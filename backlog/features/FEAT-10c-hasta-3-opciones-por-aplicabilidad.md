@@ -2,12 +2,12 @@
 
 > Linear: [L1D-25](https://linear.app/l1der-lab-mjbc/issue/L1D-25)
 
-**Talla:** L (2 historias de desarrollo + un ADR condicional) · **Sprint:** 4 (reordenamiento del 2026-10-23, antes S5; US-134, US-135, US-218, US-219) · el G-Demo sigue al cierre del S5 · `si-hay-capacidad` (US-015 · ADR-42) · **Capacidad:** CAP-10 (AC-10.1 completo, AC-10.2 tarjeta con varias opciones) · CAP-08 (AC-08.8: la opción usa su fuente más aplicable, consumido) · **Recorrido principal:** sí (hipótesis 3: encontrar las opciones descritas en la evidencia **más aplicables** a las condiciones del paciente)
+**Talla:** L (2 historias de desarrollo + un ADR condicional) · **Sprint:** 4 (reordenamiento del 2026-10-23, antes S5; US-134, US-135) · 5 (US-218, US-219: preguntas de seguimiento, refinamiento del S4, `[S4 resp. 1]`) · el G-Demo sigue al cierre del S5 · `si-hay-capacidad` (US-015 · ADR-42) · **Capacidad:** CAP-10 (AC-10.1 completo, AC-10.2 tarjeta con varias opciones) · CAP-08 (AC-08.8: la opción usa su fuente más aplicable, consumido) · **Recorrido principal:** sí (hipótesis 3: encontrar las opciones descritas en la evidencia **más aplicables** a las condiciones del paciente)
 **Requisitos:** FR-09 (S4: "hasta 3 desde el Sprint 4" y "orden de las opciones por aplicabilidad", vía HU-10) · RN-28 (dueña del **orden visible** de hasta 3 opciones; el comparador, la agregación por opción y la selección por aplicabilidad antes del recorte, ya activa en el S3 con una opción, son de US-125) · RN-03 (regresión: la relevancia solo desempata) · RN-22 (`ANALYSIS_MAX_OPTIONS` en configuración) · TBD-08 (ADR-42, condicional)
 **Evidencia:** [→ PRD §5 FR-09 ("Máximo 1 opción en los Sprints 1–3 y hasta 3 desde el Sprint 4"; "Orden de las opciones por aplicabilidad (RN-28)")], [→ PRD §6 RN-03, RN-22, RN-26, RN-28], [→ PRD §18.3.10 AC-10.1, AC-10.2, M-10.1], [→ PRD §18.3.8 AC-08.8], [→ PRD §2.1 G-5], [→ PRD §16 TBD-08], [→ readme §5 HU-10 ("comparar hasta 3 opciones descritas en la evidencia, ordenadas por aplicabilidad")], [→ readme §4.1 `EvidenceOption`, `AnalysisBasis.maxOptions`], [→ readme §3.3 #27, #31], [→ readme §6.1 #8], [→ readme §5.0 S4 KR1], [→ backlog/02-adrs.md US-015 · ADR-42], [→ docs/AS-IS.md P6, JTBD 4]
 **Dependencias:** ↪ US-055 (pipeline), US-061 (tarjeta), US-064 (soporte de cada opción), US-125 (comparador `applicability_order`, agregación por opción y orden antes del recorte a `maxOptions`, AC-5…AC-7), US-126 (tabla y resumen de aplicabilidad en la tarjeta y texto del criterio de orden, AC-7) · ⛔ DEC-11 (US-021) · escenario más probable (excluyentes y "Parcial", que alimentan los conteos) · ⛔ ADR-39 (LLM y NLI reales; los AC usan adapters falsos) · 🔗 Medido en: US-140 (M-10.1 y orden con verdad conocida), US-141 (G-5 / M-06.2 con hasta 3 opciones) · 🔗 Regresión [RN-01] → US-064 · 🔗 Regresión [RN-06] → US-053 · 🔗 Regresión [RN-23] → US-068 · 🔗 Regresión [RN-26] → US-071
 **Valor:** el oncólogo no busca "la" opción, compara (P6, JTBD 4). Hasta el S3 el análisis devuelve una sola opción: en el S1–S2, sin aplicabilidad, se elige por relevancia y el panel lo dice; desde el S3 esa opción única ya se elige con el comparador de aplicabilidad de US-125, con la relevancia solo como desempate. Con esta Feature ve hasta tres opciones que describe la evidencia, ordenadas por cuánto se parece la población estudiada a su paciente y no por eficacia ni por relevancia, con el criterio de orden siempre a la vista.
-**Stories:** US-134, US-135, US-218, US-219 (16 puntos, S5) · US-015 · ADR-42 (3 puntos, `si-hay-capacidad`)
+**Stories:** US-134, US-135 (8 puntos, S4) · US-218, US-219 (8 puntos, S5, `[S4 resp. 1]`) · US-015 · ADR-42 (3 puntos, `si-hay-capacidad`)
 
 ## Fixtures
 
@@ -52,9 +52,12 @@ que las redactó la IA decidan cuál veo arriba.
   (0,60) porque tiene menos criterios en Coincide, y O-B precede a O-D solo por
   relevancia (mismos conteos). `[RN-28]` `[RN-03]` `[AC-10.1]`
 - **AC-3 (borde · tope de opciones)** · Dado `LLM-CUATRO`, cuando se recorta a 3,
-  entonces O-A no aparece en `evidenceOptions` ni en `discardedOptions`.
-  `[FR-09]` (asumido: el excedente válido no es una descartada, igual que US-225 AC-3, ex US-055 AC-8)
-  > Pendiente de definir en refinamiento (dueño: usuario · afecta: AC-3, campo `analysisBasis`): ¿las opciones con soporte que quedan fuera del tope de 3 se declaran en la Base del análisis (p. ej., "La evidencia describe 1 opción más, no mostrada") o se omiten sin mención?
+  entonces O-A no aparece en `evidenceOptions` ni en `discardedOptions`, la respuesta trae
+  `analysisBasis.optionsNotShown = 1` sin ningún contenido de O-A (ni título, ni
+  justificación, ni citas), y el `AIAnalysisRecord` persiste el mismo valor; con `LLM-TRES`,
+  `optionsNotShown = 0`. `[FR-09]` `[S4 resp. 7]` `[S4 resp. 11]` · el texto visible es de
+  US-135 AC-7
+  > **Decidido (usuario, 2026-10-29):** las opciones con soporte que quedan fuera del tope de 3 se declaran en la Base del análisis («La evidencia describe N opción(es) más, no mostradas»), sin su contenido y no como descartadas `[S4 resp. 7]`. El campo es `analysisBasis.optionsNotShown` (entero ≥ 0), aditivo (ADR-26) — decisión de diseño de la sesión principal, a confirmar por el usuario en la revisión del PR `[S4 resp. 11]`.
 - **AC-4 (borde · no comparable visible)** · Dado `LLM-TRES`, cuando se procesa,
   entonces `evidenceOptions` = [O-B, O-C, O-A] y O-A trae
   `populationNotComparable = true` y `warnings` con `poblacion_no_comparable`: queda
@@ -77,8 +80,14 @@ que las redactó la IA decidan cuál veo arriba.
 ## Contexto técnico
 El orden se calcula en `rag-orchestrator/app/domain/` reutilizando la función pura
 `applicability_order` de US-125 sobre el `applicabilitySummary` de cada opción (su fuente
-más aplicable) y después recorta a `maxOptions`; el orden del arreglo **es** el orden
-(el contrato `EvidenceAnalysis` no cambia, ADR-26: no hay campo `rank`). `clinical-api`
+más aplicable) y después recorta a `maxOptions`; el orden del arreglo **es** el orden (no
+hay campo `rank`). El contrato cambia **solo de forma aditiva** (ADR-26): `rag-orchestrator`
+devuelve el número de opciones válidas que quedaron fuera del tope en un campo nuevo y
+opcional de `RagQueryInternalResponse`, y `clinical-api` lo copia a
+`analysisBasis.optionsNotShown` (entero ≥ 0, opcional para los análisis antiguos); además,
+`ApplicabilityCriterion` gana los campos de US-241, que el orden no usa (sigue contando por
+estado). Contract-first: `contracts/schemas/`, `sync-contracts`, ejemplos y mocks en el mismo
+PR, `oasdiff` sin ERR. `clinical-api`
 envía `maxOptions` desde la variable `ANALYSIS_MAX_OPTIONS` (valor 3 desde el S4;
 con valor 1 se aplica el mismo comparador antes del recorte, como en el S3, US-125 AC-5) `[RN-22]`;
 la validación de arranque rechaza valores fuera de 1–3 (asumido, tope de FR-09). La
@@ -103,7 +112,7 @@ FEAT-11a). Cualquier puntaje combinado o "nivel de evidencia" (RN-28, AC-07.5).
 
 > Linear: [L1D-145](https://linear.app/l1der-lab-mjbc/issue/L1D-145)
 
-`FEAT-10c` · Sprint 4 · Estimación **3** · HU-10 · FR-09 (UI S4), RN-28 (texto del criterio), RN-03, RN-23, NFR-12 · AC-10.1 (UI), AC-10.2 (varias tarjetas) · ↪ US-134, US-061, US-126 · 🔗 Consume: US-136 (avisos de conflicto y faltantes), US-101 (avisos sin verificar) · 🔗 Regresión [RN-23] → US-068 · 🔗 Regresión [RN-19] → US-069
+`FEAT-10c` · Sprint 4 · Estimación **3** · HU-10 · FR-09 (UI S4; opciones no mostradas, `[S4 resp. 7]`), RN-28 (texto del criterio), RN-03, RN-23, NFR-12 · AC-10.1 (UI), AC-10.2 (varias tarjetas) · ↪ US-134, US-061, US-126 · 🔗 Consume: US-136 (avisos de conflicto y faltantes), US-101 (avisos sin verificar) · 🔗 Regresión [RN-23] → US-068 · 🔗 Regresión [RN-19] → US-069
 
 > **Reordenamiento (usuario, 2026-10-23):** S5 → S4. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
@@ -113,14 +122,20 @@ y sus avisos, en el orden en que el sistema las clasificó y con el criterio exp
 para compararlas sin confundir el primer lugar con "la mejor opción".
 
 ## AC (Given/When/Then)
+> **Decidido (usuario, 2026-10-29):** los textos visibles siguen `docs/ux/S4/pantallas-s4.md`, variante A (tarjetas apiladas con tabla desplegable por opción), elegida por el usuario en el refinamiento del S4.
+
 - **AC-1 (happy path)** · Dada la respuesta del AC-1 de US-134 en Playwright contra
   Compose (perfil de test, FX-10c-a), cuando se renderiza el panel, entonces bajo
-  "Opciones descritas en la evidencia" hay 3 tarjetas en el orden O-B, O-D, O-C, cada
-  una con su resumen de aplicabilidad ("3 coinciden · 2 desconocidos"), sus citas y la
-  "Relevancia de la evidencia" como metadato secundario. `[AC-10.1]` `[AC-10.2]` `[HU-10]`
+  «Opciones descritas en la evidencia» hay 3 tarjetas en el orden O-B, O-D, O-C, cada
+  una con su línea de conteos con símbolo y palabra («✓ Coincide 3 · ◐ Parcial 0 · ✕ No
+  coincide 0 · ? Desconocido 2»), sus citas y, al final, «Relevancia de recuperación: …
+  Metadato de la búsqueda; no mide solidez clínica ni probabilidad, y solo desempata el
+  orden.» `[AC-10.1]` `[AC-10.2]` `[HU-10]`
 - **AC-2 (borde · criterio visible)** · Dado el panel del AC-1, cuando se inspecciona,
-  entonces encima de las tarjetas se lee "Ordenadas por coincidencia con la población
-  estudiada, no por eficacia" una sola vez. `[RN-28]` `[AC-10.1]`
+  entonces encima de las tarjetas se lee una sola vez el criterio de orden de aplicabilidad
+  (clave `evidence.orderCriterion.applicability` del S3, sin cambios) seguido de «La
+  numeración indica la posición en el orden por aplicabilidad, no una preferencia.»
+  `[RN-28]` `[AC-10.1]` `[docs/ux/S4 S4-01]`
 - **AC-3 (borde · sin jerarquía clínica)** · Dado el panel del AC-1, cuando se pasa la
   lista de términos prohibidos de US-068 sobre el DOM, entonces no hay coincidencias y
   ninguna tarjeta lleva rótulos como "Mejor opción", "Primera elección" ni medallas o
@@ -134,19 +149,34 @@ para compararlas sin confundir el primer lugar con "la mejor opción".
   comparable" y se muestra completa. `[AC-08.6]` `[RN-26]`
 - **AC-6 (borde · accesibilidad)** · Dado el panel del AC-1, cuando se navega con
   teclado, entonces cada tarjeta es un elemento de una lista ordenada (`<ol>`) con
-  encabezado propio y el lector de pantalla anuncia "Opción 1 de 3". `[NFR-12]` (asumido)
+  encabezado propio (`h3`) y cada tarjeta se rotula «Opción descrita 1 de 3», «Opción
+  descrita 2 de 3»…, nunca «mejor», «primera elección» ni «preferida». `[NFR-12]`
+  `[RN-23]` `[docs/ux/S4 S4-01]`
+- **AC-7 (borde · opciones no mostradas)** · Dada la respuesta del AC-3 de US-134
+  (`analysisBasis.optionsNotShown = 1`), cuando se renderiza el panel, entonces bajo la
+  última tarjeta se lee «La evidencia describe 1 opción(es) más con soporte que no se
+  muestran por el límite de 3, aplicado según el orden por aplicabilidad; el límite no es
+  una valoración clínica de ellas. Una pregunta más específica puede mostrarlas.», sin
+  ningún dato de esa opción y sin otro acceso a ella; el anuncio de «Análisis listo» añade
+  «1 más con soporte no mostrada»; y con `optionsNotShown = 0` (o ausente, en un análisis
+  antiguo) ese texto no aparece. `[S4 resp. 7]` `[S4 resp. 11]` `[FR-09]`
+  `[docs/ux/S4 S4-01]`
+  > **Decidido (usuario, 2026-10-29):** el panel declara las opciones con soporte que quedan fuera del tope («La evidencia describe N opción(es) más, no mostradas») sin su contenido `[S4 resp. 7]`; el campo `analysisBasis.optionsNotShown` es decisión de diseño de la sesión principal, a confirmar en la revisión del PR `[S4 resp. 11]`.
 
 ## Contexto técnico
 `EvidenceOptionCard` (US-061) ya itera `evidenceOptions[]`; esta historia agrega la
 plantilla de lista (`EvidenceOptionsList`) con `<ol>` y el texto del criterio, que en el
 S3 se mostraba sobre una sola tarjeta (US-126 AC-7; en el S1–S2, el texto neutro de
 US-061 AC-3). Sin lógica de orden en `web`.
+Los literales de AC-1, AC-2, AC-6 y AC-7 son los de `docs/ux/S4/pantallas-s4.md` (variante A,
+elegida por el usuario) y viven en `apps/web/messages/es.json` (recorrido por US-068).
 Tests: Playwright contra Compose en perfil de test con FX-10c-a (AC-1, AC-2, AC-3, AC-5,
-AC-6) y test de componente con Vitest + Testing Library (AC-4).
+AC-6) y test de componente con Vitest + Testing Library (AC-4, AC-7 con MSW desde
+`contracts/examples/`).
 
 ## INVEST
-**Small** ✓ una plantilla de lista sobre tarjetas existentes.
-**Testable** ✓ seis tests E2E y de componente.
+**Small** ✓ una plantilla de lista sobre tarjetas existentes y un literal.
+**Testable** ✓ siete tests E2E y de componente.
 
 ---
 
@@ -208,7 +238,9 @@ No implementar SSE. No emitir contenido parcial. No cambiar el contrato
 
 > Linear: [L1D-268](https://linear.app/l1der-lab-mjbc/issue/L1D-268)
 
-`FEAT-10c` · Sprint 4 · Estimación **5** · — (técnica, PRD §17; cambio frente a PRD §3/§17 "conversación de varios turnos: Post-MVP", `[Pre-S1 resp. 14]`) · FR-31, FR-09, RN-01, RN-04, RN-06, RN-11, RN-23, RN-24, RN-15 · ↪ US-033 (AC-13, contrato congelado), US-055, US-063, US-064, US-053, US-134 · 🔗 Consumida por: US-219
+`FEAT-10c` · Sprint 5 *(S4 → S5, `[S4 resp. 1]`)* · Estimación **5** · — (técnica, PRD §17; cambio frente a PRD §3/§17 "conversación de varios turnos: Post-MVP", `[Pre-S1 resp. 14]`) · FR-31, FR-09, RN-01, RN-04, RN-06, RN-11, RN-23, RN-24, RN-15 · ↪ US-033 (AC-13, contrato congelado), US-055, US-063, US-064, US-053, US-134 · 🔗 Consumida por: US-219
+
+> **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 
 > **Reordenamiento (usuario, 2026-10-23):** S5 → S4. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
@@ -279,7 +311,9 @@ Respuestas en streaming de contenido (TBD-08). Seguimiento sobre análisis `sin_
 
 > Linear: [L1D-269](https://linear.app/l1der-lab-mjbc/issue/L1D-269)
 
-`FEAT-10c` · Sprint 4 · Estimación **3** · — (técnica, PRD §17) · FR-31, RN-01, RN-19, RN-23, RN-26 · ↪ US-218, US-135 · Diseño: `docs/ux/flujo-e2e.md` pantalla 09 · `[Pre-S1 resp. 14]`
+`FEAT-10c` · Sprint 5 *(S4 → S5, `[S4 resp. 1]`)* · Estimación **3** · — (técnica, PRD §17) · FR-31, RN-01, RN-19, RN-23, RN-26 · ↪ US-218, US-135 · Diseño: `docs/ux/flujo-e2e.md` pantalla 09 · `[Pre-S1 resp. 14]`
+
+> **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 
 > **Reordenamiento (usuario, 2026-10-23):** S5 → S4. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
@@ -321,4 +355,5 @@ de `web` hacia US-218. Testing Library + MSW con `contracts/examples/` y `visual
 | — | backlog/01-requisitos.md §3 RN-28: dueña FEAT-10c (orden) con regresión en FEAT-08b | FEAT-08b (lote 2) fijó US-125 como dueña del comparador y de la agregación | Ambas: US-125 dueña del comparador y la agregación; US-134 dueña del orden visible de hasta 3 opciones |
 | — | `backlog/02-adrs.md` US-015 · ADR-42: Feature FEAT-10a | Mapa de lotes: ADR-42 en el S4 | ADR-42 se ubica en FEAT-10c (S4), la Feature cuya espera mide; FEAT-10a es del S1 |
 | Slicing v2 | PRD §14 S4 y readme §5.0 S4: hasta 3 opciones y G-Demo al cierre del S4 | Slicing v2 aprobado por el usuario (`01-requisitos.md` §15, 2026-10-07): hasta 3 opciones y G-Demo al cierre del S5; ADR-42 `si-hay-capacidad` (indicador de espera) | Se siguió el slicing v2 |
+| S4-2026-10-29 | US-134 contexto técnico: «el contrato `EvidenceAnalysis` no cambia»; AC-3 con nota pendiente sobre el excedente; US-218 y US-219 en el S4 | Refinamiento del S4 (usuario, 2026-10-29): el excedente se declara en la Base del análisis `[S4 resp. 7]` con `analysisBasis.optionsNotShown` (aditivo, sesión principal `[S4 resp. 11]`); el contrato cambia de forma aditiva también por US-241; US-218 y US-219 pasan al S5 `[S4 resp. 1]` | Decisión del usuario; ADR-26 admite el cambio aditivo |
 | C-Pre4 | PRD §3 y §17: "conversación de varios turnos dentro de un análisis" es Post-MVP | Usuario, 2026-10-11: preguntas de seguimiento (hasta 10) en el MVP, S5 | Usuario (`[Pre-S1 resp. 14]`): US-218 y US-219. Enmendado en PRD v1.4 |

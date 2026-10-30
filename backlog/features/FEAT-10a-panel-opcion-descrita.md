@@ -2,12 +2,12 @@
 
 > Linear: [L1D-23](https://linear.app/l1der-lab-mjbc/issue/L1D-23)
 
-**Talla:** M · **Sprint:** 1 (US-060, US-061) · 3 (US-062, US-237) · **Capacidad:** CAP-10 (S1), CAP-05 (AC-05.1 y AC-05.3 en la UI) · consume T-2 y T-3 · **Recorrido principal:** sí
+**Talla:** M · **Sprint:** 1 (US-060, US-061) · 3 (US-062, US-237) · 4 (US-246, `[S4 resp. 2]`) · **Capacidad:** CAP-10 (S1), CAP-05 (AC-05.1 y AC-05.3 en la UI) · consume T-2 y T-3 · **Recorrido principal:** sí
 **Requisitos:** FR-09 (UI del S1, vía HU-03) · FR-10 (sección de descartadas en la UI) · RN-03 (dueña) · RN-28 (texto del criterio de orden visible desde el S1: neutro en el S1–S2; el de aplicabilidad es de US-126 desde el S3; la selección por aplicabilidad es de US-125 y el orden de hasta 3, de US-134) · NFR-12 (panel) · SEG-01 (Route Handler)
 **Evidencia:** [→ PRD §5 FR-09, FR-10], [→ PRD §6 RN-03, RN-28], [→ PRD §7 NFR (accesibilidad)], [→ PRD §18.3.10 AC-10.1, AC-10.2, AC-10.4], [→ PRD §18.3.5 AC-05.3], [→ readme §5 HU-03], [→ readme §6 OL-04], [→ readme §2.1 Route Handler, no Server Action], [→ readme §3.3 #8], [→ readme §6.1 #4, #8, #15], [→ CLAUDE.md "El navegador solo habla con `web`"]
 **Dependencias:** ↪ US-053 (respuesta del gateway), US-211 (sesión mínima, S1), US-051 (`PatientContextCard`) · 🔗 Consume: US-064 (descartadas), US-067 (Base del análisis en la UI), US-069 (avisos de IA), US-068 (lista de términos prohibidos) · 🔗 Regresión [RN-23] → US-068 · 🔗 Regresión [RN-19] → US-069 · 🔗 Medido en: US-072 (M-10.1, M-10.2 sobre salidas)
 **Valor:** es lo que el oncólogo ve y usa: una pregunta y un análisis legible en el que la opción descrita viene con sus fuentes verificables, la relevancia no se confunde con eficacia y lo que no se pudo respaldar queda aparte, solo para revisión (P5, P6, P12). Sin esta Feature el walking skeleton no es demostrable.
-**Stories:** US-060, US-061 (8 puntos, S1) · US-062 (3 puntos, S3) · US-237 (2 puntos, S3)
+**Stories:** US-060, US-061 (8 puntos, S1) · US-062 (3 puntos, S3) · US-237 (2 puntos, S3) · US-246 (2 puntos, S4)
 
 ---
 
@@ -253,6 +253,66 @@ fuente única recorrida por US-068); agrupación por motivo en el componente de 
 
 ---
 
+## US-246 — El panel dice si una opción se descartó por falta de soporte o por lenguaje no permitido, sin mezclar los dos motivos
+
+> Linear: [L1D-296](https://linear.app/l1der-lab-mjbc/issue/L1D-296)
+
+`FEAT-10a` · Sprint 4 · Estimación **2** · HU-03 · FR-10 (descartadas en la UI), RN-19, RN-23, NFR-12 · AC-10.4 · ↪ US-237, US-061 · ⛔ US-245 (emite `discardReason = lenguaje_no_permitido`; contrato aditivo en su AC-7) · 🔗 Regresión [RN-23] → US-068 · 🔗 Regresión [RN-19] → US-069 · **Recorrido principal:** sí
+
+> **Decidido (usuario, 2026-10-29):** el mensaje de opción descartada distingue el motivo («una afirmación no tiene soporte en la fuente» frente a «contenía lenguaje no permitido») y no mezcla ambos (OUT-08 §5). Test del AC primero + `visual-check` `[S4 resp. 2]`.
+> Los literales siguen `docs/ux/S4/pantallas-s4.md` S4-02 (diseño elegido por el usuario en el refinamiento del S4).
+> **Decidido (sesión principal, 2026-10-29, a confirmar por el usuario en la revisión del PR):** el motivo propio lo emite `rag-orchestrator` como `lenguaje_no_permitido` (US-245); esta historia solo lo presenta `[S4 resp. 11]`.
+
+## Story
+Como oncólogo, quiero saber si una opción se apartó porque la fuente no respalda lo que dice o
+porque usaba lenguaje que el sistema no permite, para decidir si reformulo la pregunta o si la
+evidencia simplemente no lo sostiene.
+
+## AC (Given/When/Then)
+- **AC-1 (happy path · sin soporte)** · Dada una respuesta con solo descartadas, todas con
+  `discardReason = afirmacion_sin_soporte` (ejemplo `con-evidencia-solo-descartadas` de
+  `contracts/examples/`), cuando el panel la renderiza, entonces el resumen dice «Una
+  afirmación no tiene soporte en la fuente citada», cada afirmación de `unsupportedClaims`
+  aparece con el rótulo «Afirmación no verificada contra la fuente citada; se muestra solo
+  para revisión» (después de pasar el filtro RN-23), y no se lee «lenguaje prescriptivo».
+  `[S4 resp. 2]` `[FR-10]` `[AC-10.4]`
+- **AC-2 (borde · lenguaje no permitido)** · Dada una respuesta con solo descartadas, todas con
+  `discardReason = lenguaje_no_permitido` (ejemplo
+  `con-evidencia-solo-descartadas-lenguaje.json` de US-245), cuando se renderiza, entonces el
+  resumen dice «Contenía lenguaje prescriptivo, que no se muestra», cada opción muestra solo su
+  nombre (filtrado) con «Se omitió por la redacción generada (lenguaje prescriptivo); no es una
+  valoración de la evidencia» y «(texto no mostrado)», ningún texto prescriptivo aparece y no
+  se lee «no tiene soporte». `[S4 resp. 2]`
+  `[S4 resp. 11]`
+- **AC-3 (borde · motivos mixtos)** · Dada una respuesta con una descartada de cada motivo,
+  cuando se renderiza, entonces cada motivo aparece en su propia línea con su recuento
+  («1 × …»), con el formato de US-237 AC-2, y nunca una frase que junte los dos motivos. `[S4 resp. 2]` `[FR-10]`
+- **AC-4 (invariante · fuente única de mensajes)** · Dado `apps/web/messages/es.json`, cuando
+  se recorre con la lista de términos prohibidos (US-068), entonces
+  `discardReason.afirmacion_sin_soporte` es «Una afirmación no tiene soporte en la fuente
+  citada» (ya no incluye «o contenía lenguaje no permitido»), existe
+  `discardReason.lenguaje_no_permitido` = «Contenía lenguaje prescriptivo, que no se
+  muestra», no hay coincidencias de RN-23 y el aviso «Generado por IA;
+  requiere validación clínica independiente por el oncólogo tratante» sigue visible en el
+  panel. `[RN-23]` `[RN-19]`
+- **AC-5 (borde · motivo desconocido)** · Dada una descartada con un `discardReason` que la
+  versión de `web` no conoce, cuando se renderiza, entonces el panel muestra «No se pudo
+  verificar esta opción» sin romper la página ni mostrar el valor crudo. (asumido:
+  compatibilidad hacia adelante de un enum aditivo)
+
+## Contexto técnico
+Cambia las etiquetas de `discardReason.*` en `apps/web/messages/es.json` (fuente única de
+mensajes de US-237) y el agrupador del componente de descartadas; sin lógica nueva de backend.
+Tests del AC primero con Vitest + Testing Library + MSW sobre los ejemplos de
+`contracts/examples/` (los de US-237 y el nuevo de US-245); `visual-check` a 375 y 1280 px
+contra `docs/ux/S3/pantallas-s3.md`.
+
+## INVEST
+**Small** ✓ dos literales y un caso más en el agrupador.
+**Testable** ✓ cinco tests de componente.
+
+---
+
 ## Conflictos de fuentes
 
 | # | Fuente A | Fuente B | Se siguió |
@@ -264,3 +324,4 @@ fuente única recorrida por US-068); agrupación por motivo en el componente de 
 | Refinamiento del S1 · V-10 | PRD §12 Idioma y readme OL-04: "traducción opcional etiquetada" de las citas | Sin FR, AC ni sprint en el backlog | **Fuera del MVP comprometido** (Post-MVP, sin historia) — decisión del usuario del 2026-10-13 `[S1 resp. 8]`; la cita se muestra en su idioma original (US-063 AC-6) |
 | Refinamiento del S1 · rutas | US-061 y US-211: `/patients/{id}/evidence` | `docs/ux/flujo-e2e.md` (aprobado el 2026-10-11): `/pacientes/[id]/analisis` | Rutas en español del diseño `[S1 resp. 4]` |
 | S3-2026-10-23 | US-062 AC-2: "No se encontró evidencia suficiente en las fuentes consultadas"; US-237 con capacidad por confirmar | `docs/ux/S1/pantallas-s1.md` (estado "Sin evidencia") y refinamiento del S3 (2026-10-23) | Texto canónico del diseño `[S3 resp. 6]`; US-237 confirmada en el S3 con UI en `docs/ux/S3/pantallas-s3.md` `[S3 resp. 8]` |
+| S4-2026-10-29 | US-237 AC-6: «sin cambio de contrato: el motivo ya viaja en `discardReason`»; `es.json` junta «sin soporte» y «lenguaje no permitido» en una etiqueta | Refinamiento del S4 (usuario, 2026-10-29): los motivos se separan (OUT-08 §5) `[S4 resp. 2]` con un valor aditivo `lenguaje_no_permitido` (sesión principal, `[S4 resp. 11]`) | Decisión del usuario; US-237 AC-6 sigue valiendo para el S3 y US-245 AC-7 hace el cambio aditivo en el S4 |

@@ -22,6 +22,11 @@
 
 > **Adición del 2026-10-16 (propuesta, sin publicar en Linear):** **ADR-45 · Mejora de la recuperación frente a las metas de OL-06** (`docs/architecture/adr/ADR-45-mejora-recuperacion-ol06.md`, estado *propuesto*). Nace del resultado de ADR-39 fase A (recall@10 0,71 y MRR 0,36–0,39 frente a 0,80 y 0,60). Se pidió como ADR-44, pero **ADR-44 ya existe** (Stack de observabilidad, US-028; los IDs publicados son inmutables), de modo que toma el 45. Historias borrador US-226…US-230 en `features/FEAT-T5e-mejora-recuperacion.md` (`Linear: pendiente`). Los conteos de §1 no se recalculan hasta que el humano la apruebe.
 
+> **Estado tras el refinamiento del S4 (usuario, 2026-10-29; respuestas `[S4 resp. 1…10]`):**
+> - **Resuelta: ADR-47 · La población del estudio se extrae en la ingesta, en abanico por documento y criterio, como lista acotada por fragmento** — [registro](../docs/architecture/adr/ADR-47-extraccion-poblacion-en-abanico.md), estado **aceptado** (2026-10-29), opción A `[S4 resp. 3]`, contrato aditivo `[S4 resp. 5]`. Sin historia de ADR propia (la escribió la sesión principal); la implementan US-240, US-241, US-242, US-243, US-244 y US-233b (FEAT-06c, FEAT-08b, FEAT-T5a).
+> - **DEC-11 (US-021):** F-20…F-24 aceptadas como escenario más probable de la semántica de la lista de población; firma formal en la sesión de oncólogos del S4 `[S4 resp. 8]`; conflicto → Desconocido con `valores_en_conflicto` `[S4 resp. 9]`. Registro: [`DEC-11-aplicabilidad-lista-de-poblacion.md`](../docs/decisions/DEC-11-aplicabilidad-lista-de-poblacion.md).
+> - **Cambios de sprint `[S4 resp. 1]`:** DEC-01, US-016 · DEC-06, US-017 · DEC-07, US-018 · DEC-08 y US-019 · DEC-09 pasan al **S5**.
+
 ---
 
 ## 1. Resumen
@@ -56,6 +61,7 @@
 | US-018 | DEC-08 | Umbrales de tendencia por biomarcador | TBD-13 (tendencias) | DEC clínica | Oncólogo asesor | S1 (antes de la vista de caso) | 1 | sí (1) | FEAT-02b | Alta |
 | US-019 | DEC-09 | Semáforo y vigencia de diagnósticos | TBD-06 · readme #12 ⚠️ | DEC clínica | Oncólogo asesor | S1 (antes de la extracción) | 1 | sí (1) | FEAT-01b, FEAT-03a, FEAT-03b | Alta |
 | — | DEC-01 (existe) | Catálogo de datos críticos | TBD-12 · M-04.3 | DEC clínica | Oncólogo asesor | S3 (ver P-03) | 2 → **1** | sí (2) | FEAT-04 | **Crítica** |
+| — | ADR-47 (aceptado 2026-10-29) | Población del estudio en abanico por documento × criterio, lista acotada por fragmento | OUT-06 · OUT-07 · TBD-13 · `S4-insumo-extraccion-poblacion.md` | ADR | Usuario (PO) + Ingeniería | S4 (resuelta) | — (sin historia propia; la implementan US-240…US-244 y US-233b) | sí (3) | FEAT-08b, FEAT-06c, FEAT-T5a | **Crítica** · resuelta |
 | US-021 | DEC-11 | Criterios de aplicabilidad, excluyentes y "Parcial" | TBD-13 (aplicabilidad) | DEC clínica | Oncólogo asesor | S3 (antes de aplicabilidad; ver P-03) | 1 | sí (3) | FEAT-08b, FEAT-10c, FEAT-08c, FEAT-T5b | **Crítica** |
 | US-024 | DEC-14 | Revisión de la muestra de aplicabilidad (VM-3) | M-08.1 · VM-3 | DEC clínica | Oncólogo asesor | S4 (o al cerrar aplicabilidad) | 1 | sí (mide 3) | G-Demo, FEAT-T5d | Alta |
 | US-023 | DEC-13 | Motivos de egreso | TBD-06 (motivos) | DEC clínica | Oncólogo asesor | Con FEAT-T4b (hoy S4); Post-MVP si se difiere | 1 | no | FEAT-T4b | Baja |
@@ -610,7 +616,8 @@ Como oncólogo asesor, quiero validar las plantillas de preguntas por tipo de c�
 
 ### US-021 · DEC-11 — Criterios de aplicabilidad, excluyentes y definición de "Parcial"
 
-**Tipo:** Decisión · **Feature:** FEAT-08b · **Sprint:** 3 (antes de la Feature de aplicabilidad; ver P-03) · **Estimación:** 1
+**Tipo:** Decisión · **Feature:** FEAT-08b · **Sprint:** 4 (cierre en la sesión de oncólogos del S4; antes S3, ver P-03) · **Estimación:** 1
+> **Estado (usuario, 2026-10-29):** **escenario aceptado** con la semántica de la lista de población de F-20…F-24 (inclusiva → Parcial; mezclada → Parcial; Coincide solo si la población es específica del perfil; No coincide solo con restricción explícita; ausente sin restricción → Desconocido; conflicto → Desconocido con `valores_en_conflicto`; unidad = fragmentos citados; hasta 3 valores con «ver más») y firma formal en la sesión de oncólogos del S4 `[S4 resp. 8]` `[S4 resp. 9]`. Registro: `docs/decisions/DEC-11-aplicabilidad-lista-de-poblacion.md`. Detalle en `features/FEAT-08b-aplicabilidad.md`.
 > **Estado (usuario, 2026-10-23):** escenario aceptado para el S3; cierre en la sesión de oncólogos del S4 `[S3 resp. 1]`. Se implementa sobre la versión `propuesta_revisada` (criterios de FR-25; HER2 en mama y estado de castración en próstata como excluyentes; "Parcial" según los ejemplos de FR-25); un cambio de la sesión solo toca el catálogo JSON.
 **Origen:** TBD-13 (parte: aplicabilidad) · R-24 · **Dueño:** oncólogo asesor
 **Recorrido principal:** sí — **crítica**: sin criterios, excluyentes y "Parcial" validados no hay orden de las opciones por aplicabilidad (hipótesis 3)
@@ -878,8 +885,8 @@ Las historias de la columna "Bloquea" se estiman **`?`** hasta que cierre la his
 | 14 | DEC-09 | sí | FEAT-01b · regla de diagnóstico y semáforo; FEAT-03a; FEAT-03b | S2 |
 | 15 | DEC-08 | sí | FEAT-02b · tendencia | S2 |
 | 16 | CAL TBD-03 (OCR) | sí · crítica | FEAT-01b · `extraction_confidence` | S2 |
-| 17 | DEC-01 (existe) | sí · crítica | FEAT-04 · US-001…US-006 (solo el catálogo firmado); DEC-19 | S3: escenario aceptado para el S3; cierre en la sesión de oncólogos del S4 `[S3 resp. 1]` |
-| 18 | DEC-11 | sí · crítica | FEAT-08b, FEAT-10c, FEAT-08c, FEAT-T5b; DEC-19 | S3: escenario aceptado para el S3; cierre en la sesión de oncólogos del S4 `[S3 resp. 1]` |
+| 17 | DEC-01 (existe) | sí · crítica | FEAT-04 · US-001…US-006 (solo el catálogo firmado); DEC-19 | S3: escenario aceptado para el S3; cierre en la sesión de oncólogos del **S5** (antes S4) `[S4 resp. 1]` |
+| 18 | DEC-11 | sí · crítica | FEAT-08b, FEAT-10c, FEAT-08c, FEAT-T5b; DEC-19 | S3: escenario aceptado para el S3; **S4: F-20…F-24 aceptadas como escenario y firma formal en la sesión de oncólogos del S4** `[S4 resp. 8]` |
 | 19 | DEC-14 | sí | G-Demo (VM-3); FEAT-T5d | Cierre de aplicabilidad (hoy S4) |
 | 20 | DEC-12, DEC-16 | sí (gate) | FEAT-T4c · `403` por opt-out en la lista cerrada de endpoints; FEAT-T4b/T4d · registro de la marca | S5 (antes de G-Piloto; el canal se negocia desde el S3 con la entidad médica) |
 | 21 | P-02 (autorización por paciente) → FEAT-T4c | sí (gate) | FEAT-T4c · pertenencia en todos los endpoints | S5 |

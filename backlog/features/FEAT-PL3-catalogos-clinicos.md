@@ -8,7 +8,7 @@
 **Dependencias:** ↪ US-033 · ↪ US-037 (configuración) · ⛔ DEC-04 · workaround Q-07 (US-042 AC-4) · 🔗 Consumida por: US-039 (códigos del seed), US-052 (versión en el contexto), FEAT-04 US-001 (amplía el validador), FEAT-02b (tendencias) · 🔗 Relacionada: DEC-19 (criterio de "listo", S6)
 **Valor:** el oncólogo necesita que las reglas clínicas (datos críticos, criterios de aplicabilidad, umbrales de tendencia, códigos) se puedan revisar y cambiar sin desplegar código y que ambos backends usen exactamente la misma versión; si no, el análisis mezclaría reglas distintas sin que nadie lo note. Además, ningún código de un estándar con términos de uso no confirmados puede quedar en un repositorio público.
 **Workaround en el MVP (US-042):** US-001 (S4) publica el catálogo de datos críticos con su validador; hasta entonces el catálogo v1 se revisa en el PR.
-**Stories:** US-041, US-043, US-018 · DEC-08 (9 puntos, S2) · US-042 (3 puntos, `si-hay-capacidad`)
+**Stories:** US-041, US-043 (8 puntos, S2) · US-018 · DEC-08 (1 punto, S5; S2 → S4 → S5, `[S4 resp. 1]`) · US-042 (3 puntos, `si-hay-capacidad`)
 
 ---
 
@@ -172,7 +172,9 @@ contra Compose con el seed; AC-4: Pytest con adapters falsos; AC-5: test de arra
 
 > Linear: [L1D-174](https://linear.app/l1der-lab-mjbc/issue/L1D-174)
 
-`FEAT-PL3` · Sprint 4 *(desde S2, sesión con oncólogos junto a ARR-05, `[S2 resp. 1]`)* · Estimación **1** · — (decisión) · FR-04 · TBD-13 (tendencias), R-24 · Dueño: oncólogo asesor · 🔗 Bloquea: FEAT-02b (cálculo de la tendencia ↑ ↓ = en ficha, vista de caso y contexto, US-091)
+`FEAT-PL3` · Sprint 5 *(desde S2, sesión con oncólogos junto a ARR-05, `[S2 resp. 1]`; S4 → S5, `[S4 resp. 1]`)* · Estimación **1** · — (decisión) · FR-04 · TBD-13 (tendencias), R-24 · Dueño: oncólogo asesor · 🔗 Bloquea: FEAT-02b (cálculo de la tendencia ↑ ↓ = en ficha, vista de caso y contexto, US-091)
+
+> **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 
 ## Story
 Como oncólogo asesor, quiero validar el umbral de cambio de cada biomarcador del
@@ -213,3 +215,4 @@ FEAT-02b (S2).
 | — | PRD §7: "Backend 2 rechaza con `409` una versión distinta" (no dice qué responde `clinical-api`) | readme OL-03: mapeo de errores de Backend 2 a `502` | Se propaga `409` al cliente (no es un error de comunicación sino de configuración visible; regla del encargo: "si difieren, el análisis responde `409`") |
 | Slicing v2 | readme §5.0 S1 y OL-01: catálogo clínico v1 montado en ambos backends desde el S1; validador mínimo RN-29 en el S1 (lote 1) | Slicing v2 aprobado por el usuario (`01-requisitos.md` §15, 2026-10-07): catálogo y tipos habilitados en el S2; validador mínimo `si-hay-capacidad` | El S1 usa el subconjunto CIE-10 del catálogo como datos del seed; montaje, `409` y `tipo_no_habilitado` llegan en el S2; RN-29 la verifica US-001 en el S4 |
 | Ajuste del S2 | Slicing v2: US-018 · DEC-08 en el S2 | Refinamiento del S2 (usuario, 2026-10-21, `[S2 resp. 1]`): al S4, sesión con oncólogos | Se siguió el ajuste del S2 |
+| S4-2026-10-29 | Refinamiento del S2: US-018 · DEC-08 en el S4, sesión con oncólogos | Refinamiento del S4 (usuario, 2026-10-29): pasa al S5; el S4 se compromete con ≈ 57 pts y se recorta de menor a mayor prioridad (gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca) `[S4 resp. 1]` | Decisión del usuario |

@@ -2,12 +2,12 @@
 
 > Linear: [L1D-40](https://linear.app/l1der-lab-mjbc/issue/L1D-40)
 
-**Talla:** XL · **Sprint:** 1 (US-049, US-211) · 2 (US-044, US-045, US-046, US-048, US-013 · ADR-40) · 4 (US-047) · 6 (US-050) · **Capacidad:** T-4 (AC-T4.1 parte S1, AC-T4.2/AC-T4.3 parte S1, AC-T4.5 parte S1) · **Recorrido principal:** sí
+**Talla:** XL · **Sprint:** 1 (US-049, US-211) · 2 (US-044, US-045, US-046, US-048, US-013 · ADR-40) · 6 (US-047, S4 → S6, `[S4 resp. 1]`; US-050) · **Capacidad:** T-4 (AC-T4.1 parte S1, AC-T4.2/AC-T4.3 parte S1, AC-T4.5 parte S1) · **Recorrido principal:** sí
 **Requisitos:** FR-01 (HU-01), FR-02 (HU-06), FR-03 manual (HU-07), FR-17 y RN-18 (campos, dueña), RN-10 (dueña), RN-11 (dueña), RN-12 (dueña), RN-16 (dueña), SEG-01, SEG-02 (RBAC), SEG-03, SEG-04 (parte S1), SEG-05, V-02 (usuarios por CLI)
 **Evidencia:** [→ PRD §5 FR-01, FR-02, FR-03, FR-17], [→ PRD §6 RN-10, RN-11, RN-12, RN-13, RN-16, RN-18], [→ PRD §11 #1–#5], [→ PRD §18.4 AC-T4.1–AC-T4.5], [→ readme §5 HU-01], [→ readme §5.6 HU-06, HU-07], [→ readme §2.5], [→ readme §3.3 #1, #6, #14], [→ readme §6 OL-01, OL-02 (regla de proveedores), OL-03 (desidentificación, no-fuga)], [→ readme §6.1 #6], [→ backlog/01-requisitos.md §10 V-02, V-06; §15 P-02], [→ backlog/02-adrs.md ADR-40], [→ docs/AS-IS.md P12]
 **Dependencias:** ↪ US-034, US-035, US-037 (plataforma) · ↪ US-038 (esquema) · ⛔ ADR-40 · escenario más probable (US-049 AC-1; ADR-40 cierra en el S2) · 🔗 Consumida por: US-039 (cifrado en el seed), US-051, US-052, FEAT-02b/02c/04/11c (regresión de RN-11) · 🔗 Regresión [FR-15] → US-204 (Post-MVP) · 🔗 Regresión [RN-15] → US-148 (activa desde S6)
 **Valor:** el oncólogo solo confiará en una herramienta de IA sobre sus pacientes si la identidad de esos pacientes nunca sale del servicio clínico (P12: confianza = trazabilidad + control). Esta Feature entrega el acceso seguro, el registro y la búsqueda de pacientes con identidad cifrada, y garantiza desde el primer análisis que lo que viaja a la IA está desidentificado y que un dato real nunca toca la nube.
-**Stories:** US-049, US-211 (8 puntos, S1) · US-044, US-045, US-046, US-048, US-013 · ADR-40 (21 puntos, S2) · US-047 (5 puntos, S4) · US-050, US-221, US-222 (11 puntos, S6) — total 45 puntos
+**Stories:** US-049, US-211 (8 puntos, S1) · US-044, US-045, US-046, US-048, US-013 · ADR-40 (21 puntos, S2) · US-047, US-050, US-221, US-222 (16 puntos, S6; US-047 desde el S4, `[S4 resp. 1]`) — total 45 puntos
 
 > **Propuesta de división (talla XL).** Si DEC-03 confirma que el S1 no cabe, publicar como tres Features hermanas sin cambiar los IDs de las Stories: **T4a-1 Acceso** (US-211, US-044, US-045) · **T4a-2 Pacientes e identidad** (US-046, US-047, US-048) · **T4a-3 Desidentificación y proveedores** (US-013, US-049, US-050). T4a-3 y US-211 (sesión mínima del S1) son las únicas que bloquean el análisis (FEAT-06a, FEAT-10a); T4a-2 puede replegarse parcialmente al S2 usando el seed para la demo.
 
@@ -278,7 +278,9 @@ el payload (AC-3, AC-4).
 
 > Linear: [L1D-201](https://linear.app/l1der-lab-mjbc/issue/L1D-201)
 
-`FEAT-T4a` · Sprint 4 · Estimación **5** · HU-07 · FR-03 (manual), FR-17, RN-16 (dueña), RN-18 (campos, dueña), RN-13 · AC-T4.5 (parte S1) · ↪ US-046 · 🔗 Regresión [RN-17] → US-198 (Post-MVP)
+`FEAT-T4a` · Sprint 6 *(S4 → S6, `[S4 resp. 1]`)* · Estimación **5** · HU-07 · FR-03 (manual), FR-17, RN-16 (dueña), RN-18 (campos, dueña), RN-13 · AC-T4.5 (parte S1) · ↪ US-046 · 🔗 Regresión [RN-17] → US-198 (Post-MVP)
+
+> **Decidido (usuario, 2026-10-29):** pasa del S4 al **S6**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca `[S4 resp. 1]`.
 
 ## Story
 Como doctor, quiero registrar un paciente con un formulario mínimo, para empezar a
@@ -685,3 +687,4 @@ Auditoría de lectura de la ficha y documentos (US-102). Bloqueo de cuenta por i
 | Slicing v2 · Q-06 revisada | readme §5.0 S1 (HU-01, HU-06, HU-07) y OL-02 (regla de proveedores en el S1); PRD §14 S1 | Slicing v2 y Q-06 revisada (`01-requisitos.md` §15): acceso e identidad cifrada en el S2, alta manual en el S4 y regla de proveedores RN-12 (US-050) en el S6, antes de G-Piloto — **aceptado por el usuario el 2026-10-07**; ajuste del 2026-10-07: sesión mínima (US-211) en el S1 | El S1 usa los pacientes semilla por ruta directa con sesión real (US-211: login, cookie opaca y guard); la desidentificación (US-049) sí está en el S1. RN-12 no se relaja: hasta el S6 solo hay datos sintéticos y adapters locales, y US-050 se verifica antes de G-Piloto |
 | C-Pre6 | V-02 / US-045: usuarios solo por CLI | Usuario, 2026-10-11: auto-registro con aprobación y consola de administración | Usuario (`[Pre-S1 resp. 16]`): US-221 y US-222 en el S6, de baja prioridad; la CLI sigue siendo el workaround hasta entonces |
 | C-Pre7 | PRD §11 y readme §2.5: "el rol `admin` ve todos" | Usuario, 2026-10-11: el administrador no ve datos clínicos ni análisis | Usuario (`[Pre-S1 resp. 17]`): mínimo privilegio. US-045 (AC-6) y US-222 (AC-4). Enmendado en PRD v1.4 (E-04); el readme se actualiza con US-033 |
+| S4-2026-10-29 | Slicing v2: alta manual de pacientes (US-047) en el S4 | Refinamiento del S4 (usuario, 2026-10-29): pasa al S6 (gestión de usuarios y pacientes, menor prioridad); el S4 se compromete con ≈ 57 pts y se recorta de menor a mayor prioridad (gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca) `[S4 resp. 1]` | Decisión del usuario |

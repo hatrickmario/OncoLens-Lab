@@ -2,13 +2,13 @@
 
 > Linear: [L1D-10](https://linear.app/l1der-lab-mjbc/issue/L1D-10)
 
-**Talla:** XL (propone división) · **Sprint:** 4 (reordenamiento del 2026-10-23, antes S3; en el S4 lee del paciente sintético sembrado y en el S5 se reconecta a la extracción) (US-088, US-089, US-090, US-092, US-093) · `si-hay-capacidad` (US-091, US-094) · **Capacidad:** CAP-02 (AC-02.1, AC-02.2, AC-02.3, AC-02.4, AC-02.6, AC-02.7 en la vista) · CAP-06 (AC-06.2 completo) · CAP-11 (AC-11.4, parte de la vista) · T-1 (AC-T1.1) · T-4 (AC-T4.2, AC-T4.3 parte S2) · **Recorrido principal:** sí (hipótesis 1: reconstruir el caso) · no (US-091, US-094)
+**Talla:** XL (propone división) · **Sprint:** 5 (reordenamiento del 2026-10-23, antes S3 → S4; en el refinamiento del S4 pasa al S5, `[S4 resp. 1]`, donde lee del paciente sintético sembrado y se reconecta a la extracción) (US-088, US-089, US-090, US-092, US-093) · `si-hay-capacidad` (US-091, US-094) · **Capacidad:** CAP-02 (AC-02.1, AC-02.2, AC-02.3, AC-02.4, AC-02.6, AC-02.7 en la vista) · CAP-06 (AC-06.2 completo) · CAP-11 (AC-11.4, parte de la vista) · T-1 (AC-T1.1) · T-4 (AC-T4.2, AC-T4.3 parte S2) · **Recorrido principal:** sí (hipótesis 1: reconstruir el caso) · no (US-091, US-094)
 **Requisitos:** FR-21 (vista, dueña vía HU-15) · FR-04 (parte S2: tendencia y datos extraídos en la ficha, vía HU-02/HU-05) · NFR-03 (p95 de la vista ≤ 2 s, medido) · NFR-12 · registro manual de `PriorTreatment` y `ClinicalAttribute` (readme §4.1) · RN-07 (regresión) · RN-11 (regresión)
 **Evidencia:** [→ PRD §5 FR-04, FR-21], [→ PRD §6 RN-07, RN-11], [→ PRD §7 NFR (vista de caso ≤ 2 s; accesibilidad)], [→ PRD §10 (`GET …/case`, `…/clinical-attributes`, `…/prior-treatments`)], [→ PRD §18.2 Evento derivado], [→ PRD §18.3.2 AC-02.1–AC-02.4, AC-02.6, AC-02.7, M-02.2, M-02.4], [→ PRD §18.3.6 AC-06.2], [→ PRD §18.3.11 AC-11.4], [→ PRD §18.4 AC-T1.1, AC-T4.2, AC-T4.3], [→ readme §5 HU-05, HU-15], [→ readme §4.1 `CaseView`, `Biomarker.trend`, endpoints adicionales], [→ readme §4.2 `ClinicalContext`], [→ readme §3.3 #24, #32, #33], [→ readme §6 OL-03 (contexto)], [→ backlog/02-adrs.md DEC-08], [→ docs/AS-IS.md P1, P10, JTBD 1 y 7]
 **Dependencias:** ↪ US-087 (datos extraídos), US-051 (ficha), US-052 (constructor de contexto), US-053 (análisis como evento derivado) · ⛔ DEC-08 · escenario más probable (US-091) · 🔗 Consume: US-212 (descarga del PDF de origen, S3), US-080 (visor, `si-hay-capacidad`), US-098 (normalización final de lo manual) · 🔗 Consumida por: FEAT-04 US-003, US-004 (checklist en la vista) · 🔗 Regresión [FR-18] → US-102 (lectura de la vista de caso auditada) · 🔗 Regresión [RN-11] → US-049 · 🔗 Medido en: US-105 (M-02.1, M-02.2, M-02.4) · 🔗 Regresión [RN-17] → US-198 (Post-MVP, registro manual)
 **Valor:** la reconstrucción manual del caso es el dolor "transversal más fuerte" del Discovery (P1; JTBD 1 y 7). Con esta Feature el oncólogo ve en una pantalla, en orden cronológico y con el origen de cada dato, el diagnóstico, los exámenes, las líneas de tratamiento previas, la evolución del PSA con su tendencia y los atributos clínicos, y el análisis de evidencia recibe ese mismo caso desidentificado.
 **Workaround en el MVP:** tendencia (US-091) → la vista de caso muestra la serie fechada y el oncólogo lee la tendencia; registro manual de tratamientos previos y atributos (US-094) → cargar un documento; el registro manual cubre biomarcadores y diagnóstico (US-110, US-111).
-**Stories:** US-088, US-089, US-090, US-092, US-093 (21 puntos, S3) · US-091, US-094 (8 puntos, `si-hay-capacidad`)
+**Stories:** US-088, US-089, US-090, US-092, US-093 (21 puntos, S5; S3 → S4 → S5, `[S4 resp. 1]`) · US-091, US-094 (8 puntos, `si-hay-capacidad`)
 
 > **Propuesta de división (talla XL: 7 historias).** Publicar sin cambiar IDs como **02b-1 Vista de caso** (US-088, US-089, US-090) y **02b-2 Ficha, tendencia, contexto y registro manual** (US-091, US-092, US-093, US-094). 02b-1 es la que consume FEAT-04 en el S3.
 
@@ -32,7 +32,9 @@
 
 > Linear: [L1D-74](https://linear.app/l1der-lab-mjbc/issue/L1D-74)
 
-`FEAT-02b` · Sprint 4 · Estimación **5** · HU-15 · FR-21 (timeline, dueña) · AC-02.1, AC-02.2, AC-02.6, AC-11.4 (vista) · ↪ US-087, US-053 · 🔗 Regresión [FR-18] → US-102 · 🔗 Medido en: US-105 (M-02.2, M-02.4)
+`FEAT-02b` · Sprint 5 *(S4 → S5, `[S4 resp. 1]`)* · Estimación **5** · HU-15 · FR-21 (timeline, dueña) · AC-02.1, AC-02.2, AC-02.6, AC-11.4 (vista) · ↪ US-087, US-053 · 🔗 Regresión [FR-18] → US-102 · 🔗 Medido en: US-105 (M-02.2, M-02.4)
+
+> **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 
 > **Reordenamiento (usuario, 2026-10-23):** S3 → S4. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
@@ -69,6 +71,12 @@ caso sin reconstruirlo a mano.
 - **AC-7 (borde · paciente sin datos)** · Dado un paciente sintético sin documentos ni
   datos manuales, cuando se llama a `/case`, entonces responde `200` con
   `timeline = []`. (asumido)
+- **AC-8 (borde · checklist en la vista de caso)** · Dado F-M2 de FX-04-b con `test-1.0.0`,
+  cuando se llama a `GET /platform/patients/{id}/case`, entonces `CaseView.completeness` trae
+  los mismos 12 ítems, estados y `catalogVersion` que `GET …/completeness` (US-003 AC-1),
+  calculados por el mismo `CompletenessService`. `[AC-04.1]` `[readme §4.1]` (heredado de
+  US-003 AC-2, `[S4 resp. 6]`)
+  > **Decidido (usuario, 2026-10-29):** la parte de la vista de caso del antiguo AC-2 de US-003 pasa aquí, al S5, con la vista de caso `[S4 resp. 6]`.
 
 ## Contexto técnico
 `CaseTimelineService` en `clinical-api` (determinista, sin IA) `[PRD §8]`: deriva eventos
@@ -88,7 +96,9 @@ sin N+1 (M-02.4). Tests: Vitest + Supertest con FX-02b-a.
 
 > Linear: [L1D-75](https://linear.app/l1der-lab-mjbc/issue/L1D-75)
 
-`FEAT-02b` · Sprint 4 · Estimación **5** · HU-15 · FR-21 (tratamientos, series, atributos) · AC-02.3, AC-02.4 (series), AC-02.6, AC-02.7 (vista) · ↪ US-088 · 🔗 Consume: US-099 (fuentes adicionales) · 🔗 Medido en: US-105 (M-02.2)
+`FEAT-02b` · Sprint 5 *(S4 → S5, `[S4 resp. 1]`)* · Estimación **5** · HU-15 · FR-21 (tratamientos, series, atributos) · AC-02.3, AC-02.4 (series), AC-02.6, AC-02.7 (vista) · ↪ US-088 · 🔗 Consume: US-099 (fuentes adicionales) · 🔗 Medido en: US-105 (M-02.2)
+
+> **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 
 > **Reordenamiento (usuario, 2026-10-23):** S3 → S4. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
@@ -135,7 +145,9 @@ FX-02b-a.
 
 > Linear: [L1D-76](https://linear.app/l1der-lab-mjbc/issue/L1D-76)
 
-`FEAT-02b` · Sprint 4 · Estimación **5** · HU-15 · FR-21 (UI), NFR-12 · AC-02.1, AC-02.2, AC-02.3, AC-02.4, AC-T1.1 · ↪ US-088, US-089, US-212 (descarga del PDF de origen) · 🔗 Relacionada: US-080 (visor, `si-hay-capacidad`) · 🔗 Regresión [RN-23] → US-068 (textos nuevos) · 🔗 Consumida por: FEAT-04 US-004, US-079 (carga desde la vista)
+`FEAT-02b` · Sprint 5 *(S4 → S5, `[S4 resp. 1]`)* · Estimación **5** · HU-15 · FR-21 (UI), NFR-12 · AC-02.1, AC-02.2, AC-02.3, AC-02.4, AC-T1.1 · ↪ US-088, US-089, US-212 (descarga del PDF de origen) · 🔗 Relacionada: US-080 (visor, `si-hay-capacidad`) · 🔗 Regresión [RN-23] → US-068 (textos nuevos) · 🔗 Consumida por: FEAT-04 US-004, US-079 (carga desde la vista)
+
+> **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 
 > **Reordenamiento (usuario, 2026-10-23):** S3 → S4. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
@@ -231,7 +243,9 @@ con la unidad normalizada. El umbral vive en `packages/clinical-catalogs` `[FR-0
 
 > Linear: [L1D-78](https://linear.app/l1der-lab-mjbc/issue/L1D-78)
 
-`FEAT-02b` · Sprint 4 · Estimación **3** · HU-05 · FR-04 (parte S2: procedencia OCR y pendientes), FR-06 (origen del semáforo) · AC-T1.1 (ficha) · ↪ US-087, US-051, US-212 ("Ver documento" descarga el PDF de origen) · ⛔ DEC-09 · escenario más probable (AC-3)
+`FEAT-02b` · Sprint 5 *(S4 → S5, `[S4 resp. 1]`)* · Estimación **3** · HU-05 · FR-04 (parte S2: procedencia OCR y pendientes), FR-06 (origen del semáforo) · AC-T1.1 (ficha) · ↪ US-087, US-051, US-212 ("Ver documento" descarga el PDF de origen) · ⛔ DEC-09 · escenario más probable (AC-3)
+
+> **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 
 > **Reordenamiento (usuario, 2026-10-23):** S3 → S4. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
@@ -272,7 +286,9 @@ de test.
 
 > Linear: [L1D-79](https://linear.app/l1der-lab-mjbc/issue/L1D-79)
 
-`FEAT-02b` · Sprint 4 · Estimación **3** · HU-03, HU-15 · FR-09 (contexto con tendencias y eventos), RN-11, RN-07 · AC-06.2 (completo), AC-T4.2, AC-T4.3 (parte S2) · ↪ US-052, US-087 · 🔗 Relacionada: US-091 (tendencias, `si-hay-capacidad`) · 🔗 Regresión [RN-11] → US-049 · 🔗 Regresión [RN-07] → US-065
+`FEAT-02b` · Sprint 5 *(S4 → S5, `[S4 resp. 1]`)* · Estimación **3** · HU-03, HU-15 · FR-09 (contexto con tendencias y eventos), RN-11, RN-07 · AC-06.2 (completo), AC-T4.2, AC-T4.3 (parte S2) · ↪ US-052, US-087 · 🔗 Relacionada: US-091 (tendencias, `si-hay-capacidad`) · 🔗 Regresión [RN-11] → US-049 · 🔗 Regresión [RN-07] → US-065
+
+> **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 
 > **Reordenamiento (usuario, 2026-10-23):** S3 → S4. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
@@ -377,3 +393,4 @@ evolución (`ClinicalEvent` manual, FEAT-11b, Post-MVP).
 | P-02 | readme HU-15: `403` sin pertenencia al equipo tratante (S5) | Decisión P-02: autorización por paciente fuera del MVP | P-02: sin `403` por equipo (US-204, Post-MVP) |
 | — | readme §4.1 `CaseView`: sin campo propio para "Sin fecha confiable" | PRD AC-02.2: sección aparte | Sin cambio de contrato: la API marca `datePrecision = incierta` y la UI separa la sección (US-088 AC-3, US-090) |
 | Slicing v2 | PRD §14 S2, FR-21 y FR-04 (tendencia en el S2); readme §5.0 S2 (HU-15) | Slicing v2 aprobado por el usuario (`01-requisitos.md` §15, 2026-10-07): vista de caso en el S3; tendencia y registro manual de tratamientos y atributos `si-hay-capacidad` | Se siguió el slicing v2; AC-02.4 (tendencia) queda en US-091 `si-hay-capacidad`, con la serie visible en US-089 |
+| S4-2026-10-29 | Reordenamiento del 2026-10-23: vista de caso (US-088…US-093) en el S4 | Refinamiento del S4 (usuario, 2026-10-29): pasa al S5 por el alcance del S4 (≈ 57 pts) y el orden de prioridad (RAG de conocimiento primero) `[S4 resp. 1]`; US-088 hereda el AC-2 de `/case` de US-003 `[S4 resp. 6]` | Decisión del usuario |

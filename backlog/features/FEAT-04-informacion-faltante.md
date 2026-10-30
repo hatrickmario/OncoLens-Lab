@@ -2,12 +2,12 @@
 
 > Linear: [L1D-14](https://linear.app/l1der-lab-mjbc/issue/L1D-14)
 
-**Talla:** L · **Sprint:** 3 (DEC-01, US-001, US-002, US-006: consumidas por la aplicabilidad; reordenamiento del 2026-10-23) · 4 (US-003, US-004, US-005) · **Capacidad:** CAP-04 · T-1 (AC-T1.1 en el checklist, AC-T1.4 en faltantes) · T-2 (produce el inciso b) · **Recorrido principal:** sí (hipótesis 2: identificar los faltantes)
+**Talla:** L · **Sprint:** 3 (US-001, US-002, US-006: consumidas por la aplicabilidad; reordenamiento del 2026-10-23) · 4 (US-003, US-005) · 5 (DEC-01 y US-004, refinamiento del S4, `[S4 resp. 1]`) · **Capacidad:** CAP-04 · T-1 (AC-T1.1 en el checklist, AC-T1.4 en faltantes) · T-2 (produce el inciso b) · **Recorrido principal:** sí (hipótesis 2: identificar los faltantes)
 **Requisitos:** FR-23 (dueña, vía HU-18); FR-09 (contexto con faltantes), FR-27 inciso (b) (produce el dato); RN-29 (dueña), RN-26, RN-11, RN-07, RN-22
 **Evidencia:** [→ PRD §5 FR-23], [→ PRD §18 AC-04.1…AC-04.5], [→ PRD §18 M-04.1, M-04.2, M-04.3], [→ PRD §6 RN-26], [→ PRD §6 RN-29], [→ PRD §6 RN-11], [→ PRD §16 TBD-12], [→ PRD §17 FR-23 → HU-18], [→ PRD §2 G-12], [→ PRD §18 AC-T1.1, AC-T1.4, AC-T4.3], [→ readme §5.6 HU-18], [→ readme §4.1 `CaseView.completeness`, `continueWithWarning`, `missingCriticalCount`, `Provenance`], [→ readme §4.2 `ClinicalContext.missingCriticalData`], [→ readme §3.1 `AIAnalysisRecord.missing_critical_data`], [→ readme §3.3 #29], [→ readme §3.3 #38], [→ readme §6 OL-01 (paciente e)], [→ readme §6 OL-03], [→ backlog/01-requisitos.md §14 Q-03, Q-04; §15 P-03], [→ backlog/02-adrs.md DEC-05, Resoluciones P-03], [→ backlog/04-auditoria.md (hallazgos del piloto)], [→ docs/AS-IS.md P4, JTBD 2], [→ CLAUDE.md]
 **Dependencias:** ⛔ DEC-01 (catálogo `propuesta` revisado por el oncólogo, P-03; no bloquea las historias técnicas; escenario `propuesta_revisada` aceptado para el S3, cierre en la sesión de oncólogos del S4 `[S3 resp. 1]`) · ⛔ DEC-05 (cerrada en el Pre-S1: Gleason/ISUP en `Diagnosis.grade`) · ↪ US-041, US-042 (catálogo v1 y validador mínimo, `si-hay-capacidad`) · ↪ US-052, US-053 (gateway, S1) · ↪ US-061 (panel, S1) · ↪ US-088, US-090 (vista de caso, S3) · ↪ US-079 (carga, S2) · ↪ US-094 (registro manual de atributos y tratamientos previos, `si-hay-capacidad`) · ↪ US-110, US-111 (registro manual de biomarcadores y diagnóstico, S4) · 🔗 Produce para: US-128 (inciso b), US-124 (Desconocido: falta en el paciente), US-116 (faltantes como "desconocido" en Backend 2), US-177 (re-ejecución) · 🔗 Medido en: US-131 (M-04.1, M-04.2) · 🔗 Regresión [FR-18] → US-102
 **Valor:** hoy el oncólogo descubre el faltante *después* de analizar: caso incompleto → análisis → descubre el faltante → vuelve atrás → pide el examen → espera → reanaliza. Es "el loop más costoso" del Discovery (AS-IS, P4: "¿Qué me falta para poder analizar bien este caso?", JTBD 2). Con esta Feature, el oncólogo ve qué datos críticos faltan antes de preguntar, puede cargarlos o registrarlos desde el mismo checklist o continuar con un aviso, y el análisis declara lo que no sabía. El sistema nunca le impide continuar (PP-6).
-**Stories:** DEC-01, US-001 … US-006 (23 puntos: 14 en el S3 —DEC-01, US-001, US-002, US-006— y 9 en el S4 —US-003, US-004, US-005—; reordenamiento del 2026-10-23)
+**Stories:** DEC-01, US-001 … US-006 (23 puntos: 13 en el S3 —US-001, US-002, US-006—, 6 en el S4 —US-003, US-005— y 4 en el S5 —DEC-01, US-004—; reordenamiento del 2026-10-23 y refinamiento del S4, `[S4 resp. 1]`, `[S4 resp. 6]`)
 
 > **Talla L, no XL:** son 6 historias técnicas más 1 de decisión, todas en `clinical-api` + `web` + `packages/clinical-catalogs`. `rag-orchestrator` solo valida la versión del catálogo: el uso de los faltantes en el prompt es de US-116 y en la aplicabilidad, de US-124.
 
@@ -23,7 +23,9 @@
 
 > Linear: [L1D-92](https://linear.app/l1der-lab-mjbc/issue/L1D-92)
 
-`FEAT-04` · Sprint 3 (antes del cierre) · Estimación **1** · — (decisión) · TBD-12 · M-04.3 (gobierno; P-03) · RN-29 · Dueño: **oncólogo asesor** (prepara Ingeniería) · ⛔ DEC-05 (Q5, cerrada en el Pre-S1) · ↪ US-001 · 🔗 Bloquea: DEC-19 (US-031, criterio de "listo", S6)
+`FEAT-04` · Sprint 5 *(S3 con cierre en la sesión de oncólogos del S4 → S5, `[S4 resp. 1]`)* · Estimación **1** · — (decisión) · TBD-12 · M-04.3 (gobierno; P-03) · RN-29 · Dueño: **oncólogo asesor** (prepara Ingeniería) · ⛔ DEC-05 (Q5, cerrada en el Pre-S1) · ↪ US-001 · 🔗 Bloquea: DEC-19 (US-031, criterio de "listo", S6)
+
+> **Decidido (usuario, 2026-10-29):** su cierre, previsto en la sesión de oncólogos del S4, pasa al **S5**; el escenario `propuesta_revisada` sigue aceptado y las historias del checklist avanzan sobre él. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca `[S4 resp. 1]`.
 
 > **Reordenamiento (usuario, 2026-10-23):** S4 → S3. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
@@ -289,7 +291,9 @@ especificidad (US-131). Decidir el contenido real del catálogo (DEC-01).
 
 > Linear: [L1D-95](https://linear.app/l1der-lab-mjbc/issue/L1D-95)
 
-`FEAT-04` · Sprint 4 · Estimación **3** · HU-18 · FR-23, FR-01, FR-18 · AC-04.1, AC-T1.1 · ↪ US-002, US-088 · 🔗 Regresión [FR-18] → US-102 · 🔗 Medido en: US-105 (M-02.4, p95 de la vista de caso con el checklist) · 🔗 Regresión [RN-15] → US-148 (activa desde S6: `/completeness` y `/case` **no** responden `403` por opt-out, FR-16) · 🔗 Regresión [FR-15] → US-204 (Post-MVP)
+`FEAT-04` · Sprint 4 · Estimación **3** · HU-18 · FR-23, FR-01 · AC-04.1, AC-T1.1 · ↪ US-002 · 🔗 Produce para: US-088 (`CaseView.completeness`, S5; AC heredado), US-005 (enlace a la ficha), US-126 (enlace a la ficha) · 🔗 Regresión [FR-18] → US-102 (S6; AC heredado) · 🔗 Medido en: US-105 (M-02.4, p95 de la vista de caso con el checklist) · 🔗 Regresión [RN-15] → US-148 (activa desde S6: `/completeness` y `/case` **no** responden `403` por opt-out, FR-16) · 🔗 Regresión [FR-15] → US-204 (Post-MVP)
+
+> **Decidido (usuario, 2026-10-29):** recortada para el S4 y comprometida en él. El AC-2 en su parte de la vista de caso (`GET …/case`) pasa a **US-088** (S5, AC-8) y el AC-7 (lectura auditada) pasa a **US-102** (S6, AC-6); la parte de la ficha (`missingCriticalCount`) se queda aquí porque US-005 AC-3 enlaza a la ficha. El AC-6 queda decidido: `200` con `items = []` y `cancerTypeEnabled = false`. Sigue en **3 pts** por el cableado de la tarea 1.12b de `l1d-94` `[S4 resp. 6]`.
 
 ## Story
 Como oncólogo, quiero consultar el checklist de datos críticos de mi paciente,
@@ -301,10 +305,10 @@ debo cargar lo que falta.
   catálogo `test-1.0.0` cargado, cuando llama a `GET /platform/patients/{id}/completeness`,
   entonces recibe `200` con `items` igual al resultado del AC-2 de US-002 y
   `catalogVersion = "test-1.0.0"`. `[AC-04.1]` `[readme §4.1]`
-- **AC-2 (vista de caso y ficha)** · Dado F-M2, cuando se llama a
-  `GET /platform/patients/{id}/case` y a `GET /platform/patients/{id}`, entonces
-  `CaseView.completeness` trae los mismos 12 ítems y estados que el AC-1 con el mismo
-  `catalogVersion`, y `PatientSummary.missingCriticalCount = 6`. `[readme §4.1]` `[AC-04.1]`
+- **AC-2 (ficha)** · Dado F-M2, cuando se llama a `GET /platform/patients/{id}`, entonces
+  `PatientSummary.missingCriticalCount = 6`, calculado por el mismo servicio que el AC-1.
+  `[readme §4.1]` `[AC-04.1]` · la parte de `GET …/case` (`CaseView.completeness`) pasó a
+  US-088 AC-8 `[S4 resp. 6]`
 - **AC-3 (origen de cada ítem)** · Dada la respuesta del AC-1, cuando se inspecciona cada
   ítem, entonces todo ítem `presente_*` trae `origin` (`documento`, `manual` o
   `correccion`) y `provenance` (`entryMethod`, `reviewStatus`, `sourceDocumentId` y
@@ -321,11 +325,9 @@ debo cargar lo que falta.
 - **AC-6 (borde · tipo de cáncer no habilitado)** · Dado un paciente sintético con
   `Diagnosis` activo de un tipo que no está en `ENABLED_CANCER_TYPES`, cuando se llama a
   `/completeness`, entonces la respuesta es `200` con `items = []` y
-  `cancerTypeEnabled = false`. `(asumido)`
-  > Pendiente de definir en refinamiento (dueño: Ingeniería · afecta: AC-6): ¿qué responde `/completeness` para un tipo no habilitado o para un paciente sin `Diagnosis` activo: `200` con lista vacía y bandera, o `422`? El contrato de `/completeness` no está en el OpenAPI de readme §4.1 (solo en la tabla de endpoints).
-- **AC-7 (borde · lectura auditada)** · Dado el AC-1, cuando se completa la llamada,
-  entonces existe una fila `completeness.read` en `audit_log` con el UUID del paciente y
-  sin PHI. `[FR-18]` `(asumido: hallazgo M-18 del piloto)`
+  `cancerTypeEnabled = false`. `[S4 resp. 6]`
+- ~~AC-7 (borde · lectura auditada)~~ · **Movido a US-102 AC-6** (FEAT-T1b, S6), donde vive
+  la auditoría de lecturas `[S4 resp. 6]`.
 
 > **Decidido (usuario, 2026-10-24):** el seed usa los códigos del catálogo (`RE`/`RP`/`BRCA`/`HRR`), sin alias en el catálogo ni mapeo en código; el arreglo del seed (hoy "Receptor de estrógeno"/"Receptor de progesterona") es una tarea de esta historia (L1D-95), pendiente de hacer.
 
@@ -333,10 +335,11 @@ debo cargar lo que falta.
 
 ## Contexto técnico
 `completeness.controller.ts` + `completeness.schema.ts` (Zod en el borde) en el módulo
-`completeness`. `CaseTimelineService` (US-088) llama a `CompletenessService` para llenar
-`CaseView.completeness`. La ficha obtiene `missingCriticalCount` (número de `faltante`)
-del mismo servicio. Las tres salidas usan **una sola** implementación. La auditoría usa
-el *middleware* de US-102.
+`completeness`. La ficha obtiene `missingCriticalCount` (número de `faltante`) del mismo
+servicio; en el S5, `CaseTimelineService` (US-088) lo reutiliza para llenar
+`CaseView.completeness` (una sola implementación). En el S4 queda además el cableado de la
+tarea 1.12b de `l1d-94` (router `/completeness` montado en la app y en el OpenAPI de
+`clinical-api`). La auditoría de la lectura llega con US-102 (S6).
 
 Contrato propuesto de `/completeness` (se agrega al spec OpenAPI de 4.1 y se regenera
 `packages/api-contracts`, según la DoD):
@@ -363,8 +366,9 @@ logs registran solo el UUID del paciente y el `traceId` `[CLAUDE.md]`. Una consu
 destino, sin N+1, para no empeorar el p95 de la vista de caso (M-02.4).
 
 ## INVEST
-**Small** ✓ un endpoint de lectura y dos puntos de integración con un servicio ya hecho.
-**Testable** ✓ 7 tests de integración con Supertest sobre FX-04-a/FX-04-b (AC-1 a AC-7).
+**Small** ✓ un endpoint de lectura, el cableado de 1.12b y el contador de la ficha.
+**Testable** ✓ 5 tests de integración con Supertest sobre FX-04-a/FX-04-b (AC-1 a AC-6, sin el
+AC-7 movido).
 
 ---
 
@@ -372,7 +376,9 @@ destino, sin N+1, para no empeorar el p95 de la vista de caso (M-02.4).
 
 > Linear: [L1D-96](https://linear.app/l1der-lab-mjbc/issue/L1D-96)
 
-`FEAT-04` · Sprint 4 · Estimación **3** · HU-18 · FR-23, NFR-12 · AC-04.1, AC-T1.1 · ↪ US-003, US-090, US-079, US-111, US-212 · 🔗 Relacionada: US-094 (registro manual de atributos y tratamientos, `si-hay-capacidad`), US-080 (visor, `si-hay-capacidad`) · 🔗 Consume: US-110 (registro manual de biomarcadores y diagnóstico, FEAT-03b) · 🔗 Regresión [RN-23] → US-068 (textos nuevos de UI) · 🔗 Regresión [RN-17] → US-198 (Post-MVP)
+`FEAT-04` · Sprint 5 *(S4 → S5, `[S4 resp. 1]`)* · Estimación **3** · HU-18 · FR-23, NFR-12 · AC-04.1, AC-T1.1 · ↪ US-003, US-090, US-079, US-111, US-212 · 🔗 Relacionada: US-094 (registro manual de atributos y tratamientos, `si-hay-capacidad`), US-080 (visor, `si-hay-capacidad`) · 🔗 Consume: US-110 (registro manual de biomarcadores y diagnóstico, FEAT-03b) · 🔗 Regresión [RN-23] → US-068 (textos nuevos de UI) · 🔗 Regresión [RN-17] → US-198 (Post-MVP)
+
+> **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 
 ## Story
 Como oncólogo, quiero ver en la vista de caso el estado de cada dato crítico y,
@@ -434,38 +440,57 @@ readme §4.1).
 
 > Linear: [L1D-97](https://linear.app/l1der-lab-mjbc/issue/L1D-97)
 
-`FEAT-04` · Sprint 4 · Estimación **3** · HU-18 · FR-23, RN-26, NFR-12 · AC-04.2 · ↪ US-003, US-061 · 🔗 Regresión [RN-26] → US-071 · 🔗 Regresión [RN-23] → US-068 · 🔗 Produce para: US-137 (VM-5: "aviso de faltantes correcto / útil", S5)
+`FEAT-04` · Sprint 4 · Estimación **3** · HU-18 · FR-23, RN-26, NFR-12 · AC-04.2 · ↪ US-003, US-061, US-051 (ficha) · 🔗 Regresión [RN-26] → US-071 · 🔗 Regresión [RN-23] → US-068 · 🔗 Produce para: US-137 (VM-5: "aviso de faltantes correcto / útil", S5)
 
 ## Story
 Como oncólogo, quiero que, antes de analizar la evidencia, el sistema me diga qué
 datos críticos faltan y me deje cargarlos o continuar, para decidir yo si analizo
 ya o completo antes el caso, sin que nada me bloquee.
 
+> **Decidido (usuario, 2026-10-29):** el enlace del faltante va a la **sección ya existente de la ficha** donde vive el dato (diagnóstico o biomarcadores), con un ancla en su encabezado (`id`) que recibe el foco; las anclas son una tarea pequeña de esta historia y no se crea ninguna sección nueva `[S4 resp. 14]`. Se reconecta con la vista de caso en el S5, cuando existan US-090 y US-004 `[S4 resp. 6]`. Los textos visibles siguen `docs/ux/S4/pantallas-s4.md` (S4-03, variante elegida por el usuario): el bloque de faltantes no bloquea y «Analizar evidencia» está siempre habilitado.
+
 ## AC (Given/When/Then)
-- **AC-1 (happy path · aviso)** · Dado el oncólogo en el panel de análisis de F-M2,
-  cuando pulsa "Analizar evidencia", entonces, antes de enviar ninguna petición de
-  análisis, se muestra un aviso que lista los 6 faltantes por su etiqueta, con los botones
-  "Cargar información" y "Continuar con aviso". `[AC-04.2]` `[FR-23]`
-- **AC-2 (continuar con aviso)** · Dado el aviso del AC-1, cuando el oncólogo elige
-  "Continuar con aviso", entonces `web` envía exactamente un
-  `POST /api/evidence-analyses` con `continueWithWarning = true`. `[AC-04.2]` `[readme §4.1]` `[RN-26]`
-- **AC-3 (cargar información)** · Dado el aviso del AC-1, cuando el oncólogo elige
-  "Cargar información", entonces se abre la sección "Datos críticos" de la vista de caso
-  del mismo paciente y no se envía ninguna petición de análisis. `[AC-04.2]` `[FR-23]`
-- **AC-4 (borde · sin faltantes)** · Dado F-M1 (sin faltantes), cuando el oncólogo pulsa
-  "Analizar evidencia", entonces no aparece el aviso y se envía un
+- **AC-1 (happy path · aviso antes de analizar)** · Dado el oncólogo en el panel de
+  análisis de F-M2, cuando se carga el formulario, entonces, antes del botón «Analizar
+  evidencia» y sin enviar ninguna petición de análisis, aparece «⚠ Faltan 6 datos críticos
+  para este tipo de cáncer» (`role="status"`) con una lista `ul` de los 6 faltantes por su
+  etiqueta del catálogo, cada uno con su enlace «Registrar ‹etiqueta› en la ficha», y el
+  texto «El análisis puede hacerse igual; esos criterios saldrán como «Desconocido» y el
+  orden por aplicabilidad puede cambiar al registrarlos.» `[AC-04.2]` `[FR-23]`
+  `[docs/ux/S4 S4-03]`
+- **AC-2 (continuar con aviso)** · Dado el bloque del AC-1, cuando el oncólogo pulsa
+  «Analizar evidencia» (habilitado), entonces `web` envía exactamente un
+  `POST /api/evidence-analyses` con `continueWithWarning = true`. `[AC-04.2]`
+  `[readme §4.1]` `[RN-26]`
+- **AC-3 (registrar en la ficha)** · Dado el bloque del AC-1, cuando el oncólogo pulsa
+  «Registrar Ki-67 en la ficha» (destino `Biomarker`) y, en otra prueba, «Registrar grado
+  en la ficha» (destino `Diagnosis`), entonces navega a `/pacientes/{id}#biomarcadores` y a
+  `/pacientes/{id}#diagnostico`, el foco queda en el encabezado de esa sección existente de
+  la ficha y no se envía ninguna petición de análisis. `[AC-04.2]` `[FR-23]`
+  `[S4 resp. 14]` (asumido: un destino sin sección propia en la ficha —`ClinicalAttribute`,
+  `PriorTreatment`— enlaza al encabezado principal de la ficha)
+- **AC-4 (borde · sin faltantes)** · Dado F-M1 (sin faltantes), cuando se carga el
+  formulario, entonces no aparece el bloque y «Analizar evidencia» envía un
   `POST /api/evidence-analyses` con `continueWithWarning = false`. `[FR-23]`
 - **AC-5 (borde · checklist caído)** · Dado que `GET /platform/patients/{id}/completeness`
-  responde `5xx`, cuando el oncólogo pulsa "Analizar evidencia", entonces se muestra "No
-  se pudieron verificar los datos críticos" con "Continuar con aviso" y "Cancelar"; al
-  continuar, se envía el análisis con `continueWithWarning = true`. El servidor sigue
-  calculando y enviando los faltantes (US-006). `[RN-26]` `[PP-5]` `(asumido: hallazgo M-07 del piloto)`
-- **AC-6 (borde · accesibilidad)** · Dado el aviso del AC-1, cuando aparece, entonces
-  recibe el foco, se anuncia en una región `aria-live` y sus dos botones son operables
-  con teclado. `[NFR-12]`
+  responde `5xx`, cuando se carga el formulario, entonces se muestra «No se pudieron
+  verificar los datos críticos» y «Analizar evidencia» sigue habilitado; al pulsarlo se
+  envía el análisis con `continueWithWarning = true`. El servidor sigue calculando y
+  enviando los faltantes (US-006). `[RN-26]` `[PP-5]` (asumido: hallazgo M-07 del piloto)
+- **AC-6 (borde · tipo no habilitado)** · Dado un paciente con `cancerTypeEnabled = false`
+  en `/completeness`, cuando se carga el formulario, entonces no aparece el bloque de
+  faltantes y se ve el estado propio de «tipo no habilitado» del S3. `[S4 resp. 6]`
+  `[docs/ux/S4 S4-03]`
+- **AC-7 (borde · accesibilidad)** · Dado el bloque del AC-1, cuando se navega con teclado,
+  entonces el resumen está asociado al botón «Analizar evidencia» con `aria-describedby`,
+  cada enlace «Registrar … en la ficha» es operable y el encabezado de destino de la ficha
+  (`h2` con `id` y `tabindex="-1"`) recibe el foco al llegar. `[NFR-12]` `[S4 resp. 14]`
 
 ## Contexto técnico
-Panel de análisis de OL-04 (`apps/web`). La lista del aviso sale de `GET …/completeness`
+Panel de análisis de OL-04 (`apps/web`). **Tarea pequeña de esta historia `[S4 resp. 14]`:**
+añadir `id="diagnostico"` e `id="biomarcadores"` (con `tabindex="-1"`) a los encabezados
+existentes de esas secciones de la ficha (US-051), sin crear ninguna sección; el enlace elige
+el ancla por `destination.entity` del ítem de `/completeness`. La lista del aviso sale de `GET …/completeness`
 (vía Route Handler) y es solo informativa: la lista que viaja al análisis la recalcula
 `clinical-api` en el servidor (US-006). El aviso aparece **antes de cada análisis**
 (FR-23), también si el oncólogo ya continuó en uno anterior. Solo lista los `faltante`,
@@ -480,8 +505,8 @@ y `patientDataWarning` en la aplicabilidad (US-124). Calificar si el aviso fue c
 útil (VM-5, US-137, S4).
 
 ## INVEST
-**Small** ✓ un diálogo y un flag en un request que ya existe.
-**Testable** ✓ los 6 AC son tests E2E con Playwright.
+**Small** ✓ un bloque informativo, dos anclas y un flag en un request que ya existe.
+**Testable** ✓ los 7 AC son tests E2E con Playwright (más `visual-check`).
 
 ---
 
@@ -577,6 +602,9 @@ FR-12 (FEAT-11a).
 | — | readme §5.0 / PRD §14: egreso en el S4 (`422` por egresado) | Slicing adoptado: ciclo de vida Post-MVP | Regresión hacia US-198 (Post-MVP) |
 | Slicing v2 | PRD §14 S3 y readme §5.0 S3: faltantes en el S3 | Slicing v2 aprobado por el usuario (`01-requisitos.md` §15, 2026-10-07): faltantes en el S4, junto con el registro manual (US-110, US-111) | Se siguió el slicing v2 |
 | S3-2026-10-23 | DEC-01 cerrada por el oncólogo antes de implementar (S4) | Reordenamiento y refinamiento del S3 (2026-10-23): DEC-01, US-001, US-002 y US-006 pasan al S3; DEC-01 en DoR con escenario `propuesta_revisada` aceptado y cierre en la sesión de oncólogos del S4 `[S3 resp. 1]`; paquete de decisiones de US-001/US-002/US-006 aceptado `[S3 resp. 5]` | Decisión del usuario (refinamiento del S3) |
+
+| S4-2026-10-29 | Reordenamiento del 2026-10-23: US-003, US-004 y US-005 en el S4 con la vista de caso; US-003 AC-2 (vista de caso) y AC-7 (auditoría); US-005 AC-3 hacia la vista de caso; DEC-01 cerrada en la sesión de oncólogos del S4 | Refinamiento del S4 (usuario, 2026-10-29): la vista de caso, US-004 y DEC-01 pasan al S5 `[S4 resp. 1]`; US-003 recortada (AC-2 de `/case` → US-088, AC-7 → US-102, AC-6 decidido) y US-005 AC-3 hacia la ficha `[S4 resp. 6]` | Decisión del usuario |
+| S4-2026-10-29 · ancla | `docs/ux/S4/pantallas-s4.md` S4-03: «Registrar en la ficha» enlaza a `/pacientes/[id]#datos-criticos` | `[S4 resp. 14]`: enlace a la sección ya existente de la ficha donde vive el dato (diagnóstico o biomarcadores), ancla con foco, sin sección nueva | Usuario (más reciente); el diseño de S4-03 queda por alinear |
 
 *(El antiguo C4 —ejemplo de readme §4.2 con `missingCriticalData` del paciente semilla— se retiró: el ejemplo encaja con el paciente semilla (e) de OL-01 y no es un conflicto; hallazgo B-02 del piloto.)*
 

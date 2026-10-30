@@ -2,12 +2,12 @@
 
 > Linear: [L1D-24](https://linear.app/l1der-lab-mjbc/issue/L1D-24)
 
-**Talla:** M (Feature completa: 2 historias, 10 puntos) · **Sprint:** 4 (avisos de datos sin verificar) · 5 (conflicto y faltantes) · **Capacidad:** CAP-10 (AC-10.2: avisos en la tarjeta) · T-3 (AC-T3.3: los avisos no bloquean) · **Recorrido principal:** sí
+**Talla:** M (Feature completa: 2 historias, 10 puntos) · **Sprint:** 5 (avisos de datos sin verificar, S4 → S5, `[S4 resp. 1]`; conflicto y faltantes) · **Capacidad:** CAP-10 (AC-10.2: avisos en la tarjeta) · T-3 (AC-T3.3: los avisos no bloquean) · **Recorrido principal:** sí
 **Requisitos:** FR-11 (dueña; S2: datos pendientes de revisión · S3/S4: en conflicto y faltantes) · RN-26 (regresión → US-071)
 **Evidencia:** [→ PRD §5 FR-11], [→ PRD §6 RN-07, RN-26], [→ PRD §18.3.10 AC-10.2], [→ PRD §18.4 AC-T3.3], [→ readme §5 HU-05 (escenario 3)], [→ readme §4.1 `EvidenceOption.warnings`], [→ readme §6 OL-04 (alcance complementario: avisos por tarjeta)], [→ docs/AS-IS.md P12]
 **Dependencias:** ↪ US-053 (persistencia), US-061 (tarjeta), US-065 (procedencia en el contexto), US-087 (datos extraídos con revisión) · S5 (US-136): ↪ US-099 (conflictos), US-124 (avisos por criterio), FEAT-04 US-006 (`missingCriticalData`) · 🔗 Relacionada: US-109 (resolución, `si-hay-capacidad`) · 🔗 Regresión [RN-26] → US-071 · 🔗 Regresión [RN-06] → US-053
 **Valor:** el oncólogo necesita saber, en la misma tarjeta de la opción, si lo que ve depende de un dato que nadie ha verificado todavía, que está en conflicto o que falta (P12), sin que eso le impida leer el análisis.
-**Stories:** US-101 (S4, 5 puntos) · US-136 (S5, 5 puntos)
+**Stories:** US-101 (S5, 5 puntos; S4 → S5, `[S4 resp. 1]`) · US-136 (S5, 5 puntos)
 
 ---
 
@@ -17,7 +17,9 @@
 
 > Linear: [L1D-142](https://linear.app/l1der-lab-mjbc/issue/L1D-142)
 
-`FEAT-10b` · Sprint 4 · Estimación **5** · HU-05 (escenario 3) · FR-11 (S2, dueña), RN-26 · AC-10.2 (avisos), AC-T3.3 (parte) · ↪ US-053, US-061, US-065, US-087 · 🔗 Regresión [RN-26] → US-071 · 🔗 Regresión [RN-23] → US-068 (texto nuevo) · 🔗 Produce para: US-136 (conflicto y faltantes, S5)
+`FEAT-10b` · Sprint 5 *(S4 → S5, `[S4 resp. 1]`)* · Estimación **5** · HU-05 (escenario 3) · FR-11 (S2, dueña), RN-26 · AC-10.2 (avisos), AC-T3.3 (parte) · ↪ US-053, US-061, US-065, US-087 · 🔗 Regresión [RN-26] → US-071 · 🔗 Regresión [RN-23] → US-068 (texto nuevo) · 🔗 Produce para: US-136 (conflicto y faltantes, S5)
+
+> **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 
 ## Story
 Como oncólogo, quiero que cada opción me avise si el análisis se apoyó en datos de mi
@@ -150,3 +152,4 @@ tarjeta (en el MVP se rechaza un valor en la revisión, US-107; US-109 es `si-ha
 | — | readme OL-04 (alcance complementario): avisos por tarjeta desde el S1 | PRD FR-11: avisos de pendientes desde el S2 | PRD (US-101, S2) |
 | — | readme §5.0 S4: HU-10 trae los avisos en la tarjeta junto con HU-22 en el S4 | PRD FR-11: conflicto y faltantes en el S3 | Slicing adoptado: US-136 en el S4, cuando la aplicabilidad (S3) ya calcula `patientDataWarning` por criterio |
 | Slicing v2 | PRD FR-11: avisos en el S2 (sin verificar) y el S3 (conflicto y faltantes) | Slicing v2 aprobado por el usuario (`01-requisitos.md` §15, 2026-10-07): US-101 en el S4 y US-136 en el S5 | Se siguió el slicing v2 |
+| S4-2026-10-29 | Slicing v2: US-101 en el S4 | Refinamiento del S4 (usuario, 2026-10-29): pasa al S5; el S4 se compromete con ≈ 57 pts y se recorta de menor a mayor prioridad (gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca) `[S4 resp. 1]` | Decisión del usuario |

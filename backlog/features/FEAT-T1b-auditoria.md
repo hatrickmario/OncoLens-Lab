@@ -47,6 +47,11 @@ que lo identifiquen, para poder auditar los accesos antes de habilitar datos rea
   cuando se pide la ficha, entonces responde `500` sin datos del paciente. (asumido:
   falla cerrada)
   > Pendiente de definir en refinamiento (dueño: Ingeniería · afecta: AC-5): si la auditoría no se puede escribir, ¿la lectura falla (falla cerrada, más segura para datos reales) o se sirve y se alerta (más disponible)? Hasta decidirlo se implementa la falla cerrada.
+- **AC-6 (borde · lectura del checklist)** · Dado F-M2 de FX-04-b, cuando `doc1@test.local`
+  llama a `GET /platform/patients/{id}/completeness` con `200`, entonces existe una fila
+  `completeness.read` en `audit_log` con el UUID del paciente y sin PHI. `[FR-18]` (asumido:
+  hallazgo M-18 del piloto; heredado de US-003 AC-7, `[S4 resp. 6]`)
+  > **Decidido (usuario, 2026-10-29):** el AC-7 de US-003 pasa aquí, con el resto de la auditoría de lecturas `[S4 resp. 6]`.
 
 ## Contexto técnico
 `AuditService` en `clinical-api` con un *middleware* declarativo por ruta (`audit:
@@ -57,7 +62,7 @@ US-003. Tests: Supertest con SQL crudo sobre `audit.audit_log`.
 
 ## INVEST
 **Small** ✓ un *middleware* y tres rutas marcadas (la del documento ya audita desde US-212; aquí migra al *middleware*).
-**Testable** ✓ cinco tests de integración.
+**Testable** ✓ seis tests de integración (el AC-6 viene de US-003).
 
 ---
 

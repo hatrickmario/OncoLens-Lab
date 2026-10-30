@@ -2,13 +2,13 @@
 
 > Linear: [L1D-47](https://linear.app/l1der-lab-mjbc/issue/L1D-47)
 
-**Talla:** XL (Feature completa, propone división por sprint) · **Sprint:** 3 (US-132) · 4 (US-131, US-140) · 5 (US-103, US-105, US-142, → G-Demo; reordenamiento del 2026-10-23) · `si-hay-capacidad` (US-104, US-106, US-133, US-141) · **Capacidad:** T-5 (AC-T5.1, AC-T5.3, AC-T5.4 por regresión) · **Recorrido principal:** sí (mide las hipótesis 1, 2 y 3) · no (US-104, US-106, US-133, US-141)
+**Talla:** XL (Feature completa, propone división por sprint) · **Sprint:** 3 (US-132) · 5 (US-131, US-140, S4 → S5, `[S4 resp. 1]`; US-103, US-105, US-142, → G-Demo; reordenamiento del 2026-10-23) · `si-hay-capacidad` (US-104, US-106, US-133, US-141) · **Capacidad:** T-5 (AC-T5.1, AC-T5.3, AC-T5.4 por regresión) · **Recorrido principal:** sí (mide las hipótesis 1, 2 y 3) · no (US-104, US-106, US-133, US-141)
 **Requisitos:** FR-20 (ampliación de datasets y métricas, OL-06) · TBD-03 (umbrales de confianza OCR, CAL) · medibles técnicos: M-01.1, M-01.2, M-01.3, M-02.1, M-02.2, M-02.3, M-02.4, M-03.1–M-03.5 (S2) · M-04.1, M-04.2, M-08.2, M-08.3, M-08.4, M-08.6, M-06.1 sin retroceso (S3) · M-10.1 y M-10.2 con hasta 3 opciones, M-07.2 con hasta 3 opciones, orden por aplicabilidad (RN-28), M-06.2 recalibrado (S5, en US-142) · verificación de G-Demo redefinido (S5) · G-6, G-7, G-8 (documentos), G-11, G-12, G-13
 **Evidencia:** [→ PRD §5 FR-20], [→ PRD §2.1 G-6, G-7, G-8, G-11, G-12, G-13], [→ PRD §7 NFR (extracción ≤ 60 s; vista de caso ≤ 2 s)], [→ PRD §12 Evaluación], [→ PRD §16 TBD-02, TBD-03, TBD-20], [→ PRD §18.3.1 M-01.1–M-01.3], [→ PRD §18.3.2 M-02.1–M-02.4], [→ PRD §18.3.3 M-03.1–M-03.5], [→ PRD §18.3.4 M-04.1, M-04.2], [→ PRD §18.3.6 M-06.1], [→ PRD §18.3.8 M-08.2–M-08.4, M-08.6], [→ PRD §18.4 AC-T5.1, AC-T5.3, AC-T5.4], [→ readme §6 OL-05 (tests de exactitud), OL-06 (datasets v1.1 y v1.2)], [→ readme §5.0 S2 KR1–KR4, S3 KR1, KR3, KR4], [→ backlog/02-adrs.md §4.1 TBD-03, TBD-20], [→ PRD §18.3.10 M-10.1, M-10.2], [→ PRD §2.1 G-2, G-5, G-14], [→ PRD §14 G-Demo], [→ readme §5.0 S4 KR1], [→ backlog/01-requisitos.md §15 (slicing por hipótesis: G-Demo redefinido)]
 **Dependencias:** ↪ US-072 (*runner* y reporte), US-074 (suite en la DoD), US-014 · ADR-41 · ⛔ ADR-39 (motores de OCR, LLM y NLI fijados para las mediciones reales) · ⛔ DEC-07 · escenario más probable (metas y umbrales de regresión) · 🔗 Mide a: FEAT-01b, FEAT-02b, FEAT-03a (S3) · FEAT-04, FEAT-06c (S4) · FEAT-08b (S5) · FEAT-10c, FEAT-10b (S5) · 🔗 Consume: US-139 (reporte de feedback), US-024 · DEC-14 (VM-3) para G-Demo
 **Valor:** la hipótesis solo se valida con números: cuántos datos del documento se leen bien, si el caso reconstruido es fiel, si los faltantes se detectan y si la aplicabilidad no inventa nada. Esta Feature amplía la suite del S1 con los datasets sintéticos de cada capacidad nueva, para que todo cambio de modelo, prompt, umbral, catálogo o corpus se mida contra ellos.
 **Workaround en el MVP:** US-104 → umbrales del OCR con valores iniciales en configuración; US-106 → invariantes en los tests de US-086, US-098 y US-099; US-133 → sin híbrida no hay retroceso que medir; US-141 → se integra en US-142 (AC-7).
-**Stories:** S3: US-132 (5 puntos) · S4: US-131, US-140 (8 puntos) · S5: US-103, US-105, US-142 (15 puntos; reordenamiento del 2026-10-23) · `si-hay-capacidad`: US-104, US-106, US-133, US-141 (14 puntos)
+**Stories:** S3: US-132 (5 puntos) · S5: US-131, US-140 (8 puntos, S4 → S5, `[S4 resp. 1]`) · US-103, US-105, US-142 (15 puntos; reordenamiento del 2026-10-23) · `si-hay-capacidad`: US-104, US-106, US-133, US-141 (14 puntos)
 
 > **Propuesta de división (talla XL).** Publicar como una Feature por sprint sin cambiar IDs: **T5b-S3 Ingesta y caso** (US-103, US-105), **T5b-S4 Faltantes** (US-131) y **T5b-S5 Aplicabilidad, opciones y G-Demo** (US-132, US-140, US-142); US-104, US-106, US-133 y US-141 quedan `si-hay-capacidad` (slicing v2). Las discrepancias sembradas (M-07.1) y la búsqueda complementaria (M-08.5) quedan con sus Features diferidas (FEAT-07, S6; FEAT-08c, Post-MVP; lote 4).
 
@@ -199,7 +199,9 @@ Pytest del *runner* y Vitest del comando.
 
 > Linear: [L1D-243](https://linear.app/l1der-lab-mjbc/issue/L1D-243)
 
-`FEAT-T5b` · Sprint 4 · Estimación **3** · — (técnica, PRD §17; OL-06) · FR-20 · AC-T5.1 (faltantes) · M-04.1, M-04.2, G-12 · ↪ US-072, FEAT-04 US-002 · 🔗 Regresión [AC-T5.4] → US-074 (cambio de catálogo) · 🔗 Mide a: FEAT-04
+`FEAT-T5b` · Sprint 5 *(S4 → S5, `[S4 resp. 1]`)* · Estimación **3** · — (técnica, PRD §17; OL-06) · FR-20 · AC-T5.1 (faltantes) · M-04.1, M-04.2, G-12 · ↪ US-072, FEAT-04 US-002 · 🔗 Regresión [AC-T5.4] → US-074 (cambio de catálogo) · 🔗 Mide a: FEAT-04
+
+> **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 
 ## Story
 Como responsable técnico, quiero medir sobre pacientes con faltantes sembrados cuántos
@@ -326,7 +328,9 @@ recuperación dense y sparse.
 
 > Linear: [L1D-246](https://linear.app/l1der-lab-mjbc/issue/L1D-246)
 
-`FEAT-T5b` · Sprint 4 · Estimación **5** · — (técnica, PRD §17; OL-06) · FR-20 · AC-T5.1 (opciones), AC-T5.3 · M-10.1, M-10.2, M-07.2 (con hasta 3 opciones), G-2, G-14 · ↪ US-072, US-074, US-134, US-136 · ⛔ ADR-39 (LLM y NLI reales para la medición final) · ⛔ DEC-07 · escenario más probable (metas y tolerancias) · 🔗 Mide a: FEAT-10c, FEAT-10b (S4)
+`FEAT-T5b` · Sprint 5 *(S4 → S5, `[S4 resp. 1]`)* · Estimación **5** · — (técnica, PRD §17; OL-06) · FR-20 · AC-T5.1 (opciones), AC-T5.3 · M-10.1, M-10.2, M-07.2 (con hasta 3 opciones), G-2, G-14 · ↪ US-072, US-074, US-134, US-136 · ⛔ ADR-39 (LLM y NLI reales para la medición final) · ⛔ DEC-07 · escenario más probable (metas y tolerancias) · 🔗 Mide a: FEAT-10c, FEAT-10b (S4)
+
+> **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 
 > **Reordenamiento (usuario, 2026-10-23):** S5 → S4. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
@@ -494,3 +498,4 @@ Medir VM-1…VM-6 con casos reales (FEAT-T5d, S6). Bloqueos por opt-out (US-148,
 | — | `01-requisitos.md` §5.5: M-07.1 (discrepancias) en FEAT-T5b y M-08.5 (agente) en FEAT-T5b/FEAT-08c | Slicing adoptado: FEAT-07 en el S6 (si hay capacidad) y FEAT-08c Post-MVP | M-07.1 y M-08.5 se miden con sus Features diferidas en US-157 y US-161 (FEAT-T5d), no en el S4 |
 | Slicing v2 | PRD §14 S2–S4: suites por sprint y G-Demo al cierre del S4 | Slicing v2 aprobado por el usuario (`01-requisitos.md` §15, 2026-10-07): suites en S3–S5 y G-Demo al cierre del S5; calibración del OCR, M-03.x agregadas, no retroceso de la híbrida y p95 separado `si-hay-capacidad` | M-01 (calibración), M-03.1…M-03.5 y M-06.1 (sin retroceso) quedan en historias `si-hay-capacidad`; M-06.2 con hasta 3 opciones lo registra US-142 |
 | S3-2026-10-23 | US-132 AC-3 sobre la `CorpusRelease` vigente (US-119, `si-hay-capacidad`); US-103 y US-105 en el S3 | Reordenamiento y refinamiento del S3 (2026-10-23): US-132 en el S3 mide sobre la versión del corpus por configuración; la medición sobre la `CorpusRelease` pasa a US-119 AC-5; US-103 y US-105 en el S5 | Decisión del usuario `[S3 resp. 8]` |
+| S4-2026-10-29 | Reordenamiento del 2026-10-23: US-131 y US-140 en el S4 | Refinamiento del S4 (usuario, 2026-10-29): pasan al S5; el S4 se compromete con ≈ 57 pts y se recorta de menor a mayor prioridad (gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca) `[S4 resp. 1]` | Decisión del usuario |

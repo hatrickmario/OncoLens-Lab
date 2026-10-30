@@ -2,12 +2,12 @@
 
 > Linear: [L1D-12](https://linear.app/l1der-lab-mjbc/issue/L1D-12)
 
-**Talla:** L · **Sprint:** 4 (US-098; refinamiento del S3, 2026-10-23, `[S3 resp. 3]`) · 5 (US-099, US-100; reordenamiento del 2026-10-23, necesitan documentos extraídos) · **Capacidad:** CAP-03 (AC-03.1, AC-03.2 parte de detección, AC-03.3, AC-03.4, AC-03.5) · T-3 (AC-T3.2: no reemplazo silencioso) · **Recorrido principal:** sí (lo mínimo para no mezclar datos al reconstruir el caso)
+**Talla:** L · **Sprint:** 5 (US-098; refinamiento del S3 al S4, `[S3 resp. 3]`, y del S4 al S5, `[S4 resp. 1]`) · 5 (US-099, US-100; reordenamiento del 2026-10-23, necesitan documentos extraídos) · **Capacidad:** CAP-03 (AC-03.1, AC-03.2 parte de detección, AC-03.3, AC-03.4, AC-03.5) · T-3 (AC-T3.2: no reemplazo silencioso) · **Recorrido principal:** sí (lo mínimo para no mezclar datos al reconstruir el caso)
 **Requisitos:** FR-22 (parte S2: normalización final y duplicados; detección de conflictos en la extracción; dueña vía HU-17) · RN-27 (dueña) · RN-08 (dueña) · ADR-33 · FR-08 (regla de diagnóstico, parte automática)
 **Evidencia:** [→ PRD §5 FR-08, FR-22], [→ PRD §6 RN-08, RN-27], [→ PRD §18.3.3 AC-03.1–AC-03.5, M-03.1–M-03.5], [→ PRD §18.4 AC-T3.2], [→ readme §5.6 HU-17], [→ readme §6 OL-05 (tareas 6, 7; tests)], [→ readme §3.3 #12, #23, #25, #33], [→ readme §6.1 #10], [→ backlog/02-adrs.md DEC-04, DEC-09], [→ docs/AS-IS.md P3]
 **Dependencias:** ↪ US-041 (catálogo montado), US-086 (propuesta de Backend 2) · ⛔ DEC-09 · escenario más probable (US-100) · ⛔ DEC-04 · *workaround* Q-07 (US-098: solo CIE-10 en el catálogo real hasta cerrar) · 🔗 Consumida por: US-087 (persistencia), US-094, US-110 (datos manuales) · 🔗 Medido en: US-106 (M-03.1–M-03.5) · 🔗 Regresión [AC-T3.2] → US-070
 **Valor:** hoy el oncólogo compara a mano si dos informes dicen lo mismo o se contradicen (P3). Con esta Feature el mismo dato repetido en dos documentos queda como un solo dato con sus dos fuentes, dos valores distintos del mismo día quedan marcados en conflicto y nada verificado se reemplaza sin que él lo decida.
-**Stories:** US-098, US-099, US-100 (15 puntos: 5 en el S4 —US-098— y 10 en el S5 —US-099, US-100—)
+**Stories:** US-098, US-099, US-100 (15 puntos, S5; US-098 pasa del S4 al S5, `[S4 resp. 1]`)
 
 ## Fixtures
 
@@ -20,7 +20,9 @@
 
 > Linear: [L1D-84](https://linear.app/l1der-lab-mjbc/issue/L1D-84)
 
-`FEAT-03a` · Sprint 4 · Estimación **5** · HU-17 · FR-22 (normalización final), RN-27 (dueña), ADR-33 · AC-03.3, AC-03.5 · ⛔ DEC-04 · *workaround* Q-07 · ↪ US-041, US-086 · 🔗 Consumida por: US-087, US-094, US-110 · 🔗 Medido en: US-106 (M-03.4, M-03.5)
+`FEAT-03a` · Sprint 5 *(S4 → S5, `[S4 resp. 1]`)* · Estimación **5** · HU-17 · FR-22 (normalización final), RN-27 (dueña), ADR-33 · AC-03.3, AC-03.5 · ⛔ DEC-04 · *workaround* Q-07 · ↪ US-041, US-086 · 🔗 Consumida por: US-087, US-094, US-110 · 🔗 Medido en: US-106 (M-03.4, M-03.5)
+
+> **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 
 ## Story
 Como oncólogo, quiero que todo dato de mi paciente, venga de un documento o lo escriba
@@ -186,3 +188,4 @@ Supertest con FX-03a-a.
 | — | readme §3.3 #12: reglas "a validar con el oncólogo" | — | DEC-09 (US-019, S1) · escenario más probable |
 | Slicing v2 | PRD §14 S2 y readme §5.0 S2 (OL-05): normalización y duplicados en el S2 | Slicing v2 aprobado por el usuario (`01-requisitos.md` §15, 2026-10-07): normalización en el S3, junto con la extracción | Se siguió el slicing v2 |
 | S3-2026-10-23 | Reordenamiento del 2026-10-23: US-098 en el S3 | Refinamiento del S3 (2026-10-23): US-098 pasa al S4 porque sus AC-4…AC-6 dependen de la extracción (S5) o de US-094 `[S3 resp. 3]`; US-099 recibe como AC-7 el aviso `en_conflicto` con detección real que US-124 AC-3 ya no cubre en el S3, y como AC-8 el conflicto detectado en el contexto que US-065 AC-4 ya no cubre `[S3 resp. 8]` | Decisión del usuario (refinamiento del S3) |
+| S4-2026-10-29 | Refinamiento del S3: US-098 en el S4 | Refinamiento del S4 (usuario, 2026-10-29): pasa al S5; el S4 se compromete con ≈ 57 pts y se recorta de menor a mayor prioridad (gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca) `[S4 resp. 1]` | Decisión del usuario |

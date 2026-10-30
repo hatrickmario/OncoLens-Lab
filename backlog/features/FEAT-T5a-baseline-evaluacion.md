@@ -2,12 +2,12 @@
 
 > Linear: [L1D-46](https://linear.app/l1der-lab-mjbc/issue/L1D-46)
 
-**Talla:** XL · **Sprint:** 1 (US-014 · ADR-41, US-016 · DEC-06, US-072, US-074: suite `evaluate` y suite en la DoD · US-075: baseline manual de VM-1/VM-2) · 2 (US-073: calibración y baseline técnico · US-017 · DEC-07) · **Capacidad:** T-5 (AC-T5.2, AC-T5.3, AC-T5.4) · **Recorrido principal:** sí (mide la hipótesis)
+**Talla:** XL · **Sprint:** 1 (US-014 · ADR-41, US-016 · DEC-06, US-072, US-074: suite `evaluate` y suite en la DoD · US-075: baseline manual de VM-1/VM-2) · 2 (US-073: calibración y baseline técnico) · 4 (US-233a, US-233b: suite con modelos locales y conjunto dorado de población, `[S4 resp. 6]`) · 5 (US-016 · DEC-06, US-017 · DEC-07, `[S4 resp. 1]`) · **Capacidad:** T-5 (AC-T5.2, AC-T5.3, AC-T5.4) · **Recorrido principal:** sí (mide la hipótesis)
 **Requisitos:** FR-20 (S1: baseline técnico y manual; dueña de la suite, OL-06) · IA-10 · TBD-02 (DEC-07) · TBD-03 (calibración del umbral de relevancia) · TBD-11 (aplicación de DEC-02) · ADR-41 · DEC-06 · DEC-07 · medibles técnicos del S1: M-06.1, M-06.2, M-07.2 (fidelidad y precisión de citas), M-10.1, M-10.2, G-4 ("sin evidencia"), G-8 · M-02.5 (baseline de VM-1)
 **Evidencia:** [→ PRD §5 FR-20], [→ PRD §2.1 G-3, G-4, G-5, G-8, G-14], [→ PRD §2.2 VM-1, VM-2], [→ PRD §12 Evaluación], [→ PRD §18.4 T-5, AC-T5.2–AC-T5.4], [→ PRD §18.3.6 M-06.1, M-06.2], [→ PRD §18.3.10 M-10.1, M-10.2], [→ PRD §16 TBD-02, TBD-03, TBD-11], [→ readme §6 OL-06], [→ readme §2.6 Evaluación], [→ readme §6.0 DoD], [→ readme §5.0 S1 KR2, KR4], [→ backlog/02-adrs.md ADR-41, DEC-06, DEC-07; §4.1 TBD-03]
 **Dependencias:** ↪ US-055, US-063, US-064, US-049, US-068 (lo que se mide) · ⛔ ADR-39 (modelos para el baseline real) · ⛔ ADR-41 (juez de fidelidad) · ⛔ DEC-02 · escenario más probable (US-075) · 🔗 Relacionada: US-073 y US-017 · DEC-07 (S2: aportan los umbrales reales de regresión que US-074 aplica desde el S2)
 **Valor:** sin medición no se puede afirmar que el producto ayuda al oncólogo ni proteger los cambios de modelo, prompt, umbral, catálogo o corpus. Esta Feature mide desde el S1 cada cambio de la IA con la suite `evaluate` en la DoD, registra en el S2 el baseline técnico calibrado (recuperación, fidelidad, "sin evidencia", privacidad, lenguaje) y en el S1 el punto de partida humano (cuánto tarda hoy un oncólogo en reconstruir un caso y encontrar evidencia aplicable, VM-1 y VM-2), contra el que se medirá la hipótesis.
-**Stories:** US-014 · ADR-41, US-016 · DEC-06, US-072, US-074, US-075 (18 puntos, S1) · US-017 · DEC-07, US-073 (1 punto + US-073 en `?`, S2)
+**Stories:** US-014 · ADR-41, US-016 · DEC-06, US-072, US-074, US-075 (18 puntos, S1) · US-017 · DEC-07, US-073 (1 punto + US-073 en `?`, S2) · US-233a, US-233b (6 puntos, S4; US-233 dividida, `[S4 resp. 6]`) · US-016 · DEC-06 y US-017 · DEC-07 en el S5 (`[S4 resp. 1]`)
 
 > **Propuesta de división (talla XL: 7 historias).** **T5a-técnico** (US-014, US-016, US-017, US-072, US-073, US-074) y **T5a-valor** (US-075), sin cambiar IDs. T5a-valor depende sobre todo de la agenda de los oncólogos (SUP-4) y puede avanzar en paralelo.
 
@@ -76,7 +76,9 @@ scoring (ADR-7).
 
 > Linear: [L1D-233](https://linear.app/l1der-lab-mjbc/issue/L1D-233)
 
-`FEAT-T5a` · Sprint 4 *(desde S1 → S2 → S4, sesión con oncólogos junto a ARR-05, `[S2 resp. 1]`)* · Estimación **1** · — (decisión) · IA-10 · AC-T5.3 · Dueño: oncólogo asesor · ↪ US-072 (dataset y diccionario en borrador) · 🔗 Produce para: US-072 AC-4 (rótulo "validada" en el S1), US-073 (baseline técnico, S2)
+`FEAT-T5a` · Sprint 5 *(desde S1 → S2 → S4, sesión con oncólogos junto a ARR-05, `[S2 resp. 1]`; S4 → S5, `[S4 resp. 1]`)* · Estimación **1** · — (decisión) · IA-10 · AC-T5.3 · Dueño: oncólogo asesor · ↪ US-072 (dataset y diccionario en borrador) · 🔗 Produce para: US-072 AC-4 (rótulo "validada" en el S1), US-073 (baseline técnico, S2)
+
+> **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 
 ## Story
 Como oncólogo asesor, quiero revisar una muestra del dataset de evaluación y el
@@ -113,7 +115,9 @@ dataset (`data/evaluation/`, sintético). La mecánica del reporte es de US-072.
 
 > Linear: [L1D-234](https://linear.app/l1der-lab-mjbc/issue/L1D-234)
 
-`FEAT-T5a` · Sprint 4 *(desde S2, cierre del S2, `[S2 resp. 20]`: depende de US-233)* · Estimación **1** · — (decisión) · TBD-02 · Dueño: usuario (PO) + Ingeniería · ↪ US-073 (baseline técnico), US-014 · ADR-41 · 🔗 Produce para: US-074 AC-5 (umbrales reales de regresión en `eval/configs/regression.yaml` desde el S2), FEAT-T5b
+`FEAT-T5a` · Sprint 5 *(desde S2, cierre del S2, `[S2 resp. 20]`: depende de US-233, hoy US-233a y US-120 AC-5/AC-6; S4 → S5, `[S4 resp. 1]`)* · Estimación **1** · — (decisión) · TBD-02 · Dueño: usuario (PO) + Ingeniería · ↪ US-073 (baseline técnico), US-014 · ADR-41 · 🔗 Produce para: US-074 AC-5 (umbrales reales de regresión en `eval/configs/regression.yaml` desde el S2), FEAT-T5b
+
+> **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 
 ## Story
 Como product owner, quiero fijar las metas técnicas definitivas con el baseline del
@@ -351,37 +355,160 @@ sintéticos (US-036 AC-5).
 **Testable** ✓ cinco verificaciones sobre archivos del repo y un test unitario.
 *(Independent ⚠ depende de la agenda de los oncólogos asesores, SUP-4.)*
 
-## US-233 — La suite `evaluate` corre con los modelos locales, calibra el umbral de entailment y `RETRIEVAL_TOP_K` y acota y calibra el juez local
+## US-233 — La suite `evaluate` corre con los modelos locales, calibra el umbral de entailment y `RETRIEVAL_TOP_K` y acota y calibra el juez local — **dividida** en US-233a y US-233b (no suma)
 
 > Linear: pendiente (límite de issues del workspace; creada por el usuario el 2026-10-22, `[S2 resp. 16]`)
-> **Decidido (usuario, 2026-10-24, cierre de la O1 del S3):** se añade un AC en el refinamiento del S4 para medir RSS y latencia del NLI (tarea 1.11 de `us-231b`, abierta); hasta entonces sigue abierta en ese change.
+> **Decidido (usuario, 2026-10-29):** se parte en **US-233a** (3 pts: suite con modelos locales, RSS y latencia del NLI y tareas arrastradas) y **US-233b** (3 pts: conjunto dorado de población y suite por criterio). Sus AC-3 (calibración) y AC-8 (baseline por tipo de cáncer) dependen del corpus de ≥ 20 documentos por tipo y pasan a **US-120** (AC-5 y AC-6, S5). Los demás AC pasan a US-233a sin cambiar su texto (AC-1, AC-2, AC-4, AC-5, AC-6, AC-7). US-233 queda como lápida y no suma `[S4 resp. 6]`.
 
-`FEAT-T5a` · Sprint 4 *(deuda de ARR-03 / L1D-279, AC-1, AC-2 y AC-5)* · Estimación **3** · — (técnica, PRD §17; OL-06) · FR-20 · TBD-02 · M-07.2, M-10.1 · ↪ US-072 (L1D-235), US-073 (L1D-236), US-117 y US-120 (corpus de ≥ 20 documentos por tipo) · 🔗 Origen: ARR-03 cerró en el S2 solo con adaptadores falsos; el procedimiento está en `openspec/changes/l1d-235-suite-evaluate/design.md` D21
-
-## Story
-Como responsable de calidad de IA, quiero que la suite `evaluate` acepte `proveedor: local` con el NLI, el reranker, los *embeddings* y el generador reales (Ollama), un juez local secundario acotado y medido contra el NLI y el humano, y calibrar con ellos el umbral de entailment y `RETRIEVAL_TOP_K` sobre el corpus ampliado, para que la fidelidad, la precisión de citas y el lenguaje no prescriptivo se midan con modelos reales antes de G-Demo y no solo con adaptadores falsos.
-
-## AC (Given/When/Then)
-- **AC-1 (happy path · reporte con modelos reales)** · Dada la suite de US-072 con `proveedor: local` y los pesos de ADR-39 en el MacBook de referencia, cuando se ejecuta `evaluate`, entonces escribe un reporte en `reports/eval/` con fidelidad, precisión de citas y «sin evidencia» frente a las metas de TBD-02, con la configuración y los modelos usados. `[ARR-03 AC-1]` `[M-07.2]`
-- **AC-2 (borde · lenguaje no prescriptivo con el LLM real)** · Dado el generador real, cuando se evalúa la propuesta cruda y la salida mostrada, entonces las salidas prescriptivas mostradas son 0 y se anota cuántas propuestas crudas el filtro corrigió; incluye los casos de RN-23 fuera del nivel A del S2. `[ARR-03 AC-2]` `[RN-23]`
-- **AC-3 (borde · calibración)** · Dado el corpus del S4 (≥ 20 documentos por tipo, US-120), cuando se barren `NLI_ENTAILMENT_THRESHOLD` y `RETRIEVAL_TOP_K`, entonces los valores definitivos quedan en configuración con su justificación y el reporte del barrido; los provisionales (0,7 y 30) se sustituyen. `[ARR-03 AC-5]` `[RN-22]`
-- **AC-4 (invariante · RN-12 y RN-14)** · Dado `proveedor: local`, cuando se ejecuta, entonces ningún request sale de la máquina (host local cerrado en código), el dataset sigue siendo sintético y el archivo de resultados solo contiene métricas agregadas. `[RN-12]` `[RN-14]`
-- **AC-6 (borde · juez local secundario acotado y calibrado)** · Dado el juez LLM local (G por Ollama `/v1`, `temperature = 0` y semilla en configuración), cuando juzga una afirmación, entonces recibe **una sola afirmación y solo los fragmentos que cita** (sin la respuesta completa ni el modelo que la generó), con una rúbrica binaria y tres ejemplos (soportada, no soportada, parcial = no soportada), y responde JSON `{"veredicto": "soportada|no_soportada", "cita": "<id del fragmento>"}`; un veredicto sin cita existente o JSON inválido cuenta como no soportado y se contabiliza. `[ADR-41]` `[RN-12]`
-- **AC-7 (borde · acuerdo medido, nunca promediado)** · Dados los veredictos del NLI y del juez local sobre el mismo conjunto, y la muestra revisada por el oncólogo cuando exista (DEC-06, S4), cuando se genera el reporte, entonces incluye el acuerdo juez↔NLI y juez↔humano (porcentaje y kappa de Cohen) y lista las discrepancias; el NLI sigue siendo el juez principal y el juez local nunca se promedia con él ni decide solo. Si el acuerdo queda por debajo de `JUEZ_ACUERDO_MINIMO` (configuración, RN-22), el reporte marca la fidelidad del juez como «no concluyente». `[ADR-41]` (asumido el umbral)
-- **AC-5 (borde · NO-EJECUTABLE explícito)** · Dado un entorno sin los pesos, cuando se pide `proveedor: local`, entonces la suite termina con código ≠ 0 nombrando qué falta, y nunca marca PASS ni inventa cifras. `[OL-06]`
-- **AC-8 (baseline técnico por tipo de cáncer y umbral definitivo)** · Dados los modelos locales de ADR-39 y el stack de Compose, cuando se registra el baseline, entonces el reporte contiene recall@10, MRR, español → inglés, fidelidad, precisión de citas y «sin evidencia» para mama y para próstata (es/en), y el p95 de `/platform/evidence-analyses` de punta a punta como mediana de 3 corridas; y `RELEVANCE_THRESHOLD` queda fijado de forma definitiva en la configuración con el valor elegido por el barrido y su justificación. Heredado de US-073 AC-1/AC-2 (L1D-236), `[S2 resp. 19]`. `[M-06.1]` `[M-06.2]` `[TBD-03]` `[RN-22]`
-
-## Contexto técnico
-Cablear en `app/evaluation/` los adaptadores reales (NLI mDeBERTa, reranker y *embeddings* BGE-M3 por ONNX, generador por Ollama `/v1`) detrás de `proveedor: local`, reutilizando los de producción y el registro de llamadas que mide `llamadas_nube_datos_reales` (hoy solo cubre al juez). Juez local (decisión del usuario, 2026-10-22, `[S2 resp. 17]`): se reutiliza G con un prompt especializado y acotado (AC-6) y se mide su acuerdo (AC-7); un juez de nube queda **descartado** por el ADR-41 (una sola ruta de juez, RN-12), aunque los datos sean sintéticos. Hallazgos del S2 a incorporar: el prompt `rag-query@0.2.0` no fuerza «La fuente [cita] describe que…»; el filtro de producción solo cubre el nivel A; alias de Ollama (`ollama cp x:cloud`) sin guarda de nube. La ejecución es manual en el MacBook de referencia (modelos en `~/adr39-modelos/`); la CI sigue con adaptadores falsos.
-
-## Non-goals
-Nuevas familias de métricas (OCR, eventos, terminología, faltantes: FEAT-T5b). Metas definitivas (DEC-07, US-017).
-
-## INVEST
-**Small** ⚠ cableado de adaptadores existentes, dos ejecuciones y la calibración del juez (el adaptador del juez ya existe, `juez_fidelidad.py`); si pasa de 5, separar la calibración del juez en una historia hermana.
-**Testable** ✓ el reporte y los valores de configuración se comprueban en el repo; el rechazo sin pesos es un test.
+`FEAT-T5a` · Sprint — *(dividida; ver US-233a y US-233b)* · Estimación **—** · — (técnica, PRD §17; OL-06)
 
 ---
+
+## US-233a — La suite `evaluate` corre con los modelos locales, acota y calibra el juez local y mide los recursos del NLI
+
+> Linear: [L1D-298](https://linear.app/l1der-lab-mjbc/issue/L1D-298)
+
+`FEAT-T5a` · Sprint 4 · Estimación **3** · — (técnica, PRD §17; OL-06) · FR-20 · TBD-02 · M-07.2, M-10.1 · ↪ US-072 (L1D-235), US-073 (L1D-236), US-231b (NLI real) · 🔗 Origen: US-233 (dividida, `[S4 resp. 6]`) y ARR-03, que cerró en el S2 solo con adaptadores falsos (procedimiento en `openspec/changes/l1d-235-suite-evaluate/design.md` D21) · 🔗 Consume: US-240 (cifras de memoria) · 🔗 Produce para: US-120 (AC-5, AC-6: calibración y baseline sobre el corpus ampliado, S5), US-017 · DEC-07 (S5)
+
+> **Decidido (usuario, 2026-10-29):** primera mitad de US-233: la suite `evaluate` con modelos locales, el AC nuevo de RSS y latencia del NLI (tarea 1.11 de `us-231b`) y las tareas arrastradas (`l1d-117` 2.2, 5.3 y 5.5; `l1d-244` 4.1 y 4.2; `us-117b` 0.4b y G2.*; y, opcional, la validación de la IP resuelta del descargador) `[S4 resp. 6]` `[S4 resp. 10]`.
+
+## Story
+Como responsable de calidad de IA, quiero que la suite `evaluate` acepte `proveedor: local`
+con el NLI, el reranker, los *embeddings* y el generador reales (Ollama) y un juez local
+secundario acotado y medido contra el NLI y el humano, y saber cuánta memoria y tiempo consume
+el NLI, para que la fidelidad, la precisión de citas y el lenguaje no prescriptivo se midan con
+modelos reales antes de G-Demo y no solo con adaptadores falsos.
+
+## AC (Given/When/Then)
+- **AC-1 (happy path · reporte con modelos reales)** · Dada la suite de US-072 con
+  `proveedor: local` y los pesos de ADR-39 en el MacBook de referencia, cuando se ejecuta
+  `evaluate`, entonces escribe un reporte en `reports/eval/` con fidelidad, precisión de citas
+  y «sin evidencia» frente a las metas de TBD-02, con la configuración y los modelos usados.
+  `[ARR-03 AC-1]` `[M-07.2]` (antes US-233 AC-1)
+- **AC-2 (borde · lenguaje no prescriptivo con el LLM real)** · Dado el generador real,
+  cuando se evalúa la propuesta cruda y la salida mostrada, entonces las salidas prescriptivas
+  mostradas son 0 y se anota cuántas propuestas crudas el filtro corrigió; incluye los casos de
+  RN-23 fuera del nivel A del S2. `[ARR-03 AC-2]` `[RN-23]` (antes US-233 AC-2)
+- **AC-3 (invariante · RN-12 y RN-14)** · Dado `proveedor: local`, cuando se ejecuta,
+  entonces ningún request sale de la máquina (host local cerrado en código), el dataset sigue
+  siendo sintético y el archivo de resultados solo contiene métricas agregadas. `[RN-12]`
+  `[RN-14]` (antes US-233 AC-4)
+- **AC-4 (borde · NO-EJECUTABLE explícito)** · Dado un entorno sin los pesos, cuando se pide
+  `proveedor: local`, entonces la suite termina con código ≠ 0 nombrando qué falta, y nunca
+  marca PASS ni inventa cifras. `[OL-06]` (antes US-233 AC-5)
+- **AC-5 (borde · juez local secundario acotado y calibrado)** · Dado el juez LLM local (G
+  por Ollama `/v1`, `temperature = 0` y semilla en configuración), cuando juzga una
+  afirmación, entonces recibe **una sola afirmación y solo los fragmentos que cita** (sin la
+  respuesta completa ni el modelo que la generó), con una rúbrica binaria y tres ejemplos
+  (soportada, no soportada, parcial = no soportada), y responde JSON `{"veredicto":
+  "soportada|no_soportada", "cita": "<id del fragmento>"}`; un veredicto sin cita existente o
+  JSON inválido cuenta como no soportado y se contabiliza. `[ADR-41]` `[RN-12]` (antes US-233
+  AC-6)
+- **AC-6 (borde · acuerdo medido, nunca promediado)** · Dados los veredictos del NLI y del
+  juez local sobre el mismo conjunto, y la muestra revisada por el oncólogo cuando exista
+  (DEC-06, S5), cuando se genera el reporte, entonces incluye el acuerdo juez↔NLI y
+  juez↔humano (porcentaje y kappa de Cohen) y lista las discrepancias; el NLI sigue siendo el
+  juez principal y el juez local nunca se promedia con él ni decide solo. Si el acuerdo queda
+  por debajo de `JUEZ_ACUERDO_MINIMO` (configuración, RN-22), el reporte marca la fidelidad
+  del juez como «no concluyente». `[ADR-41]` (asumido el umbral; antes US-233 AC-7)
+- **AC-7 (borde · recursos del NLI)** · Dado el NLI real con el lote de hipótesis de la
+  suite (incluidas las de población de US-242), cuando se ejecuta `evaluate` con
+  `proveedor: local`, entonces el reporte registra el RSS máximo de `rag-orchestrator`, la
+  latencia p50 y p95 del NLI por hipótesis y por lote, y marca si el RSS supera el límite de
+  memoria configurado para el contenedor. `[us-231b 1.11]` `[R7]` `[S4 resp. 6]`
+
+## Contexto técnico
+Cablear en `app/evaluation/` los adaptadores reales (NLI mDeBERTa, reranker y *embeddings*
+BGE-M3 por ONNX, generador por Ollama `/v1`) detrás de `proveedor: local`, reutilizando los de
+producción y el registro de llamadas que mide `llamadas_nube_datos_reales` (hoy solo cubre al
+juez). Juez local (decisión del usuario, 2026-10-22, `[S2 resp. 17]`): se reutiliza G con un
+prompt especializado y acotado (AC-5) y se mide su acuerdo (AC-6); un juez de nube queda
+**descartado** por el ADR-41 (una sola ruta de juez, RN-12). Hallazgos del S2 a incorporar: el
+prompt `rag-query@0.2.0` no fuerza «La fuente [cita] describe que…» (lo resuelve el marco
+determinista de US-245); el filtro de producción solo cubre el nivel A; alias de Ollama
+(`ollama cp x:cloud`) sin guarda de nube. **Tareas arrastradas que cierra esta historia:**
+`l1d-117` 2.2, 5.3 y 5.5; `l1d-244` 4.1 y 4.2; `us-117b` 0.4b y G2.B2–B4/A1–A4; opcional, la
+validación de la IP resuelta del descargador (hallazgo bajo de `/security-review` del S3). La
+ejecución es manual en el MacBook de referencia (modelos en `~/adr39-modelos/`); la CI sigue
+con adaptadores falsos.
+
+## Non-goals
+Calibración de `NLI_ENTAILMENT_THRESHOLD` y `RETRIEVAL_TOP_K` y baseline por tipo de cáncer
+(US-120, S5). Suite de población (US-233b). Metas definitivas (DEC-07, US-017).
+
+## INVEST
+**Small** ✓ cableado de adaptadores existentes, la calibración del juez y una medición de
+recursos.
+**Testable** ✓ el reporte y los valores de configuración se comprueban en el repo; el rechazo
+sin pesos es un test.
+
+---
+
+## US-233b — Un conjunto dorado revisado a mano mide la extracción de la población por criterio y la concordancia de los estados
+
+> Linear: [L1D-299](https://linear.app/l1der-lab-mjbc/issue/L1D-299)
+
+`FEAT-T5a` · Sprint 4 · Estimación **3** · — (técnica, PRD §17; OL-06) · FR-20, FR-25 · TBD-02, TBD-20 · M-08.3, M-08.4 · ⛔ ADR-47 (aceptado) · ⛔ DEC-11 (US-021) · escenario aceptado `[S4 resp. 8]` · ↪ US-242, US-243, US-118 (muestra humana), US-233a (`proveedor: local`) · 🔗 Mide a: US-242, US-243, US-244 · 🔗 Regresión [AC-T5.4] → US-074 (PR que cambia prompt, modelo, catálogo o corpus)
+
+> **Decidido (usuario, 2026-10-29):** segunda mitad de US-233: conjunto dorado de población (muestra humana con `PLANTILLA.md` ampliada; tareas humanas `l1d-117` 2.3 y `l1d-244` 2.2) y suite por criterio: precisión y cobertura por criterio, tasa de duplicados, `finish_reason=length` = 0, concordancia de estados, regresión de «sin evidencia» y repetición de la causa del bucle en ≥ 20 casos (R17) `[S4 resp. 6]` `[S4 resp. 3]`.
+
+## Story
+Como responsable de calidad de IA, quiero un conjunto dorado de la población de los estudios
+revisado por una persona y una suite que mida contra él la extracción y los estados, para saber
+si la aplicabilidad dice la verdad antes de enseñarla en la demo.
+
+## AC (Given/When/Then)
+- **AC-1 (happy path · conjunto dorado)** · Dada la muestra revisada por el usuario con
+  `data/evaluation/corpus-metadatos/PLANTILLA.md` ampliada (tareas `[HUMANO]` `l1d-117` 2.3 y
+  `l1d-244` 2.2), cuando se versiona, entonces `data/evaluation/poblacion-dorado/` contiene,
+  por (documento, criterio, fragmento), los valores esperados con su `scope`, el rol del
+  revisor y la fecha, con ≥ 30 pares documento × criterio estratificados por tipo de fuente
+  (guía, ensayo, revisión) e idioma (es/en). `[S4 resp. 6]` `[R9]` (asumido el tamaño mínimo)
+- **AC-2 (borde · precisión y cobertura por criterio)** · Dado el conjunto dorado, cuando se
+  ejecuta `evaluate --suite poblacion` con `proveedor: local`, entonces el reporte trae la
+  precisión y la cobertura de cada criterio frente a las metas en configuración y la tasa de
+  duplicados. `[M-08.3]` `[M-08.4]` `[S4 resp. 3]`
+- **AC-3 (invariante · sin cortes por longitud)** · Dada la ejecución del AC-2, cuando se
+  cuentan las tareas con `finish_reason = length`, entonces son 0; si hay alguna, la suite
+  termina con código ≠ 0 y la nombra por documento y criterio, sin contenido. `[R4]`
+  `[S4 resp. 3]` `[RN-14]`
+- **AC-4 (borde · concordancia de estados)** · Dados los estados esperados del conjunto
+  dorado (casos F-20…F-24) y los calculados por US-243, cuando se comparan, entonces el
+  reporte da la concordancia por estado y cuenta aparte cada No coincide indebido (R2) y cada
+  Coincide indebido (R1). `[S4 resp. 8]` `[M-08.2]`
+- **AC-5 (borde · regresión de «sin evidencia»)** · Dado el baseline registrado, cuando se
+  ejecuta la suite con la extracción de US-242, entonces la métrica «sin evidencia» no baja
+  respecto del baseline y el análisis sin evidencia sigue con cero invocaciones del LLM.
+  `[RN-02]` `[G-4]`
+- **AC-6 (borde · la causa del bucle en ≥ 20 casos)** · Dados ≥ 20 pares pregunta + fuentes
+  distintos del caso del tamoxifeno, cuando se ejecuta la tarea corta de US-242 sobre cada uno,
+  entonces el reporte da la tasa de cortes por longitud y la causa de OUT-06 solo se marca
+  «cerrada» si esa tasa es 0. `[R17]` `[OUT-06]`
+- **AC-7 (borde · sin conjunto revisado)** · Dado un conjunto dorado sin revisor o sin fecha,
+  cuando se ejecuta la suite, entonces marca la precisión y la cobertura como «no
+  concluyente» y nunca PASS. (asumido)
+- **AC-8 (invariante · solo corpus público)** · Dados el conjunto dorado y el reporte,
+  cuando corre la CI, entonces solo contienen corpus público con licencia aceptada y métricas
+  agregadas, ningún dato de paciente, y el escaneo de PII no encuentra nada. `[RN-14]`
+  `[RN-21]`
+
+## Contexto técnico
+Suite nueva `poblacion` en `app/evaluation/` (OL-06) que reutiliza el extractor de US-242 y las
+reglas de US-243; la revisión humana es una tarea `[HUMANO]` del usuario (unos 20–40 min) sobre
+la plantilla ampliada (valor, `scope`, fragmento y estado esperado por paciente de prueba). Las
+metas de precisión por criterio son provisionales en configuración (RN-22) hasta DEC-07 (S5).
+Ejecución manual en el MacBook de referencia; la CI corre la suite con adaptadores falsos para
+la regresión de forma. Sin TDD de contenido (suite `evaluate`); la orquestación de la suite, con
+adaptadores falsos.
+
+## Non-goals
+Herramienta de revisión humana a escala (S5). Extracción doble con comparación (S6 / si hay
+capacidad).
+
+## INVEST
+**Small** ✓ un conjunto dorado y una suite por criterio sobre piezas existentes.
+**Testable** ✓ ocho comprobaciones sobre el reporte, el conjunto y la CI.
+*(Independent ⚠ depende de la revisión humana del usuario.)*
 
 ---
 
@@ -394,3 +521,4 @@ Nuevas familias de métricas (OCR, eventos, terminología, faltantes: FEAT-T5b).
 | Slicing v2 (ajustado el 2026-10-07) | PRD §14 S1, readme §5.0 S1 y OL-06: baseline técnico de evaluación y suite en la DoD desde el S1 | Decisión del usuario (`01-requisitos.md` §15, "Ajustes al slicing v2"): ADR-41 (US-014), DEC-06 (US-016), suite `evaluate` (US-072) y suite en la DoD (US-074) en el S1; calibración del umbral y baseline técnico (US-073) y DEC-07 (US-017) en el S2 | Decisión del usuario: desde el S1 todo PR que cambie modelo, prompt, umbral, catálogo o corpus ejecuta la suite y adjunta el reporte, sin baseline previo (US-074 AC-4); el bloqueo por regresión se activa en el S2 con el baseline de US-073 (US-074 AC-5). Lo único que se aparta del PRD es que el baseline técnico calibrado se registra en el S2 |
 | S-Pre1 | Ajuste del 2026-10-07 ("suite de evaluación desde S1"); CLAUDE.md, roadmap del S1 | DEC-03 (2026-10-09): capacidad de 80–90 puntos; el S1 tenía 124 | DEC-03 (`[Pre-S1 resp. 9]`): US-014, US-016, US-072 y US-074 vuelven al S2; en el S1, `ai-eval-runner` evalúa la demo a mano. US-075 (baseline manual) sigue en el S1 (PRD §2.2) |
 | Ajuste del S2 | Slicing v2: US-016 · DEC-06 en el S2; US-072 de 8; US-073 `?` | Refinamiento del S2 (usuario, 2026-10-21, `[S2 resp. 1]`): DEC-06 al S4 (sesión con oncólogos); US-072 partida 5 + 3 en el S2; US-073 = 3 | Se siguió el ajuste del S2 |
+| S4-2026-10-29 | US-233 (3 pts, S4) con 8 AC, dos de ellos sobre el corpus de ≥ 20 documentos (US-120); DEC-06 y DEC-07 en la sesión de oncólogos del S4 | Refinamiento del S4 (usuario, 2026-10-29): US-233 se parte en US-233a (3) y US-233b (3); AC-3 y AC-8 pasan a US-120 (S5) `[S4 resp. 6]`; DEC-06 y DEC-07 pasan al S5 `[S4 resp. 1]` | Decisión del usuario |

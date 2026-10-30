@@ -2,16 +2,17 @@
 
 > Linear: [L1D-34](https://linear.app/l1der-lab-mjbc/issue/L1D-34)
 
-**Talla:** L · **Sprint:** 1 (US-063, US-064: citas y soporte) · 3 (US-065: procedencia del contexto; US-236: alias de chunks en la cita) · 3 (US-127: RN-25; antes S5, reordenamiento del 2026-10-23) · las etapas siguientes de RN-01 las amplían sus Features con `🔗 Regresión [RN-01] → US-064`: aplicabilidad S5 (US-123); resumen (US-095), supuestos y limitaciones (US-129, US-130) y síntesis (FEAT-07), si hay capacidad · **Capacidad:** T-1 (AC-T1.2 parte S1, AC-T1.3), CAP-10 (AC-10.4) · **Recorrido principal:** sí
+**Talla:** L · **Sprint:** 1 (US-063, US-064: citas y soporte) · 3 (US-065: procedencia del contexto; US-236: alias de chunks en la cita) · 3 (US-127: RN-25; antes S5, reordenamiento del 2026-10-23) · 4 (US-245: afirmaciones atómicas con marco de atribución determinista, OUT-08, `[S4 resp. 2]`) · las etapas siguientes de RN-01 las amplían sus Features con `🔗 Regresión [RN-01] → US-064`: aplicabilidad S5 (US-123); resumen (US-095), supuestos y limitaciones (US-129, US-130) y síntesis (FEAT-07), si hay capacidad · **Capacidad:** T-1 (AC-T1.2 parte S1, AC-T1.3), CAP-10 (AC-10.4) · **Recorrido principal:** sí
 **Requisitos:** RN-01 (dueña: validador de citas y soporte para todo tipo de afirmación; en el S1, opciones y afirmaciones sueltas) · FR-10 (dueña, vía HU-03 escenario 3) · RN-04 (dueña) · RN-07 (dueña: etiquetas en el contexto y exclusión de rechazados) · RN-25 (dueña, S3: US-127) · IA-04
-**Evidencia:** [→ PRD §6 RN-01, RN-04, RN-07, RN-24], [→ PRD §5 FR-10], [→ PRD §12 Grounding], [→ PRD §18.4 AC-T1.2, AC-T1.3], [→ PRD §18.3.10 AC-10.4, M-10.1], [→ PRD §18.3.2 AC-02.6], [→ readme §5 HU-03 escenario 3], [→ readme §6 OL-02 (tareas 5, 8; tests adicionales NLI)], [→ readme §6 OL-03 (tarea 2.3)], [→ readme §4.1 `CitedSource`, `DiscardedOption`, `Provenance`], [→ readme §3.3 #34], [→ docs/AS-IS.md P12]
+**Evidencia:** [→ PRD §6 RN-01, RN-04, RN-07, RN-24], [→ PRD §5 FR-10], [→ PRD §12 Grounding], [→ PRD §18.4 AC-T1.2, AC-T1.3], [→ PRD §18.3.10 AC-10.4, M-10.1], [→ PRD §18.3.2 AC-02.6], [→ readme §5 HU-03 escenario 3], [→ readme §6 OL-02 (tareas 5, 8; tests adicionales NLI)], [→ readme §6 OL-03 (tarea 2.3)], [→ readme §4.1 `CitedSource`, `DiscardedOption`, `Provenance`], [→ readme §3.3 #34], [→ docs/AS-IS.md P12], [→ backlog/sprints/S3-demo-outcomes.md OUT-08], [→ backlog/sprints/S3-demo-cierre.md §5]
 **Dependencias:** ↪ US-055 (pipeline), US-052 (constructor de contexto) · ⛔ ADR-39 (modelo NLI real; los AC se verifican con el adapter falso) · 🔗 Medido en: US-072 (M-10.1 = 100 %, fidelidad y precisión de citas M-07.2, G-2) · 🔗 Consumida por: US-057 (última defensa ante inyección), US-061 (descartadas en la UI)
 **Valor:** el oncólogo no puede verificar cada frase de la IA contra cada fuente; necesita que el sistema lo haga por él y que lo que no se pueda respaldar nunca se muestre como válido (P12, JTBD 8). Esta Feature es la garantía G-2: cero opciones sin cita a un chunk recuperado y sin soporte, y cada dato del paciente que viaja a la IA lleva su procedencia.
-**Stories:** US-063, US-064 (10 puntos, S1) · US-065 (3 puntos, S3) · US-236 (3 puntos, S3) · US-127 (3 puntos, S3; reordenamiento del 2026-10-23)
+**Stories:** US-063, US-064 (10 puntos, S1) · US-065 (3 puntos, S3) · US-236 (3 puntos, S3) · US-127 (3 puntos, S3; reordenamiento del 2026-10-23) · US-245 (5 puntos, S4, `[S4 resp. 2]`)
 
 ## Fixtures
 
 - Usa **FX-06a-a** (corpus de prueba) y **FX-06a-b** (LLM y NLI falsos), declarados en FEAT-06a.
+- **FX-T1a-b · Afirmaciones atómicas** (US-245; extiende FX-06a-a y FX-06a-b, `Q-HER2` y `ch-m1-1`). LLM falsos con una opción O-1 que cita `ch-m1-1` y tres afirmaciones (principal P, secundaria S, salvedad V, cada una ≤ 20 palabras): `LLM-ATOM-OK` · `LLM-ATOM-SEC` (S en `neutral`) · `LLM-ATOM-PRIN` (P en `neutral`) · `LLM-ATOM-SALV` (V en `neutral`) · `LLM-ATOM-ALIAS` (S empieza por «El fragmento C1 reporta que…») · `LLM-ATOM-PRESC` (S contiene «recomendado para este paciente»). NLI falso: `entailment` salvo lo indicado.
 - **FX-T1a-a · Paciente con datos en distintos estados.** Paciente semilla (a) más cuatro biomarcadores insertados por el test: Ki-67 `20 %` con `entry_method = ocr`, `extraction_confidence = media`, `review_status = requiere_revision`; receptor de progesterona `negativo` con `review_status = rechazado`; receptor de progesterona `positivo` con `review_status = reemplazado`; receptor de estrógeno `90 %` con `review_status = requiere_revision` y `conflicts_with_id` apuntando al receptor de estrógeno del seed.
 
 ---
@@ -110,6 +111,7 @@ tomar por evidencia algo que la IA agregó por su cuenta.
   `checkProhibitedTerms` sobre la respuesta serializada completa (incluidos
   `unsupportedClaims` y la justificación de la descartada) devuelve cero coincidencias.
   `[RN-23]` `[RN-01]` `[§15 resp. 2]`
+  > **Decidido (sesión principal, 2026-10-29, a confirmar por el usuario en la revisión del PR):** desde el S4 el motivo de esta descartada es `discardReason = lenguaje_no_permitido` (US-245 AC-6), para que la UI distinga el lenguaje no permitido de la falta de soporte (US-246); el texto prohibido sigue sin devolverse `[S4 resp. 11]`.
 - **AC-8 (borde · afirmación suelta prescriptiva)** · Dado un LLM falso que devuelve una
   limitación con "debe recibir" y el NLI falso en `entailment`, cuando se valida,
   entonces `limitations = []`, `omittedClaims = 1` y `checkProhibitedTerms` sobre la
@@ -287,6 +289,93 @@ estricto (regla de dominio): commit `test(L1D-nn)` con el AC-2 en rojo antes del
 
 ---
 
+## Parte S4
+
+## US-245 — El generador escribe afirmaciones atómicas, el código añade el marco de atribución y cada afirmación se verifica según su papel
+
+> Linear: [L1D-295](https://linear.app/l1der-lab-mjbc/issue/L1D-295)
+
+`FEAT-T1a` · Sprint 4 · Estimación **5** · HU-03 · RN-01 (regresión, regla por papel), FR-10, RN-04, RN-23, RN-24, ADR-34 · AC-T1.2, AC-10.4 · ⛔ ADR-39 (LLM y NLI reales; los AC usan adapters falsos) · ↪ US-064, US-063, US-236 (alias de chunks), US-225 (generación) · 🔗 Produce para: US-246 (`discardReason = lenguaje_no_permitido`) · 🔗 Medido en: US-233a (fidelidad, precisión de citas y lenguaje con modelos locales) · 🔗 Regresión [RN-01] → US-064 · 🔗 Regresión [RN-04] → US-063 · 🔗 Regresión [RN-23] → US-068 · 🔗 Regresión [RN-24] → US-191 (Post-MVP: la memoria de análisis previos no existe aún en el pipeline)
+
+> **Decidido (usuario, 2026-10-29):** arreglo de OUT-08 con **afirmaciones atómicas**: el LLM escribe oraciones declarativas cortas (≤ 20 palabras), sin modales normativos y sin el alias «El fragmento Cn»; el código añade el marco de atribución de forma determinista («La fuente reporta que…», como ADR-34); la opción se conserva si su afirmación **principal** tiene soporte NLI; una **secundaria** sin soporte se omite y cuenta en `omittedClaims` (RN-01); una afirmación marcada como **salvedad** sin soporte descarta la opción. Requiere validación clínica en la sesión de oncólogos del S4 (no bloquea). La suite `evaluate` (OL-06) es obligatoria `[S4 resp. 2]`.
+> **Decidido (sesión principal, 2026-10-29, a confirmar por el usuario en la revisión del PR):** el lenguaje no permitido deja de compartir motivo con la falta de soporte: `DiscardedOption.discardReason` gana el valor `lenguaje_no_permitido`, que emite `rag-orchestrator` y consume US-246 (cambio aditivo, ADR-26) `[S4 resp. 11]`.
+
+## Story
+Como oncólogo, quiero que cada frase de una opción diga una sola cosa que la fuente respalda,
+con la atribución a la fuente escrita por el sistema y no por la IA, para no perder opciones
+correctas por frases largas que el verificador no sabe juzgar y para que ninguna salvedad de la
+fuente desaparezca sin que la opción se aparte.
+
+## AC (Given/When/Then)
+- **AC-1 (happy path)** · Dados `Q-HER2`, `LLM-ATOM-OK` y el NLI falso en `entailment` de
+  FX-T1a-b, cuando se valida, entonces O-1 queda en `evidenceOptions` con `rationale` =
+  «La fuente reporta que » + la afirmación principal y cada afirmación secundaria y salvedad en
+  `details` con el mismo marco; y el adapter NLI se invocó 3 veces, cada una con la afirmación
+  sin el marco como hipótesis y solo el texto de `ch-m1-1` como premisa (nunca otra afirmación
+  generada ni el marco). `[S4 resp. 2]` `[RN-01]` `[ADR-34]` `[RN-04]` `[RN-24]`
+- **AC-2 (borde · secundaria sin soporte)** · Dado `LLM-ATOM-SEC` (secundaria en `neutral`),
+  cuando se valida, entonces O-1 sigue en `evidenceOptions` sin esa afirmación,
+  `omittedClaims = 1` y su texto no aparece en ningún campo de la respuesta. `[S4 resp. 2]`
+  `[RN-01]` `[AC-T1.2]`
+- **AC-3 (borde · principal sin soporte)** · Dado `LLM-ATOM-PRIN` (principal en `neutral`),
+  cuando se valida, entonces `evidenceOptions = []` y O-1 está en `discardedOptions` con
+  `discardReason = afirmacion_sin_soporte` y `unsupportedClaims` con la principal.
+  `[S4 resp. 2]` `[FR-10]` `[AC-10.4]`
+- **AC-4 (borde · salvedad sin soporte)** · Dado `LLM-ATOM-SALV` (salvedad en `neutral`,
+  principal y secundaria en `entailment`), cuando se valida, entonces O-1 va a
+  `discardedOptions` con `discardReason = afirmacion_sin_soporte`: una opción nunca se muestra
+  más fuerte que su fuente. `[S4 resp. 2]` `[RN-01]`
+- **AC-5 (borde · forma de la afirmación)** · Dado `LLM-ATOM-ALIAS`, cuya secundaria empieza
+  por «El fragmento C1 reporta que…», cuando se valida, entonces esa secundaria se omite
+  (`omittedClaims = 1`), la opción se conserva por su principal y la cadena «fragmento C» no
+  aparece en la respuesta. `[S4 resp. 2]` `[OUT-08]` (asumido: una afirmación con alias, con
+  modal normativo o de más de 20 palabras se trata como sin soporte antes del NLI, con la
+  regla de su papel)
+- **AC-6 (borde · lenguaje no permitido)** · Dado `LLM-ATOM-PRESC`, cuya secundaria contiene
+  «recomendado para este paciente» con el NLI en `entailment`, cuando se valida, entonces O-1
+  va a `discardedOptions` con `discardReason = lenguaje_no_permitido` y
+  `checkProhibitedTerms` sobre la respuesta serializada completa devuelve cero
+  coincidencias. `[RN-23]` `[S4 resp. 11]` `[§15 resp. 2]`
+- **AC-7 (borde · contrato aditivo del motivo)** · Dado `contracts/schemas/evidence.yaml`
+  con `lenguaje_no_permitido` añadido al enum de `DiscardedOption.discardReason`, cuando se
+  ejecutan `sync-contracts`, `contracts:check` y `oasdiff`, entonces no hay cambio
+  incompatible, existe el ejemplo `con-evidencia-solo-descartadas-lenguaje.json`, los mocks
+  MSW/`respx` se construyen desde él y `clinical-api` lo valida con su cliente generado y lo
+  persiste sin pérdida. `[ADR-26]` `[S4 resp. 11]` `[RN-06]`
+- **AC-8 (borde · NLI no disponible)** · Dado el adapter NLI lanzando un error, cuando se
+  valida, entonces `rag-orchestrator` responde `503` con `error = "NLI_UNAVAILABLE"` y ninguna
+  opción se devuelve sin validar. `[RN-01]` (regresión de US-064 AC-6)
+
+## Contexto técnico
+Prompt de generación nuevo (versión en configuración): por opción, `claims[]` de 1 a 4
+elementos `{text, role: principal | secundaria | salvedad, citations[]}`, exactamente una
+`principal`, cada `text` ≤ 20 palabras, declarativo, sin modales normativos ni alias de
+fragmento. Es el esquema **interno** de salida del LLM, no el contrato público: `rationale` y
+`details` de `EvidenceOption` se componen en `domain/` con el marco determinista («La fuente
+reporta que…» / «The source reports that…» según el idioma de la pregunta), igual que la
+verbalización determinista de ADR-34. `SupportChecker` (US-064) pasa a verificar por
+afirmación con la regla por papel; `checkProhibitedTerms` corre antes del NLI y, si una
+afirmación de la opción tiene un término prohibido, la opción se descarta con
+`lenguaje_no_permitido` (antes `afirmacion_sin_soporte`, US-064 AC-7). Las afirmaciones sueltas
+(limitaciones) no cambian (US-064 AC-3, AC-8). **Obligatoria la suite `evaluate` (OL-06)**: el
+PR adjunta el reporte de `ai-eval-runner` con la retención de opciones, la fidelidad, la
+precisión de citas, las salidas prescriptivas (= 0) y la pregunta insignia de la guía §2.1.
+Tests: Pytest unitarios del dominio (composición del marco, regla por papel) y Pytest +
+TestClient de `/rag/query` con FX-T1a-b; `contracts:check` en la CI (AC-7); TDD estricto.
+
+## Non-goals
+Calibrar el umbral o cambiar el modelo NLI (US-233a, US-120). Solapamiento o corte por
+oraciones de los fragmentos (requiere reindexar; ADR). Texto de la UI (US-246).
+
+## INVEST
+**Small** ✓ un prompt, un esquema interno y una regla por papel sobre el validador existente;
+5 es el techo.
+**Testable** ✓ ocho tests deterministas con LLM y NLI falsos, más el reporte de `evaluate`.
+*(Valuable ⚠ la regla por papel requiere validación clínica en la sesión de oncólogos del S4;
+no bloquea.)*
+
+---
+
 ## Conflictos de fuentes
 
 | # | Fuente A | Fuente B | Se siguió |
@@ -294,3 +383,4 @@ estricto (regla de dominio): commit `test(L1D-nn)` con el AC-2 en rojo antes del
 | — | backlog/01-requisitos.md §3: RN-06 con dueña en FEAT-T1a | Encargo del lote 1: RN-06 con dueña en FEAT-06a | No es un conflicto de fuentes: la dueña de RN-06 es US-053 (FEAT-06a). Registrado para trazabilidad |
 | Slicing v2 | readme OL-03 (S1): contexto etiquetado con procedencia en el S1; PRD §14 S3: metadatos de fuente (RN-25) | Slicing v2 aprobado por el usuario (`01-requisitos.md` §15, 2026-10-07): US-065 en el S3 y US-127 en el S5 | En el S1–S2 el contexto solo lleva datos `seed` verificados; las etiquetas son necesarias desde que entran datos extraídos (S3) |
 | S3-2026-10-23 | US-065 contexto técnico: revisión real en el S3 (FEAT-03b); US-065 AC-4 y US-236 AC-7 apoyados en historias que el reordenamiento movió (US-099 al S5, US-226 sin sprint) | Reordenamiento y refinamiento del S3 (2026-10-23): FEAT-03b en el S4, US-099 en el S5 | US-065 AC-4 sobre conflicto sembrado (original → US-099 AC-8); US-236 AC-7 sobre el dataset actual y confirmada en el S3 `[S3 resp. 8]` |
+| S4-2026-10-29 | US-064 (S1) y `01-requisitos.md` §15 resp. 2: una opción con cualquier afirmación sin soporte o con término prohibido va a `discardedOptions` con `afirmacion_sin_soporte` | Refinamiento del S4 (usuario, 2026-10-29): regla por papel (principal y salvedad descartan; secundaria se omite y cuenta) `[S4 resp. 2]`; motivo propio `lenguaje_no_permitido` (sesión principal, `[S4 resp. 11]`, a confirmar en la revisión del PR) | Decisión del usuario; compatible con RN-01 porque la secundaria se trata como afirmación suelta (omitida y contada). US-245 amplía el validador de US-064 |

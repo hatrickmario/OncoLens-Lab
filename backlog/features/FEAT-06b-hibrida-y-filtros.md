@@ -2,7 +2,7 @@
 
 > Linear: [L1D-17](https://linear.app/l1der-lab-mjbc/issue/L1D-17)
 
-**Talla:** L · **Sprint:** `si-hay-capacidad` (US-112…US-115) · 4 (US-238: reescritura condicional de la consulta) · 5 (US-116) · **Capacidad:** CAP-06 (AC-06.1 parte S3: híbrida, expansión, filtros) · CAP-05 (AC-05.1: fuentes y filtros reales) · CAP-04 (AC-04.3: faltantes como "desconocido" en Backend 2) · **Recorrido principal:** sí (US-116) · no (US-112…US-115, US-238)
+**Talla:** L · **Sprint:** `si-hay-capacidad` (US-112…US-115) · 4 (US-238: reescritura condicional de la consulta, comprometida, `[S4 resp. 12]`) · 5 (US-116) · **Capacidad:** CAP-06 (AC-06.1 parte S3: híbrida, expansión, filtros) · CAP-05 (AC-05.1: fuentes y filtros reales) · CAP-04 (AC-04.3: faltantes como "desconocido" en Backend 2) · **Recorrido principal:** sí (US-116) · no (US-112…US-115, US-238)
 **Requisitos:** FR-09 (parte S3: *sparse*, filtros, expansión bilingüe; técnica sin HU, Q-08) · IA-02, IA-03 · RN-03, RN-05 (regresiones) · RN-02 (regresión; **enmienda decidida el 2026-10-23 en US-238**) · RN-11 (regresión: notas enmascaradas)
 **Evidencia:** [→ PRD §5 FR-09], [→ PRD §6 RN-02, RN-03, RN-05, RN-11], [→ PRD §12 Idioma, Recuperación], [→ PRD §18.3.4 AC-04.3], [→ PRD §18.3.5 AC-05.1], [→ PRD §18.3.6 AC-06.1, M-06.1], [→ readme §5.0 S3 KR1, KR2 ("enmascaramiento de las notas enviadas al LLM")], [→ readme §4.1 `sourcesSelected`, `filtersApplied`], [→ readme §4.2 `ClinicalContext.missingCriticalData`, `/rag/query`], [→ readme §6 OL-02 (no incluye: *sparse*, filtros), OL-04 (no incluye: selectores)], [→ readme §3.3 #10], [→ backlog/01-requisitos.md §10 V-04, §14 Q-08], [→ docs/AS-IS.md P5, JTBD 3]
 **Dependencias:** ↪ US-055 (pipeline dense), US-052 (contexto), US-117b (*sparse* poblado; antes US-117), FEAT-04 US-006 (faltantes en el contexto) · ⛔ ADR-39 (modelo *sparse* y fusión; los AC usan adapters falsos) · 🔗 Medido en: US-133 (M-06.1 sin retroceso) · 🔗 Regresión [RN-02] → US-055 · 🔗 Regresión [RN-05] → US-055 · 🔗 Regresión [RN-11] → US-049
@@ -270,11 +270,13 @@ Supertest para el registro en `analysis_basis`, Testing Library para el control.
 
 ## US-238 — Si el primer loop de recuperación no supera el umbral, un segundo loop con el LLM local reescribe la consulta solo para recuperar
 
-> Linear: pendiente (límite de issues del workspace)
+> Linear: [L1D-300](https://linear.app/l1der-lab-mjbc/issue/L1D-300)
 
-`FEAT-06b` · Sprint 4 (propuesto el 2026-10-23; capacidad por confirmar en `/sprint-refine`) · Estimación **5** · — (técnica, PRD §17; V-04) · FR-09 (recuperación), IA-02, RN-02 (**enmienda decidida**), RN-03, RN-12, RN-22 · AC-06.1 · ⛔ Enmienda a RN-02 aplicada en el PRD (ver abajo) · ⛔ ADR-39 (LLM local) · ↪ US-055, US-113 (no usa LLM; coexiste), US-226 (runner de variantes) · 🔗 Regresión [RN-02] → US-055 · 🔗 Regresión [RN-03] → US-055 · 🔗 Regresión [RN-10, RN-11, RN-12] → US-049 · 🔗 Medido en: US-133 · **Recorrido principal:** no · **Workaround en el MVP:** la recuperación sigue sin reescritura (US-055); si no hay chunks sobre el umbral el análisis responde "sin evidencia" y el oncólogo reformula a mano
+`FEAT-06b` · Sprint 4 *(comprometida en el refinamiento del S4, `[S4 resp. 12]`)* · Estimación **5** · — (técnica, PRD §17; V-04) · FR-09 (recuperación), IA-02, RN-02 (**enmienda decidida**), RN-03, RN-12, RN-22 · AC-06.1 · ✅ Enmienda a RN-02: resuelta en `docs/PRD.md` por la sesión principal `[S4 resp. 12]` · ⛔ ADR-39 (LLM local) · ↪ US-055, US-113 (no usa LLM; coexiste), US-226 (runner de variantes) · 🔗 Regresión [RN-02] → US-055 · 🔗 Regresión [RN-03] → US-055 · 🔗 Regresión [RN-10, RN-11, RN-12] → US-049 · 🔗 Medido en: US-133 · **Recorrido principal:** no · **Workaround en el MVP:** la recuperación sigue sin reescritura (US-055); si no hay chunks sobre el umbral el análisis responde "sin evidencia" y el oncólogo reformula a mano
 
 > **Enmienda decidida (usuario, 2026-10-23), a aplicar al PRD en el refinamiento del S4:** RN-02 pasa de "sin chunks sobre el umbral → 'sin evidencia' sin invocar al LLM ni al agente" a **"sin chunks sobre el umbral tras el primer loop → un único segundo loop de reescritura de la consulta con el LLM local; si el segundo loop tampoco supera el umbral → 'sin evidencia' sin invocar al LLM de generación ni al agente"**. Es el único uso del LLM permitido antes de declarar "sin evidencia". Contradice la decisión de US-113 / ADR-45 (2026-10-20: la expansión bilingüe no usa el LLM); no la reemplaza: US-113 sigue resolviéndose con sinónimos del catálogo y/o un modelo de traducción dedicado, y esta historia solo actúa cuando el primer loop ya falló. **Linear: pendiente de sincronizar.**
+
+> **Decidido (usuario, 2026-10-29):** se **compromete en el S4** con 5 pts; deja de estar «por confirmar». La enmienda a RN-02 la aplica la sesión principal en `docs/PRD.md` y el bloqueo queda resuelto. Con 9 AC supera el tope de 8 de la DoR: se registra como **excepción justificada**, igual que US-126, porque es una sola superficie (el loop de reescritura y sus invariantes: disparo, límite, términos del catálogo, pregunta original, privacidad y medición) y partirla separaría el paso de sus propias guardas `[S4 resp. 12]`.
 
 > **Alcance honesto:** el caso del demo del 2026-10-23 («¿Cuándo se considera un inhibidor de CDK4/6 adyutante?») **no dispara este loop**: un chunk superó el umbral y lo que falló fue la copia del `chunkId` (US-236). Esta historia cubre las consultas con **cero** chunks sobre el umbral (ortografía muy degradada, siglas, nombres de fármacos fuera del vocabulario de la pregunta).
 
@@ -344,7 +346,7 @@ Pytest con adapters falsos (`LLM_PROVIDER=fake` con contador de llamadas) y FX-0
 ampliados. El contrato OpenAPI cambia de forma compatible (`meta.retrievalParams.queryRewrite`).
 
 ## INVEST
-**Small** ✓ un paso condicional sobre un pipeline existente, con un límite fijo.
+**Small** ✓ un paso condicional sobre un pipeline existente, con un límite fijo. **Excepción a la DoR (9 AC > 8), aceptada:** una sola superficie, el loop de reescritura y sus invariantes; no se parte `[S4 resp. 12]`.
 **Testable** ✓ nueve AC: siete con adapters falsos y una medición en `evaluate`.
 
 ---
@@ -358,3 +360,4 @@ ampliados. El contrato OpenAPI cambia de forma compatible (`meta.retrievalParams
 | Slicing v2 | PRD FR-09 y §14 S3: búsqueda híbrida, expansión bilingüe y filtros en el S3; AC-05.1 y AC-06.1 (parte S3) | Slicing v2 aprobado por el usuario (`01-requisitos.md` §15, 2026-10-07): híbrida, bilingüe y filtros `si-hay-capacidad`; faltantes en la consulta en el S5 | AC-05.1 (filtros reales) y la parte S3 de AC-06.1 quedan en historias `si-hay-capacidad` |
 | C-Pre5 | Contrato de readme §4.1: `filtersApplied` sin filtro de antigüedad | Usuario, 2026-10-11: filtro por año de publicación | Usuario (`[Pre-S1 resp. 15]`): `publishedFromYear` en US-033 (AC-14) y US-220 en el S5 |
 | S3-2026-10-23 | Dependencia del *sparse* poblado en US-117 | Refinamiento del S3 (2026-10-23): US-117 partida en US-117a y US-117b | El *sparse* de la semilla y el versionado son de US-117b (S3) `[S3 resp. 2]` |
+| S4-2026-10-29 | US-238 «propuesta, capacidad por confirmar» y ⛔ enmienda a RN-02 pendiente de aplicar al PRD | Refinamiento del S4 (usuario, 2026-10-29): comprometida en el S4 con 5 pts; la sesión principal aplica la enmienda en el PRD; excepción a la DoR por 9 AC `[S4 resp. 12]` | Decisión del usuario |

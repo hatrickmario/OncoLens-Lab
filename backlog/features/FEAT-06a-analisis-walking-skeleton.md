@@ -2,12 +2,12 @@
 
 > Linear: [L1D-16](https://linear.app/l1der-lab-mjbc/issue/L1D-16)
 
-**Talla:** XL · **Sprint:** 1 (US-012 · ADR-39 fase A, US-224 · ADR-39 fase B, US-052…US-055, US-225, US-231a, US-231b) · 4 (US-056, US-057, US-239) · **Capacidad:** CAP-06 (S1), CAP-10 (S1), CAP-05 (AC-05.1, AC-05.3 parte S1) · T-1 (AC-T1.4) · T-4 (SEG-07, SEG-13) · **Recorrido principal:** sí
+**Talla:** XL · **Sprint:** 1 (US-012 · ADR-39 fase A, US-224 · ADR-39 fase B, US-052…US-055, US-225, US-231a, US-231b) · 6 (US-056, US-057, US-239; S4 → S6, `[S4 resp. 1]`) · **Capacidad:** CAP-06 (S1), CAP-10 (S1), CAP-05 (AC-05.1, AC-05.3 parte S1) · T-1 (AC-T1.4) · T-4 (SEG-07, SEG-13) · **Recorrido principal:** sí
 **Requisitos:** FR-09 (S1: dense, 1 opción, contrato `EvidenceAnalysis` final; dueña vía HU-03) · FR-25 (contrato vacío en el S1) · RN-02 (dueña) · RN-05 (dueña de la recuperación) · RN-06 (dueña) · RN-30 (dueña, Q-06 a) · SEG-07 · SEG-13 (V-17) · NFR-01 (medido), NFR-04, NFR-08 · IA-01…IA-04, IA-07, IA-11 · ADR-39
 **Evidencia:** [→ PRD §5 FR-09, FR-25], [→ PRD §6 RN-02, RN-03, RN-05, RN-06, RN-28, RN-30], [→ PRD §7 NFR (rendimiento, capacidad, fiabilidad)], [→ PRD §10], [→ PRD §11 #7, #13], [→ PRD §12], [→ PRD §18.3.5 AC-05.1, AC-05.3], [→ PRD §18.3.6 AC-06.1, AC-06.2, M-06.1, M-06.2], [→ PRD §18.3.10 AC-10.1, AC-10.4, M-10.1], [→ PRD §18.4 AC-T1.4], [→ readme §5 HU-03], [→ readme §6 OL-02, OL-03], [→ readme §4.1 `POST /platform/evidence-analyses`], [→ readme §4.2 `/rag/query`, `ClinicalContext`, `RagQueryInternalRequest/Response`], [→ readme §2.5 Rate limiting, credencial de servicio], [→ readme §3.3 #5, #8, #26], [→ readme §6.1 #1, #4, #6, #7, #8], [→ backlog/02-adrs.md ADR-39], [→ backlog/01-requisitos.md §14 Q-06]
 **Dependencias:** ↪ US-033 (contrato), US-038 (esquema), US-041 (catálogo), US-211 (sesión mínima, S1), US-049 (desidentificación), US-058/US-059 (corpus), US-063/US-064 (citas y soporte), US-065 (etiquetas), US-066 (Base del análisis) · ⛔ ADR-39 (adapters reales: `llm/`, `embeddings/`, `reranker/`, `nli/`; los de recuperación y NLI los construyen US-231a y US-231b) · 🔗 Medido en: US-072 (M-10.1, fidelidad y precisión de citas M-07.2), US-073 (M-06.1, M-06.2) · 🔗 Regresión [RN-15] → US-148 (activa desde S6) · 🔗 Regresión [RN-17] → US-198 (Post-MVP) · 🔗 Regresión [FR-15] → US-204 (Post-MVP)
 **Valor:** hoy el oncólogo busca evidencia a mano y no sabe si lo que encuentra se apoya de verdad en una fuente (P5, P12). Con esta Feature, desde el primer sprint puede hacer una pregunta en lenguaje natural sobre su paciente y recibir, de punta a punta, un análisis citado, verificado y persistido, o un "sin evidencia" honesto, sin que la IA toque datos clínicos ni le prescriba nada. Es la demostración de que la hipótesis (3) es técnicamente viable.
-**Stories:** US-012 · ADR-39 (fase A), US-224 · ADR-39 (fase B), US-052, US-053, US-054, US-055, US-225, US-231a, US-231b (31 puntos, S1, más 8 de US-231a y US-231b, decisión 75 de `S1-plan.md`) · US-056, US-057 (6 puntos, S4) · US-231 dividida en US-231a y US-231b (no suma)
+**Stories:** US-012 · ADR-39 (fase A), US-224 · ADR-39 (fase B), US-052, US-053, US-054, US-055, US-225, US-231a, US-231b (31 puntos, S1, más 8 de US-231a y US-231b, decisión 75 de `S1-plan.md`) · US-056, US-057, US-239 (11 puntos, S6, `[S4 resp. 1]`) · US-231 dividida en US-231a y US-231b (no suma)
 
 > **Propuesta de división (talla XL: atraviesa los tres servicios y suma 7 historias).** Publicar como dos Features hermanas sin cambiar los IDs: **06a-B2 Pipeline de evidencia** (`rag-orchestrator`: US-012, US-224, US-055, US-225, US-231a, US-231b, US-057 y la parte de semáforo y *deadline* de US-056) y **06a-B1 Gateway** (`clinical-api`: US-052, US-053, US-054 y la parte de *rate limit* de US-056). El panel es FEAT-10a.
 
@@ -586,7 +586,9 @@ Dónde se verifica: Pytest con FX-06a-c y modelos reales, `@pytest.mark.models` 
 
 > Linear: [L1D-107](https://linear.app/l1der-lab-mjbc/issue/L1D-107)
 
-`FEAT-06a` · Sprint 4 · Estimación **3** · HU-03 · RN-30 (dueña, Q-06 a), NFR-04, IA-11, FR-09 (`429`, `504`) · AC-06.1 (`429/504`) · ↪ US-052, US-055
+`FEAT-06a` · Sprint 6 *(S4 → S6, `[S4 resp. 1]`)* · Estimación **3** · HU-03 · RN-30 (dueña, Q-06 a), NFR-04, IA-11, FR-09 (`429`, `504`) · AC-06.1 (`429/504`) · ↪ US-052, US-055
+
+> **Decidido (usuario, 2026-10-29):** pasa del S4 al **S6**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca `[S4 resp. 1]`.
 
 ## Story
 Como oncólogo del piloto, quiero que el sistema limite cuántos análisis se lanzan y
@@ -635,7 +637,9 @@ integración (propagación de `429`/`504`).
 
 > Linear: [L1D-108](https://linear.app/l1der-lab-mjbc/issue/L1D-108)
 
-`FEAT-06a` · Sprint 4 · Estimación **3** · — (técnica, PRD §17) · SEG-13 (V-17) · ↪ US-055 · 🔗 Consume: US-063, US-064 (última defensa: validación de citas y soporte) · 🔗 Medido en: US-072 (casos de inyección del dataset)
+`FEAT-06a` · Sprint 6 *(S4 → S6, `[S4 resp. 1]`)* · Estimación **3** · — (técnica, PRD §17) · SEG-13 (V-17) · ↪ US-055 · 🔗 Consume: US-063, US-064 (última defensa: validación de citas y soporte) · 🔗 Medido en: US-072 (casos de inyección del dataset)
+
+> **Decidido (usuario, 2026-10-29):** pasa del S4 al **S6**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca `[S4 resp. 1]`.
 
 ## Story
 Como responsable de seguridad, quiero que el texto de los chunks y la pregunta del
@@ -680,7 +684,9 @@ integración con LLM falso (AC-5).
 
 > Linear: [L1D-289](https://linear.app/l1der-lab-mjbc/issue/L1D-289)
 
-`FEAT-06a` · Sprint 4 (propuesto el 2026-10-23; capacidad por confirmar en `/sprint-refine`) · Estimación **5** · HU-03 · NFR-04 (enmienda: de 2–3 a **4 concurrentes**), NFR-08, RN-30, RN-22, IA-11 · AC-06.1 (`429/504`) · ↪ US-056 (semáforo del LLM y *rate limit*), US-055, US-225, US-231a, US-231b · ⛔ ADR-39 (la memoria se mide con los modelos reales) · 🔗 Regresión [RN-30] → US-056 · 🔗 Medido en: US-233 (suite `evaluate` con modelos locales)
+`FEAT-06a` · Sprint 6 *(S4 → S6, `[S4 resp. 1]`)* · Estimación **5** · HU-03 · NFR-04 (enmienda: de 2–3 a **4 concurrentes**), NFR-08, RN-30, RN-22, IA-11 · AC-06.1 (`429/504`) · ↪ US-056 (semáforo del LLM y *rate limit*), US-055, US-225, US-231a, US-231b · ⛔ ADR-39 (la memoria se mide con los modelos reales) · 🔗 Regresión [RN-30] → US-056 · 🔗 Medido en: US-233a (suite `evaluate` con modelos locales; US-233 dividida)
+
+> **Decidido (usuario, 2026-10-29):** pasa del S4 al **S6**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca `[S4 resp. 1]`.
 
 > **Origen (demo del 2026-10-23):** tres análisis lanzados con ~12 s de diferencia (22:58:30, 22:58:44 y 22:58:56) se solaparon en `rag-orchestrator`, que el kernel mató por memoria (`exit 137`, `OOMKilled = true`, a las 22:59:43; el servicio ya usa ~8,3 GB de 12,6 GB con una sola consulta). Milvus cayó en el mismo segundo. Las consultas siguientes devolvieron «No se pudo completar el análisis» (`sin_conexion_con_rag`) hasta reiniciar los contenedores. US-056 protege **solo la generación del LLM** (`INFERENCE_CONCURRENCY`); la recuperación, el *reranker* y el NLI corren sin límite y son los que consumen la memoria.
 
@@ -728,3 +734,4 @@ Autoescalado o varias réplicas de `rag-orchestrator`. Cola persistente entre re
 | Slicing v2 · Q-06 revisada | Q-06 (a) y readme OL-03: *rate limit* RN-30 y semáforo en el S1; separación instrucciones/datos (OL-03) en el S1 | Slicing v2 y Q-06 revisada (`01-requisitos.md` §15): US-056 (*rate limit* RN-30) y US-057 en el S4 — **aceptado por el usuario el 2026-10-07** | Decisión del usuario. Hasta el S4 un único usuario de demo y datos sintéticos; el límite y la defensa de *prompt injection* llegan antes de G-Demo (S5) y del piloto |
 | Refinamiento del S1 · P-5 | US-012 · ADR-39 (8) y US-055 (8) en el S1 | DoR del S1 (≤ 5 pts) y retro del Pre-S1 P-5 — **aprobado por el usuario el 2026-10-13** `[S1 resp. 6]` | US-012 → fase A (5) + US-224 fase B (3); US-055 → recuperación (5) + US-225 generación (3). Mismos 29 puntos; AC movidos con su procedencia anotada |
 | División de US-231 · decisión 75 | US-231 (propuesta, 8, decisión 74), con *Small* ✗ y la división (embeddings + *reranker* + idioma · NLI + *smoke*) propuesta en su INVEST | Decisión del usuario (2026-10-17): dividir 5 + 3, ambas en el S1 entre las oleadas 6 y 7 | US-231a (recuperación, 5) + US-231b (NLI y *smoke* de la semilla, 3). Mismos 8 puntos; AC movidos con `ex US-231 AC-n`; los AC con dos resultados en un Then (AC-2, AC-3, AC-8 originales) se separan |
+| S4-2026-10-29 | Reordenamiento del 2026-10-23: US-056, US-057 y US-239 en el S4 | Refinamiento del S4 (usuario, 2026-10-29): pasan al S6; el S4 se compromete con ≈ 57 pts y se recorta de menor a mayor prioridad (gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca) `[S4 resp. 1]` | Decisión del usuario |
