@@ -4,8 +4,9 @@ import type {
   PatientAdminSummary,
   PatientSummary,
 } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
+import { faltantesDe } from '../completeness/completeness.rules.js';
 import type { CompletenessService } from '../completeness/ports.js';
-import type { TiposDeCancerHabilitados } from '../evidence-analysis/ports.js';
+import type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
 import { PacienteNoEncontradoError } from './patients.errores.js';
 import type { FichaRepository, FilaDePacienteDeLaFicha } from './ficha.repository.js';
 import {
@@ -53,8 +54,7 @@ async function faltantesCriticos(
   patientId: string,
 ): Promise<FaltantesDeLaFicha> {
   try {
-    const { items } = await completitud.calcular(patientId);
-    return { missingCriticalCount: items.filter((item) => item.status === 'faltante').length };
+    return { missingCriticalCount: faltantesDe(await completitud.calcular(patientId)).length };
   } catch {
     return { missingCriticalCount: 0, completenessAvailable: false };
   }

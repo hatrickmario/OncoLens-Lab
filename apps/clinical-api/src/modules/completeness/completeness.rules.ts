@@ -64,9 +64,24 @@ export function estadoDeVerificacion(
     : 'presente_sin_verificar';
 }
 
-/** Paso 1: el tipo de cáncer sale del `Diagnosis` activo vigente; `null` si no hay. */
+const compararTexto = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
+
+/**
+ * El `Diagnosis` vigente: el mismo criterio que la ficha y el listado (`diagnosed_at` más reciente, desempate por `id`
+ * ascendente). La BD no garantiza un solo activo por paciente (`diagnosis_patient_id_is_active_idx` no es único), así
+ * que todas las salidas del checklist se calculan sobre este mismo registro.
+ */
+export function diagnosticoVigente(
+  diagnosticos: readonly RegistroDeDato[],
+): RegistroDeDato | undefined {
+  return [...registrosVigentes(diagnosticos)].sort(
+    (a, b) => compararTexto(b.fecha ?? '', a.fecha ?? '') || compararTexto(a.id, b.id),
+  )[0];
+}
+
+/** Paso 1: el tipo de cáncer sale del `Diagnosis` vigente; `null` si no hay. */
 export function tipoDeCancerActivo(diagnosticosActivos: readonly RegistroDeDato[]): string | null {
-  const activo = registroQueCuenta(registrosVigentes(diagnosticosActivos));
+  const activo = diagnosticoVigente(diagnosticosActivos);
   const tipo = activo?.columnas['cancer_type'];
   return typeof tipo === 'string' ? tipo : null;
 }
@@ -198,14 +213,7 @@ export function calcularChecklist(entrada: EntradaDelChecklist): EstadoDeItem[] 
   }));
 }
 
-/** Esqueleto (L1D-95): se implementa en el commit refactor. */
-export function faltantesDe(_checklist: ChecklistDelPaciente): ItemDelChecklist[] {
-  throw new Error('no implementado');
-}
-
-/** Esqueleto (L1D-95): se implementa en el commit refactor. */
-export function diagnosticoVigente(
-  _diagnosticos: readonly RegistroDeDato[],
-): RegistroDeDato | undefined {
-  throw new Error('no implementado');
+/** Los ítems en estado `faltante`, en el orden del catálogo: ÚNICA definición de «faltante» (contador, endpoint y análisis). */
+export function faltantesDe(checklist: ChecklistDelPaciente): ItemDelChecklist[] {
+  return checklist.items.filter((item) => item.status === 'faltante');
 }

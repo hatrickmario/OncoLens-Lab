@@ -25,7 +25,7 @@ import {
   EtiquetaDeDatoCriticoNoDisponibleError,
   type TraceIdGenerator,
 } from './ports.js';
-import { crearTraceIdMiddleware } from './trace-id.middleware.js';
+import { crearTraceIdMiddleware, traceIdDe } from '../../middleware/trace-id.middleware.js';
 
 export interface DependenciasDelController {
   service: EvidenceAnalysisService;
@@ -106,10 +106,6 @@ function rechazoDe(error: unknown): Rechazo | undefined {
 export function evidenceAnalysisController(dependencias: DependenciasDelController): Router {
   const { service, traceIds, registrar } = dependencias;
   const router = Router();
-
-  function traceIdDe(response: Response): string {
-    return response.locals.traceId ?? '';
-  }
 
   function registrarResultado(response: Response, resultado: string, extra: LineaDeLog = {}): void {
     const { traceIdEntrante } = response.locals;

@@ -45,6 +45,19 @@ describe('repositorio de completitud', () => {
     await expect(lectura).rejects.toThrow('entidad_de_destino_no_soportada Exam');
   });
 
+  it('rechaza constructor y toString como entidad de destino cuando se piden, sin resolverlas por el prototipo', async () => {
+    const fm2 = await sembrarFM2(
+      await prepararSiembra(cliente, generadorDeIds(ESPACIO_DE_IDS + 3)),
+    );
+    const repositorio = createCompletenessRepository(cliente);
+
+    for (const heredada of ['constructor', 'toString']) {
+      await expect(
+        repositorio.registrosSinFiltrarPorRevision(fm2.patientId, [heredada]),
+      ).rejects.toThrow(`entidad_de_destino_no_soportada ${heredada}`);
+    }
+  });
+
   it('no trae description de los ClinicalEvent cuando los lee, aunque el texto libre tenga datos del paciente', async () => {
     const marcador = 'MARCADOR-DESCRIPCION-SINTETICA';
     const fm2 = await sembrarFM2(

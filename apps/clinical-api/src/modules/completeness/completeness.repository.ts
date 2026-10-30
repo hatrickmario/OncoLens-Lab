@@ -36,11 +36,12 @@ interface ConsultaDeEntidad {
 const FECHA = (columna: string) => `to_char(${columna}, 'YYYY-MM-DD')`;
 
 const CONSULTAS: Readonly<Record<string, ConsultaDeEntidad>> = {
-  // Solo el diagnóstico activo (design D4): un único registro por paciente.
+  // Los diagnósticos activos (design D4). La BD NO garantiza uno solo (`diagnosis_patient_id_is_active_idx` no es
+  // único): llegan todos, con `diagnosed_at` como fecha, y `diagnosticoVigente()` elige el mismo que la ficha.
   Diagnosis: {
     desde: 'clinical.diagnosis t',
     filtro: 't.patient_id = $1 AND t.is_active',
-    fecha: 'NULL',
+    fecha: FECHA('t.diagnosed_at'),
     origen: 't',
   },
   Biomarker: {
@@ -79,13 +80,17 @@ const CONSULTAS: Readonly<Record<string, ConsultaDeEntidad>> = {
 type Allowlist = Readonly<Record<string, { readonly campos: readonly string[] }>>;
 const ENTIDADES_PERMITIDAS = (allowlistDelModelo as { entidades: Allowlist }).entidades;
 
+/** Campos permitidos de una entidad; `Object.hasOwn` evita resolver `constructor` o `toString` por la cadena de prototipos. */
+const camposPermitidos = (entidad: string): readonly string[] =>
+  Object.hasOwn(ENTIDADES_PERMITIDAS, entidad) ? (ENTIDADES_PERMITIDAS[entidad]?.campos ?? []) : [];
+
 const INSTANTE_ISO = `to_char(t.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`;
 
 const NOMBRE_DE_COLUMNA = /^[a-z][a-z0-9_]*$/;
 
 /** `jsonb_build_object('campo', alias.campo, ...)` de las columnas permitidas; los nombres salen del JSON versionado. */
 function proyeccionPermitida(alias: string, entidad: string): string {
-  const campos = ENTIDADES_PERMITIDAS[entidad]?.campos ?? [];
+  const campos = camposPermitidos(entidad);
   for (const campo of campos) {
     if (!NOMBRE_DE_COLUMNA.test(campo)) throw new Error(`columna_no_permitida ${entidad}`);
   }
@@ -144,7 +149,7 @@ function aRegistro(
 ): RegistroDeDato {
   const propios = soloPermitidas(
     fila['fila'] as Record<string, unknown>,
-    ENTIDADES_PERMITIDAS[entidad]?.campos ?? [],
+    camposPermitidos(entidad),
     '',
   );
   const relacion = consulta.relacion;
@@ -153,7 +158,7 @@ function aRegistro(
       ? {}
       : soloPermitidas(
           fila['relacion'] as Record<string, unknown>,
-          ENTIDADES_PERMITIDAS[relacion.entidad]?.campos ?? [],
+          camposPermitidos(relacion.entidad),
           relacion.prefijo,
         );
   return {
@@ -181,7 +186,7 @@ export function createCompletenessRepository(db: Consultador): RegistrosDeComple
     async registrosSinFiltrarPorRevision(patientId, entidades): Promise<RegistrosPorEntidad> {
       const resultado: Record<string, RegistroDeDato[]> = {};
       for (const entidad of new Set(entidades)) {
-        const consulta = CONSULTAS[entidad];
+        const consulta = Object.hasOwn(CONSULTAS, entidad) ? CONSULTAS[entidad] : undefined;
         if (consulta === undefined) throw new Error(`entidad_de_destino_no_soportada ${entidad}`);
         const { rows } = await db.query(sqlDeLaEntidad(entidad, consulta), [patientId]);
         resultado[entidad] = rows.map((fila) => aRegistro(fila, entidad, consulta));

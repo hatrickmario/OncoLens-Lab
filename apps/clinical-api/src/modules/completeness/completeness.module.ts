@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { Consultador } from '../auth/auth.repository.js';
-import { crearProveedorDeCatalogo } from '../evidence-analysis/catalog-version.provider.js';
-import type { TiposDeCancerHabilitados } from '../evidence-analysis/ports.js';
+import { crearProveedorDeCatalogo } from '../../infrastructure/catalogo/catalog-version.provider.js';
+import type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
 import { createCompletenessRepository } from './completeness.repository.js';
 import { createCompletenessService } from './completeness.service.js';
 import {

@@ -13,7 +13,7 @@ import {
   cargarClavesDeIdentidad,
   type ClavesDeIdentidad,
 } from './infrastructure/crypto/claves-de-identidad.js';
-import { crearProveedorDeCatalogo } from './modules/evidence-analysis/catalog-version.provider.js';
+import { crearProveedorDeCatalogo } from './infrastructure/catalogo/catalog-version.provider.js';
 import type { TiposDeCancerHabilitados } from './modules/evidence-analysis/ports.js';
 import { crearTiposHabilitados } from './modules/evidence-analysis/tipos-habilitados.js';
 import {

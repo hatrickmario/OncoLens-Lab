@@ -7,7 +7,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../../src/app.js';
 import { cargarConfiguracion, observarEntorno } from '../../src/config/index.js';
 import { componerInformacionDeSalud } from '../../src/routes/health.js';
-import { crearProveedorDeCatalogo } from '../../src/modules/evidence-analysis/catalog-version.provider.js';
+import { crearProveedorDeCatalogo } from '../../src/infrastructure/catalogo/catalog-version.provider.js';
 import { RUTA_DEL_CATALOGO } from '../support/seed.js';
 
 // Sin handlers: cualquier petición saliente (p. ej. a rag-orchestrator) falla el test. Supertest llama a la propia

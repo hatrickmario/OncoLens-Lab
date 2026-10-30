@@ -1,3 +1,9 @@
+/*
+ * Glosario: «completeness» es el módulo y el endpoint (`/completeness`, `CompletenessService`); «completitud» es el
+ * nombre en español del mismo concepto en comentarios y tests; «checklist» es el resultado (`ChecklistDelPaciente`,
+ * los ítems por dato crítico). Un «faltante» es un ítem en estado `faltante` (`faltantesDe()`).
+ */
+
 /** Estado de cada dato crítico en el checklist (FR-23). */
 export type EstadoDelChecklist =
   'presente_verificado' | 'presente_sin_verificar' | 'faltante' | 'no_aplica';

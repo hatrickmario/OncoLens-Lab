@@ -1,5 +1,5 @@
-import type { RequestHandler } from 'express';
-import type { TraceIdGenerator } from './ports.js';
+import type { RequestHandler, Response } from 'express';
+import type { TraceIdGenerator } from '../infrastructure/trace-id-generator.js';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -33,3 +33,6 @@ export function crearTraceIdMiddleware(traceIds: TraceIdGenerator): RequestHandl
     siguiente();
   };
 }
+
+/** El `traceId` de la petición para logs y errores; vacío si el middleware no corrió (no debería pasar). */
+export const traceIdDe = (respuesta: Response): string => respuesta.locals.traceId ?? '';

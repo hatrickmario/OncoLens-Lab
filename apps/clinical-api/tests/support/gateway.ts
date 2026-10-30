@@ -8,7 +8,7 @@ import respuestaSinEvidencia from '../../../../contracts/examples/rag-query-sin-
 import { idSembrado } from '../../prisma/seed/determinismo.js';
 import { createRagOrchestratorClient } from '../../src/infrastructure/rag-orchestrator.client.js';
 import { createServiceTokenSigner } from '../../src/infrastructure/service-jwt.js';
-import { crearProveedorDeCatalogo } from '../../src/modules/evidence-analysis/catalog-version.provider.js';
+import { crearProveedorDeCatalogo } from '../../src/infrastructure/catalogo/catalog-version.provider.js';
 import { componerCompletitud } from '../../src/modules/completeness/completeness.module.js';
 import {
   componerGatewayDeAnalisis,

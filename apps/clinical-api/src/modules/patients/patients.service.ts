@@ -5,7 +5,7 @@ import type {
   PatientSummary,
 } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
 import type { CompletenessService } from '../completeness/ports.js';
-import type { TiposDeCancerHabilitados } from '../evidence-analysis/ports.js';
+import type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
 import type { IdentidadParcial, IdentityService } from './identity.service.js';
 import type {
   BusquedaDePacientes,

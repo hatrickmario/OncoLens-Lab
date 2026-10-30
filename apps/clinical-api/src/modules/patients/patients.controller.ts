@@ -6,12 +6,16 @@ import express, {
   type Response,
 } from 'express';
 import type { PatientPage } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
-import { enviarError, esErrorDeCuerpoDelCliente } from '../../infrastructure/http-errores.js';
+import {
+  enviarError,
+  esErrorDeCuerpoDelCliente,
+  rechazarNoEncontrado,
+} from '../../infrastructure/http-errores.js';
 import type { Registrar } from '../../infrastructure/logger.js';
 import { authorize } from '../../middleware/authorize.js';
 import { vistaSegunPermiso } from '../../middleware/vista-segun-permiso.js';
-import type { TraceIdGenerator } from '../evidence-analysis/ports.js';
-import { crearTraceIdMiddleware } from '../evidence-analysis/trace-id.middleware.js';
+import type { TraceIdGenerator } from '../../infrastructure/trace-id-generator.js';
+import { crearTraceIdMiddleware, traceIdDe } from '../../middleware/trace-id.middleware.js';
 import { PacienteNoEncontradoError } from './patients.errores.js';
 import { idDePacienteSchema, leerBusqueda, leerFiltrosDelListado } from './patients.schema.js';
 import type { PatientsService } from './patients.service.js';
@@ -30,8 +34,6 @@ const EVENTO_CHECKLIST_NO_DISPONIBLE = 'patients.ficha.checklist_no_disponible';
 
 /** Tipo de criterio que puede viajar al log: nunca el criterio mismo (RN-10). */
 type TipoDeCriterio = 'documento' | 'nombre';
-
-const traceIdDe = (response: Response): string => response.locals.traceId ?? '';
 
 /** Elige la vista por PERMISO, nunca por rol; sin sesión, la de menor privilegio. */
 const vistaDe = (request: Request): VistaPorPermiso =>
@@ -104,17 +106,11 @@ function crearCuerpoIlegible(respuestas: Respuestas): ErrorRequestHandler {
   };
 }
 
-/** `404 NO_ENCONTRADO` sin eco: lo mismo para un UUID inexistente que para un identificador mal formado (D7). */
-function rechazarPacienteNoEncontrado(response: Response, registrar: Registrar): void {
-  registrar({ event: EVENTO_FICHA, resultado: 'no_encontrado', traceId: traceIdDe(response) });
-  enviarError(response, 404, 'NO_ENCONTRADO', traceIdDe(response));
-}
-
 function crearFicha(service: PatientsService, registrar: Registrar): RequestHandler {
   return async (request, response) => {
     const patientId = idDePacienteSchema.safeParse(request.params['patientId']);
     if (!patientId.success) {
-      rechazarPacienteNoEncontrado(response, registrar);
+      rechazarNoEncontrado(response, registrar, EVENTO_FICHA);
       return;
     }
     try {
@@ -141,7 +137,7 @@ function crearFicha(service: PatientsService, registrar: Registrar): RequestHand
       response.status(200).json(ficha);
     } catch (error) {
       if (!(error instanceof PacienteNoEncontradoError)) throw error;
-      rechazarPacienteNoEncontrado(response, registrar);
+      rechazarNoEncontrado(response, registrar, EVENTO_FICHA);
     }
   };
 }

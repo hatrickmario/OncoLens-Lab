@@ -1,8 +1,9 @@
-import type { TiposDeCancerHabilitados } from '../evidence-analysis/ports.js';
+import type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
 import { PacienteNoEncontradoError } from '../patients/patients.errores.js';
 import { procedenciaDeItem } from './completeness.procedencia.js';
 import {
   calcularChecklist,
+  diagnosticoVigente,
   itemsDelTipoActivo,
   registroQueCuentaDelItem,
   tipoDeCancerActivo,
@@ -71,10 +72,10 @@ async function itemsDelTipoDeCancer(
   },
 ): Promise<ItemDelChecklist[]> {
   const { patientId, cancerType, datos, diagnosticos } = entrada;
-  const entidades = datos.items
-    .map((item) => item.destination.entity)
-    .filter((entidad) => entidad !== 'Diagnosis');
-  const delPaciente = await registros.registrosSinFiltrarPorRevision(patientId, entidades);
+  const entidades = new Set(datos.items.map((item) => item.destination.entity));
+  entidades.delete('Diagnosis');
+  const delPaciente = await registros.registrosSinFiltrarPorRevision(patientId, [...entidades]);
+  // Solo el Diagnosis vigente: tipo, condiciones e ítems de destino Diagnosis salen del mismo registro.
   const completos = { ...delPaciente, Diagnosis: diagnosticos };
   const estados = calcularChecklist({
     cancerType,
@@ -109,11 +110,12 @@ export function createCompletenessService(
           ? catalogo.deTipo(cancerType)
           : undefined;
       if (cancerType === null || datos === undefined) return sinChecklist(catalogVersion);
+      const vigente = diagnosticoVigente(diagnosticos);
       const items = await itemsDelTipoDeCancer(registros, {
         patientId,
         cancerType,
         datos,
-        diagnosticos,
+        diagnosticos: vigente === undefined ? [] : [vigente],
       });
       return { catalogVersion, cancerTypeEnabled: true, items };
     },

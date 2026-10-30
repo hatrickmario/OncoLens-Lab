@@ -1,10 +1,11 @@
-import { Router, type RequestHandler, type Response } from 'express';
-import { enviarError } from '../../infrastructure/http-errores.js';
+import { Router, type RequestHandler } from 'express';
+import { rechazarNoEncontrado } from '../../infrastructure/http-errores.js';
 import type { Registrar } from '../../infrastructure/logger.js';
 import { authorize } from '../../middleware/authorize.js';
-import type { TraceIdGenerator } from '../evidence-analysis/ports.js';
-import { crearTraceIdMiddleware } from '../evidence-analysis/trace-id.middleware.js';
+import type { TraceIdGenerator } from '../../infrastructure/trace-id-generator.js';
+import { crearTraceIdMiddleware, traceIdDe } from '../../middleware/trace-id.middleware.js';
 import { PacienteNoEncontradoError } from '../patients/patients.errores.js';
+import { faltantesDe } from './completeness.rules.js';
 import { idDePacienteSchema } from './completeness.schema.js';
 import { comoVistaDelChecklist } from './completeness.vista.js';
 import type { CompletenessService } from './ports.js';
@@ -17,23 +18,11 @@ export interface DependenciasDelController {
 
 const EVENTO_COMPLETITUD = 'completeness.consulta';
 
-const traceIdDe = (response: Response): string => response.locals.traceId ?? '';
-
-/** `404 NO_ENCONTRADO` sin eco: lo mismo para un UUID inexistente que para un identificador mal formado. */
-function rechazarPacienteNoEncontrado(response: Response, registrar: Registrar): void {
-  registrar({
-    event: EVENTO_COMPLETITUD,
-    resultado: 'no_encontrado',
-    traceId: traceIdDe(response),
-  });
-  enviarError(response, 404, 'NO_ENCONTRADO', traceIdDe(response));
-}
-
 function crearConsultar(service: CompletenessService, registrar: Registrar): RequestHandler {
   return async (request, response) => {
     const patientId = idDePacienteSchema.safeParse(request.params['patientId']);
     if (!patientId.success) {
-      rechazarPacienteNoEncontrado(response, registrar);
+      rechazarNoEncontrado(response, registrar, EVENTO_COMPLETITUD);
       return;
     }
     try {
@@ -47,13 +36,13 @@ function crearConsultar(service: CompletenessService, registrar: Registrar): Req
         patientId: patientId.data,
         catalogVersion: vista.catalogVersion,
         total: vista.items.length,
-        faltantes: vista.items.filter((item) => item.status === 'faltante').length,
+        faltantes: faltantesDe(checklist).length,
       });
       response.setHeader('Cache-Control', 'no-store');
       response.status(200).json(vista);
     } catch (error) {
       if (!(error instanceof PacienteNoEncontradoError)) throw error;
-      rechazarPacienteNoEncontrado(response, registrar);
+      rechazarNoEncontrado(response, registrar, EVENTO_COMPLETITUD);
     }
   };
 }
