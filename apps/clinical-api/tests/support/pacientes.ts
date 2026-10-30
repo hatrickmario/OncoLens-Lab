@@ -3,7 +3,9 @@ import type { IdentityService } from '../../src/modules/patients/identity.servic
 import { componerModuloDePacientes } from '../../src/modules/patients/patients.module.js';
 import { crearTiposHabilitados } from '../../src/modules/evidence-analysis/tipos-habilitados.js';
 import type { Consultador } from '../../src/modules/auth/auth.repository.js';
+import type { CompletenessService } from '../../src/modules/completeness/ports.js';
 import { appConAuth } from './app-auth.js';
+import { servicioDeCompletitud } from './completitud-http.js';
 import {
   AHORA,
   TRACE_ID_GENERADO,
@@ -12,6 +14,7 @@ import {
   type MundoDeGateway,
 } from './gateway.js';
 import { servicioDeIdentidad } from './identidad.js';
+import { RUTA_DEL_CATALOGO } from './seed.js';
 import { loggerEnMemoria, relojFijo, tokensFijos, type LoggerEnMemoria } from './usuarios.js';
 
 /**
@@ -36,6 +39,8 @@ export interface OpcionesDePacientes {
   logger?: LoggerEnMemoria;
   /** Sustituye a la conexión del módulo (p. ej. una que registra el SQL que recibe). */
   db?: Consultador;
+  /** Servicio de completitud de la ficha; por defecto el real sobre el catálogo del monorepo. */
+  completitud?: CompletenessService;
 }
 
 export function montarPacientes(
@@ -48,6 +53,8 @@ export function montarPacientes(
     db: opciones.db ?? mundo.cliente,
     identidad: opciones.identidad ?? servicioDeIdentidad(mundo.cliente),
     tiposHabilitados: crearTiposHabilitados(['mama', 'prostata'], ['mama', 'prostata']),
+    completitud:
+      opciones.completitud ?? servicioDeCompletitud(mundo, { rutaDelCatalogo: RUTA_DEL_CATALOGO }),
     traceIds: { traceId: () => TRACE_ID_GENERADO },
     registrar: logger.registrar,
     config: { pageSize: opciones.pageSize ?? PAGE_SIZE_DE_TEST },
