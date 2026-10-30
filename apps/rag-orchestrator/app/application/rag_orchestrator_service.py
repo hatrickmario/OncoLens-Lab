@@ -79,6 +79,7 @@ from app.domain.tipos_habilitados import exigir_tipo_habilitado
 from app.prompts.aplicabilidad_texto import VERSION_DEL_PROMPT_APLICABILIDAD
 from app.prompts.rag_query import VERSION_DEL_PROMPT
 from app.schemas.generated.models import (
+    Fusion,
     Limitation,
     LlmProvider,
     Origin,
@@ -384,7 +385,21 @@ class RAGOrchestratorService:
             # La similitud dense solo elige candidatos: nunca es relevance_score ni se compara con el umbral (RN-03).
             return dense[: self._parametros.retrieval_top_k]
         sparse = await self._recuperar_sparse(trace_id, solicitud.query, filtro)
-        return self._fusionar_ramas(dense, sparse)
+        fusionados = self._fusionar_ramas(dense, sparse)
+        fusion, fusion_param = self._fusion_trazada()
+        # Solo recuentos y parámetros: nunca la pregunta ni el texto de un fragmento (RN-10).
+        logger.info(
+            "event=rag_query_recuperacion_hibrida traceId=%s retrievalMode=%s fusion=%s fusionParam=%s "
+            "dense=%d sparse=%d fused=%d",
+            trace_id,
+            self._parametros.retrieval_mode.value,
+            fusion.value,
+            fusion_param,
+            len(dense),
+            len(sparse),
+            len(fusionados),
+        )
+        return fusionados
 
     async def _recuperar_dense(
         self, trace_id: str, solicitud: RagQueryInternalRequest, filtro: str
@@ -521,6 +536,7 @@ class RAGOrchestratorService:
     ) -> RagMeta:
         """``meta`` con la latencia hasta el fin de la recuperación; la generación (L1D-275) la actualiza."""
         parametros = self._parametros
+        fusion, fusion_param = self._fusion_trazada()
         return RagMeta(
             queryLanguage=idioma,
             responseLanguage=idioma,
@@ -538,10 +554,21 @@ class RAGOrchestratorService:
                 topK=parametros.retrieval_top_k,
                 rerankTopN=parametros.rerank_top_n,
                 relevanceThreshold=parametros.relevance_threshold,
-                retrievalMode=RetrievalMode.dense,
+                retrievalMode=parametros.retrieval_mode,
+                fusion=fusion,
+                fusionParam=fusion_param,
             ),
             latencyMs=int((self._reloj.ahora() - inicio).total_seconds() * 1000),
         )
+
+    def _fusion_trazada(self) -> tuple[Fusion, float]:
+        """``(fusion, fusionParam)`` de ``meta`` sin nulos (D7): ``ninguna``/0 en dense; ``rrf``/k o ``ponderada``/peso."""
+        parametros = self._parametros
+        if parametros.retrieval_mode is RetrievalMode.dense:
+            return Fusion.ninguna, 0
+        if parametros.retrieval_fusion is EstrategiaDeFusion.rrf:
+            return Fusion.rrf, parametros.rrf_k
+        return Fusion.ponderada, parametros.peso_sparse
 
     @staticmethod
     def _responder_sin_evidencia(recuperados: int, meta: RagMeta) -> RagQueryInternalResponse:

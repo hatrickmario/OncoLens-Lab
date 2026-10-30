@@ -97,12 +97,12 @@ def parametros_hibridos(
 
 
 class _EmbedderConVectorPropioParaQKeyword(EmbedderFalso):
-    """Q-KEYWORD no tiene vector dense en la fixture base: cae en e4, ortogonal a todo el corpus."""
+    """Q-KEYWORD no tiene vector dense en la fixture base: se parece algo a ch-m1-1 y a ch-inj-1 y nada a ch-m2-1."""
 
     def embeber(self, texto: str) -> Sequence[float]:
         if texto == Q_KEYWORD:
             self.textos.append(texto)
-            return _vector(e4=1.0)
+            return _vector(e0=0.5)
         return super().embeber(texto)
 
 

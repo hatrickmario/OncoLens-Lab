@@ -41,11 +41,14 @@ def fusionar_candidatos(
 
     ``rrf``: ``Σ 1/(k+rango)`` con rango desde 1 en cada rama. Cada rama se ordena por su propio puntaje antes de
     asignar rangos, así el resultado no depende del orden en que llegó.
+
+    ``ponderada``: ``(1-w)·dense_norm + w·sparse_norm`` con cada rama normalizada a [0, 1] por mínimo y máximo; un chunk
+    ausente de una rama aporta 0 por ella, y una rama cuyos candidatos empatan en puntaje les da 1 a todos.
     """
     if estrategia is EstrategiaDeFusion.rrf:
         puntajes = _puntajes_rrf(dense, sparse, rrf_k)
     else:
-        raise NotImplementedError("no implementado")
+        puntajes = _puntajes_ponderados(dense, sparse, peso_sparse)
     return _ordenados(puntajes)
 
 
@@ -68,3 +71,27 @@ def _puntajes_rrf(
         for rango, chunk_id in enumerate(_por_rango(rama), start=1):
             puntajes[chunk_id] = puntajes.get(chunk_id, 0.0) + 1.0 / (k + rango)
     return puntajes
+
+
+def _normalizados(rama: Sequence[CandidatoDeRama]) -> dict[str, float]:
+    if not rama:
+        return {}
+    minimo = min(c.puntaje for c in rama)
+    maximo = max(c.puntaje for c in rama)
+    amplitud = maximo - minimo
+    if amplitud == 0:
+        return {c.chunk_id: 1.0 for c in rama}
+    return {c.chunk_id: (c.puntaje - minimo) / amplitud for c in rama}
+
+
+def _puntajes_ponderados(
+    dense: Sequence[CandidatoDeRama], sparse: Sequence[CandidatoDeRama], peso_sparse: float
+) -> dict[str, float]:
+    if not 0.0 < peso_sparse < 1.0:
+        raise ValueError("HYBRID_SPARSE_WEIGHT debe estar en el intervalo abierto (0, 1)")
+    en_dense, en_sparse = _normalizados(dense), _normalizados(sparse)
+    return {
+        chunk_id: (1.0 - peso_sparse) * en_dense.get(chunk_id, 0.0)
+        + peso_sparse * en_sparse.get(chunk_id, 0.0)
+        for chunk_id in en_dense.keys() | en_sparse.keys()
+    }
