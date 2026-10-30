@@ -56,6 +56,7 @@
 | US-013 | ADR-40 | Detección y enmascaramiento de PII | readme §2.5, OL-03, OL-05 · G-8 · RN-11 | ADR | Ingeniería | S1 | 5 | sí (invariante RN-10/11) | FEAT-06a, FEAT-T4a, FEAT-01b, FEAT-11c | **Crítica** (no se negocia) |
 | US-014 | ADR-41 | Framework y protocolo de evaluación de IA | V-07 · readme OL-06 | ADR | Ingeniería | S1 | 3 | sí (mide) | FEAT-T5a, FEAT-T5b | Alta |
 | US-015 | ADR-42 | Streaming de eventos de progreso | TBD-08 · readme §6.1 #8 🚧 | ADR | Ingeniería | **S4** (diferida; S1 solo registra el p95) | 3 | no | FEAT-10c, FEAT-07, FEAT-08b/08c (G-5) | Baja |
+| US-248 | ADR-48 | Fusión híbrida cuando una rama no devuelve candidatos | Q-1 de L1D-109 · ADR-45 · FR-09 | ADR (investigación) | Ingeniería | `si-hay-capacidad` (usuario, 2026-10-30; usa los datos de US-133) | 2 | no (antes de poner `hibrida` por defecto) | FEAT-06b | Baja |
 | US-016 | DEC-06 | Revisión clínica del dataset de evaluación | readme OL-06 AC | DEC clínica | Oncólogo asesor | S1 | 1 | sí (mide) | FEAT-T5a | Alta |
 | US-017 | DEC-07 | Metas definitivas de evaluación técnica | TBD-02 | DEC producto | Usuario (PO) + Ingeniería | S1 (cierre) | 1 | sí | FEAT-T5a/T5b | Alta |
 | US-018 | DEC-08 | Umbrales de tendencia por biomarcador | TBD-13 (tendencias) | DEC clínica | Oncólogo asesor | S1 (antes de la vista de caso) | 1 | sí (1) | FEAT-02b | Alta |
