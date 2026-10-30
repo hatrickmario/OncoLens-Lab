@@ -54,6 +54,7 @@ COLUMNAS_ESPERADAS: dict[str, dict[str, tuple[str, bool]]] = {
         "primary_endpoint": (TEXTO, True),
         "sample_size": (ENTERO, True),
         "population_criteria": (JSONB, False),
+        "population_form": (TEXTO, False),
         "metadata_source": (TEXTO, False),
         "extracted_fields": (JSONB, False),
         "guideline_version": (TEXTO, True),

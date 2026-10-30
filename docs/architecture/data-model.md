@@ -492,7 +492,8 @@ erDiagram
         string trial_phase "nullable — I|II|III|IV"
         string primary_endpoint "nullable"
         int sample_size "nullable"
-        jsonb population_criteria "v1.1: subtipo, estadio, línea, biomarcadores, edad, ECOG — o no_disponible"
+        jsonb population_criteria "v1.1: subtipo, estadio, línea, biomarcadores, edad, ECOG — o no_disponible; forma antigua o lista por criterio (ADR-47)"
+        string population_form "antigua|lista (US-241); antigua por defecto"
         string metadata_source "fuente_estructurada|extraido_verificado|pendiente"
         jsonb extracted_fields "campos extraídos y verificados; [] por defecto (L1D-117)"
         string guideline_version "nullable"
@@ -1100,7 +1101,8 @@ Las columnas de metadatos del modelo se anulan según el estado o el tipo del an
 | `trial_phase` | text |  | nullable — I\|II\|III\|IV |
 | `primary_endpoint` | text |  | nullable |
 | `sample_size` | integer |  | nullable |
-| `population_criteria` | jsonb |  | v1.1: subtipo, estadio, línea, biomarcadores, edad, ECOG — o no_disponible |
+| `population_criteria` | jsonb |  | v1.1: subtipo, estadio, línea, biomarcadores, edad, ECOG — o no_disponible. Dos formas por criterio que conviven un sprint (ADR-47, US-241): **antigua** (cadena con texto o `{valor, alcance}`; biomarcadores como objeto de una cadena por subclave) y **nueva** (lista acotada de `{value ≤ 200, chunkId, scope ∈ elegibilidad\|subgrupo\|mencion, promptVersion, modelVersion, catalogVersion, nliResult}`, con a lo más `POPULATION_MAX_VALUES_PER_CRITERION` valores por fragmento y criterio, o la marca `{"status": "pendiente", "values": []}` de un criterio cuya extracción falló). El lector del catálogo entrega siempre una lista de valores por criterio; una forma nueva inválida degrada ese criterio a «sin valor» y se registra `poblacion_forma_invalida` sin el valor |
+| `population_form` | text |  | US-241 (migración `0005`): `antigua`\|`lista`, `antigua` por defecto; la migración no reescribe filas. Lo escribe la ingesta de población (US-242) |
 | `metadata_source` | text |  | fuente_estructurada\|extraido_verificado\|pendiente; `pendiente` = la extracción no corrió (LLM o NLI caídos, o salida inválida): nunca `fuente_estructurada`, la fuente no publicó nada (RN-25) |
 | `extracted_fields` | jsonb |  | L1D-117: campos de `population_criteria` que la extracción verificó (`[]` por defecto). La muestra de M-08.4 solo toma estos, no los que declara el manifiesto |
 | `guideline_version` | text |  | nullable |
