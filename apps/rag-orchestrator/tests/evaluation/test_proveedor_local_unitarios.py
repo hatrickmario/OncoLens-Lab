@@ -20,8 +20,24 @@ from app.evaluation.llamadas import (
 )
 from app.evaluation.medicion_modelos import informe_de_recursos_nli
 from app.evaluation.medidores import NliMedido
+from app.evaluation.reporte import es_identificador
 from tests.evaluation.test_fidelidad_juez import CONFIG
 from tests.support.modelos import crear_entorno_de_modelos
+
+
+def test_el_identificador_admite_la_version_completa_de_un_modelo_real_y_rechaza_texto_libre() -> (
+    None
+):
+    nli = (
+        "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7@"
+        + "b" * 40
+        + "#sha256:"
+        + "a" * 64
+    )
+
+    assert len(nli) > 128 and es_identificador(nli)
+    assert not es_identificador(nli + "c" * 200)
+    assert not es_identificador("con espacios")
 
 
 def test_el_percentil_usa_el_rango_mas_cercano_y_es_none_sin_muestra() -> None:
