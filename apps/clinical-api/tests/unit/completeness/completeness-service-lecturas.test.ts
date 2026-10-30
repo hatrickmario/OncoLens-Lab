@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import { registrosDeCompletitudFalsos } from '../../support/registros-de-completitud-falsos.js';
 import { createCompletenessService } from '../../../src/modules/completeness/completeness.service.js';
 import type {
   CatalogoDeDatosCriticos,
   ItemDeDatoCritico,
   RegistroDeDato,
-  RegistrosDeCompletitud,
 } from '../../../src/modules/completeness/ports.js';
 
 const item = (key: string, entity: string): ItemDeDatoCritico => ({
@@ -39,20 +39,8 @@ const registro = (id: string, fecha: string, tipo: string): RegistroDeDato => ({
 
 function servicioQueAnota(diagnosticos: RegistroDeDato[]) {
   const pedidos: (readonly string[])[] = [];
-  const registros: RegistrosDeCompletitud = {
-    existePaciente: async () => true,
-    registrosSinFiltrarPorRevision: async (_patientId, entidades) => {
-      pedidos.push(entidades);
-      return Object.fromEntries(
-        [...new Set(entidades)].map((entidad) => [
-          entidad,
-          entidad === 'Diagnosis' ? diagnosticos : [],
-        ]),
-      );
-    },
-  };
   const servicio = createCompletenessService({
-    registros,
+    registros: registrosDeCompletitudFalsos({ diagnosticos, pedidos }),
     catalogo,
     tiposHabilitados: { estaHabilitado: () => true },
   });

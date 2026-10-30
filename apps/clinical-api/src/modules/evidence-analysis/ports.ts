@@ -17,7 +17,6 @@ export type { Clock };
 // Las tres interfaces viven en infrastructure/ (las usan también completeness, patients y documents); se reexportan
 // aquí para no tocar a los consumidores internos del módulo.
 export type { CatalogVersionProvider } from '../../infrastructure/catalogo/catalog-version.provider.js';
-export type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
 export type { TraceIdGenerator } from '../../infrastructure/trace-id-generator.js';
 
 /** Seudónimo `psd_…` aleatorio POR CONSULTA (RN-11); nunca derivado del paciente. */

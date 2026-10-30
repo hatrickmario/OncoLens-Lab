@@ -1,4 +1,5 @@
 import type { AppliedFilters } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
+import type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
 import type {
   ClinicalContext,
   DataClassification,
@@ -22,7 +23,6 @@ import type {
   RagQueryClient,
   RespuestaDeRag,
   ResultadoDelAnalisis,
-  TiposDeCancerHabilitados,
 } from './ports.js';
 
 /** El `patientId` de la petición no corresponde a ningún paciente. */

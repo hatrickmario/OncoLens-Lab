@@ -5,6 +5,7 @@ import type {
   RegistroDeDato,
   RegistrosDeCompletitud,
 } from '../../../src/modules/completeness/ports.js';
+import { registrosDeCompletitudFalsos } from '../../support/registros-de-completitud-falsos.js';
 import { PacienteNoEncontradoError } from '../../../src/modules/patients/patients.errores.js';
 
 const catalogo: CatalogoDeDatosCriticos = {
@@ -39,31 +40,13 @@ const diagnostico = (tipo: string): RegistroDeDato => ({
   columnas: { cancer_type: tipo, histology: 'x' },
 });
 
-/** Cumple el contrato del puerto: una clave por cada entidad pedida (`[]` si no hay filas), nada más. */
-const registrosCon = (
-  diagnosticos: RegistroDeDato[],
-  existe = true,
-  pedidos: (readonly string[])[] = [],
-): RegistrosDeCompletitud => ({
-  existePaciente: async () => existe,
-  registrosSinFiltrarPorRevision: async (_patientId, entidades) => {
-    pedidos.push(entidades);
-    return Object.fromEntries(
-      [...new Set(entidades)].map((entidad) => [
-        entidad,
-        entidad === 'Diagnosis' ? diagnosticos : [],
-      ]),
-    );
-  },
-});
-
 const servicioCon = (
   diagnosticos: RegistroDeDato[],
   tipos: string[] = ['mama', 'prostata'],
   existe = true,
 ) =>
   createCompletenessService({
-    registros: registrosCon(diagnosticos, existe),
+    registros: registrosDeCompletitudFalsos({ diagnosticos, existe }),
     catalogo,
     tiposHabilitados: habilitados(...tipos),
   });

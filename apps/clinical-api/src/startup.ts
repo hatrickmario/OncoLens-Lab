@@ -14,7 +14,7 @@ import {
   type ClavesDeIdentidad,
 } from './infrastructure/crypto/claves-de-identidad.js';
 import { crearProveedorDeCatalogo } from './infrastructure/catalogo/catalog-version.provider.js';
-import type { TiposDeCancerHabilitados } from './modules/evidence-analysis/ports.js';
+import type { TiposDeCancerHabilitados } from './infrastructure/tipos-de-cancer-habilitados.js';
 import { crearTiposHabilitados } from './modules/evidence-analysis/tipos-habilitados.js';
 import {
   cargarConfiguracionDePii,

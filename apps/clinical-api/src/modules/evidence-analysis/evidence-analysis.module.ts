@@ -1,4 +1,5 @@
 import type { Router } from 'express';
+import type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
 import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type { Registrar } from '../../infrastructure/logger.js';
@@ -22,7 +23,6 @@ import {
   type ContextDeidentifier,
   type TraceIdGenerator,
   type RagQueryClient,
-  type TiposDeCancerHabilitados,
 } from './ports.js';
 
 export interface ConfiguracionDelGateway extends ConfiguracionDelAnalisis {
