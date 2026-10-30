@@ -453,15 +453,27 @@ def evaluar_criterio(
     ``no_reportado_por_fuente`` (D5); un valor presente pero sin regla de comparación es ``desconocido`` con
     ``sin_regla_de_comparacion`` (US-243)."""
     proyeccion = _proyeccion_de_forma_antigua(criterio, valor_paciente, valor_estudio)
+    copiado = valor_estudio.valor if valor_estudio else None
+    return _criterio_evaluado(criterio, valor_paciente, copiado, proyeccion)
+
+
+def _criterio_evaluado(
+    criterio: CriterioDeAplicabilidad,
+    valor_paciente: str | None,
+    valor_estudio: str | None,
+    proyeccion: ProyeccionDeEstado,
+    valores_del_estudio: tuple[ValorDePoblacion, ...] = (),
+) -> CriterioEvaluado:
     return CriterioEvaluado(
         criterio.clave,
         valor_paciente,
-        valor_estudio.valor if valor_estudio else None,
+        valor_estudio,
         proyeccion.estado,
         proyeccion.causa,
         criterio.es_excluyente,
         proyeccion.motivo_interno,
         motivo_parcial=proyeccion.motivo_parcial,
+        valores_del_estudio=valores_del_estudio,
     )
 
 
@@ -660,17 +672,7 @@ def _evaluar_con_lista(
 ) -> CriterioEvaluado:
     proyeccion = estado_de_poblacion(valores, valor_paciente, criterio, fuente_mezcla=fuente_mezcla)
     primero = next((v.valor for v in valores if v.alcance == "elegibilidad"), None)
-    return CriterioEvaluado(
-        criterio.clave,
-        valor_paciente,
-        primero,
-        proyeccion.estado,
-        proyeccion.causa,
-        criterio.es_excluyente,
-        proyeccion.motivo_interno,
-        motivo_parcial=proyeccion.motivo_parcial,
-        valores_del_estudio=valores,
-    )
+    return _criterio_evaluado(criterio, valor_paciente, primero, proyeccion, valores)
 
 
 def _dato_comparable(
