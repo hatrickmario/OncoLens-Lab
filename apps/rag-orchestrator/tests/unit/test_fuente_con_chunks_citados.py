@@ -123,3 +123,38 @@ def test_conflictos_para_el_log_da_un_registro_por_fragmento_cuando_un_fragmento
         ("estado_menopausico", "ch-1"),
         ("estado_menopausico", "ch-2"),
     ]
+
+
+def test_con_chunks_citados_prefiere_la_lista_al_valor_textual_cuando_los_fragmentos_citados_traen_valores():
+    poblacion = PoblacionDelEstudio(
+        "extraido_verificado",
+        {"estado_menopausico": _valores(("premenopausal women only", "ch-b7-2"))},
+    )
+    fuente = _fuente(poblacion)
+    textual = dataclasses.replace(
+        _menopausia(fuente), estado="coincide", valor_estudio="x", chunk_citado_id="ch-b7-3"
+    )
+    fuente = fuente.con_criterios(
+        tuple(textual if c.clave == textual.clave else c for c in fuente.criterios)
+    )
+
+    recalculada = _servicio().con_chunks_citados("mama", A_M2, fuente, ["ch-b7-2"])
+
+    assert _menopausia(recalculada).estado == "no_coincide"
+    assert [v.chunk_id for v in _menopausia(recalculada).valores_del_estudio] == ["ch-b7-2"]
+
+
+def test_evaluar_marca_mezclada_con_el_diseno_del_mejor_chunk_cuando_ninguna_opcion_cita_la_fuente():
+    poblacion = PoblacionDelEstudio(
+        "extraido_verificado",
+        {
+            "estado_menopausico": _valores(
+                ("premenopausal women", "ch-b5-1"), ("postmenopausal women", "ch-b5-1")
+            )
+        },
+    )
+    mejor = ChunkCitable(ChunkPuntuado("ch-b5-1", "doc-b5", "texto", 0.9), FICHAS_FX08BC["doc-b5"])
+
+    fuente = _servicio().evaluar("mama", A_M2, {"doc-b5": mejor}, {"doc-b5": poblacion})[0]
+
+    assert _menopausia(fuente).motivo_parcial == "mezclada"

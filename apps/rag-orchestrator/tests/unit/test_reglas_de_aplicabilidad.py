@@ -21,9 +21,9 @@ from app.domain.applicability_rules import (
     evaluar_criterio,
     evaluar_criterio_de_fuente,
     poblacion_no_comparable,
-    valor_del_estudio,
     valor_del_paciente,
 )
+from tests.support.poblacion_lista import valor_del_estudio
 from tests.support.aplicabilidad import criterios_de
 from tests.support.poblacion_lista import poblacion_guardada
 from tests.support.contract import CATALOGOS

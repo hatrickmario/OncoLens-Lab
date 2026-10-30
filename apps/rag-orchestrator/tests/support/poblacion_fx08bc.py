@@ -10,7 +10,11 @@ from __future__ import annotations
 import copy
 from typing import Any
 
-from app.application.ports import EvidenciaGenerada, ResultadoDeRecuperacion
+from app.application.ports import (
+    ApplicabilityTextProposer,
+    EvidenciaGenerada,
+    ResultadoDeRecuperacion,
+)
 from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
 from app.domain.citations import FichaDeFuente, OpcionGenerada
 from app.schemas.generated.models import RagQueryInternalRequest
@@ -230,7 +234,9 @@ def solicitud_a_m3() -> dict[str, Any]:
 
 
 def entorno_fx08bc(
-    *opciones: str, poblaciones: dict[str, PoblacionDelEstudio] | None = None
+    *opciones: str,
+    poblaciones: dict[str, PoblacionDelEstudio] | None = None,
+    proponente: ApplicabilityTextProposer | None = None,
 ) -> EntornoDeRecuperacion:
     """El servicio real con los bordes falsos de FX-08b-c; se recuperan solo los chunks que citan las ``opciones``."""
     citados = {chunk for o in opciones for chunk in OPCIONES_LLM_POB[o]}
@@ -242,4 +248,5 @@ def entorno_fx08bc(
         catalogo_clinico=CatalogoClinicoFalso(version=APL_1_2_0.name, tipos=TIPOS_DE_TEST),
         generador=GeneradorLlmPob(*opciones),
         criterios=criterios_de(APL_1_2_0),
+        proponente=proponente,
     )

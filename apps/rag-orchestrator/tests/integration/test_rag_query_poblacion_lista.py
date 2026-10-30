@@ -9,6 +9,7 @@ from typing import Any
 
 import pytest
 
+from tests.support.proponente_falso import ProponenteFalso
 from tests.support.poblacion_fx08bc import (
     FICHAS_FX08BC,
     entorno_fx08bc,
@@ -18,8 +19,12 @@ from tests.support.poblacion_fx08bc import (
 )
 
 
-def _consultar(*opciones: str, paciente: dict[str, Any] | None = None) -> dict[str, Any]:
-    entorno = entorno_fx08bc(*opciones)
+def _consultar(
+    *opciones: str,
+    paciente: dict[str, Any] | None = None,
+    proponente: ProponenteFalso | None = None,
+) -> dict[str, Any]:
+    entorno = entorno_fx08bc(*opciones, proponente=proponente)
     respuesta = entorno.consultar(paciente or solicitud_a_m2())
     assert respuesta.status_code == 200
     cuerpo = respuesta.json()
@@ -143,8 +148,14 @@ def test_rag_query_ningun_valor_de_un_fragmento_no_citado_entra_cuando_la_opcion
 
 @pytest.mark.ac("US-243", 8)
 def test_rag_query_estado_menopausico_parcial_mezclada_cuando_la_guia_mezcla_poblaciones():
-    cuerpo = _consultar("O-P5")
+    proponente = ProponenteFalso()
+
+    cuerpo = _consultar("O-P5", proponente=proponente)
 
     menopausia = _criterio(cuerpo, "doc-b5", "estado_menopausico")
     assert menopausia["status"] == "parcial"
     assert menopausia["partialReason"] == "mezclada"
+    # El estado lo calculan las reglas puras: el LLM textual (US-123) nunca recibe el criterio ya leído de la lista. La
+    # aserción original «cero invocaciones» no podía cumplirse por HTTP: los demás criterios sin valor sí van al texto.
+    preguntados = {c.clave for llamada in proponente.llamadas for f in llamada for c in f.criterios}
+    assert "estado_menopausico" not in preguntados

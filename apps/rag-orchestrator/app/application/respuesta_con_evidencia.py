@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict
+from typing import TypedDict
 
 from app.application.aplicabilidad import AplicabilidadDeFuente
 from app.application.chunk_citable import ChunkCitable
@@ -128,9 +129,14 @@ def _criterio_aplicable(
     )
 
 
-def _poblacion_en_lista(criterio: CriterioEvaluado) -> dict[str, object]:
+class _PoblacionEnLista(TypedDict, total=False):
+    studyPopulationValues: list[StudyPopulationValue]
+    partialReason: PartialReason
+
+
+def _poblacion_en_lista(criterio: CriterioEvaluado) -> _PoblacionEnLista:
     """``studyPopulationValues`` y ``partialReason``: opcionales, solo con la forma de lista y un motivo parcial."""
-    campos: dict[str, object] = {}
+    campos: _PoblacionEnLista = {}
     valores = [
         v
         for v in criterio.valores_del_estudio
@@ -145,7 +151,7 @@ def _poblacion_en_lista(criterio: CriterioEvaluado) -> dict[str, object]:
 
 def _valor_del_contrato(valor: ValorDePoblacion) -> StudyPopulationValue:
     return StudyPopulationValue(
-        value=valor.valor, chunkId=valor.chunk_id or "", scope=Scope(valor.alcance)
+        value=valor.valor, chunkId=valor.chunk_id, scope=Scope(valor.alcance)
     )
 
 

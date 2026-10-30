@@ -18,10 +18,12 @@ from app.domain.aplicabilidad_tipos import (
 from app.domain.applicability_text import criterios_pendientes_de_texto
 from app.domain.criterios_aplicabilidad import DestinoDelCriterio
 from app.domain.applicability_rules import (
-    clasificar_poblacion,
-    detectar_conflicto,
     estado_de_poblacion,
     evaluar_criterio_de_fuente,
+)
+from app.domain.clasificacion_de_poblacion import (
+    clasificar_poblacion,
+    detectar_conflicto,
     proyectar_estado,
     reconoce_restriccion,
     valores_de_la_opcion,
