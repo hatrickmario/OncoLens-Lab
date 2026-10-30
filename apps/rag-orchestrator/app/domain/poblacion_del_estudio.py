@@ -19,6 +19,7 @@ from app.domain.aplicabilidad_tipos import (
     AlcanceDeValor,
     CriterioDePoblacion,
     FormaInvalida,
+    MotivoDeFormaInvalida,
     OrigenDeMetadatos,
     PoblacionDelEstudio,
     ValorDePoblacion,
@@ -114,5 +115,5 @@ def _leer_valor_nuevo(elemento: object) -> ValorDePoblacion | FormaInvalida:
     return ValorDePoblacion(valor, alcance, chunk_citable)
 
 
-def _invalido(motivo: str, chunk_id: str | None) -> CriterioDePoblacion:
-    return CriterioDePoblacion(invalidez=FormaInvalida(motivo, chunk_id))  # type: ignore[arg-type]
+def _invalido(motivo: MotivoDeFormaInvalida, chunk_id: str | None) -> CriterioDePoblacion:
+    return CriterioDePoblacion(invalidez=FormaInvalida(motivo, chunk_id))
