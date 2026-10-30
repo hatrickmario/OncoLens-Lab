@@ -54,7 +54,7 @@ CH_M2_1 = ChunkFx(
     _vector(e5=1.0),  # ortogonal a las consultas de la fixture: el dense lo deja último
     True,
     "mama",
-    {TERMINO_E545K: 0.9},
+    {TERMINO_E545K: 0.5},
 )
 
 
@@ -97,12 +97,12 @@ def parametros_hibridos(
 
 
 class _EmbedderConVectorPropioParaQKeyword(EmbedderFalso):
-    """Q-KEYWORD no tiene vector dense en la fixture base: se parece algo a ch-m1-1 y a ch-inj-1 y nada a ch-m2-1."""
+    """Q-KEYWORD no tiene vector dense en la fixture base: se parece mucho a ch-m1-1 (0,9, más que el puntaje sparse crudo de ch-m2-1: 0,5) y nada a ch-m2-1."""
 
     def embeber(self, texto: str) -> Sequence[float]:
         if texto == Q_KEYWORD:
             self.textos.append(texto)
-            return _vector(e0=0.5)
+            return _vector(e0=1.0)
         return super().embeber(texto)
 
 

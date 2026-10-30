@@ -48,6 +48,10 @@ def _settings(**cambios: object) -> Settings:
     return Settings(_env_file=None, **cambios)  # type: ignore[call-arg, arg-type]
 
 
+def test_settings_acepta_la_constante_rrf_minima_uno():
+    assert _settings(rrf_k=1).rrf_k == 1
+
+
 def test_settings_recupera_en_dense_con_rrf_k_60_y_peso_0_3_cuando_no_se_define_nada():
     ajustes = _settings()
 

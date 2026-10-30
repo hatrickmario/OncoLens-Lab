@@ -4,6 +4,7 @@ Cada respuesta la valida contra el spec del proveedor el hook de `verificacion_p
 """
 
 import logging
+from dataclasses import replace
 
 import pytest
 
@@ -168,7 +169,8 @@ def test_rag_query_recupera_con_la_fusion_ponderada_y_traza_su_peso_cuando_se_co
 
 @pytest.mark.ac("US-112", 1)
 def test_rag_query_pasa_al_reranker_el_chunk_solo_sparse_cuando_el_tope_de_pares_es_uno():
-    # Con el peso sparse alto, ch-m2-1 (solo sparse) es el primero de la fusión; el corte previo al reranker lo respeta.
+    # Por puntaje crudo ch-m1-1 (dense 0,9) supera a ch-m2-1 (sparse 0,5); con el peso sparse alto la fusión invierte el
+    # orden y el corte previo al reranker debe respetar el fusionado, no el crudo.
     parametros = parametros_hibridos(
         fusion=EstrategiaDeFusion.ponderada, peso_sparse=0.9, reranker_max_pairs=1
     )
@@ -235,3 +237,25 @@ def test_rag_query_no_registra_texto_libre_del_contexto_en_los_logs_de_la_recupe
     assert respuesta.status_code == 200
     assert caplog.records
     assert all(sentinela not in r.getMessage() for r in caplog.records)
+
+
+@pytest.mark.ac("US-112", 1)
+def test_rag_query_no_pasa_al_reranker_mas_candidatos_que_el_top_k_cuando_el_modo_es_dense():
+    # Con top-k 1 la pregunta y el resumen del contexto traen un chunk distinto cada uno: el recorte decide.
+    parametros = replace(parametros_hibridos(modo=RetrievalMode.dense), retrieval_top_k=1)
+    entorno, _, _ = crear_entorno_hibrido(parametros=parametros)
+
+    respuesta = entorno.consultar(solicitud_de(Q_KEYWORD))
+
+    assert respuesta.status_code == 200
+    assert len(entorno.reranker.candidatos_recibidos[0]) == 1
+
+
+@pytest.mark.parametrize("ausente", ["buscador_sparse", "embedder_sparse"])
+def test_el_servicio_se_niega_a_construirse_en_modo_hibrido_cuando_falta_un_puerto_sparse(ausente):
+    _, buscador, codificador = crear_entorno_hibrido()
+    puertos = {"buscador_sparse": buscador, "embedder_sparse": codificador}
+    puertos[ausente] = None
+
+    with pytest.raises(ValueError, match="hibrida"):
+        crear_entorno(parametros=parametros_hibridos(), **puertos)
