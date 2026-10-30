@@ -15,10 +15,10 @@
       `sin_regla_de_comparacion`; `studyPopulationValue` `deprecated: true`); versiones: `apps/rag-orchestrator/openapi.yaml`
       1.5.0 → 1.6.0, `apps/clinical-api/openapi.yaml` 1.10.0 → 1.11.0, `contracts/schemas/evidence.yaml` 1.0.0 → 1.1.0;
       generar cliente TS, Zod y Pydantic; `oasdiff` sin ERR · `contracts:check`
-      > PENDIENTE (no `[x]`): hecho `evidence.yaml` 1.1.0, `rag-orchestrator` 1.6.0, cliente TS, Zod y Pydantic, `contracts:check` y
-      > `generate:check` en verde. Falta `clinical-api/openapi.yaml` 1.11.0 (lo sube clinical-platform-dev, 2.x) y `oasdiff`: los
-      > 8 ERR `response-property-enum-value-added` de `unknownReason` (4 por proveedor) exigen excepciones declaradas ADR-26
-      > (E-6…E-13 en `scripts/ci/contracts-breaking-excepciones.json` + ADR-26): decisión del usuario, fuera de los paths de ai-services.
+      > PENDIENTE (no `[x]`): hecho `evidence.yaml` 1.1.0, `rag-orchestrator` 1.6.0, `clinical-api` 1.11.0, cliente TS, Zod y
+      > Pydantic, `contracts:check` y `generate:check` en verde. Falta `oasdiff` sin ERR: 8 ERR `response-property-enum-value-added`
+      > de `unknownReason` (4 por proveedor) exigen excepciones ADR-26 E-6…E-13 (`scripts/ci/contracts-breaking-excepciones.json`,
+      > ADR-26 y `excepcionesDeContrato.test.mjs`); el sistema denegó añadirlas desde este agente: las declara el humano/orquestador.
 - [x] 0.2 Ejemplo `contracts/examples/con-evidencia-s4-poblacion-lista.json` (`clinical-api`, `EvidenceAnalysis`;
       sintético, vocabulario no prescriptivo; `studyPopulationValue` según D10: primer valor de elegibilidad o `null`)
       y registro en `index.json`; `con-evidencia-s3-aplicabilidad.json` no lo cambia este change (su `estadio` pasa a
