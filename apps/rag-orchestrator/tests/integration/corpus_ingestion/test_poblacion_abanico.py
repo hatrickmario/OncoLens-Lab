@@ -7,12 +7,14 @@ el Compose de test, PostgreSQL ``corpus`` y Milvus reales. Se fingen solo los bo
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
 
 from tests.integration.corpus_ingestion.conftest import Montaje
 from tests.integration.corpus_ingestion.montaje_poblacion import (
+    CONFIGURACION_DE_TEST,
     MontajeDePoblacion,
     montar_poblacion,
 )
@@ -192,6 +194,25 @@ def test_ingesta_misma_version_cero_llamadas_y_otra_version_seis(
     assert montaje.llm.invocaciones == llamadas_iniciales + 6
     guardado = montaje.poblacion_de("doc-e1").population_criteria["estado_menopausico"]
     assert {v["promptVersion"] for v in guardado} == {"poblacion_v2"}
+
+
+@pytest.mark.ac("US-242", 8)
+def test_ingesta_doce_llamadas_nunca_mas_de_dos_simultaneas_y_ninguna_mezcla_documentos(
+    montar: Callable[..., MontajeDePoblacion],
+) -> None:
+    """[US-242 AC-8] Con concurrencia 2, dos documentos hacen 12 llamadas, de a dos como máximo, y cada una lleva fragmentos
+    de una sola fuente."""
+    montaje = montar(configuracion=replace(CONFIGURACION_DE_TEST, concurrencia=2))
+
+    montaje.ingerir("doc-e1", "doc-e2")
+
+    assert montaje.llm.invocaciones == 12
+    assert montaje.llm.maximo_simultaneo == 2
+    fuentes = {f.chunk_id: clave for clave, fs in FRAGMENTOS_POR_DOCUMENTO.items() for f in fs}
+    assert all(
+        len({fuentes[c] for c in llamada.chunk_ids}) == 1 for llamada in montaje.llm.llamadas
+    )
+    assert {fuentes[c] for ll in montaje.llm.llamadas for c in ll.chunk_ids} == {"doc-e1", "doc-e2"}
 
 
 @pytest.mark.ac("US-242", 3)
