@@ -131,9 +131,12 @@ def _recalculado(
     en_lista = None if criterio is None else poblacion.criterios.get(criterio.clave_de_estudio)
     if criterio is None or en_lista is None or not en_lista.valores:
         return evaluado
-    return evaluar_criterio_de_fuente(
+    recalculado = evaluar_criterio_de_fuente(
         criterio, contexto, poblacion, chunk_ids, fuente_mezcla=fuente_mezcla
     )
+    if evaluado.chunk_citado_id is not None and not recalculado.valores_del_estudio:
+        return evaluado  # el valor aceptado por texto (US-123) no se pisa si la lista no dice nada en estos fragmentos
+    return recalculado
 
 
 def _aplicabilidad_de(
