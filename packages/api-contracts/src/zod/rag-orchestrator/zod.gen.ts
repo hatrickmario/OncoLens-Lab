@@ -125,7 +125,13 @@ export const zRagMeta = z.strictObject({
         topK: z.int().gte(1),
         rerankTopN: z.int().gte(1),
         relevanceThreshold: z.number().gte(0).lte(1),
-        retrievalMode: z.enum(['dense', 'hibrida'])
+        retrievalMode: z.enum(['dense', 'hibrida']),
+        fusion: z.enum([
+            'ninguna',
+            'rrf',
+            'ponderada'
+        ]),
+        fusionParam: z.number().gte(0)
     }),
     latencyMs: z.int().gte(0)
 });

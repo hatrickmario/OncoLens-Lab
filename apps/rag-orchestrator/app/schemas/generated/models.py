@@ -242,6 +242,12 @@ class RetrievalMode(StrEnum):
     hibrida = 'hibrida'
 
 
+class Fusion(StrEnum):
+    ninguna = 'ninguna'
+    rrf = 'rrf'
+    ponderada = 'ponderada'
+
+
 class RetrievalParams(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
@@ -250,6 +256,19 @@ class RetrievalParams(BaseModel):
     rerankTopN: Annotated[int, Field(ge=1)]
     relevanceThreshold: Annotated[float, Field(ge=0.0, le=1.0)]
     retrievalMode: RetrievalMode
+    fusion: Annotated[
+        Fusion,
+        Field(
+            description='Regla que fusionó las ramas dense y sparse (US-112). `ninguna` si y solo si `retrievalMode = dense`. Nunca null.'
+        ),
+    ]
+    fusionParam: Annotated[
+        float,
+        Field(
+            description='Parámetro de la fusión: `0` con `ninguna`; `k` de RRF (entero >= 1) con `rrf`; peso de la rama sparse (0 < w < 1) con `ponderada`. Nunca null.',
+            ge=0.0,
+        ),
+    ]
 
 
 class RagMeta(BaseModel):
@@ -282,7 +301,12 @@ class RagMeta(BaseModel):
         list[str],
         Field(description='Fuentes excluidas del corpus, declaradas como exclusión.'),
     ]
-    retrievalParams: RetrievalParams
+    retrievalParams: Annotated[
+        RetrievalParams,
+        Field(
+            description='Trazado de la recuperación (US-112, design D7). `dense` implica `fusion = ninguna` y `fusionParam = 0`; `hibrida` implica `fusion` en {rrf, ponderada} (k entero >= 1 con rrf; peso en (0, 1) con ponderada; el rango lo valida la configuración al arrancar).'
+        ),
+    ]
     latencyMs: Annotated[int, Field(ge=0)]
 
 

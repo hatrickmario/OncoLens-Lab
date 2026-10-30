@@ -11,7 +11,8 @@
 #### Scenario: Un fusion nulo o incoherente con el modo rompe la verificación [US-112 AC-5] [US-033 AC-13]
 - **WHEN** un parche deja `fusion` o `fusionParam` en `null`, los quita de `required`, o un ejemplo trae `retrievalMode = dense` con `fusion = rrf`
 - **THEN** `contracts:check` termina con código distinto de 0 y nombra el campo
-- **AND** también falla con `retrievalMode = hibrida` y `fusion = ninguna`, con `rrf` y `fusionParam` no entero o < 1, o con `ponderada` y `fusionParam` fuera de (0, 1)
+- **AND** también falla con `retrievalMode = hibrida` y `fusion = ninguna`
+- **AND** el contrato solo fija el vínculo modo/fusión; el rango de `fusionParam` (entero ≥ 1 con `rrf`, (0, 1) con `ponderada`) NO lo valida el contrato sino `Settings` al arrancar (`RRF_K`, `HYBRID_SPARSE_WEIGHT`)
 
 #### Scenario: El proveedor emite la fusión en el modo dense [US-112 AC-6]
 - **WHEN** `contracts:verify-provider` valida la respuesta real de `/rag/query` con `RETRIEVAL_MODE` sin definir

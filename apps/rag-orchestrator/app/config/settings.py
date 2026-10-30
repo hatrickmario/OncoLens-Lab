@@ -19,6 +19,7 @@ from app.domain.corpus_seed.admisibilidad import (
     clase_contradice_el_texto,
 )
 from app.domain.corpus_seed.chunking import validar_ventana
+from app.domain.fusion_de_candidatos import HYBRID_SPARSE_WEIGHT_INICIAL, RRF_K_INICIAL
 from app.domain.reglas_proveedor import (
     HOSTS_LOCALES,
     reject_fake_model_provider_with_real_data,
@@ -73,6 +74,11 @@ class Settings(BaseSettings):
     # (US-072) y el arranque de /rag/query con LLM_PROVIDER=local se niega si falta alguno (ver bootstrap).
     relevance_threshold: float | None = Field(default=None, ge=0.0, le=1.0)
     retrieval_top_k: int | None = Field(default=None, gt=0)
+    # Recuperación híbrida (US-112, RN-22): `dense` por defecto (sin la rama sparse); un valor inválido falla al arrancar.
+    retrieval_mode: Literal["dense", "hibrida"] = "dense"
+    retrieval_fusion: Literal["rrf", "ponderada"] = "rrf"
+    rrf_k: int = Field(default=RRF_K_INICIAL, ge=1)
+    hybrid_sparse_weight: float = Field(default=HYBRID_SPARSE_WEIGHT_INICIAL, gt=0.0, lt=1.0)
     rerank_top_n: int | None = Field(default=None, gt=0)
     # Longitud máxima del código de tipo de cáncer que entra al filtro de Milvus (RN-22).
     retrieval_cancer_type_max_length: int = Field(default=64, gt=0)

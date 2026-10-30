@@ -13,7 +13,7 @@ Decisión (una propuesta elegida; descartadas en una línea): fusión como regla
 - **D3 Filtro idéntico en ambas ramas (RN-05):** un único filtro escalar construido por `retrieval_filter.py` se pasa a las dos búsquedas; un chunk `is_current = false` o de otro tipo de cáncer devuelto por el falso *sparse* nunca llega al *reranker* ni a las citas (AC-3).
 - **D4 `relevance_score` solo del *reranker* (RN-03):** la fusión ordena candidatos; el puntaje de la opción y `topRelevanceScore` salen del *reranker* (AC-2). La similitud/fusión no se compara con el umbral.
 - **D5 `sin_evidencia` intacta (RN-02):** en modo híbrido, sin chunks sobre el umbral → `sin_evidencia`, `topRelevanceScore = null`, cero invocaciones del LLM (AC-4).
-- **D6 *Sparse* de la consulta:** mismo BGE-M3, mismos pesos y mismo `SPARSE_VECTOR_SOURCE` que `reindex-sparse` e ingesta; el adapter de *embeddings* expone `embeber_sparse()` (puerto + fake). En `dense` no se invoca (AC-6: cero llamadas).
+- **D6 *Sparse* de la consulta:** mismo BGE-M3, mismos pesos y mismo `SPARSE_VECTOR_SOURCE` que `reindex-sparse` e ingesta; el adapter de *embeddings* expone `embeber_sparse()` (puerto + fake). En `dense` no se invoca (AC-6: cero llamadas). **A confirmar por el usuario:** hoy una pregunta sin ningún término léxico hace que el codificador *sparse* lance `FalloDeInferencia` y la consulta híbrida falle cerrada (`503 RETRIEVAL_UNAVAILABLE`, sin degradar en silencio a `dense`), aunque `dense` funcionaría. Se mantiene hasta que el usuario decida si debe degradar a `dense` dejando constancia en `meta`.
 - **D7 Trazado sin nulos (decisión D-c del usuario, 2026-10-30):** `meta.retrievalParams` registra siempre `retrievalMode`, `fusion` y `fusionParam`, obligatorios y sin `null` (la regla de `api-contracts` «`RagMeta` estricto… sin campos nulos»):
   - `dense` → `fusion = "ninguna"`, `fusionParam = 0`;
   - `hibrida` + `rrf` → `fusion = "rrf"`, `fusionParam = RRF_K` (entero ≥ 1, 60 por defecto);
@@ -35,10 +35,15 @@ Decisión (una propuesta elegida; descartadas en una línea): fusión como regla
 
 ## Contratos
 
-- `apps/rag-orchestrator/openapi.yaml` 1.6.0 → **1.7.0** (minor, aditivo, ADR-26; rebasa sobre `l1d-291`; cadena rag-orchestrator 291 → 109 → 295 → 144 → 300; después rebasan `l1d-295`, `l1d-144` y `l1d-300`): `RagMeta.retrievalParams` (cerrado) gana `fusion` (`type: string`, `enum: [ninguna, rrf, ponderada]`, sin `null`) y `fusionParam` (`type: number`, `minimum: 0`, sin `null`), ambos en `required`, con `allOf` de `if/then`: `retrievalMode = dense` ⇒ `fusion = ninguna` y `fusionParam = 0`; `retrievalMode = hibrida` ⇒ `fusion ∈ {rrf, ponderada}`; `rrf` ⇒ `fusionParam` entero ≥ 1; `ponderada` ⇒ `0 < fusionParam < 1`. Para el consumidor (`clinical-api`) es una respuesta con dos campos más: sin incompatibles en `contracts:breaking`.
+- `apps/rag-orchestrator/openapi.yaml` 1.6.0 → **1.7.0** (minor, aditivo, ADR-26; rebasa sobre `l1d-291`; cadena rag-orchestrator 291 → 109 → 295 → 144 → 300; después rebasan `l1d-295`, `l1d-144` y `l1d-300`): `RagMeta.retrievalParams` (cerrado) gana `fusion` (`type: string`, `enum: [ninguna, rrf, ponderada]`, sin `null`) y `fusionParam` (`type: number`, `minimum: 0`, sin `null`), ambos en `required`, con un único `if/then/else` y `unevaluatedProperties: false`: si `retrievalMode = dense`, entonces `fusion = ninguna` y `fusionParam = 0`; si no, `fusion ∈ {rrf, ponderada}`. El rango de `fusionParam` por fusión (entero ≥ 1 con `rrf`; `0 < w < 1` con `ponderada`) no está en el contrato: lo valida `Settings` al arrancar (ver «Decidido (usuario, 2026-10-30)» al final). Para el consumidor (`clinical-api`) es una respuesta con dos campos más: sin incompatibles en `contracts:breaking`.
 - Primero el contrato (`sync-contracts`): todos los ejemplos con `retrievalParams` — `contracts/examples/rag-query-*.json` **y** `rag-follow-up-*.json` — ganan `fusion = "ninguna"` y `fusionParam = 0`; ejemplo nuevo `rag-query-hibrida.json` (`fusion = "rrf"`, `fusionParam = 60`) con **su propio request** `rag-query-request-hibrida.json` cuya `query` es distinta de las demás (`assertFixtureQueriesDistinct()`), registrados en `index.json`. `contracts:check`, `contracts:breaking`, `contracts:generate`. Sin endpoint nuevo.
 - `retrievalMode` ya admite `hibrida`. Colección de Milvus: **sin cambio de esquema** (el campo *sparse* ya existe por US-117b); solo se consulta.
 
 ## Evaluación
 
 La calidad (recall@10, MRR, retroceso frente a `dense`) se mide en US-133 con el runner de variantes (US-226): brazos A2 y A2b de ADR-45. Este change no fija umbrales ni decide el modo de la demo.
+
+
+## Decidido (usuario, 2026-10-30)
+
+Desviación de D7: el contrato 1.7.0 fija solo el vínculo modo/fusión con un `if/then/else` (`dense` ⇒ `ninguna` y `fusionParam = 0`; `hibrida` ⇒ `rrf` o `ponderada`). El rango de `fusionParam` (k entero ≥ 1 con `rrf`; peso en (0, 1) con `ponderada`) lo valida únicamente `Settings` al arrancar. Motivo: un `anyOf` por combinación rompe `contracts:breaking` (`response-property-any-of-added`) y habría exigido excepciones ADR-26 E-6/E-7 y ampliar `scripts/contracts/lib/refinamientos.mjs`; se descartaron ambas.

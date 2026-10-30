@@ -8,10 +8,11 @@ tokens cuentan y cómo se agrupan es de ``app/domain/pesos_sparse``. Comparte se
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 import numpy as np
 
+from app.application.corpus_ingestion.ports import SparsePassageEncoder
 from app.application.ports import FalloDeInferencia
 from app.domain.pesos_sparse import agrupar_pesos_por_token, pesos_lexicos
 from app.infrastructure.models.fallos import fallos_de_inferencia_como_error_del_puerto
@@ -68,3 +69,17 @@ class CodificadorSparseBgeM3:
             raise FalloDeInferencia(_FALLO)
         pesos = pesos_lexicos(oculto[: len(ids)], self._pesos, self._sesgo)
         return agrupar_pesos_por_token(ids, pesos.tolist())
+
+
+class CodificadorSparseDeConsultaBgeM3:
+    """``QuerySparseEncoder`` (US-112 D6): el MISMO codificador de la ingesta aplicado a la consulta.
+
+    Reutiliza ``CodificadorSparseBgeM3`` (pesos, tokenizer, ``max_length`` y origen del vector) para que el índice y la
+    consulta no puedan divergir; un texto sin ningún término con peso es un fallo del puerto, nunca un vector vacío.
+    """
+
+    def __init__(self, codificador: SparsePassageEncoder) -> None:
+        self._codificador = codificador
+
+    def embeber_sparse(self, texto: str) -> Mapping[int, float]:
+        return self._codificador.codificar([texto])[0]
