@@ -1,8 +1,10 @@
 import { ESTADOS_DESCARTADOS } from '../patients/estados-de-revision.js';
 import type {
   CondicionDeItem,
+  ChecklistDelPaciente,
   DestinoDeItem,
   EstadoDelChecklist,
+  EstadoDeItem,
   ItemDeDatoCritico,
   ItemDelChecklist,
   RegistroDeDato,
@@ -62,9 +64,24 @@ export function estadoDeVerificacion(
     : 'presente_sin_verificar';
 }
 
-/** Paso 1: el tipo de cáncer sale del `Diagnosis` activo vigente; `null` si no hay. */
+const compararTexto = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
+
+/**
+ * El `Diagnosis` vigente: el mismo criterio que la ficha y el listado (`diagnosed_at` más reciente, desempate por `id`
+ * ascendente). La BD no garantiza un solo activo por paciente (`diagnosis_patient_id_is_active_idx` no es único), así
+ * que todas las salidas del checklist se calculan sobre este mismo registro.
+ */
+export function diagnosticoVigente(
+  diagnosticos: readonly RegistroDeDato[],
+): RegistroDeDato | undefined {
+  return [...registrosVigentes(diagnosticos)].sort(
+    (a, b) => compararTexto(b.fecha ?? '', a.fecha ?? '') || compararTexto(a.id, b.id),
+  )[0];
+}
+
+/** Paso 1: el tipo de cáncer sale del `Diagnosis` vigente; `null` si no hay. */
 export function tipoDeCancerActivo(diagnosticosActivos: readonly RegistroDeDato[]): string | null {
-  const activo = registroQueCuenta(registrosVigentes(diagnosticosActivos));
+  const activo = diagnosticoVigente(diagnosticosActivos);
   const tipo = activo?.columnas['cancer_type'];
   return typeof tipo === 'string' ? tipo : null;
 }
@@ -77,12 +94,12 @@ export function itemsDelTipoActivo(
 }
 
 /**
- * Coincidencia de destino (design D5): columnas de `match` iguales y, si el destino declara campo, con valor. El
+ * Coincidencia de destino (design D5): columnas de `match` iguales y, si el destino declara campo, con valor.
  * En un `no_mapeado`, `name` es el texto propuesto, sin validar contra el catálogo: coincide si es igual al del
  * destino. Nunca se empareja por `original_name` ni por similitud (RN-27: sería asignar un concepto sin mapeo). El
  * estado del dato sale de `review_status`, no de `mapping_status`.
  */
-export function registrosDelDestino(
+function registrosDelDestino(
   destino: DestinoDeItem,
   registros: readonly RegistroDeDato[],
 ): RegistroDeDato[] {
@@ -128,6 +145,14 @@ function registrosQueCuentanDelItem(
   const destino = item.destination;
   const vigentes = registrosVigentes(registros[destino.entity] ?? []);
   return registrosDelDestino(destino, vigentes);
+}
+
+/** El registro que hizo presente a un ítem (paso 4): de él sale su procedencia; `undefined` si no tiene ninguno. */
+export function registroQueCuentaDelItem(
+  item: ItemDeDatoCritico,
+  registros: RegistrosPorEntidad,
+): RegistroDeDato | undefined {
+  return registroQueCuenta(registrosQueCuentanDelItem(item, registros));
 }
 
 function valorDelRegistro(item: ItemDeDatoCritico, registro: RegistroDeDato): string | null {
@@ -180,10 +205,15 @@ export interface EntradaDelChecklist {
 }
 
 /** Paso 5: un estado por ítem del tipo activo, en el orden del catálogo. */
-export function calcularChecklist(entrada: EntradaDelChecklist): ItemDelChecklist[] {
+export function calcularChecklist(entrada: EntradaDelChecklist): EstadoDeItem[] {
   const delTipo = itemsDelTipoActivo(entrada.items, entrada.cancerType);
   return delTipo.map((item) => ({
     key: item.key,
     status: estadoDelItem(item, delTipo, entrada.verifiedReviewStatuses, entrada.registros),
   }));
+}
+
+/** Los ítems en estado `faltante`, en el orden del catálogo: ÚNICA definición de «faltante» (contador, endpoint y análisis). */
+export function faltantesDe(checklist: ChecklistDelPaciente): ItemDelChecklist[] {
+  return checklist.items.filter((item) => item.status === 'faltante');
 }

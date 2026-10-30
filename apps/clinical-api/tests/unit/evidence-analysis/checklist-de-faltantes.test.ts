@@ -9,7 +9,21 @@ import { ChecklistNoDisponibleError } from '../../../src/modules/evidence-analys
 
 const checklistCon = (...items: [string, EstadoDelChecklist][]): ChecklistDelPaciente => ({
   catalogVersion: 'test-1.0.0',
-  items: items.map(([key, status]) => ({ key, status })),
+  cancerTypeEnabled: true,
+  items: items.map(([key, status]) => {
+    const presente = status === 'presente_verificado' || status === 'presente_sin_verificar';
+    return {
+      key,
+      label: key,
+      status,
+      origin: presente ? 'seed' : 'regla',
+      provenance: presente
+        ? { entryMethod: 'seed', reviewStatus: 'verificado', sourceDocumentId: null }
+        : null,
+      destination: { entity: 'Diagnosis', field: key },
+      condition: null,
+    };
+  }),
 });
 
 const completitudCon = (checklist: ChecklistDelPaciente): CompletenessService => ({

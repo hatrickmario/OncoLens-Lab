@@ -1,0 +1,175 @@
+{
+  "catalogVersion": "test-1.0.0",
+  "cancerTypeEnabled": true,
+  "items": [
+    {
+      "item": "histologia",
+      "label": "Histología",
+      "status": "presente_verificado",
+      "origin": "seed",
+      "provenance": {
+        "entryMethod": "seed",
+        "reviewStatus": "verificado",
+        "sourceDocumentId": null
+      },
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "histology"
+      },
+      "condition": null
+    },
+    {
+      "item": "grado",
+      "label": "Grado",
+      "status": "faltante",
+      "origin": "regla",
+      "provenance": null,
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "grade"
+      },
+      "condition": null
+    },
+    {
+      "item": "tnm",
+      "label": "Estadificación TNM",
+      "status": "presente_verificado",
+      "origin": "seed",
+      "provenance": {
+        "entryMethod": "seed",
+        "reviewStatus": "verificado",
+        "sourceDocumentId": null
+      },
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "stage_value"
+      },
+      "condition": null
+    },
+    {
+      "item": "ecog",
+      "label": "ECOG",
+      "status": "presente_verificado",
+      "origin": "seed",
+      "provenance": {
+        "entryMethod": "seed",
+        "reviewStatus": "verificado",
+        "sourceDocumentId": null
+      },
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "performance_value"
+      },
+      "condition": null
+    },
+    {
+      "item": "re",
+      "label": "Receptor de estrógeno",
+      "status": "presente_sin_verificar",
+      "origin": "documento",
+      "provenance": {
+        "entryMethod": "ocr",
+        "reviewStatus": "requiere_revision",
+        "sourceDocumentId": "3b8e5a21-6c4d-4e7f-9a10-2c3d4e5f6a7b",
+        "page": 2
+      },
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value"
+      },
+      "condition": null
+    },
+    {
+      "item": "rp",
+      "label": "Receptor de progesterona",
+      "status": "faltante",
+      "origin": "regla",
+      "provenance": null,
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value"
+      },
+      "condition": null
+    },
+    {
+      "item": "her2_ihq",
+      "label": "HER2 (IHQ)",
+      "status": "presente_verificado",
+      "origin": "correccion",
+      "provenance": {
+        "entryMethod": "manual_correction",
+        "reviewStatus": "corregido",
+        "sourceDocumentId": null
+      },
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value"
+      },
+      "condition": null
+    },
+    {
+      "item": "her2_ish",
+      "label": "HER2 (ISH)",
+      "status": "faltante",
+      "origin": "regla",
+      "provenance": null,
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value"
+      },
+      "condition": null
+    },
+    {
+      "item": "ki67",
+      "label": "Ki-67",
+      "status": "faltante",
+      "origin": "regla",
+      "provenance": null,
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value"
+      },
+      "condition": null
+    },
+    {
+      "item": "estado_menopausico",
+      "label": "Estado menopáusico",
+      "status": "faltante",
+      "origin": "regla",
+      "provenance": null,
+      "destination": {
+        "entity": "ClinicalAttribute",
+        "field": "value"
+      },
+      "condition": null
+    },
+    {
+      "item": "tratamientos_previos",
+      "label": "Tratamientos previos",
+      "status": "presente_verificado",
+      "origin": "manual",
+      "provenance": {
+        "entryMethod": "manual",
+        "reviewStatus": "verificado",
+        "sourceDocumentId": null
+      },
+      "destination": {
+        "entity": "PriorTreatment",
+        "field": null
+      },
+      "condition": null
+    },
+    {
+      "item": "brca_germinal",
+      "label": "BRCA germinal",
+      "status": "faltante",
+      "origin": "regla",
+      "provenance": null,
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value"
+      },
+      "condition": null
+    }
+  ]
+}

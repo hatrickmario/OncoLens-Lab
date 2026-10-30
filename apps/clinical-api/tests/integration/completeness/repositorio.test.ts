@@ -3,7 +3,12 @@ import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 import { createCompletenessRepository } from '../../../src/modules/completeness/completeness.repository.js';
 import { prepararSiembra, sembrarFM2 } from '../../support/completitud.js';
 import { conectar } from '../../support/db.js';
-import { generadorDeIds } from '../../support/filas-sinteticas.js';
+import {
+  FECHA_FIJA,
+  INSTANTE_FIJO,
+  generadorDeIds,
+  insertar,
+} from '../../support/filas-sinteticas.js';
 
 const ESPACIO_DE_IDS = 9410;
 let cliente: Client;
@@ -25,5 +30,59 @@ describe('repositorio de completitud', () => {
     expect(rechazados.map((registro) => registro.columnas['name'])).toEqual([
       'Receptor de progesterona',
     ]);
+  });
+
+  it('rechaza Exam como entidad de destino cuando se pide, porque clinical.exam no tiene review_status', async () => {
+    const fm2 = await sembrarFM2(
+      await prepararSiembra(cliente, generadorDeIds(ESPACIO_DE_IDS + 1)),
+    );
+
+    const lectura = createCompletenessRepository(cliente).registrosSinFiltrarPorRevision(
+      fm2.patientId,
+      ['Exam'],
+    );
+
+    await expect(lectura).rejects.toThrow('entidad_de_destino_no_soportada Exam');
+  });
+
+  it('rechaza constructor y toString como entidad de destino cuando se piden, sin resolverlas por el prototipo', async () => {
+    const fm2 = await sembrarFM2(
+      await prepararSiembra(cliente, generadorDeIds(ESPACIO_DE_IDS + 3)),
+    );
+    const repositorio = createCompletenessRepository(cliente);
+
+    for (const heredada of ['constructor', 'toString']) {
+      await expect(
+        repositorio.registrosSinFiltrarPorRevision(fm2.patientId, [heredada]),
+      ).rejects.toThrow(`entidad_de_destino_no_soportada ${heredada}`);
+    }
+  });
+
+  it('no trae description de los ClinicalEvent cuando los lee, aunque el texto libre tenga datos del paciente', async () => {
+    const marcador = 'MARCADOR-DESCRIPCION-SINTETICA';
+    const fm2 = await sembrarFM2(
+      await prepararSiembra(cliente, generadorDeIds(ESPACIO_DE_IDS + 2)),
+    );
+    await insertar(cliente, 'clinical.clinical_event', {
+      id: fm2.ids(),
+      patient_id: fm2.patientId,
+      episode_id: fm2.episodeId,
+      event_type: 'evolucion',
+      event_date: FECHA_FIJA,
+      date_precision: 'dia',
+      description: marcador,
+      mapping_status: 'n_a',
+      entry_method: 'seed',
+      extraction_confidence: 'n_a',
+      review_status: 'verificado',
+      created_at: INSTANTE_FIJO,
+    });
+
+    const { ClinicalEvent: eventos = [] } = await createCompletenessRepository(
+      cliente,
+    ).registrosSinFiltrarPorRevision(fm2.patientId, ['ClinicalEvent']);
+
+    expect(eventos).toHaveLength(1);
+    expect(JSON.stringify(eventos)).not.toContain(marcador);
   });
 });

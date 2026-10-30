@@ -1,0 +1,204 @@
+{
+  "catalogVersion": "test-1.0.0",
+  "cancerTypeEnabled": true,
+  "items": [
+    {
+      "item": "histologia",
+      "label": "Histología",
+      "status": "presente_verificado",
+      "origin": "seed",
+      "provenance": {
+        "entryMethod": "seed",
+        "reviewStatus": "verificado",
+        "sourceDocumentId": null
+      },
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "histology"
+      },
+      "condition": null
+    },
+    {
+      "item": "grado",
+      "label": "Grado",
+      "status": "presente_verificado",
+      "origin": "seed",
+      "provenance": {
+        "entryMethod": "seed",
+        "reviewStatus": "verificado",
+        "sourceDocumentId": null
+      },
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "grade"
+      },
+      "condition": null
+    },
+    {
+      "item": "tnm",
+      "label": "Estadificación TNM",
+      "status": "presente_verificado",
+      "origin": "seed",
+      "provenance": {
+        "entryMethod": "seed",
+        "reviewStatus": "verificado",
+        "sourceDocumentId": null
+      },
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "stage_value"
+      },
+      "condition": null
+    },
+    {
+      "item": "ecog",
+      "label": "ECOG",
+      "status": "presente_verificado",
+      "origin": "seed",
+      "provenance": {
+        "entryMethod": "seed",
+        "reviewStatus": "verificado",
+        "sourceDocumentId": null
+      },
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "performance_value"
+      },
+      "condition": null
+    },
+    {
+      "item": "re",
+      "label": "Receptor de estrógeno",
+      "status": "presente_verificado",
+      "origin": "seed",
+      "provenance": {
+        "entryMethod": "seed",
+        "reviewStatus": "verificado",
+        "sourceDocumentId": null
+      },
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value"
+      },
+      "condition": null
+    },
+    {
+      "item": "rp",
+      "label": "Receptor de progesterona",
+      "status": "presente_verificado",
+      "origin": "seed",
+      "provenance": {
+        "entryMethod": "seed",
+        "reviewStatus": "verificado",
+        "sourceDocumentId": null
+      },
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value"
+      },
+      "condition": null
+    },
+    {
+      "item": "her2_ihq",
+      "label": "HER2 (IHQ)",
+      "status": "presente_verificado",
+      "origin": "seed",
+      "provenance": {
+        "entryMethod": "seed",
+        "reviewStatus": "verificado",
+        "sourceDocumentId": null
+      },
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value"
+      },
+      "condition": null
+    },
+    {
+      "item": "her2_ish",
+      "label": "HER2 (ISH)",
+      "status": "no_aplica",
+      "origin": "regla",
+      "provenance": null,
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value"
+      },
+      "condition": {
+        "item": "her2_ihq",
+        "operator": "prefijo",
+        "values": [
+          "2+"
+        ]
+      }
+    },
+    {
+      "item": "ki67",
+      "label": "Ki-67",
+      "status": "presente_verificado",
+      "origin": "seed",
+      "provenance": {
+        "entryMethod": "seed",
+        "reviewStatus": "verificado",
+        "sourceDocumentId": null
+      },
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value"
+      },
+      "condition": null
+    },
+    {
+      "item": "estado_menopausico",
+      "label": "Estado menopáusico",
+      "status": "presente_verificado",
+      "origin": "seed",
+      "provenance": {
+        "entryMethod": "seed",
+        "reviewStatus": "verificado",
+        "sourceDocumentId": null
+      },
+      "destination": {
+        "entity": "ClinicalAttribute",
+        "field": "value"
+      },
+      "condition": null
+    },
+    {
+      "item": "tratamientos_previos",
+      "label": "Tratamientos previos",
+      "status": "no_aplica",
+      "origin": "regla",
+      "provenance": null,
+      "destination": {
+        "entity": "PriorTreatment",
+        "field": null
+      },
+      "condition": {
+        "item": "tnm",
+        "operator": "prefijo",
+        "values": [
+          "IV"
+        ]
+      }
+    },
+    {
+      "item": "brca_germinal",
+      "label": "BRCA germinal",
+      "status": "no_aplica",
+      "origin": "regla",
+      "provenance": null,
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value"
+      },
+      "condition": {
+        "item": "tnm",
+        "operator": "prefijo",
+        "values": [
+          "IV"
+        ]
+      }
+    }
+  ]
+}

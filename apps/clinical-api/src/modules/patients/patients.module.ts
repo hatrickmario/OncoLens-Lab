@@ -1,7 +1,9 @@
 import type { Router } from 'express';
 import type { Registrar } from '../../infrastructure/logger.js';
 import type { Consultador } from '../auth/auth.repository.js';
-import type { TiposDeCancerHabilitados, TraceIdGenerator } from '../evidence-analysis/ports.js';
+import type { CompletenessService } from '../completeness/ports.js';
+import type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
+import type { TraceIdGenerator } from '../../infrastructure/trace-id-generator.js';
 import type { IdentityService } from './identity.service.js';
 import { patientsController } from './patients.controller.js';
 import { createFichaRepository } from './ficha.repository.js';
@@ -17,6 +19,8 @@ export interface DependenciasDelModulo {
   db: Consultador;
   identidad: IdentityService;
   tiposHabilitados: TiposDeCancerHabilitados;
+  /** Checklist de datos críticos para el contador de la ficha: la misma instancia del endpoint y del análisis. */
+  completitud: CompletenessService;
   traceIds: TraceIdGenerator;
   registrar: Registrar;
   config: ConfiguracionDePacientes;
@@ -29,6 +33,7 @@ export function componerModuloDePacientes(dependencias: DependenciasDelModulo): 
     ficha: createFichaRepository(dependencias.db),
     identidad: dependencias.identidad,
     tiposHabilitados: dependencias.tiposHabilitados,
+    completitud: dependencias.completitud,
     pageSize: dependencias.config.pageSize,
   });
   return patientsController({

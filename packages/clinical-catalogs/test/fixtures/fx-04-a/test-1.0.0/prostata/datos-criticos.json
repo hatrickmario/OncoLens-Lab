@@ -1,13 +1,16 @@
 {
   "version": "test-1.0.0",
-  "verifiedReviewStatuses": ["verificado", "corregido"],
+  "verifiedReviewStatuses": [
+    "verificado",
+    "corregido"
+  ],
   "items": [
     {
       "key": "psa_serie",
       "cancerType": "prostata",
       "label": {
-        "es": "psa_serie",
-        "en": "psa_serie"
+        "es": "Serie de PSA",
+        "en": "Serie de PSA"
       },
       "destination": {
         "entity": "Biomarker",
@@ -23,8 +26,8 @@
       "key": "ecog",
       "cancerType": "prostata",
       "label": {
-        "es": "ecog",
-        "en": "ecog"
+        "es": "ECOG",
+        "en": "ECOG"
       },
       "destination": {
         "entity": "Diagnosis",

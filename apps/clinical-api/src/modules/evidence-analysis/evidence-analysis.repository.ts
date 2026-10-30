@@ -181,7 +181,7 @@ async function leerDiagnosticoActivo(leer: Leer): Promise<FilaDeDiagnostico | nu
             extraction_confidence, review_status, conflicts_with_id
        FROM clinical.diagnosis
       WHERE patient_id = $1 AND is_active AND ${sqlDatoVigente('review_status')}
-      ORDER BY diagnosed_at DESC, created_at DESC
+      ORDER BY diagnosed_at DESC, id
       LIMIT 1`,
   );
   return fila === undefined ? null : diagnosticoDe(fila);

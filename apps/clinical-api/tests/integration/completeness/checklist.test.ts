@@ -8,6 +8,7 @@ import type {
 import {
   RUTA_CATALOGO_TEST_1_0_0,
   RUTA_CATALOGO_TEST_1_1_0,
+  TIPOS_HABILITADOS_DE_TEST,
   leerTexto,
   prepararSiembra,
   sembrarBiomarcador,
@@ -39,7 +40,12 @@ afterAll(async () => {
 });
 
 const servicioCon = (rutaDelCatalogo: string) =>
-  componerCompletitud({ db: cliente, rutaDelCatalogo, leerArchivo: leerTexto });
+  componerCompletitud({
+    db: cliente,
+    rutaDelCatalogo,
+    leerArchivo: leerTexto,
+    tiposHabilitados: TIPOS_HABILITADOS_DE_TEST,
+  });
 
 const claves = (checklist: ChecklistDelPaciente, estado: EstadoDelChecklist): string[] =>
   checklist.items.filter((item) => item.status === estado).map((item) => item.key);
@@ -170,7 +176,7 @@ describe('checklist determinista de datos críticos', () => {
 
     const checklist = await servicioCon(RUTA_CATALOGO_TEST_1_0_0).calcular(fp1.patientId);
 
-    expect(checklist.items).toEqual([
+    expect(checklist.items.map(({ key, status }) => ({ key, status }))).toEqual([
       { key: 'psa_serie', status: 'presente_verificado' },
       { key: 'ecog', status: 'presente_verificado' },
     ]);

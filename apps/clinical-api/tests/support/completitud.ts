@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { Client } from 'pg';
+import { crearTiposHabilitados } from '../../src/modules/evidence-analysis/tipos-habilitados.js';
 import {
   FECHA_FIJA,
   INSTANTE_FIJO,
@@ -21,11 +22,18 @@ import {
  */
 
 const RAIZ_FIXTURES = resolve(
-  fileURLToPath(new URL('../fixtures/completeness/catalogos', import.meta.url)),
+  fileURLToPath(
+    new URL('../../../../packages/clinical-catalogs/test/fixtures/fx-04-a', import.meta.url),
+  ),
 );
 export const RUTA_CATALOGO_TEST_1_0_0 = resolve(RAIZ_FIXTURES, 'test-1.0.0');
 export const RUTA_CATALOGO_TEST_1_1_0 = resolve(RAIZ_FIXTURES, 'test-1.1.0');
 export const leerTexto = (ruta: string): string => readFileSync(ruta, 'utf8');
+/** `ENABLED_CANCER_TYPES` de los tests de completitud: los dos tipos del catálogo. */
+export const TIPOS_HABILITADOS_DE_TEST = crearTiposHabilitados(
+  ['mama', 'prostata'],
+  ['mama', 'prostata'],
+);
 
 /** Nombre y documento sintéticos de la `ClinicalNote` de F-M2, para los tests de no-fuga (US-003…US-006). */
 export function piiSinteticaDeFM2(): { nombre: string; documento: string; texto: string } {

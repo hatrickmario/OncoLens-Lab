@@ -6,7 +6,6 @@ import {
   evaluarCondicion,
   itemsDelTipoActivo,
   registroQueCuenta,
-  registrosDelDestino,
   registrosVigentes,
   tipoDeCancerActivo,
 } from '../../../src/modules/completeness/completeness.rules.js';
@@ -31,6 +30,7 @@ function registro(resto: {
     reviewStatus: resto.reviewStatus ?? 'verificado',
     fecha: resto.fecha === undefined ? '2026-01-01' : resto.fecha,
     creadoEn: resto.creadoEn ?? '2026-01-01T00:00:00.000000Z',
+    procedencia: { entryMethod: 'seed', sourceDocumentId: null, page: null },
     columnas: resto.columnas ?? {},
   };
 }
@@ -38,6 +38,7 @@ function registro(resto: {
 function item(clave: string, resto: Partial<ItemDeDatoCritico> = {}): ItemDeDatoCritico {
   return {
     key: clave,
+    label: clave,
     cancerType: 'mama',
     destination: { entity: 'PriorTreatment' },
     minValues: 1,
@@ -87,34 +88,47 @@ describe('itemsDelTipoActivo', () => {
   });
 });
 
-describe('registrosDelDestino', () => {
-  it('filtra por las columnas de match del destino cuando el destino las declara', () => {
-    const registros = [
-      registro({ id: 'ihq', columnas: { name: 'HER2', 'exam.exam_type': 'IHQ', value: '3+' } }),
-      registro({ id: 'ish', columnas: { name: 'HER2', 'exam.exam_type': 'ISH', value: 'amp' } }),
-    ];
+describe('coincidencia de destino (vía calcularChecklist)', () => {
+  const estadoDelItem = (
+    destino: ItemDeDatoCritico['destination'],
+    entidad: string,
+    registros: RegistroDeDato[],
+  ) =>
+    calcularChecklist({
+      cancerType: 'mama',
+      items: [item('d', { destination: destino })],
+      verifiedReviewStatuses: VERIFICADOS,
+      registros: { [entidad]: registros },
+    })[0]?.status;
 
-    const coinciden = registrosDelDestino(
-      {
-        entity: 'Biomarker',
-        field: 'value',
-        match: { name: 'HER2', 'exam.exam_type': 'ISH' },
-      },
-      registros,
-    );
+  it('cuenta solo el registro cuyas columnas coinciden con match cuando el destino las declara', () => {
+    const destino = {
+      entity: 'Biomarker',
+      field: 'value',
+      match: { name: 'HER2', 'exam.exam_type': 'ISH' },
+    };
+    const ihq = registro({
+      reviewStatus: 'verificado',
+      columnas: { name: 'HER2', 'exam.exam_type': 'IHQ', value: '3+' },
+    });
+    const ish = registro({
+      reviewStatus: 'requiere_revision',
+      columnas: { name: 'HER2', 'exam.exam_type': 'ISH', value: 'amp' },
+    });
 
-    expect(coinciden.map((r) => r.id)).toEqual(['ish']);
+    expect(estadoDelItem(destino, 'Biomarker', [ihq, ish])).toBe('presente_sin_verificar');
+    expect(estadoDelItem(destino, 'Biomarker', [ihq])).toBe('faltante');
   });
 
-  it('descarta los registros sin valor en el campo de destino cuando el destino declara campo', () => {
-    const registros = [
-      registro({ id: 'sin', columnas: { grade: null } }),
-      registro({ id: 'con', columnas: { grade: '2' } }),
-    ];
+  it('devuelve faltante cuando el registro no tiene valor en el campo de destino', () => {
+    const destino = { entity: 'Diagnosis', field: 'grade' };
 
-    const coinciden = registrosDelDestino({ entity: 'Diagnosis', field: 'grade' }, registros);
-
-    expect(coinciden.map((r) => r.id)).toEqual(['con']);
+    expect(estadoDelItem(destino, 'Diagnosis', [registro({ columnas: { grade: null } })])).toBe(
+      'faltante',
+    );
+    expect(estadoDelItem(destino, 'Diagnosis', [registro({ columnas: { grade: '2' } })])).toBe(
+      'presente_verificado',
+    );
   });
 });
 

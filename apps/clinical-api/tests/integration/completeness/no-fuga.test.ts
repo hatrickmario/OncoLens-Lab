@@ -4,6 +4,7 @@ import type { Consultador } from '../../../src/modules/auth/auth.repository.js';
 import { componerCompletitud } from '../../../src/modules/completeness/completeness.module.js';
 import {
   RUTA_CATALOGO_TEST_1_0_0,
+  TIPOS_HABILITADOS_DE_TEST,
   leerTexto,
   piiSinteticaDeFM2,
   prepararSiembra,
@@ -47,6 +48,7 @@ describe('no-fuga del checklist', () => {
       db: cliente,
       rutaDelCatalogo: RUTA_CATALOGO_TEST_1_0_0,
       leerArchivo: leerTexto,
+      tiposHabilitados: TIPOS_HABILITADOS_DE_TEST,
     });
     let checklist = '';
 
@@ -70,6 +72,7 @@ describe('no-fuga del checklist', () => {
       db,
       rutaDelCatalogo: RUTA_CATALOGO_TEST_1_0_0,
       leerArchivo: leerTexto,
+      tiposHabilitados: TIPOS_HABILITADOS_DE_TEST,
     });
 
     await servicio.calcular(fm2.patientId);
@@ -96,6 +99,7 @@ describe('no-fuga del checklist', () => {
       db,
       rutaDelCatalogo: RUTA_CATALOGO_TEST_1_0_0,
       leerArchivo: leerTexto,
+      tiposHabilitados: TIPOS_HABILITADOS_DE_TEST,
     });
 
     await servicio.calcular(fm2.patientId);
@@ -103,7 +107,10 @@ describe('no-fuga del checklist', () => {
     expect(filas.length).toBeGreaterThan(0);
     expect(JSON.stringify(filas)).not.toContain(marcador);
     for (const sql of sentencias) {
-      expect(sql).not.toMatch(/to_jsonb\(\s*[te]\s*\)|source_span|description|patient_id,/i);
+      // `source_span` solo puede salir como el entero `page` (US-003 AC-3), nunca el JSON ni su texto (RN-10).
+      expect(sql).not.toMatch(
+        /to_jsonb\(\s*[te]\s*\)|source_span(?!\s*->>?\s*'page')|description|patient_id,/i,
+      );
     }
   });
 });

@@ -6,6 +6,7 @@ import { idSembrado } from '../../../prisma/seed/determinismo.js';
 import { componerCompletitud } from '../../../src/modules/completeness/completeness.module.js';
 import type { ChecklistDelPaciente } from '../../../src/modules/completeness/ports.js';
 import {
+  TIPOS_HABILITADOS_DE_TEST,
   leerTexto,
   nuevoPaciente,
   prepararSiembra,
@@ -71,6 +72,7 @@ describe('checklist del seed sintético con el catálogo real 1.1.0', () => {
       db: cliente,
       rutaDelCatalogo: RUTA_DEL_CATALOGO,
       leerArchivo: leerTexto,
+      tiposHabilitados: TIPOS_HABILITADOS_DE_TEST,
     }).calcular(patientId);
 
   beforeAll(async () => {

@@ -12,6 +12,7 @@ import { componerInformacionDeSalud } from './routes/health.js';
 import { crearGeneradorDeToken } from './infrastructure/token.js';
 import { versionDelServicio } from './infrastructure/version-servicio.js';
 import { componerCompletitud } from './modules/completeness/completeness.module.js';
+import { completenessController } from './modules/completeness/completeness.controller.js';
 import { componerModuloDeDocumentos } from './modules/documents/documents.module.js';
 import { componerModuloDePacientes } from './modules/patients/patients.module.js';
 import { crearServicioDeIdentidad } from './modules/patients/identity.module.js';
@@ -61,6 +62,14 @@ arrancar({
         });
         // Una sola instancia para el desidentificador y el listado: las mismas claves y la misma conexión.
         const identidad = crearServicioDeIdentidad({ claves: clavesDeIdentidad, db: pool });
+        // Una sola instancia del checklist para el endpoint, el contador de la ficha y los faltantes del análisis (D2):
+        // lee el MISMO catálogo montado (`CLINICAL_CATALOG_PATH`, design D5).
+        const completitud = componerCompletitud({
+          db: pool,
+          rutaDelCatalogo: configuracion.analisis.catalogPath,
+          leerArchivo,
+          tiposHabilitados,
+        });
         const gateway = componerGatewayDeAnalisis({
           db: pool,
           rag: crearRagQueryClient(
@@ -70,14 +79,7 @@ arrancar({
             }),
           ),
           catalogo,
-          // El checklist lee el MISMO catálogo montado que `catalogo` (`CLINICAL_CATALOG_PATH`, design D5).
-          checklist: crearChecklistDeFaltantes(
-            componerCompletitud({
-              db: pool,
-              rutaDelCatalogo: configuracion.analisis.catalogPath,
-              leerArchivo,
-            }),
-          ),
+          checklist: crearChecklistDeFaltantes(completitud),
           config: {
             analysisMaxOptions: configuracion.analisis.analysisMaxOptions,
             evidenceDefaultYears: configuracion.analisis.evidenceDefaultYears,
@@ -123,9 +125,15 @@ arrancar({
           db: pool,
           identidad,
           tiposHabilitados: servicios.tiposHabilitados,
+          completitud,
           traceIds: { traceId: nuevoTraceId },
           registrar,
           config: { pageSize: configuracion.pacientes.pageSize },
+        });
+        const completeness = completenessController({
+          service: completitud,
+          traceIds: { traceId: nuevoTraceId },
+          registrar,
         });
         const app = componerAplicacion({
           db: pool,
@@ -136,7 +144,7 @@ arrancar({
           ids: randomUUID,
           nuevoTraceId,
           registrar,
-          rutasProtegidas: componerRutasProtegidas({ gateway, documents, patients }),
+          rutasProtegidas: componerRutasProtegidas({ gateway, documents, patients, completeness }),
           // Solo nombres de claves y versión: nunca valores (RN-14). Va después de leer toda la configuración.
           salud: componerInformacionDeSalud({
             configKeys: entorno.clavesCargadas(),

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ConfiguracionInvalidaError } from '../../../src/config/index.js';
-import { crearProveedorDeCatalogo } from '../../../src/modules/evidence-analysis/catalog-version.provider.js';
+import { crearProveedorDeCatalogo } from '../../../src/infrastructure/catalogo/catalog-version.provider.js';
 
 describe('crearProveedorDeCatalogo', () => {
   it('devuelve la version del manifest.json del directorio del catálogo', () => {

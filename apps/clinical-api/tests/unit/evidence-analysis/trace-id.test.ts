@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   crearTraceIdMiddleware,
   traceIdEntranteRegistrable,
-} from '../../../src/modules/evidence-analysis/trace-id.middleware.js';
+} from '../../../src/middleware/trace-id.middleware.js';
 import { FX_T4A_A } from '../../support/identidad.js';
 
 /** Cabecera con la PII sembrada de FX-T4a-a (documento numérico `[S2 resp. 11]`, armado por partes en el soporte). */
