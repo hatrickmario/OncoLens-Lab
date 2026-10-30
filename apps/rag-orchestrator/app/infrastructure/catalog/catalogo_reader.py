@@ -16,8 +16,9 @@ from app.infrastructure.catalog.tables import corpus_document
 class LectorCatalogoPostgres:
     """Solo lectura sobre ``corpus.corpus_document``; el motor ya fija ``search_path=corpus`` (`crear_motor`)."""
 
-    def __init__(self, motor: Engine) -> None:
+    def __init__(self, motor: Engine, max_valores_por_criterio: int) -> None:
         self._motor = motor
+        self._max_valores_por_criterio = max_valores_por_criterio
 
     def fichas_por_documento(self, document_ids: Collection[str]) -> dict[str, FichaDeFuente]:
         """Una ficha por documento existente; los ids que no están en el catálogo no aparecen en el resultado."""

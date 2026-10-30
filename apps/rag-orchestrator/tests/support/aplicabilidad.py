@@ -78,18 +78,18 @@ def _poblacion_de_la_semilla() -> dict[str, object]:
     }
 
 
+CRITERIOS_DE_DOC_A1: dict[str, object] = {
+    **_poblacion_de_la_semilla(),
+    "biomarcadores": {"her2": "positivo"},
+    "estadio": "I–III",
+    "ecog": "0-1",
+}
+"""``population_criteria`` de ``doc-a1`` en la forma antigua (un valor por criterio): FX-08b-c la conserva para el lector doble."""
+
 POBLACIONES_FX08BA: dict[str, PoblacionDelEstudio] = {
     # doc-a2: guía sin población extraída (US-123): la ingesta no pudo estructurarla y la deja ``pendiente``.
     "doc-a2": PoblacionDelEstudio("pendiente", _poblacion_de_la_semilla()),
-    "doc-a1": PoblacionDelEstudio(
-        "fuente_estructurada",
-        {
-            **_poblacion_de_la_semilla(),
-            "biomarcadores": {"her2": "positivo"},
-            "estadio": "I–III",
-            "ecog": "0-1",
-        },
-    ),
+    "doc-a1": PoblacionDelEstudio("fuente_estructurada", CRITERIOS_DE_DOC_A1),
     "doc-a3": PoblacionDelEstudio("fuente_estructurada", _poblacion_de_la_semilla()),
     "doc-a4": PoblacionDelEstudio(
         "fuente_estructurada",
