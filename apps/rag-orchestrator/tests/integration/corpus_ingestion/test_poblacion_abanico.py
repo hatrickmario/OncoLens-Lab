@@ -17,6 +17,7 @@ from tests.integration.corpus_ingestion.montaje_poblacion import (
     montar_poblacion,
 )
 from tests.support.poblacion_abanico import (
+    CRITERIO_QUE_SE_CORTA,
     CRITERIOS_DE_MAMA,
     FRAGMENTOS_POR_DOCUMENTO,
     TOP_K_DE_TEST,
@@ -133,6 +134,64 @@ def test_ingesta_cuatro_valores_de_un_fragmento_se_reducen_a_tres_y_marca_trunca
     assert (contadores.truncado, contadores.valores_fuera_del_tope) == (True, 1)
     resumen = reporte.como_diccionario()["poblacion"]
     assert (resumen["truncado"], resumen["valoresFueraDelTope"]) == (True, 1)
+
+
+@pytest.mark.ac("US-242", 6)
+def test_ingesta_salida_cortada_se_reintenta_una_vez_con_otra_semilla_y_guarda_los_valores(
+    montar: Callable[..., MontajeDePoblacion],
+) -> None:
+    """[US-242 AC-6] Con ``finish_reason = length`` el criterio hace exactamente 2 llamadas, la segunda con otra semilla."""
+    montaje = montar(FakePopulationLlm(("EXT-OK",), cortes={CRITERIO_QUE_SE_CORTA: 1}))
+
+    reporte = montaje.ingerir("doc-e1")
+
+    llamadas = montaje.llm.llamadas_de(CRITERIO_QUE_SE_CORTA)
+    assert len(llamadas) == 2
+    assert llamadas[0].semilla != llamadas[1].semilla
+    assert len(montaje.poblacion_de("doc-e1").population_criteria["estado_menopausico"]) == 2
+    assert reporte.contadores_de_poblacion.finish_reason_length == 1
+    assert reporte.contadores_de_poblacion.criterios_pendientes == 0
+
+
+@pytest.mark.ac("US-242", 6)
+def test_ingesta_dos_cortes_dejan_el_criterio_pendiente_sin_bloquear_el_documento(
+    montar: Callable[..., MontajeDePoblacion],
+) -> None:
+    """[US-242 AC-6] Si el reintento también se corta, el criterio queda ``pendiente``, los demás se guardan y el documento
+    queda ``embebido``."""
+    montaje = montar(FakePopulationLlm(("EXT-OK",), cortes={CRITERIO_QUE_SE_CORTA: 2}))
+
+    reporte = montaje.ingerir("doc-e1")
+
+    assert reporte.resultado_de("doc-e1").estado.value == "embebido"
+    criterios = montaje.poblacion_de("doc-e1").population_criteria
+    assert criterios["estado_menopausico"] == {"status": "pendiente", "values": []}
+    assert len(criterios["biomarcadores.her2"]) == 1
+    assert len(montaje.llm.llamadas_de(CRITERIO_QUE_SE_CORTA)) == 2
+    assert reporte.contadores_de_poblacion.finish_reason_length == 2
+    assert reporte.como_diccionario()["poblacion"]["finishReasonLength"] == 2
+    assert reporte.contadores_de_poblacion.criterios_pendientes == 1
+
+
+@pytest.mark.ac("US-242", 7)
+def test_ingesta_misma_version_cero_llamadas_y_otra_version_seis(
+    montar: Callable[..., MontajeDePoblacion],
+) -> None:
+    """[US-242 AC-7] Reingerir con las mismas versiones no llama al extractor; cambiar el prompt reextrae los 6 criterios."""
+    montaje = montar()
+    montaje.ingerir("doc-e1")
+    llamadas_iniciales = montaje.llm.invocaciones
+
+    montaje.ingerir("doc-e1")
+
+    assert montaje.llm.invocaciones == llamadas_iniciales
+
+    otra_version = montaje.con_configuracion(version_del_prompt="poblacion_v2")
+    otra_version.ingerir("doc-e1")
+
+    assert montaje.llm.invocaciones == llamadas_iniciales + 6
+    guardado = montaje.poblacion_de("doc-e1").population_criteria["estado_menopausico"]
+    assert {v["promptVersion"] for v in guardado} == {"poblacion_v2"}
 
 
 @pytest.mark.ac("US-242", 3)
