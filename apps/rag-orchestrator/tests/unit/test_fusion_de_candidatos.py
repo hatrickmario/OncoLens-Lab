@@ -75,3 +75,58 @@ def test_rrf_desempata_el_rango_dentro_de_una_rama_por_chunk_id():
 def test_rrf_rechaza_una_constante_menor_que_uno():
     with pytest.raises(ValueError):
         _rrf(_rama(("a", 0.5)), [], k=0)
+
+
+PONDERADA = EstrategiaDeFusion.ponderada
+
+
+def _ponderada(dense, sparse, peso: float = 0.3):
+    return fusionar_candidatos(dense, sparse, PONDERADA, rrf_k=60, peso_sparse=peso)
+
+
+def test_ponderada_combina_los_puntajes_normalizados_de_cada_rama_con_el_peso_sparse():
+    fusionados = _ponderada(
+        _rama(("a", 0.9), ("b", 0.1)), _rama(("b", 8.0), ("a", 2.0), ("c", 5.0)), peso=0.3
+    )
+
+    por_id = {c.chunk_id: c.puntaje for c in fusionados}
+    assert por_id["a"] == pytest.approx(0.7 * 1.0 + 0.3 * 0.0)
+    assert por_id["b"] == pytest.approx(0.7 * 0.0 + 0.3 * 1.0)
+    assert por_id["c"] == pytest.approx(0.3 * 0.5)
+    assert _ids(fusionados) == ["a", "b", "c"]
+
+
+def test_ponderada_normaliza_cada_rama_a_cero_uno_aunque_sus_escalas_difieran():
+    fusionados = _ponderada(_rama(("a", 0.5), ("b", 0.4)), _rama(("b", 1000.0), ("a", 10.0)), 0.5)
+
+    por_id = {c.chunk_id: c.puntaje for c in fusionados}
+    assert por_id["a"] == pytest.approx(0.5)
+    assert por_id["b"] == pytest.approx(0.5)
+
+
+def test_ponderada_da_puntaje_uno_a_la_rama_cuyos_candidatos_empatan_en_puntaje():
+    fusionados = _ponderada(_rama(("a", 0.5), ("b", 0.5)), [], peso=0.3)
+
+    assert [c.puntaje for c in fusionados] == [pytest.approx(0.7), pytest.approx(0.7)]
+
+
+def test_ponderada_devuelve_el_chunk_que_solo_halla_la_rama_sparse_con_su_parte_ponderada():
+    fusionados = _ponderada([], _rama(("solo-sparse", 3.0)), peso=0.3)
+
+    assert [(c.chunk_id, c.puntaje) for c in fusionados] == [("solo-sparse", pytest.approx(0.3))]
+
+
+def test_ponderada_desempata_por_chunk_id_cuando_dos_chunks_tienen_el_mismo_puntaje():
+    fusionados = _ponderada(_rama(("ch-z", 0.9)), _rama(("ch-a", 4.0)), peso=0.5)
+
+    assert _ids(fusionados) == ["ch-a", "ch-z"]
+
+
+def test_ponderada_devuelve_vacio_cuando_ninguna_rama_halla_nada():
+    assert _ponderada([], []) == []
+
+
+@pytest.mark.parametrize("peso", [0.0, 1.0, -0.1, 1.5])
+def test_ponderada_rechaza_un_peso_fuera_del_intervalo_abierto_cero_uno(peso):
+    with pytest.raises(ValueError):
+        _ponderada(_rama(("a", 0.5)), [], peso=peso)

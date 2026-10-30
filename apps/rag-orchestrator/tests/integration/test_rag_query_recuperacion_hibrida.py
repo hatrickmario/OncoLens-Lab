@@ -3,12 +3,17 @@
 Cada respuesta la valida contra el spec del proveedor el hook de `verificacion_proveedor.py` (US-214).
 """
 
+import logging
+
 import pytest
 
 from app.domain.retrieval_filter import expresion_vigente_del_tipo
 from tests.support.recuperacion import LONGITUD_MAXIMA_DE_PRUEBA, Q_HER2, Q_SIN, solicitud_de
 from tests.support.recuperacion_hibrida import Q_KEYWORD, crear_entorno_hibrido, parametros_hibridos
+from app.domain.fusion_de_candidatos import EstrategiaDeFusion
 from app.schemas.generated.models import RetrievalMode
+from tests.support.generador_falso import OPCION_ANTI_HER2, RAZON_ANTI_HER2
+from tests.support.recuperacion_hibrida import CORPUS_HIBRIDO
 
 
 def _candidatos_del_reranker(entorno) -> set[str]:
@@ -84,3 +89,71 @@ def test_rag_query_responde_sin_evidencia_sin_invocar_al_llm_cuando_q_sin_no_sup
     assert cuerpo["evidenceOptions"] == []
     assert cuerpo["topRelevanceScore"] is None
     assert entorno.generador.invocaciones == 0
+
+
+@pytest.mark.ac("US-112", 5)
+def test_rag_query_traza_modo_fusion_y_k_en_meta_cuando_la_fusion_es_rrf():
+    entorno, _, _ = crear_entorno_hibrido(parametros=parametros_hibridos(rrf_k=60))
+
+    respuesta = entorno.consultar(solicitud_de(Q_KEYWORD))
+
+    assert respuesta.status_code == 200
+    params = respuesta.json()["meta"]["retrievalParams"]
+    assert params["retrievalMode"] == "hibrida"
+    assert params["fusion"] == "rrf"
+    assert params["fusionParam"] == 60
+    assert all(valor is not None for valor in params.values())
+
+
+@pytest.mark.ac("US-112", 5)
+def test_rag_query_no_registra_texto_en_los_logs_de_la_recuperacion_hibrida(caplog):
+    entorno, _, _ = crear_entorno_hibrido()
+    caplog.set_level(logging.DEBUG)
+
+    respuesta = entorno.consultar(solicitud_de(Q_KEYWORD))
+
+    assert respuesta.status_code == 200
+    mensajes = [r.getMessage() for r in caplog.records]
+    recuperacion = [m for m in mensajes if "event=rag_query_recuperacion_hibrida" in m]
+    assert len(recuperacion) == 1, (
+        "la recuperación híbrida debe dejar un único log con sus recuentos"
+    )
+    for esperado in ("retrievalMode=hibrida", "fusion=rrf", "fusionParam=60", "dense=", "sparse="):
+        assert esperado in recuperacion[0]
+    prohibidos = [Q_KEYWORD, OPCION_ANTI_HER2, RAZON_ANTI_HER2, *(c.texto for c in CORPUS_HIBRIDO)]
+    for mensaje in mensajes:
+        for prohibido in prohibidos:
+            assert prohibido not in mensaje, f"{prohibido!r} aparece en un log"
+
+
+@pytest.mark.ac("US-112", 6)
+def test_rag_query_recupera_en_dense_sin_llamar_a_la_rama_sparse_cuando_el_modo_no_esta_definido():
+    entorno, buscador, codificador = crear_entorno_hibrido(
+        parametros=parametros_hibridos(modo=RetrievalMode.dense)
+    )
+
+    respuesta = entorno.consultar(solicitud_de(Q_KEYWORD))
+
+    assert respuesta.status_code == 200
+    assert buscador.invocaciones_sparse == 0
+    assert codificador.invocaciones == 0
+    assert "ch-m2-1" not in _candidatos_del_reranker(entorno)
+    params = respuesta.json()["meta"]["retrievalParams"]
+    assert params["retrievalMode"] == "dense"
+    assert params["fusion"] == "ninguna"
+    assert params["fusionParam"] == 0
+    assert all(valor is not None for valor in params.values())
+
+
+@pytest.mark.ac("US-112", 6)
+def test_rag_query_recupera_con_la_fusion_ponderada_y_traza_su_peso_cuando_se_configura():
+    parametros = parametros_hibridos(fusion=EstrategiaDeFusion.ponderada, peso_sparse=0.3)
+    entorno, _, _ = crear_entorno_hibrido(parametros=parametros)
+
+    respuesta = entorno.consultar(solicitud_de(Q_KEYWORD))
+
+    assert respuesta.status_code == 200
+    assert "ch-m2-1" in _candidatos_del_reranker(entorno)
+    params = respuesta.json()["meta"]["retrievalParams"]
+    assert params["fusion"] == "ponderada"
+    assert params["fusionParam"] == 0.3
