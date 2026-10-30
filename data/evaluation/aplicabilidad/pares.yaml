@@ -25,7 +25,7 @@ pares:
     guion: APL-SILENCIO
     esperado:
       estado_her2: {estado: coincide}
-      estadio: {estado: desconocido}
+      estadio: {estado: desconocido, causa: sin_regla_de_comparacion}
       ecog: {estado: coincide}
       estado_menopausico: {estado: desconocido, causa: falta_en_paciente}
       linea_tratamiento: {estado: desconocido, causa: no_reportado_por_fuente}
