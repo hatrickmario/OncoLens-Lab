@@ -51,6 +51,8 @@ class ReglasDePoblacion:
     sinonimos: Mapping[str, tuple[str, ...]] = field(default_factory=dict)
     escala: tuple[str, ...] = ()
     grupos: Mapping[str, tuple[str, ...]] = field(default_factory=dict)
+    disenos_que_mezclan: tuple[str, ...] = ()
+    """``study_design`` cuyos fragmentos reúnen varias poblaciones sin desagregar: una lista inclusiva queda ``mezclada``."""
 
 
 @dataclass(frozen=True)

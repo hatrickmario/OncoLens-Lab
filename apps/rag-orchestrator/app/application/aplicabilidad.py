@@ -21,7 +21,6 @@ from app.domain.aplicabilidad_tipos import (
 from app.domain.applicability_rules import (
     contar_estados,
     evaluar_criterio_de_fuente,
-    fuente_mezcla_poblaciones,
     poblacion_no_comparable,
 )
 from app.domain.relevance import ordenar_por_relevancia
@@ -110,10 +109,10 @@ class ApplicabilityService:
         if fuente.poblacion is None:
             return fuente
         catalogo = {c.clave: c for c in self.criterios_del(tipo_de_cancer)}
-        mezcla = fuente_mezcla_poblaciones(fuente.mejor_chunk.ficha.study_design)
+        diseno = fuente.mejor_chunk.ficha.study_design
         return fuente.con_criterios(
             tuple(
-                _recalculado(evaluado, catalogo, contexto, fuente.poblacion, chunk_ids, mezcla)
+                _recalculado(evaluado, catalogo, contexto, fuente.poblacion, chunk_ids, diseno)
                 for evaluado in fuente.criterios
             )
         )
@@ -125,14 +124,14 @@ def _recalculado(
     contexto: ContextoDelPaciente,
     poblacion: PoblacionDelEstudio,
     chunk_ids: Collection[str],
-    fuente_mezcla: bool,
+    diseno_de_la_fuente: str | None,
 ) -> CriterioEvaluado:
     criterio = catalogo.get(evaluado.clave)
     en_lista = None if criterio is None else poblacion.criterios.get(criterio.clave_de_estudio)
     if criterio is None or en_lista is None or not en_lista.valores:
         return evaluado
     recalculado = evaluar_criterio_de_fuente(
-        criterio, contexto, poblacion, chunk_ids, fuente_mezcla=fuente_mezcla
+        criterio, contexto, poblacion, chunk_ids, diseno_de_la_fuente=diseno_de_la_fuente
     )
     if evaluado.chunk_citado_id is not None and not recalculado.valores_del_estudio:
         return evaluado  # el valor aceptado por texto (US-123) no se pisa si la lista no dice nada en estos fragmentos
@@ -146,10 +145,13 @@ def _aplicabilidad_de(
     poblacion: PoblacionDelEstudio,
 ) -> AplicabilidadDeFuente:
     """Sin opción que cite fragmentos, la unidad es el mejor chunk del documento (el mismo que cita la fuente)."""
-    mezcla = fuente_mezcla_poblaciones(mejor.ficha.study_design)
     evaluados = tuple(
         evaluar_criterio_de_fuente(
-            c, contexto, poblacion, (mejor.chunk.chunk_id,), fuente_mezcla=mezcla
+            c,
+            contexto,
+            poblacion,
+            (mejor.chunk.chunk_id,),
+            diseno_de_la_fuente=mejor.ficha.study_design,
         )
         for c in criterios
     )

@@ -71,16 +71,9 @@ def _valor_de_forma_antigua(valores: Sequence[ValorDePoblacion]) -> ValorDelEstu
 
 # --- estado por criterio con la población en lista (US-243, ADR-47) ------------------------------------------------
 
-DISENOS_QUE_MEZCLAN_POBLACIONES = frozenset({"guia", "revision_sistematica"})
-"""``study_design`` cuyos fragmentos suelen reunir varias poblaciones sin desagregar (DEC-11, ``mezclada``)."""
-
 _PALABRA_DE_RANGO = re.compile(r"[-–]")
 
 type _Clasificacion = tuple[EstadoInterno, MotivoInterno | None]
-
-
-def fuente_mezcla_poblaciones(study_design: str | None) -> bool:
-    return study_design in DISENOS_QUE_MEZCLAN_POBLACIONES
 
 
 def valores_de_la_opcion(
@@ -151,7 +144,7 @@ def estado_de_poblacion(
     valor_paciente: str | None,
     criterio: CriterioDeAplicabilidad,
     *,
-    fuente_mezcla: bool = False,
+    diseno_de_la_fuente: str | None = None,
 ) -> ProyeccionDeEstado:
     """Estado visible, ``partialReason`` y causa de un criterio a partir de los valores de los fragmentos que cita la
     opción y del valor del paciente (RN-28). Función pura: sin E/S, sin LLM, sin puntaje.
@@ -164,7 +157,7 @@ def estado_de_poblacion(
             criterio, valor_paciente, _valor_de_forma_antigua(valores)
         )
     interno, motivo = clasificar_poblacion(
-        valores, valor_paciente, criterio, fuente_mezcla=fuente_mezcla
+        valores, valor_paciente, criterio, diseno_de_la_fuente=diseno_de_la_fuente
     )
     return proyectar_estado(interno, motivo)
 
@@ -174,7 +167,7 @@ def clasificar_poblacion(
     valor_paciente: str,
     criterio: CriterioDeAplicabilidad,
     *,
-    fuente_mezcla: bool = False,
+    diseno_de_la_fuente: str | None = None,
 ) -> _Clasificacion:
     """Estado interno de la lista de una opción. ``subgrupo`` y ``mencion`` no cuentan (ADR-47): sin valores de
     elegibilidad el criterio queda ``ausente``."""
@@ -185,14 +178,14 @@ def clasificar_poblacion(
         return "sin_regla", "forma_no_comparable"
     if criterio.regla.operador == "rango":
         return _clasificar_rango(valor_paciente, elegibles, criterio)
-    return _clasificar_categorias(valor_paciente, elegibles, criterio, fuente_mezcla)
+    return _clasificar_categorias(valor_paciente, elegibles, criterio, diseno_de_la_fuente)
 
 
 def _clasificar_categorias(
     valor_paciente: str,
     elegibles: Sequence[ValorDePoblacion],
     criterio: CriterioDeAplicabilidad,
-    fuente_mezcla: bool,
+    diseno_de_la_fuente: str | None,
 ) -> _Clasificacion:
     por_fragmento = _codigos_por_fragmento(elegibles, criterio)
     codigos = frozenset().union(*por_fragmento.values())
@@ -207,7 +200,8 @@ def _clasificar_categorias(
         return ("restringido" if restringido else "ausente"), None
     if len(codigos) == 1:
         return "exacto", None
-    return ("mezclado" if fuente_mezcla else "inclusivo"), None
+    mezcla = diseno_de_la_fuente in criterio.poblacion.disenos_que_mezclan
+    return ("mezclado" if mezcla else "inclusivo"), None
 
 
 def _codigos_por_fragmento(
@@ -634,7 +628,7 @@ def evaluar_criterio_de_fuente(
     poblacion: PoblacionDelEstudio,
     chunk_ids_citados: Collection[str] | None = None,
     *,
-    fuente_mezcla: bool = False,
+    diseno_de_la_fuente: str | None = None,
 ) -> CriterioEvaluado:
     """Lee el valor del paciente por ``destination`` y los del estudio por ``studyKey`` (los de los fragmentos citados,
     o todos si ``chunk_ids_citados`` es ``None``), evalúa el criterio y le añade el aviso del dato del paciente (US-124)."""
@@ -645,7 +639,7 @@ def evaluar_criterio_de_fuente(
     valor_paciente = None if dato is None else dato.valor
     valores = _valores_del_criterio(poblacion, criterio, chunk_ids_citados)
     if any(v.chunk_id is not None for v in valores):
-        evaluado = _evaluar_con_lista(criterio, valor_paciente, valores, fuente_mezcla)
+        evaluado = _evaluar_con_lista(criterio, valor_paciente, valores, diseno_de_la_fuente)
     else:
         evaluado = evaluar_criterio(criterio, valor_paciente, _valor_de_forma_antigua(valores))
     return replace(evaluado, aviso=aviso_dato_paciente(() if dato is None else dato.procedencias))
@@ -668,9 +662,11 @@ def _evaluar_con_lista(
     criterio: CriterioDeAplicabilidad,
     valor_paciente: str | None,
     valores: tuple[ValorDePoblacion, ...],
-    fuente_mezcla: bool,
+    diseno_de_la_fuente: str | None,
 ) -> CriterioEvaluado:
-    proyeccion = estado_de_poblacion(valores, valor_paciente, criterio, fuente_mezcla=fuente_mezcla)
+    proyeccion = estado_de_poblacion(
+        valores, valor_paciente, criterio, diseno_de_la_fuente=diseno_de_la_fuente
+    )
     primero = next((v.valor for v in valores if v.alcance == "elegibilidad"), None)
     return _criterio_evaluado(criterio, valor_paciente, primero, proyeccion, valores)
 

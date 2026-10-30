@@ -4,6 +4,7 @@
     "es": ["solo", "exclusivamente"],
     "en": ["only", "exclusively"]
   },
+  "disenosQueMezclan": ["guia", "revision_sistematica"],
   "criteria": {
     "estado_menopausico": {
       "synonyms": {

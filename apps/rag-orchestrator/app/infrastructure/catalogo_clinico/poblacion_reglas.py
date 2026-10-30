@@ -50,6 +50,7 @@ class _ReglasDelCriterio(_Estricto):
 class _Archivo(_Estricto):
     version: str
     restrictionMarkers: _Marcadores = _Marcadores()
+    disenosQueMezclan: list[_Texto] = []
     criteria: dict[Annotated[str, Field(pattern=_CLAVE)], _ReglasDelCriterio] = {}
 
 
@@ -59,9 +60,11 @@ class ReglasDePoblacionDelTipo:
     def __init__(
         self,
         marcadores: tuple[str, ...] = (),
+        disenos_que_mezclan: tuple[str, ...] = (),
         por_criterio: Mapping[str, _ReglasDelCriterio] | None = None,
     ) -> None:
         self._marcadores = marcadores
+        self._disenos = disenos_que_mezclan
         self._por_criterio = dict(por_criterio or {})
 
     def de(self, clave_de_criterio: str) -> ReglasDePoblacion:
@@ -72,6 +75,7 @@ class ReglasDePoblacionDelTipo:
             sinonimos=MappingProxyType({c: tuple(t) for c, t in reglas.synonyms.items()}),
             escala=tuple(reglas.scale or ()),
             grupos=MappingProxyType({g: tuple(m) for g, m in reglas.groups.items()}),
+            disenos_que_mezclan=self._disenos,
         )
 
 
@@ -86,4 +90,6 @@ def leer_reglas_de_poblacion(archivo: Path) -> ReglasDePoblacionDelTipo:
             "poblacion-reglas.json no está disponible o no cumple su forma"
         ) from None
     marcadores = tuple(contenido.restrictionMarkers.es + contenido.restrictionMarkers.en)
-    return ReglasDePoblacionDelTipo(marcadores, contenido.criteria)
+    return ReglasDePoblacionDelTipo(
+        marcadores, tuple(contenido.disenosQueMezclan), contenido.criteria
+    )

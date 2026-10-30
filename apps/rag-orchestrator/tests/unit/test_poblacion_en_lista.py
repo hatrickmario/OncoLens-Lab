@@ -22,7 +22,6 @@ from app.domain.applicability_rules import (
     detectar_conflicto,
     estado_de_poblacion,
     evaluar_criterio_de_fuente,
-    fuente_mezcla_poblaciones,
     proyectar_estado,
     reconoce_restriccion,
     valores_de_la_opcion,
@@ -139,11 +138,26 @@ def test_proyectar_estado_conserva_el_motivo_interno_cuando_no_hay_regla_de_comp
     )
 
 
-def test_fuente_mezcla_poblaciones_solo_para_guia_y_revision_sistematica():
-    assert fuente_mezcla_poblaciones("guia")
-    assert fuente_mezcla_poblaciones("revision_sistematica")
-    assert not fuente_mezcla_poblaciones("eca")
-    assert not fuente_mezcla_poblaciones(None)
+@pytest.mark.ac("US-243", 8)
+@pytest.mark.parametrize(
+    ("diseno", "motivo"),
+    [
+        ("guia", "mezclada"),
+        ("revision_sistematica", "mezclada"),
+        ("eca", "inclusiva"),
+        (None, "inclusiva"),
+    ],
+)
+def test_estado_de_poblacion_distingue_mezclada_de_inclusiva_por_el_diseno_del_catalogo(
+    diseno, motivo
+):
+    valores = [_v("premenopausal women"), _v("postmenopausal women")]
+
+    proyeccion = estado_de_poblacion(
+        valores, "posmenopáusica", MENOPAUSIA, diseno_de_la_fuente=diseno
+    )
+
+    assert proyeccion == ProyeccionDeEstado("parcial", motivo_parcial=motivo)
 
 
 # --- clasificación: casos de borde de cada regla ---------------------------------------------------------------

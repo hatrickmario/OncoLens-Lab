@@ -48,6 +48,7 @@ MENOPAUSIA = _criterio(
     "estado_menopausico",
     poblacion=ReglasDePoblacion(
         marcadores_de_restriccion=MARCADORES,
+        disenos_que_mezclan=("guia", "revision_sistematica"),
         sinonimos=MappingProxyType(
             {
                 "premenopausica": ("premenopausal women", "premenopáusica"),
