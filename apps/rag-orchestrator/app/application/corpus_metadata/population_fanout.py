@@ -186,7 +186,7 @@ class PopulationFanoutExtractor:
     ) -> _ResultadoDeCriterio:
         fragmentos = self._recuperar(documento, criterio)
         try:
-            salida = await self._pedir_valores(criterio, fragmentos)
+            salida = await self._pedir_valores(criterio, fragmentos, semaforo)
             if salida.valores is None:
                 return self._pendiente(criterio, salida.contadores)
             return self._depurar_y_acotar(documento, criterio, salida)
@@ -208,6 +208,7 @@ class PopulationFanoutExtractor:
         self,
         criterio: CriterioDeAplicabilidad,
         fragmentos: Sequence[Fragmento],
+        semaforo: asyncio.Semaphore,
     ) -> _SalidaDelLlm:
         """Una llamada y, si la salida se corta (``finish_reason = length``), UN reintento con otra semilla (D5).
         ``valores = None`` es que ambas se cortaron. La semilla del intento ``n`` es ``n``: determinista."""
@@ -217,12 +218,13 @@ class PopulationFanoutExtractor:
         )
         contadores = ContadoresDePoblacion()
         for intento in range(1 + configuracion.reintentos):
-            respuesta = await self._llm.completar_json_acotado(
-                prompt,
-                esquema_de_poblacion(configuracion.max_valores_por_criterio),
-                max_tokens=configuracion.max_tokens_de_salida,
-                semilla=intento,
-            )
+            async with semaforo:
+                respuesta = await self._llm.completar_json_acotado(
+                    prompt,
+                    esquema_de_poblacion(configuracion.max_valores_por_criterio),
+                    max_tokens=configuracion.max_tokens_de_salida,
+                    semilla=intento,
+                )
             logger.info(
                 "poblacion_llamada criterio=%s intento=%d finish_reason=%s chunks=%s longitud_prompt=%d longitud_salida=%d",
                 criterio.clave,
