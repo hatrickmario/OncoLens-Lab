@@ -1,0 +1,29 @@
+# Tasks — l1d-97-aviso-faltantes-panel
+
+> ⛔ Depende de **l1d-95 (US-003 / L1D-95)**: `GET /platform/patients/{id}/completeness` y sus tipos/Zod generados; no empezar sin ese merge. ↪ l1d-94, l1d-98, l1d-188 (archivados), l1d-72 (ficha). ↪ Coordinar con l1d-145 (mismo `evidence-panel.tsx`).
+>
+> Matriz TDD (CLAUDE.md): componentes, hooks y Route Handlers simples de `web` → test del AC primero (Testing Library + MSW desde `contracts/examples/`), commit `test(L1D-97)` en rojo antes del `feat(L1D-97)`; `visual-check`. Nunca `vi.mock` de módulos propios; nunca `.skip`/`.only`. Sin cambio de API: no hay commit `contract(L1D-97)`.
+
+## 1. clinical-platform
+
+- [ ] 1.1 (TDD, test del AC primero) Test en rojo: "reenvía la sesión y retransmite el checklist cuando clinical-api responde 200 [US-005 AC-1]" y "responde un 5xx saneado con { error, message, traceId propio } sin pila, detalles internos ni URL de clinical-api cuando clinical-api falla o no responde [US-005 AC-5]" · integración del Route Handler con MSW. Commit `test(L1D-97)`.
+- [ ] 1.2 Crear (lo crea este change, no l1d-95) el Route Handler `apps/web/app/api/patients/[id]/completeness/route.ts` sobre el proxy `server-only` existente (`lib/server/proxy-json.ts`), validación de UUID, mismo patrón que `app/api/patients`; el handler intercepta `status >= 500` (y el fallo de red) **antes** de `retransmitir` y responde con `respuestaPropia({ error, message, traceId })` (código y mensaje fijos, `traceId` propio de `web`), sin pila, URL ni detalles internos; `retransmitir` solo para `200` y `4xx`; sin `NEXT_PUBLIC_` nuevas ni cambios de CSP/cabeceras; cliente generado de `packages/api-contracts`. Commit `feat(L1D-97)`.
+- [ ] 1.3 (test después) Verificar que `POST /api/evidence-analyses` reenvía `continueWithWarning` sin reserializar. Verificación: test de humo del handler en verde.
+
+## 2. frontend
+
+- [ ] 2.1 Test de aceptación en rojo: "muestra el aviso con los seis faltantes y no envía ningún análisis cuando se carga el panel de F-M2 [US-005 AC-1]" · Testing Library + MSW. Commit `test(L1D-97)`.
+- [ ] 2.2 Tests en rojo: "envía un solo POST con continueWithWarning true [US-005 AC-2]"; "envía continueWithWarning false y no muestra el bloque sin faltantes [US-005 AC-4]"; "muestra «No se pudieron verificar los datos críticos», mantiene el botón habilitado y envía true cuando el checklist responde 500 [US-005 AC-5]"; "no muestra el bloque cuando cancerTypeEnabled es false [US-005 AC-6]". Commit `test(L1D-97)`.
+- [ ] 2.3 Tests en rojo: enlaces por `destination.entity` (`#biomarcadores`, `#diagnostico`, sin ancla) sin POST de análisis [US-005 AC-3]; `aria-describedby` y operación por teclado [US-005 AC-7]; textos sin términos prohibidos (RN-23). Commit `test(L1D-97)`.
+- [ ] 2.4 (test después) Test del encabezado de la ficha: `id="diagnostico"`/`"biomarcadores"` con `tabindex="-1"` y foco al llegar por ancla [US-005 AC-3, AC-7]; un fragmento fuera de la lista permitida (`#x"],img`) no lanza ni mueve el foco. Cambiar `SeccionDeFicha` y sus dos usos (`active-diagnosis-table.tsx`, `recent-biomarkers-table.tsx`), con componente cliente de foco con lista permitida `{diagnostico, biomarcadores}` y `getElementById` (nunca `querySelector` con `location.hash` en crudo); actualizar los tests que usen `ficha-diagnostico`/`ficha-biomarcadores`. Commit `feat(L1D-97)`.
+- [ ] 2.4b (test del AC primero · Testing Library + MSW; Q2, usuario, 2026-10-30) Tests en rojo de la ficha con el `PatientSummary` de `contracts/examples/patient-summary-checklist-no-disponible.json` (l1d-95) y, para el caso sin aviso, `patient-summary-doctor.json`: "muestra «No se pudieron verificar los datos críticos» con role status y ningún contador 0 ni «sin faltantes» cuando completenessAvailable es false [US-003 AC-2] [US-005 AC-5]" y "no muestra el aviso cuando completenessAvailable está ausente"; las secciones y acciones de la ficha siguen disponibles (RN-26). Commit `test(L1D-97)`. Luego pintar el aviso en la ficha (`ficha-del-doctor.tsx` o `patient-summary-card.tsx`, texto de React, clave i18n compartida con el aviso del panel, sin términos prohibidos). Commit `feat(L1D-97)`.
+- [ ] 2.5 Implementar `lib/evidence` (lectura del checklist, filtro `faltante`, ancla por entidad, `armarSolicitud` con `continueWithWarning`), organismo `missing-data-notice.tsx`, claves i18n en español, integración en `evidence-panel.tsx` con relectura antes de cada análisis. Unitarios uno a la vez del caso más simple al siguiente. Commit `feat(L1D-97)`.
+- [ ] 2.6 E2E Playwright contra Compose con seed sintético y LLM fingido (FX-04-b `test-1.0.0`, F-M1 y F-M2): el número de requests a `/api/evidence-analyses` se verifica interceptando. Verificación: E2E en verde.
+- [ ] 2.7 Loop `visual-check` a 375 y 1280 px (bloque, estados de error, foco en la ficha, aviso de la ficha con `completenessAvailable = false`); evidencia para el Gate 2.
+- [ ] 2.8 Refactor en verde (`refactor(L1D-97)`), sin cambiar aserciones.
+
+## 3. Verificación
+
+- [ ] 3.1 `openspec validate l1d-97-aviso-faltantes-panel --strict` en verde.
+- [ ] 3.2 Suite de `apps/web` (Vitest) y E2E en verde; `contracts:verify-provider` no aplica (sin cambio de API).
+- [ ] 3.3 `run-ai-eval` no aplica (sin modelo, prompt, umbral, catálogo ni corpus).
