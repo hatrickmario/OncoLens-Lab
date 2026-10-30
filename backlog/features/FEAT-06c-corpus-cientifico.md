@@ -4,7 +4,7 @@
 
 **Talla:** XL (Feature completa; propone división por sprint) · parte S1: **M** · parte S3: **L** · **Sprint:** 1 (semilla y esquema) · 3 (US-117a, US-117b, US-118: la aplicabilidad los consume; reordenamiento del 2026-10-23; US-117 partida `[S3 resp. 2]`) · 4 (US-240 spike de capacidad, US-242 extractor en abanico, US-247 datos de demo e instalación; US-117b se archiva con 0 pts; refinamiento del S4, `[S4 resp. 3]`) · 5 (US-120, `[S4 resp. 1]`) · `si-hay-capacidad` (US-119, `CorpusRelease`) · **Capacidad:** CAP-06 (prerrequisito de CAP-07, CAP-08 y CAP-09) · **Recorrido principal:** sí
 **Requisitos:** FR-19 (S1: semilla y esquema de metadatos; S3: ingesta como entregable) · RN-21 (dueña) · RN-05 (parte de versionado: el histórico nunca se borra; la recuperación de chunks vigentes es de US-055) · M-08.3, M-08.4 (S3, medidos en US-132) · TBD-20 (CAL, US-118) · ADR-36 (S3)
-**Evidencia:** [→ PRD §5 FR-19], [→ PRD §6 RN-05, RN-21, RN-25], [→ PRD §17 FR-19 → OL-02], [→ PRD §18.3.6 AC-06.1], [→ PRD §18.3.8 M-08.3, M-08.4], [→ readme §6 OL-02 (tareas 2, 7; alcance complementario: catálogo)], [→ readme §3.1 modelo del corpus], [→ readme §3.3 #5, #10, #17, #30, #36], [→ readme §1.4 paso 7], [→ backlog/02-adrs.md ADR-36, ADR-39], [→ docs/architecture/adr/ADR-47-extraccion-poblacion-en-abanico.md], [→ backlog/sprints/S4-insumo-extraccion-poblacion.md §2.1, §5, §6], [→ backlog/sprints/S3-demo-outcomes.md OUT-02, OUT-04, OUT-05, OUT-06, OUT-07]
+**Evidencia:** [→ PRD §5 FR-19], [→ PRD §6 RN-05, RN-21, RN-25], [→ PRD §17 FR-19 → OL-02], [→ PRD §18.3.6 AC-06.1], [→ PRD §18.3.8 M-08.3, M-08.4], [→ readme §6 OL-02 (tareas 2, 7; alcance complementario: catálogo)], [→ readme §3.1 modelo del corpus], [→ readme §3.3 #5, #10, #17, #30, #36], [→ readme §1.4 paso 7], [→ backlog/02-adrs.md ADR-36, ADR-39], [→ docs/architecture/adr/ADR-47-extraccion-poblacion-en-abanico.md], [→ docs/evidence/S3-demo3/S4-insumo-extraccion-poblacion.md §2.1, §5, §6], [→ docs/evidence/S3-demo3/S3-demo-outcomes.md OUT-02, OUT-04, OUT-05, OUT-06, OUT-07]
 **Dependencias:** ↪ US-033 (esquema congelado), US-034 (Milvus), US-040 (rol `rag_corpus`) · ⛔ ADR-39 (dimensión del vector dense y origen del sparse: US-058 AC-2; *embeddings* reales para indexar: US-059 AC-1) · ADR-36 no bloquea el S1 (licencia verificada documento a documento) · 🔗 Consumida por: US-055 · ⛔ ADR-36 (S3: US-117a; S4: US-120) · 🔗 Medido en (S5): US-132 (M-08.3, M-08.4)
 **Valor:** el oncólogo solo puede confiar en una opción si la fuente es pública, con licencia que permite usarla, vigente y verificable (P5, P8, P12). La semilla del S1 permite demostrar el recorrido con evidencia real de acceso abierto de mama y próstata, sin NCCN ni ESMO, y deja el esquema de metadatos listo para la aplicabilidad.
 **Workaround en el MVP (US-119):** la fecha de corte del corpus vive en configuración `[RN-22]` y la Base del análisis la toma de ahí.
@@ -390,6 +390,7 @@ demasiado pequeño.
   `RELEVANCE_THRESHOLD` queda fijado en configuración con el valor del barrido y su
   justificación. `[M-06.1]` `[M-06.2]` `[TBD-03]` `[RN-22]` (heredado de US-233 AC-8,
   `[S2 resp. 19]`, `[S4 resp. 6]`)
+  > **Nota (usuario, 2026-10-29):** si US-245 no alcanza la meta en `evaluate`, valorar aquí contexto del fragmento para el NLI (solapamiento o vecinos; exige reindexar → ADR) y un NLI más fuerte es↔en o un umbral por tipo de afirmación (OUT-08, soluciones 3 y 4) `[S4 resp. 15]`.
   > **Decidido (usuario, 2026-10-29):** los AC de US-233 que dependen del corpus de ≥ 20 documentos por tipo (AC-3 y AC-8) pasan aquí, al S5, con el corpus `[S4 resp. 6]`. La estimación (3) se revisa en el refinamiento del S5.
 
 ## Contexto técnico
@@ -429,7 +430,7 @@ concurrencia, los topes y los plazos con cifras y no con estimaciones.
 - **AC-2 (borde · memoria)** · Dado el *spike* del AC-1, cuando se lee el informe, entonces
   registra por nivel el valor de `OLLAMA_NUM_PARALLEL`, la memoria del modelo según
   `ollama ps` (`size` y `size_vram`), el RSS del NLI y de `rag-orchestrator` y la memoria de
-  la VM de Docker, y marca si se supera el LLM ≤ 21 GB o el stack ≤ ~30 GB. `[R7]`
+  la VM de Docker, y marca si se supera el LLM ≤ 21 GB o el stack ≤ ~30 GB. `[ADR47-R7]`
   `[CLAUDE.md]`
 - **AC-3 (borde · nivel que falla)** · Dado un nivel con OOM, uso de *swap* o un p95 más del
   doble que el del nivel 1, cuando se fija el valor por defecto, entonces el informe lo
@@ -487,7 +488,7 @@ estudio dice de verdad y no se rompa cuando una fuente describe varios grupos.
 - **AC-2 (borde · relleno y fragmento ajeno)** · Dados `EXT-RELLENO` y `EXT-AJENO`, cuando
   se ingiere `doc-e1`, entonces `ecog`, `estadio` y `estado_her2` quedan con lista vacía y el
   resumen de la ingesta cuenta `valoresRechazados = 3` (2 `relleno`, 1 `chunk_ajeno`).
-  `[R15]` `[R16]` `[RN-04]`
+  `[ADR47-R15]` `[ADR47-R16]` `[RN-04]`
 - **AC-3 (borde · sin soporte NLI)** · Dado `EXT-NLI`, cuando se verifica `stage I–III`
   contra `ch-e1-1`, entonces `estadio` queda con lista vacía y el resumen cuenta
   `valoresSinSoporte = 1`. `[RN-01]` `[RN-25]`
@@ -503,14 +504,14 @@ estudio dice de verdad y no se rompa cuando una fuente describe varios grupos.
   entonces ese criterio tiene exactamente 2 llamadas (la segunda con otra semilla) y sus
   valores quedan guardados; y dado `EXT-CORTE-2`, ese criterio queda `pendiente`, los demás
   se guardan, el documento queda `embebido` y el resumen cuenta `finishReasonLength = 2`.
-  `[R4]` `[RN-26]`
+  `[ADR47-R4]` `[RN-26]`
 - **AC-7 (borde · caché por versión)** · Dado `doc-e1` ya extraído, cuando se vuelve a
   ingerir con las mismas versiones, entonces el adapter registra 0 llamadas; y cuando cambia
-  `POPULATION_PROMPT_VERSION`, registra 6. `[ADR-47]` `[R8]`
+  `POPULATION_PROMPT_VERSION`, registra 6. `[ADR-47]` `[ADR47-R8]`
 - **AC-8 (invariante · concurrencia y una fuente por llamada)** · Dados `doc-e1` y `doc-e2`
   con `POPULATION_EXTRACTION_CONCURRENCY = 2`, cuando se ingieren, entonces el adapter
   registra 12 llamadas, nunca más de 2 simultáneas y ninguna con fragmentos de los dos
-  documentos. `[RN-22]` `[R16]` `[S4 resp. 3]`
+  documentos. `[RN-22]` `[ADR47-R16]` `[S4 resp. 3]`
 
 ## Contexto técnico
 Extiende `application/corpus_metadata/` (US-118) con un orquestador determinista
@@ -603,9 +604,15 @@ estado previo con confirmación (nunca borrar sin avisar). Tests: humo de `levan
 imagen del seed obsoleta (AC-6) y con volúmenes previos (AC-7), en la CI o como *fixture* de
 PR (test después: *scripts*).
 
+**Tareas de instalación (sin AC nuevo; cubiertas por el AC-7 y la DoD) `[S4 resp. 15]`:**
+`scripts/demo/apagar.sh` cierra `attu` al terminar (OUT-05 punto 3, F-10); y el runbook
+`docs/demo/runbook-demo-S1.md` §2 (limpieza inicial antes de levantar) y §5 («Si algo falla»:
+volúmenes de una instalación previa con otras contraseñas, `apagar.sh --borrar-datos`) se
+actualizan (OUT-03, OUT-05).
+
 ## Non-goals
-Cerrar `attu` al terminar (F-10) y el aviso de permiso del `403` (OUT-09). Corpus de ≥ 20
-documentos por tipo (US-120, S5). Herramienta de revisión humana a escala (S5).
+El aviso de permiso del `403` (OUT-09, US-222). Corpus de ≥ 20 documentos por tipo (US-120,
+S5). Herramienta de revisión humana a escala (S5).
 
 ## INVEST
 **Small** ✓ 5 es el techo: datos, seed, guía y dos pasos de `levantar.sh`; si la prueba del

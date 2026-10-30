@@ -1,6 +1,6 @@
 # ADR-47 — La población del estudio se extrae en la ingesta, en abanico por documento y criterio, como lista acotada por fragmento
 
-> Linear: pendiente (se crea al publicar el refinamiento del S4) · Historias: US-240 … US-244, US-233b · Feature: FEAT-08b, FEAT-06c
+> Linear: sin issue propio (el ADR se decidió en el refinamiento) · Historias: US-240 [L1D-290](https://linear.app/l1der-lab-mjbc/issue/L1D-290) · US-241 [L1D-291](https://linear.app/l1der-lab-mjbc/issue/L1D-291) · US-242 [L1D-292](https://linear.app/l1der-lab-mjbc/issue/L1D-292) · US-243 [L1D-293](https://linear.app/l1der-lab-mjbc/issue/L1D-293) · US-244 [L1D-294](https://linear.app/l1der-lab-mjbc/issue/L1D-294) · US-233b [L1D-299](https://linear.app/l1der-lab-mjbc/issue/L1D-299) · Feature: FEAT-08b, FEAT-06c
 > Plantilla: MADR 4 (variante mínima, en español).
 
 - **Estado:** aceptado
@@ -11,7 +11,7 @@
 
 ## Contexto y problema
 
-La aplicabilidad (RN-28) compara los datos del paciente con la población de cada estudio citado. En la Demo 3 (2026-10-29) eso no funcionó por dos motivos verificados ([`S3-demo-outcomes.md`](../../../backlog/sprints/S3-demo-outcomes.md) OUT-06 y OUT-07; análisis en [`S4-insumo-extraccion-poblacion.md`](../../../backlog/sprints/S4-insumo-extraccion-poblacion.md)):
+La aplicabilidad (RN-28) compara los datos del paciente con la población de cada estudio citado. En la Demo 3 (2026-10-29) eso no funcionó por dos motivos verificados ([`S3-demo-outcomes.md`](../../evidence/S3-demo3/S3-demo-outcomes.md) OUT-06 y OUT-07; análisis en [`S4-insumo-extraccion-poblacion.md`](../../evidence/S3-demo3/S4-insumo-extraccion-poblacion.md)):
 
 1. Los 10 documentos del corpus sembrado tienen todos los criterios en `no_disponible`: la ruta de ingesta (`application/corpus_metadata/`, US-118) existe, pero no se ejecutó sobre la demo. Por eso solo opera el camino de consulta.
 2. El proponente de la consulta (`infrastructure/llm/proponente_de_aplicabilidad.py`, L1D-128) hace **una sola llamada** con todas las fuentes y todos los criterios, con una lista abierta de propuestas. Con dos fuentes en el prompt el modelo entra en un **bucle de repetición** (`finish_reason=length`; una propuesta repetida 21 veces). Además, `_parsear` convierte el JSON inválido en `503 LOCAL_LLM_UNAVAILABLE` y descarta un análisis ya validado. Aun cuando termina, tarda de 10 a 39 s y devuelve `propuestas=0`.
@@ -124,11 +124,52 @@ Opción elegida: **A**, porque es la única que cumple a la vez las respuestas c
   - No es reproducible ni revisable por humanos.
   - Con cientos de documentos es inviable.
 
+## Riesgos y mitigación (ADR47-R1…R18)
+
+Copiados del insumo, ya **asignados a historias**. Las etiquetas `[ADR47-Rn]` de las historias remiten a esta tabla. Severidad: A = puede dar un estado clínicamente engañoso; M = degrada calidad o plazo; B = molestia.
+
+| # | Riesgo | Sev. | Mitigación | Dónde |
+|---|---|---|---|---|
+| ADR47-R1 | Falso positivo de población: un valor de subgrupo o mención tomado como elegibilidad | A | `scope`, NLI contra el fragmento; ante duda, Desconocido; precisión por criterio con meta | US-242, US-243, US-233b, DEC-11 |
+| ADR47-R2 | Lista incompleta tratada como exclusión (No coincide indebido) | A | No coincide solo con restricción explícita | US-243 |
+| ADR47-R3 | Conflicto entre valores de una misma fuente | A | Desconocido `valores_en_conflicto` con ambos valores | DEC-11, US-243, US-126 |
+| ADR47-R4 | El bucle de repetición vuelve en las tareas cortas | M | Tope de tokens por tarea, `maxItems`, deduplicación; `finish_reason=length` = 0 en `evaluate` y CI | US-242, US-233b |
+| ADR47-R5 | Corrupción de `chunkId` o del valor | A | Sin penalizaciones altas; `chunkId` validado contra el documento; NLI y comparación con el fragmento | US-242 |
+| ADR47-R6 | Cambio de contrato que rompe consumidores o mocks | M | Contract-first, aditivo, ejemplos y mocks en el mismo PR | US-241 |
+| ADR47-R7 | Memoria: NLI + LLM + Docker en el equipo de referencia | M | *Spike* de capacidad; concurrencia en configuración | US-240, US-233a |
+| ADR47-R8 | Deriva por cambio de modelo, prompt o catálogo | M | Versión en cada fila, reindexación selectiva, `evaluate` por PR | US-242 |
+| ADR47-R9 | Conjunto dorado pequeño | M | Muestra humana ampliada y estratificada | US-233b |
+| ADR47-R10 | Valores en español o inglés que el catálogo no reconoce | M | Sinónimos bilingües y normalización antes de comparar | US-242 |
+| ADR47-R11 | Coste de ingesta creciente | B | Cola reanudable, caché por versión, tiempos medidos | US-240, US-242 |
+| ADR47-R12 | UI sobrecargada | B | 3 valores visibles y «ver más» | US-126 |
+| ADR47-R13 | Extraer de documentos con licencia no aceptada | M | El extractor solo corre sobre lo aceptado (RN-21, ADR-36) | US-242, US-247 |
+| ADR47-R14 | «Arreglar» con temperatura o penalizaciones | M | Descartado por medición (ver evidencia) | este ADR, US-244 |
+| ADR47-R15 | Valores de relleno («not found», «no expresado», `chunkId` «none») | A | Rechazo por marcadores y NLI; `chunkId` del documento | US-242 |
+| ADR47-R16 | Fuente mal etiquetada con varias fuentes por llamada | A | Una fuente por llamada; la fija el código | US-242 |
+| ADR47-R17 | Generalizar con una sola pregunta | M | Repetir la causa del bucle en ≥ 20 casos | US-233b |
+| ADR47-R18 | Guía o revisión con varias poblaciones da Coincide indebido | A | Valores por fragmento; solo cuentan los fragmentos citados | US-243, US-233b |
+
+## Evidencia medida (resumen)
+
+Detalle completo en [`docs/evidence/S3-demo3/S3-demo-outcomes.md`](../../evidence/S3-demo3/S3-demo-outcomes.md) (OUT-06, OUT-08). Todo con datos sintéticos y corpus público, temperatura 0, una ejecución por variante.
+
+- **Bucle (OUT-06):** el prompt tenía 4435 tokens y la salida se cortó con `finish_reason: length`. De 25 propuestas, solo 5 eran distintas y una se repitió 21 veces.
+  - Con el tope de salida en 4096 tokens falla igual: la salida crece de 4852 a 8907 caracteres.
+  - La temperatura 0,3 da una salida idéntica a la de 0; con 0,7 se pierde el determinismo.
+  - `frequency_penalty` / `presence_penalty` 0,5 cierran el JSON, pero corrompen `chunkId`.
+  - `maxItems` 10 corta el bucle, pero pierde criterios.
+  - Con una sola fuente por llamada, o con un límite explícito de propuestas, termina en 4 a 13 s.
+  - `logprobs`: continuar la lista tiene p ≈ 1,0 y repetir p ≈ 0,997. Dos preguntas reales afectadas (tamoxifeno y próstata localizado).
+- **Falsos negativos del NLI (OUT-08):**
+  - Las justificaciones largas obtienen 0,341 y 0,616 con el umbral en 0,7.
+  - Con afirmaciones atómicas, el soporte por afirmación sube del 69 % al 78 %, pero con la regla estricta la retención de opciones baja del 73 % al 54 %. Por eso US-245 decide por el papel de cada afirmación.
+  - Quitar el prefijo de atribución infla el soporte, porque los sintagmas nominales dan falsos positivos (0,34 → 0,83). Por eso el marco lo pone el código y el NLI evalúa la afirmación sin él.
+
 ## Más información
 
-- Análisis base y riesgos R1…R18: [`backlog/sprints/S4-insumo-extraccion-poblacion.md`](../../../backlog/sprints/S4-insumo-extraccion-poblacion.md).
-- Evidencia del bucle y del 503: [`backlog/sprints/S3-demo-outcomes.md`](../../../backlog/sprints/S3-demo-outcomes.md) OUT-06.
-- Respuestas clínicas F-20…F-24: [`backlog/sprints/S3-demo-cierre.md`](../../../backlog/sprints/S3-demo-cierre.md) §4.
+- Análisis base y riesgos R1…R18: [`docs/evidence/S3-demo3/S4-insumo-extraccion-poblacion.md`](../../evidence/S3-demo3/S4-insumo-extraccion-poblacion.md).
+- Evidencia del bucle y del 503: [`docs/evidence/S3-demo3/S3-demo-outcomes.md`](../../evidence/S3-demo3/S3-demo-outcomes.md) OUT-06.
+- Respuestas clínicas F-20…F-24: [`docs/evidence/S3-demo3/S3-demo-cierre.md`](../../evidence/S3-demo3/S3-demo-cierre.md) §4.
 - Decisiones del refinamiento: [`backlog/sprints/S4-refinamiento.md`](../../../backlog/sprints/S4-refinamiento.md).
 - **No hacer** (medido en OUT-06): subir la temperatura o las penalizaciones como arreglo (`frequency_penalty` 0,5 corrompe los `chunkId`, RN-04), subir el tope de tokens o añadir un tope de iteraciones de búsqueda (no aplica a este fallo).
 - **Revisión prevista:** cierre del S4, con el informe de US-240 (capacidad) y la suite de US-233b. Si la precisión por criterio no alcanza la meta, se reevalúa la extracción doble con comparación (S6 / si hay capacidad).

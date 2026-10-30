@@ -1,6 +1,6 @@
 # S3 · Cierre de la Demo 3 (feedback de la sección 8)
 
-> Creado el 2026-10-29. Recopila las 24 respuestas de [`docs/demo/guia-demo-S3.md`](../../docs/demo/guia-demo-S3.md) §8 (F-01 a F-24), las contrasta con los outcomes de [`S3-demo-outcomes.md`](S3-demo-outcomes.md) y recoge las decisiones clínicas que alimentan el S4 ([`S4-insumo-extraccion-poblacion.md`](S4-insumo-extraccion-poblacion.md)). Complementa `S3-cierre.md` §4 (Review · Demo 3). **Markdown = fuente.** No se ha creado nada en Linear.
+> Creado el 2026-10-29. Recopila las 24 respuestas de [`docs/demo/guia-demo-S3.md`](../../demo/guia-demo-S3.md) §8 (F-01 a F-24), las contrasta con los outcomes de [`S3-demo-outcomes.md`](S3-demo-outcomes.md) y recoge las decisiones clínicas que alimentan el S4 ([`S4-insumo-extraccion-poblacion.md`](S4-insumo-extraccion-poblacion.md)). Complementa `S3-cierre.md` §4 (Review · Demo 3). **Markdown = fuente.** No se ha creado nada en Linear.
 
 ## 1. Cómo se leyeron las marcas (confirmar)
 

@@ -101,7 +101,7 @@ Guion, pasos y preguntas para oncólogos y equipo técnico: [`docs/demo/guia-dem
 
 ## 9. Retrospectiva: decisiones del usuario tras la Demo 3 (2026-10-29)
 
-> Añadido después del cierre del S3, con los resultados de la Demo 3 ([`S3-demo-cierre.md`](S3-demo-cierre.md)). **9.1 a 9.3 son decisiones del usuario**, tal como las dio; **9.4 son consecuencias y propuestas mías, sin aprobar**. Nada de esto se ha aplicado al backlog, al PRD ni a Linear: el slicing solo cambia con aprobación en `/sprint-refine` (Markdown primero, Linear después).
+> Añadido después del cierre del S3, con los resultados de la Demo 3 ([`S3-demo-cierre.md`](../../docs/evidence/S3-demo3/S3-demo-cierre.md)). **9.1 a 9.3 son decisiones del usuario**, tal como las dio; **9.4 son consecuencias y propuestas mías, sin aprobar**. Nada de esto se ha aplicado al backlog, al PRD ni a Linear: el slicing solo cambia con aprobación en `/sprint-refine` (Markdown primero, Linear después).
 
 ### 9.1 Compromiso: cerrar al menos el 80 % de lo comprometido
 

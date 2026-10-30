@@ -10,6 +10,9 @@
 **Workaround en el MVP:** el criterio queda "Desconocido: no reportado por la fuente" con su causa visible (US-124); el oncólogo puede reformular la pregunta o filtrar por fuente y lanzar un análisis nuevo. `agentSteps` llega vacío (contrato final desde el S1, US-033).
 **Stories:** US-186, US-187, US-188 (13 puntos)
 
+
+> **Nota (usuario, 2026-10-29):** cada llamada del agente al LLM lleva su propio tope de salida y un test con un adapter de salida repetitiva hasta el tope; el límite de iteraciones y el *deadline* no frenan una repetición dentro de una sola generación (OUT-06) `[S4 resp. 15]`.
+
 ## Fixtures
 
 - **FX-08c-a · Búsqueda complementaria de test** (en `rag-orchestrator`; amplía FX-08b-a; configuración de test `AGENT_MAX_ITERATIONS = 1`, `AGENT_MAX_SUBQUERIES = 3`, `AGENT_DEADLINE_MS = 2000`):

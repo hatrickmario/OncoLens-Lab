@@ -159,6 +159,12 @@ Repo **público**: nunca datos reales (ni anonimizados) ni secretos (RN-14); CI 
 4. **Ejecución** (`/sprint-start` → `/sprint-run`): lo independiente en paralelo y lo dependiente en secuencia; ante una situación crítica el orquestador se pausa y la sesión principal entrevista al humano. Merges humanos, por oleada.
 5. **Review y retro** (`/sprint-close`): demo, resumen de lo implementado y mejoras críticas del proceso agéntico, sin aplicarlas.
 
+**Ritmo, presupuesto y meta de cierre de S4–S6 (usuario, 2026-10-29, `backlog/sprints/S3-cierre.md` §9):**
+- Cada sprint dura de 1 a 2 días y se ejecuta con la suscripción Max de 100 USD dedicada al proyecto. El compromiso se fija por capacidad y presupuesto de uso, no solo por puntos.
+- Meta de cierre: ≥ 80 % de las historias comprometidas **cerradas**, según la definición de `docs/process/definition-of-done.md` («Historia cerrada»).
+- Si no alcanza, se recorta según el orden de prioridad del Roadmap.
+- Si no hay datos reales o anonimizados, las demos se hacen solo con pacientes sintéticos.
+
 **Verificación de CI antes de pedir un merge (usuario, 2026-10-24):** tras subir cambios a una rama con PR, espera a que la CI termine y no le pidas al humano el merge hasta tener 0 checks en fallo, 0 pendientes y 0 alertas abiertas. Si algo falla, lee el log, corrige o pregunta, y vuelve a verificar. Lo recuerda el *hook* `pr-checks-reminder` (PostToolUse en `git push` y `gh pr create`).
 
 **Plugin Superpowers (uso selectivo, `[S3 resp. 4]`, 2026-10-23):** instalado a nivel de usuario. **El flujo del proyecto manda:** OpenSpec, `/sprint-*`, `implement-story`, `gate-review` y la política TDD de este fichero sustituyen a `brainstorming`, `writing-plans`, `executing-plans`, `subagent-driven-development`, `dispatching-parallel-agents`, `using-git-worktrees`, `test-driven-development`, `requesting-code-review` y `finishing-a-development-branch`, que **no se usan** aunque el *hook* de inicio de sesión las sugiera. Solo se usan `superpowers:systematic-debugging` (fallos de CI o tests rojos inesperados), `superpowers:verification-before-completion` (antes de marcar una tarea `[x]` o declarar un PR listo: nada `[x]` sin evidencia ejecutada) y `superpowers:receiving-code-review` (al responder a hallazgos de Gate 2). Se mide en el S3 con vueltas de gate por historia, reanudaciones del orquestador y tareas `[x]` reabiertas en el cierre.

@@ -116,7 +116,7 @@ Lista de verificación para la sesión de la Demo 3 y su repaso posterior. Cada 
 - **Falso:** no se cumple (el outcome sigue abierto; anotar qué se vio).
 - **Otro feedback:** hay un matiz, una opinión clínica o un hallazgo nuevo (anotarlo en la columna «Notas»).
 
-Los outcomes están en [`backlog/sprints/S3-demo-outcomes.md`](../../backlog/sprints/S3-demo-outcomes.md); el análisis de la extracción de población, en [`backlog/sprints/S4-insumo-extraccion-poblacion.md`](../../backlog/sprints/S4-insumo-extraccion-poblacion.md). Usuarios: médico `doc1@test.local` y administrador `admin@test.local` (contraseñas en `infra/docker/secrets/`).
+Los outcomes están en [`docs/evidence/S3-demo3/S3-demo-outcomes.md`](../evidence/S3-demo3/S3-demo-outcomes.md); el análisis de la extracción de población, en [`docs/evidence/S3-demo3/S4-insumo-extraccion-poblacion.md`](../evidence/S3-demo3/S4-insumo-extraccion-poblacion.md). Usuarios: médico `doc1@test.local` y administrador `admin@test.local` (contraseñas en `infra/docker/secrets/`).
 
 ### 8.1 Acceso y rol del administrador (OUT-01)
 

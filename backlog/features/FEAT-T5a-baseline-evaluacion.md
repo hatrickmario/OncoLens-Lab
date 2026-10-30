@@ -415,7 +415,7 @@ modelos reales antes de G-Demo y no solo con adaptadores falsos.
   suite (incluidas las de población de US-242), cuando se ejecuta `evaluate` con
   `proveedor: local`, entonces el reporte registra el RSS máximo de `rag-orchestrator`, la
   latencia p50 y p95 del NLI por hipótesis y por lote, y marca si el RSS supera el límite de
-  memoria configurado para el contenedor. `[us-231b 1.11]` `[R7]` `[S4 resp. 6]`
+  memoria configurado para el contenedor. `[us-231b 1.11]` `[ADR47-R7]` `[S4 resp. 6]`
 
 ## Contexto técnico
 Cablear en `app/evaluation/` los adaptadores reales (NLI mDeBERTa, reranker y *embeddings*
@@ -463,19 +463,19 @@ si la aplicabilidad dice la verdad antes de enseñarla en la demo.
   `l1d-244` 2.2), cuando se versiona, entonces `data/evaluation/poblacion-dorado/` contiene,
   por (documento, criterio, fragmento), los valores esperados con su `scope`, el rol del
   revisor y la fecha, con ≥ 30 pares documento × criterio estratificados por tipo de fuente
-  (guía, ensayo, revisión) e idioma (es/en). `[S4 resp. 6]` `[R9]` (asumido el tamaño mínimo)
+  (guía, ensayo, revisión) e idioma (es/en). `[S4 resp. 6]` `[ADR47-R9]` (asumido el tamaño mínimo)
 - **AC-2 (borde · precisión y cobertura por criterio)** · Dado el conjunto dorado, cuando se
   ejecuta `evaluate --suite poblacion` con `proveedor: local`, entonces el reporte trae la
   precisión y la cobertura de cada criterio frente a las metas en configuración y la tasa de
   duplicados. `[M-08.3]` `[M-08.4]` `[S4 resp. 3]`
 - **AC-3 (invariante · sin cortes por longitud)** · Dada la ejecución del AC-2, cuando se
   cuentan las tareas con `finish_reason = length`, entonces son 0; si hay alguna, la suite
-  termina con código ≠ 0 y la nombra por documento y criterio, sin contenido. `[R4]`
+  termina con código ≠ 0 y la nombra por documento y criterio, sin contenido. `[ADR47-R4]`
   `[S4 resp. 3]` `[RN-14]`
 - **AC-4 (borde · concordancia de estados)** · Dados los estados esperados del conjunto
   dorado (casos F-20…F-24) y los calculados por US-243, cuando se comparan, entonces el
-  reporte da la concordancia por estado y cuenta aparte cada No coincide indebido (R2) y cada
-  Coincide indebido (R1). `[S4 resp. 8]` `[M-08.2]`
+  reporte da la concordancia por estado y cuenta aparte cada No coincide indebido (`[ADR47-R2]`) y cada
+  Coincide indebido (`[ADR47-R1]`). `[S4 resp. 8]` `[M-08.2]`
 - **AC-5 (borde · regresión de «sin evidencia»)** · Dado el baseline registrado, cuando se
   ejecuta la suite con la extracción de US-242, entonces la métrica «sin evidencia» no baja
   respecto del baseline y el análisis sin evidencia sigue con cero invocaciones del LLM.
@@ -483,7 +483,7 @@ si la aplicabilidad dice la verdad antes de enseñarla en la demo.
 - **AC-6 (borde · la causa del bucle en ≥ 20 casos)** · Dados ≥ 20 pares pregunta + fuentes
   distintos del caso del tamoxifeno, cuando se ejecuta la tarea corta de US-242 sobre cada uno,
   entonces el reporte da la tasa de cortes por longitud y la causa de OUT-06 solo se marca
-  «cerrada» si esa tasa es 0. `[R17]` `[OUT-06]`
+  «cerrada» si esa tasa es 0. `[ADR47-R17]` `[OUT-06]`
 - **AC-7 (borde · sin conjunto revisado)** · Dado un conjunto dorado sin revisor o sin fecha,
   cuando se ejecuta la suite, entonces marca la precisión y la cobertura como «no
   concluyente» y nunca PASS. (asumido)
