@@ -8,7 +8,7 @@ import respuestaSinEvidencia from '../../../../contracts/examples/rag-query-sin-
 import { idSembrado } from '../../prisma/seed/determinismo.js';
 import { createRagOrchestratorClient } from '../../src/infrastructure/rag-orchestrator.client.js';
 import { createServiceTokenSigner } from '../../src/infrastructure/service-jwt.js';
-import { crearProveedorDeCatalogo } from '../../src/modules/evidence-analysis/catalog-version.provider.js';
+import { crearProveedorDeCatalogo } from '../../src/infrastructure/catalogo/catalog-version.provider.js';
 import { componerCompletitud } from '../../src/modules/completeness/completeness.module.js';
 import {
   componerGatewayDeAnalisis,
@@ -284,6 +284,10 @@ export async function montarGateway(
   const appEnv = Object.hasOwn(opciones, 'appEnv') ? opciones.appEnv : 'test';
   const pseudonimos = opciones.pseudonimos ?? pseudonimosFijos();
   const rutaDelCatalogo = opciones.rutaDelCatalogo ?? RUTA_DEL_CATALOGO;
+  const tiposHabilitados = crearTiposHabilitados(
+    opciones.tiposHabilitados ?? ['mama', 'prostata'],
+    ['mama', 'prostata'],
+  );
   const ruta = componerGatewayDeAnalisis({
     db: mundo.cliente,
     rag,
@@ -298,6 +302,7 @@ export async function montarGateway(
           db: mundo.cliente,
           rutaDelCatalogo,
           leerArchivo: (archivo) => readFileSync(archivo, 'utf8'),
+          tiposHabilitados,
         }),
       ),
     config: {
@@ -306,10 +311,7 @@ export async function montarGateway(
       ragTimeoutMs: opciones.ragTimeoutMs ?? RAG_TIMEOUT_MS_DE_TEST,
       aiDisclaimerText: opciones.aiDisclaimerText ?? DISCLAIMER_DE_TEST,
     },
-    tiposHabilitados: crearTiposHabilitados(opciones.tiposHabilitados ?? ['mama', 'prostata'], [
-      'mama',
-      'prostata',
-    ]),
+    tiposHabilitados,
     alcanceDelCorpus: {
       corpusExcludedSources: opciones.corpusExcludedSources ?? ['NCCN', 'ESMO'],
       corpusCutoffDate: opciones.corpusCutoffDate ?? '2026-09-30',
@@ -331,6 +333,7 @@ export async function montarGateway(
     gateway: ruta,
     documents: Router(),
     patients: Router(),
+    completeness: Router(),
   });
   const app = appConAuth({
     cliente: mundo.cliente,

@@ -1,9 +1,11 @@
 import type { Router } from 'express';
+import type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
 import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type { Registrar } from '../../infrastructure/logger.js';
 import type { AlcanceDelCorpus } from '../../config/index.js';
 import type { Consultador } from '../auth/auth.repository.js';
+import { faltantesDe } from '../completeness/completeness.rules.js';
 import type { ChecklistDelPaciente, CompletenessService } from '../completeness/ports.js';
 import { crearBaseDelAnalisis } from './analysis-basis.js';
 import { crearAnalysisCompletion } from './analysis-completion.js';
@@ -21,7 +23,6 @@ import {
   type ContextDeidentifier,
   type TraceIdGenerator,
   type RagQueryClient,
-  type TiposDeCancerHabilitados,
 } from './ports.js';
 
 export interface ConfiguracionDelGateway extends ConfiguracionDelAnalisis {
@@ -52,7 +53,7 @@ export interface DependenciasDelGateway {
 
 /** Claves del catálogo en estado `faltante`, en el orden del catálogo (US-002). */
 function clavesFaltantes(checklist: ChecklistDelPaciente): readonly string[] {
-  return checklist.items.filter((item) => item.status === 'faltante').map((item) => item.key);
+  return faltantesDe(checklist).map((item) => item.key);
 }
 
 /**

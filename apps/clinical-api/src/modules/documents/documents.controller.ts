@@ -2,9 +2,9 @@ import { Router, type Request, type Response } from 'express';
 import { enviarError, type CodigoDeError } from '../../infrastructure/http-errores.js';
 import type { LineaDeLog, Registrar } from '../../infrastructure/logger.js';
 import { authorize } from '../../middleware/authorize.js';
-import type { TraceIdGenerator } from '../evidence-analysis/ports.js';
+import type { TraceIdGenerator } from '../../infrastructure/trace-id-generator.js';
 import type { SesionAutenticada } from '../auth/auth.service.js';
-import { crearTraceIdMiddleware } from '../evidence-analysis/trace-id.middleware.js';
+import { crearTraceIdMiddleware, traceIdDe } from '../../middleware/trace-id.middleware.js';
 import { AlmacenNoDisponible } from './ports.js';
 import {
   ArchivoDemasiadoGrande,
@@ -90,8 +90,6 @@ const contentLengthDe = (request: Request): number | undefined => {
 interface Contexto extends DependenciasDelController {
   limiteDeLectura: number;
 }
-
-const traceIdDe = (response: Response): string => response.locals.traceId ?? '';
 
 function registrarResultado(
   contexto: Contexto,

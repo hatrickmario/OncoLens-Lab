@@ -1,10 +1,11 @@
 import type { PatientAdminSummary } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
 import { IdentityIntegrityError } from '../../infrastructure/crypto/identity-integrity-error.js';
-import type { TiposDeCancerHabilitados } from '../evidence-analysis/ports.js';
+import type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
 
 /**
- * Hasta que existan los módulos de datos críticos (S3/S4) no hay faltantes que contar: el contador es 0 y no un
- * valor inventado (design D3 de L1D-202, D5 de L1D-72). Lo comparten el listado y la ficha.
+ * Contador de faltantes SOLO del listado y la búsqueda: no calculan el checklist por fila (decisión Q2, L1D-95 D7b), así
+ * que muestran 0 y no un valor inventado. La ficha NO lo usa: su contador sale de `CompletenessService` (US-003). Se
+ * retira cuando una historia posterior calcule el checklist por fila.
  */
 export const FALTANTES_CRITICOS_POR_AHORA = 0;
 

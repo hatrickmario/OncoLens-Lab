@@ -30,6 +30,14 @@ module.exports = {
       to: { path: DATOS_CLINICAL_API },
     },
     {
+      name: 'modulos-sin-evidence-analysis',
+      comment:
+        'completeness, patients y documents no dependen de evidence-analysis: lo compartido (TraceIdGenerator, TiposDeCancerHabilitados, proveedor de catálogo, middleware de traceId) vive en infrastructure/ y middleware/ (L1D-95, P2-1).',
+      severity: 'error',
+      from: { path: '^apps/clinical-api/src/modules/(completeness|patients|documents)/' },
+      to: { path: '^apps/clinical-api/src/modules/evidence-analysis/' },
+    },
+    {
       name: 'web-solo-por-bff',
       comment:
         'web habla con clinical-api solo por HTTP desde los Route Handlers: nunca importa su código (readme §2.3).',

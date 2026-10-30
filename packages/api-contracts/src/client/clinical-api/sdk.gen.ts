@@ -2,7 +2,7 @@
 
 import { client } from './client.gen.js';
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client/index.js';
-import type { CreateEvidenceAnalysisData, CreateEvidenceAnalysisErrors, CreateEvidenceAnalysisResponses, CreateFollowUpData, CreateFollowUpErrors, CreateFollowUpResponses, CreateManualBiomarkerData, CreateManualBiomarkerErrors, CreateManualBiomarkerResponses, CreateManualDiagnosisData, CreateManualDiagnosisErrors, CreateManualDiagnosisResponses, GetHealthData, GetHealthResponses, GetPatientCaseData, GetPatientCaseErrors, GetPatientCaseResponses, GetPatientData, GetPatientErrors, GetPatientResponses, ListFollowUpsData, ListFollowUpsErrors, ListFollowUpsResponses, ListPatientsData, ListPatientsErrors, ListPatientsResponses, LoginData, LoginErrors, LoginResponses, LogoutData, LogoutErrors, LogoutResponses, SearchPatientsData, SearchPatientsErrors, SearchPatientsResponses, UploadDocumentData, UploadDocumentErrors, UploadDocumentResponses } from './types.gen.js';
+import type { CreateEvidenceAnalysisData, CreateEvidenceAnalysisErrors, CreateEvidenceAnalysisResponses, CreateFollowUpData, CreateFollowUpErrors, CreateFollowUpResponses, CreateManualBiomarkerData, CreateManualBiomarkerErrors, CreateManualBiomarkerResponses, CreateManualDiagnosisData, CreateManualDiagnosisErrors, CreateManualDiagnosisResponses, GetCompletenessData, GetCompletenessErrors, GetCompletenessResponses, GetHealthData, GetHealthResponses, GetPatientCaseData, GetPatientCaseErrors, GetPatientCaseResponses, GetPatientData, GetPatientErrors, GetPatientResponses, ListFollowUpsData, ListFollowUpsErrors, ListFollowUpsResponses, ListPatientsData, ListPatientsErrors, ListPatientsResponses, LoginData, LoginErrors, LoginResponses, LogoutData, LogoutErrors, LogoutResponses, SearchPatientsData, SearchPatientsErrors, SearchPatientsResponses, UploadDocumentData, UploadDocumentErrors, UploadDocumentResponses } from './types.gen.js';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -98,6 +98,21 @@ export const getPatient = <ThrowOnError extends boolean = false>(options: Option
             type: 'apiKey'
         }],
     url: '/platform/patients/{patientId}',
+    ...options
+});
+
+/**
+ * Checklist de datos críticos del paciente con procedencia por ítem
+ *
+ * Determinista (FR-23), sin IA. Un faltante nunca produce 4xx (RN-26). Lectura clínica: el administrador recibe 403.
+ */
+export const getCompleteness = <ThrowOnError extends boolean = false>(options: Options<GetCompletenessData, ThrowOnError>): RequestResult<GetCompletenessResponses, GetCompletenessErrors, ThrowOnError> => (options.client ?? client).get<GetCompletenessResponses, GetCompletenessErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'oncolens_session',
+            type: 'apiKey'
+        }],
+    url: '/platform/patients/{patientId}/completeness',
     ...options
 });
 

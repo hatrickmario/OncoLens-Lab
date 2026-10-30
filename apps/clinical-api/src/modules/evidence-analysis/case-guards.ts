@@ -1,5 +1,5 @@
 import type { CasoClinico } from './evidence-analysis.repository.js';
-import type { TiposDeCancerHabilitados } from './ports.js';
+import type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
 
 /** El paciente no tiene diagnóstico activo: no hay tipo de cáncer con el que filtrar la evidencia ([S1 resp. 35]). */
 export class TipoCancerNoRegistradoError extends Error {

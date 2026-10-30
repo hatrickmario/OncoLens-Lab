@@ -262,6 +262,69 @@ export const zDiagnosisManualCreate = z.strictObject({
     grading: zDiagnosisGradingInput.optional()
 });
 
+/**
+ * Subconjunto propio del checklist; no es el Provenance completo (no lleva extractionConfidence, conflict ni additionalSourceDocumentIds, que el cálculo no lee).
+ */
+export const zCompletenessProvenance = z.strictObject({
+    entryMethod: z.enum([
+        'ocr',
+        'manual',
+        'manual_correction',
+        'seed'
+    ]),
+    reviewStatus: z.enum([
+        'auto_aceptado',
+        'requiere_revision',
+        'verificado',
+        'corregido'
+    ]),
+    sourceDocumentId: z.uuid().nullable(),
+    page: z.int().gte(1).optional()
+});
+
+export const zCompletenessItem = z.strictObject({
+    item: z.string().min(1),
+    label: z.string().min(1),
+    status: z.enum([
+        'presente_verificado',
+        'presente_sin_verificar',
+        'faltante',
+        'no_aplica'
+    ]),
+    origin: z.enum([
+        'documento',
+        'manual',
+        'correccion',
+        'seed',
+        'regla'
+    ]),
+    provenance: zCompletenessProvenance.nullable(),
+    destination: z.strictObject({
+        entity: z.enum([
+            'Diagnosis',
+            'Biomarker',
+            'ClinicalAttribute',
+            'PriorTreatment'
+        ]),
+        field: z.string().nullable()
+    }),
+    condition: z.strictObject({
+        item: z.string().min(1),
+        operator: z.enum([
+            'igualdad',
+            'pertenencia',
+            'prefijo'
+        ]),
+        values: z.array(z.string()).min(1)
+    }).nullable()
+});
+
+export const zCompletenessView = z.strictObject({
+    catalogVersion: z.string().min(1),
+    cancerTypeEnabled: z.boolean(),
+    items: z.array(zCompletenessItem)
+});
+
 export const zIdType = z.enum([
     'cedula_ciudadania',
     'tarjeta_identidad',
@@ -298,7 +361,8 @@ export const zPatientSummary = z.strictObject({
     diagnosis: zDiagnosis.nullable(),
     recentBiomarkers: z.array(zBiomarker),
     pendingReviewCount: z.int().gte(0),
-    missingCriticalCount: z.int().gte(0)
+    missingCriticalCount: z.int().gte(0),
+    completenessAvailable: z.boolean().optional()
 });
 
 /**
@@ -871,7 +935,8 @@ export const zPatientSummaryWritable = z.strictObject({
     diagnosis: zDiagnosisWritable.nullable(),
     recentBiomarkers: z.array(zBiomarker),
     pendingReviewCount: z.int().gte(0),
-    missingCriticalCount: z.int().gte(0)
+    missingCriticalCount: z.int().gte(0),
+    completenessAvailable: z.boolean().optional()
 });
 
 export const zPatientId = z.uuid();
@@ -928,6 +993,15 @@ export const zGetPatientResponse = z.discriminatedUnion('view', [
     zPatientSummary,
     zPatientAdminSummary
 ]);
+
+export const zGetCompletenessPath = z.object({
+    patientId: z.uuid()
+});
+
+/**
+ * Checklist del paciente.
+ */
+export const zGetCompletenessResponse = zCompletenessView;
 
 export const zGetPatientCasePath = z.object({
     patientId: z.uuid()

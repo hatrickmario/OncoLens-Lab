@@ -1,13 +1,16 @@
 {
   "version": "test-1.0.0",
-  "verifiedReviewStatuses": ["verificado", "corregido"],
+  "verifiedReviewStatuses": [
+    "verificado",
+    "corregido"
+  ],
   "items": [
     {
       "key": "histologia",
       "cancerType": "mama",
       "label": {
-        "es": "histologia",
-        "en": "histologia"
+        "es": "Histología",
+        "en": "Histología"
       },
       "destination": {
         "entity": "Diagnosis",
@@ -20,8 +23,8 @@
       "key": "grado",
       "cancerType": "mama",
       "label": {
-        "es": "grado",
-        "en": "grado"
+        "es": "Grado",
+        "en": "Grado"
       },
       "destination": {
         "entity": "Diagnosis",
@@ -34,8 +37,8 @@
       "key": "tnm",
       "cancerType": "mama",
       "label": {
-        "es": "tnm",
-        "en": "tnm"
+        "es": "Estadificación TNM",
+        "en": "Estadificación TNM"
       },
       "destination": {
         "entity": "Diagnosis",
@@ -51,8 +54,8 @@
       "key": "ecog",
       "cancerType": "mama",
       "label": {
-        "es": "ecog",
-        "en": "ecog"
+        "es": "ECOG",
+        "en": "ECOG"
       },
       "destination": {
         "entity": "Diagnosis",
@@ -68,8 +71,8 @@
       "key": "re",
       "cancerType": "mama",
       "label": {
-        "es": "re",
-        "en": "re"
+        "es": "Receptor de estrógeno",
+        "en": "Receptor de estrógeno"
       },
       "destination": {
         "entity": "Biomarker",
@@ -85,8 +88,8 @@
       "key": "rp",
       "cancerType": "mama",
       "label": {
-        "es": "rp",
-        "en": "rp"
+        "es": "Receptor de progesterona",
+        "en": "Receptor de progesterona"
       },
       "destination": {
         "entity": "Biomarker",
@@ -102,8 +105,8 @@
       "key": "her2_ihq",
       "cancerType": "mama",
       "label": {
-        "es": "her2_ihq",
-        "en": "her2_ihq"
+        "es": "HER2 (IHQ)",
+        "en": "HER2 (IHQ)"
       },
       "destination": {
         "entity": "Biomarker",
@@ -119,8 +122,8 @@
       "key": "her2_ish",
       "cancerType": "mama",
       "label": {
-        "es": "her2_ish",
-        "en": "her2_ish"
+        "es": "HER2 (ISH)",
+        "en": "HER2 (ISH)"
       },
       "destination": {
         "entity": "Biomarker",
@@ -134,7 +137,9 @@
       "condition": {
         "item": "her2_ihq",
         "operator": "prefijo",
-        "values": ["2+"]
+        "values": [
+          "2+"
+        ]
       },
       "whenConditionUnknown": "no_aplica"
     },
@@ -142,8 +147,8 @@
       "key": "ki67",
       "cancerType": "mama",
       "label": {
-        "es": "ki67",
-        "en": "ki67"
+        "es": "Ki-67",
+        "en": "Ki-67"
       },
       "destination": {
         "entity": "Biomarker",
@@ -159,8 +164,8 @@
       "key": "estado_menopausico",
       "cancerType": "mama",
       "label": {
-        "es": "estado_menopausico",
-        "en": "estado_menopausico"
+        "es": "Estado menopáusico",
+        "en": "Estado menopáusico"
       },
       "destination": {
         "entity": "ClinicalAttribute",
@@ -176,8 +181,8 @@
       "key": "tratamientos_previos",
       "cancerType": "mama",
       "label": {
-        "es": "tratamientos_previos",
-        "en": "tratamientos_previos"
+        "es": "Tratamientos previos",
+        "en": "Tratamientos previos"
       },
       "destination": {
         "entity": "PriorTreatment"
@@ -187,7 +192,9 @@
       "condition": {
         "item": "tnm",
         "operator": "prefijo",
-        "values": ["IV"]
+        "values": [
+          "IV"
+        ]
       },
       "whenConditionUnknown": "faltante"
     },
@@ -195,8 +202,8 @@
       "key": "brca_germinal",
       "cancerType": "mama",
       "label": {
-        "es": "brca_germinal",
-        "en": "brca_germinal"
+        "es": "BRCA germinal",
+        "en": "BRCA germinal"
       },
       "destination": {
         "entity": "Biomarker",
@@ -210,7 +217,9 @@
       "condition": {
         "item": "tnm",
         "operator": "prefijo",
-        "values": ["IV"]
+        "values": [
+          "IV"
+        ]
       },
       "whenConditionUnknown": "no_aplica"
     }

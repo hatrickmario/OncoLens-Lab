@@ -44,6 +44,13 @@ fijo en `0` (`FALTANTES_CRITICOS_POR_AHORA`) y el oncólogo no ve de dónde sale
 - El Route Handler BFF `GET /api/patients/[id]/completeness` **no** es de este change: lo crea `l1d-97`.
 - **Deuda de `l1d-94` (4.6)**: vocabulario de operadores en un solo sitio (F-3), fixtures FX-04-a a
   `packages/clinical-catalogs` (F-5), F-8, F-9, F-11; `patientId` UUID con Zod y sin registrar el error de `pg`.
+- **Decidido (usuario, 2026-10-30):** (1) los cinco Menores del PR #197 se aplican dentro de este change, sin importar
+  la numeración F-8/F-9/F-11: (a) JSDoc duplicado de `ports.ts`; (b) exports sobrantes `registrosDelDestino` y
+  `excluirNoMapeados`; (c) el marcador de no-fuga cubre `ClinicalEvent.description`; (d) la consulta de `Exam` usaba
+  `t.review_status`, columna que `clinical.exam` no tiene; (e) includes de Vitest y dependencia con `evidence-analysis`.
+  (2) Tarea 4.7 de l1d-94: para el MVP los criterios son RE/RP/HER2 y basta lo hecho en L1D-95a (#212); BRCA/HRR no se
+  eliminan del modelo y quedan como biomarcadores moleculares opcionales con los estados positivo, negativo, no
+  realizado y desconocido (se demuestra con una prueba; el texto libre de `Biomarker.value` ya los admite).
 
 ## Capabilities
 

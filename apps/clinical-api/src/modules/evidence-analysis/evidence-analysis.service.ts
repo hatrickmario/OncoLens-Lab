@@ -1,10 +1,12 @@
 import type { AppliedFilters } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
+import type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
 import type {
   ClinicalContext,
   DataClassification,
   RagQueryInternalRequest,
   SourcesSelected,
 } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
+import { PacienteNoEncontradoError } from '../patients/patients.errores.js';
 import { exigirTipoCancer, alcanceDelTipo } from './case-guards.js';
 import {
   construirContextoPermitido,
@@ -21,16 +23,10 @@ import type {
   RagQueryClient,
   RespuestaDeRag,
   ResultadoDelAnalisis,
-  TiposDeCancerHabilitados,
 } from './ports.js';
 
 /** El `patientId` de la petición no corresponde a ningún paciente. */
-export class PacienteNoEncontradoError extends Error {
-  constructor() {
-    super('Paciente no encontrado');
-    this.name = 'PacienteNoEncontradoError';
-  }
-}
+export { PacienteNoEncontradoError };
 
 export interface ConfiguracionDelAnalisis {
   /** `maxOptions` enviado a Backend 2 (`ANALYSIS_MAX_OPTIONS`, RN-22). */

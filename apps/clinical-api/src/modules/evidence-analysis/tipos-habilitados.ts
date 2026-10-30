@@ -1,5 +1,5 @@
 import { validarTiposHabilitados } from '../../config/index.js';
-import type { TiposDeCancerHabilitados } from './ports.js';
+import type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
 
 /**
  * Adaptador de `TiposDeCancerHabilitados` (RN-20, RN-22). Valida la lista contra los tipos del catálogo al crearse,

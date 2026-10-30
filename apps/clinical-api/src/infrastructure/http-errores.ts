@@ -1,5 +1,6 @@
 import type { ErrorRequestHandler, Response } from 'express';
 import { IdentityIntegrityError } from './crypto/identity-integrity-error.js';
+import { traceIdDe } from '../middleware/trace-id.middleware.js';
 import type { Registrar } from './logger.js';
 
 /** La sesión no tiene ninguno de los permisos que exige la operación; el manejador final lo traduce a 403. */
@@ -74,6 +75,17 @@ export function enviarError(
   traceId: string,
 ): void {
   respuesta.status(status).json({ error: codigo, message: MENSAJES[codigo], traceId });
+}
+
+/** `404 NO_ENCONTRADO` sin eco, con su línea de log (`resultado: no_encontrado`, `traceId`): un UUID inexistente y un identificador mal formado son indistinguibles para el cliente. */
+export function rechazarNoEncontrado(
+  respuesta: Response,
+  registrar: Registrar,
+  evento: string,
+): void {
+  const traceId = traceIdDe(respuesta);
+  registrar({ event: evento, resultado: 'no_encontrado', traceId });
+  enviarError(respuesta, 404, 'NO_ENCONTRADO', traceId);
 }
 
 /**

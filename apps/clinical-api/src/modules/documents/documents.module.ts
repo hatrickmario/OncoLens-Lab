@@ -3,7 +3,7 @@ import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type { Registrar } from '../../infrastructure/logger.js';
 import type { Consultador } from '../auth/auth.repository.js';
-import type { TraceIdGenerator } from '../evidence-analysis/ports.js';
+import type { TraceIdGenerator } from '../../infrastructure/trace-id-generator.js';
 import { documentsController } from './documents.controller.js';
 import { createDocumentsRepository } from './documents.repository.js';
 import { crearDocumentsService } from './documents.service.js';

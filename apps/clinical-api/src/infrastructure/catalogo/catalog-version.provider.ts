@@ -1,6 +1,10 @@
 import { ConfiguracionInvalidaError } from '../../config/index.js';
-import { esquemaDeManifest } from '../../infrastructure/catalogo/manifiesto.schema.js';
-import type { CatalogVersionProvider } from './ports.js';
+import { esquemaDeManifest } from './manifiesto.schema.js';
+
+/** Versión del catálogo clínico que consume este despliegue (`manifest.json`). */
+export interface CatalogVersionProvider {
+  version(): string;
+}
 
 /** Lo que el arranque lee del `manifest.json`: la versión (todo despliegue) y los tipos de cáncer del catálogo. */
 export interface ProveedorDeCatalogo extends CatalogVersionProvider {

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { crearProveedorDeCatalogo } from './catalog-version.provider.js';
+import { crearProveedorDeCatalogo } from '../../infrastructure/catalogo/catalog-version.provider.js';
 import type { EtiquetaDeDatoCritico } from './ports.js';
 
 /** Lo único que este módulo lee de `datos-criticos.json`: la clave y su `label.es` (el arranque ya validó el resto). */
