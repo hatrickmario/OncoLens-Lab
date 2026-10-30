@@ -580,7 +580,7 @@ Historias de deuda nacidas de las decisiones del usuario sobre la Oleada 4 (`bac
 | **D-11** | `infra`/`clinical-api`: rol de PostgreSQL `clinical_seed` solo DML | FEAT-PL2 | L1D-169 (deuda D-b) | El seed usa hoy `clinical_api` (dueño de la base); usar un rol `clinical_seed` con solo DML sobre `auth`/`clinical`, antes de G-Piloto. Condición: test de *permission denied* del rol (sin DDL) y el seed sintético sigue funcionando. ID por asignar. | por asignar (S6, antes de G-Piloto) |
 | **D-12** | `clinical-api`: RN-06 también frente a `DELETE` y `TRUNCATE` | FEAT-PL2 | L1D-168 (US-038); `S1-trazabilidad.md` M-7 | `clinical.ai_analysis_record` es inmutable solo frente a `UPDATE`; añadir *triggers* `BEFORE DELETE` (fila) y `BEFORE TRUNCATE` (sentencia) que lancen error (detalle en la nota de deuda de FEAT-PL2). Propuesta: 2 pts, técnica. Condición: test de integración sobre PostgreSQL real que intenta `DELETE` y `TRUNCATE` y recibe el error. ID por asignar. | por asignar (≥ S2) |
 
-Excepciones y deudas menores sin historia propia (registradas en su historia dueña): `WEB_HOME_PATH` con el UUID del paciente semilla en `/login`, aceptado hasta US-048 (US-211); CSP y cabeceras anti-clickjacking en `/login`, excepción nombrada hasta US-216 (S6; deuda D-9 para el S2); `ALLOW_CC_BY_NC` aceptado por ahora (US-012).
+Excepciones y deudas menores sin historia propia (registradas en su historia dueña): `WEB_HOME_PATH` con el UUID del paciente semilla en `/login`, aceptado hasta US-048 (US-211; vencida, la cierra US-222 AC-6 en el S6, `[S4 resp. 15]`); CSP y cabeceras anti-clickjacking en `/login`, excepción nombrada hasta US-216 (S6; deuda D-9 para el S2); `ALLOW_CC_BY_NC` aceptado por ahora (US-012).
 
 ## Publicación en Linear (F6, 2026-10-07)
 

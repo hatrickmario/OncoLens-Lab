@@ -1,6 +1,6 @@
 # S3 · Outcomes de la Demo 3 (feedback recopilado)
 
-> Creado el 2026-10-28. Recoge el feedback de la Demo 3 (instalación desde cero en `Demo3/OncoLens-Lab` y recorrido). Guía de la demo: [`docs/demo/guia-demo-S3.md`](../../docs/demo/guia-demo-S3.md). Cierre del sprint: [`S3-cierre.md`](S3-cierre.md).
+> Creado el 2026-10-28. Recoge el feedback de la Demo 3 (instalación desde cero en `Demo3/OncoLens-Lab` y recorrido). Guía de la demo: [`docs/demo/guia-demo-S3.md`](../../demo/guia-demo-S3.md). Cierre del sprint: [`S3-cierre.md`](../../../backlog/sprints/S3-cierre.md).
 > **Markdown = fuente.** Cada outcome queda sin historia ni destino hasta que el usuario lo triage (S4 o deuda). Los IDs `OUT-nn` son inmutables.
 > Estados: `abierto` → `triage` (con destino) → `cerrado`.
 

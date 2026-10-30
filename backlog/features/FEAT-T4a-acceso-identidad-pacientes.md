@@ -39,7 +39,7 @@
 > - **Contrato y versión (decisiones 58 y 59):** L1D-197 sube `clinical-api` a 1.2.0 y es el dueño de `ErrorInterno` (L1D-104 lo referencia).
 > - **Conexión a PostgreSQL (decisión 62):** `CLINICAL_DATABASE_URL` sin credenciales + `PG_CLINICAL_API_PASSWORD_FILE`, TLS con `rejectUnauthorized: true`, un solo pool inyectado en `server.ts`; `APP_ENV` obligatorio en Compose (decisión 64); respaldo `SINT-*` solo bajo `tests/` (decisión 66).
 > - **`visual-check` de `/login` y E2E de Playwright pendientes** hasta la deuda D-3 (Playwright y perfil de test en Compose).
-> - **`WEB_HOME_PATH`** con el UUID del paciente semilla: aceptado como deuda hasta US-048.
+> - **`WEB_HOME_PATH`** con el UUID del paciente semilla: aceptado como deuda hasta US-048. **Vencida** con US-048; la cierra US-222 AC-6 (S6), con el destino por rol `[S4 resp. 15]`.
 > - **CSP y cabeceras anti-clickjacking en `/login`:** excepción nombrada hasta US-216 (S6).
 
 > **Decidido (usuario, 2026-10-20), circularidad con US-039:** L1D-197 crea su usuario `doc1@test.local` con un *fixture* local de tests (`tests/support/usuarios.ts`) usando el *hasher* de 197 (`createPasswordHasher()`), **sin depender del seed de L1D-169**; L1D-169 adopta después el seed usando ese mismo *hasher* y el mismo usuario `doc1`. Los AC no cambian (el AC-1 sigue hablando de `doc1@test.local` activo con hash Argon2id).
@@ -636,6 +636,23 @@ pacientes desde una consola, para gestionar el piloto sin la CLI y sin ver datos
   muestra los valores de configuración vigentes (sesión, edad de mayoría, tipos
   habilitados, fuentes, límite de seguimiento, antigüedad por defecto) **en solo lectura**,
   con la indicación de que se cambian en la configuración del despliegue. `[RN-22]`
+- **AC-6 (borde · destino tras el login según el rol)** · Dado `admin@test.local`, cuando
+  inicia sesión, entonces `web` lo redirige a la consola de administración (listado de
+  usuarios y pacientes) y nunca a `/pacientes/<id>/analisis`; y `doc1@test.local` llega al
+  listado de pacientes. El destino sale del rol de la sesión y no de `WEB_HOME_PATH`, que se
+  retira. `[OUT-01]` `[PRD §11 E-04]` `[S4 resp. 15]`
+- **AC-7 (borde · rutas clínicas rechazadas en el servidor)** · Dada una sesión `admin`,
+  cuando pide cualquier ruta `/pacientes/**` de `web` (p. ej.,
+  `/pacientes/<id>/analisis`), entonces `web` la rechaza en el servidor (`proxy.ts` o el
+  *layout*) con la misma respuesta que la API, `403 PERMISO_DENEGADO`, sin renderizar el
+  panel ni pedir datos clínicos a `clinical-api`. `[OUT-01]` `[PRD §11 E-04]` `[S4 resp. 15]`
+- **AC-8 (borde · aviso de permiso específico)** · Dado un `403 PERMISO_DENEGADO` en
+  `POST /api/evidence-analyses` o en una ruta clínica, cuando `web` lo muestra, entonces se
+  lee el aviso de permiso de la clave `errors.permisoDenegado` de `apps/web/messages/es.json`
+  («Tu rol no tiene permiso para esta acción»), no «No se pudo completar el análisis», y sin
+  contenido clínico. `[OUT-09]` `[S4 resp. 15]` (asumido el literal)
+
+> **Decidido (usuario, 2026-10-29):** se añaden los AC-6…AC-8 por OUT-01 y OUT-09 de la Demo 3 (`docs/evidence/S3-demo3/S3-demo-outcomes.md`) y se cierra aquí la deuda `WEB_HOME_PATH` de US-211, que venció con US-048 `[S4 resp. 15]`. Con 8 AC queda en el tope de la DoR; la estimación (5) **no se re-estima sin avisar**: se propone revisarla en el refinamiento del S6 (probable 5 → 8 o partir la parte de `web`).
 
 ## Contexto técnico
 Rutas `/platform/admin/users*` y reutilización de `POST /platform/patients`. Fuera de esta
@@ -645,7 +662,8 @@ a RN-22). Supertest con PostgreSQL real y Testing Library con `visual-check`.
 
 ## INVEST
 **Small** ✓ CRUD acotado y una sección de solo lectura.
-**Testable** ✓ cinco AC.
+**Testable** ✓ ocho AC (AC-6…AC-8 con Playwright contra Compose y sesiones `admin` y `doctor`).
+*(Small ⚠ con los AC-6…AC-8 la historia llega al tope de 8 AC; estimación a revisar en el S6.)*
 
 ## US-234 — La búsqueda de pacientes limita la tasa por usuario, queda auditada sin datos personales y su índice del nombre es obligatorio
 

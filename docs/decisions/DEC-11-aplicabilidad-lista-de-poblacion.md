@@ -14,7 +14,7 @@ En el S3 los criterios se implementaron sobre el catálogo `propuesta_revisada` 
 - mama: HER2 (excluyente), receptores hormonales, estadio, línea, estado menopáusico y ECOG;
 - próstata: estado de castración (excluyente), extensión, ISUP, línea, ECOG y HRR/BRCA.
 
-El modelo admitía un solo valor del estudio por criterio. En la Demo 3 (2026-10-29) los oncólogos respondieron cómo tratar los estudios que describen varios valores ([`S3-demo-cierre.md`](../../backlog/sprints/S3-demo-cierre.md) §4, F-20…F-24). Con el ADR-47, la población del estudio pasa a ser una lista acotada por criterio y por fragmento, y hace falta fijar su semántica clínica.
+El modelo admitía un solo valor del estudio por criterio. En la Demo 3 (2026-10-29) los oncólogos respondieron cómo tratar los estudios que describen varios valores ([`S3-demo-cierre.md`](../evidence/S3-demo3/S3-demo-cierre.md) §4, F-20…F-24). Con el ADR-47, la población del estudio pasa a ser una lista acotada por criterio y por fragmento, y hace falta fijar su semántica clínica.
 
 ## Decisión
 

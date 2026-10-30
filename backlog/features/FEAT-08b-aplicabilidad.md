@@ -4,7 +4,7 @@
 
 **Talla:** XL (propone división) · **Sprint:** 3 (US-021, US-121…US-125) · 4 (US-126; reordenamiento del 2026-10-23, antes todo en el S5 · refinamiento del S4: cierre de US-021 · DEC-11 y etapa 2 de la población del estudio, US-241, US-243, US-244, ADR-47, `[S4 resp. 3]`) · **Capacidad:** CAP-08 (AC-08.1–AC-08.6, AC-08.8, AC-08.9) · CAP-04 (AC-04.3: "Desconocido: falta en el paciente") · CAP-10 (AC-10.2: resumen de aplicabilidad en la tarjeta) · T-1 (AC-T1.2 para afirmaciones sobre población) · **Recorrido principal:** sí (hipótesis 3: opciones más aplicables a las condiciones del paciente)
 **Requisitos:** FR-25 (dueña, vía HU-22; funcionalidad completa salvo el agente) · RN-28 (dueña de la **agregación** por opción, del comparador y, desde el S3, de la selección por aplicabilidad antes del recorte a `maxOptions`, también con una sola opción; el orden visible de hasta 3 opciones es de US-134, S4) · IA-06 · TBD-13 (aplicabilidad: DEC-11) · ADR-47 (población del estudio en lista acotada por fragmento, S4) · RN-01, RN-02, RN-06, RN-25, RN-29 (regresiones)
-**Evidencia:** [→ PRD §5 FR-25], [→ PRD §6 RN-01, RN-02, RN-25, RN-26, RN-28, RN-29], [→ PRD §7 NFR (estados de aplicabilidad por texto)], [→ PRD §12 Síntesis y aplicabilidad], [→ PRD §16 TBD-13], [→ PRD §18.2 Estado de aplicabilidad], [→ PRD §18.3.8 AC-08.1–AC-08.6, AC-08.8, AC-08.9, M-08.1–M-08.6], [→ PRD §18.3.10 AC-10.1 ("1 en los Sprints 1–3", ordenada por aplicabilidad)], [→ PRD §5 FR-09 (máximo 1 opción en los Sprints 1–3)], [→ PRD §18.3.4 AC-04.3], [→ readme §5 HU-22], [→ readme §4.1 `ApplicabilityCriterion`, `SourceApplicability`, `ApplicabilitySummary`, `EvidenceOption.perSource`], [→ readme §3.3 #27, #31, #34], [→ backlog/02-adrs.md DEC-11, P-03], [→ backlog/01-requisitos.md §15 (slicing por hipótesis)], [→ docs/AS-IS.md P6, JTBD 4], [→ docs/architecture/adr/ADR-47-extraccion-poblacion-en-abanico.md], [→ docs/decisions/DEC-11-aplicabilidad-lista-de-poblacion.md], [→ backlog/sprints/S3-demo-cierre.md §4 F-20…F-24], [→ backlog/sprints/S3-demo-outcomes.md OUT-06, OUT-07], [→ backlog/sprints/S4-insumo-extraccion-poblacion.md §2, §6 R1…R18]
+**Evidencia:** [→ PRD §5 FR-25], [→ PRD §6 RN-01, RN-02, RN-25, RN-26, RN-28, RN-29], [→ PRD §7 NFR (estados de aplicabilidad por texto)], [→ PRD §12 Síntesis y aplicabilidad], [→ PRD §16 TBD-13], [→ PRD §18.2 Estado de aplicabilidad], [→ PRD §18.3.8 AC-08.1–AC-08.6, AC-08.8, AC-08.9, M-08.1–M-08.6], [→ PRD §18.3.10 AC-10.1 ("1 en los Sprints 1–3", ordenada por aplicabilidad)], [→ PRD §5 FR-09 (máximo 1 opción en los Sprints 1–3)], [→ PRD §18.3.4 AC-04.3], [→ readme §5 HU-22], [→ readme §4.1 `ApplicabilityCriterion`, `SourceApplicability`, `ApplicabilitySummary`, `EvidenceOption.perSource`], [→ readme §3.3 #27, #31, #34], [→ backlog/02-adrs.md DEC-11, P-03], [→ backlog/01-requisitos.md §15 (slicing por hipótesis)], [→ docs/AS-IS.md P6, JTBD 4], [→ docs/architecture/adr/ADR-47-extraccion-poblacion-en-abanico.md], [→ docs/decisions/DEC-11-aplicabilidad-lista-de-poblacion.md], [→ docs/evidence/S3-demo3/S3-demo-cierre.md §4 F-20…F-24], [→ docs/evidence/S3-demo3/S3-demo-outcomes.md OUT-06, OUT-07], [→ docs/evidence/S3-demo3/S4-insumo-extraccion-poblacion.md §2, §6 R1…R18]
 **Dependencias:** ↪ US-055 (pipeline), US-063, US-064 (citas y soporte), US-118 (metadatos de población), FEAT-04 US-006 (faltantes en el contexto), US-099 (conflictos: detección real en el S5; en el S3, conflicto sembrado) · ⛔ DEC-11 (US-021) · escenario `propuesta_revisada` aceptado para el S3, cierre en la sesión de oncólogos del S4 `[S3 resp. 1]` · ⛔ ADR-39 (NLI y LLM reales; los AC usan adapters falsos) · ADR-47 (aceptado el 2026-10-29) · ↪ US-242 (extractor en abanico, FEAT-06c) · 🔗 Produce para: US-134 (orden de hasta 3 opciones, S4), US-130 (limitación "población no comparable"), US-071 (avisos que no bloquean) · 🔗 Medido en: US-132 (M-08.2, M-08.3, M-08.4, M-08.6) · M-08.1 (VM-3, mixto) → US-024 · DEC-14 (FEAT-T5c, S5) / FEAT-T5d (piloto) · 🔗 Regresión [RN-01] → US-064 · 🔗 Regresión [RN-06] → US-053
 **Valor:** el oncólogo encuentra evidencia, pero juzgar si la población del estudio se parece a su paciente le lleva tiempo y es fácil pasar por alto un criterio excluyente (P6, JTBD 4). Con esta Feature cada fuente trae, criterio a criterio, el valor del paciente, el del estudio y si coinciden, sin ningún puntaje clínico, y la opción hereda la aplicabilidad de su fuente más comparable.
 **Stories:** US-021 · DEC-11, US-121, US-122, US-123, US-124, US-125, US-126, US-241, US-243, US-244 (40 puntos: 23 en el S3 —criterios, cálculo y herencia: US-121…US-125— y 17 en el S4 —cierre de DEC-11 (1), tabla y UI con varios valores (US-126, 5), contrato y migración (US-241, 3), dominio de estados con listas (US-243, 5) y respaldo en la consulta (US-244, 3)—; reordenamiento del 2026-10-23 y refinamiento del S4, `[S4 resp. 3]`, `[S4 resp. 6]`)
@@ -64,7 +64,7 @@
 
 `FEAT-08b` · Sprint 4 *(escenario aceptado en el S3; F-20…F-24 aceptadas y firma en la sesión de oncólogos del S4, `[S4 resp. 8]`)* · Estimación **1** · — (decisión) · TBD-13 (aplicabilidad), R-24 · RN-28, RN-29 · Dueño: oncólogo asesor · ⛔ DEC-05 (cerrada en el Pre-S1) · 🔗 Bloquea: US-121 (contenido real), US-122 (reglas), US-243 (semántica de la lista), US-126 (UI de varios valores), US-134, US-247, US-233b, US-132, DEC-19 (US-031) · Registro: `docs/decisions/DEC-11-aplicabilidad-lista-de-poblacion.md`
 
-> **Decidido (usuario, 2026-10-29):** se aceptan las respuestas clínicas F-20…F-24 de la Demo 3 como escenario más probable de la semántica de la lista de población; la **firma formal** es en la sesión de oncólogos del S4 y, si cambia algo, el cambio va al catálogo JSON o a la configuración, no al código. Semántica: población inclusiva (varios grupos, el paciente es de uno) → Parcial (inclusiva); fragmento que mezcla poblaciones sin desagregar → Parcial (mezclada); Coincide solo si la población es específica del perfil; No coincide solo con restricción explícita; valor ausente sin restricción → Desconocido; unidad = fragmentos citados por la opción; hasta 3 valores con «ver más» `[S4 resp. 8]`. Valores en conflicto → Desconocido con `unknownReason = valores_en_conflicto`, ambos valores visibles con sus citas y el aviso «requiere validación clínica/patológica»; se respetan los 4 estados de RN-28 `[S4 resp. 9]`.
+> **Decidido (usuario, 2026-10-29):** se aceptan las respuestas clínicas F-20…F-24 de la Demo 3 como escenario más probable de la semántica de la lista de población; la **firma formal** es en la sesión de oncólogos del S4 y, si cambia algo, el cambio va al catálogo JSON o a la configuración, no al código. Semántica: población inclusiva (varios grupos, el paciente es de uno) → Parcial (inclusiva); fragmento que mezcla poblaciones sin desagregar → Parcial (mezclada); Coincide solo si la población es específica del perfil; No coincide solo con restricción explícita; valor ausente sin restricción → Desconocido; unidad = fragmentos citados por la opción; hasta 3 valores con «ver más» `[S4 resp. 8]`. Valores en conflicto → Desconocido con `unknownReason = valores_en_conflicto`, ambos valores visibles con sus citas y el aviso «requiere validación clínica/patológica»; se respetan los 4 estados de RN-28 `[S4 resp. 9]`. Fecha y tamaño de muestra de cada valor: se muestran si constan en el fragmento; si no, nada (asumido, F-23, `[S4 resp. 15]`).
 
 > **Reordenamiento (usuario, 2026-10-23):** S5 → S3. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
@@ -433,7 +433,9 @@ aplica antes de considerarla.
   muestra `estado_her2`, entonces se lee «? Desconocido · los fragmentos citados muestran
   valores distintos; se muestran ambos. Conviene contrastarlos con la fuente y con la
   validación clínica/patológica», con los dos valores y sus fragmentos (`ch-b4-1` y
-  `ch-b4-2`), sin que la UI elija uno. `[S4 resp. 9]` `[F-23]` `[RN-28]`
+  `ch-b4-2`), sin que la UI elija uno; junto a cada valor se muestran la fecha y el tamaño de
+  muestra si constan en su fragmento y, si no constan, nada (asumido, F-23,
+  `[S4 resp. 15]`). `[S4 resp. 9]` `[F-23]` `[RN-28]`
 - **AC-10 (borde · por qué es Parcial)** · Dadas las opciones O-P1 y O-P5 de A-M2, cuando
   se muestra `estado_menopausico`, entonces se lee «◐ Parcial · el estudio incluyó varios
   grupos, entre ellos el del paciente» en `doc-b1` y «◐ Parcial · el fragmento mezcla
@@ -575,7 +577,7 @@ parte ni por exclusión lo que la fuente no dice.
 - **AC-4 (borde · lista incompleta no excluye)** · Dados A-M3 y O-P3 (`postmenopausal
   women`, sin marcador de restricción), cuando se calcula, entonces `estado_menopausico`
   trae `status = desconocido` y `unknownReason = no_reportado_por_fuente`, nunca
-  `no_coincide`. `[S4 resp. 8]` `[F-21]` `[R2]`
+  `no_coincide`. `[S4 resp. 8]` `[F-21]` `[ADR47-R2]`
 - **AC-5 (borde · valores en conflicto)** · Dados A-M2 y O-P4, cuando se calcula, entonces
   `estado_her2` trae `status = desconocido`, `unknownReason = valores_en_conflicto`,
   `studyPopulationValues` con los dos valores y sus `chunkId` (`ch-b4-1`, `ch-b4-2`) y
@@ -587,11 +589,11 @@ parte ni por exclusión lo que la fuente no dice.
   entonces `receptores_hormonales` trae `status = desconocido`
   (`no_reportado_por_fuente`), `studyPopulationValues` conserva el valor con
   `scope = subgrupo` como contexto y el resumen de la fuente no lo cuenta como `coincide`
-  ni como `parcial`. `[S4 resp. 3]` `[S4 resp. 8]` `[R1]`
+  ni como `parcial`. `[S4 resp. 3]` `[S4 resp. 8]` `[ADR47-R1]`
 - **AC-7 (invariante · unidad = fragmento citado)** · Dados A-M2 y las opciones O-P7
   (`ch-b7-1`) y O-P8 (`ch-b7-2`) del mismo `doc-b7`, cuando se calcula cada una, entonces
   O-P7 da `estado_menopausico = coincide` y O-P8 `no_coincide`: ningún valor de un fragmento
-  que la opción no cita entra en su estado. `[S4 resp. 8]` `[F-22]` `[R18]`
+  que la opción no cita entra en su estado. `[S4 resp. 8]` `[F-22]` `[ADR47-R18]`
 - **AC-8 (invariante · tabla de casos y determinismo)** · Dada la tabla de casos de la
   función pura (exacto, inclusivo, mezclado —fragmento de `study_design` guía o revisión con
   varios valores—, rango solapado con las tablas del catálogo, `solo_subgrupo` de la forma

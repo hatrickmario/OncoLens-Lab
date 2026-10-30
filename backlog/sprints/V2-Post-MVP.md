@@ -102,6 +102,12 @@
 | US-184 | L1D-176 | El 100 % de las requests lleva un `traceId` que se correlaciona de `web` a `rag-orchestrator` | FEAT-PL5 | 6 `si-hay-capacidad` | 3 |
 | US-185 | L1D-177 | StrykerJS alcanza un *mutation score* ≥ 70 % sobre auth, autorización y cifrado, y la CI lo exige | FEAT-PL5 | 6 `si-hay-capacidad` | 5 |
 
+### Ideas sin historia ni ID (refinamiento del S4, 2026-10-29, `[S4 resp. 15]`)
+
+- «Si hay capacidad»: herramienta de revisión humana de los metadatos de población del corpus a escala (más allá de la muestra de US-118/US-233b).
+- «Si hay capacidad»: métricas de deriva de la extracción de población y runbook de reindexación selectiva por versión de prompt, modelo o catálogo (ADR-47).
+- «Si hay capacidad» / Post-MVP: extracción doble con comparación y calibración de confianza por señales deterministas (revisión prevista de ADR-47).
+
 ## Features y «si hay capacidad» sin milestone: retirar de Linear (revisión del 2026-10-23)
 
 Al 2026-10-23 el proyecto tenía 251 issues activas (límite del plan gratuito: 250). Las 29 historias Post-MVP de arriba ya están fuera de Linear; **las 51 de «si hay capacidad» no** (49 siguen activas y sin milestone, más L1D-118 y L1D-172 con milestone). Faltaban además estas Features, que no estaban registradas aquí. La interfaz de Linear solo ofrece **Delete** (el archivado es automático y solo para issues cerradas), así que se retiran borrándolas: queda en «Recently deleted» 30 días y después es **irreversible**.

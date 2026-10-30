@@ -54,3 +54,18 @@
 - [ ] Todas sus historias mergeadas o movidas con motivo.
 - [ ] Demo del recorrido con datos sintéticos en el cierre del sprint.
 - [ ] Trazabilidad regenerada (`backlog/03-trazabilidad.md`) sin huecos Bloqueantes.
+
+## Historia cerrada (cuenta para la meta de cierre del sprint)
+
+> Decidida por el usuario tras la Demo 3 (2026-10-29; `backlog/sprints/S3-cierre.md` §9.1, `backlog/sprints/S4-refinamiento.md` §8).
+
+Una historia comprometida cuenta como **cerrada** solo si cumple todo esto:
+
+- [ ] AC verificados.
+- [ ] CI en verde: 0 fallos, 0 pendientes, 0 alertas.
+- [ ] PR mergeado.
+- [ ] `tasks.md` conciliado: todo en `[x]` con evidencia, o con su ID destino.
+- [ ] Change archivado (`openspec archive`).
+- [ ] Issue de Linear en **Done**.
+
+**Meta de cada sprint** (a partir del S4): historias comprometidas cerradas ÷ historias comprometidas ≥ **0,80** al cierre. La línea base del S3 es ≈ 53 %, según la cifra del usuario. Una historia en In Review con tareas abiertas **no** cuenta como cerrada.
