@@ -21,9 +21,11 @@ from app.domain.aplicabilidad_tipos import (
     MotivoInterno,
     PoblacionDelEstudio,
     ProcedenciaDelDato,
+    ProyeccionDeEstado,
     ResumenDeEstados,
     TratamientoPrevioDelPaciente,
     ValorDelEstudio,
+    ValorDePoblacion,
 )
 from app.domain.applicability_order import contar_excluyentes_no_coincide
 from app.domain.criterios_aplicabilidad import CriterioDeAplicabilidad, DestinoDelCriterio
@@ -59,6 +61,21 @@ def valor_del_estudio(
         return ValorDelEstudio(elegibles[0].valor, solo_subgrupo=False)
     subgrupos = [v for v in criterio.valores if v.alcance == "subgrupo"]
     return ValorDelEstudio(subgrupos[0].valor, solo_subgrupo=True) if subgrupos else None
+
+
+# --- estado por criterio con la población en lista (US-243, ADR-47) ------------------------------------------------
+
+
+def estado_de_poblacion(
+    valores: Sequence[ValorDePoblacion],
+    valor_paciente: str | None,
+    criterio: CriterioDeAplicabilidad,
+    *,
+    fuente_mezcla: bool = False,
+) -> ProyeccionDeEstado:
+    """Estado visible, ``partialReason`` y causa de un criterio a partir de los valores de los fragmentos que cita la
+    opción y del valor del paciente (RN-28). Función pura: sin E/S, sin LLM, sin puntaje."""
+    raise NotImplementedError("no implementado")
 
 
 # --- valor del paciente (ADR-34 b, design D3) --------------------------------------------------------------------

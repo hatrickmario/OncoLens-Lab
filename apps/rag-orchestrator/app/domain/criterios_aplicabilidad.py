@@ -5,7 +5,7 @@ operativo de cada operador lo implementa el motor de aplicabilidad (US-122) sobr
 """
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Literal, Protocol
 
 
@@ -41,6 +41,19 @@ class ReglaDeAplicabilidad:
 
 
 @dataclass(frozen=True)
+class ReglasDePoblacion:
+    """Datos del catálogo para leer la población en lista de un criterio (US-243, RN-22, RN-27): nunca literales en código.
+
+    ``sinonimos`` lleva código canónico → textos que lo nombran (es/en); lo que no mapea queda ``no_mapeado``.
+    ``escala`` y ``grupos`` son la tabla ordenada de un criterio de rango (estadio): sin ella no hay regla de comparación."""
+
+    marcadores_de_restriccion: tuple[str, ...] = ()
+    sinonimos: Mapping[str, tuple[str, ...]] = field(default_factory=dict)
+    escala: tuple[str, ...] = ()
+    grupos: Mapping[str, tuple[str, ...]] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
 class CriterioDeAplicabilidad:
     clave: str
     tipo_de_cancer: str
@@ -51,6 +64,7 @@ class CriterioDeAplicabilidad:
     es_excluyente: bool
     regla: ReglaDeAplicabilidad
     estado_de_revision: EstadoDeRevision
+    poblacion: ReglasDePoblacion = field(default_factory=ReglasDePoblacion)
 
 
 class CriteriosDeAplicabilidad(Protocol):

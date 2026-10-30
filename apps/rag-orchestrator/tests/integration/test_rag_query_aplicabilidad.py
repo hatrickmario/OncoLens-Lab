@@ -72,7 +72,10 @@ def test_rag_query_trae_estado_her2_coincide_con_valores_copiados_cuando_se_recu
     )
     estadio = criterios["estadio"]
     assert (estadio["patientValue"], estadio["studyPopulationValue"]) == ("IIA", "I–III")
-    assert (estadio["status"], estadio["unknownReason"]) == ("desconocido", None)
+    assert (estadio["status"], estadio["unknownReason"]) == (
+        "desconocido",
+        "sin_regla_de_comparacion",
+    )
     linea = criterios["linea_tratamiento"]
     assert (linea["patientValue"], linea["status"], linea["unknownReason"]) == (
         "1",
