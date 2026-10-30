@@ -12,7 +12,7 @@ from app.domain.pares_del_reranker import recortar_a_pares_del_reranker
 @dataclass(frozen=True)
 class Candidato:
     chunk_id: str
-    similitud_dense: float
+    puntaje_de_recuperacion: float
 
 
 def _ids(candidatos: list[Candidato]) -> list[str]:

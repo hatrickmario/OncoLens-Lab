@@ -33,6 +33,7 @@ from app.application.generador_fallando_cerrado import GeneradorFallandoCerrado
 from app.application.ports import (
     ApplicabilityTextProposer,
     CatalogoClinico,
+    CandidatoDeRecuperacion,
     ChunkEncontrado,
     ChunkEncontradoSparse,
     ChunkSearch,
@@ -395,16 +396,21 @@ class RAGOrchestratorService:
 
     async def _recuperar(
         self, trace_id: str, solicitud: RagQueryInternalRequest, filtro: str
-    ) -> list[ChunkEncontrado]:
+    ) -> list[CandidatoDeRecuperacion]:
         """Candidatos para el reranker: dense; en modo híbrido, dense + sparse fusionados (RN-05: un solo filtro)."""
         dense = await self._recuperar_dense(trace_id, solicitud, filtro)
         if self._parametros.retrieval_mode is RetrievalMode.dense:
-            # La similitud dense solo elige candidatos: nunca es relevance_score ni se compara con el umbral (RN-03).
-            return dense[: self._parametros.retrieval_top_k]
+            return self._recortar_a_top_k(dense)
         sparse = await self._recuperar_sparse(trace_id, solicitud.query, filtro)
-        fusionados = self._fusionar_ramas(dense, sparse)
-        self._registrar_recuperacion_hibrida(trace_id, len(dense), len(sparse), len(fusionados))
-        return fusionados
+        recortados = self._recortar_a_top_k(self._unir_ramas(dense, sparse))
+        self._registrar_recuperacion_hibrida(trace_id, len(dense), len(sparse), len(recortados))
+        return recortados
+
+    def _recortar_a_top_k(
+        self, ordenados: Sequence[CandidatoDeRecuperacion]
+    ) -> list[CandidatoDeRecuperacion]:
+        """Los ``RETRIEVAL_TOP_K`` primeros de una lista ya ordenada por puntaje de recuperación (nunca relevance_score)."""
+        return list(ordenados[: self._parametros.retrieval_top_k])
 
     def _registrar_recuperacion_hibrida(
         self, trace_id: str, dense: int, sparse: int, fusionados: int
@@ -425,22 +431,28 @@ class RAGOrchestratorService:
 
     async def _recuperar_dense(
         self, trace_id: str, solicitud: RagQueryInternalRequest, filtro: str
-    ) -> list[ChunkEncontrado]:
+    ) -> list[CandidatoDeRecuperacion]:
         """Búsqueda dense con el *embedding* de la pregunta y el del resumen del contexto; une sin repetir chunks."""
         textos = (solicitud.query, resumen_del_contexto_clinico(solicitud.clinicalContext))
         encontrados: dict[str, ChunkEncontrado] = {}
         for texto in textos:
             for chunk in await self._buscar_cercanos_a(trace_id, texto, filtro):
                 encontrados.setdefault(chunk.chunk_id, chunk)
-        return sorted(encontrados.values(), key=lambda c: (-c.similitud_dense, c.chunk_id))
+        candidatos = [
+            CandidatoDeRecuperacion(c.chunk_id, c.document_id, c.chunk_text, c.similitud_dense)
+            for c in encontrados.values()
+        ]
+        return sorted(candidatos, key=lambda c: (-c.puntaje_de_recuperacion, c.chunk_id))
 
     async def _recuperar_sparse(
         self, trace_id: str, pregunta: str, filtro: str
     ) -> list[ChunkEncontradoSparse]:
         """Búsqueda sparse solo con la pregunta (el resumen del contexto aportaría léxico común, no discriminante)."""
         codificador, buscador = self._embedder_sparse, self._buscador_sparse
-        assert codificador is not None  # garantizado por el constructor en modo híbrido
-        assert buscador is not None
+        if codificador is None or buscador is None:
+            raise RuntimeError(
+                "la rama sparse se pidió sin codificador ni búsqueda (el constructor lo impide)"
+            )
         borde = self._invocar_borde_fallando_cerrado
         vector = await borde(trace_id, "embeddings", codificador.embeber_sparse, pregunta)
         return await borde(
@@ -452,32 +464,31 @@ class RAGOrchestratorService:
             filtro,
         )
 
-    def _fusionar_ramas(
-        self, dense: Sequence[ChunkEncontrado], sparse: Sequence[ChunkEncontradoSparse]
-    ) -> list[ChunkEncontrado]:
-        """Fusiona las ramas con la regla de dominio y recorta a ``retrieval_top_k``.
+    def _unir_ramas(
+        self, dense: Sequence[CandidatoDeRecuperacion], sparse: Sequence[ChunkEncontradoSparse]
+    ) -> list[CandidatoDeRecuperacion]:
+        """Fusiona las ramas con la regla de dominio; el puntaje de cada candidato pasa a ser el de la fusión.
 
-        El puntaje de la fusión sustituye a ``similitud_dense`` como puntaje de recuperación (elige candidatos, no es
-        relevancia, RN-03): así el corte previo al reranker respeta el orden de la fusión.
+        El puntaje fusionado solo elige y ordena candidatos (no es relevancia, RN-03): así el corte previo al reranker
+        respeta el orden de la fusión, también con chunks que solo halló la rama sparse.
         """
         parametros = self._parametros
         por_id = {c.chunk_id: c for c in dense}
         for chunk in sparse:
             por_id.setdefault(
                 chunk.chunk_id,
-                ChunkEncontrado(chunk.chunk_id, chunk.document_id, chunk.chunk_text, 0.0),
+                CandidatoDeRecuperacion(
+                    chunk.chunk_id, chunk.document_id, chunk.chunk_text, chunk.similitud_sparse
+                ),
             )
         fusionados = fusionar_candidatos(
-            [CandidatoDeRama(c.chunk_id, c.similitud_dense) for c in dense],
+            [CandidatoDeRama(c.chunk_id, c.puntaje_de_recuperacion) for c in dense],
             [CandidatoDeRama(c.chunk_id, c.similitud_sparse) for c in sparse],
             parametros.retrieval_fusion,
             rrf_k=parametros.rrf_k,
             peso_sparse=parametros.peso_sparse,
         )
-        return [
-            replace(por_id[f.chunk_id], similitud_dense=f.puntaje)
-            for f in fusionados[: parametros.retrieval_top_k]
-        ]
+        return [replace(por_id[f.chunk_id], puntaje_de_recuperacion=f.puntaje) for f in fusionados]
 
     async def _buscar_cercanos_a(
         self, trace_id: str, texto: str, filtro: str
@@ -494,8 +505,8 @@ class RAGOrchestratorService:
         )
 
     def _cortar_a_pares_del_reranker(
-        self, trace_id: str, candidatos: Sequence[ChunkEncontrado]
-    ) -> list[ChunkEncontrado]:
+        self, trace_id: str, candidatos: Sequence[CandidatoDeRecuperacion]
+    ) -> list[CandidatoDeRecuperacion]:
         """Decisión 82: al reranker solo van los ``RERANKER_MAX_PAIRS`` mejores por puntaje de recuperación.
 
         Se registran solo recuentos (recibidos, descartados, enviados): nunca ids ni texto de chunk.
@@ -514,7 +525,7 @@ class RAGOrchestratorService:
         return enviados
 
     async def _reranquear(
-        self, trace_id: str, pregunta: str, candidatos: Sequence[ChunkEncontrado]
+        self, trace_id: str, pregunta: str, candidatos: Sequence[CandidatoDeRecuperacion]
     ) -> list[ChunkPuntuado]:
         """Puntúa todos los candidatos y conserva los ``RERANK_TOP_N`` de mayor `relevance_score` (orden estable)."""
         if not candidatos:

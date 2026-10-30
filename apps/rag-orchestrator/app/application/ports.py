@@ -82,8 +82,7 @@ class ChunkEncontrado:
     document_id: str
     chunk_text: str
     similitud_dense: float
-    """Puntaje de recuperación: la similitud dense de Milvus (``MILVUS_DENSE_METRIC_TYPE``) o, en modo híbrido, el puntaje
-    ya fusionado de las dos ramas. NO es ``relevance_score`` (RN-03): solo elige candidatos, no ordena opciones."""
+    """Similitud dense de Milvus según ``MILVUS_DENSE_METRIC_TYPE``. NO es ``relevance_score`` (RN-03): no ordena opciones."""
 
 
 class ChunkSearch(Protocol):
@@ -94,6 +93,17 @@ class ChunkSearch(Protocol):
     ) -> list[ChunkEncontrado]:
         """``filtro`` viene de ``expresion_vigente_del_tipo()``; ausente, solo ``is_current == true`` (RN-05)."""
         ...
+
+
+@dataclass(frozen=True)
+class CandidatoDeRecuperacion:
+    """Un candidato para el reranker con su puntaje de recuperación: la similitud dense o, en modo híbrido, el puntaje
+    fusionado de las dos ramas. NO es ``relevance_score`` (RN-03): solo elige y recorta candidatos."""
+
+    chunk_id: str
+    document_id: str
+    chunk_text: str
+    puntaje_de_recuperacion: float
 
 
 @dataclass(frozen=True)
@@ -170,6 +180,16 @@ class QuerySparseEncoder(Protocol):
     def embeber_sparse(self, texto: str) -> Mapping[int, float]: ...
 
 
+class CandidatoParaReranker(Protocol):
+    """Lo único que el reranker lee de un candidato: su identificador y su texto."""
+
+    @property
+    def chunk_id(self) -> str: ...
+
+    @property
+    def chunk_text(self) -> str: ...
+
+
 class Reranker(Protocol):
     """Puntúa candidatos contra la pregunta. Devuelve un puntaje por candidato, en el mismo orden y ya en [0, 1] (RN-03).
 
@@ -181,7 +201,9 @@ class Reranker(Protocol):
         """Versión exacta del reranker, para ``meta.rerankerModel`` (IA-07)."""
         ...
 
-    def puntuar(self, pregunta: str, candidatos: Sequence[ChunkEncontrado]) -> list[float]: ...
+    def puntuar(
+        self, pregunta: str, candidatos: Sequence[CandidatoParaReranker]
+    ) -> list[float]: ...
 
 
 @dataclass(frozen=True)
