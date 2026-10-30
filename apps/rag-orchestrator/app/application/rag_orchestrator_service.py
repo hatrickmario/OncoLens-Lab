@@ -32,6 +32,7 @@ from app.application.ports import (
     ApplicabilityTextProposer,
     CatalogoClinico,
     ChunkEncontrado,
+    ChunkEncontradoSparse,
     ChunkSearch,
     Clock,
     CorpusCatalogReader,
@@ -58,7 +59,11 @@ from app.domain.citations import (
     contar_por_motivo,
     validar_citas,
 )
-from app.domain.fusion_de_candidatos import EstrategiaDeFusion
+from app.domain.fusion_de_candidatos import (
+    CandidatoDeRama,
+    EstrategiaDeFusion,
+    fusionar_candidatos,
+)
 from app.domain.normalizacion_puntaje import validar_puntaje_normalizado
 from app.domain.option_selection import OpcionConRelevancia, recortar_a_max_opciones
 from app.domain.pares_del_reranker import recortar_a_pares_del_reranker
@@ -149,6 +154,10 @@ class RAGOrchestratorService:
         self._detector_idioma = detector_idioma
         self._embedder = embedder
         self._buscador = buscador
+        if parametros.retrieval_mode is RetrievalMode.hibrida and (
+            buscador_sparse is None or embedder_sparse is None
+        ):
+            raise ValueError("RETRIEVAL_MODE=hibrida exige la búsqueda y el codificador sparse")
         self._buscador_sparse = buscador_sparse
         self._embedder_sparse = embedder_sparse
         self._reranker = reranker
@@ -369,15 +378,69 @@ class RAGOrchestratorService:
     async def _recuperar(
         self, trace_id: str, solicitud: RagQueryInternalRequest, filtro: str
     ) -> list[ChunkEncontrado]:
+        """Candidatos para el reranker: dense; en modo híbrido, dense + sparse fusionados (RN-05: un solo filtro)."""
+        dense = await self._recuperar_dense(trace_id, solicitud, filtro)
+        if self._parametros.retrieval_mode is RetrievalMode.dense:
+            # La similitud dense solo elige candidatos: nunca es relevance_score ni se compara con el umbral (RN-03).
+            return dense[: self._parametros.retrieval_top_k]
+        sparse = await self._recuperar_sparse(trace_id, solicitud.query, filtro)
+        return self._fusionar_ramas(dense, sparse)
+
+    async def _recuperar_dense(
+        self, trace_id: str, solicitud: RagQueryInternalRequest, filtro: str
+    ) -> list[ChunkEncontrado]:
         """Búsqueda dense con el *embedding* de la pregunta y el del resumen del contexto; une sin repetir chunks."""
         textos = (solicitud.query, resumen_del_contexto_clinico(solicitud.clinicalContext))
         encontrados: dict[str, ChunkEncontrado] = {}
         for texto in textos:
             for chunk in await self._buscar_cercanos_a(trace_id, texto, filtro):
                 encontrados.setdefault(chunk.chunk_id, chunk)
-        # La similitud dense solo elige candidatos: nunca es relevance_score ni se compara con el umbral (RN-03).
-        ordenados = sorted(encontrados.values(), key=lambda c: (-c.similitud_dense, c.chunk_id))
-        return ordenados[: self._parametros.retrieval_top_k]
+        return sorted(encontrados.values(), key=lambda c: (-c.similitud_dense, c.chunk_id))
+
+    async def _recuperar_sparse(
+        self, trace_id: str, pregunta: str, filtro: str
+    ) -> list[ChunkEncontradoSparse]:
+        """Búsqueda sparse solo con la pregunta (el resumen del contexto aportaría léxico común, no discriminante)."""
+        codificador, buscador = self._embedder_sparse, self._buscador_sparse
+        assert codificador is not None  # garantizado por el constructor en modo híbrido
+        assert buscador is not None
+        borde = self._invocar_borde_fallando_cerrado
+        vector = await borde(trace_id, "embeddings", codificador.embeber_sparse, pregunta)
+        return await borde(
+            trace_id,
+            "busqueda",
+            buscador.search_sparse,
+            vector,
+            self._parametros.retrieval_top_k,
+            filtro,
+        )
+
+    def _fusionar_ramas(
+        self, dense: Sequence[ChunkEncontrado], sparse: Sequence[ChunkEncontradoSparse]
+    ) -> list[ChunkEncontrado]:
+        """Fusiona las ramas con la regla de dominio y recorta a ``retrieval_top_k``.
+
+        El puntaje de la fusión sustituye a ``similitud_dense`` como puntaje de recuperación (elige candidatos, no es
+        relevancia, RN-03): así el corte previo al reranker respeta el orden de la fusión.
+        """
+        parametros = self._parametros
+        por_id = {c.chunk_id: c for c in dense}
+        for chunk in sparse:
+            por_id.setdefault(
+                chunk.chunk_id,
+                ChunkEncontrado(chunk.chunk_id, chunk.document_id, chunk.chunk_text, 0.0),
+            )
+        fusionados = fusionar_candidatos(
+            [CandidatoDeRama(c.chunk_id, c.similitud_dense) for c in dense],
+            [CandidatoDeRama(c.chunk_id, c.similitud_sparse) for c in sparse],
+            parametros.retrieval_fusion,
+            rrf_k=parametros.rrf_k,
+            peso_sparse=parametros.peso_sparse,
+        )
+        return [
+            replace(por_id[f.chunk_id], similitud_dense=f.puntaje)
+            for f in fusionados[: parametros.retrieval_top_k]
+        ]
 
     async def _buscar_cercanos_a(
         self, trace_id: str, texto: str, filtro: str
