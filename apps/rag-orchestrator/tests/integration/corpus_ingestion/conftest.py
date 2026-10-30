@@ -66,6 +66,13 @@ class RegistroObservado:
     sparse: dict[int, float]
 
 
+@dataclass(frozen=True)
+class PoblacionObservada:
+    population_criteria: dict[str, Any]
+    population_form: str
+    metadata_source: str
+
+
 class Observador(Protocol):
     """Lo que un test puede preguntar al catálogo y al almacén, sea cual sea su implementación."""
 
@@ -87,6 +94,10 @@ class Observador(Protocol):
 
     def superseded_at_de(self, clave: str) -> list[datetime | None]:
         """``superseded_at`` de cada fila del catálogo cuyo ``document_id`` empieza por ``<clave>@``."""
+        ...
+
+    def poblacion_de(self, clave: str) -> PoblacionObservada:
+        """``population_criteria``, ``population_form`` y ``metadata_source`` de la fila VIGENTE de ``<clave>``."""
         ...
 
 
@@ -140,6 +151,16 @@ class ObservadorEnMemoria:
             for i, r in self._catalogo.documentos.items()
             if i.split("@")[0] == clave
         ]
+
+    def poblacion_de(self, clave: str) -> PoblacionObservada:
+        registro = next(
+            r
+            for i, r in self._catalogo.documentos.items()
+            if i.split("@")[0] == clave and r.is_current
+        )
+        return PoblacionObservada(
+            dict(registro.population_criteria), registro.population_form, registro.metadata_source
+        )
 
 
 class ObservadorReal:
@@ -210,6 +231,15 @@ class ObservadorReal:
         )
         with self._motor.connect() as conexion:
             return [f[0] for f in conexion.execute(consulta, {"p": f"{clave}@"})]
+
+    def poblacion_de(self, clave: str) -> PoblacionObservada:
+        consulta = text(
+            "SELECT population_criteria, population_form, metadata_source FROM corpus.corpus_document "
+            "WHERE starts_with(document_id, :p) AND is_current"
+        )
+        with self._motor.connect() as conexion:
+            criterios, forma, origen = conexion.execute(consulta, {"p": f"{clave}@"}).one()
+        return PoblacionObservada(dict(criterios), forma, origen)
 
 
 @dataclass

@@ -100,6 +100,9 @@ class RegistroDeDocumento:
     # Nombres de los campos de ``population_criteria``/escalares que el LLM extrajo y el NLI verificó (no los declarados por el
     # manifiesto). Decidido (usuario, 2026-10-24): la muestra de M-08.4 se construye solo desde estos.
     extracted_fields: tuple[str, ...] = ()
+    # Forma de ``population_criteria`` (migración 0005, US-241): ``antigua`` = un valor por criterio; ``lista`` = lista
+    # acotada por criterio (US-242). Informativa: el lector decide por la forma del JSON.
+    population_form: str = "antigua"
 
 
 @dataclass(frozen=True)

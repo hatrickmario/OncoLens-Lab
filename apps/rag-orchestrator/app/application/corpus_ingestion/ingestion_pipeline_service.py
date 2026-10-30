@@ -15,6 +15,10 @@ from contextlib import contextmanager
 from datetime import date
 
 from app.application.corpus_ingestion.ports import ResolutorDeMetadatos, SparsePassageEncoder
+from app.application.corpus_metadata.poblacion_puertos import (
+    AlmacenDePoblacion,
+    ExtractorDePoblacion,
+)
 from app.application.corpus_ingestion.reporte import (
     Estado,
     ReporteDeIngesta,
@@ -95,7 +99,11 @@ class IngestionPipelineService:
         tamano_de_chunk: int,
         solape_de_chunk: int,
         fecha_de_corte: date,
+        extractor_de_poblacion: ExtractorDePoblacion | None = None,
+        almacen_de_poblacion: AlmacenDePoblacion | None = None,
     ) -> None:
+        self._extractor_de_poblacion = extractor_de_poblacion
+        self._almacen_de_poblacion = almacen_de_poblacion
         self._catalogo = catalogo
         self._almacen_de_chunks = almacen_de_chunks
         self._embedder = embedder

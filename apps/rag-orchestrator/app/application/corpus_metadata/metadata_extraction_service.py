@@ -46,7 +46,15 @@ FALLOS_QUE_DEJAN_PENDIENTE = (FalloDelLlm, FalloDeInferencia, SalidaInvalida)
 
 
 class MetadataExtractionService:
-    def __init__(self, *, llm: LlmClient, nli: NliClassifier, umbral_nli: float) -> None:
+    def __init__(
+        self,
+        *,
+        llm: LlmClient,
+        nli: NliClassifier,
+        umbral_nli: float,
+        incluir_poblacion: bool = True,
+    ) -> None:
+        self._incluir_poblacion = incluir_poblacion
         self._llm = llm
         self._nli = nli
         self._umbral_nli = umbral_nli

@@ -44,3 +44,4 @@ class MetadatosResueltos:
     metadata_source: str
     campos_verificados: tuple[CampoDeMetadato, ...] = ()
     fallo: FalloDeMetadatos | None = None
+    population_form: str = "antigua"
