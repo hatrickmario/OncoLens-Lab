@@ -13,8 +13,8 @@ import pytest
 
 from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
 from tests.support.aplicabilidad import (
+    CRITERIOS_DE_DOC_A1,
     FICHAS_FX08BA,
-    POBLACIONES_FX08BA,
     GeneradorDeAplicabilidad,
     catalogo_de_test_sin_criterios,
     entorno_de_aplicabilidad,
@@ -23,6 +23,7 @@ from tests.support.aplicabilidad import (
     solicitud_a_m1,
 )
 from tests.support.catalogo_aplicabilidad import APL_1_0_0, APL_1_0_1
+from tests.support.poblacion_lista import poblacion_guardada
 from tests.support.recuperacion import CatalogoFalso
 
 RELEVANCIA_ALTA = 0.90
@@ -142,9 +143,8 @@ def _paciente_con(
 
 
 def _poblacion_con_receptores() -> dict[str, PoblacionDelEstudio]:
-    base = POBLACIONES_FX08BA["doc-a1"]
-    criterios = {**base.criterios, "biomarcadores": {"receptores_hormonales": "positivo"}}
-    return {"doc-a1": PoblacionDelEstudio(base.metadata_source, criterios)}
+    criterios = {**CRITERIOS_DE_DOC_A1, "biomarcadores": {"receptores_hormonales": "positivo"}}
+    return {"doc-a1": poblacion_guardada("fuente_estructurada", criterios)}
 
 
 @pytest.mark.ac("US-122", 2)

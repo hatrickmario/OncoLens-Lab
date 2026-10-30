@@ -23,7 +23,9 @@ from app.application.chunk_citable import ChunkCitable
 from app.application.contexto_del_paciente import contexto_del_paciente
 from app.application.ports import Clock, CoberturaDePoblacion, LectorDeCoberturaDePoblacion
 from app.application.verificacion_de_soporte import VerificadorDeSoporte
-from app.domain.aplicabilidad_tipos import CriterioEvaluado, PoblacionDelEstudio
+from app.config.settings import POBLACION_MAX_VALORES_POR_CRITERIO_INICIAL
+from app.domain.aplicabilidad_tipos import CriterioEvaluado
+from app.domain.poblacion_del_estudio import poblacion_desde_lo_guardado
 from app.domain.citations import FichaDeFuente
 from app.domain.cobertura_poblacion import proporcion_con_criterios
 from app.domain.relevance import ChunkPuntuado
@@ -148,10 +150,12 @@ async def _evaluar_par(
         contexto,
         mejor_chunk_por_documento(citables),
         {
-            fuente.document_id: PoblacionDelEstudio(
-                fuente.metadata_source, fuente.population_criteria
+            fuente.document_id: poblacion_desde_lo_guardado(
+                fuente.metadata_source,  # type: ignore[arg-type]
+                fuente.population_criteria,
+                POBLACION_MAX_VALORES_POR_CRITERIO_INICIAL,
             )
-        },  # type: ignore[arg-type]
+        },
     )
     textual = _servicio_textual(fuente, guion, servicio, terminos, umbral_nli, reloj)
     completa = await textual.completar(

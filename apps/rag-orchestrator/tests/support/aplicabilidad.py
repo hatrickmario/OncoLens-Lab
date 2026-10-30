@@ -27,6 +27,7 @@ from app.domain.citations import FichaDeFuente, OpcionGenerada
 from app.domain.criterios_aplicabilidad import CriteriosDeAplicabilidad
 from app.infrastructure.catalogo_clinico.aplicabilidad import cargar_criterios_de_aplicabilidad
 from app.schemas.generated.models import RagQueryInternalRequest
+from tests.support.poblacion_lista import poblacion_guardada
 from tests.support.catalogo_aplicabilidad import APL_1_0_0
 from tests.support.recuperacion import (
     Q_HER2,
@@ -78,28 +79,28 @@ def _poblacion_de_la_semilla() -> dict[str, object]:
     }
 
 
+CRITERIOS_DE_DOC_A1: dict[str, object] = {
+    **_poblacion_de_la_semilla(),
+    "biomarcadores": {"her2": "positivo"},
+    "estadio": "I–III",
+    "ecog": "0-1",
+}
+"""``population_criteria`` de ``doc-a1`` en la forma antigua (un valor por criterio): FX-08b-c la conserva para el lector doble."""
+
 POBLACIONES_FX08BA: dict[str, PoblacionDelEstudio] = {
     # doc-a2: guía sin población extraída (US-123): la ingesta no pudo estructurarla y la deja ``pendiente``.
-    "doc-a2": PoblacionDelEstudio("pendiente", _poblacion_de_la_semilla()),
-    "doc-a1": PoblacionDelEstudio(
-        "fuente_estructurada",
-        {
-            **_poblacion_de_la_semilla(),
-            "biomarcadores": {"her2": "positivo"},
-            "estadio": "I–III",
-            "ecog": "0-1",
-        },
-    ),
-    "doc-a3": PoblacionDelEstudio("fuente_estructurada", _poblacion_de_la_semilla()),
-    "doc-a4": PoblacionDelEstudio(
+    "doc-a2": poblacion_guardada("pendiente", _poblacion_de_la_semilla()),
+    "doc-a1": poblacion_guardada("fuente_estructurada", CRITERIOS_DE_DOC_A1),
+    "doc-a3": poblacion_guardada("fuente_estructurada", _poblacion_de_la_semilla()),
+    "doc-a4": poblacion_guardada(
         "fuente_estructurada",
         {**_poblacion_de_la_semilla(), "biomarcadores": {"her2": "negativo"}},
     ),
-    "doc-a5": PoblacionDelEstudio(
+    "doc-a5": poblacion_guardada(
         "fuente_estructurada",
         {**_poblacion_de_la_semilla(), "ecog": {"valor": "0-1", "alcance": "subgrupo"}},
     ),
-    "doc-a6": PoblacionDelEstudio("pendiente", _poblacion_de_la_semilla()),
+    "doc-a6": poblacion_guardada("pendiente", _poblacion_de_la_semilla()),
 }
 
 DOCUMENTOS_FX08BA = ("doc-a1", "doc-a2", "doc-a3", "doc-a4", "doc-a5", "doc-a6")
@@ -298,7 +299,7 @@ def entorno_de_aplicabilidad(
 POBLACIONES_FX08BB: dict[str, PoblacionDelEstudio] = {
     **POBLACIONES_FX08BA,
     # doc-a6: «ECA estructurado con la misma población que doc-a1»; en FX-08b-a sigue ``pendiente`` y no se toca.
-    "doc-a6": PoblacionDelEstudio("fuente_estructurada", POBLACIONES_FX08BA["doc-a1"].criterios),
+    "doc-a6": POBLACIONES_FX08BA["doc-a1"],
 }
 RELEVANCIAS_FX08BB = {"doc-a4": 0.92, "doc-a1": 0.70, "doc-a6": 0.60}
 """Puntajes del reranker falso de FX-08b-b: ``ch-a4-1`` 0,92 · ``ch-a1-1`` 0,70 · ``ch-a6-1`` 0,60."""

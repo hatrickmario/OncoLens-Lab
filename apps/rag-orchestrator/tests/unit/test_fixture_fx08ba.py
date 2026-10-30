@@ -2,10 +2,11 @@
 
 import asyncio
 
-from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
+from app.domain.aplicabilidad_tipos import PoblacionDelEstudio, ValorDePoblacion
 from app.domain.applicability_text import FuenteParaProponer
 from app.schemas.generated.models import RagQueryInternalRequest
 from tests.support.aplicabilidad import (
+    CRITERIOS_DE_DOC_A1,
     CORPUS_FX08BA,
     DOCUMENTOS_FX08BA,
     FICHAS_FX08BA,
@@ -37,9 +38,14 @@ def test_fixture_fx08ba_usa_la_forma_real_de_l1d_117_cuando_siembra_biomarcadore
     doc_a1 = POBLACIONES_FX08BA["doc-a1"]
     doc_a3 = POBLACIONES_FX08BA["doc-a3"]
 
-    assert doc_a1.criterios["biomarcadores"] == {"her2": "positivo"}
-    assert doc_a3.criterios["biomarcadores"] == "no_disponible"
-    assert POBLACIONES_FX08BA["doc-a5"].criterios["ecog"] == {"valor": "0-1", "alcance": "subgrupo"}
+    assert CRITERIOS_DE_DOC_A1["biomarcadores"] == {"her2": "positivo"}
+    assert doc_a1.criterios["biomarcadores.her2"].valores == (
+        ValorDePoblacion("positivo", "elegibilidad", None),
+    )
+    assert doc_a3.criterios["biomarcadores"].valores == ()
+    assert POBLACIONES_FX08BA["doc-a5"].criterios["ecog"].valores == (
+        ValorDePoblacion("0-1", "subgrupo", None),
+    )
     assert POBLACIONES_FX08BA["doc-a6"].metadata_source == "pendiente"
 
 

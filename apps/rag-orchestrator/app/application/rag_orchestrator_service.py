@@ -18,6 +18,7 @@ from typing import TypeVar
 from app.application.aplicabilidad import (
     AplicabilidadDeFuente,
     ApplicabilityService,
+    formas_invalidas_para_el_log,
     mejor_chunk_por_documento,
     recuentos_para_el_log,
 )
@@ -26,6 +27,7 @@ from app.application.aplicabilidad_de_opciones import con_aplicabilidad_de_cada_
 from app.application.catalogo_exigido import exigir_catalogo_de_la_solicitud
 from app.application.chunk_citable import ChunkCitable
 from app.application.contexto_del_paciente import contexto_del_paciente
+from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
 from app.application.errores import RecuperacionNoDisponibleError, TipoCancerNoRegistradoError
 from app.application.generador_fallando_cerrado import GeneradorFallandoCerrado
 from app.application.ports import (
@@ -281,6 +283,7 @@ class RAGOrchestratorService:
         poblaciones = await self._invocar_borde_fallando_cerrado(
             trace_id, "poblacion", self._catalogo.poblacion_por_documento, set(mejores)
         )
+        self._registrar_formas_invalidas(trace_id, poblaciones)
         fuentes = self._aplicabilidad.evaluar(
             tipo, contexto_del_paciente(solicitud.clinicalContext), mejores, poblaciones
         )
@@ -296,6 +299,20 @@ class RAGOrchestratorService:
         return replace(
             recuperacion, meta=recuperacion.meta.model_copy(update={"promptVersion": version})
         )
+
+    @staticmethod
+    def _registrar_formas_invalidas(
+        trace_id: str, poblaciones: Mapping[str, PoblacionDelEstudio]
+    ) -> None:
+        """Un criterio de población con forma inválida queda sin valor y el análisis sigue (RN-26). Criterio, ``chunkId`` y
+        ``traceId``; nunca el valor, el texto del fragmento, el prompt ni la salida del LLM (RN-14)."""
+        for criterio, chunk_id in formas_invalidas_para_el_log(poblaciones):
+            logger.warning(
+                "event=poblacion_forma_invalida criterio=%s chunkId=%s traceId=%s",
+                criterio,
+                chunk_id or "sin_chunk",
+                trace_id,
+            )
 
     def _registrar_aplicabilidad(
         self, trace_id: str, fuentes: Sequence[AplicabilidadDeFuente], inicio: datetime

@@ -28,8 +28,6 @@ from app.domain.aplicabilidad_tipos import (
 from app.domain.applicability_order import contar_excluyentes_no_coincide
 from app.domain.criterios_aplicabilidad import CriterioDeAplicabilidad, DestinoDelCriterio
 
-VALOR_NO_DISPONIBLE = "no_disponible"
-ALCANCE_SUBGRUPO = "subgrupo"
 _SEPARADORES_DE_LISTA = re.compile(r"[,;]")
 _ENTERO = re.compile(r"\d+")
 _RANGO_DE_ENTEROS = re.compile(r"(\d+)\s*[-–]\s*(\d+)")
@@ -50,27 +48,17 @@ def valor_del_estudio(
 ) -> ValorDelEstudio | None:
     """Copia literal del valor bajo ``studyKey`` (clave ``a`` o subclave ``a.b``), o ``None`` sin inferir.
 
-    Admite una cadena con texto, o un objeto ``{"valor", "alcance"}`` (Q2). ``no_disponible``, la ausencia y cualquier
-    otra forma (incluida una subclave pedida sobre una cadena) son ``None``."""
-    raiz, _, subclave = clave_de_estudio.partition(".")
-    valor = poblacion.criterios.get(raiz)
-    if subclave:
-        valor = valor.get(subclave) if isinstance(valor, Mapping) else None
-    return _valor_leido(valor)
-
-
-def _valor_leido(valor: object) -> ValorDelEstudio | None:
-    if isinstance(valor, str):
-        return _con_texto(valor, solo_subgrupo=False)
-    if isinstance(valor, Mapping) and isinstance(valor.get("valor"), str):
-        return _con_texto(valor["valor"], solo_subgrupo=valor.get("alcance") == ALCANCE_SUBGRUPO)
-    return None
-
-
-def _con_texto(texto: str, *, solo_subgrupo: bool) -> ValorDelEstudio | None:
-    if not texto or texto == VALOR_NO_DISPONIBLE:
+    Del criterio, el primer valor de elegibilidad; si solo hay de subgrupo, el primero de ellos marcado
+    ``solo_subgrupo`` (Q2); los de mención no cuentan (ADR-47). Pendiente, inválido o ausente: ``None``. El cálculo por
+    fragmento citado y sus reglas llegan con US-243: aquí solo se consume la lista."""
+    criterio = poblacion.criterios.get(clave_de_estudio)
+    if criterio is None:
         return None
-    return ValorDelEstudio(texto, solo_subgrupo)
+    elegibles = [v for v in criterio.valores if v.alcance == "elegibilidad"]
+    if elegibles:
+        return ValorDelEstudio(elegibles[0].valor, solo_subgrupo=False)
+    subgrupos = [v for v in criterio.valores if v.alcance == "subgrupo"]
+    return ValorDelEstudio(subgrupos[0].valor, solo_subgrupo=True) if subgrupos else None
 
 
 # --- valor del paciente (ADR-34 b, design D3) --------------------------------------------------------------------
