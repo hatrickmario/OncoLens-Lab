@@ -33,25 +33,24 @@ from app.application.corpus_metadata.poblacion_puertos import (
 )
 from app.application.ports import FalloDeInferencia, FalloDelLlm, NliClassifier
 from app.domain.corpus_metadata.poblacion_abanico import (
+    Depurado,
     ValorPropuesto,
     pares_de_verificacion,
-)
-from app.domain.corpus_metadata.poblacion_abanico import (
-    Depurado,
     rechazar_relleno,
     validar_chunk,
     verificar_nli,
 )
-from app.domain.corpus_metadata.poblacion_seleccion import aplicar_tope, deduplicar
 from app.domain.corpus_metadata.poblacion_contadores import ContadoresDePoblacion
 from app.domain.corpus_metadata.poblacion_escritura import (
     FORMA_LISTA,
     VersionesDeExtraccion,
     criterios_con_valores,
+    criterios_reutilizables,
     exigir_forma_de_lista,
     lista_de_criterio,
     marca_pendiente,
 )
+from app.domain.corpus_metadata.poblacion_seleccion import aplicar_tope, deduplicar
 from app.domain.criterios_aplicabilidad import CriterioDeAplicabilidad, CriteriosDeAplicabilidad
 
 logger = logging.getLogger(__name__)
@@ -160,7 +159,14 @@ class PopulationFanoutExtractor:
     def _reutilizables(
         self, guardado: PoblacionGuardada | None, criterios: Sequence[CriterioDeAplicabilidad]
     ) -> frozenset[str]:
-        return frozenset()
+        if guardado is None:
+            return frozenset()
+        return criterios_reutilizables(
+            guardado.population_criteria,
+            guardado.population_form,
+            [c.clave_de_estudio for c in criterios],
+            self._configuracion.versiones,
+        )
 
     async def _extraer_todos(
         self, documento: DocumentoParaExtraer, criterios: Sequence[CriterioDeAplicabilidad]
@@ -199,19 +205,40 @@ class PopulationFanoutExtractor:
         return self._recuperador.relevantes(documento, criterio, self._configuracion.top_k)
 
     async def _pedir_valores(
-        self, criterio: CriterioDeAplicabilidad, fragmentos: Sequence[Fragmento]
+        self,
+        criterio: CriterioDeAplicabilidad,
+        fragmentos: Sequence[Fragmento],
     ) -> _SalidaDelLlm:
+        """Una llamada y, si la salida se corta (``finish_reason = length``), UN reintento con otra semilla (D5).
+        ``valores = None`` es que ambas se cortaron. La semilla del intento ``n`` es ``n``: determinista."""
         configuracion = self._configuracion
         prompt = construir_prompt(
             self._plantilla, criterio, fragmentos, configuracion.max_valores_por_criterio
         )
-        respuesta = await self._llm.completar_json_acotado(
-            prompt,
-            esquema_de_poblacion(configuracion.max_valores_por_criterio),
-            max_tokens=configuracion.max_tokens_de_salida,
-            semilla=0,
-        )
-        return _SalidaDelLlm(parsear_valores(respuesta.texto), ContadoresDePoblacion(llamadas=1))
+        contadores = ContadoresDePoblacion()
+        for intento in range(1 + configuracion.reintentos):
+            respuesta = await self._llm.completar_json_acotado(
+                prompt,
+                esquema_de_poblacion(configuracion.max_valores_por_criterio),
+                max_tokens=configuracion.max_tokens_de_salida,
+                semilla=intento,
+            )
+            logger.info(
+                "poblacion_llamada criterio=%s intento=%d finish_reason=%s chunks=%s longitud_prompt=%d longitud_salida=%d",
+                criterio.clave,
+                intento,
+                respuesta.finish_reason,
+                ",".join(f.chunk_id for f in fragmentos),
+                len(prompt),
+                len(respuesta.texto),
+            )
+            if respuesta.finish_reason != FINISH_REASON_CORTADA:
+                return _SalidaDelLlm(
+                    parsear_valores(respuesta.texto),
+                    contadores + ContadoresDePoblacion(llamadas=1),
+                )
+            contadores = contadores + ContadoresDePoblacion(llamadas=1, finish_reason_length=1)
+        return _SalidaDelLlm(None, contadores)
 
     def _depurar_y_acotar(
         self,

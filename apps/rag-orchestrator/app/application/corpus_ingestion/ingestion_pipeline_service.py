@@ -25,6 +25,7 @@ from app.application.corpus_metadata.poblacion_puertos import (
     DocumentoParaExtraer,
     ExtractorDePoblacion,
     Fragmento,
+    PoblacionExtraida,
 )
 from app.application.ports import Clock
 from app.application.seed_corpus.ports import (
@@ -259,6 +260,32 @@ class IngestionPipelineService:
             integrada = integrar_poblacion_en_abanico(metadatos, extraida.population_criteria)
         return integrada, extraida.contadores
 
+    def _refrescar_poblacion(
+        self, documento: DocumentoDeSemilla, texto: str, checksum: str
+    ) -> ContadoresDePoblacion | None:
+        """Un documento ya ``embebido`` con ese contenido no se re-embebe, pero su población se reextrae si cambió una versión
+        (prompt, modelo o catálogo) o quedó algún criterio ``pendiente`` (D6, AC-7); con las mismas versiones, 0 llamadas."""
+        if self._extractor_de_poblacion is None or self._almacen_de_poblacion is None:
+            return None
+        document_id = identificador_de_documento(documento.document_key, checksum)
+        with _etapa("poblacion"):
+            guardado = self._almacen_de_poblacion.leer_poblacion(document_id)
+            if guardado is None or guardado.metadata_source != EXTRAIDO_VERIFICADO:
+                return None
+            extraida = self._extractor_de_poblacion.extraer(
+                _documento_para_extraer(documento, document_id, self._fragmentar(texto)),
+                documento.cancer_type_tags,
+                guardado,
+            )
+            self._guardar_si_cambio(document_id, extraida)
+        return extraida.contadores
+
+    def _guardar_si_cambio(self, document_id: str, extraida: PoblacionExtraida) -> None:
+        if extraida.contadores.llamadas and self._almacen_de_poblacion is not None:
+            self._almacen_de_poblacion.guardar_poblacion(
+                document_id, extraida.population_criteria, extraida.population_form
+            )
+
     def _embeber(self, fragmentos: Sequence[str]) -> list[list[float]]:
         with _etapa("embeddings"):
             return self._embedder.embeber(fragmentos)
@@ -272,14 +299,16 @@ class IngestionPipelineService:
     def _omitir(
         self, documento: DocumentoDeSemilla, decision: DecisionDeVersion, texto: str, checksum: str
     ) -> ResultadoDeIngesta:
-        """Ya embebido con ese contenido: no se re-embebe, pero se reconcilia Milvus con el catálogo (RN-05)."""
+        """Ya embebido con ese contenido: no se re-embebe, pero se reconcilia Milvus con el catálogo (RN-05) y se actualiza
+        la población si cambió una versión (US-242 D6)."""
         try:
             with _etapa("milvus"):
                 self._nucleo.reconciliar_omitido(decision)
+            poblacion = self._refrescar_poblacion(documento, texto, checksum)
         except FalloDeEtapa as fallo:
             # Sin fila de error: el documento embebido y vigente sigue siendo la verdad del catálogo.
             return _resultado_de_error(documento, fallo)
-        return ResultadoDeIngesta(documento.document_key, Estado.OMITIDO)
+        return ResultadoDeIngesta(documento.document_key, Estado.OMITIDO, poblacion=poblacion)
 
     def _indexar(
         self,
