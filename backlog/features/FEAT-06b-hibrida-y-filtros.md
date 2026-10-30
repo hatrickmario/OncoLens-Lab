@@ -8,7 +8,7 @@
 **Dependencias:** ↪ US-055 (pipeline dense), US-052 (contexto), US-117b (*sparse* poblado; antes US-117), FEAT-04 US-006 (faltantes en el contexto) · ⛔ ADR-39 (modelo *sparse* y fusión; los AC usan adapters falsos) · 🔗 Medido en: US-133 (M-06.1 sin retroceso) · 🔗 Regresión [RN-02] → US-055 · 🔗 Regresión [RN-05] → US-055 · 🔗 Regresión [RN-11] → US-049
 **Valor:** el oncólogo busca con términos exactos (un fármaco, un gen) que la búsqueda semántica sola pierde, en español sobre evidencia mayoritariamente en inglés, y necesita acotar a guías o ensayos (P5, JTBD 3). Con esta Feature la búsqueda combina ambas señales, se expande al otro idioma, respeta los filtros que el oncólogo ve en el panel y sabe qué datos del paciente faltan.
 **Workaround en el MVP (US-113…US-115):** ADR-39 elige *embeddings* multilingües; la suite mide recall es→en ≥ 0,70 (US-072). US-112 y su medición (US-133, FEAT-T5b) entran en el S4; mientras US-133 no descarte un retroceso, `RETRIEVAL_MODE = dense` (US-055) sigue siendo el valor por defecto `[S4 resp. 17]`.
-**Stories:** US-113, US-114, US-115 (11 puntos, `si-hay-capacidad`) · US-112, US-238 (10 puntos, S4) · US-116, US-220 (6 puntos, S5)
+**Stories:** US-113, US-114, US-115, US-248 (13 puntos, `si-hay-capacidad`) · US-112, US-238 (10 puntos, S4) · US-116, US-220 (6 puntos, S5)
 
 ## Fixtures
 
@@ -366,6 +366,97 @@ ampliados. El contrato OpenAPI cambia de forma compatible (`meta.retrievalParams
 ## INVEST
 **Small** ✓ un paso condicional sobre un pipeline existente, con un límite fijo. **Excepción a la DoR (9 AC > 8), aceptada:** una sola superficie, el loop de reescritura y sus invariantes; no se parte `[S4 resp. 12]`.
 **Testable** ✓ nueve AC: siete con adapters falsos y una medición en `evaluate`.
+
+---
+
+## US-248 · ADR-48 — Cuando una rama de la recuperación híbrida no devuelve candidatos, la fusión conserva la calidad de la otra o la degrada
+
+> Linear: [L1D-304](https://linear.app/l1der-lab-mjbc/issue/L1D-304)
+
+`FEAT-06b` · `si-hay-capacidad` *(nueva, usuario, 2026-10-30, desde la Q-1 de L1D-109)* · Estimación **2** · — (ADR, investigación) · FR-09 (S3: *sparse*), IA-03, RN-03, RN-05, RN-22 · ADR-45 (brazos A2 y A2b, P1 preinscripción) · Dueño: Ingeniería · ↪ US-112 (fusión implementada), US-133 (datos de la medición) · 🔗 Bloquea: poner `RETRIEVAL_MODE = hibrida` por defecto (no bloquea el MVP ni el G-Demo) · **Recorrido principal:** no
+
+> **Decidido (usuario, 2026-10-30, Q-1 de L1D-109):** en el S4 se mantiene el **fallo cerrado** (`503 RETRIEVAL_UNAVAILABLE`) cuando la pregunta no produce ningún término con peso, sin degradar en silencio a `dense`; el modo `hibrida` no es el predeterminado y solo lo usa la medición de US-133. Esta historia investiga la pregunta de fondo antes de cambiar ese comportamiento. **Linear: L1D-304.**
+
+## Story
+Como responsable técnico, quiero saber si, cuando una de las dos ramas de la recuperación
+híbrida no devuelve candidatos, la fusión (RRF o suma ponderada) conserva la calidad de
+ordenación de la rama restante o introduce una degradación no buscada, para decidir con
+datos si la consulta híbrida debe fallar cerrada, degradar a `dense` con constancia en
+`meta`, o fusionar de otra forma, antes de que `hibrida` pase a ser el modo por defecto.
+
+## Pregunta de investigación
+*Cuando un componente de recuperación no devuelve candidatos, ¿el mecanismo de fusión
+híbrida conserva la calidad de ordenación del otro, o introduce una degradación no
+buscada?*
+
+Se separan **tres casos** que hoy se confunden (el código de US-112 solo trata el primero
+como fallo):
+
+| Caso | Qué ocurre | Tratamiento actual (US-112) |
+|---|---|---|
+| **A. La consulta no produce vector *sparse*.** La pregunta no tiene ningún término con peso. | El codificador lanza `FalloDeInferencia`; la consulta híbrida devuelve `503 RETRIEVAL_UNAVAILABLE`. | Falla cerrado. Es un límite del codificador, no ausencia de evidencia. |
+| **B. El *sparse* existe pero Milvus no devuelve ningún chunk.** | `search_sparse` devuelve `[]`; la fusión recibe una rama vacía. | Sin error; el log registra `sparse=0`. |
+| **C. La rama *sparse* devuelve muy pocos candidatos (1 a 3).** | Pocos chunks suben posiciones en la lista fusionada. | Sin tratamiento especial. |
+
+## Hipótesis (a preinscribir, ADR-45 P1; ninguna está verificada)
+- **H1 · RRF con rama vacía.** El orden fusionado coincide con el de `dense`, porque cada
+  candidato recibe solo `1/(k + posición_dense)`, monótono en la posición.
+- **H2 · Suma ponderada con rama vacía.** El orden coincide con el de `dense` solo si la
+  normalización de puntajes no depende de la rama vacía; hay que comprobar cómo se
+  normalizan los dos puntajes en la implementación.
+- **H3 · Rama casi vacía (caso C).** Es el riesgo real: unos pocos candidatos *sparse*
+  que no están en `dense` pueden desplazar candidatos de `dense` antes del recorte a
+  `RETRIEVAL_TOP_K` y del reranker, y bajar el acierto@10 del conjunto final.
+- **H4 · Frecuencia.** El caso A es raro con preguntas reales; el conjunto dorado de
+  US-133 permite contarlo.
+
+## AC (Given/When/Then)
+- **AC-1 (preinscripción)** · Dado el protocolo de ADR-45 P1, cuando se vaya a medir,
+  entonces se commitea antes de ejecutar un documento con las hipótesis H1 a H4, los
+  brazos, la métrica primaria (acierto@10 sobre el conjunto final de chunks tras el
+  reranker; MRR secundaria), la comparación emparejada con IC por *bootstrap*, el margen de
+  equivalencia y la regla de decisión. Los hiperparámetros salen de la fuente (RRF
+  k = 60; pesos 1 : 0,3) y no se barren. `[ADR-45 P1]`
+- **AC-2 (borde · rama vacía)** · Dado el conjunto dorado de US-133 y los mismos modelos,
+  cuando se fuerce la rama *sparse* a 0 candidatos con RRF y con suma ponderada, entonces
+  se informa si el orden y las métricas del conjunto final coinciden con `dense`, y por
+  qué (H1, H2). `[FR-09]`
+- **AC-3 (borde · rama casi vacía)** · Dado el mismo conjunto, cuando se fuerce la rama
+  *sparse* a 1, 2 y 3 candidatos que no están en `dense`, entonces se informa la
+  variación de acierto@10 y de MRR frente a `dense` y si el recorte previo al reranker
+  expulsa candidatos de `dense` (H3). `[RN-03]`
+- **AC-4 (frecuencia del caso A)** · Dado el conjunto dorado, cuando se codifiquen las
+  preguntas, entonces se cuenta cuántas no producen ningún término con peso (H4). Si el
+  recuento es 0, el ADR lo dice y no lo extrapola a preguntas reales. `[IA-03]`
+- **AC-5 (decisión)** · Dado el resultado, cuando se cierre el ADR, entonces
+  `docs/architecture/adr/ADR-48-fusion-con-rama-vacia.md` elige una opción: **(1)** mantener
+  el fallo cerrado, **(2)** degradar a `dense` con constancia en `meta` (campo de modo
+  efectivo, cambio de contrato aditivo con ADR-26) o **(3)** otra fusión; y registra las
+  alternativas descartadas con su evidencia. `[RN-22]`
+- **AC-6 (regresión)** · Dado el ADR aceptado, cuando implique cambiar el código, entonces
+  se abre una historia aparte y esta no modifica `app/` ni los contratos. La
+  investigación no cambia `RETRIEVAL_MODE = dense` por defecto. `[RN-02]` `[RN-05]`
+
+## Contexto técnico
+
+| Opción | A favor | En contra |
+|---|---|---|
+| **1. Mantener el fallo cerrado** | Sin cambio de contrato; la medición de US-133 queda limpia | Una pregunta degenerada falla aunque `dense` funcionaría; mezcla «sin señal léxica» con «motor caído» |
+| **2. Degradar a `dense` con constancia** | La consulta responde; el orden es el de `dense` si H1 y H2 se cumplen | Exige un campo de modo efectivo en el contrato (versión nueva, ADR-26); hay que excluir esas consultas de la comparación |
+| **3. Fusión que ignora la rama vacía o casi vacía** | Cubre el caso C si H3 se confirma | Más lógica y un hiperparámetro nuevo que justificar |
+
+Datos: solo sintéticos y corpus público (RN-14); no hay datos reales. No usa el LLM (RN-02).
+La implementación de la fusión vive en `RAGOrchestratorService` (US-112); la medición reutiliza
+la corrida de US-133 con una rama forzada, sin reindexar.
+
+## Non-goals
+No cambiar el modo por defecto ni la lógica de la fusión (si el ADR lo pide, es otra
+historia). No barrer `RRF_K` ni `HYBRID_SPARSE_WEIGHT`. No decidir el modelo *sparse*
+(ADR-39) ni los brazos de ADR-45.
+
+## INVEST
+**Small** ✓ una medición acotada sobre datos que ya genera US-133 y un documento.
+**Testable** ✓ los AC verifican la preinscripción, las cifras reportadas y el contenido del ADR.
 
 ---
 
