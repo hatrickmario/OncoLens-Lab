@@ -13,7 +13,9 @@ from tests.support.recuperacion_hibrida import Q_KEYWORD, crear_entorno_hibrido,
 from app.domain.fusion_de_candidatos import EstrategiaDeFusion
 from app.schemas.generated.models import RetrievalMode
 from tests.support.generador_falso import OPCION_ANTI_HER2, RAZON_ANTI_HER2
-from tests.support.recuperacion_hibrida import CORPUS_HIBRIDO
+from tests.support.recuperacion_hibrida import CORPUS_HIBRIDO, TOP_K_ESTRECHO
+from app.application.ports import FalloDeInferencia
+from tests.support.recuperacion import BuscadorFalso, crear_entorno
 
 
 def _candidatos_del_reranker(entorno) -> set[str]:
@@ -118,7 +120,12 @@ def test_rag_query_no_registra_texto_en_los_logs_de_la_recuperacion_hibrida(capl
     assert len(recuperacion) == 1, (
         "la recuperación híbrida debe dejar un único log con sus recuentos"
     )
-    for esperado in ("retrievalMode=hibrida", "fusion=rrf", "fusionParam=60", "dense=", "sparse="):
+    for esperado in (
+        "retrievalMode=hibrida",
+        "fusion=rrf",
+        "fusionParam=60",
+        "dense=2 sparse=1 fused=2",
+    ):
         assert esperado in recuperacion[0]
     prohibidos = [Q_KEYWORD, OPCION_ANTI_HER2, RAZON_ANTI_HER2, *(c.texto for c in CORPUS_HIBRIDO)]
     for mensaje in mensajes:
@@ -157,3 +164,74 @@ def test_rag_query_recupera_con_la_fusion_ponderada_y_traza_su_peso_cuando_se_co
     params = respuesta.json()["meta"]["retrievalParams"]
     assert params["fusion"] == "ponderada"
     assert params["fusionParam"] == 0.3
+
+
+@pytest.mark.ac("US-112", 1)
+def test_rag_query_pasa_al_reranker_el_chunk_solo_sparse_cuando_el_tope_de_pares_es_uno():
+    # Con el peso sparse alto, ch-m2-1 (solo sparse) es el primero de la fusión; el corte previo al reranker lo respeta.
+    parametros = parametros_hibridos(
+        fusion=EstrategiaDeFusion.ponderada, peso_sparse=0.9, reranker_max_pairs=1
+    )
+    entorno, _, _ = crear_entorno_hibrido(parametros=parametros)
+
+    respuesta = entorno.consultar(solicitud_de(Q_KEYWORD))
+
+    assert respuesta.status_code == 200
+    assert entorno.reranker.candidatos_recibidos == [["ch-m2-1"]]
+
+
+@pytest.mark.ac("US-112", 1)
+def test_rag_query_no_pasa_al_reranker_mas_candidatos_que_el_top_k_cuando_las_ramas_suman_mas():
+    entorno, buscador, _ = crear_entorno_hibrido()
+
+    respuesta = entorno.consultar(solicitud_de(Q_KEYWORD))
+
+    assert respuesta.status_code == 200
+    assert len(entorno.reranker.candidatos_recibidos[0]) <= TOP_K_ESTRECHO
+    assert buscador.limites_sparse == [TOP_K_ESTRECHO]
+
+
+def test_rag_query_responde_503_sin_invocar_al_llm_cuando_falla_la_busqueda_sparse():
+    fallo = RuntimeError("milvus-interno.test:19530 rechazó la búsqueda sparse")
+    entorno, _, _ = crear_entorno_hibrido(
+        buscador=BuscadorFalso(CORPUS_HIBRIDO, error_sparse=fallo)
+    )
+
+    respuesta = entorno.consultar(solicitud_de(Q_KEYWORD))
+
+    assert respuesta.status_code == 503
+    assert respuesta.json()["error"] == "RETRIEVAL_UNAVAILABLE"
+    assert "milvus-interno" not in respuesta.text
+    assert entorno.generador.invocaciones == 0
+
+
+def test_rag_query_responde_503_sin_invocar_al_llm_cuando_falla_el_codificador_sparse():
+    entorno, _, codificador = crear_entorno_hibrido()
+    codificador.error = FalloDeInferencia("sparse: fallo de inferencia del modelo local")
+
+    respuesta = entorno.consultar(solicitud_de(Q_KEYWORD))
+
+    assert respuesta.status_code == 503
+    assert respuesta.json()["error"] == "RETRIEVAL_UNAVAILABLE"
+    assert entorno.generador.invocaciones == 0
+
+
+def test_el_servicio_se_niega_a_construirse_en_modo_hibrido_sin_las_ramas_sparse():
+    with pytest.raises(ValueError, match="hibrida"):
+        crear_entorno(parametros=parametros_hibridos())
+
+
+def test_rag_query_no_registra_texto_libre_del_contexto_en_los_logs_de_la_recuperacion_hibrida(
+    caplog,
+):
+    sentinela = "SENTINELA-HISTOLOGIA-109"
+    solicitud = solicitud_de(Q_KEYWORD)
+    solicitud["clinicalContext"]["diagnosis"]["histology"] = sentinela
+    entorno, _, _ = crear_entorno_hibrido()
+    caplog.set_level(logging.DEBUG)
+
+    respuesta = entorno.consultar(solicitud)
+
+    assert respuesta.status_code == 200
+    assert caplog.records
+    assert all(sentinela not in r.getMessage() for r in caplog.records)

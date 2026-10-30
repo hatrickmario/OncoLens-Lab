@@ -72,6 +72,12 @@ def test_rrf_desempata_el_rango_dentro_de_una_rama_por_chunk_id():
     assert _ids(fusionados) == ["a", "b"]
 
 
+def test_rrf_acepta_la_constante_minima_uno():
+    fusionados = _rrf(_rama(("a", 0.5)), _rama(("a", 0.5)), k=1)
+
+    assert fusionados[0].puntaje == pytest.approx(1 / 2 + 1 / 2)
+
+
 def test_rrf_rechaza_una_constante_menor_que_uno():
     with pytest.raises(ValueError):
         _rrf(_rama(("a", 0.5)), [], k=0)

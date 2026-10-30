@@ -210,10 +210,15 @@ class BuscadorFalso:
     """
 
     def __init__(
-        self, chunks: Sequence[ChunkFx] = CORPUS_FX06A, error: Exception | None = None
+        self,
+        chunks: Sequence[ChunkFx] = CORPUS_FX06A,
+        error: Exception | None = None,
+        error_sparse: Exception | None = None,
     ) -> None:
         self._chunks = list(chunks)
         self.error = error
+        self.error_sparse = error_sparse
+        self.limites_sparse: list[int] = []
         self.expresiones: list[str] = []
         self.expresiones_sparse: list[str] = []
 
@@ -252,8 +257,9 @@ class BuscadorFalso:
             raise ValueError("el vector sparse de la consulta no puede estar vacío")
         filtro = expresion_solo_vigente() if filtro is None else filtro
         self.expresiones_sparse.append(filtro)
-        if self.error is not None:
-            raise self.error
+        self.limites_sparse.append(limit)
+        if self.error_sparse is not None:
+            raise self.error_sparse
         aciertos = [
             (c, _producto_sparse(vector, c.terminos_sparse or {}))
             for c in self._chunks
