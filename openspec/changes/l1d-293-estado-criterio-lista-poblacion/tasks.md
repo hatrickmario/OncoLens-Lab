@@ -36,7 +36,7 @@
 
 ## evaluación
 
-- [ ] 4.1 (pendiente: `ai-eval-runner` en el Gate 2) Si cambia el catálogo (`restrictionMarkers`, tablas de rangos), correr `run-ai-eval` y registrar la concordancia base de estados para US-233b · evaluate
+- [x] 4.1 (reporte de ai-eval-runner copiado en `reports/eval/l1d-293-estado-criterio-lista-poblacion.md`: PASS) Si cambia el catálogo (`restrictionMarkers`, tablas de rangos), correr `run-ai-eval` y registrar la concordancia base de estados para US-233b · evaluate
 
 ## Cierre
 
