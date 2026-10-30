@@ -80,6 +80,14 @@ class PatientDataRef(RootModel[str]):
     root: Annotated[str, Field(pattern='^r[0-9]+$')]
 
 
+class PartialReason(Enum):
+    inclusiva = 'inclusiva'
+    mezclada = 'mezclada'
+    rango_solapado = 'rango_solapado'
+    solo_subgrupo = 'solo_subgrupo'
+    NoneType_None = None
+
+
 class ApplicabilityStatus(StrEnum):
     coincide = 'coincide'
     parcial = 'parcial'
@@ -90,6 +98,10 @@ class ApplicabilityStatus(StrEnum):
 class UnknownReason(Enum):
     falta_en_paciente = 'falta_en_paciente'
     no_reportado_por_fuente = 'no_reportado_por_fuente'
+    varios_valores_en_la_fuente = 'varios_valores_en_la_fuente'
+    valores_en_conflicto = 'valores_en_conflicto'
+    respaldo_fallido = 'respaldo_fallido'
+    sin_regla_de_comparacion = 'sin_regla_de_comparacion'
     NoneType_None = None
 
 
@@ -1011,6 +1023,27 @@ class CitedSourceFields(BaseModel):
     ]
 
 
+class Scope(StrEnum):
+    elegibilidad = 'elegibilidad'
+    subgrupo = 'subgrupo'
+    mencion = 'mencion'
+
+
+class StudyPopulationValue(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    value: Annotated[
+        str,
+        Field(
+            description='Extraído por IA de un fragmento citado y verificado con NLI contra él (ADR-47); no es texto copiado del corpus; recorrido por el filtro RN-23.',
+            max_length=200,
+        ),
+    ]
+    chunkId: str
+    scope: Scope
+
+
 class PerSourceItem(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
@@ -1124,9 +1157,29 @@ class ApplicabilityCriterion(BaseModel):
             description='Valor copiado del contexto del paciente; nunca generado (ADR-34).'
         ),
     ]
-    studyPopulationValue: str | None
+    studyPopulationValue: Annotated[
+        str | None,
+        Field(
+            deprecated=True,
+            description='Deprecado; se retira en el S5 (ADR-26). Con lista, el primer valor con scope elegibilidad de los fragmentos citados por la opción; si no hay ninguno, null. Con la forma antigua, su texto.',
+        ),
+    ]
+    studyPopulationValues: Annotated[
+        list[StudyPopulationValue] | None,
+        Field(
+            description='Valores de población de los fragmentos que cita la opción (ADR-47). El tope POPULATION_MAX_VALUES_PER_CRITERION rige por fragmento y criterio al extraer; aquí no hay maxItems. Opcional: las respuestas con la forma antigua no lo llevan.'
+        ),
+    ] = None
+    partialReason: Annotated[
+        PartialReason | None, Field(description='Motivo del estado parcial. Opcional.')
+    ] = None
     status: Annotated[ApplicabilityStatus, Field(title='ApplicabilityStatus')]
-    unknownReason: UnknownReason | None
+    unknownReason: Annotated[
+        UnknownReason | None,
+        Field(
+            description='varios_valores_en_la_fuente está reservado (ADR-47): ningún change del S4 lo produce.'
+        ),
+    ]
     isExclusionary: bool
     patientDataWarning: PatientDataWarning | None
     citedSources: list[CitedSource]

@@ -123,12 +123,28 @@ export type ApplicabilityCriterion = {
      * Valor copiado del contexto del paciente; nunca generado (ADR-34).
      */
     patientValue: string | null;
+    /**
+     * Deprecado; se retira en el S5 (ADR-26). Con lista, el primer valor con scope elegibilidad de los fragmentos citados por la opción; si no hay ninguno, null. Con la forma antigua, su texto.
+     *
+     * @deprecated
+     */
     studyPopulationValue: string | null;
+    /**
+     * Valores de población de los fragmentos que cita la opción (ADR-47). El tope POPULATION_MAX_VALUES_PER_CRITERION rige por fragmento y criterio al extraer; aquí no hay maxItems. Opcional: las respuestas con la forma antigua no lo llevan.
+     */
+    studyPopulationValues?: Array<StudyPopulationValue>;
+    /**
+     * Motivo del estado parcial. Opcional.
+     */
+    partialReason?: 'inclusiva' | 'mezclada' | 'rango_solapado' | 'solo_subgrupo' | null;
     /**
      * ApplicabilityStatus
      */
     status: 'coincide' | 'parcial' | 'no_coincide' | 'desconocido';
-    unknownReason: 'falta_en_paciente' | 'no_reportado_por_fuente' | null;
+    /**
+     * varios_valores_en_la_fuente está reservado (ADR-47): ningún change del S4 lo produce.
+     */
+    unknownReason: 'falta_en_paciente' | 'no_reportado_por_fuente' | 'varios_valores_en_la_fuente' | 'valores_en_conflicto' | 'respaldo_fallido' | 'sin_regla_de_comparacion' | null;
     isExclusionary: boolean;
     patientDataWarning: 'sin_verificar' | 'en_conflicto' | 'faltante' | null;
     citedSources: Array<CitedSource>;
@@ -843,6 +859,15 @@ export type CitedSourceFields = {
      * Referencia al chunk del corpus recuperado en esa consulta; puede no resolverse si el chunk se reindexó.
      */
     chunkId: string;
+};
+
+export type StudyPopulationValue = {
+    /**
+     * Extraído por IA de un fragmento citado y verificado con NLI contra él (ADR-47); no es texto copiado del corpus; recorrido por el filtro RN-23.
+     */
+    value: string;
+    chunkId: string;
+    scope: 'elegibilidad' | 'subgrupo' | 'mencion';
 };
 
 export type LoginRequestWritable = {
