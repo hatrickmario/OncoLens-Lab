@@ -52,6 +52,8 @@ El filtro nunca perdona por omisión. (1) Se identifica a sí mismo comparando r
 | E-3 | rag-orchestrator | `response-body-one-of-added` en `POST /rag/query`: `ErrorNliNoDisponible` (`NLI_UNAVAILABLE`) añadido al `oneOf` del `503` | l1d-180-soporte-nli-descartadas | Alternativa aditiva del `503`; clinical-api y web clasifican por código HTTP y código de error y descartan los desconocidos. Reutilizar un código existente perdería el significado que exige US-064 AC-6. Decidido (usuario, 2026-10-18) |
 | E-4 | clinical-api | `response-property-enum-value-added` en `POST /platform/patients/{patientId}/documents`: valor `ARCHIVO_NO_PDF` en `error` del `422` | l1d-56-carga-documento-api | Valor aditivo del `422`; el endpoint no tiene consumidor hasta US-079 (S3) y `error` se trata como cadena abierta. `x-extensible-enum` descartado: su efecto en el Zod generado no está verificado y en E-2 no evitó el ERR. Decidido (usuario, 2026-10-21, `[S2 resp. 9]`) |
 | E-5 | clinical-api | `response-property-enum-value-added` en `POST /platform/patients/{patientId}/documents`: valor `ARCHIVO_DEMASIADO_GRANDE` en `error` del `422` | l1d-56-carga-documento-api | Igual que E-4 (una excepción por valor). Decidido (usuario, 2026-10-21, `[S2 resp. 9]`) |
+| E-6 a E-9 | rag-orchestrator | `response-property-enum-value-added` en `POST /rag/query`: valores `varios_valores_en_la_fuente`, `valores_en_conflicto`, `respaldo_fallido` y `sin_regla_de_comparacion` en `applicability[].criteria[].unknownReason` del `200` | l1d-291-poblacion-lista-contrato-migracion | Valores aditivos de una causa informativa (ADR-47, `[S4 resp. 5]`); una excepción por valor, como E-4 y E-5. Decidido (usuario, 2026-10-30) |
+| E-10 a E-13 | clinical-api | Los mismos cuatro valores en `POST /platform/evidence-analyses` | l1d-291-poblacion-lista-contrato-migracion | Igual que E-6 a E-9 (mismo schema compartido `evidence.yaml`). Decidido (usuario, 2026-10-30) |
 
 ### Consecuencias
 
@@ -63,7 +65,7 @@ El filtro nunca perdona por omisión. (1) Se identifica a sí mismo comparando r
 
 ### Confirmación
 
-`scripts/ci/__tests__/excepcionesDeContrato.test.mjs`: la excepción solo perdona el hallazgo exacto (otro proveedor, otro schema, otra regla, otra ruta o un ERR distinto siguen rompiendo) y `contracts-breaking-excepciones.json` declara E-1…E-5, enlazadas a este archivo. Revisión del Gate 2 (`contract-keeper`).
+`scripts/ci/__tests__/excepcionesDeContrato.test.mjs`: la excepción solo perdona el hallazgo exacto (otro proveedor, otro schema, otra regla, otra ruta o un ERR distinto siguen rompiendo) y `contracts-breaking-excepciones.json` declara E-1…E-13, enlazadas a este archivo. Revisión del Gate 2 (`contract-keeper`).
 
 ## Pros y contras de las opciones
 

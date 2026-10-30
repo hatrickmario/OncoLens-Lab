@@ -53,5 +53,93 @@
     "operacion": "POST",
     "ruta": "/platform/patients/{patientId}/documents",
     "texto": "added the new `ARCHIVO_DEMASIADO_GRANDE` enum value to the `error` response property for the response status `422`"
+  },
+  {
+    "id": "E-6",
+    "adr": "ADR-26",
+    "documento": "ADR-26-contrato-congelado-y-excepciones-declaradas.md",
+    "change": "l1d-291-poblacion-lista-contrato-migracion",
+    "proveedor": "rag-orchestrator",
+    "regla": "response-property-enum-value-added",
+    "operacion": "POST",
+    "ruta": "/rag/query",
+    "texto": "added the new `varios_valores_en_la_fuente` enum value to the `applicability/items/criteria/items/unknownReason` response property for the response status `200`"
+  },
+  {
+    "id": "E-7",
+    "adr": "ADR-26",
+    "documento": "ADR-26-contrato-congelado-y-excepciones-declaradas.md",
+    "change": "l1d-291-poblacion-lista-contrato-migracion",
+    "proveedor": "rag-orchestrator",
+    "regla": "response-property-enum-value-added",
+    "operacion": "POST",
+    "ruta": "/rag/query",
+    "texto": "added the new `valores_en_conflicto` enum value to the `applicability/items/criteria/items/unknownReason` response property for the response status `200`"
+  },
+  {
+    "id": "E-8",
+    "adr": "ADR-26",
+    "documento": "ADR-26-contrato-congelado-y-excepciones-declaradas.md",
+    "change": "l1d-291-poblacion-lista-contrato-migracion",
+    "proveedor": "rag-orchestrator",
+    "regla": "response-property-enum-value-added",
+    "operacion": "POST",
+    "ruta": "/rag/query",
+    "texto": "added the new `respaldo_fallido` enum value to the `applicability/items/criteria/items/unknownReason` response property for the response status `200`"
+  },
+  {
+    "id": "E-9",
+    "adr": "ADR-26",
+    "documento": "ADR-26-contrato-congelado-y-excepciones-declaradas.md",
+    "change": "l1d-291-poblacion-lista-contrato-migracion",
+    "proveedor": "rag-orchestrator",
+    "regla": "response-property-enum-value-added",
+    "operacion": "POST",
+    "ruta": "/rag/query",
+    "texto": "added the new `sin_regla_de_comparacion` enum value to the `applicability/items/criteria/items/unknownReason` response property for the response status `200`"
+  },
+  {
+    "id": "E-10",
+    "adr": "ADR-26",
+    "documento": "ADR-26-contrato-congelado-y-excepciones-declaradas.md",
+    "change": "l1d-291-poblacion-lista-contrato-migracion",
+    "proveedor": "clinical-api",
+    "regla": "response-property-enum-value-added",
+    "operacion": "POST",
+    "ruta": "/platform/evidence-analyses",
+    "texto": "added the new `varios_valores_en_la_fuente` enum value to the `applicability/items/criteria/items/unknownReason` response property for the response status `200`"
+  },
+  {
+    "id": "E-11",
+    "adr": "ADR-26",
+    "documento": "ADR-26-contrato-congelado-y-excepciones-declaradas.md",
+    "change": "l1d-291-poblacion-lista-contrato-migracion",
+    "proveedor": "clinical-api",
+    "regla": "response-property-enum-value-added",
+    "operacion": "POST",
+    "ruta": "/platform/evidence-analyses",
+    "texto": "added the new `valores_en_conflicto` enum value to the `applicability/items/criteria/items/unknownReason` response property for the response status `200`"
+  },
+  {
+    "id": "E-12",
+    "adr": "ADR-26",
+    "documento": "ADR-26-contrato-congelado-y-excepciones-declaradas.md",
+    "change": "l1d-291-poblacion-lista-contrato-migracion",
+    "proveedor": "clinical-api",
+    "regla": "response-property-enum-value-added",
+    "operacion": "POST",
+    "ruta": "/platform/evidence-analyses",
+    "texto": "added the new `respaldo_fallido` enum value to the `applicability/items/criteria/items/unknownReason` response property for the response status `200`"
+  },
+  {
+    "id": "E-13",
+    "adr": "ADR-26",
+    "documento": "ADR-26-contrato-congelado-y-excepciones-declaradas.md",
+    "change": "l1d-291-poblacion-lista-contrato-migracion",
+    "proveedor": "clinical-api",
+    "regla": "response-property-enum-value-added",
+    "operacion": "POST",
+    "ruta": "/platform/evidence-analyses",
+    "texto": "added the new `sin_regla_de_comparacion` enum value to the `applicability/items/criteria/items/unknownReason` response property for the response status `200`"
   }
 ]
