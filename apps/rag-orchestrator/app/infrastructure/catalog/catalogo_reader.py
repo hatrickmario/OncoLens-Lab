@@ -10,6 +10,7 @@ from sqlalchemy import Engine
 
 from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
 from app.domain.citations import FichaDeFuente
+from app.domain.poblacion_del_estudio import poblacion_desde_lo_guardado
 from app.infrastructure.catalog.tables import corpus_document
 
 
@@ -47,16 +48,22 @@ class LectorCatalogoPostgres:
         ).where(corpus_document.c.document_id.in_(sorted(document_ids)))
         with self._motor.connect() as conexion:
             filas = conexion.execute(consulta).mappings().all()
-        return {fila["document_id"]: _poblacion_de_fila(fila) for fila in filas}
+        return {
+            fila["document_id"]: _poblacion_de_fila(fila, self._max_valores_por_criterio)
+            for fila in filas
+        }
 
 
-def _poblacion_de_fila(fila: Mapping[str, Any]) -> PoblacionDelEstudio:
+def _poblacion_de_fila(
+    fila: Mapping[str, Any], max_valores_por_criterio: int
+) -> PoblacionDelEstudio:
     """``population_criteria`` debe ser un objeto JSON; otra forma es un catálogo corrupto y se rechaza (el
-    orquestador lo traduce en 503) en vez de leerse como «sin población». El mensaje no lleva el contenido."""
+    orquestador lo traduce en 503) en vez de leerse como «sin población». El mensaje no lleva el contenido. Cada criterio
+    se lee de la forma antigua o de la nueva; uno inválido llega sin valores y con su motivo (D6)."""
     criterios = fila["population_criteria"]
     if not isinstance(criterios, dict):
         raise ValueError("population_criteria no es un objeto JSON")
-    return PoblacionDelEstudio(fila["metadata_source"], criterios)
+    return poblacion_desde_lo_guardado(fila["metadata_source"], criterios, max_valores_por_criterio)
 
 
 def ficha_de_fila(fila: Mapping[str, Any]) -> FichaDeFuente:

@@ -12,6 +12,7 @@ import pytest
 
 from app.application.generation import LlmEvidenceGenerator
 from tests.support.aplicabilidad import (
+    CRITERIOS_DE_DOC_A1,
     FICHAS_FX08BA,
     POBLACIONES_FX08BA,
     GeneradorDeAplicabilidad,
@@ -101,7 +102,7 @@ def test_rag_query_devuelve_study_population_value_identico_a_population_criteri
 
     fuente = next(f for f in cuerpo["applicability"] if f["externalId"] == external_id_de("doc-a1"))
     valores = {c["criterion"]: c["studyPopulationValue"] for c in fuente["criteria"]}
-    criterios = POBLACIONES_FX08BA["doc-a1"].criterios
+    criterios = CRITERIOS_DE_DOC_A1
     assert valores["estadio"] == criterios["estadio"] == "I–III"  # raya (U+2013) intacta
     assert valores["ecog"] == criterios["ecog"]
     assert valores["estado_her2"] == criterios["biomarcadores"]["her2"]  # type: ignore[index]

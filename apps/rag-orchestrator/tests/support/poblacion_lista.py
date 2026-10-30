@@ -4,7 +4,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
+
+from app.config.settings import POBLACION_MAX_VALORES_POR_CRITERIO_INICIAL
+from app.domain.aplicabilidad_tipos import OrigenDeMetadatos, PoblacionDelEstudio
+from app.domain.poblacion_del_estudio import poblacion_desde_lo_guardado
 
 PROCEDENCIA_DE_PRUEBA = {
     "promptVersion": "poblacion@0.1.0",
@@ -32,3 +37,10 @@ CRITERIOS_DE_DOC_B1: dict[str, object] = {
 
 SENTINELA_DE_VALOR = "SENTINELA-VALOR-DE-POBLACION"
 """Texto que ningún log puede contener (RN-14): va como valor de los criterios inválidos."""
+
+
+def poblacion_guardada(
+    origen: OrigenDeMetadatos, guardado: Mapping[str, object]
+) -> PoblacionDelEstudio:
+    """La población que el lector entrega al dominio para un ``population_criteria`` guardado (cualquiera de las dos formas)."""
+    return poblacion_desde_lo_guardado(origen, guardado, POBLACION_MAX_VALORES_POR_CRITERIO_INICIAL)
