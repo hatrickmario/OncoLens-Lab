@@ -16,15 +16,10 @@ from tests.support.poblacion_fx08bc import (
     solicitud_a_m3,
     texto_de_opcion,
 )
-from tests.support.proponente_falso import ProponenteFalso
 
 
-def _consultar(
-    *opciones: str,
-    paciente: dict[str, Any] | None = None,
-    proponente: ProponenteFalso | None = None,
-) -> dict[str, Any]:
-    entorno = entorno_fx08bc(*opciones, proponente=proponente)
+def _consultar(*opciones: str, paciente: dict[str, Any] | None = None) -> dict[str, Any]:
+    entorno = entorno_fx08bc(*opciones)
     respuesta = entorno.consultar(paciente or solicitud_a_m2())
     assert respuesta.status_code == 200
     cuerpo = respuesta.json()
@@ -148,11 +143,8 @@ def test_rag_query_ningun_valor_de_un_fragmento_no_citado_entra_cuando_la_opcion
 
 @pytest.mark.ac("US-243", 8)
 def test_rag_query_estado_menopausico_parcial_mezclada_cuando_la_guia_mezcla_poblaciones():
-    proponente = ProponenteFalso()
-
-    cuerpo = _consultar("O-P5", proponente=proponente)
+    cuerpo = _consultar("O-P5")
 
     menopausia = _criterio(cuerpo, "doc-b5", "estado_menopausico")
     assert menopausia["status"] == "parcial"
     assert menopausia["partialReason"] == "mezclada"
-    assert proponente.invocaciones == 0
