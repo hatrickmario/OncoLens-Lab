@@ -43,9 +43,11 @@ from app.application.ports import (
     NliClassifier,
     ProhibitedTermsChecker,
     QueryEmbedder,
+    QuerySparseEncoder,
     ReleaseDelCorpus,
     Reranker,
     ResultadoDeRecuperacion,
+    SparseChunkSearch,
 )
 from app.application.respuesta_con_evidencia import ensamblar_respuesta_con_evidencia
 from app.application.resumen_contexto import resumen_del_contexto_clinico
@@ -56,6 +58,7 @@ from app.domain.citations import (
     contar_por_motivo,
     validar_citas,
 )
+from app.domain.fusion_de_candidatos import EstrategiaDeFusion
 from app.domain.normalizacion_puntaje import validar_puntaje_normalizado
 from app.domain.option_selection import OpcionConRelevancia, recortar_a_max_opciones
 from app.domain.pares_del_reranker import recortar_a_pares_del_reranker
@@ -106,6 +109,14 @@ class ParametrosDeRecuperacion:
     """``ENABLED_CANCER_TYPES`` ya validada contra el manifiesto (RN-20); vacía = ningún tipo."""
     reranker_max_pairs: int | None = None
     """Tope de pares que admite el reranker (``RERANKER_MAX_PAIRS``); ``None`` = el reranker no limita y no se recorta."""
+    retrieval_mode: RetrievalMode = RetrievalMode.dense
+    """``RETRIEVAL_MODE`` (US-112, RN-22): ``dense`` por defecto; ``hibrida`` suma la rama *sparse* antes del reranker."""
+    retrieval_fusion: EstrategiaDeFusion = EstrategiaDeFusion.rrf
+    """``RETRIEVAL_FUSION``: regla que fusiona las dos ramas; solo se usa con ``retrieval_mode = hibrida``."""
+    rrf_k: int = 60
+    """``RRF_K``: constante de ``Σ 1/(k+rank)``; solo con ``retrieval_fusion = rrf``."""
+    peso_sparse: float = 0.3
+    """``HYBRID_SPARSE_WEIGHT``: peso de la rama *sparse* (0 < w < 1); solo con ``retrieval_fusion = ponderada``."""
 
 
 def _con_relevancia(aceptada: OpcionAceptada, puntajes: Mapping[str, float]) -> OpcionConRelevancia:
@@ -132,10 +143,14 @@ class RAGOrchestratorService:
         verificador_terminos: ProhibitedTermsChecker,
         reloj: Clock,
         parametros: ParametrosDeRecuperacion,
+        buscador_sparse: SparseChunkSearch | None = None,
+        embedder_sparse: QuerySparseEncoder | None = None,
     ) -> None:
         self._detector_idioma = detector_idioma
         self._embedder = embedder
         self._buscador = buscador
+        self._buscador_sparse = buscador_sparse
+        self._embedder_sparse = embedder_sparse
         self._reranker = reranker
         self._lector_release = lector_release
         self._catalogo = catalogo

@@ -95,6 +95,29 @@ class ChunkSearch(Protocol):
         ...
 
 
+@dataclass(frozen=True)
+class ChunkEncontradoSparse:
+    """Un acierto de la rama *sparse* (US-112): ``similitud_sparse`` es el producto interno de Milvus.
+
+    NO es ``relevance_score`` (RN-03): solo elige y ordena candidatos antes del *reranker*.
+    """
+
+    chunk_id: str
+    document_id: str
+    chunk_text: str
+    similitud_sparse: float
+
+
+class SparseChunkSearch(Protocol):
+    """Búsqueda *sparse* del corpus (Milvus); la implementa ``MilvusRepository``. Mismo contrato de filtro que ``ChunkSearch``."""
+
+    def search_sparse(
+        self, vector: Mapping[int, float], limit: int, filtro: str | None = None
+    ) -> list[ChunkEncontradoSparse]:
+        """``filtro`` es el MISMO de la rama dense (``expresion_vigente_del_tipo()``, RN-05); sin él, solo ``is_current == true``."""
+        ...
+
+
 class CorpusChunkStore(ChunkSearch, Protocol):
     """Almacén vectorial de chunks del corpus (Milvus). Lo consumen L1D-106 (recuperación) y L1D-115 (ingesta).
 
@@ -135,6 +158,15 @@ class QueryEmbedder(Protocol):
         ...
 
     def embeber(self, texto: str) -> Sequence[float]: ...
+
+
+class QuerySparseEncoder(Protocol):
+    """Vector *sparse* léxico de la CONSULTA (US-112 D6): mismo BGE-M3, pesos y ``SPARSE_VECTOR_SOURCE`` que la ingesta.
+
+    Un texto sin ningún término con peso es un fallo (``FalloDeInferencia``): Milvus no admite un vector vacío.
+    """
+
+    def embeber_sparse(self, texto: str) -> Mapping[int, float]: ...
 
 
 class Reranker(Protocol):
@@ -241,6 +273,8 @@ class PuertosDelCorpus:
     buscador: ChunkSearch
     lector_release: CorpusReleaseReader
     catalogo: CorpusCatalogReader
+    buscador_sparse: SparseChunkSearch | None = None
+    """La rama *sparse* de la recuperación híbrida (US-112); ``None`` = el adapter del corpus no la ofrece."""
 
 
 # --- Generación de /rag/query (US-225, L1D-275) ----------------------------------------------------------------------
