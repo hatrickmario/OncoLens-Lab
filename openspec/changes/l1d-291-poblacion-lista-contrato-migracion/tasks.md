@@ -57,13 +57,19 @@
 
 ## clinical-platform
 
-- [ ] 2.1 Test de aceptación en rojo: "valida y conserva `studyPopulationValues` y `partialReason` cuando
+- [x] 2.1 Test de aceptación (rojo comprobado por mutación, ver nota): "valida y conserva `studyPopulationValues` y `partialReason` cuando
       rag-orchestrator responde con el ejemplo nuevo (`rag-query-poblacion-lista.json`) o con el antiguo
       (`rag-query-aplicabilidad-a-m1.json`) [US-241 AC-2]" · integración (Supertest +
       MSW desde `contracts/examples/`, PostgreSQL real) · TDD estricto · commit `test(L1D-291)`
-- [ ] 2.2 Validación con el cliente generado de `packages/api-contracts` y persistencia del `AIAnalysisRecord` tal
+- [x] 2.2 Validación con el cliente generado de `packages/api-contracts` y persistencia del `AIAnalysisRecord` tal
       cual llegó (módulo `evidence-analysis`); AC-2 en verde · TDD estricto · commit `feat(L1D-291)`
-- [ ] 2.3 Regresión [RN-06] → US-053: análisis persistido antes de responder, sin cambios (no es tarea nueva)
+- [x] 2.3 Regresión [RN-06] → US-053: análisis persistido antes de responder, sin cambios (no es tarea nueva)
+      > Evidencia: `tests/integration/evidence-analysis` 24 archivos / 111 tests en verde con PostgreSQL real.
+      > Nota 2.1/2.2: el AC-2 nace en verde porque el comportamiento ya lo aportó el commit `feat(L1D-291) clinical-api 1.11.0`
+      > (Zod/cliente generados, módulo sin lista blanca: persiste el JSON validado tal cual). No hay código de `src/` que
+      > añadir. Sensibilidad del test comprobada por mutación: sin `studyPopulationValues` en el Zod generado de
+      > rag-orchestrator falla en la aserción (`expected 502 to be 200`). `contracts:verify-provider` clinical-api: 329
+      > respuestas verificadas; `tsc --noEmit` limpio.
 
 ## frontend
 
