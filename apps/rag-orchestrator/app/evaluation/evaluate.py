@@ -104,6 +104,8 @@ def main(
     entorno: Mapping[str, str] | None = None,
     directorio_de_configs: Path | None = None,
     puertos_aplicabilidad: PuertosDeAplicabilidad | None = None,
+    cargador_de_modelos: Any = None,
+    lector_rss: Any = None,
 ) -> int:
     try:
         return _despachar_familia(
