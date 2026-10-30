@@ -14,7 +14,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from typing import Any
 
 from app.application.corpus_metadata.esquema import SalidaInvalida
@@ -35,6 +35,12 @@ from app.application.ports import FalloDeInferencia, FalloDelLlm, NliClassifier
 from app.domain.corpus_metadata.poblacion_abanico import (
     ValorPropuesto,
     pares_de_verificacion,
+)
+from app.domain.corpus_metadata.poblacion_abanico import (
+    Depurado,
+    rechazar_relleno,
+    validar_chunk,
+    verificar_nli,
 )
 from app.domain.corpus_metadata.poblacion_contadores import ContadoresDePoblacion
 from app.domain.corpus_metadata.poblacion_escritura import (
@@ -212,17 +218,28 @@ class PopulationFanoutExtractor:
         criterio: CriterioDeAplicabilidad,
         salida: _SalidaDelLlm,
     ) -> _ResultadoDeCriterio:
-        """AC-1: cada valor propuesto se guarda con su fragmento y la etiqueta del NLI."""
-        todos = self._recuperador.todos(documento)
-        texto_del_fragmento = {f.chunk_id: f.texto for f in todos}
-        propuestos = salida.valores or ()
-        pares = pares_de_verificacion(propuestos, texto_del_fragmento, criterio.etiqueta_es)
-        resultados = self._nli.clasificar(pares)
-        etiquetados = tuple(
-            replace(v, resultado_nli=r.label) for v, r in zip(propuestos, resultados, strict=True)
+        """Relleno → fragmento → NLI. Lo que sobrevive se guarda con su fragmento y la etiqueta del NLI."""
+        texto_del_fragmento = {f.chunk_id: f.texto for f in self._recuperador.todos(documento)}
+        sin_relleno = rechazar_relleno(salida.valores or ())
+        en_el_documento = validar_chunk(sin_relleno.conservados, texto_del_fragmento.keys())
+        con_soporte = self._verificar(en_el_documento.conservados, texto_del_fragmento, criterio)
+        contadores = salida.contadores + ContadoresDePoblacion(
+            valores_rechazados_por_relleno=sin_relleno.descartados,
+            valores_rechazados_por_chunk_ajeno=en_el_documento.descartados,
+            valores_sin_soporte=con_soporte.descartados,
         )
-        lista = lista_de_criterio(etiquetados, self._configuracion.versiones)
-        return _ResultadoDeCriterio(criterio.clave_de_estudio, lista, salida.contadores)
+        lista = lista_de_criterio(con_soporte.conservados, self._configuracion.versiones)
+        return _ResultadoDeCriterio(criterio.clave_de_estudio, lista, contadores)
+
+    def _verificar(
+        self,
+        valores: Sequence[ValorPropuesto],
+        texto_del_fragmento: Mapping[str, str],
+        criterio: CriterioDeAplicabilidad,
+    ) -> Depurado:
+        """El NLI contrasta cada valor con SU fragmento (RN-01); sin valores no se invoca."""
+        pares = pares_de_verificacion(valores, texto_del_fragmento, criterio.etiqueta_es)
+        return verificar_nli(valores, self._nli.clasificar(pares), self._configuracion.umbral_nli)
 
     @staticmethod
     def _pendiente(
