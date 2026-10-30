@@ -10,9 +10,11 @@
 >
 > **Markdown = fuente.** Linear se actualiza después, con confirmación (§7). Las respuestas se citan en las historias como `[S4 resp. n]`.
 
-## 1. Alcance comprometido: 61 pts, 18 tarjetas
+## 1. Alcance comprometido: 69 pts, 20 tarjetas
 
-Según el orden de prioridad del usuario (RAG de conocimiento → búsqueda por los datos del paciente → OCR → gestión de usuarios), el S4 compromete el núcleo del RAG de conocimiento, la etapa 2 de la población del estudio y los faltantes. **Riesgo aceptado por el usuario** `[S4 resp. 1]`: 61 pts en 1–2 días frente a la meta de cierre ≥ 80 %. Si no alcanza, se recorta de menor a mayor prioridad. El primer recorte serían los faltantes (US-003, US-005), seguidos de US-238.
+Según el orden de prioridad del usuario (RAG de conocimiento → búsqueda por los datos del paciente → OCR → gestión de usuarios), el S4 compromete el núcleo del RAG de conocimiento, la etapa 2 de la población del estudio y los faltantes. **Riesgo aceptado por el usuario** `[S4 resp. 1]`: 61 pts en 1–2 días frente a la meta de cierre ≥ 80 %. Si no alcanza, se recorta de menor a mayor prioridad. El primer recorte serían los faltantes (US-003, US-005), seguidos de US-238, US-133 y US-112 `[S4 resp. 20]`.
+
+**Ampliación del 2026-10-30** `[S4 resp. 17]`…`[S4 resp. 20]`: entran US-112 (búsqueda híbrida) y US-133 (su medición), que estaban en `si-hay-capacidad`. El S4 pasa de 61 a **69 pts** y de 18 a 20 tarjetas, con el mismo riesgo aceptado frente a la meta ≥ 80 %.
 
 | Orden | ID (Linear) | Título corto | Feature | Pts | AC | Prioridad |
 |---|---|---|---|---|---|---|
@@ -34,6 +36,8 @@ Según el orden de prioridad del usuario (RAG de conocimiento → búsqueda por 
 | 15 | US-247 (L1D-297) | Datos de demo (Coincide, Parcial y No coincide) + `levantar.sh` | FEAT-06c | 5 | 8 | 1 |
 | 16 | US-003 (L1D-95) | `/completeness` recortado | FEAT-04 | 3 | 5 | 2 |
 | 17 | US-005 (L1D-97) | Aviso de faltantes en el panel, con enlace a la ficha | FEAT-04 | 3 | 7 | 2 |
+| 18 | US-112 (L1D-109) | Búsqueda híbrida *dense* + *sparse* detrás de `RETRIEVAL_MODE` (`dense` por defecto) | FEAT-06b | 5 | 6 | 1 |
+| 19 | US-133 (L1D-245) | Híbrida frente a *dense* en la misma corrida (A0, A2, A2b de ADR-45) | FEAT-T5b | 3 | 5 | 1 |
 
 ⚠ = excepción aceptada a la DoR (más de 8 AC), justificada en la historia `[S4 resp. 12]` `[S4 resp. 13]`. El «orden» es una sugerencia de dependencias para `/sprint-start`, no el plan de oleadas.
 
@@ -44,6 +48,7 @@ Según el orden de prioridad del usuario (RAG de conocimiento → búsqueda por 
 - US-245 → US-246.
 - US-134 → US-135.
 - US-242 → US-247 y US-233b.
+- US-112 → US-133; US-233a → US-133 (modelos locales en la suite).
 
 ## 2. Definition of Ready
 
@@ -57,9 +62,11 @@ Según el orden de prioridad del usuario (RAG de conocimiento → búsqueda por 
 | — | US-117b | Ninguno (hecha) | 0 pts, solo conciliar y archivar `[S4 resp. 10]` |
 | L1D-95 | US-003 | Decisiones: AC-6 pendiente · Dependencias ocultas: AC-2 (`/case`) y AC-7 (auditoría) | AC-6 = `200` con `items = []` y `cancerTypeEnabled = false` · AC-2 (parte `/case`) → US-088 (S5) · AC-7 → US-102 (S6) `[S4 resp. 6c]` |
 | L1D-97 | US-005 | Dependencias ocultas: el AC-3 va a la vista de caso (S5) | Enlace a la sección existente de la ficha `[S4 resp. 6d]` `[S4 resp. 14]` |
+| L1D-109 | US-112 | Decisiones: fusión sin decidir (⛔ ADR-39) · AC-5 con `mode = hybrid`, valor que no existe en el contrato (`dense \| hibrida`) | `RETRIEVAL_MODE` con `dense` por defecto; RRF (k = 60) por defecto y suma ponderada (0,3) como alternativa, de ADR-45; AC-5 corregido y AC-6 nuevo; cambio aditivo en `retrievalParams` `[S4 resp. 17]` `[S4 resp. 18]` |
+| L1D-245 | US-133 | Dependencias: US-113 fuera del S4 · Medición: baseline del S1 con adaptadores falsos y otros modelos | Compara A0, A2 y A2b en la misma corrida con los modelos de US-233a y el conjunto de desarrollo de `ol06-particion-v1`; sin US-113; AC-5 nuevo (validación y prueba sin abrir, ADR-45 P2) `[S4 resp. 19]` |
 | — | US-240…US-247 | Nuevas | Escritas con AC Given/When/Then y su tipo de test según la matriz TDD de `CLAUDE.md` |
 
-**Resultado:** las 18 tarjetas cumplen la DoR, con dos excepciones de tamaño aceptadas. Quedan supuestos marcados `(asumido)` que se validan en la sesión de oncólogos sin bloquear (§5).
+**Resultado:** las 20 tarjetas cumplen la DoR, con dos excepciones de tamaño aceptadas. Quedan supuestos marcados `(asumido)` que se validan en la sesión de oncólogos sin bloquear (§5).
 
 ## 3. Decisiones y ADRs
 
@@ -94,6 +101,13 @@ Según el orden de prioridad del usuario (RAG de conocimiento → búsqueda por 
 15. **Diseño S4-01:** variante A, tarjetas apiladas (§6).
 16. **Cobertura de la Demo 3:** los huecos que encontró la auditoría se cierran en documentos formales (§9). Los tres documentos temporales se conservan como evidencia en `docs/evidence/S3-demo3/`. En las historias se cita como `[S4 resp. 15]`.
 
+### Ampliación del 2026-10-30
+
+17. **US-112 entra en el S4 detrás de un flag:** `RETRIEVAL_MODE = dense | hibrida`, con `dense` por defecto (ADR-45: no se adopta una mejora de recuperación sin medirla). La demo usa `hibrida` solo si US-133 no muestra retroceso.
+18. **Fusión:** se implementan las dos de ADR-45, RRF con k = 60 (A2, por defecto) y suma ponderada con 0,3 (A2b), sin barrer hiperparámetros.
+19. **US-133 entra en el S4** y compara la híbrida con la densa en la misma corrida (mismos modelos locales de US-233a, mismo corpus, conjunto de desarrollo de `ol06-particion-v1`), no con el baseline del S1. Sale la dependencia de US-113.
+20. **Recorte:** US-112 y US-133 van después de US-238: US-003/US-005 → US-238 → US-133 → US-112.
+
 ## 5. Cambios de slicing aprobados
 
 Aplicados en `backlog/features/` (cada Feature con su fila en `## Conflictos de fuentes`), en `backlog/features/README.md` y en el PRD (E-15):
@@ -105,14 +119,15 @@ Aplicados en `backlog/features/` (cada Feature con su fila en `## Conflictos de 
   - US-004, US-101, US-070, US-131, US-140, US-218, US-219 y US-120;
   - DEC-01 (L1D-92), DEC-06, DEC-07, DEC-08 y DEC-09.
 - **Del S4 al S6:** US-056, US-057, US-239 y US-047.
+- **De `si-hay-capacidad` al S4 (2026-10-30):** US-112 y US-133 `[S4 resp. 17]`…`[S4 resp. 20]`.
 - **Totales:**
 
   | Alcance | Pts |
   |---|---|
-  | S4 | **61** |
+  | S4 | **69** (61 + 8 el 2026-10-30) |
   | S5 | **168** |
   | S6 | **102** |
-  | MVP comprometido | 602 |
+  | MVP comprometido | 610 |
 
   El S5 queda **sobrecargado**: su refinamiento debe recortar según la prioridad (gestión de usuarios → OCR → …) y llevar lo que sobre a `V2-Post-MVP.md`.
 - **G-Piloto (S6):** no se sacó del camino crítico ninguna historia suya. US-047 (alta manual de pacientes) pasa al S6, el mismo sprint del gate.
@@ -162,6 +177,7 @@ Aplicados en `backlog/features/` (cada Feature con su fila en `## Conflictos de 
    - **→ Sprint 4:** L1D-25 (FEAT-10c).
    - **Sin cambio:** L1D-286 sigue en Sprint 4.
 4. ✅ **Comprometidas actualizadas:** L1D-95, 97, 125, 131, 144 y 145 llevan al final un bloque «Refinamiento del S4» con sus decisiones. Se quitaron las etiquetas `needs-refinement` (L1D-95, 144, 145) y `refinar-en-planning` (L1D-125).
+5. ⏳ **Pendiente (ampliación del 2026-10-30):** L1D-109 (US-112) y L1D-245 (US-133) → milestone Sprint 4, con un bloque «Refinamiento del S4» en su descripción. L1D-245 cambia de título. Se hace con confirmación, después del merge de este PR.
 
 ## 8. Cambios aplicados en este PR (aprobados)
 

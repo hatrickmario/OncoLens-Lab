@@ -2,13 +2,13 @@
 
 > Linear: [L1D-17](https://linear.app/l1der-lab-mjbc/issue/L1D-17)
 
-**Talla:** L · **Sprint:** `si-hay-capacidad` (US-112…US-115) · 4 (US-238: reescritura condicional de la consulta, comprometida, `[S4 resp. 12]`) · 5 (US-116) · **Capacidad:** CAP-06 (AC-06.1 parte S3: híbrida, expansión, filtros) · CAP-05 (AC-05.1: fuentes y filtros reales) · CAP-04 (AC-04.3: faltantes como "desconocido" en Backend 2) · **Recorrido principal:** sí (US-116) · no (US-112…US-115, US-238)
+**Talla:** L · **Sprint:** `si-hay-capacidad` (US-113…US-115) · 4 (US-112: híbrida detrás de `RETRIEVAL_MODE`, `[S4 resp. 17]`; US-238: reescritura condicional de la consulta, comprometida, `[S4 resp. 12]`) · 5 (US-116) · **Capacidad:** CAP-06 (AC-06.1 parte S3: híbrida, expansión, filtros) · CAP-05 (AC-05.1: fuentes y filtros reales) · CAP-04 (AC-04.3: faltantes como "desconocido" en Backend 2) · **Recorrido principal:** sí (US-116) · no (US-112…US-115, US-238)
 **Requisitos:** FR-09 (parte S3: *sparse*, filtros, expansión bilingüe; técnica sin HU, Q-08) · IA-02, IA-03 · RN-03, RN-05 (regresiones) · RN-02 (regresión; **enmienda decidida el 2026-10-23 en US-238**) · RN-11 (regresión: notas enmascaradas)
 **Evidencia:** [→ PRD §5 FR-09], [→ PRD §6 RN-02, RN-03, RN-05, RN-11], [→ PRD §12 Idioma, Recuperación], [→ PRD §18.3.4 AC-04.3], [→ PRD §18.3.5 AC-05.1], [→ PRD §18.3.6 AC-06.1, M-06.1], [→ readme §5.0 S3 KR1, KR2 ("enmascaramiento de las notas enviadas al LLM")], [→ readme §4.1 `sourcesSelected`, `filtersApplied`], [→ readme §4.2 `ClinicalContext.missingCriticalData`, `/rag/query`], [→ readme §6 OL-02 (no incluye: *sparse*, filtros), OL-04 (no incluye: selectores)], [→ readme §3.3 #10], [→ backlog/01-requisitos.md §10 V-04, §14 Q-08], [→ docs/AS-IS.md P5, JTBD 3]
 **Dependencias:** ↪ US-055 (pipeline dense), US-052 (contexto), US-117b (*sparse* poblado; antes US-117), FEAT-04 US-006 (faltantes en el contexto) · ⛔ ADR-39 (modelo *sparse* y fusión; los AC usan adapters falsos) · 🔗 Medido en: US-133 (M-06.1 sin retroceso) · 🔗 Regresión [RN-02] → US-055 · 🔗 Regresión [RN-05] → US-055 · 🔗 Regresión [RN-11] → US-049
 **Valor:** el oncólogo busca con términos exactos (un fármaco, un gen) que la búsqueda semántica sola pierde, en español sobre evidencia mayoritariamente en inglés, y necesita acotar a guías o ensayos (P5, JTBD 3). Con esta Feature la búsqueda combina ambas señales, se expande al otro idioma, respeta los filtros que el oncólogo ve en el panel y sabe qué datos del paciente faltan.
-**Workaround en el MVP (US-112…US-115, y US-133 en FEAT-T5b):** ADR-39 elige *embeddings* multilingües; la recuperación sigue siendo *dense* + *reranker* (US-055) y la suite mide recall es→en ≥ 0,70 (US-072).
-**Stories:** US-112, US-113, US-114, US-115 (16 puntos, `si-hay-capacidad`) · US-238 (5 puntos, S4) · US-116, US-220 (6 puntos, S5)
+**Workaround en el MVP (US-113…US-115):** ADR-39 elige *embeddings* multilingües; la suite mide recall es→en ≥ 0,70 (US-072). US-112 y su medición (US-133, FEAT-T5b) entran en el S4; mientras US-133 no descarte un retroceso, `RETRIEVAL_MODE = dense` (US-055) sigue siendo el valor por defecto `[S4 resp. 17]`.
+**Stories:** US-113, US-114, US-115 (11 puntos, `si-hay-capacidad`) · US-112, US-238 (10 puntos, S4) · US-116, US-220 (6 puntos, S5)
 
 ## Fixtures
 
@@ -25,11 +25,16 @@
 
 > Linear: [L1D-109](https://linear.app/l1der-lab-mjbc/issue/L1D-109)
 
-`FEAT-06b` · Sprint si-hay-capacidad · Estimación **5** · — (técnica, PRD §17; V-04) · FR-09 (S3: *sparse*), IA-03, RN-03, RN-05 · AC-06.1 (híbrida) · ⛔ ADR-39 (modelo *sparse*) · ↪ US-055, US-117 · 🔗 Regresión [RN-02] → US-055 · 🔗 Regresión [RN-05] → US-055 · 🔗 Medido en: US-133 · **Recorrido principal:** no · **Workaround en el MVP:** ADR-39 elige *embeddings* multilingües y la recuperación sigue siendo *dense* + *reranker* (US-055); la suite mide recall es→en ≥ 0,70 (US-072)
+`FEAT-06b` · Sprint 4 *(desde `si-hay-capacidad`, `[S4 resp. 17]`)* · Estimación **5** · — (técnica, PRD §17; V-04) · FR-09 (S3: *sparse*), IA-03, RN-03, RN-05, RN-22 · AC-06.1 (híbrida) · ADR-39 (modelo *sparse*, decidido) · ADR-45 (brazos A2 y A2b) · ↪ US-055, US-117b · 🔗 Regresión [RN-02] → US-055 · 🔗 Regresión [RN-05] → US-055 · 🔗 Medido en: US-133 · **Recorrido principal:** no · **Valor por defecto:** `RETRIEVAL_MODE = dense` (recuperación de US-055) hasta que US-133 descarte un retroceso
 
 > **Enmienda decidida (usuario, 2026-10-20, ADR-45):** la expansión bilingüe **no invoca al LLM local** (RN-02 se mantiene). Se resuelve con sinónimos del catálogo y/o un modelo de traducción dedicado, según el resultado de los brazos A3 y A4 de ADR-45. Los AC se ajustan en el refinamiento de la historia; el ID no cambia. **Linear: pendiente de sincronizar.**
 
 > **Decidido (usuario, 2026-10-27, desde US-117b):** el *sparse* de la consulta sale del **mismo BGE-M3, los mismos pesos y el mismo `SPARSE_VECTOR_SOURCE`** que el del corpus (`reindex-sparse` y la ingesta lo escriben con esa configuración); si cabe, test de consistencia índice/consulta con la misma configuración. La búsqueda híbrida vive dentro de `RAGOrchestratorService`, no en el CLI ni en el agente.
+
+> **Refinamiento del S4 (usuario, 2026-10-30):** entra en el S4 `[S4 resp. 17]` `[S4 resp. 18]`.
+> - **Detrás de un flag, `dense` por defecto.** `RETRIEVAL_MODE` admite `dense | hibrida` (los mismos valores que el enum `retrievalMode` del contrato) y su valor por defecto es `dense`, el comportamiento actual (ADR-45, «Configuración»). La demo usa `hibrida` solo si US-133 no muestra retroceso frente a `dense`.
+> - **Dos fusiones, RRF por defecto.** `RETRIEVAL_FUSION = rrf | ponderada`: RRF con `RRF_K = 60` (brazo A2 de ADR-45) o suma ponderada denso/*sparse* con `HYBRID_SPARSE_WEIGHT = 0,3` (brazo A2b, pesos del artículo de BGE-M3). Los hiperparámetros salen de la fuente y no se barren (ADR-45 P1).
+> - La enmienda de ADR-45 que figura arriba (expansión bilingüe sin LLM) es de US-113, que sigue en `si-hay-capacidad`.
 
 ## Story
 Como oncólogo, quiero que la búsqueda encuentre también la evidencia que menciona
@@ -51,20 +56,33 @@ porque la búsqueda semántica no lo ubicó.
   procesa, entonces responde `sin_evidencia` y el LLM registra cero invocaciones.
   `[RN-02]`
 - **AC-5 (borde · parámetros en configuración y trazados)** · Dados `RETRIEVAL_MODE =
-  hybrid` y los parámetros de fusión en configuración, cuando se procesa cualquier
-  consulta, entonces `meta.retrievalParams` registra `mode = hybrid` y esos parámetros, y
-  quedan persistidos en `retrieval_params`. `[RN-22]` `[AC-T1.4]`
+  hibrida`, `RETRIEVAL_FUSION = rrf` y `RRF_K = 60` en configuración, cuando se procesa
+  cualquier consulta, entonces `meta.retrievalParams` registra `retrievalMode = hibrida`,
+  la fusión y su parámetro, y quedan persistidos en `retrieval_params`. `[RN-22]`
+  `[AC-T1.4]` `[S4 resp. 18]`
+- **AC-6 (borde · valor por defecto y fusión ponderada)** · Dado `RETRIEVAL_MODE` sin
+  definir, cuando se procesa `Q-KEYWORD`, entonces el recuperador *sparse* falso registra
+  cero llamadas, `retrievalMode = dense` y `ch-m2-1` no llega al *reranker*; y dados
+  `RETRIEVAL_MODE = hibrida`, `RETRIEVAL_FUSION = ponderada` y `HYBRID_SPARSE_WEIGHT = 0,3`,
+  cuando se procesa `Q-KEYWORD`, entonces `ch-m2-1` llega al *reranker* y
+  `meta.retrievalParams` registra la fusión ponderada y su peso. `[RN-22]` `[ADR-45]`
+  `[S4 resp. 17]` `[S4 resp. 18]`
 
 ## Contexto técnico
 `MilvusRepository.hybrid_search()` con el mismo filtro escalar (`is_current`,
 `cancer_type_tags`, `population`, `source_type`) en ambas ramas y fusión de candidatos
 antes del *reranker*; `relevance_score` sigue saliendo solo del *reranker*
-`[readme §6.1 #4]`. Depende de que el *sparse* esté poblado (US-117b). Tests: Pytest con
-recuperadores falsos y un test contra Milvus de test en la CI.
+`[readme §6.1 #4]`. Depende de que el *sparse* esté poblado (US-117b). La fusión es una
+regla pura en `domain/` (RRF y ponderada) y el *sparse* de la consulta sale del mismo
+BGE-M3 y del mismo `SPARSE_VECTOR_SOURCE` que el del corpus (decisión del 2026-10-27).
+**Contrato:** cambio aditivo en `retrievalParams` (ADR-26) con la fusión y su parámetro
+(`null` en modo `dense`), primero en el `openapi.yaml` de `rag-orchestrator`
+(`sync-contracts`). Tests: Pytest con recuperadores falsos y un test contra Milvus de
+test en la CI.
 
 ## INVEST
 **Small** ✓ una búsqueda adicional y una fusión antes de un paso existente.
-**Testable** ✓ cinco tests con recuperadores falsos.
+**Testable** ✓ seis tests con recuperadores falsos.
 
 ---
 
@@ -361,3 +379,4 @@ ampliados. El contrato OpenAPI cambia de forma compatible (`meta.retrievalParams
 | C-Pre5 | Contrato de readme §4.1: `filtersApplied` sin filtro de antigüedad | Usuario, 2026-10-11: filtro por año de publicación | Usuario (`[Pre-S1 resp. 15]`): `publishedFromYear` en US-033 (AC-14) y US-220 en el S5 |
 | S3-2026-10-23 | Dependencia del *sparse* poblado en US-117 | Refinamiento del S3 (2026-10-23): US-117 partida en US-117a y US-117b | El *sparse* de la semilla y el versionado son de US-117b (S3) `[S3 resp. 2]` |
 | S4-2026-10-29 | US-238 «propuesta, capacidad por confirmar» y ⛔ enmienda a RN-02 pendiente de aplicar al PRD | Refinamiento del S4 (usuario, 2026-10-29): comprometida en el S4 con 5 pts; la sesión principal aplica la enmienda en el PRD; excepción a la DoR por 9 AC `[S4 resp. 12]` | Decisión del usuario |
+| S4-2026-10-30 | US-112 `si-hay-capacidad`, con `mode = hybrid` en el AC-5 y la fusión sin decidir (⛔ ADR-39) | Refinamiento del S4 (usuario, 2026-10-30): entra en el S4 detrás de `RETRIEVAL_MODE` con `dense` por defecto; RRF (k = 60) por defecto y suma ponderada (0,3) como alternativa, ambas de ADR-45; el valor del modo sigue el enum del contrato (`hibrida`) `[S4 resp. 17]` `[S4 resp. 18]` | Decisión del usuario |
