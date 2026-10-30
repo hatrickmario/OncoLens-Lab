@@ -74,7 +74,9 @@
       "topK": 40,
       "rerankTopN": 10,
       "relevanceThreshold": 0.5,
-      "retrievalMode": "dense"
+      "retrievalMode": "dense",
+      "fusion": "ninguna",
+      "fusionParam": 0
     },
     "latencyMs": 6100
   }

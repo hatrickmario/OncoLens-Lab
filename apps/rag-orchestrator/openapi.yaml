@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — RAG & AI Services API (Backend 2 / rag-orchestrator)
-  version: 1.6.0
+  version: 1.7.0
   description: >-
     API interna, alcanzable solo desde la red ai-net y solo por clinical-api (JWT de servicio
     asimétrico; la cookie de sesión del doctor nunca llega aquí). No persiste PHI y procesa los
@@ -529,7 +529,23 @@ components:
         retrievalParams:
           type: object
           additionalProperties: false
-          required: [topK, rerankTopN, relevanceThreshold, retrievalMode]
+          required: [topK, rerankTopN, relevanceThreshold, retrievalMode, fusion, fusionParam]
+          unevaluatedProperties: false
+          description: >-
+            Trazado de la recuperación (US-112, design D7). `dense` implica `fusion = ninguna` y `fusionParam = 0`;
+            `hibrida` implica `fusion` en {rrf, ponderada} (k entero >= 1 con rrf; peso en (0, 1) con ponderada; el rango lo
+            valida la configuración al arrancar).
+          if:
+            required: [retrievalMode]
+            properties:
+              retrievalMode: {const: dense}
+          then:
+            properties:
+              fusion: {const: ninguna}
+              fusionParam: {const: 0}
+          else:
+            properties:
+              fusion: {enum: [rrf, ponderada]}
           properties:
             topK:
               type: integer
@@ -544,6 +560,18 @@ components:
             retrievalMode:
               type: string
               enum: [dense, hibrida]
+            fusion:
+              type: string
+              enum: [ninguna, rrf, ponderada]
+              description: >-
+                Regla que fusionó las ramas dense y sparse (US-112). `ninguna` si y solo si
+                `retrievalMode = dense`. Nunca null.
+            fusionParam:
+              type: number
+              minimum: 0
+              description: >-
+                Parámetro de la fusión: `0` con `ninguna`; `k` de RRF (entero >= 1) con `rrf`; peso de la rama
+                sparse (0 < w < 1) con `ponderada`. Nunca null.
         latencyMs:
           type: integer
           minimum: 0

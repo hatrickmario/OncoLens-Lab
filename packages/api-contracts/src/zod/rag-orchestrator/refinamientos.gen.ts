@@ -1,7 +1,7 @@
 // GENERADO desde apps/rag-orchestrator/openapi.yaml — no editar a mano (npm run contracts:generate)
 
 import * as z from 'zod';
-import { zApplicabilityCriterion, zCitedSource, zEvidenceOption, zRagFollowUpResponse, zRagQueryInternalResponse, zSourceApplicability, zSupportedClaim, zSynthesis } from './zod.gen.js';
+import { zApplicabilityCriterion, zCitedSource, zEvidenceOption, zRagFollowUpResponse, zRagMeta, zRagQueryInternalResponse, zSourceApplicability, zSupportedClaim, zSynthesis } from './zod.gen.js';
 
 type Ruta = readonly PropertyKey[];
 type Contexto = { addIssue(incidencia: { code: 'custom'; message: string; path?: PropertyKey[] }): void };
@@ -79,6 +79,29 @@ function verificarRagFollowUpResponse(valor: unknown, ctx: Contexto, ruta: Ruta)
         });
       }
     }
+    if (tiene(objeto0, "meta")) {
+      const hijo0 = objeto0["meta"];
+      verificarRagMeta(hijo0, ctx, [...ruta, "meta"]);
+    }
+  }
+}
+function verificarRagMeta(valor: unknown, ctx: Contexto, ruta: Ruta): void {
+  if (esObjeto(valor)) {
+    const objeto0 = valor;
+    if (tiene(objeto0, "retrievalParams")) {
+      const hijo0 = objeto0["retrievalParams"];
+      if (esObjeto(hijo0)) {
+        const objeto1 = hijo0;
+        if ((!tiene(objeto1, "retrievalMode") || (objeto1["retrievalMode"] === "dense")) && tiene(objeto1, "retrievalMode")) {
+          if (tiene(objeto1, "fusion") && !(objeto1["fusion"] === "ninguna")) ctx.addIssue({ code: 'custom', path: [...[...ruta, "retrievalParams"], "fusion"], message: "RagMeta.retrievalParams: si retrievalMode = \"dense\" y retrievalMode presente: fusion debe cumplir {\"const\":\"ninguna\"}" });
+          if (tiene(objeto1, "fusionParam") && !(objeto1["fusionParam"] === 0)) ctx.addIssue({ code: 'custom', path: [...[...ruta, "retrievalParams"], "fusionParam"], message: "RagMeta.retrievalParams: si retrievalMode = \"dense\" y retrievalMode presente: fusionParam debe cumplir {\"const\":0}" });
+        } else {
+          if (tiene(objeto1, "fusion") && !(esUnoDe(objeto1["fusion"], ["rrf","ponderada"]))) ctx.addIssue({ code: 'custom', path: [...[...ruta, "retrievalParams"], "fusion"], message: "RagMeta.retrievalParams: si no retrievalMode = \"dense\" y retrievalMode presente: fusion debe cumplir {\"enum\":[\"rrf\",\"ponderada\"]}" });
+        }
+        const permitidas = new Set<string>(["fusion","fusionParam","relevanceThreshold","rerankTopN","retrievalMode","topK"]);
+        for (const clave of Object.keys(objeto1)) if (!permitidas.has(clave)) ctx.addIssue({ code: 'custom', path: [...[...ruta, "retrievalParams"], nombreDeCampo(clave)], message: "RagMeta.retrievalParams: propiedad no evaluada por el schema" });
+      }
+    }
   }
 }
 function verificarRagQueryInternalResponse(valor: unknown, ctx: Contexto, ruta: Ruta): void {
@@ -109,6 +132,10 @@ function verificarRagQueryInternalResponse(valor: unknown, ctx: Contexto, ruta: 
           verificarEvidenceOption(elemento1, ctx, [...[...ruta, "evidenceOptions"], indice1]);
         });
       }
+    }
+    if (tiene(objeto0, "meta")) {
+      const hijo0 = objeto0["meta"];
+      verificarRagMeta(hijo0, ctx, [...ruta, "meta"]);
     }
   }
 }
@@ -170,6 +197,7 @@ export const zApplicabilityCriterionRefinado = z.unknown().superRefine((valor, c
 export const zCitedSourceRefinado = z.unknown().superRefine((valor, ctx) => verificarCitedSource(valor, ctx, [])).pipe(zCitedSource);
 export const zEvidenceOptionRefinado = z.unknown().superRefine((valor, ctx) => verificarEvidenceOption(valor, ctx, [])).pipe(zEvidenceOption);
 export const zRagFollowUpResponseRefinado = z.unknown().superRefine((valor, ctx) => verificarRagFollowUpResponse(valor, ctx, [])).pipe(zRagFollowUpResponse);
+export const zRagMetaRefinado = z.unknown().superRefine((valor, ctx) => verificarRagMeta(valor, ctx, [])).pipe(zRagMeta);
 export const zRagQueryInternalResponseRefinado = z.unknown().superRefine((valor, ctx) => verificarRagQueryInternalResponse(valor, ctx, [])).pipe(zRagQueryInternalResponse);
 export const zSourceApplicabilityRefinado = z.unknown().superRefine((valor, ctx) => verificarSourceApplicability(valor, ctx, [])).pipe(zSourceApplicability);
 export const zSupportedClaimRefinado = z.unknown().superRefine((valor, ctx) => verificarSupportedClaim(valor, ctx, [])).pipe(zSupportedClaim);

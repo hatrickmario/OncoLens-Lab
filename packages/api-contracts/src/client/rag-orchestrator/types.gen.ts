@@ -245,11 +245,22 @@ export type RagMeta = {
      * Fuentes excluidas del corpus, declaradas como exclusión.
      */
     excludedSources: Array<string>;
+    /**
+     * Trazado de la recuperación (US-112, design D7). `dense` implica `fusion = ninguna` y `fusionParam = 0`; `hibrida` implica `fusion` en {rrf, ponderada} (k entero >= 1 con rrf; peso en (0, 1) con ponderada; el rango lo valida la configuración al arrancar).
+     */
     retrievalParams: {
         topK: number;
         rerankTopN: number;
         relevanceThreshold: number;
         retrievalMode: 'dense' | 'hibrida';
+        /**
+         * Regla que fusionó las ramas dense y sparse (US-112). `ninguna` si y solo si `retrievalMode = dense`. Nunca null.
+         */
+        fusion: 'ninguna' | 'rrf' | 'ponderada';
+        /**
+         * Parámetro de la fusión: `0` con `ninguna`; `k` de RRF (entero >= 1) con `rrf`; peso de la rama sparse (0 < w < 1) con `ponderada`. Nunca null.
+         */
+        fusionParam: number;
     };
     latencyMs: number;
 };
