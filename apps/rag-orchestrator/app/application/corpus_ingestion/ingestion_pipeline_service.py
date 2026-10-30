@@ -15,14 +15,16 @@ from contextlib import contextmanager
 from datetime import date
 
 from app.application.corpus_ingestion.ports import ResolutorDeMetadatos, SparsePassageEncoder
-from app.application.corpus_metadata.poblacion_puertos import (
-    AlmacenDePoblacion,
-    ExtractorDePoblacion,
-)
 from app.application.corpus_ingestion.reporte import (
     Estado,
     ReporteDeIngesta,
     ResultadoDeIngesta,
+)
+from app.application.corpus_metadata.poblacion_puertos import (
+    AlmacenDePoblacion,
+    DocumentoParaExtraer,
+    ExtractorDePoblacion,
+    Fragmento,
 )
 from app.application.ports import Clock
 from app.application.seed_corpus.ports import (
@@ -36,12 +38,16 @@ from app.application.seed_corpus.ports import (
 from app.application.seed_corpus.nucleo_de_versionado import NucleoDeVersionado
 from app.application.seed_corpus.registros import (
     chunks_del_documento,
+    identificador_de_chunk,
+    identificador_de_documento,
     registro_con_error,
     registro_embebido,
     registro_normalizado,
 )
 from app.application.seed_corpus.release import publicar_release_si_cambio_el_conjunto_vigente
-from app.domain.corpus_metadata.resultado import MetadatosResueltos
+from app.domain.corpus_metadata.poblacion_contadores import ContadoresDePoblacion
+from app.domain.corpus_metadata.poblacion_escritura import integrar_poblacion_en_abanico
+from app.domain.corpus_metadata.resultado import EXTRAIDO_VERIFICADO, MetadatosResueltos
 from app.domain.corpus_seed.admisibilidad import (
     Admision,
     PoliticaDeLicencias,
@@ -188,7 +194,7 @@ class IngestionPipelineService:
         versiones = self._catalogo.versiones_del_grupo(documento.version_group_id)
         decision = decidir_version(checksum, versiones)
         if decision.accion is Accion.OMITIR:
-            return self._omitir(documento, decision)
+            return self._omitir(documento, decision, texto, checksum)
         reanudado = es_reanudacion(checksum, versiones)
         fragmentos = self._fragmentar(texto)
         self._catalogo.guardar_documento(
@@ -196,7 +202,11 @@ class IngestionPipelineService:
         )
         vectores = self._embeber(fragmentos)
         vectores_sparse = self._codificar_sparse(fragmentos)
+        document_id = identificador_de_documento(documento.document_key, checksum)
         metadatos = self._resolver_metadatos(documento, texto, fragmentos)
+        metadatos, poblacion = self._extraer_poblacion(
+            documento, document_id, fragmentos, metadatos
+        )
         registro = registro_embebido(documento, admision, checksum, self._reloj.ahora(), metadatos)
         with _etapa("milvus"):
             self._indexar(registro, fragmentos, vectores, vectores_sparse, decision)
@@ -208,6 +218,7 @@ class IngestionPipelineService:
             reanudado=reanudado,
             metadatos=metadatos,
             document_id=registro.document_id,
+            poblacion=poblacion,
         )
 
     def _fragmentar(self, texto: str) -> list[str]:
@@ -227,6 +238,27 @@ class IngestionPipelineService:
         with _etapa("metadatos"):
             return self._resolutor_de_metadatos.resolver(documento, texto, fragmentos)
 
+    def _extraer_poblacion(
+        self,
+        documento: DocumentoDeSemilla,
+        document_id: str,
+        fragmentos: Sequence[str],
+        metadatos: MetadatosResueltos,
+    ) -> tuple[MetadatosResueltos, ContadoresDePoblacion | None]:
+        """La población del estudio en abanico (US-242, D8): solo si la extracción de metadatos corrió (si cayó, el documento
+        queda ``pendiente`` y no se gastan más llamadas). Un fallo del LLM o del NLI deja SOLO ese criterio ``pendiente``;
+        un defecto del extractor deja SOLO este documento en ``error`` (etapa ``poblacion``)."""
+        if self._extractor_de_poblacion is None or metadatos.metadata_source != EXTRAIDO_VERIFICADO:
+            return metadatos, None
+        with _etapa("poblacion"):
+            extraida = self._extractor_de_poblacion.extraer(
+                _documento_para_extraer(documento, document_id, fragmentos),
+                documento.cancer_type_tags,
+                None,
+            )
+            integrada = integrar_poblacion_en_abanico(metadatos, extraida.population_criteria)
+        return integrada, extraida.contadores
+
     def _embeber(self, fragmentos: Sequence[str]) -> list[list[float]]:
         with _etapa("embeddings"):
             return self._embedder.embeber(fragmentos)
@@ -238,7 +270,7 @@ class IngestionPipelineService:
             return list(exigir_sparse_por_pasaje(vectores, len(fragmentos)))
 
     def _omitir(
-        self, documento: DocumentoDeSemilla, decision: DecisionDeVersion
+        self, documento: DocumentoDeSemilla, decision: DecisionDeVersion, texto: str, checksum: str
     ) -> ResultadoDeIngesta:
         """Ya embebido con ese contenido: no se re-embebe, pero se reconcilia Milvus con el catálogo (RN-05)."""
         try:
@@ -279,6 +311,19 @@ class IngestionPipelineService:
             registro_con_error(documento, admision, checksum, self._reloj.ahora())
         )
         return _resultado_de_error(documento, fallo)
+
+
+def _documento_para_extraer(
+    documento: DocumentoDeSemilla, document_id: str, fragmentos: Sequence[str]
+) -> DocumentoParaExtraer:
+    """Los fragmentos llevan el ``chunk_id`` que Milvus indexará (``identificador_de_chunk``): la cita es verificable (RN-04)."""
+    return DocumentoParaExtraer(
+        documento.document_key,
+        document_id,
+        tuple(
+            Fragmento(identificador_de_chunk(document_id, i), f) for i, f in enumerate(fragmentos)
+        ),
+    )
 
 
 def _resultado_de_error(documento: DocumentoDeSemilla, fallo: FalloDeEtapa) -> ResultadoDeIngesta:

@@ -11,8 +11,10 @@ from __future__ import annotations
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import replace
 from datetime import datetime
+from typing import Any
 
 from app.application.corpus_ingestion.ports import ChunkParaReindexar
+from app.application.corpus_metadata.poblacion_puertos import PoblacionGuardada
 from app.application.ports import ChunkDelCorpus, ChunkEncontrado, DimensionDeVectorInvalida
 from app.application.seed_corpus.ports import (
     RegistroDeDocumento,
@@ -70,6 +72,25 @@ class CatalogoEnMemoria:
             raise VersionInexistente(document_id)
         self.documentos[document_id] = replace(
             registro, is_current=False, superseded_at=superseded_at
+        )
+
+    def leer_poblacion(self, document_id: str) -> PoblacionGuardada | None:
+        registro = self.documentos.get(document_id)
+        if registro is None:
+            return None
+        return PoblacionGuardada(
+            registro.population_criteria, registro.population_form, registro.metadata_source
+        )
+
+    def guardar_poblacion(
+        self, document_id: str, population_criteria: Mapping[str, Any], population_form: str
+    ) -> None:
+        self._puede("guardar_poblacion")
+        registro = self.documentos.get(document_id)
+        if registro is None:  # como el UPDATE real: ninguna fila afectada es un fallo, no un alta
+            raise VersionInexistente(document_id)
+        self.documentos[document_id] = replace(
+            registro, population_criteria=population_criteria, population_form=population_form
         )
 
     def ids_de_documentos_vigentes(self) -> frozenset[str]:

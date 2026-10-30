@@ -16,6 +16,7 @@ import sqlalchemy as sa
 from sqlalchemy import Engine
 from sqlalchemy.dialects.postgresql import insert
 
+from app.application.corpus_metadata.poblacion_puertos import PoblacionGuardada
 from app.application.seed_corpus.ports import (
     RegistroDeDocumento,
     RegistroDeRelease,
@@ -76,6 +77,31 @@ class CorpusDocumentRepository:
                 .values(is_current=False, superseded_at=superseded_at)
             )
             if retiradas.rowcount != 1:
+                raise VersionInexistente(document_id)
+
+    def leer_poblacion(self, document_id: str) -> PoblacionGuardada | None:
+        consulta = sa.select(
+            corpus_document.c.population_criteria,
+            corpus_document.c.population_form,
+            corpus_document.c.metadata_source,
+        ).where(corpus_document.c.document_id == document_id)
+        with self._motor.connect() as conexion:
+            fila = conexion.execute(consulta).one_or_none()
+        return None if fila is None else PoblacionGuardada(*fila)
+
+    def guardar_poblacion(
+        self, document_id: str, population_criteria: Mapping[str, Any], population_form: str
+    ) -> None:
+        """Reescribe SOLO la población de un documento ya registrado (US-242 D6); no crea filas ni toca el histórico."""
+        with self._motor.begin() as conexion:
+            actualizadas = conexion.execute(
+                sa.update(corpus_document)
+                .where(corpus_document.c.document_id == document_id)
+                .values(
+                    population_criteria=dict(population_criteria), population_form=population_form
+                )
+            )
+            if actualizadas.rowcount != 1:
                 raise VersionInexistente(document_id)
 
     def ids_de_documentos_vigentes(self) -> frozenset[str]:
