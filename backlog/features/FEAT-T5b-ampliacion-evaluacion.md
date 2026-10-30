@@ -2,13 +2,13 @@
 
 > Linear: [L1D-47](https://linear.app/l1der-lab-mjbc/issue/L1D-47)
 
-**Talla:** XL (Feature completa, propone división por sprint) · **Sprint:** 3 (US-132) · 5 (US-131, US-140, S4 → S5, `[S4 resp. 1]`; US-103, US-105, US-142, → G-Demo; reordenamiento del 2026-10-23) · `si-hay-capacidad` (US-104, US-106, US-133, US-141) · **Capacidad:** T-5 (AC-T5.1, AC-T5.3, AC-T5.4 por regresión) · **Recorrido principal:** sí (mide las hipótesis 1, 2 y 3) · no (US-104, US-106, US-133, US-141)
+**Talla:** XL (Feature completa, propone división por sprint) · **Sprint:** 3 (US-132) · 5 (US-131, US-140, S4 → S5, `[S4 resp. 1]`; US-103, US-105, US-142, → G-Demo; reordenamiento del 2026-10-23) · 4 (US-133: híbrida frente a *dense*, `[S4 resp. 19]`) · `si-hay-capacidad` (US-104, US-106, US-141) · **Capacidad:** T-5 (AC-T5.1, AC-T5.3, AC-T5.4 por regresión) · **Recorrido principal:** sí (mide las hipótesis 1, 2 y 3) · no (US-104, US-106, US-133, US-141)
 **Requisitos:** FR-20 (ampliación de datasets y métricas, OL-06) · TBD-03 (umbrales de confianza OCR, CAL) · medibles técnicos: M-01.1, M-01.2, M-01.3, M-02.1, M-02.2, M-02.3, M-02.4, M-03.1–M-03.5 (S2) · M-04.1, M-04.2, M-08.2, M-08.3, M-08.4, M-08.6, M-06.1 sin retroceso (S3) · M-10.1 y M-10.2 con hasta 3 opciones, M-07.2 con hasta 3 opciones, orden por aplicabilidad (RN-28), M-06.2 recalibrado (S5, en US-142) · verificación de G-Demo redefinido (S5) · G-6, G-7, G-8 (documentos), G-11, G-12, G-13
 **Evidencia:** [→ PRD §5 FR-20], [→ PRD §2.1 G-6, G-7, G-8, G-11, G-12, G-13], [→ PRD §7 NFR (extracción ≤ 60 s; vista de caso ≤ 2 s)], [→ PRD §12 Evaluación], [→ PRD §16 TBD-02, TBD-03, TBD-20], [→ PRD §18.3.1 M-01.1–M-01.3], [→ PRD §18.3.2 M-02.1–M-02.4], [→ PRD §18.3.3 M-03.1–M-03.5], [→ PRD §18.3.4 M-04.1, M-04.2], [→ PRD §18.3.6 M-06.1], [→ PRD §18.3.8 M-08.2–M-08.4, M-08.6], [→ PRD §18.4 AC-T5.1, AC-T5.3, AC-T5.4], [→ readme §6 OL-05 (tests de exactitud), OL-06 (datasets v1.1 y v1.2)], [→ readme §5.0 S2 KR1–KR4, S3 KR1, KR3, KR4], [→ backlog/02-adrs.md §4.1 TBD-03, TBD-20], [→ PRD §18.3.10 M-10.1, M-10.2], [→ PRD §2.1 G-2, G-5, G-14], [→ PRD §14 G-Demo], [→ readme §5.0 S4 KR1], [→ backlog/01-requisitos.md §15 (slicing por hipótesis: G-Demo redefinido)]
 **Dependencias:** ↪ US-072 (*runner* y reporte), US-074 (suite en la DoD), US-014 · ADR-41 · ⛔ ADR-39 (motores de OCR, LLM y NLI fijados para las mediciones reales) · ⛔ DEC-07 · escenario más probable (metas y umbrales de regresión) · 🔗 Mide a: FEAT-01b, FEAT-02b, FEAT-03a (S3) · FEAT-04, FEAT-06c (S4) · FEAT-08b (S5) · FEAT-10c, FEAT-10b (S5) · 🔗 Consume: US-139 (reporte de feedback), US-024 · DEC-14 (VM-3) para G-Demo
 **Valor:** la hipótesis solo se valida con números: cuántos datos del documento se leen bien, si el caso reconstruido es fiel, si los faltantes se detectan y si la aplicabilidad no inventa nada. Esta Feature amplía la suite del S1 con los datasets sintéticos de cada capacidad nueva, para que todo cambio de modelo, prompt, umbral, catálogo o corpus se mida contra ellos.
-**Workaround en el MVP:** US-104 → umbrales del OCR con valores iniciales en configuración; US-106 → invariantes en los tests de US-086, US-098 y US-099; US-133 → sin híbrida no hay retroceso que medir; US-141 → se integra en US-142 (AC-7).
-**Stories:** S3: US-132 (5 puntos) · S5: US-131, US-140 (8 puntos, S4 → S5, `[S4 resp. 1]`) · US-103, US-105, US-142 (15 puntos; reordenamiento del 2026-10-23) · `si-hay-capacidad`: US-104, US-106, US-133, US-141 (14 puntos)
+**Workaround en el MVP:** US-104 → umbrales del OCR con valores iniciales en configuración; US-106 → invariantes en los tests de US-086, US-098 y US-099; US-141 → se integra en US-142 (AC-7).
+**Stories:** S3: US-132 (5 puntos) · S5: US-131, US-140 (8 puntos, S4 → S5, `[S4 resp. 1]`) · US-103, US-105, US-142 (15 puntos; reordenamiento del 2026-10-23) · S4: US-133 (3 puntos, `[S4 resp. 19]`) · `si-hay-capacidad`: US-104, US-106, US-141 (11 puntos)
 
 > **Propuesta de división (talla XL).** Publicar como una Feature por sprint sin cambiar IDs: **T5b-S3 Ingesta y caso** (US-103, US-105), **T5b-S4 Faltantes** (US-131) y **T5b-S5 Aplicabilidad, opciones y G-Demo** (US-132, US-140, US-142); US-104, US-106, US-133 y US-141 quedan `si-hay-capacidad` (slicing v2). Las discrepancias sembradas (M-07.1) y la búsqueda complementaria (M-08.5) quedan con sus Features diferidas (FEAT-07, S6; FEAT-08c, Post-MVP; lote 4).
 
@@ -286,39 +286,56 @@ US-024 · DEC-14 (FEAT-T5c, S5). Tests: Pytest del *runner* con FX-08b-a.
 
 ---
 
-## US-133 — La recuperación híbrida no retrocede respecto del baseline del S1
+## US-133 — La recuperación híbrida no retrocede respecto de la densa con los mismos modelos
 
 > Linear: [L1D-245](https://linear.app/l1der-lab-mjbc/issue/L1D-245)
 
-`FEAT-T5b` · Sprint si-hay-capacidad · Estimación **3** · — (técnica, PRD §17; OL-06) · FR-20 · M-06.1 · ↪ US-073 (baseline), US-112, US-113 · 🔗 Mide a: FEAT-06b · **Recorrido principal:** no · **Workaround en el MVP:** sin búsqueda híbrida no hay retroceso que medir; ADR-39 elige *embeddings* multilingües y la suite mide recall es→en ≥ 0,70 (US-072)
+`FEAT-T5b` · Sprint 4 *(desde `si-hay-capacidad`, `[S4 resp. 19]`)* · Estimación **3** · — (técnica, PRD §17; OL-06) · FR-20 · M-06.1 · ADR-45 (brazos A0, A2, A2b; protocolo P1–P2) · ↪ US-112, US-233a (suite con modelos locales), US-072 · 🔗 Mide a: FEAT-06b · **Recorrido principal:** no
+
+> **Refinamiento del S4 (usuario, 2026-10-30):** entra en el S4 `[S4 resp. 19]`.
+> - **Se compara con la recuperación *dense* en la misma corrida**, con los mismos modelos locales (US-233a), el mismo corpus y las mismas preguntas, y no con el baseline del S1. Ese baseline salió con adaptadores falsos («no validada», `reports/eval/s3-cierre.md`) y con modelos distintos de los de ADR-39.
+> - **Sale la dependencia de US-113:** la expansión bilingüe sigue en `si-hay-capacidad` y se medirá cuando entre (brazos A3 y A4 de ADR-45).
+> - **Su resultado decide el modo de la demo:** sin retroceso, la demo puede usar `RETRIEVAL_MODE = hibrida`; con retroceso, sigue en `dense` `[S4 resp. 17]`. Adoptar la híbrida como mejora definitiva requiere cerrar ADR-45 (validación y prueba), que no es parte de esta historia.
 
 ## Story
-Como responsable técnico, quiero comparar la recuperación híbrida y la expansión
-bilingüe con el baseline del S1, para que el cambio de recuperación no empeore lo que el
-oncólogo ya recibía.
+Como responsable técnico, quiero comparar la recuperación híbrida con la densa, con los
+mismos modelos, corpus y preguntas, para que el cambio de recuperación no empeore lo que
+el oncólogo ya recibía.
 
 ## AC (Given/When/Then)
-- **AC-1 (happy path)** · Dados el dataset del S1 y el reporte del baseline (US-073),
-  cuando se ejecuta `evaluate --config eval/configs/s3.yaml`, entonces el reporte trae
-  recall@10 total, recall@10 de español a inglés y MRR, con la diferencia frente al
-  baseline. `[M-06.1]` `[readme §5.0 S3 KR1]`
-- **AC-2 (borde · retroceso)** · Dada una diferencia peor que
-  `RETRIEVAL_REGRESSION_TOLERANCE` en cualquiera de las tres métricas, cuando termina la
-  suite, entonces sale con código ≠ 0. `[readme §5.0 S3 KR1]` `[RN-22]`
-- **AC-3 (borde · modo híbrido en todas las consultas)** · Dado el reporte del AC-1,
-  cuando se inspecciona `meta.retrievalParams` de cada consulta, entonces el 100 % trae
-  `mode = hybrid`. `[readme §5.0 S3 KR1]`
+- **AC-1 (happy path)** · Dados el conjunto de desarrollo de `data/eval/ol06-particion-v1`,
+  los modelos locales de ADR-39 (US-233a) y el corpus indexado con *dense* y *sparse*,
+  cuando se ejecuta `evaluate --config eval/configs/s4-hibrida.yaml`, entonces el reporte
+  trae, para A0 (*dense*), A2 (híbrida con RRF, k = 60) y A2b (suma ponderada, 0,3),
+  recall@10 total, recall@10 de español a inglés y MRR, con la diferencia de A2 y A2b
+  frente a A0 en la misma corrida. `[M-06.1]` `[ADR-45 P1]` `[S4 resp. 19]`
+- **AC-2 (borde · retroceso)** · Dado un brazo híbrido con una diferencia frente a A0
+  peor que `RETRIEVAL_REGRESSION_TOLERANCE` en cualquiera de las tres métricas, cuando
+  termina la suite, entonces el reporte marca ese brazo como retroceso y la suite sale con
+  código ≠ 0. `[readme §5.0 S3 KR1]` `[RN-22]` `[S4 resp. 17]`
+- **AC-3 (borde · cada consulta trazada con su brazo)** · Dado el reporte del AC-1,
+  cuando se inspecciona `meta.retrievalParams` de cada consulta, entonces el 100 % de las
+  de A0 trae `retrievalMode = dense` y el 100 % de las de A2 y A2b trae
+  `retrievalMode = hibrida` con su fusión. `[readme §5.0 S3 KR1]` `[S4 resp. 18]`
 - **AC-4 (borde · reproducible)** · Dada la configuración falsa, cuando se ejecuta dos
   veces, entonces las métricas son idénticas. `[OL-06]`
+- **AC-5 (invariante · validación y prueba sin abrir)** · Dada la configuración del AC-1,
+  cuando se ejecuta, entonces solo se evalúan preguntas del conjunto de desarrollo, la
+  corrida verifica `golden_sha256` contra el golden vigente y los conjuntos de validación
+  y prueba no se leen. `[ADR-45 P2]`
 
 ## Contexto técnico
-Reutiliza el *runner* y el dataset de recuperación de US-072; el baseline del S1 se lee
-del archivo versionado en `eval/results/`. Tests: Pytest con adapters falsos de
-recuperación dense y sparse.
+Reutiliza el *runner* y el dataset de recuperación de US-072 y los modelos locales de
+US-233a. Los tres brazos corren en la misma corrida y sobre el mismo índice; solo cambian
+`RETRIEVAL_MODE` y `RETRIEVAL_FUSION`. No usa el baseline del S1 `[S4 resp. 19]`. La
+preinscripción (ADR-45 P1: hipótesis, brazos, hiperparámetros, métrica y regla) se
+commitea antes de la primera corrida real. Tests: Pytest con adapters falsos de
+recuperación *dense* y *sparse*; la corrida con modelos locales la ejecuta
+`ai-eval-runner` y su reporte va a `reports/eval/`.
 
 ## INVEST
-**Small** ✓ una comparación contra un reporte existente.
-**Testable** ✓ cuatro tests sobre el reporte y el código de salida.
+**Small** ✓ tres brazos de configuración sobre el *runner* existente.
+**Testable** ✓ cinco tests sobre el reporte y el código de salida.
 
 ---
 
@@ -499,3 +516,4 @@ Medir VM-1…VM-6 con casos reales (FEAT-T5d, S6). Bloqueos por opt-out (US-148,
 | Slicing v2 | PRD §14 S2–S4: suites por sprint y G-Demo al cierre del S4 | Slicing v2 aprobado por el usuario (`01-requisitos.md` §15, 2026-10-07): suites en S3–S5 y G-Demo al cierre del S5; calibración del OCR, M-03.x agregadas, no retroceso de la híbrida y p95 separado `si-hay-capacidad` | M-01 (calibración), M-03.1…M-03.5 y M-06.1 (sin retroceso) quedan en historias `si-hay-capacidad`; M-06.2 con hasta 3 opciones lo registra US-142 |
 | S3-2026-10-23 | US-132 AC-3 sobre la `CorpusRelease` vigente (US-119, `si-hay-capacidad`); US-103 y US-105 en el S3 | Reordenamiento y refinamiento del S3 (2026-10-23): US-132 en el S3 mide sobre la versión del corpus por configuración; la medición sobre la `CorpusRelease` pasa a US-119 AC-5; US-103 y US-105 en el S5 | Decisión del usuario `[S3 resp. 8]` |
 | S4-2026-10-29 | Reordenamiento del 2026-10-23: US-131 y US-140 en el S4 | Refinamiento del S4 (usuario, 2026-10-29): pasan al S5; el S4 se compromete con ≈ 57 pts y se recorta de menor a mayor prioridad (gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca) `[S4 resp. 1]` | Decisión del usuario |
+| S4-2026-10-30 | US-133 `si-hay-capacidad`, contra el baseline del S1 (US-073) y con US-113 como dependencia | Refinamiento del S4 (usuario, 2026-10-30): entra en el S4 y compara A0, A2 y A2b de ADR-45 en la misma corrida con los modelos locales (US-233a), sobre el conjunto de desarrollo de `ol06-particion-v1`; sin US-113 `[S4 resp. 19]` | Decisión del usuario |
