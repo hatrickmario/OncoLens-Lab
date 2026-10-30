@@ -101,6 +101,40 @@ def test_ingesta_relleno_y_fragmento_ajeno_dejan_lista_vacia_y_se_cuentan(
     assert resumen["valoresRechazadosPorMotivo"] == {"relleno": 2, "chunk_ajeno": 1}
 
 
+@pytest.mark.ac("US-242", 4)
+def test_ingesta_duplicados_con_distinta_capitalizacion_quedan_en_un_valor(
+    montar: Callable[..., MontajeDePoblacion],
+) -> None:
+    """[US-242 AC-4] Dos valores que solo difieren en la capitalización se guardan una vez, el primero y de su fragmento."""
+    montaje = montar(FakePopulationLlm(("EXT-DUP",)))
+
+    montaje.ingerir("doc-e1")
+
+    guardados = montaje.poblacion_de("doc-e1").population_criteria["estado_menopausico"]
+    assert [(v["value"], v["chunkId"]) for v in guardados] == [("postmenopausal women", "ch-e1-1")]
+
+
+@pytest.mark.ac("US-242", 5)
+def test_ingesta_cuatro_valores_de_un_fragmento_se_reducen_a_tres_y_marca_truncado(
+    montar: Callable[..., MontajeDePoblacion],
+) -> None:
+    """[US-242 AC-5] El tope por fragmento y criterio deja 3 valores (elegibilidad primero) y registra el recorte."""
+    montaje = montar(FakePopulationLlm(("EXT-CUATRO",)))
+
+    reporte = montaje.ingerir("doc-e1")
+
+    guardados = montaje.poblacion_de("doc-e1").population_criteria["linea"]
+    assert [(v["value"], v["scope"]) for v in guardados] == [
+        ("first line", "elegibilidad"),
+        ("second line", "elegibilidad"),
+        ("adjuvant setting", "mencion"),
+    ]
+    contadores = reporte.contadores_de_poblacion
+    assert (contadores.truncado, contadores.valores_fuera_del_tope) == (True, 1)
+    resumen = reporte.como_diccionario()["poblacion"]
+    assert (resumen["truncado"], resumen["valoresFueraDelTope"]) == (True, 1)
+
+
 @pytest.mark.ac("US-242", 3)
 def test_ingesta_valor_sin_soporte_nli_no_se_guarda_y_se_cuenta(
     montar: Callable[..., MontajeDePoblacion],
