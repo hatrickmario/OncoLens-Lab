@@ -386,8 +386,14 @@ class RAGOrchestratorService:
             return dense[: self._parametros.retrieval_top_k]
         sparse = await self._recuperar_sparse(trace_id, solicitud.query, filtro)
         fusionados = self._fusionar_ramas(dense, sparse)
+        self._registrar_recuperacion_hibrida(trace_id, len(dense), len(sparse), len(fusionados))
+        return fusionados
+
+    def _registrar_recuperacion_hibrida(
+        self, trace_id: str, dense: int, sparse: int, fusionados: int
+    ) -> None:
+        """Solo recuentos y parámetros: nunca la pregunta ni el texto de un fragmento (RN-10)."""
         fusion, fusion_param = self._fusion_trazada()
-        # Solo recuentos y parámetros: nunca la pregunta ni el texto de un fragmento (RN-10).
         logger.info(
             "event=rag_query_recuperacion_hibrida traceId=%s retrievalMode=%s fusion=%s fusionParam=%s "
             "dense=%d sparse=%d fused=%d",
@@ -395,11 +401,10 @@ class RAGOrchestratorService:
             self._parametros.retrieval_mode.value,
             fusion.value,
             fusion_param,
-            len(dense),
-            len(sparse),
-            len(fusionados),
+            dense,
+            sparse,
+            fusionados,
         )
-        return fusionados
 
     async def _recuperar_dense(
         self, trace_id: str, solicitud: RagQueryInternalRequest, filtro: str

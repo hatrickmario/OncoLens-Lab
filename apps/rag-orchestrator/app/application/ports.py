@@ -82,7 +82,8 @@ class ChunkEncontrado:
     document_id: str
     chunk_text: str
     similitud_dense: float
-    """Similitud dense de Milvus según ``MILVUS_DENSE_METRIC_TYPE``. NO es ``relevance_score`` (RN-03): no ordena opciones."""
+    """Puntaje de recuperación: la similitud dense de Milvus (``MILVUS_DENSE_METRIC_TYPE``) o, en modo híbrido, el puntaje
+    ya fusionado de las dos ramas. NO es ``relevance_score`` (RN-03): solo elige candidatos, no ordena opciones."""
 
 
 class ChunkSearch(Protocol):
