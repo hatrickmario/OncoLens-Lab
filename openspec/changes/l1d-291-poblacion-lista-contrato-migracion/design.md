@@ -92,7 +92,9 @@ prompt ni la salida del LLM (RN-14). `poblacion_forma_invalida` lleva criterio, 
 
 ## Contratos
 
-Cambio aditivo (ADR-26): primera tarea de `## contratos` con `sync-contracts`. `oasdiff` sin cambio incompatible;
+Cambio aditivo (ADR-26): primera tarea de `## contratos` con `sync-contracts`. Los cuatro valores nuevos de
+`unknownReason` los marca oasdiff como ERR (`response-property-enum-value-added`); se declaran como excepciones
+E-6…E-13 de ADR-26 (una por valor y proveedor). Decidido (usuario, 2026-10-30). `oasdiff` sin cambio incompatible;
 `studyPopulationValue` `deprecated: true` hasta el S5. Verificación del proveedor en los tests de integración (US-214).
 
 Diff propuesto de `contracts/schemas/evidence.yaml` (1.0.0 → 1.1.0):
