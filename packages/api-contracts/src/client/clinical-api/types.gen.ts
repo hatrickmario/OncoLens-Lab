@@ -349,6 +349,63 @@ export type NottinghamGradingInput = {
     nottinghamGrade: number;
 };
 
+export type CompletenessView = {
+    catalogVersion: string;
+    /**
+     * false si el Diagnosis activo es de un tipo fuera de ENABLED_CANCER_TYPES o si no hay Diagnosis activo; entonces items = [].
+     */
+    cancerTypeEnabled: boolean;
+    items: Array<CompletenessItem>;
+};
+
+export type CompletenessItem = {
+    /**
+     * Clave del catálogo (her2_ihq).
+     */
+    item: string;
+    /**
+     * label.es del catálogo; nunca valores del paciente.
+     */
+    label: string;
+    status: 'presente_verificado' | 'presente_sin_verificar' | 'faltante' | 'no_aplica';
+    /**
+     * regla si status es faltante o no_aplica; si no, sale del entryMethod del registro que cuenta.
+     */
+    origin: 'documento' | 'manual' | 'correccion' | 'seed' | 'regla';
+    /**
+     * null si y solo si status es faltante o no_aplica.
+     */
+    provenance: CompletenessProvenance | null;
+    destination: {
+        entity: 'Diagnosis' | 'Biomarker' | 'ClinicalAttribute' | 'PriorTreatment';
+        /**
+         * null cuando el destino es la entidad entera (PriorTreatment).
+         */
+        field: string | null;
+    };
+    /**
+     * Condición del catálogo que no se cumplió; no nula solo si status es no_aplica.
+     */
+    condition: {
+        item: string;
+        operator: 'igualdad' | 'pertenencia' | 'prefijo';
+        values: Array<string>;
+    } | null;
+};
+
+/**
+ * Subconjunto propio del checklist; no es el Provenance completo (no lleva extractionConfidence, conflict ni additionalSourceDocumentIds, que el cálculo no lee).
+ */
+export type CompletenessProvenance = {
+    entryMethod: 'ocr' | 'manual' | 'manual_correction' | 'seed';
+    reviewStatus: 'auto_aceptado' | 'requiere_revision' | 'verificado' | 'corregido';
+    sourceDocumentId: string | null;
+    /**
+     * Solo si el registro viene de un documento y su source_span tiene página.
+     */
+    page?: number;
+};
+
 /**
  * Vista del doctor (permiso clinical:read).
  */
@@ -381,6 +438,10 @@ export type PatientSummary = {
      * Datos críticos faltantes (FR-23).
      */
     missingCriticalCount: number;
+    /**
+     * false si el checklist no pudo calcularse; entonces missingCriticalCount = 0 y no debe mostrarse como contador (RN-26). Ausente equivale a true.
+     */
+    completenessAvailable?: boolean;
 };
 
 /**
@@ -897,6 +958,10 @@ export type PatientSummaryWritable = {
      * Datos críticos faltantes (FR-23).
      */
     missingCriticalCount: number;
+    /**
+     * false si el checklist no pudo calcularse; entonces missingCriticalCount = 0 y no debe mostrarse como contador (RN-26). Ausente equivale a true.
+     */
+    completenessAvailable?: boolean;
 };
 
 export type PatientId = string;
@@ -1105,6 +1170,45 @@ export type GetPatientResponses = {
 };
 
 export type GetPatientResponse = GetPatientResponses[keyof GetPatientResponses];
+
+export type GetCompletenessData = {
+    body?: never;
+    path: {
+        patientId: string;
+    };
+    query?: never;
+    url: '/platform/patients/{patientId}/completeness';
+};
+
+export type GetCompletenessErrors = {
+    /**
+     * Sesión ausente o expirada.
+     */
+    401: ErrorNoAutenticado;
+    /**
+     * Permiso denegado por RBAC u opt-out.
+     */
+    403: ErrorPermisoDenegado;
+    /**
+     * Recurso no encontrado.
+     */
+    404: ErrorNoEncontrado;
+    /**
+     * Fallo interno de clinical-api. Mensaje fijo, sin eco ni detalle interno.
+     */
+    500: ErrorInterno;
+};
+
+export type GetCompletenessError = GetCompletenessErrors[keyof GetCompletenessErrors];
+
+export type GetCompletenessResponses = {
+    /**
+     * Checklist del paciente.
+     */
+    200: CompletenessView;
+};
+
+export type GetCompletenessResponse = GetCompletenessResponses[keyof GetCompletenessResponses];
 
 export type GetPatientCaseData = {
     body?: never;

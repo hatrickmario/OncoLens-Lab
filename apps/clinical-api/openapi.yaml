@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — Platform API (Backend 1 / clinical-api)
-  version: 1.10.0
+  version: 1.12.0
   description: >-
     API pública, accesible solo a través de los Route Handlers de web (clinical-api no
     publica puerto al host). Autenticación por cookie de sesión HttpOnly + Secure +
@@ -238,6 +238,33 @@ paths:
                   mapping:
                     doctor: '#/components/schemas/PatientSummary'
                     admin: '#/components/schemas/PatientAdminSummary'
+        "401":
+          $ref: '#/components/responses/NoAutenticado'
+        "403":
+          $ref: '#/components/responses/PermisoDenegado'
+        "404":
+          $ref: '#/components/responses/NoEncontrado'
+        "500":
+          $ref: '#/components/responses/ErrorInterno'
+
+  /platform/patients/{patientId}/completeness:
+    get:
+      operationId: getCompleteness
+      tags: [pacientes]
+      summary: Checklist de datos críticos del paciente con procedencia por ítem
+      description: >-
+        Determinista (FR-23), sin IA. Un faltante nunca produce 4xx (RN-26). Lectura clínica: el
+        administrador recibe 403.
+      x-permission: clinical:read
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+      responses:
+        "200":
+          description: Checklist del paciente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompletenessView'
         "401":
           $ref: '#/components/responses/NoAutenticado'
         "403":
@@ -1228,6 +1255,104 @@ components:
           maximum: 3
 
     # ---- Pacientes (vista por permiso)
+    CompletenessView:
+      type: object
+      additionalProperties: false
+      required: [catalogVersion, cancerTypeEnabled, items]
+      properties:
+        catalogVersion:
+          type: string
+          minLength: 1
+        cancerTypeEnabled:
+          type: boolean
+          description: >-
+            false si el Diagnosis activo es de un tipo fuera de ENABLED_CANCER_TYPES o si no hay
+            Diagnosis activo; entonces items = [].
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompletenessItem'
+
+    CompletenessItem:
+      type: object
+      additionalProperties: false
+      required: [item, label, status, origin, provenance, destination, condition]
+      properties:
+        item:
+          type: string
+          minLength: 1
+          description: Clave del catálogo (her2_ihq).
+        label:
+          type: string
+          minLength: 1
+          description: label.es del catálogo; nunca valores del paciente.
+        status:
+          type: string
+          enum: [presente_verificado, presente_sin_verificar, faltante, no_aplica]
+        origin:
+          type: string
+          enum: [documento, manual, correccion, seed, regla]
+          description: >-
+            regla si status es faltante o no_aplica; si no, sale del entryMethod del registro que
+            cuenta.
+        provenance:
+          oneOf:
+            - $ref: '#/components/schemas/CompletenessProvenance'
+            - type: "null"
+          description: null si y solo si status es faltante o no_aplica.
+        destination:
+          type: object
+          additionalProperties: false
+          required: [entity, field]
+          properties:
+            entity:
+              type: string
+              enum: [Diagnosis, Biomarker, ClinicalAttribute, PriorTreatment]
+            field:
+              type: [string, "null"]
+              description: null cuando el destino es la entidad entera (PriorTreatment).
+        condition:
+          description: Condición del catálogo que no se cumplió; no nula solo si status es no_aplica.
+          oneOf:
+            - type: object
+              additionalProperties: false
+              required: [item, operator, values]
+              properties:
+                item:
+                  type: string
+                  minLength: 1
+                operator:
+                  type: string
+                  enum: [igualdad, pertenencia, prefijo]
+                values:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: string
+            - type: "null"
+
+    CompletenessProvenance:
+      type: object
+      description: >-
+        Subconjunto propio del checklist; no es el Provenance completo (no lleva
+        extractionConfidence, conflict ni additionalSourceDocumentIds, que el cálculo no lee).
+      additionalProperties: false
+      required: [entryMethod, reviewStatus, sourceDocumentId]
+      properties:
+        entryMethod:
+          type: string
+          enum: [ocr, manual, manual_correction, seed]
+        reviewStatus:
+          type: string
+          enum: [auto_aceptado, requiere_revision, verificado, corregido]
+        sourceDocumentId:
+          type: [string, "null"]
+          format: uuid
+        page:
+          type: integer
+          minimum: 1
+          description: Solo si el registro viene de un documento y su source_span tiene página.
+
     PatientSummary:
       type: object
       description: Vista del doctor (permiso clinical:read).
@@ -1291,6 +1416,11 @@ components:
           type: integer
           minimum: 0
           description: Datos críticos faltantes (FR-23).
+        completenessAvailable:
+          type: boolean
+          description: >-
+            false si el checklist no pudo calcularse; entonces missingCriticalCount = 0 y no debe
+            mostrarse como contador (RN-26). Ausente equivale a true.
 
     PatientListItem:
       type: object

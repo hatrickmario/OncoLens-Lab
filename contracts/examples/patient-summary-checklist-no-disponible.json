@@ -1,0 +1,86 @@
+{
+  "view": "doctor",
+  "id": "8f2b3c4d-9a1e-4b5c-8d6e-7f8091a2b3c4",
+  "identification": {
+    "idType": "sintetico",
+    "nationalId": "SINT-0000001",
+    "fullName": "Prueba Sintética 1"
+  },
+  "dataOrigin": "sintetico",
+  "lifecycleStatus": "activo",
+  "birthYear": 1968,
+  "requiresRatification": false,
+  "cancerTypeEnabled": true,
+  "diagnosis": {
+    "id": "5c9f6b32-7d5e-4f80-8b21-3d4e5f6a7b8c",
+    "cancerType": "mama",
+    "icd10Code": "C50.9",
+    "histology": "carcinoma ductal infiltrante",
+    "histologyCode": null,
+    "grade": "Nottingham grado 2",
+    "gradings": [
+      {
+        "id": "6d0a7c43-8e6f-4091-9c32-4e5f6a7b8c9d",
+        "gradingSystem": "nottingham",
+        "specimenType": null,
+        "gradeScope": null,
+        "gleasonPrimaryPattern": null,
+        "gleasonSecondaryPattern": null,
+        "gleasonScore": null,
+        "isupGradeGroup": null,
+        "nottinghamGrade": 2,
+        "isReference": true,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false,
+          "sourceDocumentId": null,
+          "additionalSourceDocumentIds": []
+        }
+      }
+    ],
+    "stagingSystem": "TNM_8",
+    "stageValue": "IIA",
+    "performanceScale": "ECOG",
+    "performanceValue": 1,
+    "diagnosedAt": "2026-09-01",
+    "isActive": true,
+    "provenance": {
+      "entryMethod": "seed",
+      "extractionConfidence": "n_a",
+      "reviewStatus": "verificado",
+      "conflict": false,
+      "sourceDocumentId": null,
+      "additionalSourceDocumentIds": []
+    }
+  },
+  "recentBiomarkers": [
+    {
+      "id": "7a1c9e44-5b2d-4c3e-8f60-1d2e3f4a5b6c",
+      "name": "HER2",
+      "loincCode": null,
+      "mappingStatus": "no_mapeado",
+      "trend": null,
+      "value": "3+ (IHQ)",
+      "unit": null,
+      "referenceRange": null,
+      "resultType": "cualitativo",
+      "clinicalSignificance": "relevante",
+      "significanceSource": "documento",
+      "examType": "inmunohistoquimica",
+      "performedAt": "2026-09-05",
+      "provenance": {
+        "entryMethod": "ocr",
+        "extractionConfidence": "alta",
+        "reviewStatus": "auto_aceptado",
+        "conflict": false,
+        "sourceDocumentId": "3b8e5a21-6c4d-4e7f-9a10-2c3d4e5f6a7b",
+        "additionalSourceDocumentIds": []
+      }
+    }
+  ],
+  "pendingReviewCount": 1,
+  "missingCriticalCount": 0,
+  "completenessAvailable": false
+}

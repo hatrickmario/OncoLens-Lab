@@ -428,6 +428,46 @@
       "file": "con-evidencia-s3-poblacion-no-comparable.json",
       "spec": "clinical-api",
       "target": "#/components/schemas/EvidenceAnalysis"
+    },
+    {
+      "file": "completeness-f-m2.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1completeness/get/responses/200"
+    },
+    {
+      "file": "completeness-f-m1.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1completeness/get/responses/200"
+    },
+    {
+      "file": "completeness-tipo-no-habilitado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1completeness/get/responses/200"
+    },
+    {
+      "file": "patient-summary-checklist-no-disponible.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/PatientSummary"
+    },
+    {
+      "file": "error-no-autenticado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1completeness/get/responses/401"
+    },
+    {
+      "file": "error-permiso-denegado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1completeness/get/responses/403"
+    },
+    {
+      "file": "error-no-encontrado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1completeness/get/responses/404"
+    },
+    {
+      "file": "error-interno.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1completeness/get/responses/500"
     }
   ],
   "pendingExamples": [
