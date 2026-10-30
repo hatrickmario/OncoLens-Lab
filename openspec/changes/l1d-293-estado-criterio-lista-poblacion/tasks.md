@@ -46,7 +46,7 @@
 
 - **D-1 · Dónde viven `restrictionMarkers` y los sinónimos.** `aplicabilidad.schema.json` (`additionalProperties: false`, en `packages/clinical-catalogs`)
   no los admite y el paquete queda fuera de este agente. Se leen de un archivo opcional `<tipo>/poblacion-reglas.json` del catálogo montado
-  (`infrastructure/catalogo_clinico/poblacion_reglas.py`): marcadores es/en, y por criterio `synonyms`, `scale`, `groups`; ausente = sin
+  (`infrastructure/catalogo_clinico/poblacion_reglas.py`): marcadores es/en, `disenosQueMezclan` y, por criterio, `synonyms`, `scale`, `groups`; ausente = sin
   reglas, inválido = `CatalogoNoDisponible`. La fixture `test-apl-1.2.0` vive solo en el rag-orchestrator. **Falta** (clinical-platform / contratos):
   esquema y validador de `poblacion-reglas.json`, la versión `1.2.0` real en ambos backends y su copia exacta (`test_fixtures_de_aplicabilidad`).
 - **D-2 · Unidad de la `applicability` de la fuente.** El contrato solo trae criterios por fuente, no por opción: `applicability[]` se calcula con
