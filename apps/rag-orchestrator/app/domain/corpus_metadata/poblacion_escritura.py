@@ -15,10 +15,10 @@ from typing import Any, Final
 from app.domain.corpus_metadata.campos import LONGITUD_MAXIMA_DE_VALOR
 from app.domain.corpus_metadata.poblacion_abanico import ValorPropuesto
 from app.domain.corpus_metadata.resultado import CampoDeMetadato, MetadatosResueltos
+from app.domain.poblacion_del_estudio import ESTADO_PENDIENTE
 
 FORMA_LISTA: Final = "lista"
 FORMA_ANTIGUA: Final = "antigua"
-ESTADO_PENDIENTE: Final = "pendiente"
 CLAVES_DE_UN_VALOR: Final = frozenset(
     {"value", "chunkId", "scope", "promptVersion", "modelVersion", "catalogVersion", "nliResult"}
 )

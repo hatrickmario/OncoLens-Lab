@@ -132,15 +132,7 @@ class PopulationFanoutExtractor:
         reutilizables = self._reutilizables(guardado, criterios)
         pendientes = [c for c in criterios if c.clave_de_estudio not in reutilizables]
         resultados = asyncio.run(self._extraer_todos(documento, pendientes))
-        por_clave = {r.clave_de_estudio: r for r in resultados}
-        poblacion = {
-            c.clave_de_estudio: (
-                guardado.population_criteria[c.clave_de_estudio]  # type: ignore[union-attr]
-                if c.clave_de_estudio in reutilizables
-                else por_clave[c.clave_de_estudio].contenido
-            )
-            for c in criterios
-        }
+        poblacion = self._unir_con_lo_guardado(criterios, reutilizables, guardado, resultados)
         exigir_forma_de_lista(poblacion)
         contadores = sum(
             (r.contadores for r in resultados),
@@ -149,6 +141,23 @@ class PopulationFanoutExtractor:
         return PoblacionExtraida(
             poblacion, FORMA_LISTA, contadores, criterios_con_valores(poblacion)
         )
+
+    @staticmethod
+    def _unir_con_lo_guardado(
+        criterios: Sequence[CriterioDeAplicabilidad],
+        reutilizables: frozenset[str],
+        guardado: PoblacionGuardada | None,
+        resultados: Sequence[_ResultadoDeCriterio],
+    ) -> dict[str, Any]:
+        """Un contenido por criterio, en el orden del catálogo: lo guardado si se reutiliza, lo recién extraído si no."""
+        extraido = {r.clave_de_estudio: r.contenido for r in resultados}
+        previo = guardado.population_criteria if guardado is not None else {}
+        return {
+            c.clave_de_estudio: previo[c.clave_de_estudio]
+            if c.clave_de_estudio in reutilizables
+            else extraido[c.clave_de_estudio]
+            for c in criterios
+        }
 
     def _criterios_de(self, tipos_de_cancer: Sequence[str]) -> list[CriterioDeAplicabilidad]:
         """Los criterios del catálogo vigente de los tipos del documento, sin repetir ``studyKey`` (D3)."""
