@@ -99,6 +99,7 @@ def montar_poblacion(
     configuracion: ConfiguracionDePoblacion = CONFIGURACION_DE_TEST,
     recuperador: RecuperadorFalsoPorDocumento | None = None,
     nli: NliPorValor | None = None,
+    sinonimos: dict[str, str] | None = None,
 ) -> MontajeDePoblacion:
     llm = llm if llm is not None else FakePopulationLlm()
     recuperador = recuperador if recuperador is not None else RecuperadorFalsoPorDocumento()
@@ -110,7 +111,7 @@ def montar_poblacion(
         recuperador=recuperador,
         criterios=_Criterios(),
         plantilla_del_prompt=PLANTILLA_DE_TEST,
-        sinonimos={},
+        sinonimos=sinonimos or {},
         buscar_terminos_prohibidos=lambda texto: terminos.reglas_coincidentes(
             texto, "studyPopulationValues[].value"
         ),

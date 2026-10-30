@@ -99,6 +99,12 @@ ESCENARIOS: dict[str, dict[str, list[Valor]]] = {
             ("second line", "ch-e1-1", "elegibilidad"),
         ]
     },
+    "EXT-SINONIMO": {
+        "estado_menopausico": [
+            ("postmenopausal women", "ch-e1-1", "elegibilidad"),
+            ("Post-menopausal", "ch-e1-3", "mencion"),
+        ]
+    },
     "EXT-PROHIBIDO": {"ecog": [(VALOR_PROHIBIDO, "ch-e1-1", "elegibilidad")]},
     "EXT-LARGO": {"ecog": [("x" * 201, "ch-e1-1", "elegibilidad")]},
 }

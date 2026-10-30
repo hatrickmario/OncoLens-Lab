@@ -123,6 +123,22 @@ def test_ingesta_duplicados_con_distinta_capitalizacion_quedan_en_un_valor(
     assert [(v["value"], v["chunkId"]) for v in guardados] == [("postmenopausal women", "ch-e1-1")]
 
 
+def test_ingesta_une_los_sinonimos_del_catalogo_en_un_solo_valor(
+    montar: Callable[..., MontajeDePoblacion],
+) -> None:
+    """[US-242 D4] Dos formas que el catálogo declara sinónimas (RN-27) se guardan una vez, la de mayor alcance."""
+    sinonimos = {
+        "postmenopausal women": "postmenopausal women",
+        "post menopausal": "postmenopausal women",
+    }
+    montaje = montar(FakePopulationLlm(("EXT-SINONIMO",)), sinonimos=sinonimos)
+
+    montaje.ingerir("doc-e1")
+
+    guardados = montaje.poblacion_de("doc-e1").population_criteria["estado_menopausico"]
+    assert [v["value"] for v in guardados] == ["postmenopausal women"]
+
+
 @pytest.mark.ac("US-242", 5)
 def test_ingesta_cuatro_valores_de_un_fragmento_se_reducen_a_tres_y_marca_truncado(
     montar: Callable[..., MontajeDePoblacion],

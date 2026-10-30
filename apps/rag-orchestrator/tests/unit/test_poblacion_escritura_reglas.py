@@ -161,3 +161,21 @@ def test_criterios_reutilizables_ignora_la_forma_antigua() -> None:
     assert (
         criterios_reutilizables({"estadio": "II"}, "antigua", ["estadio"], VERSIONES) == frozenset()
     )
+
+
+def test_criterios_reutilizables_solo_reutiliza_el_criterio_con_las_versiones_vigentes() -> None:
+    vigente = _lista(_valor("uno"))
+    obsoleto = _lista(
+        _valor("dos"), versiones=VersionesDeExtraccion("poblacion_v0", "modelo-1", "cat-1")
+    )
+    guardado = {"a": vigente, "b": obsoleto, "c": []}
+
+    assert criterios_reutilizables(guardado, FORMA_LISTA, ["a", "b", "c"], VERSIONES) == {"a", "c"}
+
+
+def test_criterios_reutilizables_no_reutiliza_una_lista_si_la_fila_declara_la_forma_antigua() -> (
+    None
+):
+    guardado = {"a": _lista(_valor())}
+
+    assert criterios_reutilizables(guardado, "antigua", ["a"], VERSIONES) == frozenset()
