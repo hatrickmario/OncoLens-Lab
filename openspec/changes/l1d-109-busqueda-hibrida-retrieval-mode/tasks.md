@@ -13,7 +13,7 @@
 - [x] 2.4 (`.env.example` de rag-orchestrator con `RETRIEVAL_MODE`, `RETRIEVAL_FUSION`, `RRF_K` y `HYBRID_SPARSE_WEIGHT`: aplicado en el PR #246 (mergeado en main)) `RETRIEVAL_MODE`, `RETRIEVAL_FUSION`, `RRF_K`, `HYBRID_SPARSE_WEIGHT` en `settings.py` y `.env.example` (validación al arranque); ponderada y `_armar_meta_de_recuperacion` con `fusion`/`fusionParam` sin `null` (`ninguna`/`0` en `dense`), único armado de `retrievalParams` para `/rag/query` y `/rag/follow-up`; AC-5, AC-6 en verde · estricto · commit `feat(L1D-109)`
 - [x] 2.5 Test de logs (AC-5, RN-10): con `hibrida`, los logs traen solo recuentos, modo, fusión y `chunkId`, nunca texto de consulta, fragmento, *prompt* ni salida del LLM · integración (captura de logs) · estricto · commit `test(L1D-109)` antes de su ajuste
 - [x] 2.6 Verificación del proveedor: `contracts:verify-provider` valida las respuestas reales de `/rag/query` en `dense`, `hibrida`+`rrf` e `hibrida`+`ponderada` (sin `null` en `retrievalParams`); para `/rag/follow-up`, si su ruta ya existe al implementar, el mismo test de integración sobre ella; si no, queda cubierto por el `required` del contrato y por los ejemplos de 1.2, y lo hereda la historia que implemente el endpoint · integración · test después · commit `test(L1D-109)`
-- [ ] 2.7 (PARCIAL; se cierra cuando el job `integration-rag` del PR pase en la CI, no se corre local: consistencia índice/consulta verificada en `tests/unit/test_recuperacion_hibrida_configuracion.py`; los tests contra Milvus real están escritos pero NO ejecutados localmente, queda pendiente el job `integration-rag` de la CI) Test de consistencia índice/consulta del *sparse* (misma configuración y `SPARSE_VECTOR_SOURCE`) y, en la CI, búsqueda híbrida contra Milvus de test · integración · test después · commit `test(L1D-109)`
+- [x] 2.7 (CERRADA: el job `integration-rag` del PR #243 pasó en verde, CI completa en 519a4a8b = success; antes PARCIAL, no se corre local: consistencia índice/consulta verificada en `tests/unit/test_recuperacion_hibrida_configuracion.py`; los tests contra Milvus real están escritos pero NO ejecutados localmente, queda pendiente el job `integration-rag` de la CI) Test de consistencia índice/consulta del *sparse* (misma configuración y `SPARSE_VECTOR_SOURCE`) y, en la CI, búsqueda híbrida contra Milvus de test · integración · test después · commit `test(L1D-109)`
 - [x] 2.8 Refactor: Extract Method en `_recuperar()` y `_armar_meta_de_recuperacion`, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-109)`
 
 ## clinical-platform
@@ -26,7 +26,7 @@
 
 ## Cierre
 
-- [ ] 5.1 (condición: 2.7 en verde en la CI y 3.1 hecha) `openspec validate l1d-109-busqueda-hibrida-retrieval-mode --strict`, tests de `apps/rag-orchestrator` y de `clinical-api` (3.1) en verde, `contracts:check`, `contracts:breaking` y `contracts:verify-provider` en verde
+- [x] 5.1 (`contracts:check`, `contracts:breaking` sin ERR con las excepciones de 291 y `contracts:verify-provider` en verde en la CI de 519a4a8b y en local: 2907 passed, 265 respuestas) `openspec validate l1d-109-busqueda-hibrida-retrieval-mode --strict`, tests de `apps/rag-orchestrator` y de `clinical-api` (3.1) en verde, `contracts:check`, `contracts:breaking` y `contracts:verify-provider` en verde
 
 ## Pregunta abierta al humano
 
