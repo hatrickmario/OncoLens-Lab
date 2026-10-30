@@ -13,6 +13,7 @@
 - [ ] 1.5 Reporte (`armado_reporte.py`/`reporte.py`): recall@10 total, es→en, MRR por brazo, diferencias frente a A0, bandera de retroceso, huella de configuración, por documento (P12); código de salida ≠ 0 con retroceso (AC-2); claves aditivas · TDD estricto · commit `feat(L1D-245)`
 - [ ] 1.6 `RETRIEVAL_REGRESSION_TOLERANCE` en la configuración de la suite y en `.env.example` (lo aplica la sesión principal), sin default inventado (valor de la preinscripción) · test después (fixture de carga de config)
 - [ ] 1.7 `eval/configs/s4-hibrida.yaml` (A0 `dense`; A2 `hibrida` + `rrf` + `RRF_K = 60`; A2b `hibrida` + `ponderada` + `HYBRID_SPARSE_WEIGHT = 0,3`; desarrollo, `proveedor: local`) y `eval/configs/s4-hibrida-fake.yaml` para CI/AC-4 · test después (fixture de carga de config)
+- [ ] 1.7b (Decidido (usuario, 2026-10-30), de Q-1 de l1d-109 y US-248 · ADR-48) Contar y reportar cuántas preguntas del conjunto dorado caen en «sin términos léxicos» (la rama *sparse* sin términos, que en l1d-109 falla cerrado con 503; AC-4 de US-248 / ADR-48), por brazo, en el reporte; no cambia el valor por defecto de `RETRIEVAL_MODE` ni el fallo cerrado. Test de aceptación con adapters falsos: conjunto con N preguntas sin términos, el reporte informa N y la proporción; con 0 informa 0 (no `null`). TDD estricto, commits `test(L1D-245)` y `feat(L1D-245)`.
 - [ ] 1.8 Refactor: Extract Method / Inline Method en los archivos tocados, tests en verde antes y después, commit `refactor(L1D-245)`
 
 ## evaluación

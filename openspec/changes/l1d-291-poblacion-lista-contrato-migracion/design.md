@@ -183,3 +183,5 @@ No cambia modelo, prompt, umbral ni corpus ingerido (solo forma y lector). La su
 - **P5 · ¿El lector acepta `{"values": […]}` sin `status`?** (a confirmar por el usuario; afecta: AC-4). Hoy sí, como lista.
 - **P6 · `value` de más de 200 caracteres.** (a confirmar por el usuario; decidir en l1d-293 o l1d-292). El contrato lo rechaza
   (`maxLength` 200) y tumbaría el análisis si el lector lo deja pasar; hoy el lector no lo valida.
+
+> **Nota del 2026-10-30 (solo documental; el change ya está mergeado):** **P4, P5 y P6: Decidido (usuario, 2026-10-30): resuelta en l1d-292** (decisiones D10, D11 y D12 de `l1d-292-poblacion-abanico-ingesta`). P4: `population_form` la escribe l1d-292, validada frente a la estructura, informativa. P5: el escritor nunca emite `{"values":[…]}` sin `status`. P6: el escritor recorta o descarta un `value` de más de 200 caracteres.

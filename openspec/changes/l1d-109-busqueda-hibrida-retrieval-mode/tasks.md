@@ -30,4 +30,4 @@
 
 ## Pregunta abierta al humano
 
-- [ ] Q-1 Una pregunta sin términos léxicos hace fallar cerrado (503) la consulta híbrida, aunque `dense` funcione: ¿se mantiene, o debe degradar a `dense` dejando constancia en `meta`? (design.md D6, «a confirmar por el usuario»). No decidida aquí.
+- [x] Q-1 Una pregunta sin términos léxicos hace fallar cerrado (503) la consulta híbrida, aunque `dense` funcione: ¿se mantiene, o debe degradar a `dense` dejando constancia en `meta`? (design.md D6, «a confirmar por el usuario»). Decidido (usuario, 2026-10-30): se mantiene el fallo cerrado (503) en el S4; la investigación de fondo es US-248 · ADR-48 (Linear L1D-304, FEAT-06b, si-hay-capacidad, 2 pts, PR #247); US-133/L1D-245 debe contar cuántas preguntas del conjunto dorado caen en «sin términos» (AC-4 de US-248). No se ejecuta US-248 aquí.
