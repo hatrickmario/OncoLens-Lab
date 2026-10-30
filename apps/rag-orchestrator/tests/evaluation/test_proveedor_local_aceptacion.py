@@ -31,12 +31,12 @@ LOCAL = "http://127.0.0.1:11434/v1"
 COMPLETIONS = f"{LOCAL}/chat/completions"
 HOSTS_LOCALES = {"127.0.0.1", "localhost", "host.docker.internal"}
 LIMITE_DE_RSS_MIB = 4489.0
-OPCION_SIN_CITA = {
+OPCION_CON_CITA = {
     "options": [
         {
             "option": "Opción de prueba",
             "rationale": "Texto de prueba.",
-            "citedFragments": [],
+            "citedFragments": ["C1"],
             "details": [],
         }
     ]
@@ -70,7 +70,7 @@ def config_local(tmp_path: Path, *, modelo: str = "gemma-fingido@1", url: str = 
 
 
 def respuesta_del_generador() -> httpx.Response:
-    return veredicto(json.dumps(OPCION_SIN_CITA))
+    return veredicto(json.dumps(OPCION_CON_CITA))
 
 
 def correr_local(

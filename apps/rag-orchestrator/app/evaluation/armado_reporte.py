@@ -89,9 +89,11 @@ def armar_reporte(
     resultados: Sequence[ResultadoConsulta],
     latencia_p95_ms: dict[str, float | None],
     privacidad: dict[str, Any] | None = None,
+    recursos_nli: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     return {
         **({} if privacidad is None else {"privacidad": privacidad}),
+        **({} if recursos_nli is None else {"recursos_nli": recursos_nli}),
         "esquema": VERSION_ESQUEMA,
         "suite": suite,
         "configuracion": configuracion_evaluada(config, dataset, meta),

@@ -1,11 +1,20 @@
-"""Composición del ``RAGOrchestratorService`` de la suite con adapters falsos, cronometrados y observados."""
+"""Composición del ``RAGOrchestratorService`` de la suite: adapters falsos o locales, cronometrados y observados."""
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 from app.application.aplicabilidad import ApplicabilityService
-from app.application.ports import Clock, ProhibitedTermsChecker
+from app.application.ports import (
+    Clock,
+    EvidenceGenerator,
+    LanguageDetector,
+    NliClassifier,
+    ProhibitedTermsChecker,
+    QueryEmbedder,
+    Reranker,
+)
 from app.application.rag_orchestrator_service import (
     ParametrosDeRecuperacion,
     RAGOrchestratorService,
@@ -31,11 +40,13 @@ from app.evaluation.medidores import (
     DetectorMedido,
     EmbedderMedido,
     GeneradorObservado,
+    LatenciasNli,
     LectorReleaseMedido,
     NliMedido,
     Observaciones,
     RerankerObservado,
 )
+from app.evaluation.modelos_locales import PuertosLocales
 from app.infrastructure.catalogo_clinico.aplicabilidad import CriteriosDelCatalogo
 from app.infrastructure.catalogo_clinico.manifiesto import cargar_catalogo_del_manifiesto
 from app.infrastructure.fake.fake_applicability_text_proposer import ProponenteSilencioso
@@ -59,6 +70,7 @@ class ServicioDeSuite:
     verificador_produccion: ProhibitedTermsChecker
     juez_nli: JuezFidelidad
     juez_llm: JuezSecundario | None
+    latencias_nli: LatenciasNli
 
 
 def parametros_de_recuperacion(
@@ -77,35 +89,81 @@ def parametros_de_recuperacion(
     )
 
 
+@dataclass(frozen=True)
+class _Adaptadores:
+    """Los puertos que cambian entre ``fake`` y ``local``; el resto del servicio es el mismo."""
+
+    detector_idioma: LanguageDetector
+    embedder: QueryEmbedder
+    vectores_de_chunks: Sequence[Sequence[float]]
+    reranker: Reranker
+    generador: EvidenceGenerator
+    clasificador_nli: NliClassifier
+
+
+def _adaptadores_falsos(dataset: DatasetSuite) -> _Adaptadores:
+    embedder = EmbedderBolsaDePalabras()
+    return _Adaptadores(
+        DetectorDeIdiomaLocal("es"),
+        embedder,
+        [embedder.embeber(c.texto) for c in dataset.chunks],
+        RerankerLexico(),
+        GeneradorGuionado(dataset),
+        NliLexico(),
+    )
+
+
+def _adaptadores_locales(puertos: PuertosLocales, dataset: DatasetSuite) -> _Adaptadores:
+    return _Adaptadores(
+        puertos.detector_idioma,
+        puertos.embedder,
+        puertos.embedder_pasajes.embeber([c.texto for c in dataset.chunks]),
+        puertos.reranker,
+        puertos.generador,
+        puertos.clasificador_nli,
+    )
+
+
+def _adaptadores_de(
+    config: ConfigSuite, dataset: DatasetSuite, puertos_locales: PuertosLocales | None
+) -> _Adaptadores:
+    if config.proveedor == "fake":
+        return _adaptadores_falsos(dataset)
+    if puertos_locales is None:
+        raise ConfigInvalida("adaptadores.proveedor: local exige los puertos reales ya cargados")
+    return _adaptadores_locales(puertos_locales, dataset)
+
+
 def componer_servicio(
     config: ConfigSuite,
     dataset: DatasetSuite,
     cronometro: Cronometro,
     reloj: Clock,
     juez_llm: JuezSecundario | None = None,
+    puertos_locales: PuertosLocales | None = None,
 ) -> ServicioDeSuite:
-    if config.proveedor != "fake":
-        raise ConfigInvalida("adaptadores.proveedor: local se cablea con US-073")
+    adaptadores = _adaptadores_de(config, dataset, puertos_locales)
     observaciones = Observaciones()
-    embedder = EmbedderBolsaDePalabras()
-    nli = NliLexico()
+    nli = NliMedido(adaptadores.clasificador_nli, cronometro)
     lista = cargar_lista_de_terminos(config.ruta_terminos)  # se lee y valida una sola vez
     terminos = VerificadorDeTerminosProhibidos(lista)
     # La suite habilita los tipos del catálogo montado (RN-20): el dataset no restringe el tipo y la huella no cambia.
     tipos_habilitados = cargar_catalogo_del_manifiesto(config.ruta_terminos).tipos_de_cancer()
     servicio = RAGOrchestratorService(
-        detector_idioma=DetectorMedido(DetectorDeIdiomaLocal("es"), cronometro),
-        embedder=EmbedderMedido(embedder, cronometro),
-        buscador=BuscadorMedido(BuscadorEnMemoria(dataset, embedder), cronometro),
-        reranker=RerankerObservado(RerankerLexico(), cronometro, observaciones),
+        detector_idioma=DetectorMedido(adaptadores.detector_idioma, cronometro),
+        embedder=EmbedderMedido(adaptadores.embedder, cronometro),
+        buscador=BuscadorMedido(
+            BuscadorEnMemoria(dataset, adaptadores.vectores_de_chunks), cronometro
+        ),
+        reranker=RerankerObservado(adaptadores.reranker, cronometro, observaciones),
         lector_release=LectorReleaseMedido(LectorReleaseFijo(dataset), cronometro),
         catalogo=CatalogoMedido(CatalogoEnMemoria(dataset), cronometro),
         catalogo_clinico=CatalogoClinicoDeConfig(config.catalogo_version, tipos_habilitados),
         # Sin criterios: la suite mide la recuperación y la generación; la aplicabilidad se mide en US-132 (M-08.2).
         aplicabilidad=ApplicabilityService(CriteriosDelCatalogo({})),
         proponente=ProponenteSilencioso(),
-        generador=GeneradorObservado(GeneradorGuionado(dataset), cronometro, observaciones),
-        clasificador_nli=NliMedido(nli, cronometro),
+        generador=GeneradorObservado(adaptadores.generador, cronometro, observaciones),
+        clasificador_nli=nli,
         verificador_terminos=terminos,
         reloj=reloj,
         parametros=parametros_de_recuperacion(config, tipos_habilitados),
@@ -118,7 +176,8 @@ def componer_servicio(
         VerificadorEstricto(lista),
         terminos,
         JuezNli(
-            nli, config.umbrales.nli_entailment_threshold
+            adaptadores.clasificador_nli, config.umbrales.nli_entailment_threshold
         ),  # sin cronómetro: no es la etapa «nli»
         juez_llm,
+        nli.latencias,
     )

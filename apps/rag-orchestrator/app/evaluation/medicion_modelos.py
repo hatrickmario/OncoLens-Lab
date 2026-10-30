@@ -16,6 +16,7 @@ import numpy as np
 
 from app.evaluation.chunking_variants import ChunkCandidato, Seccion, Variante, fragmentar
 from app.evaluation.chunking_variants import Tokenizador
+from app.evaluation.cronometro import resumen_de_latencia
 from app.evaluation.dataset_loader import ParNli, Pregunta
 from app.domain.normalizacion_puntaje import normalizar_a_unidad
 from app.evaluation.envoltorios import ClasificadorNli, Embedder, Reranker
@@ -186,6 +187,27 @@ def percentil_95(valores: Sequence[float]) -> float:
 
 def mediana(valores: Sequence[float]) -> float:
     return float(statistics.median(valores))
+
+
+def informe_de_recursos_nli(
+    por_lote_ms: Sequence[float],
+    por_hipotesis_ms: Sequence[float],
+    rss_maximo_mib: float,
+    rss_limite_mib: float,
+) -> dict[str, object]:
+    """RSS máximo y latencia p50/p95 del NLI por lote y por hipótesis (US-233a AC-7, ADR-47 R7, M-10.1).
+
+    Un exceso del límite se MARCA, nunca se ajusta el presupuesto: lo decide el refinamiento.
+    """
+    return {
+        "rss_maximo_mib": rss_maximo_mib,
+        "rss_limite_mib": rss_limite_mib,
+        "supera_el_limite": rss_maximo_mib > rss_limite_mib,
+        "latencia_ms": {
+            "por_lote": resumen_de_latencia(por_lote_ms),
+            "por_hipotesis": resumen_de_latencia(por_hipotesis_ms),
+        },
+    }
 
 
 def entradas_espaciadas(items: Sequence[object], cuantas: int) -> list[object]:

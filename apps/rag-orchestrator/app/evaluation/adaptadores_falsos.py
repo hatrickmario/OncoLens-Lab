@@ -65,9 +65,12 @@ class EmbedderBolsaDePalabras:
 class BuscadorEnMemoria:
     """``ChunkSearch`` sobre el corpus del dataset; aplica el filtro como Milvus (vigente y etiqueta completa)."""
 
-    def __init__(self, dataset: DatasetSuite, embedder: EmbedderBolsaDePalabras) -> None:
+    def __init__(self, dataset: DatasetSuite, vectores: Sequence[Sequence[float]]) -> None:
+        """``vectores``: el embedding de cada chunk de ``dataset.chunks``, en el mismo orden (fake o ONNX real)."""
         cancer = {d.id: d.cancer for d in dataset.documentos}
-        self._chunks = [(c, cancer[c.documento], embedder.embeber(c.texto)) for c in dataset.chunks]
+        self._chunks = [
+            (c, cancer[c.documento], v) for c, v in zip(dataset.chunks, vectores, strict=True)
+        ]
 
     def search_dense(
         self, vector: Sequence[float], limit: int, filtro: str | None = None

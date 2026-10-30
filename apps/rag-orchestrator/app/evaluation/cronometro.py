@@ -31,12 +31,25 @@ class RelojSimulado:
         return self._lecturas * TICK_SIMULADO_S
 
 
-def percentil_95(valores: Sequence[float]) -> float | None:
-    """P95 por rango más cercano; ``None`` (≠ 0.0) si la etapa no se ejecutó."""
+def percentil(valores: Sequence[float], fraccion: float) -> float | None:
+    """Percentil por rango más cercano; ``None`` (≠ 0.0) si la etapa no se ejecutó."""
     if not valores:
         return None
     ordenados = sorted(valores)
-    return ordenados[math.ceil(0.95 * len(ordenados)) - 1]
+    return ordenados[math.ceil(fraccion * len(ordenados)) - 1]
+
+
+def percentil_95(valores: Sequence[float]) -> float | None:
+    return percentil(valores, 0.95)
+
+
+def resumen_de_latencia(valores_ms: Sequence[float]) -> dict[str, float | None]:
+    """Muestra, p50 y p95 de una serie de latencias; sin muestra, ``None`` y no ``0.0``."""
+    return {
+        "n": len(valores_ms),
+        "p50_ms": percentil(valores_ms, 0.50),
+        "p95_ms": percentil(valores_ms, 0.95),
+    }
 
 
 class Cronometro:
@@ -59,6 +72,10 @@ class Cronometro:
             return await funcion(*argumentos)
         finally:
             self._registrar(etapa, inicio)
+
+    def ultima_duracion_ms(self, etapa: str) -> float:
+        """Duración de la última medición de la etapa (la que acaba de terminar ``medir``)."""
+        return self._duraciones_ms[etapa][-1]
 
     def p95_ms(self) -> dict[str, float | None]:
         return {etapa: percentil_95(d) for etapa, d in self._duraciones_ms.items()}

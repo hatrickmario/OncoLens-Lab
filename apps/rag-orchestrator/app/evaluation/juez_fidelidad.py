@@ -116,7 +116,9 @@ class JuezLlmLocal:
                 {"role": "user", "content": usuario},
             ],
         }
-        self._registro.registrar(str(self._cliente.base_url), self._clase_datos, self._modelo)
+        self._registro.registrar(
+            str(self._cliente.base_url), self._clase_datos, self._modelo, "juez"
+        )
         try:
             respuesta = await self._cliente.post(RUTA_DE_COMPLETIONS, json=cuerpo)
             respuesta.raise_for_status()

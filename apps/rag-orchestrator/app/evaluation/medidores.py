@@ -140,13 +140,33 @@ class GeneradorObservado:
         return evidencia
 
 
+@dataclass
+class LatenciasNli:
+    """Latencia del NLI en ms (US-233a AC-7): por lote (una llamada a ``clasificar``) y por hipótesis (el lote repartido
+    entre sus pares, incluidas las hipótesis de población)."""
+
+    por_lote_ms: list[float] = field(default_factory=list)
+    por_hipotesis_ms: list[float] = field(default_factory=list)
+
+
 class NliMedido:
-    def __init__(self, interno: NliClassifier, cronometro: Cronometro) -> None:
+    def __init__(
+        self,
+        interno: NliClassifier,
+        cronometro: Cronometro,
+        latencias: LatenciasNli | None = None,
+    ) -> None:
         self._interno, self._cronometro = interno, cronometro
+        self.latencias = latencias or LatenciasNli()
 
     @property
     def version(self) -> str:
         return self._interno.version
 
     def clasificar(self, pares: list[ParNli]) -> list[ResultadoNli]:
-        return self._cronometro.medir("nli", self._interno.clasificar, pares)
+        resultados = self._cronometro.medir("nli", self._interno.clasificar, pares)
+        if pares:  # un lote vacío no invoca el modelo: no tiene latencia que reportar
+            duracion = self._cronometro.ultima_duracion_ms("nli")
+            self.latencias.por_lote_ms.append(duracion)
+            self.latencias.por_hipotesis_ms.extend([duracion / len(pares)] * len(pares))
+        return resultados

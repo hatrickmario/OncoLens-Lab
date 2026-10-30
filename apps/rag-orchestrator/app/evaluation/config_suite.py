@@ -86,6 +86,9 @@ class ConfigSuite:
     informe_pii: Path | None = None
     """Ruta del JSON de `npm run eval:pii` (B1); ``--informe-pii`` la sustituye."""
     barrido: Barrido | None = None
+    rss_limite_mib: float | None = None
+    """Límite de memoria (MiB) con el que se marca el RSS máximo en el reporte local (US-233a AC-7, RN-22); obligatorio
+    con ``proveedor: local``."""
     origen: Mapping[str, Any] | None = None
     """Bloque ``origen`` de la medición de US-236 (pregunta de la demo y ``EVAL_ORIGIN_RUNS``); ``None`` en el resto."""
 
@@ -186,6 +189,21 @@ def _barrido_de(crudo: dict[str, Any]) -> Barrido | None:
     return Barrido(grilla, referencia, tolerancia)
 
 
+def _limite_de_rss(crudo: dict[str, Any]) -> float | None:
+    """``medicion.rss_limite_mib``: sin valor por defecto en código (RN-22). Exigirlo al correr la suite con modelos
+    reales es de ``exigir_proveedor_local``: otras herramientas cargan esta configuración sin medir el NLI."""
+    limite = crudo["medicion"].get("rss_limite_mib")
+    if limite is None:
+        return None
+    try:
+        numero = float(limite)
+    except (TypeError, ValueError):
+        raise ConfigInvalida("medicion.rss_limite_mib debe ser un número") from None
+    if numero <= 0:
+        raise ConfigInvalida("medicion.rss_limite_mib debe ser positivo")
+    return numero
+
+
 def cargar_config_suite(ruta: Path, entorno: Mapping[str, str] | None = None) -> ConfigSuite:
     try:
         crudo = yaml.safe_load(ruta.read_text(encoding="utf-8"))
@@ -230,5 +248,6 @@ def cargar_config_suite(ruta: Path, entorno: Mapping[str, str] | None = None) ->
             else None
         ),
         barrido=_barrido_de(crudo),
+        rss_limite_mib=_limite_de_rss(crudo),
         origen=crudo.get("origen"),
     )

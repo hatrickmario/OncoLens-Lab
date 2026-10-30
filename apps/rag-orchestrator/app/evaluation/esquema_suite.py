@@ -154,8 +154,18 @@ _PRIVACIDAD = Objeto(
         "sensibilidad_b1": Objeto(
             {"textos_medidos": Numero(), **{modo: _MODO_PII for modo in MODOS}}
         ),
+        "adaptadores_cubiertos": Lista(Identificador()),
     },
-    opcionales=frozenset({"sensibilidad_b1"}),
+    opcionales=frozenset({"sensibilidad_b1", "adaptadores_cubiertos"}),
+)
+_LATENCIA_NLI = Objeto({"n": Numero(), "p50_ms": Numero(), "p95_ms": Numero()})
+_RECURSOS_NLI = Objeto(
+    {
+        "rss_maximo_mib": Numero(),
+        "rss_limite_mib": Numero(),
+        "supera_el_limite": Booleano(),
+        "latencia_ms": Objeto({"por_lote": _LATENCIA_NLI, "por_hipotesis": _LATENCIA_NLI}),
+    }
 )
 
 ESQUEMA_SUITE = Objeto(
@@ -165,9 +175,10 @@ ESQUEMA_SUITE = Objeto(
         "configuracion": _CONFIGURACION,
         "metricas": Objeto({"completa": _FAMILIAS, "revisada": _FAMILIAS}),
         "privacidad": _PRIVACIDAD,
+        "recursos_nli": _RECURSOS_NLI,
         "latencia_p95_ms": Objeto({etapa: Numero() for etapa in ETAPAS}),
     },
-    opcionales=frozenset({"privacidad"}),
+    opcionales=frozenset({"privacidad", "recursos_nli"}),
 )
 
 
