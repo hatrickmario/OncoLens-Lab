@@ -6,7 +6,7 @@ import type { TraceIdGenerator } from '../../infrastructure/trace-id-generator.j
 import { crearTraceIdMiddleware, traceIdDe } from '../../middleware/trace-id.middleware.js';
 import { PacienteNoEncontradoError } from '../patients/patients.errores.js';
 import { faltantesDe } from './completeness.rules.js';
-import { idDePacienteSchema } from './completeness.schema.js';
+import { leerIdDePaciente } from './completeness.schema.js';
 import { comoVistaDelChecklist } from './completeness.vista.js';
 import type { CompletenessService } from './ports.js';
 
@@ -20,20 +20,20 @@ const EVENTO_COMPLETITUD = 'completeness.consulta';
 
 function crearConsultar(service: CompletenessService, registrar: Registrar): RequestHandler {
   return async (request, response) => {
-    const patientId = idDePacienteSchema.safeParse(request.params['patientId']);
-    if (!patientId.success) {
+    const paciente = leerIdDePaciente(request.params);
+    if (paciente === undefined) {
       rechazarNoEncontrado(response, registrar, EVENTO_COMPLETITUD);
       return;
     }
     try {
-      const checklist = await service.calcular(patientId.data);
+      const checklist = await service.calcular(paciente);
       const vista = comoVistaDelChecklist(checklist);
       // Solo UUID, traceId, versión del catálogo y conteos: nunca etiquetas, valores ni el error de la base (RN-10).
       registrar({
         event: EVENTO_COMPLETITUD,
         resultado: 'ok',
         traceId: traceIdDe(response),
-        patientId: patientId.data,
+        patientId: paciente,
         catalogVersion: vista.catalogVersion,
         total: vista.items.length,
         faltantes: faltantesDe(checklist).length,
