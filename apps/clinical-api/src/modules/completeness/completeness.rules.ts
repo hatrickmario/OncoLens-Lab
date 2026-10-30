@@ -4,7 +4,7 @@ import type {
   DestinoDeItem,
   EstadoDelChecklist,
   ItemDeDatoCritico,
-  ItemDelChecklist,
+  EstadoDeItem,
   RegistroDeDato,
   RegistrosPorEntidad,
 } from './ports.js';
@@ -130,6 +130,14 @@ function registrosQueCuentanDelItem(
   return registrosDelDestino(destino, vigentes);
 }
 
+/** El registro que hizo presente a un ítem (paso 4): de él sale su procedencia; `undefined` si no tiene ninguno. */
+export function registroQueCuentaDelItem(
+  item: ItemDeDatoCritico,
+  registros: RegistrosPorEntidad,
+): RegistroDeDato | undefined {
+  return registroQueCuenta(registrosQueCuentanDelItem(item, registros));
+}
+
 function valorDelRegistro(item: ItemDeDatoCritico, registro: RegistroDeDato): string | null {
   const campo = item.destination.field;
   const valor = campo === undefined ? null : (registro.columnas[campo] ?? null);
@@ -180,7 +188,7 @@ export interface EntradaDelChecklist {
 }
 
 /** Paso 5: un estado por ítem del tipo activo, en el orden del catálogo. */
-export function calcularChecklist(entrada: EntradaDelChecklist): ItemDelChecklist[] {
+export function calcularChecklist(entrada: EntradaDelChecklist): EstadoDeItem[] {
   const delTipo = itemsDelTipoActivo(entrada.items, entrada.cancerType);
   return delTipo.map((item) => ({
     key: item.key,

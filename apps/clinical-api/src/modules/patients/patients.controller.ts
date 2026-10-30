@@ -26,6 +26,7 @@ export interface DependenciasDelController {
 const EVENTO_LISTADO = 'patients.listado';
 const EVENTO_BUSQUEDA = 'patients.busqueda';
 const EVENTO_FICHA = 'patients.ficha';
+const EVENTO_CHECKLIST_NO_DISPONIBLE = 'patients.ficha.checklist_no_disponible';
 
 /** Tipo de criterio que puede viajar al log: nunca el criterio mismo (RN-10). */
 type TipoDeCriterio = 'documento' | 'nombre';
@@ -127,6 +128,15 @@ function crearFicha(service: PatientsService, registrar: Registrar): RequestHand
         traceId: traceIdDe(response),
         patientId: patientId.data,
       });
+      if ('completenessAvailable' in ficha && ficha.completenessAvailable === false) {
+        // Aviso no bloqueante (RN-26): solo UUID y traceId, nunca el error de la base (RN-10).
+        registrar({
+          event: EVENTO_CHECKLIST_NO_DISPONIBLE,
+          resultado: 'no_disponible',
+          traceId: traceIdDe(response),
+          patientId: patientId.data,
+        });
+      }
       response.setHeader('Cache-Control', 'no-store');
       response.status(200).json(ficha);
     } catch (error) {

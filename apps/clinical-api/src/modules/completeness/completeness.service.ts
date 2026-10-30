@@ -1,24 +1,57 @@
-import { calcularChecklist, tipoDeCancerActivo } from './completeness.rules.js';
+import type { TiposDeCancerHabilitados } from '../evidence-analysis/ports.js';
+import { PacienteNoEncontradoError } from '../patients/patients.errores.js';
+import { procedenciaDeItem } from './completeness.procedencia.js';
+import {
+  calcularChecklist,
+  itemsDelTipoActivo,
+  registroQueCuentaDelItem,
+  tipoDeCancerActivo,
+} from './completeness.rules.js';
 import type {
   CatalogoDeDatosCriticos,
   ChecklistDelPaciente,
   CompletenessService,
+  ItemDeDatoCritico,
+  ItemDelChecklist,
   RegistrosDeCompletitud,
+  RegistrosPorEntidad,
 } from './ports.js';
 
 export interface DependenciasDelServicio {
   readonly registros: RegistrosDeCompletitud;
   readonly catalogo: CatalogoDeDatosCriticos;
+  /** `ENABLED_CANCER_TYPES` validada contra el catálogo (RN-20, RN-22). */
+  readonly tiposHabilitados: TiposDeCancerHabilitados;
+}
+
+/** Un ítem con su etiqueta del catálogo y la procedencia del registro que lo hizo presente (US-003, D1). */
+function conProcedencia(
+  estado: { key: string; status: ItemDelChecklist['status'] },
+  delTipo: readonly ItemDeDatoCritico[],
+  registros: RegistrosPorEntidad,
+): ItemDelChecklist {
+  const item = delTipo.find((candidato) => candidato.key === estado.key);
+  if (item === undefined) throw new Error('item_del_catalogo_inexistente');
+  const presente =
+    estado.status === 'presente_verificado' || estado.status === 'presente_sin_verificar';
+  const registro = presente ? registroQueCuentaDelItem(item, registros) : undefined;
+  return {
+    key: item.key,
+    label: item.label,
+    status: estado.status,
+    ...procedenciaDeItem(item, estado.status, registro),
+  };
 }
 
 /**
- * Checklist determinista de datos críticos (US-002, FR-23): carga el catálogo montado y los registros del paciente y
- * delega la regla de cinco pasos en el motor puro. Sin LLM, sin `rag-orchestrator`, sin aleatoriedad.
+ * Checklist determinista de datos críticos (US-002, US-003, FR-23): carga el catálogo montado y los registros del
+ * paciente y delega la regla de cinco pasos en el motor puro. Es la ÚNICA implementación: la usan el endpoint
+ * `/completeness`, el contador de la ficha y los faltantes del análisis. Sin LLM, sin `rag-orchestrator`, sin azar.
  */
 export function createCompletenessService(
   dependencias: DependenciasDelServicio,
 ): CompletenessService {
-  const { registros, catalogo } = dependencias;
+  const { registros, catalogo, tiposHabilitados } = dependencias;
   return {
     async calcular(patientId): Promise<ChecklistDelPaciente> {
       const catalogVersion = catalogo.version();
@@ -26,22 +59,34 @@ export function createCompletenessService(
         patientId,
         ['Diagnosis'],
       );
+      if (diagnosticos.length === 0 && !(await registros.existePaciente(patientId))) {
+        throw new PacienteNoEncontradoError();
+      }
       const cancerType = tipoDeCancerActivo(diagnosticos);
-      const datos = cancerType === null ? undefined : catalogo.deTipo(cancerType);
-      if (cancerType === null || datos === undefined) return { catalogVersion, items: [] };
+      const datos =
+        cancerType !== null && tiposHabilitados.estaHabilitado(cancerType)
+          ? catalogo.deTipo(cancerType)
+          : undefined;
+      if (cancerType === null || datos === undefined) {
+        return { catalogVersion, cancerTypeEnabled: false, items: [] };
+      }
       // El diagnóstico activo ya está leído: se reutiliza para que tipo y condiciones salgan del mismo registro.
       const entidades = datos.items
         .map((item) => item.destination.entity)
         .filter((entidad) => entidad !== 'Diagnosis');
       const delPaciente = await registros.registrosSinFiltrarPorRevision(patientId, entidades);
+      const completos = { ...delPaciente, Diagnosis: diagnosticos };
+      const estados = calcularChecklist({
+        cancerType,
+        items: datos.items,
+        verifiedReviewStatuses: datos.verifiedReviewStatuses,
+        registros: completos,
+      });
+      const delTipo = itemsDelTipoActivo(datos.items, cancerType);
       return {
         catalogVersion,
-        items: calcularChecklist({
-          cancerType,
-          items: datos.items,
-          verifiedReviewStatuses: datos.verifiedReviewStatuses,
-          registros: { ...delPaciente, Diagnosis: diagnosticos },
-        }),
+        cancerTypeEnabled: true,
+        items: estados.map((estado) => conProcedencia(estado, delTipo, completos)),
       };
     },
   };

@@ -4,6 +4,7 @@ import type {
   PatientAdminSummary,
   PatientSummary,
 } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
+import type { CompletenessService } from '../completeness/ports.js';
 import type { TiposDeCancerHabilitados } from '../evidence-analysis/ports.js';
 import { PacienteNoEncontradoError } from './patients.errores.js';
 import type { FichaRepository, FilaDePacienteDeLaFicha } from './ficha.repository.js';
@@ -14,12 +15,7 @@ import {
   ultimoValorPorBiomarcador,
 } from './ficha.reglas.js';
 import type { IdentityService } from './identity.service.js';
-import {
-  cancerTypeHabilitado,
-  comoResumenAdmin,
-  exigirIdentidad,
-  FALTANTES_CRITICOS_POR_AHORA,
-} from './patients.reglas.js';
+import { cancerTypeHabilitado, comoResumenAdmin, exigirIdentidad } from './patients.reglas.js';
 import type { PatientsRepository } from './patients.repository.js';
 import type { VistaPorPermiso } from './vistas.js';
 
@@ -29,6 +25,8 @@ export interface DependenciasDeLaFicha {
   repo: Pick<PatientsRepository, 'contarPendientesDeRevision'>;
   identidad: IdentityService;
   tiposHabilitados: TiposDeCancerHabilitados;
+  /** El mismo servicio del endpoint `/completeness` y del análisis (US-003, D2): una sola implementación. */
+  completitud: CompletenessService;
 }
 
 async function diagnosticoVigente(
@@ -41,6 +39,25 @@ async function diagnosticoVigente(
   const gradaciones = await ficha.gradaciones(vigente.id);
   const adicionales = await ficha.fuentesAdicionales('diagnosis', [vigente.id]);
   return comoDiagnostico(vigente, gradaciones, adicionales.get(vigente.id) ?? []);
+}
+
+/** Lo que la ficha muestra del checklist: el contador y, si el cálculo falló, la marca de que no está disponible. */
+type FaltantesDeLaFicha = Pick<PatientSummary, 'missingCriticalCount' | 'completenessAvailable'>;
+
+/**
+ * Datos críticos faltantes del paciente (FR-23). Si el cálculo falla, la ficha NO falla (RN-26: un aviso clínico no
+ * bloquea): `missingCriticalCount = 0` y `completenessAvailable = false`, sin propagar el error de la base (RN-10).
+ */
+async function faltantesCriticos(
+  completitud: CompletenessService,
+  patientId: string,
+): Promise<FaltantesDeLaFicha> {
+  try {
+    const { items } = await completitud.calcular(patientId);
+    return { missingCriticalCount: items.filter((item) => item.status === 'faltante').length };
+  } catch {
+    return { missingCriticalCount: 0, completenessAvailable: false };
+  }
 }
 
 async function biomarcadoresRecientes(
@@ -61,7 +78,7 @@ async function fichaDelDoctor(
   dependencias: DependenciasDeLaFicha,
   paciente: FilaDePacienteDeLaFicha,
 ): Promise<PatientSummary> {
-  const { identidad, repo, tiposHabilitados } = dependencias;
+  const { identidad, repo, tiposHabilitados, completitud } = dependencias;
   const descifrada = exigirIdentidad((await identidad.descifrar(paciente.id)) ?? undefined);
   const diagnostico = await diagnosticoVigente(dependencias, paciente.id);
   const pendientes = await repo.contarPendientesDeRevision([paciente.id]);
@@ -81,7 +98,7 @@ async function fichaDelDoctor(
     diagnosis: diagnostico,
     recentBiomarkers: await biomarcadoresRecientes(dependencias, paciente.id),
     pendingReviewCount: pendientes.get(paciente.id) ?? 0,
-    missingCriticalCount: FALTANTES_CRITICOS_POR_AHORA,
+    ...(await faltantesCriticos(completitud, paciente.id)),
   };
 }
 

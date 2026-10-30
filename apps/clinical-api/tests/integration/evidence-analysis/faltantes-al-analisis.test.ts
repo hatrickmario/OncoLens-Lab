@@ -5,6 +5,7 @@ import { componerCompletitud } from '../../../src/modules/completeness/completen
 import { ChecklistNoDisponibleError } from '../../../src/modules/evidence-analysis/ports.js';
 import {
   RUTA_CATALOGO_TEST_1_0_0,
+  TIPOS_HABILITADOS_DE_TEST,
   leerTexto,
   piiSinteticaDeFM2,
   prepararSiembra,
@@ -96,6 +97,7 @@ describe('fixture FX-04-b: F-M2 contra el catálogo FX-04-a', () => {
       db: mundo.cliente,
       rutaDelCatalogo: RUTA_CATALOGO_TEST_1_0_0,
       leerArchivo: leerTexto,
+      tiposHabilitados: TIPOS_HABILITADOS_DE_TEST,
     }).calcular(fm2.patientId);
 
     expect(checklist.catalogVersion).toBe('test-1.0.0');
@@ -155,6 +157,7 @@ describe('faltantes críticos del análisis: envío y persistencia', () => {
       db: mundo.cliente,
       rutaDelCatalogo: RUTA_CATALOGO_TEST_1_0_0,
       leerArchivo: leerTexto,
+      tiposHabilitados: TIPOS_HABILITADOS_DE_TEST,
     });
     const previo = await completitud.calcular(fm2.patientId);
     expect(previo.items.filter((i) => i.status === 'faltante')).toHaveLength(6);

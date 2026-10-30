@@ -5,17 +5,19 @@ import type {
   RegistroDeDato,
   RegistrosDeCompletitud,
 } from '../../../src/modules/completeness/ports.js';
+import { PacienteNoEncontradoError } from '../../../src/modules/patients/patients.errores.js';
 
 const catalogo: CatalogoDeDatosCriticos = {
   version: () => 'test-fake',
   deTipo: (tipo) =>
-    tipo === 'mama'
+    tipo === 'mama' || tipo === 'prostata'
       ? {
           verifiedReviewStatuses: ['verificado'],
           items: [
             {
               key: 'histologia',
-              cancerType: 'mama',
+              label: 'Histología',
+              cancerType: tipo,
               destination: { entity: 'Diagnosis', field: 'histology' },
               minValues: 1,
             },
@@ -24,43 +26,107 @@ const catalogo: CatalogoDeDatosCriticos = {
       : undefined,
 };
 
+const habilitados = (...tipos: string[]) => ({
+  estaHabilitado: (tipo: string) => tipos.includes(tipo),
+});
+
 const diagnostico = (tipo: string): RegistroDeDato => ({
   id: 'd-1',
   reviewStatus: 'verificado',
   fecha: null,
   creadoEn: '2026-01-01T00:00:00.000000Z',
+  procedencia: { entryMethod: 'seed', sourceDocumentId: null, page: null },
   columnas: { cancer_type: tipo, histology: 'x' },
 });
 
-const registrosCon = (diagnosticos: RegistroDeDato[]): RegistrosDeCompletitud => ({
+const registrosCon = (diagnosticos: RegistroDeDato[], existe = true): RegistrosDeCompletitud => ({
+  existePaciente: async () => existe,
   registrosSinFiltrarPorRevision: async () => ({ Diagnosis: diagnosticos }),
 });
 
+const servicioCon = (
+  diagnosticos: RegistroDeDato[],
+  tipos: string[] = ['mama', 'prostata'],
+  existe = true,
+) =>
+  createCompletenessService({
+    registros: registrosCon(diagnosticos, existe),
+    catalogo,
+    tiposHabilitados: habilitados(...tipos),
+  });
+
 describe('CompletenessService', () => {
-  it('devuelve items vacíos con la catalogVersion cuando el paciente no tiene diagnóstico activo', async () => {
-    const servicio = createCompletenessService({ registros: registrosCon([]), catalogo });
-
-    expect(await servicio.calcular('p-1')).toEqual({ catalogVersion: 'test-fake', items: [] });
+  it('devuelve items vacíos y cancerTypeEnabled false con la catalogVersion cuando el paciente no tiene diagnóstico activo', async () => {
+    expect(await servicioCon([]).calcular('p-1')).toEqual({
+      catalogVersion: 'test-fake',
+      cancerTypeEnabled: false,
+      items: [],
+    });
   });
 
-  it('devuelve items vacíos cuando el tipo del diagnóstico no está en el catálogo', async () => {
-    const servicio = createCompletenessService({
-      registros: registrosCon([diagnostico('leucemia')]),
-      catalogo,
+  it('devuelve items vacíos y cancerTypeEnabled false cuando el tipo del diagnóstico no está en el catálogo', async () => {
+    expect(await servicioCon([diagnostico('leucemia')]).calcular('p-1')).toEqual({
+      catalogVersion: 'test-fake',
+      cancerTypeEnabled: false,
+      items: [],
     });
-
-    expect(await servicio.calcular('p-1')).toEqual({ catalogVersion: 'test-fake', items: [] });
   });
 
-  it('calcula los ítems del tipo activo cuando el diagnóstico está en el catálogo', async () => {
-    const servicio = createCompletenessService({
-      registros: registrosCon([diagnostico('mama')]),
-      catalogo,
-    });
+  it('devuelve items vacíos y cancerTypeEnabled false cuando el tipo está en el catálogo pero no en ENABLED_CANCER_TYPES', async () => {
+    const servicio = servicioCon([diagnostico('mama')], ['prostata']);
 
     expect(await servicio.calcular('p-1')).toEqual({
       catalogVersion: 'test-fake',
-      items: [{ key: 'histologia', status: 'presente_verificado' }],
+      cancerTypeEnabled: false,
+      items: [],
     });
+  });
+
+  it('calcula los ítems del tipo activo con etiqueta y procedencia cuando el diagnóstico está habilitado', async () => {
+    expect(await servicioCon([diagnostico('mama')]).calcular('p-1')).toEqual({
+      catalogVersion: 'test-fake',
+      cancerTypeEnabled: true,
+      items: [
+        {
+          key: 'histologia',
+          label: 'Histología',
+          status: 'presente_verificado',
+          origin: 'seed',
+          provenance: {
+            entryMethod: 'seed',
+            reviewStatus: 'verificado',
+            sourceDocumentId: null,
+          },
+          destination: { entity: 'Diagnosis', field: 'histology' },
+          condition: null,
+        },
+      ],
+    });
+  });
+
+  it('lanza PacienteNoEncontradoError cuando no hay diagnóstico y el paciente no existe', async () => {
+    await expect(servicioCon([], ['mama'], false).calcular('p-1')).rejects.toBeInstanceOf(
+      PacienteNoEncontradoError,
+    );
+  });
+
+  it('no consulta la existencia del paciente cuando ya leyó un diagnóstico suyo', async () => {
+    let consultas = 0;
+    const registros: RegistrosDeCompletitud = {
+      existePaciente: async () => {
+        consultas += 1;
+        return true;
+      },
+      registrosSinFiltrarPorRevision: async () => ({ Diagnosis: [diagnostico('mama')] }),
+    };
+    const servicio = createCompletenessService({
+      registros,
+      catalogo,
+      tiposHabilitados: habilitados('mama'),
+    });
+
+    await servicio.calcular('p-1');
+
+    expect(consultas).toBe(0);
   });
 });

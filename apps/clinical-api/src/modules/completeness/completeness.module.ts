@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { Consultador } from '../auth/auth.repository.js';
 import { crearProveedorDeCatalogo } from '../evidence-analysis/catalog-version.provider.js';
+import type { TiposDeCancerHabilitados } from '../evidence-analysis/ports.js';
 import { createCompletenessRepository } from './completeness.repository.js';
 import { createCompletenessService } from './completeness.service.js';
 import type {
@@ -14,6 +15,8 @@ export interface DependenciasDelModulo {
   /** Directorio montado como `CLINICAL_CATALOG_PATH`. */
   readonly rutaDelCatalogo: string;
   readonly leerArchivo: (ruta: string) => string;
+  /** `ENABLED_CANCER_TYPES` validada contra el catálogo (RN-20, RN-22). */
+  readonly tiposHabilitados: TiposDeCancerHabilitados;
 }
 
 /** Forma de `datos-criticos.json` que consume el cálculo; el arranque ya la validó entera (L1D-93, RN-29). */
@@ -22,6 +25,7 @@ const esquemaDeDatosCriticos = z.object({
   items: z.array(
     z.object({
       key: z.string(),
+      label: z.object({ es: z.string().min(1) }),
       cancerType: z.string(),
       destination: z.object({
         entity: z.string(),
@@ -52,7 +56,10 @@ export function cargarCatalogoDeDatosCriticos(
     const archivo = esquemaDeDatosCriticos.parse(
       JSON.parse(leerArchivo(`${rutaDelCatalogo}/${tipo}/datos-criticos.json`)),
     );
-    porTipo.set(tipo, archivo);
+    porTipo.set(tipo, {
+      verifiedReviewStatuses: archivo.verifiedReviewStatuses,
+      items: archivo.items.map(({ label, ...item }) => ({ ...item, label: label.es })),
+    });
   }
   return { version: manifiesto.version, deTipo: (tipo) => porTipo.get(tipo) };
 }
@@ -61,5 +68,6 @@ export function componerCompletitud(dependencias: DependenciasDelModulo): Comple
   return createCompletenessService({
     registros: createCompletenessRepository(dependencias.db),
     catalogo: cargarCatalogoDeDatosCriticos(dependencias.rutaDelCatalogo, dependencias.leerArchivo),
+    tiposHabilitados: dependencias.tiposHabilitados,
   });
 }

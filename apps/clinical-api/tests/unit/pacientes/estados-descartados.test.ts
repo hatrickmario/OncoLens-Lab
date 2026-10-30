@@ -21,6 +21,7 @@ const registroConEstado = (reviewStatus: EstadoDeRevision): RegistroDeDato => ({
   reviewStatus,
   fecha: null,
   creadoEn: '2026-10-16T12:00:00.000000Z',
+  procedencia: { entryMethod: 'seed', sourceDocumentId: null, page: null },
   columnas: {},
 });
 

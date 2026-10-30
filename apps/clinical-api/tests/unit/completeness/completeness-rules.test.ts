@@ -31,6 +31,7 @@ function registro(resto: {
     reviewStatus: resto.reviewStatus ?? 'verificado',
     fecha: resto.fecha === undefined ? '2026-01-01' : resto.fecha,
     creadoEn: resto.creadoEn ?? '2026-01-01T00:00:00.000000Z',
+    procedencia: { entryMethod: 'seed', sourceDocumentId: null, page: null },
     columnas: resto.columnas ?? {},
   };
 }
@@ -38,6 +39,7 @@ function registro(resto: {
 function item(clave: string, resto: Partial<ItemDeDatoCritico> = {}): ItemDeDatoCritico {
   return {
     key: clave,
+    label: clave,
     cancerType: 'mama',
     destination: { entity: 'PriorTreatment' },
     minValues: 1,
