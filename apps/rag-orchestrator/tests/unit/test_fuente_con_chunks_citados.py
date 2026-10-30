@@ -2,7 +2,7 @@
 
 import dataclasses
 
-from app.application.aplicabilidad import ApplicabilityService
+from app.application.aplicabilidad import ApplicabilityService, conflictos_para_el_log
 from app.application.chunk_citable import ChunkCitable
 from app.domain.aplicabilidad_tipos import (
     AtributoDelPaciente,
@@ -81,3 +81,45 @@ def test_con_chunks_citados_devuelve_la_misma_fuente_cuando_no_se_conoce_su_pobl
     )
 
     assert _servicio().con_chunks_citados("mama", A_M2, fuente, ["ch-b7-1"]) is fuente
+
+
+def test_con_chunks_citados_conserva_el_criterio_aceptado_por_texto_cuando_la_lista_no_tiene_valores_en_los_fragmentos_citados():
+    poblacion = PoblacionDelEstudio(
+        "extraido_verificado",
+        {"estado_menopausico": _valores(("premenopausal women only", "ch-b7-2"))},
+    )
+    fuente = _fuente(poblacion)
+    aceptado = dataclasses.replace(
+        _menopausia(fuente),
+        estado="coincide",
+        causa=None,
+        valor_estudio="postmenopausal women",
+        chunk_citado_id="ch-b7-3",
+    )
+    fuente = fuente.con_criterios(
+        tuple(aceptado if c.clave == aceptado.clave else c for c in fuente.criterios)
+    )
+
+    recalculada = _servicio().con_chunks_citados("mama", A_M2, fuente, ["ch-b7-1"])
+
+    assert _menopausia(recalculada) == aceptado
+
+
+def test_conflictos_para_el_log_da_un_registro_por_fragmento_cuando_un_fragmento_trae_dos_valores():
+    poblacion = PoblacionDelEstudio("extraido_verificado", {})
+    fuente = _fuente(poblacion)
+    en_conflicto = dataclasses.replace(
+        _menopausia(fuente),
+        causa="valores_en_conflicto",
+        valores_del_estudio=(
+            ValorDePoblacion("a", "elegibilidad", "ch-1"),
+            ValorDePoblacion("b", "elegibilidad", "ch-1"),
+            ValorDePoblacion("c", "elegibilidad", "ch-2"),
+        ),
+    )
+    fuente = fuente.con_criterios((en_conflicto,))
+
+    assert conflictos_para_el_log([fuente]) == [
+        ("estado_menopausico", "ch-1"),
+        ("estado_menopausico", "ch-2"),
+    ]

@@ -154,3 +154,29 @@ def test_criterio_aplicable_no_emite_el_valor_de_la_forma_antigua_sin_fragmento_
     campos = _poblacion_en_lista(criterio)
 
     assert [v.chunkId for v in campos["studyPopulationValues"]] == ["ch-1"]
+
+
+@pytest.mark.parametrize(("largo", "se_emite"), [(200, True), (201, False)])
+def test_criterio_aplicable_emite_el_valor_solo_hasta_el_maximo_del_contrato(largo, se_emite):
+    criterio = CriterioEvaluado(
+        "estado_menopausico",
+        "posmenopáusica",
+        None,
+        "desconocido",
+        "no_reportado_por_fuente",
+        False,
+        valores_del_estudio=(ValorDePoblacion("x" * largo, "elegibilidad", "ch-1"),),
+    )
+
+    emitidos = _poblacion_en_lista(criterio).get("studyPopulationValues", [])
+
+    assert (len(emitidos) == 1) is se_emite
+
+
+def test_rag_query_cita_los_dos_fragmentos_del_conflicto_cuando_estado_her2_trae_valores_de_dos_fragmentos():
+    cuerpo = entorno_fx08bc("O-P4").consultar(solicitud_a_m2()).json()
+
+    externo = FICHAS_FX08BC["doc-b4"].external_id
+    fuente = next(f for f in cuerpo["applicability"] if f["externalId"] == externo)
+    her2 = next(c for c in fuente["criteria"] if c["criterion"] == "estado_her2")
+    assert [c["chunkId"] for c in her2["citedSources"]] == ["ch-b4-1", "ch-b4-2"]

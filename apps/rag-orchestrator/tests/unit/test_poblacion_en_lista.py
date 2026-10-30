@@ -273,6 +273,15 @@ def test_clasifica_forma_no_comparable_cuando_el_destino_reune_varios_biomarcado
 # --- composición con el contexto del paciente y los fragmentos citados -----------------------------------------
 
 
+MENOPAUSIA_CON_PERI = dataclasses.replace(
+    MENOPAUSIA,
+    poblacion=dataclasses.replace(
+        MENOPAUSIA.poblacion,
+        sinonimos=MappingProxyType(
+            {**MENOPAUSIA.poblacion.sinonimos, "perimenopausica": ("perimenopausal women",)}
+        ),
+    ),
+)
 MENOPAUSIA_LEIDA = dataclasses.replace(
     MENOPAUSIA,
     destino=DestinoDelCriterio(
@@ -357,3 +366,9 @@ def test_estado_de_poblacion_lee_la_forma_antigua_cuando_algun_valor_no_trae_fra
 
     # Con la lectura de lista sería ``parcial``/``inclusiva``; la forma antigua compara el primer valor por pertenencia.
     assert proyeccion == ProyeccionDeEstado("no_coincide")
+
+
+def test_clasifica_restringido_cuando_solo_uno_de_varios_valores_elegibles_lleva_el_marcador():
+    valores = [_v("postmenopausal women only"), _v("perimenopausal women")]
+
+    assert clasificar_poblacion(valores, "premenopáusica", MENOPAUSIA_CON_PERI)[0] == "restringido"
