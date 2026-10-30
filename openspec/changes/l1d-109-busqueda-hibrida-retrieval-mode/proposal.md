@@ -44,3 +44,8 @@ La búsqueda semántica sola pierde estudios que mencionan literalmente el fárm
 - Reescritura de consulta (US-238) y cambios de código en `clinical-api` (salvo regenerar su schema si fuera cerrado) o `web`.
 - Implementar `/rag/follow-up` (solo se fija su contrato y ejemplos; su historia emitirá el bloque con el mismo `_armar_meta_de_recuperacion`).
 - Cambiar `relevance_score` u orden de opciones (RN-03, RN-28).
+
+
+## Decidido (usuario, 2026-10-30)
+
+Desviación de D7: el contrato 1.7.0 fija solo el vínculo modo/fusión con un `if/then/else` (`dense` ⇒ `ninguna` y `fusionParam = 0`; `hibrida` ⇒ `rrf` o `ponderada`). El rango de `fusionParam` (k entero ≥ 1 con `rrf`; peso en (0, 1) con `ponderada`) lo valida únicamente `Settings` al arrancar. Motivo: un `anyOf` por combinación rompe `contracts:breaking` (`response-property-any-of-added`) y habría exigido excepciones ADR-26 E-6/E-7 y ampliar `scripts/contracts/lib/refinamientos.mjs`; se descartaron ambas.

@@ -42,3 +42,8 @@ Decisión (una propuesta elegida; descartadas en una línea): fusión como regla
 ## Evaluación
 
 La calidad (recall@10, MRR, retroceso frente a `dense`) se mide en US-133 con el runner de variantes (US-226): brazos A2 y A2b de ADR-45. Este change no fija umbrales ni decide el modo de la demo.
+
+
+## Decidido (usuario, 2026-10-30)
+
+Desviación de D7: el contrato 1.7.0 fija solo el vínculo modo/fusión con un `if/then/else` (`dense` ⇒ `ninguna` y `fusionParam = 0`; `hibrida` ⇒ `rrf` o `ponderada`). El rango de `fusionParam` (k entero ≥ 1 con `rrf`; peso en (0, 1) con `ponderada`) lo valida únicamente `Settings` al arrancar. Motivo: un `anyOf` por combinación rompe `contracts:breaking` (`response-property-any-of-added`) y habría exigido excepciones ADR-26 E-6/E-7 y ampliar `scripts/contracts/lib/refinamientos.mjs`; se descartaron ambas.
