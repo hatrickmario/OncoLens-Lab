@@ -1,0 +1,27 @@
+# Tasks — l1d-145-panel-hasta-3-opciones
+
+> Disciplina (matriz de CLAUDE.md): componentes de `web` → **test del AC primero** (Testing Library + MSW desde
+> `contracts/examples/`, sin rojo por cada componente); reglas puras con nombre (`textoOpcionesNoMostradas`,
+> `etiquetaDePosicion`) con unitarios uno a uno dentro del `feat`. E2E Playwright contra Compose (`LLM_PROVIDER=fake`,
+> perfil de test, FX-10c-a, seed sintético). Mocks solo en el borde HTTP (MSW); reloj inyectado. Sin cambio de
+> `openapi.yaml`: no hay sección de contrato con diff. ↪ L1D-144 aporta `optionsNotShown` y los ejemplos (`con-evidencia-s4-tres-opciones.json`,
+> `con-evidencia-s4-tres-opciones-no-comparable.json` y sus pares `rag-query-*` para el LLM fake del E2E).
+
+## 1. contratos
+
+- [ ] 1.1 (test después) Sin diff de `openapi.yaml`. Verificar en `main` que L1D-144 dejó `analysisBasis.optionsNotShown` en `packages/api-contracts` y en `contracts/examples/` `con-evidencia-s4-tres-opciones.json` (`LLM-CUATRO`, `optionsNotShown = 1`), `con-evidencia-s4-tres-opciones-no-comparable.json` (`LLM-TRES`, O-A no comparable tercera, `optionsNotShown = 0`) y sus pares `rag-query-tres-opciones.json` / `rag-query-tres-opciones-no-comparable.json` (con request propio) para el LLM fake del E2E. `contracts:check` en verde.
+
+## 2. frontend
+
+- [ ] 2.1 (test después: soporte) Ampliar los handlers MSW de `apps/web/tests/support/msw/evidence-analyses.ts` desde `contracts/examples/` con `con-evidencia-s4-tres-opciones.json` (3 opciones, `optionsNotShown = 1`), `con-evidencia-s4-tres-opciones-no-comparable.json` (`LLM-TRES`, O-A no comparable, `optionsNotShown = 0`) y un ejemplo previo sin el campo (ausente); `onUnhandledRequest: 'error'`. La suite previa de `web` sigue en verde.
+- [ ] 2.2 (test del AC primero) Tests de componente en rojo sobre `AnalysisResult`/`EvidencePanel` en `apps/web/tests/ui/` (esqueletos `EvidenceOptionsList`, `textoOpcionesNoMostradas`, `etiquetaDePosicion` con `throw new Error('no implementado')`, para que falle en la aserción): "la UI conserva el orden recibido aunque la segunda opción tenga mayor relevanceScore [US-135 AC-4]"; "muestra la etiqueta Población no comparable y la tarjeta completa cuando la tercera opción lo es [US-135 AC-5]"; "rotula cada tarjeta como Opción descrita n de 3 dentro de una lista ordenada con h3 [US-135 AC-6]"; "muestra el texto de opciones no mostradas bajo la última tarjeta y lo añade al anuncio cuando optionsNotShown es 1, y no aparece con 0 o ausente [US-135 AC-7]"; "muestra el criterio de aplicabilidad una sola vez con la frase de numeración [US-135 AC-2]"; actualizar los tests de relevancia de US-061 AC-2 y US-062 AC-7 a los literales de D6. Commit `test(L1D-145)`.
+- [ ] 2.3 (test del AC primero, E2E) Tests Playwright en rojo en `apps/web/e2e/panel-analisis.spec.ts` (o `panel-tres-opciones.spec.ts`) con tiempo máximo explícito: "muestra 3 tarjetas en el orden O-B, O-D, O-C con conteos, citas y relevancia al final [US-135 AC-1]" y "no encuentra términos prohibidos ni rótulos de jerarquía en el DOM del panel de tres opciones [US-135 AC-3]"; ampliar `lenguaje-no-prescriptivo.spec.ts` (Regresión [RN-23]) y `aviso-ia.spec.ts` (Regresión [RN-19]: subcadena del `disclaimer` en `role="note"` y `es.app.academicUseLabel` en la cabecera) para recorrer la lista. Si falta US-134 en `main`, queda en rojo en la rama y se cierra en la misma oleada, nunca con `.skip`. Commit `test(L1D-145)`.
+- [ ] 2.4 (test del AC primero) Extraer las reglas puras con unitarios uno a uno en `apps/web/tests/lib/`: `textoOpcionesNoMostradas()` (FR-09, `[S4 resp. 7]`: 0/ausente/no entero → `null`) y `etiquetaDePosicion(n, total)` (RN-23). Commit `feat(L1D-145)` junto con 2.5.
+- [ ] 2.5 (test del AC primero) Implementar design D1–D8: `EvidenceOptionsList` (`<ol>`, `<li>`, `h3`, rótulo de posición) usada por `AnalysisResult`; frase de numeración en `OrderingCriterion` solo con orden por aplicabilidad; etiqueta «Población no comparable» en la tarjeta; texto de opciones no mostradas bajo la última tarjeta y adición al anuncio en `anuncio-de-estado.ts`; valores nuevos de `evidence.relevance.basis` y `evidence.relevance.basisRelevancia` (D6, sin clave nueva) y claves nuevas en `apps/web/messages/es.json` con los literales exactos de `docs/ux/S4/pantallas-s4.md` (variante A) y de US-135 AC-1/2/6/7; `AiDisclaimer` en banda al pie del panel (H-17) si no está ya. Sin `dangerouslySetInnerHTML` ni dependencias nuevas; sin lógica de orden. Verificación: 2.2 en verde, suite de `web` y `lint:lenguaje` sin hallazgos. Commit `feat(L1D-145)`.
+- [ ] 2.6 (test del AC primero, E2E) Poner en verde 2.3 contra Compose; `panel-analisis`, `lenguaje-no-prescriptivo`, `aviso-ia`, `base-analisis` en verde. Ajustes en `feat(L1D-145)`.
+- [ ] 2.7 Loop visual (visual-check): estados con 1, 3 y 3+1 no mostrada, `LLM-TRES` con no comparable, consola sin errores ni violaciones de CSP, red solo /api/* sin PII en URLs, accesibilidad y teclado (`<ol>`, `h3`, foco), rendimiento y capturas a 375 y 1280 px; cada fallo se convierte primero en un test en rojo.
+- [ ] 2.8 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-145)`.
+
+## 3. cierre
+
+- [ ] 3.1 `openspec validate l1d-145-panel-hasta-3-opciones --strict`, tests del contexto `web` (Vitest y Playwright) en verde, `lint:lenguaje` sin hallazgos. `contracts:verify-provider` y `run-ai-eval` no aplican (sin cambio de API, modelo, prompt, umbral, catálogo ni corpus).
