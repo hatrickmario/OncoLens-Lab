@@ -559,6 +559,29 @@ export const zSynthesis = z.strictObject({
     }))
 });
 
+export const zRagFollowUpResponse = z.strictObject({
+    status: z.enum([
+        'con_evidencia',
+        'sin_evidencia',
+        'fuera_de_contexto'
+    ]),
+    answer: z.array(zSupportedClaim),
+    citedSources: z.array(zCitedSource),
+    omittedClaims: z.int().gte(0),
+    topRelevanceScore: z.number().gte(0).lte(1).nullable(),
+    meta: zRagMeta
+});
+
+export const zStudyPopulationValue = z.strictObject({
+    value: z.string().max(200),
+    chunkId: z.string(),
+    scope: z.enum([
+        'elegibilidad',
+        'subgrupo',
+        'mencion'
+    ])
+});
+
 /**
  * Un criterio del catálogo del tipo de cáncer y su estado frente al paciente (RN-28).
  */
@@ -566,13 +589,27 @@ export const zApplicabilityCriterion = z.strictObject({
     criterion: z.string(),
     patientValue: z.string().nullable(),
     studyPopulationValue: z.string().nullable(),
+    studyPopulationValues: z.array(zStudyPopulationValue).optional(),
+    partialReason: z.enum([
+        'inclusiva',
+        'mezclada',
+        'rango_solapado',
+        'solo_subgrupo'
+    ]).nullish(),
     status: z.enum([
         'coincide',
         'parcial',
         'no_coincide',
         'desconocido'
     ]),
-    unknownReason: z.enum(['falta_en_paciente', 'no_reportado_por_fuente']).nullable(),
+    unknownReason: z.enum([
+        'falta_en_paciente',
+        'no_reportado_por_fuente',
+        'varios_valores_en_la_fuente',
+        'valores_en_conflicto',
+        'respaldo_fallido',
+        'sin_regla_de_comparacion'
+    ]).nullable(),
     isExclusionary: z.boolean(),
     patientDataWarning: z.enum([
         'sin_verificar',
@@ -618,19 +655,6 @@ export const zRagQueryInternalResponse = z.strictObject({
         target: z.string(),
         foundEvidence: z.boolean()
     })),
-    topRelevanceScore: z.number().gte(0).lte(1).nullable(),
-    meta: zRagMeta
-});
-
-export const zRagFollowUpResponse = z.strictObject({
-    status: z.enum([
-        'con_evidencia',
-        'sin_evidencia',
-        'fuera_de_contexto'
-    ]),
-    answer: z.array(zSupportedClaim),
-    citedSources: z.array(zCitedSource),
-    omittedClaims: z.int().gte(0),
     topRelevanceScore: z.number().gte(0).lte(1).nullable(),
     meta: zRagMeta
 });

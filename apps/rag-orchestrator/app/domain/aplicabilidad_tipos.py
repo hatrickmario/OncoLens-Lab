@@ -19,6 +19,39 @@ AvisoDelDato = Literal["sin_verificar", "en_conflicto", "faltante"]
 OrigenDeMetadatos = Literal["fuente_estructurada", "extraido_verificado", "pendiente"]
 
 
+AlcanceDeValor = Literal["elegibilidad", "subgrupo", "mencion"]
+ALCANCES: tuple[AlcanceDeValor, ...] = get_args(AlcanceDeValor)
+MotivoDeFormaInvalida = Literal["demasiados_valores", "alcance_fuera_de_enum", "valor_invalido"]
+
+
+@dataclass(frozen=True)
+class ValorDePoblacion:
+    """Un valor de población de un criterio (ADR-47): ``chunk_id`` es ``None`` en la forma antigua, que no lo guardaba."""
+
+    valor: str
+    alcance: AlcanceDeValor
+    chunk_id: str | None
+
+
+@dataclass(frozen=True)
+class FormaInvalida:
+    """Por qué se descartó la lista de un criterio. Nunca lleva el valor ni el texto del fragmento (RN-14)."""
+
+    motivo: MotivoDeFormaInvalida
+    chunk_id: str | None
+
+
+@dataclass(frozen=True)
+class CriterioDePoblacion:
+    """Lo que el dominio recibe por criterio, venga de la forma antigua o de la nueva (US-241, D6).
+
+    Pendiente (D5) e inválido llevan la lista vacía: el criterio queda sin valor del estudio."""
+
+    valores: tuple[ValorDePoblacion, ...] = ()
+    pendiente: bool = False
+    invalidez: FormaInvalida | None = None
+
+
 @dataclass(frozen=True)
 class PoblacionDelEstudio:
     """``population_criteria`` y ``metadata_source`` de un documento del catálogo, tal como están guardados."""

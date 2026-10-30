@@ -11,6 +11,7 @@ from collections.abc import Iterator
 import pytest
 from sqlalchemy import Engine, text
 
+from app.config.settings import POBLACION_MAX_VALORES_POR_CRITERIO_INICIAL as MAX_VALORES
 from app.infrastructure.catalog.catalogo_reader import LectorCatalogoPostgres
 from app.infrastructure.catalog.conexion import crear_motor
 from app.infrastructure.catalog.corpus_document_repository import CorpusDocumentRepository
@@ -34,7 +35,9 @@ def test_fichas_por_documento_devuelve_solo_los_documentos_que_existen(motor: En
         registro_de_prueba("doc-a@abcdef", title="Breast Cancer Treatment (test)")
     )
 
-    fichas = LectorCatalogoPostgres(motor).fichas_por_documento({"doc-a@abcdef", "doc-inexistente"})
+    fichas = LectorCatalogoPostgres(motor, MAX_VALORES).fichas_por_documento(
+        {"doc-a@abcdef", "doc-inexistente"}
+    )
 
     assert set(fichas) == {"doc-a@abcdef"}
     assert fichas["doc-a@abcdef"].title == "Breast Cancer Treatment (test)"
@@ -42,7 +45,7 @@ def test_fichas_por_documento_devuelve_solo_los_documentos_que_existen(motor: En
 
 
 def test_fichas_por_documento_devuelve_vacio_cuando_no_se_piden_documentos(motor: Engine) -> None:
-    assert LectorCatalogoPostgres(motor).fichas_por_documento(set()) == {}
+    assert LectorCatalogoPostgres(motor, MAX_VALORES).fichas_por_documento(set()) == {}
 
 
 def test_la_ficha_devuelve_la_url_de_la_fuente_guardada_en_el_catalogo(motor: Engine) -> None:
@@ -52,7 +55,7 @@ def test_la_ficha_devuelve_la_url_de_la_fuente_guardada_en_el_catalogo(motor: En
     )
     CorpusDocumentRepository(motor).guardar_documento(registro_de_prueba("doc-sin-url@abcdef"))
 
-    fichas = LectorCatalogoPostgres(motor).fichas_por_documento(
+    fichas = LectorCatalogoPostgres(motor, MAX_VALORES).fichas_por_documento(
         {"doc-url@abcdef", "doc-sin-url@abcdef"}
     )
 

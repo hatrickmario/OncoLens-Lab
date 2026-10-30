@@ -468,6 +468,22 @@
       "file": "error-interno.json",
       "spec": "clinical-api",
       "target": "#/paths/~1platform~1patients~1{patientId}~1completeness/get/responses/500"
+    },
+    {
+      "file": "rag-query-request-poblacion-lista.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalRequest"
+    },
+    {
+      "file": "rag-query-poblacion-lista.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalResponse",
+      "request": "rag-query-request-poblacion-lista.json"
+    },
+    {
+      "file": "con-evidencia-s4-poblacion-lista.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/EvidenceAnalysis"
     }
   ],
   "pendingExamples": [
