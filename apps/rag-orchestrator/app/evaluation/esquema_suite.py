@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from app.evaluation.acuerdo_juez import ESTADO_CONCLUYENTE, ESTADO_NO_CONCLUYENTE, SIN_MEDIR
 from app.evaluation.config_suite import PROVEEDORES, RELOJES, SUITES
 from app.evaluation.cronometro import ETAPAS
 from app.evaluation.fuente_dataset import CLASES_ADMITIDAS
@@ -49,6 +50,17 @@ _FIDELIDAD = _familia(
                 "rotulo": Enumerado(frozenset({ROTULO_SECUNDARIA})),
                 **_FRACCION_DE_AFIRMACIONES,
                 "discrepancias_con_nli": Numero(),
+                "veredictos_invalidos": Numero(),
+                "acuerdo_con_nli": Objeto(
+                    {
+                        "muestra": Numero(),
+                        "porcentaje": Numero(),
+                        "kappa": Numero(),
+                        "discrepancias": Lista(Identificador()),
+                    }
+                ),
+                "acuerdo_con_humano": Enumerado(frozenset({SIN_MEDIR})),
+                "estado": Enumerado(frozenset({ESTADO_CONCLUYENTE, ESTADO_NO_CONCLUYENTE})),
             }
         ),
     },

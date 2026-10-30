@@ -23,7 +23,7 @@ from app.evaluation.adaptadores_falsos import (
 from app.evaluation.config_suite import ConfigInvalida, ConfigSuite
 from app.evaluation.cronometro import Cronometro
 from app.evaluation.fuente_dataset import DatasetSuite
-from app.evaluation.juez_fidelidad import JuezFidelidad, JuezNli
+from app.evaluation.juez_fidelidad import JuezFidelidad, JuezNli, JuezSecundario
 from app.evaluation.lenguaje_estricto import VerificadorEstricto
 from app.evaluation.medidores import (
     BuscadorMedido,
@@ -58,7 +58,7 @@ class ServicioDeSuite:
     verificador_estricto: VerificadorEstricto
     verificador_produccion: ProhibitedTermsChecker
     juez_nli: JuezFidelidad
-    juez_llm: JuezFidelidad | None
+    juez_llm: JuezSecundario | None
 
 
 def parametros_de_recuperacion(
@@ -82,7 +82,7 @@ def componer_servicio(
     dataset: DatasetSuite,
     cronometro: Cronometro,
     reloj: Clock,
-    juez_llm: JuezFidelidad | None = None,
+    juez_llm: JuezSecundario | None = None,
 ) -> ServicioDeSuite:
     if config.proveedor != "fake":
         raise ConfigInvalida("adaptadores.proveedor: local se cablea con US-073")

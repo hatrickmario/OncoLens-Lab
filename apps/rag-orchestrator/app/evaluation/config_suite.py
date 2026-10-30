@@ -24,6 +24,7 @@ ENTORNO_DEL_JUEZ = {
     "base_url": "EVAL_JUDGE_BASE_URL",
     "temperatura": "EVAL_JUDGE_TEMPERATURE",
     "semilla": "EVAL_JUDGE_SEED",
+    "acuerdo_minimo": "JUEZ_ACUERDO_MINIMO",
 }
 """Claves del juez que ADR-41 deja en variables de entorno (RN-22); lo que digan sustituye al YAML."""
 TIMEOUT_DEL_JUEZ_POR_DEFECTO_S = 120.0
@@ -51,6 +52,8 @@ class ConfigJuez:
     temperatura: float
     semilla: int
     timeout_s: float
+    acuerdo_minimo: float
+    """``JUEZ_ACUERDO_MINIMO`` (RN-22): bajo este acuerdo con el NLI la fidelidad del juez es «no concluyente»."""
 
 
 @dataclass(frozen=True)
@@ -127,6 +130,15 @@ def _con_juez_efectivo(crudo: dict[str, Any], entorno: Mapping[str, str]) -> dic
     return {**crudo, "juez": juez} if juez else crudo
 
 
+def _exigir_fraccion(valor: object, clave: str) -> None:
+    try:
+        numero = float(valor)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        raise ConfigInvalida(f"{clave} debe ser un número") from None
+    if not 0.0 <= numero <= 1.0:
+        raise ConfigInvalida(f"{clave} debe estar en [0, 1]")
+
+
 def _leer_juez(crudo: dict[str, Any]) -> ConfigJuez | None:
     juez = crudo.get("juez")
     if not juez:
@@ -140,6 +152,8 @@ def _leer_juez(crudo: dict[str, Any]) -> ConfigJuez | None:
         modelo
     ):  # antes de cualquier request: Ollama resuelve nombres con espacios o control
         raise ConfigInvalida("juez.modelo no es un identificador válido (sin espacios ni control)")
+    acuerdo_minimo = _clave(juez, "acuerdo_minimo")  # RN-22: sin valor por defecto en código
+    _exigir_fraccion(acuerdo_minimo, "juez.acuerdo_minimo")
     try:
         return ConfigJuez(
             proveedor=proveedor,
@@ -148,10 +162,11 @@ def _leer_juez(crudo: dict[str, Any]) -> ConfigJuez | None:
             temperatura=float(juez.get("temperatura", 0.0)),
             semilla=int(juez.get("semilla", 0)),
             timeout_s=float(juez.get("timeout_s", TIMEOUT_DEL_JUEZ_POR_DEFECTO_S)),
+            acuerdo_minimo=float(acuerdo_minimo),
         )
     except (TypeError, ValueError):
         raise ConfigInvalida(
-            "juez.temperatura, juez.semilla y juez.timeout_s deben ser números"
+            "juez.temperatura, juez.semilla, juez.timeout_s y juez.acuerdo_minimo deben ser números"
         ) from None
 
 

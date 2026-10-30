@@ -73,7 +73,11 @@ def _familias(
     resultados: Sequence[ResultadoConsulta], suite: str, config: ConfigSuite
 ) -> dict[str, Any]:
     return calcular_familias(
-        resultados, suite, config.semilla_bootstrap, config.bootstrap_repeticiones
+        resultados,
+        suite,
+        config.semilla_bootstrap,
+        config.bootstrap_repeticiones,
+        None if config.juez is None else config.juez.acuerdo_minimo,
     )
 
 

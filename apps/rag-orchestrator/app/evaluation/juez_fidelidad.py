@@ -7,7 +7,6 @@ Los textos de afirmaciones y premisas viven en memoria; los errores nunca los in
 
 from __future__ import annotations
 
-import re
 from collections.abc import Sequence
 from contextlib import AsyncExitStack
 from typing import Protocol
@@ -17,18 +16,15 @@ import httpx
 from app.application.ports import NliClassifier
 from app.domain.nli import ParNli
 from app.domain.support import soporta
+from app.evaluation.acuerdo_juez import ESQUEMA_DEL_VEREDICTO, juzgar_afirmacion
 from app.evaluation.adaptadores_falsos import tokens
 from app.evaluation.config_suite import ConfigInvalida, ConfigJuez
 from app.evaluation.guardas import exigir_juez_local
 from app.evaluation.llamadas import RegistroDeLlamadas
 
 RUTA_DE_COMPLETIONS = "/chat/completions"
-SISTEMA = (
-    "Eres un verificador de afirmaciones. Decide si la afirmación se desprende de los fragmentos dados. "
-    "Responde exactamente SOPORTADA o NO_SOPORTADA, sin explicación."
-)
-MAXIMO_DE_TOKENS_DEL_VEREDICTO = 16
-_VEREDICTO = re.compile(r"\W*(NO_SOPORTADA|SOPORTADA)\W*", re.IGNORECASE)
+MAXIMO_DE_TOKENS_DEL_VEREDICTO = 64
+PREFIJO_DE_ID_DE_FRAGMENTO = "F"
 
 
 class JuezNoDisponible(RuntimeError):
@@ -39,6 +35,12 @@ class JuezFidelidad(Protocol):
     async def juzgar_soporte(self, afirmacion: str, premisas: Sequence[str]) -> bool:
         """``True`` si la afirmación se desprende de las premisas (los chunks que cita)."""
         ...
+
+
+class JuezSecundario(JuezFidelidad, Protocol):
+    """Juez que no decide solo (ADR-41): además del veredicto cuenta los que no pudo interpretar."""
+
+    veredictos_invalidos: int
 
 
 class JuezNli:
@@ -57,6 +59,8 @@ class JuezNli:
 
 class JuezLlmLexico:
     """Juez LLM fingido de la CI: soportada si todas sus palabras están en las premisas (sin modelo ni red)."""
+
+    veredictos_invalidos = 0
 
     async def juzgar_soporte(self, afirmacion: str, premisas: Sequence[str]) -> bool:
         disponibles = frozenset().union(*(tokens(p) for p in premisas)) if premisas else frozenset()
@@ -82,24 +86,34 @@ class JuezLlmLocal:
         self._semilla = semilla
         self._registro = registro
         self._clase_datos = clase_datos
+        self.veredictos_invalidos = 0
 
     async def juzgar_soporte(self, afirmacion: str, premisas: Sequence[str]) -> bool:
-        if (
-            not premisas
-        ):  # igual que JuezNli y JuezLlmLexico: sin premisas no hay soporte ni llamada
-            return False
-        fragmentos = "\n".join(f"- {p}" for p in premisas)
+        fragmentos = {
+            f"{PREFIJO_DE_ID_DE_FRAGMENTO}{n}": premisa for n, premisa in enumerate(premisas, 1)
+        }
+        veredicto = await juzgar_afirmacion(afirmacion, fragmentos, self)
+        self.veredictos_invalidos += not veredicto.valido
+        return veredicto.soportada
+
+    async def completar(self, sistema: str, usuario: str) -> str:
         cuerpo = {
             "model": self._modelo,
             "temperature": self._temperatura,
             "seed": self._semilla,
             "max_tokens": MAXIMO_DE_TOKENS_DEL_VEREDICTO,
-            "messages": [
-                {"role": "system", "content": SISTEMA},
-                {
-                    "role": "user",
-                    "content": f"Fragmentos:\n{fragmentos}\n\nAfirmación: {afirmacion}",
+            "reasoning_effort": "none",  # como en producción: un modelo que razona agota max_tokens (ADR-39 fase B)
+            "response_format": {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "veredicto",
+                    "schema": ESQUEMA_DEL_VEREDICTO,
+                    "strict": True,
                 },
+            },
+            "messages": [
+                {"role": "system", "content": sistema},
+                {"role": "user", "content": usuario},
             ],
         }
         self._registro.registrar(str(self._cliente.base_url), self._clase_datos, self._modelo)
@@ -111,14 +125,7 @@ class JuezLlmLocal:
             raise JuezNoDisponible("el juez LLM no respondió") from None
         except (KeyError, IndexError, TypeError, ValueError):
             raise JuezNoDisponible("la respuesta del juez LLM no tiene la forma esperada") from None
-        return _interpretar(str(contenido))
-
-
-def _interpretar(contenido: str) -> bool:
-    veredicto = _VEREDICTO.fullmatch(contenido)
-    if veredicto is None:
-        raise JuezNoDisponible("el veredicto del juez LLM no se pudo interpretar")
-    return veredicto.group(1).upper() == "SOPORTADA"
+        return str(contenido)
 
 
 async def crear_juez_llm(
@@ -126,7 +133,7 @@ async def crear_juez_llm(
     pila: AsyncExitStack,
     registro: RegistroDeLlamadas,
     clase_datos: str,
-) -> JuezFidelidad | None:
+) -> JuezSecundario | None:
     """El juez secundario de la configuración, o ``None`` si no hay; el cliente HTTP se cierra con ``pila``."""
     if config is None:
         return None

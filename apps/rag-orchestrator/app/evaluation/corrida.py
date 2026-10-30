@@ -105,7 +105,7 @@ async def _resultado_de(
         citas_validas = sum(len(a.chunk_ids_validos) for a in revisadas.aceptadas)
         citas_propuestas = citas_propuestas_de(propuesta.opciones)
     top = respuesta.topRelevanceScore
-    en_nli, en_juez = await _fidelidad_de(suite, pregunta.texto, generador_invocado)
+    en_nli, en_juez, invalidos = await _fidelidad_de(suite, pregunta.texto, generador_invocado)
     return ResultadoConsulta(
         recuperacion=evaluar_pregunta(pregunta, obs.rankings.get(pregunta.texto, [])),
         revisada=pregunta.id in dataset.revisadas,
@@ -119,6 +119,8 @@ async def _resultado_de(
         opciones_descartadas=len(respuesta.discardedOptions),
         **_lenguaje_de(suite, dataset, pregunta.texto, respuesta),
         afirmaciones_nli=en_nli,
+        ids_afirmaciones=tuple(f"{pregunta.id}/a{n}" for n, _ in enumerate(en_nli, 1)),
+        veredictos_invalidos_juez=invalidos,
         afirmaciones_juez=en_juez,
     )
 
@@ -192,21 +194,24 @@ def _inyecciones_efectivas(
 
 async def _fidelidad_de(
     suite: ServicioDeSuite, texto_pregunta: str, generador_invocado: bool
-) -> tuple[tuple[bool, ...], tuple[bool, ...] | None]:
-    """Veredicto por afirmación de la propuesta cruda: el NLI (principal) y el juez LLM (secundario, si lo hay)."""
+) -> tuple[tuple[bool, ...], tuple[bool, ...] | None, int]:
+    """Veredicto por afirmación de la propuesta cruda: el NLI (principal), el juez LLM (secundario, si lo hay) y
+    cuántos veredictos del juez no se pudieron interpretar en esta consulta."""
     propuesta = suite.observaciones.propuestas.get(texto_pregunta)
     if not generador_invocado or propuesta is None:
-        return (), None if suite.juez_llm is None else ()
+        return (), None if suite.juez_llm is None else (), 0
     plan = plan_de_la_propuesta(
         propuesta,
         suite.observaciones.textos_entregados[texto_pregunta],
         suite.verificador_produccion.reglas_coincidentes,
     )
     afirmaciones = afirmaciones_a_juzgar(plan)
-    return (
-        await _veredictos(suite.juez_nli, afirmaciones),
-        None if suite.juez_llm is None else await _veredictos(suite.juez_llm, afirmaciones),
-    )
+    del_nli = await _veredictos(suite.juez_nli, afirmaciones)
+    if suite.juez_llm is None:
+        return del_nli, None, 0
+    invalidos_antes = suite.juez_llm.veredictos_invalidos
+    del_juez = await _veredictos(suite.juez_llm, afirmaciones)
+    return del_nli, del_juez, suite.juez_llm.veredictos_invalidos - invalidos_antes
 
 
 async def _veredictos(

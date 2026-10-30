@@ -49,5 +49,9 @@ class ResultadoConsulta:
     inyecciones_efectivas: int = 0
     afirmaciones_nli: tuple[bool, ...] = ()
     """Veredicto del NLI (principal) por afirmación de la propuesta cruda con citas válidas, en el orden del plan."""
+    ids_afirmaciones: tuple[str, ...] = ()
+    """Id de cada afirmación (``<pregunta>/a<n>``, mismo orden que ``afirmaciones_nli``): las discrepancias se listan por id."""
+    veredictos_invalidos_juez: int = 0
+    """Veredictos del juez LLM que no se pudieron interpretar o citaron un fragmento inexistente (cuentan no soportados)."""
     afirmaciones_juez: tuple[bool, ...] | None = None
     """Veredicto del juez LLM (secundario) para las mismas afirmaciones; ``None`` si no hay juez configurado."""

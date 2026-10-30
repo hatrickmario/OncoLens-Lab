@@ -40,7 +40,11 @@ def familias_de_recuperacion(
 
 
 def calcular_familias(
-    resultados: Sequence[ResultadoConsulta], suite: str, semilla: int, repeticiones: int
+    resultados: Sequence[ResultadoConsulta],
+    suite: str,
+    semilla: int,
+    repeticiones: int,
+    acuerdo_minimo: float | None = None,
 ) -> dict[str, Any]:
     familias: dict[str, Any] = {}
     if suite in ("retrieval", "all"):
@@ -49,7 +53,7 @@ def calcular_familias(
         familias["citas"] = precision_de_citas(resultados)
         familias["sin_evidencia"] = exactitud_sin_evidencia(resultados)
         familias["opciones_con_cita_y_soporte"] = porcentaje_con_cita_y_soporte(resultados)
-        familias["fidelidad"] = fidelidad(resultados)
+        familias["fidelidad"] = fidelidad(resultados, acuerdo_minimo)
         familias["terminos_prohibidos"] = terminos_prohibidos(resultados)
         familias["inyeccion"] = inyeccion_efectiva(resultados)
     validacion = _validacion_de(resultados)

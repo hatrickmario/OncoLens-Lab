@@ -18,7 +18,13 @@ import respx
 from app.evaluation.dataset_loader import CLASE_SINTETICA
 from app.evaluation.juez_fidelidad import JuezLlmLocal
 from app.evaluation.llamadas import RegistroDeLlamadas
-from tests.evaluation.test_fidelidad_juez import COMPLETIONS, LOCAL, config_con_juez, correr, veredicto
+from tests.evaluation.test_fidelidad_juez import (
+    COMPLETIONS,
+    LOCAL,
+    config_con_juez,
+    correr,
+    veredicto,
+)
 
 SOPORTADA = '{"veredicto": "soportada", "cita": "F1"}'
 ID_DE_AFIRMACION = re.compile(r"[A-Za-z0-9-]+/a\d+")
