@@ -27,3 +27,7 @@
 ## Cierre
 
 - [ ] 5.1 (condición: 2.7 en verde en la CI y 3.1 hecha) `openspec validate l1d-109-busqueda-hibrida-retrieval-mode --strict`, tests de `apps/rag-orchestrator` y de `clinical-api` (3.1) en verde, `contracts:check`, `contracts:breaking` y `contracts:verify-provider` en verde
+
+## Pregunta abierta al humano
+
+- [ ] Q-1 Una pregunta sin términos léxicos hace fallar cerrado (503) la consulta híbrida, aunque `dense` funcione: ¿se mantiene, o debe degradar a `dense` dejando constancia en `meta`? (design.md D6, «a confirmar por el usuario»). No decidida aquí.
