@@ -44,7 +44,11 @@ async function analizar(cuerpoDeRag: object, traceId: string) {
   const respuesta = await clienteVerificado(app)
     .post('/platform/evidence-analyses')
     .set('Cookie', cookie)
-    .send({ patientId: idDePaciente('a'), query: PREGUNTA_Q_HER2, sourcesSelected: TODAS_LAS_FUENTES });
+    .send({
+      patientId: idDePaciente('a'),
+      query: PREGUNTA_Q_HER2,
+      sourcesSelected: TODAS_LAS_FUENTES,
+    });
   const fila = await leerRegistroPorTrace(mundo.cliente, traceId);
   return { respuesta, fila };
 }
