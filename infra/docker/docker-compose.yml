@@ -337,6 +337,8 @@ services:
       RERANK_TOP_N: ${RERANK_TOP_N:-10}
       # Soporte NLI (L1D-180, RN-01, RN-22): probabilidad mínima de entailment; provisional hasta US-072.
       NLI_ENTAILMENT_THRESHOLD: ${NLI_ENTAILMENT_THRESHOLD:-0.7}
+      # Tope de valores de población por criterio y fragmento (ADR-47, RN-22).
+      POPULATION_MAX_VALUES_PER_CRITERION: ${POPULATION_MAX_VALUES_PER_CRITERION:-3}
       SERVICE_JWT_PUBLIC_KEY_FILE: /run/secrets/jwt_service_public.pem
       SERVICE_JWT_TTL_SECONDS: *service-jwt-ttl
       PG_RAG_CORPUS_PASSWORD_FILE: /run/secrets/pg_rag_corpus_password
