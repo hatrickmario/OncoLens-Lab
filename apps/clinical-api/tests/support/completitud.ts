@@ -22,7 +22,9 @@ import {
  */
 
 const RAIZ_FIXTURES = resolve(
-  fileURLToPath(new URL('../fixtures/completeness/catalogos', import.meta.url)),
+  fileURLToPath(
+    new URL('../../../../packages/clinical-catalogs/test/fixtures/fx-04-a', import.meta.url),
+  ),
 );
 export const RUTA_CATALOGO_TEST_1_0_0 = resolve(RAIZ_FIXTURES, 'test-1.0.0');
 export const RUTA_CATALOGO_TEST_1_1_0 = resolve(RAIZ_FIXTURES, 'test-1.1.0');
