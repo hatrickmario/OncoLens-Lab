@@ -92,7 +92,9 @@ prompt ni la salida del LLM (RN-14). `poblacion_forma_invalida` lleva criterio, 
 
 ## Contratos
 
-Cambio aditivo (ADR-26): primera tarea de `## contratos` con `sync-contracts`. `oasdiff` sin cambio incompatible;
+Cambio aditivo (ADR-26): primera tarea de `## contratos` con `sync-contracts`. Los cuatro valores nuevos de
+`unknownReason` los marca oasdiff como ERR (`response-property-enum-value-added`); se declaran como excepciones
+E-6…E-13 de ADR-26 (una por valor y proveedor). Decidido (usuario, 2026-10-30). `oasdiff` sin cambio incompatible;
 `studyPopulationValue` `deprecated: true` hasta el S5. Verificación del proveedor en los tests de integración (US-214).
 
 Diff propuesto de `contracts/schemas/evidence.yaml` (1.0.0 → 1.1.0):
@@ -176,3 +178,8 @@ No cambia modelo, prompt, umbral ni corpus ingerido (solo forma y lector). La su
   se emite en `studyPopulationValues` (solo en el campo deprecado).
 - **P3 · Resuelto:** el tope se valida al leer por `(criterio, chunkId)` contra `POPULATION_MAX_VALUES_PER_CRITERION`
   (D3, D6); la unión de la respuesta no tiene tope.
+- **P4 · `population_form`: ¿informativa o debe usarse?** (a confirmar por el usuario; afecta: AC-3). Hoy la escribirá US-242 y
+  el lector la ignora (detecta la forma por criterio). Si debe usarse, el lector la leerá para elegir la forma de la fila.
+- **P5 · ¿El lector acepta `{"values": […]}` sin `status`?** (a confirmar por el usuario; afecta: AC-4). Hoy sí, como lista.
+- **P6 · `value` de más de 200 caracteres.** (a confirmar por el usuario; decidir en l1d-293 o l1d-292). El contrato lo rechaza
+  (`maxLength` 200) y tumbaría el análisis si el lector lo deja pasar; hoy el lector no lo valida.

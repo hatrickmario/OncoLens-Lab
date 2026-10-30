@@ -23,7 +23,7 @@ from app.application.chunk_citable import ChunkCitable
 from app.application.contexto_del_paciente import contexto_del_paciente
 from app.application.ports import Clock, CoberturaDePoblacion, LectorDeCoberturaDePoblacion
 from app.application.verificacion_de_soporte import VerificadorDeSoporte
-from app.config.settings import POBLACION_MAX_VALORES_POR_CRITERIO_INICIAL
+from app.config.settings import Settings
 from app.domain.aplicabilidad_tipos import CriterioEvaluado
 from app.domain.poblacion_del_estudio import poblacion_desde_lo_guardado
 from app.domain.citations import FichaDeFuente
@@ -98,8 +98,9 @@ def _correr(args: argparse.Namespace, reloj: Clock, puertos: PuertosDeAplicabili
         config.dataset
     )  # se niega si no es sintético, antes de medir
     exigir_claves_resolubles(dataset, cargar_criterios(dataset))
-    pares = (puertos.evaluador or _evaluador_falso(reloj))(config, dataset)
-    cobertura = (puertos.lector_cobertura or _cobertura_falsa(config)).cobertura()
+    tope = Settings().population_max_values_per_criterion
+    pares = (puertos.evaluador or _evaluador_falso(reloj, tope))(config, dataset)
+    cobertura = (puertos.lector_cobertura or _cobertura_falsa(config, tope)).cobertura()
     revision = leer_revision(config.revision)
     reporte = _reporte(config, dataset, pares, cobertura, revision)
     escribir_reporte_cerrado(
@@ -108,26 +109,35 @@ def _correr(args: argparse.Namespace, reloj: Clock, puertos: PuertosDeAplicabili
     return _veredicto(reporte)
 
 
-def _evaluador_falso(reloj: Clock) -> Evaluador:
-    return lambda config, dataset: asyncio.run(evaluar_pares(config, dataset, reloj))
+def _evaluador_falso(reloj: Clock, max_valores_de_poblacion: int) -> Evaluador:
+    return lambda config, dataset: asyncio.run(
+        evaluar_pares(config, dataset, reloj, max_valores_de_poblacion)
+    )
 
 
-def _cobertura_falsa(config: ConfigAplicabilidad) -> LectorDeCoberturaDePoblacion:
+def _cobertura_falsa(
+    config: ConfigAplicabilidad, max_valores_de_poblacion: int
+) -> LectorDeCoberturaDePoblacion:
     if config.catalogo_en_memoria is None:
         raise ConfigInvalida("falta la clave corpus.catalogo_en_memoria")
-    return CoberturaEnMemoria(config.catalogo_en_memoria)
+    return CoberturaEnMemoria(config.catalogo_en_memoria, max_valores_de_poblacion)
 
 
 # --- evaluación de los pares ---------------------------------------------------------------------------------------
 
 
 async def evaluar_pares(
-    config: ConfigAplicabilidad, dataset: DatasetAplicabilidad, reloj: Clock
+    config: ConfigAplicabilidad,
+    dataset: DatasetAplicabilidad,
+    reloj: Clock,
+    max_valores_de_poblacion: int,
 ) -> list[ParEvaluado]:
     criterios = cargar_criterios(dataset)
     terminos = VerificadorDeTerminosProhibidos(cargar_lista_de_terminos(config.ruta_terminos))
     return [
-        await _evaluar_par(par, dataset, criterios, terminos, config.umbral_nli, reloj)
+        await _evaluar_par(
+            par, dataset, criterios, terminos, config.umbral_nli, reloj, max_valores_de_poblacion
+        )
         for par in dataset.pares
     ]
 
@@ -139,6 +149,7 @@ async def _evaluar_par(
     terminos: VerificadorDeTerminosProhibidos,
     umbral_nli: float,
     reloj: Clock,
+    max_valores_de_poblacion: int,
 ) -> ParEvaluado:
     fuente = dataset.fuentes[par.fuente]
     guion = dataset.guiones[par.guion]
@@ -153,7 +164,7 @@ async def _evaluar_par(
             fuente.document_id: poblacion_desde_lo_guardado(
                 fuente.metadata_source,  # type: ignore[arg-type]
                 fuente.population_criteria,
-                POBLACION_MAX_VALORES_POR_CRITERIO_INICIAL,
+                max_valores_de_poblacion,
             )
         },
     )

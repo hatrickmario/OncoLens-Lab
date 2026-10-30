@@ -9,16 +9,15 @@
 
 ## contratos
 
-- [ ] 0.1 `sync-contracts`: editar primero `contracts/schemas/evidence.yaml` con el diff de `design.md` ## Contratos
+- [x] 0.1 `sync-contracts`: editar primero `contracts/schemas/evidence.yaml` con el diff de `design.md` ## Contratos
       (`studyPopulationValues` y `StudyPopulationValue`, `partialReason` opcionales; `unknownReason` con
       `varios_valores_en_la_fuente` (reservado), `valores_en_conflicto`, `respaldo_fallido` y
       `sin_regla_de_comparacion`; `studyPopulationValue` `deprecated: true`); versiones: `apps/rag-orchestrator/openapi.yaml`
       1.5.0 → 1.6.0, `apps/clinical-api/openapi.yaml` 1.10.0 → 1.11.0, `contracts/schemas/evidence.yaml` 1.0.0 → 1.1.0;
       generar cliente TS, Zod y Pydantic; `oasdiff` sin ERR · `contracts:check`
-      > PENDIENTE (no `[x]`): hecho `evidence.yaml` 1.1.0, `rag-orchestrator` 1.6.0, `clinical-api` 1.11.0, cliente TS, Zod y
-      > Pydantic, `contracts:check` y `generate:check` en verde. Falta `oasdiff` sin ERR: 8 ERR `response-property-enum-value-added`
-      > de `unknownReason` (4 por proveedor) exigen excepciones ADR-26 E-6…E-13 (`scripts/ci/contracts-breaking-excepciones.json`,
-      > ADR-26 y `excepcionesDeContrato.test.mjs`); el sistema denegó añadirlas desde este agente: las declara el humano/orquestador.
+      > Evidencia: `contracts:check` y `generate:check` en verde; `contracts:breaking` sin cambios incompatibles (los 8 ERR
+      > `response-property-enum-value-added` de `unknownReason` son las excepciones ADR-26 E-6…E-13, decididas por el usuario el
+      > 2026-10-30); `excepcionesDeContrato.test.mjs` y `contractsBreaking.test.mjs` en verde (24 tests).
 - [x] 0.2 Ejemplo `contracts/examples/con-evidencia-s4-poblacion-lista.json` (`clinical-api`, `EvidenceAnalysis`;
       sintético, vocabulario no prescriptivo; `studyPopulationValue` según D10: primer valor de elegibilidad o `null`)
       y registro en `index.json`; `con-evidencia-s3-aplicabilidad.json` no lo cambia este change (su `estadio` pasa a
@@ -57,13 +56,24 @@
 
 ## clinical-platform
 
-- [ ] 2.1 Test de aceptación en rojo: "valida y conserva `studyPopulationValues` y `partialReason` cuando
+- [x] 2.1 Test de aceptación (rojo comprobado por mutación, ver nota): "valida y conserva `studyPopulationValues` y `partialReason` cuando
       rag-orchestrator responde con el ejemplo nuevo (`rag-query-poblacion-lista.json`) o con el antiguo
       (`rag-query-aplicabilidad-a-m1.json`) [US-241 AC-2]" · integración (Supertest +
       MSW desde `contracts/examples/`, PostgreSQL real) · TDD estricto · commit `test(L1D-291)`
-- [ ] 2.2 Validación con el cliente generado de `packages/api-contracts` y persistencia del `AIAnalysisRecord` tal
+- [x] 2.2 Validación con el cliente generado de `packages/api-contracts` y persistencia del `AIAnalysisRecord` tal
       cual llegó (módulo `evidence-analysis`); AC-2 en verde · TDD estricto · commit `feat(L1D-291)`
-- [ ] 2.3 Regresión [RN-06] → US-053: análisis persistido antes de responder, sin cambios (no es tarea nueva)
+- [x] 2.3 Regresión [RN-06] → US-053: análisis persistido antes de responder, sin cambios (no es tarea nueva)
+      > Evidencia: `tests/integration/evidence-analysis` 24 archivos / 111 tests en verde con PostgreSQL real.
+      > Nota 2.1/2.2: el AC-2 nace en verde porque el comportamiento ya lo aportó el commit `feat(L1D-291) clinical-api 1.11.0`
+      > (Zod/cliente generados, módulo sin lista blanca: persiste el JSON validado tal cual). No hay código de `src/` que
+      > añadir. Sensibilidad del test comprobada por mutación: sin `studyPopulationValues` en el Zod generado de
+      > rag-orchestrator falla en la aserción (`expected 502 to be 200`). `contracts:verify-provider` clinical-api: 329
+      > respuestas verificadas; `tsc --noEmit` limpio.
+
+> Nota para la PR: el AC-2 de `clinical-api` (2.1) es caracterización de un contrato generado: su rojo se comprobó contra el Zod de
+> `main` y no hay código de `src/` que escribir.
+> Vuelta 1 del Gate 2 (design-principles-reviewer): P1-1 cobertura apoyada en el lector doble, P1-2 paridad de `ALCANCES` con el
+> contrato generado, P2-3 tope obligatorio en la composición y en la corrida de evaluación, P3-1 import sin usar, P3-6 cuatro aserciones.
 
 ## frontend
 

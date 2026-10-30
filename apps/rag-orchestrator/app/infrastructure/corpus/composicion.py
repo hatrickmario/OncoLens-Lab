@@ -17,12 +17,7 @@ from typing import Any
 from pydantic import ValidationError
 
 from app.application.ports import PuertosDelCorpus
-from app.config.settings import (
-    POBLACION_MAX_VALORES_POR_CRITERIO_INICIAL,
-    CorpusDatabaseSettings,
-    MilvusSettings,
-    Settings,
-)
+from app.config.settings import CorpusDatabaseSettings, MilvusSettings, Settings
 
 
 class CorpusNoDisponibleError(RuntimeError):
@@ -52,7 +47,7 @@ def crear_puertos_del_corpus(
     *,
     fabricar_cliente: Callable[..., Any] | None = None,
     fabricar_motor: Callable[..., Any] | None = None,
-    max_valores_de_poblacion: int = POBLACION_MAX_VALORES_POR_CRITERIO_INICIAL,
+    max_valores_de_poblacion: int,
 ) -> PuertosDelCorpus:
     """Construye Milvus y los lectores del catálogo y los sonda. Las fábricas se inyectan en los tests."""
     from app.infrastructure.catalog.catalogo_reader import LectorCatalogoPostgres

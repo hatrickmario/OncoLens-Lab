@@ -247,7 +247,8 @@ class NliGuionado:
 class CoberturaEnMemoria:
     """``LectorDeCoberturaDePoblacion`` sobre un catálogo sintético en YAML (``documentos[].{is_current, population_criteria}``)."""
 
-    def __init__(self, ruta: Path) -> None:
+    def __init__(self, ruta: Path, max_valores_de_poblacion: int) -> None:
+        self._max_valores_de_poblacion = max_valores_de_poblacion
         try:
             crudo = yaml.safe_load(ruta.read_text(encoding="utf-8"))
             self._documentos = [d for d in crudo["documentos"] if d["is_current"]]
@@ -257,5 +258,7 @@ class CoberturaEnMemoria:
             ) from None
 
     def cobertura(self) -> CoberturaDePoblacion:
-        conteo = contar_cobertura(d["population_criteria"] for d in self._documentos)
+        conteo = contar_cobertura(
+            (d["population_criteria"] for d in self._documentos), self._max_valores_de_poblacion
+        )
         return CoberturaDePoblacion(conteo.vigentes, conteo.con_criterios)
