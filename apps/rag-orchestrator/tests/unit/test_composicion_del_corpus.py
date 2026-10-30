@@ -16,6 +16,7 @@ from sqlalchemy.engine import URL
 from app.config.settings import CorpusDatabaseSettings, MilvusSettings
 from app.infrastructure.catalog.catalogo_reader import LectorCatalogoPostgres
 from app.infrastructure.catalog.release_reader import LectorReleasePostgres
+from app.config.settings import POBLACION_MAX_VALORES_POR_CRITERIO_INICIAL as MAX_VALORES
 from app.infrastructure.corpus.composicion import (
     CorpusNoDisponibleError,
     crear_puertos_del_corpus,
@@ -110,7 +111,11 @@ def _componer(
 
     milvus, base = ajustes
     puertos = crear_puertos_del_corpus(
-        milvus, base, fabricar_cliente=fabricar_cliente, fabricar_motor=fabricar_motor
+        milvus,
+        base,
+        fabricar_cliente=fabricar_cliente,
+        fabricar_motor=fabricar_motor,
+        max_valores_de_poblacion=MAX_VALORES,
     )
     return puertos, motores, clientes
 
@@ -177,7 +182,10 @@ def test_un_catalogo_inaccesible_libera_el_motor_antes_de_terminar(
 
     with pytest.raises(CorpusNoDisponibleError):
         crear_puertos_del_corpus(
-            *ajustes, fabricar_cliente=ClienteMilvusFalso, fabricar_motor=fabricar_motor
+            *ajustes,
+            fabricar_cliente=ClienteMilvusFalso,
+            fabricar_motor=fabricar_motor,
+            max_valores_de_poblacion=MAX_VALORES,
         )
 
     assert motores[0].liberado is True
@@ -216,7 +224,12 @@ def test_con_pymilvus_real_y_un_puerto_cerrado_ni_el_error_ni_los_logs_ni_la_sal
     caplog.set_level(0)
 
     with pytest.raises(CorpusNoDisponibleError) as error:
-        crear_puertos_del_corpus(milvus, base, fabricar_motor=lambda url: MotorFalso(url))
+        crear_puertos_del_corpus(
+            milvus,
+            base,
+            fabricar_motor=lambda url: MotorFalso(url),
+            max_valores_de_poblacion=MAX_VALORES,
+        )
 
     salida = capfd.readouterr()
     todo = f"{error.value} {error.value!r} {caplog.text} {salida.out} {salida.err}"
@@ -259,6 +272,7 @@ def test_un_archivo_de_contrasena_ilegible_termina_nombrando_su_variable_sin_cre
             base,
             fabricar_cliente=ClienteMilvusFalso,
             fabricar_motor=lambda url: motores.append(MotorFalso(url)),  # type: ignore[func-returns-value]
+            max_valores_de_poblacion=MAX_VALORES,
         )
 
     assert error.value.variable == "PG_RAG_CORPUS_PASSWORD_FILE" and motores == []

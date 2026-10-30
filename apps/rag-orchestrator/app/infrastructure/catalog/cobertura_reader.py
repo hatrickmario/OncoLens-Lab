@@ -15,8 +15,9 @@ from app.infrastructure.catalog.tables import corpus_document
 class LectorDeCoberturaPostgres:
     """Solo lectura sobre ``corpus.corpus_document`` de los documentos ``is_current``; el motor ya fija el schema."""
 
-    def __init__(self, motor: Engine) -> None:
+    def __init__(self, motor: Engine, max_valores_de_poblacion: int) -> None:
         self._motor = motor
+        self._max_valores_de_poblacion = max_valores_de_poblacion
 
     def cobertura(self) -> CoberturaDePoblacion:
         consulta = sa.select(corpus_document.c.population_criteria).where(
@@ -29,5 +30,5 @@ class LectorDeCoberturaPostgres:
             raise RecuperacionNoDisponibleError(
                 "cobertura"
             ) from None  # sin cadena de conexión ni detalle del motor
-        conteo = contar_cobertura(criterios)
+        conteo = contar_cobertura(criterios, self._max_valores_de_poblacion)
         return CoberturaDePoblacion(conteo.vigentes, conteo.con_criterios)

@@ -64,3 +64,21 @@ def test_formas_invalidas_para_el_log_lista_criterio_y_chunk_sin_la_marca_pendie
         ("estadio", "ch-2"),
         ("edad", None),
     ]
+
+
+def test_valor_del_estudio_toma_el_primero_cuando_solo_hay_subgrupos_y_son_varios():
+    poblacion = _poblacion(
+        ecog=[valor_nuevo("A", "ch-1", "subgrupo"), valor_nuevo("B", "ch-2", "subgrupo")]
+    )
+
+    assert valor_del_estudio(poblacion, "ecog") == ValorDelEstudio("A", solo_subgrupo=True)
+
+
+def test_formas_invalidas_para_el_log_mantiene_el_orden_de_documento_cuando_hay_dos():
+    invalida_1 = _poblacion(ecog=[valor_nuevo("x", "ch-a", "global")])
+    invalida_2 = _poblacion(estadio=[valor_nuevo("y", "ch-b", "global")])
+
+    assert formas_invalidas_para_el_log({"doc-b": invalida_2, "doc-a": invalida_1}) == [
+        ("ecog", "ch-a"),
+        ("estadio", "ch-b"),
+    ]

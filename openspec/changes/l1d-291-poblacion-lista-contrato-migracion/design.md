@@ -176,3 +176,8 @@ No cambia modelo, prompt, umbral ni corpus ingerido (solo forma y lector). La su
   se emite en `studyPopulationValues` (solo en el campo deprecado).
 - **P3 · Resuelto:** el tope se valida al leer por `(criterio, chunkId)` contra `POPULATION_MAX_VALUES_PER_CRITERION`
   (D3, D6); la unión de la respuesta no tiene tope.
+- **P4 · `population_form`: ¿informativa o debe usarse?** (a confirmar por el usuario; afecta: AC-3). Hoy la escribirá US-242 y
+  el lector la ignora (detecta la forma por criterio). Si debe usarse, el lector la leerá para elegir la forma de la fila.
+- **P5 · ¿El lector acepta `{"values": […]}` sin `status`?** (a confirmar por el usuario; afecta: AC-4). Hoy sí, como lista.
+- **P6 · `value` de más de 200 caracteres.** (a confirmar por el usuario; decidir en l1d-293 o l1d-292). El contrato lo rechaza
+  (`maxLength` 200) y tumbaría el análisis si el lector lo deja pasar; hoy el lector no lo valida.

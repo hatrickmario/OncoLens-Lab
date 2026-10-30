@@ -71,6 +71,11 @@
       > rag-orchestrator falla en la aserción (`expected 502 to be 200`). `contracts:verify-provider` clinical-api: 329
       > respuestas verificadas; `tsc --noEmit` limpio.
 
+> Nota para la PR: el AC-2 de `clinical-api` (2.1) es caracterización de un contrato generado: su rojo se comprobó contra el Zod de
+> `main` y no hay código de `src/` que escribir.
+> Vuelta 1 del Gate 2 (design-principles-reviewer): P1-1 cobertura apoyada en el lector doble, P1-2 paridad de `ALCANCES` con el
+> contrato generado, P2-3 tope obligatorio en la composición y en la corrida de evaluación, P3-1 import sin usar, P3-6 cuatro aserciones.
+
 ## frontend
 
 Sin tareas: la UI es de US-126.

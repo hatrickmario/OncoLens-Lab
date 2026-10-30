@@ -14,7 +14,6 @@ from app.application.generation import LlmEvidenceGenerator
 from tests.support.aplicabilidad import (
     CRITERIOS_DE_DOC_A1,
     FICHAS_FX08BA,
-    POBLACIONES_FX08BA,
     GeneradorDeAplicabilidad,
     entorno_de_aplicabilidad,
     external_id_de,

@@ -3,10 +3,12 @@
 import pytest
 
 from app.domain.aplicabilidad_tipos import (
+    ALCANCES,
     CriterioDePoblacion,
     FormaInvalida,
     ValorDePoblacion,
 )
+from app.schemas.generated.models import Scope
 from app.domain.poblacion_del_estudio import leer_criterio_guardado, poblacion_desde_lo_guardado
 from tests.support.poblacion_lista import MARCA_PENDIENTE, valor_nuevo
 
@@ -180,3 +182,19 @@ def test_un_criterio_invalido_no_contagia_a_los_demas_de_la_fila():
     assert poblacion.criterios["ecog"].invalidez is not None
     assert poblacion.criterios["estadio"].valores == (_elegibilidad("I", "ch-1"),)
     assert poblacion.criterios["linea"].pendiente
+
+
+def test_los_alcances_del_dominio_son_los_del_contrato_generado():
+    assert set(ALCANCES) == {alcance.value for alcance in Scope}
+
+
+def test_un_alcance_mencion_valido_se_conserva():
+    leido = leer_criterio_guardado([valor_nuevo("x", "ch-1", "mencion")], MAX)
+
+    assert leido.valores == (ValorDePoblacion("x", "mencion", "ch-1"),)
+
+
+def test_un_chunk_id_que_no_es_texto_es_invalido_sin_chunk():
+    leido = leer_criterio_guardado([{"value": "x", "chunkId": 123, "scope": "elegibilidad"}], MAX)
+
+    assert leido == CriterioDePoblacion(invalidez=FormaInvalida("valor_invalido", None))
