@@ -55,6 +55,7 @@ describe('EvidencePanel · estados del S3', () => {
   afterEach(() => {
     cleanup();
     vi.useRealTimers();
+    vi.unstubAllGlobals();
     bff.reiniciar();
     replace.mockReset();
   });
@@ -124,9 +125,12 @@ describe('EvidencePanel · estados del S3', () => {
   });
 
   it('indica reintentar en 30 segundos y habilita Reintentar al vencer el plazo cuando la respuesta es 429 con Retry-After 30 [US-062 AC-5]', async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
+    // Solo el plazo del aviso es simulado: sin reloj real mezclado, el vencimiento ocurre solo al avanzarlo aquí.
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    // Testing Library solo avanza el reloj simulado en sus esperas si detecta `jest`; sin esto se cuelga.
+    vi.stubGlobal('jest', { advanceTimersByTime: (ms: number) => vi.advanceTimersByTime(ms) });
     bff.responder({ status: 429, cuerpo: errorColaLlena, cabeceras: { 'Retry-After': '30' } });
-    const usuario = userEvent.setup({ advanceTimers: (ms) => vi.advanceTimersByTime(ms) });
+    const usuario = userEvent.setup({ delay: null });
     montarPanel();
     await usuario.type(screen.getByLabelText(evidence.formulario.pregunta), PREGUNTA_DE_PRUEBA);
     await usuario.click(screen.getByRole('button', { name: evidence.formulario.analizar }));
@@ -137,8 +141,10 @@ describe('EvidencePanel · estados del S3', () => {
     expect(reintentar.disabled).toBe(true);
     expect(document.body.textContent).not.toContain(errorColaLlena.message);
     expect(screen.queryByRole('heading', { level: 2 })).toBeNull();
-    act(() => vi.advanceTimersByTime(30_000));
-    await waitFor(() => expect(reintentar.disabled).toBe(false));
+    await act(async () => {}); // el efecto que arma el plazo ya corrió antes de avanzar el reloj
+    await act(async () => vi.advanceTimersByTime(30_000));
+    const reintentarVencido = await screen.findByRole('button', { name: 'Reintentar' });
+    await waitFor(() => expect((reintentarVencido as HTMLButtonElement).disabled).toBe(false));
   });
 
   it('muestra el mensaje genérico y Reintentar habilitado cuando el 429 no trae un Retry-After válido', async () => {
