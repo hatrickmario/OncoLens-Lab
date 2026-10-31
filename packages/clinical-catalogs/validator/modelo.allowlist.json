@@ -76,7 +76,12 @@
       "relaciones": {}
     },
     "Exam": {
-      "campos": ["created_at", "entry_method", "exam_type", "performed_at"],
+      "campos": [
+        "created_at",
+        "entry_method",
+        "exam_type",
+        "performed_at"
+      ],
       "relaciones": {
         "biomarkers": "Biomarker"
       }
