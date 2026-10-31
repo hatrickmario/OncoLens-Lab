@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 from app.application.aplicabilidad import ApplicabilityService
 from app.application.ports import (
+    ApplicabilityTextProposer,
     Clock,
     EvidenceGenerator,
     LanguageDetector,
@@ -99,28 +100,31 @@ class _Adaptadores:
     reranker: Reranker
     generador: EvidenceGenerator
     clasificador_nli: NliClassifier
+    proponente: ApplicabilityTextProposer
 
 
 def _adaptadores_falsos(dataset: DatasetSuite) -> _Adaptadores:
     embedder = EmbedderBolsaDePalabras()
     return _Adaptadores(
-        DetectorDeIdiomaLocal("es"),
-        embedder,
-        [embedder.embeber(c.texto) for c in dataset.chunks],
-        RerankerLexico(),
-        GeneradorGuionado(dataset),
-        NliLexico(),
+        detector_idioma=DetectorDeIdiomaLocal("es"),
+        embedder=embedder,
+        vectores_de_chunks=[embedder.embeber(c.texto) for c in dataset.chunks],
+        reranker=RerankerLexico(),
+        generador=GeneradorGuionado(dataset),
+        clasificador_nli=NliLexico(),
+        proponente=ProponenteSilencioso(),
     )
 
 
 def _adaptadores_locales(puertos: PuertosLocales, dataset: DatasetSuite) -> _Adaptadores:
     return _Adaptadores(
-        puertos.detector_idioma,
-        puertos.embedder,
-        puertos.embedder_pasajes.embeber([c.texto for c in dataset.chunks]),
-        puertos.reranker,
-        puertos.generador,
-        puertos.clasificador_nli,
+        detector_idioma=puertos.detector_idioma,
+        embedder=puertos.embedder,
+        vectores_de_chunks=puertos.embedder_pasajes.embeber([c.texto for c in dataset.chunks]),
+        reranker=puertos.reranker,
+        generador=puertos.generador,
+        clasificador_nli=puertos.clasificador_nli,
+        proponente=puertos.proponente,  # el de producción: la suite local no usa el silencioso
     )
 
 
@@ -161,7 +165,7 @@ def componer_servicio(
         catalogo_clinico=CatalogoClinicoDeConfig(config.catalogo_version, tipos_habilitados),
         # Sin criterios: la suite mide la recuperación y la generación; la aplicabilidad se mide en US-132 (M-08.2).
         aplicabilidad=ApplicabilityService(CriteriosDelCatalogo({})),
-        proponente=ProponenteSilencioso(),
+        proponente=adaptadores.proponente,
         generador=GeneradorObservado(adaptadores.generador, cronometro, observaciones),
         clasificador_nli=nli,
         verificador_terminos=terminos,

@@ -61,6 +61,8 @@ _FIDELIDAD = _familia(
                 ),
                 "acuerdo_con_humano": Enumerado(frozenset({SIN_MEDIR})),
                 "estado": Enumerado(frozenset({ESTADO_CONCLUYENTE, ESTADO_NO_CONCLUYENTE})),
+                # Con estado no_concluyente `fidelidad` es null y la cifra queda aquí, solo informativa.
+                "valor_informativo": Numero(),
             }
         ),
     },
@@ -76,8 +78,15 @@ _CAMPOS_DE_FAMILIA = {
     "fidelidad": _FIDELIDAD,
     "terminos_prohibidos": _familia(
         {
+            # `propuesta_cruda`, `salida_mostrada` y `terminos_compartidos_con_corpus_citado` cuentan CAMPOS generados con
+            # algún término de la lista (un campo cuenta una vez), no salidas completas: son
+            # `campos_con_termino_de_la_lista_*`. Sus nombres se conservan por la huella del baseline.
             "propuesta_cruda": Numero(),
             "salida_mostrada": Numero(),
+            "salida_mostrada_nivel_a": Numero(),  # bloqueante (meta 0)
+            "salida_mostrada_nivel_b": Numero(),  # seguimiento
+            "salida_mostrada_por_nivel": Objeto({"A": Numero(), "B": Numero()}),
+            "campos_mostrados": Lista(Objeto({"campo": Identificador(), "regla": Identificador()})),
             "propuesta_cruda_por_nivel": Objeto({"A": Numero(), "B": Numero()}),
             "terminos_compartidos_con_corpus_citado": Numero(),
             "terminos_nivel_a": Lista(Identificador()),
@@ -161,10 +170,17 @@ _PRIVACIDAD = Objeto(
 _LATENCIA_NLI = Objeto({"n": Numero(), "p50_ms": Numero(), "p95_ms": Numero()})
 _RECURSOS_NLI = Objeto(
     {
-        "rss_maximo_mib": Numero(),
+        # ru_maxrss del proceso ENTERO (carga de los tres modelos); no es el RSS del NLI ni el del régimen.
+        "rss_pico_proceso_mib": Numero(),
         "rss_limite_mib": Numero(),
         "supera_el_limite": Booleano(),
-        "latencia_ms": Objeto({"por_lote": _LATENCIA_NLI, "por_hipotesis": _LATENCIA_NLI}),
+        "latencia_ms": Objeto(
+            {
+                "por_lote": _LATENCIA_NLI,
+                # La duración del lote repartida entre sus hipótesis: una media, no la latencia de una hipótesis sola.
+                "media_por_hipotesis_del_lote_ms": _LATENCIA_NLI,
+            }
+        ),
     }
 )
 

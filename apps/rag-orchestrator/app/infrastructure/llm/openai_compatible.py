@@ -27,21 +27,28 @@ def cuerpo_de_peticion(
     semilla: int | None = None,
     nombre_del_esquema: str = "generation_output",
 ) -> dict[str, Any]:
-    """Cuerpo de ``POST /chat/completions`` de producción; el script de ADR-39 lo reutiliza para medir la misma ruta."""
+    """Cuerpo de ``POST /chat/completions`` de producción; el script de ADR-39 y el juez de la suite lo reutilizan.
+
+    ``sistema`` antepone un mensaje de sistema; ``semilla`` fija ``seed`` (el juez la necesita para ser reproducible)."""
+    mensajes = [{"role": "user", "content": prompt}]
+    if sistema is not None:
+        mensajes.insert(0, {"role": "system", "content": sistema})
     cuerpo: dict[str, Any] = {
         "model": modelo,
-        "messages": [{"role": "user", "content": prompt}],
+        "messages": mensajes,
         "temperature": temperatura,
         "max_tokens": max_tokens,
         "stream": False,
     }
+    if semilla is not None:
+        cuerpo["seed"] = semilla
     if not razonar:
         # Los modelos que razonan por defecto agotan max_tokens y dejan el contenido vacío (ADR-39 fase B, hallazgo).
         cuerpo["reasoning_effort"] = "none"
     if esquema is not None:
         cuerpo["response_format"] = {
             "type": "json_schema",
-            "json_schema": {"name": "generation_output", "schema": dict(esquema), "strict": True},
+            "json_schema": {"name": nombre_del_esquema, "schema": dict(esquema), "strict": True},
         }
     return cuerpo
 

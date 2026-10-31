@@ -8,7 +8,6 @@ from pathlib import Path
 import pytest
 
 from app.domain.nli import ParNli, ResultadoNli
-from app.evaluation.chequeo_config import variables_de_modelos_ausentes
 from app.evaluation.config_suite import cargar_config_suite
 from app.evaluation.cronometro import Cronometro, RelojSimulado, percentil, resumen_de_latencia
 from app.evaluation.guardas import SuiteAbortada, exigir_proveedor_local
@@ -20,7 +19,11 @@ from app.evaluation.llamadas import (
 )
 from app.evaluation.medicion_modelos import informe_de_recursos_nli
 from app.evaluation.medidores import NliMedido
-from app.evaluation.modelos_locales import OrigenLocal, cargar_puertos_locales
+from app.evaluation.modelos_locales import (
+    OrigenLocal,
+    cargar_puertos_locales,
+    variables_de_modelos_ausentes,
+)
 from app.evaluation.reporte import es_identificador
 from tests.evaluation.test_fidelidad_juez import CONFIG
 from tests.support.modelos import crear_entorno_de_modelos
@@ -67,7 +70,7 @@ def test_el_nli_medido_reparte_el_lote_entre_sus_hipotesis_y_no_cuenta_lotes_vac
     nli.clasificar([])
 
     assert nli.latencias.por_lote_ms == [1.0]
-    assert nli.latencias.por_hipotesis_ms == [0.25] * 4
+    assert nli.latencias.media_por_hipotesis_del_lote_ms == [0.25] * 4
 
 
 @pytest.mark.parametrize(("rss", "supera"), [(4488.9, False), (4489.0, False), (4489.1, True)])
@@ -77,10 +80,10 @@ def test_el_informe_marca_el_exceso_solo_cuando_el_rss_supera_el_limite(
     informe = informe_de_recursos_nli([2.0, 4.0], [1.0, 1.0, 2.0, 2.0], rss, 4489.0)
 
     assert informe["supera_el_limite"] is supera
-    assert (informe["rss_maximo_mib"], informe["rss_limite_mib"]) == (rss, 4489.0)
+    assert (informe["rss_pico_proceso_mib"], informe["rss_limite_mib"]) == (rss, 4489.0)
     assert informe["latencia_ms"] == {
         "por_lote": {"n": 2, "p50_ms": 2.0, "p95_ms": 4.0},
-        "por_hipotesis": {"n": 4, "p50_ms": 1.0, "p95_ms": 2.0},
+        "media_por_hipotesis_del_lote_ms": {"n": 4, "p50_ms": 1.0, "p95_ms": 2.0},
     }
 
 

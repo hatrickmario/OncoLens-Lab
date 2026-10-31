@@ -21,6 +21,7 @@ from app.evaluation.adaptadores_falsos import tokens
 from app.evaluation.config_suite import ConfigInvalida, ConfigJuez
 from app.evaluation.guardas import exigir_juez_local
 from app.evaluation.llamadas import RegistroDeLlamadas
+from app.infrastructure.llm.openai_compatible import cuerpo_de_peticion
 
 RUTA_DE_COMPLETIONS = "/chat/completions"
 MAXIMO_DE_TOKENS_DEL_VEREDICTO = 64
@@ -97,25 +98,16 @@ class JuezLlmLocal:
         return veredicto.soportada
 
     async def completar(self, sistema: str, usuario: str) -> str:
-        cuerpo = {
-            "model": self._modelo,
-            "temperature": self._temperatura,
-            "seed": self._semilla,
-            "max_tokens": MAXIMO_DE_TOKENS_DEL_VEREDICTO,
-            "reasoning_effort": "none",  # como en producción: un modelo que razona agota max_tokens (ADR-39 fase B)
-            "response_format": {
-                "type": "json_schema",
-                "json_schema": {
-                    "name": "veredicto",
-                    "schema": ESQUEMA_DEL_VEREDICTO,
-                    "strict": True,
-                },
-            },
-            "messages": [
-                {"role": "system", "content": sistema},
-                {"role": "user", "content": usuario},
-            ],
-        }
+        cuerpo = cuerpo_de_peticion(  # el de producción: `reasoning_effort: none`, `stream: false`, esquema estricto
+            self._modelo,
+            usuario,
+            ESQUEMA_DEL_VEREDICTO,
+            self._temperatura,
+            MAXIMO_DE_TOKENS_DEL_VEREDICTO,
+            sistema=sistema,
+            semilla=self._semilla,
+            nombre_del_esquema="veredicto",
+        )
         self._registro.registrar(
             str(self._cliente.base_url), self._clase_datos, self._modelo, "juez"
         )

@@ -191,12 +191,12 @@ def test_el_reporte_registra_el_rss_maximo_la_latencia_del_nli_y_la_marca_de_exc
 
     assert codigo == 0 and reporte is not None
     recursos = reporte["recursos_nli"]
-    assert recursos["rss_maximo_mib"] == LIMITE_DE_RSS_MIB + 10.0
+    assert recursos["rss_pico_proceso_mib"] == LIMITE_DE_RSS_MIB + 10.0
     assert (recursos["rss_limite_mib"], recursos["supera_el_limite"]) == (LIMITE_DE_RSS_MIB, True)
     # Reloj simulado: cada lote dura 1 ms; la latencia por hipótesis reparte el lote entre sus hipótesis.
     assert recursos["latencia_ms"]["por_lote"]["p50_ms"] == 1.0
     assert recursos["latencia_ms"]["por_lote"]["p95_ms"] == 1.0
-    por_hipotesis = recursos["latencia_ms"]["por_hipotesis"]
+    por_hipotesis = recursos["latencia_ms"]["media_por_hipotesis_del_lote_ms"]
     assert por_hipotesis["n"] >= recursos["latencia_ms"]["por_lote"]["n"] > 0
     assert 0 < por_hipotesis["p50_ms"] <= 1.0
 

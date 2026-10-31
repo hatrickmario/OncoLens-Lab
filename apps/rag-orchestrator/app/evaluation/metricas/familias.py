@@ -44,8 +44,10 @@ def calcular_familias(
     suite: str,
     semilla: int,
     repeticiones: int,
-    acuerdo_minimo: float | None = None,
+    acuerdo_minimo: float | None,
+    muestra_minima: int | None,
 ) -> dict[str, Any]:
+    """Las familias de ``suite``. Los mínimos del juez no tienen valor por defecto (RN-22); ``None`` si no hay juez."""
     familias: dict[str, Any] = {}
     if suite in ("retrieval", "all"):
         familias["recuperacion"] = familias_de_recuperacion(resultados, semilla, repeticiones)
@@ -53,7 +55,7 @@ def calcular_familias(
         familias["citas"] = precision_de_citas(resultados)
         familias["sin_evidencia"] = exactitud_sin_evidencia(resultados)
         familias["opciones_con_cita_y_soporte"] = porcentaje_con_cita_y_soporte(resultados)
-        familias["fidelidad"] = fidelidad(resultados, acuerdo_minimo)
+        familias["fidelidad"] = fidelidad(resultados, acuerdo_minimo, muestra_minima)
         familias["terminos_prohibidos"] = terminos_prohibidos(resultados)
         familias["inyeccion"] = inyeccion_efectiva(resultados)
     validacion = _validacion_de(resultados)

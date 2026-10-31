@@ -55,9 +55,14 @@ SPARSE_VECTOR_SOURCES_ADMITIDAS = ("modelo_embeddings",)
 
 
 class ConfigInvalida(ValueError):
-    """Falta una clave o su valor no es válido; el mensaje lista todas las claves con problema."""
+    """Falta una clave o su valor no es válido; el mensaje lista todas las claves con problema.
 
-    claves: tuple[str, ...] = ()
+    ``claves`` expone solo los NOMBRES: quien informa de un valor inválido no debe reconstruirlos parseando el mensaje,
+    que puede repetir el valor (y un valor con «; » o una ruta rompería el parseo)."""
+
+    def __init__(self, mensaje: str, claves: tuple[str, ...] = ()) -> None:
+        super().__init__(mensaje)
+        self.claves = claves
 
 
 @dataclass(frozen=True)
@@ -176,20 +181,24 @@ def cargar_config_modelos(entorno: Mapping[str, str]) -> ConfigModelos:
     """Valida todas las claves de ADR-39 y devuelve la configuración tipada; reporta todos los problemas juntos."""
     valores: dict[str, Any] = {}
     problemas: list[str] = []
+    claves_con_problema: list[str] = []
     for clave in CLAVES_ADR39:
         crudo = entorno.get(clave)
         if crudo is None or crudo == "":
             problemas.append(f"{clave}: falta")
+            claves_con_problema.append(clave)
             continue
         try:
             valores[clave] = _VALIDADORES[clave](crudo)
         except (ValueError, TypeError, json.JSONDecodeError) as exc:
             problemas.append(f"{clave}: {exc}")
+            claves_con_problema.append(clave)
     if not problemas:
         try:
             validar_ventana(valores["CORPUS_CHUNK_SIZE"], valores["CORPUS_CHUNK_OVERLAP"])
         except ValueError as exc:
             problemas.append(f"CORPUS_CHUNK_OVERLAP: {exc}")
+            claves_con_problema.append("CORPUS_CHUNK_OVERLAP")
     if problemas:
-        raise ConfigInvalida("; ".join(problemas))
+        raise ConfigInvalida("; ".join(problemas), tuple(claves_con_problema))
     return ConfigModelos(**{clave.lower(): valor for clave, valor in valores.items()})

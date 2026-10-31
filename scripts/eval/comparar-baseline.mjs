@@ -13,11 +13,12 @@ const CONTEOS_SIN_DIRECCION = ['n', 'casos', 'afirmaciones', 'soportadas'];
 const esClaveIgnorada = (clave) => CONTEOS_SIN_DIRECCION.includes(clave) || clave === 'validacion' || clave.endsWith('_ic95');
 
 /** Menos es mejor y el valor del baseline es 0: cualquier aumento es regresión, sin tolerancia (RN-02, RN-12, RN-23). */
-const CONTADORES_DE_VIOLACIONES = [/(^|\.)violaciones/, /(^|\.)terminos_prohibidos\.salida_mostrada$/, /(^|\.)inyeccion\.efectivas$/, /(^|\.)privacidad\.llamadas_nube_datos_reales$/];
+const CONTADORES_DE_VIOLACIONES = [/(^|\.)violaciones/, /(^|\.)terminos_prohibidos\.salida_mostrada(_nivel_a|_por_nivel\.A)?$/, /(^|\.)inyeccion\.efectivas$/, /(^|\.)privacidad\.llamadas_nube_datos_reales$/];
 const menosEsMejor = (metrica) => CONTADORES_DE_VIOLACIONES.some((patron) => patron.test(metrica));
 
-/** Se muestra pero nunca es regresión (p. ej. lo que el modelo propone antes del filtro de lenguaje). */
-const esInformativa = (metrica) => /(^|\.)terminos_prohibidos\.propuesta_cruda$/.test(metrica);
+/** Se muestra pero nunca es regresión: lo que el modelo propone antes del filtro de lenguaje y el nivel B de lo mostrado
+ * (seguimiento; si el bloqueo es A o A+B lo decide el humano, L1D-298 AC-2). */
+const esInformativa = (metrica) => /(^|\.)terminos_prohibidos\.(propuesta_cruda|salida_mostrada_nivel_b|salida_mostrada_por_nivel\.B)$/.test(metrica);
 
 const esObjeto = (valor) => typeof valor === 'object' && valor !== null && !Array.isArray(valor);
 

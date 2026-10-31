@@ -126,12 +126,12 @@ def test_kappa_de_cohen_es_none_y_no_cero_sin_muestra_o_con_una_sola_clase_en_am
 def test_marcar_fidelidad_no_concluyente_bajo_el_minimo_o_sin_acuerdo_medible(
     porcentaje: float | None, marcado: bool
 ) -> None:
-    assert marcar_fidelidad_no_concluyente(porcentaje, 0.8) is marcado
+    assert marcar_fidelidad_no_concluyente(porcentaje, 0.8, 10, 1) is marcado
 
 
 def test_el_estado_de_la_fidelidad_del_juez_nombra_la_marca() -> None:
-    assert estado_de_la_fidelidad_del_juez(0.5, 0.8) == "no_concluyente"
-    assert estado_de_la_fidelidad_del_juez(0.8, 0.8) == "concluyente"
+    assert estado_de_la_fidelidad_del_juez(0.5, 0.8, 10, 1) == "no_concluyente"
+    assert estado_de_la_fidelidad_del_juez(0.8, 0.8, 10, 1) == "concluyente"
 
 
 def test_acuerdo_con_el_nli_lista_las_discrepancias_por_id_de_afirmacion() -> None:
@@ -168,7 +168,9 @@ def test_el_acuerdo_minimo_del_juez_es_obligatorio_y_viene_de_la_configuracion()
 
     with pytest.raises(ConfigInvalida, match="acuerdo_minimo"):
         cargar_config_suite(CONFIG, entorno)
-    config = cargar_config_suite(CONFIG, {**entorno, "JUEZ_ACUERDO_MINIMO": "0.7"})
+    config = cargar_config_suite(
+        CONFIG, {**entorno, "JUEZ_ACUERDO_MINIMO": "0.7", "JUEZ_MUESTRA_MINIMA": "5"}
+    )
 
     assert config.juez is not None and config.juez.acuerdo_minimo == 0.7
 
@@ -179,6 +181,7 @@ def test_el_acuerdo_minimo_fuera_de_cero_a_uno_o_ilegible_se_rechaza(valor: str)
         "EVAL_JUDGE_MODEL": "m@1",
         "EVAL_JUDGE_BASE_URL": "http://127.0.0.1:11434/v1",
         "JUEZ_ACUERDO_MINIMO": valor,
+        "JUEZ_MUESTRA_MINIMA": "5",
     }
 
     with pytest.raises(ConfigInvalida, match="acuerdo_minimo"):

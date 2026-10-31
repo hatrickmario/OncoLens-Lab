@@ -14,7 +14,6 @@ from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
-from app.application.generation import LlmEvidenceGenerator
 from app.application.ports import (
     CandidatoParaReranker,
     EvidenceGenerator,
@@ -30,11 +29,11 @@ from app.config.modelos import ConfigInvalida as ConfigDeModelosInvalida
 from app.config.modelos import cargar_config_modelos
 from app.config.settings import Settings
 from app.domain.nli import ParNli, ResultadoNli
-from app.evaluation.chequeo_config import variables_de_modelos_ausentes
 from app.evaluation.config_suite import ConfigSuite
 from app.evaluation.guardas import SuiteAbortada
 from app.evaluation.llamadas import RegistroDeLlamadas
-from app.infrastructure.llm.openai_compatible import OpenAICompatibleLlmClient
+from app.infrastructure.llm.fabrica_local import crear_generador_local, crear_proponente_local
+from app.infrastructure.llm.proponente_de_aplicabilidad import LlmApplicabilityTextProposer
 from app.infrastructure.models.verificacion import ModeloNoVerificadoError
 
 if TYPE_CHECKING:  # solo para el tipado: importar local.py carga onnxruntime
@@ -43,6 +42,26 @@ if TYPE_CHECKING:  # solo para el tipado: importar local.py carga onnxruntime
 CargadorDeModelos = Callable[[Settings], "ModelosDeRecuperacion"]
 LectorDeRss = Callable[[], float]
 CAMPOS_QUE_NO_SE_TOMAN_DEL_ENTORNO = frozenset({"modelos"})
+
+
+VARIABLES_DE_INDICES_DEL_NLI = (
+    "NLI_LABEL_INDEX_ENTAILMENT",
+    "NLI_LABEL_INDEX_NEUTRAL",
+    "NLI_LABEL_INDEX_CONTRADICTION",
+)
+
+
+def variables_de_modelos_ausentes(entorno: Mapping[str, str]) -> list[str]:
+    """Variables que ``proveedor: local`` necesita para cargar los pesos y que el entorno no trae (US-233a AC-4).
+
+    Solo nombres, en el orden de la configuración: nunca rutas ni hashes. Un archivo declarado que no existe o cuyo
+    SHA-256 no coincide lo detecta la verificación al cargar y también nombra su variable."""
+    from app.infrastructure.models.local import ARCHIVOS_A_VERIFICAR
+
+    requeridas = [v for par in ARCHIVOS_A_VERIFICAR for v in par] + list(
+        VARIABLES_DE_INDICES_DEL_NLI
+    )
+    return [variable for variable in requeridas if not entorno.get(variable)]
 
 
 @dataclass(frozen=True)
@@ -62,7 +81,7 @@ class PuertosLocales:
     reranker: Reranker
     clasificador_nli: NliClassifier
     generador: EvidenceGenerator
-    proponente: object | None = None
+    proponente: LlmApplicabilityTextProposer
 
 
 class EmbedderRegistrado:
@@ -136,13 +155,17 @@ class LlmRegistrado:
 
 
 def _settings_de(config: ConfigSuite, entorno: Mapping[str, str]) -> Settings:
-    """``Settings`` con el entorno INYECTADO (nunca el del proceso para las claves de modelos) y el LLM de la suite."""
+    """``Settings`` con las claves de ``entorno`` (inyectado) y el LLM de la suite.
+
+    La configuración de modelos (ADR-39) sale solo del entorno inyectado. Para el resto de los campos de ``Settings`` que
+    el entorno inyectado no trae, pydantic SÍ lee ``os.environ``: la suite no aísla el entorno del proceso."""
     try:
         modelos = cargar_config_modelos(entorno)
     except ConfigDeModelosInvalida as error:
-        # El mensaje de la configuración trae «CLAVE: motivo» y el motivo puede repetir el valor: solo los nombres.
-        variables = [problema.split(":", 1)[0] for problema in str(error).split("; ")]
-        raise SuiteAbortada(f"configuración de modelos inválida: {', '.join(variables)}") from None
+        # El mensaje trae «CLAVE: motivo» y el motivo puede repetir el valor: solo los nombres, de ``claves``.
+        raise SuiteAbortada(
+            f"configuración de modelos inválida: {', '.join(error.claves)}"
+        ) from None
     campos = {
         clave.lower(): valor
         for clave, valor in entorno.items()
@@ -193,19 +216,16 @@ def cargar_puertos_locales(
     settings = _settings_de(config, origen.entorno)
     modelos = _cargar_modelos(settings, origen.cargador)
     embedder = modelos.embedder_consulta
-    cliente = LlmRegistrado(
-        OpenAICompatibleLlmClient(
-            settings.llm_base_url,
-            settings.llm_model,
-            settings.llm_request_timeout_ms,
-            settings.llm_max_output_tokens,
-            settings.llm_temperature,
-        ),
-        registro,
-        destino=settings.llm_base_url,
-        clase=clase_datos,
-        modelo=settings.llm_model,
-    )
+
+    def registrar_llm(interno: LlmClient) -> LlmClient:
+        return LlmRegistrado(
+            interno,
+            registro,
+            destino=settings.llm_base_url,
+            clase=clase_datos,
+            modelo=settings.llm_model,
+        )
+
     return PuertosLocales(
         detector_idioma=modelos.detector_idioma,
         embedder=EmbedderRegistrado(embedder, registro, clase_datos),
@@ -214,7 +234,6 @@ def cargar_puertos_locales(
         ),
         reranker=RerankerRegistrado(modelos.reranker, registro, clase_datos),
         clasificador_nli=NliRegistrado(modelos.clasificador_nli, registro, clase_datos),
-        generador=LlmEvidenceGenerator(
-            cliente, settings.details_max_paragraphs, settings.llm_fragments_max_chars
-        ),
+        generador=crear_generador_local(settings, registrar_llm),
+        proponente=crear_proponente_local(settings, registrar_llm),
     )

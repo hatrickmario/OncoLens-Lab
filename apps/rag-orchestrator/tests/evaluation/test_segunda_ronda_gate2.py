@@ -210,7 +210,7 @@ def test_la_fidelidad_del_juez_lleva_su_cifra_cuando_concluye() -> None:
 def test_las_discrepancias_con_el_nli_se_derivan_del_acuerdo_con_el_nli() -> None:
     juez = fidelidad([_consulta_con_juez(4, acuerdan=False)], 0.8, 1)["juez_llm"]
 
-    assert juez["discrepancias_con_nli"] == len(juez["acuerdo_con_nli"]["discrepancias"]) == 0
+    assert juez["discrepancias_con_nli"] == len(juez["acuerdo_con_nli"]["discrepancias"]) == 4
 
 
 def test_la_muestra_minima_del_juez_es_obligatoria_y_viene_de_la_configuracion() -> None:

@@ -39,13 +39,20 @@ CLAVES_DEL_JUEZ_SIN_ACUERDO = {
     "soportadas",
     "fidelidad",
     "discrepancias_con_nli",
+    "valor_informativo",
 }
 CATALOGOS = RAIZ_REPO / "packages" / "clinical-catalogs"
 
 
 def config_con_juez(tmp_path: Path, **juez: object) -> Path:
     crudo = yaml.safe_load(CONFIG.read_text(encoding="utf-8"))
-    crudo["juez"] = {"proveedor": "fake", "modelo": "fake-juez@1", "acuerdo_minimo": 0.8, **juez}
+    crudo["juez"] = {
+        "proveedor": "fake",
+        "modelo": "fake-juez@1",
+        "acuerdo_minimo": 0.8,
+        "muestra_minima": 1,
+        **juez,
+    }
     ruta = tmp_path / "config.yaml"
     ruta.write_text(yaml.safe_dump(crudo), encoding="utf-8")
     return ruta
@@ -106,13 +113,17 @@ def test_evaluate_con_el_juez_local_reporta_la_fidelidad_del_nli_y_la_del_juez_a
     familia = reporte["metricas"]["completa"].get("fidelidad")
     assert familia is not None
     assert familia["nli"] == {"afirmaciones": 4, "soportadas": 3, "fidelidad": 0.75}
-    assert {k: v for k, v in familia["juez_llm"].items() if k in CLAVES_DEL_JUEZ_SIN_ACUERDO} == {
-        "rotulo": "secundaria",
-        "afirmaciones": 4,
-        "soportadas": 4,
-        "fidelidad": 1.0,
-        "discrepancias_con_nli": 1,
-    }
+    assert (
+        {k: v for k, v in familia["juez_llm"].items() if k in CLAVES_DEL_JUEZ_SIN_ACUERDO}
+        == {
+            "rotulo": "secundaria",
+            "afirmaciones": 4,
+            "soportadas": 4,
+            "fidelidad": None,  # acuerdo 0,75 < 0,8: no concluyente, la cifra queda como valor informativo
+            "discrepancias_con_nli": 1,
+            "valor_informativo": 1.0,
+        }
+    )
     assert peticiones == 4
 
 
@@ -220,13 +231,14 @@ def test_la_fidelidad_cuenta_afirmaciones_soportadas_y_discrepancias_con_el_juez
         consulta(afirmaciones_nli=(True,), afirmaciones_juez=(False,), ids_afirmaciones=("p2/a1",)),
     ]
 
-    assert fidelidad(resultados, acuerdo_minimo=0.5) == {
+    assert fidelidad(resultados, acuerdo_minimo=0.5, muestra_minima=1) == {
         "nli": {"afirmaciones": 3, "soportadas": 2, "fidelidad": 2 / 3},
         "juez_llm": {
             "rotulo": "secundaria",
             "afirmaciones": 3,
             "soportadas": 2,
-            "fidelidad": 2 / 3,
+            "fidelidad": None,  # no concluyente: sin cifra de fidelidad
+            "valor_informativo": 2 / 3,
             "discrepancias_con_nli": 2,
             "veredictos_invalidos": 1,
             "acuerdo_con_nli": {
@@ -242,7 +254,7 @@ def test_la_fidelidad_cuenta_afirmaciones_soportadas_y_discrepancias_con_el_juez
 
 
 def test_la_fidelidad_es_none_y_no_cero_cuando_no_hay_afirmaciones() -> None:
-    assert fidelidad([consulta()])["nli"] == {
+    assert fidelidad([consulta()], None, None)["nli"] == {
         "afirmaciones": 0,
         "soportadas": 0,
         "fidelidad": None,
@@ -253,6 +265,7 @@ def test_las_variables_eval_judge_sustituyen_al_yaml_y_cambian_la_huella(tmp_pat
     config = config_con_juez(tmp_path)
     entorno = {
         "JUEZ_ACUERDO_MINIMO": "0.8",
+        "JUEZ_MUESTRA_MINIMA": "1",
         "EVAL_JUDGE_MODEL": "otro@2",
         "EVAL_JUDGE_BASE_URL": LOCAL,
         "EVAL_JUDGE_TEMPERATURE": "0",
@@ -285,7 +298,12 @@ def test_sin_bloque_de_juez_ni_variables_no_hay_juez() -> None:
 def test_la_guarda_del_juez_aborta_con_una_url_fuera_de_la_lista_local() -> None:
     config = cargar_config_suite(
         CONFIG,
-        {"JUEZ_ACUERDO_MINIMO": "0.8", "EVAL_JUDGE_MODEL": "m@1", "EVAL_JUDGE_BASE_URL": NUBE},
+        {
+            "JUEZ_ACUERDO_MINIMO": "0.8",
+            "JUEZ_MUESTRA_MINIMA": "1",
+            "EVAL_JUDGE_MODEL": "m@1",
+            "EVAL_JUDGE_BASE_URL": NUBE,
+        },
     )
 
     with pytest.raises(SuiteAbortada):
@@ -297,7 +315,12 @@ def test_la_guarda_del_juez_deja_pasar_un_juez_local_y_la_ausencia_de_juez() -> 
     exigir_juez_local(
         cargar_config_suite(
             CONFIG,
-            {"JUEZ_ACUERDO_MINIMO": "0.8", "EVAL_JUDGE_MODEL": "m@1", "EVAL_JUDGE_BASE_URL": LOCAL},
+            {
+                "JUEZ_ACUERDO_MINIMO": "0.8",
+                "JUEZ_MUESTRA_MINIMA": "1",
+                "EVAL_JUDGE_MODEL": "m@1",
+                "EVAL_JUDGE_BASE_URL": LOCAL,
+            },
         ).juez
     )
 
@@ -390,7 +413,12 @@ def test_el_cliente_del_juez_ignora_los_proxies_del_entorno_para_no_desviar_el_p
     monkeypatch.setenv("HTTPS_PROXY", "http://proxy.nube-de-prueba.invalid:8080")
     config = cargar_config_suite(
         CONFIG,
-        {"JUEZ_ACUERDO_MINIMO": "0.8", "EVAL_JUDGE_MODEL": "m@1", "EVAL_JUDGE_BASE_URL": LOCAL},
+        {
+            "JUEZ_ACUERDO_MINIMO": "0.8",
+            "JUEZ_MUESTRA_MINIMA": "1",
+            "EVAL_JUDGE_MODEL": "m@1",
+            "EVAL_JUDGE_BASE_URL": LOCAL,
+        },
     )
 
     async def crear() -> object:
@@ -422,7 +450,13 @@ def test_la_guarda_del_juez_rechaza_un_modelo_de_nube_y_acepta_uno_local() -> No
     with pytest.raises(SuiteAbortada):
         exigir_juez_local(
             cargar_config_suite(
-                CONFIG, {**entorno, "JUEZ_ACUERDO_MINIMO": "0.8", "EVAL_JUDGE_MODEL": "x:cloud"}
+                CONFIG,
+                {
+                    **entorno,
+                    "JUEZ_ACUERDO_MINIMO": "0.8",
+                    "JUEZ_MUESTRA_MINIMA": "1",
+                    "EVAL_JUDGE_MODEL": "x:cloud",
+                },
             ).juez
         )
     exigir_juez_local(
@@ -431,6 +465,7 @@ def test_la_guarda_del_juez_rechaza_un_modelo_de_nube_y_acepta_uno_local() -> No
             {
                 **entorno,
                 "JUEZ_ACUERDO_MINIMO": "0.8",
+                "JUEZ_MUESTRA_MINIMA": "1",
                 "EVAL_JUDGE_MODEL": "gemma4:26b-a4b-it-q4_K_M",
             },
         ).juez
@@ -444,7 +479,12 @@ def test_crear_juez_llm_tambien_rechaza_un_modelo_de_nube_antes_de_crear_el_clie
 
     config = cargar_config_suite(
         CONFIG,
-        {"EVAL_JUDGE_BASE_URL": LOCAL, "JUEZ_ACUERDO_MINIMO": "0.8", "EVAL_JUDGE_MODEL": "x:cloud"},
+        {
+            "EVAL_JUDGE_BASE_URL": LOCAL,
+            "JUEZ_ACUERDO_MINIMO": "0.8",
+            "JUEZ_MUESTRA_MINIMA": "1",
+            "EVAL_JUDGE_MODEL": "x:cloud",
+        },
     )
 
     async def crear() -> None:
@@ -473,6 +513,7 @@ def test_un_modelo_de_nube_con_espacios_o_control_no_envia_requests_por_ningun_c
             entorno = {
                 "EVAL_JUDGE_BASE_URL": LOCAL,
                 "JUEZ_ACUERDO_MINIMO": "0.8",
+                "JUEZ_MUESTRA_MINIMA": "1",
                 "EVAL_JUDGE_MODEL": modelo,
             }
         else:
@@ -504,6 +545,7 @@ def test_un_modelo_con_espacios_es_un_identificador_invalido_antes_de_cualquier_
             {
                 "EVAL_JUDGE_BASE_URL": LOCAL,
                 "JUEZ_ACUERDO_MINIMO": "0.8",
+                "JUEZ_MUESTRA_MINIMA": "1",
                 "EVAL_JUDGE_MODEL": "m@1 ",
             },
         )

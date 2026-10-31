@@ -120,13 +120,13 @@ def kappa_de_cohen(a: Sequence[bool], b: Sequence[bool]) -> float | None:
 
 
 def marcar_fidelidad_no_concluyente(
-    porcentaje_de_acuerdo_: float | None,
-    minimo: float,
-    muestra: int | None = None,
-    muestra_minima: int | None = None,
+    porcentaje_de_acuerdo_: float | None, minimo: float, muestra: int, muestra_minima: int
 ) -> bool:
-    """RN-22: bajo ``JUEZ_ACUERDO_MINIMO`` (o sin acuerdo medible) la fidelidad del juez no es concluyente."""
-    return porcentaje_de_acuerdo_ is None or porcentaje_de_acuerdo_ < minimo
+    """RN-22: la fidelidad del juez no es concluyente sin acuerdo medible, bajo ``JUEZ_ACUERDO_MINIMO`` o con una
+    muestra menor que ``JUEZ_MUESTRA_MINIMA`` (un acuerdo alto sobre dos afirmaciones no dice nada)."""
+    if porcentaje_de_acuerdo_ is None or muestra < muestra_minima:
+        return True
+    return porcentaje_de_acuerdo_ < minimo
 
 
 def acuerdo_con_el_nli(
@@ -149,7 +149,9 @@ def acuerdo_con_el_nli(
     }
 
 
-def estado_de_la_fidelidad_del_juez(porcentaje_de_acuerdo_: float | None, minimo: float) -> str:
-    if marcar_fidelidad_no_concluyente(porcentaje_de_acuerdo_, minimo):
+def estado_de_la_fidelidad_del_juez(
+    porcentaje_de_acuerdo_: float | None, minimo: float, muestra: int, muestra_minima: int
+) -> str:
+    if marcar_fidelidad_no_concluyente(porcentaje_de_acuerdo_, minimo, muestra, muestra_minima):
         return ESTADO_NO_CONCLUYENTE
     return ESTADO_CONCLUYENTE

@@ -36,3 +36,4 @@ juez: # ADR-41: juez LLM local secundario (G); el NLI sigue siendo el juez princ
   semilla: 20261021
   timeout_s: 300
   acuerdo_minimo: 0.8 # JUEZ_ACUERDO_MINIMO (asumido; dueño: refinamiento/usuario): bajo este acuerdo con el NLI, «no concluyente»
+  muestra_minima: 30 # JUEZ_MUESTRA_MINIMA (asumido, sin calibrar; dueño: refinamiento/usuario): con menos afirmaciones, «no concluyente»

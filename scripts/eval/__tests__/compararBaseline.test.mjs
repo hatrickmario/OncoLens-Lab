@@ -102,6 +102,23 @@ describe('compararConBaseline con las métricas de privacidad y lenguaje (L1D-23
     expect(comparacion.filas.find((f) => f.metrica.endsWith('propuesta_cruda')).estado).toBe('informativa');
   });
 
+  it('bloquea el nivel A de lo mostrado y deja el nivel B como seguimiento informativo [L1D-298 AC-2]', () => {
+    const conNiveles = ({ a = 0, b = 0 } = {}) => ({
+      metricas: { completa: { terminos_prohibidos: { salida_mostrada_nivel_a: a, salida_mostrada_nivel_b: b, salida_mostrada_por_nivel: { A: a, B: b } } } },
+    });
+
+    expect(regresiones(conNiveles({ a: 1 }), conNiveles(), 1)).toEqual([
+      'completa.terminos_prohibidos.salida_mostrada_nivel_a',
+      'completa.terminos_prohibidos.salida_mostrada_por_nivel.A',
+    ]);
+    const conB = compararConBaseline(conNiveles({ b: 3 }), conNiveles(), { tolerancia: 0 });
+    expect(conB.regresiones).toEqual([]);
+    expect(conB.filas.filter((f) => f.estado === 'informativa').map((f) => f.metrica)).toEqual([
+      'completa.terminos_prohibidos.salida_mostrada_nivel_b',
+      'completa.terminos_prohibidos.salida_mostrada_por_nivel.B',
+    ]);
+  });
+
   it('no trata casos, afirmaciones ni soportadas como métricas de calidad [US-074 AC-5]', () => {
     const comparacion = compararConBaseline(informe({ casos: 1, afirmaciones: 1, soportadas: 0 }), informe(), { tolerancia: 0 });
 

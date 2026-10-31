@@ -61,7 +61,7 @@ from app.evaluation.informe_pii import (
     SinInformePii,
 )
 from app.evaluation.juez_fidelidad import JuezNoDisponible, crear_juez_llm
-from app.evaluation.envoltorios import pico_rss_mb
+from app.evaluation.envoltorios import pico_rss_mib
 from app.evaluation.llamadas import RegistroDeLlamadas
 from app.evaluation.medicion_modelos import informe_de_recursos_nli
 from app.evaluation.medidores import LatenciasNli
@@ -123,7 +123,7 @@ def main(
             _parser().parse_args(list(argv)),
             reloj or RelojDelSistema(),
             raiz,
-            OrigenLocal(entorno or {}, cargador_de_modelos, lector_rss or pico_rss_mb),
+            OrigenLocal(entorno or {}, cargador_de_modelos, lector_rss or pico_rss_mib),
             directorio_de_configs,
             puertos_aplicabilidad or PuertosDeAplicabilidad(),
         )
@@ -276,12 +276,12 @@ def _correr_suite(
 def _recursos_del_nli(
     config: ConfigSuite, latencias: LatenciasNli, origen: OrigenLocal
 ) -> dict[str, object] | None:
-    """RSS máximo y latencia del NLI (US-233a AC-7): solo con los modelos reales; con fakes no hay nada que medir."""
+    """Pico de RSS del proceso y latencia del NLI (US-233a AC-7): solo con los modelos reales; con fakes no hay nada que medir."""
     if config.proveedor != "local" or config.rss_limite_mib is None:
         return None
     return informe_de_recursos_nli(
         latencias.por_lote_ms,
-        latencias.por_hipotesis_ms,
+        latencias.media_por_hipotesis_del_lote_ms,
         origen.lector_rss(),
         config.rss_limite_mib,
     )

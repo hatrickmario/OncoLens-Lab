@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import re
 import sys
-from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -98,7 +97,7 @@ def problemas_de_configuracion_invalida(entorno: dict[str, str]) -> list[str]:
     try:
         cargar_config_modelos(entorno)
     except ConfigInvalida as exc:
-        return [f"{RUTA_ENV}: {exc}"]
+        return [f"{RUTA_ENV}: configuración de modelos inválida: {', '.join(exc.claves)}"]
     return []
 
 
@@ -133,26 +132,6 @@ def chequear(raiz: Path) -> ResultadoChequeo:
     resultado.problemas.extend(problemas_de_configuracion_invalida(entorno))
     resultado.problemas.extend(problemas_de_dimension_en_modelo_datos(raiz))
     return resultado
-
-
-VARIABLES_DE_INDICES_DEL_NLI = (
-    "NLI_LABEL_INDEX_ENTAILMENT",
-    "NLI_LABEL_INDEX_NEUTRAL",
-    "NLI_LABEL_INDEX_CONTRADICTION",
-)
-
-
-def variables_de_modelos_ausentes(entorno: Mapping[str, str]) -> list[str]:
-    """Variables que ``proveedor: local`` necesita para cargar los pesos y que el entorno no trae (US-233a AC-4).
-
-    Solo nombres, en el orden de la configuración: nunca rutas ni hashes. Un archivo declarado que no existe o cuyo
-    SHA-256 no coincide lo detecta la verificación al cargar y también nombra su variable."""
-    from app.infrastructure.models.local import ARCHIVOS_A_VERIFICAR
-
-    requeridas = [v for par in ARCHIVOS_A_VERIFICAR for v in par] + list(
-        VARIABLES_DE_INDICES_DEL_NLI
-    )
-    return [variable for variable in requeridas if not entorno.get(variable)]
 
 
 def ejecutar_chequeo(raiz: Path) -> int:

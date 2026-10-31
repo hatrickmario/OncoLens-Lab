@@ -75,6 +75,7 @@ def test_el_envoltorio_traduce_eval_judge_a_flags_y_la_guarda_rn12_los_alcanza(
             "EVAL_PYTHON": sys.executable,
             "EVAL_JUDGE_MODEL": "m@1",
             "JUEZ_ACUERDO_MINIMO": "0.8",
+            "JUEZ_MUESTRA_MINIMA": "1",
             "EVAL_JUDGE_BASE_URL": "https://api.nube-de-prueba.invalid/v1",
         },
         check=False,

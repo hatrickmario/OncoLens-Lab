@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any
 
-from app.evaluation.config_suite import ConfigSuite
+from app.evaluation.config_suite import ConfigSuite, minimos_del_juez
 from app.evaluation.esquema_suite import VERSION_ESQUEMA
 from app.evaluation.fuente_dataset import DatasetSuite
 from app.evaluation.metricas.familias import calcular_familias
@@ -77,7 +77,7 @@ def _familias(
         suite,
         config.semilla_bootstrap,
         config.bootstrap_repeticiones,
-        None if config.juez is None else config.juez.acuerdo_minimo,
+        *minimos_del_juez(config),
     )
 
 
