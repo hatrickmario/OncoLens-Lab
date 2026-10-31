@@ -141,5 +141,49 @@
     "operacion": "POST",
     "ruta": "/platform/evidence-analyses",
     "texto": "added the new `sin_regla_de_comparacion` enum value to the `applicability/items/criteria/items/unknownReason` response property for the response status `200`"
+  },
+  {
+    "id": "E-14",
+    "adr": "ADR-26",
+    "documento": "ADR-26-contrato-congelado-y-excepciones-declaradas.md",
+    "change": "l1d-295-afirmaciones-atomicas-por-papel",
+    "proveedor": "rag-orchestrator",
+    "regla": "response-body-one-of-added",
+    "operacion": "POST",
+    "ruta": "/rag/query",
+    "texto": "added `#/components/schemas/ErrorSalidaLlmInvalida` to the response body `oneOf` list for the response status `503`"
+  },
+  {
+    "id": "E-15",
+    "adr": "ADR-26",
+    "documento": "ADR-26-contrato-congelado-y-excepciones-declaradas.md",
+    "change": "l1d-295-afirmaciones-atomicas-por-papel",
+    "proveedor": "rag-orchestrator",
+    "regla": "response-property-enum-value-added",
+    "operacion": "POST",
+    "ruta": "/rag/query",
+    "texto": "added the new `lenguaje_no_permitido` enum value to the `discardedOptions/items/discardReason` response property for the response status `200`"
+  },
+  {
+    "id": "E-16",
+    "adr": "ADR-26",
+    "documento": "ADR-26-contrato-congelado-y-excepciones-declaradas.md",
+    "change": "l1d-295-afirmaciones-atomicas-por-papel",
+    "proveedor": "clinical-api",
+    "regla": "response-body-one-of-added",
+    "operacion": "POST",
+    "ruta": "/platform/evidence-analyses",
+    "texto": "added `#/components/schemas/ErrorSalidaLlmInvalida` to the response body `oneOf` list for the response status `503`"
+  },
+  {
+    "id": "E-17",
+    "adr": "ADR-26",
+    "documento": "ADR-26-contrato-congelado-y-excepciones-declaradas.md",
+    "change": "l1d-295-afirmaciones-atomicas-por-papel",
+    "proveedor": "clinical-api",
+    "regla": "response-property-enum-value-added",
+    "operacion": "POST",
+    "ruta": "/platform/evidence-analyses",
+    "texto": "added the new `lenguaje_no_permitido` enum value to the `discardedOptions/items/discardReason` response property for the response status `200`"
   }
 ]
