@@ -50,6 +50,7 @@ from app.schemas.generated.models import (
 
 def ensamblar_respuesta_con_evidencia(
     opciones: Sequence[OpcionConRelevancia],
+    opciones_no_mostradas: int,
     descartadas: Sequence[OpcionDescartada],
     sin_soporte: Sequence[OpcionSinSoporte],
     limitaciones: Sequence[str],
@@ -74,6 +75,7 @@ def ensamblar_respuesta_con_evidencia(
             aboveThreshold=len(recuperacion.chunks_sobre_umbral),
         ),
         omittedClaims=omitidas,
+        optionsNotShown=opciones_no_mostradas,
         agentSteps=[],
         topRelevanceScore=top_relevance_score(recuperacion.chunks_sobre_umbral),
         meta=recuperacion.meta,

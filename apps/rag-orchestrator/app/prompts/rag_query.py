@@ -1,4 +1,4 @@
-"""Prompt `rag-query@0.5.0` de la rama con evidencia de `/rag/query` (US-225): función pura, sin E/S.
+"""Prompt `rag-query@0.6.0` de la rama con evidencia de `/rag/query` (US-225): función pura, sin E/S.
 
 Las instrucciones están redactadas en positivo (describir lo que reporta la evidencia citada) y sin términos de
 RN-23; un test las verifica con ``check_prohibited_terms``. El prompt solo recibe campos clínicos ya enmascarados,
@@ -12,7 +12,7 @@ from collections.abc import Sequence
 from app.domain.alias_de_chunks import FragmentoConAlias
 from app.schemas.generated.models import ClinicalContext, Diagnosis, Provenance, ReviewStatus
 
-VERSION_DEL_PROMPT = "rag-query@0.5.0"
+VERSION_DEL_PROMPT = "rag-query@0.6.0"
 
 # Etiquetas de procedencia del bloque de datos del paciente (RN-07): texto del prompt, versionado con él (no RN-22).
 ETIQUETA_SIN_VERIFICAR = "(sin verificar)"
@@ -29,6 +29,7 @@ Instrucciones:
 - Cada opción lleva "option" (su nombre, en tercera persona y en presente) y "claims": de {minimo_de_afirmaciones} a {maximo_de_afirmaciones} afirmaciones.
 - Cada afirmación es una oración declarativa de {maximo_de_palabras} palabras como máximo que describe lo que reporta un fragmento. Escríbela sin atribución, sin nombrar el fragmento ni su alias: el sistema añade la atribución a la fuente.
 - Asigna a cada afirmación un "role": exactamente una "principal" (lo central que reporta la fuente sobre la opción), y las demás "secundaria" (un dato que amplía la principal) o "salvedad" (una limitación o condición que la fuente señala).
+- Cuando un fragmento formule un requisito de inclusión o de elegibilidad con un verbo modal (por ejemplo "must", "should" o "debe"), descríbelo en indicativo y en pasado o presente (por ejemplo "el estudio incluyó a pacientes con..."): el sistema retira las afirmaciones y los nombres de opción que contienen un verbo modal.
 - Indica en "citations" de cada afirmación el alias de cada fragmento que la sustenta; usa solo los alias de los fragmentos entregados, escritos exactamente como aparecen.
 - Cuando describas lo que establece una guía, indica la población y el escenario a los que se refiere \
 (para pacientes con [condición] en [escenario]), atribúyelo a la fuente citada y no lo dirijas al paciente.

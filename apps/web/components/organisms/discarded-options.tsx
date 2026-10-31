@@ -5,6 +5,7 @@ import type { DiscardedOption } from '../../../../packages/api-contracts/src/typ
 import { mensajes } from '../../lib/mensajes';
 import estilos from '../evidence.module.css';
 import { DiscardedAuditMeta } from '../molecules/discarded-audit-meta';
+import { DiscardedOptionItem } from '../molecules/discarded-option-item';
 
 export interface DiscardedOptionsProps {
   descartadas: DiscardedOption[];
@@ -18,7 +19,7 @@ export interface DiscardedOptionsProps {
  */
 export function DiscardedOptions({ descartadas, idAnalisis, creadoEn }: DiscardedOptionsProps) {
   const [abierta, setAbierta] = useState(false);
-  const { discarded, discardReason } = mensajes().evidence;
+  const { discarded } = mensajes().evidence;
   return (
     <section>
       <h2>
@@ -45,14 +46,7 @@ export function DiscardedOptions({ descartadas, idAnalisis, creadoEn }: Discarde
                     idAnalisis={idAnalisis}
                     creadoEn={creadoEn}
                   />
-                  <p>{descartada.option}</p>
-                  <p>{discardReason[descartada.discardReason]}</p>
-                  {descartada.unsupportedClaims.map((afirmacion) => (
-                    <p key={afirmacion}>
-                      <span className={estilos.sinSoporte}>⚠ {discarded.sinSoporte}</span>{' '}
-                      <span>{afirmacion}</span>
-                    </p>
-                  ))}
+                  <DiscardedOptionItem descartada={descartada} />
                 </li>
               ))}
             </ol>
