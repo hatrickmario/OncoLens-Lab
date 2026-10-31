@@ -9,6 +9,8 @@ import conEvidenciaPoblacionA_M2B from '../../../../../contracts/examples/con-ev
 import conEvidenciaSinOpciones from '../../../../../contracts/examples/con-evidencia-sin-opciones.json';
 import conEvidenciaSoloDescartadas from '../../../../../contracts/examples/con-evidencia-solo-descartadas.json';
 import soloDescartadasCitaInvalida from '../../../../../contracts/examples/con-evidencia-solo-descartadas-cita-invalida.json';
+import soloDescartadasLenguaje from '../../../../../contracts/examples/con-evidencia-solo-descartadas-lenguaje.json';
+import soloDescartadasSinSoporteYLenguaje from '../../../../../contracts/examples/con-evidencia-solo-descartadas-sin-soporte-y-lenguaje.json';
 import soloDescartadasMotivosMixtos from '../../../../../contracts/examples/con-evidencia-solo-descartadas-motivos-mixtos.json';
 import soloDescartadasOtrosMotivos from '../../../../../contracts/examples/con-evidencia-solo-descartadas-otros-motivos.json';
 import checklistF_M1 from '../../../../../contracts/examples/completeness-f-m1.json';
@@ -47,8 +49,10 @@ export {
   peticion,
   sinEvidencia,
   soloDescartadasCitaInvalida,
+  soloDescartadasLenguaje,
   soloDescartadasMotivosMixtos,
   soloDescartadasOtrosMotivos,
+  soloDescartadasSinSoporteYLenguaje,
   tipoNoHabilitado,
 };
 
