@@ -10,7 +10,6 @@ from __future__ import annotations
 from app.evaluation.estadistica import mediana
 import json
 import math
-import statistics
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime

@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import random
 import re
-import statistics
 import unicodedata
 from collections import defaultdict
 from collections.abc import Callable, Sequence
