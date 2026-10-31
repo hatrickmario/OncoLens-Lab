@@ -67,6 +67,23 @@ orquestador; `MetadataExtractionService` conserva los escalares. Los tests de `l
 - **D11 · P5:** el escritor emite solo la lista o `{"status":"pendiente","values":[]}`, nunca `{"values":[…]}` sin `status`; el lector lo tolera, el escritor no lo produce.
 - **D12 · P6:** el escritor recorta o descarta un `value` de más de 200 caracteres (`maxLength` del contrato) para que nunca tumbe el análisis.
 
+## Desviaciones de la implementación (reportadas al Gate 2)
+
+- **D3 · recuperación léxica en memoria.** El paso de metadatos corre antes de indexar el documento en Milvus, así que no hay
+  «búsqueda existente» que consultar: `RecuperadorLexicalDeFragmentos` puntúa en memoria los fragmentos que la ingesta acaba de
+  producir (mismos `chunk_id` que se indexarán, `identificador_de_chunk`). Puntaje léxico sobre etiqueta del criterio y palabras
+  de métodos/elegibilidad/población; a calibrar con US-233b.
+- **D4 · `validar_chunk` sin subcadena.** Solo comprueba que el `chunkId` es del documento: FX-06c-c exige guardar `premenopausal
+  women` aunque el fragmento diga «premenopausal or postmenopausal women»; el soporte lo decide el NLI contra el fragmento citado.
+- **D6 · caché sin columna nueva.** Las versiones viajan en cada valor guardado (forma de US-241). Una lista vacía solo se
+  reutiliza si el documento guarda algún valor con las versiones vigentes; un documento con todos los criterios vacíos se
+  reextrae al reingerir. Un criterio `pendiente` se reintenta. Un documento omitido (mismo checksum) actualiza solo su población.
+- **D8 · `MetadataExtractionService(incluir_poblacion=False)`** cuando el abanico está activo (el LLM de metadatos pide solo
+  escalares); con `True` (por defecto) conserva el camino de US-118 sin cambiar sus tests. Sin `llm_poblacion` la CLI usa ese camino.
+- **EXT-CUATRO** del fixture FX-06c-c queda con los 4 valores en el MISMO fragmento (`ch-e1-1`), como dice el escenario de AC-5
+  (el fixture escrito en la historia los repartía en tres fragmentos, que no excederían el tope por fragmento).
+- **Fallo del LLM o del NLI** (no solo `length`) deja el criterio `pendiente` y se reintenta en la siguiente ingesta.
+
 ## Dependencias y colaboradores
 
 - Crea: `application/corpus_metadata/population_fanout.py`, `prompts/poblacion_v1.txt`, `domain/corpus_metadata/poblacion_abanico.py`,

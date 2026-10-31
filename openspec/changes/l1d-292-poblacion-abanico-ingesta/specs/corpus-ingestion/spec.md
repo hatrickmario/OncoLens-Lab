@@ -76,5 +76,27 @@ La extracción MUST ejecutarse con a lo sumo `POPULATION_EXTRACTION_CONCURRENCY`
 - **THEN** el adapter registra 12 llamadas y nunca más de 2 simultáneas
 - **AND** ninguna llamada lleva fragmentos de los dos documentos
 
+### Requirement: Filtro de lenguaje prescriptivo sobre cada valor extraído
+La ingesta MUST recorrer cada valor extraído con el filtro de lenguaje prescriptivo (campo `studyPopulationValues[].value`, RN-23); un valor con un término prohibido MUST omitirse y contarse en `valoresConLenguajePrescriptivo`, nunca sustituirse por otro texto. Decidido (usuario, 2026-10-30).
+
+#### Scenario: Un valor con término prohibido se omite y se cuenta [US-242 AC-9] [RN-23]
+- **GIVEN** un valor propuesto con un término prohibido (`recommended treatment`) en un fragmento citado, y valores limpios en otros criterios
+- **WHEN** se ingiere el documento
+- **THEN** el criterio queda con lista vacía y el resumen cuenta `valoresConLenguajePrescriptivo = 1`
+- **AND** los demás valores se conservan y el valor prohibido no llega al NLI ni al catálogo
+
+### Requirement: Forma escrita coherente y acotada
+El escritor MUST emitir por criterio solo la lista de valores o exactamente `{"status": "pendiente", "values": []}` (nunca `{"values": […]}` sin `status`), MUST escribir `population_form = lista` coherente con la estructura (validada al escribir) y MUST descartar y contar un `value` de más de 200 caracteres (`maxLength` del contrato). Decidido (usuario, 2026-10-30; P4, P5 y P6 de `l1d-291`).
+
+#### Scenario: Un value de 201 caracteres no se guarda y se cuenta [US-242 D12] [P6]
+- **GIVEN** un valor propuesto de 201 caracteres
+- **WHEN** se ingiere el documento
+- **THEN** el criterio queda con lista vacía, el resumen cuenta `valoresDescartadosPorLongitud = 1` y el documento queda `embebido`
+
+#### Scenario: La forma escrita la lee el lector de US-241 sin forma inválida [US-242 D10] [P4] [P5]
+- **GIVEN** una ingesta con un criterio `pendiente` y otros con valores
+- **WHEN** el lector de `population_criteria` lee la fila
+- **THEN** `population_form = lista`, ningún criterio es inválido y el `pendiente` se lee como criterio pendiente sin valores
+
 Regresión [RN-21] activa desde S3 (US-059): la ingesta rechaza licencia no aceptada o fuente excluida antes de extraer.
 Regresión [RN-25] activa desde S3 (US-127): la ficha de la fuente muestra "No disponible" ante criterios sin valor verificado.
