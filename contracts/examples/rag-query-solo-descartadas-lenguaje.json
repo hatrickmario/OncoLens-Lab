@@ -1,0 +1,67 @@
+{
+  "status": "con_evidencia",
+  "synthesis": {
+    "agreements": [],
+    "discrepancies": []
+  },
+  "applicability": [],
+  "evidenceOptions": [],
+  "discardedOptions": [
+    {
+      "option": "Terapia anti-HER2 adyuvante con reducción marcada de la mortalidad",
+      "rationale": "La opción se descartó porque no cumple la validación de la evidencia recuperada.",
+      "discardReason": "lenguaje_no_permitido",
+      "unsupportedClaims": [
+        "[afirmación retirada: formulación no permitida]"
+      ]
+    },
+    {
+      "option": "Terapia anti-HER2 adyuvante combinada con pertuzumab",
+      "rationale": "La opción se descartó porque no cumple la validación de la evidencia recuperada.",
+      "discardReason": "lenguaje_no_permitido",
+      "unsupportedClaims": [
+        "[afirmación retirada: formulación no permitida]"
+      ]
+    }
+  ],
+  "limitations": [
+    {
+      "text": "Síntesis basada en una sola fuente.",
+      "origin": "estructural"
+    }
+  ],
+  "assumptions": [],
+  "retrievalStats": {
+    "retrieved": 40,
+    "aboveThreshold": 1
+  },
+  "omittedClaims": 0,
+  "agentSteps": [],
+  "topRelevanceScore": 0.87,
+  "meta": {
+    "queryLanguage": "es",
+    "responseLanguage": "es",
+    "llmProvider": "local",
+    "llmModel": "llm-local-ejemplo",
+    "embeddingModel": "embedding-local-ejemplo",
+    "rerankerModel": "reranker-local-ejemplo",
+    "nliModel": "nli-local-ejemplo",
+    "promptVersion": "rag-query@0.1.0",
+    "catalogVersion": "2026.10.0",
+    "corpusRelease": "2026-09-30",
+    "corpusCutoffDate": "2026-09-30",
+    "excludedSources": [
+      "NCCN",
+      "ESMO"
+    ],
+    "retrievalParams": {
+      "topK": 40,
+      "rerankTopN": 10,
+      "relevanceThreshold": 0.5,
+      "retrievalMode": "dense",
+      "fusion": "ninguna",
+      "fusionParam": 0
+    },
+    "latencyMs": 8200
+  }
+}
