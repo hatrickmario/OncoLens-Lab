@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from app.application.aplicabilidad import ApplicabilityService
 from app.application.ports import (
@@ -86,8 +86,7 @@ def parametros_de_recuperacion(
     config: ConfigSuite, tipos_habilitados: tuple[str, ...], brazo: Brazo | None = None
 ) -> ParametrosDeRecuperacion:
     u = config.umbrales
-    return ParametrosDeRecuperacion(
-        **_parametros_del_brazo(brazo),
+    base = ParametrosDeRecuperacion(
         relevance_threshold=u.relevance_threshold,
         retrieval_top_k=u.retrieval_top_k,
         rerank_top_n=u.rerank_top_n,
@@ -97,20 +96,20 @@ def parametros_de_recuperacion(
         nli_entailment_threshold=u.nli_entailment_threshold,
         tipos_habilitados=tipos_habilitados,
     )
+    return base if brazo is None else _con_recuperacion_del_brazo(base, brazo)
 
 
-def _parametros_del_brazo(brazo: Brazo | None) -> dict[str, object]:
-    """``RETRIEVAL_*`` del brazo sobre los valores por defecto del servicio (*dense*); sin brazo, nada cambia."""
-    if brazo is None:
-        return {}
-    ajustes: dict[str, object] = {"retrieval_mode": brazo.modo}
-    if brazo.fusion is not None:
-        ajustes["retrieval_fusion"] = brazo.fusion
-    if brazo.rrf_k is not None:
-        ajustes["rrf_k"] = brazo.rrf_k
-    if brazo.peso_sparse is not None:
-        ajustes["peso_sparse"] = brazo.peso_sparse
-    return ajustes
+def _con_recuperacion_del_brazo(
+    parametros: ParametrosDeRecuperacion, brazo: Brazo
+) -> ParametrosDeRecuperacion:
+    """``RETRIEVAL_*`` del brazo sobre los valores por defecto del servicio (*dense*)."""
+    return replace(
+        parametros,
+        retrieval_mode=brazo.modo,
+        retrieval_fusion=brazo.fusion or parametros.retrieval_fusion,
+        rrf_k=brazo.rrf_k or parametros.rrf_k,
+        peso_sparse=brazo.peso_sparse or parametros.peso_sparse,
+    )
 
 
 @dataclass(frozen=True)
@@ -195,18 +194,16 @@ def _rama_sparse(
     brazo: Brazo | None,
     cronometro: Cronometro,
     observaciones: Observaciones,
-) -> dict[str, object]:
+) -> tuple[CodificadorSparseObservado | None, BuscadorSparseMedido | None]:
     """Los puertos *sparse* medidos, solo para un brazo híbrido: el servicio los exige y un brazo *dense* no los toca."""
     if brazo is None or brazo.modo is RetrievalMode.dense:
-        return {}
+        return None, None
     if adaptadores.codificador_sparse is None or adaptadores.buscador_sparse is None:
         raise ConfigInvalida("un brazo híbrido exige el codificador y la búsqueda sparse")
-    return {
-        "embedder_sparse": CodificadorSparseObservado(
-            adaptadores.codificador_sparse, cronometro, observaciones
-        ),
-        "buscador_sparse": BuscadorSparseMedido(adaptadores.buscador_sparse, cronometro),
-    }
+    return (
+        CodificadorSparseObservado(adaptadores.codificador_sparse, cronometro, observaciones),
+        BuscadorSparseMedido(adaptadores.buscador_sparse, cronometro),
+    )
 
 
 def componer_servicio(
@@ -228,6 +225,7 @@ def componer_servicio(
     terminos = VerificadorDeTerminosProhibidos(lista)
     # La suite habilita los tipos del catálogo montado (RN-20): el dataset no restringe el tipo y la huella no cambia.
     tipos_habilitados = cargar_catalogo_del_manifiesto(config.ruta_terminos).tipos_de_cancer()
+    embedder_sparse, buscador_sparse = _rama_sparse(adaptadores, brazo, cronometro, observaciones)
     servicio = RAGOrchestratorService(
         detector_idioma=DetectorMedido(adaptadores.detector_idioma, cronometro),
         embedder=EmbedderMedido(adaptadores.embedder, cronometro),
@@ -246,7 +244,8 @@ def componer_servicio(
         verificador_terminos=terminos,
         reloj=reloj,
         parametros=parametros_de_recuperacion(config, tipos_habilitados, brazo),
-        **_rama_sparse(adaptadores, brazo, cronometro, observaciones),
+        embedder_sparse=embedder_sparse,
+        buscador_sparse=buscador_sparse,
     )
     return ServicioDeSuite(
         servicio,
