@@ -17,9 +17,14 @@ from app.config.settings import Settings
 from app.evaluation.adaptadores_falsos import (
     BuscadorSparseEnMemoria,
     CodificadorSparseLexico,
+    EmbedderBolsaDePalabras,
+    NliLexico,
+    RerankerLexico,
 )
+from app.evaluation.composicion_suite import componer_servicio
+from app.evaluation.cronometro import Cronometro, RelojSimulado
+from app.infrastructure.language.detector_local import DetectorDeIdiomaLocal
 from app.evaluation.armado_comparacion import armar_comparacion
-from app.evaluation.brazos_recuperacion import Brazo
 from app.evaluation.config_suite import (
     Comparacion,
     ConfigInvalida,
@@ -31,7 +36,7 @@ from app.evaluation.evaluate import main
 from app.evaluation.fuente_dataset import FuenteDatasetEnDirectorio
 from app.evaluation.guardas import SuiteAbortada, verificar_golden_sha256
 from app.infrastructure.models.local import ModelosDeRecuperacion
-from app.schemas.generated.models import Fusion, RetrievalMode
+from app.schemas.generated.models import Fusion, RagMeta, RetrievalMode
 from tests.evaluation.conftest import RAIZ_APP, RAIZ_REPO
 from tests.evaluation.test_comparacion_hibrida_aceptacion import (
     CONFIG,
@@ -212,10 +217,6 @@ def test_la_comparacion_aborta_si_una_consulta_trae_el_retrieval_params_de_otro_
     config = cargar_config_suite(CONFIG)
     assert config.comparacion is not None
     dataset = FuenteDatasetEnDirectorio(FIXTURE).cargar()
-    from app.evaluation.composicion_suite import componer_servicio
-    from app.evaluation.cronometro import Cronometro, RelojSimulado
-    from app.schemas.generated.models import RagMeta
-
     meta_dense = _meta_de_ejemplo(RetrievalMode.dense, Fusion.ninguna, 0)
     servicio = componer_servicio(config, dataset, Cronometro(RelojSimulado()), RelojFijo())
     a2 = config.comparacion.brazos[1]
@@ -226,12 +227,9 @@ def test_la_comparacion_aborta_si_una_consulta_trae_el_retrieval_params_de_otro_
 
     with pytest.raises(SuiteAbortada, match="A2"):
         armar_comparacion(config, config.comparacion, brazos)
-    assert isinstance(meta_dense, RagMeta)
 
 
-def _meta_de_ejemplo(modo: RetrievalMode, fusion: Fusion, parametro: float) -> Any:
-    from app.schemas.generated.models import RagMeta
-
+def _meta_de_ejemplo(modo: RetrievalMode, fusion: Fusion, parametro: float) -> RagMeta:
     ejemplo = json.loads(
         (RAIZ_REPO / "contracts" / "examples" / "rag-query-con-evidencia.json").read_text(
             encoding="utf-8"
@@ -254,11 +252,11 @@ def test_con_proveedor_local_los_brazos_comparten_los_modelos_y_el_cargador_reci
         cargas += 1
         recibidos.append(settings)
         return ModelosDeRecuperacion(
-            detector_idioma=_detector(),
-            embedder_consulta=_embedder(),
+            detector_idioma=DetectorDeIdiomaLocal("es"),
+            embedder_consulta=EmbedderBolsaDePalabras(),
             embedder_pasajes=EmbedderDePasajesFalso(),
-            reranker=_reranker(),
-            clasificador_nli=_nli(),
+            reranker=RerankerLexico(),
+            clasificador_nli=NliLexico(),
             embedder_sparse_consulta=CodificadorSparseLexico(),
         )
 
@@ -289,30 +287,6 @@ def test_con_proveedor_local_los_brazos_comparten_los_modelos_y_el_cargador_reci
     assert cargas == 1 and recibidos[0].retrieval_mode == "hibrida"
     brazos = por_nombre(leer_comparacion(salida))
     assert brazos["A2"]["trazabilidad"] == {"consultas": 5, "coherentes": 5}
-
-
-def _detector() -> Any:
-    from app.infrastructure.language.detector_local import DetectorDeIdiomaLocal
-
-    return DetectorDeIdiomaLocal("es")
-
-
-def _embedder() -> Any:
-    from app.evaluation.adaptadores_falsos import EmbedderBolsaDePalabras
-
-    return EmbedderBolsaDePalabras()
-
-
-def _reranker() -> Any:
-    from app.evaluation.adaptadores_falsos import RerankerLexico
-
-    return RerankerLexico()
-
-
-def _nli() -> Any:
-    from app.evaluation.adaptadores_falsos import NliLexico
-
-    return NliLexico()
 
 
 def test_la_comparacion_no_escribe_textos_de_preguntas_ni_de_fragmentos(tmp_path: Path) -> None:

@@ -11,6 +11,7 @@ import asyncio
 import sys
 import time
 from contextlib import AsyncExitStack
+from dataclasses import dataclass
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
@@ -27,6 +28,7 @@ from app.evaluation.config_suite import (
     ENTORNO_DEL_JUEZ,
     SUITE_COMPLETA,
     SUITES,
+    Comparacion,
     ConfigInvalida,
     ConfigSuite,
     cargar_config_suite,
@@ -79,7 +81,7 @@ from app.evaluation.reporte import ReporteFueraDeEsquema, escribir_reporte_cerra
 from app.evaluation.rutas import raiz_repo
 from app.infrastructure.lenguaje.terminos_prohibidos import ListaDeTerminosNoDisponible
 from app.infrastructure.clock.system_clock import RelojDelSistema
-from app.schemas.generated.models import RagQueryInternalResponse
+from app.schemas.generated.models import RagMeta, RagQueryInternalResponse
 
 SALIDA_POR_DEFECTO = Path("eval") / "results"
 SUITE_PII = "pii"
@@ -252,28 +254,14 @@ def _correr_suite(
     informe_pii: InformePiiB1 | None,
     origen: OrigenLocal,
 ) -> dict[str, Any]:
-    cronometro = Cronometro(_reloj_de_medicion(config))
     registro = RegistroDeLlamadas()
-    resultados: list[ResultadoConsulta] = []
-    meta = None
-    recursos_nli = None
-    comparacion = None
-    if suite != SUITE_PII and config.comparacion is not None:
-        brazos = asyncio.run(_evaluar_brazos(config, dataset, reloj, registro, origen))
-        referencia = brazos[0]
-        resultados, meta, cronometro = (
-            referencia.resultados,
-            referencia.metas[0],
-            referencia.servicio.cronometro,
+    medido = _Medicion([], None, Cronometro(_reloj_de_medicion(config)), None, None)
+    if suite != SUITE_PII:  # la familia pii no consulta al servicio: mide solo la privacidad
+        medido = (
+            _medir_comparacion(config, dataset, reloj, registro, origen)
+            if config.comparacion is not None
+            else _medir_un_brazo(config, dataset, reloj, registro, origen)
         )
-        recursos_nli = _recursos_del_nli(config, referencia.servicio.latencias_nli, origen)
-        comparacion = armar_comparacion(config, config.comparacion, brazos)
-    elif suite != SUITE_PII:  # la familia pii no consulta al servicio: mide solo la privacidad
-        resultados, respuestas, latencias = asyncio.run(
-            _evaluar(config, dataset, cronometro, reloj, registro, origen)
-        )
-        meta = respuestas[0].meta
-        recursos_nli = _recursos_del_nli(config, latencias, origen)
     privacidad_medida = (
         privacidad(len(dataset.textos_pii), informe_pii, registro.llamadas)
         if suite in SUITES_CON_PRIVACIDAD
@@ -283,12 +271,65 @@ def _correr_suite(
         config,
         dataset,
         suite,
-        meta,
-        resultados,
-        cronometro.p95_ms(),
+        medido.meta,
+        medido.resultados,
+        medido.cronometro.p95_ms(),
         privacidad_medida,
-        recursos_nli,
-        comparacion,
+        medido.recursos_nli,
+        medido.comparacion,
+    )
+
+
+@dataclass(frozen=True)
+class _Medicion:
+    """Lo que la corrida entrega al reporte: los resultados del brazo de referencia y, si hay, la comparación."""
+
+    resultados: list[ResultadoConsulta]
+    meta: RagMeta | None
+    cronometro: Cronometro
+    recursos_nli: dict[str, object] | None
+    comparacion: dict[str, Any] | None
+
+
+def _medir_un_brazo(
+    config: ConfigSuite,
+    dataset: DatasetSuite,
+    reloj: Clock,
+    registro: RegistroDeLlamadas,
+    origen: OrigenLocal,
+) -> _Medicion:
+    cronometro = Cronometro(_reloj_de_medicion(config))
+    resultados, respuestas, latencias = asyncio.run(
+        _evaluar(config, dataset, cronometro, reloj, registro, origen)
+    )
+    return _Medicion(
+        resultados,
+        respuestas[0].meta,
+        cronometro,
+        _recursos_del_nli(config, latencias, origen),
+        None,
+    )
+
+
+def _medir_comparacion(
+    config: ConfigSuite,
+    dataset: DatasetSuite,
+    reloj: Clock,
+    registro: RegistroDeLlamadas,
+    origen: OrigenLocal,
+) -> _Medicion:
+    """Todos los brazos; el reporte principal es el de la referencia (A0) y la comparación va aparte."""
+    comparacion = config.comparacion
+    if comparacion is None:
+        raise ConfigInvalida("falta el bloque comparacion")
+    brazos = asyncio.run(_evaluar_brazos(config, comparacion, dataset, reloj, registro, origen))
+    referencia = brazos[0]
+    return _Medicion(
+        referencia.resultados,
+        referencia.metas[0],
+        referencia.servicio.cronometro,
+        _recursos_del_nli(config, referencia.servicio.latencias_nli, origen),
+        armar_comparacion(config, comparacion, brazos),
     )
 
 
@@ -328,15 +369,13 @@ async def _evaluar(
 
 async def _evaluar_brazos(
     config: ConfigSuite,
+    comparacion: Comparacion,
     dataset: DatasetSuite,
     reloj: Clock,
     registro: RegistroDeLlamadas,
     origen: OrigenLocal,
 ) -> list[ResultadoDeBrazo]:
     """Todos los brazos de ``comparacion`` sobre los mismos modelos locales cargados una sola vez."""
-    comparacion = config.comparacion
-    if comparacion is None:
-        raise ConfigInvalida("falta el bloque comparacion")
     puertos_locales = (
         cargar_puertos_locales(config, origen, registro, dataset.clase)
         if config.proveedor == "local"
