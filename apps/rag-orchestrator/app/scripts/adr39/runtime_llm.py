@@ -23,8 +23,8 @@ from app.evaluation.dataset_loader import Dataset, Pregunta, cargar_dataset_conf
 from app.prompts.rag_query import construir_prompt_rag_query
 from app.scripts.adr39.config import CandidatoLlm, ConfigFaseB
 from app.scripts.adr39.reglas import (
-    mediana,
-    percentil_95,
+    mediana_estadistica,
+    percentil_95_interpolado,
     porcentaje_json_valido,
     validar_contra_esquema,
 )
@@ -309,7 +309,7 @@ def medir_admision(
         memoria = cliente.memoria_residente_gb(tag)
         if memoria is not None:
             cifras.append(memoria)
-    return mediana(cifras) if cifras else None
+    return mediana_estadistica(cifras) if cifras else None
 
 
 def medir_candidato(
@@ -345,12 +345,12 @@ def medir_candidato(
         **base,
         "admitido": True,
         "llamadas": len(prompts) * config.corridas,
-        "json_valido": mediana([c["json_valido"] for c in corridas]),
+        "json_valido": mediana_estadistica([c["json_valido"] for c in corridas]),
         "rutas": RUTAS_MEDIDAS,
         "tokens_por_segundo": _mediana_o_none([c["tok_s"] for c in corridas]),
         "prefill_tokens_por_segundo": _mediana_o_none([c["prefill_tok_s"] for c in corridas]),
-        "p50_ms": mediana([c["p50_ms"] for c in corridas]),
-        "p95_ms": mediana([c["p95_ms"] for c in corridas]),
+        "p50_ms": mediana_estadistica([c["p50_ms"] for c in corridas]),
+        "p95_ms": mediana_estadistica([c["p95_ms"] for c in corridas]),
         "corridas": [{k: v for k, v in c.items() if k != "salidas"} for c in corridas],
     }
 
@@ -373,17 +373,17 @@ def _corrida(
     salidas = [c.contenido for c in llamadas]
     return {
         "json_valido": porcentaje_json_valido(salidas, ESQUEMA_DE_GENERACION),
-        "tok_s": mediana(tok_s) if tok_s else None,
-        "prefill_tok_s": mediana(prefill) if prefill else None,
-        "p50_ms": mediana(tiempos_ms),
-        "p95_ms": percentil_95(tiempos_ms),
+        "tok_s": mediana_estadistica(tok_s) if tok_s else None,
+        "prefill_tok_s": mediana_estadistica(prefill) if prefill else None,
+        "p50_ms": mediana_estadistica(tiempos_ms),
+        "p95_ms": percentil_95_interpolado(tiempos_ms),
         "salidas": salidas,
     }
 
 
 def _mediana_o_none(valores: Sequence[float | None]) -> float | None:
     presentes = [v for v in valores if v is not None]
-    return mediana(presentes) if presentes else None
+    return mediana_estadistica(presentes) if presentes else None
 
 
 def _guardar_muestra(
@@ -431,11 +431,11 @@ def medir_estructuracion(
             llamada = cliente.chat(tag, _prompt_estructuracion(doc["texto"], claves), esquema)
             tiempos.append(llamada.segundos * 1000)
             salidas.append(llamada.contenido if _cumple(llamada.contenido, esquema) else None)
-        p95_por_corrida.append(percentil_95(tiempos))
+        p95_por_corrida.append(percentil_95_interpolado(tiempos))
         validos.append(sum(s is not None for s in salidas) / len(salidas))
     return {
-        "p95_ms": mediana(p95_por_corrida),
-        "json_valido": mediana(validos),
+        "p95_ms": mediana_estadistica(p95_por_corrida),
+        "json_valido": mediana_estadistica(validos),
         "documentos": len(documentos),
     }
 

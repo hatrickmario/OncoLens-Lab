@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from app.evaluation.acuerdo_juez import ESTADO_CONCLUYENTE, ESTADO_NO_CONCLUYENTE, SIN_MEDIR
 from app.evaluation.config_suite import PROVEEDORES, RELOJES, SUITES
 from app.evaluation.cronometro import ETAPAS
 from app.evaluation.fuente_dataset import CLASES_ADMITIDAS
@@ -49,6 +50,19 @@ _FIDELIDAD = _familia(
                 "rotulo": Enumerado(frozenset({ROTULO_SECUNDARIA})),
                 **_FRACCION_DE_AFIRMACIONES,
                 "discrepancias_con_nli": Numero(),
+                "veredictos_invalidos": Numero(),
+                "acuerdo_con_nli": Objeto(
+                    {
+                        "muestra": Numero(),
+                        "porcentaje": Numero(),
+                        "kappa": Numero(),
+                        "discrepancias": Lista(Identificador()),
+                    }
+                ),
+                "acuerdo_con_humano": Enumerado(frozenset({SIN_MEDIR})),
+                "estado": Enumerado(frozenset({ESTADO_CONCLUYENTE, ESTADO_NO_CONCLUYENTE})),
+                # Con estado no_concluyente `fidelidad` es null y la cifra queda aquí, solo informativa.
+                "valor_informativo": Numero(),
             }
         ),
     },
@@ -64,8 +78,15 @@ _CAMPOS_DE_FAMILIA = {
     "fidelidad": _FIDELIDAD,
     "terminos_prohibidos": _familia(
         {
+            # `propuesta_cruda`, `salida_mostrada` y `terminos_compartidos_con_corpus_citado` cuentan CAMPOS generados con
+            # algún término de la lista (un campo cuenta una vez), no salidas completas: son
+            # `campos_con_termino_de_la_lista_*`. Sus nombres se conservan por la huella del baseline.
             "propuesta_cruda": Numero(),
             "salida_mostrada": Numero(),
+            "salida_mostrada_nivel_a": Numero(),  # bloqueante (meta 0)
+            "salida_mostrada_nivel_b": Numero(),  # seguimiento
+            "salida_mostrada_por_nivel": Objeto({"A": Numero(), "B": Numero()}),
+            "campos_mostrados": Lista(Objeto({"campo": Identificador(), "regla": Identificador()})),
             "propuesta_cruda_por_nivel": Objeto({"A": Numero(), "B": Numero()}),
             "terminos_compartidos_con_corpus_citado": Numero(),
             "terminos_nivel_a": Lista(Identificador()),
@@ -142,8 +163,25 @@ _PRIVACIDAD = Objeto(
         "sensibilidad_b1": Objeto(
             {"textos_medidos": Numero(), **{modo: _MODO_PII for modo in MODOS}}
         ),
+        "adaptadores_cubiertos": Lista(Identificador()),
     },
-    opcionales=frozenset({"sensibilidad_b1"}),
+    opcionales=frozenset({"sensibilidad_b1", "adaptadores_cubiertos"}),
+)
+_LATENCIA_NLI = Objeto({"n": Numero(), "p50_ms": Numero(), "p95_ms": Numero()})
+_RECURSOS_NLI = Objeto(
+    {
+        # ru_maxrss del proceso ENTERO (carga de los tres modelos); no es el RSS del NLI ni el del régimen.
+        "rss_pico_proceso_mib": Numero(),
+        "rss_limite_mib": Numero(),
+        "supera_el_limite": Booleano(),
+        "latencia_ms": Objeto(
+            {
+                "por_lote": _LATENCIA_NLI,
+                # La duración del lote repartida entre sus hipótesis: una media, no la latencia de una hipótesis sola.
+                "media_por_hipotesis_del_lote_ms": _LATENCIA_NLI,
+            }
+        ),
+    }
 )
 
 ESQUEMA_SUITE = Objeto(
@@ -153,9 +191,10 @@ ESQUEMA_SUITE = Objeto(
         "configuracion": _CONFIGURACION,
         "metricas": Objeto({"completa": _FAMILIAS, "revisada": _FAMILIAS}),
         "privacidad": _PRIVACIDAD,
+        "recursos_nli": _RECURSOS_NLI,
         "latencia_p95_ms": Objeto({etapa: Numero() for etapa in ETAPAS}),
     },
-    opcionales=frozenset({"privacidad"}),
+    opcionales=frozenset({"privacidad", "recursos_nli"}),
 )
 
 

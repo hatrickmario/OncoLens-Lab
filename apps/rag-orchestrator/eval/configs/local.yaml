@@ -1,0 +1,39 @@
+# Configuración de la suite `evaluate` con los MODELOS LOCALES REALES (US-233a, L1D-298; ADR-39, ADR-41, RN-12).
+# Corre a mano en el MacBook de referencia; la CI sigue con `test-fake.yaml`. Los pesos (rutas y SHA-256) y las claves de
+# ADR-39 llegan por el entorno (`~/adr39-modelos/modelos.env` y `adr39-config.sh`); sin ellos la suite termina con
+# código ≠ 0 nombrando la variable (AC-4) y no escribe cifras.
+#   OLLAMA_CONTEXT_LENGTH=8192 OLLAMA_FLASH_ATTENTION=1 OLLAMA_KV_CACHE_TYPE=q8_0 ollama serve   # LLM fuera de Docker
+#   python -m app.evaluation.evaluate --config eval/configs/local.yaml --suite all --salida reports/eval
+# Cambiar cualquier valor cambia la huella SHA-256 que forma parte del nombre del resultado.
+nombre: local-fx-t5a-a
+fixture: FX-T5a-a
+dataset:
+  ruta: data/eval/fx-t5a-a
+semilla_bootstrap: 20261021
+bootstrap_repeticiones: 200
+medicion:
+  reloj: real # time.perf_counter: la latencia por etapa y la del NLI son de verdad
+  rss_limite_mib: 4489 # límite de memoria para la marca de AC-7: el RSS conjunto de ADR-39 / US-231b AC-7 (supuesto: heredado)
+adaptadores:
+  proveedor: local
+  urls:
+    llm: http://127.0.0.1:11434/v1 # Ollama nativo; ninguna ruta hacia la nube (lista local cerrada en código)
+modelos:
+  llm: gemma4:26b-a4b-it-q4_K_M # G, LLM decidido en ADR-39
+umbrales:
+  relevance_threshold: 0.30
+  nli_entailment_threshold: 0.7
+  retrieval_top_k: 40
+  rerank_top_n: 10
+catalogo:
+  version: '2026.10.0'
+  ruta_terminos: packages/clinical-catalogs
+juez: # ADR-41: juez LLM local secundario (G); el NLI sigue siendo el juez principal y nunca se promedian
+  proveedor: local
+  base_url: http://127.0.0.1:11434/v1
+  modelo: gemma4:26b-a4b-it-q4_K_M
+  temperatura: 0
+  semilla: 20261021
+  timeout_s: 300
+  acuerdo_minimo: 0.8 # JUEZ_ACUERDO_MINIMO (asumido; dueño: refinamiento/usuario): bajo este acuerdo con el NLI, «no concluyente»
+  muestra_minima: 30 # JUEZ_MUESTRA_MINIMA (asumido, sin calibrar; dueño: refinamiento/usuario): con menos afirmaciones, «no concluyente»

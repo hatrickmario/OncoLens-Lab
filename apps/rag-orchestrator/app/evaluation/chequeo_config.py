@@ -97,7 +97,7 @@ def problemas_de_configuracion_invalida(entorno: dict[str, str]) -> list[str]:
     try:
         cargar_config_modelos(entorno)
     except ConfigInvalida as exc:
-        return [f"{RUTA_ENV}: {exc}"]
+        return [f"{RUTA_ENV}: configuración de modelos inválida: {', '.join(exc.claves)}"]
     return []
 
 

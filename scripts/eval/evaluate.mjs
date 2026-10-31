@@ -29,6 +29,7 @@ const FLAGS_DEL_JUEZ = {
   EVAL_JUDGE_BASE_URL: '--juez-base-url',
   EVAL_JUDGE_TEMPERATURE: '--juez-temperatura',
   EVAL_JUDGE_SEED: '--juez-semilla',
+  JUEZ_ACUERDO_MINIMO: '--juez-acuerdo-minimo',
 };
 
 /**

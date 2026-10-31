@@ -2,14 +2,31 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import Any, Final, Protocol, TypeVar
 
 FUENTE_ESTRUCTURADA: Final = "fuente_estructurada"
 EXTRAIDO_VERIFICADO: Final = "extraido_verificado"
 PENDIENTE: Final = "pendiente"
 ETAPA_DE_METADATOS: Final = "metadatos"
+
+
+class _ConProcedencia(Protocol):
+    document_id: str
+    metadata_source: str
+
+
+_Fila = TypeVar("_Fila", bound=_ConProcedencia)
+
+
+def solo_extraidos_verificados(filas: Iterable[_Fila]) -> list[_Fila]:
+    """Los documentos que entran a la muestra humana: solo ``extraido_verificado``, ordenados por ``document_id``.
+
+    Única regla para el adapter SQL y el fake en memoria (L1D-117 5.3): ninguno repite el filtro."""
+    return sorted(
+        (f for f in filas if f.metadata_source == EXTRAIDO_VERIFICADO), key=lambda f: f.document_id
+    )
 
 
 @dataclass(frozen=True)

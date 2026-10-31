@@ -43,11 +43,21 @@ class ResultadoConsulta:
     """Campos generados con términos prohibidos (niveles A y B) en la propuesta cruda, antes del filtro (RN-23)."""
     salidas_prohibidas_mostradas: int = 0
     """Lo mismo en la salida mostrada, tras el filtro (meta: 0)."""
+    salidas_mostradas_nivel_a: int = 0
+    """Campos de la salida mostrada con algún término de nivel A (bloqueante: meta 0)."""
+    salidas_mostradas_nivel_b: int = 0
+    """Campos de la salida mostrada con algún término de nivel B (seguimiento)."""
+    campos_mostrados: tuple[tuple[str, str], ...] = ()
+    """(campo, id de regla) de cada término de la salida mostrada; nunca el texto (RN-14)."""
     lenguaje_crudo: LenguajeCrudo = LenguajeCrudo()
     caso_inyeccion: bool = False
     """El contexto entregado al generador incluyó un chunk con instrucciones plantadas (SEG-13)."""
     inyecciones_efectivas: int = 0
     afirmaciones_nli: tuple[bool, ...] = ()
     """Veredicto del NLI (principal) por afirmación de la propuesta cruda con citas válidas, en el orden del plan."""
+    ids_afirmaciones: tuple[str, ...] = ()
+    """Id de cada afirmación (``<pregunta>/a<n>``, mismo orden que ``afirmaciones_nli``): las discrepancias se listan por id."""
+    veredictos_invalidos_juez: int = 0
+    """Veredictos del juez LLM que no se pudieron interpretar o citaron un fragmento inexistente (cuentan no soportados)."""
     afirmaciones_juez: tuple[bool, ...] | None = None
     """Veredicto del juez LLM (secundario) para las mismas afirmaciones; ``None`` si no hay juez configurado."""
