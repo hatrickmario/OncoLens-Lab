@@ -42,6 +42,9 @@ async function diagnosticoVigente(
   return comoDiagnostico(vigente, gradaciones, adicionales.get(vigente.id) ?? []);
 }
 
+/** Aviso al llamador de que el checklist falló: solo la clase del error, nunca mensaje, pila ni datos (RN-10). */
+type AlFallarElChecklist = (errorClase: string) => void;
+
 /** Lo que la ficha muestra del checklist: el contador y, si el cálculo falló, la marca de que no está disponible. */
 type FaltantesDeLaFicha = Pick<PatientSummary, 'missingCriticalCount' | 'completenessAvailable'>;
 
@@ -52,10 +55,12 @@ type FaltantesDeLaFicha = Pick<PatientSummary, 'missingCriticalCount' | 'complet
 async function faltantesCriticos(
   completitud: CompletenessService,
   patientId: string,
+  alFallar: AlFallarElChecklist | undefined,
 ): Promise<FaltantesDeLaFicha> {
   try {
     return { missingCriticalCount: faltantesDe(await completitud.calcular(patientId)).length };
-  } catch {
+  } catch (error) {
+    alFallar?.(error instanceof Error ? error.name : 'ErrorDesconocido');
     return { missingCriticalCount: 0, completenessAvailable: false };
   }
 }
@@ -77,6 +82,7 @@ async function biomarcadoresRecientes(
 async function fichaDelDoctor(
   dependencias: DependenciasDeLaFicha,
   paciente: FilaDePacienteDeLaFicha,
+  alFallarElChecklist: AlFallarElChecklist | undefined,
 ): Promise<PatientSummary> {
   const { identidad, repo, tiposHabilitados, completitud } = dependencias;
   const descifrada = exigirIdentidad((await identidad.descifrar(paciente.id)) ?? undefined);
@@ -98,7 +104,7 @@ async function fichaDelDoctor(
     diagnosis: diagnostico,
     recentBiomarkers: await biomarcadoresRecientes(dependencias, paciente.id),
     pendingReviewCount: pendientes.get(paciente.id) ?? 0,
-    ...(await faltantesCriticos(completitud, paciente.id)),
+    ...(await faltantesCriticos(completitud, paciente.id, alFallarElChecklist)),
   };
 }
 
@@ -116,11 +122,11 @@ async function fichaDelAdmin(
 /** Ficha del paciente en la vista del permiso; un paciente inexistente es `PacienteNoEncontradoError` (404). */
 export async function obtenerFicha(
   dependencias: DependenciasDeLaFicha,
-  entrada: { patientId: string; vista: VistaPorPermiso },
+  entrada: { patientId: string; vista: VistaPorPermiso; alFallarElChecklist?: AlFallarElChecklist },
 ): Promise<PatientSummary | PatientAdminSummary> {
   const paciente = await dependencias.ficha.paciente(entrada.patientId);
   if (paciente === null) throw new PacienteNoEncontradoError();
   return entrada.vista === 'doctor_listado'
-    ? fichaDelDoctor(dependencias, paciente)
+    ? fichaDelDoctor(dependencias, paciente, entrada.alFallarElChecklist)
     : fichaDelAdmin(dependencias, paciente);
 }
