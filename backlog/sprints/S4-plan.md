@@ -172,7 +172,7 @@ flowchart LR
 
 **Decidido (usuario, 2026-10-31):**
 
-- **Puntos del sprint: 73** (69 + 2 de L1D-97 reestimada de 3 a 5 + 2 de L1D-297 de 5 a 7). Las columnas Pts de §1 reflejan L1D-97 = 5 y L1D-297 = 7. El orden de las oleadas no cambia.
+- **Puntos del sprint: 73** (69 + 2 de L1D-97 reestimada de 3 a 5 + 2 de L1D-297 de 5 a 7). Las columnas Pts de §1 reflejan L1D-97 = 5 y L1D-297 = 7. El orden de las oleadas no cambia. **Actualización del 2026-10-31: con D4-18 el sprint es de 74 (ver §7).**
 - **L1D-97 (US-005)** se aprueba reestimada a 5 y se entrega en **dos partes**: primero las 4 deudas de `clinical-api` con `clinical-platform-dev`, luego el BFF y la UI.
 - **L1D-297 (US-247)** absorbe la deuda 1.1 de L1D-293 (`poblacion-reglas.json`, D4-03) con +2 puntos. Sin ese archivo, «mezclada» no aparece en producción. Detalle en su `design.md`.
 - **Orden de recorte** si hace falta (el aprobado del 2026-10-29, sin cambios): US-003/US-005, US-238, US-133, US-112.
@@ -183,8 +183,13 @@ flowchart LR
 - **Estimaciones:** L1D-97 = 5 pts (era 3) y L1D-297 = 7 pts (era 5), ya reflejadas en las columnas Pts de §1.
   **Cuenta explícita.** Antes (plan del 2026-10-30): 69 = 3+5+3+5+5+5+3+5+3+5+2+3+5+3+5+3+3+2+1+0 (L1D-97 = 3, L1D-297 = 5).
   Después: 69 + 2 + 2 = **73** = 3+5+3+5+5+5+3+5+3+5+2+5+5+3+7+3+3+2+1+0. El total de 73 no cambia con esta tanda.
+  **Actualización posterior (usuario, 2026-10-31): D4-18 cuenta en el sprint.** Antes: 73. Después: 73 + 1 (D4-18) = **74** pts.
 - **D4-18** (bug del sprint, `stack-smoke` intermitente; arreglo = nombre de proyecto Compose único por ejecución y fase): 1 pt, `clinical-platform-dev`, PR aparte. **No se suma a los 73:** es un bug del sprint, no una tarjeta del refinamiento (si el usuario prefiere contarlo, el S4 pasa a 74).
+  **Actualización:** el usuario decidió que D4-18 SÍ cuenta (S4 = **74**); ver la cuenta arriba.
 - **D4-01 -> US-249** (S5, 3 pts, antes del G-Demo): el S5 pasa de 168 a **171** (ver `features/README.md`). El AC-2 de L1D-298 (juez acotado A+B bloqueante con el generador real) pasa a US-249; el AC-7 de L1D-298 (RSS en régimen estable) pasa a L1D-297 (D4-02). L1D-298 conserva sus 3 pts.
 - **L1D-294:** `POPULATION_FALLBACK_DEADLINE_MS=10000` ms se deja hasta US-233b (calibración). Q2 de la deuda, cerrada.
 - **L1D-131:** las tareas 1.1 y 2.9 (perfil E2E con `RAG_ADAPTERS=fake`, seed A-M1/A-M2, catálogo `test-apl-1.2.0`, Playwright contra Compose, extensión de `aviso-ia.spec.ts`) se difieren a L1D-297; sin cambio de puntos.
 - **Discrepancia entre documentos:** `S4-refinamiento.md` y `features/README.md` guardaban «MVP comprometido = 610» (calculado con S4 = 69). Con S4 = 73 son 614, y con US-249 son **617**. La cifra de 610 estaba marcada «pendiente de recalcular»; ver `features/README.md`.
+- **Cuenta del MVP comprometido tras D4-18:** partiendo de 614 (610 + 2 de L1D-97 + 2 de L1D-297, cifra de este documento) sumando D4-18: 614 + 1 = **615**; con US-249: 617 + 1 = **618**. Discrepancia a vigilar: `features/README.md` atribuye los +4 a US-005 y US-247, mientras que este plan los atribuye a L1D-97 y L1D-297; la suma es la misma (+4) y no se ha recontado el backlog entero.
+- **D4-19** (2 pts, `ai-services-dev`, antes de L1D-144): aprobada, pero NO se suma a los 74. Decisión pendiente: *D4-19 aprobada, 2 pts, antes de L1D-144; ¿cuenta dentro del sprint (76)?*
+- **Otras decisiones:** D4-09 -> L1D-299; D4-20 -> L1D-144; D4-21 -> inicio del Sprint 5; US-249 = L1D-305 (S5, 3 pts). Detalle en `S4-deuda.md`.
