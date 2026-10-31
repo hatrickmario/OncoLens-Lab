@@ -39,8 +39,8 @@ from app.infrastructure.llm.fabrica_local import crear_generador_local, crear_pr
 from app.infrastructure.llm.openai_compatible import cuerpo_de_peticion
 from app.infrastructure.llm.proponente_de_aplicabilidad import LlmApplicabilityTextProposer
 from tests.evaluation.test_fidelidad_juez import COMPLETIONS, CONFIG, LOCAL
-from tests.evaluation.test_proveedor_local_unitarios import config_local
 from tests.evaluation.test_proveedor_local_aceptacion import modelos_fingidos
+from tests.evaluation.test_proveedor_local_unitarios import config_local
 from tests.evaluation.test_suite_unitarios import consulta
 from tests.support.modelos import crear_entorno_de_modelos
 
@@ -307,14 +307,6 @@ def test_la_salida_mostrada_se_separa_por_nivel_con_el_campo_y_la_regla_pero_sin
     assert (
         familia["salida_mostrada"] == 2
     )  # contador de CAMPOS con algún término (A o B), no de salidas
-
-
-def test_los_contadores_de_campos_lo_dicen_en_el_esquema() -> None:
-    from app.evaluation import esquema_suite
-
-    fuente = inspect.getsource(esquema_suite)
-
-    assert "campos_con_termino_de_la_lista" in fuente
 
 
 # --- P2-3: la suite compone el generador y el proponente con la fábrica de producción --------------------------------

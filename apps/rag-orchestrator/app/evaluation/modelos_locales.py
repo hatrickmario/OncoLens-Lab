@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING
 from pydantic import ValidationError
 
 from app.application.ports import (
+    ApplicabilityTextProposer,
     CandidatoParaReranker,
     EvidenceGenerator,
     LanguageDetector,
@@ -33,7 +34,6 @@ from app.evaluation.config_suite import ConfigSuite
 from app.evaluation.guardas import SuiteAbortada
 from app.evaluation.llamadas import RegistroDeLlamadas
 from app.infrastructure.llm.fabrica_local import crear_generador_local, crear_proponente_local
-from app.infrastructure.llm.proponente_de_aplicabilidad import LlmApplicabilityTextProposer
 from app.infrastructure.models.verificacion import ModeloNoVerificadoError
 
 if TYPE_CHECKING:  # solo para el tipado: importar local.py carga onnxruntime
@@ -81,7 +81,7 @@ class PuertosLocales:
     reranker: Reranker
     clasificador_nli: NliClassifier
     generador: EvidenceGenerator
-    proponente: LlmApplicabilityTextProposer
+    proponente: ApplicabilityTextProposer
 
 
 class EmbedderRegistrado:
