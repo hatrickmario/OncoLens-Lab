@@ -172,7 +172,7 @@ flowchart LR
 
 **Decidido (usuario, 2026-10-31):**
 
-- **Puntos del sprint: 73** (69 + 2 de L1D-97 reestimada de 3 a 5 + 2 de L1D-297 de 5 a 7). Las columnas Pts de §1 reflejan L1D-97 = 5 y L1D-297 = 7. El orden de las oleadas no cambia. **Actualización del 2026-10-31: con D4-18 el sprint es de 74 (ver §7).**
+- **Puntos del sprint: 73** (69 + 2 de L1D-97 reestimada de 3 a 5 + 2 de L1D-297 de 5 a 7). Las columnas Pts de §1 reflejan L1D-97 = 5 y L1D-297 = 7. El orden de las oleadas no cambia. **Actualización del 2026-10-31: con D4-18 el sprint es de 74 y con D4-19 de 76 (ver §7).**
 - **L1D-97 (US-005)** se aprueba reestimada a 5 y se entrega en **dos partes**: primero las 4 deudas de `clinical-api` con `clinical-platform-dev`, luego el BFF y la UI.
 - **L1D-297 (US-247)** absorbe la deuda 1.1 de L1D-293 (`poblacion-reglas.json`, D4-03) con +2 puntos. Sin ese archivo, «mezclada» no aparece en producción. Detalle en su `design.md`.
 - **Orden de recorte** si hace falta (el aprobado del 2026-10-29, sin cambios): US-003/US-005, US-238, US-133, US-112.
@@ -191,5 +191,12 @@ flowchart LR
 - **L1D-131:** las tareas 1.1 y 2.9 (perfil E2E con `RAG_ADAPTERS=fake`, seed A-M1/A-M2, catálogo `test-apl-1.2.0`, Playwright contra Compose, extensión de `aviso-ia.spec.ts`) se difieren a L1D-297; sin cambio de puntos.
 - **Discrepancia entre documentos:** `S4-refinamiento.md` y `features/README.md` guardaban «MVP comprometido = 610» (calculado con S4 = 69). Con S4 = 73 son 614, y con US-249 son **617**. La cifra de 610 estaba marcada «pendiente de recalcular»; ver `features/README.md`.
 - **Cuenta del MVP comprometido tras D4-18:** partiendo de 614 (610 + 2 de L1D-97 + 2 de L1D-297, cifra de este documento) sumando D4-18: 614 + 1 = **615**; con US-249: 617 + 1 = **618**. Discrepancia a vigilar: `features/README.md` atribuye los +4 a US-005 y US-247, mientras que este plan los atribuye a L1D-97 y L1D-297; la suma es la misma (+4) y no se ha recontado el backlog entero.
-- **D4-19** (2 pts, `ai-services-dev`, antes de L1D-144): aprobada, pero NO se suma a los 74. Decisión pendiente: *D4-19 aprobada, 2 pts, antes de L1D-144; ¿cuenta dentro del sprint (76)?*
+- **D4-19 cuenta en el sprint (usuario, 2026-10-31).** Cuenta explícita. Antes: 74. Después: 74 + 2 (D4-19) = **76** pts. MVP comprometido: antes 618 (cifra de este documento tras D4-18), después 618 + 2 = **620**. Discrepancia a vigilar: `features/README.md` guardaba 617 sin D4-18; se ajustó a 620 (617 + 1 + 2) y no se ha recontado el backlog entero. D4-19 se entregó en el PR #269 (comportamiento de `unsupportedClaims` mantenido y documentado).
+- **D4-22 queda FUERA del sprint S4:** pasa al Sprint 5 (ver [ADR-49](../../docs/architecture/adr/ADR-49-alias-turbopack-temporal-clinical-language.md), propuesto). No suma puntos al S4.
 - **Otras decisiones:** D4-09 -> L1D-299; D4-20 -> L1D-144; D4-21 -> inicio del Sprint 5; US-249 = L1D-305 (S5, 3 pts). Detalle en `S4-deuda.md`.
+
+## 8. Regla de recorte vigente y orden de despacho (usuario, 2026-10-31)
+
+- **Despacho:** L1D-144 se despacha en cuanto #269 se mergee (con D4-20), luego L1D-300 y L1D-145. L1D-299 y L1D-297 solo si el uso del límite de la suscripción sigue por debajo del 80 %.
+- **Regla de recorte vigente:** si el uso pasa del 80 %, se recorta por el orden de prioridad del Roadmap: RAG de conocimiento -> búsqueda por los datos del paciente -> OCR -> gestión de usuarios (lo último se recorta primero). El orden de recorte de tarjetas del 2026-10-29 (US-003/US-005, US-238, US-133, US-112) sigue como referencia dentro del sprint.
+- **L1D-296:** se acepta la lista RN-23 horneada en el build y el filtro de cliente de nivel A (pin de versión -> D4-23).
