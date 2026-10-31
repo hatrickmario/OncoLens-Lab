@@ -374,3 +374,70 @@ def entorno_de_dos_opciones(
         catalogo_falso=CatalogoFalso(fichas=FICHAS_FX08BA, poblaciones=POBLACIONES_FX08BB),
         clasificador_nli=clasificador_nli,
     )
+
+
+# --- FX-10c-a: hasta tres opciones ordenadas por aplicabilidad (L1D-144) -------------------------------------------
+
+RELEVANCIAS_FX10CA = {"doc-a4": 0.92, "doc-a3": 0.85, "doc-a1": 0.70, "doc-a6": 0.60}
+"""Puntajes del reranker falso de FX-10c-a: ``ch-a4-1`` 0,92 · ``ch-a3-1`` 0,85 · ``ch-a1-1`` 0,70 · ``ch-a6-1`` 0,60."""
+OPCION_O_C = "Quimioterapia adyuvante con esquema alternativo"
+OPCION_O_E = "Quimioterapia adyuvante que duplica la supervivencia"
+RAZON_E_SIN_SOPORTE = "La fuente afirma que el esquema duplica la supervivencia."
+OPCION_O_F = "Quimioterapia adyuvante respaldada por dos fuentes"
+
+_A = (OPCION_O_A, RAZON_FX08BB, "doc-a4")
+_B = (OPCION_O_B, RAZON_FX08BB, "doc-a1")
+_C = (OPCION_O_C, RAZON_FX08BB, "doc-a3")
+_D = (OPCION_O_D, RAZON_FX08BB, "doc-a6")
+_E = (OPCION_O_E, RAZON_E_SIN_SOPORTE, "doc-a1")
+
+ESCENARIOS_FX10CA: dict[str, tuple[tuple[str, str, str | tuple[str, ...]], ...]] = {
+    "LLM-CUATRO": (_A, _B, _C, _D, _E),
+    "LLM-TRES": (_A, _B, _C),
+    "LLM-MULTIFUENTE": ((OPCION_O_F, RAZON_FX08BB, ("doc-a4", "doc-a1")), _A),
+}
+"""``LLM-CUATRO``: O-A (1 excluyente en No coincide), O-B, O-C, O-D y O-E (su afirmación principal queda sin soporte)."""
+
+
+class GeneradorFx10ca:
+    """``EvidenceGenerator`` falso de FX-10c-a: las opciones del escenario, en el orden de salida dado."""
+
+    def __init__(
+        self,
+        escenario: str,
+        *,
+        orden: tuple[int, ...] | None = None,
+    ) -> None:
+        filas = ESCENARIOS_FX10CA[escenario]
+        if orden is not None:
+            filas = tuple(filas[i] for i in orden)
+        self._opciones = tuple(
+            opcion_atomica(
+                nombre,
+                razon,
+                (_chunk_id(docs),) if isinstance(docs, str) else tuple(_chunk_id(d) for d in docs),
+            )
+            for nombre, razon, docs in filas
+        )
+        self.recuperaciones: list[ResultadoDeRecuperacion] = []
+
+    async def generar(
+        self, solicitud: RagQueryInternalRequest, recuperacion: ResultadoDeRecuperacion
+    ) -> EvidenciaGenerada:
+        self.recuperaciones.append(recuperacion)
+        return EvidenciaGenerada(opciones=self._opciones)
+
+
+def entorno_fx10ca(
+    escenario: str,
+    *,
+    orden: tuple[int, ...] | None = None,
+    clasificador_nli: NliClassifier | None = None,
+) -> EntornoDeRecuperacion:
+    """El servicio real con los bordes falsos de FX-10c-a (``test-apl-1.0.0``, umbral 0,30, ``APL-FIJA``)."""
+    return entorno_de_aplicabilidad(
+        RELEVANCIAS_FX10CA,
+        generador=GeneradorFx10ca(escenario, orden=orden),
+        catalogo_falso=CatalogoFalso(fichas=FICHAS_FX08BA, poblaciones=POBLACIONES_FX08BB),
+        clasificador_nli=clasificador_nli,
+    )

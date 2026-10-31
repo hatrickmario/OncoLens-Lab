@@ -74,6 +74,7 @@ def ensamblar_respuesta_con_evidencia(
             aboveThreshold=len(recuperacion.chunks_sobre_umbral),
         ),
         omittedClaims=omitidas,
+        optionsNotShown=0,
         agentSteps=[],
         topRelevanceScore=top_relevance_score(recuperacion.chunks_sobre_umbral),
         meta=recuperacion.meta,

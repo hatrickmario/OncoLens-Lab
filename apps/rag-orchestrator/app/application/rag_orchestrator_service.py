@@ -663,6 +663,7 @@ class RAGOrchestratorService:
             assumptions=[],
             retrievalStats=RetrievalStats(retrieved=recuperados, aboveThreshold=0),
             omittedClaims=0,
+            optionsNotShown=0,
             agentSteps=[],
             topRelevanceScore=top_relevance_score([]),
             meta=meta,
