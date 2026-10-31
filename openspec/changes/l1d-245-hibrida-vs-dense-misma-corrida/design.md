@@ -38,7 +38,22 @@ Es el entregable: `ai-eval-runner` ejecuta `evaluate --config eval/configs/s4-hi
 - Fallos de A0 por etiqueta de pasaje único (auditoría P10 fuera de alcance) pueden sesgar a ambos brazos por igual.
 - Solapamiento de archivos con l1d-298: ordenar merges.
 
+## Decisiones tomadas en la implementación
+
+- **Tolerancia en puntos absolutos** (brazo − A0 < −tolerancia), provisional hasta que la preinscripción P1 diga otra cosa; una diferencia `null` (sin preguntas medibles) no cuenta como retroceso. `RETRIEVAL_REGRESSION_TOLERANCE` llega por `comparacion.tolerancia_retroceso` o por la variable de entorno del mismo nombre (que sustituye al YAML y entra en la huella); `s4-hibrida.yaml` no lleva valor.
+- **Código de salida 3** = retroceso (el 1 sigue siendo «la suite se negó a correr», el 2 «uso o configuración inválidos»). El reporte se escribe antes de salir.
+- **Reporte:** el reporte principal es el del brazo A0; la sección aditiva `comparacion_recuperacion` trae, por brazo, `retrievalMode`/`fusion`/`fusionParam`, `huellaConfig`, recall@10 total y es→en con MRR (con sus IC), diferencias frente a A0, `retroceso`, `trazabilidad {consultas, coherentes}` (si alguna consulta trae el `retrievalParams` de otro brazo la corrida aborta sin escribir), `sin_terminos_lexicos {n, proporcion}` (Q-1 de l1d-109) y `por_documento` (P12).
+- **Pregunta sin términos léxicos:** la rama *sparse* falla cerrada (503); en la comparación esa pregunta se cuenta, no tiene `meta` y suma como fallo de recall (ranking vacío). Un 503 que no sea de «sin términos» sigue abortando la corrida.
+- **Guarda de partición:** `golden_sha256` se compara con `<origen>/<archivo_golden>` del `manifest.yaml` de la partición (por defecto `golden.yaml`, así que `ol06-particion-v1` no cambia). La CI usa una partición sintética del fixture FX-T5a-a (`apps/rag-orchestrator/eval/particiones/fx-t5a-a/`) porque los ids de `ol06` no existen en él.
+- **D4-10:** los puertos de la suite admiten la rama *sparse* (`CodificadorSparseLexico`/`BuscadorSparseEnMemoria` falsos; con `proveedor: local`, el codificador BGE-M3 de la ingesta aplicado a los chunks y a la consulta, con los pesos `EMBEDDING_SPARSE_*` del entorno).
+
+- **Gate 2 (vuelta 1):** `SinTerminosLexicos(FalloDeInferencia)` distingue «sin términos léxicos» de un fallo de inferencia; solo ella cuenta en `sin_terminos_lexicos` y un codificador roto aborta la corrida (exit 1).
+
+- **Cambio visible del adapter de US-248:** el reporte de ingesta registra la clase de la causa (`type(causa).__name__`); para un pasaje sin términos léxicos pasa de `FalloDeInferencia` a `SinTerminosLexicos` (subclase, mismo mensaje). Ninguna prueba de ingesta fijaba el nombre anterior; queda anotado, sin aserción nueva en ese test.
+
 ## Pendientes de definir
+
+- ¿El `golden_sha256` protege el archivo que la corrida realmente lee? Con los fixtures sí (hashea `preguntas.yaml`); con un dataset real en formato de la suite habrá que decidir si la huella cubre su `preguntas.yaml` o el `golden.yaml` de origen (hoy no hay vínculo dataset↔partición verificado).
 
 - Valor de `RETRIEVAL_REGRESSION_TOLERANCE` y si la diferencia se mide en puntos absolutos o relativos (se fija en la preinscripción P1; dueño: responsable técnico; afecta AC-2).
 - Si se exige IC pareado para marcar retroceso o basta la tolerancia puntual.
