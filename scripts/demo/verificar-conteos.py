@@ -15,6 +15,7 @@ import sys
 PACIENTES = "clinical.patient"
 IDENTIDADES = "identity.patient_identity"
 USUARIOS = 'auth."user"'
+MINIMOS = {"corpus.con_poblacion_verificada"}
 
 
 def comparaciones(
@@ -25,7 +26,8 @@ def comparaciones(
     return [
         (PACIENTES, pacientes_del_seed, clinico[PACIENTES]),
         (IDENTIDADES, pacientes_del_seed, clinico[IDENTIDADES]),
-        (USUARIOS, seed[USUARIOS], clinico[USUARIOS]),
+        # Una re-ejecución idempotente del seed no republica los usuarios que ya existen: sin conteo publicado basta con que haya.
+        (USUARIOS, seed.get(USUARIOS, 1), clinico[USUARIOS]),
         ("corpus.documentos_vigentes", documentos, corpus["documentos_vigentes"]),
         (
             "corpus.con_poblacion_verificada",
@@ -56,12 +58,18 @@ def main(argv=None) -> int:
     except (OSError, ValueError, KeyError, TypeError):
         print("FALLA entrada: los conteos no tienen la forma esperada", file=sys.stderr)
         return 1
-    fallos = [f for f in filas if f[1] != f[2]]
+    # Los documentos con población verificada son «al menos» los del archivo versionado: una ingesta completa (US-242) puede
+    # dejar más (metadato verificado en documentos que no aportaron valores de población).
+    minimos = MINIMOS | ({USUARIOS} if USUARIOS not in seed else set())
+    fallos = [f for f in filas if (f[2] < f[1] if f[0] in minimos else f[1] != f[2])]
     for nombre, esperado, obtenido in filas:
-        print(f"  {nombre}: esperado={esperado} obtenido={obtenido}")
+        etiqueta = "minimo" if nombre in minimos else "esperado"
+        print(f"  {nombre}: {etiqueta}={esperado} obtenido={obtenido}")
     for nombre, esperado, obtenido in fallos:
+        previo = "al menos " if nombre in minimos else ""
         print(
-            f"FALLA {nombre}: esperado {esperado}, obtenido {obtenido}", file=sys.stderr
+            f"FALLA {nombre}: esperado {previo}{esperado}, obtenido {obtenido}",
+            file=sys.stderr,
         )
     return 1 if fallos else 0
 

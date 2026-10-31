@@ -116,10 +116,10 @@ describe('levantar.sh · verificación del seed [US-247 AC-6]', () => {
 describe('verificar-conteos.py · [US-247 AC-6]', () => {
   const semilla = { 'clinical.patient': 5, 'identity.patient_identity': 5, 'auth."user"': 2 };
 
-  function verificar({ clinico, corpus }) {
+  function verificar({ clinico, corpus, publicado = semilla }) {
     const dir = mkdtempSync(path.join(os.tmpdir(), 'conteos-'));
     temporales.push(dir);
-    writeFileSync(path.join(dir, 'seed.json'), JSON.stringify(semilla));
+    writeFileSync(path.join(dir, 'seed.json'), JSON.stringify(publicado));
     writeFileSync(
       path.join(dir, 'pob.json'),
       JSON.stringify({ documentos: { a: {}, b: {}, c: {} } }),
@@ -150,6 +150,25 @@ describe('verificar-conteos.py · [US-247 AC-6]', () => {
 
     expect(codigo).toBe(0);
     expect(salida).toContain('clinical.patient: esperado=5 obtenido=5');
+  });
+
+  it('acepta la re-ejecución idempotente del seed que no republica los usuarios cuando hay usuarios', () => {
+    const { codigo } = verificar({
+      clinico: semilla,
+      corpus: corpusOk,
+      publicado: { 'clinical.patient': 5 },
+    });
+
+    expect(codigo).toBe(0);
+  });
+
+  it('acepta más documentos con población verificada que los del archivo versionado cuando la ingesta completa los dejó', () => {
+    const { codigo } = verificar({
+      clinico: semilla,
+      corpus: { documentos_vigentes: 10, con_poblacion_verificada: 10 },
+    });
+
+    expect(codigo).toBe(0);
   });
 
   it('termina distinto de 0 y nombra identity.patient_identity cuando el seed deja 5 pacientes y 0 identidades', () => {
