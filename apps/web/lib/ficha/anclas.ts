@@ -11,3 +11,20 @@ export function anclaPermitida(fragmento: string): AnclaDeFicha | null {
   const nombre = fragmento.startsWith('#') ? fragmento.slice(1) : fragmento;
   return ANCLAS_DE_FICHA.find((ancla) => ancla === nombre) ?? null;
 }
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Única comprobación de UUID de las rutas de paciente. */
+export function esUuid(valor: string): boolean {
+  return UUID.test(valor);
+}
+
+/**
+ * Ruta de la ficha del paciente, con ancla opcional (D7). La usan el aviso de faltantes y la tabla de aplicabilidad;
+ * otras pantallas arman `/pacientes/{id}/analisis` por su cuenta (deuda anotada en tasks.md).
+ * Precondición: `patientId` es un UUID; cualquier otro valor lanza en vez de armar una ruta con él.
+ */
+export function hrefDeFicha(patientId: string, ancla?: AnclaDeFicha): string {
+  if (!esUuid(patientId)) throw new Error('patientId debe ser un UUID');
+  return ancla ? `/pacientes/${patientId}#${ancla}` : `/pacientes/${patientId}`;
+}
