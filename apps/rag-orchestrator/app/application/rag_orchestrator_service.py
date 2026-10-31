@@ -313,7 +313,9 @@ class RAGOrchestratorService:
         motivo = MotivoDeReescritura.disparado if iteracion else MotivoDeReescritura.no_disparado
         return loop, EstadoDeReescritura(motivo)
 
-    async def _terminos_para_reescribir(self, trace_id: str, pregunta: str) -> tuple[str, ...] | None:
+    async def _terminos_para_reescribir(
+        self, trace_id: str, pregunta: str
+    ) -> tuple[str, ...] | None:
         """Términos del catálogo que propone el LLM local, o ``None`` si no hay reformulación utilizable (D4: LLM caído,
         plazo vencido, salida inválida o cero términos admitidos). Se registra solo ``reason`` y la clase del error:
         nunca el mensaje de la excepción ni la pregunta, la reformulación o la salida del LLM (RN-10, RN-14)."""

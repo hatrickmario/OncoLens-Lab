@@ -15,6 +15,7 @@ from app.domain.lenguaje import normalizar_texto
 REESCRITURA_MAX_ITERACIONES_INICIAL = 1
 REESCRITURA_PLAZO_MS_INICIAL = 3000
 REESCRITURA_MAX_TOKENS_DE_SALIDA_INICIAL = 128
+REESCRITURA_MAX_TERMINOS_INICIAL = 5
 """Valores iniciales de ``QUERY_REWRITE_*`` (RN-22): el único lugar donde aparecen los literales; los recalibra la evaluación."""
 
 

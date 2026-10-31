@@ -15,7 +15,9 @@ from app.application.corpus_metadata.poblacion_puertos import LlmDePoblacion
 from app.application.generation import LlmEvidenceGenerator
 from app.application.ports import LlmClient
 from app.config.settings import Settings
+from app.domain.reescritura import ParametrosDeReescritura
 from app.infrastructure.llm.openai_compatible import OpenAICompatibleLlmClient
+from app.infrastructure.llm.reescritor_de_consulta import ReescritorDeConsultaLocal
 from app.infrastructure.llm.tarea_de_poblacion import (
     MAX_VALORES_DEL_RESPALDO,
     TareaDePoblacionLocal,
@@ -83,4 +85,24 @@ def crear_proponente_local(
         max_valores=MAX_VALORES_DEL_RESPALDO,
         max_tokens_de_salida=settings.population_extraction_max_output_tokens,
         max_chars_fragmentos=settings.llm_fragments_max_chars,
+    )
+
+
+def parametros_de_reescritura(settings: Settings) -> ParametrosDeReescritura:
+    """``QUERY_REWRITE_ENABLED``, ``_MAX_ITERATIONS`` y ``_DEADLINE_MS`` de la configuración (RN-22)."""
+    return ParametrosDeReescritura(
+        habilitada=settings.query_rewrite_enabled,
+        max_iteraciones=settings.query_rewrite_max_iterations,
+        plazo_ms=settings.query_rewrite_deadline_ms,
+    )
+
+
+def crear_reescritor_local(
+    settings: Settings, envolver_cliente: EnvolverCliente | None = None
+) -> ReescritorDeConsultaLocal:
+    """Reescritura de la consulta con el LLM nativo local (RN-12); sin adapter de nube ni *fallback*."""
+    return ReescritorDeConsultaLocal(
+        _cliente_llm_local(settings, envolver_cliente),
+        max_terminos=settings.query_rewrite_max_terms,
+        max_tokens_de_salida=settings.query_rewrite_max_output_tokens,
     )

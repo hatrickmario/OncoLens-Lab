@@ -41,3 +41,8 @@ def _items_de(archivo: Path) -> list[dict[str, Any]]:
         ]
     except (OSError, ValueError, KeyError, TypeError):
         raise CatalogoNoDisponible("sinonimos.json no está disponible") from None
+
+
+def cargar_terminos_del_catalogo(catalogos: Path, tipos_de_cancer: Sequence[str]) -> frozenset[str]:
+    """Los términos canónicos y sinónimos del catálogo montado, normalizados: lo único que la reescritura puede agregar (RN-27)."""
+    return frozenset(cargar_sinonimos(catalogos, tipos_de_cancer))
