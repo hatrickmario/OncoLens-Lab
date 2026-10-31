@@ -16,24 +16,26 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 
 from app.application.aplicabilidad import AplicabilidadDeFuente
 from app.application.chunk_citable import ChunkCitable
-from app.application.errores import ErrorDeAplicacion, LlmLocalNoDisponibleError
-from app.application.ports import Clock, PoblacionTask, ProhibitedTermsChecker
+from app.application.ports import Clock, FalloDelLlm, PoblacionTask, ProhibitedTermsChecker
 from app.application.verificacion_de_soporte import VerificadorDeSoporte
 from app.domain.aplicabilidad_tipos import CriterioEvaluado
 from app.domain.applicability_text import (
+    CausaDeRespaldo,
     ChunkDeFuente,
     FuenteParaProponer,
     MotivoDeRechazo,
     PlanDePropuestas,
     PropuestaDePoblacion,
+    RespaldoFallido,
     aceptar_propuestas,
     con_valor_textual,
     criterios_pendientes,
+    degradar_a_respaldo_fallido,
     pares_para_el_nli,
     planificar_propuestas,
 )
@@ -50,6 +52,16 @@ class ParametrosDelRespaldo:
     plazo_ms: int
     concurrencia: int
     version_del_prompt: str
+
+
+@dataclass(frozen=True)
+class _ResultadoDelRespaldo:
+    """Lo que una llamada del respaldo entregó: sus propuestas o la causa por la que falló (RN-26)."""
+
+    external_id: str
+    criterio: str
+    propuestas: tuple[PropuestaDePoblacion, ...] = ()
+    fallo: RespaldoFallido | None = None
 
 
 @dataclass(frozen=True)
@@ -94,48 +106,55 @@ class AplicabilidadTextual:
                 fuentes
             )  # nada pendiente: el LLM no se invoca (US-122 AC-6, RN-02)
         inicio = self._reloj.ahora()
-        propuestas = await self._pedir_propuestas(trace_id, a_proponer)
+        resultados = await self._pedir_respaldo(a_proponer)
+        propuestas = tuple(p for r in resultados for p in r.propuestas)
         plan = planificar_propuestas(propuestas, a_proponer, self._terminos.reglas_coincidentes)
         soportadas = await self._soporte.pares_soportados(trace_id, pares_para_el_nli(plan))
         resultado = aceptar_propuestas(plan, soportadas)
         recuentos = recuentos_de_propuestas(a_proponer, propuestas, plan, resultado.aceptadas)
         self._registrar(trace_id, recuentos, inicio)
+        con_valores = _con_valores_aceptados(fuentes, criterios, resultado.aceptadas)
         return AplicabilidadCompleta(
-            _con_valores_aceptados(fuentes, criterios, resultado.aceptadas),
+            _con_respaldo_fallido(con_valores, [r for r in resultados if r.fallo is not None]),
             resultado.omitidas,
             invoco_al_llm=True,
         )
 
-    async def _pedir_propuestas(
-        self, trace_id: str, fuentes: Sequence[FuenteParaProponer]
-    ) -> tuple[PropuestaDePoblacion, ...]:
+    async def _pedir_respaldo(
+        self, fuentes: Sequence[FuenteParaProponer]
+    ) -> tuple[_ResultadoDelRespaldo, ...]:
         """Una llamada por fuente y criterio pendiente, con a lo sumo ``concurrencia`` simultáneas (RN-22)."""
         semaforo = asyncio.Semaphore(self._parametros.concurrencia)
-        llamadas = [
-            self._proponer_un_criterio(
-                semaforo, FuenteParaProponer(fuente.external_id, (criterio,), fuente.chunks)
+        return tuple(
+            await asyncio.gather(
+                *(
+                    self._respaldar_un_criterio(
+                        semaforo, FuenteParaProponer(fuente.external_id, (criterio,), fuente.chunks)
+                    )
+                    for fuente in fuentes
+                    for criterio in fuente.criterios
+                )
             )
-            for fuente in fuentes
-            for criterio in fuente.criterios
-        ]
-        try:
-            resultados = await asyncio.gather(*llamadas)
-        except ErrorDeAplicacion:
-            raise
-        except Exception as error:  # noqa: BLE001 - todo fallo del proponente es "modelo local no disponible"
-            logger.warning(
-                "event=aplicabilidad_textual_fallo error=%s traceId=%s",
-                type(error).__name__,
-                trace_id,
-            )
-            raise LlmLocalNoDisponibleError() from None
-        return tuple(propuesta for propuestas in resultados for propuesta in propuestas)
+        )
 
-    async def _proponer_un_criterio(
+    async def _respaldar_un_criterio(
         self, semaforo: asyncio.Semaphore, fuente: FuenteParaProponer
-    ) -> tuple[PropuestaDePoblacion, ...]:
+    ) -> _ResultadoDelRespaldo:
+        """El respaldo es secundario (RN-26): un fallo, un plazo vencido o el LLM caído degradan SOLO este criterio y nunca
+        son ``LOCAL_LLM_UNAVAILABLE``. Cualquier otra excepción es un defecto y sube."""
+        (criterio,) = fuente.criterios
+        resultado = _ResultadoDelRespaldo(fuente.external_id, criterio.clave)
         async with semaforo:
-            return tuple(await self._proponente.proponer(fuente))
+            try:
+                async with asyncio.timeout(self._parametros.plazo_ms / 1000):
+                    propuestas = tuple(await self._proponente.proponer(fuente))
+            except TimeoutError:
+                return replace(resultado, fallo=RespaldoFallido(CausaDeRespaldo.plazo))
+            except FalloDelLlm:
+                return replace(resultado, fallo=RespaldoFallido(CausaDeRespaldo.caido))
+            except RespaldoFallido as fallo:
+                return replace(resultado, fallo=fallo)
+        return replace(resultado, propuestas=propuestas)
 
     def _registrar(
         self,
@@ -215,5 +234,23 @@ def _con_valores_aceptados(
 
     return tuple(
         fuente.con_criterios(tuple(evaluado(fuente, c) for c in fuente.criterios))
+        for fuente in fuentes
+    )
+
+
+def _con_respaldo_fallido(
+    fuentes: Sequence[AplicabilidadDeFuente], fallidos: Sequence[_ResultadoDelRespaldo]
+) -> tuple[AplicabilidadDeFuente, ...]:
+    """Los criterios cuyo respaldo falló, ``desconocido`` con ``respaldo_fallido``; el resto de la fuente no cambia."""
+    marcados = {(r.external_id, r.criterio) for r in fallidos}
+    if not marcados:
+        return tuple(fuentes)
+    return tuple(
+        fuente.con_criterios(
+            tuple(
+                degradar_a_respaldo_fallido(c) if (fuente.external_id, c.clave) in marcados else c
+                for c in fuente.criterios
+            )
+        )
         for fuente in fuentes
     )

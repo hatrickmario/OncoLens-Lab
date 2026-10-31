@@ -4,6 +4,7 @@ import json
 import logging
 
 from app.application.corpus_metadata.poblacion_puertos import RespuestaDelLlm
+from app.application.ports import FalloDelLlm
 from tests.support.aplicabilidad import TEXTO_DE_CH_A2_1, entorno_de_aplicabilidad, solicitud_a_m1
 from tests.support.nli_falso import IMPLICA, NliFalso
 from tests.support.proponente_falso import ProponenteFalso
@@ -31,17 +32,17 @@ def test_rag_query_no_invoca_al_proponente_ni_al_nli_cuando_ningun_chunk_supera_
     assert (proponente.invocaciones, nli.invocaciones) == (0, 0)
 
 
-def test_rag_query_responde_503_local_llm_unavailable_sin_aplicabilidad_cuando_el_proponente_falla():
+def test_rag_query_responde_200_con_respaldo_fallido_y_sin_el_detalle_del_error_cuando_el_proponente_cae():
     nli = NliFalso(por_defecto=IMPLICA)
-    proponente = ProponenteFalso("APL-OK", error=RuntimeError("SENTINELA-LLM"))
+    proponente = ProponenteFalso("APL-OK", error=FalloDelLlm("SENTINELA-LLM"))
 
     respuesta = _entorno(proponente, nli, SOLO_DOC_A2).consultar(solicitud_a_m1())
 
-    assert respuesta.status_code == 503
-    cuerpo = respuesta.json()
-    assert cuerpo["error"] == "LOCAL_LLM_UNAVAILABLE"
-    assert not {"applicability", "evidenceOptions"} & set(cuerpo)
-    assert "SENTINELA-LLM" not in respuesta.text
+    assert respuesta.status_code == 200
+    (fuente,) = respuesta.json()["applicability"]
+    her2 = next(c for c in fuente["criteria"] if c["criterion"] == "estado_her2")
+    assert (her2["status"], her2["unknownReason"]) == ("desconocido", "respaldo_fallido")
+    assert "SENTINELA-LLM" not in respuesta.text and "LOCAL_LLM_UNAVAILABLE" not in respuesta.text
     assert nli.invocaciones == 0
 
 

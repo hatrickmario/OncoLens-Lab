@@ -17,6 +17,7 @@ from app.domain.applicability_text import (
     aceptar_propuestas,
     con_valor_textual,
     criterios_pendientes,
+    degradar_a_respaldo_fallido,
     normalizar_valor_al_catalogo,
     pares_para_el_nli,
     planificar_propuestas,
@@ -114,6 +115,51 @@ def test_criterios_pendientes_excluye_el_criterio_con_destino_no_resoluble():
     pendientes = pendientes_de("doc-a2", evaluados)
 
     assert "ecog" not in [p.clave for p in pendientes]
+
+
+# --- respaldo fallido (US-244, RN-26) ----------------------------------------------------------------------------------
+
+
+def _coincide() -> CriterioEvaluado:
+    return CriterioEvaluado(
+        "estado_her2",
+        "3+ (IHQ)",
+        "HER2 positivo",
+        "coincide",
+        None,
+        True,
+        chunk_citado_id="ch-a2-1",
+        aviso="sin_verificar",
+    )
+
+
+def test_degradar_a_respaldo_fallido_deja_desconocido_sin_valor_ni_cita_cuando_el_paciente_tiene_el_dato():
+    degradado = degradar_a_respaldo_fallido(_coincide())
+
+    assert (degradado.estado, degradado.causa) == ("desconocido", "respaldo_fallido")
+    assert (degradado.valor_estudio, degradado.chunk_citado_id, degradado.valores_del_estudio) == (
+        None,
+        None,
+        (),
+    )
+
+
+def test_degradar_a_respaldo_fallido_conserva_el_valor_del_paciente_su_aviso_y_si_es_excluyente():
+    degradado = degradar_a_respaldo_fallido(_coincide())
+
+    assert (degradado.valor_paciente, degradado.aviso, degradado.es_excluyente) == (
+        "3+ (IHQ)",
+        "sin_verificar",
+        True,
+    )
+
+
+def test_degradar_a_respaldo_fallido_deja_falta_en_paciente_cuando_el_paciente_no_tiene_el_dato():
+    sin_dato = CriterioEvaluado(
+        "estado_her2", None, None, "desconocido", "falta_en_paciente", False, aviso="faltante"
+    )
+
+    assert degradar_a_respaldo_fallido(sin_dato) == sin_dato
 
 
 # --- planificar propuestas: cita y lenguaje (RN-01, RN-04, RN-23) ------------------------------------------------------

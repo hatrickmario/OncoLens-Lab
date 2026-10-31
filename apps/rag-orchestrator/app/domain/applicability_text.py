@@ -134,8 +134,22 @@ def _tiene_la_marca_pendiente(
 
 
 def degradar_a_respaldo_fallido(criterio: CriterioEvaluado) -> CriterioEvaluado:
-    """El criterio ``desconocido`` con ``respaldo_fallido`` (RN-26); si falta el dato del paciente gana ``falta_en_paciente``."""
-    raise NotImplementedError("US-244 AC-2")
+    """El criterio ``desconocido`` con ``respaldo_fallido`` (RN-26); si falta el dato del paciente gana ``falta_en_paciente``.
+
+    Cubre las cuatro causas (bucle, truncado, plazo, LLM caído) por igual: ninguna deja valor, cita ni motivo del estudio.
+    El valor del paciente y el aviso de su dato se conservan (ADR-34)."""
+    if criterio.valor_paciente is None:
+        return criterio
+    return replace(
+        criterio,
+        estado="desconocido",
+        causa="respaldo_fallido",
+        valor_estudio=None,
+        chunk_citado_id=None,
+        motivo_parcial=None,
+        motivo_interno=None,
+        valores_del_estudio=(),
+    )
 
 
 # --- validar lo que propone el LLM (D3, RN-01, RN-04, RN-23) -------------------------------------------------------
