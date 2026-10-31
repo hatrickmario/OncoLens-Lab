@@ -223,7 +223,9 @@ describe('EvidencePanel', () => {
     expect(seccion.getByText(descartada.option)).toBeTruthy();
     expect(seccion.getByText(evidence.discardReason.afirmacion_sin_soporte)).toBeTruthy();
     const afirmacion = seccion.getByText(descartada.unsupportedClaims[0]!);
-    expect(afirmacion.parentElement?.textContent).toContain(evidence.discarded.sinSoporte);
+    expect(afirmacion.parentElement?.textContent).toContain(
+      evidence.discarded.afirmacionNoVerificada,
+    );
     expect(seccion.queryAllByRole('button')).toEqual([]);
     expect(seccion.queryAllByRole('link')).toEqual([]);
   });
