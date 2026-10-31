@@ -1,0 +1,16 @@
+# Partición SINTÉTICA del fixture FX-T5a-a para probar la comparación híbrida vs densa con adapters falsos (US-133, ADR-45 P2).
+# No es la partición de OL-06 (`data/eval/ol06-particion-v1`, 75 preguntas del golden adr39-mini): solo reparte los 6 ids
+# del fixture para que la guarda de partición se ejercite en la CI. Solo ids; ningún texto de pregunta.
+clase: sintetico
+version: '1'
+sal: fx-t5a-a-fake
+golden_sha256: c17152fe63a98412c1792ef8047ccc283f0455527f589a401a642ed9e853a66f
+total_preguntas: 6
+resumen:
+  desarrollo: 5
+  validacion: 1
+  prueba: 0
+asignacion:
+  desarrollo: [FX-01, FX-02, FX-03, FX-04, FX-05]
+  validacion: [FX-06]
+  prueba: []
