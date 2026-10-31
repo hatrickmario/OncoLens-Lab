@@ -90,6 +90,13 @@ def esquema_de_generacion(claims_min: int, claims_max: int) -> dict[str, Any]:
     return esquema
 
 
+def _tipos_de_error(error: ValidationError | PydanticCustomError) -> list[str]:
+    """Solo el tipo de cada error de validación (p. ej. ``principal_duplicada``), nunca el contenido generado."""
+    if isinstance(error, ValidationError):
+        return sorted({e["type"] for e in error.errors()})
+    return [error.type]
+
+
 class LlmEvidenceGenerator:
     """Implementa ``EvidenceGenerator`` sobre el puerto ``LlmClient``."""
 
@@ -188,11 +195,7 @@ class LlmEvidenceGenerator:
             salida = GenerationOutput.model_validate_json(crudo)
             self._exigir_cantidad_de_afirmaciones(salida)
         except (ValidationError, PydanticCustomError) as error:
-            tipos = (
-                sorted({e["type"] for e in error.errors()})
-                if isinstance(error, ValidationError)
-                else [error.type]
-            )
+            tipos = _tipos_de_error(error)
             # Solo el tipo de cada error y la longitud: nunca el contenido generado a partir del corpus (RN-14).
             logger.warning(
                 "event=generacion_salida_invalida traceId=%s caracteres=%d errores=%s",

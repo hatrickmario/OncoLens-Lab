@@ -126,6 +126,11 @@ def literal_de_retiro(idioma: str) -> str:
     return RETIRO_EN if idioma == "en" else RETIRO_ES
 
 
+def literal_de_texto_no_mostrado(idioma: str) -> str:
+    """Lo que ocupa el lugar de una afirmación fuera de forma (alias, longitud, artefactos o modal normativo): su texto nunca se expone."""
+    return NO_MOSTRADO_EN if idioma == "en" else NO_MOSTRADO_ES
+
+
 def soporta(resultado: ResultadoNli, umbral: float) -> bool:
     """Soporte: la clase más probable es ``entailment`` Y su probabilidad alcanza el umbral (RN-01, RN-22, D2)."""
     return resultado.label == "entailment" and resultado.p_entailment >= umbral
@@ -307,14 +312,24 @@ def verificar_soporte(
     )
 
 
-def _estado_de(afirmacion: Afirmacion, veredictos: Mapping[Afirmacion, bool]) -> EstadoDeAfirmacion:
-    """Orden de validación: lenguaje de la lista → forma → NLI (el NLI solo juzga lo que llegó en forma)."""
-    if afirmacion.reglas:
+def _estado_por_lenguaje_y_forma(
+    reglas: tuple[str, ...], forma: FormaDeAfirmacion
+) -> EstadoDeAfirmacion:
+    """Orden de validación previo al NLI: lenguaje de la lista → forma. ``soportada`` solo significa «llega en forma»."""
+    if reglas:
         return EstadoDeAfirmacion.lenguaje_no_permitido
-    if afirmacion.forma is FormaDeAfirmacion.modal_normativo:
+    if forma is FormaDeAfirmacion.modal_normativo:
         return EstadoDeAfirmacion.modal_normativo
-    if afirmacion.forma is not FormaDeAfirmacion.valida:
+    if forma is not FormaDeAfirmacion.valida:
         return EstadoDeAfirmacion.fuera_de_forma
+    return EstadoDeAfirmacion.soportada
+
+
+def _estado_de(afirmacion: Afirmacion, veredictos: Mapping[Afirmacion, bool]) -> EstadoDeAfirmacion:
+    """Lenguaje de la lista → forma → NLI (el NLI solo juzga lo que llegó en forma)."""
+    estado = _estado_por_lenguaje_y_forma(afirmacion.reglas, afirmacion.forma)
+    if estado is not EstadoDeAfirmacion.soportada:
+        return estado
     return (
         EstadoDeAfirmacion.soportada
         if veredictos.get(afirmacion, False)
@@ -351,47 +366,47 @@ def _resolver_por_papel(
     return replace(planificada.aceptada, opcion=opcion), len(decision.omitidas)
 
 
+def _texto_a_mostrar(texto: str, estado: EstadoDeAfirmacion, idioma: str) -> str:
+    """El texto de una afirmación solo sale si no incumple la lista ni llegó fuera de forma (RN-23); si no, un literal."""
+    if estado is EstadoDeAfirmacion.lenguaje_no_permitido:
+        return literal_de_retiro(idioma)
+    if estado in (EstadoDeAfirmacion.modal_normativo, EstadoDeAfirmacion.fuera_de_forma):
+        return literal_de_texto_no_mostrado(idioma)
+    return texto
+
+
+def _causa_el_descarte(papel: PapelDeAfirmacion, estado: EstadoDeAfirmacion) -> bool:
+    """Lenguaje de la lista y modal normativo descartan en cualquier papel; el resto, solo la principal y la salvedad."""
+    return estado in (
+        EstadoDeAfirmacion.lenguaje_no_permitido,
+        EstadoDeAfirmacion.modal_normativo,
+    ) or (papel is not PapelDeAfirmacion.secundaria and estado is not EstadoDeAfirmacion.soportada)
+
+
 def _descartar_por_papel(
     planificada: OpcionPlanificada,
     estados: Sequence[tuple[PapelDeAfirmacion, EstadoDeAfirmacion]],
     decision: DecisionPorPapel,
     idioma: str,
 ) -> OpcionSinSoporte:
-    """``unsupportedClaims`` lista solo las causas del descarte: el texto de la que no se respalda, y un literal (nunca el
-    texto) para lo que incumple la lista (RN-23) o llegó en forma de modal normativo. Una secundaria sin respaldo no es
-    causa y no se muestra. La justificación de la descartada nunca expone una principal retirada u oculta."""
+    """``unsupportedClaims`` lista solo las causas del descarte; una secundaria sin respaldo no es causa y no se muestra.
+    La justificación de la descartada nunca expone una principal retirada u oculta."""
     origen = planificada.aceptada.opcion
-    literal = literal_de_retiro(idioma)
-    no_mostrado = NO_MOSTRADO_EN if idioma == "en" else NO_MOSTRADO_ES
-    causas: list[str] = []
-    for afirmacion, (papel, estado) in zip(planificada.afirmaciones, estados, strict=True):
-        if estado is EstadoDeAfirmacion.lenguaje_no_permitido:
-            causas.append(literal)
-        elif estado is EstadoDeAfirmacion.modal_normativo:
-            causas.append(no_mostrado)
-        elif (
-            papel is not PapelDeAfirmacion.secundaria and estado is not EstadoDeAfirmacion.soportada
-        ):
-            causas.append(
-                no_mostrado if estado is EstadoDeAfirmacion.fuera_de_forma else afirmacion.texto
-            )
     retirada = bool(planificada.option.reglas)
+    visibles = [
+        (papel, estado, _texto_a_mostrar(afirmacion.texto, estado, idioma))
+        for afirmacion, (papel, estado) in zip(planificada.afirmaciones, estados, strict=True)
+    ]
+    causas = [texto for papel, estado, texto in visibles if _causa_el_descarte(papel, estado)]
     if retirada:
-        causas.insert(0, literal)
-    principal, estado_principal = next(
-        (a, e)
-        for a, (p, e) in zip(planificada.afirmaciones, estados, strict=True)
-        if p is PapelDeAfirmacion.principal
+        causas.insert(0, literal_de_retiro(idioma))
+    principal_visible = next(
+        texto for papel, _, texto in visibles if papel is PapelDeAfirmacion.principal
     )
-    texto_visible = {
-        EstadoDeAfirmacion.lenguaje_no_permitido: literal,
-        EstadoDeAfirmacion.modal_normativo: no_mostrado,
-        EstadoDeAfirmacion.fuera_de_forma: no_mostrado,
-    }.get(estado_principal, principal.texto)
     return OpcionSinSoporte(
         OpcionGenerada(
-            literal if retirada else origen.option,
-            marco_de_atribucion(idioma) + texto_visible,
+            literal_de_retiro(idioma) if retirada else origen.option,
+            marco_de_atribucion(idioma) + principal_visible,
             origen.chunk_ids_citados,
         ),
         tuple(causas),
@@ -506,13 +521,10 @@ def _retirar_de_la_principal(
     reglas = tuple(buscar_terminos(principal.texto, "rationale"))
     if reglas:
         retiros.append(RetiroDeLenguaje("rationale", reglas, PapelDeAfirmacion.principal))
-    forma = validar_forma_de_afirmacion(principal.texto, max_palabras)
-    if reglas:
-        visible = literal
-    elif forma is not FormaDeAfirmacion.valida:
-        visible = NO_MOSTRADO_EN if idioma == "en" else NO_MOSTRADO_ES
-    else:
-        visible = principal.texto
+    estado = _estado_por_lenguaje_y_forma(
+        reglas, validar_forma_de_afirmacion(principal.texto, max_palabras)
+    )
+    visible = _texto_a_mostrar(principal.texto, estado, idioma)
     return (
         OpcionGenerada(
             literal if reglas_de_la_opcion else opcion.option,
