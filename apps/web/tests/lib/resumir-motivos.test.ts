@@ -31,4 +31,17 @@ describe('resumirMotivos', () => {
       { motivo: 'sin_citas', n: 1 },
     ]);
   });
+
+  it('ordena lenguaje_no_permitido después de solo_soportada_por_analisis_previo cuando llegan juntos [US-245 AC-7]', () => {
+    const resumen = resumirMotivos([
+      descartada('lenguaje_no_permitido'),
+      descartada('solo_soportada_por_analisis_previo'),
+      descartada('afirmacion_sin_soporte'),
+    ]);
+    expect(resumen.map((m) => m.motivo)).toEqual([
+      'afirmacion_sin_soporte',
+      'solo_soportada_por_analisis_previo',
+      'lenguaje_no_permitido',
+    ]);
+  });
 });

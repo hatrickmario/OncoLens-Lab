@@ -12,6 +12,7 @@ from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
 from app.application.aplicabilidad_textual import ParametrosDelRespaldo
+from app.application.ports import SinTerminosLexicos
 from app.application.rag_orchestrator_service import ParametrosDeRecuperacion
 from app.schemas.generated.models import LlmProvider
 from app.bootstrap import ConfiguracionDeRecuperacionIncompleta, crear_app
@@ -73,6 +74,7 @@ def test_los_valores_iniciales_de_la_fusion_son_los_mismos_en_settings_y_en_los_
         llm_model="m",
         nli_entailment_threshold=0.7,
         tipos_habilitados=(),
+        claim_max_words=20,
         respaldo=ParametrosDelRespaldo(plazo_ms=1, concurrencia=1, version_del_prompt="p"),
     )
 
@@ -112,6 +114,17 @@ def _cliente(puertos, **cambios: object) -> TestClient:
         settings, trace_ids=GeneradorTraceFijo(), clock=RelojFijo(), recuperacion=puertos
     )
     return TestClient(app, raise_server_exceptions=False, headers=con_token_valido(par_de_sesion()))
+
+
+def test_una_pregunta_sin_terminos_lexicos_da_503_y_el_fake_lanza_el_error_especifico_del_puerto():
+    puertos = _puertos_hibridos()
+    cliente = _cliente(puertos, retrieval_mode="hibrida")
+
+    with pytest.raises(SinTerminosLexicos):
+        puertos.embedder_sparse.embeber_sparse("texto sin términos conocidos")
+    respuesta = cliente.post("/rag/query", json=solicitud_de("pregunta sin términos conocidos"))
+
+    assert respuesta.status_code == 503
 
 
 def test_el_arranque_cablea_el_modo_hibrido_de_la_configuracion_hasta_la_respuesta():

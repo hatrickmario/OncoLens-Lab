@@ -3,6 +3,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import deadlineVencido from '../../../../../contracts/examples/error-deadline-vencido.json' with { type: 'json' };
 import errorInterno from '../../../../../contracts/examples/error-interno-analisis.json' with { type: 'json' };
 import llmLocalNoDisponible from '../../../../../contracts/examples/error-llm-local-no-disponible.json' with { type: 'json' };
+import errorSalidaLlmInvalida from '../../../../../contracts/examples/error-salida-llm-invalida.json' with { type: 'json' };
 import errorServicioIa from '../../../../../contracts/examples/error-servicio-ia.json' with { type: 'json' };
 import tipoCancerNoRegistrado from '../../../../../contracts/examples/error-tipo-cancer-no-registrado.json' with { type: 'json' };
 import ragColaLlena from '../../../../../contracts/examples/rag-cola-inferencia-llena.json' with { type: 'json' };
@@ -10,6 +11,7 @@ import ragCatalogo from '../../../../../contracts/examples/rag-catalog-version-m
 import ragDeadline from '../../../../../contracts/examples/rag-deadline-vencido.json' with { type: 'json' };
 import ragConEvidencia from '../../../../../contracts/examples/rag-query-con-evidencia.json' with { type: 'json' };
 import ragSinEvidencia from '../../../../../contracts/examples/rag-query-sin-evidencia.json' with { type: 'json' };
+import ragSalidaLlmInvalida from '../../../../../contracts/examples/rag-salida-llm-invalida.json' with { type: 'json' };
 import ragLlmLocal from '../../../../../contracts/examples/rag-llm-local-no-disponible.json' with { type: 'json' };
 import ragRecuperacion from '../../../../../contracts/examples/rag-recuperacion-no-disponible.json' with { type: 'json' };
 import ragTipoCancer from '../../../../../contracts/examples/rag-tipo-cancer-no-registrado.json' with { type: 'json' };
@@ -154,6 +156,21 @@ describe('una sola tabla de mapeo de fallos de rag-orchestrator', () => {
       error: 'LOCAL_LLM_UNAVAILABLE',
       message: llmLocalNoDisponible.message,
     });
+  });
+
+  it('responde 503 LLM_OUTPUT_INVALID sin registro y nunca LOCAL_LLM_UNAVAILABLE cuando rag-orchestrator responde 503 LLM_OUTPUT_INVALID [US-245 AC-1]', async () => {
+    responderJson(503, { ...ragSalidaLlmInvalida, message: TEXTO_INTERNO });
+    const { app } = await gateway('req_Mapeo0000010');
+
+    const respuesta = await solicitar(app);
+
+    await afirmarFallo(respuesta, 'req_Mapeo0000010', {
+      status: 503,
+      error: 'LLM_OUTPUT_INVALID',
+      message: errorSalidaLlmInvalida.message,
+    });
+    expect(respuesta.body.error).not.toBe('LOCAL_LLM_UNAVAILABLE');
+    expect(JSON.stringify(respuesta.body)).not.toContain(TEXTO_INTERNO);
   });
 
   it('responde 502 sin eco ni registro cuando rag-orchestrator responde 503 RETRIEVAL_UNAVAILABLE [US-053 AC-4]', async () => {

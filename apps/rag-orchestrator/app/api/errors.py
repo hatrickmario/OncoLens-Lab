@@ -17,6 +17,7 @@ from fastapi.responses import JSONResponse
 from app.api.trace import resolver_trace_id
 from app.application.errores import (
     LlmLocalNoDisponibleError,
+    LlmSalidaInvalidaError,
     NliNoDisponibleError,
     RecuperacionNoDisponibleError,
     TipoCancerNoRegistradoError,
@@ -31,6 +32,7 @@ from app.schemas.generated.models import (
     ErrorLlmLocalNoDisponible,
     ErrorNliNoDisponible,
     ErrorRecuperacionNoDisponible,
+    ErrorSalidaLlmInvalida,
     ErrorTipoCancerNoRegistrado,
     ErrorTipoNoHabilitado,
     ErrorTokenServicioInvalido,
@@ -81,6 +83,21 @@ def registrar_manejadores_de_error(app: FastAPI, trace_ids: TraceIdGenerator) ->
         cuerpo = ErrorLlmLocalNoDisponible(
             error="LOCAL_LLM_UNAVAILABLE",
             message="El modelo local no está disponible.",
+            traceId=trace_id,
+        )
+        return JSONResponse(status_code=503, content=cuerpo.model_dump())
+
+    @app.exception_handler(LlmSalidaInvalidaError)
+    async def salida_del_llm_invalida(
+        request: Request, error: LlmSalidaInvalidaError
+    ) -> JSONResponse:
+        """503 LLM_OUTPUT_INVALID: el modelo respondió, pero su salida no se pudo validar. Mensaje fijo, sin eco del texto
+        generado ni detalle interno; el tipo del error de validación ya lo registró el generador (Q1)."""
+        trace_id = resolver_trace_id(request, trace_ids)
+        logger.warning("event=llm_output_invalid traceId=%s", trace_id)
+        cuerpo = ErrorSalidaLlmInvalida(
+            error="LLM_OUTPUT_INVALID",
+            message="El modelo local devolvió una respuesta que no se pudo validar.",
             traceId=trace_id,
         )
         return JSONResponse(status_code=503, content=cuerpo.model_dump())

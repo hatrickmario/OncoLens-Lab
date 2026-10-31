@@ -38,11 +38,13 @@ class VerificadorDeSoporte:
         terminos: ProhibitedTermsChecker,
         umbral: float,
         reloj: Clock,
+        max_palabras_por_afirmacion: int,
     ) -> None:
         self._clasificador = clasificador
         self._terminos = terminos
         self._umbral = umbral
         self._reloj = reloj
+        self._max_palabras = max_palabras_por_afirmacion
 
     @property
     def nli_model(self) -> str:
@@ -60,7 +62,11 @@ class VerificadorDeSoporte:
         """Etapa SOPORTE: va antes del recorte a ``maxOptions``; nunca se recortan candidatas sin verificar."""
         inicio = self._reloj.ahora()
         plan = planificar_soporte(
-            aceptadas, limitaciones_propuestas, textos_de_chunks, self._terminos.reglas_coincidentes
+            aceptadas,
+            limitaciones_propuestas,
+            textos_de_chunks,
+            self._terminos.reglas_coincidentes,
+            max_palabras=self._max_palabras,
         )
         self._registrar_retiros(trace_id, plan.retiros)
         pares = pares_a_verificar(plan)
@@ -86,7 +92,7 @@ class VerificadorDeSoporte:
         saneadas: list[OpcionDescartada] = []
         for descartada in descartadas:
             opcion, retiros = retirar_texto_prohibido(
-                descartada.opcion, self._terminos.reglas_coincidentes, idioma
+                descartada.opcion, self._terminos.reglas_coincidentes, idioma, self._max_palabras
             )
             self._registrar_retiros(trace_id, retiros)
             saneadas.append(OpcionDescartada(opcion, descartada.motivo))
@@ -122,9 +128,10 @@ class VerificadorDeSoporte:
         for retiro in retiros:
             for regla in retiro.reglas:
                 logger.info(
-                    "event=fragmento_retirado_lenguaje traceId=%s campo=%s ruleId=%s languagePolicyVersion=%s",
+                    "event=fragmento_retirado_lenguaje traceId=%s campo=%s papel=%s ruleId=%s languagePolicyVersion=%s",
                     trace_id,
                     retiro.campo,
+                    retiro.papel or "n_a",
                     regla,
                     self._terminos.version,
                 )

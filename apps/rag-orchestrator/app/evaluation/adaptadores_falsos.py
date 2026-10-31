@@ -8,7 +8,7 @@ from __future__ import annotations
 import re
 import unicodedata
 import zlib
-from collections.abc import Collection, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from dataclasses import replace
 from datetime import date
 from pathlib import Path
@@ -18,7 +18,9 @@ import yaml
 from app.application.ports import (
     CandidatoParaReranker,
     ChunkEncontrado,
+    ChunkEncontradoSparse,
     CoberturaDePoblacion,
+    SinTerminosLexicos,
     EvidenciaGenerada,
     ReleaseDelCorpus,
     ResultadoDeRecuperacion,
@@ -89,6 +91,54 @@ class BuscadorEnMemoria:
         return [
             ChunkEncontrado(c.id, c.documento, c.texto, similitud)
             for similitud, c in candidatos[:limit]
+        ]
+
+
+class CodificadorSparseLexico:
+    """``QuerySparseEncoder`` falso (US-133): un término por palabra de ``tokens`` con peso 1.0 y un índice estable.
+
+    Cumple el contrato del real (LSP): un texto sin ningún término es un ``SinTerminosLexicos``, nunca un vector vacío.
+    """
+
+    def vector_de(self, texto: str) -> dict[int, float]:
+        """El vector del texto; vacío si no hay términos (solo los pasajes del corpus pueden quedar así)."""
+        return {zlib.crc32(palabra.encode()): 1.0 for palabra in sorted(tokens(texto))}
+
+    def embeber_sparse(self, texto: str) -> Mapping[int, float]:
+        vector = self.vector_de(texto)
+        if not vector:
+            raise SinTerminosLexicos("sparse: el texto no tiene ningún término con peso")
+        return vector
+
+
+class BuscadorSparseEnMemoria:
+    """``SparseChunkSearch`` sobre el corpus del dataset: producto interno de los vectores y el mismo filtro que Milvus."""
+
+    def __init__(self, dataset: DatasetSuite, vectores: Sequence[Mapping[int, float]]) -> None:
+        """``vectores``: el vector *sparse* de cada chunk de ``dataset.chunks``, en el mismo orden (fake o BGE-M3 real)."""
+        cancer = {d.id: d.cancer for d in dataset.documentos}
+        self._chunks = [
+            (c, cancer[c.documento], v) for c, v in zip(dataset.chunks, vectores, strict=True)
+        ]
+
+    def search_sparse(
+        self, vector: Mapping[int, float], limit: int, filtro: str | None = None
+    ) -> list[ChunkEncontradoSparse]:
+        if not vector:  # el contrato del real: nunca llega un vector vacío a la búsqueda
+            raise ValueError("el vector sparse de la consulta no puede estar vacío")
+        filtro = "is_current == true" if filtro is None else filtro
+        exigir_filtro_vigente(filtro)
+        tipo = _FILTRO_TIPO.search(filtro)
+        aciertos = [
+            (sum(peso * propios.get(indice, 0.0) for indice, peso in vector.items()), c)
+            for c, cancer, propios in self._chunks
+            if tipo is None or coincide_etiqueta(cancer, tipo.group("tipo"))
+        ]
+        aciertos = [(puntaje, c) for puntaje, c in aciertos if puntaje > 0.0]
+        aciertos.sort(key=lambda par: (-par[0], par[1].id))
+        return [
+            ChunkEncontradoSparse(c.id, c.documento, c.texto, puntaje)
+            for puntaje, c in aciertos[:limit]
         ]
 
 

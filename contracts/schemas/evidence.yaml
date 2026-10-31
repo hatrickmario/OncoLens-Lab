@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — Schemas compartidos del análisis de evidencia
-  version: 1.1.0
+  version: 1.2.0
   description: >-
     Origen único de los ocho schemas que comparten clinical-api (contrato público) y
     rag-orchestrator (contrato interno): EvidenceOption, DiscardedOption, Synthesis,
@@ -381,7 +381,7 @@ components:
           type: string
         discardReason:
           type: string
-          enum: [cita_invalida, afirmacion_sin_soporte, sin_citas, solo_soportada_por_analisis_previo]
+          enum: [cita_invalida, afirmacion_sin_soporte, sin_citas, solo_soportada_por_analisis_previo, lenguaje_no_permitido]
         unsupportedClaims:
           type: array
           items:

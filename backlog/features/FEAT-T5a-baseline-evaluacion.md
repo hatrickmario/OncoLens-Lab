@@ -389,6 +389,7 @@ modelos reales antes de G-Demo y no solo con adaptadores falsos.
   cuando se evalúa la propuesta cruda y la salida mostrada, entonces las salidas prescriptivas
   mostradas son 0 y se anota cuántas propuestas crudas el filtro corrigió; incluye los casos de
   RN-23 fuera del nivel A del S2. `[ARR-03 AC-2]` `[RN-23]` (antes US-233 AC-2)
+  **Movido a US-249 (usuario, 2026-10-31, D4-01):** este AC se mide y bloquea en US-249 AC-4; US-233a conserva sus 3 pts.
 - **AC-3 (invariante · RN-12 y RN-14)** · Dado `proveedor: local`, cuando se ejecuta,
   entonces ningún request sale de la máquina (host local cerrado en código), el dataset sigue
   siendo sintético y el archivo de resultados solo contiene métricas agregadas. `[RN-12]`
@@ -416,6 +417,7 @@ modelos reales antes de G-Demo y no solo con adaptadores falsos.
   `proveedor: local`, entonces el reporte registra el RSS máximo de `rag-orchestrator`, la
   latencia p50 y p95 del NLI por hipótesis y por lote, y marca si el RSS supera el límite de
   memoria configurado para el contenedor. `[us-231b 1.11]` `[ADR47-R7]` `[S4 resp. 6]`
+  **Medición diferida a L1D-297 (usuario, 2026-10-31, D4-02):** el límite de RSS se mide en régimen estable (tras `gc`, proceso fresco, ≥ 3 repeticiones) en el MacBook de 32 GB con el stack completo; los 4489 MiB de ADR-39 no se usan como `mem_limit`.
 
 ## Contexto técnico
 Cablear en `app/evaluation/` los adaptadores reales (NLI mDeBERTa, reranker y *embeddings*

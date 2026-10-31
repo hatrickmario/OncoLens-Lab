@@ -50,7 +50,7 @@ def test_rag_query_entrega_al_runtime_el_esquema_con_el_patron_de_alias():
     _, llm, _ = _consultar("LLM-OK")
 
     (esquema,) = llm.esquemas
-    campo = esquema["$defs"]["_OpcionCruda"]["properties"]["citedFragments"]
+    campo = esquema["$defs"]["_AfirmacionCruda"]["properties"]["citations"]
     assert campo["items"]["pattern"] == PATRON_DE_ALIAS
 
 

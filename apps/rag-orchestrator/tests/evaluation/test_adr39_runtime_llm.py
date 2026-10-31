@@ -20,7 +20,14 @@ BASE = "http://runtime-local.test:11434"
 TAG = "modelo-de-prueba:1b"
 PARAMS = {"num_ctx": 8192, "temperature": 0.0, "max_output_tokens": 256, "thinking": False}
 SALIDA_VALIDA = json.dumps(
-    {"options": [{"option": "o", "rationale": "r", "citedFragments": ["C1"]}]}
+    {
+        "options": [
+            {
+                "option": "o",
+                "claims": [{"text": "r", "role": "principal", "citations": ["C1"]}],
+            }
+        ]
+    }
 )
 
 

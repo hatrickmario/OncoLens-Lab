@@ -8,6 +8,8 @@ sobre qué se verifica.
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
+from enum import StrEnum
 
 TERMINADORES = ".;?!"
 ABREVIATURAS = frozenset(
@@ -47,3 +49,20 @@ def dividir_en_afirmaciones(texto: str) -> tuple[str, ...]:
 def _termina_en_abreviatura(fragmento: str) -> bool:
     palabras = fragmento.rsplit(maxsplit=1)
     return bool(palabras) and palabras[-1].lstrip("(\"'[").lower() in ABREVIATURAS
+
+
+class PapelDeAfirmacion(StrEnum):
+    """Función de una afirmación atómica en su opción (US-245): decide qué pasa si la fuente no la respalda (RN-01)."""
+
+    principal = "principal"
+    secundaria = "secundaria"
+    salvedad = "salvedad"
+
+
+@dataclass(frozen=True)
+class AfirmacionAtomica:
+    """Una afirmación declarativa de la opción con su papel y los ``chunkId`` que cita (ya traducidos desde el alias)."""
+
+    texto: str
+    papel: PapelDeAfirmacion
+    chunk_ids: tuple[str, ...]

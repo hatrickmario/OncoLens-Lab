@@ -173,7 +173,7 @@
       "volver": "Volver a la cita"
     },
     "discarded": {
-      "titulo": "Descartadas por falta de soporte — solo para revisión",
+      "titulo": "Opciones descartadas — solo para revisión",
       "linea": "No son opciones descritas: se muestran solo para revisión.",
       "auditoria": "Registro solo para auditoría: no es contenido clínico utilizable.",
       "numero": "N.º {n}",
@@ -183,12 +183,14 @@
     },
     "discardReason": {
       "cita_invalida": "La cita no corresponde a un fragmento recuperado",
-      "afirmacion_sin_soporte": "Una afirmación no tiene soporte en la fuente o contenía lenguaje no permitido",
+      "afirmacion_sin_soporte": "Una afirmación no tiene soporte en la fuente o su formulación no se muestra",
       "sin_citas": "La opción no incluye citas a fragmentos recuperados",
-      "solo_soportada_por_analisis_previo": "Solo la respalda un análisis previo, que no es evidencia"
+      "solo_soportada_por_analisis_previo": "Solo la respalda un análisis previo, que no es evidencia",
+      "lenguaje_no_permitido": "Contenía lenguaje prescriptivo, que no se muestra"
     },
     "error": {
       "modeloNoDisponible": "El modelo local no está disponible. No se muestra ningún resultado parcial.",
+      "salidaNoValidada": "El modelo local devolvió una respuesta que no se pudo validar. Reintenta el análisis.",
       "tiempoAgotado": "El análisis superó el tiempo máximo de espera. No se muestra ningún resultado parcial.",
       "generico": "No se pudo completar el análisis. No se muestra ningún resultado parcial.",
       "limite": "Se alcanzó el límite de análisis. Puedes reintentar en {s} segundos.",

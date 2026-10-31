@@ -1,0 +1,8 @@
+# Manifiesto de la partición sintética del fixture FX-T5a-a (CI de la comparación híbrida vs densa, US-133).
+clase: sintetico
+nombre: fx-t5a-a-fake
+version: '1'
+origen: data/eval/fx-t5a-a # directorio del golden de origen, relativo a la raíz del repositorio
+archivo_golden: preguntas.yaml # el golden cuya huella guarda `golden_sha256` (por defecto `golden.yaml`)
+archivos:
+  particion: particion.yaml

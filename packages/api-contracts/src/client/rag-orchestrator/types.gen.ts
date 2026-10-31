@@ -63,7 +63,7 @@ export type EvidenceOption = {
 export type DiscardedOption = {
     option: string;
     rationale: string;
-    discardReason: 'cita_invalida' | 'afirmacion_sin_soporte' | 'sin_citas' | 'solo_soportada_por_analisis_previo';
+    discardReason: 'cita_invalida' | 'afirmacion_sin_soporte' | 'sin_citas' | 'solo_soportada_por_analisis_previo' | 'lenguaje_no_permitido';
     unsupportedClaims: Array<string>;
 };
 
@@ -666,6 +666,15 @@ export type ErrorLlmLocalNoDisponible = {
     traceId: string;
 };
 
+/**
+ * La salida del LLM no se pudo parsear o no cumple el esquema interno de afirmaciones. El message es fijo: nunca incluye detalles internos ni texto generado.
+ */
+export type ErrorSalidaLlmInvalida = {
+    error: 'LLM_OUTPUT_INVALID';
+    message: string;
+    traceId: string;
+};
+
 export type ErrorInterno = {
     error: 'ERROR_INTERNO';
     message: string;
@@ -832,9 +841,9 @@ export type RagQueryErrors = {
      */
     500: ErrorInterno;
     /**
-     * Un componente local no está disponible: LLM (LOCAL_LLM_UNAVAILABLE, también salida del LLM inválida o fuera de esquema), recuperación (RETRIEVAL_UNAVAILABLE: Milvus o embeddings) o verificador de soporte (NLI_UNAVAILABLE): falla cerrada, ninguna opción se devuelve sin validar (RN-01), sin respuesta parcial. Con datos reales solo modelos locales, sin fallback a la nube (RN-12).
+     * Un componente local no está disponible o su salida no es válida: LLM caído (LOCAL_LLM_UNAVAILABLE), salida del LLM no parseable o fuera del esquema interno de afirmaciones (LLM_OUTPUT_INVALID, sin detalles internos ni texto generado), recuperación (RETRIEVAL_UNAVAILABLE: Milvus o embeddings) o verificador de soporte (NLI_UNAVAILABLE): falla cerrada, ninguna opción se devuelve sin validar (RN-01), sin respuesta parcial. Con datos reales solo modelos locales, sin fallback a la nube (RN-12).
      */
-    503: ErrorLlmLocalNoDisponible | ErrorRecuperacionNoDisponible | ErrorNliNoDisponible;
+    503: ErrorLlmLocalNoDisponible | ErrorRecuperacionNoDisponible | ErrorNliNoDisponible | ErrorSalidaLlmInvalida;
     /**
      * Deadline vencido; la generación se aborta.
      */

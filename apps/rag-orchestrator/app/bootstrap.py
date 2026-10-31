@@ -481,6 +481,7 @@ def _parametros_de_recuperacion(settings: Settings) -> ParametrosDeRecuperacion:
         retrieval_fusion=EstrategiaDeFusion(settings.retrieval_fusion),
         rrf_k=settings.rrf_k,
         peso_sparse=settings.hybrid_sparse_weight,
+        claim_max_words=settings.claim_max_words,
         # Con modelos locales el tope sale de ADR-39 (RERANKER_MAX_PAIRS); sin él, el reranker no limita y no se recorta.
         reranker_max_pairs=settings.modelos.reranker_max_pairs if settings.modelos else None,
     )

@@ -168,11 +168,19 @@ describe('docker-compose.yml', () => {
     const variables = ['LOGIN_MAX_FAILED_ATTEMPTS', 'LOGIN_LOCKOUT_MINUTES', 'TRUST_PROXY_HOPS'];
     const sinFijar = resolver().services['clinical-api'].environment;
     const fijadas = resolver({
-      entorno: { LOGIN_MAX_FAILED_ATTEMPTS: '3', LOGIN_LOCKOUT_MINUTES: '20', TRUST_PROXY_HOPS: '2' },
+      entorno: {
+        LOGIN_MAX_FAILED_ATTEMPTS: '3',
+        LOGIN_LOCKOUT_MINUTES: '20',
+        TRUST_PROXY_HOPS: '2',
+      },
     }).services['clinical-api'].environment;
 
     for (const variable of variables) expect(sinFijar[variable]).toBe('');
-    expect([fijadas.LOGIN_MAX_FAILED_ATTEMPTS, fijadas.LOGIN_LOCKOUT_MINUTES, fijadas.TRUST_PROXY_HOPS]).toEqual(['3', '20', '2']);
+    expect([
+      fijadas.LOGIN_MAX_FAILED_ATTEMPTS,
+      fijadas.LOGIN_LOCKOUT_MINUTES,
+      fijadas.TRUST_PROXY_HOPS,
+    ]).toEqual(['3', '20', '2']);
   });
 
   it('web recibe CLINICAL_API_URL, WEB_ALLOWED_ORIGIN y WEB_UPSTREAM_TIMEOUT_MS de servidor y ninguna NEXT_PUBLIC_ [US-060 AC-5]', () => {
@@ -186,18 +194,31 @@ describe('docker-compose.yml', () => {
     expect(Object.keys(entorno).filter((nombre) => nombre.startsWith('NEXT_PUBLIC_'))).toEqual([]);
   });
 
-  it('rag-orchestrator recibe los topes de la salida del LLM con sus valores por defecto y los respeta cuando se fijan [ARR-08]', () => {
+  it('rag-orchestrator recibe los topes de la salida del LLM y de las afirmaciones con sus valores por defecto y los respeta cuando se fijan [ARR-08] [US-245]', () => {
     const porDefecto = resolver().services['rag-orchestrator'].environment;
     const fijadas = resolver({
-      entorno: { DETAILS_MAX_PARAGRAPHS: '1', LLM_FRAGMENTS_MAX_CHARS: '8000' },
+      entorno: {
+        CLAIMS_MIN_PER_OPTION: '2',
+        CLAIMS_MAX_PER_OPTION: '3',
+        CLAIM_MAX_WORDS: '15',
+        LLM_FRAGMENTS_MAX_CHARS: '8000',
+      },
     }).services['rag-orchestrator'].environment;
 
     expect(porDefecto).toMatchObject({
       LLM_MAX_OUTPUT_TOKENS: '2048',
       LLM_FRAGMENTS_MAX_CHARS: '12000',
-      DETAILS_MAX_PARAGRAPHS: '2',
+      CLAIMS_MIN_PER_OPTION: '1',
+      CLAIMS_MAX_PER_OPTION: '4',
+      CLAIM_MAX_WORDS: '20',
     });
-    expect(fijadas).toMatchObject({ DETAILS_MAX_PARAGRAPHS: '1', LLM_FRAGMENTS_MAX_CHARS: '8000' });
+    expect(porDefecto).not.toHaveProperty('DETAILS_MAX_PARAGRAPHS');
+    expect(fijadas).toMatchObject({
+      CLAIMS_MIN_PER_OPTION: '2',
+      CLAIMS_MAX_PER_OPTION: '3',
+      CLAIM_MAX_WORDS: '15',
+      LLM_FRAGMENTS_MAX_CHARS: '8000',
+    });
   });
 
   it('web recibe WEB_HOME_PATH del entorno y resuelve a vacío si no se fija', () => {

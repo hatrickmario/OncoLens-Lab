@@ -8,9 +8,9 @@ from app.domain.relevance import ChunkPuntuado
 
 
 def test_el_esquema_entregado_al_runtime_usa_el_patron_de_alias_del_dominio():
-    esquema = esquema_de_generacion(2)
+    esquema = esquema_de_generacion(1, 4)
 
-    items = esquema["$defs"]["_OpcionCruda"]["properties"]["citedFragments"]["items"]
+    items = esquema["$defs"]["_AfirmacionCruda"]["properties"]["citations"]["items"]
     assert items["pattern"] == PATRON_DE_ALIAS
 
 

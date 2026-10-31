@@ -63,7 +63,7 @@ export type EvidenceOption = {
 export type DiscardedOption = {
     option: string;
     rationale: string;
-    discardReason: 'cita_invalida' | 'afirmacion_sin_soporte' | 'sin_citas' | 'solo_soportada_por_analisis_previo';
+    discardReason: 'cita_invalida' | 'afirmacion_sin_soporte' | 'sin_citas' | 'solo_soportada_por_analisis_previo' | 'lenguaje_no_permitido';
     unsupportedClaims: Array<string>;
 };
 
@@ -855,6 +855,15 @@ export type ErrorLlmLocalNoDisponible = {
     traceId: string;
 };
 
+/**
+ * La salida del LLM local no se pudo parsear o no cumple el esquema interno. El message es fijo: nunca incluye detalles internos ni texto generado.
+ */
+export type ErrorSalidaLlmInvalida = {
+    error: 'LLM_OUTPUT_INVALID';
+    message: string;
+    traceId: string;
+};
+
 export type ErrorDesidentificacionNoDisponible = {
     error: 'DESIDENTIFICACION_NO_DISPONIBLE';
     message: string;
@@ -1364,9 +1373,9 @@ export type CreateEvidenceAnalysisErrors = {
      */
     502: ErrorServicioIa;
     /**
-     * La generación no está disponible: LLM local caído (los datos reales nunca se envían a la nube) o desidentificación no disponible (falla cerrada, RN-11; no se invoca a Backend 2).
+     * La generación no está disponible: LLM local caído (los datos reales nunca se envían a la nube), salida del LLM local no validada (LLM_OUTPUT_INVALID: no parseable o fuera del esquema; no se persiste contenido generado, RN-06) o desidentificación no disponible (falla cerrada, RN-11; no se invoca a Backend 2).
      */
-    503: ErrorLlmLocalNoDisponible | ErrorDesidentificacionNoDisponible;
+    503: ErrorLlmLocalNoDisponible | ErrorDesidentificacionNoDisponible | ErrorSalidaLlmInvalida;
     /**
      * rag-orchestrator no respondió dentro del deadline.
      */

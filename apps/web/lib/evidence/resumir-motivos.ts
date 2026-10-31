@@ -13,6 +13,7 @@ const INDICE_DE_MOTIVO: Record<Motivo, number> = {
   afirmacion_sin_soporte: 1,
   sin_citas: 2,
   solo_soportada_por_analisis_previo: 3,
+  lenguaje_no_permitido: 4,
 };
 
 /** Agrupa las descartadas por motivo (RN-01), omite los motivos sin descartadas y ordena como el contrato. */

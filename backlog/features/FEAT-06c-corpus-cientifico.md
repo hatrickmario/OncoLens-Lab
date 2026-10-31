@@ -8,7 +8,7 @@
 **Dependencias:** ↪ US-033 (esquema congelado), US-034 (Milvus), US-040 (rol `rag_corpus`) · ⛔ ADR-39 (dimensión del vector dense y origen del sparse: US-058 AC-2; *embeddings* reales para indexar: US-059 AC-1) · ADR-36 no bloquea el S1 (licencia verificada documento a documento) · 🔗 Consumida por: US-055 · ⛔ ADR-36 (S3: US-117a; S4: US-120) · 🔗 Medido en (S5): US-132 (M-08.3, M-08.4)
 **Valor:** el oncólogo solo puede confiar en una opción si la fuente es pública, con licencia que permite usarla, vigente y verificable (P5, P8, P12). La semilla del S1 permite demostrar el recorrido con evidencia real de acceso abierto de mama y próstata, sin NCCN ni ESMO, y deja el esquema de metadatos listo para la aplicabilidad.
 **Workaround en el MVP (US-119):** la fecha de corte del corpus vive en configuración `[RN-22]` y la Base del análisis la toma de ahí.
-**Stories:** parte S1: US-058, US-059 (10 puntos) · parte S3: US-117a (5), US-117b (3), US-118 (5) (13 puntos) · parte S4: US-240 (2), US-242 (5), US-247 (5) (12 puntos; US-117b se archiva sin sumar) · parte S5: US-120 (3 puntos, `[S4 resp. 1]`) · US-119 (3 puntos, `si-hay-capacidad`) · total 41 puntos
+**Stories:** parte S1: US-058, US-059 (10 puntos) · parte S3: US-117a (5), US-117b (3), US-118 (5) (13 puntos) · parte S4: US-240 (2), US-242 (5), US-247 (7) (14 puntos; US-117b se archiva sin sumar) · parte S5: US-120 (3 puntos, `[S4 resp. 1]`) · US-119 (3 puntos, `si-hay-capacidad`) · total 43 puntos
 
 > **Propuesta de división (talla XL).** Publicar como **06c-S1 Semilla y esquema** (US-058, US-059) y **06c-S3 Ingesta** (US-117…US-120), sin cambiar IDs, para que cada una cierre en su milestone.
 
@@ -544,7 +544,7 @@ de revisión humana a escala (S5). Respaldo en la consulta (US-244).
 
 > Linear: [L1D-297](https://linear.app/l1der-lab-mjbc/issue/L1D-297)
 
-`FEAT-06c` · Sprint 4 · Estimación **5** · — (técnica, PRD §17; OL-01, OL-02) · FR-19, FR-25 (demo), RN-13, RN-14, RN-21, RN-25 · ⛔ ADR-47 (aceptado) · ⛔ DEC-11 (US-021) · escenario aceptado `[S4 resp. 8]` · ↪ US-242, US-243, US-039 (seed sintético) · 🔗 Consume: US-118 (muestra humana) · 🔗 Regresión [RN-13] → US-143 · 🔗 Regresión [RN-21] → US-059
+`FEAT-06c` · Sprint 4 · Estimación **7** *(5 → 7, usuario, 2026-10-31: absorbe la deuda D4-03 de L1D-293, `poblacion-reglas.json`; y recibe D4-02 y D4-08, y las tareas diferidas de L1D-131 1.1 y 2.9)* · — (técnica, PRD §17; OL-01, OL-02) · FR-19, FR-25 (demo), RN-13, RN-14, RN-21, RN-25 · ⛔ ADR-47 (aceptado) · ⛔ DEC-11 (US-021) · escenario aceptado `[S4 resp. 8]` · ↪ US-242, US-243, US-039 (seed sintético) · 🔗 Consume: US-118 (muestra humana) · 🔗 Regresión [RN-13] → US-143 · 🔗 Regresión [RN-21] → US-059
 
 > **Decidido (usuario, 2026-10-29):** datos de demo y de instalación de OUT-07, OUT-02, OUT-04 y OUT-05: metadatos de población extraídos y verificados con US-242 (no inventados, licencia RN-21) que den Coincide, Parcial y No coincide; pacientes sintéticos del seed que los produzcan; ≥ 2 pares paciente + pregunta documentados en la guía de demo con conteos esperados en `applicabilitySummary` y un caso con No coincide excluyente; prueba de aceptación sobre el seed; `scripts/demo/levantar.sh` carga metadatos y pesos *sparse*, verifica el seed con conteos mínimos (falla si hay 0 identidades) y, ante estado previo, avisa y ofrece borrar (decisión F-07) `[S4 resp. 1]` `[S4 resp. 3]`.
 

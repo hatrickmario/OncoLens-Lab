@@ -1,0 +1,95 @@
+{
+  "id": "e1a2b3c4-3e5a-4b1c-8d3c-1a4b2e5f1b05",
+  "traceId": "req_5c8e2f0b",
+  "queryText": "En pacientes con cáncer de mama HER2 positivo temprano, ¿qué describe la evidencia sobre mortalidad con terapia anti-HER2 adyuvante?",
+  "questionTemplateId": null,
+  "queryLanguage": "es",
+  "status": "con_evidencia",
+  "synthesis": {
+    "agreements": [],
+    "discrepancies": []
+  },
+  "applicability": [],
+  "evidenceOptions": [],
+  "discardedOptions": [
+    {
+      "option": "Terapia anti-HER2 adyuvante con reducción marcada de la mortalidad",
+      "rationale": "La opción se descartó porque no cumple la validación de la evidencia recuperada.",
+      "discardReason": "afirmacion_sin_soporte",
+      "unsupportedClaims": [
+        "reduce la mortalidad a la mitad"
+      ]
+    },
+    {
+      "option": "Terapia anti-HER2 adyuvante combinada con pertuzumab",
+      "rationale": "La opción se descartó porque no cumple la validación de la evidencia recuperada.",
+      "discardReason": "lenguaje_no_permitido",
+      "unsupportedClaims": [
+        "[afirmación retirada: formulación no permitida]"
+      ]
+    }
+  ],
+  "analysisBasis": {
+    "patientDataUsed": [
+      {
+        "label": "HER2 3+ (IHQ)",
+        "reviewStatus": "auto_aceptado",
+        "conflict": false
+      },
+      {
+        "label": "Estadio IIA (TNM_8)",
+        "reviewStatus": "verificado",
+        "conflict": false
+      }
+    ],
+    "missingCriticalData": [
+      "estado_menopausico",
+      "ki67"
+    ],
+    "missingCriticalDataLabels": [
+      "Estado menopáusico",
+      "Ki-67"
+    ],
+    "continuedWithWarning": true,
+    "assumptions": [],
+    "sourcesConsulted": {
+      "selected": [
+        "guias",
+        "publicaciones"
+      ],
+      "filters": {
+        "historiaCompleta": false,
+        "soloBiomarcadoresRelevantes": true,
+        "ultimosSeisMeses": true,
+        "antecedentesFamiliares": false,
+        "publishedFromYear": 2021
+      },
+      "retrieved": 40,
+      "aboveThreshold": 1
+    },
+    "sourcesNotIncluded": [
+      "NCCN",
+      "ESMO"
+    ],
+    "corpusCutoffDate": "2026-09-30",
+    "limitations": [
+      {
+        "text": "Síntesis basada en una sola fuente.",
+        "origin": "estructural"
+      }
+    ],
+    "priorAnalysesUsed": [],
+    "agentSteps": [],
+    "omittedClaims": 0
+  },
+  "topRelevanceScore": 0.87,
+  "staleness": {
+    "patientData": false,
+    "changedData": [],
+    "newerEvidenceOrCatalog": false
+  },
+  "rerunOfAnalysisId": null,
+  "patientDataLinks": [],
+  "disclaimer": "Generado por IA; requiere validación clínica independiente por el oncólogo tratante.",
+  "createdAt": "2026-10-12T15:20:00Z"
+}

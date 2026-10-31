@@ -19,7 +19,8 @@ export const zDiscardedOption = z.strictObject({
         'cita_invalida',
         'afirmacion_sin_soporte',
         'sin_citas',
-        'solo_soportada_por_analisis_previo'
+        'solo_soportada_por_analisis_previo',
+        'lenguaje_no_permitido'
     ]),
     unsupportedClaims: z.array(z.string())
 });
@@ -436,6 +437,15 @@ export const zErrorColaInferenciaLlena = z.strictObject({
 
 export const zErrorLlmLocalNoDisponible = z.strictObject({
     error: z.literal('LOCAL_LLM_UNAVAILABLE'),
+    message: z.string(),
+    traceId: z.string()
+});
+
+/**
+ * La salida del LLM no se pudo parsear o no cumple el esquema interno de afirmaciones. El message es fijo: nunca incluye detalles internos ni texto generado.
+ */
+export const zErrorSalidaLlmInvalida = z.strictObject({
+    error: z.literal('LLM_OUTPUT_INVALID'),
     message: z.string(),
     traceId: z.string()
 });

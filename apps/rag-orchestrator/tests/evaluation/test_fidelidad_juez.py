@@ -342,7 +342,7 @@ def test_las_afirmaciones_a_juzgar_son_las_que_el_pipeline_envia_al_nli() -> Non
     textos = {"c1": "texto uno", "c2": "texto dos"}
     verificador = cargar_verificador_de_terminos(CATALOGOS)
 
-    plan = plan_de_la_propuesta(propuesta, textos, verificador.reglas_coincidentes)
+    plan = plan_de_la_propuesta(propuesta, textos, verificador.reglas_coincidentes, max_palabras=20)
     afirmaciones = afirmaciones_a_juzgar(plan)
 
     pares = pares_a_verificar(plan)
@@ -395,7 +395,10 @@ def test_las_afirmaciones_de_una_opcion_cuyo_nombre_incumple_el_lenguaje_no_se_j
         opciones=(OpcionGenerada("Se recomienda esta opción", "Afirmación limpia.", ("c1",)),)
     )
     plan = plan_de_la_propuesta(
-        propuesta, {"c1": "texto"}, cargar_verificador_de_terminos(CATALOGOS).reglas_coincidentes
+        propuesta,
+        {"c1": "texto"},
+        cargar_verificador_de_terminos(CATALOGOS).reglas_coincidentes,
+        max_palabras=20,
     )
 
     assert afirmaciones_a_juzgar(plan) == []
