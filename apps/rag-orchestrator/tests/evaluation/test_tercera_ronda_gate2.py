@@ -88,6 +88,8 @@ def _huella_del_proponente(proponente: TareaDePoblacionLocal) -> tuple[object, .
         cliente._timeout_s,  # noqa: SLF001
         cliente._max_output_tokens,  # noqa: SLF001
         cliente._temperature,  # noqa: SLF001
+        proponente._max_tokens_de_salida,  # noqa: SLF001
+        proponente._plantilla,  # noqa: SLF001
         proponente._max_chars_fragmentos,  # noqa: SLF001
     )
 

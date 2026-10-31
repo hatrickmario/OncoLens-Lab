@@ -7,10 +7,11 @@ fragmentos). ``envolver_cliente`` deja que quien mide anote cada llamada sin cam
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import cast
+from typing import Protocol, cast, runtime_checkable
 
 from app.application.corpus_metadata.esquema_poblacion import cargar_plantilla
 from app.application.corpus_metadata.poblacion_puertos import LlmDePoblacion
+from app.application.aplicabilidad_textual import ParametrosDelRespaldo
 from app.application.generation import LlmEvidenceGenerator
 from app.application.ports import LlmClient
 from app.config.settings import Settings
@@ -19,6 +20,17 @@ from app.infrastructure.llm.tarea_de_poblacion import (
     MAX_VALORES_DEL_RESPALDO,
     TareaDePoblacionLocal,
 )
+
+
+@runtime_checkable
+class ClienteLlmLocal(LlmClient, LlmDePoblacion, Protocol):
+    """El cliente del LLM local completo: la generación (``LlmClient``) y la tarea corta de población (``LlmDePoblacion``)."""
+
+
+def parametros_del_respaldo(settings: Settings) -> ParametrosDelRespaldo:
+    """Plazo, concurrencia y versión del prompt del respaldo de población, de la configuración (RN-22)."""
+    raise NotImplementedError("US-244 Gate 2 vuelta 2")
+
 
 EnvolverCliente = Callable[[LlmClient], LlmClient]
 
