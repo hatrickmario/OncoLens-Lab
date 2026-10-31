@@ -32,7 +32,7 @@ class MotivoDeSoporte(StrEnum):
 class DecisionPorPapel:
     conservar: bool
     motivo: MotivoDeSoporte | None
-    omitidas: tuple[int, ...]
+    posiciones_omitidas: tuple[int, ...]
     """Posiciones de las secundarias que se omiten y se cuentan en ``omittedClaims`` (solo si la opción se conserva)."""
 
 

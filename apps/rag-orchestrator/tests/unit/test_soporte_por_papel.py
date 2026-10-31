@@ -23,19 +23,19 @@ LENGUAJE = EstadoDeAfirmacion.lenguaje_no_permitido
 def test_conserva_la_opcion_sin_omitir_nada_cuando_todas_las_afirmaciones_se_soportan() -> None:
     decision = decidir_opcion_por_papel([(P, OK), (S, OK), (V, OK)])
 
-    assert decision.conservar and decision.motivo is None and decision.omitidas == ()
+    assert decision.conservar and decision.motivo is None and decision.posiciones_omitidas == ()
 
 
 def test_omite_la_secundaria_sin_soporte_y_conserva_la_opcion() -> None:
     decision = decidir_opcion_por_papel([(P, OK), (S, SIN), (V, OK)])
 
-    assert decision.conservar and decision.omitidas == (1,)
+    assert decision.conservar and decision.posiciones_omitidas == (1,)
 
 
 def test_omite_la_secundaria_fuera_de_forma_por_alias_o_longitud_y_conserva_la_opcion() -> None:
     decision = decidir_opcion_por_papel([(P, OK), (S, FORMA)])
 
-    assert decision.conservar and decision.omitidas == (1,)
+    assert decision.conservar and decision.posiciones_omitidas == (1,)
 
 
 @pytest.mark.parametrize("papel", [P, V])
@@ -116,4 +116,4 @@ def test_un_texto_limpio_solo_llega_en_forma_y_eso_nunca_cuenta_como_respaldo_de
 
     assert estado is EstadoDeAfirmacion.en_forma
     assert not decidir_opcion_por_papel([(P, estado)]).conservar
-    assert decidir_opcion_por_papel([(P, OK), (S, estado)]).omitidas == (1,)
+    assert decidir_opcion_por_papel([(P, OK), (S, estado)]).posiciones_omitidas == (1,)

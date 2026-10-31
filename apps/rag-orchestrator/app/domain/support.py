@@ -7,7 +7,6 @@ from dataclasses import dataclass, replace
 from typing import Literal, get_args
 
 from app.domain.atribucion import (
-    CLAIM_MAX_WORDS_INICIAL,
     FormaDeAfirmacion,
     componer_con_marco,
     marco_de_atribucion,
@@ -143,7 +142,7 @@ def planificar_soporte(
     textos_de_chunks: Mapping[str, str],
     buscar_terminos: BuscadorDeTerminos,
     *,
-    max_palabras: int = CLAIM_MAX_WORDS_INICIAL,
+    max_palabras: int,
 ) -> PlanDeSoporte:
     """Divide cada justificación en afirmaciones, asigna sus premisas y marca lo que incumple el lenguaje (RN-23).
 
@@ -355,7 +354,7 @@ def _resolver_por_papel(
     conservadas = tuple(
         atomica
         for posicion, atomica in enumerate(origen.afirmaciones)
-        if posicion not in decision.omitidas
+        if posicion not in decision.posiciones_omitidas
     )
     composicion = componer_con_marco(conservadas, idioma)
     opcion = replace(
@@ -364,7 +363,7 @@ def _resolver_por_papel(
         details=composicion.details,
         afirmaciones=conservadas,
     )
-    return replace(planificada.aceptada, opcion=opcion), len(decision.omitidas)
+    return replace(planificada.aceptada, opcion=opcion), len(decision.posiciones_omitidas)
 
 
 def _texto_a_mostrar(texto: str, estado: EstadoDeAfirmacion, idioma: str) -> str:
@@ -467,7 +466,7 @@ def retirar_texto_prohibido(
     opcion: OpcionGenerada,
     buscar_terminos: BuscadorDeTerminos,
     idioma: str,
-    max_palabras: int = CLAIM_MAX_WORDS_INICIAL,
+    max_palabras: int,
 ) -> tuple[OpcionGenerada, tuple[RetiroDeLenguaje, ...]]:
     """RN-23 en una opción que ya salió del flujo (descartada por sus citas): sus fragmentos prohibidos se reemplazan.
 

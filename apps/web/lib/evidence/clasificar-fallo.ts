@@ -1,13 +1,13 @@
-/** Códigos de error que tienen estado o mensaje propio; cualquier otro `error` de la respuesta se descarta. */
-export const CODIGOS_CON_ESTADO_PROPIO = [
+/** Códigos de error que tienen mensaje propio (o estado propio); cualquier otro `error` de la respuesta se descarta. */
+export const CODIGOS_CON_MENSAJE_PROPIO = [
   'TIPO_CANCER_NO_REGISTRADO',
   'LLM_OUTPUT_INVALID',
 ] as const;
 
-export type CodigoConMensajePropio = (typeof CODIGOS_CON_ESTADO_PROPIO)[number];
+export type CodigoConMensajePropio = (typeof CODIGOS_CON_MENSAJE_PROPIO)[number];
 
 export function esCodigoConMensajePropio(codigo: unknown): codigo is CodigoConMensajePropio {
-  return CODIGOS_CON_ESTADO_PROPIO.some((conocido) => conocido === codigo);
+  return CODIGOS_CON_MENSAJE_PROPIO.some((conocido) => conocido === codigo);
 }
 
 /** `422 TIPO_CANCER_NO_REGISTRADO` no es un error técnico: el análisis no se realizó (`[S1 resp. 35]`). */

@@ -34,7 +34,11 @@ def plan_de_la_propuesta(
     """El plan de soporte de las opciones cuyas citas son válidas (las demás se descartan antes del NLI)."""
     aceptadas = validar_citas(propuesta.opciones, textos_entregados.keys()).aceptadas
     return planificar_soporte(
-        aceptadas, propuesta.limitaciones_propuestas, textos_entregados, buscar_terminos
+        aceptadas,
+        propuesta.limitaciones_propuestas,
+        textos_entregados,
+        buscar_terminos,
+        max_palabras=max_palabras,
     )
 
 
