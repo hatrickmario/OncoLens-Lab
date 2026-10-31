@@ -10,10 +10,10 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Collection, Mapping, Sequence
 from dataclasses import dataclass, replace
 from datetime import datetime
-from typing import TypeVar
+from typing import NamedTuple, TypeVar
 
 from app.application.aplicabilidad import (
     AplicabilidadDeFuente,
@@ -55,6 +55,7 @@ from app.application.ports import (
     PoblacionTask,
     ProhibitedTermsChecker,
     QueryEmbedder,
+    QueryRewriter,
     QuerySparseEncoder,
     ReleaseDelCorpus,
     Reranker,
@@ -92,6 +93,15 @@ from app.domain.relevance import (
     relevancia_de_opcion,
     top_relevance_score,
 )
+from app.domain.lenguaje import normalizar_texto
+from app.domain.reescritura import (
+    EstadoDeReescritura,
+    MotivoDeReescritura,
+    ParametrosDeReescritura,
+    conservar_pregunta_original,
+    debe_reescribir,
+    filtrar_terminos_del_catalogo,
+)
 from app.domain.retrieval_filter import expresion_vigente_del_tipo
 from app.domain.tipos_habilitados import exigir_tipo_habilitado
 from app.prompts.rag_query import VERSION_DEL_PROMPT
@@ -100,10 +110,12 @@ from app.schemas.generated.models import (
     Limitation,
     LlmProvider,
     Origin,
+    QueryRewrite,
     RagMeta,
     RagQueryInternalRequest,
     RagQueryInternalResponse,
     RagQueryStatus,
+    Reason,
     RetrievalMode,
     RetrievalParams,
     RetrievalStats,
@@ -115,6 +127,13 @@ logger = logging.getLogger(__name__)
 LIMITACION_SIN_EVIDENCIA = "Ningún fragmento recuperado supera el umbral de relevancia."
 
 _Resultado = TypeVar("_Resultado")
+
+
+class ResultadoDelLoop(NamedTuple):
+    """Lo que deja un loop de recuperación: los candidatos que vio el reranker y los que superan el umbral."""
+
+    candidatos: list[CandidatoDeRecuperacion]
+    sobre_umbral: list[ChunkPuntuado]
 
 
 @dataclass(frozen=True)
@@ -144,6 +163,8 @@ class ParametrosDeRecuperacion:
     """``RRF_K``: constante de ``Σ 1/(k+rank)``; solo con ``retrieval_fusion = rrf``."""
     peso_sparse: float = HYBRID_SPARSE_WEIGHT_INICIAL
     """``HYBRID_SPARSE_WEIGHT``: peso de la rama *sparse* (0 < w < 1); solo con ``retrieval_fusion = ponderada``."""
+    reescritura: ParametrosDeReescritura = ParametrosDeReescritura()
+    """``QUERY_REWRITE_*`` (US-238, RN-22): segundo loop de reescritura; desactivado por defecto."""
 
 
 def _con_relevancia(aceptada: OpcionAceptada, puntajes: Mapping[str, float]) -> OpcionConRelevancia:
@@ -172,7 +193,11 @@ class RAGOrchestratorService:
         parametros: ParametrosDeRecuperacion,
         buscador_sparse: SparseChunkSearch | None = None,
         embedder_sparse: QuerySparseEncoder | None = None,
+        reescritor: QueryRewriter | None = None,
+        terminos_del_catalogo: Collection[str] = (),
     ) -> None:
+        self._reescritor = reescritor
+        self._terminos_del_catalogo = frozenset(normalizar_texto(t) for t in terminos_del_catalogo)
         self._detector_idioma = detector_idioma
         self._embedder = embedder
         self._buscador = buscador
@@ -218,17 +243,14 @@ class RAGOrchestratorService:
         borde = self._invocar_borde_fallando_cerrado
         idioma = await borde(trace_id, "idioma", self._detector_idioma.detectar, solicitud.query)
         release = await borde(trace_id, "catalogo", self._lector_release.release_vigente)
-        candidatos = await self._recuperar(trace_id, solicitud, filtro)
-        a_reranquear = self._cortar_a_pares_del_reranker(trace_id, candidatos)
-        puntuados = await self._reranquear(trace_id, solicitud.query, a_reranquear)
-        sobre_umbral = filtrar_sobre_umbral(puntuados, self._parametros.relevance_threshold)
-        logger.info(
-            "event=rag_query_recuperacion traceId=%s retrieved=%d aboveThreshold=%d",
-            trace_id,
-            len(candidatos),
-            len(sobre_umbral),
+        loop = await self._recuperar_y_puntuar(trace_id, solicitud, filtro, solicitud.query, 1)
+        loop, reescritura = await self._segundo_loop_si_corresponde(
+            trace_id, solicitud, filtro, loop
         )
-        meta_de_recuperacion = self._armar_meta_de_recuperacion(solicitud, idioma, release, inicio)
+        candidatos, sobre_umbral = loop
+        meta_de_recuperacion = self._armar_meta_de_recuperacion(
+            solicitud, idioma, release, inicio, reescritura
+        )
         if not sobre_umbral:
             return self._responder_sin_evidencia(len(candidatos), meta_de_recuperacion)
         recuperacion = ResultadoDeRecuperacion(
@@ -236,6 +258,91 @@ class RAGOrchestratorService:
         )
         evidencia = await self._generador.generar(solicitud, recuperacion)
         return await self._validar_citas_y_ensamblar(solicitud, evidencia, recuperacion)
+
+    async def _recuperar_y_puntuar(
+        self,
+        trace_id: str,
+        solicitud: RagQueryInternalRequest,
+        filtro: str,
+        texto_de_busqueda: str,
+        numero_de_loop: int,
+    ) -> ResultadoDelLoop:
+        """Un loop: recuperar → cortar → reranquear → umbral. Solo el vector depende de ``texto_de_busqueda``; el
+        *reranker* puntúa siempre contra la pregunta original (RN-03, RN-06)."""
+        candidatos = await self._recuperar(trace_id, solicitud, filtro, texto_de_busqueda)
+        a_reranquear = self._cortar_a_pares_del_reranker(trace_id, candidatos)
+        puntuados = await self._reranquear(trace_id, solicitud.query, a_reranquear)
+        sobre_umbral = filtrar_sobre_umbral(puntuados, self._parametros.relevance_threshold)
+        logger.info(
+            "event=rag_query_recuperacion traceId=%s loop=%d retrieved=%d aboveThreshold=%d",
+            trace_id,
+            numero_de_loop,
+            len(candidatos),
+            len(sobre_umbral),
+        )
+        return ResultadoDelLoop(candidatos, sobre_umbral)
+
+    async def _segundo_loop_si_corresponde(
+        self,
+        trace_id: str,
+        solicitud: RagQueryInternalRequest,
+        filtro: str,
+        primero: ResultadoDelLoop,
+    ) -> tuple[ResultadoDelLoop, EstadoDeReescritura]:
+        """RN-02 enmendada: con el primer loop vacío, hasta ``QUERY_REWRITE_MAX_ITERATIONS`` loops con la consulta
+        reformulada con términos del catálogo. Sin reformulación utilizable el resultado es el del loop previo."""
+        parametros = self._parametros.reescritura
+        habilitada = parametros.habilitada and self._reescritor is not None
+        loop, iteracion = primero, 0
+        while debe_reescribir(
+            len(loop.sobre_umbral), habilitada, iteracion, parametros.max_iteraciones
+        ):
+            terminos = await self._terminos_para_reescribir(trace_id, solicitud.query)
+            if terminos is None:
+                motivo = (
+                    MotivoDeReescritura.disparado
+                    if iteracion
+                    else MotivoDeReescritura.no_disponible
+                )
+                return loop, EstadoDeReescritura(motivo)
+            consulta = conservar_pregunta_original(solicitud.query, terminos)
+            iteracion += 1
+            loop = await self._recuperar_y_puntuar(
+                trace_id, solicitud, filtro, consulta.texto_de_busqueda, iteracion + 1
+            )
+        motivo = MotivoDeReescritura.disparado if iteracion else MotivoDeReescritura.no_disparado
+        return loop, EstadoDeReescritura(motivo)
+
+    async def _terminos_para_reescribir(
+        self, trace_id: str, pregunta: str
+    ) -> tuple[str, ...] | None:
+        """Términos del catálogo que propone el LLM local, o ``None`` si no hay reformulación utilizable (D4: LLM caído,
+        plazo vencido, salida inválida o cero términos admitidos). Se registra solo ``reason`` y la clase del error:
+        nunca el mensaje de la excepción ni la pregunta, la reformulación o la salida del LLM (RN-10, RN-14)."""
+        reescritor = self._reescritor
+        if reescritor is None:
+            raise RuntimeError("la reescritura se pidió sin QueryRewriter (el servicio lo impide)")
+        inicio = self._reloj.ahora()
+        plazo_s = self._parametros.reescritura.plazo_ms / 1000
+        error: str | None = None
+        terminos: tuple[str, ...] = ()
+        try:
+            propuestos = await asyncio.wait_for(reescritor.reformular(pregunta), timeout=plazo_s)
+            terminos = filtrar_terminos_del_catalogo(propuestos, self._terminos_del_catalogo)
+        except Exception as fallo:  # noqa: BLE001 - cualquier fallo del LLM de reescritura cae a "sin evidencia"
+            error = type(fallo).__name__
+        latencia_ms = int((self._reloj.ahora() - inicio).total_seconds() * 1000)
+        utilizable = error is None and bool(terminos)
+        logger.info(
+            "event=rag_query_reescritura traceId=%s rewriteApplied=%s reason=%s terms=%d latencyMs=%d%s",
+            trace_id,
+            utilizable,
+            MotivoDeReescritura.disparado if utilizable else MotivoDeReescritura.no_disponible,
+            len(terminos),
+            latencia_ms,
+            f" error={error}" if error else "",
+        )
+        return terminos if utilizable else None
 
     async def _validar_citas_y_ensamblar(
         self,
@@ -449,13 +556,17 @@ class RAGOrchestratorService:
             raise TipoCancerNoRegistradoError() from None
 
     async def _recuperar(
-        self, trace_id: str, solicitud: RagQueryInternalRequest, filtro: str
+        self,
+        trace_id: str,
+        solicitud: RagQueryInternalRequest,
+        filtro: str,
+        texto_de_busqueda: str,
     ) -> list[CandidatoDeRecuperacion]:
         """Candidatos para el reranker: dense; en modo híbrido, dense + sparse fusionados (RN-05: un solo filtro)."""
-        dense = await self._recuperar_dense(trace_id, solicitud, filtro)
+        dense = await self._recuperar_dense(trace_id, solicitud, filtro, texto_de_busqueda)
         if self._parametros.retrieval_mode is RetrievalMode.dense:
             return self._recortar_a_top_k(dense)
-        sparse = await self._recuperar_sparse(trace_id, solicitud.query, filtro)
+        sparse = await self._recuperar_sparse(trace_id, texto_de_busqueda, filtro)
         recortados = self._recortar_a_top_k(self._unir_ramas(dense, sparse))
         self._registrar_recuperacion_hibrida(trace_id, len(dense), len(sparse), len(recortados))
         return recortados
@@ -484,10 +595,14 @@ class RAGOrchestratorService:
         )
 
     async def _recuperar_dense(
-        self, trace_id: str, solicitud: RagQueryInternalRequest, filtro: str
+        self,
+        trace_id: str,
+        solicitud: RagQueryInternalRequest,
+        filtro: str,
+        texto_de_busqueda: str,
     ) -> list[CandidatoDeRecuperacion]:
-        """Búsqueda dense con el *embedding* de la pregunta y el del resumen del contexto; une sin repetir chunks."""
-        textos = (solicitud.query, resumen_del_contexto_clinico(solicitud.clinicalContext))
+        """Búsqueda dense con el *embedding* del texto de búsqueda y el del resumen del contexto; une sin repetir chunks."""
+        textos = (texto_de_busqueda, resumen_del_contexto_clinico(solicitud.clinicalContext))
         encontrados: dict[str, ChunkEncontrado] = {}
         for texto in textos:
             for chunk in await self._buscar_cercanos_a(trace_id, texto, filtro):
@@ -620,6 +735,7 @@ class RAGOrchestratorService:
         idioma: Idioma,
         release: ReleaseDelCorpus,
         inicio: datetime,
+        reescritura: EstadoDeReescritura = EstadoDeReescritura(MotivoDeReescritura.no_disparado),
     ) -> RagMeta:
         """``meta`` con la latencia hasta el fin de la recuperación; la generación (L1D-275) la actualiza."""
         parametros = self._parametros
@@ -644,6 +760,9 @@ class RAGOrchestratorService:
                 retrievalMode=parametros.retrieval_mode,
                 fusion=fusion,
                 fusionParam=fusion_param,
+                queryRewrite=QueryRewrite(
+                    applied=reescritura.applied, reason=Reason(reescritura.motivo.value)
+                ),
             ),
             latencyMs=int((self._reloj.ahora() - inicio).total_seconds() * 1000),
         )

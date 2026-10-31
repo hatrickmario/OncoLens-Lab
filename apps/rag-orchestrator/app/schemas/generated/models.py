@@ -249,6 +249,21 @@ class Fusion(StrEnum):
     ponderada = 'ponderada'
 
 
+class Reason(StrEnum):
+    disparado = 'disparado'
+    no_disparado = 'no_disparado'
+    no_disponible = 'no_disponible'
+    no_aplica = 'no_aplica'
+
+
+class QueryRewrite(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    applied: bool
+    reason: Reason
+
+
 class RetrievalParams(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
@@ -268,6 +283,12 @@ class RetrievalParams(BaseModel):
         Field(
             description='Parámetro de la fusión: `0` con `ninguna`; `k` de RRF (entero >= 1) con `rrf`; peso de la rama sparse (0 < w < 1) con `ponderada`. Nunca null.',
             ge=0.0,
+        ),
+    ]
+    queryRewrite: Annotated[
+        QueryRewrite,
+        Field(
+            description='Segundo loop de reescritura de la consulta (US-238, RN-02 enmendada). Nunca null. `disparado`: el primer loop quedó vacío y hubo segunda recuperación con la consulta reformulada (rescate o no); `no_disparado`: el primer loop tuvo chunks sobre el umbral o la reescritura está desactivada; `no_disponible`: primer loop vacío sin reformulación utilizable (LLM caído, deadline vencido, salida inválida o cero términos del catálogo); `no_aplica`: /rag/follow-up, donde el segundo loop nunca corre. La consulta reformulada nunca sale de rag-orchestrator.'
         ),
     ]
 

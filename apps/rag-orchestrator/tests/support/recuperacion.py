@@ -32,6 +32,7 @@ from app.application.ports import (
     NliClassifier,
     PoblacionTask,
     ProhibitedTermsChecker,
+    QueryRewriter,
     QuerySparseEncoder,
     ReleaseDelCorpus,
     SinTerminosLexicos,
@@ -540,6 +541,8 @@ def crear_entorno(
     proponente: PoblacionTask | None = None,
     buscador_sparse: SparseChunkSearch | None = None,
     embedder_sparse: QuerySparseEncoder | None = None,
+    reescritor: QueryRewriter | None = None,
+    terminos_del_catalogo: Collection[str] = (),
 ) -> EntornoDeRecuperacion:
     embedder = embedder or EmbedderFalso()
     buscador = buscador or BuscadorFalso()
@@ -573,6 +576,8 @@ def crear_entorno(
         parametros=parametros,
         buscador_sparse=buscador_sparse,
         embedder_sparse=embedder_sparse,
+        reescritor=reescritor,
+        terminos_del_catalogo=terminos_del_catalogo,
     )
     app = crear_app(
         settings_de_prueba(), trace_ids=GeneradorTraceFijo(), clock=RelojFijo(), consulta=servicio

@@ -88,6 +88,7 @@ describe('Base del análisis (FR-27)', () => {
       filters: rag.capturadas[0]!.cuerpo['filtersApplied'],
       retrieved: 40,
       aboveThreshold: 1,
+      queryRewritten: false,
     });
     expect(base.sourcesNotIncluded).toEqual(['NCCN', 'ESMO']);
     expect(base.corpusCutoffDate).toBe('2026-09-30');

@@ -231,7 +231,7 @@ describe('EvidencePanel · estados del S3', () => {
       'Coincide 2 · Parcial 0 · No coincide 0 · Desconocido 4',
     );
     expect(within(tarjeta).getByTestId('relevance-basis').textContent).toBe(
-      'Metadato de recuperación; solo desempata el orden por aplicabilidad.',
+      'Metadato de recuperación; no mide solidez clínica ni probabilidad, y solo desempata el orden por aplicabilidad.',
     );
     expect(tarjeta.textContent).not.toMatch(/%|Orden basado en la cita/);
     expect(within(tarjeta).queryByRole('progressbar')).toBeNull();
@@ -274,7 +274,7 @@ describe('EvidencePanel · estados del S3', () => {
     expect(await screen.findByText(CRITERIO_NEUTRO)).toBeTruthy();
     expect(screen.queryByText(CRITERIO_APLICABILIDAD)).toBeNull();
     expect(screen.getByTestId('relevance-basis').textContent).toBe(
-      'Orden basado en la cita recuperada más relevante asociada a cada opción',
+      'Metadato de recuperación; no mide solidez clínica ni probabilidad.',
     );
   });
 });
