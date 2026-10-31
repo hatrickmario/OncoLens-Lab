@@ -276,14 +276,21 @@ evidencia simplemente no lo sostiene.
   aparece con el rótulo «Afirmación no verificada contra la fuente citada; se muestra solo
   para revisión» (después de pasar el filtro RN-23), y no se lee «lenguaje prescriptivo».
   `[S4 resp. 2]` `[FR-10]` `[AC-10.4]`
-- **AC-2 (borde · lenguaje no permitido)** · Dada una respuesta con solo descartadas, todas con
+- **AC-2 (borde · lenguaje no permitido y «(texto no mostrado)»)** · Dada una respuesta con solo descartadas, todas con
   `discardReason = lenguaje_no_permitido` (ejemplo
   `con-evidencia-solo-descartadas-lenguaje.json` de US-245), cuando se renderiza, entonces el
   resumen dice «Contenía lenguaje prescriptivo, que no se muestra», cada opción muestra solo su
-  nombre (filtrado) con «Se omitió por la redacción generada (lenguaje prescriptivo); no es una
-  valoración de la evidencia» y «(texto no mostrado)», ningún texto prescriptivo aparece y no
-  se lee «no tiene soporte». `[S4 resp. 2]`
-  `[S4 resp. 11]`
+  nombre (tras el filtro RN-23) con la nota «Se omitió por la redacción generada (lenguaje prescriptivo); no es una
+  valoración de la evidencia», no se muestra ninguna afirmación (`unsupportedClaims`), ningún texto prescriptivo aparece y no
+  se lee «no tiene soporte». Además, dada una descartada `afirmacion_sin_soporte` cuya afirmación
+  el filtro RN-23 del cliente rechaza, o que el backend ya envió retirada (literales de
+  `apps/rag-orchestrator/app/domain/support.py`: «(texto no mostrado)» y la marca de retiro), entonces en lugar
+  de la afirmación se lee «(texto no mostrado)», sin el rótulo «Afirmación no verificada contra la
+  fuente citada; se muestra solo para revisión», y se conserva la etiqueta del motivo recibido.
+  «(texto no mostrado)» aparece **solo** en esos dos casos. `[S4 resp. 2]` `[S4 resp. 11]`
+  > **Enmienda (2026-10-31, decidido por el usuario):** el AC-2 original exigía «(texto no mostrado)» en toda
+  > opción `lenguaje_no_permitido`; se enmienda para reflejar lo implementado en L1D-296 y
+  > `docs/ux/S4/pantallas-s4.md`. Markdown primero; el espejo en Linear (L1D-296) lo hace la sesión principal.
 - **AC-3 (borde · motivos mixtos)** · Dada una respuesta con una descartada de cada motivo,
   cuando se renderiza, entonces cada motivo aparece en su propia línea con su recuento
   («1 × …»), con el formato de US-237 AC-2, y nunca una frase que junte los dos motivos. `[S4 resp. 2]` `[FR-10]`

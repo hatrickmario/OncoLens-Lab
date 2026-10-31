@@ -1,7 +1,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Descartadas aparte, plegadas y sin controles
-Las `discardedOptions` MUST mostrarse aparte, en una sección colapsada titulada "Descartadas en la verificación — solo para revisión", con `option`, el motivo en texto de la UI y cada `unsupportedClaims[]` rotulada "Afirmación no verificada contra la fuente citada; se muestra solo para revisión" (texto, no solo color) tras pasar el filtro RN-23, sin ningún control de vínculo a un tratamiento. Excepciones al rótulo: en una descartada `lenguaje_no_permitido` las `unsupportedClaims` MUST NOT mostrarse; y una entrada que es el literal «(texto no mostrado)» (enviado por el backend, D-a) o que el filtro RN-23 rechaza MUST mostrarse solo como «(texto no mostrado)», sin el rótulo. Con `evidenceOptions = []` MUST NOT haber tarjeta de opción.
+Las `discardedOptions` MUST mostrarse aparte, en una sección colapsada titulada "Descartadas en la verificación — solo para revisión", con `option`, el motivo en texto de la UI y cada `unsupportedClaims[]` rotulada "Afirmación no verificada contra la fuente citada; se muestra solo para revisión" (texto, no solo color) tras pasar el filtro RN-23, sin ningún control de vínculo a un tratamiento. Excepciones al rótulo: en una descartada `lenguaje_no_permitido` las `unsupportedClaims` MUST NOT mostrarse; y una entrada que es el literal «(texto no mostrado)» (enviado por el backend, D-a) o la marca de retiro del backend (`support.py`), o que el filtro RN-23 rechaza MUST mostrarse solo como «(texto no mostrado)», sin el rótulo. Con `evidenceOptions = []` MUST NOT haber tarjeta de opción.
 
 #### Scenario: Solo hay descartadas y se muestran plegadas, con la afirmación sin soporte resaltada [US-061 AC-4] [FR-10] [HU-03] [AC-10.4]
 - **GIVEN** una respuesta `con_evidencia` con `evidenceOptions = []` y una descartada `afirmacion_sin_soporte` con `unsupportedClaims = ["reduce la mortalidad a la mitad"]` (`LLM-SIN-SOPORTE`)
@@ -43,7 +43,7 @@ NOT contener identificadores de chunk ni texto de la opción.
 ## ADDED Requirements
 
 ### Requirement: Motivo de descarte sin soporte distinto del de lenguaje no permitido
-El panel MUST presentar `afirmacion_sin_soporte` y `lenguaje_no_permitido` como motivos distintos, cada uno con su etiqueta y su línea en el resumen, y MUST NOT mostrar nunca una frase que junte ambos. Para `lenguaje_no_permitido` MUST mostrar solo `option` tras el filtro RN-23 (o «(texto no mostrado)» si el filtro lo rechaza) con la nota de redacción, y MUST NOT mostrar texto prescriptivo.
+El panel MUST presentar `afirmacion_sin_soporte` y `lenguaje_no_permitido` como motivos distintos, cada uno con su etiqueta y su línea en el resumen, y MUST NOT mostrar nunca una frase que junte ambos. Para `lenguaje_no_permitido` MUST mostrar solo `option` tras el filtro RN-23 (o «(texto no mostrado)» si el filtro lo rechaza) con la nota de redacción, sin afirmaciones, y MUST NOT mostrar texto prescriptivo.
 
 #### Scenario: Solo sin soporte muestra su resumen y cada afirmación con su rótulo, sin hablar de lenguaje [US-246 AC-1] [FR-10] [AC-10.4] [S4 resp. 2]
 - **GIVEN** la respuesta de `contracts/examples/con-evidencia-solo-descartadas.json` (todas `afirmacion_sin_soporte`, con `unsupportedClaims`)
