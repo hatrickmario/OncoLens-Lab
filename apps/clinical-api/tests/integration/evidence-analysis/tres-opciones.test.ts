@@ -38,7 +38,7 @@ const gateway = (traceId: string) =>
 
 const nombres = (opciones: { option: string }[]) => opciones.map((o) => o.option);
 
-async function analizar(traceId: string, cuerpo: unknown) {
+async function analizar(traceId: string, cuerpo: object) {
   rag.responder({ tipo: 'json', status: 200, cuerpo });
   const { app } = await gateway(traceId);
   return clienteVerificado(app)
@@ -71,7 +71,7 @@ describe('hasta tres opciones ordenadas por aplicabilidad (US-134)', () => {
     const fila = await leerRegistroPorTrace(mundo.cliente, 'req_TresOpc00002');
     expect(fila).toBeDefined();
     expect(fila!['analysis_basis']).toEqual(respuesta.body.analysisBasis);
-    expect((fila!['analysis_basis'] as { optionsNotShown: number }).optionsNotShown).toBe(1);
+    expect((fila!['analysis_basis'] as Record<string, unknown>)['optionsNotShown']).toBe(1);
   });
 
   it('propaga la opción de población no comparable última y visible [US-134 AC-4]', async () => {

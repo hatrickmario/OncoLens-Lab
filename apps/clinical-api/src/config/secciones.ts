@@ -372,7 +372,7 @@ export interface EvidenceAnalysisConfig {
   aiDisclaimerText: string;
 }
 
-const DEFAULT_ANALYSIS_MAX_OPTIONS = 1;
+const DEFAULT_ANALYSIS_MAX_OPTIONS = 3;
 /** `maximum` de `maxOptions` en `RagQueryInternalRequest` (contrato de rag-orchestrator). */
 const CONTRACT_MAX_OPTIONS = 3;
 const DEFAULT_EVIDENCE_YEARS = 10;
