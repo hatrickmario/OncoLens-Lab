@@ -167,6 +167,10 @@ class CatalogoEnMemoria:
         return {d: PoblacionDelEstudio("pendiente", {}) for d in document_ids if d in self._fichas}
 
 
+def ficha_sintetica(documento: str, titulo: str, corte: date) -> FichaDeFuente:
+    raise NotImplementedError("no implementado")
+
+
 def _ficha(documento: str, titulo: str, corte: date) -> FichaDeFuente:
     return FichaDeFuente(
         title=titulo,
