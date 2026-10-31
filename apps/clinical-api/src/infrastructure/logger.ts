@@ -44,12 +44,20 @@ function camposSensiblesEfectivos(extra: readonly string[]): ReadonlySet<string>
 }
 
 /**
+ * Lo único de un error que puede loguearse por su cuenta (RN-10): su clase (`error.name`); un valor que no es un
+ * `Error` se registra como `ErrorDesconocido`. Regla única de logger y de quien registra un fallo sin pasarlo entero.
+ */
+export function claseDeError(error: unknown): string {
+  return error instanceof Error ? error.name : 'ErrorDesconocido';
+}
+
+/**
  * Un `Error` se reduce a su clase y su `code`: ni `message`, ni pila, ni propiedades como el `detail` de pg, que cita
  * valores de la fila (RN-10).
  */
 function reducirError(error: Error): { errorClase: string; code?: string } {
   const { code } = error as { code?: unknown };
-  return { errorClase: error.name, ...(typeof code === 'string' && { code }) };
+  return { errorClase: claseDeError(error), ...(typeof code === 'string' && { code }) };
 }
 
 /** Copia el valor sustituyendo, a cualquier profundidad, los campos sensibles (sin distinguir mayúsculas). */

@@ -36,6 +36,8 @@ export interface PatientsService {
   obtenerFicha(entrada: {
     patientId: string;
     vista: VistaPorPermiso;
+    /** Se invoca solo con la clase del error (`error.name`) si el checklist falla; nunca con su mensaje (RN-10). */
+    alFallarElChecklist?: (errorClase: string) => void;
   }): Promise<PatientSummary | PatientAdminSummary>;
 }
 

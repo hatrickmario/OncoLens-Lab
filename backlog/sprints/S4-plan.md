@@ -20,17 +20,17 @@
 | L1D-298 | US-233a | `l1d-298-evaluate-modelos-locales` | ai-services (evaluación) | O3 | — (pesos locales en el MacBook) | R3 | 3 |
 | L1D-300 | US-238 | `l1d-300-reescritura-consulta-segundo-loop` (RN-02 enmendada) | contratos · ai-services · clinical-platform · frontend | O4 | 109, 144 | R4 | 5 |
 | L1D-296 | US-246 | `l1d-296-motivo-descarte-separado` | frontend | O4 | 295 | R6 | 2 |
-| L1D-97 | US-005 | `l1d-97-aviso-faltantes-panel` (crea el BFF `/api/patients/[id]/completeness`) | clinical-platform (BFF) · frontend | O4 | 95 | R5 | 3 |
+| L1D-97 | US-005 | `l1d-97-aviso-faltantes-panel` (crea el BFF `/api/patients/[id]/completeness`) | clinical-platform (BFF) · frontend | O4 | 95 | R5 | 5 |
 | L1D-131 | US-126 | `l1d-131-tabla-aplicabilidad-fuente` (10 AC, excepción a la DoR) | contratos (solo ejemplos) · clinical-platform (fixtures) · frontend | O5 | 291, 293 | R6 | 5 |
 | L1D-245 | US-133 | `l1d-245-hibrida-vs-dense-misma-corrida` | ai-services (evaluación) | O5 | 109, 298 | R3 | 3 |
-| L1D-297 | US-247 | `l1d-297-demo-datos-levantar-verificacion` | contratos (solo ejemplos) · ai-services · clinical-platform | O5 | 291, 292, 293 | — | 5 |
+| L1D-297 | US-247 | `l1d-297-demo-datos-levantar-verificacion` | contratos (solo ejemplos) · ai-services · clinical-platform | O5 | 291, 292, 293 | — | 7 |
 | L1D-145 | US-135 | `l1d-145-panel-hasta-3-opciones` | frontend | O6 | 144, 131 | R6 | 3 |
 | L1D-299 | US-233b | `l1d-299-poblacion-dorado-suite` | ai-services (evaluación) | O6 | 292, 293, 298 | R3 | 3 |
 | L1D-290 | US-240 | sin change: *spike* de capacidad y paralelismo, informe en `reports/`; su código no se mergea | ai-services | O1 | — | — | 2 |
 | L1D-125 | US-021 · DEC-11 | sin change: firma en la sesión de oncólogos (supuestos `(asumido)` hasta entonces; no bloquea) | — | O1 → cierre | — | — | 1 |
 | L1D-302 | US-117b | sin change nuevo: conciliar y archivar `us-117b-versionado-sparse-semilla` | — | O1 | — | — | 0 |
 
-**Total: 69 pts**, que son los 20 tarjetas del refinamiento. El usuario aceptó el riesgo frente a la meta de cierre del 80 % `[S4 resp. 1]` `[S4 resp. 17…20]`. **Orden de recorte** si no alcanza: US-003 y US-005, luego US-238, US-133 y US-112 `[S4 resp. 20]`.
+**Total: 73 pts** (69 + 2 de L1D-97 reestimada de 3 a 5 + 2 de L1D-297 de 5 a 7; ver la nota del 2026-10-31), que son las 20 tarjetas del refinamiento. El usuario aceptó el riesgo frente a la meta de cierre del 80 % `[S4 resp. 1]` `[S4 resp. 17…20]`. **Orden de recorte** si no alcanza: US-003 y US-005, luego US-238, US-133 y US-112 `[S4 resp. 20]`.
 
 **Fuera del S4:** US-119 (L1D-118, `si-hay-capacidad`) tiene milestone Sprint 4 en Linear, pero el refinamiento no la comprometió. Se propone sacarla del milestone.
 
@@ -167,3 +167,13 @@ flowchart LR
   - Q3…Q7 siguen abiertas, con dueño y sin bloquear.
 - **(d) `si-hay-capacidad`:** no entra ninguna. US-119 (L1D-118) sale del milestone Sprint 4.
 - **(e) Merge:** por oleada. El orquestador junta los PRs de cada oleada en una sola petición, con CI en verde (0 fallos, 0 pendientes y 0 alertas) y en el orden de la cadena de versiones (§1).
+
+## 6. Ajustes del 2026-10-31 (O2)
+
+**Decidido (usuario, 2026-10-31):**
+
+- **Puntos del sprint: 73** (69 + 2 de L1D-97 reestimada de 3 a 5 + 2 de L1D-297 de 5 a 7). Las columnas Pts de §1 reflejan L1D-97 = 5 y L1D-297 = 7. El orden de las oleadas no cambia.
+- **L1D-97 (US-005)** se aprueba reestimada a 5 y se entrega en **dos partes**: primero las 4 deudas de `clinical-api` con `clinical-platform-dev`, luego el BFF y la UI.
+- **L1D-297 (US-247)** absorbe la deuda 1.1 de L1D-293 (`poblacion-reglas.json`, D4-03) con +2 puntos. Sin ese archivo, «mezclada» no aparece en producción. Detalle en su `design.md`.
+- **Orden de recorte** si hace falta (el aprobado del 2026-10-29, sin cambios): US-003/US-005, US-238, US-133, US-112.
+- La deuda del S4 (D4-01…D4-10) queda registrada en [`S4-deuda.md`](S4-deuda.md); sus dueños son propuestos y esperan aprobación humana, salvo D4-03.

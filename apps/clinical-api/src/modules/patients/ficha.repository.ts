@@ -1,5 +1,5 @@
 import type { Consultador } from '../auth/auth.repository.js';
-import { sqlDatoVigente, type EstadoDeRevisionVisible } from './estados-de-revision.js';
+import { sqlDatoVigente, type EstadoDeRevisionVisible } from '../compartido/estados-de-revision.js';
 import type { EstadoDelPaciente, OrigenDelPaciente } from './patients.repository.js';
 
 /** Datos no clínicos del paciente que alimentan la cabecera de la ficha (y la vista del admin). */

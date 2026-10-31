@@ -4,7 +4,7 @@ import type { Registrar } from '../../infrastructure/logger.js';
 import { authorize } from '../../middleware/authorize.js';
 import type { TraceIdGenerator } from '../../infrastructure/trace-id-generator.js';
 import { crearTraceIdMiddleware, traceIdDe } from '../../middleware/trace-id.middleware.js';
-import { PacienteNoEncontradoError } from '../patients/patients.errores.js';
+import { PacienteNoEncontradoError } from '../compartido/pacientes.errores.js';
 import { faltantesDe } from './completeness.rules.js';
 import { leerIdDePaciente } from './completeness.schema.js';
 import { comoVistaDelChecklist } from './completeness.vista.js';

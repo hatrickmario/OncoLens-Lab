@@ -1,5 +1,5 @@
 import type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
-import { PacienteNoEncontradoError } from '../patients/patients.errores.js';
+import { PacienteNoEncontradoError } from '../compartido/pacientes.errores.js';
 import { procedenciaDeItem } from './completeness.procedencia.js';
 import {
   calcularChecklist,
