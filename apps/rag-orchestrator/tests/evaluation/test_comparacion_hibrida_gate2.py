@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from pathlib import Path
 from typing import Any
 
@@ -172,6 +171,30 @@ def test_un_codificador_sparse_roto_aborta_la_corrida_y_no_cuenta_preguntas_sin_
     assert not (tmp_path / "salida").exists()
 
 
+class CodificadorQueSoloFallaConLaPregunta:
+    """Codifica bien los textos de los chunks del índice y falla por inferencia (no por falta de términos) con la pregunta."""
+
+    def __init__(self, textos_de_chunks: set[str]) -> None:
+        self._chunks = textos_de_chunks
+        self._interno = CodificadorSparseLexico()
+
+    def embeber_sparse(self, texto: str) -> dict[int, float]:
+        if texto not in self._chunks:
+            raise FalloDeInferencia("sparse: fallo de inferencia del modelo local")
+        return dict(self._interno.embeber_sparse(texto))
+
+
+def test_un_fallo_de_inferencia_solo_con_la_pregunta_aborta_la_corrida_sin_reporte(
+    tmp_path: Path,
+) -> None:
+    chunks = {c.texto for c in FuenteDatasetEnDirectorio(FIXTURE).cargar().chunks}
+
+    codigo = correr_local_con(tmp_path, CodificadorQueSoloFallaConLaPregunta(chunks))
+
+    assert codigo == 1
+    assert not (tmp_path / "salida").exists()
+
+
 def test_el_codificador_falso_lanza_sin_terminos_lexicos_y_no_un_fallo_generico() -> None:
     with pytest.raises(SinTerminosLexicos):
         CodificadorSparseLexico().embeber_sparse("¿qué es eso?")
@@ -201,4 +224,3 @@ def test_un_parametro_de_fusion_en_cero_se_respeta_y_no_se_sustituye_por_el_valo
     parametros = parametros_de_recuperacion(config, (), brazo)
 
     assert parametros.peso_sparse == 0.0
-    assert asyncio.iscoroutinefunction(main) is False

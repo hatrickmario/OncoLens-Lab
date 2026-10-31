@@ -27,6 +27,7 @@ from app.application.ports import (
     CorpusChunkStore,
     EvidenceGenerator,
     FalloDeInferencia,
+    SinTerminosLexicos,
     Idioma,
     NliClassifier,
     ProhibitedTermsChecker,
@@ -292,7 +293,7 @@ def _producto_sparse(a: Mapping[int, float], b: Mapping[int, float]) -> float:
 
 
 class EmbedderSparseFalso:
-    """``QuerySparseEncoder``: el mismo contrato que el real: un texto sin términos conocidos es un fallo, no un vector vacío."""
+    """``QuerySparseEncoder``: el mismo contrato que el real: un texto sin términos conocidos es ``SinTerminosLexicos`` (no un vector vacío) y cualquier otro fallo, ``FalloDeInferencia``."""
 
     def __init__(
         self, vectores: Mapping[str, Mapping[int, float]], error: Exception | None = None
@@ -310,7 +311,7 @@ class EmbedderSparseFalso:
         if self.error is not None:
             raise self.error
         if texto not in self._vectores:
-            raise FalloDeInferencia("sparse falso: la consulta no tiene ningún término con peso")
+            raise SinTerminosLexicos("sparse falso: la consulta no tiene ningún término con peso")
         return dict(self._vectores[texto])
 
 

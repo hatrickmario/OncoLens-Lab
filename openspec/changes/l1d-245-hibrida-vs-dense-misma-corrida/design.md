@@ -49,6 +49,8 @@ Es el entregable: `ai-eval-runner` ejecuta `evaluate --config eval/configs/s4-hi
 
 - **Gate 2 (vuelta 1):** `SinTerminosLexicos(FalloDeInferencia)` distingue «sin términos léxicos» de un fallo de inferencia; solo ella cuenta en `sin_terminos_lexicos` y un codificador roto aborta la corrida (exit 1).
 
+- **Cambio visible del adapter de US-248:** el reporte de ingesta registra la clase de la causa (`type(causa).__name__`); para un pasaje sin términos léxicos pasa de `FalloDeInferencia` a `SinTerminosLexicos` (subclase, mismo mensaje). Ninguna prueba de ingesta fijaba el nombre anterior; queda anotado, sin aserción nueva en ese test.
+
 ## Pendientes de definir
 
 - ¿El `golden_sha256` protege el archivo que la corrida realmente lee? Con los fixtures sí (hashea `preguntas.yaml`); con un dataset real en formato de la suite habrá que decidir si la huella cubre su `preguntas.yaml` o el `golden.yaml` de origen (hoy no hay vínculo dataset↔partición verificado).

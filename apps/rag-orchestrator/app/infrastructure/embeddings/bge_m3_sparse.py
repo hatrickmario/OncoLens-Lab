@@ -2,8 +2,8 @@
 
 El peso léxico de cada token es ``relu(sparse_linear(h))`` sobre el estado oculto ``h`` de ese token; la regla de qué
 tokens cuentan y cómo se agrupan es de ``app/domain/pesos_sparse``. Comparte sesión y tokenizer con el
-``PassageEmbedder``: el modelo se carga una sola vez. Un pasaje sin ningún término con peso es un fallo del puerto
-(``FalloDeInferencia``): Milvus no admite un vector vacío y la ingesta no inserta un chunk sin *sparse*.
+``PassageEmbedder``: el modelo se carga una sola vez. Un pasaje sin ningún término con peso lanza ``SinTerminosLexicos`` (Milvus no admite un vector vacío y la ingesta no
+inserta un chunk sin *sparse*); cualquier otro fallo del modelo, ``FalloDeInferencia``.
 """
 
 from __future__ import annotations
@@ -75,7 +75,7 @@ class CodificadorSparseDeConsultaBgeM3:
     """``QuerySparseEncoder`` (US-112 D6): el MISMO codificador de la ingesta aplicado a la consulta.
 
     Reutiliza ``CodificadorSparseBgeM3`` (pesos, tokenizer, ``max_length`` y origen del vector) para que el índice y la
-    consulta no puedan divergir; un texto sin ningún término con peso es un fallo del puerto, nunca un vector vacío.
+    consulta no puedan divergir; un texto sin ningún término con peso lanza ``SinTerminosLexicos``, nunca un vector vacío; otro fallo, ``FalloDeInferencia``.
     """
 
     def __init__(self, codificador: SparsePassageEncoder) -> None:
