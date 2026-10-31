@@ -102,6 +102,12 @@ ellos no divergen de lo que produce el proveedor. El requisito de la spec princi
 falta» (`applicability`) se modifica en este change; el escenario de US-125 AC-5 (`evidence-analysis`) lo modifica
 `l1d-144` (dueño de ese requisito en el S4), que depende de este change para él.
 
+**Unidad real de `applicability[]` (D-2, gate 2 vuelta 2).** El contrato trae criterios por fuente, no por opción. Cada fuente
+de `applicability[]` lleva los criterios de **la opción más aplicable que la cita** (orden de RN-28, ADR-31), calculados con
+los fragmentos que cita esa opción; si ninguna opción la cita, con el mejor chunk. Nunca la unión entre opciones: un
+`valores_en_conflicto` y el log `poblacion_conflicto` solo nacen entre fragmentos citados por una misma opción. El resumen por
+opción (`perSource`, `applicabilitySummary`) usa los fragmentos de cada opción y no cambia. Sin cambio de contrato.
+
 **Tests que fijan la causa antigua.** `test_rag_query_aplicabilidad.py:74` (`[US-122 AC-1]`) asierta `unknownReason = None`
 para el estadio: cambia la aserción con el *trailer* `Test-Removal:` (el AC cambió en la spec de este change). El test de
 US-125 AC-5 no fija `unknownReason`; gana la aserción nueva sin *trailer*. Los análisis históricos persistidos con `null`
@@ -111,6 +117,12 @@ no se reescriben (RN-06): la UI los muestra con «? Desconocido · causa no regi
 
 Toca la semántica del catálogo de aplicabilidad (no prompts ni modelos): el PR corre `run-ai-eval` si cambia el catálogo.
 La concordancia de estados la mide US-233b. Sin impacto directo en recall/MRR/fidelidad.
+
+## Decisiones de implementación (gate 2)
+
+- **Camino textual (D-6).** Con sinónimos o escala en el catálogo, `con_valor_textual` usa `estado_de_poblacion`; sin ellos, la regla de US-123.
+- **Rangos acotados (D-8).** Un rango declarado por el estudio que no incluye el valor del paciente da No coincide (S3); DEC-11 no lo escribe: a confirmar por el oncólogo.
+- **`mezclada`.** Sale de `disenosQueMezclan` en `poblacion-reglas.json`; sin el archivo no aparece en producción.
 
 ## Risks / Trade-offs
 

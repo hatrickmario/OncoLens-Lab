@@ -21,9 +21,9 @@ from app.domain.applicability_rules import (
     evaluar_criterio,
     evaluar_criterio_de_fuente,
     poblacion_no_comparable,
-    valor_del_estudio,
     valor_del_paciente,
 )
+from tests.support.poblacion_lista import valor_del_estudio
 from tests.support.aplicabilidad import criterios_de
 from tests.support.poblacion_lista import poblacion_guardada
 from tests.support.contract import CATALOGOS
@@ -284,14 +284,14 @@ def test_evaluar_criterio_clasifica_la_alternativa_larga_cuando_el_prefijo_es_2_
 def test_evaluar_criterio_deja_desconocido_cuando_el_paciente_tiene_2_mas_sin_ish_y_el_estudio_dice_positivo():
     evaluado = evaluar_criterio(her2(), "2+ (IHQ)", estudio("positivo"))
 
-    assert estado_y_causa(evaluado) == ("desconocido", None)
+    assert estado_y_causa(evaluado) == ("desconocido", "sin_regla_de_comparacion")
     assert evaluado.motivo_interno == "valor_fuera_de_tabla"
 
 
 def test_evaluar_criterio_deja_desconocido_cuando_el_paciente_dice_negativo_y_el_estudio_dice_positivo():
     assert estado_y_causa(evaluar_criterio(her2(), "negativo", estudio("positivo"))) == (
         "desconocido",
-        None,
+        "sin_regla_de_comparacion",
     )
 
 
@@ -320,7 +320,7 @@ def test_evaluar_criterio_compara_con_prefijo_sensible_a_mayusculas_y_espacios()
     # Con un espacio delante no hay prefijo: el paciente queda sin categoría y no se adivina (Q3).
     assert estado_y_causa(evaluar_criterio(her2(), " 3+ (IHQ)", estudio("positivo"))) == (
         "desconocido",
-        None,
+        "sin_regla_de_comparacion",
     )
     assert evaluar_criterio(her2(), "3+ (IHQ)", estudio("positivo")).estado == "coincide"
     assert evaluar_criterio(her2(), "3+ (IHQ)", estudio("Positivo")).estado == "no_coincide"
@@ -376,12 +376,12 @@ def test_evaluar_criterio_no_da_parcial_cuando_la_condicion_es_rango_solapado():
     assert evaluar_criterio(solapado, "1", estudio("0-1")).estado == "coincide"
 
 
-def test_evaluar_criterio_deja_desconocido_sin_causa_cuando_el_estadio_no_tiene_escala():
+def test_evaluar_criterio_deja_desconocido_sin_regla_de_comparacion_cuando_el_estadio_no_tiene_escala():
     estadio = criterio_de("rango", clave="estadio", campo="stage_value")
 
     evaluado = evaluar_criterio(estadio, "IIA", estudio("I–III"))
 
-    assert estado_y_causa(evaluado) == ("desconocido", None)
+    assert estado_y_causa(evaluado) == ("desconocido", "sin_regla_de_comparacion")
     assert evaluado.motivo_interno == "sin_escala"
     assert (evaluado.valor_paciente, evaluado.valor_estudio) == ("IIA", "I–III")
 
@@ -390,9 +390,9 @@ def test_evaluar_criterio_deja_desconocido_cuando_el_paciente_no_es_entero_o_el_
     sin_entero = evaluar_criterio(ecog(campo="grade"), "Nottingham grado 2", estudio("1-3"))
     sin_rango = evaluar_criterio(ecog(), "1", estudio("bajo"))
 
-    assert estado_y_causa(sin_entero) == ("desconocido", None)
+    assert estado_y_causa(sin_entero) == ("desconocido", "sin_regla_de_comparacion")
     assert sin_entero.motivo_interno == "forma_no_comparable"
-    assert estado_y_causa(sin_rango) == ("desconocido", None)
+    assert estado_y_causa(sin_rango) == ("desconocido", "sin_regla_de_comparacion")
     assert sin_rango.motivo_interno == "forma_no_comparable"
 
 
@@ -435,11 +435,11 @@ def test_evaluar_criterio_da_parcial_cuando_pertenece_y_el_estudio_es_de_un_subg
 def test_evaluar_criterio_deja_desconocido_cuando_la_pertenencia_recibe_un_valor_con_forma_de_rango():
     evaluado = evaluar_criterio(linea(), "1", estudio("1-2"))
 
-    assert estado_y_causa(evaluado) == ("desconocido", None)
+    assert estado_y_causa(evaluado) == ("desconocido", "sin_regla_de_comparacion")
     assert evaluado.motivo_interno == "forma_no_comparable"
     assert estado_y_causa(evaluar_criterio(linea(), "IIA", estudio("I–III"))) == (
         "desconocido",
-        None,
+        "sin_regla_de_comparacion",
     )
 
 
@@ -488,7 +488,7 @@ def test_evaluar_criterio_deja_desconocido_cuando_el_destino_es_una_lista_y_hay_
 
     evaluado = evaluar_criterio(receptores, "RE: Positivo; RP: Negativo", estudio("positivo"))
 
-    assert estado_y_causa(evaluado) == ("desconocido", None)
+    assert estado_y_causa(evaluado) == ("desconocido", "sin_regla_de_comparacion")
     assert evaluado.motivo_interno == "forma_no_comparable"
 
 

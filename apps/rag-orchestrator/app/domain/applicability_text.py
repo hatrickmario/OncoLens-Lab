@@ -11,8 +11,12 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
 from enum import StrEnum
 
-from app.domain.aplicabilidad_tipos import CriterioEvaluado, ValorDelEstudio
-from app.domain.applicability_rules import evaluar_criterio
+from app.domain.aplicabilidad_tipos import CriterioEvaluado, ValorDelEstudio, ValorDePoblacion
+from app.domain.applicability_rules import (
+    criterio_evaluado,
+    estado_de_poblacion,
+    evaluar_criterio,
+)
 from app.domain.citations import OpcionGenerada, validar_citas
 from app.domain.criterios_aplicabilidad import CriterioDeAplicabilidad
 from app.domain.nli import ParNli
@@ -80,13 +84,16 @@ def criterios_pendientes_de_texto(
 ) -> tuple[CriterioPendiente, ...]:
     """Los criterios sin valor estructurado de una fuente, en el orden del catálogo (design D1).
 
-    Un criterio con valor del estudio ya leído de ``population_criteria`` nunca va al LLM (US-122 AC-6); tampoco el que
-    tiene un destino que el resolvedor no sabe leer, que es un error del catálogo y no una pregunta al texto."""
+    Un criterio con valor del estudio ya leído de ``population_criteria`` nunca va al LLM (US-122 AC-6), ni uno cuya lista
+    solo trae valores de subgrupo o mención (US-243: ya se leyó y no cuenta); tampoco el que tiene un destino que el
+    resolvedor no sabe leer, que es un error del catálogo y no una pregunta al texto."""
     catalogo = {c.clave: c for c in criterios}
     return tuple(
         CriterioPendiente(e.clave, catalogo[e.clave].etiqueta_es, catalogo[e.clave].etiqueta_en)
         for e in evaluados
-        if e.valor_estudio is None and e.motivo_interno != "destino_no_resoluble"
+        if e.valor_estudio is None
+        and not e.valores_del_estudio
+        and e.motivo_interno != "destino_no_resoluble"
     )
 
 
@@ -201,6 +208,19 @@ def aceptar_propuestas(plan: PlanDePropuestas, soportadas: Sequence[bool]) -> Re
 # --- aplicar el valor aceptado con la regla del catálogo (D4, OQ-1) ----------------------------------------------------
 
 
+def _veredicto_del_texto(
+    criterio: CriterioDeAplicabilidad, valor_paciente: str | None, propuesta: PropuestaDePoblacion
+) -> CriterioEvaluado:
+    """Con tablas de población en el catálogo (sinónimos o escala) el texto se evalúa como un valor de la lista, igual que
+    el camino estructurado (US-243); sin ellas, con la regla del valor normalizado (US-123 sin cambios)."""
+    if criterio.poblacion.sinonimos or criterio.poblacion.escala:
+        valor = ValorDePoblacion(propuesta.valor, "elegibilidad", propuesta.chunk_id)
+        proyeccion = estado_de_poblacion([valor], valor_paciente, criterio)
+        return criterio_evaluado(criterio, valor_paciente, propuesta.valor, proyeccion)
+    normalizado = normalizar_valor_al_catalogo(criterio, propuesta.valor)
+    return evaluar_criterio(criterio, valor_paciente, ValorDelEstudio(normalizado))
+
+
 def normalizar_valor_al_catalogo(criterio: CriterioDeAplicabilidad, valor: str) -> str:
     """El valor sin los rótulos del propio criterio, para compararlo con la regla del catálogo (design D4).
 
@@ -243,8 +263,7 @@ def con_valor_textual(
 
     ``valor_estudio`` es el texto propuesto y verificado por el NLI (no el normalizado) y cita el chunk de la propuesta;
     el valor del paciente no se toca (ADR-34). Si el valor no encaja en la regla queda ``desconocido`` (OQ-1)."""
-    normalizado = normalizar_valor_al_catalogo(criterio, propuesta.valor)
-    veredicto = evaluar_criterio(criterio, evaluado.valor_paciente, ValorDelEstudio(normalizado))
+    veredicto = _veredicto_del_texto(criterio, evaluado.valor_paciente, propuesta)
     return replace(
         veredicto,
         valor_estudio=propuesta.valor,

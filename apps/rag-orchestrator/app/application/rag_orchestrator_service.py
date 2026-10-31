@@ -18,12 +18,17 @@ from typing import TypeVar
 from app.application.aplicabilidad import (
     AplicabilidadDeFuente,
     ApplicabilityService,
+    conflictos_para_el_log,
     formas_invalidas_para_el_log,
     mejor_chunk_por_documento,
     recuentos_para_el_log,
 )
 from app.application.aplicabilidad_textual import AplicabilidadCompleta, AplicabilidadTextual
-from app.application.aplicabilidad_de_opciones import con_aplicabilidad_de_cada_opcion
+from app.application.aplicabilidad_de_opciones import (
+    Reevaluar,
+    con_aplicabilidad_de_cada_opcion,
+    fuentes_con_los_fragmentos_citados,
+)
 from app.application.catalogo_exigido import exigir_catalogo_de_la_solicitud
 from app.application.chunk_citable import ChunkCitable
 from app.application.contexto_del_paciente import contexto_del_paciente
@@ -251,9 +256,14 @@ class RAGOrchestratorService:
         soporte = await self._soporte.verificar(
             trace_id, idioma, resultado.aceptadas, evidencia.limitaciones_propuestas, textos
         )
+        reevaluar = self._reevaluador_de_aplicabilidad(solicitud)
         recortadas = self._recortar_soportadas(
-            trace_id, soporte.soportadas, citables, solicitud, aplicabilidad.fuentes
+            trace_id, soporte.soportadas, citables, solicitud, aplicabilidad.fuentes, reevaluar
         )
+        fuentes = fuentes_con_los_fragmentos_citados(
+            aplicabilidad.fuentes, recortadas, citables, reevaluar
+        )
+        self._registrar_conflictos(trace_id, fuentes)
         return ensamblar_respuesta_con_evidencia(
             recortadas,
             self._soporte.sanear_descartadas(trace_id, idioma, resultado.descartadas),
@@ -262,7 +272,7 @@ class RAGOrchestratorService:
             soporte.omitidas + aplicabilidad.omitidas,
             citables,
             recuperacion,
-            aplicabilidad.fuentes,
+            fuentes,
         )
 
     async def _evaluar_aplicabilidad(
@@ -292,6 +302,29 @@ class RAGOrchestratorService:
         )
         self._registrar_aplicabilidad(trace_id, fuentes, inicio)
         return await self._textual.completar(trace_id, tipo, fuentes, citables)
+
+    def _reevaluador_de_aplicabilidad(self, solicitud: RagQueryInternalRequest) -> Reevaluar:
+        """Recalcula una fuente con los fragmentos que cita una opción (ADR-47); sin diagnóstico no hay fuentes."""
+        diagnostico = solicitud.clinicalContext.diagnosis
+        if diagnostico is None:
+            return lambda fuente, _: fuente
+        tipo = diagnostico.cancerType.root
+        contexto = contexto_del_paciente(solicitud.clinicalContext)
+        return lambda fuente, chunk_ids: self._aplicabilidad.con_chunks_citados(
+            tipo, contexto, fuente, chunk_ids
+        )
+
+    @staticmethod
+    def _registrar_conflictos(trace_id: str, fuentes: Sequence[AplicabilidadDeFuente]) -> None:
+        """Valores en conflicto entre fragmentos (US-243): criterio, ``chunkId`` y ``traceId``; nunca el valor, el texto del
+        fragmento, el prompt ni la salida del LLM (RN-14)."""
+        for criterio, chunk_id in conflictos_para_el_log(fuentes):
+            logger.info(
+                "event=poblacion_conflicto criterio=%s chunkId=%s traceId=%s",
+                criterio,
+                chunk_id,
+                trace_id,
+            )
 
     @staticmethod
     def _con_version_de_aplicabilidad(
@@ -336,6 +369,7 @@ class RAGOrchestratorService:
         citables: dict[str, ChunkCitable],
         solicitud: RagQueryInternalRequest,
         fuentes: Sequence[AplicabilidadDeFuente],
+        reevaluar: Reevaluar,
     ) -> tuple[OpcionConRelevancia, ...]:
         """FR-09, RN-28: agrega la aplicabilidad de cada opción ya soportada y conserva las ``maxOptions`` más aplicables.
 
@@ -348,6 +382,7 @@ class RAGOrchestratorService:
             fuentes,
             citables,
             puntajes,
+            reevaluar,
         )
         recortadas = recortar_a_max_opciones(soportadas, solicitud.maxOptions)
         logger.info(

@@ -9,11 +9,12 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict
+from typing import TypedDict
 
 from app.application.aplicabilidad import AplicabilidadDeFuente
 from app.application.chunk_citable import ChunkCitable
 from app.application.ports import ResultadoDeRecuperacion
-from app.domain.aplicabilidad_tipos import CriterioEvaluado, ResumenDeEstados
+from app.domain.aplicabilidad_tipos import CriterioEvaluado, ResumenDeEstados, ValorDePoblacion
 from app.domain.applicability_aggregation import (
     FuenteDeLaOpcion,
     agregar_aplicabilidad_de_opcion,
@@ -32,12 +33,15 @@ from app.schemas.generated.models import (
     EvidenceOption,
     Limitation,
     Origin,
+    PartialReason,
     PatientDataWarning,
     PerSourceItem,
     RagQueryInternalResponse,
     RagQueryStatus,
     RetrievalStats,
+    Scope,
     SourceApplicability,
+    StudyPopulationValue,
     Synthesis,
     UnknownReason,
     Warning,
@@ -98,24 +102,68 @@ def _resumen_del_contrato(resumen: ResumenDeEstados) -> ApplicabilitySummary:
     )
 
 
+LONGITUD_MAXIMA_DEL_VALOR_DE_POBLACION = 200
+"""``StudyPopulationValue.value`` (contrato): un valor más largo no cabe en la respuesta; el lector de US-241 aún no lo
+valida (P6 abierta), así que aquí no se emite en lugar de tumbar el análisis."""
+
+
 def _criterio_aplicable(
     criterio: CriterioEvaluado, mejor_chunk: ChunkCitable, citables: Mapping[str, ChunkCitable]
 ) -> ApplicabilityCriterion:
     """Todo criterio que muestra un valor del estudio cita la fuente, aunque sea ``desconocido`` (RN-25, design D6);
-    sin valor del estudio no hay nada que citar. Un valor textual aceptado cita el chunk que lo respaldó (US-123);
-    uno estructurado, el mejor chunk de la fuente. ``patientDataWarning`` es el aviso del dato del paciente (US-124)."""
-    cita_la_fuente = criterio.valor_estudio is not None
-    citado = citables[criterio.chunk_citado_id] if criterio.chunk_citado_id else mejor_chunk
+    sin valor del estudio no hay nada que citar. Un valor textual aceptado cita el chunk que lo respaldó (US-123); uno de
+    la lista, los fragmentos de los que salen sus valores (ADR-47); uno estructurado antiguo, el mejor chunk de la fuente.
+    ``patientDataWarning`` es el aviso del dato del paciente (US-124)."""
     return ApplicabilityCriterion(
         criterion=criterio.clave,
         patientValue=criterio.valor_paciente,
         studyPopulationValue=criterio.valor_estudio,
+        **_poblacion_en_lista(criterio),
         status=ApplicabilityStatus(criterio.estado),
         unknownReason=UnknownReason(criterio.causa) if criterio.causa else None,
         isExclusionary=criterio.es_excluyente,
         patientDataWarning=PatientDataWarning(criterio.aviso) if criterio.aviso else None,
-        citedSources=[_cita_de(citado)] if cita_la_fuente else [],
+        citedSources=[
+            _cita_de(c) for c in _fragmentos_que_respaldan(criterio, mejor_chunk, citables)
+        ],
     )
+
+
+class _PoblacionEnLista(TypedDict, total=False):
+    studyPopulationValues: list[StudyPopulationValue]
+    partialReason: PartialReason
+
+
+def _poblacion_en_lista(criterio: CriterioEvaluado) -> _PoblacionEnLista:
+    """``studyPopulationValues`` y ``partialReason``: opcionales, solo con la forma de lista y un motivo parcial."""
+    campos: _PoblacionEnLista = {}
+    valores = [
+        v
+        for v in criterio.valores_del_estudio
+        if v.chunk_id is not None and len(v.valor) <= LONGITUD_MAXIMA_DEL_VALOR_DE_POBLACION
+    ]
+    if valores:
+        campos["studyPopulationValues"] = [_valor_del_contrato(v) for v in valores]
+    if criterio.motivo_parcial:
+        campos["partialReason"] = PartialReason(criterio.motivo_parcial)
+    return campos
+
+
+def _valor_del_contrato(valor: ValorDePoblacion) -> StudyPopulationValue:
+    return StudyPopulationValue(
+        value=valor.valor, chunkId=valor.chunk_id, scope=Scope(valor.alcance)
+    )
+
+
+def _fragmentos_que_respaldan(
+    criterio: CriterioEvaluado, mejor_chunk: ChunkCitable, citables: Mapping[str, ChunkCitable]
+) -> list[ChunkCitable]:
+    if criterio.valores_del_estudio:
+        ids = dict.fromkeys(v.chunk_id for v in criterio.valores_del_estudio)
+        return [citables[i] for i in ids if i in citables]
+    if criterio.valor_estudio is None:
+        return []
+    return [citables[criterio.chunk_citado_id] if criterio.chunk_citado_id else mejor_chunk]
 
 
 def _cita_de(citable: ChunkCitable) -> CitedSource:
