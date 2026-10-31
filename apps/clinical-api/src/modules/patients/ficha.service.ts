@@ -4,6 +4,7 @@ import type {
   PatientAdminSummary,
   PatientSummary,
 } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
+import { claseDeError } from '../../infrastructure/logger.js';
 import { faltantesDe } from '../completeness/completeness.rules.js';
 import type { CompletenessService } from '../completeness/ports.js';
 import type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
@@ -12,7 +13,7 @@ import type { FichaRepository, FilaDePacienteDeLaFicha } from './ficha.repositor
 import {
   comoBiomarcador,
   comoDiagnostico,
-  seleccionarDiagnosticoVigente,
+  elegirDiagnosticoVigenteDeLaFicha,
   ultimoValorPorBiomarcador,
 } from './ficha.reglas.js';
 import type { IdentityService } from './identity.service.js';
@@ -30,12 +31,12 @@ export interface DependenciasDeLaFicha {
   completitud: CompletenessService;
 }
 
-async function diagnosticoVigente(
+async function cargarDiagnosticoVigenteDeLaFicha(
   dependencias: DependenciasDeLaFicha,
   patientId: string,
 ): Promise<Diagnosis | null> {
   const { ficha } = dependencias;
-  const vigente = seleccionarDiagnosticoVigente(await ficha.diagnosticos(patientId));
+  const vigente = elegirDiagnosticoVigenteDeLaFicha(await ficha.diagnosticos(patientId));
   if (vigente === null) return null;
   const gradaciones = await ficha.gradaciones(vigente.id);
   const adicionales = await ficha.fuentesAdicionales('diagnosis', [vigente.id]);
@@ -60,7 +61,7 @@ async function faltantesCriticos(
   try {
     return { missingCriticalCount: faltantesDe(await completitud.calcular(patientId)).length };
   } catch (error) {
-    alFallar?.(error instanceof Error ? error.name : 'ErrorDesconocido');
+    alFallar?.(claseDeError(error));
     return { missingCriticalCount: 0, completenessAvailable: false };
   }
 }
@@ -86,7 +87,7 @@ async function fichaDelDoctor(
 ): Promise<PatientSummary> {
   const { identidad, repo, tiposHabilitados, completitud } = dependencias;
   const descifrada = exigirIdentidad((await identidad.descifrar(paciente.id)) ?? undefined);
-  const diagnostico = await diagnosticoVigente(dependencias, paciente.id);
+  const diagnostico = await cargarDiagnosticoVigenteDeLaFicha(dependencias, paciente.id);
   const pendientes = await repo.contarPendientesDeRevision([paciente.id]);
   return {
     view: 'doctor',

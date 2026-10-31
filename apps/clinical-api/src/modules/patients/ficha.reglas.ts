@@ -22,7 +22,7 @@ function compararTexto(a: string, b: string): number {
  * Diagnóstico vigente (D3): entre los activos, el que fija la regla única de `compartido/diagnostico-vigente`. Sin
  * ninguno, `null` y la ficha muestra «No registrado».
  */
-export function seleccionarDiagnosticoVigente(
+export function elegirDiagnosticoVigenteDeLaFicha(
   diagnosticos: readonly FilaDeDiagnostico[],
 ): FilaDeDiagnostico | null {
   const activos = diagnosticos.filter((diagnostico) => diagnostico.isActive);

@@ -153,4 +153,21 @@ describe('missingCriticalCount de la ficha', () => {
     expect(logger.texto()).not.toContain('SINT-error-de-pg');
     expect(resultado.body).not.toHaveProperty('errorClase');
   });
+
+  it('registra errorClase ErrorDesconocido cuando el checklist rechaza con un valor que no es un Error', async () => {
+    const fm2 = await sembrarFM2(siembra);
+    await conIdentidad(fm2.patientId, 6);
+    const fallido: CompletenessService = {
+      calcular: () => Promise.reject('texto-sintetico-no-error'),
+    };
+
+    const { respuesta, logger } = pedirFicha(fm2.patientId, fallido);
+    await respuesta;
+
+    const aviso = logger.lineas.find(
+      (linea) => linea.event === 'patients.ficha.checklist_no_disponible',
+    );
+    expect(aviso?.errorClase).toBe('ErrorDesconocido');
+    expect(logger.texto()).not.toContain('texto-sintetico-no-error');
+  });
 });

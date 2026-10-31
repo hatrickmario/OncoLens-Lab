@@ -9,7 +9,7 @@ import {
   sqlOrdenDeDiagnosticoVigente,
   type DatosDeVigencia,
 } from '../../../src/modules/compartido/diagnostico-vigente.js';
-import { seleccionarDiagnosticoVigente } from '../../../src/modules/patients/ficha.reglas.js';
+import { elegirDiagnosticoVigenteDeLaFicha } from '../../../src/modules/patients/ficha.reglas.js';
 import type { FilaDeDiagnostico } from '../../../src/modules/patients/ficha.repository.js';
 
 const dato = (id: string, fecha: string | null): DatosDeVigencia => ({ id, fecha });
@@ -119,9 +119,14 @@ const registroDeChecklist = (id: string, fecha: string, creadoEn: string): Regis
 });
 
 describe('el diagnóstico vigente de la ficha y del checklist', () => {
-  const casos: ReadonlyArray<{ nombre: string; filas: ReadonlyArray<[string, string, string]> }> = [
+  const casos: ReadonlyArray<{
+    nombre: string;
+    esperado: string;
+    filas: ReadonlyArray<[string, string, string]>;
+  }> = [
     {
       nombre: 'varios por fecha',
+      esperado: 'd-2',
       filas: [
         ['d-1', '2026-01-01', '2026-10-01T00:00:00Z'],
         ['d-2', '2026-08-01', '2026-10-02T00:00:00Z'],
@@ -129,21 +134,28 @@ describe('el diagnóstico vigente de la ficha y del checklist', () => {
     },
     {
       nombre: 'empate de fecha con created_at invertido',
+      esperado: 'd-1',
       filas: [
         ['d-1', '2026-06-01', '2026-10-09T00:00:00Z'],
         ['d-2', '2026-06-01', '2026-10-01T00:00:00Z'],
       ],
     },
-    { nombre: 'un solo diagnóstico', filas: [['d-7', '2026-03-03', '2026-10-01T00:00:00Z']] },
+    {
+      nombre: 'un solo diagnóstico',
+      esperado: 'd-7',
+      filas: [['d-7', '2026-03-03', '2026-10-01T00:00:00Z']],
+    },
   ];
 
-  it.each(casos)('es el mismo registro cuando hay $nombre', ({ filas }) => {
-    const ficha = seleccionarDiagnosticoVigente(filas.map(([id, fecha]) => filaDeFicha(id, fecha)));
+  it.each(casos)('es el mismo registro cuando hay $nombre', ({ filas, esperado }) => {
+    const ficha = elegirDiagnosticoVigenteDeLaFicha(
+      filas.map(([id, fecha]) => filaDeFicha(id, fecha)),
+    );
     const checklist = diagnosticoVigente(
       filas.map(([id, fecha, creado]) => registroDeChecklist(id, fecha, creado)),
     );
 
-    expect(ficha?.id).toBeDefined();
+    expect(ficha?.id).toBe(esperado);
     expect(checklist?.id).toBe(ficha?.id);
   });
 });

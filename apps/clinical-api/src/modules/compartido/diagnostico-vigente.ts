@@ -12,7 +12,7 @@ function compararTexto(a: string, b: string): number {
 }
 
 /**
- * REGLA ÚNICA del «diagnóstico vigente» (D3 de la ficha, D4 del checklist): entre los diagnósticos candidatos (la
+ * Orden ÚNICO de vigencia del «diagnóstico vigente» (el filtro de candidatos lo declara quien llama; D3 de la ficha, D4 del checklist): entre los diagnósticos candidatos (la
  * BD no garantiza un solo activo por paciente: `diagnosis_patient_id_is_active_idx` no es único), el de `diagnosed_at`
  * más reciente; el empate lo desempata el `id` ascendente. Negativo si `a` es más vigente que `b`.
  */
