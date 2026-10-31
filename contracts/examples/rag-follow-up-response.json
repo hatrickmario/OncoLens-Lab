@@ -76,7 +76,11 @@
       "relevanceThreshold": 0.5,
       "retrievalMode": "dense",
       "fusion": "ninguna",
-      "fusionParam": 0
+      "fusionParam": 0,
+      "queryRewrite": {
+        "applied": false,
+        "reason": "no_aplica"
+      }
     },
     "latencyMs": 6100
   }

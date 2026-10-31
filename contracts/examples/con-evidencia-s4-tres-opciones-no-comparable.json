@@ -237,7 +237,8 @@
         "publishedFromYear": 2021
       },
       "retrieved": 40,
-      "aboveThreshold": 2
+      "aboveThreshold": 2,
+      "queryRewritten": false
     },
     "sourcesNotIncluded": [
       "NCCN",

@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
+import reescrituraAplicada from '../../../../../contracts/examples/rag-query-reescritura-aplicada.json' with { type: 'json' };
 import conEvidencia from '../../../../../contracts/examples/rag-query-con-evidencia.json' with { type: 'json' };
 import sinEvidencia from '../../../../../contracts/examples/rag-query-sin-evidencia.json' with { type: 'json' };
 import peticion from '../../../../../contracts/examples/rag-query-request.json' with { type: 'json' };
 import {
   construirBaseTipoNoHabilitado,
   crearBaseDelAnalisis,
+  declararReescrituraEnLaBase,
   etiquetarFaltantes,
 } from '../../../src/modules/evidence-analysis/analysis-basis.js';
 import { validarRespuestaInterna } from '../../../src/modules/evidence-analysis/analysis-completion.js';
@@ -13,6 +15,32 @@ import type { RagQueryInternalRequest } from '../../../../../packages/api-contra
 
 const request = peticion as RagQueryInternalRequest;
 const respuestaConEvidencia = () => validarRespuestaInterna(conEvidencia);
+
+describe('declararReescrituraEnLaBase (US-238, D-d)', () => {
+  const conQueryRewrite = (
+    status: 'con_evidencia' | 'sin_evidencia',
+    queryRewrite: { applied: boolean; reason: string },
+  ) => {
+    const respuesta = validarRespuestaInterna(
+      status === 'con_evidencia' ? conEvidencia : sinEvidencia,
+    );
+    respuesta.meta.retrievalParams.queryRewrite = queryRewrite as never;
+    return respuesta;
+  };
+
+  it('es verdadero solo con applied verdadero y con_evidencia [US-238 AC-1]', () => {
+    expect(declararReescrituraEnLaBase(validarRespuestaInterna(reescrituraAplicada))).toBe(true);
+  });
+
+  it.each([
+    ['con_evidencia', { applied: false, reason: 'no_disparado' }],
+    ['con_evidencia', { applied: false, reason: 'no_disponible' }],
+    ['sin_evidencia', { applied: true, reason: 'disparado' }],
+    ['sin_evidencia', { applied: false, reason: 'no_disponible' }],
+  ] as const)('es falso con %s y %j', (status, queryRewrite) => {
+    expect(declararReescrituraEnLaBase(conQueryRewrite(status, queryRewrite))).toBe(false);
+  });
+});
 
 describe('BaseDelAnalisis', () => {
   const base = crearBaseDelAnalisis({ etiquetaDe: (clave) => clave });
@@ -33,6 +61,7 @@ describe('BaseDelAnalisis', () => {
       filters: request.filtersApplied,
       retrieved: 40,
       aboveThreshold: 1,
+      queryRewritten: false,
     });
   });
 
@@ -138,6 +167,7 @@ describe('construirBaseTipoNoHabilitado', () => {
       filters: request.filtersApplied,
       retrieved: 0,
       aboveThreshold: 0,
+      queryRewritten: false,
     });
   });
 

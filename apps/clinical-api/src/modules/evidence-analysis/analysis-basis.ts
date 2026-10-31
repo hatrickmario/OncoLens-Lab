@@ -84,6 +84,13 @@ export function etiquetarFaltantes(
   });
 }
 
+/** D-d (US-238): la Base declara el rescate de la reescritura de la consulta; la reformulación nunca sale de Backend 2. */
+export function declararReescrituraEnLaBase(respuesta: RagQueryInternalResponse): boolean {
+  return (
+    respuesta.meta.retrievalParams.queryRewrite.applied && respuesta.status === 'con_evidencia'
+  );
+}
+
 /**
  * Base del análisis del S2 (FR-27, US-066): determinista y sin E/S. Función pura de la petición interna, la respuesta
  * interna y `continueWithWarning`; la sustituye en la raíz de composición sin tocar el service.
@@ -105,6 +112,7 @@ export function crearBaseDelAnalisis(dependencias: {
           filters: request.filtersApplied,
           retrieved: respuesta.retrievalStats.retrieved,
           aboveThreshold: respuesta.retrievalStats.aboveThreshold,
+          queryRewritten: declararReescrituraEnLaBase(respuesta),
         },
         sourcesNotIncluded: respuesta.meta.excludedSources,
         corpusCutoffDate: respuesta.meta.corpusCutoffDate,
@@ -143,6 +151,7 @@ export function construirBaseTipoNoHabilitado(entrada: EntradaDeLaBaseSinIA): An
       filters: entrada.filters,
       retrieved: 0,
       aboveThreshold: 0,
+      queryRewritten: false,
     },
     sourcesNotIncluded: [...entrada.sourcesNotIncluded],
     corpusCutoffDate: entrada.corpusCutoffDate,

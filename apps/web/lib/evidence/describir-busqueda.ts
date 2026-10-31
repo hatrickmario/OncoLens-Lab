@@ -22,13 +22,16 @@ export function nombrarFuentes(seleccionadas: FuentesConsultadas['selected']): s
   return seleccionadas.map((fuente) => fuentes[fuente]).join(', ');
 }
 
-/** "Qué se buscó…" del resumen; con `tipo_no_habilitado` dice que no se consultó el corpus (RN-20). */
+/**
+ * "Qué se buscó…" del resumen; con `tipo_no_habilitado` dice que no se consultó el corpus (RN-20). Con evidencia solo
+ * aparece si la búsqueda se repitió con una reformulación (`queryRewritten`, US-238): la reformulación misma no llega aquí.
+ */
 export function describirBusqueda(
   consultadas: FuentesConsultadas,
   estado: EstadoDelAnalisis,
 ): string | null {
-  const { busqueda, sinConsulta } = mensajes().evidence.base;
-  if (estado === 'con_evidencia') return null;
+  const { busqueda, sinConsulta, reescrituraAplicada } = mensajes().evidence.base;
+  if (estado === 'con_evidencia') return consultadas.queryRewritten ? reescrituraAplicada : null;
   if (estado === 'tipo_no_habilitado') return sinConsulta;
   return rellenar(busqueda, {
     fuentes: nombrarFuentes(consultadas.selected),
