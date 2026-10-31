@@ -177,7 +177,11 @@
       "relevanceThreshold": 0.5,
       "retrievalMode": "hibrida",
       "fusion": "rrf",
-      "fusionParam": 60
+      "fusionParam": 60,
+      "queryRewrite": {
+        "applied": false,
+        "reason": "no_disparado"
+      }
     },
     "latencyMs": 8200
   }

@@ -54,6 +54,7 @@ from app.config.version import VERSION_DEL_SERVICIO
 from app.domain.criterios_aplicabilidad import CriteriosDeAplicabilidad
 from app.domain.fusion_de_candidatos import EstrategiaDeFusion
 from app.domain.tipos_habilitados import tipos_ausentes_del_catalogo
+from app.infrastructure.catalogo_clinico.sinonimos import cargar_terminos_del_catalogo
 from app.infrastructure.catalogo_clinico.aplicabilidad import (
     CriteriosDelCatalogo,
     cargar_criterios_de_aplicabilidad,
@@ -73,6 +74,8 @@ from app.infrastructure.lenguaje.terminos_prohibidos import (
 from app.infrastructure.llm.fabrica_local import (
     crear_generador_local,
     crear_proponente_local,
+    crear_reescritor_local,
+    parametros_de_reescritura,
     parametros_del_respaldo,
 )
 from app.infrastructure.llm.openai_compatible_health import OpenAICompatibleLlmHealth
@@ -410,7 +413,17 @@ def _crear_servicio_de_recuperacion(
         parametros=_parametros_de_recuperacion(settings),
         buscador_sparse=puertos.buscador_sparse,
         embedder_sparse=puertos.embedder_sparse,
+        # Segundo loop (US-238): el mismo LLM local (RN-12) y solo términos del catálogo montado (RN-27).
+        reescritor=crear_reescritor_local(settings),
+        terminos_del_catalogo=_terminos_del_catalogo_montado(settings, puertos.catalogo_clinico),
     )
+
+
+def _terminos_del_catalogo_montado(settings: Settings, catalogo: CatalogoClinico) -> frozenset[str]:
+    """Términos y sinónimos de cada tipo del manifiesto; sin ruta de catálogo (solo con un catálogo inyectado) no hay."""
+    if settings.clinical_catalog_path is None:
+        return frozenset()
+    return cargar_terminos_del_catalogo(settings.clinical_catalog_path, catalogo.tipos_de_cancer())
 
 
 def _exigir_configuracion_de_recuperacion(settings: Settings) -> None:
@@ -477,6 +490,7 @@ def _parametros_de_recuperacion(settings: Settings) -> ParametrosDeRecuperacion:
         nli_entailment_threshold=settings.nli_entailment_threshold,  # type: ignore[arg-type]
         tipos_habilitados=settings.enabled_cancer_types,
         respaldo=parametros_del_respaldo(settings),
+        reescritura=parametros_de_reescritura(settings),
         retrieval_mode=RetrievalMode(settings.retrieval_mode),
         retrieval_fusion=EstrategiaDeFusion(settings.retrieval_fusion),
         rrf_k=settings.rrf_k,

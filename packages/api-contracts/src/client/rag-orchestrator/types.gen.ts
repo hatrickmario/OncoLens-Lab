@@ -261,6 +261,13 @@ export type RagMeta = {
          * Parámetro de la fusión: `0` con `ninguna`; `k` de RRF (entero >= 1) con `rrf`; peso de la rama sparse (0 < w < 1) con `ponderada`. Nunca null.
          */
         fusionParam: number;
+        /**
+         * Segundo loop de reescritura de la consulta (US-238, RN-02 enmendada). Nunca null. `disparado`: el primer loop quedó vacío y hubo segunda recuperación con la consulta reformulada (rescate o no); `no_disparado`: el primer loop tuvo chunks sobre el umbral o la reescritura está desactivada; `no_disponible`: primer loop vacío sin reformulación utilizable (LLM caído, deadline vencido, salida inválida o cero términos del catálogo); `no_aplica`: /rag/follow-up, donde el segundo loop nunca corre. La consulta reformulada nunca sale de rag-orchestrator.
+         */
+        queryRewrite: {
+            applied: boolean;
+            reason: 'disparado' | 'no_disparado' | 'no_disponible' | 'no_aplica';
+        };
     };
     latencyMs: number;
 };

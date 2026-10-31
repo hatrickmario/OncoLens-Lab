@@ -477,6 +477,7 @@ export const zAnalysisBasis = z.strictObject({
         origin: z.enum(['regla_catalogo', 'llm_verificado'])
     })),
     sourcesConsulted: z.strictObject({
+        queryRewritten: z.boolean(),
         selected: z.array(z.enum([
             'guias',
             'ensayos',

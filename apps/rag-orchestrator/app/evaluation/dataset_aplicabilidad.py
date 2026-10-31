@@ -221,6 +221,7 @@ def _par(crudo: Mapping[str, Any]) -> ParDelDataset:
         fuente=crudo["fuente"],
         guion=crudo["guion"],
         esperados={
-            clave: Esperado(e["estado"], e.get("causa")) for clave, e in crudo["esperado"].items()
+            clave: Esperado(e["estado"], e.get("causa"), e.get("aviso"))
+            for clave, e in crudo["esperado"].items()
         },
     )

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — Platform API (Backend 1 / clinical-api)
-  version: 1.14.0
+  version: 1.15.0
   description: >-
     API pública, accesible solo a través de los Route Handlers de web (clinical-api no
     publica puerto al host). Autenticación por cookie de sesión HttpOnly + Secure +
@@ -1736,8 +1736,15 @@ components:
         sourcesConsulted:
           type: object
           additionalProperties: false
-          required: [selected, filters, retrieved, aboveThreshold]
+          required: [selected, filters, retrieved, aboveThreshold, queryRewritten]
           properties:
+            queryRewritten:
+              type: boolean
+              description: >-
+                `true` solo si la búsqueda se repitió con una reformulación de la pregunta con términos del
+                catálogo (segundo loop, US-238) y el análisis quedó `con_evidencia`; `false` en cualquier otro caso
+                (incluida una reescritura intentada sin rescate). Lo fija clinical-api desde
+                `meta.retrievalParams.queryRewrite`; la consulta reformulada nunca sale de rag-orchestrator.
             selected:
               type: array
               items:

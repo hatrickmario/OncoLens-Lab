@@ -1,12 +1,15 @@
 import type { EvidenceAnalysis } from '../../../../packages/api-contracts/src/types/clinical-api';
 import { mensajes, rellenar } from '../mensajes';
+import { anuncioOpcionesNoMostradas } from './lista-de-opciones';
 import { clasificarResultado, type ClaseDeResultado } from './clasificar-resultado';
 import type { FaseDelPanel } from './fase-del-panel';
 
 function anunciarOpcionesListas(analisis: EvidenceAnalysis): string {
   const { estado } = mensajes().evidence;
   const n = analisis.evidenceOptions.length;
-  return n === 1 ? estado.listoUna : rellenar(estado.listoVarias, { n });
+  const listo = n === 1 ? estado.listoUna : rellenar(estado.listoVarias, { n });
+  const noMostradas = anuncioOpcionesNoMostradas(analisis.analysisBasis);
+  return noMostradas ? `${listo}. ${noMostradas}` : listo;
 }
 
 /** Anuncio por clase de resultado; exhaustivo: añadir una clase obliga a decidir qué se anuncia. */
