@@ -28,11 +28,27 @@ class OpcionConRelevancia:
     """La agregada por fuente (ADR-31); ``None`` si la consulta no calculó aplicabilidad."""
 
 
+@dataclass(frozen=True)
+class RecorteDeOpciones:
+    """Las opciones conservadas en orden y SOLO el número de las que quedaron fuera (nunca su contenido)."""
+
+    conservadas: tuple[OpcionConRelevancia, ...]
+    excedente: int
+
+
 def recortar_a_max_opciones(
     opciones: Sequence[OpcionConRelevancia], max_options: int
 ) -> tuple[OpcionConRelevancia, ...]:
     """Las ``max_options`` primeras en el orden determinista de RN-28."""
     return tuple(sorted(opciones, key=_clave_de_recorte)[:max_options])
+
+
+def recortar_contando_excedente(
+    opciones: Sequence[OpcionConRelevancia], max_options: int
+) -> RecorteDeOpciones:
+    """El recorte de RN-28 y cuántas opciones validadas quedaron fuera (``optionsNotShown``, US-134 AC-3)."""
+    conservadas = recortar_a_max_opciones(opciones, max_options)
+    return RecorteDeOpciones(conservadas, len(opciones) - len(conservadas))
 
 
 def _clave_de_recorte(opcion: OpcionConRelevancia) -> tuple[int, int, float, str]:

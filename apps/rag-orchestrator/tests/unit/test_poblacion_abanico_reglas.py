@@ -7,12 +7,12 @@ import pytest
 from app.domain.corpus_metadata.campos import LONGITUD_MAXIMA_DE_VALOR
 from app.domain.corpus_metadata.poblacion_abanico import (
     ValorPropuesto,
+    descartar_chunk_ajeno,
     descartar_por_longitud,
     hipotesis_de_valor,
     omitir_lenguaje_prescriptivo,
     pares_de_verificacion,
     rechazar_relleno,
-    descartar_chunk_ajeno,
     verificar_nli,
 )
 from app.domain.nli import ResultadoNli

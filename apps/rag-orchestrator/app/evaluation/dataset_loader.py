@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+
 from app.config.settings import Settings
 from app.domain.corpus_seed.admisibilidad import PISO_DE_FUENTES_EXCLUIDAS
 

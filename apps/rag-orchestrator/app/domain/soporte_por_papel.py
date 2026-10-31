@@ -1,8 +1,9 @@
 """Regla por papel de las afirmaciones atómicas de una opción (RN-01, US-245): pura, sin E/S.
 
 Una opción nunca se muestra más fuerte que su fuente: la principal y la salvedad sin respaldo descartan la opción; una
-secundaria sin respaldo solo se omite. Un modal normativo descarta la opción en cualquier papel (D-a) y el lenguaje de
-la lista prohibida (RN-23) la descarta con su propio motivo, que precede a los demás.
+secundaria sin respaldo solo se omite. Un modal normativo hace que la afirmación llegue fuera de forma (D4-20): una
+secundaria se omite sin descartar la opción, y la principal o la salvedad la descartan por falta de respaldo. El lenguaje
+de la lista prohibida (RN-23) la descarta con su propio motivo, que precede a los demás.
 """
 
 from __future__ import annotations
@@ -11,6 +12,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 
+from app.domain.atribucion import FormaDeAfirmacion
 from app.domain.claims import PapelDeAfirmacion
 
 
@@ -36,12 +38,17 @@ class DecisionPorPapel:
     """Posiciones de las secundarias que se omiten y se cuentan en ``omittedClaims`` (solo si la opción se conserva)."""
 
 
+DECISION_OPCION_RETIRADA_POR_LENGUAJE = DecisionPorPapel(
+    False, MotivoDeSoporte.lenguaje_no_permitido, ()
+)
+"""El propio texto de la opción incumple la lista prohibida (RN-23): se descarta sin mirar sus afirmaciones."""
+
+
 def decidir_opcion_por_papel(
     estados: Sequence[tuple[PapelDeAfirmacion, EstadoDeAfirmacion]],
-    option_incumple: bool = False,
 ) -> DecisionPorPapel:
-    """``option_incumple``: el propio texto de la opción incumple la lista prohibida (RN-23)."""
-    motivo = motivo_de_descarte(estados, option_incumple)
+    """Decide la opción por el estado de cada afirmación atómica: la regla por papel de RN-01."""
+    motivo = motivo_de_descarte(estados)
     if motivo is not None:
         return DecisionPorPapel(False, motivo, ())
     omitidas = tuple(
@@ -54,23 +61,35 @@ def decidir_opcion_por_papel(
 
 
 def motivo_de_descarte(
-    estados: Sequence[tuple[PapelDeAfirmacion, EstadoDeAfirmacion]], option_incumple: bool
+    estados: Sequence[tuple[PapelDeAfirmacion, EstadoDeAfirmacion]],
 ) -> MotivoDeSoporte | None:
-    """Precedencia: ``lenguaje_no_permitido`` (reservado a la lista prohibida) → modal normativo → papel sin respaldo."""
-    if option_incumple or any(e is EstadoDeAfirmacion.lenguaje_no_permitido for _, e in estados):
+    """Precedencia: ``lenguaje_no_permitido`` (reservado a la lista prohibida) → papel sin respaldo."""
+    if any(e is EstadoDeAfirmacion.lenguaje_no_permitido for _, e in estados):
         return MotivoDeSoporte.lenguaje_no_permitido
     if any(es_causa_de_descarte(papel, estado) for papel, estado in estados):
         return MotivoDeSoporte.afirmacion_sin_soporte
     return None
 
 
+def estado_por_lenguaje_y_forma(
+    reglas: tuple[str, ...], forma: FormaDeAfirmacion
+) -> EstadoDeAfirmacion:
+    """Orden de validación previo al NLI: lenguaje de la lista → forma. ``en_forma`` NO es respaldo: falta el NLI."""
+    if reglas:
+        return EstadoDeAfirmacion.lenguaje_no_permitido
+    if forma is FormaDeAfirmacion.modal_normativo:
+        return EstadoDeAfirmacion.modal_normativo
+    if forma is not FormaDeAfirmacion.valida:
+        return EstadoDeAfirmacion.fuera_de_forma
+    return EstadoDeAfirmacion.en_forma
+
+
 def es_causa_de_descarte(papel: PapelDeAfirmacion, estado: EstadoDeAfirmacion) -> bool:
-    """Única definición de la regla por papel (RN-01): el lenguaje de la lista y el modal normativo descartan la opción en
-    cualquier papel; la principal y la salvedad sin respaldo del NLI también. Solo ``soportada_por_nli`` es respaldo."""
-    return estado in (
-        EstadoDeAfirmacion.lenguaje_no_permitido,
-        EstadoDeAfirmacion.modal_normativo,
-    ) or (
+    """Única definición de la regla por papel (RN-01): el lenguaje de la lista descarta la opción en cualquier papel; la
+    principal y la salvedad sin respaldo del NLI también, y una secundaria sin respaldo solo se omite. El modal normativo
+    es una afirmación fuera de forma (D4-20): en una secundaria se omite y la opción se conserva. Solo
+    ``soportada_por_nli`` es respaldo."""
+    return estado is EstadoDeAfirmacion.lenguaje_no_permitido or (
         papel is not PapelDeAfirmacion.secundaria
         and estado is not EstadoDeAfirmacion.soportada_por_nli
     )

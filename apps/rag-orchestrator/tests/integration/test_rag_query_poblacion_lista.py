@@ -9,7 +9,6 @@ from typing import Any
 
 import pytest
 
-from tests.support.proponente_falso import ProponenteFalso
 from tests.support.poblacion_fx08bc import (
     FICHAS_FX08BC,
     entorno_fx08bc,
@@ -17,6 +16,7 @@ from tests.support.poblacion_fx08bc import (
     solicitud_a_m3,
     texto_de_opcion,
 )
+from tests.support.proponente_falso import ProponenteFalso
 
 
 def _consultar(

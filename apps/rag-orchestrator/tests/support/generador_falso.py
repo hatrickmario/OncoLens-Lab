@@ -12,6 +12,7 @@ from typing import Any
 from app.application.ports import EvidenciaGenerada, ResultadoDeRecuperacion
 from app.domain.citations import OpcionGenerada
 from app.schemas.generated.models import RagQueryInternalRequest
+from tests.support.opcion_generada import opcion_atomica
 
 OPCION_ANTI_HER2 = "Quimioterapia adyuvante combinada con terapia dirigida anti-HER2"
 RAZON_ANTI_HER2 = (
@@ -46,16 +47,24 @@ ESCENARIOS: dict[str, list[dict[str, Any]]] = {
     "LLM-CITA-MIXTA": [_opcion([{"chunkId": "ch-m1-1"}, {"chunkId": "ch-x-999"}])],
     "LLM-SIN-SOPORTE": [_opcion_con(RAZON_SIN_SOPORTE, [{"chunkId": "ch-m1-1"}])],
     "LLM-PRESCRIPTIVO": [_opcion_con(RAZON_PRESCRIPTIVA, [{"chunkId": "ch-m1-1"}])],
+    "LLM-OPCION-PROHIBIDA": [
+        {
+            "option": RAZON_PRESCRIPTIVA,
+            "rationale": RAZON_ANTI_HER2,
+            "citedSources": [{"chunkId": "ch-m1-1"}],
+        }
+    ],
     "LLM-CITA-AJENA-PRESCRIPTIVO": [_opcion_con(RAZON_PRESCRIPTIVA, [{"chunkId": "ch-x-999"}])],
 }
 
 
 def _parsear(opciones_crudas: list[dict[str, Any]]) -> tuple[OpcionGenerada, ...]:
+    """Cada propuesta cruda es UNA afirmación atómica principal, como en la generación real (US-245)."""
     return tuple(
-        OpcionGenerada(
-            option=cruda["option"],
-            rationale=cruda["rationale"],
-            chunk_ids_citados=tuple(cita["chunkId"] for cita in cruda["citedSources"]),
+        opcion_atomica(
+            cruda["option"],
+            cruda["rationale"],
+            tuple(cita["chunkId"] for cita in cruda["citedSources"]),
         )
         for cruda in opciones_crudas
     )

@@ -11,9 +11,9 @@ import pytest
 import respx
 from pydantic import ValidationError
 
-from app.infrastructure.llm.fabrica_local import crear_generador_local
 from app.config.modelos import CLAVES_ADR39
 from app.config.settings import Settings
+from app.infrastructure.llm.fabrica_local import crear_generador_local
 from app.infrastructure.llm.openai_compatible import OpenAICompatibleLlmClient
 
 RAIZ_APP = Path(__file__).resolve().parents[2] / "app"

@@ -1,6 +1,6 @@
 """Etapa de soporte de `/rag/query` (L1D-180, RN-01 y RN-23): lenguaje → NLI → opciones soportadas o descartadas.
 
-Orquesta los puertos (NLI, términos prohibidos) y delega toda decisión en ``domain/support.py``. Falla cerrada: si el
+Orquesta los puertos (NLI, términos prohibidos) y delega toda decisión en ``domain/support.py`` y sus módulos hermanos. Falla cerrada: si el
 NLI no responde o rompe su contrato, ninguna opción sale sin validar (``NliNoDisponibleError``, `503`).
 
 Logs: solo conteos, latencia, ``nliModel``, ``traceId`` y, por fragmento retirado, ``campo``, ``ruleId`` y
@@ -17,14 +17,14 @@ from app.application.errores import NliNoDisponibleError
 from app.application.ports import Clock, NliClassifier, ProhibitedTermsChecker
 from app.domain.citations import OpcionAceptada, OpcionDescartada
 from app.domain.nli import ParNli, ResultadoNli
+from app.domain.resolucion_de_soporte import verificar_soporte
+from app.domain.saneamiento_de_descartadas import retirar_texto_prohibido
 from app.domain.support import (
     ResultadoSoporte,
     RetiroDeLenguaje,
     pares_a_verificar,
     planificar_soporte,
-    retirar_texto_prohibido,
     soporta,
-    verificar_soporte,
 )
 
 logger = logging.getLogger(__name__)

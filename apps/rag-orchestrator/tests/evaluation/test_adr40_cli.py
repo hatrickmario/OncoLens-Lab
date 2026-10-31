@@ -6,9 +6,9 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Any
 
 import pytest
-from typing import Any
 
 from app.scripts.adr40.cli import (
     FORMATOS_B2,

@@ -14,8 +14,8 @@ from app.domain.aplicabilidad_tipos import (
     MOTIVOS_INTERNOS,
     ContextoDelPaciente,
     CriterioEvaluado,
-    PoblacionDelEstudio,
     OrigenDeMetadatos,
+    PoblacionDelEstudio,
     ResumenDeEstados,
 )
 from app.domain.applicability_rules import (
@@ -23,8 +23,8 @@ from app.domain.applicability_rules import (
     evaluar_criterio_de_fuente,
     poblacion_no_comparable,
 )
-from app.domain.relevance import ordenar_por_relevancia
 from app.domain.criterios_aplicabilidad import CriterioDeAplicabilidad, CriteriosDeAplicabilidad
+from app.domain.relevance import ordenar_por_relevancia
 
 
 @dataclass(frozen=True)

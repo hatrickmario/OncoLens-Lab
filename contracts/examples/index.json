@@ -558,6 +558,38 @@
       "spec": "rag-orchestrator",
       "target": "#/components/schemas/RagQueryInternalResponse",
       "request": "rag-query-request-demo-s4-mama-cdk46-excluyente.json"
+    },
+    {
+      "file": "rag-query-request-tres-opciones.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalRequest"
+    },
+    {
+      "file": "rag-query-tres-opciones.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalResponse",
+      "request": "rag-query-request-tres-opciones.json"
+    },
+    {
+      "file": "rag-query-request-tres-opciones-no-comparable.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalRequest"
+    },
+    {
+      "file": "rag-query-tres-opciones-no-comparable.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalResponse",
+      "request": "rag-query-request-tres-opciones-no-comparable.json"
+    },
+    {
+      "file": "con-evidencia-s4-tres-opciones.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/EvidenceAnalysis"
+    },
+    {
+      "file": "con-evidencia-s4-tres-opciones-no-comparable.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/EvidenceAnalysis"
     }
   ],
   "pendingExamples": [

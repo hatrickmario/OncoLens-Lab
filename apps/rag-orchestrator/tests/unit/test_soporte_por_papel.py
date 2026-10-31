@@ -6,6 +6,7 @@ import pytest
 
 from app.domain.claims import PapelDeAfirmacion
 from app.domain.soporte_por_papel import (
+    DECISION_OPCION_RETIRADA_POR_LENGUAJE,
     EstadoDeAfirmacion,
     MotivoDeSoporte,
     decidir_opcion_por_papel,
@@ -51,8 +52,8 @@ def test_descarta_con_afirmacion_sin_soporte_cuando_la_principal_o_la_salvedad_n
     assert not decision.conservar and decision.motivo is MotivoDeSoporte.afirmacion_sin_soporte
 
 
-@pytest.mark.parametrize("papel", [P, S, V])
-def test_descarta_con_afirmacion_sin_soporte_cuando_cualquier_papel_trae_modal_normativo(
+@pytest.mark.parametrize("papel", [P, V])
+def test_descarta_con_afirmacion_sin_soporte_cuando_la_principal_o_la_salvedad_trae_modal_normativo(
     papel: PapelDeAfirmacion,
 ) -> None:
     estados = [(P, OK), (S, OK), (V, OK)]
@@ -61,6 +62,16 @@ def test_descarta_con_afirmacion_sin_soporte_cuando_cualquier_papel_trae_modal_n
     decision = decidir_opcion_por_papel(estados)
 
     assert not decision.conservar and decision.motivo is MotivoDeSoporte.afirmacion_sin_soporte
+
+
+def test_omite_la_secundaria_y_conserva_la_opcion_cuando_la_secundaria_trae_modal_normativo() -> (
+    None
+):
+    """D4-20: un criterio de inclusión con «must»/«should» en una secundaria no descarta la opción entera."""
+    decision = decidir_opcion_por_papel([(P, OK), (S, MODAL), (V, OK)])
+
+    assert decision.conservar and decision.motivo is None
+    assert decision.posiciones_omitidas == (1,)
 
 
 @pytest.mark.parametrize("papel", [P, S, V])
@@ -91,7 +102,7 @@ def test_el_modal_normativo_precede_a_la_falta_de_soporte() -> None:
 def test_descarta_con_lenguaje_no_permitido_cuando_el_propio_texto_de_la_opcion_incumple_la_lista() -> (
     None
 ):
-    decision = decidir_opcion_por_papel([(P, OK)], option_incumple=True)
+    decision = DECISION_OPCION_RETIRADA_POR_LENGUAJE
 
     assert not decision.conservar and decision.motivo is MotivoDeSoporte.lenguaje_no_permitido
 
@@ -110,9 +121,9 @@ def test_es_causa_de_descarte_coincide_con_la_decision_de_la_opcion_en_toda_la_m
 
 def test_un_texto_limpio_solo_llega_en_forma_y_eso_nunca_cuenta_como_respaldo_del_nli() -> None:
     from app.domain.atribucion import FormaDeAfirmacion
-    from app.domain.support import _estado_por_lenguaje_y_forma
+    from app.domain.soporte_por_papel import estado_por_lenguaje_y_forma
 
-    estado = _estado_por_lenguaje_y_forma((), FormaDeAfirmacion.valida)
+    estado = estado_por_lenguaje_y_forma((), FormaDeAfirmacion.valida)
 
     assert estado is EstadoDeAfirmacion.en_forma
     assert not decidir_opcion_por_papel([(P, estado)]).conservar

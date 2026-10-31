@@ -13,6 +13,10 @@ COPY packages/api-contracts/src/client-web/clinical-api packages/api-contracts/s
 COPY packages/api-contracts/src/types/clinical-api packages/api-contracts/src/types/clinical-api
 # Los schemas Zod generados del contrato (login: zLoginBody y los de error) también se compilan con web.
 COPY packages/api-contracts/src/zod/clinical-api packages/api-contracts/src/zod/clinical-api
+# Filtro RN-23 del panel (US-246): solo el verificador puro y la lista versionada, rutas relativas intactas
+# (hasta D4-22, que lo reemplazaría por un subpath público de clinical-language).
+COPY packages/clinical-language/src packages/clinical-language/src
+COPY packages/clinical-catalogs/lenguaje/terminos-prohibidos.json packages/clinical-catalogs/lenguaje/terminos-prohibidos.json
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build --workspace apps/web
 

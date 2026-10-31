@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 
 import pytest
+
 from app.evaluation.chunking_variants import (
     ESTRATEGIA_ESTRUCTURA,
     ESTRATEGIA_TAMANO_FIJO,

@@ -17,7 +17,7 @@
       "reranker": "fake-lexical@1"
     },
     "nombre": "test-fake",
-    "promptVersion": "rag-query@0.5.0",
+    "promptVersion": "rag-query@0.6.0",
     "proveedor": "fake",
     "reloj": "simulado",
     "semillaBootstrap": 20261021,
@@ -125,7 +125,7 @@
       },
       "terminos_prohibidos": {
         "atribucion": {
-          "con_formula": 0,
+          "con_formula": 5,
           "opciones": 5
         },
         "campos_mostrados": [],

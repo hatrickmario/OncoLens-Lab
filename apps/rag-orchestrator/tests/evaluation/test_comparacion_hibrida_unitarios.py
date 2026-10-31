@@ -14,6 +14,7 @@ import yaml
 
 from app.application.ports import FalloDeInferencia
 from app.config.settings import Settings
+from app.domain.fusion_de_candidatos import EstrategiaDeFusion
 from app.evaluation.adaptadores_falsos import (
     BuscadorSparseEnMemoria,
     CodificadorSparseLexico,
@@ -21,20 +22,19 @@ from app.evaluation.adaptadores_falsos import (
     NliLexico,
     RerankerLexico,
 )
-from app.evaluation.composicion_suite import componer_servicio
-from app.evaluation.cronometro import Cronometro, RelojSimulado
-from app.infrastructure.language.detector_local import DetectorDeIdiomaLocal
 from app.evaluation.armado_comparacion import armar_comparacion
+from app.evaluation.composicion_suite import componer_servicio
 from app.evaluation.config_suite import (
     Comparacion,
     ConfigInvalida,
     cargar_config_suite,
 )
-from app.domain.fusion_de_candidatos import EstrategiaDeFusion
 from app.evaluation.corrida_brazos import ResultadoDeBrazo
+from app.evaluation.cronometro import Cronometro, RelojSimulado
 from app.evaluation.evaluate import main
 from app.evaluation.fuente_dataset import FuenteDatasetEnDirectorio
 from app.evaluation.guardas import SuiteAbortada, verificar_golden_sha256
+from app.infrastructure.language.detector_local import DetectorDeIdiomaLocal
 from app.infrastructure.models.local import ModelosDeRecuperacion
 from app.schemas.generated.models import Fusion, RagMeta, RetrievalMode
 from tests.evaluation.conftest import RAIZ_APP, RAIZ_REPO

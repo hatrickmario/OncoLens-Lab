@@ -18,11 +18,11 @@ function variableInvalida(env: NodeJS.ProcessEnv): string {
 }
 
 describe('readEvidenceAnalysisConfig', () => {
-  it('aplica los valores por defecto del S1: maxOptions 1, 10 años de antigüedad y 30 s de plazo hacia rag-orchestrator', () => {
+  it('aplica los valores por defecto del S4: maxOptions 3, 10 años de antigüedad y 30 s de plazo hacia rag-orchestrator [US-134]', () => {
     expect(readEvidenceAnalysisConfig(ENV_VALIDO)).toEqual({
       ragOrchestratorUrl: 'http://rag-orchestrator:8000',
       catalogPath: '/catalogs',
-      analysisMaxOptions: 1,
+      analysisMaxOptions: 3,
       evidenceDefaultYears: 10,
       ragTimeoutMs: 30_000,
       aiDisclaimerText: 'Texto de aviso sintético de test.',
@@ -52,7 +52,7 @@ describe('readEvidenceAnalysisConfig', () => {
       EVIDENCE_DEFAULT_YEARS: '',
     });
 
-    expect(config).toMatchObject({ analysisMaxOptions: 1, evidenceDefaultYears: 10 });
+    expect(config).toMatchObject({ analysisMaxOptions: 3, evidenceDefaultYears: 10 });
   });
 
   it.each([

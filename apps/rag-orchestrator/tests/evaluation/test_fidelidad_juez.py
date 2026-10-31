@@ -13,21 +13,22 @@ import respx
 import yaml
 
 from app.application.ports import EvidenciaGenerada
-from app.domain.citations import OpcionGenerada
+from app.domain.claims import AfirmacionAtomica, PapelDeAfirmacion
+from app.domain.reglas_proveedor import es_modelo_de_nube
 from app.domain.support import pares_a_verificar
 from app.evaluation.afirmaciones import afirmaciones_a_juzgar, plan_de_la_propuesta
-from app.evaluation.dataset_loader import CLASE_SINTETICA
-from app.evaluation.llamadas import RegistroDeLlamadas
-from app.domain.reglas_proveedor import es_modelo_de_nube
 from app.evaluation.config_suite import ConfigInvalida, cargar_config_suite
+from app.evaluation.dataset_loader import CLASE_SINTETICA
 from app.evaluation.evaluate import main
 from app.evaluation.guardas import SuiteAbortada, exigir_juez_local
 from app.evaluation.juez_fidelidad import JuezLlmLocal, JuezNoDisponible
+from app.evaluation.llamadas import RegistroDeLlamadas
 from app.evaluation.metricas.fidelidad import fidelidad
 from app.infrastructure.lenguaje.terminos_prohibidos import cargar_verificador_de_terminos
 from tests.evaluation.conftest import RAIZ_APP, RAIZ_REPO
 from tests.evaluation.test_suite_unitarios import consulta
 from tests.support.fakes import RelojFijo
+from tests.support.opcion_generada import opcion_atomica, opcion_con_afirmaciones
 
 CONFIG = RAIZ_APP / "eval" / "configs" / "test-fake.yaml"
 NUBE = "https://api.nube-de-prueba.invalid/v1"
@@ -329,13 +330,24 @@ def test_las_afirmaciones_a_juzgar_son_las_que_el_pipeline_envia_al_nli() -> Non
     """Paridad con ``domain.support``: mismos pares (premisa, afirmación) que ``pares_a_verificar``."""
     propuesta = EvidenciaGenerada(
         opciones=(
-            OpcionGenerada(
+            opcion_con_afirmaciones(
                 "Opción A",
-                "Primera afirmación limpia. Se sugiere considerar esta opción.",
-                ("c1",),
-                details=("Detalle limpio.", "Detalle con recomendado para este paciente."),
+                (
+                    AfirmacionAtomica(
+                        "Primera afirmación limpia.", PapelDeAfirmacion.principal, ("c1",)
+                    ),
+                    AfirmacionAtomica(
+                        "Se sugiere considerar esta opción.", PapelDeAfirmacion.secundaria, ("c1",)
+                    ),
+                    AfirmacionAtomica("Detalle limpio.", PapelDeAfirmacion.secundaria, ("c1",)),
+                    AfirmacionAtomica(
+                        "Detalle con recomendado para este paciente.",
+                        PapelDeAfirmacion.secundaria,
+                        ("c1",),
+                    ),
+                ),
             ),
-            OpcionGenerada("Opción B", "Cita inexistente.", ("zz",)),
+            opcion_atomica("Opción B", "Cita inexistente.", ("zz",)),
         ),
         limitaciones_propuestas=("Limitación limpia.", "El paciente debe recibir esto."),
     )
@@ -392,7 +404,7 @@ def test_el_juez_llm_local_no_llama_ni_registra_cuando_la_afirmacion_no_tiene_pr
 
 def test_las_afirmaciones_de_una_opcion_cuyo_nombre_incumple_el_lenguaje_no_se_juzgan() -> None:
     propuesta = EvidenciaGenerada(
-        opciones=(OpcionGenerada("Se recomienda esta opción", "Afirmación limpia.", ("c1",)),)
+        opciones=(opcion_atomica("Se recomienda esta opción", "Afirmación limpia.", ("c1",)),)
     )
     plan = plan_de_la_propuesta(
         propuesta,

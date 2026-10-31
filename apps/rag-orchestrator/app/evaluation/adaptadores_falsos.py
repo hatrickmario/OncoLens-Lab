@@ -9,7 +9,6 @@ import re
 import unicodedata
 import zlib
 from collections.abc import Collection, Mapping, Sequence
-from dataclasses import replace
 from datetime import date
 from pathlib import Path
 
@@ -20,27 +19,29 @@ from app.application.ports import (
     ChunkEncontrado,
     ChunkEncontradoSparse,
     CoberturaDePoblacion,
-    SinTerminosLexicos,
     EvidenciaGenerada,
     ReleaseDelCorpus,
     ResultadoDeRecuperacion,
+    SinTerminosLexicos,
 )
 from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
 from app.domain.applicability_text import (
     FuenteParaProponer,
-    exigir_un_criterio,
     PropuestaDePoblacion,
+    exigir_un_criterio,
     normalizar_propuesta,
 )
-from app.domain.cobertura_poblacion import contar_cobertura
+from app.domain.atribucion import componer_con_marco
 from app.domain.citations import FichaDeFuente, OpcionGenerada
+from app.domain.claims import AfirmacionAtomica, PapelDeAfirmacion
+from app.domain.cobertura_poblacion import contar_cobertura
 from app.domain.corpus_seed.admisibilidad import PISO_DE_FUENTES_EXCLUIDAS
 from app.domain.nli import ParNli, ResultadoNli
 from app.domain.retrieval_filter import coincide_etiqueta, exigir_filtro_vigente
 from app.evaluation.config_suite import ConfigInvalida
 from app.evaluation.dataset_loader import CLASE_SINTETICA
+from app.evaluation.fuente_dataset import DatasetSuite, OpcionPropuesta
 from app.evaluation.guardas import SuiteAbortada
-from app.evaluation.fuente_dataset import DatasetSuite
 from app.schemas.generated.models import RagQueryInternalRequest
 
 DIMENSION = 64
@@ -173,29 +174,54 @@ class NliLexico:
 class GeneradorGuionado:
     """``EvidenceGenerator`` con la salida cruda del dataset por pregunta; sin propuesta, no propone nada.
 
+    Pasa por el mismo camino que el real (US-245): cada propuesta cruda es UNA afirmación atómica principal y la
+    justificación se compone con el marco de atribución en el idioma de la pregunta.
     Las salidas con términos prohibidos del dataset (``prescriptivas.yaml``) se suman a la propuesta de su pregunta:
-    ``rationale`` a la justificación de la primera opción y ``limitations[].text`` como limitación propuesta.
+    ``rationale`` como afirmación secundaria de la primera opción (la principal sigue midiéndose con el NLI) y
+    ``limitations[].text`` como limitación propuesta.
     """
 
     def __init__(self, dataset: DatasetSuite) -> None:
-        self._por_texto = {p.texto: self._propuesta_de(p.id, dataset) for p in dataset.preguntas}
+        self._por_texto = {
+            p.texto: self._propuesta_de(p.id, p.idioma, dataset) for p in dataset.preguntas
+        }
 
     @staticmethod
-    def _propuesta_de(pregunta: str, dataset: DatasetSuite) -> EvidenciaGenerada:
-        opciones = [
-            OpcionGenerada(p.opcion, p.justificacion, p.citas)
-            for p in dataset.propuestas.get(pregunta, ())
-        ]
+    def _propuesta_de(pregunta: str, idioma: str, dataset: DatasetSuite) -> EvidenciaGenerada:
         salidas = [s for s in dataset.salidas_prescriptivas if s.pregunta == pregunta]
-        for salida in salidas:
-            if salida.campo == "rationale" and opciones:
-                primera = opciones[0]
-                opciones[0] = replace(primera, rationale=f"{primera.rationale} {salida.texto}")
+        en_la_justificacion = tuple(s.texto for s in salidas if s.campo == "rationale")
         return EvidenciaGenerada(
-            opciones=tuple(opciones),
+            opciones=tuple(
+                GeneradorGuionado._opcion_con_marco(
+                    propuesta, idioma, en_la_justificacion if posicion == 0 else ()
+                )
+                for posicion, propuesta in enumerate(dataset.propuestas.get(pregunta, ()))
+            ),
             limitaciones_propuestas=tuple(
                 s.texto for s in salidas if s.campo == "limitations[].text"
             ),
+        )
+
+    @staticmethod
+    def _opcion_con_marco(
+        propuesta: OpcionPropuesta, idioma: str, secundarias: tuple[str, ...]
+    ) -> OpcionGenerada:
+        afirmaciones = (
+            AfirmacionAtomica(
+                propuesta.justificacion, PapelDeAfirmacion.principal, propuesta.citas
+            ),
+            *(
+                AfirmacionAtomica(texto, PapelDeAfirmacion.secundaria, propuesta.citas)
+                for texto in secundarias
+            ),
+        )
+        composicion = componer_con_marco(afirmaciones, idioma)
+        return OpcionGenerada(
+            propuesta.opcion,
+            composicion.rationale,
+            propuesta.citas,
+            composicion.details,
+            afirmaciones,
         )
 
     async def generar(

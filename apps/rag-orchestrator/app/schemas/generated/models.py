@@ -1307,6 +1307,13 @@ class RagQueryInternalResponse(BaseModel):
     ]
     retrievalStats: RetrievalStats
     omittedClaims: Annotated[int, Field(ge=0)]
+    optionsNotShown: Annotated[
+        int,
+        Field(
+            description='Número de opciones validadas (con citas, soporte NLI y lenguaje válidos) que quedaron fuera de maxOptions tras el orden por aplicabilidad (RN-28). 0 si no hubo recorte. Solo el número: nunca título, justificación ni citas de las opciones recortadas. Las descartadas (discardedOptions) no cuentan. [S4 resp. 7]',
+            ge=0,
+        ),
+    ]
     agentSteps: list[AgentStep]
     topRelevanceScore: Annotated[
         float | None,

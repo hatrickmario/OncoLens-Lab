@@ -14,7 +14,6 @@ from pathlib import Path
 import pytest
 
 from app.domain.corpus_metadata.campos import LONGITUD_MAXIMA_DE_VALOR
-
 from tests.integration.corpus_ingestion.conftest import Montaje
 from tests.integration.corpus_ingestion.montaje_poblacion import (
     CONFIGURACION_DE_TEST,
@@ -26,10 +25,10 @@ from tests.support.poblacion_abanico import (
     CRITERIOS_DE_MAMA,
     FRAGMENTOS_POR_DOCUMENTO,
     TOP_K_DE_TEST,
+    VALOR_PROHIBIDO,
     VERSION_DE_CATALOGO_DE_TEST,
     VERSION_DEL_MODELO_DE_TEST,
     VERSION_DEL_PROMPT_DE_TEST,
-    VALOR_PROHIBIDO,
     FakePopulationLlm,
     NliPorValor,
     RecuperadorFalsoPorDocumento,

@@ -10,7 +10,6 @@ import logging
 
 import pytest
 
-from tests.support.generador_llm import generador_con_llm
 from tests.support.afirmaciones_atomicas import (
     PRINCIPAL,
     PRINCIPAL_MODAL,
@@ -21,6 +20,7 @@ from tests.support.afirmaciones_atomicas import (
     SECUNDARIA_PRESCRIPTIVA,
     SENTINELA,
 )
+from tests.support.generador_llm import generador_con_llm
 from tests.support.llm_falso import FakeLlmClient
 from tests.support.nli_falso import IMPLICA, NEUTRAL, NliFalso
 from tests.support.recuperacion import CORPUS_FX06A, Q_HER2, crear_entorno, solicitud_de
@@ -113,15 +113,14 @@ def test_rag_query_omite_la_secundaria_con_alias_de_fragmento_y_conserva_la_opci
 
 
 @pytest.mark.ac("US-245", 5)
-def test_rag_query_descarta_sin_exponer_el_texto_cuando_una_secundaria_trae_modal_normativo():
+def test_rag_query_omite_la_secundaria_y_conserva_la_opcion_cuando_una_secundaria_trae_modal_normativo():
     respuesta, nli, _ = _consultar("LLM-ATOM-MODAL")
 
     assert respuesta.status_code == 200
     cuerpo = respuesta.json()
-    assert cuerpo["evidenceOptions"] == []
-    (descartada,) = cuerpo["discardedOptions"]
-    assert descartada["discardReason"] == "afirmacion_sin_soporte"
-    assert descartada["unsupportedClaims"] == [NO_MOSTRADO]
+    assert len(cuerpo["evidenceOptions"]) == 1
+    assert cuerpo["discardedOptions"] == []
+    assert cuerpo["omittedClaims"] == 1
     assert SECUNDARIA_MODAL not in respuesta.text
     assert SECUNDARIA_MODAL not in [p.hipotesis for p in nli.pares_recibidos]
 

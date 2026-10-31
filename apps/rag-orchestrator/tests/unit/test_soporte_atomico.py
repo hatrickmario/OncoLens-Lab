@@ -8,15 +8,10 @@ from __future__ import annotations
 from app.domain.citations import OpcionAceptada, OpcionGenerada
 from app.domain.claims import AfirmacionAtomica, PapelDeAfirmacion
 from app.domain.nli import ResultadoNli
-from app.domain.support import (
-    RETIRO_ES,
-    OpcionSinSoporte,
-    pares_a_verificar,
-    planificar_soporte,
-    retirar_texto_prohibido,
-    verificar_soporte,
-)
+from app.domain.resolucion_de_soporte import verificar_soporte
+from app.domain.saneamiento_de_descartadas import retirar_texto_prohibido
 from app.domain.soporte_por_papel import MotivoDeSoporte
+from app.domain.support import RETIRO_ES, OpcionSinSoporte, pares_a_verificar, planificar_soporte
 
 P, S, V = PapelDeAfirmacion.principal, PapelDeAfirmacion.secundaria, PapelDeAfirmacion.salvedad
 UMBRAL = 0.7
@@ -46,6 +41,20 @@ def _plan(aceptada: OpcionAceptada):
 def _verificar(aceptada: OpcionAceptada, *veredictos: ResultadoNli, idioma: str = "es"):
     plan = _plan(aceptada)
     return verificar_soporte(plan, list(veredictos), UMBRAL, idioma)
+
+
+def test_el_titulo_de_la_opcion_con_modal_normativo_incumple_el_lenguaje_y_la_opcion_se_descarta() -> (
+    None
+):
+    """D4-20 (Q5): ``option`` también pasa por la lista de modales; el motivo es el de lenguaje, sin consultar al NLI."""
+    opcion = OpcionGenerada(
+        "Patients must receive the drug", "ignorado", ("c1",), (), (_a("uno", P),)
+    )
+
+    resultado = verificar_soporte(_plan(OpcionAceptada(opcion, ("c1",))), [], UMBRAL, "es")
+
+    (descartada,) = resultado.descartadas
+    assert descartada.motivo is MotivoDeSoporte.lenguaje_no_permitido
 
 
 def test_el_nli_recibe_solo_los_chunks_validos_que_cita_cada_afirmacion() -> None:
@@ -161,3 +170,23 @@ def test_el_lenguaje_de_la_lista_precede_al_alias_de_fragmento() -> None:
     (descartada,) = _verificar(aceptada, IMPLICA).descartadas
 
     assert descartada.motivo is MotivoDeSoporte.lenguaje_no_permitido
+
+
+def test_la_descartada_por_soporte_y_la_descartada_por_citas_muestran_la_misma_opcion_y_justificacion() -> (
+    None
+):
+    """Paridad (D4-19 P1-1): una sola regla para la opción descartada visible, sea cual sea la razón del descarte."""
+    for texto, veredictos in (
+        ("uno", [NEUTRAL]),
+        ("PROHIBIDO uno", []),
+        ("el fragmento C1 dice", []),
+    ):
+        aceptada = _aceptada(_a(texto, P))
+        por_citas, _ = retirar_texto_prohibido(aceptada.opcion, _buscar, "es", 5)
+
+        (por_soporte,) = _verificar(aceptada, *veredictos).descartadas
+
+        assert (por_soporte.opcion.option, por_soporte.opcion.rationale) == (
+            por_citas.option,
+            por_citas.rationale,
+        )

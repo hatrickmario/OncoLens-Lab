@@ -5,10 +5,11 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
+
 from app.config.modelos import CLAVES_ADR39
 from app.config.settings import Settings
 from app.evaluation.chequeo_config import leer_env
-from pydantic import ValidationError
 
 ENV_EXAMPLE = Path(__file__).resolve().parents[2] / ".env.example"
 

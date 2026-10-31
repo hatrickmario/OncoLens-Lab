@@ -6,8 +6,8 @@ from app.domain.aplicabilidad_tipos import PoblacionDelEstudio, ValorDePoblacion
 from app.domain.applicability_text import CriterioPendiente, FuenteParaProponer
 from app.schemas.generated.models import RagQueryInternalRequest
 from tests.support.aplicabilidad import (
-    CRITERIOS_DE_DOC_A1,
     CORPUS_FX08BA,
+    CRITERIOS_DE_DOC_A1,
     DOCUMENTOS_FX08BA,
     FICHAS_FX08BA,
     POBLACIONES_FX08BA,

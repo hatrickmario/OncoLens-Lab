@@ -6,8 +6,8 @@ from app.evaluation.acuerdo_juez import ESTADO_CONCLUYENTE, ESTADO_NO_CONCLUYENT
 from app.evaluation.config_suite import PROVEEDORES, RELOJES, SUITES
 from app.evaluation.cronometro import ETAPAS
 from app.evaluation.fuente_dataset import CLASES_ADMITIDAS
-from app.evaluation.metricas.fidelidad import ROTULO_SECUNDARIA
 from app.evaluation.informe_pii import MODOS, TIPOS_DIRECTOS
+from app.evaluation.metricas.fidelidad import ROTULO_SECUNDARIA
 from app.evaluation.reporte import Booleano, Enumerado, Huella, Identificador, Lista, Numero, Objeto
 from app.evaluation.rotulo import ROTULOS
 from app.schemas.generated.models import Fusion, RetrievalMode
