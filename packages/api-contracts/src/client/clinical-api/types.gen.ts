@@ -628,6 +628,14 @@ export type AnalysisBasis = {
      * Afirmaciones omitidas por falta de soporte.
      */
     omittedClaims: number;
+    /**
+     * Copiado sin transformar de RagQueryInternalResponse.optionsNotShown. Ausente solo en análisis históricos anteriores al S4; en los nuevos siempre presente (0 si no hubo recorte).
+     */
+    optionsNotShown?: number;
+    /**
+     * ANALYSIS_MAX_OPTIONS aplicado en este análisis (RN-22, FR-09). Ausente en análisis históricos.
+     */
+    maxOptions?: number;
 };
 
 /**

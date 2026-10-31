@@ -43,6 +43,20 @@ def _verificar(aceptada: OpcionAceptada, *veredictos: ResultadoNli, idioma: str 
     return verificar_soporte(plan, list(veredictos), UMBRAL, idioma)
 
 
+def test_el_titulo_de_la_opcion_con_modal_normativo_incumple_el_lenguaje_y_la_opcion_se_descarta() -> (
+    None
+):
+    """D4-20 (Q5): ``option`` también pasa por la lista de modales; el motivo es el de lenguaje, sin consultar al NLI."""
+    opcion = OpcionGenerada(
+        "Patients must receive the drug", "ignorado", ("c1",), (), (_a("uno", P),)
+    )
+
+    resultado = verificar_soporte(_plan(OpcionAceptada(opcion, ("c1",))), [], UMBRAL, "es")
+
+    (descartada,) = resultado.descartadas
+    assert descartada.motivo is MotivoDeSoporte.lenguaje_no_permitido
+
+
 def test_el_nli_recibe_solo_los_chunks_validos_que_cita_cada_afirmacion() -> None:
     aceptada = _aceptada(_a("uno", P, "c1"), _a("dos", S, "c2", "c9"), validos=("c1", "c2"))
 

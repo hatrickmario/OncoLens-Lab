@@ -666,6 +666,7 @@ export const zRagQueryInternalResponse = z.strictObject({
         aboveThreshold: z.int().gte(0)
     }),
     omittedClaims: z.int().gte(0),
+    optionsNotShown: z.int().gte(0),
     agentSteps: z.array(z.strictObject({
         subQuery: z.string(),
         target: z.string(),

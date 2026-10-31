@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — RAG & AI Services API (Backend 2 / rag-orchestrator)
-  version: 1.8.0
+  version: 1.9.0
   description: >-
     API interna, alcanzable solo desde la red ai-net y solo por clinical-api (JWT de servicio
     asimétrico; la cookie de sesión del doctor nunca llega aquí). No persiste PHI y procesa los
@@ -989,6 +989,7 @@ components:
         - assumptions
         - retrievalStats
         - omittedClaims
+        - optionsNotShown
         - agentSteps
         - topRelevanceScore
         - meta
@@ -1049,6 +1050,14 @@ components:
         omittedClaims:
           type: integer
           minimum: 0
+        optionsNotShown:
+          type: integer
+          minimum: 0
+          description: >-
+            Número de opciones validadas (con citas, soporte NLI y lenguaje válidos) que quedaron fuera de
+            maxOptions tras el orden por aplicabilidad (RN-28). 0 si no hubo recorte. Solo el número: nunca
+            título, justificación ni citas de las opciones recortadas. Las descartadas (discardedOptions) no
+            cuentan. [S4 resp. 7]
         agentSteps:
           type: array
           items:

@@ -46,8 +46,16 @@ def test_plantilla_contiene_la_instruccion_de_poblacion_y_escenario_atribuida_a_
     assert "no lo dirijas al paciente" in texto
 
 
-def test_version_del_prompt_es_rag_query_0_5_0_porque_pide_afirmaciones_atomicas_por_papel():
-    assert VERSION_DEL_PROMPT == "rag-query@0.5.0"
+def test_plantilla_avisa_de_los_modales_normativos_y_pide_parafrasear_los_requisitos_en_indicativo():
+    """D4-20: las afirmaciones con modal normativo se retiran; el prompt lo advierte para que el modelo describa en indicativo."""
+    texto = " ".join(PLANTILLA_RAG_QUERY.split())
+
+    assert "modal" in texto
+    assert "indicativo" in texto
+
+
+def test_version_del_prompt_es_rag_query_0_6_0_porque_avisa_de_los_modales_normativos():
+    assert VERSION_DEL_PROMPT == "rag-query@0.6.0"
 
 
 def test_prompt_incluye_pregunta_contexto_y_alias_de_cada_fragmento():

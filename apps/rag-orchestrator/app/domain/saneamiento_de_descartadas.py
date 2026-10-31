@@ -15,6 +15,7 @@ from app.domain.support import (
     exigir_afirmaciones_atomicas,
     literal_de_retiro,
     literal_de_texto_no_mostrado,
+    reglas_del_titulo,
 )
 
 
@@ -49,7 +50,7 @@ def retirar_texto_prohibido(
     se expone (se sustituye por el literal de retiro o por «(texto no mostrado)»)."""
     exigir_afirmaciones_atomicas(opcion)
     retiros: list[RetiroDeLenguaje] = []
-    reglas_de_la_opcion = tuple(buscar_terminos(opcion.option, "option"))
+    reglas_de_la_opcion = reglas_del_titulo(buscar_terminos, opcion.option)
     if reglas_de_la_opcion:
         retiros.append(RetiroDeLenguaje("option", reglas_de_la_opcion))
     principal = next(a for a in opcion.afirmaciones if a.papel is PapelDeAfirmacion.principal)
