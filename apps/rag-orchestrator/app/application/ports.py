@@ -315,6 +315,20 @@ class FalloDelLlm(RuntimeError):
     """
 
 
+class SalidaDeReescrituraInvalida(RuntimeError):
+    """La salida del LLM de reescritura no cumple el esquema. Sin detalle: el mensaje nunca lleva la salida (RN-14)."""
+
+
+class QueryRewriter(Protocol):
+    """Reescritura de la consulta con el LLM local (US-238, RN-12): solo recibe la pregunta ya enmascarada.
+
+    Devuelve los términos de expansión que propone, sin filtrar contra el catálogo (lo hace el dominio, RN-27). Un LLM
+    caído es ``FalloDelLlm``; una salida que no valida, ``SalidaDeReescrituraInvalida``. Nunca recibe contexto clínico,
+    ``pseudoPatientId`` ni memoria de análisis (RN-11, RN-24)."""
+
+    async def reformular(self, pregunta: str) -> tuple[str, ...]: ...
+
+
 class LlmClient(Protocol):
     """LLM local con salida JSON restringida por un esquema (RN-12: nunca un proveedor de nube con datos reales)."""
 

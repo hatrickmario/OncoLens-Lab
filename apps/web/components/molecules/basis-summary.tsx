@@ -34,7 +34,12 @@ export function BasisSummary({ base, estado }: BasisSummaryProps) {
           : `${faltantes} · ${resto}`}
       </p>
       {sinChecklist && <p>{resto}</p>}
-      {!sinChecklist && busqueda && <p>{busqueda}</p>}
+      {!sinChecklist && busqueda && estado === 'con_evidencia' && (
+        <section aria-label={mensajes().evidence.resultado.queSeBusco}>
+          <p>{busqueda}</p>
+        </section>
+      )}
+      {!sinChecklist && busqueda && estado !== 'con_evidencia' && <p>{busqueda}</p>}
       <p>{rellenar(fechaDeCorte, { fecha: formatearFechaDeCorte(base.corpusCutoffDate) })}</p>
     </div>
   );

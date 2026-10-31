@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — RAG & AI Services API (Backend 2 / rag-orchestrator)
-  version: 1.9.0
+  version: 1.10.0
   description: >-
     API interna, alcanzable solo desde la red ai-net y solo por clinical-api (JWT de servicio
     asimétrico; la cookie de sesión del doctor nunca llega aquí). No persiste PHI y procesa los
@@ -131,6 +131,8 @@ paths:
         pseudoPatientId y el traceId son nuevos en cada turno. question llega enmascarada
         (RN-11). Recupera solo del corpus, valida citas y soporte NLI sobre la respuesta
         completa, y clasifica fuera_de_contexto cuando la pregunta no se refiere al análisis.
+        El segundo loop de reescritura (US-238) nunca corre en seguimiento: `meta.retrievalParams.queryRewrite`
+        es siempre `{applied: false, reason: "no_aplica"}`.
         Con datos reales solo se usan modelos locales, sin fallback a la nube (RN-12).
       parameters:
         - $ref: '#/components/parameters/RequestDeadline'
@@ -532,7 +534,7 @@ components:
         retrievalParams:
           type: object
           additionalProperties: false
-          required: [topK, rerankTopN, relevanceThreshold, retrievalMode, fusion, fusionParam]
+          required: [topK, rerankTopN, relevanceThreshold, retrievalMode, fusion, fusionParam, queryRewrite]
           unevaluatedProperties: false
           description: >-
             Trazado de la recuperación (US-112, design D7). `dense` implica `fusion = ninguna` y `fusionParam = 0`;
@@ -575,6 +577,33 @@ components:
               description: >-
                 Parámetro de la fusión: `0` con `ninguna`; `k` de RRF (entero >= 1) con `rrf`; peso de la rama
                 sparse (0 < w < 1) con `ponderada`. Nunca null.
+            queryRewrite:
+              type: object
+              additionalProperties: false
+              required: [applied, reason]
+              description: >-
+                Segundo loop de reescritura de la consulta (US-238, RN-02 enmendada). Nunca null. `disparado`: el primer
+                loop quedó vacío y hubo segunda recuperación con la consulta reformulada (rescate o no);
+                `no_disparado`: el primer loop tuvo chunks sobre el umbral o la reescritura está desactivada;
+                `no_disponible`: primer loop vacío sin reformulación utilizable (LLM caído, deadline vencido, salida
+                inválida o cero términos del catálogo); `no_aplica`: /rag/follow-up, donde el segundo loop nunca corre.
+                La consulta reformulada nunca sale de rag-orchestrator.
+              properties:
+                applied:
+                  type: boolean
+                reason:
+                  type: string
+                  enum: [disparado, no_disparado, no_disponible, no_aplica]
+              if:
+                required: [applied]
+                properties:
+                  applied: {const: true}
+              then:
+                properties:
+                  reason: {const: disparado}
+              else:
+                properties:
+                  reason: {enum: [no_disparado, no_disponible, no_aplica]}
         latencyMs:
           type: integer
           minimum: 0
