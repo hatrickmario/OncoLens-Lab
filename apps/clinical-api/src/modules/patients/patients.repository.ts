@@ -1,4 +1,5 @@
 import type { Consultador } from '../auth/auth.repository.js';
+import { sqlOrdenDeDiagnosticoVigente } from '../compartido/diagnostico-vigente.js';
 import {
   ESTADOS_PENDIENTES_DE_REVISION,
   sqlDatoVigente,
@@ -100,7 +101,7 @@ export const FUENTES_POR_REVISAR: readonly FuentePorRevisar[] = [
 
 const SUBCONSULTA_TIPO_DE_CANCER = `(SELECT d.cancer_type FROM clinical.diagnosis d
                   WHERE d.patient_id = p.id AND d.is_active AND ${sqlDatoVigente('d.review_status')}
-                  ORDER BY d.diagnosed_at DESC, d.id LIMIT 1)`;
+                  ORDER BY ${sqlOrdenDeDiagnosticoVigente('d.')} LIMIT 1)`;
 
 const DONDE = `
   ($1::text IS NULL OR p.lifecycle_status::text = $1)

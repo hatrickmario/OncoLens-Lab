@@ -4,6 +4,7 @@ import type {
   DiagnosisGrading,
   Provenance,
 } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
+import { elegirDiagnosticoVigente } from '../compartido/diagnostico-vigente.js';
 import type {
   ColumnasDeProcedencia,
   FilaDeBiomarcador,
@@ -18,17 +19,14 @@ function compararTexto(a: string, b: string): number {
 }
 
 /**
- * Diagnóstico vigente (D3): el activo; si el repository devolviera varios, el de fecha más reciente (desempate por
- * `id`). Sin ninguno, `null` y la ficha muestra «No registrado».
+ * Diagnóstico vigente (D3): entre los activos, el que fija la regla única de `compartido/diagnostico-vigente`. Sin
+ * ninguno, `null` y la ficha muestra «No registrado».
  */
 export function seleccionarDiagnosticoVigente(
   diagnosticos: readonly FilaDeDiagnostico[],
 ): FilaDeDiagnostico | null {
   const activos = diagnosticos.filter((diagnostico) => diagnostico.isActive);
-  const ordenados = [...activos].sort(
-    (a, b) => compararTexto(b.diagnosedAt, a.diagnosedAt) || compararTexto(a.id, b.id),
-  );
-  return ordenados[0] ?? null;
+  return elegirDiagnosticoVigente(activos, (d) => ({ id: d.id, fecha: d.diagnosedAt })) ?? null;
 }
 
 /**

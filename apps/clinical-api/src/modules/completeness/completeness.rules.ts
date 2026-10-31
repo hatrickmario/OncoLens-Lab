@@ -1,3 +1,4 @@
+import { elegirDiagnosticoVigente } from '../compartido/diagnostico-vigente.js';
 import { ESTADOS_DESCARTADOS } from '../compartido/estados-de-revision.js';
 import type {
   CondicionDeItem,
@@ -64,19 +65,17 @@ export function estadoDeVerificacion(
     : 'presente_sin_verificar';
 }
 
-const compararTexto = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
-
 /**
- * El `Diagnosis` vigente: el mismo criterio que la ficha y el listado (`diagnosed_at` más reciente, desempate por `id`
- * ascendente). La BD no garantiza un solo activo por paciente (`diagnosis_patient_id_is_active_idx` no es único), así
- * que todas las salidas del checklist se calculan sobre este mismo registro.
+ * El `Diagnosis` vigente entre los no descartados (RN-07), por la regla única de `compartido/diagnostico-vigente`: la
+ * misma de la ficha y el listado. Todas las salidas del checklist se calculan sobre este mismo registro.
  */
 export function diagnosticoVigente(
   diagnosticos: readonly RegistroDeDato[],
 ): RegistroDeDato | undefined {
-  return [...registrosVigentes(diagnosticos)].sort(
-    (a, b) => compararTexto(b.fecha ?? '', a.fecha ?? '') || compararTexto(a.id, b.id),
-  )[0];
+  return elegirDiagnosticoVigente(registrosVigentes(diagnosticos), (d) => ({
+    id: d.id,
+    fecha: d.fecha,
+  }));
 }
 
 /** Paso 1: el tipo de cáncer sale del `Diagnosis` vigente; `null` si no hay. */
