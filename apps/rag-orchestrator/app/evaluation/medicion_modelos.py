@@ -7,7 +7,6 @@ El reloj se inyecta (``reloj``) para que las pruebas sean deterministas.
 from __future__ import annotations
 
 import math
-import statistics
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -22,6 +21,7 @@ from app.evaluation.chunking_variants import (
     Variante,
     fragmentar,
 )
+from app.evaluation.estadistica import mediana, percentil_interpolado
 from app.evaluation.cronometro import resumen_de_latencia
 from app.evaluation.dataset_loader import ParNli, Pregunta
 from app.evaluation.envoltorios import ClasificadorNli, Embedder, Reranker
@@ -187,16 +187,15 @@ def cronometrar(
 
 
 def percentil_95_interpolado(valores: Sequence[float]) -> float:
-    """Percentil 95 con interpolación lineal (numpy); no comparable con cronometro.percentil.
+    """Percentil 95 con interpolación lineal; no comparable con cronometro.percentil (ver ``estadistica``).
 
-    ``cronometro.percentil`` usa el rango más cercano: sobre [10, 20, 30, 40] da 40.0 y este 38.5. Las cifras históricas de
-    ADR-39 son de este; los reportes de ``evaluate`` usan el otro."""
-    return float(np.percentile(np.asarray(valores, dtype=float), 95))
+    Las cifras históricas de ADR-39 son de este; los reportes de ``evaluate`` usan el de rango más cercano."""
+    return percentil_interpolado(valores, 95)
 
 
 def mediana_estadistica(valores: Sequence[float]) -> float:
-    """Mediana de ``statistics`` (promedia los dos centrales en una muestra par); para la mediana de corridas de ADR-39."""
-    return float(statistics.median(valores))
+    """Mediana de las corridas de ADR-39 (``estadistica.mediana``)."""
+    return mediana(valores)
 
 
 def informe_de_recursos_nli(

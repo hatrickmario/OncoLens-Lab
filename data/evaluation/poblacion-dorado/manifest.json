@@ -1,0 +1,25 @@
+{
+  "clase": "sintetico",
+  "nombre": "poblacion-dorado",
+  "version": "0-semilla",
+  "descripcion": "Semilla sintética del conjunto dorado de población (L1D-299, US-233b AC-1). Texto redactado para la prueba, sin datos de paciente. Pendiente de la revisión humana (PLANTILLA.md ampliada): sin revisor la suite marca precisión y cobertura como no concluyentes.",
+  "catalogo_de_estados": "apps/rag-orchestrator/tests/fixtures/catalogo/test-apl-1.2.0",
+  "revisor": {
+    "rol": null,
+    "fecha": null
+  },
+  "licencias": {
+    "doc-gui-es-1": "sintetico_propio",
+    "doc-gui-es-2": "sintetico_propio",
+    "doc-gui-en-1": "sintetico_propio",
+    "doc-gui-en-2": "sintetico_propio",
+    "doc-ens-es-1": "sintetico_propio",
+    "doc-ens-es-2": "sintetico_propio",
+    "doc-ens-en-1": "sintetico_propio",
+    "doc-ens-en-2": "sintetico_propio",
+    "doc-rev-es-1": "sintetico_propio",
+    "doc-rev-es-2": "sintetico_propio",
+    "doc-rev-en-1": "sintetico_propio",
+    "doc-rev-en-2": "sintetico_propio"
+  }
+}
