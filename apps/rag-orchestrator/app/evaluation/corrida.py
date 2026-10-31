@@ -21,7 +21,11 @@ from app.evaluation.fuente_dataset import DatasetSuite
 from app.evaluation.juez_fidelidad import JuezFidelidad
 from app.evaluation.lenguaje_estricto import VerificadorEstricto
 from app.evaluation.metricas.inyeccion import es_inyeccion_efectiva
-from app.evaluation.metricas.prescriptivas import contar_salidas_con_terminos, medir_propuesta_cruda
+from app.evaluation.metricas.prescriptivas import (
+    contar_salidas_con_terminos,
+    medir_propuesta_cruda,
+    medir_salida_mostrada,
+)
 from app.evaluation.metricas.resultado import LenguajeCrudo, ResultadoConsulta
 from app.evaluation.retrieval_metrics import evaluar_pregunta
 from app.evaluation.rutas import raiz_repo
@@ -105,7 +109,7 @@ async def _resultado_de(
         citas_validas = sum(len(a.chunk_ids_validos) for a in revisadas.aceptadas)
         citas_propuestas = citas_propuestas_de(propuesta.opciones)
     top = respuesta.topRelevanceScore
-    en_nli, en_juez = await _fidelidad_de(suite, pregunta.texto, generador_invocado)
+    en_nli, en_juez, invalidos = await _fidelidad_de(suite, pregunta.texto, generador_invocado)
     return ResultadoConsulta(
         recuperacion=evaluar_pregunta(pregunta, obs.rankings.get(pregunta.texto, [])),
         revisada=pregunta.id in dataset.revisadas,
@@ -119,6 +123,8 @@ async def _resultado_de(
         opciones_descartadas=len(respuesta.discardedOptions),
         **_lenguaje_de(suite, dataset, pregunta.texto, respuesta),
         afirmaciones_nli=en_nli,
+        ids_afirmaciones=tuple(f"{pregunta.id}/a{n}" for n, _ in enumerate(en_nli, 1)),
+        veredictos_invalidos_juez=invalidos,
         afirmaciones_juez=en_juez,
     )
 
@@ -126,6 +132,9 @@ async def _resultado_de(
 class _LenguajeDeLaConsulta(TypedDict):
     salidas_prohibidas_crudas: int
     salidas_prohibidas_mostradas: int
+    salidas_mostradas_nivel_a: int
+    salidas_mostradas_nivel_b: int
+    campos_mostrados: tuple[tuple[str, str], ...]
     lenguaje_crudo: LenguajeCrudo
     caso_inyeccion: bool
     inyecciones_efectivas: int
@@ -143,14 +152,16 @@ def _lenguaje_de(
     entregados = suite.observaciones.entregados.get(texto_pregunta, frozenset())
     caso_inyeccion = bool(entregados & {c.id for c in dataset.chunks if c.inyeccion})
     efectivas = _inyecciones_efectivas(respuesta, entregados, verificador) if caso_inyeccion else 0
+    mostrada = medir_salida_mostrada(textos_de_respuesta(respuesta), verificador)
     crudo = _lenguaje_crudo_de(
         suite, propuesta, suite.observaciones.textos_entregados.get(texto_pregunta, {})
     )
     return {
         "salidas_prohibidas_crudas": crudo.campos_con_termino,
-        "salidas_prohibidas_mostradas": contar_salidas_con_terminos(
-            textos_de_respuesta(respuesta), verificador
-        ),
+        "salidas_prohibidas_mostradas": mostrada.campos_con_termino,
+        "salidas_mostradas_nivel_a": mostrada.campos_nivel_a,
+        "salidas_mostradas_nivel_b": mostrada.campos_nivel_b,
+        "campos_mostrados": mostrada.campos,
         "lenguaje_crudo": crudo,
         "caso_inyeccion": caso_inyeccion,
         "inyecciones_efectivas": efectivas,
@@ -192,21 +203,24 @@ def _inyecciones_efectivas(
 
 async def _fidelidad_de(
     suite: ServicioDeSuite, texto_pregunta: str, generador_invocado: bool
-) -> tuple[tuple[bool, ...], tuple[bool, ...] | None]:
-    """Veredicto por afirmación de la propuesta cruda: el NLI (principal) y el juez LLM (secundario, si lo hay)."""
+) -> tuple[tuple[bool, ...], tuple[bool, ...] | None, int]:
+    """Veredicto por afirmación de la propuesta cruda: el NLI (principal), el juez LLM (secundario, si lo hay) y
+    cuántos veredictos del juez no se pudieron interpretar en esta consulta."""
     propuesta = suite.observaciones.propuestas.get(texto_pregunta)
     if not generador_invocado or propuesta is None:
-        return (), None if suite.juez_llm is None else ()
+        return (), None if suite.juez_llm is None else (), 0
     plan = plan_de_la_propuesta(
         propuesta,
         suite.observaciones.textos_entregados[texto_pregunta],
         suite.verificador_produccion.reglas_coincidentes,
     )
     afirmaciones = afirmaciones_a_juzgar(plan)
-    return (
-        await _veredictos(suite.juez_nli, afirmaciones),
-        None if suite.juez_llm is None else await _veredictos(suite.juez_llm, afirmaciones),
-    )
+    del_nli = await _veredictos(suite.juez_nli, afirmaciones)
+    if suite.juez_llm is None:
+        return del_nli, None, 0
+    invalidos_antes = suite.juez_llm.veredictos_invalidos
+    del_juez = await _veredictos(suite.juez_llm, afirmaciones)
+    return del_nli, del_juez, suite.juez_llm.veredictos_invalidos - invalidos_antes
 
 
 async def _veredictos(

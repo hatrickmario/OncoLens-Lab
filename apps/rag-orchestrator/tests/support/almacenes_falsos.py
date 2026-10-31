@@ -21,7 +21,7 @@ from app.application.seed_corpus.ports import (
     RegistroDeRelease,
     VersionInexistente,
 )
-from app.domain.corpus_metadata.resultado import EXTRAIDO_VERIFICADO
+from app.domain.corpus_metadata.resultado import solo_extraidos_verificados
 from app.domain.corpus_seed.versionado import STATUS_EMBEBIDO, VersionExistente
 from app.infrastructure.milvus.repository import LIMITE_DE_CONSULTA
 from tests.support.milvus import DIMENSION_DE_TEST
@@ -122,14 +122,7 @@ class CatalogoEnMemoria:
         ids = next(
             (set(r.document_ids) for r in self.releases if r.release_id == release_id), set()
         )
-        return sorted(
-            (
-                r
-                for i, r in self.documentos.items()
-                if i in ids and r.metadata_source == EXTRAIDO_VERIFICADO
-            ),
-            key=lambda r: r.document_id,
-        )
+        return solo_extraidos_verificados(r for i, r in self.documentos.items() if i in ids)
 
 
 class AlmacenDeChunksEnMemoria:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
+from dataclasses import dataclass
 from typing import Any
 
 from app.domain.support import CampoGenerado
@@ -18,6 +19,32 @@ def contar_salidas_con_terminos(
 ) -> int:
     """Cuántos campos generados traen al menos un término de los niveles A o B (cada campo cuenta una vez)."""
     return sum(verificador.contiene_terminos(texto, campo) for campo, texto in textos)
+
+
+@dataclass(frozen=True)
+class SalidaMostrada:
+    """RN-23 en lo que la respuesta MUESTRA, por nivel de la lista: solo conteos de campos e ids de regla (RN-14)."""
+
+    campos_nivel_a: int
+    campos_nivel_b: int
+    campos_con_termino: int
+    campos: tuple[tuple[str, str], ...]
+    """(nombre del campo, id de la regla) de cada coincidencia; nunca el texto."""
+
+
+def medir_salida_mostrada(
+    textos: Iterable[TextoGenerado], verificador: VerificadorEstricto
+) -> SalidaMostrada:
+    """Cuántos campos mostrados traen términos de nivel A, de nivel B o de cualquiera, y cuáles reglas coinciden."""
+    campos_a = campos_b = con_termino = 0
+    coincidentes: list[tuple[str, str]] = []
+    for campo, texto in textos:
+        coincidencias = verificador.coincidencias_generadas(texto, campo)
+        campos_a += any(c.nivel == "A" for c in coincidencias)
+        campos_b += any(c.nivel == "B" for c in coincidencias)
+        con_termino += bool(coincidencias)
+        coincidentes.extend((campo, c.id) for c in coincidencias)
+    return SalidaMostrada(campos_a, campos_b, con_termino, tuple(coincidentes))
 
 
 def cumple_formula_de_atribucion(texto: str) -> bool:
@@ -61,10 +88,24 @@ def medir_propuesta_cruda(
 
 
 def terminos_prohibidos(resultados: Sequence[ResultadoConsulta]) -> dict[str, Any]:
+    """Familia RN-23. ``propuesta_cruda``, ``salida_mostrada`` y ``terminos_compartidos_con_corpus_citado`` cuentan CAMPOS
+    con algún término de la lista (no salidas completas). La meta bloqueante de lo mostrado es ``salida_mostrada_nivel_a``
+    (el nivel B es seguimiento); si el bloqueo debe ser A o A+B (``salida_mostrada``) lo decide el humano."""
     crudos = [r.lenguaje_crudo for r in resultados]
+    nivel_a = sum(r.salidas_mostradas_nivel_a for r in resultados)
+    nivel_b = sum(r.salidas_mostradas_nivel_b for r in resultados)
     return {
         "propuesta_cruda": sum(r.salidas_prohibidas_crudas for r in resultados),
+        # Contadores de CAMPOS generados con algún término de la lista (un campo cuenta una vez), no de salidas.
         "salida_mostrada": sum(r.salidas_prohibidas_mostradas for r in resultados),
+        "salida_mostrada_nivel_a": nivel_a,
+        "salida_mostrada_nivel_b": nivel_b,
+        "salida_mostrada_por_nivel": {"A": nivel_a, "B": nivel_b},
+        "campos_mostrados": [
+            {"campo": campo, "regla": regla}
+            for r in resultados
+            for campo, regla in r.campos_mostrados
+        ],
         "propuesta_cruda_por_nivel": {
             "A": sum(c.campos_nivel_a for c in crudos),
             "B": sum(c.campos_nivel_b for c in crudos),

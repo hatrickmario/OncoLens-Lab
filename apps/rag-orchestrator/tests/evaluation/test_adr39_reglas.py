@@ -15,8 +15,8 @@ from app.scripts.adr39.reglas import (
     descartar_por_restriccion,
     desempatar_por_memoria,
     elegir_candidato,
-    mediana,
-    percentil_95,
+    mediana_estadistica,
+    percentil_95_interpolado,
     porcentaje_json_valido,
     validar_contra_esquema,
 )
@@ -50,8 +50,8 @@ def completo(id_c: str = "A", **cambios: object) -> Candidato:
 def test_percentil_95_y_mediana_calculan_sobre_la_serie_de_tiempos() -> None:
     serie = [float(n) for n in range(1, 101)]
 
-    assert mediana(serie) == 50.5
-    assert percentil_95(serie) == pytest.approx(95.05)
+    assert mediana_estadistica(serie) == 50.5
+    assert percentil_95_interpolado(serie) == pytest.approx(95.05)
 
 
 @pytest.mark.parametrize(

@@ -19,6 +19,7 @@ from pydantic import ValidationError
 
 from app.application.errores import ErrorDeAplicacion
 from app.application.ports import Clock
+from app.config.entorno import entorno_del_proceso
 from app.evaluation.armado_reporte import armar_reporte
 from app.evaluation.composicion_suite import componer_servicio
 from app.evaluation.config_suite import (
@@ -50,6 +51,7 @@ from app.evaluation.guardas import (
     exigir_adapters_locales,
     exigir_juez_local,
     exigir_marca_final,
+    exigir_proveedor_local,
 )
 from app.evaluation.informe_pii import (
     InformePiiB1,
@@ -59,7 +61,16 @@ from app.evaluation.informe_pii import (
     SinInformePii,
 )
 from app.evaluation.juez_fidelidad import JuezNoDisponible, crear_juez_llm
+from app.evaluation.envoltorios import pico_rss_mib
 from app.evaluation.llamadas import RegistroDeLlamadas
+from app.evaluation.medicion_modelos import informe_de_recursos_nli
+from app.evaluation.medidores import LatenciasNli
+from app.evaluation.modelos_locales import (
+    CargadorDeModelos,
+    LectorDeRss,
+    OrigenLocal,
+    cargar_puertos_locales,
+)
 from app.evaluation.metricas.privacidad import privacidad
 from app.evaluation.reporte import ReporteFueraDeEsquema, escribir_reporte_cerrado
 from app.evaluation.rutas import raiz_repo
@@ -104,13 +115,15 @@ def main(
     entorno: Mapping[str, str] | None = None,
     directorio_de_configs: Path | None = None,
     puertos_aplicabilidad: PuertosDeAplicabilidad | None = None,
+    cargador_de_modelos: CargadorDeModelos | None = None,
+    lector_rss: LectorDeRss | None = None,
 ) -> int:
     try:
         return _despachar_familia(
             _parser().parse_args(list(argv)),
             reloj or RelojDelSistema(),
             raiz,
-            entorno,
+            OrigenLocal(entorno or {}, cargador_de_modelos, lector_rss or pico_rss_mib),
             directorio_de_configs,
             puertos_aplicabilidad or PuertosDeAplicabilidad(),
         )
@@ -145,7 +158,7 @@ def _despachar_familia(
     args: argparse.Namespace,
     reloj: Clock,
     raiz: Path | None,
-    entorno: Mapping[str, str] | None,
+    origen: OrigenLocal,
     directorio_de_configs: Path | None,
     puertos_aplicabilidad: PuertosDeAplicabilidad,
 ) -> int:
@@ -154,8 +167,8 @@ def _despachar_familia(
         raise ConfigInvalida(f"familia no disponible: {args.suite}")
     if args.suite == SUITE_APLICABILIDAD:
         return ejecutar_aplicabilidad(args, reloj, puertos_aplicabilidad)
-    config = cargar_config_suite(args.config, _ajustes_del_juez(args, entorno))
-    return _ejecutar(config, args, reloj, raiz, directorio_de_configs)
+    config = cargar_config_suite(args.config, _ajustes_del_juez(args, origen.entorno))
+    return _ejecutar(config, args, reloj, raiz, origen, directorio_de_configs)
 
 
 def _ajustes_del_juez(
@@ -186,6 +199,7 @@ def _ejecutar(
     args: argparse.Namespace,
     reloj: Clock,
     raiz: Path | None,
+    origen: OrigenLocal,
     directorio_de_configs: Path | None = None,
 ) -> int:
     exigir_marca_final(config, args.prueba_final)
@@ -194,6 +208,7 @@ def _ejecutar(
     exigir_adapters_locales(
         fuente.clase(), config.urls
     )  # RN-12: antes de cargar nada ni crear un cliente
+    exigir_proveedor_local(config)  # RN-12: los adapters locales y su modelo, antes de cargar pesos
     if args.sweep:
         exigir_dataset_sintetico(fuente.clase())  # RN-14: antes de cargar nada
         return ejecutar_barrido(
@@ -210,7 +225,7 @@ def _ejecutar(
     informe_pii = _proveedor_pii(
         config, args
     ).leer()  # antes de consultar: un informe roto no cuesta una corrida
-    reporte = _correr_suite(config, fuente.cargar(), args.suite, reloj, informe_pii)
+    reporte = _correr_suite(config, fuente.cargar(), args.suite, reloj, informe_pii, origen)
     escribir_reporte_cerrado(_ruta_del_resultado(config, args, reloj), reporte, ESQUEMA_SUITE)
     return 0
 
@@ -228,21 +243,47 @@ def _correr_suite(
     suite: str,
     reloj: Clock,
     informe_pii: InformePiiB1 | None,
+    origen: OrigenLocal,
 ) -> dict[str, Any]:
     cronometro = Cronometro(_reloj_de_medicion(config))
     registro = RegistroDeLlamadas()
     resultados: list[ResultadoConsulta] = []
     meta = None
+    recursos_nli = None
     if suite != SUITE_PII:  # la familia pii no consulta al servicio: mide solo la privacidad
-        resultados, respuestas = asyncio.run(_evaluar(config, dataset, cronometro, reloj, registro))
+        resultados, respuestas, latencias = asyncio.run(
+            _evaluar(config, dataset, cronometro, reloj, registro, origen)
+        )
         meta = respuestas[0].meta
+        recursos_nli = _recursos_del_nli(config, latencias, origen)
     privacidad_medida = (
         privacidad(len(dataset.textos_pii), informe_pii, registro.llamadas)
         if suite in SUITES_CON_PRIVACIDAD
         else None
     )
     return armar_reporte(
-        config, dataset, suite, meta, resultados, cronometro.p95_ms(), privacidad_medida
+        config,
+        dataset,
+        suite,
+        meta,
+        resultados,
+        cronometro.p95_ms(),
+        privacidad_medida,
+        recursos_nli,
+    )
+
+
+def _recursos_del_nli(
+    config: ConfigSuite, latencias: LatenciasNli, origen: OrigenLocal
+) -> dict[str, object] | None:
+    """Pico de RSS del proceso y latencia del NLI (US-233a AC-7): solo con los modelos reales; con fakes no hay nada que medir."""
+    if config.proveedor != "local" or config.rss_limite_mib is None:
+        return None
+    return informe_de_recursos_nli(
+        latencias.por_lote_ms,
+        latencias.media_por_hipotesis_del_lote_ms,
+        origen.lector_rss(),
+        config.rss_limite_mib,
     )
 
 
@@ -252,11 +293,18 @@ async def _evaluar(
     cronometro: Cronometro,
     reloj: Clock,
     registro: RegistroDeLlamadas,
-) -> tuple[list[ResultadoConsulta], list[RagQueryInternalResponse]]:
+    origen: OrigenLocal,
+) -> tuple[list[ResultadoConsulta], list[RagQueryInternalResponse], LatenciasNli]:
+    puertos_locales = (
+        cargar_puertos_locales(config, origen, registro, dataset.clase)
+        if config.proveedor == "local"
+        else None
+    )
     async with AsyncExitStack() as pila:  # cierra el cliente del juez LLM, si lo hay
         juez_llm = await crear_juez_llm(config.juez, pila, registro, dataset.clase)
-        servicio = componer_servicio(config, dataset, cronometro, reloj, juez_llm)
-        return await evaluar_dataset(servicio, dataset)
+        servicio = componer_servicio(config, dataset, cronometro, reloj, juez_llm, puertos_locales)
+        resultados, respuestas = await evaluar_dataset(servicio, dataset)
+        return resultados, respuestas, servicio.latencias_nli
 
 
 def _ruta_del_resultado(config: ConfigSuite, args: argparse.Namespace, reloj: Clock) -> Path:
@@ -271,4 +319,4 @@ def _ruta_del_resultado(config: ConfigSuite, args: argparse.Namespace, reloj: Cl
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(main(sys.argv[1:], entorno=entorno_del_proceso()))

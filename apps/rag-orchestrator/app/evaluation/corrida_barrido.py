@@ -16,7 +16,7 @@ from app.application.ports import Clock
 from app.domain.relevance import corte_para_el_generador
 from app.evaluation.barrido import FilaBarrido, elegir_umbral, sin_nan
 from app.evaluation.composicion_suite import componer_servicio
-from app.evaluation.config_suite import Barrido, ConfigInvalida, ConfigSuite
+from app.evaluation.config_suite import Barrido, ConfigInvalida, ConfigSuite, minimos_del_juez
 from app.evaluation.corrida import evaluar_dataset
 from app.evaluation.cronometro import Cronometro
 from app.evaluation.fuente_dataset import CLASE_SINTETICA, DatasetSuite
@@ -175,7 +175,11 @@ def _metricas_de(
     resultados: list[ResultadoConsulta], config: ConfigSuite
 ) -> dict[str, float | None]:
     familias = calcular_familias(
-        resultados, "all", config.semilla_bootstrap, config.bootstrap_repeticiones
+        resultados,
+        "all",
+        config.semilla_bootstrap,
+        config.bootstrap_repeticiones,
+        *minimos_del_juez(config),
     )
     return metricas_planas(familias)
 

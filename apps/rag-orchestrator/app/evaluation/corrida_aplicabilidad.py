@@ -26,10 +26,14 @@ from app.application.verificacion_de_soporte import VerificadorDeSoporte
 from app.config.settings import Settings
 from app.domain.aplicabilidad_tipos import CriterioEvaluado
 from app.domain.poblacion_del_estudio import poblacion_desde_lo_guardado
-from app.domain.citations import FichaDeFuente
 from app.domain.cobertura_poblacion import proporcion_con_criterios
 from app.domain.relevance import ChunkPuntuado
-from app.evaluation.adaptadores_falsos import CoberturaEnMemoria, NliGuionado, ProponenteGuionado
+from app.evaluation.adaptadores_falsos import (
+    CoberturaEnMemoria,
+    NliGuionado,
+    ProponenteGuionado,
+    ficha_sintetica,
+)
 from app.evaluation.config_aplicabilidad import ConfigAplicabilidad, cargar_config_aplicabilidad
 from app.evaluation.config_suite import ConfigInvalida
 from app.evaluation.dataset_aplicabilidad import (
@@ -209,34 +213,13 @@ def _servicio_textual(
 
 
 def _citables_de(fuente: FuenteDelDataset) -> dict[str, ChunkCitable]:
-    ficha = _ficha_de(fuente)
+    ficha = ficha_sintetica(fuente.external_id, fuente.titulo, date(2026, 1, 1))
     return {
         c.chunk_id: ChunkCitable(
             ChunkPuntuado(c.chunk_id, fuente.document_id, c.texto, c.relevance_score), ficha
         )
         for c in fuente.chunks
     }
-
-
-def _ficha_de(fuente: FuenteDelDataset) -> FichaDeFuente:
-    corte = date(2026, 1, 1)
-    return FichaDeFuente(
-        title=fuente.titulo,
-        source_name="Corpus sintético (test)",
-        external_id=fuente.external_id,
-        language="en",
-        source_type="guideline",
-        license_class="dominio_publico",
-        study_design=None,
-        trial_phase=None,
-        primary_endpoint=None,
-        sample_size=None,
-        published_at=corte,
-        last_updated_at=corte,
-        guideline_version=None,
-        authors=None,
-        source_url=None,
-    )
 
 
 # --- reporte -------------------------------------------------------------------------------------------------------

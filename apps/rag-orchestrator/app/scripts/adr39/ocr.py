@@ -22,7 +22,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
-from app.scripts.adr39.reglas import mediana, percentil_95
+from app.scripts.adr39.reglas import mediana_estadistica, percentil_95_interpolado
 
 Reloj = Callable[[], float]
 
@@ -218,7 +218,7 @@ def medir_motor(
                 if corrida == 0:
                     a, t = exactitud_por_campo(texto, doc["campos"])
                     aciertos, total = aciertos + a, total + t
-            p95_por_corrida.append(percentil_95(tiempos))
+            p95_por_corrida.append(percentil_95_interpolado(tiempos))
     except MotorNoDisponible:
         return ResultadoOcr(motor.id, False, None, None, None, None, (), 0)
     except ResiduosDeOcr as error:
@@ -236,7 +236,7 @@ def medir_motor(
         motor.id,
         True,
         aciertos / total,
-        mediana(p95_por_corrida),
+        mediana_estadistica(p95_por_corrida),
         memoria_pico_mb(),
         escribio,
         (),

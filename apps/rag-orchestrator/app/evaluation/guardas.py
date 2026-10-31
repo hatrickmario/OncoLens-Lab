@@ -40,6 +40,27 @@ def exigir_juez_local(juez: ConfigJuez | None) -> None:
         raise SuiteAbortada("el modelo del juez de fidelidad se ejecuta en la nube (RN-12, ADR-41)")
 
 
+def exigir_proveedor_local(config: ConfigSuite) -> None:
+    """RN-12, US-233a AC-3: con ``proveedor: local`` el generador es un host de la lista local cerrada en código y su
+    modelo no se ejecuta en la nube (``x:cloud``), tampoco con datos sintéticos.
+
+    Se llama antes de cargar pesos y de crear el cliente: no sale ningún request. El mensaje nombra el adapter,
+    nunca la URL ni el nombre del modelo."""
+    if config.proveedor != "local":
+        return
+    if "llm" not in config.urls:
+        raise SuiteAbortada("con proveedor local falta adaptadores.urls.llm")
+    if config.rss_limite_mib is None:
+        raise SuiteAbortada("con proveedor local falta medicion.rss_limite_mib")
+    for adapter, url in sorted(config.urls.items()):
+        if not es_proveedor_local(url):
+            raise SuiteAbortada(f"el adapter {adapter} no es un proveedor local (RN-12)")
+    if es_modelo_de_nube(
+        config.llm_modelo
+    ):  # un host local puede servir un modelo que corre en la nube
+        raise SuiteAbortada("el modelo del adapter llm se ejecuta en la nube (RN-12)")
+
+
 def exigir_marca_final(config: ConfigSuite, prueba_final: bool) -> None:
     """ADR-45 P3: el subconjunto de prueba solo se evalúa con ``--prueba-final``."""
     if config.subconjunto == "prueba" and not prueba_final:
