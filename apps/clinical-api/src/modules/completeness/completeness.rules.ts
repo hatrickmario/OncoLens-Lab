@@ -1,4 +1,4 @@
-import { ESTADOS_DESCARTADOS } from '../patients/estados-de-revision.js';
+import { ESTADOS_DESCARTADOS } from '../compartido/estados-de-revision.js';
 import type {
   CondicionDeItem,
   ChecklistDelPaciente,

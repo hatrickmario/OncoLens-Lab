@@ -1,6 +1,6 @@
 import type { Consultador } from '../auth/auth.repository.js';
 import type { RegistroDeAnalisis } from './analysis-record.js';
-import { sqlDatoVigente } from '../patients/estados-de-revision.js';
+import { sqlDatoVigente } from '../compartido/estados-de-revision.js';
 import type { OrigenDeDatos } from './ports.js';
 
 export type EstadoDeRevisionMostrable =

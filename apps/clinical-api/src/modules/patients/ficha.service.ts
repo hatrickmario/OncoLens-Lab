@@ -7,7 +7,7 @@ import type {
 import { faltantesDe } from '../completeness/completeness.rules.js';
 import type { CompletenessService } from '../completeness/ports.js';
 import type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
-import { PacienteNoEncontradoError } from './patients.errores.js';
+import { PacienteNoEncontradoError } from '../compartido/pacientes.errores.js';
 import type { FichaRepository, FilaDePacienteDeLaFicha } from './ficha.repository.js';
 import {
   comoBiomarcador,

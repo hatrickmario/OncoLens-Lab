@@ -9,7 +9,7 @@ import {
   seleccionarDiagnosticoVigente,
   ultimoValorPorBiomarcador,
 } from '../../../src/modules/patients/ficha.reglas.js';
-import { ESTADOS_PENDIENTES_DE_REVISION } from '../../../src/modules/patients/estados-de-revision.js';
+import { ESTADOS_PENDIENTES_DE_REVISION } from '../../../src/modules/compartido/estados-de-revision.js';
 
 const PROCEDENCIA = {
   entryMethod: 'seed',

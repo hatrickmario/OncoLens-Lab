@@ -1,5 +1,8 @@
 import type { Consultador } from '../auth/auth.repository.js';
-import { ESTADOS_PENDIENTES_DE_REVISION, sqlDatoVigente } from './estados-de-revision.js';
+import {
+  ESTADOS_PENDIENTES_DE_REVISION,
+  sqlDatoVigente,
+} from '../compartido/estados-de-revision.js';
 
 export type EstadoDelPaciente = 'activo' | 'egresado';
 export type OrigenDelPaciente = 'sintetico' | 'real_anonimizado' | 'real_identificado';

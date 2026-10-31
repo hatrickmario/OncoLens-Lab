@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PacienteNoEncontradoError as DelAnalisis } from '../../../src/modules/evidence-analysis/evidence-analysis.service.js';
-import { PacienteNoEncontradoError as DePacientes } from '../../../src/modules/patients/patients.errores.js';
+import { PacienteNoEncontradoError as DePacientes } from '../../../src/modules/compartido/pacientes.errores.js';
 
 describe('PacienteNoEncontradoError', () => {
   it('es la misma clase en pacientes y en el análisis cuando se importa desde cada módulo', () => {

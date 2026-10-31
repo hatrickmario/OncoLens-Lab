@@ -38,6 +38,14 @@ module.exports = {
       to: { path: '^apps/clinical-api/src/modules/evidence-analysis/' },
     },
     {
+      name: 'modulos-sin-patients',
+      comment:
+        'completeness y evidence-analysis no importan de patients (cierra el ciclo patients ↔ completeness): lo compartido (estados de revisión, PacienteNoEncontradoError, diagnóstico vigente) vive en modules/compartido/ (L1D-97, deuda de l1d-95 2.15 a).',
+      severity: 'error',
+      from: { path: '^apps/clinical-api/src/modules/(completeness|evidence-analysis)/' },
+      to: { path: '^apps/clinical-api/src/modules/patients/' },
+    },
+    {
       name: 'web-solo-por-bff',
       comment:
         'web habla con clinical-api solo por HTTP desde los Route Handlers: nunca importa su código (readme §2.3).',

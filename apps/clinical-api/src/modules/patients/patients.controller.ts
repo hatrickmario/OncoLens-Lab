@@ -16,7 +16,7 @@ import { authorize } from '../../middleware/authorize.js';
 import { vistaSegunPermiso } from '../../middleware/vista-segun-permiso.js';
 import type { TraceIdGenerator } from '../../infrastructure/trace-id-generator.js';
 import { crearTraceIdMiddleware, traceIdDe } from '../../middleware/trace-id.middleware.js';
-import { PacienteNoEncontradoError } from './patients.errores.js';
+import { PacienteNoEncontradoError } from '../compartido/pacientes.errores.js';
 import { idDePacienteSchema, leerBusqueda, leerFiltrosDelListado } from './patients.schema.js';
 import type { PatientsService } from './patients.service.js';
 import type { VistaPorPermiso } from './vistas.js';
