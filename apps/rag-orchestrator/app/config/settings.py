@@ -29,6 +29,13 @@ from app.domain.reglas_proveedor import (
 _SHA256 = re.compile(r"[0-9a-fA-F]{64}")
 POBLACION_MAX_VALORES_POR_CRITERIO_INICIAL = 3
 """Valor inicial de ``POPULATION_MAX_VALUES_PER_CRITERION`` (ADR-47): el único lugar donde aparece el literal."""
+POBLACION_TOP_K_INICIAL = 4
+POBLACION_MAX_TOKENS_DE_SALIDA_INICIAL = 512
+POBLACION_CONCURRENCIA_INICIAL = 1
+POBLACION_REINTENTOS_INICIAL = 1
+POBLACION_VERSION_DEL_PROMPT_INICIAL = "poblacion_v1"
+"""Valores iniciales de la extracción de población en abanico (US-242, RN-22): los fija el spike US-240
+(``reports/spikes/s4-capacidad-paralelismo.md`` §7); se recalibran con US-233b. Es el único lugar donde aparecen."""
 HOSTS_LOCALES_DEL_LLM = tuple(sorted(HOSTS_LOCALES))
 
 
@@ -514,3 +521,17 @@ class CorpusIngestSettings(AjustesDeCorpus, AjustesSparse):
     corpus_metadata_sample_dir: Path = Path("data/evaluation/corpus-metadatos")
     # Temperatura del LLM en la extracción de metadatos (RN-22): propia, no la de la generación de /rag/query.
     corpus_metadata_llm_temperature: float = Field(default=0.0, ge=0.0, le=2.0)
+
+    # Extracción de la población del estudio en abanico (US-242, ADR-47, RN-22): una tarea corta por documento y criterio.
+    population_extraction_top_k: int = Field(default=POBLACION_TOP_K_INICIAL, gt=0)
+    population_max_values_per_criterion: int = Field(
+        default=POBLACION_MAX_VALORES_POR_CRITERIO_INICIAL, gt=0
+    )
+    population_extraction_max_output_tokens: int = Field(
+        default=POBLACION_MAX_TOKENS_DE_SALIDA_INICIAL, gt=0
+    )
+    population_extraction_concurrency: int = Field(default=POBLACION_CONCURRENCIA_INICIAL, gt=0)
+    population_extraction_retries: int = Field(default=POBLACION_REINTENTOS_INICIAL, ge=0)
+    population_prompt_version: str = Field(
+        default=POBLACION_VERSION_DEL_PROMPT_INICIAL, pattern=r"^[a-z0-9_]+$"
+    )

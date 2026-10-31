@@ -141,6 +141,33 @@ def test_los_campos_conservados_de_una_fila_son_los_escalares_y_criterios_no_vac
     ]
 
 
+def test_los_campos_conservados_de_la_forma_de_lista_resumen_los_valores_y_ignoran_vacios_y_pendientes() -> (
+    None
+):
+    valor = {
+        "value": "stage II",
+        "chunkId": "c1",
+        "scope": "elegibilidad",
+        "promptVersion": "p",
+        "modelVersion": "m",
+        "catalogVersion": "c",
+        "nliResult": "entailment",
+    }
+    campos = campos_conservados(
+        "otro",
+        None,
+        None,
+        None,
+        {
+            "estadio": [valor, {**valor, "value": "stage III"}],
+            "ecog": [],
+            "linea": {"status": "pendiente", "values": []},
+        },
+    )
+
+    assert [(c.campo, c.valor) for c in campos] == [("estadio", "stage II; stage III")]
+
+
 def test_una_fila_sin_nada_conservado_no_tiene_campos_y_otro_es_no_declarado() -> None:
     assert campos_conservados("otro", None, None, None, {"biomarcadores": NO_DISPONIBLE}) == ()
 

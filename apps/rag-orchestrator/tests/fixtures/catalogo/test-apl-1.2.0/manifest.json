@@ -1,0 +1,12 @@
+{
+  "version": "test-apl-1.2.0",
+  "cancerTypes": [
+    "mama",
+    "prostata"
+  ],
+  "standards": [
+    "cie10",
+    "loinc",
+    "atc"
+  ]
+}

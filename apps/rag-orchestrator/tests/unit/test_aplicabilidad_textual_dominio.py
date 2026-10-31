@@ -241,12 +241,12 @@ def test_con_valor_textual_da_coincide_cuando_el_texto_nombra_la_categoria_del_p
     assert resultado.estado == "coincide"
 
 
-def test_con_valor_textual_deja_desconocido_sin_causa_cuando_el_valor_no_encaja_en_la_regla():
+def test_con_valor_textual_deja_desconocido_sin_regla_de_comparacion_cuando_el_valor_no_encaja_en_la_regla():
     resultado = con_valor_textual(
         CRITERIOS["ecog"], evaluado("ecog"), propuesta("ecog", "ECOG según criterio clínico")
     )
 
-    assert (resultado.estado, resultado.causa) == ("desconocido", None)
+    assert (resultado.estado, resultado.causa) == ("desconocido", "sin_regla_de_comparacion")
     assert (
         resultado.valor_estudio == "ECOG según criterio clínico"
     )  # aceptado y citado, sin estado inventado

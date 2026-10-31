@@ -12,6 +12,7 @@ from typing import Any
 
 import httpx
 
+from app.application.corpus_metadata.poblacion_puertos import RespuestaDelLlm
 from app.application.ports import FalloDelLlm
 
 
@@ -53,6 +54,9 @@ def cuerpo_de_peticion(
     return cuerpo
 
 
+MOTIVO_DESCONOCIDO = "desconocido"
+
+
 class OpenAICompatibleLlmClient:
     """Implementa ``LlmClient``: temperatura de la configuración (0 por defecto), salida restringida por el esquema."""
 
@@ -74,6 +78,19 @@ class OpenAICompatibleLlmClient:
         cuerpo = cuerpo_de_peticion(
             self._model, prompt, esquema, self._temperature, self._max_output_tokens
         )
+        return (await self._pedir(cuerpo)).texto
+
+    async def completar_json_acotado(
+        self, prompt: str, esquema: Mapping[str, Any], *, max_tokens: int, semilla: int
+    ) -> RespuestaDelLlm:
+        """Implementa ``LlmDePoblacion``: tope de tokens y semilla propios de la tarea corta, y el ``finish_reason``
+        (``length`` = salida cortada) que ``completar_json`` descarta (US-242 D5)."""
+        cuerpo = cuerpo_de_peticion(
+            self._model, prompt, esquema, self._temperature, max_tokens, semilla=semilla
+        )
+        return await self._pedir(cuerpo)
+
+    async def _pedir(self, cuerpo: dict[str, Any]) -> RespuestaDelLlm:
         try:
             # `trust_env=False`: un proxy del entorno no puede sacar el prompt del host local (RN-12). El timeout de
             # httpx es por operación; el plazo total (`asyncio.timeout`) corta a un servidor que gotea bytes.
@@ -81,9 +98,11 @@ class OpenAICompatibleLlmClient:
                 async with httpx.AsyncClient(timeout=self._timeout_s, trust_env=False) as cliente:
                     respuesta = await cliente.post(self._url, json=cuerpo)
             respuesta.raise_for_status()
-            contenido = respuesta.json()["choices"][0]["message"]["content"]
+            eleccion = respuesta.json()["choices"][0]
+            contenido = eleccion["message"]["content"]
         except (httpx.HTTPError, TimeoutError, ValueError, KeyError, IndexError, TypeError):
             raise FalloDelLlm("el LLM local no entregó una respuesta utilizable") from None
         if not isinstance(contenido, str):
             raise FalloDelLlm("el LLM local no entregó una respuesta utilizable")
-        return contenido
+        motivo = eleccion.get("finish_reason")
+        return RespuestaDelLlm(contenido, motivo if isinstance(motivo, str) else MOTIVO_DESCONOCIDO)

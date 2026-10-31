@@ -29,8 +29,8 @@ documento; el código fija la fuente al guardar, nunca el modelo.
 secciones típicas (Métodos, Elegibilidad, Población); se recortan a `POPULATION_EXTRACTION_TOP_K`.
 
 **D4 · Reglas puras (`app/domain/corpus_metadata/poblacion_abanico.py`).** `rechazar_relleno()` (lista de marcadores
-«not found», «no expresado», `none`…), `validar_chunk()` (el `chunkId` pertenece al documento y el valor aparece, como
-subcadena normalizada, en el fragmento; si no: `chunk_ajeno`), `verificar_nli()` (verbalización determinista ADR-34 y
+«not found», «no expresado», `none`…), `descartar_chunk_ajeno()` (el `chunkId` pertenece al documento, contra TODOS sus fragmentos y no solo los del prompt; si no:
+`chunk_ajeno`; no se exige subcadena, ver Desviaciones), `verificar_nli()` (verbalización determinista ADR-34 y
 `soporta()` con `NLI_ENTAILMENT_THRESHOLD`; sin soporte → `valoresSinSoporte`), `deduplicar()` (valor normalizado con
 sinónimos del catálogo; conserva el primero de mayor alcance), `aplicar_tope()` **por fragmento y criterio**: agrupa por
 `chunkId` y conserva en cada grupo como máximo `POPULATION_MAX_VALUES_PER_CRITERION` valores (leído de configuración,
@@ -66,6 +66,35 @@ orquestador; `MetadataExtractionService` conserva los escalares. Los tests de `l
 - **D10 · P4 (`population_form`):** la escribe este change y se valida frente a la estructura al escribir; es informativa, la ingesta la escribe coherente con la forma real y el lector sigue decidiendo por la forma del JSON.
 - **D11 · P5:** el escritor emite solo la lista o `{"status":"pendiente","values":[]}`, nunca `{"values":[…]}` sin `status`; el lector lo tolera, el escritor no lo produce.
 - **D12 · P6:** el escritor recorta o descarta un `value` de más de 200 caracteres (`maxLength` del contrato) para que nunca tumbe el análisis.
+
+## Desviaciones de la implementación (reportadas al Gate 2)
+
+- **D3 · recuperación léxica en memoria.** El paso de metadatos corre antes de indexar el documento en Milvus, así que no hay
+  «búsqueda existente» que consultar: `RecuperadorLexicalDeFragmentos` puntúa en memoria los fragmentos que la ingesta acaba de
+  producir (mismos `chunk_id` que se indexarán, `identificador_de_chunk`). Puntaje léxico sobre etiqueta del criterio y palabras
+  de métodos/elegibilidad/población; a calibrar con US-233b.
+- **D4 · `validar_chunk` sin subcadena.** Solo comprueba que el `chunkId` es del documento: FX-06c-c exige guardar `premenopausal
+  women` aunque el fragmento diga «premenopausal or postmenopausal women»; el soporte lo decide el NLI contra el fragmento citado.
+- **D6 · caché sin columna nueva.** Las versiones viajan en cada valor guardado (forma de US-241). Una lista vacía solo se
+  reutiliza si el documento guarda algún valor con las versiones vigentes; un documento con todos los criterios vacíos se
+  reextrae al reingerir. Un criterio `pendiente` se reintenta. Un documento omitido (mismo checksum) actualiza solo su población.
+- **D8 · `MetadataExtractionService(incluir_poblacion=False)`** cuando el abanico está activo (el LLM de metadatos pide solo
+  escalares); con `True` (por defecto) conserva el camino de US-118 sin cambiar sus tests. Sin `llm_poblacion` la CLI usa ese camino.
+- **EXT-CUATRO** del fixture FX-06c-c queda con los 4 valores en el MISMO fragmento (`ch-e1-1`), como dice el escenario de AC-5
+  (el fixture escrito en la historia los repartía en tres fragmentos, que no excederían el tope por fragmento).
+- **Sin fragmentos relevantes** (decisión por defecto, a confirmar por el humano): el criterio queda con lista vacía SIN llamar al
+  LLM (fijado con test). Antes se habría llamado con un bloque de fragmentos vacío.
+- **`valoresRechazados`** suma solo `relleno` y `chunk_ajeno` (fijado por AC-2); longitud, lenguaje, NLI y tope tienen su contador.
+- **Documentos `fuente_estructurada`** (el manifiesto declara criterios) no se extraen ni se refrescan (D8); conservan la forma antigua.
+- **Refresca de un documento omitido** (mismo checksum) vive en `_omitir_y_refrescar_poblacion`, separada de `_omitir`; solo
+  corre con `metadata_source = extraido_verificado`, escribe solo si la población cambió y actualiza `extracted_fields`.
+- **Muestra humana (`extracted_fields`, M-08.4):** solo se escribe en `reports/` o `data/evaluation/` con corpus público y
+  sintético; nunca en logs ni en datos clínicos.
+- **Alcance (pregunta abierta, riesgo para DEC-11):** en el smoke con LLM real 11 de 19 valores salieron como `mencion`; la
+  exactitud del alcance no está medida. Deuda: muestra etiquetada a mano antes del G-Demo, a decidir por el humano.
+- **Validez del valor guardado:** un único predicado (`valor_guardado_es_valido`, en el lector de US-241) que el escritor invoca;
+  el escritor exige además `nliResult = entailment` (RN-01).
+- **Fallo del LLM o del NLI** (no solo `length`) deja el criterio `pendiente` y se reintenta en la siguiente ingesta.
 
 ## Dependencias y colaboradores
 

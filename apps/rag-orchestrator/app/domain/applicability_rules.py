@@ -7,13 +7,14 @@ prefijo o elemento exacto, sensible a mayúsculas y espacios (design D2b). Lo qu
 """
 
 import re
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
 from dataclasses import replace
 
 from app.domain.aplicabilidad_tipos import (
     AtributoDelPaciente,
     AvisoDelDato,
     CausaDeDesconocido,
+    MOTIVOS_SIN_REGLA_DE_COMPARACION,
     ContextoDelPaciente,
     CriterioEvaluado,
     DatoDelPaciente,
@@ -21,16 +22,26 @@ from app.domain.aplicabilidad_tipos import (
     MotivoInterno,
     PoblacionDelEstudio,
     ProcedenciaDelDato,
+    ProyeccionDeEstado,
     ResumenDeEstados,
     TratamientoPrevioDelPaciente,
     ValorDelEstudio,
+    ValorDePoblacion,
 )
 from app.domain.applicability_order import contar_excluyentes_no_coincide
+from app.domain.clasificacion_de_poblacion import (
+    categoria_del_paciente,
+    clasificar_poblacion,
+    es_criterio_compuesto,
+    es_forma_antigua,
+    proyectar_estado,
+    rango_acotado,
+    valores_de_la_opcion,
+)
 from app.domain.criterios_aplicabilidad import CriterioDeAplicabilidad, DestinoDelCriterio
 
 _SEPARADORES_DE_LISTA = re.compile(r"[,;]")
 _ENTERO = re.compile(r"\d+")
-_RANGO_DE_ENTEROS = re.compile(r"(\d+)\s*[-–]\s*(\d+)")
 _ELEMENTO_CON_FORMA_DE_RANGO = re.compile(
     r"(\d+|[IVX]+[A-C]?)\s*[-–]\s*(\d+|[IVX]+[A-C]?)"
 )  # «1-2», «I–III»: un rango no es una lista de valores
@@ -43,22 +54,40 @@ class DestinoNoResoluble(Exception):
 # --- valor del estudio (RN-25, design D4) ------------------------------------------------------------------------
 
 
-def valor_del_estudio(
-    poblacion: PoblacionDelEstudio, clave_de_estudio: str
-) -> ValorDelEstudio | None:
-    """Copia literal del valor bajo ``studyKey`` (clave ``a`` o subclave ``a.b``), o ``None`` sin inferir.
-
-    Del criterio, el primer valor de elegibilidad; si solo hay de subgrupo, el primero de ellos marcado
-    ``solo_subgrupo`` (Q2); los de mención no cuentan (ADR-47). Pendiente, inválido o ausente: ``None``. El cálculo por
-    fragmento citado y sus reglas llegan con US-243: aquí solo se consume la lista."""
-    criterio = poblacion.criterios.get(clave_de_estudio)
-    if criterio is None:
-        return None
-    elegibles = [v for v in criterio.valores if v.alcance == "elegibilidad"]
+def valor_de_forma_antigua(valores: Sequence[ValorDePoblacion]) -> ValorDelEstudio | None:
+    """Del criterio, el primer valor de elegibilidad; si solo hay de subgrupo, el primero de ellos marcado
+    ``solo_subgrupo`` (Q2); los de mención no cuentan (ADR-47). Sin valores: ``None``."""
+    elegibles = [v for v in valores if v.alcance == "elegibilidad"]
     if elegibles:
         return ValorDelEstudio(elegibles[0].valor, solo_subgrupo=False)
-    subgrupos = [v for v in criterio.valores if v.alcance == "subgrupo"]
+    subgrupos = [v for v in valores if v.alcance == "subgrupo"]
     return ValorDelEstudio(subgrupos[0].valor, solo_subgrupo=True) if subgrupos else None
+
+
+# --- estado por criterio con la población en lista (US-243, ADR-47) ------------------------------------------------
+
+
+def estado_de_poblacion(
+    valores: Sequence[ValorDePoblacion],
+    valor_paciente: str | None,
+    criterio: CriterioDeAplicabilidad,
+    *,
+    diseno_de_la_fuente: str | None = None,
+) -> ProyeccionDeEstado:
+    """Estado visible, ``partialReason`` y causa de un criterio a partir de los valores de los fragmentos que cita la
+    opción y del valor del paciente (RN-28). Función pura: sin E/S, sin LLM, sin puntaje.
+
+    Un valor sin ``chunk_id`` es de la forma antigua y se lee como en el S3 (D6): lectura doble durante un sprint."""
+    if valor_paciente is None:
+        return ProyeccionDeEstado("desconocido", causa="falta_en_paciente")
+    if es_forma_antigua(valores):
+        return _proyeccion_de_forma_antigua(
+            criterio, valor_paciente, valor_de_forma_antigua(valores)
+        )
+    interno, motivo = clasificar_poblacion(
+        valores, valor_paciente, criterio, diseno_de_la_fuente=diseno_de_la_fuente
+    )
+    return proyectar_estado(interno, motivo)
 
 
 # --- valor del paciente (ADR-34 b, design D3) --------------------------------------------------------------------
@@ -81,12 +110,6 @@ def dato_del_paciente(
     if lector is None:
         raise DestinoNoResoluble(f"{destino.entidad}.{destino.campo}")
     return lector(contexto, destino)
-
-
-def es_criterio_compuesto(destino: DestinoDelCriterio) -> bool:
-    """RE/RP, HRR/BRCA: el destino reúne varios biomarcadores (``match.name`` con lista). El paciente se rotula por
-    componente y el estudio guarda una sola cadena, así que no hay componente contra componente que comparar."""
-    return len(destino.coincidencia.get("name", ())) > 1
 
 
 def _nombres_exigidos(coincidencia: Mapping[str, tuple[str, ...]]) -> tuple[str, ...]:
@@ -208,15 +231,47 @@ def evaluar_criterio(
     valor_estudio: ValorDelEstudio | None,
 ) -> CriterioEvaluado:
     """Estado del criterio con la ``rule`` del catálogo. Precedencia de la causa: ``falta_en_paciente`` gana a
-    ``no_reportado_por_fuente`` (D5); un valor presente pero no comparable es ``desconocido`` sin causa."""
+    ``no_reportado_por_fuente`` (D5); un valor presente pero sin regla de comparación es ``desconocido`` con
+    ``sin_regla_de_comparacion`` (US-243)."""
+    proyeccion = _proyeccion_de_forma_antigua(criterio, valor_paciente, valor_estudio)
     copiado = valor_estudio.valor if valor_estudio else None
-    causa = causa_de_desconocido(valor_paciente, valor_estudio)
-    if causa is not None:
-        return _desconocido(criterio, valor_paciente, copiado, causa=causa)
-    estado, motivo = _veredicto(criterio, valor_paciente, valor_estudio)
+    return criterio_evaluado(criterio, valor_paciente, copiado, proyeccion)
+
+
+def criterio_evaluado(
+    criterio: CriterioDeAplicabilidad,
+    valor_paciente: str | None,
+    valor_estudio: str | None,
+    proyeccion: ProyeccionDeEstado,
+    valores_del_estudio: tuple[ValorDePoblacion, ...] = (),
+) -> CriterioEvaluado:
     return CriterioEvaluado(
-        criterio.clave, valor_paciente, copiado, estado, None, criterio.es_excluyente, motivo
+        criterio.clave,
+        valor_paciente,
+        valor_estudio,
+        proyeccion.estado,
+        proyeccion.causa,
+        criterio.es_excluyente,
+        proyeccion.motivo_interno,
+        motivo_parcial=proyeccion.motivo_parcial,
+        valores_del_estudio=valores_del_estudio,
     )
+
+
+def _proyeccion_de_forma_antigua(
+    criterio: CriterioDeAplicabilidad,
+    valor_paciente: str | None,
+    valor_estudio: ValorDelEstudio | None,
+) -> ProyeccionDeEstado:
+    causa = causa_de_desconocido(valor_paciente, valor_estudio)
+    if causa is not None or valor_paciente is None or valor_estudio is None:
+        return ProyeccionDeEstado("desconocido", causa=causa)
+    estado, motivo = _veredicto(criterio, valor_paciente, valor_estudio)
+    if estado == "desconocido" and motivo in MOTIVOS_SIN_REGLA_DE_COMPARACION:
+        return proyectar_estado("sin_regla", motivo)
+    if estado == "parcial":
+        return proyectar_estado("solo_subgrupo")
+    return ProyeccionDeEstado(estado, motivo_interno=motivo)
 
 
 def causa_de_desconocido(
@@ -280,7 +335,7 @@ def _por_igualdad(
 ) -> _Veredicto:
     """Categoría del paciente = clave de ``equivalences`` cuya alternativa es prefijo de su valor. Sin categoría no se
     adivina: igual al literal coincide, igual a una clave de la tabla es ``desconocido``, otro valor no coincide."""
-    categoria = _categoria_del_paciente(equivalencias, valor_paciente)
+    categoria = categoria_del_paciente(equivalencias, valor_paciente)
     if categoria is not None:
         return ("coincide" if valor_estudio == categoria else "no_coincide"), None
     if valor_estudio == valor_paciente:
@@ -290,15 +345,6 @@ def _por_igualdad(
     return "no_coincide", None
 
 
-def _categoria_del_paciente(
-    equivalencias: Mapping[str, tuple[str, ...]], valor_paciente: str
-) -> str | None:
-    for categoria, alternativas in equivalencias.items():
-        if any(valor_paciente.startswith(alternativa) for alternativa in alternativas):
-            return categoria
-    return None
-
-
 def _por_rango(
     criterio: CriterioDeAplicabilidad, valor_paciente: str, valor_estudio: ValorDelEstudio
 ) -> _Veredicto:
@@ -306,30 +352,13 @@ def _por_rango(
         # El estadio («IIA») no tiene escala ordenada en el catálogo: fuera del alcance del S3 (D2b).
         sin_escala = criterio.destino.campo == "stage_value"
         return "desconocido", "sin_escala" if sin_escala else "forma_no_comparable"
-    rango = _rango_acotado(valor_estudio.valor, criterio)
+    rango = rango_acotado(valor_estudio.valor, criterio)
     if rango is None:
         return "desconocido", "forma_no_comparable"
     minimo, maximo = rango
     if not minimo <= int(valor_paciente) <= maximo:
         return "no_coincide", None
     return _dentro(criterio, valor_estudio), None
-
-
-def _rango_acotado(texto: str, criterio: CriterioDeAplicabilidad) -> tuple[float, float] | None:
-    """Rango ``a-b`` (guion o raya) o entero único, intersecado con ``rule.limits`` del catálogo."""
-    par = _RANGO_DE_ENTEROS.fullmatch(texto)
-    if par:
-        minimo, maximo = int(par.group(1)), int(par.group(2))
-    elif _ENTERO.fullmatch(texto):
-        minimo = maximo = int(texto)
-    else:
-        return None
-    limites = criterio.regla.limites
-    if limites is not None and limites.minimo is not None:
-        minimo = max(minimo, limites.minimo)
-    if limites is not None and limites.maximo is not None:
-        maximo = min(maximo, limites.maximo)
-    return minimo, maximo
 
 
 def _por_pertenencia(
@@ -358,19 +387,49 @@ def evaluar_criterio_de_fuente(
     criterio: CriterioDeAplicabilidad,
     contexto: ContextoDelPaciente,
     poblacion: PoblacionDelEstudio,
+    chunk_ids_citados: Collection[str] | None = None,
+    *,
+    diseno_de_la_fuente: str | None = None,
 ) -> CriterioEvaluado:
-    """Lee el valor del paciente por ``destination`` y el del estudio por ``studyKey``, evalúa el criterio y le añade el
-    aviso del dato del paciente (US-124)."""
+    """Lee el valor del paciente por ``destination`` y los del estudio por ``studyKey`` (los de los fragmentos citados,
+    o todos si ``chunk_ids_citados`` es ``None``), evalúa el criterio y le añade el aviso del dato del paciente (US-124)."""
     try:
         dato = _dato_comparable(contexto, criterio)
     except DestinoNoResoluble:
         return _desconocido(criterio, None, None, motivo="destino_no_resoluble")
-    evaluado = evaluar_criterio(
-        criterio,
-        None if dato is None else dato.valor,
-        valor_del_estudio(poblacion, criterio.clave_de_estudio),
-    )
+    valor_paciente = None if dato is None else dato.valor
+    valores = _valores_del_criterio(poblacion, criterio, chunk_ids_citados)
+    if valores and not es_forma_antigua(valores):
+        evaluado = _evaluar_con_lista(criterio, valor_paciente, valores, diseno_de_la_fuente)
+    else:
+        evaluado = evaluar_criterio(criterio, valor_paciente, valor_de_forma_antigua(valores))
     return replace(evaluado, aviso=aviso_dato_paciente(() if dato is None else dato.procedencias))
+
+
+def _valores_del_criterio(
+    poblacion: PoblacionDelEstudio,
+    criterio: CriterioDeAplicabilidad,
+    chunk_ids_citados: Collection[str] | None,
+) -> tuple[ValorDePoblacion, ...]:
+    del_estudio = poblacion.criterios.get(criterio.clave_de_estudio)
+    if del_estudio is None:
+        return ()
+    if chunk_ids_citados is None:
+        return del_estudio.valores
+    return valores_de_la_opcion(del_estudio, chunk_ids_citados)
+
+
+def _evaluar_con_lista(
+    criterio: CriterioDeAplicabilidad,
+    valor_paciente: str | None,
+    valores: tuple[ValorDePoblacion, ...],
+    diseno_de_la_fuente: str | None,
+) -> CriterioEvaluado:
+    proyeccion = estado_de_poblacion(
+        valores, valor_paciente, criterio, diseno_de_la_fuente=diseno_de_la_fuente
+    )
+    primero = next((v.valor for v in valores if v.alcance == "elegibilidad"), None)
+    return criterio_evaluado(criterio, valor_paciente, primero, proyeccion, valores)
 
 
 def _dato_comparable(
