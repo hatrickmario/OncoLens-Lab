@@ -20,6 +20,7 @@ from app.evaluation.llamadas import (
 )
 from app.evaluation.medicion_modelos import informe_de_recursos_nli
 from app.evaluation.medidores import NliMedido
+from app.evaluation.modelos_locales import OrigenLocal, cargar_puertos_locales
 from app.evaluation.reporte import es_identificador
 from tests.evaluation.test_fidelidad_juez import CONFIG
 from tests.support.modelos import crear_entorno_de_modelos
@@ -138,6 +139,17 @@ def test_la_guarda_local_aborta_nombrando_la_causa_y_nunca_el_valor(
 
     assert causa in str(error.value)
     assert "nube.invalid" not in str(error.value) and "g:cloud" not in str(error.value)
+
+
+def test_una_clave_de_adr39_invalida_se_nombra_sin_repetir_su_valor(tmp_path: Path) -> None:
+    entorno = crear_entorno_de_modelos(tmp_path).con(EMBEDDING_DIM="valor-secreto-no-numerico")
+    origen = OrigenLocal(entorno, None, lambda: 0.0)
+
+    with pytest.raises(SuiteAbortada) as error:
+        cargar_puertos_locales(config_local(), origen, RegistroDeLlamadas(), "sintetico")
+
+    assert "EMBEDDING_DIM" in str(error.value)
+    assert "valor-secreto-no-numerico" not in str(error.value)
 
 
 def test_las_variables_ausentes_de_los_modelos_se_listan_por_nombre(tmp_path: Path) -> None:

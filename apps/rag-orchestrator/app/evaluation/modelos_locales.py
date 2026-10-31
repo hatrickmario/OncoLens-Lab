@@ -139,7 +139,9 @@ def _settings_de(config: ConfigSuite, entorno: Mapping[str, str]) -> Settings:
     try:
         modelos = cargar_config_modelos(entorno)
     except ConfigDeModelosInvalida as error:
-        raise SuiteAbortada(f"configuración de modelos incompleta: {error}") from None
+        # El mensaje de la configuración trae «CLAVE: motivo» y el motivo puede repetir el valor: solo los nombres.
+        variables = [problema.split(":", 1)[0] for problema in str(error).split("; ")]
+        raise SuiteAbortada(f"configuración de modelos inválida: {', '.join(variables)}") from None
     campos = {
         clave.lower(): valor
         for clave, valor in entorno.items()
