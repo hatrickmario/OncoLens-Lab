@@ -6,6 +6,7 @@ falsos. El adapter real de la tarea corta construye el prompt. Cada respuesta la
 hook de ``verificacion_proveedor.py`` (US-214).
 """
 
+import logging
 from dataclasses import replace
 from typing import Any
 
@@ -20,6 +21,9 @@ from tests.support.poblacion_fx08bc import (
 )
 from tests.support.recuperacion import PARAMETROS_DE_PRUEBA, PARAMETROS_DEL_RESPALDO_DE_PRUEBA
 from tests.support.respaldo_poblacion import (
+    CARACTERES_POR_TOKEN,
+    TOKENS_DE_PRUEBA,
+    VALOR_DE_RESP_OK,
     RespaldoLlmFalso,
     tarea_de_respaldo,
 )
@@ -147,3 +151,75 @@ def test_respaldo_conserva_las_opciones_validadas_cuando_el_llm_cae_despues_de_g
     _exigir_respaldo_fallido(cuerpo)
     assert cuerpo["evidenceOptions"] == referencia["evidenceOptions"]
     assert len(cuerpo["evidenceOptions"]) == 1
+
+
+def _eventos_de_respaldo_fallido(caplog) -> list[str]:
+    return [
+        r.getMessage()
+        for r in caplog.records
+        if "event=aplicabilidad_respaldo_fallido" in r.getMessage()
+    ]
+
+
+def _el_evento_de_respaldo_fallido(caplog) -> str:
+    eventos = _eventos_de_respaldo_fallido(caplog)
+    assert len(eventos) == 1, "se esperaba un único evento aplicabilidad_respaldo_fallido"
+    return eventos[0]
+
+
+@pytest.mark.ac("US-244", 6)
+def test_respaldo_registra_el_bucle_sin_valores_textos_prompt_salida_ni_pregunta(caplog):
+    caplog.set_level(logging.DEBUG)
+    solicitud = solicitud_a_m2()
+
+    _consultar("RESP-BUCLE", "O-P9")
+
+    evento = _el_evento_de_respaldo_fallido(caplog)
+    for esperado in (
+        "finish_reason=length",
+        f"longitud={TOKENS_DE_PRUEBA * CARACTERES_POR_TOKEN}",
+        "criterio=estado_menopausico",
+        "traceId=req_9a3f2c1b",
+    ):
+        assert esperado in evento
+    mensajes = [r.getMessage() for r in caplog.records]
+    for prohibido in (
+        VALOR_DE_RESP_OK,  # el valor y la salida del LLM, que lo repite
+        TEXTO_DE_CH_B9_1,  # el texto del fragmento
+        "<<<FRAGMENTOS",  # el prompt
+        solicitud["query"],
+        solicitud["clinicalContext"]["pseudoPatientId"],
+    ):
+        assert all(prohibido not in mensaje for mensaje in mensajes)
+
+
+@pytest.mark.parametrize(
+    ("escenario", "causa", "finish_reason"),
+    [("RESP-TRUNCADO", "truncado", "stop"), ("RESP-CAIDO", "caido", "none")],
+)
+def test_respaldo_registra_la_causa_y_el_finish_reason_cuando_el_llm_falla_sin_bucle(
+    caplog, escenario, causa, finish_reason
+):
+    caplog.set_level(logging.DEBUG)
+
+    _consultar(escenario, "O-P9")
+
+    evento = _el_evento_de_respaldo_fallido(caplog)
+    assert f"causa={causa}" in evento and f"finish_reason={finish_reason}" in evento
+
+
+def test_respaldo_registra_el_plazo_vencido_con_la_causa_plazo(caplog):
+    caplog.set_level(logging.DEBUG)
+
+    _consultar("RESP-LENTO", "O-P9", plazo_ms=20)
+
+    evento = _el_evento_de_respaldo_fallido(caplog)
+    assert "causa=plazo" in evento and "longitud=0" in evento
+
+
+def test_respaldo_no_registra_ningun_fallo_cuando_el_llm_responde_bien(caplog):
+    caplog.set_level(logging.DEBUG)
+
+    _consultar("RESP-OK", "O-P9")
+
+    assert _eventos_de_respaldo_fallido(caplog) == []

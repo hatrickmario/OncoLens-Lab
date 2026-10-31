@@ -39,6 +39,8 @@ ESCENARIOS_DE_RESPALDO = (
 _CRITERIO_EN_PROMPT = re.compile(r"^Criterio: (\S+)$", re.MULTILINE)
 _FRAGMENTO_EN_PROMPT = re.compile(r"^\[(ch-[a-z0-9-]+)\]$", re.MULTILINE)
 CARACTERES_POR_TOKEN = 4
+TOKENS_DE_PRUEBA = 512
+"""``POPULATION_EXTRACTION_MAX_OUTPUT_TOKENS`` de los tests: el bucle agota exactamente este presupuesto."""
 SEGUNDOS_DE_RESP_LENTO = 1.0
 """Mucho más que el plazo de los tests (decenas de ms) y poco si nadie lo cancela: nunca cuelga la suite."""
 
@@ -103,7 +105,7 @@ def _salida_en_bucle(max_tokens: int) -> str:
 
 
 def tarea_de_respaldo(
-    llm: LlmDePoblacion, *, max_tokens: int = 512, max_chars_fragmentos: int = 12000
+    llm: LlmDePoblacion, *, max_tokens: int = TOKENS_DE_PRUEBA, max_chars_fragmentos: int = 12000
 ) -> TareaDePoblacionLocal:
     """El adapter real sobre el LLM falso: la plantilla versionada de la ingesta, con el tope de la configuración."""
     return TareaDePoblacionLocal(
