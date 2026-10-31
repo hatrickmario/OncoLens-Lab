@@ -17,7 +17,6 @@ from app.api.health import crear_router_health
 from app.api.rag_query import crear_router_rag_query
 from app.api.trace import ContextoDeTraceId
 from app.application.aplicabilidad import ApplicabilityService
-from app.application.aplicabilidad_textual import ParametrosDelRespaldo
 from app.application.catalogo_exigido import ConsultaConCatalogoExigido
 from app.application.consulta_no_componible import ConsultaNoComponible
 from app.application.ports import (
@@ -71,9 +70,10 @@ from app.infrastructure.lenguaje.terminos_prohibidos import (
     ListaDeTerminosNoDisponible,
     cargar_verificador_de_terminos,
 )
-from app.infrastructure.llm.fabrica_local import (  # noqa: F401  re-exportadas: las importan otros changes y tests
+from app.infrastructure.llm.fabrica_local import (
     crear_generador_local,
     crear_proponente_local,
+    parametros_del_respaldo,
 )
 from app.infrastructure.llm.openai_compatible_health import OpenAICompatibleLlmHealth
 from app.infrastructure.security.clave_publica import cargar_clave_publica_es256
@@ -476,11 +476,7 @@ def _parametros_de_recuperacion(settings: Settings) -> ParametrosDeRecuperacion:
         llm_model=settings.llm_model,
         nli_entailment_threshold=settings.nli_entailment_threshold,  # type: ignore[arg-type]
         tipos_habilitados=settings.enabled_cancer_types,
-        respaldo=ParametrosDelRespaldo(
-            plazo_ms=settings.population_fallback_deadline_ms,
-            concurrencia=settings.population_extraction_concurrency,
-            version_del_prompt=settings.population_prompt_version,
-        ),
+        respaldo=parametros_del_respaldo(settings),
         retrieval_mode=RetrievalMode(settings.retrieval_mode),
         retrieval_fusion=EstrategiaDeFusion(settings.retrieval_fusion),
         rrf_k=settings.rrf_k,

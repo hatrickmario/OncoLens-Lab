@@ -7,7 +7,7 @@ fragmentos). ``envolver_cliente`` deja que quien mide anote cada llamada sin cam
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Protocol, cast, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 from app.application.corpus_metadata.esquema_poblacion import cargar_plantilla
 from app.application.corpus_metadata.poblacion_puertos import LlmDePoblacion
@@ -29,13 +29,19 @@ class ClienteLlmLocal(LlmClient, LlmDePoblacion, Protocol):
 
 def parametros_del_respaldo(settings: Settings) -> ParametrosDelRespaldo:
     """Plazo, concurrencia y versión del prompt del respaldo de población, de la configuración (RN-22)."""
-    raise NotImplementedError("US-244 Gate 2 vuelta 2")
+    return ParametrosDelRespaldo(
+        plazo_ms=settings.population_fallback_deadline_ms,
+        concurrencia=settings.population_extraction_concurrency,
+        version_del_prompt=settings.population_prompt_version,
+    )
 
 
-EnvolverCliente = Callable[[LlmClient], LlmClient]
+EnvolverCliente = Callable[[ClienteLlmLocal], ClienteLlmLocal]
 
 
-def _cliente_llm_local(settings: Settings, envolver_cliente: EnvolverCliente | None) -> LlmClient:
+def _cliente_llm_local(
+    settings: Settings, envolver_cliente: EnvolverCliente | None
+) -> ClienteLlmLocal:
     cliente = OpenAICompatibleLlmClient(
         settings.llm_base_url,
         settings.llm_model,
@@ -65,8 +71,12 @@ def crear_proponente_local(
     """Respaldo de la población en la consulta (US-244): la tarea corta de la ingesta sobre el mismo LLM local (RN-12), con
     el tope de tokens de salida de la extracción y el presupuesto de fragmentos de la generación (RN-22). ``llm`` solo lo
     inyectan los tests: es el borde que se sustituye."""
+    if llm is not None and envolver_cliente is not None:
+        raise ValueError(
+            "llm y envolver_cliente se excluyen: el envoltorio anota el cliente que se crea aquí"
+        )
     return TareaDePoblacionLocal(
-        llm or cast(LlmDePoblacion, _cliente_llm_local(settings, envolver_cliente)),
+        llm or _cliente_llm_local(settings, envolver_cliente),
         plantilla=cargar_plantilla(settings.population_prompt_version),
         max_valores=MAX_VALORES_DEL_RESPALDO,
         max_tokens_de_salida=settings.population_extraction_max_output_tokens,

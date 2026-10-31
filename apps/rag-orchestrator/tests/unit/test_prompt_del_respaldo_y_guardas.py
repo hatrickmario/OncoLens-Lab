@@ -6,7 +6,7 @@ from pathlib import Path
 
 from app.application.corpus_metadata.esquema_poblacion import cargar_plantilla, construir_prompt
 from app.application.corpus_metadata.poblacion_puertos import Fragmento
-from app.bootstrap import crear_proponente_local
+from app.infrastructure.llm.fabrica_local import crear_proponente_local
 from app.config.settings import Settings
 from app.domain.applicability_text import ChunkDeFuente, CriterioPendiente, FuenteParaProponer
 from app.domain.criterios_aplicabilidad import CriterioDeAplicabilidad

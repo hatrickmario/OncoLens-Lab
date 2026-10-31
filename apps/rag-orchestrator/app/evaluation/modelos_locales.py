@@ -20,7 +20,6 @@ from app.application.ports import (
     CandidatoParaReranker,
     EvidenceGenerator,
     LanguageDetector,
-    LlmClient,
     NliClassifier,
     QueryEmbedder,
     Reranker,
@@ -34,7 +33,13 @@ from app.domain.nli import ParNli, ResultadoNli
 from app.evaluation.config_suite import ConfigSuite
 from app.evaluation.guardas import SuiteAbortada
 from app.evaluation.llamadas import RegistroDeLlamadas
-from app.infrastructure.llm.fabrica_local import crear_generador_local, crear_proponente_local
+from app.application.aplicabilidad_textual import ParametrosDelRespaldo
+from app.infrastructure.llm.fabrica_local import (
+    ClienteLlmLocal,
+    crear_generador_local,
+    crear_proponente_local,
+    parametros_del_respaldo,
+)
 from app.infrastructure.models.verificacion import ModeloNoVerificadoError
 
 if TYPE_CHECKING:  # solo para el tipado: importar local.py carga onnxruntime
@@ -83,6 +88,7 @@ class PuertosLocales:
     clasificador_nli: NliClassifier
     generador: EvidenceGenerator
     proponente: PoblacionTask
+    respaldo: ParametrosDelRespaldo
 
 
 class EmbedderRegistrado:
@@ -140,7 +146,7 @@ class LlmRegistrado:
 
     def __init__(
         self,
-        interno: LlmClient,
+        interno: ClienteLlmLocal,
         registro: RegistroDeLlamadas,
         *,
         destino: str,
@@ -159,7 +165,7 @@ class LlmRegistrado:
     ) -> RespuestaDelLlm:
         """La tarea corta del respaldo de población (US-244): se anota igual que cualquier otra llamada al LLM."""
         self._registro.registrar(self._destino, self._clase, self._modelo, "llm")
-        return await self._interno.completar_json_acotado(  # type: ignore[attr-defined]
+        return await self._interno.completar_json_acotado(
             prompt, esquema, max_tokens=max_tokens, semilla=semilla
         )
 
@@ -227,7 +233,7 @@ def cargar_puertos_locales(
     modelos = _cargar_modelos(settings, origen.cargador)
     embedder = modelos.embedder_consulta
 
-    def registrar_llm(interno: LlmClient) -> LlmClient:
+    def registrar_llm(interno: ClienteLlmLocal) -> ClienteLlmLocal:
         return LlmRegistrado(
             interno,
             registro,
@@ -246,4 +252,5 @@ def cargar_puertos_locales(
         clasificador_nli=NliRegistrado(modelos.clasificador_nli, registro, clase_datos),
         generador=crear_generador_local(settings, registrar_llm),
         proponente=crear_proponente_local(settings, registrar_llm),
+        respaldo=parametros_del_respaldo(settings),
     )

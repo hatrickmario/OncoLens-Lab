@@ -85,11 +85,14 @@ PARAMETROS_DEL_RESPALDO_DE_LA_SUITE = ParametrosDelRespaldo(
     concurrencia=POBLACION_CONCURRENCIA_INICIAL,
     version_del_prompt=POBLACION_VERSION_DEL_PROMPT_INICIAL,
 )
-"""El respaldo de la población de la suite: con adapters falsos el plazo y la concurrencia no cambian la medida."""
+"""El respaldo de la población con adapters FALSOS: ni el plazo ni la concurrencia cambian la medida. La suite local usa el que
+derivan de ``Settings`` los puertos locales (``PuertosLocales.respaldo``, RN-22)."""
 
 
 def parametros_de_recuperacion(
-    config: ConfigSuite, tipos_habilitados: tuple[str, ...]
+    config: ConfigSuite,
+    tipos_habilitados: tuple[str, ...],
+    respaldo: ParametrosDelRespaldo = PARAMETROS_DEL_RESPALDO_DE_LA_SUITE,
 ) -> ParametrosDeRecuperacion:
     u = config.umbrales
     return ParametrosDeRecuperacion(
@@ -101,7 +104,7 @@ def parametros_de_recuperacion(
         llm_model=config.llm_modelo,
         nli_entailment_threshold=u.nli_entailment_threshold,
         tipos_habilitados=tipos_habilitados,
-        respaldo=PARAMETROS_DEL_RESPALDO_DE_LA_SUITE,
+        respaldo=respaldo,
     )
 
 
@@ -185,7 +188,11 @@ def componer_servicio(
         clasificador_nli=nli,
         verificador_terminos=terminos,
         reloj=reloj,
-        parametros=parametros_de_recuperacion(config, tipos_habilitados),
+        parametros=parametros_de_recuperacion(
+            config,
+            tipos_habilitados,
+            puertos_locales.respaldo if puertos_locales else PARAMETROS_DEL_RESPALDO_DE_LA_SUITE,
+        ),
     )
     return ServicioDeSuite(
         servicio,
