@@ -17,6 +17,8 @@ export interface LineaDeRegistro {
     | 'cuerpo_excesivo'
     | 'clinical_api_inalcanzable'
     | 'cuerpo_cortado'
+    // 5xx de clinical-api interceptado antes de retransmitir (checklist, US-005 AC-5).
+    | 'status_5xx'
     | 'error_no_json'
     // Status que el contrato no declara para la operación, o cuerpo que no cumple el schema de su status.
     | 'cuerpo_no_conforme'

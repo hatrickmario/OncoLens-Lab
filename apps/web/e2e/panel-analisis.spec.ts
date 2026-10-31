@@ -161,13 +161,17 @@ test.describe('Panel de análisis (L1D-140)', () => {
     const campo = page.getByLabel('Pregunta clínica');
     await campo.focus();
     await page.keyboard.type(preguntaHer2);
-    await page.keyboard.press('Tab');
     const boton = page.getByRole('button', { name: 'Analizar evidencia' });
+    // Los enlaces «Registrar … en la ficha» del aviso de faltantes (US-005 AC-7) preceden al botón en el orden de Tab.
+    for (let i = 0; i < 12 && !(await boton.evaluate((el) => el === document.activeElement)); i++)
+      await page.keyboard.press('Tab');
     await expect(boton).toBeFocused();
     await page.keyboard.press('Enter');
 
-    await expect(page.getByRole('status')).toHaveText(textos.estado.listoUna);
-    await expect(page.getByRole('status')).toHaveAttribute('aria-live', 'polite');
+    // El aviso de faltantes también es role=status (US-005): se acota al anuncio del resultado.
+    const anuncio = page.getByRole('status').filter({ hasText: textos.estado.listoUna });
+    await expect(anuncio).toHaveText(textos.estado.listoUna);
+    await expect(anuncio).toHaveAttribute('aria-live', 'polite');
     await expect(boton).toBeFocused();
   });
 
@@ -238,6 +242,9 @@ test.describe('Estados del panel (L1D-141)', () => {
     context,
   }) => {
     await iniciarSesion(page);
+    // Espera la lectura inicial del checklist: así la sesión vence después de ella y el 401 llega al pulsar el botón.
+    await expect(page.getByRole('button', { name: 'Analizar evidencia' })).toBeVisible();
+    await expect(page.getByRole('status').filter({ hasText: /datos críticos/ })).toBeVisible();
     const cookies = await context.cookies();
     const origen = new URL(page.url()).origin;
     await page.request.post('/api/auth/logout', { headers: { Origin: origen } });

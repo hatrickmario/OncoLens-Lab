@@ -5,6 +5,7 @@ import errorInterno from '../../../../contracts/examples/error-interno.json';
 import errorNoAutenticado from '../../../../contracts/examples/error-no-autenticado.json';
 import errorNoEncontrado from '../../../../contracts/examples/error-no-encontrado.json';
 import fichaAdmin from '../../../../contracts/examples/patient-summary-admin.json';
+import fichaChecklistNoDisponible from '../../../../contracts/examples/patient-summary-checklist-no-disponible.json';
 import fichaDelDoctor from '../../../../contracts/examples/patient-summary-doctor.json';
 import { URL_CLINICAL_API } from './clinical-api-simulado';
 
@@ -14,6 +15,7 @@ export {
   errorNoAutenticado,
   errorNoEncontrado,
   fichaAdmin,
+  fichaChecklistNoDisponible,
   fichaDelDoctor,
 };
 
