@@ -99,7 +99,7 @@ def huella_de_config(crudo: dict[str, Any]) -> str:
     return hashlib.sha256(canonico.encode("utf-8")).hexdigest()
 
 
-def _clave(crudo: dict[str, Any], *ruta: str) -> Any:
+def clave_de(crudo: dict[str, Any], *ruta: str) -> Any:
     valor: Any = crudo
     for parte in ruta:
         if not isinstance(valor, dict) or parte not in valor:
@@ -114,7 +114,7 @@ def _en(valor: str, permitidos: tuple[str, ...], clave: str) -> str:
     return valor
 
 
-def _ruta_del_repo(valor: str) -> Path:
+def ruta_del_repo(valor: str) -> Path:
     ruta = Path(valor)
     return ruta if ruta.is_absolute() else raiz_repo() / ruta
 
@@ -150,12 +150,12 @@ def _leer_juez(crudo: dict[str, Any]) -> ConfigJuez | None:
     base_url = str(juez["base_url"]) if juez.get("base_url") else None
     if proveedor == "local" and base_url is None:
         raise ConfigInvalida("un juez local exige juez.base_url (EVAL_JUDGE_BASE_URL)")
-    modelo = str(_clave(juez, "modelo"))
+    modelo = str(clave_de(juez, "modelo"))
     if not es_identificador(
         modelo
     ):  # antes de cualquier request: Ollama resuelve nombres con espacios o control
         raise ConfigInvalida("juez.modelo no es un identificador válido (sin espacios ni control)")
-    acuerdo_minimo = _clave(juez, "acuerdo_minimo")  # RN-22: sin valor por defecto en código
+    acuerdo_minimo = clave_de(juez, "acuerdo_minimo")  # RN-22: sin valor por defecto en código
     _exigir_fraccion(acuerdo_minimo, "juez.acuerdo_minimo")
     try:
         return ConfigJuez(
@@ -177,9 +177,9 @@ def _barrido_de(crudo: dict[str, Any]) -> Barrido | None:
     seccion = crudo.get("barrido")
     if seccion is None:
         return None
-    grilla = tuple(float(v) for v in _clave(seccion, "relevance_threshold_grid"))
-    referencia = float(_clave(seccion, "umbral_de_referencia"))
-    tolerancia = float(_clave(seccion, "tolerancia_recall"))
+    grilla = tuple(float(v) for v in clave_de(seccion, "relevance_threshold_grid"))
+    referencia = float(clave_de(seccion, "umbral_de_referencia"))
+    tolerancia = float(clave_de(seccion, "tolerancia_recall"))
     if not grilla or any(not 0.0 <= v <= 1.0 for v in grilla):
         raise ConfigInvalida("barrido.relevance_threshold_grid debe tener valores en [0, 1]")
     if referencia not in grilla:
@@ -212,38 +212,38 @@ def cargar_config_suite(ruta: Path, entorno: Mapping[str, str] | None = None) ->
     if not isinstance(crudo, dict):
         raise ConfigInvalida("la configuración no es un mapa YAML")
     crudo = _con_juez_efectivo(crudo, entorno or {})
-    umbrales = _clave(crudo, "umbrales")
-    dataset = _clave(crudo, "dataset")
+    umbrales = clave_de(crudo, "umbrales")
+    dataset = clave_de(crudo, "dataset")
     sub = dataset.get("subconjunto")
     particion = dataset.get("particion") if sub else None
     if sub and not particion:
         raise ConfigInvalida("dataset.subconjunto exige dataset.particion")
     return ConfigSuite(
-        nombre=str(_clave(crudo, "nombre")),
-        fixture=str(_clave(crudo, "fixture")),
-        dataset=_ruta_del_repo(str(_clave(dataset, "ruta"))),
+        nombre=str(clave_de(crudo, "nombre")),
+        fixture=str(clave_de(crudo, "fixture")),
+        dataset=ruta_del_repo(str(clave_de(dataset, "ruta"))),
         subconjunto=_en(sub, SUBCONJUNTOS, "dataset.subconjunto") if sub else None,
-        particion=_ruta_del_repo(str(particion)) if particion else None,
-        semilla_bootstrap=int(_clave(crudo, "semilla_bootstrap")),
-        bootstrap_repeticiones=int(_clave(crudo, "bootstrap_repeticiones")),
-        reloj=_en(str(_clave(crudo, "medicion", "reloj")), RELOJES, "medicion.reloj"),
+        particion=ruta_del_repo(str(particion)) if particion else None,
+        semilla_bootstrap=int(clave_de(crudo, "semilla_bootstrap")),
+        bootstrap_repeticiones=int(clave_de(crudo, "bootstrap_repeticiones")),
+        reloj=_en(str(clave_de(crudo, "medicion", "reloj")), RELOJES, "medicion.reloj"),
         proveedor=_en(
-            str(_clave(crudo, "adaptadores", "proveedor")), PROVEEDORES, "adaptadores.proveedor"
+            str(clave_de(crudo, "adaptadores", "proveedor")), PROVEEDORES, "adaptadores.proveedor"
         ),
         urls={str(k): str(v) for k, v in (crudo["adaptadores"].get("urls") or {}).items()},
-        llm_modelo=str(_clave(crudo, "modelos", "llm")),
+        llm_modelo=str(clave_de(crudo, "modelos", "llm")),
         umbrales=Umbrales(
-            relevance_threshold=float(_clave(umbrales, "relevance_threshold")),
-            nli_entailment_threshold=float(_clave(umbrales, "nli_entailment_threshold")),
-            retrieval_top_k=int(_clave(umbrales, "retrieval_top_k")),
-            rerank_top_n=int(_clave(umbrales, "rerank_top_n")),
+            relevance_threshold=float(clave_de(umbrales, "relevance_threshold")),
+            nli_entailment_threshold=float(clave_de(umbrales, "nli_entailment_threshold")),
+            retrieval_top_k=int(clave_de(umbrales, "retrieval_top_k")),
+            rerank_top_n=int(clave_de(umbrales, "rerank_top_n")),
         ),
-        catalogo_version=str(_clave(crudo, "catalogo", "version")),
-        ruta_terminos=_ruta_del_repo(str(_clave(crudo, "catalogo", "ruta_terminos"))),
+        catalogo_version=str(clave_de(crudo, "catalogo", "version")),
+        ruta_terminos=ruta_del_repo(str(clave_de(crudo, "catalogo", "ruta_terminos"))),
         hash_config=huella_de_config(crudo),
         juez=_leer_juez(crudo),
         informe_pii=(
-            _ruta_del_repo(str(crudo["pii"]["informe_b1"]))
+            ruta_del_repo(str(crudo["pii"]["informe_b1"]))
             if (crudo.get("pii") or {}).get("informe_b1")
             else None
         ),

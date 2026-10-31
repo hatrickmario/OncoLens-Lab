@@ -35,6 +35,8 @@ from app.domain.corpus_seed.admisibilidad import PISO_DE_FUENTES_EXCLUIDAS
 from app.domain.nli import ParNli, ResultadoNli
 from app.domain.retrieval_filter import coincide_etiqueta, exigir_filtro_vigente
 from app.evaluation.config_suite import ConfigInvalida
+from app.evaluation.dataset_loader import CLASE_SINTETICA
+from app.evaluation.guardas import SuiteAbortada
 from app.evaluation.fuente_dataset import DatasetSuite
 from app.schemas.generated.models import RagQueryInternalRequest
 
@@ -155,7 +157,9 @@ class CatalogoEnMemoria:
     """``CorpusCatalogReader``: una ficha por documento del corpus sintético (títulos «(test)»)."""
 
     def __init__(self, dataset: DatasetSuite) -> None:
-        self._fichas = {d.id: _ficha(d.id, d.titulo, dataset.corte) for d in dataset.documentos}
+        self._fichas = {
+            d.id: ficha_sintetica(d.id, d.titulo, dataset.corte) for d in dataset.documentos
+        }
 
     def fichas_por_documento(self, document_ids: Collection[str]) -> dict[str, FichaDeFuente]:
         return {d: self._fichas[d] for d in document_ids if d in self._fichas}
@@ -168,10 +172,7 @@ class CatalogoEnMemoria:
 
 
 def ficha_sintetica(documento: str, titulo: str, corte: date) -> FichaDeFuente:
-    raise NotImplementedError("no implementado")
-
-
-def _ficha(documento: str, titulo: str, corte: date) -> FichaDeFuente:
+    """La ficha del corpus sintético (títulos «(test)»): la única, para la suite y para la familia ``aplicabilidad``."""
     return FichaDeFuente(
         title=titulo,
         source_name="Corpus sintético (test)",
@@ -258,11 +259,17 @@ class CoberturaEnMemoria:
         self._max_valores_de_poblacion = max_valores_de_poblacion
         try:
             crudo = yaml.safe_load(ruta.read_text(encoding="utf-8"))
-            self._documentos = [d for d in crudo["documentos"] if d["is_current"]]
-        except (OSError, yaml.YAMLError, KeyError, TypeError):
+            clase = crudo.get("clase")
+            documentos = [d for d in crudo["documentos"] if d["is_current"]]
+        except (OSError, yaml.YAMLError, KeyError, TypeError, AttributeError):
             raise ConfigInvalida(
                 "el catálogo del corpus en memoria no tiene la forma esperada"
             ) from None
+        if clase != CLASE_SINTETICA:  # RN-14: la familia solo mide sobre datos sintéticos
+            raise SuiteAbortada(
+                "el catálogo del corpus en memoria no declara clase: sintetico (RN-14)"
+            )
+        self._documentos = documentos
 
     def cobertura(self) -> CoberturaDePoblacion:
         conteo = contar_cobertura(
