@@ -63,6 +63,7 @@ export function EvidencePanel({ patientId }: EvidencePanelProps) {
     setFase({ tipo: 'enviando' });
     const lecturaActual = await releer();
     enCurso.current = false;
+    // Sesión vencida: el hook ya lleva al login; aquí solo no se envía nada.
     if (lecturaActual.tipo === 'sin_sesion') return setFase({ tipo: 'inactivo' });
     void enviar(armarSolicitud(patientId, query, debeContinuarConAviso(lecturaActual)));
   }

@@ -31,6 +31,8 @@ export function useChecklistDeFaltantes(patientId: string) {
     };
   }, [patientId]);
 
+  // Único camino de la sesión vencida del checklist: lo siguen la lectura inicial y `releer` (antes de cada análisis)
+  // porque ambas guardan `sin_sesion` en `lectura`; el panel solo corta su envío (`analizarNuevo`).
   const sesionVencida = lectura?.tipo === 'sin_sesion';
   useEffect(() => {
     if (sesionVencida) router.replace(RUTA_LOGIN_EXPIRADA);
