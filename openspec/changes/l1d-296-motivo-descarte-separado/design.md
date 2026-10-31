@@ -54,6 +54,10 @@ No toca modelo, prompt, umbral, catálogo ni corpus: sin `run-ai-eval`. Evidenci
 - Motivo desconocido como error: un backend más nuevo que `web` haría fallar todo el análisis en lugar de una sola descartada; aceptado porque el contrato y los generados se despliegan juntos en el monorepo.
 - El filtro en el cliente puede divergir de la política del backend si las listas se versionan distinto; se mitiga usando el mismo paquete `clinical-language`.
 
+## Hallazgo del visual-check
+
+`packages/clinical-language/src` importa sus hermanos con `.js` (NodeNext); Vitest los resuelve pero Turbopack no (500 en `/analisis`). Se declara `turbopack.resolveAlias` en `apps/web/next.config.ts` para `./normalizar.js` y `./secuencias.js`, con un test que exige un alias por cada importación `.js` del verificador. No es un `webpack()` personalizado. Alternativa (mejor a largo plazo, fuera de alcance): que el paquete emita imports sin extensión o un subpath `exports` puro.
+
 ## Pendientes de definir
 
 - «(texto no mostrado)» (AC-2): se asume que sustituye al nombre de la opción solo cuando el filtro RN-23 lo rechaza; con nombre limpio se muestra el nombre.
