@@ -7,10 +7,10 @@ nunca el ``pseudoPatientId`` (RN-11): la función no tiene dónde recibirlo.
 
 from __future__ import annotations
 
-import re
 from collections.abc import Sequence
 
 from app.domain.alias_de_chunks import FragmentoConAlias
+from app.domain.atribucion import FORMULA_DE_ATRIBUCION  # noqa: F401 - reexportada: la usa la métrica de la suite
 from app.schemas.generated.models import ClinicalContext, Diagnosis, Provenance, ReviewStatus
 
 VERSION_DEL_PROMPT = "rag-query@0.5.0"
@@ -18,14 +18,6 @@ VERSION_DEL_PROMPT = "rag-query@0.5.0"
 # Etiquetas de procedencia del bloque de datos del paciente (RN-07): texto del prompt, versionado con él (no RN-22).
 ETIQUETA_SIN_VERIFICAR = "(sin verificar)"
 ETIQUETA_EN_CONFLICTO = "(en conflicto)"
-
-# Fórmula de atribución «La fuente [cita] describe que…» (ARR-03 AC-3), en español y en inglés; la cita es opcional.
-# El prompt vigente NO la impone (ver reports/eval/L1D-279-ol06-rn23.md): la suite `evaluate` mide si el generador la usa.
-FORMULA_DE_ATRIBUCION = re.compile(
-    r"^\s*(?:la fuente|the source)\s+(?:\[[^\]]*\]\s+)?"
-    r"(?:describe|describen|reporta|reportan|describes|reports)\s+(?:que|that)\b",
-    re.IGNORECASE,
-)
 
 _NOMBRE_DEL_IDIOMA = {"es": "español", "en": "inglés"}
 
@@ -61,9 +53,9 @@ def construir_prompt_rag_query(
     datos_del_paciente: str,
     fragmentos: Sequence[FragmentoConAlias],
     idioma: str,
-    claims_min: int = 1,
-    claims_max: int = 4,
-    claim_max_words: int = 20,
+    claims_min: int,
+    claims_max: int,
+    claim_max_words: int,
 ) -> str:
     """Rellena la plantilla con la pregunta enmascarada, el bloque de datos del paciente y los chunks recuperados con su alias (RN-04)."""
     return PLANTILLA_RAG_QUERY.format(

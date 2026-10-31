@@ -16,10 +16,27 @@ from app.domain.claims import AfirmacionAtomica, PapelDeAfirmacion
 from app.domain.lenguaje import normalizar_texto
 from app.domain.modales_normativos import MODALES_NORMATIVOS
 
-MARCO_ES = "La fuente reporta que "
-MARCO_EN = "The source reports that "
+SUJETO_ES, VERBO_ES, CONECTOR_ES = "La fuente", "reporta", "que"
+SUJETO_EN, VERBO_EN, CONECTOR_EN = "The source", "reports", "that"
+MARCO_ES = f"{SUJETO_ES} {VERBO_ES} {CONECTOR_ES} "
+MARCO_EN = f"{SUJETO_EN} {VERBO_EN} {CONECTOR_EN} "
+
+# Fórmula de atribución «La fuente [cita] describe que…» (ARR-03 AC-3): la deriva de los marcos de arriba y tolera los
+# verbos equivalentes y la cita opcional. Una sola fuente: si el marco cambia, la fórmula que mide la suite cambia con él.
+_VERBOS_EQUIVALENTES = ("describe", "describen", "reporta", "reportan", "describes", "reports")
+FORMULA_DE_ATRIBUCION = re.compile(
+    rf"^\s*(?:{re.escape(SUJETO_ES)}|{re.escape(SUJETO_EN)})\s+(?:\[[^\]]*\]\s+)?"
+    rf"(?:{'|'.join(dict.fromkeys((VERBO_ES, VERBO_EN, *_VERBOS_EQUIVALENTES)))})\s+"
+    rf"(?:{CONECTOR_ES}|{CONECTOR_EN})\b",
+    re.IGNORECASE,
+)
+
+CLAIMS_MIN_INICIAL = 1
+CLAIMS_MAX_INICIAL = 4
 CLAIM_MAX_WORDS_INICIAL = 20
-"""Valor inicial de ``CLAIM_MAX_WORDS`` (RN-22): lo calibra la evaluación; producción lo lee de la configuración."""
+"""Valores iniciales de ``CLAIMS_MIN_PER_OPTION``, ``CLAIMS_MAX_PER_OPTION`` y ``CLAIM_MAX_WORDS`` (RN-22): los calibra la
+evaluación; producción y la suite los reciben de la configuración y nunca de un literal."""
+CIERRES_DE_ORACION = (".", ";", "?", "!")
 MAX_DETALLES = 2
 """``EvidenceOption.details`` admite hasta 2 párrafos (contrato): lo que excede se agrupa en el último."""
 
@@ -59,7 +76,15 @@ def componer_con_marco(
 def _agrupar_en_detalles(textos: list[str]) -> tuple[str, ...]:
     if len(textos) <= MAX_DETALLES:
         return tuple(textos)
-    return (*textos[: MAX_DETALLES - 1], ". ".join(textos[MAX_DETALLES - 1 :]))
+    return (*textos[: MAX_DETALLES - 1], _unir_oraciones(textos[MAX_DETALLES - 1 :]))
+
+
+def _unir_oraciones(textos: list[str]) -> str:
+    """Une con un espacio si la oración previa ya cierra con signo y con «. » si no: nunca «..»."""
+    unido = textos[0]
+    for texto in textos[1:]:
+        unido += (" " if unido.endswith(CIERRES_DE_ORACION) else ". ") + texto
+    return unido
 
 
 def validar_forma_de_afirmacion(texto: str, max_palabras: int) -> FormaDeAfirmacion:

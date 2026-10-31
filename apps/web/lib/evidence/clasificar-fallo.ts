@@ -4,16 +4,16 @@ export const CODIGOS_CON_ESTADO_PROPIO = [
   'LLM_OUTPUT_INVALID',
 ] as const;
 
-export type CodigoConEstadoPropio = (typeof CODIGOS_CON_ESTADO_PROPIO)[number];
+export type CodigoConMensajePropio = (typeof CODIGOS_CON_ESTADO_PROPIO)[number];
 
-export function esCodigoConEstadoPropio(codigo: unknown): codigo is CodigoConEstadoPropio {
+export function esCodigoConMensajePropio(codigo: unknown): codigo is CodigoConMensajePropio {
   return CODIGOS_CON_ESTADO_PROPIO.some((conocido) => conocido === codigo);
 }
 
 /** `422 TIPO_CANCER_NO_REGISTRADO` no es un error técnico: el análisis no se realizó (`[S1 resp. 35]`). */
 export function clasificarFallo(
   httpStatus: number,
-  codigo: CodigoConEstadoPropio | null,
+  codigo: CodigoConMensajePropio | null,
 ): 'no_realizado' | 'error' {
   return httpStatus === 422 && codigo === 'TIPO_CANCER_NO_REGISTRADO' ? 'no_realizado' : 'error';
 }
@@ -24,7 +24,7 @@ export function clasificarFallo(
  */
 export function mensajeDeError(
   httpStatus: number,
-  codigo: CodigoConEstadoPropio | null = null,
+  codigo: CodigoConMensajePropio | null = null,
 ): string {
   if (httpStatus === 503 && codigo === 'LLM_OUTPUT_INVALID')
     return 'evidence.error.salidaNoValidada';

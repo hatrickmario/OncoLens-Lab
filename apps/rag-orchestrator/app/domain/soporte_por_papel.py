@@ -15,7 +15,8 @@ from app.domain.claims import PapelDeAfirmacion
 
 
 class EstadoDeAfirmacion(StrEnum):
-    soportada = "soportada"
+    en_forma = "en_forma"  # pasó lenguaje y forma; todavía sin veredicto del NLI: NO es respaldo
+    soportada_por_nli = "soportada_por_nli"
     sin_soporte = "sin_soporte"
     fuera_de_forma = "fuera_de_forma"  # alias de fragmento o más palabras que el máximo: sin soporte, sin consultar al NLI
     modal_normativo = "modal_normativo"
@@ -46,7 +47,8 @@ def decidir_opcion_por_papel(
     omitidas = tuple(
         posicion
         for posicion, (papel, estado) in enumerate(estados)
-        if papel is PapelDeAfirmacion.secundaria and estado is not EstadoDeAfirmacion.soportada
+        if papel is PapelDeAfirmacion.secundaria
+        and estado is not EstadoDeAfirmacion.soportada_por_nli
     )
     return DecisionPorPapel(True, None, omitidas)
 
@@ -55,16 +57,20 @@ def motivo_de_descarte(
     estados: Sequence[tuple[PapelDeAfirmacion, EstadoDeAfirmacion]], option_incumple: bool
 ) -> MotivoDeSoporte | None:
     """Precedencia: ``lenguaje_no_permitido`` (reservado a la lista prohibida) → modal normativo → papel sin respaldo."""
-    estados_presentes = {estado for _, estado in estados}
-    if option_incumple or EstadoDeAfirmacion.lenguaje_no_permitido in estados_presentes:
+    if option_incumple or any(e is EstadoDeAfirmacion.lenguaje_no_permitido for _, e in estados):
         return MotivoDeSoporte.lenguaje_no_permitido
-    if EstadoDeAfirmacion.modal_normativo in estados_presentes or any(
-        papel is not PapelDeAfirmacion.secundaria and estado is not EstadoDeAfirmacion.soportada
-        for papel, estado in estados
-    ):
+    if any(es_causa_de_descarte(papel, estado) for papel, estado in estados):
         return MotivoDeSoporte.afirmacion_sin_soporte
     return None
 
 
 def es_causa_de_descarte(papel: PapelDeAfirmacion, estado: EstadoDeAfirmacion) -> bool:
-    raise NotImplementedError("no implementado")
+    """Única definición de la regla por papel (RN-01): el lenguaje de la lista y el modal normativo descartan la opción en
+    cualquier papel; la principal y la salvedad sin respaldo del NLI también. Solo ``soportada_por_nli`` es respaldo."""
+    return estado in (
+        EstadoDeAfirmacion.lenguaje_no_permitido,
+        EstadoDeAfirmacion.modal_normativo,
+    ) or (
+        papel is not PapelDeAfirmacion.secundaria
+        and estado is not EstadoDeAfirmacion.soportada_por_nli
+    )

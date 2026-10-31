@@ -141,7 +141,14 @@ async def evaluar_pares(
     terminos = VerificadorDeTerminosProhibidos(cargar_lista_de_terminos(config.ruta_terminos))
     return [
         await _evaluar_par(
-            par, dataset, criterios, terminos, config.umbral_nli, reloj, max_valores_de_poblacion
+            par,
+            dataset,
+            criterios,
+            terminos,
+            config.umbral_nli,
+            config.claim_max_words,
+            reloj,
+            max_valores_de_poblacion,
         )
         for par in dataset.pares
     ]
@@ -153,6 +160,7 @@ async def _evaluar_par(
     criterios: CriteriosPorTipo,
     terminos: VerificadorDeTerminosProhibidos,
     umbral_nli: float,
+    claim_max_words: int,
     reloj: Clock,
     max_valores_de_poblacion: int,
 ) -> ParEvaluado:
@@ -173,7 +181,9 @@ async def _evaluar_par(
             )
         },
     )
-    textual = _servicio_textual(fuente, guion, servicio, terminos, umbral_nli, reloj)
+    textual = _servicio_textual(
+        fuente, guion, servicio, terminos, umbral_nli, claim_max_words, reloj
+    )
     completa = await textual.completar(
         TRAZA_DE_LA_SUITE, fuente.tipo_de_cancer, estructurada, citables
     )
@@ -197,6 +207,7 @@ def _servicio_textual(
     servicio: ApplicabilityService,
     terminos: VerificadorDeTerminosProhibidos,
     umbral_nli: float,
+    claim_max_words: int,
     reloj: Clock,
 ) -> AplicabilidadTextual:
     """El camino textual real con el LLM y el NLI falsos que dicta el guion del par."""
@@ -206,7 +217,11 @@ def _servicio_textual(
         ),
         parametros=PARAMETROS_DEL_RESPALDO_DE_LA_SUITE,
         soporte=VerificadorDeSoporte(
-            clasificador=NliGuionado(guion.nli), terminos=terminos, umbral=umbral_nli, reloj=reloj
+            clasificador=NliGuionado(guion.nli),
+            terminos=terminos,
+            umbral=umbral_nli,
+            reloj=reloj,
+            max_palabras_por_afirmacion=claim_max_words,
         ),
         terminos=terminos,
         criterios_del=servicio.criterios_del,

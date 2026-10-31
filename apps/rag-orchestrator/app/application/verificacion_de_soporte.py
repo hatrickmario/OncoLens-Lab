@@ -15,7 +15,6 @@ from collections.abc import Mapping, Sequence
 
 from app.application.errores import NliNoDisponibleError
 from app.application.ports import Clock, NliClassifier, ProhibitedTermsChecker
-from app.domain.atribucion import CLAIM_MAX_WORDS_INICIAL
 from app.domain.citations import OpcionAceptada, OpcionDescartada
 from app.domain.nli import ParNli, ResultadoNli
 from app.domain.support import (
@@ -39,7 +38,7 @@ class VerificadorDeSoporte:
         terminos: ProhibitedTermsChecker,
         umbral: float,
         reloj: Clock,
-        max_palabras_por_afirmacion: int = CLAIM_MAX_WORDS_INICIAL,
+        max_palabras_por_afirmacion: int,
     ) -> None:
         self._clasificador = clasificador
         self._terminos = terminos

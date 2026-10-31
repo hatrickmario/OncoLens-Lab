@@ -11,14 +11,14 @@ def test_el_prompt_pide_el_rango_de_afirmaciones_y_el_maximo_de_palabras_configu
 
 
 def test_el_prompt_define_los_tres_papeles_y_exige_una_sola_principal() -> None:
-    prompt = construir_prompt_rag_query("pregunta", "contexto", [], "es")
+    prompt = construir_prompt_rag_query("pregunta", "contexto", [], "es", 1, 4, 20)
 
     assert 'exactamente una "principal"' in prompt
     assert '"secundaria"' in prompt and '"salvedad"' in prompt
 
 
 def test_el_prompt_deja_la_atribucion_al_sistema_y_no_pide_detalles_libres() -> None:
-    prompt = construir_prompt_rag_query("pregunta", "contexto", [], "es")
+    prompt = construir_prompt_rag_query("pregunta", "contexto", [], "es", 1, 4, 20)
 
     assert "el sistema añade la atribución" in prompt
     assert '"details"' not in prompt and '"citedFragments"' not in prompt

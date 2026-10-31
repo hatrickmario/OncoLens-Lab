@@ -2,7 +2,7 @@
 
 import pytest
 
-from app.application.generation import LlmEvidenceGenerator
+from tests.support.generador_llm import generador_con_llm
 from app.domain.alias_de_chunks import asignar_alias
 from app.domain.relevance import ChunkPuntuado
 from app.prompts.rag_query import bloque_de_datos_del_paciente, construir_prompt_rag_query
@@ -31,10 +31,13 @@ def test_prompt_rag_query_con_pseudo_patient_id_no_lo_incluye():
         bloque_de_datos_del_paciente(modelo.clinicalContext),
         asignar_alias(fragmentos).fragmentos,
         "es",
+        1,
+        4,
+        20,
     )
     llm = FakeLlmClient("LLM-OK")
 
-    respuesta = crear_entorno(generador=LlmEvidenceGenerator(llm)).consultar(solicitud)
+    respuesta = crear_entorno(generador=generador_con_llm(llm)).consultar(solicitud)
 
     assert respuesta.status_code == 200
     assert llm.invocaciones == 1

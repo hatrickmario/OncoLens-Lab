@@ -13,7 +13,7 @@ from app.domain.soporte_por_papel import (
 )
 
 P, S, V = PapelDeAfirmacion.principal, PapelDeAfirmacion.secundaria, PapelDeAfirmacion.salvedad
-OK = EstadoDeAfirmacion.soportada
+OK = EstadoDeAfirmacion.soportada_por_nli
 SIN = EstadoDeAfirmacion.sin_soporte
 FORMA = EstadoDeAfirmacion.fuera_de_forma
 MODAL = EstadoDeAfirmacion.modal_normativo
@@ -106,3 +106,14 @@ def test_es_causa_de_descarte_coincide_con_la_decision_de_la_opcion_en_toda_la_m
     decision = decidir_opcion_por_papel(estados)
 
     assert es_causa_de_descarte(papel, estado) is (not decision.conservar)
+
+
+def test_un_texto_limpio_solo_llega_en_forma_y_eso_nunca_cuenta_como_respaldo_del_nli() -> None:
+    from app.domain.atribucion import FormaDeAfirmacion
+    from app.domain.support import _estado_por_lenguaje_y_forma
+
+    estado = _estado_por_lenguaje_y_forma((), FormaDeAfirmacion.valida)
+
+    assert estado is EstadoDeAfirmacion.en_forma
+    assert not decidir_opcion_por_papel([(P, estado)]).conservar
+    assert decidir_opcion_por_papel([(P, OK), (S, estado)]).omitidas == (1,)

@@ -9,7 +9,7 @@ import logging
 
 import pytest
 
-from app.application.generation import LlmEvidenceGenerator
+from tests.support.generador_llm import generador_con_llm
 from app.application.ports import ResultadoNli
 from app.domain.lenguaje import ListaTerminos
 from app.domain.support import RETIRO_ES
@@ -187,7 +187,7 @@ def test_rag_query_conserva_la_limitacion_con_origen_llm_verificado_cuando_el_nl
 def test_rag_query_verifica_el_soporte_antes_de_recortar_a_max_options_cuando_la_mas_relevante_no_tiene_soporte():
     nli = NliFalso(resultados={RAZON_ANTI_HER2: NEUTRAL}, por_defecto=IMPLICA)
     entorno = crear_entorno(
-        generador=LlmEvidenceGenerator(FakeLlmClient("LLM-DOS")), clasificador_nli=nli
+        generador=generador_con_llm(FakeLlmClient("LLM-DOS")), clasificador_nli=nli
     )
 
     respuesta = entorno.consultar(solicitud_de(Q_HER2, max_options=1))

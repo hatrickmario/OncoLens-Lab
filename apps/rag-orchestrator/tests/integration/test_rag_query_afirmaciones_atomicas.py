@@ -10,7 +10,7 @@ import logging
 
 import pytest
 
-from app.application.generation import LlmEvidenceGenerator
+from tests.support.generador_llm import generador_con_llm
 from tests.support.afirmaciones_atomicas import (
     PRINCIPAL,
     PRINCIPAL_MODAL,
@@ -35,7 +35,7 @@ TEXTO_DE_CH_M1_1 = next(c.texto for c in CORPUS_FX06A if c.chunk_id == "ch-m1-1"
 def _consultar(escenario: str, nli: NliFalso | None = None, llm: FakeLlmClient | None = None):
     nli = nli or NliFalso(por_defecto=IMPLICA)
     llm = llm or FakeLlmClient(escenario)
-    entorno = crear_entorno(generador=LlmEvidenceGenerator(llm), clasificador_nli=nli)
+    entorno = crear_entorno(generador=generador_con_llm(llm), clasificador_nli=nli)
     return entorno.consultar(solicitud_de(Q_HER2, max_options=3)), nli, llm
 
 

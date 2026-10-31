@@ -8,10 +8,13 @@ completa.
 
 from __future__ import annotations
 
-VERSION_DE_MODALES_NORMATIVOS = "1.0.0"
+VERSION_DE_MODALES_NORMATIVOS = "1.1.0"
 
 MODALES_NORMATIVOS: tuple[tuple[str, ...], ...] = (
     ("debe",),
+    ("debes",),
+    ("deba",),
+    ("debiera",),
     ("deben",),
     ("debera",),
     ("deberan",),
@@ -20,6 +23,8 @@ MODALES_NORMATIVOS: tuple[tuple[str, ...], ...] = (
     ("conviene",),
     ("convendria",),
     ("hay", "que"),
+    ("hace", "falta"),
+    ("habria", "que"),
     ("tiene", "que"),
     ("tienen", "que"),
     ("es", "necesario"),

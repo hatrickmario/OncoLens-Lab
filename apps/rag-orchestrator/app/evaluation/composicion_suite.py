@@ -104,6 +104,7 @@ def parametros_de_recuperacion(
         llm_model=config.llm_modelo,
         nli_entailment_threshold=u.nli_entailment_threshold,
         tipos_habilitados=tipos_habilitados,
+        claim_max_words=u.claim_max_words,
         respaldo=respaldo,
     )
 

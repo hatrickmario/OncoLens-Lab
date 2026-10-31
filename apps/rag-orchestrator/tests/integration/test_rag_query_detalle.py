@@ -6,7 +6,7 @@ de cada afirmación. Cada respuesta la valida contra el spec del proveedor el ho
 
 import pytest
 
-from app.application.generation import LlmEvidenceGenerator
+from tests.support.generador_llm import generador_con_llm
 from tests.support.llm_falso import DETALLE_DOS, DETALLE_TRES, DETALLE_UNO, FakeLlmClient
 from tests.support.nli_falso import IMPLICA, NEUTRAL, NliFalso
 from tests.support.recuperacion import Q_HER2, crear_entorno, solicitud_de
@@ -16,7 +16,7 @@ RESPUESTA = "#/components/schemas/RagQueryInternalResponse"
 
 def _consultar(escenario: str, nli: NliFalso, **generador):
     entorno = crear_entorno(
-        generador=LlmEvidenceGenerator(FakeLlmClient(escenario), **generador), clasificador_nli=nli
+        generador=generador_con_llm(FakeLlmClient(escenario), **generador), clasificador_nli=nli
     )
     respuesta = entorno.consultar(solicitud_de(Q_HER2))
     assert respuesta.status_code == 200
@@ -41,13 +41,13 @@ def test_rag_query_agrupa_en_el_ultimo_detalle_lo_que_excede_el_maximo_del_contr
 
     assert cuerpo["evidenceOptions"][0]["details"] == [
         MARCO + DETALLE_UNO,
-        f"{MARCO}{DETALLE_DOS}. {MARCO}{DETALLE_TRES}",
+        f"{MARCO}{DETALLE_DOS} {MARCO}{DETALLE_TRES}",
     ]
 
 
 def test_rag_query_responde_503_llm_output_invalid_cuando_la_salida_excede_el_maximo_de_afirmaciones():
     entorno = crear_entorno(
-        generador=LlmEvidenceGenerator(FakeLlmClient("LLM-CON-TRES-DETALLES"), claims_max=3),
+        generador=generador_con_llm(FakeLlmClient("LLM-CON-TRES-DETALLES"), claims_max=3),
         clasificador_nli=NliFalso(por_defecto=IMPLICA),
     )
 
@@ -87,7 +87,7 @@ def test_rag_query_no_incluye_details_cuando_ninguna_secundaria_se_soporta():
 def _prompts_enviados(**generador) -> list[str]:
     llm = FakeLlmClient("LLM-OK")
     entorno = crear_entorno(
-        generador=LlmEvidenceGenerator(llm, **generador),
+        generador=generador_con_llm(llm, **generador),
         clasificador_nli=NliFalso(por_defecto=IMPLICA),
     )
     assert entorno.consultar(solicitud_de(Q_HER2)).status_code == 200

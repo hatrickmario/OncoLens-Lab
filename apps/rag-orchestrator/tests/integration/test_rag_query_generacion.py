@@ -7,7 +7,7 @@ se valida contra el spec con el hook de `verificacion_proveedor.py` (US-214).
 
 import pytest
 
-from app.application.generation import LlmEvidenceGenerator
+from tests.support.generador_llm import generador_con_llm
 from tests.support.aplicabilidad import catalogo_de_test_sin_criterios, criterios_de
 from tests.support.generador_falso import OPCION_ANTI_HER2, TITULO_INVENTADO
 from tests.support.llm_falso import OPCION_SOLA, FakeLlmClient
@@ -19,7 +19,7 @@ RESPUESTA_503 = "#/paths/~1rag~1query/post/responses/503"
 
 def _consultar(escenario: str, pregunta: str = Q_HER2, *, max_options: int = 1, criterios=None):
     llm = FakeLlmClient(escenario)
-    entorno = crear_entorno(generador=LlmEvidenceGenerator(llm), criterios=criterios)
+    entorno = crear_entorno(generador=generador_con_llm(llm), criterios=criterios)
     respuesta = entorno.consultar(solicitud_de(pregunta, max_options=max_options))
     return respuesta, llm
 

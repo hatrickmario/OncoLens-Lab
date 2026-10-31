@@ -10,7 +10,7 @@ from typing import Any
 
 import pytest
 
-from app.application.generation import LlmEvidenceGenerator
+from tests.support.generador_llm import generador_con_llm
 from tests.support.aplicabilidad import (
     CRITERIOS_DE_DOC_A1,
     FICHAS_FX08BA,
@@ -73,7 +73,7 @@ def test_rag_query_trae_los_siete_metadatos_iguales_a_las_columnas_cuando_la_opc
 def test_rag_query_conserva_sample_size_y_trial_phase_del_catalogo_cuando_el_llm_los_inventa_en_la_opcion():
     llm = FakeLlmClient("LLM-METADATOS-FALSOS")
 
-    cuerpo = _consultar("doc-a1", generador=LlmEvidenceGenerator(llm))
+    cuerpo = _consultar("doc-a1", generador=generador_con_llm(llm))
 
     assert llm.invocaciones == 1
     cita = _cita_de(cuerpo)

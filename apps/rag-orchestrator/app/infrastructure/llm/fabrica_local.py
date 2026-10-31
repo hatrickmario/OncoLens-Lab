@@ -60,8 +60,8 @@ def crear_generador_local(
         _cliente_llm_local(settings, envolver_cliente),
         settings.claims_min_per_option,
         settings.claims_max_per_option,
-        settings.llm_fragments_max_chars,
         settings.claim_max_words,
+        settings.llm_fragments_max_chars,
     )
 
 

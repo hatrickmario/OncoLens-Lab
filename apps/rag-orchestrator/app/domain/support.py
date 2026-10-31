@@ -22,6 +22,7 @@ from app.domain.soporte_por_papel import (
     EstadoDeAfirmacion,
     MotivoDeSoporte,
     decidir_opcion_por_papel,
+    es_causa_de_descarte,
 )
 
 CampoGenerado = Literal[
@@ -286,11 +287,11 @@ def verificar_soporte(
     literal = literal_de_retiro(idioma)
     soportadas: list[OpcionAceptada] = []
     descartadas: list[OpcionSinSoporte] = []
-    parrafos_omitidos = 0
+    omitidas = 0
     for planificada in plan.opciones:
         if planificada.aceptada.opcion.afirmaciones:
             resuelta, omitidas_por_papel = _resolver_por_papel(planificada, veredictos, idioma)
-            parrafos_omitidos += omitidas_por_papel
+            omitidas += omitidas_por_papel
             if isinstance(resuelta, OpcionSinSoporte):
                 descartadas.append(resuelta)
             else:
@@ -300,7 +301,7 @@ def verificar_soporte(
         if sin_soporte is None:
             aceptada, omitidos = _con_detalles_soportados(planificada, veredictos)
             soportadas.append(aceptada)
-            parrafos_omitidos += omitidos
+            omitidas += omitidos
         else:
             descartadas.append(sin_soporte)
     limitaciones = [x.texto for x in plan.limitaciones if not x.reglas and veredictos[x]]
@@ -308,30 +309,30 @@ def verificar_soporte(
         tuple(soportadas),
         tuple(descartadas),
         tuple(limitaciones),
-        len(plan.limitaciones) - len(limitaciones) + parrafos_omitidos,
+        len(plan.limitaciones) - len(limitaciones) + omitidas,
     )
 
 
 def _estado_por_lenguaje_y_forma(
     reglas: tuple[str, ...], forma: FormaDeAfirmacion
 ) -> EstadoDeAfirmacion:
-    """Orden de validación previo al NLI: lenguaje de la lista → forma. ``soportada`` solo significa «llega en forma»."""
+    """Orden de validación previo al NLI: lenguaje de la lista → forma. ``en_forma`` NO es respaldo: falta el NLI."""
     if reglas:
         return EstadoDeAfirmacion.lenguaje_no_permitido
     if forma is FormaDeAfirmacion.modal_normativo:
         return EstadoDeAfirmacion.modal_normativo
     if forma is not FormaDeAfirmacion.valida:
         return EstadoDeAfirmacion.fuera_de_forma
-    return EstadoDeAfirmacion.soportada
+    return EstadoDeAfirmacion.en_forma
 
 
 def _estado_de(afirmacion: Afirmacion, veredictos: Mapping[Afirmacion, bool]) -> EstadoDeAfirmacion:
     """Lenguaje de la lista → forma → NLI (el NLI solo juzga lo que llegó en forma)."""
     estado = _estado_por_lenguaje_y_forma(afirmacion.reglas, afirmacion.forma)
-    if estado is not EstadoDeAfirmacion.soportada:
+    if estado is not EstadoDeAfirmacion.en_forma:
         return estado
     return (
-        EstadoDeAfirmacion.soportada
+        EstadoDeAfirmacion.soportada_por_nli
         if veredictos.get(afirmacion, False)
         else EstadoDeAfirmacion.sin_soporte
     )
@@ -375,14 +376,6 @@ def _texto_a_mostrar(texto: str, estado: EstadoDeAfirmacion, idioma: str) -> str
     return texto
 
 
-def _causa_el_descarte(papel: PapelDeAfirmacion, estado: EstadoDeAfirmacion) -> bool:
-    """Lenguaje de la lista y modal normativo descartan en cualquier papel; el resto, solo la principal y la salvedad."""
-    return estado in (
-        EstadoDeAfirmacion.lenguaje_no_permitido,
-        EstadoDeAfirmacion.modal_normativo,
-    ) or (papel is not PapelDeAfirmacion.secundaria and estado is not EstadoDeAfirmacion.soportada)
-
-
 def _descartar_por_papel(
     planificada: OpcionPlanificada,
     estados: Sequence[tuple[PapelDeAfirmacion, EstadoDeAfirmacion]],
@@ -397,7 +390,7 @@ def _descartar_por_papel(
         (papel, estado, _texto_a_mostrar(afirmacion.texto, estado, idioma))
         for afirmacion, (papel, estado) in zip(planificada.afirmaciones, estados, strict=True)
     ]
-    causas = [texto for papel, estado, texto in visibles if _causa_el_descarte(papel, estado)]
+    causas = [texto for papel, estado, texto in visibles if es_causa_de_descarte(papel, estado)]
     if retirada:
         causas.insert(0, literal_de_retiro(idioma))
     principal_visible = next(

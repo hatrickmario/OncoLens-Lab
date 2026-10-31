@@ -1,5 +1,5 @@
 import type { EvidenceAnalysis } from '../../../../packages/api-contracts/src/types/clinical-api';
-import { clasificarFallo, type CodigoConEstadoPropio } from './clasificar-fallo';
+import { clasificarFallo, type CodigoConMensajePropio } from './clasificar-fallo';
 import { clasificarResultado } from './clasificar-resultado';
 import type { ResultadoDeSolicitud } from './solicitar-analisis';
 
@@ -11,7 +11,7 @@ export type FaseDelPanel =
       tipo: 'error';
       httpStatus: number;
       traceId: string | null;
-      codigo?: CodigoConEstadoPropio | null;
+      codigo?: CodigoConMensajePropio | null;
     }
   | { tipo: 'limite'; reintentarEnSegundos: number }
   | { tipo: 'red' }

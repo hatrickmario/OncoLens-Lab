@@ -103,10 +103,10 @@ class LlmEvidenceGenerator:
     def __init__(
         self,
         cliente: LlmClient,
-        claims_min: int = 1,
-        claims_max: int = 4,
+        claims_min: int,
+        claims_max: int,
+        claim_max_words: int,
         max_chars_fragmentos: int = 12000,
-        claim_max_words: int = 20,
     ) -> None:
         self._cliente = cliente
         self._claims_min = claims_min
