@@ -102,7 +102,8 @@ class Lista:
 
 
 _HUELLA = re.compile(r"[0-9a-f]{64}")
-_IDENTIFICADOR = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:@#+/-]{0,127}")
+MAXIMO_DE_IDENTIFICADOR = 255  # «<modelo>@<revisión>#sha256:<hash>» de ADR-39 supera los 128
+_IDENTIFICADOR = re.compile(rf"[A-Za-z0-9][A-Za-z0-9._:@#+/-]{{0,{MAXIMO_DE_IDENTIFICADOR - 1}}}")
 
 
 def es_identificador(valor: object) -> bool:

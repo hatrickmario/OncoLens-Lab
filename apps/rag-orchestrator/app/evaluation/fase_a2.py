@@ -34,8 +34,8 @@ from app.evaluation.indices_milvus import (
 from app.evaluation.medicion_modelos import (
     construir_corpus,
     evaluar_rankings,
-    mediana,
-    percentil_95,
+    mediana_estadistica,
+    percentil_95_interpolado,
     recuperar_densos,
     vectores_en_cache,
 )
@@ -151,7 +151,7 @@ class PruebasChunking:
             "memoria_indice_flat_bytes_estimada": estimar_bytes_indice(
                 "FLAT", {}, len(chunks), int(vectores.shape[1])
             ),
-            "tokens_por_chunk_mediana": mediana([c.tokens for c in chunks]),
+            "tokens_por_chunk_mediana": mediana_estadistica([c.tokens for c in chunks]),
             "segundos": self.reloj() - inicio,
             "metricas": metricas,
         }
@@ -234,8 +234,8 @@ def prueba_indice(
                 config.bootstrap_repeticiones,
                 escala_puntaje=ESCALA_COSENO,
             ),
-            "p50_ms": mediana(todas),
-            "p95_ms": percentil_95(todas),
+            "p50_ms": mediana_estadistica(todas),
+            "p95_ms": percentil_95_interpolado(todas),
             "memoria_estimada_bytes": estimar_bytes_indice(
                 tipo, config.parametros_hnsw, len(chunks), int(vectores.shape[1])
             ),

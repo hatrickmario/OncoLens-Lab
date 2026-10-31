@@ -46,6 +46,20 @@ def test_evaluate_mide_que_el_generador_reproduce_el_nivel_b_y_el_nivel_a_del_co
     assert familia.get("salida_mostrada") == 1  # el nivel B que el filtro de producción deja pasar
 
 
+@pytest.mark.ac("L1D-279", 3)
+def test_evaluate_separa_lo_mostrado_por_nivel_y_lista_el_campo_y_la_regla_sin_texto(
+    tmp_path: Path,
+) -> None:
+    familia = correr(tmp_path)["metricas"]["completa"]["terminos_prohibidos"]
+
+    assert familia.get("salida_mostrada_nivel_a") == 0  # bloqueante
+    assert familia.get("salida_mostrada_nivel_b") == 1  # seguimiento
+    assert familia.get("salida_mostrada_por_nivel") == {"A": 0, "B": 1}
+    mostrados = familia.get("campos_mostrados")
+    assert [m["regla"] for m in mostrados] == ["b-recommend"]
+    assert all(set(m) == {"campo", "regla"} for m in mostrados)
+
+
 @pytest.mark.ac("L1D-279", 4)
 def test_evaluate_cuenta_la_reproduccion_literal_de_standard_of_care_y_recommended_treatment_del_corpus_citado(
     tmp_path: Path,

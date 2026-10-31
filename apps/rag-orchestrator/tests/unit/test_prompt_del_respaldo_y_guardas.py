@@ -53,7 +53,7 @@ def test_ningun_modulo_de_app_nombra_el_puerto_retirado_del_proponente_de_una_ll
 def test_el_respaldo_pide_un_solo_valor_por_criterio_cuando_se_compone_para_produccion():
     ajustes = Settings(_env_file=None, modelos=None)  # type: ignore[call-arg]
     llm = RespaldoLlmFalso("RESP-SILENCIO")
-    tarea = crear_proponente_local(ajustes, llm)
+    tarea = crear_proponente_local(ajustes, llm=llm)
     fuente = FuenteParaProponer(
         "CDR-TEST-B9",
         (CriterioPendiente("estado_menopausico", "Estado menopáusico", None),),
