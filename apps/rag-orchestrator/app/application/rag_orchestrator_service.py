@@ -23,7 +23,11 @@ from app.application.aplicabilidad import (
     mejor_chunk_por_documento,
     recuentos_para_el_log,
 )
-from app.application.aplicabilidad_textual import AplicabilidadCompleta, AplicabilidadTextual
+from app.application.aplicabilidad_textual import (
+    AplicabilidadCompleta,
+    AplicabilidadTextual,
+    ParametrosDelRespaldo,
+)
 from app.application.aplicabilidad_de_opciones import (
     Reevaluar,
     con_aplicabilidad_de_cada_opcion,
@@ -36,7 +40,7 @@ from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
 from app.application.errores import RecuperacionNoDisponibleError, TipoCancerNoRegistradoError
 from app.application.generador_fallando_cerrado import GeneradorFallandoCerrado
 from app.application.ports import (
-    ApplicabilityTextProposer,
+    PoblacionTask,
     CatalogoClinico,
     CandidatoDeRecuperacion,
     ChunkEncontrado,
@@ -87,7 +91,6 @@ from app.domain.relevance import (
 )
 from app.domain.retrieval_filter import expresion_vigente_del_tipo
 from app.domain.tipos_habilitados import exigir_tipo_habilitado
-from app.prompts.aplicabilidad_texto import VERSION_DEL_PROMPT_APLICABILIDAD
 from app.prompts.rag_query import VERSION_DEL_PROMPT
 from app.schemas.generated.models import (
     Fusion,
@@ -124,6 +127,8 @@ class ParametrosDeRecuperacion:
     nli_entailment_threshold: float
     tipos_habilitados: tuple[str, ...]
     """``ENABLED_CANCER_TYPES`` ya validada contra el manifiesto (RN-20); vacía = ningún tipo."""
+    respaldo: ParametrosDelRespaldo
+    """Plazo, concurrencia y versión del prompt del respaldo de la población (US-244, RN-22)."""
     reranker_max_pairs: int | None = None
     """Tope de pares que admite el reranker (``RERANKER_MAX_PAIRS``); ``None`` = el reranker no limita y no se recorta."""
     retrieval_mode: RetrievalMode = RetrievalMode.dense
@@ -156,7 +161,7 @@ class RAGOrchestratorService:
         catalogo: CorpusCatalogReader,
         catalogo_clinico: CatalogoClinico,
         aplicabilidad: ApplicabilityService,
-        proponente: ApplicabilityTextProposer,
+        proponente: PoblacionTask,
         generador: EvidenceGenerator,
         clasificador_nli: NliClassifier,
         verificador_terminos: ProhibitedTermsChecker,
@@ -191,6 +196,7 @@ class RAGOrchestratorService:
         )
         self._textual = AplicabilidadTextual(
             proponente=proponente,
+            parametros=parametros.respaldo,
             soporte=self._soporte,
             terminos=verificador_terminos,
             criterios_del=aplicabilidad.criterios_del,
@@ -330,12 +336,13 @@ class RAGOrchestratorService:
                 trace_id,
             )
 
-    @staticmethod
     def _con_version_de_aplicabilidad(
-        recuperacion: ResultadoDeRecuperacion,
+        self, recuperacion: ResultadoDeRecuperacion
     ) -> ResultadoDeRecuperacion:
-        """``meta.promptVersion`` lleva también la del prompt de aplicabilidad cuando se invocó al LLM (design D6)."""
-        version = f"{recuperacion.meta.promptVersion}+{VERSION_DEL_PROMPT_APLICABILIDAD}"
+        """``meta.promptVersion`` lleva también la del prompt del respaldo de población cuando se invocó al LLM (US-244)."""
+        version = (
+            f"{recuperacion.meta.promptVersion}+{self._parametros.respaldo.version_del_prompt}"
+        )
         return replace(
             recuperacion, meta=recuperacion.meta.model_copy(update={"promptVersion": version})
         )

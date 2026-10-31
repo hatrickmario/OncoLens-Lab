@@ -1,0 +1,30 @@
+{
+ "modelo": "gemma4:26b-a4b-it-q4_K_M",
+ "plazo_ms": 10000,
+ "A": {
+  "llamadas": 25,
+  "finish_reason": {
+   "stop": 25
+  },
+  "p50_s": 0.49,
+  "max_s": 1.28,
+  "sobre_plazo_10s": 0,
+  "fallos_llm": 0,
+  "fallidos_respaldo": [],
+  "valores_por_celda": {}
+ },
+ "B": {
+  "llamadas": 12,
+  "finish_reason": {
+   "stop": 12
+  },
+  "p50_s": 3.31,
+  "max_s": 4.02,
+  "sobre_plazo_10s": 0,
+  "fallos_llm": 0,
+  "fallidos_respaldo": [],
+  "valores": 5,
+  "chunk_id_fuera_de_fragmentos": 0,
+  "listas_vacias": 7
+ }
+}

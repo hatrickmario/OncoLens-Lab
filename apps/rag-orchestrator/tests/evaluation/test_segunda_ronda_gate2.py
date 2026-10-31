@@ -37,7 +37,7 @@ from app.evaluation.metricas.prescriptivas import terminos_prohibidos
 from app.evaluation.modelos_locales import OrigenLocal, cargar_puertos_locales
 from app.infrastructure.llm.fabrica_local import crear_generador_local, crear_proponente_local
 from app.infrastructure.llm.openai_compatible import cuerpo_de_peticion
-from app.infrastructure.llm.proponente_de_aplicabilidad import LlmApplicabilityTextProposer
+from app.infrastructure.llm.tarea_de_poblacion import TareaDePoblacionLocal
 from tests.evaluation.test_fidelidad_juez import COMPLETIONS, CONFIG, LOCAL
 from tests.evaluation.test_proveedor_local_aceptacion import modelos_fingidos
 from tests.evaluation.test_proveedor_local_unitarios import config_local
@@ -373,10 +373,10 @@ def test_el_proponente_de_la_suite_local_es_el_de_produccion_y_no_el_silencioso(
         "sintetico",
     )
 
-    assert isinstance(puertos.proponente, LlmApplicabilityTextProposer)
+    assert isinstance(puertos.proponente, TareaDePoblacionLocal)
     assert isinstance(
         crear_proponente_local(Settings(_env_file=None)),  # type: ignore[call-arg]
-        LlmApplicabilityTextProposer,
+        TareaDePoblacionLocal,
     )
 
 

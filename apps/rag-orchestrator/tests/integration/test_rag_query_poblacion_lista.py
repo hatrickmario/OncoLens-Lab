@@ -157,5 +157,5 @@ def test_rag_query_estado_menopausico_parcial_mezclada_cuando_la_guia_mezcla_pob
     assert menopausia["partialReason"] == "mezclada"
     # El estado lo calculan las reglas puras: el LLM textual (US-123) nunca recibe el criterio ya leído de la lista. La
     # aserción original «cero invocaciones» no podía cumplirse por HTTP: los demás criterios sin valor sí van al texto.
-    preguntados = {c.clave for llamada in proponente.llamadas for f in llamada for c in f.criterios}
+    preguntados = {c.clave for f in proponente.llamadas for c in f.criterios}
     assert "estado_menopausico" not in preguntados
