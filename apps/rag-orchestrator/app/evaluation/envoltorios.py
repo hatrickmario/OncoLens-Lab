@@ -72,8 +72,10 @@ class MonitorRss:
         self.maximo_mb = max(self.maximo_mb, self.actual_mb())
 
 
-def pico_rss_mb() -> float:
-    """RSS máximo histórico del proceso (incluye la carga del modelo)."""
+def pico_rss_mib() -> float:
+    """RSS máximo histórico del proceso ENTERO en MiB (``ru_maxrss``: incluye la carga de todos los modelos).
+
+    Las claves ``pico_rss_mb`` de los JSON de ADR-39 son históricas y conservan su nombre; este es el mismo número."""
     import resource
     import sys
 

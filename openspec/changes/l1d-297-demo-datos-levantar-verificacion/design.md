@@ -38,6 +38,20 @@ nuevo de solo lectura (más secretos y `pg_hba` que generar en `scripts/` para e
 **D5 · Tests de scripts (test después):** humo con imagen del seed obsoleta (AC-6) y con volúmenes previos (AC-7), en CI o
 como *fixture* de PR.
 
+**D6 · Reglas de población como catálogo versionado (D4-03; Decidido (usuario, 2026-10-31)).** L1D-297 absorbe la deuda 1.1
+de L1D-293 con +2 puntos (5 → 7): `poblacion-reglas.json` en `packages/clinical-catalogs` con `catalogHash` y entrada en
+`manifest.json`, copia de `test-apl-1.2.0`, esquema y validador, y versión 1.2.0 real en ambos backends (misma versión: si no,
+`409`). **Efecto:** sin ese archivo el estado «mezclada» no aparece en producción, de modo que la guía y la prueba de aceptación
+de la demo no pueden mostrarlo; por eso el seed y la guía dependen de esta decisión. Disciplina TDD proporcional: catálogo,
+esquema y migración de versión = test después; las reglas (estados derivados del archivo) = test primero. Commits
+`test(L1D-297)` del AC en rojo antes del `feat(L1D-297)` para las reglas.
+
+**D7 · Verificaciones propuestas sin puntos adicionales (a confirmar).** D4-02: el límite de RSS se refiere al RSS en régimen
+estable (tras `gc`, proceso fresco, ≥ 3 repeticiones) medido en el MacBook de 32 GB con el stack completo; los 4489 MiB
+(suma de tres RSS medidos por separado en ADR-39) no se usan como `mem_limit` (criterio Decidido (usuario, 2026-10-31)).
+D4-08: smoke de la semilla `us-231b` 1.12, muestra de `l1d-117` 2.2 y partición de ADR-45, que necesitan PostgreSQL y Milvus
+reales. Ambas se proponen como tareas de verificación de L1D-297 (levanta y verifica el stack), pendientes de confirmación.
+
 ## Dependencias y colaboradores
 
 - Depende de `l1d-292` (extractor), `l1d-293` (estados), `l1d-291` (contrato/migración) y US-117b (`--reindex-sparse`).

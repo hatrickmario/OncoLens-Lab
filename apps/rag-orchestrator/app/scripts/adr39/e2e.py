@@ -17,7 +17,7 @@ from typing import Any
 
 import httpx
 
-from app.scripts.adr39.reglas import mediana, percentil_95
+from app.scripts.adr39.reglas import mediana_estadistica, percentil_95_interpolado
 
 Reloj = Callable[[], float]
 GeneradorDeId = Callable[[], str]
@@ -144,8 +144,8 @@ def medir_corrida(
             errores += 1
         tiempos_ms.append((reloj() - inicio) * 1000)
     return {
-        "p50_ms": mediana(tiempos_ms),
-        "p95_ms": percentil_95(tiempos_ms),
+        "p50_ms": mediana_estadistica(tiempos_ms),
+        "p95_ms": percentil_95_interpolado(tiempos_ms),
         "errores": errores,
         "trace_ids": ids,
     }
@@ -182,8 +182,8 @@ def medir_e2e(
     return {
         "perfil_consultas": consultas,
         "corridas": corridas,
-        "p95_total_ms": mediana([r["p95_ms"] for r in resultados]),
-        "p50_total_ms": mediana([r["p50_ms"] for r in resultados]),
+        "p95_total_ms": mediana_estadistica([r["p95_ms"] for r in resultados]),
+        "p50_total_ms": mediana_estadistica([r["p50_ms"] for r in resultados]),
         "errores": sum(r["errores"] for r in resultados),
         "etapas": _etapas(archivo_de_log, set().union(*(r["trace_ids"] for r in resultados))),
         "memoria_llm_gb": llm_gb,
@@ -211,5 +211,6 @@ def _etapas(archivo: Path | None, trace_ids: set[str]) -> dict[str, Any] | str:
     if not por_etapa:
         return "no desglosado"
     return {
-        e: {"p95_ms": percentil_95(v), "muestras": len(v)} for e, v in sorted(por_etapa.items())
+        e: {"p95_ms": percentil_95_interpolado(v), "muestras": len(v)}
+        for e, v in sorted(por_etapa.items())
     }

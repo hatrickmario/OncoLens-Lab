@@ -1,0 +1,12 @@
+{
+  "nli": {
+    "corridas_ms": [
+      36.948083026800305,
+      36.51387500576675,
+      35.98408302059397
+    ],
+    "mediana_ms": 36.51387500576675,
+    "presupuesto_ms": 1500.0,
+    "dentro_de_presupuesto": true
+  }
+}

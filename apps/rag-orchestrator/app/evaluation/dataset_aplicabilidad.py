@@ -19,7 +19,7 @@ from pydantic import ValidationError
 
 from app.domain.corpus_seed.poblacion import NO_DISPONIBLE
 from app.domain.criterios_aplicabilidad import CriterioDeAplicabilidad
-from app.evaluation.config_suite import ConfigInvalida, _ruta_del_repo
+from app.evaluation.config_suite import ConfigInvalida, ruta_del_repo
 from app.evaluation.dataset_loader import CLASE_SINTETICA, DatasetInvalido
 from app.evaluation.guardas import SuiteAbortada
 from app.evaluation.metricas.aplicabilidad import Esperado
@@ -107,7 +107,7 @@ def cargar_dataset_aplicabilidad(directorio: Path) -> DatasetAplicabilidad:
             version=str(manifiesto["version"]),
             clase=CLASE_SINTETICA,
             catalog_version=str(manifiesto["catalogVersion"]),
-            catalogos={tipo: _ruta_del_repo(str(r)) for tipo, r in manifiesto["catalogos"].items()},
+            catalogos={tipo: ruta_del_repo(str(r)) for tipo, r in manifiesto["catalogos"].items()},
             contextos=_contextos(directorio / "contextos"),
             fuentes=_fuentes(directorio / "fuentes"),
             guiones={nombre: _guion(g) for nombre, g in pares["guiones"].items()},

@@ -10,7 +10,7 @@
 >
 > **Markdown = fuente.** Linear se actualiza después, con confirmación (§7). Las respuestas se citan en las historias como `[S4 resp. n]`.
 
-## 1. Alcance comprometido: 69 pts, 20 tarjetas
+## 1. Alcance comprometido: 73 pts, 20 tarjetas (reajuste del 2026-10-31)
 
 Según el orden de prioridad del usuario (RAG de conocimiento → búsqueda por los datos del paciente → OCR → gestión de usuarios), el S4 compromete el núcleo del RAG de conocimiento, la etapa 2 de la población del estudio y los faltantes. **Riesgo aceptado por el usuario** `[S4 resp. 1]`: 61 pts en 1–2 días frente a la meta de cierre ≥ 80 %. Si no alcanza, se recorta de menor a mayor prioridad. El primer recorte serían los faltantes (US-003, US-005), seguidos de US-238, US-133 y US-112 `[S4 resp. 20]`.
 
@@ -33,9 +33,9 @@ Según el orden de prioridad del usuario (RAG de conocimiento → búsqueda por 
 | 12 | US-238 (L1D-300) | Segundo loop de reescritura (RN-02 enmendado) | FEAT-06b | 5 | 9 ⚠ | 1 |
 | 13 | US-233a (L1D-298) | Suite `evaluate` local + RSS/latencia del NLI + arrastres | FEAT-T5a | 3 | 7 | 1 |
 | 14 | US-233b (L1D-299) | Conjunto dorado de población + suite por criterio | FEAT-T5a | 3 | 8 | 1 |
-| 15 | US-247 (L1D-297) | Datos de demo (Coincide, Parcial y No coincide) + `levantar.sh` | FEAT-06c | 5 | 8 | 1 |
+| 15 | US-247 (L1D-297) | Datos de demo (Coincide, Parcial y No coincide) + `levantar.sh` | FEAT-06c | 7 | 8 | 1 |
 | 16 | US-003 (L1D-95) | `/completeness` recortado | FEAT-04 | 3 | 5 | 2 |
-| 17 | US-005 (L1D-97) | Aviso de faltantes en el panel, con enlace a la ficha | FEAT-04 | 3 | 7 | 2 |
+| 17 | US-005 (L1D-97) | Aviso de faltantes en el panel, con enlace a la ficha | FEAT-04 | 5 | 7 | 2 |
 | 18 | US-112 (L1D-109) | Búsqueda híbrida *dense* + *sparse* detrás de `RETRIEVAL_MODE` (`dense` por defecto) | FEAT-06b | 5 | 6 | 1 |
 | 19 | US-133 (L1D-245) | Híbrida frente a *dense* en la misma corrida (A0, A2, A2b de ADR-45) | FEAT-T5b | 3 | 5 | 1 |
 
@@ -124,10 +124,10 @@ Aplicados en `backlog/features/` (cada Feature con su fila en `## Conflictos de 
 
   | Alcance | Pts |
   |---|---|
-  | S4 | **69** (61 + 8 el 2026-10-30) |
+  | S4 | **73** (61 + 8 el 2026-10-30 + 4 el 2026-10-31: L1D-97 de 3 a 5 y L1D-297 de 5 a 7) |
   | S5 | **168** |
   | S6 | **102** |
-  | MVP comprometido | 610 |
+  | MVP comprometido | 610 (pendiente de recalcular por el humano: S4 pasa de 69 a 73 pts) |
 
   El S5 queda **sobrecargado**: su refinamiento debe recortar según la prioridad (gestión de usuarios → OCR → …) y llevar lo que sobre a `V2-Post-MVP.md`.
 - **G-Piloto (S6):** no se sacó del camino crítico ninguna historia suya. US-047 (alta manual de pacientes) pasa al S6, el mismo sprint del gate.
