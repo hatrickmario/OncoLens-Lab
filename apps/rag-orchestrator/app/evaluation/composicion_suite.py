@@ -15,6 +15,7 @@ from app.application.ports import (
     ProhibitedTermsChecker,
     QueryEmbedder,
     FalloDeInferencia,
+    SinTerminosLexicos,
     QuerySparseEncoder,
     Reranker,
     SparseChunkSearch,
@@ -39,6 +40,7 @@ from app.evaluation.brazos_recuperacion import Brazo
 from app.evaluation.config_suite import ConfigInvalida, ConfigSuite
 from app.evaluation.cronometro import Cronometro
 from app.evaluation.fuente_dataset import DatasetSuite
+from app.evaluation.guardas import SuiteAbortada
 from app.evaluation.juez_fidelidad import JuezFidelidad, JuezNli, JuezSecundario
 from app.evaluation.lenguaje_estricto import VerificadorEstricto
 from app.evaluation.medidores import (
@@ -106,9 +108,9 @@ def _con_recuperacion_del_brazo(
     return replace(
         parametros,
         retrieval_mode=brazo.modo,
-        retrieval_fusion=brazo.fusion or parametros.retrieval_fusion,
-        rrf_k=brazo.rrf_k or parametros.rrf_k,
-        peso_sparse=brazo.peso_sparse or parametros.peso_sparse,
+        retrieval_fusion=(parametros.retrieval_fusion if brazo.fusion is None else brazo.fusion),
+        rrf_k=parametros.rrf_k if brazo.rrf_k is None else brazo.rrf_k,
+        peso_sparse=parametros.peso_sparse if brazo.peso_sparse is None else brazo.peso_sparse,
     )
 
 
@@ -175,8 +177,12 @@ def _buscador_sparse_local(
 def _vector_sparse_o_vacio(codificador: QuerySparseEncoder, texto: str) -> dict[int, float]:
     try:
         return dict(codificador.embeber_sparse(texto))
-    except FalloDeInferencia:
+    except SinTerminosLexicos:
         return {}
+    except (
+        FalloDeInferencia
+    ):  # un codificador roto no se disfraza de chunk sin términos: la corrida no es válida
+        raise SuiteAbortada("falló la codificación sparse de los chunks del índice") from None
 
 
 def adaptadores_de_suite(

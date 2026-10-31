@@ -20,7 +20,7 @@ from app.application.ports import (
     ChunkEncontrado,
     ChunkEncontradoSparse,
     CoberturaDePoblacion,
-    FalloDeInferencia,
+    SinTerminosLexicos,
     EvidenciaGenerada,
     ReleaseDelCorpus,
     ResultadoDeRecuperacion,
@@ -96,7 +96,7 @@ class BuscadorEnMemoria:
 class CodificadorSparseLexico:
     """``QuerySparseEncoder`` falso (US-133): un término por palabra de ``tokens`` con peso 1.0 y un índice estable.
 
-    Cumple el contrato del real (LSP): un texto sin ningún término es un ``FalloDeInferencia``, nunca un vector vacío.
+    Cumple el contrato del real (LSP): un texto sin ningún término es un ``SinTerminosLexicos``, nunca un vector vacío.
     """
 
     def vector_de(self, texto: str) -> dict[int, float]:
@@ -106,7 +106,7 @@ class CodificadorSparseLexico:
     def embeber_sparse(self, texto: str) -> Mapping[int, float]:
         vector = self.vector_de(texto)
         if not vector:
-            raise FalloDeInferencia("sparse: el texto no tiene ningún término con peso")
+            raise SinTerminosLexicos("sparse: el texto no tiene ningún término con peso")
         return vector
 
 
@@ -123,8 +123,11 @@ class BuscadorSparseEnMemoria:
     def search_sparse(
         self, vector: Mapping[int, float], limit: int, filtro: str | None = None
     ) -> list[ChunkEncontradoSparse]:
-        exigir_filtro_vigente(filtro or "is_current == true")
-        tipo = _FILTRO_TIPO.search(filtro or "")
+        if not vector:  # el contrato del real: nunca llega un vector vacío a la búsqueda
+            raise ValueError("el vector sparse de la consulta no puede estar vacío")
+        filtro = "is_current == true" if filtro is None else filtro
+        exigir_filtro_vigente(filtro)
+        tipo = _FILTRO_TIPO.search(filtro)
         aciertos = [
             (sum(peso * propios.get(indice, 0.0) for indice, peso in vector.items()), c)
             for c, cancer, propios in self._chunks

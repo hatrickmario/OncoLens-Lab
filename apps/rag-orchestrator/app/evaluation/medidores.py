@@ -13,7 +13,7 @@ from app.application.ports import (
     ChunkEncontrado,
     ChunkEncontradoSparse,
     ChunkSearch,
-    FalloDeInferencia,
+    SinTerminosLexicos,
     CorpusCatalogReader,
     CorpusReleaseReader,
     EvidenceGenerator,
@@ -105,7 +105,7 @@ class CodificadorSparseObservado:
     def embeber_sparse(self, texto: str) -> Mapping[int, float]:
         try:
             return self._cronometro.medir("embeddings", self._interno.embeber_sparse, texto)
-        except FalloDeInferencia:
+        except SinTerminosLexicos:
             self._obs.sin_terminos_lexicos.add(texto)
             raise
 

@@ -13,7 +13,7 @@ from collections.abc import Mapping, Sequence
 import numpy as np
 
 from app.application.corpus_ingestion.ports import SparsePassageEncoder
-from app.application.ports import FalloDeInferencia
+from app.application.ports import FalloDeInferencia, SinTerminosLexicos
 from app.domain.pesos_sparse import agrupar_pesos_por_token, pesos_lexicos
 from app.infrastructure.models.fallos import fallos_de_inferencia_como_error_del_puerto
 from app.infrastructure.models.lotes import (
@@ -61,7 +61,7 @@ class CodificadorSparseBgeM3:
                 for fila, indice in enumerate(lote):
                     vectores[indice] = self._terminos(secuencias[indice], oculto[fila])
         if not all(vectores):
-            raise FalloDeInferencia(_FALLO)
+            raise SinTerminosLexicos(_FALLO)
         return vectores
 
     def _terminos(self, ids: list[int], oculto: np.ndarray) -> dict[int, float]:

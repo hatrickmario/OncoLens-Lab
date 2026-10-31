@@ -83,7 +83,10 @@ def marcar_retroceso(diferencias: MetricasDeBrazo, tolerancia: float) -> bool:
     """``True`` si alguna diferencia es peor que ``-tolerancia``; una diferencia ``None`` no cuenta como retroceso."""
     if tolerancia < 0:
         raise ValueError("la tolerancia de retroceso no puede ser negativa")
-    return any(d is not None and d < -tolerancia for d in diferencias.como_tupla())
+    # round: 0.60 - 0.65 es -0.05000000000000004 en coma flotante y «igual a la tolerancia» no es retroceso
+    return any(
+        d is not None and round(d, 12) < -round(tolerancia, 12) for d in diferencias.como_tupla()
+    )
 
 
 def trazado_coherente(brazo: Brazo, modo: RetrievalMode, fusion: Fusion, parametro: float) -> bool:
