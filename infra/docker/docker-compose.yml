@@ -118,7 +118,7 @@ services:
       test: ["CMD", "mc", "ready", "local"]
 
   milvus-standalone:
-    image: milvusdb/milvus:v2.6.25
+    image: milvusdb/milvus:v2.6.26
     # Milvus lee la clave de MinIO del entorno: se carga desde el secreto al arrancar, sin escribirla en el Compose.
     command:
       - sh
