@@ -260,6 +260,16 @@ class ApplicabilityTextProposer(Protocol):
     ) -> tuple[PropuestaDePoblacion, ...]: ...
 
 
+class PoblacionTask(Protocol):
+    """La tarea corta de población (US-242) en la consulta (US-244): UNA fuente y UN criterio por llamada.
+
+    ``fuente`` trae un único criterio pendiente y solo los fragmentos recuperados de esa fuente en esta consulta. Solo
+    propone: la cita, el lenguaje y el soporte NLI los valida el servicio y el estado lo asigna la regla del catálogo.
+    Un fallo (salida cortada o inválida, LLM caído) es ``RespaldoFallido``; nunca ``LOCAL_LLM_UNAVAILABLE``."""
+
+    async def proponer(self, fuente: FuenteParaProponer) -> tuple[PropuestaDePoblacion, ...]: ...
+
+
 class CatalogoClinico(Protocol):
     """Catálogo clínico versionado y montado de solo lectura (``CLINICAL_CATALOG_PATH``), no el catálogo del corpus."""
 

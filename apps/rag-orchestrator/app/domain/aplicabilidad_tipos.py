@@ -14,6 +14,7 @@ CausaDeDesconocido = Literal[
     "no_reportado_por_fuente",
     "valores_en_conflicto",
     "sin_regla_de_comparacion",
+    "respaldo_fallido",
 ]
 MotivoInterno = Literal[
     "valor_fuera_de_tabla", "sin_escala", "forma_no_comparable", "destino_no_resoluble"

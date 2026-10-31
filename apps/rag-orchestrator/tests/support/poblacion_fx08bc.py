@@ -13,6 +13,7 @@ from typing import Any
 from app.application.ports import (
     ApplicabilityTextProposer,
     EvidenciaGenerada,
+    NliClassifier,
     ResultadoDeRecuperacion,
 )
 from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
@@ -110,8 +111,16 @@ CHUNKS_DE_DOCUMENTO: dict[str, tuple[str, ...]] = {
 }
 
 
+TEXTO_DE_CH_B9_1 = "Eligible patients were postmenopausal women with early breast cancer"
+"""El único fragmento con texto propio: el respaldo (US-244) lo lee para completar el criterio ``pendiente`` de ``doc-b9``."""
+
+
 def _chunk(chunk_id: str, documento: str) -> ChunkFx:
-    texto = f"Synthetic adjuvant study {documento}, fragment {chunk_id} (test)."
+    texto = (
+        TEXTO_DE_CH_B9_1
+        if chunk_id == "ch-b9-1"
+        else f"Synthetic adjuvant study {documento}, fragment {chunk_id} (test)."
+    )
     return ChunkFx(chunk_id, documento, texto, _vector(e0=0.9, e3=0.1), True, "mama")
 
 
@@ -237,6 +246,7 @@ def entorno_fx08bc(
     *opciones: str,
     poblaciones: dict[str, PoblacionDelEstudio] | None = None,
     proponente: ApplicabilityTextProposer | None = None,
+    clasificador_nli: NliClassifier | None = None,
 ) -> EntornoDeRecuperacion:
     """El servicio real con los bordes falsos de FX-08b-c; se recuperan solo los chunks que citan las ``opciones``."""
     citados = {chunk for o in opciones for chunk in OPCIONES_LLM_POB[o]}
@@ -249,4 +259,5 @@ def entorno_fx08bc(
         generador=GeneradorLlmPob(*opciones),
         criterios=criterios_de(APL_1_2_0),
         proponente=proponente,
+        clasificador_nli=clasificador_nli,
     )

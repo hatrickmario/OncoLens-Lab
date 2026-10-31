@@ -11,7 +11,12 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
 from enum import StrEnum
 
-from app.domain.aplicabilidad_tipos import CriterioEvaluado, ValorDelEstudio, ValorDePoblacion
+from app.domain.aplicabilidad_tipos import (
+    CriterioEvaluado,
+    PoblacionDelEstudio,
+    ValorDelEstudio,
+    ValorDePoblacion,
+)
 from app.domain.applicability_rules import (
     criterio_evaluado,
     estado_de_poblacion,
@@ -95,6 +100,45 @@ def criterios_pendientes_de_texto(
         and not e.valores_del_estudio
         and e.motivo_interno != "destino_no_resoluble"
     )
+
+
+# --- respaldo de la población en la consulta (US-244, ADR-47, RN-26) ---------------------------------------------------
+
+
+class CausaDeRespaldo(StrEnum):
+    """Por qué el respaldo no entregó propuestas: solo sirve para el log; el criterio degrada igual en los cuatro casos."""
+
+    bucle = "bucle"
+    truncado = "truncado"
+    plazo = "plazo"
+    caido = "caido"
+
+
+class RespaldoFallido(Exception):
+    """El respaldo de UN criterio falló. Lleva la causa y dos medidas (``finish_reason`` y longitud de la salida); nunca la
+    salida, el prompt ni un valor (RN-14)."""
+
+    def __init__(
+        self, causa: CausaDeRespaldo, finish_reason: str | None = None, longitud: int = 0
+    ) -> None:
+        super().__init__(causa.value)
+        self.causa = causa
+        self.finish_reason = finish_reason
+        self.longitud = longitud
+
+
+def criterios_pendientes(
+    poblacion: PoblacionDelEstudio | None,
+    evaluados: Sequence[CriterioEvaluado],
+    criterios: Sequence[CriterioDeAplicabilidad],
+) -> tuple[CriterioPendiente, ...]:
+    """Los criterios del catálogo que ``population_criteria`` marca ``pendiente`` (ADR-47), en el orden del catálogo."""
+    raise NotImplementedError("US-244 AC-1")
+
+
+def degradar_a_respaldo_fallido(criterio: CriterioEvaluado) -> CriterioEvaluado:
+    """El criterio ``desconocido`` con ``respaldo_fallido`` (RN-26); si falta el dato del paciente gana ``falta_en_paciente``."""
+    raise NotImplementedError("US-244 AC-2")
 
 
 # --- validar lo que propone el LLM (D3, RN-01, RN-04, RN-23) -------------------------------------------------------
