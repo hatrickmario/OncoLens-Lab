@@ -23,6 +23,12 @@ describe('mapearFalloRag', () => {
       'LOCAL_LLM_UNAVAILABLE',
     ],
     [
+      '503 LLM_OUTPUT_INVALID',
+      fallo({ status: 503, codigo: 'LLM_OUTPUT_INVALID' }),
+      503,
+      'LLM_OUTPUT_INVALID',
+    ],
+    [
       '503 RETRIEVAL_UNAVAILABLE',
       fallo({ status: 503, codigo: 'RETRIEVAL_UNAVAILABLE' }),
       502,
@@ -78,6 +84,7 @@ describe('mapearFalloRag', () => {
     const etiquetas = [
       fallo({ tiempoAgotado: true }),
       fallo({ status: 503, codigo: 'LOCAL_LLM_UNAVAILABLE' }),
+      fallo({ status: 503, codigo: 'LLM_OUTPUT_INVALID' }),
       fallo({ status: 503, codigo: 'RETRIEVAL_UNAVAILABLE' }),
       fallo({ status: 503, codigo: 'NLI_UNAVAILABLE' }),
       fallo({ status: 422, codigo: 'TIPO_CANCER_NO_REGISTRADO' }),
