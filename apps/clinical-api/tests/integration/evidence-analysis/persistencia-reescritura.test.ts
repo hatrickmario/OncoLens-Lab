@@ -65,7 +65,11 @@ describe('persistencia de retrieval_params con queryRewrite (RN-06, US-238)', ()
 
   it.each([
     ['con evidencia sin reescritura', SIN_REESCRITURA, { applied: false, reason: 'no_disparado' }],
-    ['sin evidencia tras reescribir', REESCRITA_SIN_RESCATE, { applied: true, reason: 'disparado' }],
+    [
+      'sin evidencia tras reescribir',
+      REESCRITA_SIN_RESCATE,
+      { applied: true, reason: 'disparado' },
+    ],
   ] as const)(
     'persiste el queryRewrite recibido tal cual cuando la respuesta es %s [US-238 AC-3]',
     async (_nombre, escenario, esperado) => {
@@ -92,10 +96,13 @@ describe('Base del análisis: sourcesConsulted.queryRewritten (D-d)', () => {
     async (_nombre, escenario, esperado) => {
       rag.responder(escenario);
 
-      const respuesta = await solicitarAnalisis(`req_Basew${esperado ? 'T' : 'F'}${_nombre.length}`);
+      const respuesta = await solicitarAnalisis(
+        `req_Basew${esperado ? 'T' : 'F'}${_nombre.length}`,
+      );
 
       expect(respuesta.status).toBe(200);
-      const base = (respuesta.body as { analysisBasis: { sourcesConsulted: object } }).analysisBasis;
+      const base = (respuesta.body as { analysisBasis: { sourcesConsulted: object } })
+        .analysisBasis;
       expect(base.sourcesConsulted).toMatchObject({ queryRewritten: esperado });
       expect(JSON.stringify(respuesta.body)).not.toContain('"consulta reformulada"');
     },

@@ -21,7 +21,9 @@ describe('declararReescrituraEnLaBase (US-238, D-d)', () => {
     status: 'con_evidencia' | 'sin_evidencia',
     queryRewrite: { applied: boolean; reason: string },
   ) => {
-    const respuesta = validarRespuestaInterna(status === 'con_evidencia' ? conEvidencia : sinEvidencia);
+    const respuesta = validarRespuestaInterna(
+      status === 'con_evidencia' ? conEvidencia : sinEvidencia,
+    );
     respuesta.meta.retrievalParams.queryRewrite = queryRewrite as never;
     return respuesta;
   };
