@@ -1,4 +1,8 @@
-import { enlaceDeRegistro, type LecturaDelChecklist } from '../../lib/evidence/faltantes';
+import {
+  debeContinuarConAviso,
+  enlaceDeRegistro,
+  type LecturaDelChecklist,
+} from '../../lib/evidence/faltantes';
 import { mensajes, rellenar } from '../../lib/mensajes';
 import { ChecklistNoDisponible } from '../molecules/checklist-no-disponible';
 import { EnlaceDeRegistro } from '../molecules/enlace-de-registro';
@@ -6,6 +10,11 @@ import { ScopeNotice } from '../molecules/scope-notice';
 
 /** Id del resumen del aviso: el botón «Analizar evidencia» lo referencia con `aria-describedby` (US-005 AC-7). */
 export const ID_RESUMEN_DE_FALTANTES = 'aviso-faltantes-resumen';
+
+/** Id del resumen que el botón referencia, o `undefined` si el aviso no muestra resumen. */
+export function idDelResumenDeAviso(lectura: LecturaDelChecklist | null): string | undefined {
+  return lectura && debeContinuarConAviso(lectura) ? ID_RESUMEN_DE_FALTANTES : undefined;
+}
 
 /**
  * Aviso previo al análisis (US-005, FR-23): faltantes con enlace a la ficha, checklist caído, o tipo no habilitado.

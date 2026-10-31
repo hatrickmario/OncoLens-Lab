@@ -20,7 +20,7 @@ import { mensajes } from '../../lib/mensajes';
 import { RUTA_LOGIN_EXPIRADA } from '../../lib/sesion/motivo-de-sesion';
 import { AnalysisResult } from './analysis-result';
 import { EvidenceQueryForm } from './evidence-query-form';
-import { ID_RESUMEN_DE_FALTANTES, MissingDataNotice } from './missing-data-notice';
+import { idDelResumenDeAviso, MissingDataNotice } from './missing-data-notice';
 
 export interface EvidencePanelProps {
   /** UUID del paciente de la ruta; va en el cuerpo de la petición, nunca en query strings. */
@@ -91,9 +91,7 @@ export function EvidencePanel({ patientId }: EvidencePanelProps) {
           botonRef={botonRef}
           onCambiar={setPregunta}
           aviso={<MissingDataNotice lectura={lectura} patientId={patientId} />}
-          descripcionDelBoton={
-            lectura && debeContinuarConAviso(lectura) ? ID_RESUMEN_DE_FALTANTES : undefined
-          }
+          descripcionDelBoton={idDelResumenDeAviso(lectura)}
           onEnviar={() => validacion.ok && void analizarNuevo(pregunta)}
         />
         {fase.tipo === 'enviando' && <EvidenceOptionSkeleton />}
