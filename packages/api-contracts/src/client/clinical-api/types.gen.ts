@@ -592,6 +592,10 @@ export type AnalysisBasis = {
         origin: 'regla_catalogo' | 'llm_verificado';
     }>;
     sourcesConsulted: {
+        /**
+         * `true` solo si la búsqueda se repitió con una reformulación de la pregunta con términos del catálogo (segundo loop, US-238) y el análisis quedó `con_evidencia`; `false` en cualquier otro caso (incluida una reescritura intentada sin rescate). Lo fija clinical-api desde `meta.retrievalParams.queryRewrite`; la consulta reformulada nunca sale de rag-orchestrator.
+         */
+        queryRewritten: boolean;
         selected: Array<'guias' | 'ensayos' | 'publicaciones'>;
         filters: AppliedFilters;
         retrieved: number;

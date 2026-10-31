@@ -98,8 +98,19 @@ function verificarRagMeta(valor: unknown, ctx: Contexto, ruta: Ruta): void {
         } else {
           if (tiene(objeto1, "fusion") && !(esUnoDe(objeto1["fusion"], ["rrf","ponderada"]))) ctx.addIssue({ code: 'custom', path: [...[...ruta, "retrievalParams"], "fusion"], message: "RagMeta.retrievalParams: si no retrievalMode = \"dense\" y retrievalMode presente: fusion debe cumplir {\"enum\":[\"rrf\",\"ponderada\"]}" });
         }
-        const permitidas = new Set<string>(["fusion","fusionParam","relevanceThreshold","rerankTopN","retrievalMode","topK"]);
+        const permitidas = new Set<string>(["fusion","fusionParam","queryRewrite","relevanceThreshold","rerankTopN","retrievalMode","topK"]);
         for (const clave of Object.keys(objeto1)) if (!permitidas.has(clave)) ctx.addIssue({ code: 'custom', path: [...[...ruta, "retrievalParams"], nombreDeCampo(clave)], message: "RagMeta.retrievalParams: propiedad no evaluada por el schema" });
+        if (tiene(objeto1, "queryRewrite")) {
+          const hijo1 = objeto1["queryRewrite"];
+          if (esObjeto(hijo1)) {
+            const objeto2 = hijo1;
+            if ((!tiene(objeto2, "applied") || (objeto2["applied"] === true)) && tiene(objeto2, "applied")) {
+              if (tiene(objeto2, "reason") && !(objeto2["reason"] === "disparado")) ctx.addIssue({ code: 'custom', path: [...[...[...ruta, "retrievalParams"], "queryRewrite"], "reason"], message: "RagMeta.retrievalParams.queryRewrite: si applied = true y applied presente: reason debe cumplir {\"const\":\"disparado\"}" });
+            } else {
+              if (tiene(objeto2, "reason") && !(esUnoDe(objeto2["reason"], ["no_disparado","no_disponible","no_aplica"]))) ctx.addIssue({ code: 'custom', path: [...[...[...ruta, "retrievalParams"], "queryRewrite"], "reason"], message: "RagMeta.retrievalParams.queryRewrite: si no applied = true y applied presente: reason debe cumplir {\"enum\":[\"no_disparado\",\"no_disponible\",\"no_aplica\"]}" });
+            }
+          }
+        }
       }
     }
   }
