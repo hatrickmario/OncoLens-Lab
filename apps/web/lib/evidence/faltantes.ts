@@ -2,7 +2,7 @@ import type {
   CompletenessItem,
   CompletenessView,
 } from '../../../../packages/api-contracts/src/types/clinical-api';
-import type { AnclaDeFicha } from '../ficha/anclas';
+import { hrefDeFicha, type AnclaDeFicha } from '../ficha/anclas';
 
 /** Resultado de leer el checklist: el panel nunca ve una excepción, solo estos tres casos. */
 export type LecturaDelChecklist =
@@ -27,8 +27,7 @@ const ANCLA_POR_ENTIDAD: Partial<Record<CompletenessItem['destination']['entity'
 
 /** Enlace a la sección existente de la ficha donde vive el dato; sin sección propia, al encabezado principal. */
 export function enlaceDeRegistro(patientId: string, item: CompletenessItem): string {
-  const ancla = ANCLA_POR_ENTIDAD[item.destination.entity];
-  return ancla ? `/pacientes/${patientId}#${ancla}` : `/pacientes/${patientId}`;
+  return hrefDeFicha(patientId, ANCLA_POR_ENTIDAD[item.destination.entity]);
 }
 
 /**

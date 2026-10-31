@@ -19,11 +19,13 @@ import { OrderingCriterion } from './ordering-criterion';
 
 export interface AnalysisResultProps {
   analisis: EvidenceAnalysis;
+  /** UUID del paciente: solo arma los enlaces a su ficha. */
+  patientId: string;
   onVerFragmento: (cita: CitedSource, idChip: string) => void;
 }
 
 /** Despacha el resultado ya validado y persistido por su clase (design D2); nunca se emite contenido sin validar. */
-export function AnalysisResult({ analisis, onVerFragmento }: AnalysisResultProps) {
+export function AnalysisResult({ analisis, patientId, onVerFragmento }: AnalysisResultProps) {
   const { resultado } = mensajes().evidence;
   const clase = clasificarResultado(analisis);
   const descartadas = analisis.discardedOptions;
@@ -43,6 +45,8 @@ export function AnalysisResult({ analisis, onVerFragmento }: AnalysisResultProps
               key={opcion.option}
               opcion={opcion}
               indice={indice}
+              fuentes={analisis.applicability}
+              patientId={patientId}
               onVerFragmento={onVerFragmento}
             />
           ))}

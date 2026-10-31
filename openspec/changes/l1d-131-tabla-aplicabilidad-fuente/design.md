@@ -41,6 +41,18 @@ tabla por criterio. Los datos (`perSource[].criteria[]`, `applicabilitySummary`,
   de orden por aplicabilidad» (y con el MODIFIED de `l1d-145`), así que se eliminó; US-126 AC-7 se verifica con un test que cita ese
   escenario (`[US-126 AC-7]`), sin delta propio.
 
+- **D10 · Origen del valor y RN-25 (Gate 2, vuelta 1).** Cada valor del estudio dice su origen en la propia línea: «valor · Fragmento [n] · según {sourceName} · {externalId}» (los chips de cita no numeran, y dos fragmentos de un mismo documento deben distinguirse). Un valor sin fragmento citado se rotula «valor extraído por IA; fragmento no disponible» (RN-01). Con `valores_en_conflicto`, fecha y tamaño de muestra salen de la cita del fragmento y, si faltan, dicen «No disponible» (RN-25), no se omiten; el tamaño se rotula «Tamaño de muestra del estudio» (es de la fuente completa) y la fecha va en `dd/mm/aaaa`. **Decisión del orquestador, pendiente de confirmación del usuario (RN-25 vs AC-9 asumido, F-23: «si no consta, nada»).**
+- **D11 · Un solo lugar por regla.** Símbolo, clave y palabra de cada estado viven en `lib/evidence/estados-de-aplicabilidad.ts` (los usan `ApplicabilityCounts` y `CriterionStatus`); la ruta a la ficha se arma solo con `hrefDeFicha` (`lib/ficha/anclas.ts`, exige UUID). Las causas sintéticas (que no son valores del enum del contrato) están bajo `evidence.aplicabilidad.causaSintetica`.
+- **D12 · `patientId` por props, deliberado.** Baja por `EvidencePanel → AnalysisResult → EvidenceOptionCard → ApplicabilityTable → ApplicabilitySource → ApplicabilityCriterionRow → CriterionStatus` sin Provider: es un dato del servidor de solo lectura y un único consumidor de hoja; un Provider no se justifica por la evidencia de la tabla de patrones. Pregunta abierta (c) para el usuario.
+
+## Preguntas abiertas para el usuario
+
+- (a) El cliente filtra los valores por los fragmentos que cita la opción, pero el estado se calcula por opción en el servidor: si dos opciones citan la misma fuente con fragmentos distintos, ¿qué garantiza el contrato para que estado y valores mostrados coincidan?
+- (b) `patientDataWarning = en_conflicto` (RN-08) y `faltante` no se pintan en la tabla (solo `sin_verificar`): ¿es intencional en el S4 (S5: US-101, US-136)?
+- (c) Drilling de `patientId` por 7 niveles (D12): ¿se acepta como deliberado?
+- (d) El texto de conflicto de la spec («…requieren contraste con la fuente y con la validación clínica/patológica») difiere del de `pantallas-s4.md` H-12 («Conviene contrastarlos…»): se dejó el de la spec. Se quitó el punto final por homogeneidad.
+- (e) La etiqueta «Población no comparable según los datos registrados» no se aplicó: el AC-3 exige la etiqueta visible «Población no comparable» tal cual.
+
 ## Privacidad y ownership
 
 Solo `web`; consume `/api/evidence-analyses` sin PII adicional. Los valores del paciente ya vienen desidentificados del
@@ -83,4 +95,4 @@ No toca modelo, prompt, umbral, catálogo ni corpus; sin `evaluate`. Los fixture
 
 ## Riesgos
 
-Diez AC en un componente: las pruebas se agrupan por *fixture*. `visual-check` a 320/375/1280 px contra `pantallas-s4.md`.
+Diez AC en un componente: las pruebas se agrupan por _fixture_. `visual-check` a 320/375/1280 px contra `pantallas-s4.md`.
