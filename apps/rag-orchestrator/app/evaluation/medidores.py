@@ -6,12 +6,14 @@ Lo observado vive solo en memoria: el reporte lleva agregados, nunca textos (RN-
 
 from __future__ import annotations
 
-from collections.abc import Collection, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass, field
 
 from app.application.ports import (
     ChunkEncontrado,
+    ChunkEncontradoSparse,
     ChunkSearch,
+    SinTerminosLexicos,
     CorpusCatalogReader,
     CorpusReleaseReader,
     EvidenceGenerator,
@@ -20,9 +22,11 @@ from app.application.ports import (
     LanguageDetector,
     NliClassifier,
     QueryEmbedder,
+    QuerySparseEncoder,
     ReleaseDelCorpus,
     Reranker,
     ResultadoDeRecuperacion,
+    SparseChunkSearch,
 )
 from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
 from app.domain.citations import FichaDeFuente
@@ -43,6 +47,8 @@ class Observaciones:
     textos_entregados: dict[str, dict[str, str]] = field(default_factory=dict)
     """``chunk_id -> texto`` de lo entregado al generador: las premisas con las que se juzga su fidelidad."""
     generaciones: int = 0
+    sin_terminos_lexicos: set[str] = field(default_factory=set)
+    """Textos de pregunta cuya rama *sparse* no tuvo ningún término (la consulta híbrida falla cerrada, US-248 AC-4)."""
 
 
 class DetectorMedido:
@@ -86,6 +92,34 @@ class EmbedderMedido:
 
     def embeber(self, texto: str) -> Sequence[float]:
         return self._cronometro.medir("embeddings", self._interno.embeber, texto)
+
+
+class CodificadorSparseObservado:
+    """Cronometra la codificación *sparse* de la pregunta y anota las que no tienen términos léxicos (US-133, 1.7b)."""
+
+    def __init__(
+        self, interno: QuerySparseEncoder, cronometro: Cronometro, observaciones: Observaciones
+    ) -> None:
+        self._interno, self._cronometro, self._obs = interno, cronometro, observaciones
+
+    def embeber_sparse(self, texto: str) -> Mapping[int, float]:
+        try:
+            return self._cronometro.medir("embeddings", self._interno.embeber_sparse, texto)
+        except SinTerminosLexicos:
+            self._obs.sin_terminos_lexicos.add(texto)
+            raise
+
+
+class BuscadorSparseMedido:
+    def __init__(self, interno: SparseChunkSearch, cronometro: Cronometro) -> None:
+        self._interno, self._cronometro = interno, cronometro
+
+    def search_sparse(
+        self, vector: Mapping[int, float], limit: int, filtro: str | None = None
+    ) -> list[ChunkEncontradoSparse]:
+        return self._cronometro.medir(
+            "busqueda", self._interno.search_sparse, vector, limit, filtro
+        )
 
 
 class BuscadorMedido:
