@@ -34,8 +34,8 @@ from app.evaluation.medicion_modelos import (
     entradas_espaciadas,
     evaluar_nli,
     evaluar_rankings,
-    mediana,
-    percentil_95,
+    mediana_estadistica,
+    percentil_95_interpolado,
     recuperar_densos,
     reordenar_con_reranker,
 )
@@ -98,8 +98,8 @@ class FabricaOnnx:
 
 def _estadisticas_latencia(tiempos: Sequence[float]) -> dict[str, float]:
     return {
-        "p50_ms": mediana(tiempos),
-        "p95_ms": percentil_95(tiempos),
+        "p50_ms": mediana_estadistica(tiempos),
+        "p95_ms": percentil_95_interpolado(tiempos),
         "max_ms": float(max(tiempos)),
         "n": len(tiempos),
     }
@@ -332,7 +332,7 @@ def ejecutar_trabajo(
         "revision": trabajo.spec.revision,
         "cuantizacion": trabajo.cuantizacion,
         "corrida": trabajo.corrida,
-        "pico_rss_mb": envoltorios.pico_rss_mb(),
+        "pico_rss_mb": envoltorios.pico_rss_mib(),
         **medido,
     }
     serializable: dict[str, Any] = a_json_seguro(resultado)

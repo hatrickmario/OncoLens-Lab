@@ -19,7 +19,6 @@ from app.api.trace import ContextoDeTraceId
 from app.application.aplicabilidad import ApplicabilityService
 from app.application.catalogo_exigido import ConsultaConCatalogoExigido
 from app.application.consulta_no_componible import ConsultaNoComponible
-from app.application.generation import LlmEvidenceGenerator
 from app.application.ports import (
     CatalogoClinico,
     ChunkSearch,
@@ -71,8 +70,10 @@ from app.infrastructure.lenguaje.terminos_prohibidos import (
     ListaDeTerminosNoDisponible,
     cargar_verificador_de_terminos,
 )
-from app.infrastructure.llm.openai_compatible import OpenAICompatibleLlmClient
-from app.infrastructure.llm.proponente_de_aplicabilidad import LlmApplicabilityTextProposer
+from app.infrastructure.llm.fabrica_local import (  # noqa: F401  re-exportadas: las importan otros changes y tests
+    crear_generador_local,
+    crear_proponente_local,
+)
 from app.infrastructure.llm.openai_compatible_health import OpenAICompatibleLlmHealth
 from app.infrastructure.security.clave_publica import cargar_clave_publica_es256
 from app.infrastructure.security.service_jwt_verifier import ServiceJwtVerifier
@@ -408,32 +409,6 @@ def _crear_servicio_de_recuperacion(
         parametros=_parametros_de_recuperacion(settings),
         buscador_sparse=puertos.buscador_sparse,
         embedder_sparse=puertos.embedder_sparse,
-    )
-
-
-def _cliente_llm_local(settings: Settings) -> OpenAICompatibleLlmClient:
-    return OpenAICompatibleLlmClient(
-        settings.llm_base_url,
-        settings.llm_model,
-        settings.llm_request_timeout_ms,
-        settings.llm_max_output_tokens,
-        settings.llm_temperature,
-    )
-
-
-def crear_generador_local(settings: Settings) -> LlmEvidenceGenerator:
-    """Generación con el LLM nativo local (``LLM_BASE_URL``); sin adapter de nube ni *fallback* (RN-12)."""
-    return LlmEvidenceGenerator(
-        _cliente_llm_local(settings),
-        settings.details_max_paragraphs,
-        settings.llm_fragments_max_chars,
-    )
-
-
-def crear_proponente_local(settings: Settings) -> LlmApplicabilityTextProposer:
-    """Población textual de las fuentes (US-123) con el mismo LLM local y el mismo presupuesto de fragmentos."""
-    return LlmApplicabilityTextProposer(
-        _cliente_llm_local(settings), settings.llm_fragments_max_chars
     )
 
 

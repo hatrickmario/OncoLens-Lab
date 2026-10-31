@@ -6,7 +6,7 @@
 ## ai-services
 
 - [ ] 1.1 Fixtures FX-08b-c: adapters falsos del respaldo `RESP-OK`, `RESP-BUCLE`, `RESP-TRUNCADO`, `RESP-LENTO`, `RESP-CAIDO` (cumplen el contrato del puerto `PoblacionTask`; registran llamadas, fragmentos, criterio y el prompt construido) · test después (fixture) · humo de los fakes
-- [ ] 1.2 Configuración: `POPULATION_FALLBACK_DEADLINE_MS` en `settings.py` y `.env.example` (RN-22) · test después (humo de configuración)
+- [ ] 1.2 Configuración: `POPULATION_FALLBACK_DEADLINE_MS` en `settings.py` y `.env.example` (RN-22) (.env.example va en el PR #253 de la sesión principal; depende de su merge) · test después (humo de configuración)
 - [ ] 1.3 Test de aceptación en rojo: `test_respaldo_completa_criterio_pendiente_con_solo_fragmentos_de_doc_b9` con `@pytest.mark.ac("US-244", 1)` · integración (TestClient + PostgreSQL `corpus` real, fakes, reloj inyectado); esqueleto con `raise NotImplementedError` · TDD estricto · commit `test(L1D-294)`
 - [ ] 1.4 Extraer `criterios_pendientes()` (lee la marca `{"status": "pendiente", "values": []}` por criterio, ADR-47) y conectar el respaldo en `AplicabilidadTextual` mediante el puerto `PoblacionTask`; prompt solo con fragmentos de la fuente y etiqueta del criterio (sin `clinicalContext`, `pseudoPatientId` ni pregunta); AC-1 en verde · TDD estricto · commit `feat(L1D-294)`
 - [ ] 1.5 Tests de aceptación en rojo AC-2, AC-3, AC-4, AC-5, AC-7 (`ac("US-244", n)`): bucle, truncado, plazo (reloj/timeout inyectado), sin pendientes (cero llamadas), LLM caído tras generar · integración · TDD estricto · commit `test(L1D-294)`

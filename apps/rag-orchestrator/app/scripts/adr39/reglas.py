@@ -15,7 +15,7 @@ from typing import Any, Literal
 
 import jsonschema
 
-from app.evaluation.medicion_modelos import mediana, percentil_95
+from app.evaluation.medicion_modelos import mediana_estadistica, percentil_95_interpolado
 
 __all__ = [
     "Candidato",
@@ -27,8 +27,8 @@ __all__ = [
     "descartar_por_restriccion",
     "desempatar_por_memoria",
     "elegir_candidato",
-    "mediana",
-    "percentil_95",
+    "mediana_estadistica",
+    "percentil_95_interpolado",
     "porcentaje_json_valido",
     "validar_contra_esquema",
 ]

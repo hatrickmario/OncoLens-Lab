@@ -10,7 +10,11 @@ from collections.abc import Iterable
 from typing import Any
 
 from app.evaluation.informe_pii import InformePiiB1
-from app.evaluation.llamadas import LlamadaSaliente, llamadas_a_nube_con_datos_reales
+from app.evaluation.llamadas import (
+    LlamadaSaliente,
+    adaptadores_cubiertos,
+    llamadas_a_nube_con_datos_reales,
+)
 
 
 def privacidad(
@@ -24,6 +28,9 @@ def privacidad(
         "llamadas_nube_datos_reales": llamadas_a_nube_con_datos_reales(llamadas),
         "sensibilidad_b1_medida": informe_b1 is not None,
     }
+    cubiertos = adaptadores_cubiertos(llamadas)
+    if cubiertos:  # solo los adapters que registran (juez y proveedor local); la CI con fakes no cambia su baseline
+        bloque["adaptadores_cubiertos"] = cubiertos
     if informe_b1 is not None:
         bloque["sensibilidad_b1"] = {
             "textos_medidos": informe_b1.textos,

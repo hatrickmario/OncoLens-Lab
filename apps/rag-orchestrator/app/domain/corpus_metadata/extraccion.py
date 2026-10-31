@@ -6,6 +6,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 from app.domain.corpus_metadata.campos import CAMPOS_ESCALARES, DISENO_NO_DECLARADO
+from app.domain.corpus_metadata.poblacion_escritura import campos_de_poblacion
 from app.domain.corpus_metadata.resultado import (
     EXTRAIDO_VERIFICADO,
     PENDIENTE,
@@ -117,6 +118,8 @@ def campos_conservados(
             campos += [
                 CampoDeMetadato(f"{_PREFIJO_DE_BIOMARCADOR}{k}", str(v)) for k, v in valor.items()
             ]
-        elif valor != NO_DISPONIBLE and not isinstance(valor, Mapping):
+        elif valor != NO_DISPONIBLE and not isinstance(valor, Mapping | list):
             campos.append(CampoDeMetadato(nombre, str(valor)))
-    return tuple(campos)
+    # Forma de lista (US-242): un campo por criterio con valores; las listas vacías y la marca ``pendiente`` no cuentan.
+    listas = {n: v for n, v in sorted(population_criteria.items()) if isinstance(v, list)}
+    return (*campos, *campos_de_poblacion(listas))

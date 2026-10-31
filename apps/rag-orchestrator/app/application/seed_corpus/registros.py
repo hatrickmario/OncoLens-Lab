@@ -36,6 +36,11 @@ def identificador_de_documento(document_key: str, checksum: str) -> str:
     return f"{document_key}@{checksum[:12]}"
 
 
+def identificador_de_chunk(document_id: str, indice: int) -> str:
+    """Estable y determinista: reprocesar reescribe el mismo chunk. Lo cita la población extraída (RN-04)."""
+    return f"{document_id}#{indice:04d}"
+
+
 def identificador_de_rechazado(document_key: str) -> str:
     return f"{document_key}@rechazado"
 
@@ -159,6 +164,7 @@ def _registro(
         population_criteria=metadatos.population_criteria,
         metadata_source=metadatos.metadata_source,
         extracted_fields=tuple(c.campo for c in metadatos.campos_verificados),
+        population_form=metadatos.population_form,
         guideline_version=documento.guideline_version,
         last_updated_at=documento.last_updated_at,
         original_format=documento.original_format,
@@ -196,7 +202,7 @@ def chunks_del_documento(
     sparse = vectores_sparse if vectores_sparse is not None else [None] * len(fragmentos)
     return [
         ChunkDelCorpus(
-            chunk_id=f"{registro.document_id}#{indice:04d}",
+            chunk_id=identificador_de_chunk(registro.document_id, indice),
             document_id=registro.document_id,
             dense_vector=vector,
             chunk_text=fragmento,

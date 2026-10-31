@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any
 
-from app.evaluation.config_suite import ConfigSuite
+from app.evaluation.config_suite import ConfigSuite, minimos_del_juez
 from app.evaluation.esquema_suite import VERSION_ESQUEMA
 from app.evaluation.fuente_dataset import DatasetSuite
 from app.evaluation.metricas.familias import calcular_familias
@@ -73,7 +73,11 @@ def _familias(
     resultados: Sequence[ResultadoConsulta], suite: str, config: ConfigSuite
 ) -> dict[str, Any]:
     return calcular_familias(
-        resultados, suite, config.semilla_bootstrap, config.bootstrap_repeticiones
+        resultados,
+        suite,
+        config.semilla_bootstrap,
+        config.bootstrap_repeticiones,
+        *minimos_del_juez(config),
     )
 
 
@@ -85,9 +89,11 @@ def armar_reporte(
     resultados: Sequence[ResultadoConsulta],
     latencia_p95_ms: dict[str, float | None],
     privacidad: dict[str, Any] | None = None,
+    recursos_nli: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     return {
         **({} if privacidad is None else {"privacidad": privacidad}),
+        **({} if recursos_nli is None else {"recursos_nli": recursos_nli}),
         "esquema": VERSION_ESQUEMA,
         "suite": suite,
         "configuracion": configuracion_evaluada(config, dataset, meta),
