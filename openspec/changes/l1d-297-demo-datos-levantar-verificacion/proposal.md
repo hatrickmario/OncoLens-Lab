@@ -35,6 +35,7 @@ previos con otras contraseñas (OUT-02…OUT-05).
   propio seed (falla con código ≠ 0 si hay 0 identidades), solo `count(*)` con el rol de cada servicio dentro de su
   contenedor, nunca superusuario ni credenciales en la salida; detección de estado previo `oncolens_*` con confirmación.
 - **`scripts/demo/apagar.sh`** cierra `attu` (F-10) y **`docs/demo/runbook-demo-S1.md`** §2 y §5 se actualizan (OUT-03, OUT-05).
+- **Tareas heredadas (Decidido, usuario, 2026-10-31; sin cambiar los 7 puntos):** de L1D-298, el AC-7 (RSS en régimen estable, MacBook de 32 GB; D4-02) y la tarea 3.3 (D4-08); de L1D-131, las tareas 1.1 y 2.9 (perfil E2E de Compose con `RAG_ADAPTERS=fake`, seed A-M1/A-M2, catálogo `test-apl-1.2.0`, Playwright contra Compose, extensión de `aviso-ia.spec.ts`), en `tasks.md` 2.8 a 2.10.
 - **Reglas de población en el catálogo (D4-03, absorbida de L1D-293 1.1; +2 puntos)**: `poblacion-reglas.json` en
   `packages/clinical-catalogs` con `catalogHash` y entrada en `manifest.json`, copia de `test-apl-1.2.0`, esquema y
   validador, y versión 1.2.0 real en ambos backends. Sin este archivo «mezclada» no aparece en producción.

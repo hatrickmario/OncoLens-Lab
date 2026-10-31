@@ -27,7 +27,10 @@ export function AnalysisFailure({ fallo, onReintentar }: AnalysisFailureProps) {
   if (fallo.tipo === 'limite') {
     return <RateLimitNotice segundos={fallo.reintentarEnSegundos} onReintentar={onReintentar} />;
   }
-  const clave = fallo.tipo === 'red' ? 'evidence.error.red' : mensajeDeError(fallo.httpStatus);
+  const clave =
+    fallo.tipo === 'red'
+      ? 'evidence.error.red'
+      : mensajeDeError(fallo.httpStatus, fallo.codigo ?? null);
   return (
     <div className={estilos.error} role={fallo.tipo === 'red' ? 'alert' : undefined}>
       <p>{textoDe(clave)}</p>

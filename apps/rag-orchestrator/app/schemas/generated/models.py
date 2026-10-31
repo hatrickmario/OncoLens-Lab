@@ -56,6 +56,7 @@ class DiscardReason(StrEnum):
     afirmacion_sin_soporte = 'afirmacion_sin_soporte'
     sin_citas = 'sin_citas'
     solo_soportada_por_analisis_previo = 'solo_soportada_por_analisis_previo'
+    lenguaje_no_permitido = 'lenguaje_no_permitido'
 
 
 class DiscardedOption(BaseModel):
@@ -913,6 +914,15 @@ class ErrorLlmLocalNoDisponible(BaseModel):
         extra='forbid',
     )
     error: Literal['LOCAL_LLM_UNAVAILABLE']
+    message: str
+    traceId: str
+
+
+class ErrorSalidaLlmInvalida(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    error: Literal['LLM_OUTPUT_INVALID']
     message: str
     traceId: str
 

@@ -475,6 +475,7 @@ PARAMETROS_DE_PRUEBA = ParametrosDeRecuperacion(
     llm_model="llm-test@1",
     nli_entailment_threshold=0.7,
     tipos_habilitados=("mama", "prostata"),
+    claim_max_words=20,
     respaldo=PARAMETROS_DEL_RESPALDO_DE_PRUEBA,
 )
 

@@ -25,5 +25,13 @@ class LlmLocalNoDisponibleError(ErrorDeAplicacion):
     """El LLM local no está disponible o su salida no es válida (`503 LOCAL_LLM_UNAVAILABLE`)."""
 
 
+class LlmSalidaInvalidaError(ErrorDeAplicacion):
+    """El LLM respondió, pero su salida no es JSON o no cumple el esquema interno de afirmaciones (`503 LLM_OUTPUT_INVALID`).
+
+    Distinto de ``LlmLocalNoDisponibleError`` (el LLM caído o sin respuesta): aquí el modelo contestó y la salida no se pudo
+    validar. Sin reintento silencioso ni eco del texto generado; solo viaja el tipo del error de validación en el log.
+    """
+
+
 class NliNoDisponibleError(ErrorDeAplicacion):
     """El verificador de soporte (NLI) falló o no respondió (`503 NLI_UNAVAILABLE`): ninguna opción sale sin validar (RN-01)."""

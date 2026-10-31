@@ -1,8 +1,10 @@
-"""Generación de la rama con evidencia de `/rag/query` (US-225): prompt → LLM local → opciones crudas.
+"""Generación de la rama con evidencia de `/rag/query` (US-225, US-245): prompt → LLM local → opciones crudas.
 
-El LLM solo aporta el texto de cada opción y los alias de chunk que cita, traducidos a ``chunkId`` reales (RN-04): todo campo de más (títulos, fuentes,
-puntajes) se descarta al parsear. Una salida que no es JSON o no valida contra el esquema interno es
-``LlmLocalNoDisponibleError`` (`503`), sin reintento silencioso ni respuesta parcial (`[S1 resp. 12]`).
+El LLM solo aporta por opción su nombre y de 1 a N afirmaciones atómicas ``{text, role, citations}``, con los alias de chunk
+traducidos a ``chunkId`` reales (RN-04); la atribución («La fuente reporta que…») la compone el código (ADR-34). Todo campo
+de más (títulos, fuentes, puntajes) se descarta al parsear. Una salida que no es JSON o no valida el esquema interno (p. ej.
+dos ``principal``) es ``LlmSalidaInvalidaError`` (`503 LLM_OUTPUT_INVALID`); un LLM que no responde es
+``LlmLocalNoDisponibleError`` (`503 LOCAL_LLM_UNAVAILABLE`). Sin reintento silencioso ni respuesta parcial.
 """
 
 from __future__ import annotations
@@ -12,9 +14,10 @@ import logging
 from collections.abc import Sequence
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
+from pydantic_core import PydanticCustomError
 
-from app.application.errores import LlmLocalNoDisponibleError
+from app.application.errores import LlmLocalNoDisponibleError, LlmSalidaInvalidaError
 from app.application.ports import (
     EvidenciaGenerada,
     FalloDelLlm,
@@ -28,8 +31,9 @@ from app.domain.alias_de_chunks import (
     asignar_alias,
     traducir_citas,
 )
-from app.domain.calidad_de_texto import tiene_artefactos
+from app.domain.atribucion import componer_con_marco
 from app.domain.citations import OpcionGenerada
+from app.domain.claims import AfirmacionAtomica, PapelDeAfirmacion
 from app.domain.relevance import ChunkPuntuado
 from app.prompts.rag_query import bloque_de_datos_del_paciente, construir_prompt_rag_query
 from app.schemas.generated.models import RagQueryInternalRequest
@@ -37,13 +41,28 @@ from app.schemas.generated.models import RagQueryInternalRequest
 logger = logging.getLogger(__name__)
 
 
+class _AfirmacionCruda(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    texto: str = Field(alias="text", min_length=1)
+    papel: PapelDeAfirmacion = Field(alias="role")
+    citas: list[str] = Field(alias="citations")
+
+
 class _OpcionCruda(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     option: str = Field(min_length=1)
-    rationale: str = Field(min_length=1)
-    fragmentos_citados: list[str] = Field(alias="citedFragments")
-    details: list[str] = Field(default_factory=list)
+    afirmaciones: list[_AfirmacionCruda] = Field(alias="claims", min_length=1)
+
+    @model_validator(mode="after")
+    def _exactamente_una_principal(self) -> _OpcionCruda:
+        principales = sum(a.papel is PapelDeAfirmacion.principal for a in self.afirmaciones)
+        if principales == 0:
+            raise PydanticCustomError("principal_ausente", "falta la afirmación principal")
+        if principales > 1:
+            raise PydanticCustomError("principal_duplicada", "hay más de una afirmación principal")
+        return self
 
 
 class GenerationOutput(BaseModel):
@@ -57,21 +76,25 @@ class GenerationOutput(BaseModel):
 ESQUEMA_DE_GENERACION: dict[str, Any] = GenerationOutput.model_json_schema()
 
 
-def esquema_de_generacion(max_parrafos_detalle: int) -> dict[str, Any]:
-    """Esquema entregado al LLM (salida estructurada). ``details`` es opcional para el parseo, pero con la gramática
-    del runtime un campo no requerido se omite siempre: se exige y se acota al máximo configurado (RN-22). Con 0
-    párrafos el campo ni se ofrece."""
+def esquema_de_generacion(claims_min: int, claims_max: int) -> dict[str, Any]:
+    """Esquema entregado al LLM (salida estructurada): de ``claims_min`` a ``claims_max`` afirmaciones por opción (RN-22)
+    y, en ``citations``, solo alias con el formato de la consulta."""
     esquema = copy.deepcopy(ESQUEMA_DE_GENERACION)
     opcion = esquema["$defs"]["_OpcionCruda"]
+    opcion["properties"]["claims"]["minItems"] = claims_min
+    opcion["properties"]["claims"]["maxItems"] = claims_max
     # Solo en el esquema entregado al runtime (gramática): el parseo no lo valida, un token fuera de patrón es
     # ``cita_invalida`` y no un 503 (US-236, design D4).
-    opcion["properties"]["citedFragments"]["items"]["pattern"] = PATRON_DE_ALIAS
-    if max_parrafos_detalle > 0:
-        opcion["required"] = [*opcion["required"], "details"]
-        opcion["properties"]["details"]["maxItems"] = max_parrafos_detalle
-    else:
-        del opcion["properties"]["details"]
+    afirmacion = esquema["$defs"]["_AfirmacionCruda"]
+    afirmacion["properties"]["citations"]["items"]["pattern"] = PATRON_DE_ALIAS
     return esquema
+
+
+def _tipos_de_error(error: ValidationError | PydanticCustomError) -> list[str]:
+    """Solo el tipo de cada error de validación (p. ej. ``principal_duplicada``), nunca el contenido generado."""
+    if isinstance(error, ValidationError):
+        return sorted({e["type"] for e in error.errors()})
+    return [error.type]
 
 
 class LlmEvidenceGenerator:
@@ -80,18 +103,23 @@ class LlmEvidenceGenerator:
     def __init__(
         self,
         cliente: LlmClient,
-        max_parrafos_detalle: int = 2,
+        claims_min: int,
+        claims_max: int,
+        claim_max_words: int,
         max_chars_fragmentos: int = 12000,
     ) -> None:
         self._cliente = cliente
-        self._max_parrafos_detalle = max_parrafos_detalle
+        self._claims_min = claims_min
+        self._claims_max = claims_max
+        self._claim_max_words = claim_max_words
         self._max_chars_fragmentos = max_chars_fragmentos
-        self._esquema = esquema_de_generacion(max_parrafos_detalle)
+        self._esquema = esquema_de_generacion(claims_min, claims_max)
 
     async def generar(
         self, solicitud: RagQueryInternalRequest, recuperacion: ResultadoDeRecuperacion
     ) -> EvidenciaGenerada:
         trace_id = solicitud.traceId.root
+        idioma = recuperacion.meta.responseLanguage
         tabla = asignar_alias(
             self._fragmentos_dentro_del_presupuesto(recuperacion.chunks_sobre_umbral)
         )
@@ -99,8 +127,10 @@ class LlmEvidenceGenerator:
             solicitud.query,
             bloque_de_datos_del_paciente(solicitud.clinicalContext),
             tabla.fragmentos,
-            recuperacion.meta.responseLanguage,
-            self._max_parrafos_detalle,
+            idioma,
+            self._claims_min,
+            self._claims_max,
+            self._claim_max_words,
         )
         try:
             crudo = await self._cliente.completar_json(prompt, self._esquema)
@@ -108,15 +138,15 @@ class LlmEvidenceGenerator:
             logger.warning("event=generacion_llm_fallo traceId=%s", trace_id)
             raise LlmLocalNoDisponibleError() from None
         salida = self._parsear(crudo, trace_id)
-        opciones = tuple(self._opcion_generada(o, tabla) for o in salida.options)
+        opciones = tuple(self._opcion_generada(o, tabla, idioma.value) for o in salida.options)
         no_traducibles = sum(c == CITA_NO_TRADUCIBLE for o in opciones for c in o.chunk_ids_citados)
         # Solo conteos: nunca un alias, un chunkId ni texto de un chunk (RN-14, RN-06).
         logger.info(
-            "event=rag_query_generacion traceId=%s opcionesGeneradas=%d parrafosDeDetalle=%d "
+            "event=rag_query_generacion traceId=%s opcionesGeneradas=%d afirmaciones=%d "
             "citasTraducidas=%d citasNoTraducibles=%d",
             trace_id,
             len(opciones),
-            sum(len(o.details) for o in opciones),
+            sum(len(o.afirmaciones) for o in opciones),
             sum(len(o.chunk_ids_citados) for o in opciones) - no_traducibles,
             no_traducibles,
         )
@@ -125,13 +155,21 @@ class LlmEvidenceGenerator:
             limitaciones_propuestas=(),  # el LLM no genera limitaciones en el S1 [S1 resp. 11]
         )
 
-    def _opcion_generada(self, cruda: _OpcionCruda, tabla: TablaDeAlias) -> OpcionGenerada:
-        """La opción con sus alias ya traducidos a ``chunkId`` reales: ``validar_citas`` nunca ve un alias (RN-04)."""
+    @staticmethod
+    def _opcion_generada(cruda: _OpcionCruda, tabla: TablaDeAlias, idioma: str) -> OpcionGenerada:
+        """La opción con sus alias ya traducidos a ``chunkId`` reales: ``validar_citas`` nunca ve un alias (RN-04).
+
+        ``rationale`` y ``details`` salen compuestos con el marco de atribución; las citas de la opción son la unión de las
+        de sus afirmaciones, y cada afirmación conserva las suyas para el NLI.
+        """
+        afirmaciones = tuple(
+            AfirmacionAtomica(a.texto.strip(), a.papel, traducir_citas(tabla, a.citas))
+            for a in cruda.afirmaciones
+        )
+        composicion = componer_con_marco(afirmaciones, idioma)
+        citados = tuple(dict.fromkeys(c for a in afirmaciones for c in a.chunk_ids))
         return OpcionGenerada(
-            cruda.option,
-            cruda.rationale,
-            traducir_citas(tabla, cruda.fragmentos_citados),
-            self._parrafos_de_detalle(cruda.details),
+            cruda.option, composicion.rationale, citados, composicion.details, afirmaciones
         )
 
     def _fragmentos_dentro_del_presupuesto(
@@ -151,23 +189,26 @@ class LlmEvidenceGenerator:
             total += len(chunk.chunk_text)
         return elegidos
 
-    def _parrafos_de_detalle(self, crudos: list[str]) -> tuple[str, ...]:
-        """Sin párrafos vacíos y hasta el máximo configurado (RN-22): lo que sobra se descarta sin validarlo."""
-        limpios = (p.strip() for p in crudos)
-        sin_artefactos = (p for p in limpios if p and not tiene_artefactos(p))
-        return tuple(sin_artefactos)[: self._max_parrafos_detalle]
-
-    @staticmethod
-    def _parsear(crudo: str, trace_id: str) -> GenerationOutput:
-        """JSON inválido o fuera de esquema = modelo local no disponible; solo se registra la clase del error."""
+    def _parsear(self, crudo: str, trace_id: str) -> GenerationOutput:
+        """JSON inválido o fuera de esquema = salida del LLM no validada; solo se registra el tipo de cada error."""
         try:
-            return GenerationOutput.model_validate_json(crudo)
-        except ValidationError as error:
-            # Solo la clase de cada error y la longitud: nunca el contenido generado a partir del corpus (RN-14).
+            salida = GenerationOutput.model_validate_json(crudo)
+            self._exigir_cantidad_de_afirmaciones(salida)
+        except (ValidationError, PydanticCustomError) as error:
+            tipos = _tipos_de_error(error)
+            # Solo el tipo de cada error y la longitud: nunca el contenido generado a partir del corpus (RN-14).
             logger.warning(
                 "event=generacion_salida_invalida traceId=%s caracteres=%d errores=%s",
                 trace_id,
                 len(crudo),
-                ",".join(sorted({e["type"] for e in error.errors()})),
+                ",".join(tipos),
             )
-            raise LlmLocalNoDisponibleError() from None
+            raise LlmSalidaInvalidaError() from None
+        return salida
+
+    def _exigir_cantidad_de_afirmaciones(self, salida: GenerationOutput) -> None:
+        for opcion in salida.options:
+            if not self._claims_min <= len(opcion.afirmaciones) <= self._claims_max:
+                raise PydanticCustomError(
+                    "afirmaciones_fuera_de_rango", "cantidad de afirmaciones fuera de rango"
+                )

@@ -243,6 +243,7 @@ async def _fidelidad_de(
         propuesta,
         suite.observaciones.textos_entregados[texto_pregunta],
         suite.verificador_produccion.reglas_coincidentes,
+        max_palabras=suite.claim_max_words,
     )
     afirmaciones = afirmaciones_a_juzgar(plan)
     del_nli = await _veredictos(suite.juez_nli, afirmaciones)

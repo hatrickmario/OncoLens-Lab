@@ -177,6 +177,7 @@ export interface RespuestaDeFallo {
     | 'TIPO_CANCER_NO_REGISTRADO'
     | 'ERROR_SERVICIO_IA'
     | 'LOCAL_LLM_UNAVAILABLE'
+    | 'LLM_OUTPUT_INVALID'
     | 'DEADLINE_VENCIDO';
   /** Etiqueta del log (sin PHI). */
   resultado: string;

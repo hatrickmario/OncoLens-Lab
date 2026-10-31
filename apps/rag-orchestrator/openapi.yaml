@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — RAG & AI Services API (Backend 2 / rag-orchestrator)
-  version: 1.7.0
+  version: 1.8.0
   description: >-
     API interna, alcanzable solo desde la red ai-net y solo por clinical-api (JWT de servicio
     asimétrico; la cookie de sesión del doctor nunca llega aquí). No persiste PHI y procesa los
@@ -100,11 +100,13 @@ paths:
           $ref: '#/components/responses/ErrorInterno'
         "503":
           description: >-
-            Un componente local no está disponible: LLM (LOCAL_LLM_UNAVAILABLE, también salida del
-            LLM inválida o fuera de esquema), recuperación (RETRIEVAL_UNAVAILABLE: Milvus o
-            embeddings) o verificador de soporte (NLI_UNAVAILABLE): falla cerrada, ninguna opción
-            se devuelve sin validar (RN-01), sin respuesta parcial. Con datos reales solo modelos
-            locales, sin fallback a la nube (RN-12).
+            Un componente local no está disponible o su salida no es válida: LLM caído
+            (LOCAL_LLM_UNAVAILABLE), salida del LLM no parseable o fuera del esquema interno de
+            afirmaciones (LLM_OUTPUT_INVALID, sin detalles internos ni texto generado),
+            recuperación (RETRIEVAL_UNAVAILABLE: Milvus o embeddings) o verificador de soporte
+            (NLI_UNAVAILABLE): falla cerrada, ninguna opción se devuelve sin validar (RN-01), sin
+            respuesta parcial. Con datos reales solo modelos locales, sin fallback a la nube
+            (RN-12).
           content:
             application/json:
               schema:
@@ -112,6 +114,7 @@ paths:
                   - $ref: '#/components/schemas/ErrorLlmLocalNoDisponible'
                   - $ref: '#/components/schemas/ErrorRecuperacionNoDisponible'
                   - $ref: '#/components/schemas/ErrorNliNoDisponible'
+                  - $ref: '#/components/schemas/ErrorSalidaLlmInvalida'
         "504":
           $ref: '#/components/responses/DeadlineVencido'
 
@@ -1468,6 +1471,17 @@ components:
       required: [error, message, traceId]
       properties:
         error: { type: string, const: LOCAL_LLM_UNAVAILABLE }
+        message: { type: string }
+        traceId: { type: string }
+    ErrorSalidaLlmInvalida:
+      type: object
+      description: >-
+        La salida del LLM no se pudo parsear o no cumple el esquema interno de afirmaciones.
+        El message es fijo: nunca incluye detalles internos ni texto generado.
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error: { type: string, const: LLM_OUTPUT_INVALID }
         message: { type: string }
         traceId: { type: string }
     ErrorInterno:

@@ -1,5 +1,5 @@
 import type { EvidenceAnalysis } from '../../../../packages/api-contracts/src/types/clinical-api';
-import { clasificarFallo } from './clasificar-fallo';
+import { clasificarFallo, type CodigoConMensajePropio } from './clasificar-fallo';
 import { clasificarResultado } from './clasificar-resultado';
 import type { ResultadoDeSolicitud } from './solicitar-analisis';
 
@@ -7,7 +7,12 @@ export type FaseDelPanel =
   | { tipo: 'inactivo' }
   | { tipo: 'enviando' }
   | { tipo: 'ok'; analisis: EvidenceAnalysis }
-  | { tipo: 'error'; httpStatus: number; traceId: string | null }
+  | {
+      tipo: 'error';
+      httpStatus: number;
+      traceId: string | null;
+      codigo?: CodigoConMensajePropio | null;
+    }
   | { tipo: 'limite'; reintentarEnSegundos: number }
   | { tipo: 'red' }
   | { tipo: 'no_realizado' };
@@ -41,5 +46,5 @@ export function faseTrasSolicitud(
   const { httpStatus, codigo, traceId } = resultado;
   return clasificarFallo(httpStatus, codigo) === 'no_realizado'
     ? { tipo: 'no_realizado' }
-    : { tipo: 'error', httpStatus, traceId };
+    : { tipo: 'error', httpStatus, traceId, codigo };
 }

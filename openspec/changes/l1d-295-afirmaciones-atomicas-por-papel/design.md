@@ -147,3 +147,17 @@ Los AC con adapters falsos son TDD estricto.
 - ¿Dónde vive la lista de «modales normativos» de AC-5: `terminos-prohibidos.json` (nivel nuevo) o recurso propio
   en `packages/clinical-language`? Propuesta de este change: recurso versionado propio, junto a la política de
   lenguaje, sin reabrir `terminos-prohibidos.json`.
+
+- **(Abierta, Gate 2, Q4.)** Los criterios de inclusión de una guía suelen decir «must/should»; una afirmación que los
+  copie lleva un modal normativo y descarta la opción entera con `afirmacion_sin_soporte` (D-a). El prompt 0.5.0 no avisa
+  de los modales (la tarea 2.6 pide un esquema «sin modales ni alias»). ¿Se avisa en el prompt o se acepta el descarte?
+- **(Abierta, Gate 2, Q5.)** `option` solo pasa por la lista prohibida (RN-23), no por la de modales normativos. ¿Debe
+  pasar también por la de modales?
+- **(Abierta, Gate 2.)** `CLAIMS_MAX_PER_OPTION = 4` frente a `details` con máximo 2: con 3 secundarias/salvedades se
+  agrupan con frecuencia en el último párrafo; el valor 3 lo evitaría.
+- **(Abierta, Gate 2.)** La métrica `cumple_formula_de_atribucion` de la suite queda tautológica: el marco ya lo pone el
+  código (`componer_con_marco`), así que `FORMULA_DE_ATRIBUCION`, derivada de ese marco, siempre coincide. Se deja como está;
+  ¿se retira o se reorienta (p. ej. a medir que el LLM NO escriba atribución en el texto de la afirmación)?
+- **Decidido (Gate 2).** Lista de modales normativos v1.1.0 (añade «debes», «deba», «debiera», «hace falta», «habría que»);
+  `D7/US-249` añade los demás.
+

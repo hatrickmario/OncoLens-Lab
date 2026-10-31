@@ -42,7 +42,7 @@ def _aceptada(
 
 
 def _plan(*aceptadas: OpcionAceptada, limitaciones: tuple[str, ...] = ()):
-    return planificar_soporte(aceptadas, limitaciones, TEXTOS, _buscar)
+    return planificar_soporte(aceptadas, limitaciones, TEXTOS, _buscar, max_palabras=20)
 
 
 # --- literales y umbral ------------------------------------------------------------------------------------------
@@ -271,7 +271,7 @@ def test_una_cantidad_de_resultados_distinta_a_la_de_pares_es_un_error_de_contra
 def test_una_opcion_limpia_no_cambia_ni_declara_retiros() -> None:
     opcion = OpcionGenerada("Opción", "Uno. Dos.", ("c9",))
 
-    saneada, retiros = retirar_texto_prohibido(opcion, _buscar, "es")
+    saneada, retiros = retirar_texto_prohibido(opcion, _buscar, "es", 20)
 
     assert saneada == opcion and retiros == ()
 
@@ -279,7 +279,7 @@ def test_una_opcion_limpia_no_cambia_ni_declara_retiros() -> None:
 def test_retirar_texto_prohibido_reemplaza_la_opcion_y_las_afirmaciones_que_incumplen() -> None:
     opcion = OpcionGenerada("PROHIBIDO a", "Limpia. PROHIBIDO b.", ("c9",))
 
-    saneada, retiros = retirar_texto_prohibido(opcion, _buscar, "en")
+    saneada, retiros = retirar_texto_prohibido(opcion, _buscar, "en", 20)
 
     assert saneada == OpcionGenerada(RETIRO_EN, f"Limpia. {RETIRO_EN}", ("c9",))
     assert retiros == (

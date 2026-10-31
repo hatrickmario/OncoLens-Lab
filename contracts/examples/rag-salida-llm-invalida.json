@@ -1,0 +1,5 @@
+{
+  "error": "LLM_OUTPUT_INVALID",
+  "message": "El modelo local devolvió una respuesta que no se pudo validar.",
+  "traceId": "req_3c5d7e9f"
+}

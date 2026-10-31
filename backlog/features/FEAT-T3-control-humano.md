@@ -2,12 +2,12 @@
 
 > Linear: [L1D-39](https://linear.app/l1der-lab-mjbc/issue/L1D-39)
 
-**Talla:** L · **Sprint:** 1 (US-068, US-069) · 5 (US-070; S4 → S5, `[S4 resp. 1]`) · 5 (US-071, cuando existen todos los avisos clínicos; verificación completa en G-Piloto, S6) · **Capacidad:** T-3 (AC-T3.1, AC-T3.2, AC-T3.3, AC-T3.4) · CAP-10 (AC-10.3) · **Recorrido principal:** sí
+**Talla:** L · **Sprint:** 1 (US-068, US-069) · 5 (US-070; S4 → S5, `[S4 resp. 1]`) · 5 (US-071, cuando existen todos los avisos clínicos; verificación completa en G-Piloto, S6) · 5 (US-249, antes del G-Demo, 2026-10-31) · **Capacidad:** T-3 (AC-T3.1, AC-T3.2, AC-T3.3, AC-T3.4) · CAP-10 (AC-10.3) · **Recorrido principal:** sí
 **Requisitos:** RN-23 (dueña) · RN-19 (dueña) · RN-26 (dueña) · AC-T3.2 (dueña; regresión en FEAT-01c, FEAT-03a/b) · M-10.2 (medido en T-5)
 **Evidencia:** [→ PRD §6 RN-19, RN-23, RN-26], [→ PRD §18.4 T-3, AC-T3.1–AC-T3.4], [→ PRD §18.3.10 AC-10.3, M-10.2], [→ PRD §2.1 G-14], [→ PRD §13 Lenguaje], [→ PRD §1.3 PP-1, PP-6], [→ readme §5 HU-03 escenarios 1 y 4], [→ readme §6 OL-04 (aviso fijo, etiqueta permanente)], [→ readme §2.6 Lenguaje], [→ readme §6.0 DoD], [→ docs/AS-IS.md P12]
 **Dependencias:** ↪ US-061, US-062 (textos del panel), US-053 (campo `disclaimer`) · US-071: ↪ US-101 (avisos de no verificados, S4), FEAT-04 US-005 (aviso previo de faltantes, S4), US-124 (población no comparable y avisos por criterio, S5), US-136 (avisos de conflicto y faltantes en la tarjeta, S5) · 🔗 Medido en: US-072 (M-10.2 y G-14 sobre las salidas del set de evaluación) · 🔗 Regresión [RN-15] → US-148 (activa desde S6)
 **Valor:** el oncólogo pidió explícitamente que la herramienta no le diga qué hacer (PP-1, "no me digas qué hacer"; P12: control humano). Esta Feature garantiza que ninguna pantalla ni salida use lenguaje prescriptivo, que toda salida generada se identifique como IA que requiere validación, que el sistema nunca ejecute una acción clínica por su cuenta y que ningún aviso clínico le impida continuar.
-**Stories:** US-068, US-069 (5 puntos, S1) · US-070 (2 puntos, S5, `[S4 resp. 1]`) · US-071 (3 puntos, S5) — total 10 puntos
+**Stories:** US-068, US-069 (5 puntos, S1) · US-070 (2 puntos, S5, `[S4 resp. 1]`) · US-071 (3 puntos, S5) · US-249 (3 puntos, S5, 2026-10-31) — total 13 puntos
 
 ---
 
@@ -203,6 +203,34 @@ perfil de test (AC-2, AC-3, AC-5).
 **Small** ✓ un fixture compuesto y un recorrido de verificación sobre funciones ya construidas.
 **Testable** ✓ cinco tests de integración y E2E.
 *(Independent ⚠ depende de tres Features de S2–S3; por eso vive en el S4.)*
+
+---
+
+## US-249 — La salida generada rechaza el lenguaje de recomendación en la voz propia del modelo y el nivel B atribuido, con casos de conformidad
+
+> Linear: pendiente de creación
+
+`FEAT-T3` · Sprint 5 *(antes del G-Demo; usuario, 2026-10-31)* · Estimación **3** · HU-03 · RN-23 (dueña) · AC-10.3, AC-T3.4 · ↪ US-068 (lista y filtro de producción), US-245 (afirmaciones por papel y `lenguaje_no_permitido`), US-233a (juez acotado) · 🔗 Regresión [RN-23] → US-068 · 🔗 Medido en: US-072 (M-10.2 = 0)
+
+> **Decidido (usuario, 2026-10-31):** nace de la deuda **D4-01** (`backlog/sprints/S4-deuda.md`, deuda D7 de L1D-193). Las formas españolas «Se recomendaría», «Se aconseja» y «Considere iniciar» pasan hoy el filtro de producción de RN-23 (nivel A), y el nivel B del fixture `fx-rn23` (campo `rationale`, regla `b-recommend` mostrado) no las cubre. El **AC-2 de US-233a** (L1D-298: juez acotado con el generador real, A+B bloqueante) pasa a esta historia. No entra en el S4. Requiere aprobación humana al fusionar el PR que la incorpora y su espejo en Linear.
+
+## Story
+Como oncólogo, quiero que ninguna salida generada me diga qué hacer, ni en la voz propia del modelo ni cuando atribuye la frase a una fuente, para seguir siendo quien decide (PP-1, RN-23).
+
+## AC (Given/When/Then)
+- **AC-1 (happy path · voz propia)** · Dada una propuesta del generador que contiene «Se recomendaría iniciar…», «Se aconseja…» o «Considere iniciar…», cuando pasa el filtro de producción, entonces la afirmación (o la opción, si está en su justificación) se rechaza con `lenguaje_no_permitido`, nunca se muestra y la opción sin soporte va a `discardedOptions`. `[RN-23]` `[AC-10.3]`
+- **AC-2 (borde · nivel B atribuido)** · Dado el campo `rationale` con una frase de recomendación atribuida a una fuente («La guía recomienda…», sin comillas del chunk citado), cuando se valida, entonces la regla `b-recommend` la marca como mostrada y la rechaza; una cita textual del chunk entre comillas sigue permitida. `[RN-23]` (asumido: la atribución textual no cuenta como voz propia)
+- **AC-3 (casos de conformidad)** · Dado `fx-rn23` ampliado con casos positivos y negativos por forma (condicional, impersonal con «se», imperativo, variantes de número, género y negación), cuando corre la suite de conformidad, entonces cada caso positivo se rechaza y cada negativo se acepta, y el fallo nombra el caso. `[RN-23]` `[AC-T3.4]`
+- **AC-4 (juez acotado A+B bloqueante · antes AC-2 de US-233a)** · Dado el generador real (`proveedor: local`), cuando la suite `evaluate` mide la propuesta cruda y la salida mostrada con el juez acotado sobre los niveles A y B, entonces las salidas prescriptivas mostradas son 0, el nivel A+B es bloqueante en la CI y se anota cuántas propuestas crudas corrigió el filtro. `[RN-23]` `[M-10.2]` `[ARR-03 AC-2]`
+- **AC-5 (regresión · sin falsos positivos)** · Dadas las salidas del set de evaluación que describen lo que la evidencia dice sin dirigirse al paciente, cuando pasan el filtro ampliado, entonces no se rechazan más salidas legítimas que en la línea base de US-068 (tolerancia registrada en el reporte). `[RN-23]` (asumido el criterio)
+
+## Contexto técnico
+Filtro de producción en `apps/rag-orchestrator` (dominio puro, lista por forma de `S1-plan.md` §7 resp. 33); nivel B y `fx-rn23` en la suite de lenguaje; juez acotado de US-233a. TDD estricto para el filtro (commit `test` del AC en rojo antes del `feat`); la suite `evaluate` y el juez, sin TDD (informe de `ai-eval-runner`). Sin cambio de contrato. Debe llegar antes del G-Demo.
+
+## INVEST
+**Small** ✓ una lista ampliada, una regla de nivel B y un caso de evaluación.
+**Testable** ✓ cinco chequeos automatizados.
+*(Independent ⚠ depende de US-068, US-245 y US-233a.)*
 
 ---
 

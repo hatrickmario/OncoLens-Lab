@@ -7,6 +7,7 @@ import {
   crearBffAnalisisSimulado,
   errorDeadline,
   errorLlmNoDisponible,
+  errorSalidaLlmInvalida,
   errorServicioIa,
   errorTipoCancer,
   sinEvidencia,
@@ -71,6 +72,22 @@ describe('EvidencePanel · estados mínimos del S1', () => {
     expect(screen.getByText(textoDeError(errorLlmNoDisponible))).toBeTruthy();
     expect(screen.queryByText(errorLlmNoDisponible.message)).toBeNull();
     expect(screen.queryByText(errorLlmNoDisponible.error)).toBeNull();
+    esperarSinResultadoParcial();
+  });
+
+  it('muestra que el modelo devolvió una respuesta no validada y el código de traza, nunca que no está disponible, cuando la petición responde 503 LLM_OUTPUT_INVALID [US-245 AC-1] [RN-06]', async () => {
+    bff.responder({ status: 503, cuerpo: errorSalidaLlmInvalida });
+    await analizar();
+
+    expect(
+      await screen.findByText(
+        'El modelo local devolvió una respuesta que no se pudo validar. Reintenta el análisis.',
+      ),
+    ).toBeTruthy();
+    expect(screen.getByText(textoDeError(errorSalidaLlmInvalida))).toBeTruthy();
+    expect(screen.queryByText(evidence.error.modeloNoDisponible)).toBeNull();
+    expect(screen.queryByText(errorSalidaLlmInvalida.message)).toBeNull();
+    expect(screen.queryByText(errorSalidaLlmInvalida.error)).toBeNull();
     esperarSinResultadoParcial();
   });
 

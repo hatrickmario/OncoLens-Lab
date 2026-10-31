@@ -26,6 +26,7 @@ export type CodigoDeError =
   | 'CATALOG_VERSION_MISMATCH'
   | 'ERROR_SERVICIO_IA'
   | 'LOCAL_LLM_UNAVAILABLE'
+  | 'LLM_OUTPUT_INVALID'
   | 'DESIDENTIFICACION_NO_DISPONIBLE'
   | 'DEADLINE_VENCIDO'
   | 'ERROR_INTERNO';
@@ -45,6 +46,7 @@ const MENSAJES: Record<CodigoDeError, string> = {
   CATALOG_VERSION_MISMATCH: 'La versión del catálogo clínico difiere entre servicios.',
   ERROR_SERVICIO_IA: 'El servicio de IA no respondió correctamente.',
   LOCAL_LLM_UNAVAILABLE: 'El modelo local no está disponible.',
+  LLM_OUTPUT_INVALID: 'El modelo local devolvió una respuesta que no se pudo validar.',
   DESIDENTIFICACION_NO_DISPONIBLE: 'No fue posible preparar la consulta.',
   DEADLINE_VENCIDO: 'El servicio de IA no respondió dentro del plazo.',
   ERROR_INTERNO: 'Error interno del servidor.',

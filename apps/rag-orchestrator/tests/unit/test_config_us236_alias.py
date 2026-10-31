@@ -60,7 +60,9 @@ def test_el_generador_de_la_medicion_hereda_los_valores_de_settings_salvo_url_y_
     generador = generador_de(params)
 
     assert generador._max_chars_fragmentos == ajustes.llm_fragments_max_chars
-    assert generador._max_parrafos_detalle == ajustes.details_max_paragraphs
+    assert generador._claims_min == ajustes.claims_min_per_option
+    assert generador._claims_max == ajustes.claims_max_per_option
+    assert generador._claim_max_words == ajustes.claim_max_words
 
 
 def test_el_chunk_con_ruido_conserva_las_palabras_originales_y_agrega_latex():
