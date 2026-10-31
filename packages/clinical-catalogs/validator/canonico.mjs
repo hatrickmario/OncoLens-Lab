@@ -34,3 +34,14 @@ export function catalogHashDe(alcances, items) {
   }
   return createHash('sha256').update(jsonCanonico(cubierto)).digest('hex');
 }
+
+/**
+ * `catalogHash` de un `<tipo>/poblacion-reglas.json` (D4-03): SHA-256 del JSON canónico del archivo sin `version`.
+ * El manifiesto lo declara en `poblacionReglas.<tipo>.catalogHash`; el validador lo recalcula.
+ */
+export function catalogHashDeReglasDePoblacion(archivo) {
+  const contenido = Object.fromEntries(
+    Object.entries(archivo).filter(([clave]) => clave !== 'version'),
+  );
+  return createHash('sha256').update(jsonCanonico(contenido)).digest('hex');
+}

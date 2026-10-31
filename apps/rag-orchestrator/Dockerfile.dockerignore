@@ -45,3 +45,7 @@ apps/rag-orchestrator/app/scripts
 !apps/rag-orchestrator/app/scripts/migrate_corpus_catalog.py
 !apps/rag-orchestrator/app/scripts/init_corpus_store.py
 !apps/rag-orchestrator/app/scripts/load_seed_corpus.py
+# L1D-297: la instalación de la demo carga los metadatos de población versionados y reindexa el sparse (US-117b) con esta imagen.
+!apps/rag-orchestrator/app/scripts/ingest.py
+!apps/rag-orchestrator/app/scripts/ingest_poblacion.py
+!apps/rag-orchestrator/app/scripts/poblacion_seed.py

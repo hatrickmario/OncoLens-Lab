@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "<tipo>/poblacion-reglas.json: reglas de población en lista (L1D-293, D4-03 de L1D-297)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version"],
+  "properties": {
+    "version": { "$ref": "comun.schema.json#/$defs/version" },
+    "restrictionMarkers": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "es": { "$ref": "#/$defs/textos" },
+        "en": { "$ref": "#/$defs/textos" }
+      }
+    },
+    "disenosQueMezclan": { "$ref": "#/$defs/textos" },
+    "criteria": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z0-9_]+$" },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "synonyms": {
+            "type": "object",
+            "propertyNames": { "pattern": "^[a-z0-9_]+$" },
+            "additionalProperties": { "$ref": "#/$defs/textosNoVacios" }
+          },
+          "scale": { "$ref": "#/$defs/textosNoVacios" },
+          "groups": {
+            "type": "object",
+            "additionalProperties": { "$ref": "#/$defs/textosNoVacios" }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "textos": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "textosNoVacios": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    }
+  }
+}

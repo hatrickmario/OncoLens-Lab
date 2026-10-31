@@ -113,6 +113,61 @@ class CorpusDocumentRepository:
             if actualizadas.rowcount != 1:
                 raise VersionInexistente(document_id)
 
+    def guardar_poblacion_verificada(
+        self,
+        document_id: str,
+        population_criteria: Mapping[str, Any],
+        extracted_fields: Sequence[str],
+        metadata_source: str,
+    ) -> None:
+        """Carga de los metadatos de población versionados de la demo (L1D-297): reescribe SOLO la población, su forma
+        ``lista``, los campos verificados y ``metadata_source`` de un documento ya registrado. No crea filas (RN-05)."""
+        with self._motor.begin() as conexion:
+            actualizadas = conexion.execute(
+                sa.update(corpus_document)
+                .where(corpus_document.c.document_id == document_id)
+                .values(
+                    population_criteria=dict(population_criteria),
+                    population_form="lista",
+                    extracted_fields=list(extracted_fields),
+                    metadata_source=metadata_source,
+                )
+            )
+            if actualizadas.rowcount != 1:
+                raise VersionInexistente(document_id)
+
+    def leer_poblaciones_verificadas(self) -> dict[str, dict[str, Any]]:
+        """Población de los documentos vigentes con ``metadata_source = extraido_verificado`` (exportación de la demo)."""
+        consulta = sa.select(
+            corpus_document.c.document_id,
+            corpus_document.c.population_criteria,
+            corpus_document.c.extracted_fields,
+            corpus_document.c.metadata_source,
+        ).where(
+            corpus_document.c.is_current.is_(True),
+            corpus_document.c.metadata_source == "extraido_verificado",
+        )
+        with self._motor.connect() as conexion:
+            return {
+                fila[0]: {
+                    "population_criteria": fila[1],
+                    "extracted_fields": list(fila[2]),
+                    "metadata_source": fila[3],
+                }
+                for fila in conexion.execute(consulta)
+            }
+
+    def contar_para_verificacion(self) -> dict[str, int]:
+        """Solo ``count(*)`` (verificación del seed, D4b): documentos vigentes y los que traen población verificada."""
+        vigentes = corpus_document.c.is_current.is_(True)
+        total = sa.select(sa.func.count()).select_from(corpus_document).where(vigentes)
+        verificados = total.where(corpus_document.c.metadata_source == "extraido_verificado")
+        with self._motor.connect() as conexion:
+            return {
+                "documentos_vigentes": conexion.execute(total).scalar_one(),
+                "con_poblacion_verificada": conexion.execute(verificados).scalar_one(),
+            }
+
     def ids_de_documentos_vigentes(self) -> frozenset[str]:
         consulta = sa.select(corpus_document.c.document_id).where(
             corpus_document.c.is_current.is_(True), corpus_document.c.status == STATUS_EMBEBIDO

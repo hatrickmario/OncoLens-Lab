@@ -554,6 +554,28 @@
       "target": "#/paths/~1platform~1evidence-analyses/post/responses/503"
     },
     {
+      "file": "rag-query-request-demo-s4-mama-her2-adyuvante.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalRequest"
+    },
+    {
+      "file": "rag-query-demo-s4-mama-her2-adyuvante.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalResponse",
+      "request": "rag-query-request-demo-s4-mama-her2-adyuvante.json"
+    },
+    {
+      "file": "rag-query-request-demo-s4-mama-cdk46-excluyente.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalRequest"
+    },
+    {
+      "file": "rag-query-demo-s4-mama-cdk46-excluyente.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalResponse",
+      "request": "rag-query-request-demo-s4-mama-cdk46-excluyente.json"
+    },
+    {
       "file": "rag-query-request-tres-opciones.json",
       "spec": "rag-orchestrator",
       "target": "#/components/schemas/RagQueryInternalRequest"

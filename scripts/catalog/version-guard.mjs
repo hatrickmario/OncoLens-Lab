@@ -38,6 +38,7 @@ const POR_TIPO = [
   'tendencias',
   'plantillas',
   'sinonimos',
+  'poblacion-reglas',
 ];
 const DE_RAIZ = ['manifest', 'atributos', 'poblacion'];
 const CON_VERSION_PROPIA = ['lenguaje/terminos-prohibidos'];
