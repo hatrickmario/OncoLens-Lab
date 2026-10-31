@@ -8,16 +8,17 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import replace
 
-from app.domain.atribucion import componer_con_marco, marco_de_atribucion
-from app.domain.citations import OpcionAceptada, OpcionGenerada
+from app.domain.atribucion import componer_con_marco
+from app.domain.citations import OpcionAceptada
 from app.domain.claims import PapelDeAfirmacion
 from app.domain.nli import ResultadoNli
+from app.domain.saneamiento_de_descartadas import opcion_descartada_visible, texto_a_mostrar
 from app.domain.soporte_por_papel import (
+    DECISION_OPCION_RETIRADA_POR_LENGUAJE,
     DecisionPorPapel,
     EstadoDeAfirmacion,
     MotivoDeSoporte,
     decidir_opcion_por_papel,
-    decidir_opcion_retirada_por_lenguaje,
     es_causa_de_descarte,
     estado_por_lenguaje_y_forma,
 )
@@ -29,7 +30,6 @@ from app.domain.support import (
     PlanDeSoporte,
     ResultadoSoporte,
     literal_de_retiro,
-    literal_de_texto_no_mostrado,
     veredictos_por_afirmacion,
 )
 
@@ -71,7 +71,7 @@ def resolver_por_papel(
     """
     estados = [(a.papel, _estado_de(a, veredictos)) for a in planificada.afirmaciones]
     decision = (
-        decidir_opcion_retirada_por_lenguaje()
+        DECISION_OPCION_RETIRADA_POR_LENGUAJE
         if planificada.option.reglas
         else decidir_opcion_por_papel(estados)
     )
@@ -107,15 +107,6 @@ def _estado_de(
     )
 
 
-def texto_a_mostrar(texto: str, estado: EstadoDeAfirmacion, idioma: str) -> str:
-    """El texto de una afirmación solo sale si no incumple la lista ni llegó fuera de forma (RN-23); si no, un literal."""
-    if estado is EstadoDeAfirmacion.lenguaje_no_permitido:
-        return literal_de_retiro(idioma)
-    if estado in (EstadoDeAfirmacion.modal_normativo, EstadoDeAfirmacion.fuera_de_forma):
-        return literal_de_texto_no_mostrado(idioma)
-    return texto
-
-
 def _descartar_por_papel(
     planificada: OpcionPlanificada,
     estados: Sequence[tuple[PapelDeAfirmacion, EstadoDeAfirmacion]],
@@ -137,11 +128,7 @@ def _descartar_por_papel(
         texto for papel, _, texto in visibles if papel is PapelDeAfirmacion.principal
     )
     return OpcionSinSoporte(
-        OpcionGenerada(
-            literal_de_retiro(idioma) if retirada else origen.option,
-            marco_de_atribucion(idioma) + principal_visible,
-            origen.chunk_ids_citados,
-        ),
+        opcion_descartada_visible(origen, retirada, principal_visible, idioma),
         tuple(causas),
         decision.motivo or MotivoDeSoporte.afirmacion_sin_soporte,
     )

@@ -10,8 +10,8 @@ from app.domain.claims import AfirmacionAtomica, PapelDeAfirmacion
 from app.domain.nli import ResultadoNli
 from app.domain.resolucion_de_soporte import verificar_soporte
 from app.domain.saneamiento_de_descartadas import retirar_texto_prohibido
-from app.domain.support import RETIRO_ES, OpcionSinSoporte, pares_a_verificar, planificar_soporte
 from app.domain.soporte_por_papel import MotivoDeSoporte
+from app.domain.support import RETIRO_ES, OpcionSinSoporte, pares_a_verificar, planificar_soporte
 
 P, S, V = PapelDeAfirmacion.principal, PapelDeAfirmacion.secundaria, PapelDeAfirmacion.salvedad
 UMBRAL = 0.7
@@ -156,3 +156,23 @@ def test_el_lenguaje_de_la_lista_precede_al_alias_de_fragmento() -> None:
     (descartada,) = _verificar(aceptada, IMPLICA).descartadas
 
     assert descartada.motivo is MotivoDeSoporte.lenguaje_no_permitido
+
+
+def test_la_descartada_por_soporte_y_la_descartada_por_citas_muestran_la_misma_opcion_y_justificacion() -> (
+    None
+):
+    """Paridad (D4-19 P1-1): una sola regla para la opción descartada visible, sea cual sea la razón del descarte."""
+    for texto, veredictos in (
+        ("uno", [NEUTRAL]),
+        ("PROHIBIDO uno", []),
+        ("el fragmento C1 dice", []),
+    ):
+        aceptada = _aceptada(_a(texto, P))
+        por_citas, _ = retirar_texto_prohibido(aceptada.opcion, _buscar, "es", 5)
+
+        (por_soporte,) = _verificar(aceptada, *veredictos).descartadas
+
+        assert (por_soporte.opcion.option, por_soporte.opcion.rationale) == (
+            por_citas.option,
+            por_citas.rationale,
+        )

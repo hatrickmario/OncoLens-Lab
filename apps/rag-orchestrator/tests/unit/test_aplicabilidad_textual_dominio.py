@@ -6,6 +6,7 @@ y el soporte los decide el dominio; el estado lo pone la regla del catálogo.
 
 import pytest
 
+from app.application.contexto_del_paciente import contexto_del_paciente
 from app.domain.aplicabilidad_tipos import CriterioEvaluado
 from app.domain.applicability_rules import evaluar_criterio_de_fuente
 from app.domain.applicability_text import (
@@ -23,13 +24,12 @@ from app.domain.applicability_text import (
     planificar_propuestas,
 )
 from app.domain.nli import ParNli
+from app.schemas.generated.models import RagQueryInternalRequest
 from tests.support.aplicabilidad import (
     POBLACIONES_FX08BA,
     criterios_de_test_apl_1_0_0,
     solicitud_a_m1,
 )
-from app.application.contexto_del_paciente import contexto_del_paciente
-from app.schemas.generated.models import RagQueryInternalRequest
 
 CRITERIOS = {c.clave: c for c in criterios_de_test_apl_1_0_0().criterios("mama")}
 A_M1 = contexto_del_paciente(

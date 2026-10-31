@@ -10,7 +10,6 @@ from typing import Any
 
 import pytest
 
-from tests.support.generador_llm import generador_con_llm
 from tests.support.aplicabilidad import (
     CRITERIOS_DE_DOC_A1,
     FICHAS_FX08BA,
@@ -19,6 +18,7 @@ from tests.support.aplicabilidad import (
     external_id_de,
     solicitud_a_m1,
 )
+from tests.support.generador_llm import generador_con_llm
 from tests.support.llm_falso import FakeLlmClient
 
 RELEVANCIA_ALTA = 0.90

@@ -2,11 +2,11 @@
 
 import pytest
 
-from tests.support.generador_llm import generador_con_llm
 from app.domain.alias_de_chunks import asignar_alias
 from app.domain.relevance import ChunkPuntuado
 from app.prompts.rag_query import bloque_de_datos_del_paciente, construir_prompt_rag_query
 from app.schemas.generated.models import RagQueryInternalRequest
+from tests.support.generador_llm import generador_con_llm
 from tests.support.llm_falso import FakeLlmClient
 from tests.support.recuperacion import Q_HER2, crear_entorno, solicitud_de
 

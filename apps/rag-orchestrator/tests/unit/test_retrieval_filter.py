@@ -8,7 +8,6 @@ from app.domain.retrieval_filter import (
     expresion_vigente_del_tipo,
 )
 
-
 LONGITUD = 64  # el defecto de Settings.retrieval_cancer_type_max_length
 
 

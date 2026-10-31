@@ -13,10 +13,10 @@ from app.evaluation.config_suite import (
     PROVEEDORES,
     RELOJES,
     ConfigInvalida,
-    clave_de,
     _en,
-    ruta_del_repo,
+    clave_de,
     huella_de_config,
+    ruta_del_repo,
 )
 
 META_COBERTURA = "cobertura_poblacion"

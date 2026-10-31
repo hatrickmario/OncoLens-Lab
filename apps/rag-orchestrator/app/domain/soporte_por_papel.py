@@ -37,9 +37,10 @@ class DecisionPorPapel:
     """Posiciones de las secundarias que se omiten y se cuentan en ``omittedClaims`` (solo si la opción se conserva)."""
 
 
-def decidir_opcion_retirada_por_lenguaje() -> DecisionPorPapel:
-    """El propio texto de la opción incumple la lista prohibida (RN-23): se descarta sin mirar sus afirmaciones."""
-    return DecisionPorPapel(False, MotivoDeSoporte.lenguaje_no_permitido, ())
+DECISION_OPCION_RETIRADA_POR_LENGUAJE = DecisionPorPapel(
+    False, MotivoDeSoporte.lenguaje_no_permitido, ()
+)
+"""El propio texto de la opción incumple la lista prohibida (RN-23): se descarta sin mirar sus afirmaciones."""
 
 
 def decidir_opcion_por_papel(

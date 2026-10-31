@@ -14,13 +14,14 @@ from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
+from app.application.aplicabilidad_textual import ParametrosDelRespaldo
 from app.application.corpus_metadata.poblacion_puertos import RespuestaDelLlm
 from app.application.ports import (
-    PoblacionTask,
     CandidatoParaReranker,
     EvidenceGenerator,
     LanguageDetector,
     NliClassifier,
+    PoblacionTask,
     QueryEmbedder,
     QuerySparseEncoder,
     Reranker,
@@ -34,8 +35,6 @@ from app.domain.nli import ParNli, ResultadoNli
 from app.evaluation.config_suite import ConfigSuite
 from app.evaluation.guardas import SuiteAbortada
 from app.evaluation.llamadas import RegistroDeLlamadas
-from app.schemas.generated.models import RetrievalMode
-from app.application.aplicabilidad_textual import ParametrosDelRespaldo
 from app.infrastructure.llm.fabrica_local import (
     ClienteLlmLocal,
     crear_generador_local,
@@ -43,6 +42,7 @@ from app.infrastructure.llm.fabrica_local import (
     parametros_del_respaldo,
 )
 from app.infrastructure.models.verificacion import ModeloNoVerificadoError
+from app.schemas.generated.models import RetrievalMode
 
 if TYPE_CHECKING:  # solo para el tipado: importar local.py carga onnxruntime
     from app.infrastructure.models.local import ModelosDeRecuperacion

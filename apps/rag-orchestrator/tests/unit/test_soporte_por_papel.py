@@ -6,10 +6,10 @@ import pytest
 
 from app.domain.claims import PapelDeAfirmacion
 from app.domain.soporte_por_papel import (
+    DECISION_OPCION_RETIRADA_POR_LENGUAJE,
     EstadoDeAfirmacion,
     MotivoDeSoporte,
     decidir_opcion_por_papel,
-    decidir_opcion_retirada_por_lenguaje,
     es_causa_de_descarte,
 )
 
@@ -92,7 +92,7 @@ def test_el_modal_normativo_precede_a_la_falta_de_soporte() -> None:
 def test_descarta_con_lenguaje_no_permitido_cuando_el_propio_texto_de_la_opcion_incumple_la_lista() -> (
     None
 ):
-    decision = decidir_opcion_retirada_por_lenguaje()
+    decision = DECISION_OPCION_RETIRADA_POR_LENGUAJE
 
     assert not decision.conservar and decision.motivo is MotivoDeSoporte.lenguaje_no_permitido
 

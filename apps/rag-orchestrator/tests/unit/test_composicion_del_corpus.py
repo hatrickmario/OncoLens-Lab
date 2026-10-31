@@ -13,10 +13,10 @@ from typing import Any
 import pytest
 from sqlalchemy.engine import URL
 
+from app.config.settings import POBLACION_MAX_VALORES_POR_CRITERIO_INICIAL as MAX_VALORES
 from app.config.settings import CorpusDatabaseSettings, MilvusSettings
 from app.infrastructure.catalog.catalogo_reader import LectorCatalogoPostgres
 from app.infrastructure.catalog.release_reader import LectorReleasePostgres
-from app.config.settings import POBLACION_MAX_VALORES_POR_CRITERIO_INICIAL as MAX_VALORES
 from app.infrastructure.corpus.composicion import (
     CorpusNoDisponibleError,
     crear_puertos_del_corpus,

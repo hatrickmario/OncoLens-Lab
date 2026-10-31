@@ -16,10 +16,10 @@ from pathlib import Path
 from typing import Any
 
 from app.application.ports import (
-    PoblacionTask,
     EvidenceGenerator,
     EvidenciaGenerada,
     NliClassifier,
+    PoblacionTask,
     ResultadoDeRecuperacion,
 )
 from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
@@ -27,9 +27,9 @@ from app.domain.citations import FichaDeFuente
 from app.domain.criterios_aplicabilidad import CriteriosDeAplicabilidad
 from app.infrastructure.catalogo_clinico.aplicabilidad import cargar_criterios_de_aplicabilidad
 from app.schemas.generated.models import RagQueryInternalRequest
+from tests.support.catalogo_aplicabilidad import APL_1_0_0
 from tests.support.opcion_generada import opcion_atomica
 from tests.support.poblacion_lista import MARCA_PENDIENTE, poblacion_guardada
-from tests.support.catalogo_aplicabilidad import APL_1_0_0
 from tests.support.recuperacion import (
     Q_HER2,
     BuscadorFalso,

@@ -23,7 +23,6 @@ from types import SimpleNamespace
 from typing import Any
 
 from app.application.generation import LlmEvidenceGenerator
-from app.infrastructure.llm.fabrica_local import crear_generador_local
 from app.config.settings import Settings
 from app.domain.citations import validar_citas
 from app.domain.relevance import ChunkPuntuado
@@ -31,6 +30,7 @@ from app.evaluation.config_suite import ConfigInvalida, ConfigSuite, cargar_conf
 from app.evaluation.corrida import citas_propuestas_de, solicitud_base
 from app.evaluation.dataset_loader import cargar_dataset_configurado
 from app.evaluation.rutas import raiz_repo
+from app.infrastructure.llm.fabrica_local import crear_generador_local
 from app.prompts.rag_query import VERSION_DEL_PROMPT
 from app.schemas.generated.models import RagQueryInternalRequest
 

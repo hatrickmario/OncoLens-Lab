@@ -8,14 +8,35 @@ from __future__ import annotations
 from app.domain.atribucion import marco_de_atribucion, validar_forma_de_afirmacion
 from app.domain.citations import OpcionGenerada
 from app.domain.claims import PapelDeAfirmacion
-from app.domain.resolucion_de_soporte import texto_a_mostrar
-from app.domain.soporte_por_papel import estado_por_lenguaje_y_forma
+from app.domain.soporte_por_papel import EstadoDeAfirmacion, estado_por_lenguaje_y_forma
 from app.domain.support import (
     BuscadorDeTerminos,
     RetiroDeLenguaje,
     exigir_afirmaciones_atomicas,
     literal_de_retiro,
+    literal_de_texto_no_mostrado,
 )
+
+
+def texto_a_mostrar(texto: str, estado: EstadoDeAfirmacion, idioma: str) -> str:
+    """El texto de una afirmación solo sale si no incumple la lista ni llegó fuera de forma (RN-23); si no, un literal."""
+    if estado is EstadoDeAfirmacion.lenguaje_no_permitido:
+        return literal_de_retiro(idioma)
+    if estado in (EstadoDeAfirmacion.modal_normativo, EstadoDeAfirmacion.fuera_de_forma):
+        return literal_de_texto_no_mostrado(idioma)
+    return texto
+
+
+def opcion_descartada_visible(
+    origen: OpcionGenerada, retirada: bool, principal_visible: str, idioma: str
+) -> OpcionGenerada:
+    """La opción descartada como se muestra (RN-23): el literal de retiro si su propio texto incumple, y como
+    justificación el marco más la principal ya saneada. Única regla para la descartada por soporte y por citas."""
+    return OpcionGenerada(
+        literal_de_retiro(idioma) if retirada else origen.option,
+        marco_de_atribucion(idioma) + principal_visible,
+        origen.chunk_ids_citados,
+    )
 
 
 def retirar_texto_prohibido(
@@ -39,11 +60,6 @@ def retirar_texto_prohibido(
         reglas, validar_forma_de_afirmacion(principal.texto, max_palabras)
     )
     visible = texto_a_mostrar(principal.texto, estado, idioma)
-    return (
-        OpcionGenerada(
-            literal_de_retiro(idioma) if reglas_de_la_opcion else opcion.option,
-            marco_de_atribucion(idioma) + visible,
-            opcion.chunk_ids_citados,
-        ),
-        tuple(retiros),
+    return opcion_descartada_visible(opcion, bool(reglas_de_la_opcion), visible, idioma), tuple(
+        retiros
     )

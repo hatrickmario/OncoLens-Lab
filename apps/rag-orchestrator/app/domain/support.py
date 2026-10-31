@@ -138,9 +138,15 @@ def soporta(resultado: ResultadoNli, umbral: float) -> bool:
 
 
 def exigir_afirmaciones_atomicas(opcion: OpcionGenerada) -> None:
-    """RN-01: sin afirmaciones atómicas no hay qué verificar; una opción así jamás llega a un veredicto de soporte."""
+    """RN-01: sin afirmaciones atómicas no hay qué verificar; una opción así jamás llega a un veredicto de soporte.
+
+    Exige exactamente una principal, como el esquema de la generación: sin ella la justificación no se puede componer.
+    """
     if not opcion.afirmaciones:
         raise ValueError("la opción debe llegar con afirmaciones atómicas por papel")
+    principales = sum(a.papel is PapelDeAfirmacion.principal for a in opcion.afirmaciones)
+    if principales != 1:
+        raise ValueError("la opción debe llegar con exactamente una afirmación principal")
 
 
 def planificar_soporte(

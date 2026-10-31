@@ -6,8 +6,8 @@ import pytest
 
 from app.domain.retrieval_filter import expresion_solo_vigente, expresion_vigente_del_tipo
 from app.infrastructure.milvus.repository import MilvusRepository
-from tests.support.recuperacion import LONGITUD_MAXIMA_DE_PRUEBA
 from tests.support.milvus import ajustes_de_milvus, nombre_de_coleccion_de_test
+from tests.support.recuperacion import LONGITUD_MAXIMA_DE_PRUEBA
 
 
 class _ClienteMilvusEspia:

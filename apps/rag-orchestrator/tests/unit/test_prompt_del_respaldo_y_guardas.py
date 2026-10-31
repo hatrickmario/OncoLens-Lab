@@ -6,11 +6,11 @@ from pathlib import Path
 
 from app.application.corpus_metadata.esquema_poblacion import cargar_plantilla, construir_prompt
 from app.application.corpus_metadata.poblacion_puertos import Fragmento
-from app.infrastructure.llm.fabrica_local import crear_proponente_local
 from app.config.settings import Settings
 from app.domain.applicability_text import ChunkDeFuente, CriterioPendiente, FuenteParaProponer
 from app.domain.criterios_aplicabilidad import CriterioDeAplicabilidad
 from app.domain.lenguaje import ListaTerminos, check_prohibited_terms
+from app.infrastructure.llm.fabrica_local import crear_proponente_local
 from tests.support.aplicabilidad import criterios_de
 from tests.support.catalogo_aplicabilidad import APL_1_2_0
 from tests.support.respaldo_poblacion import RespaldoLlmFalso

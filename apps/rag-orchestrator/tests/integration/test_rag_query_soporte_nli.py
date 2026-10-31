@@ -9,10 +9,9 @@ import logging
 
 import pytest
 
-from tests.support.generador_llm import generador_con_llm
 from app.application.ports import ResultadoNli
-from app.domain.lenguaje import ListaTerminos
 from app.domain.atribucion import MARCO_ES
+from app.domain.lenguaje import ListaTerminos
 from app.domain.support import RETIRO_ES
 from app.prompts.rag_query import VERSION_DEL_PROMPT
 from tests.support.contract import CATALOGOS
@@ -25,6 +24,7 @@ from tests.support.generador_falso import (
     RAZON_SIN_SOPORTE,
     FakeEvidenceGenerator,
 )
+from tests.support.generador_llm import generador_con_llm
 from tests.support.llm_falso import OPCION_SOLA, FakeLlmClient
 from tests.support.nli_falso import CONTRADICE, IMPLICA, NEUTRAL, NliFalso
 from tests.support.recuperacion import CORPUS_FX06A, Q_HER2, crear_entorno, solicitud_de

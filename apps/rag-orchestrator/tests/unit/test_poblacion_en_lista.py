@@ -15,12 +15,11 @@ from app.domain.aplicabilidad_tipos import (
     ProyeccionDeEstado,
     ValorDePoblacion,
 )
-from app.domain.applicability_text import criterios_pendientes
-from app.domain.criterios_aplicabilidad import DestinoDelCriterio
 from app.domain.applicability_rules import (
     estado_de_poblacion,
     evaluar_criterio_de_fuente,
 )
+from app.domain.applicability_text import criterios_pendientes
 from app.domain.clasificacion_de_poblacion import (
     clasificar_poblacion,
     detectar_conflicto,
@@ -28,6 +27,7 @@ from app.domain.clasificacion_de_poblacion import (
     reconoce_restriccion,
     valores_de_la_opcion,
 )
+from app.domain.criterios_aplicabilidad import DestinoDelCriterio
 from tests.support.criterios_poblacion import (
     ECOG,
     ESTADIO_CON_ESCALA,

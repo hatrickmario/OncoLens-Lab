@@ -7,9 +7,9 @@ import logging
 
 import pytest
 
-from tests.support.generador_llm import generador_con_llm
 from app.application.ports import FalloDelLlm
 from tests.support.generador_falso import OPCION_ANTI_HER2, RAZON_ANTI_HER2
+from tests.support.generador_llm import generador_con_llm
 from tests.support.llm_falso import FakeLlmClient
 from tests.support.recuperacion import CORPUS_FX06A, Q_HER2, crear_entorno, solicitud_de
 

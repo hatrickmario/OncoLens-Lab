@@ -9,9 +9,9 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Protocol, runtime_checkable
 
+from app.application.aplicabilidad_textual import ParametrosDelRespaldo
 from app.application.corpus_metadata.esquema_poblacion import cargar_plantilla
 from app.application.corpus_metadata.poblacion_puertos import LlmDePoblacion
-from app.application.aplicabilidad_textual import ParametrosDelRespaldo
 from app.application.generation import LlmEvidenceGenerator
 from app.application.ports import LlmClient
 from app.config.settings import Settings

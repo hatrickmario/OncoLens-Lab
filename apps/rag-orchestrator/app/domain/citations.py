@@ -24,10 +24,11 @@ class OpcionGenerada:
     # Pueden incluir ``CITA_NO_TRADUCIBLE`` (alias_de_chunks): el centinela de una cita que no era un alias de esta consulta.
     # Nunca coincide con un chunk recuperado (``cita_invalida``), se cuenta aparte en la evaluación y no sale de la generación.
     chunk_ids_citados: tuple[str, ...]
-    # Párrafos opcionales que amplían la justificación (ARR-08): se validan como el resto de lo generado (RN-01, RN-23).
+    # Párrafos de detalle ya compuestos con el marco (ARR-08) desde las afirmaciones secundarias y salvedades. Vacío = sin detalle.
     details: tuple[str, ...] = ()
     # Afirmaciones atómicas por papel de la generación real (US-245): ``rationale`` y ``details`` ya están compuestos con
-    # el marco. Vacío en el resto de los orígenes (p. ej. la proposición textual de población): se verifica por oraciones.
+    # el marco. Vacío = inválido para el soporte (``planificar_soporte`` falla cerrado); solo es válido en las opciones que
+    # nunca llegan a él (p. ej. la proposición textual de población, que se valida con ``validar_citas``).
     afirmaciones: tuple[AfirmacionAtomica, ...] = ()
 
 

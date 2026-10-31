@@ -17,14 +17,14 @@ import httpx
 
 from app.application.generation import ESQUEMA_DE_GENERACION
 from app.domain.alias_de_chunks import asignar_alias
-from app.domain.relevance import ChunkPuntuado
-from app.infrastructure.llm.openai_compatible import cuerpo_de_peticion
-from app.evaluation.dataset_loader import Dataset, Pregunta, cargar_dataset_configurado
 from app.domain.atribucion import (
     CLAIM_MAX_WORDS_INICIAL,
     CLAIMS_MAX_INICIAL,
     CLAIMS_MIN_INICIAL,
 )
+from app.domain.relevance import ChunkPuntuado
+from app.evaluation.dataset_loader import Dataset, Pregunta, cargar_dataset_configurado
+from app.infrastructure.llm.openai_compatible import cuerpo_de_peticion
 from app.prompts.rag_query import construir_prompt_rag_query
 from app.scripts.adr39.config import CandidatoLlm, ConfigFaseB
 from app.scripts.adr39.reglas import (

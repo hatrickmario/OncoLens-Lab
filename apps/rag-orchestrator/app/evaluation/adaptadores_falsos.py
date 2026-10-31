@@ -19,29 +19,29 @@ from app.application.ports import (
     ChunkEncontrado,
     ChunkEncontradoSparse,
     CoberturaDePoblacion,
-    SinTerminosLexicos,
     EvidenciaGenerada,
     ReleaseDelCorpus,
     ResultadoDeRecuperacion,
+    SinTerminosLexicos,
 )
 from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
 from app.domain.applicability_text import (
     FuenteParaProponer,
-    exigir_un_criterio,
     PropuestaDePoblacion,
+    exigir_un_criterio,
     normalizar_propuesta,
 )
-from app.domain.cobertura_poblacion import contar_cobertura
 from app.domain.atribucion import componer_con_marco
 from app.domain.citations import FichaDeFuente, OpcionGenerada
 from app.domain.claims import AfirmacionAtomica, PapelDeAfirmacion
+from app.domain.cobertura_poblacion import contar_cobertura
 from app.domain.corpus_seed.admisibilidad import PISO_DE_FUENTES_EXCLUIDAS
 from app.domain.nli import ParNli, ResultadoNli
 from app.domain.retrieval_filter import coincide_etiqueta, exigir_filtro_vigente
 from app.evaluation.config_suite import ConfigInvalida
 from app.evaluation.dataset_loader import CLASE_SINTETICA
-from app.evaluation.guardas import SuiteAbortada
 from app.evaluation.fuente_dataset import DatasetSuite, OpcionPropuesta
+from app.evaluation.guardas import SuiteAbortada
 from app.schemas.generated.models import RagQueryInternalRequest
 
 DIMENSION = 64

@@ -42,8 +42,8 @@ from app.evaluation.medicion_modelos import (
 from app.evaluation.model_selection import MedicionVariante, seleccionar_variante
 from app.evaluation.reporte import escribir_reporte
 from app.evaluation.retrieval_metrics import ESCALA_COSENO, agregar
-from app.infrastructure.milvus.schema import parametros_de_busqueda, parametros_de_construccion
 from app.evaluation.trabajos import Fabrica
+from app.infrastructure.milvus.schema import parametros_de_busqueda, parametros_de_construccion
 
 SALIDA_OK, SALIDA_PREVIA = 0, 6
 

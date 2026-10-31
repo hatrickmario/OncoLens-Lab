@@ -9,11 +9,11 @@ from __future__ import annotations
 
 import random
 import re
+import statistics
 import unicodedata
 from collections import defaultdict
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-import statistics
 from statistics import mean
 
 from app.evaluation.dataset_loader import Pregunta

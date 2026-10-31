@@ -10,6 +10,9 @@ from typing import Any
 import httpx
 import pytest
 import respx
+from datos_sinteticos import mock_fuentes, preparar_dataset
+from modelos_falsos import FabricaFalsa
+
 from app.evaluation.config_medicion import ModeloSpec
 from app.evaluation.dataset_loader import cargar_dataset
 from app.evaluation.fase_a3 import (
@@ -26,8 +29,6 @@ from app.evaluation.fase_a3 import (
     redondear_hacia_arriba,
 )
 from app.scripts.adr39_fetch_sources import descargar_fuentes
-from datos_sinteticos import mock_fuentes, preparar_dataset
-from modelos_falsos import FabricaFalsa
 
 AHORA = datetime(2026, 10, 20, 9, 0, tzinfo=timezone.utc)
 REGLAS = ReglasA3(250.0, 10_000.0, 15_000.0, 1_000.0, 2_000.0, {"embeddings": 59.0, "nli": 248.0})

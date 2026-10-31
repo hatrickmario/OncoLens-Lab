@@ -7,8 +7,8 @@ from __future__ import annotations
 
 import pytest
 
-from app.domain.claims import AfirmacionAtomica, PapelDeAfirmacion, dividir_en_afirmaciones
 from app.domain.citations import OpcionAceptada, OpcionGenerada
+from app.domain.claims import AfirmacionAtomica, PapelDeAfirmacion, dividir_en_afirmaciones
 from app.domain.lenguaje import ListaTerminos, check_prohibited_terms
 from app.domain.nli import ParNli, ResultadoNli
 from app.domain.resolucion_de_soporte import verificar_soporte
@@ -42,9 +42,11 @@ PRINCIPAL = PapelDeAfirmacion.principal
 
 
 def _opcion(option: str, rationale: str, citas: tuple[str, ...]) -> OpcionGenerada:
-    """Cada oración de ``rationale`` es una afirmación atómica principal con las citas de la opción (US-245)."""
+    """La primera oración de ``rationale`` es la afirmación principal y cada una de las demás, una salvedad (US-245)."""
+    oraciones = dividir_en_afirmaciones(rationale)
     atomicas = tuple(
-        AfirmacionAtomica(a, PRINCIPAL, citas) for a in dividir_en_afirmaciones(rationale)
+        AfirmacionAtomica(a, PRINCIPAL if posicion == 0 else PapelDeAfirmacion.salvedad, citas)
+        for posicion, a in enumerate(oraciones)
     )
     return OpcionGenerada(option, rationale, citas, (), atomicas)
 
@@ -150,7 +152,7 @@ def test_el_plan_declara_solo_el_campo_y_las_reglas_de_cada_fragmento_retirado()
 
     assert plan.retiros == (
         RetiroDeLenguaje("option", ("regla-x",)),
-        RetiroDeLenguaje("rationale", ("regla-x",), PRINCIPAL),
+        RetiroDeLenguaje("details", ("regla-x",), PapelDeAfirmacion.salvedad),
         RetiroDeLenguaje("limitations[].text", ("regla-x",)),
     )
 
