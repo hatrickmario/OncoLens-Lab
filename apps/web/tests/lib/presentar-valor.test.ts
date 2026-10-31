@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { CitedSource } from '../../../../packages/api-contracts/src/types/clinical-api';
+import { numeroONoDisponible, valorONoDisponible } from '../../lib/evidence/procedencia';
 import { presentarValor } from '../../lib/evidence/presentar-valor';
 
 const citas = [
@@ -49,6 +50,34 @@ describe('presentarValor', () => {
     );
     expect(presentarValor(segundo, citas, conDatos).texto).toBe(
       'b · Fragmento [2] · según NCI PDQ · doc-1 · Publicado: No disponible · Tamaño de muestra del estudio: 120',
+    );
+  });
+
+  it.each([
+    ['publishedAt null', null, 0],
+    ['publishedAt cadena vacía', '', 0],
+    ['publishedAt en blanco', '   ', 0],
+    ['publishedAt ausente y sampleSize null', null, null],
+  ])(
+    'trata el metadato ausente como procedencia cuando %s (RN-25)',
+    (_caso, publishedAt, sampleSize) => {
+      const cita = { ...citas[0], publishedAt, sampleSize } as unknown as CitedSource;
+      const valor = { value: 'a', chunkId: 'c1', scope: 'elegibilidad' as const };
+
+      const { texto } = presentarValor(valor, [cita], { conDatosDelFragmento: true });
+
+      expect(texto).toContain(`Publicado: ${valorONoDisponible(publishedAt)}`);
+      expect(texto).toContain(`Tamaño de muestra del estudio: ${numeroONoDisponible(sampleSize)}`);
+      expect(valorONoDisponible(publishedAt)).toBe('No disponible');
+    },
+  );
+
+  it('muestra 0 como tamaño de muestra y no No disponible cuando sampleSize es 0, igual que procedencia', () => {
+    const cita = { ...citas[0], sampleSize: 0 } as unknown as CitedSource;
+    const valor = { value: 'a', chunkId: 'c1', scope: 'elegibilidad' as const };
+
+    expect(presentarValor(valor, [cita], { conDatosDelFragmento: true }).texto).toContain(
+      'Tamaño de muestra del estudio: 0',
     );
   });
 });
