@@ -11,12 +11,18 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
 from enum import StrEnum
 
-from app.domain.aplicabilidad_tipos import CriterioEvaluado, ValorDelEstudio, ValorDePoblacion
+from app.domain.aplicabilidad_tipos import (
+    CriterioEvaluado,
+    PoblacionDelEstudio,
+    ValorDelEstudio,
+    ValorDePoblacion,
+)
 from app.domain.applicability_rules import (
     criterio_evaluado,
     estado_de_poblacion,
     evaluar_criterio,
 )
+from app.domain.corpus_metadata.campos import LONGITUD_MAXIMA_DE_VALOR
 from app.domain.citations import OpcionGenerada, validar_citas
 from app.domain.criterios_aplicabilidad import CriterioDeAplicabilidad
 from app.domain.nli import ParNli
@@ -59,8 +65,15 @@ class PropuestaDePoblacion:
     chunk_id: str
 
 
-LONGITUD_MAXIMA_DEL_VALOR = 200
-"""Un valor de población es una frase corta; una más larga no cabe como hipótesis del NLI ni como celda de la tabla."""
+LONGITUD_MAXIMA_DEL_VALOR = LONGITUD_MAXIMA_DE_VALOR
+"""Un valor de población es una frase corta (el mismo tope del esquema de la ingesta); una más larga no cabe como hipótesis
+del NLI ni como celda de la tabla."""
+
+
+def exigir_un_criterio(fuente: FuenteParaProponer) -> None:
+    """El respaldo recibe UNA fuente y UN criterio por llamada (ADR-47); lo mismo exigen el adapter real y los falsos (LSP)."""
+    if len(fuente.criterios) != 1:
+        raise ValueError("el respaldo recibe una fuente y un único criterio por llamada")
 
 
 def normalizar_propuesta(
@@ -68,32 +81,83 @@ def normalizar_propuesta(
 ) -> PropuestaDePoblacion | None:
     """La propuesta con el valor sin espacios sobrantes, o ``None`` si no es utilizable.
 
+    Quita el marcador ``[chunkId]`` con el que el prompt rotula cada fragmento cuando el LLM lo copia dentro del valor.
     No es utilizable: valor vacío, valor de más de ``LONGITUD_MAXIMA_DEL_VALOR`` caracteres o ``chunkId`` vacío. Una sola
     regla para el adapter real y los falsos (LSP): el LLM descuidado y el guion de un test se tratan igual."""
-    limpio = valor.strip()
+    limpio = valor.replace(f"[{chunk_id}]", "").strip()
     if not limpio or len(limpio) > LONGITUD_MAXIMA_DEL_VALOR or not chunk_id.strip():
         return None
     return PropuestaDePoblacion(external_id, criterio, limpio, chunk_id)
 
 
-# --- qué se le pide al LLM (D1) ------------------------------------------------------------------------------------
+# --- respaldo de la población en la consulta (US-244, ADR-47, RN-26) ---------------------------------------------------
 
 
-def criterios_pendientes_de_texto(
-    evaluados: Sequence[CriterioEvaluado], criterios: Sequence[CriterioDeAplicabilidad]
+class CausaDeRespaldo(StrEnum):
+    """Por qué el respaldo no entregó propuestas: solo sirve para el log; el criterio degrada igual en los cuatro casos."""
+
+    bucle = "bucle"
+    truncado = "truncado"
+    plazo = "plazo"
+    caido = "caido"
+
+
+class RespaldoFallido(Exception):
+    """El respaldo de UN criterio falló. Lleva la causa y dos medidas (``finish_reason`` y longitud de la salida); nunca la
+    salida, el prompt ni un valor (RN-14)."""
+
+    def __init__(
+        self, causa: CausaDeRespaldo, finish_reason: str | None = None, longitud: int = 0
+    ) -> None:
+        super().__init__(causa.value)
+        self.causa = causa
+        self.finish_reason = finish_reason
+        self.longitud = longitud
+
+
+def criterios_pendientes(
+    poblacion: PoblacionDelEstudio | None,
+    evaluados: Sequence[CriterioEvaluado],
+    criterios: Sequence[CriterioDeAplicabilidad],
 ) -> tuple[CriterioPendiente, ...]:
-    """Los criterios sin valor estructurado de una fuente, en el orden del catálogo (design D1).
+    """Los criterios del catálogo que ``population_criteria`` marca ``pendiente`` (ADR-47), en el orden del catálogo.
 
-    Un criterio con valor del estudio ya leído de ``population_criteria`` nunca va al LLM (US-122 AC-6), ni uno cuya lista
-    solo trae valores de subgrupo o mención (US-243: ya se leyó y no cuenta); tampoco el que tiene un destino que el
-    resolvedor no sabe leer, que es un error del catálogo y no una pregunta al texto."""
-    catalogo = {c.clave: c for c in criterios}
+    La marca es por criterio (no ``metadata_source``, que es por documento). Un criterio con valores en la lista, vacío
+    sin marca o con forma inválida nunca va al LLM; tampoco el de un destino que el resolvedor no sabe leer, que es un
+    error del catálogo y no una pregunta al texto."""
+    if poblacion is None:
+        return ()
+    ilegibles = {e.clave for e in evaluados if e.motivo_interno == "destino_no_resoluble"}
     return tuple(
-        CriterioPendiente(e.clave, catalogo[e.clave].etiqueta_es, catalogo[e.clave].etiqueta_en)
-        for e in evaluados
-        if e.valor_estudio is None
-        and not e.valores_del_estudio
-        and e.motivo_interno != "destino_no_resoluble"
+        CriterioPendiente(c.clave, c.etiqueta_es, c.etiqueta_en)
+        for c in criterios
+        if _tiene_la_marca_pendiente(poblacion, c) and c.clave not in ilegibles
+    )
+
+
+def _tiene_la_marca_pendiente(
+    poblacion: PoblacionDelEstudio, criterio: CriterioDeAplicabilidad
+) -> bool:
+    del_estudio = poblacion.criterios.get(criterio.clave_de_estudio)
+    return del_estudio is not None and del_estudio.pendiente
+
+
+def degradar_a_respaldo_fallido(criterio: CriterioEvaluado) -> CriterioEvaluado:
+    """El criterio ``desconocido`` con ``respaldo_fallido`` (RN-26); si falta el dato del paciente gana ``falta_en_paciente``.
+
+    Cubre las cuatro causas (bucle, truncado, plazo, LLM caído) por igual: ninguna deja valor, cita ni motivo del estudio.
+    El valor del paciente y el aviso de su dato se conservan (ADR-34)."""
+    if criterio.valor_paciente is None:
+        return criterio
+    return replace(
+        criterio,
+        estado="desconocido",
+        causa="respaldo_fallido",
+        valor_estudio=None,
+        chunk_citado_id=None,
+        motivo_parcial=None,
+        motivo_interno=None,
+        valores_del_estudio=(),
     )
 
 

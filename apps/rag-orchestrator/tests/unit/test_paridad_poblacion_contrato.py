@@ -5,7 +5,7 @@ from typing import get_args
 from app.domain.aplicabilidad_tipos import CausaDeDesconocido, EstadoDeCriterio, MotivoParcial
 from app.schemas.generated.models import ApplicabilityStatus, PartialReason, UnknownReason
 
-RESERVADAS_O_DE_OTRO_CHANGE = {"varios_valores_en_la_fuente", "respaldo_fallido"}
+RESERVADAS_O_DE_OTRO_CHANGE = {"varios_valores_en_la_fuente"}
 
 
 def test_motivo_parcial_del_dominio_es_el_enum_partial_reason_del_contrato():

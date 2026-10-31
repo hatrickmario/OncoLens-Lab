@@ -70,9 +70,10 @@ from app.infrastructure.lenguaje.terminos_prohibidos import (
     ListaDeTerminosNoDisponible,
     cargar_verificador_de_terminos,
 )
-from app.infrastructure.llm.fabrica_local import (  # noqa: F401  re-exportadas: las importan otros changes y tests
+from app.infrastructure.llm.fabrica_local import (
     crear_generador_local,
     crear_proponente_local,
+    parametros_del_respaldo,
 )
 from app.infrastructure.llm.openai_compatible_health import OpenAICompatibleLlmHealth
 from app.infrastructure.security.clave_publica import cargar_clave_publica_es256
@@ -475,6 +476,7 @@ def _parametros_de_recuperacion(settings: Settings) -> ParametrosDeRecuperacion:
         llm_model=settings.llm_model,
         nli_entailment_threshold=settings.nli_entailment_threshold,  # type: ignore[arg-type]
         tipos_habilitados=settings.enabled_cancer_types,
+        respaldo=parametros_del_respaldo(settings),
         retrieval_mode=RetrievalMode(settings.retrieval_mode),
         retrieval_fusion=EstrategiaDeFusion(settings.retrieval_fusion),
         rrf_k=settings.rrf_k,

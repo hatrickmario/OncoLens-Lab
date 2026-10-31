@@ -19,6 +19,7 @@ from pydantic import ValidationError
 
 from app.domain.corpus_seed.poblacion import NO_DISPONIBLE
 from app.domain.criterios_aplicabilidad import CriterioDeAplicabilidad
+from app.domain.poblacion_del_estudio import es_un_criterio
 from app.evaluation.config_suite import ConfigInvalida, ruta_del_repo
 from app.evaluation.dataset_loader import CLASE_SINTETICA, DatasetInvalido
 from app.evaluation.guardas import SuiteAbortada
@@ -142,11 +143,12 @@ def exigir_claves_resolubles(dataset: DatasetAplicabilidad, criterios: Criterios
 
 
 def claves_declaradas(criterios: Mapping[str, object], prefijo: str = "") -> list[str]:
-    """Claves ``studyKey`` con valor distinto de ``no_disponible``; un objeto con ``valor`` es una hoja (``alcance``)."""
+    """Claves ``studyKey`` con valor distinto de ``no_disponible``; un objeto con ``valor`` (``alcance``) o con ``values``
+    (la marca ``pendiente`` de ADR-47) es una hoja."""
     claves: list[str] = []
     for nombre, valor in criterios.items():
         clave = f"{prefijo}{nombre}"
-        if isinstance(valor, dict) and "valor" not in valor:
+        if isinstance(valor, dict) and not es_un_criterio(valor):
             claves.extend(claves_declaradas(valor, f"{clave}."))
         elif valor != NO_DISPONIBLE:
             claves.append(clave)

@@ -248,16 +248,15 @@ class EvidenceGenerator(Protocol):
     ) -> EvidenciaGenerada: ...
 
 
-class ApplicabilityTextProposer(Protocol):
-    """Propone el valor de población que el texto de una fuente da a un criterio sin valor estructurado (US-123).
+class PoblacionTask(Protocol):
+    """La tarea corta de población (US-242) en la consulta (US-244): UNA fuente y UN criterio por llamada.
 
-    Una sola llamada por consulta con todas las fuentes (design D2). Solo propone: la cita, el lenguaje y el soporte NLI
-    los valida el servicio, y el estado lo asigna la regla del catálogo. Un fallo se propaga y la etapa lo traduce en
-    ``503 LOCAL_LLM_UNAVAILABLE``."""
+    ``fuente`` trae un único criterio pendiente y solo los fragmentos recuperados de esa fuente en esta consulta. Solo
+    propone: la cita, el lenguaje y el soporte NLI los valida el servicio y el estado lo asigna la regla del catálogo.
+    Un fallo de la salida (cortada o inválida) es ``RespaldoFallido``; un LLM caído es ``FalloDelLlm`` y lo deja pasar: el
+    servicio es el único que lo traduce a la causa «caído». Nunca ``LOCAL_LLM_UNAVAILABLE`` por el respaldo."""
 
-    async def proponer(
-        self, fuentes: Sequence[FuenteParaProponer]
-    ) -> tuple[PropuestaDePoblacion, ...]: ...
+    async def proponer(self, fuente: FuenteParaProponer) -> tuple[PropuestaDePoblacion, ...]: ...
 
 
 class CatalogoClinico(Protocol):

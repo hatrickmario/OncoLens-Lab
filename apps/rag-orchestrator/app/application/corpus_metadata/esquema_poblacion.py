@@ -10,7 +10,7 @@ import json
 import re
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Final
+from typing import Any, Final, Protocol
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
@@ -19,10 +19,19 @@ from app.application.corpus_metadata.poblacion_puertos import Fragmento
 from app.domain.aplicabilidad_tipos import ALCANCES, AlcanceDeValor
 from app.domain.corpus_metadata.campos import LONGITUD_MAXIMA_DE_VALOR
 from app.domain.corpus_metadata.poblacion_abanico import ValorPropuesto
-from app.domain.criterios_aplicabilidad import CriterioDeAplicabilidad
 
 DIRECTORIO_DE_PROMPTS: Final = Path(__file__).parent / "prompts"
 _MARCADOR: Final = re.compile(r"\{(clave|etiqueta|maximo|longitud|fragmentos)\}")
+
+
+class CriterioParaElPrompt(Protocol):
+    """Lo único que el prompt toma de un criterio: su clave y su etiqueta (la extracción y el respaldo la comparten)."""
+
+    @property
+    def clave(self) -> str: ...
+
+    @property
+    def etiqueta_es(self) -> str: ...
 
 
 class PlantillaDePoblacionNoDisponible(RuntimeError):
@@ -59,7 +68,7 @@ def esquema_de_poblacion(maximo_de_valores: int) -> dict[str, Any]:
 
 def construir_prompt(
     plantilla: str,
-    criterio: CriterioDeAplicabilidad,
+    criterio: CriterioParaElPrompt,
     fragmentos: Sequence[Fragmento],
     maximo_de_valores: int,
 ) -> str:
