@@ -25,6 +25,12 @@ from app.domain.corpus_seed.admisibilidad import (
 )
 from app.domain.corpus_seed.chunking import validar_ventana
 from app.domain.fusion_de_candidatos import HYBRID_SPARSE_WEIGHT_INICIAL, RRF_K_INICIAL
+from app.domain.reescritura import (
+    REESCRITURA_MAX_ITERACIONES_INICIAL,
+    REESCRITURA_MAX_TERMINOS_INICIAL,
+    REESCRITURA_MAX_TOKENS_DE_SALIDA_INICIAL,
+    REESCRITURA_PLAZO_MS_INICIAL,
+)
 from app.domain.reglas_proveedor import (
     HOSTS_LOCALES,
     reject_fake_model_provider_with_real_data,
@@ -96,6 +102,15 @@ class Settings(BaseSettings):
     rrf_k: int = Field(default=RRF_K_INICIAL, ge=1)
     hybrid_sparse_weight: float = Field(default=HYBRID_SPARSE_WEIGHT_INICIAL, gt=0.0, lt=1.0)
     rerank_top_n: int | None = Field(default=None, gt=0)
+    # Segundo loop de reescritura de la consulta con el LLM local (US-238, RN-02 enmendada, RN-22). Desactivado hasta que
+    # la evaluación (AC-9) fije el valor por defecto; `QUERY_REWRITE_MAX_ITERATIONS = 1` es un único segundo loop.
+    query_rewrite_enabled: bool = False
+    query_rewrite_max_iterations: int = Field(default=REESCRITURA_MAX_ITERACIONES_INICIAL, ge=1)
+    query_rewrite_deadline_ms: int = Field(default=REESCRITURA_PLAZO_MS_INICIAL, gt=0)
+    query_rewrite_max_output_tokens: int = Field(
+        default=REESCRITURA_MAX_TOKENS_DE_SALIDA_INICIAL, gt=0
+    )
+    query_rewrite_max_terms: int = Field(default=REESCRITURA_MAX_TERMINOS_INICIAL, gt=0)
     # Longitud máxima del código de tipo de cáncer que entra al filtro de Milvus (RN-22).
     retrieval_cancer_type_max_length: int = Field(default=64, gt=0)
     # Probabilidad mínima de `entailment` que cuenta como soporte (RN-01, RN-22, L1D-180); la calibra la evaluación (US-072).

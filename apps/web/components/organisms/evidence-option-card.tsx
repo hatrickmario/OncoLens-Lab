@@ -19,6 +19,8 @@ export interface EvidenceOptionCardProps {
   opcion: EvidenceOption;
   /** Distingue los ids de esta tarjeta de los de otras (la UI itera el arreglo). */
   indice: number;
+  /** Rótulo de posición en la lista («Opción descrita n de N»): posición, no jerarquía (RN-23). */
+  posicion: string;
   /** `applicability[]` del análisis: criterios por fuente para la tabla de la opción. */
   fuentes: readonly SourceApplicability[];
   patientId: string;
@@ -29,6 +31,7 @@ export interface EvidenceOptionCardProps {
 export function EvidenceOptionCard({
   opcion,
   indice,
+  posicion,
   fuentes,
   patientId,
   onVerFragmento,
@@ -36,6 +39,7 @@ export function EvidenceOptionCard({
   const [abierta, setAbierta] = useState<string | null>(null);
   return (
     <article className={estilos.tarjeta}>
+      <p>{posicion}</p>
       <h3>{opcion.option}</h3>
       <p>{opcion.rationale}</p>
       <OptionApplicability opcion={opcion}>

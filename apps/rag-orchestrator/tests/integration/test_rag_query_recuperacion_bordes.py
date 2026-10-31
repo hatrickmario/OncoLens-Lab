@@ -84,6 +84,7 @@ def test_rag_query_completa_meta_con_la_release_del_corpus_y_la_configuracion_cu
             "retrievalMode": "dense",
             "fusion": "ninguna",
             "fusionParam": 0,
+            "queryRewrite": {"applied": False, "reason": "no_disparado"},
         },
         "latencyMs": 0,
     }

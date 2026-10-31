@@ -1,0 +1,16 @@
+[
+  {
+    "ac": "US-238",
+    "regla": "assertExamplesValid",
+    "escenario": "un parche pone queryRewrite.reason null en rag-query-sin-evidencia.json (queryRewrite es obligatorio y sin null, D6)",
+    "parches": [{ "destino": "ejemplo:rag-query-sin-evidencia.json", "operaciones": [{ "op": "replace", "path": "/meta/retrievalParams/queryRewrite/reason", "value": null }] }],
+    "esperado": { "ref": "AC-3", "archivo": "contracts/examples/rag-query-sin-evidencia.json", "rutaContiene": "queryRewrite" }
+  },
+  {
+    "ac": "US-238",
+    "regla": "assertExamplesValid",
+    "escenario": "un parche pone applied true con reason no_disparado en rag-query-con-evidencia.json (applied = true solo con disparado)",
+    "parches": [{ "destino": "ejemplo:rag-query-con-evidencia.json", "operaciones": [{ "op": "replace", "path": "/meta/retrievalParams/queryRewrite/applied", "value": true }] }],
+    "esperado": { "ref": "AC-3", "archivo": "contracts/examples/rag-query-con-evidencia.json", "rutaContiene": "queryRewrite" }
+  }
+]

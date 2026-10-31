@@ -23,6 +23,11 @@
       "target": "#/components/schemas/CaseView"
     },
     {
+      "file": "con-evidencia-reescritura.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/EvidenceAnalysis"
+    },
+    {
       "file": "con-evidencia-s1.json",
       "spec": "clinical-api",
       "target": "#/components/schemas/EvidenceAnalysis"
@@ -286,6 +291,11 @@
       "request": "rag-query-request.json"
     },
     {
+      "file": "rag-query-request-reescritura-aplicada.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalRequest"
+    },
+    {
       "file": "rag-query-request-sin-evidencia.json",
       "spec": "rag-orchestrator",
       "target": "#/components/schemas/RagQueryInternalRequest"
@@ -294,6 +304,12 @@
       "file": "rag-query-request.json",
       "spec": "rag-orchestrator",
       "target": "#/components/schemas/RagQueryInternalRequest"
+    },
+    {
+      "file": "rag-query-reescritura-aplicada.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalResponse",
+      "request": "rag-query-request-reescritura-aplicada.json"
     },
     {
       "file": "rag-query-sin-evidencia.json",

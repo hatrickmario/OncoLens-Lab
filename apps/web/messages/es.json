@@ -46,7 +46,8 @@
       "listoVarias": "Análisis listo: {n} opciones descritas",
       "sinEvidencia": "Sin evidencia sobre el umbral",
       "error": "No se pudo completar el análisis. Código de traza {traceId}",
-      "noRealizado": "Análisis no realizado: falta el tipo de cáncer"
+      "noRealizado": "Análisis no realizado: falta el tipo de cáncer",
+      "noMostradas": "{n} más con soporte no mostrada"
     },
     "resultado": {
       "pregunta": "Pregunta",
@@ -59,11 +60,14 @@
       "queSeBusco": "Qué se buscó",
       "fuentes": "Fuentes",
       "relevanciaMaxima": "Relevancia máxima",
-      "noAplica": "no aplica"
+      "noAplica": "no aplica",
+      "posicion": "Opción descrita {n} de {total}",
+      "noMostradas": "La evidencia describe {n} opción(es) más con soporte que no se muestran por el límite de {limite}, aplicado según el orden por aplicabilidad; el límite no es una valoración clínica de ellas. Una pregunta más específica puede mostrarlas."
     },
     "orderCriterion": {
       "relevance": "Ordenado por relevancia de recuperación de la búsqueda; no representa prioridad ni aplicabilidad clínica.",
-      "applicability": "Orden por aplicabilidad: primero la opción con menos criterios excluyentes en No coincide; luego, la que coincide en más criterios con los datos registrados; la relevancia de recuperación solo desempata. Es un criterio de orden, no una valoración clínica."
+      "applicability": "Orden por aplicabilidad: primero la opción con menos criterios excluyentes en No coincide; luego, la que coincide en más criterios con los datos registrados; la relevancia de recuperación solo desempata. Es un criterio de orden, no una valoración clínica.",
+      "numeracion": "La numeración indica la posición en el orden por aplicabilidad, no una preferencia."
     },
     "aplicabilidad": {
       "prefijo": "Criterios del estudio frente a datos registrados:",
@@ -71,6 +75,7 @@
       "parcial": "Parcial",
       "noCoincide": "No coincide",
       "desconocido": "Desconocido",
+      "etiquetaNoComparable": "Población no comparable",
       "poblacionNoComparable": "Según los datos registrados, al menos un criterio excluyente del estudio no coincide con este paciente. La opción se muestra igualmente.",
       "noEvaluada": "Aplicabilidad no evaluada: sin datos de población en las fuentes citadas",
       "verPorCriterio": "Ver aplicabilidad por criterio",
@@ -129,8 +134,8 @@
     },
     "relevance": {
       "label": "Relevancia de recuperación de evidencia",
-      "basis": "Metadato de recuperación; solo desempata el orden por aplicabilidad.",
-      "basisRelevancia": "Orden basado en la cita recuperada más relevante asociada a cada opción",
+      "basis": "Metadato de recuperación; no mide solidez clínica ni probabilidad, y solo desempata el orden por aplicabilidad.",
+      "basisRelevancia": "Metadato de recuperación; no mide solidez clínica ni probabilidad.",
       "note": "Metadato secundario: no mide eficacia ni solidez clínica",
       "help": "No resume la aplicabilidad, la eficacia ni la calidad global de la opción."
     },
@@ -219,6 +224,7 @@
       "ocultarDetalle": "Ocultar detalle",
       "busqueda": "Qué se buscó: fuentes {fuentes} · filtros {filtros} · {n} fragmentos sobre el umbral",
       "sinConsulta": "No se consultó el corpus: tipo fuera de alcance",
+      "reescrituraAplicada": "La búsqueda se repitió con una reformulación de la pregunta con términos del catálogo; la relevancia se calculó contra la pregunta original",
       "datosUsados": "Datos del paciente usados",
       "fuentesConsultadas": "Fuentes consultadas",
       "fragmentos": "{retrieved} fragmentos recuperados · {above} sobre el umbral",
