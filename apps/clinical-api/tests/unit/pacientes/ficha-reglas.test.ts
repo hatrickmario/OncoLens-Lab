@@ -6,10 +6,10 @@ import type {
 import {
   comoBiomarcador,
   comoProvenance,
-  seleccionarDiagnosticoVigente,
+  elegirDiagnosticoVigenteDeLaFicha,
   ultimoValorPorBiomarcador,
 } from '../../../src/modules/patients/ficha.reglas.js';
-import { ESTADOS_PENDIENTES_DE_REVISION } from '../../../src/modules/patients/estados-de-revision.js';
+import { ESTADOS_PENDIENTES_DE_REVISION } from '../../../src/modules/compartido/estados-de-revision.js';
 
 const PROCEDENCIA = {
   entryMethod: 'seed',
@@ -54,13 +54,13 @@ const biomarcador = (id: string, resto: Partial<FilaDeBiomarcador> = {}): FilaDe
   ...resto,
 });
 
-describe('seleccionarDiagnosticoVigente', () => {
+describe('elegirDiagnosticoVigenteDeLaFicha', () => {
   it('devuelve null cuando el paciente no tiene diagnósticos', () => {
-    expect(seleccionarDiagnosticoVigente([])).toBeNull();
+    expect(elegirDiagnosticoVigenteDeLaFicha([])).toBeNull();
   });
 
   it('devuelve el activo cuando hay uno inactivo y uno activo', () => {
-    const vigente = seleccionarDiagnosticoVigente([
+    const vigente = elegirDiagnosticoVigenteDeLaFicha([
       diagnostico('d-1', { isActive: false }),
       diagnostico('d-2'),
     ]);
@@ -69,11 +69,11 @@ describe('seleccionarDiagnosticoVigente', () => {
   });
 
   it('devuelve null cuando todos están inactivos', () => {
-    expect(seleccionarDiagnosticoVigente([diagnostico('d-1', { isActive: false })])).toBeNull();
+    expect(elegirDiagnosticoVigenteDeLaFicha([diagnostico('d-1', { isActive: false })])).toBeNull();
   });
 
   it('devuelve el de fecha más reciente cuando hay varios activos', () => {
-    const vigente = seleccionarDiagnosticoVigente([
+    const vigente = elegirDiagnosticoVigenteDeLaFicha([
       diagnostico('d-1', { diagnosedAt: '2026-01-01' }),
       diagnostico('d-2', { diagnosedAt: '2026-08-01' }),
     ]);

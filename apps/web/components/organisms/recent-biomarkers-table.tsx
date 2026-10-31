@@ -46,7 +46,7 @@ export function RecentBiomarkersTable({ biomarcadores }: { biomarcadores: Biomar
     textos.origen,
   ];
   return (
-    <SeccionDeFicha id="ficha-biomarcadores" titulo={textos.titulo}>
+    <SeccionDeFicha id="biomarcadores" titulo={textos.titulo}>
       {biomarcadores.length === 0 ? (
         <p className="m-0">{noRegistrado}</p>
       ) : (

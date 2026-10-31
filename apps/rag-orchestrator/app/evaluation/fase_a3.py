@@ -26,14 +26,14 @@ from app.evaluation.chunking_variants import (
 )
 from app.evaluation.config_medicion import ModeloSpec, spec_desde_yaml
 from app.evaluation.dataset_loader import Dataset, Pregunta
-from app.evaluation.envoltorios import MonitorRss, pico_rss_mb
+from app.evaluation.envoltorios import MonitorRss, pico_rss_mib
 from app.evaluation.medicion_modelos import (
     construir_corpus,
     cronometrar,
     entradas_espaciadas,
     evaluar_rankings,
-    mediana,
-    percentil_95,
+    mediana_estadistica,
+    percentil_95_interpolado,
     recuperar_densos,
     reordenar_con_reranker,
     vectores_en_cache,
@@ -293,10 +293,10 @@ def ejecutar_trabajo_a3(
         "corrida": trabajo.corrida,
         "rss_carga_mb": rss_carga,
         "rss_max_mb": monitor.maximo_mb,
-        "pico_rss_mb": pico_rss_mb(),
+        "pico_rss_mb": pico_rss_mib(),
         "latencia": {
-            "p50_ms": mediana(tiempos),
-            "p95_ms": percentil_95(tiempos),
+            "p50_ms": mediana_estadistica(tiempos),
+            "p95_ms": percentil_95_interpolado(tiempos),
             "max_ms": float(max(tiempos)),
             "n": len(tiempos),
         },

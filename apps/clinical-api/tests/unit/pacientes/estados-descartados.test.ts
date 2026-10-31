@@ -5,7 +5,7 @@ import {
   ESTADOS_DESCARTADOS,
   sqlDatoVigente,
   type EstadoDeRevision,
-} from '../../../src/modules/patients/estados-de-revision.js';
+} from '../../../src/modules/compartido/estados-de-revision.js';
 
 const TODOS_LOS_ESTADOS: readonly EstadoDeRevision[] = [
   'auto_aceptado',

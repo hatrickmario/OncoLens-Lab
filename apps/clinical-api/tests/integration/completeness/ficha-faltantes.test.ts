@@ -122,4 +122,52 @@ describe('missingCriticalCount de la ficha', () => {
       logger.lineas.some((linea) => linea.event === 'patients.ficha.checklist_no_disponible'),
     ).toBe(true);
   });
+
+  it('registra errorClase y ningún mensaje de la excepción cuando el checklist falla', async () => {
+    class ErrorDeChecklistSintetico extends Error {
+      constructor() {
+        super(ERROR_DE_PG);
+        this.name = 'ErrorDeChecklistSintetico';
+      }
+    }
+    const fm2 = await sembrarFM2(siembra);
+    await conIdentidad(fm2.patientId, 5);
+    const fallido: CompletenessService = {
+      calcular: () => Promise.reject(new ErrorDeChecklistSintetico()),
+    };
+
+    const { respuesta, logger } = pedirFicha(fm2.patientId, fallido);
+    const resultado = await respuesta;
+
+    const aviso = logger.lineas.find(
+      (linea) => linea.event === 'patients.ficha.checklist_no_disponible',
+    );
+    expect(aviso?.errorClase).toBe('ErrorDeChecklistSintetico');
+    expect(Object.keys(aviso ?? {}).sort()).toEqual([
+      'errorClase',
+      'event',
+      'patientId',
+      'resultado',
+      'traceId',
+    ]);
+    expect(logger.texto()).not.toContain('SINT-error-de-pg');
+    expect(resultado.body).not.toHaveProperty('errorClase');
+  });
+
+  it('registra errorClase ErrorDesconocido cuando el checklist rechaza con un valor que no es un Error', async () => {
+    const fm2 = await sembrarFM2(siembra);
+    await conIdentidad(fm2.patientId, 6);
+    const fallido: CompletenessService = {
+      calcular: () => Promise.reject('texto-sintetico-no-error'),
+    };
+
+    const { respuesta, logger } = pedirFicha(fm2.patientId, fallido);
+    await respuesta;
+
+    const aviso = logger.lineas.find(
+      (linea) => linea.event === 'patients.ficha.checklist_no_disponible',
+    );
+    expect(aviso?.errorClase).toBe('ErrorDesconocido');
+    expect(logger.texto()).not.toContain('texto-sintetico-no-error');
+  });
 });

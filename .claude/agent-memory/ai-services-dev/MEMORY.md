@@ -2,4 +2,5 @@
 - [Integration-rag en local](integracion_rag_local.md) — subredes libres, node_modules symlink y venv compartido para reproducir el job de la CI
 - [Verificaciones locales de la CI](verificaciones_locales_ci.md) — env vars para generate:check, eval-required, quality; cambiar ejemplos rompe clinical-api
 - [Integración RAG iterativa](integracion_rag_iterativa.md) — up una vez / run N veces del job integration-rag; git ls-files --cached copia el árbol
+- [Medición local de evaluate](medicion_local_evaluate.md) — lanzador .py sin source, Ollama propio en otro puerto, resultados de L1D-298
 - [ONNX desde bytes y entorno de trabajo](onnx_bytes_y_entorno_de_trabajo.md) — trampas de ORT con datos externos y cómo correr pytest/vitest/ruff en el worktree

@@ -13,9 +13,9 @@ from app.evaluation.config_suite import (
     PROVEEDORES,
     RELOJES,
     ConfigInvalida,
-    _clave,
+    clave_de,
     _en,
-    _ruta_del_repo,
+    ruta_del_repo,
     huella_de_config,
 )
 
@@ -53,19 +53,19 @@ def cargar_config_aplicabilidad(
         raise ConfigInvalida("la configuración no es un mapa YAML")
     if fecha_de_corte is not None:
         crudo = {**crudo, "corpus": {**(crudo.get("corpus") or {}), "cutoff_date": fecha_de_corte}}
-    corpus = _clave(crudo, "corpus")
-    metas = _clave(crudo, "metas")
+    corpus = clave_de(crudo, "corpus")
+    metas = clave_de(crudo, "metas")
     return ConfigAplicabilidad(
-        nombre=str(_clave(crudo, "nombre")),
-        fixture=str(_clave(crudo, "fixture")),
-        dataset=_ruta_del_repo(str(_clave(crudo, "dataset", "ruta"))),
-        reloj=_en(str(_clave(crudo, "medicion", "reloj")), RELOJES, "medicion.reloj"),
+        nombre=str(clave_de(crudo, "nombre")),
+        fixture=str(clave_de(crudo, "fixture")),
+        dataset=ruta_del_repo(str(clave_de(crudo, "dataset", "ruta"))),
+        reloj=_en(str(clave_de(crudo, "medicion", "reloj")), RELOJES, "medicion.reloj"),
         proveedor=_en(
-            str(_clave(crudo, "adaptadores", "proveedor")), PROVEEDORES, "adaptadores.proveedor"
+            str(clave_de(crudo, "adaptadores", "proveedor")), PROVEEDORES, "adaptadores.proveedor"
         ),
-        umbral_nli=_numero(_clave(crudo, "umbrales", "nli_entailment_threshold"), "umbrales"),
-        ruta_terminos=_ruta_del_repo(str(_clave(crudo, "catalogo", "ruta_terminos"))),
-        fecha_de_corte=_fecha(_clave(corpus, "cutoff_date")),
+        umbral_nli=_numero(clave_de(crudo, "umbrales", "nli_entailment_threshold"), "umbrales"),
+        ruta_terminos=ruta_del_repo(str(clave_de(crudo, "catalogo", "ruta_terminos"))),
+        fecha_de_corte=_fecha(clave_de(corpus, "cutoff_date")),
         catalogo_en_memoria=_ruta_opcional(corpus.get("catalogo_en_memoria")),
         revision=_ruta_opcional((crudo.get("corpus_metadatos") or {}).get("revision")),
         meta_cobertura=_meta(metas, META_COBERTURA),
@@ -75,7 +75,7 @@ def cargar_config_aplicabilidad(
 
 
 def _ruta_opcional(valor: Any) -> Path | None:
-    return _ruta_del_repo(str(valor)) if valor else None
+    return ruta_del_repo(str(valor)) if valor else None
 
 
 def _numero(valor: Any, clave: str) -> float:
@@ -85,7 +85,7 @@ def _numero(valor: Any, clave: str) -> float:
 
 
 def _meta(metas: dict[str, Any], nombre: str) -> float:
-    return _numero(_clave(metas, nombre, "minimo"), f"metas.{nombre}.minimo")
+    return _numero(clave_de(metas, nombre, "minimo"), f"metas.{nombre}.minimo")
 
 
 def _fecha(valor: Any) -> date:

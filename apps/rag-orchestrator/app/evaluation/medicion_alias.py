@@ -23,7 +23,7 @@ from types import SimpleNamespace
 from typing import Any
 
 from app.application.generation import LlmEvidenceGenerator
-from app.bootstrap import crear_generador_local
+from app.infrastructure.llm.fabrica_local import crear_generador_local
 from app.config.settings import Settings
 from app.domain.citations import validar_citas
 from app.domain.relevance import ChunkPuntuado

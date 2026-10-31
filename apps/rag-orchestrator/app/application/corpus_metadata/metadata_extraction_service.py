@@ -46,10 +46,27 @@ FALLOS_QUE_DEJAN_PENDIENTE = (FalloDelLlm, FalloDeInferencia, SalidaInvalida)
 
 
 class MetadataExtractionService:
-    def __init__(self, *, llm: LlmClient, nli: NliClassifier, umbral_nli: float) -> None:
+    def __init__(
+        self,
+        *,
+        llm: LlmClient,
+        nli: NliClassifier,
+        umbral_nli: float,
+        criterios_de_poblacion: Sequence[str] = CRITERIOS_DE_POBLACION,
+    ) -> None:
+        # Los criterios de población que ESTE paso pide al LLM (camino de US-118). Vacío cuando la población la extrae el
+        # abanico (US-242 D8): el LLM de metadatos pide solo los escalares.
+        self._criterios_de_poblacion = tuple(criterios_de_poblacion)
         self._llm = llm
         self._nli = nli
         self._umbral_nli = umbral_nli
+
+    @classmethod
+    def solo_escalares(
+        cls, *, llm: LlmClient, nli: NliClassifier, umbral_nli: float
+    ) -> MetadataExtractionService:
+        """Fábrica del paso de metadatos cuando la población la extrae ``PopulationFanoutExtractor`` (US-242 D8)."""
+        return cls(llm=llm, nli=nli, umbral_nli=umbral_nli, criterios_de_poblacion=())
 
     def resolver(
         self, documento: DocumentoDeSemilla, texto: str, fragmentos: Sequence[str]
@@ -72,13 +89,16 @@ class MetadataExtractionService:
     def _proponer(self, documento: DocumentoDeSemilla, texto: str) -> tuple[CampoDeMetadato, ...]:
         """El LLM propone solo lo que el manifiesto no declara; la salida se valida contra el esquema cerrado."""
         solicitados = escalares_a_extraer(documento)
-        prompt = construir_prompt(documento.title, texto, (*solicitados, *CRITERIOS_DE_POBLACION))
+        prompt = construir_prompt(
+            documento.title, texto, (*solicitados, *self._criterios_de_poblacion)
+        )
         crudo = asyncio.run(self._llm.completar_json(prompt, esquema_de_metadatos()))
         propuesta = parsear_propuesta(crudo)
         return tuple(
             c
             for c in propuesta.campos()
-            if c.campo not in CAMPOS_ESCALARES or c.campo in solicitados
+            if c.campo in solicitados
+            or (c.campo not in CAMPOS_ESCALARES and bool(self._criterios_de_poblacion))
         )
 
     def _verificar(

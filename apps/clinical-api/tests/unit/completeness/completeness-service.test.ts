@@ -6,7 +6,7 @@ import type {
   RegistrosDeCompletitud,
 } from '../../../src/modules/completeness/ports.js';
 import { registrosDeCompletitudFalsos } from '../../support/registros-de-completitud-falsos.js';
-import { PacienteNoEncontradoError } from '../../../src/modules/patients/patients.errores.js';
+import { PacienteNoEncontradoError } from '../../../src/modules/compartido/pacientes.errores.js';
 
 const catalogo: CatalogoDeDatosCriticos = {
   version: () => 'test-fake',

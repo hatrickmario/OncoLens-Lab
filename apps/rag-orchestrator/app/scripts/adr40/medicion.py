@@ -10,7 +10,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import asdict
 from typing import Any
 
-from app.evaluation.medicion_modelos import mediana, percentil_95
+from app.evaluation.medicion_modelos import mediana_estadistica, percentil_95_interpolado
 from app.scripts.adr40.dataset import CONTEXTO_DE_DOCUMENTO, TextoSembrado
 from app.scripts.adr40.detectores import DetectorPii
 from app.scripts.adr40.reglas import (
@@ -50,7 +50,7 @@ def medir_candidato(
 ) -> dict[str, Any]:
     """Agregados del candidato: la sensibilidad es determinista; la latencia es la mediana de los p95 de cada corrida."""
     p95_por_corrida = [
-        percentil_95(_latencias_ms(detector, textos, reloj)) for _ in range(corridas)
+        percentil_95_interpolado(_latencias_ms(detector, textos, reloj)) for _ in range(corridas)
     ]
     hallazgos: dict[str, list[Span]] = {t.id: detector.detectar(t.texto) for t in textos}
     documentos = [t for t in textos if t.contexto == CONTEXTO_DE_DOCUMENTO]
@@ -67,7 +67,7 @@ def medir_candidato(
         "falsos_positivos_clinicos": asdict(
             falsos_positivos_clinicos([(t.controles, hallazgos[t.id]) for t in textos])
         ),
-        "latencia_p95_ms": mediana(p95_por_corrida),
+        "latencia_p95_ms": mediana_estadistica(p95_por_corrida),
         "latencia_p95_ms_por_corrida": p95_por_corrida,
         "corridas": corridas,
     }

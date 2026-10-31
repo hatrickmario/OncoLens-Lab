@@ -16,7 +16,7 @@ import { authorize } from '../../middleware/authorize.js';
 import { vistaSegunPermiso } from '../../middleware/vista-segun-permiso.js';
 import type { TraceIdGenerator } from '../../infrastructure/trace-id-generator.js';
 import { crearTraceIdMiddleware, traceIdDe } from '../../middleware/trace-id.middleware.js';
-import { PacienteNoEncontradoError } from './patients.errores.js';
+import { PacienteNoEncontradoError } from '../compartido/pacientes.errores.js';
 import { idDePacienteSchema, leerBusqueda, leerFiltrosDelListado } from './patients.schema.js';
 import type { PatientsService } from './patients.service.js';
 import type { VistaPorPermiso } from './vistas.js';
@@ -114,9 +114,13 @@ function crearFicha(service: PatientsService, registrar: Registrar): RequestHand
       return;
     }
     try {
+      let errorDelChecklist: string | undefined;
       const ficha = await service.obtenerFicha({
         patientId: patientId.data,
         vista: vistaDe(request),
+        alFallarElChecklist: (errorClase) => {
+          errorDelChecklist = errorClase;
+        },
       });
       registrar({
         event: EVENTO_FICHA,
@@ -124,11 +128,12 @@ function crearFicha(service: PatientsService, registrar: Registrar): RequestHand
         traceId: traceIdDe(response),
         patientId: patientId.data,
       });
-      if ('completenessAvailable' in ficha && ficha.completenessAvailable === false) {
-        // Aviso no bloqueante (RN-26): solo UUID y traceId, nunca el error de la base (RN-10).
+      if (errorDelChecklist !== undefined) {
+        // Aviso no bloqueante (RN-26): UUID, traceId y la clase del error; nunca su mensaje ni la pila (RN-10).
         registrar({
           event: EVENTO_CHECKLIST_NO_DISPONIBLE,
           resultado: 'no_disponible',
+          errorClase: errorDelChecklist,
           traceId: traceIdDe(response),
           patientId: patientId.data,
         });
