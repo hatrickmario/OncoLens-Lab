@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, replace
+from enum import StrEnum
 from typing import Literal, get_args
 
 from app.domain.citations import OpcionAceptada, OpcionGenerada
-from app.domain.claims import dividir_en_afirmaciones
+from app.domain.claims import PapelDeAfirmacion, dividir_en_afirmaciones
 from app.domain.lenguaje import Coincidencia, ListaTerminos, Nivel, check_prohibited_terms
 from app.domain.nli import ParNli, ResultadoNli
 
@@ -296,3 +297,24 @@ def retirar_texto_prohibido(
         ),
         tuple(retiros),
     )
+
+
+class EstadoDeAfirmacion(StrEnum):
+    soportada = "soportada"
+    sin_soporte = "sin_soporte"
+    fuera_de_forma = "fuera_de_forma"
+    modal_normativo = "modal_normativo"
+    lenguaje_no_permitido = "lenguaje_no_permitido"
+
+
+@dataclass(frozen=True)
+class DecisionPorPapel:
+    conservar: bool
+    motivo: str | None
+    omitidas: tuple[int, ...]
+
+
+def decidir_opcion_por_papel(
+    estados: Sequence[tuple[PapelDeAfirmacion, EstadoDeAfirmacion]],
+) -> DecisionPorPapel:
+    raise NotImplementedError("no implementado")

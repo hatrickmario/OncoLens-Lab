@@ -11,6 +11,7 @@ import json
 from collections.abc import Mapping
 from typing import Any
 
+from tests.support.afirmaciones_atomicas import ESCENARIOS_ATOMICOS
 from tests.support.generador_falso import OPCION_ANTI_HER2, RAZON_ANTI_HER2, TITULO_INVENTADO
 
 OPCION_SOLA = "Terapia anti-HER2 sola"
@@ -75,6 +76,8 @@ ESCENARIOS_LLM: dict[str, str] = {
     "LLM-ALIAS-C4": _salida(_opcion(OPCION_ANTI_HER2, RAZON_ANTI_HER2, "C4")),
     "LLM-ID-REAL": _salida(_opcion(OPCION_ANTI_HER2, RAZON_ANTI_HER2, "ch-m1-1")),
 }
+
+ESCENARIOS_LLM.update(ESCENARIOS_ATOMICOS)
 
 
 class FakeLlmClient:
