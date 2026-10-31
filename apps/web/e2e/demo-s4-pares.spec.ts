@@ -24,10 +24,7 @@ interface ParDeLaGuia {
 }
 
 function paresDeLaGuia(): Record<string, ParDeLaGuia> {
-  const guia = readFileSync(
-    new URL('../../../docs/demo/guia-demo-S4.md', import.meta.url),
-    'utf8',
-  );
+  const guia = readFileSync(new URL('../../../docs/demo/guia-demo-S4.md', import.meta.url), 'utf8');
   const bloque = guia
     .split('<!-- conteos-demo-s4:inicio -->')[1]
     ?.split('<!-- conteos-demo-s4:fin -->')[0]
@@ -49,6 +46,16 @@ test.describe('Pares de la demo del S4 (L1D-297)', () => {
     expect(opciones.some((o) => o.conteos.parcial > 0)).toBe(true);
   });
 
+  test('los conteos de la guía coinciden con los ejemplos fijos que sirve el modo fingido [US-247 AC-2]', () => {
+    for (const par of Object.values(pares)) {
+      const fijo = ejemplo(`rag-query-demo-s4-${par.ejemplo}.json`);
+
+      expect(
+        fijo.evidenceOptions.map((o: { applicabilitySummary: Conteos }) => o.applicabilitySummary),
+      ).toEqual(par.opciones.map((o) => o.conteos));
+    }
+  });
+
   for (const [nombre, par] of Object.entries(pares)) {
     const pregunta = ejemplo(`rag-query-request-demo-s4-${par.ejemplo}.json`).query as string;
 
@@ -63,7 +70,9 @@ test.describe('Pares de la demo del S4 (L1D-297)', () => {
       const analisis = await (await respuesta).json();
 
       expect(
-        analisis.evidenceOptions.map((o: { applicabilitySummary: Conteos }) => o.applicabilitySummary),
+        analisis.evidenceOptions.map(
+          (o: { applicabilitySummary: Conteos }) => o.applicabilitySummary,
+        ),
       ).toEqual(par.opciones.map((o) => o.conteos));
     });
 

@@ -98,7 +98,9 @@ def exportar(repositorio: CorpusDocumentRepository, archivo: Path) -> dict[str, 
 
 
 def _argumentos(argv: Sequence[str] | None) -> argparse.Namespace:
-    analizador = argparse.ArgumentParser(prog=f"python -m app.scripts.{NOMBRE}", description=__doc__)
+    analizador = argparse.ArgumentParser(
+        prog=f"python -m app.scripts.{NOMBRE}", description=__doc__
+    )
     modos = analizador.add_subparsers(dest="modo", required=True)
     for modo in ("cargar", "exportar"):
         modos.add_parser(modo).add_argument("--archivo", type=Path, required=True)

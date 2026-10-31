@@ -96,7 +96,9 @@ def test_cargar_escribe_la_poblacion_cuando_el_archivo_es_valido(tmp_path):
 
 def test_cargar_rechaza_sin_escribir_nada_cuando_un_valor_no_trae_chunk_id(tmp_path):
     archivo = tmp_path / "p.json"
-    archivo.write_text(json.dumps(_archivo({"estado_her2": [_valor(chunk=None)]})), encoding="utf-8")
+    archivo.write_text(
+        json.dumps(_archivo({"estado_her2": [_valor(chunk=None)]})), encoding="utf-8"
+    )
     catalogo = CatalogoFalso({"doc-a"})
 
     with pytest.raises(ArchivoDePoblacionInvalido, match="estado_her2"):
@@ -143,7 +145,9 @@ def test_el_corpus_de_la_demo_trae_al_menos_tres_documentos_con_poblacion_verifi
     import yaml  # noqa: PLC0415
 
     documentos = validar_archivo(json.loads(ARCHIVO_VERSIONADO.read_text(encoding="utf-8")))
-    manifiesto = yaml.safe_load((RAIZ / "data" / "raw" / "seed" / "manifest.yaml").read_text(encoding="utf-8"))
+    manifiesto = yaml.safe_load(
+        (RAIZ / "data" / "raw" / "seed" / "manifest.yaml").read_text(encoding="utf-8")
+    )
     aceptados = {d["document_key"] for d in manifiesto["documentos"] if d["license"]}
 
     assert len(documentos) >= 3
@@ -151,4 +155,7 @@ def test_el_corpus_de_la_demo_trae_al_menos_tres_documentos_con_poblacion_verifi
     for document_id, entrada in documentos.items():
         for valores in entrada["population_criteria"].values():
             for valor in valores if isinstance(valores, list) else []:
-                assert valor["chunkId"].startswith(f"{document_id}:") or document_id in valor["chunkId"]
+                assert (
+                    valor["chunkId"].startswith(f"{document_id}:")
+                    or document_id in valor["chunkId"]
+                )

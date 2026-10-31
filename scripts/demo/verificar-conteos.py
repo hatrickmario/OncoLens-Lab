@@ -17,7 +17,9 @@ IDENTIDADES = "identity.patient_identity"
 USUARIOS = 'auth."user"'
 
 
-def comparaciones(seed: dict, clinico: dict, corpus: dict, documentos: int, con_poblacion: int):
+def comparaciones(
+    seed: dict, clinico: dict, corpus: dict, documentos: int, con_poblacion: int
+):
     """(nombre, esperado, obtenido): pacientes = identidades = pacientes del seed, usuarios y documentos del corpus."""
     pacientes_del_seed = seed[PACIENTES]
     return [
@@ -25,7 +27,11 @@ def comparaciones(seed: dict, clinico: dict, corpus: dict, documentos: int, con_
         (IDENTIDADES, pacientes_del_seed, clinico[IDENTIDADES]),
         (USUARIOS, seed[USUARIOS], clinico[USUARIOS]),
         ("corpus.documentos_vigentes", documentos, corpus["documentos_vigentes"]),
-        ("corpus.con_poblacion_verificada", con_poblacion, corpus["con_poblacion_verificada"]),
+        (
+            "corpus.con_poblacion_verificada",
+            con_poblacion,
+            corpus["con_poblacion_verificada"],
+        ),
     ]
 
 
@@ -41,8 +47,12 @@ def main(argv=None) -> int:
         seed = json.load(open(argumentos.seed, encoding="utf-8"))
         clinico = json.loads(argumentos.clinico)["conteos"]
         corpus = json.loads(argumentos.corpus)["conteos"]
-        con_poblacion = len(json.load(open(argumentos.poblacion, encoding="utf-8"))["documentos"])
-        filas = comparaciones(seed, clinico, corpus, argumentos.documentos, con_poblacion)
+        con_poblacion = len(
+            json.load(open(argumentos.poblacion, encoding="utf-8"))["documentos"]
+        )
+        filas = comparaciones(
+            seed, clinico, corpus, argumentos.documentos, con_poblacion
+        )
     except (OSError, ValueError, KeyError, TypeError):
         print("FALLA entrada: los conteos no tienen la forma esperada", file=sys.stderr)
         return 1
@@ -50,7 +60,9 @@ def main(argv=None) -> int:
     for nombre, esperado, obtenido in filas:
         print(f"  {nombre}: esperado={esperado} obtenido={obtenido}")
     for nombre, esperado, obtenido in fallos:
-        print(f"FALLA {nombre}: esperado {esperado}, obtenido {obtenido}", file=sys.stderr)
+        print(
+            f"FALLA {nombre}: esperado {esperado}, obtenido {obtenido}", file=sys.stderr
+        )
     return 1 if fallos else 0
 
 
