@@ -156,6 +156,10 @@ class FalloDeInferencia(RuntimeError):
     """
 
 
+class SinTerminosLexicos(FalloDeInferencia):
+    """El texto no tiene ningún término con peso para la rama *sparse* (US-248 AC-4): distinto de un fallo de inferencia."""
+
+
 class LanguageDetector(Protocol):
     def detectar(self, texto: str) -> Idioma: ...
 

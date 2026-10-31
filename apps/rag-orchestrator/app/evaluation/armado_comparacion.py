@@ -53,6 +53,10 @@ def _por_documento(brazo: ResultadoDeBrazo) -> list[dict[str, Any]]:
     ]
 
 
+def exigir_trazabilidad_coherente(brazo: ResultadoDeBrazo) -> None:
+    raise NotImplementedError
+
+
 def _trazabilidad(brazo: ResultadoDeBrazo) -> dict[str, int]:
     """Cuántas consultas trajeron en ``meta.retrievalParams`` el modo, la fusión y el parámetro de su brazo."""
     coherentes = sum(
