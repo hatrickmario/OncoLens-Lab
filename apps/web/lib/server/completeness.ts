@@ -26,7 +26,7 @@ function responderNoEncontrado(dependencias: DependenciasDelBff): Response {
 function responderChecklistNoDisponible(
   dependencias: DependenciasDelBff,
   inicio: number,
-  motivo: 'status_5xx' | 'fallo_de_red',
+  motivo: 'status_5xx' | 'clinical_api_inalcanzable',
 ): Response {
   const traceId = dependencias.nuevoTraceId();
   dependencias.registrar({
@@ -77,7 +77,7 @@ export function crearManejadorChecklist(dependencias: DependenciasDelBff): Manej
     const sdk = crearSdkClinicalApi(dependencias.config, { request, fetch: dependencias.fetch });
     const respuesta = await pedirChecklist(sdk, patientId);
     if (respuesta === undefined) {
-      return responderChecklistNoDisponible(dependencias, inicio, 'fallo_de_red');
+      return responderChecklistNoDisponible(dependencias, inicio, 'clinical_api_inalcanzable');
     }
     if (respuesta.status >= 500) {
       return responderChecklistNoDisponible(dependencias, inicio, 'status_5xx');

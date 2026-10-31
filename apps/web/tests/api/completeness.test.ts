@@ -1,7 +1,11 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { assertMatchesSpec } from '../../../../scripts/contracts/lib/responseValidator.mjs';
 import { crearManejadorChecklist } from '../../lib/server/completeness';
-import { crearDependenciasDeTest, ejemplo, URL_CLINICAL_API } from '../support/clinical-api-simulado';
+import {
+  crearDependenciasDeTest,
+  ejemplo,
+  URL_CLINICAL_API,
+} from '../support/clinical-api-simulado';
 import {
   crearChecklistSimulado,
   ID_DE_PACIENTE_SINTETICO,
@@ -15,7 +19,8 @@ beforeAll(() => clinicalApi.iniciar());
 afterEach(() => clinicalApi.reiniciar());
 afterAll(() => clinicalApi.detener());
 
-const DETALLE_INTERNO = 'PrismaClientKnownRequestError at /srv/clinical-api/dist/modules/completeness.js:42';
+const DETALLE_INTERNO =
+  'PrismaClientKnownRequestError at /srv/clinical-api/dist/modules/completeness.js:42';
 
 describe('GET /api/patients/{id}/completeness', () => {
   it('reenvía la sesión y retransmite el checklist cuando clinical-api responde 200 [US-005 AC-1]', async () => {
@@ -45,7 +50,11 @@ describe('GET /api/patients/{id}/completeness', () => {
   });
 
   it('retransmite el 404 de clinical-api con su cuerpo cuando el paciente no existe [US-005 AC-1]', async () => {
-    const cuerpo404 = { error: 'NO_ENCONTRADO', message: 'Paciente no encontrado.', traceId: 'req_1' };
+    const cuerpo404 = {
+      error: 'NO_ENCONTRADO',
+      message: 'Paciente no encontrado.',
+      traceId: 'req_1',
+    };
     clinicalApi.responder({ status: 404, cuerpo: cuerpo404 });
     const { dependencias } = crearDependenciasDeTest();
 
