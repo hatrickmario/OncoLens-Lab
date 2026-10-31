@@ -72,7 +72,56 @@
       "noCoincide": "No coincide",
       "desconocido": "Desconocido",
       "poblacionNoComparable": "Según los datos registrados, al menos un criterio excluyente del estudio no coincide con este paciente. La opción se muestra igualmente.",
-      "noEvaluada": "Aplicabilidad no evaluada: sin datos de población en las fuentes citadas"
+      "noEvaluada": "Aplicabilidad no evaluada: sin datos de población en las fuentes citadas",
+      "verPorCriterio": "Ver aplicabilidad por criterio",
+      "etiquetaNoComparable": "Población no comparable",
+      "columnas": {
+        "criterio": "Criterio",
+        "paciente": "Paciente",
+        "estudio": "Estudio (valores extraídos de la fuente por IA y verificados contra el fragmento)",
+        "estado": "Estado"
+      },
+      "sinDato": "Sin dato registrado",
+      "sinValorDelEstudio": "Sin valor del estudio",
+      "datoSinVerificar": "Dato del paciente sin verificar",
+      "excluyente": "Criterio excluyente",
+      "leyendaExcluyente": "⚑ Criterio excluyente según el catálogo; un No coincide en él se cuenta primero en el orden por aplicabilidad",
+      "fragmento": "Fragmento [{n}]",
+      "verMasUno": "+ 1 valor más ▸ ver más",
+      "verMasVarios": "+ {n} valores más ▸ ver más",
+      "verMenos": "ver menos",
+      "contexto": "Contexto (no cuenta para el estado)",
+      "alcance": {
+        "subgrupo": "subgrupo",
+        "mencion": "mención"
+      },
+      "fechaDelFragmento": "Publicado: {fecha}",
+      "tamanoDelFragmento": "Tamaño de muestra: {n}",
+      "motivoParcial": {
+        "inclusiva": "el estudio incluyó varios grupos, entre ellos el del paciente",
+        "mezclada": "el fragmento mezcla poblaciones sin desagregarlas",
+        "rango_solapado": "rango parcialmente solapado",
+        "solo_subgrupo": "solo un subgrupo"
+      },
+      "causaDesconocido": {
+        "falta_en_paciente": "falta en los datos registrados",
+        "no_reportado_por_fuente": "la fuente no reporta este dato",
+        "solo_subgrupo": "la fuente no reporta este dato para la población elegible (solo para un subgrupo)",
+        "valores_en_conflicto": "los fragmentos citados muestran valores distintos; se muestran ambos; requieren contraste con la fuente y con la validación clínica/patológica.",
+        "varios_valores_en_la_fuente": "la fuente reporta varios valores; se muestran junto a su fragmento",
+        "respaldo_fallido": "no se pudo determinar el valor del estudio; no indica que el criterio coincida ni que no coincida",
+        "sin_regla_de_comparacion": "el catálogo no define cómo comparar este criterio",
+        "sin_causa_registrada": "causa no registrada en este análisis"
+      },
+      "criterios": {
+        "estado_her2": "Estado HER2",
+        "receptores_hormonales": "Receptores hormonales",
+        "estadio": "Estadio",
+        "linea_tratamiento": "Línea de tratamiento",
+        "estado_menopausico": "Estado menopáusico",
+        "ecog": "ECOG",
+        "terapia_previa": "Terapia previa"
+      }
     },
     "relevance": {
       "label": "Relevancia de recuperación de evidencia",
