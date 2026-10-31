@@ -15,6 +15,7 @@ import errorInterno from '../../../../../contracts/examples/error-interno.json';
 import errorColaLlena from '../../../../../contracts/examples/error-cola-inferencia-llena.json';
 import errorDeadline from '../../../../../contracts/examples/error-deadline-vencido.json';
 import errorLlmNoDisponible from '../../../../../contracts/examples/error-llm-local-no-disponible.json';
+import errorSalidaLlmInvalida from '../../../../../contracts/examples/error-salida-llm-invalida.json';
 import errorServicioIa from '../../../../../contracts/examples/error-servicio-ia.json';
 import errorTipoCancer from '../../../../../contracts/examples/error-tipo-cancer-no-registrado.json';
 import peticion from '../../../../../contracts/examples/evidence-analysis-request.json';
@@ -34,6 +35,7 @@ export {
   errorColaLlena,
   errorDeadline,
   errorLlmNoDisponible,
+  errorSalidaLlmInvalida,
   errorServicioIa,
   errorTipoCancer,
   peticion,
