@@ -34,6 +34,7 @@ POBLACION_MAX_TOKENS_DE_SALIDA_INICIAL = 512
 POBLACION_CONCURRENCIA_INICIAL = 1
 POBLACION_REINTENTOS_INICIAL = 1
 POBLACION_VERSION_DEL_PROMPT_INICIAL = "poblacion_v1"
+POBLACION_PLAZO_DEL_RESPALDO_MS_INICIAL = 10000
 """Valores iniciales de la extracción de población en abanico (US-242, RN-22): los fija el spike US-240
 (``reports/spikes/s4-capacidad-paralelismo.md`` §7); se recalibran con US-233b. Es el único lugar donde aparecen."""
 HOSTS_LOCALES_DEL_LLM = tuple(sorted(HOSTS_LOCALES))
@@ -101,6 +102,17 @@ class Settings(BaseSettings):
     # Tope de valores de población por fragmento y criterio al extraer, persistir y leer (ADR-47, RN-22).
     population_max_values_per_criterion: int = Field(
         default=POBLACION_MAX_VALORES_POR_CRITERIO_INICIAL, gt=0
+    )
+    # Respaldo de la población en la consulta (US-244, ADR-47, RN-22): la misma tarea corta de la ingesta, con plazo propio.
+    population_fallback_deadline_ms: int = Field(
+        default=POBLACION_PLAZO_DEL_RESPALDO_MS_INICIAL, gt=0
+    )
+    population_extraction_max_output_tokens: int = Field(
+        default=POBLACION_MAX_TOKENS_DE_SALIDA_INICIAL, gt=0
+    )
+    population_extraction_concurrency: int = Field(default=POBLACION_CONCURRENCIA_INICIAL, gt=0)
+    population_prompt_version: str = Field(
+        default=POBLACION_VERSION_DEL_PROMPT_INICIAL, pattern=r"^[a-z0-9_]+$"
     )
     # Un archivo cargado = una ruta y un SHA-256 (RN-22); se verifican al arrancar con MODEL_PROVIDER=local.
     embedding_model_path: Path | None = None

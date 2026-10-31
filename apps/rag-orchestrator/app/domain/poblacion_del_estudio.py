@@ -58,14 +58,15 @@ def leer_criterio_guardado(guardado: object, max_valores: int) -> CriterioDePobl
 def _hojas_por_clave_de_estudio(guardado: Mapping[str, object]) -> Iterator[tuple[str, object]]:
     """Cada criterio con su clave de estudio: ``a`` o ``a.b`` cuando la forma antigua anida una cadena por subclave."""
     for clave, valor in guardado.items():
-        if _es_un_criterio(valor) or not isinstance(valor, Mapping):
+        if es_un_criterio(valor) or not isinstance(valor, Mapping):
             yield clave, valor
         else:
             for subclave, subvalor in valor.items():
                 yield f"{clave}.{subclave}", subvalor
 
 
-def _es_un_criterio(valor: object) -> bool:
+def es_un_criterio(valor: object) -> bool:
+    """Una hoja de ``population_criteria`` (con ``valor`` o ``values``), no un contenedor de subclaves (``biomarcadores``)."""
     if isinstance(valor, Mapping):
         return "valor" in valor or "values" in valor
     return True

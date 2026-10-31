@@ -1,11 +1,14 @@
 """Bordes del camino textual de la aplicabilidad (US-123): RN-02, falla cerrada del LLM y no-fuga en logs (RN-10, RN-25)."""
 
+import json
 import logging
 
-from app.infrastructure.llm.proponente_de_aplicabilidad import LlmApplicabilityTextProposer
+from app.application.corpus_metadata.poblacion_puertos import RespuestaDelLlm
+from app.application.ports import FalloDelLlm
 from tests.support.aplicabilidad import TEXTO_DE_CH_A2_1, entorno_de_aplicabilidad, solicitud_a_m1
 from tests.support.nli_falso import IMPLICA, NliFalso
 from tests.support.proponente_falso import ProponenteFalso
+from tests.support.respaldo_poblacion import tarea_de_respaldo
 
 SOLO_DOC_A2 = {"doc-a2": 0.90}
 
@@ -29,33 +32,18 @@ def test_rag_query_no_invoca_al_proponente_ni_al_nli_cuando_ningun_chunk_supera_
     assert (proponente.invocaciones, nli.invocaciones) == (0, 0)
 
 
-def test_rag_query_responde_503_local_llm_unavailable_sin_aplicabilidad_cuando_el_proponente_falla():
+def test_rag_query_responde_200_con_respaldo_fallido_y_sin_el_detalle_del_error_cuando_el_proponente_cae():
     nli = NliFalso(por_defecto=IMPLICA)
-    proponente = ProponenteFalso("APL-OK", error=RuntimeError("SENTINELA-LLM"))
+    proponente = ProponenteFalso("APL-OK", error=FalloDelLlm("SENTINELA-LLM"))
 
     respuesta = _entorno(proponente, nli, SOLO_DOC_A2).consultar(solicitud_a_m1())
 
-    assert respuesta.status_code == 503
-    cuerpo = respuesta.json()
-    assert cuerpo["error"] == "LOCAL_LLM_UNAVAILABLE"
-    assert not {"applicability", "evidenceOptions"} & set(cuerpo)
-    assert "SENTINELA-LLM" not in respuesta.text
+    assert respuesta.status_code == 200
+    (fuente,) = respuesta.json()["applicability"]
+    her2 = next(c for c in fuente["criteria"] if c["criterion"] == "estado_her2")
+    assert (her2["status"], her2["unknownReason"]) == ("desconocido", "respaldo_fallido")
+    assert "SENTINELA-LLM" not in respuesta.text and "LOCAL_LLM_UNAVAILABLE" not in respuesta.text
     assert nli.invocaciones == 0
-
-
-def test_rag_query_responde_503_local_llm_unavailable_cuando_el_proponente_no_devuelve_propuestas():
-    proponente = ProponenteFalso("APL-OK")
-
-    async def propuestas_invalidas(fuentes):
-        return ("no es una propuesta",)
-
-    proponente.proponer = propuestas_invalidas  # type: ignore[method-assign]
-
-    respuesta = _entorno(proponente, NliFalso(por_defecto=IMPLICA), SOLO_DOC_A2).consultar(
-        solicitud_a_m1()
-    )
-
-    assert (respuesta.status_code, respuesta.json()["error"]) == (503, "LOCAL_LLM_UNAVAILABLE")
 
 
 def test_rag_query_solo_registra_conteos_cuando_acepta_una_propuesta(caplog):
@@ -76,25 +64,26 @@ def test_rag_query_solo_registra_conteos_cuando_acepta_una_propuesta(caplog):
             assert prohibido not in mensaje
 
 
-class _LlmGuionado:
-    def __init__(self, respuesta: str) -> None:
-        self._respuesta = respuesta
+class _LlmHer2:
+    """Borde del LLM: devuelve ``HER2 negativo`` citando ``ch-a2-1`` para el criterio de HER2 y nada para los demás."""
+
+    def __init__(self) -> None:
         self.prompts: list[str] = []
 
-    async def completar_json(self, prompt, esquema):
+    async def completar_json_acotado(self, prompt, esquema, *, max_tokens, semilla):
         self.prompts.append(prompt)
-        return self._respuesta
+        valores = (
+            [{"value": "HER2 negativo", "chunkId": "ch-a2-1", "scope": "elegibilidad"}]
+            if "Criterio: estado_her2" in prompt
+            else []
+        )
+        return RespuestaDelLlm(json.dumps({"values": valores}), "stop")
 
 
 def test_rag_query_acepta_la_propuesta_del_adapter_real_y_su_prompt_no_lleva_datos_del_paciente():
-    llm = _LlmGuionado(
-        '{"proposals": [{"source": "S1", "criterion": "estado_her2", "value": "HER2 negativo",'
-        ' "chunkId": "ch-a2-1", "patientValue": "2+", "status": "coincide"}]}'
-    )
+    llm = _LlmHer2()
     solicitud = solicitud_a_m1()
-    entorno = _entorno(
-        LlmApplicabilityTextProposer(llm), NliFalso(por_defecto=IMPLICA), SOLO_DOC_A2
-    )
+    entorno = _entorno(tarea_de_respaldo(llm), NliFalso(por_defecto=IMPLICA), SOLO_DOC_A2)
 
     respuesta = entorno.consultar(solicitud)
 
@@ -106,7 +95,7 @@ def test_rag_query_acepta_la_propuesta_del_adapter_real_y_su_prompt_no_lleva_dat
         "HER2 negativo",
         "no_coincide",
     )
-    (prompt,) = llm.prompts
-    assert TEXTO_DE_CH_A2_1 in prompt
-    assert solicitud["clinicalContext"]["pseudoPatientId"] not in prompt
-    assert "3+ (IHQ)" not in prompt
+    for prompt in llm.prompts:
+        assert TEXTO_DE_CH_A2_1 in prompt
+        assert solicitud["clinicalContext"]["pseudoPatientId"] not in prompt
+        assert "3+ (IHQ)" not in prompt

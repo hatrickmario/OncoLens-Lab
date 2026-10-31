@@ -1,17 +1,16 @@
-"""LLM falso de aplicabilidad de FX-08b-a (US-123): ``ApplicabilityTextProposer`` con guiones fijos por escenario.
+"""LLM falso de aplicabilidad de FX-08b-a (US-123): ``PoblacionTask`` con guiones fijos por escenario.
 
 Cumple el contrato del adapter real: devuelve solo propuestas ``(fuente, criterio, valor, chunkId)``, nunca estado ni
-``patientValue``, y solo habla de las fuentes que recibió. Registra las llamadas para comprobar que no se invoca
-cuando no hay criterios pendientes (RN-02, US-122 AC-6).
+``patientValue``, y solo habla de la fuente y el criterio que recibió (una fuente y un criterio por llamada, US-244).
+Registra las llamadas para comprobar que no se invoca cuando no hay criterios pendientes (RN-02, US-122 AC-6).
 """
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-
 from app.domain.applicability_text import (
     FuenteParaProponer,
     PropuestaDePoblacion,
+    exigir_un_criterio,
     normalizar_propuesta,
 )
 from tests.support.aplicabilidad import external_id_de
@@ -46,23 +45,22 @@ class ProponenteFalso:
     def __init__(self, escenario: str = "APL-SILENCIO", error: Exception | None = None) -> None:
         self._guion = _GUIONES[escenario]
         self.error = error
-        self.llamadas: list[tuple[FuenteParaProponer, ...]] = []
+        self.llamadas: list[FuenteParaProponer] = []
 
     @property
     def invocaciones(self) -> int:
         return len(self.llamadas)
 
-    async def proponer(
-        self, fuentes: Sequence[FuenteParaProponer]
-    ) -> tuple[PropuestaDePoblacion, ...]:
-        self.llamadas.append(tuple(fuentes))
+    async def proponer(self, fuente: FuenteParaProponer) -> tuple[PropuestaDePoblacion, ...]:
+        exigir_un_criterio(fuente)
+        self.llamadas.append(fuente)
         if self.error is not None:
             raise self.error
-        recibidas = {f.external_id for f in fuentes}
+        pedidos = {c.clave for c in fuente.criterios}
         # Como el adapter real: la misma normalizacion del dominio (LSP).
         normalizadas = (
             normalizar_propuesta(p.external_id, p.criterio, p.valor, p.chunk_id)
             for p in self._guion
-            if p.external_id in recibidas
+            if p.external_id == fuente.external_id and p.criterio in pedidos
         )
         return tuple(p for p in normalizadas if p is not None)
