@@ -1,6 +1,6 @@
 ## ai-eval-runner · feat/l1d-292-poblacion-abanico-ingesta · suite poblacion (eval-required + sintetica del change + smoke del prompt)
 
-Veredicto: PASS en lo ejecutable (sin regresion; 0 salidas prescriptivas). El smoke con LLM real es evidencia de una muestra pequena (12 tareas), no un gate. `baseline.json` no tiene linea de regresion para esta familia: "umbral no aplicado".
+Veredicto: PASS en lo ejecutable (sin regresion; 0 valores con termino prohibido conservados en la suite sintetica; el smoke con LLM real no midio lenguaje). El smoke con LLM real es evidencia de una muestra pequena (12 tareas), no un gate. `baseline.json` no tiene linea de regresion para esta familia: "umbral no aplicado".
 
 Solo agregados (RN-14): sin texto de fragmentos, prompts ni salidas del LLM.
 
@@ -28,7 +28,7 @@ La variante que falla en main queda detectada por `test_la_evaluacion_detecta_un
 - Datos: corpus publico `data/raw/seed` (NCI y PMC CC BY, sin pacientes). 4 documentos de mama x 3 criterios (`estado_her2`, `estado_menopausico`, `ecog`) = 12 tareas.
 - Parametros: TOP_K=4, MAX_OUTPUT_TOKENS=512, semilla 0, maximo 3 valores por criterio, plazo 60 s, 1 intento por tarea.
 - Fragmentos: troceado ad hoc por parrafos (~1500 caracteres), no el chunker de produccion. Los fragmentos del prompt los eligio `RecuperadorLexicalDeFragmentos`.
-- Script (fuera del repo): `/private/tmp/claude-501/-Users-mb-Documents-L1DER-Final-Project-V1-OncoLens-Lab/da50dd31-9151-47ec-ad04-86d57e1f21a2/scratchpad/ai292-eval/smoke_prompt.py`
+- Script (fuera del repo): `script ad hoc fuera del repo`
 
 | Metrica | Resultado | Meta/criterio | Estado |
 |---|---|---|---|
@@ -42,7 +42,7 @@ La variante que falla en main queda detectada por `test_la_evaluacion_detecta_un
 | Valores de relleno ("not found", "none"...) | 0 % | - | OK |
 | Valores de mas de 200 caracteres | 0 | - | OK |
 | Alcance: elegibilidad / subgrupo / mencion | 4 / 4 / 11 | - | informativo |
-| Latencia por tarea p50 / p95 / max | 3,39 s / 5,29 s / 8,36 s | - | informativo |
+| Latencia por tarea p50 / ~p90 (n=12) / max | 3,39 s / 5,29 s / 8,36 s | - | informativo |
 
 ### Hallazgos sobre el prompt
 
@@ -61,3 +61,18 @@ modelo `gemma4:26b-a4b-it-q4_K_M` (smoke) / fakes (suite) · prompt `poblacion_v
 Ninguna detectada. `EVAL_MAX_REGRESSION` no se aplico porque el baseline no cubre la familia.
 
 JSON crudo (agregados y metricas por tarea sin texto): `reports/eval/l1d-292-poblacion-abanico.json`
+
+
+## Aclaraciones (Gate 2)
+
+- **Variante `confia_en_el_llm`:** es una simulacion del comportamiento previo, porque `main` no tiene el extractor. Guarda lo que
+  propone el LLM (sin relleno, fragmento, lenguaje ni NLI).
+- **NLI falso:** valida la composicion de la ingesta, no la calidad del NLI (US-233b).
+- **Valores medidos por separado (suite sintetica):** produccion = 0 no respaldados, cobertura 1,0, 0 duplicados; variante = 3 no
+  respaldados (`HER2-positive` de un fragmento ajeno, `stage I-III` sin soporte y `recommended treatment`), cobertura 1,0, 0 duplicados.
+- **Suites `all` y `aplicabilidad`:** identicas a baseline y a main (delta = 0); el change no toca esas rutas.
+- **Versiones:** suite con `fake-guion@1` / `fake-nli@1`; smoke con `gemma4:26b-a4b-it-q4_K_M`; prompt `poblacion_v1`; catalogo
+  `2026.10.0` y `test-apl-1.2.0` (etiqueta de test); corpus `rel-fx-t5a-a-1` y `data/raw/seed`; umbral de relevancia 0,30 y de NLI 0,7.
+- **`eval-required.mjs`:** no se pudo ejecutar localmente (falta el modulo `yaml`); la CI lo confirma.
+- **Script del smoke:** script ad hoc fuera del repo.
+- **Alcance:** 11 de 19 valores del smoke salen como `mencion`; la exactitud del alcance no esta medida (riesgo para DEC-11).

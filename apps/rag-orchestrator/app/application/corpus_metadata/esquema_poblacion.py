@@ -10,7 +10,7 @@ import json
 import re
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Final, Literal
+from typing import Any, Final
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
@@ -22,7 +22,7 @@ from app.domain.corpus_metadata.poblacion_abanico import ValorPropuesto
 from app.domain.criterios_aplicabilidad import CriterioDeAplicabilidad
 
 DIRECTORIO_DE_PROMPTS: Final = Path(__file__).parent / "prompts"
-_MARCADOR: Final = re.compile(r"\{(clave|etiqueta|maximo|fragmentos)\}")
+_MARCADOR: Final = re.compile(r"\{(clave|etiqueta|maximo|longitud|fragmentos)\}")
 
 
 class PlantillaDePoblacionNoDisponible(RuntimeError):
@@ -69,6 +69,7 @@ def construir_prompt(
         "clave": criterio.clave,
         "etiqueta": criterio.etiqueta_es,
         "maximo": str(maximo_de_valores),
+        "longitud": str(LONGITUD_MAXIMA_DE_VALOR),
         "fragmentos": "\n".join(f"[{f.chunk_id}]\n{f.texto}\n" for f in fragmentos),
     }
     return _MARCADOR.sub(lambda m: valores[m.group(1)], plantilla)
@@ -81,7 +82,7 @@ class _Cerrado(BaseModel):
 class _ValorDeSalida(_Cerrado):
     value: str
     chunkId: str
-    scope: Literal["elegibilidad", "subgrupo", "mencion"]
+    scope: AlcanceDeValor
 
 
 class _SalidaDePoblacion(_Cerrado):

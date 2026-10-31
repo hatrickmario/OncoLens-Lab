@@ -12,7 +12,7 @@ from app.domain.corpus_metadata.poblacion_abanico import (
     omitir_lenguaje_prescriptivo,
     pares_de_verificacion,
     rechazar_relleno,
-    validar_chunk,
+    descartar_chunk_ajeno,
     verificar_nli,
 )
 from app.domain.nli import ResultadoNli
@@ -42,8 +42,10 @@ def test_rechazar_relleno_conserva_un_valor_que_solo_contiene_un_marcador() -> N
     assert len(resultado.conservados) == 2
 
 
-def test_validar_chunk_descarta_el_valor_cuyo_fragmento_no_es_del_documento() -> None:
-    resultado = validar_chunk([_v("a", "c1"), _v("b", "ajeno"), _v("c", "c2")], {"c1", "c2"})
+def test_descartar_chunk_ajeno_descarta_el_valor_cuyo_fragmento_no_es_del_documento() -> None:
+    resultado = descartar_chunk_ajeno(
+        [_v("a", "c1"), _v("b", "ajeno"), _v("c", "c2")], {"c1", "c2"}
+    )
 
     assert [v.valor for v in resultado.conservados] == ["a", "c"]
     assert resultado.descartados == 1

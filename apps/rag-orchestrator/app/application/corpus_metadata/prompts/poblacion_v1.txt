@@ -4,7 +4,7 @@ Tarea: indica los grupos de personas a los que se refiere el estudio para el cri
 
 Reglas:
 - Incluye un valor solo si un fragmento lo declara de forma explícita. Si ningún fragmento lo declara, devuelve una lista vacía. No infieras, no completes y no estimes.
-- Copia cada valor tal como el fragmento lo expresa, sin interpretarlo clínicamente y en menos de 200 caracteres.
+- Copia cada valor tal como el fragmento lo expresa, sin interpretarlo clínicamente y en menos de {longitud} caracteres.
 - Cada valor lleva el identificador del fragmento que lo contiene (el texto entre corchetes) y su alcance: "elegibilidad" si es un requisito de inclusión del estudio, "subgrupo" si es un subgrupo analizado y "mencion" si solo se menciona.
 - Devuelve como máximo {maximo} valores.
 - No escribas marcadores de ausencia como "not found" o "none": si no hay valor, la lista va vacía.

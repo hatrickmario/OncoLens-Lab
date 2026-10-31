@@ -22,7 +22,7 @@ from app.application.corpus_metadata.poblacion_puertos import (
     Fragmento,
     RespuestaDelLlm,
 )
-from app.application.ports import FalloDelLlm, ParNli, ResultadoNli
+from app.application.ports import FalloDeInferencia, FalloDelLlm, ParNli, ResultadoNli
 from app.domain.criterios_aplicabilidad import CriterioDeAplicabilidad
 from app.infrastructure.catalogo_clinico.aplicabilidad import cargar_criterios_de_aplicabilidad
 from tests.support.contract import CATALOGOS
@@ -105,6 +105,8 @@ ESCENARIOS: dict[str, dict[str, list[Valor]]] = {
             ("Post-menopausal", "ch-e1-3", "mencion"),
         ]
     },
+    # Cita ch-e1-3: está en el documento pero NO entre los k fragmentos del prompt (se valida contra todos).
+    "EXT-FUERA-DEL-PROMPT": {"ecog": [("ECOG 0 or 1", "ch-e1-3", "mencion")]},
     "EXT-PROHIBIDO": {"ecog": [(VALOR_PROHIBIDO, "ch-e1-1", "elegibilidad")]},
     "EXT-LARGO": {"ecog": [("x" * 201, "ch-e1-1", "elegibilidad")]},
 }
@@ -131,6 +133,7 @@ class FakePopulationLlm:
     escenarios: Sequence[str] = ("EXT-OK",)
     cortes: Mapping[str, int] = field(default_factory=dict)
     modo_caido: bool = False
+    salida_fija: str | None = None  # texto crudo devuelto con stop (JSON fuera del esquema)
     llamadas: list[LlamadaRegistrada] = field(default_factory=list)
     prompts: list[str] = field(default_factory=list)
     salidas: list[str] = field(default_factory=list)
@@ -166,6 +169,9 @@ class FakePopulationLlm:
             await asyncio.sleep(0)  # cede el turno: con el semáforo las demás tareas esperan
             if self.modo_caido:
                 raise FalloDelLlm("llm falso: sin respuesta")
+            if self.salida_fija is not None:
+                self.salidas.append(self.salida_fija)
+                return RespuestaDelLlm(self.salida_fija, "stop")
             respuesta = self._responder(criterio.group(1), self.llamadas_de(criterio.group(1)))
             self.salidas.append(respuesta.texto)
             return respuesta
@@ -211,10 +217,13 @@ class NliPorValor:
 
     version = "nli-test@1"
 
-    def __init__(self) -> None:
+    def __init__(self, caido: bool = False) -> None:
         self.pares: list[ParNli] = []
+        self.caido = caido
 
     def clasificar(self, pares: list[ParNli]) -> list[ResultadoNli]:
+        if pares and self.caido:
+            raise FalloDeInferencia("nli falso: fallo del modelo")
         self.pares.extend(pares)
         return [NEUTRAL if "stage I–III" in par.hipotesis else IMPLICA for par in pares]
 

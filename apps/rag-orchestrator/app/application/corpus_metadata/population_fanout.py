@@ -39,7 +39,7 @@ from app.domain.corpus_metadata.poblacion_abanico import (
     omitir_lenguaje_prescriptivo,
     pares_de_verificacion,
     rechazar_relleno,
-    validar_chunk,
+    descartar_chunk_ajeno,
     verificar_nli,
 )
 from app.domain.corpus_metadata.poblacion_contadores import ContadoresDePoblacion
@@ -265,7 +265,7 @@ class PopulationFanoutExtractor:
         """Relleno → fragmento → longitud → lenguaje → NLI → duplicados → tope. Lo que sobrevive se guarda con su fragmento y su etiqueta NLI."""
         texto_del_fragmento = {f.chunk_id: f.texto for f in self._recuperador.todos(documento)}
         sin_relleno = rechazar_relleno(salida.valores or ())
-        en_el_documento = validar_chunk(sin_relleno.conservados, texto_del_fragmento.keys())
+        en_el_documento = descartar_chunk_ajeno(sin_relleno.conservados, texto_del_fragmento.keys())
         acotados_en_longitud = descartar_por_longitud(en_el_documento.conservados)
         sin_lenguaje = omitir_lenguaje_prescriptivo(
             acotados_en_longitud.conservados, self._buscar_terminos_prohibidos

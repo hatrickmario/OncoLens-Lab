@@ -64,10 +64,13 @@ def rechazar_relleno(propuestos: Sequence[ValorPropuesto]) -> Depurado:
     return _depurar(propuestos, lambda v: normalizar_texto(v.valor) not in MARCADORES_DE_RELLENO)
 
 
-def validar_chunk(
+def descartar_chunk_ajeno(
     propuestos: Sequence[ValorPropuesto], chunk_ids_del_documento: Collection[str]
 ) -> Depurado:
-    """Descarta el valor cuyo ``chunkId`` no existe en el documento de la tarea (RN-04): la fuente la fija el código."""
+    """Descarta el valor cuyo ``chunkId`` no existe en el documento de la tarea (RN-04): la fuente la fija el código.
+
+    Se valida contra TODOS los fragmentos del documento, no solo los del prompt. Cuenta en ``valoresRechazados`` (motivo
+    ``chunk_ajeno``) junto con el relleno: AC-2 fija que ``valoresRechazados`` solo suma esos dos motivos."""
     return _depurar(propuestos, lambda v: v.chunk_id in chunk_ids_del_documento)
 
 

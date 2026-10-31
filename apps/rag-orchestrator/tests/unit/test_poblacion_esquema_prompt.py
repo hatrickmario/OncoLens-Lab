@@ -56,7 +56,7 @@ def test_construir_prompt_no_reinterpreta_marcadores_que_vienen_en_un_fragmento(
 
 
 def test_el_prompt_versionado_no_usa_lenguaje_prescriptivo_ni_datos_de_pacientes() -> None:
-    """RN-23 sobre el prompt (niveles A y B de la lista versionada) y RN-13: la plantilla no nombra pacientes concretos."""
+    """RN-23 sobre el prompt (nivel A de la lista versionada, el que aplica el filtro de producción) y RN-13: la plantilla no nombra pacientes concretos."""
     verificador = cargar_verificador_de_terminos(CATALOGOS)
     prompt = construir_prompt(PLANTILLA, CRITERIO, [Fragmento("c1", "Texto.")], 3)
 

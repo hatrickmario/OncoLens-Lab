@@ -138,13 +138,18 @@ def _modelos_de_metadatos(
     ambiente = Settings(_env_file=None, modelos=None)  # type: ignore[call-arg]
     if ambiente.nli_entailment_threshold is None:
         raise ModeloNoVerificadoError("NLI_ENTAILMENT_THRESHOLD")
-    cliente_local = _llm_local(ambiente, temperatura) if llm is None else None
+    if llm is None:
+        cliente_local = _llm_local(ambiente, temperatura)
+        llm_de_metadatos: LlmClient = cliente_local
+        llm_de_poblacion: LlmDePoblacion | None = llm_poblacion or cliente_local
+    else:
+        llm_de_metadatos, llm_de_poblacion = llm, llm_poblacion
     return ModelosDeMetadatos(
-        llm=llm or cliente_local,  # type: ignore[arg-type]
+        llm=llm_de_metadatos,
         nli=nli or _nli_real(),
         umbral_nli=ambiente.nli_entailment_threshold,
         nombre_del_llm=ambiente.llm_model or "no_declarado",
-        llm_poblacion=llm_poblacion or cliente_local,
+        llm_poblacion=llm_de_poblacion,
     )
 
 
@@ -170,17 +175,17 @@ def _exigir_llm_local() -> None:
         raise ConfiguracionDeLlmNoLocalError(incumplida)
 
 
-def servicio_de_metadatos(
-    modelos: ModelosDeMetadatos, incluir_poblacion: bool = True
-) -> MetadataExtractionService:
-    """Fábrica de producción del paso de metadatos: la usan la CLI y la evaluación (adapters falsos en la CI).
-
-    ``incluir_poblacion = False`` cuando la población la extrae el abanico (US-242 D8)."""
+def servicio_de_metadatos(modelos: ModelosDeMetadatos) -> MetadataExtractionService:
+    """Fábrica de producción del paso de metadatos: la usan la CLI y la evaluación (adapters falsos en la CI)."""
     return MetadataExtractionService(
-        llm=modelos.llm,
-        nli=modelos.nli,
-        umbral_nli=modelos.umbral_nli,
-        incluir_poblacion=incluir_poblacion,
+        llm=modelos.llm, nli=modelos.nli, umbral_nli=modelos.umbral_nli
+    )
+
+
+def servicio_de_metadatos_solo_escalares(modelos: ModelosDeMetadatos) -> MetadataExtractionService:
+    """Como ``servicio_de_metadatos`` pero sin pedir población: la extrae el abanico (US-242 D8)."""
+    return MetadataExtractionService.solo_escalares(
+        llm=modelos.llm, nli=modelos.nli, umbral_nli=modelos.umbral_nli
     )
 
 
@@ -263,8 +268,10 @@ def _ejecutar_ingesta(
             almacen_de_chunks=almacen,
             embedder=embedder,
             codificador_sparse=sparse,
-            resolutor_de_metadatos=servicio_de_metadatos(
-                metadatos, incluir_poblacion=extractor is None
+            resolutor_de_metadatos=(
+                servicio_de_metadatos(metadatos)
+                if extractor is None
+                else servicio_de_metadatos_solo_escalares(metadatos)
             ),
             fuente=fuente_de_texto(ajustes, manifiesto.resolve().parent),
             reloj=reloj,

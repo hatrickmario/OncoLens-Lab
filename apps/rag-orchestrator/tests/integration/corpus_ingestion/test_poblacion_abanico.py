@@ -31,6 +31,7 @@ from tests.support.poblacion_abanico import (
     VERSION_DEL_PROMPT_DE_TEST,
     VALOR_PROHIBIDO,
     FakePopulationLlm,
+    NliPorValor,
     RecuperadorFalsoPorDocumento,
     documentos_e,
 )
@@ -393,3 +394,98 @@ def test_ingesta_criterio_sin_fragmentos_relevantes_queda_vacio_sin_llamar_al_ll
     assert montaje.llm.llamadas_de("ecog") == []
     assert montaje.llm.invocaciones == 5
     assert montaje.poblacion_de("doc-e1").population_criteria["ecog"] == []
+
+
+PENDIENTE = {"status": "pendiente", "values": []}
+
+
+@pytest.mark.ac("US-242", 6)
+def test_ingesta_llm_caido_deja_todos_los_criterios_pendientes_y_el_documento_embebido(
+    montar: Callable[..., MontajeDePoblacion],
+) -> None:
+    """[US-242 AC-6] Con el LLM caído cada criterio queda ``pendiente`` y el documento sigue ``embebido`` (RN-26)."""
+    montaje = montar(FakePopulationLlm(modo_caido=True))
+
+    reporte = montaje.ingerir("doc-e1")
+
+    assert reporte.resultado_de("doc-e1").estado.value == "embebido"
+    criterios = montaje.poblacion_de("doc-e1").population_criteria
+    assert len(criterios) == 6 and all(c == PENDIENTE for c in criterios.values())
+    assert reporte.contadores_de_poblacion.criterios_pendientes == 6
+
+
+@pytest.mark.ac("US-242", 6)
+def test_ingesta_nli_caido_deja_pendientes_los_criterios_con_valores_y_vacios_los_demas(
+    montar: Callable[..., MontajeDePoblacion],
+) -> None:
+    """[US-242 AC-6] Si el NLI falla, los criterios que lo necesitan quedan ``pendiente``; el documento queda ``embebido``."""
+    montaje = montar(nli=NliPorValor(caido=True))
+
+    reporte = montaje.ingerir("doc-e1")
+
+    assert reporte.resultado_de("doc-e1").estado.value == "embebido"
+    criterios = montaje.poblacion_de("doc-e1").population_criteria
+    assert sorted(k for k, v in criterios.items() if v == PENDIENTE) == [
+        "biomarcadores.her2",
+        "biomarcadores.receptores_hormonales",
+        "estado_menopausico",
+    ]
+    assert reporte.contadores_de_poblacion.criterios_pendientes == 3
+
+
+@pytest.mark.ac("US-242", 6)
+def test_ingesta_json_fuera_de_esquema_deja_pendientes_los_criterios(
+    montar: Callable[..., MontajeDePoblacion],
+) -> None:
+    """[US-242 AC-6] Una salida que no cumple el esquema nunca se guarda: el criterio queda ``pendiente``."""
+    montaje = montar(FakePopulationLlm(salida_fija='{"valores": ["x"]}'))
+
+    reporte = montaje.ingerir("doc-e1")
+
+    assert reporte.resultado_de("doc-e1").estado.value == "embebido"
+    criterios = montaje.poblacion_de("doc-e1").population_criteria
+    assert all(c == PENDIENTE for c in criterios.values())
+    assert reporte.contadores_de_poblacion.criterios_pendientes == 6
+
+
+def test_ingesta_valida_el_fragmento_contra_todo_el_documento_y_no_solo_contra_el_prompt(
+    montar: Callable[..., MontajeDePoblacion],
+) -> None:
+    """[US-242 D4] Un valor que cita un fragmento del documento fuera de los k del prompt se conserva (no es ajeno)."""
+    montaje = montar(FakePopulationLlm(("EXT-FUERA-DEL-PROMPT",)))
+
+    reporte = montaje.ingerir("doc-e1")
+
+    assert [v["chunkId"] for v in montaje.poblacion_de("doc-e1").population_criteria["ecog"]] == [
+        "ch-e1-3"
+    ]
+    assert reporte.contadores_de_poblacion.valores_rechazados == 0
+
+
+def test_ingesta_sin_recortes_no_marca_truncado(montar: Callable[..., MontajeDePoblacion]) -> None:
+    """[US-242 AC-5] ``truncado`` es falso mientras el tope no deje valores fuera."""
+    montaje = montar()
+
+    reporte = montaje.ingerir("doc-e1")
+
+    assert reporte.contadores_de_poblacion.truncado is False
+    assert reporte.como_diccionario()["poblacion"]["truncado"] is False
+
+
+def test_ingesta_con_poblacion_de_la_fuente_estructurada_no_se_extrae_ni_se_refresca(
+    montar: Callable[..., MontajeDePoblacion],
+) -> None:
+    """[US-242 D8] Un documento con criterios estructurados (``fuente_estructurada``) conserva la forma antigua: 0 llamadas,
+    tampoco al reingerir."""
+    montaje = montar()
+    estructurado = replace(documentos_e()["doc-e1"], population_criteria={"estadio": "IV"})
+
+    montaje.ingerir_documentos(estructurado)
+    montaje.ingerir_documentos(estructurado)
+
+    poblacion = montaje.poblacion_de("doc-e1")
+    assert (poblacion.metadata_source, poblacion.population_form) == (
+        "fuente_estructurada",
+        "antigua",
+    )
+    assert montaje.llm.invocaciones == 0

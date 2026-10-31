@@ -17,6 +17,7 @@ detectara, la evaluación no protegería nada.
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import Any
 
 from app.application.corpus_metadata.poblacion_puertos import DocumentoParaExtraer
@@ -83,7 +84,8 @@ class _ConfiaEnElLlm(PopulationFanoutExtractor):
     """Lo que hace un paso que guarda lo que el LLM propone: sin relleno, fragmento, lenguaje ni NLI."""
 
     def _depurar_y_acotar(self, documento: Any, criterio: Any, salida: Any) -> _ResultadoDeCriterio:
-        lista = lista_de_criterio(salida.valores or (), self._configuracion.versiones)
+        confiados = tuple(replace(v, resultado_nli="entailment") for v in salida.valores or ())
+        lista = lista_de_criterio(confiados, self._configuracion.versiones)
         return _ResultadoDeCriterio(criterio.clave_de_estudio, lista, ContadoresDePoblacion())
 
 

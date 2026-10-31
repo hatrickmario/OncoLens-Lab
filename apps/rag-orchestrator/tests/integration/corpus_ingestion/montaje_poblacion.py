@@ -122,11 +122,8 @@ def montar_poblacion(
         almacen_de_chunks=base.almacen,
         embedder=base.embedder,
         codificador_sparse=base.sparse,
-        resolutor_de_metadatos=MetadataExtractionService(
-            llm=FakeMetadataLlm(),
-            nli=base.nli_metadatos,
-            umbral_nli=UMBRAL_NLI_DE_TEST,
-            incluir_poblacion=False,
+        resolutor_de_metadatos=MetadataExtractionService.solo_escalares(
+            llm=FakeMetadataLlm(), nli=base.nli_metadatos, umbral_nli=UMBRAL_NLI_DE_TEST
         ),
         fuente=FuenteDeTextoDelManifiesto(DIRECTORIO_DE_FIXTURES, None),
         reloj=RelojFijo(),
