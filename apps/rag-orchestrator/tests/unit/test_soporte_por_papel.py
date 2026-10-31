@@ -52,8 +52,8 @@ def test_descarta_con_afirmacion_sin_soporte_cuando_la_principal_o_la_salvedad_n
     assert not decision.conservar and decision.motivo is MotivoDeSoporte.afirmacion_sin_soporte
 
 
-@pytest.mark.parametrize("papel", [P, S, V])
-def test_descarta_con_afirmacion_sin_soporte_cuando_cualquier_papel_trae_modal_normativo(
+@pytest.mark.parametrize("papel", [P, V])
+def test_descarta_con_afirmacion_sin_soporte_cuando_la_principal_o_la_salvedad_trae_modal_normativo(
     papel: PapelDeAfirmacion,
 ) -> None:
     estados = [(P, OK), (S, OK), (V, OK)]
@@ -62,6 +62,16 @@ def test_descarta_con_afirmacion_sin_soporte_cuando_cualquier_papel_trae_modal_n
     decision = decidir_opcion_por_papel(estados)
 
     assert not decision.conservar and decision.motivo is MotivoDeSoporte.afirmacion_sin_soporte
+
+
+def test_omite_la_secundaria_y_conserva_la_opcion_cuando_la_secundaria_trae_modal_normativo() -> (
+    None
+):
+    """D4-20: un criterio de inclusión con «must»/«should» en una secundaria no descarta la opción entera."""
+    decision = decidir_opcion_por_papel([(P, OK), (S, MODAL), (V, OK)])
+
+    assert decision.conservar and decision.motivo is None
+    assert decision.posiciones_omitidas == (1,)
 
 
 @pytest.mark.parametrize("papel", [P, S, V])

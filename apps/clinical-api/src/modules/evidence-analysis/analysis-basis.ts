@@ -112,6 +112,8 @@ export function crearBaseDelAnalisis(dependencias: {
         priorAnalysesUsed: [],
         agentSteps: respuesta.agentSteps,
         omittedClaims: respuesta.omittedClaims,
+        optionsNotShown: respuesta.optionsNotShown,
+        maxOptions: request.maxOptions,
       };
     },
   };

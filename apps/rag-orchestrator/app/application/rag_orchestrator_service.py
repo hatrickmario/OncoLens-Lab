@@ -80,7 +80,11 @@ from app.domain.fusion_de_candidatos import (
     fusionar_candidatos,
 )
 from app.domain.normalizacion_puntaje import validar_puntaje_normalizado
-from app.domain.option_selection import OpcionConRelevancia, recortar_a_max_opciones
+from app.domain.option_selection import (
+    OpcionConRelevancia,
+    RecorteDeOpciones,
+    recortar_contando_excedente,
+)
 from app.domain.pares_del_reranker import recortar_a_pares_del_reranker
 from app.domain.relevance import (
     ChunkPuntuado,
@@ -284,11 +288,12 @@ class RAGOrchestratorService:
             trace_id, soporte.soportadas, citables, solicitud, aplicabilidad.fuentes, reevaluar
         )
         fuentes = fuentes_con_los_fragmentos_citados(
-            aplicabilidad.fuentes, recortadas, citables, reevaluar
+            aplicabilidad.fuentes, recortadas.conservadas, citables, reevaluar
         )
         self._registrar_conflictos(trace_id, fuentes)
         return ensamblar_respuesta_con_evidencia(
-            recortadas,
+            recortadas.conservadas,
+            recortadas.excedente,
             self._soporte.sanear_descartadas(trace_id, idioma, resultado.descartadas),
             soporte.descartadas,
             soporte.limitaciones,
@@ -394,7 +399,7 @@ class RAGOrchestratorService:
         solicitud: RagQueryInternalRequest,
         fuentes: Sequence[AplicabilidadDeFuente],
         reevaluar: Reevaluar,
-    ) -> tuple[OpcionConRelevancia, ...]:
+    ) -> RecorteDeOpciones:
         """FR-09, RN-28: agrega la aplicabilidad de cada opción ya soportada y conserva las ``maxOptions`` más aplicables.
 
         El orden va después del soporte y antes del recorte: una descartada nunca ocupa posición. El excedente se omite
@@ -408,16 +413,18 @@ class RAGOrchestratorService:
             puntajes,
             reevaluar,
         )
-        recortadas = recortar_a_max_opciones(soportadas, solicitud.maxOptions)
+        recorte = recortar_contando_excedente(soportadas, solicitud.maxOptions)
         logger.info(
             "event=rag_query_recorte traceId=%s opcionesRecortadas=%d opcionesNoComparables=%d",
             trace_id,
-            len(soportadas) - len(recortadas),
+            recorte.excedente,
             sum(
-                1 for o in recortadas if o.aplicabilidad and o.aplicabilidad.poblacion_no_comparable
+                1
+                for o in recorte.conservadas
+                if o.aplicabilidad and o.aplicabilidad.poblacion_no_comparable
             ),
         )
-        return recortadas
+        return recorte
 
     async def _chunks_citables(
         self, trace_id: str, recuperacion: ResultadoDeRecuperacion
@@ -681,6 +688,7 @@ class RAGOrchestratorService:
             assumptions=[],
             retrievalStats=RetrievalStats(retrieved=recuperados, aboveThreshold=0),
             omittedClaims=0,
+            optionsNotShown=0,
             agentSteps=[],
             topRelevanceScore=top_relevance_score([]),
             meta=meta,

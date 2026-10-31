@@ -10,7 +10,11 @@ from app.domain.applicability_aggregation import (
     agregar_aplicabilidad_de_opcion,
 )
 from app.domain.citations import OpcionAceptada, OpcionGenerada
-from app.domain.option_selection import OpcionConRelevancia, recortar_a_max_opciones
+from app.domain.option_selection import (
+    OpcionConRelevancia,
+    recortar_a_max_opciones,
+    recortar_contando_excedente,
+)
 from app.domain.relevance import relevancia_de_opcion
 
 
@@ -91,6 +95,32 @@ def test_recortar_prefiere_mas_coincide_y_despues_relevancia_cuando_empatan_los_
         "mucho-coincide-relevante",
         "mucho-coincide",
     ]
+
+
+def test_recortar_contando_excedente_devuelve_cero_cuando_no_hay_opciones():
+    recorte = recortar_contando_excedente([], 3)
+
+    assert (recorte.conservadas, recorte.excedente) == ((), 0)
+
+
+def test_recortar_contando_excedente_devuelve_cero_cuando_caben_todas():
+    opciones = [_validada("a", 0.4, "ch-a"), _validada("b", 0.9, "ch-b")]
+
+    recorte = recortar_contando_excedente(opciones, 3)
+
+    assert _nombres(recorte.conservadas) == ["b", "a"]
+    assert recorte.excedente == 0
+
+
+def test_recortar_contando_excedente_cuenta_las_que_quedan_fuera_sin_conservarlas():
+    opciones = [
+        _validada(n, p, f"ch-{n}") for n, p in (("a", 0.9), ("b", 0.8), ("c", 0.7), ("d", 0.6))
+    ]
+
+    recorte = recortar_contando_excedente(opciones, 3)
+
+    assert _nombres(recorte.conservadas) == ["a", "b", "c"]
+    assert recorte.excedente == 1
 
 
 def test_relevancia_de_opcion_es_la_de_la_cita_mas_relevante():
