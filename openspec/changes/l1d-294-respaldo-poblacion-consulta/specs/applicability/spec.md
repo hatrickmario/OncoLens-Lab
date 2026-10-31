@@ -51,3 +51,20 @@ Ante un respaldo fallido, `rag-orchestrator` MUST registrar el evento `aplicabil
 - **WHEN** se leen los logs de `rag-orchestrator`
 - **THEN** hay un evento `aplicabilidad_respaldo_fallido` con `finish_reason = length`, la longitud de la salida, el criterio y el `traceId`
 - **AND** ningún valor, texto de fragmento, prompt, salida del LLM ni pregunta aparece en los logs
+
+## MODIFIED Requirements
+
+### Requirement: La versión del prompt de aplicabilidad queda registrada con la del generador
+Cuando el respaldo de población invoca al LLM, `meta.promptVersion` MUST llevar la versión del generador y la del prompt del respaldo (`POPULATION_PROMPT_VERSION`) en un solo token (`<generador>+<versión del prompt de población>`), y el log del análisis SHALL registrar la de población como `applicabilityPromptVersion`; sin cambio de contrato (`[S3 resp. 16]`). Si no se invoca, `meta.promptVersion` MUST ser solo la del generador.
+
+#### Scenario: Un análisis con camino textual reporta ambas versiones del prompt [FR-25] [S3 resp. 16]
+- **GIVEN** A-M1, `test-apl-1.0.0`, `doc-a2` con la marca `pendiente` por criterio, `APL-OK` y el NLI falso en `entailment` (FX-08b-a)
+- **WHEN** `POST /rag/query` evalúa la aplicabilidad de `doc-a2`
+- **THEN** `meta.promptVersion` es la versión del generador seguida de `+poblacion_v1`, sin espacios
+- **AND** el log del análisis registra `applicabilityPromptVersion = poblacion_v1` sin el valor propuesto ni el texto del chunk
+- **AND** la respuesta valida contra `RagQueryInternalResponse` del `openapi.yaml` del proveedor
+
+#### Scenario: Sin camino textual la versión es solo la del generador [S3 resp. 16]
+- **GIVEN** A-M1, `test-apl-1.0.0` y una única fuente recuperada con los cinco criterios de población estructurados (fixture propia; `doc-a1` no reporta `linea` y la llamaría)
+- **WHEN** `POST /rag/query` procesa el análisis
+- **THEN** `meta.promptVersion` es la del generador, sin sufijo de aplicabilidad
