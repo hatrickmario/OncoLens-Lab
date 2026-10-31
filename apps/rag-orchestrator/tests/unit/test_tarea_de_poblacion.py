@@ -9,6 +9,7 @@ import asyncio
 import pytest
 
 from app.application.corpus_metadata.poblacion_puertos import RespuestaDelLlm
+from app.application.ports import FalloDelLlm
 from app.domain.applicability_text import (
     CausaDeRespaldo,
     ChunkDeFuente,
@@ -78,7 +79,6 @@ def test_proponer_conserva_solo_los_valores_de_elegibilidad_cuando_el_llm_marca_
     [
         ("RESP-BUCLE", CausaDeRespaldo.bucle, "length"),
         ("RESP-TRUNCADO", CausaDeRespaldo.truncado, "stop"),
-        ("RESP-CAIDO", CausaDeRespaldo.caido, None),
     ],
 )
 def test_proponer_lanza_respaldo_fallido_con_la_causa_cuando_el_llm_falla(
@@ -88,6 +88,12 @@ def test_proponer_lanza_respaldo_fallido_con_la_causa_cuando_el_llm_falla(
         _proponer(RespaldoLlmFalso(escenario))
 
     assert (excepcion.value.causa, excepcion.value.finish_reason) == (causa, finish_reason)
+
+
+def test_proponer_deja_pasar_el_fallo_del_llm_cuando_el_llm_esta_caido():
+    # Un solo punto traduce FalloDelLlm a la causa «caido»: el servicio (AplicabilidadTextual), no el adapter.
+    with pytest.raises(FalloDelLlm):
+        _proponer(RespaldoLlmFalso("RESP-CAIDO"))
 
 
 def test_proponer_mide_la_longitud_de_la_salida_sin_copiarla_cuando_el_llm_entra_en_bucle():

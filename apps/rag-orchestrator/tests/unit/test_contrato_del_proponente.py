@@ -66,11 +66,42 @@ def test_proponer_normaliza_y_descarta_igual_que_el_contrato_cuando_el_llm_entre
     assert resultado == ESPERADO
 
 
+@pytest.mark.parametrize("construir", [_real, _falso], ids=["real", "falso"])
+@pytest.mark.parametrize("n_criterios", [0, 2])
+def test_proponer_rechaza_con_value_error_cuando_la_llamada_no_trae_exactamente_un_criterio(
+    construir, n_criterios
+):
+    criterio = CriterioPendiente("estado_her2", "Estado de HER2", "HER2 status")
+    fuente = FuenteParaProponer(EXTERNAL_ID, (criterio,) * n_criterios, FUENTE.chunks)
+
+    with pytest.raises(ValueError):
+        asyncio.run(construir().proponer(fuente))
+
+
+def test_proponer_quita_el_marcador_del_fragmento_pegado_al_valor_cuando_el_llm_lo_copia():
+    # El prompt entrega los fragmentos como «[ch-a2-1]\ntexto»: un LLM descuidado copia el marcador dentro del valor.
+    class Llm:
+        async def completar_json_acotado(self, prompt, esquema, *, max_tokens, semilla):
+            valor = {
+                "value": "HER2 negativo [ch-a2-1]",
+                "chunkId": "ch-a2-1",
+                "scope": "elegibilidad",
+            }
+            return RespuestaDelLlm(json.dumps({"values": [valor]}), "stop")
+
+    resultado = asyncio.run(tarea_de_respaldo(Llm()).proponer(FUENTE))
+
+    assert [p.valor for p in resultado] == ["HER2 negativo"]
+
+
 @pytest.mark.parametrize(
     ("valor", "chunk_id", "esperado"),
     [
         ("  HER2 negativo ", "ch-1", "HER2 negativo"),
         ("   ", "ch-1", None),
+        ("HER2 negativo [ch-1]", "ch-1", "HER2 negativo"),
+        ("[ch-1]", "ch-1", None),
+        ("HER2 [ch-otro] negativo", "ch-1", "HER2 [ch-otro] negativo"),
         ("HER2 negativo", "", None),
         ("HER2 negativo", "   ", None),
         ("x" * LONGITUD_MAXIMA_DEL_VALOR, "ch-1", "x" * LONGITUD_MAXIMA_DEL_VALOR),

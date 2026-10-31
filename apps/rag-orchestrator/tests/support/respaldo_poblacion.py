@@ -60,6 +60,7 @@ class LlamadaDeRespaldo:
 class RespaldoLlmFalso:
     escenario: str = "RESP-OK"
     llamadas: list[LlamadaDeRespaldo] = field(default_factory=list)
+    esquemas: list[Mapping[str, Any]] = field(default_factory=list)
 
     @property
     def invocaciones(self) -> int:
@@ -70,6 +71,7 @@ class RespaldoLlmFalso:
     ) -> RespuestaDelLlm:
         criterio = _CRITERIO_EN_PROMPT.search(prompt)
         assert criterio is not None, "el prompt debe declarar 'Criterio: <clave>'"
+        self.esquemas.append(esquema)
         self.llamadas.append(
             LlamadaDeRespaldo(
                 prompt,
