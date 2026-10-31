@@ -132,7 +132,8 @@
       "cita_invalida": "La cita no corresponde a un fragmento recuperado",
       "afirmacion_sin_soporte": "Una afirmación no tiene soporte en la fuente o contenía lenguaje no permitido",
       "sin_citas": "La opción no incluye citas a fragmentos recuperados",
-      "solo_soportada_por_analisis_previo": "Solo la respalda un análisis previo, que no es evidencia"
+      "solo_soportada_por_analisis_previo": "Solo la respalda un análisis previo, que no es evidencia",
+      "lenguaje_no_permitido": "Contenía lenguaje prescriptivo, que no se muestra"
     },
     "error": {
       "modeloNoDisponible": "El modelo local no está disponible. No se muestra ningún resultado parcial.",
