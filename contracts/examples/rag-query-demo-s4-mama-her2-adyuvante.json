@@ -1,0 +1,495 @@
+{
+  "status": "con_evidencia",
+  "synthesis": {
+    "agreements": [
+      {
+        "text": "Las fuentes recuperadas describen el uso de terapia anti-HER2 con o sin antraciclinas y de terapia endocrina adyuvante en cáncer de mama temprano.",
+        "citedSources": [
+          {
+            "title": "Reassessing the Role of Anthracyclines in Early HER2-Positive Breast Cancer in the Era of Anti-HER2 Therapy",
+            "sourceName": "PMC Open Access",
+            "externalId": "10.3390/jcm15187303",
+            "language": "en",
+            "sourceType": "literature",
+            "licenseClass": "cc_by",
+            "studyDesign": "revision_sistematica",
+            "trialPhase": null,
+            "primaryEndpoint": null,
+            "sampleSize": null,
+            "publishedAt": "2026-09-20",
+            "lastUpdatedAt": "2026-09-20",
+            "guidelineVersion": null,
+            "authors": null,
+            "sourceUrl": "https://doi.org/10.3390/jcm15187303",
+            "possiblyOutdated": false,
+            "newerVersionAvailable": false,
+            "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: studies included patients with early HER2-positive breast cancer, both hormone receptor-positive and -negative, stages I–III, treated with anti-HER2 therapy.",
+            "chunkId": "chunk_pmc-mama-antraciclinas-rs_0004"
+          },
+          {
+            "title": "Tamoxifen therapy benefit in luminal A and B breast cancer with 20-year follow-up",
+            "sourceName": "PMC Open Access",
+            "externalId": "10.1093/jnci/djag049",
+            "language": "en",
+            "sourceType": "literature",
+            "licenseClass": "cc_by",
+            "studyDesign": "eca",
+            "trialPhase": null,
+            "primaryEndpoint": null,
+            "sampleSize": null,
+            "publishedAt": "2026-07-01",
+            "lastUpdatedAt": "2026-07-01",
+            "guidelineVersion": null,
+            "authors": null,
+            "sourceUrl": "https://doi.org/10.1093/jnci/djag049",
+            "possiblyOutdated": false,
+            "newerVersionAvailable": false,
+            "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: women with estrogen receptor-positive (luminal A or B) breast cancer were randomized to adjuvant tamoxifen or no endocrine therapy.",
+            "chunkId": "chunk_pmc-mama-tamoxifeno-eca_0003"
+          }
+        ],
+        "patientDataRefs": []
+      },
+      {
+        "text": "El paciente tiene registrado un resultado de HER2 3+ por inmunohistoquímica.",
+        "citedSources": [],
+        "patientDataRefs": [
+          "r2"
+        ]
+      }
+    ],
+    "discrepancies": []
+  },
+  "applicability": [
+    {
+      "externalId": "10.3390/jcm15187303",
+      "criteria": [
+        {
+          "criterion": "estado_her2",
+          "patientValue": "3+ (IHQ)",
+          "studyPopulationValue": "positivo",
+          "status": "coincide",
+          "unknownReason": null,
+          "isExclusionary": true,
+          "patientDataWarning": null,
+          "studyPopulationValues": [
+            {
+              "value": "positivo",
+              "chunkId": "chunk_pmc-mama-antraciclinas-rs_0004",
+              "scope": "elegibilidad"
+            }
+          ],
+          "partialReason": null,
+          "citedSources": [
+            {
+              "title": "Reassessing the Role of Anthracyclines in Early HER2-Positive Breast Cancer in the Era of Anti-HER2 Therapy",
+              "sourceName": "PMC Open Access",
+              "externalId": "10.3390/jcm15187303",
+              "language": "en",
+              "sourceType": "literature",
+              "licenseClass": "cc_by",
+              "studyDesign": "revision_sistematica",
+              "trialPhase": null,
+              "primaryEndpoint": null,
+              "sampleSize": null,
+              "publishedAt": "2026-09-20",
+              "lastUpdatedAt": "2026-09-20",
+              "guidelineVersion": null,
+              "authors": null,
+              "sourceUrl": "https://doi.org/10.3390/jcm15187303",
+              "possiblyOutdated": false,
+              "newerVersionAvailable": false,
+              "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: studies included patients with early HER2-positive breast cancer, both hormone receptor-positive and -negative, stages I–III, treated with anti-HER2 therapy.",
+              "chunkId": "chunk_pmc-mama-antraciclinas-rs_0004"
+            }
+          ]
+        },
+        {
+          "criterion": "receptores_hormonales",
+          "patientValue": "positivo",
+          "studyPopulationValue": "positivo, negativo",
+          "status": "parcial",
+          "unknownReason": null,
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "studyPopulationValues": [
+            {
+              "value": "positivo",
+              "chunkId": "chunk_pmc-mama-antraciclinas-rs_0004",
+              "scope": "elegibilidad"
+            },
+            {
+              "value": "negativo",
+              "chunkId": "chunk_pmc-mama-antraciclinas-rs_0004",
+              "scope": "elegibilidad"
+            }
+          ],
+          "partialReason": "mezclada",
+          "citedSources": [
+            {
+              "title": "Reassessing the Role of Anthracyclines in Early HER2-Positive Breast Cancer in the Era of Anti-HER2 Therapy",
+              "sourceName": "PMC Open Access",
+              "externalId": "10.3390/jcm15187303",
+              "language": "en",
+              "sourceType": "literature",
+              "licenseClass": "cc_by",
+              "studyDesign": "revision_sistematica",
+              "trialPhase": null,
+              "primaryEndpoint": null,
+              "sampleSize": null,
+              "publishedAt": "2026-09-20",
+              "lastUpdatedAt": "2026-09-20",
+              "guidelineVersion": null,
+              "authors": null,
+              "sourceUrl": "https://doi.org/10.3390/jcm15187303",
+              "possiblyOutdated": false,
+              "newerVersionAvailable": false,
+              "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: studies included patients with early HER2-positive breast cancer, both hormone receptor-positive and -negative, stages I–III, treated with anti-HER2 therapy.",
+              "chunkId": "chunk_pmc-mama-antraciclinas-rs_0004"
+            }
+          ]
+        },
+        {
+          "criterion": "estadio",
+          "patientValue": "IIA",
+          "studyPopulationValue": "I, II, III",
+          "status": "parcial",
+          "unknownReason": null,
+          "isExclusionary": false,
+          "patientDataWarning": "sin_verificar",
+          "studyPopulationValues": [
+            {
+              "value": "I",
+              "chunkId": "chunk_pmc-mama-antraciclinas-rs_0004",
+              "scope": "elegibilidad"
+            },
+            {
+              "value": "II",
+              "chunkId": "chunk_pmc-mama-antraciclinas-rs_0004",
+              "scope": "elegibilidad"
+            },
+            {
+              "value": "III",
+              "chunkId": "chunk_pmc-mama-antraciclinas-rs_0004",
+              "scope": "elegibilidad"
+            }
+          ],
+          "partialReason": "mezclada",
+          "citedSources": [
+            {
+              "title": "Reassessing the Role of Anthracyclines in Early HER2-Positive Breast Cancer in the Era of Anti-HER2 Therapy",
+              "sourceName": "PMC Open Access",
+              "externalId": "10.3390/jcm15187303",
+              "language": "en",
+              "sourceType": "literature",
+              "licenseClass": "cc_by",
+              "studyDesign": "revision_sistematica",
+              "trialPhase": null,
+              "primaryEndpoint": null,
+              "sampleSize": null,
+              "publishedAt": "2026-09-20",
+              "lastUpdatedAt": "2026-09-20",
+              "guidelineVersion": null,
+              "authors": null,
+              "sourceUrl": "https://doi.org/10.3390/jcm15187303",
+              "possiblyOutdated": false,
+              "newerVersionAvailable": false,
+              "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: studies included patients with early HER2-positive breast cancer, both hormone receptor-positive and -negative, stages I–III, treated with anti-HER2 therapy.",
+              "chunkId": "chunk_pmc-mama-antraciclinas-rs_0004"
+            }
+          ]
+        },
+        {
+          "criterion": "linea_tratamiento",
+          "patientValue": "1",
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "no_reportado_por_fuente",
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "citedSources": []
+        },
+        {
+          "criterion": "estado_menopausico",
+          "patientValue": "posmenopáusica",
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "no_reportado_por_fuente",
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "citedSources": []
+        },
+        {
+          "criterion": "ecog",
+          "patientValue": "1",
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "no_reportado_por_fuente",
+          "isExclusionary": false,
+          "patientDataWarning": "sin_verificar",
+          "citedSources": []
+        }
+      ],
+      "summary": {
+        "coincide": 1,
+        "parcial": 2,
+        "noCoincide": 0,
+        "desconocido": 3
+      },
+      "populationNotComparable": false
+    },
+    {
+      "externalId": "10.1093/jnci/djag049",
+      "criteria": [
+        {
+          "criterion": "estado_her2",
+          "patientValue": "3+ (IHQ)",
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "no_reportado_por_fuente",
+          "isExclusionary": true,
+          "patientDataWarning": null,
+          "citedSources": []
+        },
+        {
+          "criterion": "receptores_hormonales",
+          "patientValue": "positivo",
+          "studyPopulationValue": "positivo",
+          "status": "coincide",
+          "unknownReason": null,
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "studyPopulationValues": [
+            {
+              "value": "positivo",
+              "chunkId": "chunk_pmc-mama-tamoxifeno-eca_0003",
+              "scope": "elegibilidad"
+            }
+          ],
+          "partialReason": null,
+          "citedSources": [
+            {
+              "title": "Tamoxifen therapy benefit in luminal A and B breast cancer with 20-year follow-up",
+              "sourceName": "PMC Open Access",
+              "externalId": "10.1093/jnci/djag049",
+              "language": "en",
+              "sourceType": "literature",
+              "licenseClass": "cc_by",
+              "studyDesign": "eca",
+              "trialPhase": null,
+              "primaryEndpoint": null,
+              "sampleSize": null,
+              "publishedAt": "2026-07-01",
+              "lastUpdatedAt": "2026-07-01",
+              "guidelineVersion": null,
+              "authors": null,
+              "sourceUrl": "https://doi.org/10.1093/jnci/djag049",
+              "possiblyOutdated": false,
+              "newerVersionAvailable": false,
+              "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: women with estrogen receptor-positive (luminal A or B) breast cancer were randomized to adjuvant tamoxifen or no endocrine therapy.",
+              "chunkId": "chunk_pmc-mama-tamoxifeno-eca_0003"
+            }
+          ]
+        },
+        {
+          "criterion": "estadio",
+          "patientValue": "IIA",
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "no_reportado_por_fuente",
+          "isExclusionary": false,
+          "patientDataWarning": "sin_verificar",
+          "citedSources": []
+        },
+        {
+          "criterion": "linea_tratamiento",
+          "patientValue": "1",
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "no_reportado_por_fuente",
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "citedSources": []
+        },
+        {
+          "criterion": "estado_menopausico",
+          "patientValue": "posmenopáusica",
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "no_reportado_por_fuente",
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "citedSources": []
+        },
+        {
+          "criterion": "ecog",
+          "patientValue": "1",
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "no_reportado_por_fuente",
+          "isExclusionary": false,
+          "patientDataWarning": "sin_verificar",
+          "citedSources": []
+        }
+      ],
+      "summary": {
+        "coincide": 1,
+        "parcial": 0,
+        "noCoincide": 0,
+        "desconocido": 5
+      },
+      "populationNotComparable": false
+    }
+  ],
+  "evidenceOptions": [
+    {
+      "option": "Terapia anti-HER2 adyuvante con o sin antraciclinas",
+      "rationale": "La revisión sistemática describe el papel de las antraciclinas junto a la terapia anti-HER2 en cáncer de mama temprano HER2 positivo.",
+      "details": [
+        "Texto sintético de ejemplo: el detalle describe, según los fragmentos recuperados, el diseño del estudio y la población incluida.",
+        "Texto sintético de ejemplo: el detalle describe los resultados que reporta la fuente para el grupo estudiado."
+      ],
+      "applicabilitySummary": {
+        "coincide": 1,
+        "parcial": 2,
+        "noCoincide": 0,
+        "desconocido": 3
+      },
+      "populationNotComparable": false,
+      "perSource": [
+        {
+          "externalId": "10.3390/jcm15187303",
+          "summary": {
+            "coincide": 1,
+            "parcial": 2,
+            "noCoincide": 0,
+            "desconocido": 3
+          },
+          "populationNotComparable": false
+        }
+      ],
+      "relevanceScore": 0.88,
+      "warnings": [
+        "datos_sin_verificar"
+      ],
+      "citedSources": [
+        {
+          "title": "Reassessing the Role of Anthracyclines in Early HER2-Positive Breast Cancer in the Era of Anti-HER2 Therapy",
+          "sourceName": "PMC Open Access",
+          "externalId": "10.3390/jcm15187303",
+          "language": "en",
+          "sourceType": "literature",
+          "licenseClass": "cc_by",
+          "studyDesign": "revision_sistematica",
+          "trialPhase": null,
+          "primaryEndpoint": null,
+          "sampleSize": null,
+          "publishedAt": "2026-09-20",
+          "lastUpdatedAt": "2026-09-20",
+          "guidelineVersion": null,
+          "authors": null,
+          "sourceUrl": "https://doi.org/10.3390/jcm15187303",
+          "possiblyOutdated": false,
+          "newerVersionAvailable": false,
+          "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: studies included patients with early HER2-positive breast cancer, both hormone receptor-positive and -negative, stages I–III, treated with anti-HER2 therapy.",
+          "chunkId": "chunk_pmc-mama-antraciclinas-rs_0004"
+        }
+      ]
+    },
+    {
+      "option": "Terapia endocrina adyuvante con tamoxifeno",
+      "rationale": "El ensayo describe el beneficio del tamoxifeno adyuvante en cáncer de mama con receptores de estrógeno positivos.",
+      "details": [
+        "Texto sintético de ejemplo: el detalle describe, según los fragmentos recuperados, el diseño del estudio y la población incluida.",
+        "Texto sintético de ejemplo: el detalle describe los resultados que reporta la fuente para el grupo estudiado."
+      ],
+      "applicabilitySummary": {
+        "coincide": 1,
+        "parcial": 0,
+        "noCoincide": 0,
+        "desconocido": 5
+      },
+      "populationNotComparable": false,
+      "perSource": [
+        {
+          "externalId": "10.1093/jnci/djag049",
+          "summary": {
+            "coincide": 1,
+            "parcial": 0,
+            "noCoincide": 0,
+            "desconocido": 5
+          },
+          "populationNotComparable": false
+        }
+      ],
+      "relevanceScore": 0.74,
+      "warnings": [
+        "datos_sin_verificar"
+      ],
+      "citedSources": [
+        {
+          "title": "Tamoxifen therapy benefit in luminal A and B breast cancer with 20-year follow-up",
+          "sourceName": "PMC Open Access",
+          "externalId": "10.1093/jnci/djag049",
+          "language": "en",
+          "sourceType": "literature",
+          "licenseClass": "cc_by",
+          "studyDesign": "eca",
+          "trialPhase": null,
+          "primaryEndpoint": null,
+          "sampleSize": null,
+          "publishedAt": "2026-07-01",
+          "lastUpdatedAt": "2026-07-01",
+          "guidelineVersion": null,
+          "authors": null,
+          "sourceUrl": "https://doi.org/10.1093/jnci/djag049",
+          "possiblyOutdated": false,
+          "newerVersionAvailable": false,
+          "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: women with estrogen receptor-positive (luminal A or B) breast cancer were randomized to adjuvant tamoxifen or no endocrine therapy.",
+          "chunkId": "chunk_pmc-mama-tamoxifeno-eca_0003"
+        }
+      ]
+    }
+  ],
+  "discardedOptions": [],
+  "limitations": [
+    {
+      "text": "Síntesis basada en pocas fuentes del corpus de la demo.",
+      "origin": "estructural"
+    }
+  ],
+  "assumptions": [],
+  "retrievalStats": {
+    "retrieved": 40,
+    "aboveThreshold": 2
+  },
+  "omittedClaims": 0,
+  "agentSteps": [],
+  "topRelevanceScore": 0.88,
+  "meta": {
+    "queryLanguage": "es",
+    "responseLanguage": "es",
+    "llmProvider": "local",
+    "llmModel": "llm-local-ejemplo",
+    "embeddingModel": "embedding-local-ejemplo",
+    "rerankerModel": "reranker-local-ejemplo",
+    "nliModel": "nli-local-ejemplo",
+    "promptVersion": "rag-query@0.1.0",
+    "catalogVersion": "2026.10.0",
+    "corpusRelease": "2026-09-30",
+    "corpusCutoffDate": "2026-09-30",
+    "excludedSources": [
+      "NCCN",
+      "ESMO"
+    ],
+    "retrievalParams": {
+      "topK": 40,
+      "rerankTopN": 10,
+      "relevanceThreshold": 0.5,
+      "retrievalMode": "dense",
+      "fusion": "ninguna",
+      "fusionParam": 0
+    },
+    "latencyMs": 8200
+  }
+}
