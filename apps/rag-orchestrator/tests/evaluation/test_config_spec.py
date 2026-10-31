@@ -2,16 +2,15 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import re
+from pathlib import Path
 
 import pytest
 import yaml
+
 from app.evaluation.config_medicion import cargar_config, spec_desde_yaml
 from app.evaluation.fase_a2 import cargar_config_a2
 from app.evaluation.fase_a3 import cargar_config_a3
-
 from tests.evaluation.conftest import RAIZ_APP
 
 PLANTILLA = "Instruct: pregunta clinica\nQuery:{texto}"

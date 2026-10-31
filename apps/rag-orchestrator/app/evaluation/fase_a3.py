@@ -7,9 +7,9 @@ extremo, palancas viables) se fijan en ``eval/configs/adr39-fase-a3.yaml`` antes
 
 from __future__ import annotations
 
-import statistics
 import json
 import math
+import statistics
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime

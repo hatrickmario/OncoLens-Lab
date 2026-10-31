@@ -1,6 +1,6 @@
 """Las afirmaciones de la propuesta cruda que el pipeline envía al NLI, con las premisas que las respaldan (RN-01).
 
-Delega en ``domain.support.afirmaciones_para_el_nli`` (justificación, párrafos de detalle y limitaciones; fuera
+Delega en ``domain.support.afirmaciones_para_el_nli`` (afirmaciones atómicas por papel y limitaciones; fuera
 lo que incumple el lenguaje de RN-23); un test de paridad compara orden y texto contra ``pares_a_verificar``.
 """
 

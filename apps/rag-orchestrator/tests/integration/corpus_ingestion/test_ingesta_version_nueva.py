@@ -8,9 +8,9 @@ from __future__ import annotations
 import pytest
 
 from app.application.corpus_ingestion.reporte import Estado
+from app.infrastructure.seed_manifest.lector import leer_manifiesto
 from tests.integration.corpus_ingestion.conftest import Montaje
 from tests.support.fakes import RelojFijo
-from app.infrastructure.seed_manifest.lector import leer_manifiesto
 from tests.support.ingesta import (
     MANIFIESTO_FX_06C_B_V2,
     documentos_fx_06c_b,

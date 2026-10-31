@@ -14,7 +14,6 @@ from pydantic import ValidationError
 from app.application.aplicabilidad_textual import ParametrosDelRespaldo
 from app.application.ports import SinTerminosLexicos
 from app.application.rag_orchestrator_service import ParametrosDeRecuperacion
-from app.schemas.generated.models import LlmProvider
 from app.bootstrap import ConfiguracionDeRecuperacionIncompleta, crear_app
 from app.config.settings import AjustesSparse, Settings
 from app.infrastructure.models.local import (
@@ -22,6 +21,7 @@ from app.infrastructure.models.local import (
     cargar_modelos_locales,
 )
 from app.infrastructure.models.verificacion import ModeloNoVerificadoError
+from app.schemas.generated.models import LlmProvider
 from tests.support.fakes import GeneradorTraceFijo, RelojFijo, par_de_sesion, settings_de_prueba
 from tests.support.inferencia_falsa import TokenizadorFalso
 from tests.support.modelos import (

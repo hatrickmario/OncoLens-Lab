@@ -17,30 +17,30 @@ from typing import Any
 
 from fastapi.testclient import TestClient
 
+from app.application.aplicabilidad import ApplicabilityService
+from app.application.aplicabilidad_textual import ParametrosDelRespaldo
 from app.application.ports import (
-    PoblacionTask,
-    ChunkDelCorpus,
     CandidatoParaReranker,
+    ChunkDelCorpus,
     ChunkEncontrado,
     ChunkEncontradoSparse,
     ChunkSearch,
     CorpusChunkStore,
     EvidenceGenerator,
     FalloDeInferencia,
-    SinTerminosLexicos,
     Idioma,
     NliClassifier,
+    PoblacionTask,
     ProhibitedTermsChecker,
     QuerySparseEncoder,
     ReleaseDelCorpus,
+    SinTerminosLexicos,
     SparseChunkSearch,
 )
 from app.application.rag_orchestrator_service import (
     ParametrosDeRecuperacion,
     RAGOrchestratorService,
 )
-from app.application.aplicabilidad import ApplicabilityService
-from app.application.aplicabilidad_textual import ParametrosDelRespaldo
 from app.bootstrap import PuertosDeRecuperacion, crear_app
 from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
 from app.domain.citations import FichaDeFuente

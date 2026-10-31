@@ -5,13 +5,14 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
+from pydantic import ValidationError
+
 from app.domain.lenguaje import (
     ListaTerminos,
     check_prohibited_terms,
     clave_flexiva,
     normalizar_texto,
 )
-from pydantic import ValidationError
 
 
 def _termino(id_: str, texto: str, **extra: Any) -> dict[str, Any]:

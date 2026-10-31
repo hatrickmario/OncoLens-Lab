@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+
 from app.domain.lenguaje import ListaTerminos, check_prohibited_terms
 
 RAIZ = Path(__file__).resolve().parents[4]

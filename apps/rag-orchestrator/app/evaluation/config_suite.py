@@ -4,20 +4,19 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from collections.abc import Mapping
 from typing import Any
 
 import yaml
 
-from app.schemas.generated.models import RetrievalMode
-
+from app.domain.atribucion import CLAIM_MAX_WORDS_INICIAL
 from app.domain.fusion_de_candidatos import EstrategiaDeFusion
 from app.evaluation.brazos_recuperacion import REFERENCIA, Brazo
-from app.domain.atribucion import CLAIM_MAX_WORDS_INICIAL
 from app.evaluation.reporte import es_identificador
 from app.evaluation.rutas import raiz_repo
+from app.schemas.generated.models import RetrievalMode
 
 SUITES = ("retrieval", "generation", "pii", "aplicabilidad", "all")
 SUITE_COMPLETA = "all"

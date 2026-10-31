@@ -4,21 +4,27 @@ from app.prompts.rag_query import construir_prompt_rag_query
 
 
 def test_el_prompt_pide_el_rango_de_afirmaciones_y_el_maximo_de_palabras_configurados() -> None:
-    prompt = construir_prompt_rag_query("pregunta", "contexto", [], "es", 2, 3, 15)
+    prompt = construir_prompt_rag_query(
+        "pregunta", "contexto", [], "es", claims_min=2, claims_max=3, claim_max_words=15
+    )
 
     assert '"claims": de 2 a 3 afirmaciones' in prompt
     assert "de 15 palabras como máximo" in prompt
 
 
 def test_el_prompt_define_los_tres_papeles_y_exige_una_sola_principal() -> None:
-    prompt = construir_prompt_rag_query("pregunta", "contexto", [], "es", 1, 4, 20)
+    prompt = construir_prompt_rag_query(
+        "pregunta", "contexto", [], "es", claims_min=1, claims_max=4, claim_max_words=20
+    )
 
     assert 'exactamente una "principal"' in prompt
     assert '"secundaria"' in prompt and '"salvedad"' in prompt
 
 
 def test_el_prompt_deja_la_atribucion_al_sistema_y_no_pide_detalles_libres() -> None:
-    prompt = construir_prompt_rag_query("pregunta", "contexto", [], "es", 1, 4, 20)
+    prompt = construir_prompt_rag_query(
+        "pregunta", "contexto", [], "es", claims_min=1, claims_max=4, claim_max_words=20
+    )
 
     assert "el sistema añade la atribución" in prompt
     assert '"details"' not in prompt and '"citedFragments"' not in prompt

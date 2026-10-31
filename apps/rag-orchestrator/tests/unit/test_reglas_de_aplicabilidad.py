@@ -23,10 +23,6 @@ from app.domain.applicability_rules import (
     poblacion_no_comparable,
     valor_del_paciente,
 )
-from tests.support.poblacion_lista import valor_del_estudio
-from tests.support.aplicabilidad import criterios_de
-from tests.support.poblacion_lista import poblacion_guardada
-from tests.support.contract import CATALOGOS
 from app.domain.criterios_aplicabilidad import (
     CondicionDeParcial,
     CriterioDeAplicabilidad,
@@ -35,6 +31,9 @@ from app.domain.criterios_aplicabilidad import (
     OperadorDeRegla,
     ReglaDeAplicabilidad,
 )
+from tests.support.aplicabilidad import criterios_de
+from tests.support.contract import CATALOGOS
+from tests.support.poblacion_lista import poblacion_guardada, valor_del_estudio
 
 EQUIVALENCIAS_HER2 = {"positivo": ("3+", "2+ con ISH positivo")}
 

@@ -10,7 +10,6 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from app.domain.alias_de_chunks import FragmentoConAlias
-from app.domain.atribucion import FORMULA_DE_ATRIBUCION  # noqa: F401 - reexportada: la usa la métrica de la suite
 from app.schemas.generated.models import ClinicalContext, Diagnosis, Provenance, ReviewStatus
 
 VERSION_DEL_PROMPT = "rag-query@0.5.0"
@@ -53,6 +52,7 @@ def construir_prompt_rag_query(
     datos_del_paciente: str,
     fragmentos: Sequence[FragmentoConAlias],
     idioma: str,
+    *,
     claims_min: int,
     claims_max: int,
     claim_max_words: int,
