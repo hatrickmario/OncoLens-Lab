@@ -20,6 +20,18 @@
 
 Las deudas de L1D-95 (`/completeness`) que L1D-97 ya recoge no llevan ID propio: se entregan con L1D-97, reestimada de 3 a 5 puntos y aprobada en dos partes (primero las 4 deudas de `clinical-api` con `clinical-platform-dev`; luego el BFF y la UI). Ver `S4-plan.md` §6.
 
+## Deuda del Gate 2 de la oleada 3 (propuesta, pendiente de aprobación del usuario)
+
+| ID | Deuda | Origen | Destino | Dueño |
+|---|---|---|---|---|
+| D4-12 | Respaldo de población con lista de valores y DEC-11 (hoy un valor por criterio, `MAX_VALORES_DEL_RESPALDO=1`). | L1D-294 | Propuesta de historia de deuda del S5 | Propuesto, pendiente de aprobación del usuario |
+| D4-13 | `evaluate` no mide la población del respaldo ni `finish_reason`, más la cobertura 0/1 del respaldo (el modelo etiqueta «applies to HER2-negative» como `mencion`). Va junto con D4-07. | L1D-294 | L1D-299 | Propuesto, pendiente de aprobación del usuario |
+| D4-14 | Mixin único de ajustes de población en `Settings`/`CorpusIngestSettings`; versión del prompt desde el adapter; limpieza única del marcador `[chunkId]` compartida con la ingesta; `parametros_de_recuperacion` con default de fakes; `parametros_del_respaldo` en `fabrica_local`. | L1D-294 | Deuda S5 de `rag-orchestrator` (se junta con D4-11) | Propuesto, pendiente de aprobación del usuario |
+| D4-15 | Menores del Gate 2 de L1D-97: `FichaPage` sin validar UUID (clinical-api responde 404); lectura inicial y releer del checklist sin descarte de respuestas antiguas; regla «hay resumen de aviso» en tres sitios; E2E con espera dependiente del seed; `reintentar()` no relee el checklist; `hashchange` vs `pushState` en `FocoPorAncla`; textos `faltantes.nota` y `faltantes.noVerificables` (explicar «Desconocido» y que el análisis sigue disponible); `SeccionDeFicha` con el literal `ficha-identificacion` fuera del catálogo. | L1D-97 | Deuda S5 de `web` / L1D-136 según corresponda | Propuesto, pendiente de aprobación del usuario |
+| D4-16 | El spec principal `openspec/specs/evidence-analysis-gateway/spec.md` (línea ~343) cita la ruta antigua `modules/patients/estados-de-revision.ts` (ahora `modules/compartido/`). | L1D-97 / L1D-95 | Actualizar al archivar en `/sprint-close` | Propuesto, pendiente de aprobación del usuario |
+
 ## Decidido (usuario, 2026-10-31)
 
 1. D4-01 va a una historia nueva del S5, antes del G-Demo; no entra en el S4. 2. D4-02: criterio de RSS en régimen estable. 3. D4-03: L1D-297 absorbe `poblacion-reglas.json` con +2 puntos. 4. L1D-97 pasa de 3 a 5 puntos y se entrega en dos partes. 5. El sprint queda en 73 puntos; el orden de recorte del 2026-10-29 no cambia (US-003/US-005, US-238, US-133, US-112).
+
+6. Pregunta abierta Q2 (L1D-294): el plazo del respaldo es por llamada; con concurrencia 1 y 4 criterios pendientes puede sumar 40 s frente al p95 de 15 s; sin cambiar hasta calibrar en US-233b (recomendación del orquestador, pendiente de decisión del usuario).
