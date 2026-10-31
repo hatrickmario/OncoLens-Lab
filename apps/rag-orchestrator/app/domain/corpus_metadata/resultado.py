@@ -2,14 +2,26 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import Any, Final, Protocol, TypeVar
 
 FUENTE_ESTRUCTURADA: Final = "fuente_estructurada"
 EXTRAIDO_VERIFICADO: Final = "extraido_verificado"
 PENDIENTE: Final = "pendiente"
 ETAPA_DE_METADATOS: Final = "metadatos"
+
+
+class _ConProcedencia(Protocol):
+    document_id: str
+    metadata_source: str
+
+
+_Fila = TypeVar("_Fila", bound=_ConProcedencia)
+
+
+def solo_extraidos_verificados(filas: Iterable[_Fila]) -> list[_Fila]:
+    raise NotImplementedError("no implementado")
 
 
 @dataclass(frozen=True)
