@@ -137,6 +137,7 @@
     },
     "error": {
       "modeloNoDisponible": "El modelo local no está disponible. No se muestra ningún resultado parcial.",
+      "salidaNoValidada": "El modelo local devolvió una respuesta que no se pudo validar. Reintenta el análisis.",
       "tiempoAgotado": "El análisis superó el tiempo máximo de espera. No se muestra ningún resultado parcial.",
       "generico": "No se pudo completar el análisis. No se muestra ningún resultado parcial.",
       "limite": "Se alcanzó el límite de análisis. Puedes reintentar en {s} segundos.",
