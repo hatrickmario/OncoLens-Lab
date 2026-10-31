@@ -29,7 +29,7 @@ export function SeccionDeFicha({
       aria-labelledby={id}
       className="bg-surface rounded-tarjeta border-border mb-4 border p-4"
     >
-      <h2 id={id} className="m-0 mb-3 text-lg font-semibold">
+      <h2 id={id} tabIndex={-1} className="m-0 mb-3 text-lg font-semibold">
         {titulo}
       </h2>
       <div className="overflow-x-auto">{children}</div>

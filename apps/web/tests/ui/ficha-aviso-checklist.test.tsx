@@ -52,7 +52,9 @@ describe('FichaPage · aviso del checklist', () => {
 
     expect(screen.getByRole('region', { name: 'Identificación' })).toBeTruthy();
     const analizar = screen.getByRole('link', { name: 'Analizar evidencia' });
-    expect(analizar.getAttribute('href')).toBe(`/pacientes/${fichaChecklistNoDisponible.id}/analisis`);
+    expect(analizar.getAttribute('href')).toBe(
+      `/pacientes/${fichaChecklistNoDisponible.id}/analisis`,
+    );
   });
 
   it('no muestra el aviso cuando completenessAvailable está ausente [US-003 AC-2]', async () => {

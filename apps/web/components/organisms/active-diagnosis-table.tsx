@@ -45,7 +45,7 @@ function filasDelDiagnostico(d: Diagnosis) {
 export function ActiveDiagnosisTable({ diagnostico }: { diagnostico: Diagnosis | null }) {
   const { diagnostico: textos, noRegistrado } = mensajes().ficha;
   return (
-    <SeccionDeFicha id="ficha-diagnostico" titulo={textos.titulo}>
+    <SeccionDeFicha id="diagnostico" titulo={textos.titulo}>
       {diagnostico === null ? (
         <p className="m-0">{noRegistrado}</p>
       ) : (
