@@ -21,7 +21,12 @@ _Fila = TypeVar("_Fila", bound=_ConProcedencia)
 
 
 def solo_extraidos_verificados(filas: Iterable[_Fila]) -> list[_Fila]:
-    raise NotImplementedError("no implementado")
+    """Los documentos que entran a la muestra humana: solo ``extraido_verificado``, ordenados por ``document_id``.
+
+    Única regla para el adapter SQL y el fake en memoria (L1D-117 5.3): ninguno repite el filtro."""
+    return sorted(
+        (f for f in filas if f.metadata_source == EXTRAIDO_VERIFICADO), key=lambda f: f.document_id
+    )
 
 
 @dataclass(frozen=True)

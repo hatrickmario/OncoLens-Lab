@@ -21,7 +21,7 @@ from app.application.seed_corpus.ports import (
     RegistroDeRelease,
     VersionInexistente,
 )
-from app.domain.corpus_metadata.resultado import EXTRAIDO_VERIFICADO
+from app.domain.corpus_metadata.resultado import solo_extraidos_verificados
 from app.domain.corpus_seed.versionado import STATUS_EMBEBIDO, VersionExistente
 from app.infrastructure.catalog.tables import (
     corpus_document,
@@ -131,14 +131,11 @@ class CorpusDocumentRepository:
                 corpus_release_document,
                 corpus_release_document.c.document_id == corpus_document.c.document_id,
             )
-            .where(
-                corpus_release_document.c.release_id == release_id,
-                corpus_document.c.metadata_source == EXTRAIDO_VERIFICADO,
-            )
-            .order_by(corpus_document.c.document_id)
+            .where(corpus_release_document.c.release_id == release_id)
         )
         with self._motor.connect() as conexion:
-            return [_registro_de(fila) for fila in conexion.execute(consulta).mappings()]
+            registros = [_registro_de(fila) for fila in conexion.execute(consulta).mappings()]
+        return solo_extraidos_verificados(registros)  # la regla es del dominio, no de este SQL
 
     @staticmethod
     def _guardar(conexion: sa.Connection, registro: RegistroDeDocumento) -> None:
