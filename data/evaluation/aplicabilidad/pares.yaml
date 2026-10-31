@@ -15,6 +15,10 @@ guiones:
   APL-CITA-AJENA:
     propuestas: [{criterio: estado_her2, valor: HER2 negativo, chunk: ch-x-999}]
     nli: entailment
+  APL-CITA-PREVIA:
+    # Un análisis previo (priorAnalyses, RN-24) no es un chunk del corpus: citarlo no puede sostener ningún criterio.
+    propuestas: [{criterio: estado_her2, valor: HER2 negativo, chunk: analisis-previo-1}]
+    nli: entailment
   APL-VALOR-PACIENTE:
     propuestas: [{criterio: estado_her2, valor: '2+', chunk: ch-a2-1}]
     nli: entailment
@@ -89,6 +93,28 @@ pares:
       ecog: {estado: parcial}
       estado_menopausico: {estado: desconocido, causa: falta_en_paciente}
       linea_tratamiento: {estado: desconocido, causa: no_reportado_por_fuente}
+  # D4-04 (L1D-299). a-m2: escala de desempeño Karnofsky (no comparable con el ECOG del criterio), HER2 sin verificar
+  # (`requiere_revision`, RN-26: el aviso no bloquea ni cambia el estado) y un análisis previo en `priorAnalyses` (RN-24).
+  - id: am2-a1-escala-no-comparable-y-sin-verificar
+    paciente: a-m2
+    fuente: doc-a1
+    guion: APL-SILENCIO
+    esperado:
+      estado_her2: {estado: coincide, aviso: sin_verificar}
+      estadio: {estado: desconocido, causa: sin_regla_de_comparacion}
+      ecog: {estado: desconocido, causa: falta_en_paciente}
+      estado_menopausico: {estado: desconocido, causa: falta_en_paciente}
+      linea_tratamiento: {estado: desconocido, causa: falta_en_paciente}
+  - id: am2-a2-analisis-previo-no-es-cita
+    paciente: a-m2
+    fuente: doc-a2
+    guion: APL-CITA-PREVIA
+    esperado:
+      estado_her2: {estado: desconocido, causa: no_reportado_por_fuente}
+      estadio: {estado: desconocido, causa: no_reportado_por_fuente}
+      ecog: {estado: desconocido, causa: falta_en_paciente}
+      estado_menopausico: {estado: desconocido, causa: falta_en_paciente}
+      linea_tratamiento: {estado: desconocido, causa: falta_en_paciente}
   # Próstata con el catálogo real: la ingesta no produce `grado` ni `estado_castracion` (L1D-117), así que salen desconocidos.
   - id: pa1-p1
     paciente: p-a1

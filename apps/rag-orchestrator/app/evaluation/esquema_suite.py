@@ -5,6 +5,7 @@ from __future__ import annotations
 from app.evaluation.acuerdo_juez import ESTADO_CONCLUYENTE, ESTADO_NO_CONCLUYENTE, SIN_MEDIR
 from app.evaluation.config_suite import PROVEEDORES, RELOJES, SUITES
 from app.evaluation.cronometro import ETAPAS
+from app.evaluation.dataset_poblacion import CLASES_DEL_DORADO
 from app.evaluation.fuente_dataset import CLASES_ADMITIDAS
 from app.evaluation.informe_pii import MODOS, TIPOS_DIRECTOS
 from app.evaluation.metricas.fidelidad import ROTULO_SECUNDARIA
@@ -295,6 +296,114 @@ ESQUEMA_APLICABILIDAD = Objeto(
                     },
                     opcionales=frozenset({"causa"}),
                 ),
+            }
+        ),
+    }
+)
+
+
+# --- Familia `poblacion` (L1D-299): reporte propio, solo agregados e identificadores del corpus público --------------
+
+_MARCAS_DE_POBLACION = frozenset(_MARCAS | {"no_concluyente"})
+_ESTADOS_DE_LA_MEDICION = frozenset({"concluyente", "no_concluyente"})
+_POR_ESTADO = Objeto({"esperados": Numero(), "aciertos": Numero()})
+_DOCUMENTO_Y_CRITERIO = Objeto({"documento": Identificador(), "criterio": Identificador()})
+
+ESQUEMA_POBLACION = Objeto(
+    {
+        "esquema": Enumerado(frozenset({VERSION_ESQUEMA})),
+        "suite": Enumerado(frozenset({"poblacion"})),
+        "configuracion": Objeto(
+            {
+                "nombre": Identificador(),
+                "hashConfig": Huella(),
+                "fixture": Identificador(),
+                "claseDataset": Enumerado(frozenset(CLASES_DEL_DORADO)),
+                "dataset": Objeto({"nombre": Identificador(), "version": Identificador()}),
+                "proveedor": Enumerado(frozenset(PROVEEDORES)),
+                "reloj": Enumerado(frozenset(RELOJES)),
+                "umbrales": Objeto({"nliEntailmentThreshold": Numero()}),
+                "revision": Objeto(
+                    {"completa": Booleano(), "rol": Identificador(), "fecha": Identificador()},
+                    opcionales=frozenset({"rol", "fecha"}),
+                ),
+            }
+        ),
+        "metricas": Objeto(
+            {
+                "pares_del_dorado": Numero(),
+                "estratos": Lista(Objeto({"estrato": Identificador(), "pares": Numero()})),
+                "por_criterio": Lista(
+                    Objeto(
+                        {
+                            "criterio": Identificador(),
+                            "esperados": Numero(),
+                            "obtenidos": Numero(),
+                            "coincidentes": Numero(),
+                            "precision": Numero(),
+                            "cobertura": Numero(),
+                            "meta_precision": Numero(),
+                            "meta_cobertura": Numero(),
+                            "marca_precision": Enumerado(_MARCAS_DE_POBLACION),
+                            "marca_cobertura": Enumerado(_MARCAS_DE_POBLACION),
+                        }
+                    )
+                ),
+                "tasa_duplicados": Objeto(
+                    {
+                        "obtenidos": Numero(),
+                        "duplicados": Numero(),
+                        "valor": Numero(),
+                        "meta": Numero(),
+                        "marca": Enumerado(_MARCAS),
+                    }
+                ),
+                "cortes_por_longitud": Objeto(
+                    {"tareas": Numero(), "cortes": Numero(), "casos": Lista(_DOCUMENTO_Y_CRITERIO)}
+                ),
+                "concordancia": Objeto(
+                    {
+                        "por_estado": Objeto(
+                            {
+                                estado: _POR_ESTADO
+                                for estado in ("coincide", "parcial", "no_coincide", "desconocido")
+                            }
+                        ),
+                        "aciertos": Numero(),
+                        "total": Numero(),
+                        "valor": Numero(),
+                        "meta": Numero(),
+                        "marca": Enumerado(_MARCAS),
+                        "no_coincide_indebido": Numero(),
+                        "coincide_indebido": Numero(),
+                    }
+                ),
+                "sin_evidencia": Objeto(
+                    {
+                        "baseline": Numero(),
+                        "actual": Numero(),
+                        "baja": Booleano(),
+                        "violaciones_rn02": Numero(),
+                    }
+                ),
+                "bucle": Objeto(
+                    {
+                        "pares": Numero(),
+                        "cortes": Numero(),
+                        "tasa": Numero(),
+                        "minimo_de_pares": Numero(),
+                        "out06": Enumerado(frozenset({"cerrada", "abierta", "insuficiente"})),
+                    }
+                ),
+            }
+        ),
+        "veredicto": Objeto(
+            {
+                "resultado": Enumerado(frozenset({"pass", "fail", "no_concluyente"})),
+                "precision": Enumerado(_ESTADOS_DE_LA_MEDICION),
+                "cobertura": Enumerado(_ESTADOS_DE_LA_MEDICION),
+                "causas": Lista(Enumerado(frozenset({"sin_revisor", "muestra_insuficiente"}))),
+                "invariantes_violadas": Lista(Identificador()),
             }
         ),
     }

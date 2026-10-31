@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-import math
 from collections.abc import Awaitable, Callable, Sequence
 from typing import TypeVar
+
+from app.evaluation.estadistica import percentil_rango_mas_cercano
 
 ETAPAS = (
     "idioma",
@@ -33,10 +34,7 @@ class RelojSimulado:
 
 def percentil(valores: Sequence[float], fraccion: float) -> float | None:
     """Percentil por rango más cercano; ``None`` (≠ 0.0) si la etapa no se ejecutó."""
-    if not valores:
-        return None
-    ordenados = sorted(valores)
-    return ordenados[math.ceil(fraccion * len(ordenados)) - 1]
+    return percentil_rango_mas_cercano(valores, fraccion)
 
 
 def percentil_95(valores: Sequence[float]) -> float | None:

@@ -1,0 +1,194 @@
+# 24 pares pregunta + fuente distintos del caso del tamoxifeno (ADR47-R17, OUT-06). Texto sintético.
+pares:
+- id: b00
+  pregunta: Pregunta sintetica 0 sobre la poblacion de un ensayo de cancer de mama
+  fuentes:
+  - documento: doc-b00
+    fragmentos:
+    - chunk_id: ch-b00-1
+      texto: 'Eligibility: eligible patients with HER2-positive early breast cancer,
+        cohort 0.'
+- id: b01
+  pregunta: Pregunta sintetica 1 sobre la poblacion de un ensayo de cancer de mama
+  fuentes:
+  - documento: doc-b01
+    fragmentos:
+    - chunk_id: ch-b01-1
+      texto: 'Eligibility: eligible patients with HER2-positive early breast cancer,
+        cohort 1.'
+- id: b02
+  pregunta: Pregunta sintetica 2 sobre la poblacion de un ensayo de cancer de mama
+  fuentes:
+  - documento: doc-b02
+    fragmentos:
+    - chunk_id: ch-b02-1
+      texto: 'Eligibility: eligible patients with HER2-positive early breast cancer,
+        cohort 2.'
+- id: b03
+  pregunta: Pregunta sintetica 3 sobre la poblacion de un ensayo de cancer de mama
+  fuentes:
+  - documento: doc-b03
+    fragmentos:
+    - chunk_id: ch-b03-1
+      texto: 'Eligibility: eligible patients with HER2-positive early breast cancer,
+        cohort 3.'
+- id: b04
+  pregunta: Pregunta sintetica 4 sobre la poblacion de un ensayo de cancer de mama
+  fuentes:
+  - documento: doc-b04
+    fragmentos:
+    - chunk_id: ch-b04-1
+      texto: 'Eligibility: eligible patients with HER2-positive early breast cancer,
+        cohort 4.'
+- id: b05
+  pregunta: Pregunta sintetica 5 sobre la poblacion de un ensayo de cancer de mama
+  fuentes:
+  - documento: doc-b05
+    fragmentos:
+    - chunk_id: ch-b05-1
+      texto: 'Eligibility: eligible patients with HER2-positive early breast cancer,
+        cohort 5.'
+- id: b06
+  pregunta: Pregunta sintetica 6 sobre la poblacion de un ensayo de cancer de mama
+  fuentes:
+  - documento: doc-b06
+    fragmentos:
+    - chunk_id: ch-b06-1
+      texto: 'Eligibility: eligible patients with HER2-positive early breast cancer,
+        cohort 6.'
+- id: b07
+  pregunta: Pregunta sintetica 7 sobre la poblacion de un ensayo de cancer de mama
+  fuentes:
+  - documento: doc-b07
+    fragmentos:
+    - chunk_id: ch-b07-1
+      texto: 'Eligibility: eligible patients with HER2-positive early breast cancer,
+        cohort 7.'
+- id: b08
+  pregunta: Pregunta sintetica 8 sobre la poblacion de un ensayo de cancer de mama
+  fuentes:
+  - documento: doc-b08
+    fragmentos:
+    - chunk_id: ch-b08-1
+      texto: 'Eligibility: eligible patients with HER2-positive early breast cancer,
+        cohort 8.'
+- id: b09
+  pregunta: Pregunta sintetica 9 sobre la poblacion de un ensayo de cancer de mama
+  fuentes:
+  - documento: doc-b09
+    fragmentos:
+    - chunk_id: ch-b09-1
+      texto: 'Eligibility: eligible patients with HER2-positive early breast cancer,
+        cohort 9.'
+- id: b10
+  pregunta: Pregunta sintetica 10 sobre la poblacion de un ensayo de cancer de mama
+  fuentes:
+  - documento: doc-b10
+    fragmentos:
+    - chunk_id: ch-b10-1
+      texto: 'Eligibility: eligible patients with HER2-positive early breast cancer,
+        cohort 10.'
+- id: b11
+  pregunta: Pregunta sintetica 11 sobre la poblacion de un ensayo de cancer de mama
+  fuentes:
+  - documento: doc-b11
+    fragmentos:
+    - chunk_id: ch-b11-1
+      texto: 'Eligibility: eligible patients with HER2-positive early breast cancer,
+        cohort 11.'
+- id: b12
+  pregunta: Pregunta sintetica 12 sobre la poblacion de un ensayo de cancer de mama
+  fuentes:
+  - documento: doc-b12
+    fragmentos:
+    - chunk_id: ch-b12-1
+      texto: 'Eligibility: eligible patients with HER2-positive early breast cancer,
+        cohort 12.'
+- id: b13
+  pregunta: Pregunta sintetica 13 sobre la poblacion de un ensayo de cancer de mama
+  fuentes:
+  - documento: doc-b13
+    fragmentos:
+    - chunk_id: ch-b13-1
+      texto: 'Eligibility: eligible patients with HER2-positive early breast cancer,
+        cohort 13.'
+- id: b14
+  pregunta: Pregunta sintetica 14 sobre la poblacion de un ensayo de cancer de mama
+  fuentes:
+  - documento: doc-b14
+    fragmentos:
+    - chunk_id: ch-b14-1
+      texto: 'Eligibility: eligible patients with HER2-positive early breast cancer,
+        cohort 14.'
+- id: b15
+  pregunta: Pregunta sintetica 15 sobre la poblacion de un ensayo de cancer de mama
+  fuentes:
+  - documento: doc-b15
+    fragmentos:
+    - chunk_id: ch-b15-1
+      texto: 'Eligibility: eligible patients with HER2-positive early breast cancer,
+        cohort 15.'
+- id: b16
+  pregunta: Pregunta sintetica 16 sobre la poblacion de un ensayo de cancer de mama
+  fuentes:
+  - documento: doc-b16
+    fragmentos:
+    - chunk_id: ch-b16-1
+      texto: 'Eligibility: eligible patients with HER2-positive early breast cancer,
+        cohort 16.'
+- id: b17
+  pregunta: Pregunta sintetica 17 sobre la poblacion de un ensayo de cancer de mama
+  fuentes:
+  - documento: doc-b17
+    fragmentos:
+    - chunk_id: ch-b17-1
+      texto: 'Eligibility: eligible patients with HER2-positive early breast cancer,
+        cohort 17.'
+- id: b18
+  pregunta: Pregunta sintetica 18 sobre la poblacion de un ensayo de cancer de mama
+  fuentes:
+  - documento: doc-b18
+    fragmentos:
+    - chunk_id: ch-b18-1
+      texto: 'Eligibility: eligible patients with HER2-positive early breast cancer,
+        cohort 18.'
+- id: b19
+  pregunta: Pregunta sintetica 19 sobre la poblacion de un ensayo de cancer de mama
+  fuentes:
+  - documento: doc-b19
+    fragmentos:
+    - chunk_id: ch-b19-1
+      texto: 'Eligibility: eligible patients with HER2-positive early breast cancer,
+        cohort 19.'
+- id: b20
+  pregunta: Pregunta sintetica 20 sobre la poblacion de un ensayo de cancer de mama
+  fuentes:
+  - documento: doc-b20
+    fragmentos:
+    - chunk_id: ch-b20-1
+      texto: 'Eligibility: eligible patients with HER2-positive early breast cancer,
+        cohort 20.'
+- id: b21
+  pregunta: Pregunta sintetica 21 sobre la poblacion de un ensayo de cancer de mama
+  fuentes:
+  - documento: doc-b21
+    fragmentos:
+    - chunk_id: ch-b21-1
+      texto: 'Eligibility: eligible patients with HER2-positive early breast cancer,
+        cohort 21.'
+- id: b22
+  pregunta: Pregunta sintetica 22 sobre la poblacion de un ensayo de cancer de mama
+  fuentes:
+  - documento: doc-b22
+    fragmentos:
+    - chunk_id: ch-b22-1
+      texto: 'Eligibility: eligible patients with HER2-positive early breast cancer,
+        cohort 22.'
+- id: b23
+  pregunta: Pregunta sintetica 23 sobre la poblacion de un ensayo de cancer de mama
+  fuentes:
+  - documento: doc-b23
+    fragmentos:
+    - chunk_id: ch-b23-1
+      texto: 'Eligibility: eligible patients with HER2-positive early breast cancer,
+        cohort 23.'
