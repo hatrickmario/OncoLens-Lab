@@ -460,6 +460,10 @@ export type RagQueryInternalResponse = {
         aboveThreshold: number;
     };
     omittedClaims: number;
+    /**
+     * Número de opciones validadas (con citas, soporte NLI y lenguaje válidos) que quedaron fuera de maxOptions tras el orden por aplicabilidad (RN-28). 0 si no hubo recorte. Solo el número: nunca título, justificación ni citas de las opciones recortadas. Las descartadas (discardedOptions) no cuentan. [S4 resp. 7]
+     */
+    optionsNotShown: number;
     agentSteps: Array<{
         subQuery: string;
         target: string;

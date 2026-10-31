@@ -1,0 +1,273 @@
+{
+  "id": "b3d9f2a0-1c3e-4f9a-8b1a-9e2f0c3d9f2a",
+  "traceId": "req_9a3f2c1b",
+  "queryText": "¿Qué opciones adyuvantes describe la evidencia para cáncer de mama HER2 positivo en estadio IIA?",
+  "questionTemplateId": "mama.adyuvancia.her2",
+  "queryLanguage": "es",
+  "status": "con_evidencia",
+  "synthesis": {
+    "agreements": [],
+    "discrepancies": []
+  },
+  "applicability": [
+    {
+      "externalId": "CDR-TEST-A1",
+      "criteria": [],
+      "summary": {
+        "coincide": 2,
+        "parcial": 0,
+        "noCoincide": 0,
+        "desconocido": 3
+      },
+      "populationNotComparable": false
+    },
+    {
+      "externalId": "CDR-TEST-A6",
+      "criteria": [],
+      "summary": {
+        "coincide": 2,
+        "parcial": 0,
+        "noCoincide": 0,
+        "desconocido": 3
+      },
+      "populationNotComparable": false
+    },
+    {
+      "externalId": "CDR-TEST-A3",
+      "criteria": [],
+      "summary": {
+        "coincide": 0,
+        "parcial": 0,
+        "noCoincide": 0,
+        "desconocido": 5
+      },
+      "populationNotComparable": false
+    }
+  ],
+  "evidenceOptions": [
+    {
+      "option": "Quimioterapia adyuvante combinada con terapia dirigida anti-HER2",
+      "rationale": "La evidencia recuperada describe el esquema adyuvante en la población estudiada.",
+      "details": [],
+      "applicabilitySummary": {
+        "coincide": 2,
+        "parcial": 0,
+        "noCoincide": 0,
+        "desconocido": 3
+      },
+      "populationNotComparable": false,
+      "perSource": [
+        {
+          "externalId": "CDR-TEST-A1",
+          "summary": {
+            "coincide": 2,
+            "parcial": 0,
+            "noCoincide": 0,
+            "desconocido": 3
+          },
+          "populationNotComparable": false
+        }
+      ],
+      "relevanceScore": 0.7,
+      "warnings": [],
+      "citedSources": [
+        {
+          "title": "Estudio sintético doc-a1 (test)",
+          "sourceName": "NCI PDQ",
+          "externalId": "CDR-TEST-A1",
+          "language": "en",
+          "sourceType": "guideline",
+          "licenseClass": "dominio_publico",
+          "studyDesign": "guia",
+          "trialPhase": null,
+          "primaryEndpoint": null,
+          "sampleSize": null,
+          "publishedAt": "2024-03-15",
+          "lastUpdatedAt": "2026-05-01",
+          "guidelineVersion": "2026-05",
+          "authors": null,
+          "sourceUrl": "https://corpus.oncolens.test/documentos/CDR0000062787",
+          "possiblyOutdated": false,
+          "newerVersionAvailable": false,
+          "chunkTextSnapshot": "Texto sintético de ejemplo: the addition of anti-HER2 therapy to adjuvant chemotherapy is described for HER2-positive tumors in a study population with stage I–III disease, including both premenopausal and postmenopausal patients.",
+          "chunkId": "ch-a1-1"
+        }
+      ]
+    },
+    {
+      "option": "Terapia dirigida anti-HER2 posterior a la cirugía",
+      "rationale": "La evidencia recuperada describe el esquema adyuvante en la población estudiada.",
+      "details": [],
+      "applicabilitySummary": {
+        "coincide": 2,
+        "parcial": 0,
+        "noCoincide": 0,
+        "desconocido": 3
+      },
+      "populationNotComparable": false,
+      "perSource": [
+        {
+          "externalId": "CDR-TEST-A6",
+          "summary": {
+            "coincide": 2,
+            "parcial": 0,
+            "noCoincide": 0,
+            "desconocido": 3
+          },
+          "populationNotComparable": false
+        }
+      ],
+      "relevanceScore": 0.6,
+      "warnings": [],
+      "citedSources": [
+        {
+          "title": "Estudio sintético doc-a6 (test)",
+          "sourceName": "NCI PDQ",
+          "externalId": "CDR-TEST-A6",
+          "language": "en",
+          "sourceType": "guideline",
+          "licenseClass": "dominio_publico",
+          "studyDesign": "guia",
+          "trialPhase": null,
+          "primaryEndpoint": null,
+          "sampleSize": null,
+          "publishedAt": "2024-03-15",
+          "lastUpdatedAt": "2026-05-01",
+          "guidelineVersion": "2026-05",
+          "authors": null,
+          "sourceUrl": "https://corpus.oncolens.test/documentos/CDR0000062787",
+          "possiblyOutdated": false,
+          "newerVersionAvailable": false,
+          "chunkTextSnapshot": "Texto sintético de ejemplo: the addition of anti-HER2 therapy to adjuvant chemotherapy is described for HER2-positive tumors in a study population with stage I–III disease, including both premenopausal and postmenopausal patients.",
+          "chunkId": "ch-a6-1"
+        }
+      ]
+    },
+    {
+      "option": "Quimioterapia adyuvante con esquema alternativo",
+      "rationale": "La evidencia recuperada describe el esquema adyuvante en la población estudiada.",
+      "details": [],
+      "applicabilitySummary": {
+        "coincide": 0,
+        "parcial": 0,
+        "noCoincide": 0,
+        "desconocido": 5
+      },
+      "populationNotComparable": false,
+      "perSource": [
+        {
+          "externalId": "CDR-TEST-A3",
+          "summary": {
+            "coincide": 0,
+            "parcial": 0,
+            "noCoincide": 0,
+            "desconocido": 5
+          },
+          "populationNotComparable": false
+        }
+      ],
+      "relevanceScore": 0.85,
+      "warnings": [],
+      "citedSources": [
+        {
+          "title": "Estudio sintético doc-a3 (test)",
+          "sourceName": "NCI PDQ",
+          "externalId": "CDR-TEST-A3",
+          "language": "en",
+          "sourceType": "guideline",
+          "licenseClass": "dominio_publico",
+          "studyDesign": "guia",
+          "trialPhase": null,
+          "primaryEndpoint": null,
+          "sampleSize": null,
+          "publishedAt": "2024-03-15",
+          "lastUpdatedAt": "2026-05-01",
+          "guidelineVersion": "2026-05",
+          "authors": null,
+          "sourceUrl": "https://corpus.oncolens.test/documentos/CDR0000062787",
+          "possiblyOutdated": false,
+          "newerVersionAvailable": false,
+          "chunkTextSnapshot": "Texto sintético de ejemplo: the addition of anti-HER2 therapy to adjuvant chemotherapy is described for HER2-positive tumors in a study population with stage I–III disease, including both premenopausal and postmenopausal patients.",
+          "chunkId": "ch-a3-1"
+        }
+      ]
+    }
+  ],
+  "discardedOptions": [],
+  "analysisBasis": {
+    "patientDataUsed": [
+      {
+        "label": "HER2 3+ (IHQ)",
+        "reviewStatus": "auto_aceptado",
+        "conflict": false
+      },
+      {
+        "label": "Estadio IIA (TNM_8)",
+        "reviewStatus": "verificado",
+        "conflict": false
+      }
+    ],
+    "missingCriticalData": [
+      "estado_menopausico",
+      "ki67"
+    ],
+    "missingCriticalDataLabels": [
+      "Estado menopáusico",
+      "Ki-67"
+    ],
+    "continuedWithWarning": true,
+    "assumptions": [
+      {
+        "text": "Se asume enfermedad no metastásica: no hay estudios de extensión registrados.",
+        "origin": "regla_catalogo"
+      }
+    ],
+    "sourcesConsulted": {
+      "selected": [
+        "guias",
+        "publicaciones"
+      ],
+      "filters": {
+        "historiaCompleta": false,
+        "soloBiomarcadoresRelevantes": true,
+        "ultimosSeisMeses": true,
+        "antecedentesFamiliares": false,
+        "publishedFromYear": 2021
+      },
+      "retrieved": 40,
+      "aboveThreshold": 2
+    },
+    "sourcesNotIncluded": [
+      "NCCN",
+      "ESMO"
+    ],
+    "corpusCutoffDate": "2026-09-30",
+    "limitations": [
+      {
+        "text": "Síntesis basada en dos fuentes.",
+        "origin": "estructural"
+      }
+    ],
+    "priorAnalysesUsed": [],
+    "agentSteps": [],
+    "omittedClaims": 0,
+    "optionsNotShown": 1,
+    "maxOptions": 3
+  },
+  "topRelevanceScore": 0.92,
+  "staleness": {
+    "patientData": false,
+    "changedData": [],
+    "newerEvidenceOrCatalog": false
+  },
+  "rerunOfAnalysisId": null,
+  "patientDataLinks": [
+    {
+      "dataRef": "r2",
+      "entityType": "biomarker",
+      "entityId": "7a1c9e44-5b2d-4c3e-8f60-1d2e3f4a5b6c"
+    }
+  ],
+  "disclaimer": "Generado por IA; requiere validación clínica independiente por el oncólogo tratante.",
+  "createdAt": "2026-10-12T15:04:00Z"
+}

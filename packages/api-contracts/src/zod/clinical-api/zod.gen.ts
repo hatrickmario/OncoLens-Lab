@@ -501,7 +501,9 @@ export const zAnalysisBasis = z.strictObject({
         target: z.string(),
         foundEvidence: z.boolean()
     })),
-    omittedClaims: z.int().gte(0)
+    omittedClaims: z.int().gte(0),
+    optionsNotShown: z.int().gte(0).optional(),
+    maxOptions: z.int().gte(1).lte(3).optional()
 });
 
 /**
