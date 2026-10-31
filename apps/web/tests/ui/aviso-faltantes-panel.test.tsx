@@ -156,6 +156,23 @@ describe('EvidencePanel · aviso de faltantes', () => {
     await waitFor(() => expect(replace).toHaveBeenCalledTimes(1));
   });
 
+  it('redirige a /login?motivo=expirada y no envía el POST cuando el checklist responde 401 al pulsar Analizar tras una lectura inicial 200 [US-005 AC-5]', async () => {
+    bff.responder({ status: 200, cuerpo: conEvidencia });
+    montarPanel();
+    await waitFor(() => expect(bff.lecturasDelChecklist).toHaveLength(1));
+    bff.responderChecklist({
+      status: 401,
+      cuerpo: { error: 'NO_AUTENTICADO', message: 'Sesión no válida.', traceId: 'req_1' },
+    });
+    const usuario = await escribirPregunta();
+
+    await usuario.click(BOTON());
+
+    await waitFor(() => expect(replace).toHaveBeenCalledTimes(1));
+    expect(replace).toHaveBeenCalledWith('/login?motivo=expirada');
+    expect(bff.cuerpos).toEqual([]);
+  });
+
   it('apunta cada enlace a su sección de la ficha o al encabezado principal sin enviar análisis [US-005 AC-3]', async () => {
     const conDestinos = {
       ...checklistF_M2,
