@@ -195,3 +195,27 @@ def test_rag_query_sigue_respondiendo_local_llm_unavailable_cuando_el_llm_no_res
 
     assert respuesta.status_code == 503
     assert respuesta.json()["error"] == "LOCAL_LLM_UNAVAILABLE"
+
+
+@pytest.mark.parametrize(
+    ("escenario", "texto_centinela"),
+    [
+        ("LLM-ATOM-ALIAS", SECUNDARIA_CON_ALIAS),
+        ("LLM-ATOM-MODAL", SECUNDARIA_MODAL),
+        ("LLM-ATOM-MODAL-PRIN", PRINCIPAL_MODAL),
+        ("LLM-ATOM-PRESC", SECUNDARIA_PRESCRIPTIVA),
+        ("LLM-ATOM-SEC", SECUNDARIA),
+    ],
+)
+def test_rag_query_no_registra_el_texto_de_una_afirmacion_retirada_u_omitida_en_los_logs(
+    escenario, texto_centinela, caplog
+):
+    caplog.set_level(logging.DEBUG)
+    nli = NliFalso(resultados={SECUNDARIA: NEUTRAL}, por_defecto=IMPLICA)
+
+    respuesta, _, _ = _consultar(escenario, nli)
+
+    assert respuesta.status_code == 200
+    assert caplog.records, "la sonda no vio ningún log: el test no probaría nada"
+    assert texto_centinela not in caplog.text
+    assert "fragmento C" not in caplog.text

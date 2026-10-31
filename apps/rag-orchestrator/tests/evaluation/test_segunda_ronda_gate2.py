@@ -322,7 +322,9 @@ def _huella(generador: LlmEvidenceGenerator) -> tuple[object, ...]:
         cliente._max_output_tokens,  # noqa: SLF001
         cliente._temperature,  # noqa: SLF001
         generador._max_chars_fragmentos,  # noqa: SLF001
-        generador._max_parrafos_detalle,  # noqa: SLF001
+        generador._claims_min,  # noqa: SLF001
+        generador._claims_max,  # noqa: SLF001
+        generador._claim_max_words,  # noqa: SLF001
     )
 
 

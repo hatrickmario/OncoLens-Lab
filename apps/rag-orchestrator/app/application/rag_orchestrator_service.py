@@ -61,6 +61,7 @@ from app.application.ports import (
 from app.application.respuesta_con_evidencia import ensamblar_respuesta_con_evidencia
 from app.application.resumen_contexto import resumen_del_contexto_clinico
 from app.application.verificacion_de_soporte import VerificadorDeSoporte
+from app.domain.atribucion import CLAIM_MAX_WORDS_INICIAL
 from app.domain.citations import (
     MotivoDeDescarte,
     OpcionAceptada,
@@ -133,6 +134,8 @@ class ParametrosDeRecuperacion:
     """``RRF_K``: constante de ``Σ 1/(k+rank)``; solo con ``retrieval_fusion = rrf``."""
     peso_sparse: float = HYBRID_SPARSE_WEIGHT_INICIAL
     """``HYBRID_SPARSE_WEIGHT``: peso de la rama *sparse* (0 < w < 1); solo con ``retrieval_fusion = ponderada``."""
+    claim_max_words: int = CLAIM_MAX_WORDS_INICIAL
+    """``CLAIM_MAX_WORDS`` (US-245, RN-22): palabras máximas de una afirmación atómica; más es «fuera de forma»."""
 
 
 def _con_relevancia(aceptada: OpcionAceptada, puntajes: Mapping[str, float]) -> OpcionConRelevancia:
@@ -184,6 +187,7 @@ class RAGOrchestratorService:
             terminos=verificador_terminos,
             umbral=parametros.nli_entailment_threshold,
             reloj=reloj,
+            max_palabras_por_afirmacion=parametros.claim_max_words,
         )
         self._textual = AplicabilidadTextual(
             proponente=proponente,

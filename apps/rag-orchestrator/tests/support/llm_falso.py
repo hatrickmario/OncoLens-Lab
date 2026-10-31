@@ -19,12 +19,26 @@ RAZON_SOLA = "La evidencia recuperada describe el uso de terapia anti-HER2 sin q
 
 
 DETALLE_UNO = "El estudio describe la duración de la terapia dirigida contra HER2."
-DETALLE_DOS = "La fuente reporta el beneficio en la supervivencia libre de enfermedad."
-DETALLE_TRES = "Un tercer párrafo que excede el máximo configurado."
+DETALLE_DOS = "El beneficio se reporta en la supervivencia libre de enfermedad."
+DETALLE_TRES = "El seguimiento descrito supera los cinco años."
+
+
+def _afirmacion(texto: str, papel: str, *chunk_ids: str) -> dict[str, Any]:
+    return {"text": texto, "role": papel, "citations": list(chunk_ids)}
 
 
 def _opcion(opcion: str, razon: str, *chunk_ids: str, **extra: Any) -> dict[str, Any]:
-    return {"option": opcion, "rationale": razon, "citedFragments": list(chunk_ids), **extra}
+    """Una opción con su justificación como única afirmación ``principal`` (esquema ``claims[]`` de US-245)."""
+    return {"option": opcion, "claims": [_afirmacion(razon, "principal", *chunk_ids)], **extra}
+
+
+def _opcion_con_secundarias(*secundarias: str) -> dict[str, Any]:
+    """La opción de ``LLM-OK`` más una afirmación ``secundaria`` por texto, todas citando ``C1``."""
+    base = _opcion(OPCION_ANTI_HER2, RAZON_ANTI_HER2, "C1")
+    return {
+        **base,
+        "claims": [*base["claims"], *(_afirmacion(t, "secundaria", "C1") for t in secundarias)],
+    }
 
 
 def _salida(*opciones: dict[str, Any]) -> str:
@@ -36,17 +50,12 @@ def _salida(*opciones: dict[str, Any]) -> str:
 # (``recuperacion_alias.py``) C1 = ``ch-m2-1``, C2 = ``ch-m1-1``, C3 = ``ch-m3-1`` y C4 = ``ch-m3-2``.
 ESCENARIOS_LLM: dict[str, str] = {
     "LLM-OK": _salida(_opcion(OPCION_ANTI_HER2, RAZON_ANTI_HER2, "C1")),
-    "LLM-CON-DETALLE": _salida(
-        {
-            **_opcion(OPCION_ANTI_HER2, RAZON_ANTI_HER2, "C1"),
-            "details": [DETALLE_UNO, DETALLE_DOS, DETALLE_TRES],
-        }
+    "LLM-CON-DETALLE": _salida(_opcion_con_secundarias(DETALLE_UNO, DETALLE_DOS)),
+    "LLM-CON-TRES-DETALLES": _salida(
+        _opcion_con_secundarias(DETALLE_UNO, DETALLE_DOS, DETALLE_TRES)
     ),
     "LLM-DETALLE-CON-ARTEFACTO": _salida(
-        {
-            **_opcion(OPCION_ANTI_HER2, RAZON_ANTI_HER2, "C1"),
-            "details": [DETALLE_UNO, "El ensayo NSABP-B-3隀 reportó el mismo beneficio."],
-        }
+        _opcion_con_secundarias(DETALLE_UNO, "El ensayo NSABP-B-3隀 reportó el mismo beneficio.")
     ),
     "LLM-DOS": _salida(
         _opcion(OPCION_ANTI_HER2, RAZON_ANTI_HER2, "C1"),

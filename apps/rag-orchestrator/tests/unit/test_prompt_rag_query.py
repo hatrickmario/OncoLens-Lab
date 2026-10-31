@@ -46,8 +46,8 @@ def test_plantilla_contiene_la_instruccion_de_poblacion_y_escenario_atribuida_a_
     assert "no lo dirijas al paciente" in texto
 
 
-def test_version_del_prompt_es_rag_query_0_4_0_porque_etiqueta_la_procedencia_de_los_datos():
-    assert VERSION_DEL_PROMPT == "rag-query@0.4.0"
+def test_version_del_prompt_es_rag_query_0_5_0_porque_pide_afirmaciones_atomicas_por_papel():
+    assert VERSION_DEL_PROMPT == "rag-query@0.5.0"
 
 
 def test_prompt_incluye_pregunta_contexto_y_alias_de_cada_fragmento():

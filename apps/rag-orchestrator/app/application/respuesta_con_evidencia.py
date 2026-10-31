@@ -209,10 +209,10 @@ def _opcion_descartada(descartada: OpcionDescartada) -> DiscardedOption:
 
 
 def _opcion_sin_soporte(descartada: OpcionSinSoporte) -> DiscardedOption:
-    """Descartada por RN-01: la afirmación sin soporte (o su literal de retiro, RN-23) figura en ``unsupportedClaims``."""
+    """Descartada por RN-01 o RN-23: la afirmación sin soporte (o su literal de retiro) figura en ``unsupportedClaims``."""
     return DiscardedOption(
         option=descartada.opcion.option,
         rationale=descartada.opcion.rationale,
-        discardReason=DiscardReason.afirmacion_sin_soporte,
+        discardReason=DiscardReason(descartada.motivo.value),
         unsupportedClaims=list(descartada.afirmaciones_sin_soporte),
     )

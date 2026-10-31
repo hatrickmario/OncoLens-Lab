@@ -104,7 +104,7 @@ def test_rag_query_no_emite_titulo_ni_fuente_inventados_cuando_el_llm_los_agrega
 
 
 @pytest.mark.parametrize("escenario", ["LLM-FUERA-DE-ESQUEMA", "LLM-JSON-ROTO"])
-def test_rag_query_responde_503_local_llm_unavailable_sin_opciones_cuando_el_llm_devuelve_un_json_invalido(
+def test_rag_query_responde_503_llm_output_invalid_sin_opciones_cuando_el_llm_devuelve_un_json_invalido(
     escenario,
 ):
     respuesta, llm = _consultar(escenario)
@@ -112,5 +112,5 @@ def test_rag_query_responde_503_local_llm_unavailable_sin_opciones_cuando_el_llm
     assert llm.invocaciones == 1  # sin reintento silencioso
     assert respuesta.status_code == 503
     cuerpo = respuesta.json()
-    assert cuerpo["error"] == "LOCAL_LLM_UNAVAILABLE"
+    assert cuerpo["error"] == "LLM_OUTPUT_INVALID"
     assert "evidenceOptions" not in cuerpo

@@ -35,9 +35,7 @@ OPCION_CON_CITA = {
     "options": [
         {
             "option": "Opción de prueba",
-            "rationale": "Texto de prueba.",
-            "citedFragments": ["C1"],
-            "details": [],
+            "claims": [{"text": "Texto de prueba.", "role": "principal", "citations": ["C1"]}],
         }
     ]
 }

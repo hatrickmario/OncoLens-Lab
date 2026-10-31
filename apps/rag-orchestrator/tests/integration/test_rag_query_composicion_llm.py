@@ -22,7 +22,7 @@ BASE_LLM = "http://llm-nativo.test:11434/v1"
 URL_LLM = f"{BASE_LLM}/chat/completions"
 RESPUESTA = "#/components/schemas/RagQueryInternalResponse"
 RESPUESTA_503 = "#/paths/~1rag~1query/post/responses/503"
-CONTENIDO_OK = '{"options":[{"option":"Opción","rationale":"Razón","citedFragments":["C1"]}]}'
+CONTENIDO_OK = '{"options":[{"option":"Opción","claims":[{"text":"Razón","role":"principal","citations":["C1"]}]}]}'
 
 
 def _puertos() -> PuertosDeRecuperacion:

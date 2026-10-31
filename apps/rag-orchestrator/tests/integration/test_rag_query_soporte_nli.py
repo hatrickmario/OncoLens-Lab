@@ -156,7 +156,7 @@ def test_rag_query_descarta_la_opcion_y_reemplaza_la_afirmacion_por_el_literal_d
     cuerpo = _respuesta_valida(respuesta)
     assert cuerpo["evidenceOptions"] == []
     (descartada,) = cuerpo["discardedOptions"]
-    assert descartada["discardReason"] == "afirmacion_sin_soporte"
+    assert descartada["discardReason"] == "lenguaje_no_permitido"
     assert descartada["unsupportedClaims"] == [RETIRO_ES]
     assert descartada["rationale"] == RETIRO_ES
     assert _coincidencias_de_lenguaje(cuerpo) == []

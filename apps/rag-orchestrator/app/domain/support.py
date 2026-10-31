@@ -4,13 +4,25 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, replace
-from enum import StrEnum
 from typing import Literal, get_args
 
+from app.domain.atribucion import (
+    CLAIM_MAX_WORDS_INICIAL,
+    FormaDeAfirmacion,
+    componer_con_marco,
+    marco_de_atribucion,
+    validar_forma_de_afirmacion,
+)
 from app.domain.citations import OpcionAceptada, OpcionGenerada
-from app.domain.claims import PapelDeAfirmacion, dividir_en_afirmaciones
+from app.domain.claims import AfirmacionAtomica, PapelDeAfirmacion, dividir_en_afirmaciones
 from app.domain.lenguaje import Coincidencia, ListaTerminos, Nivel, check_prohibited_terms
 from app.domain.nli import ParNli, ResultadoNli
+from app.domain.soporte_por_papel import (
+    DecisionPorPapel,
+    EstadoDeAfirmacion,
+    MotivoDeSoporte,
+    decidir_opcion_por_papel,
+)
 
 CampoGenerado = Literal[
     "option",
@@ -36,6 +48,8 @@ def coincidencias_en_campo_generado(
 
 RETIRO_ES = "[afirmación retirada: formulación no permitida]"
 RETIRO_EN = "[claim removed: disallowed wording]"
+NO_MOSTRADO_ES = "(texto no mostrado)"
+NO_MOSTRADO_EN = "(text not shown)"
 
 BuscadorDeTerminos = Callable[[str, CampoGenerado], Sequence[str]]
 """``(texto, campo) -> ids de regla``: el puerto ``ProhibitedTermsChecker`` visto desde el dominio."""
@@ -53,6 +67,9 @@ class Afirmacion:
     campo: CampoGenerado
     reglas: tuple[str, ...]
     premisas: tuple[str, ...]
+    # Solo en las afirmaciones atómicas de una opción con ``claims[]`` (US-245): su papel y si llegan en forma.
+    papel: PapelDeAfirmacion | None = None
+    forma: FormaDeAfirmacion = FormaDeAfirmacion.valida
 
 
 @dataclass(frozen=True)
@@ -61,6 +78,7 @@ class RetiroDeLenguaje:
 
     campo: CampoGenerado
     reglas: tuple[str, ...]
+    papel: PapelDeAfirmacion | None = None
 
 
 @dataclass(frozen=True)
@@ -85,13 +103,14 @@ class PlanDeSoporte:
             for o in self.opciones
             for f in (o.option, *o.afirmaciones, *(a for p in o.detalles for a in p))
         ] + list(self.limitaciones)
-        return tuple(RetiroDeLenguaje(f.campo, f.reglas) for f in fragmentos if f.reglas)
+        return tuple(RetiroDeLenguaje(f.campo, f.reglas, f.papel) for f in fragmentos if f.reglas)
 
 
 @dataclass(frozen=True)
 class OpcionSinSoporte:
     opcion: OpcionGenerada
     afirmaciones_sin_soporte: tuple[str, ...]
+    motivo: MotivoDeSoporte = MotivoDeSoporte.afirmacion_sin_soporte
 
 
 @dataclass(frozen=True)
@@ -117,10 +136,14 @@ def planificar_soporte(
     limitaciones_propuestas: Sequence[str],
     textos_de_chunks: Mapping[str, str],
     buscar_terminos: BuscadorDeTerminos,
+    *,
+    max_palabras: int = CLAIM_MAX_WORDS_INICIAL,
 ) -> PlanDeSoporte:
     """Divide cada justificación en afirmaciones, asigna sus premisas y marca lo que incumple el lenguaje (RN-23).
 
     Las premisas de una opción son los chunks que cita; las de una limitación, todos los entregados a la generación.
+    Una opción con afirmaciones atómicas (US-245) conserva cada una con su papel y solo con SUS chunks citados como
+    premisa; ``max_palabras`` es ``CLAIM_MAX_WORDS``.
     """
 
     def afirmacion(texto: str, campo: CampoGenerado, premisas: tuple[str, ...]) -> Afirmacion:
@@ -129,6 +152,13 @@ def planificar_soporte(
     todas = tuple(textos_de_chunks.values())
     opciones = []
     for aceptada in aceptadas:
+        if aceptada.opcion.afirmaciones:
+            opciones.append(
+                _planificar_opcion_atomica(
+                    aceptada, textos_de_chunks, buscar_terminos, max_palabras
+                )
+            )
+            continue
         premisas = tuple(textos_de_chunks[c] for c in aceptada.chunk_ids_validos)
         opciones.append(
             OpcionPlanificada(
@@ -150,6 +180,51 @@ def planificar_soporte(
     return PlanDeSoporte(tuple(opciones), limitaciones)
 
 
+def _planificar_opcion_atomica(
+    aceptada: OpcionAceptada,
+    textos_de_chunks: Mapping[str, str],
+    buscar_terminos: BuscadorDeTerminos,
+    max_palabras: int,
+) -> OpcionPlanificada:
+    """Cada afirmación atómica con su papel, su forma, su lenguaje y SOLO el texto de los chunks válidos que ella cita."""
+    return OpcionPlanificada(
+        aceptada,
+        Afirmacion(
+            aceptada.opcion.option,
+            "option",
+            tuple(buscar_terminos(aceptada.opcion.option, "option")),
+            (),
+        ),
+        tuple(
+            _planificar_afirmacion_atomica(
+                a, aceptada.chunk_ids_validos, textos_de_chunks, buscar_terminos, max_palabras
+            )
+            for a in aceptada.opcion.afirmaciones
+        ),
+    )
+
+
+def _planificar_afirmacion_atomica(
+    afirmacion: AfirmacionAtomica,
+    chunk_ids_validos: Sequence[str],
+    textos_de_chunks: Mapping[str, str],
+    buscar_terminos: BuscadorDeTerminos,
+    max_palabras: int,
+) -> Afirmacion:
+    campo: CampoGenerado = (
+        "rationale" if afirmacion.papel is PapelDeAfirmacion.principal else "details"
+    )
+    citados = dict.fromkeys(c for c in afirmacion.chunk_ids if c in chunk_ids_validos)
+    return Afirmacion(
+        afirmacion.texto,
+        campo,
+        tuple(buscar_terminos(afirmacion.texto, campo)),
+        tuple(textos_de_chunks[c] for c in citados if c in textos_de_chunks),
+        afirmacion.papel,
+        validar_forma_de_afirmacion(afirmacion.texto, max_palabras),
+    )
+
+
 def afirmaciones_para_el_nli(plan: PlanDeSoporte) -> Iterator[Afirmacion]:
     """Lo que de verdad va al NLI, en un orden único que comparten ``pares_a_verificar`` y ``verificar_soporte``.
 
@@ -158,7 +233,11 @@ def afirmaciones_para_el_nli(plan: PlanDeSoporte) -> Iterator[Afirmacion]:
     """
     for opcion in plan.opciones:
         if not opcion.option.reglas:
-            yield from (a for a in opcion.afirmaciones if not a.reglas)
+            yield from (
+                a
+                for a in opcion.afirmaciones
+                if not a.reglas and a.forma is FormaDeAfirmacion.valida
+            )
             for parrafo in opcion.detalles:
                 if not any(a.reglas for a in parrafo):
                     yield from parrafo
@@ -204,6 +283,14 @@ def verificar_soporte(
     descartadas: list[OpcionSinSoporte] = []
     parrafos_omitidos = 0
     for planificada in plan.opciones:
+        if planificada.aceptada.opcion.afirmaciones:
+            resuelta, omitidas_por_papel = _resolver_por_papel(planificada, veredictos, idioma)
+            parrafos_omitidos += omitidas_por_papel
+            if isinstance(resuelta, OpcionSinSoporte):
+                descartadas.append(resuelta)
+            else:
+                soportadas.append(resuelta)
+            continue
         sin_soporte = _descartar_si_no_se_soporta(planificada, veredictos, literal)
         if sin_soporte is None:
             aceptada, omitidos = _con_detalles_soportados(planificada, veredictos)
@@ -217,6 +304,98 @@ def verificar_soporte(
         tuple(descartadas),
         tuple(limitaciones),
         len(plan.limitaciones) - len(limitaciones) + parrafos_omitidos,
+    )
+
+
+def _estado_de(afirmacion: Afirmacion, veredictos: Mapping[Afirmacion, bool]) -> EstadoDeAfirmacion:
+    """Orden de validación: lenguaje de la lista → forma → NLI (el NLI solo juzga lo que llegó en forma)."""
+    if afirmacion.reglas:
+        return EstadoDeAfirmacion.lenguaje_no_permitido
+    if afirmacion.forma is FormaDeAfirmacion.modal_normativo:
+        return EstadoDeAfirmacion.modal_normativo
+    if afirmacion.forma is not FormaDeAfirmacion.valida:
+        return EstadoDeAfirmacion.fuera_de_forma
+    return (
+        EstadoDeAfirmacion.soportada
+        if veredictos.get(afirmacion, False)
+        else EstadoDeAfirmacion.sin_soporte
+    )
+
+
+def _resolver_por_papel(
+    planificada: OpcionPlanificada, veredictos: Mapping[Afirmacion, bool], idioma: str
+) -> tuple[OpcionAceptada | OpcionSinSoporte, int]:
+    """Aplica ``decidir_opcion_por_papel`` a una opción con afirmaciones atómicas.
+
+    Conservada: ``rationale`` y ``details`` se recomponen SOLO con las afirmaciones que se soportaron (las secundarias
+    omitidas no salen en ningún campo) y se devuelven las omitidas. Descartada: ver ``_descartar_por_papel``.
+    """
+    afirmaciones = planificada.afirmaciones
+    estados = [(a.papel, _estado_de(a, veredictos)) for a in afirmaciones if a.papel is not None]
+    decision = decidir_opcion_por_papel(estados, option_incumple=bool(planificada.option.reglas))
+    if not decision.conservar:
+        return _descartar_por_papel(planificada, estados, decision, idioma), 0
+    origen = planificada.aceptada.opcion
+    conservadas = tuple(
+        atomica
+        for posicion, atomica in enumerate(origen.afirmaciones)
+        if posicion not in decision.omitidas
+    )
+    composicion = componer_con_marco(conservadas, idioma)
+    opcion = replace(
+        origen,
+        rationale=composicion.rationale,
+        details=composicion.details,
+        afirmaciones=conservadas,
+    )
+    return replace(planificada.aceptada, opcion=opcion), len(decision.omitidas)
+
+
+def _descartar_por_papel(
+    planificada: OpcionPlanificada,
+    estados: Sequence[tuple[PapelDeAfirmacion, EstadoDeAfirmacion]],
+    decision: DecisionPorPapel,
+    idioma: str,
+) -> OpcionSinSoporte:
+    """``unsupportedClaims`` lista solo las causas del descarte: el texto de la que no se respalda, y un literal (nunca el
+    texto) para lo que incumple la lista (RN-23) o llegó en forma de modal normativo. Una secundaria sin respaldo no es
+    causa y no se muestra. La justificación de la descartada nunca expone una principal retirada u oculta."""
+    origen = planificada.aceptada.opcion
+    literal = literal_de_retiro(idioma)
+    no_mostrado = NO_MOSTRADO_EN if idioma == "en" else NO_MOSTRADO_ES
+    causas: list[str] = []
+    for afirmacion, (papel, estado) in zip(planificada.afirmaciones, estados, strict=True):
+        if estado is EstadoDeAfirmacion.lenguaje_no_permitido:
+            causas.append(literal)
+        elif estado is EstadoDeAfirmacion.modal_normativo:
+            causas.append(no_mostrado)
+        elif (
+            papel is not PapelDeAfirmacion.secundaria and estado is not EstadoDeAfirmacion.soportada
+        ):
+            causas.append(
+                no_mostrado if estado is EstadoDeAfirmacion.fuera_de_forma else afirmacion.texto
+            )
+    retirada = bool(planificada.option.reglas)
+    if retirada:
+        causas.insert(0, literal)
+    principal, estado_principal = next(
+        (a, e)
+        for a, (p, e) in zip(planificada.afirmaciones, estados, strict=True)
+        if p is PapelDeAfirmacion.principal
+    )
+    texto_visible = {
+        EstadoDeAfirmacion.lenguaje_no_permitido: literal,
+        EstadoDeAfirmacion.modal_normativo: no_mostrado,
+        EstadoDeAfirmacion.fuera_de_forma: no_mostrado,
+    }.get(estado_principal, principal.texto)
+    return OpcionSinSoporte(
+        OpcionGenerada(
+            literal if retirada else origen.option,
+            marco_de_atribucion(idioma) + texto_visible,
+            origen.chunk_ids_citados,
+        ),
+        tuple(causas),
+        decision.motivo or MotivoDeSoporte.afirmacion_sin_soporte,
     )
 
 
@@ -264,23 +443,38 @@ def _descartar_si_no_se_soporta(
     if planificada.afirmaciones and not sin_soporte:
         return None
     origen = planificada.aceptada.opcion
+    con_lenguaje = retirada or any(a.reglas for a in planificada.afirmaciones)
     return OpcionSinSoporte(
         OpcionGenerada(
             literal if retirada else origen.option, " ".join(partes), origen.chunk_ids_citados
         ),
         tuple(sin_soporte),
+        MotivoDeSoporte.lenguaje_no_permitido
+        if con_lenguaje
+        else MotivoDeSoporte.afirmacion_sin_soporte,
     )
 
 
 def retirar_texto_prohibido(
-    opcion: OpcionGenerada, buscar_terminos: BuscadorDeTerminos, idioma: str
+    opcion: OpcionGenerada,
+    buscar_terminos: BuscadorDeTerminos,
+    idioma: str,
+    max_palabras: int = CLAIM_MAX_WORDS_INICIAL,
 ) -> tuple[OpcionGenerada, tuple[RetiroDeLenguaje, ...]]:
-    """RN-23 en una opción que ya salió del flujo (descartada por sus citas): sus fragmentos prohibidos se reemplazan."""
+    """RN-23 en una opción que ya salió del flujo (descartada por sus citas): sus fragmentos prohibidos se reemplazan.
+
+    Con afirmaciones atómicas, la justificación de la descartada es el marco más la principal, y una principal prohibida o
+    fuera de forma nunca se expone (se sustituye por el literal de retiro o por «(texto no mostrado)»).
+    """
     literal = literal_de_retiro(idioma)
     retiros: list[RetiroDeLenguaje] = []
     reglas_de_la_opcion = tuple(buscar_terminos(opcion.option, "option"))
     if reglas_de_la_opcion:
         retiros.append(RetiroDeLenguaje("option", reglas_de_la_opcion))
+    if opcion.afirmaciones:
+        return _retirar_de_la_principal(
+            opcion, reglas_de_la_opcion, retiros, buscar_terminos, idioma, max_palabras
+        )
     partes = []
     for afirmacion in dividir_en_afirmaciones(opcion.rationale):
         reglas = tuple(buscar_terminos(afirmacion, "rationale"))
@@ -299,22 +493,31 @@ def retirar_texto_prohibido(
     )
 
 
-class EstadoDeAfirmacion(StrEnum):
-    soportada = "soportada"
-    sin_soporte = "sin_soporte"
-    fuera_de_forma = "fuera_de_forma"
-    modal_normativo = "modal_normativo"
-    lenguaje_no_permitido = "lenguaje_no_permitido"
-
-
-@dataclass(frozen=True)
-class DecisionPorPapel:
-    conservar: bool
-    motivo: str | None
-    omitidas: tuple[int, ...]
-
-
-def decidir_opcion_por_papel(
-    estados: Sequence[tuple[PapelDeAfirmacion, EstadoDeAfirmacion]],
-) -> DecisionPorPapel:
-    raise NotImplementedError("no implementado")
+def _retirar_de_la_principal(
+    opcion: OpcionGenerada,
+    reglas_de_la_opcion: tuple[str, ...],
+    retiros: list[RetiroDeLenguaje],
+    buscar_terminos: BuscadorDeTerminos,
+    idioma: str,
+    max_palabras: int,
+) -> tuple[OpcionGenerada, tuple[RetiroDeLenguaje, ...]]:
+    literal = literal_de_retiro(idioma)
+    principal = next(a for a in opcion.afirmaciones if a.papel is PapelDeAfirmacion.principal)
+    reglas = tuple(buscar_terminos(principal.texto, "rationale"))
+    if reglas:
+        retiros.append(RetiroDeLenguaje("rationale", reglas, PapelDeAfirmacion.principal))
+    forma = validar_forma_de_afirmacion(principal.texto, max_palabras)
+    if reglas:
+        visible = literal
+    elif forma is not FormaDeAfirmacion.valida:
+        visible = NO_MOSTRADO_EN if idioma == "en" else NO_MOSTRADO_ES
+    else:
+        visible = principal.texto
+    return (
+        OpcionGenerada(
+            literal if reglas_de_la_opcion else opcion.option,
+            marco_de_atribucion(idioma) + visible,
+            opcion.chunk_ids_citados,
+        ),
+        tuple(retiros),
+    )
