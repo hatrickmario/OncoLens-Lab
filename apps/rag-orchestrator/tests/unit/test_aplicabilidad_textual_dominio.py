@@ -16,7 +16,7 @@ from app.domain.applicability_text import (
     PropuestaDePoblacion,
     aceptar_propuestas,
     con_valor_textual,
-    criterios_pendientes_de_texto,
+    criterios_pendientes,
     normalizar_valor_al_catalogo,
     pares_para_el_nli,
     planificar_propuestas,
@@ -68,19 +68,37 @@ def sin_terminos(texto: str, campo: str) -> tuple[str, ...]:
 # --- criterios pendientes de texto (D1) ---------------------------------------------------------------------------
 
 
-def test_criterios_pendientes_incluye_solo_los_que_no_tienen_valor_estructurado_cuando_la_fuente_trae_algunos():
-    pendientes = criterios_pendientes_de_texto(evaluados_de("doc-a1"), list(CRITERIOS.values()))
+def pendientes_de(documento: str, evaluados=None) -> tuple[CriterioPendiente, ...]:
+    return criterios_pendientes(
+        POBLACIONES_FX08BA[documento],
+        evaluados or evaluados_de(documento),
+        list(CRITERIOS.values()),
+    )
 
-    assert [p.clave for p in pendientes] == ["estado_menopausico", "linea_tratamiento"]
-    assert pendientes[1] == CriterioPendiente(
+
+def test_criterios_pendientes_incluye_solo_los_que_llevan_la_marca_cuando_la_fuente_trae_algunos():
+    pendientes = pendientes_de("doc-a2")
+
+    assert [p.clave for p in pendientes] == [
+        "estado_her2",
+        "estadio",
+        "ecog",
+        "linea_tratamiento",
+    ]
+    assert pendientes[-1] == CriterioPendiente(
         "linea_tratamiento", "Línea de tratamiento", "Treatment line"
     )
 
 
-def test_criterios_pendientes_incluye_todos_cuando_la_poblacion_esta_pendiente():
-    pendientes = criterios_pendientes_de_texto(evaluados_de("doc-a2"), list(CRITERIOS.values()))
+def test_criterios_pendientes_es_vacio_cuando_la_fuente_no_trae_ninguna_marca_aunque_le_falten_valores():
+    # doc-a1 no tiene valor para estado_menopausico ni linea_tratamiento, y doc-a6 es ``pendiente`` como documento:
+    # la marca es por criterio (ADR-47), no ``metadata_source``.
+    assert pendientes_de("doc-a1") == ()
+    assert pendientes_de("doc-a6") == ()
 
-    assert [p.clave for p in pendientes] == list(CRITERIOS)
+
+def test_criterios_pendientes_es_vacio_cuando_la_fuente_no_tiene_poblacion():
+    assert criterios_pendientes(None, evaluados_de("doc-a2"), list(CRITERIOS.values())) == ()
 
 
 def test_criterios_pendientes_excluye_el_criterio_con_destino_no_resoluble():
@@ -93,7 +111,7 @@ def test_criterios_pendientes_excluye_el_criterio_con_destino_no_resoluble():
         for e in evaluados_de("doc-a2")
     )
 
-    pendientes = criterios_pendientes_de_texto(evaluados, list(CRITERIOS.values()))
+    pendientes = pendientes_de("doc-a2", evaluados)
 
     assert "ecog" not in [p.clave for p in pendientes]
 

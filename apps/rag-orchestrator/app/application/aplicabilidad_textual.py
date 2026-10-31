@@ -1,6 +1,7 @@
-"""``AplicabilidadTextual``: camino textual de la aplicabilidad (US-123, FR-25, RN-01, design D8).
+"""``AplicabilidadTextual``: respaldo textual de la población del estudio (US-244, US-123, ADR-47, FR-25, RN-01).
 
-Para lo que la fuente no trae estructurado, el LLM solo **propone** el valor del estudio con una cita; el valor se acepta
+Para los criterios que ``population_criteria`` marca ``pendiente``, la tarea corta de US-242 (una fuente y un criterio por
+llamada) solo **propone** el valor del estudio con una cita; el valor se acepta
 únicamente si la cita es un chunk recuperado de esa fuente en esta consulta, el lenguaje es permitido (RN-23) y el NLI da
 ``entailment`` sobre el umbral con ese chunk como premisa. El estado lo asigna la regla del catálogo (la misma de
 ``ApplicabilityService``), nunca el LLM, y el valor del paciente se copia del contexto (ADR-34).
@@ -12,6 +13,7 @@ la versión del prompt y ``traceId``; jamás el valor propuesto, el texto de un 
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
@@ -20,7 +22,7 @@ from datetime import datetime
 from app.application.aplicabilidad import AplicabilidadDeFuente
 from app.application.chunk_citable import ChunkCitable
 from app.application.errores import ErrorDeAplicacion, LlmLocalNoDisponibleError
-from app.application.ports import ApplicabilityTextProposer, Clock, ProhibitedTermsChecker
+from app.application.ports import Clock, PoblacionTask, ProhibitedTermsChecker
 from app.application.verificacion_de_soporte import VerificadorDeSoporte
 from app.domain.aplicabilidad_tipos import CriterioEvaluado
 from app.domain.applicability_text import (
@@ -31,15 +33,23 @@ from app.domain.applicability_text import (
     PropuestaDePoblacion,
     aceptar_propuestas,
     con_valor_textual,
-    criterios_pendientes_de_texto,
+    criterios_pendientes,
     pares_para_el_nli,
     planificar_propuestas,
 )
 from app.domain.criterios_aplicabilidad import CriterioDeAplicabilidad
 from app.domain.relevance import ordenar_por_relevancia
-from app.prompts.aplicabilidad_texto import VERSION_DEL_PROMPT_APLICABILIDAD
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class ParametrosDelRespaldo:
+    """Valores de configuración del respaldo (RN-22): plazo por llamada, llamadas simultáneas y versión del prompt."""
+
+    plazo_ms: int
+    concurrencia: int
+    version_del_prompt: str
 
 
 @dataclass(frozen=True)
@@ -55,13 +65,15 @@ class AplicabilidadTextual:
     def __init__(
         self,
         *,
-        proponente: ApplicabilityTextProposer,
+        proponente: PoblacionTask,
+        parametros: ParametrosDelRespaldo,
         soporte: VerificadorDeSoporte,
         terminos: ProhibitedTermsChecker,
         criterios_del: Callable[[str], Sequence[CriterioDeAplicabilidad]],
         reloj: Clock,
     ) -> None:
         self._proponente = proponente
+        self._parametros = parametros
         self._soporte = soporte
         self._terminos = terminos
         self._criterios_del = criterios_del
@@ -97,11 +109,17 @@ class AplicabilidadTextual:
     async def _pedir_propuestas(
         self, trace_id: str, fuentes: Sequence[FuenteParaProponer]
     ) -> tuple[PropuestaDePoblacion, ...]:
-        """Todo fallo del proponente, o una salida que no son propuestas, es ``LOCAL_LLM_UNAVAILABLE`` sin detalle."""
+        """Una llamada por fuente y criterio pendiente, con a lo sumo ``concurrencia`` simultáneas (RN-22)."""
+        semaforo = asyncio.Semaphore(self._parametros.concurrencia)
+        llamadas = [
+            self._proponer_un_criterio(
+                semaforo, FuenteParaProponer(fuente.external_id, (criterio,), fuente.chunks)
+            )
+            for fuente in fuentes
+            for criterio in fuente.criterios
+        ]
         try:
-            propuestas = tuple(await self._proponente.proponer(fuentes))
-            if not all(isinstance(p, PropuestaDePoblacion) for p in propuestas):
-                raise ValueError("el proponente debe devolver propuestas de población")
+            resultados = await asyncio.gather(*llamadas)
         except ErrorDeAplicacion:
             raise
         except Exception as error:  # noqa: BLE001 - todo fallo del proponente es "modelo local no disponible"
@@ -111,7 +129,13 @@ class AplicabilidadTextual:
                 trace_id,
             )
             raise LlmLocalNoDisponibleError() from None
-        return propuestas
+        return tuple(propuesta for propuestas in resultados for propuesta in propuestas)
+
+    async def _proponer_un_criterio(
+        self, semaforo: asyncio.Semaphore, fuente: FuenteParaProponer
+    ) -> tuple[PropuestaDePoblacion, ...]:
+        async with semaforo:
+            return tuple(await self._proponente.proponer(fuente))
 
     def _registrar(
         self,
@@ -127,7 +151,7 @@ class AplicabilidadTextual:
             detalle,
             int((self._reloj.ahora() - inicio).total_seconds() * 1000),
             self._soporte.nli_model,
-            VERSION_DEL_PROMPT_APLICABILIDAD,
+            self._parametros.version_del_prompt,
         )
 
 
@@ -154,10 +178,10 @@ def _fuentes_para_proponer(
     criterios: Sequence[CriterioDeAplicabilidad],
     citables: Mapping[str, ChunkCitable],
 ) -> tuple[FuenteParaProponer, ...]:
-    """Una entrada por fuente con criterios pendientes: esos criterios y todos sus chunks recuperados (design D2)."""
+    """Una entrada por fuente con criterios ``pendiente``: esos criterios y todos sus chunks recuperados (ADR-47)."""
     pedidas: list[FuenteParaProponer] = []
     for fuente in fuentes:
-        pendientes = criterios_pendientes_de_texto(fuente.criterios, criterios)
+        pendientes = criterios_pendientes(fuente.poblacion, fuente.criterios, criterios)
         if pendientes:
             pedidas.append(
                 FuenteParaProponer(fuente.external_id, pendientes, _chunks_de(fuente, citables))

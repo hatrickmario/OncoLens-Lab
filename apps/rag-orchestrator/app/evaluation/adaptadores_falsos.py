@@ -207,7 +207,7 @@ class LectorReleaseFijo:
 
 
 class ProponenteGuionado:
-    """``ApplicabilityTextProposer`` con el guion de un par: propone lo escrito, solo de las fuentes recibidas.
+    """``PoblacionTask`` con el guion de un par: propone lo escrito, solo de la fuente y el criterio que recibe.
 
     Como el adapter real (LSP) devuelve solo propuestas ``(fuente, criterio, valor, chunkId)`` ya normalizadas, nunca
     un estado ni un valor del paciente."""
@@ -216,14 +216,14 @@ class ProponenteGuionado:
         self._external_id = external_id
         self._propuestas = tuple(propuestas)
 
-    async def proponer(
-        self, fuentes: Sequence[FuenteParaProponer]
-    ) -> tuple[PropuestaDePoblacion, ...]:
-        if self._external_id not in {f.external_id for f in fuentes}:
+    async def proponer(self, fuente: FuenteParaProponer) -> tuple[PropuestaDePoblacion, ...]:
+        if fuente.external_id != self._external_id:
             return ()
+        pedidos = {c.clave for c in fuente.criterios}
         normalizadas = (
             normalizar_propuesta(self._external_id, criterio, valor, chunk_id)
             for criterio, valor, chunk_id in self._propuestas
+            if criterio in pedidos
         )
         return tuple(p for p in normalizadas if p is not None)
 

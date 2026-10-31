@@ -81,27 +81,6 @@ def normalizar_propuesta(
     return PropuestaDePoblacion(external_id, criterio, limpio, chunk_id)
 
 
-# --- qué se le pide al LLM (D1) ------------------------------------------------------------------------------------
-
-
-def criterios_pendientes_de_texto(
-    evaluados: Sequence[CriterioEvaluado], criterios: Sequence[CriterioDeAplicabilidad]
-) -> tuple[CriterioPendiente, ...]:
-    """Los criterios sin valor estructurado de una fuente, en el orden del catálogo (design D1).
-
-    Un criterio con valor del estudio ya leído de ``population_criteria`` nunca va al LLM (US-122 AC-6), ni uno cuya lista
-    solo trae valores de subgrupo o mención (US-243: ya se leyó y no cuenta); tampoco el que tiene un destino que el
-    resolvedor no sabe leer, que es un error del catálogo y no una pregunta al texto."""
-    catalogo = {c.clave: c for c in criterios}
-    return tuple(
-        CriterioPendiente(e.clave, catalogo[e.clave].etiqueta_es, catalogo[e.clave].etiqueta_en)
-        for e in evaluados
-        if e.valor_estudio is None
-        and not e.valores_del_estudio
-        and e.motivo_interno != "destino_no_resoluble"
-    )
-
-
 # --- respaldo de la población en la consulta (US-244, ADR-47, RN-26) ---------------------------------------------------
 
 
@@ -132,8 +111,26 @@ def criterios_pendientes(
     evaluados: Sequence[CriterioEvaluado],
     criterios: Sequence[CriterioDeAplicabilidad],
 ) -> tuple[CriterioPendiente, ...]:
-    """Los criterios del catálogo que ``population_criteria`` marca ``pendiente`` (ADR-47), en el orden del catálogo."""
-    raise NotImplementedError("US-244 AC-1")
+    """Los criterios del catálogo que ``population_criteria`` marca ``pendiente`` (ADR-47), en el orden del catálogo.
+
+    La marca es por criterio (no ``metadata_source``, que es por documento). Un criterio con valores en la lista, vacío
+    sin marca o con forma inválida nunca va al LLM; tampoco el de un destino que el resolvedor no sabe leer, que es un
+    error del catálogo y no una pregunta al texto."""
+    if poblacion is None:
+        return ()
+    ilegibles = {e.clave for e in evaluados if e.motivo_interno == "destino_no_resoluble"}
+    return tuple(
+        CriterioPendiente(c.clave, c.etiqueta_es, c.etiqueta_en)
+        for c in criterios
+        if _tiene_la_marca_pendiente(poblacion, c) and c.clave not in ilegibles
+    )
+
+
+def _tiene_la_marca_pendiente(
+    poblacion: PoblacionDelEstudio, criterio: CriterioDeAplicabilidad
+) -> bool:
+    del_estudio = poblacion.criterios.get(criterio.clave_de_estudio)
+    return del_estudio is not None and del_estudio.pendiente
 
 
 def degradar_a_respaldo_fallido(criterio: CriterioEvaluado) -> CriterioEvaluado:

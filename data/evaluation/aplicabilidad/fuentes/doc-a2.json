@@ -6,11 +6,11 @@
   "metadata_source": "pendiente",
   "population_criteria": {
     "subtipo": "no_disponible",
-    "estadio": "no_disponible",
-    "linea": "no_disponible",
-    "biomarcadores": "no_disponible",
+    "estadio": {"status": "pendiente", "values": []},
+    "linea": {"status": "pendiente", "values": []},
+    "biomarcadores": {"her2": {"status": "pendiente", "values": []}},
     "edad": "no_disponible",
-    "ecog": "no_disponible"
+    "ecog": {"status": "pendiente", "values": []}
   },
   "chunks": [
     {

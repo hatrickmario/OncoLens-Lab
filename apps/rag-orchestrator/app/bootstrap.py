@@ -17,8 +17,10 @@ from app.api.health import crear_router_health
 from app.api.rag_query import crear_router_rag_query
 from app.api.trace import ContextoDeTraceId
 from app.application.aplicabilidad import ApplicabilityService
+from app.application.aplicabilidad_textual import ParametrosDelRespaldo
 from app.application.catalogo_exigido import ConsultaConCatalogoExigido
 from app.application.consulta_no_componible import ConsultaNoComponible
+from app.application.corpus_metadata.esquema_poblacion import cargar_plantilla
 from app.application.generation import LlmEvidenceGenerator
 from app.application.ports import (
     CatalogoClinico,
@@ -72,7 +74,7 @@ from app.infrastructure.lenguaje.terminos_prohibidos import (
     cargar_verificador_de_terminos,
 )
 from app.infrastructure.llm.openai_compatible import OpenAICompatibleLlmClient
-from app.infrastructure.llm.proponente_de_aplicabilidad import LlmApplicabilityTextProposer
+from app.infrastructure.llm.tarea_de_poblacion import TareaDePoblacionLocal
 from app.infrastructure.llm.openai_compatible_health import OpenAICompatibleLlmHealth
 from app.infrastructure.security.clave_publica import cargar_clave_publica_es256
 from app.infrastructure.security.service_jwt_verifier import ServiceJwtVerifier
@@ -430,10 +432,15 @@ def crear_generador_local(settings: Settings) -> LlmEvidenceGenerator:
     )
 
 
-def crear_proponente_local(settings: Settings) -> LlmApplicabilityTextProposer:
-    """Población textual de las fuentes (US-123) con el mismo LLM local y el mismo presupuesto de fragmentos."""
-    return LlmApplicabilityTextProposer(
-        _cliente_llm_local(settings), settings.llm_fragments_max_chars
+def crear_proponente_local(settings: Settings) -> TareaDePoblacionLocal:
+    """Respaldo de la población en la consulta (US-244): la tarea corta de la ingesta sobre el mismo LLM local (RN-12), con
+    el tope de tokens de salida de la extracción y el presupuesto de fragmentos de la generación (RN-22)."""
+    return TareaDePoblacionLocal(
+        _cliente_llm_local(settings),
+        plantilla=cargar_plantilla(settings.population_prompt_version),
+        max_valores=settings.population_max_values_per_criterion,
+        max_tokens_de_salida=settings.population_extraction_max_output_tokens,
+        max_chars_fragmentos=settings.llm_fragments_max_chars,
     )
 
 
@@ -500,6 +507,11 @@ def _parametros_de_recuperacion(settings: Settings) -> ParametrosDeRecuperacion:
         llm_model=settings.llm_model,
         nli_entailment_threshold=settings.nli_entailment_threshold,  # type: ignore[arg-type]
         tipos_habilitados=settings.enabled_cancer_types,
+        respaldo=ParametrosDelRespaldo(
+            plazo_ms=settings.population_fallback_deadline_ms,
+            concurrencia=settings.population_extraction_concurrency,
+            version_del_prompt=settings.population_prompt_version,
+        ),
         retrieval_mode=RetrievalMode(settings.retrieval_mode),
         retrieval_fusion=EstrategiaDeFusion(settings.retrieval_fusion),
         rrf_k=settings.rrf_k,

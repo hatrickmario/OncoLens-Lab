@@ -1,4 +1,4 @@
-"""Contrato común de ``ApplicabilityTextProposer`` (LSP, Gate 2): el adapter real y el falso normalizan igual.
+"""Contrato común de ``PoblacionTask`` (LSP, Gate 2): el adapter real y el falso normalizan igual.
 
 Ambos pasan por ``normalizar_propuesta``: valor sin espacios sobrantes, y sin propuesta cuando el valor queda vacío, supera
 ``LONGITUD_MAXIMA_DEL_VALOR`` o el ``chunkId`` viene vacío. Un fake más indulgente que el real escondería esos casos.
@@ -11,7 +11,8 @@ from typing import Any
 
 import pytest
 
-from app.application.ports import ApplicabilityTextProposer
+from app.application.corpus_metadata.poblacion_puertos import RespuestaDelLlm
+from app.application.ports import PoblacionTask
 from app.domain.applicability_text import (
     LONGITUD_MAXIMA_DEL_VALOR,
     ChunkDeFuente,
@@ -20,9 +21,9 @@ from app.domain.applicability_text import (
     PropuestaDePoblacion,
     normalizar_propuesta,
 )
-from app.infrastructure.llm.proponente_de_aplicabilidad import LlmApplicabilityTextProposer
 from tests.support.aplicabilidad import external_id_de
 from tests.support.proponente_falso import ProponenteFalso
+from tests.support.respaldo_poblacion import tarea_de_respaldo
 
 EXTERNAL_ID = external_id_de("doc-a2")
 FUENTE = FuenteParaProponer(
@@ -41,22 +42,18 @@ ESPERADO = (PropuestaDePoblacion(EXTERNAL_ID, "estado_her2", "HER2 negativo", "c
 
 
 class _LlmCrudo:
-    async def completar_json(self, prompt: str, esquema: Mapping[str, Any]) -> str:
-        return json.dumps(
-            {
-                "proposals": [
-                    {"source": "S1", "criterion": "estado_her2", "value": v, "chunkId": c}
-                    for v, c in CRUDAS
-                ]
-            }
-        )
+    async def completar_json_acotado(
+        self, prompt: str, esquema: Mapping[str, Any], *, max_tokens: int, semilla: int
+    ) -> RespuestaDelLlm:
+        valores = [{"value": v, "chunkId": c, "scope": "elegibilidad"} for v, c in CRUDAS]
+        return RespuestaDelLlm(json.dumps({"values": valores}), "stop")
 
 
-def _real() -> ApplicabilityTextProposer:
-    return LlmApplicabilityTextProposer(_LlmCrudo())
+def _real() -> PoblacionTask:
+    return tarea_de_respaldo(_LlmCrudo())
 
 
-def _falso() -> ApplicabilityTextProposer:
+def _falso() -> PoblacionTask:
     return ProponenteFalso("APL-CRUDO")
 
 
@@ -64,7 +61,7 @@ def _falso() -> ApplicabilityTextProposer:
 def test_proponer_normaliza_y_descarta_igual_que_el_contrato_cuando_el_llm_entrega_valores_descuidados(
     construir,
 ):
-    resultado = asyncio.run(construir().proponer([FUENTE]))
+    resultado = asyncio.run(construir().proponer(FUENTE))
 
     assert resultado == ESPERADO
 

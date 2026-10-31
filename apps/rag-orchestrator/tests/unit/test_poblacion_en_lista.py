@@ -15,7 +15,7 @@ from app.domain.aplicabilidad_tipos import (
     ProyeccionDeEstado,
     ValorDePoblacion,
 )
-from app.domain.applicability_text import criterios_pendientes_de_texto
+from app.domain.applicability_text import criterios_pendientes
 from app.domain.criterios_aplicabilidad import DestinoDelCriterio
 from app.domain.applicability_rules import (
     estado_de_poblacion,
@@ -338,7 +338,7 @@ def test_evaluar_criterio_de_fuente_lee_todos_los_valores_cuando_no_se_indican_f
     assert [v.chunk_id for v in evaluado.valores_del_estudio] == ["ch-1", "ch-2"]
 
 
-def test_criterios_pendientes_de_texto_no_pide_al_llm_el_criterio_cuando_la_lista_solo_trae_subgrupo():
+def test_criterios_pendientes_no_pide_al_llm_el_criterio_cuando_la_lista_solo_trae_subgrupo():
     solo_subgrupo = CriterioEvaluado(
         "receptores_hormonales",
         "RE: Positivo",
@@ -352,8 +352,16 @@ def test_criterios_pendientes_de_texto_no_pide_al_llm_el_criterio_cuando_la_list
         solo_subgrupo, clave="estado_menopausico", valores_del_estudio=()
     )
 
-    pendientes = criterios_pendientes_de_texto(
-        [solo_subgrupo, sin_lista], [RECEPTORES, MENOPAUSIA_LEIDA]
+    poblacion = PoblacionDelEstudio(
+        "extraido_verificado",
+        {
+            RECEPTORES.clave_de_estudio: CriterioDePoblacion(solo_subgrupo.valores_del_estudio),
+            MENOPAUSIA_LEIDA.clave_de_estudio: CriterioDePoblacion(pendiente=True),
+        },
+    )
+
+    pendientes = criterios_pendientes(
+        poblacion, [solo_subgrupo, sin_lista], [RECEPTORES, MENOPAUSIA_LEIDA]
     )
 
     assert [p.clave for p in pendientes] == ["estado_menopausico"]

@@ -22,7 +22,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from app.application.corpus_metadata.esquema_poblacion import cargar_plantilla
-from app.application.corpus_metadata.poblacion_puertos import RespuestaDelLlm
+from app.application.corpus_metadata.poblacion_puertos import LlmDePoblacion, RespuestaDelLlm
 from app.application.ports import FalloDelLlm
 from app.infrastructure.llm.tarea_de_poblacion import TareaDePoblacionLocal
 
@@ -99,7 +99,7 @@ def _salida_en_bucle(max_tokens: int) -> str:
 
 
 def tarea_de_respaldo(
-    llm: RespaldoLlmFalso, *, max_tokens: int = 512, max_chars_fragmentos: int = 12000
+    llm: LlmDePoblacion, *, max_tokens: int = 512, max_chars_fragmentos: int = 12000
 ) -> TareaDePoblacionLocal:
     """El adapter real sobre el LLM falso: la plantilla versionada de la ingesta, con el tope de la configuración."""
     return TareaDePoblacionLocal(

@@ -11,7 +11,7 @@ import copy
 from typing import Any
 
 from app.application.ports import (
-    ApplicabilityTextProposer,
+    PoblacionTask,
     EvidenciaGenerada,
     NliClassifier,
     ResultadoDeRecuperacion,
@@ -245,7 +245,7 @@ def solicitud_a_m3() -> dict[str, Any]:
 def entorno_fx08bc(
     *opciones: str,
     poblaciones: dict[str, PoblacionDelEstudio] | None = None,
-    proponente: ApplicabilityTextProposer | None = None,
+    proponente: PoblacionTask | None = None,
     clasificador_nli: NliClassifier | None = None,
 ) -> EntornoDeRecuperacion:
     """El servicio real con los bordes falsos de FX-08b-c; se recuperan solo los chunks que citan las ``opciones``."""

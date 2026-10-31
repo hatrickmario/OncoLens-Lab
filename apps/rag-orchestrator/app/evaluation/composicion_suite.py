@@ -5,10 +5,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from app.application.aplicabilidad import ApplicabilityService
+from app.application.aplicabilidad_textual import ParametrosDelRespaldo
 from app.application.ports import Clock, ProhibitedTermsChecker
 from app.application.rag_orchestrator_service import (
     ParametrosDeRecuperacion,
     RAGOrchestratorService,
+)
+from app.config.settings import (
+    POBLACION_CONCURRENCIA_INICIAL,
+    POBLACION_PLAZO_DEL_RESPALDO_MS_INICIAL,
+    POBLACION_VERSION_DEL_PROMPT_INICIAL,
 )
 from app.evaluation.adaptadores_falsos import (
     BuscadorEnMemoria,
@@ -61,6 +67,14 @@ class ServicioDeSuite:
     juez_llm: JuezFidelidad | None
 
 
+PARAMETROS_DEL_RESPALDO_DE_LA_SUITE = ParametrosDelRespaldo(
+    plazo_ms=POBLACION_PLAZO_DEL_RESPALDO_MS_INICIAL,
+    concurrencia=POBLACION_CONCURRENCIA_INICIAL,
+    version_del_prompt=POBLACION_VERSION_DEL_PROMPT_INICIAL,
+)
+"""El respaldo de la población de la suite: con adapters falsos el plazo y la concurrencia no cambian la medida."""
+
+
 def parametros_de_recuperacion(
     config: ConfigSuite, tipos_habilitados: tuple[str, ...]
 ) -> ParametrosDeRecuperacion:
@@ -74,6 +88,7 @@ def parametros_de_recuperacion(
         llm_model=config.llm_modelo,
         nli_entailment_threshold=u.nli_entailment_threshold,
         tipos_habilitados=tipos_habilitados,
+        respaldo=PARAMETROS_DEL_RESPALDO_DE_LA_SUITE,
     )
 
 
