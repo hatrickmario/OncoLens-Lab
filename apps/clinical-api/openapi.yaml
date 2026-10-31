@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — Platform API (Backend 1 / clinical-api)
-  version: 1.13.0
+  version: 1.14.0
   description: >-
     API pública, accesible solo a través de los Route Handlers de web (clinical-api no
     publica puerto al host). Autenticación por cookie de sesión HttpOnly + Secure +
@@ -1806,6 +1806,17 @@ components:
           type: integer
           minimum: 0
           description: Afirmaciones omitidas por falta de soporte.
+        optionsNotShown:
+          type: integer
+          minimum: 0
+          description: >-
+            Copiado sin transformar de RagQueryInternalResponse.optionsNotShown. Ausente solo en análisis
+            históricos anteriores al S4; en los nuevos siempre presente (0 si no hubo recorte).
+        maxOptions:
+          type: integer
+          minimum: 1
+          maximum: 3
+          description: ANALYSIS_MAX_OPTIONS aplicado en este análisis (RN-22, FR-09). Ausente en análisis históricos.
 
     Staleness:
       type: object
