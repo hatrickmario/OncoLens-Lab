@@ -16,6 +16,9 @@ SCRIPTS_DE_OPERACION = (
     "migrate_corpus_catalog.py",
     "init_corpus_store.py",
     "load_seed_corpus.py",
+    "ingest.py",
+    "ingest_poblacion.py",
+    "poblacion_seed.py",
     "__init__.py",
 )
 PREFIJOS_DE_MEDICION = (

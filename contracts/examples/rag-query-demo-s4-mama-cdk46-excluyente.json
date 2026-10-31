@@ -1,0 +1,349 @@
+{
+  "status": "con_evidencia",
+  "synthesis": {
+    "agreements": [
+      {
+        "text": "La guía recuperada describe los inhibidores de CDK4/6 adyuvantes para una población con receptores hormonales positivos y HER2 negativo.",
+        "citedSources": [
+          {
+            "title": "Multidisciplinary Practical Guidance for Implementing Adjuvant CDK4/6 Inhibitors in Early Breast Cancer",
+            "sourceName": "PMC Open Access",
+            "externalId": "10.3390/curroncol32080444",
+            "language": "en",
+            "sourceType": "guideline",
+            "licenseClass": "cc_by",
+            "studyDesign": "guia",
+            "trialPhase": null,
+            "primaryEndpoint": null,
+            "sampleSize": null,
+            "publishedAt": "2025-08-07",
+            "lastUpdatedAt": "2025-08-07",
+            "guidelineVersion": null,
+            "authors": null,
+            "sourceUrl": "https://doi.org/10.3390/curroncol32080444",
+            "possiblyOutdated": false,
+            "newerVersionAvailable": false,
+            "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: adjuvant CDK4/6 inhibitors are described for hormone receptor-positive, HER2-negative early breast cancer at high risk of recurrence, in premenopausal and postmenopausal patients.",
+            "chunkId": "pmc-mama-cdk46-guia@a3bb26468a32#0001"
+          }
+        ],
+        "patientDataRefs": []
+      },
+      {
+        "text": "El paciente tiene registrado un resultado de HER2 3+ por inmunohistoquímica.",
+        "citedSources": [],
+        "patientDataRefs": [
+          "r2"
+        ]
+      }
+    ],
+    "discrepancies": []
+  },
+  "applicability": [
+    {
+      "externalId": "10.3390/curroncol32080444",
+      "criteria": [
+        {
+          "criterion": "estado_her2",
+          "patientValue": "3+ (IHQ)",
+          "studyPopulationValue": "negativo",
+          "status": "no_coincide",
+          "unknownReason": null,
+          "isExclusionary": true,
+          "patientDataWarning": null,
+          "studyPopulationValues": [
+            {
+              "value": "negativo",
+              "chunkId": "pmc-mama-cdk46-guia@a3bb26468a32#0001",
+              "scope": "elegibilidad"
+            }
+          ],
+          "partialReason": null,
+          "citedSources": [
+            {
+              "title": "Multidisciplinary Practical Guidance for Implementing Adjuvant CDK4/6 Inhibitors in Early Breast Cancer",
+              "sourceName": "PMC Open Access",
+              "externalId": "10.3390/curroncol32080444",
+              "language": "en",
+              "sourceType": "guideline",
+              "licenseClass": "cc_by",
+              "studyDesign": "guia",
+              "trialPhase": null,
+              "primaryEndpoint": null,
+              "sampleSize": null,
+              "publishedAt": "2025-08-07",
+              "lastUpdatedAt": "2025-08-07",
+              "guidelineVersion": null,
+              "authors": null,
+              "sourceUrl": "https://doi.org/10.3390/curroncol32080444",
+              "possiblyOutdated": false,
+              "newerVersionAvailable": false,
+              "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: adjuvant CDK4/6 inhibitors are described for hormone receptor-positive, HER2-negative early breast cancer at high risk of recurrence, in premenopausal and postmenopausal patients.",
+              "chunkId": "pmc-mama-cdk46-guia@a3bb26468a32#0001"
+            }
+          ]
+        },
+        {
+          "criterion": "receptores_hormonales",
+          "patientValue": "positivo",
+          "studyPopulationValue": "positivo",
+          "status": "coincide",
+          "unknownReason": null,
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "studyPopulationValues": [
+            {
+              "value": "positivo",
+              "chunkId": "pmc-mama-cdk46-guia@a3bb26468a32#0001",
+              "scope": "elegibilidad"
+            }
+          ],
+          "partialReason": null,
+          "citedSources": [
+            {
+              "title": "Multidisciplinary Practical Guidance for Implementing Adjuvant CDK4/6 Inhibitors in Early Breast Cancer",
+              "sourceName": "PMC Open Access",
+              "externalId": "10.3390/curroncol32080444",
+              "language": "en",
+              "sourceType": "guideline",
+              "licenseClass": "cc_by",
+              "studyDesign": "guia",
+              "trialPhase": null,
+              "primaryEndpoint": null,
+              "sampleSize": null,
+              "publishedAt": "2025-08-07",
+              "lastUpdatedAt": "2025-08-07",
+              "guidelineVersion": null,
+              "authors": null,
+              "sourceUrl": "https://doi.org/10.3390/curroncol32080444",
+              "possiblyOutdated": false,
+              "newerVersionAvailable": false,
+              "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: adjuvant CDK4/6 inhibitors are described for hormone receptor-positive, HER2-negative early breast cancer at high risk of recurrence, in premenopausal and postmenopausal patients.",
+              "chunkId": "pmc-mama-cdk46-guia@a3bb26468a32#0001"
+            }
+          ]
+        },
+        {
+          "criterion": "estadio",
+          "patientValue": "IIA",
+          "studyPopulationValue": "II, III",
+          "status": "parcial",
+          "unknownReason": null,
+          "isExclusionary": false,
+          "patientDataWarning": "sin_verificar",
+          "studyPopulationValues": [
+            {
+              "value": "II",
+              "chunkId": "pmc-mama-cdk46-guia@a3bb26468a32#0001",
+              "scope": "elegibilidad"
+            },
+            {
+              "value": "III",
+              "chunkId": "pmc-mama-cdk46-guia@a3bb26468a32#0001",
+              "scope": "elegibilidad"
+            }
+          ],
+          "partialReason": "mezclada",
+          "citedSources": [
+            {
+              "title": "Multidisciplinary Practical Guidance for Implementing Adjuvant CDK4/6 Inhibitors in Early Breast Cancer",
+              "sourceName": "PMC Open Access",
+              "externalId": "10.3390/curroncol32080444",
+              "language": "en",
+              "sourceType": "guideline",
+              "licenseClass": "cc_by",
+              "studyDesign": "guia",
+              "trialPhase": null,
+              "primaryEndpoint": null,
+              "sampleSize": null,
+              "publishedAt": "2025-08-07",
+              "lastUpdatedAt": "2025-08-07",
+              "guidelineVersion": null,
+              "authors": null,
+              "sourceUrl": "https://doi.org/10.3390/curroncol32080444",
+              "possiblyOutdated": false,
+              "newerVersionAvailable": false,
+              "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: adjuvant CDK4/6 inhibitors are described for hormone receptor-positive, HER2-negative early breast cancer at high risk of recurrence, in premenopausal and postmenopausal patients.",
+              "chunkId": "pmc-mama-cdk46-guia@a3bb26468a32#0001"
+            }
+          ]
+        },
+        {
+          "criterion": "linea_tratamiento",
+          "patientValue": "1",
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "no_reportado_por_fuente",
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "citedSources": []
+        },
+        {
+          "criterion": "estado_menopausico",
+          "patientValue": "posmenopáusica",
+          "studyPopulationValue": "premenopáusica, posmenopáusica",
+          "status": "parcial",
+          "unknownReason": null,
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "studyPopulationValues": [
+            {
+              "value": "premenopáusica",
+              "chunkId": "pmc-mama-cdk46-guia@a3bb26468a32#0001",
+              "scope": "elegibilidad"
+            },
+            {
+              "value": "posmenopáusica",
+              "chunkId": "pmc-mama-cdk46-guia@a3bb26468a32#0001",
+              "scope": "elegibilidad"
+            }
+          ],
+          "partialReason": "mezclada",
+          "citedSources": [
+            {
+              "title": "Multidisciplinary Practical Guidance for Implementing Adjuvant CDK4/6 Inhibitors in Early Breast Cancer",
+              "sourceName": "PMC Open Access",
+              "externalId": "10.3390/curroncol32080444",
+              "language": "en",
+              "sourceType": "guideline",
+              "licenseClass": "cc_by",
+              "studyDesign": "guia",
+              "trialPhase": null,
+              "primaryEndpoint": null,
+              "sampleSize": null,
+              "publishedAt": "2025-08-07",
+              "lastUpdatedAt": "2025-08-07",
+              "guidelineVersion": null,
+              "authors": null,
+              "sourceUrl": "https://doi.org/10.3390/curroncol32080444",
+              "possiblyOutdated": false,
+              "newerVersionAvailable": false,
+              "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: adjuvant CDK4/6 inhibitors are described for hormone receptor-positive, HER2-negative early breast cancer at high risk of recurrence, in premenopausal and postmenopausal patients.",
+              "chunkId": "pmc-mama-cdk46-guia@a3bb26468a32#0001"
+            }
+          ]
+        },
+        {
+          "criterion": "ecog",
+          "patientValue": "1",
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "no_reportado_por_fuente",
+          "isExclusionary": false,
+          "patientDataWarning": "sin_verificar",
+          "citedSources": []
+        }
+      ],
+      "summary": {
+        "coincide": 1,
+        "parcial": 2,
+        "noCoincide": 1,
+        "desconocido": 2
+      },
+      "populationNotComparable": true
+    }
+  ],
+  "evidenceOptions": [
+    {
+      "option": "Inhibidores de CDK4/6 adyuvantes",
+      "rationale": "La guía describe los inhibidores de CDK4/6 adyuvantes para cáncer de mama temprano con receptores hormonales positivos y HER2 negativo de alto riesgo.",
+      "details": [
+        "Texto sintético de ejemplo: el detalle describe, según los fragmentos recuperados, el diseño del estudio y la población incluida.",
+        "Texto sintético de ejemplo: el detalle describe los resultados que reporta la fuente para el grupo estudiado."
+      ],
+      "applicabilitySummary": {
+        "coincide": 1,
+        "parcial": 2,
+        "noCoincide": 1,
+        "desconocido": 2
+      },
+      "populationNotComparable": true,
+      "perSource": [
+        {
+          "externalId": "10.3390/curroncol32080444",
+          "summary": {
+            "coincide": 1,
+            "parcial": 2,
+            "noCoincide": 1,
+            "desconocido": 2
+          },
+          "populationNotComparable": true
+        }
+      ],
+      "relevanceScore": 0.81,
+      "warnings": [
+        "datos_sin_verificar",
+        "poblacion_no_comparable"
+      ],
+      "citedSources": [
+        {
+          "title": "Multidisciplinary Practical Guidance for Implementing Adjuvant CDK4/6 Inhibitors in Early Breast Cancer",
+          "sourceName": "PMC Open Access",
+          "externalId": "10.3390/curroncol32080444",
+          "language": "en",
+          "sourceType": "guideline",
+          "licenseClass": "cc_by",
+          "studyDesign": "guia",
+          "trialPhase": null,
+          "primaryEndpoint": null,
+          "sampleSize": null,
+          "publishedAt": "2025-08-07",
+          "lastUpdatedAt": "2025-08-07",
+          "guidelineVersion": null,
+          "authors": null,
+          "sourceUrl": "https://doi.org/10.3390/curroncol32080444",
+          "possiblyOutdated": false,
+          "newerVersionAvailable": false,
+          "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: adjuvant CDK4/6 inhibitors are described for hormone receptor-positive, HER2-negative early breast cancer at high risk of recurrence, in premenopausal and postmenopausal patients.",
+          "chunkId": "pmc-mama-cdk46-guia@a3bb26468a32#0001"
+        }
+      ]
+    }
+  ],
+  "discardedOptions": [],
+  "limitations": [
+    {
+      "text": "Síntesis basada en pocas fuentes del corpus de la demo.",
+      "origin": "estructural"
+    }
+  ],
+  "assumptions": [],
+  "retrievalStats": {
+    "retrieved": 40,
+    "aboveThreshold": 1
+  },
+  "omittedClaims": 0,
+  "optionsNotShown": 0,
+  "agentSteps": [],
+  "topRelevanceScore": 0.81,
+  "meta": {
+    "queryLanguage": "es",
+    "responseLanguage": "es",
+    "llmProvider": "local",
+    "llmModel": "llm-local-ejemplo",
+    "embeddingModel": "embedding-local-ejemplo",
+    "rerankerModel": "reranker-local-ejemplo",
+    "nliModel": "nli-local-ejemplo",
+    "promptVersion": "rag-query@0.1.0",
+    "catalogVersion": "2026.10.0",
+    "corpusRelease": "2026-09-30",
+    "corpusCutoffDate": "2026-09-30",
+    "excludedSources": [
+      "NCCN",
+      "ESMO"
+    ],
+    "retrievalParams": {
+      "topK": 40,
+      "rerankTopN": 10,
+      "relevanceThreshold": 0.5,
+      "retrievalMode": "dense",
+      "fusion": "ninguna",
+      "fusionParam": 0,
+      "queryRewrite": {
+        "applied": false,
+        "reason": "no_disparado"
+      }
+    },
+    "latencyMs": 8200
+  }
+}

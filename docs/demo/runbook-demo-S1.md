@@ -9,10 +9,16 @@ Recorrido local de punta a punta: login → paciente semilla → pregunta clíni
    `python scripts/demo/exportar-modelos.py ~/adr39-modelos`. Genera `~/adr39-modelos/` con `model.onnx` + `tokenizer.json` por modelo y `modelos.env` (rutas y SHA-256).
 
 ## 2. Levantar y apagar
+**Limpieza inicial (OUT-03, F-07):** antes de la primera instalación, o si hubo otra anterior, empieza de cero:
 ```bash
-scripts/demo/levantar.sh     # ~15 min la primera vez (construye imágenes, migra, siembra, carga el corpus); idempotente
-scripts/demo/apagar.sh       # detiene el stack y el Ollama que arrancó el script (--borrar-datos: empezar de cero)
+scripts/demo/apagar.sh --borrar-datos   # cierra attu, baja el stack y BORRA los volúmenes oncolens_* (PostgreSQL, Milvus, MinIO)
 ```
+`levantar.sh` **no borra nada por su cuenta**: si encuentra volúmenes o contenedores `oncolens_*`/`oncolens-*` de una instalación anterior, imprime la lista y pide confirmación; sin confirmar sale con código 1 y te indica la orden de arriba. Para seguir sobre ese estado a propósito: `scripts/demo/levantar.sh --continuar` (o `ONCOLENS_CONFIRMAR_ESTADO_PREVIO=si`).
+```bash
+scripts/demo/levantar.sh     # ~15-25 min la primera vez (construye imágenes, migra, siembra, carga el corpus y sus metadatos de población, pesos sparse); verifica el seed
+scripts/demo/apagar.sh       # cierra attu, detiene el stack y el Ollama que arrancó el script (--borrar-datos: empezar de cero)
+```
+Antes de «Listo», `levantar.sh` ejecuta la **Verificación del seed**: compara pacientes, identidades, usuarios y documentos del corpus (con y sin población verificada) con los conteos que publica el propio seed. Solo `count(*)`, con el rol de `clinical-api` y el de `rag_corpus` dentro de su contenedor; nunca superusuario ni contraseñas en la salida. Si un conteo falla, termina con código 1 y nombra cuál (p. ej. `FALLA identity.patient_identity: esperado 5, obtenido 0`).
 `levantar.sh` imprime la URL y los usuarios; **nunca** imprime contraseñas: `cat infra/docker/secrets/seed_doctor_password` (médico `doc1@test.local`) o `seed_admin_password` (`admin@test.local`, no ve datos clínicos). Si Ollama ya corría, debe haberse iniciado con `OLLAMA_CONTEXT_LENGTH=8192 OLLAMA_FLASH_ATTENTION=1`.
 
 ## 3. Guion (≈ 8 min)
@@ -39,6 +45,9 @@ scripts/demo/apagar.sh       # detiene el stack y el Ollama que arrancó el scri
 - `DEADLINE_VENCIDO` → la consulta pasó del plazo; confirma que el stack se levantó con `levantar.sh` (plazos de 90/100 s) y que Ollama corre con contexto 8192 (`ollama ps` debe mostrar `8192`).
 - `levantar.sh` se detiene diciendo que la app de Ollama está abierta → ciérrala (icono de la barra de menú → Quit Ollama) y repite: la app usa contexto 32768 y vuelve a abrirse al iniciar sesión.
 - Memoria justa → cierra otras apps; `scripts/demo/apagar.sh` libera Docker y Ollama.
+- `levantar.sh` dice «Hay restos de una instalación anterior» y sale con código 1 → son volúmenes de otra instalación (con **otras contraseñas**: PostgreSQL conserva las de la primera vez y `setup-secrets.sh` puede haber generado nuevas). Empieza de cero con `scripts/demo/apagar.sh --borrar-datos`, o continúa a propósito con `levantar.sh --continuar` si no cambiaste `infra/docker/secrets/`.
+- «Verificación del seed» falla nombrando un conteo (`FALLA …: esperado N, obtenido M`) → el seed o el corpus quedaron incompletos. Con `identity.patient_identity` o `clinical.patient`: la imagen del seed estaba obsoleta o el seed falló a medias; repite desde cero (`apagar.sh --borrar-datos` y `levantar.sh`). Con `corpus.*`: falló la carga del corpus o de `data/raw/seed/poblacion-verificada.json`.
+- Attu (§6) queda abierto → `scripts/demo/apagar.sh` lo cierra; si quieres cerrarlo antes, `docker rm -f attu`.
 
 ## 6. Ver qué entró a Milvus (corpus)
 La colección `corpus_chunks` guarda **310 chunks** de los 10 documentos semilla: `document_id`, `chunk_text`, `chunk_index`, `section`, `source_type`, `language`, `population`, `study_design`, `published_year`, `is_current`, `created_at` y los vectores `dense` (1024) y `sparse`. El catálogo (documentos y licencias) está en PostgreSQL, schema `corpus`; los textos originales, en `data/raw/seed/docs/`. Milvus no publica puerto al host (solo `web` lo hace), así que se consulta de tres formas, con el stack arriba:

@@ -29,7 +29,7 @@ def test_el_error_de_version_no_lleva_ninguna_de_las_dos_versiones_en_el_mensaje
 
 
 def test_el_adapter_lee_la_version_del_manifiesto_cuando_el_catalogo_es_el_del_repositorio():
-    assert cargar_catalogo_del_manifiesto(CATALOGOS).version() == "1.1.0"
+    assert cargar_catalogo_del_manifiesto(CATALOGOS).version() == "1.2.0"
 
 
 @pytest.mark.parametrize(

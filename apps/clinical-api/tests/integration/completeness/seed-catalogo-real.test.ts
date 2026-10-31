@@ -27,14 +27,14 @@ import {
 } from '../../support/seed.js';
 
 const ESPACIO_DE_IDS = 9420;
-const VERSION_DEL_CATALOGO_REAL = '1.1.0';
+const VERSION_DEL_CATALOGO_REAL = '1.2.0';
 
 interface ItemDelCatalogo {
   key: string;
   destination: { match: { name: string } };
 }
 
-/** Nombre canónico (`destination.match.name`) que el catálogo real 1.1.0 espera para un ítem de mama. */
+/** Nombre canónico (`destination.match.name`) que el catálogo real 1.2.0 espera para un ítem de mama. */
 function nombreDelCatalogo(clave: string): string {
   const { items } = JSON.parse(
     readFileSync(resolve(RUTA_DEL_CATALOGO, 'mama/datos-criticos.json'), 'utf8'),
@@ -61,7 +61,7 @@ async function nuevaPacienteDeMama(contexto: ContextoDeSiembra): Promise<Pacient
 const estadoDe = (checklist: ChecklistDelPaciente, clave: string): string | undefined =>
   checklist.items.find((item) => item.key === clave)?.status;
 
-describe('checklist del seed sintético con el catálogo real 1.1.0', () => {
+describe('checklist del seed sintético con el catálogo real 1.2.0', () => {
   let base: BaseDeTest;
   let cliente: Client;
   let archivos: ArchivosDeContrasena;

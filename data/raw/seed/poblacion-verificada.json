@@ -1,0 +1,789 @@
+{
+  "version": 1,
+  "documentos": {
+    "nci-mama-hp-en@70b3b48a1249": {
+      "population_criteria": {
+        "ecog": [
+          {
+            "scope": "elegibilidad",
+            "value": "Eastern Cooperative Oncology Group (ECOG) performance status of 0 or 1",
+            "chunkId": "nci-mama-hp-en@70b3b48a1249#0093",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          }
+        ],
+        "linea": [
+          {
+            "scope": "elegibilidad",
+            "value": "had received as least two previous anti-HER2 regimens, at least one of which was for metastatic disease",
+            "chunkId": "nci-mama-hp-en@70b3b48a1249#0093",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "subgrupo",
+            "value": "had previously been treated with trastuzumab, pertuzumab, and trastuzumab emtansine",
+            "chunkId": "nci-mama-hp-en@70b3b48a1249#0093",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          }
+        ],
+        "estadio": [
+          {
+            "scope": "mencion",
+            "value": "early-stage breast cancer",
+            "chunkId": "nci-mama-hp-en@70b3b48a1249#0026",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "mencion",
+            "value": "early-stage (T1 and small T2), hormone receptor–positive tumors",
+            "chunkId": "nci-mama-hp-en@70b3b48a1249#0026",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          }
+        ],
+        "biomarcadores.her2": [
+          {
+            "scope": "mencion",
+            "value": "HER2-negative hormone receptor–positive breast cancer",
+            "chunkId": "nci-mama-hp-en@70b3b48a1249#0038",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "subgrupo",
+            "value": "HER2-negative breast cancers",
+            "chunkId": "nci-mama-hp-en@70b3b48a1249#0053",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "elegibilidad",
+            "value": "HER2-positive metastatic breast cancer",
+            "chunkId": "nci-mama-hp-en@70b3b48a1249#0093",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          }
+        ],
+        "estado_menopausico": [
+          {
+            "scope": "subgrupo",
+            "value": "premenopausal and postmenopausal groups",
+            "chunkId": "nci-mama-hp-en@70b3b48a1249#0004",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "mencion",
+            "value": "premenopausal and postmenopausal women",
+            "chunkId": "nci-mama-hp-en@70b3b48a1249#0042",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          }
+        ],
+        "biomarcadores.receptores_hormonales": [
+          {
+            "scope": "elegibilidad",
+            "value": "TNBC",
+            "chunkId": "nci-mama-hp-en@70b3b48a1249#0053",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "subgrupo",
+            "value": "hormone receptor–negative disease",
+            "chunkId": "nci-mama-hp-en@70b3b48a1249#0053",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "elegibilidad",
+            "value": "hormone receptor–positive tumors",
+            "chunkId": "nci-mama-hp-en@70b3b48a1249#0026",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          }
+        ]
+      },
+      "extracted_fields": [
+        "trial_phase",
+        "sample_size",
+        "primary_endpoint",
+        "biomarcadores.her2",
+        "biomarcadores.receptores_hormonales",
+        "estadio",
+        "linea",
+        "estado_menopausico",
+        "ecog"
+      ],
+      "metadata_source": "extraido_verificado"
+    },
+    "nci-mama-pac-es@a5509492c916": {
+      "population_criteria": {
+        "ecog": [],
+        "linea": [
+          {
+            "scope": "mencion",
+            "value": "tratamiento preoperatorio o terapia neoadyuvante",
+            "chunkId": "nci-mama-pac-es@a5509492c916#0001",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "mencion",
+            "value": "tratamiento posoperatorio o terapia adyuvante",
+            "chunkId": "nci-mama-pac-es@a5509492c916#0001",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "mencion",
+            "value": "terapia sistémica preoperatoria",
+            "chunkId": "nci-mama-pac-es@a5509492c916#0004",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          }
+        ],
+        "estadio": [
+          {
+            "scope": "mencion",
+            "value": "estadio temprano, localizado u operable",
+            "chunkId": "nci-mama-pac-es@a5509492c916#0003",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          }
+        ],
+        "biomarcadores.her2": [
+          {
+            "scope": "mencion",
+            "value": "cáncer de mama positivo para HER2",
+            "chunkId": "nci-mama-pac-es@a5509492c916#0002",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "mencion",
+            "value": "Tumor negativo o positivo para HER2",
+            "chunkId": "nci-mama-pac-es@a5509492c916#0004",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          }
+        ],
+        "estado_menopausico": [
+          {
+            "scope": "subgrupo",
+            "value": "mujeres posmenopáusicas",
+            "chunkId": "nci-mama-pac-es@a5509492c916#0005",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          }
+        ],
+        "biomarcadores.receptores_hormonales": [
+          {
+            "scope": "mencion",
+            "value": "cáncer de mama positivo para receptores hormonales y negativo para HER2",
+            "chunkId": "nci-mama-pac-es@a5509492c916#0002",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "mencion",
+            "value": "mujeres premenopáusicas con tumores positivos para receptores hormonales",
+            "chunkId": "nci-mama-pac-es@a5509492c916#0004",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "mencion",
+            "value": "mujeres posmenopáusicas con diagnóstico reciente de cáncer de mama metastásico positivo para receptores hormonales o cuyo estado de receptores hormonales se desconoce",
+            "chunkId": "nci-mama-pac-es@a5509492c916#0005",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          }
+        ]
+      },
+      "extracted_fields": [
+        "biomarcadores.her2",
+        "biomarcadores.receptores_hormonales",
+        "estadio",
+        "linea",
+        "estado_menopausico"
+      ],
+      "metadata_source": "extraido_verificado"
+    },
+    "nci-prostata-hp-en@1007e2dd59d2": {
+      "population_criteria": {
+        "ecog": [],
+        "grado": [
+          {
+            "scope": "subgrupo",
+            "value": "Gleason score 5",
+            "chunkId": "nci-prostata-hp-en@1007e2dd59d2#0009",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "subgrupo",
+            "value": "Gleason score 6",
+            "chunkId": "nci-prostata-hp-en@1007e2dd59d2#0009",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "subgrupo",
+            "value": "Gleason score 8",
+            "chunkId": "nci-prostata-hp-en@1007e2dd59d2#0009",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          }
+        ],
+        "linea": [
+          {
+            "scope": "elegibilidad",
+            "value": "Patients with stage II prostate cancer",
+            "chunkId": "nci-prostata-hp-en@1007e2dd59d2#0041",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "subgrupo",
+            "value": "men with clinically localized prostate cancer who were managed by watchful waiting or active surveillance",
+            "chunkId": "nci-prostata-hp-en@1007e2dd59d2#0041",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "mencion",
+            "value": "Asymptomatic patients of advanced age or with concomitant illness",
+            "chunkId": "nci-prostata-hp-en@1007e2dd59d2#0041",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          }
+        ],
+        "estadio": [
+          {
+            "scope": "elegibilidad",
+            "value": "men with clinically localized (stage I or stage II) prostate cancer",
+            "chunkId": "nci-prostata-hp-en@1007e2dd59d2#0009",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "subgrupo",
+            "value": "men with clinically organ-confined disease",
+            "chunkId": "nci-prostata-hp-en@1007e2dd59d2#0035",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "subgrupo",
+            "value": "men with pathological T3, N0, and M0 disease",
+            "chunkId": "nci-prostata-hp-en@1007e2dd59d2#0035",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          }
+        ],
+        "estado_castracion": [],
+        "biomarcadores.hrr_brca": [
+          {
+            "scope": "elegibilidad",
+            "value": "men with mCRPC and BRCA1 , BRCA2 , or ATM variants",
+            "chunkId": "nci-prostata-hp-en@1007e2dd59d2#0084",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "subgrupo",
+            "value": "Cohort A included 245 patients with at least one variant in BRCA1 , BRCA2 , or ATM",
+            "chunkId": "nci-prostata-hp-en@1007e2dd59d2#0084",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "subgrupo",
+            "value": "patients with BRCA -altered disease",
+            "chunkId": "nci-prostata-hp-en@1007e2dd59d2#0084",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          }
+        ]
+      },
+      "extracted_fields": [
+        "trial_phase",
+        "primary_endpoint",
+        "estadio",
+        "grado",
+        "linea",
+        "biomarcadores.hrr_brca"
+      ],
+      "metadata_source": "extraido_verificado"
+    },
+    "nci-prostata-pac-es@be2d54359ae6": {
+      "population_criteria": {
+        "ecog": [],
+        "grado": [],
+        "linea": [
+          {
+            "scope": "subgrupo",
+            "value": "hombres con cáncer de próstata avanzado que no mejora con otras terapias hormonales",
+            "chunkId": "nci-prostata-pac-es@be2d54359ae6#0008",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "subgrupo",
+            "value": "hombres con cáncer de próstata de riesgo alto que mejoró con los tratamientos que reducen la concentración de hormonas",
+            "chunkId": "nci-prostata-pac-es@be2d54359ae6#0008",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "subgrupo",
+            "value": "pacientes con cáncer de próstata que se diseminó a otras partes del cuerpo y tiene mutaciones en ciertos genes , como el BRCA1 o el BRCA2",
+            "chunkId": "nci-prostata-pac-es@be2d54359ae6#0008",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          }
+        ],
+        "estadio": [
+          {
+            "scope": "elegibilidad",
+            "value": "El cáncer se diseminó de la próstata a las vesículas seminales o a los tejidos u órganos cercanos, como el recto, la vejiga o la pared pélvica",
+            "chunkId": "nci-prostata-pac-es@be2d54359ae6#0005",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "elegibilidad",
+            "value": "El cáncer se diseminó a otras partes del cuerpo, como el hueso o los ganglios linfáticos lejanos",
+            "chunkId": "nci-prostata-pac-es@be2d54359ae6#0005",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "subgrupo",
+            "value": "el cáncer se diseminó a estos [los huesos]",
+            "chunkId": "nci-prostata-pac-es@be2d54359ae6#0009",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          }
+        ],
+        "estado_castracion": [],
+        "biomarcadores.hrr_brca": [
+          {
+            "scope": "mencion",
+            "value": "pacientes con cáncer de próstata que se diseminó a otras partes del cuerpo y tiene mutaciones en ciertos genes , como el BRCA1 o el BRCA2",
+            "chunkId": "nci-prostata-pac-es@be2d54359ae6#0008",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          }
+        ]
+      },
+      "extracted_fields": [
+        "trial_phase",
+        "primary_endpoint",
+        "estadio",
+        "linea",
+        "biomarcadores.hrr_brca"
+      ],
+      "metadata_source": "extraido_verificado"
+    },
+    "pmc-mama-antraciclinas-rs@c019104016b2": {
+      "population_criteria": {
+        "ecog": [],
+        "linea": [],
+        "estadio": [
+          {
+            "scope": "elegibilidad",
+            "value": "early or locally advanced HER2-positive breast cancer",
+            "chunkId": "pmc-mama-antraciclinas-rs@c019104016b2#0002",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          }
+        ],
+        "biomarcadores.her2": [],
+        "estado_menopausico": [],
+        "biomarcadores.receptores_hormonales": []
+      },
+      "extracted_fields": [
+        "estadio"
+      ],
+      "metadata_source": "extraido_verificado"
+    },
+    "pmc-mama-cdk46-guia@a3bb26468a32": {
+      "population_criteria": {
+        "ecog": [],
+        "linea": [
+          {
+            "scope": "elegibilidad",
+            "value": "adjuvant treatment for patients with HR+, HER2− early breast cancer who are considered at high risk for disease recurrence [pmc-mama-cdk46-guia@a3bb26468a32#0001]",
+            "chunkId": "pmc-mama-cdk46-guia@a3bb26468a32#0001",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "mencion",
+            "value": "first- and second-line treatment options [15,16,17,18]",
+            "chunkId": "pmc-mama-cdk46-guia@a3bb26468a32#0001",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "subgrupo",
+            "value": "abemaciclib may be considered with tamoxifen for patients who cannot tolerate AIs [pmc-mama-cdk46-guia@a3bb26468a32#0003]",
+            "chunkId": "pmc-mama-cdk46-guia@a3bb26468a32#0003",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          }
+        ],
+        "estadio": [
+          {
+            "scope": "elegibilidad",
+            "value": "Patients with stage IIB or III disease",
+            "chunkId": "pmc-mama-cdk46-guia@a3bb26468a32#0003",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          }
+        ],
+        "biomarcadores.her2": [
+          {
+            "scope": "mencion",
+            "value": "HR-positive, HER2-negative early breast cancer",
+            "chunkId": "pmc-mama-cdk46-guia@a3bb26468a32#0000",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "mencion",
+            "value": "HR+, HER2− early breast cancer",
+            "chunkId": "pmc-mama-cdk46-guia@a3bb26468a32#0001",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          }
+        ],
+        "estado_menopausico": [],
+        "biomarcadores.receptores_hormonales": [
+          {
+            "scope": "mencion",
+            "value": "estrogen receptor-positive (ER+) early-stage breast cancer",
+            "chunkId": "pmc-mama-cdk46-guia@a3bb26468a32#0000",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          }
+        ]
+      },
+      "extracted_fields": [
+        "trial_phase",
+        "primary_endpoint",
+        "biomarcadores.her2",
+        "biomarcadores.receptores_hormonales",
+        "estadio",
+        "linea"
+      ],
+      "metadata_source": "extraido_verificado"
+    },
+    "pmc-mama-tamoxifeno-eca@e2e4820ce4be": {
+      "population_criteria": {
+        "ecog": [],
+        "linea": [
+          {
+            "scope": "elegibilidad",
+            "value": "tamoxifen therapy (40 mg daily) vs no tamoxifen therapy (control)",
+            "chunkId": "pmc-mama-tamoxifeno-eca@e2e4820ce4be#0001",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "elegibilidad",
+            "value": "2 years endocrine therapy (tamoxifen, goserelin, combination) or control",
+            "chunkId": "pmc-mama-tamoxifeno-eca@e2e4820ce4be#0001",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          }
+        ],
+        "estadio": [
+          {
+            "scope": "mencion",
+            "value": "early stage breast cancer",
+            "chunkId": "pmc-mama-tamoxifeno-eca@e2e4820ce4be#0009",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          }
+        ],
+        "biomarcadores.her2": [
+          {
+            "scope": "elegibilidad",
+            "value": "estrogen receptor–positive and HER2-negative breast cancer patients with luminal A or B subtype",
+            "chunkId": "pmc-mama-tamoxifeno-eca@e2e4820ce4be#0001",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "elegibilidad",
+            "value": "estrogen receptor–positive and HER2-negative tumors",
+            "chunkId": "pmc-mama-tamoxifeno-eca@e2e4820ce4be#0000",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "subgrupo",
+            "value": "estrogen receptor–positive and HER2-negative breast cancer patients with luminal A and B subtype tumors",
+            "chunkId": "pmc-mama-tamoxifeno-eca@e2e4820ce4be#0002",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          }
+        ],
+        "estado_menopausico": [
+          {
+            "scope": "elegibilidad",
+            "value": "premenopausal and postmenopausal patients",
+            "chunkId": "pmc-mama-tamoxifeno-eca@e2e4820ce4be#0001",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "elegibilidad",
+            "value": "premenopausal patients in the STO-5 trial",
+            "chunkId": "pmc-mama-tamoxifeno-eca@e2e4820ce4be#0001",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "elegibilidad",
+            "value": "postmenopausal patients in the STO-2 and STO-3 trials",
+            "chunkId": "pmc-mama-tamoxifeno-eca@e2e4820ce4be#0001",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          }
+        ],
+        "biomarcadores.receptores_hormonales": [
+          {
+            "scope": "elegibilidad",
+            "value": "estrogen receptor–positive and HER2-negative breast cancer patients with luminal A or B subtype",
+            "chunkId": "pmc-mama-tamoxifeno-eca@e2e4820ce4be#0001",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "mencion",
+            "value": "estrogen receptor–positive disease",
+            "chunkId": "pmc-mama-tamoxifeno-eca@e2e4820ce4be#0005",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          }
+        ]
+      },
+      "extracted_fields": [
+        "trial_phase",
+        "primary_endpoint",
+        "biomarcadores.her2",
+        "biomarcadores.receptores_hormonales",
+        "estadio",
+        "linea",
+        "estado_menopausico"
+      ],
+      "metadata_source": "extraido_verificado"
+    },
+    "pmc-prostata-darolutamida-rs@f3b7c87b164e": {
+      "population_criteria": {
+        "ecog": [],
+        "grado": [
+          {
+            "scope": "subgrupo",
+            "value": "Gleason scores",
+            "chunkId": "pmc-prostata-darolutamida-rs@f3b7c87b164e#0000",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          }
+        ],
+        "linea": [
+          {
+            "scope": "elegibilidad",
+            "value": "darolutamide, either doublet therapy (darolutamide plus androgen deprivation therapy [ADT]) or in combination with other agents (e.g., darolutamide plus ADT and docetaxel)",
+            "chunkId": "pmc-prostata-darolutamida-rs@f3b7c87b164e#0002",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          }
+        ],
+        "estadio": [
+          {
+            "scope": "elegibilidad",
+            "value": "advanced prostate cancer, including metastatic hormone-sensitive prostate cancer (mHSPC) or non-metastatic castration-resistant prostate cancer (nmCRPC)",
+            "chunkId": "pmc-prostata-darolutamida-rs@f3b7c87b164e#0002",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "subgrupo",
+            "value": "nmCRPC group and the mHSPC group",
+            "chunkId": "pmc-prostata-darolutamida-rs@f3b7c87b164e#0004",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          },
+          {
+            "scope": "subgrupo",
+            "value": "patients with a Gleason score of ≥8",
+            "chunkId": "pmc-prostata-darolutamida-rs@f3b7c87b164e#0011",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          }
+        ],
+        "estado_castracion": [
+          {
+            "scope": "subgrupo",
+            "value": "mHSPC",
+            "chunkId": "pmc-prostata-darolutamida-rs@f3b7c87b164e#0004",
+            "nliResult": "entailment",
+            "modelVersion": "gemma4:26b-a4b-it-q4_K_M",
+            "promptVersion": "poblacion_v1",
+            "catalogVersion": "1.2.0"
+          }
+        ],
+        "biomarcadores.hrr_brca": []
+      },
+      "extracted_fields": [
+        "trial_phase",
+        "primary_endpoint",
+        "estado_castracion",
+        "estadio",
+        "grado",
+        "linea"
+      ],
+      "metadata_source": "extraido_verificado"
+    }
+  }
+}
