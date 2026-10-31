@@ -8,7 +8,7 @@ Cumplen el contrato del puerto (LSP): un LLM caído es ``FalloDelLlm`` y una sal
 * ``RESP-SILENCIO``: ``{"values": []}`` (el LLM no encuentra nada): la referencia «sin respaldo» de AC-2.
 * ``RESP-BUCLE``: repite esa propuesta hasta agotar ``max_tokens``; ``finish_reason = length``.
 * ``RESP-TRUNCADO``: JSON cortado a mitad, con ``finish_reason = stop``.
-* ``RESP-LENTO``: no responde dentro del plazo (se cancela al vencer ``POPULATION_FALLBACK_DEADLINE_MS``).
+* ``RESP-LENTO``: responde como ``RESP-OK`` pero después del plazo (se cancela al vencer ``POPULATION_FALLBACK_DEADLINE_MS``).
 * ``RESP-CAIDO``: error de conexión.
 """
 
@@ -39,6 +39,8 @@ ESCENARIOS_DE_RESPALDO = (
 _CRITERIO_EN_PROMPT = re.compile(r"^Criterio: (\S+)$", re.MULTILINE)
 _FRAGMENTO_EN_PROMPT = re.compile(r"^\[(ch-[a-z0-9-]+)\]$", re.MULTILINE)
 CARACTERES_POR_TOKEN = 4
+SEGUNDOS_DE_RESP_LENTO = 1.0
+"""Mucho más que el plazo de los tests (decenas de ms) y poco si nadie lo cancela: nunca cuelga la suite."""
 
 
 @dataclass(frozen=True)
@@ -81,7 +83,9 @@ class RespaldoLlmFalso:
         if self.escenario == "RESP-CAIDO":
             raise FalloDelLlm("llm falso: sin respuesta")
         if self.escenario == "RESP-LENTO":
-            await asyncio.sleep(3600)  # la cancela el plazo del respaldo; nunca llega a devolver
+            await asyncio.sleep(
+                SEGUNDOS_DE_RESP_LENTO
+            )  # responde bien, pero después del plazo; el plazo la cancela
         if self.escenario == "RESP-SILENCIO":
             return RespuestaDelLlm('{"values": []}', "stop")
         if self.escenario == "RESP-BUCLE":

@@ -16,6 +16,7 @@ from app.application.ports import (
     NliClassifier,
     ResultadoDeRecuperacion,
 )
+from app.application.rag_orchestrator_service import ParametrosDeRecuperacion
 from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
 from app.domain.citations import FichaDeFuente, OpcionGenerada
 from app.schemas.generated.models import RagQueryInternalRequest
@@ -23,6 +24,7 @@ from tests.support.aplicabilidad import FICHAS_FX08BA, criterios_de
 from tests.support.catalogo_aplicabilidad import APL_1_2_0
 from tests.support.poblacion_lista import MARCA_PENDIENTE, poblacion_guardada, valor_nuevo
 from tests.support.recuperacion import (
+    PARAMETROS_DE_PRUEBA,
     Q_HER2,
     BuscadorFalso,
     CatalogoClinicoFalso,
@@ -247,6 +249,7 @@ def entorno_fx08bc(
     poblaciones: dict[str, PoblacionDelEstudio] | None = None,
     proponente: PoblacionTask | None = None,
     clasificador_nli: NliClassifier | None = None,
+    parametros: ParametrosDeRecuperacion = PARAMETROS_DE_PRUEBA,
 ) -> EntornoDeRecuperacion:
     """El servicio real con los bordes falsos de FX-08b-c; se recuperan solo los chunks que citan las ``opciones``."""
     citados = {chunk for o in opciones for chunk in OPCIONES_LLM_POB[o]}
@@ -260,4 +263,5 @@ def entorno_fx08bc(
         criterios=criterios_de(APL_1_2_0),
         proponente=proponente,
         clasificador_nli=clasificador_nli,
+        parametros=parametros,
     )
