@@ -10,7 +10,11 @@ from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Literal, get_args
 
-from app.domain.atribucion import FormaDeAfirmacion, validar_forma_de_afirmacion
+from app.domain.atribucion import (
+    FormaDeAfirmacion,
+    tiene_modal_normativo,
+    validar_forma_de_afirmacion,
+)
 from app.domain.citations import OpcionAceptada, OpcionGenerada
 from app.domain.claims import AfirmacionAtomica, PapelDeAfirmacion
 from app.domain.lenguaje import Coincidencia, ListaTerminos, Nivel, check_prohibited_terms
@@ -173,6 +177,17 @@ def planificar_soporte(
     return PlanDeSoporte(opciones, limitaciones)
 
 
+REGLA_MODAL_NORMATIVO = "modal_normativo"
+"""Id de regla que el log registra cuando el título de la opción trae un modal normativo (D4-20); nunca el texto."""
+
+
+def reglas_del_titulo(buscar_terminos: BuscadorDeTerminos, titulo: str) -> tuple[str, ...]:
+    """Reglas que incumple el título de la opción (``option``): las de la lista prohibida (RN-23) y, además, la lista de
+    modales normativos, que antes solo miraba las afirmaciones (D4-20)."""
+    reglas = tuple(buscar_terminos(titulo, "option"))
+    return (*reglas, REGLA_MODAL_NORMATIVO) if tiene_modal_normativo(titulo) else reglas
+
+
 def _planificar_opcion(
     aceptada: OpcionAceptada,
     textos_de_chunks: Mapping[str, str],
@@ -185,7 +200,7 @@ def _planificar_opcion(
         Afirmacion(
             aceptada.opcion.option,
             "option",
-            tuple(buscar_terminos(aceptada.opcion.option, "option")),
+            reglas_del_titulo(buscar_terminos, aceptada.opcion.option),
             (),
         ),
         tuple(
