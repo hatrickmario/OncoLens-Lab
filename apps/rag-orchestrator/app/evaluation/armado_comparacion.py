@@ -6,6 +6,7 @@ import math
 import statistics
 from collections import defaultdict
 from collections.abc import Sequence
+from dataclasses import dataclass
 from typing import Any
 
 from app.evaluation.brazos_recuperacion import (
@@ -53,13 +54,8 @@ def _por_documento(brazo: ResultadoDeBrazo) -> list[dict[str, Any]]:
     ]
 
 
-def exigir_trazabilidad_coherente(brazo: ResultadoDeBrazo) -> None:
-    raise NotImplementedError
-
-
-def _trazabilidad(brazo: ResultadoDeBrazo) -> dict[str, int]:
-    """Cuántas consultas trajeron en ``meta.retrievalParams`` el modo, la fusión y el parámetro de su brazo."""
-    coherentes = sum(
+def _coherentes(brazo: ResultadoDeBrazo) -> int:
+    return sum(
         trazado_coherente(
             brazo.brazo,
             meta.retrievalParams.retrievalMode,
@@ -68,11 +64,19 @@ def _trazabilidad(brazo: ResultadoDeBrazo) -> dict[str, int]:
         )
         for meta in brazo.metas
     )
-    if coherentes != len(brazo.metas):
+
+
+def exigir_trazabilidad_coherente(brazo: ResultadoDeBrazo) -> None:
+    """Toda consulta del brazo trajo el modo, la fusión y el parámetro de su brazo; si no, la corrida aborta."""
+    if _coherentes(brazo) != len(brazo.metas):
         raise SuiteAbortada(
             f"el brazo {brazo.brazo.nombre} trajo consultas con retrievalParams de otro brazo"
         )
-    return {"consultas": len(brazo.metas), "coherentes": coherentes}
+
+
+def _trazabilidad(brazo: ResultadoDeBrazo) -> dict[str, int]:
+    """Cuántas consultas respondieron y cuántas trajeron en ``meta.retrievalParams`` la traza de su brazo."""
+    return {"consultas": len(brazo.metas), "coherentes": _coherentes(brazo)}
 
 
 def _sin_terminos(brazo: ResultadoDeBrazo) -> dict[str, float | int]:
@@ -84,9 +88,19 @@ def _sin_terminos(brazo: ResultadoDeBrazo) -> dict[str, float | int]:
     }
 
 
+@dataclass(frozen=True)
+class ComparacionArmada:
+    seccion: dict[str, Any]
+    """La sección ``comparacion_recuperacion`` del reporte."""
+    retroceso: bool
+    """Algún brazo híbrido retrocedió frente a A0: decide el código de salida sin releer el reporte."""
+
+
 def armar_comparacion(
     config: ConfigSuite, comparacion: Comparacion, brazos: Sequence[ResultadoDeBrazo]
-) -> dict[str, Any]:
+) -> ComparacionArmada:
+    for brazo in brazos:
+        exigir_trazabilidad_coherente(brazo)  # antes de armar ningún dato
     recuperaciones = [
         familias_de_recuperacion(
             b.resultados, config.semilla_bootstrap, config.bootstrap_repeticiones
@@ -114,9 +128,11 @@ def armar_comparacion(
             armado["diferencia_frente_a_a0"] = _diferencia_a_dict(diferencia)
             armado["retroceso"] = marcar_retroceso(diferencia, comparacion.tolerancia_retroceso)
         armados.append(armado)
-    return {
+    hay_retroceso = any(a["retroceso"] for a in armados)
+    seccion = {
         "referencia": REFERENCIA,
         "tolerancia_retroceso": comparacion.tolerancia_retroceso,
-        "retroceso": any(a["retroceso"] for a in armados),
+        "retroceso": hay_retroceso,
         "brazos": armados,
     }
+    return ComparacionArmada(seccion, hay_retroceso)

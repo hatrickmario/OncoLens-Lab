@@ -173,11 +173,11 @@ def _despachar_familia(
         raise ConfigInvalida(f"familia no disponible: {args.suite}")
     if args.suite == SUITE_APLICABILIDAD:
         return ejecutar_aplicabilidad(args, reloj, puertos_aplicabilidad)
-    config = cargar_config_suite(args.config, _ajustes_del_juez(args, origen.entorno))
+    config = cargar_config_suite(args.config, _ajustes_de_la_suite(args, origen.entorno))
     return _ejecutar(config, args, reloj, raiz, origen, directorio_de_configs)
 
 
-def _ajustes_del_juez(
+def _ajustes_de_la_suite(
     args: argparse.Namespace, entorno: Mapping[str, str] | None
 ) -> dict[str, str]:
     """``EVAL_JUDGE_*`` (ADR-41) sin leer el entorno del proceso (US-037 AC-1: solo ``app/config/`` lo hace).
@@ -233,9 +233,10 @@ def _ejecutar(
     informe_pii = _proveedor_pii(
         config, args
     ).leer()  # antes de consultar: un informe roto no cuesta una corrida
-    reporte = _correr_suite(config, fuente.cargar(), args.suite, reloj, informe_pii, origen)
+    reporte, hay_retroceso = _correr_suite(
+        config, fuente.cargar(), args.suite, reloj, informe_pii, origen
+    )
     escribir_reporte_cerrado(_ruta_del_resultado(config, args, reloj), reporte, ESQUEMA_SUITE)
-    hay_retroceso = reporte.get("comparacion_recuperacion", {}).get("retroceso", False)
     return CODIGO_RETROCESO if hay_retroceso else 0
 
 
@@ -253,7 +254,8 @@ def _correr_suite(
     reloj: Clock,
     informe_pii: InformePiiB1 | None,
     origen: OrigenLocal,
-) -> dict[str, Any]:
+) -> tuple[dict[str, Any], bool]:
+    """El reporte de la suite y si la comparación de brazos terminó con un retroceso (US-133)."""
     registro = RegistroDeLlamadas()
     medido = _Medicion([], None, Cronometro(_reloj_de_medicion(config)), None, None)
     if suite != SUITE_PII:  # la familia pii no consulta al servicio: mide solo la privacidad
@@ -267,7 +269,7 @@ def _correr_suite(
         if suite in SUITES_CON_PRIVACIDAD
         else None
     )
-    return armar_reporte(
+    reporte = armar_reporte(
         config,
         dataset,
         suite,
@@ -278,6 +280,7 @@ def _correr_suite(
         medido.recursos_nli,
         medido.comparacion,
     )
+    return reporte, medido.retroceso
 
 
 @dataclass(frozen=True)
@@ -289,6 +292,8 @@ class _Medicion:
     cronometro: Cronometro
     recursos_nli: dict[str, object] | None
     comparacion: dict[str, Any] | None
+    retroceso: bool = False
+    """Algún brazo híbrido retrocedió frente a A0 (US-133): lo calcula la comparación, no se relee del reporte."""
 
 
 def _medir_un_brazo(
@@ -324,12 +329,14 @@ def _medir_comparacion(
         raise ConfigInvalida("falta el bloque comparacion")
     brazos = asyncio.run(_evaluar_brazos(config, comparacion, dataset, reloj, registro, origen))
     referencia = brazos[0]
+    armada = armar_comparacion(config, comparacion, brazos)
     return _Medicion(
         referencia.resultados,
         referencia.metas[0],
         referencia.servicio.cronometro,
         _recursos_del_nli(config, referencia.servicio.latencias_nli, origen),
-        armar_comparacion(config, comparacion, brazos),
+        armada.seccion,
+        armada.retroceso,
     )
 
 
