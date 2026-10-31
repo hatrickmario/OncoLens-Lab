@@ -88,8 +88,8 @@ def _unir_oraciones(textos: list[str]) -> str:
 
 
 def validar_forma_de_afirmacion(texto: str, max_palabras: int) -> FormaDeAfirmacion:
-    """El modal normativo precede (descarta la opción en cualquier papel, D-a); alias, artefactos y longitud siguen la regla del papel."""
-    if _tiene_modal_normativo(texto):
+    """El modal normativo precede a alias, artefactos y longitud; la afirmación fuera de forma sigue la regla del papel (D4-20)."""
+    if tiene_modal_normativo(texto):
         return FormaDeAfirmacion.modal_normativo
     if _ALIAS_DE_FRAGMENTO.search(texto):
         return FormaDeAfirmacion.alias_de_fragmento
@@ -100,7 +100,8 @@ def validar_forma_de_afirmacion(texto: str, max_palabras: int) -> FormaDeAfirmac
     return FormaDeAfirmacion.valida
 
 
-def _tiene_modal_normativo(texto: str) -> bool:
+def tiene_modal_normativo(texto: str) -> bool:
+    """El texto trae alguno de los modales normativos de ``MODALES_NORMATIVOS`` como palabras completas (acentos y mayúsculas indistintos)."""
     palabras = normalizar_texto(texto).split()
     return any(
         tuple(palabras[i : i + len(modal)]) == modal
