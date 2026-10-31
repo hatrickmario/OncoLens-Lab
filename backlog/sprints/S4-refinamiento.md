@@ -127,7 +127,7 @@ Aplicados en `backlog/features/` (cada Feature con su fila en `## Conflictos de 
   | S4 | **73** (61 + 8 el 2026-10-30 + 4 el 2026-10-31: L1D-97 de 3 a 5 y L1D-297 de 5 a 7) |
   | S5 | **168** |
   | S6 | **102** |
-  | MVP comprometido | 614 (610 + 4 del reajuste del S4) |
+  | MVP comprometido | 610 (pendiente de recalcular por el humano: S4 pasa de 69 a 73 pts) |
 
   El S5 queda **sobrecargado**: su refinamiento debe recortar según la prioridad (gestión de usuarios → OCR → …) y llevar lo que sobre a `V2-Post-MVP.md`.
 - **G-Piloto (S6):** no se sacó del camino crítico ninguna historia suya. US-047 (alta manual de pacientes) pasa al S6, el mismo sprint del gate.
