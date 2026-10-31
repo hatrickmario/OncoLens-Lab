@@ -9,7 +9,7 @@ import {
   sinEvidencia,
   tipoNoHabilitado,
 } from '../support/msw/evidence-analyses';
-import { analizar, SIN_BASE } from '../support/panel-ui';
+import { analizar, ID_PACIENTE, SIN_BASE } from '../support/panel-ui';
 
 const { replace } = vi.hoisted(() => ({ replace: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace }) }));
@@ -181,7 +181,13 @@ describe('AnalysisBasisPanel', () => {
   });
 
   it('dice No se consultó el corpus: tipo fuera de alcance ante tipo_no_habilitado [US-067 AC-3]', () => {
-    render(<AnalysisResult analisis={tipoNoHabilitado as never} onVerFragmento={() => {}} />);
+    render(
+      <AnalysisResult
+        analisis={tipoNoHabilitado as never}
+        patientId={ID_PACIENTE}
+        onVerFragmento={() => {}}
+      />,
+    );
 
     expect(
       screen.getByText(
@@ -197,7 +203,13 @@ describe('AnalysisBasisPanel', () => {
     // El esquema del contrato rechaza campos extra en el borde, así que el campo no contractual se
     // inyecta directo al organismo: si el panel lo pintara alguna vez, esta aserción lo detectaría.
     const analisis = conBase({ omittedClaims: 1, omittedClaimTexts: [textoOmitido] });
-    render(<AnalysisResult analisis={analisis as never} onVerFragmento={() => {}} />);
+    render(
+      <AnalysisResult
+        analisis={analisis as never}
+        patientId={ID_PACIENTE}
+        onVerFragmento={() => {}}
+      />,
+    );
 
     expect(screen.getByText(/Afirmaciones omitidas: 1$/)).toBeTruthy();
     expect(document.body.textContent).not.toContain(textoOmitido);
@@ -240,8 +252,16 @@ describe('AnalysisBasisPanel', () => {
   it('usa ids distintos para el control y el detalle cuando hay dos paneles de Base', () => {
     render(
       <>
-        <AnalysisResult analisis={conBaseDeUs066 as never} onVerFragmento={() => {}} />
-        <AnalysisResult analisis={conBaseDeUs066 as never} onVerFragmento={() => {}} />
+        <AnalysisResult
+          analisis={conBaseDeUs066 as never}
+          patientId={ID_PACIENTE}
+          onVerFragmento={() => {}}
+        />
+        <AnalysisResult
+          analisis={conBaseDeUs066 as never}
+          patientId={ID_PACIENTE}
+          onVerFragmento={() => {}}
+        />
       </>,
     );
     const ids = screen
@@ -306,7 +326,13 @@ describe('AnalysisBasisPanel', () => {
   });
 
   it('dice Datos críticos faltantes: no evaluados en este estado y no 0 datos críticos faltantes cuando el tipo no está habilitado [US-128 AC-4]', () => {
-    render(<AnalysisResult analisis={tipoNoHabilitado as never} onVerFragmento={() => {}} />);
+    render(
+      <AnalysisResult
+        analisis={tipoNoHabilitado as never}
+        patientId={ID_PACIENTE}
+        onVerFragmento={() => {}}
+      />,
+    );
 
     expect(document.body.textContent).toContain(
       'Datos críticos faltantes: no evaluados en este estado',

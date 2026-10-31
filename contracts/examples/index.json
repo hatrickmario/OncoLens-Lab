@@ -497,6 +497,16 @@
       "target": "#/components/schemas/EvidenceAnalysis"
     },
     {
+      "file": "con-evidencia-s4-poblacion-a-m2.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/EvidenceAnalysis"
+    },
+    {
+      "file": "con-evidencia-s4-poblacion-a-m2-b.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/EvidenceAnalysis"
+    },
+    {
       "file": "con-evidencia-solo-descartadas-lenguaje.json",
       "spec": "clinical-api",
       "target": "#/components/schemas/EvidenceAnalysis"

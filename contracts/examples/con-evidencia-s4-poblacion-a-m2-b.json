@@ -1,0 +1,539 @@
+{
+  "id": "3d9c1e57-7a24-4b68-8f13-2c5e9a0b4d62",
+  "traceId": "req_b4e8f2a6",
+  "queryText": "¿Qué otras opciones sistémicas describe la evidencia para una paciente con cáncer de mama HER2 positivo, estadio IIA, según la población de cada estudio?",
+  "questionTemplateId": "mama.adyuvancia.her2",
+  "queryLanguage": "es",
+  "status": "con_evidencia",
+  "synthesis": {
+    "agreements": [
+      {
+        "text": "Las fuentes recuperadas describen opciones sistémicas con poblaciones de estudio que difieren en estado menopáusico y estadio.",
+        "citedSources": [
+          {
+            "title": "Estudio sintético B4 con HER2 reportado de dos formas",
+            "sourceName": "NCI PDQ",
+            "externalId": "doc-b4",
+            "language": "en",
+            "sourceType": "guideline",
+            "licenseClass": "dominio_publico",
+            "studyDesign": "guia",
+            "trialPhase": null,
+            "primaryEndpoint": null,
+            "sampleSize": null,
+            "publishedAt": "2024-03-15",
+            "lastUpdatedAt": "2026-05-01",
+            "guidelineVersion": "2026-05",
+            "authors": null,
+            "sourceUrl": "https://corpus.oncolens.test/documentos/doc-b4",
+            "possiblyOutdated": false,
+            "newerVersionAvailable": false,
+            "chunkTextSnapshot": "Texto sintético de ejemplo: the study population is described as HER2-positive.",
+            "chunkId": "ch-b4-1"
+          }
+        ],
+        "patientDataRefs": []
+      },
+      {
+        "text": "El paciente tiene registrado un resultado de HER2 3+ por inmunohistoquímica.",
+        "citedSources": [],
+        "patientDataRefs": [
+          "r2"
+        ]
+      }
+    ],
+    "discrepancies": []
+  },
+  "applicability": [
+    {
+      "externalId": "doc-b4",
+      "criteria": [
+        {
+          "criterion": "estado_her2",
+          "patientValue": "3+ (IHQ)",
+          "studyPopulationValue": "HER2-positive (IHC 3+)",
+          "status": "desconocido",
+          "unknownReason": "valores_en_conflicto",
+          "isExclusionary": true,
+          "patientDataWarning": null,
+          "citedSources": [
+            {
+              "title": "Estudio sintético B4 con HER2 reportado de dos formas",
+              "sourceName": "NCI PDQ",
+              "externalId": "doc-b4",
+              "language": "en",
+              "sourceType": "guideline",
+              "licenseClass": "dominio_publico",
+              "studyDesign": "guia",
+              "trialPhase": null,
+              "primaryEndpoint": null,
+              "sampleSize": null,
+              "publishedAt": "2024-03-15",
+              "lastUpdatedAt": "2026-05-01",
+              "guidelineVersion": "2026-05",
+              "authors": null,
+              "sourceUrl": "https://corpus.oncolens.test/documentos/doc-b4",
+              "possiblyOutdated": false,
+              "newerVersionAvailable": false,
+              "chunkTextSnapshot": "Texto sintético de ejemplo: the study population is described as HER2-positive.",
+              "chunkId": "ch-b4-1"
+            },
+            {
+              "title": "Estudio sintético B4 con HER2 reportado de dos formas",
+              "sourceName": "NCI PDQ",
+              "externalId": "doc-b4",
+              "language": "en",
+              "sourceType": "guideline",
+              "licenseClass": "dominio_publico",
+              "studyDesign": "guia",
+              "trialPhase": null,
+              "primaryEndpoint": null,
+              "sampleSize": null,
+              "publishedAt": "2024-03-15",
+              "lastUpdatedAt": "2026-05-01",
+              "guidelineVersion": "2026-05",
+              "authors": null,
+              "sourceUrl": "https://corpus.oncolens.test/documentos/doc-b4",
+              "possiblyOutdated": false,
+              "newerVersionAvailable": false,
+              "chunkTextSnapshot": "Texto sintético de ejemplo: a later table lists the population as HER2-low.",
+              "chunkId": "ch-b4-2"
+            }
+          ],
+          "studyPopulationValues": [
+            {
+              "value": "HER2-positive (IHC 3+)",
+              "chunkId": "ch-b4-1",
+              "scope": "elegibilidad"
+            },
+            {
+              "value": "HER2-negative (IHC 2+, ISH not amplified)",
+              "chunkId": "ch-b4-2",
+              "scope": "elegibilidad"
+            }
+          ],
+          "partialReason": null
+        }
+      ],
+      "summary": {
+        "coincide": 0,
+        "parcial": 0,
+        "noCoincide": 0,
+        "desconocido": 1
+      },
+      "populationNotComparable": false
+    },
+    {
+      "externalId": "doc-b10",
+      "criteria": [
+        {
+          "criterion": "estado_menopausico",
+          "patientValue": "posmenopáusica",
+          "studyPopulationValue": "premenopausal women",
+          "status": "parcial",
+          "unknownReason": null,
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "citedSources": [
+            {
+              "title": "Estudio sintético B10 con varios valores de elegibilidad",
+              "sourceName": "NCI PDQ",
+              "externalId": "doc-b10",
+              "language": "en",
+              "sourceType": "guideline",
+              "licenseClass": "dominio_publico",
+              "studyDesign": "guia",
+              "trialPhase": null,
+              "primaryEndpoint": null,
+              "sampleSize": null,
+              "publishedAt": "2024-03-15",
+              "lastUpdatedAt": "2026-05-01",
+              "guidelineVersion": "2026-05",
+              "authors": null,
+              "sourceUrl": "https://corpus.oncolens.test/documentos/doc-b10",
+              "possiblyOutdated": false,
+              "newerVersionAvailable": false,
+              "chunkTextSnapshot": "Texto sintético de ejemplo: eligible patients were premenopausal or perimenopausal women.",
+              "chunkId": "ch-b10-1"
+            },
+            {
+              "title": "Estudio sintético B10 con varios valores de elegibilidad",
+              "sourceName": "NCI PDQ",
+              "externalId": "doc-b10",
+              "language": "en",
+              "sourceType": "guideline",
+              "licenseClass": "dominio_publico",
+              "studyDesign": "guia",
+              "trialPhase": null,
+              "primaryEndpoint": null,
+              "sampleSize": null,
+              "publishedAt": "2024-03-15",
+              "lastUpdatedAt": "2026-05-01",
+              "guidelineVersion": "2026-05",
+              "authors": null,
+              "sourceUrl": "https://corpus.oncolens.test/documentos/doc-b10",
+              "possiblyOutdated": false,
+              "newerVersionAvailable": false,
+              "chunkTextSnapshot": "Texto sintético de ejemplo: postmenopausal women and women aged 60 or older were also eligible.",
+              "chunkId": "ch-b10-2"
+            }
+          ],
+          "studyPopulationValues": [
+            {
+              "value": "premenopausal women",
+              "chunkId": "ch-b10-1",
+              "scope": "elegibilidad"
+            },
+            {
+              "value": "perimenopausal women",
+              "chunkId": "ch-b10-1",
+              "scope": "elegibilidad"
+            },
+            {
+              "value": "postmenopausal women",
+              "chunkId": "ch-b10-2",
+              "scope": "elegibilidad"
+            },
+            {
+              "value": "women aged 60 or older",
+              "chunkId": "ch-b10-2",
+              "scope": "elegibilidad"
+            }
+          ],
+          "partialReason": "inclusiva"
+        }
+      ],
+      "summary": {
+        "coincide": 0,
+        "parcial": 1,
+        "noCoincide": 0,
+        "desconocido": 0
+      },
+      "populationNotComparable": false
+    },
+    {
+      "externalId": "doc-b11",
+      "criteria": [
+        {
+          "criterion": "terapia_previa",
+          "patientValue": "ninguna",
+          "studyPopulationValue": "sin terapia sistémica previa",
+          "status": "desconocido",
+          "unknownReason": "sin_regla_de_comparacion",
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "citedSources": [
+            {
+              "title": "Estudio sintético B11 sin regla de comparación",
+              "sourceName": "NCI PDQ",
+              "externalId": "doc-b11",
+              "language": "en",
+              "sourceType": "guideline",
+              "licenseClass": "dominio_publico",
+              "studyDesign": "guia",
+              "trialPhase": null,
+              "primaryEndpoint": null,
+              "sampleSize": null,
+              "publishedAt": "2024-03-15",
+              "lastUpdatedAt": "2026-05-01",
+              "guidelineVersion": "2026-05",
+              "authors": null,
+              "sourceUrl": "https://corpus.oncolens.test/documentos/doc-b11",
+              "possiblyOutdated": false,
+              "newerVersionAvailable": false,
+              "chunkTextSnapshot": "Texto sintético de ejemplo: patients had received no prior systemic therapy for the current disease.",
+              "chunkId": "ch-b11-1"
+            }
+          ],
+          "studyPopulationValues": [
+            {
+              "value": "sin terapia sistémica previa",
+              "chunkId": "ch-b11-1",
+              "scope": "elegibilidad"
+            }
+          ],
+          "partialReason": null
+        }
+      ],
+      "summary": {
+        "coincide": 0,
+        "parcial": 0,
+        "noCoincide": 0,
+        "desconocido": 1
+      },
+      "populationNotComparable": false
+    }
+  ],
+  "evidenceOptions": [
+    {
+      "option": "Terapia dirigida anti-HER2 (estudio B4)",
+      "rationale": "La evidencia recuperada describe terapia dirigida; los fragmentos difieren en el estado HER2 de la población.",
+      "details": [
+        "Texto sintético de ejemplo: el detalle describe, según los fragmentos recuperados, la población incluida en el estudio."
+      ],
+      "applicabilitySummary": {
+        "coincide": 0,
+        "parcial": 0,
+        "noCoincide": 0,
+        "desconocido": 1
+      },
+      "populationNotComparable": false,
+      "perSource": [
+        {
+          "externalId": "doc-b4",
+          "summary": {
+            "coincide": 0,
+            "parcial": 0,
+            "noCoincide": 0,
+            "desconocido": 1
+          },
+          "populationNotComparable": false
+        }
+      ],
+      "relevanceScore": 0.79,
+      "warnings": [
+        "datos_sin_verificar"
+      ],
+      "citedSources": [
+        {
+          "title": "Estudio sintético B4 con HER2 reportado de dos formas",
+          "sourceName": "NCI PDQ",
+          "externalId": "doc-b4",
+          "language": "en",
+          "sourceType": "guideline",
+          "licenseClass": "dominio_publico",
+          "studyDesign": "guia",
+          "trialPhase": null,
+          "primaryEndpoint": null,
+          "sampleSize": null,
+          "publishedAt": "2024-03-15",
+          "lastUpdatedAt": "2026-05-01",
+          "guidelineVersion": "2026-05",
+          "authors": null,
+          "sourceUrl": "https://corpus.oncolens.test/documentos/doc-b4",
+          "possiblyOutdated": false,
+          "newerVersionAvailable": false,
+          "chunkTextSnapshot": "Texto sintético de ejemplo: the study population is described as HER2-positive.",
+          "chunkId": "ch-b4-1"
+        },
+        {
+          "title": "Estudio sintético B4 con HER2 reportado de dos formas",
+          "sourceName": "NCI PDQ",
+          "externalId": "doc-b4",
+          "language": "en",
+          "sourceType": "guideline",
+          "licenseClass": "dominio_publico",
+          "studyDesign": "guia",
+          "trialPhase": null,
+          "primaryEndpoint": null,
+          "sampleSize": null,
+          "publishedAt": "2024-03-15",
+          "lastUpdatedAt": "2026-05-01",
+          "guidelineVersion": "2026-05",
+          "authors": null,
+          "sourceUrl": "https://corpus.oncolens.test/documentos/doc-b4",
+          "possiblyOutdated": false,
+          "newerVersionAvailable": false,
+          "chunkTextSnapshot": "Texto sintético de ejemplo: a later table lists the population as HER2-low.",
+          "chunkId": "ch-b4-2"
+        }
+      ]
+    },
+    {
+      "option": "Terapia endocrina extendida (estudio B10)",
+      "rationale": "La evidencia recuperada describe la terapia en una población con varias categorías de estado menopáusico.",
+      "details": [
+        "Texto sintético de ejemplo: el detalle describe, según los fragmentos recuperados, la población incluida en el estudio."
+      ],
+      "applicabilitySummary": {
+        "coincide": 0,
+        "parcial": 1,
+        "noCoincide": 0,
+        "desconocido": 0
+      },
+      "populationNotComparable": false,
+      "perSource": [
+        {
+          "externalId": "doc-b10",
+          "summary": {
+            "coincide": 0,
+            "parcial": 1,
+            "noCoincide": 0,
+            "desconocido": 0
+          },
+          "populationNotComparable": false
+        }
+      ],
+      "relevanceScore": 0.74,
+      "warnings": [
+        "datos_sin_verificar"
+      ],
+      "citedSources": [
+        {
+          "title": "Estudio sintético B10 con varios valores de elegibilidad",
+          "sourceName": "NCI PDQ",
+          "externalId": "doc-b10",
+          "language": "en",
+          "sourceType": "guideline",
+          "licenseClass": "dominio_publico",
+          "studyDesign": "guia",
+          "trialPhase": null,
+          "primaryEndpoint": null,
+          "sampleSize": null,
+          "publishedAt": "2024-03-15",
+          "lastUpdatedAt": "2026-05-01",
+          "guidelineVersion": "2026-05",
+          "authors": null,
+          "sourceUrl": "https://corpus.oncolens.test/documentos/doc-b10",
+          "possiblyOutdated": false,
+          "newerVersionAvailable": false,
+          "chunkTextSnapshot": "Texto sintético de ejemplo: eligible patients were premenopausal or perimenopausal women.",
+          "chunkId": "ch-b10-1"
+        },
+        {
+          "title": "Estudio sintético B10 con varios valores de elegibilidad",
+          "sourceName": "NCI PDQ",
+          "externalId": "doc-b10",
+          "language": "en",
+          "sourceType": "guideline",
+          "licenseClass": "dominio_publico",
+          "studyDesign": "guia",
+          "trialPhase": null,
+          "primaryEndpoint": null,
+          "sampleSize": null,
+          "publishedAt": "2024-03-15",
+          "lastUpdatedAt": "2026-05-01",
+          "guidelineVersion": "2026-05",
+          "authors": null,
+          "sourceUrl": "https://corpus.oncolens.test/documentos/doc-b10",
+          "possiblyOutdated": false,
+          "newerVersionAvailable": false,
+          "chunkTextSnapshot": "Texto sintético de ejemplo: postmenopausal women and women aged 60 or older were also eligible.",
+          "chunkId": "ch-b10-2"
+        }
+      ]
+    },
+    {
+      "option": "Esquema de quimioterapia secuencial (estudio B11)",
+      "rationale": "La evidencia recuperada describe el esquema; un criterio no tiene regla de comparación en el catálogo.",
+      "details": [
+        "Texto sintético de ejemplo: el detalle describe, según los fragmentos recuperados, la población incluida en el estudio."
+      ],
+      "applicabilitySummary": {
+        "coincide": 0,
+        "parcial": 0,
+        "noCoincide": 0,
+        "desconocido": 1
+      },
+      "populationNotComparable": false,
+      "perSource": [
+        {
+          "externalId": "doc-b11",
+          "summary": {
+            "coincide": 0,
+            "parcial": 0,
+            "noCoincide": 0,
+            "desconocido": 1
+          },
+          "populationNotComparable": false
+        }
+      ],
+      "relevanceScore": 0.7,
+      "warnings": [
+        "datos_sin_verificar"
+      ],
+      "citedSources": [
+        {
+          "title": "Estudio sintético B11 sin regla de comparación",
+          "sourceName": "NCI PDQ",
+          "externalId": "doc-b11",
+          "language": "en",
+          "sourceType": "guideline",
+          "licenseClass": "dominio_publico",
+          "studyDesign": "guia",
+          "trialPhase": null,
+          "primaryEndpoint": null,
+          "sampleSize": null,
+          "publishedAt": "2024-03-15",
+          "lastUpdatedAt": "2026-05-01",
+          "guidelineVersion": "2026-05",
+          "authors": null,
+          "sourceUrl": "https://corpus.oncolens.test/documentos/doc-b11",
+          "possiblyOutdated": false,
+          "newerVersionAvailable": false,
+          "chunkTextSnapshot": "Texto sintético de ejemplo: patients had received no prior systemic therapy for the current disease.",
+          "chunkId": "ch-b11-1"
+        }
+      ]
+    }
+  ],
+  "discardedOptions": [],
+  "analysisBasis": {
+    "patientDataUsed": [
+      {
+        "label": "HER2 3+ (IHQ)",
+        "reviewStatus": "auto_aceptado",
+        "conflict": false
+      },
+      {
+        "label": "Estadio IIA (TNM_8)",
+        "reviewStatus": "auto_aceptado",
+        "conflict": false
+      }
+    ],
+    "missingCriticalData": [],
+    "missingCriticalDataLabels": [],
+    "continuedWithWarning": false,
+    "assumptions": [
+      {
+        "text": "Se asume enfermedad no metastásica: no hay estudios de extensión registrados.",
+        "origin": "regla_catalogo"
+      }
+    ],
+    "sourcesConsulted": {
+      "selected": [
+        "guias",
+        "publicaciones"
+      ],
+      "filters": {
+        "historiaCompleta": false,
+        "soloBiomarcadoresRelevantes": true,
+        "ultimosSeisMeses": true,
+        "antecedentesFamiliares": false,
+        "publishedFromYear": 2021
+      },
+      "retrieved": 40,
+      "aboveThreshold": 3
+    },
+    "sourcesNotIncluded": [
+      "NCCN",
+      "ESMO"
+    ],
+    "corpusCutoffDate": "2026-09-30",
+    "limitations": [
+      {
+        "text": "Síntesis basada en pocas fuentes.",
+        "origin": "estructural"
+      }
+    ],
+    "priorAnalysesUsed": [],
+    "agentSteps": [],
+    "omittedClaims": 0
+  },
+  "topRelevanceScore": 0.79,
+  "staleness": {
+    "patientData": false,
+    "changedData": [],
+    "newerEvidenceOrCatalog": false
+  },
+  "rerunOfAnalysisId": null,
+  "patientDataLinks": [
+    {
+      "dataRef": "r2",
+      "entityType": "biomarker",
+      "entityId": "7a1c9e44-5b2d-4c3e-8f60-1d2e3f4a5b6c"
+    }
+  ],
+  "disclaimer": "Generado por IA; requiere validación clínica independiente por el oncólogo tratante.",
+  "createdAt": "2026-10-30T10:00:00Z"
+}
