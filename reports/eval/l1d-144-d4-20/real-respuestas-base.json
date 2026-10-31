@@ -1,0 +1,442 @@
+[
+ {
+  "status": "con_evidencia",
+  "synthesis": {
+   "agreements": [],
+   "discrepancies": []
+  },
+  "applicability": [],
+  "evidenceOptions": [
+   {
+    "option": "Añadir terapia anti-HER2 a la quimioterapia adyuvante",
+    "rationale": "La fuente reporta que La adición de terapia anti-HER2 a la quimioterapia adyuvante mejora la supervivencia libre de enfermedad.",
+    "details": [
+     "La fuente reporta que Este beneficio se observa en el cáncer de mama temprano con receptor HER2 positivo."
+    ],
+    "applicabilitySummary": {
+     "coincide": 0,
+     "parcial": 0,
+     "noCoincide": 0,
+     "desconocido": 0
+    },
+    "populationNotComparable": false,
+    "perSource": [],
+    "relevanceScore": 0.9043996291565825,
+    "warnings": [],
+    "citedSources": [
+     {
+      "title": "Breast Cancer Treatment (test)",
+      "sourceName": "Corpus sintético (test)",
+      "externalId": "doc-m1",
+      "language": "en",
+      "sourceType": "guideline",
+      "licenseClass": "dominio_publico",
+      "studyDesign": null,
+      "trialPhase": null,
+      "primaryEndpoint": null,
+      "sampleSize": null,
+      "publishedAt": "2026-09-30",
+      "lastUpdatedAt": "2026-09-30",
+      "guidelineVersion": null,
+      "authors": null,
+      "sourceUrl": null,
+      "possiblyOutdated": false,
+      "newerVersionAvailable": false,
+      "chunkTextSnapshot": "Adding anti-HER2 therapy to adjuvant chemotherapy improved disease-free survival in HER2-positive early breast cancer.",
+      "chunkId": "ch-m1-1"
+     }
+    ]
+   }
+  ],
+  "discardedOptions": [],
+  "limitations": [],
+  "assumptions": [],
+  "retrievalStats": {
+   "retrieved": 2,
+   "aboveThreshold": 1
+  },
+  "omittedClaims": 0,
+  "agentSteps": [],
+  "topRelevanceScore": 0.9043996291565825,
+  "meta": {
+   "queryLanguage": "es",
+   "responseLanguage": "es",
+   "llmProvider": "local",
+   "llmModel": "gemma4:26b-a4b-it-q4_K_M",
+   "embeddingModel": "BAAI/bge-m3@5617a9f61b028005a4858fdac845db406aefb181#sha256:3f771d8d6368f21658b0784f947c6c05fdff6f5f56f7c7498cec2b901f16191a",
+   "rerankerModel": "BAAI/bge-reranker-v2-m3@953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e#sha256:d1d97f8090e239b20420cae771c5457197e4dc59678d08c9b6c521448c968d0f",
+   "nliModel": "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7@b5113eb38ab63efdd7f280f8c144ea8b13f978ce#sha256:49f52a865d9207679c83d2f227738294a1856843115a1fc7c86978615beddee4",
+   "promptVersion": "rag-query@0.5.0",
+   "catalogVersion": "2026.10.0",
+   "corpusRelease": "rel-fx-t5a-a-1",
+   "corpusCutoffDate": "2026-09-30",
+   "excludedSources": [
+    "NCCN",
+    "ESMO"
+   ],
+   "retrievalParams": {
+    "topK": 40,
+    "rerankTopN": 10,
+    "relevanceThreshold": 0.3,
+    "retrievalMode": "dense",
+    "fusion": "ninguna",
+    "fusionParam": 0.0
+   },
+   "latencyMs": 809
+  }
+ },
+ {
+  "status": "con_evidencia",
+  "synthesis": {
+   "agreements": [],
+   "discrepancies": []
+  },
+  "applicability": [],
+  "evidenceOptions": [
+   {
+    "option": "Adding anti-HER2 therapy to adjuvant chemotherapy",
+    "rationale": "The source reports that Adding anti-HER2 therapy to adjuvant chemotherapy improves disease-free survival in HER2-positive early breast cancer.",
+    "details": null,
+    "applicabilitySummary": {
+     "coincide": 0,
+     "parcial": 0,
+     "noCoincide": 0,
+     "desconocido": 0
+    },
+    "populationNotComparable": false,
+    "perSource": [],
+    "relevanceScore": 0.9729703533041949,
+    "warnings": [],
+    "citedSources": [
+     {
+      "title": "Breast Cancer Treatment (test)",
+      "sourceName": "Corpus sintético (test)",
+      "externalId": "doc-m1",
+      "language": "en",
+      "sourceType": "guideline",
+      "licenseClass": "dominio_publico",
+      "studyDesign": null,
+      "trialPhase": null,
+      "primaryEndpoint": null,
+      "sampleSize": null,
+      "publishedAt": "2026-09-30",
+      "lastUpdatedAt": "2026-09-30",
+      "guidelineVersion": null,
+      "authors": null,
+      "sourceUrl": null,
+      "possiblyOutdated": false,
+      "newerVersionAvailable": false,
+      "chunkTextSnapshot": "Adding anti-HER2 therapy to adjuvant chemotherapy improved disease-free survival in HER2-positive early breast cancer.",
+      "chunkId": "ch-m1-1"
+     }
+    ]
+   }
+  ],
+  "discardedOptions": [],
+  "limitations": [],
+  "assumptions": [],
+  "retrievalStats": {
+   "retrieved": 2,
+   "aboveThreshold": 1
+  },
+  "omittedClaims": 0,
+  "agentSteps": [],
+  "topRelevanceScore": 0.9729703533041949,
+  "meta": {
+   "queryLanguage": "en",
+   "responseLanguage": "en",
+   "llmProvider": "local",
+   "llmModel": "gemma4:26b-a4b-it-q4_K_M",
+   "embeddingModel": "BAAI/bge-m3@5617a9f61b028005a4858fdac845db406aefb181#sha256:3f771d8d6368f21658b0784f947c6c05fdff6f5f56f7c7498cec2b901f16191a",
+   "rerankerModel": "BAAI/bge-reranker-v2-m3@953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e#sha256:d1d97f8090e239b20420cae771c5457197e4dc59678d08c9b6c521448c968d0f",
+   "nliModel": "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7@b5113eb38ab63efdd7f280f8c144ea8b13f978ce#sha256:49f52a865d9207679c83d2f227738294a1856843115a1fc7c86978615beddee4",
+   "promptVersion": "rag-query@0.5.0",
+   "catalogVersion": "2026.10.0",
+   "corpusRelease": "rel-fx-t5a-a-1",
+   "corpusCutoffDate": "2026-09-30",
+   "excludedSources": [
+    "NCCN",
+    "ESMO"
+   ],
+   "retrievalParams": {
+    "topK": 40,
+    "rerankTopN": 10,
+    "relevanceThreshold": 0.3,
+    "retrievalMode": "dense",
+    "fusion": "ninguna",
+    "fusionParam": 0.0
+   },
+   "latencyMs": 1633
+  }
+ },
+ {
+  "status": "con_evidencia",
+  "synthesis": {
+   "agreements": [],
+   "discrepancies": []
+  },
+  "applicability": [],
+  "evidenceOptions": [
+   {
+    "option": "Terapia de privación de andrógenos combinada con un inhibidor del receptor de andrógenos",
+    "rationale": "La fuente reporta que La combinación de terapia de privación de andrógenos con un inhibidor del receptor de andrógenos prolonga la supervivencia.",
+    "details": [
+     "La fuente reporta que Este efecto ocurre en el cáncer de próstata metastásico sensible a hormonas."
+    ],
+    "applicabilitySummary": {
+     "coincide": 0,
+     "parcial": 0,
+     "noCoincide": 0,
+     "desconocido": 0
+    },
+    "populationNotComparable": false,
+    "perSource": [],
+    "relevanceScore": 0.783588714407018,
+    "warnings": [],
+    "citedSources": [
+     {
+      "title": "Prostate Cancer Treatment (test)",
+      "sourceName": "Corpus sintético (test)",
+      "externalId": "doc-p1",
+      "language": "en",
+      "sourceType": "guideline",
+      "licenseClass": "dominio_publico",
+      "studyDesign": null,
+      "trialPhase": null,
+      "primaryEndpoint": null,
+      "sampleSize": null,
+      "publishedAt": "2026-09-30",
+      "lastUpdatedAt": "2026-09-30",
+      "guidelineVersion": null,
+      "authors": null,
+      "sourceUrl": null,
+      "possiblyOutdated": false,
+      "newerVersionAvailable": false,
+      "chunkTextSnapshot": "Androgen deprivation therapy combined with an androgen receptor inhibitor prolonged survival in metastatic hormone-sensitive prostate cancer.",
+      "chunkId": "ch-p1-1"
+     }
+    ]
+   }
+  ],
+  "discardedOptions": [],
+  "limitations": [],
+  "assumptions": [],
+  "retrievalStats": {
+   "retrieved": 3,
+   "aboveThreshold": 1
+  },
+  "omittedClaims": 0,
+  "agentSteps": [],
+  "topRelevanceScore": 0.783588714407018,
+  "meta": {
+   "queryLanguage": "es",
+   "responseLanguage": "es",
+   "llmProvider": "local",
+   "llmModel": "gemma4:26b-a4b-it-q4_K_M",
+   "embeddingModel": "BAAI/bge-m3@5617a9f61b028005a4858fdac845db406aefb181#sha256:3f771d8d6368f21658b0784f947c6c05fdff6f5f56f7c7498cec2b901f16191a",
+   "rerankerModel": "BAAI/bge-reranker-v2-m3@953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e#sha256:d1d97f8090e239b20420cae771c5457197e4dc59678d08c9b6c521448c968d0f",
+   "nliModel": "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7@b5113eb38ab63efdd7f280f8c144ea8b13f978ce#sha256:49f52a865d9207679c83d2f227738294a1856843115a1fc7c86978615beddee4",
+   "promptVersion": "rag-query@0.5.0",
+   "catalogVersion": "2026.10.0",
+   "corpusRelease": "rel-fx-t5a-a-1",
+   "corpusCutoffDate": "2026-09-30",
+   "excludedSources": [
+    "NCCN",
+    "ESMO"
+   ],
+   "retrievalParams": {
+    "topK": 40,
+    "rerankTopN": 10,
+    "relevanceThreshold": 0.3,
+    "retrievalMode": "dense",
+    "fusion": "ninguna",
+    "fusionParam": 0.0
+   },
+   "latencyMs": 1150
+  }
+ },
+ {
+  "status": "con_evidencia",
+  "synthesis": {
+   "agreements": [],
+   "discrepancies": []
+  },
+  "applicability": [],
+  "evidenceOptions": [
+   {
+    "option": "Androgen deprivation therapy combined with an androgen receptor inhibitor",
+    "rationale": "The source reports that This combination therapy prolongs survival in metastatic hormone-sensitive prostate cancer.",
+    "details": null,
+    "applicabilitySummary": {
+     "coincide": 0,
+     "parcial": 0,
+     "noCoincide": 0,
+     "desconocido": 0
+    },
+    "populationNotComparable": false,
+    "perSource": [],
+    "relevanceScore": 0.7082410380419264,
+    "warnings": [],
+    "citedSources": [
+     {
+      "title": "Prostate Cancer Treatment (test)",
+      "sourceName": "Corpus sintético (test)",
+      "externalId": "doc-p1",
+      "language": "en",
+      "sourceType": "guideline",
+      "licenseClass": "dominio_publico",
+      "studyDesign": null,
+      "trialPhase": null,
+      "primaryEndpoint": null,
+      "sampleSize": null,
+      "publishedAt": "2026-09-30",
+      "lastUpdatedAt": "2026-09-30",
+      "guidelineVersion": null,
+      "authors": null,
+      "sourceUrl": null,
+      "possiblyOutdated": false,
+      "newerVersionAvailable": false,
+      "chunkTextSnapshot": "Androgen deprivation therapy combined with an androgen receptor inhibitor prolonged survival in metastatic hormone-sensitive prostate cancer.",
+      "chunkId": "ch-p1-1"
+     }
+    ]
+   }
+  ],
+  "discardedOptions": [],
+  "limitations": [],
+  "assumptions": [],
+  "retrievalStats": {
+   "retrieved": 3,
+   "aboveThreshold": 1
+  },
+  "omittedClaims": 0,
+  "agentSteps": [],
+  "topRelevanceScore": 0.7082410380419264,
+  "meta": {
+   "queryLanguage": "en",
+   "responseLanguage": "en",
+   "llmProvider": "local",
+   "llmModel": "gemma4:26b-a4b-it-q4_K_M",
+   "embeddingModel": "BAAI/bge-m3@5617a9f61b028005a4858fdac845db406aefb181#sha256:3f771d8d6368f21658b0784f947c6c05fdff6f5f56f7c7498cec2b901f16191a",
+   "rerankerModel": "BAAI/bge-reranker-v2-m3@953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e#sha256:d1d97f8090e239b20420cae771c5457197e4dc59678d08c9b6c521448c968d0f",
+   "nliModel": "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7@b5113eb38ab63efdd7f280f8c144ea8b13f978ce#sha256:49f52a865d9207679c83d2f227738294a1856843115a1fc7c86978615beddee4",
+   "promptVersion": "rag-query@0.5.0",
+   "catalogVersion": "2026.10.0",
+   "corpusRelease": "rel-fx-t5a-a-1",
+   "corpusCutoffDate": "2026-09-30",
+   "excludedSources": [
+    "NCCN",
+    "ESMO"
+   ],
+   "retrievalParams": {
+    "topK": 40,
+    "rerankTopN": 10,
+    "relevanceThreshold": 0.3,
+    "retrievalMode": "dense",
+    "fusion": "ninguna",
+    "fusionParam": 0.0
+   },
+   "latencyMs": 3758
+  }
+ },
+ {
+  "status": "sin_evidencia",
+  "synthesis": {
+   "agreements": [],
+   "discrepancies": []
+  },
+  "applicability": [],
+  "evidenceOptions": [],
+  "discardedOptions": [],
+  "limitations": [
+   {
+    "text": "Ningún fragmento recuperado supera el umbral de relevancia.",
+    "origin": "estructural"
+   }
+  ],
+  "assumptions": [],
+  "retrievalStats": {
+   "retrieved": 2,
+   "aboveThreshold": 0
+  },
+  "omittedClaims": 0,
+  "agentSteps": [],
+  "topRelevanceScore": null,
+  "meta": {
+   "queryLanguage": "es",
+   "responseLanguage": "es",
+   "llmProvider": "local",
+   "llmModel": "gemma4:26b-a4b-it-q4_K_M",
+   "embeddingModel": "BAAI/bge-m3@5617a9f61b028005a4858fdac845db406aefb181#sha256:3f771d8d6368f21658b0784f947c6c05fdff6f5f56f7c7498cec2b901f16191a",
+   "rerankerModel": "BAAI/bge-reranker-v2-m3@953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e#sha256:d1d97f8090e239b20420cae771c5457197e4dc59678d08c9b6c521448c968d0f",
+   "nliModel": "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7@b5113eb38ab63efdd7f280f8c144ea8b13f978ce#sha256:49f52a865d9207679c83d2f227738294a1856843115a1fc7c86978615beddee4",
+   "promptVersion": "rag-query@0.5.0",
+   "catalogVersion": "2026.10.0",
+   "corpusRelease": "rel-fx-t5a-a-1",
+   "corpusCutoffDate": "2026-09-30",
+   "excludedSources": [
+    "NCCN",
+    "ESMO"
+   ],
+   "retrievalParams": {
+    "topK": 40,
+    "rerankTopN": 10,
+    "relevanceThreshold": 0.3,
+    "retrievalMode": "dense",
+    "fusion": "ninguna",
+    "fusionParam": 0.0
+   },
+   "latencyMs": 4018
+  }
+ },
+ {
+  "status": "sin_evidencia",
+  "synthesis": {
+   "agreements": [],
+   "discrepancies": []
+  },
+  "applicability": [],
+  "evidenceOptions": [],
+  "discardedOptions": [],
+  "limitations": [
+   {
+    "text": "Ningún fragmento recuperado supera el umbral de relevancia.",
+    "origin": "estructural"
+   }
+  ],
+  "assumptions": [],
+  "retrievalStats": {
+   "retrieved": 3,
+   "aboveThreshold": 0
+  },
+  "omittedClaims": 0,
+  "agentSteps": [],
+  "topRelevanceScore": null,
+  "meta": {
+   "queryLanguage": "en",
+   "responseLanguage": "en",
+   "llmProvider": "local",
+   "llmModel": "gemma4:26b-a4b-it-q4_K_M",
+   "embeddingModel": "BAAI/bge-m3@5617a9f61b028005a4858fdac845db406aefb181#sha256:3f771d8d6368f21658b0784f947c6c05fdff6f5f56f7c7498cec2b901f16191a",
+   "rerankerModel": "BAAI/bge-reranker-v2-m3@953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e#sha256:d1d97f8090e239b20420cae771c5457197e4dc59678d08c9b6c521448c968d0f",
+   "nliModel": "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7@b5113eb38ab63efdd7f280f8c144ea8b13f978ce#sha256:49f52a865d9207679c83d2f227738294a1856843115a1fc7c86978615beddee4",
+   "promptVersion": "rag-query@0.5.0",
+   "catalogVersion": "2026.10.0",
+   "corpusRelease": "rel-fx-t5a-a-1",
+   "corpusCutoffDate": "2026-09-30",
+   "excludedSources": [
+    "NCCN",
+    "ESMO"
+   ],
+   "retrievalParams": {
+    "topK": 40,
+    "rerankTopN": 10,
+    "relevanceThreshold": 0.3,
+    "retrievalMode": "dense",
+    "fusion": "ninguna",
+    "fusionParam": 0.0
+   },
+   "latencyMs": 3115
+  }
+ }
+]
