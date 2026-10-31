@@ -19,6 +19,18 @@
         "pattern": "^[a-z]+$"
       }
     },
+    "poblacionReglas": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z]+$" },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["catalogHash"],
+        "properties": {
+          "catalogHash": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        }
+      }
+    },
     "standards": {
       "type": "array",
       "uniqueItems": true,

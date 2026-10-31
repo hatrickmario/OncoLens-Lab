@@ -1,0 +1,28 @@
+{
+  "version": "1.2.0",
+  "restrictionMarkers": {
+    "es": ["solo", "exclusivamente"],
+    "en": ["only", "exclusively"]
+  },
+  "disenosQueMezclan": ["guia", "revision_sistematica"],
+  "criteria": {
+    "estado_menopausico": {
+      "synonyms": {
+        "premenopausica": ["premenopausal women", "premenopáusica"],
+        "perimenopausica": ["perimenopausal women", "perimenopáusica"],
+        "postmenopausica": ["postmenopausal women", "posmenopáusica"]
+      }
+    },
+    "estado_her2": {
+      "synonyms": {
+        "positivo": ["HER2-positive (IHC 3+)"],
+        "negativo": ["HER2-negative (IHC 2+, ISH not amplified)"]
+      }
+    },
+    "receptores_hormonales": {
+      "synonyms": {
+        "triple_negativo": ["triple-negative (TNBC)"]
+      }
+    }
+  }
+}

@@ -55,6 +55,14 @@ export const ARCHIVOS_DEL_CATALOGO = {
 /** Nombres de los archivos por tipo, en el orden del registro. */
 export const NOMBRES_DE_ARCHIVO = Object.keys(ARCHIVOS_DEL_CATALOGO);
 
+/**
+ * Archivos por tipo que existen solo si el manifiesto los declara (`poblacionReglas.<tipo>`, D4-03): `clave` es la
+ * del manifiesto que los declara. Un tipo sin declaración no los tiene (los fixtures anteriores siguen válidos).
+ */
+export const ARCHIVOS_DECLARADOS_POR_EL_MANIFIESTO = {
+  'poblacion-reglas': { esquema: 'poblacion-reglas', clave: 'poblacionReglas' },
+};
+
 /** Archivos de la raíz del catálogo (no por tipo): cada entrada nombra su esquema. */
 export const ARCHIVOS_DE_RAIZ = {
   atributos: { esquema: 'atributos' },

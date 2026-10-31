@@ -1,5 +1,11 @@
 import { Ajv2020 } from 'ajv/dist/2020.js';
-import { ARCHIVOS_DE_RAIZ, ARCHIVOS_DEL_CATALOGO, NOMBRES_DE_ARCHIVO } from './archivos.mjs';
+import {
+  ARCHIVOS_DE_RAIZ,
+  ARCHIVOS_DECLARADOS_POR_EL_MANIFIESTO,
+  ARCHIVOS_DEL_CATALOGO,
+  NOMBRES_DE_ARCHIVO,
+} from './archivos.mjs';
+import { catalogHashDeReglasDePoblacion } from './canonico.mjs';
 import { nombrable } from './nombrable.mjs';
 import { clavesRepetidasEn, verificarCatalogHash, vocabularioDe } from './reglas.mjs';
 
@@ -72,8 +78,12 @@ function compilarEsquemas(esquemas) {
     nombre,
     ajv.compile(esquemas[esquema]),
   ]);
+  const declarados = Object.entries(ARCHIVOS_DECLARADOS_POR_EL_MANIFIESTO).map(
+    ([nombre, { esquema }]) => [nombre, ajv.compile(esquemas[esquema])],
+  );
   return {
     manifest: ajv.compile(esquemas.manifest),
+    ...Object.fromEntries(declarados),
     ...Object.fromEntries(deLaRaiz),
     ...Object.fromEntries(delRegistro),
   };
@@ -97,6 +107,22 @@ function violacionesDelTipo(tipoDeCancer, archivosDelTipo, contexto, esquemasCom
       esquemasCompilados[nombre],
       delTipo,
     ),
+  );
+}
+
+/** Archivos que el manifiesto declara por tipo (D4-03): esquema y `catalogHash` declarado frente al recalculado. */
+function violacionesDeLosDeclarados(manifest, tipos, esquemasCompilados) {
+  return Object.entries(ARCHIVOS_DECLARADOS_POR_EL_MANIFIESTO).flatMap(([nombre, { clave }]) =>
+    Object.entries(tipos).flatMap(([tipoDeCancer, delTipo]) => {
+      const declarado = manifest?.[clave]?.[tipoDeCancer];
+      const archivo = delTipo[nombre];
+      if (declarado === undefined || archivo === undefined) return [];
+      const violacion = (codigo) => [{ codigo, tipoDeCancer, archivo: nombre }];
+      if (!esquemasCompilados[nombre](archivo)) return violacion('esquema_invalido');
+      return catalogHashDeReglasDePoblacion(archivo) === declarado.catalogHash
+        ? []
+        : violacion('hash_distinto');
+    }),
   );
 }
 
@@ -135,6 +161,7 @@ export function validarCatalogo({ archivos, allowlist, esquemas }) {
     ...Object.entries(archivos.tipos).flatMap(([tipoDeCancer, delTipo]) =>
       violacionesDelTipoSinLanzar(tipoDeCancer, delTipo, contexto, esquemasCompilados),
     ),
+    ...violacionesDeLosDeclarados(archivos.manifest, archivos.tipos, esquemasCompilados),
   ];
   return {
     valido: violaciones.length === 0,
