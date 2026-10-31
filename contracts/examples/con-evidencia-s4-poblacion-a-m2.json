@@ -1,0 +1,524 @@
+{
+  "id": "8f2a6d10-4c3b-4e71-9a05-6b1d7e3c2f41",
+  "traceId": "req_a2b7c3d1",
+  "queryText": "¿Qué opciones sistémicas describe la evidencia para una paciente con cáncer de mama HER2 positivo, estadio IIA, según la población de cada estudio?",
+  "questionTemplateId": "mama.adyuvancia.her2",
+  "queryLanguage": "es",
+  "status": "con_evidencia",
+  "synthesis": {
+    "agreements": [
+      {
+        "text": "Las fuentes recuperadas describen opciones sistémicas con poblaciones de estudio que difieren en estado menopáusico y estadio.",
+        "citedSources": [
+          {
+            "title": "Estudio sintético B1 de terapia anti-HER2 adyuvante",
+            "sourceName": "NCI PDQ",
+            "externalId": "doc-b1",
+            "language": "en",
+            "sourceType": "guideline",
+            "licenseClass": "dominio_publico",
+            "studyDesign": "guia",
+            "trialPhase": null,
+            "primaryEndpoint": null,
+            "sampleSize": null,
+            "publishedAt": "2024-03-15",
+            "lastUpdatedAt": "2026-05-01",
+            "guidelineVersion": "2026-05",
+            "authors": null,
+            "sourceUrl": "https://corpus.oncolens.test/documentos/doc-b1",
+            "possiblyOutdated": false,
+            "newerVersionAvailable": false,
+            "chunkTextSnapshot": "Texto sintético de ejemplo: the study population includes premenopausal and postmenopausal women with HER2-positive stage I–III disease and ECOG 0-1.",
+            "chunkId": "ch-b1-1"
+          }
+        ],
+        "patientDataRefs": []
+      },
+      {
+        "text": "El paciente tiene registrado un resultado de HER2 3+ por inmunohistoquímica.",
+        "citedSources": [],
+        "patientDataRefs": [
+          "r2"
+        ]
+      }
+    ],
+    "discrepancies": []
+  },
+  "applicability": [
+    {
+      "externalId": "doc-b1",
+      "criteria": [
+        {
+          "criterion": "estado_her2",
+          "patientValue": "3+ (IHQ)",
+          "studyPopulationValue": "positivo",
+          "status": "coincide",
+          "unknownReason": null,
+          "isExclusionary": true,
+          "patientDataWarning": null,
+          "citedSources": [
+            {
+              "title": "Estudio sintético B1 de terapia anti-HER2 adyuvante",
+              "sourceName": "NCI PDQ",
+              "externalId": "doc-b1",
+              "language": "en",
+              "sourceType": "guideline",
+              "licenseClass": "dominio_publico",
+              "studyDesign": "guia",
+              "trialPhase": null,
+              "primaryEndpoint": null,
+              "sampleSize": null,
+              "publishedAt": "2024-03-15",
+              "lastUpdatedAt": "2026-05-01",
+              "guidelineVersion": "2026-05",
+              "authors": null,
+              "sourceUrl": "https://corpus.oncolens.test/documentos/doc-b1",
+              "possiblyOutdated": false,
+              "newerVersionAvailable": false,
+              "chunkTextSnapshot": "Texto sintético de ejemplo: the study population includes premenopausal and postmenopausal women with HER2-positive stage I–III disease and ECOG 0-1.",
+              "chunkId": "ch-b1-1"
+            }
+          ],
+          "studyPopulationValues": [
+            {
+              "value": "positivo",
+              "chunkId": "ch-b1-1",
+              "scope": "elegibilidad"
+            }
+          ],
+          "partialReason": null
+        },
+        {
+          "criterion": "estado_menopausico",
+          "patientValue": "premenopáusica",
+          "studyPopulationValue": "premenopáusica",
+          "status": "parcial",
+          "unknownReason": null,
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "citedSources": [
+            {
+              "title": "Estudio sintético B1 de terapia anti-HER2 adyuvante",
+              "sourceName": "NCI PDQ",
+              "externalId": "doc-b1",
+              "language": "en",
+              "sourceType": "guideline",
+              "licenseClass": "dominio_publico",
+              "studyDesign": "guia",
+              "trialPhase": null,
+              "primaryEndpoint": null,
+              "sampleSize": null,
+              "publishedAt": "2024-03-15",
+              "lastUpdatedAt": "2026-05-01",
+              "guidelineVersion": "2026-05",
+              "authors": null,
+              "sourceUrl": "https://corpus.oncolens.test/documentos/doc-b1",
+              "possiblyOutdated": false,
+              "newerVersionAvailable": false,
+              "chunkTextSnapshot": "Texto sintético de ejemplo: the study population includes premenopausal and postmenopausal women with HER2-positive stage I–III disease and ECOG 0-1.",
+              "chunkId": "ch-b1-1"
+            }
+          ],
+          "studyPopulationValues": [
+            {
+              "value": "premenopáusica",
+              "chunkId": "ch-b1-1",
+              "scope": "elegibilidad"
+            },
+            {
+              "value": "posmenopáusica",
+              "chunkId": "ch-b1-1",
+              "scope": "elegibilidad"
+            }
+          ],
+          "partialReason": "inclusiva"
+        },
+        {
+          "criterion": "ecog",
+          "patientValue": "1",
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "respaldo_fallido",
+          "isExclusionary": false,
+          "patientDataWarning": "sin_verificar",
+          "citedSources": [
+            {
+              "title": "Estudio sintético B1 de terapia anti-HER2 adyuvante",
+              "sourceName": "NCI PDQ",
+              "externalId": "doc-b1",
+              "language": "en",
+              "sourceType": "guideline",
+              "licenseClass": "dominio_publico",
+              "studyDesign": "guia",
+              "trialPhase": null,
+              "primaryEndpoint": null,
+              "sampleSize": null,
+              "publishedAt": "2024-03-15",
+              "lastUpdatedAt": "2026-05-01",
+              "guidelineVersion": "2026-05",
+              "authors": null,
+              "sourceUrl": "https://corpus.oncolens.test/documentos/doc-b1",
+              "possiblyOutdated": false,
+              "newerVersionAvailable": false,
+              "chunkTextSnapshot": "Texto sintético de ejemplo: the study population includes premenopausal and postmenopausal women with HER2-positive stage I–III disease and ECOG 0-1.",
+              "chunkId": "ch-b1-1"
+            }
+          ],
+          "studyPopulationValues": [],
+          "partialReason": null
+        }
+      ],
+      "summary": {
+        "coincide": 1,
+        "parcial": 1,
+        "noCoincide": 0,
+        "desconocido": 1
+      },
+      "populationNotComparable": false
+    },
+    {
+      "externalId": "doc-b5",
+      "criteria": [
+        {
+          "criterion": "estadio",
+          "patientValue": "IIA",
+          "studyPopulationValue": "I",
+          "status": "parcial",
+          "unknownReason": null,
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "citedSources": [
+            {
+              "title": "Estudio sintético B5 de terapia endocrina adyuvante",
+              "sourceName": "NCI PDQ",
+              "externalId": "doc-b5",
+              "language": "en",
+              "sourceType": "guideline",
+              "licenseClass": "dominio_publico",
+              "studyDesign": "guia",
+              "trialPhase": null,
+              "primaryEndpoint": null,
+              "sampleSize": null,
+              "publishedAt": "2024-03-15",
+              "lastUpdatedAt": "2026-05-01",
+              "guidelineVersion": "2026-05",
+              "authors": null,
+              "sourceUrl": "https://corpus.oncolens.test/documentos/doc-b5",
+              "possiblyOutdated": false,
+              "newerVersionAvailable": false,
+              "chunkTextSnapshot": "Texto sintético de ejemplo: the study enrolled patients with stage I and II disease; a stage III subgroup was analyzed separately.",
+              "chunkId": "ch-b5-1"
+            }
+          ],
+          "studyPopulationValues": [
+            {
+              "value": "I",
+              "chunkId": "ch-b5-1",
+              "scope": "elegibilidad"
+            },
+            {
+              "value": "II",
+              "chunkId": "ch-b5-1",
+              "scope": "elegibilidad"
+            },
+            {
+              "value": "III",
+              "chunkId": "ch-b5-1",
+              "scope": "subgrupo"
+            }
+          ],
+          "partialReason": "mezclada"
+        }
+      ],
+      "summary": {
+        "coincide": 0,
+        "parcial": 1,
+        "noCoincide": 0,
+        "desconocido": 0
+      },
+      "populationNotComparable": false
+    },
+    {
+      "externalId": "doc-b6",
+      "criteria": [
+        {
+          "criterion": "receptores_hormonales",
+          "patientValue": "positivo",
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "no_reportado_por_fuente",
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "citedSources": [
+            {
+              "title": "Estudio sintético B6 de inhibidores de CDK4/6",
+              "sourceName": "NCI PDQ",
+              "externalId": "doc-b6",
+              "language": "en",
+              "sourceType": "guideline",
+              "licenseClass": "dominio_publico",
+              "studyDesign": "guia",
+              "trialPhase": null,
+              "primaryEndpoint": null,
+              "sampleSize": null,
+              "publishedAt": "2024-03-15",
+              "lastUpdatedAt": "2026-05-01",
+              "guidelineVersion": "2026-05",
+              "authors": null,
+              "sourceUrl": "https://corpus.oncolens.test/documentos/doc-b6",
+              "possiblyOutdated": false,
+              "newerVersionAvailable": false,
+              "chunkTextSnapshot": "Texto sintético de ejemplo: the subgroup analysis reported results in hormone receptor-positive patients only.",
+              "chunkId": "ch-b6-1"
+            }
+          ],
+          "studyPopulationValues": [
+            {
+              "value": "positivo",
+              "chunkId": "ch-b6-1",
+              "scope": "subgrupo"
+            }
+          ],
+          "partialReason": null
+        }
+      ],
+      "summary": {
+        "coincide": 0,
+        "parcial": 0,
+        "noCoincide": 0,
+        "desconocido": 1
+      },
+      "populationNotComparable": false
+    }
+  ],
+  "evidenceOptions": [
+    {
+      "option": "Quimioterapia combinada con terapia dirigida anti-HER2 (estudio B1)",
+      "rationale": "La evidencia recuperada describe la adición de terapia anti-HER2 en una población que incluye mujeres pre y posmenopáusicas.",
+      "details": [
+        "Texto sintético de ejemplo: el detalle describe, según los fragmentos recuperados, la población incluida en el estudio."
+      ],
+      "applicabilitySummary": {
+        "coincide": 1,
+        "parcial": 1,
+        "noCoincide": 0,
+        "desconocido": 1
+      },
+      "populationNotComparable": false,
+      "perSource": [
+        {
+          "externalId": "doc-b1",
+          "summary": {
+            "coincide": 1,
+            "parcial": 1,
+            "noCoincide": 0,
+            "desconocido": 1
+          },
+          "populationNotComparable": false
+        }
+      ],
+      "relevanceScore": 0.88,
+      "warnings": [
+        "datos_sin_verificar"
+      ],
+      "citedSources": [
+        {
+          "title": "Estudio sintético B1 de terapia anti-HER2 adyuvante",
+          "sourceName": "NCI PDQ",
+          "externalId": "doc-b1",
+          "language": "en",
+          "sourceType": "guideline",
+          "licenseClass": "dominio_publico",
+          "studyDesign": "guia",
+          "trialPhase": null,
+          "primaryEndpoint": null,
+          "sampleSize": null,
+          "publishedAt": "2024-03-15",
+          "lastUpdatedAt": "2026-05-01",
+          "guidelineVersion": "2026-05",
+          "authors": null,
+          "sourceUrl": "https://corpus.oncolens.test/documentos/doc-b1",
+          "possiblyOutdated": false,
+          "newerVersionAvailable": false,
+          "chunkTextSnapshot": "Texto sintético de ejemplo: the study population includes premenopausal and postmenopausal women with HER2-positive stage I–III disease and ECOG 0-1.",
+          "chunkId": "ch-b1-1"
+        }
+      ]
+    },
+    {
+      "option": "Terapia endocrina adyuvante (estudio B5)",
+      "rationale": "La evidencia recuperada describe terapia endocrina en una población de estadios mezclados.",
+      "details": [
+        "Texto sintético de ejemplo: el detalle describe, según los fragmentos recuperados, la población incluida en el estudio."
+      ],
+      "applicabilitySummary": {
+        "coincide": 0,
+        "parcial": 1,
+        "noCoincide": 0,
+        "desconocido": 0
+      },
+      "populationNotComparable": false,
+      "perSource": [
+        {
+          "externalId": "doc-b5",
+          "summary": {
+            "coincide": 0,
+            "parcial": 1,
+            "noCoincide": 0,
+            "desconocido": 0
+          },
+          "populationNotComparable": false
+        }
+      ],
+      "relevanceScore": 0.81,
+      "warnings": [
+        "datos_sin_verificar"
+      ],
+      "citedSources": [
+        {
+          "title": "Estudio sintético B5 de terapia endocrina adyuvante",
+          "sourceName": "NCI PDQ",
+          "externalId": "doc-b5",
+          "language": "en",
+          "sourceType": "guideline",
+          "licenseClass": "dominio_publico",
+          "studyDesign": "guia",
+          "trialPhase": null,
+          "primaryEndpoint": null,
+          "sampleSize": null,
+          "publishedAt": "2024-03-15",
+          "lastUpdatedAt": "2026-05-01",
+          "guidelineVersion": "2026-05",
+          "authors": null,
+          "sourceUrl": "https://corpus.oncolens.test/documentos/doc-b5",
+          "possiblyOutdated": false,
+          "newerVersionAvailable": false,
+          "chunkTextSnapshot": "Texto sintético de ejemplo: the study enrolled patients with stage I and II disease; a stage III subgroup was analyzed separately.",
+          "chunkId": "ch-b5-1"
+        }
+      ]
+    },
+    {
+      "option": "Inhibidor de CDK4/6 con terapia endocrina (estudio B6)",
+      "rationale": "La evidencia recuperada describe el inhibidor en una población definida por receptores hormonales.",
+      "details": [
+        "Texto sintético de ejemplo: el detalle describe, según los fragmentos recuperados, la población incluida en el estudio."
+      ],
+      "applicabilitySummary": {
+        "coincide": 0,
+        "parcial": 0,
+        "noCoincide": 0,
+        "desconocido": 1
+      },
+      "populationNotComparable": false,
+      "perSource": [
+        {
+          "externalId": "doc-b6",
+          "summary": {
+            "coincide": 0,
+            "parcial": 0,
+            "noCoincide": 0,
+            "desconocido": 1
+          },
+          "populationNotComparable": false
+        }
+      ],
+      "relevanceScore": 0.76,
+      "warnings": [
+        "datos_sin_verificar"
+      ],
+      "citedSources": [
+        {
+          "title": "Estudio sintético B6 de inhibidores de CDK4/6",
+          "sourceName": "NCI PDQ",
+          "externalId": "doc-b6",
+          "language": "en",
+          "sourceType": "guideline",
+          "licenseClass": "dominio_publico",
+          "studyDesign": "guia",
+          "trialPhase": null,
+          "primaryEndpoint": null,
+          "sampleSize": null,
+          "publishedAt": "2024-03-15",
+          "lastUpdatedAt": "2026-05-01",
+          "guidelineVersion": "2026-05",
+          "authors": null,
+          "sourceUrl": "https://corpus.oncolens.test/documentos/doc-b6",
+          "possiblyOutdated": false,
+          "newerVersionAvailable": false,
+          "chunkTextSnapshot": "Texto sintético de ejemplo: the subgroup analysis reported results in hormone receptor-positive patients only.",
+          "chunkId": "ch-b6-1"
+        }
+      ]
+    }
+  ],
+  "discardedOptions": [],
+  "analysisBasis": {
+    "patientDataUsed": [
+      {
+        "label": "HER2 3+ (IHQ)",
+        "reviewStatus": "auto_aceptado",
+        "conflict": false
+      },
+      {
+        "label": "Estadio IIA (TNM_8)",
+        "reviewStatus": "auto_aceptado",
+        "conflict": false
+      }
+    ],
+    "missingCriticalData": [],
+    "missingCriticalDataLabels": [],
+    "continuedWithWarning": false,
+    "assumptions": [
+      {
+        "text": "Se asume enfermedad no metastásica: no hay estudios de extensión registrados.",
+        "origin": "regla_catalogo"
+      }
+    ],
+    "sourcesConsulted": {
+      "selected": [
+        "guias",
+        "publicaciones"
+      ],
+      "filters": {
+        "historiaCompleta": false,
+        "soloBiomarcadoresRelevantes": true,
+        "ultimosSeisMeses": true,
+        "antecedentesFamiliares": false,
+        "publishedFromYear": 2021
+      },
+      "retrieved": 40,
+      "aboveThreshold": 3
+    },
+    "sourcesNotIncluded": [
+      "NCCN",
+      "ESMO"
+    ],
+    "corpusCutoffDate": "2026-09-30",
+    "limitations": [
+      {
+        "text": "Síntesis basada en pocas fuentes.",
+        "origin": "estructural"
+      }
+    ],
+    "priorAnalysesUsed": [],
+    "agentSteps": [],
+    "omittedClaims": 0
+  },
+  "topRelevanceScore": 0.88,
+  "staleness": {
+    "patientData": false,
+    "changedData": [],
+    "newerEvidenceOrCatalog": false
+  },
+  "rerunOfAnalysisId": null,
+  "patientDataLinks": [
+    {
+      "dataRef": "r2",
+      "entityType": "biomarker",
+      "entityId": "7a1c9e44-5b2d-4c3e-8f60-1d2e3f4a5b6c"
+    }
+  ],
+  "disclaimer": "Generado por IA; requiere validación clínica independiente por el oncólogo tratante.",
+  "createdAt": "2026-10-30T10:00:00Z"
+}
