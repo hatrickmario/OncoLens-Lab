@@ -2,7 +2,7 @@
 
 ## Trazabilidad
 
-L1D-297 · US-247 · FEAT-06c · Sprint 4 · Estimación **5** · FR-19, FR-25 (demo) · RN-13, RN-14, RN-21, RN-25 ·
+L1D-297 · US-247 · FEAT-06c · Sprint 4 · Estimación **7** (5 + 2 de la deuda D4-03 de L1D-293; Decidido (usuario, 2026-10-31)) · FR-19, FR-25 (demo) · RN-13, RN-14, RN-21, RN-25 ·
 OL-01, OL-02 · AC-08.6 · OUT-02, OUT-03, OUT-04, OUT-05, OUT-07 (`backlog/sprints/S4-refinamiento.md`) ·
 US-247 AC-1…AC-8 · `[S4 resp. 1]` `[S4 resp. 3]` `[S4 resp. 8]` `[S4 resp. 15]` · decisión F-07 (confirmar antes de borrar), F-10 (Attu) ·
 ⛔ ADR-47 (aceptado) · ⛔ DEC-11 (US-021) · ⛔ `l1d-292-poblacion-abanico-ingesta` (US-242) ·
@@ -35,6 +35,14 @@ previos con otras contraseñas (OUT-02…OUT-05).
   propio seed (falla con código ≠ 0 si hay 0 identidades), solo `count(*)` con el rol de cada servicio dentro de su
   contenedor, nunca superusuario ni credenciales en la salida; detección de estado previo `oncolens_*` con confirmación.
 - **`scripts/demo/apagar.sh`** cierra `attu` (F-10) y **`docs/demo/runbook-demo-S1.md`** §2 y §5 se actualizan (OUT-03, OUT-05).
+- **Reglas de población en el catálogo (D4-03, absorbida de L1D-293 1.1; +2 puntos)**: `poblacion-reglas.json` en
+  `packages/clinical-catalogs` con `catalogHash` y entrada en `manifest.json`, copia de `test-apl-1.2.0`, esquema y
+  validador, y versión 1.2.0 real en ambos backends. Sin este archivo «mezclada» no aparece en producción.
+  Decidido (usuario, 2026-10-31). Ver `backlog/sprints/S4-deuda.md`.
+- **Verificaciones propuestas, sin puntos adicionales (a confirmar)**: D4-02 (límite de RSS en régimen estable al levantar
+  y verificar el stack en el MacBook de 32 GB, `gc`, proceso fresco, ≥ 3 repeticiones; los 4489 MiB de ADR-39 no son
+  `mem_limit`; criterio Decidido (usuario, 2026-10-31)) y D4-08 (smoke de la semilla `us-231b` 1.12, muestra `l1d-117` 2.2 y
+  partición ADR-45 con PostgreSQL y Milvus reales).
 - **CI**: chequeo de que ningún valor de población carece de `chunkId`/`nliResult` y el escaneo de PII/secretos sobre los datos nuevos.
 
 ## Capacidades
