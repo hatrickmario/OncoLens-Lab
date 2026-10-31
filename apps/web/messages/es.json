@@ -217,6 +217,7 @@
       "ocultarDetalle": "Ocultar detalle",
       "busqueda": "Qué se buscó: fuentes {fuentes} · filtros {filtros} · {n} fragmentos sobre el umbral",
       "sinConsulta": "No se consultó el corpus: tipo fuera de alcance",
+      "reescrituraAplicada": "La búsqueda se repitió con una reformulación de la pregunta con términos del catálogo; la relevancia se calculó contra la pregunta original",
       "datosUsados": "Datos del paciente usados",
       "fuentesConsultadas": "Fuentes consultadas",
       "fragmentos": "{retrieved} fragmentos recuperados · {above} sobre el umbral",
