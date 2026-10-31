@@ -10,6 +10,7 @@ from app.evaluation.metricas.fidelidad import ROTULO_SECUNDARIA
 from app.evaluation.informe_pii import MODOS, TIPOS_DIRECTOS
 from app.evaluation.reporte import Booleano, Enumerado, Huella, Identificador, Lista, Numero, Objeto
 from app.evaluation.rotulo import ROTULOS
+from app.schemas.generated.models import Fusion, RetrievalMode
 
 VERSION_ESQUEMA = "oncolens.evaluate.v1"
 
@@ -184,6 +185,36 @@ _RECURSOS_NLI = Objeto(
     }
 )
 
+_METRICAS_DE_DIFERENCIA = Objeto(
+    {"recall_at_10_total": Numero(), "recall_at_10_es_a_en": Numero(), "mrr": Numero()}
+)
+_BRAZO = Objeto(
+    {
+        "nombre": Identificador(),
+        "retrievalMode": Enumerado(frozenset(m.value for m in RetrievalMode)),
+        "fusion": Enumerado(frozenset(f.value for f in Fusion)),
+        "fusionParam": Numero(),
+        "huellaConfig": Huella(),
+        "recuperacion": Objeto({"total": _RECUPERACION, "es_a_en": _RECUPERACION}),
+        "diferencia_frente_a_a0": _METRICAS_DE_DIFERENCIA,
+        "retroceso": Booleano(),
+        "trazabilidad": Objeto({"consultas": Numero(), "coherentes": Numero()}),
+        "sin_terminos_lexicos": Objeto({"n": Numero(), "proporcion": Numero()}),
+        "por_documento": Lista(
+            Objeto({"documento": Identificador(), "recall_at_10": Numero(), "n": Numero()})
+        ),
+    },
+    opcionales=frozenset({"diferencia_frente_a_a0"}),
+)
+_COMPARACION_RECUPERACION = Objeto(
+    {
+        "referencia": Identificador(),
+        "tolerancia_retroceso": Numero(),
+        "retroceso": Booleano(),
+        "brazos": Lista(_BRAZO),
+    }
+)
+
 ESQUEMA_SUITE = Objeto(
     {
         "esquema": Enumerado(frozenset({VERSION_ESQUEMA})),
@@ -192,9 +223,10 @@ ESQUEMA_SUITE = Objeto(
         "metricas": Objeto({"completa": _FAMILIAS, "revisada": _FAMILIAS}),
         "privacidad": _PRIVACIDAD,
         "recursos_nli": _RECURSOS_NLI,
+        "comparacion_recuperacion": _COMPARACION_RECUPERACION,
         "latencia_p95_ms": Objeto({etapa: Numero() for etapa in ETAPAS}),
     },
-    opcionales=frozenset({"privacidad", "recursos_nli"}),
+    opcionales=frozenset({"privacidad", "recursos_nli", "comparacion_recuperacion"}),
 )
 
 

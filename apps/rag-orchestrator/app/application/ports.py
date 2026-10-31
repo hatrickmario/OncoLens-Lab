@@ -156,6 +156,10 @@ class FalloDeInferencia(RuntimeError):
     """
 
 
+class SinTerminosLexicos(FalloDeInferencia):
+    """El texto no tiene ningún término con peso para la rama *sparse* (US-248 AC-4): distinto de un fallo de inferencia."""
+
+
 class LanguageDetector(Protocol):
     def detectar(self, texto: str) -> Idioma: ...
 
@@ -174,7 +178,8 @@ class QueryEmbedder(Protocol):
 class QuerySparseEncoder(Protocol):
     """Vector *sparse* léxico de la CONSULTA (US-112 D6): mismo BGE-M3, pesos y ``SPARSE_VECTOR_SOURCE`` que la ingesta.
 
-    Un texto sin ningún término con peso es un fallo (``FalloDeInferencia``): Milvus no admite un vector vacío.
+    Un texto sin ningún término con peso lanza ``SinTerminosLexicos`` (Milvus no admite un vector vacío); cualquier otro
+    fallo del modelo, ``FalloDeInferencia``.
     """
 
     def embeber_sparse(self, texto: str) -> Mapping[int, float]: ...

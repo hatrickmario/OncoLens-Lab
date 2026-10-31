@@ -1,0 +1,44 @@
+# Comparación recuperación híbrida vs densa en la MISMA corrida con los MODELOS LOCALES REALES (US-133, L1D-245; ADR-45 P1,
+# P2; ADR-39, RN-12). Corre a mano en el MacBook de referencia (US-233a); la CI usa `s4-hibrida-fake.yaml`.
+#   OLLAMA_CONTEXT_LENGTH=8192 OLLAMA_FLASH_ATTENTION=1 OLLAMA_KV_CACHE_TYPE=q8_0 ollama serve   # LLM fuera de Docker
+#   RETRIEVAL_REGRESSION_TOLERANCE=<valor de la preinscripción P1> \
+#     npm run evaluate -- --config apps/rag-orchestrator/eval/configs/s4-hibrida.yaml --suite retrieval --report json
+# Además de los pesos y las claves de ADR-39 (`~/adr39-modelos/modelos.env`), el brazo híbrido necesita los pesos del
+# codificador sparse (`EMBEDDING_SPARSE_WEIGHTS_PATH`/`_SHA256`, como la ingesta de US-117a).
+#
+# PRERREQUISITOS de la corrida real (no los cubre este change; ver tasks.md 3.2):
+#   1. Una preinscripción ADR-45 P1 commiteada ANTES de la primera corrida real, con el valor de
+#      RETRIEVAL_REGRESSION_TOLERANCE (variable de entorno; esta configuración no lleva valor por defecto, RN-22).
+#   2. Un dataset en el formato de la suite (corpus.yaml con los chunks del índice + preguntas.yaml con los ids del golden
+#      adr39-mini): `data/eval/adr39-mini` solo trae `golden.yaml` y `nli-pares.yaml`, sin el corpus indexable.
+nombre: s4-hibrida
+fixture: ol06-particion-v1
+dataset:
+  ruta: data/eval/adr39-mini
+  subconjunto: desarrollo # ADR-45 P2: validación y prueba no se abren; la corrida verifica golden_sha256 antes de empezar
+  particion: data/eval/ol06-particion-v1
+semilla_bootstrap: 20261021
+bootstrap_repeticiones: 10000
+medicion:
+  reloj: real
+  rss_limite_mib: 4489 # el mismo límite de US-233a / local.yaml
+adaptadores:
+  proveedor: local
+  urls:
+    llm: http://127.0.0.1:11434/v1 # Ollama nativo; ninguna ruta hacia la nube (lista local cerrada en código)
+modelos:
+  llm: gemma4:26b-a4b-it-q4_K_M # G, LLM decidido en ADR-39
+umbrales:
+  relevance_threshold: 0.30
+  nli_entailment_threshold: 0.7
+  retrieval_top_k: 40
+  rerank_top_n: 10
+catalogo:
+  version: '2026.10.0'
+  ruta_terminos: packages/clinical-catalogs
+comparacion:
+  # tolerancia_retroceso: sin valor aquí. RETRIEVAL_REGRESSION_TOLERANCE (entorno) lo fija la preinscripción P1 (RN-22).
+  brazos:
+    - {nombre: A0, RETRIEVAL_MODE: dense}
+    - {nombre: A2, RETRIEVAL_MODE: hibrida, RETRIEVAL_FUSION: rrf, RRF_K: 60}
+    - {nombre: A2b, RETRIEVAL_MODE: hibrida, RETRIEVAL_FUSION: ponderada, HYBRID_SPARSE_WEIGHT: 0.3}

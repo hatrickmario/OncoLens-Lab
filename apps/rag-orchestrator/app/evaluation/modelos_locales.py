@@ -22,6 +22,7 @@ from app.application.ports import (
     LanguageDetector,
     NliClassifier,
     QueryEmbedder,
+    QuerySparseEncoder,
     Reranker,
 )
 from app.application.seed_corpus.ports import PassageEmbedder
@@ -33,6 +34,7 @@ from app.domain.nli import ParNli, ResultadoNli
 from app.evaluation.config_suite import ConfigSuite
 from app.evaluation.guardas import SuiteAbortada
 from app.evaluation.llamadas import RegistroDeLlamadas
+from app.schemas.generated.models import RetrievalMode
 from app.application.aplicabilidad_textual import ParametrosDelRespaldo
 from app.infrastructure.llm.fabrica_local import (
     ClienteLlmLocal,
@@ -89,6 +91,8 @@ class PuertosLocales:
     generador: EvidenceGenerator
     proponente: PoblacionTask
     respaldo: ParametrosDelRespaldo
+    embedder_sparse: QuerySparseEncoder | None = None
+    """Solo si la configuración trae un brazo híbrido (US-133): el codificador *sparse* de BGE-M3 de la ingesta."""
 
 
 class EmbedderRegistrado:
@@ -102,6 +106,19 @@ class EmbedderRegistrado:
     def embeber(self, texto: str) -> Sequence[float]:
         self._registro.registrar_en_proceso("embeddings", self._clase, self.modelo)
         return self._interno.embeber(texto)
+
+
+class SparseRegistrado:
+    """``QuerySparseEncoder`` que anota cada codificación como llamada en proceso, igual que el embedder dense."""
+
+    def __init__(
+        self, interno: QuerySparseEncoder, registro: RegistroDeLlamadas, clase: str, modelo: str
+    ) -> None:
+        self._interno, self._registro, self._clase, self._modelo = interno, registro, clase, modelo
+
+    def embeber_sparse(self, texto: str) -> Mapping[int, float]:
+        self._registro.registrar_en_proceso("embeddings", self._clase, self._modelo)
+        return self._interno.embeber_sparse(texto)
 
 
 class EmbedderDePasajesRegistrado:
@@ -194,6 +211,7 @@ def _settings_de(config: ConfigSuite, entorno: Mapping[str, str]) -> Settings:
             **{
                 **campos,
                 "modelos": modelos,
+                **_modo_de_recuperacion_de(config),
                 "model_provider": "local",
                 "llm_provider": "local",
                 "llm_base_url": config.urls["llm"],
@@ -204,6 +222,15 @@ def _settings_de(config: ConfigSuite, entorno: Mapping[str, str]) -> Settings:
     except ValidationError as error:
         variables = sorted({e["variable"] for e in describir_errores(error) if "variable" in e})
         raise SuiteAbortada(f"configuración inválida: {', '.join(variables)}") from None
+
+
+def _modo_de_recuperacion_de(config: ConfigSuite) -> dict[str, str]:
+    """Con un brazo híbrido el cargador de modelos debe construir también el codificador *sparse* (US-133); sus pesos
+    (``EMBEDDING_SPARSE_*``) llegan por el entorno como en la ingesta y, si faltan, el cargador nombra la variable."""
+    hay_hibrido = config.comparacion is not None and any(
+        b.modo is RetrievalMode.hibrida for b in config.comparacion.brazos
+    )
+    return {"retrieval_mode": "hibrida"} if hay_hibrido else {}
 
 
 def _cargador_de_produccion(settings: Settings) -> ModelosDeRecuperacion:
@@ -254,4 +281,11 @@ def cargar_puertos_locales(
         generador=crear_generador_local(settings, registrar_llm),
         proponente=crear_proponente_local(settings, registrar_llm),
         respaldo=parametros_del_respaldo(settings),
+        embedder_sparse=(
+            None
+            if modelos.embedder_sparse_consulta is None
+            else SparseRegistrado(
+                modelos.embedder_sparse_consulta, registro, clase_datos, embedder.modelo
+            )
+        ),
     )
