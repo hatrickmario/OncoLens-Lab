@@ -60,19 +60,34 @@ Los conteos de `applicabilitySummary` por opción salen de **este bloque** (fuen
 
 - **Paciente:** (a). **Pregunta (exacta):** _«¿Qué opciones sistémicas adyuvantes describe la evidencia del corpus de la demo para una paciente con cáncer de mama HER2 positivo, receptores hormonales positivos y estadio IIA?»_
 - **Fragmentos que sustentan cada opción:**
-  1. _Terapia anti-HER2 adyuvante con o sin antraciclinas_ → `pmc-mama-antraciclinas-rs` (revisión sistemática, CC BY): HER2 positivo **Coincide** (excluyente); receptores hormonales y estadio **Parcial** (lista mezclada: la revisión reúne varias poblaciones: positivo y negativo; I, II y III); línea de tratamiento, menopausia y ECOG **Desconocido** (la fuente no los reporta). Conteos 1 · 2 · 0 · 3.
-  2. _Terapia endocrina adyuvante con tamoxifeno_ → `pmc-mama-tamoxifeno-eca` (ECA, CC BY): receptores hormonales positivos **Coincide**; el resto **Desconocido** (no reportado por la fuente). Conteos 1 · 0 · 0 · 5.
+  1. _Terapia anti-HER2 adyuvante con o sin antraciclinas_ → `pmc-mama-antraciclinas-rs@c019104016b2#0002` (revisión sistemática, CC BY): HER2 positivo **Coincide** (excluyente); receptores hormonales y estadio **Parcial** (lista mezclada: la revisión reúne varias poblaciones: positivo y negativo; I, II y III); línea de tratamiento, menopausia y ECOG **Desconocido** (la fuente no los reporta). Conteos 1 · 2 · 0 · 3.
+  2. _Terapia endocrina adyuvante con tamoxifeno_ → `pmc-mama-tamoxifeno-eca@e2e4820ce4be#0001` (ECA, CC BY): receptores hormonales positivos **Coincide**; el resto **Desconocido** (no reportado por la fuente). Conteos 1 · 0 · 0 · 5.
 - **Qué mirar:** la línea «Criterios del estudio frente a datos registrados» con los cuatro conteos (sin puntaje combinado); la opción 1 va primero (empatan en criterios excluyentes en No coincide y en Coincide; la relevancia solo desempata); la leyenda del criterio de orden.
 
 ### Par 2 · «mama-cdk46-excluyente» — caso con criterio excluyente en No coincide
 
 - **Paciente:** (a). **Pregunta (exacta):** _«¿Qué describe la evidencia del corpus de la demo sobre los inhibidores de CDK4/6 adyuvantes en una paciente con cáncer de mama HER2 positivo y receptores hormonales positivos?»_
-- **Fragmento que la sustenta:** `pmc-mama-cdk46-guia` (guía, CC BY): describe CDK4/6 adyuvantes para receptores hormonales positivos y **HER2 negativo** de alto riesgo.
+- **Fragmento que la sustenta:** `pmc-mama-cdk46-guia@a3bb26468a32#0001` (guía, CC BY): describe CDK4/6 adyuvantes para receptores hormonales positivos y **HER2 negativo** de alto riesgo.
 - **Estados:** HER2 (paciente 3+) frente a «negativo» → **No coincide** y es excluyente; receptores hormonales **Coincide**; estadio y menopausia **Parcial** (guía: varias poblaciones); línea y ECOG **Desconocido**. Conteos 1 · 2 · 1 · 2.
 - **Qué mirar:** `populationNotComparable = true` y el aviso «Según los datos registrados, al menos un criterio excluyente del estudio no coincide con este paciente. La opción se muestra igualmente.» (RN-26: no se oculta ni se bloquea). En la respuesta, `warnings` contiene `poblacion_no_comparable`.
 - Para el caso de **próstata**: el criterio excluyente análogo es el estado de castración (`estado_castracion`); con el paciente (b) la misma lógica marca No coincide ante una población solo resistente a la castración (si el documento lo declara).
 
-## 3. Prueba reproducible (modo fingido, sin LLM real)
+## 3. En vivo (LLM real): qué estados salen de la población versionada
+
+Los conteos del §2 son los del modo fingido. En vivo, las opciones las redacta el LLM, pero **los estados por criterio los calculan reglas puras** con (a) los valores `elegibilidad` de la población versionada (§5) que cita la opción y (b) el catálogo 1.2.0 (`mama/poblacion-reglas.json`). Con el paciente (a) y la población **realmente extraída** el 2026-10-31 (60 llamadas al LLM local; NLI `entailment`), las reglas dan, por documento citado (los demás criterios quedan Desconocido):
+
+| Documento citado                | Criterio → estado (paciente (a))               | Por qué                                                                                                                          |
+| ------------------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `nci-mama-hp-en` (guía)         | HER2 → **Coincide** (excluyente)               | «HER2-positive metastatic breast cancer» (elegibilidad) frente a HER2 3+                                                         |
+| `pmc-mama-tamoxifeno-eca` (ECA) | Estado menopáusico → **Parcial** (`inclusiva`) | el ensayo incluye mujeres pre y posmenopáusicas; la paciente es posmenopáusica                                                   |
+| `pmc-mama-tamoxifeno-eca`       | HER2 → Desconocido (`no_reportado_por_fuente`) | el estudio se limita a «HER2-negative» pero **sin marcador de restricción** («solo», «only»): DEC-11 → no se declara No coincide |
+| `pmc-mama-cdk46-guia` (guía)    | todos Desconocido                              | HER2 y receptores solo aparecen como `mencion`/`subgrupo` (no cuentan, ADR-47)                                                   |
+
+Lo que **no** se puede enseñar en vivo con este corpus: un **No coincide** (exige una restricción explícita en el texto del estudio, DEC-11). El caso excluyente en No coincide (HER2) se demuestra con el par 2 del §2 en modo fingido y con las pruebas de las reglas (`test_poblacion_en_lista.py`, `[US-243 AC-3]`). Dilo antes de que pregunten: los metadatos reales producen Coincide y Parcial; No coincide necesita estudios que digan «solo …».
+
+La prueba `test_demo_estados_con_poblacion_versionada.py` fija los dos estados de la tabla con el catálogo real (si cambias el catálogo o el archivo versionado, falla).
+
+## 4. Prueba reproducible (modo fingido, sin LLM real)
 
 ```bash
 scripts/e2e/ejecutar.sh -- --grep "US-247"      # Compose de test, LLM_PROVIDER=fake, seed sintético, Playwright
@@ -80,17 +95,17 @@ scripts/e2e/ejecutar.sh -- --grep "US-247"      # Compose de test, LLM_PROVIDER=
 
 Cada par devuelve los conteos del bloque de §2 y el par 2 trae `populationNotComparable` y `poblacion_no_comparable` `[US-247 AC-2] [US-247 AC-3]`. Es determinista: el modo fingido responde con los ejemplos de `contracts/examples/`.
 
-## 4. Metadatos de población del corpus (US-242, AC-1)
+## 5. Metadatos de población del corpus (US-242, AC-1)
 
-`data/raw/seed/poblacion-verificada.json` versiona la población que extrajo US-242 (LLM local + NLI) sobre el corpus de la demo. Cada valor trae su `chunkId` (del propio documento), `scope`, `nliResult = entailment` y las versiones de prompt, modelo y catálogo; `levantar.sh` lo carga con `python -m app.scripts.poblacion_seed cargar` y reindexa el sparse (`ingest reindex-sparse`). Regenerar: ver `data/raw/seed/ATTRIBUTION.md`.
+`data/raw/seed/poblacion-verificada.json` versiona la población que extrajo US-242 (LLM local + NLI) sobre el corpus de la demo. Son **8 de los 10 documentos** (`pmc-prostata-mhsp-nma` y `pmc-prostata-volumen-nma` no dejaron ningún valor que el NLI confirmara; 42 valores propuestos quedaron sin soporte y 12 citaban un fragmento ajeno: se descartaron, RN-01). Cada valor trae su `chunkId` (del propio documento), `scope`, `nliResult = entailment` y las versiones de prompt, modelo y catálogo; `levantar.sh` lo carga con `python -m app.scripts.poblacion_seed cargar` y reindexa el sparse (`ingest reindex-sparse`). Regenerar: ver `data/raw/seed/ATTRIBUTION.md`.
 
-## 5. Límites honestos (decirlos antes de que pregunten)
+## 6. Límites honestos (decirlos antes de que pregunten)
 
 - Los **conteos del §2 son los del modo fingido** (reproducibles). En vivo, con el LLM real, la redacción de las opciones y el número de opciones varían; los **estados por criterio** son deterministas dado lo que cita cada opción y los metadatos versionados, pero una opción distinta puede citar fragmentos distintos.
 - La extracción de población se midió con una muestra humana pequeña (US-118/US-233b): los valores son **propuestos y verificados por NLI**, no una validación clínica.
 - Latencia con el LLM real: la primera consulta carga el modelo (~15-25 s); `RAG_TIMEOUT_MS=90000` en el demo (runbook §4).
 - El stack con el LLM local ocupa ~29 GB: cierra apps pesadas.
 
-## 6. Si algo falla
+## 7. Si algo falla
 
 Ver `docs/demo/runbook-demo-S1.md` §5. Apagar y limpiar al terminar: `scripts/demo/apagar.sh` (y `--borrar-datos` para empezar de cero).

@@ -8,15 +8,29 @@
   "criteria": {
     "estado_menopausico": {
       "synonyms": {
-        "premenopausica": ["premenopausal women", "premenopáusica"],
-        "perimenopausica": ["perimenopausal women", "perimenopáusica"],
-        "postmenopausica": ["postmenopausal women", "posmenopáusica"]
+        "premenopausica": [
+          "premenopausal women",
+          "premenopáusica",
+          "premenopausal patients in the STO-5 trial",
+          "premenopausica"
+        ],
+        "perimenopausica": ["perimenopausal women", "perimenopáusica", "perimenopausica"],
+        "postmenopausica": [
+          "postmenopausal women",
+          "posmenopáusica",
+          "postmenopausal patients in the STO-2 and STO-3 trials",
+          "posmenopausica"
+        ]
       }
     },
     "estado_her2": {
       "synonyms": {
-        "positivo": ["HER2-positive (IHC 3+)"],
-        "negativo": ["HER2-negative (IHC 2+, ISH not amplified)"]
+        "positivo": ["HER2-positive (IHC 3+)", "HER2-positive metastatic breast cancer"],
+        "negativo": [
+          "HER2-negative (IHC 2+, ISH not amplified)",
+          "estrogen receptor–positive and HER2-negative breast cancer patients with luminal A or B subtype",
+          "estrogen receptor–positive and HER2-negative tumors"
+        ]
       }
     },
     "receptores_hormonales": {

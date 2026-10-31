@@ -148,14 +148,13 @@ def test_el_corpus_de_la_demo_trae_al_menos_tres_documentos_con_poblacion_verifi
     manifiesto = yaml.safe_load(
         (RAIZ / "data" / "raw" / "seed" / "manifest.yaml").read_text(encoding="utf-8")
     )
-    aceptados = {d["document_key"] for d in manifiesto["documentos"] if d["license"]}
+    checksums = {d["document_key"]: d["checksum"] for d in manifiesto["documentos"] if d["license"]}
 
     assert len(documentos) >= 3
-    assert set(documentos) <= aceptados
     for document_id, entrada in documentos.items():
+        clave, _, huella = document_id.partition("@")
+        # El document_id lleva la huella del texto: el archivo versionado corresponde al texto del manifiesto (RN-21).
+        assert checksums[clave].startswith(huella)
         for valores in entrada["population_criteria"].values():
             for valor in valores if isinstance(valores, list) else []:
-                assert (
-                    valor["chunkId"].startswith(f"{document_id}:")
-                    or document_id in valor["chunkId"]
-                )
+                assert valor["chunkId"].startswith(f"{document_id}#")

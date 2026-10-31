@@ -24,7 +24,7 @@
             "possiblyOutdated": false,
             "newerVersionAvailable": false,
             "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: studies included patients with early HER2-positive breast cancer, both hormone receptor-positive and -negative, stages I–III, treated with anti-HER2 therapy.",
-            "chunkId": "chunk_pmc-mama-antraciclinas-rs_0004"
+            "chunkId": "pmc-mama-antraciclinas-rs@c019104016b2#0002"
           },
           {
             "title": "Tamoxifen therapy benefit in luminal A and B breast cancer with 20-year follow-up",
@@ -45,7 +45,7 @@
             "possiblyOutdated": false,
             "newerVersionAvailable": false,
             "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: women with estrogen receptor-positive (luminal A or B) breast cancer were randomized to adjuvant tamoxifen or no endocrine therapy.",
-            "chunkId": "chunk_pmc-mama-tamoxifeno-eca_0003"
+            "chunkId": "pmc-mama-tamoxifeno-eca@e2e4820ce4be#0001"
           }
         ],
         "patientDataRefs": []
@@ -75,7 +75,7 @@
           "studyPopulationValues": [
             {
               "value": "positivo",
-              "chunkId": "chunk_pmc-mama-antraciclinas-rs_0004",
+              "chunkId": "pmc-mama-antraciclinas-rs@c019104016b2#0002",
               "scope": "elegibilidad"
             }
           ],
@@ -100,7 +100,7 @@
               "possiblyOutdated": false,
               "newerVersionAvailable": false,
               "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: studies included patients with early HER2-positive breast cancer, both hormone receptor-positive and -negative, stages I–III, treated with anti-HER2 therapy.",
-              "chunkId": "chunk_pmc-mama-antraciclinas-rs_0004"
+              "chunkId": "pmc-mama-antraciclinas-rs@c019104016b2#0002"
             }
           ]
         },
@@ -115,12 +115,12 @@
           "studyPopulationValues": [
             {
               "value": "positivo",
-              "chunkId": "chunk_pmc-mama-antraciclinas-rs_0004",
+              "chunkId": "pmc-mama-antraciclinas-rs@c019104016b2#0002",
               "scope": "elegibilidad"
             },
             {
               "value": "negativo",
-              "chunkId": "chunk_pmc-mama-antraciclinas-rs_0004",
+              "chunkId": "pmc-mama-antraciclinas-rs@c019104016b2#0002",
               "scope": "elegibilidad"
             }
           ],
@@ -145,7 +145,7 @@
               "possiblyOutdated": false,
               "newerVersionAvailable": false,
               "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: studies included patients with early HER2-positive breast cancer, both hormone receptor-positive and -negative, stages I–III, treated with anti-HER2 therapy.",
-              "chunkId": "chunk_pmc-mama-antraciclinas-rs_0004"
+              "chunkId": "pmc-mama-antraciclinas-rs@c019104016b2#0002"
             }
           ]
         },
@@ -160,17 +160,17 @@
           "studyPopulationValues": [
             {
               "value": "I",
-              "chunkId": "chunk_pmc-mama-antraciclinas-rs_0004",
+              "chunkId": "pmc-mama-antraciclinas-rs@c019104016b2#0002",
               "scope": "elegibilidad"
             },
             {
               "value": "II",
-              "chunkId": "chunk_pmc-mama-antraciclinas-rs_0004",
+              "chunkId": "pmc-mama-antraciclinas-rs@c019104016b2#0002",
               "scope": "elegibilidad"
             },
             {
               "value": "III",
-              "chunkId": "chunk_pmc-mama-antraciclinas-rs_0004",
+              "chunkId": "pmc-mama-antraciclinas-rs@c019104016b2#0002",
               "scope": "elegibilidad"
             }
           ],
@@ -195,7 +195,7 @@
               "possiblyOutdated": false,
               "newerVersionAvailable": false,
               "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: studies included patients with early HER2-positive breast cancer, both hormone receptor-positive and -negative, stages I–III, treated with anti-HER2 therapy.",
-              "chunkId": "chunk_pmc-mama-antraciclinas-rs_0004"
+              "chunkId": "pmc-mama-antraciclinas-rs@c019104016b2#0002"
             }
           ]
         },
@@ -262,7 +262,7 @@
           "studyPopulationValues": [
             {
               "value": "positivo",
-              "chunkId": "chunk_pmc-mama-tamoxifeno-eca_0003",
+              "chunkId": "pmc-mama-tamoxifeno-eca@e2e4820ce4be#0001",
               "scope": "elegibilidad"
             }
           ],
@@ -287,7 +287,7 @@
               "possiblyOutdated": false,
               "newerVersionAvailable": false,
               "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: women with estrogen receptor-positive (luminal A or B) breast cancer were randomized to adjuvant tamoxifen or no endocrine therapy.",
-              "chunkId": "chunk_pmc-mama-tamoxifeno-eca_0003"
+              "chunkId": "pmc-mama-tamoxifeno-eca@e2e4820ce4be#0001"
             }
           ]
         },
@@ -392,7 +392,7 @@
           "possiblyOutdated": false,
           "newerVersionAvailable": false,
           "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: studies included patients with early HER2-positive breast cancer, both hormone receptor-positive and -negative, stages I–III, treated with anti-HER2 therapy.",
-          "chunkId": "chunk_pmc-mama-antraciclinas-rs_0004"
+          "chunkId": "pmc-mama-antraciclinas-rs@c019104016b2#0002"
         }
       ]
     },
@@ -446,7 +446,7 @@
           "possiblyOutdated": false,
           "newerVersionAvailable": false,
           "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: women with estrogen receptor-positive (luminal A or B) breast cancer were randomized to adjuvant tamoxifen or no endocrine therapy.",
-          "chunkId": "chunk_pmc-mama-tamoxifeno-eca_0003"
+          "chunkId": "pmc-mama-tamoxifeno-eca@e2e4820ce4be#0001"
         }
       ]
     }
