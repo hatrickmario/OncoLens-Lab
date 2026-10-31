@@ -7,7 +7,7 @@ propagan sin traducir: el cargador los trata como fallo del catálogo y aborta.
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict
 from datetime import datetime
 from typing import Any
@@ -16,6 +16,7 @@ import sqlalchemy as sa
 from sqlalchemy import Engine
 from sqlalchemy.dialects.postgresql import insert
 
+from app.application.corpus_metadata.poblacion_puertos import PoblacionGuardada
 from app.application.seed_corpus.ports import (
     RegistroDeDocumento,
     RegistroDeRelease,
@@ -31,10 +32,8 @@ from app.infrastructure.catalog.tables import (
 
 
 def _registro_de(fila: Mapping[str, Any]) -> RegistroDeDocumento:
-    """JSONB devuelve ``extracted_fields`` como lista: el registro lo expone como tupla inmutable. ``population_form``
-    (migración 0005) es del catálogo, no del registro: lo escribe la ingesta de población (US-242)."""
-    campos = {k: v for k, v in fila.items() if k != "population_form"}
-    return RegistroDeDocumento(**{**campos, "extracted_fields": tuple(fila["extracted_fields"])})
+    """JSONB devuelve ``extracted_fields`` como lista: el registro lo expone como tupla inmutable."""
+    return RegistroDeDocumento(**{**fila, "extracted_fields": tuple(fila["extracted_fields"])})
 
 
 class CorpusDocumentRepository:
@@ -78,6 +77,40 @@ class CorpusDocumentRepository:
                 .values(is_current=False, superseded_at=superseded_at)
             )
             if retiradas.rowcount != 1:
+                raise VersionInexistente(document_id)
+
+    def leer_poblacion(self, document_id: str) -> PoblacionGuardada | None:
+        consulta = sa.select(
+            corpus_document.c.population_criteria,
+            corpus_document.c.population_form,
+            corpus_document.c.metadata_source,
+            corpus_document.c.extracted_fields,
+        ).where(corpus_document.c.document_id == document_id)
+        with self._motor.connect() as conexion:
+            fila = conexion.execute(consulta).one_or_none()
+        if fila is None:
+            return None
+        return PoblacionGuardada(fila[0], fila[1], fila[2], tuple(fila[3]))
+
+    def guardar_poblacion(
+        self,
+        document_id: str,
+        population_criteria: Mapping[str, Any],
+        population_form: str,
+        extracted_fields: Sequence[str],
+    ) -> None:
+        """Reescribe SOLO la población de un documento ya registrado (US-242 D6); no crea filas ni toca el histórico."""
+        with self._motor.begin() as conexion:
+            actualizadas = conexion.execute(
+                sa.update(corpus_document)
+                .where(corpus_document.c.document_id == document_id)
+                .values(
+                    population_criteria=dict(population_criteria),
+                    population_form=population_form,
+                    extracted_fields=list(extracted_fields),
+                )
+            )
+            if actualizadas.rowcount != 1:
                 raise VersionInexistente(document_id)
 
     def ids_de_documentos_vigentes(self) -> frozenset[str]:

@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
 
+from app.domain.corpus_metadata.poblacion_contadores import ContadoresDePoblacion
 from app.domain.corpus_metadata.resultado import MetadatosResueltos
 
 
@@ -42,6 +43,8 @@ class ResultadoDeIngesta:
     # se quedan en memoria para la muestra humana (``compare=False``: no cambian la identidad del resultado).
     metadatos: MetadatosResueltos | None = field(default=None, repr=False, compare=False)
     document_id: str | None = field(default=None, repr=False, compare=False)
+    # Extracción de población en abanico (US-242): solo contadores, nunca valores (RN-14). ``None`` = no corrió.
+    poblacion: ContadoresDePoblacion | None = None
 
     @property
     def metadata_source(self) -> str | None:
@@ -78,8 +81,17 @@ class ReporteDeIngesta:
             ],
             "resumen": self.contadores(),
             "metadatos_pendientes": self._resumen_de_metadatos_pendientes(),
+            "poblacion": self.contadores_de_poblacion.como_diccionario(),
             "release_id": self.release_id,
         }
+
+    @property
+    def contadores_de_poblacion(self) -> ContadoresDePoblacion:
+        """La suma de los contadores de la extracción de población de todos los documentos de la corrida (US-242)."""
+        return sum(
+            (r.poblacion for r in self.resultados if r.poblacion is not None),
+            ContadoresDePoblacion(),
+        )
 
     @property
     def metadatos_pendientes(self) -> tuple[ResultadoDeIngesta, ...]:
