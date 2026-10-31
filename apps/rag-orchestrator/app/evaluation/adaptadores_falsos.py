@@ -26,6 +26,7 @@ from app.application.ports import (
 from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
 from app.domain.applicability_text import (
     FuenteParaProponer,
+    exigir_un_criterio,
     PropuestaDePoblacion,
     normalizar_propuesta,
 )
@@ -217,6 +218,7 @@ class ProponenteGuionado:
         self._propuestas = tuple(propuestas)
 
     async def proponer(self, fuente: FuenteParaProponer) -> tuple[PropuestaDePoblacion, ...]:
+        exigir_un_criterio(fuente)
         if fuente.external_id != self._external_id:
             return ()
         pedidos = {c.clave for c in fuente.criterios}

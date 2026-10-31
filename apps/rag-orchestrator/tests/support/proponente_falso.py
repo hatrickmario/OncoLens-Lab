@@ -10,6 +10,7 @@ from __future__ import annotations
 from app.domain.applicability_text import (
     FuenteParaProponer,
     PropuestaDePoblacion,
+    exigir_un_criterio,
     normalizar_propuesta,
 )
 from tests.support.aplicabilidad import external_id_de
@@ -51,6 +52,7 @@ class ProponenteFalso:
         return len(self.llamadas)
 
     async def proponer(self, fuente: FuenteParaProponer) -> tuple[PropuestaDePoblacion, ...]:
+        exigir_un_criterio(fuente)
         self.llamadas.append(fuente)
         if self.error is not None:
             raise self.error

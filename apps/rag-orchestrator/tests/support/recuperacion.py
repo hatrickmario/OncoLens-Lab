@@ -50,7 +50,7 @@ from app.domain.retrieval_filter import (
     expresion_solo_vigente,
 )
 from app.infrastructure.catalogo_clinico.aplicabilidad import CriteriosDelCatalogo
-from app.infrastructure.fake.fake_applicability_text_proposer import ProponenteSilencioso
+from app.infrastructure.fake.tarea_de_poblacion_silenciosa import TareaDePoblacionSilenciosa
 from app.infrastructure.lenguaje.terminos_prohibidos import cargar_verificador_de_terminos
 from app.schemas.generated.models import (
     LlmProvider,
@@ -563,7 +563,7 @@ def crear_entorno(
         catalogo=catalogo,
         catalogo_clinico=catalogo_clinico,
         aplicabilidad=ApplicabilityService(criterios or CriteriosDelCatalogo({})),
-        proponente=proponente or ProponenteSilencioso(),
+        proponente=proponente or TareaDePoblacionSilenciosa(),
         generador=generador,
         clasificador_nli=clasificador_nli,
         verificador_terminos=verificador_terminos,

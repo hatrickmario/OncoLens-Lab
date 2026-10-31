@@ -14,19 +14,24 @@ from app.application.corpus_metadata.esquema_poblacion import (
     esquema_de_poblacion,
     parsear_valores,
 )
-from app.application.corpus_metadata.poblacion_puertos import Fragmento, LlmDePoblacion
-from app.application.corpus_metadata.population_fanout import FINISH_REASON_CORTADA
-from app.application.ports import FalloDelLlm
+from app.application.corpus_metadata.poblacion_puertos import (
+    FINISH_REASON_CORTADA,
+    Fragmento,
+    LlmDePoblacion,
+)
 from app.domain.applicability_text import (
     CausaDeRespaldo,
     ChunkDeFuente,
     FuenteParaProponer,
     PropuestaDePoblacion,
     RespaldoFallido,
+    exigir_un_criterio,
     normalizar_propuesta,
 )
 
 SEMILLA_DEL_UNICO_INTENTO = 0
+MAX_VALORES_DEL_RESPALDO = 1
+"""El respaldo propone UN valor por criterio (design D5): esquema y prompt piden uno, que es lo único que se conserva."""
 
 
 class TareaDePoblacionLocal:
@@ -46,8 +51,7 @@ class TareaDePoblacionLocal:
         self._max_chars_fragmentos = max_chars_fragmentos
 
     async def proponer(self, fuente: FuenteParaProponer) -> tuple[PropuestaDePoblacion, ...]:
-        if len(fuente.criterios) != 1:
-            raise ValueError("el respaldo recibe una fuente y un único criterio por llamada")
+        exigir_un_criterio(fuente)
         (criterio,) = fuente.criterios
         prompt = construir_prompt(
             self._plantilla,
@@ -55,15 +59,12 @@ class TareaDePoblacionLocal:
             self._dentro_del_presupuesto(fuente.chunks),
             self._max_valores,
         )
-        try:
-            respuesta = await self._llm.completar_json_acotado(
-                prompt,
-                esquema_de_poblacion(self._max_valores),
-                max_tokens=self._max_tokens_de_salida,
-                semilla=SEMILLA_DEL_UNICO_INTENTO,
-            )
-        except FalloDelLlm:
-            raise RespaldoFallido(CausaDeRespaldo.caido) from None
+        respuesta = await self._llm.completar_json_acotado(
+            prompt,
+            esquema_de_poblacion(self._max_valores),
+            max_tokens=self._max_tokens_de_salida,
+            semilla=SEMILLA_DEL_UNICO_INTENTO,
+        )  # un LLM caído es FalloDelLlm: lo traduce el servicio, no este adapter
         longitud = len(respuesta.texto)
         if respuesta.finish_reason == FINISH_REASON_CORTADA:
             raise RespaldoFallido(CausaDeRespaldo.bucle, respuesta.finish_reason, longitud)

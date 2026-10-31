@@ -115,7 +115,7 @@ class AplicabilidadTextual:
         resultados = await self._pedir_respaldo(a_proponer)
         propuestas = tuple(p for r in resultados for p in r.propuestas)
         plan, resultado = await self._aceptar_las_propuestas(trace_id, a_proponer, propuestas)
-        fallidos = [r for r in resultados if r.fallo is not None]
+        fallidos = [(r, r.fallo) for r in resultados if r.fallo is not None]
         self._registrar_fallos(trace_id, fallidos)
         recuentos = recuentos_de_propuestas(a_proponer, propuestas, plan, resultado.aceptadas)
         self._registrar(trace_id, recuentos, inicio)
@@ -140,17 +140,21 @@ class AplicabilidadTextual:
     ) -> tuple[_ResultadoDelRespaldo, ...]:
         """Una llamada por fuente y criterio pendiente, con a lo sumo ``concurrencia`` simultáneas (RN-22)."""
         semaforo = asyncio.Semaphore(self._parametros.concurrencia)
-        return tuple(
-            await asyncio.gather(
-                *(
-                    self._respaldar_un_criterio(
-                        semaforo, FuenteParaProponer(fuente.external_id, (criterio,), fuente.chunks)
+        try:
+            async with asyncio.TaskGroup() as grupo:
+                tareas = [
+                    grupo.create_task(
+                        self._respaldar_un_criterio(
+                            semaforo,
+                            FuenteParaProponer(fuente.external_id, (criterio,), fuente.chunks),
+                        )
                     )
                     for fuente in fuentes
                     for criterio in fuente.criterios
-                )
-            )
-        )
+                ]
+        except ExceptionGroup as defectos:
+            raise defectos.exceptions[0] from None  # un defecto cancela a las demás y sube tal cual
+        return tuple(tarea.result() for tarea in tareas)
 
     async def _respaldar_un_criterio(
         self, semaforo: asyncio.Semaphore, fuente: FuenteParaProponer
@@ -174,14 +178,13 @@ class AplicabilidadTextual:
         return replace(resultado, propuestas=propuestas)
 
     @staticmethod
-    def _registrar_fallos(trace_id: str, resultados: Sequence[_ResultadoDelRespaldo]) -> None:
+    def _registrar_fallos(
+        trace_id: str, fallidos: Sequence[tuple[_ResultadoDelRespaldo, RespaldoFallido]]
+    ) -> None:
         """Un evento por respaldo fallido: criterio, causa, ``finish_reason``, longitud de la salida, los ``chunkId`` del corpus
         público que recibió y ``traceId``. Nunca el valor, el texto de un fragmento, el prompt, la salida del LLM ni la
         pregunta (RN-14, regla común de l1d-291…294)."""
-        for resultado in resultados:
-            fallo = resultado.fallo
-            if fallo is None:
-                continue
+        for resultado, fallo in fallidos:
             logger.warning(
                 "event=aplicabilidad_respaldo_fallido criterio=%s causa=%s finish_reason=%s longitud=%d "
                 "chunkIds=%s traceId=%s",
@@ -276,10 +279,11 @@ def _con_valores_aceptados(
 
 
 def _con_respaldo_fallido(
-    fuentes: Sequence[AplicabilidadDeFuente], fallidos: Sequence[_ResultadoDelRespaldo]
+    fuentes: Sequence[AplicabilidadDeFuente],
+    fallidos: Sequence[tuple[_ResultadoDelRespaldo, RespaldoFallido]],
 ) -> tuple[AplicabilidadDeFuente, ...]:
     """Los criterios cuyo respaldo falló, ``desconocido`` con ``respaldo_fallido``; el resto de la fuente no cambia."""
-    marcados = {(r.external_id, r.criterio) for r in fallidos}
+    marcados = {(r.external_id, r.criterio) for r, _ in fallidos}
     if not marcados:
         return tuple(fuentes)
     return tuple(

@@ -22,6 +22,7 @@ from app.domain.applicability_rules import (
     estado_de_poblacion,
     evaluar_criterio,
 )
+from app.domain.corpus_metadata.campos import LONGITUD_MAXIMA_DE_VALOR
 from app.domain.citations import OpcionGenerada, validar_citas
 from app.domain.criterios_aplicabilidad import CriterioDeAplicabilidad
 from app.domain.nli import ParNli
@@ -64,8 +65,15 @@ class PropuestaDePoblacion:
     chunk_id: str
 
 
-LONGITUD_MAXIMA_DEL_VALOR = 200
-"""Un valor de población es una frase corta; una más larga no cabe como hipótesis del NLI ni como celda de la tabla."""
+LONGITUD_MAXIMA_DEL_VALOR = LONGITUD_MAXIMA_DE_VALOR
+"""Un valor de población es una frase corta (el mismo tope del esquema de la ingesta); una más larga no cabe como hipótesis
+del NLI ni como celda de la tabla."""
+
+
+def exigir_un_criterio(fuente: FuenteParaProponer) -> None:
+    """El respaldo recibe UNA fuente y UN criterio por llamada (ADR-47); lo mismo exigen el adapter real y los falsos (LSP)."""
+    if len(fuente.criterios) != 1:
+        raise ValueError("el respaldo recibe una fuente y un único criterio por llamada")
 
 
 def normalizar_propuesta(
@@ -73,9 +81,10 @@ def normalizar_propuesta(
 ) -> PropuestaDePoblacion | None:
     """La propuesta con el valor sin espacios sobrantes, o ``None`` si no es utilizable.
 
+    Quita el marcador ``[chunkId]`` con el que el prompt rotula cada fragmento cuando el LLM lo copia dentro del valor.
     No es utilizable: valor vacío, valor de más de ``LONGITUD_MAXIMA_DEL_VALOR`` caracteres o ``chunkId`` vacío. Una sola
     regla para el adapter real y los falsos (LSP): el LLM descuidado y el guion de un test se tratan igual."""
-    limpio = valor.strip()
+    limpio = valor.replace(f"[{chunk_id}]", "").strip()
     if not limpio or len(limpio) > LONGITUD_MAXIMA_DEL_VALOR or not chunk_id.strip():
         return None
     return PropuestaDePoblacion(external_id, criterio, limpio, chunk_id)
