@@ -1,5 +1,6 @@
 import type { AnalysisBasis } from '../../../../packages/api-contracts/src/types/clinical-api';
 import { mensajes, rellenar } from '../mensajes';
+import { formatearFechaIso } from './formatear-fecha';
 import type { EstadoDelAnalisis } from './estado-del-analisis';
 
 export interface ResumenDeBase {
@@ -32,8 +33,7 @@ export function textoDeFaltantes({ faltantes, continuoConAviso }: ResumenDeBase)
   return continuoConAviso ? `${cuenta} · ${textos.continuoConAviso}` : cuenta;
 }
 
-/** `AAAA-MM-DD` → `dd/mm/aaaa` partiendo la cadena: `new Date()` desplazaría un día según la zona horaria. */
+/** Fecha de corte del corpus en la Base del análisis: el mismo formato que el resto de fechas del panel. */
 export function formatearFechaDeCorte(fechaIso: string): string {
-  const [anio, mes, dia] = fechaIso.slice(0, 10).split('-');
-  return `${dia}/${mes}/${anio}`;
+  return formatearFechaIso(fechaIso);
 }

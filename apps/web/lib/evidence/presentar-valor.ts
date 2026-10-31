@@ -1,6 +1,7 @@
 import type { CitedSource } from '../../../../packages/api-contracts/src/types/clinical-api';
 import { mensajes, rellenar } from '../mensajes';
-import { formatearFechaDeCorte } from './resumen-base';
+import { formatearFechaIso } from './formatear-fecha';
+import { numeroONoDisponible, valorONoDisponible } from './procedencia';
 import type { ValorDelEstudio } from './valores-del-estudio';
 
 export interface ValorPresentado {
@@ -44,8 +45,9 @@ export function presentarValor(
 
 function datosDeLaFuente(cita: CitedSource): string[] {
   const { fechaDelFragmento, tamanoDelFragmento } = mensajes().evidence.aplicabilidad;
-  const noDisponible = mensajes().evidence.cita.noDisponible;
-  const fecha = cita.publishedAt ? formatearFechaDeCorte(cita.publishedAt) : noDisponible;
-  const tamano = cita.sampleSize != null ? String(cita.sampleSize) : noDisponible;
-  return [rellenar(fechaDelFragmento, { fecha }), rellenar(tamanoDelFragmento, { n: tamano })];
+  const fecha = cita.publishedAt?.trim() ? formatearFechaIso(cita.publishedAt) : null;
+  return [
+    rellenar(fechaDelFragmento, { fecha: valorONoDisponible(fecha) }),
+    rellenar(tamanoDelFragmento, { n: numeroONoDisponible(cita.sampleSize) }),
+  ];
 }

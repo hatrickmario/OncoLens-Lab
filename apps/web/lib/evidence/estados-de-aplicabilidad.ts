@@ -3,23 +3,29 @@ import type {
   ApplicabilitySummary,
 } from '../../../../packages/api-contracts/src/types/clinical-api';
 
+type Estado = ApplicabilityCriterion['status'];
+
 /**
- * Los cuatro estados con su símbolo: el estado se distingue por texto, nunca solo por color (NFR-12, WCAG 1.4.1).
- * Fuente única del símbolo y de la clave de literal/clase (`evidence.aplicabilidad.<clave>`), compartida por la
- * línea de conteos y la fila de la tabla.
+ * Símbolo y clave de literal/clase (`evidence.aplicabilidad.<clave>`) de cada estado: el estado se distingue por
+ * texto, nunca solo por color (NFR-12, WCAG 1.4.1). `Record<Estado, …>` es exhaustivo: si el contrato añade un
+ * estado, el compilador obliga a presentarlo. Fuente única de la línea de conteos y de la fila de la tabla.
  */
-export const ESTADOS_DE_APLICABILIDAD = [
-  { estado: 'coincide', clave: 'coincide', simbolo: '✓' },
-  { estado: 'parcial', clave: 'parcial', simbolo: '◐' },
-  { estado: 'no_coincide', clave: 'noCoincide', simbolo: '✕' },
-  { estado: 'desconocido', clave: 'desconocido', simbolo: '?' },
-] as const satisfies readonly {
-  estado: ApplicabilityCriterion['status'];
-  clave: keyof ApplicabilitySummary;
-  simbolo: string;
-}[];
+const PRESENTACION: Record<Estado, { clave: keyof ApplicabilitySummary; simbolo: string }> = {
+  coincide: { clave: 'coincide', simbolo: '✓' },
+  parcial: { clave: 'parcial', simbolo: '◐' },
+  no_coincide: { clave: 'noCoincide', simbolo: '✕' },
+  desconocido: { clave: 'desconocido', simbolo: '?' },
+};
+
+const ORDEN_DE_LECTURA: readonly Estado[] = ['coincide', 'parcial', 'no_coincide', 'desconocido'];
+
+/** Los estados en el orden en que se leen los conteos. */
+export const ESTADOS_DE_APLICABILIDAD = ORDEN_DE_LECTURA.map((estado) => ({
+  estado,
+  ...PRESENTACION[estado],
+}));
 
 /** Datos de presentación de un estado de criterio. */
-export function presentacionDelEstado(estado: ApplicabilityCriterion['status']) {
-  return ESTADOS_DE_APLICABILIDAD.find((e) => e.estado === estado)!;
+export function presentacionDelEstado(estado: Estado) {
+  return PRESENTACION[estado];
 }

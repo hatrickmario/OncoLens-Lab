@@ -57,4 +57,4 @@ adicional al backend desde «ver más».
 ## Pendientes de refinamiento
 
 Ninguno abierto. Asumidos en la historia: `estado_menopausico` (destino `ClinicalAttribute`) enlaza al encabezado de la ficha
-(AC-2); fecha y tamaño de muestra junto a cada valor en conflicto solo si constan en su fragmento (AC-9, F-23).
+(AC-2); fecha (`dd/mm/aaaa`) y tamaño de muestra del estudio junto a cada valor en conflicto, con «No disponible» si faltan (AC-9: decisión del orquestador RN-25 sobre el F-23 asumido; pendiente de confirmación del usuario).
