@@ -6,7 +6,7 @@ Todos los errores nombran fila y regla, nunca el valor rechazado (RN-14).
 from __future__ import annotations
 
 import re
-import statistics
+from app.evaluation.estadistica import mediana
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from datetime import date
@@ -297,7 +297,7 @@ def pares_para_validacion(
 
 def _mediana(valores: Iterable[float]) -> float | None:
     lista = list(valores)
-    return float(statistics.median(lista)) if lista else None
+    return float(mediana(lista)) if lista else None
 
 
 def _tiempos_por_tipo(

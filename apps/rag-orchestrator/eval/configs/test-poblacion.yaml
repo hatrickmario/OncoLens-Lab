@@ -1,0 +1,36 @@
+# Configuración de la familia `poblacion` de `evaluate` con adapters falsos (L1D-299, US-233b). Es la configuración de la
+# CI de esta familia: no carga modelos, no abre sockets y es reproducible (misma configuración, misma huella).
+# Es independiente de test-fake.yaml: `--suite all` no la usa y data/evaluation/baseline.json no depende de ella.
+# Las metas son iniciales y provisionales (RN-22): las recalibra DEC-07 (S5). Con `adaptadores.proveedor: local` la
+# familia aún no corre (la medición con el LLM local real es la tarea 2.1 del change).
+nombre: test-poblacion
+fixture: FX-06c-d
+dataset:
+  ruta: data/evaluation/poblacion-dorado
+medicion:
+  reloj: simulado
+adaptadores:
+  proveedor: fake # fake | local (la medición con el LLM local, 2.1)
+umbrales:
+  nli_entailment_threshold: 0.8
+catalogo:
+  ruta: packages/clinical-catalogs # criterios, sinónimos y lista de términos prohibidos (RN-23) de la extracción
+extraccion: # POPULATION_* (RN-22): los mismos valores iniciales que la ingesta
+  top_k: 3
+  max_valores_por_criterio: 3
+  max_tokens_de_salida: 512
+  concurrencia: 2
+  reintentos: 1
+licencias_aceptadas: [cc_by, cc_by_sa, dominio_publico, sintetico_propio] # RN-21; NCCN y ESMO excluidas
+metas: # M-08.3, M-08.4, M-08.2 y duplicados; iniciales, a recalibrar con DEC-07
+  precision: {minimo: 0.90}
+  cobertura: {minimo: 0.80}
+  concordancia: {minimo: 1.00}
+  tasa_duplicados: {maximo: 0.0}
+dorado:
+  minimo_de_pares: 30 # ADR47-R9: con menos pares la precisión y la cobertura son «no concluyentes»
+bucle:
+  minimo_de_pares: 20 # OUT-06: la causa solo se cierra con tasa de cortes 0 sobre al menos 20 pares
+sin_evidencia:
+  config: apps/rag-orchestrator/eval/configs/test-fake.yaml # la suite `all` que se compara con el baseline
+  baseline: data/evaluation/baseline.json
