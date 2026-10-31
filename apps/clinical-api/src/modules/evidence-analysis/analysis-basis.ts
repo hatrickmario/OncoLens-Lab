@@ -85,8 +85,10 @@ export function etiquetarFaltantes(
 }
 
 /** D-d (US-238): la Base declara el rescate de la reescritura de la consulta; la reformulación nunca sale de Backend 2. */
-export function declararReescrituraEnLaBase(_respuesta: RagQueryInternalResponse): boolean {
-  throw new Error('no implementado');
+export function declararReescrituraEnLaBase(respuesta: RagQueryInternalResponse): boolean {
+  return (
+    respuesta.meta.retrievalParams.queryRewrite.applied && respuesta.status === 'con_evidencia'
+  );
 }
 
 /**
@@ -110,6 +112,7 @@ export function crearBaseDelAnalisis(dependencias: {
           filters: request.filtersApplied,
           retrieved: respuesta.retrievalStats.retrieved,
           aboveThreshold: respuesta.retrievalStats.aboveThreshold,
+          queryRewritten: declararReescrituraEnLaBase(respuesta),
         },
         sourcesNotIncluded: respuesta.meta.excludedSources,
         corpusCutoffDate: respuesta.meta.corpusCutoffDate,
@@ -148,6 +151,7 @@ export function construirBaseTipoNoHabilitado(entrada: EntradaDeLaBaseSinIA): An
       filters: entrada.filters,
       retrieved: 0,
       aboveThreshold: 0,
+      queryRewritten: false,
     },
     sourcesNotIncluded: [...entrada.sourcesNotIncluded],
     corpusCutoffDate: entrada.corpusCutoffDate,

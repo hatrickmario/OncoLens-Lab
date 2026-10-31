@@ -165,6 +165,7 @@ describe('construirBaseTipoNoHabilitado', () => {
       filters: request.filtersApplied,
       retrieved: 0,
       aboveThreshold: 0,
+      queryRewritten: false,
     });
   });
 
