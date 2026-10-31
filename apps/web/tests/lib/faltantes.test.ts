@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { CompletenessView } from '../../../../packages/api-contracts/src/types/clinical-api';
 import checklistF_M2 from '../../../../contracts/examples/completeness-f-m2.json';
+import { hrefDeFicha } from '../../lib/ficha/anclas';
 import {
   debeContinuarConAviso,
   enlaceDeRegistro,
@@ -34,13 +35,13 @@ describe('enlaceDeRegistro', () => {
     }) as CompletenessView['items'][number];
 
   it('lleva a #diagnostico para Diagnosis y a #biomarcadores para Biomarker', () => {
-    expect(enlaceDeRegistro(ID, item('Diagnosis'))).toBe(`/pacientes/${ID}#diagnostico`);
-    expect(enlaceDeRegistro(ID, item('Biomarker'))).toBe(`/pacientes/${ID}#biomarcadores`);
+    expect(enlaceDeRegistro(ID, item('Diagnosis'))).toBe(hrefDeFicha(ID, 'diagnostico'));
+    expect(enlaceDeRegistro(ID, item('Biomarker'))).toBe(hrefDeFicha(ID, 'biomarcadores'));
   });
 
   it('lleva a la ficha sin ancla para ClinicalAttribute y PriorTreatment', () => {
-    expect(enlaceDeRegistro(ID, item('ClinicalAttribute'))).toBe(`/pacientes/${ID}`);
-    expect(enlaceDeRegistro(ID, item('PriorTreatment'))).toBe(`/pacientes/${ID}`);
+    expect(enlaceDeRegistro(ID, item('ClinicalAttribute'))).toBe(hrefDeFicha(ID));
+    expect(enlaceDeRegistro(ID, item('PriorTreatment'))).toBe(hrefDeFicha(ID));
   });
 });
 

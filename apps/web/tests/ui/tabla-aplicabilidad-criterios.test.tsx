@@ -56,7 +56,7 @@ describe('Tabla de aplicabilidad · criterios y causas', () => {
     expect(within(tabla).getAllByRole('row')).toHaveLength(1 + 5);
     expect(celdas(filaDe(tabla, /Estado HER2/))).toEqual([
       '3+ (IHQ)',
-      'positivo · Fragmento [1]',
+      'positivo · Fragmento [1] · según NCI PDQ · CDR0000062787',
       'Coincide',
     ]);
     expect(celdas(filaDe(tabla, /ECOG/))[2]).toBe('Coincide');
@@ -150,10 +150,10 @@ describe('Tabla de aplicabilidad · criterios y causas', () => {
 
     const fila = filaDe(tabla, /Estado menopáusico/);
     const [, estudio, estado] = celdas(fila);
-    expect(estudio).toContain('premenopausal women · Fragmento [1]');
-    expect(estudio).toContain('postmenopausal women · Fragmento [2]');
+    expect(estudio).toContain('premenopausal women · Fragmento [1] · según NCI PDQ · doc-b10');
+    expect(estudio).toContain('postmenopausal women · Fragmento [2] · según NCI PDQ · doc-b10');
     expect(estado).toBe(
-      'Desconocido · la fuente reporta varios valores; se muestran junto a su fragmento',
+      'Desconocido · la fuente reporta varios valores; se muestran junto a su fragmento, sin determinar cuál corresponde al paciente',
     );
     expect(estado).not.toMatch(/no se pudo|error|fall/i);
   });
@@ -187,7 +187,7 @@ describe('Tabla de aplicabilidad · criterios y causas', () => {
     const ecog = filaDe(tabla, /ECOG/);
     const [paciente, estudio] = celdas(ecog);
     expect(paciente).toBe('1 Dato del paciente sin verificar');
-    expect(estudio).toBe('0-1 · Fragmento [1]');
+    expect(estudio).toBe('0-1 · Fragmento [1] · según NCI PDQ · CDR0000062787');
     expect(within(tabla).getAllByText('Dato del paciente sin verificar')).toHaveLength(1);
     expect(
       (screen.getByRole('button', { name: 'Analizar evidencia' }) as HTMLButtonElement).disabled,

@@ -63,4 +63,15 @@ describe('motivoDelEstado', () => {
       causaDesconocido.solo_subgrupo,
     );
   });
+
+  it('devuelve la causa genérica cuando no_reportado_por_fuente trae valores de elegibilidad además del contexto', () => {
+    const valores = {
+      elegibilidad: [{ value: 'HR+', chunkId: 'c1', scope: 'elegibilidad' as const }],
+      contexto: [{ value: 'TNBC', chunkId: 'c1', scope: 'subgrupo' as const }],
+    };
+
+    expect(motivoDelEstado(criterio({ unknownReason: 'no_reportado_por_fuente' }), valores)).toBe(
+      causaDesconocido.no_reportado_por_fuente,
+    );
+  });
 });

@@ -58,6 +58,10 @@ describe('Tabla de aplicabilidad · fuentes, sin puntaje y criterio de orden', (
     expect(tabla.querySelector('[role="progressbar"], [role="meter"], progress, meter')).toBeNull();
     const copia = tabla.cloneNode(true) as HTMLElement;
     copia.querySelectorAll('[role="group"]').forEach((conteos) => conteos.remove());
+    const origen = 'según NCI PDQ · CDR0000062787';
+    copia
+      .querySelectorAll('li')
+      .forEach((li) => (li.textContent = li.textContent!.replaceAll(origen, '')));
     const numeros = (copia.textContent ?? '').match(/\d+(?:[.,]\d+)?/g) ?? [];
     // Solo quedan los valores de los datos (3+, 0-1…) y los «Fragmento [n]», nunca un número de aplicabilidad.
     expect(copia.textContent).not.toMatch(/aplicabilidad:?\s*\d|coincidencia:?\s*\d/i);

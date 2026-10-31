@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { hrefDeFicha } from '../../lib/ficha/anclas';
 import { enlaceDeFichaParaCriterio, rotuloDeCriterio } from '../../lib/evidence/presentar-criterio';
+
+const ID = '0b5c9c1e-5f0e-4d6b-8c55-3f7a1a2b9d10';
 
 describe('rotuloDeCriterio', () => {
   it('devuelve el literal del catálogo cuando la clave es conocida', () => {
@@ -13,16 +16,16 @@ describe('rotuloDeCriterio', () => {
 
 describe('enlaceDeFichaParaCriterio', () => {
   it('apunta a la sección de biomarcadores cuando el criterio es un biomarcador', () => {
-    expect(enlaceDeFichaParaCriterio('p-1', 'receptores_hormonales')).toBe(
-      '/pacientes/p-1#biomarcadores',
+    expect(enlaceDeFichaParaCriterio(ID, 'receptores_hormonales')).toBe(
+      hrefDeFicha(ID, 'biomarcadores'),
     );
   });
 
   it('apunta al diagnóstico cuando el criterio es el estadio', () => {
-    expect(enlaceDeFichaParaCriterio('p-1', 'estadio')).toBe('/pacientes/p-1#diagnostico');
+    expect(enlaceDeFichaParaCriterio(ID, 'estadio')).toBe(hrefDeFicha(ID, 'diagnostico'));
   });
 
   it('apunta al encabezado de la ficha cuando el criterio no tiene sección propia', () => {
-    expect(enlaceDeFichaParaCriterio('p-1', 'estado_menopausico')).toBe('/pacientes/p-1');
+    expect(enlaceDeFichaParaCriterio(ID, 'estado_menopausico')).toBe(hrefDeFicha(ID));
   });
 });

@@ -11,3 +11,10 @@ export function anclaPermitida(fragmento: string): AnclaDeFicha | null {
   const nombre = fragmento.startsWith('#') ? fragmento.slice(1) : fragmento;
   return ANCLAS_DE_FICHA.find((ancla) => ancla === nombre) ?? null;
 }
+
+/** Ruta de la ficha del paciente, con ancla opcional. Precondición: `patientId` es un UUID. */
+export function hrefDeFicha(patientId: string, ancla?: AnclaDeFicha): string {
+  void patientId;
+  void ancla;
+  throw new Error('no implementado');
+}
