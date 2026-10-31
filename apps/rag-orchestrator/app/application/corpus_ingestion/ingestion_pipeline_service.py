@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
+from dataclasses import replace
 from datetime import date
 
 from app.application.corpus_ingestion.ports import ResolutorDeMetadatos, SparsePassageEncoder
@@ -19,6 +20,14 @@ from app.application.corpus_ingestion.reporte import (
     Estado,
     ReporteDeIngesta,
     ResultadoDeIngesta,
+)
+from app.application.corpus_metadata.poblacion_puertos import (
+    AlmacenDePoblacion,
+    DocumentoParaExtraer,
+    ExtractorDePoblacion,
+    Fragmento,
+    PoblacionExtraida,
+    PoblacionGuardada,
 )
 from app.application.ports import Clock
 from app.application.seed_corpus.ports import (
@@ -32,12 +41,19 @@ from app.application.seed_corpus.ports import (
 from app.application.seed_corpus.nucleo_de_versionado import NucleoDeVersionado
 from app.application.seed_corpus.registros import (
     chunks_del_documento,
+    identificador_de_chunk,
+    identificador_de_documento,
     registro_con_error,
     registro_embebido,
     registro_normalizado,
 )
 from app.application.seed_corpus.release import publicar_release_si_cambio_el_conjunto_vigente
-from app.domain.corpus_metadata.resultado import MetadatosResueltos
+from app.domain.corpus_metadata.poblacion_contadores import ContadoresDePoblacion
+from app.domain.corpus_metadata.poblacion_escritura import (
+    campos_extraidos_tras_refrescar,
+    integrar_poblacion_en_abanico,
+)
+from app.domain.corpus_metadata.resultado import EXTRAIDO_VERIFICADO, MetadatosResueltos
 from app.domain.corpus_seed.admisibilidad import (
     Admision,
     PoliticaDeLicencias,
@@ -95,7 +111,11 @@ class IngestionPipelineService:
         tamano_de_chunk: int,
         solape_de_chunk: int,
         fecha_de_corte: date,
+        extractor_de_poblacion: ExtractorDePoblacion | None = None,
+        almacen_de_poblacion: AlmacenDePoblacion | None = None,
     ) -> None:
+        self._extractor_de_poblacion = extractor_de_poblacion
+        self._almacen_de_poblacion = almacen_de_poblacion
         self._catalogo = catalogo
         self._almacen_de_chunks = almacen_de_chunks
         self._embedder = embedder
@@ -180,7 +200,7 @@ class IngestionPipelineService:
         versiones = self._catalogo.versiones_del_grupo(documento.version_group_id)
         decision = decidir_version(checksum, versiones)
         if decision.accion is Accion.OMITIR:
-            return self._omitir(documento, decision)
+            return self._omitir_y_refrescar_poblacion(documento, decision, texto, checksum)
         reanudado = es_reanudacion(checksum, versiones)
         fragmentos = self._fragmentar(texto)
         self._catalogo.guardar_documento(
@@ -188,7 +208,11 @@ class IngestionPipelineService:
         )
         vectores = self._embeber(fragmentos)
         vectores_sparse = self._codificar_sparse(fragmentos)
+        document_id = identificador_de_documento(documento.document_key, checksum)
         metadatos = self._resolver_metadatos(documento, texto, fragmentos)
+        metadatos, poblacion = self._extraer_poblacion(
+            documento, document_id, fragmentos, metadatos
+        )
         registro = registro_embebido(documento, admision, checksum, self._reloj.ahora(), metadatos)
         with _etapa("milvus"):
             self._indexar(registro, fragmentos, vectores, vectores_sparse, decision)
@@ -200,6 +224,7 @@ class IngestionPipelineService:
             reanudado=reanudado,
             metadatos=metadatos,
             document_id=registro.document_id,
+            poblacion=poblacion,
         )
 
     def _fragmentar(self, texto: str) -> list[str]:
@@ -218,6 +243,64 @@ class IngestionPipelineService:
         ``error`` (etapa ``metadatos``) y el lote sigue."""
         with _etapa("metadatos"):
             return self._resolutor_de_metadatos.resolver(documento, texto, fragmentos)
+
+    def _extraer_poblacion(
+        self,
+        documento: DocumentoDeSemilla,
+        document_id: str,
+        fragmentos: Sequence[str],
+        metadatos: MetadatosResueltos,
+    ) -> tuple[MetadatosResueltos, ContadoresDePoblacion | None]:
+        """La población del estudio en abanico (US-242, D8): solo si la extracción de metadatos corrió (si cayó, el documento
+        queda ``pendiente`` y no se gastan más llamadas). Un fallo del LLM o del NLI deja SOLO ese criterio ``pendiente``;
+        un defecto del extractor deja SOLO este documento en ``error`` (etapa ``poblacion``)."""
+        if self._extractor_de_poblacion is None or metadatos.metadata_source != EXTRAIDO_VERIFICADO:
+            return metadatos, None
+        with _etapa("poblacion"):
+            extraida = self._extractor_de_poblacion.extraer(
+                _documento_para_extraer(documento, document_id, fragmentos),
+                documento.cancer_type_tags,
+                None,
+            )
+            integrada = integrar_poblacion_en_abanico(metadatos, extraida.population_criteria)
+        return integrada, extraida.contadores
+
+    def _refrescar_poblacion(
+        self, documento: DocumentoDeSemilla, texto: str, checksum: str
+    ) -> ContadoresDePoblacion | None:
+        """Un documento ya ``embebido`` con ese contenido no se re-embebe, pero su población se reextrae si cambió una versión
+        (prompt, modelo o catálogo) o quedó algún criterio ``pendiente`` (D6, AC-7); con las mismas versiones, 0 llamadas."""
+        if self._extractor_de_poblacion is None or self._almacen_de_poblacion is None:
+            return None
+        document_id = identificador_de_documento(documento.document_key, checksum)
+        with _etapa("poblacion"):
+            guardado = self._almacen_de_poblacion.leer_poblacion(document_id)
+            if guardado is None or guardado.metadata_source != EXTRAIDO_VERIFICADO:
+                return None
+            extraida = self._extractor_de_poblacion.extraer(
+                _documento_para_extraer(documento, document_id, self._fragmentar(texto)),
+                documento.cancer_type_tags,
+                guardado,
+            )
+            self._guardar_si_cambio(document_id, guardado, extraida)
+        return extraida.contadores
+
+    def _guardar_si_cambio(
+        self, document_id: str, guardado: PoblacionGuardada, extraida: PoblacionExtraida
+    ) -> None:
+        """Escribe solo si lo extraído difiere de lo guardado: con las mismas versiones no hay UPDATE."""
+        if self._almacen_de_poblacion is None or dict(extraida.population_criteria) == dict(
+            guardado.population_criteria
+        ):
+            return
+        self._almacen_de_poblacion.guardar_poblacion(
+            document_id,
+            extraida.population_criteria,
+            extraida.population_form,
+            campos_extraidos_tras_refrescar(
+                guardado.extracted_fields, extraida.population_criteria
+            ),
+        )
 
     def _embeber(self, fragmentos: Sequence[str]) -> list[list[float]]:
         with _etapa("embeddings"):
@@ -240,6 +323,19 @@ class IngestionPipelineService:
             # Sin fila de error: el documento embebido y vigente sigue siendo la verdad del catálogo.
             return _resultado_de_error(documento, fallo)
         return ResultadoDeIngesta(documento.document_key, Estado.OMITIDO)
+
+    def _omitir_y_refrescar_poblacion(
+        self, documento: DocumentoDeSemilla, decision: DecisionDeVersion, texto: str, checksum: str
+    ) -> ResultadoDeIngesta:
+        """Omitir no hace nada con los chunks; la población se reextrae aparte si cambió una versión (US-242 D6)."""
+        omitido = self._omitir(documento, decision)
+        if omitido.estado is not Estado.OMITIDO:
+            return omitido
+        try:
+            poblacion = self._refrescar_poblacion(documento, texto, checksum)
+        except FalloDeEtapa as fallo:
+            return _resultado_de_error(documento, fallo)
+        return replace(omitido, poblacion=poblacion)
 
     def _indexar(
         self,
@@ -271,6 +367,19 @@ class IngestionPipelineService:
             registro_con_error(documento, admision, checksum, self._reloj.ahora())
         )
         return _resultado_de_error(documento, fallo)
+
+
+def _documento_para_extraer(
+    documento: DocumentoDeSemilla, document_id: str, fragmentos: Sequence[str]
+) -> DocumentoParaExtraer:
+    """Los fragmentos llevan el ``chunk_id`` que Milvus indexará (``identificador_de_chunk``): la cita es verificable (RN-04)."""
+    return DocumentoParaExtraer(
+        documento.document_key,
+        document_id,
+        tuple(
+            Fragmento(identificador_de_chunk(document_id, i), f) for i, f in enumerate(fragmentos)
+        ),
+    )
 
 
 def _resultado_de_error(documento: DocumentoDeSemilla, fallo: FalloDeEtapa) -> ResultadoDeIngesta:

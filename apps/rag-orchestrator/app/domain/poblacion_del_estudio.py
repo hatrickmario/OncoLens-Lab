@@ -115,5 +115,11 @@ def _leer_valor_nuevo(elemento: object) -> ValorDePoblacion | FormaInvalida:
     return ValorDePoblacion(valor, alcance, chunk_citable)
 
 
+def valor_guardado_es_valido(elemento: object) -> bool:
+    """Un único predicado de validez de un valor de la forma de lista: lo que el lector acepta (``value`` y ``chunkId`` no
+    vacíos, ``scope`` del enum). El escritor de la ingesta (US-242) lo invoca para no escribir lo que el lector degradaría."""
+    return not isinstance(_leer_valor_nuevo(elemento), FormaInvalida)
+
+
 def _invalido(motivo: MotivoDeFormaInvalida, chunk_id: str | None) -> CriterioDePoblacion:
     return CriterioDePoblacion(invalidez=FormaInvalida(motivo, chunk_id))
