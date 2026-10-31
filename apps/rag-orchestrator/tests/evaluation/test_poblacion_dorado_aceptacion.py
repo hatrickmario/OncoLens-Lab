@@ -48,7 +48,7 @@ def _correr(
 
 
 def _sin_evidencia_ok(_config: Path) -> MedicionSinEvidencia:
-    return MedicionSinEvidencia(exactitud=1.0, invocaciones_llm=0, top_relevance_no_nulos=0)
+    return MedicionSinEvidencia(exactitud=1.0, violaciones_rn02=0)
 
 
 @pytest.mark.ac("US-233b", 2)
@@ -198,14 +198,14 @@ def test_poblacion_no_baja_sin_evidencia_respecto_del_baseline_ni_invoca_al_llm_
     sin_evidencia = reporte["metricas"]["sin_evidencia"]
     assert sin_evidencia["baja"] is False
     assert sin_evidencia["actual"] >= sin_evidencia["baseline"]
-    assert (sin_evidencia["invocaciones_llm"], sin_evidencia["top_relevance_no_nulos"]) == (0, 0)
+    assert sin_evidencia["violaciones_rn02"] == 0
 
 
 def test_poblacion_falla_y_nombra_sin_evidencia_cuando_la_metrica_baja_respecto_del_baseline(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     baja = PuertosDePoblacion(
-        medidor_sin_evidencia=lambda _c: MedicionSinEvidencia(0.8, 0, 0)  # baseline: 1.0
+        medidor_sin_evidencia=lambda _c: MedicionSinEvidencia(0.8, 0)  # baseline: 1.0
     )
 
     codigo, reporte, error = _correr(tmp_path, capsys, puertos=baja)
@@ -217,7 +217,7 @@ def test_poblacion_falla_y_nombra_sin_evidencia_cuando_la_metrica_baja_respecto_
 def test_poblacion_falla_cuando_el_camino_sin_evidencia_invoca_al_llm(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    invoca = PuertosDePoblacion(medidor_sin_evidencia=lambda _c: MedicionSinEvidencia(1.0, 1, 0))
+    invoca = PuertosDePoblacion(medidor_sin_evidencia=lambda _c: MedicionSinEvidencia(1.0, 1))
 
     codigo, _, error = _correr(tmp_path, capsys, puertos=invoca)
 

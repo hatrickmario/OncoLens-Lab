@@ -181,7 +181,7 @@ def escribir_dorado(
         "clase": clase,
         "nombre": "poblacion-dorado-de-prueba",
         "version": "1",
-        "catalogos": {"mama": CATALOGO_DE_REGLAS},
+        "catalogo_de_estados": CATALOGO_DE_REGLAS,
         "licencias": {} if licencia is None else {d: licencia for d in DOCUMENTOS},
     }
     if revisor is not None:

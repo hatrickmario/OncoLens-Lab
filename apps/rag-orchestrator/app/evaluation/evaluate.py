@@ -40,7 +40,12 @@ from app.evaluation.corrida_aplicabilidad import (
     PuertosDeAplicabilidad,
     ejecutar_aplicabilidad,
 )
-from app.evaluation.corrida_poblacion import PuertosDePoblacion
+from app.evaluation.corrida_poblacion import (
+    SUITE_POBLACION,
+    MedicionSinEvidencia,
+    PuertosDePoblacion,
+    ejecutar_poblacion,
+)
 from app.evaluation.corrida_barrido import ejecutar_barrido, exigir_dataset_sintetico
 from app.evaluation.cronometro import Cronometro, RelojSimulado
 from app.evaluation.dataset_loader import DatasetInvalido
@@ -134,6 +139,7 @@ def main(
             OrigenLocal(entorno or {}, cargador_de_modelos, lector_rss or pico_rss_mib),
             directorio_de_configs,
             puertos_aplicabilidad or PuertosDeAplicabilidad(),
+            puertos_poblacion or PuertosDePoblacion(),
         )
     except (argparse.ArgumentError, SystemExit, ConfigInvalida) as error:
         print(f"evaluate: uso o configuración inválidos ({type(error).__name__})", file=sys.stderr)
@@ -169,14 +175,37 @@ def _despachar_familia(
     origen: OrigenLocal,
     directorio_de_configs: Path | None,
     puertos_aplicabilidad: PuertosDeAplicabilidad,
+    puertos_poblacion: PuertosDePoblacion,
 ) -> int:
-    """La familia `aplicabilidad` tiene configuración, dataset y reporte propios (US-132); el resto, la configuración común."""
+    """Las familias `aplicabilidad` (US-132) y `poblacion` (L1D-299) tienen configuración, dataset y reporte propios; el
+    resto, la configuración común."""
     if args.suite not in SUITES:
         raise ConfigInvalida(f"familia no disponible: {args.suite}")
     if args.suite == SUITE_APLICABILIDAD:
         return ejecutar_aplicabilidad(args, reloj, puertos_aplicabilidad)
+    if args.suite == SUITE_POBLACION:
+        medidor = puertos_poblacion.medidor_sin_evidencia or _medidor_de_sin_evidencia(
+            reloj, raiz, origen
+        )
+        return ejecutar_poblacion(args, reloj, PuertosDePoblacion(medidor))
     config = cargar_config_suite(args.config, _ajustes_de_la_suite(args, origen.entorno))
     return _ejecutar(config, args, reloj, raiz, origen, directorio_de_configs)
+
+
+def _medidor_de_sin_evidencia(
+    reloj: Clock, raiz: Path | None, origen: OrigenLocal
+) -> Callable[[Path], MedicionSinEvidencia]:
+    """«Sin evidencia» (RN-02) tal como lo mide la suite `all` de la configuración dada, para la regresión de `poblacion`."""
+
+    def medir(ruta_de_config: Path) -> MedicionSinEvidencia:
+        config = cargar_config_suite(ruta_de_config, {})
+        reporte, _ = _correr_suite(
+            config, _fuente_de(config, raiz).cargar(), SUITE_COMPLETA, reloj, None, origen
+        )
+        medida = reporte["metricas"]["completa"]["sin_evidencia"]
+        return MedicionSinEvidencia(medida["exactitud"], medida["violaciones_rn02"])
+
+    return medir
 
 
 def _ajustes_de_la_suite(

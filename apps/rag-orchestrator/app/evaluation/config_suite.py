@@ -19,7 +19,7 @@ from app.domain.atribucion import CLAIM_MAX_WORDS_INICIAL
 from app.evaluation.reporte import es_identificador
 from app.evaluation.rutas import raiz_repo
 
-SUITES = ("retrieval", "generation", "pii", "aplicabilidad", "all")
+SUITES = ("retrieval", "generation", "pii", "aplicabilidad", "poblacion", "all")
 SUITE_COMPLETA = "all"
 PROVEEDORES = ("fake", "local")
 RELOJES = ("simulado", "real")
