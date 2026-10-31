@@ -41,6 +41,7 @@ class Umbrales:
     nli_entailment_threshold: float
     retrieval_top_k: int
     rerank_top_n: int
+    claim_max_words: int = 20
 
 
 @dataclass(frozen=True)

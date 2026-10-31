@@ -141,3 +141,23 @@ def test_la_opcion_descartada_por_citas_retira_una_principal_prohibida_y_declara
 
     assert saneada.rationale == f"La fuente reporta que {RETIRO_ES}"
     assert [(r.campo, r.papel) for r in retiros] == [("rationale", P)]
+
+
+def test_el_lenguaje_de_la_lista_precede_a_la_forma_y_el_nli_no_se_invoca_para_la_afirmacion() -> (
+    None
+):
+    """Orden prohibidos → forma → NLI [US-245 AC-5/AC-6]: texto prohibido Y con modal normativo."""
+    aceptada = _aceptada(_a("uno", P), _a("PROHIBIDO debería continuar", S))
+
+    assert [p.hipotesis for p in pares_a_verificar(_plan(aceptada))] == ["uno"]
+    (descartada,) = _verificar(aceptada, IMPLICA).descartadas
+    assert descartada.motivo is MotivoDeSoporte.lenguaje_no_permitido
+    assert descartada.afirmaciones_sin_soporte == (RETIRO_ES,)
+
+
+def test_el_lenguaje_de_la_lista_precede_al_alias_de_fragmento() -> None:
+    aceptada = _aceptada(_a("uno", P), _a("según C1 PROHIBIDO dos", S))
+
+    (descartada,) = _verificar(aceptada, IMPLICA).descartadas
+
+    assert descartada.motivo is MotivoDeSoporte.lenguaje_no_permitido

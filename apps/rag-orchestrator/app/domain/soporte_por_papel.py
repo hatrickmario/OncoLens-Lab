@@ -64,3 +64,7 @@ def motivo_de_descarte(
     ):
         return MotivoDeSoporte.afirmacion_sin_soporte
     return None
+
+
+def es_causa_de_descarte(papel: PapelDeAfirmacion, estado: EstadoDeAfirmacion) -> bool:
+    raise NotImplementedError("no implementado")

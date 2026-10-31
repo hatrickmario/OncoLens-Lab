@@ -6,6 +6,8 @@ import pytest
 
 from app.domain.atribucion import FormaDeAfirmacion, componer_con_marco, validar_forma_de_afirmacion
 from app.domain.claims import AfirmacionAtomica, PapelDeAfirmacion
+from app.domain.modales_normativos import VERSION_DE_MODALES_NORMATIVOS
+from app.prompts.rag_query import FORMULA_DE_ATRIBUCION
 
 P, S, V = PapelDeAfirmacion.principal, PapelDeAfirmacion.secundaria, PapelDeAfirmacion.salvedad
 
@@ -111,3 +113,51 @@ def test_detecta_el_artefacto_de_generacion_aunque_la_afirmacion_sea_corta() -> 
     forma = validar_forma_de_afirmacion("El ensayo NSABP-B-3隀 reportó el mismo beneficio.", 20)
 
     assert forma is FormaDeAfirmacion.con_artefactos
+
+
+def test_une_con_un_espacio_y_sin_duplicar_el_punto_cuando_la_afirmacion_agrupada_ya_termina_en_punto() -> (
+    None
+):
+    afirmaciones = [_a("principal", P), _a("uno", S), _a("dos.", S), _a("tres", V)]
+
+    composicion = componer_con_marco(afirmaciones, "es")
+
+    assert composicion.details[1] == "La fuente reporta que dos. La fuente reporta que tres"
+
+
+@pytest.mark.parametrize("final", [".", "?", "!", ";"])
+def test_no_agrega_otro_punto_cuando_la_afirmacion_agrupada_termina_en_un_signo_de_cierre(
+    final: str,
+) -> None:
+    afirmaciones = [_a("principal", P), _a("uno", S), _a(f"dos{final}", S), _a("tres", V)]
+
+    composicion = componer_con_marco(afirmaciones, "es")
+
+    assert ".." not in composicion.details[1] and f"{final}." not in composicion.details[1]
+
+
+@pytest.mark.parametrize("idioma", ["es", "en"])
+def test_el_marco_compuesto_cumple_la_formula_de_atribucion_del_prompt_en_cada_idioma(
+    idioma: str,
+) -> None:
+    composicion = componer_con_marco([_a("el beneficio es mayor", P)], idioma)
+
+    assert FORMULA_DE_ATRIBUCION.match(composicion.rationale)
+
+
+@pytest.mark.parametrize(
+    "texto",
+    [
+        "Debes repetir la prueba.",
+        "Que deba continuar el esquema.",
+        "La terapia debiera mantenerse.",
+        "Hace falta repetir la prueba.",
+        "Habría que repetir la prueba.",
+    ],
+)
+def test_detecta_los_modales_de_la_version_1_1_0_de_la_lista(texto: str) -> None:
+    assert validar_forma_de_afirmacion(texto, 20) is FormaDeAfirmacion.modal_normativo
+
+
+def test_la_lista_de_modales_normativos_esta_en_la_version_1_1_0() -> None:
+    assert VERSION_DE_MODALES_NORMATIVOS == "1.1.0"

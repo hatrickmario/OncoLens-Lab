@@ -9,6 +9,7 @@ from app.domain.soporte_por_papel import (
     EstadoDeAfirmacion,
     MotivoDeSoporte,
     decidir_opcion_por_papel,
+    es_causa_de_descarte,
 )
 
 P, S, V = PapelDeAfirmacion.principal, PapelDeAfirmacion.secundaria, PapelDeAfirmacion.salvedad
@@ -93,3 +94,15 @@ def test_descarta_con_lenguaje_no_permitido_cuando_el_propio_texto_de_la_opcion_
     decision = decidir_opcion_por_papel([(P, OK)], option_incumple=True)
 
     assert not decision.conservar and decision.motivo is MotivoDeSoporte.lenguaje_no_permitido
+
+
+@pytest.mark.parametrize("papel", list(PapelDeAfirmacion))
+@pytest.mark.parametrize("estado", list(EstadoDeAfirmacion))
+def test_es_causa_de_descarte_coincide_con_la_decision_de_la_opcion_en_toda_la_matriz_papel_por_estado(
+    papel: PapelDeAfirmacion, estado: EstadoDeAfirmacion
+) -> None:
+    estados = [(P, estado)] if papel is P else [(P, OK), (papel, estado)]
+
+    decision = decidir_opcion_por_papel(estados)
+
+    assert es_causa_de_descarte(papel, estado) is (not decision.conservar)
