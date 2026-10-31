@@ -4,12 +4,8 @@ import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type { Registrar } from '../../infrastructure/logger.js';
 import type { DocumentsRepository, NuevoDocumento } from './documents.repository.js';
-import {
-  ArchivoDemasiadoGrande,
-  ArchivoNoPdf,
-  DocumentoDuplicado,
-  PacienteNoEncontrado,
-} from './documents.errores.js';
+import { ArchivoDemasiadoGrande, ArchivoNoPdf, DocumentoDuplicado } from './documents.errores.js';
+import { PacienteNoEncontradoError } from '../compartido/pacientes.errores.js';
 import type { TipoDeDocumento } from './documents.schema.js';
 import { claveDeObjeto, esPdfPorMagicBytes, superaTamanoMaximo } from './documents.reglas.js';
 import type { AlmacenDeDocumentos } from './ports.js';
@@ -95,7 +91,7 @@ async function validarAntesDeAlmacenar(
   solicitud: SolicitudDeCarga,
 ): Promise<string> {
   const { repo, maxUploadMb } = dependencias;
-  if (!(await repo.existePaciente(solicitud.patientId))) throw new PacienteNoEncontrado();
+  if (!(await repo.existePaciente(solicitud.patientId))) throw new PacienteNoEncontradoError();
   if (superaTamanoMaximo(solicitud.contenido.length, maxUploadMb))
     throw new ArchivoDemasiadoGrande();
   if (!esPdfPorMagicBytes(solicitud.contenido)) throw new ArchivoNoPdf();
