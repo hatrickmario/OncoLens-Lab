@@ -44,7 +44,7 @@ varios valores del estudio con su fragmento y los avisos en texto, sin puntaje n
   `studyPopulationValue`; textos en `apps/web/messages/es.json`. El criterio de orden (AC-7) usa el literal existente
   `evidence.orderCriterion.applicability`, sin texto propio ni requisito nuevo (redundante con `main`).
 - **contratos:** dos ejemplos nuevos `EvidenceAnalysis` en `contracts/examples/` + `index.json`; sin cambio de `openapi.yaml`.
-- **clinical-platform:** solo *fixtures* de test (MSW desde esos ejemplos y los de `l1d-291`, perfil de test E2E con FX-08b-a/FX-08b-c y
+- **clinical-platform:** solo _fixtures_ de test (MSW desde esos ejemplos y los de `l1d-291`, perfil de test E2E con FX-08b-a/FX-08b-c y
   catálogo `test-apl-1.2.0` en ambos backends); sin cambio de API, de esquema ni de Route Handlers.
 - Sin cambio en `ai-services`.
 
@@ -57,4 +57,4 @@ adicional al backend desde «ver más».
 ## Pendientes de refinamiento
 
 Ninguno abierto. Asumidos en la historia: `estado_menopausico` (destino `ClinicalAttribute`) enlaza al encabezado de la ficha
-(AC-2); fecha y tamaño de muestra junto a cada valor en conflicto solo si constan en su fragmento (AC-9, F-23).
+(AC-2); fecha (`dd/mm/aaaa`) y tamaño de muestra del estudio junto a cada valor en conflicto, con «No disponible» si faltan (AC-9: decisión del orquestador RN-25 sobre el F-23 asumido; pendiente de confirmación del usuario).

@@ -92,14 +92,14 @@ La celda MUST leer `studyPopulationValues[]` y caer a `studyPopulationValue` si 
 - **THEN** se lee el valor único sin error y sin «ver más»
 
 ### Requirement: Valores en conflicto mostrados sin elegir uno
-Con `unknownReason = valores_en_conflicto` la fila MUST leer «? Desconocido · los fragmentos citados muestran valores distintos; se muestran ambos; requieren contraste con la fuente y con la validación clínica/patológica.», MUST mostrar ambos valores con sus fragmentos y MUST NOT elegir uno; junto a cada valor se muestran fecha y tamaño de muestra solo si constan en su fragmento.
+Con `unknownReason = valores_en_conflicto` la fila MUST leer «? Desconocido · los fragmentos citados muestran valores distintos; se muestran ambos; requieren contraste con la fuente y con la validación clínica/patológica» (sin punto final), MUST mostrar ambos valores con su fragmento y su fuente («según {fuente}») y MUST NOT elegir uno; junto a cada valor se muestran fecha (`dd/mm/aaaa`) y tamaño de muestra del estudio, o «No disponible» (RN-25).
 
 #### Scenario: HER2 en conflicto muestra ambos valores [US-126 AC-9] [S4 resp. 9] [F-23] [RN-28]
 - **GIVEN** A-M2 con la opción O-P4 y `estado_her2` con `ch-b4-1` y `ch-b4-2`
 - **WHEN** se muestra `estado_her2`
 - **THEN** se lee el mensaje de valores distintos con ambos valores y sus fragmentos (`ch-b4-1`, `ch-b4-2`)
 - **AND** la UI no marca ninguno como el correcto
-- **AND** fecha y tamaño de muestra aparecen solo si constan en el fragmento
+- **AND** fecha y tamaño de muestra dicen «No disponible» si no constan en el fragmento (decisión del orquestador RN-25 sobre el AC-9 asumido; pendiente de confirmación del usuario)
 
 ### Requirement: Motivo de Parcial y contexto fuera del estado
 Un criterio Parcial MUST leer «◐ Parcial · » seguido del motivo de `partialReason` («el estudio incluyó varios grupos, entre ellos el del paciente», «el fragmento mezcla poblaciones sin desagregarlas», «rango parcialmente solapado» o, solo en la forma antigua `solo_subgrupo`, «solo un subgrupo»). Los valores de alcance `subgrupo` o `mencion` MUST mostrarse bajo «Contexto (no cuenta para el estado)» y MUST NOT contar en el resumen.

@@ -16,6 +16,12 @@
 | D4-10 | Puertos de la suite de evaluación extensibles a *sparse* antes de L1D-245. | L1D-245 (híbrida frente a *dense*) | L1D-245 | Aprobado (usuario, 2026-10-31); cubierta por el PR #261 |
 | D4-11 | Deuda menor de L1D-292: guard de «omitido» con Milvus caído y extractor presente sin test (exige forzar `a_encender`), contadores parciales al `_pendiente` y mixin único de ajustes de población (`Settings` y `CorpusIngestSettings`). Sin ID de historia. | L1D-292 | Historia de deuda de `rag-orchestrator` del S5 (una sola, sin ID aún; junto con D4-14) | Aprobado (usuario, 2026-10-31) |
 
+## Deuda del Gate 2 de la oleada 3 (propuesta, pendiente de aprobación del usuario)
+
+| ID | Deuda / decisión | Origen | Dueño propuesto | Estado |
+|---|---|---|---|---|
+| D4-17 | Test inestable en CI de main (306bf340): `panel-estados-s3.test.tsx` US-062 AC-5; bug del sprint; causa raíz: el test mezclaba reloj real y simulado (`shouldAdvanceTime: true`) y avanzaba los 30 s sin garantizar que el efecto que arma el plazo ya hubiera corrido ni re-consultaba el botón; no se reprodujo en local (0 fallos en 300 ejecuciones bajo carga de CPU), así que es una causa por análisis, no confirmada empíricamente, y el componente de producción es correcto; arreglo: reloj simulado solo en `setTimeout`/`clearTimeout`, avance explícito dentro de `act` y botón re-consultado tras el avance (commit `refactor(L1D-112): tests`, rama `fix/d4-17-test-reintentar-determinista`) | CI de main (306bf340, merge de #256) | Bug del sprint S4 (frontend-dev), arreglo en esta rama; propuesto, pendiente de aprobación del usuario como historia/tarea | Propuesto, pendiente de aprobación |
+
 ## Deudas de L1D-95 que ya están en L1D-97
 
 Las deudas de L1D-95 (`/completeness`) que L1D-97 ya recoge no llevan ID propio: se entregan con L1D-97, reestimada de 3 a 5 puntos y aprobada en dos partes (primero las 4 deudas de `clinical-api` con `clinical-platform-dev`; luego el BFF y la UI). Ver `S4-plan.md` §6.

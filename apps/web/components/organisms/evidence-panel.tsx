@@ -99,6 +99,7 @@ export function EvidencePanel({ patientId }: EvidencePanelProps) {
         {fase.tipo === 'ok' && (
           <AnalysisResult
             analisis={fase.analisis}
+            patientId={patientId}
             onVerFragmento={(cita, idChip) => setFragmento({ cita, idChip })}
           />
         )}
