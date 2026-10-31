@@ -11,10 +11,10 @@ from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
 from dataclasses import replace
 
 from app.domain.aplicabilidad_tipos import (
+    MOTIVOS_SIN_REGLA_DE_COMPARACION,
     AtributoDelPaciente,
     AvisoDelDato,
     CausaDeDesconocido,
-    MOTIVOS_SIN_REGLA_DE_COMPARACION,
     ContextoDelPaciente,
     CriterioEvaluado,
     DatoDelPaciente,

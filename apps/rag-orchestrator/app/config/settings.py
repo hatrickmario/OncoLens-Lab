@@ -14,16 +14,16 @@ from sqlalchemy.exc import ArgumentError
 
 from app.config import modelos
 from app.config.modelos import CLAVES_ADR39, ConfigModelos, cargar_config_modelos
-from app.domain.corpus_seed.admisibilidad import (
-    ClaseDeLicencia,
-    clase_contradice_el_texto,
-)
-from app.domain.corpus_seed.chunking import validar_ventana
 from app.domain.atribucion import (
     CLAIM_MAX_WORDS_INICIAL,
     CLAIMS_MAX_INICIAL,
     CLAIMS_MIN_INICIAL,
 )
+from app.domain.corpus_seed.admisibilidad import (
+    ClaseDeLicencia,
+    clase_contradice_el_texto,
+)
+from app.domain.corpus_seed.chunking import validar_ventana
 from app.domain.fusion_de_candidatos import HYBRID_SPARSE_WEIGHT_INICIAL, RRF_K_INICIAL
 from app.domain.reglas_proveedor import (
     HOSTS_LOCALES,

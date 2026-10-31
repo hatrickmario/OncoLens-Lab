@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import pytest
-from app.evaluation.envoltorios import EmbedderOnnx, NliOnnx, RerankerOnnx
 from modelos_falsos import EmbedderFalso, NliFalso, RerankerFalso
+
+from app.evaluation.envoltorios import EmbedderOnnx, NliOnnx, RerankerOnnx
 
 
 @pytest.mark.parametrize(

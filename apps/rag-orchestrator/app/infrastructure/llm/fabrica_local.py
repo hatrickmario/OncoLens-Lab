@@ -9,9 +9,9 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Protocol, runtime_checkable
 
+from app.application.aplicabilidad_textual import ParametrosDelRespaldo
 from app.application.corpus_metadata.esquema_poblacion import cargar_plantilla
 from app.application.corpus_metadata.poblacion_puertos import LlmDePoblacion
-from app.application.aplicabilidad_textual import ParametrosDelRespaldo
 from app.application.generation import LlmEvidenceGenerator
 from app.application.ports import LlmClient
 from app.config.settings import Settings
@@ -58,10 +58,10 @@ def crear_generador_local(
     """Generación con el LLM nativo local (``LLM_BASE_URL``); sin adapter de nube ni *fallback* (RN-12)."""
     return LlmEvidenceGenerator(
         _cliente_llm_local(settings, envolver_cliente),
-        settings.claims_min_per_option,
-        settings.claims_max_per_option,
-        settings.claim_max_words,
-        settings.llm_fragments_max_chars,
+        claims_min=settings.claims_min_per_option,
+        claims_max=settings.claims_max_per_option,
+        claim_max_words=settings.claim_max_words,
+        max_chars_fragmentos=settings.llm_fragments_max_chars,
     )
 
 

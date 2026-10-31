@@ -8,10 +8,11 @@ from pathlib import Path
 import httpx
 import pytest
 import respx
+from datos_sinteticos import CTGOV, JATS, NCI, mock_fuentes, preparar_dataset
+
 from app.evaluation.dataset_loader import cargar_dataset
 from app.evaluation.parsers_fuentes import parsear_html_nci, parsear_jats, parsear_registro_ctgov
 from app.scripts import adr39_fetch_sources as fetch
-from datos_sinteticos import CTGOV, JATS, NCI, mock_fuentes, preparar_dataset
 
 
 def test_parsear_jats_separa_titulo_resumen_y_secciones_aplanando_subsecciones_y_separando_subindices() -> (

@@ -6,13 +6,13 @@ from pathlib import Path
 
 import pytest
 
+from app.config.settings import POBLACION_MAX_VALORES_POR_CRITERIO_INICIAL as MAX_VALORES
 from app.domain.aplicabilidad_tipos import (
     AtributoDelPaciente,
     BiomarcadorDelPaciente,
     ContextoDelPaciente,
     CriterioEvaluado,
 )
-from app.config.settings import POBLACION_MAX_VALORES_POR_CRITERIO_INICIAL as MAX_VALORES
 from app.domain.cobertura_poblacion import proporcion_con_criterios, tiene_criterios_de_poblacion
 from app.evaluation.config_suite import ConfigInvalida
 from app.evaluation.metricas.aplicabilidad import (

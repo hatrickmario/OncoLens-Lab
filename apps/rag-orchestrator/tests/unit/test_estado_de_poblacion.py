@@ -4,6 +4,7 @@ Los criterios se arman como los lee el catálogo (sinónimos, marcadores de rest
 en el dominio (RN-22, RN-27)."""
 
 import dataclasses
+
 import pytest
 
 from app.domain.aplicabilidad_tipos import ProyeccionDeEstado, ValorDePoblacion

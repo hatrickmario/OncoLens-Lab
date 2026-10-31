@@ -13,9 +13,9 @@ from datetime import UTC, date, datetime
 import pytest
 from sqlalchemy import Engine, create_engine, text
 
-from app.config.settings import POBLACION_MAX_VALORES_POR_CRITERIO_INICIAL as MAX_VALORES
 from app.application.errores import RecuperacionNoDisponibleError
 from app.application.ports import CoberturaDePoblacion
+from app.config.settings import POBLACION_MAX_VALORES_POR_CRITERIO_INICIAL as MAX_VALORES
 from app.domain.cobertura_poblacion import proporcion_con_criterios
 from app.infrastructure.catalog.cobertura_reader import LectorDeCoberturaPostgres
 from app.infrastructure.catalog.conexion import crear_motor

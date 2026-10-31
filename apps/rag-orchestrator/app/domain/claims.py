@@ -33,6 +33,8 @@ _FIN_DE_AFIRMACION = re.compile(rf"(?<=[{re.escape(TERMINADORES)}])\s+")
 
 
 def dividir_en_afirmaciones(texto: str) -> tuple[str, ...]:
+    """Sin llamadores de producción desde D4-19 (el soporte es solo por afirmaciones atómicas): se conserva por su
+    regla determinista de segmentación y la usan los tests como constructor de afirmaciones."""
     afirmaciones: list[str] = []
     pendiente = ""
     for fragmento in _FIN_DE_AFIRMACION.split(texto.strip()):

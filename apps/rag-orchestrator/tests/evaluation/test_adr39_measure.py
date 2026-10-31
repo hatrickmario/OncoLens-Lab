@@ -12,13 +12,14 @@ import httpx
 import pytest
 import respx
 import yaml
+from datos_sinteticos import mock_fuentes, preparar_dataset
+from modelos_falsos import FabricaFalsa, exportador_falso
+
 from app.evaluation.config_medicion import cargar_config
 from app.evaluation.dataset_loader import cargar_dataset
 from app.evaluation.trabajos import Trabajo, ejecutar_trabajo
 from app.scripts import adr39_measure as medir
 from app.scripts.adr39_fetch_sources import leer_fuentes_de_cache
-from datos_sinteticos import mock_fuentes, preparar_dataset
-from modelos_falsos import FabricaFalsa, exportador_falso
 
 AHORA = datetime(2026, 10, 16, 9, 0, tzinfo=timezone.utc)
 REVISION = "a" * 40

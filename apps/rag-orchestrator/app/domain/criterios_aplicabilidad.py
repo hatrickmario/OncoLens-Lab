@@ -8,7 +8,6 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Literal, Protocol
 
-
 # Vocabularios cerrados del catálogo (una sola fuente; el adapter los importa).
 OperadorDeRegla = Literal["igualdad", "pertenencia", "rango"]
 CondicionDeParcial = Literal["solo_subgrupo", "rango_solapado"]

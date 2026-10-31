@@ -20,7 +20,6 @@ from app.domain.applicability_order import contar_excluyentes_no_coincide
 from app.domain.option_selection import OpcionConRelevancia
 from app.domain.relevance import relevancia_de_opcion
 
-
 type Reevaluar = Callable[[AplicabilidadDeFuente, Sequence[str]], AplicabilidadDeFuente]
 """Recalcula una fuente con los fragmentos que cita una opción (ADR-47): la unidad de cálculo es el fragmento citado."""
 

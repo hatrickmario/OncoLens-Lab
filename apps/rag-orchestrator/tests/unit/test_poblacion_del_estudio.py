@@ -8,8 +8,8 @@ from app.domain.aplicabilidad_tipos import (
     FormaInvalida,
     ValorDePoblacion,
 )
-from app.schemas.generated.models import Scope
 from app.domain.poblacion_del_estudio import leer_criterio_guardado, poblacion_desde_lo_guardado
+from app.schemas.generated.models import Scope
 from tests.support.poblacion_lista import MARCA_PENDIENTE, valor_nuevo
 
 MAX = 3

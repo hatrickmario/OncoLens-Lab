@@ -10,9 +10,9 @@ import argparse
 import asyncio
 import sys
 import time
+from collections.abc import Callable, Mapping, Sequence
 from contextlib import AsyncExitStack
 from dataclasses import dataclass
-from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -34,7 +34,6 @@ from app.evaluation.config_suite import (
     cargar_config_suite,
 )
 from app.evaluation.corrida import evaluar_dataset
-from app.evaluation.corrida_brazos import ResultadoDeBrazo, evaluar_brazos
 from app.evaluation.corrida_aplicabilidad import (
     SUITE_APLICABILIDAD,
     PuertosDeAplicabilidad,
@@ -47,10 +46,11 @@ from app.evaluation.corrida_poblacion import (
     ejecutar_poblacion,
 )
 from app.evaluation.corrida_barrido import ejecutar_barrido, exigir_dataset_sintetico
+from app.evaluation.corrida_brazos import ResultadoDeBrazo, evaluar_brazos
 from app.evaluation.cronometro import Cronometro, RelojSimulado
 from app.evaluation.dataset_loader import DatasetInvalido
+from app.evaluation.envoltorios import pico_rss_mib
 from app.evaluation.esquema_suite import ESQUEMA_SUITE
-from app.evaluation.metricas.resultado import ResultadoConsulta
 from app.evaluation.fuente_dataset import (
     DatasetSuite,
     FuenteDatasetEnDirectorio,
@@ -72,21 +72,21 @@ from app.evaluation.informe_pii import (
     SinInformePii,
 )
 from app.evaluation.juez_fidelidad import JuezNoDisponible, crear_juez_llm
-from app.evaluation.envoltorios import pico_rss_mib
 from app.evaluation.llamadas import RegistroDeLlamadas
 from app.evaluation.medicion_modelos import informe_de_recursos_nli
 from app.evaluation.medidores import LatenciasNli
+from app.evaluation.metricas.privacidad import privacidad
+from app.evaluation.metricas.resultado import ResultadoConsulta
 from app.evaluation.modelos_locales import (
     CargadorDeModelos,
     LectorDeRss,
     OrigenLocal,
     cargar_puertos_locales,
 )
-from app.evaluation.metricas.privacidad import privacidad
 from app.evaluation.reporte import ReporteFueraDeEsquema, escribir_reporte_cerrado
 from app.evaluation.rutas import raiz_repo
-from app.infrastructure.lenguaje.terminos_prohibidos import ListaDeTerminosNoDisponible
 from app.infrastructure.clock.system_clock import RelojDelSistema
+from app.infrastructure.lenguaje.terminos_prohibidos import ListaDeTerminosNoDisponible
 from app.schemas.generated.models import RagMeta, RagQueryInternalResponse
 
 SALIDA_POR_DEFECTO = Path("eval") / "results"

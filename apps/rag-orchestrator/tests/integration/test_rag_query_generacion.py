@@ -7,9 +7,9 @@ se valida contra el spec con el hook de `verificacion_proveedor.py` (US-214).
 
 import pytest
 
-from tests.support.generador_llm import generador_con_llm
 from tests.support.aplicabilidad import catalogo_de_test_sin_criterios, criterios_de
 from tests.support.generador_falso import OPCION_ANTI_HER2, TITULO_INVENTADO
+from tests.support.generador_llm import generador_con_llm
 from tests.support.llm_falso import OPCION_SOLA, FakeLlmClient
 from tests.support.recuperacion import Q_HER2, Q_TOX, crear_entorno, solicitud_de
 
