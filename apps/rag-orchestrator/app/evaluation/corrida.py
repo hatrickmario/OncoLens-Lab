@@ -83,15 +83,45 @@ async def evaluar_dataset(
     resultados: list[ResultadoConsulta] = []
     respuestas: list[RagQueryInternalResponse] = []
     for indice, pregunta in enumerate(dataset.preguntas):
-        solicitud = solicitud_de(base, pregunta, dataset.clase, indice, suite.catalogo_version)
-        generaciones_previas = suite.observaciones.generaciones
-        respuesta = await suite.cronometro.medir_async(
-            "consulta", suite.servicio.consultar, solicitud
+        resultado, respuesta = await evaluar_pregunta_en_servicio(
+            suite, dataset, base, pregunta, indice
         )
-        invocado = suite.observaciones.generaciones > generaciones_previas
-        resultados.append(await _resultado_de(suite, dataset, pregunta, respuesta, invocado))
+        resultados.append(resultado)
         respuestas.append(respuesta)
     return resultados, respuestas
+
+
+async def evaluar_pregunta_en_servicio(
+    suite: ServicioDeSuite,
+    dataset: DatasetSuite,
+    base: dict[str, Any],
+    pregunta: Pregunta,
+    indice: int,
+) -> tuple[ResultadoConsulta, RagQueryInternalResponse]:
+    """Una pregunta por ``RAGOrchestratorService`` en proceso: su resultado y la respuesta que dio."""
+    solicitud = solicitud_de(base, pregunta, dataset.clase, indice, suite.catalogo_version)
+    generaciones_previas = suite.observaciones.generaciones
+    respuesta = await suite.cronometro.medir_async("consulta", suite.servicio.consultar, solicitud)
+    invocado = suite.observaciones.generaciones > generaciones_previas
+    return await _resultado_de(suite, dataset, pregunta, respuesta, invocado), respuesta
+
+
+def resultado_sin_recuperacion(pregunta: Pregunta, dataset: DatasetSuite) -> ResultadoConsulta:
+    """Lo que la suite conserva de una pregunta cuya recuperación falló cerrada (503): ranking vacío, sin generador.
+
+    Para recall y MRR cuenta como fallo de la pregunta; no se inventa ninguna respuesta del servicio (``null`` ≠ ``0.0``)."""
+    return ResultadoConsulta(
+        recuperacion=evaluar_pregunta(pregunta, []),
+        revisada=pregunta.id in dataset.revisadas,
+        esperaba_sin_evidencia=pregunta.modo_acierto == "sin_evidencia",
+        sin_evidencia=False,
+        generador_invocado=False,
+        top_relevance_score=None,
+        citas_propuestas=0,
+        citas_validas=0,
+        opciones_mostradas=0,
+        opciones_descartadas=0,
+    )
 
 
 async def _resultado_de(

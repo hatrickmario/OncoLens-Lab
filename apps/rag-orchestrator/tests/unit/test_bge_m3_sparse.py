@@ -7,7 +7,7 @@ from collections.abc import Sequence
 import numpy as np
 import pytest
 
-from app.application.ports import FalloDeInferencia
+from app.application.ports import FalloDeInferencia, SinTerminosLexicos
 from app.infrastructure.embeddings.bge_m3_sparse import CodificadorSparseBgeM3
 from tests.support.inferencia_falsa import TokenizadorFalso, id_de_palabra
 
@@ -86,6 +86,15 @@ def test_traduce_los_fallos_del_runtime_sin_el_texto_del_pasaje() -> None:
 def test_falla_cuando_la_dimension_del_estado_oculto_no_coincide_con_los_pesos() -> None:
     with pytest.raises(FalloDeInferencia):
         _codificador(pesos=[1.0, 1.0]).codificar(["her2"])
+
+
+def test_distingue_un_pasaje_sin_terminos_de_un_fallo_de_inferencia() -> None:
+    with pytest.raises(SinTerminosLexicos):
+        _codificador(sesgo=-5.0).codificar(["her2"])
+
+    with pytest.raises(FalloDeInferencia) as roto:
+        _codificador(pesos=[1.0, 1.0]).codificar(["her2"])
+    assert not isinstance(roto.value, SinTerminosLexicos)
 
 
 def test_devuelve_lista_vacia_sin_invocar_el_modelo_cuando_no_hay_textos() -> None:

@@ -1,7 +1,7 @@
 """Runner `evaluate` (US-072, ADR-41): ``python -m app.evaluation.evaluate --config <ruta> --suite <familia>``.
 
-Códigos de salida: 0 correcto; 1 la suite se negó a correr (dataset, proveedores, prueba congelada); 2 uso o
-configuración inválidos. Los mensajes nombran la causa y nunca llevan textos de preguntas ni de salidas (RN-14).
+Códigos de salida: 0 correcto; 1 la suite se negó a correr (dataset, proveedores, prueba congelada, golden de la
+partición distinto); 2 uso o configuración inválidos; 3 la comparación de brazos terminó con un retroceso (US-133). Los mensajes nombran la causa y nunca llevan textos de preguntas ni de salidas (RN-14).
 """
 
 from __future__ import annotations
@@ -11,6 +11,7 @@ import asyncio
 import sys
 import time
 from contextlib import AsyncExitStack
+from dataclasses import dataclass
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
@@ -20,17 +21,20 @@ from pydantic import ValidationError
 from app.application.errores import ErrorDeAplicacion
 from app.application.ports import Clock
 from app.config.entorno import entorno_del_proceso
+from app.evaluation.armado_comparacion import armar_comparacion
 from app.evaluation.armado_reporte import armar_reporte
 from app.evaluation.composicion_suite import componer_servicio
 from app.evaluation.config_suite import (
     ENTORNO_DEL_JUEZ,
     SUITE_COMPLETA,
     SUITES,
+    Comparacion,
     ConfigInvalida,
     ConfigSuite,
     cargar_config_suite,
 )
 from app.evaluation.corrida import evaluar_dataset
+from app.evaluation.corrida_brazos import ResultadoDeBrazo, evaluar_brazos
 from app.evaluation.corrida_aplicabilidad import (
     SUITE_APLICABILIDAD,
     PuertosDeAplicabilidad,
@@ -52,6 +56,7 @@ from app.evaluation.guardas import (
     exigir_juez_local,
     exigir_marca_final,
     exigir_proveedor_local,
+    verificar_golden_sha256,
 )
 from app.evaluation.informe_pii import (
     InformePiiB1,
@@ -76,11 +81,12 @@ from app.evaluation.reporte import ReporteFueraDeEsquema, escribir_reporte_cerra
 from app.evaluation.rutas import raiz_repo
 from app.infrastructure.lenguaje.terminos_prohibidos import ListaDeTerminosNoDisponible
 from app.infrastructure.clock.system_clock import RelojDelSistema
-from app.schemas.generated.models import RagQueryInternalResponse
+from app.schemas.generated.models import RagMeta, RagQueryInternalResponse
 
 SALIDA_POR_DEFECTO = Path("eval") / "results"
 SUITE_PII = "pii"
 SUITES_CON_PRIVACIDAD = (SUITE_PII, SUITE_COMPLETA)
+CODIGO_RETROCESO = 3
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -167,11 +173,11 @@ def _despachar_familia(
         raise ConfigInvalida(f"familia no disponible: {args.suite}")
     if args.suite == SUITE_APLICABILIDAD:
         return ejecutar_aplicabilidad(args, reloj, puertos_aplicabilidad)
-    config = cargar_config_suite(args.config, _ajustes_del_juez(args, origen.entorno))
+    config = cargar_config_suite(args.config, _ajustes_de_la_suite(args, origen.entorno))
     return _ejecutar(config, args, reloj, raiz, origen, directorio_de_configs)
 
 
-def _ajustes_del_juez(
+def _ajustes_de_la_suite(
     args: argparse.Namespace, entorno: Mapping[str, str] | None
 ) -> dict[str, str]:
     """``EVAL_JUDGE_*`` (ADR-41) sin leer el entorno del proceso (US-037 AC-1: solo ``app/config/`` lo hace).
@@ -209,6 +215,8 @@ def _ejecutar(
         fuente.clase(), config.urls
     )  # RN-12: antes de cargar nada ni crear un cliente
     exigir_proveedor_local(config)  # RN-12: los adapters locales y su modelo, antes de cargar pesos
+    if config.comparacion is not None and config.particion is not None:
+        verificar_golden_sha256(config.particion)  # ADR-45 P2: antes de abrir ninguna pregunta
     if args.sweep:
         exigir_dataset_sintetico(fuente.clase())  # RN-14: antes de cargar nada
         return ejecutar_barrido(
@@ -225,9 +233,11 @@ def _ejecutar(
     informe_pii = _proveedor_pii(
         config, args
     ).leer()  # antes de consultar: un informe roto no cuesta una corrida
-    reporte = _correr_suite(config, fuente.cargar(), args.suite, reloj, informe_pii, origen)
+    reporte, hay_retroceso = _correr_suite(
+        config, fuente.cargar(), args.suite, reloj, informe_pii, origen
+    )
     escribir_reporte_cerrado(_ruta_del_resultado(config, args, reloj), reporte, ESQUEMA_SUITE)
-    return 0
+    return CODIGO_RETROCESO if hay_retroceso else 0
 
 
 def _proveedor_pii(config: ConfigSuite, args: argparse.Namespace) -> ProveedorPii:
@@ -244,32 +254,89 @@ def _correr_suite(
     reloj: Clock,
     informe_pii: InformePiiB1 | None,
     origen: OrigenLocal,
-) -> dict[str, Any]:
-    cronometro = Cronometro(_reloj_de_medicion(config))
+) -> tuple[dict[str, Any], bool]:
+    """El reporte de la suite y si la comparación de brazos terminó con un retroceso (US-133)."""
     registro = RegistroDeLlamadas()
-    resultados: list[ResultadoConsulta] = []
-    meta = None
-    recursos_nli = None
+    medido = _Medicion([], None, Cronometro(_reloj_de_medicion(config)), None, None)
     if suite != SUITE_PII:  # la familia pii no consulta al servicio: mide solo la privacidad
-        resultados, respuestas, latencias = asyncio.run(
-            _evaluar(config, dataset, cronometro, reloj, registro, origen)
+        medido = (
+            _medir_comparacion(config, dataset, reloj, registro, origen)
+            if config.comparacion is not None
+            else _medir_un_brazo(config, dataset, reloj, registro, origen)
         )
-        meta = respuestas[0].meta
-        recursos_nli = _recursos_del_nli(config, latencias, origen)
     privacidad_medida = (
         privacidad(len(dataset.textos_pii), informe_pii, registro.llamadas)
         if suite in SUITES_CON_PRIVACIDAD
         else None
     )
-    return armar_reporte(
+    reporte = armar_reporte(
         config,
         dataset,
         suite,
-        meta,
-        resultados,
-        cronometro.p95_ms(),
+        medido.meta,
+        medido.resultados,
+        medido.cronometro.p95_ms(),
         privacidad_medida,
-        recursos_nli,
+        medido.recursos_nli,
+        medido.comparacion,
+    )
+    return reporte, medido.retroceso
+
+
+@dataclass(frozen=True)
+class _Medicion:
+    """Lo que la corrida entrega al reporte: los resultados del brazo de referencia y, si hay, la comparación."""
+
+    resultados: list[ResultadoConsulta]
+    meta: RagMeta | None
+    cronometro: Cronometro
+    recursos_nli: dict[str, object] | None
+    comparacion: dict[str, Any] | None
+    retroceso: bool = False
+    """Algún brazo híbrido retrocedió frente a A0 (US-133): lo calcula la comparación, no se relee del reporte."""
+
+
+def _medir_un_brazo(
+    config: ConfigSuite,
+    dataset: DatasetSuite,
+    reloj: Clock,
+    registro: RegistroDeLlamadas,
+    origen: OrigenLocal,
+) -> _Medicion:
+    cronometro = Cronometro(_reloj_de_medicion(config))
+    resultados, respuestas, latencias = asyncio.run(
+        _evaluar(config, dataset, cronometro, reloj, registro, origen)
+    )
+    return _Medicion(
+        resultados,
+        respuestas[0].meta,
+        cronometro,
+        _recursos_del_nli(config, latencias, origen),
+        None,
+    )
+
+
+def _medir_comparacion(
+    config: ConfigSuite,
+    dataset: DatasetSuite,
+    reloj: Clock,
+    registro: RegistroDeLlamadas,
+    origen: OrigenLocal,
+) -> _Medicion:
+    """Todos los brazos; el reporte principal es el de la referencia (A0) y la comparación va aparte."""
+    comparacion = config.comparacion
+    if comparacion is None:
+        raise ConfigInvalida("falta el bloque comparacion")
+    brazos = asyncio.run(_evaluar_brazos(config, comparacion, dataset, reloj, registro, origen))
+    referencia = brazos[0]
+    armada = armar_comparacion(config, comparacion, brazos)
+    return _Medicion(
+        referencia.resultados,
+        referencia.metas[0],
+        referencia.servicio.cronometro,
+        _recursos_del_nli(config, referencia.servicio.latencias_nli, origen),
+        armada.seccion,
+        armada.retroceso,
     )
 
 
@@ -305,6 +372,30 @@ async def _evaluar(
         servicio = componer_servicio(config, dataset, cronometro, reloj, juez_llm, puertos_locales)
         resultados, respuestas = await evaluar_dataset(servicio, dataset)
         return resultados, respuestas, servicio.latencias_nli
+
+
+async def _evaluar_brazos(
+    config: ConfigSuite,
+    comparacion: Comparacion,
+    dataset: DatasetSuite,
+    reloj: Clock,
+    registro: RegistroDeLlamadas,
+    origen: OrigenLocal,
+) -> list[ResultadoDeBrazo]:
+    """Todos los brazos de ``comparacion`` sobre los mismos modelos locales cargados una sola vez."""
+    puertos_locales = (
+        cargar_puertos_locales(config, origen, registro, dataset.clase)
+        if config.proveedor == "local"
+        else None
+    )
+    return await evaluar_brazos(
+        config,
+        comparacion,
+        dataset,
+        reloj,
+        lambda: Cronometro(_reloj_de_medicion(config)),
+        puertos_locales,
+    )
 
 
 def _ruta_del_resultado(config: ConfigSuite, args: argparse.Namespace, reloj: Clock) -> Path:

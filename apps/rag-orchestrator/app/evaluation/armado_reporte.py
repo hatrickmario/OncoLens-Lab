@@ -90,8 +90,10 @@ def armar_reporte(
     latencia_p95_ms: dict[str, float | None],
     privacidad: dict[str, Any] | None = None,
     recursos_nli: dict[str, Any] | None = None,
+    comparacion: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     return {
+        **({} if comparacion is None else {"comparacion_recuperacion": comparacion}),
         **({} if privacidad is None else {"privacidad": privacidad}),
         **({} if recursos_nli is None else {"recursos_nli": recursos_nli}),
         "esquema": VERSION_ESQUEMA,
