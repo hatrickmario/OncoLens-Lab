@@ -1,0 +1,300 @@
+{
+  "comparacion_recuperacion": {
+    "brazos": [
+      {
+        "fusion": "ninguna",
+        "fusionParam": 0,
+        "huellaConfig": "f1e76d5f7f7124bd2ae634c9ae91e9041b5592b49993fe3599ba8201b493a379",
+        "nombre": "A0",
+        "por_documento": [
+          {
+            "documento": "doc-m1",
+            "n": 2,
+            "recall_at_10": 1.0
+          },
+          {
+            "documento": "doc-p1",
+            "n": 2,
+            "recall_at_10": 1.0
+          }
+        ],
+        "recuperacion": {
+          "es_a_en": {
+            "mrr": 1.0,
+            "mrr_ic95": {
+              "inferior": 1.0,
+              "superior": 1.0
+            },
+            "n": 2,
+            "recall_at_10": 1.0,
+            "recall_ic95": {
+              "inferior": 1.0,
+              "superior": 1.0
+            }
+          },
+          "total": {
+            "mrr": 1.0,
+            "mrr_ic95": {
+              "inferior": 1.0,
+              "superior": 1.0
+            },
+            "n": 4,
+            "recall_at_10": 1.0,
+            "recall_ic95": {
+              "inferior": 1.0,
+              "superior": 1.0
+            }
+          }
+        },
+        "retrievalMode": "dense",
+        "retroceso": false,
+        "sin_terminos_lexicos": {
+          "n": 0,
+          "proporcion": 0.0
+        },
+        "trazabilidad": {
+          "coherentes": 5,
+          "consultas": 5
+        }
+      },
+      {
+        "diferencia_frente_a_a0": {
+          "mrr": 0.0,
+          "recall_at_10_es_a_en": 0.0,
+          "recall_at_10_total": 0.0
+        },
+        "fusion": "rrf",
+        "fusionParam": 60,
+        "huellaConfig": "de21035202e79b1e291771f64451dcf2651f771245bae00e3356dffac059db27",
+        "nombre": "A2",
+        "por_documento": [
+          {
+            "documento": "doc-m1",
+            "n": 2,
+            "recall_at_10": 1.0
+          },
+          {
+            "documento": "doc-p1",
+            "n": 2,
+            "recall_at_10": 1.0
+          }
+        ],
+        "recuperacion": {
+          "es_a_en": {
+            "mrr": 1.0,
+            "mrr_ic95": {
+              "inferior": 1.0,
+              "superior": 1.0
+            },
+            "n": 2,
+            "recall_at_10": 1.0,
+            "recall_ic95": {
+              "inferior": 1.0,
+              "superior": 1.0
+            }
+          },
+          "total": {
+            "mrr": 1.0,
+            "mrr_ic95": {
+              "inferior": 1.0,
+              "superior": 1.0
+            },
+            "n": 4,
+            "recall_at_10": 1.0,
+            "recall_ic95": {
+              "inferior": 1.0,
+              "superior": 1.0
+            }
+          }
+        },
+        "retrievalMode": "hibrida",
+        "retroceso": false,
+        "sin_terminos_lexicos": {
+          "n": 0,
+          "proporcion": 0.0
+        },
+        "trazabilidad": {
+          "coherentes": 5,
+          "consultas": 5
+        }
+      },
+      {
+        "diferencia_frente_a_a0": {
+          "mrr": 0.0,
+          "recall_at_10_es_a_en": 0.0,
+          "recall_at_10_total": 0.0
+        },
+        "fusion": "ponderada",
+        "fusionParam": 0.3,
+        "huellaConfig": "be3c69cd98653e93dadfdd4e69155bd42512279150e9b8f4919f7a3503c3f9ae",
+        "nombre": "A2b",
+        "por_documento": [
+          {
+            "documento": "doc-m1",
+            "n": 2,
+            "recall_at_10": 1.0
+          },
+          {
+            "documento": "doc-p1",
+            "n": 2,
+            "recall_at_10": 1.0
+          }
+        ],
+        "recuperacion": {
+          "es_a_en": {
+            "mrr": 1.0,
+            "mrr_ic95": {
+              "inferior": 1.0,
+              "superior": 1.0
+            },
+            "n": 2,
+            "recall_at_10": 1.0,
+            "recall_ic95": {
+              "inferior": 1.0,
+              "superior": 1.0
+            }
+          },
+          "total": {
+            "mrr": 1.0,
+            "mrr_ic95": {
+              "inferior": 1.0,
+              "superior": 1.0
+            },
+            "n": 4,
+            "recall_at_10": 1.0,
+            "recall_ic95": {
+              "inferior": 1.0,
+              "superior": 1.0
+            }
+          }
+        },
+        "retrievalMode": "hibrida",
+        "retroceso": false,
+        "sin_terminos_lexicos": {
+          "n": 0,
+          "proporcion": 0.0
+        },
+        "trazabilidad": {
+          "coherentes": 5,
+          "consultas": 5
+        }
+      }
+    ],
+    "referencia": "A0",
+    "retroceso": false,
+    "tolerancia_retroceso": 0.05
+  },
+  "configuracion": {
+    "bootstrapRepeticiones": 200,
+    "catalogVersion": "2026.10.0",
+    "claseDataset": "sintetico",
+    "corpusRelease": "rel-fx-t5a-a-1",
+    "dataset": {
+      "nombre": "fx-t5a-a",
+      "version": "1"
+    },
+    "fixture": "FX-T5a-a",
+    "hashConfig": "4b7399b9bdb1c9bb3f8b1d2c256da1fa65f751e6f20444aa75386d0a4db9ed82",
+    "modelos": {
+      "embeddings": "fake-bow@1",
+      "llm": "fake-guion@1",
+      "nli": "fake-nli@1",
+      "reranker": "fake-lexical@1"
+    },
+    "nombre": "s4-hibrida-fake",
+    "promptVersion": "rag-query@0.4.0",
+    "proveedor": "fake",
+    "reloj": "simulado",
+    "semillaBootstrap": 20261021,
+    "umbrales": {
+      "nliEntailmentThreshold": 0.7,
+      "relevanceThreshold": 0.3,
+      "rerankTopN": 10,
+      "retrievalTopK": 40
+    }
+  },
+  "esquema": "oncolens.evaluate.v1",
+  "latencia_p95_ms": {
+    "busqueda": 1.0,
+    "catalogo": 1.0,
+    "consulta": 21.0,
+    "embeddings": 1.0,
+    "generacion": 1.0,
+    "idioma": 1.0,
+    "nli": 1.0,
+    "reranker": 1.0
+  },
+  "metricas": {
+    "completa": {
+      "recuperacion": {
+        "es_a_en": {
+          "mrr": 1.0,
+          "mrr_ic95": {
+            "inferior": 1.0,
+            "superior": 1.0
+          },
+          "n": 2,
+          "recall_at_10": 1.0,
+          "recall_ic95": {
+            "inferior": 1.0,
+            "superior": 1.0
+          }
+        },
+        "total": {
+          "mrr": 1.0,
+          "mrr_ic95": {
+            "inferior": 1.0,
+            "superior": 1.0
+          },
+          "n": 4,
+          "recall_at_10": 1.0,
+          "recall_ic95": {
+            "inferior": 1.0,
+            "superior": 1.0
+          }
+        },
+        "validacion": {
+          "preguntas_no_validadas": 5,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      }
+    },
+    "revisada": {
+      "recuperacion": {
+        "es_a_en": {
+          "mrr": null,
+          "mrr_ic95": {
+            "inferior": null,
+            "superior": null
+          },
+          "n": 0,
+          "recall_at_10": null,
+          "recall_ic95": {
+            "inferior": null,
+            "superior": null
+          }
+        },
+        "total": {
+          "mrr": null,
+          "mrr_ic95": {
+            "inferior": null,
+            "superior": null
+          },
+          "n": 0,
+          "recall_at_10": null,
+          "recall_ic95": {
+            "inferior": null,
+            "superior": null
+          }
+        },
+        "validacion": {
+          "preguntas_no_validadas": 0,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      }
+    }
+  },
+  "suite": "retrieval"
+}
