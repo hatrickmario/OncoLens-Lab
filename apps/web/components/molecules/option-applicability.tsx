@@ -26,6 +26,9 @@ export function OptionApplicability({ opcion, children }: OptionApplicabilityPro
       )}
       {opcion.populationNotComparable && (
         <NonBlockingNotice>
+          <p>
+            <strong>{aplicabilidad.etiquetaNoComparable}</strong>
+          </p>
           <p>{aplicabilidad.poblacionNoComparable}</p>
         </NonBlockingNotice>
       )}
