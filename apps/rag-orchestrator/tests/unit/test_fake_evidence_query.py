@@ -32,3 +32,14 @@ def test_select_fixture_response_devuelve_sin_evidencia_cuando_la_pregunta_solo_
 
     assert elegida.status == RagQueryStatus.sin_evidencia
     assert elegida.topRelevanceScore is None
+
+
+def test_desde_directorio_carga_los_ejemplos_demo_s4_cuando_el_smoke_monta_contracts_examples():
+    # El stack-smoke monta contracts/examples con LLM_PROVIDER=fake: un ejemplo que no cumpla
+    # RagQueryInternalResponse (p. ej. sin optionsNotShown) hace salir al contenedor con código 1 (L1D-297).
+    fake = FakeEvidenceQuery.desde_directorio(EJEMPLOS)
+    for nombre in ("her2-adyuvante", "cdk46-excluyente"):
+        pregunta = _pregunta(f"rag-query-request-demo-s4-mama-{nombre}.json")
+        respuesta = fake.select_fixture_response(pregunta)
+        assert respuesta.status == RagQueryStatus.con_evidencia
+        assert respuesta.optionsNotShown == 0

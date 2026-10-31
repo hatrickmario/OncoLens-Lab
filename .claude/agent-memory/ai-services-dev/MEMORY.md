@@ -5,3 +5,4 @@
 - [Medición local de evaluate](medicion_local_evaluate.md) — lanzador .py sin source, Ollama propio en otro puerto, resultados de L1D-298
 - [Arnés clinical-api y hooks (L1D-295)](arnes_l1d295_clinical_api_y_hooks.md) — PostgreSQL de test iterativo, trailer Test-Removal en -m y comandos que rechaza el worktree
 - [ONNX desde bytes y entorno de trabajo](onnx_bytes_y_entorno_de_trabajo.md) — trampas de ORT con datos externos y cómo correr pytest/vitest/ruff en el worktree
+- [Hallazgos de la demo del S4 (L1D-297)](demo_s4_l1d297_hallazgos.md) — ingest solo en corpus vacío, lista blanca de la imagen, estados en vivo y cómo probar levantar.sh
