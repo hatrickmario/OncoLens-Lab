@@ -1,0 +1,115 @@
+{
+  "configuracion": {
+    "catalogVersion": "test-apl-1.0.0",
+    "claseDataset": "sintetico",
+    "dataset": {
+      "nombre": "aplicabilidad",
+      "version": "1"
+    },
+    "fixture": "FX-08b-a",
+    "hashConfig": "0e733aa5439f3544163c6fae2e4931dab0a97337bc890d3a45726ab43be77518",
+    "nombre": "test-aplicabilidad",
+    "proveedor": "fake",
+    "reloj": "simulado",
+    "umbrales": {
+      "nliEntailmentThreshold": 0.7
+    }
+  },
+  "esquema": "oncolens.evaluate.v1",
+  "metricas": {
+    "aplicabilidad": {
+      "concordancia_de_estados": {
+        "aciertos": 41,
+        "total": 41,
+        "valor": 1.0
+      },
+      "criterios_coincide_sin_cita": 0,
+      "omitidas": 2,
+      "pares": [
+        {
+          "acierto": true,
+          "coincide": 2,
+          "desconocido": 3,
+          "id": "am1-a1",
+          "no_coincide": 0,
+          "parcial": 0
+        },
+        {
+          "acierto": true,
+          "coincide": 0,
+          "desconocido": 4,
+          "id": "am1-a2-ok",
+          "no_coincide": 1,
+          "parcial": 0
+        },
+        {
+          "acierto": true,
+          "coincide": 0,
+          "desconocido": 5,
+          "id": "am1-a2-sin-soporte",
+          "no_coincide": 0,
+          "parcial": 0
+        },
+        {
+          "acierto": true,
+          "coincide": 0,
+          "desconocido": 5,
+          "id": "am1-a2-cita-ajena",
+          "no_coincide": 0,
+          "parcial": 0
+        },
+        {
+          "acierto": true,
+          "coincide": 0,
+          "desconocido": 4,
+          "id": "am1-a2-valor-paciente",
+          "no_coincide": 1,
+          "parcial": 0
+        },
+        {
+          "acierto": true,
+          "coincide": 0,
+          "desconocido": 4,
+          "id": "am1-a4",
+          "no_coincide": 1,
+          "parcial": 0
+        },
+        {
+          "acierto": true,
+          "coincide": 0,
+          "desconocido": 4,
+          "id": "am1-a5",
+          "no_coincide": 0,
+          "parcial": 1
+        },
+        {
+          "acierto": true,
+          "coincide": 1,
+          "desconocido": 5,
+          "id": "pa1-p1",
+          "no_coincide": 0,
+          "parcial": 0
+        }
+      ],
+      "valores_paciente_no_copiados": 0
+    },
+    "cobertura_poblacion": {
+      "con_criterios": 7,
+      "marca": "fuera_de_meta",
+      "meta": 0.9,
+      "valor": 0.7,
+      "version": "2026-10-16",
+      "vigentes": 10
+    },
+    "exactitud_extraido_verificado": {
+      "correctos": 19,
+      "documentos": 2,
+      "marca": "en_meta",
+      "meta": 0.95,
+      "pendientes": 0,
+      "revisados": 20,
+      "valor": 0.95
+    }
+  },
+  "suite": "aplicabilidad"
+}
