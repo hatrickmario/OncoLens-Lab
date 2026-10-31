@@ -1,0 +1,276 @@
+{
+  "configuracion": {
+    "bootstrapRepeticiones": 200,
+    "catalogVersion": "2026.10.0",
+    "claseDataset": "sintetico",
+    "corpusRelease": "rel-fx-t5a-a-1",
+    "dataset": {
+      "nombre": "fx-t5a-a",
+      "version": "1"
+    },
+    "fixture": "FX-T5a-a",
+    "hashConfig": "57b8a05d02374409d1aa6f7b420e9c8834b1957bb7041e44c33d79c54cd85ced",
+    "modelos": {
+      "embeddings": "fake-bow@1",
+      "llm": "fake-guion@1",
+      "nli": "fake-nli@1",
+      "reranker": "fake-lexical@1"
+    },
+    "nombre": "test-fake",
+    "promptVersion": "rag-query@0.4.0",
+    "proveedor": "fake",
+    "reloj": "simulado",
+    "semillaBootstrap": 20261021,
+    "umbrales": {
+      "nliEntailmentThreshold": 0.7,
+      "relevanceThreshold": 0.3,
+      "rerankTopN": 10,
+      "retrievalTopK": 40
+    }
+  },
+  "esquema": "oncolens.evaluate.v1",
+  "latencia_p95_ms": {
+    "busqueda": 1.0,
+    "catalogo": 1.0,
+    "consulta": 21.0,
+    "embeddings": 1.0,
+    "generacion": 1.0,
+    "idioma": 1.0,
+    "nli": 1.0,
+    "reranker": 1.0
+  },
+  "metricas": {
+    "completa": {
+      "citas": {
+        "n": 5,
+        "precision": 0.8,
+        "validacion": {
+          "preguntas_no_validadas": 6,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
+      "fidelidad": {
+        "nli": {
+          "afirmaciones": 4,
+          "fidelidad": 0.75,
+          "soportadas": 3
+        },
+        "validacion": {
+          "preguntas_no_validadas": 6,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
+      "inyeccion": {
+        "casos": 1,
+        "efectivas": 0,
+        "validacion": {
+          "preguntas_no_validadas": 6,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
+      "opciones_con_cita_y_soporte": {
+        "n": 5,
+        "porcentaje": 0.6,
+        "validacion": {
+          "preguntas_no_validadas": 6,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
+      "recuperacion": {
+        "es_a_en": {
+          "mrr": 1.0,
+          "mrr_ic95": {
+            "inferior": 1.0,
+            "superior": 1.0
+          },
+          "n": 2,
+          "recall_at_10": 1.0,
+          "recall_ic95": {
+            "inferior": 1.0,
+            "superior": 1.0
+          }
+        },
+        "total": {
+          "mrr": 1.0,
+          "mrr_ic95": {
+            "inferior": 1.0,
+            "superior": 1.0
+          },
+          "n": 4,
+          "recall_at_10": 1.0,
+          "recall_ic95": {
+            "inferior": 1.0,
+            "superior": 1.0
+          }
+        },
+        "validacion": {
+          "preguntas_no_validadas": 6,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
+      "sin_evidencia": {
+        "exactitud": 1.0,
+        "n": 6,
+        "validacion": {
+          "preguntas_no_validadas": 6,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        },
+        "violaciones_rn02": 0
+      },
+      "terminos_prohibidos": {
+        "atribucion": {
+          "con_formula": 0,
+          "opciones": 5
+        },
+        "campos_mostrados": [],
+        "propuesta_cruda": 2,
+        "propuesta_cruda_por_nivel": {
+          "A": 2,
+          "B": 0
+        },
+        "salida_mostrada": 0,
+        "salida_mostrada_nivel_a": 0,
+        "salida_mostrada_nivel_b": 0,
+        "salida_mostrada_por_nivel": {
+          "A": 0,
+          "B": 0
+        },
+        "terminos_compartidos_con_corpus_citado": 0,
+        "terminos_nivel_a": [
+          "es-debe-recibir",
+          "es-recomendado-para-este-paciente"
+        ],
+        "terminos_nivel_b": [],
+        "validacion": {
+          "preguntas_no_validadas": 6,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      }
+    },
+    "revisada": {
+      "citas": {
+        "n": 0,
+        "precision": null,
+        "validacion": {
+          "preguntas_no_validadas": 0,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
+      "fidelidad": {
+        "nli": {
+          "afirmaciones": 0,
+          "fidelidad": null,
+          "soportadas": 0
+        },
+        "validacion": {
+          "preguntas_no_validadas": 0,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
+      "inyeccion": {
+        "casos": 0,
+        "efectivas": 0,
+        "validacion": {
+          "preguntas_no_validadas": 0,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
+      "opciones_con_cita_y_soporte": {
+        "n": 0,
+        "porcentaje": null,
+        "validacion": {
+          "preguntas_no_validadas": 0,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
+      "recuperacion": {
+        "es_a_en": {
+          "mrr": null,
+          "mrr_ic95": {
+            "inferior": null,
+            "superior": null
+          },
+          "n": 0,
+          "recall_at_10": null,
+          "recall_ic95": {
+            "inferior": null,
+            "superior": null
+          }
+        },
+        "total": {
+          "mrr": null,
+          "mrr_ic95": {
+            "inferior": null,
+            "superior": null
+          },
+          "n": 0,
+          "recall_at_10": null,
+          "recall_ic95": {
+            "inferior": null,
+            "superior": null
+          }
+        },
+        "validacion": {
+          "preguntas_no_validadas": 0,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
+      "sin_evidencia": {
+        "exactitud": null,
+        "n": 0,
+        "validacion": {
+          "preguntas_no_validadas": 0,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        },
+        "violaciones_rn02": 0
+      },
+      "terminos_prohibidos": {
+        "atribucion": {
+          "con_formula": 0,
+          "opciones": 0
+        },
+        "campos_mostrados": [],
+        "propuesta_cruda": 0,
+        "propuesta_cruda_por_nivel": {
+          "A": 0,
+          "B": 0
+        },
+        "salida_mostrada": 0,
+        "salida_mostrada_nivel_a": 0,
+        "salida_mostrada_nivel_b": 0,
+        "salida_mostrada_por_nivel": {
+          "A": 0,
+          "B": 0
+        },
+        "terminos_compartidos_con_corpus_citado": 0,
+        "terminos_nivel_a": [],
+        "terminos_nivel_b": [],
+        "validacion": {
+          "preguntas_no_validadas": 0,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      }
+    }
+  },
+  "privacidad": {
+    "llamadas_nube_datos_reales": 0,
+    "llamadas_salientes_registradas": 0,
+    "sensibilidad_b1_medida": false,
+    "textos_sembrados": 4
+  },
+  "suite": "all"
+}
