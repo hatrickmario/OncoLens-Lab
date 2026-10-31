@@ -1,4 +1,9 @@
-import { ARCHIVOS_DE_RAIZ, ARCHIVOS_DEL_CATALOGO, NOMBRES_DE_ARCHIVO } from './archivos.mjs';
+import {
+  ARCHIVOS_DE_RAIZ,
+  ARCHIVOS_DECLARADOS_POR_EL_MANIFIESTO,
+  ARCHIVOS_DEL_CATALOGO,
+  NOMBRES_DE_ARCHIVO,
+} from './archivos.mjs';
 import { nombrable } from './nombrable.mjs';
 
 const ESQUEMAS_DE_ARCHIVOS = NOMBRES_DE_ARCHIVO.map(
@@ -30,6 +35,7 @@ export class ArchivoIlegibleError extends Error {
 }
 
 const FORMA_DE_TIPO = /^[a-z]+$/;
+const esObjeto = (valor) => valor !== null && typeof valor === 'object' && !Array.isArray(valor);
 
 function leerJson(directorio, archivo, leerArchivo) {
   try {
@@ -62,6 +68,11 @@ export function leerCatalogo(directorio, leerArchivo) {
         leerJson(directorio, `${tipo}/${nombre}.json`, leerArchivo),
       ]),
     );
+    for (const [nombre, { clave }] of Object.entries(ARCHIVOS_DECLARADOS_POR_EL_MANIFIESTO)) {
+      if (esObjeto(manifest[clave]) && tipo in manifest[clave]) {
+        tipos[tipo][nombre] = leerJson(directorio, `${tipo}/${nombre}.json`, leerArchivo);
+      }
+    }
   }
   return { manifest, ...deLaRaiz, tipos };
 }
@@ -70,6 +81,16 @@ export function leerCatalogo(directorio, leerArchivo) {
 export function leerEsquemas(directorioDeEsquemas, leerArchivo) {
   const leer = (nombre) => leerJson(directorioDeEsquemas, `${nombre}.schema.json`, leerArchivo);
   const esquemasDeLaRaiz = Object.values(ARCHIVOS_DE_RAIZ).map(({ esquema }) => esquema);
-  const nombres = ['manifest', 'comun', 'validation', ...esquemasDeLaRaiz, ...ESQUEMAS_DE_ARCHIVOS];
+  const esquemasDeclarados = Object.values(ARCHIVOS_DECLARADOS_POR_EL_MANIFIESTO).map(
+    ({ esquema }) => esquema,
+  );
+  const nombres = [
+    'manifest',
+    'comun',
+    'validation',
+    ...esquemasDeLaRaiz,
+    ...ESQUEMAS_DE_ARCHIVOS,
+    ...esquemasDeclarados,
+  ];
   return Object.fromEntries(nombres.map((nombre) => [nombre, leer(nombre)]));
 }

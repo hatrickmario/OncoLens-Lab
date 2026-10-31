@@ -1,0 +1,9 @@
+{
+  "version": "1.2.0",
+  "restrictionMarkers": {
+    "es": ["solo", "exclusivamente"],
+    "en": ["only", "exclusively"]
+  },
+  "disenosQueMezclan": ["guia", "revision_sistematica"],
+  "criteria": {}
+}
