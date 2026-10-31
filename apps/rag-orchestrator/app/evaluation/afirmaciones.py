@@ -29,6 +29,7 @@ def plan_de_la_propuesta(
     propuesta: EvidenciaGenerada,
     textos_entregados: Mapping[str, str],
     buscar_terminos: BuscadorDeTerminos,
+    max_palabras: int,
 ) -> PlanDeSoporte:
     """El plan de soporte de las opciones cuyas citas son válidas (las demás se descartan antes del NLI)."""
     aceptadas = validar_citas(propuesta.opciones, textos_entregados.keys()).aceptadas
