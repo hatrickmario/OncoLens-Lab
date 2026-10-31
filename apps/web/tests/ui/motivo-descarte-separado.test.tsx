@@ -127,6 +127,22 @@ describe('EvidencePanel · motivo de descarte separado', () => {
     expect(document.body.textContent).not.toContain(ROTULO_NO_VERIFICADA);
   });
 
+  it.each(['(text not shown)', '[afirmación retirada: formulación no permitida]'])(
+    'muestra (texto no mostrado) sin rótulo cuando el backend envía el literal de retiro %s [US-246 AC-1]',
+    async (literal) => {
+      const seccion = await expandir(
+        conDescartada(conEvidenciaSoloDescartadas, {
+          ...conEvidenciaSoloDescartadas.discardedOptions[0]!,
+          unsupportedClaims: [literal],
+        }),
+      );
+
+      expect(seccion.getByText(TEXTO_NO_MOSTRADO)).toBeTruthy();
+      expect(document.body.textContent).not.toContain(ROTULO_NO_VERIFICADA);
+      expect(document.body.textContent).not.toContain(literal);
+    },
+  );
+
   it('separa las etiquetas en es.json, pasa la lista de términos prohibidos y mantiene visible el aviso de IA [US-246 AC-4]', async () => {
     const { discardReason, discarded } = mensajes().evidence;
     expect(discardReason.afirmacion_sin_soporte).toBe(ETIQUETA_SIN_SOPORTE);

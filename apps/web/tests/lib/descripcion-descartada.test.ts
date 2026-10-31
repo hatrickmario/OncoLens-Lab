@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { parseProhibitedTerms } from '../../../../packages/clinical-language/src/load-prohibited-terms';
 import listaVersionada from '../../../../packages/clinical-catalogs/lenguaje/terminos-prohibidos.json';
 import type { DiscardedOption } from '../../../../packages/api-contracts/src/types/clinical-api';
+import { zDiscardedOption } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
+import sinSoporteYLenguaje from '../../../../contracts/examples/con-evidencia-solo-descartadas-sin-soporte-y-lenguaje.json';
 import { descripcionDeDescartada } from '../../lib/evidence/descripcion-descartada';
 import { mostrarSiPermitido } from '../../lib/evidence/mostrar-si-permitido';
 
@@ -59,5 +61,41 @@ describe('descripcionDeDescartada', () => {
 
   it('devuelve opcion null cuando el filtro rechaza el nombre', () => {
     expect(descripcionDeDescartada(descartada({ option: 'Debe recibir X' })).opcion).toBeNull();
+  });
+});
+
+const MUESTRA_AFIRMACIONES: Record<DiscardedOption['discardReason'], boolean> = {
+  cita_invalida: true,
+  afirmacion_sin_soporte: true,
+  sin_citas: true,
+  solo_soportada_por_analisis_previo: true,
+  lenguaje_no_permitido: false,
+};
+
+describe('descripcionDeDescartada · todos los motivos del contrato', () => {
+  it.each(zDiscardedOption.shape.discardReason.options)(
+    'decide si muestra afirmaciones según el motivo %s',
+    (motivo) => {
+      const d = descripcionDeDescartada(
+        descartada({ discardReason: motivo, unsupportedClaims: ['dato limpio'] }),
+      );
+      expect(d.afirmaciones).toEqual(MUESTRA_AFIRMACIONES[motivo] ? ['dato limpio'] : []);
+      expect(d.porLenguaje).toBe(motivo === 'lenguaje_no_permitido');
+    },
+  );
+});
+
+describe('descripcionDeDescartada · literales de afirmación retirada del backend', () => {
+  const retiradaDelFixture = sinSoporteYLenguaje.discardedOptions[1]!.unsupportedClaims[0]!;
+
+  it.each([
+    '(texto no mostrado)',
+    '(text not shown)',
+    '[afirmación retirada: formulación no permitida]',
+    '[claim removed: disallowed wording]',
+    retiradaDelFixture,
+  ])('trata %s como una afirmación cuyo texto no se muestra', (literal) => {
+    const d = descripcionDeDescartada(descartada({ unsupportedClaims: [literal] }));
+    expect(d.afirmaciones).toEqual([null]);
   });
 });
