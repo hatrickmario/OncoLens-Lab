@@ -173,17 +173,19 @@
       "volver": "Volver a la cita"
     },
     "discarded": {
-      "titulo": "Opciones descartadas — solo para revisión",
+      "titulo": "Descartadas en la verificación — solo para revisión",
       "linea": "No son opciones descritas: se muestran solo para revisión.",
       "auditoria": "Registro solo para auditoría: no es contenido clínico utilizable.",
       "numero": "N.º {n}",
       "analisis": "Análisis",
-      "sinSoporte": "Sin soporte",
+      "afirmacionNoVerificada": "Afirmación no verificada contra la fuente citada; se muestra solo para revisión",
+      "notaLenguaje": "Se omitió por la redacción generada (lenguaje prescriptivo); no es una valoración de la evidencia",
+      "textoNoMostrado": "(texto no mostrado)",
       "motivos": "Motivos:"
     },
     "discardReason": {
       "cita_invalida": "La cita no corresponde a un fragmento recuperado",
-      "afirmacion_sin_soporte": "Una afirmación no tiene soporte en la fuente o su formulación no se muestra",
+      "afirmacion_sin_soporte": "Una afirmación no tiene soporte en la fuente citada",
       "sin_citas": "La opción no incluye citas a fragmentos recuperados",
       "solo_soportada_por_analisis_previo": "Solo la respalda un análisis previo, que no es evidencia",
       "lenguaje_no_permitido": "Contenía lenguaje prescriptivo, que no se muestra"

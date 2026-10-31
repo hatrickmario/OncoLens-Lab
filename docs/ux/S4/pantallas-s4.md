@@ -146,7 +146,7 @@ Extiende S3-03. Cada motivo tiene su línea y su etiqueta; ya no hay un texto qu
 | `lenguaje_no_permitido` (nuevo) | «Contenía lenguaje prescriptivo, que no se muestra» |
 | `cita_invalida` · `sin_citas` · `solo_soportada_por_analisis_previo` | Etiquetas existentes de `evidence.discardReason.*` |
 
-En «Descartadas · solo para revisión», la afirmación sin soporte (`unsupportedClaims[]`) se muestra con el rótulo «Afirmación no verificada contra la fuente citada; se muestra solo para revisión», **después** de pasar el filtro RN-23 (H-07). Si el filtro la rechaza, solo aparece la etiqueta de `lenguaje_no_permitido`.
+En «Descartadas en la verificación — solo para revisión» (título fijado por US-246), la afirmación sin soporte (`unsupportedClaims[]`) se muestra con el rótulo «Afirmación no verificada contra la fuente citada; se muestra solo para revisión», **después** de pasar el filtro RN-23 (H-07). Si el filtro la rechaza, o el backend ya la envió retirada, se muestra «(texto no mostrado)» sin el rótulo y la opción **conserva la etiqueta del motivo recibido**: el panel no reinterpreta el motivo que decidió el backend (RN-01).
 
 Para `lenguaje_no_permitido` se muestra el nombre de la opción (`option`, también filtrado) con la etiqueta «Se omitió por la redacción generada (lenguaje prescriptivo); no es una valoración de la evidencia» (H-19). Nunca se muestra el texto prescriptivo.
 
@@ -201,7 +201,7 @@ Revisión WCAG 2.1 AA del 2026-10-29: A aprueba con correcciones; B y C no recom
   - Lista `ul`/`li`, con enlaces «Registrar Estado HER2 en la ficha».
   - El destino (`#diagnostico`, `#biomarcadores` o el encabezado principal) es un encabezado con ese `id` que recibe el foco.
   - En la ficha, el faltante sigue con ◌ en gris neutro.
-- **Descartadas (S2-1):** el ítem de `lenguaje_no_permitido` lleva su etiqueta con «(texto no mostrado)».
+- **Descartadas (S2-1):** el ítem de `lenguaje_no_permitido` lleva su etiqueta y la nota de redacción; «(texto no mostrado)» aparece solo cuando el filtro RN-23 rechaza el nombre de la opción o una afirmación, o el backend ya la envió retirada.
 - **Objetivos táctiles:** ≥ 44 × 44 px en [n], «ver más» y «Otras fuentes» (área ampliada, sin solapes).
 - Contrastes: todos los tokens de estado y de aviso dan ≥ 7:1 (sistema de diseño §1).
 
