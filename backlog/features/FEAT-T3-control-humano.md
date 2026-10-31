@@ -208,7 +208,7 @@ perfil de test (AC-2, AC-3, AC-5).
 
 ## US-249 — La salida generada rechaza el lenguaje de recomendación en la voz propia del modelo y el nivel B atribuido, con casos de conformidad
 
-> Linear: pendiente de creación
+> Linear: [L1D-305](https://linear.app/l1der-lab-mjbc/issue/L1D-305) (hija de L1D-39, Sprint 5, 3 pts; creada el 2026-10-31)
 
 `FEAT-T3` · Sprint 5 *(antes del G-Demo; usuario, 2026-10-31)* · Estimación **3** · HU-03 · RN-23 (dueña) · AC-10.3, AC-T3.4 · ↪ US-068 (lista y filtro de producción), US-245 (afirmaciones por papel y `lenguaje_no_permitido`), US-233a (juez acotado) · 🔗 Regresión [RN-23] → US-068 · 🔗 Medido en: US-072 (M-10.2 = 0)
 
