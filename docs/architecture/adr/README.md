@@ -17,4 +17,5 @@ van como DEC en [`docs/decisions/`](../../decisions/).
 | [ADR-45](ADR-45-mejora-recuperacion-ol06.md) | Mejora de la recuperación frente a las metas de OL-06: diagnóstico, protocolo anti-sobreajuste y plan por ablaciones | propuesto | 2026-10-16 | US-226…US-230 (borrador, sin Linear) |
 | [ADR-46](ADR-46-contratos-provider-driven-sin-pact.md) | Los contratos son provider-driven: el proveedor verifica sus respuestas y los consumidores usan clientes generados, sin Pact | propuesto | 2026-10-21 | US-214 (L1D-264) |
 | [ADR-47](ADR-47-extraccion-poblacion-en-abanico.md) | La población del estudio se extrae en la ingesta, en abanico por documento y criterio, como lista acotada por fragmento; consulta determinista con respaldo que degrada; contrato aditivo | aceptado | 2026-10-29 | US-240…US-244, US-233b (refinamiento del S4) |
+| [ADR-49](ADR-49-alias-turbopack-temporal-clinical-language.md) | Alias de Turbopack temporal para los imports NodeNext de `packages/clinical-language` en `apps/web` | propuesto, pendiente de firma del usuario | 2026-10-31 | US-246 (L1D-296), D4-22 |
 | ADR-7 | Scoring de evidencia clínica | futuro | — | — |
