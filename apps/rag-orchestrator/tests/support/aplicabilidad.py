@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from app.application.ports import (
-    ApplicabilityTextProposer,
+    PoblacionTask,
     EvidenceGenerator,
     EvidenciaGenerada,
     NliClassifier,
@@ -27,7 +27,7 @@ from app.domain.citations import FichaDeFuente, OpcionGenerada
 from app.domain.criterios_aplicabilidad import CriteriosDeAplicabilidad
 from app.infrastructure.catalogo_clinico.aplicabilidad import cargar_criterios_de_aplicabilidad
 from app.schemas.generated.models import RagQueryInternalRequest
-from tests.support.poblacion_lista import poblacion_guardada
+from tests.support.poblacion_lista import MARCA_PENDIENTE, poblacion_guardada
 from tests.support.catalogo_aplicabilidad import APL_1_0_0
 from tests.support.recuperacion import (
     Q_HER2,
@@ -79,6 +79,16 @@ def _poblacion_de_la_semilla() -> dict[str, object]:
     }
 
 
+CRITERIOS_DE_DOC_A2: dict[str, object] = {
+    **_poblacion_de_la_semilla(),
+    "biomarcadores": {"her2": MARCA_PENDIENTE},
+    "estadio": MARCA_PENDIENTE,
+    "ecog": MARCA_PENDIENTE,
+    "linea": MARCA_PENDIENTE,
+}
+"""``population_criteria`` de ``doc-a2``: la extracción de la ingesta falló en todos los criterios del catálogo y dejó la marca
+``pendiente`` por criterio (ADR-47); el respaldo de la consulta (US-244) es lo único que los lee."""
+
 CRITERIOS_DE_DOC_A1: dict[str, object] = {
     **_poblacion_de_la_semilla(),
     "biomarcadores": {"her2": "positivo"},
@@ -88,8 +98,8 @@ CRITERIOS_DE_DOC_A1: dict[str, object] = {
 """``population_criteria`` de ``doc-a1`` en la forma antigua (un valor por criterio): FX-08b-c la conserva para el lector doble."""
 
 POBLACIONES_FX08BA: dict[str, PoblacionDelEstudio] = {
-    # doc-a2: guía sin población extraída (US-123): la ingesta no pudo estructurarla y la deja ``pendiente``.
-    "doc-a2": poblacion_guardada("pendiente", _poblacion_de_la_semilla()),
+    # doc-a2: guía sin población extraída (US-123): la ingesta no pudo estructurarla y deja la marca por criterio.
+    "doc-a2": poblacion_guardada("pendiente", CRITERIOS_DE_DOC_A2),
     "doc-a1": poblacion_guardada("fuente_estructurada", CRITERIOS_DE_DOC_A1),
     "doc-a3": poblacion_guardada("fuente_estructurada", _poblacion_de_la_semilla()),
     "doc-a4": poblacion_guardada(
@@ -275,7 +285,7 @@ def entorno_de_aplicabilidad(
     catalogo: Path = APL_1_0_0,
     generador: EvidenceGenerator | None = None,
     catalogo_falso: CatalogoFalso | None = None,
-    proponente: ApplicabilityTextProposer | None = None,
+    proponente: PoblacionTask | None = None,
     clasificador_nli: NliClassifier | None = None,
 ) -> EntornoDeRecuperacion:
     """El servicio real con los bordes falsos de FX-08b-a: solo los ``documentos`` dados superan el umbral.

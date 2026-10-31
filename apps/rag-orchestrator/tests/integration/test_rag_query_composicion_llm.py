@@ -9,7 +9,8 @@ import httpx
 import respx
 from fastapi.testclient import TestClient
 
-from app.bootstrap import PuertosDeRecuperacion, crear_app, crear_generador_local
+from app.bootstrap import PuertosDeRecuperacion, crear_app
+from app.infrastructure.llm.fabrica_local import crear_generador_local
 from tests.support.fakes import GeneradorTraceFijo, RelojFijo, par_de_sesion, settings_de_prueba
 from tests.support.recuperacion import (
     Q_HER2,

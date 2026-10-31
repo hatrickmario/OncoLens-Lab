@@ -13,7 +13,6 @@ from typing import Any
 import pytest
 
 from app.domain.nli import ParNli
-from app.prompts.aplicabilidad_texto import VERSION_DEL_PROMPT_APLICABILIDAD
 from app.prompts.rag_query import VERSION_DEL_PROMPT
 from tests.support.aplicabilidad import (
     TEXTO_DE_CH_A2_1,
@@ -25,7 +24,9 @@ from tests.support.aplicabilidad import (
 from tests.support.catalogo_aplicabilidad import APL_1_0_0
 from tests.support.nli_falso import IMPLICA, NEUTRAL, NliFalso
 from tests.support.proponente_falso import ProponenteFalso
+from tests.support.recuperacion import PARAMETROS_DEL_RESPALDO_DE_PRUEBA
 
+VERSION_DEL_PROMPT_DEL_RESPALDO = PARAMETROS_DEL_RESPALDO_DE_PRUEBA.version_del_prompt
 RELEVANCIA_ALTA = 0.90
 SOLO_DOC_A2 = {"doc-a2": RELEVANCIA_ALTA}
 
@@ -178,13 +179,12 @@ def test_rag_query_reporta_ambas_versiones_del_prompt_sin_valores_en_el_log_cuan
     cuerpo = _consultar(ProponenteFalso("APL-OK"), NliFalso(por_defecto=IMPLICA))
 
     assert (
-        cuerpo["meta"]["promptVersion"]
-        == f"{VERSION_DEL_PROMPT}+{VERSION_DEL_PROMPT_APLICABILIDAD}"
+        cuerpo["meta"]["promptVersion"] == f"{VERSION_DEL_PROMPT}+{VERSION_DEL_PROMPT_DEL_RESPALDO}"
     )
     assert " " not in cuerpo["meta"]["promptVersion"]
     registros = [r.getMessage() for r in caplog.records]
     assert any(
-        f"applicabilityPromptVersion={VERSION_DEL_PROMPT_APLICABILIDAD}" in r for r in registros
+        f"applicabilityPromptVersion={VERSION_DEL_PROMPT_DEL_RESPALDO}" in r for r in registros
     )
     for registro in registros:
         assert "HER2 negativo" not in registro and TEXTO_DE_CH_A2_1 not in registro

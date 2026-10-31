@@ -7,17 +7,41 @@ fragmentos). ``envolver_cliente`` deja que quien mide anote cada llamada sin cam
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import Protocol, runtime_checkable
 
+from app.application.corpus_metadata.esquema_poblacion import cargar_plantilla
+from app.application.corpus_metadata.poblacion_puertos import LlmDePoblacion
+from app.application.aplicabilidad_textual import ParametrosDelRespaldo
 from app.application.generation import LlmEvidenceGenerator
 from app.application.ports import LlmClient
 from app.config.settings import Settings
 from app.infrastructure.llm.openai_compatible import OpenAICompatibleLlmClient
-from app.infrastructure.llm.proponente_de_aplicabilidad import LlmApplicabilityTextProposer
+from app.infrastructure.llm.tarea_de_poblacion import (
+    MAX_VALORES_DEL_RESPALDO,
+    TareaDePoblacionLocal,
+)
 
-EnvolverCliente = Callable[[LlmClient], LlmClient]
+
+@runtime_checkable
+class ClienteLlmLocal(LlmClient, LlmDePoblacion, Protocol):
+    """El cliente del LLM local completo: la generación (``LlmClient``) y la tarea corta de población (``LlmDePoblacion``)."""
 
 
-def _cliente_llm_local(settings: Settings, envolver_cliente: EnvolverCliente | None) -> LlmClient:
+def parametros_del_respaldo(settings: Settings) -> ParametrosDelRespaldo:
+    """Plazo, concurrencia y versión del prompt del respaldo de población, de la configuración (RN-22)."""
+    return ParametrosDelRespaldo(
+        plazo_ms=settings.population_fallback_deadline_ms,
+        concurrencia=settings.population_extraction_concurrency,
+        version_del_prompt=settings.population_prompt_version,
+    )
+
+
+EnvolverCliente = Callable[[ClienteLlmLocal], ClienteLlmLocal]
+
+
+def _cliente_llm_local(
+    settings: Settings, envolver_cliente: EnvolverCliente | None
+) -> ClienteLlmLocal:
     cliente = OpenAICompatibleLlmClient(
         settings.llm_base_url,
         settings.llm_model,
@@ -40,9 +64,21 @@ def crear_generador_local(
 
 
 def crear_proponente_local(
-    settings: Settings, envolver_cliente: EnvolverCliente | None = None
-) -> LlmApplicabilityTextProposer:
-    """Población textual de las fuentes (US-123) con el mismo LLM local y el mismo presupuesto de fragmentos."""
-    return LlmApplicabilityTextProposer(
-        _cliente_llm_local(settings, envolver_cliente), settings.llm_fragments_max_chars
+    settings: Settings,
+    envolver_cliente: EnvolverCliente | None = None,
+    llm: LlmDePoblacion | None = None,
+) -> TareaDePoblacionLocal:
+    """Respaldo de la población en la consulta (US-244): la tarea corta de la ingesta sobre el mismo LLM local (RN-12), con
+    el tope de tokens de salida de la extracción y el presupuesto de fragmentos de la generación (RN-22). ``llm`` solo lo
+    inyectan los tests: es el borde que se sustituye."""
+    if llm is not None and envolver_cliente is not None:
+        raise ValueError(
+            "llm y envolver_cliente se excluyen: el envoltorio anota el cliente que se crea aquí"
+        )
+    return TareaDePoblacionLocal(
+        llm or _cliente_llm_local(settings, envolver_cliente),
+        plantilla=cargar_plantilla(settings.population_prompt_version),
+        max_valores=MAX_VALORES_DEL_RESPALDO,
+        max_tokens_de_salida=settings.population_extraction_max_output_tokens,
+        max_chars_fragmentos=settings.llm_fragments_max_chars,
     )
