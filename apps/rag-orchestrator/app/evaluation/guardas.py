@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Mapping
+from pathlib import Path
+
+import yaml
 
 from app.domain.reglas_proveedor import es_modelo_de_nube, es_proveedor_local
 from app.evaluation.config_suite import ConfigJuez, ConfigSuite
 from app.evaluation.dataset_loader import CLASE_SINTETICA
+from app.evaluation.rutas import raiz_repo
 
 
 class SuiteAbortada(RuntimeError):
@@ -65,3 +70,38 @@ def exigir_marca_final(config: ConfigSuite, prueba_final: bool) -> None:
     """ADR-45 P3: el subconjunto de prueba solo se evalúa con ``--prueba-final``."""
     if config.subconjunto == "prueba" and not prueba_final:
         raise SuiteAbortada("el subconjunto de prueba exige --prueba-final (ADR-45 P3)")
+
+
+GOLDEN_POR_DEFECTO = "golden.yaml"
+
+
+def _leer_mapa(ruta: Path) -> dict[str, object]:
+    try:
+        contenido = yaml.safe_load(ruta.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError):
+        raise SuiteAbortada(f"no se pudo leer {ruta.name} de la partición (ADR-45 P2)") from None
+    if not isinstance(contenido, dict):
+        raise SuiteAbortada(f"{ruta.name} de la partición no es un mapa YAML")
+    return contenido
+
+
+def verificar_golden_sha256(particion: Path) -> None:
+    """ADR-45 P2: la huella ``golden_sha256`` de ``particion.yaml`` debe ser la del golden vigente.
+
+    El golden es ``<origen>/<archivo_golden>`` del ``manifest.yaml`` de la partición (``origen`` relativo a la raíz del
+    repositorio; ``archivo_golden`` por defecto ``golden.yaml``). Solo se hashean los bytes: ninguna pregunta se
+    lee. Si no coincide, la corrida aborta sin métricas: cambiar la partición o el golden exige ``ol06-particion-v2``."""
+    huella = _leer_mapa(particion / "particion.yaml").get("golden_sha256")
+    manifiesto = _leer_mapa(particion / "manifest.yaml")
+    origen = Path(str(manifiesto.get("origen", "")))
+    golden = (origen if origen.is_absolute() else raiz_repo() / origen) / str(
+        manifiesto.get("archivo_golden", GOLDEN_POR_DEFECTO)
+    )
+    try:
+        vigente = hashlib.sha256(golden.read_bytes()).hexdigest()
+    except OSError:
+        raise SuiteAbortada("no se pudo leer el golden vigente de la partición") from None
+    if not isinstance(huella, str) or huella != vigente:
+        raise SuiteAbortada(
+            "golden_sha256 no coincide con el golden vigente: la partición exige ol06-particion-v2 (ADR-45 P2)"
+        )

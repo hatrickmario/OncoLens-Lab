@@ -1,0 +1,31 @@
+# Comparación recuperación híbrida vs densa con ADAPTERS FALSOS (US-133, L1D-245; ADR-45 P1, P2). Es la configuración de la
+# CI y de AC-4: no carga modelos, no abre sockets y es reproducible (misma configuración, mismas métricas).
+# Los brazos reflejan los de `s4-hibrida.yaml`; las claves son las de RN-22 (`RETRIEVAL_*`, `RRF_K`, `HYBRID_SPARSE_WEIGHT`).
+nombre: s4-hibrida-fake
+fixture: FX-T5a-a
+dataset:
+  ruta: data/eval/fx-t5a-a
+  subconjunto: desarrollo # la comparación solo evalúa desarrollo (ADR-45 P2); cualquier otro valor es una configuración inválida
+  particion: apps/rag-orchestrator/eval/particiones/fx-t5a-a # partición sintética del fixture; verifica golden_sha256
+semilla_bootstrap: 20261021
+bootstrap_repeticiones: 200
+medicion:
+  reloj: simulado
+adaptadores:
+  proveedor: fake
+modelos:
+  llm: fake-guion@1
+umbrales:
+  relevance_threshold: 0.30
+  nli_entailment_threshold: 0.7
+  retrieval_top_k: 40
+  rerank_top_n: 10
+catalogo:
+  version: '2026.10.0'
+  ruta_terminos: packages/clinical-catalogs
+comparacion:
+  tolerancia_retroceso: 0.05 # RETRIEVAL_REGRESSION_TOLERANCE, solo para la CI con fakes; el valor real lo fija la preinscripción P1
+  brazos:
+    - {nombre: A0, RETRIEVAL_MODE: dense}
+    - {nombre: A2, RETRIEVAL_MODE: hibrida, RETRIEVAL_FUSION: rrf, RRF_K: 60}
+    - {nombre: A2b, RETRIEVAL_MODE: hibrida, RETRIEVAL_FUSION: ponderada, HYBRID_SPARSE_WEIGHT: 0.3}
