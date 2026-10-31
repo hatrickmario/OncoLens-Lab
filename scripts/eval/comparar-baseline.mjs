@@ -15,8 +15,8 @@ const esClaveIgnorada = (clave) => CONTEOS_SIN_DIRECCION.includes(clave) || clav
 /**
  * Política por métrica (RN-02, RN-12, RN-23): `bloqueante` = menos es mejor y el valor del baseline es 0, cualquier aumento
  * es regresión sin tolerancia; `informativa` = se muestra pero nunca es regresión. Cambiar la decisión es una línea.
- * Lenguaje mostrado (L1D-298 AC-2): HOY se bloquea el agregado A+B (`salida_mostrada`) además del nivel A. Si el humano
- * decide que la meta es solo el nivel A, `salida_mostrada` pasa a `informativa`.
+ * Lenguaje mostrado (L1D-298 AC-2): la meta es A+B bloqueante (decidido por el usuario, 2026-10-31): se bloquea el
+ * agregado A+B (`salida_mostrada`) además del nivel A.
  */
 const POLITICA_POR_METRICA = {
   'terminos_prohibidos.salida_mostrada': 'bloqueante',

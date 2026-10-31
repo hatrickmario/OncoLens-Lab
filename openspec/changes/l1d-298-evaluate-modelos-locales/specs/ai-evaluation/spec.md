@@ -40,7 +40,7 @@ Con el generador real, `evaluate` MUST medir la propuesta cruda y la salida most
 #### Scenario: AC-2 NO CUMPLIDA con el generador real (estado registrado) [US-233a AC-2] [RN-23]
 - **GIVEN** la corrida con G real sobre `fx-rn23`: 1 salida prohibida mostrada (nivel A = 0, nivel B = 1; meta 0) y 6 en la propuesta cruda (A = 5, B = 1) que copian términos del corpus citado
 - **WHEN** se evalúa el criterio
-- **THEN** AC-2 queda «no cumplida», con dueño y destino a decidir por el humano (filtro de nivel B o política de citas del corpus, y deuda D7 de L1D-193 con «Se recomendaría», «Se aconseja», «Considere iniciar»), sin cambiar el filtro de producción en este change y con la pregunta abierta de si la meta bloqueante es A o A+B
+- **THEN** AC-2 queda «no cumplida», con dueño y destino en la historia D4-01 (filtro de nivel B o política de citas del corpus, y deuda D7 de L1D-193 con «Se recomendaría», «Se aconseja», «Considere iniciar»), sin cambiar el filtro de producción en este change y con la meta decidida por el usuario (2026-10-31): A+B bloqueante, hasta que el filtro cubra el nivel B (historia D4-01, S5)
 
 ### Requirement: Juez local secundario acotado y de salida estricta
 El juez LLM local MUST recibir una sola afirmación y solo los fragmentos que cita, con rúbrica binaria y tres ejemplos, y responder `{"veredicto": "soportada|no_soportada", "cita": "<id>"}` con `temperature` y semilla de configuración. Un veredicto sin cita existente o un JSON inválido SHALL contar como no soportado y contabilizarse.
