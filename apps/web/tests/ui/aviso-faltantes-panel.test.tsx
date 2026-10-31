@@ -194,6 +194,16 @@ describe('EvidencePanel · aviso de faltantes', () => {
     expect(bff.cuerpos).toEqual([]);
   });
 
+  it('usa el singular y mantiene el botón habilitado cuando falta un solo dato [US-005 AC-1]', async () => {
+    const uno = { ...checklistF_M2, items: checklistF_M2.items.slice(1, 2) };
+    bff.responderChecklist({ status: 200, cuerpo: uno });
+
+    montarPanel();
+
+    expect(await screen.findByText('Falta 1 dato crítico para este tipo de cáncer')).toBeTruthy();
+    expect((BOTON() as HTMLButtonElement).disabled).toBe(false);
+  });
+
   it('no asocia aria-describedby al botón cuando no hay aviso [US-005 AC-7]', async () => {
     montarPanel();
     await waitFor(() => expect(bff.lecturasDelChecklist).toHaveLength(1));

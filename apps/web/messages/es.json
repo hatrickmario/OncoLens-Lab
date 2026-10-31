@@ -20,6 +20,14 @@
   "alcance": {
     "tipoNoHabilitado": "Tipo de cáncer fuera del alcance del piloto: sin análisis con IA"
   },
+  "faltantes": {
+    "tituloUno": "Falta 1 dato crítico para este tipo de cáncer",
+    "tituloVarios": "Faltan {n} datos críticos para este tipo de cáncer",
+    "nota": "El análisis puede hacerse igual; los criterios de aplicabilidad que dependan de esos datos saldrán como «Desconocido» y el orden por aplicabilidad puede cambiar al registrarlos.",
+    "registrar": "Registrar",
+    "enLaFicha": "en la ficha",
+    "noVerificables": "No se pudieron verificar los datos críticos"
+  },
   "evidence": {
     "titulo": "Análisis de evidencia",
     "paciente": "Paciente · ID",

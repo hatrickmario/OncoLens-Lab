@@ -24,8 +24,12 @@ export type ResultadoDeSolicitud =
 /** Fuentes por defecto del S1: desaparecen con los selectores del S3. */
 export const FUENTES_POR_DEFECTO_S1 = { guias: true, ensayos: true, publicaciones: true } as const;
 
-export function armarSolicitud(patientId: string, query: string): EvidenceAnalysisRequest {
-  return { patientId, query, sourcesSelected: { ...FUENTES_POR_DEFECTO_S1 } };
+export function armarSolicitud(
+  patientId: string,
+  query: string,
+  continueWithWarning = false,
+): EvidenceAnalysisRequest {
+  return { patientId, query, continueWithWarning, sourcesSelected: { ...FUENTES_POR_DEFECTO_S1 } };
 }
 
 const FALLO_DE_TRANSPORTE: ResultadoDeSolicitud = {

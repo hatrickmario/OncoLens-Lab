@@ -6,6 +6,8 @@ import type {
   CitedSource,
   EvidenceAnalysisRequest,
 } from '../../../../packages/api-contracts/src/types/clinical-api';
+import { debeContinuarConAviso } from '../../lib/evidence/faltantes';
+import { useChecklistDeFaltantes } from '../../lib/evidence/use-checklist-de-faltantes';
 import { anunciarEstado } from '../../lib/evidence/anuncio-de-estado';
 import { esFallo, faseTrasSolicitud, type FaseDelPanel } from '../../lib/evidence/fase-del-panel';
 import { puedeEnviar, validarPregunta } from '../../lib/evidence/reglas-del-formulario';
@@ -18,6 +20,7 @@ import { mensajes } from '../../lib/mensajes';
 import { RUTA_LOGIN_EXPIRADA } from '../../lib/sesion/motivo-de-sesion';
 import { AnalysisResult } from './analysis-result';
 import { EvidenceQueryForm } from './evidence-query-form';
+import { ID_RESUMEN_DE_FALTANTES, MissingDataNotice } from './missing-data-notice';
 
 export interface EvidencePanelProps {
   /** UUID del paciente de la ruta; va en el cuerpo de la petición, nunca en query strings. */
@@ -39,6 +42,7 @@ export function EvidencePanel({ patientId }: EvidencePanelProps) {
   const [fase, setFase] = useState<FaseDelPanel>({ tipo: 'inactivo' });
   const [ultima, setUltima] = useState<EvidenceAnalysisRequest | null>(null);
   const [fragmento, setFragmento] = useState<FragmentoAbierto | null>(null);
+  const { lectura, releer } = useChecklistDeFaltantes(patientId);
 
   async function enviar(solicitud: EvidenceAnalysisRequest) {
     if (!puedeEnviar(enCurso.current, solicitud.query)) return;
@@ -50,6 +54,17 @@ export function EvidencePanel({ patientId }: EvidencePanelProps) {
     enCurso.current = false;
     if (resultado.tipo === 'sin_sesion') return router.replace(RUTA_LOGIN_EXPIRADA);
     setFase(faseTrasSolicitud(resultado));
+  }
+
+  /** Relee el checklist antes de cada análisis nuevo (FR-23) y lleva su resultado en `continueWithWarning`. */
+  async function analizarNuevo(query: string) {
+    if (!puedeEnviar(enCurso.current, query)) return;
+    enCurso.current = true;
+    setFase({ tipo: 'enviando' });
+    const lecturaActual = await releer();
+    enCurso.current = false;
+    if (lecturaActual.tipo === 'sin_sesion') return setFase({ tipo: 'inactivo' });
+    void enviar(armarSolicitud(patientId, query, debeContinuarConAviso(lecturaActual)));
   }
 
   function reintentar() {
@@ -75,7 +90,11 @@ export function EvidencePanel({ patientId }: EvidencePanelProps) {
           anuncio={anunciarEstado(fase)}
           botonRef={botonRef}
           onCambiar={setPregunta}
-          onEnviar={() => validacion.ok && void enviar(armarSolicitud(patientId, pregunta))}
+          aviso={<MissingDataNotice lectura={lectura} patientId={patientId} />}
+          descripcionDelBoton={
+            lectura && debeContinuarConAviso(lectura) ? ID_RESUMEN_DE_FALTANTES : undefined
+          }
+          onEnviar={() => validacion.ok && void analizarNuevo(pregunta)}
         />
         {fase.tipo === 'enviando' && <EvidenceOptionSkeleton />}
         {fase.tipo === 'ok' && (
