@@ -9,7 +9,6 @@ from typing import Any
 
 import yaml
 
-from app.domain.atribucion import CLAIM_MAX_WORDS_INICIAL
 from app.evaluation.config_suite import (
     PROVEEDORES,
     RELOJES,
@@ -66,7 +65,7 @@ def cargar_config_aplicabilidad(
             str(clave_de(crudo, "adaptadores", "proveedor")), PROVEEDORES, "adaptadores.proveedor"
         ),
         umbral_nli=_numero(clave_de(crudo, "umbrales", "nli_entailment_threshold"), "umbrales"),
-        claim_max_words=int(crudo["umbrales"].get("claim_max_words", CLAIM_MAX_WORDS_INICIAL)),
+        claim_max_words=int(clave_de(crudo, "umbrales", "claim_max_words")),
         ruta_terminos=ruta_del_repo(str(clave_de(crudo, "catalogo", "ruta_terminos"))),
         fecha_de_corte=_fecha(clave_de(corpus, "cutoff_date")),
         catalogo_en_memoria=_ruta_opcional(corpus.get("catalogo_en_memoria")),

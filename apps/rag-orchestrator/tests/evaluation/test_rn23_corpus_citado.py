@@ -8,6 +8,7 @@ from typing import Any
 
 import pytest
 
+from app.domain import atribucion
 from app.evaluation.evaluate import main
 from app.evaluation.lenguaje_estricto import VerificadorEstricto
 from app.evaluation.metricas import prescriptivas
@@ -19,7 +20,6 @@ from app.infrastructure.lenguaje.terminos_prohibidos import (
     cargar_lista_de_terminos,
     cargar_verificador_de_terminos,
 )
-from app.prompts import rag_query
 from tests.evaluation.conftest import RAIZ_APP, RAIZ_REPO
 from tests.support.fakes import RelojFijo
 
@@ -118,8 +118,8 @@ def test_un_campo_con_termino_de_nivel_a_y_de_nivel_b_cuenta_una_sola_vez_en_los
     assert (medido.campos_nivel_a, medido.campos_nivel_b, medido.campos_con_termino) == (1, 1, 1)
 
 
-def test_la_formula_de_atribucion_se_importa_del_modulo_del_prompt() -> None:
-    assert prescriptivas.FORMULA_DE_ATRIBUCION is rag_query.FORMULA_DE_ATRIBUCION
+def test_la_formula_de_atribucion_se_importa_del_modulo_del_dominio() -> None:
+    assert prescriptivas.FORMULA_DE_ATRIBUCION is atribucion.FORMULA_DE_ATRIBUCION
 
 
 @pytest.mark.parametrize(

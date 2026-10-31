@@ -6,8 +6,8 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import Any
 
+from app.domain.atribucion import FORMULA_DE_ATRIBUCION
 from app.domain.support import CampoGenerado
-from app.prompts.rag_query import FORMULA_DE_ATRIBUCION
 from app.evaluation.lenguaje_estricto import VerificadorEstricto
 from app.evaluation.metricas.resultado import LenguajeCrudo, ResultadoConsulta
 

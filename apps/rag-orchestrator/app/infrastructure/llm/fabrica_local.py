@@ -58,10 +58,10 @@ def crear_generador_local(
     """Generación con el LLM nativo local (``LLM_BASE_URL``); sin adapter de nube ni *fallback* (RN-12)."""
     return LlmEvidenceGenerator(
         _cliente_llm_local(settings, envolver_cliente),
-        settings.claims_min_per_option,
-        settings.claims_max_per_option,
-        settings.claim_max_words,
-        settings.llm_fragments_max_chars,
+        claims_min=settings.claims_min_per_option,
+        claims_max=settings.claims_max_per_option,
+        claim_max_words=settings.claim_max_words,
+        max_chars_fragmentos=settings.llm_fragments_max_chars,
     )
 
 

@@ -31,9 +31,9 @@ def test_prompt_rag_query_con_pseudo_patient_id_no_lo_incluye():
         bloque_de_datos_del_paciente(modelo.clinicalContext),
         asignar_alias(fragmentos).fragmentos,
         "es",
-        1,
-        4,
-        20,
+        claims_min=1,
+        claims_max=4,
+        claim_max_words=20,
     )
     llm = FakeLlmClient("LLM-OK")
 

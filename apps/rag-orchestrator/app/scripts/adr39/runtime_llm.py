@@ -85,9 +85,9 @@ def _prompt_de(pregunta: Pregunta) -> str:
         "",
         tabla.fragmentos,
         pregunta.idioma,
-        CLAIMS_MIN_INICIAL,
-        CLAIMS_MAX_INICIAL,
-        CLAIM_MAX_WORDS_INICIAL,
+        claims_min=CLAIMS_MIN_INICIAL,
+        claims_max=CLAIMS_MAX_INICIAL,
+        claim_max_words=CLAIM_MAX_WORDS_INICIAL,
     )
 
 
