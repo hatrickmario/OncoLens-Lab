@@ -16,6 +16,9 @@
 - [x] 1.7b (Decidido (usuario, 2026-10-30), de Q-1 de l1d-109 y US-248 · ADR-48) Contar y reportar cuántas preguntas del conjunto dorado caen en «sin términos léxicos» (la rama *sparse* sin términos, que en l1d-109 falla cerrado con 503; AC-4 de US-248 / ADR-48), por brazo, en el reporte; no cambia el valor por defecto de `RETRIEVAL_MODE` ni el fallo cerrado. Test de aceptación con adapters falsos: conjunto con N preguntas sin términos, el reporte informa N y la proporción; con 0 informa 0 (no `null`). TDD estricto, commits `test(L1D-245)` y `feat(L1D-245)`. · `sin_terminos_lexicos {n, proporcion}` por brazo (0 y 0.0, nunca `null`); `CodificadorSparseObservado` anota los 503 por «sin términos» y cuentan como fallo de recall.
 - [x] 1.8 Refactor: Extract Method / Inline Method en los archivos tocados, tests en verde antes y después, commit `refactor(L1D-245)` · tres commits `refactor(L1D-245)` (0aa3b9c3, 448cee47): Extract Method en `evaluate.py` y `composicion_suite.py`.
 
+- [x] 1.9 Gate 2 vuelta 1 (design-principles-reviewer): P1-1, P1-2, P2-3, P2-4 y menores 5, 7 y 9 aplicados (test `da67caa9` en rojo → refactor `0e6e40c0` y feat `b67f591a`; `test_comparacion_hibrida_gate2.py`, `SinTerminosLexicos` en `ports.py` y `bge_m3_sparse.py`).
+- [ ] 1.10 Diferidos del Gate 2, TRASLADADOS a «S5 deuda rag-orchestrator (pendiente de ID)»: (6) mover `verificar_golden_sha256` junto a `ids_de_subconjunto`; (8) `componer_servicio` con 8 parámetros.
+
 ## evaluación
 
 - [ ] 3.1 (TRASLADADA a la sesión principal: documento en `docs/`, fuera de mis paths; bloquea la corrida real) Preinscripción ADR-45 P1 commiteada **antes** de la primera corrida real: hipótesis, brazos, hiperparámetros sin barrer, métrica primaria (acierto@10) y MRR secundaria, valor de `RETRIEVAL_REGRESSION_TOLERANCE`, regla de decisión · exento (documentación)

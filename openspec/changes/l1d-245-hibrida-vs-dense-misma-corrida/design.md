@@ -47,7 +47,11 @@ Es el entregable: `ai-eval-runner` ejecuta `evaluate --config eval/configs/s4-hi
 - **Guarda de partición:** `golden_sha256` se compara con `<origen>/<archivo_golden>` del `manifest.yaml` de la partición (por defecto `golden.yaml`, así que `ol06-particion-v1` no cambia). La CI usa una partición sintética del fixture FX-T5a-a (`apps/rag-orchestrator/eval/particiones/fx-t5a-a/`) porque los ids de `ol06` no existen en él.
 - **D4-10:** los puertos de la suite admiten la rama *sparse* (`CodificadorSparseLexico`/`BuscadorSparseEnMemoria` falsos; con `proveedor: local`, el codificador BGE-M3 de la ingesta aplicado a los chunks y a la consulta, con los pesos `EMBEDDING_SPARSE_*` del entorno).
 
+- **Gate 2 (vuelta 1):** `SinTerminosLexicos(FalloDeInferencia)` distingue «sin términos léxicos» de un fallo de inferencia; solo ella cuenta en `sin_terminos_lexicos` y un codificador roto aborta la corrida (exit 1).
+
 ## Pendientes de definir
+
+- ¿El `golden_sha256` protege el archivo que la corrida realmente lee? Con los fixtures sí (hashea `preguntas.yaml`); con un dataset real en formato de la suite habrá que decidir si la huella cubre su `preguntas.yaml` o el `golden.yaml` de origen (hoy no hay vínculo dataset↔partición verificado).
 
 - Valor de `RETRIEVAL_REGRESSION_TOLERANCE` y si la diferencia se mide en puntos absolutos o relativos (se fija en la preinscripción P1; dueño: responsable técnico; afecta AC-2).
 - Si se exige IC pareado para marcar retroceso o basta la tolerancia puntual.
