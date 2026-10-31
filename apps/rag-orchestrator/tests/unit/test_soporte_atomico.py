@@ -8,14 +8,9 @@ from __future__ import annotations
 from app.domain.citations import OpcionAceptada, OpcionGenerada
 from app.domain.claims import AfirmacionAtomica, PapelDeAfirmacion
 from app.domain.nli import ResultadoNli
-from app.domain.support import (
-    RETIRO_ES,
-    OpcionSinSoporte,
-    pares_a_verificar,
-    planificar_soporte,
-    retirar_texto_prohibido,
-    verificar_soporte,
-)
+from app.domain.resolucion_de_soporte import verificar_soporte
+from app.domain.saneamiento_de_descartadas import retirar_texto_prohibido
+from app.domain.support import RETIRO_ES, OpcionSinSoporte, pares_a_verificar, planificar_soporte
 from app.domain.soporte_por_papel import MotivoDeSoporte
 
 P, S, V = PapelDeAfirmacion.principal, PapelDeAfirmacion.secundaria, PapelDeAfirmacion.salvedad

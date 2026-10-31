@@ -9,10 +9,11 @@ from __future__ import annotations
 import pytest
 
 from app.application.ports import EvidenciaGenerada
-from app.domain.citations import OpcionGenerada
+from app.domain.atribucion import MARCO_ES
 from app.domain.support import RETIRO_ES
 from tests.support.generador_falso import OPCION_ANTI_HER2
 from tests.support.nli_falso import IMPLICA, NliFalso
+from tests.support.opcion_generada import opcion_atomica
 from tests.support.recuperacion import Q_HER2, crear_entorno, solicitud_de
 
 FRASES_PRESCRIPTIVAS = [
@@ -40,7 +41,7 @@ class _GeneradorDeFrase:
         self._limitaciones = limitaciones
 
     async def generar(self, solicitud, recuperacion) -> EvidenciaGenerada:
-        opcion = OpcionGenerada(OPCION_ANTI_HER2, self._razon, ("ch-m1-1",))
+        opcion = opcion_atomica(OPCION_ANTI_HER2, self._razon, ("ch-m1-1",))
         return EvidenciaGenerada(opciones=(opcion,), limitaciones_propuestas=self._limitaciones)
 
 
@@ -63,7 +64,7 @@ def test_rag_query_descarta_la_opcion_con_el_literal_de_retiro_cuando_la_justifi
 
     assert cuerpo["evidenceOptions"] == []
     (descartada,) = cuerpo["discardedOptions"]
-    assert descartada["rationale"] == RETIRO_ES
+    assert descartada["rationale"] == f"{MARCO_ES}{RETIRO_ES}"
     assert frase not in str(cuerpo)
 
 

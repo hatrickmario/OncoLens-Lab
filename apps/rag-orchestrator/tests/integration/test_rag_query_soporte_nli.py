@@ -12,6 +12,7 @@ import pytest
 from tests.support.generador_llm import generador_con_llm
 from app.application.ports import ResultadoNli
 from app.domain.lenguaje import ListaTerminos
+from app.domain.atribucion import MARCO_ES
 from app.domain.support import RETIRO_ES
 from app.prompts.rag_query import VERSION_DEL_PROMPT
 from tests.support.contract import CATALOGOS
@@ -158,7 +159,7 @@ def test_rag_query_descarta_la_opcion_y_reemplaza_la_afirmacion_por_el_literal_d
     (descartada,) = cuerpo["discardedOptions"]
     assert descartada["discardReason"] == "lenguaje_no_permitido"
     assert descartada["unsupportedClaims"] == [RETIRO_ES]
-    assert descartada["rationale"] == RETIRO_ES
+    assert descartada["rationale"] == f"{MARCO_ES}{RETIRO_ES}"
     assert _coincidencias_de_lenguaje(cuerpo) == []
     assert RAZON_PRESCRIPTIVA not in respuesta.text
     assert nli.pares_recibidos == []  # un término prohibido no se envía al NLI
@@ -203,7 +204,7 @@ def test_rag_query_retira_el_lenguaje_prohibido_de_una_opcion_descartada_por_su_
     cuerpo = _respuesta_valida(respuesta)
     (descartada,) = cuerpo["discardedOptions"]
     assert descartada["discardReason"] == "cita_invalida"
-    assert descartada["rationale"] == RETIRO_ES
+    assert descartada["rationale"] == f"{MARCO_ES}{RETIRO_ES}"
     assert _coincidencias_de_lenguaje(cuerpo) == []
 
 

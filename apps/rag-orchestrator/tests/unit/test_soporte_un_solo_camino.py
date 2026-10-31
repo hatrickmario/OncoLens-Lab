@@ -5,7 +5,8 @@ from __future__ import annotations
 import pytest
 
 from app.domain.citations import OpcionAceptada, OpcionGenerada
-from app.domain.support import planificar_soporte, retirar_texto_prohibido
+from app.domain.saneamiento_de_descartadas import retirar_texto_prohibido
+from app.domain.support import planificar_soporte
 
 TEXTOS = {"c1": "premisa uno"}
 

@@ -77,7 +77,8 @@ def test_evaluate_mide_cuantas_opciones_usan_la_formula_de_atribucion_a_la_fuent
         "atribucion", {}
     )
 
-    assert (atribucion.get("opciones"), atribucion.get("con_formula")) == (4, 2)
+    # D4-19: el generador guionado pasa por el camino real y el código antepone el marco a toda justificación.
+    assert (atribucion.get("opciones"), atribucion.get("con_formula")) == (4, 4)
 
 
 @pytest.mark.parametrize(

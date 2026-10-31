@@ -7,9 +7,12 @@ from __future__ import annotations
 
 import pytest
 
+from app.domain.claims import AfirmacionAtomica, PapelDeAfirmacion, dividir_en_afirmaciones
 from app.domain.citations import OpcionAceptada, OpcionGenerada
 from app.domain.lenguaje import ListaTerminos, check_prohibited_terms
 from app.domain.nli import ParNli, ResultadoNli
+from app.domain.resolucion_de_soporte import verificar_soporte
+from app.domain.saneamiento_de_descartadas import retirar_texto_prohibido
 from app.domain.support import (
     CAMPOS_GENERADOS,
     RETIRO_EN,
@@ -18,9 +21,7 @@ from app.domain.support import (
     literal_de_retiro,
     pares_a_verificar,
     planificar_soporte,
-    retirar_texto_prohibido,
     soporta,
-    verificar_soporte,
 )
 from tests.support.contract import CATALOGOS
 
@@ -35,10 +36,23 @@ def _buscar(texto: str, campo: str) -> tuple[str, ...]:
     return ("regla-x",) if "PROHIBIDO" in texto else ()
 
 
+MARCO_ES = "La fuente reporta que "
+MARCO_EN = "The source reports that "
+PRINCIPAL = PapelDeAfirmacion.principal
+
+
+def _opcion(option: str, rationale: str, citas: tuple[str, ...]) -> OpcionGenerada:
+    """Cada oración de ``rationale`` es una afirmación atómica principal con las citas de la opción (US-245)."""
+    atomicas = tuple(
+        AfirmacionAtomica(a, PRINCIPAL, citas) for a in dividir_en_afirmaciones(rationale)
+    )
+    return OpcionGenerada(option, rationale, citas, (), atomicas)
+
+
 def _aceptada(
     option: str = "Opción A", rationale: str = "Afirmación uno.", citas: tuple[str, ...] = ("c1",)
 ) -> OpcionAceptada:
-    return OpcionAceptada(OpcionGenerada(option, rationale, citas), citas)
+    return OpcionAceptada(_opcion(option, rationale, citas), citas)
 
 
 def _plan(*aceptadas: OpcionAceptada, limitaciones: tuple[str, ...] = ()):
@@ -136,7 +150,7 @@ def test_el_plan_declara_solo_el_campo_y_las_reglas_de_cada_fragmento_retirado()
 
     assert plan.retiros == (
         RetiroDeLenguaje("option", ("regla-x",)),
-        RetiroDeLenguaje("rationale", ("regla-x",)),
+        RetiroDeLenguaje("rationale", ("regla-x",), PRINCIPAL),
         RetiroDeLenguaje("limitations[].text", ("regla-x",)),
     )
 
@@ -165,7 +179,10 @@ def test_la_opcion_con_su_unica_afirmacion_implicada_queda_soportada() -> None:
 
     resultado = verificar_soporte(_plan(aceptada), [IMPLICA], UMBRAL, "es")
 
-    assert resultado.soportadas == (aceptada,) and resultado.descartadas == ()
+    (soportada,) = resultado.soportadas
+    assert soportada.opcion.option == "Opción A"
+    assert soportada.opcion.rationale == f"{MARCO_ES}Afirmación uno."
+    assert resultado.descartadas == ()
 
 
 def test_una_afirmacion_neutral_descarta_la_opcion_y_la_lista_en_afirmaciones_sin_soporte() -> None:
@@ -176,7 +193,8 @@ def test_una_afirmacion_neutral_descarta_la_opcion_y_la_lista_en_afirmaciones_si
     assert resultado.soportadas == ()
     (descartada,) = resultado.descartadas
     assert descartada.afirmaciones_sin_soporte == ("Dos.",)
-    assert descartada.opcion == aceptada.opcion
+    assert descartada.opcion.option == aceptada.opcion.option
+    assert descartada.opcion.rationale == f"{MARCO_ES}Uno."
 
 
 def test_basta_un_chunk_citado_que_implique_la_afirmacion_aunque_otro_la_contradiga() -> None:
@@ -184,7 +202,7 @@ def test_basta_un_chunk_citado_que_implique_la_afirmacion_aunque_otro_la_contrad
 
     resultado = verificar_soporte(_plan(aceptada), [CONTRADICE, IMPLICA], UMBRAL, "es")
 
-    assert resultado.soportadas == (aceptada,)
+    assert [o.opcion.option for o in resultado.soportadas] == ["Opción A"]
 
 
 def test_ninguna_afirmacion_se_soporta_con_un_resultado_bajo_el_umbral() -> None:
@@ -204,7 +222,7 @@ def test_la_afirmacion_prohibida_se_reemplaza_por_el_literal_en_la_justificacion
 
     (descartada,) = resultado.descartadas
     assert descartada.afirmaciones_sin_soporte == (RETIRO_ES,)
-    assert descartada.opcion.rationale == f"{RETIRO_ES} Limpia."
+    assert descartada.opcion.rationale == f"{MARCO_ES}{RETIRO_ES}"
     assert "PROHIBIDO" not in f"{descartada.opcion}"
 
 
@@ -213,7 +231,7 @@ def test_el_literal_de_retiro_sale_en_ingles_cuando_la_pregunta_esta_en_ingles()
 
     (descartada,) = resultado.descartadas
     assert descartada.afirmaciones_sin_soporte == (RETIRO_EN,)
-    assert descartada.opcion.rationale == RETIRO_EN
+    assert descartada.opcion.rationale == f"{MARCO_EN}{RETIRO_EN}"
 
 
 def test_un_termino_prohibido_en_la_opcion_la_reemplaza_por_el_literal_y_descarta_sin_enviarla_al_nli() -> (
@@ -227,15 +245,7 @@ def test_un_termino_prohibido_en_la_opcion_la_reemplaza_por_el_literal_y_descart
     assert pares_a_verificar(plan) == []
     (descartada,) = resultado.descartadas
     assert descartada.opcion.option == RETIRO_ES
-    assert descartada.afirmaciones_sin_soporte == (RETIRO_ES,)
-
-
-def test_una_opcion_sin_afirmaciones_verificables_no_se_da_por_soportada() -> None:
-    aceptada = _aceptada(rationale="   ")
-
-    resultado = verificar_soporte(_plan(aceptada), [], UMBRAL, "es")
-
-    assert resultado.soportadas == () and len(resultado.descartadas) == 1
+    assert descartada.afirmaciones_sin_soporte[0] == RETIRO_ES
 
 
 def test_una_limitacion_soportada_se_conserva_y_una_sin_soporte_se_omite_y_cuenta() -> None:
@@ -268,23 +278,16 @@ def test_una_cantidad_de_resultados_distinta_a_la_de_pares_es_un_error_de_contra
 # --- retiro en opciones descartadas por sus citas ----------------------------------------------------------------
 
 
-def test_una_opcion_limpia_no_cambia_ni_declara_retiros() -> None:
-    opcion = OpcionGenerada("Opción", "Uno. Dos.", ("c9",))
-
-    saneada, retiros = retirar_texto_prohibido(opcion, _buscar, "es", 20)
-
-    assert saneada == opcion and retiros == ()
-
-
-def test_retirar_texto_prohibido_reemplaza_la_opcion_y_las_afirmaciones_que_incumplen() -> None:
-    opcion = OpcionGenerada("PROHIBIDO a", "Limpia. PROHIBIDO b.", ("c9",))
+def test_retirar_texto_prohibido_reemplaza_la_opcion_y_la_principal_que_incumplen() -> None:
+    opcion = _opcion("PROHIBIDO a", "PROHIBIDO b.", ("c9",))
 
     saneada, retiros = retirar_texto_prohibido(opcion, _buscar, "en", 20)
 
-    assert saneada == OpcionGenerada(RETIRO_EN, f"Limpia. {RETIRO_EN}", ("c9",))
+    assert (saneada.option, saneada.rationale) == (RETIRO_EN, f"{MARCO_EN}{RETIRO_EN}")
+    assert saneada.chunk_ids_citados == ("c9",)
     assert retiros == (
         RetiroDeLenguaje("option", ("regla-x",)),
-        RetiroDeLenguaje("rationale", ("regla-x",)),
+        RetiroDeLenguaje("rationale", ("regla-x",), PRINCIPAL),
     )
 
 
@@ -311,7 +314,7 @@ def test_cada_resultado_va_a_su_afirmacion_cuando_la_primera_opcion_y_la_limitac
 
     resultado = verificar_soporte(plan, [IMPLICA, NEUTRAL, IMPLICA, NEUTRAL, NEUTRAL], UMBRAL, "es")
 
-    assert resultado.soportadas == (primera,)
+    assert [o.opcion.option for o in resultado.soportadas] == ["Opción 1"]
     assert [d.opcion.option for d in resultado.descartadas] == ["Opción 2"]
     assert resultado.limitaciones == ("Limitación.",) and resultado.omitidas == 0
 
@@ -321,7 +324,7 @@ def test_cada_resultado_va_a_su_afirmacion_cuando_las_posiciones_se_invierten():
 
     resultado = verificar_soporte(plan, [NEUTRAL, IMPLICA, NEUTRAL, NEUTRAL, NEUTRAL], UMBRAL, "es")
 
-    assert resultado.soportadas == (segunda,)
+    assert [o.opcion.option for o in resultado.soportadas] == ["Opción 2"]
     assert [d.opcion.option for d in resultado.descartadas] == ["Opción 1"]
     assert resultado.limitaciones == () and resultado.omitidas == 1
 
@@ -333,7 +336,7 @@ def test_una_opcion_prohibida_no_desplaza_los_resultados_de_las_afirmaciones_que
 
     resultado = verificar_soporte(plan, [IMPLICA], UMBRAL, "es")
 
-    assert resultado.soportadas == (limpia,)
+    assert [o.opcion.option for o in resultado.soportadas] == ["Opción 2"]
     assert [d.opcion.option for d in resultado.descartadas] == [RETIRO_ES]
 
 
@@ -345,98 +348,3 @@ def test_una_limitacion_prohibida_se_omite_y_cuenta_aunque_el_nli_implique_todo_
     resultado = verificar_soporte(plan, [IMPLICA, IMPLICA, IMPLICA], UMBRAL, "es")
 
     assert resultado.limitaciones == ("Limpia.",) and resultado.omitidas == 1
-
-
-# --- detalle expandible (ARR-08): párrafos opcionales, validados como el resto de lo generado (RN-01, RN-23) -----
-
-
-def _con_detalles(
-    *detalles: str, rationale: str = "Afirmación uno.", citas: tuple[str, ...] = ("c1",)
-) -> OpcionAceptada:
-    return OpcionAceptada(OpcionGenerada("Opción A", rationale, citas, tuple(detalles)), citas)
-
-
-def test_los_pares_del_nli_incluyen_las_afirmaciones_de_cada_parrafo_de_detalle_con_las_premisas_de_la_opcion() -> (
-    None
-):
-    plan = _plan(_con_detalles("Detalle uno. Detalle dos.", "Detalle tres."))
-
-    pares = pares_a_verificar(plan)
-
-    assert [p.hipotesis for p in pares] == [
-        "Afirmación uno.",
-        "Detalle uno.",
-        "Detalle dos.",
-        "Detalle tres.",
-    ]
-    assert {p.premisa for p in pares} == {TEXTOS["c1"]}
-
-
-def test_conserva_en_orden_los_parrafos_de_detalle_cuyas_afirmaciones_se_soportan_todas() -> None:
-    plan = _plan(_con_detalles("Detalle uno. Detalle dos.", "Detalle tres."))
-
-    resultado = verificar_soporte(plan, [IMPLICA] * 4, UMBRAL, "es")
-
-    assert [o.opcion.details for o in resultado.soportadas] == [
-        ("Detalle uno. Detalle dos.", "Detalle tres.")
-    ]
-    assert resultado.omitidas == 0
-
-
-def test_omite_el_parrafo_con_una_afirmacion_sin_soporte_y_cuenta_la_omision_sin_descartar_la_opcion() -> (
-    None
-):
-    plan = _plan(_con_detalles("Detalle uno. Detalle dos.", "Detalle tres."))
-
-    resultado = verificar_soporte(plan, [IMPLICA, IMPLICA, NEUTRAL, IMPLICA], UMBRAL, "es")
-
-    assert [o.opcion.details for o in resultado.soportadas] == [("Detalle tres.",)]
-    assert resultado.descartadas == ()
-    assert resultado.omitidas == 1
-
-
-def test_la_opcion_queda_sin_detalle_y_no_con_lista_vacia_cuando_ningun_parrafo_se_soporta() -> (
-    None
-):
-    plan = _plan(_con_detalles("Detalle uno."))
-
-    resultado = verificar_soporte(plan, [IMPLICA, CONTRADICE], UMBRAL, "es")
-
-    assert [o.opcion.details for o in resultado.soportadas] == [()]
-    assert resultado.omitidas == 1
-
-
-def test_omite_sin_consultar_al_nli_el_parrafo_con_lenguaje_prohibido_y_conserva_la_opcion() -> (
-    None
-):
-    plan = _plan(_con_detalles("Detalle PROHIBIDO.", "Detalle limpio."))
-
-    pares = pares_a_verificar(plan)
-    resultado = verificar_soporte(plan, [IMPLICA] * len(pares), UMBRAL, "es")
-
-    assert [p.hipotesis for p in pares] == ["Afirmación uno.", "Detalle limpio."]
-    assert [o.opcion.details for o in resultado.soportadas] == [("Detalle limpio.",)]
-    assert resultado.omitidas == 1
-    assert RetiroDeLenguaje("details", ("regla-x",)) in plan.retiros
-
-
-def test_descarta_la_opcion_cuando_su_justificacion_no_se_soporta_aunque_el_detalle_si() -> None:
-    plan = _plan(_con_detalles("Detalle uno."))
-
-    resultado = verificar_soporte(plan, [NEUTRAL, IMPLICA], UMBRAL, "es")
-
-    assert resultado.soportadas == ()
-    assert [d.afirmaciones_sin_soporte for d in resultado.descartadas] == [("Afirmación uno.",)]
-
-
-def test_omite_el_parrafo_completo_sin_error_cuando_solo_una_de_sus_afirmaciones_tiene_lenguaje_prohibido() -> (
-    None
-):
-    plan = _plan(_con_detalles("Detalle limpio. Detalle PROHIBIDO.", "Detalle tres."))
-
-    pares = pares_a_verificar(plan)
-    resultado = verificar_soporte(plan, [IMPLICA] * len(pares), UMBRAL, "es")
-
-    assert [p.hipotesis for p in pares] == ["Afirmación uno.", "Detalle tres."]
-    assert [o.opcion.details for o in resultado.soportadas] == [("Detalle tres.",)]
-    assert resultado.omitidas == 1

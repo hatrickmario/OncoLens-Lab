@@ -23,10 +23,11 @@ from app.application.ports import (
     ResultadoDeRecuperacion,
 )
 from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
-from app.domain.citations import FichaDeFuente, OpcionGenerada
+from app.domain.citations import FichaDeFuente
 from app.domain.criterios_aplicabilidad import CriteriosDeAplicabilidad
 from app.infrastructure.catalogo_clinico.aplicabilidad import cargar_criterios_de_aplicabilidad
 from app.schemas.generated.models import RagQueryInternalRequest
+from tests.support.opcion_generada import opcion_atomica
 from tests.support.poblacion_lista import MARCA_PENDIENTE, poblacion_guardada
 from tests.support.catalogo_aplicabilidad import APL_1_0_0
 from tests.support.recuperacion import (
@@ -261,10 +262,10 @@ class GeneradorDeAplicabilidad:
     }
 
     def __init__(self, escenario: str = "APL-OK", documento: str = "doc-a1") -> None:
-        self._opcion = OpcionGenerada(
-            option="Quimioterapia adyuvante combinada con terapia dirigida anti-HER2",
-            rationale=self.ESCENARIOS[escenario],
-            chunk_ids_citados=(_chunk_id(documento),),
+        self._opcion = opcion_atomica(
+            "Quimioterapia adyuvante combinada con terapia dirigida anti-HER2",
+            self.ESCENARIOS[escenario],
+            (_chunk_id(documento),),
         )
         self.recuperaciones: list[ResultadoDeRecuperacion] = []
 
@@ -345,7 +346,7 @@ class GeneradorDeDosOpciones:
 
     def __init__(self, escenario: str) -> None:
         self._opciones = tuple(
-            OpcionGenerada(option=opcion, rationale=razon, chunk_ids_citados=(_chunk_id(doc),))
+            opcion_atomica(opcion, razon, (_chunk_id(doc),))
             for opcion, razon, doc in ESCENARIOS_FX08BB[escenario]
         )
         self.recuperaciones: list[ResultadoDeRecuperacion] = []

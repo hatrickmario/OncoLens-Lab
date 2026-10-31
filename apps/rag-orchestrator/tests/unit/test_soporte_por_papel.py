@@ -9,6 +9,7 @@ from app.domain.soporte_por_papel import (
     EstadoDeAfirmacion,
     MotivoDeSoporte,
     decidir_opcion_por_papel,
+    decidir_opcion_retirada_por_lenguaje,
     es_causa_de_descarte,
 )
 
@@ -91,7 +92,7 @@ def test_el_modal_normativo_precede_a_la_falta_de_soporte() -> None:
 def test_descarta_con_lenguaje_no_permitido_cuando_el_propio_texto_de_la_opcion_incumple_la_lista() -> (
     None
 ):
-    decision = decidir_opcion_por_papel([(P, OK)], option_incumple=True)
+    decision = decidir_opcion_retirada_por_lenguaje()
 
     assert not decision.conservar and decision.motivo is MotivoDeSoporte.lenguaje_no_permitido
 
@@ -110,9 +111,9 @@ def test_es_causa_de_descarte_coincide_con_la_decision_de_la_opcion_en_toda_la_m
 
 def test_un_texto_limpio_solo_llega_en_forma_y_eso_nunca_cuenta_como_respaldo_del_nli() -> None:
     from app.domain.atribucion import FormaDeAfirmacion
-    from app.domain.support import _estado_por_lenguaje_y_forma
+    from app.domain.soporte_por_papel import estado_por_lenguaje_y_forma
 
-    estado = _estado_por_lenguaje_y_forma((), FormaDeAfirmacion.valida)
+    estado = estado_por_lenguaje_y_forma((), FormaDeAfirmacion.valida)
 
     assert estado is EstadoDeAfirmacion.en_forma
     assert not decidir_opcion_por_papel([(P, estado)]).conservar
