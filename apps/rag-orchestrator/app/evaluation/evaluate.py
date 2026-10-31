@@ -40,6 +40,7 @@ from app.evaluation.corrida_aplicabilidad import (
     PuertosDeAplicabilidad,
     ejecutar_aplicabilidad,
 )
+from app.evaluation.corrida_poblacion import PuertosDePoblacion
 from app.evaluation.corrida_barrido import ejecutar_barrido, exigir_dataset_sintetico
 from app.evaluation.cronometro import Cronometro, RelojSimulado
 from app.evaluation.dataset_loader import DatasetInvalido
@@ -121,6 +122,7 @@ def main(
     entorno: Mapping[str, str] | None = None,
     directorio_de_configs: Path | None = None,
     puertos_aplicabilidad: PuertosDeAplicabilidad | None = None,
+    puertos_poblacion: PuertosDePoblacion | None = None,
     cargador_de_modelos: CargadorDeModelos | None = None,
     lector_rss: LectorDeRss | None = None,
 ) -> int:
