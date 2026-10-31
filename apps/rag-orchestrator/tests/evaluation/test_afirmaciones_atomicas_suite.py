@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from pathlib import Path
 
 import yaml
@@ -64,3 +65,45 @@ def _solicitud(texto: str):
         query = texto
 
     return _Solicitud
+
+
+def test_evaluate_no_envia_al_nli_las_afirmaciones_mas_largas_que_claim_max_words_de_la_configuracion(
+    tmp_path: Path,
+) -> None:
+    from app.evaluation.evaluate import main
+    from tests.support.fakes import RelojFijo
+
+    crudo = yaml.safe_load(CONFIG.read_text(encoding="utf-8"))
+    crudo["umbrales"]["claim_max_words"] = 3
+    ruta = tmp_path / "config.yaml"
+    ruta.write_text(yaml.safe_dump(crudo), encoding="utf-8")
+    codigo = main(
+        ["--config", str(ruta), "--suite", "all", "--salida", str(tmp_path / "s")],
+        reloj=RelojFijo(),
+    )
+
+    reporte = json.loads(next((tmp_path / "s").glob("*.json")).read_text(encoding="utf-8"))
+    assert codigo == 0
+    assert reporte["metricas"]["completa"]["fidelidad"]["nli"]["afirmaciones"] == 0
+
+
+def test_el_plan_de_la_propuesta_marca_fuera_de_forma_una_afirmacion_larga_segun_claim_max_words_de_la_suite() -> (
+    None
+):
+    from app.application.ports import EvidenciaGenerada
+    from app.domain.atribucion import FormaDeAfirmacion
+    from app.domain.citations import OpcionGenerada
+    from app.domain.claims import AfirmacionAtomica, PapelDeAfirmacion
+    from app.evaluation.afirmaciones import plan_de_la_propuesta
+
+    afirmacion = AfirmacionAtomica("uno dos tres cuatro", PapelDeAfirmacion.principal, ("c1",))
+    propuesta = EvidenciaGenerada(
+        opciones=(OpcionGenerada("Opción", "x", ("c1",), (), (afirmacion,)),)
+    )
+    textos = {"c1": "texto"}
+
+    con_20 = plan_de_la_propuesta(propuesta, textos, lambda t, c: (), max_palabras=20)
+    con_3 = plan_de_la_propuesta(propuesta, textos, lambda t, c: (), max_palabras=3)
+
+    assert con_20.opciones[0].afirmaciones[0].forma is FormaDeAfirmacion.valida
+    assert con_3.opciones[0].afirmaciones[0].forma is FormaDeAfirmacion.demasiado_larga
