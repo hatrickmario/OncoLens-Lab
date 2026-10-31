@@ -8,6 +8,10 @@ import conEvidenciaSoloDescartadas from '../../../../../contracts/examples/con-e
 import soloDescartadasCitaInvalida from '../../../../../contracts/examples/con-evidencia-solo-descartadas-cita-invalida.json';
 import soloDescartadasMotivosMixtos from '../../../../../contracts/examples/con-evidencia-solo-descartadas-motivos-mixtos.json';
 import soloDescartadasOtrosMotivos from '../../../../../contracts/examples/con-evidencia-solo-descartadas-otros-motivos.json';
+import checklistF_M1 from '../../../../../contracts/examples/completeness-f-m1.json';
+import checklistF_M2 from '../../../../../contracts/examples/completeness-f-m2.json';
+import checklistTipoNoHabilitado from '../../../../../contracts/examples/completeness-tipo-no-habilitado.json';
+import errorInterno from '../../../../../contracts/examples/error-interno.json';
 import errorColaLlena from '../../../../../contracts/examples/error-cola-inferencia-llena.json';
 import errorDeadline from '../../../../../contracts/examples/error-deadline-vencido.json';
 import errorLlmNoDisponible from '../../../../../contracts/examples/error-llm-local-no-disponible.json';
@@ -18,6 +22,10 @@ import sinEvidencia from '../../../../../contracts/examples/sin-evidencia.json';
 import tipoNoHabilitado from '../../../../../contracts/examples/tipo-no-habilitado.json';
 
 export {
+  checklistF_M1,
+  checklistF_M2,
+  checklistTipoNoHabilitado,
+  errorInterno,
   conEvidencia,
   conEvidenciaAplicabilidad,
   conEvidenciaPoblacionNoComparable,
@@ -55,14 +63,34 @@ export interface Respuesta {
 export function crearBffAnalisisSimulado() {
   const servidor = setupServer();
   const cuerpos: unknown[] = [];
+  const lecturasDelChecklist: string[] = [];
+  const checklistPorDefecto = () =>
+    http.get('*/api/patients/:id/completeness', ({ request }) => {
+      lecturasDelChecklist.push(request.url);
+      return HttpResponse.json(checklistF_M1);
+    });
   return {
     cuerpos,
-    iniciar: () => servidor.listen({ onUnhandledFrame: 'error' }),
+    /** URLs de cada `GET /api/patients/{id}/completeness` recibido. */
+    lecturasDelChecklist,
+    iniciar: () => {
+      servidor.use(checklistPorDefecto());
+      servidor.listen({ onUnhandledFrame: 'error' });
+    },
     detener: () => servidor.close(),
     reiniciar: () => {
-      servidor.resetHandlers();
+      servidor.resetHandlers(checklistPorDefecto());
       cuerpos.length = 0;
+      lecturasDelChecklist.length = 0;
     },
+    /** `GET /api/patients/{id}/completeness` del BFF; sin llamarla responde F-M1 (sin faltantes). */
+    responderChecklist: ({ status, cuerpo, red }: { status: number; cuerpo: object; red?: true }) =>
+      servidor.use(
+        http.get('*/api/patients/:id/completeness', ({ request }) => {
+          lecturasDelChecklist.push(request.url);
+          return red ? HttpResponse.error() : HttpResponse.json(cuerpo, { status });
+        }),
+      ),
     responder: (...respuestas: Respuesta[]) => {
       let siguiente = 0;
       servidor.use(
