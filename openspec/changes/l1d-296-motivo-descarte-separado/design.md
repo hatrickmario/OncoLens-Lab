@@ -58,6 +58,14 @@ No toca modelo, prompt, umbral, catálogo ni corpus: sin `run-ai-eval`. Evidenci
 
 `packages/clinical-language/src` importa sus hermanos con `.js` (NodeNext); Vitest los resuelve pero Turbopack no (500 en `/analisis`). Se declara `turbopack.resolveAlias` en `apps/web/next.config.ts` para `./normalizar.js` y `./secuencias.js`, con un test que exige un alias por cada importación `.js` del verificador. No es un `webpack()` personalizado. Alternativa (mejor a largo plazo, fuera de alcance): que el paquete emita imports sin extensión o un subpath `exports` puro.
 
+**Excepción temporal al principio de no personalizar el bundler: `turbopack.resolveAlias` (hasta D4-22).** Alias para `./normalizar.js`, `./secuencias.js` y `./tipos.js`; el test `alias-verificador-rn23` deriva los alias requeridos del cierre transitivo de imports (también `export … from` e `import type`) y exige que solo `lib/evidence/texto-si-permitido.ts` importe `packages/clinical-language/src`. Retirada: subpath puro `./verificador` en `packages/clinical-language` sin `node:fs`. **Pregunta para el usuario:** `CLAUDE.md` prohíbe `webpack()` personalizado en `next.config` (si hiciera falta, ADR); `resolveAlias` no es `webpack()` pero va contra su intención, ¿exige un ADR?
+
+**Gate 2 (vuelta 1):** `POLITICA_DE_MOTIVO` (`lib/evidence/motivos-de-descarte.ts`) unifica orden y `muestraAfirmaciones` en un `Record<Motivo, …>` exhaustivo (un motivo nuevo del contrato rompe `tsc`); los literales de afirmación retirada del backend (es/en) viven en `lib/evidence/literales-de-retiro.ts`, ligados por test al ejemplo del contrato. `textoSiPermitido` pasa niveles y frases explícitos.
+
+**Aviso de IA y etiqueta de uso académico:** el aviso sale de la respuesta y US-069 AC-2 lo cubre (el literal no se copia a los tests); US-069 AC-3 prohíbe copiar el literal «Uso académico/investigación» fuera de `es.json`, por eso AC-4 comprueba la presencia de `app.academicUseLabel` en `AppHeader` y no un literal fijo. La regex de AC-3 se limita a las líneas del resumen porque la nota de redacción de una descartada de lenguaje contiene legítimamente «lenguaje» en la lista de descartadas.
+
+**Preguntas abiertas:** (1) acortar `discarded.notaLenguaje` y añadir texto auxiliar a la afirmación filtrada no se hizo: US-246 AC-2 y el escenario del spec fijan el literal «Se omitió por la redacción generada (lenguaje prescriptivo); no es una valoración de la evidencia» y AC-1 no prevé texto auxiliar; requiere cambiar el AC. (2) La lista RN-23 se hornea en el build sin fijar versión (m3): ¿se versiona/avisa si el catálogo cambia entre backend y web?
+
 ## Pendientes de definir
 
 - «(texto no mostrado)» (AC-2): se asume que sustituye al nombre de la opción solo cuando el filtro RN-23 lo rechaza; con nombre limpio se muestra el nombre.

@@ -10,8 +10,9 @@
 - [x] 1.4 Extraer `mostrarSiPermitido()` (RN-23, `checkProhibitedTerms`) y `descripcionDeDescartada()` (exhaustiva sobre el tipo generado, sin rama de motivo desconocido); ajustar `DiscardReasonsSummary` y `DiscardedOptions` (extraer `DiscardedOptionItem` si pasa de 100 líneas); `resumirMotivos()` sin cambios salvo lo que exijan los tests; AC-1…AC-5 en verde · test del AC primero · commit `feat(L1D-296)`
 - [x] 1.5 Regresiones: tests existentes de `evidence-panel*.test.tsx`, `resumir-motivos.test.ts` y `panel-analisis.spec.ts` actualizados solo en la etiqueta cambiada (sin relajar aserciones; `Test-Removal:` si un AC cambió), [RN-23] (US-068) y [RN-19] (US-069) en verde · test después (suite existente)
 - [x] 1.6 Loop visual (visual-check): estados, consola sin errores ni violaciones de CSP, red solo /api/* sin PII en URLs, accesibilidad y teclado, rendimiento y capturas a 375 y 1280 px contra S4-02; cada fallo se convierte primero en un test en rojo
-- [x] 1.7 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-296)`
+- [x] 1.7 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-296)` — sin refactor adicional necesario: la extracción (`DiscardedOptionItem`, `descripcionDeDescartada`, `textoSiPermitido`, `POLITICA_DE_MOTIVO`) se hizo dentro de los commits `feat`.
 
 ## Cierre
 
 - [x] 2.1 `openspec validate l1d-296-motivo-descarte-separado --strict`, tests de `apps/web` en verde, `contracts:check` sin cambios
+- [ ] 2.2 S5 deuda web (pendiente de ID) — DIFERIDA: retirar el alias de Turbopack con un subpath puro `./verificador` en `packages/clinical-language` (D4-22); acortar `notaLenguaje` y texto auxiliar si cambia el AC; versionado de la lista RN-23 horneada en el build.

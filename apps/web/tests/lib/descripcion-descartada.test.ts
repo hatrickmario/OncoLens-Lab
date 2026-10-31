@@ -5,7 +5,7 @@ import type { DiscardedOption } from '../../../../packages/api-contracts/src/typ
 import { zDiscardedOption } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
 import sinSoporteYLenguaje from '../../../../contracts/examples/con-evidencia-solo-descartadas-sin-soporte-y-lenguaje.json';
 import { descripcionDeDescartada } from '../../lib/evidence/descripcion-descartada';
-import { mostrarSiPermitido } from '../../lib/evidence/mostrar-si-permitido';
+import { textoSiPermitido } from '../../lib/evidence/texto-si-permitido';
 
 function descartada(parcial: Partial<DiscardedOption>): DiscardedOption {
   return {
@@ -17,19 +17,19 @@ function descartada(parcial: Partial<DiscardedOption>): DiscardedOption {
   };
 }
 
-describe('mostrarSiPermitido (RN-23)', () => {
+describe('textoSiPermitido (RN-23)', () => {
   it('la lista versionada importada como dato es válida para el verificador', () => {
     expect(() => parseProhibitedTerms(listaVersionada, 'terminos-prohibidos.json')).not.toThrow();
   });
 
   it('devuelve el texto cuando no contiene términos prohibidos', () => {
-    expect(mostrarSiPermitido('reduce la mortalidad a la mitad')).toBe(
+    expect(textoSiPermitido('reduce la mortalidad a la mitad')).toBe(
       'reduce la mortalidad a la mitad',
     );
   });
 
   it('devuelve null cuando el texto contiene un término prohibido', () => {
-    expect(mostrarSiPermitido('es el mejor tratamiento para la paciente')).toBeNull();
+    expect(textoSiPermitido('es el mejor tratamiento para la paciente')).toBeNull();
   });
 });
 

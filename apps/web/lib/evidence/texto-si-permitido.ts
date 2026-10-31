@@ -9,9 +9,10 @@ import type { ListaTerminos } from '../../../../packages/clinical-language/src/t
 const lista = listaVersionada as unknown as ListaTerminos;
 
 /**
- * RN-23: devuelve `texto` si no contiene términos prohibidos de salida generada (Nivel A) y `null` si
- * los contiene. Quien presenta texto generado nunca lo renderiza cuando devuelve `null`.
+ * RN-23: devuelve `texto` si no contiene términos prohibidos de salida generada (Nivel A, sin frases
+ * permitidas) y `null` si los contiene. Quien presenta texto generado nunca lo renderiza si devuelve `null`.
  */
-export function mostrarSiPermitido(texto: string): string | null {
-  return checkProhibitedTerms(texto, lista).length === 0 ? texto : null;
+export function textoSiPermitido(texto: string): string | null {
+  const hallazgos = checkProhibitedTerms(texto, lista, { niveles: ['A'], permitirFrases: false });
+  return hallazgos.length === 0 ? texto : null;
 }
