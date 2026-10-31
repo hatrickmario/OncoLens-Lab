@@ -34,6 +34,7 @@ from app.domain.applicability_text import (
     PlanDePropuestas,
     PropuestaDePoblacion,
     RespaldoFallido,
+    ResultadoDePropuestas,
     aceptar_propuestas,
     con_valor_textual,
     criterios_pendientes,
@@ -113,18 +114,26 @@ class AplicabilidadTextual:
         inicio = self._reloj.ahora()
         resultados = await self._pedir_respaldo(a_proponer)
         propuestas = tuple(p for r in resultados for p in r.propuestas)
-        plan = planificar_propuestas(propuestas, a_proponer, self._terminos.reglas_coincidentes)
-        soportadas = await self._soporte.pares_soportados(trace_id, pares_para_el_nli(plan))
-        resultado = aceptar_propuestas(plan, soportadas)
-        self._registrar_fallos(trace_id, resultados)
+        plan, resultado = await self._aceptar_las_propuestas(trace_id, a_proponer, propuestas)
+        fallidos = [r for r in resultados if r.fallo is not None]
+        self._registrar_fallos(trace_id, fallidos)
         recuentos = recuentos_de_propuestas(a_proponer, propuestas, plan, resultado.aceptadas)
         self._registrar(trace_id, recuentos, inicio)
         con_valores = _con_valores_aceptados(fuentes, criterios, resultado.aceptadas)
         return AplicabilidadCompleta(
-            _con_respaldo_fallido(con_valores, [r for r in resultados if r.fallo is not None]),
-            resultado.omitidas,
-            invoco_al_llm=True,
+            _con_respaldo_fallido(con_valores, fallidos), resultado.omitidas, invoco_al_llm=True
         )
+
+    async def _aceptar_las_propuestas(
+        self,
+        trace_id: str,
+        fuentes: Sequence[FuenteParaProponer],
+        propuestas: Sequence[PropuestaDePoblacion],
+    ) -> tuple[PlanDePropuestas, ResultadoDePropuestas]:
+        """Cita y lenguaje (RN-01, RN-23) y después el NLI con el chunk citado como premisa: solo lo soportado se acepta."""
+        plan = planificar_propuestas(propuestas, fuentes, self._terminos.reglas_coincidentes)
+        soportadas = await self._soporte.pares_soportados(trace_id, pares_para_el_nli(plan))
+        return plan, aceptar_propuestas(plan, soportadas)
 
     async def _pedir_respaldo(
         self, fuentes: Sequence[FuenteParaProponer]
