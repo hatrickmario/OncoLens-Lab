@@ -165,6 +165,19 @@ def test_rag_query_descarta_la_opcion_y_reemplaza_la_afirmacion_por_el_literal_d
     assert nli.pares_recibidos == []  # un término prohibido no se envía al NLI
 
 
+def test_rag_query_lista_el_literal_y_la_principal_en_unsupported_claims_cuando_el_texto_de_la_opcion_incumple():
+    """Comportamiento heredado de L1D-295 (pregunta abierta para el usuario): la principal que no llegó al NLI sale rotulada
+    como sin soporte junto al literal de retiro."""
+    respuesta, nli = _consultar("LLM-OPCION-PROHIBIDA")
+
+    cuerpo = _respuesta_valida(respuesta)
+    (descartada,) = cuerpo["discardedOptions"]
+    assert descartada["discardReason"] == "lenguaje_no_permitido"
+    assert descartada["unsupportedClaims"] == [RETIRO_ES, RAZON_ANTI_HER2]
+    assert descartada["option"] == RETIRO_ES
+    assert nli.pares_recibidos == []
+
+
 @pytest.mark.ac("US-064", 8)
 def test_rag_query_omite_la_limitacion_con_debe_recibir_y_cuenta_omitted_claims_1_cuando_el_nli_la_implica():
     respuesta, _ = _consultar("LLM-OK", limitaciones=(LIMITACION_PRESCRIPTIVA,))

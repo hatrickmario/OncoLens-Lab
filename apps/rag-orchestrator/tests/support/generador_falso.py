@@ -47,6 +47,13 @@ ESCENARIOS: dict[str, list[dict[str, Any]]] = {
     "LLM-CITA-MIXTA": [_opcion([{"chunkId": "ch-m1-1"}, {"chunkId": "ch-x-999"}])],
     "LLM-SIN-SOPORTE": [_opcion_con(RAZON_SIN_SOPORTE, [{"chunkId": "ch-m1-1"}])],
     "LLM-PRESCRIPTIVO": [_opcion_con(RAZON_PRESCRIPTIVA, [{"chunkId": "ch-m1-1"}])],
+    "LLM-OPCION-PROHIBIDA": [
+        {
+            "option": RAZON_PRESCRIPTIVA,
+            "rationale": RAZON_ANTI_HER2,
+            "citedSources": [{"chunkId": "ch-m1-1"}],
+        }
+    ],
     "LLM-CITA-AJENA-PRESCRIPTIVO": [_opcion_con(RAZON_PRESCRIPTIVA, [{"chunkId": "ch-x-999"}])],
 }
 

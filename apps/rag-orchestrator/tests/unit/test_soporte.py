@@ -245,7 +245,7 @@ def test_un_termino_prohibido_en_la_opcion_la_reemplaza_por_el_literal_y_descart
     assert pares_a_verificar(plan) == []
     (descartada,) = resultado.descartadas
     assert descartada.opcion.option == RETIRO_ES
-    assert descartada.afirmaciones_sin_soporte[0] == RETIRO_ES
+    assert descartada.afirmaciones_sin_soporte == (RETIRO_ES, "Uno.")
 
 
 def test_una_limitacion_soportada_se_conserva_y_una_sin_soporte_se_omite_y_cuenta() -> None:
