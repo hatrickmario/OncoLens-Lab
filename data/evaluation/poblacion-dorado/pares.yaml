@@ -1,0 +1,370 @@
+# Semilla sintética: (documento, criterio) -> valores esperados con scope y fragmento. 36 pares, estratos guía/ensayo/revisión x es/en.
+# El revisor humano la sustituye con la PLANTILLA.md ampliada (l1d-117 2.3, l1d-244 2.2).
+documentos:
+  doc-gui-es-1:
+    estrato: guia
+    idioma: es
+    tipo_de_cancer: mama
+    fragmentos:
+    - chunk_id: ch-doc-gui-es-1-1
+      texto: 'Elegibilidad: las pacientes elegibles de esta poblacion tenian mujeres
+        posmenopausicas; HER2 positivo; ECOG 0 o 1.'
+  doc-gui-es-2:
+    estrato: guia
+    idioma: es
+    tipo_de_cancer: mama
+    fragmentos:
+    - chunk_id: ch-doc-gui-es-2-1
+      texto: 'Elegibilidad: las pacientes elegibles de esta poblacion tenian HER2
+        positivo; ECOG 0 o 1; primera linea.'
+  doc-gui-en-1:
+    estrato: guia
+    idioma: en
+    tipo_de_cancer: mama
+    fragmentos:
+    - chunk_id: ch-doc-gui-en-1-1
+      texto: 'Eligibility: eligible patients in this population had ECOG 0 or 1; first
+        line; hormone receptor-positive, triple-negative.'
+  doc-gui-en-2:
+    estrato: guia
+    idioma: en
+    tipo_de_cancer: mama
+    fragmentos:
+    - chunk_id: ch-doc-gui-en-2-1
+      texto: 'Eligibility: eligible patients in this population had first line; hormone
+        receptor-positive, triple-negative; stage II-III.'
+  doc-ens-es-1:
+    estrato: ensayo
+    idioma: es
+    tipo_de_cancer: mama
+    fragmentos:
+    - chunk_id: ch-doc-ens-es-1-1
+      texto: 'Elegibilidad: las pacientes elegibles de esta poblacion tenian receptores
+        hormonales positivos; estadio II-III; mujeres posmenopausicas.'
+  doc-ens-es-2:
+    estrato: ensayo
+    idioma: es
+    tipo_de_cancer: mama
+    fragmentos:
+    - chunk_id: ch-doc-ens-es-2-1
+      texto: 'Elegibilidad: las pacientes elegibles de esta poblacion tenian estadio
+        II-III; mujeres posmenopausicas; HER2 positivo.'
+  doc-ens-en-1:
+    estrato: ensayo
+    idioma: en
+    tipo_de_cancer: mama
+    fragmentos:
+    - chunk_id: ch-doc-ens-en-1-1
+      texto: 'Eligibility: eligible patients in this population had premenopausal
+        women, postmenopausal women; HER2-positive; ECOG 0 or 1.'
+  doc-ens-en-2:
+    estrato: ensayo
+    idioma: en
+    tipo_de_cancer: mama
+    fragmentos:
+    - chunk_id: ch-doc-ens-en-2-1
+      texto: 'Eligibility: eligible patients in this population had HER2-positive;
+        ECOG 0 or 1; first line.'
+  doc-rev-es-1:
+    estrato: revision
+    idioma: es
+    tipo_de_cancer: mama
+    fragmentos:
+    - chunk_id: ch-doc-rev-es-1-1
+      texto: 'Elegibilidad: las pacientes elegibles de esta poblacion tenian ECOG
+        0 o 1; primera linea; receptores hormonales positivos.'
+  doc-rev-es-2:
+    estrato: revision
+    idioma: es
+    tipo_de_cancer: mama
+    fragmentos:
+    - chunk_id: ch-doc-rev-es-2-1
+      texto: 'Elegibilidad: las pacientes elegibles de esta poblacion tenian primera
+        linea; receptores hormonales positivos; estadio II-III.'
+  doc-rev-en-1:
+    estrato: revision
+    idioma: en
+    tipo_de_cancer: mama
+    fragmentos:
+    - chunk_id: ch-doc-rev-en-1-1
+      texto: 'Eligibility: eligible patients in this population had hormone receptor-positive,
+        triple-negative; stage II-III; premenopausal women, postmenopausal women.'
+  doc-rev-en-2:
+    estrato: revision
+    idioma: en
+    tipo_de_cancer: mama
+    fragmentos:
+    - chunk_id: ch-doc-rev-en-2-1
+      texto: 'Eligibility: eligible patients in this population had stage II-III;
+        premenopausal women, postmenopausal women; HER2-positive.'
+pares:
+- id: doc-gui-es-1-estado_menopausico
+  documento: doc-gui-es-1
+  criterio: estado_menopausico
+  esperados:
+  - valor: mujeres posmenopausicas
+    scope: elegibilidad
+    chunk: ch-doc-gui-es-1-1
+- id: doc-gui-es-1-estado_her2
+  documento: doc-gui-es-1
+  criterio: estado_her2
+  esperados:
+  - valor: HER2 positivo
+    scope: elegibilidad
+    chunk: ch-doc-gui-es-1-1
+- id: doc-gui-es-1-ecog
+  documento: doc-gui-es-1
+  criterio: ecog
+  esperados:
+  - valor: ECOG 0 o 1
+    scope: elegibilidad
+    chunk: ch-doc-gui-es-1-1
+- id: doc-gui-es-2-estado_her2
+  documento: doc-gui-es-2
+  criterio: estado_her2
+  esperados:
+  - valor: HER2 positivo
+    scope: elegibilidad
+    chunk: ch-doc-gui-es-2-1
+- id: doc-gui-es-2-ecog
+  documento: doc-gui-es-2
+  criterio: ecog
+  esperados:
+  - valor: ECOG 0 o 1
+    scope: elegibilidad
+    chunk: ch-doc-gui-es-2-1
+- id: doc-gui-es-2-linea_tratamiento
+  documento: doc-gui-es-2
+  criterio: linea_tratamiento
+  esperados:
+  - valor: primera linea
+    scope: elegibilidad
+    chunk: ch-doc-gui-es-2-1
+- id: doc-gui-en-1-ecog
+  documento: doc-gui-en-1
+  criterio: ecog
+  esperados:
+  - valor: ECOG 0 or 1
+    scope: elegibilidad
+    chunk: ch-doc-gui-en-1-1
+- id: doc-gui-en-1-linea_tratamiento
+  documento: doc-gui-en-1
+  criterio: linea_tratamiento
+  esperados:
+  - valor: first line
+    scope: elegibilidad
+    chunk: ch-doc-gui-en-1-1
+- id: doc-gui-en-1-receptores_hormonales
+  documento: doc-gui-en-1
+  criterio: receptores_hormonales
+  esperados:
+  - valor: hormone receptor-positive
+    scope: elegibilidad
+    chunk: ch-doc-gui-en-1-1
+  - valor: triple-negative
+    scope: subgrupo
+    chunk: ch-doc-gui-en-1-1
+- id: doc-gui-en-2-linea_tratamiento
+  documento: doc-gui-en-2
+  criterio: linea_tratamiento
+  esperados:
+  - valor: first line
+    scope: elegibilidad
+    chunk: ch-doc-gui-en-2-1
+- id: doc-gui-en-2-receptores_hormonales
+  documento: doc-gui-en-2
+  criterio: receptores_hormonales
+  esperados:
+  - valor: hormone receptor-positive
+    scope: elegibilidad
+    chunk: ch-doc-gui-en-2-1
+  - valor: triple-negative
+    scope: subgrupo
+    chunk: ch-doc-gui-en-2-1
+- id: doc-gui-en-2-estadio
+  documento: doc-gui-en-2
+  criterio: estadio
+  esperados:
+  - valor: stage II-III
+    scope: elegibilidad
+    chunk: ch-doc-gui-en-2-1
+- id: doc-ens-es-1-receptores_hormonales
+  documento: doc-ens-es-1
+  criterio: receptores_hormonales
+  esperados:
+  - valor: receptores hormonales positivos
+    scope: elegibilidad
+    chunk: ch-doc-ens-es-1-1
+- id: doc-ens-es-1-estadio
+  documento: doc-ens-es-1
+  criterio: estadio
+  esperados:
+  - valor: estadio II-III
+    scope: elegibilidad
+    chunk: ch-doc-ens-es-1-1
+- id: doc-ens-es-1-estado_menopausico
+  documento: doc-ens-es-1
+  criterio: estado_menopausico
+  esperados:
+  - valor: mujeres posmenopausicas
+    scope: elegibilidad
+    chunk: ch-doc-ens-es-1-1
+- id: doc-ens-es-2-estadio
+  documento: doc-ens-es-2
+  criterio: estadio
+  esperados:
+  - valor: estadio II-III
+    scope: elegibilidad
+    chunk: ch-doc-ens-es-2-1
+- id: doc-ens-es-2-estado_menopausico
+  documento: doc-ens-es-2
+  criterio: estado_menopausico
+  esperados:
+  - valor: mujeres posmenopausicas
+    scope: elegibilidad
+    chunk: ch-doc-ens-es-2-1
+- id: doc-ens-es-2-estado_her2
+  documento: doc-ens-es-2
+  criterio: estado_her2
+  esperados:
+  - valor: HER2 positivo
+    scope: elegibilidad
+    chunk: ch-doc-ens-es-2-1
+- id: doc-ens-en-1-estado_menopausico
+  documento: doc-ens-en-1
+  criterio: estado_menopausico
+  esperados:
+  - valor: premenopausal women
+    scope: elegibilidad
+    chunk: ch-doc-ens-en-1-1
+  - valor: postmenopausal women
+    scope: elegibilidad
+    chunk: ch-doc-ens-en-1-1
+- id: doc-ens-en-1-estado_her2
+  documento: doc-ens-en-1
+  criterio: estado_her2
+  esperados:
+  - valor: HER2-positive
+    scope: elegibilidad
+    chunk: ch-doc-ens-en-1-1
+- id: doc-ens-en-1-ecog
+  documento: doc-ens-en-1
+  criterio: ecog
+  esperados:
+  - valor: ECOG 0 or 1
+    scope: elegibilidad
+    chunk: ch-doc-ens-en-1-1
+- id: doc-ens-en-2-estado_her2
+  documento: doc-ens-en-2
+  criterio: estado_her2
+  esperados:
+  - valor: HER2-positive
+    scope: elegibilidad
+    chunk: ch-doc-ens-en-2-1
+- id: doc-ens-en-2-ecog
+  documento: doc-ens-en-2
+  criterio: ecog
+  esperados:
+  - valor: ECOG 0 or 1
+    scope: elegibilidad
+    chunk: ch-doc-ens-en-2-1
+- id: doc-ens-en-2-linea_tratamiento
+  documento: doc-ens-en-2
+  criterio: linea_tratamiento
+  esperados:
+  - valor: first line
+    scope: elegibilidad
+    chunk: ch-doc-ens-en-2-1
+- id: doc-rev-es-1-ecog
+  documento: doc-rev-es-1
+  criterio: ecog
+  esperados:
+  - valor: ECOG 0 o 1
+    scope: elegibilidad
+    chunk: ch-doc-rev-es-1-1
+- id: doc-rev-es-1-linea_tratamiento
+  documento: doc-rev-es-1
+  criterio: linea_tratamiento
+  esperados:
+  - valor: primera linea
+    scope: elegibilidad
+    chunk: ch-doc-rev-es-1-1
+- id: doc-rev-es-1-receptores_hormonales
+  documento: doc-rev-es-1
+  criterio: receptores_hormonales
+  esperados:
+  - valor: receptores hormonales positivos
+    scope: elegibilidad
+    chunk: ch-doc-rev-es-1-1
+- id: doc-rev-es-2-linea_tratamiento
+  documento: doc-rev-es-2
+  criterio: linea_tratamiento
+  esperados:
+  - valor: primera linea
+    scope: elegibilidad
+    chunk: ch-doc-rev-es-2-1
+- id: doc-rev-es-2-receptores_hormonales
+  documento: doc-rev-es-2
+  criterio: receptores_hormonales
+  esperados:
+  - valor: receptores hormonales positivos
+    scope: elegibilidad
+    chunk: ch-doc-rev-es-2-1
+- id: doc-rev-es-2-estadio
+  documento: doc-rev-es-2
+  criterio: estadio
+  esperados:
+  - valor: estadio II-III
+    scope: elegibilidad
+    chunk: ch-doc-rev-es-2-1
+- id: doc-rev-en-1-receptores_hormonales
+  documento: doc-rev-en-1
+  criterio: receptores_hormonales
+  esperados:
+  - valor: hormone receptor-positive
+    scope: elegibilidad
+    chunk: ch-doc-rev-en-1-1
+  - valor: triple-negative
+    scope: subgrupo
+    chunk: ch-doc-rev-en-1-1
+- id: doc-rev-en-1-estadio
+  documento: doc-rev-en-1
+  criterio: estadio
+  esperados:
+  - valor: stage II-III
+    scope: elegibilidad
+    chunk: ch-doc-rev-en-1-1
+- id: doc-rev-en-1-estado_menopausico
+  documento: doc-rev-en-1
+  criterio: estado_menopausico
+  esperados:
+  - valor: premenopausal women
+    scope: elegibilidad
+    chunk: ch-doc-rev-en-1-1
+  - valor: postmenopausal women
+    scope: elegibilidad
+    chunk: ch-doc-rev-en-1-1
+- id: doc-rev-en-2-estadio
+  documento: doc-rev-en-2
+  criterio: estadio
+  esperados:
+  - valor: stage II-III
+    scope: elegibilidad
+    chunk: ch-doc-rev-en-2-1
+- id: doc-rev-en-2-estado_menopausico
+  documento: doc-rev-en-2
+  criterio: estado_menopausico
+  esperados:
+  - valor: premenopausal women
+    scope: elegibilidad
+    chunk: ch-doc-rev-en-2-1
+  - valor: postmenopausal women
+    scope: elegibilidad
+    chunk: ch-doc-rev-en-2-1
+- id: doc-rev-en-2-estado_her2
+  documento: doc-rev-en-2
+  criterio: estado_her2
+  esperados:
+  - valor: HER2-positive
+    scope: elegibilidad
+    chunk: ch-doc-rev-en-2-1

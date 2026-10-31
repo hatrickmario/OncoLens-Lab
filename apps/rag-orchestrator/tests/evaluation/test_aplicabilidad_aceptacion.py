@@ -112,7 +112,7 @@ def test_aplicabilidad_reporta_concordancia_cero_coincidencias_sin_cita_y_cero_v
 
     assert codigo == 0 and reporte is not None
     medidas = reporte["metricas"]["aplicabilidad"]
-    assert medidas["concordancia_de_estados"] == {"aciertos": 41, "total": 41, "valor": 1.0}
+    assert medidas["concordancia_de_estados"] == {"aciertos": 51, "total": 51, "valor": 1.0}
     assert medidas["criterios_coincide_sin_cita"] == 0
     assert medidas["valores_paciente_no_copiados"] == 0
     assert reporte["configuracion"]["catalogVersion"] == "test-apl-1.0.0"
@@ -153,8 +153,24 @@ def test_aplicabilidad_deja_desconocidos_y_suma_omitidas_cuando_el_nli_es_neutra
     pares = {p["id"]: p for p in medidas["pares"]}
     assert pares["am1-a2-sin-soporte"]["acierto"] and pares["am1-a2-cita-ajena"]["acierto"]
     assert pares["am1-a2-sin-soporte"]["coincide"] == pares["am1-a2-cita-ajena"]["coincide"] == 0
-    assert medidas["omitidas"] == 2
+    assert pares["am2-a2-analisis-previo-no-es-cita"][
+        "acierto"
+    ]  # RN-24: un análisis previo no es cita ni soporte
+    assert medidas["omitidas"] == 3
     assert medidas["criterios_coincide_sin_cita"] == 0
+
+
+def test_aplicabilidad_mide_la_escala_no_comparable_y_el_dato_sin_verificar_sin_bloquear_el_estado(
+    tmp_path: Path,
+) -> None:
+    """D4-04 (L1D-299): Karnofsky no compara con el ECOG del criterio (desconocido) y un HER2 ``requiere_revision``
+    avisa ``sin_verificar`` pero el estado se calcula igual (RN-26)."""
+    codigo, reporte = correr(tmp_path)
+
+    assert codigo == 0 and reporte is not None
+    pares = {p["id"]: p for p in reporte["metricas"]["aplicabilidad"]["pares"]}
+    par = pares["am2-a1-escala-no-comparable-y-sin-verificar"]
+    assert par["acierto"] and par["coincide"] == 1 and par["desconocido"] == 4
 
 
 def test_aplicabilidad_baja_la_concordancia_cuando_el_dataset_espera_otro_estado(
@@ -168,7 +184,7 @@ def test_aplicabilidad_baja_la_concordancia_cuando_el_dataset_espera_otro_estado
     codigo, reporte = correr(tmp_path / "salida", config=config)
 
     assert codigo == 0 and reporte is not None
-    assert reporte["metricas"]["aplicabilidad"]["concordancia_de_estados"]["aciertos"] == 40
+    assert reporte["metricas"]["aplicabilidad"]["concordancia_de_estados"]["aciertos"] == 50
 
 
 def test_aplicabilidad_se_niega_con_codigo_1_y_nombra_el_manifiesto_cuando_el_dataset_no_es_sintetico(

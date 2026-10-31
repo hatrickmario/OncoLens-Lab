@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import statistics
+from app.evaluation.estadistica import mediana
 from collections.abc import Sequence
 from typing import Any
 
@@ -32,11 +32,11 @@ def agregar_corridas(corridas: Sequence[dict[str, Any]]) -> dict[str, Any]:
     huellas = {c.get("huella_sondas") for c in corridas}
     return {
         "corridas": len(corridas),
-        "rss_carga_mb": statistics.median(c["rss_carga_mb"] for c in corridas),
-        "rss_max_mb": statistics.median(c["rss_max_mb"] for c in corridas),
-        "pico_rss_mb": statistics.median(c["pico_rss_mb"] for c in corridas),
-        "p50_ms": statistics.median(c["latencia"]["p50_ms"] for c in corridas),
-        "p95_ms": statistics.median(c["latencia"]["p95_ms"] for c in corridas),
+        "rss_carga_mb": mediana(c["rss_carga_mb"] for c in corridas),
+        "rss_max_mb": mediana(c["rss_max_mb"] for c in corridas),
+        "pico_rss_mb": mediana(c["pico_rss_mb"] for c in corridas),
+        "p50_ms": mediana(c["latencia"]["p50_ms"] for c in corridas),
+        "p95_ms": mediana(c["latencia"]["p95_ms"] for c in corridas),
         "p95_ms_por_corrida": [c["latencia"]["p95_ms"] for c in corridas],
         "rss_max_mb_por_corrida": [c["rss_max_mb"] for c in corridas],
         "determinista": len(huellas) == 1,
