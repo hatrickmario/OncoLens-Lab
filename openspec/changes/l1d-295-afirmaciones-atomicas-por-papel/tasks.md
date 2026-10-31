@@ -39,8 +39,17 @@
 
 ## 5. evaluación
 
-- [ ] 5.1 `run-ai-eval` (`ai-eval-runner`, OL-06 obligatoria): retención de opciones frente al baseline, fidelidad ≥ 0,90, precisión de citas ≥ 0,90, salidas prescriptivas = 0, JSON válido ≥ 99 % del esquema `claims[]` y la pregunta insignia de la guía §2.1; adjuntar `reports/eval/` al PR. La medición con modelos locales completos queda en US-233a (L1D-298).
+- [x] 5.1 (reporte de `ai-eval-runner` en el Gate 2: PASS; smoke local con gemma4 y prompt 0.5.0: fidelidad 1,00, precisión de citas 1,00, salidas prescriptivas A+B = 0 y 0 `LLM_OUTPUT_INVALID` en ~20 generaciones, lo que NO demuestra JSON válido ≥ 99 %; la suite fake no ejercita el prompt 0.5.0 y su baseline solo cambió `promptVersion`. Archivos en `/private/tmp/claude-501/-Users-mb-Documents-L1DER-Final-Project-V1-OncoLens-Lab/da50dd31-9151-47ec-ad04-86d57e1f21a2/scratchpad/reports-295/`; el humano los copia a `reports/eval/`) `run-ai-eval` (`ai-eval-runner`, OL-06 obligatoria): retención de opciones frente al baseline, fidelidad ≥ 0,90, precisión de citas ≥ 0,90, salidas prescriptivas = 0, JSON válido ≥ 99 % del esquema `claims[]` y la pregunta insignia de la guía §2.1; adjuntar `reports/eval/` al PR. La medición con modelos locales completos queda en US-233a (L1D-298).
 
 ## 6. cierre
 
 - [ ] 6.1 `openspec validate l1d-295-afirmaciones-atomicas-por-papel --strict`, tests de `rag-orchestrator`, `clinical-api` y `apps/web` en verde, `contracts:verify-provider` y `contracts:breaking` sin incompatibles, `run-ai-eval` adjunto. Pedir validación clínica de la regla por papel en la sesión de oncólogos del S4 (no bloquea).
+
+## 7. diferido (Gate 2, vuelta 1)
+
+> Nada de esto es `[x]`; cada ítem tiene destino.
+
+- TRASLADADA a «S5 deuda rag-orchestrator (pendiente de ID)», **antes de L1D-144** (toca el mismo `support.py`): retirar el camino heredado de `domain/support.py` (migrar `GeneradorGuionado` de `app/evaluation/adaptadores_falsos.py` y los tests heredados a afirmaciones atómicas; borrar `_descartar_si_no_se_soporta`, `_con_detalles_soportados` y la rama `details` de `planificar_soporte`). Migrar `GeneradorGuionado` hoy cambia el recuento de afirmaciones del baseline (la salida prescriptiva se suma a la justificación y deja de ser una oración aparte), por eso no cupo en este PR. **El baseline 0.5.0 de la suite fake NO mide el prompt 0.5.0; la medida válida es el smoke local.**
+- TRASLADADA a «S5 deuda rag-orchestrator (pendiente de ID)»: sustituir el flag `option_incumple` de `decidir_opcion_por_papel`, introducir un objeto `LimitesDeAfirmaciones` (mínimo, máximo, palabras) en lugar de tres enteros sueltos y partir `domain/support.py` (~540 líneas).
+- TRASLADADA a «S5 deuda de documentación de contrato (pendiente de ID)»: las descripciones de `contracts/schemas/evidence.yaml` (`details`, `rationale`, `omittedClaims`) quedaron desactualizadas con las afirmaciones atómicas; cambiarlas exige subir versión de nuevo.
+- Prueba de paridad entre el camino heredado y el atómico: no se añadió (no es barata: ambos caminos difieren a propósito en `details` y en el motivo); queda cubierta por el retiro del camino heredado.
