@@ -26,8 +26,9 @@
 - [ ] 2.6 Escribir `docs/demo/guia-demo-S4.md` con los pares fijados en 0.1: ≥ 2 pares, conteos esperados, fragmentos y caso excluyente `[AC-4]`
 
 - [ ] 2.7 (D4-03, +2 puntos; Decidido (usuario, 2026-10-31)) Reglas de población en el catálogo: **test primero** para las reglas (commit `test(L1D-297)` del AC en rojo, luego `feat(L1D-297)`) que derivan «mezclada» de `poblacion-reglas.json`; **test después** para el archivo, su esquema y validador, `catalogHash`, la entrada en `manifest.json` y la versión 1.2.0 real en ambos backends. `packages/clinical-catalogs/poblacion-reglas.json` (copia de `test-apl-1.2.0`), esquema y validador. Verificación: sin el archivo «mezclada» no aparece; con él, sí, en ambos backends con la misma versión.
-- [ ] 2.8 (D4-02, **propuesta, sin puntos adicionales, a confirmar**) Verificar el RSS en régimen estable del stack completo en el MacBook de 32 GB (tras `gc`, proceso fresco, ≥ 3 repeticiones); los 4489 MiB de ADR-39 no se usan como `mem_limit`.
-- [ ] 2.9 (D4-08, **propuesta, sin puntos adicionales, a confirmar**) Smoke de la semilla (`us-231b` 1.12), muestra de `l1d-117` 2.2 y partición de ADR-45 con PostgreSQL y Milvus reales.
+- [ ] 2.8 (D4-02, **aprobado (usuario, 2026-10-31)**, sin puntos adicionales; absorbe el AC-7 de L1D-298) Verificar el RSS en régimen estable del stack completo en el MacBook de 32 GB (tras `gc`, proceso fresco, ≥ 3 repeticiones); los 4489 MiB de ADR-39 no se usan como `mem_limit`.
+- [ ] 2.9 (D4-08, **aprobado (usuario, 2026-10-31)**, sin puntos adicionales) Smoke de la semilla (`us-231b` 1.12), muestra de `l1d-117` 2.2 y partición de ADR-45 con PostgreSQL y Milvus reales.
+- [ ] 2.10 (heredada de L1D-131 1.1 y 2.9; Decidido (usuario, 2026-10-31); sin puntos adicionales) Perfil E2E de Compose con `RAG_ADAPTERS=fake`, seed A-M1/A-M2 y catálogo `test-apl-1.2.0`, Playwright contra Compose y extensión de `aviso-ia.spec.ts` · test después
 
 ## evaluación
 
