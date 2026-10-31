@@ -464,6 +464,7 @@
     "aboveThreshold": 2
   },
   "omittedClaims": 0,
+  "optionsNotShown": 0,
   "agentSteps": [],
   "topRelevanceScore": 0.88,
   "meta": {
