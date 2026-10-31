@@ -13,7 +13,7 @@ import unicodedata
 from collections import defaultdict
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-import statistics
+from app.evaluation.estadistica import mediana
 from statistics import mean
 
 from app.evaluation.dataset_loader import Pregunta
@@ -180,7 +180,7 @@ def agregar(
         "sin_evidencia_puntaje_maximo": {
             "n": len(sin_evidencia),
             "maximo": max(sin_evidencia) if sin_evidencia else None,
-            "mediana": statistics.median(sin_evidencia) if sin_evidencia else None,
+            "mediana": mediana(sin_evidencia) if sin_evidencia else None,
             "escala_puntaje": escala_puntaje,  # coseno_denso | relevance_score_sigmoide: no comparables entre sí
         },
     }
