@@ -8,6 +8,7 @@ import {
   ejemplo,
   ORIGEN_PERMITIDO,
   peticionDeAnalisis,
+  URL_ANALISIS,
   URL_CLINICAL_API,
 } from '../support/clinical-api-simulado';
 
@@ -185,6 +186,31 @@ describe('POST /api/evidence-analyses', () => {
     expect(sinCuerpo.status).toBe(401);
     expect(await sinCuerpo.text()).toBe('');
     expect(sinCuerpo.headers.get('content-type')).toBeNull();
+  });
+
+  it('reenvía continueWithWarning tal cual, sin reserializar el cuerpo, cuando el panel continúa con el aviso [US-005 AC-2]', async () => {
+    clinicalApi.responder({ status: 200, cuerpo: ejemplo('con-evidencia-s1.json') });
+    const { dependencias } = crearDependenciasDeTest();
+    const textoCrudo = JSON.stringify(ejemplo('evidence-analysis-request.json'), null, 3).replace(
+      '"continueWithWarning": false',
+      '"continueWithWarning":   true',
+    );
+    expect(textoCrudo).toContain('"continueWithWarning":   true');
+
+    await crearManejadorAnalisis(dependencias)(
+      new Request(URL_ANALISIS, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Origin: ORIGEN_PERMITIDO,
+          Cookie: 'oncolens_session=sesion-sintetica-1',
+        },
+        body: textoCrudo,
+      }),
+    );
+
+    expect(clinicalApi.peticiones).toHaveLength(1);
+    expect(clinicalApi.peticiones[0]!.cuerpo).toBe(textoCrudo);
   });
 
   it('responde 502 propio y no un 200 vacío cuando el cuerpo de una respuesta 2xx se corta [US-060 AC-4]', async () => {

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import type { AnclaDeFicha } from '../../lib/ficha/anclas';
 
 const CELDA = 'border-border border-b px-3 py-2 text-left align-top';
 
@@ -20,7 +21,7 @@ export function SeccionDeFicha({
   titulo,
   children,
 }: {
-  id: string;
+  id: AnclaDeFicha | 'ficha-identificacion';
   titulo: string;
   children: ReactNode;
 }) {
@@ -29,7 +30,7 @@ export function SeccionDeFicha({
       aria-labelledby={id}
       className="bg-surface rounded-tarjeta border-border mb-4 border p-4"
     >
-      <h2 id={id} className="m-0 mb-3 text-lg font-semibold">
+      <h2 id={id} tabIndex={-1} className="m-0 mb-3 text-lg font-semibold">
         {titulo}
       </h2>
       <div className="overflow-x-auto">{children}</div>
