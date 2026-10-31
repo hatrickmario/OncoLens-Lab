@@ -6,6 +6,8 @@ from typing import Any
 
 import pytest
 
+from app.domain.poblacion_del_estudio import poblacion_desde_lo_guardado
+
 from app.domain.corpus_metadata.poblacion_abanico import ValorPropuesto
 from app.domain.corpus_metadata.poblacion_escritura import (
     FORMA_LISTA,
@@ -79,6 +81,10 @@ def test_exigir_forma_de_lista_acepta_listas_vacias_o_completas_y_la_marca_pendi
         [{**_lista(_valor())[0], "extra": "x"}],  # clave de más
         [{**_lista(_valor())[0], "value": "x" * 201}],  # P6: más de 200 caracteres
         [{**_lista(_valor())[0], "value": ""}],
+        [{**_lista(_valor())[0], "scope": "otro"}],  # el lector lo degradaría a «sin valor»
+        [{**_lista(_valor())[0], "chunkId": ""}],
+        [{**_lista(_valor())[0], "nliResult": ""}],  # RN-01: solo lo que el NLI confirmó
+        [{**_lista(_valor())[0], "nliResult": "neutral"}],
     ],
 )
 def test_exigir_forma_de_lista_rechaza_lo_que_no_es_ni_lista_ni_marca_y_nombra_solo_la_clave(
@@ -179,3 +185,20 @@ def test_criterios_reutilizables_no_reutiliza_una_lista_si_la_fila_declara_la_fo
     guardado = {"a": _lista(_valor())}
 
     assert criterios_reutilizables(guardado, "antigua", ["a"], VERSIONES) == frozenset()
+
+
+@pytest.mark.parametrize("alcance", ["elegibilidad", "subgrupo", "mencion"])
+def test_todo_lo_que_exigir_forma_de_lista_acepta_lo_lee_el_lector_sin_invalidez(
+    alcance: str,
+) -> None:
+    criterios = {
+        "a": _lista(ValorPropuesto("x", "c1", alcance, "entailment")),  # type: ignore[arg-type]
+        "b": [],
+        "c": marca_pendiente(),
+    }
+    exigir_forma_de_lista(criterios)
+
+    leidos = poblacion_desde_lo_guardado("extraido_verificado", criterios, 3)  # type: ignore[arg-type]
+
+    assert all(c.invalidez is None for c in leidos.criterios.values())
+    assert len(leidos.criterios["a"].valores) == 1 and leidos.criterios["c"].pendiente

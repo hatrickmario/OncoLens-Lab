@@ -190,8 +190,9 @@ class FakePopulationLlm:
 class RecuperadorFalsoPorDocumento:
     """Los fragmentos de FX-06c-c por ``document_key``, en el orden ``ch-e1-1``, ``ch-e1-2``, ``ch-e1-3``."""
 
-    def __init__(self) -> None:
+    def __init__(self, sin_relevantes: frozenset[str] = frozenset()) -> None:
         self.consultas: list[tuple[str, str, int]] = []
+        self.sin_relevantes = sin_relevantes
 
     def todos(self, documento: DocumentoParaExtraer) -> tuple[Fragmento, ...]:
         return FRAGMENTOS_POR_DOCUMENTO[documento.document_key]
@@ -200,6 +201,8 @@ class RecuperadorFalsoPorDocumento:
         self, documento: DocumentoParaExtraer, criterio: CriterioDeAplicabilidad, k: int
     ) -> tuple[Fragmento, ...]:
         self.consultas.append((documento.document_key, criterio.clave, k))
+        if criterio.clave in self.sin_relevantes:
+            return ()  # el contrato real: puede no haber ningún fragmento relevante
         return FRAGMENTOS_POR_DOCUMENTO[documento.document_key][:k]
 
 

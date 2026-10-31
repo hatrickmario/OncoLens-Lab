@@ -7,7 +7,7 @@ propagan sin traducir: el cargador los trata como fallo del catálogo y aborta.
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict
 from datetime import datetime
 from typing import Any
@@ -84,13 +84,20 @@ class CorpusDocumentRepository:
             corpus_document.c.population_criteria,
             corpus_document.c.population_form,
             corpus_document.c.metadata_source,
+            corpus_document.c.extracted_fields,
         ).where(corpus_document.c.document_id == document_id)
         with self._motor.connect() as conexion:
             fila = conexion.execute(consulta).one_or_none()
-        return None if fila is None else PoblacionGuardada(*fila)
+        if fila is None:
+            return None
+        return PoblacionGuardada(fila[0], fila[1], fila[2], tuple(fila[3]))
 
     def guardar_poblacion(
-        self, document_id: str, population_criteria: Mapping[str, Any], population_form: str
+        self,
+        document_id: str,
+        population_criteria: Mapping[str, Any],
+        population_form: str,
+        extracted_fields: Sequence[str],
     ) -> None:
         """Reescribe SOLO la población de un documento ya registrado (US-242 D6); no crea filas ni toca el histórico."""
         with self._motor.begin() as conexion:
@@ -98,7 +105,9 @@ class CorpusDocumentRepository:
                 sa.update(corpus_document)
                 .where(corpus_document.c.document_id == document_id)
                 .values(
-                    population_criteria=dict(population_criteria), population_form=population_form
+                    population_criteria=dict(population_criteria),
+                    population_form=population_form,
+                    extracted_fields=list(extracted_fields),
                 )
             )
             if actualizadas.rowcount != 1:

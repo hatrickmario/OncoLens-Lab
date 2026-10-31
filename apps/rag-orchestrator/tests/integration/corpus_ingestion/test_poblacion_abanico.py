@@ -31,6 +31,7 @@ from tests.support.poblacion_abanico import (
     VERSION_DEL_PROMPT_DE_TEST,
     VALOR_PROHIBIDO,
     FakePopulationLlm,
+    RecuperadorFalsoPorDocumento,
     documentos_e,
 )
 from tests.support.poblacion_lista import poblacion_guardada
@@ -209,6 +210,8 @@ def test_ingesta_misma_version_cero_llamadas_y_otra_version_seis(
     montaje.ingerir("doc-e1")
 
     assert montaje.llm.invocaciones == llamadas_iniciales
+    escrituras = getattr(montaje.base.catalogo, "escrituras_de_poblacion", 0)
+    assert escrituras == 0  # mismas versiones: ni llamadas ni UPDATE de población
 
     otra_version = montaje.con_configuracion(version_del_prompt="poblacion_v2")
     otra_version.ingerir("doc-e1")
@@ -216,6 +219,12 @@ def test_ingesta_misma_version_cero_llamadas_y_otra_version_seis(
     assert montaje.llm.invocaciones == llamadas_iniciales + 6
     guardado = montaje.poblacion_de("doc-e1").population_criteria["estado_menopausico"]
     assert {v["promptVersion"] for v in guardado} == {"poblacion_v2"}
+    campos = montaje.poblacion_de("doc-e1").extracted_fields
+    assert {
+        "estado_menopausico",
+        "biomarcadores.her2",
+        "biomarcadores.receptores_hormonales",
+    } <= set(campos)
 
 
 @pytest.mark.ac("US-242", 8)
@@ -371,3 +380,16 @@ def test_ingesta_no_registra_en_los_logs_prompt_salida_fragmentos_ni_valores(
         "Eres un extractor",
     ]
     assert not [s for s in secretos if s in registro]
+
+
+def test_ingesta_criterio_sin_fragmentos_relevantes_queda_vacio_sin_llamar_al_llm(
+    montar: Callable[..., MontajeDePoblacion],
+) -> None:
+    """[US-242 D3] Si ningún fragmento es relevante para un criterio no hay llamada al LLM y el criterio queda vacío."""
+    montaje = montar(recuperador=RecuperadorFalsoPorDocumento(frozenset({"ecog"})))
+
+    montaje.ingerir("doc-e1")
+
+    assert montaje.llm.llamadas_de("ecog") == []
+    assert montaje.llm.invocaciones == 5
+    assert montaje.poblacion_de("doc-e1").population_criteria["ecog"] == []

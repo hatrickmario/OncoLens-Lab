@@ -71,6 +71,7 @@ class PoblacionObservada:
     population_criteria: dict[str, Any]
     population_form: str
     metadata_source: str
+    extracted_fields: tuple[str, ...] = ()
 
 
 class Observador(Protocol):
@@ -159,7 +160,10 @@ class ObservadorEnMemoria:
             if i.split("@")[0] == clave and r.is_current
         )
         return PoblacionObservada(
-            dict(registro.population_criteria), registro.population_form, registro.metadata_source
+            dict(registro.population_criteria),
+            registro.population_form,
+            registro.metadata_source,
+            tuple(registro.extracted_fields),
         )
 
 
@@ -234,12 +238,12 @@ class ObservadorReal:
 
     def poblacion_de(self, clave: str) -> PoblacionObservada:
         consulta = text(
-            "SELECT population_criteria, population_form, metadata_source FROM corpus.corpus_document "
+            "SELECT population_criteria, population_form, metadata_source, extracted_fields FROM corpus.corpus_document "
             "WHERE starts_with(document_id, :p) AND is_current"
         )
         with self._motor.connect() as conexion:
-            criterios, forma, origen = conexion.execute(consulta, {"p": f"{clave}@"}).one()
-        return PoblacionObservada(dict(criterios), forma, origen)
+            criterios, forma, origen, campos = conexion.execute(consulta, {"p": f"{clave}@"}).one()
+        return PoblacionObservada(dict(criterios), forma, origen, tuple(campos))
 
 
 @dataclass

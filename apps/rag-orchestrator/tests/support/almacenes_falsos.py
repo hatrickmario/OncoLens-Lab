@@ -34,6 +34,7 @@ class CatalogoEnMemoria:
         self.fallar_en: dict[str, Exception] = {}
         # ``guardar_documento`` falla solo al guardar un registro con este ``status`` (p. ej. el ``embebido`` de confirmar).
         self.fallar_al_guardar_status: dict[str, Exception] = {}
+        self.escrituras_de_poblacion = 0
 
     def _puede(self, metodo: str) -> None:
         if metodo in self.fallar_en:
@@ -79,18 +80,29 @@ class CatalogoEnMemoria:
         if registro is None:
             return None
         return PoblacionGuardada(
-            registro.population_criteria, registro.population_form, registro.metadata_source
+            registro.population_criteria,
+            registro.population_form,
+            registro.metadata_source,
+            registro.extracted_fields,
         )
 
     def guardar_poblacion(
-        self, document_id: str, population_criteria: Mapping[str, Any], population_form: str
+        self,
+        document_id: str,
+        population_criteria: Mapping[str, Any],
+        population_form: str,
+        extracted_fields: Sequence[str],
     ) -> None:
         self._puede("guardar_poblacion")
+        self.escrituras_de_poblacion += 1
         registro = self.documentos.get(document_id)
         if registro is None:  # como el UPDATE real: ninguna fila afectada es un fallo, no un alta
             raise VersionInexistente(document_id)
         self.documentos[document_id] = replace(
-            registro, population_criteria=population_criteria, population_form=population_form
+            registro,
+            population_criteria=population_criteria,
+            population_form=population_form,
+            extracted_fields=tuple(extracted_fields),
         )
 
     def ids_de_documentos_vigentes(self) -> frozenset[str]:

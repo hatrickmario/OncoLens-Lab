@@ -15,8 +15,9 @@ from typing import Any, Final
 from app.domain.corpus_metadata.campos import LONGITUD_MAXIMA_DE_VALOR
 from app.domain.corpus_metadata.poblacion_abanico import ValorPropuesto
 from app.domain.corpus_metadata.resultado import CampoDeMetadato, MetadatosResueltos
-from app.domain.poblacion_del_estudio import ESTADO_PENDIENTE
+from app.domain.poblacion_del_estudio import ESTADO_PENDIENTE, valor_guardado_es_valido
 
+NLI_QUE_SOPORTA: Final = "entailment"  # RN-01: solo se guarda lo que el NLI confirmó
 FORMA_LISTA: Final = "lista"
 FORMA_ANTIGUA: Final = "antigua"
 CLAVES_DE_UN_VALOR: Final = frozenset(
@@ -77,7 +78,9 @@ def _es_valor_guardable(valor: object) -> bool:
         isinstance(valor, Mapping)
         and set(valor) == CLAVES_DE_UN_VALOR
         and all(isinstance(v, str) for v in valor.values())
-        and 0 < len(valor["value"]) <= LONGITUD_MAXIMA_DE_VALOR
+        and len(valor["value"]) <= LONGITUD_MAXIMA_DE_VALOR
+        and valor["nliResult"] == NLI_QUE_SOPORTA
+        and valor_guardado_es_valido(valor)
     )
 
 
@@ -130,3 +133,11 @@ def _con_versiones(valores: Sequence[Any], versiones: VersionesDeExtraccion) -> 
         == (versiones.prompt, versiones.modelo, versiones.catalogo)
         for v in valores
     )
+
+
+def campos_extraidos_tras_refrescar(
+    previos: Sequence[str], criterios: Mapping[str, Any]
+) -> tuple[str, ...]:
+    """``extracted_fields`` tras reextraer la población: los campos que no son criterios se conservan y los criterios se
+    reemplazan por los que hoy guardan valores (la muestra humana M-08.4 no puede quedar vieja)."""
+    return (*(c for c in previos if c not in criterios), *criterios_con_valores(criterios))

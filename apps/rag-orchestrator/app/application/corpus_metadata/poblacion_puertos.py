@@ -68,6 +68,8 @@ class PoblacionGuardada:
     population_criteria: Mapping[str, Any]
     population_form: str
     metadata_source: str
+    # Campos extraídos y verificados (muestra humana M-08.4): la refresca de la población los actualiza (US-242).
+    extracted_fields: tuple[str, ...] = ()
 
 
 class AlmacenDePoblacion(Protocol):
@@ -76,7 +78,11 @@ class AlmacenDePoblacion(Protocol):
     def leer_poblacion(self, document_id: str) -> PoblacionGuardada | None: ...
 
     def guardar_poblacion(
-        self, document_id: str, population_criteria: Mapping[str, Any], population_form: str
+        self,
+        document_id: str,
+        population_criteria: Mapping[str, Any],
+        population_form: str,
+        extracted_fields: Sequence[str],
     ) -> None: ...
 
 

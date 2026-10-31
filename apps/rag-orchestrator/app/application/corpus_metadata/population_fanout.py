@@ -196,6 +196,9 @@ class PopulationFanoutExtractor:
         semaforo: asyncio.Semaphore,
     ) -> _ResultadoDeCriterio:
         fragmentos = self._recuperar(documento, criterio)
+        if not fragmentos:
+            # Sin fragmentos relevantes no hay de dónde extraer: lista vacía y ninguna llamada al LLM.
+            return _ResultadoDeCriterio(criterio.clave_de_estudio, [], ContadoresDePoblacion())
         try:
             salida = await self._pedir_valores(criterio, fragmentos, semaforo)
             if salida.valores is None:

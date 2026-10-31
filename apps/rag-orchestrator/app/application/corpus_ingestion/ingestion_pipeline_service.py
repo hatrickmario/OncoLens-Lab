@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
+from dataclasses import replace
 from datetime import date
 
 from app.application.corpus_ingestion.ports import ResolutorDeMetadatos, SparsePassageEncoder
@@ -26,6 +27,7 @@ from app.application.corpus_metadata.poblacion_puertos import (
     ExtractorDePoblacion,
     Fragmento,
     PoblacionExtraida,
+    PoblacionGuardada,
 )
 from app.application.ports import Clock
 from app.application.seed_corpus.ports import (
@@ -47,7 +49,10 @@ from app.application.seed_corpus.registros import (
 )
 from app.application.seed_corpus.release import publicar_release_si_cambio_el_conjunto_vigente
 from app.domain.corpus_metadata.poblacion_contadores import ContadoresDePoblacion
-from app.domain.corpus_metadata.poblacion_escritura import integrar_poblacion_en_abanico
+from app.domain.corpus_metadata.poblacion_escritura import (
+    campos_extraidos_tras_refrescar,
+    integrar_poblacion_en_abanico,
+)
 from app.domain.corpus_metadata.resultado import EXTRAIDO_VERIFICADO, MetadatosResueltos
 from app.domain.corpus_seed.admisibilidad import (
     Admision,
@@ -195,7 +200,7 @@ class IngestionPipelineService:
         versiones = self._catalogo.versiones_del_grupo(documento.version_group_id)
         decision = decidir_version(checksum, versiones)
         if decision.accion is Accion.OMITIR:
-            return self._omitir(documento, decision, texto, checksum)
+            return self._omitir_y_refrescar_poblacion(documento, decision, texto, checksum)
         reanudado = es_reanudacion(checksum, versiones)
         fragmentos = self._fragmentar(texto)
         self._catalogo.guardar_documento(
@@ -277,14 +282,25 @@ class IngestionPipelineService:
                 documento.cancer_type_tags,
                 guardado,
             )
-            self._guardar_si_cambio(document_id, extraida)
+            self._guardar_si_cambio(document_id, guardado, extraida)
         return extraida.contadores
 
-    def _guardar_si_cambio(self, document_id: str, extraida: PoblacionExtraida) -> None:
-        if extraida.contadores.llamadas and self._almacen_de_poblacion is not None:
-            self._almacen_de_poblacion.guardar_poblacion(
-                document_id, extraida.population_criteria, extraida.population_form
-            )
+    def _guardar_si_cambio(
+        self, document_id: str, guardado: PoblacionGuardada, extraida: PoblacionExtraida
+    ) -> None:
+        """Escribe solo si lo extraído difiere de lo guardado: con las mismas versiones no hay UPDATE."""
+        if self._almacen_de_poblacion is None or dict(extraida.population_criteria) == dict(
+            guardado.population_criteria
+        ):
+            return
+        self._almacen_de_poblacion.guardar_poblacion(
+            document_id,
+            extraida.population_criteria,
+            extraida.population_form,
+            campos_extraidos_tras_refrescar(
+                guardado.extracted_fields, extraida.population_criteria
+            ),
+        )
 
     def _embeber(self, fragmentos: Sequence[str]) -> list[list[float]]:
         with _etapa("embeddings"):
@@ -297,18 +313,29 @@ class IngestionPipelineService:
             return list(exigir_sparse_por_pasaje(vectores, len(fragmentos)))
 
     def _omitir(
-        self, documento: DocumentoDeSemilla, decision: DecisionDeVersion, texto: str, checksum: str
+        self, documento: DocumentoDeSemilla, decision: DecisionDeVersion
     ) -> ResultadoDeIngesta:
-        """Ya embebido con ese contenido: no se re-embebe, pero se reconcilia Milvus con el catálogo (RN-05) y se actualiza
-        la población si cambió una versión (US-242 D6)."""
+        """Ya embebido con ese contenido: no se re-embebe, pero se reconcilia Milvus con el catálogo (RN-05)."""
         try:
             with _etapa("milvus"):
                 self._nucleo.reconciliar_omitido(decision)
-            poblacion = self._refrescar_poblacion(documento, texto, checksum)
         except FalloDeEtapa as fallo:
             # Sin fila de error: el documento embebido y vigente sigue siendo la verdad del catálogo.
             return _resultado_de_error(documento, fallo)
-        return ResultadoDeIngesta(documento.document_key, Estado.OMITIDO, poblacion=poblacion)
+        return ResultadoDeIngesta(documento.document_key, Estado.OMITIDO)
+
+    def _omitir_y_refrescar_poblacion(
+        self, documento: DocumentoDeSemilla, decision: DecisionDeVersion, texto: str, checksum: str
+    ) -> ResultadoDeIngesta:
+        """Omitir no hace nada con los chunks; la población se reextrae aparte si cambió una versión (US-242 D6)."""
+        omitido = self._omitir(documento, decision)
+        if omitido.estado is not Estado.OMITIDO:
+            return omitido
+        try:
+            poblacion = self._refrescar_poblacion(documento, texto, checksum)
+        except FalloDeEtapa as fallo:
+            return _resultado_de_error(documento, fallo)
+        return replace(omitido, poblacion=poblacion)
 
     def _indexar(
         self,
