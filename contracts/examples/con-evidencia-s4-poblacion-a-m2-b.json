@@ -51,7 +51,7 @@
         {
           "criterion": "estado_her2",
           "patientValue": "3+ (IHQ)",
-          "studyPopulationValue": "positivo",
+          "studyPopulationValue": "HER2-positive (IHC 3+)",
           "status": "desconocido",
           "unknownReason": "valores_en_conflicto",
           "isExclusionary": true,
@@ -102,12 +102,12 @@
           ],
           "studyPopulationValues": [
             {
-              "value": "positivo",
+              "value": "HER2-positive (IHC 3+)",
               "chunkId": "ch-b4-1",
               "scope": "elegibilidad"
             },
             {
-              "value": "HER2-bajo",
+              "value": "HER2-negative (IHC 2+, ISH not amplified)",
               "chunkId": "ch-b4-2",
               "scope": "elegibilidad"
             }
@@ -128,8 +128,8 @@
       "criteria": [
         {
           "criterion": "estado_menopausico",
-          "patientValue": "premenopáusica",
-          "studyPopulationValue": "premenopáusica",
+          "patientValue": "posmenopáusica",
+          "studyPopulationValue": "premenopausal women",
           "status": "parcial",
           "unknownReason": null,
           "isExclusionary": false,
@@ -153,7 +153,7 @@
               "sourceUrl": "https://corpus.oncolens.test/documentos/doc-b10",
               "possiblyOutdated": false,
               "newerVersionAvailable": false,
-              "chunkTextSnapshot": "Texto sintético de ejemplo: eligible patients were premenopausal, perimenopausal or postmenopausal women.",
+              "chunkTextSnapshot": "Texto sintético de ejemplo: eligible patients were premenopausal or perimenopausal women.",
               "chunkId": "ch-b10-1"
             },
             {
@@ -174,28 +174,28 @@
               "sourceUrl": "https://corpus.oncolens.test/documentos/doc-b10",
               "possiblyOutdated": false,
               "newerVersionAvailable": false,
-              "chunkTextSnapshot": "Texto sintético de ejemplo: women with induced menopause were also eligible.",
+              "chunkTextSnapshot": "Texto sintético de ejemplo: postmenopausal women and women aged 60 or older were also eligible.",
               "chunkId": "ch-b10-2"
             }
           ],
           "studyPopulationValues": [
             {
-              "value": "premenopáusica",
+              "value": "premenopausal women",
               "chunkId": "ch-b10-1",
               "scope": "elegibilidad"
             },
             {
-              "value": "perimenopáusica",
+              "value": "perimenopausal women",
               "chunkId": "ch-b10-1",
               "scope": "elegibilidad"
             },
             {
-              "value": "posmenopáusica",
-              "chunkId": "ch-b10-1",
+              "value": "postmenopausal women",
+              "chunkId": "ch-b10-2",
               "scope": "elegibilidad"
             },
             {
-              "value": "menopausia inducida",
+              "value": "women aged 60 or older",
               "chunkId": "ch-b10-2",
               "scope": "elegibilidad"
             }
@@ -387,7 +387,7 @@
           "sourceUrl": "https://corpus.oncolens.test/documentos/doc-b10",
           "possiblyOutdated": false,
           "newerVersionAvailable": false,
-          "chunkTextSnapshot": "Texto sintético de ejemplo: eligible patients were premenopausal, perimenopausal or postmenopausal women.",
+          "chunkTextSnapshot": "Texto sintético de ejemplo: eligible patients were premenopausal or perimenopausal women.",
           "chunkId": "ch-b10-1"
         },
         {
@@ -408,7 +408,7 @@
           "sourceUrl": "https://corpus.oncolens.test/documentos/doc-b10",
           "possiblyOutdated": false,
           "newerVersionAvailable": false,
-          "chunkTextSnapshot": "Texto sintético de ejemplo: women with induced menopause were also eligible.",
+          "chunkTextSnapshot": "Texto sintético de ejemplo: postmenopausal women and women aged 60 or older were also eligible.",
           "chunkId": "ch-b10-2"
         }
       ]

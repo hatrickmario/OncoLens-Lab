@@ -90,8 +90,8 @@
         },
         {
           "criterion": "estado_menopausico",
-          "patientValue": "premenopáusica",
-          "studyPopulationValue": "premenopáusica",
+          "patientValue": "posmenopáusica",
+          "studyPopulationValue": "premenopausal women",
           "status": "parcial",
           "unknownReason": null,
           "isExclusionary": false,
@@ -121,12 +121,12 @@
           ],
           "studyPopulationValues": [
             {
-              "value": "premenopáusica",
+              "value": "premenopausal women",
               "chunkId": "ch-b1-1",
               "scope": "elegibilidad"
             },
             {
-              "value": "posmenopáusica",
+              "value": "postmenopausal women",
               "chunkId": "ch-b1-1",
               "scope": "elegibilidad"
             }
@@ -180,16 +180,16 @@
       "externalId": "doc-b5",
       "criteria": [
         {
-          "criterion": "estadio",
-          "patientValue": "IIA",
-          "studyPopulationValue": "I",
+          "criterion": "estado_menopausico",
+          "patientValue": "posmenopáusica",
+          "studyPopulationValue": "premenopausal women",
           "status": "parcial",
           "unknownReason": null,
           "isExclusionary": false,
           "patientDataWarning": null,
           "citedSources": [
             {
-              "title": "Estudio sintético B5 de terapia endocrina adyuvante",
+              "title": "Guía sintética B5 de terapia endocrina adyuvante",
               "sourceName": "NCI PDQ",
               "externalId": "doc-b5",
               "language": "en",
@@ -206,25 +206,20 @@
               "sourceUrl": "https://corpus.oncolens.test/documentos/doc-b5",
               "possiblyOutdated": false,
               "newerVersionAvailable": false,
-              "chunkTextSnapshot": "Texto sintético de ejemplo: the study enrolled patients with stage I and II disease; a stage III subgroup was analyzed separately.",
+              "chunkTextSnapshot": "Texto sintético de ejemplo: the guideline describes premenopausal and postmenopausal women with early breast cancer.",
               "chunkId": "ch-b5-1"
             }
           ],
           "studyPopulationValues": [
             {
-              "value": "I",
+              "value": "premenopausal women",
               "chunkId": "ch-b5-1",
               "scope": "elegibilidad"
             },
             {
-              "value": "II",
+              "value": "postmenopausal women",
               "chunkId": "ch-b5-1",
               "scope": "elegibilidad"
-            },
-            {
-              "value": "III",
-              "chunkId": "ch-b5-1",
-              "scope": "subgrupo"
             }
           ],
           "partialReason": "mezclada"
@@ -274,7 +269,7 @@
           ],
           "studyPopulationValues": [
             {
-              "value": "positivo",
+              "value": "triple-negative (TNBC)",
               "chunkId": "ch-b6-1",
               "scope": "subgrupo"
             }
@@ -347,7 +342,7 @@
     },
     {
       "option": "Terapia endocrina adyuvante (estudio B5)",
-      "rationale": "La evidencia recuperada describe terapia endocrina en una población de estadios mezclados.",
+      "rationale": "La evidencia recuperada describe terapia endocrina en una población de estados menopáusicos mezclados.",
       "details": [
         "Texto sintético de ejemplo: el detalle describe, según los fragmentos recuperados, la población incluida en el estudio."
       ],
@@ -376,7 +371,7 @@
       ],
       "citedSources": [
         {
-          "title": "Estudio sintético B5 de terapia endocrina adyuvante",
+          "title": "Guía sintética B5 de terapia endocrina adyuvante",
           "sourceName": "NCI PDQ",
           "externalId": "doc-b5",
           "language": "en",
@@ -393,7 +388,7 @@
           "sourceUrl": "https://corpus.oncolens.test/documentos/doc-b5",
           "possiblyOutdated": false,
           "newerVersionAvailable": false,
-          "chunkTextSnapshot": "Texto sintético de ejemplo: the study enrolled patients with stage I and II disease; a stage III subgroup was analyzed separately.",
+          "chunkTextSnapshot": "Texto sintético de ejemplo: the guideline describes premenopausal and postmenopausal women with early breast cancer.",
           "chunkId": "ch-b5-1"
         }
       ]

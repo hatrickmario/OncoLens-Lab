@@ -7,7 +7,7 @@
 
 ## contratos
 
-- [ ] 0.1 Crear `contracts/examples/con-evidencia-s4-poblacion-a-m2.json` (spec `clinical-api`, target
+- [x] 0.1 Crear `contracts/examples/con-evidencia-s4-poblacion-a-m2.json` (spec `clinical-api`, target
       `#/components/schemas/EvidenceAnalysis`; sintético, A-M2, forma de lista de `l1d-291`, vocabulario no prescriptivo, aviso de IA
       y una pregunta propia) con O-P1 (`estado_menopausico` Parcial `partialReason = inclusiva`, `doc-b1`, y un criterio con
       `unknownReason = respaldo_fallido`), O-P5 (Parcial `mezclada`, `doc-b5`) y O-P6 (`receptores_hormonales` Desconocido
@@ -20,12 +20,19 @@
 
 ## clinical-platform
 
-- [ ] 1.1 Perfil de test E2E: `RAG_ADAPTERS=fake`, catálogo `test-apl-1.2.0` montado en ambos backends y seed de A-M1/A-M2 con FX-08b-a y FX-08b-c · test después (fixture)
-- [ ] 1.2 Handlers MSW de `apps/web/tests/support/msw/` construidos desde `contracts/examples/`: `con-evidencia-s4-poblacion-a-m2.json` y
+- [ ] 1.1 TRASLADADA a 2.9 (pendiente de decisión del orquestador; ver nota) · Perfil de test E2E: `RAG_ADAPTERS=fake`, catálogo `test-apl-1.2.0` montado en ambos backends y seed de A-M1/A-M2 con FX-08b-a y FX-08b-c · test después (fixture)
+- [x] 1.2 Handlers MSW de `apps/web/tests/support/msw/` construidos desde `contracts/examples/`: `con-evidencia-s4-poblacion-a-m2.json` y
       `con-evidencia-s4-poblacion-a-m2-b.json` (0.1: conflicto, Parcial inclusiva y mezclada, subgrupo, 4 valores, `respaldo_fallido`,
       `sin_regla_de_comparacion`), `con-evidencia-s4-poblacion-lista.json` (`l1d-291`), `con-evidencia-s3-aplicabilidad.json` (A-M1,
       forma antigua) y `con-evidencia-s3-poblacion-no-comparable.json` (análisis histórico con `estadio` en `unknownReason = null`) ·
       test después (fixture)
+
+> Evidencia 0.1: `npm run contracts:check` → «sin hallazgos (33 reglas)»; valores alineados con FX-08b-c (A-M2 posmenopáusica).
+> Evidencia 1.2: `apps/web/tests/support/msw-ejemplos-aplicabilidad.test.ts` (3 tests en verde) y `tsc --noEmit` limpio.
+> Nota 1.1: el Compose de E2E responde por `LLM_PROVIDER=fake` eligiendo el ejemplo `rag-query-*` por `query` exacta
+> (`fake_evidence_query.py`); `RAG_ADAPTERS=fake` no existe como modo de ejecución, la semilla no tiene A-M1/A-M2 y el catálogo
+> `test-apl-1.2.0` solo existe como fixture de rag-orchestrator (la copia a `packages/clinical-catalogs` es D4-03/L1D-297). Exige
+> ejemplos `rag-query-*` nuevos (ai-services) y semilla de pacientes: fuera de mis paths; no se marca `[x]`.
 
 ## frontend
 
