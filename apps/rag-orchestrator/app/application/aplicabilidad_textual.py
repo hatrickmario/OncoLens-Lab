@@ -6,9 +6,11 @@ llamada) solo **propone** el valor del estudio con una cita; el valor se acepta
 ``entailment`` sobre el umbral con ese chunk como premisa. El estado lo asigna la regla del catálogo (la misma de
 ``ApplicabilityService``), nunca el LLM, y el valor del paciente se copia del contexto (ADR-34).
 
-Falla cerrada: un fallo del LLM de aplicabilidad es ``LlmLocalNoDisponibleError`` y uno del NLI,
-``NliNoDisponibleError``; nunca se devuelve aplicabilidad sin validar. Logs: solo conteos, latencia, ``nliModel``,
-la versión del prompt y ``traceId``; jamás el valor propuesto, el texto de un chunk ni un ``chunkId`` (RN-10, RN-25).
+Un respaldo que falla (salida cortada o inválida, plazo vencido, LLM caído) deja SOLO ese criterio ``desconocido`` con
+``respaldo_fallido`` y el análisis sigue (RN-26); un fallo del NLI sigue siendo ``NliNoDisponibleError``: nunca se devuelve
+aplicabilidad sin validar. Logs: conteos, latencia, ``nliModel``, la versión del prompt y ``traceId``; del respaldo fallido,
+además, criterio, causa, ``finish_reason``, longitud y los ``chunkId`` del corpus público; jamás el valor propuesto, el texto
+de un chunk, el prompt ni la salida del LLM (RN-10, RN-14, RN-25).
 """
 
 from __future__ import annotations
@@ -44,6 +46,8 @@ from app.domain.relevance import ordenar_por_relevancia
 
 logger = logging.getLogger(__name__)
 
+SIN_FINISH_REASON = "none"
+
 
 @dataclass(frozen=True)
 class ParametrosDelRespaldo:
@@ -60,6 +64,7 @@ class _ResultadoDelRespaldo:
 
     external_id: str
     criterio: str
+    chunk_ids: tuple[str, ...]
     propuestas: tuple[PropuestaDePoblacion, ...] = ()
     fallo: RespaldoFallido | None = None
 
@@ -111,6 +116,7 @@ class AplicabilidadTextual:
         plan = planificar_propuestas(propuestas, a_proponer, self._terminos.reglas_coincidentes)
         soportadas = await self._soporte.pares_soportados(trace_id, pares_para_el_nli(plan))
         resultado = aceptar_propuestas(plan, soportadas)
+        self._registrar_fallos(trace_id, resultados)
         recuentos = recuentos_de_propuestas(a_proponer, propuestas, plan, resultado.aceptadas)
         self._registrar(trace_id, recuentos, inicio)
         con_valores = _con_valores_aceptados(fuentes, criterios, resultado.aceptadas)
@@ -143,7 +149,9 @@ class AplicabilidadTextual:
         """El respaldo es secundario (RN-26): un fallo, un plazo vencido o el LLM caído degradan SOLO este criterio y nunca
         son ``LOCAL_LLM_UNAVAILABLE``. Cualquier otra excepción es un defecto y sube."""
         (criterio,) = fuente.criterios
-        resultado = _ResultadoDelRespaldo(fuente.external_id, criterio.clave)
+        resultado = _ResultadoDelRespaldo(
+            fuente.external_id, criterio.clave, tuple(c.chunk_id for c in fuente.chunks)
+        )
         async with semaforo:
             try:
                 async with asyncio.timeout(self._parametros.plazo_ms / 1000):
@@ -155,6 +163,26 @@ class AplicabilidadTextual:
             except RespaldoFallido as fallo:
                 return replace(resultado, fallo=fallo)
         return replace(resultado, propuestas=propuestas)
+
+    @staticmethod
+    def _registrar_fallos(trace_id: str, resultados: Sequence[_ResultadoDelRespaldo]) -> None:
+        """Un evento por respaldo fallido: criterio, causa, ``finish_reason``, longitud de la salida, los ``chunkId`` del corpus
+        público que recibió y ``traceId``. Nunca el valor, el texto de un fragmento, el prompt, la salida del LLM ni la
+        pregunta (RN-14, regla común de l1d-291…294)."""
+        for resultado in resultados:
+            fallo = resultado.fallo
+            if fallo is None:
+                continue
+            logger.warning(
+                "event=aplicabilidad_respaldo_fallido criterio=%s causa=%s finish_reason=%s longitud=%d "
+                "chunkIds=%s traceId=%s",
+                resultado.criterio,
+                fallo.causa.value,
+                fallo.finish_reason or SIN_FINISH_REASON,
+                fallo.longitud,
+                ",".join(resultado.chunk_ids),
+                trace_id,
+            )
 
     def _registrar(
         self,
