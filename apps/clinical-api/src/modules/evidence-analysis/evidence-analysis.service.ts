@@ -6,7 +6,7 @@ import type {
   RagQueryInternalRequest,
   SourcesSelected,
 } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
-import { PacienteNoEncontradoError } from '../patients/patients.errores.js';
+import { PacienteNoEncontradoError } from '../compartido/pacientes.errores.js';
 import { exigirTipoCancer, alcanceDelTipo } from './case-guards.js';
 import {
   construirContextoPermitido,

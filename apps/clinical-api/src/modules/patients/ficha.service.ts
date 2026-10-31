@@ -4,15 +4,16 @@ import type {
   PatientAdminSummary,
   PatientSummary,
 } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
+import { claseDeError } from '../../infrastructure/logger.js';
 import { faltantesDe } from '../completeness/completeness.rules.js';
 import type { CompletenessService } from '../completeness/ports.js';
 import type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
-import { PacienteNoEncontradoError } from './patients.errores.js';
+import { PacienteNoEncontradoError } from '../compartido/pacientes.errores.js';
 import type { FichaRepository, FilaDePacienteDeLaFicha } from './ficha.repository.js';
 import {
   comoBiomarcador,
   comoDiagnostico,
-  seleccionarDiagnosticoVigente,
+  elegirDiagnosticoVigenteDeLaFicha,
   ultimoValorPorBiomarcador,
 } from './ficha.reglas.js';
 import type { IdentityService } from './identity.service.js';
@@ -30,17 +31,20 @@ export interface DependenciasDeLaFicha {
   completitud: CompletenessService;
 }
 
-async function diagnosticoVigente(
+async function cargarDiagnosticoVigenteDeLaFicha(
   dependencias: DependenciasDeLaFicha,
   patientId: string,
 ): Promise<Diagnosis | null> {
   const { ficha } = dependencias;
-  const vigente = seleccionarDiagnosticoVigente(await ficha.diagnosticos(patientId));
+  const vigente = elegirDiagnosticoVigenteDeLaFicha(await ficha.diagnosticos(patientId));
   if (vigente === null) return null;
   const gradaciones = await ficha.gradaciones(vigente.id);
   const adicionales = await ficha.fuentesAdicionales('diagnosis', [vigente.id]);
   return comoDiagnostico(vigente, gradaciones, adicionales.get(vigente.id) ?? []);
 }
+
+/** Aviso al llamador de que el checklist falló: solo la clase del error, nunca mensaje, pila ni datos (RN-10). */
+type AlFallarElChecklist = (errorClase: string) => void;
 
 /** Lo que la ficha muestra del checklist: el contador y, si el cálculo falló, la marca de que no está disponible. */
 type FaltantesDeLaFicha = Pick<PatientSummary, 'missingCriticalCount' | 'completenessAvailable'>;
@@ -52,10 +56,12 @@ type FaltantesDeLaFicha = Pick<PatientSummary, 'missingCriticalCount' | 'complet
 async function faltantesCriticos(
   completitud: CompletenessService,
   patientId: string,
+  alFallar: AlFallarElChecklist | undefined,
 ): Promise<FaltantesDeLaFicha> {
   try {
     return { missingCriticalCount: faltantesDe(await completitud.calcular(patientId)).length };
-  } catch {
+  } catch (error) {
+    alFallar?.(claseDeError(error));
     return { missingCriticalCount: 0, completenessAvailable: false };
   }
 }
@@ -77,10 +83,11 @@ async function biomarcadoresRecientes(
 async function fichaDelDoctor(
   dependencias: DependenciasDeLaFicha,
   paciente: FilaDePacienteDeLaFicha,
+  alFallarElChecklist: AlFallarElChecklist | undefined,
 ): Promise<PatientSummary> {
   const { identidad, repo, tiposHabilitados, completitud } = dependencias;
   const descifrada = exigirIdentidad((await identidad.descifrar(paciente.id)) ?? undefined);
-  const diagnostico = await diagnosticoVigente(dependencias, paciente.id);
+  const diagnostico = await cargarDiagnosticoVigenteDeLaFicha(dependencias, paciente.id);
   const pendientes = await repo.contarPendientesDeRevision([paciente.id]);
   return {
     view: 'doctor',
@@ -98,7 +105,7 @@ async function fichaDelDoctor(
     diagnosis: diagnostico,
     recentBiomarkers: await biomarcadoresRecientes(dependencias, paciente.id),
     pendingReviewCount: pendientes.get(paciente.id) ?? 0,
-    ...(await faltantesCriticos(completitud, paciente.id)),
+    ...(await faltantesCriticos(completitud, paciente.id, alFallarElChecklist)),
   };
 }
 
@@ -116,11 +123,11 @@ async function fichaDelAdmin(
 /** Ficha del paciente en la vista del permiso; un paciente inexistente es `PacienteNoEncontradoError` (404). */
 export async function obtenerFicha(
   dependencias: DependenciasDeLaFicha,
-  entrada: { patientId: string; vista: VistaPorPermiso },
+  entrada: { patientId: string; vista: VistaPorPermiso; alFallarElChecklist?: AlFallarElChecklist },
 ): Promise<PatientSummary | PatientAdminSummary> {
   const paciente = await dependencias.ficha.paciente(entrada.patientId);
   if (paciente === null) throw new PacienteNoEncontradoError();
   return entrada.vista === 'doctor_listado'
-    ? fichaDelDoctor(dependencias, paciente)
+    ? fichaDelDoctor(dependencias, paciente, entrada.alFallarElChecklist)
     : fichaDelAdmin(dependencias, paciente);
 }

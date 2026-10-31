@@ -1,6 +1,7 @@
 import type { Consultador } from '../auth/auth.repository.js';
 import type { RegistroDeAnalisis } from './analysis-record.js';
-import { sqlDatoVigente } from '../patients/estados-de-revision.js';
+import { sqlOrdenDeDiagnosticoVigente } from '../compartido/diagnostico-vigente.js';
+import { sqlDatoVigente } from '../compartido/estados-de-revision.js';
 import type { OrigenDeDatos } from './ports.js';
 
 export type EstadoDeRevisionMostrable =
@@ -181,7 +182,7 @@ async function leerDiagnosticoActivo(leer: Leer): Promise<FilaDeDiagnostico | nu
             extraction_confidence, review_status, conflicts_with_id
        FROM clinical.diagnosis
       WHERE patient_id = $1 AND is_active AND ${sqlDatoVigente('review_status')}
-      ORDER BY diagnosed_at DESC, id
+      ORDER BY ${sqlOrdenDeDiagnosticoVigente()}
       LIMIT 1`,
   );
   return fila === undefined ? null : diagnosticoDe(fila);

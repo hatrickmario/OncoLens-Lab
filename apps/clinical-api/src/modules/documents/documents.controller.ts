@@ -6,12 +6,8 @@ import type { TraceIdGenerator } from '../../infrastructure/trace-id-generator.j
 import type { SesionAutenticada } from '../auth/auth.service.js';
 import { crearTraceIdMiddleware, traceIdDe } from '../../middleware/trace-id.middleware.js';
 import { AlmacenNoDisponible } from './ports.js';
-import {
-  ArchivoDemasiadoGrande,
-  ArchivoNoPdf,
-  DocumentoDuplicado,
-  PacienteNoEncontrado,
-} from './documents.errores.js';
+import { ArchivoDemasiadoGrande, ArchivoNoPdf, DocumentoDuplicado } from './documents.errores.js';
+import { PacienteNoEncontradoError } from '../compartido/pacientes.errores.js';
 import {
   leerCargaMultipart,
   MultipartIlegible,
@@ -69,7 +65,7 @@ function rechazoDe(error: unknown): Rechazo | undefined {
   if (error instanceof DocumentoDuplicado) {
     return { status: 409, codigo: 'DOCUMENTO_DUPLICADO', resultado: 'documento_duplicado' };
   }
-  if (error instanceof PacienteNoEncontrado) return PACIENTE_NO_ENCONTRADO;
+  if (error instanceof PacienteNoEncontradoError) return PACIENTE_NO_ENCONTRADO;
   if (error instanceof AlmacenNoDisponible) {
     return { status: 503, codigo: 'ALMACEN_NO_DISPONIBLE', resultado: 'almacen_no_disponible' };
   }
