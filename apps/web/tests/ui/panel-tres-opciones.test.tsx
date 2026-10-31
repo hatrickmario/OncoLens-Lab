@@ -25,6 +25,13 @@ const BASE_DESEMPATA =
 const nombres = (cuerpo: { evidenceOptions: { option: string }[] }) =>
   cuerpo.evidenceOptions.map((o) => o.option);
 
+/** Texto de todas las regiones `role="status"` (el anuncio del panel y los avisos no bloqueantes). */
+const anuncios = () =>
+  screen
+    .getAllByRole('status')
+    .map((region) => region.textContent)
+    .join(' ');
+
 async function listaDeOpciones() {
   const lista = await screen.findByRole('list', { name: /opciones descritas/i });
   return within(lista);
@@ -42,7 +49,7 @@ describe('EvidencePanel · hasta tres opciones (L1D-145)', () => {
     const [primera, segunda, tercera] = conEvidenciaTresOpciones.evidenceOptions;
     const cuerpo = {
       ...conEvidenciaTresOpciones,
-      evidenceOptions: [primera, { ...segunda!, relevanceScore: 0.99 }, tercera],
+      evidenceOptions: [primera!, { ...segunda!, relevanceScore: 0.99 }, tercera!],
     };
     bff.responder({ status: 200, cuerpo });
     await analizar();
@@ -57,7 +64,7 @@ describe('EvidencePanel · hasta tres opciones (L1D-145)', () => {
     await analizar();
 
     const lista = await listaDeOpciones();
-    const tercera = lista.getAllByRole('listitem')[2]!;
+    const tercera = lista.getAllByRole('article')[2]!;
     const opcion = conEvidenciaTresOpcionesNoComparable.evidenceOptions[2]!;
     expect(within(tercera).getByText('Población no comparable')).toBeTruthy();
     expect(within(tercera).getByText(opcion.rationale)).toBeTruthy();
@@ -89,7 +96,7 @@ describe('EvidencePanel · hasta tres opciones (L1D-145)', () => {
     const tarjetas = screen.getAllByRole('article');
     expect(tarjetas[2]!.compareDocumentPosition(texto)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     expect(within(texto.parentElement!).queryByRole('link')).toBeNull();
-    expect(screen.getByRole('status').textContent).toContain('1 más con soporte no mostrada');
+    expect(anuncios()).toContain('1 más con soporte no mostrada');
   });
 
   it('no muestra el texto de opciones no mostradas ni lo anuncia cuando optionsNotShown es 0 o está ausente [US-135 AC-7]', async () => {
@@ -97,14 +104,14 @@ describe('EvidencePanel · hasta tres opciones (L1D-145)', () => {
     await analizar();
     await listaDeOpciones();
     expect(screen.queryByText(/opción\(es\) más con soporte/)).toBeNull();
-    expect(screen.getByRole('status').textContent).not.toContain('no mostrada');
+    expect(anuncios()).not.toContain('no mostrada');
     cleanup();
 
     bff.responder({ status: 200, cuerpo: conEvidencia });
     await analizar();
     await screen.findAllByRole('article');
     expect(screen.queryByText(/opción\(es\) más con soporte/)).toBeNull();
-    expect(screen.getByRole('status').textContent).not.toContain('no mostrada');
+    expect(anuncios()).not.toContain('no mostrada');
   });
 
   it('muestra el criterio de aplicabilidad una sola vez con la frase de numeración [US-135 AC-2]', async () => {

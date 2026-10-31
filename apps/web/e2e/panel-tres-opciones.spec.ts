@@ -5,8 +5,10 @@ import { analizar, ejemplo, textos } from './soporte';
 const pregunta = ejemplo('rag-query-request-tres-opciones.json').query as string;
 const respuesta = ejemplo('rag-query-tres-opciones.json');
 const lista = loadProhibitedTerms();
+/** Valor de AI_DISCLAIMER_TEXT con el que arrancó Compose; sin él, el del contrato (RN-19, nunca literal en web). */
 const DISCLAIMER =
-  'Generado por IA; requiere validación clínica independiente por el oncólogo tratante';
+  process.env.AI_DISCLAIMER_TEXT ??
+  (ejemplo('con-evidencia-s4-tres-opciones.json').disclaimer as string);
 
 test.describe('Panel de tres opciones (L1D-145)', () => {
   test.setTimeout(60_000);
