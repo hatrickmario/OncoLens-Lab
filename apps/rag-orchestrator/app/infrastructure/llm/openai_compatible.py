@@ -22,6 +22,10 @@ def cuerpo_de_peticion(
     temperatura: float,
     max_tokens: int,
     razonar: bool = False,
+    *,
+    sistema: str | None = None,
+    semilla: int | None = None,
+    nombre_del_esquema: str = "generation_output",
 ) -> dict[str, Any]:
     """Cuerpo de ``POST /chat/completions`` de producción; el script de ADR-39 lo reutiliza para medir la misma ruta."""
     cuerpo: dict[str, Any] = {

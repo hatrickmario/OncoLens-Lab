@@ -29,7 +29,9 @@ def _fraccion(soportadas: int, afirmaciones: int) -> dict[str, Any]:
 
 
 def fidelidad(
-    resultados: Sequence[ResultadoConsulta], acuerdo_minimo: float | None = None
+    resultados: Sequence[ResultadoConsulta],
+    acuerdo_minimo: float | None = None,
+    muestra_minima: int | None = None,
 ) -> dict[str, Any]:
     """``acuerdo_minimo`` (``JUEZ_ACUERDO_MINIMO``) solo existe si hay juez configurado; sin él no se mide el acuerdo."""
     nli = [v for r in resultados for v in r.afirmaciones_nli]

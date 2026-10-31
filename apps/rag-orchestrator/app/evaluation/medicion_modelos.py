@@ -189,6 +189,14 @@ def mediana(valores: Sequence[float]) -> float:
     return float(statistics.median(valores))
 
 
+def percentil_95_interpolado(valores: Sequence[float]) -> float:
+    raise NotImplementedError("no implementado")
+
+
+def mediana_estadistica(valores: Sequence[float]) -> float:
+    raise NotImplementedError("no implementado")
+
+
 def informe_de_recursos_nli(
     por_lote_ms: Sequence[float],
     por_hipotesis_ms: Sequence[float],

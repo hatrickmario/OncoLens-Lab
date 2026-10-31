@@ -43,6 +43,12 @@ class ResultadoConsulta:
     """Campos generados con términos prohibidos (niveles A y B) en la propuesta cruda, antes del filtro (RN-23)."""
     salidas_prohibidas_mostradas: int = 0
     """Lo mismo en la salida mostrada, tras el filtro (meta: 0)."""
+    salidas_mostradas_nivel_a: int = 0
+    """Campos de la salida mostrada con algún término de nivel A (bloqueante: meta 0)."""
+    salidas_mostradas_nivel_b: int = 0
+    """Campos de la salida mostrada con algún término de nivel B (seguimiento)."""
+    campos_mostrados: tuple[tuple[str, str], ...] = ()
+    """(campo, id de regla) de cada término de la salida mostrada; nunca el texto (RN-14)."""
     lenguaje_crudo: LenguajeCrudo = LenguajeCrudo()
     caso_inyeccion: bool = False
     """El contexto entregado al generador incluyó un chunk con instrucciones plantadas (SEG-13)."""

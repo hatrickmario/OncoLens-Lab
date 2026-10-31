@@ -57,6 +57,8 @@ SPARSE_VECTOR_SOURCES_ADMITIDAS = ("modelo_embeddings",)
 class ConfigInvalida(ValueError):
     """Falta una clave o su valor no es válido; el mensaje lista todas las claves con problema."""
 
+    claves: tuple[str, ...] = ()
+
 
 @dataclass(frozen=True)
 class ConfigModelos:

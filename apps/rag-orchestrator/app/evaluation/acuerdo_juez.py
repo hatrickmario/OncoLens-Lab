@@ -119,7 +119,12 @@ def kappa_de_cohen(a: Sequence[bool], b: Sequence[bool]) -> float | None:
     return (observado - esperado) / (1 - esperado)
 
 
-def marcar_fidelidad_no_concluyente(porcentaje_de_acuerdo_: float | None, minimo: float) -> bool:
+def marcar_fidelidad_no_concluyente(
+    porcentaje_de_acuerdo_: float | None,
+    minimo: float,
+    muestra: int | None = None,
+    muestra_minima: int | None = None,
+) -> bool:
     """RN-22: bajo ``JUEZ_ACUERDO_MINIMO`` (o sin acuerdo medible) la fidelidad del juez no es concluyente."""
     return porcentaje_de_acuerdo_ is None or porcentaje_de_acuerdo_ < minimo
 

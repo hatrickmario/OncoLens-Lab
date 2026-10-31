@@ -62,6 +62,7 @@ class PuertosLocales:
     reranker: Reranker
     clasificador_nli: NliClassifier
     generador: EvidenceGenerator
+    proponente: object | None = None
 
 
 class EmbedderRegistrado:
