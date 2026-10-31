@@ -199,4 +199,5 @@ flowchart LR
 
 - **Despacho:** L1D-144 se despacha en cuanto #269 se mergee (con D4-20), luego L1D-300 y L1D-145. L1D-299 y L1D-297 solo si el uso del límite de la suscripción sigue por debajo del 80 %.
 - **Regla de recorte vigente:** si el uso pasa del 80 %, se recorta por el orden de prioridad del Roadmap: RAG de conocimiento -> búsqueda por los datos del paciente -> OCR -> gestión de usuarios (lo último se recorta primero). El orden de recorte de tarjetas del 2026-10-29 (US-003/US-005, US-238, US-133, US-112) sigue como referencia dentro del sprint.
-- **L1D-296:** se acepta la lista RN-23 horneada en el build y el filtro de cliente de nivel A (pin de versión -> D4-23).
+- **L1D-296:** se acepta la lista RN-23 horneada en el build y el filtro de cliente de nivel A (pin de versión -> D4-24).
+- **Actualización (2026-10-31, modo aceleración: el S4 se cierra hoy; comunicada por la sesión `sprint-S4`):** prioridad de recorte de hoy: RAG de usuario (L1D-144 -> L1D-300 -> L1D-145, L1D-296) > datos de demo (L1D-297) > L1D-299 (mejor esfuerzo; si no cabe pasa al S5) > el resto. El Gate 2 pasa a **una sola vuelta**, con guardianes solo por ruta, y solo bloquean las invariantes MVP (RN-10/11/12/14, RN-21, RN-05, RN-23, contrato); el resto de Mayores y Menores va a `S4-deuda.md`. Esto sustituye la condición del 80 % de uso para L1D-299 y L1D-297 de más arriba.
