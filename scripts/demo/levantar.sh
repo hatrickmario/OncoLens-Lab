@@ -17,6 +17,9 @@ raiz="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
 export MODEL_HOST_DIR="${MODEL_HOST_DIR:-$HOME/adr39-modelos}"
 export APP_ENV=local
 export LLM_MODEL="${LLM_MODEL:-gemma4:26b-a4b-it-q4_K_M}"
+# Puerto del Ollama que usa el demo (por defecto el 11434; otro puerto sirve para no tocar un Ollama ajeno).
+puerto_ollama="${OLLAMA_PUERTO:-11434}"
+export OLLAMA_HOST="127.0.0.1:${puerto_ollama}" LLM_BASE_URL="http://host.docker.internal:${puerto_ollama}/v1"
 # Paciente semilla (a): idSembrado('paciente-a'); ruta de inicio tras el login.
 PACIENTE_SEMILLA="0fd028e2-f8b0-56c7-a748-2a4e473d879d"
 export WEB_HOME_PATH="/pacientes/${PACIENTE_SEMILLA}/analisis"
@@ -65,24 +68,24 @@ mem_docker_gb=$(docker info --format '{{.MemTotal}}' | awk '{printf "%d", $1/107
 [ "$mem_docker_gb" -ge 12 ] || echo "AVISO: la VM de Docker tiene ${mem_docker_gb} GB; se recomiendan >= 12 GB (Settings > Resources)"
 
 paso "Ollama (contexto 8192, flash attention)"
-if curl -fsS -m 2 http://127.0.0.1:11434/api/version >/dev/null 2>&1; then
-  if pgrep -f "Ollama.app/Contents/Resources/ollama serve" >/dev/null; then
+if curl -fsS -m 2 http://127.0.0.1:${puerto_ollama}/api/version >/dev/null 2>&1; then
+  if [ "$puerto_ollama" = "11434" ] && pgrep -f "Ollama.app/Contents/Resources/ollama serve" >/dev/null; then
     fallar "la app de Ollama está abierta y usa su propio contexto (32768), no el de ADR-39 (8192): ciérrala (icono de la barra de menú > Quit Ollama) y repite"
   fi
   echo "Ollama ya responde: debe haberse iniciado con OLLAMA_CONTEXT_LENGTH=8192 OLLAMA_FLASH_ATTENTION=1 (ADR-39)"
 else
   OLLAMA_CONTEXT_LENGTH=8192 OLLAMA_FLASH_ATTENTION=1 nohup ollama serve >"$estado/ollama.log" 2>&1 &
   echo $! >"$estado/ollama.pid"
-  for _ in $(seq 1 20); do curl -fsS -m 2 http://127.0.0.1:11434/api/version >/dev/null 2>&1 && break; sleep 1; done
-  curl -fsS -m 2 http://127.0.0.1:11434/api/version >/dev/null || fallar "Ollama no arrancó (ver $estado/ollama.log)"
+  for _ in $(seq 1 20); do curl -fsS -m 2 http://127.0.0.1:${puerto_ollama}/api/version >/dev/null 2>&1 && break; sleep 1; done
+  curl -fsS -m 2 http://127.0.0.1:${puerto_ollama}/api/version >/dev/null || fallar "Ollama no arrancó (ver $estado/ollama.log)"
 fi
 ollama list | awk 'NR>1{print $1}' | grep -qx "$LLM_MODEL" || fallar "falta el modelo: ollama pull $LLM_MODEL"
 
 paso "Modelo en memoria (se comprueba el contexto de 8192)"
-curl -fsS -m 300 http://127.0.0.1:11434/api/generate \
+curl -fsS -m 300 http://127.0.0.1:${puerto_ollama}/api/generate \
   -d "{\"model\":\"$LLM_MODEL\",\"prompt\":\"hola\",\"stream\":false,\"think\":false,\"options\":{\"num_predict\":1}}" >/dev/null \
   || fallar "no pude cargar $LLM_MODEL en Ollama"
-contexto=$(curl -fsS -m 5 http://127.0.0.1:11434/api/ps | python3 -c "
+contexto=$(curl -fsS -m 5 http://127.0.0.1:${puerto_ollama}/api/ps | python3 -c "
 import json, sys
 modelos = [m for m in json.load(sys.stdin).get('models', []) if sys.argv[1] in (m.get('name'), m.get('model'))]
 print(modelos[0].get('context_length', '') if modelos else '')" "$LLM_MODEL")
