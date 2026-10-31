@@ -1,5 +1,13 @@
 {
-  "version": "1.1.0",
+  "version": "1.2.0",
   "cancerTypes": ["mama", "prostata"],
-  "standards": ["cie10", "loinc", "atc"]
+  "standards": ["cie10", "loinc", "atc"],
+  "poblacionReglas": {
+    "mama": {
+      "catalogHash": "5e4479a08ec06147538d30d9be3530325d471f542b9cebc0c8c97171993988a7"
+    },
+    "prostata": {
+      "catalogHash": "2443ad86783b312e5f7e56540b1c30c204065ecb82f6509e5f5e7b0fb83b54b8"
+    }
+  }
 }
