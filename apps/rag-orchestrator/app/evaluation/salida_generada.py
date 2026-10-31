@@ -33,6 +33,20 @@ def textos_de_opcion_mostrada(opcion: EvidenceOption) -> list[TextoGenerado]:
     ]
 
 
+def textos_de_poblacion(respuesta: RagQueryInternalResponse) -> list[TextoGenerado]:
+    """Los valores de población del estudio que muestra cada criterio: los extrae el LLM de la ingesta (RN-23, ADR-47)."""
+    textos: list[TextoGenerado] = []
+    for fuente in respuesta.applicability:
+        for criterio in fuente.criteria:
+            if criterio.studyPopulationValue is not None:
+                textos.append(("studyPopulationValue", criterio.studyPopulationValue))
+            textos.extend(
+                ("studyPopulationValues[].value", valor.value)
+                for valor in criterio.studyPopulationValues or []
+            )
+    return textos
+
+
 def textos_de_respuesta(respuesta: RagQueryInternalResponse) -> list[TextoGenerado]:
     """Todo lo generado que la respuesta muestra, incluidas las opciones descartadas y la síntesis."""
     textos: list[TextoGenerado] = []
@@ -44,6 +58,7 @@ def textos_de_respuesta(respuesta: RagQueryInternalResponse) -> list[TextoGenera
         textos.extend(
             ("unsupportedClaims", afirmacion) for afirmacion in descartada.unsupportedClaims
         )
+    textos.extend(textos_de_poblacion(respuesta))
     textos.extend((CAMPO_LIMITACION, limitacion.text) for limitacion in respuesta.limitations)
     textos.extend(("synthesis", acuerdo.root.text) for acuerdo in respuesta.synthesis.agreements)
     for discrepancia in respuesta.synthesis.discrepancies:
