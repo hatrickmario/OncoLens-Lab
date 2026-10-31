@@ -10,6 +10,8 @@ from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 
+from app.domain.lenguaje import normalizar_texto
+
 REESCRITURA_MAX_ITERACIONES_INICIAL = 1
 REESCRITURA_PLAZO_MS_INICIAL = 3000
 REESCRITURA_MAX_TOKENS_DE_SALIDA_INICIAL = 128
@@ -54,14 +56,28 @@ class ConsultaDelSegundoLoop:
 def debe_reescribir(
     chunks_sobre_umbral: int, habilitada: bool, iteracion: int, max_iteraciones: int
 ) -> bool:
-    raise NotImplementedError("no implementado")
+    """RN-02 enmendada: solo con el loop previo vacío, la reescritura habilitada y iteraciones por consumir.
+
+    ``iteracion`` cuenta los segundos loops ya ejecutados (0 antes del primero)."""
+    return habilitada and chunks_sobre_umbral == 0 and iteracion < max_iteraciones
 
 
 def filtrar_terminos_del_catalogo(
     propuestos: Sequence[str], catalogo: Collection[str]
 ) -> tuple[str, ...]:
-    raise NotImplementedError("no implementado")
+    """Solo los términos que el catálogo versionado conoce (RN-27), normalizados, sin repetir y en orden de aparición.
+
+    ``catalogo`` ya viene normalizado (``normalizar_texto``); el resto se descarta sin inventar códigos."""
+    admitidos: dict[str, None] = {}
+    for termino in propuestos:
+        normalizado = normalizar_texto(termino)
+        if normalizado in catalogo:
+            admitidos.setdefault(normalizado)
+    return tuple(admitidos)
 
 
 def conservar_pregunta_original(pregunta: str, terminos: Sequence[str]) -> ConsultaDelSegundoLoop:
-    raise NotImplementedError("no implementado")
+    """La original manda (RN-03, RN-06): los términos solo se suman al texto que se embebe, nunca la sustituyen."""
+    return ConsultaDelSegundoLoop(
+        texto_de_busqueda=" ".join((pregunta, *terminos)), pregunta_original=pregunta
+    )
