@@ -9,7 +9,12 @@ import {
   peticion,
 } from './msw/evidence-analyses';
 
-type Criterio = { status: string; unknownReason: string | null; partialReason?: string | null; studyPopulationValues?: { scope: string }[] };
+type Criterio = {
+  status: string;
+  unknownReason: string | null;
+  partialReason?: string | null;
+  studyPopulationValues?: { scope: string }[];
+};
 type Cuerpo = { applicability: { criteria: Criterio[] }[] };
 
 const criteriosDe = (c: unknown) => (c as Cuerpo).applicability.flatMap((a) => a.criteria);
@@ -44,9 +49,16 @@ describe('Ejemplos de aplicabilidad servidos por MSW (L1D-131)', () => {
     const b = criteriosDe(conEvidenciaPoblacionA_M2B);
     const causas = [...a, ...b].map((c) => c.unknownReason).filter(Boolean);
     expect(causas).toEqual(
-      expect.arrayContaining(['respaldo_fallido', 'no_reportado_por_fuente', 'valores_en_conflicto', 'sin_regla_de_comparacion']),
+      expect.arrayContaining([
+        'respaldo_fallido',
+        'no_reportado_por_fuente',
+        'valores_en_conflicto',
+        'sin_regla_de_comparacion',
+      ]),
     );
-    expect(a.map((c) => c.partialReason)).toEqual(expect.arrayContaining(['inclusiva', 'mezclada']));
+    expect(a.map((c) => c.partialReason)).toEqual(
+      expect.arrayContaining(['inclusiva', 'mezclada']),
+    );
     expect(a.some((c) => c.studyPopulationValues?.some((v) => v.scope === 'subgrupo'))).toBe(true);
     expect(b.some((c) => (c.studyPopulationValues?.length ?? 0) === 4)).toBe(true);
   });
