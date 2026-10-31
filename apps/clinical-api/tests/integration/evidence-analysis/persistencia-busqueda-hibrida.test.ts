@@ -71,6 +71,7 @@ describe('persistencia del bloque retrievalParams con la fusión (RN-06, US-112)
         [
           'fusion',
           'fusionParam',
+          'queryRewrite',
           'relevanceThreshold',
           'rerankTopN',
           'retrievalMode',

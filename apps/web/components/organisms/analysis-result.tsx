@@ -14,7 +14,7 @@ import { QueSeBusco } from '../molecules/que-se-busco';
 import { ScopeNotice } from '../molecules/scope-notice';
 import { AnalysisBasisPanel } from './analysis-basis-panel';
 import { DiscardedOptions } from './discarded-options';
-import { EvidenceOptionCard } from './evidence-option-card';
+import { EvidenceOptionsList, ID_ENCABEZADO_OPCIONES } from './evidence-options-list';
 import { OrderingCriterion } from './ordering-criterion';
 
 export interface AnalysisResultProps {
@@ -38,18 +38,13 @@ export function AnalysisResult({ analisis, patientId, onVerFragmento }: Analysis
       <AiDisclaimer text={analisis.disclaimer} />
       {clase === 'con_opciones' && (
         <>
-          <h2>{resultado.encabezado}</h2>
+          <h2 id={ID_ENCABEZADO_OPCIONES}>{resultado.encabezado}</h2>
           <OrderingCriterion analisis={analisis} />
-          {analisis.evidenceOptions.map((opcion, indice) => (
-            <EvidenceOptionCard
-              key={opcion.option}
-              opcion={opcion}
-              indice={indice}
-              fuentes={analisis.applicability}
-              patientId={patientId}
-              onVerFragmento={onVerFragmento}
-            />
-          ))}
+          <EvidenceOptionsList
+            analisis={analisis}
+            patientId={patientId}
+            onVerFragmento={onVerFragmento}
+          />
         </>
       )}
       {clase === 'solo_descartadas' && (

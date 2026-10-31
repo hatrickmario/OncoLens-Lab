@@ -72,6 +72,26 @@ class TestConcordanciaDeEstados:
 
         assert (resultado.aciertos, resultado.total) == (0, 1)
 
+    def test_cuenta_el_criterio_cuando_el_aviso_esperado_coincide_con_el_del_dato_del_paciente(
+        self,
+    ) -> None:
+        obtenido = criterio(aviso="sin_verificar")
+        esperado = Esperado("coincide", aviso="sin_verificar")
+
+        assert concordancia_de_estados({"estado_her2": esperado}, [obtenido]).aciertos == 1
+
+    def test_no_cuenta_el_criterio_cuando_el_aviso_esperado_difiere(self) -> None:
+        esperado = Esperado("coincide", aviso="sin_verificar")
+
+        assert concordancia_de_estados({"estado_her2": esperado}, [criterio()]).aciertos == 0
+
+    def test_no_compara_el_aviso_cuando_el_esperado_no_lo_declara(self) -> None:
+        obtenido = criterio(aviso="sin_verificar")
+
+        assert (
+            concordancia_de_estados({"estado_her2": Esperado("coincide")}, [obtenido]).aciertos == 1
+        )
+
 
 class TestCoincideSinCita:
     def test_vale_cero_cuando_el_criterio_cita_el_mejor_chunk_de_la_fuente(self) -> None:

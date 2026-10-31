@@ -132,7 +132,16 @@ export const zRagMeta = z.strictObject({
             'rrf',
             'ponderada'
         ]),
-        fusionParam: z.number().gte(0)
+        fusionParam: z.number().gte(0),
+        queryRewrite: z.strictObject({
+            applied: z.boolean(),
+            reason: z.enum([
+                'disparado',
+                'no_disparado',
+                'no_disponible',
+                'no_aplica'
+            ])
+        })
     }),
     latencyMs: z.int().gte(0)
 });

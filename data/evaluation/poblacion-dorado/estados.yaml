@@ -1,0 +1,63 @@
+# F-20…F-24 (DEC-11): el estado lo fija un humano leyendo la regla del catálogo, no la salida del código.
+casos:
+- id: F-20
+  criterio: estado_menopausico
+  tipo_de_cancer: mama
+  paciente: posmenopáusica
+  valores:
+  - valor: premenopausal women
+    scope: elegibilidad
+    chunk: ch-a
+  - valor: postmenopausal women
+    scope: elegibilidad
+    chunk: ch-a
+  esperado:
+    estado: parcial
+- id: F-21
+  criterio: estado_menopausico
+  tipo_de_cancer: mama
+  paciente: premenopáusica
+  valores:
+  - valor: postmenopausal women
+    scope: elegibilidad
+    chunk: ch-a
+  esperado:
+    estado: desconocido
+- id: F-21b
+  criterio: estado_menopausico
+  tipo_de_cancer: mama
+  paciente: premenopáusica
+  valores:
+  - valor: only postmenopausal women
+    scope: elegibilidad
+    chunk: ch-a
+  esperado:
+    estado: no_coincide
+- id: F-22
+  criterio: estado_menopausico
+  tipo_de_cancer: mama
+  paciente: posmenopáusica
+  valores:
+  - valor: premenopausal women
+    scope: elegibilidad
+    chunk: ch-a
+  - valor: postmenopausal women
+    scope: elegibilidad
+    chunk: ch-b
+  citados:
+  - ch-b
+  esperado:
+    estado: coincide
+- id: F-23
+  criterio: estado_her2
+  tipo_de_cancer: mama
+  paciente: 3+
+  valores:
+  - valor: HER2-positive (IHC 3+)
+    scope: elegibilidad
+    chunk: ch-a
+  - valor: HER2-negative (IHC 2+, ISH not amplified)
+    scope: elegibilidad
+    chunk: ch-b
+  esperado:
+    estado: desconocido

@@ -7,9 +7,9 @@ extremo, palancas viables) se fijan en ``eval/configs/adr39-fase-a3.yaml`` antes
 
 from __future__ import annotations
 
+from app.evaluation.estadistica import mediana
 import json
 import math
-import statistics
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
@@ -246,11 +246,11 @@ def agregar_corridas_a3(corridas: Sequence[dict[str, Any]]) -> dict[str, Any]:
     primera = next(c for c in corridas if "calidad" in c)
     return {
         "corridas": len(corridas),
-        "rss_carga_mb": statistics.median(c["rss_carga_mb"] for c in corridas),
-        "rss_max_mb": statistics.median(c["rss_max_mb"] for c in corridas),
-        "pico_rss_mb": statistics.median(c["pico_rss_mb"] for c in corridas),
-        "p50_ms": statistics.median(c["latencia"]["p50_ms"] for c in corridas),
-        "p95_ms": statistics.median(c["latencia"]["p95_ms"] for c in corridas),
+        "rss_carga_mb": mediana(c["rss_carga_mb"] for c in corridas),
+        "rss_max_mb": mediana(c["rss_max_mb"] for c in corridas),
+        "pico_rss_mb": mediana(c["pico_rss_mb"] for c in corridas),
+        "p50_ms": mediana(c["latencia"]["p50_ms"] for c in corridas),
+        "p95_ms": mediana(c["latencia"]["p95_ms"] for c in corridas),
         "p95_ms_por_corrida": [c["latencia"]["p95_ms"] for c in corridas],
         "rss_max_mb_por_corrida": [c["rss_max_mb"] for c in corridas],
         "calidad": primera["calidad"],

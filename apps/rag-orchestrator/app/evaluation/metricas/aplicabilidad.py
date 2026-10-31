@@ -19,6 +19,8 @@ class Esperado:
 
     estado: str
     causa: str | None = None
+    aviso: str | None = None
+    """Aviso del dato del paciente que el humano espera (RN-26: ``sin_verificar``…); ``None`` = no se compara."""
 
 
 @dataclass(frozen=True)
@@ -43,13 +45,15 @@ class ParEvaluado:
 def concordancia_de_estados(
     esperados: Mapping[str, Esperado], obtenidos: Sequence[CriterioEvaluado]
 ) -> Concordancia:
-    """Criterios con el estado (y la causa, si el contrato la lleva) esperados; un criterio ausente cuenta como fallo."""
+    """Criterios con el estado (y la causa y el aviso, si el esperado los declara) esperados; un criterio ausente cuenta
+    como fallo."""
     por_clave = {c.clave: c for c in obtenidos}
     aciertos = sum(
         1
         for clave, esperado in esperados.items()
         if (c := por_clave.get(clave)) is not None
         and (c.estado, c.causa) == (esperado.estado, esperado.causa)
+        and (esperado.aviso is None or c.aviso == esperado.aviso)
     )
     return Concordancia(aciertos, len(esperados))
 
