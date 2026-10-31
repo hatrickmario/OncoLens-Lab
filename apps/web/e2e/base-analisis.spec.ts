@@ -7,21 +7,21 @@ const preguntaSinEvidencia = ejemplo('rag-query-request-sin-evidencia.json').que
 test.describe('Base del análisis (L1D-187)', () => {
   test.setTimeout(60_000);
 
+  // US-005 AC-2: la UI envía continueWithWarning=true con faltantes, así que la Base añade «continuó con aviso» (US-128 AC-2).
   // Desviación: Compose monta el catálogo real y el seed no incluye F-M2 (seis faltantes de test-1.0.0); el recorrido
   // comprueba que el contador del resumen coincide con las etiquetas del detalle del paciente semilla (a).
-  test('dice N datos críticos faltantes sin continuó con aviso y lista N etiquetas cuando la UI analiza el paciente semilla [US-128 AC-4]', async ({
+  test('dice N datos críticos faltantes con continuó con aviso y lista N etiquetas cuando la UI analiza el paciente semilla [US-128 AC-4]', async ({
     page,
   }) => {
     await analizar(page, preguntaHer2);
     await esperarResultado(page);
 
     const resumen = page.getByText(
-      /^(\d+) datos críticos faltantes · Supuestos: \d+ · Fuentes no incluidas: NCCN, ESMO · Afirmaciones omitidas: 0$/,
+      /^(\d+) datos críticos faltantes · continuó con aviso · Supuestos: \d+ · Fuentes no incluidas: NCCN, ESMO · Afirmaciones omitidas: 0$/,
     );
     await expect(resumen).toBeVisible();
     const cuenta = Number((await resumen.innerText()).match(/^(\d+) /)?.[1]);
     expect(cuenta).toBeGreaterThan(0);
-    await expect(page.getByText(/continuó con aviso/)).toHaveCount(0);
     await expect(page.getByText(/aún no se calculan/)).toHaveCount(0);
 
     await page.getByRole('button', { name: 'Ver detalle de la Base' }).click();
