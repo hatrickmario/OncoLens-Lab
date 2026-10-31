@@ -46,8 +46,8 @@ def test_plantilla_contiene_la_instruccion_de_poblacion_y_escenario_atribuida_a_
     assert "no lo dirijas al paciente" in texto
 
 
-def test_version_del_prompt_es_rag_query_0_4_0_porque_etiqueta_la_procedencia_de_los_datos():
-    assert VERSION_DEL_PROMPT == "rag-query@0.4.0"
+def test_version_del_prompt_es_rag_query_0_5_0_porque_pide_afirmaciones_atomicas_por_papel():
+    assert VERSION_DEL_PROMPT == "rag-query@0.5.0"
 
 
 def test_prompt_incluye_pregunta_contexto_y_alias_de_cada_fragmento():
@@ -55,7 +55,9 @@ def test_prompt_incluye_pregunta_contexto_y_alias_de_cada_fragmento():
         [ChunkPuntuado("ch-1", "doc-1", "texto del fragmento", 0.9)]
     ).fragmentos
 
-    prompt = construir_prompt_rag_query("¿pregunta?", "mama; HER2 positivo", fragmentos, "es")
+    prompt = construir_prompt_rag_query(
+        "¿pregunta?", "mama; HER2 positivo", fragmentos, "es", 1, 4, 20
+    )
 
     assert "¿pregunta?" in prompt
     assert "mama; HER2 positivo" in prompt
@@ -70,7 +72,7 @@ def test_prompt_conserva_las_llaves_del_texto_de_un_fragmento_sin_interpretarlas
         [ChunkPuntuado("ch-1", "doc-1", "valor {idioma} y {0}", 0.9)]
     ).fragmentos
 
-    prompt = construir_prompt_rag_query("p", "", fragmentos, "en")
+    prompt = construir_prompt_rag_query("p", "", fragmentos, "en", 1, 4, 20)
 
     assert "valor {idioma} y {0}" in prompt
     assert "inglés" in prompt
@@ -208,7 +210,7 @@ def test_bloque_de_datos_sin_etiquetas_coincide_con_el_resumen_embebido_cuando_s
 
 
 def test_plantilla_explica_las_mismas_etiquetas_que_el_bloque_emite():
-    prompt = construir_prompt_rag_query("p", "- dato", [], "es")
+    prompt = construir_prompt_rag_query("p", "- dato", [], "es", 1, 4, 20)
 
     encabezado = next(
         linea for linea in prompt.splitlines() if linea.startswith("Datos del paciente")
@@ -229,6 +231,9 @@ def test_prompt_con_datos_etiquetados_no_contiene_terminos_prohibidos_ni_identif
         bloque_de_datos_del_paciente(contexto),
         fragmentos,
         "es",
+        1,
+        4,
+        20,
     )
 
     assert "(sin verificar)" in prompt

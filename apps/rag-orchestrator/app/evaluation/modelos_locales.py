@@ -198,6 +198,7 @@ def _settings_de(config: ConfigSuite, entorno: Mapping[str, str]) -> Settings:
                 "llm_provider": "local",
                 "llm_base_url": config.urls["llm"],
                 "llm_model": config.llm_modelo,
+                "claim_max_words": config.umbrales.claim_max_words,
             },
         )
     except ValidationError as error:

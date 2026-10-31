@@ -3,4 +3,5 @@
 - [Verificaciones locales de la CI](verificaciones_locales_ci.md) — env vars para generate:check, eval-required, quality; cambiar ejemplos rompe clinical-api
 - [Integración RAG iterativa](integracion_rag_iterativa.md) — up una vez / run N veces del job integration-rag; git ls-files --cached copia el árbol
 - [Medición local de evaluate](medicion_local_evaluate.md) — lanzador .py sin source, Ollama propio en otro puerto, resultados de L1D-298
+- [Arnés clinical-api y hooks (L1D-295)](arnes_l1d295_clinical_api_y_hooks.md) — PostgreSQL de test iterativo, trailer Test-Removal en -m y comandos que rechaza el worktree
 - [ONNX desde bytes y entorno de trabajo](onnx_bytes_y_entorno_de_trabajo.md) — trampas de ORT con datos externos y cómo correr pytest/vitest/ruff en el worktree

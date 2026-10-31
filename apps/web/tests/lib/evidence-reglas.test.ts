@@ -138,6 +138,11 @@ describe('mensajeDeError', () => {
     expect(mensajeDeError(503)).toBe('evidence.error.modeloNoDisponible');
   });
 
+  it('devuelve la clave de la salida no validada para 503 LLM_OUTPUT_INVALID y la del modelo no disponible para cualquier otro 503 [US-245 AC-1]', () => {
+    expect(mensajeDeError(503, 'LLM_OUTPUT_INVALID')).toBe('evidence.error.salidaNoValidada');
+    expect(mensajeDeError(503, null)).toBe('evidence.error.modeloNoDisponible');
+  });
+
   it('devuelve la clave del tiempo agotado para 504', () => {
     expect(mensajeDeError(504)).toBe('evidence.error.tiempoAgotado');
   });

@@ -20,6 +20,11 @@ from app.domain.alias_de_chunks import asignar_alias
 from app.domain.relevance import ChunkPuntuado
 from app.infrastructure.llm.openai_compatible import cuerpo_de_peticion
 from app.evaluation.dataset_loader import Dataset, Pregunta, cargar_dataset_configurado
+from app.domain.atribucion import (
+    CLAIM_MAX_WORDS_INICIAL,
+    CLAIMS_MAX_INICIAL,
+    CLAIMS_MIN_INICIAL,
+)
 from app.prompts.rag_query import construir_prompt_rag_query
 from app.scripts.adr39.config import CandidatoLlm, ConfigFaseB
 from app.scripts.adr39.reglas import (
@@ -75,7 +80,15 @@ def _prompt_de(pregunta: Pregunta) -> str:
         for n, e in enumerate(pregunta.evidencia, start=1)
     ]
     tabla = asignar_alias(fragmentos)
-    return construir_prompt_rag_query(pregunta.texto, "", tabla.fragmentos, pregunta.idioma)
+    return construir_prompt_rag_query(
+        pregunta.texto,
+        "",
+        tabla.fragmentos,
+        pregunta.idioma,
+        CLAIMS_MIN_INICIAL,
+        CLAIMS_MAX_INICIAL,
+        CLAIM_MAX_WORDS_INICIAL,
+    )
 
 
 class ClienteRuntime:

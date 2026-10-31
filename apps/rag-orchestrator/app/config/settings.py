@@ -19,6 +19,11 @@ from app.domain.corpus_seed.admisibilidad import (
     clase_contradice_el_texto,
 )
 from app.domain.corpus_seed.chunking import validar_ventana
+from app.domain.atribucion import (
+    CLAIM_MAX_WORDS_INICIAL,
+    CLAIMS_MAX_INICIAL,
+    CLAIMS_MIN_INICIAL,
+)
 from app.domain.fusion_de_candidatos import HYBRID_SPARSE_WEIGHT_INICIAL, RRF_K_INICIAL
 from app.domain.reglas_proveedor import (
     HOSTS_LOCALES,
@@ -60,8 +65,11 @@ class Settings(BaseSettings):
     # compatible con OpenAI no lo recibe por petición. El modelo elegido (`LLM_MODEL`) lo fija el ADR al aprobarse.
     llm_num_ctx: int = Field(default=8192, gt=0)
     llm_temperature: float = Field(default=0.0, ge=0.0, le=2.0)
-    # Párrafos de detalle por opción que se piden al LLM (ARR-08, RN-22); 0 desactiva el detalle. El contrato admite hasta 2.
-    details_max_paragraphs: int = Field(default=2, ge=0, le=2)
+    # Afirmaciones atómicas por opción (US-245, RN-22): de `CLAIMS_MIN_PER_OPTION` a `CLAIMS_MAX_PER_OPTION` (una es la
+    # principal) y `CLAIM_MAX_WORDS` palabras como máximo cada una; una salida fuera de esos límites no se repara.
+    claims_min_per_option: int = Field(default=CLAIMS_MIN_INICIAL, ge=1)
+    claims_max_per_option: int = Field(default=CLAIMS_MAX_INICIAL, ge=1)
+    claim_max_words: int = Field(default=CLAIM_MAX_WORDS_INICIAL, gt=0)
     # Presupuesto de caracteres de fragmentos que entran al prompt (RN-22): la ventana de LLM_NUM_CTX se reparte con la salida.
     llm_fragments_max_chars: int = Field(default=12000, gt=0)
     # Motor y idiomas del OCR (los consume FEAT-01b, S2): un motor desconocido falla al arrancar.
@@ -233,6 +241,12 @@ class Settings(BaseSettings):
         if valor is not None and not _SHA256.fullmatch(valor):
             raise ValueError(f"{str(info.field_name).upper()}: debe ser un SHA-256 hexadecimal")
         return valor
+
+    @model_validator(mode="after")
+    def _rango_de_afirmaciones_coherente(self) -> Self:
+        if self.claims_min_per_option > self.claims_max_per_option:
+            raise ValueError("CLAIMS_MIN_PER_OPTION no puede superar a CLAIMS_MAX_PER_OPTION")
+        return self
 
     @model_validator(mode="after")
     def _rechazar_fake_con_datos_reales(self) -> Self:

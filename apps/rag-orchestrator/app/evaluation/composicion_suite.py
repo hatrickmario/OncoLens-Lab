@@ -78,6 +78,8 @@ class ServicioDeSuite:
     juez_nli: JuezFidelidad
     juez_llm: JuezSecundario | None
     latencias_nli: LatenciasNli
+    claim_max_words: int
+    """``CLAIM_MAX_WORDS`` de la suite: el mismo que usa el verificador del servicio (RN-22)."""
 
 
 PARAMETROS_DEL_RESPALDO_DE_LA_SUITE = ParametrosDelRespaldo(
@@ -104,6 +106,7 @@ def parametros_de_recuperacion(
         llm_model=config.llm_modelo,
         nli_entailment_threshold=u.nli_entailment_threshold,
         tipos_habilitados=tipos_habilitados,
+        claim_max_words=u.claim_max_words,
         respaldo=respaldo,
     )
 
@@ -206,4 +209,5 @@ def componer_servicio(
         ),  # sin cronómetro: no es la etapa «nli»
         juez_llm,
         nli.latencias,
+        config.umbrales.claim_max_words,
     )

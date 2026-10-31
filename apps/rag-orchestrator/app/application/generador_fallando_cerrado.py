@@ -14,7 +14,8 @@ logger = logging.getLogger(__name__)
 class GeneradorFallandoCerrado:
     """Implementa ``EvidenceGenerator`` sobre otro generador (RN-10, RN-12).
 
-    Una excepción inesperada o un valor que no es ``EvidenciaGenerada`` (incluida una salida que el
+    Los ``ErrorDeAplicacion`` (p. ej. ``LlmSalidaInvalidaError``, `503 LLM_OUTPUT_INVALID`) pasan tal cual con su código
+    propio: nunca se disfrazan de «LLM no disponible». Una excepción inesperada o un valor que no es ``EvidenciaGenerada`` (incluida una salida que el
     generador entregue a medias) se traducen a ``LlmLocalNoDisponibleError`` sin mensaje ni traceback: ``from None``
     evita que el texto de la pregunta o el detalle del modelo lleguen a los logs. Hoy ``generar`` devuelve la
     evidencia completa; cuando L1D-275 la entregue como flujo, el envoltorio deberá consumirlo entero antes de

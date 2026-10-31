@@ -8,6 +8,8 @@ const respuesta = (
 
 const DEADLINE_VENCIDO = respuesta(504, 'DEADLINE_VENCIDO', 'deadline_vencido');
 const LLM_LOCAL_NO_DISPONIBLE = respuesta(503, 'LOCAL_LLM_UNAVAILABLE', 'llm_local_no_disponible');
+/** El modelo respondió, pero su salida no se pudo validar: se propaga con su código, nunca como «LLM no disponible» (Q1). */
+const SALIDA_LLM_NO_VALIDADA = respuesta(503, 'LLM_OUTPUT_INVALID', 'salida_llm_no_validada');
 const TIPO_CANCER_NO_REGISTRADO = respuesta(
   422,
   'TIPO_CANCER_NO_REGISTRADO',
@@ -24,6 +26,8 @@ function falloDe503(codigo: string | null | undefined): RespuestaDeFallo {
   switch (codigo) {
     case 'LOCAL_LLM_UNAVAILABLE':
       return LLM_LOCAL_NO_DISPONIBLE;
+    case 'LLM_OUTPUT_INVALID':
+      return SALIDA_LLM_NO_VALIDADA;
     case 'RETRIEVAL_UNAVAILABLE':
       return servicioIa('recuperacion_no_disponible');
     case 'NLI_UNAVAILABLE':

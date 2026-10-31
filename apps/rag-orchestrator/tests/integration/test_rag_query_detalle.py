@@ -6,8 +6,8 @@ de cada afirmación. Cada respuesta la valida contra el spec del proveedor el ho
 
 import pytest
 
-from app.application.generation import LlmEvidenceGenerator
-from tests.support.llm_falso import DETALLE_DOS, DETALLE_UNO, FakeLlmClient
+from tests.support.generador_llm import generador_con_llm
+from tests.support.llm_falso import DETALLE_DOS, DETALLE_TRES, DETALLE_UNO, FakeLlmClient
 from tests.support.nli_falso import IMPLICA, NEUTRAL, NliFalso
 from tests.support.recuperacion import Q_HER2, crear_entorno, solicitud_de
 
@@ -16,7 +16,7 @@ RESPUESTA = "#/components/schemas/RagQueryInternalResponse"
 
 def _consultar(escenario: str, nli: NliFalso, **generador):
     entorno = crear_entorno(
-        generador=LlmEvidenceGenerator(FakeLlmClient(escenario), **generador), clasificador_nli=nli
+        generador=generador_con_llm(FakeLlmClient(escenario), **generador), clasificador_nli=nli
     )
     respuesta = entorno.consultar(solicitud_de(Q_HER2))
     assert respuesta.status_code == 200
@@ -24,39 +24,57 @@ def _consultar(escenario: str, nli: NliFalso, **generador):
     return cuerpo
 
 
+MARCO = "La fuente reporta que "
+
+
 @pytest.mark.ac("ARR-08", 2)
-def test_rag_query_devuelve_los_parrafos_de_detalle_en_orden_y_solo_hasta_el_maximo_configurado_cuando_el_nli_los_soporta():
+def test_rag_query_devuelve_los_detalles_en_orden_con_el_marco_cuando_el_nli_soporta_las_secundarias():
     cuerpo = _consultar("LLM-CON-DETALLE", NliFalso(por_defecto=IMPLICA))
 
     opcion = cuerpo["evidenceOptions"][0]
-    assert opcion["details"] == [DETALLE_UNO, DETALLE_DOS]
+    assert opcion["details"] == [MARCO + DETALLE_UNO, MARCO + DETALLE_DOS]
     assert cuerpo["omittedClaims"] == 0
 
 
-def test_rag_query_respeta_un_maximo_de_un_parrafo_de_detalle_cuando_se_configura_asi():
-    cuerpo = _consultar("LLM-CON-DETALLE", NliFalso(por_defecto=IMPLICA), max_parrafos_detalle=1)
+def test_rag_query_agrupa_en_el_ultimo_detalle_lo_que_excede_el_maximo_del_contrato():
+    cuerpo = _consultar("LLM-CON-TRES-DETALLES", NliFalso(por_defecto=IMPLICA))
 
-    assert cuerpo["evidenceOptions"][0]["details"] == [DETALLE_UNO]
+    assert cuerpo["evidenceOptions"][0]["details"] == [
+        MARCO + DETALLE_UNO,
+        f"{MARCO}{DETALLE_DOS} {MARCO}{DETALLE_TRES}",
+    ]
+
+
+def test_rag_query_responde_503_llm_output_invalid_cuando_la_salida_excede_el_maximo_de_afirmaciones():
+    entorno = crear_entorno(
+        generador=generador_con_llm(FakeLlmClient("LLM-CON-TRES-DETALLES"), claims_max=3),
+        clasificador_nli=NliFalso(por_defecto=IMPLICA),
+    )
+
+    respuesta = entorno.consultar(solicitud_de(Q_HER2))
+
+    assert respuesta.status_code == 503
+    assert respuesta.json()["error"] == "LLM_OUTPUT_INVALID"
 
 
 @pytest.mark.ac("ARR-08", 2)
-def test_rag_query_omite_el_parrafo_sin_soporte_y_cuenta_omitted_claims_sin_descartar_la_opcion():
+def test_rag_query_omite_la_secundaria_sin_soporte_y_cuenta_omitted_claims_sin_descartar_la_opcion():
     nli = NliFalso(por_defecto=IMPLICA, resultados={DETALLE_DOS: NEUTRAL})
 
     cuerpo = _consultar("LLM-CON-DETALLE", nli)
 
-    assert cuerpo["evidenceOptions"][0]["details"] == [DETALLE_UNO]
+    assert cuerpo["evidenceOptions"][0]["details"] == [MARCO + DETALLE_UNO]
     assert cuerpo["discardedOptions"] == []
     assert cuerpo["omittedClaims"] == 1
 
 
-def test_rag_query_no_incluye_details_en_la_opcion_cuando_el_llm_no_los_trae():
+def test_rag_query_no_incluye_details_en_la_opcion_cuando_el_llm_no_trae_mas_que_la_principal():
     cuerpo = _consultar("LLM-OK", NliFalso(por_defecto=IMPLICA))
 
     assert "details" not in cuerpo["evidenceOptions"][0]
 
 
-def test_rag_query_no_incluye_details_cuando_ningun_parrafo_se_soporta():
+def test_rag_query_no_incluye_details_cuando_ninguna_secundaria_se_soporta():
     cuerpo = _consultar(
         "LLM-CON-DETALLE",
         NliFalso(por_defecto=IMPLICA, resultados={DETALLE_UNO: NEUTRAL, DETALLE_DOS: NEUTRAL}),
@@ -69,7 +87,7 @@ def test_rag_query_no_incluye_details_cuando_ningun_parrafo_se_soporta():
 def _prompts_enviados(**generador) -> list[str]:
     llm = FakeLlmClient("LLM-OK")
     entorno = crear_entorno(
-        generador=LlmEvidenceGenerator(llm, **generador),
+        generador=generador_con_llm(llm, **generador),
         clasificador_nli=NliFalso(por_defecto=IMPLICA),
     )
     assert entorno.consultar(solicitud_de(Q_HER2)).status_code == 200
@@ -88,7 +106,7 @@ def test_el_prompt_recorta_los_fragmentos_al_presupuesto_dejando_siempre_el_mas_
     assert prompt.count("[fragmento C") == 1
 
 
-def test_rag_query_omite_el_parrafo_de_detalle_con_artefactos_de_generacion_aunque_el_nli_lo_implique():
+def test_rag_query_omite_la_secundaria_con_artefactos_de_generacion_aunque_el_nli_lo_implique():
     cuerpo = _consultar("LLM-DETALLE-CON-ARTEFACTO", NliFalso(por_defecto=IMPLICA))
 
-    assert cuerpo["evidenceOptions"][0]["details"] == [DETALLE_UNO]
+    assert cuerpo["evidenceOptions"][0]["details"] == [MARCO + DETALLE_UNO]

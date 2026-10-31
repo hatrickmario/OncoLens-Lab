@@ -6,7 +6,7 @@ import {
   zEvidenceAnalysis,
   zEvidenceAnalysisRequest,
 } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
-import { esCodigoConEstadoPropio, type CodigoConEstadoPropio } from './clasificar-fallo';
+import { esCodigoConMensajePropio, type CodigoConMensajePropio } from './clasificar-fallo';
 import { leerRetryAfter } from './reglas-del-formulario';
 
 export type ResultadoDeSolicitud =
@@ -17,7 +17,7 @@ export type ResultadoDeSolicitud =
   | {
       tipo: 'error';
       httpStatus: number;
-      codigo: CodigoConEstadoPropio | null;
+      codigo: CodigoConMensajePropio | null;
       traceId: string | null;
     };
 
@@ -49,7 +49,7 @@ async function leerError(respuesta: Response): Promise<ResultadoDeSolicitud> {
     tipo: 'error',
     httpStatus: respuesta.status,
     // El `message` se descarta; `error` solo sirve para elegir el estado, nunca se muestra.
-    codigo: esCodigoConEstadoPropio(error) ? error : null,
+    codigo: esCodigoConMensajePropio(error) ? error : null,
     traceId: typeof traceId === 'string' ? traceId : null,
   };
 }

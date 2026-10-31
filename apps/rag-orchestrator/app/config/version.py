@@ -3,4 +3,4 @@
 Un test compara ambas; subir el contrato obliga a subir esta constante.
 """
 
-VERSION_DEL_SERVICIO = "1.7.0"
+VERSION_DEL_SERVICIO = "1.8.0"

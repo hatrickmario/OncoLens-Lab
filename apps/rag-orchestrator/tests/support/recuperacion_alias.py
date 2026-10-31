@@ -7,7 +7,7 @@ Orden esperado por ``relevance_score`` descendente y ``chunkId`` ascendente: ``c
 
 from __future__ import annotations
 
-from app.application.generation import LlmEvidenceGenerator
+from tests.support.generador_llm import generador_con_llm
 from tests.support.llm_falso import FakeLlmClient
 from tests.support.recuperacion import (
     CORPUS_FX06A,
@@ -72,5 +72,5 @@ def entorno_con_alias(
     return crear_entorno(
         buscador=BuscadorFalso(chunks=CHUNKS_FX06A_C),
         reranker=RerankerFalso(puntajes={Q_HER2: puntajes}),
-        generador=LlmEvidenceGenerator(llm),
+        generador=generador_con_llm(llm),
     )

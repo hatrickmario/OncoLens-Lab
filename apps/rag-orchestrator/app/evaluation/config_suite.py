@@ -11,6 +11,7 @@ from typing import Any
 
 import yaml
 
+from app.domain.atribucion import CLAIM_MAX_WORDS_INICIAL
 from app.evaluation.reporte import es_identificador
 from app.evaluation.rutas import raiz_repo
 
@@ -41,6 +42,7 @@ class Umbrales:
     nli_entailment_threshold: float
     retrieval_top_k: int
     rerank_top_n: int
+    claim_max_words: int = CLAIM_MAX_WORDS_INICIAL
 
 
 @dataclass(frozen=True)
@@ -258,6 +260,7 @@ def cargar_config_suite(ruta: Path, entorno: Mapping[str, str] | None = None) ->
             nli_entailment_threshold=float(clave_de(umbrales, "nli_entailment_threshold")),
             retrieval_top_k=int(clave_de(umbrales, "retrieval_top_k")),
             rerank_top_n=int(clave_de(umbrales, "rerank_top_n")),
+            claim_max_words=int(umbrales.get("claim_max_words", CLAIM_MAX_WORDS_INICIAL)),
         ),
         catalogo_version=str(clave_de(crudo, "catalogo", "version")),
         ruta_terminos=ruta_del_repo(str(clave_de(crudo, "catalogo", "ruta_terminos"))),

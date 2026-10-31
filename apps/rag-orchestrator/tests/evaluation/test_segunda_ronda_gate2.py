@@ -322,7 +322,9 @@ def _huella(generador: LlmEvidenceGenerator) -> tuple[object, ...]:
         cliente._max_output_tokens,  # noqa: SLF001
         cliente._temperature,  # noqa: SLF001
         generador._max_chars_fragmentos,  # noqa: SLF001
-        generador._max_parrafos_detalle,  # noqa: SLF001
+        generador._claims_min,  # noqa: SLF001
+        generador._claims_max,  # noqa: SLF001
+        generador._claim_max_words,  # noqa: SLF001
     )
 
 
@@ -358,6 +360,25 @@ def test_el_generador_de_la_suite_y_el_de_produccion_tienen_la_misma_configuraci
     assert isinstance(puertos.generador, LlmEvidenceGenerator)
     assert _huella(puertos.generador) == _huella(de_produccion)
     assert _huella(puertos.generador)[2:6] == (12.345, 777, 0.3, 999)
+
+
+def test_el_generador_de_la_suite_local_recibe_claim_max_words_de_la_configuracion_y_no_del_entorno(
+    tmp_path: Path,
+) -> None:
+    from dataclasses import replace
+
+    entorno = crear_entorno_de_modelos(tmp_path / "pesos").con(CLAIM_MAX_WORDS="30")
+    base = config_local()
+    config = replace(base, umbrales=replace(base.umbrales, claim_max_words=15))
+
+    puertos = cargar_puertos_locales(
+        config,
+        OrigenLocal(entorno, modelos_fingidos, lambda: 0.0),
+        RegistroDeLlamadas(),
+        "sintetico",
+    )
+
+    assert puertos.generador._claim_max_words == 15  # noqa: SLF001
 
 
 def test_el_proponente_de_la_suite_local_es_el_de_produccion_y_no_el_silencioso(

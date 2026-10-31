@@ -73,6 +73,7 @@ def test_los_valores_iniciales_de_la_fusion_son_los_mismos_en_settings_y_en_los_
         llm_model="m",
         nli_entailment_threshold=0.7,
         tipos_habilitados=(),
+        claim_max_words=20,
         respaldo=ParametrosDelRespaldo(plazo_ms=1, concurrencia=1, version_del_prompt="p"),
     )
 

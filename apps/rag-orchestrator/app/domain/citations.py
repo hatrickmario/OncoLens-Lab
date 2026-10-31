@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
 
+from app.domain.claims import AfirmacionAtomica
 from app.domain.relevance import ChunkPuntuado
 
 
@@ -25,6 +26,9 @@ class OpcionGenerada:
     chunk_ids_citados: tuple[str, ...]
     # Párrafos opcionales que amplían la justificación (ARR-08): se validan como el resto de lo generado (RN-01, RN-23).
     details: tuple[str, ...] = ()
+    # Afirmaciones atómicas por papel de la generación real (US-245): ``rationale`` y ``details`` ya están compuestos con
+    # el marco. Vacío en el resto de los orígenes (p. ej. la proposición textual de población): se verifica por oraciones.
+    afirmaciones: tuple[AfirmacionAtomica, ...] = ()
 
 
 class MotivoDeDescarte(StrEnum):

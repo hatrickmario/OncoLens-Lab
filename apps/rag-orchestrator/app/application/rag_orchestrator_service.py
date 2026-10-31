@@ -126,6 +126,8 @@ class ParametrosDeRecuperacion:
     nli_entailment_threshold: float
     tipos_habilitados: tuple[str, ...]
     """``ENABLED_CANCER_TYPES`` ya validada contra el manifiesto (RN-20); vacía = ningún tipo."""
+    claim_max_words: int
+    """``CLAIM_MAX_WORDS`` (US-245, RN-22): palabras máximas de una afirmación atómica; más es «fuera de forma»."""
     respaldo: ParametrosDelRespaldo
     """Plazo, concurrencia y versión del prompt del respaldo de la población (US-244, RN-22)."""
     reranker_max_pairs: int | None = None
@@ -189,6 +191,7 @@ class RAGOrchestratorService:
             terminos=verificador_terminos,
             umbral=parametros.nli_entailment_threshold,
             reloj=reloj,
+            max_palabras_por_afirmacion=parametros.claim_max_words,
         )
         self._textual = AplicabilidadTextual(
             proponente=proponente,
