@@ -12,9 +12,13 @@ export function anclaPermitida(fragmento: string): AnclaDeFicha | null {
   return ANCLAS_DE_FICHA.find((ancla) => ancla === nombre) ?? null;
 }
 
-/** Ruta de la ficha del paciente, con ancla opcional. Precondición: `patientId` es un UUID. */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Ruta de la ficha del paciente, con ancla opcional: único lugar que arma esta ruta (D7).
+ * Precondición: `patientId` es un UUID; cualquier otro valor lanza en vez de armar una ruta con él.
+ */
 export function hrefDeFicha(patientId: string, ancla?: AnclaDeFicha): string {
-  void patientId;
-  void ancla;
-  throw new Error('no implementado');
+  if (!UUID.test(patientId)) throw new Error('patientId debe ser un UUID');
+  return ancla ? `/pacientes/${patientId}#${ancla}` : `/pacientes/${patientId}`;
 }

@@ -10,15 +10,15 @@ export function motivoDelEstado(
   criterio: ApplicabilityCriterion,
   valores: ValoresDelEstudio,
 ): string | null {
-  const { motivoParcial, causaDesconocido } = mensajes().evidence.aplicabilidad;
+  const { motivoParcial, causaDesconocido, causaSintetica } = mensajes().evidence.aplicabilidad;
   if (criterio.status === 'parcial') {
     return criterio.partialReason ? motivoParcial[criterio.partialReason] : null;
   }
   if (criterio.status !== 'desconocido') return null;
-  if (criterio.unknownReason === null) return causaDesconocido.sin_causa_registrada;
+  if (criterio.unknownReason === null) return causaSintetica.sin_causa_registrada;
   const soloContexto = valores.elegibilidad.length === 0 && valores.contexto.length > 0;
   if (criterio.unknownReason === 'no_reportado_por_fuente' && soloContexto) {
-    return causaDesconocido.solo_subgrupo;
+    return causaSintetica.solo_contexto_de_subgrupo;
   }
   return causaDesconocido[criterio.unknownReason];
 }

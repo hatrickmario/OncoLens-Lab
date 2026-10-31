@@ -1,4 +1,4 @@
-import type { AnclaDeFicha } from '../ficha/anclas';
+import { hrefDeFicha, type AnclaDeFicha } from '../ficha/anclas';
 import { mensajes } from '../mensajes';
 
 const ANCLA_POR_CRITERIO: Record<string, AnclaDeFicha> = {
@@ -17,6 +17,5 @@ export function rotuloDeCriterio(clave: string): string {
 
 /** Enlace a la sección de la ficha donde se registra el dato; sin sección propia, al encabezado de la ficha (D7). */
 export function enlaceDeFichaParaCriterio(patientId: string, clave: string): string {
-  const ancla = ANCLA_POR_CRITERIO[clave];
-  return ancla ? `/pacientes/${patientId}#${ancla}` : `/pacientes/${patientId}`;
+  return hrefDeFicha(patientId, ANCLA_POR_CRITERIO[clave]);
 }

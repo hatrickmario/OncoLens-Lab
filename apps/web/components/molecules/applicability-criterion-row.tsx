@@ -30,8 +30,8 @@ export function ApplicabilityCriterionRow({
     citas.map((c) => c.chunkId),
   );
   const enConflicto = criterio.unknownReason === 'valores_en_conflicto';
-  const presentar = (conAlcance: boolean) => (valor: (typeof valores.elegibilidad)[number]) =>
-    presentarValor(valor, citas, { conDatosDelFragmento: enConflicto, conAlcance });
+  const presentar = (valor: (typeof valores.elegibilidad)[number]) =>
+    presentarValor(valor, citas, { conDatosDelFragmento: enConflicto });
   return (
     <tr>
       <th scope="row" data-etiqueta={columnas.criterio}>
@@ -56,8 +56,8 @@ export function ApplicabilityCriterionRow({
       </td>
       <td data-etiqueta={columnas.estudio}>
         <StudyValueList
-          valores={valores.elegibilidad.map(presentar(false))}
-          contexto={valores.contexto.map(presentar(true))}
+          valores={valores.elegibilidad.map(presentar)}
+          contexto={valores.contexto.map(presentar)}
         />
       </td>
       <td data-etiqueta={columnas.estado}>

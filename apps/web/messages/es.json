@@ -95,8 +95,10 @@
         "subgrupo": "subgrupo",
         "mencion": "mención"
       },
+      "fuenteDelFragmento": "según {fuente}",
+      "fragmentoNoDisponible": "valor extraído por IA; fragmento no disponible",
       "fechaDelFragmento": "Publicado: {fecha}",
-      "tamanoDelFragmento": "Tamaño de muestra: {n}",
+      "tamanoDelFragmento": "Tamaño de muestra del estudio: {n}",
       "motivoParcial": {
         "inclusiva": "el estudio incluyó varios grupos, entre ellos el del paciente",
         "mezclada": "el fragmento mezcla poblaciones sin desagregarlas",
@@ -106,11 +108,13 @@
       "causaDesconocido": {
         "falta_en_paciente": "falta en los datos registrados",
         "no_reportado_por_fuente": "la fuente no reporta este dato",
-        "solo_subgrupo": "la fuente no reporta este dato para la población elegible (solo para un subgrupo)",
-        "valores_en_conflicto": "los fragmentos citados muestran valores distintos; se muestran ambos; requieren contraste con la fuente y con la validación clínica/patológica.",
-        "varios_valores_en_la_fuente": "la fuente reporta varios valores; se muestran junto a su fragmento",
+        "valores_en_conflicto": "los fragmentos citados muestran valores distintos; se muestran ambos; requieren contraste con la fuente y con la validación clínica/patológica",
+        "varios_valores_en_la_fuente": "la fuente reporta varios valores; se muestran junto a su fragmento, sin determinar cuál corresponde al paciente",
         "respaldo_fallido": "no se pudo determinar el valor del estudio; no indica que el criterio coincida ni que no coincida",
-        "sin_regla_de_comparacion": "el catálogo no define cómo comparar este criterio",
+        "sin_regla_de_comparacion": "el catálogo no define cómo comparar este criterio"
+      },
+      "causaSintetica": {
+        "solo_contexto_de_subgrupo": "la fuente no reporta este dato para la población elegible (solo para un subgrupo)",
         "sin_causa_registrada": "causa no registrada en este análisis"
       },
       "criterios": {

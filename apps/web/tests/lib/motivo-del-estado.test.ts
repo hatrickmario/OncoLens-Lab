@@ -3,7 +3,7 @@ import type { ApplicabilityCriterion } from '../../../../packages/api-contracts/
 import { motivoDelEstado } from '../../lib/evidence/motivo-del-estado';
 import { mensajes } from '../../lib/mensajes';
 
-const { motivoParcial, causaDesconocido } = mensajes().evidence.aplicabilidad;
+const { motivoParcial, causaDesconocido, causaSintetica } = mensajes().evidence.aplicabilidad;
 const SIN_VALORES = { elegibilidad: [], contexto: [] };
 
 function criterio(parcial: Partial<ApplicabilityCriterion>): ApplicabilityCriterion {
@@ -50,7 +50,7 @@ describe('motivoDelEstado', () => {
   });
 
   it('devuelve causa no registrada cuando el Desconocido no trae unknownReason', () => {
-    expect(motivoDelEstado(criterio({}), SIN_VALORES)).toBe(causaDesconocido.sin_causa_registrada);
+    expect(motivoDelEstado(criterio({}), SIN_VALORES)).toBe(causaSintetica.sin_causa_registrada);
   });
 
   it('devuelve la causa de subgrupo cuando no_reportado_por_fuente solo trae valores de contexto', () => {
@@ -60,7 +60,7 @@ describe('motivoDelEstado', () => {
     };
 
     expect(motivoDelEstado(criterio({ unknownReason: 'no_reportado_por_fuente' }), valores)).toBe(
-      causaDesconocido.solo_subgrupo,
+      causaSintetica.solo_contexto_de_subgrupo,
     );
   });
 
