@@ -14,11 +14,16 @@ from pathlib import Path
 
 import numpy as np
 
-from app.evaluation.chunking_variants import ChunkCandidato, Seccion, Variante, fragmentar
-from app.evaluation.chunking_variants import Tokenizador
+from app.domain.normalizacion_puntaje import normalizar_a_unidad
+from app.evaluation.chunking_variants import (
+    ChunkCandidato,
+    Seccion,
+    Tokenizador,
+    Variante,
+    fragmentar,
+)
 from app.evaluation.cronometro import resumen_de_latencia
 from app.evaluation.dataset_loader import ParNli, Pregunta
-from app.domain.normalizacion_puntaje import normalizar_a_unidad
 from app.evaluation.envoltorios import ClasificadorNli, Embedder, Reranker
 from app.evaluation.retrieval_metrics import ChunkRecuperado, ResultadoPregunta, evaluar_pregunta
 

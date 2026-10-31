@@ -7,8 +7,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+import httpx
 import numpy as np
 import pytest
+import respx
+from datos_sinteticos import mock_fuentes, preparar_dataset
+from modelos_falsos import FabricaFalsa
+
 from app.evaluation.chunking_variants import Variante
 from app.evaluation.config_medicion import ModeloSpec
 from app.evaluation.dataset_loader import cargar_dataset
@@ -27,10 +32,6 @@ from app.evaluation.indices_milvus import (
     verificar_nombre_temporal,
 )
 from app.scripts.adr39_fetch_sources import descargar_fuentes
-from datos_sinteticos import mock_fuentes, preparar_dataset
-from modelos_falsos import FabricaFalsa
-import httpx
-import respx
 
 AHORA = datetime(2026, 10, 16, 9, 0, tzinfo=timezone.utc)
 SPEC = ModeloSpec("A", "embeddings", "falso/a", "a" * 40, "embedding", 512, pooling="cls")

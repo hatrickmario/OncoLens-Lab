@@ -6,8 +6,6 @@ from typing import Any
 
 import pytest
 
-from app.domain.poblacion_del_estudio import poblacion_desde_lo_guardado
-
 from app.domain.corpus_metadata.poblacion_abanico import ValorPropuesto
 from app.domain.corpus_metadata.poblacion_escritura import (
     FORMA_LISTA,
@@ -22,6 +20,7 @@ from app.domain.corpus_metadata.poblacion_escritura import (
     marca_pendiente,
 )
 from app.domain.corpus_metadata.resultado import FUENTE_ESTRUCTURADA, MetadatosResueltos
+from app.domain.poblacion_del_estudio import poblacion_desde_lo_guardado
 
 VERSIONES = VersionesDeExtraccion("poblacion_v1", "modelo-1", "cat-1")
 

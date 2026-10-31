@@ -11,17 +11,18 @@ import copy
 from typing import Any
 
 from app.application.ports import (
-    PoblacionTask,
     EvidenciaGenerada,
     NliClassifier,
+    PoblacionTask,
     ResultadoDeRecuperacion,
 )
 from app.application.rag_orchestrator_service import ParametrosDeRecuperacion
 from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
-from app.domain.citations import FichaDeFuente, OpcionGenerada
+from app.domain.citations import FichaDeFuente
 from app.schemas.generated.models import RagQueryInternalRequest
 from tests.support.aplicabilidad import FICHAS_FX08BA, criterios_de
 from tests.support.catalogo_aplicabilidad import APL_1_2_0
+from tests.support.opcion_generada import opcion_atomica
 from tests.support.poblacion_lista import MARCA_PENDIENTE, poblacion_guardada, valor_nuevo
 from tests.support.recuperacion import (
     PARAMETROS_DE_PRUEBA,
@@ -181,7 +182,7 @@ class GeneradorLlmPob:
 
     def __init__(self, *opciones: str) -> None:
         self._opciones = tuple(
-            OpcionGenerada(texto_de_opcion(o), RAZON, OPCIONES_LLM_POB[o]) for o in opciones
+            opcion_atomica(texto_de_opcion(o), RAZON, OPCIONES_LLM_POB[o]) for o in opciones
         )
         self.recuperaciones: list[ResultadoDeRecuperacion] = []
 

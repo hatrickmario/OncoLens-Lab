@@ -4,10 +4,14 @@ from __future__ import annotations
 
 import pytest
 
-from app.domain.atribucion import FormaDeAfirmacion, componer_con_marco, validar_forma_de_afirmacion
+from app.domain.atribucion import (
+    FORMULA_DE_ATRIBUCION,
+    FormaDeAfirmacion,
+    componer_con_marco,
+    validar_forma_de_afirmacion,
+)
 from app.domain.claims import AfirmacionAtomica, PapelDeAfirmacion
 from app.domain.modales_normativos import VERSION_DE_MODALES_NORMATIVOS
-from app.prompts.rag_query import FORMULA_DE_ATRIBUCION
 
 P, S, V = PapelDeAfirmacion.principal, PapelDeAfirmacion.secundaria, PapelDeAfirmacion.salvedad
 

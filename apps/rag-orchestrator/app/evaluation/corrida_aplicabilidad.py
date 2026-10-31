@@ -24,10 +24,9 @@ from app.application.contexto_del_paciente import contexto_del_paciente
 from app.application.ports import Clock, CoberturaDePoblacion, LectorDeCoberturaDePoblacion
 from app.application.verificacion_de_soporte import VerificadorDeSoporte
 from app.config.settings import Settings
-from app.evaluation.composicion_suite import PARAMETROS_DEL_RESPALDO_DE_LA_SUITE
 from app.domain.aplicabilidad_tipos import CriterioEvaluado
-from app.domain.poblacion_del_estudio import poblacion_desde_lo_guardado
 from app.domain.cobertura_poblacion import proporcion_con_criterios
+from app.domain.poblacion_del_estudio import poblacion_desde_lo_guardado
 from app.domain.relevance import ChunkPuntuado
 from app.evaluation.adaptadores_falsos import (
     CoberturaEnMemoria,
@@ -35,6 +34,7 @@ from app.evaluation.adaptadores_falsos import (
     ProponenteGuionado,
     ficha_sintetica,
 )
+from app.evaluation.composicion_suite import PARAMETROS_DEL_RESPALDO_DE_LA_SUITE
 from app.evaluation.config_aplicabilidad import ConfigAplicabilidad, cargar_config_aplicabilidad
 from app.evaluation.config_suite import ConfigInvalida
 from app.evaluation.dataset_aplicabilidad import (
@@ -59,8 +59,8 @@ from app.evaluation.metricas.aplicabilidad import (
     valores_no_copiados,
     veredicto_de_invariantes,
 )
-from app.evaluation.revision_muestra import ResultadoDeRevision, leer_revision
 from app.evaluation.reporte import escribir_reporte_cerrado
+from app.evaluation.revision_muestra import ResultadoDeRevision, leer_revision
 from app.evaluation.rutas import raiz_repo
 from app.infrastructure.lenguaje.terminos_prohibidos import (
     VerificadorDeTerminosProhibidos,

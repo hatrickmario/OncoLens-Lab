@@ -13,7 +13,6 @@ from app.application.ports import (
     ChunkEncontrado,
     ChunkEncontradoSparse,
     ChunkSearch,
-    SinTerminosLexicos,
     CorpusCatalogReader,
     CorpusReleaseReader,
     EvidenceGenerator,
@@ -26,6 +25,7 @@ from app.application.ports import (
     ReleaseDelCorpus,
     Reranker,
     ResultadoDeRecuperacion,
+    SinTerminosLexicos,
     SparseChunkSearch,
 )
 from app.domain.aplicabilidad_tipos import PoblacionDelEstudio

@@ -10,15 +10,15 @@ from app.application.aplicabilidad_textual import ParametrosDelRespaldo
 from app.application.ports import (
     Clock,
     EvidenceGenerator,
+    FalloDeInferencia,
     LanguageDetector,
     NliClassifier,
     PoblacionTask,
     ProhibitedTermsChecker,
     QueryEmbedder,
-    FalloDeInferencia,
-    SinTerminosLexicos,
     QuerySparseEncoder,
     Reranker,
+    SinTerminosLexicos,
     SparseChunkSearch,
 )
 from app.application.rag_orchestrator_service import (

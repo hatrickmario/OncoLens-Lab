@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from datetime import date
 
 from app.application.ports import Clock
+from app.application.seed_corpus.nucleo_de_versionado import NucleoDeVersionado
 from app.application.seed_corpus.ports import (
     ChunkStoreDeIngesta,
     CorpusCatalog,
@@ -19,7 +20,6 @@ from app.application.seed_corpus.ports import (
     RegistroDeDocumento,
     SourceFetcher,
 )
-from app.application.seed_corpus.nucleo_de_versionado import NucleoDeVersionado
 from app.application.seed_corpus.registros import (
     chunks_del_documento,
     registro_con_error,

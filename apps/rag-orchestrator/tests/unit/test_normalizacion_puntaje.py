@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+
 from app.domain.normalizacion_puntaje import normalizar_a_unidad, validar_puntaje_normalizado
 
 

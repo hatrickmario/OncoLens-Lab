@@ -14,8 +14,8 @@ from typing import Any, Protocol
 
 from app.application.ports import Clock
 from app.application.seed_corpus.ports import LectorDeDocumentosExtraidos, RegistroDeDocumento
-from app.domain.corpus_metadata.muestra import seleccionar_muestra
 from app.domain.corpus_metadata.extraccion import campos_conservados
+from app.domain.corpus_metadata.muestra import seleccionar_muestra
 from app.domain.corpus_metadata.resultado import CampoDeMetadato
 from app.domain.corpus_seed.poblacion import NO_DISPONIBLE
 

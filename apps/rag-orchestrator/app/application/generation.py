@@ -103,6 +103,7 @@ class LlmEvidenceGenerator:
     def __init__(
         self,
         cliente: LlmClient,
+        *,
         claims_min: int,
         claims_max: int,
         claim_max_words: int,
@@ -128,9 +129,9 @@ class LlmEvidenceGenerator:
             bloque_de_datos_del_paciente(solicitud.clinicalContext),
             tabla.fragmentos,
             idioma,
-            self._claims_min,
-            self._claims_max,
-            self._claim_max_words,
+            claims_min=self._claims_min,
+            claims_max=self._claims_max,
+            claim_max_words=self._claim_max_words,
         )
         try:
             crudo = await self._cliente.completar_json(prompt, self._esquema)

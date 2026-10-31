@@ -23,26 +23,24 @@ from app.application.aplicabilidad import (
     mejor_chunk_por_documento,
     recuentos_para_el_log,
 )
-from app.application.aplicabilidad_textual import (
-    AplicabilidadCompleta,
-    AplicabilidadTextual,
-    ParametrosDelRespaldo,
-)
 from app.application.aplicabilidad_de_opciones import (
     Reevaluar,
     con_aplicabilidad_de_cada_opcion,
     fuentes_con_los_fragmentos_citados,
 )
+from app.application.aplicabilidad_textual import (
+    AplicabilidadCompleta,
+    AplicabilidadTextual,
+    ParametrosDelRespaldo,
+)
 from app.application.catalogo_exigido import exigir_catalogo_de_la_solicitud
 from app.application.chunk_citable import ChunkCitable
 from app.application.contexto_del_paciente import contexto_del_paciente
-from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
 from app.application.errores import RecuperacionNoDisponibleError, TipoCancerNoRegistradoError
 from app.application.generador_fallando_cerrado import GeneradorFallandoCerrado
 from app.application.ports import (
-    PoblacionTask,
-    CatalogoClinico,
     CandidatoDeRecuperacion,
+    CatalogoClinico,
     ChunkEncontrado,
     ChunkEncontradoSparse,
     ChunkSearch,
@@ -54,6 +52,7 @@ from app.application.ports import (
     Idioma,
     LanguageDetector,
     NliClassifier,
+    PoblacionTask,
     ProhibitedTermsChecker,
     QueryEmbedder,
     QuerySparseEncoder,
@@ -65,6 +64,7 @@ from app.application.ports import (
 from app.application.respuesta_con_evidencia import ensamblar_respuesta_con_evidencia
 from app.application.resumen_contexto import resumen_del_contexto_clinico
 from app.application.verificacion_de_soporte import VerificadorDeSoporte
+from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
 from app.domain.citations import (
     MotivoDeDescarte,
     OpcionAceptada,

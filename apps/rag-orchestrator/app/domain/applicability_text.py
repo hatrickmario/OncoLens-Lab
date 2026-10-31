@@ -22,8 +22,8 @@ from app.domain.applicability_rules import (
     estado_de_poblacion,
     evaluar_criterio,
 )
-from app.domain.corpus_metadata.campos import LONGITUD_MAXIMA_DE_VALOR
 from app.domain.citations import OpcionGenerada, validar_citas
+from app.domain.corpus_metadata.campos import LONGITUD_MAXIMA_DE_VALOR
 from app.domain.criterios_aplicabilidad import CriterioDeAplicabilidad
 from app.domain.nli import ParNli
 from app.domain.support import CampoGenerado
