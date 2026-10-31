@@ -29,6 +29,6 @@
 
 ## 3. Verificación
 
-- [ ] 3.1 `openspec validate l1d-97-aviso-faltantes-panel --strict` en verde.
-- [ ] 3.2 Suite de `apps/web` (Vitest) y E2E en verde; `contracts:verify-provider` no aplica (sin cambio de API).
-- [ ] 3.3 `run-ai-eval` no aplica (sin modelo, prompt, umbral, catálogo ni corpus).
+- [x] 3.1 `openspec validate l1d-97-aviso-faltantes-panel --strict`: válido (ejecutado antes de #255 y #256).
+- [x] 3.2 Suite de `apps/web` (Vitest) y E2E en verde: vitest de `apps/web` 422 tests en verde; E2E Playwright 34/34 en 88ee491f (después solo cambió un comentario y tests unitarios); `contracts:verify-provider` no aplica en la entrega 2 y 359 respuestas en la entrega 1.
+- [x] 3.3 `run-ai-eval`: no aplica (sin modelo, prompt, umbral, catálogo ni corpus).
