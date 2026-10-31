@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Collection, Mapping, Sequence
 from dataclasses import dataclass, replace
 from datetime import datetime
 from typing import TypeVar
@@ -55,6 +55,7 @@ from app.application.ports import (
     PoblacionTask,
     ProhibitedTermsChecker,
     QueryEmbedder,
+    QueryRewriter,
     QuerySparseEncoder,
     ReleaseDelCorpus,
     Reranker,
@@ -88,6 +89,11 @@ from app.domain.relevance import (
     relevancia_de_opcion,
     top_relevance_score,
 )
+from app.domain.reescritura import (
+    EstadoDeReescritura,
+    MotivoDeReescritura,
+    ParametrosDeReescritura,
+)
 from app.domain.retrieval_filter import expresion_vigente_del_tipo
 from app.domain.tipos_habilitados import exigir_tipo_habilitado
 from app.prompts.rag_query import VERSION_DEL_PROMPT
@@ -96,10 +102,12 @@ from app.schemas.generated.models import (
     Limitation,
     LlmProvider,
     Origin,
+    QueryRewrite,
     RagMeta,
     RagQueryInternalRequest,
     RagQueryInternalResponse,
     RagQueryStatus,
+    Reason,
     RetrievalMode,
     RetrievalParams,
     RetrievalStats,
@@ -140,6 +148,8 @@ class ParametrosDeRecuperacion:
     """``RRF_K``: constante de ``Σ 1/(k+rank)``; solo con ``retrieval_fusion = rrf``."""
     peso_sparse: float = HYBRID_SPARSE_WEIGHT_INICIAL
     """``HYBRID_SPARSE_WEIGHT``: peso de la rama *sparse* (0 < w < 1); solo con ``retrieval_fusion = ponderada``."""
+    reescritura: ParametrosDeReescritura = ParametrosDeReescritura()
+    """``QUERY_REWRITE_*`` (US-238, RN-22): segundo loop de reescritura; desactivado por defecto."""
 
 
 def _con_relevancia(aceptada: OpcionAceptada, puntajes: Mapping[str, float]) -> OpcionConRelevancia:
@@ -168,7 +178,11 @@ class RAGOrchestratorService:
         parametros: ParametrosDeRecuperacion,
         buscador_sparse: SparseChunkSearch | None = None,
         embedder_sparse: QuerySparseEncoder | None = None,
+        reescritor: QueryRewriter | None = None,
+        terminos_del_catalogo: Collection[str] = (),
     ) -> None:
+        self._reescritor = reescritor
+        self._terminos_del_catalogo = frozenset(terminos_del_catalogo)
         self._detector_idioma = detector_idioma
         self._embedder = embedder
         self._buscador = buscador
@@ -613,6 +627,7 @@ class RAGOrchestratorService:
         idioma: Idioma,
         release: ReleaseDelCorpus,
         inicio: datetime,
+        reescritura: EstadoDeReescritura = EstadoDeReescritura(MotivoDeReescritura.no_disparado),
     ) -> RagMeta:
         """``meta`` con la latencia hasta el fin de la recuperación; la generación (L1D-275) la actualiza."""
         parametros = self._parametros
@@ -637,6 +652,9 @@ class RAGOrchestratorService:
                 retrievalMode=parametros.retrieval_mode,
                 fusion=fusion,
                 fusionParam=fusion_param,
+                queryRewrite=QueryRewrite(
+                    applied=reescritura.applied, reason=Reason(reescritura.motivo.value)
+                ),
             ),
             latencyMs=int((self._reloj.ahora() - inicio).total_seconds() * 1000),
         )
