@@ -11,6 +11,7 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
+from app.application.aplicabilidad_textual import ParametrosDelRespaldo
 from app.application.ports import SinTerminosLexicos
 from app.application.rag_orchestrator_service import ParametrosDeRecuperacion
 from app.schemas.generated.models import LlmProvider
@@ -73,6 +74,7 @@ def test_los_valores_iniciales_de_la_fusion_son_los_mismos_en_settings_y_en_los_
         llm_model="m",
         nli_entailment_threshold=0.7,
         tipos_habilitados=(),
+        respaldo=ParametrosDelRespaldo(plazo_ms=1, concurrencia=1, version_del_prompt="p"),
     )
 
     assert parametros.rrf_k == ajustes.rrf_k

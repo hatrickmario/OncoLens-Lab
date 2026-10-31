@@ -3,7 +3,7 @@
 import asyncio
 
 from app.domain.aplicabilidad_tipos import PoblacionDelEstudio, ValorDePoblacion
-from app.domain.applicability_text import FuenteParaProponer
+from app.domain.applicability_text import CriterioPendiente, FuenteParaProponer
 from app.schemas.generated.models import RagQueryInternalRequest
 from tests.support.aplicabilidad import (
     CRITERIOS_DE_DOC_A1,
@@ -83,17 +83,21 @@ def test_fixture_fx08ba_trae_doc_a2_pendiente_con_ch_a2_1_cuando_se_carga_la_gui
     assert POBLACIONES_FX08BA["doc-a2"].metadata_source == "pendiente"
 
 
-def test_proponente_falso_solo_habla_de_las_fuentes_que_recibio_y_registra_la_llamada():
+def test_proponente_falso_solo_habla_de_la_fuente_y_el_criterio_que_recibio_y_registra_la_llamada():
     proponente = ProponenteFalso("APL-OK")
-    otra = FuenteParaProponer(external_id_de("doc-a1"), (), ())
-    a2 = FuenteParaProponer(external_id_de("doc-a2"), (), ())
+    her2 = CriterioPendiente("estado_her2", "Estado de HER2", None)
+    estadio = CriterioPendiente("estadio", "Estadio", None)
+    otra = FuenteParaProponer(external_id_de("doc-a1"), (her2,), ())
+    a2_estadio = FuenteParaProponer(external_id_de("doc-a2"), (estadio,), ())
+    a2 = FuenteParaProponer(external_id_de("doc-a2"), (her2,), ())
 
-    assert asyncio.run(proponente.proponer([otra])) == ()
-    (propuesta,) = asyncio.run(proponente.proponer([otra, a2]))
+    assert asyncio.run(proponente.proponer(otra)) == ()
+    assert asyncio.run(proponente.proponer(a2_estadio)) == ()
+    (propuesta,) = asyncio.run(proponente.proponer(a2))
 
     assert (propuesta.criterio, propuesta.valor, propuesta.chunk_id) == (
         "estado_her2",
         "HER2 negativo",
         "ch-a2-1",
     )
-    assert proponente.invocaciones == 2
+    assert proponente.invocaciones == 3

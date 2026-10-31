@@ -11,7 +11,7 @@ import httpx
 import pytest
 import respx
 
-from app.application.ports import ApplicabilityTextProposer
+from app.application.ports import PoblacionTask
 from app.config.modelos import ConfigInvalida as ConfigDeModelosInvalida
 from app.config.modelos import cargar_config_modelos
 from app.config.settings import Settings
@@ -24,7 +24,7 @@ from app.evaluation.llamadas import RegistroDeLlamadas
 from app.evaluation.modelos_locales import OrigenLocal, PuertosLocales, cargar_puertos_locales
 from app.infrastructure.llm.fabrica_local import crear_proponente_local
 from app.infrastructure.llm.openai_compatible import cuerpo_de_peticion
-from app.infrastructure.llm.proponente_de_aplicabilidad import LlmApplicabilityTextProposer
+from app.infrastructure.llm.tarea_de_poblacion import TareaDePoblacionLocal
 from tests.evaluation.test_fidelidad_juez import CONFIG, LOCAL
 from tests.evaluation.test_proveedor_local_aceptacion import modelos_fingidos
 from tests.evaluation.test_proveedor_local_unitarios import config_local
@@ -61,18 +61,26 @@ def test_el_servicio_local_usa_el_proponente_de_produccion_y_cada_llamada_queda_
     with respx.mock() as http:
         ruta = http.post(f"{LOCAL}/chat/completions").mock(
             return_value=httpx.Response(
-                200, json={"choices": [{"message": {"content": json.dumps({"proposals": []})}}]}
+                200,
+                json={
+                    "choices": [
+                        {
+                            "message": {"content": json.dumps({"values": []})},
+                            "finish_reason": "stop",
+                        }
+                    ]
+                },
             )
         )
-        asyncio.run(proponente.proponer([FUENTE]))
+        asyncio.run(proponente.proponer(FUENTE))
 
-    assert isinstance(proponente, LlmApplicabilityTextProposer)
+    assert isinstance(proponente, TareaDePoblacionLocal)
     assert ruta.call_count == 1
     assert [(c.adaptador, c.clase_datos) for c in registro.llamadas] == [("llm", "sintetico")]
 
 
-def _huella_del_proponente(proponente: LlmApplicabilityTextProposer) -> tuple[object, ...]:
-    cliente: Any = proponente._cliente  # noqa: SLF001
+def _huella_del_proponente(proponente: TareaDePoblacionLocal) -> tuple[object, ...]:
+    cliente: Any = proponente._llm  # noqa: SLF001
     cliente = getattr(cliente, "_interno", cliente)
     return (
         cliente._url,  # noqa: SLF001
@@ -80,6 +88,8 @@ def _huella_del_proponente(proponente: LlmApplicabilityTextProposer) -> tuple[ob
         cliente._timeout_s,  # noqa: SLF001
         cliente._max_output_tokens,  # noqa: SLF001
         cliente._temperature,  # noqa: SLF001
+        proponente._max_tokens_de_salida,  # noqa: SLF001
+        proponente._plantilla,  # noqa: SLF001
         proponente._max_chars_fragmentos,  # noqa: SLF001
     )
 
@@ -118,7 +128,7 @@ def test_el_proponente_de_los_puertos_locales_cumple_el_puerto_de_aplicabilidad(
 ) -> None:
     puertos, _ = _servicio_local(tmp_path, RegistroDeLlamadas())
 
-    proponente: ApplicabilityTextProposer = puertos.proponente
+    proponente: PoblacionTask = puertos.proponente
     assert hasattr(proponente, "proponer")
 
 

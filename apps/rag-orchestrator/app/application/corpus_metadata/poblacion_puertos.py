@@ -45,6 +45,10 @@ class RecuperadorDeFragmentos(Protocol):
         ...
 
 
+FINISH_REASON_CORTADA = "length"
+"""Un ``finish_reason`` que no es ``stop``: el LLM agotó el tope de tokens y la salida está cortada (D5)."""
+
+
 @dataclass(frozen=True)
 class RespuestaDelLlm:
     """Texto crudo y motivo de fin (``stop``, ``length``…): ``length`` es una salida cortada (D5)."""

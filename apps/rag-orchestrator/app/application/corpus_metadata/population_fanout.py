@@ -24,6 +24,7 @@ from app.application.corpus_metadata.esquema_poblacion import (
     parsear_valores,
 )
 from app.application.corpus_metadata.poblacion_puertos import (
+    FINISH_REASON_CORTADA,
     DocumentoParaExtraer,
     Fragmento,
     LlmDePoblacion,
@@ -60,7 +61,6 @@ logger = logging.getLogger(__name__)
 # Los únicos fallos que dejan un criterio pendiente (D5): el LLM, el NLI o una salida fuera del esquema. Cualquier otro
 # error es un defecto y sube; ``KeyboardInterrupt`` nunca se captura.
 FALLOS_QUE_DEJAN_PENDIENTE = (FalloDelLlm, FalloDeInferencia, SalidaInvalida)
-FINISH_REASON_CORTADA = "length"
 
 
 @dataclass(frozen=True)

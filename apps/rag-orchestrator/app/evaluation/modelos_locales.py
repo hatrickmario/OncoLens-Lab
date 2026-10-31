@@ -14,12 +14,12 @@ from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
+from app.application.corpus_metadata.poblacion_puertos import RespuestaDelLlm
 from app.application.ports import (
-    ApplicabilityTextProposer,
+    PoblacionTask,
     CandidatoParaReranker,
     EvidenceGenerator,
     LanguageDetector,
-    LlmClient,
     NliClassifier,
     QueryEmbedder,
     QuerySparseEncoder,
@@ -35,7 +35,13 @@ from app.evaluation.config_suite import ConfigSuite
 from app.evaluation.guardas import SuiteAbortada
 from app.evaluation.llamadas import RegistroDeLlamadas
 from app.schemas.generated.models import RetrievalMode
-from app.infrastructure.llm.fabrica_local import crear_generador_local, crear_proponente_local
+from app.application.aplicabilidad_textual import ParametrosDelRespaldo
+from app.infrastructure.llm.fabrica_local import (
+    ClienteLlmLocal,
+    crear_generador_local,
+    crear_proponente_local,
+    parametros_del_respaldo,
+)
 from app.infrastructure.models.verificacion import ModeloNoVerificadoError
 
 if TYPE_CHECKING:  # solo para el tipado: importar local.py carga onnxruntime
@@ -83,7 +89,8 @@ class PuertosLocales:
     reranker: Reranker
     clasificador_nli: NliClassifier
     generador: EvidenceGenerator
-    proponente: ApplicabilityTextProposer
+    proponente: PoblacionTask
+    respaldo: ParametrosDelRespaldo
     embedder_sparse: QuerySparseEncoder | None = None
     """Solo si la configuración trae un brazo híbrido (US-133): el codificador *sparse* de BGE-M3 de la ingesta."""
 
@@ -156,7 +163,7 @@ class LlmRegistrado:
 
     def __init__(
         self,
-        interno: LlmClient,
+        interno: ClienteLlmLocal,
         registro: RegistroDeLlamadas,
         *,
         destino: str,
@@ -169,6 +176,15 @@ class LlmRegistrado:
     async def completar_json(self, prompt: str, esquema: Mapping[str, object]) -> str:
         self._registro.registrar(self._destino, self._clase, self._modelo, "llm")
         return await self._interno.completar_json(prompt, esquema)
+
+    async def completar_json_acotado(
+        self, prompt: str, esquema: Mapping[str, object], *, max_tokens: int, semilla: int
+    ) -> RespuestaDelLlm:
+        """La tarea corta del respaldo de población (US-244): se anota igual que cualquier otra llamada al LLM."""
+        self._registro.registrar(self._destino, self._clase, self._modelo, "llm")
+        return await self._interno.completar_json_acotado(
+            prompt, esquema, max_tokens=max_tokens, semilla=semilla
+        )
 
 
 def _settings_de(config: ConfigSuite, entorno: Mapping[str, str]) -> Settings:
@@ -244,7 +260,7 @@ def cargar_puertos_locales(
     modelos = _cargar_modelos(settings, origen.cargador)
     embedder = modelos.embedder_consulta
 
-    def registrar_llm(interno: LlmClient) -> LlmClient:
+    def registrar_llm(interno: ClienteLlmLocal) -> ClienteLlmLocal:
         return LlmRegistrado(
             interno,
             registro,
@@ -263,6 +279,7 @@ def cargar_puertos_locales(
         clasificador_nli=NliRegistrado(modelos.clasificador_nli, registro, clase_datos),
         generador=crear_generador_local(settings, registrar_llm),
         proponente=crear_proponente_local(settings, registrar_llm),
+        respaldo=parametros_del_respaldo(settings),
         embedder_sparse=(
             None
             if modelos.embedder_sparse_consulta is None

@@ -18,7 +18,7 @@ from typing import Any
 from fastapi.testclient import TestClient
 
 from app.application.ports import (
-    ApplicabilityTextProposer,
+    PoblacionTask,
     ChunkDelCorpus,
     CandidatoParaReranker,
     ChunkEncontrado,
@@ -40,6 +40,7 @@ from app.application.rag_orchestrator_service import (
     RAGOrchestratorService,
 )
 from app.application.aplicabilidad import ApplicabilityService
+from app.application.aplicabilidad_textual import ParametrosDelRespaldo
 from app.bootstrap import PuertosDeRecuperacion, crear_app
 from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
 from app.domain.citations import FichaDeFuente
@@ -50,7 +51,7 @@ from app.domain.retrieval_filter import (
     expresion_solo_vigente,
 )
 from app.infrastructure.catalogo_clinico.aplicabilidad import CriteriosDelCatalogo
-from app.infrastructure.fake.fake_applicability_text_proposer import ProponenteSilencioso
+from app.infrastructure.fake.tarea_de_poblacion_silenciosa import TareaDePoblacionSilenciosa
 from app.infrastructure.lenguaje.terminos_prohibidos import cargar_verificador_de_terminos
 from app.schemas.generated.models import (
     LlmProvider,
@@ -461,6 +462,10 @@ class LectorReleaseFalso:
         return self._release
 
 
+PARAMETROS_DEL_RESPALDO_DE_PRUEBA = ParametrosDelRespaldo(
+    plazo_ms=10000, concurrencia=1, version_del_prompt="poblacion_v1"
+)
+
 PARAMETROS_DE_PRUEBA = ParametrosDeRecuperacion(
     relevance_threshold=0.30,
     retrieval_top_k=40,
@@ -470,6 +475,7 @@ PARAMETROS_DE_PRUEBA = ParametrosDeRecuperacion(
     llm_model="llm-test@1",
     nli_entailment_threshold=0.7,
     tipos_habilitados=("mama", "prostata"),
+    respaldo=PARAMETROS_DEL_RESPALDO_DE_PRUEBA,
 )
 
 
@@ -530,7 +536,7 @@ def crear_entorno(
     clasificador_nli: NliClassifier | None = None,
     verificador_terminos: ProhibitedTermsChecker | None = None,
     criterios: CriteriosDeAplicabilidad | None = None,
-    proponente: ApplicabilityTextProposer | None = None,
+    proponente: PoblacionTask | None = None,
     buscador_sparse: SparseChunkSearch | None = None,
     embedder_sparse: QuerySparseEncoder | None = None,
 ) -> EntornoDeRecuperacion:
@@ -558,7 +564,7 @@ def crear_entorno(
         catalogo=catalogo,
         catalogo_clinico=catalogo_clinico,
         aplicabilidad=ApplicabilityService(criterios or CriteriosDelCatalogo({})),
-        proponente=proponente or ProponenteSilencioso(),
+        proponente=proponente or TareaDePoblacionSilenciosa(),
         generador=generador,
         clasificador_nli=clasificador_nli,
         verificador_terminos=verificador_terminos,

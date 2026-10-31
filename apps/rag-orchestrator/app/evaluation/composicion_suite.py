@@ -6,12 +6,13 @@ from collections.abc import Sequence
 from dataclasses import dataclass, replace
 
 from app.application.aplicabilidad import ApplicabilityService
+from app.application.aplicabilidad_textual import ParametrosDelRespaldo
 from app.application.ports import (
-    ApplicabilityTextProposer,
     Clock,
     EvidenceGenerator,
     LanguageDetector,
     NliClassifier,
+    PoblacionTask,
     ProhibitedTermsChecker,
     QueryEmbedder,
     FalloDeInferencia,
@@ -23,6 +24,11 @@ from app.application.ports import (
 from app.application.rag_orchestrator_service import (
     ParametrosDeRecuperacion,
     RAGOrchestratorService,
+)
+from app.config.settings import (
+    POBLACION_CONCURRENCIA_INICIAL,
+    POBLACION_PLAZO_DEL_RESPALDO_MS_INICIAL,
+    POBLACION_VERSION_DEL_PROMPT_INICIAL,
 )
 from app.evaluation.adaptadores_falsos import (
     BuscadorEnMemoria,
@@ -60,7 +66,7 @@ from app.evaluation.medidores import (
 from app.evaluation.modelos_locales import PuertosLocales
 from app.infrastructure.catalogo_clinico.aplicabilidad import CriteriosDelCatalogo
 from app.infrastructure.catalogo_clinico.manifiesto import cargar_catalogo_del_manifiesto
-from app.infrastructure.fake.fake_applicability_text_proposer import ProponenteSilencioso
+from app.infrastructure.fake.tarea_de_poblacion_silenciosa import TareaDePoblacionSilenciosa
 from app.infrastructure.language.detector_local import DetectorDeIdiomaLocal
 from app.infrastructure.lenguaje.terminos_prohibidos import (
     VerificadorDeTerminosProhibidos,
@@ -84,8 +90,20 @@ class ServicioDeSuite:
     latencias_nli: LatenciasNli
 
 
+PARAMETROS_DEL_RESPALDO_DE_LA_SUITE = ParametrosDelRespaldo(
+    plazo_ms=POBLACION_PLAZO_DEL_RESPALDO_MS_INICIAL,
+    concurrencia=POBLACION_CONCURRENCIA_INICIAL,
+    version_del_prompt=POBLACION_VERSION_DEL_PROMPT_INICIAL,
+)
+"""El respaldo de la población con adapters FALSOS: ni el plazo ni la concurrencia cambian la medida. La suite local usa el que
+derivan de ``Settings`` los puertos locales (``PuertosLocales.respaldo``, RN-22)."""
+
+
 def parametros_de_recuperacion(
-    config: ConfigSuite, tipos_habilitados: tuple[str, ...], brazo: Brazo | None = None
+    config: ConfigSuite,
+    tipos_habilitados: tuple[str, ...],
+    brazo: Brazo | None = None,
+    respaldo: ParametrosDelRespaldo = PARAMETROS_DEL_RESPALDO_DE_LA_SUITE,
 ) -> ParametrosDeRecuperacion:
     u = config.umbrales
     base = ParametrosDeRecuperacion(
@@ -97,6 +115,7 @@ def parametros_de_recuperacion(
         llm_model=config.llm_modelo,
         nli_entailment_threshold=u.nli_entailment_threshold,
         tipos_habilitados=tipos_habilitados,
+        respaldo=respaldo,
     )
     return base if brazo is None else _con_recuperacion_del_brazo(base, brazo)
 
@@ -124,7 +143,7 @@ class Adaptadores:
     reranker: Reranker
     generador: EvidenceGenerator
     clasificador_nli: NliClassifier
-    proponente: ApplicabilityTextProposer
+    proponente: PoblacionTask
     codificador_sparse: QuerySparseEncoder | None = None
     """La rama *sparse* (US-133): el codificador de la consulta y la búsqueda sobre los mismos chunks que la *dense*."""
     buscador_sparse: SparseChunkSearch | None = None
@@ -140,7 +159,7 @@ def _adaptadores_falsos(dataset: DatasetSuite) -> Adaptadores:
         reranker=RerankerLexico(),
         generador=GeneradorGuionado(dataset),
         clasificador_nli=NliLexico(),
-        proponente=ProponenteSilencioso(),
+        proponente=TareaDePoblacionSilenciosa(),
         codificador_sparse=sparse,
         buscador_sparse=BuscadorSparseEnMemoria(
             dataset, [sparse.vector_de(c.texto) for c in dataset.chunks]
@@ -249,7 +268,12 @@ def componer_servicio(
         clasificador_nli=nli,
         verificador_terminos=terminos,
         reloj=reloj,
-        parametros=parametros_de_recuperacion(config, tipos_habilitados, brazo),
+        parametros=parametros_de_recuperacion(
+            config,
+            tipos_habilitados,
+            brazo,
+            puertos_locales.respaldo if puertos_locales else PARAMETROS_DEL_RESPALDO_DE_LA_SUITE,
+        ),
         embedder_sparse=embedder_sparse,
         buscador_sparse=buscador_sparse,
     )
