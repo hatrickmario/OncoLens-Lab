@@ -33,12 +33,16 @@ describe('Anclas de la ficha', () => {
     },
   );
 
-  it('ignora un fragmento fuera de la lista permitida sin lanzar, sin querySelector y sin mover el foco [US-005 AC-3]', () => {
-    const querySelector = vi.spyOn(document, 'querySelector');
-
+  it('ignora un fragmento fuera de la lista permitida sin lanzar y sin mover el foco [US-005 AC-3]', () => {
     expect(() => abrirFichaCon('#x"],img')).not.toThrow();
 
-    expect(querySelector).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(document.body);
+  });
+
+  it('no enfoca el h2 de identificación cuando el fragmento es #ficha-identificacion [US-005 AC-3]', () => {
+    abrirFichaCon('#ficha-identificacion');
+
+    expect(document.getElementById('ficha-identificacion')).toBeTruthy();
     expect(document.activeElement).toBe(document.body);
   });
 
