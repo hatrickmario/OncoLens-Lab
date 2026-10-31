@@ -14,7 +14,10 @@ from app.application.ports import (
     NliClassifier,
     ProhibitedTermsChecker,
     QueryEmbedder,
+    FalloDeInferencia,
+    QuerySparseEncoder,
     Reranker,
+    SparseChunkSearch,
 )
 from app.application.rag_orchestrator_service import (
     ParametrosDeRecuperacion,
@@ -22,14 +25,17 @@ from app.application.rag_orchestrator_service import (
 )
 from app.evaluation.adaptadores_falsos import (
     BuscadorEnMemoria,
+    BuscadorSparseEnMemoria,
     CatalogoClinicoDeConfig,
     CatalogoEnMemoria,
+    CodificadorSparseLexico,
     EmbedderBolsaDePalabras,
     GeneradorGuionado,
     LectorReleaseFijo,
     NliLexico,
     RerankerLexico,
 )
+from app.evaluation.brazos_recuperacion import Brazo
 from app.evaluation.config_suite import ConfigInvalida, ConfigSuite
 from app.evaluation.cronometro import Cronometro
 from app.evaluation.fuente_dataset import DatasetSuite
@@ -37,7 +43,9 @@ from app.evaluation.juez_fidelidad import JuezFidelidad, JuezNli, JuezSecundario
 from app.evaluation.lenguaje_estricto import VerificadorEstricto
 from app.evaluation.medidores import (
     BuscadorMedido,
+    BuscadorSparseMedido,
     CatalogoMedido,
+    CodificadorSparseObservado,
     DetectorMedido,
     EmbedderMedido,
     GeneradorObservado,
@@ -56,7 +64,7 @@ from app.infrastructure.lenguaje.terminos_prohibidos import (
     VerificadorDeTerminosProhibidos,
     cargar_lista_de_terminos,
 )
-from app.schemas.generated.models import LlmProvider
+from app.schemas.generated.models import LlmProvider, RetrievalMode
 
 LONGITUD_MAXIMA_CODIGO_TIPO = 64
 
@@ -75,10 +83,11 @@ class ServicioDeSuite:
 
 
 def parametros_de_recuperacion(
-    config: ConfigSuite, tipos_habilitados: tuple[str, ...]
+    config: ConfigSuite, tipos_habilitados: tuple[str, ...], brazo: Brazo | None = None
 ) -> ParametrosDeRecuperacion:
     u = config.umbrales
     return ParametrosDeRecuperacion(
+        **_parametros_del_brazo(brazo),
         relevance_threshold=u.relevance_threshold,
         retrieval_top_k=u.retrieval_top_k,
         rerank_top_n=u.rerank_top_n,
@@ -90,8 +99,22 @@ def parametros_de_recuperacion(
     )
 
 
+def _parametros_del_brazo(brazo: Brazo | None) -> dict[str, object]:
+    """``RETRIEVAL_*`` del brazo sobre los valores por defecto del servicio (*dense*); sin brazo, nada cambia."""
+    if brazo is None:
+        return {}
+    ajustes: dict[str, object] = {"retrieval_mode": brazo.modo}
+    if brazo.fusion is not None:
+        ajustes["retrieval_fusion"] = brazo.fusion
+    if brazo.rrf_k is not None:
+        ajustes["rrf_k"] = brazo.rrf_k
+    if brazo.peso_sparse is not None:
+        ajustes["peso_sparse"] = brazo.peso_sparse
+    return ajustes
+
+
 @dataclass(frozen=True)
-class _Adaptadores:
+class Adaptadores:
     """Los puertos que cambian entre ``fake`` y ``local``; el resto del servicio es el mismo."""
 
     detector_idioma: LanguageDetector
@@ -101,11 +124,15 @@ class _Adaptadores:
     generador: EvidenceGenerator
     clasificador_nli: NliClassifier
     proponente: ApplicabilityTextProposer
+    codificador_sparse: QuerySparseEncoder | None = None
+    """La rama *sparse* (US-133): el codificador de la consulta y la búsqueda sobre los mismos chunks que la *dense*."""
+    buscador_sparse: SparseChunkSearch | None = None
 
 
-def _adaptadores_falsos(dataset: DatasetSuite) -> _Adaptadores:
+def _adaptadores_falsos(dataset: DatasetSuite) -> Adaptadores:
     embedder = EmbedderBolsaDePalabras()
-    return _Adaptadores(
+    sparse = CodificadorSparseLexico()
+    return Adaptadores(
         detector_idioma=DetectorDeIdiomaLocal("es"),
         embedder=embedder,
         vectores_de_chunks=[embedder.embeber(c.texto) for c in dataset.chunks],
@@ -113,11 +140,15 @@ def _adaptadores_falsos(dataset: DatasetSuite) -> _Adaptadores:
         generador=GeneradorGuionado(dataset),
         clasificador_nli=NliLexico(),
         proponente=ProponenteSilencioso(),
+        codificador_sparse=sparse,
+        buscador_sparse=BuscadorSparseEnMemoria(
+            dataset, [sparse.vector_de(c.texto) for c in dataset.chunks]
+        ),
     )
 
 
-def _adaptadores_locales(puertos: PuertosLocales, dataset: DatasetSuite) -> _Adaptadores:
-    return _Adaptadores(
+def _adaptadores_locales(puertos: PuertosLocales, dataset: DatasetSuite) -> Adaptadores:
+    return Adaptadores(
         detector_idioma=puertos.detector_idioma,
         embedder=puertos.embedder,
         vectores_de_chunks=puertos.embedder_pasajes.embeber([c.texto for c in dataset.chunks]),
@@ -125,17 +156,57 @@ def _adaptadores_locales(puertos: PuertosLocales, dataset: DatasetSuite) -> _Ada
         generador=puertos.generador,
         clasificador_nli=puertos.clasificador_nli,
         proponente=puertos.proponente,  # el de producción: la suite local no usa el silencioso
+        codificador_sparse=puertos.embedder_sparse,
+        buscador_sparse=_buscador_sparse_local(puertos.embedder_sparse, dataset),
     )
 
 
-def _adaptadores_de(
+def _buscador_sparse_local(
+    codificador: QuerySparseEncoder | None, dataset: DatasetSuite
+) -> SparseChunkSearch | None:
+    """La búsqueda *sparse* sobre los vectores BGE-M3 de los chunks, con el MISMO codificador que la consulta (US-112 D6).
+
+    Un chunk sin ningún término con peso queda con vector vacío (no aporta a la rama), igual que en la ingesta."""
+    if codificador is None:
+        return None
+    vectores = [_vector_sparse_o_vacio(codificador, c.texto) for c in dataset.chunks]
+    return BuscadorSparseEnMemoria(dataset, vectores)
+
+
+def _vector_sparse_o_vacio(codificador: QuerySparseEncoder, texto: str) -> dict[int, float]:
+    try:
+        return dict(codificador.embeber_sparse(texto))
+    except FalloDeInferencia:
+        return {}
+
+
+def adaptadores_de_suite(
     config: ConfigSuite, dataset: DatasetSuite, puertos_locales: PuertosLocales | None
-) -> _Adaptadores:
+) -> Adaptadores:
     if config.proveedor == "fake":
         return _adaptadores_falsos(dataset)
     if puertos_locales is None:
         raise ConfigInvalida("adaptadores.proveedor: local exige los puertos reales ya cargados")
     return _adaptadores_locales(puertos_locales, dataset)
+
+
+def _rama_sparse(
+    adaptadores: Adaptadores,
+    brazo: Brazo | None,
+    cronometro: Cronometro,
+    observaciones: Observaciones,
+) -> dict[str, object]:
+    """Los puertos *sparse* medidos, solo para un brazo híbrido: el servicio los exige y un brazo *dense* no los toca."""
+    if brazo is None or brazo.modo is RetrievalMode.dense:
+        return {}
+    if adaptadores.codificador_sparse is None or adaptadores.buscador_sparse is None:
+        raise ConfigInvalida("un brazo híbrido exige el codificador y la búsqueda sparse")
+    return {
+        "embedder_sparse": CodificadorSparseObservado(
+            adaptadores.codificador_sparse, cronometro, observaciones
+        ),
+        "buscador_sparse": BuscadorSparseMedido(adaptadores.buscador_sparse, cronometro),
+    }
 
 
 def componer_servicio(
@@ -145,8 +216,12 @@ def componer_servicio(
     reloj: Clock,
     juez_llm: JuezSecundario | None = None,
     puertos_locales: PuertosLocales | None = None,
+    brazo: Brazo | None = None,
+    adaptadores: Adaptadores | None = None,
 ) -> ServicioDeSuite:
-    adaptadores = _adaptadores_de(config, dataset, puertos_locales)
+    """El servicio de la suite. Con ``brazo`` recupera con sus ``RETRIEVAL_*`` (US-133); con ``adaptadores`` ya cargados
+    (los mismos modelos y el mismo índice para todos los brazos) no vuelve a cargar ni a indexar nada."""
+    adaptadores = adaptadores or adaptadores_de_suite(config, dataset, puertos_locales)
     observaciones = Observaciones()
     nli = NliMedido(adaptadores.clasificador_nli, cronometro)
     lista = cargar_lista_de_terminos(config.ruta_terminos)  # se lee y valida una sola vez
@@ -170,7 +245,8 @@ def componer_servicio(
         clasificador_nli=nli,
         verificador_terminos=terminos,
         reloj=reloj,
-        parametros=parametros_de_recuperacion(config, tipos_habilitados),
+        parametros=parametros_de_recuperacion(config, tipos_habilitados, brazo),
+        **_rama_sparse(adaptadores, brazo, cronometro, observaciones),
     )
     return ServicioDeSuite(
         servicio,

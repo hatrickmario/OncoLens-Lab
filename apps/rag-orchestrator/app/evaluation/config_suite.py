@@ -11,6 +11,10 @@ from typing import Any
 
 import yaml
 
+from app.schemas.generated.models import RetrievalMode
+
+from app.domain.fusion_de_candidatos import EstrategiaDeFusion
+from app.evaluation.brazos_recuperacion import REFERENCIA, Brazo
 from app.evaluation.reporte import es_identificador
 from app.evaluation.rutas import raiz_repo
 
@@ -19,6 +23,8 @@ SUITE_COMPLETA = "all"
 PROVEEDORES = ("fake", "local")
 RELOJES = ("simulado", "real")
 SUBCONJUNTOS = ("desarrollo", "validacion", "prueba")
+MODOS_DE_RECUPERACION = tuple(m.value for m in RetrievalMode)
+FUSIONES = tuple(f.value for f in EstrategiaDeFusion)
 ENTORNO_DEL_JUEZ = {
     "modelo": "EVAL_JUDGE_MODEL",
     "base_url": "EVAL_JUDGE_BASE_URL",
@@ -29,6 +35,8 @@ ENTORNO_DEL_JUEZ = {
 }
 """Claves del juez que ADR-41 deja en variables de entorno (RN-22); lo que digan sustituye al YAML."""
 TIMEOUT_DEL_JUEZ_POR_DEFECTO_S = 120.0
+ENTORNO_DE_LA_TOLERANCIA = "RETRIEVAL_REGRESSION_TOLERANCE"
+"""Variable de entorno de la tolerancia de retroceso (RN-22, US-133); lo que diga sustituye al YAML y no hay valor por defecto."""
 
 
 class ConfigInvalida(ValueError):
@@ -69,6 +77,15 @@ class Barrido:
 
 
 @dataclass(frozen=True)
+class Comparacion:
+    """La comparación de brazos de recuperación (US-133): A0 *dense* primero, luego las variantes híbridas."""
+
+    brazos: tuple[Brazo, ...]
+    tolerancia_retroceso: float
+    """``RETRIEVAL_REGRESSION_TOLERANCE`` (RN-22) en puntos absolutos; sin valor por defecto: la fija la preinscripción P1."""
+
+
+@dataclass(frozen=True)
 class ConfigSuite:
     nombre: str
     fixture: str
@@ -94,6 +111,8 @@ class ConfigSuite:
     con ``proveedor: local``."""
     origen: Mapping[str, Any] | None = None
     """Bloque ``origen`` de la medición de US-236 (pregunta de la demo y ``EVAL_ORIGIN_RUNS``); ``None`` en el resto."""
+    comparacion: Comparacion | None = None
+    """Bloque ``comparacion`` de US-133: varios brazos de recuperación en una sola corrida; ``None`` en el resto."""
 
 
 def huella_de_config(crudo: dict[str, Any]) -> str:
@@ -134,6 +153,17 @@ def _con_juez_efectivo(crudo: dict[str, Any], entorno: Mapping[str, str]) -> dic
     if entorno.get(ENTORNO_DEL_JUEZ["base_url"]):
         juez["proveedor"] = "local"
     return {**crudo, "juez": juez} if juez else crudo
+
+
+def _con_tolerancia_efectiva(crudo: dict[str, Any], entorno: Mapping[str, str]) -> dict[str, Any]:
+    """``RETRIEVAL_REGRESSION_TOLERANCE`` del entorno, si viene, sobre ``comparacion.tolerancia_retroceso`` (RN-22)."""
+    if not entorno.get(ENTORNO_DE_LA_TOLERANCIA) or not isinstance(crudo.get("comparacion"), dict):
+        return crudo
+    comparacion = {
+        **crudo["comparacion"],
+        "tolerancia_retroceso": entorno[ENTORNO_DE_LA_TOLERANCIA],
+    }
+    return {**crudo, "comparacion": comparacion}
 
 
 def _exigir_fraccion(valor: object, clave: str) -> None:
@@ -225,6 +255,64 @@ def _limite_de_rss(crudo: dict[str, Any]) -> float | None:
     return numero
 
 
+def _brazo_de(crudo: object) -> Brazo:
+    if not isinstance(crudo, dict):
+        raise ConfigInvalida("cada brazo de comparacion.brazos debe ser un mapa")
+    nombre = str(clave_de(crudo, "nombre"))
+    if not es_identificador(nombre):
+        raise ConfigInvalida("el nombre de un brazo no es un identificador válido")
+    modo = RetrievalMode(
+        _en(str(clave_de(crudo, "RETRIEVAL_MODE")), MODOS_DE_RECUPERACION, "RETRIEVAL_MODE")
+    )
+    if modo is RetrievalMode.dense:
+        return Brazo(nombre, modo)
+    fusion = EstrategiaDeFusion(
+        _en(str(clave_de(crudo, "RETRIEVAL_FUSION")), FUSIONES, "RETRIEVAL_FUSION")
+    )
+    if fusion is EstrategiaDeFusion.rrf:
+        return Brazo(
+            nombre, modo, fusion, rrf_k=_exigir_entero_positivo(clave_de(crudo, "RRF_K"), "RRF_K")
+        )
+    peso = _numero(clave_de(crudo, "HYBRID_SPARSE_WEIGHT"), "HYBRID_SPARSE_WEIGHT")
+    if not 0.0 < peso < 1.0:
+        raise ConfigInvalida("HYBRID_SPARSE_WEIGHT debe estar en (0, 1)")
+    return Brazo(nombre, modo, fusion, peso_sparse=peso)
+
+
+def _numero(valor: object, clave: str) -> float:
+    try:
+        return float(valor)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        raise ConfigInvalida(f"{clave} debe ser un número") from None
+
+
+def _comparacion_de(crudo: dict[str, Any], subconjunto: str | None) -> Comparacion | None:
+    """``comparacion`` (US-133): A0 *dense* de referencia primero, nombres únicos, solo el conjunto de desarrollo
+    (ADR-45 P2) y una tolerancia sin valor por defecto."""
+    seccion = crudo.get("comparacion")
+    if seccion is None:
+        return None
+    if subconjunto != "desarrollo":
+        raise ConfigInvalida(
+            "la comparación solo evalúa dataset.subconjunto: desarrollo (ADR-45 P2)"
+        )
+    brazos = tuple(_brazo_de(b) for b in clave_de(seccion, "brazos"))
+    if (
+        len(brazos) < 2
+        or brazos[0].nombre != REFERENCIA
+        or brazos[0].modo is not RetrievalMode.dense
+    ):
+        raise ConfigInvalida(
+            f"comparacion.brazos debe empezar por {REFERENCIA} (dense) y tener otro brazo"
+        )
+    if len({b.nombre for b in brazos}) != len(brazos):
+        raise ConfigInvalida("los nombres de comparacion.brazos deben ser únicos")
+    tolerancia = _numero(clave_de(seccion, "tolerancia_retroceso"), "tolerancia_retroceso")
+    if not 0.0 <= tolerancia <= 1.0:
+        raise ConfigInvalida("comparacion.tolerancia_retroceso debe estar en [0, 1]")
+    return Comparacion(brazos, tolerancia)
+
+
 def cargar_config_suite(ruta: Path, entorno: Mapping[str, str] | None = None) -> ConfigSuite:
     try:
         crudo = yaml.safe_load(ruta.read_text(encoding="utf-8"))
@@ -232,7 +320,7 @@ def cargar_config_suite(ruta: Path, entorno: Mapping[str, str] | None = None) ->
         raise ConfigInvalida("la configuración no se pudo leer") from None
     if not isinstance(crudo, dict):
         raise ConfigInvalida("la configuración no es un mapa YAML")
-    crudo = _con_juez_efectivo(crudo, entorno or {})
+    crudo = _con_tolerancia_efectiva(_con_juez_efectivo(crudo, entorno or {}), entorno or {})
     umbrales = clave_de(crudo, "umbrales")
     dataset = clave_de(crudo, "dataset")
     sub = dataset.get("subconjunto")
@@ -271,4 +359,5 @@ def cargar_config_suite(ruta: Path, entorno: Mapping[str, str] | None = None) ->
         barrido=_barrido_de(crudo),
         rss_limite_mib=_limite_de_rss(crudo),
         origen=crudo.get("origen"),
+        comparacion=_comparacion_de(crudo, sub),
     )
