@@ -26,8 +26,8 @@ const lista = loadProhibitedTerms(
     '../../../../packages/clinical-catalogs/lenguaje/terminos-prohibidos.json',
   ),
 );
-const AVISO_IA =
-  'Generado por IA; requiere validación clínica independiente por el oncólogo tratante';
+// El aviso sale de la respuesta (RN-19): el literal no se copia a los tests (US-069 AC-2).
+const AVISO_IA = String(fx08ba().disclaimer).replace(/\.$/, '');
 
 /** Texto visible fuera de las hojas copiadas del corpus, como lo recorre la lista de US-068 (design D5). */
 function textosPropios(raiz: HTMLElement): string[] {
