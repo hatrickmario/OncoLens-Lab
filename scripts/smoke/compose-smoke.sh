@@ -9,8 +9,9 @@
 #   fase 5  perfil test/CI: oncolens_test_admin solo con CREATEDB, sin acceso a la base clínica (US-035 AC-1, AC-4)
 #   fase 6  un fallo del init de roles no deja ninguna contraseña en el log de postgres (US-035 AC-1)
 # Usa los secretos reales de scripts/setup-secrets.sh (US-035) en un directorio temporal, con sus permisos 0600.
-# Un proyecto de Compose propio
-# y `down -v` al final, siempre. Variables: SMOKE_WAIT_TIMEOUT (s), SMOKE_COMPOSE_OVERRIDE (-f extra, p. ej. de la CI).
+# Cada fase que arranca o recrea contenedores por su cuenta (1 y 6) usa un proyecto de Compose PROPIO (D4-18): un `down`
+# lento o fallido de una fase no puede chocar por nombre de contenedor con el `up` de la siguiente. El trap baja todos
+# los proyectos con `down -v` al final, siempre. Variables: SMOKE_WAIT_TIMEOUT (s), SMOKE_COMPOSE_OVERRIDE (-f extra, p. ej. de la CI).
 set -euo pipefail
 
 # APP_ENV es obligatorio en el servicio clinical-api (`${APP_ENV:?...}`, sin default en el Compose): el smoke corre con
@@ -23,7 +24,9 @@ export AI_DISCLAIMER_TEXT="${AI_DISCLAIMER_TEXT:-Aviso sintético de IA del smok
 export ANALYSIS_BASIS_S1_ASSUMPTION_TEXT="${ANALYSIS_BASIS_S1_ASSUMPTION_TEXT:-Supuesto sintético de la Base del análisis del smoke.}"
 
 raiz="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-proyecto="oncolens-smoke-$$"
+proyecto_base="oncolens-smoke-$$"
+proyecto="$proyecto_base"
+proyectos=("$proyecto_base")
 espera="${SMOKE_WAIT_TIMEOUT:-900}"
 temporal="$(mktemp -d)"
 log="$temporal/compose.log"
@@ -38,12 +41,27 @@ archivos=(-f "$raiz/infra/docker/docker-compose.yml")
 [ -n "${SMOKE_COMPOSE_OVERRIDE:-}" ] && archivos+=(-f "$SMOKE_COMPOSE_OVERRIDE")
 compose() { docker compose -p "$proyecto" "${archivos[@]}" "$@"; }
 
-fallo() { echo "FALLO: $*" >&2; [ -s "$log" ] && tail -n 20 "$log" >&2; exit 1; }
+# Ante un fallo: el log completo del último `compose up`/`down` y el estado de TODOS los contenedores del proyecto activo,
+# antes de que el trap los baje.
+fallo() {
+  echo "FALLO: $*" >&2
+  if [ -s "$log" ]; then echo "--- log completo del último comando de compose ---" >&2; cat "$log" >&2; fi
+  echo "--- compose ps -a del proyecto $proyecto ---" >&2
+  compose ps -a >&2 2>&1 || true
+  if declare -F compose_test >/dev/null; then echo "--- compose ps -a del proyecto $proyecto_test ---" >&2; compose_test ps -a >&2 2>&1 || true; fi
+  exit 1
+}
 bien() { echo "OK    $*"; }
 
 limpiar() {
   local codigo=$?
-  compose down -v --remove-orphans >/dev/null 2>&1 || true
+  local p
+  for p in "${proyectos[@]}"; do
+    docker compose -p "$p" "${archivos[@]}" down -v --remove-orphans >/dev/null 2>&1 || true
+  done
+  for p in "${proyectos[@]}"; do
+    [ "$p" = "$proyecto_base" ] || docker image ls --format '{{.Repository}}' | grep "^$p-" | xargs -r docker rmi >/dev/null 2>&1 || true
+  done
   if declare -F compose_test >/dev/null; then compose_test down -v --remove-orphans >/dev/null 2>&1 || true; fi
   rm -rf "$temporal"
   exit "$codigo"
@@ -64,6 +82,15 @@ estado_de() { compose ps --format '{{.Service}}={{.Health}}' | sort; }
 compose build >"$log" 2>&1 || fallo "no se pudieron construir las imágenes"
 
 # ---------- fase 1: secretos ausentes ----------
+# Proyecto propio (D4-18): el `up` fallido deja contenedores creados (p. ej. milvus-etcd-1) y el `down` puede tardar; con otro
+# nombre de proyecto la fase 2 nunca choca con "container name already in use". Como las imágenes de los servicios con
+# `build` se nombran <proyecto>-<servicio>, se les añade la etiqueta del proyecto de la fase 1 (sin reconstruir: --no-build).
+proyecto_fase1="$proyecto_base-f1"
+proyectos+=("$proyecto_fase1")
+for servicio in $(compose config --services); do
+  if docker image inspect "$proyecto_base-$servicio" >/dev/null 2>&1; then docker tag "$proyecto_base-$servicio" "$proyecto_fase1-$servicio"; fi
+done
+proyecto="$proyecto_fase1"
 vacio="$temporal/secretos-vacios"
 mkdir -p "$vacio"
 if ONCOLENS_SECRETS_DIR="$vacio" compose up -d --no-build --wait >"$log" 2>&1; then
@@ -71,8 +98,13 @@ if ONCOLENS_SECRETS_DIR="$vacio" compose up -d --no-build --wait >"$log" 2>&1; t
 fi
 grep -q "$vacio" "$log" || fallo "el arranque sin secretos no nombra el archivo ausente"
 bien "sin secretos el arranque falla nombrando el archivo ausente"
-compose down -v --remove-orphans >/dev/null 2>&1 || true
-: >"$log"
+# El `down` de la fase 1 puede fallar sin invalidar el smoke, pero su salida queda en el log (y en stderr si falla).
+if ! compose down -v --remove-orphans >>"$log" 2>&1; then
+  echo "AVISO: el down de la fase 1 falló; salida:" >&2
+  cat "$log" >&2
+fi
+compose ps -a >>"$log" 2>&1 || true
+proyecto="$proyecto_base"
 
 # ---------- secretos de las fases siguientes ----------
 secretos="$temporal/secretos"
@@ -344,6 +376,9 @@ bien "US-035 AC-1 el perfil test crea y borra bases con el prefijo, no entra a l
 
 # ---------- fase 6: un fallo del init de roles no filtra contraseñas al log (US-035 AC-1) ----------
 compose_test down -v --remove-orphans >"$log" 2>&1 || fallo "no se pudo bajar postgres del perfil test"
+# Proyecto propio también aquí (D4-18): la fase 6 crea y destruye postgres seis veces.
+proyecto="$proyecto_base-f6"
+proyectos+=("$proyecto")
 # Un límite numérico pero fuera de rango falla dentro de la sentencia que lleva la contraseña; uno no numérico lo
 # rechaza el shell antes de llamar a psql. En ninguno de los dos casos el log de postgres puede contener un secreto.
 for ajuste in PG_RAG_CORPUS_CONNECTION_LIMIT=99999999999 PG_RAG_CORPUS_CONNECTION_LIMIT=abc PG_RAG_CORPUS_STATEMENT_TIMEOUT_MS=99999999999 PG_RAG_CORPUS_STATEMENT_TIMEOUT_MS=abc PG_RAG_CORPUS_IDLE_TX_TIMEOUT_MS=99999999999 PG_RAG_CORPUS_IDLE_TX_TIMEOUT_MS=abc; do
