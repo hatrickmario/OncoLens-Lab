@@ -6,6 +6,8 @@ import conEvidenciaPoblacionNoComparable from '../../../../../contracts/examples
 import conEvidenciaPoblacionLista from '../../../../../contracts/examples/con-evidencia-s4-poblacion-lista.json';
 import conEvidenciaPoblacionA_M2 from '../../../../../contracts/examples/con-evidencia-s4-poblacion-a-m2.json';
 import conEvidenciaPoblacionA_M2B from '../../../../../contracts/examples/con-evidencia-s4-poblacion-a-m2-b.json';
+import conEvidenciaTresOpciones from '../../../../../contracts/examples/con-evidencia-s4-tres-opciones.json';
+import conEvidenciaTresOpcionesNoComparable from '../../../../../contracts/examples/con-evidencia-s4-tres-opciones-no-comparable.json';
 import conEvidenciaSinOpciones from '../../../../../contracts/examples/con-evidencia-sin-opciones.json';
 import conEvidenciaSoloDescartadas from '../../../../../contracts/examples/con-evidencia-solo-descartadas.json';
 import soloDescartadasCitaInvalida from '../../../../../contracts/examples/con-evidencia-solo-descartadas-cita-invalida.json';
@@ -37,6 +39,8 @@ export {
   conEvidenciaPoblacionA_M2,
   conEvidenciaPoblacionA_M2B,
   conEvidenciaSinOpciones,
+  conEvidenciaTresOpciones,
+  conEvidenciaTresOpcionesNoComparable,
   conEvidenciaSoloDescartadas,
   errorColaLlena,
   errorDeadline,

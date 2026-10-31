@@ -178,7 +178,7 @@ describe('EvidencePanel', () => {
     expect(etiqueta.textContent).toBe('Relevancia de recuperación de evidencia');
     expect(valor.textContent).toBe('0,87');
     expect(screen.getByTestId('relevance-basis').textContent).toBe(
-      'Orden basado en la cita recuperada más relevante asociada a cada opción',
+      'Metadato de recuperación; no mide solidez clínica ni probabilidad.',
     );
     expect(ayuda.textContent).toBe(
       'No resume la aplicabilidad, la eficacia ni la calidad global de la opción.',
