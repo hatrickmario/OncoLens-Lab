@@ -10,7 +10,6 @@ import logging
 
 import pytest
 
-from tests.support.generador_llm import generador_con_llm
 from tests.support.afirmaciones_atomicas import (
     PRINCIPAL,
     PRINCIPAL_MODAL,
@@ -21,6 +20,7 @@ from tests.support.afirmaciones_atomicas import (
     SECUNDARIA_PRESCRIPTIVA,
     SENTINELA,
 )
+from tests.support.generador_llm import generador_con_llm
 from tests.support.llm_falso import FakeLlmClient
 from tests.support.nli_falso import IMPLICA, NEUTRAL, NliFalso
 from tests.support.recuperacion import CORPUS_FX06A, Q_HER2, crear_entorno, solicitud_de

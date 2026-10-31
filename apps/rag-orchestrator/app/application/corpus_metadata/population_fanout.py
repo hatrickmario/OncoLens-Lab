@@ -36,11 +36,11 @@ from app.application.ports import FalloDeInferencia, FalloDelLlm, NliClassifier
 from app.domain.corpus_metadata.poblacion_abanico import (
     Depurado,
     ValorPropuesto,
+    descartar_chunk_ajeno,
     descartar_por_longitud,
     omitir_lenguaje_prescriptivo,
     pares_de_verificacion,
     rechazar_relleno,
-    descartar_chunk_ajeno,
     verificar_nli,
 )
 from app.domain.corpus_metadata.poblacion_contadores import ContadoresDePoblacion

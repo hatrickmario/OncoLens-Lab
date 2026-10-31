@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import pytest
+
 from app.evaluation.model_selection import (
     Medicion,
     MedicionVariante,
     Restricciones,
-    desempatar_por_memoria,
     dentro_de_tolerancia,
     descartar_por_restricciones,
+    desempatar_por_memoria,
     seleccionar_componente,
     seleccionar_variante,
     verificar_presupuesto_conjunto,

@@ -5,7 +5,6 @@ from __future__ import annotations
 import ast
 
 from app.evaluation.rutas import raiz_repo
-
 from tests.evaluation.conftest import RAIZ_APP, RAIZ_REPO
 
 

@@ -8,15 +8,26 @@ from dataclasses import replace
 
 import pytest
 
-from app.domain.retrieval_filter import expresion_vigente_del_tipo
-from tests.support.recuperacion import LONGITUD_MAXIMA_DE_PRUEBA, Q_HER2, Q_SIN, solicitud_de
-from tests.support.recuperacion_hibrida import Q_KEYWORD, crear_entorno_hibrido, parametros_hibridos
+from app.application.ports import FalloDeInferencia
 from app.domain.fusion_de_candidatos import EstrategiaDeFusion
+from app.domain.retrieval_filter import expresion_vigente_del_tipo
 from app.schemas.generated.models import RetrievalMode
 from tests.support.generador_falso import OPCION_ANTI_HER2, RAZON_ANTI_HER2
-from tests.support.recuperacion_hibrida import CORPUS_HIBRIDO, TOP_K_ESTRECHO
-from app.application.ports import FalloDeInferencia
-from tests.support.recuperacion import BuscadorFalso, crear_entorno
+from tests.support.recuperacion import (
+    LONGITUD_MAXIMA_DE_PRUEBA,
+    Q_HER2,
+    Q_SIN,
+    BuscadorFalso,
+    crear_entorno,
+    solicitud_de,
+)
+from tests.support.recuperacion_hibrida import (
+    CORPUS_HIBRIDO,
+    Q_KEYWORD,
+    TOP_K_ESTRECHO,
+    crear_entorno_hibrido,
+    parametros_hibridos,
+)
 
 
 def _candidatos_del_reranker(entorno) -> set[str]:

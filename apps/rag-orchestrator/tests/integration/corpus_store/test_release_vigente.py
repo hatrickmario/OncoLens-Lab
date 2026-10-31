@@ -14,7 +14,7 @@ from sqlalchemy import Engine, text
 
 from app.application.ports import ReleaseDelCorpus
 from app.infrastructure.catalog.conexion import crear_motor
-from app.infrastructure.catalog.release_reader import LectorReleasePostgres, CorpusSinReleaseError
+from app.infrastructure.catalog.release_reader import CorpusSinReleaseError, LectorReleasePostgres
 from tests.support.pg import BaseDeTest
 
 pytestmark = pytest.mark.servicios_reales

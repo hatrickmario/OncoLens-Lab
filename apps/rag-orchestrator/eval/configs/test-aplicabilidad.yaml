@@ -11,6 +11,7 @@ adaptadores:
   proveedor: fake # fake | local (el catálogo SQL con rag_corpus se cablea con la medición real, US-233)
 umbrales:
   nli_entailment_threshold: 0.7
+  claim_max_words: 20 # CLAIM_MAX_WORDS (RN-22): más palabras = fuera de forma, sin NLI
 catalogo:
   ruta_terminos: packages/clinical-catalogs # lista de términos prohibidos (RN-23) con la que el camino textual sanea
 corpus:

@@ -10,11 +10,11 @@ from __future__ import annotations
 from pathlib import Path
 
 from app.application.corpus_metadata.esquema_poblacion import cargar_plantilla
+from app.application.corpus_metadata.poblacion_puertos import LlmDePoblacion
 from app.application.corpus_metadata.population_fanout import (
     ConfiguracionDePoblacion,
     PopulationFanoutExtractor,
 )
-from app.application.corpus_metadata.poblacion_puertos import LlmDePoblacion
 from app.application.ports import NliClassifier
 from app.config.settings import CorpusIngestSettings, Settings
 from app.infrastructure.catalogo_clinico.aplicabilidad import cargar_criterios_de_aplicabilidad

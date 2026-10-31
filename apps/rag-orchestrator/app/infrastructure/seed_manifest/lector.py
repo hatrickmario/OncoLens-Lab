@@ -9,11 +9,11 @@ del catálogo no lo es.
 from __future__ import annotations
 
 import re
-from urllib.parse import urlsplit
 from collections.abc import Mapping
 from datetime import date
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 import yaml
 
