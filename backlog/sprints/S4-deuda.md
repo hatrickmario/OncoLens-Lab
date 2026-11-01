@@ -62,6 +62,7 @@ Las deudas de L1D-95 (`/completeness`) que L1D-97 ya recoge no llevan ID propio:
 | D4-34 | L1D-297, lenguaje: `guía-demo-S4.md:93` usa «recomendada» (RN-23); `assumptions` vacío en los 2 ejemplos demo. | L1D-297 (Gate 2, lenguaje) | Deuda de documentación S5 | Propuesto |
 | D4-35 | L1D-297, mediciones y tareas pendientes: medición con LLM real de las reglas de población y de los ejemplos `demo-s4`; tarea 1.1 (revisión humana US-118 y limpiar `linea` de `pmc-mama-cdk46-guia`) y tareas 2.8-2.10. | L1D-297 (1.1, 2.8-2.10) | L1D-297 (cola S5); requieren LLM real y revisión humana | Propuesto |
 | D4-36 | **Hallazgo ajeno, por investigar:** en `main` HEAD, `terminos_prohibidos.atribucion.con_formula` = 5 frente a 0 en `data/evaluation/baseline.json`. Verificar si es regresión real de la métrica (D4-20 la reorienta) o deriva del baseline. | Gate 2 de aceleración (L1D-144) | `ai-eval-runner` al inicio del S5 | Por investigar |
+| D4-37 | L1D-145, E2E diferidos: ejecutar los E2E de `panel-tres-opciones` contra Compose (tareas 2.3 y 2.6 de `tasks.md`). | L1D-145 (2.3, 2.6) | Deuda de verificación S5 | Propuesto |
 
 ## Decidido (usuario, 2026-10-31)
 
