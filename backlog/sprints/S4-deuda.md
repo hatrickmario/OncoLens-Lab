@@ -63,6 +63,20 @@ Las deudas de L1D-95 (`/completeness`) que L1D-97 ya recoge no llevan ID propio:
 | D4-35 | L1D-297, mediciones y tareas pendientes: medición con LLM real de las reglas de población y de los ejemplos `demo-s4`; tarea 1.1 (revisión humana US-118 y limpiar `linea` de `pmc-mama-cdk46-guia`) y tareas 2.8-2.10. | L1D-297 (1.1, 2.8-2.10) | L1D-297 (cola S5); requieren LLM real y revisión humana | Propuesto |
 | D4-36 | **Hallazgo ajeno, por investigar:** en `main` HEAD, `terminos_prohibidos.atribucion.con_formula` = 5 frente a 0 en `data/evaluation/baseline.json`. Verificar si es regresión real de la métrica (D4-20 la reorienta) o deriva del baseline. | Gate 2 de aceleración (L1D-144) | `ai-eval-runner` al inicio del S5 | Por investigar |
 | D4-37 | L1D-145, E2E diferidos: ejecutar los E2E de `panel-tres-opciones` contra Compose (tareas 2.3 y 2.6 de `tasks.md`). | L1D-145 (2.3, 2.6) | Deuda de verificación S5 | Propuesto |
+| D4-38 | **Mantenimiento de dependencias al inicio del S5** (plan abajo): PR de Dependabot #228 (docker), #230 (npm), #237 (Milvus 2.6.25→2.6.26) y #238 (pip, 10 paquetes), abiertos desde 2026-10-28 y fuera del sprint. | Sesión principal (usuario, 2026-10-31) | Primer bloque del S5, tras `/sprint-close S4` y antes de las historias | Propuesto |
+
+### Plan D4-38: mantenimiento de dependencias (S5)
+
+Regla: uno por uno, cada uno con `gh pr update-branch` y CI de `main` en verde antes del siguiente. No se hace antes de la demo del S4. Los mergea el humano.
+
+| Orden | PR | Qué comprobar antes de mergear |
+|---|---|---|
+| 1 | #228 docker (3 directorios) | CI y E2E en verde; `stack-smoke` levanta el Compose. |
+| 2 | #230 npm (5 paquetes) | CI y E2E en verde; `contracts:check` y build de `web` sin cambios de salida. |
+| 3 | #238 pip (10 paquetes, `rag-orchestrator`) | `integration-rag` en verde; `evaluate all` con el modelo falso idéntico a `baseline.json` (salvo D4-36); si un paquete rompe, separarlo del grupo con `@dependabot ignore` para ese paquete. |
+| 4 | #237 Milvus 2.6.26 | Solo con motivo. Levantar el stack con `levantar.sh`, indexar el corpus de la demo y repetir una consulta de los ejemplos `demo-s4`; comparar resultados con 2.6.25. Si difiere el índice o el recall, no mergear. |
+
+Cierre: CI de `main` en verde, `reports/eval/` sin cambios no explicados y comentario en cada PR.
 
 ## Decidido (usuario, 2026-10-31)
 
