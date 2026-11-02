@@ -106,12 +106,18 @@ Cuando la clave de un criterio figura en `clinicalContext.missingCriticalData` o
 - **THEN** `estado_menopausico` trae `status = desconocido`, `unknownReason = falta_en_paciente`, `patientValue = null` y `patientDataWarning = faltante` [AC-08.2] [AC-04.3]
 
 ### Requirement: Desconocido sin causa cuando el dato no falta
-Un criterio `desconocido` cuyo motivo no es la ausencia del dato en el paciente ni en la fuente (valor no comparable, estadio sin escala ordenada) MUST llevar `unknownReason = null`: la causa solo toma los dos valores del contrato.
+Un criterio `desconocido` cuyo motivo no es la ausencia del dato en el paciente ni en la fuente MUST llevar la causa que lo produce: `sin_regla_de_comparacion` cuando el catálogo no define cómo comparar el valor y `valores_en_conflicto` en el conflicto (US-243, enum de US-241). `unknownReason = null` con `status = desconocido` SHALL quedar solo en los análisis históricos persistidos antes de este change, que no se reescriben (RN-06).
 
 #### Scenario: Estadio de A-M1 sin escala ordenada
-- **GIVEN** A-M1 con estadio «IIA» y `doc-a1` con estadio «I–III»
+- **GIVEN** A-M1 con estadio «IIA» y `doc-a1` con estadio «I–III», y un catálogo de test sin escala ordenada para el estadio
 - **WHEN** se evalúa la aplicabilidad de `doc-a1`
-- **THEN** `estadio` trae `status = desconocido` y `unknownReason = null`
+- **THEN** `estadio` trae `status = desconocido` y `unknownReason = sin_regla_de_comparacion`
+- **AND** `contracts/examples/rag-query-aplicabilidad-a-m1.json` y `con-evidencia-s3-aplicabilidad.json` traen ese mismo motivo para el estadio y validan con `contracts:check`
+
+#### Scenario: Causas que producen sin_regla_de_comparacion [US-243]
+- **GIVEN** un criterio cuyo valor es `valor_fuera_de_tabla`, `sin_escala` o `forma_no_comparable` (p. ej. un estadio sin escala ordenada)
+- **WHEN** el catálogo no define cómo compararlo
+- **THEN** el criterio queda `desconocido` con `unknownReason = sin_regla_de_comparacion`
 
 ### Requirement: Aviso del dato del paciente según su procedencia
 Para cada criterio comparado con un dato del paciente, `patientDataWarning` MUST derivarse de la `provenance` del dato cuyo valor se copia en `patientValue`: `en_conflicto` si `conflict = true` (con precedencia sobre `sin_verificar`), `sin_verificar` si `reviewStatus = requiere_revision`, y `null` en otro caso; en un destino compuesto (RE/RP) rige la misma precedencia sobre sus componentes. El aviso MUST NOT cambiar el `status` calculado ni bloquear el análisis (RN-26, RN-07).
@@ -265,13 +271,13 @@ Un criterio sin valor estructurado sobre el que el LLM no propone nada MUST qued
 - **THEN** ambas listas contienen `studyPopulationValue` y son iguales
 
 ### Requirement: La versión del prompt de aplicabilidad queda registrada con la del generador
-Cuando el camino textual invoca al LLM de aplicabilidad, `meta.promptVersion` MUST llevar la versión del generador y la del prompt de aplicabilidad en un solo token (`<generador>+aplicabilidad-texto@<versión>`), y el log del análisis SHALL registrar la de aplicabilidad; sin cambio de contrato (`[S3 resp. 16]`). Si no se invoca, `meta.promptVersion` MUST ser solo la del generador.
+Cuando el respaldo de población invoca al LLM, `meta.promptVersion` MUST llevar la versión del generador y la del prompt del respaldo (`POPULATION_PROMPT_VERSION`) en un solo token (`<generador>+<versión del prompt de población>`), y el log del análisis SHALL registrar la de población como `applicabilityPromptVersion`; sin cambio de contrato (`[S3 resp. 16]`). Si no se invoca, `meta.promptVersion` MUST ser solo la del generador.
 
 #### Scenario: Un análisis con camino textual reporta ambas versiones del prompt [FR-25] [S3 resp. 16]
-- **GIVEN** A-M1, `test-apl-1.0.0`, `doc-a2`, `APL-OK` y el NLI falso en `entailment` (FX-08b-a)
+- **GIVEN** A-M1, `test-apl-1.0.0`, `doc-a2` con la marca `pendiente` por criterio, `APL-OK` y el NLI falso en `entailment` (FX-08b-a)
 - **WHEN** `POST /rag/query` evalúa la aplicabilidad de `doc-a2`
-- **THEN** `meta.promptVersion` es la versión del generador seguida de `+aplicabilidad-texto@0.1.0`, sin espacios
-- **AND** el log del análisis registra `applicabilityPromptVersion = aplicabilidad-texto@0.1.0` sin el valor propuesto ni el texto del chunk
+- **THEN** `meta.promptVersion` es la versión del generador seguida de `+poblacion_v1`, sin espacios
+- **AND** el log del análisis registra `applicabilityPromptVersion = poblacion_v1` sin el valor propuesto ni el texto del chunk
 - **AND** la respuesta valida contra `RagQueryInternalResponse` del `openapi.yaml` del proveedor
 
 #### Scenario: Sin camino textual la versión es solo la del generador [S3 resp. 16]
@@ -288,3 +294,147 @@ Si el adapter NLI lanza un error o no responde al validar una propuesta de aplic
 - **THEN** la respuesta es `503` con `error = "NLI_UNAVAILABLE"`, `message` y `traceId`
 - **AND** el cuerpo no contiene `applicability`, `evidenceOptions` ni el texto "HER2 negativo"
 - **AND** la respuesta valida contra el `503` de `/rag/query` del `openapi.yaml` del proveedor
+
+### Requirement: Lector de population_criteria que acepta la forma antigua y la nueva
+El repositorio del catálogo del corpus MUST entregar al dominio una lista de valores por criterio desde la forma antigua y la nueva, y aceptar la marca `{"status": "pendiente", "values": []}` como criterio pendiente; una forma inválida (más de `POPULATION_MAX_VALUES_PER_CRITERION` valores de un fragmento, o `scope` fuera del enum) SHALL dejar el criterio `desconocido` con `no_reportado_por_fuente`, responder `200` y registrar `poblacion_forma_invalida` sin valor ni texto (RN-26, RN-14, RN-22).
+
+#### Scenario: doc-a1 antigua y doc-b1 nueva llegan como lista y A-M1 × doc-a1 no cambia [US-241 AC-4] [ADR-47] [AC-08.9]
+- **GIVEN** `doc-a1` (forma antigua) y `doc-b1` (forma nueva) de FX-08b-c y el catálogo `test-apl-1.0.0`
+- **WHEN** el repositorio del catálogo del corpus los lee
+- **THEN** ambos llegan al dominio como lista de valores
+- **AND** el resumen de A-M1 × `doc-a1` es `{ coincide: 2, parcial: 0, noCoincide: 0, desconocido: 3 }`
+
+#### Scenario: Una forma inválida degrada el criterio y no rompe el análisis [US-241 AC-5] [RN-26] [RN-14]
+- **GIVEN** `POPULATION_MAX_VALUES_PER_CRITERION = 3`, una fila de forma nueva con 4 valores de un mismo fragmento en un criterio, y otra con un `scope` fuera del enum
+- **WHEN** se lee en un análisis
+- **THEN** ese criterio queda `desconocido` con `unknownReason = no_reportado_por_fuente` y el análisis responde `200`
+- **AND** el log registra `poblacion_forma_invalida` con el criterio, el `chunkId` y el `traceId`, sin el valor ni el texto del fragmento
+
+#### Scenario: La marca pendiente es una forma válida [US-241 AC-5] [ADR-47]
+- **GIVEN** una fila de forma nueva con `estado_menopausico = {"status": "pendiente", "values": []}`
+- **WHEN** el repositorio del catálogo del corpus la lee
+- **THEN** el dominio recibe ese criterio como pendiente con lista vacía
+- **AND** no se registra `poblacion_forma_invalida`
+
+### Requirement: Estado por criterio calculado con los valores de los fragmentos que cita la opción
+El estado de cada criterio de una opción MUST calcularse con una función pura sobre los valores de población cuyo `chunkId` cita esa opción, el valor del paciente del contexto y las tablas del catálogo; un valor de un fragmento no citado SHALL NOT entrar (RN-28, ADR-47).
+
+#### Scenario: Una población inclusiva deja el criterio en parcial con motivo inclusiva [US-243 AC-1] [AC-08.1] [FR-25] [S4 resp. 8]
+- **GIVEN** FX-08b-c, el paciente A-M2 (posmenopáusica) y la opción O-P1, que cita `ch-b1-1` con `premenopausal women` y `postmenopausal women`
+- **WHEN** se calcula la aplicabilidad de la opción
+- **THEN** `estado_menopausico` trae `status = parcial` y `partialReason = inclusiva`
+- **AND** `studyPopulationValues` trae los dos valores de `ch-b1-1`
+
+#### Scenario: Una población específica del perfil da coincide [US-243 AC-2] [AC-08.1] [DEC-11]
+- **GIVEN** A-M2 y la opción O-P2, que cita `ch-b2-1` con `postmenopausal women only`
+- **WHEN** se calcula la aplicabilidad
+- **THEN** `estado_menopausico` trae `status = coincide` y `partialReason = null`
+
+#### Scenario: Una restricción explícita que excluye al paciente da no_coincide [US-243 AC-3] [AC-08.1] [DEC-11] (asumido en la señal)
+- **GIVEN** A-M3 (premenopáusica) y la opción O-P2 (`postmenopausal women only`), con `restrictionMarkers` del catálogo
+- **WHEN** se calcula la aplicabilidad
+- **THEN** `estado_menopausico` trae `status = no_coincide`
+
+#### Scenario: Una lista incompleta sin restricción nunca excluye [US-243 AC-4] [AC-08.2] [ADR47-R2]
+- **GIVEN** A-M3 y la opción O-P3, que cita `ch-b3-1` con `postmenopausal women` sin marcador de restricción
+- **WHEN** se calcula la aplicabilidad
+- **THEN** `estado_menopausico` trae `status = desconocido` y `unknownReason = no_reportado_por_fuente`
+- **AND** el estado nunca es `no_coincide`
+
+#### Scenario: La unidad de cálculo es el fragmento citado [US-243 AC-7] [AC-08.1] [ADR47-R18]
+- **GIVEN** A-M2 y las opciones O-P7 (cita `ch-b7-1`) y O-P8 (cita `ch-b7-2`) del mismo `doc-b7`
+- **WHEN** se calcula cada una
+- **THEN** O-P7 trae `estado_menopausico = coincide` y O-P8 trae `no_coincide`
+- **AND** ningún valor de un fragmento que la opción no cita entra en su estado
+
+### Requirement: Valores en conflicto dejan el criterio desconocido con ambos valores visibles
+Cuando los valores de los fragmentos citados son códigos del catálogo excluyentes entre sí, el criterio MUST quedar `desconocido` con `unknownReason = valores_en_conflicto`, conservar ambos valores con su `chunkId` y no marcar `populationNotComparable` por ese motivo (RN-28).
+
+#### Scenario: Dos fragmentos con HER2 distinto dan desconocido con valores_en_conflicto [US-243 AC-5] [AC-08.2] [RN-28] (asumido: conflicto = códigos excluyentes en fragmentos distintos del mismo documento)
+- **GIVEN** A-M2 y la opción O-P4, que cita `ch-b4-1` (`HER2-positive (IHC 3+)`) y `ch-b4-2` (`HER2-negative (IHC 2+, ISH not amplified)`)
+- **WHEN** se calcula la aplicabilidad
+- **THEN** `estado_her2` trae `status = desconocido` y `unknownReason = valores_en_conflicto`
+- **AND** `studyPopulationValues` trae los dos valores con `chunkId` `ch-b4-1` y `ch-b4-2`
+- **AND** `populationNotComparable = false` para la fuente
+
+### Requirement: Subgrupo y mención no cuentan para el estado
+Los valores con `scope = subgrupo` o `mencion` MUST NOT contar para el estado del criterio ni sumarse a `coincide` ni a `parcial` en el resumen de la fuente; SHALL conservarse en `studyPopulationValues` como contexto (ADR-47).
+
+#### Scenario: Un valor de subgrupo se muestra pero el criterio queda desconocido [US-243 AC-6] [AC-08.1] [ADR47-R1] [S4 resp. 3]
+- **GIVEN** A-M2 y la opción O-P6, que cita `ch-b6-1` con `triple-negative (TNBC)` de `scope = subgrupo`
+- **WHEN** se calcula la aplicabilidad
+- **THEN** `receptores_hormonales` trae `status = desconocido` y `unknownReason = no_reportado_por_fuente`
+- **AND** `studyPopulationValues` conserva el valor con `scope = subgrupo`
+- **AND** el resumen de la fuente no lo cuenta como `coincide` ni como `parcial`
+
+### Requirement: Tabla de casos pura, determinista y sin puntaje
+La proyección de los estados internos (design D2, incluidos rango solapado, `solo_subgrupo` antiguo y los casos sin regla de comparación) a los cuatro estados, a `partialReason` y a `unknownReason` (`sin_regla_de_comparacion` para los casos sin regla) MUST ser una función pura: misma entrada, misma salida, cero invocaciones del LLM y ningún puntaje ni porcentaje (RN-28, ADR-34).
+
+#### Scenario: Cada caso de la tabla proyecta el estado y el motivo esperados y el cálculo es idéntico al repetirlo [US-243 AC-8] [AC-08.9] [RN-28] [ADR-34] [S4 resp. 11]
+- **GIVEN** la tabla de casos de la función pura (exacto, inclusivo, mezclado con fragmento de `study_design` guía o revisión con varios valores, rango solapado, `solo_subgrupo` de la forma antigua, en conflicto, ausente, restricción, `valor_fuera_de_tabla`, `sin_escala` y `forma_no_comparable`) y el LLM falso con contador
+- **WHEN** se evalúa dos veces cada caso
+- **THEN** cada caso proyecta al estado visible, al `partialReason` y al `unknownReason` esperados (rango solapado → `parcial` / `rango_solapado`; `solo_subgrupo` antiguo → `parcial` / `solo_subgrupo`; los tres casos sin regla → `desconocido` / `sin_regla_de_comparacion`) y los dos resultados son idénticos
+- **AND** el LLM falso registra cero invocaciones
+- **AND** la salida no contiene ningún puntaje ni porcentaje
+
+#### Scenario: Un fragmento que mezcla poblaciones sin desagregar deja parcial con motivo mezclada [US-243 AC-8] [AC-08.1] [DEC-11]
+- **GIVEN** A-M2 y la opción O-P5, que cita `ch-b5-1` de `doc-b5` (`study_design = guia`) con dos valores de menopausia
+- **WHEN** se calcula la aplicabilidad
+- **THEN** `estado_menopausico` trae `status = parcial` y `partialReason = mezclada`
+
+<!-- Regresiones anotadas (no son escenarios de este change):
+- Regresión [RN-28] orden por estados y sin puntaje activa desde S4 en US-134.
+- Regresión [RN-02] sin evidencia, `applicability = []` y sin invocar al LLM, activa desde S3 en US-055/US-124 AC-6.
+-->
+
+### Requirement: Respaldo en la consulta solo para criterios de población pendientes
+Si una fuente citada tiene un criterio con la marca `pendiente` en `population_criteria` (forma de US-241), el servicio de aplicabilidad MUST ejecutar la tarea corta de US-242 (una fuente y un criterio por llamada; prompt sin `clinicalContext`, `pseudoPatientId` ni pregunta) y aceptar el valor solo con cita a un fragmento recuperado y NLI `entailment` (RN-01, ADR-47). Sin criterios pendientes MUST NOT invocar el adapter de respaldo.
+
+#### Scenario: El respaldo completa el criterio pendiente de doc-b9 [US-244 AC-1] [AC-08.3] [RN-01] [ADR-47]
+- **GIVEN** el paciente A-M2, el catálogo `test-apl-1.2.0`, el LLM de opciones `LLM-POB` limitado a O-P9 y el adapter de respaldo `RESP-OK` (FX-08b-c)
+- **WHEN** se procesa el análisis
+- **THEN** el adapter de respaldo registra una llamada, con solo los fragmentos de `doc-b9` y solo el criterio `estado_menopausico` (el único con la marca `pendiente`)
+- **AND** el prompt registrado no contiene ningún campo de `clinicalContext`, ni el `pseudoPatientId`, ni el texto de la pregunta
+- **AND** el valor pasa el NLI contra `ch-b9-1` y el criterio queda `coincide`
+
+#### Scenario: Sin criterios pendientes no hay llamadas al respaldo [US-244 AC-5] [ADR-47]
+- **GIVEN** un análisis cuyas fuentes citadas (O-P1…O-P8) no tienen ningún criterio con la marca `pendiente` en `population_criteria`
+- **WHEN** se procesa el análisis
+- **THEN** el adapter de respaldo registra cero llamadas
+
+### Requirement: Un respaldo fallido degrada el criterio sin descartar el análisis
+Si el respaldo falla por salida truncada, bucle de repetición, plazo vencido o LLM caído tras generar las opciones, el criterio MUST quedar `desconocido` con `unknownReason = respaldo_fallido`; la respuesta MUST ser `200`, con `evidenceOptions` igual a la del análisis sin respaldo, y MUST NOT incluir `LOCAL_LLM_UNAVAILABLE` por esa causa (RN-26).
+
+#### Scenario: Un bucle de repetición deja el criterio respaldo_fallido y conserva las opciones [US-244 AC-2] [RN-26] [S4 resp. 3]
+- **GIVEN** el adapter `RESP-BUCLE` (repite hasta `POPULATION_EXTRACTION_MAX_OUTPUT_TOKENS`, `finish_reason = length`)
+- **WHEN** se procesa el análisis
+- **THEN** la respuesta es `200` y `estado_menopausico` queda `desconocido` con `unknownReason = respaldo_fallido`
+- **AND** `evidenceOptions` es igual a la del mismo análisis sin respaldo
+
+#### Scenario: Un JSON truncado no produce LOCAL_LLM_UNAVAILABLE [US-244 AC-3] [S4 resp. 3]
+- **GIVEN** el adapter `RESP-TRUNCADO`
+- **WHEN** se procesa el análisis
+- **THEN** la respuesta es `200` y el criterio queda `respaldo_fallido`
+- **AND** ningún código de error de la respuesta es `LOCAL_LLM_UNAVAILABLE`
+
+#### Scenario: El LLM caído durante el respaldo conserva las opciones validadas [US-244 AC-7] [RN-26] (asumido: el respaldo degrada también ante el LLM caído; si cae antes de generar sigue el 503 de US-053)
+- **GIVEN** el adapter `RESP-CAIDO` tras una generación de opciones correcta
+- **WHEN** se procesa el análisis
+- **THEN** la respuesta es `200` con las opciones validadas y el criterio en `respaldo_fallido`
+
+### Requirement: El respaldo tiene un plazo propio configurable
+Cada llamada de respaldo MUST cancelarse al superar `POPULATION_FALLBACK_DEADLINE_MS` (configuración, RN-22) y dejar su criterio `respaldo_fallido`, sin literal en el código.
+
+#### Scenario: Un respaldo lento se cancela al vencer el plazo [US-244 AC-4] [RN-22] [RN-26]
+- **GIVEN** el adapter `RESP-LENTO` y `POPULATION_FALLBACK_DEADLINE_MS` en configuración
+- **WHEN** se procesa el análisis
+- **THEN** el respaldo se cancela al vencer el plazo, el criterio queda `respaldo_fallido` y la respuesta es `200`
+
+### Requirement: El fallo del respaldo se registra sin contenido
+Ante un respaldo fallido, `rag-orchestrator` MUST registrar el evento `aplicabilidad_respaldo_fallido` con `finish_reason`, la longitud de la salida, el criterio y el `traceId` (el `chunkId` está permitido), y MUST NOT registrar valores, texto de fragmento, prompt, salida del LLM ni la pregunta (RN-14).
+
+#### Scenario: El log del bucle no contiene contenido [US-244 AC-6] [RN-14] [S4 resp. 3]
+- **GIVEN** el análisis del escenario de `RESP-BUCLE`
+- **WHEN** se leen los logs de `rag-orchestrator`
+- **THEN** hay un evento `aplicabilidad_respaldo_fallido` con `finish_reason = length`, la longitud de la salida, el criterio y el `traceId`
+- **AND** ningún valor, texto de fragmento, prompt, salida del LLM ni pregunta aparece en los logs

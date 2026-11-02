@@ -1,0 +1,186 @@
+{
+  "configuracion": {
+    "claseDataset": "sintetico",
+    "dataset": {
+      "nombre": "poblacion-dorado",
+      "version": "0-semilla"
+    },
+    "fixture": "FX-06c-d",
+    "hashConfig": "d486588f0639999d11340122f80943381e6b54a59bfa10df9fdf0e7fb9ba237c",
+    "nombre": "test-poblacion",
+    "proveedor": "fake",
+    "reloj": "simulado",
+    "revision": {
+      "completa": false
+    },
+    "umbrales": {
+      "nliEntailmentThreshold": 0.8
+    }
+  },
+  "esquema": "oncolens.evaluate.v1",
+  "metricas": {
+    "bucle": {
+      "cortes": 0,
+      "minimo_de_pares": 20,
+      "out06": "cerrada",
+      "pares": 24,
+      "tasa": 0.0
+    },
+    "concordancia": {
+      "aciertos": 5,
+      "coincide_indebido": 0,
+      "marca": "en_meta",
+      "meta": 1.0,
+      "no_coincide_indebido": 0,
+      "por_estado": {
+        "coincide": {
+          "aciertos": 1,
+          "esperados": 1
+        },
+        "desconocido": {
+          "aciertos": 2,
+          "esperados": 2
+        },
+        "no_coincide": {
+          "aciertos": 1,
+          "esperados": 1
+        },
+        "parcial": {
+          "aciertos": 1,
+          "esperados": 1
+        }
+      },
+      "total": 5,
+      "valor": 1.0
+    },
+    "cortes_por_longitud": {
+      "casos": [],
+      "cortes": 0,
+      "tareas": 72
+    },
+    "estratos": [
+      {
+        "estrato": "ensayo/en",
+        "pares": 6
+      },
+      {
+        "estrato": "ensayo/es",
+        "pares": 6
+      },
+      {
+        "estrato": "guia/en",
+        "pares": 6
+      },
+      {
+        "estrato": "guia/es",
+        "pares": 6
+      },
+      {
+        "estrato": "revision/en",
+        "pares": 6
+      },
+      {
+        "estrato": "revision/es",
+        "pares": 6
+      }
+    ],
+    "pares_del_dorado": 36,
+    "por_criterio": [
+      {
+        "cobertura": 1.0,
+        "coincidentes": 6,
+        "criterio": "ecog",
+        "esperados": 6,
+        "marca_cobertura": "no_concluyente",
+        "marca_precision": "no_concluyente",
+        "meta_cobertura": 0.8,
+        "meta_precision": 0.9,
+        "obtenidos": 6,
+        "precision": 1.0
+      },
+      {
+        "cobertura": 1.0,
+        "coincidentes": 6,
+        "criterio": "estadio",
+        "esperados": 6,
+        "marca_cobertura": "no_concluyente",
+        "marca_precision": "no_concluyente",
+        "meta_cobertura": 0.8,
+        "meta_precision": 0.9,
+        "obtenidos": 6,
+        "precision": 1.0
+      },
+      {
+        "cobertura": 1.0,
+        "coincidentes": 6,
+        "criterio": "estado_her2",
+        "esperados": 6,
+        "marca_cobertura": "no_concluyente",
+        "marca_precision": "no_concluyente",
+        "meta_cobertura": 0.8,
+        "meta_precision": 0.9,
+        "obtenidos": 6,
+        "precision": 1.0
+      },
+      {
+        "cobertura": 1.0,
+        "coincidentes": 9,
+        "criterio": "estado_menopausico",
+        "esperados": 9,
+        "marca_cobertura": "no_concluyente",
+        "marca_precision": "no_concluyente",
+        "meta_cobertura": 0.8,
+        "meta_precision": 0.9,
+        "obtenidos": 9,
+        "precision": 1.0
+      },
+      {
+        "cobertura": 1.0,
+        "coincidentes": 6,
+        "criterio": "linea_tratamiento",
+        "esperados": 6,
+        "marca_cobertura": "no_concluyente",
+        "marca_precision": "no_concluyente",
+        "meta_cobertura": 0.8,
+        "meta_precision": 0.9,
+        "obtenidos": 6,
+        "precision": 1.0
+      },
+      {
+        "cobertura": 1.0,
+        "coincidentes": 9,
+        "criterio": "receptores_hormonales",
+        "esperados": 9,
+        "marca_cobertura": "no_concluyente",
+        "marca_precision": "no_concluyente",
+        "meta_cobertura": 0.8,
+        "meta_precision": 0.9,
+        "obtenidos": 9,
+        "precision": 1.0
+      }
+    ],
+    "sin_evidencia": {
+      "actual": 1.0,
+      "baja": false,
+      "baseline": 1.0,
+      "violaciones_rn02": 0
+    },
+    "tasa_duplicados": {
+      "duplicados": 0,
+      "marca": "en_meta",
+      "meta": 0.0,
+      "obtenidos": 42,
+      "valor": 0.0
+    }
+  },
+  "suite": "poblacion",
+  "veredicto": {
+    "causas": [
+      "sin_revisor"
+    ],
+    "cobertura": "no_concluyente",
+    "invariantes_violadas": [],
+    "precision": "no_concluyente",
+    "resultado": "no_concluyente"
+  }
+}

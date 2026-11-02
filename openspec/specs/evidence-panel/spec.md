@@ -29,19 +29,20 @@ Cada cita MUST mostrar los metadatos del contrato y "No disponible" para cualqui
 La tarjeta MUST mostrar `relevanceScore` con el rótulo `relevance-label` "Relevancia de recuperación de evidencia" `[S1 resp. 28]`, coma decimal y dos decimales, **después** de las citas, en estilo secundario y sin barra, estrella ni porcentaje (RN-03). Ningún rótulo MUST ser "Evidencia" a secas ni afirmar eficacia; la nota y la ayuda negadas SHALL permitirse.
 
 #### Scenario: La relevancia aparece con su rótulo exacto, después de las citas y en estilo secundario [US-061 AC-2] [RN-03] [AC-10.2] [ADR-8] [S1 resp. 28]
-- **GIVEN** la tarjeta del escenario del AC-1, con `relevanceScore = 0.87`
+- **GIVEN** la tarjeta del escenario del AC-1, con `relevanceScore = 0.87` y sin aplicabilidad calculada
 - **WHEN** se inspecciona
 - **THEN** el elemento `relevance-label` tiene exactamente el texto "Relevancia de recuperación de evidencia" y el valor es "0,87"
-- **AND** `relevance-basis` es exactamente "Orden basado en la cita recuperada más relevante asociada a cada opción" y `relevance-help` es exactamente "No resume la aplicabilidad, la eficacia ni la calidad global de la opción.", referenciada por el `aria-describedby` del valor
+- **AND** `relevance-basis` es exactamente "Metadato de recuperación; no mide solidez clínica ni probabilidad." y `relevance-help` es exactamente "No resume la aplicabilidad, la eficacia ni la calidad global de la opción.", referenciada por el `aria-describedby` del valor
 - **AND** el bloque incluye la nota "Metadato secundario: no mide eficacia ni solidez clínica"
 - **AND** el bloque de relevancia sigue en el orden del documento a la lista de citas y usa el estilo secundario
 - **AND** ningún rótulo de la tarjeta es "Evidencia" a secas ni "Relevancia de la evidencia"
+- **AND** no aparece "Orden basado en la cita recuperada más relevante asociada a cada opción" (texto anterior de `basisRelevancia`)
 
 #### Scenario: Con orden por aplicabilidad la presentación de la relevancia dice que solo desempata [US-062 AC-7] [RN-03] [RN-28] [S3 resp. 9]
 - **GIVEN** una respuesta `con_evidencia` cuya opción trae aplicabilidad calculada (`perSource` no vacío, `l1d-130-herencia-aplicabilidad-recorte`)
 - **WHEN** se renderiza la tarjeta
-- **THEN** `relevance-basis` es exactamente "Metadato de recuperación; solo desempata el orden por aplicabilidad."
-- **AND** no aparece "Orden basado en la cita recuperada más relevante asociada a cada opción"
+- **THEN** `relevance-basis` es exactamente "Metadato de recuperación; no mide solidez clínica ni probabilidad, y solo desempata el orden por aplicabilidad."
+- **AND** no aparece "Metadato de recuperación; no mide solidez clínica ni probabilidad." como texto completo de `relevance-basis`, ni "Orden basado en la cita recuperada más relevante asociada a cada opción"
 - **AND** el bloque de relevancia sigue después de las citas, en estilo secundario, con el mismo rótulo, la misma nota y la misma ayuda
 
 #### Scenario: Nota, base y ayuda de la relevancia [RN-03] [S3 resp. 9] [S1 resp. 28]
@@ -49,9 +50,17 @@ La tarjeta MUST mostrar `relevanceScore` con el rótulo `relevance-label` "Relev
 - **WHEN** se inspecciona el bloque de relevancia
 - **THEN** incluye la nota, la presentación `relevance-basis` y la ayuda `relevance-help` de los escenarios de esta capacidad
 - **AND** con el criterio de orden por aplicabilidad, `relevance-basis` dice que la relevancia solo desempata
+- **AND** en ningún modo `relevance-basis` usa otro literal que el de su clave (`evidence.relevance.basis` o `evidence.relevance.basisRelevancia`)
+
+#### Scenario: Un solo literal de relevance-basis por modo [RN-03] [RN-28]
+- **GIVEN** la tarjeta de una opción
+- **WHEN** el criterio de orden es por aplicabilidad
+- **THEN** `evidence.relevance.basis` muestra "Metadato de recuperación; no mide solidez clínica ni probabilidad, y solo desempata el orden por aplicabilidad."
+- **AND** con el criterio de relevancia (sin aplicabilidad), `evidence.relevance.basisRelevancia` muestra "Metadato de recuperación; no mide solidez clínica ni probabilidad."
+- **AND** `relevance-label`, la nota y `relevance-help` no cambian (Gate 1 del S4, lenguaje #14)
 
 ### Requirement: Criterio de selección visible elegido por la respuesta
-Encima de la opción, el panel MUST mostrar el texto del criterio de selección de la clave i18n `evidence.orderCriterion.relevance` cuando la opción no trae aplicabilidad calculada, y el de `evidence.orderCriterion.applicability` cuando la trae (US-125, `maxOptions = 1`) `[S3 resp. 9]`. El panel MUST NOT afirmar un orden que la respuesta no construyó. El texto es un criterio de orden, nunca una valoración clínica (RN-28, RN-23).
+Encima de las opciones, el panel MUST mostrar una sola vez el texto del criterio de selección de la clave i18n `evidence.orderCriterion.relevance` cuando las opciones no traen aplicabilidad calculada, y el de `evidence.orderCriterion.applicability` cuando la traen `[S3 resp. 9]`. El panel MUST NOT afirmar un orden que la respuesta no construyó.
 
 #### Scenario: Se lee el criterio neutro y no el de aplicabilidad [US-061 AC-3] [RN-28] [AC-10.1] [RN-23] [S1 resp. 28]
 - **GIVEN** la respuesta del AC-1, con una opción sin aplicabilidad calculada (`perSource = []`)
@@ -66,16 +75,40 @@ Encima de la opción, el panel MUST mostrar el texto del criterio de selección 
 - **AND** no aparece "Ordenado por relevancia de recuperación de la búsqueda; no representa prioridad ni aplicabilidad clínica."
 - **AND** el texto no contiene "elegida", "recomendada" ni ningún término de la lista prohibida (US-068)
 
+#### Scenario: El criterio de aplicabilidad se lee una sola vez con la frase de numeración sobre las tres tarjetas [US-135 AC-2] [RN-28] [AC-10.1] [docs/ux/S4 S4-01]
+- **GIVEN** el panel de la respuesta de tres opciones del AC-1 de US-134 (FX-10c-a), todas con aplicabilidad calculada
+- **WHEN** se inspecciona
+- **THEN** encima de las tarjetas hay exactamente una aparición del texto de `evidence.orderCriterion.applicability`
+- **AND** le sigue "La numeración indica la posición en el orden por aplicabilidad, no una preferencia."
+- **AND** esa frase no aparece cuando el criterio mostrado es el de relevancia
+
+#### Scenario: El criterio por aplicabilidad aclara la numeración [RN-28] [RN-23]
+- **GIVEN** opciones con aplicabilidad calculada
+- **WHEN** el panel muestra el criterio `evidence.orderCriterion.applicability`
+- **THEN** añade «La numeración indica la posición en el orden por aplicabilidad, no una preferencia.»
+- **AND** el texto es un criterio de orden, nunca una valoración clínica
+
 ### Requirement: Descartadas aparte, plegadas y sin controles
-Las `discardedOptions` MUST mostrarse aparte, en una sección colapsada titulada "Descartadas por falta de soporte — solo para revisión", con `option`, el motivo en texto de la UI y cada `unsupportedClaims[]` rotulada "Sin soporte" (texto, no solo color), sin ningún control de vínculo a un tratamiento. Con `evidenceOptions = []` MUST NOT haber tarjeta de opción.
+Las `discardedOptions` MUST mostrarse aparte, en una sección colapsada titulada "Descartadas en la verificación — solo para revisión", con `option`, el motivo en texto de la UI y cada `unsupportedClaims[]` rotulada "Afirmación no verificada contra la fuente citada; se muestra solo para revisión" (texto, no solo color) tras pasar el filtro RN-23, sin ningún control de vínculo a un tratamiento.
 
 #### Scenario: Solo hay descartadas y se muestran plegadas, con la afirmación sin soporte resaltada [US-061 AC-4] [FR-10] [HU-03] [AC-10.4]
 - **GIVEN** una respuesta `con_evidencia` con `evidenceOptions = []` y una descartada `afirmacion_sin_soporte` con `unsupportedClaims = ["reduce la mortalidad a la mitad"]` (`LLM-SIN-SOPORTE`)
 - **WHEN** se renderiza
 - **THEN** no hay ninguna tarjeta de opción
-- **AND** existe la sección colapsada "Descartadas por falta de soporte — solo para revisión"
-- **AND** al expandirla muestra la opción, el motivo "Una afirmación no tiene soporte en la fuente o contenía lenguaje no permitido" `[S1 resp. 16]` y "reduce la mortalidad a la mitad" con el rótulo "Sin soporte"
+- **AND** existe la sección colapsada "Descartadas en la verificación — solo para revisión"
+- **AND** al expandirla muestra la opción, el motivo "Una afirmación no tiene soporte en la fuente citada" `[US-246 AC-4]` y "reduce la mortalidad a la mitad" con el rótulo "Afirmación no verificada contra la fuente citada; se muestra solo para revisión" `[US-246 AC-1]`
 - **AND** la sección no contiene ningún botón, enlace ni control para vincularla a un tratamiento
+
+#### Scenario: Excepciones al rótulo de las afirmaciones no verificadas [RN-23] [D-a]
+- **GIVEN** una opción descartada
+- **WHEN** su `discardReason` es `lenguaje_no_permitido`
+- **THEN** sus `unsupportedClaims` no se muestran
+- **AND** una entrada que es el literal «(texto no mostrado)» (enviado por el backend, D-a), la marca de retiro del backend (`support.py`) o que el filtro RN-23 rechaza se muestra solo como «(texto no mostrado)», sin el rótulo
+
+#### Scenario: Sin opciones válidas no hay tarjeta de opción [RN-23]
+- **GIVEN** una respuesta con `evidenceOptions = []`
+- **WHEN** el panel se renderiza
+- **THEN** no hay tarjeta de opción
 
 ### Requirement: Auditoría mínima de cada descartada
 Cada descartada MUST mostrar su número de orden (posición en `discardedOptions`, desde 1), el `id` del análisis y su `createdAt`, tomados de la respuesta sin cambio de contrato, junto a "Registro solo para auditoría: no es contenido clínico utilizable.", y MUST NOT presentarse como contenido clínico utilizable ni con el estilo de la tarjeta de opción `[S1 resp. 29]`. La traza completa (frase retirada, regla, versión de la política y `chunkIds`) es de US-150 (S6).
@@ -138,7 +171,7 @@ El panel MUST despachar los estados del diseño S1-08/09 y S3-01. Con `status = 
 - **AND** se muestra el bloque "Qué se buscó"
 
 ### Requirement: Errores de transporte sin resultado parcial
-Ante un `4xx/5xx` (salvo `401` y el `422 TIPO_CANCER_NO_REGISTRADO` del requisito siguiente) de `POST /api/evidence-analyses`, el panel MUST mostrar solo el mensaje propio del código HTTP (`503`: modelo local no disponible; `504`: tiempo agotado; `502` y cualquier otro: genérico) seguido de "Código de traza: [traceId]", sin resultado parcial ni aviso de IA (RN-06) y MUST NOT mostrar el `message`, el `error` ni otro detalle interno de la respuesta.
+Ante un `4xx/5xx` (salvo `401` y el `422 TIPO_CANCER_NO_REGISTRADO` del requisito siguiente) de `POST /api/evidence-analyses`, el panel MUST mostrar solo el mensaje propio del código (`503 LLM_OUTPUT_INVALID`: salida no validada; otro `503`: modelo local no disponible; `504`: tiempo agotado; `502` y cualquier otro: genérico) seguido de "Código de traza: [traceId]", sin resultado parcial ni aviso de IA (RN-06) y MUST NOT mostrar el `message` ni otro detalle interno.
 
 #### Scenario: Un error de transporte no deja resultado parcial [pantallas-s1 S1-08/09] [RN-06]
 - **GIVEN** que `POST /api/evidence-analyses` responde `502` con el cuerpo de `contracts/examples/error-servicio-ia.json` y su `traceId`
@@ -150,6 +183,13 @@ Ante un `4xx/5xx` (salvo `401` y el `422 TIPO_CANCER_NO_REGISTRADO` del requisit
 - **GIVEN** que `POST /api/evidence-analyses` responde `503` con el cuerpo de `contracts/examples/error-llm-local-no-disponible.json` (`error = LOCAL_LLM_UNAVAILABLE`) y su `traceId`
 - **WHEN** el panel procesa la respuesta
 - **THEN** se lee "El modelo local no está disponible. No se muestra ningún resultado parcial." y "Código de traza: [traceId]"
+- **AND** no hay tarjeta, descartadas, relevancia ni región `role="note"` de aviso
+- **AND** no aparecen el `message` ni el valor de `error` de la respuesta, ni ningún otro detalle interno
+
+#### Scenario: Una salida del LLM no validada (503 LLM_OUTPUT_INVALID) muestra su mensaje propio sin resultado parcial [US-245 AC-1] [RN-06] [RN-23] (decisión Q1, 2026-10-30)
+- **GIVEN** que `POST /api/evidence-analyses` responde `503` con el cuerpo de `contracts/examples/error-salida-llm-invalida.json` (`error = LLM_OUTPUT_INVALID`) y su `traceId`
+- **WHEN** el panel procesa la respuesta
+- **THEN** se lee "El modelo local devolvió una respuesta que no se pudo validar. Reintenta el análisis." y "Código de traza: [traceId]", nunca "El modelo local no está disponible"
 - **AND** no hay tarjeta, descartadas, relevancia ni región `role="note"` de aviso
 - **AND** no aparecen el `message` ni el valor de `error` de la respuesta, ni ningún otro detalle interno
 
@@ -322,7 +362,7 @@ NOT contener identificadores de chunk ni texto de la opción.
 #### Scenario: Otros motivos usan las etiquetas existentes [US-237 AC-3] [RN-24]
 - **GIVEN** la respuesta de `contracts/examples/con-evidencia-solo-descartadas-otros-motivos.json` (descartadas `afirmacion_sin_soporte` y `solo_soportada_por_analisis_previo`)
 - **WHEN** se renderiza
-- **THEN** las líneas del resumen son «1 × Una afirmación no tiene soporte en la fuente o contenía lenguaje no permitido» y «1 × Solo la respalda un análisis previo, que no es evidencia», en ese orden
+- **THEN** las líneas del resumen son «1 × Una afirmación no tiene soporte en la fuente citada» y «1 × Solo la respalda un análisis previo, que no es evidencia», en ese orden
 - **AND** cada etiqueta es idéntica al valor de `evidence.discardReason.<motivo>` en `apps/web/messages/es.json` y no existe ninguna clave de mensaje nueva por motivo
 
 #### Scenario: Con opciones aceptadas no aparece el resumen (asumido)
@@ -341,3 +381,332 @@ seguir visible en la región `role="note"`.
 - **WHEN** se renderiza y se recorre su texto visible y `apps/web/messages/es.json` con `lint:lenguaje`
 - **THEN** no se encuentra ningún término prohibido
 - **AND** se lee el aviso «Generado por IA; requiere validación clínica independiente por el oncólogo tratante.» en la región `role="note"`
+
+### Requirement: Aviso no bloqueante de datos críticos faltantes antes de analizar
+Antes de cada análisis, `web` MUST leer el checklist por `GET /api/patients/{id}/completeness` y, si hay ítems `faltante` y `cancerTypeEnabled` es `true`, mostrar sobre «Analizar evidencia» un bloque `role="status"` informativo con la lista de faltantes por etiqueta del catálogo y un enlace «Registrar ‹etiqueta› en la ficha» por ítem. El bloque MUST NOT enviar ningún análisis ni deshabilitar el botón (RN-26) y MUST NOT usar términos prohibidos (RN-23).
+
+#### Scenario: Se avisan los seis faltantes de F-M2 antes de analizar [US-005 AC-1] [AC-04.2] [FR-23] [docs/ux/S4 S4-03]
+- **GIVEN** F-M2 (FX-04-b, `test-1.0.0`) con seis faltantes y `GET …/completeness` simulado desde `contracts/examples/`
+- **WHEN** el oncólogo abre `/pacientes/{id}/analisis`
+- **THEN** antes del botón aparece «⚠ Faltan 6 datos críticos para este tipo de cáncer» con `role="status"` y una lista `ul` de 6 etiquetas del catálogo, cada una con «Registrar ‹etiqueta› en la ficha»
+- **AND** se lee «El análisis puede hacerse igual; los criterios de aplicabilidad que dependan de esos datos saldrán como «Desconocido» y el orden por aplicabilidad puede cambiar al registrarlos.»
+- **AND** no se envió ningún `POST /api/evidence-analyses`
+- **AND** el texto no contiene términos de la lista prohibida de RN-23
+
+### Requirement: Continuar con aviso envía continueWithWarning verdadero
+«Analizar evidencia» MUST estar siempre habilitado con el bloque visible y, al pulsarlo, `web` MUST enviar exactamente un `POST /api/evidence-analyses` con `continueWithWarning = true`.
+
+#### Scenario: Un solo POST con la bandera cuando hay faltantes [US-005 AC-2] [AC-04.2] [RN-26]
+- **GIVEN** el bloque del escenario anterior
+- **WHEN** el oncólogo pulsa «Analizar evidencia» (habilitado)
+- **THEN** el navegador envía exactamente un `POST /api/evidence-analyses` con `continueWithWarning = true`
+
+### Requirement: El enlace del faltante lleva a la sección existente de la ficha
+Cada enlace «Registrar ‹etiqueta› en la ficha» MUST navegar a `/pacientes/{id}#diagnostico` si `destination.entity` es `Diagnosis`, a `/pacientes/{id}#biomarcadores` si es `Biomarker`, y a `/pacientes/{id}` (encabezado principal) para cualquier otro destino; MUST NOT enviar petición de análisis ni crear secciones nuevas.
+
+#### Scenario: Ki-67 va a biomarcadores y grado a diagnóstico [US-005 AC-3] [AC-04.2] [FR-23] [S4 resp. 14]
+- **GIVEN** el bloque con los faltantes Ki-67 (`Biomarker`) y grado (`Diagnosis`)
+- **WHEN** el oncólogo pulsa «Registrar Ki-67 en la ficha» y, en otra prueba, «Registrar grado en la ficha»
+- **THEN** navega a `/pacientes/{id}#biomarcadores` y a `/pacientes/{id}#diagnostico`, respectivamente, con el foco en el encabezado de esa sección
+- **AND** no se envía ninguna petición de análisis
+
+#### Scenario: Un destino sin sección propia enlaza al encabezado principal [US-005 AC-3] [S4 resp. 14] (asumido)
+- **GIVEN** un faltante con `destination.entity` `ClinicalAttribute` o `PriorTreatment`
+- **WHEN** se pulsa su enlace
+- **THEN** navega a `/pacientes/{id}` sin ancla de sección y el foco queda en el encabezado principal de la ficha
+
+### Requirement: Sin faltantes no hay aviso y el análisis no lleva la bandera
+Sin ítems `faltante`, `web` MUST NOT mostrar el bloque y «Analizar evidencia» MUST enviar `POST /api/evidence-analyses` con `continueWithWarning = false`.
+
+#### Scenario: F-M1 analiza sin bloque [US-005 AC-4] [FR-23]
+- **GIVEN** F-M1 sin faltantes
+- **WHEN** se carga el formulario y se pulsa «Analizar evidencia»
+- **THEN** no aparece el bloque y el `POST` lleva `continueWithWarning = false`
+
+### Requirement: Checklist caído no bloquea el análisis
+Si `GET …/completeness` responde `5xx` o falla la red, el panel MUST mostrar «No se pudieron verificar los datos críticos», mantener «Analizar evidencia» habilitado y enviar el análisis con `continueWithWarning = true`; el servidor sigue calculando y enviando los faltantes.
+
+#### Scenario: Error 5xx del checklist degrada con aviso [US-005 AC-5] [RN-26] [PP-5]
+- **GIVEN** `GET …/completeness` simulado con `500`
+- **WHEN** se carga el formulario y se pulsa «Analizar evidencia»
+- **THEN** se lee «No se pudieron verificar los datos críticos» y el botón está habilitado
+- **AND** el `POST` lleva `continueWithWarning = true`
+
+### Requirement: Tipo de cáncer no habilitado no muestra el aviso de faltantes
+Con `cancerTypeEnabled = false`, el panel MUST NOT mostrar el bloque de faltantes y MUST mostrar el estado propio de «tipo no habilitado» del S3.
+
+#### Scenario: Sin bloque con tipo no habilitado [US-005 AC-6] [docs/ux/S4 S4-03] [S4 resp. 6]
+- **GIVEN** un paciente con `cancerTypeEnabled = false` en `/completeness`
+- **WHEN** se carga el formulario
+- **THEN** no aparece el bloque de faltantes y se ve el estado de «tipo no habilitado»
+
+### Requirement: Aviso operable con teclado y asociado al botón
+El bloque MUST asociarse al botón «Analizar evidencia» con `aria-describedby` y cada enlace «Registrar … en la ficha» MUST ser operable con teclado.
+
+#### Scenario: Teclado y descripción accesible [US-005 AC-7] [NFR-12]
+- **GIVEN** el bloque del primer escenario
+- **WHEN** se navega con Tab y se activa un enlace con Enter
+- **THEN** el botón «Analizar evidencia» tiene `aria-describedby` apuntando al resumen y cada enlace recibe el foco en orden
+- **AND** al llegar a la ficha el encabezado de destino recibe el foco (ver `patients-identity`)
+
+Regresión [RN-26] activa desde S4: ningún estado del aviso deshabilita «Analizar evidencia» (verificada por US-071). Regresión [RN-23]: textos del aviso fuera de la lista prohibida (US-068).
+
+### Requirement: Motivo de descarte sin soporte distinto del de lenguaje no permitido
+El panel MUST presentar `afirmacion_sin_soporte` y `lenguaje_no_permitido` como motivos distintos, cada uno con su etiqueta y su línea en el resumen, y MUST NOT mostrar nunca una frase que junte ambos. Para `lenguaje_no_permitido` MUST mostrar solo `option` tras el filtro RN-23 (o «(texto no mostrado)» si el filtro lo rechaza) con la nota de redacción, sin afirmaciones, y MUST NOT mostrar texto prescriptivo.
+
+#### Scenario: Solo sin soporte muestra su resumen y cada afirmación con su rótulo, sin hablar de lenguaje [US-246 AC-1] [FR-10] [AC-10.4] [S4 resp. 2]
+- **GIVEN** la respuesta de `contracts/examples/con-evidencia-solo-descartadas.json` (todas `afirmacion_sin_soporte`, con `unsupportedClaims`)
+- **WHEN** el panel la renderiza y se expande «Descartadas»
+- **THEN** el resumen dice «Una afirmación no tiene soporte en la fuente citada»
+- **AND** cada afirmación de `unsupportedClaims` aparece con «Afirmación no verificada contra la fuente citada; se muestra solo para revisión» tras pasar el filtro RN-23
+- **AND** no se lee «lenguaje prescriptivo»
+
+#### Scenario: Solo lenguaje no permitido muestra el nombre filtrado y nunca el texto prescriptivo [US-246 AC-2] [S4 resp. 2] [S4 resp. 11]
+- **GIVEN** la respuesta de `contracts/examples/con-evidencia-solo-descartadas-lenguaje.json` (todas `lenguaje_no_permitido`)
+- **WHEN** se renderiza y se expande «Descartadas»
+- **THEN** el resumen dice «Contenía lenguaje prescriptivo, que no se muestra»
+- **AND** cada opción muestra solo su nombre (filtrado) o «(texto no mostrado)», con «Se omitió por la redacción generada (lenguaje prescriptivo); no es una valoración de la evidencia»
+- **AND** ningún texto prescriptivo aparece y no se lee «no tiene soporte»
+
+#### Scenario: Motivos mixtos usan una línea por motivo con su recuento [US-246 AC-3] [FR-10] [S4 resp. 2]
+- **GIVEN** la respuesta de `contracts/examples/con-evidencia-solo-descartadas-sin-soporte-y-lenguaje.json` (una descartada `afirmacion_sin_soporte` y una `lenguaje_no_permitido`; ejemplo creado por `l1d-295`)
+- **WHEN** se renderiza
+- **THEN** hay dos líneas, «1 × Una afirmación no tiene soporte en la fuente citada» y «1 × Contenía lenguaje prescriptivo, que no se muestra», en el orden del enum
+- **AND** ninguna frase junta los dos motivos
+
+#### Scenario: Si el filtro RN-23 rechaza la afirmación se muestra «(texto no mostrado)» y se conserva el motivo recibido [US-246 AC-1] [RN-23] (asumido)
+- **GIVEN** una descartada `afirmacion_sin_soporte` cuyo `unsupportedClaims[]` contiene un término de la lista de términos prohibidos
+- **WHEN** se expande «Descartadas»
+- **THEN** en lugar de la afirmación se lee «(texto no mostrado)», sin el rótulo «Afirmación no verificada contra la fuente citada; se muestra solo para revisión»
+- **AND** la opción conserva la etiqueta del motivo recibido, «Una afirmación no tiene soporte en la fuente citada»
+- **AND** ningún texto prescriptivo aparece en el DOM
+
+#### Scenario: El literal «(texto no mostrado)» del backend se muestra sin rótulo [US-246 AC-1] [RN-23] (decisión D-a, 2026-10-30)
+- **GIVEN** una descartada `afirmacion_sin_soporte` con `unsupportedClaims = ["(texto no mostrado)"]` (afirmación con modal normativo, US-245 AC-5)
+- **WHEN** se expande «Descartadas»
+- **THEN** se lee «(texto no mostrado)» sin el rótulo «Afirmación no verificada contra la fuente citada; se muestra solo para revisión»
+- **AND** la opción conserva la etiqueta «Una afirmación no tiene soporte en la fuente citada»
+
+### Requirement: Motivo de descarte desconocido sin romper el panel
+Ante un `discardReason` fuera del enum del contrato, `web` MUST tratar la respuesta como no válida (el schema Zod generado es estricto y no se relaja) y MUST mostrar el estado de error existente del panel, sin resultado parcial, sin el valor crudo y sin romper la página (decisión de la sesión principal, Gate 1 del S4, 2026-10-30: un valor nuevo del enum llega a `web` solo con su contrato regenerado, como hizo `l1d-295`).
+
+#### Scenario: Un motivo no reconocido muestra el estado de error del panel [US-246 AC-5] (decisión de la sesión principal, 2026-10-30)
+- **GIVEN** una respuesta `200` de `/api/evidence-analyses` (override de MSW en el test) con una descartada cuyo `discardReason` es un valor ausente del enum del contrato
+- **WHEN** el panel la recibe
+- **THEN** `zEvidenceAnalysis.safeParse` falla y el panel muestra el estado de error existente («No se pudo completar el análisis. No se muestra ningún resultado parcial.») con el botón «Reintentar»
+- **AND** no se renderiza ninguna opción ni descartada, el valor crudo no aparece en el DOM y la página sigue operativa
+
+### Requirement: Mensajes de motivo de descarte desde la fuente única, sin términos prohibidos y con aviso de IA
+`evidence.discardReason.afirmacion_sin_soporte` MUST ser «Una afirmación no tiene soporte en la fuente citada» y `evidence.discardReason.lenguaje_no_permitido` MUST ser «Contenía lenguaje prescriptivo, que no se muestra» en `apps/web/messages/es.json`; ninguna etiqueta nueva MUST contener términos de la lista prohibida (US-068) y el aviso de IA MUST seguir visible en `role="note"` (RN-19; literal y cabecera en el escenario).
+
+#### Scenario: es.json pasa la lista de términos prohibidos con las etiquetas separadas y el aviso visible [US-246 AC-4] [RN-23] [RN-19]
+- **GIVEN** `apps/web/messages/es.json` y la respuesta de `contracts/examples/con-evidencia-solo-descartadas-lenguaje.json`
+- **WHEN** se recorre con `lint:lenguaje` y se renderiza el panel
+- **THEN** `discardReason.afirmacion_sin_soporte` ya no incluye «o contenía lenguaje no permitido» y existe `discardReason.lenguaje_no_permitido`
+- **AND** no hay coincidencias de RN-23
+- **AND** la región `role="note"` (`AiDisclaimer`, el `disclaimer` de la respuesta) contiene la subcadena «Generado por IA; requiere validación clínica independiente por el oncólogo tratante»
+- **AND** la cabecera muestra «Uso académico/investigación» (`es.app.academicUseLabel`)
+
+### Requirement: Tabla de aplicabilidad por fuente con estados en texto
+Al desplegar «Ver aplicabilidad por criterio», la opción MUST mostrar por fuente una tabla con criterio, valor del paciente, valor del estudio y estado en texto (símbolo `aria-hidden` + palabra, nunca solo color) y el resumen por conteos en el formato único de la tarjeta (L1D-145, `ApplicabilityCounts`, claves `evidence.aplicabilidad.*`): «✓ Coincide n · ◐ Parcial n · ✕ No coincide n · ? Desconocido n». MUST NOT mostrar puntaje, porcentaje ni barra (RN-28).
+
+#### Scenario: La tabla de doc-a1 muestra criterio, valores, estado y resumen [US-126 AC-1] [AC-08.1] [AC-08.5] [NFR-12]
+- **GIVEN** el análisis de A-M1 con `doc-a1` (FX-08b-a)
+- **WHEN** el oncólogo abre el detalle de la fuente
+- **THEN** ve criterio, valor del paciente, valor del estudio y estado en texto por fila
+- **AND** se lee el resumen "✓ Coincide 2 · ◐ Parcial 0 · ✕ No coincide 0 · ? Desconocido 3", con los símbolos `aria-hidden`
+- **AND** no aparece el formato "2 coinciden · 3 desconocidos"
+
+#### Scenario: Sin puntaje ni porcentaje visibles [US-126 AC-6] [AC-08.5] [RN-28]
+- **GIVEN** la pantalla del escenario anterior
+- **WHEN** se inspecciona su texto y su DOM
+- **THEN** no hay "%", barra, `role="progressbar"` ni número de aplicabilidad distinto de los conteos por estado
+
+### Requirement: Desconocido siempre con su causa en texto
+Una fila en Desconocido MUST decir «? Desconocido · » seguido de la causa de su `unknownReason` desde `es.json`, nunca sin texto de causa: un texto por cada valor del enum (los escenarios fijan los literales) y, para `unknownReason = null` de un análisis histórico anterior a `l1d-293`, «causa no registrada en este análisis». `varios_valores_en_la_fuente`, reservado sin productor en el S4, MUST mostrar los valores por compatibilidad hacia atrás.
+
+#### Scenario: Causas de Desconocido con enlace a la ficha [US-126 AC-2] [AC-08.2] [HU-22] [S4 resp. 14] [S4 resp. 5]
+- **GIVEN** `estado_menopausico` sin dato en el paciente, `linea_tratamiento` no reportada por la fuente y un criterio con `respaldo_fallido`
+- **WHEN** se muestra la tabla
+- **THEN** se lee «? Desconocido · falta en los datos registrados» con un enlace a la ficha del paciente (ancla de la sección existente, o encabezado si no hay ancla)
+- **AND** `linea_tratamiento` muestra «? Desconocido · la fuente no reporta este dato»
+- **AND** `respaldo_fallido` muestra «? Desconocido · no se pudo determinar el valor del estudio; no indica que el criterio coincida ni que no coincida»
+
+#### Scenario: Desconocido por falta de regla de comparación en el catálogo [US-126 AC-2] [AC-08.2] [RN-28] [NFR-12]
+- **GIVEN** un criterio con `status = desconocido` y `unknownReason = sin_regla_de_comparacion` (p. ej. `estadio` con el catálogo de test, US-125 AC-5)
+- **WHEN** se muestra la tabla
+- **THEN** la fila lee «? Desconocido · el catálogo no define cómo comparar este criterio»
+- **AND** no hay ninguna fila en Desconocido sin su causa en texto
+
+#### Scenario: Desconocido sin causa registrada en un análisis histórico [US-126 AC-2] [AC-08.2] [RN-06] [NFR-12]
+- **GIVEN** el análisis histórico de `contracts/examples/con-evidencia-s3-poblacion-no-comparable.json`, con `estadio` en `status = desconocido` y `unknownReason = null`
+- **WHEN** se muestra la tabla
+- **THEN** la fila lee «? Desconocido · causa no registrada en este análisis»
+- **AND** no se infiere ni se muestra otra causa
+
+#### Scenario: Desconocido cuando la fuente solo reporta un subgrupo (forma nueva) [US-126 AC-10] [US-243 AC-6] [ADR-47] [S4 resp. 8]
+- **GIVEN** A-M2 y la opción O-P6, con `receptores_hormonales` en `status = desconocido`, `unknownReason = no_reportado_por_fuente` y `studyPopulationValues` con solo `triple-negative (TNBC)` de `scope = subgrupo`
+- **WHEN** se muestra la tabla
+- **THEN** la fila lee «? Desconocido · la fuente no reporta este dato para la población elegible (solo para un subgrupo)»
+- **AND** el valor de subgrupo aparece bajo «Contexto (no cuenta para el estado)» y no cuenta en el resumen
+
+#### Scenario: varios_valores_en_la_fuente muestra los valores (compatibilidad hacia atrás) [US-126 AC-2] [ADR-47]
+- **GIVEN** un criterio con `unknownReason = varios_valores_en_la_fuente`, motivo reservado y sin productor en el S4 (US-241)
+- **WHEN** se muestra la tabla
+- **THEN** se muestran los valores del estudio con su fragmento, no un mensaje de fallo
+
+### Requirement: Etiqueta de población no comparable por fuente
+Una fuente con población no comparable MUST llevar la etiqueta visible "Población no comparable" en su tabla, sin ocultar la fuente (RN-26).
+
+#### Scenario: doc-a2 lleva la etiqueta [US-126 AC-3] [AC-08.6] [HU-22]
+- **GIVEN** el análisis con `doc-a2` (FX-08b-a)
+- **WHEN** se muestra su tabla
+- **THEN** la fuente lleva la etiqueta visible "Población no comparable"
+
+### Requirement: Aviso del dato del paciente sin verificar en el criterio
+Un criterio cuyo valor del paciente no está verificado MUST llevar el texto "Dato del paciente sin verificar" junto a ese valor, sin bloquear ni ocultar la fila (RN-26).
+
+#### Scenario: ecog lleva el aviso [US-126 AC-4] [AC-08.4] [HU-22]
+- **GIVEN** el criterio `ecog` con valor del paciente no verificado
+- **WHEN** se muestra la tabla
+- **THEN** el criterio lleva "Dato del paciente sin verificar"
+
+### Requirement: Resumen de aplicabilidad por fuente en la opción con varias fuentes
+La tarjeta de una opción con varias fuentes MUST traer el resumen de su fuente más aplicable y, al expandir, el resumen de cada fuente (AC-10.2).
+
+#### Scenario: Opción con varias fuentes expande el resumen de cada una [US-126 AC-5] [AC-08.8] [AC-10.2]
+- **GIVEN** la opción de US-125 AC-1 (FX-08b-b) con `doc-a1` y otra fuente
+- **WHEN** se muestra la tarjeta y luego se expande
+- **THEN** la tarjeta trae el resumen de `doc-a1`
+- **AND** al expandir se lee el resumen de cada fuente
+
+### Requirement: Varios valores del estudio con «ver más» sin peticiones nuevas
+La celda «Estudio (valores extraídos de la fuente por IA y verificados contra el fragmento)» MUST mostrar hasta 3 valores, cada uno con su «Fragmento [n]», y «+ k valor(es) más ▸ ver más» si hay más. Al pulsarlo MUST mostrar el resto con su fragmento, cambiar el botón a «ver menos», dejar el foco en el valor revelado y no emitir ninguna petición nueva.
+
+#### Scenario: Tres valores, «ver más» y cuarto valor sin red [US-126 AC-8] [S4 resp. 13] [S4 resp. 8] [F-24]
+- **GIVEN** A-M2 con la opción O-P10 de FX-08b-c (4 valores de elegibilidad en `ch-b10-1` y `ch-b10-2`)
+- **WHEN** el oncólogo despliega «Ver aplicabilidad por criterio» y pulsa «ver más»
+- **THEN** `estado_menopausico` muestra 3 valores con su «Fragmento [n]» y «+ 1 valor más ▸ ver más»
+- **AND** al pulsar aparece el cuarto con su fragmento, el botón pasa a «ver menos» y el foco queda en él
+- **AND** MSW registra cero peticiones nuevas
+
+### Requirement: Lectura de la forma nueva y de la antigua del valor del estudio
+La celda MUST leer `studyPopulationValues[]` y caer a `studyPopulationValue` si solo viene este; solo se citan fragmentos recuperados en la consulta y citados por la opción.
+
+#### Scenario: La forma antigua se lee sin error [US-126 AC-8] [ADR-47]
+- **GIVEN** un análisis con `studyPopulationValue` y sin `studyPopulationValues`
+- **WHEN** se muestra la celda
+- **THEN** se lee el valor único sin error y sin «ver más»
+
+### Requirement: Valores en conflicto mostrados sin elegir uno
+Con `unknownReason = valores_en_conflicto` la fila MUST leer «? Desconocido · los fragmentos citados muestran valores distintos; se muestran ambos; requieren contraste con la fuente y con la validación clínica/patológica» (sin punto final), MUST mostrar ambos valores con su fragmento y su fuente («según {fuente}») y MUST NOT elegir uno; junto a cada valor se muestran fecha (`dd/mm/aaaa`) y tamaño de muestra del estudio, o «No disponible» (RN-25).
+
+#### Scenario: HER2 en conflicto muestra ambos valores [US-126 AC-9] [S4 resp. 9] [F-23] [RN-28]
+- **GIVEN** A-M2 con la opción O-P4 y `estado_her2` con `ch-b4-1` y `ch-b4-2`
+- **WHEN** se muestra `estado_her2`
+- **THEN** se lee el mensaje de valores distintos con ambos valores y sus fragmentos (`ch-b4-1`, `ch-b4-2`)
+- **AND** la UI no marca ninguno como el correcto
+- **AND** fecha y tamaño de muestra dicen «No disponible» si no constan en el fragmento (decisión del orquestador RN-25 sobre el AC-9 asumido; pendiente de confirmación del usuario)
+
+### Requirement: Motivo de Parcial y contexto fuera del estado
+Un criterio Parcial MUST leer «◐ Parcial · » seguido del motivo de `partialReason` («el estudio incluyó varios grupos, entre ellos el del paciente», «el fragmento mezcla poblaciones sin desagregarlas», «rango parcialmente solapado» o, solo en la forma antigua `solo_subgrupo`, «solo un subgrupo»). Los valores de alcance `subgrupo` o `mencion` MUST mostrarse bajo «Contexto (no cuenta para el estado)» y MUST NOT contar en el resumen.
+
+#### Scenario: Parcial inclusivo, mezclado y subgrupo como contexto [US-126 AC-10] [S4 resp. 11] [S4 resp. 8] [NFR-12]
+- **GIVEN** las opciones O-P1 y O-P5 de A-M2 (`doc-b1` inclusiva, `doc-b5` mezclada) y O-P6 con un valor de subgrupo
+- **WHEN** se muestra `estado_menopausico`
+- **THEN** se lee «◐ Parcial · el estudio incluyó varios grupos, entre ellos el del paciente» en `doc-b1`
+- **AND** se lee «◐ Parcial · el fragmento mezcla poblaciones sin desagregarlas» en `doc-b5`
+- **AND** el valor de subgrupo de O-P6 aparece bajo «Contexto (no cuenta para el estado)» sin contar en el resumen
+- **AND** un análisis antiguo con `partialReason = solo_subgrupo` lee «◐ Parcial · solo un subgrupo»
+
+### Requirement: Regresión activa de lenguaje no prescriptivo, aviso de IA y avisos no bloqueantes
+Los textos de la tabla MUST estar en `apps/web/messages/es.json` y pasar la lista de términos prohibidos de US-068 (RN-23); ningún aviso de la tabla MUST bloquear ni deshabilitar controles (RN-26, regresión US-071); con la tabla desplegada, la región `role="note"` del `AiDisclaimer` y la etiqueta académica de la cabecera MUST seguir visibles (RN-19, regresión US-069; literales en el escenario).
+
+#### Scenario: Regresión RN-23 y RN-26 sobre la tabla [RN-23] [RN-26]
+- **GIVEN** la tabla renderizada con todos los motivos de Parcial y Desconocido
+- **WHEN** se comparan sus textos con la lista de US-068
+- **THEN** ningún texto contiene un término prohibido y el formulario y "Ver fragmento" siguen habilitados
+
+#### Scenario: Regresión RN-19 con la tabla desplegada [RN-19] [US-069]
+- **GIVEN** la tabla de `doc-a1` desplegada
+- **WHEN** se recorre el panel con `aviso-ia.spec.ts`
+- **THEN** la región `role="note"` contiene la subcadena «Generado por IA; requiere validación clínica independiente por el oncólogo tratante»
+- **AND** la cabecera muestra «Uso académico/investigación»
+
+### Requirement: Lista ordenada de hasta tres opciones en el orden recibido
+El panel MUST mostrar `evidenceOptions[]` como una lista ordenada (`<ol>`) en el mismo orden del arreglo recibido, una tarjeta por opción con encabezado `h3` y el rótulo «Opción descrita {n} de {total}». El panel MUST NOT reordenar por `relevanceScore` ni por ningún otro campo (RN-28, RN-03). Cada tarjeta MUST conservar sus citas y cerrar con el bloque de relevancia.
+
+#### Scenario: Tres tarjetas en el orden recibido con conteos, citas y relevancia al final [US-135 AC-1] [AC-10.1] [AC-10.2] [HU-10]
+- **GIVEN** la respuesta del AC-1 de US-134 en Playwright contra Compose (perfil de test, FX-10c-a, `LLM-CUATRO`, `ANALYSIS_MAX_OPTIONS`=3)
+- **WHEN** se renderiza el panel
+- **THEN** bajo "Opciones descritas en la evidencia" hay 3 tarjetas en el orden O-B, O-D, O-C
+- **AND** cada una muestra su línea de conteos con símbolo (`aria-hidden`) y palabra ("✓ Coincide 3 · ◐ Parcial 0 · ✕ No coincide 0 · ? Desconocido 2" para O-B), compuesta por `ApplicabilityCounts` desde las claves `evidence.aplicabilidad.{coincide,parcial,noCoincide,desconocido}`, sus citas y, al final, el bloque de relevancia cuyo `relevance-basis` es "Metadato de recuperación; no mide solidez clínica ni probabilidad, y solo desempata el orden por aplicabilidad."
+
+#### Scenario: La UI no reordena por relevancia [US-135 AC-4] [RN-28] [RN-03]
+- **GIVEN** una respuesta simulada en la que la segunda opción tiene mayor `relevanceScore` que la primera
+- **WHEN** se renderiza
+- **THEN** el orden visible es el del arreglo recibido
+
+#### Scenario: Cada tarjeta es un elemento de lista con encabezado y rótulo de posición [US-135 AC-6] [NFR-12] [RN-23] [docs/ux/S4 S4-01]
+- **GIVEN** el panel del AC-1
+- **WHEN** se navega con teclado y se inspecciona el árbol de accesibilidad
+- **THEN** las tarjetas son elementos de una `<ol>` y cada una tiene un `h3` propio
+- **AND** se rotulan "Opción descrita 1 de 3", "Opción descrita 2 de 3" y "Opción descrita 3 de 3"
+- **AND** ningún rótulo dice "mejor", "primera elección" ni "preferida"
+
+### Requirement: Sin rótulos de jerarquía clínica en las tarjetas
+Ninguna tarjeta MUST llevar rótulos, medallas, insignias ni números de ranking que indiquen jerarquía clínica ("Mejor opción", "Primera elección", "Preferida"); el único número permitido es la posición en la lista (RN-23).
+
+#### Scenario: La lista de términos prohibidos no encuentra coincidencias en el panel de tres opciones [US-135 AC-3] [RN-23] [AC-10.3] (asumido en los rótulos no listados por RN-23)
+- **GIVEN** el panel del AC-1
+- **WHEN** se pasa la lista de términos prohibidos de US-068 sobre el DOM
+- **THEN** no hay coincidencias
+- **AND** ninguna tarjeta lleva "Mejor opción", "Primera elección", medallas ni números de ranking distintos de la posición en la lista
+
+### Requirement: Opción de población no comparable visible en la lista
+Una tarjeta con `populationNotComparable = true` MUST mostrar la etiqueta «Población no comparable» y MUST mostrarse completa, sin ocultarse ni plegarse (RN-26).
+
+#### Scenario: La tercera tarjeta no comparable lleva la etiqueta y se muestra completa [US-135 AC-5] [AC-08.6] [RN-26]
+- **GIVEN** la respuesta de `LLM-TRES` (orden O-B, O-C, O-A; O-A con `populationNotComparable = true`)
+- **WHEN** se renderiza
+- **THEN** la tercera tarjeta (O-A) lleva la etiqueta "Población no comparable"
+- **AND** se muestran completas su justificación, su línea de conteos, sus citas y su relevancia
+
+### Requirement: Opciones con soporte no mostradas por el límite se declaran sin su contenido
+Cuando `analysisBasis.optionsNotShown` sea mayor que 0, el panel MUST mostrar bajo la última tarjeta un texto que declare cuántas opciones con soporte no se muestran por el límite, sin ningún dato de ellas ni otro acceso a ellas, y el anuncio de «Análisis listo» MUST añadir «{n} más con soporte no mostrada». Con `optionsNotShown` en 0 o ausente (análisis antiguo) el texto MUST NOT aparecer.
+
+#### Scenario: Con una opción no mostrada se lee el texto y se anuncia [US-135 AC-7] [S4 resp. 7] [S4 resp. 11] [FR-09] [docs/ux/S4 S4-01]
+- **GIVEN** la respuesta del AC-3 de US-134 con `analysisBasis.optionsNotShown = 1`
+- **WHEN** se renderiza el panel
+- **THEN** bajo la última tarjeta se lee "La evidencia describe 1 opción(es) más con soporte que no se muestran por el límite de 3, aplicado según el orden por aplicabilidad; el límite no es una valoración clínica de ellas. Una pregunta más específica puede mostrarlas."
+- **AND** no aparece ningún dato de esa opción ni un enlace o control para abrirla
+- **AND** el anuncio `role="status"` de «Análisis listo» añade "1 más con soporte no mostrada"
+
+#### Scenario: Con cero o sin el campo no aparece el texto [US-135 AC-7] [S4 resp. 7] [FR-09]
+- **GIVEN** una respuesta con `optionsNotShown = 0` y otra de un análisis antiguo sin el campo
+- **WHEN** se renderizan
+- **THEN** el texto de opciones no mostradas no aparece
+- **AND** el anuncio no menciona opciones no mostradas
+
+### Requirement: Regresión activa del aviso de IA en el panel de tres opciones
+Con hasta tres tarjetas, la región `role="note"` del `AiDisclaimer` MUST seguir visible aunque las tres tarjetas estén desplegadas y contener la subcadena «Generado por IA; requiere validación clínica independiente por el oncólogo tratante» (el `disclaimer` de la respuesta, que por defecto termina en punto), y la cabecera MUST mostrar «Uso académico/investigación» (`es.app.academicUseLabel`) (RN-19, regresión US-069).
+
+#### Scenario: El aviso de IA sigue visible con tres tarjetas desplegadas [RN-19] [US-069] [docs/ux/S4 S4-01]
+- **GIVEN** el panel del AC-1 con las tres tarjetas desplegadas
+- **WHEN** se recorre con `aviso-ia.spec.ts`
+- **THEN** la región `role="note"` contiene la subcadena «Generado por IA; requiere validación clínica independiente por el oncólogo tratante»
+- **AND** la cabecera muestra «Uso académico/investigación»
+
+### Requirement: La Base muestra que la búsqueda se repitió con reformulación
+Con `analysisBasis.sourcesConsulted.queryRewritten = true` y `status = con_evidencia`, el resumen visible de la Base del análisis MUST mostrar, sin expandir, bajo «Qué se buscó» el texto exacto de la clave i18n `evidence.base.reescrituraAplicada` (literal en el escenario y en design.md D8); con `false` SHALL NOT mostrarlo y el resumen de `con_evidencia` no cambia. La consulta reformulada nunca se muestra (decisión D-d, 2026-10-30).
+
+#### Scenario: El rescate por reescritura se lee en «Qué se buscó» [US-238 AC-7] [FR-27]
+- **GIVEN** la respuesta de `contracts/examples/con-evidencia-reescritura.json` servida al panel con MSW
+- **WHEN** se renderiza el panel
+- **THEN** sin expandir, bajo «Qué se buscó», se lee «La búsqueda se repitió con una reformulación de la pregunta con términos del catálogo; la relevancia se calculó contra la pregunta original»
+- **AND** la pregunta mostrada es la original
+
+#### Scenario: Sin rescate no aparece el texto de reformulación [US-238 AC-2] [FR-27]
+- **GIVEN** la respuesta de `contracts/examples/con-evidencia-s1.json` (`queryRewritten = false`)
+- **WHEN** se renderiza el panel
+- **THEN** no se lee «La búsqueda se repitió con una reformulación»

@@ -210,12 +210,18 @@ Si la escritura del `AIAnalysisRecord` falla, `clinical-api` MUST responder `500
 - **AND** no se persiste ningún registro
 
 ### Requirement: Una sola tabla de mapeo de fallos de rag-orchestrator
-`clinical-api` MUST mapear cada fallo de `POST /rag/query` en una única función (`mapearFalloRag()`, `[S1 resp. 12]`): `503 LOCAL_LLM_UNAVAILABLE` y, desde el S2, `409 CATALOG_VERSION_MISMATCH` conservan su código; `503 RETRIEVAL_UNAVAILABLE`, `503 NLI_UNAVAILABLE`, otros `4xx`/`5xx`, errores de red y respuestas que no validan → `502 ERROR_SERVICIO_IA`. Ninguna fila SHALL persistir un `AIAnalysisRecord` ni reenviar cuerpo, `message` o cabeceras de rag.
+`clinical-api` MUST mapear cada fallo de `POST /rag/query` en una única función (`mapearFalloRag()`, `[S1 resp. 12]`): `503 LOCAL_LLM_UNAVAILABLE`, `503 LLM_OUTPUT_INVALID` (desde el S4, Q1) y `409 CATALOG_VERSION_MISMATCH` conservan su código; `503 RETRIEVAL_UNAVAILABLE`, `503 NLI_UNAVAILABLE`, otros `4xx`/`5xx`, errores de red y respuestas que no validan → `502 ERROR_SERVICIO_IA`. Ninguna fila SHALL persistir un `AIAnalysisRecord` ni reenviar cuerpo, `message` o cabeceras de rag.
 
 #### Scenario: El LLM local no disponible se responde como 503 sin registro [US-053 AC-4] [S1 resp. 12]
 - **GIVEN** `rag-orchestrator` simulado respondiendo `503` desde `contracts/examples/rag-llm-local-no-disponible.json`
 - **WHEN** `doc1@test.local` envía `Q-HER2` sobre el paciente semilla (a)
 - **THEN** la respuesta es `503` con `error = LOCAL_LLM_UNAVAILABLE`, el `message` fijo de `error-llm-local-no-disponible.json` y el `traceId` generado, válida contra el spec de `clinical-api` (*helper* de L1D-164)
+- **AND** no existe fila en `clinical.ai_analysis_record` con ese `trace_id`
+
+#### Scenario: Una salida inválida del LLM se responde como 503 LLM_OUTPUT_INVALID sin registro [US-245 AC-1] [RN-06] (decisión Q1, 2026-10-30)
+- **GIVEN** `rag-orchestrator` simulado respondiendo `503` desde `contracts/examples/rag-salida-llm-invalida.json`
+- **WHEN** `doc1@test.local` envía `Q-HER2` sobre el paciente semilla (a)
+- **THEN** la respuesta es `503` con `error = LLM_OUTPUT_INVALID`, el `message` fijo de `error-salida-llm-invalida.json` y el `traceId` generado, válida contra el spec de `clinical-api`, y nunca `LOCAL_LLM_UNAVAILABLE`
 - **AND** no existe fila en `clinical.ai_analysis_record` con ese `trace_id`
 
 #### Scenario: La recuperación no disponible se responde como 502 sin registro [US-053 AC-4] [S1 resp. 12]
@@ -340,7 +346,7 @@ Un dato con `review_status` `rechazado` o `reemplazado` MUST NOT aparecer en el 
 - **AND** ningún valor `rechazado` ni `reemplazado` aparece en ninguna `provenance.reviewStatus` del payload ni del snapshot
 
 #### Scenario: El predicado SQL y el filtro de completitud derivan de la misma constante de estados descartados [RN-07] (unitario)
-- **GIVEN** la constante `ESTADOS_DESCARTADOS` de `modules/patients/estados-de-revision.ts`
+- **GIVEN** la constante `ESTADOS_DESCARTADOS` de `modules/compartido/estados-de-revision.ts`
 - **WHEN** se construye `sqlDatoVigente('review_status')` y se aplica `registrosVigentes()` a un registro por estado de revisión
 - **THEN** la cadena SQL excluye exactamente los estados de `ESTADOS_DESCARTADOS`
 - **AND** `registrosVigentes()` descarta exactamente esos mismos estados
@@ -404,3 +410,22 @@ Si el cálculo del checklist falla durante el análisis, `clinical-api` MUST res
 - **THEN** la respuesta es `500` con `error = ERROR_INTERNO`, `message` y `traceId`, válida contra el spec de `clinical-api`
 - **AND** el cliente de `rag-orchestrator` registra cero llamadas
 - **AND** no existe ningún `AIAnalysisRecord` nuevo para ese paciente
+
+### Requirement: Las opciones se persisten y se responden en el orden recibido
+`clinical-api` MUST persistir `evidence_options` del `AIAnalysisRecord` con el mismo orden y contenido que `evidenceOptions` recibido de `rag-orchestrator`, sin reordenarlo ni filtrarlo, y la respuesta `200` SHALL construirse desde el valor persistido (RN-06, AC-T1.4). `ANALYSIS_MAX_OPTIONS` (RN-22) MUST valer 3 por defecto desde el S4 y el arranque SHALL rechazar valores fuera de 1–3 (asumido, tope de FR-09).
+
+#### Scenario: evidence_options persistido igual y en el mismo orden que la respuesta [US-134 AC-8] [RN-06] [AC-T1.4]
+- **GIVEN** el análisis del AC-1 de US-134 con `rag-orchestrator` simulado respondiendo [O-B, O-D, O-C]
+- **WHEN** se lee `evidence_options` del `AIAnalysisRecord`
+- **THEN** el arreglo es igual en profundidad y en orden a `evidenceOptions` de la respuesta
+- **AND** `clinical-api` no aplica ningún `sort`, `reverse` ni filtro sobre las opciones
+
+#### Scenario: Con maxOptions 3 la respuesta trae las opciones en el orden recibido [US-134 AC-1] [AC-10.1] [RN-28] [HU-10] [FR-09]
+- **GIVEN** `ANALYSIS_MAX_OPTIONS = 3` y `rag-orchestrator` simulado con [O-B, O-D, O-C] y `maxOptions = 3` en el request interno capturado
+- **WHEN** `doc1@test.local` envía `Q-HER2` sobre A-M1
+- **THEN** responde `200` con `evidenceOptions` = [O-B, O-D, O-C] y `analysisBasis.maxOptions = 3`
+
+#### Scenario: Una opción no comparable se propaga visible y última [US-134 AC-4] [RN-28] [RN-26] [AC-08.8]
+- **GIVEN** `rag-orchestrator` simulado con [O-B, O-C, O-A] (O-A con `populationNotComparable = true` y `poblacion_no_comparable`)
+- **WHEN** se envía la consulta
+- **THEN** la respuesta y el registro traen [O-B, O-C, O-A] con el aviso de O-A intacto

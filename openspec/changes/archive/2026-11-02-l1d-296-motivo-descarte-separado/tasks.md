@@ -15,4 +15,4 @@
 ## Cierre
 
 - [x] 2.1 `openspec validate l1d-296-motivo-descarte-separado --strict`, tests de `apps/web` en verde, `contracts:check` sin cambios
-- [ ] 2.2 S5 deuda web (pendiente de ID) — DIFERIDA: retirar el alias de Turbopack con un subpath puro `./verificador` en `packages/clinical-language` (D4-22); acortar `notaLenguaje` y texto auxiliar si cambia el AC; versionado de la lista RN-23 horneada en el build.
+- [ ] 2.2 DIFERIDA -> D4-22 y D4-24 (S5, deuda web): retirar el alias de Turbopack con un subpath puro `./verificador` en `packages/clinical-language` (D4-22); acortar `notaLenguaje` y texto auxiliar si cambia el AC; versionado de la lista RN-23 horneada en el build.
