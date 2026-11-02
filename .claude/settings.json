@@ -18,6 +18,7 @@
       "Bash(gh pr view *)",
       "Bash(gh pr list *)",
       "Bash(gh pr checks *)",
+      "Write(./reports/eval/**)",
       "mcp__playwright",
       "mcp__chrome-devtools"
     ],

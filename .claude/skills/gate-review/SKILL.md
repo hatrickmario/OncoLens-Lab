@@ -32,7 +32,11 @@ relanzan salvo que el diff nuevo toque su dominio.
 | código en `apps/**` o `packages/**` (no solo datos, docs o configuración) | `design-principles-reviewer` (modo change) |
 
    `privacy-guardian` corre **siempre** que el diff toque algo fuera de `docs/` u `openspec/`.
-3. Lánzalos en paralelo (modo Gate 2, rama `$target`, change asociado).
+3. Lánzalos en paralelo (modo Gate 2, rama `$target`, change asociado). Los guardianes de solo
+   lectura (`privacy-guardian`, `contract-keeper`, `clinical-language-auditor`,
+   `design-principles-reviewer`) se lanzan con `isolation: "worktree"`: nunca sobre el checkout
+   principal (retro S4, M6). `design-principles-reviewer` corre siempre en código de `apps/**` o
+   `packages/**`, también en modo aceleración (una pasada, solo P1; retro S4, M2).
 4. Comprueba además que el implementador dejó en verde `openspec validate <change> --strict` y
    `/opsx:verify` (si no hay evidencia en su reporte, ejecútalos tú en un worktree temporal).
 5. **Evidencia de TDD según la matriz de `CLAUDE.md`:**
@@ -64,6 +68,16 @@ relanzan salvo que el diff nuevo toque su dominio.
    stack todavía). Falta el bloque o es FAIL → **Mayor**. Pasa la sección **Red** del reporte a
    `privacy-guardian` y la de **Estados** a `clinical-language-auditor` como evidencia; ellos
    siguen revisando el código. El loop visual es evidencia, no sustituye a los tests E2E.
+9. **Orden y trailers de commits (retro S4, M5):** `scripts/ci/verificar-commits-tdd.mjs` (job
+   `higiene-proceso`) ya lo comprueba en la CI; si el reporte del implementador no trae su salida,
+   ejecútalo: `node scripts/ci/verificar-commits-tdd.mjs --base origin/main`. Un `Test-Removal:` que
+   `git interpret-trailers` no ve (no está en el último párrafo, junto a `Co-Authored-By`) →
+   **Mayor**; el orden `contract → test → feat` roto por change → **Menor** (el *bump* de versión va
+   en el commit `contract`).
+10. **Lo que rompe la CI y el Gate 2 no ejerce (retro S4, M6):** si el diff toca imports de
+    `apps/web` hacia `packages/*`, el `Dockerfile` de `web` o `contracts/examples/**`, exige en el
+    reporte `docker build` de `apps/web` (si hay Docker) y `npm run contracts:check` **después** de
+    `git merge origin/main`. Falta la evidencia → **Mayor**.
 
 ## Lote: SOLID y CUPID sobre 2–3 changes relacionados
 

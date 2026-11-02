@@ -64,7 +64,9 @@ Para cada oleada del plan, en orden:
    commit revisado en la vuelta anterior.
 5. **PR listo:** con el Gate 2 en verde, abre el PR (`gh pr create --base main --head <rama>`),
    título `[L1D-<nn>] <título>`, cuerpo con: change, Trazabilidad, veredicto del Gate 2 por
-   guardián, métricas de evaluación si hubo, y la línea de atribución. **Nunca** `gh pr merge`.
+   guardián, métricas de evaluación si hubo, y la línea de atribución. El cuerpo referencia la
+   historia con `Refs L1D-<nn>`, **nunca** `Closes`/`Fixes`/`Resolves` (retro S4, M4a: el `Done`
+   lo pone solo quien verifica los criterios, ver «Reglas duras»). **Nunca** `gh pr merge`.
    **Controles de GitHub en 0 antes de informar:** tras abrir el PR y tras cada push, espera a que
    terminen los controles (`gh pr checks <n> --watch`), lee las alertas de code scanning y los
    comentarios de `github-advanced-security`, y si algo falla lee el log
@@ -169,6 +171,11 @@ tu pregunta va en el mensaje final.
 - Linear: **tú mantienes el estado de trabajo** (Backlog/Todo → In Progress → In Review) según la
   sección «Sincronización con Linear». Pasas una historia a `Done` **solo** si cumple los criterios de completada y todos
   sus PR están mergeados (un `Done` de la Feature, o devolver un `Done`, es de /sprint-close); no creas, borras ni cambias estimación, milestone, etiquetas ni relaciones.
+- **Modo aceleración (retro S4, M2):** cuando el usuario acorta el sprint, puedes reducir a una pasada y a Menores a deuda, pero `design-principles-reviewer` **corre siempre**: una sola pasada, solo hallazgos P1 (regla de dominio duplicada, constante RN-22 sin `Settings`, fake que no cumple el contrato de su puerto). Los P2/P3 van a `S<n>-deuda.md` con ID. En el S4, 13 de 13 historias revisadas tuvieron al menos un P1, y donde se omitió la revisión la deuda subió a D4-25…D4-40.
+- **PR apilados (retro S4, M3):** evita apilar; si apilas, al mergear el PR padre y **antes de cualquier otro merge**, retargetea cada hijo con `gh pr edit <hijo> --base main && gh pr update-branch <hijo>`. Nunca se mergea un hijo contra una rama que no sea `main`: su contenido no llega a `main` (S4: #272 y #274 se perdieron así y hubo que abrir #279). Pide los merges en el orden padre → hijos y registra el orden en el status.
+- **Cambios que los agentes no pueden hacer (retro S4, M1):** `.env.example`, `scripts/ci/contracts-breaking-excepciones.json` y `reports/eval/` están protegidos para los agentes. Si un change los necesita, su `tasks.md` los lista en una sección `## humano` con el bloque literal y un ID `H-<n>` por tarea (se marcan `[ ]` con `DIFERIDA -> H-<n>` y el trabajo continúa). Al **inicio de cada oleada** agrupa los `H-<n>` en **un solo** PR `chore` y pídele el merge al humano, en vez de esperar a que bloqueen la historia.
+- **`Done` en Linear (retro S4, M4a):** los PR de historia usan `Refs L1D-<nn>`. Si la automatización GitHub–Linear sigue cerrando al mergear, devuelve la historia según la regla de «Linear tras cada merge»; la causa raíz (cierre automático al mergear) se desactiva en los ajustes de la integración de Linear, que es una tarea del humano.
+- **Guardianes de solo lectura en worktree (retro S4, M6):** lanza `privacy-guardian`, `contract-keeper`, `clinical-language-auditor` y `design-principles-reviewer` con `isolation: "worktree"` sobre la rama revisada; nunca sobre el checkout principal (en el S4 dos guardianes lo dejaron en `detached HEAD`).
 - Si `openspec validate <change> --strict` falla en `main` antes de despachar, no despaches: escala.
 - Registra en tu memoria de proyecto lo que aprendas sobre tiempos, fallos recurrentes de gates y
   dependencias ocultas, para el siguiente sprint.
