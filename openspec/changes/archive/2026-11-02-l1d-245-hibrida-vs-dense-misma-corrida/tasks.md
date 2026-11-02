@@ -17,7 +17,7 @@
 - [x] 1.8 Refactor: Extract Method / Inline Method en los archivos tocados, tests en verde antes y después, commit `refactor(L1D-245)` · tres commits `refactor(L1D-245)` (0aa3b9c3, 448cee47): Extract Method en `evaluate.py` y `composicion_suite.py`.
 
 - [x] 1.9 Gate 2 vuelta 1 (design-principles-reviewer): P1-1, P1-2, P2-3, P2-4 y menores 5, 7 y 9 aplicados (test `da67caa9` en rojo → refactor `0e6e40c0` y feat `b67f591a`; `test_comparacion_hibrida_gate2.py`, `SinTerminosLexicos` en `ports.py` y `bge_m3_sparse.py`).
-- [ ] 1.10 Diferidos del Gate 2, TRASLADADOS a «S5 deuda rag-orchestrator (pendiente de ID)»: (6) mover `verificar_golden_sha256` junto a `ids_de_subconjunto`; (8) `componer_servicio` con 8 parámetros.
+- [ ] 1.10 Diferidos del Gate 2, TRASLADADOS a D4-40 (S5, deuda rag-orchestrator): (6) mover `verificar_golden_sha256` junto a `ids_de_subconjunto`; (8) `componer_servicio` con 8 parámetros.
 
 ## evaluación
 

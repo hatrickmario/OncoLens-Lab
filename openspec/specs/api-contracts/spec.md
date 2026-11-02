@@ -576,3 +576,135 @@ El código de `apps/web` (Route Handlers y `lib/server`) y de `apps/clinical-api
 - **GIVEN** un archivo de `apps/clinical-api/src/` que llama con `fetch` a una URL de `rag-orchestrator` fuera del cliente generado
 - **WHEN** se ejecuta `npm run contracts:check`
 - **THEN** termina con código distinto de 0 nombrando el archivo y la línea
+
+### Requirement: Población del estudio como lista por fragmento, aditiva y opcional
+`ApplicabilityCriterion` MUST declarar opcionales `studyPopulationValues` (`{value ≤ 200, chunkId, scope}`, sin `maxItems`) y `partialReason`; `unknownReason` MUST sumar `varios_valores_en_la_fuente` (reservado), `valores_en_conflicto`, `respaldo_fallido` y `sin_regla_de_comparacion`; `studyPopulationValue` SHALL ser `deprecated: true` y, con lista, llevar el primer valor de elegibilidad citado o `null`. El cambio SHALL ser aditivo (ADR-26) con versión minor (design D8–D10).
+
+#### Scenario: El schema declara los campos nuevos y oasdiff no informa incompatibilidades [US-241 AC-1] [ADR-26] [ADR-47]
+- **GIVEN** `contracts/schemas/evidence.yaml` editado primero y propagado con `sync-contracts`
+- **WHEN** se ejecutan `contracts:check` y `oasdiff` contra `main`
+- **THEN** `ApplicabilityCriterion` declara `studyPopulationValues` y `partialReason` opcionales con los límites y enums indicados, `unknownReason` incluye los cuatro valores nuevos y `studyPopulationValue` lleva `deprecated: true`
+- **AND** `oasdiff` no informa ningún cambio incompatible y las versiones pasan a `rag-orchestrator` 1.6.0, `clinical-api` 1.11.0 y `evidence.yaml` 1.1.0
+
+#### Scenario: Ambas formas validan y se conservan en clinical-api [US-241 AC-2] [RN-06] [ADR-26]
+- **GIVEN** `contracts/examples/rag-query-poblacion-lista.json` (con los campos nuevos) y `rag-query-aplicabilidad-a-m1.json` (sin ellos), servidos por el mock de `rag-orchestrator` construido desde `contracts/examples/` (MSW)
+- **WHEN** `clinical-api` recibe cada respuesta
+- **THEN** ambas validan con el cliente generado de `packages/api-contracts`
+- **AND** la respuesta y el `AIAnalysisRecord` conservan `studyPopulationValues`, `partialReason` y `studyPopulationValue` exactamente como llegaron, con la forma de `con-evidencia-s4-poblacion-lista.json`
+
+### Requirement: Los valores de población entran en el filtro de términos prescriptivos
+`packages/clinical-language/origen-de-campos.json` MUST listar `studyPopulationValues[].value` en `camposGenerados`, junto a `studyPopulationValue`, para que el recorrido de RN-23 lo incluya.
+
+#### Scenario: El recorrido RN-23 visita studyPopulationValues[].value [US-241 AC-1] [RN-23]
+- **GIVEN** `origen-de-campos.json` actualizado y `con-evidencia-s4-poblacion-lista.json`
+- **WHEN** se ejecuta `contracts:check` (validador de origen de campos de US-068)
+- **THEN** `studyPopulationValues[].value` figura en `camposGenerados` y el recorrido lo visita en el ejemplo
+
+Regresión [RN-06] activa desde S3 (US-053): el análisis se persiste antes de responder.
+
+### Requirement: RagMeta.retrievalParams declara la fusión sin nulos
+`RagMeta.retrievalParams` de `rag-orchestrator` 1.7.0 MUST declarar en `required` `fusion` (`ninguna | rrf | ponderada`) y `fusionParam` (número ≥ 0), sin `null` y atados al modo por `if/then` (design.md D7); todos los ejemplos de `/rag/query` y `/rag/follow-up` SHALL traerlos (decisión D-c; ADR-26, aditivo).
+
+#### Scenario: Los ejemplos de query y follow-up traen fusion y fusionParam [US-112 AC-5] [US-033 AC-13]
+- **WHEN** `contracts:check` valida `contracts/examples/rag-query-*.json` y `rag-follow-up-*.json` contra `RagQueryInternalResponse` y `RagFollowUpResponse`
+- **THEN** todos traen `meta.retrievalParams.fusion` y `fusionParam` sin `null`, los de modo `dense` con `fusion = ninguna` y `fusionParam = 0`
+- **AND** `rag-query-hibrida.json` trae `retrievalMode = hibrida`, `fusion = rrf` y `fusionParam = 60` y tiene su propio request con una `query` distinta de las demás
+
+#### Scenario: Un fusion nulo o incoherente con el modo rompe la verificación [US-112 AC-5] [US-033 AC-13]
+- **WHEN** un parche deja `fusion` o `fusionParam` en `null`, los quita de `required`, o un ejemplo trae `retrievalMode = dense` con `fusion = rrf`
+- **THEN** `contracts:check` termina con código distinto de 0 y nombra el campo
+- **AND** también falla con `retrievalMode = hibrida` y `fusion = ninguna`
+- **AND** el contrato solo fija el vínculo modo/fusión; el rango de `fusionParam` (entero ≥ 1 con `rrf`, (0, 1) con `ponderada`) NO lo valida el contrato sino `Settings` al arrancar (`RRF_K`, `HYBRID_SPARSE_WEIGHT`)
+
+#### Scenario: El proveedor emite la fusión en el modo dense [US-112 AC-6]
+- **WHEN** `contracts:verify-provider` valida la respuesta real de `/rag/query` con `RETRIEVAL_MODE` sin definir
+- **THEN** la respuesta valida contra `RagQueryInternalResponse` con `fusion = ninguna` y `fusionParam = 0`
+
+### Requirement: /completeness y CompletenessView en el spec de clinical-api
+El spec de `clinical-api` MUST declarar `GET /platform/patients/{patientId}/completeness` con `x-permission: clinical:read`, respuestas `200`, `401`, `403`, `404` y `500`, y los schemas cerrados `CompletenessView`, `CompletenessItem` y `CompletenessProvenance` (subconjunto propio, sin modificar `Provenance`). El cambio MUST ser aditivo (sin ERR de oasdiff) y subir `info.version` a `1.12.0`.
+
+#### Scenario: La operación está declarada y es aditiva [US-003 AC-1] [US-003 AC-3]
+- **WHEN** `contracts:check` y `contracts:breaking` revisan el spec
+- **THEN** la operación, `CompletenessView`, `CompletenessItem` y `CompletenessProvenance` existen con `x-permission: clinical:read` y `oasdiff` no reporta cambios incompatibles
+- **AND** la respuesta real de `/completeness` valida contra el spec en `contracts:verify-provider`
+
+### Requirement: La ficha declara si el checklist está disponible
+`PatientSummary` SHALL ganar la propiedad opcional `completenessAvailable` (booleano; ausente equivale a `true`), sin volver nulable `missingCriticalCount`. `PatientListItem` SHALL NOT cambiar en el S4 (decisión Q2, usuario, 2026-10-30).
+
+#### Scenario: La propiedad nueva es opcional [US-003 AC-2] [RN-26]
+- **WHEN** `contracts:breaking` compara el spec con `main`
+- **THEN** `completenessAvailable` aparece como propiedad opcional de `PatientSummary` y `missingCriticalCount` sigue siendo un entero requerido
+- **AND** `PatientListItem` no tiene cambios respecto de `main`
+- **AND** `patient-summary-checklist-no-disponible.json` (con `completenessAvailable = false`) valida contra `PatientSummary` y está registrado en `index.json`
+
+### Requirement: Ejemplos de /completeness para los consumidores
+`contracts/examples/` MUST incluir respuestas `200` de F-M2 (6 faltantes), de F-M1 (0 faltantes) y de tipo no habilitado (`items = []`), y los errores `401`, `403`, `404` y `500` de la operación, todos registrados en `index.json`.
+
+#### Scenario: Los siete ejemplos validan contra su target [US-003 AC-1] [US-005 AC-1]
+- **WHEN** `contracts:check` valida `contracts/examples/index.json`
+- **THEN** los tres ejemplos `200` y los cuatro de error de `/completeness` validan contra su respuesta en el spec
+
+### Requirement: Motivo lenguaje_no_permitido en DiscardedOption
+El enum `DiscardedOption.discardReason` de `contracts/schemas/evidence.yaml` MUST incluir `lenguaje_no_permitido` al final de los motivos vigentes, como cambio aditivo sin ruptura (ADR-26; schema 1.2.0, `rag-orchestrator` 1.8.0, `clinical-api` 1.13.0), con sus ejemplos registrados en `contracts/examples/index.json`; `clinical-api` SHALL validarlo con su cliente generado y persistirlo sin pérdida (RN-06).
+
+#### Scenario: El motivo nuevo es aditivo y viaja sin pérdida hasta la persistencia [US-245 AC-7] [ADR-26] [RN-06]
+- **GIVEN** `contracts/schemas/evidence.yaml` con `lenguaje_no_permitido` añadido al enum de `DiscardedOption.discardReason` y los ejemplos `con-evidencia-solo-descartadas-lenguaje.json` y `con-evidencia-solo-descartadas-sin-soporte-y-lenguaje.json` (`EvidenceAnalysis`, `clinical-api`) y `rag-query-solo-descartadas-lenguaje.json` (`RagQueryInternalResponse`, `rag-orchestrator`, con su request `rag-query-request-solo-descartadas-lenguaje.json` y una pregunta distinta de las de los ejemplos existentes), registrados en `index.json`
+- **WHEN** se ejecutan `sync-contracts`, `contracts:check` y `oasdiff` contra `main`
+- **THEN** no hay cambio incompatible
+- **AND** cada ejemplo valida contra su `target` de `index.json` y los mocks MSW/`respx` se construyen desde ellos
+- **AND** `clinical-api`, con el MSW de `rag-orchestrator` construido desde `rag-query-solo-descartadas-lenguaje.json`, valida la respuesta con su cliente generado y persiste en el `AIAnalysisRecord` el `discardReason = lenguaje_no_permitido` sin pérdida
+
+### Requirement: Error LLM_OUTPUT_INVALID en el 503 de ambos backends
+El schema `ErrorSalidaLlmInvalida` (`error = LLM_OUTPUT_INVALID`, `message`, `traceId`, sin detalles internos) MUST añadirse como alternativa aditiva del `oneOf` del `503` de `POST /rag/query` (1.8.0) y de `POST /platform/evidence-analyses` (1.13.0), con ejemplos en `index.json` (ADR-26). `clinical-api` SHALL propagarlo sin convertirlo en `LOCAL_LLM_UNAVAILABLE` (Q1, 2026-10-30).
+
+#### Scenario: El error de salida inválida es aditivo y clinical-api lo propaga sin cambiarlo [US-245 AC-1] [ADR-26] [RN-06] (decisión Q1, 2026-10-30)
+- **GIVEN** `ErrorSalidaLlmInvalida` en el `oneOf` del `503` de ambos `openapi.yaml` y los ejemplos `rag-salida-llm-invalida.json` y `error-salida-llm-invalida.json` registrados en `index.json`
+- **WHEN** `clinical-api`, con el MSW de `rag-orchestrator` construido desde `rag-salida-llm-invalida.json`, recibe `POST /platform/evidence-analyses`
+- **THEN** responde `503` con `error = "LLM_OUTPUT_INVALID"`, validado contra su `openapi.yaml`, y nunca `LOCAL_LLM_UNAVAILABLE`
+- **AND** no persiste un `AIAnalysisRecord` con contenido generado (RN-06 sin cambios)
+- **AND** `oasdiff` contra `main` no reporta cambio incompatible
+
+### Requirement: Campos aditivos de opciones no mostradas
+`RagQueryInternalResponse` (rag-orchestrator 1.9.0) MUST declarar `optionsNotShown` (integer >= 0) como requerido y siempre emitido (`0` sin recorte); `AnalysisBasis` (clinical-api 1.14.0) MUST declarar `optionsNotShown` (integer >= 0) y `maxOptions` (integer 1–3), opcionales solo por los análisis históricos. El cambio SHALL ser aditivo (ADR-26), con sus ejemplos en `index.json` (design, Contratos).
+
+#### Scenario: Los campos nuevos son aditivos y los mocks salen de los ejemplos [US-134 AC-3] [ADR-26] [RN-06]
+- **GIVEN** `apps/rag-orchestrator/openapi.yaml` 1.9.0 y `apps/clinical-api/openapi.yaml` 1.14.0 con los campos nuevos, y los ejemplos `rag-query-tres-opciones.json` (con `rag-query-request-tres-opciones.json`) y `con-evidencia-s4-tres-opciones.json`
+- **WHEN** se ejecutan `sync-contracts`, `contracts:check` y `oasdiff` contra `main`
+- **THEN** no hay cambio incompatible en ninguno de los dos specs
+- **AND** `rag-query-tres-opciones.json` valida contra `RagQueryInternalResponse` y `con-evidencia-s4-tres-opciones.json` valida contra `EvidenceAnalysis`
+- **AND** `rag-query-tres-opciones-no-comparable.json` y `con-evidencia-s4-tres-opciones-no-comparable.json` (`LLM-TRES`) traen O-A no comparable en tercer lugar y `optionsNotShown = 0`
+- **AND** todo ejemplo con target `RagQueryInternalResponse` en `index.json`, incluidos los de `l1d-291`, `l1d-295` y `l1d-297`, trae `optionsNotShown = 0` (salvo `rag-query-tres-opciones.json`) y sigue validando
+- **AND** los mocks MSW/`respx` se construyen desde esos ejemplos y `clinical-api` valida la respuesta interna con su cliente generado
+
+### Requirement: Cada openapi.yaml proveedor se edita a mano y lo demás se genera
+Los dos `openapi.yaml` MUST editarse a mano como fuente (no se generan) y los tipos TS, Zod y Pydantic SHALL generarse después desde ellos; `contracts/schemas/evidence.yaml` (solo schemas compartidos) MUST NOT cambiar en este change.
+
+#### Scenario: Los artefactos generados salen del openapi.yaml proveedor [ADR-26]
+- **GIVEN** el diff del change
+- **WHEN** se compara con la salida de la generación desde los dos `openapi.yaml`
+- **THEN** los tipos de `packages/api-contracts`, los schemas Zod y los modelos Pydantic coinciden con lo generado
+- **AND** `contracts/schemas/evidence.yaml` no aparece en el diff
+
+### Requirement: RagMeta.retrievalParams declara la reescritura sin nulos
+`RagMeta.retrievalParams` de `rag-orchestrator` 1.10.0 MUST declarar en `required` `queryRewrite` (`{applied: boolean, reason: disparado | no_disparado | no_disponible | no_aplica}`, cerrado, sin `null`, `applied = true` ⇔ `disparado`); todos los ejemplos de respuesta de `/rag/query` y `/rag/follow-up` con `meta.retrievalParams` SHALL traerlo, los de seguimiento con `no_aplica` (decisión D-c; ADR-26, aditivo).
+
+#### Scenario: Los ejemplos de query y follow-up traen queryRewrite [US-238 AC-1] [US-033 AC-13]
+- **WHEN** `contracts:check` valida `contracts/examples/rag-query-*.json` y `rag-follow-up-*.json`
+- **THEN** todos traen `meta.retrievalParams.queryRewrite` sin `null`, los de seguimiento con `reason = no_aplica`
+- **AND** `rag-query-reescritura-aplicada.json` trae `{applied: true, reason: "disparado"}` y tiene su propio request `rag-query-request-reescritura-aplicada.json` con una `query` distinta de las demás
+
+#### Scenario: Un queryRewrite nulo o incoherente rompe la verificación [US-238] [US-033 AC-13]
+- **WHEN** un parche deja `reason` en `null`, quita `queryRewrite` de `required`, o un ejemplo trae `applied = true` con `reason = no_disparado`
+- **THEN** `contracts:check` termina con código distinto de 0 y nombra el campo
+
+#### Scenario: El proveedor emite queryRewrite en cada camino [US-238 AC-1] [US-238 AC-2] [US-238 AC-5]
+- **WHEN** `contracts:verify-provider` valida las respuestas reales de `/rag/query` en rescate, primer loop con evidencia y LLM caído
+- **THEN** validan contra `RagQueryInternalResponse` con `reason` `disparado`, `no_disparado` y `no_disponible` respectivamente
+
+### Requirement: AnalysisBasis declara si la búsqueda se repitió con reformulación
+`AnalysisBasis.sourcesConsulted` del `openapi.yaml` de `clinical-api` (versión 1.15.0) MUST declarar en `required` `queryRewritten` (`boolean`, sin `null`), descrito como verdadero solo cuando el segundo loop de reescritura rescató evidencia; ningún campo de `AnalysisBasis` SHALL contener la consulta reformulada (decisión D-d, 2026-10-30).
+
+#### Scenario: Los ejemplos de la Base traen queryRewritten [US-238 AC-7] [FR-27]
+- **WHEN** `contracts:check` valida los ejemplos con `analysisBasis`
+- **THEN** todos traen `sourcesConsulted.queryRewritten`, `false` salvo `con-evidencia-reescritura.json`, que trae `true`
+- **AND** un parche que lo quita de `required` o lo vuelve nullable hace terminar el comando con código distinto de 0

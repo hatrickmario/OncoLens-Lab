@@ -76,3 +76,56 @@ El seed sintético MUST escribir la identidad de los pacientes semilla (a)–(e)
 #### Scenario: Volver a correr el seed no duplica ni recifra [US-046 AC-6] (asumido)
 - **WHEN** el seed se ejecuta dos veces
 - **THEN** sigue habiendo una identidad por paciente semilla y sus blobs no cambian
+
+### Requirement: El contador de faltantes de la ficha sale del servicio de completitud
+`PatientSummary.missingCriticalCount` MUST ser el número de ítems `faltante` que calcula el mismo servicio de completitud que `/completeness`, y SHALL NOT ser un valor fijo. Un faltante SHALL NOT bloquear la ficha (RN-26). Si el tipo no está habilitado o no hay `Diagnosis` activo, `missingCriticalCount` MUST ser `0`. Si el cálculo del checklist falla, la ficha MUST responder `200` con `missingCriticalCount = 0` y `completenessAvailable = false`, nunca `5xx`.
+
+#### Scenario: F-M2 tiene seis faltantes en la ficha [US-003 AC-2] [AC-04.1]
+- **GIVEN** el paciente F-M2 y el catálogo `test-1.0.0`
+- **WHEN** se llama a `GET /platform/patients/{id}` con una sesión `clinical:read`
+- **THEN** `PatientSummary.missingCriticalCount = 6`
+- **AND** es igual al número de ítems `faltante` de `/completeness` para F-M2
+
+#### Scenario: La ficha no cae si falla el checklist [US-003 AC-2] [RN-26] (decidido por defecto, Gate 1)
+- **GIVEN** el paciente F-M2 y un fallo al calcular su checklist (servicio de la ficha armado por su *factory* con un puerto de catálogo que lanza)
+- **WHEN** se llama a `GET /platform/patients/{id}` con una sesión `clinical:read`
+- **THEN** la respuesta es `200` con `missingCriticalCount = 0` y `completenessAvailable = false`
+- **AND** el log no contiene valores clínicos ni la identidad del paciente
+
+### Requirement: El listado y la búsqueda no calculan el checklist en el S4
+El listado y la búsqueda de pacientes MUST NOT invocar el servicio de completitud por fila en el S4: `PatientListItem` conserva su forma y su `missingCriticalCount` el valor actual, con cualquier sesión (decisión Q2, usuario, 2026-10-30; RN-26).
+
+#### Scenario: El listado no invoca el servicio de completitud [US-003 AC-2] [RN-26] (decisión Q2, 2026-10-30)
+- **GIVEN** un doctor con sesión `clinical:read` y el servicio de completitud armado por su *factory* con un fake que cuenta invocaciones
+- **WHEN** llama al listado y a la búsqueda de pacientes
+- **THEN** el fake no se invoca
+- **AND** cada `PatientListItem` es igual al de `main` (sin `completenessAvailable`)
+
+### Requirement: Anclas con foco en las secciones existentes de la ficha
+Los encabezados `h2` de las secciones de diagnóstico y biomarcadores de la ficha MUST llevar `id="diagnostico"` y `id="biomarcadores"` con `tabindex="-1"`, y MUST recibir el foco al llegar con ese fragmento en la URL; MUST NOT crearse secciones nuevas. El componente que da el foco MUST aceptar solo los fragmentos de la lista permitida `{diagnostico, biomarcadores}` y resolverlos con `getElementById`; MUST NOT usar `querySelector` ni ningún selector armado con `location.hash` en crudo.
+
+#### Scenario: El encabezado de destino recibe el foco [US-005 AC-3] [US-005 AC-7] [NFR-12] [S4 resp. 14]
+- **GIVEN** la ficha de un paciente
+- **WHEN** se abre `/pacientes/{id}#biomarcadores` (y, en otra prueba, `#diagnostico`)
+- **THEN** el `h2` con ese `id` y `tabindex="-1"` es el elemento enfocado
+- **AND** la ficha no tiene secciones nuevas respecto de la existente
+
+#### Scenario: Un fragmento fuera de la lista permitida no mueve el foco [US-005 AC-3] [privacy Gate 1]
+- **GIVEN** la ficha de un paciente
+- **WHEN** se abre `/pacientes/{id}#x"],img` (o cualquier fragmento distinto de `diagnostico` y `biomarcadores`)
+- **THEN** no se lanza ningún error, no se llama a `querySelector` y el foco no se mueve a ningún elemento por el fragmento
+
+### Requirement: La ficha avisa si no se pudieron verificar los datos críticos
+Si `PatientSummary.completenessAvailable` es `false`, la ficha MUST mostrar el aviso no bloqueante «No se pudieron verificar los datos críticos» con `role="status"` y MUST NOT mostrar un contador `0` ni «sin faltantes». El aviso SHALL NOT deshabilitar ni ocultar ninguna acción ni sección de la ficha (RN-26). Ausente o `true`, no se muestra (decisión Q2, usuario, 2026-10-30).
+
+#### Scenario: Con el checklist no disponible la ficha muestra el aviso y no un cero [US-003 AC-2] [US-005 AC-5] [RN-26] (decisión Q2, 2026-10-30)
+- **GIVEN** la ficha de un paciente cuyo `PatientSummary` es `contracts/examples/patient-summary-checklist-no-disponible.json` (`completenessAvailable = false`, `missingCriticalCount = 0`)
+- **WHEN** el oncólogo abre `/pacientes/{id}`
+- **THEN** se lee «No se pudieron verificar los datos críticos» en una región `role="status"`
+- **AND** no aparece «0» como contador de faltantes ni «sin faltantes»
+- **AND** las secciones y acciones de la ficha siguen disponibles, incluido el enlace al análisis
+
+#### Scenario: Con el checklist disponible la ficha no muestra el aviso [US-003 AC-2] (decisión Q2, 2026-10-30)
+- **GIVEN** la ficha de un paciente cuyo `PatientSummary` es `contracts/examples/patient-summary-doctor.json` (`completenessAvailable` ausente)
+- **WHEN** el oncólogo abre `/pacientes/{id}`
+- **THEN** no aparece «No se pudieron verificar los datos críticos»
