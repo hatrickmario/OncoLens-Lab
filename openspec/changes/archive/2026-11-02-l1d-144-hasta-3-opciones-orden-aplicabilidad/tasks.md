@@ -20,9 +20,9 @@
 
 - [x] 3.1 Tests de aceptación en rojo (Supertest + PostgreSQL real + MSW desde `contracts/examples/`): "responde [O-B, O-D, O-C] y analysisBasis.maxOptions = 3 [US-134 AC-1]", "persiste optionsNotShown igual en la Base y el registro [US-134 AC-3]", "propaga O-A última y visible [US-134 AC-4]", "persiste evidence_options en el mismo orden sin reordenar [US-134 AC-8]" · TDD estricto · commit `test(L1D-144)`
 - [x] 3.2 `ANALYSIS_MAX_OPTIONS` con defecto 3 (RN-22) y validación 1–3 en `src/config/secciones.ts`; `optionsNotShown` y `maxOptions` en `analysis-basis.ts`, `analysis-record.ts` y mapper, sin reordenar · TDD estricto (test unitario de config uno a uno) · commit `feat(L1D-144)`
-- [ ] 3.3 (NO MARCADA: .env.example lo cubre la sesión principal, PR #265; Compose pasa `ANALYSIS_MAX_OPTIONS` vacío y el defecto 3 vive en `secciones.ts`) Actualizar `.env.example`/Compose con `ANALYSIS_MAX_OPTIONS=3` · test después (humo de configuración)
+- [ ] 3.3 (DIFERIDA -> D4-39, tarea humana: verificar `ANALYSIS_MAX_OPTIONS=3` en `.env.example`, que los agentes no pueden leer; Compose pasa `ANALYSIS_MAX_OPTIONS` vacío y el defecto 3 vive en `secciones.ts`) Actualizar `.env.example`/Compose con `ANALYSIS_MAX_OPTIONS=3` · test después (humo de configuración)
 
 ## Cierre
 
-- [ ] 4.1 (NO MARCADA: refactor: sin cambios en el modo aceleración; TRASLADADA a deuda del S5) Refactor: Extract Method en los archivos tocados, tests en verde antes y después, cobertura del módulo sin bajar · commit `refactor(L1D-144)`
+- [ ] 4.1 (NO MARCADA: refactor: sin cambios en el modo aceleración; TRASLADADA a D4-39, S5) Refactor: Extract Method en los archivos tocados, tests en verde antes y después, cobertura del módulo sin bajar · commit `refactor(L1D-144)`
 - [x] 4.2 `openspec validate l1d-144-hasta-3-opciones-orden-aplicabilidad --strict`, suites de ambos backends, `contracts:check`, `contracts:verify-provider` y `oasdiff` en verde

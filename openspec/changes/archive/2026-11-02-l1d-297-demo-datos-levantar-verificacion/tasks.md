@@ -36,4 +36,4 @@
 
 ## cierre
 
-- [ ] 4.1 `openspec validate l1d-297-demo-datos-levantar-verificacion --strict` y CI verde
+- [x] 4.1 `openspec validate l1d-297-demo-datos-levantar-verificacion --strict` y CI verde · evidencia (cierre S4, 2026-11-02): `openspec validate --changes --strict` 30/30 sobre main db43e9ea; PR #276 mergeado con CI 14/14 y 0 alertas

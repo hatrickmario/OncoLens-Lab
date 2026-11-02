@@ -64,6 +64,8 @@ Las deudas de L1D-95 (`/completeness`) que L1D-97 ya recoge no llevan ID propio:
 | D4-36 | **Hallazgo ajeno, por investigar:** en `main` HEAD, `terminos_prohibidos.atribucion.con_formula` = 5 frente a 0 en `data/evaluation/baseline.json`. Verificar si es regresión real de la métrica (D4-20 la reorienta) o deriva del baseline. | Gate 2 de aceleración (L1D-144) | `ai-eval-runner` al inicio del S5 | Por investigar |
 | D4-37 | L1D-145, E2E diferidos: ejecutar los E2E de `panel-tres-opciones` contra Compose (tareas 2.3 y 2.6 de `tasks.md`). | L1D-145 (2.3, 2.6) | Deuda de verificación S5 | Propuesto |
 | D4-38 | **Mantenimiento de dependencias al inicio del S5** (plan abajo): PR de Dependabot #228 (docker), #230 (npm), #237 (Milvus 2.6.25→2.6.26) y #238 (pip, 10 paquetes), abiertos desde 2026-10-28 y fuera del sprint. | Sesión principal (usuario, 2026-10-31) | Primer bloque del S5, tras `/sprint-close S4` y antes de las historias | Propuesto |
+| D4-39 | L1D-144, tareas diferidas sin ID al cierre: 3.3 (verificar `ANALYSIS_MAX_OPTIONS=3` en `.env.example`; Compose lo pasa vacío y el defecto 3 vive en `secciones.ts`; tarea humana porque los agentes no leen `.env.example`) y 4.1 (refactor Extract Method en los archivos tocados; el `design-principles-reviewer` se omitió por aceleración en el Gate 2). | L1D-144 (3.3, 4.1) | Deuda de `rag-orchestrator`/`clinical-api` S5 (3.3: humano) | Propuesto (cierre S4) |
+| D4-40 | L1D-245, tarea 1.10 (menores del Gate 2): mover `verificar_golden_sha256` junto a `ids_de_subconjunto` y reducir `componer_servicio` (8 parámetros). | L1D-245 (1.10) | Deuda de `rag-orchestrator` S5 (`ai-services-dev`) | Propuesto (cierre S4) |
 
 ### Plan D4-38: mantenimiento de dependencias (S5)
 

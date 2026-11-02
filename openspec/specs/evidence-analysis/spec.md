@@ -67,14 +67,21 @@ Una opción devuelta por el LLM con `citedSources` vacío MUST ir a `discardedOp
 - **THEN** la opción está en `discardedOptions` con `discardReason = sin_citas` y no en `evidenceOptions`
 
 ### Requirement: Sin evidencia sobre el umbral, respuesta sin invocar al LLM
-Cuando ningún chunk recuperado supere el umbral de relevancia, `POST /rag/query` MUST responder `200` con `status = sin_evidencia`, `evidenceOptions = []`, `retrievalStats.aboveThreshold = 0` y `topRelevanceScore = null` (nunca `0.0`), y SHALL hacerlo sin invocar al LLM ni al agente (RN-02). La respuesta MUST validar contra `RagQueryInternalResponse`.
+Cuando ningún chunk supere el umbral de relevancia tras el primer loop, `POST /rag/query` MUST intentar a lo sumo un segundo loop de reescritura (RN-02 enmendado); si tampoco supera el umbral MUST responder `200` con `status = sin_evidencia`, `evidenceOptions = []`, `retrievalStats.aboveThreshold = 0` y `topRelevanceScore = null` (nunca `0.0`), sin invocar al LLM de generación ni al agente. La respuesta MUST validar contra `RagQueryInternalResponse`.
 
 #### Scenario: Una pregunta sin evidencia en el corpus responde sin_evidencia y el LLM no se invoca [US-055 AC-2] [AC-10.4] [RN-02]
 - **GIVEN** el corpus de prueba FX-06a-a, `RELEVANCE_THRESHOLD = 0.30` en la configuración de test y el adapter falso del LLM con contador de invocaciones (FX-06a-b)
 - **WHEN** `clinical-api` envía `Q-SIN` ("¿Qué describe la evidencia sobre melanoma uveal?") a `POST /rag/query` con un JWT de servicio válido
 - **THEN** responde `200` con `status = sin_evidencia`, `evidenceOptions = []`, `retrievalStats.aboveThreshold = 0` y `topRelevanceScore = null`
-- **AND** el adapter del LLM registra cero invocaciones
+- **AND** el adapter del LLM de generación registra cero invocaciones (el de reescritura, como mucho una, según `QUERY_REWRITE_ENABLED`)
 - **AND** la respuesta valida contra `RagQueryInternalResponse` del `openapi.yaml` del proveedor (helper de validación de L1D-164)
+
+#### Scenario: Sin respuesta en el corpus tras el segundo loop responde sin_evidencia con una sola reescritura [US-238 AC-3] [AC-06.1] [RN-02]
+- **GIVEN** `Q-SIN-RESPUESTA` (FX-06b-a: ni la pregunta ni su reescritura superan el umbral) y `QUERY_REWRITE_ENABLED = true`
+- **WHEN** se procesa la consulta
+- **THEN** responde `status = sin_evidencia` con `topRelevanceScore = null`
+- **AND** el LLM de generación y el agente registran cero invocaciones y el LLM de reescritura exactamente una
+- **AND** `meta.retrievalParams.queryRewrite = { applied: true, reason: "disparado" }`
 
 ### Requirement: Umbral de relevancia en configuración
 El umbral que separa la evidencia relevante de la que no lo es MUST leerse de la clave de configuración `RELEVANCE_THRESHOLD` (RN-22, TBD-03), nunca de un literal en código, y SHALL aparecer en `meta.retrievalParams.relevanceThreshold` de cada respuesta.
@@ -138,7 +145,7 @@ Cuando `clinicalContext.diagnosis` es `null`, `POST /rag/query` MUST responder `
 - **AND** la respuesta valida contra el `422` de `/rag/query` del `openapi.yaml` del proveedor y no es un `RagQueryInternalResponse` con `status = sin_evidencia`
 
 ### Requirement: Soporte NLI por afirmación contra los chunks citados
-Cada afirmación de la justificación de una opción con citas válidas MUST evaluarse con el adapter NLI, con el `chunkTextSnapshot` de cada chunk citado como premisa y la afirmación como hipótesis (RN-01, FR-10, IA-04). Una afirmación SHALL estar soportada solo si algún chunk citado da `entailment` con probabilidad ≥ umbral; `neutral` y `contradiction` nunca soportan. Regresión [RN-24] activa desde S4 y Regresión [RN-01] (datos del paciente, ADR-34) activa desde S2.
+Cada afirmación atómica de una opción con citas válidas MUST evaluarse con el adapter NLI, con el `chunkTextSnapshot` de los chunks que ella cita como premisa y el texto de la afirmación sin el marco de atribución como hipótesis (RN-01, FR-10, IA-04). Una afirmación SHALL estar soportada solo si algún chunk citado da `entailment` con probabilidad ≥ umbral; `neutral` y `contradiction` nunca soportan.
 
 #### Scenario: Una opción con su justificación implicada por el chunk citado queda en evidenceOptions [US-064 AC-1] [AC-T1.2] [RN-01] [FR-10]
 - **GIVEN** el corpus de prueba FX-06a-a, `Q-HER2`, el LLM falso `LLM-OK` (opción que cita `ch-m1-1`) y el NLI falso en `entailment` (FX-06a-b), con `NLI_ENTAILMENT_THRESHOLD` en la configuración de test
@@ -148,20 +155,51 @@ Cada afirmación de la justificación de una opción con citas válidas MUST eva
 - **AND** la respuesta valida contra `RagQueryInternalResponse` del `openapi.yaml` del proveedor (helper de validación de L1D-164)
 
 #### Scenario: Una afirmación contradicha por el chunk citado descarta la opción [US-064 AC-4] [RN-01] [IA-04]
-- **GIVEN** FX-06a-a, `Q-HER2`, `LLM-OK` y un NLI falso que devuelve `contradiction` para una afirmación de la opción
+- **GIVEN** FX-06a-a, `Q-HER2`, `LLM-OK` y un NLI falso que devuelve `contradiction` para la afirmación `principal` de la opción (las demás en `entailment`)
 - **WHEN** `POST /rag/query` valida la opción
 - **THEN** la opción no está en `evidenceOptions`
 - **AND** está en `discardedOptions` con `discardReason = afirmacion_sin_soporte`
 
+#### Scenario: Regresiones activas del soporte NLI [RN-24] [RN-01]
+- **GIVEN** la suite de regresión del soporte por afirmación
+- **WHEN** se ejecuta
+- **THEN** la Regresión [RN-24] está activa desde el S4
+- **AND** la Regresión [RN-01] (datos del paciente, ADR-34) está activa desde el S2
+
 ### Requirement: Opción con una afirmación sin soporte va a descartadas
-Una opción con al menos una afirmación sin soporte MUST ir a `discardedOptions` con `discardReason = afirmacion_sin_soporte` y SHALL NOT aparecer en `evidenceOptions`; `unsupportedClaims` MUST listar el texto de cada afirmación sin soporte; el de una afirmación con términos prohibidos se sustituye por el literal de retiro (RN-01, FR-10, HU-03 escenario 3, AC-T1.2, `[S1 resp. 16]`). La descartada es solo para revisión del oncólogo, no una opción.
+La verificación MUST aplicar la regla por papel: una afirmación `principal` o `salvedad` sin soporte lleva la opción a `discardedOptions` con `discardReason = afirmacion_sin_soporte`, sin aparecer en `evidenceOptions`, y `unsupportedClaims` lista su texto; una `secundaria` sin soporte se omite, suma 1 a `omittedClaims` y no aparece en ningún campo (RN-01, FR-10, AC-T1.2, AC-10.4, `[S4 resp. 2]`). La descartada es solo para revisión del oncólogo, no una opción.
 
 #### Scenario: Una opción con una cifra que la fuente no respalda va a descartadas con su afirmación [US-064 AC-2] [AC-T1.2] [RN-01] [FR-10] [HU-03]
-- **GIVEN** FX-06a-a, `Q-HER2` y el LLM falso `LLM-SIN-SOPORTE` (cita `ch-m1-1` con la afirmación "reduce la mortalidad a la mitad"), y el NLI falso en `neutral` para esa afirmación
+- **GIVEN** FX-06a-a, `Q-HER2` y el LLM falso `LLM-SIN-SOPORTE` (cita `ch-m1-1` con la afirmación principal "reduce la mortalidad a la mitad"), y el NLI falso en `neutral` para esa afirmación
 - **WHEN** `POST /rag/query` valida la opción
 - **THEN** `evidenceOptions = []`
 - **AND** la opción está en `discardedOptions` con `discardReason = afirmacion_sin_soporte` y `unsupportedClaims = ["reduce la mortalidad a la mitad"]`
 - **AND** la respuesta valida contra `RagQueryInternalResponse` del `openapi.yaml` del proveedor (helper de validación de L1D-164)
+
+#### Scenario: Una secundaria sin soporte se omite y la opción se conserva [US-245 AC-2] [RN-01] [AC-T1.2]
+- **GIVEN** `Q-HER2` y `LLM-ATOM-SEC` (secundaria en `neutral`; principal y salvedad en `entailment`)
+- **WHEN** `POST /rag/query` valida la respuesta
+- **THEN** O-1 sigue en `evidenceOptions` sin esa afirmación
+- **AND** `omittedClaims = 1`
+- **AND** el texto de la secundaria no aparece en ningún campo de la respuesta serializada
+
+#### Scenario: Una principal sin soporte descarta la opción con su afirmación [US-245 AC-3] [FR-10] [AC-10.4]
+- **GIVEN** `Q-HER2` y `LLM-ATOM-PRIN` (principal en `neutral`)
+- **WHEN** `POST /rag/query` valida la respuesta
+- **THEN** `evidenceOptions = []`
+- **AND** O-1 está en `discardedOptions` con `discardReason = afirmacion_sin_soporte` y `unsupportedClaims` con la principal
+
+#### Scenario: Una salvedad sin soporte descarta la opción [US-245 AC-4] [RN-01]
+- **GIVEN** `Q-HER2` y `LLM-ATOM-SALV` (salvedad en `neutral`; principal y secundaria en `entailment`)
+- **WHEN** `POST /rag/query` valida la respuesta
+- **THEN** O-1 está en `discardedOptions` con `discardReason = afirmacion_sin_soporte`
+- **AND** la opción no aparece en `evidenceOptions`: una opción nunca se muestra más fuerte que su fuente
+
+#### Scenario: Afirmación fuera de forma o con modal normativo [RN-01] [RN-23]
+- **GIVEN** una afirmación sin soporte que está fuera de forma (alias, longitud o modal normativo)
+- **WHEN** la verificación arma `unsupportedClaims`
+- **THEN** lista el literal «(texto no mostrado)» en lugar de su texto
+- **AND** una afirmación con modal normativo descarta la opción sea cual sea su papel (D-a)
 
 ### Requirement: Limitación propuesta sin soporte se omite y se cuenta
 Si el generador propone una limitación (en el S1 el LLM no las genera, `[S1 resp. 11]`; la regla se prueba con un generador falso), MUST evaluarse con el NLI contra los chunks entregados a la generación; sin soporte SHALL omitirse por completo y MUST sumar 1 a `omittedClaims` (FR-10, RN-01, AC-T1.2). Una limitación soportada MUST conservarse con `origin = llm_verificado`.
@@ -192,14 +230,20 @@ Si el adapter NLI lanza un error o no responde, `POST /rag/query` MUST responder
 - **AND** el cuerpo no contiene `evidenceOptions` ni el texto de la opción o de su justificación
 - **AND** la respuesta valida contra el `503` de `/rag/query` del `openapi.yaml` del proveedor
 
+#### Scenario: Un fallo del NLI con afirmaciones atómicas no devuelve ninguna opción [US-245 AC-8] [RN-01] (regresión de US-064 AC-6)
+- **GIVEN** `Q-HER2`, `LLM-ATOM-OK` y el adapter NLI falso configurado para lanzar un error
+- **WHEN** `POST /rag/query` valida la respuesta
+- **THEN** responde `503` con `error = "NLI_UNAVAILABLE"`
+- **AND** ninguna opción ni afirmación se devuelve sin validar
+
 ### Requirement: Términos prescriptivos generados nunca se devuelven
-Antes del NLI, la `option`, cada afirmación de su `rationale` y cada limitación propuesta MUST pasar `checkProhibitedTerms` (nivel A, `[S1 resp. 15]`), solo sobre los campos generados de la `CAMPOS_GENERADOS`, igual a `packages/clinical-language/origen-de-campos.json`. Un texto con término prohibido SHALL contar como sin soporte (opción → `discardedOptions`, `afirmacion_sin_soporte`; limitación → omitida y contada) y MUST reemplazarse siempre por el literal de retiro (RN-23, `[S1 resp. 16]`).
+Antes de la validación de forma y del NLI, la `option`, cada afirmación atómica de la opción y cada limitación propuesta MUST pasar `checkProhibitedTerms` (nivel A, `[S1 resp. 15]`) solo sobre los campos generados de `CAMPOS_GENERADOS`. El texto se reemplaza siempre por el literal de retiro (RN-23, `[S1 resp. 16]`, `[S4 resp. 11]`). `lenguaje_no_permitido` queda reservado a los términos de esa lista; un modal normativo fuera de ella sigue la regla de forma (D-a).
 
 #### Scenario: Una justificación prescriptiva descarta la opción y el término no sale en la respuesta [US-064 AC-7] [RN-23] [RN-01] [§15 resp. 2]
 - **GIVEN** FX-06a-a, `Q-HER2`, un LLM falso cuya justificación de la opción contiene "recomendado para este paciente" y el NLI falso en `entailment`
 - **WHEN** `POST /rag/query` valida la opción
 - **THEN** `evidenceOptions = []`
-- **AND** la opción está en `discardedOptions` con `discardReason = afirmacion_sin_soporte`
+- **AND** la opción está en `discardedOptions` con `discardReason = lenguaje_no_permitido` (desde S4, `[S4 resp. 11]`; antes `afirmacion_sin_soporte`)
 - **AND** la afirmación retirada figura en `unsupportedClaims` y en la justificación de la descartada como "[afirmación retirada: formulación no permitida]"
 - **AND** `checkProhibitedTerms` sobre los campos generados de la respuesta (`option`, `rationale`, `unsupportedClaims`, `limitations[].text`, `synthesis`; `CAMPOS_GENERADOS`, igual a `packages/clinical-language/origen-de-campos.json`, excluidos los copiados del corpus) devuelve cero coincidencias
 
@@ -208,6 +252,28 @@ Antes del NLI, la `option`, cada afirmación de su `rationale` y cada limitació
 - **WHEN** `POST /rag/query` valida la respuesta
 - **THEN** `limitations = []` y `omittedClaims = 1`
 - **AND** `checkProhibitedTerms` sobre los campos generados de la respuesta (`CAMPOS_GENERADOS`, igual a `packages/clinical-language/origen-de-campos.json`) devuelve cero coincidencias
+
+#### Scenario: Una afirmación secundaria prescriptiva descarta la opción con lenguaje_no_permitido [US-245 AC-6] [RN-23] [§15 resp. 2]
+- **GIVEN** `Q-HER2` y `LLM-ATOM-PRESC`, cuya secundaria contiene «recomendado para este paciente», con el NLI falso en `entailment`
+- **WHEN** `POST /rag/query` valida la respuesta
+- **THEN** O-1 está en `discardedOptions` con `discardReason = lenguaje_no_permitido`
+- **AND** `checkProhibitedTerms` sobre la respuesta serializada completa devuelve cero coincidencias
+
+#### Scenario: Término prohibido en una afirmación de la opción [RN-23]
+- **GIVEN** una afirmación de la opción que contiene un término de la lista de términos prohibidos
+- **WHEN** pasa `checkProhibitedTerms`
+- **THEN** la opción va a `discardedOptions` con `discardReason = lenguaje_no_permitido`
+- **AND** esa razón precede a `afirmacion_sin_soporte`, incluidos los modales que están en la lista
+
+#### Scenario: Término prohibido en una limitación [RN-23]
+- **GIVEN** una limitación propuesta que contiene un término de la lista de términos prohibidos
+- **WHEN** pasa `checkProhibitedTerms`
+- **THEN** la limitación se omite y se cuenta
+
+#### Scenario: lenguaje_no_permitido queda reservado a la lista [RN-23]
+- **GIVEN** un modal normativo que no está en la lista de términos prohibidos
+- **WHEN** se valida la afirmación
+- **THEN** sigue la regla de forma (D-a) y no produce `lenguaje_no_permitido`
 
 ### Requirement: El retiro por lenguaje se registra sin el texto retirado
 Por cada fragmento retirado por términos prohibidos, `rag-orchestrator` MUST registrar en el log el `ruleId` de la regla coincidente y la versión de la política de lenguaje (`version` de `terminos-prohibidos.json`), y SHALL NOT registrar el texto retirado ni el término (`[S1 resp. 29]`). La traza completa persistida es de US-150 (S6).
@@ -257,7 +323,7 @@ Cuando hay chunks sobre el umbral pero el LLM no propone ninguna opción, `POST 
 - **AND** la respuesta valida contra `RagQueryInternalResponse`
 
 ### Requirement: Recorte de opciones validadas a maxOptions
-Tras la validación de citas (RN-01, RN-04) y de soporte NLI y lenguaje (RN-23), el pipeline MUST conservar como máximo `maxOptions` opciones (FR-09), valor que `clinical-api` envía desde su configuración (RN-22). El orden SHALL aplicarse después de la validación y antes del recorte: una opción descartada (`discardedOptions`) nunca ocupa una posición. El excedente se omite sin listarlo en `discardedOptions` (asumido, aceptado `[S1 resp. 3]`).
+Tras la validación de citas (RN-01, RN-04) y de soporte NLI y lenguaje (RN-23), el pipeline MUST conservar como máximo `maxOptions` opciones (FR-09; 1 en S1–S3 y hasta 3 desde el S4), valor que `clinical-api` envía desde su configuración (RN-22). El orden SHALL aplicarse después de la validación y antes del recorte: una opción descartada (`discardedOptions`) nunca ocupa una posición.
 
 #### Scenario: Con maxOptions 1 y dos opciones válidas queda la más relevante y la otra no es descartada [US-225 AC-3] [FR-09] [RN-28]
 - **GIVEN** FX-06a-a, `maxOptions = 1`, el LLM falso `LLM-DOS` (opción que cita `ch-m1-1`, 0,87, y opción "Terapia anti-HER2 sola" que cita `ch-inj-1`, 0,40), el NLI falso en `entailment` y un pipeline sin aplicabilidad calculada (`applicability = []`)
@@ -276,7 +342,7 @@ Tras la validación de citas (RN-01, RN-04) y de soporte NLI y lenguaje (RN-23),
 - **WHEN** `clinical-api` envía la consulta a `POST /rag/query` con un JWT de servicio válido
 - **THEN** responde `200` con `evidenceOptions` de 1 elemento: O-B
 - **AND** O-A no aparece en `evidenceOptions` ni en `discardedOptions`
-- **AND** O-B trae `applicabilitySummary = { coincide: 2, parcial: 0, noCoincide: 0, desconocido: 3 }` (`estadio` queda `desconocido` sin causa: el catálogo de test no declara escala para el estadio) y `perSource` con `doc-a1`
+- **AND** O-B trae `applicabilitySummary = { coincide: 2, parcial: 0, noCoincide: 0, desconocido: 3 }` (`estadio` queda `desconocido` con `unknownReason = sin_regla_de_comparacion`: el catálogo de test no define cómo comparar el estadio) y `perSource` con `doc-a1`
 - **AND** la respuesta valida contra `RagQueryInternalResponse`
 
 #### Scenario: A igualdad de conteos la relevancia desempata la opción única [US-125 AC-6] [AC-10.1] [RN-28] [RN-03]
@@ -285,7 +351,7 @@ Tras la validación de citas (RN-01, RN-04) y de soporte NLI y lenguaje (RN-23),
 - **THEN** `evidenceOptions` tiene 1 elemento: O-B
 
 #### Scenario: Una opción descartada por soporte nunca ocupa la posición aunque sea la más aplicable [US-125 AC-7] [RN-01] [FR-10] [RN-28]
-- **GIVEN** FX-08b-b, `maxOptions = 1` y el LLM falso `LLM-SIN-SOPORTE-APL` (O-B' cita `ch-a1-1`, más aplicable, con una afirmación que el NLI falso marca `neutral`; O-A cita `ch-a4-1` con `entailment`)
+- **GIVEN** FX-08b-b, `maxOptions = 1` y el LLM falso `LLM-SIN-SOPORTE-APL` (O-B' cita `ch-a1-1`, más aplicable, con su afirmación `principal` en `neutral` según el NLI falso; O-A cita `ch-a4-1` con todas sus afirmaciones en `entailment`)
 - **WHEN** se procesa la consulta en `POST /rag/query`
 - **THEN** `evidenceOptions` = [O-A]
 - **AND** O-B' aparece en `discardedOptions` con `discardReason = afirmacion_sin_soporte`
@@ -298,13 +364,39 @@ Tras la validación de citas (RN-01, RN-04) y de soporte NLI y lenguaje (RN-23),
 - **AND** la relevancia solo desempata a igualdad de conteos (RN-03)
 - **AND** sin aplicabilidad se conservan las de mayor `relevanceScore`, a igualdad la de menor `chunkId` de su cita principal
 
-### Requirement: Salida del LLM inválida responde 503 LOCAL_LLM_UNAVAILABLE
-Si el LLM no responde o devuelve un JSON no parseable o que no valida contra el esquema interno de generación, `POST /rag/query` MUST responder `503` con `error = "LOCAL_LLM_UNAVAILABLE"` (alternativa `ErrorLlmLocalNoDisponible` del `oneOf` del `503`), sin reintento silencioso, sin respuesta parcial y sin eco del texto generado (`[S1 resp. 12]`, RN-12).
+#### Scenario: Con maxOptions 3 el excedente se declara solo como número [US-134 AC-3] [FR-09] [S4 resp. 7] [S4 resp. 11]
+- **GIVEN** FX-10c-a, `ANALYSIS_MAX_OPTIONS = 3` y `LLM-CUATRO` (O-A con 1 excluyente fuera del tope; O-E con su afirmación `principal` sin soporte NLI)
+- **WHEN** se procesa `Q-HER2` en `POST /rag/query`
+- **THEN** `optionsNotShown = 1`
+- **AND** O-A no aparece en `evidenceOptions` ni en `discardedOptions` y ningún campo de la respuesta ni de los logs contiene su título, justificación ni citas
+- **AND** con `LLM-TRES` `optionsNotShown = 0`, presente en la respuesta y no ausente
+- **AND** la respuesta valida contra `RagQueryInternalResponse`
+
+#### Scenario: El excedente se cuenta en optionsNotShown sin su contenido [US-134] [S4 resp. 7]
+- **GIVEN** más opciones validadas que `maxOptions`
+- **WHEN** el pipeline recorta
+- **THEN** el excedente se omite sin listarlo en `discardedOptions`
+- **AND** `optionsNotShown` (entero >= 0, emitido siempre por `rag-orchestrator`, `0` si no hubo recorte) lo cuenta sin ningún contenido de las opciones recortadas
+
+### Requirement: Salida del LLM inválida responde 503 LLM_OUTPUT_INVALID
+Si el LLM devuelve un JSON no parseable o que no valida el esquema interno (p. ej. dos `principal` o ninguna), `POST /rag/query` MUST responder `503` con `error = "LLM_OUTPUT_INVALID"` (`ErrorSalidaLlmInvalida`); si no responde, `503 LOCAL_LLM_UNAVAILABLE`. Sin reintento silencioso, respuesta parcial ni eco del texto generado; el log solo registra el tipo de error (`[S1 resp. 12]`, RN-12, Q1 2026-10-30).
+
+#### Scenario: Una salida con dos afirmaciones principales responde 503 LLM_OUTPUT_INVALID [US-245 AC-1] [RN-01] (decisión Q1, 2026-10-30)
+- **GIVEN** `Q-HER2` y un LLM falso cuya opción trae dos afirmaciones con `role = principal`
+- **WHEN** se procesa la consulta
+- **THEN** responde `503` con `error = "LLM_OUTPUT_INVALID"`, `message` y `traceId`, sin eco del texto generado y sin opciones
+- **AND** la respuesta valida contra el `503` de `/rag/query` del `openapi.yaml` del proveedor
+- **AND** el log registra el tipo de error de validación y no contiene el texto de la salida del LLM
+
+#### Scenario: Un LLM que no responde sigue respondiendo LOCAL_LLM_UNAVAILABLE [US-245 AC-1] [RN-12] (regresión, decisión Q1)
+- **GIVEN** `Q-HER2` y el adapter LLM falso configurado para lanzar un error de conexión
+- **WHEN** se procesa la consulta
+- **THEN** responde `503` con `error = "LOCAL_LLM_UNAVAILABLE"` y nunca `LLM_OUTPUT_INVALID`
 
 #### Scenario: Un JSON fuera de esquema del LLM responde 503 sin opciones [S1 resp. 12]
 - **GIVEN** FX-06a-a, `Q-HER2` con contexto de mama y un LLM falso que devuelve un JSON sin el campo `options`
 - **WHEN** se procesa la consulta
-- **THEN** responde `503` con `error = "LOCAL_LLM_UNAVAILABLE"`, `message` y `traceId`
+- **THEN** responde `503` con `error = "LLM_OUTPUT_INVALID"`, `message` y `traceId`
 - **AND** el cuerpo no contiene `evidenceOptions` ni texto generado
 - **AND** la respuesta valida contra el `503` de `/rag/query` del `openapi.yaml` del proveedor
 
@@ -501,12 +593,12 @@ El bloque de datos del paciente y sus etiquetas MUST NOT contener ningún `termi
 - **THEN** devuelve cero coincidencias y no aparece ningún `pseudoPatientId` ni `dataRef`
 
 ### Requirement: La versión del prompt de generación queda registrada en meta
-`meta.promptVersion` MUST comenzar por `rag-query@0.4.0`; cuando el camino textual de aplicabilidad de `l1d-128` invoca al LLM, MAY continuar con el sufijo `+aplicabilidad-texto@0.1.0` sin espacios. Las comprobaciones SHALL usar un prefijo tolerante a ese sufijo, para no acoplar este change al de aplicabilidad.
+`meta.promptVersion` MUST comenzar por `rag-query@0.4.0`; cuando el respaldo de población de `l1d-294` invoca al LLM, MAY continuar con el sufijo `+poblacion_v1` (la versión de `POPULATION_PROMPT_VERSION`) sin espacios. Las comprobaciones SHALL usar un prefijo tolerante a ese sufijo, para no acoplar este change al de aplicabilidad.
 
 #### Scenario: La versión del prompt empieza por rag-query@0.4.0 con o sin sufijo de aplicabilidad [US-065 AC-5] [RN-07] (asumido: sufijo de l1d-128)
 - **GIVEN** una consulta a `/rag/query` con el contexto de FX-T1a-a y el LLM falso
 - **WHEN** se lee `meta.promptVersion` de la respuesta
-- **THEN** el valor coincide con `^rag-query@0\.4\.0(\+aplicabilidad-texto@0\.1\.0)?$`
+- **THEN** el valor coincide con `^rag-query@0\.4\.0(\+poblacion_v1)?$`
 
 ### Requirement: Metadato factual ausente del catálogo viaja como null
 Si el catálogo no registra un metadato factual de la fuente (columna nula o texto vacío), el campo correspondiente de `CitedSource` MUST viajar `null`; SHALL NOT rellenarse con `""`, `0`, un valor por defecto, un centinela de texto ("No disponible" es solo texto de la UI) ni un valor de otra fuente o del texto generado (RN-25).
@@ -596,3 +688,227 @@ Los alias MUST vivir solo dentro de una consulta de generación: la respuesta de
 - **WHEN** se completa el análisis de punta a punta y se inspeccionan la respuesta serializada, el `AIAnalysisRecord` persistido y los logs capturados
 - **THEN** cada `citedSources[].chunkId` es un `chunkId` real del corpus
 - **AND** ninguna de las tres salidas contiene `C1` ni `C2` como identificador de chunk
+
+### Requirement: La recuperación híbrida suma la rama sparse antes del reranker
+Con `RETRIEVAL_MODE = hibrida`, `/rag/query` MUST ejecutar una búsqueda *dense* y una *sparse* (BGE-M3, mismo `SPARSE_VECTOR_SOURCE` que el corpus), fusionar sus candidatos con la regla de `RETRIEVAL_FUSION` y entregarlos al *reranker*; el `relevanceScore` MUST seguir saliendo solo del *reranker* (RN-03).
+
+#### Scenario: Un chunk hallado solo por la rama sparse llega al reranker y se cita [US-112 AC-1] [AC-06.1] [FR-09]
+- **GIVEN** `RETRIEVAL_MODE = hibrida`, FX-06a-a con `ch-m2-1` fuera del top-k *dense* y primero en el recuperador *sparse* falso para `Q-KEYWORD`
+- **WHEN** `clinical-api` envía `Q-KEYWORD` a `POST /rag/query` con un JWT de servicio válido
+- **THEN** `ch-m2-1` llega a los candidatos del *reranker*, la respuesta es `con_evidencia` y la opción cita `ch-m2-1`
+
+#### Scenario: La relevancia es la del reranker, no la de la fusión [US-112 AC-2] [RN-03] [ADR-8]
+- **GIVEN** la respuesta del escenario anterior con el *reranker* falso dando 0,82 a `ch-m2-1`
+- **WHEN** se inspecciona la respuesta
+- **THEN** `relevanceScore = 0.82`
+- **AND** no es el puntaje RRF ni el ponderado
+
+### Requirement: Ambas ramas aplican el mismo filtro de vigencia y tipo de cáncer
+La búsqueda *sparse* MUST usar el mismo filtro escalar que la *dense* (`is_current == true`, `cancer_type_tags`, `population`, `source_type`); un chunk no vigente o de otro tipo de cáncer SHALL quedar fuera de los candidatos del *reranker* y de las citas aunque la rama *sparse* lo devuelva primero (RN-05).
+
+#### Scenario: Un chunk no vigente devuelto por el sparse no llega al reranker [US-112 AC-3] [RN-05] [AC-06.1]
+- **GIVEN** `RETRIEVAL_MODE = hibrida`, `ch-m1v0-1` (`is_current = false`) devuelto primero por el recuperador *sparse* falso y `ch-p1-1` (próstata)
+- **WHEN** se procesa `Q-HER2` con un caso de mama
+- **THEN** la expresión de filtro de ambas ramas incluye `is_current == true` y restringe `cancer_type_tags` a mama
+- **AND** ni `ch-m1v0-1` ni `ch-p1-1` llegan al *reranker* ni a las citas
+
+### Requirement: El modo híbrido no invoca al LLM sin evidencia
+En modo híbrido, sin chunks sobre el umbral la respuesta MUST ser `sin_evidencia` con `topRelevanceScore = null` y cero invocaciones del LLM de generación y del agente (RN-02); el LLM de reescritura de consulta (RN-02 enmendada, E-14, l1d-300) se invoca como mucho una vez, según `QUERY_REWRITE_ENABLED`.
+
+#### Scenario: Q-SIN en modo híbrido responde sin_evidencia [US-112 AC-4] [RN-02]
+- **GIVEN** `RETRIEVAL_MODE = hibrida` y el adapter falso del LLM de generación con contador
+- **WHEN** se procesa `Q-SIN`
+- **THEN** responde `sin_evidencia` y el LLM de generación registra cero invocaciones
+
+### Requirement: Modo, fusión y parámetros en configuración y trazados
+`RETRIEVAL_MODE`, `RETRIEVAL_FUSION`, `RRF_K` y `HYBRID_SPARSE_WEIGHT` MUST leerse de configuración (RN-22), sin literales en código, y `meta.retrievalParams` SHALL registrar siempre `retrievalMode`, `fusion` y `fusionParam`, sin `null` (`fusion = ninguna` y `fusionParam = 0` en `dense`), en `/rag/query` y en `/rag/follow-up`, y persistirse en `retrieval_params` (AC-T1.4).
+
+#### Scenario: Los parámetros de RRF quedan en meta y persistidos [US-112 AC-5] [RN-22] [AC-T1.4] [S4 resp. 18]
+- **GIVEN** `RETRIEVAL_MODE = hibrida`, `RETRIEVAL_FUSION = rrf` y `RRF_K = 60`
+- **WHEN** se procesa cualquier consulta
+- **THEN** `meta.retrievalParams` trae `retrievalMode = hibrida`, `fusion = rrf` y `fusionParam = 60`
+- **AND** el mismo bloque se persiste en `retrieval_params` del `AIAnalysisRecord`
+
+#### Scenario: Los logs de la recuperación híbrida no llevan texto [US-112 AC-5] [RN-10]
+- **GIVEN** `RETRIEVAL_MODE = hibrida` y la captura de logs del servicio
+- **WHEN** se procesa `Q-KEYWORD`
+- **THEN** los logs pueden traer `retrievalMode`, `fusion`, `fusionParam`, recuentos por rama y `chunkId`
+- **AND** no contienen el texto de la consulta, de ningún fragmento, del *prompt* ni de la salida del LLM
+
+### Requirement: Por defecto la recuperación es dense y la fusión ponderada es alternativa
+Sin `RETRIEVAL_MODE` definido el servicio MUST recuperar en `dense` sin invocar la rama *sparse*; con `RETRIEVAL_FUSION = ponderada` y `HYBRID_SPARSE_WEIGHT = 0,3` MUST fusionar por suma ponderada y trazar el peso.
+
+#### Scenario: Sin configuración el modo es dense y el sparse no se llama [US-112 AC-6] [RN-22] [ADR-45] [S4 resp. 17]
+- **GIVEN** `RETRIEVAL_MODE` sin definir y el recuperador *sparse* falso con contador
+- **WHEN** se procesa `Q-KEYWORD`
+- **THEN** el contador *sparse* es 0, `retrievalMode = dense` y `ch-m2-1` no llega al *reranker*
+- **AND** `fusion = ninguna` y `fusionParam = 0`, sin ningún `null` en `meta.retrievalParams`
+
+#### Scenario: La fusión ponderada recupera el chunk y traza su peso [US-112 AC-6] [RN-22] [ADR-45] [S4 resp. 18]
+- **GIVEN** `RETRIEVAL_MODE = hibrida`, `RETRIEVAL_FUSION = ponderada` y `HYBRID_SPARSE_WEIGHT = 0,3`
+- **WHEN** se procesa `Q-KEYWORD`
+- **THEN** `ch-m2-1` llega al *reranker*
+- **AND** `meta.retrievalParams` registra `fusion = ponderada` y `fusionParam = 0.3`
+
+### Requirement: El generador escribe afirmaciones atómicas con papel
+La generación de `POST /rag/query` MUST producir por opción de 1 a `CLAIMS_MAX_PER_OPTION` afirmaciones `{text, role, citations}` con `role` en `principal | secundaria | salvedad`, exactamente una `principal`, cada `text` de a lo sumo `CLAIM_MAX_WORDS` palabras (RN-22), declarativo y sin modal normativo ni alias de fragmento. Es el esquema interno del LLM, no del contrato público; la versión del prompt vive en configuración (FR-10, ADR-34, `[S4 resp. 2]`).
+
+#### Scenario: Una salida con una principal y afirmaciones dentro del límite valida el esquema interno [US-245 AC-1] [RN-22]
+- **GIVEN** `Q-HER2` y `LLM-ATOM-OK` (una `principal`, una `secundaria` y una `salvedad`, cada una ≤ `CLAIM_MAX_WORDS` palabras)
+- **WHEN** se procesa la consulta
+- **THEN** la salida valida el esquema interno y la respuesta es `200`
+- **AND** el esquema `claims[]` no aparece en la respuesta serializada
+
+### Requirement: El código compone el marco de atribución de la opción
+`rag-orchestrator` MUST componer `rationale` como «La fuente reporta que » seguido de la afirmación principal, y cada afirmación secundaria y salvedad en `details` con el mismo marco, en el idioma de la pregunta («The source reports that…»), con una función pura de `domain/`; el LLM SHALL NOT escribir la atribución (ADR-34, `[S4 resp. 2]`).
+
+#### Scenario: Con las tres afirmaciones implicadas O-1 queda en evidenceOptions con el marco y el NLI recibe solo la afirmación y su chunk [US-245 AC-1] [RN-01] [ADR-34] [RN-04] [RN-24]
+- **GIVEN** `Q-HER2`, `LLM-ATOM-OK` y el NLI falso en `entailment` de FX-T1a-b
+- **WHEN** `POST /rag/query` valida la respuesta
+- **THEN** O-1 está en `evidenceOptions` con `rationale` igual a «La fuente reporta que » más la afirmación principal
+- **AND** cada afirmación secundaria y salvedad figura en `details` con el mismo marco
+- **AND** el adapter NLI se invocó 3 veces, cada una con la afirmación sin el marco como hipótesis y solo el texto de `ch-m1-1` como premisa, nunca otra afirmación generada ni el marco
+- **AND** ninguna cita es un análisis previo (regresión [RN-24] activa desde S4; control de la memoria en US-191, Post-MVP)
+
+### Requirement: Una afirmación fuera de forma cuenta como sin soporte antes del NLI
+Después de `checkProhibitedTerms` y sin invocar al NLI, una afirmación con alias de fragmento o con más de `CLAIM_MAX_WORDS` palabras MUST tratarse como sin soporte con la regla de su papel. Su texto SHALL NOT aparecer en ningún campo de la respuesta: si descarta la opción, `unsupportedClaims` recibe el literal «(texto no mostrado)» (RN-23, `[S4 resp. 2]`, OUT-08).
+
+#### Scenario: Una secundaria con alias de fragmento se omite y la opción se conserva [US-245 AC-5] [OUT-08] [RN-01] (asumido: tratamiento previo al NLI)
+- **GIVEN** `Q-HER2` y `LLM-ATOM-ALIAS`, cuya secundaria empieza por «El fragmento C1 reporta que…»
+- **WHEN** `POST /rag/query` valida la respuesta
+- **THEN** esa secundaria se omite y `omittedClaims = 1`
+- **AND** O-1 se conserva en `evidenceOptions` por su principal
+- **AND** la cadena «fragmento C» no aparece en la respuesta serializada
+
+### Requirement: Una afirmación con modal normativo descarta la opción sin exponer su texto
+Una afirmación con modal normativo fuera de la lista de términos prohibidos (p. ej. «debería») MUST descartar la opción con `afirmacion_sin_soporte` en cualquier papel, sin invocar al NLI (D-a, usuario, 2026-10-30). Su texto SHALL NOT exponerse: `unsupportedClaims` recibe «(texto no mostrado)» (RN-23). Los modales de la lista prohibida van antes a `lenguaje_no_permitido`.
+
+#### Scenario: Una afirmación con modal normativo descarta la opción sin exponer su texto [US-245 AC-5] [RN-23] [RN-01] (decisión D-a, 2026-10-30)
+- **GIVEN** `Q-HER2` y `LLM-ATOM-MODAL`, cuya secundaria contiene el modal normativo «debería» (fuera de la lista de términos prohibidos) y cuyas principal y salvedad están en `entailment`
+- **WHEN** `POST /rag/query` valida la respuesta
+- **THEN** O-1 está en `discardedOptions` con `discardReason = afirmacion_sin_soporte` y `unsupportedClaims = ["(texto no mostrado)"]`
+- **AND** el texto de esa afirmación no aparece en ningún campo de la respuesta serializada
+- **AND** el adapter NLI no se invocó para esa afirmación
+
+#### Scenario: Una principal con modal normativo descarta la opción y su texto no aparece en ningún campo [US-245 AC-5] [RN-23] (decisión D-a, 2026-10-30)
+- **GIVEN** `Q-HER2` y `LLM-ATOM-MODAL-PRIN`, cuya principal contiene el modal normativo «debería»
+- **WHEN** `POST /rag/query` valida la respuesta
+- **THEN** O-1 está en `discardedOptions` con `discardReason = afirmacion_sin_soporte` y `unsupportedClaims = ["(texto no mostrado)"]`
+- **AND** el texto de la principal no aparece en `rationale`, `details` ni en ningún otro campo de la respuesta serializada
+
+### Requirement: Hasta tres opciones en orden determinista por aplicabilidad
+Con `maxOptions = 3`, `evidenceOptions` MUST salir en el orden del comparador de aplicabilidad (RN-28, ADR-27) sobre la fuente más aplicable de cada opción validada, sin campo `rank` ni puntaje; la relevancia (RN-03) SHALL solo desempatar a igualdad de conteos, y el orden SHALL ser independiente del orden de salida del LLM. Una opción de población no comparable queda ordenada al final pero visible, con `populationNotComparable = true` y el aviso `poblacion_no_comparable` (RN-26).
+
+#### Scenario: Tres opciones ordenadas por aplicabilidad y no por relevancia [US-134 AC-1] [US-134 AC-2] [AC-10.1] [RN-28] [RN-03] [HU-10] [FR-09]
+- **GIVEN** FX-10c-a (A-M1, `Q-HER2`, `RELEVANCE_THRESHOLD = 0.30`, `test-apl-1.0.0`, `APL-FIJA`), `LLM-CUATRO` y `maxOptions = 3`
+- **WHEN** se procesa la consulta en `POST /rag/query`
+- **THEN** `evidenceOptions` = [O-B, O-D, O-C] en ese orden
+- **AND** O-C (relevancia 0,85) queda detrás de O-D (0,60) por tener menos criterios en Coincide, y O-B precede a O-D solo por relevancia (mismos conteos)
+
+#### Scenario: La opción no comparable queda última y visible [US-134 AC-4] [RN-28] [RN-26] [AC-08.8]
+- **GIVEN** FX-10c-a, `LLM-TRES` y `maxOptions = 3`
+- **WHEN** se procesa la consulta
+- **THEN** `evidenceOptions` = [O-B, O-C, O-A]
+- **AND** O-A trae `populationNotComparable = true` y `warnings` con `poblacion_no_comparable`
+
+#### Scenario: Una opción sin soporte no ocupa ninguna de las tres posiciones [US-134 AC-5] [RN-01] [FR-10] [AC-10.4]
+- **GIVEN** FX-10c-a, `LLM-CUATRO` (NLI falso `neutral` para la afirmación `principal` de O-E, "duplica la supervivencia") y `maxOptions = 3`
+- **WHEN** se valida
+- **THEN** O-E aparece en `discardedOptions` con `discardReason = afirmacion_sin_soporte`
+- **AND** `evidenceOptions` no contiene a O-E
+
+#### Scenario: El orden no depende del orden de salida del LLM [US-134 AC-6] [RN-28] [ADR-27]
+- **GIVEN** FX-10c-a y las 24 permutaciones del orden de salida de O-A…O-D del LLM falso
+- **WHEN** se procesa cada una con `maxOptions = 3`
+- **THEN** `evidenceOptions` es siempre [O-B, O-D, O-C]
+
+#### Scenario: Una opción con varias fuentes se compara con su fuente más aplicable [US-134 AC-7] [AC-08.8] [RN-28]
+- **GIVEN** FX-10c-a y `LLM-MULTIFUENTE` (O-F cita `ch-a4-1` y `ch-a1-1`)
+- **WHEN** se ordena
+- **THEN** O-F se compara con el resumen de `doc-a1` y no con el de `doc-a4`
+
+### Requirement: Un segundo loop de reescritura rescata el primer loop vacío
+Con cero chunks sobre el umbral en el primer loop y `QUERY_REWRITE_ENABLED = true`, el pipeline MUST invocar una vez la reescritura con el LLM local, recuperar de nuevo y, si algún chunk supera el umbral, continuar con la generación (FR-09). Con al menos un chunk sobre el umbral en el primer loop SHALL NOT invocarse.
+
+#### Scenario: El segundo loop recupera un chunk y el pipeline genera [US-238 AC-1] [AC-06.1] [RN-02] [FR-09]
+- **GIVEN** `Q-TYPO-SIN-EVIDENCIA` (FX-06b-a: `ch-m1-1` = 0,12 con la original y 0,74 con la reescritura, umbral 0,30) y `QUERY_REWRITE_ENABLED = true`
+- **WHEN** se procesa la consulta
+- **THEN** el primer loop no supera el umbral, la reescritura se invoca una vez y el segundo loop recupera al menos un chunk sobre el umbral
+- **AND** el pipeline continúa con la generación y `meta.retrievalParams.queryRewrite = { applied: true, reason: "disparado" }`
+
+#### Scenario: Con un chunk sobre el umbral la reescritura no se invoca [US-238 AC-2] [RN-02]
+- **GIVEN** un primer loop con al menos un chunk sobre el umbral y el LLM falso de reescritura con contador
+- **WHEN** se procesa la consulta
+- **THEN** el contador de llamadas del LLM de reescritura es 0
+- **AND** `meta.retrievalParams.queryRewrite = { applied: false, reason: "no_disparado" }`
+
+### Requirement: El segundo loop está acotado y se configura
+El segundo loop MUST ejecutarse como máximo `QUERY_REWRITE_MAX_ITERATIONS` veces, sin tercer loop, y `QUERY_REWRITE_ENABLED`, `QUERY_REWRITE_MAX_ITERATIONS` y `QUERY_REWRITE_DEADLINE_MS` SHALL leerse de configuración (RN-22).
+
+#### Scenario: Un LLM que siempre reformula produce un solo segundo loop [US-238 AC-4] [RN-22]
+- **GIVEN** `QUERY_REWRITE_MAX_ITERATIONS = 1` y un LLM falso que siempre propone otra reformulación
+- **WHEN** se procesa una pregunta con el primer loop vacío
+- **THEN** hay un solo segundo loop y no hay un tercero
+- **AND** las tres claves se leen de la configuración, sin literales en código
+
+### Requirement: Reescritura no disponible cae a sin_evidencia sin error
+Si el LLM local está caído o vence `QUERY_REWRITE_DEADLINE_MS`, el servicio MUST responder `sin_evidencia` con la pregunta original, `meta.retrievalParams.queryRewrite = { applied: false, reason: "no_disponible" }`, sin `5xx` por esto y sin *fallback* a la nube (RN-12).
+
+#### Scenario: LLM caído o vencido responde sin_evidencia [US-238 AC-5] [RN-12] (asumido)
+- **GIVEN** el LLM local caído o vencido el `QUERY_REWRITE_DEADLINE_MS` y un primer loop vacío
+- **WHEN** se procesa la pregunta
+- **THEN** la respuesta es `200 sin_evidencia` con `queryRewrite = { applied: false, reason: "no_disponible" }`
+- **AND** ningún proveedor de nube es invocado
+
+### Requirement: La consulta reescrita solo usa términos del catálogo
+Los términos que la reescritura agregue MUST existir en el catálogo versionado (`CLINICAL_CATALOG_PATH`); los ausentes SHALL descartarse sin inventar códigos (RN-27). Si no queda ningún término admitido, no hay segunda recuperación y la respuesta es `sin_evidencia` con `queryRewrite = { applied: false, reason: "no_disponible" }`.
+
+#### Scenario: Solo el término presente en el catálogo se usa [US-238 AC-6] [RN-27]
+- **GIVEN** un LLM falso que propone expandir `CDK4/6` con `ribociclib` (en el catálogo) y `farmaco-inventado-x` (ausente)
+- **WHEN** se arma la consulta del segundo loop
+- **THEN** solo `ribociclib` se usa para recuperar y `farmaco-inventado-x` se descarta
+
+#### Scenario: Sin términos del catálogo no hay segunda recuperación [US-238 AC-6] [RN-27]
+- **GIVEN** un primer loop vacío y un LLM falso que solo propone `farmaco-inventado-x`
+- **WHEN** se procesa la consulta
+- **THEN** no hay segunda búsqueda en Milvus y responde `sin_evidencia` con `queryRewrite = { applied: false, reason: "no_disponible" }`
+
+### Requirement: La pregunta original manda sobre la reescritura
+La reescritura MUST cambiar solo el vector enviado a Milvus: el reranker puntúa contra la pregunta original (el umbral se compara con ese puntaje) y la respuesta y el `AIAnalysisRecord` conservan la pregunta original (RN-03, RN-06).
+
+#### Scenario: Pregunta mostrada, guardada y puntuada es la original [US-238 AC-7] [RN-03] [RN-06]
+- **GIVEN** el caso de `Q-TYPO-SIN-EVIDENCIA` rescatado por el segundo loop
+- **WHEN** se completa la respuesta
+- **THEN** la pregunta mostrada y guardada es la original y el reranker puntuó los chunks del segundo loop contra ella
+- **AND** la reescritura solo cambió el vector enviado a Milvus
+
+### Requirement: La reescritura no filtra PII ni usa proveedores no locales
+El prompt de reescritura MUST contener exactamente la pregunta recibida por `rag-orchestrator` (ya enmascarada por `clinical-api`, RN-11), sin `clinicalContext`, `pseudoPatientId` ni memoria rotulada; el proveedor SHALL ser local y los logs MAY registrar recuentos, `rewriteApplied`, `reason`, `latencyMs` y `chunkId`, pero MUST NOT registrar el texto de la pregunta, de la consulta reescrita, de un fragmento, del *prompt* ni la salida del LLM (RN-10, RN-12).
+
+#### Scenario: El prompt de reescritura es solo la pregunta recibida y los logs no llevan texto [US-238 AC-8] [RN-10] [RN-11] [RN-12]
+- **GIVEN** una petición a `/rag/query` con `clinicalContext` y `pseudoPatientId` no vacíos, primer loop vacío, proveedor local y el fake de `QueryRewriter` que captura su *prompt*
+- **WHEN** se invoca la reescritura
+- **THEN** la pregunta incluida en el *prompt* capturado es exactamente la `query` recibida, y el *prompt* no contiene `clinicalContext`, el `pseudoPatientId` ni memoria rotulada
+- **AND** ningún proveedor de nube es invocado
+- **AND** los logs contienen `rewriteApplied`, `reason` y `latencyMs` y ningún texto de pregunta, reescritura, fragmento, *prompt* ni salida del LLM
+
+#### Scenario: La PII sembrada en la pregunta llega enmascarada a rag-orchestrator [US-238 AC-8] [US-049] [RN-11]
+- **GIVEN** `clinical-api` con una pregunta del doctor que contiene PII sembrada y MSW capturando el request saliente a `POST /rag/query`
+- **WHEN** se ejecuta el análisis
+- **THEN** la `query` capturada trae la PII enmascarada (regresión de US-049 en `clinical-api`, que es quien enmascara)
+
+### Requirement: queryRewrite se emite siempre y sin nulos; el segundo loop solo corre en /rag/query
+`meta.retrievalParams.queryRewrite` MUST emitirse sin `null` en toda respuesta de `/rag/query` y `/rag/follow-up`. El segundo loop SHALL correr solo en `/rag/query`; `/rag/follow-up` MUST emitir `{applied: false, reason: "no_aplica"}` sin invocar la reescritura, así la memoria rotulada nunca llega a ese *prompt* (RN-24). Con `QUERY_REWRITE_ENABLED = false` SHALL emitirse `no_disparado`.
+
+#### Scenario: El seguimiento declara no_aplica y no invoca la reescritura [US-238] [RN-24] [decisión D-c]
+- **GIVEN** el armado de `retrievalParams` para una respuesta de `/rag/follow-up` y el fake de `QueryRewriter` con contador
+- **WHEN** se arma la respuesta (en integración si la ruta ya existe; si no, sobre `_armar_meta_de_recuperacion` y el ejemplo `rag-follow-up-response.json`)
+- **THEN** `meta.retrievalParams.queryRewrite = { applied: false, reason: "no_aplica" }`
+- **AND** el contador de `QueryRewriter` es 0
+
+#### Scenario: Reescritura desactivada se traza como no disparada [US-238 AC-4] [RN-22]
+- **GIVEN** `QUERY_REWRITE_ENABLED = false` y un primer loop vacío
+- **WHEN** se procesa la consulta
+- **THEN** responde `sin_evidencia` con `queryRewrite = { applied: false, reason: "no_disparado" }` y el contador de `QueryRewriter` es 0
+
+Regresión [RN-02] activa desde S3 (US-055): el escenario original de `Q-SIN` se conserva. Regresión [RN-03] (US-055) y [RN-10, RN-11, RN-12] (US-049) siguen en verde.

@@ -260,3 +260,128 @@ Volver a ejecutar `ingest reindex-sparse` MUST dejar los mismos `sparse_vector`.
 - **AND** ningún chunk cambió su `dense_vector`, su `chunk_id` ni su `is_current`, y una nueva ejecución completa la reindexación
 
 Regresión [RN-05] activa desde S1 (US-055 AC-3): la recuperación solo devuelve chunks `is_current`; la búsqueda híbrida que consume el *sparse* llega con US-112.
+
+### Requirement: population_criteria por criterio como lista acotada con procedencia
+La migración Alembic `0005`, ejecutada como `rag_corpus_migrator`, MUST dar a `population_criteria` la forma de lista por criterio con procedencia sin perder las filas existentes, SHALL tener `downgrade -1` y MUST NOT crear objetos fuera de `corpus`; el tope por fragmento y criterio sale de `POPULATION_MAX_VALUES_PER_CRITERION` (RN-22, ADR-47); la marca por criterio `{"status": "pendiente", "values": []}` forma parte de la forma nueva.
+
+#### Scenario: La migración 0005 conserva las filas y es reversible [US-241 AC-3] [ADR-47] [RN-05]
+- **GIVEN** un schema `corpus` migrado a `0004` con `doc-a1` en la forma antigua de `population_criteria`
+- **WHEN** se aplica `alembic upgrade head` (0005) y luego `alembic downgrade -1`
+- **THEN** tras el `upgrade` existe la forma nueva por criterio y `doc-a1` conserva su valor
+- **AND** tras el `downgrade` el schema y las filas coinciden con los de `0004` y `alembic heads` informa una sola cabeza
+
+#### Scenario: La migración no abre la frontera de rag_corpus [US-241 AC-6] [AC-T4.4] [SEG-06]
+- **WHEN** corre la CI con `0005` aplicada con el rol migrador del schema `corpus`
+- **THEN** ninguna tabla nueva queda fuera de `corpus` y los tests de *permission denied* del rol `rag_corpus` sobre `auth`, `identity`, `clinical`, `audit` y `research` siguen en verde
+
+Regresión [AC-T4.4] activa desde S2 (US-040): con el rol `rag_corpus`, `SELECT` sobre esos schemas → *permission denied*.
+
+### Requirement: Extracción de la población en abanico, una tarea por documento y criterio
+La ingesta MUST ejecutar una tarea por cada criterio del catálogo vigente, con como máximo `POPULATION_EXTRACTION_TOP_K` fragmentos del mismo documento, y guardar por criterio una lista con `value`, `chunkId`, `scope`, versiones y `nliResult` (`metadata_source = extraido_verificado`). El prompt MUST NOT incluir datos de pacientes (RN-21, RN-13).
+
+#### Scenario: Seis llamadas por documento y valores guardados con su fragmento [US-242 AC-1] [FR-19] [ADR-47]
+- **GIVEN** `doc-e1`, `test-apl-1.2.0` (6 criterios), `POPULATION_EXTRACTION_TOP_K = 2` y `EXT-OK` de FX-06c-c
+- **WHEN** se ingiere `doc-e1`
+- **THEN** el adapter de extracción registra 6 llamadas (una por criterio), cada prompt lleva como máximo 2 fragmentos y todos de `doc-e1`
+- **AND** `population_criteria.estado_menopausico` guarda los dos valores con `chunkId = ch-e1-1`, `scope = elegibilidad`, las versiones de prompt, modelo y catálogo y `nliResult = entailment`, con `metadata_source = extraido_verificado`
+
+### Requirement: Rechazo de valores de relleno y de fragmentos ajenos
+La ingesta MUST rechazar los valores de relleno («not found», «no expresado», `none`) y los valores cuyo `chunkId` no exista en el documento, dejando el criterio con lista vacía y contando cada rechazo por motivo (`relleno`, `chunk_ajeno`) en `valoresRechazados` del resumen (RN-04).
+
+#### Scenario: Relleno y fragmento ajeno dejan la lista vacía [US-242 AC-2] [ADR47-R15] [ADR47-R16] [RN-04]
+- **GIVEN** `EXT-RELLENO` y `EXT-AJENO` y la ingesta de `doc-e1`
+- **WHEN** se ingiere `doc-e1`
+- **THEN** `ecog`, `estadio` y `estado_her2` quedan con lista vacía
+- **AND** el resumen cuenta `valoresRechazados = 3` (2 `relleno`, 1 `chunk_ajeno`)
+
+### Requirement: Solo se guardan valores con soporte NLI contra su fragmento
+Cada valor MUST verificarse con el NLI contra el fragmento que cita y solo se conserva con `entailment` ≥ `NLI_ENTAILMENT_THRESHOLD`; el resto MUST descartarse y contarse en `valoresSinSoporte` (RN-01, RN-25).
+
+#### Scenario: Un valor sin soporte NLI no se guarda [US-242 AC-3] [RN-01] [RN-25]
+- **GIVEN** `EXT-NLI` y el NLI falso en `neutral` para `stage I–III` contra `ch-e1-1`
+- **WHEN** se verifica el valor
+- **THEN** `estadio` queda con lista vacía
+- **AND** el resumen cuenta `valoresSinSoporte = 1`
+
+### Requirement: Deduplicación por valor normalizado
+Los valores de un criterio que coincidan tras normalizarse con los sinónimos del catálogo MUST guardarse una sola vez (RN-27).
+
+#### Scenario: Duplicados con distinta capitalización quedan en un valor [US-242 AC-4] [RN-27] [S4 resp. 3]
+- **GIVEN** `EXT-DUP` (`postmenopausal women` en `ch-e1-1` y `Postmenopausal women` en `ch-e1-3`)
+- **WHEN** se normaliza con los sinónimos del catálogo
+- **THEN** `estado_menopausico` guarda un valor, `postmenopausal women`, de `ch-e1-1`
+
+### Requirement: Tope de valores por fragmento y criterio con orden determinista
+Cada criterio MUST guardar como máximo `POPULATION_MAX_VALUES_PER_CRITERION` valores **por fragmento** (`chunkId`), leído de configuración, en orden `elegibilidad`, `subgrupo`, `mencion` y, a igual alcance, el de la salida; los valores de otros fragmentos del mismo criterio no cuentan para ese tope; si se supera, MUST registrar `truncado = true` y `valoresFueraDelTope` (RN-22, ADR-47).
+
+#### Scenario: Cuatro valores se reducen a tres [US-242 AC-5] [RN-22]
+- **GIVEN** `EXT-CUATRO` (4 valores de `linea_tratamiento` en el mismo fragmento: 2 de elegibilidad y 2 menciones) y `POPULATION_MAX_VALUES_PER_CRITERION = 3`
+- **WHEN** se guarda `linea_tratamiento`
+- **THEN** quedan 3 valores de ese fragmento: los 2 de elegibilidad y la primera mención de la salida
+- **AND** se registran `truncado = true` y `valoresFueraDelTope = 1`
+
+### Requirement: Salida cortada con reintento único y criterio pendiente
+Si una llamada termina con `finish_reason = length`, la ingesta MUST reintentar una sola vez con otra semilla; si el reintento también se corta, el criterio MUST guardarse con la marca `{"status": "pendiente", "values": []}` en `population_criteria` (forma de US-241), los demás criterios se guardan, el documento queda `embebido` y `finishReasonLength` suma las llamadas cortadas (RN-26).
+
+#### Scenario: El reintento recupera la salida cortada [US-242 AC-6] [ADR47-R4]
+- **GIVEN** `EXT-CORTE` (primera llamada truncada, segunda como `EXT-OK`)
+- **WHEN** se ingiere el documento
+- **THEN** ese criterio tiene exactamente 2 llamadas, la segunda con otra semilla, y sus valores quedan guardados
+
+#### Scenario: Dos cortes dejan el criterio pendiente sin bloquear el documento [US-242 AC-6] [RN-26]
+- **GIVEN** `EXT-CORTE-2` (las dos llamadas truncadas)
+- **WHEN** se ingiere el documento
+- **THEN** ese criterio queda guardado como `{"status": "pendiente", "values": []}` y los demás se guardan
+- **AND** el documento queda `embebido` y el resumen cuenta `finishReasonLength = 2`
+
+### Requirement: Caché de la extracción por versión
+La ingesta MUST NOT invocar al extractor para un documento y criterio ya extraídos con las mismas versiones de prompt, modelo y catálogo; un cambio de `POPULATION_PROMPT_VERSION` MUST volver a extraer todos los criterios (ADR-47).
+
+#### Scenario: Misma versión 0 llamadas, otra versión 6 [US-242 AC-7] [ADR-47] [ADR47-R8]
+- **GIVEN** `doc-e1` ya extraído
+- **WHEN** se vuelve a ingerir con las mismas versiones
+- **THEN** el adapter registra 0 llamadas
+- **AND** al cambiar `POPULATION_PROMPT_VERSION` y reingerir, registra 6 llamadas
+
+### Requirement: Concurrencia acotada y una fuente por llamada
+La extracción MUST ejecutarse con a lo sumo `POPULATION_EXTRACTION_CONCURRENCY` llamadas simultáneas y ninguna llamada MUST contener fragmentos de más de un documento (RN-22).
+
+#### Scenario: Doce llamadas, nunca más de dos simultáneas y ninguna mezclada [US-242 AC-8] [RN-22] [ADR47-R16]
+- **GIVEN** `doc-e1` y `doc-e2` y `POPULATION_EXTRACTION_CONCURRENCY = 2`
+- **WHEN** se ingieren
+- **THEN** el adapter registra 12 llamadas y nunca más de 2 simultáneas
+- **AND** ninguna llamada lleva fragmentos de los dos documentos
+
+### Requirement: Filtro de lenguaje prescriptivo sobre cada valor extraído
+La ingesta MUST recorrer cada valor extraído con el filtro de lenguaje prescriptivo (campo `studyPopulationValues[].value`, RN-23); un valor con un término prohibido MUST omitirse y contarse en `valoresConLenguajePrescriptivo`, nunca sustituirse por otro texto. Decidido (usuario, 2026-10-30).
+
+#### Scenario: Un valor con término prohibido se omite y se cuenta [US-242 AC-9] [RN-23]
+- **GIVEN** un valor propuesto con un término prohibido (`recommended treatment`) en un fragmento citado, y valores limpios en otros criterios
+- **WHEN** se ingiere el documento
+- **THEN** el criterio queda con lista vacía y el resumen cuenta `valoresConLenguajePrescriptivo = 1`
+- **AND** los demás valores se conservan y el valor prohibido no llega al NLI ni al catálogo
+
+### Requirement: Forma escrita coherente y acotada
+El escritor MUST emitir por criterio solo la lista de valores o exactamente `{"status": "pendiente", "values": []}` (nunca `{"values": […]}` sin `status`), MUST escribir `population_form = lista` coherente con la estructura (validada al escribir) y MUST descartar y contar un `value` de más de 200 caracteres (`maxLength` del contrato). Decidido (usuario, 2026-10-30; P4, P5 y P6 de `l1d-291`).
+
+#### Scenario: Un value de 201 caracteres no se guarda y se cuenta [US-242 D12] [P6]
+- **GIVEN** un valor propuesto de 201 caracteres
+- **WHEN** se ingiere el documento
+- **THEN** el criterio queda con lista vacía, el resumen cuenta `valoresDescartadosPorLongitud = 1` y el documento queda `embebido`
+
+#### Scenario: La forma escrita la lee el lector de US-241 sin forma inválida [US-242 D10] [P4] [P5]
+- **GIVEN** una ingesta con un criterio `pendiente` y otros con valores
+- **WHEN** el lector de `population_criteria` lee la fila
+- **THEN** `population_form = lista`, ningún criterio es inválido y el `pendiente` se lee como criterio pendiente sin valores
+
+Regresión [RN-21] activa desde S3 (US-059): la ingesta rechaza licencia no aceptada o fuente excluida antes de extraer.
+Regresión [RN-25] activa desde S3 (US-127): la ficha de la fuente muestra "No disponible" ante criterios sin valor verificado.
+
+### Requirement: El corpus de la demo trae metadatos de población extraidos y verificados
+El corpus de la demo ingerido con la extracción de población (US-242) MUST tener al menos 3 documentos con valores de población con `metadata_source = extraido_verificado`, cada valor con un `chunkId` de su documento y `nliResult = entailment`, todos con licencia aceptada (RN-21, RN-25).
+
+#### Scenario: Al menos 3 documentos de la demo con población verificada [US-247 AC-1] [OUT-07] [RN-21] [RN-25]
+- **GIVEN** el corpus de la demo ingerido con US-242
+- **WHEN** se consulta el catálogo del corpus
+- **THEN** al menos 3 documentos tienen valores de población con `metadata_source = extraido_verificado`
+- **AND** cada valor tiene un `chunkId` de su documento, `nliResult = entailment` y licencia aceptada

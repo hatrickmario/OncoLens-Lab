@@ -20,7 +20,7 @@
 
 ## clinical-platform
 
-- [ ] 1.1 TRASLADADA a L1D-297 (US-247, «demo datos, levantar y verificación»; propuesta del orquestador pendiente de aprobación del usuario) · Perfil de test E2E: `RAG_ADAPTERS=fake`, catálogo `test-apl-1.2.0` montado en ambos backends y seed de A-M1/A-M2 con FX-08b-a y FX-08b-c · test después (fixture)
+- [ ] 1.1 TRASLADADA a L1D-297 tarea 2.10 (US-247, «demo datos, levantar y verificación»; Decidido (usuario, 2026-10-31); DIFERIDA -> D4-35, S5) · Perfil de test E2E: `RAG_ADAPTERS=fake`, catálogo `test-apl-1.2.0` montado en ambos backends y seed de A-M1/A-M2 con FX-08b-a y FX-08b-c · test después (fixture)
 - [x] 1.2 Handlers MSW de `apps/web/tests/support/msw/` construidos desde `contracts/examples/`: `con-evidencia-s4-poblacion-a-m2.json` y
       `con-evidencia-s4-poblacion-a-m2-b.json` (0.1: conflicto, Parcial inclusiva y mezclada, subgrupo, 4 valores, `respaldo_fallido`,
       `sin_regla_de_comparacion`), `con-evidencia-s4-poblacion-lista.json` (`l1d-291`), `con-evidencia-s3-aplicabilidad.json` (A-M1,
@@ -44,7 +44,7 @@
 - [x] 2.6 Literales de estado, causa y rótulos en `apps/web/messages/es.json` (claves `evidence.aplicabilidad.*`) y `valoresDelEstudio()` en `apps/web/lib/evidence/` · `feat(L1D-131)`
 - [x] 2.7 `ApplicabilityTable` + `StudyValueList` + `UnknownReasonText`, montada desde `OptionApplicability`; AC-1…AC-10 en verde; unitarios uno a uno · `feat(L1D-131)`
 - [x] 2.8 Variante A responsive (tarjetas < 560 px), teclado y `aria-expanded`/foco; `visual-check` a 320, 375 y 1280 px con capturas y consola/red limpias · evidencia Gate 2
-- [ ] 2.9 TRASLADADA a L1D-297 (US-247; propuesta pendiente de aprobación del usuario; depende de 1.1: ejemplos `rag-query-*` nuevos, seed A-M1/A-M2 y catálogo `test-apl-1.2.0` en Compose) · Playwright contra Compose con FX-08b-a (AC-1…AC-7) y FX-08b-c (AC-8…AC-10) · E2E
+- [ ] 2.9 TRASLADADA a L1D-297 tarea 2.10 (US-247; Decidido (usuario, 2026-10-31); DIFERIDA -> D4-35, S5; depende de 1.1: ejemplos `rag-query-*` nuevos, seed A-M1/A-M2 y catálogo `test-apl-1.2.0` en Compose) · Playwright contra Compose con FX-08b-a (AC-1…AC-7) y FX-08b-c (AC-8…AC-10) · E2E
 - [x] 2.10 Regresión RN-23/RN-26/RN-19: textos nuevos recorridos por la lista de US-068; avisos sin bloquear; `aviso-ia.spec.ts` con la tabla desplegada (subcadena del `disclaimer` en `role="note"` y `es.app.academicUseLabel` en la cabecera) · test
 
 > Evidencia frontend (Vitest, jsdom + MSW desde `contracts/examples/`): AC-1…AC-4 `tests/ui/tabla-aplicabilidad-criterios.test.tsx` (rojo en `d1fd1609`, verde en `218ea4db`); AC-5…AC-7 `…-fuentes.test.tsx` (rojo `cfb5c29a`); AC-8…AC-10 `…-valores.test.tsx` (rojo `e09cc2af`); unitarios `tests/lib/{valores-del-estudio,motivo-del-estado,presentar-valor,presentar-criterio}.test.ts`.
