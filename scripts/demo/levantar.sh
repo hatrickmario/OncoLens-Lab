@@ -20,9 +20,8 @@ export LLM_MODEL="${LLM_MODEL:-gemma4:26b-a4b-it-q4_K_M}"
 # Puerto del Ollama que usa el demo (por defecto el 11434; otro puerto sirve para no tocar un Ollama ajeno).
 puerto_ollama="${OLLAMA_PUERTO:-11434}"
 export OLLAMA_HOST="127.0.0.1:${puerto_ollama}" LLM_BASE_URL="http://host.docker.internal:${puerto_ollama}/v1"
-# Paciente semilla (a): idSembrado('paciente-a'); ruta de inicio tras el login.
-PACIENTE_SEMILLA="0fd028e2-f8b0-56c7-a748-2a4e473d879d"
-export WEB_HOME_PATH="/pacientes/${PACIENTE_SEMILLA}/analisis"
+# Ruta de inicio tras el login, igual para médico y administrador: el listado de pacientes (feedback de la Demo 4).
+export WEB_HOME_PATH="/pacientes"
 # Plazos del demo (RN-22): el p95 de 15 s del NFR no se cumple con consultas variadas (ADR-39 fase B) y una pregunta larga
 # vence a los 30 s con DEADLINE_VENCIDO. El del web debe ser mayor que el de clinical-api hacia rag-orchestrator.
 export RAG_TIMEOUT_MS="${RAG_TIMEOUT_MS:-90000}"

@@ -205,3 +205,18 @@ describe('apagar.sh · [US-247 tareas de instalación] [OUT-05]', () => {
     expect(readFileSync(stub.registro, 'utf8')).toContain('docker rm -f attu');
   });
 });
+
+describe('ruta de inicio tras el login (feedback de la Demo 4, F1)', () => {
+  it('lleva al listado de pacientes a todos los roles cuando el demo fija WEB_HOME_PATH', () => {
+    const script = readFileSync(LEVANTAR, 'utf8');
+    const linea = script.split('\n').find((l) => l.startsWith('export WEB_HOME_PATH='));
+
+    const resultado = spawnSync('bash', ['-c', `${linea}; printf '%s' "$WEB_HOME_PATH"`], {
+      encoding: 'utf8',
+      timeout: PLAZO_MS,
+    });
+
+    expect(linea).toBeDefined();
+    expect(resultado.stdout).toBe('/pacientes');
+  });
+});
