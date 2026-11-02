@@ -3,6 +3,8 @@
 > Linear: [L1D-26](https://linear.app/l1der-lab-mjbc/issue/L1D-26)
 
 **Talla:** XL (6 historias; la re-ejecución atraviesa `web` → `clinical-api` → `rag-orchestrator`). **Propone división** sin cambiar IDs: **FEAT-11a-1** historial y marcas (US-174, US-175, US-176, US-179 parte de lectura) · **FEAT-11a-2** re-ejecución y comparación (US-177, US-178, US-179 parte de acciones) · **Sprint:** 6 · **Label:** `si-hay-capacidad` · **Capacidad:** CAP-11 (AC-11.1 historial, AC-11.2, AC-11.2b, AC-11.3) · T-2 (AC-T2.4: Base idéntica en el historial) · T-1 (AC-T1.4, AC-T1.5: re-ejecución auditada) · **Recorrido principal:** no
+
+> **Añadida (usuario, 2026-11-02):** US-251 (S6, 5 pts), desde el feedback de la Demo 4 (estabilidad del análisis).
 **Requisitos:** FR-12 (dueña) · RN-06, RN-15, RN-30 (regresión en la re-ejecución) · FR-18 (regresión: auditar la re-ejecución) · FR-23 (la re-ejecución recalcula faltantes)
 **Evidencia:** [→ PRD §5 FR-12], [→ PRD §6 RN-06, RN-15, RN-26, RN-30], [→ PRD §18.2 "Análisis desactualizado"], [→ PRD §18.3.11 AC-11.1, AC-11.2, AC-11.2b, AC-11.3, M-11.1, M-11.2], [→ PRD §18.4 AC-T1.4, AC-T1.5, AC-T2.4], [→ readme §3.1 `AI_ANALYSIS_RECORD` (`context_fingerprint`, `corpus_release`, `catalog_version`, tabla inmutable)], [→ readme §4.1 `GET …/analyses`, `POST …/rerun`, `GET …/compare`, `staleness`, `rerunOfAnalysisId`], [→ readme §5 HU-11, HU-24], [→ readme §2.6 (detector de desactualizados, dos marcas y cascada)]
 **Dependencias:** ↪ US-053 (análisis persistido con contexto y huella), US-066 (Base del análisis), US-119 (`CorpusRelease`), US-041 (versión de catálogo), FEAT-04 US-006 (`missing_critical_data` persistido), US-107, US-110 (correcciones y registros que cambian datos), US-148 (guardia de opt-out), US-056 (*rate limit*), US-150 (auditoría) · ⛔ ADR-39 (US-012) · solo para la re-ejecución con LLM real (los AC usan adapters falsos) · 🔗 Medido en: US-159 (M-11.1, M-11.2) · 🔗 Produce para: US-165 (versión más reciente en la cita), US-192 (cascada por memoria, FEAT-11c), US-195 (la evolución marca análisis desactualizados, FEAT-11b) · 🔗 Regresión [RN-15] → US-148 · 🔗 Regresión [RN-30] → US-056 · 🔗 Regresión [RN-06] → US-053 · 🔗 Regresión [FR-18] → US-150
@@ -271,6 +273,34 @@ análisis. Tests: Playwright con FX-11a-a sembrado y LLM falso en Compose (AC-1�
 ## INVEST
 **Small** ✓ una página y un Route Handler sobre endpoints ya probados.
 **Testable** ✓ cinco tests E2E.
+
+---
+
+## US-251 — La misma entrada devuelve el análisis ya guardado, rotulado como reutilizado, y «Re-ejecutar» genera uno nuevo
+
+> Linear: [L1D-307](https://linear.app/l1der-lab-mjbc/issue/L1D-307) (hija de L1D-26, Sprint 6, 5 pts; creada el 2026-11-02)
+
+`FEAT-11a` · Sprint 6 *(usuario, 2026-11-02)* · Estimación **5** *(propuesta; se confirma en el refinamiento del S6)* · CAP-11 · RN-06, RN-15, RN-22 · ↪ US-250 (pregunta normalizada), US-179 (re-ejecución desde el historial) · 🔗 Medido en: US-252
+
+> **Origen:** Demo 4 (2026-11-02), [`docs/evidence/S4-demo4/S4-demo-outcomes.md`](../../docs/evidence/S4-demo4/S4-demo-outcomes.md), **OUT-06**. Aun con la entrada idéntica, el motor del LLM puede dar dos salidas en prompts cercanos a un empate (experimento aislado: mismo prompt, dos salidas según el estado de la caché del motor). Devolver el análisis guardado garantiza que el oncólogo vea siempre lo mismo ante la misma entrada, y la re-ejecución sigue disponible de forma explícita (`rerunOfAnalysisId` ya existe en el contrato).
+
+## Story
+Como oncólogo, quiero ver el mismo análisis si repito la misma pregunta sobre el mismo paciente sin que nada haya cambiado, y poder pedir uno nuevo de forma explícita, para no recibir respuestas distintas a la misma pregunta.
+
+## AC (Given/When/Then)
+- **AC-1 (happy path · reutilización)** · Dado un análisis guardado para el mismo paciente, cuando se repite la petición y coinciden la pregunta normalizada (US-250), las fuentes seleccionadas, la huella del contexto clínico, la *release* del corpus, la versión del catálogo, la versión del prompt, el modelo (digest) y los parámetros de recuperación, entonces `clinical-api` devuelve ese análisis sin invocar a `rag-orchestrator` y la respuesta lo identifica como reutilizado, con el id y la fecha del original. `[OUT-06]` `[RN-06]`
+- **AC-2 (borde · algo cambió)** · Dado que cambió cualquiera de esos elementos (un dato del paciente, el corpus, el catálogo, el prompt o el modelo), cuando se repite la pregunta, entonces se genera un análisis nuevo. `[OUT-06]`
+- **AC-3 (borde · re-ejecutar)** · Dado un análisis reutilizado, cuando el oncólogo pulsa «Re-ejecutar», entonces se genera uno nuevo con `rerunOfAnalysisId` igual al original y no se reutiliza. `[OUT-06]`
+- **AC-4 (borde · opt-out y permisos)** · Dado un paciente con opt-out de `analisis_ia` registrado después del análisis guardado, cuando se repite la pregunta, entonces la respuesta es `403` y no se devuelve el análisis guardado. `[RN-15]`
+- **AC-5 (borde · vigencia)** · Dado un análisis guardado más antiguo que la ventana de reutilización (configuración, RN-22) o marcado como desactualizado, cuando se repite la pregunta, entonces se genera uno nuevo. `[RN-22]`
+- **AC-6 (UI)** · Dada una respuesta reutilizada, cuando el panel la muestra, entonces indica «Reutilizado del análisis del <fecha>» junto al botón «Re-ejecutar», sin ocultar los avisos de IA ni la Base del análisis. `[RN-19]`
+
+## Contexto técnico
+Clave de reutilización calculada en `clinical-api` (módulo `evidence-analysis`) con los elementos del AC-1; búsqueda en `AIAnalysisRecord` (ya persiste todo lo necesario: `context_fingerprint`, versiones de prompt, modelo, corpus y catálogo). Campo nuevo en `EvidenceAnalysis` para marcar la reutilización: cambio compatible (ADR-26), primero el contrato. Log `evidence_analysis.reutilizado` con `traceId` e id original, sin contenido. **Pendiente de refinamiento:** ventana de reutilización por defecto y si `sin_evidencia` también se reutiliza.
+
+## INVEST
+**Small** ⚠ 5 puntos: atraviesa contrato, `clinical-api` y `web`.
+**Testable** ✓ seis tests (Supertest con PostgreSQL real y Testing Library).
 
 ---
 

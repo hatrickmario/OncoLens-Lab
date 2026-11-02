@@ -3,6 +3,8 @@
 > Linear: [L1D-16](https://linear.app/l1der-lab-mjbc/issue/L1D-16)
 
 **Talla:** XL · **Sprint:** 1 (US-012 · ADR-39 fase A, US-224 · ADR-39 fase B, US-052…US-055, US-225, US-231a, US-231b) · 6 (US-056, US-057, US-239; S4 → S6, `[S4 resp. 1]`) · **Capacidad:** CAP-06 (S1), CAP-10 (S1), CAP-05 (AC-05.1, AC-05.3 parte S1) · T-1 (AC-T1.4) · T-4 (SEG-07, SEG-13) · **Recorrido principal:** sí
+
+> **Añadida (usuario, 2026-11-02):** US-250 (S5, 2 pts), desde el feedback de la Demo 4 (estabilidad del análisis).
 **Requisitos:** FR-09 (S1: dense, 1 opción, contrato `EvidenceAnalysis` final; dueña vía HU-03) · FR-25 (contrato vacío en el S1) · RN-02 (dueña) · RN-05 (dueña de la recuperación) · RN-06 (dueña) · RN-30 (dueña, Q-06 a) · SEG-07 · SEG-13 (V-17) · NFR-01 (medido), NFR-04, NFR-08 · IA-01…IA-04, IA-07, IA-11 · ADR-39
 **Evidencia:** [→ PRD §5 FR-09, FR-25], [→ PRD §6 RN-02, RN-03, RN-05, RN-06, RN-28, RN-30], [→ PRD §7 NFR (rendimiento, capacidad, fiabilidad)], [→ PRD §10], [→ PRD §11 #7, #13], [→ PRD §12], [→ PRD §18.3.5 AC-05.1, AC-05.3], [→ PRD §18.3.6 AC-06.1, AC-06.2, M-06.1, M-06.2], [→ PRD §18.3.10 AC-10.1, AC-10.4, M-10.1], [→ PRD §18.4 AC-T1.4], [→ readme §5 HU-03], [→ readme §6 OL-02, OL-03], [→ readme §4.1 `POST /platform/evidence-analyses`], [→ readme §4.2 `/rag/query`, `ClinicalContext`, `RagQueryInternalRequest/Response`], [→ readme §2.5 Rate limiting, credencial de servicio], [→ readme §3.3 #5, #8, #26], [→ readme §6.1 #1, #4, #6, #7, #8], [→ backlog/02-adrs.md ADR-39], [→ backlog/01-requisitos.md §14 Q-06]
 **Dependencias:** ↪ US-033 (contrato), US-038 (esquema), US-041 (catálogo), US-211 (sesión mínima, S1), US-049 (desidentificación), US-058/US-059 (corpus), US-063/US-064 (citas y soporte), US-065 (etiquetas), US-066 (Base del análisis) · ⛔ ADR-39 (adapters reales: `llm/`, `embeddings/`, `reranker/`, `nli/`; los de recuperación y NLI los construyen US-231a y US-231b) · 🔗 Medido en: US-072 (M-10.1, fidelidad y precisión de citas M-07.2), US-073 (M-06.1, M-06.2) · 🔗 Regresión [RN-15] → US-148 (activa desde S6) · 🔗 Regresión [RN-17] → US-198 (Post-MVP) · 🔗 Regresión [FR-15] → US-204 (Post-MVP)
@@ -719,6 +721,33 @@ Autoescalado o varias réplicas de `rag-orchestrator`. Cola persistente entre re
 **Testable** ✓ siete tests: seis con adapters falsos y la medición real con script.
 *(Estimable ⚠ el 5 asume que serializar el *pipeline* completo basta; si no, se divide en US-239a, compuerta, y US-239b, optimización de memoria o solape de etapas.)*
 
+
+---
+
+## US-250 — La pregunta del análisis se normaliza a Unicode NFC antes de guardarse y de llegar al LLM, para que la misma pregunta dé el mismo resultado
+
+> Linear: [L1D-306](https://linear.app/l1der-lab-mjbc/issue/L1D-306) (hija de L1D-16, Sprint 5, 2 pts; creada el 2026-11-02)
+
+`FEAT-06a` · Sprint 5 *(usuario, 2026-11-02)* · Estimación **2** *(propuesta; se confirma en el refinamiento del S5)* · HU-03 · RN-06 · ↪ pasarela `POST /platform/evidence-analyses` (FEAT-06a) · 🔗 Medido en: US-252
+
+> **Origen:** Demo 4 (2026-11-02), [`docs/evidence/S4-demo4/S4-demo-outcomes.md`](../../docs/evidence/S4-demo4/S4-demo-outcomes.md), **OUT-05**. Con la pregunta en NFC (forma normal), 57 de 57 ejecuciones sobre el paciente semilla (a) dieron el mismo análisis; las 3 ejecuciones del usuario que dieron «0 opciones» traían la **misma pregunta visible en NFD** (`é`, `í`, `á`, `á` como letra + acento combinante: 206 caracteres frente a 202). Con NFD se reprodujo a propósito: 3 de 3 resultados distintos del de NFC, y variables entre sí. La recuperación no cambió; cambió lo que recibe el LLM.
+
+## Story
+Como oncólogo, quiero que la misma pregunta produzca el mismo análisis aunque la haya copiado de otra aplicación, para confiar en que el resultado depende de la evidencia y no de cómo se codificó el texto.
+
+## AC (Given/When/Then)
+- **AC-1 (happy path · NFD → NFC)** · Dada la pregunta de la Demo 4 enviada en NFD, cuando `clinical-api` recibe `POST /platform/evidence-analyses`, entonces el `queryText` que persiste y el que envía a `rag-orchestrator` están en NFC y son byte a byte iguales a los de la misma pregunta escrita en NFC. `[OUT-05]` `[RN-06]`
+- **AC-2 (borde · espacios)** · Dada una pregunta con espacios al inicio o al final, espacios repetidos o espacios no separables, cuando se normaliza, entonces se recortan y se colapsan a un único espacio; mayúsculas, signos y puntuación no cambian. `[OUT-05]`
+- **AC-3 (borde · longitud)** · Dada una pregunta cuyo NFD supera la longitud máxima permitida y cuyo NFC no, cuando se valida, entonces se acepta: la longitud se mide después de normalizar. `[OUT-05]`
+- **AC-4 (defensa en profundidad)** · Dada una petición a `/rag/query` con la pregunta en NFD (un llamador que no pasa por `clinical-api`), cuando `rag-orchestrator` construye el prompt, entonces el texto de la pregunta en el prompt está en NFC. `[OUT-05]`
+- **AC-5 (regresión · mismo prompt)** · Dadas las versiones NFC y NFD de la pregunta de la Demo 4 con adapters falsos que registran el prompt, cuando se ejecutan, entonces ambos prompts tienen el mismo hash. `[OUT-05]`
+
+## Contexto técnico
+Función pura de normalización (NFC + espacios) en `clinical-api` (autoridad, transformación en el esquema Zod del borde), en `web` (mismo esquema compartido) y en `rag-orchestrator` (validador Pydantic de `/rag/query`). El campo sigue siendo `string`: no hay cambio incompatible de contrato, pero la descripción del `openapi.yaml` declara la normalización. Verificar aparte si la ingesta del corpus normaliza el texto de los fragmentos (si no, deuda con ID). TDD estricto (regla de dominio en el borde): commit `test` del AC-1 en rojo antes del `feat`.
+
+## INVEST
+**Small** ✓ una función pura aplicada en tres bordes.
+**Testable** ✓ cinco chequeos automatizados con texto NFD fijo.
 
 ---
 
