@@ -22,7 +22,7 @@ Antes de «Listo», `levantar.sh` ejecuta la **Verificación del seed**: compara
 `levantar.sh` imprime la URL y los usuarios; **nunca** imprime contraseñas: `cat infra/docker/secrets/seed_doctor_password` (médico `doc1@test.local`) o `seed_admin_password` (`admin@test.local`, no ve datos clínicos). Si Ollama ya corría, debe haberse iniciado con `OLLAMA_CONTEXT_LENGTH=8192 OLLAMA_FLASH_ATTENTION=1`.
 
 ## 3. Guion (≈ 8 min)
-1. **Login** en `http://127.0.0.1:3000/login` (cookie opaca; solo `web` publica puerto). Entra directo al paciente semilla (a) `/pacientes/0fd028e2-…/analisis`, encabezado «Uso académico/investigación».
+1. **Login** en `http://127.0.0.1:3000/login` (cookie opaca; solo `web` publica puerto). Tanto el médico como el administrador llegan al listado `/pacientes`, encabezado «Uso académico/investigación»; el médico abre desde ahí la ficha y el análisis del paciente (a) `/pacientes/0fd028e2-…/analisis`.
 2. **Con evidencia** (paciente de mama): *«¿Qué opciones adyuvantes describe la evidencia para cáncer de mama HER2 positivo en estadio IIA?»* → «Opciones descritas en la evidencia» con una opción, su justificación, la cita a NCI (`breast-treatment-pdq`), «Ver fragmento» (texto original recuperado en esa consulta) y el aviso «Generado por IA; requiere validación clínica independiente por el oncólogo tratante». Medido por API: ~13 s, `relevance_score` 0,60 (dato secundario, RN-03).
    Otras que dieron `con_evidencia`: tamoxifeno adyuvante con receptores hormonales positivos (~22 s) y antraciclinas en cáncer de mama temprano (~17 s).
 3. **Sin evidencia**: *«¿Qué dice la evidencia sobre el tratamiento de la leucemia mieloide aguda en niños?»* → «sin evidencia» en ~3 s, **sin invocar al LLM** (RN-02, `topRelevanceScore = null`).

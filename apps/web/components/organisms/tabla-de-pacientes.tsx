@@ -19,8 +19,10 @@ function CeldaDelPaciente({ paciente, textos }: { paciente: Paciente; textos: Te
   }
   return (
     <Link href={`/pacientes/${paciente.id}`} className="text-primary flex flex-col font-semibold">
-      <span>{paciente.fullNameMasked}</span>
-      <span className="text-text font-normal">{paciente.nationalIdMasked}</span>
+      <span className="flex flex-row gap-2 whitespace-nowrap">
+        <span>{paciente.fullNameMasked}</span>
+        <span className="text-text font-normal">{paciente.nationalIdMasked}</span>
+      </span>
       <span className="text-text-muted text-sm font-normal">
         {rellenar(textos.tabla.anioNacimiento, { anio: paciente.birthYear })}
       </span>
