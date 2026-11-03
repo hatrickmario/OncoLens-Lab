@@ -53,7 +53,7 @@ describe('Ficha · enlace a la vista de caso y fechas', () => {
 
     const diagnostico = within(screen.getByRole('region', { name: 'Diagnóstico vigente' }));
     const diagnosticado = diagnostico.getByRole('row', { name: /Diagnosticado/ });
-    expect(diagnosticado.textContent).toContain('hace 1 mes');
+    expect(diagnosticado.textContent).toContain('hace 30 días');
     expect(diagnosticado.querySelector('time')!.getAttribute('datetime')).toBe('2026-09-01');
     expect(diagnosticado.querySelector('time')!.getAttribute('title')).toBe('01/09/2026');
     const biomarcadores = within(screen.getByRole('region', { name: 'Biomarcadores recientes' }));

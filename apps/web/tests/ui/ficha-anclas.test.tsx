@@ -8,7 +8,7 @@ import { fichaDelDoctor } from '../support/ficha-simulado';
 
 function abrirFichaCon(fragmento: string) {
   window.history.replaceState(null, '', `/pacientes/${fichaDelDoctor.id}${fragmento}`);
-  render(<FichaDelDoctor ficha={fichaDelDoctor as PatientSummary} />);
+  render(<FichaDelDoctor ficha={fichaDelDoctor as PatientSummary} hoy="2026-10-01" />);
 }
 
 describe('Anclas de la ficha', () => {

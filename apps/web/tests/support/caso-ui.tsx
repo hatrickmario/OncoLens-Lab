@@ -6,6 +6,7 @@ import errorInterno from '../../../../contracts/examples/error-interno.json';
 import errorNoAutenticado from '../../../../contracts/examples/error-no-autenticado.json';
 import errorNoEncontrado from '../../../../contracts/examples/error-no-encontrado.json';
 import { VistaDeCaso } from '../../components/organisms/vista-de-caso';
+import { CaseViewTemplate } from '../../components/templates/case-view-template';
 
 export { casoPCaso, errorInterno, errorNoAutenticado, errorNoEncontrado };
 
@@ -36,7 +37,7 @@ export function crearCasoUiSimulado() {
   return {
     peticiones,
     responder,
-    iniciar: () => servidor.listen({ onUnhandledRequest: 'error' }),
+    iniciar: () => servidor.listen({ onUnhandledFrame: 'error' }),
     detener: () => servidor.close(),
     reiniciar: () => {
       servidor.resetHandlers();
@@ -46,3 +47,11 @@ export function crearCasoUiSimulado() {
 }
 
 export const montarVistaDeCaso = () => render(<VistaDeCaso patientId={ID_DEL_CASO} hoy={HOY} />);
+
+/** La página completa sin su barra de paciente: plantilla con la acción de analizar y la vista de caso. */
+export const montarPaginaDeCaso = () =>
+  render(
+    <CaseViewTemplate patientId={ID_DEL_CASO}>
+      <VistaDeCaso patientId={ID_DEL_CASO} hoy={HOY} />
+    </CaseViewTemplate>,
+  );

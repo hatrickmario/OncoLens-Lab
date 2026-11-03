@@ -9,6 +9,7 @@ import {
   errorNoAutenticado,
   errorNoEncontrado,
   ID_DEL_CASO,
+  montarPaginaDeCaso,
   montarVistaDeCaso,
 } from '../support/caso-ui';
 
@@ -31,7 +32,7 @@ describe('VistaDeCaso · estados y accesibilidad', () => {
     bff.responder(200, casoPCaso);
     const usuario = userEvent.setup();
 
-    montarVistaDeCaso();
+    montarPaginaDeCaso();
 
     await screen.findByRole('region', { name: 'Línea de tiempo' });
     for (const nombre of [
@@ -50,7 +51,9 @@ describe('VistaDeCaso · estados y accesibilidad', () => {
         .map((c) => c.textContent),
     ).toEqual(['Fecha', 'Valor', 'Origen y revisión']);
     await usuario.tab();
-    expect(document.activeElement).not.toBe(document.body);
+    expect(document.activeElement).toBe(
+      screen.getByRole('link', { name: 'Analizar la evidencia para este caso' }),
+    );
   });
 
   it('expone el estado Por revisar como texto [US-090 AC-4]', async () => {
