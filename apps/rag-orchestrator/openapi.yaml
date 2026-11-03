@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — RAG & AI Services API (Backend 2 / rag-orchestrator)
-  version: 1.10.0
+  version: 1.10.1
   description: >-
     API interna, alcanzable solo desde la red ai-net y solo por clinical-api (JWT de servicio
     asimétrico; la cookie de sesión del doctor nunca llega aquí). No persiste PHI y procesa los
@@ -971,7 +971,10 @@ components:
           type: string
           minLength: 1
           maxLength: 2000
-          description: Pregunta ya enmascarada (RN-11).
+          description: >-
+            Pregunta ya enmascarada (RN-11) y normalizada por clinical-api (Unicode NFC, espacios
+            colapsados y recortados). rag-orchestrator vuelve a normalizarla al recibirla; vacía tras
+            normalizar → 422 CUERPO_INVALIDO (US-250).
         sourcesSelected:
           $ref: '#/components/schemas/SourcesSelected'
         dataClassification:
