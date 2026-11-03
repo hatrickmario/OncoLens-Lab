@@ -297,6 +297,7 @@ def _servicio(
     llm: FakeMetadataLlm,
     nli: NliFalso,
     politica: PoliticaDeLicencias | None = None,
+    tamano_de_chunk: int = TAMANO_DE_CHUNK_DE_TEST,
 ) -> IngestionPipelineService:
     return IngestionPipelineService(
         catalogo=catalogo,
@@ -311,7 +312,7 @@ def _servicio(
         ids=GeneradorDeIdsFijo(),
         politica=politica or politica_de_test(),
         tokenizador=TokenizadorPorPalabras(),
-        tamano_de_chunk=TAMANO_DE_CHUNK_DE_TEST,
+        tamano_de_chunk=tamano_de_chunk,
         solape_de_chunk=SOLAPE_DE_CHUNK_DE_TEST,
         fecha_de_corte=FECHA_DE_CORTE_DE_TEST,
     )
@@ -320,12 +321,21 @@ def _servicio(
 def montar(
     directorio_de_textos: Path = DIRECTORIO_DE_FIXTURES,
     politica: PoliticaDeLicencias | None = None,
+    tamano_de_chunk: int = TAMANO_DE_CHUNK_DE_TEST,
 ) -> Montaje:
     catalogo, almacen = CatalogoEnMemoria(), AlmacenDeChunksEnMemoria()
     embedder, sparse = EmbedderInterrumpible(), CodificadorSparseFalso()
     llm, nli = FakeMetadataLlm(), nli_de_metadatos()
     servicio = _servicio(
-        catalogo, almacen, directorio_de_textos, embedder, sparse, llm, nli, politica
+        catalogo,
+        almacen,
+        directorio_de_textos,
+        embedder,
+        sparse,
+        llm,
+        nli,
+        politica,
+        tamano_de_chunk,
     )
     observador = ObservadorEnMemoria(catalogo, almacen)
     return Montaje(
@@ -364,11 +374,15 @@ def fabrica_de_montaje(request: pytest.FixtureRequest) -> Iterator[Callable[...,
     catalogo = CorpusDocumentRepository(motor)
 
     def montar_real(
-        directorio: Path = DIRECTORIO_DE_FIXTURES, politica: PoliticaDeLicencias | None = None
+        directorio: Path = DIRECTORIO_DE_FIXTURES,
+        politica: PoliticaDeLicencias | None = None,
+        tamano_de_chunk: int = TAMANO_DE_CHUNK_DE_TEST,
     ) -> Montaje:
         embedder, sparse = EmbedderInterrumpible(), CodificadorSparseFalso()
         llm, nli = FakeMetadataLlm(), nli_de_metadatos()
-        servicio = _servicio(catalogo, almacen, directorio, embedder, sparse, llm, nli, politica)
+        servicio = _servicio(
+            catalogo, almacen, directorio, embedder, sparse, llm, nli, politica, tamano_de_chunk
+        )
         observador = ObservadorReal(motor, cliente, ajustes.milvus_collection_name)
         return Montaje(
             catalogo,
