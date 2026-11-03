@@ -6,7 +6,7 @@ const valida = () => structuredClone(loadProhibitedTerms());
 
 describe('parseProhibitedTerms', () => {
   it('devuelve la lista cuando cumple el esquema', () => {
-    expect(parseProhibitedTerms(valida(), origen).version).toBe('1.5.0');
+    expect(parseProhibitedTerms(valida(), origen).version).toBe('1.6.0');
   });
 
   it('lanza un error que nombra el origen cuando hay ids repetidos entre niveles', () => {
@@ -52,5 +52,29 @@ describe('parseProhibitedTerms', () => {
     const lista = { ...valida(), version: 'uno' };
 
     expect(() => parseProhibitedTerms(lista, origen)).toThrow(/semver/);
+  });
+
+  it('devuelve salidaGenerada.nivelB con ids que existen en el Nivel B cuando carga la lista vigente [US-249 AC-2]', () => {
+    const lista = parseProhibitedTerms(valida(), origen);
+
+    expect(lista.salidaGenerada.nivelB).toEqual(['b-recomend', 'b-recomiend', 'b-recommend']);
+  });
+
+  it('lanza un error que nombra el origen y el id cuando salidaGenerada trae un id desconocido [US-249 AC-2]', () => {
+    const lista = valida();
+    lista.salidaGenerada.nivelB.push('b-no-existe');
+
+    expect(() => parseProhibitedTerms(lista, origen)).toThrow(origen);
+    expect(() => parseProhibitedTerms(lista, origen)).toThrow(/b-no-existe/);
+  });
+
+  it('lanza un error cuando salidaGenerada falta o queda vacía (falla cerrada) [US-249 AC-2]', () => {
+    const sin: Record<string, unknown> = { ...valida() };
+    sin['salidaGenerada'] = undefined;
+    const vacia = valida();
+    vacia.salidaGenerada.nivelB = [];
+
+    expect(() => parseProhibitedTerms(sin, origen)).toThrow(/salidaGenerada/);
+    expect(() => parseProhibitedTerms(vacia, origen)).toThrow(/salidaGenerada/);
   });
 });

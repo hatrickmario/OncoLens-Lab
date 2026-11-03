@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 from typing import Literal, Self
 
@@ -189,8 +189,11 @@ def check_prohibited_terms(
     *,
     niveles: Sequence[Nivel] = ("A",),
     permitir_frases: bool = False,
+    solo_ids_b: Collection[str] | None = None,
 ) -> list[Coincidencia]:
     """RN-23: coincidencias de la lista en ``texto``, en orden de aparición. Por defecto solo Nivel A."""
+    if solo_ids_b is not None:
+        raise NotImplementedError("no implementado")
     palabras = _palabras_de(texto)
     if permitir_frases:
         palabras = _tapar_frases_permitidas(palabras, lista.frases_permitidas.frases)
