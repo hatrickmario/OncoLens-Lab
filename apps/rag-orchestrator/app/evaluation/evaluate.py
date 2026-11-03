@@ -46,6 +46,7 @@ from app.evaluation.corrida_poblacion import (
     ejecutar_poblacion,
 )
 from app.evaluation.corrida_barrido import ejecutar_barrido, exigir_dataset_sintetico
+from app.evaluation.corrida_calibracion import PARAMETROS_DE_CALIBRACION, ejecutar_calibracion
 from app.evaluation.corrida_brazos import ResultadoDeBrazo, evaluar_brazos
 from app.evaluation.cronometro import Cronometro, RelojSimulado
 from app.evaluation.dataset_loader import DatasetInvalido
@@ -108,7 +109,9 @@ def _parser() -> argparse.ArgumentParser:
         clave
     ) in ENTORNO_DEL_JUEZ:  # --juez-modelo, --juez-base-url, --juez-temperatura, --juez-semilla
         parser.add_argument(f"--juez-{clave.replace('_', '-')}", dest=f"juez_{clave}", default=None)
-    parser.add_argument("--sweep", choices=("relevance_threshold",), default=None)
+    parser.add_argument(
+        "--sweep", choices=("relevance_threshold", *PARAMETROS_DE_CALIBRACION), default=None
+    )
     parser.add_argument("--fijar", action="store_true")
     parser.add_argument("--p95-e2e-s", type=float, default=None)
     parser.add_argument("--corpus-cutoff-date", default=None)
@@ -248,6 +251,24 @@ def _ejecutar(
     exigir_proveedor_local(config)  # RN-12: los adapters locales y su modelo, antes de cargar pesos
     if config.comparacion is not None and config.particion is not None:
         verificar_golden_sha256(config.particion)  # ADR-45 P2: antes de abrir ninguna pregunta
+    if args.sweep in PARAMETROS_DE_CALIBRACION:
+        exigir_dataset_sintetico(fuente.clase())  # RN-14: antes de cargar nada
+        dataset = fuente.cargar()
+        puertos_locales = (  # una sola carga de modelos para toda la grilla
+            cargar_puertos_locales(config, origen, RegistroDeLlamadas(), dataset.clase)
+            if config.proveedor == "local"
+            else None
+        )
+        return ejecutar_calibracion(
+            config,
+            args.sweep,
+            dataset,
+            puertos_locales=puertos_locales,
+            reloj=reloj,
+            cronometro_de=lambda: Cronometro(_reloj_de_medicion(config)),
+            salida=args.salida,
+            fijar=args.fijar,
+        )
     if args.sweep:
         exigir_dataset_sintetico(fuente.clase())  # RN-14: antes de cargar nada
         return ejecutar_barrido(

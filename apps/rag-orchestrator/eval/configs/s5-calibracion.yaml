@@ -1,0 +1,50 @@
+# Calibración del S5 con los MODELOS LOCALES REALES (US-120 AC-5 y AC-6, L1D-119; ADR-39, ADR-41, RN-12, RN-22).
+# Corre a mano en el MacBook de referencia dentro de la corrida nocturna del día 2 (D5-08); la CI usa `test-fake.yaml`
+# con las mismas secciones `barrido`. Los pesos (rutas y SHA-256) y las claves de ADR-39 llegan por el entorno
+# (`~/adr39-modelos/modelos.env`); sin ellos la suite termina con código ≠ 0 nombrando la variable y no escribe cifras.
+#   OLLAMA_CONTEXT_LENGTH=8192 OLLAMA_FLASH_ATTENTION=1 OLLAMA_KV_CACHE_TYPE=q8_0 ollama serve   # LLM fuera de Docker
+#   for p in nli_entailment_threshold retrieval_top_k relevance_threshold; do
+#     npm run evaluate -- --config apps/rag-orchestrator/eval/configs/s5-calibracion.yaml --sweep $p --salida reports/eval/l1d-119-$p
+#   done
+# Los barridos NO fijan nada: los valores definitivos se escriben en `Settings` y Compose en la tarea 7.1 (`--fijar` solo
+# existe para `relevance_threshold` y nunca sobre esta configuración versionada).
+# Cambiar cualquier valor cambia la huella SHA-256 del informe.
+nombre: s5-calibracion
+fixture: FX-T5a-a
+dataset:
+  ruta: data/eval/fx-t5a-a
+semilla_bootstrap: 20261021
+bootstrap_repeticiones: 200
+medicion:
+  reloj: real # time.perf_counter: el p95 de búsqueda y el del NLI son de verdad
+  rss_limite_mib: 4489 # el mismo límite de US-233a / local.yaml
+adaptadores:
+  proveedor: local
+  urls:
+    llm: http://127.0.0.1:11434/v1 # Ollama nativo; ninguna ruta hacia la nube (lista local cerrada en código)
+modelos:
+  llm: gemma4:26b-a4b-it-q4_K_M # G, LLM decidido en ADR-39
+umbrales: # los provisionales que el barrido confirma o sustituye
+  relevance_threshold: 0.30
+  nli_entailment_threshold: 0.7
+  retrieval_top_k: 30
+  rerank_top_n: 10
+catalogo:
+  version: '2026.10.0'
+  ruta_terminos: packages/clinical-catalogs
+barrido:
+  relevance_threshold_grid: [0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90] # RELEVANCE_THRESHOLD_GRID
+  umbral_de_referencia: 0.30
+  tolerancia_recall: 0.05 # THRESHOLD_RECALL_TOLERANCE
+  nli_entailment_threshold_grid: [0.5, 0.6, 0.7, 0.8, 0.9] # NLI_ENTAILMENT_THRESHOLD_GRID
+  retrieval_top_k_grid: [10, 20, 30, 50] # RETRIEVAL_TOP_K_GRID
+  retrieval_top_k_recall_tolerance: 0.02 # RETRIEVAL_TOP_K_RECALL_TOLERANCE: caída máxima de recall@10 frente al mejor k
+juez: # ADR-41: juez LLM local secundario (G); el NLI sigue siendo el juez principal y nunca se promedian
+  proveedor: local
+  base_url: http://127.0.0.1:11434/v1
+  modelo: gemma4:26b-a4b-it-q4_K_M
+  temperatura: 0
+  semilla: 20261021
+  timeout_s: 300
+  acuerdo_minimo: 0.8
+  muestra_minima: 30

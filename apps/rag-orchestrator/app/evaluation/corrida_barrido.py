@@ -41,7 +41,7 @@ NOMBRE_DEL_INFORME = "S1-baseline"
 _UMBRAL_EN_CONFIG = re.compile(r"^(\s+relevance_threshold:\s*)[-+0-9.eE]+", re.MULTILINE)
 
 
-def _directorio_de_la_app() -> Path:
+def directorio_de_la_app() -> Path:
     return raiz_repo() / "apps" / "rag-orchestrator"
 
 
@@ -123,7 +123,7 @@ def metricas_planas(familias: dict[str, Any]) -> dict[str, float | None]:
 
 
 def directorio_de_configuraciones() -> Path:
-    return _directorio_de_la_app() / "eval" / "configs"
+    return directorio_de_la_app() / "eval" / "configs"
 
 
 def _dentro_de(ruta: Path, directorio: Path) -> bool:
@@ -171,7 +171,7 @@ def fijar_umbral_en_config(
     _escribir_atomico(ruta, config_con_umbral(ruta.read_text(encoding="utf-8"), umbral))
 
 
-def _metricas_de(
+def metricas_de(
     resultados: list[ResultadoConsulta], config: ConfigSuite
 ) -> dict[str, float | None]:
     familias = calcular_familias(
@@ -189,7 +189,7 @@ def _por_cancer(
 ) -> dict[str, dict[str, float | None]]:
     cancers = sorted({r.recuperacion.cancer for r in resultados})
     return {
-        c: _metricas_de([r for r in resultados if r.recuperacion.cancer == c], config)
+        c: metricas_de([r for r in resultados if r.recuperacion.cancer == c], config)
         for c in cancers
     }
 
@@ -215,9 +215,9 @@ def _datos_del_informe(
         filas=filas,
         eleccion=eleccion,
         fijado=fijar,
-        metricas_totales=_metricas_de(del_elegido.resultados, config),
+        metricas_totales=metricas_de(del_elegido.resultados, config),
         metricas_por_cancer=_por_cancer(del_elegido.resultados, config),
-        metas=cargar_metas(_directorio_de_la_app() / RUTA_DE_METAS),
+        metas=cargar_metas(directorio_de_la_app() / RUTA_DE_METAS),
         p95_e2e_s=p95_e2e_s,
     )
 
@@ -246,7 +246,7 @@ def ejecutar_barrido(
         if fijar
         else None
     )  # lanza ConfigInvalida antes de escribir nada: «fijado» en el informe es el resultado, no la intención
-    carpeta = salida or _directorio_de_la_app() / SALIDA_DEL_BASELINE
+    carpeta = salida or directorio_de_la_app() / SALIDA_DEL_BASELINE
     carpeta.mkdir(parents=True, exist_ok=True)
     # El JSON se valida contra la lista blanca ANTES de escribir nada: un rechazo no deja un informe a medias.
     escribir_reporte_cerrado(
