@@ -104,3 +104,23 @@ export async function textoDeLosTurnos(cliente: Client, analysisId: string): Pro
 
 export const rutaDeSeguimiento = (analysisId: string): string =>
   `/platform/evidence-analyses/${analysisId}/follow-ups`;
+
+/**
+ * Provoca un fallo real de escritura (RN-06): un *trigger* temporal `BEFORE INSERT` en `clinical.analysis_follow_up` que
+ * lanza una excepción con texto sintético. Devuelve la función que lo elimina. La base es de este archivo de test.
+ */
+export async function instalarFalloDeEscrituraDelTurno(
+  cliente: Client,
+  textoDelError: string,
+): Promise<() => Promise<void>> {
+  await cliente.query(`
+    CREATE FUNCTION clinical.test_falla_insercion_turno() RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN RAISE EXCEPTION '${textoDelError}'; END $$`);
+  await cliente.query(`
+    CREATE TRIGGER test_falla_insercion_turno BEFORE INSERT ON clinical.analysis_follow_up
+    FOR EACH ROW EXECUTE FUNCTION clinical.test_falla_insercion_turno()`);
+  return async () => {
+    await cliente.query('DROP TRIGGER test_falla_insercion_turno ON clinical.analysis_follow_up');
+    await cliente.query('DROP FUNCTION clinical.test_falla_insercion_turno()');
+  };
+}
