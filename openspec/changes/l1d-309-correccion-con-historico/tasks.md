@@ -30,3 +30,7 @@
 ## 4. cierre
 
 - [ ] 4.1 `openspec validate l1d-309-correccion-con-historico --strict`; suites de `clinical-api` (unitarios e integración) y de `web` en verde; `contracts:verify-provider` en verde. `run-ai-eval` no aplica (sin cambio de modelo, prompt, umbral, catálogo ni corpus; las notas no viajan a la IA). **Parcial (clinical-api, hecho):** `openspec validate --strict`, unitarios e integración de `clinical-api` y `contracts:verify-provider` en verde; queda la suite de `web` (sección 3).
+
+## humano
+
+- [ ] H.1 DEUDA TRASLADADA a D5-21 (propuesto; Gate 2 vuelta 1): P3-2 pasar `ahora` desde la página RSC en lugar de `new Date()` dentro de los componentes cliente de la ficha; P3-5 retirar los casts de los tests de ficha; el `Dialog` (`components/ui/dialog.tsx`) tiene un solo consumidor hasta l1d-91 (Pregunta de design: mantener o inlinear).

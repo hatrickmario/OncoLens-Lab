@@ -1,8 +1,9 @@
 import type { Biomarker } from '../../../../packages/api-contracts/src/types/clinical-api';
-import { formatearFecha, textoDeConfianza, textoDeOrigen } from '../../lib/ficha/presentacion';
+import { formatearFecha, textoDeConfianza } from '../../lib/ficha/presentacion';
 import { mensajes, rellenar } from '../../lib/mensajes';
 import { BiomarcadorCorregible } from '../molecules/biomarcador-corregible';
 import { SeccionDeFicha } from '../molecules/fila-de-ficha';
+import { OrigenDelDato } from '../molecules/origen-del-dato';
 
 const CELDA = 'border-border border-b px-3 py-2 text-left align-top';
 const ID_DE_AYUDA = 'correccion-egresado-biomarcadores';
@@ -27,7 +28,9 @@ function CeldasDeBiomarcador({ b }: { b: Biomarker }) {
       <td className={CELDA}>{b.trend ?? biomarcadores.sinTendencia}</td>
       <td className={CELDA}>{significancia[b.clinicalSignificance]}</td>
       <td className={CELDA}>
-        <span>{textoDeOrigen(b.provenance)}</span>
+        <span>
+          <OrigenDelDato procedencia={b.provenance} fecha={b.performedAt} />
+        </span>
         <span className="text-text-muted block text-sm">
           {textoDeConfianza(b.provenance.extractionConfidence)}
         </span>

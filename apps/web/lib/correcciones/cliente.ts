@@ -1,5 +1,8 @@
 import type { CorrectionHistoryEntry } from '../../../../packages/api-contracts/src/types/clinical-api';
-import { zCorrectionHistory } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
+import {
+  zCorrectionHistory,
+  zErrorCorreccionInvalida,
+} from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
 import { mensajes } from '../mensajes';
 
 /** Error de una corrección ya traducido al texto que ve el oncólogo; `campo` es la propiedad del cuerpo, si la hay. */
@@ -31,17 +34,32 @@ function leerJson(texto: string): Record<string, unknown> {
   }
 }
 
-/** 422: el texto del campo viene de clinical-api (sin eco del valor); 403/404/409 y lo demás, textos fijos. */
+/** Texto fijo de un 422 por `error` y `field`; el `message` del servidor nunca se muestra (sin jerga ni eco de valores). */
+function textoDelError422(cuerpo: { error: string; field?: string | undefined }): string {
+  const { errores, egresado } = mensajes().ficha.correccion;
+  if (cuerpo.error === 'PACIENTE_EGRESADO') return egresado;
+  if (cuerpo.error === 'VALOR_FUERA_DE_CATALOGO') return errores.valorFormato;
+  const porCampo: Record<string, string> = {
+    performedAt: errores.fechaFutura,
+    value: errores.valorFormato,
+    content: errores.textoDeNota,
+  };
+  if (cuerpo.field === undefined) return errores.sinCambios;
+  return porCampo[cuerpo.field] ?? errores.campoInvalido;
+}
+
 function traducirError(status: number, cuerpo: Record<string, unknown>): ErrorDeCorreccion {
   const { errores } = mensajes().ficha.correccion;
   if (status === 409) return { mensaje: errores.noVigente };
   if (status === 403) return { mensaje: errores.permiso };
   if (status === 404) return { mensaje: errores.noEncontrado };
-  if (status === 422 && typeof cuerpo['message'] === 'string') {
-    const campo = typeof cuerpo['field'] === 'string' ? cuerpo['field'] : undefined;
-    return { ...(campo !== undefined && { campo }), mensaje: cuerpo['message'] };
-  }
-  return { mensaje: errores.generico };
+  const invalido = status === 422 ? zErrorCorreccionInvalida.safeParse(cuerpo) : null;
+  if (!invalido?.success) return { mensaje: errores.generico };
+  const { error, field } = invalido.data;
+  return {
+    ...(field !== undefined && { campo: field }),
+    mensaje: textoDelError422({ error, field }),
+  };
 }
 
 /** `POST …/corrections` del BFF. El navegador añade `Origin` y la cookie `SameSite=Strict`; un fallo de red es genérico. */
