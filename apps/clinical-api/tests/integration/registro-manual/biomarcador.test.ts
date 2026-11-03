@@ -93,7 +93,12 @@ describe('registro manual de un biomarcador', () => {
     const paciente = (await sembrarMamaFM2(escenario.siembra)).patientId;
 
     const respuesta = await registrar(
-      { name: 'marcador XYZ', value: 'positivo', resultType: 'cualitativo', performedAt: '2026-09-10' },
+      {
+        name: 'marcador XYZ',
+        value: 'positivo',
+        resultType: 'cualitativo',
+        performedAt: '2026-09-10',
+      },
       paciente,
     );
 
@@ -114,7 +119,7 @@ describe('registro manual de un biomarcador', () => {
   it('rechaza un biomarcador inválido sin crear Exam ni Biomarker cuando falta performedAt o resultType es "otro" [US-110 AC-5]', async () => {
     const paciente = (await sembrarMamaFM2(escenario.siembra)).patientId;
     const antes = await contarFilasDelPaciente(escenario.mundo.cliente, paciente);
-    const { performedAt: _omitida, ...sinFecha } = CUERPO_KI67;
+    const sinFecha = { ...CUERPO_KI67, performedAt: undefined };
 
     const sinFechaRespuesta = await registrar(sinFecha, paciente);
     const tipoInvalido = await registrar({ ...CUERPO_KI67, resultType: 'otro' }, paciente);

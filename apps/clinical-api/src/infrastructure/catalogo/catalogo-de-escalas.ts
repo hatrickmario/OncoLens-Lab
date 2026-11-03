@@ -11,7 +11,9 @@ const esquemaDeEscalas = z.object({
   escalasFuncionales: z.array(
     z.object({ codigo: z.string(), minimo: z.number(), maximo: z.number() }),
   ),
-  sistemasDeGradacion: z.array(z.object({ codigo: z.string(), tiposDeCancer: z.array(z.string()) })),
+  sistemasDeGradacion: z.array(
+    z.object({ codigo: z.string(), tiposDeCancer: z.array(z.string()) }),
+  ),
 });
 
 const esquemaDeManifiesto = z.object({ escalas: z.literal(true).optional() });
@@ -32,7 +34,8 @@ export function crearCatalogoDeEscalas(
   let escalas: z.output<typeof esquemaDeEscalas> | undefined;
   try {
     declarado =
-      esquemaDeManifiesto.parse(JSON.parse(leerArchivo(`${rutaDelCatalogo}/manifest.json`))).escalas === true;
+      esquemaDeManifiesto.parse(JSON.parse(leerArchivo(`${rutaDelCatalogo}/manifest.json`)))
+        .escalas === true;
     escalas = declarado
       ? esquemaDeEscalas.parse(JSON.parse(leerArchivo(`${rutaDelCatalogo}/escalas.json`)))
       : undefined;
@@ -54,7 +57,10 @@ export function crearCatalogoDeEscalas(
     rangoDeEscala:
       escalas === undefined
         ? CATALOGO_SIN_ESCALAS
-        : (escala) => escalas.escalasFuncionales.find((e) => e.codigo === escala),
+        : (escala) => {
+            const encontrada = escalas.escalasFuncionales.find((e) => e.codigo === escala);
+            return encontrada && { minimo: encontrada.minimo, maximo: encontrada.maximo };
+          },
     sistemaDeGradacionValido: (sistema, tipo) =>
       sistemaValido(escalas?.sistemasDeGradacion, sistema, tipo),
   };

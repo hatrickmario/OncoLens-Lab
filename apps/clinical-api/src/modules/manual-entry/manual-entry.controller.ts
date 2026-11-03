@@ -37,7 +37,11 @@ interface Rechazo {
   readonly resultado: string;
 }
 
-const CUERPO_INVALIDO: Rechazo = { status: 422, codigo: 'CUERPO_INVALIDO', resultado: 'cuerpo_invalido' };
+const CUERPO_INVALIDO: Rechazo = {
+  status: 422,
+  codigo: 'CUERPO_INVALIDO',
+  resultado: 'cuerpo_invalido',
+};
 
 /** Errores de dominio → respuesta HTTP; `undefined` si no es uno de ellos (sigue al 500 genérico). */
 function rechazoDe(error: unknown): Rechazo | undefined {
@@ -63,7 +67,10 @@ const sesionDe = (request: Request): SesionAutenticada => {
 interface Operacion<C, R> {
   readonly evento: string;
   readonly leerCuerpo: (cuerpo: unknown) => C | undefined;
-  readonly ejecutar: (servicio: ManualEntryService, solicitud: SolicitudDeRegistro<C>) => Promise<R>;
+  readonly ejecutar: (
+    servicio: ManualEntryService,
+    solicitud: SolicitudDeRegistro<C>,
+  ) => Promise<R>;
 }
 
 /** Línea de log: solo evento, resultado, `traceId` y `patientId` (UUID); nunca el cuerpo ni sus valores (RN-10). */
@@ -127,7 +134,13 @@ function crearCuerpoIlegible(registrar: Registrar): ErrorRequestHandler {
       next(error);
       return;
     }
-    registrarResultado(registrar, EVENTO_BIOMARCADOR, response, undefined, CUERPO_INVALIDO.resultado);
+    registrarResultado(
+      registrar,
+      EVENTO_BIOMARCADOR,
+      response,
+      undefined,
+      CUERPO_INVALIDO.resultado,
+    );
     enviarError(response, CUERPO_INVALIDO.status, CUERPO_INVALIDO.codigo, traceIdDe(response));
   };
 }

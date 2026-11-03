@@ -10,11 +10,7 @@ import { createReconciliationService } from '../../src/modules/reconciliation/re
 import { appConAuth } from './app-auth.js';
 import { RUTA_CATALOGO_FX01BB } from './catalogo-terminologico.js';
 import { servicioDeCompletitud } from './completitud-http.js';
-import {
-  filaDeGradacionGleason,
-  filaDeGradacionNottingham,
-  insertar,
-} from './filas-sinteticas.js';
+import { filaDeGradacionGleason, filaDeGradacionNottingham, insertar } from './filas-sinteticas.js';
 import {
   RUTA_CATALOGO_TEST_1_0_0,
   leerTexto,
@@ -110,7 +106,11 @@ export async function iniciarEscenarioDeRegistroManual(
   return {
     mundo,
     siembra: await prepararSiembra(mundo.cliente, mundo.ids),
-    cookieDoctor: await abrirSesion(mundo, 'doc1@test.local', `SINT-cookie-doctor-${etiqueta}-0001`),
+    cookieDoctor: await abrirSesion(
+      mundo,
+      'doc1@test.local',
+      `SINT-cookie-doctor-${etiqueta}-0001`,
+    ),
     cookieAdmin: await abrirSesion(mundo, 'admin@test.local', `SINT-cookie-admin-${etiqueta}-0001`),
     cerrar: () => mundo.cerrar(),
   };
@@ -239,7 +239,9 @@ export async function contarFilasDelPaciente(
     biomarcadores: await contar(
       'SELECT count(*)::int AS n FROM clinical.biomarker b JOIN clinical.exam e ON e.id = b.exam_id WHERE e.patient_id = $1',
     ),
-    diagnosticos: await contar('SELECT count(*)::int AS n FROM clinical.diagnosis WHERE patient_id = $1'),
+    diagnosticos: await contar(
+      'SELECT count(*)::int AS n FROM clinical.diagnosis WHERE patient_id = $1',
+    ),
     gradaciones: await contar(
       'SELECT count(*)::int AS n FROM clinical.diagnosis_grading g JOIN clinical.diagnosis d ON d.id = g.diagnosis_id WHERE d.patient_id = $1',
     ),

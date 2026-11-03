@@ -46,12 +46,7 @@ describe('bordes del registro manual', () => {
       const { patientId } = await sembrarEgresado(escenario.siembra);
       const antes = await contarFilasDelPaciente(escenario.mundo.cliente, patientId);
 
-      const respuesta = await enviar(
-        ruta,
-        patientId,
-        cuerpoValidoDe(ruta),
-        escenario.cookieDoctor,
-      );
+      const respuesta = await enviar(ruta, patientId, cuerpoValidoDe(ruta), escenario.cookieDoctor);
 
       expect(respuesta.status).toBe(422);
       expect(respuesta.body.error).toBe('PACIENTE_EGRESADO');
