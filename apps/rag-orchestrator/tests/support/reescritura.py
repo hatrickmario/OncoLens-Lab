@@ -13,7 +13,7 @@ from collections.abc import Sequence
 from dataclasses import replace
 from typing import Any
 
-from app.application.ports import CandidatoParaReranker, FalloDelLlm, SalidaDeReescrituraInvalida
+from app.application.ports import FalloDelLlm, SalidaDeReescrituraInvalida
 from app.domain.reescritura import ParametrosDeReescritura
 from tests.support.generador_falso import FakeEvidenceGenerator
 from tests.support.recuperacion import (
@@ -102,26 +102,14 @@ class EmbedderDeReescritura(EmbedderFalso):
         return super().embeber(texto)
 
 
-class RerankerQueRegistraPreguntas(RerankerFalso):
-    """Registra la pregunta con la que se puntúa cada lote: debe ser siempre la original (RN-03, RN-06)."""
-
-    def __init__(self, puntajes: dict[str, dict[str, float]]) -> None:
-        super().__init__(puntajes)
-        self.preguntas: list[str] = []
-
-    def puntuar(self, pregunta: str, candidatos: Sequence[CandidatoParaReranker]) -> list[float]:
-        self.preguntas.append(pregunta)
-        return super().puntuar(pregunta, candidatos)
-
-
 def crear_entorno_de_reescritura(
     *,
     reescritor: ReescritorFalso | None = None,
     parametros=None,
     **bordes: Any,
-) -> tuple[EntornoDeRecuperacion, ReescritorFalso, RerankerQueRegistraPreguntas]:
+) -> tuple[EntornoDeRecuperacion, ReescritorFalso, RerankerFalso]:
     reescritor = ReescritorFalso() if reescritor is None else reescritor
-    reranker = RerankerQueRegistraPreguntas(PUNTAJES_DE_REESCRITURA)
+    reranker = RerankerFalso(PUNTAJES_DE_REESCRITURA)
     entorno = crear_entorno(
         parametros=parametros or parametros_de_reescritura(),
         embedder=EmbedderDeReescritura(),
