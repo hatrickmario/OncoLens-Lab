@@ -1,0 +1,88 @@
+# 12 preguntas terapéuticas sintéticas (6 mama, 6 próstata). Todo inventado. `revisada_por_oncologo` marca los 4 casos que el
+# contrato de US-140 AC-5 declara revisados; la revisión humana real la confirma el oncólogo (H-1 de tasks.md).
+clase: sintetico
+preguntas:
+  - id: OP-01
+    idioma: es
+    cancer: mama
+    modo_acierto: cualquiera
+    pregunta: '¿Qué opciones describe la evidencia sobre adjuvant anti-HER2 therapy after surgery en cáncer de mama?'
+    evidencia: [{documento: doc-a1, cita: 'Adjuvant anti-HER2 therapy after surgery'}]
+    revisada_por_oncologo: true
+  - id: OP-02
+    idioma: es
+    cancer: mama
+    modo_acierto: cualquiera
+    pregunta: '¿Qué opciones describe la evidencia sobre adjuvant therapy after surgery en cáncer de mama?'
+    evidencia: [{documento: doc-a1, cita: 'Adjuvant anti-HER2 therapy after surgery'}]
+    revisada_por_oncologo: true
+  - id: OP-03
+    idioma: es
+    cancer: mama
+    modo_acierto: cualquiera
+    pregunta: '¿Qué opciones describe la evidencia sobre anti-HER2 therapy with dose adjustment after surgery en cáncer de mama?'
+    evidencia: [{documento: doc-a6, cita: 'with dose adjustment'}]
+    revisada_por_oncologo: false
+  - id: OP-04
+    idioma: es
+    cancer: mama
+    modo_acierto: cualquiera
+    pregunta: '¿Qué opciones describe la evidencia sobre adjuvant chemotherapy or extended anti-HER2 therapy after surgery en cáncer de mama?'
+    evidencia: [{documento: doc-a3, cita: 'Adjuvant chemotherapy alone'}]
+    revisada_por_oncologo: false
+  - id: OP-05
+    idioma: es
+    cancer: mama
+    modo_acierto: cualquiera
+    pregunta: '¿Qué opciones describe la evidencia sobre adjuvant anti-HER2 therapy y chemotherapy after surgery en cáncer de mama?'
+    evidencia: [{documento: doc-a1, cita: 'Adjuvant anti-HER2 therapy after surgery'}]
+    revisada_por_oncologo: false
+  - id: OP-06
+    idioma: es
+    cancer: mama
+    modo_acierto: cualquiera
+    pregunta: '¿Qué opciones describe la evidencia sobre adjuvant anti-HER2 therapy duration after surgery en cáncer de mama?'
+    evidencia: [{documento: doc-a1, cita: 'Adjuvant anti-HER2 therapy after surgery'}]
+    revisada_por_oncologo: false
+  - id: OP-07
+    idioma: es
+    cancer: prostata
+    modo_acierto: cualquiera
+    pregunta: '¿Qué opciones describe la evidencia sobre androgen deprivation therapy and androgen receptor inhibitor en cáncer de próstata?'
+    evidencia: [{documento: doc-p1, cita: 'Androgen deprivation therapy plus an androgen receptor inhibitor'}]
+    revisada_por_oncologo: true
+  - id: OP-08
+    idioma: es
+    cancer: prostata
+    modo_acierto: cualquiera
+    pregunta: '¿Qué opciones describe la evidencia sobre androgen deprivation therapy plus chemotherapy en cáncer de próstata?'
+    evidencia: [{documento: doc-p1, cita: 'Androgen deprivation therapy plus an androgen receptor inhibitor'}]
+    revisada_por_oncologo: true
+  - id: OP-09
+    idioma: es
+    cancer: prostata
+    modo_acierto: cualquiera
+    pregunta: '¿Qué opciones describe la evidencia sobre androgen deprivation therapy and radiotherapy en cáncer de próstata?'
+    evidencia: [{documento: doc-p1, cita: 'Androgen deprivation therapy plus an androgen receptor inhibitor'}]
+    revisada_por_oncologo: false
+  - id: OP-10
+    idioma: es
+    cancer: prostata
+    modo_acierto: cualquiera
+    pregunta: '¿Qué opciones describe la evidencia sobre androgen receptor inhibitor with radiotherapy en cáncer de próstata?'
+    evidencia: [{documento: doc-p4, cita: 'Androgen receptor inhibitor with radiotherapy'}]
+    revisada_por_oncologo: false
+  - id: OP-11
+    idioma: es
+    cancer: prostata
+    modo_acierto: cualquiera
+    pregunta: '¿Qué opciones describe la evidencia sobre androgen deprivation therapy alone or with inhibitor en cáncer de próstata?'
+    evidencia: [{documento: doc-p3, cita: 'Androgen deprivation therapy alone'}]
+    revisada_por_oncologo: false
+  - id: OP-12
+    idioma: es
+    cancer: prostata
+    modo_acierto: cualquiera
+    pregunta: '¿Qué opciones describe la evidencia sobre androgen deprivation therapy en cáncer de próstata sin tratamiento previo?'
+    evidencia: [{documento: doc-p3, cita: 'Androgen deprivation therapy alone'}]
+    revisada_por_oncologo: false
