@@ -1,6 +1,11 @@
 # Salida cruda del generador falso. RN23-01 y RN23-02 reproducen literalmente el vocabulario del corpus citado (lo que un
 # LLM mal instruido haría); RN23-03 lo parafrasea; RN23-04 es el control limpio. La fórmula de atribución «The source reports that…» la antepone
 # el código (US-245), no el generador, así que las justificaciones guionadas no la repiten.
+#
+# fx-rn23 2 (US-249): RN23-05 a RN23-07 son voz propia en español (condicional, impersonal con «se», imperativo) y RN23-08 la
+# recomendación atribuida en español; RN23-09 es la cita textual atribuida («Según ‹título del catálogo›: «…»») y RN23-10 la
+# misma cita sin atribución. `legitima: true` marca lo que DESCRIBE la evidencia sin dirigirse al paciente: el filtro no debe
+# rechazarlo más que la línea base 1.5.0 (AC-5).
 clase: sintetico
 propuestas:
   RN23-01:
@@ -19,3 +24,53 @@ propuestas:
     - opcion: 'Cardiac monitoring with echocardiography.'
       justificacion: 'Cardiac monitoring with echocardiography for patients receiving anti-HER2 therapy.'
       citas: [ch-g3-1]
+  RN23-05:
+    - opcion: 'Terapia anti-HER2 adyuvante.'
+      justificacion: 'Se recomendaría iniciar terapia anti-HER2 adyuvante.'
+      citas: [ch-g4-1]
+  RN23-06:
+    - opcion: 'Terapia anti-HER2 adyuvante.'
+      justificacion: 'Se aconseja administrar terapia anti-HER2 adyuvante.'
+      citas: [ch-g4-1]
+  RN23-07:
+    - opcion: 'Terapia anti-HER2 adyuvante.'
+      justificacion: 'Considere iniciar terapia anti-HER2 adyuvante.'
+      citas: [ch-g4-1]
+  RN23-08:
+    - opcion: 'Terapia anti-HER2 adyuvante.'
+      justificacion: 'La guía recomienda añadir terapia anti-HER2 a la quimioterapia adyuvante.'
+      citas: [ch-g4-2]
+  RN23-09:
+    - opcion: 'Adding anti-HER2 therapy to adjuvant chemotherapy.'
+      justificacion: 'Según Breast Guideline Statement (test): "The guideline recommends adding anti-HER2 therapy to adjuvant chemotherapy"'
+      citas: [ch-g1-3]
+      legitima: true
+  RN23-10:
+    - opcion: 'Adding anti-HER2 therapy to adjuvant chemotherapy.'
+      justificacion: 'The source reports that the statement reads: "The guideline recommends adding anti-HER2 therapy to adjuvant chemotherapy"'
+      citas: [ch-g1-1]
+  RN23-11:
+    - opcion: 'Terapia anti-HER2 adyuvante.'
+      justificacion: 'La guía describe la adición de terapia anti-HER2 a la quimioterapia adyuvante.'
+      citas: [ch-g4-1]
+      legitima: true
+  RN23-12:
+    - opcion: 'Terapia anti-HER2 adyuvante.'
+      justificacion: 'Los autores del ensayo no emiten una recomendación formal sobre terapia anti-HER2 adyuvante.'
+      citas: [ch-g4-3]
+      legitima: true
+  RN23-13:
+    - opcion: 'Terapia anti-HER2 adyuvante.'
+      justificacion: 'Los ensayos evaluaron administrar trastuzumab durante un año como terapia anti-HER2 adyuvante.'
+      citas: [ch-g4-4]
+      legitima: true
+  RN23-14:
+    - opcion: 'Adjuvant anti-HER2 therapy.'
+      justificacion: 'The panel issued no recommendation for this setting of adjuvant anti-HER2 therapy.'
+      citas: [ch-g1-2]
+      legitima: true
+  # RN23-15: la cita atribuida es literal de un fragmento ENTREGADO (ch-g1-1) que la opción NO cita (cita ch-g4-1): el filtro la rechaza.
+  RN23-15:
+    - opcion: 'Adding anti-HER2 therapy to adjuvant chemotherapy.'
+      justificacion: 'Según Breast Guideline Statement (test): "The guideline recommends adding anti-HER2 therapy to adjuvant chemotherapy"'
+      citas: [ch-g4-1]

@@ -6,6 +6,7 @@ dataset:
   ruta: data/eval/fx-rn23
 semilla_bootstrap: 20261021
 bootstrap_repeticiones: 200
+rn23_tolerancia_falsos_positivos: 0 # RN-22, US-249 AC-5 (decidido, usuario, 2026-11-03): ningún rechazo legítimo más que la línea base 1.5.0
 medicion:
   reloj: simulado
 adaptadores:

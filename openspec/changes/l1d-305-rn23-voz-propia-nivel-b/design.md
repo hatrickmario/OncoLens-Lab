@@ -47,12 +47,33 @@ La lista declara una sección nueva, validada en los dos cargadores:
   texto normalizado aparece literalmente en el `chunkTextSnapshot` de un fragmento que **la misma opción cita** (enlace al
   fragmento por su `chunkId` en las citas), se tapa antes de buscar el subconjunto B (no el nivel A: una cita no habilita
   «debe recibir»). Comillas sin atribución o sin coincidencia literal no tapan nada: la cita sin atribución se rechaza. Regla pura con nombre propio: `tapar_citas_textuales_del_corpus()` en
-  `app/domain/lenguaje.py`, con su gemelo en TypeScript **solo si** algún consumidor Node lo necesita (hoy ninguno: YAGNI).
+  `app/domain/lenguaje.py`, sin gemelo en TypeScript (decisión de `sprint-S5`, Gate 2: ver 2b).
 - El resto del nivel B (`iniciar`, `administrar`, `standard of care`…) **no** se aplica a la salida generada (AC-5).
 
 Alternativa elegida frente a: (b) mover los prefijos `recomend*` al nivel A (rompería el escenario vigente «La raíz recomend
 solo se aplica cuando se pide el Nivel B» y el lint de UI cambiaría de nivel) y (c) una constante de ids en el dominio de
 `rag-orchestrator` (la política dejaría de vivir en el catálogo versionado). Barato de revertir: un campo del JSON.
+
+### 2b · Ajustes del Gate 2 (decisiones registradas)
+
+- **`salidaGenerada.excepciones` (frases, no palabras).** El prefijo `recomend`/`recommend` rechazaba el sustantivo
+  descriptivo («Los autores del ensayo no emiten una recomendación formal»). La lista declara **frases del sustantivo negado**
+  («no emite(n) una recomendación», «sin recomendación(es)», «no hace recomendaciones», «issued/made no recommendation»,
+  «no recommendation(s)») que el subconjunto B no cuenta. Una excepción por palabra abría un hueco prescriptivo en voz propia
+  («Nuestra recomendación es iniciar…», «The recommendation for this patient is…»): esos casos se rechazan (`b-recomend`,
+  `b-recommend`) y están en la conformidad de Node y de Python. Solo rige en la salida generada; el lint de UI no cambia.
+- **Inglés en el Nivel A:** `consider starting`, `consider initiating`, `consider discontinuing` (paralelo de «considere
+  iniciar»); «the authors considered starting» no se rechaza.
+- **Dónde rige la cita atribuida.** `fuentes` es obligatorio en `ProhibitedTermsChecker`: `rationale` y `details` reciben los
+  fragmentos que cita la opción; `limitations[].text` recibe todos los entregados (también son sus premisas); el título de la
+  opción, `unsupportedClaims`, las descartadas por citas y `studyPopulationValue(s)` reciben `()` (un título, una afirmación
+  sin soporte o un valor extraído no es una cita; «recomendada» como valor de población se omite como cualquier término
+  prohibido); `synthesis` no pasa por este puerto. La suite usa las mismas reglas (`FuentesDeLaConsulta`, `campo_de_papel`).
+- **`web` queda en el Nivel A** (`texto-si-permitido.ts`): recibe texto que ya filtró Python. No se porta el subconjunto B a
+  web; un test de `packages/clinical-language` falla si `salidaGenerada` cambia sin revisar esta decisión. Unificar la política
+  Node/Python es deuda (historia de deuda: «unificar la política de salida generada Node/Python»).
+- **Límite conocido:** «recommended» suelto (p. ej. «recommended phase 2 dose») sigue rechazándose por el prefijo; la corrida
+  nocturna lo vigila con `rechazos_legitimos`.
 
 ### 3 · Dónde vive la política (un solo dueño)
 

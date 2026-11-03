@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from app.domain.atribucion import FORMULA_DE_ATRIBUCION
+from app.domain.lenguaje import FuenteCitada
 from app.domain.support import CampoGenerado
 from app.evaluation.lenguaje_estricto import VerificadorEstricto
 from app.evaluation.metricas.resultado import LenguajeCrudo, ResultadoConsulta
@@ -32,14 +33,30 @@ class SalidaMostrada:
     """(nombre del campo, id de la regla) de cada coincidencia; nunca el texto."""
 
 
+def sumar_salidas_mostradas(partes: Iterable[SalidaMostrada]) -> SalidaMostrada:
+    """La suma de las mediciones de varios grupos de textos (cada grupo con sus fuentes citadas)."""
+    lista = list(partes)
+    return SalidaMostrada(
+        sum(p.campos_nivel_a for p in lista),
+        sum(p.campos_nivel_b for p in lista),
+        sum(p.campos_con_termino for p in lista),
+        tuple(c for p in lista for c in p.campos),
+    )
+
+
 def medir_salida_mostrada(
-    textos: Iterable[TextoGenerado], verificador: VerificadorEstricto
+    textos: Iterable[TextoGenerado],
+    verificador: VerificadorEstricto,
+    fuentes: Sequence[FuenteCitada] = (),
 ) -> SalidaMostrada:
-    """Cuántos campos mostrados traen términos de nivel A, de nivel B o de cualquiera, y cuáles reglas coinciden."""
+    """Cuántos campos mostrados traen términos de nivel A, de nivel B o de cualquiera, y cuáles reglas coinciden.
+
+    Con la política del filtro de producción (Nivel A y ``salidaGenerada.nivelB``): una cita textual atribuida de
+    ``fuentes`` no cuenta como Nivel B, igual que en el filtro (US-249)."""
     campos_a = campos_b = con_termino = 0
     coincidentes: list[tuple[str, str]] = []
     for campo, texto in textos:
-        coincidencias = verificador.coincidencias_generadas(texto, campo)
+        coincidencias = verificador.coincidencias_mostradas(texto, campo, fuentes)
         campos_a += any(c.nivel == "A" for c in coincidencias)
         campos_b += any(c.nivel == "B" for c in coincidencias)
         con_termino += bool(coincidencias)
@@ -89,8 +106,9 @@ def medir_propuesta_cruda(
 
 def terminos_prohibidos(resultados: Sequence[ResultadoConsulta]) -> dict[str, Any]:
     """Familia RN-23. ``propuesta_cruda``, ``salida_mostrada`` y ``terminos_compartidos_con_corpus_citado`` cuentan CAMPOS
-    con algún término de la lista (no salidas completas). La meta bloqueante de lo mostrado es ``salida_mostrada_nivel_a``
-    (el nivel B es seguimiento); si el bloqueo debe ser A o A+B (``salida_mostrada``) lo decide el humano."""
+    con algún término de la lista (no salidas completas). La meta de lo mostrado es 0 en ambos niveles, bloqueantes
+    (``salida_mostrada_nivel_a`` y ``salida_mostrada_nivel_b``, A+B decidido por el usuario, 2026-10-31, US-249 AC-4);
+    ``corregidas_por_el_filtro`` cuenta por nivel lo que el filtro retiró de la propuesta cruda."""
     crudos = [r.lenguaje_crudo for r in resultados]
     nivel_a = sum(r.salidas_mostradas_nivel_a for r in resultados)
     nivel_b = sum(r.salidas_mostradas_nivel_b for r in resultados)
@@ -109,6 +127,10 @@ def terminos_prohibidos(resultados: Sequence[ResultadoConsulta]) -> dict[str, An
         "propuesta_cruda_por_nivel": {
             "A": sum(c.campos_nivel_a for c in crudos),
             "B": sum(c.campos_nivel_b for c in crudos),
+        },
+        "corregidas_por_el_filtro": {
+            "A": sum(r.corregidas_nivel_a for r in resultados),
+            "B": sum(r.corregidas_nivel_b for r in resultados),
         },
         "terminos_compartidos_con_corpus_citado": sum(c.reproducen_corpus for c in crudos),
         "terminos_nivel_a": sorted(frozenset().union(*(c.ids_nivel_a for c in crudos))),

@@ -50,7 +50,7 @@ def extractor_de_poblacion(
         plantilla_del_prompt=cargar_plantilla(ajustes.population_prompt_version),
         sinonimos=cargar_sinonimos(catalogos, tipos),
         buscar_terminos_prohibidos=lambda texto: verificador.reglas_coincidentes(
-            texto, CAMPO_DE_VALOR_GENERADO
+            texto, CAMPO_DE_VALOR_GENERADO, ()
         ),
         configuracion=ConfiguracionDePoblacion(
             top_k=ajustes.population_extraction_top_k,

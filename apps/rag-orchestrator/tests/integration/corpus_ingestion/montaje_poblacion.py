@@ -113,7 +113,7 @@ def montar_poblacion(
         plantilla_del_prompt=PLANTILLA_DE_TEST,
         sinonimos=sinonimos or {},
         buscar_terminos_prohibidos=lambda texto: terminos.reglas_coincidentes(
-            texto, "studyPopulationValues[].value"
+            texto, "studyPopulationValues[].value", ()
         ),
         configuracion=configuracion,
     )
