@@ -12,7 +12,10 @@ import {
   zCorrectClinicalNoteBody,
   zCorrectClinicalNotePath,
   zGetBiomarkerHistoryPath,
+  zCreateManualClinicalAttributePath,
+  zCreateManualPriorTreatmentPath,
   zGetClinicalNoteHistoryPath,
+  zListClinicalAttributesPath,
   zListClinicalNotesPath,
 } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
 import type { ZodType } from 'zod';
@@ -28,7 +31,10 @@ export type OperacionDeRegistroManual =
   | 'getBiomarkerHistory'
   | 'listClinicalNotes'
   | 'correctClinicalNote'
-  | 'getClinicalNoteHistory';
+  | 'getClinicalNoteHistory'
+  | 'createManualPriorTreatment'
+  | 'listClinicalAttributes'
+  | 'createManualClinicalAttribute';
 
 export interface ParametrosDeRuta {
   id: string;
@@ -99,6 +105,28 @@ const DEFINICIONES: Record<OperacionDeRegistroManual, Definicion> = {
     evento: 'correcciones.nota.historico',
     ruta: zGetClinicalNoteHistoryPath,
     llamar: (sdk, path) => getClinicalNoteHistory({ client: sdk.client, path, ...base }),
+  }),
+  // Esqueleto de L1D-80 (tarea 2.9): el cuerpo y la llamada llegan con el commit `feat`.
+  createManualPriorTreatment: definir({
+    evento: 'registro_clinico.tratamiento.crear',
+    ruta: zCreateManualPriorTreatmentPath,
+    llamar: () => {
+      throw new Error('no implementado');
+    },
+  }),
+  listClinicalAttributes: definir({
+    evento: 'registro_clinico.atributos.listar',
+    ruta: zListClinicalAttributesPath,
+    llamar: () => {
+      throw new Error('no implementado');
+    },
+  }),
+  createManualClinicalAttribute: definir({
+    evento: 'registro_clinico.atributo.crear',
+    ruta: zCreateManualClinicalAttributePath,
+    llamar: () => {
+      throw new Error('no implementado');
+    },
   }),
 };
 
