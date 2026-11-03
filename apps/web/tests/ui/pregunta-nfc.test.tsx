@@ -57,4 +57,15 @@ describe('EvidencePanel · pregunta normalizada (US-250)', () => {
     expect((bff.cuerpos[0] as { query: string }).query).toBe(nfc);
     expect(screen.queryByText('La pregunta admite como máximo 2000 caracteres.')).toBeNull();
   });
+
+  it('cuenta la longitud de la pregunta normalizada cuando el oncólogo pega 2000 caracteres NFC en NFD [US-250 AC-3]', async () => {
+    const nfd = String.fromCodePoint(0xe9).repeat(2000).normalize('NFD');
+    const usuario = userEvent.setup();
+    montarPanel();
+    await usuario.click(screen.getByLabelText(evidence.formulario.pregunta));
+
+    await usuario.paste(nfd);
+
+    expect(screen.getByText('2000 / 2000')).toBeTruthy();
+  });
 });
