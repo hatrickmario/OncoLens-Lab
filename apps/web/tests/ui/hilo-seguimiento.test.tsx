@@ -89,6 +89,48 @@ describe('Hilo de seguimiento · contenido', () => {
     expect(screen.getByText(seguimientoTurno.citedSources[1]!.chunkTextSnapshot)).toBeTruthy();
   });
 
+  it('no muestra una afirmación sin ninguna cita resoluble en las fuentes del turno [US-219 AC-2]', async () => {
+    const huerfana = {
+      ...seguimientoTurno.answer[0]!,
+      text: 'Afirmación sin soporte en las fuentes.',
+      citedSources: [{ ...seguimientoTurno.citedSources[0]!, chunkId: 'chunk_ajeno' }],
+    };
+    const turnoConHuerfana = {
+      ...seguimientoTurno,
+      answer: [...seguimientoTurno.answer, huerfana],
+    };
+    bff.responderSeguimiento({ status: 201, cuerpo: turnoConHuerfana });
+    const usuario = await analizarYAbrirHilo(bff, conEvidenciaTresOpciones);
+
+    await preguntar(usuario, PREGUNTA);
+
+    const turno = await screen.findByRole('article', { name: /Pregunta 1/ });
+    expect(within(turno).getByText(seguimientoTurno.answer[0]!.text)).toBeTruthy();
+    expect(within(turno).queryByText(huerfana.text)).toBeNull();
+  });
+
+  it('expande solo la cita pulsada cuando dos afirmaciones citan el mismo fragmento [US-219 AC-2]', async () => {
+    const segunda = {
+      ...seguimientoTurno.answer[0]!,
+      text: 'Segunda afirmación, mismo fragmento.',
+    };
+    bff.responderSeguimiento({
+      status: 201,
+      cuerpo: { ...seguimientoTurno, answer: [seguimientoTurno.answer[0]!, segunda] },
+    });
+    const usuario = await analizarYAbrirHilo(bff, conEvidenciaTresOpciones);
+    await preguntar(usuario, PREGUNTA);
+    const turno = await screen.findByRole('article', { name: /Pregunta 1/ });
+
+    const [primeraCita] = within(turno).getAllByRole('button', { name: /PMC9000001/ });
+    await usuario.click(primeraCita!);
+
+    const expandidas = within(turno)
+      .getAllByRole('button', { name: /PMC9000001/ })
+      .filter((chip) => chip.getAttribute('aria-expanded') === 'true');
+    expect(expandidas).toHaveLength(1);
+  });
+
   it('muestra la nota de citas, el disclaimer del turno y la etiqueta académica [US-219 AC-2]', async () => {
     bff.responderSeguimiento({ status: 201, cuerpo: seguimientoTurno });
     const usuario = await analizarYAbrirHilo(bff, conEvidenciaTresOpciones);

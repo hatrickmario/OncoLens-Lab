@@ -6,7 +6,10 @@ import {
   textoDelContador,
 } from '../../lib/evidence/seguimiento/contador-de-seguimiento';
 import { faseTrasSeguimiento } from '../../lib/evidence/seguimiento/fase-tras-seguimiento';
-import { numerarCitasDelTurno } from '../../lib/evidence/seguimiento/numerar-citas-del-turno';
+import {
+  afirmacionesConCita,
+  numerarCitasDelTurno,
+} from '../../lib/evidence/seguimiento/numerar-citas-del-turno';
 
 const turno = seguimientoTurno as FollowUpTurn;
 
@@ -55,6 +58,32 @@ describe('numerarCitasDelTurno', () => {
     const [afirmacion] = numerarCitasDelTurno(sinFuentes);
 
     expect(afirmacion!.citas.map(({ numero }) => numero)).toEqual([1]);
+  });
+});
+
+describe('afirmacionesConCita', () => {
+  const sinSoporte = {
+    text: 'Afirmación sin soporte.',
+    citedSources: [{ ...turno.citedSources[0]!, chunkId: 'chunk_ajeno' }],
+    patientDataRefs: [],
+  };
+
+  it('no muestra una afirmación sin ninguna cita resoluble en las fuentes del turno [US-219 AC-2]', () => {
+    const conAjena = { ...turno, answer: [...turno.answer, sinSoporte] } as FollowUpTurn;
+
+    expect(afirmacionesConCita(conAjena).map(({ text }) => text)).toEqual([turno.answer[0]!.text]);
+  });
+
+  it('conserva una afirmación que enlaza un dato del paciente resuelto en patientDataLinks', () => {
+    const link = { dataRef: 'r1', entityType: 'biomarker', entityId: turno.id } as const;
+    const deDato = { text: 'Dato.', citedSources: [], patientDataRefs: ['r1'] };
+    const conDato = {
+      ...turno,
+      answer: [deDato],
+      patientDataLinks: [link],
+    } as FollowUpTurn;
+
+    expect(afirmacionesConCita(conDato)).toHaveLength(1);
   });
 });
 

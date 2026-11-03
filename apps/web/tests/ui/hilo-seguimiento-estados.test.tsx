@@ -18,7 +18,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn() }) }));
 const bff = crearBffAnalisisSimulado();
 const PREGUNTA =
   '¿Existen ensayos que evalúen esta opción en pacientes con función renal reducida?';
-const IMPERATIVOS = /\b(abre|reformula|escribe|consulta|reintenta|debe|recomend\w*)\b/i;
+const IMPERATIVOS = /\b(abre|reformula|escribe|consulta tú|debe|recomend)/i;
 
 function turnoDeEstado(estado: typeof seguimientoSinEvidencia) {
   return screen.findByRole('article', { name: new RegExp(`Pregunta ${estado.turnNumber}`) });

@@ -1,6 +1,7 @@
 import type {
   FollowUpCitedSource,
   FollowUpTurn,
+  SupportedClaim,
 } from '../../../../../packages/api-contracts/src/types/clinical-api';
 
 export interface CitaNumerada {
@@ -23,4 +24,9 @@ export function numerarCitasDelTurno(turno: FollowUpTurn): AfirmacionNumerada[] 
       return indice < 0 ? [] : [{ numero: indice + 1, cita: turno.citedSources[indice]! }];
     }),
   }));
+}
+
+/** Afirmaciones con soporte resoluble en el turno (RN-01): al menos una cita en `citedSources` o un dato del paciente. */
+export function afirmacionesConCita(_turno: FollowUpTurn): SupportedClaim[] {
+  throw new Error('no implementado');
 }
