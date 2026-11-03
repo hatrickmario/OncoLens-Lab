@@ -39,8 +39,8 @@ export function checkProhibitedTerms(
     ? taparFrasesPermitidas(palabrasDe(texto), lista.frasesPermitidas.frases)
     : palabrasDe(texto);
   const claves = palabras.map(claveFlexiva);
-  const excepciones = new Set((excepcionesB ?? []).map(normalizarTexto));
-  const candidatas = recolectarCandidatas(palabras, claves, lista, niveles, soloIdsB, excepciones);
+  const palabrasB = taparFrasesPermitidas(palabras, [...(excepcionesB ?? [])]);
+  const candidatas = recolectarCandidatas(palabras, claves, lista, niveles, soloIdsB, palabrasB);
   return elegirTramosMasLargos(candidatas).map(({ id, termino, nivel }) => ({
     id,
     termino,
@@ -65,7 +65,7 @@ function recolectarCandidatas(
   lista: ListaTerminos,
   niveles: readonly Nivel[],
   soloIdsB: readonly string[] | undefined,
-  excepcionesB: ReadonlySet<string>,
+  palabrasB: string[],
 ): Candidata[] {
   const candidatas: Candidata[] = [];
   let orden = 0;
@@ -79,7 +79,7 @@ function recolectarCandidatas(
     for (const prefijo of lista.nivelB.prefijos) {
       const posicion = orden++;
       if (admiteB(prefijo.id)) {
-        candidatas.push(...candidatasDePrefijo(prefijo, posicion, palabras, excepcionesB));
+        candidatas.push(...candidatasDePrefijo(prefijo, posicion, palabrasB));
       }
     }
     for (const termino of lista.nivelB.terminos) {
@@ -93,18 +93,16 @@ function recolectarCandidatas(
 }
 
 /**
- * Cada palabra de la normalización base que empieza por el prefijo es una candidata de una palabra; una palabra
- * completa de `excepciones` no cuenta.
+ * Cada palabra de la normalización base que empieza por el prefijo es una candidata de una palabra.
  */
 function candidatasDePrefijo(
   prefijo: PrefijoProhibido,
   orden: number,
   palabras: string[],
-  excepciones: ReadonlySet<string>,
 ): Candidata[] {
   const normalizado = normalizarTexto(prefijo.prefijo);
   return palabras.flatMap((palabra, inicio) =>
-    palabra.startsWith(normalizado) && !excepciones.has(palabra)
+    palabra.startsWith(normalizado)
       ? [
           {
             id: prefijo.id,

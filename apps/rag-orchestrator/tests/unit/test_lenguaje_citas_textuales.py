@@ -135,7 +135,7 @@ def test_reglas_para_salida_generada_declara_el_nivel_a_y_los_ids_del_subconjunt
 
     assert reglas.niveles == ("A", "B")
     assert reglas.ids_nivel_b == {"b-recomend", "b-recomiend", "b-recommend"}
-    assert "recomendación" in reglas.excepciones_nivel_b
+    assert "no emite una recomendación" in reglas.excepciones_nivel_b
 
 
 def test_check_prohibited_terms_no_cuenta_una_palabra_de_excepciones_b_cuando_empieza_por_el_prefijo() -> (
@@ -144,7 +144,7 @@ def test_check_prohibited_terms_no_cuenta_una_palabra_de_excepciones_b_cuando_em
     lista = _lista()
     texto = "no emiten una recomendación"
 
-    con = check_prohibited_terms(texto, lista, niveles=("A", "B"), excepciones_b=["recomendación"])
+    con = check_prohibited_terms(texto, lista, niveles=("A", "B"), excepciones_b=["no emiten una recomendación"])
     sin = check_prohibited_terms(texto, lista, niveles=("A", "B"))
 
     assert [c.id for c in con] == []

@@ -274,15 +274,15 @@ def check_prohibited_terms(
 ) -> list[Coincidencia]:
     """RN-23: coincidencias de la lista en ``texto``, en orden de aparición. Por defecto solo Nivel A.
 
-    ``solo_ids_b`` limita el Nivel B a esos ids; ``excepciones_b`` son palabras completas que un prefijo del Nivel B no
-    debe contar (el sustantivo «recomendación» describe, no recomienda).
+    ``solo_ids_b`` limita el Nivel B a esos ids; ``excepciones_b`` son frases (el sustantivo negado, «no emite una
+    recomendación», que describe) que los prefijos del Nivel B no cuentan. El nivel A siempre ve el texto completo.
     """
     palabras = _palabras_de(texto)
     if permitir_frases:
         palabras = _tapar_frases_permitidas(palabras, lista.frases_permitidas.frases)
     claves = [clave_flexiva(p) for p in palabras]
-    excepciones = frozenset(normalizar_texto(e) for e in excepciones_b or ())
-    candidatas = _recolectar_candidatas(palabras, claves, lista, niveles, solo_ids_b, excepciones)
+    palabras_b = _tapar_frases_permitidas(palabras, list(excepciones_b or ()))
+    candidatas = _recolectar_candidatas(palabras, claves, lista, niveles, solo_ids_b, palabras_b)
     return [
         Coincidencia(id=c.id, termino=c.termino, nivel=c.nivel)
         for c in _elegir_tramos_mas_largos(candidatas)
@@ -304,7 +304,7 @@ def _recolectar_candidatas(
     lista: ListaTerminos,
     niveles: Sequence[Nivel],
     solo_ids_b: Collection[str] | None,
-    excepciones_b: frozenset[str],
+    palabras_b: list[str],
 ) -> list[_Candidata]:
     candidatas: list[_Candidata] = []
     orden = 0
@@ -315,7 +315,7 @@ def _recolectar_candidatas(
     if "B" in niveles:
         for prefijo in lista.nivel_b.prefijos:
             if solo_ids_b is None or prefijo.id in solo_ids_b:
-                candidatas += _candidatas_de_prefijo(prefijo, orden, palabras, excepciones_b)
+                candidatas += _candidatas_de_prefijo(prefijo, orden, palabras_b)
             orden += 1
         for termino in lista.nivel_b.terminos:
             if solo_ids_b is None or termino.id in solo_ids_b:
@@ -325,16 +325,14 @@ def _recolectar_candidatas(
 
 
 def _candidatas_de_prefijo(
-    prefijo: PrefijoProhibido, orden: int, palabras: list[str], excepciones: frozenset[str]
+    prefijo: PrefijoProhibido, orden: int, palabras: list[str]
 ) -> list[_Candidata]:
-    """Cada palabra de la normalización base que empieza por el prefijo es una candidata de una palabra.
-
-    Una palabra completa de ``excepciones`` no cuenta."""
+    """Cada palabra de la normalización base que empieza por el prefijo es una candidata de una palabra."""
     normalizado = normalizar_texto(prefijo.prefijo)
     return [
         _Candidata(prefijo.id, prefijo.prefijo, "B", inicio, 1, orden, palabra == normalizado)
         for inicio, palabra in enumerate(palabras)
-        if palabra.startswith(normalizado) and palabra not in excepciones
+        if palabra.startswith(normalizado)
     ]
 
 

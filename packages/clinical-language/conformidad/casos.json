@@ -2615,6 +2615,10 @@
         {
           "id": "b-recommend",
           "nivel": "B"
+        },
+        {
+          "id": "b-recommend",
+          "nivel": "B"
         }
       ]
     },

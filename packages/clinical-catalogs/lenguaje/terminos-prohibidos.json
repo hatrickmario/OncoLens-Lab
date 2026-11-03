@@ -480,7 +480,10 @@
         "id": "es-se-sugeriria",
         "idioma": "es",
         "texto": "se sugeriría"
-      }
+      },
+      { "id": "en-consider-starting", "idioma": "en", "texto": "consider starting" },
+      { "id": "en-consider-initiating", "idioma": "en", "texto": "consider initiating" },
+      { "id": "en-consider-discontinuing", "idioma": "en", "texto": "consider discontinuing" }
     ]
   },
   "nivelB": {
@@ -591,6 +594,16 @@
   },
   "salidaGenerada": {
     "nivelB": ["b-recomend", "b-recomiend", "b-recommend"],
-    "excepciones": ["recomendación", "recomendaciones", "recommendation", "recommendations"]
+    "excepciones": [
+      "no emite una recomendación",
+      "no emiten una recomendación",
+      "sin recomendación",
+      "sin recomendaciones",
+      "no hace recomendaciones",
+      "issued no recommendation",
+      "made no recommendation",
+      "no recommendation",
+      "no recommendations"
+    ]
   }
 }
