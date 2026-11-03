@@ -40,7 +40,7 @@ const POR_TIPO = [
   'sinonimos',
   'poblacion-reglas',
 ];
-const DE_RAIZ = ['manifest', 'atributos', 'poblacion'];
+const DE_RAIZ = ['manifest', 'atributos', 'poblacion', 'escalas'];
 const CON_VERSION_PROPIA = ['lenguaje/terminos-prohibidos'];
 /** Listas de contenido: un archivo cuyas listas están todas vacías (y tiene alguna) aún no se publicó. */
 const LISTAS_DE_CONTENIDO = ['items', 'keys', 'entradas'];

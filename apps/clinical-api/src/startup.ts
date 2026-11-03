@@ -14,7 +14,9 @@ import {
   type ClavesDeIdentidad,
 } from './infrastructure/crypto/claves-de-identidad.js';
 import { crearProveedorDeCatalogo } from './infrastructure/catalogo/catalog-version.provider.js';
+import { crearCatalogoDeEscalas } from './infrastructure/catalogo/catalogo-de-escalas.js';
 import { crearCatalogoTerminologico } from './infrastructure/catalogo/catalogo-terminologico.js';
+import type { CatalogoDeEscalas } from './modules/manual-entry/ports.js';
 import type { CatalogoTerminologico } from './modules/reconciliation/ports.js';
 import type { TiposDeCancerHabilitados } from './infrastructure/tipos-de-cancer-habilitados.js';
 import { crearTiposHabilitados } from './modules/evidence-analysis/tipos-habilitados.js';
@@ -31,6 +33,8 @@ export interface ServiciosCargados {
   readonly catalogo: ReturnType<typeof crearProveedorDeCatalogo>;
   /** `codigos.json` y `sinonimos.json` ya leídos y validados: lo inyectan los consumidores de `ReconciliationService`. */
   readonly terminologia: CatalogoTerminologico;
+  /** `escalas.json` ya leído: valores válidos del registro manual de diagnósticos (L1D-90). */
+  readonly escalas: CatalogoDeEscalas;
   readonly clavesDeIdentidad: ClavesDeIdentidad;
   /** `ENABLED_CANCER_TYPES` ya validada contra el `manifest.json` (US-043, RN-20). */
   readonly tiposHabilitados: TiposDeCancerHabilitados;
@@ -123,6 +127,7 @@ export function cargarEtapaDeServicios(
     configuracion: { ...servicios, pii },
     catalogo,
     terminologia,
+    escalas: crearCatalogoDeEscalas(servicios.analisis.catalogPath, readFile, catalogo),
     clavesDeIdentidad: cargarClavesDeIdentidad(arranque.identidad, readFile),
     tiposHabilitados: crearTiposHabilitados(
       servicios.alcance.enabledCancerTypes,

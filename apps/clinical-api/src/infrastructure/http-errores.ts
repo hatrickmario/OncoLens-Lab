@@ -23,6 +23,9 @@ export type CodigoDeError =
   | 'DOCUMENTO_DUPLICADO'
   | 'ALMACEN_NO_DISPONIBLE'
   | 'TIPO_CANCER_NO_REGISTRADO'
+  | 'PACIENTE_EGRESADO'
+  | 'VALOR_FUERA_DE_CATALOGO'
+  | 'GRADACION_INCOHERENTE'
   | 'CATALOG_VERSION_MISMATCH'
   | 'ERROR_SERVICIO_IA'
   | 'LOCAL_LLM_UNAVAILABLE'
@@ -45,6 +48,9 @@ const MENSAJES: Record<CodigoDeError, string> = {
   ALMACEN_NO_DISPONIBLE: 'El almacén de documentos no está disponible.',
   TIPO_CANCER_NO_REGISTRADO:
     'Análisis no realizado: falta el tipo de cáncer; no fue posible filtrar la evidencia.',
+  PACIENTE_EGRESADO: 'El paciente está egresado y no admite registros.',
+  VALOR_FUERA_DE_CATALOGO: 'Un valor no pertenece al catálogo clínico montado.',
+  GRADACION_INCOHERENTE: 'El puntaje o el grupo ISUP no cuadran con los patrones de Gleason.',
   CATALOG_VERSION_MISMATCH: 'La versión del catálogo clínico difiere entre servicios.',
   ERROR_SERVICIO_IA: 'El servicio de IA no respondió correctamente.',
   LOCAL_LLM_UNAVAILABLE: 'El modelo local no está disponible.',

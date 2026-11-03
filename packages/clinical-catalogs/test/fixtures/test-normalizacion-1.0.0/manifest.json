@@ -1,5 +1,6 @@
 {
   "version": "test-normalizacion-1.0.0",
   "cancerTypes": ["mama", "prostata"],
-  "standards": ["cie10", "loinc", "atc"]
+  "standards": ["cie10", "loinc", "atc"],
+  "escalas": true
 }

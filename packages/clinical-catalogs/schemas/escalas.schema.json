@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "escalas.json: valores válidos de estadificación, escalas funcionales y gradación (L1D-90, RN-29)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "sistemasDeEstadificacion", "escalasFuncionales", "sistemasDeGradacion"],
+  "properties": {
+    "version": { "$ref": "comun.schema.json#/$defs/version" },
+    "sistemasDeEstadificacion": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/sistemaPorTipo" }
+    },
+    "escalasFuncionales": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["codigo", "minimo", "maximo"],
+        "properties": {
+          "codigo": { "type": "string", "minLength": 1 },
+          "minimo": { "type": "integer", "minimum": 0 },
+          "maximo": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "sistemasDeGradacion": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/sistemaPorTipo" }
+    }
+  },
+  "$defs": {
+    "sistemaPorTipo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["codigo", "tiposDeCancer"],
+      "properties": {
+        "codigo": { "type": "string", "minLength": 1 },
+        "tiposDeCancer": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[a-z]+$" }
+        }
+      }
+    }
+  }
+}

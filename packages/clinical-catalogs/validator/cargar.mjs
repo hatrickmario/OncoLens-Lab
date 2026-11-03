@@ -1,5 +1,6 @@
 import {
   ARCHIVOS_DE_RAIZ,
+  ARCHIVOS_DE_RAIZ_DECLARADOS_POR_EL_MANIFIESTO,
   ARCHIVOS_DECLARADOS_POR_EL_MANIFIESTO,
   ARCHIVOS_DEL_CATALOGO,
   NOMBRES_DE_ARCHIVO,
@@ -55,6 +56,11 @@ export function leerCatalogo(directorio, leerArchivo) {
       leerJson(directorio, `${nombre}.json`, leerArchivo),
     ]),
   );
+  const declaradosDeLaRaiz = Object.fromEntries(
+    Object.entries(ARCHIVOS_DE_RAIZ_DECLARADOS_POR_EL_MANIFIESTO)
+      .filter(([, { clave }]) => manifest?.[clave] === true)
+      .map(([nombre]) => [nombre, leerJson(directorio, `${nombre}.json`, leerArchivo)]),
+  );
   const tipos = {};
   // Solo se lee por tipos con la forma del manifiesto (`^[a-z]+$`): `../x` no construye una ruta de lectura. El
   // esquema del manifiesto rechaza luego el tipo deformado.
@@ -74,13 +80,16 @@ export function leerCatalogo(directorio, leerArchivo) {
       }
     }
   }
-  return { manifest, ...deLaRaiz, tipos };
+  return { manifest, ...deLaRaiz, ...declaradosDeLaRaiz, tipos };
 }
 
 /** Esquemas del paquete que `validarCatalogo` necesita, leídos de `schemas/` (uso del script de CI). */
 export function leerEsquemas(directorioDeEsquemas, leerArchivo) {
   const leer = (nombre) => leerJson(directorioDeEsquemas, `${nombre}.schema.json`, leerArchivo);
   const esquemasDeLaRaiz = Object.values(ARCHIVOS_DE_RAIZ).map(({ esquema }) => esquema);
+  const esquemasDeclaradosDeLaRaiz = Object.values(
+    ARCHIVOS_DE_RAIZ_DECLARADOS_POR_EL_MANIFIESTO,
+  ).map(({ esquema }) => esquema);
   const esquemasDeclarados = Object.values(ARCHIVOS_DECLARADOS_POR_EL_MANIFIESTO).map(
     ({ esquema }) => esquema,
   );
@@ -91,6 +100,7 @@ export function leerEsquemas(directorioDeEsquemas, leerArchivo) {
     ...esquemasDeLaRaiz,
     ...ESQUEMAS_DE_ARCHIVOS,
     ...esquemasDeclarados,
+    ...esquemasDeclaradosDeLaRaiz,
   ];
   return Object.fromEntries(nombres.map((nombre) => [nombre, leer(nombre)]));
 }
