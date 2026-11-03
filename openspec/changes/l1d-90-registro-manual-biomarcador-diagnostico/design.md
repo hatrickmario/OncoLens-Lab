@@ -153,3 +153,9 @@ los datos críticos pasan de `no_mapeado` a `mapeado`). `manifest.json` 1.3.0 se
 - **P-4 → decidido `[S5 resp. 9]`:** `run-ai-eval` se corre (cambio de catálogo: `escalas.json` y LOINC).
 - DEC-01 Q1: el dato manual `verificado` cuenta como «Presente y verificado» en el checklist.
 - Los supuestos marcados antes como «(asumido)» quedan decididos `[S5 resp. 13]`.
+
+## Decisiones del Gate 2 (vuelta 1, 2026-11-03), a confirmar por el humano
+
+- **Validación sobre el diagnóstico resultante (P2-2).** D4 solo decía «si `cancerType` cambia, se recalcula CIE-10». Se amplía: toda corrección valida SIEMPRE contra el catálogo el diagnóstico resultante (estadificación heredada, escala y rango del valor heredado, y el sistema de gradación de cada gradación copiada), no solo lo enviado. Una corrección que solo cambia el tipo de cáncer o la escala y deja un dato heredado inválido responde `422 VALOR_FUERA_DE_CATALOGO`. Efecto lateral aceptado: un catálogo montado sin `escalas.json` rechaza cualquier corrección con estadificación o gradación heredadas. Decisión del orquestador (sprint-S5), pendiente de confirmación humana.
+- **`ReconciliationService` acepta `tipoDeCancer: null` (P3-7).** Un biomarcador de un paciente sin diagnóstico vigente se normaliza a `no_mapeado` por una ruta explícita del servicio, sin el centinela `''`. `estadoPersistible(decision)` es el único estrechamiento de `n_a` a los estados persistibles (P2-3).
+
