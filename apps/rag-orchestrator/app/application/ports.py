@@ -241,6 +241,8 @@ class ResultadoDeRecuperacion:
     chunks_sobre_umbral: tuple[ChunkPuntuado, ...]
     recuperados: int
     meta: RagMeta
+    etiquetas_de_faltantes: tuple[str, ...] = ()
+    """Etiqueta del catálogo de cada dato crítico faltante, en el orden recibido (US-116): ya validadas, nunca claves ni texto libre."""
 
 
 @dataclass(frozen=True)

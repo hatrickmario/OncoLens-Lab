@@ -265,7 +265,9 @@ class RAGOrchestratorService:
         self._exigir_tipo_habilitado(
             solicitud
         )  # un tipo inutilizable ya fue 422 propio; aquí, antes de recuperar (RN-20)
-        self._exigir_faltantes_catalogados(solicitud)  # RN-11: texto libre no llega a ningún puerto
+        etiquetas_de_faltantes = self._etiquetas_de_los_faltantes(
+            solicitud
+        )  # RN-11: texto libre no llega a ningún puerto
         idioma, release = await self._idioma_y_release(trace_id, solicitud.query)
         loop = await self._recuperar_y_puntuar(trace_id, solicitud, filtro, solicitud.query, 1)
         if con_reescritura:
@@ -278,7 +280,9 @@ class RAGOrchestratorService:
         meta = self._armar_meta_de_recuperacion(
             solicitud, idioma, release, inicio, reescritura, version_del_prompt
         )
-        return ResultadoDeRecuperacion(tuple(sobre_umbral), len(candidatos), meta)
+        return ResultadoDeRecuperacion(
+            tuple(sobre_umbral), len(candidatos), meta, etiquetas_de_faltantes
+        )
 
     async def meta_sin_recuperacion(
         self, solicitud: RagQueryInternalRequest, version_del_prompt: str
@@ -601,19 +605,24 @@ class RAGOrchestratorService:
             return
         exigir_tipo_habilitado(diagnostico.cancerType.root, self._parametros.tipos_habilitados)
 
-    def _exigir_faltantes_catalogados(self, solicitud: RagQueryInternalRequest) -> None:
-        """Cada ``missingCriticalData`` debe ser una clave de ``datos-criticos.json`` del tipo del caso (RN-11).
+    def _etiquetas_de_los_faltantes(self, solicitud: RagQueryInternalRequest) -> tuple[str, ...]:
+        """Etiqueta del catálogo de cada ``missingCriticalData``; cada uno debe ser una clave de ``datos-criticos.json``
+        del tipo del caso (RN-11).
 
         Sin diagnóstico no hay tipo (``_filtro_de_recuperacion`` ya lo rechazó). Lanza con posiciones, nunca valores."""
         contexto = solicitud.clinicalContext
         if contexto.diagnosis is None:
-            return
-        conocidas = self._datos_criticos.claves(contexto.diagnosis.cancerType.root)
-        posiciones = claves_de_faltantes_invalidas(
-            [clave.root for clave in contexto.missingCriticalData], conocidas
-        )
+            return ()
+        tipo = contexto.diagnosis.cancerType.root
+        claves = [clave.root for clave in contexto.missingCriticalData]
+        posiciones = claves_de_faltantes_invalidas(claves, self._datos_criticos.claves(tipo))
         if posiciones:
             raise FaltanteNoCatalogadoError(posiciones)
+        return tuple(
+            etiqueta
+            for clave in claves
+            if (etiqueta := self._datos_criticos.etiqueta(tipo, clave)) is not None
+        )
 
     def _filtro_de_recuperacion(self, solicitud: RagQueryInternalRequest) -> str:
         """Filtro vigente y del tipo de cáncer del caso; sin código de catálogo no hay búsqueda (`422`, OL-02)."""
