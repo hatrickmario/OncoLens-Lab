@@ -303,6 +303,19 @@ def _planificar_opcion(
     )
 
 
+def premisas_del_soporte(
+    chunk_ids_citados: Sequence[str],
+    chunk_ids_validos: Sequence[str],
+    textos_de_chunks: Mapping[str, str],
+) -> tuple[str, ...]:
+    """Las premisas del NLI de una afirmación: SOLO el texto de los chunks que cita y que se recuperaron en esta consulta.
+
+    RN-24: ``textos_de_chunks`` es el único origen; ni un análisis previo ni su memoria rotulada son jamás premisa.
+    """
+    citados = dict.fromkeys(c for c in chunk_ids_citados if c in chunk_ids_validos)
+    return tuple(textos_de_chunks[c] for c in citados if c in textos_de_chunks)
+
+
 def _planificar_afirmacion(
     afirmacion: AfirmacionAtomica,
     chunk_ids_validos: Sequence[str],
@@ -312,12 +325,11 @@ def _planificar_afirmacion(
     max_palabras: int,
 ) -> AfirmacionPorPapel:
     campo = campo_de_papel(afirmacion.papel)
-    citados = dict.fromkeys(c for c in afirmacion.chunk_ids if c in chunk_ids_validos)
     return AfirmacionPorPapel(
         afirmacion.texto,
         campo,
         tuple(buscar_terminos(afirmacion.texto, campo, citadas_por_la_opcion)),
-        tuple(textos_de_chunks[c] for c in citados if c in textos_de_chunks),
+        premisas_del_soporte(afirmacion.chunk_ids, chunk_ids_validos, textos_de_chunks),
         afirmacion.papel,
         validar_forma_de_afirmacion(afirmacion.texto, max_palabras),
     )
