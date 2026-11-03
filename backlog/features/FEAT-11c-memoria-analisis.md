@@ -25,7 +25,9 @@
 
 > Linear: [L1D-157](https://linear.app/l1der-lab-mjbc/issue/L1D-157)
 
-`FEAT-11c` · Post-MVP · Estimación **5** · HU-24 · FR-29 (c, dueña) · AC-11.6, AC-T1.4 · TBD-14 · ↪ US-052, US-053, US-175, US-195 · 🔗 Regresión [RN-06] → US-053
+`FEAT-11c` · Sprint 6 *(usuario, 2026-11-02, PRD E-17)* · Estimación **5** · HU-24 · FR-29 (c, dueña) · AC-11.6, AC-T1.4 · TBD-14 · ↪ US-052, US-053, US-175, US-195 · 🔗 Regresión [RN-06] → US-053
+
+> **Decidido (usuario, 2026-11-02, PRD E-17):** pasa a **Sprint 6**: el análisis parte de los últimos análisis guardados (flujo de conversación con memoria).
 
 ## Story
 Como oncólogo, quiero que al analizar de nuevo a un paciente la IA tenga en cuenta los
@@ -72,7 +74,9 @@ Supertest con FX-11c-a y el cliente de Backend 2 que captura el cuerpo (AC-1…A
 
 > Linear: [L1D-158](https://linear.app/l1der-lab-mjbc/issue/L1D-158)
 
-`FEAT-11c` · Post-MVP · Estimación **3** · HU-24 · FR-29 (c), RN-11, SEG-13 · AC-T4.3 (memoria), AC-11.6 · ↪ US-189, US-049, US-057 · ⛔ ADR-40 (US-013) · 🔗 Regresión [RN-11] → US-049 · 🔗 Medido en: US-160 (M-11.4)
+`FEAT-11c` · Sprint 6 *(usuario, 2026-11-02, PRD E-17)* · Estimación **3** · HU-24 · FR-29 (c), RN-11, SEG-13 · AC-T4.3 (memoria), AC-11.6 · ↪ US-189, US-049, US-057 · ⛔ ADR-40 (US-013) · 🔗 Regresión [RN-11] → US-049 · 🔗 Medido en: US-160 (M-11.4)
+
+> **Decidido (usuario, 2026-11-02, PRD E-17):** pasa a **Sprint 6**: el análisis parte de los últimos análisis guardados (flujo de conversación con memoria).
 
 ## Story
 Como paciente, quiero que lo que se analizó antes sobre mí llegue a la IA sin mi nombre
@@ -115,7 +119,9 @@ y PII sembrada (AC-1…AC-3, AC-5), Pytest del `prompt_builder` con `MEM-INY` (A
 
 > Linear: [L1D-159](https://linear.app/l1der-lab-mjbc/issue/L1D-159)
 
-`FEAT-11c` · Post-MVP · Estimación **5** · HU-24 · RN-24 (dueña), RN-01, RN-04 · AC-11.6, AC-T1.2 · ↪ US-189, US-063, US-064 · 🔗 Regresión [RN-01] → US-064 · 🔗 Medido en: US-160 (M-11.3)
+`FEAT-11c` · Sprint 6 *(usuario, 2026-11-02, PRD E-17)* · Estimación **5** · HU-24 · RN-24 (dueña), RN-01, RN-04 · AC-11.6, AC-T1.2 · ↪ US-189, US-063, US-064 · 🔗 Regresión [RN-01] → US-064 · 🔗 Medido en: US-160 (M-11.3)
+
+> **Decidido (usuario, 2026-11-02, PRD E-17):** pasa a **Sprint 6**: el análisis parte de los últimos análisis guardados (flujo de conversación con memoria).
 
 ## Story
 Como oncólogo, quiero tener la garantía de que lo que la IA concluyó antes nunca se
@@ -188,6 +194,33 @@ con FX-11c-a (AC-1…AC-4).
 ## INVEST
 **Small** ✓ un recorrido sobre un detector existente.
 **Testable** ✓ cuatro tests.
+
+---
+
+## US-255 — Las conversaciones de seguimiento quedan como historial, las 3 últimas se ven al abrir el análisis y entran como memoria rotulada del análisis nuevo
+
+> Linear: [L1D-311](https://linear.app/l1der-lab-mjbc/issue/L1D-311) (hija de L1D-28, Sprint 6, 5 pts; creada el 2026-11-02)
+
+`FEAT-11c` · Sprint 6 *(usuario, 2026-11-02, PRD E-17)* · Estimación **5** *(propuesta; se confirma en el refinamiento del S6)* · CAP-11, T-4 (AC-T4.3) · RN-11, RN-22, RN-24 · ↪ US-189, US-190, US-191 (memoria), US-218, US-219 (seguimiento), US-174 (historial) · 🔗 Medido en: US-160
+
+> **Origen:** feedback de oncólogos y equipo de producto (2026-11-02), registrado en el PRD como **E-17**. El flujo pedido: un análisis nuevo parte de los exámenes recientes y de los últimos análisis guardados; cada análisis admite un debate con varias preguntas; cada conversación se guarda y sirve de contexto para las siguientes, y se ven las últimas (inicialmente 3). La memoria de análisis (US-189…US-191) no cubría la conversación de seguimiento ni la ventana de exámenes recientes.
+
+## Story
+Como oncólogo, quiero retomar el debate donde lo dejé, ver mis últimas conversaciones sobre el paciente y que el análisis nuevo las tenga en cuenta como contexto, para no empezar de cero en cada consulta.
+
+## AC (Given/When/Then)
+- **AC-1 (happy path · últimas conversaciones)** · Dado un paciente con varios análisis y sus conversaciones de seguimiento, cuando el oncólogo abre su pantalla de análisis, entonces ve las últimas N conversaciones (N en configuración, por defecto 3), cada una con su pregunta inicial, su fecha y el número de preguntas, y puede abrirla en solo lectura. `[RN-22]`
+- **AC-2 (happy path · memoria)** · Dado un análisis nuevo, cuando se construye su contexto, entonces incluye como memoria las últimas N conversaciones (pregunta, respuestas validadas y fecha relativa), desidentificadas, rotuladas «conversación previa de IA» y delimitadas como datos. `[RN-11]` `[RN-24]`
+- **AC-3 (invariante · nunca soporte)** · Dada una afirmación del análisis nuevo que solo respalda una conversación previa, cuando se valida, entonces se descarta: la memoria nunca es citable ni soporte NLI. `[RN-24]`
+- **AC-4 (borde · exámenes recientes)** · Dado el contexto del análisis nuevo, cuando se arma, entonces incluye los exámenes y biomarcadores dentro de la ventana reciente de la configuración (RN-22) y la Base del análisis declara esa ventana. `[RN-22]`
+- **AC-5 (borde · opt-out)** · Dado un paciente con opt-out de `analisis_ia`, cuando se pide un análisis nuevo, entonces `403` y ninguna conversación previa se envía a la IA. `[RN-15]`
+
+## Contexto técnico
+Las conversaciones de seguimiento ya se persisten (`clinical.analysis_follow_up`, US-218). La memoria la arma `clinical-api` (módulo `evidence-analysis`, *analysis-memory*) y viaja a `rag-orchestrator` desidentificada; `ANALYSIS_MEMORY_MAX` y la ventana de exámenes recientes viven en configuración. TDD estricto en desidentificación y en RN-24.
+
+## INVEST
+**Small** ⚠ 5 puntos: vista, memoria y ventana de exámenes sobre piezas existentes.
+**Testable** ✓ cinco tests de integración y de UI.
 
 ---
 

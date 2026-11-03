@@ -334,7 +334,9 @@ Supertest con `rag-orchestrator` simulado que captura el payload, con FX-02b-a.
 
 > Linear: [L1D-80](https://linear.app/l1der-lab-mjbc/issue/L1D-80)
 
-`FEAT-02b` · Sprint si-hay-capacidad · Estimación **5** · HU-15 · FR-21 (datos manuales), FR-22 (normalización de datos manuales) · AC-02.3, AC-02.7, AC-03.3 (manuales) · ↪ US-088, US-098 · 🔗 Regresión [RN-27] → US-098 · 🔗 Regresión [RN-17] → US-198 (Post-MVP) · 🔗 Consumida por: FEAT-04 US-004 · **Recorrido principal:** no · **Workaround en el MVP:** cargar un documento con los tratamientos previos y atributos (US-076, US-085); el registro manual del MVP cubre biomarcadores y diagnóstico (US-110, US-111)
+`FEAT-02b` · Sprint 5 *(usuario, 2026-11-02, PRD E-17)* · Estimación **5** · HU-15 · FR-21 (datos manuales), FR-22 (normalización de datos manuales) · AC-02.3, AC-02.7, AC-03.3 (manuales) · ↪ US-088, US-098 · 🔗 Regresión [RN-27] → US-098 · 🔗 Regresión [RN-17] → US-198 (Post-MVP) · 🔗 Consumida por: FEAT-04 US-004 · **Recorrido principal:** no · **Workaround en el MVP:** cargar un documento con los tratamientos previos y atributos (US-076, US-085); el registro manual del MVP cubre biomarcadores y diagnóstico (US-110, US-111)
+
+> **Decidido (usuario, 2026-11-02, PRD E-17):** pasa a **Sprint 5**: se prioriza la edición de exámenes y notas en la ficha.
 
 ## Story
 Como oncólogo, quiero registrar a mano una línea de tratamiento previa o un atributo

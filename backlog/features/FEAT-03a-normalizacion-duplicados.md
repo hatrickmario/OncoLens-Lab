@@ -78,7 +78,9 @@ persistencia.
 
 > Linear: [L1D-85](https://linear.app/l1der-lab-mjbc/issue/L1D-85)
 
-`FEAT-03a` · Sprint 5 · Estimación **5** · HU-17 · FR-22 (duplicados; detección de conflictos) · AC-03.1, AC-03.2 (detección), AC-01.1 (reproceso) · ↪ US-098 · 🔗 Consumida por: US-087, US-089, US-080 · 🔗 Produce para: US-109 (resolución de conflictos, `si-hay-capacidad`), US-124 (aviso `en_conflicto`: en el S3 sobre un conflicto sembrado; con detección real desde el S5, AC-7) · 🔗 Medido en: US-106 (M-03.1–M-03.3)
+`FEAT-03a` · Post-MVP *(usuario, 2026-11-02, PRD E-17)* · Estimación **5** · HU-17 · FR-22 (duplicados; detección de conflictos) · AC-03.1, AC-03.2 (detección), AC-01.1 (reproceso) · ↪ US-098 · 🔗 Consumida por: US-087, US-089, US-080 · 🔗 Produce para: US-109 (resolución de conflictos, `si-hay-capacidad`), US-124 (aviso `en_conflicto`: en el S3 sobre un conflicto sembrado; con detección real desde el S5, AC-7) · 🔗 Medido en: US-106 (M-03.1–M-03.3)
+
+> **Decidido (usuario, 2026-11-02, PRD E-17):** pasa a **Post-MVP**: el OCR no se prioriza en el MVP (feedback de oncólogos y producto).
 
 > **Reordenamiento (usuario, 2026-10-23):** S3 → S5. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
@@ -136,7 +138,9 @@ Vitest + Supertest con FX-03a-a.
 
 > Linear: [L1D-86](https://linear.app/l1der-lab-mjbc/issue/L1D-86)
 
-`FEAT-03a` · Sprint 5 · Estimación **5** · HU-09 (parte automática), HU-17 · RN-08 (dueña), FR-08 (regla de diagnóstico), ADR-12 · AC-03.4, AC-T3.2 · ⛔ DEC-09 · escenario más probable · ↪ US-087 · 🔗 Regresión [AC-T3.2] → US-070 · 🔗 Produce para: US-107 (confirmar o descartar, S4)
+`FEAT-03a` · Post-MVP *(usuario, 2026-11-02, PRD E-17)* · Estimación **5** · HU-09 (parte automática), HU-17 · RN-08 (dueña), FR-08 (regla de diagnóstico), ADR-12 · AC-03.4, AC-T3.2 · ⛔ DEC-09 · escenario más probable · ↪ US-087 · 🔗 Regresión [AC-T3.2] → US-070 · 🔗 Produce para: US-107 (confirmar o descartar, S4)
+
+> **Decidido (usuario, 2026-11-02, PRD E-17):** pasa a **Post-MVP**: el OCR no se prioriza en el MVP (feedback de oncólogos y producto).
 
 > **Reordenamiento (usuario, 2026-10-23):** S3 → S5. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
