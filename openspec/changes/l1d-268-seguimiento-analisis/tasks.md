@@ -27,14 +27,14 @@
 
 ## 2. clinical-platform
 
-- [ ] 2.1 `ANALYSIS_FOLLOWUP_MAX` en `apps/clinical-api/src/config/secciones.ts` (entero positivo, por defecto 10, RN-22)
+- [x] 2.1 `ANALYSIS_FOLLOWUP_MAX` en `apps/clinical-api/src/config/secciones.ts` (entero positivo, por defecto 10, RN-22)
       con su test de configuración; `.env.example` va en `H-1` · **test después (configuración)**
-- [ ] 2.2 Test de aceptación en rojo: «la Base trae maxFollowUps igual a ANALYSIS_FOLLOWUP_MAX y el registro persiste el
+- [x] 2.2 Test de aceptación en rojo: «la Base trae maxFollowUps igual a ANALYSIS_FOLLOWUP_MAX y el registro persiste el
       mismo valor [US-219 AC-1]» · integración (Supertest + PostgreSQL real + MSW hacia `rag-orchestrator` desde
       `contracts/examples/`; respuesta validada contra el spec del proveedor) en
       `apps/clinical-api/tests/integration/evidence-analysis/base-max-follow-ups.test.ts`; commit `test(L1D-268)` ·
       **TDD estricto** `[S5 resp. 10]`
-- [ ] 2.3 Copiar `ANALYSIS_FOLLOWUP_MAX` de Settings a `analysisBasis.maxFollowUps` en el armado de la Base (sin literal;
+- [x] 2.3 Copiar `ANALYSIS_FOLLOWUP_MAX` de Settings a `analysisBasis.maxFollowUps` en el armado de la Base (sin literal;
       reutiliza la clave de 2.1). Test 2.2 en verde; commit `feat(L1D-268)` · **TDD estricto** `[US-219 AC-1]`
 - [ ] 2.4 Esqueletos (`throw new Error('no implementado')`) de `follow-up.controller.ts`, `follow-up.service.ts`,
       `follow-up.repository.ts`, `follow-up.request.ts`, `follow-up.reglas.ts`, puerto `RagFollowUpPort` en `ports.ts` y

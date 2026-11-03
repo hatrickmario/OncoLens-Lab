@@ -81,7 +81,10 @@ export function componerGatewayDeAnalisis(dependencias: DependenciasDelGateway):
     rag: dependencias.rag,
     cierre: crearAnalysisCompletion({
       analisis: repositorio,
-      base: crearBaseDelAnalisis({ etiquetaDe: dependencias.etiquetaDe }),
+      base: crearBaseDelAnalisis({
+        etiquetaDe: dependencias.etiquetaDe,
+        maxFollowUps: dependencias.config.analysisFollowupMax,
+      }),
       reloj: dependencias.reloj,
       idsDeAnalisis: dependencias.idsDeAnalisis,
       disclaimer: dependencias.config.aiDisclaimerText,
