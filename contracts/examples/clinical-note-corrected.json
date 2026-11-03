@@ -1,0 +1,15 @@
+{
+  "id": "e8f1b3c4-2a5d-4e67-8c9b-6a7b8c9d0e1f",
+  "noteType": "antecedente",
+  "content": "Hipertensión arterial controlada con tratamiento oral desde hace varios años.",
+  "recordedAt": "2026-09-01T00:00:00.000Z",
+  "provenance": {
+    "entryMethod": "manual_correction",
+    "extractionConfidence": "n_a",
+    "reviewStatus": "verificado",
+    "conflict": false,
+    "sourceDocumentId": null,
+    "additionalSourceDocumentIds": []
+  },
+  "supersedesId": "b3a9d5e7-4f1c-4a28-b6d0-7c8d9e0f1a2b"
+}

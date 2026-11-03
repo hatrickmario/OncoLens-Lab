@@ -1,0 +1,6 @@
+{
+  "error": "CUERPO_INVALIDO",
+  "field": "performedAt",
+  "message": "La fecha del examen no puede ser posterior a hoy.",
+  "traceId": "req_c9d0e1f2"
+}
