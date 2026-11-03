@@ -43,6 +43,28 @@ describe('Contraseñas e idempotencia del seed', () => {
     return rows[0]?.password_hash ?? '';
   }
 
+  it('no revive ni pisa una nota corregida por el oncólogo cuando el seed se ejecuta otra vez [US-253 AC-2]', async () => {
+    const entorno = entornoDelSeed(archivos);
+    await seedContraLaBase(base.url).ejecutar(entorno);
+    const { rows: notas } = await cliente.query<{ id: string }>(
+      `SELECT id FROM clinical.clinical_note WHERE note_type = 'comorbilidad'`,
+    );
+    const notaId = notas[0]?.id;
+    await cliente.query(
+      `UPDATE clinical.clinical_note SET review_status = 'reemplazado', is_active = false, content = 'versión anterior'
+        WHERE id = $1`,
+      [notaId],
+    );
+
+    await seedContraLaBase(base.url).ejecutar(entorno);
+
+    const { rows } = await cliente.query<{ review_status: string; is_active: boolean }>(
+      'SELECT review_status::text AS review_status, is_active FROM clinical.clinical_note WHERE id = $1',
+      [notaId],
+    );
+    expect(rows[0]).toEqual({ review_status: 'reemplazado', is_active: false });
+  });
+
   it('el archivo de contraseña tiene prioridad sobre la variable directa [US-039 AC-1]', async () => {
     const entorno = entornoDelSeed(archivos, { SEED_DOCTOR_PASSWORD: CONTRASENA_DE_LA_VARIABLE });
 

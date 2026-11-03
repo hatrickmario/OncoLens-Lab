@@ -402,6 +402,7 @@ export async function montarGateway(
     completeness: Router(),
     manualEntry: Router(),
     caseView: Router(),
+    corrections: Router(),
   });
   const app = appConAuth({
     cliente: mundo.cliente,

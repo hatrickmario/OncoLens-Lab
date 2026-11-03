@@ -5,10 +5,8 @@ import type {
 import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
-import { PacienteNoEncontradoError } from '../compartido/pacientes.errores.js';
-import { pacienteAdmiteRegistros } from '../compartido/paciente-activo.js';
+import { exigirPacienteQueAdmiteRegistros } from '../compartido/paciente-activo.js';
 import type { DecisionDeNormalizacion, ReconciliationService } from '../reconciliation/ports.js';
-import { PacienteEgresadoError } from './manual-entry.errores.js';
 import {
   armarRegistroDeBiomarcador,
   comoBiomarcadorDelContrato,
@@ -30,7 +28,6 @@ import type {
   DatosDelDiagnostico,
   DiagnosticoVigente,
   RepositorioDeRegistroManual,
-  TransaccionDeRegistro,
 } from './ports.js';
 
 export interface SolicitudDeRegistro<C> {
@@ -52,16 +49,6 @@ export interface DependenciasDelService {
   readonly tiposHabilitados: TiposDeCancerHabilitados;
   readonly reloj: Clock;
   readonly generarId: GeneradorDeIds;
-}
-
-/** Precondición común, ya con el paciente bloqueado: existe (404) y admite registros (RN-17, 422). */
-async function exigirPacienteQueAdmiteRegistros(
-  tx: TransaccionDeRegistro,
-  patientId: string,
-): Promise<void> {
-  const paciente = await tx.bloquearPaciente(patientId);
-  if (paciente === null) throw new PacienteNoEncontradoError();
-  if (!pacienteAdmiteRegistros(paciente.estado)) throw new PacienteEgresadoError();
 }
 
 /** La decisión de normalización del tipo de cáncer: la toma `ReconciliationService` (RN-27), nunca este módulo. */

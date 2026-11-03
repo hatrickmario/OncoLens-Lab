@@ -27,7 +27,7 @@
 - Acción por fila: **«Corregir dato»** (nunca «Editar» a secas: comunica que el valor anterior se conserva, RN-08). Solo para el rol `doctor`; `admin` no ve la acción (y el servidor responde `403`, US-253 AC-4).
 - Al guardar, la fila muestra el valor nuevo con el rótulo de origen **«Corrección manual · [fecha relativa]»** y el anterior pasa a **«Histórico»**; nunca desaparece.
 - Paciente egresado: la acción está deshabilitada con el texto «El paciente está egresado: no admite registros hasta su reactivación» (RN-17; es regla legal, sí bloquea).
-- Nota libre: aviso fijo encima del campo: «No escribas nombres de personas (ni del paciente ni de terceros) en las notas. El texto se enmascara antes de llegar a la IA.» (ADR-40, RN-11, US-253 AC-6).
+- Nota libre: aviso fijo encima del campo: «Las notas no se envían a la IA en esta versión; conviene no incluir nombres de personas en ellas.» (ADR-40, RN-11, US-253 AC-6).
 - Validación: `422` → mensaje junto al campo, anunciado en `aria-live="assertive"`, sin cambios (US-253 AC-3).
 - Tras guardar, aviso que no bloquea: «Los análisis anteriores se hicieron con el valor previo. Un análisis nuevo usará el valor corregido.» (RN-26, US-253 AC-5).
 
