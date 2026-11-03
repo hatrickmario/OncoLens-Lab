@@ -90,11 +90,30 @@ def esquema_de_generacion(claims_min: int, claims_max: int) -> dict[str, Any]:
     return esquema
 
 
-def _tipos_de_error(error: ValidationError | PydanticCustomError) -> list[str]:
+def tipos_de_error(error: ValidationError | PydanticCustomError) -> list[str]:
     """Solo el tipo de cada error de validación (p. ej. ``principal_duplicada``), nunca el contenido generado."""
     if isinstance(error, ValidationError):
         return sorted({e["type"] for e in error.errors()})
     return [error.type]
+
+
+def fragmentos_dentro_del_presupuesto(
+    chunks: Sequence[ChunkPuntuado], max_chars_fragmentos: int
+) -> list[ChunkPuntuado]:
+    """Los más relevantes que caben en ``max_chars_fragmentos`` (el primero siempre entra).
+
+    La ventana de contexto del runtime se reparte entre el prompt y la salida: con demasiados fragmentos la salida se
+    trunca y el JSON queda inválido (503). Los chunks llegan ordenados por relevancia (RN-22). Lo comparten la
+    generación del análisis y la del seguimiento.
+    """
+    elegidos: list[ChunkPuntuado] = []
+    total = 0
+    for chunk in chunks:
+        if elegidos and total + len(chunk.chunk_text) > max_chars_fragmentos:
+            break
+        elegidos.append(chunk)
+        total += len(chunk.chunk_text)
+    return elegidos
 
 
 class LlmEvidenceGenerator:
@@ -122,7 +141,9 @@ class LlmEvidenceGenerator:
         trace_id = solicitud.traceId.root
         idioma = recuperacion.meta.responseLanguage
         tabla = asignar_alias(
-            self._fragmentos_dentro_del_presupuesto(recuperacion.chunks_sobre_umbral)
+            fragmentos_dentro_del_presupuesto(
+                recuperacion.chunks_sobre_umbral, self._max_chars_fragmentos
+            )
         )
         prompt = construir_prompt_rag_query(
             solicitud.query,
@@ -173,30 +194,13 @@ class LlmEvidenceGenerator:
             cruda.option, composicion.rationale, citados, composicion.details, afirmaciones
         )
 
-    def _fragmentos_dentro_del_presupuesto(
-        self, chunks: Sequence[ChunkPuntuado]
-    ) -> list[ChunkPuntuado]:
-        """Los más relevantes que caben en ``max_chars_fragmentos`` (el primero siempre entra).
-
-        La ventana de contexto del runtime se reparte entre el prompt y la salida: con demasiados fragmentos la salida se
-        trunca y el JSON queda inválido (503). Los chunks llegan ordenados por relevancia (RN-22).
-        """
-        elegidos: list[ChunkPuntuado] = []
-        total = 0
-        for chunk in chunks:
-            if elegidos and total + len(chunk.chunk_text) > self._max_chars_fragmentos:
-                break
-            elegidos.append(chunk)
-            total += len(chunk.chunk_text)
-        return elegidos
-
     def _parsear(self, crudo: str, trace_id: str) -> GenerationOutput:
         """JSON inválido o fuera de esquema = salida del LLM no validada; solo se registra el tipo de cada error."""
         try:
             salida = GenerationOutput.model_validate_json(crudo)
             self._exigir_cantidad_de_afirmaciones(salida)
         except (ValidationError, PydanticCustomError) as error:
-            tipos = _tipos_de_error(error)
+            tipos = tipos_de_error(error)
             # Solo el tipo de cada error y la longitud: nunca el contenido generado a partir del corpus (RN-14).
             logger.warning(
                 "event=generacion_salida_invalida traceId=%s caracteres=%d errores=%s",

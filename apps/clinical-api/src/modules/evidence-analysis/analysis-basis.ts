@@ -97,6 +97,8 @@ export function declararReescrituraEnLaBase(respuesta: RagQueryInternalResponse)
  */
 export function crearBaseDelAnalisis(dependencias: {
   etiquetaDe: EtiquetaDeDatoCritico;
+  /** `ANALYSIS_FOLLOWUP_MAX` de Settings (RN-22): el tope vigente al crear el análisis, informativo para la UI (US-219). */
+  maxFollowUps: number;
 }): AnalysisBasisBuilder {
   return {
     construir(request, respuesta, continueWithWarning) {
@@ -122,6 +124,7 @@ export function crearBaseDelAnalisis(dependencias: {
         omittedClaims: respuesta.omittedClaims,
         optionsNotShown: respuesta.optionsNotShown,
         maxOptions: request.maxOptions,
+        maxFollowUps: dependencias.maxFollowUps,
       };
     },
   };

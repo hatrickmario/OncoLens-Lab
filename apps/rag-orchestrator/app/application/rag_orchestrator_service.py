@@ -232,6 +232,23 @@ class RAGOrchestratorService:
         )
 
     async def consultar(self, solicitud: RagQueryInternalRequest) -> RagQueryInternalResponse:
+        recuperacion = await self.recuperar(solicitud)
+        if not recuperacion.chunks_sobre_umbral:
+            return self._responder_sin_evidencia(recuperacion.recuperados, recuperacion.meta)
+        evidencia = await self._generador.generar(solicitud, recuperacion)
+        return await self._validar_citas_y_ensamblar(solicitud, evidencia, recuperacion)
+
+    async def recuperar(
+        self,
+        solicitud: RagQueryInternalRequest,
+        *,
+        con_reescritura: bool = True,
+        version_del_prompt: str = VERSION_DEL_PROMPT,
+    ) -> ResultadoDeRecuperacion:
+        """Etapa RECUPERAR de `/rag/query` y de `/rag/follow-up`: catálogo → filtro → idioma y release → loop(s) → umbral.
+
+        Entrega solo los chunks sobre el umbral (RN-02); sin ninguno, quien llama responde sin evidencia sin invocar al
+        generador. ``con_reescritura=False`` omite el segundo loop (el seguimiento no reescribe: ``no_aplica``)."""
         trace_id = solicitud.traceId.root
         # Primer paso, antes de todo borde (D2): un catálogo de otra versión no consume embeddings, Milvus, LLM ni NLI.
         exigir_catalogo_de_la_solicitud(self._catalogo_clinico, trace_id, solicitud.catalogVersion)
@@ -240,24 +257,50 @@ class RAGOrchestratorService:
         self._exigir_tipo_habilitado(
             solicitud
         )  # un tipo inutilizable ya fue 422 propio; aquí, antes de recuperar (RN-20)
-        borde = self._invocar_borde_fallando_cerrado
-        idioma = await borde(trace_id, "idioma", self._detector_idioma.detectar, solicitud.query)
-        release = await borde(trace_id, "catalogo", self._lector_release.release_vigente)
+        idioma, release = await self._idioma_y_release(trace_id, solicitud.query)
         loop = await self._recuperar_y_puntuar(trace_id, solicitud, filtro, solicitud.query, 1)
-        loop, reescritura = await self._segundo_loop_si_corresponde(
-            trace_id, solicitud, filtro, loop
-        )
+        if con_reescritura:
+            loop, reescritura = await self._segundo_loop_si_corresponde(
+                trace_id, solicitud, filtro, loop
+            )
+        else:
+            reescritura = EstadoDeReescritura(MotivoDeReescritura.no_aplica)
         candidatos, sobre_umbral = loop
-        meta_de_recuperacion = self._armar_meta_de_recuperacion(
-            solicitud, idioma, release, inicio, reescritura
+        meta = self._armar_meta_de_recuperacion(
+            solicitud, idioma, release, inicio, reescritura, version_del_prompt
         )
-        if not sobre_umbral:
-            return self._responder_sin_evidencia(len(candidatos), meta_de_recuperacion)
-        recuperacion = ResultadoDeRecuperacion(
-            tuple(sobre_umbral), len(candidatos), meta_de_recuperacion
+        return ResultadoDeRecuperacion(tuple(sobre_umbral), len(candidatos), meta)
+
+    async def meta_sin_recuperacion(
+        self, solicitud: RagQueryInternalRequest, version_del_prompt: str
+    ) -> RagMeta:
+        """``meta`` de una respuesta que no recupera (``fuera_de_contexto``): exige el catálogo, detecta el idioma y lee el
+        release, pero no invoca embeddings, búsqueda, *reranker*, LLM ni NLI."""
+        trace_id = solicitud.traceId.root
+        exigir_catalogo_de_la_solicitud(self._catalogo_clinico, trace_id, solicitud.catalogVersion)
+        inicio = self._reloj.ahora()
+        idioma, release = await self._idioma_y_release(trace_id, solicitud.query)
+        return self._armar_meta_de_recuperacion(
+            solicitud,
+            idioma,
+            release,
+            inicio,
+            EstadoDeReescritura(MotivoDeReescritura.no_aplica),
+            version_del_prompt,
         )
-        evidencia = await self._generador.generar(solicitud, recuperacion)
-        return await self._validar_citas_y_ensamblar(solicitud, evidencia, recuperacion)
+
+    @property
+    def verificador_de_soporte(self) -> VerificadorDeSoporte:
+        """El verificador NLI y de lenguaje (RN-01, RN-23) que comparten el análisis y el seguimiento."""
+        return self._soporte
+
+    async def _idioma_y_release(
+        self, trace_id: str, pregunta: str
+    ) -> tuple[Idioma, ReleaseDelCorpus]:
+        borde = self._invocar_borde_fallando_cerrado
+        idioma = await borde(trace_id, "idioma", self._detector_idioma.detectar, pregunta)
+        release = await borde(trace_id, "catalogo", self._lector_release.release_vigente)
+        return idioma, release
 
     async def _recuperar_y_puntuar(
         self,
@@ -357,7 +400,7 @@ class RAGOrchestratorService:
         """
         trace_id = solicitud.traceId.root
         idioma = recuperacion.meta.responseLanguage.value
-        citables = await self._chunks_citables(trace_id, recuperacion)
+        citables = await self.chunks_citables(trace_id, recuperacion)
         aplicabilidad = await self._evaluar_aplicabilidad(solicitud, citables)
         if aplicabilidad.invoco_al_llm:
             recuperacion = self._con_version_de_aplicabilidad(recuperacion)
@@ -525,7 +568,7 @@ class RAGOrchestratorService:
         )
         return recorte
 
-    async def _chunks_citables(
+    async def chunks_citables(
         self, trace_id: str, recuperacion: ResultadoDeRecuperacion
     ) -> dict[str, ChunkCitable]:
         """Los chunks sobre el umbral entregados a la generación cuyo documento tiene ficha en el catálogo."""
@@ -742,6 +785,7 @@ class RAGOrchestratorService:
         release: ReleaseDelCorpus,
         inicio: datetime,
         reescritura: EstadoDeReescritura = EstadoDeReescritura(MotivoDeReescritura.no_disparado),
+        version_del_prompt: str = VERSION_DEL_PROMPT,
     ) -> RagMeta:
         """``meta`` con la latencia hasta el fin de la recuperación; la generación (L1D-275) la actualiza."""
         parametros = self._parametros
@@ -754,7 +798,7 @@ class RAGOrchestratorService:
             embeddingModel=self._embedder.modelo,
             rerankerModel=self._reranker.version,
             nliModel=self._soporte.nli_model,
-            promptVersion=VERSION_DEL_PROMPT,
+            promptVersion=version_del_prompt,
             catalogVersion=solicitud.catalogVersion,
             corpusRelease=release.release_id,
             corpusCutoffDate=release.cutoff_date,

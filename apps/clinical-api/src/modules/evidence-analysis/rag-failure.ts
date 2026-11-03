@@ -73,3 +73,15 @@ export function mapearFalloRag(fallo: FalloDeRag): RespuestaDeFallo {
       return servicioIa('error_de_rag');
   }
 }
+
+/**
+ * Fallo de `/rag/follow-up` según el contrato del seguimiento: sus `409` y `422` solo declaran el límite y el cuerpo
+ * inválido de clinical-api, así que un `409` o `422` de Backend 2 se expone como `502`, igual que cualquier otro fallo
+ * interno (misma tabla única, sin tocar el análisis).
+ */
+export function mapearFalloRagDeSeguimiento(fallo: FalloDeRag): RespuestaDeFallo {
+  const respuesta = mapearFalloRag(fallo);
+  return respuesta.status === 409 || respuesta.status === 422
+    ? servicioIa(respuesta.resultado)
+    : respuesta;
+}

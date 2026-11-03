@@ -12,6 +12,7 @@ from typing import Protocol, runtime_checkable
 from app.application.aplicabilidad_textual import ParametrosDelRespaldo
 from app.application.corpus_metadata.esquema_poblacion import cargar_plantilla
 from app.application.corpus_metadata.poblacion_puertos import LlmDePoblacion
+from app.application.generacion_de_seguimiento import LlmSeguimientoGenerator
 from app.application.generation import LlmEvidenceGenerator
 from app.application.ports import LlmClient
 from app.config.settings import Settings
@@ -59,6 +60,19 @@ def crear_generador_local(
 ) -> LlmEvidenceGenerator:
     """Generación con el LLM nativo local (``LLM_BASE_URL``); sin adapter de nube ni *fallback* (RN-12)."""
     return LlmEvidenceGenerator(
+        _cliente_llm_local(settings, envolver_cliente),
+        claims_min=settings.claims_min_per_option,
+        claims_max=settings.claims_max_per_option,
+        claim_max_words=settings.claim_max_words,
+        max_chars_fragmentos=settings.llm_fragments_max_chars,
+    )
+
+
+def crear_generador_de_seguimiento_local(
+    settings: Settings, envolver_cliente: EnvolverCliente | None = None
+) -> LlmSeguimientoGenerator:
+    """Generación del seguimiento (US-218) con el mismo LLM local y los mismos valores de configuración que el análisis."""
+    return LlmSeguimientoGenerator(
         _cliente_llm_local(settings, envolver_cliente),
         claims_min=settings.claims_min_per_option,
         claims_max=settings.claims_max_per_option,

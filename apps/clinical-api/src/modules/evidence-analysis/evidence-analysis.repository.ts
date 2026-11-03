@@ -96,7 +96,7 @@ export interface AnalisisRepository {
   persistirAnalisis(registro: RegistroDeAnalisis): Promise<RegistroDeAnalisis>;
 }
 
-type Fila = Record<string, unknown>;
+export type Fila = Record<string, unknown>;
 
 function procedenciaDe(fila: Fila): ProcedenciaDeFila {
   return {
@@ -162,7 +162,7 @@ function tratamientoPrevioDe(fila: Fila): FilaDeTratamientoPrevio {
   };
 }
 
-function eventoDe(fila: Fila): FilaDeEvento {
+export function eventoDe(fila: Fila): FilaDeEvento {
   return {
     id: fila['id'] as string,
     eventType: fila['event_type'] as string,
@@ -223,16 +223,22 @@ async function leerTratamientosPrevios(leer: Leer): Promise<FilaDeTratamientoPre
   return filas.map(tratamientoPrevioDe);
 }
 
-/** Los eventos con `analysis_id` son el reflejo de un análisis previo en el timeline: no son datos clínicos. */
-async function leerEventos(leer: Leer): Promise<FilaDeEvento[]> {
-  const filas = await leer(
-    `SELECT id, event_type, event_date::text AS event_date, description, entry_method,
+/**
+ * Eventos clínicos vigentes de un paciente (`$1`): sin rechazados ni reemplazados (RN-07) y sin los que tienen
+ * `analysis_id`, que son el reflejo de un análisis previo en el timeline y no datos clínicos. Única consulta de eventos
+ * del módulo: el contexto del análisis y la evolución posterior del seguimiento la comparten; `filtroExtra` añade una
+ * condición `AND …` con sus propios parámetros; es SOLO SQL constante del código, nunca texto del cliente.
+ */
+export function sqlEventosClinicosVigentes(filtroExtra = ''): string {
+  return `SELECT id, event_type, event_date::text AS event_date, description, entry_method,
             extraction_confidence, review_status
        FROM clinical.clinical_event
-      WHERE patient_id = $1 AND ${sqlEventoClinicoPropio()} AND ${sqlDatoVigente('review_status')}
-      ORDER BY event_date NULLS LAST, created_at`,
-  );
-  return filas.map(eventoDe);
+      WHERE patient_id = $1 AND ${sqlEventoClinicoPropio()} AND ${sqlDatoVigente('review_status')} ${filtroExtra}
+      ORDER BY event_date NULLS LAST, created_at`;
+}
+
+async function leerEventos(leer: Leer): Promise<FilaDeEvento[]> {
+  return (await leer(sqlEventosClinicosVigentes())).map(eventoDe);
 }
 
 /** El episodio abierto del paciente o, si no hay, el último: el `AIAnalysisRecord` se asocia a él. */
@@ -315,7 +321,7 @@ function parametrosDelRegistro(r: RegistroDeAnalisis): unknown[] {
 }
 
 /** El registro tal como quedó en la fila (jsonb ya parseado por `pg`): de aquí sale la respuesta `200`. */
-function registroDeFila(f: Fila): RegistroDeAnalisis {
+export function registroDeFila(f: Fila): RegistroDeAnalisis {
   return {
     id: f['id'] as string,
     patientId: f['patient_id'] as string,

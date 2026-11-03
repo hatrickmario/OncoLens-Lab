@@ -368,6 +368,8 @@ export interface EvidenceAnalysisConfig {
   evidenceDefaultYears: number;
   /** Plazo de la llamada a rag-orchestrator en milisegundos (`RAG_TIMEOUT_MS`, RN-22): `X-Request-Deadline` y abortar. */
   ragTimeoutMs: number;
+  /** Máximo de preguntas de seguimiento por análisis (`ANALYSIS_FOLLOWUP_MAX`, RN-22, US-218): el `409 LIMITE_SEGUIMIENTO`. */
+  analysisFollowupMax: number;
   /** `AI_DISCLAIMER_TEXT`: aviso de IA de la respuesta (literal de US-069 y PRD E-11, sin la etiqueta de uso académico); obligatorio y no vacío, nunca un literal del código. */
   aiDisclaimerText: string;
 }
@@ -377,6 +379,7 @@ const DEFAULT_ANALYSIS_MAX_OPTIONS = 3;
 const CONTRACT_MAX_OPTIONS = 3;
 const DEFAULT_EVIDENCE_YEARS = 10;
 const DEFAULT_RAG_TIMEOUT_MS = 30_000;
+const DEFAULT_ANALYSIS_FOLLOWUP_MAX = 10;
 
 function leerUrlHttpObligatoria(env: NodeJS.ProcessEnv, variable: string): string {
   const valor = leerObligatoria(env, variable);
@@ -418,6 +421,11 @@ export function readEvidenceAnalysisConfig(env: NodeJS.ProcessEnv): EvidenceAnal
       DEFAULT_EVIDENCE_YEARS,
     ),
     ragTimeoutMs: readPositiveInteger(env, 'RAG_TIMEOUT_MS', DEFAULT_RAG_TIMEOUT_MS),
+    analysisFollowupMax: readPositiveInteger(
+      env,
+      'ANALYSIS_FOLLOWUP_MAX',
+      DEFAULT_ANALYSIS_FOLLOWUP_MAX,
+    ),
     aiDisclaimerText: leerObligatoria(env, 'AI_DISCLAIMER_TEXT'),
   };
 }

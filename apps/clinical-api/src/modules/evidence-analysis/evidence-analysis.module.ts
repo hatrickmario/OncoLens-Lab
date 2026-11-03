@@ -10,6 +10,9 @@ import type { ChecklistDelPaciente, CompletenessService } from '../completeness/
 import { crearBaseDelAnalisis } from './analysis-basis.js';
 import { crearAnalysisCompletion } from './analysis-completion.js';
 import { evidenceAnalysisController } from './evidence-analysis.controller.js';
+import { followUpController } from './follow-up.controller.js';
+import { crearFollowUpRepository, type EjecutarEnTransaccion } from './follow-up.repository.js';
+import { crearFollowUpService, type FollowUpService } from './follow-up.service.js';
 import { createEvidenceAnalysisRepository } from './evidence-analysis.repository.js';
 import {
   crearEvidenceAnalysisService,
@@ -22,6 +25,7 @@ import {
   type ChecklistDeFaltantes,
   type ContextDeidentifier,
   type TraceIdGenerator,
+  type RagFollowUpPort,
   type RagQueryClient,
 } from './ports.js';
 
@@ -33,6 +37,12 @@ export interface ConfiguracionDelGateway extends ConfiguracionDelAnalisis {
 export interface DependenciasDelGateway {
   db: Consultador;
   rag: RagQueryClient;
+  /** Cliente de `/rag/follow-up` (US-218). */
+  ragFollowUp: RagFollowUpPort;
+  /** Transacción sobre una conexión: el turno de seguimiento se inserta bajo bloqueo del análisis. */
+  enTransaccion: EjecutarEnTransaccion;
+  /** UUID de los turnos de seguimiento; distinto de `idsDeAnalisis`. */
+  idsDeTurnos: GeneradorDeIds;
   catalogo: CatalogVersionProvider;
   /** Faltantes críticos del caso (US-006): lo cablea la raíz de composición sobre `CompletenessService`. */
   checklist: ChecklistDeFaltantes;
@@ -72,6 +82,20 @@ export function crearChecklistDeFaltantes(completitud: CompletenessService): Che
   };
 }
 
+/** Servicio del seguimiento (US-218): comparte desidentificador, catálogo, reloj y configuración con el gateway. */
+function componerSeguimiento(dependencias: DependenciasDelGateway): FollowUpService {
+  const { analysisFollowupMax, ragTimeoutMs, aiDisclaimerText } = dependencias.config;
+  return crearFollowUpService({
+    seguimientos: crearFollowUpRepository(dependencias.db, dependencias.enTransaccion),
+    desidentificador: dependencias.desidentificador,
+    rag: dependencias.ragFollowUp,
+    catalogo: dependencias.catalogo,
+    reloj: dependencias.reloj,
+    idsDeTurnos: dependencias.idsDeTurnos,
+    config: { analysisFollowupMax, ragTimeoutMs, aiDisclaimerText },
+  });
+}
+
 /** Composición del módulo `evidence-analysis`: devuelve el router que se monta detrás del guard de sesión. */
 export function componerGatewayDeAnalisis(dependencias: DependenciasDelGateway): Router {
   const repositorio = createEvidenceAnalysisRepository(dependencias.db);
@@ -81,7 +105,10 @@ export function componerGatewayDeAnalisis(dependencias: DependenciasDelGateway):
     rag: dependencias.rag,
     cierre: crearAnalysisCompletion({
       analisis: repositorio,
-      base: crearBaseDelAnalisis({ etiquetaDe: dependencias.etiquetaDe }),
+      base: crearBaseDelAnalisis({
+        etiquetaDe: dependencias.etiquetaDe,
+        maxFollowUps: dependencias.config.analysisFollowupMax,
+      }),
       reloj: dependencias.reloj,
       idsDeAnalisis: dependencias.idsDeAnalisis,
       disclaimer: dependencias.config.aiDisclaimerText,
@@ -93,9 +120,17 @@ export function componerGatewayDeAnalisis(dependencias: DependenciasDelGateway):
     reloj: dependencias.reloj,
     config: dependencias.config,
   });
-  return evidenceAnalysisController({
+  const router = evidenceAnalysisController({
     service,
     traceIds: dependencias.traceIds,
     registrar: dependencias.registrar,
   });
+  return followUpController(
+    {
+      service: componerSeguimiento(dependencias),
+      traceIds: dependencias.traceIds,
+      registrar: dependencias.registrar,
+    },
+    router,
+  );
 }

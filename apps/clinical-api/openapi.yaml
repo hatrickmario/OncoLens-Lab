@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — Platform API (Backend 1 / clinical-api)
-  version: 1.16.0
+  version: 1.17.0
   description: >-
     API pública, accesible solo a través de los Route Handlers de web (clinical-api no
     publica puerto al host). Autenticación por cookie de sesión HttpOnly + Secure +
@@ -573,10 +573,12 @@ paths:
                 $ref: '#/components/schemas/ErrorSeguimientoNoProcesable'
         "429":
           $ref: '#/components/responses/LimiteGeneracion'
+        "500":
+          $ref: '#/components/responses/ErrorInterno'
         "502":
           $ref: '#/components/responses/ErrorServicioIa'
         "503":
-          $ref: '#/components/responses/LlmLocalNoDisponible'
+          $ref: '#/components/responses/GeneracionNoDisponible'
         "504":
           $ref: '#/components/responses/DeadlineVencido'
     get:
@@ -1839,6 +1841,13 @@ components:
           minimum: 1
           maximum: 3
           description: ANALYSIS_MAX_OPTIONS aplicado en este análisis (RN-22, FR-09). Ausente en análisis históricos.
+        maxFollowUps:
+          type: integer
+          minimum: 1
+          description: >-
+            ANALYSIS_FOLLOWUP_MAX vigente al crear este análisis (RN-22, FR-31): tope de preguntas de
+            seguimiento que muestra la UI. La autoridad es el 409 LIMITE_SEGUIMIENTO. Ausente en
+            análisis históricos.
 
     Staleness:
       type: object
@@ -1996,6 +2005,10 @@ components:
           type: string
           minLength: 1
           maxLength: 2000
+          description: >-
+            Pregunta de seguimiento. clinical-api la normaliza antes de validarla, desidentificarla,
+            persistirla y enviarla (Unicode NFC, espacios colapsados a uno y recortados; mayúsculas y
+            puntuación sin cambios). minLength y maxLength se miden después de normalizar (US-250, US-218).
 
     FollowUpCitedSource:
       type: object

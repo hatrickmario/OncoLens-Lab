@@ -504,7 +504,8 @@ export const zAnalysisBasis = z.strictObject({
     })),
     omittedClaims: z.int().gte(0),
     optionsNotShown: z.int().gte(0).optional(),
-    maxOptions: z.int().gte(1).lte(3).optional()
+    maxOptions: z.int().gte(1).lte(3).optional(),
+    maxFollowUps: z.int().gte(1).optional()
 });
 
 /**

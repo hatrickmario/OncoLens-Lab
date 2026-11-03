@@ -1,20 +1,8 @@
-import express, {
-  Router,
-  type ErrorRequestHandler,
-  type RequestHandler,
-  type Response,
-} from 'express';
-import {
-  enviarError,
-  esErrorDeCuerpoDelCliente,
-  type CodigoDeError,
-} from '../../infrastructure/http-errores.js';
-import type { LineaDeLog, Registrar } from '../../infrastructure/logger.js';
+import express, { Router, type RequestHandler } from 'express';
+import type { Registrar } from '../../infrastructure/logger.js';
 import { authorize } from '../../middleware/authorize.js';
 import { FalloDePersistenciaError } from './analysis-completion.js';
 import { TipoCancerNoRegistradoError } from './case-guards.js';
-import { DesidentificacionNoDisponible } from './deidentification/context-deidentifier.js';
-import { EntornoNoSintetico } from './deidentification/entorno-sintetico.guard.js';
 import { evidenceAnalysisRequestSchema } from './evidence-analysis.schema.js';
 import {
   PacienteNoEncontradoError,
@@ -25,6 +13,14 @@ import {
   EtiquetaDeDatoCriticoNoDisponibleError,
   type TraceIdGenerator,
 } from './ports.js';
+import {
+  CUERPO_INVALIDO,
+  ERROR_INTERNO,
+  crearEmisor,
+  manejadorDeCuerpoIlegible,
+  rechazoDeDesidentificacion,
+  type Rechazo,
+} from './rechazos-http.js';
 import { crearTraceIdMiddleware, traceIdDe } from '../../middleware/trace-id.middleware.js';
 
 export interface DependenciasDelController {
@@ -35,37 +31,10 @@ export interface DependenciasDelController {
 
 const EVENTO = 'evidence_analysis.solicitud';
 
-interface Rechazo {
-  status: number;
-  codigo: CodigoDeError;
-  resultado: string;
-  extra?: LineaDeLog;
-}
-
 const PERMISO_DENEGADO: Rechazo = {
   status: 403,
   codigo: 'PERMISO_DENEGADO',
   resultado: 'permiso_denegado',
-};
-const CUERPO_INVALIDO: Rechazo = {
-  status: 422,
-  codigo: 'CUERPO_INVALIDO',
-  resultado: 'cuerpo_invalido',
-};
-const ERROR_INTERNO: Rechazo = {
-  status: 500,
-  codigo: 'ERROR_INTERNO',
-  resultado: 'error_de_persistencia',
-};
-const DESIDENTIFICACION_NO_DISPONIBLE: Rechazo = {
-  status: 503,
-  codigo: 'DESIDENTIFICACION_NO_DISPONIBLE',
-  resultado: 'desidentificacion_no_disponible',
-};
-const ERROR_SERVICIO_IA: Rechazo = {
-  status: 502,
-  codigo: 'ERROR_SERVICIO_IA',
-  resultado: 'error_servicio_ia',
 };
 
 /** Errores del dominio → respuesta HTTP; `undefined` si no es uno de ellos (sigue al 500 genérico). */
@@ -87,15 +56,7 @@ function rechazoDe(error: unknown): Rechazo | undefined {
   if (error instanceof EtiquetaDeDatoCriticoNoDisponibleError) {
     return { ...ERROR_INTERNO, resultado: 'etiqueta_de_dato_critico_no_disponible' };
   }
-  if (error instanceof DesidentificacionNoDisponible) return DESIDENTIFICACION_NO_DISPONIBLE;
-  if (error instanceof EntornoNoSintetico) {
-    return {
-      ...ERROR_SERVICIO_IA,
-      resultado: 'desidentificacion_rechazada',
-      extra: { motivo: error.motivo },
-    };
-  }
-  return undefined;
+  return rechazoDeDesidentificacion(error);
 }
 
 /**
@@ -107,21 +68,8 @@ export function evidenceAnalysisController(dependencias: DependenciasDelControll
   const { service, traceIds, registrar } = dependencias;
   const router = Router();
 
-  function registrarResultado(response: Response, resultado: string, extra: LineaDeLog = {}): void {
-    const { traceIdEntrante } = response.locals;
-    registrar({
-      event: EVENTO,
-      resultado,
-      traceId: traceIdDe(response),
-      ...(traceIdEntrante !== undefined && { traceIdEntrante }),
-      ...extra,
-    });
-  }
-
-  function rechazar(response: Response, rechazo: Rechazo, extra: LineaDeLog = {}): void {
-    registrarResultado(response, rechazo.resultado, { ...extra, ...rechazo.extra });
-    enviarError(response, rechazo.status, rechazo.codigo, traceIdDe(response));
-  }
+  const emisor = crearEmisor(registrar, EVENTO);
+  const { registrarResultado, rechazar } = emisor;
 
   const solicitar: RequestHandler = async (request, response) => {
     const sesion = request.sesion;
@@ -155,22 +103,13 @@ export function evidenceAnalysisController(dependencias: DependenciasDelControll
     }
   };
 
-  // JSON malformado o cuerpo excesivo: mismo 422 del contrato, sin eco del error del parser.
-  const cuerpoIlegible: ErrorRequestHandler = (error: unknown, _request, response, next) => {
-    if (!esErrorDeCuerpoDelCliente(error)) {
-      next(error);
-      return;
-    }
-    rechazar(response, CUERPO_INVALIDO);
-  };
-
   router.post(
     '/evidence-analyses',
     crearTraceIdMiddleware(traceIds),
     authorize('ai_analysis:create'), // x-permission de createEvidenceAnalysis; el rol no se mira
     express.json(),
     solicitar,
-    cuerpoIlegible,
+    manejadorDeCuerpoIlegible(emisor),
   );
   return router;
 }

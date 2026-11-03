@@ -6,6 +6,8 @@ import type {
 import type {
   ClinicalContext,
   DataClassification,
+  RagFollowUpRequest,
+  RagFollowUpResponse,
   RagQueryInternalRequest,
   RagQueryInternalResponse,
   SourcesSelected,
@@ -200,4 +202,14 @@ export interface AnalysisCompletion {
   completar(entrada: EntradaDeCierre): Promise<ResultadoDelAnalisis>;
   /** Cierre sin IA de un `tipo_no_habilitado`: persiste el registro antes de responder (RN-06). */
   completarTipoNoHabilitado(entrada: EntradaDeCierreSinIA): Promise<ResultadoDelAnalisis>;
+}
+
+export type RespuestaDeSeguimientoRag = { ok: true; cuerpo: RagFollowUpResponse } | FalloDeRag;
+
+/** Cliente de `/rag/follow-up` (US-218): el SDK generado sobre el transporte con JWT de servicio. Sin estado entre turnos. */
+export interface RagFollowUpPort {
+  responder(
+    request: RagFollowUpRequest,
+    opciones?: OpcionesDeConsultaRag,
+  ): Promise<RespuestaDeSeguimientoRag>;
 }

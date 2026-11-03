@@ -253,7 +253,8 @@
     "agentSteps": [],
     "omittedClaims": 0,
     "optionsNotShown": 1,
-    "maxOptions": 3
+    "maxOptions": 3,
+    "maxFollowUps": 10
   },
   "topRelevanceScore": 0.92,
   "staleness": {

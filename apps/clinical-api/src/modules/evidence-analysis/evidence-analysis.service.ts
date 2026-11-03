@@ -24,6 +24,7 @@ import type {
   RespuestaDeRag,
   ResultadoDelAnalisis,
 } from './ports.js';
+import { llamarConPlazo } from './rag-plazo.js';
 
 /** El `patientId` de la petición no corresponde a ningún paciente. */
 export { PacienteNoEncontradoError };
@@ -35,6 +36,8 @@ export interface ConfiguracionDelAnalisis {
   evidenceDefaultYears: number;
   /** Plazo hacia rag-orchestrator en ms (`RAG_TIMEOUT_MS`, RN-22). */
   ragTimeoutMs: number;
+  /** Tope de preguntas de seguimiento por análisis (`ANALYSIS_FOLLOWUP_MAX`, RN-22): la Base lo declara a la UI (US-219). */
+  analysisFollowupMax: number;
 }
 
 export interface DependenciasDelService {
@@ -122,21 +125,13 @@ export function calcularDeadline(ahora: Date, ragTimeoutMs: number): string {
  * Consulta a rag-orchestrator con su plazo: envía el deadline y aborta la llamada al vencer `ragTimeoutMs`. El
  * temporizador se limpia siempre, también cuando la llamada falla.
  */
-async function consultarConPlazo(
+function consultarConPlazo(
   rag: RagQueryClient,
   request: RagQueryInternalRequest,
   deadline: string,
   ragTimeoutMs: number,
 ): Promise<RespuestaDeRag> {
-  const controlador = new AbortController();
-  const temporizador = setTimeout(() => {
-    controlador.abort();
-  }, ragTimeoutMs);
-  try {
-    return await rag.consultar(request, { deadline, signal: controlador.signal });
-  } finally {
-    clearTimeout(temporizador);
-  }
+  return llamarConPlazo(ragTimeoutMs, (signal) => rag.consultar(request, { deadline, signal }));
 }
 
 /**

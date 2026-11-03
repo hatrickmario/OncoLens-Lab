@@ -643,6 +643,10 @@ export type AnalysisBasis = {
      * ANALYSIS_MAX_OPTIONS aplicado en este análisis (RN-22, FR-09). Ausente en análisis históricos.
      */
     maxOptions?: number;
+    /**
+     * ANALYSIS_FOLLOWUP_MAX vigente al crear este análisis (RN-22, FR-31): tope de preguntas de seguimiento que muestra la UI. La autoridad es el 409 LIMITE_SEGUIMIENTO. Ausente en análisis históricos.
+     */
+    maxFollowUps?: number;
 };
 
 /**
@@ -705,6 +709,9 @@ export type EvidenceAnalysis = {
 };
 
 export type FollowUpCreate = {
+    /**
+     * Pregunta de seguimiento. clinical-api la normaliza antes de validarla, desidentificarla, persistirla y enviarla (Unicode NFC, espacios colapsados a uno y recortados; mayúsculas y puntuación sin cambios). minLength y maxLength se miden después de normalizar (US-250, US-218).
+     */
     question: string;
 };
 
@@ -1560,13 +1567,17 @@ export type CreateFollowUpErrors = {
      */
     429: ErrorLimiteGeneracion;
     /**
+     * Fallo interno de clinical-api. Mensaje fijo, sin eco ni detalle interno.
+     */
+    500: ErrorInterno;
+    /**
      * Error de comunicación con rag-orchestrator (sin detalles internos).
      */
     502: ErrorServicioIa;
     /**
-     * LLM local no disponible; los datos reales nunca se envían a la nube.
+     * La generación no está disponible: LLM local caído (los datos reales nunca se envían a la nube), salida del LLM local no validada (LLM_OUTPUT_INVALID: no parseable o fuera del esquema; no se persiste contenido generado, RN-06) o desidentificación no disponible (falla cerrada, RN-11; no se invoca a Backend 2).
      */
-    503: ErrorLlmLocalNoDisponible;
+    503: ErrorLlmLocalNoDisponible | ErrorDesidentificacionNoDisponible | ErrorSalidaLlmInvalida;
     /**
      * rag-orchestrator no respondió dentro del deadline.
      */

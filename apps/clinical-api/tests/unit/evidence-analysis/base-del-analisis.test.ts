@@ -43,7 +43,7 @@ describe('declararReescrituraEnLaBase (US-238, D-d)', () => {
 });
 
 describe('BaseDelAnalisis', () => {
-  const base = crearBaseDelAnalisis({ etiquetaDe: (clave) => clave });
+  const base = crearBaseDelAnalisis({ etiquetaDe: (clave) => clave, maxFollowUps: 10 });
 
   it('produce la misma Base byte a byte cuando se ejecuta dos veces con las mismas entradas [US-066 AC-4]', () => {
     const primera = base.construir(request, respuestaConEvidencia(), false);
@@ -212,7 +212,7 @@ describe('inciso (b) de la Base', () => {
     grado: 'Grado histológico',
     rp: 'Receptor de progesterona',
   };
-  const base = crearBaseDelAnalisis({ etiquetaDe: (clave) => etiquetas[clave] });
+  const base = crearBaseDelAnalisis({ etiquetaDe: (clave) => etiquetas[clave], maxFollowUps: 10 });
   const conFaltantes = (faltantes: string[]): RagQueryInternalRequest => ({
     ...request,
     clinicalContext: { ...request.clinicalContext, missingCriticalData: faltantes },

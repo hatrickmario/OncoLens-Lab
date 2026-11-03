@@ -1,0 +1,8 @@
+# FX-SEGUIMIENTO (US-218 / L1D-268): 4 casos sintéticos del seguimiento de un análisis sobre el corpus de FX-T5a-a.
+# Ningún dato real ni de paciente.
+clase: sintetico
+nombre: fx-seguimiento
+version: '1'
+descripcion: 'Cuatro casos de /rag/follow-up con guiones del LLM falso: con evidencia, sin evidencia, fuera de contexto y memoria como única base. Corpus: data/eval/fx-t5a-a.'
+archivos:
+  casos: seguimiento.yaml

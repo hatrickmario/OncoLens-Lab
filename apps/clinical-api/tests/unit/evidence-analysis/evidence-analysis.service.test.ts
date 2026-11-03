@@ -176,7 +176,12 @@ function crearFakes(
       },
     },
     reloj: { now: () => AHORA_DE_EJEMPLO },
-    config: { analysisMaxOptions: 1, evidenceDefaultYears: 10, ragTimeoutMs: 30_000 },
+    config: {
+      analysisMaxOptions: 1,
+      evidenceDefaultYears: 10,
+      ragTimeoutMs: 30_000,
+      analysisFollowupMax: 10,
+    },
   };
   return { dependencias, llamadas, recibido };
 }
