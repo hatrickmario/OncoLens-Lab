@@ -1,11 +1,13 @@
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import {
   ARCHIVOS_DE_RAIZ,
+  ARCHIVOS_DE_RAIZ_DECLARADOS_POR_EL_MANIFIESTO,
   ARCHIVOS_DECLARADOS_POR_EL_MANIFIESTO,
   ARCHIVOS_DEL_CATALOGO,
   NOMBRES_DE_ARCHIVO,
 } from './archivos.mjs';
 import { catalogHashDeReglasDePoblacion } from './canonico.mjs';
+import { violacionesDeEscalas } from './escalas.mjs';
 import { nombrable } from './nombrable.mjs';
 import { clavesRepetidasEn, verificarCatalogHash, vocabularioDe } from './reglas.mjs';
 
@@ -81,8 +83,12 @@ function compilarEsquemas(esquemas) {
   const declarados = Object.entries(ARCHIVOS_DECLARADOS_POR_EL_MANIFIESTO).map(
     ([nombre, { esquema }]) => [nombre, ajv.compile(esquemas[esquema])],
   );
+  const declaradosDeLaRaiz = Object.entries(ARCHIVOS_DE_RAIZ_DECLARADOS_POR_EL_MANIFIESTO).map(
+    ([nombre, { esquema }]) => [nombre, ajv.compile(esquemas[esquema])],
+  );
   return {
     manifest: ajv.compile(esquemas.manifest),
+    ...Object.fromEntries(declaradosDeLaRaiz),
     ...Object.fromEntries(declarados),
     ...Object.fromEntries(deLaRaiz),
     ...Object.fromEntries(delRegistro),
@@ -126,6 +132,18 @@ function violacionesDeLosDeclarados(manifest, tipos, esquemasCompilados) {
   );
 }
 
+/** Archivos de la raíz que el manifiesto declara (`escalas: true`): esquema y reglas propias. */
+function violacionesDeLosDeclaradosDeLaRaiz(archivos, esquemasCompilados) {
+  return Object.entries(ARCHIVOS_DE_RAIZ_DECLARADOS_POR_EL_MANIFIESTO).flatMap(
+    ([nombre, { clave }]) => {
+      if (archivos.manifest?.[clave] !== true) return [];
+      const archivo = archivos[nombre];
+      if (!esquemasCompilados[nombre](archivo)) return [{ codigo: 'esquema_invalido', archivo: nombre }];
+      return violacionesDeEscalas(archivo, archivos.manifest?.cancerTypes);
+    },
+  );
+}
+
 /**
  * Red de seguridad: una forma que las reglas no previeron es un catálogo inválido, no una excepción que escape del
  * arranque o de la CI. El error original se descarta (puede citar contenido del catálogo).
@@ -162,6 +180,7 @@ export function validarCatalogo({ archivos, allowlist, esquemas }) {
       violacionesDelTipoSinLanzar(tipoDeCancer, delTipo, contexto, esquemasCompilados),
     ),
     ...violacionesDeLosDeclarados(archivos.manifest, archivos.tipos, esquemasCompilados),
+    ...violacionesDeLosDeclaradosDeLaRaiz(archivos, esquemasCompilados),
   ];
   return {
     valido: violaciones.length === 0,
