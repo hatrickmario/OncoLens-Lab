@@ -8,6 +8,7 @@ sinónimos y la lista de términos prohibidos (RN-23); toma de ``CorpusIngestSet
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from app.application.corpus_metadata.esquema_poblacion import cargar_plantilla
 from app.application.corpus_metadata.poblacion_puertos import LlmDePoblacion
@@ -16,9 +17,15 @@ from app.application.corpus_metadata.population_fanout import (
     PopulationFanoutExtractor,
 )
 from app.application.ports import NliClassifier
+from app.application.seed_corpus.ports import LectorDePoblacionDelCorpus
 from app.config.settings import CorpusIngestSettings, Settings
 from app.infrastructure.catalogo_clinico.aplicabilidad import cargar_criterios_de_aplicabilidad
 from app.infrastructure.catalogo_clinico.manifiesto import cargar_catalogo_del_manifiesto
+from app.application.corpus_ingestion.resumen_poblacion import (
+    como_diccionario,
+    resumir_poblacion_por_tipo_e_idioma,
+)
+from app.infrastructure.catalog.tables import DOMINIOS_CERRADOS
 from app.infrastructure.catalogo_clinico.sinonimos import cargar_sinonimos
 from app.infrastructure.corpus_metadata.recuperador_lexical import RecuperadorLexicalDeFragmentos
 from app.infrastructure.lenguaje.terminos_prohibidos import cargar_verificador_de_terminos
@@ -70,3 +77,20 @@ def _ruta_del_catalogo(ambiente: Settings) -> Path:
     if ambiente.clinical_catalog_path is None:
         raise CatalogoDePoblacionNoConfigurado("CLINICAL_CATALOG_PATH")
     return ambiente.clinical_catalog_path
+
+
+def resumen_de_poblacion_del_corpus(
+    lector: LectorDePoblacionDelCorpus, ajustes: CorpusIngestSettings, ambiente: Settings
+) -> dict[str, Any]:
+    """Resumen por tipo de cáncer e idioma de los documentos vigentes con elegibilidad verificada (US-120 AC-7): solo
+    identificadores y contadores. Los criterios salen del catálogo de aplicabilidad montado, sin lista local."""
+    catalogos = _ruta_del_catalogo(ambiente)
+    tipos = cargar_catalogo_del_manifiesto(catalogos).tipos_de_cancer()
+    criterios = cargar_criterios_de_aplicabilidad(catalogos, tipos)
+    resumen = resumir_poblacion_por_tipo_e_idioma(
+        lector.documentos_vigentes_con_poblacion(),
+        {tipo: criterios.criterios(tipo) for tipo in tipos},
+        DOMINIOS_CERRADOS["language"],
+        ajustes.population_max_values_per_criterion,
+    )
+    return como_diccionario(resumen)
