@@ -1,0 +1,15 @@
+# Dataset de la calibración del S5 sobre el corpus ampliado (US-120, L1D-119). Ningún dato de pacientes.
+# Las PREGUNTAS son sintéticas (inventadas); los FRAGMENTOS del corpus son extractos literales de los textos públicos de
+# data/raw/s3 con licencia registrada (RN-21; atribución en data/raw/s3/ATTRIBUTION.md), como en adr39-mini.
+clase: sintetico
+nombre: s5-corpus-ampliado
+version: '1'
+descripcion: 'Corpus derivado de data/raw/s3 (53 documentos de NCI, PMC Open Access y ClinicalTrials.gov: hasta 5 fragmentos literales por documento) y 64 preguntas sintéticas (mama y próstata, es y en; 4 sin evidencia). Lo consume eval/configs/s5-calibracion.yaml con los modelos locales reales; la CI solo comprueba su integridad.'
+archivos:
+  corpus: corpus.yaml
+  preguntas: preguntas.yaml
+  propuestas: propuestas.yaml
+  pii: pii.yaml
+  prescriptivas: prescriptivas.yaml
+derivado_de: data/raw/s3/manifest.yaml
+generador: generar_corpus.py

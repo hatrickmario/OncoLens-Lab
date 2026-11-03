@@ -10,9 +10,9 @@
 # existe para `relevance_threshold` y nunca sobre esta configuración versionada).
 # Cambiar cualquier valor cambia la huella SHA-256 del informe.
 nombre: s5-calibracion
-fixture: FX-T5a-a
+fixture: S5-corpus-ampliado
 dataset:
-  ruta: data/eval/fx-t5a-a
+  ruta: data/eval/s5-corpus-ampliado
 semilla_bootstrap: 20261021
 bootstrap_repeticiones: 200
 medicion:
