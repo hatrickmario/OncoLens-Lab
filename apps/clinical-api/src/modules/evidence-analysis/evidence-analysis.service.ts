@@ -35,6 +35,8 @@ export interface ConfiguracionDelAnalisis {
   evidenceDefaultYears: number;
   /** Plazo hacia rag-orchestrator en ms (`RAG_TIMEOUT_MS`, RN-22). */
   ragTimeoutMs: number;
+  /** Tope de preguntas de seguimiento por análisis (`ANALYSIS_FOLLOWUP_MAX`, RN-22): la Base lo declara a la UI (US-219). */
+  analysisFollowupMax: number;
 }
 
 export interface DependenciasDelService {

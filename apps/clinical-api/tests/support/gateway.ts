@@ -237,6 +237,8 @@ export interface OpcionesDeGateway {
   /** `ANALYSIS_MAX_OPTIONS` (por defecto 1, el valor del S1). */
   analysisMaxOptions?: number;
   evidenceDefaultYears?: number;
+  /** `ANALYSIS_FOLLOWUP_MAX` (por defecto 10, el de configuración). */
+  analysisFollowupMax?: number;
   /** `RAG_TIMEOUT_MS` (por defecto, el plazo corto de test). */
   ragTimeoutMs?: number;
   /** `AI_DISCLAIMER_TEXT` (por defecto, `DISCLAIMER_DE_TEST`). */
@@ -308,6 +310,7 @@ export async function montarGateway(
     config: {
       analysisMaxOptions: opciones.analysisMaxOptions ?? 1,
       evidenceDefaultYears: opciones.evidenceDefaultYears ?? 10,
+      analysisFollowupMax: opciones.analysisFollowupMax ?? 10,
       ragTimeoutMs: opciones.ragTimeoutMs ?? RAG_TIMEOUT_MS_DE_TEST,
       aiDisclaimerText: opciones.aiDisclaimerText ?? DISCLAIMER_DE_TEST,
     },

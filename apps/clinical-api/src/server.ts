@@ -84,6 +84,7 @@ arrancar({
             analysisMaxOptions: configuracion.analisis.analysisMaxOptions,
             evidenceDefaultYears: configuracion.analisis.evidenceDefaultYears,
             ragTimeoutMs: configuracion.analisis.ragTimeoutMs,
+            analysisFollowupMax: configuracion.analisis.analysisFollowupMax,
             aiDisclaimerText: configuracion.analisis.aiDisclaimerText,
           },
           etiquetaDe: cargarEtiquetasDeDatosCriticos(
