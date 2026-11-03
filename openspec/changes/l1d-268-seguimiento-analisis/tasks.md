@@ -72,7 +72,7 @@
 
 ## 3. ai-services
 
-- [ ] 3.1 Esqueletos (`raise NotImplementedError`) de `app/api/rag_follow_up.py`, `app/application/seguimiento.py`
+- [x] 3.1 Esqueletos (`raise NotImplementedError`) de `app/api/rag_follow_up.py`, `app/application/seguimiento.py`
       (`ResponderSeguimiento`), `app/domain/contexto_del_seguimiento.py::clasificar_contexto_del_seguimiento()` y
       `app/prompts/seguimiento.py`; tests de aceptación en rojo (`TestClient` + adapters falsos, `RAG_ADAPTERS=fake`,
       respuesta validada contra el spec) en `tests/integration/test_rag_follow_up.py` con `@pytest.mark.ac("US-218", n)`:
@@ -81,10 +81,10 @@
       contexto determinista con cero llamadas a adapters, por marcador del prompt, y la pregunta comparativa legítima que
       nombra mama y próstata y **no** queda fuera de contexto), AC-7 (término prohibido omitido);
       commit `test(L1D-268)` · **TDD estricto**
-- [ ] 3.2 Test en rojo `tests/integration/test_rag_follow_up_sin_estado.py` (`@pytest.mark.ac("US-218", 8)`): dos turnos
+- [x] 3.2 Test en rojo `tests/integration/test_rag_follow_up_sin_estado.py` (`@pytest.mark.ac("US-218", 8)`): dos turnos
       sin ficheros nuevos en el `tmp_path` vigilado, cero escrituras en el fake de Milvus y en `corpus`, logs sin pregunta,
       memoria, frase marcada ni seudónimo; segundo turno independiente del primero; commit `test(L1D-268)` · **TDD estricto**
-- [ ] 3.3 Implementar con unitarios uno a uno: `clasificar_contexto_del_seguimiento()` (señales decididas de design.md
+- [x] 3.3 Implementar con unitarios uno a uno: `clasificar_contexto_del_seguimiento()` (señales decididas de design.md
       D7 `[S5 resp. 13]`: marcador de identidad de ADR-40; otro tipo de cáncer por sinónimos del catálogo **sin** nombrar
       el del contexto; la comparativa que nombra ambos pasa); extraer `premisas_del_soporte()` (RN-24, excluye la memoria);
       `ResponderSeguimiento` reutilizando los pasos de `RAGOrchestratorService` vía Extract Method (sin copiar umbral,
@@ -92,29 +92,33 @@
       y la regla `fuera_de_contexto`; parseo del marcador estructurado (salida inválida → error existente); router con JWT
       de servicio, `X-Trace-Id`, *deadline* y errores del `503` ampliado. Tests 3.1 y 3.2 en verde; commit `feat(L1D-268)` ·
       **TDD estricto** `[US-218 AC-1, AC-2, AC-3, AC-5, AC-7, AC-8]`
-- [ ] 3.4 Normalización: el router aplica `normalizar_pregunta()` de `app/domain/pregunta.py` (US-250; **espera a
+- [x] 3.4 Normalización: el router aplica `normalizar_pregunta()` de `app/domain/pregunta.py` (US-250; **espera a
       `l1d-306-pregunta-nfc`**) antes de delegar; test en rojo «NFD y NFC dan el mismo SHA-256 de prompt [US-218 AC-1]
       [US-250 AC-4]» y solo espacios → `422` sin adapters; luego verde. Commits `test(L1D-268)` → `feat(L1D-268)` · **TDD
       estricto**
-- [ ] 3.5 Fakes: extender `tests/support/llm_falso.py` (guiones de seguimiento y registro del prompt), `nli_falso.py`
+- [x] 3.5 Fakes: extender `tests/support/llm_falso.py` (guiones de seguimiento y registro del prompt), `nli_falso.py`
       (registro de premisas) y `milvus.py` (registro de escrituras) sin romper `tests/support/contract.py` (mismos errores,
       `null` ≠ `0.0`) · **TDD estricto (test de contrato del fake)**
-- [ ] 3.6 Test de NLI caído → `503 NLI_UNAVAILABLE` sin respuesta parcial (rojo → verde) · **TDD estricto** `[US-218 AC-1]`
-- [ ] 3.7 Suite de `rag-orchestrator` en verde y verificación del proveedor de `/rag/follow-up` (todos los códigos) ·
+      Hecho: `llm_falso.py` (guiones `SEG-*`, registro de prompts) y `nli_falso.py` (ya registraba premisas); `milvus.py` es el
+      arnés de Milvus real y no se tocó: el seguimiento no recibe ningún puerto de escritura (sin `CorpusChunkStore`).
+- [x] 3.6 Test de NLI caído → `503 NLI_UNAVAILABLE` sin respuesta parcial (rojo → verde) · **TDD estricto** `[US-218 AC-1]`
+- [x] 3.7 Suite de `rag-orchestrator` en verde y verificación del proveedor de `/rag/follow-up` (todos los códigos) ·
       **verificación**
-- [ ] 3.8 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde
+- [x] 3.8 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde
       antes y después, commit refactor(L1D-268)
 
 ## 4. evaluación
 
-- [ ] 4.1 Añadir al dataset sintético de `evaluate` 4 casos de seguimiento (con evidencia, sin evidencia, fuera de contexto,
+- [x] 4.1 Añadir al dataset sintético de `evaluate` 4 casos de seguimiento (con evidencia, sin evidencia, fuera de contexto,
       memoria como única base) y la comprobación de RN-24 sobre lo mostrado; sin PII · **evaluate**
-- [ ] 4.2 `run-ai-eval` con adapters falsos sobre la rama (job `eval-required`): reporte de `ai-eval-runner` en
+      Hecho como módulo propio `app/evaluation/seguimiento.py` + `data/eval/fx-seguimiento/` (corpus de FX-T5a-a), sobre el
+      `ResponderSeguimiento` de producción; integrarlo a `evaluate --suite all` queda para US-140.
+- [ ] 4.2 DIFERIDA -> entrega 2 (Gate 2: el orquestador lanza `ai-eval-runner`). `run-ai-eval` con adapters falsos sobre la rama (job `eval-required`): reporte de `ai-eval-runner` en
       `reports/eval/` adjunto al PR con fidelidad, precisión de citas, «sin evidencia», salidas prescriptivas = 0 y RN-24 ·
       **evaluate**
-- [ ] 4.3 Medición con modelos locales en la corrida nocturna del día 2 (`S5-refinamiento.md` §5), registrada en el reporte
+- [ ] 4.3 DIFERIDA -> D5-13 (corrida nocturna de L1D-268). Medición con modelos locales en la corrida nocturna del día 2 (`S5-refinamiento.md` §5), registrada en el reporte
       de la corrida; si no cabe, DIFERIDA -> US-140 · **evaluate**
-- [ ] 4.4 Revisión de la plantilla de seguimiento por `clinical-language-auditor` (RN-23, RN-24, RN-19) en el Gate 2 ·
+- [ ] 4.4 DIFERIDA -> entrega 2 (Gate 2). Revisión de la plantilla de seguimiento por `clinical-language-auditor` (RN-23, RN-24, RN-19) en el Gate 2 ·
       **verificación**
 
 ## humano
@@ -126,20 +130,26 @@
 ANALYSIS_FOLLOWUP_MAX=10
 ```
 
-- [ ] H-2 `docs/architecture/adr/ADR-26-contrato-congelado-y-excepciones-declaradas.md`: añadir a la tabla «Excepciones
+- [ ] H-2 DIFERIDA -> H-2. `docs/architecture/adr/ADR-26-contrato-congelado-y-excepciones-declaradas.md`: añadir a la tabla «Excepciones
       declaradas» la fila de la decisión aprobada `[S5 resp. 10]`. El humano la sube a la rama **justo después** del commit
       `contract(L1D-268)` (tarea 1.3). **Sin** entrada en `scripts/ci/contracts-breaking-excepciones.json`: `oasdiff` da
-      solo WARN (design.md §Contratos); si 1.3 midiera un ERR, se añaden aquí sus entradas exactas. DIFERIDA -> H-2.
+      solo WARN (design.md §Contratos); si 1.3 midiera un ERR, se añaden aquí sus entradas exactas.
       Bloque literal:
 
 ```
 | E-18 y E-19 | rag-orchestrator · clinical-api | `response-body-wrapped-in-one-of-original-preserved` (WARN, no rompe; sin entrada en el JSON) en `POST /rag/follow-up` y `POST /platform/evidence-analyses/{analysisId}/follow-ups`: el `503` pasa de `ErrorLlmLocalNoDisponible` a un `oneOf` que lo conserva (+ `ErrorRecuperacionNoDisponible`, `ErrorNliNoDisponible`, `ErrorSalidaLlmInvalida` en Backend 2; `GeneracionNoDisponible` en Backend 1) | l1d-268-seguimiento-analisis | El seguimiento reutiliza el pipeline del análisis y falla cerrado por las mismas causas; clinical-api y web clasifican por código HTTP y de error. Decidido (usuario, 2026-11-03, `[S5 resp. 10]`) |
 ```
 
+- [ ] H-3 `backlog/sprints/S5-deuda.md`: registrar D5-13 (corrida nocturna de L1D-268), DIFERIDA -> H-3. Bloque literal:
+
+```
+| D5-13 | L1D-268 | Medición del seguimiento (`rag-follow-up@0.1.0`) con modelos locales en la corrida nocturna del día 2: fidelidad, precisión de citas, «sin evidencia», salidas prescriptivas = 0 y RN-24 (`python -m app.evaluation.seguimiento` con proveedor local) | tasks 4.3 |
+```
+
 ## 5. cierre
 
-- [ ] 5.1 Buscar en el árbol `ANALYSIS_FOLLOWUP_MAX`, el mensaje de `LIMITE_SEGUIMIENTO`, `normalize('NFC')` /
+- [x] 5.1 Buscar en el árbol `ANALYSIS_FOLLOWUP_MAX`, el mensaje de `LIMITE_SEGUIMIENTO`, `normalize('NFC')` /
       `unicodedata.normalize("NFC"` y el umbral RN-02, y confirmar un solo dueño por regla (design.md §Dependencias) ·
       **verificación**
-- [ ] 5.2 `openspec validate l1d-268-seguimiento-analisis --strict`, tests de los dos contextos en verde,
+- [x] 5.2 `openspec validate l1d-268-seguimiento-analisis --strict`, tests de los dos contextos en verde,
       `contracts:verify-provider` en verde y `run-ai-eval` adjunto · **verificación**
