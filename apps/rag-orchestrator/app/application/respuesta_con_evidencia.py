@@ -126,7 +126,7 @@ def _criterio_aplicable(
         isExclusionary=criterio.es_excluyente,
         patientDataWarning=PatientDataWarning(criterio.aviso) if criterio.aviso else None,
         citedSources=[
-            _cita_de(c) for c in _fragmentos_que_respaldan(criterio, mejor_chunk, citables)
+            cita_del_contrato(c) for c in _fragmentos_que_respaldan(criterio, mejor_chunk, citables)
         ],
     )
 
@@ -168,7 +168,7 @@ def _fragmentos_que_respaldan(
     return [citables[criterio.chunk_citado_id] if criterio.chunk_citado_id else mejor_chunk]
 
 
-def _cita_de(citable: ChunkCitable) -> CitedSource:
+def cita_del_contrato(citable: ChunkCitable) -> CitedSource:
     return CitedSource.model_validate(asdict(construir_cita(citable.chunk, citable.ficha)))
 
 
@@ -188,7 +188,7 @@ def _opcion_con_evidencia(
         perSource=[_aplicabilidad_de_fuente_citada(f) for f in aplicabilidad.por_fuente],
         relevanceScore=validada.relevance_score,
         warnings=[Warning(aviso) for aviso in aplicabilidad.avisos],
-        citedSources=[_cita_de(c) for c in citados],
+        citedSources=[cita_del_contrato(c) for c in citados],
     )
 
 

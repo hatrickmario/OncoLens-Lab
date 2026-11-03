@@ -11,6 +11,7 @@ dataset:
   ruta: data/eval/fx-t5a-a
 semilla_bootstrap: 20261021
 bootstrap_repeticiones: 200
+rn23_tolerancia_falsos_positivos: 0 # RN-22, US-249 AC-5 (decidido, usuario, 2026-11-03): ningún rechazo legítimo más que la línea base 1.5.0
 medicion:
   reloj: real # time.perf_counter: la latencia por etapa y la del NLI son de verdad
   rss_limite_mib: 4489 # límite de memoria para la marca de AC-7: el RSS conjunto de ADR-39 / US-231b AC-7 (supuesto: heredado)

@@ -68,7 +68,7 @@ def construir_prompt_rag_query(
         maximo_de_palabras=claim_max_words,
         pregunta=pregunta,
         contexto=datos_del_paciente or "No disponible",
-        fragmentos="\n".join(_fragmento(f) for f in fragmentos),
+        fragmentos="\n".join(bloque_de_fragmento(f) for f in fragmentos),
     )
 
 
@@ -116,5 +116,5 @@ def _linea_etiquetada(texto: str, procedencia: Provenance) -> str:
     return f"- {texto} {etiqueta}" if etiqueta else f"- {texto}"
 
 
-def _fragmento(fragmento: FragmentoConAlias) -> str:
+def bloque_de_fragmento(fragmento: FragmentoConAlias) -> str:
     return f"[fragmento {fragmento.alias}]\n{fragmento.chunk.chunk_text}\n[fin del fragmento]"

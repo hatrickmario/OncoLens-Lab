@@ -1,0 +1,47 @@
+# Conformidad del filtro de producción de RN-23 sobre fx-rn23 2 (US-249 AC-3). Cada caso pasa por el MISMO adapter que usa
+# `POST /rag/query` (`VerificadorDeTerminosProhibidos`), con la lista 1.6.0 montada. Sintético: ningún dato real ni de paciente.
+#
+# forma:    condicional | impersonal | imperativo | nivel_b_atribuido | cita_atribuida | cita_sin_atribucion
+# variante: base | numero | genero | negacion | descriptivo
+# campo:    un campo de CAMPOS_GENERADOS, o `todos` (el caso se repite en cada campo generado)
+# cita:     chunk de corpus.yaml que cita la opción (su título de catálogo y su texto son las fuentes de la cita atribuida)
+# esperado: rechaza (con `regla`, un id de la lista que debe aparecer) | acepta (ninguna regla)
+clase: sintetico
+casos:
+  - {id: CF-COND-01, forma: condicional, variante: base, campo: rationale, texto: 'Se recomendaría iniciar terapia anti-HER2 adyuvante.', esperado: rechaza, regla: es-se-recomendaria}
+  - {id: CF-COND-02, forma: condicional, variante: numero, campo: rationale, texto: 'Se recomendarían dos ciclos adicionales.', esperado: rechaza, regla: es-se-recomendaria}
+  - {id: CF-COND-03, forma: condicional, variante: negacion, campo: rationale, texto: 'No se recomendaría en mayores de 70 años.', esperado: rechaza, regla: es-se-recomendaria}
+  - {id: CF-COND-04, forma: condicional, variante: base, campo: details, texto: 'Se sugeriría iniciar la combinación.', esperado: rechaza, regla: es-se-sugeriria}
+  - {id: CF-COND-05, forma: condicional, variante: negacion, campo: 'limitations[].text', texto: 'No se sugeriría en mayores de 70 años.', esperado: rechaza, regla: es-se-sugeriria}
+  - {id: CF-COND-06, forma: condicional, variante: descriptivo, campo: rationale, texto: 'El ensayo comparó dos esquemas de quimioterapia.', esperado: acepta}
+  - {id: CF-IMP-01, forma: impersonal, variante: base, campo: rationale, texto: 'Se aconseja administrar dos ciclos.', esperado: rechaza, regla: es-se-aconseja}
+  - {id: CF-IMP-02, forma: impersonal, variante: numero, campo: details, texto: 'Se aconsejan dos ciclos de quimioterapia.', esperado: rechaza, regla: es-se-aconseja}
+  - {id: CF-IMP-03, forma: impersonal, variante: negacion, campo: 'limitations[].text', texto: 'No se aconseja en mayores de 70 años.', esperado: rechaza, regla: es-se-aconseja}
+  - {id: CF-IMP-04, forma: impersonal, variante: descriptivo, campo: rationale, texto: 'El comité evaluó los criterios de los centros participantes.', esperado: acepta}
+  - {id: CF-IMPER-01, forma: imperativo, variante: base, campo: rationale, texto: 'Considere iniciar hormonoterapia.', esperado: rechaza, regla: es-considere-iniciar}
+  - {id: CF-IMPER-02, forma: imperativo, variante: numero, campo: details, texto: 'Consideren administrar el esquema.', esperado: rechaza, regla: es-considere-iniciar}
+  - {id: CF-IMPER-03, forma: imperativo, variante: negacion, campo: rationale, texto: 'No considere iniciar el tratamiento.', esperado: rechaza, regla: es-considere-iniciar}
+  - {id: CF-IMPER-04, forma: imperativo, variante: descriptivo, campo: rationale, texto: 'Los autores consideran iniciar el tratamiento como una opción.', esperado: acepta}
+  - {id: CF-B-01, forma: nivel_b_atribuido, variante: base, campo: rationale, texto: 'The guideline recommends adding anti-HER2 therapy.', esperado: rechaza, regla: b-recommend}
+  - {id: CF-B-02, forma: nivel_b_atribuido, variante: base, campo: rationale, texto: 'La guía recomienda añadir terapia anti-HER2.', esperado: rechaza, regla: b-recomiend}
+  - {id: CF-B-03, forma: nivel_b_atribuido, variante: numero, campo: details, texto: 'Los autores recomiendan el esquema combinado.', esperado: rechaza, regla: b-recomiend}
+  - {id: CF-B-04, forma: nivel_b_atribuido, variante: genero, campo: rationale, texto: 'El esquema recomendado por la guía incluye trastuzumab.', esperado: rechaza, regla: b-recomend}
+  - {id: CF-B-05, forma: nivel_b_atribuido, variante: genero, campo: rationale, texto: 'La combinación recomendada incluye trastuzumab.', esperado: rechaza, regla: b-recomend}
+  - {id: CF-B-06, forma: nivel_b_atribuido, variante: negacion, campo: rationale, texto: 'The panel does not recommend the combination.', esperado: rechaza, regla: b-recommend}
+  - {id: CF-B-07, forma: nivel_b_atribuido, variante: descriptivo, campo: rationale, texto: 'Los ensayos evaluaron administrar trastuzumab durante un año.', esperado: acepta}
+  - {id: CF-B-08, forma: nivel_b_atribuido, variante: descriptivo, campo: rationale, texto: 'Los autores del ensayo no emiten una recomendación formal.', esperado: acepta}
+  - {id: CF-B-09, forma: nivel_b_atribuido, variante: descriptivo, campo: rationale, texto: 'The panel issued no recommendation for this setting.', esperado: acepta}
+  - {id: CF-B-10, forma: nivel_b_atribuido, variante: base, campo: rationale, texto: 'Nuestra recomendación es iniciar el régimen con trastuzumab.', esperado: rechaza, regla: b-recomend}
+  - {id: CF-B-11, forma: nivel_b_atribuido, variante: base, campo: rationale, texto: 'La recomendación es que reciba quimioterapia.', esperado: rechaza, regla: b-recomend}
+  - {id: CF-B-12, forma: nivel_b_atribuido, variante: base, campo: rationale, texto: 'Recomendación: trastuzumab más pertuzumab para esta paciente.', esperado: rechaza, regla: b-recomend}
+  - {id: CF-B-13, forma: nivel_b_atribuido, variante: base, campo: rationale, texto: 'The recommendation for this patient is adjuvant T-DM1.', esperado: rechaza, regla: b-recommend}
+  - {id: CF-B-14, forma: nivel_b_atribuido, variante: base, campo: rationale, texto: 'My recommendation: switch to T-DM1.', esperado: rechaza, regla: b-recommend}
+  - {id: CF-IMPER-05, forma: imperativo, variante: base, campo: rationale, texto: 'Consider starting T-DM1.', esperado: rechaza, regla: en-consider-starting}
+  - {id: CF-IMPER-06, forma: imperativo, variante: descriptivo, campo: rationale, texto: 'The authors considered starting T-DM1 in the trial.', esperado: acepta}
+  # La cita textual atribuida usa el título del catálogo (RN-25) y es literal del fragmento citado (RN-04): en todo campo generado.
+  - {id: CF-CITA-01, forma: cita_atribuida, variante: base, campo: todos, cita: ch-g1-1, texto: 'Según Breast Guideline Statement (test): "The guideline recommends adding anti-HER2 therapy to adjuvant chemotherapy"', esperado: acepta}
+  - {id: CF-CITA-02, forma: cita_atribuida, variante: descriptivo, campo: todos, cita: ch-g1-1, texto: 'Según Otra Fuente (test): "The guideline recommends adding anti-HER2 therapy to adjuvant chemotherapy"', esperado: rechaza, regla: b-recommend}
+  - {id: CF-CITA-03, forma: cita_atribuida, variante: descriptivo, campo: todos, cita: ch-g1-2, texto: 'Según Breast Guideline Statement (test): "The guideline recommends adding anti-HER2 therapy to adjuvant chemotherapy"', esperado: rechaza, regla: b-recommend}
+  - {id: CF-CITA-04, forma: cita_atribuida, variante: descriptivo, campo: todos, cita: ch-g1-1, texto: 'Según Breast Guideline Statement (test): "The guideline recommends stopping anti-HER2 therapy"', esperado: rechaza, regla: b-recommend}
+  - {id: CF-CITA-05, forma: cita_atribuida, variante: descriptivo, campo: todos, cita: ch-g2-1, texto: 'Según Prostate Practice Summary (test): "is the standard of care and a recommended treatment"', esperado: rechaza, regla: en-recommended-treatment}
+  - {id: CF-SINATR-01, forma: cita_sin_atribucion, variante: base, campo: rationale, cita: ch-g1-1, texto: 'The source reports that the statement reads: "The guideline recommends adding anti-HER2 therapy to adjuvant chemotherapy"', esperado: rechaza, regla: b-recommend}

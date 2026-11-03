@@ -25,6 +25,7 @@ describe('readEvidenceAnalysisConfig', () => {
       analysisMaxOptions: 3,
       evidenceDefaultYears: 10,
       ragTimeoutMs: 30_000,
+      analysisFollowupMax: 10,
       aiDisclaimerText: 'Texto de aviso sintético de test.',
     });
   });
@@ -33,6 +34,13 @@ describe('readEvidenceAnalysisConfig', () => {
     const config = readEvidenceAnalysisConfig({ ...ENV_VALIDO, RAG_TIMEOUT_MS: '45000' });
 
     expect(config.ragTimeoutMs).toBe(45_000);
+  });
+
+  it('lee ANALYSIS_FOLLOWUP_MAX del entorno y usa 10 por defecto [US-218 AC-4]', () => {
+    expect(
+      readEvidenceAnalysisConfig({ ...ENV_VALIDO, ANALYSIS_FOLLOWUP_MAX: '4' }).analysisFollowupMax,
+    ).toBe(4);
+    expect(readEvidenceAnalysisConfig(ENV_VALIDO).analysisFollowupMax).toBe(10);
   });
 
   it('lee ANALYSIS_MAX_OPTIONS y EVIDENCE_DEFAULT_YEARS del entorno', () => {
@@ -64,6 +72,8 @@ describe('readEvidenceAnalysisConfig', () => {
     ['ANALYSIS_MAX_OPTIONS', { ...ENV_VALIDO, ANALYSIS_MAX_OPTIONS: '4' }],
     ['ANALYSIS_MAX_OPTIONS', { ...ENV_VALIDO, ANALYSIS_MAX_OPTIONS: 'abc' }],
     ['EVIDENCE_DEFAULT_YEARS', { ...ENV_VALIDO, EVIDENCE_DEFAULT_YEARS: '0' }],
+    ['ANALYSIS_FOLLOWUP_MAX', { ...ENV_VALIDO, ANALYSIS_FOLLOWUP_MAX: '0' }],
+    ['ANALYSIS_FOLLOWUP_MAX', { ...ENV_VALIDO, ANALYSIS_FOLLOWUP_MAX: 'abc' }],
     ['RAG_TIMEOUT_MS', { ...ENV_VALIDO, RAG_TIMEOUT_MS: '0' }],
     ['RAG_TIMEOUT_MS', { ...ENV_VALIDO, RAG_TIMEOUT_MS: '-5' }],
     ['RAG_TIMEOUT_MS', { ...ENV_VALIDO, RAG_TIMEOUT_MS: 'abc' }],

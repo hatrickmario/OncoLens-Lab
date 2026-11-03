@@ -33,13 +33,14 @@ const HUECO = '';
 export function checkProhibitedTerms(
   texto: string,
   lista: ListaTerminos,
-  { niveles = ['A'], permitirFrases = false }: OpcionesDeVerificacion = {},
+  { niveles = ['A'], permitirFrases = false, soloIdsB, excepcionesB }: OpcionesDeVerificacion = {},
 ): Coincidencia[] {
   const palabras = permitirFrases
     ? taparFrasesPermitidas(palabrasDe(texto), lista.frasesPermitidas.frases)
     : palabrasDe(texto);
   const claves = palabras.map(claveFlexiva);
-  const candidatas = recolectarCandidatas(palabras, claves, lista, niveles);
+  const palabrasB = taparFrasesPermitidas(palabras, [...(excepcionesB ?? [])]);
+  const candidatas = recolectarCandidatas(palabras, claves, lista, niveles, soloIdsB, palabrasB);
   return elegirTramosMasLargos(candidatas).map(({ id, termino, nivel }) => ({
     id,
     termino,
@@ -63,9 +64,12 @@ function recolectarCandidatas(
   claves: string[],
   lista: ListaTerminos,
   niveles: readonly Nivel[],
+  soloIdsB: readonly string[] | undefined,
+  palabrasB: string[],
 ): Candidata[] {
   const candidatas: Candidata[] = [];
   let orden = 0;
+  const admiteB = (id: string) => soloIdsB === undefined || soloIdsB.includes(id);
   if (niveles.includes('A')) {
     for (const termino of lista.nivelA.terminos) {
       candidatas.push(...candidatasDeTermino(termino, 'A', orden++, palabras, claves));
@@ -73,16 +77,24 @@ function recolectarCandidatas(
   }
   if (niveles.includes('B')) {
     for (const prefijo of lista.nivelB.prefijos) {
-      candidatas.push(...candidatasDePrefijo(prefijo, orden++, palabras));
+      const posicion = orden++;
+      if (admiteB(prefijo.id)) {
+        candidatas.push(...candidatasDePrefijo(prefijo, posicion, palabrasB));
+      }
     }
     for (const termino of lista.nivelB.terminos) {
-      candidatas.push(...candidatasDeTermino(termino, 'B', orden++, palabras, claves));
+      const posicion = orden++;
+      if (admiteB(termino.id)) {
+        candidatas.push(...candidatasDeTermino(termino, 'B', posicion, palabras, claves));
+      }
     }
   }
   return candidatas;
 }
 
-/** Cada palabra de la normalización base que empieza por el prefijo es una candidata de una palabra. */
+/**
+ * Cada palabra de la normalización base que empieza por el prefijo es una candidata de una palabra.
+ */
 function candidatasDePrefijo(
   prefijo: PrefijoProhibido,
   orden: number,

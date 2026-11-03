@@ -1,5 +1,17 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { FECHA_FIJA, INSTANTE_FIJO, insertar } from '../../support/filas-sinteticas.js';
+import {
+  sembrarEventoReflejoDeAnalisis,
+  sembrarPCaso,
+  type PCasoSembrado,
+} from '../../support/caso.js';
+import { prepararSiembra } from '../../support/completitud.js';
+import {
+  FECHA_FIJA,
+  INSTANTE_FIJO,
+  generadorDeIds,
+  insertar,
+} from '../../support/filas-sinteticas.js';
+import { FX_T4A_A, servicioDeIdentidad } from '../../support/identidad.js';
 import { idDePaciente } from '../../support/gateway.js';
 import { FUENTES_POR_REVISAR } from '../../../src/modules/patients/patients.repository.js';
 import {
@@ -110,4 +122,85 @@ describe('pendingReviewCount por fuente', () => {
       }
     },
   );
+});
+
+describe('pendingReviewCount de eventos sin fecha confiable', () => {
+  /** P-CASO con identidad sintética dentro de una transacción que se deshace: no contamina a los demás tests. */
+  async function conPCaso(
+    espacio: number,
+    numeroDeDocumento: string,
+    cuerpo: (patientId: string, toxicidadId: string, p: PCasoSembrado) => Promise<void>,
+  ): Promise<void> {
+    const { cliente } = escenario.mundo;
+    await cliente.query('BEGIN');
+    try {
+      const contexto = await prepararSiembra(cliente, generadorDeIds(ESPACIO_DE_IDS + 500));
+      const p = await sembrarPCaso(contexto, { espacio });
+      await servicioDeIdentidad(cliente).guardar({
+        patientId: p.patientId,
+        idType: FX_T4A_A.idType,
+        issuingCountry: null,
+        numeroDeDocumento,
+        nombreCompleto: FX_T4A_A.nombreCompleto,
+      });
+      await cuerpo(p.patientId, p.filas.toxicidad, p);
+    } finally {
+      await cliente.query('ROLLBACK');
+    }
+  }
+
+  const pendientesDeLaFicha = async (patientId: string): Promise<number> => {
+    const { app } = montarPacientes(escenario.mundo);
+    const respuesta = await clienteVerificado(app)
+      .get(`/platform/patients/${patientId}`)
+      .set('Cookie', escenario.cookieDoctor);
+    expect(respuesta.status).toBe(200);
+    return respuesta.body.pendingReviewCount;
+  };
+
+  it('cuenta una vez la toxicidad incierta de P-CASO en pendingReviewCount antes y después de pasar a verificado [US-088 AC-3]', async () => {
+    await conPCaso(7450, FX_T4A_A.numeroDeDocumento, async (patientId, toxicidadId) => {
+      const antes = await pendientesDeLaFicha(patientId);
+      await escenario.mundo.cliente.query(
+        "UPDATE clinical.clinical_event SET review_status = 'verificado' WHERE id = $1",
+        [toxicidadId],
+      );
+      const despues = await pendientesDeLaFicha(patientId);
+
+      // PSA del 2026-07-15 (requiere_revision) + la toxicidad incierta, una sola vez cada una.
+      expect(antes).toBe(2);
+      expect(despues).toBe(2);
+    });
+  });
+
+  it('no cuenta un evento incierto rechazado en pendingReviewCount [US-088 AC-3] [RN-07]', async () => {
+    await conPCaso(7451, FX_T4A_A.numeroDistinto, async (patientId, toxicidadId) => {
+      await escenario.mundo.cliente.query(
+        "UPDATE clinical.clinical_event SET review_status = 'rechazado' WHERE id = $1",
+        [toxicidadId],
+      );
+
+      // Solo el PSA por revisar: la cirugía rechazada y la toxicidad rechazada no cuentan.
+      expect(await pendientesDeLaFicha(patientId)).toBe(1);
+    });
+  });
+
+  it('cuenta una vez un evento vigente con event_date NULL aunque su precisión sea dia [US-088 AC-3]', async () => {
+    await conPCaso(7452, FX_T4A_A.numeroDeDocumento, async (patientId, toxicidadId) => {
+      await escenario.mundo.cliente.query(
+        "UPDATE clinical.clinical_event SET review_status = 'verificado', date_precision = 'dia', event_date = NULL WHERE id = $1",
+        [toxicidadId],
+      );
+
+      expect(await pendientesDeLaFicha(patientId)).toBe(2);
+    });
+  });
+
+  it('no suma en pendingReviewCount un evento con analysis_id [US-088 AC-5] [ADR-32]', async () => {
+    await conPCaso(7453, FX_T4A_A.numeroDistinto, async (patientId, _toxicidadId, p) => {
+      await sembrarEventoReflejoDeAnalisis(p, generadorDeIds(7454)(), 'requiere_revision');
+
+      expect(await pendientesDeLaFicha(patientId)).toBe(2);
+    });
+  });
 });

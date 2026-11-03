@@ -1,0 +1,15 @@
+{
+  "version": "1.3.0",
+  "sistemasDeEstadificacion": [
+    { "codigo": "TNM_8", "tiposDeCancer": ["mama", "prostata"] }
+  ],
+  "escalasFuncionales": [
+    { "codigo": "ECOG", "minimo": 0, "maximo": 5 },
+    { "codigo": "Karnofsky", "minimo": 0, "maximo": 100 },
+    { "codigo": "Lansky", "minimo": 0, "maximo": 100 }
+  ],
+  "sistemasDeGradacion": [
+    { "codigo": "nottingham", "tiposDeCancer": ["mama"] },
+    { "codigo": "gleason_isup", "tiposDeCancer": ["prostata"] }
+  ]
+}

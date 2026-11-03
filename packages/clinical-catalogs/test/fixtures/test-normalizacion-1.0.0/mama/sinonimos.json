@@ -18,7 +18,10 @@
     },
     {
       "terminoCanonico": "Ki-67",
-      "sinonimos": [{ "texto": "MIB-1", "idioma": "en" }]
+      "sinonimos": [
+        { "texto": "MIB-1", "idioma": "en" },
+        { "texto": "ki 67", "idioma": "es" }
+      ]
     }
   ]
 }

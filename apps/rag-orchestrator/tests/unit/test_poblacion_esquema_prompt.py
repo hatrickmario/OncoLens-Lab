@@ -61,7 +61,7 @@ def test_el_prompt_versionado_no_usa_lenguaje_prescriptivo_ni_datos_de_pacientes
     prompt = construir_prompt(PLANTILLA, CRITERIO, [Fragmento("c1", "Texto.")], 3)
 
     campos = ("option", "rationale", "details")
-    assert not [c for c in campos if verificador.reglas_coincidentes(prompt, c)]  # type: ignore[arg-type]
+    assert not [c for c in campos if verificador.reglas_coincidentes(prompt, c, ())]  # type: ignore[arg-type]
     # La única mención es la regla que prohíbe juzgar pacientes concretos; no hay marcadores de datos de paciente.
     assert PLANTILLA.lower().count("paciente") == 1
     assert "{paciente" not in PLANTILLA

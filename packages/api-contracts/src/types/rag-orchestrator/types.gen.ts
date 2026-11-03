@@ -488,7 +488,7 @@ export type RagFollowUpRequest = {
     dataClassification: DataClassification;
     catalogVersion: string;
     /**
-     * Pregunta ya enmascarada (RN-11).
+     * Pregunta ya enmascarada (RN-11) y normalizada por clinical-api (Unicode NFC, espacios colapsados y recortados). rag-orchestrator vuelve a normalizarla al recibirla; vacía tras normalizar → 422 (US-250, US-218).
      */
     question: string;
     clinicalContext: ClinicalContext;
@@ -908,9 +908,9 @@ export type AnswerFollowUpErrors = {
      */
     500: ErrorInterno;
     /**
-     * LLM local no disponible (LOCAL_LLM_UNAVAILABLE). Con datos reales solo se usan modelos locales, sin fallback a la nube (RN-12).
+     * Un componente local no está disponible o su salida no es válida (LOCAL_LLM_UNAVAILABLE, LLM_OUTPUT_INVALID, RETRIEVAL_UNAVAILABLE, NLI_UNAVAILABLE): falla cerrada, ninguna afirmación se devuelve sin validar (RN-01), sin respuesta parcial. Con datos reales solo se usan modelos locales, sin fallback a la nube (RN-12).
      */
-    503: ErrorLlmLocalNoDisponible;
+    503: ErrorLlmLocalNoDisponible | ErrorRecuperacionNoDisponible | ErrorNliNoDisponible | ErrorSalidaLlmInvalida;
     /**
      * Deadline vencido; la generación se aborta.
      */

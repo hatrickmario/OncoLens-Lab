@@ -1,4 +1,22 @@
 {
   "version": "1.1.0",
-  "items": []
+  "items": [
+    {
+      "terminoCanonico": "PSA",
+      "sinonimos": [
+        {
+          "texto": "antígeno prostático específico",
+          "idioma": "es"
+        },
+        {
+          "texto": "APE",
+          "idioma": "es"
+        },
+        {
+          "texto": "prostate specific antigen",
+          "idioma": "en"
+        }
+      ]
+    }
+  ]
 }

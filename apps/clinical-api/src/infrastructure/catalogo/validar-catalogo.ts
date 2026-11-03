@@ -3,6 +3,7 @@ import allowlistDelModelo from '../../../../../packages/clinical-catalogs/valida
 import esquemaDeAplicabilidad from '../../../../../packages/clinical-catalogs/schemas/aplicabilidad.schema.json' with { type: 'json' };
 import esquemaDeAtributos from '../../../../../packages/clinical-catalogs/schemas/atributos.schema.json' with { type: 'json' };
 import esquemaDeDatosCriticos from '../../../../../packages/clinical-catalogs/schemas/datos-criticos.schema.json' with { type: 'json' };
+import esquemaDeEscalas from '../../../../../packages/clinical-catalogs/schemas/escalas.schema.json' with { type: 'json' };
 import esquemaDeValidation from '../../../../../packages/clinical-catalogs/schemas/validation.schema.json' with { type: 'json' };
 import esquemaComun from '../../../../../packages/clinical-catalogs/schemas/comun.schema.json' with { type: 'json' };
 import esquemaDePoblacion from '../../../../../packages/clinical-catalogs/schemas/poblacion.schema.json' with { type: 'json' };
@@ -23,6 +24,7 @@ const ESQUEMAS = {
   'datos-criticos': esquemaDeDatosCriticos,
   aplicabilidad: esquemaDeAplicabilidad,
   'poblacion-reglas': esquemaDeReglasDePoblacion,
+  escalas: esquemaDeEscalas,
 };
 
 /** Código de la primera regla incumplida (cerrado: `destino_ausente`, `hash_distinto`...), o `null` si el catálogo valida. */

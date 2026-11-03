@@ -132,7 +132,7 @@ function cierreConFake(persistir: (registro: RegistroDeAnalisis) => Promise<Regi
         return persistir(registro);
       },
     },
-    base: crearBaseDelAnalisis({ etiquetaDe: (clave) => clave }),
+    base: crearBaseDelAnalisis({ etiquetaDe: (clave) => clave, maxFollowUps: 10 }),
     reloj: { now: () => new Date('2026-10-16T12:00:00.000Z') },
     idsDeAnalisis: () => UUID_FIJO,
     disclaimer: 'Aviso sintético.',

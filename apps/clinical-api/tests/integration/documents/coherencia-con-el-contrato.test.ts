@@ -42,14 +42,18 @@ describe('coherencia del módulo documents con el contrato [US-045 AC-3]', () =>
 
     const patients = Router();
     const completeness = Router();
+    const manualEntry = Router();
+    const caseView = Router();
 
     const protegidas = componerRutasProtegidas({
       gateway,
       documents: rutas[0]!,
       patients,
       completeness,
+      manualEntry,
+      caseView,
     });
 
-    expect(protegidas).toEqual([gateway, rutas[0], patients, completeness]);
+    expect(protegidas).toEqual([gateway, rutas[0], patients, completeness, manualEntry, caseView]);
   });
 });

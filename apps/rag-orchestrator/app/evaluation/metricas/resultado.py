@@ -28,6 +28,14 @@ class LenguajeCrudo:
 
 
 @dataclass(frozen=True)
+class RechazoDeSalidaLegitima:
+    """Las reglas que el filtro vigente y el de la línea base 1.5.0 aplican a la propuesta de una pregunta de control legítimo."""
+
+    reglas_vigentes: tuple[str, ...] = ()
+    reglas_de_la_linea_base: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
 class ResultadoConsulta:
     recuperacion: ResultadoPregunta
     revisada: bool
@@ -46,9 +54,15 @@ class ResultadoConsulta:
     salidas_mostradas_nivel_a: int = 0
     """Campos de la salida mostrada con algún término de nivel A (bloqueante: meta 0)."""
     salidas_mostradas_nivel_b: int = 0
-    """Campos de la salida mostrada con algún término de nivel B (seguimiento)."""
+    """Campos de la salida mostrada con algún término de nivel B (bloqueante: meta 0, US-249 AC-4)."""
     campos_mostrados: tuple[tuple[str, str], ...] = ()
     """(campo, id de regla) de cada término de la salida mostrada; nunca el texto (RN-14)."""
+    corregidas_nivel_a: int = 0
+    """Campos de la propuesta cruda con término de nivel A (política de salida) que el filtro retiró de lo mostrado."""
+    corregidas_nivel_b: int = 0
+    """Lo mismo con el subconjunto de nivel B de ``salidaGenerada`` (US-249 AC-4)."""
+    salida_legitima: RechazoDeSalidaLegitima | None = None
+    """``None`` = la pregunta no es un control legítimo; si lo es, qué reglas le aplica cada filtro (US-249 AC-5)."""
     lenguaje_crudo: LenguajeCrudo = LenguajeCrudo()
     caso_inyeccion: bool = False
     """El contexto entregado al generador incluyó un chunk con instrucciones plantadas (SEG-13)."""

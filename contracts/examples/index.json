@@ -133,6 +133,11 @@
       "target": "#/paths/~1platform~1evidence-analyses/post/responses/503"
     },
     {
+      "file": "error-desidentificacion-no-disponible.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1evidence-analyses~1{analysisId}~1follow-ups/post/responses/503"
+    },
+    {
       "file": "error-llm-local-no-disponible.json",
       "spec": "clinical-api",
       "target": "#/paths/~1platform~1evidence-analyses/post/responses/503"
@@ -189,6 +194,11 @@
     },
     {
       "file": "follow-up-fuera-de-contexto.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/FollowUpTurn"
+    },
+    {
+      "file": "follow-up-sin-evidencia.json",
       "spec": "clinical-api",
       "target": "#/components/schemas/FollowUpTurn"
     },
@@ -259,6 +269,12 @@
       "request": "rag-follow-up-request.json"
     },
     {
+      "file": "rag-follow-up-sin-evidencia.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagFollowUpResponse",
+      "request": "rag-follow-up-request.json"
+    },
+    {
       "file": "rag-follow-up-request.json",
       "spec": "rag-orchestrator",
       "target": "#/components/schemas/RagFollowUpRequest"
@@ -283,6 +299,11 @@
       "file": "rag-nli-no-disponible.json",
       "spec": "rag-orchestrator",
       "target": "#/paths/~1rag~1query/post/responses/503"
+    },
+    {
+      "file": "rag-nli-no-disponible.json",
+      "spec": "rag-orchestrator",
+      "target": "#/paths/~1rag~1follow-up/post/responses/503"
     },
     {
       "file": "rag-query-con-evidencia.json",
@@ -495,6 +516,31 @@
       "file": "error-interno.json",
       "spec": "clinical-api",
       "target": "#/paths/~1platform~1patients~1{patientId}~1completeness/get/responses/500"
+    },
+    {
+      "file": "case-view-p-caso.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/CaseView"
+    },
+    {
+      "file": "error-no-autenticado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1case/get/responses/401"
+    },
+    {
+      "file": "error-permiso-denegado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1case/get/responses/403"
+    },
+    {
+      "file": "error-no-encontrado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1case/get/responses/404"
+    },
+    {
+      "file": "error-interno.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1case/get/responses/500"
     },
     {
       "file": "rag-query-request-poblacion-lista.json",

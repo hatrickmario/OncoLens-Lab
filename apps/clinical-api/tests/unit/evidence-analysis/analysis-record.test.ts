@@ -18,7 +18,7 @@ import {
 const AHORA = new Date('2026-10-16T12:00:00.000Z');
 const request = peticion as RagQueryInternalRequest;
 const respuesta = validarRespuestaInterna(conEvidencia);
-const base = crearBaseDelAnalisis({ etiquetaDe: (clave) => clave }).construir(
+const base = crearBaseDelAnalisis({ etiquetaDe: (clave) => clave, maxFollowUps: 10 }).construir(
   request,
   respuesta,
   true,

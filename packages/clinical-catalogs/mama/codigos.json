@@ -7,6 +7,30 @@
       "nombreOficial": "Tumor maligno de la mama, parte no especificada",
       "etiquetaEs": "Cáncer de mama",
       "versionFuente": "CIE-10 OMS/OPS · pendiente de verificar contra MinSalud/SISPRO"
+    },
+    {
+      "terminoCanonico": "Ki-67",
+      "estandar": "loinc",
+      "codigo": "85330-9",
+      "nombreOficial": "Cells.Ki-67 nuclear Ag/cells in Breast cancer specimen by Immune stain",
+      "etiquetaEs": "Índice de proliferación Ki-67",
+      "versionFuente": "LOINC 2.83 (data_version de NLM Clinical Tables loinc_items v3, consultada el 2026-11-03)"
+    },
+    {
+      "terminoCanonico": "RE",
+      "estandar": "loinc",
+      "codigo": "40556-3",
+      "nombreOficial": "Estrogen receptor Ag [Presence] in Tissue by Immune stain",
+      "etiquetaEs": "Receptor de estrógeno",
+      "versionFuente": "LOINC 2.83 (data_version de NLM Clinical Tables loinc_items v3, consultada el 2026-11-03)"
+    },
+    {
+      "terminoCanonico": "RP",
+      "estandar": "loinc",
+      "codigo": "40557-1",
+      "nombreOficial": "Progesterone receptor Ag [Presence] in Tissue by Immune stain",
+      "etiquetaEs": "Receptor de progesterona",
+      "versionFuente": "LOINC 2.83 (data_version de NLM Clinical Tables loinc_items v3, consultada el 2026-11-03)"
     }
   ]
 }

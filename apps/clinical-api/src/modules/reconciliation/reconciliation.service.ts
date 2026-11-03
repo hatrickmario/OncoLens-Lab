@@ -44,38 +44,50 @@ function construirDecision(
   };
 }
 
+/** Resuelve el código contra el catálogo del tipo; una resolución ambigua deja un log sin texto clínico (RN-10). */
+function resolverContraElCatalogo(
+  { catalogo, registrar }: DependenciasDeReconciliation,
+  propuesta: PropuestaDeNormalizacion,
+  tipoDeCancer: string,
+  estandar: Estandar,
+) {
+  const resolucion = resolverCodigo({
+    entradas: catalogo.entradas(tipoDeCancer, estandar),
+    sinonimos: catalogo.sinonimos(tipoDeCancer),
+    textoOriginal: propuesta.textoOriginal,
+    ...(propuesta.codigoPropuesto !== undefined && { codigoPropuesto: propuesta.codigoPropuesto }),
+  });
+  if (resolucion.resultado === 'ambiguo') {
+    registrar?.({ event: 'terminologia_ambigua', entidad: propuesta.entidad, estandar });
+  }
+  return resolucion;
+}
+
 /**
  * ÚNICO dueño de RN-27 (ADR-33): decide término canónico, código y `mapping_status` de un dato manual contra el
  * catálogo montado. Sin E/S propia: devuelve la decisión y el service del consumidor la guarda en su transacción (D1).
  */
-export function createReconciliationService({
-  catalogo,
-  registrar,
-}: DependenciasDeReconciliation): ReconciliationService {
-  function resolverContraElCatalogo(propuesta: PropuestaDeNormalizacion, estandar: Estandar) {
-    const resolucion = resolverCodigo({
-      entradas: catalogo.entradas(propuesta.tipoDeCancer, estandar),
-      sinonimos: catalogo.sinonimos(propuesta.tipoDeCancer),
-      textoOriginal: propuesta.textoOriginal,
-      ...(propuesta.codigoPropuesto !== undefined && {
-        codigoPropuesto: propuesta.codigoPropuesto,
-      }),
-    });
-    if (resolucion.resultado === 'ambiguo') {
-      registrar?.({ event: 'terminologia_ambigua', entidad: propuesta.entidad, estandar });
-    }
-    return resolucion;
-  }
+export function createReconciliationService(
+  dependencias: DependenciasDeReconciliation,
+): ReconciliationService {
+  const { catalogo } = dependencias;
+  const sinMapeo = (propuesta: PropuestaDeNormalizacion): DecisionDeNormalizacion =>
+    construirDecision(catalogo.version(), propuesta, 'no_mapeado', null, null, []);
 
   return {
     decidir(propuesta) {
       const estandar = estandarDe(propuesta);
       if (estandar === null)
         return construirDecision(catalogo.version(), propuesta, 'n_a', null, null, []);
-      const resolucion = resolverContraElCatalogo(propuesta, estandar);
-      if (resolucion.resultado !== 'mapeado') {
-        return construirDecision(catalogo.version(), propuesta, 'no_mapeado', null, null, []);
-      }
+      // Sin tipo de cáncer (paciente sin diagnóstico) no hay catálogo contra el que mapear: `no_mapeado`, sin centinelas.
+      if (propuesta.tipoDeCancer === null) return sinMapeo(propuesta);
+      const resolucion = resolverContraElCatalogo(
+        dependencias,
+        propuesta,
+        propuesta.tipoDeCancer,
+        estandar,
+      );
+      if (resolucion.resultado !== 'mapeado') return sinMapeo(propuesta);
       return construirDecision(
         catalogo.version(),
         propuesta,

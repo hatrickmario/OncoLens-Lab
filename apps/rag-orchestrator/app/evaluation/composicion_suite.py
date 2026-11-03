@@ -45,10 +45,13 @@ from app.evaluation.adaptadores_falsos import (
 from app.evaluation.brazos_recuperacion import Brazo
 from app.evaluation.config_suite import ConfigInvalida, ConfigSuite
 from app.evaluation.cronometro import Cronometro
+from app.evaluation.dataset_loader import DatasetInvalido
 from app.evaluation.fuente_dataset import DatasetSuite
 from app.evaluation.guardas import SuiteAbortada
 from app.evaluation.juez_fidelidad import JuezFidelidad, JuezNli, JuezSecundario
 from app.evaluation.lenguaje_estricto import VerificadorEstricto
+from app.evaluation.lenguaje_linea_base import verificador_de_la_linea_base
+from app.evaluation.metricas.rechazos_legitimos import ids_de_preguntas_de_control_legitimo
 from app.evaluation.medidores import (
     BuscadorMedido,
     BuscadorSparseMedido,
@@ -90,6 +93,8 @@ class ServicioDeSuite:
     latencias_nli: LatenciasNli
     claim_max_words: int
     """``CLAIM_MAX_WORDS`` de la suite: el mismo que usa el verificador del servicio (RN-22)."""
+    verificador_linea_base: ProhibitedTermsChecker | None = None
+    """El filtro de la línea base de US-068 (lista 1.5.0, solo Nivel A) para la regresión de falsos positivos (US-249 AC-5)."""
 
 
 PARAMETROS_DEL_RESPALDO_DE_LA_SUITE = ParametrosDelRespaldo(
@@ -293,4 +298,14 @@ def componer_servicio(
         juez_llm,
         nli.latencias,
         config.umbrales.claim_max_words,
+        _filtro_de_la_linea_base(dataset),
     )
+
+
+def _filtro_de_la_linea_base(dataset: DatasetSuite) -> ProhibitedTermsChecker | None:
+    """El filtro de US-068 (lista 1.5.0, solo Nivel A) si el dataset la declara; un dataset con salidas legítimas la exige."""
+    if dataset.linea_base_de_lenguaje is not None:
+        return verificador_de_la_linea_base(dataset.linea_base_de_lenguaje)
+    if ids_de_preguntas_de_control_legitimo(dataset):
+        raise DatasetInvalido("el dataset con salidas legítimas no declara linea_base_de_lenguaje")
+    return None

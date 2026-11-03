@@ -1,5 +1,5 @@
 {
-  "version": "1.5.0",
+  "version": "1.6.0",
   "normalizacion": "nfkd-sin-diacriticos+minusculas+puntuacion-a-espacio+espacios-colapsados+clave-flexiva+formas-verbales+excepciones+secuencia-completa+tramo-mas-largo",
   "nivelA": {
     "aplicaA": ["salida_generada", "ui", "prompts", "contratos"],
@@ -448,7 +448,42 @@
         "id": "en-standard-of-care",
         "idioma": "en",
         "texto": "standard of care"
-      }
+      },
+      {
+        "id": "es-se-recomendaria",
+        "idioma": "es",
+        "texto": "se recomendaría"
+      },
+      {
+        "id": "es-se-aconseja",
+        "idioma": "es",
+        "texto": "se aconseja",
+        "formas": ["se aconseja", "se aconsejan", "se aconsejaria", "se aconsejarian"]
+      },
+      {
+        "id": "es-considere-iniciar",
+        "idioma": "es",
+        "texto": "considere iniciar",
+        "formas": [
+          "considere iniciar",
+          "considere administrar",
+          "considere suspender",
+          "consideren iniciar",
+          "consideren administrar",
+          "consideren suspender",
+          "considerese iniciar",
+          "considerese administrar",
+          "considerese suspender"
+        ]
+      },
+      {
+        "id": "es-se-sugeriria",
+        "idioma": "es",
+        "texto": "se sugeriría"
+      },
+      { "id": "en-consider-starting", "idioma": "en", "texto": "consider starting" },
+      { "id": "en-consider-initiating", "idioma": "en", "texto": "consider initiating" },
+      { "id": "en-consider-discontinuing", "idioma": "en", "texto": "consider discontinuing" }
     ]
   },
   "nivelB": {
@@ -555,6 +590,20 @@
       "no recomienda ni prescribe",
       "ni la probabilidad de éxito",
       "iniciar sesión"
+    ]
+  },
+  "salidaGenerada": {
+    "nivelB": ["b-recomend", "b-recomiend", "b-recommend"],
+    "excepciones": [
+      "no emite una recomendación",
+      "no emiten una recomendación",
+      "sin recomendación",
+      "sin recomendaciones",
+      "no hace recomendaciones",
+      "issued no recommendation",
+      "made no recommendation",
+      "no recommendation",
+      "no recommendations"
     ]
   }
 }

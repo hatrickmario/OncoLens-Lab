@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { Client, type ClientConfig } from 'pg';
+import { Client, Pool, type ClientConfig } from 'pg';
 import { ErrorArnes, validarNombreBaseDeTest, validarPrefijoTestDb } from './prefijo-test-db.js';
 
 /**
@@ -122,6 +122,11 @@ function configuracionCliente(url: URL): ClientConfig {
     database: decodeURIComponent(url.pathname.slice(1)),
     ssl: { rejectUnauthorized: false },
   };
+}
+
+/** Pool para las operaciones transaccionales que abren su propia conexión (p. ej. el turno de seguimiento bajo bloqueo). */
+export function crearPoolDeTest(url: URL | string): Pool {
+  return new Pool({ ...configuracionCliente(new URL(url)), max: 4 });
 }
 
 export async function conectar(url: URL | string): Promise<Client> {

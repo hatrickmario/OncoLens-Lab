@@ -1,7 +1,12 @@
 """`EvidenceQueryPort` de `LLM_PROVIDER=local` cuando faltan los bordes reales de la recuperación (US-055)."""
 
 from app.application.errores import RecuperacionNoDisponibleError
-from app.schemas.generated.models import RagQueryInternalRequest, RagQueryInternalResponse
+from app.schemas.generated.models import (
+    RagFollowUpRequest,
+    RagFollowUpResponse,
+    RagQueryInternalRequest,
+    RagQueryInternalResponse,
+)
 
 
 class ConsultaNoComponible:
@@ -11,4 +16,11 @@ class ConsultaNoComponible:
     """
 
     async def consultar(self, solicitud: RagQueryInternalRequest) -> RagQueryInternalResponse:
+        raise RecuperacionNoDisponibleError("composicion")
+
+
+class SeguimientoNoComponible:
+    """`FollowUpPort` análogo: sin los bordes reales de la recuperación, `/rag/follow-up` falla cerrado (503)."""
+
+    async def responder(self, solicitud: RagFollowUpRequest) -> RagFollowUpResponse:
         raise RecuperacionNoDisponibleError("composicion")

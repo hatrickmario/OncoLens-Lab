@@ -40,10 +40,26 @@ def test_evaluate_mide_que_el_generador_reproduce_el_nivel_b_y_el_nivel_a_del_co
 ) -> None:
     familia = correr(tmp_path)["metricas"]["completa"]["terminos_prohibidos"]
 
-    assert familia.get("terminos_compartidos_con_corpus_citado") == 2
-    assert familia.get("propuesta_cruda_por_nivel") == {"A": 1, "B": 1}
-    assert familia.get("terminos_nivel_b") == ["b-recommend"]
-    assert familia.get("salida_mostrada") == 1  # el nivel B que el filtro de producción deja pasar
+    # fx-rn23 2 (US-249): 15 preguntas; las 4 de la versión 1 aportan b-recommend y los dos términos A del corpus citado.
+    assert familia.get("terminos_compartidos_con_corpus_citado") == 8
+    assert familia.get("propuesta_cruda_por_nivel") == {"A": 4, "B": 10}
+    assert "b-recommend" in familia.get("terminos_nivel_b")
+    # US-249 AC-2: el filtro de producción retira el b-recommend, así que ya no llega a la salida mostrada.
+    assert familia.get("salida_mostrada") == 0
+
+
+@pytest.mark.ac("US-249", 4)
+def test_evaluate_anota_por_nivel_cuantas_propuestas_crudas_corrigio_el_filtro(
+    tmp_path: Path,
+) -> None:
+    familia = correr(tmp_path)["metricas"]["completa"]["terminos_prohibidos"]
+
+    # A: standard of care (RN23-02) y la voz propia condicional, impersonal e imperativa (RN23-05 a 07).
+    # B: b-recommend (RN23-01, RN23-10 sin atribución y RN23-15, cita atribuida de un fragmento entregado que la opción NO
+    # cita) y b-recomiend (RN23-08); la cita atribuida del fragmento citado (RN23-09), el sustantivo negado «no emite una
+    # recomendación» (RN23-12 y 14) y «administrar» (RN23-13) no cuentan.
+    assert familia.get("corregidas_por_el_filtro") == {"A": 4, "B": 4}
+    assert familia.get("salida_mostrada_por_nivel") == {"A": 0, "B": 0}
 
 
 @pytest.mark.ac("L1D-279", 3)
@@ -53,10 +69,12 @@ def test_evaluate_separa_lo_mostrado_por_nivel_y_lista_el_campo_y_la_regla_sin_t
     familia = correr(tmp_path)["metricas"]["completa"]["terminos_prohibidos"]
 
     assert familia.get("salida_mostrada_nivel_a") == 0  # bloqueante
-    assert familia.get("salida_mostrada_nivel_b") == 1  # seguimiento
-    assert familia.get("salida_mostrada_por_nivel") == {"A": 0, "B": 1}
+    assert familia.get("salida_mostrada_nivel_b") == 0  # bloqueante desde US-249 AC-4
+    assert familia.get("salida_mostrada_por_nivel") == {"A": 0, "B": 0}
     mostrados = familia.get("campos_mostrados")
-    assert [m["regla"] for m in mostrados] == ["b-recommend"]
+    assert (
+        mostrados == []
+    )  # la medición de lo mostrado no lista ni siquiera el campo: no queda nada
     assert all(set(m) == {"campo", "regla"} for m in mostrados)
 
 
@@ -66,7 +84,13 @@ def test_evaluate_cuenta_la_reproduccion_literal_de_standard_of_care_y_recommend
 ) -> None:
     familia = correr(tmp_path)["metricas"]["completa"]["terminos_prohibidos"]
 
-    assert familia.get("terminos_nivel_a") == ["en-recommended-treatment", "en-standard-of-care"]
+    assert familia.get("terminos_nivel_a") == [
+        "en-recommended-treatment",
+        "en-standard-of-care",
+        "es-considere-iniciar",
+        "es-se-aconseja",
+        "es-se-recomendaria",
+    ]
 
 
 @pytest.mark.ac("L1D-279", 3)
@@ -78,7 +102,7 @@ def test_evaluate_mide_cuantas_opciones_usan_la_formula_de_atribucion_a_la_fuent
     )
 
     # D4-19: el generador guionado pasa por el camino real y el código antepone el marco a toda justificación.
-    assert (atribucion.get("opciones"), atribucion.get("con_formula")) == (4, 4)
+    assert (atribucion.get("opciones"), atribucion.get("con_formula")) == (15, 15)
 
 
 @pytest.mark.parametrize(
@@ -122,16 +146,35 @@ def test_la_formula_de_atribucion_se_importa_del_modulo_del_dominio() -> None:
     assert prescriptivas.FORMULA_DE_ATRIBUCION is atribucion.FORMULA_DE_ATRIBUCION
 
 
+@pytest.mark.ac("US-068", 2)
+@pytest.mark.ac("US-249", 4)
 @pytest.mark.parametrize(
     "texto", ["The guideline recommends it.", "It is the standard of care.", "Hola."]
 )
-def test_el_verificador_de_la_suite_con_nivel_a_da_los_mismos_ids_que_el_filtro_de_produccion(
+def test_el_verificador_de_la_suite_da_los_mismos_ids_que_el_filtro_de_produccion_en_lo_mostrado(
     texto: str,
 ) -> None:
     lista = cargar_lista_de_terminos(CATALOGOS)
-    suite = VerificadorEstricto(lista, niveles=("A",))
+    suite = VerificadorEstricto(lista)
     produccion = cargar_verificador_de_terminos(CATALOGOS)
 
-    ids = tuple(dict.fromkeys(c.id for c in suite.coincidencias_generadas(texto, "rationale")))
+    ids = tuple(dict.fromkeys(c.id for c in suite.coincidencias_mostradas(texto, "rationale", ())))
 
-    assert ids == produccion.reglas_coincidentes(texto, "rationale")
+    assert ids == produccion.reglas_coincidentes(texto, "rationale", ())
+
+
+@pytest.mark.ac("L1D-279", 3)
+@pytest.mark.ac("US-249", 4)
+def test_la_salida_mostrada_lista_el_campo_y_la_regla_sin_texto_cuando_queda_un_termino_real() -> (
+    None
+):
+    verificador = VerificadorEstricto(cargar_lista_de_terminos(CATALOGOS))
+    texto = "The guideline recommends adding the therapy."
+
+    medida = prescriptivas.medir_salida_mostrada([("rationale", texto)], verificador, ())
+
+    assert medida.campos == (("rationale", "b-recommend"),)
+    assert (medida.campos_nivel_a, medida.campos_nivel_b) == (0, 1)
+    assert all(
+        len(c) == 2 and texto not in c for c in medida.campos
+    )  # solo (campo, regla), nunca el texto

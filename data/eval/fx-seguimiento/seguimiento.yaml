@@ -1,0 +1,31 @@
+clase: sintetico
+corpus: fx-t5a-a
+# Contexto y memoria: el ejemplo contracts/examples/rag-follow-up-request.json (paciente sintético de mama).
+casos:
+  - id: SEG-EV-01
+    descripcion: con evidencia citada
+    pregunta: '¿Qué describe la bibliografía sobre anti-HER2 con quimioterapia adyuvante en mama?'
+    guion:
+      outcome: respuesta
+      claims:
+        - {text: 'Adding anti-HER2 therapy to adjuvant chemotherapy improved disease-free survival.', citations: [C1]}
+    esperado: {estado: con_evidencia, mostradas: 1, omitidas: 0}
+  - id: SEG-SIN-02
+    descripcion: ningún chunk supera el umbral; el LLM no se invoca
+    pregunta: '¿Qué reporta la bibliografía sobre melanoma uveal?'
+    guion: {outcome: respuesta, claims: []}
+    esperado: {estado: sin_evidencia, mostradas: 0, omitidas: 0}
+  - id: SEG-FUERA-03
+    descripcion: pregunta sobre otra persona (marcador de identidad)
+    pregunta: '¿La bibliografía aplica al tratamiento que recibió [NOMBRE]?'
+    guion: {outcome: respuesta, claims: []}
+    esperado: {estado: fuera_de_contexto, mostradas: 0, omitidas: 0}
+  - id: SEG-MEM-04
+    descripcion: una afirmación copia la memoria del análisis (RN-24) y se omite
+    pregunta: '¿Qué describe la bibliografía sobre anti-HER2 con quimioterapia adyuvante en cáncer de mama?'
+    guion:
+      outcome: respuesta
+      claims:
+        - {text: 'Adding anti-HER2 therapy to adjuvant chemotherapy improved disease-free survival.', citations: [C1]}
+        - {text: 'Las fuentes describen terapia anti-HER2 con quimioterapia adyuvante y terapia endocrina adyuvante.', citations: [C1]}
+    esperado: {estado: con_evidencia, mostradas: 1, omitidas: 1}

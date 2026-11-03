@@ -8,10 +8,14 @@ from typing import Any, Literal, Protocol
 from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
 from app.domain.applicability_text import FuenteParaProponer, PropuestaDePoblacion
 from app.domain.citations import FichaDeFuente, OpcionGenerada
+from app.domain.claims import AfirmacionAtomica
+from app.domain.lenguaje import FuenteCitada
 from app.domain.nli import ParNli, ResultadoNli
 from app.domain.relevance import ChunkPuntuado
 from app.domain.support import CampoGenerado
 from app.schemas.generated.models import (
+    RagFollowUpRequest,
+    RagFollowUpResponse,
     RagMeta,
     RagQueryInternalRequest,
     RagQueryInternalResponse,
@@ -28,6 +32,12 @@ class EvidenceQueryPort(Protocol):
     """Consulta de evidencia de `/rag/query`; el enlace real es de L1D-106, el `fake` de L1D-164."""
 
     async def consultar(self, solicitud: RagQueryInternalRequest) -> RagQueryInternalResponse: ...
+
+
+class FollowUpPort(Protocol):
+    """Seguimiento de `/rag/follow-up` (US-218): sin estado, una llamada se resuelve solo con su cuerpo."""
+
+    async def responder(self, solicitud: RagFollowUpRequest) -> RagFollowUpResponse: ...
 
 
 class TraceIdGenerator(Protocol):
@@ -253,6 +263,23 @@ class EvidenceGenerator(Protocol):
     ) -> EvidenciaGenerada: ...
 
 
+@dataclass(frozen=True)
+class SeguimientoGenerado:
+    """Lo que devuelve el generador del seguimiento: el marcador ``fuera_de_contexto`` del prompt o las afirmaciones
+    atómicas con sus ``chunkId`` citados (alias ya traducidos), aún sin validar (RN-01, RN-04)."""
+
+    fuera_de_contexto: bool
+    afirmaciones: tuple[AfirmacionAtomica, ...] = ()
+
+
+class SeguimientoGenerator(Protocol):
+    """Generación del seguimiento (prompt propio, LLM local); entrega afirmaciones crudas, el servicio las valida."""
+
+    async def generar(
+        self, solicitud: RagFollowUpRequest, recuperacion: ResultadoDeRecuperacion
+    ) -> SeguimientoGenerado: ...
+
+
 class PoblacionTask(Protocol):
     """La tarea corta de población (US-242) en la consulta (US-244): UNA fuente y UN criterio por llamada.
 
@@ -365,10 +392,14 @@ class ProhibitedTermsChecker(Protocol):
         """``version`` de ``terminos-prohibidos.json`` cargada (``languagePolicyVersion`` del log)."""
         ...
 
-    def reglas_coincidentes(self, texto: str, campo: CampoGenerado) -> tuple[str, ...]:
+    def reglas_coincidentes(
+        self, texto: str, campo: CampoGenerado, fuentes: Sequence[FuenteCitada]
+    ) -> tuple[str, ...]:
         """``id`` de cada regla que coincide con ``texto`` (``campo`` es uno de ``CAMPOS_GENERADOS``); vacío = limpio.
 
-        Un campo que no es generado (copiado del corpus) nunca coincide. Nunca devuelve el término ni el texto.
+        Rige el Nivel A y ``salidaGenerada.nivelB`` de la lista (RN-23). ``fuentes`` son los fragmentos que cita la
+        opción: una cita textual atribuida de ellos no activa el subconjunto B. Un campo que no es generado (copiado
+        del corpus) nunca coincide. Nunca devuelve el término ni el texto.
         """
         ...
 
