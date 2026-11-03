@@ -8,6 +8,7 @@ import type {
 } from '../../../../packages/api-contracts/src/types/clinical-api';
 import { NotasClinicasDeFicha } from '../../components/organisms/notas-clinicas-de-ficha';
 import { RecentBiomarkersTable } from '../../components/organisms/recent-biomarkers-table';
+import { fechaRelativa } from '../../lib/fechas/fecha-relativa';
 import { mensajes } from '../../lib/mensajes';
 import {
   biomarcadorCorregido,
@@ -27,6 +28,7 @@ const { refresh } = vi.hoisted(() => ({ refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh }) }));
 
 const { correccion } = mensajes().ficha;
+const HOY = '2026-09-22';
 const bff = crearBffDeCorreccionSimulado();
 const [her2] = fichaDelDoctor.recentBiomarkers;
 if (her2 === undefined) throw new Error('El ejemplo no trae biomarcadores');
@@ -37,7 +39,7 @@ function montarTabla(biomarcadores: unknown[] = [her2], egresado = false) {
       biomarcadores={biomarcadores as unknown as Biomarker[]}
       pacienteId={ID_DEL_PACIENTE}
       egresado={egresado}
-      hoy="2026-10-01"
+      hoy={HOY}
     />,
   );
   return userEvent.setup();
@@ -49,6 +51,7 @@ function montarNotas(notas: unknown[] = listaDeNotas.items, egresado = false) {
       notas={notas as unknown as ClinicalNote[]}
       pacienteId={ID_DEL_PACIENTE}
       egresado={egresado}
+      hoy={HOY}
     />,
   );
   return userEvent.setup();
@@ -63,9 +66,7 @@ async function abrirCorreccion(usuario: Usuario) {
 describe('Corrección con histórico en la ficha', () => {
   beforeAll(bff.iniciar);
   afterAll(bff.detener);
-  beforeEach(() => vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-09-22T12:00:00Z') }));
   afterEach(() => {
-    vi.useRealTimers();
     cleanup();
     bff.reiniciar();
     refresh.mockReset();
@@ -78,9 +79,9 @@ describe('Corrección con histórico en la ficha', () => {
     const fila = screen.getByRole('row', { name: /Ki-67/ });
     expect(within(fila).getByText(/Corrección manual/)).toBeTruthy();
     expect(within(fila).queryByText(/Verificado/)).toBeNull();
-    expect(within(fila).getByText('hace 12 días').closest('time')?.getAttribute('datetime')).toBe(
-      '2026-09-10',
-    );
+    expect(
+      within(fila).getAllByText('hace 12 días').at(-1)?.closest('time')?.getAttribute('datetime'),
+    ).toBe('2026-09-10');
     expect(within(fila).getByText(/25 %/)).toBeTruthy();
     const alternar = screen.getByRole('button', { name: /Histórico/ });
     expect(alternar.getAttribute('aria-expanded')).toBe('false');
@@ -209,6 +210,72 @@ describe('Corrección con histórico en la ficha', () => {
     expect(aviso.compareDocumentPosition(campo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
+  it('muestra la misma fecha relativa que el átomo en el histórico, la nota y la corrección manual para 30 días, 400 días y fecha futura [US-253 AC-1]', async () => {
+    const dias = (n: number) =>
+      new Date(Date.parse(`${HOY}T00:00:00Z`) - n * 86_400_000).toISOString();
+    const fechas = [dias(30), dias(400), dias(-5)];
+    const esperadas = fechas.map((fecha) => fechaRelativa(fecha, HOY));
+    const textos = (raiz: ParentNode) =>
+      [...raiz.querySelectorAll('time')].map((t) => t.textContent);
+    bff.historicoDeBiomarcador({
+      items: fechas.map((recordedAt, i) => ({
+        ...historicoDeBiomarcador.items[0]!,
+        id: `00000000-0000-4000-8000-00000000000${i}`,
+        recordedAt,
+      })),
+    });
+    const corregidos = fechas.map((performedAt, i) => ({
+      ...biomarcadorCorregido,
+      id: `10000000-0000-4000-8000-00000000000${i}`,
+      name: `Marcador ${i}`,
+      performedAt: performedAt.slice(0, 10),
+    }));
+    const usuario = montarTabla(corregidos);
+    for (const [i, nombre] of corregidos.map((c) => c.name).entries()) {
+      const origen = within(screen.getByRole('row', { name: new RegExp(nombre) }));
+      expect(origen.getAllByText(esperadas[i]!).length).toBeGreaterThan(1);
+    }
+
+    await usuario.click(screen.getAllByRole('button', { name: /Histórico/ })[0]!);
+    const historico = await screen.findByRole('list', { name: correccion.historico.etiqueta });
+    expect(textos(historico)).toEqual(esperadas);
+    cleanup();
+
+    montarNotas(
+      fechas.map((recordedAt, i) => ({
+        ...listaDeNotas.items[1]!,
+        id: `20000000-0000-4000-8000-00000000000${i}`,
+        recordedAt,
+      })),
+    );
+    expect(textos(document.body)).toEqual(esperadas);
+  });
+
+  it('mantiene el aviso de análisis anteriores tras corregir un biomarcador y volver a pintar la fila con otro id [US-253 AC-5]', async () => {
+    bff.corregirBiomarcador(201, biomarcadorCorregido);
+    const props = { pacienteId: ID_DEL_PACIENTE, egresado: false, hoy: HOY };
+    const { rerender } = render(
+      <RecentBiomarkersTable biomarcadores={[her2] as unknown as Biomarker[]} {...props} />,
+    );
+    const usuario = userEvent.setup();
+    await abrirCorreccion(usuario);
+    await usuario.click(screen.getByRole('button', { name: correccion.formulario.guardar }));
+    expect(await screen.findByText(correccion.avisoAnalisisAnteriores)).toBeTruthy();
+
+    rerender(
+      <RecentBiomarkersTable
+        biomarcadores={
+          [
+            { ...her2, id: biomarcadorCorregido.id, supersedesId: her2.id },
+          ] as unknown as Biomarker[]
+        }
+        {...props}
+      />,
+    );
+
+    expect(screen.getByText(correccion.avisoAnalisisAnteriores)).toBeTruthy();
+  });
+
   it('devuelve el foco al botón Corregir dato cuando se cierra el diálogo con Escape [US-253 AC-2]', async () => {
     const usuario = montarNotas();
     const accion = screen.getAllByRole('button', { name: /Corregir dato/ })[0]!;
@@ -256,7 +323,7 @@ describe('Corrección con histórico en la ficha', () => {
 
     const historico = await screen.findByRole('list', { name: correccion.historico.etiqueta });
     const fecha = within(historico).getAllByText('hace 12 días')[0]!.closest('time');
-    expect(fecha?.getAttribute('datetime')).toBe('2026-09-10T00:00:00.000Z');
+    expect(fecha?.getAttribute('datetime')).toBe('2026-09-10');
     expect(fecha?.getAttribute('title')).toBe('10/09/2026');
   });
 });
