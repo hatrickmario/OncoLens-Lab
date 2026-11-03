@@ -127,24 +127,7 @@ def ejecutar_opciones(
 async def medir_opciones(
     config: ConfigOpciones, dataset: DatasetOpciones, reloj: Clock, origen: OrigenLocal
 ) -> MedicionDeOpciones:
-    suite = config.suite
-    puertos = _puertos_locales(suite, dataset, origen)
-    cronometro = Cronometro(RelojSimulado() if suite.reloj == "simulado" else time.perf_counter)
-    servicio = componer_servicio(
-        suite,
-        dataset.base,
-        cronometro,
-        reloj,
-        puertos_locales=puertos,
-        aplicabilidad=AplicabilidadDeLaSuite(
-            cargar_criterios(dataset),
-            CatalogoConPoblacion(
-                dataset.base,
-                dataset.poblaciones,
-                Settings().population_max_values_per_criterion,
-            ),
-        ),
-    )
+    servicio = _servicio_de_la_familia(config, dataset, reloj, origen)
     analisis: list[AnalisisDeOpciones] = []
     resultados: list[ResultadoConsulta] = []
     for indice, pregunta in enumerate(dataset.base.preguntas):
@@ -159,6 +142,29 @@ async def medir_opciones(
         resultados.append(resultado)
     return MedicionDeOpciones(
         tuple(analisis), tuple(resultados), servicio.verificador_produccion.version
+    )
+
+
+def _servicio_de_la_familia(
+    config: ConfigOpciones, dataset: DatasetOpciones, reloj: Clock, origen: OrigenLocal
+) -> ServicioDeSuite:
+    """El servicio de la suite con la aplicabilidad por criterio y la población de cada documento del dataset."""
+    suite = config.suite
+    cronometro = Cronometro(RelojSimulado() if suite.reloj == "simulado" else time.perf_counter)
+    return componer_servicio(
+        suite,
+        dataset.base,
+        cronometro,
+        reloj,
+        puertos_locales=_puertos_locales(suite, dataset, origen),
+        aplicabilidad=AplicabilidadDeLaSuite(
+            cargar_criterios(dataset),
+            CatalogoConPoblacion(
+                dataset.base,
+                dataset.poblaciones,
+                Settings().population_max_values_per_criterion,
+            ),
+        ),
     )
 
 
