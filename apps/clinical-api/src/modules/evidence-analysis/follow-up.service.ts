@@ -1,5 +1,8 @@
 import type { FollowUpTurn } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
-import type { RagFollowUpRequest } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
+import type {
+  PriorAnalysisMemory,
+  RagFollowUpRequest,
+} from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import { zRagFollowUpResponseRefinado } from '../../../../../packages/api-contracts/src/zod/rag-orchestrator/refinamientos.gen.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type { RegistroDeAnalisis } from './analysis-record.js';
@@ -127,20 +130,28 @@ async function leerAnalisisConEvidencia(
   return registro;
 }
 
-/**
- * RN-11: la pregunta, la memoria del análisis y la evolución posterior salen enmascaradas con el desidentificador de
- * ADR-40, con un seudónimo nuevo por turno. Es el único punto donde algo del seguimiento se prepara para la IA.
- */
-async function desidentificarContexto(
-  { seguimientos, desidentificador, reloj }: Dependencias,
-  { traceId, peticion }: SolicitudDeSeguimiento,
+/** Memoria rotulada del análisis con la evolución registrada desde entonces (aún sin enmascarar; RN-24). */
+async function memoriaDelSeguimiento(
+  { seguimientos, reloj }: Dependencias,
   registro: RegistroDeAnalisis,
-): Promise<SalidaDeDesidentificacion> {
+): Promise<PriorAnalysisMemory> {
   const eventos = await seguimientos.leerEventosPosteriores(
     registro.patientId,
     fechaUtc(registro.createdAt),
   );
-  const memoria = memoriaDelAnalisis(registro, eventos, reloj.now());
+  return memoriaDelAnalisis(registro, eventos, reloj.now());
+}
+
+/**
+ * RN-11: la pregunta y la memoria del análisis con su evolución salen enmascaradas con el desidentificador de ADR-40,
+ * con un seudónimo nuevo por turno. Es el único punto donde algo del seguimiento se prepara para la IA; solo enmascara.
+ */
+function desidentificarContexto(
+  { desidentificador }: Dependencias,
+  { traceId, peticion }: SolicitudDeSeguimiento,
+  registro: RegistroDeAnalisis,
+  memoria: PriorAnalysisMemory,
+): Promise<SalidaDeDesidentificacion> {
   return desidentificador.desidentificar({
     traceId,
     patientId: registro.patientId,
@@ -155,10 +166,12 @@ async function armarRequest(
   solicitud: SolicitudDeSeguimiento,
   registro: RegistroDeAnalisis,
 ): Promise<RagFollowUpRequest> {
+  const memoria = await memoriaDelSeguimiento(dependencias, registro);
   const { clinicalContext, query } = await desidentificarContexto(
     dependencias,
     solicitud,
     registro,
+    memoria,
   );
   return armarRagFollowUpRequest({
     traceId: solicitud.traceId,

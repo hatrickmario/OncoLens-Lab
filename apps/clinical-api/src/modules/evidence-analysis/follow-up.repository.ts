@@ -4,12 +4,12 @@ import type {
 } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
 import type { SupportedClaim } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import type { Consultador } from '../auth/auth.repository.js';
-import { sqlDatoVigente } from '../compartido/estados-de-revision.js';
 import type { RegistroDeAnalisis } from './analysis-record.js';
 import { superaLimiteDeSeguimiento } from './follow-up.reglas.js';
 import {
   eventoDe,
   registroDeFila,
+  sqlEventosClinicosVigentes,
   type Fila,
   type FilaDeEvento,
 } from './evidence-analysis.repository.js';
@@ -133,15 +133,10 @@ async function leerEventosPosteriores(
   patientId: string,
   desde: string,
 ): Promise<FilaDeEvento[]> {
-  const { rows } = await db.query(
-    `SELECT id, event_type, event_date::text AS event_date, description, entry_method,
-            extraction_confidence, review_status
-       FROM clinical.clinical_event
-      WHERE patient_id = $1 AND analysis_id IS NULL AND ${sqlDatoVigente('review_status')}
-        AND event_date > $2::date
-      ORDER BY event_date, created_at`,
-    [patientId, desde],
-  );
+  const { rows } = await db.query(sqlEventosClinicosVigentes('AND event_date > $2::date'), [
+    patientId,
+    desde,
+  ]);
   return rows.map(eventoDe);
 }
 
