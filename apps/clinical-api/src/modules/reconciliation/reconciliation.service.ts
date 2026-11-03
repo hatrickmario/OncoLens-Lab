@@ -50,21 +50,26 @@ export function createReconciliationService({
     };
   }
 
+  function resolverContraElCatalogo(propuesta: PropuestaDeNormalizacion, estandar: Estandar) {
+    const resolucion = resolverCodigo({
+      entradas: catalogo.entradas(propuesta.tipoDeCancer, estandar),
+      sinonimos: catalogo.sinonimos(propuesta.tipoDeCancer),
+      textoOriginal: propuesta.textoOriginal,
+      ...(propuesta.codigoPropuesto !== undefined && {
+        codigoPropuesto: propuesta.codigoPropuesto,
+      }),
+    });
+    if (resolucion.resultado === 'ambiguo') {
+      registrar?.({ event: 'terminologia_ambigua', entidad: propuesta.entidad, estandar });
+    }
+    return resolucion;
+  }
+
   return {
     decidir(propuesta) {
       const estandar = estandarDe(propuesta);
       if (estandar === null) return decision(propuesta, 'n_a', null, null, []);
-      const resolucion = resolverCodigo({
-        entradas: catalogo.entradas(propuesta.tipoDeCancer, estandar),
-        sinonimos: catalogo.sinonimos(propuesta.tipoDeCancer),
-        textoOriginal: propuesta.textoOriginal,
-        ...(propuesta.codigoPropuesto !== undefined && {
-          codigoPropuesto: propuesta.codigoPropuesto,
-        }),
-      });
-      if (resolucion.resultado === 'ambiguo') {
-        registrar?.({ event: 'terminologia_ambigua', entidad: propuesta.entidad, estandar });
-      }
+      const resolucion = resolverContraElCatalogo(propuesta, estandar);
       if (resolucion.resultado !== 'mapeado') {
         return decision(propuesta, 'no_mapeado', null, null, []);
       }
