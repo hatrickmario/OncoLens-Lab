@@ -1,0 +1,92 @@
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import peticionFxT3a from '../../../../../contracts/examples/rag-query-request-fx-t3-a.json' with { type: 'json' };
+import ragFxT3a from '../../../../../contracts/examples/rag-query-fx-t3-a.json' with { type: 'json' };
+import type { EvidenceAnalysis } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
+import {
+  RUTA_CATALOGO_TEST_1_0_0,
+  prepararSiembra,
+  type ContextoDeSiembra,
+} from '../../support/completitud.js';
+import { CLAVE_DEL_FALTANTE, sembrarFxT3a, type FxT3aSembrado } from '../../support/fx-t3-a.js';
+import { generadorDeIds } from '../../support/filas-sinteticas.js';
+import {
+  TODAS_LAS_FUENTES,
+  abrirSesion,
+  leerRegistroPorTrace,
+  montarGateway,
+  prepararMundoConSeed,
+  ragSimulado,
+  type MundoDeGateway,
+} from '../../support/gateway.js';
+import { clienteVerificado } from '../../support/verificarProveedor.js';
+
+const ESPACIO_DE_IDS = 9710;
+const TOKEN_DE_SESION = 'SINT-cookie-sesion-avisos-no-bloquean-0001';
+
+const AVISOS_FUERA_DE_WARNINGS = ['datos_faltantes', 'datos_sin_verificar', 'datos_en_conflicto'];
+
+const rag = ragSimulado();
+let mundo: MundoDeGateway;
+let siembra: ContextoDeSiembra;
+let cookie: string;
+let fxT3a: FxT3aSembrado;
+
+beforeAll(async () => {
+  rag.iniciar();
+  mundo = await prepararMundoConSeed('gw_avisos_no_bloquean', ESPACIO_DE_IDS);
+  cookie = await abrirSesion(mundo, 'doc1@test.local', TOKEN_DE_SESION);
+  siembra = await prepararSiembra(mundo.cliente, generadorDeIds(ESPACIO_DE_IDS + 500));
+  fxT3a = await sembrarFxT3a(siembra);
+});
+afterEach(() => rag.reiniciar());
+afterAll(async () => {
+  rag.detener();
+  await mundo.cerrar();
+});
+
+/** `rag-orchestrator` devuelve en `meta.catalogVersion` la versión del request (si difiere responde 409). */
+const respuestaDeFxT3a = {
+  tipo: 'json' as const,
+  status: 200,
+  cuerpo: { ...ragFxT3a, meta: { ...ragFxT3a.meta, catalogVersion: 'test-1.0.0' } },
+};
+
+describe('POST /platform/evidence-analyses · FX-T3-a acumula todos los avisos clínicos (RN-26)', () => {
+  it('responde 200 con poblacion_no_comparable en warnings y declara faltantes y sin verificar en la Base del análisis sin emitirlos en warnings cuando FX-T3-a pide el análisis con continueWithWarning [US-071 AC-1]', async () => {
+    rag.responder(respuestaDeFxT3a);
+    const { app } = await montarGateway(mundo, {
+      rutaDelCatalogo: RUTA_CATALOGO_TEST_1_0_0,
+      traceIds: { traceId: () => 'req_AvisosNoBloq01' },
+    });
+
+    const respuesta = await clienteVerificado(app)
+      .post('/platform/evidence-analyses')
+      .set('Cookie', cookie)
+      .send({
+        patientId: fxT3a.patientId,
+        query: peticionFxT3a.query,
+        sourcesSelected: TODAS_LAS_FUENTES,
+        continueWithWarning: true,
+      });
+
+    expect(respuesta.status).toBe(200);
+    const analisis = respuesta.body as EvidenceAnalysis;
+    expect(analisis.evidenceOptions).toHaveLength(1);
+    const [opcion] = analisis.evidenceOptions;
+    expect(opcion).toMatchObject({
+      populationNotComparable: true,
+      warnings: ['poblacion_no_comparable'],
+    });
+    for (const aviso of AVISOS_FUERA_DE_WARNINGS) expect(opcion?.warnings).not.toContain(aviso);
+    const base = analisis.analysisBasis;
+    expect(base.missingCriticalData).toContain(CLAVE_DEL_FALTANTE);
+    expect(base.continuedWithWarning).toBe(true);
+    const ki67 = base.patientDataUsed.find((dato) => dato.label.startsWith('Ki-67'));
+    expect(ki67).toMatchObject({ reviewStatus: 'requiere_revision' });
+    const registro = await leerRegistroPorTrace(mundo.cliente, 'req_AvisosNoBloq01');
+    expect(registro).toMatchObject({
+      missing_critical_data: base.missingCriticalData,
+      continued_with_warning: true,
+    });
+  });
+});

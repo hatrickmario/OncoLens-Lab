@@ -140,6 +140,8 @@ export interface BiomarcadorDeSiembra {
   extractionConfidence?: string;
   /** JSON serializado de `source_span` (texto del documento: debe quedar fuera de la lectura del checklist). */
   sourceSpan?: string;
+  /** `conflicts_with_id`: id de otro biomarcador del paciente con el que este dato entra en conflicto (RN-08). */
+  enConflictoCon?: string;
 }
 
 export async function sembrarBiomarcador(
@@ -172,6 +174,7 @@ export async function sembrarBiomarcador(
     review_status: b.reviewStatus,
     source_span: b.sourceSpan ?? '{}',
     created_at: INSTANTE_FIJO,
+    ...(b.enConflictoCon !== undefined && { conflicts_with_id: b.enConflictoCon }),
   };
   const insertada = await insertar(p.cliente, 'clinical.biomarker', fila);
   return insertada['id'] as string;
