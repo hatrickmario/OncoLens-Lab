@@ -2,8 +2,8 @@
 
     python scripts/demo/exportar-modelos.py [DESTINO]      # por defecto ~/adr39-modelos
 
-Se ejecuta con un entorno que tenga `apps/rag-orchestrator/requirements-eval.txt` (torch, transformers, onnx, onnxruntime):
-    python3 -m venv ~/.venvs/oncolens-export && ~/.venvs/oncolens-export/bin/pip install -r apps/rag-orchestrator/requirements-eval.txt
+Se ejecuta con un entorno que tenga `apps/rag-orchestrator/requirements-eval.txt` y `requirements-export.txt` (torch, transformers, onnx, onnxruntime):
+    python3 -m venv ~/.venvs/oncolens-export && ~/.venvs/oncolens-export/bin/pip install -r apps/rag-orchestrator/requirements-eval.txt -r apps/rag-orchestrator/requirements-export.txt
 
 Resultado en DESTINO: embeddings/ (BGE-M3 int8 + sparse_linear.npz), reranker/ (bge-reranker-v2-m3 int8) y nli/ (mDeBERTa fp32),
 cada uno con `model.onnx` en UN solo archivo y `tokenizer.json`, más `modelos.env` con las rutas del contenedor y el SHA-256

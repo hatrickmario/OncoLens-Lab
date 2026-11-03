@@ -12,16 +12,16 @@
 
 ### 1. D-11 primero (desbloquea la CI del propio PR)
 
-- [ ] 1.1 (test después) Crear `apps/rag-orchestrator/requirements-export.txt` con `torch==2.14.1` y `transformers==5.20.2`
+- [x] 1.1 (test después) Crear `apps/rag-orchestrator/requirements-export.txt` con `torch==2.14.1` y `transformers==5.20.2`
   y sus comentarios de licencia, y cabecera «solo exportación manual a ONNX (ADR-39); nunca en la CI ni en la imagen»;
   quitarlos de `requirements-eval.txt`; actualizar el comentario de la línea 4 de `requirements.txt` `[D-11]`.
-- [ ] 1.2 (test después) `tests/unit/test_dependencias_de_inferencia.py`: `transformers` y `torch` en
+- [x] 1.2 (test después) `tests/unit/test_dependencias_de_inferencia.py`: `transformers` y `torch` en
   `requirements-export.txt` y **ni** en `requirements.txt` **ni** en `requirements-eval.txt` (escenario «transformers solo
   está en requirements-export.txt») `[D-11]`. Verifica: Pytest del archivo en verde.
-- [ ] 1.3 (test después) `eval/configs/adr39-medicion.Dockerfile` copia e instala también `requirements-export.txt`;
+- [x] 1.3 (test después) `eval/configs/adr39-medicion.Dockerfile` copia e instala también `requirements-export.txt`;
   `docs/demo/runbook-demo-S1.md` (venv de los pesos ONNX) y el docstring de `scripts/demo/exportar-modelos.py` piden los dos
   ficheros `[D-11]`.
-- [ ] 1.4 (test después) `scripts/ci/auditar-dependencias.sh`: `-r "$req/requirements-export.txt"` en `pip-audit`; su test
+- [x] 1.4 (test después) `scripts/ci/auditar-dependencias.sh`: `-r "$req/requirements-export.txt"` en `pip-audit`; su test
   o caso existente sigue en verde `[D-11] [US-217 AC-1]`.
 
 ### 2. Detector de cambios y agregador
