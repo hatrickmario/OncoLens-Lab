@@ -5,12 +5,7 @@ import { idSembrado } from './determinismo.js';
 import { columnasDeGradacion } from './columnas-de-gradacion.js';
 import { derivarTextoGrade } from './grade.js';
 import { identidadSinteticaDe } from './identidades.js';
-import { pacienteA } from './pacientes/a.js';
-import { pacienteB } from './pacientes/b.js';
-import { pacienteC } from './pacientes/c.js';
-import { pacienteD } from './pacientes/d.js';
-import { pacienteE } from './pacientes/e.js';
-import { pacienteF } from './pacientes/f.js';
+import { PACIENTES_SEMILLA } from './pacientes/indice.js';
 import type { DiagnosticoSemilla, GradacionSemilla, PacienteSemilla } from './pacientes/tipos.js';
 import type { ClavesDeIdentidad } from '../../src/infrastructure/crypto/claves-de-identidad.js';
 import type { RolDeUsuario } from '../../src/modules/auth/auth.repository.js';
@@ -54,15 +49,6 @@ export interface EntradasDelSeed {
 
 /** Filas escritas por tabla (los logs del seed solo llevan conteos, nunca valores). */
 export type FilasUpsertadas = Readonly<Record<string, number>>;
-
-export const PACIENTES_SEMILLA: readonly PacienteSemilla[] = [
-  pacienteA,
-  pacienteB,
-  pacienteC,
-  pacienteD,
-  pacienteE,
-  pacienteF,
-];
 
 const REFERENCIA_DE_CONVENIO = 'CONV-SEED-01';
 const ORIGEN_DEL_DATASET = 'seed';

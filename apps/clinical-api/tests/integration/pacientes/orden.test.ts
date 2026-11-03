@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { PACIENTES_SEMILLA } from '../../../prisma/seed/sembrar.js';
+import { PACIENTES_SEMILLA } from '../../../prisma/seed/pacientes/indice.js';
 import {
   iniciarEscenarioDePacientes,
   montarPacientes,

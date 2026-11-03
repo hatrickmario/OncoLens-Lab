@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Client } from 'pg';
 import { SeedBloqueadoError } from '../../../prisma/seed/guarda.js';
 import { ejecutarSeed } from '../../../prisma/seed/principal.js';
-import { PACIENTES_SEMILLA } from '../../../prisma/seed/sembrar.js';
+import { PACIENTES_SEMILLA } from '../../../prisma/seed/pacientes/indice.js';
 import { conectar, type BaseDeTest } from '../../support/db.js';
 import { crearIndiceCiego } from '../../../src/infrastructure/crypto/indice-ciego.js';
 import { claveDeTest, entornoDeClaves, servicioDesdeEntorno } from '../../support/identidad.js';

@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Client } from 'pg';
 import { idSembrado } from '../../../prisma/seed/determinismo.js';
-import { PACIENTES_SEMILLA } from '../../../prisma/seed/sembrar.js';
+import { PACIENTES_SEMILLA } from '../../../prisma/seed/pacientes/indice.js';
 import { conectar, type BaseDeTest } from '../../support/db.js';
 import {
   CONTRASENA_FICTICIA_ADMIN,

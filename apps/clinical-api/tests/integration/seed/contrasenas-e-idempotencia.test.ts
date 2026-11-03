@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { Client } from 'pg';
-import { PACIENTES_SEMILLA } from '../../../prisma/seed/sembrar.js';
+import { PACIENTES_SEMILLA } from '../../../prisma/seed/pacientes/indice.js';
 import { createPasswordHasher } from '../../../src/modules/auth/password-hasher.js';
 import { conectar, type BaseDeTest } from '../../support/db.js';
 import {
