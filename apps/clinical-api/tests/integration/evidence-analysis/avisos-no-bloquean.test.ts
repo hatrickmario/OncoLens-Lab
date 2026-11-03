@@ -2,7 +2,6 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import peticionFxT3a from '../../../../../contracts/examples/rag-query-request-fx-t3-a.json' with { type: 'json' };
 import ragFxT3a from '../../../../../contracts/examples/rag-query-fx-t3-a.json' with { type: 'json' };
 import type { EvidenceAnalysis } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
-import { RUTA_CATALOGO_TEST_1_0_0 } from '../../support/completitud.js';
 import {
   TODAS_LAS_FUENTES,
   abrirSesion,
@@ -11,6 +10,7 @@ import {
   montarGateway,
   prepararMundoConSeed,
   ragSimulado,
+  versionDelCatalogo,
   type MundoDeGateway,
 } from '../../support/gateway.js';
 import { clienteVerificado } from '../../support/verificarProveedor.js';
@@ -23,6 +23,18 @@ const PACIENTE_FX_T3_A = idDePaciente('f');
 const CLAVE_DEL_FALTANTE = 'estado_menopausico';
 
 const AVISOS_FUERA_DE_WARNINGS = ['datos_faltantes', 'datos_sin_verificar', 'datos_en_conflicto'];
+
+/** Los meses relativos dependen del reloj del seed y el seudónimo es por consulta: lo demás debe coincidir con el ejemplo. */
+const CAMPOS_RELATIVOS = new Set(['monthsAgo', 'monthsSinceDiagnosis', 'pseudoPatientId']);
+function sinCamposRelativos(valor: unknown): unknown {
+  if (Array.isArray(valor)) return valor.map(sinCamposRelativos);
+  if (valor === null || typeof valor !== 'object') return valor;
+  return Object.fromEntries(
+    Object.entries(valor)
+      .filter(([clave]) => !CAMPOS_RELATIVOS.has(clave))
+      .map(([clave, hijo]) => [clave, sinCamposRelativos(hijo)]),
+  );
+}
 
 const rag = ragSimulado();
 let mundo: MundoDeGateway;
@@ -43,14 +55,13 @@ afterAll(async () => {
 const respuestaDeFxT3a = {
   tipo: 'json' as const,
   status: 200,
-  cuerpo: { ...ragFxT3a, meta: { ...ragFxT3a.meta, catalogVersion: 'test-1.0.0' } },
+  cuerpo: { ...ragFxT3a, meta: { ...ragFxT3a.meta, catalogVersion: versionDelCatalogo() } },
 };
 
 describe('POST /platform/evidence-analyses · FX-T3-a acumula todos los avisos clínicos (RN-26)', () => {
   it('responde 200 con poblacion_no_comparable en warnings y declara faltantes y sin verificar en la Base del análisis sin emitirlos en warnings cuando FX-T3-a pide el análisis con continueWithWarning [US-071 AC-1]', async () => {
     rag.responder(respuestaDeFxT3a);
     const { app } = await montarGateway(mundo, {
-      rutaDelCatalogo: RUTA_CATALOGO_TEST_1_0_0,
       traceIds: { traceId: () => 'req_AvisosNoBloq01' },
     });
 
@@ -65,6 +76,10 @@ describe('POST /platform/evidence-analyses · FX-T3-a acumula todos los avisos c
       });
 
     expect(respuesta.status).toBe(200);
+    // El ejemplo que sirve el modo fingido es lo que el gateway le envía a rag-orchestrator para este paciente (US-213).
+    expect(sinCamposRelativos(rag.capturadas[0]?.cuerpo['clinicalContext'])).toEqual(
+      sinCamposRelativos(peticionFxT3a.clinicalContext),
+    );
     const analisis = respuesta.body as EvidenceAnalysis;
     expect(analisis.evidenceOptions).toHaveLength(1);
     const [opcion] = analisis.evidenceOptions;
