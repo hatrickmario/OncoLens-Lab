@@ -1,15 +1,17 @@
 import type { Express } from 'express';
 import type { Client } from 'pg';
 import { crearProveedorDeCatalogo } from '../../src/infrastructure/catalogo/catalog-version.provider.js';
+import { crearCatalogoDeAtributos } from '../../src/infrastructure/catalogo/catalogo-de-atributos.js';
 import { crearCatalogoTerminologico } from '../../src/infrastructure/catalogo/catalogo-terminologico.js';
 import { createCaseViewRepository } from '../../src/modules/case-view/case-view.repository.js';
 import { caseViewController } from '../../src/modules/case-view/case-view.controller.js';
 import { createCaseViewService } from '../../src/modules/case-view/case-view.service.js';
+import { componerModuloDeAtributos } from '../../src/modules/clinical-attributes/clinical-attributes.module.js';
 import type { FuenteDeConexiones } from '../../src/modules/compartido/transaccion.js';
 import { componerModuloDeTratamientos } from '../../src/modules/prior-treatments/prior-treatments.module.js';
 import { createReconciliationService } from '../../src/modules/reconciliation/reconciliation.service.js';
 import { appConAuth } from './app-auth.js';
-import { RUTA_CATALOGO_FX01BB } from './catalogo-terminologico.js';
+import { RUTA_CATALOGO_FX01BB, RUTA_CATALOGO_REAL } from './catalogo-terminologico.js';
 import { servicioDeCompletitud } from './completitud-http.js';
 import { leerTexto } from './completitud.js';
 import { AHORA, TRACE_ID_GENERADO, type MundoDeGateway } from './gateway.js';
@@ -30,6 +32,8 @@ export interface AppDeRegistroClinico {
 export interface OpcionesDeRegistroClinico {
   /** Catálogo montado; por defecto el fixture FX-01b-b `test-normalizacion-1.0.0`. */
   rutaDelCatalogo?: string;
+  /** Catálogo de atributos montado (`atributos.json`); por defecto el catálogo real, que declara los valores (RN-29). */
+  rutaDelCatalogoDeAtributos?: string;
   /** Fuente de conexiones; por defecto la conexión única del mundo (BEGIN/COMMIT caen en la sesión del test). */
   fuente?: FuenteDeConexiones;
 }
@@ -64,6 +68,18 @@ export function montarRegistroClinico(
     traceIds,
     registrar: logger.registrar,
   });
+  const atributos = componerModuloDeAtributos({
+    fuente,
+    catalogo: crearCatalogoDeAtributos(
+      opciones.rutaDelCatalogoDeAtributos ?? RUTA_CATALOGO_REAL,
+      leerTexto,
+      crearProveedorDeCatalogo(opciones.rutaDelCatalogoDeAtributos ?? RUTA_CATALOGO_REAL, leerTexto),
+    ),
+    reloj,
+    generarId: mundo.ids,
+    traceIds,
+    registrar: logger.registrar,
+  });
   const caso = caseViewController({
     service: createCaseViewService({
       repo: createCaseViewRepository(mundo.cliente),
@@ -78,7 +94,7 @@ export function montarRegistroClinico(
     tokens: tokensFijos('no-se-usa'),
     reloj,
     registrar: logger.registrar,
-    rutasProtegidas: [tratamientos, caso],
+    rutasProtegidas: [tratamientos, atributos, caso],
   });
   return { app, logger };
 }
@@ -87,6 +103,15 @@ export function montarRegistroClinico(
 export async function contarTratamientos(cliente: Client, patientId: string): Promise<number> {
   const { rows } = await cliente.query<{ n: number }>(
     'SELECT count(*)::int AS n FROM clinical.prior_treatment WHERE patient_id = $1',
+    [patientId],
+  );
+  return rows[0]?.n ?? 0;
+}
+
+/** Filas de `clinical.clinical_attribute` del paciente (cualquier estado de revisión). */
+export async function contarAtributos(cliente: Client, patientId: string): Promise<number> {
+  const { rows } = await cliente.query<{ n: number }>(
+    'SELECT count(*)::int AS n FROM clinical.clinical_attribute WHERE patient_id = $1',
     [patientId],
   );
   return rows[0]?.n ?? 0;
