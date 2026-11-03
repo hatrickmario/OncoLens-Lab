@@ -1,10 +1,11 @@
 import { describe, expect, inject, it } from 'vitest';
 import { conTransaccionRevertida } from '../../support/db.js';
-import { generadorDeIds, insertar, insertarContextoClinico } from '../../support/filas-sinteticas.js';
 import {
-  instantaneaDeTablas,
-  tablasConDiferencia,
-} from '../../support/instantanea-de-tablas.js';
+  generadorDeIds,
+  insertar,
+  insertarContextoClinico,
+} from '../../support/filas-sinteticas.js';
+import { instantaneaDeTablas, tablasConDiferencia } from '../../support/instantanea-de-tablas.js';
 
 const urlBase = inject('urlBaseDeTest');
 const ESPACIO_DE_IDS = 9990;
