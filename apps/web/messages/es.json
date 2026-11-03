@@ -459,6 +459,7 @@
       "significancia": "Significancia",
       "origen": "Origen y revisión",
       "sinTendencia": "Sin tendencia calculada",
+      "acciones": "Acciones",
       "loinc": "LOINC {codigo}"
     },
     "significancia": {
@@ -494,6 +495,57 @@
     },
     "acciones": {
       "analizar": "Analizar evidencia"
+    },
+    "correccion": {
+      "accion": "Corregir dato",
+      "accionDe": "Corregir dato · {nombre}",
+      "egresado": "El paciente está egresado: no admite registros hasta su reactivación",
+      "avisoNombres": "Las notas no se envían a la IA en esta versión; conviene no incluir nombres de personas en ellas.",
+      "avisoAnalisisAnteriores": "Los análisis anteriores se hicieron con el valor previo. Un análisis nuevo usará el valor corregido.",
+      "formulario": {
+        "valor": "Valor",
+        "unidad": "Unidad",
+        "fecha": "Fecha del examen (opcional)",
+        "tipoDeNota": "Tipo de nota",
+        "nota": "Texto de la nota",
+        "guardar": "Guardar mi corrección",
+        "guardando": "Guardando…",
+        "cancelar": "Cancelar",
+        "tituloDeNota": "Corregir nota clínica",
+        "descripcionDeNota": "Tu corrección crea una versión nueva; la anterior queda en el histórico."
+      },
+      "errores": {
+        "noVigente": "El dato ya fue reemplazado: vuelve a abrir la ficha para ver su versión vigente.",
+        "permiso": "Tu cuenta no puede corregir datos clínicos.",
+        "noEncontrado": "El dato ya no está en la ficha.",
+        "obligatorio": "Este campo es obligatorio.",
+        "fechaFutura": "La fecha no puede ser posterior a hoy.",
+        "valorFormato": "Este valor no coincide con el formato esperado.",
+        "textoDeNota": "El texto de la nota no puede estar vacío ni superar el máximo permitido.",
+        "sinCambios": "No hay cambios respecto de la versión vigente.",
+        "campoInvalido": "Revisa este campo: no cumple el formato esperado.",
+        "generico": "No se pudo guardar la corrección. Intenta de nuevo."
+      },
+      "historico": {
+        "etiqueta": "Versiones anteriores",
+        "abrir": "Histórico",
+        "reemplazado": "reemplazado",
+        "cargando": "Cargando el histórico…",
+        "vacio": "Este dato no tiene versiones anteriores.",
+        "error": "No se pudo cargar el histórico."
+      }
+    },
+    "notas": {
+      "titulo": "Notas clínicas",
+      "vacio": "No hay notas clínicas registradas.",
+      "noDisponibles": "No se pudieron cargar las notas clínicas.",
+      "tipos": {
+        "antecedente": "Antecedente",
+        "comorbilidad": "Comorbilidad",
+        "alergia": "Alergia",
+        "antecedente_familiar": "Antecedente familiar",
+        "nota_libre": "Nota libre"
+      }
     },
     "noEncontrado": {
       "titulo": "Paciente no encontrado",

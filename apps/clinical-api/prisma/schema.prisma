@@ -285,10 +285,13 @@ model ClinicalNote {
   extractionConfidence ExtractionConfidence @map("extraction_confidence")
   reviewStatus         ReviewStatus         @map("review_status")
   createdAt            DateTime             @map("created_at") @db.Timestamptz(6)
+  supersedesId         String?              @map("supersedes_id") @db.Uuid
   patient              Patient              @relation(fields: [patientId], references: [id], onDelete: Restrict)
   episode              CareEpisode          @relation(fields: [episodeId], references: [id], onDelete: Restrict)
   sourceDocument       Document?            @relation(fields: [sourceDocumentId], references: [id], onDelete: Restrict)
   createdByUser        User                 @relation(fields: [createdBy], references: [id], onDelete: Restrict)
+  supersedes           ClinicalNote?        @relation("CorreccionDeNota", fields: [supersedesId], references: [id], onDelete: Restrict)
+  correcciones         ClinicalNote[]       @relation("CorreccionDeNota")
 
   @@index([patientId, noteType, recordedAt])
   @@index([reviewStatus])
@@ -306,10 +309,13 @@ model Exam {
   entryMethod      EntryMethod @map("entry_method")
   performedAt      DateTime    @map("performed_at") @db.Date
   createdAt        DateTime    @map("created_at") @db.Timestamptz(6)
+  supersedesId     String?     @map("supersedes_id") @db.Uuid
   patient          Patient     @relation(fields: [patientId], references: [id], onDelete: Restrict)
   episode          CareEpisode @relation(fields: [episodeId], references: [id], onDelete: Restrict)
   sourceDocument   Document?   @relation(fields: [sourceDocumentId], references: [id], onDelete: Restrict)
   biomarkers       Biomarker[]
+  supersedes       Exam?       @relation("CorreccionDeExamen", fields: [supersedesId], references: [id], onDelete: Restrict)
+  correcciones     Exam[]      @relation("CorreccionDeExamen")
 
   @@index([patientId, performedAt])
   @@map("exam")
@@ -338,7 +344,10 @@ model Biomarker {
   reviewedBy           String?              @map("reviewed_by") @db.Uuid
   reviewedAt           DateTime?            @map("reviewed_at") @db.Timestamptz(6)
   createdAt            DateTime             @map("created_at") @db.Timestamptz(6)
+  supersedesId         String?              @map("supersedes_id") @db.Uuid
   exam                 Exam                 @relation(fields: [examId], references: [id], onDelete: Restrict)
+  supersedes           Biomarker?           @relation("CorreccionDeBiomarcador", fields: [supersedesId], references: [id], onDelete: Restrict)
+  correcciones         Biomarker[]          @relation("CorreccionDeBiomarcador")
 
   @@index([examId, loincCode])
   @@index([reviewStatus])

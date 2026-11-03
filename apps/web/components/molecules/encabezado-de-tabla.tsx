@@ -2,7 +2,14 @@
 export const CELDA = 'border-border border-b px-3 py-2 text-left align-top';
 
 /** Fila de encabezados de columna (`th scope="col"`): el equivalente textual de cada tabla para lectores de pantalla. */
-export function EncabezadoDeTabla({ columnas }: { columnas: string[] }) {
+export function EncabezadoDeTabla({
+  columnas,
+  columnaDeAcciones,
+}: {
+  columnas: string[];
+  /** Nombre accesible de una última columna de acciones sin título visible (`relative` contiene su texto oculto). */
+  columnaDeAcciones?: string;
+}) {
   return (
     <thead className="bg-surface-alt">
       <tr>
@@ -11,6 +18,11 @@ export function EncabezadoDeTabla({ columnas }: { columnas: string[] }) {
             {columna}
           </th>
         ))}
+        {columnaDeAcciones && (
+          <th scope="col" className={`${CELDA} relative`}>
+            <span className="sr-only">{columnaDeAcciones}</span>
+          </th>
+        )}
       </tr>
     </thead>
   );

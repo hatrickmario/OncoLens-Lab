@@ -1,5 +1,5 @@
+import type { PacienteBloqueable } from '../compartido/paciente-activo.js';
 import type { EstadoDeRevisionVisible } from '../compartido/estados-de-revision.js';
-import type { EstadoDelPaciente } from '../patients/patients.repository.js';
 
 /*
  * Glosario: «registro manual» es el dato que el oncólogo escribe a mano (no extraído de un documento); «corrección» es
@@ -118,9 +118,7 @@ export interface BiomarcadorAGuardar {
 }
 
 /** Operaciones de UNA transacción de registro manual (el repository las ejecuta sobre una sola conexión). */
-export interface TransaccionDeRegistro {
-  /** Bloquea la fila del paciente (serializa los registros concurrentes); `null` si no existe. */
-  bloquearPaciente(patientId: string): Promise<{ readonly estado: EstadoDelPaciente } | null>;
+export interface TransaccionDeRegistro extends PacienteBloqueable {
   /** Episodio al que se asocia el registro: el abierto, o el más reciente. */
   episodioDelRegistro(patientId: string): Promise<string>;
   /** Diagnóstico vigente (activo, no rechazado ni reemplazado) con sus gradaciones; `null` si no hay. */

@@ -6,6 +6,7 @@ import type {
   FilaDeDiagnostico,
   FilaDeEvento,
   FilaDeTratamientoPrevio,
+  PrecisionDeFecha,
   ProcedenciaDeFila,
 } from './evidence-analysis.repository.js';
 import type { ContextoPermitido, EnlaceDeDato, MapaDeDataRefs } from './ports.js';
@@ -20,6 +21,25 @@ export function mesesTranscurridos(fecha: string | null, ahora: Date): number | 
   const meses = (ahora.getUTCFullYear() - anio) * 12 + (ahora.getUTCMonth() + 1 - mes);
   const mesCompleto = ahora.getUTCDate() >= dia ? meses : meses - 1;
   return Math.max(0, mesCompleto);
+}
+
+/**
+ * Regla única de «sin fecha confiable» del contexto (RN-11, readme §4.2): una fecha de precisión `incierta` no viaja
+ * como meses relativos aunque esté informada, igual que en la vista de caso (US-088). La fecha ausente sigue ausente.
+ * Misma regla que `comoEventoConOrden` (case-view/timeline.reglas.ts) y `sqlFechaNoConfiable`
+ * (compartido/estados-de-revision.ts); unificarlas es D5-22.
+ */
+export function fechaConfiable(fecha: string | null, precision: PrecisionDeFecha): string | null {
+  return precision === 'incierta' ? null : fecha;
+}
+
+/** Meses relativos de una fecha de evento o atributo, o `null` si no tiene fecha confiable. */
+function mesesDeFechaConfiable(
+  fecha: string | null,
+  precision: PrecisionDeFecha,
+  ahora: Date,
+): number | null {
+  return mesesTranscurridos(fechaConfiable(fecha, precision), ahora);
 }
 
 /**
@@ -116,7 +136,7 @@ function atributoPermitido(
     dataRef: asignador.asignar({ tabla: 'clinical_attribute', id: fila.id }),
     key: fila.attributeKey,
     value: fila.value,
-    monthsAgo: mesesTranscurridos(fila.observedAt, ahora),
+    monthsAgo: mesesDeFechaConfiable(fila.observedAt, fila.datePrecision, ahora),
     provenance: provenanceDe(fila),
   };
 }
@@ -147,7 +167,7 @@ function eventoPermitido(
   return {
     dataRef: asignador.asignar({ tabla: 'clinical_event', id: fila.id }),
     eventType: fila.eventType,
-    monthsAgo: mesesTranscurridos(fila.eventDate, ahora),
+    monthsAgo: mesesDeFechaConfiable(fila.eventDate, fila.datePrecision, ahora),
     description: fila.description,
     provenance: provenanceDe(fila),
   };

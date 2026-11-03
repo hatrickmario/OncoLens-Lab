@@ -32,7 +32,12 @@ describe('allowlist del modelo generada desde Prisma', () => {
     expect(entidades['Diagnosis'].campos).toContain('stage_value');
     expect(entidades['ClinicalAttribute'].campos).toContain('attribute_key');
     expect(entidades['Exam'].campos).toContain('exam_type');
-    expect(entidades['Biomarker'].relaciones).toEqual({ exam: 'Exam' });
+    // ADR-50 (US-253): las relaciones de versión (`supersedes`, `correcciones`) son parte del modelo.
+    expect(entidades['Biomarker'].relaciones).toEqual({
+      correcciones: 'Biomarker',
+      exam: 'Exam',
+      supersedes: 'Biomarker',
+    });
   });
 
   it('excluye como destino las columnas de control y de texto libre [US-001 AC-4]', async () => {

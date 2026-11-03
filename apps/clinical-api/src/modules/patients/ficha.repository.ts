@@ -64,6 +64,8 @@ export interface FilaDeBiomarcador extends ColumnasDeProcedencia {
   readonly examType: string;
   readonly performedAt: string;
   readonly createdAt: Date;
+  /** Fila a la que esta corrección reemplazó (ADR-50); `null` en un dato que nunca se corrigió. */
+  readonly supersedesId?: string | null;
 }
 
 /** Documentos adicionales (duplicados fusionados) por id de dato. */
@@ -152,6 +154,7 @@ function filaDeBiomarcador(f: FilaSql): FilaDeBiomarcador {
     examType: f['exam_type'] as string,
     performedAt: f['performed_at'] as string,
     createdAt: f['created_at'] as Date,
+    supersedesId: f['supersedes_id'] as string | null,
     ...procedenciaDe(f),
   };
 }
@@ -173,7 +176,7 @@ const CONSULTA_DE_BIOMARCADORES = `SELECT b.id, b.name, b.loinc_code, b.mapping_
        b.significance_source::text AS significance_source, e.exam_type,
        ${comoFecha('e.performed_at')} AS performed_at, e.entry_method::text AS entry_method,
        b.extraction_confidence::text AS extraction_confidence, b.review_status::text AS review_status,
-       b.conflicts_with_id, e.source_document_id, b.created_at
+       b.conflicts_with_id, e.source_document_id, b.created_at, b.supersedes_id
   FROM clinical.biomarker b JOIN clinical.exam e ON e.id = b.exam_id
  WHERE e.patient_id = $1 AND ${sqlDatoVigente('b.review_status')}`;
 

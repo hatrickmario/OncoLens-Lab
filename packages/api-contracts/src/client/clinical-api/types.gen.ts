@@ -208,6 +208,10 @@ export type Biomarker = {
     examType: string;
     performedAt: string;
     provenance: Provenance;
+    /**
+     * Fila a la que esta corrección reemplazó (ADR-50); ausente en un dato que nunca se corrigió. Le dice a la UI si hay histórico.
+     */
+    supersedesId?: string | null;
 };
 
 /**
@@ -282,6 +286,80 @@ export type BiomarkerManualCreate = {
     unit?: string;
     resultType: 'cuantitativo' | 'cualitativo';
     performedAt: string;
+};
+
+/**
+ * Corrección del valor de un biomarcador vigente. El término no cambia. performedAt es opcional: si se envía y difiere del examen, el dato pasa a un Examen de corrección.
+ */
+export type BiomarkerCorrection = {
+    value: string;
+    unit?: string | null;
+    referenceRange?: string | null;
+    /**
+     * Posterior a hoy se rechaza con 422 y field = performedAt.
+     */
+    performedAt?: string;
+};
+
+export type NoteType = 'antecedente' | 'comorbilidad' | 'alergia' | 'antecedente_familiar' | 'nota_libre';
+
+export type ClinicalNote = {
+    id: string;
+    noteType: NoteType;
+    /**
+     * El máximo lo impone CLINICAL_NOTE_MAX_CHARS (configuración, RN-22).
+     */
+    content: string;
+    recordedAt: string;
+    provenance: Provenance;
+    supersedesId: string | null;
+};
+
+export type ClinicalNoteList = {
+    items: Array<ClinicalNote>;
+};
+
+export type ClinicalNoteCorrection = {
+    content?: string;
+    noteType?: NoteType;
+};
+
+/**
+ * Una versión reemplazada. value y unit solo en biomarcadores; content y noteType solo en notas.
+ */
+export type CorrectionHistoryEntry = {
+    id: string;
+    entryMethod: 'ocr' | 'manual' | 'manual_correction' | 'seed';
+    reviewStatus: 'reemplazado';
+    recordedAt: string;
+    createdAt: string;
+    value?: string;
+    unit?: string | null;
+    content?: string;
+    noteType?: NoteType;
+};
+
+/**
+ * De la más reciente a la más antigua, sin la vigente; tope CORRECTION_HISTORY_MAX (RN-22).
+ */
+export type CorrectionHistory = {
+    items: Array<CorrectionHistoryEntry>;
+};
+
+export type ErrorCorreccionInvalida = {
+    error: 'CUERPO_INVALIDO' | 'PACIENTE_EGRESADO' | 'VALOR_FUERA_DE_CATALOGO';
+    /**
+     * Propiedad del cuerpo que causó el error, cuando el error es de un campo; ausente si no lo es (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.
+     */
+    field?: string;
+    message: string;
+    traceId: string;
+};
+
+export type ErrorDatoNoVigente = {
+    error: 'DATO_NO_VIGENTE';
+    message: string;
+    traceId: string;
 };
 
 /**
@@ -1024,6 +1102,10 @@ export type PatientId = string;
 
 export type AnalysisId = string;
 
+export type BiomarkerId = string;
+
+export type NoteId = string;
+
 export type GetHealthData = {
     body?: never;
     path?: never;
@@ -1496,6 +1578,201 @@ export type CreateManualDiagnosisResponses = {
 };
 
 export type CreateManualDiagnosisResponse = CreateManualDiagnosisResponses[keyof CreateManualDiagnosisResponses];
+
+export type CorrectBiomarkerData = {
+    body: BiomarkerCorrection;
+    path: {
+        patientId: string;
+        biomarkerId: string;
+    };
+    query?: never;
+    url: '/platform/patients/{patientId}/biomarkers/{biomarkerId}/corrections';
+};
+
+export type CorrectBiomarkerErrors = {
+    /**
+     * Sesión ausente o expirada.
+     */
+    401: ErrorNoAutenticado;
+    /**
+     * Permiso denegado por RBAC u opt-out.
+     */
+    403: ErrorPermisoDenegado;
+    /**
+     * Recurso no encontrado.
+     */
+    404: ErrorNoEncontrado;
+    /**
+     * El dato ya no está vigente (fue reemplazado o rechazado).
+     */
+    409: ErrorDatoNoVigente;
+    /**
+     * Cuerpo inválido (fecha posterior a hoy, corrección sin cambios), valor fuera del catálogo o paciente egresado.
+     */
+    422: ErrorCorreccionInvalida;
+};
+
+export type CorrectBiomarkerError = CorrectBiomarkerErrors[keyof CorrectBiomarkerErrors];
+
+export type CorrectBiomarkerResponses = {
+    /**
+     * Biomarcador corregido (la fila nueva, vigente).
+     */
+    201: Biomarker;
+};
+
+export type CorrectBiomarkerResponse = CorrectBiomarkerResponses[keyof CorrectBiomarkerResponses];
+
+export type GetBiomarkerHistoryData = {
+    body?: never;
+    path: {
+        patientId: string;
+        biomarkerId: string;
+    };
+    query?: never;
+    url: '/platform/patients/{patientId}/biomarkers/{biomarkerId}/history';
+};
+
+export type GetBiomarkerHistoryErrors = {
+    /**
+     * Sesión ausente o expirada.
+     */
+    401: ErrorNoAutenticado;
+    /**
+     * Permiso denegado por RBAC u opt-out.
+     */
+    403: ErrorPermisoDenegado;
+    /**
+     * Recurso no encontrado.
+     */
+    404: ErrorNoEncontrado;
+};
+
+export type GetBiomarkerHistoryError = GetBiomarkerHistoryErrors[keyof GetBiomarkerHistoryErrors];
+
+export type GetBiomarkerHistoryResponses = {
+    /**
+     * Versiones reemplazadas (vacía si el dato nunca se corrigió).
+     */
+    200: CorrectionHistory;
+};
+
+export type GetBiomarkerHistoryResponse = GetBiomarkerHistoryResponses[keyof GetBiomarkerHistoryResponses];
+
+export type ListClinicalNotesData = {
+    body?: never;
+    path: {
+        patientId: string;
+    };
+    query?: never;
+    url: '/platform/patients/{patientId}/clinical-notes';
+};
+
+export type ListClinicalNotesErrors = {
+    /**
+     * Sesión ausente o expirada.
+     */
+    401: ErrorNoAutenticado;
+    /**
+     * Permiso denegado por RBAC u opt-out.
+     */
+    403: ErrorPermisoDenegado;
+    /**
+     * Recurso no encontrado.
+     */
+    404: ErrorNoEncontrado;
+};
+
+export type ListClinicalNotesError = ListClinicalNotesErrors[keyof ListClinicalNotesErrors];
+
+export type ListClinicalNotesResponses = {
+    /**
+     * Notas vigentes.
+     */
+    200: ClinicalNoteList;
+};
+
+export type ListClinicalNotesResponse = ListClinicalNotesResponses[keyof ListClinicalNotesResponses];
+
+export type CorrectClinicalNoteData = {
+    body: ClinicalNoteCorrection;
+    path: {
+        patientId: string;
+        noteId: string;
+    };
+    query?: never;
+    url: '/platform/patients/{patientId}/clinical-notes/{noteId}/corrections';
+};
+
+export type CorrectClinicalNoteErrors = {
+    /**
+     * Sesión ausente o expirada.
+     */
+    401: ErrorNoAutenticado;
+    /**
+     * Permiso denegado por RBAC u opt-out.
+     */
+    403: ErrorPermisoDenegado;
+    /**
+     * Recurso no encontrado.
+     */
+    404: ErrorNoEncontrado;
+    /**
+     * La nota ya no está vigente (fue reemplazada).
+     */
+    409: ErrorDatoNoVigente;
+    /**
+     * Cuerpo inválido (texto vacío o mayor que CLINICAL_NOTE_MAX_CHARS, corrección sin cambios) o paciente egresado.
+     */
+    422: ErrorCorreccionInvalida;
+};
+
+export type CorrectClinicalNoteError = CorrectClinicalNoteErrors[keyof CorrectClinicalNoteErrors];
+
+export type CorrectClinicalNoteResponses = {
+    /**
+     * Nota corregida (la fila nueva, vigente).
+     */
+    201: ClinicalNote;
+};
+
+export type CorrectClinicalNoteResponse = CorrectClinicalNoteResponses[keyof CorrectClinicalNoteResponses];
+
+export type GetClinicalNoteHistoryData = {
+    body?: never;
+    path: {
+        patientId: string;
+        noteId: string;
+    };
+    query?: never;
+    url: '/platform/patients/{patientId}/clinical-notes/{noteId}/history';
+};
+
+export type GetClinicalNoteHistoryErrors = {
+    /**
+     * Sesión ausente o expirada.
+     */
+    401: ErrorNoAutenticado;
+    /**
+     * Permiso denegado por RBAC u opt-out.
+     */
+    403: ErrorPermisoDenegado;
+    /**
+     * Recurso no encontrado.
+     */
+    404: ErrorNoEncontrado;
+};
+
+export type GetClinicalNoteHistoryError = GetClinicalNoteHistoryErrors[keyof GetClinicalNoteHistoryErrors];
+
+export type GetClinicalNoteHistoryResponses = {
+    /**
+     * Versiones reemplazadas (vacía si la nota nunca se corrigió).
+     */
+    200: CorrectionHistory;
+};
+
+export type GetClinicalNoteHistoryResponse = GetClinicalNoteHistoryResponses[keyof GetClinicalNoteHistoryResponses];
 
 export type ListFollowUpsData = {
     body?: never;

@@ -106,7 +106,8 @@ export const zBiomarker = z.strictObject({
     ]),
     examType: z.string(),
     performedAt: z.iso.date(),
-    provenance: zProvenance
+    provenance: zProvenance,
+    supersedesId: z.uuid().nullish()
 });
 
 /**
@@ -179,6 +180,86 @@ export const zBiomarkerManualCreate = z.strictObject({
     unit: z.string().max(50).optional(),
     resultType: z.enum(['cuantitativo', 'cualitativo']),
     performedAt: z.iso.date()
+});
+
+/**
+ * Corrección del valor de un biomarcador vigente. El término no cambia. performedAt es opcional: si se envía y difiere del examen, el dato pasa a un Examen de corrección.
+ */
+export const zBiomarkerCorrection = z.strictObject({
+    value: z.string().min(1).max(200),
+    unit: z.string().max(50).nullish(),
+    referenceRange: z.string().max(200).nullish(),
+    performedAt: z.iso.date().optional()
+});
+
+export const zNoteType = z.enum([
+    'antecedente',
+    'comorbilidad',
+    'alergia',
+    'antecedente_familiar',
+    'nota_libre'
+]);
+
+export const zClinicalNote = z.strictObject({
+    id: z.uuid(),
+    noteType: zNoteType,
+    content: z.string().min(1),
+    recordedAt: z.iso.datetime(),
+    provenance: zProvenance,
+    supersedesId: z.uuid().nullable()
+});
+
+export const zClinicalNoteList = z.strictObject({
+    items: z.array(zClinicalNote)
+});
+
+export const zClinicalNoteCorrection = z.strictObject({
+    content: z.string().min(1).optional(),
+    noteType: zNoteType.optional()
+});
+
+/**
+ * Una versión reemplazada. value y unit solo en biomarcadores; content y noteType solo en notas.
+ */
+export const zCorrectionHistoryEntry = z.strictObject({
+    id: z.uuid(),
+    entryMethod: z.enum([
+        'ocr',
+        'manual',
+        'manual_correction',
+        'seed'
+    ]),
+    reviewStatus: z.literal('reemplazado'),
+    recordedAt: z.iso.datetime(),
+    createdAt: z.iso.datetime(),
+    value: z.string().optional(),
+    unit: z.string().nullish(),
+    content: z.string().optional(),
+    noteType: zNoteType.optional()
+});
+
+/**
+ * De la más reciente a la más antigua, sin la vigente; tope CORRECTION_HISTORY_MAX (RN-22).
+ */
+export const zCorrectionHistory = z.strictObject({
+    items: z.array(zCorrectionHistoryEntry)
+});
+
+export const zErrorCorreccionInvalida = z.strictObject({
+    error: z.enum([
+        'CUERPO_INVALIDO',
+        'PACIENTE_EGRESADO',
+        'VALOR_FUERA_DE_CATALOGO'
+    ]),
+    field: z.string().optional(),
+    message: z.string(),
+    traceId: z.string()
+});
+
+export const zErrorDatoNoVigente = z.strictObject({
+    error: z.literal('DATO_NO_VIGENTE'),
+    message: z.string(),
+    traceId: z.string()
 });
 
 /**
@@ -957,6 +1038,10 @@ export const zPatientId = z.uuid();
 
 export const zAnalysisId = z.uuid();
 
+export const zBiomarkerId = z.uuid();
+
+export const zNoteId = z.uuid();
+
 /**
  * El proceso está listo.
  */
@@ -1072,6 +1157,59 @@ export const zCreateManualDiagnosisPath = z.object({
  * Diagnóstico registrado.
  */
 export const zCreateManualDiagnosisResponse = zDiagnosis;
+
+export const zCorrectBiomarkerBody = zBiomarkerCorrection;
+
+export const zCorrectBiomarkerPath = z.object({
+    patientId: z.uuid(),
+    biomarkerId: z.uuid()
+});
+
+/**
+ * Biomarcador corregido (la fila nueva, vigente).
+ */
+export const zCorrectBiomarkerResponse = zBiomarker;
+
+export const zGetBiomarkerHistoryPath = z.object({
+    patientId: z.uuid(),
+    biomarkerId: z.uuid()
+});
+
+/**
+ * Versiones reemplazadas (vacía si el dato nunca se corrigió).
+ */
+export const zGetBiomarkerHistoryResponse = zCorrectionHistory;
+
+export const zListClinicalNotesPath = z.object({
+    patientId: z.uuid()
+});
+
+/**
+ * Notas vigentes.
+ */
+export const zListClinicalNotesResponse = zClinicalNoteList;
+
+export const zCorrectClinicalNoteBody = zClinicalNoteCorrection;
+
+export const zCorrectClinicalNotePath = z.object({
+    patientId: z.uuid(),
+    noteId: z.uuid()
+});
+
+/**
+ * Nota corregida (la fila nueva, vigente).
+ */
+export const zCorrectClinicalNoteResponse = zClinicalNote;
+
+export const zGetClinicalNoteHistoryPath = z.object({
+    patientId: z.uuid(),
+    noteId: z.uuid()
+});
+
+/**
+ * Versiones reemplazadas (vacía si la nota nunca se corrigió).
+ */
+export const zGetClinicalNoteHistoryResponse = zCorrectionHistory;
 
 export const zListFollowUpsPath = z.object({
     analysisId: z.uuid()
