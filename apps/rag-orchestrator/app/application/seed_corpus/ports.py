@@ -158,3 +158,13 @@ class LectorDeDocumentosExtraidos(Protocol):
         """Filas de los documentos de la release con ``metadata_source = extraido_verificado`` (fuente de la muestra humana,
         US-118 AC-5), ordenadas por ``document_id``. Release inexistente: lista vacía."""
         ...
+
+
+class LectorDePoblacionDelCorpus(Protocol):
+    """Lectura del resumen de población por tipo de cáncer e idioma (US-120 AC-7), aparte de ``CorpusCatalog`` (ISP).
+
+    El catálogo SQL (rol ``rag_corpus``) y el fake en memoria lo cumplen además de ``CorpusCatalog``."""
+
+    def documentos_vigentes_con_poblacion(self) -> list[RegistroDeDocumento]:
+        """Filas ``is_current`` y ``status = embebido``, ordenadas por ``document_id``. Sin documentos: lista vacía."""
+        ...
