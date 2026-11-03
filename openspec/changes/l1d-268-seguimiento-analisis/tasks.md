@@ -36,7 +36,7 @@
       **TDD estricto** `[S5 resp. 10]`
 - [x] 2.3 Copiar `ANALYSIS_FOLLOWUP_MAX` de Settings a `analysisBasis.maxFollowUps` en el armado de la Base (sin literal;
       reutiliza la clave de 2.1). Test 2.2 en verde; commit `feat(L1D-268)` · **TDD estricto** `[US-219 AC-1]`
-- [ ] 2.4 Esqueletos (`throw new Error('no implementado')`) de `follow-up.controller.ts`, `follow-up.service.ts`,
+- [x] 2.4 Esqueletos (`throw new Error('no implementado')`) de `follow-up.controller.ts`, `follow-up.service.ts`,
       `follow-up.repository.ts`, `follow-up.request.ts`, `follow-up.reglas.ts`, puerto `RagFollowUpPort` en `ports.ts` y
       ruta montada; tests de aceptación en rojo (Supertest + PostgreSQL real + MSW hacia `/rag/follow-up` desde
       `contracts/examples/`, respuestas validadas contra el spec del proveedor, US-214):
@@ -45,25 +45,29 @@
       [US-218 AC-4]», «no envía ni registra PII de la pregunta ni de la evolución [US-218 AC-6]», «usa seudónimo y
       traceId nuevos por turno, persiste el trace_id del turno y nunca el seudónimo [US-218 AC-8]» `[S5 resp. 12]`, en
       `apps/clinical-api/tests/integration/evidence-analysis/seguimiento*.test.ts`; commit `test(L1D-268)` · **TDD estricto**
-- [ ] 2.5 Implementar con unitarios uno a uno: `superaLimiteDeSeguimiento()` (RN-22), `marcarFuentesNuevas()`,
+- [x] 2.5 Implementar con unitarios uno a uno: `superaLimiteDeSeguimiento()` (RN-22), `marcarFuentesNuevas()`,
       `memoriaDelAnalisis()` (re-enmascara síntesis, opciones y `outcomesSince`, `citable = false`, `monthsAgo` con reloj
       inyectado) y `armarRagFollowUpRequest()` (snapshot + `pseudoPatientId` y `traceId` nuevos); service con el orden de
       D4; repository con inserción bajo `SELECT … FOR UPDATE` del análisis y recálculo de `turn_number`; adapter con el
-      cliente generado y la tabla única `rag-failure.ts`; verificación `llm_provider` vs `data_classification` (RN-12)
-      reutilizada. Tests 2.4 en verde; commit `feat(L1D-268)` · **TDD estricto** `[US-218 AC-1, AC-3, AC-4, AC-6, AC-8]`
-- [ ] 2.6 Tests de aceptación en rojo y luego verde de los bordes: fallo al persistir → `500` sin contenido; `401`, `403`
+      cliente generado y la tabla única `rag-failure.ts` (más `mapearFalloRagDeSeguimiento`: los 409 y 422 de
+      Backend 2 salen como 502, el spec del seguimiento no los declara). Tests 2.4 en verde; commit `feat(L1D-268)` · **TDD estricto** `[US-218 AC-1, AC-3, AC-4, AC-6, AC-8]`
+- [ ] 2.5b Verificación `llm_provider` vs `data_classification` (RN-12) en el turno: TRASLADADA a US-050. No existe en
+      `clinical-api` una regla reutilizable (la design D4 la daba por existente); es la regla de proveedores de US-050
+      (S6, antes de G-Piloto). Hasta entonces solo hay datos sintéticos y `exigirEntornoSintetico` del desidentificador
+      corta los demás · **TDD estricto**
+- [x] 2.6 Tests de aceptación en rojo y luego verde de los bordes: fallo al persistir → `500` sin contenido; `401`, `403`
       del `admin` en POST y GET, `404`, `422 ANALISIS_SIN_EVIDENCIA`; `503`/`504`/`502` de Backend 2 sin consumir turno;
       desidentificación no disponible → `503` sin llamada; dos POST simultáneos con 9 turnos → un `201` y un `409`; `GET`
       en orden. Commits `test(L1D-268)` → `feat(L1D-268)` · **TDD estricto** `[US-218 AC-1, AC-4, AC-6]`
-- [ ] 2.7 Normalización de la pregunta: `follow-up.schema.ts` compone `zFollowUpCreate` con `esquemaPreguntaNormalizada`
+- [x] 2.7 Normalización de la pregunta: `follow-up.schema.ts` compone `zFollowUpCreate` con `esquemaPreguntaNormalizada`
       de `packages/clinical-language` (US-250; **espera a `l1d-306-pregunta-nfc`**); test en rojo «normaliza a NFC y mide
       la longitud tras normalizar [US-218 AC-1] [US-250 AC-1]» y solo espacios → `422 CUERPO_INVALIDO` sin llamada; luego
       verde. Commits `test(L1D-268)` → `feat(L1D-268)` · **TDD estricto**
-- [ ] 2.8 Logs: extender `gateway-logs.test.ts` (o uno nuevo del seguimiento) para que ninguna línea contenga la pregunta,
+- [x] 2.8 Logs: extender `gateway-logs.test.ts` (o uno nuevo del seguimiento) para que ninguna línea contenga la pregunta,
       la memoria ni PII sembrada · **TDD estricto** `[US-218 AC-6]`
-- [ ] 2.9 Suite de `clinical-api` en verde y `contracts:verify-provider` de `…/follow-ups` (todos los códigos) ·
+- [x] 2.9 Suite de `clinical-api` en verde y `contracts:verify-provider` de `…/follow-ups` (todos los códigos) ·
       **verificación**
-- [ ] 2.10 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde
+- [x] 2.10 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde
       antes y después, commit refactor(L1D-268)
 
 ## 3. ai-services
