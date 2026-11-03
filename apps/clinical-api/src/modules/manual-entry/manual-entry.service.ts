@@ -7,7 +7,7 @@ import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
 import { PacienteNoEncontradoError } from '../compartido/pacientes.errores.js';
 import { pacienteAdmiteRegistros } from '../compartido/paciente-activo.js';
-import { estadoPersistible, type ReconciliationService } from '../reconciliation/ports.js';
+import type { DecisionDeNormalizacion, ReconciliationService } from '../reconciliation/ports.js';
 import { PacienteEgresadoError } from './manual-entry.errores.js';
 import {
   armarRegistroDeBiomarcador,
@@ -16,7 +16,9 @@ import {
 import {
   armarDiagnosticoNuevo,
   comoDiagnosticoDelContrato,
+  conCodigoDeLaDecision,
   datosDelPrimerDiagnostico,
+  exigirCamposMinimosDelPrimerDiagnostico,
   exigirGradacionCoherente,
   gradacionDelCuerpo,
   gradacionesDelDiagnosticoNuevo,
@@ -62,21 +64,16 @@ async function exigirPacienteQueAdmiteRegistros(
   if (!pacienteAdmiteRegistros(paciente.estado)) throw new PacienteEgresadoError();
 }
 
-/** CIE-10 y `mapping_status` del tipo de cáncer: los decide `ReconciliationService` (RN-27), nunca este módulo. */
-function conCodigoDelTipoDeCancer(
+/** La decisión de normalización del tipo de cáncer: la toma `ReconciliationService` (RN-27), nunca este módulo. */
+function decidirTipoDeCancer(
   reconciliacion: ReconciliationService,
-  datos: DatosDelDiagnostico,
-): DatosDelDiagnostico {
-  const decision = reconciliacion.decidir({
+  tipoDeCancer: string,
+): DecisionDeNormalizacion {
+  return reconciliacion.decidir({
     entidad: 'Diagnosis',
-    tipoDeCancer: datos.cancerType,
-    textoOriginal: datos.cancerType,
+    tipoDeCancer,
+    textoOriginal: tipoDeCancer,
   });
-  return {
-    ...datos,
-    icd10Code: decision.icd10Code,
-    mappingStatus: estadoPersistible(decision),
-  };
 }
 
 /** `corregirDiagnosticoVigente()` (RN-08): los valores del vigente más lo enviado; un tipo de cáncer nuevo recodifica. */
@@ -88,7 +85,19 @@ function corregirDiagnosticoVigente(
   const fusionados = fusionarCorreccion(vigente.datos, cuerpo);
   return fusionados.cancerType === vigente.datos.cancerType
     ? fusionados
-    : conCodigoDelTipoDeCancer(reconciliacion, fusionados);
+    : conCodigoDeLaDecision(fusionados, decidirTipoDeCancer(reconciliacion, fusionados.cancerType));
+}
+
+/** Sin vigente: exige los campos mínimos y toma el CIE-10 de la decisión sobre el tipo enviado. */
+function primerDiagnostico(
+  reconciliacion: ReconciliationService,
+  cuerpo: CuerpoDeDiagnostico,
+): DatosDelDiagnostico {
+  exigirCamposMinimosDelPrimerDiagnostico(cuerpo);
+  return datosDelPrimerDiagnostico(
+    cuerpo,
+    decidirTipoDeCancer(reconciliacion, cuerpo.cancerType ?? ''),
+  );
 }
 
 async function registrarBiomarcador(
@@ -130,7 +139,7 @@ async function registrarDiagnostico(
     const vigente = await tx.diagnosticoVigente(patientId);
     const datos =
       vigente === null
-        ? conCodigoDelTipoDeCancer(reconciliacion, datosDelPrimerDiagnostico(cuerpo))
+        ? primerDiagnostico(reconciliacion, cuerpo)
         : corregirDiagnosticoVigente(reconciliacion, vigente, cuerpo);
     const id = generarId();
     const contexto = { generarId, diagnosisId: id, userId, ahora };

@@ -131,18 +131,23 @@ async function guardarBiomarcador(
   await db.query(
     `INSERT INTO clinical.exam (id, patient_id, episode_id, source_document_id, exam_type, source_lab,
                                 entry_method, performed_at, created_at)
-     VALUES ($1, $2, $3, NULL, 'registro_manual', NULL, 'manual', $4, $5)`,
-    [examen.id, examen.patientId, examen.episodeId, examen.performedAt, examen.createdAt],
+     VALUES ($1, $2, $3, NULL, $4, NULL, $5, $6, $7)`,
+    [
+      ...[examen.id, examen.patientId, examen.episodeId, examen.examType, examen.entryMethod],
+      ...[examen.performedAt, examen.createdAt],
+    ],
   );
   await db.query(
     `INSERT INTO clinical.biomarker (id, exam_id, name, original_name, loinc_code, mapping_status, value, unit,
                                      reference_range, result_type, clinical_significance, significance_source,
                                      extraction_confidence, review_status, source_span, reviewed_by, reviewed_at,
                                      created_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, '', $9, 'relevante', 'regla', 'n_a', 'verificado', '{}', $10, $11, $12)`,
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`,
     [
       ...[b.id, b.examId, b.name, b.originalName, b.loincCode, b.mappingStatus],
-      ...[b.value, b.unit, b.resultType, b.reviewedBy, b.reviewedAt, b.createdAt],
+      ...[b.value, b.unit, b.referenceRange, b.resultType, b.clinicalSignificance],
+      ...[b.significanceSource, b.extractionConfidence, b.reviewStatus, b.sourceSpan],
+      ...[b.reviewedBy, b.reviewedAt, b.createdAt],
     ],
   );
 }
@@ -161,13 +166,19 @@ async function insertarDiagnostico(db: Consultador, d: DiagnosticoAGuardar): Pro
                                      icd10_code, mapping_status, histology, histology_code, grade, staging_system,
                                      stage_value, performance_scale, performance_value, diagnosed_at, is_active,
                                      extraction_confidence, review_status, reviewed_by, reviewed_at, created_at)
-     VALUES ($1, $2, $3, NULL, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, true, 'n_a', 'verificado',
-             $16, $17, $18)`,
+     VALUES ($1, $2, $3, NULL, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
+             $21)`,
     [
       ...[d.id, d.patientId, d.episodeId, d.entryMethod, d.cancerType, d.icd10Code],
       ...[d.mappingStatus, d.histology, d.histologyCode, d.grade, d.stagingSystem, d.stageValue],
-      ...[d.performanceScale, d.performanceValue, d.diagnosedAt, d.reviewedBy, d.reviewedAt],
-      d.createdAt,
+      ...[
+        d.performanceScale,
+        d.performanceValue,
+        d.diagnosedAt,
+        d.isActive,
+        d.extractionConfidence,
+      ],
+      ...[d.reviewStatus, d.reviewedBy, d.reviewedAt, d.createdAt],
     ],
   );
 }

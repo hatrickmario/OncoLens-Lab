@@ -8,6 +8,7 @@ import {
   textoDeGrado,
   validarCoherenciaGleason,
 } from './manual-entry.reglas.js';
+import { estadoPersistible, type DecisionDeNormalizacion } from '../reconciliation/ports.js';
 import type { CuerpoDeDiagnostico } from './manual-entry.schema.js';
 import type {
   DatosDelDiagnostico,
@@ -26,24 +27,46 @@ const CAMPOS_MINIMOS_DEL_PRIMER_DIAGNOSTICO = [
   'diagnosedAt',
 ] as const;
 
-/** Datos del primer diagnóstico manual: exige los campos mínimos y deja el resto en `null` (CIE-10 lo decide quien normaliza). */
-export function datosDelPrimerDiagnostico(cuerpo: CuerpoDeDiagnostico): DatosDelDiagnostico {
+/** El primer diagnóstico manual exige los campos mínimos (sin uno vigente no hay de dónde copiarlos). */
+export function exigirCamposMinimosDelPrimerDiagnostico(cuerpo: CuerpoDeDiagnostico): void {
   for (const campo of CAMPOS_MINIMOS_DEL_PRIMER_DIAGNOSTICO) {
     if (cuerpo[campo] === undefined) throw new CuerpoIncompletoError(campo);
   }
+}
+
+/** CIE-10 y `mapping_status` del tipo de cáncer según lo que decidió `ReconciliationService` (RN-27). */
+export function conCodigoDeLaDecision(
+  datos: DatosDelDiagnostico,
+  decision: DecisionDeNormalizacion,
+): DatosDelDiagnostico {
   return {
-    cancerType: cuerpo.cancerType ?? '',
-    icd10Code: null,
-    mappingStatus: 'no_mapeado',
-    histology: cuerpo.histology ?? null,
-    histologyCode: null,
-    grade: null,
-    stagingSystem: cuerpo.stagingSystem ?? null,
-    stageValue: cuerpo.stageValue ?? null,
-    performanceScale: cuerpo.performanceScale ?? null,
-    performanceValue: cuerpo.performanceValue ?? null,
-    diagnosedAt: cuerpo.diagnosedAt ?? '',
+    ...datos,
+    icd10Code: decision.icd10Code,
+    mappingStatus: estadoPersistible(decision),
   };
+}
+
+/** Datos del primer diagnóstico manual (campos mínimos ya exigidos); el resto queda en `null` y el código viene de la decisión. */
+export function datosDelPrimerDiagnostico(
+  cuerpo: CuerpoDeDiagnostico,
+  decision: DecisionDeNormalizacion,
+): DatosDelDiagnostico {
+  return conCodigoDeLaDecision(
+    {
+      cancerType: cuerpo.cancerType ?? '',
+      icd10Code: null,
+      mappingStatus: 'no_mapeado',
+      histology: cuerpo.histology ?? null,
+      histologyCode: null,
+      grade: null,
+      stagingSystem: cuerpo.stagingSystem ?? null,
+      stageValue: cuerpo.stageValue ?? null,
+      performanceScale: cuerpo.performanceScale ?? null,
+      performanceValue: cuerpo.performanceValue ?? null,
+      diagnosedAt: cuerpo.diagnosedAt ?? '',
+    },
+    decision,
+  );
 }
 
 /** Rechaza el score o grupo ISUP que no cuadran con los patrones (422 `GRADACION_INCOHERENTE`, DEC-05). */
@@ -154,6 +177,9 @@ export function armarDiagnosticoNuevo(entrada: EntradaDelDiagnosticoNuevo): Diag
     patientId: entrada.patientId,
     episodeId: entrada.episodeId,
     entryMethod: entrada.esCorreccion ? 'manual_correction' : 'manual',
+    isActive: true,
+    extractionConfidence: 'n_a',
+    reviewStatus: 'verificado',
     reviewedBy: entrada.userId,
     reviewedAt: entrada.ahora,
     createdAt: entrada.ahora,
@@ -171,9 +197,6 @@ export function comoDiagnosticoDelContrato(
       // El contrato declara `stagingSystem` y `stageValue` como texto; la ficha los entrega igual (D3).
       stagingSystem: diagnostico.stagingSystem as string,
       stageValue: diagnostico.stageValue as string,
-      isActive: true,
-      extractionConfidence: 'n_a',
-      reviewStatus: 'verificado',
       conflictsWithId: null,
       sourceDocumentId: null,
     },

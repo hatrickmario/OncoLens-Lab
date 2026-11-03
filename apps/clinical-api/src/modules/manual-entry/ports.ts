@@ -1,3 +1,4 @@
+import type { EstadoDeRevisionVisible } from '../compartido/estados-de-revision.js';
 import type { EstadoDelPaciente } from '../patients/patients.repository.js';
 
 /*
@@ -16,8 +17,6 @@ export interface CatalogoDeEscalas {
 }
 
 export type SistemaDeGradacion = 'gleason_isup' | 'nottingham';
-export type EstadoDeRevisionGuardado =
-  'auto_aceptado' | 'requiere_revision' | 'verificado' | 'corregido';
 export type MetodoDeEntrada = 'ocr' | 'manual' | 'manual_correction' | 'seed';
 export type ConfianzaDeExtraccion = 'alta' | 'media' | 'baja' | 'n_a';
 
@@ -26,7 +25,7 @@ export interface ProcedenciaDeGradacion {
   readonly entryMethod: MetodoDeEntrada;
   readonly extractionConfidence: ConfianzaDeExtraccion;
   readonly extractionScore: number | null;
-  readonly reviewStatus: EstadoDeRevisionGuardado;
+  readonly reviewStatus: EstadoDeRevisionVisible;
   readonly sourceDocumentId: string | null;
   readonly reviewedBy: string | null;
   readonly reviewedAt: Date | null;
@@ -77,6 +76,10 @@ export interface DiagnosticoAGuardar extends DatosDelDiagnostico {
   readonly patientId: string;
   readonly episodeId: string;
   readonly entryMethod: 'manual' | 'manual_correction';
+  /** Un diagnóstico manual nace vigente y verificado (RN-08). */
+  readonly isActive: true;
+  readonly extractionConfidence: 'n_a';
+  readonly reviewStatus: 'verificado';
   readonly reviewedBy: string;
   readonly reviewedAt: Date;
   readonly createdAt: Date;
@@ -84,6 +87,8 @@ export interface DiagnosticoAGuardar extends DatosDelDiagnostico {
 
 export interface ExamenAGuardar {
   readonly id: string;
+  readonly examType: 'registro_manual';
+  readonly entryMethod: 'manual';
   readonly patientId: string;
   readonly episodeId: string;
   readonly performedAt: string;
@@ -100,6 +105,13 @@ export interface BiomarcadorAGuardar {
   readonly value: string;
   readonly unit: string | null;
   readonly resultType: 'cuantitativo' | 'cualitativo';
+  /** Convención del dato manual (`[S5 resp. 13]`): relevante por regla; sin rango, sin texto fuente, sin confianza de extracción. */
+  readonly clinicalSignificance: 'relevante';
+  readonly significanceSource: 'regla';
+  readonly extractionConfidence: 'n_a';
+  readonly reviewStatus: 'verificado';
+  readonly referenceRange: '';
+  readonly sourceSpan: '{}';
   readonly reviewedBy: string;
   readonly reviewedAt: Date;
   readonly createdAt: Date;
