@@ -34,10 +34,10 @@ describe('mapping_status de las entidades con códigos (RN-27)', () => {
     await conTransaccionRevertida(urlBase, async (cliente) => {
       const ids = generadorDeIds(ESPACIO_DE_IDS);
       const { patientId, episodeId } = await insertarContextoClinico(cliente, ids);
-      const { mapping_status: _omitida, ...sinEstado } = filaDeDiagnostico(
-        ids,
-        patientId,
-        episodeId,
+      const sinEstado = Object.fromEntries(
+        Object.entries(filaDeDiagnostico(ids, patientId, episodeId)).filter(
+          ([columna]) => columna !== 'mapping_status',
+        ),
       );
       const { sql, valores } = sqlInsertar('clinical.diagnosis', sinEstado);
 
