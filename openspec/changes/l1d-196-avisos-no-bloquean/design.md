@@ -39,7 +39,7 @@ Sin componentes nuevos ni patrones: solo E2E sobre la UI existente (panel S4, vi
 
 ## Dependencias y colaboradores
 
-- Se crean: `apps/clinical-api/tests/support/fx-t3-a.ts` (filas de FX-T3-a sobre `filas-sinteticas.ts` y `completitud.ts`), `tests/integration/evidence-analysis/avisos-no-bloquean.test.ts`, `tests/integration/pacientes/lecturas-con-avisos.test.ts`, `apps/web/e2e/avisos-no-bloquean.spec.ts`, `apps/clinical-api/prisma/seed/pacientes/f.ts`.
+- Se crean: `tests/integration/evidence-analysis/avisos-no-bloquean.test.ts`, `tests/integration/pacientes/lecturas-con-avisos.test.ts`, `apps/web/e2e/avisos-no-bloquean.spec.ts`, `apps/clinical-api/prisma/seed/pacientes/f.ts`.
 - Se modifican: `prisma/seed/pacientes/tipos.ts` y el sembrador de biomarcadores (campos opcionales de D4), `apps/web/e2e/soporte.ts` (ID de (f)), `pacientes-listado.spec.ts` (conteo desde el seed).
 - Sin reglas de dominio nuevas: la regla de RN-26 ya vive en cada dueño (checklist, `aviso_dato_paciente`, agregación de población); no se duplica ningún literal.
 - Fakes tocados: ninguno nuevo; `FakeEvidenceQuery` ya tiene su test de contrato (US-034 AC-6) y solo recibe un ejemplo más.
@@ -53,3 +53,5 @@ Sin componentes nuevos ni patrones: solo E2E sobre la UI existente (panel S4, vi
 ## Pendiente de definir
 
 Nada. P1 (D1) y P2 (`en_conflicto` por criterio como regresión) quedan **Decididos (usuario, 2026-11-03, `[S5 resp. 12]`)**.
+
+**Gate 2 vuelta 1 (design-principles):** FX-T3-a tiene una sola definición, el paciente semilla (f) (`prisma/seed/pacientes/f.ts`); los tests de integración lo leen con `idDePaciente('f')` y no hay un `tests/support/fx-t3-a.ts` aparte.

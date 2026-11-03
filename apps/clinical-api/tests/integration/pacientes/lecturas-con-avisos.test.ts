@@ -1,38 +1,27 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { montarCaso } from '../../support/caso-http.js';
-import { prepararSiembra } from '../../support/completitud.js';
 import { montarCompletitud, servicioDeCompletitud } from '../../support/completitud-http.js';
-import { generadorDeIds } from '../../support/filas-sinteticas.js';
 import {
-  CLAVE_DEL_DATO_SIN_VERIFICAR,
-  CLAVE_DEL_FALTANTE,
-  sembrarFxT3a,
-  type FxT3aSembrado,
-} from '../../support/fx-t3-a.js';
-import { abrirSesion, prepararMundoConSeed, type MundoDeGateway } from '../../support/gateway.js';
-import { servicioDeIdentidad } from '../../support/identidad.js';
+  abrirSesion,
+  idDePaciente,
+  prepararMundoConSeed,
+  type MundoDeGateway,
+} from '../../support/gateway.js';
 import { montarPacientes } from '../../support/pacientes.js';
 import { clienteVerificado } from '../../support/verificarProveedor.js';
 
 const ESPACIO_DE_IDS = 9720;
+/** FX-T3-a es el paciente semilla (f): la misma fila que recorre el E2E. */
+const PACIENTE_FX_T3_A = idDePaciente('f');
+const CLAVE_DEL_DATO_SIN_VERIFICAR = 'ki67';
+const CLAVE_DEL_FALTANTE = 'estado_menopausico';
 
 let mundo: MundoDeGateway;
 let cookie: string;
-let fxT3a: FxT3aSembrado;
 
 beforeAll(async () => {
   mundo = await prepararMundoConSeed('lecturas_con_avisos', ESPACIO_DE_IDS);
   cookie = await abrirSesion(mundo, 'doc1@test.local', 'SINT-cookie-doctor-lecturas-avisos-0001');
-  const siembra = await prepararSiembra(mundo.cliente, generadorDeIds(ESPACIO_DE_IDS + 500));
-  fxT3a = await sembrarFxT3a(siembra);
-  // La ficha exige identidad (como todo paciente del seed): sintética y cifrada con el servicio real (RN-10, RN-13).
-  await servicioDeIdentidad(mundo.cliente).guardar({
-    patientId: fxT3a.patientId,
-    idType: 'sintetico',
-    issuingCountry: null,
-    numeroDeDocumento: 'SINT-0000099',
-    nombreCompleto: 'Prueba Sintética FX-T3-a',
-  });
 });
 afterAll(() => mundo.cerrar());
 
@@ -52,13 +41,13 @@ describe('lecturas del paciente · FX-T3-a acumula todos los avisos clínicos (R
     const { app: appChecklist } = montarCompletitud(mundo);
 
     const ficha = await clienteVerificado(appFicha)
-      .get(`/platform/patients/${fxT3a.patientId}`)
+      .get(`/platform/patients/${PACIENTE_FX_T3_A}`)
       .set('Cookie', cookie);
     const caso = await clienteVerificado(appCaso)
-      .get(`/platform/patients/${fxT3a.patientId}/case`)
+      .get(`/platform/patients/${PACIENTE_FX_T3_A}/case`)
       .set('Cookie', cookie);
     const checklist = await clienteVerificado(appChecklist)
-      .get(`/platform/patients/${fxT3a.patientId}/completeness`)
+      .get(`/platform/patients/${PACIENTE_FX_T3_A}/completeness`)
       .set('Cookie', cookie);
 
     expect([ficha.status, caso.status, checklist.status]).toEqual([200, 200, 200]);

@@ -2,16 +2,11 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import peticionFxT3a from '../../../../../contracts/examples/rag-query-request-fx-t3-a.json' with { type: 'json' };
 import ragFxT3a from '../../../../../contracts/examples/rag-query-fx-t3-a.json' with { type: 'json' };
 import type { EvidenceAnalysis } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
-import {
-  RUTA_CATALOGO_TEST_1_0_0,
-  prepararSiembra,
-  type ContextoDeSiembra,
-} from '../../support/completitud.js';
-import { CLAVE_DEL_FALTANTE, sembrarFxT3a, type FxT3aSembrado } from '../../support/fx-t3-a.js';
-import { generadorDeIds } from '../../support/filas-sinteticas.js';
+import { RUTA_CATALOGO_TEST_1_0_0 } from '../../support/completitud.js';
 import {
   TODAS_LAS_FUENTES,
   abrirSesion,
+  idDePaciente,
   leerRegistroPorTrace,
   montarGateway,
   prepararMundoConSeed,
@@ -23,20 +18,20 @@ import { clienteVerificado } from '../../support/verificarProveedor.js';
 const ESPACIO_DE_IDS = 9710;
 const TOKEN_DE_SESION = 'SINT-cookie-sesion-avisos-no-bloquean-0001';
 
+/** FX-T3-a es el paciente semilla (f): la misma fila que recorre el E2E. */
+const PACIENTE_FX_T3_A = idDePaciente('f');
+const CLAVE_DEL_FALTANTE = 'estado_menopausico';
+
 const AVISOS_FUERA_DE_WARNINGS = ['datos_faltantes', 'datos_sin_verificar', 'datos_en_conflicto'];
 
 const rag = ragSimulado();
 let mundo: MundoDeGateway;
-let siembra: ContextoDeSiembra;
 let cookie: string;
-let fxT3a: FxT3aSembrado;
 
 beforeAll(async () => {
   rag.iniciar();
   mundo = await prepararMundoConSeed('gw_avisos_no_bloquean', ESPACIO_DE_IDS);
   cookie = await abrirSesion(mundo, 'doc1@test.local', TOKEN_DE_SESION);
-  siembra = await prepararSiembra(mundo.cliente, generadorDeIds(ESPACIO_DE_IDS + 500));
-  fxT3a = await sembrarFxT3a(siembra);
 });
 afterEach(() => rag.reiniciar());
 afterAll(async () => {
@@ -63,7 +58,7 @@ describe('POST /platform/evidence-analyses · FX-T3-a acumula todos los avisos c
       .post('/platform/evidence-analyses')
       .set('Cookie', cookie)
       .send({
-        patientId: fxT3a.patientId,
+        patientId: PACIENTE_FX_T3_A,
         query: peticionFxT3a.query,
         sourcesSelected: TODAS_LAS_FUENTES,
         continueWithWarning: true,
