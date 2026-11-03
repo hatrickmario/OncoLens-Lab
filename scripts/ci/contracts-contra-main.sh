@@ -48,11 +48,12 @@ if ! toca_contratos <<<"$cambiados"; then
   exit 0
 fi
 
-if ! git fetch --no-tags --quiet origin main; then
+# Sin mantenimiento automático: git lo lanzaría en segundo plano y seguiría escribiendo en .git tras terminar el paso.
+if ! git -c gc.auto=0 -c maintenance.auto=false fetch --no-tags --quiet origin main; then
   echo "contracts-contra-main — no se pudo traer origin/main" >&2
   exit 2
 fi
-if ! git -c user.name=ci-contratos -c user.email=ci-contratos@example.invalid -c commit.gpgsign=false \
+if ! git -c gc.auto=0 -c maintenance.auto=false -c user.name=ci-contratos -c user.email=ci-contratos@example.invalid -c commit.gpgsign=false \
   merge --no-edit --no-ff origin/main >/dev/null 2>&1; then
   echo "el PR tiene conflictos con main: actualiza la rama" >&2
   git diff --name-only --diff-filter=U | sed 's/^/  conflicto: /' >&2

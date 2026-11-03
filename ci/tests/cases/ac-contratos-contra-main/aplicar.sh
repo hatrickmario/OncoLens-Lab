@@ -19,6 +19,9 @@ writeFileSync(archivo, YAML.stringify(documento, { lineWidth: 0 }));
 "
 git -c commit.gpgsign=false commit -q -am "main avanza: campoNuevoObligatorio"
 git init -q --bare "$remoto"
+# Sin gc automático en el origen simulado: receive-pack lo lanzaría en segundo plano y seguiría escribiendo mientras el runner borra el clon.
+git -C "$remoto" config receive.autogc false
+git -C "$remoto" config gc.auto 0
 git push -q "$remoto" main-simulada:refs/heads/main
 git checkout -q "$rama"
 git branch -q -D main-simulada

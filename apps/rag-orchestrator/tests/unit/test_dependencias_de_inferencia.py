@@ -33,7 +33,9 @@ def test_cada_requisito_de_ejecucion_tiene_version_exacta() -> None:
     assert sin_fijar == []
 
 
-def test_transformers_solo_esta_en_requirements_export_txt_y_no_en_el_runtime_ni_en_la_medicion() -> None:
+def test_transformers_solo_esta_en_requirements_export_txt_y_no_en_el_runtime_ni_en_la_medicion() -> (
+    None
+):
     """D-11: torch y transformers (exportación manual a ONNX) nunca entran en la CI ni en la imagen."""
     for paquete in ("transformers", "torch"):
         assert paquete in _requisitos("requirements-export.txt")
