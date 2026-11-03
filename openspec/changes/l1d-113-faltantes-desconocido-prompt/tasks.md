@@ -82,6 +82,15 @@
 - [ ] 5.2 DIFERIDA -> H-2. Gate 2 con `privacy-guardian`, `clinical-language-auditor`, `contract-keeper` y `design-principles-reviewer`; CI con
   0 checks en fallo, 0 pendientes y 0 alertas antes de pedir el merge (lo corre el orquestador)
 
+- [x] 6.1 Vuelta 1 del Gate 2: `contract(L1D-113)` solo descripción (0.1); AC-3 también en `/rag/follow-up` y en el camino
+  `fuera_de_contexto` (`validar_y_etiquetar_faltantes` compartido por `recuperar()` y `meta_sin_recuperacion()`, test en rojo
+  `test_rag_follow_up_faltantes_no_catalogados.py` antes del fix); puerto `etiquetas(tipo) -> Mapping[str, str]`; instrucción del
+  prompt que cierra la inferencia indirecta y manda lo relevante a la Base del análisis (misma versión `rag-query@0.7.0`);
+  `eval-required` sin regresión.
+- [ ] 6.2 DIFERIDA -> D5-25. Menores del Gate 2: P3 #4 `solicitud_de` asimétrica por tipo en la suite, #5 forma de clave
+  `^[a-z0-9_]+$` repetida en 3 sitios, #6 `or` en `bootstrap`; redacción de `S5-L04`; expectativa de no inferencia solo como
+  comentario del dataset (métrica y juez); alinear `/case/summary` con la validación de claves
+
 ## humano
 
 Sin cambio en `.env.example`: este change no añade variables de configuración (el literal «línea de tratamiento» y el texto

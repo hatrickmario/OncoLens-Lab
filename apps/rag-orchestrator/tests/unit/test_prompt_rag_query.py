@@ -204,8 +204,11 @@ def test_plantilla_pide_describir_el_desconocido_como_sin_dato_registrado_y_no_c
     )
 
     texto = " ".join(prompt.split())
-    assert 'descríbelos como "sin dato registrado (desconocido)"' in texto
+    assert 'descríbelo como "sin dato registrado (desconocido)"' in texto
     assert "no les atribuyas un valor" in texto
+    assert "ni lo deduzcas de otros datos del paciente ni de los fragmentos" in texto
+    assert "describen poblaciones de estudio y no a este caso" in texto
+    assert "indícalo en la Base del análisis como limitación, no como afirmación" in texto
     assert "no disponibles" not in texto.lower()
 
 
