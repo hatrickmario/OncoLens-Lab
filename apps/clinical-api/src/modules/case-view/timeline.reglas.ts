@@ -39,7 +39,7 @@ export const DESCRIPCION_DEL_ANALISIS = 'Análisis de IA';
 export const DESCRIPCION_DEL_RESUMEN = 'Resumen del caso';
 
 /** Espacio de nombres del `uuid` v5 de los eventos derivados: fijo, de este módulo (D4). */
-const ESPACIO_DE_NOMBRES_DEL_TIMELINE = '6f2b7a10-3e4c-4d58-a1b9-74c45e000074';
+const ESPACIO_DE_NOMBRES_DEL_TIMELINE = '6f2b7a10-3e4c-4d58-a1b9-74c45e000001';
 
 /** Rango del origen para desempatar eventos de la misma fecha (D5): diagnóstico → inicio → fin → examen → evento clínico → IA. */
 const RANGO = {
