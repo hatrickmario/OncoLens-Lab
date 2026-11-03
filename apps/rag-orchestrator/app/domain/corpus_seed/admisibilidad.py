@@ -111,13 +111,17 @@ def contiene_sa(texto: str) -> bool:
 
 def fuente_admitida(source_name: str, admitidas: tuple[str, ...]) -> bool:
     """La fuente figura por nombre exacto en la lista admitida (ADR-36, RN-21); la regla única de la ingesta y del manifiesto."""
-    raise NotImplementedError
+    return normalizar_clave(source_name) in {normalizar_clave(fuente) for fuente in admitidas}
 
 
 def evaluar_admisibilidad(documento: DocumentoDeSemilla, politica: PoliticaDeLicencias) -> Admision:
     # La fuente excluida se decide ANTES que la licencia: NCCN se rechaza aunque declare una aceptada (D-09).
     if es_fuente_excluida(documento, politica):
         return Admision(MotivoDeRechazo.FUENTE_EXCLUIDA)
+    if politica.fuentes_admitidas is not None and not fuente_admitida(
+        documento.source_name, politica.fuentes_admitidas
+    ):
+        return Admision(MotivoDeRechazo.FUENTE_NO_ADMITIDA)
     if not documento.license:
         return Admision(MotivoDeRechazo.SIN_LICENCIA)
     clase = clase_de_licencia(documento.license, politica.mapa_de_clases)

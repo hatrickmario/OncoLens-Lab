@@ -108,6 +108,7 @@ def politica_de_licencias(ajustes: AjustesDeCorpus, permitir_cc_by_nc: bool) -> 
         excluidas=ajustes.corpus_excluded_sources,
         mapa_de_clases=ajustes.corpus_license_class_map,
         permitir_cc_by_nc=permitir_cc_by_nc,
+        fuentes_admitidas=ajustes.corpus_allowed_sources,
     )
 
 
