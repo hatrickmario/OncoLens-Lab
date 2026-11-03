@@ -2,15 +2,26 @@ import {
   esquemaPreguntaNormalizada,
   normalizarPregunta,
 } from '../../../../packages/clinical-language/src/normalizar-pregunta';
-import { zEvidenceAnalysisRequest } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
+import {
+  zEvidenceAnalysisRequest,
+  zFollowUpCreate,
+} from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
 
-const CAMPO_PREGUNTA = zEvidenceAnalysisRequest.shape.query;
+/** Id del campo de pregunta del panel: «Nuevo análisis» del hilo de seguimiento lleva el foco aquí (design D6). */
+export const ID_CAMPO_PREGUNTA = 'pregunta-clinica';
+
+const CAMPO_PREGUNTA =zEvidenceAnalysisRequest.shape.query;
 
 /**
  * Pregunta tal como la valida y la envía el cliente: la regla NFC + espacios de `clinical-api` (US-250) y después
  * los límites del contrato. Único punto de composición en `web`; el campo conserva el texto pegado.
  */
 export const ESQUEMA_PREGUNTA = esquemaPreguntaNormalizada(CAMPO_PREGUNTA);
+
+/** Pregunta de seguimiento: la misma regla de normalización sobre el campo `question` del contrato (US-250, US-218). */
+export const ESQUEMA_PREGUNTA_DE_SEGUIMIENTO = esquemaPreguntaNormalizada(
+  zFollowUpCreate.shape.question,
+);
 
 /** Máximo de `EvidenceAnalysisRequest.query`: sale del schema generado del contrato, no de un literal. */
 export const MAXIMO_PREGUNTA: number = CAMPO_PREGUNTA.maxLength ?? Number.POSITIVE_INFINITY;

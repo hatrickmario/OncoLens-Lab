@@ -15,6 +15,7 @@ import { ScopeNotice } from '../molecules/scope-notice';
 import { AnalysisBasisPanel } from './analysis-basis-panel';
 import { DiscardedOptions } from './discarded-options';
 import { EvidenceOptionsList, ID_ENCABEZADO_OPCIONES } from './evidence-options-list';
+import { FollowUpThread } from './follow-up-thread';
 import { OrderingCriterion } from './ordering-criterion';
 
 export interface AnalysisResultProps {
@@ -73,6 +74,9 @@ export function AnalysisResult({ analisis, patientId, onVerFragmento }: Analysis
         />
       )}
       <AnalysisBasisPanel base={analisis.analysisBasis} estado={analisis.status} />
+      {analisis.status === 'con_evidencia' && (
+        <FollowUpThread key={analisis.id} analisis={analisis} onVerFragmento={onVerFragmento} />
+      )}
       <AiDisclaimer text={analisis.disclaimer} />
     </div>
   );

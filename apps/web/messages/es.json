@@ -445,7 +445,7 @@
     "ninguno": "ninguno",
     "nuevoAnalisis": "Nuevo análisis",
     "sinEvidencia": "No se encontró evidencia suficientemente relacionada con esta pregunta en el corpus. La pregunta puede reformularse o abrirse un análisis nuevo.",
-    "fueraDeContexto": "La pregunta no se refiere a los hallazgos de este análisis; no se generó respuesta. Otro tema o paciente se consulta en un análisis nuevo.",
+    "fueraDeContexto": "La pregunta no se refiere a los hallazgos de este análisis; no se generó respuesta. Otro tema o paciente corresponde a un análisis nuevo.",
     "limiteConTotal": "Se alcanzó el límite de {max} preguntas de este análisis. Una pregunta distinta puede formularse en un análisis nuevo.",
     "limiteSinTotal": "Se alcanzó el límite de preguntas de este análisis. Una pregunta distinta puede formularse en un análisis nuevo.",
     "noProcesable": "La pregunta no pudo procesarse con este análisis; no se generó respuesta."

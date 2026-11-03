@@ -10,13 +10,14 @@ import {
   seguimientoSinEvidencia,
   seguimientoTurno,
 } from '../support/msw/evidence-analyses';
+import { mensajes } from '../../lib/mensajes';
 import { analizarYAbrirHilo, evidence, followUp, preguntar } from '../support/panel-ui';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn() }) }));
 
 const bff = crearBffAnalisisSimulado();
 const PREGUNTA = '¿Existen ensayos que evalúen esta opción en pacientes con función renal reducida?';
-const IMPERATIVOS = /\b(abre|reformula|escribe|consulta tú|debe|recomend)/i;
+const IMPERATIVOS = /\b(abre|reformula|escribe|consulta|reintenta|debe|recomend\w*)\b/i;
 
 function turnoDeEstado(estado: typeof seguimientoSinEvidencia) {
   return screen.findByRole('article', { name: new RegExp(`Pregunta ${estado.turnNumber}`) });
@@ -58,7 +59,7 @@ describe('Hilo de seguimiento · estados', () => {
     expect(within(turno).getByText(followUp.sinEvidencia)).toBeTruthy();
     expect(within(turno).getByRole('button', { name: followUp.nuevoAnalisis })).toBeTruthy();
     expect(within(turno).getByRole('note').textContent).toBe(seguimientoSinEvidencia.disclaimer);
-    expect(within(turno).getByText('Uso académico/investigación')).toBeTruthy();
+    expect(within(turno).getByText(mensajes().app.academicUseLabel)).toBeTruthy();
     expect(within(turno).queryByText(followUp.notaCitas)).toBeNull();
     expect(followUp.sinEvidencia).not.toMatch(IMPERATIVOS);
   });

@@ -7,16 +7,18 @@ import {
   seguimientoTurno,
   sinEvidencia,
 } from '../support/msw/evidence-analyses';
+import { mensajes } from '../../lib/mensajes';
 import { analizar, analizarYAbrirHilo, followUp, preguntar } from '../support/panel-ui';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn() }) }));
 
 const bff = crearBffAnalisisSimulado();
-const AVISO_ACADEMICO = 'Uso académico/investigación';
+const AVISO_ACADEMICO = mensajes().app.academicUseLabel;
 const PREGUNTA = '¿La evidencia describe diferencias según el estado menopáusico?';
 
 function sinTotal() {
-  const { maxFollowUps: _omitido, ...base } = conEvidenciaTresOpciones.analysisBasis;
+  const base: Record<string, unknown> = { ...conEvidenciaTresOpciones.analysisBasis };
+  delete base.maxFollowUps;
   return { ...conEvidenciaTresOpciones, analysisBasis: base };
 }
 
@@ -78,7 +80,7 @@ describe('Hilo de seguimiento · contenido', () => {
     expect(chips[1]!.closest('li')!.textContent).not.toContain(followUp.nuevaFuente);
 
     await usuario.click(chips[1]!);
-    expect(within(turno).getByText('No disponible')).toBeTruthy();
+    expect(within(turno).getByText('Autores').nextElementSibling?.textContent).toBe('No disponible');
     await usuario.click(within(turno).getByRole('button', { name: 'Ver fragmento' }));
     expect(screen.getByText(seguimientoTurno.citedSources[1]!.chunkTextSnapshot)).toBeTruthy();
   });

@@ -41,7 +41,9 @@ const FALLO_DE_TRANSPORTE: ResultadoDeSolicitud = {
   traceId: null,
 };
 
-async function leerError(respuesta: Response): Promise<ResultadoDeSolicitud> {
+export async function leerError(
+  respuesta: Response,
+): Promise<Exclude<ResultadoDeSolicitud, { tipo: 'ok' }>> {
   const cuerpo: unknown = await respuesta.json().catch(() => null);
   const { error, traceId } = (cuerpo ?? {}) as { error?: unknown; traceId?: unknown };
   const reintentarEnSegundos = respuesta.status === 429 ? leerRetryAfter(respuesta.headers) : null;
