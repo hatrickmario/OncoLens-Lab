@@ -1,0 +1,614 @@
+Overview
+
+Go to Patient Version
+
+Note: The Overview section summarizes the published evidence on this topic. The rest of the summary describes the evidence in more detail.
+
+Benefits From Finasteride and Dutasteride Chemoprevention
+
+Chemoprevention with finasteride and dutasteride reduces the incidence of prostate cancer, but the evidence is inadequate to determine whether chemoprevention with finasteride or dutasteride reduces mortality from prostate cancer.
+
+Magnitude of Effect: In the Prostate Cancer Prevention Trial (PCPT), absolute reduction in incidence for more than 7 years with finasteride as compared with placebo was 6% (18.4% with finasteride and 24.4% with placebo); relative risk reduction (RRR) for incidence was 24.8% (95% confidence interval [CI], 18.6%–30.6%). With long-term follow-up (median, 18.4 years), prostate cancer mortality was not statistically different between men in the placebo and finasteride groups of PCPT (hazard ratio [HR], finasteride vs. placebo, 0.75; 95% CI, 0.50–1.12). Long-term follow-up (median, 16 years) of PCPT participants found that with 7 years of finasteride therapy, there was a 21.1% relative reduction in risk of prostate cancer.[1]
+
+In the Reduction by Dutasteride of Prostate Cancer Events (REDUCE) randomized trial of dutasteride versus placebo, using the restricted crude rate, the absolute risk reduction was 5.1% at 4 years, and the RRR was 22.8% (95% CI, 15.2%–29.8%; P < .001). There was no difference in prostate cancer or overall mortality, although the number of deaths was small and none were due to prostate cancer. The reduction in prostate cancer incidence occurred primarily in Gleason score 5 to 6 cancers.[2] That the reduction in incidence was primarily in less aggressive cancers (i.e., Gleason score 5–6) and not in more aggressive cancers (i.e., Gleason score 7–10) raises the question of whether this reduction in incidence would lead to any reduction in mortality. This question is presently unanswered.
+
+Study Design: Two randomized controlled trials; one for finasteride and one for dutasteride.
+
+Internal Validity: Good for the outcome of incidence, poor for the outcome of mortality.
+
+Consistency: Good.
+
+External Validity: The studies focused on different populations. The finasteride trial enrolled men with a prostate-specific antigen (PSA) of less than 3 ng/mL, constituting the majority of U.S. men, but those with a lower risk of cancer. In the dutasteride trial, men were at somewhat higher risk, with a PSA of 2.5 to 10.0 ng/mL and a prior negative biopsy. As such, results are generalizable primarily to these respective populations.
+
+Harms From Finasteride and Dutasteride Chemoprevention
+
+Finasteride
+
+Men in the finasteride group had statistically significantly more erectile dysfunction, loss of libido, and gynecomastia than men in the placebo group. Men in the finasteride group had a statistically significant higher incidence of high-grade (Gleason score 7–10) cancers during the study than did men in the placebo group (relative risk, 1.27; 95% CI, 1.07–1.50).[3] Subsequent studies showed that diagnostic tests (PSA, prostate digital rectal exam, and prostate biopsy) had improved performance for detection of cancer and of high-grade cancer in men who received finasteride.[4-6] Long-term follow-up in the finasteride trial (PCPT) found no increased risk of prostate cancer mortality (HR, finasteride vs. placebo, 0.75; 95% CI, 0.50–1.12).
+
+Magnitude of Effect: Statistically significant increases in the following outcomes were observed in the finasteride group (a greater fraction of men in the finasteride group [36.8%] temporarily discontinued treatment at some time during the study for reasons other than death or a diagnosis of prostate cancer than in the placebo group [28.9%]):
+
+Percentage in finasteride group versus percentage in placebo group:
+
+Reduced volume of ejaculate (60.4% vs. 47.3%).
+
+Erectile dysfunction (67.4% vs. 61.5%).
+
+Loss of libido (65.4% vs. 59.6%).
+
+Gynecomastia (4.5% vs. 2.8%).
+
+Study Design: Two randomized controlled trials; one for finasteride and one for dutasteride.
+
+Internal Validity: Good: The finasteride trial used two subject-completed sexual functioning instruments administered at enrollment, randomization, 6 months, and annually over the 7-year study. The dutasteride trial administered a sexual functioning instrument after completion of placebo run-in and annually thereafter.
+
+Consistency: Good (evidence other than the randomized controlled trial supports these effects).
+
+External Validity: As above, the studies evaluated two different populations: PSA less than or equal to 3 ng/mL in the finasteride trial and PSA of 2.5 to 10.0 ng/mL with a prior negative biopsy in the REDUCE trial. The results are most generalizable to these two populations.
+
+Dutasteride
+
+Overall, 4.3% of men in the dutasteride group compared with 2% of men in the placebo group discontinued the trial because of drug-related adverse events (P < .001). Men in the dutasteride group had a higher incidence of decreased libido, loss of libido, decreased semen volume, erectile dysfunction, and gynecomastia than men in the placebo group.[2]
+
+Magnitude of Effect: Increases in the following outcomes were observed in the dutasteride group:
+
+Percentage in dutasteride group versus percentage in placebo group:
+
+Decreased libido (3.3% vs. 1.6%).
+
+Loss of libido (1.9% vs. 1.3%).
+
+Decreased semen volume (1.4% vs. 0.2%).
+
+Erectile dysfunction (9.0% vs. 5.7%).
+
+Gynecomastia (1.9% vs. 1.0%).
+
+U.S. Food and Drug Administration (FDA) Review of Finasteride and Dutasteride
+
+The Oncology Drugs Advisory Committee of the FDA examined both finasteride and dutasteride in 2010. Neither agent was recommended for use for chemoprevention of prostate cancer.
+
+Other Prevention Interventions
+
+The Selenium and Vitamin E Cancer Prevention Trial (SELECT [NCT00006392]) was a large randomized placebo-controlled trial of vitamin E and selenium. It showed no reduction in prostate cancer period prevalence, but an increased risk of prostate cancer with vitamin E alone.[7]
+
+Magnitude of Effect: Compared with the placebo group in which 529 men developed prostate cancer, there was a statistically significant increase in prostate cancer in the vitamin E group (620 cases) but not in the selenium plus vitamin E group (555 cases) or in the selenium group (575 cases). The magnitude of increase in prostate cancer risk with vitamin E alone was 17%.
+
+Study Design for Vitamin E and Selenium: Randomized, placebo-controlled trial of selenium (200 µg/d from L-selenomethionine), vitamin E (400 IU/d of all-rac-[alpha]-tocopheryl acetate), or both.
+
+Internal Validity: Good.
+
+Consistency: Good.
+
+External Validity: Good.
+
+References
+
+Unger JM, Hershman DL, Till C, et al.: Using Medicare Claims to Examine Long-term Prostate Cancer Risk of Finasteride in the Prostate Cancer Prevention Trial. J Natl Cancer Inst 110 (11): 1208-1215, 2018. [PUBMED Abstract]
+
+Andriole GL, Bostwick DG, Brawley OW, et al.: Effect of dutasteride on the risk of prostate cancer. N Engl J Med 362 (13): 1192-202, 2010. [PUBMED Abstract]
+
+Thompson IM, Goodman PJ, Tangen CM, et al.: The influence of finasteride on the development of prostate cancer. N Engl J Med 349 (3): 215-24, 2003. [PUBMED Abstract]
+
+Thompson IM, Chi C, Ankerst DP, et al.: Effect of finasteride on the sensitivity of PSA for detecting prostate cancer. J Natl Cancer Inst 98 (16): 1128-33, 2006. [PUBMED Abstract]
+
+Thompson IM, Tangen CM, Goodman PJ, et al.: Finasteride improves the sensitivity of digital rectal examination for prostate cancer detection. J Urol 177 (5): 1749-52, 2007. [PUBMED Abstract]
+
+Lucia MS, Epstein JI, Goodman PJ, et al.: Finasteride and high-grade prostate cancer in the Prostate Cancer Prevention Trial. J Natl Cancer Inst 99 (18): 1375-83, 2007. [PUBMED Abstract]
+
+Klein EA, Thompson IM, Tangen CM, et al.: Vitamin E and the risk of prostate cancer: the Selenium and Vitamin E Cancer Prevention Trial (SELECT). JAMA 306 (14): 1549-56, 2011. [PUBMED Abstract]
+
+Incidence and Mortality of Prostate Cancer
+
+Carcinoma of the prostate is the most common tumor in men in the United States (other than skin cancer),
+with an estimated 313,780 new cases and 35,770 deaths expected in 2025.[1] A wide range of
+estimates of the impact of the disease are notable. The disease is
+histologically evident in as many as 34% of men in their fifth decade and in up
+to 70% of men aged 80 years and older.[2,3] The lifetime risk of being diagnosed with prostate cancer for U.S. men is 12.8%, while the lifetime risk of dying from prostate cancer is 2.0%.[4] The estimated reduction in life
+expectancy of men who die of prostate cancer is approximately 9 years.[5]
+
+The extraordinarily high rate of clinically occult prostate cancer in the
+general population compared with the 20-fold lower likelihood of death from the
+disease indicates that many of these cancers have low biological risk. Concordant
+with this observation are the many series of patients with lower-risk (i.e., Gleason grade 6 and some low-volume Gleason grade 7 tumors) prostate cancer
+managed by surveillance alone with high survival rates at 5 and 10
+years of follow-up.[6] Data demonstrate, however, that with longer follow-up, higher-grade cancers are associated with a greater risk of prostate cancer death.[7,8]
+
+Because of marked variability in tumor differentiation from one microscopic field to another, many pathologists will report the range of differentiation among the malignant cells that are present in a biopsy using the Gleason grading system. This grading system includes five histological patterns distinguished by the glandular architecture of the cancer. The architectural patterns are identified and assigned a grade from 1 to 5 with 1 being the most differentiated and 5 being the least differentiated. The sum of the grades of the predominant and next most prevalent will range from 2 (well-differentiated tumors) to 10 (undifferentiated tumors).[9,10] Systematic changes to the histological interpretation of biopsy specimens by anatomical pathologists have occurred during the prostate-specific antigen (PSA) screening era (i.e., since about 1985) in the United States.[11] This phenomenon, sometimes called grade inflation, is the apparent increase in the distribution of high-grade tumors in the population for a period of time but in the absence of a true biological or clinical change. It is possibly the result of an increasing tendency for pathologists to read tumor grade as more aggressive, resulting in a higher preponderance to treat these cancers aggressively.[12] In general, these changes in interpretation have resulted in almost all prostate cancers being graded with Gleason grades of 3, 4, or 5; Gleason grades of 1 or 2 are highly unusual.
+
+Treatment options available for prostate cancer include radical prostatectomy,
+external-beam radiation therapy, brachytherapy, cryotherapy, focal ablation, androgen deprivation with luteinizing hormone-releasing hormone analogs and/or antiandrogens, intermittent androgen deprivation, cytotoxic agents, and watchful waiting. Of all the means of management, only radical prostatectomy has been tested in a randomized clinical trial to assess survival benefit. In this study, prostatectomy was found to be superior to surveillance in men with localized prostate cancer, diagnosed in an era before widespread PSA screening. There were reduced rates of prostate cancer mortality (relative risk [RR], 0.56; 95% confidence interval [CI], 0.41–0.77) and overall mortality (RR, 0.71; 95% CI, 0.59–0.86).[13] Only 12% of the men had nonpalpable T1x tumors, suggesting that a minority of tumors were detected by PSA screening, whereas the majority were clinically detected. The relative efficacy of radical prostatectomy compared with other forms of treatment has not been adequately addressed.[14] Previous studies that compared radical prostatectomy with radiation therapy and brachytherapy closed because of poor patient accrual. Confounding issues in the treatment of prostate cancer include side
+effects of treatment, inability to predict the natural history of a given
+cancer, patient comorbidity that may affect an individual’s likelihood of
+surviving long enough to be at risk of disease morbidity and mortality, and an increasing body of evidence suggesting that, with careful PSA monitoring following treatment, a
+substantial fraction of patients may suffer disease recurrence.[15]
+
+Because of considerable uncertainty regarding the efficacy of treatment and the
+difficulty with selecting patients for whom there is a known risk of disease
+progression, opinion in the medical community is divided regarding
+screening for carcinoma of the prostate. While both digital rectal examination
+and PSA screening have demonstrated reasonable performance characteristics (sensitivity,
+specificity, and positive predictive value) for the early detection of prostate
+cancer, conflicting outcomes of randomized trials examining the impact of screening on mortality has led some organizations to recommend for and others to recommend against screening.[16]
+
+The tremendous impact of prostate cancer on the U.S. population and the
+financial burden of the disease for both patients and society have led to an
+increased interest in primary disease prevention.
+
+The main treatment modalities for prostate cancer are surgery, radiation, hormonal, and active surveillance. For a detailed discussion, see Prostate Cancer Treatment. The goal of prostate cancer prevention interventions is to reduce the occurrence of prostate cancer, thereby obviating the need for treatment. As the effectiveness of prevention interventions improves, it is expected that the need for treatment will diminish.
+
+References
+
+American Cancer Society: Cancer Facts and Figures 2025. American Cancer Society, 2025. Available online. Last accessed January 16, 2025.
+
+Sakr WA, Haas GP, Cassin BF, et al.: The frequency of carcinoma and intraepithelial neoplasia of the prostate in young male patients. J Urol 150 (2 Pt 1): 379-85, 1993. [PUBMED Abstract]
+
+Hølund B: Latent prostatic cancer in a consecutive autopsy series. Scand J Urol Nephrol 14 (1): 29-35, 1980. [PUBMED Abstract]
+
+Surveillance Research Program, National Cancer Institute: SEER*Explorer: An interactive website for SEER cancer statistics. Bethesda, MD: National Cancer Institute. Available online. Last accessed December 30, 2024.
+
+Horm JW, Sondik EJ: Person-years of life lost due to cancer in the United States, 1970 and 1984. Am J Public Health 79 (11): 1490-3, 1989. [PUBMED Abstract]
+
+Cooperberg MR, Carroll PR, Klotz L: Active surveillance for prostate cancer: progress and promise. J Clin Oncol 29 (27): 3669-76, 2011. [PUBMED Abstract]
+
+Lu-Yao GL, Albertsen PC, Moore DF, et al.: Outcomes of localized prostate cancer following conservative management. JAMA 302 (11): 1202-9, 2009. [PUBMED Abstract]
+
+Jones CU, Hunt D, McGowan DG, et al.: Radiotherapy and short-term androgen deprivation for localized prostate cancer. N Engl J Med 365 (2): 107-18, 2011. [PUBMED Abstract]
+
+Gleason DF, Mellinger GT: Prediction of prognosis for prostatic adenocarcinoma by combined histological grading and clinical staging. J Urol 111 (1): 58-64, 1974. [PUBMED Abstract]
+
+Gleason DF: Histologic grading and clinical staging of prostatic carcinoma. In: Tannenbaum M: Urologic Pathology: The Prostate. Lea and Febiger, 1977, pp 171-197.
+
+Albertsen PC, Hanley JA, Barrows GH, et al.: Prostate cancer and the Will Rogers phenomenon. J Natl Cancer Inst 97 (17): 1248-53, 2005. [PUBMED Abstract]
+
+Thompson IM, Canby-Hagino E, Lucia MS: Stage migration and grade inflation in prostate cancer: Will Rogers meets Garrison Keillor. J Natl Cancer Inst 97 (17): 1236-7, 2005. [PUBMED Abstract]
+
+Bill-Axelson A, Holmberg L, Garmo H, et al.: Radical Prostatectomy or Watchful Waiting in Prostate Cancer - 29-Year Follow-up. N Engl J Med 379 (24): 2319-2329, 2018. [PUBMED Abstract]
+
+Middleton RG, Thompson IM, Austenfeld MS, et al.: Prostate Cancer Clinical Guidelines Panel Summary report on the management of clinically localized prostate cancer. The American Urological Association. J Urol 154 (6): 2144-8, 1995. [PUBMED Abstract]
+
+Moul JW: Prostate specific antigen only progression of prostate cancer. J Urol 163 (6): 1632-42, 2000. [PUBMED Abstract]
+
+Carter HB, Albertsen PC: Re: Relative value of race, family history and prostate specific antigen as indications for early initiation of prostate cancer screening. J Urol 193 (3): 1063-4; discussion 1064, 2015. [PUBMED Abstract]
+
+Risk Factors for Prostate Cancer Development
+
+Age
+
+Prostate cancer incidence escalates with increasing age. Although it is an unusual disease in men younger than 50 years, incidence rates
+increase substantially thereafter. Data from the Surveillance, Epidemiology and End Results (SEER) program for 2017 to 2021 showed that incidence rates for prostate cancer were 109.6 per 100,000 for men aged 50 to 54 years, 251.3 per 100,000 for men aged 55 to 59 years, 440.5 per 100,000 for men aged 60 to 64 years, and 693.2 per 100,000 for men aged 65 to 69 years. After age 70 years, incidence rates stabilized or decreased modestly. From 2018 to 2022, mortality rates showed a greater increasing trend with age than did incidence, increasing from 2.8 per 100,000 for men aged 50 to 54 years to 39.1 per 100,000 for men aged 65 to 69 years to 209.7 per 100,000 for men aged 80 to 84 years.[1]
+
+Family History
+
+Approximately 15% of men with a diagnosis of prostate cancer will be found to
+have a first-degree relative (e.g., brother, father) with prostate cancer,
+compared with approximately 8% of the U.S. population.[2] Approximately 9% of all prostate cancers may result from heritable
+susceptibility genes.[3] Several authors have completed segregation analyses,
+and though a single, rare autosomal gene has been suggested to cause cancer
+in some of these families, the burden of evidence suggests that the inheritance
+is considerably more complex.[4-6]
+Evidence from the Prostate Cancer Prevention Trial (PCPT) and Selenium and Vitamin E Cancer Prevention Trial suggest that physician and patient bias lead to a greater likelihood of prostate biopsy, which contributes significantly to the increased risk of prostate cancer diagnosis in men with a family history of the disease.[7]
+
+Hormones
+
+The development of the prostate is dependent upon the secretion of dihydrotestosterone (DHT)
+by the fetal testis. Testosterone causes normal virilization of the Wolffian
+duct structures and internal genitalia and is acted upon by the enzyme 5-alpha-reductase (5AR) to form DHT. DHT has a 4-fold to 50-fold greater affinity for the androgen receptor than testosterone, and it is
+DHT that leads to normal prostatic development. Children born with abnormal
+5AR (due to a change in a single base pair in exon 5 of the normal type II 5AR
+gene), are born with ambiguous genitalia (variously described as hypospadias
+with a blind-ending vagina to a small phallus) but masculinize at puberty because of the surge of testosterone production at that time. Clinical, imaging, and
+histological studies of kindreds born with 5AR deficiency have demonstrated a
+small, pancake-appearing prostate with an undetectable prostate-specific
+antigen (PSA) level and no evidence of prostatic epithelium.[8] Long-term follow-up
+demonstrates that neither benign prostatic hyperplasia (BPH) nor prostate
+cancer develop.
+
+Other evidence suggesting that the degree of cumulative exposure of the
+prostate to androgens is related to an increased risk of prostate cancer
+includes the following:
+
+Neither BPH nor prostate cancer have been reported in men castrated
+prior to puberty.[9]
+
+Androgen deprivation in almost all forms leads to involution of the
+prostate, a fall in PSA levels, apoptosis of prostate cancer and
+epithelial cells, and a clinical response in prostate cancer
+patients.[10,11]
+
+The results of two large-scale chemoprevention trials using 5AR inhibitors (finasteride and dutasteride) demonstrate that intraprostatic androgens modulate prostate cancer risk. In both studies, reductions in overall prostate cancer risk were identified although with increased risk of high-grade disease.[12,13]
+
+Ecological studies have found a correlation between serum levels of testosterone, especially DHT, and overall risk of prostate cancer among African American, White, and Japanese males.[14-16] However, evidence from prospective studies of the association between serum concentrations of sex hormones, including androgens and estrogens, does not support a direct link.[17] A collaborative analysis of 18 prospective studies, pooling prediagnostic measures on 3,886 men with incident prostate cancer and 6,438 control subjects, found no association between the risk of prostate cancer and serum concentrations of testosterone, calculated-free testosterone, DHT sulfate, androstenedione, androstanediol glucuronide, estradiol, or calculated-free estradiol.[17] A caution for interpreting the data is the unknown degree of correlation between serum levels and prostate tissue level. Androstanediol glucuronide may most closely reflect intraprostatic androgen activity, and this measure was not associated with the risk of prostate cancer. This lack of association affirms that risk stratification cannot be made on serum hormone concentrations.
+
+Race
+
+The risk of developing and dying of prostate cancer is higher among Black men (Hispanic and non-Hispanic), is of
+intermediate levels among White men (Hispanic and non-Hispanic), and is lowest among native Japanese men.[1,18] Conflicting data have been published regarding
+the etiology of these outcomes, but some evidence is available that access to
+health care may play a role in disease outcomes.[19] According to the Surveillance, Epidemiology, and End Results (SEER) Program, incidence of
+prostate cancer in African American men exceeds those of White men at all ages.[20]
+
+Dietary Fat
+
+An interesting observation is that although the incidence of latent (occult,
+histologically evident) prostate cancer is similar throughout the world,
+clinical prostate cancer varies from country to country by as much as 20-fold.[21] Previous ecological studies have demonstrated a direct relationship
+between a country’s prostate cancer-specific mortality rate and average total
+calories from fat consumed by the country’s population.[22,23] Studies of
+immigrants from Japan have demonstrated that native Japanese have the lowest
+risk of clinical prostate cancer, first-generation Japanese American men have an
+intermediate risk, and subsequent generations have a risk comparable to the
+U.S. population.[24,25] Animal models of explanted human prostate cancer have
+demonstrated decreased tumor growth rates in animals who are fed a low-fat diet.[26,27]
+Evidence from many case-control studies has shown an association
+between dietary fat and prostate cancer risk,[28-30] although studies have not
+uniformly reached this conclusion.[31-33] In a review of published studies of
+the relationship between dietary fat and prostate cancer risk, among
+descriptive studies, approximately half found an increased risk with increased
+dietary fat and half found no association.[34] Among case-control studies,
+about half of the studies found an increased risk with increasing
+dietary fat, animal fat, and saturated and monounsaturated fat intake while
+approximately half found no association. Only in studies of polyunsaturated
+fat intake were three studies reported of a significant negative association
+between prostate cancer and fat intake. Fat of animal origin seems
+to be associated with the highest risk.[19,35] In a series of 384 patients
+with prostate cancer, the risk of cancer progression to an advanced stage was
+greater in men with a high fat intake.[36] The announcement in 1996 that
+cancer mortality rates had fallen in the United States prompted the suggestion
+that this may be caused by decreases in dietary fat intake during the same time
+period.[37,38]
+
+Two studies were conducted within the PCPT in which prospective nutritional information was collected and all participants were recommended to undergo biopsy. Findings included that among 9,559 participants, there was no association between any supplement or nutrient (including fat) and risk of prostate cancer overall, but the risk of high-grade cancer was associated with high intake of polyunsaturated fats. In a subset of 1,658 cases and 1,803 controls, specific fatty acids were examined, and docosahexaenoic acid was associated with risk of high-grade disease while trans-fatty acids (TFA) 18:1 and TFA 18:2 were inversely associated with risk of high-grade disease. These large-scale studies suggest a complex relationship between nutrients such as fat and risk of prostate cancer.[39,40]
+
+The explanation for this possible association between prostate cancer and
+dietary fat is unknown. Several hypotheses have been advanced, including the following:
+
+Dietary fat may increase serum androgen levels, thereby increasing
+prostate cancer risk. This hypothesis is supported by observations
+from South Africa and the United States that changes in dietary fat
+intake change urinary and serum levels of androgens.[41,42]
+
+Certain types of fatty acids or their metabolites may initiate or
+promote prostate carcinoma development. The evidence for this
+hypothesis is conflicting, but one study suggests that linoleic acid
+(omega-6 polyunsaturated fatty acid) may stimulate prostate cancer
+cells, while omega-3 fatty acids inhibit cell growth.[43]
+
+An observation made in an animal model is that male offspring of
+pregnant rats who are fed a high-fat diet will develop prostate cancer at a
+higher rate than animals who are fed a low-fat diet.[44] This observation may
+explain some of the variations in prostate cancer incidence and
+mortality among ethnic groups; an observation has been made that
+first trimester androgen levels in pregnant Black men are higher than
+those in White men.[45]
+
+Dairy and Calcium Intake
+
+A meta-analysis of ten cohort studies (eight from the United States and two from Europe) concluded that men with the highest intake of dairy products (relative risk [RR], 1.11; 95% confidence interval [CI], 1.00–1.22; P = .04) and calcium (RR, 1.39; 95% CI, 1.09–1.77; P = .18) were more likely to develop prostate cancer than men with the lowest intake. The pooled RRs of advanced prostate cancer were 1.33 (95% CI, 1.00–1.78; P = .055) for the highest versus lowest intake categories of dairy products and 1.46 (95% CI, 0.65–3.25; P > .2) for the highest versus lowest intake categories of calcium. High intake of dairy products and calcium may be associated with an increased risk of prostate cancer, although the increase may be small.[46]
+
+Multivitamin Use
+
+Regular multivitamin use has not been associated with the risk of early or localized prostate cancer. However, in this large (295,344 men) study, there was a statistically significantly increased risk of advanced and fatal prostate cancer among men with excessive use of multivitamins.[47]
+
+Folate
+
+The Aspirin/Folate Polyp Prevention Study, a placebo-controlled randomized trial of aspirin and folic acid supplementation for the chemoprevention of colorectal adenomas, was conducted between July 6, 1994, and December 31, 2006. In a secondary analysis, the authors addressed the effect of folic acid supplementation on the risk of prostate cancer. Participants were followed for up to 10.8 (median, 7.0; interquartile range, 6.0–7.8) years and asked periodically to report all illnesses and hospitalizations.[48] Supplementation with 1 mg of folic acid was associated with an increased risk of prostate cancer. However, dietary and plasma levels among nonmultivitamin users were inversely associated with risk. These findings highlight the potentially complex role of folate in prostate carcinogenesis.[48,49]
+
+Cadmium Exposure
+
+Cadmium exposure is occupationally associated with nickel-cadmium
+batteries and cadmium recovery plant smelters and is associated with
+cigarette smoke.[50] The earliest studies of this agent documented an apparent association with prostate cancer, but better-designed studies have failed to note an
+association.[51,52]
+
+Dioxin Exposure
+
+Dioxin (2,3,7,8 tetrachlorodibenzo-p-dioxin or TCDD) is a contaminant of an
+herbicide used in Vietnam. This agent is similar to many components of
+herbicides used in farming. A review of the linkage between dioxin and
+prostate cancer risk, by the National Academy of Sciences Institute of Medicine
+Committee to Review the Health Effects in Vietnam Veterans of Exposure to
+Herbicides, found only two articles on prostate cancer with sufficient
+numbers of cases and follow-up to allow analysis.[53,54] The analysis of all
+available data suggests that the association between dioxin exposure and
+prostate cancer is not conclusive.[55]
+
+Prostatitis
+
+Several case-control and cohort studies, as well as two meta-analyses, suggested a significant but modest increase in the risk of prostate cancer in men with prostatitis (RR, 1.6) and in those with a history of syphilis or gonorrhea (RR, 1.4).[56,57] However, PSA values can be elevated with prostatitis, leading to more prostate biopsies and a greater likelihood of making the diagnosis of cancer. This is an example of ascertainment bias, and this bias can be significant in prostate cancer. Any factor associated with an elevation in serum PSA would be expected to lead to more biopsies being performed, and consequently an artifactual elevation in prostate cancer diagnoses. Despite a significant body of work relating inflammation to cancer, a cause and effect relationship has not been established between prostatitis and prostate cancer.[56,57]
+
+References
+
+Surveillance Research Program, National Cancer Institute: SEER*Explorer: An interactive website for SEER cancer statistics. Bethesda, MD: National Cancer Institute. Available online. Last accessed December 30, 2024.
+
+Steinberg GD, Carter BS, Beaty TH, et al.: Family history and the risk of prostate cancer. Prostate 17 (4): 337-47, 1990. [PUBMED Abstract]
+
+Grönberg H, Isaacs SD, Smith JR, et al.: Characteristics of prostate cancer in families potentially linked to the hereditary prostate cancer 1 (HPC1) locus. JAMA 278 (15): 1251-5, 1997. [PUBMED Abstract]
+
+Carter BS, Steinberg GD, Beaty TH, et al.: Familial risk factors for prostate cancer. Cancer Surv 11: 5-13, 1991. [PUBMED Abstract]
+
+Schaid DJ, McDonnell SK, Blute ML, et al.: Evidence for autosomal dominant inheritance of prostate cancer. Am J Hum Genet 62 (6): 1425-38, 1998. [PUBMED Abstract]
+
+Bauer JJ, Srivastava S, Connelly RR, et al.: Significance of familial history of prostate cancer to traditional prognostic variables, genetic biomarkers, and recurrence after radical prostatectomy. Urology 51 (6): 970-6, 1998. [PUBMED Abstract]
+
+Tangen CM, Goodman PJ, Till C, et al.: Biases in Recommendations for and Acceptance of Prostate Biopsy Significantly Affect Assessment of Prostate Cancer Risk Factors: Results From Two Large Randomized Clinical Trials. J Clin Oncol 34 (36): 4338-4344, 2016. [PUBMED Abstract]
+
+Imperato-McGinley J, Gautier T, Zirinsky K, et al.: Prostate visualization studies in males homozygous and heterozygous for 5 alpha-reductase deficiency. J Clin Endocrinol Metab 75 (4): 1022-6, 1992. [PUBMED Abstract]
+
+Isaacs JT: Hormonal balance and the risk of prostatic cancer. J Cell Biochem Suppl 16H: 107-8, 1992. [PUBMED Abstract]
+
+Peters CA, Walsh PC: The effect of nafarelin acetate, a luteinizing-hormone-releasing hormone agonist, on benign prostatic hyperplasia. N Engl J Med 317 (10): 599-604, 1987. [PUBMED Abstract]
+
+Kyprianou N, Isaacs JT: Expression of transforming growth factor-beta in the rat ventral prostate during castration-induced programmed cell death. Mol Endocrinol 3 (10): 1515-22, 1989. [PUBMED Abstract]
+
+Andriole GL, Bostwick DG, Brawley OW, et al.: Effect of dutasteride on the risk of prostate cancer. N Engl J Med 362 (13): 1192-202, 2010. [PUBMED Abstract]
+
+Thompson IM, Goodman PJ, Tangen CM, et al.: The influence of finasteride on the development of prostate cancer. N Engl J Med 349 (3): 215-24, 2003. [PUBMED Abstract]
+
+Ellis L, Nyborg H: Racial/ethnic variations in male testosterone levels: a probable contributor to group differences in health. Steroids 57 (2): 72-5, 1992. [PUBMED Abstract]
+
+Ross RK, Bernstein L, Lobo RA, et al.: 5-alpha-reductase activity and risk of prostate cancer among Japanese and US white and black males. Lancet 339 (8798): 887-9, 1992. [PUBMED Abstract]
+
+Wu AH, Whittemore AS, Kolonel LN, et al.: Serum androgens and sex hormone-binding globulins in relation to lifestyle factors in older African-American, white, and Asian men in the United States and Canada. Cancer Epidemiol Biomarkers Prev 4 (7): 735-41, 1995 Oct-Nov. [PUBMED Abstract]
+
+Roddam AW, Allen NE, Appleby P, et al.: Endogenous sex hormones and prostate cancer: a collaborative analysis of 18 prospective studies. J Natl Cancer Inst 100 (3): 170-83, 2008. [PUBMED Abstract]
+
+Bunker CH, Patrick AL, Konety BR, et al.: High prevalence of screening-detected prostate cancer among Afro-Caribbeans: the Tobago Prostate Cancer Survey. Cancer Epidemiol Biomarkers Prev 11 (8): 726-9, 2002. [PUBMED Abstract]
+
+Optenberg SA, Thompson IM, Friedrichs P, et al.: Race, treatment, and long-term survival from prostate cancer in an equal-access medical care delivery system. JAMA 274 (20): 1599-605, 1995 Nov 22-29. [PUBMED Abstract]
+
+Cancer incidence in the United States (SEER) age-specific rates. In: Harras A, Edwards BK, Blot WJ, eds.: Cancer Rates and Risks. 4th ed. National Cancer Institute, 1996, pp 22.
+
+Wynder EL, Mabuchi K, Whitmore WF: Epidemiology of cancer of the prostate. Cancer 28 (2): 344-60, 1971. [PUBMED Abstract]
+
+Armstrong B, Doll R: Environmental factors and cancer incidence and mortality in different countries, with special reference to dietary practices. Int J Cancer 15 (4): 617-31, 1975. [PUBMED Abstract]
+
+Rose DP, Connolly JM: Dietary fat, fatty acids and prostate cancer. Lipids 27 (10): 798-803, 1992. [PUBMED Abstract]
+
+Haenszel W, Kurihara M: Studies of Japanese migrants. I. Mortality from cancer and other diseases among Japanese in the United States. J Natl Cancer Inst 40 (1): 43-68, 1968. [PUBMED Abstract]
+
+Shimizu H, Ross RK, Bernstein L, et al.: Cancers of the prostate and breast among Japanese and white immigrants in Los Angeles County. Br J Cancer 63 (6): 963-6, 1991. [PUBMED Abstract]
+
+Wang Y, Corr JG, Thaler HT, et al.: Decreased growth of established human prostate LNCaP tumors in nude mice fed a low-fat diet. J Natl Cancer Inst 87 (19): 1456-62, 1995. [PUBMED Abstract]
+
+Connolly JM, Coleman M, Rose DP: Effects of dietary fatty acids on DU145 human prostate cancer cell growth in athymic nude mice. Nutr Cancer 29 (2): 114-9, 1997. [PUBMED Abstract]
+
+Ross RK, Shimizu H, Paganini-Hill A, et al.: Case-control studies of prostate cancer in blacks and whites in southern California. J Natl Cancer Inst 78 (5): 869-74, 1987. [PUBMED Abstract]
+
+Kolonel LN, Yoshizawa CN, Hankin JH: Diet and prostatic cancer: a case-control study in Hawaii. Am J Epidemiol 127 (5): 999-1012, 1988. [PUBMED Abstract]
+
+Whittemore AS, Kolonel LN, Wu AH, et al.: Prostate cancer in relation to diet, physical activity, and body size in blacks, whites, and Asians in the United States and Canada. J Natl Cancer Inst 87 (9): 652-61, 1995. [PUBMED Abstract]
+
+Giovannucci E: Epidemiologic characteristics of prostate cancer. Cancer 75 (Suppl 7): 1766-77, 1995.
+
+Mettlin C, Selenskas S, Natarajan N, et al.: Beta-carotene and animal fats and their relationship to prostate cancer risk. A case-control study. Cancer 64 (3): 605-12, 1989. [PUBMED Abstract]
+
+Severson RK, Nomura AM, Grove JS, et al.: A prospective study of demographics, diet, and prostate cancer among men of Japanese ancestry in Hawaii. Cancer Res 49 (7): 1857-60, 1989. [PUBMED Abstract]
+
+Zhou JR, Blackburn GL: Bridging animal and human studies: what are the missing segments in dietary fat and prostate cancer? Am J Clin Nutr 66 (6 Suppl): 1572S-1580S, 1997. [PUBMED Abstract]
+
+Rose DP, Boyar AP, Wynder EL: International comparisons of mortality rates for cancer of the breast, ovary, prostate, and colon, and per capita food consumption. Cancer 58 (11): 2363-71, 1986. [PUBMED Abstract]
+
+Bairati I, Meyer F, Fradet Y, et al.: Dietary fat and advanced prostate cancer. J Urol 159 (4): 1271-5, 1998. [PUBMED Abstract]
+
+Cole P, Rodu B: Declining cancer mortality in the United States. Cancer 78 (10): 2045-8, 1996. [PUBMED Abstract]
+
+Wynder EL, Cohen LA: Correlating nutrition to recent cancer mortality statistics. J Natl Cancer Inst 89 (4): 324, 1997. [PUBMED Abstract]
+
+Kristal AR, Till C, Platz EA, et al.: Serum lycopene concentration and prostate cancer risk: results from the Prostate Cancer Prevention Trial. Cancer Epidemiol Biomarkers Prev 20 (4): 638-46, 2011. [PUBMED Abstract]
+
+Kristal AR, Arnold KB, Neuhouser ML, et al.: Diet, supplement use, and prostate cancer risk: results from the prostate cancer prevention trial. Am J Epidemiol 172 (5): 566-77, 2010. [PUBMED Abstract]
+
+Hill P, Wynder EL, Garbaczewski L, et al.: Diet and urinary steroids in black and white North American men and black South African men. Cancer Res 39 (12): 5101-5, 1979. [PUBMED Abstract]
+
+Hämäläinen E, Adlercreutz H, Puska P, et al.: Diet and serum sex hormones in healthy men. J Steroid Biochem 20 (1): 459-64, 1984. [PUBMED Abstract]
+
+Rose DP, Connolly JM: Effects of fatty acids and eicosanoid synthesis inhibitors on the growth of two human prostate cancer cell lines. Prostate 18 (3): 243-54, 1991. [PUBMED Abstract]
+
+Kondo Y, Homma Y, Aso Y, et al.: Promotional effect of two-generation exposure to a high-fat diet on prostate carcinogenesis in ACI/Seg rats. Cancer Res 54 (23): 6129-32, 1994. [PUBMED Abstract]
+
+Henderson BE, Bernstein L, Ross RK, et al.: The early in utero oestrogen and testosterone environment of blacks and whites: potential effects on male offspring. Br J Cancer 57 (2): 216-8, 1988. [PUBMED Abstract]
+
+Gao X, LaValley MP, Tucker KL: Prospective studies of dairy product and calcium intakes and prostate cancer risk: a meta-analysis. J Natl Cancer Inst 97 (23): 1768-77, 2005. [PUBMED Abstract]
+
+Lawson KA, Wright ME, Subar A, et al.: Multivitamin use and risk of prostate cancer in the National Institutes of Health-AARP Diet and Health Study. J Natl Cancer Inst 99 (10): 754-64, 2007. [PUBMED Abstract]
+
+Figueiredo JC, Grau MV, Haile RW, et al.: Folic acid and risk of prostate cancer: results from a randomized clinical trial. J Natl Cancer Inst 101 (6): 432-5, 2009. [PUBMED Abstract]
+
+Kristal AR, Lippman SM: Nutritional prevention of cancer: new directions for an increasingly complex challenge. J Natl Cancer Inst 101 (6): 363-5, 2009. [PUBMED Abstract]
+
+Pienta KJ: Epidemiology and etiology of prostate cancer. In: Raghavan D, Scher HI, Leibel SA, eds.: Principles and Practice of Genitourinary Oncology. Lippincott-Raven Publishers, 1997, pp 379-385.
+
+García Sánchez A, Antona JF, Urrutia M: Geochemical prospection of cadmium in a high incidence area of prostate cancer, Sierra de Gata, Salamanca, Spain. Sci Total Environ 116 (3): 243-51, 1992. [PUBMED Abstract]
+
+Boffetta P: Methodological aspects of the epidemiological association between cadmium and cancer in humans. In: Nordberg GF, Herber RF, Alessio L, eds.: Cadmium in the Human Environment: Toxicity and Carcinogenicity. Lyon, France: International Agency for Research on Cancer, 1992, pp 425-434.
+
+Fingerhut MA, Halperin WE, Marlow DA, et al.: Cancer mortality in workers exposed to 2,3,7,8-tetrachlorodibenzo-p-dioxin. N Engl J Med 324 (4): 212-8, 1991. [PUBMED Abstract]
+
+Bertazzi PA, Zocchetti C, Pesatori AC, et al.: Ten-year mortality study of the population involved in the Seveso incident in 1976. Am J Epidemiol 129 (6): 1187-200, 1989. [PUBMED Abstract]
+
+Committee to Review the Health Effects in Vietnam Veterans of Exposure to Herbicides: Veterans and Agent Orange: Update 1996. In: Washington DC, National Academy Press, 1996.
+
+Dennis LK, Dawson DV: Meta-analysis of measures of sexual activity and prostate cancer. Epidemiology 13 (1): 72-9, 2002. [PUBMED Abstract]
+
+Dennis LK, Lynch CF, Torner JC: Epidemiologic association between prostatitis and prostate cancer. Urology 60 (1): 78-83, 2002. [PUBMED Abstract]
+
+Opportunities for Prevention
+
+Hormonal Prevention
+
+The Prostate Cancer Prevention Trial (PCPT), a large randomized placebo-controlled trial of finasteride (an inhibitor of alpha-reductase), was performed in 18,882 men aged 55 years or older. At 7 years, the incidence of prostate cancer was 18.4% in the finasteride group versus 24.4% in the placebo group, a relative risk reduction (RRR) of 24.8% (95% confidence interval [CI], 18.6%–30.6%; P < .001). The finasteride group had more patients with Gleason grade 7 to 10, but the clinical significance of Gleason scoring is uncertain in conditions of androgen deprivation.[1]
+High-grade cancers (Gleason score 7–10) were noted in 6.4% of finasteride patients, compared with 5.1% of men who received placebo, yielding a relative risk (RR) of 1.27 (95% CI, 1.07–1.50). The increase in high-grade tumors was seen within 1 year of finasteride exposure and did not increase during this time period.[2]
+
+Finasteride decreases the risk of prostate cancer but may also alter
+the detection of disease through effects on prostate-specific antigen (PSA), prostate digital rectal examination (DRE),
+and decreased prostate volume (24%), creating a detection bias.[3] Adjustment of PSA in men taking finasteride preserves the performance characteristics for cancer detection.[4]
+
+Examination of the outcomes of the PCPT found that finasteride significantly reduced the risk of high-grade prostatic intraepithelial neoplasia (HGPIN); HGPIN alone was reduced by 15% (RR, 0.85; 95% CI, 0.73–0.99) and HGPIN with prostate cancer was reduced by 31% (RR, 0.69; 95% CI, 0.56–0.85).[3,5] The concern that finasteride may increase the risk of high-grade cancer prompted an examination of the rate of cancer development in the PCPT. While a gradual and progressive increase in the number of high-grade tumors would have been expected over the study duration of 7 years, when compared with placebo, this was not the case. The increase in high-grade tumors was seen within 1 year of finasteride exposure and did not increase during this time period.[2] An analysis of the PCPT data adjusted for the sources of detection bias found that finasteride reduced the incidence of Gleason score 5 to 7 and Gleason score 3 to 4 prostate cancer, but not Gleason score 2 to 3 or Gleason score 8 to 10. The reduction in the incidence of Gleason score 7 (22%) was less than the reduction in the incidence of Gleason 5 score (58%) and Gleason score 6 (52%).[6] An analysis using different methodologies found an overall reduction of both low-grade (Gleason score <6) and high-grade (Gleason score >7) cancers.[7]
+
+A follow-up analysis of the PCPT of finasteride mapped study participants with the National Death Index, allowing for an analysis of prostate cancer-specific mortality. With 296,842 person-years of follow-up and a median follow-up of 18.4 years, of the 9,423 men randomly assigned to the finasteride group, there were 3,048 deaths of which 42 were caused by prostate cancer; of the 9,457 men randomly assigned to the placebo group, there were 2,979 deaths of which 56 were caused by prostate cancer. The 25% reduction in risk of prostate cancer death with finasteride was not statistically significant (hazard ratio, finasteride vs. placebo, 0.75; 95% CI, 0.50–1.12). It was concluded that the early concern for an increased risk of high-grade prostate cancer with finasteride was not borne out. In this study, it was notable that, of the 61 prostate cancer deaths for which original Gleason grading was available, 23 (38%) of the prostate cancer deaths were seen in men whose original biopsy Gleason grade was less than or equal to 6.[8]
+
+A retrospective, population-based, cohort study from the U.S. Department of Veterans Affairs health care system examined the impact of 5-alpha reductase inhibitor (5-ARI) use before prostate cancer diagnosis on prostate cancer-specific mortality.[9] The authors found that prediagnostic use of 5-ARIs was associated with a delayed diagnosis (median time from first elevated PSA was 3.6 years for men who received 5-ARIs versus 1.4 years for non–5-ARI users) and worsened cancer-specific outcomes (e.g., higher grade, higher clinical stage, more with positive nodes, and higher rates of metastatic disease) in men with prostate cancer. A subsequent letter to the editor pointed out the following challenges with the analysis:
+
+A 39% improvement in prostate cancer mortality with a 2-year earlier diagnosis and with only 5.9 years of follow-up is implausible, given that the very best reduction in prostate cancer mortality in a randomized clinical trial was 20%.
+
+Because the study could not assess 5-ARI medication adherence, PSA misadjustment was a serious concern.
+
+Because men treated with 5-ARIs are very different than those not treated (i.e., more urinary symptoms, older, larger prostates, etc.), major differences in baseline characteristics, as reported in the study, prevented adequate adjustment in outcomes.
+
+As demonstrated by the PCPT, because finasteride (a 5-ARI) prevents a substantial proportion of low-grade tumors, a greater proportion of high-grade tumors would be expected.
+
+Because national treatment guidelines recommend 5-ARIs for men with larger prostates, which have higher PSA values, and as prostate cancers are more commonly missed in larger prostates (and may be identified at a subsequent biopsy, often with a magnetic resonance imaging-directed biopsy), a later diagnosis would be common in this patient population.
+
+The authors' analysis did not adjust for survival bias; men not receiving a 5-ARI had an earlier diagnosis, and therefore, an inherent longer survival.
+
+When taken together, these biases call into question the conclusions, which appear to be at odds with the prostate cancer–specific mortality outcomes of the randomized PCPT.
+
+The Reduction by Dutasteride of Prostate Cancer Events (REDUCE) trial randomly assigned 8,231 men aged 50 to 75 years at higher risk of prostate cancer (i.e., PSA 2.5–10.0 ng/mL) with one recent negative prostate biopsy to dutasteride at 0.5 mg daily or to placebo. The primary end point was prostate cancer diagnosed by prostate biopsy at 2 years and 4 years after randomization. After 4 years, among the 6,729 men (82% of initial population) who had at least one prostate biopsy, 25.1% of the placebo group and 19.9% of the dutasteride group had been diagnosed with prostate cancer, a statistically significant difference (absolute risk reduction, 5.1% and RRR, 22.8% [95% CI, 15.2%–29.8%]). The RRR in years 3 to 4 was similar to the RRR in years 1 to 2. The difference between the groups was entirely due to a reduction in prostate cancers with Gleason score 5 to 7. For years 3 to 4 there was a statistically significant increase in the dutasteride group compared with the placebo group in prostate cancers with Gleason score 8 to 10 (12 cancers in the dutasteride group vs. 1 cancer in the placebo group).[10]
+
+Overall, there was no statistically significant difference in high-grade tumors for Gleason score 8 to 10 cancers in years 1 to 4 (29 tumors in the dutasteride group vs. 19 tumors in the placebo group, 0.9% vs. 0.6%; P = .15). However, in a retrospective analysis there was a statistically significant difference between years 3 to 4. Because this is a small retrospective subgroup, the finding of an increase in Gleason score 8 to 10 cancers is of uncertain validity. However, the finding of no reduction in these cancers is more significant.[10]
+
+While long-term data are unavailable for dutasteride as a cancer prevention agent, evidence is now available that finasteride does not have a significant effect on overall survival or prostate cancer–specific survival. Its effect is primarily in preventing the diagnosis of prostate cancer and the subsequent events (staging, treatment, follow-up, and management of treatment-related side effects) after diagnosis.
+
+Agents that are used
+for hormonal therapy of existing prostate cancers would be unsuitable for
+prostate cancer chemoprevention because of the cost and wide variety of side
+effects including sexual dysfunction, osteoporosis, and vasomotor symptoms (hot
+flushes).[11] Newer antiandrogens may play a role
+as preventive agents in the future.[12]
+
+A Cochrane systematic review of all published studies of clinical outcome investigations of the prostate preventive effects of 5-ARIs through 2010 that were at least 1 year in duration concluded that finasteride and dutasteride reduce the risk of being diagnosed with prostate cancer among men who are screened regularly for prostate cancer. The review also concluded that mortality effects could not be assessed from these studies and that persistent use of these agents increased sexual and erectile dysfunction. The review was based on MEDLINE and Cochrane Collaboration Library computerized searches through June 2010 using the Medical Subject Headings terms and text words finasteride, dutasteride, neoplasms, azasteroids, reductase inhibitors, and enzyme inhibitors to identify randomized trials. Eight studies met the inclusion criteria. Only the PCPT and the REDUCE study were designed to assess the impact of 5-ARIs on prostate cancer period prevalence. Reviews of all eight studies concluded that compared with placebo, 5-ARIs resulted in 25% RR reduction in prostate cancers detected for cause (RR, 0.75; 95% CI, 0.67–0.83 and 1.4% absolute risk reduction [3.5% vs. 4.9%]). Six trials of 5-ARIs versus placebo assessed prostate cancers detected overall. Among these there was a 26% RR reduction favoring 5-ARIs (RR, 0.74; 95% CI, 0.55–1.00 and 2.9% absolute risk reduction [6.3% vs. 9.2%]). There were reductions across age, race, and family history. One placebo-controlled trial of men considered at greater risk for prostate cancer based on age, elevated PSA, and previous suspicion of prostate cancer leading to a prostate biopsy reported that dutasteride did not reduce prostate cancers detected for cause based on needle biopsy but did reduce risk of overall incident prostate cancer detected by biopsy by 23% (RR, 0.77; 95% CI, 0.7–0.85 and absolute risk reduction, 16.1% vs. 20.8%). There were reductions across age, family history of prostate cancer, PSA level, and prostate volume subgroups. The Cochrane review defined for cause cancers as follows:
+
+Suspected clinically from symptoms, abnormal DRE, or PSA and confirmed on biopsy.
+
+Study protocol recommended biopsy, but it was not done and the end-of-study biopsy showed prostate cancer.
+
+The end-of-study biopsy with PSA less than 4 ng/mL and/or suspicious DRE showed prostate cancer.[13]
+
+Dietary Prevention With Fruit, Vegetables, and a Low-fat Diet
+
+Results from studies of the association between dietary intake of fruits and vegetables and risk of prostate cancer are not consistent. A study evaluated 1,619
+prostate cancer cases and 1,618 controls in a multicenter, multiethnic
+population. The study found that intake of legumes and yellow-orange and
+cruciferous vegetables was associated with a lower risk of prostate cancer.
+
+The European Prospective Investigation into Cancer and Nutrition examined the association between fruit and vegetable intake and subsequent prostate cancer. After an average follow-up of 4.8 years, 1,104 men developed prostate cancer among the 130,544 male participants. No statistically significant associations were observed for fruit intake, vegetable intake, cruciferous vegetable intake, or the intake of fruits and vegetables combined.[14]
+
+One study of dietary intervention over a 4-year period with reduced fat and increased consumption of fruit, vegetables, and fiber had no impact on serum PSA levels.[15] It is unknown whether dietary modification through the use of a low-fat, plant-based diet will reduce prostate cancer risk. While this outcome is unknown,
+multiple additional benefits may be observed in patients following such a diet, including a lower
+risk of hyperlipidemia, better control of blood pressure, and a lower risk of
+cardiovascular disease—all of which may merit adoption of such a diet.
+
+Chemoprevention
+
+While several agents, including alpha-tocopherol, selenium, lycopene,
+difluoromethylornithine,[16-20] vitamin D,[21-23] and isoflavonoids,[24,25]
+have shown potential in either clinical or laboratory studies for
+chemoprevention of prostate cancer. However, the correlations of cancer prevention with these agents are increasingly of concern given the statistically significant increased risk of prostate cancer with alpha-tocopherol in the Selenium and Vitamin E Cancer Prevention Trial (SELECT) and the lack of preventive effect (actually, a nonsignificant increase in prostate cancer risk) with selenium.
+
+Chemoprevention with selenium and vitamin E
+
+The SELECT (NCT00006392) was a large randomized placebo-controlled trial of vitamin E and selenium. It showed no reduction in prostate cancer period prevalence, but an increased risk of prostate cancer with vitamin E alone.[26]
+
+Compared with the placebo group in which 529 men developed prostate cancer, there was a statistically significant increase in prostate cancer in the vitamin E group (620 cases), but not in the selenium plus vitamin E group (555 cases) or in the selenium group (575 cases). The magnitude of increase in prostate cancer risk with vitamin E alone was 17%. Of interest, the statistically increased risk of prostate cancer among men receiving vitamin E was seen after study supplements had been discontinued suggesting a longer-term effect of this agent.[26]
+
+Chemoprevention with lycopene
+
+Evidence exists that a diet with a high intake of fruits and vegetables is
+associated with a lower risk of cancer. Which, if any, micronutrients may
+account for this reduction is unknown. One group of nutrients often postulated
+as having chemoprevention properties is the carotenoids. Lycopene is the
+predominant circulating carotenoid in Americans and has a number of potential
+activities, including an antioxidant effect.[27] It is encountered in a number
+of vegetables, most notably tomatoes, and is best absorbed if these products
+are cooked and in the presence of dietary fats or oils.
+
+The earliest studies of the association of lycopene and prostate cancer risk
+were generally negative before 1995 with only one study of 180 case-control patients
+showing a reduced risk.[28-31] In 1995, an analysis of the Physicians’
+Health Study found a one-third reduction in prostate cancer risk in the group
+of men with the highest consumption of tomato products when compared with the group
+with the lowest level of consumption, which was attributed to the lycopene
+content of these vegetables.[32] This large analysis prompted several
+subsequent studies, the results of which were mixed.[33,34] A review of the
+published data concluded that the evidence is weak that lycopene is associated
+with a reduced risk because previous studies were not controlled for total
+vegetable intake (i.e., separating the effect of tomatoes from vegetables), dietary intake instruments are poorly able to quantify lycopene
+intake, and other potential biases.[35] Specific dietary supplementation with
+lycopene remains to be demonstrated to reduce prostate cancer risk. In the largest prospective study to date, the PCPT, lycopene was not associated with any reduction in risk of prostate cancer among 9,559 men studied. Similarly, there was no relationship between lycopene serum concentrations and risk of prostate cancer.[36,37]
+
+References
+
+Thompson IM, Goodman PJ, Tangen CM, et al.: The influence of finasteride on the development of prostate cancer. N Engl J Med 349 (3): 215-24, 2003. [PUBMED Abstract]
+
+Thompson IM, Klein EA, Lippman SM, et al.: Prevention of prostate cancer with finasteride: US/European perspective. Eur Urol 44 (6): 650-5, 2003. [PUBMED Abstract]
+
+Andriole G, Bostwick D, Civantos F, et al.: The effects of 5alpha-reductase inhibitors on the natural history, detection and grading of prostate cancer: current state of knowledge. J Urol 174 (6): 2098-104, 2005. [PUBMED Abstract]
+
+Etzioni RD, Howlader N, Shaw PA, et al.: Long-term effects of finasteride on prostate specific antigen levels: results from the prostate cancer prevention trial. J Urol 174 (3): 877-81, 2005. [PUBMED Abstract]
+
+Thompson IM, Lucia MS, Redman MW, et al.: Finasteride decreases the risk of prostatic intraepithelial neoplasia. J Urol 178 (1): 107-9; discussion 110, 2007. [PUBMED Abstract]
+
+Kaplan SA, Roehrborn CG, Meehan AG, et al.: PCPT: Evidence that finasteride reduces risk of most frequently detected intermediate- and high-grade (Gleason score 6 and 7) cancer. Urology 73 (5): 935-9, 2009. [PUBMED Abstract]
+
+Redman MW, Tangen CM, Goodman PJ, et al.: Finasteride does not increase the risk of high-grade prostate cancer: a bias-adjusted modeling approach. Cancer Prev Res (Phila Pa) 1 (3): 174-81, 2008. [PUBMED Abstract]
+
+Goodman PJ, Tangen CM, Darke AK, et al.: Long-Term Effects of Finasteride on Prostate Cancer Mortality. N Engl J Med 380 (4): 393-394, 2019. [PUBMED Abstract]
+
+Sarkar RR, Parsons JK, Bryant AK, et al.: Association of Treatment With 5α-Reductase Inhibitors With Time to Diagnosis and Mortality in Prostate Cancer. JAMA Intern Med 179 (6): 812-819, 2019. [PUBMED Abstract]
+
+Andriole GL, Bostwick DG, Brawley OW, et al.: Effect of dutasteride on the risk of prostate cancer. N Engl J Med 362 (13): 1192-202, 2010. [PUBMED Abstract]
+
+Thompson I, Feigl P, Coltman C: Chemoprevention of prostate cancer with finasteride. Important Adv Oncol : 57-76, 1995. [PUBMED Abstract]
+
+Nelson PS, Gleason TP, Brawer MK: Chemoprevention for prostatic intraepithelial neoplasia. Eur Urol 30 (2): 269-78, 1996. [PUBMED Abstract]
+
+Wilt TJ, Macdonald R, Hagerty K, et al.: 5-α-Reductase inhibitors for prostate cancer chemoprevention: an updated Cochrane systematic review. BJU Int 106 (10): 1444-51, 2010. [PUBMED Abstract]
+
+Key TJ, Allen N, Appleby P, et al.: Fruits and vegetables and prostate cancer: no association among 1104 cases in a prospective study of 130544 men in the European Prospective Investigation into Cancer and Nutrition (EPIC). Int J Cancer 109 (1): 119-24, 2004 Mar10. [PUBMED Abstract]
+
+Shike M, Latkany L, Riedel E, et al.: Lack of effect of a low-fat, high-fruit, -vegetable, and -fiber diet on serum prostate-specific antigen of men without prostate cancer: results from a randomized trial. J Clin Oncol 20 (17): 3592-8, 2002. [PUBMED Abstract]
+
+Heby O: Role of polyamines in the control of cell proliferation and differentiation. Differentiation 19 (1): 1-20, 1981. [PUBMED Abstract]
+
+Danzin C, Jung MJ, Grove J, et al.: Effect of alpha-difluoromethylornithine, an enzyme-activated irreversible inhibitor of ornithine decarboxylase, on polyamine levels in rat tissues. Life Sci 24 (6): 519-24, 1979. [PUBMED Abstract]
+
+Metcalf BW, Bey P, Danzin C, et al.: Catalytic irreversible inhibition of mammalian ornithine decarboxylase (E.C. 4.1.1.17) by substrate and product analogues. J Am Chem Soc 100(8): 2551-2553, 1978.
+
+Heston WD, Kadmon D, Lazan DW, et al.: Copenhagen rat prostatic tumor ornithine decarboxylase activity (ODC) and the effect of the ODC inhibitor alpha-difluoromethylornithine. Prostate 3 (4): 383-9, 1982. [PUBMED Abstract]
+
+Abeloff MD, Slavik M, Luk GD, et al.: Phase I trial and pharmacokinetic studies of alpha-difluoromethylornithine--an inhibitor of polyamine biosynthesis. J Clin Oncol 2 (2): 124-30, 1984. [PUBMED Abstract]
+
+Schwartz GG, Hulka BS: Is vitamin D deficiency a risk factor for prostate cancer? (Hypothesis). Anticancer Res 10 (5A): 1307-11, 1990 Sep-Oct. [PUBMED Abstract]
+
+Eisman JA, Barkla DH, Tutton PJ: Suppression of in vivo growth of human cancer solid tumor xenografts by 1,25-dihydroxyvitamin D3. Cancer Res 47 (1): 21-5, 1987. [PUBMED Abstract]
+
+Chida K, Hashiba H, Fukushima M, et al.: Inhibition of tumor promotion in mouse skin by 1 alpha,25-dihydroxyvitamin D3. Cancer Res 45 (11 Pt 1): 5426-30, 1985. [PUBMED Abstract]
+
+Adlercreutz H, Markkanen H, Watanabe S: Plasma concentrations of phyto-oestrogens in Japanese men. Lancet 342 (8881): 1209-10, 1993. [PUBMED Abstract]
+
+Peterson G, Barnes S: Genistein and biochanin A inhibit the growth of human prostate cancer cells but not epidermal growth factor receptor tyrosine autophosphorylation. Prostate 22 (4): 335-45, 1993. [PUBMED Abstract]
+
+Klein EA, Thompson IM, Tangen CM, et al.: Vitamin E and the risk of prostate cancer: the Selenium and Vitamin E Cancer Prevention Trial (SELECT). JAMA 306 (14): 1549-56, 2011. [PUBMED Abstract]
+
+Gerster H: The potential role of lycopene for human health. J Am Coll Nutr 16 (2): 109-26, 1997. [PUBMED Abstract]
+
+Hsing AW, Comstock GW, Abbey H, et al.: Serologic precursors of cancer. Retinol, carotenoids, and tocopherol and risk of prostate cancer. J Natl Cancer Inst 82 (11): 941-6, 1990. [PUBMED Abstract]
+
+Mills PK, Beeson WL, Phillips RL, et al.: Cohort study of diet, lifestyle, and prostate cancer in Adventist men. Cancer 64 (3): 598-604, 1989. [PUBMED Abstract]
+
+Schuman LM, Mandel JS, Radke A, et al.: Some selected features of the epidemiology of prostatic cancer: Minneapolis-St. Paul, Minnesota case-control study, 1976-1979. [Abstract] Trends in Cancer Incidence: Causes and Practical Implications (Proceedings of a Symposium Held in Oslo, Norway, Aug. 6-7, 1980) pp 345-354.
+
+Le Marchand L, Hankin JH, Kolonel LN, et al.: Vegetable and fruit consumption in relation to prostate cancer risk in Hawaii: a reevaluation of the effect of dietary beta-carotene. Am J Epidemiol 133 (3): 215-9, 1991. [PUBMED Abstract]
+
+Giovannucci E, Ascherio A, Rimm EB, et al.: Intake of carotenoids and retinol in relation to risk of prostate cancer. J Natl Cancer Inst 87 (23): 1767-76, 1995. [PUBMED Abstract]
+
+Jain MG, Hislop GT, Howe GR, et al.: Plant foods, antioxidants, and prostate cancer risk: findings from case-control studies in Canada. Nutr Cancer 34 (2): 173-84, 1999. [PUBMED Abstract]
+
+Key TJ, Silcocks PB, Davey GK, et al.: A case-control study of diet and prostate cancer. Br J Cancer 76 (5): 678-87, 1997. [PUBMED Abstract]
+
+Kristal AR, Cohen JH: Invited commentary: tomatoes, lycopene, and prostate cancer. How strong is the evidence? Am J Epidemiol 151 (2): 124-7; discussion 128-30, 2000. [PUBMED Abstract]
+
+Kristal AR, Till C, Platz EA, et al.: Serum lycopene concentration and prostate cancer risk: results from the Prostate Cancer Prevention Trial. Cancer Epidemiol Biomarkers Prev 20 (4): 638-46, 2011. [PUBMED Abstract]
+
+Kristal AR, Arnold KB, Neuhouser ML, et al.: Diet, supplement use, and prostate cancer risk: results from the prostate cancer prevention trial. Am J Epidemiol 172 (5): 566-77, 2010. [PUBMED Abstract]

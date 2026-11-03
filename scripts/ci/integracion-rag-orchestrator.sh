@@ -27,7 +27,7 @@ readonly PATRON_ENTORNO_CLINICO='CLINICAL|IDENTITY|BLIND_INDEX|AES|HMAC|JWT_PRIV
 # Lo único del repositorio que leen los tests (rutas versionadas). Todo lo demás, incluidos los secretos y el .env locales, no existe en el contenedor.
 readonly RUTAS_QUE_LEEN_LOS_TESTS=(
   package.json readme.md config contracts scripts/contracts scripts/ci/pytest_plugins packages/clinical-catalogs
-  data/raw/seed docs/architecture/data-model.md infra/docker/postgres/sql
+  data/raw/seed data/raw/s3 docs/architecture/data-model.md infra/docker/postgres/sql
   apps/rag-orchestrator apps/clinical-api/openapi.yaml
   apps/clinical-api/prisma/migrations/20261021120000_privilegios_roles/migration.sql
 )

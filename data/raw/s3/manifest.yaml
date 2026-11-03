@@ -1,0 +1,1334 @@
+# Manifiesto del corpus ampliado del S5 (US-120, L1D-119): superconjunto del de la semilla (`data/raw/seed/manifest.yaml`).
+#
+# Las diez entradas de la semilla se conservan idénticas (mismas `document_key` y `checksum`); las nuevas llevan su licencia
+# verificada documento a documento el 2026-11-03 (`license_verified_at`, `license_evidence`): PMC contra el JSON de metadatos de
+# PMC OA en AWS (`license_code`) y el registro de Europe PMC, NCI contra su política de reutilización y ClinicalTrials.gov contra
+# sus términos de uso. Solo fuentes admitidas por ADR-36 (NCI, PMC Open Access con CC BY, ClinicalTrials.gov), sin NCCN ni ESMO
+# (RN-21, D-09) y sin datos de pacientes (RN-13, RN-14). `checksum` es el SHA-256 del texto normalizado de `text_path`.
+# Registros de ClinicalTrials.gov: `source_type: clinical_trial` (no son evidencia de eficacia, ADR-36 Enmienda 1);
+# `original_format: html` porque el catálogo no admite JSON y `original_url` es la página pública del registro.
+# Atribución completa en ATTRIBUTION.md.
+excluded_sources:
+- NCCN
+- ESMO
+documentos:
+- document_key: nci-mama-hp-en
+  source_type: guideline
+  source_name: NCI
+  external_id: https://www.cancer.gov/types/breast/hp/breast-treatment-pdq
+  title: Breast Cancer Treatment, health professional version
+  language: en
+  cancer_type_tags:
+  - mama
+  published_at: '2026-02-10'
+  study_design: guia
+  population: adulto
+  original_format: html
+  original_url: https://www.cancer.gov/types/breast/hp/breast-treatment-pdq
+  license: Texto de NCI libre de copyright
+  license_url: https://www.cancer.gov/policies/copyright-reuse
+  license_verified_at: '2026-10-16'
+  license_evidence: 'https://www.cancer.gov/policies/copyright-reuse (consultada el 2026-10-16): «Unless otherwise indicated,
+    all text within National Cancer Institute (NCI) products is free of copyright and may be reused without our permission.
+    Credit the National Cancer Institute as the source.» Sin gráficos; sin logo de NCI ni marca PDQ.'
+  downloaded_at: '2026-10-16'
+  checksum: 70b3b48a12495cf69c0faef788f8c3fee51a7e0c137a548c623b0a991e5a395c
+  text_path: docs/nci-mama-hp-en.txt
+- document_key: nci-mama-pac-es
+  source_type: guideline
+  source_name: NCI
+  external_id: https://www.cancer.gov/espanol/tipos/seno/tratamiento-mama
+  title: Tratamiento del cáncer de mama (seno), versión para pacientes
+  language: es
+  cancer_type_tags:
+  - mama
+  published_at: '2025-12-02'
+  study_design: guia
+  population: adulto
+  original_format: html
+  original_url: https://www.cancer.gov/espanol/tipos/seno/tratamiento-mama
+  license: Texto de NCI libre de copyright
+  license_url: https://www.cancer.gov/policies/copyright-reuse
+  license_verified_at: '2026-10-16'
+  license_evidence: 'https://www.cancer.gov/policies/copyright-reuse (consultada el 2026-10-16): «Unless otherwise indicated,
+    all text within National Cancer Institute (NCI) products is free of copyright and may be reused without our permission.
+    Credit the National Cancer Institute as the source.» Sin gráficos; sin logo de NCI ni marca PDQ.'
+  downloaded_at: '2026-10-16'
+  checksum: a5509492c9165d9a061c3963ceeea692447dca6b97198d5450e7f028b2db7825
+  text_path: docs/nci-mama-pac-es.txt
+- document_key: nci-prostata-hp-en
+  source_type: guideline
+  source_name: NCI
+  external_id: https://www.cancer.gov/types/prostate/hp/prostate-treatment-pdq
+  title: Prostate Cancer Treatment, health professional version
+  language: en
+  cancer_type_tags:
+  - prostata
+  published_at: '2026-02-10'
+  study_design: guia
+  population: adulto
+  original_format: html
+  original_url: https://www.cancer.gov/types/prostate/hp/prostate-treatment-pdq
+  license: Texto de NCI libre de copyright
+  license_url: https://www.cancer.gov/policies/copyright-reuse
+  license_verified_at: '2026-10-16'
+  license_evidence: 'https://www.cancer.gov/policies/copyright-reuse (consultada el 2026-10-16): «Unless otherwise indicated,
+    all text within National Cancer Institute (NCI) products is free of copyright and may be reused without our permission.
+    Credit the National Cancer Institute as the source.» Sin gráficos; sin logo de NCI ni marca PDQ.'
+  downloaded_at: '2026-10-16'
+  checksum: 1007e2dd59d28a46390f63b1e687d57173126631b347e5819bc72369f1425144
+  text_path: docs/nci-prostata-hp-en.txt
+- document_key: nci-prostata-pac-es
+  source_type: guideline
+  source_name: NCI
+  external_id: https://www.cancer.gov/espanol/tipos/prostata/paciente/tratamiento-prostata-pdq
+  title: Tratamiento del cáncer de próstata, versión para pacientes
+  language: es
+  cancer_type_tags:
+  - prostata
+  published_at: '2026-02-10'
+  study_design: guia
+  population: adulto
+  original_format: html
+  original_url: https://www.cancer.gov/espanol/tipos/prostata/paciente/tratamiento-prostata-pdq
+  license: Texto de NCI libre de copyright
+  license_url: https://www.cancer.gov/policies/copyright-reuse
+  license_verified_at: '2026-10-16'
+  license_evidence: 'https://www.cancer.gov/policies/copyright-reuse (consultada el 2026-10-16): «Unless otherwise indicated,
+    all text within National Cancer Institute (NCI) products is free of copyright and may be reused without our permission.
+    Credit the National Cancer Institute as the source.» Sin gráficos; sin logo de NCI ni marca PDQ.'
+  downloaded_at: '2026-10-16'
+  checksum: be2d54359ae60d5b302722424465b03df6630ad756b8d09892a17e8ce7d5b477
+  text_path: docs/nci-prostata-pac-es.txt
+- document_key: pmc-mama-cdk46-guia
+  source_type: guideline
+  source_name: PMC Open Access
+  external_id: 10.3390/curroncol32080444
+  title: Multidisciplinary Practical Guidance for Implementing Adjuvant CDK4/6 Inhibitors for Patients with HR-Positive, HER2-Negative
+    Early Breast Cancer in Canada
+  language: en
+  cancer_type_tags:
+  - mama
+  published_at: '2025-08-07'
+  study_design: guia
+  population: adulto
+  original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12384589/fullTextXML
+  license: CC BY 4.0
+  license_url: https://creativecommons.org/licenses/by/4.0/
+  license_verified_at: '2026-10-16'
+  license_evidence: 'Europe PMC REST (search PMCID:PMC12384589, consultado el 2026-10-16): license=''cc by'', isOpenAccess=''Y''.
+    <license-p> del JATS: «Licensee MDPI, Basel, Switzerland. This article is an open access article distributed under the
+    terms and conditions of the Creative Commons Attribution (CC BY) license (https://creativecommons.org/licenses/by/4.0/).»'
+  downloaded_at: '2026-10-16'
+  checksum: a3bb26468a3282e2b57f16ed646e2ddd92c86954337c17a34cfacde7b599e7b7
+  text_path: docs/pmc-mama-cdk46-guia.txt
+- document_key: pmc-mama-tamoxifeno-eca
+  source_type: literature
+  source_name: PMC Open Access
+  external_id: 10.1093/jnci/djag049
+  title: Tamoxifen therapy benefit in luminal A and B breast cancer with 20-year follow-up
+  language: en
+  cancer_type_tags:
+  - mama
+  published_at: '2026-07-01'
+  study_design: eca
+  population: adulto
+  original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13339100/fullTextXML
+  license: CC BY 4.0
+  license_url: https://creativecommons.org/licenses/by/4.0/
+  license_verified_at: '2026-10-16'
+  license_evidence: 'Europe PMC REST (search PMCID:PMC13339100, consultado el 2026-10-16): license=''cc by'', isOpenAccess=''Y''.
+    <license-p> del JATS: «This is an Open Access article distributed under the terms of the Creative Commons Attribution
+    License (https://creativecommons.org/licenses/by/4.0/), which permits unrestricted reuse, distribution, and reproduction
+    in any medium, provided the original work is properly cited.»'
+  downloaded_at: '2026-10-16'
+  checksum: e2e4820ce4bee220183287139784169cf42dcd486781b107793d6e502369b396
+  text_path: docs/pmc-mama-tamoxifeno-eca.txt
+- document_key: pmc-mama-antraciclinas-rs
+  source_type: literature
+  source_name: PMC Open Access
+  external_id: 10.3390/jcm15187303
+  title: 'Reassessing the Role of Anthracyclines in Early HER2-Positive Breast Cancer in the Era of HER2-Targeted Therapy
+    and Treatment De-Escalation: A Systematic Review and Narrative Synthesis'
+  language: en
+  cancer_type_tags:
+  - mama
+  published_at: '2026-09-20'
+  study_design: revision_sistematica
+  population: adulto
+  original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13607463/fullTextXML
+  license: CC BY 4.0
+  license_url: https://creativecommons.org/licenses/by/4.0/
+  license_verified_at: '2026-10-16'
+  license_evidence: 'Europe PMC REST (search PMCID:PMC13607463, consultado el 2026-10-16): license=''cc by'', isOpenAccess=''Y''.
+    <license-p> del JATS: «Licensee MDPI, Basel, Switzerland. This article is an open access article distributed under the
+    terms and conditions of the Creative Commons Attribution (CC BY) license.» El JATS no precisa la versión; la editorial
+    publica sus artículos con CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/).'
+  downloaded_at: '2026-10-16'
+  checksum: c019104016b2b59c9623702a8030d9b1ed3fa8083dee6201352a463bfe16f03a
+  text_path: docs/pmc-mama-antraciclinas-rs.txt
+- document_key: pmc-prostata-mhsp-nma
+  source_type: literature
+  source_name: PMC Open Access
+  external_id: 10.1097/ju.0000000000005131
+  title: 'First-Line Systemic Treatments of Metastatic Hormone-Sensitive Prostate Cancer: Updated Systematic Review and Network
+    Meta-Analysis'
+  language: en
+  cancer_type_tags:
+  - prostata
+  published_at: '2026-05-22'
+  study_design: revision_sistematica
+  population: adulto
+  original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13456578/fullTextXML
+  license: CC BY 4.0
+  license_url: https://creativecommons.org/licenses/by/4.0/
+  license_verified_at: '2026-10-16'
+  license_evidence: 'Europe PMC REST (search PMCID:PMC13456578, consultado el 2026-10-16): license=''cc by'', isOpenAccess=''Y''.
+    <license-p> del JATS: «This is an open access article distributed under the Creative Commons Attribution License 4.0 (CCBY),
+    which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited.»'
+  downloaded_at: '2026-10-16'
+  checksum: 85f4120c2ce775ad3b5ec07296f7f5fae781e1aeff1925b48b7598848fce795a
+  text_path: docs/pmc-prostata-mhsp-nma.txt
+- document_key: pmc-prostata-volumen-nma
+  source_type: literature
+  source_name: PMC Open Access
+  external_id: 10.1093/oncolo/oyaf386
+  title: 'Best therapeutic approach in metastatic hormone-sensitive prostate cancer based on disease volume: a systematic
+    review and network meta-analysis'
+  language: en
+  cancer_type_tags:
+  - prostata
+  published_at: '2026-01-01'
+  study_design: revision_sistematica
+  population: adulto
+  original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12832964/fullTextXML
+  license: CC BY 4.0
+  license_url: https://creativecommons.org/licenses/by/4.0/
+  license_verified_at: '2026-10-16'
+  license_evidence: 'Europe PMC REST (search PMCID:PMC12832964, consultado el 2026-10-16): license=''cc by'', isOpenAccess=''Y''.
+    <license-p> del JATS: «This is an Open Access article distributed under the terms of the Creative Commons Attribution
+    License (https://creativecommons.org/licenses/by/4.0/), which permits unrestricted reuse, distribution, and reproduction
+    in any medium, provided the original work is properly cited.»'
+  downloaded_at: '2026-10-16'
+  checksum: 43c99994a4d95513de6cfa09b12271fb0f502972c1a060fe75b0611d17a634f3
+  text_path: docs/pmc-prostata-volumen-nma.txt
+- document_key: pmc-prostata-darolutamida-rs
+  source_type: literature
+  source_name: PMC Open Access
+  external_id: 10.3389/fphar.2026.1818807
+  title: 'The efficacy and safety of darolutamide combination therapy in advanced prostate cancer: a systematic review and
+    meta-analysis of randomized controlled trials'
+  language: en
+  cancer_type_tags:
+  - prostata
+  published_at: '2026-05-18'
+  study_design: revision_sistematica
+  population: adulto
+  original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13223009/fullTextXML
+  license: CC BY 4.0
+  license_url: https://creativecommons.org/licenses/by/4.0/
+  license_verified_at: '2026-10-16'
+  license_evidence: 'Europe PMC REST (search PMCID:PMC13223009, consultado el 2026-10-16): license=''cc by'', isOpenAccess=''Y''.
+    <license-p> del JATS: «This is an open-access article distributed under the terms of the Creative Commons Attribution
+    License (CC BY). The use, distribution or reproduction in other forums is permitted, provided the original author(s) and
+    the copyright owner(s) are credited and that the original publication in this journal is cited, in accordance with accepted
+    academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.» El JATS
+    no precisa la versión; la editorial publica sus artículos con CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/).'
+  downloaded_at: '2026-10-16'
+  checksum: f3b7c87b164ed810ff7987870f16edb0b90b1f3c963a818de3e27e739d31997d
+  text_path: docs/pmc-prostata-darolutamida-rs.txt
+- document_key: nci-mama-prevencion-hp-en
+  source_type: guideline
+  source_name: NCI
+  external_id: https://www.cancer.gov/types/breast/hp/breast-prevention-pdq
+  title: Breast Cancer Prevention, health professional version
+  language: en
+  cancer_type_tags:
+  - mama
+  published_at: '2025-04-09'
+  study_design: guia
+  population: adulto
+  original_format: html
+  original_url: https://www.cancer.gov/types/breast/hp/breast-prevention-pdq
+  license: Texto de NCI libre de copyright
+  license_url: https://www.cancer.gov/policies/copyright-reuse
+  license_verified_at: '2026-11-03'
+  license_evidence: 'https://www.cancer.gov/policies/copyright-reuse (consultada el 2026-11-03): «Unless otherwise indicated,
+    all text within National Cancer Institute (NCI) products is free of copyright and may be reused without our permission.
+    Credit the National Cancer Institute as the source.» Sin gráficos; sin logo de NCI ni marca PDQ.'
+  downloaded_at: '2026-11-03'
+  checksum: bdb7f270c310902703cb69359b20fc38a138eb7699e4b0d7e3fd5161aa4bc561
+  text_path: docs/nci-mama-prevencion-hp-en.txt
+- document_key: nci-mama-deteccion-hp-en
+  source_type: guideline
+  source_name: NCI
+  external_id: https://www.cancer.gov/types/breast/hp/breast-screening-pdq
+  title: Breast Cancer Screening, health professional version
+  language: en
+  cancer_type_tags:
+  - mama
+  published_at: '2025-04-10'
+  study_design: guia
+  population: adulto
+  original_format: html
+  original_url: https://www.cancer.gov/types/breast/hp/breast-screening-pdq
+  license: Texto de NCI libre de copyright
+  license_url: https://www.cancer.gov/policies/copyright-reuse
+  license_verified_at: '2026-11-03'
+  license_evidence: 'https://www.cancer.gov/policies/copyright-reuse (consultada el 2026-11-03): «Unless otherwise indicated,
+    all text within National Cancer Institute (NCI) products is free of copyright and may be reused without our permission.
+    Credit the National Cancer Institute as the source.» Sin gráficos; sin logo de NCI ni marca PDQ.'
+  downloaded_at: '2026-11-03'
+  checksum: c07e09b34044879509887ec65903f10d0419a06731cb9b64c2c7001a1d1460ba
+  text_path: docs/nci-mama-deteccion-hp-en.txt
+- document_key: nci-mama-hombre-hp-en
+  source_type: guideline
+  source_name: NCI
+  external_id: https://www.cancer.gov/types/breast/hp/male-breast-treatment-pdq
+  title: Male Breast Cancer Treatment, health professional version
+  language: en
+  cancer_type_tags:
+  - mama
+  published_at: '2025-02-28'
+  study_design: guia
+  population: adulto
+  original_format: html
+  original_url: https://www.cancer.gov/types/breast/hp/male-breast-treatment-pdq
+  license: Texto de NCI libre de copyright
+  license_url: https://www.cancer.gov/policies/copyright-reuse
+  license_verified_at: '2026-11-03'
+  license_evidence: 'https://www.cancer.gov/policies/copyright-reuse (consultada el 2026-11-03): «Unless otherwise indicated,
+    all text within National Cancer Institute (NCI) products is free of copyright and may be reused without our permission.
+    Credit the National Cancer Institute as the source.» Sin gráficos; sin logo de NCI ni marca PDQ.'
+  downloaded_at: '2026-11-03'
+  checksum: 6712c4ee272d85c760ab675ad05e5808bf23f49a522c02e69abf5ec733fb60c4
+  text_path: docs/nci-mama-hombre-hp-en.txt
+- document_key: nci-mama-prevencion-pac-es
+  source_type: guideline
+  source_name: NCI
+  external_id: https://www.cancer.gov/espanol/tipos/seno/paciente/prevencion-seno-pdq
+  title: Prevención del cáncer de mama (seno), versión para pacientes
+  language: es
+  cancer_type_tags:
+  - mama
+  published_at: '2025-12-02'
+  study_design: guia
+  population: adulto
+  original_format: html
+  original_url: https://www.cancer.gov/espanol/tipos/seno/paciente/prevencion-seno-pdq
+  license: Texto de NCI libre de copyright
+  license_url: https://www.cancer.gov/policies/copyright-reuse
+  license_verified_at: '2026-11-03'
+  license_evidence: 'https://www.cancer.gov/policies/copyright-reuse (consultada el 2026-11-03): «Unless otherwise indicated,
+    all text within National Cancer Institute (NCI) products is free of copyright and may be reused without our permission.
+    Credit the National Cancer Institute as the source.» Sin gráficos; sin logo de NCI ni marca PDQ.'
+  downloaded_at: '2026-11-03'
+  checksum: 9b82a23984cdb8be2436a71f4e4bdb5452cd8000fed0979e6dcdaf557f118548
+  text_path: docs/nci-mama-prevencion-pac-es.txt
+- document_key: nci-mama-deteccion-pac-es
+  source_type: guideline
+  source_name: NCI
+  external_id: https://www.cancer.gov/espanol/tipos/seno/paciente/deteccion-seno-pdq
+  title: Exámenes de detección del cáncer de mama (seno), versión para pacientes
+  language: es
+  cancer_type_tags:
+  - mama
+  published_at: '2025-12-02'
+  study_design: guia
+  population: adulto
+  original_format: html
+  original_url: https://www.cancer.gov/espanol/tipos/seno/paciente/deteccion-seno-pdq
+  license: Texto de NCI libre de copyright
+  license_url: https://www.cancer.gov/policies/copyright-reuse
+  license_verified_at: '2026-11-03'
+  license_evidence: 'https://www.cancer.gov/policies/copyright-reuse (consultada el 2026-11-03): «Unless otherwise indicated,
+    all text within National Cancer Institute (NCI) products is free of copyright and may be reused without our permission.
+    Credit the National Cancer Institute as the source.» Sin gráficos; sin logo de NCI ni marca PDQ.'
+  downloaded_at: '2026-11-03'
+  checksum: 5d41f1c3c53f4f0ebda10d2252a4dd6f92b472b18918b0b6d46eb8bb6330984d
+  text_path: docs/nci-mama-deteccion-pac-es.txt
+- document_key: nci-prostata-prevencion-hp-en
+  source_type: guideline
+  source_name: NCI
+  external_id: https://www.cancer.gov/types/prostate/hp/prostate-prevention-pdq
+  title: Prostate Cancer Prevention, health professional version
+  language: en
+  cancer_type_tags:
+  - prostata
+  published_at: '2025-04-09'
+  study_design: guia
+  population: adulto
+  original_format: html
+  original_url: https://www.cancer.gov/types/prostate/hp/prostate-prevention-pdq
+  license: Texto de NCI libre de copyright
+  license_url: https://www.cancer.gov/policies/copyright-reuse
+  license_verified_at: '2026-11-03'
+  license_evidence: 'https://www.cancer.gov/policies/copyright-reuse (consultada el 2026-11-03): «Unless otherwise indicated,
+    all text within National Cancer Institute (NCI) products is free of copyright and may be reused without our permission.
+    Credit the National Cancer Institute as the source.» Sin gráficos; sin logo de NCI ni marca PDQ.'
+  downloaded_at: '2026-11-03'
+  checksum: 14b323b0cfb3b99d552987d08c820249e52fdf5046cc9342ee13aa7b46534c63
+  text_path: docs/nci-prostata-prevencion-hp-en.txt
+- document_key: nci-prostata-deteccion-hp-en
+  source_type: guideline
+  source_name: NCI
+  external_id: https://www.cancer.gov/types/prostate/hp/prostate-screening-pdq
+  title: Prostate Cancer Screening, health professional version
+  language: en
+  cancer_type_tags:
+  - prostata
+  published_at: '2025-04-08'
+  study_design: guia
+  population: adulto
+  original_format: html
+  original_url: https://www.cancer.gov/types/prostate/hp/prostate-screening-pdq
+  license: Texto de NCI libre de copyright
+  license_url: https://www.cancer.gov/policies/copyright-reuse
+  license_verified_at: '2026-11-03'
+  license_evidence: 'https://www.cancer.gov/policies/copyright-reuse (consultada el 2026-11-03): «Unless otherwise indicated,
+    all text within National Cancer Institute (NCI) products is free of copyright and may be reused without our permission.
+    Credit the National Cancer Institute as the source.» Sin gráficos; sin logo de NCI ni marca PDQ.'
+  downloaded_at: '2026-11-03'
+  checksum: 5dc64d1828af5539b8e9d154a9d107e932087e8bf98316481395116d08c8b6b8
+  text_path: docs/nci-prostata-deteccion-hp-en.txt
+- document_key: nci-prostata-tratamiento-pac-en
+  source_type: guideline
+  source_name: NCI
+  external_id: https://www.cancer.gov/types/prostate/patient/prostate-treatment-pdq
+  title: Prostate Cancer Treatment, patient version
+  language: en
+  cancer_type_tags:
+  - prostata
+  published_at: '2024-12-20'
+  study_design: guia
+  population: adulto
+  original_format: html
+  original_url: https://www.cancer.gov/types/prostate/patient/prostate-treatment-pdq
+  license: Texto de NCI libre de copyright
+  license_url: https://www.cancer.gov/policies/copyright-reuse
+  license_verified_at: '2026-11-03'
+  license_evidence: 'https://www.cancer.gov/policies/copyright-reuse (consultada el 2026-11-03): «Unless otherwise indicated,
+    all text within National Cancer Institute (NCI) products is free of copyright and may be reused without our permission.
+    Credit the National Cancer Institute as the source.» Sin gráficos; sin logo de NCI ni marca PDQ.'
+  downloaded_at: '2026-11-03'
+  checksum: 7cce14575ca5c9516a864c519fa25d0f65237bfd181802ac2e27eda2184a152c
+  text_path: docs/nci-prostata-tratamiento-pac-en.txt
+- document_key: nci-prostata-prevencion-pac-en
+  source_type: guideline
+  source_name: NCI
+  external_id: https://www.cancer.gov/types/prostate/patient/prostate-prevention-pdq
+  title: Prostate Cancer Prevention, patient version
+  language: en
+  cancer_type_tags:
+  - prostata
+  published_at: '2023-10-20'
+  study_design: guia
+  population: adulto
+  original_format: html
+  original_url: https://www.cancer.gov/types/prostate/patient/prostate-prevention-pdq
+  license: Texto de NCI libre de copyright
+  license_url: https://www.cancer.gov/policies/copyright-reuse
+  license_verified_at: '2026-11-03'
+  license_evidence: 'https://www.cancer.gov/policies/copyright-reuse (consultada el 2026-11-03): «Unless otherwise indicated,
+    all text within National Cancer Institute (NCI) products is free of copyright and may be reused without our permission.
+    Credit the National Cancer Institute as the source.» Sin gráficos; sin logo de NCI ni marca PDQ.'
+  downloaded_at: '2026-11-03'
+  checksum: 713ef11ef2f28a6f8b5c073da2981e571da064977c6e8accb449e8d43e52524c
+  text_path: docs/nci-prostata-prevencion-pac-en.txt
+- document_key: nci-prostata-deteccion-pac-en
+  source_type: guideline
+  source_name: NCI
+  external_id: https://www.cancer.gov/types/prostate/patient/prostate-screening-pdq
+  title: Prostate Cancer Screening, patient version
+  language: en
+  cancer_type_tags:
+  - prostata
+  published_at: '2024-12-10'
+  study_design: guia
+  population: adulto
+  original_format: html
+  original_url: https://www.cancer.gov/types/prostate/patient/prostate-screening-pdq
+  license: Texto de NCI libre de copyright
+  license_url: https://www.cancer.gov/policies/copyright-reuse
+  license_verified_at: '2026-11-03'
+  license_evidence: 'https://www.cancer.gov/policies/copyright-reuse (consultada el 2026-11-03): «Unless otherwise indicated,
+    all text within National Cancer Institute (NCI) products is free of copyright and may be reused without our permission.
+    Credit the National Cancer Institute as the source.» Sin gráficos; sin logo de NCI ni marca PDQ.'
+  downloaded_at: '2026-11-03'
+  checksum: f86cbe180670b391385230ada946eae38f7f9301c2dc532c41cc423763b51090
+  text_path: docs/nci-prostata-deteccion-pac-en.txt
+- document_key: nci-prostata-prevencion-pac-es
+  source_type: guideline
+  source_name: NCI
+  external_id: https://www.cancer.gov/espanol/tipos/prostata/paciente/prevencion-prostata-pdq
+  title: Prevención del cáncer de próstata, versión para pacientes
+  language: es
+  cancer_type_tags:
+  - prostata
+  published_at: '2013-06-21'
+  study_design: guia
+  population: adulto
+  original_format: html
+  original_url: https://www.cancer.gov/espanol/tipos/prostata/paciente/prevencion-prostata-pdq
+  license: Texto de NCI libre de copyright
+  license_url: https://www.cancer.gov/policies/copyright-reuse
+  license_verified_at: '2026-11-03'
+  license_evidence: 'https://www.cancer.gov/policies/copyright-reuse (consultada el 2026-11-03): «Unless otherwise indicated,
+    all text within National Cancer Institute (NCI) products is free of copyright and may be reused without our permission.
+    Credit the National Cancer Institute as the source.» Sin gráficos; sin logo de NCI ni marca PDQ.'
+  downloaded_at: '2026-11-03'
+  checksum: da03b889967c7d08c4eecb80a6b999777173b52ccae7220510eae45abcdd0910
+  text_path: docs/nci-prostata-prevencion-pac-es.txt
+- document_key: nci-prostata-deteccion-pac-es
+  source_type: guideline
+  source_name: NCI
+  external_id: https://www.cancer.gov/espanol/tipos/prostata/paciente/deteccion-prostata-pdq
+  title: Exámenes de detección del cáncer de próstata, versión para pacientes
+  language: es
+  cancer_type_tags:
+  - prostata
+  published_at: '2013-06-21'
+  study_design: guia
+  population: adulto
+  original_format: html
+  original_url: https://www.cancer.gov/espanol/tipos/prostata/paciente/deteccion-prostata-pdq
+  license: Texto de NCI libre de copyright
+  license_url: https://www.cancer.gov/policies/copyright-reuse
+  license_verified_at: '2026-11-03'
+  license_evidence: 'https://www.cancer.gov/policies/copyright-reuse (consultada el 2026-11-03): «Unless otherwise indicated,
+    all text within National Cancer Institute (NCI) products is free of copyright and may be reused without our permission.
+    Credit the National Cancer Institute as the source.» Sin gráficos; sin logo de NCI ni marca PDQ.'
+  downloaded_at: '2026-11-03'
+  checksum: 70131abfdd873ed0a8975b326d5713267dc31098b1fe31b15d9d55fb4c380dc8
+  text_path: docs/nci-prostata-deteccion-pac-es.txt
+- document_key: pmc-mama-pembrolizumab-er-eca
+  source_type: literature
+  source_name: PMC Open Access
+  external_id: 10.1038/s41591-024-03415-7
+  title: 'Pembrolizumab and chemotherapy in high-risk, early-stage, ER+/HER2- breast cancer: a randomized phase 3 trial'
+  language: en
+  cancer_type_tags:
+  - mama
+  published_at: '2025-01-21'
+  study_design: eca
+  population: adulto
+  original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11835712/fullTextXML
+  license: CC BY 4.0
+  license_url: https://creativecommons.org/licenses/by/4.0/
+  license_verified_at: '2026-11-03'
+  license_evidence: 'PMC OA en AWS (metadata/PMC11835712.1.json, consultado el 2026-11-03): license_code=''CC BY'', is_pmc_openaccess=true,
+    is_retracted=false. Europe PMC REST (PMCID:PMC11835712, consultado el 2026-11-03): license=''cc by'', isOpenAccess=''Y''.
+    <license-p> del JATS: «https://creativecommons.org/licenses/by/4.0/Open Access This article is licensed under a Creative
+    Commons Attribution 4.0 International License, which permits use, sharing, adaptation, distribution and reproduction in
+    any medium or format, as long as you give»'
+  downloaded_at: '2026-11-03'
+  checksum: f5ae051260d65d571c8fa7119bcb7bf5a744b7d0d2f7a0bcb5f4090cfce1c5ef
+  text_path: docs/pmc-mama-pembrolizumab-er-eca.txt
+- document_key: pmc-mama-trastuzumab-deruxtecan-eca
+  source_type: literature
+  source_name: PMC Open Access
+  external_id: 10.1038/s41591-024-03021-7
+  title: 'Trastuzumab deruxtecan versus trastuzumab emtansine in HER2-positive metastatic breast cancer: long-term survival
+    analysis of the DESTINY-Breast03 trial'
+  language: en
+  cancer_type_tags:
+  - mama
+  published_at: '2024-06-02'
+  study_design: eca
+  population: adulto
+  original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11333275/fullTextXML
+  license: CC BY 4.0
+  license_url: https://creativecommons.org/licenses/by/4.0/
+  license_verified_at: '2026-11-03'
+  license_evidence: 'PMC OA en AWS (metadata/PMC11333275.1.json, consultado el 2026-11-03): license_code=''CC BY'', is_pmc_openaccess=true,
+    is_retracted=false. Europe PMC REST (PMCID:PMC11333275, consultado el 2026-11-03): license=''cc by'', isOpenAccess=''Y''.
+    <license-p> del JATS: «Open Access This article is licensed under a Creative Commons Attribution 4.0 International License,
+    which permits use, sharing, adaptation, distribution and reproduction in any medium or format, as long as you give appropriate
+    credit to the original author(s)»'
+  downloaded_at: '2026-11-03'
+  checksum: ba5e7062efccf19cc44c29d4629f58d931ebc1fecfe84e0397fe18228c0ea0e3
+  text_path: docs/pmc-mama-trastuzumab-deruxtecan-eca.txt
+- document_key: pmc-mama-elacestrant-esr1-eca
+  source_type: literature
+  source_name: PMC Open Access
+  external_id: 10.1158/1078-0432.CCR-24-1073
+  title: 'Elacestrant in ER+, HER2- Metastatic Breast Cancer with ESR1-Mutated Tumors: Subgroup Analyses from the Phase III
+    EMERALD Trial by Prior Duration of Endocrine Therapy plus CDK4/6 Inhibitor and in Clinical Subgroups'
+  language: en
+  cancer_type_tags:
+  - mama
+  published_at: '2024-08-01'
+  study_design: eca
+  population: adulto
+  original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11443208/fullTextXML
+  license: CC BY 4.0
+  license_url: https://creativecommons.org/licenses/by/4.0/
+  license_verified_at: '2026-11-03'
+  license_evidence: 'PMC OA en AWS (metadata/PMC11443208.1.json, consultado el 2026-11-03): license_code=''CC BY'', is_pmc_openaccess=true,
+    is_retracted=false. Europe PMC REST (PMCID:PMC11443208, consultado el 2026-11-03): license=''cc by'', isOpenAccess=''Y''.
+    <license-p> del JATS: «This open access article is distributed under the Creative Commons Attribution 4.0 International
+    (CC BY 4.0) license.»'
+  downloaded_at: '2026-11-03'
+  checksum: d00195fd2cf04b507d7cfed88a1b96ba09d2effee070c11b48ab530dea684dc8
+  text_path: docs/pmc-mama-elacestrant-esr1-eca.txt
+- document_key: pmc-mama-capivasertib-eca
+  source_type: literature
+  source_name: PMC Open Access
+  external_id: 10.1038/s41467-025-59210-6
+  title: 'Capivasertib plus fulvestrant in patients with HR-positive/HER2-negative advanced breast cancer: phase 3 CAPItello-291
+    study extended Chinese cohort'
+  language: en
+  cancer_type_tags:
+  - mama
+  published_at: '2025-05-09'
+  study_design: eca
+  population: adulto
+  original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12064754/fullTextXML
+  license: CC BY 4.0
+  license_url: https://creativecommons.org/licenses/by/4.0/
+  license_verified_at: '2026-11-03'
+  license_evidence: 'PMC OA en AWS (metadata/PMC12064754.1.json, consultado el 2026-11-03): license_code=''CC BY'', is_pmc_openaccess=true,
+    is_retracted=false. Europe PMC REST (PMCID:PMC12064754, consultado el 2026-11-03): license=''cc by'', isOpenAccess=''Y''.
+    <license-p> del JATS: «Open Access This article is licensed under a Creative Commons Attribution 4.0 International License,
+    which permits use, sharing, adaptation, distribution and reproduction in any medium or format, as long as you give appropriate
+    credit to the original author(s)»'
+  downloaded_at: '2026-11-03'
+  checksum: cfba5eaf26c4f888bb27338ade86ad86f16c1a76213d8d10fde2b12f96b0d461
+  text_path: docs/pmc-mama-capivasertib-eca.txt
+- document_key: pmc-mama-adn-tumoral-metastasico-rs
+  source_type: literature
+  source_name: PMC Open Access
+  external_id: 10.1001/jamanetworkopen.2024.31722
+  title: 'Circulating Tumor DNA and Survival in Metastatic Breast Cancer: A Systematic Review and Meta-Analysis'
+  language: en
+  cancer_type_tags:
+  - mama
+  published_at: '2024-09-05'
+  study_design: revision_sistematica
+  population: adulto
+  original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11378006/fullTextXML
+  license: CC BY
+  license_url: https://creativecommons.org/share-your-work/cclicenses/
+  license_verified_at: '2026-11-03'
+  license_evidence: 'PMC OA en AWS (metadata/PMC11378006.1.json, consultado el 2026-11-03): license_code=''CC BY'', is_pmc_openaccess=true,
+    is_retracted=false. Europe PMC REST (PMCID:PMC11378006, consultado el 2026-11-03): license=''cc by'', isOpenAccess=''Y''.
+    <license-p> del JATS: «This is an open access article distributed under the terms of the CC-BY License.»'
+  downloaded_at: '2026-11-03'
+  checksum: 1d1bfbd8ca4f94a0614f3cf0c03a71135b394c49354bca263473e942630e6a61
+  text_path: docs/pmc-mama-adn-tumoral-metastasico-rs.txt
+- document_key: pmc-mama-irradiacion-pared-toracica-eca
+  source_type: literature
+  source_name: PMC Open Access
+  external_id: 10.1056/NEJMoa2412225
+  title: Ten-Year Survival after Postmastectomy Chest-Wall Irradiation in Breast Cancer
+  language: en
+  cancer_type_tags:
+  - mama
+  published_at: '2025-11-06'
+  study_design: eca
+  population: adulto
+  original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7618363/fullTextXML
+  license: CC BY 4.0
+  license_url: https://creativecommons.org/licenses/by/4.0/
+  license_verified_at: '2026-11-03'
+  license_evidence: 'PMC OA en AWS (metadata/PMC7618363.1.json, consultado el 2026-11-03): license_code=''CC BY'', is_pmc_openaccess=true,
+    is_retracted=false. Europe PMC REST (PMCID:PMC7618363, consultado el 2026-11-03): license=''cc by'', isOpenAccess=''Y''.
+    <license-p> del JATS: «https://creativecommons.org/licenses/by/4.0/This work is licensed under a BY 4.0 International
+    license.» Versión de manuscrito de autor (is_manuscript=true) con CC BY explícita.'
+  downloaded_at: '2026-11-03'
+  checksum: b72022176211ee564452487103fbe40c51bf31d902d385f13f26628e94c54bd1
+  text_path: docs/pmc-mama-irradiacion-pared-toracica-eca.txt
+- document_key: pmc-mama-parp-neoadyuvante-eca
+  source_type: literature
+  source_name: PMC Open Access
+  external_id: 10.1038/s41467-025-59151-0
+  title: 'Neoadjuvant PARP inhibitor scheduling in BRCA1 and BRCA2 related breast cancer: PARTNER, a randomized phase II/III
+    trial'
+  language: en
+  cancer_type_tags:
+  - mama
+  published_at: '2025-05-13'
+  study_design: eca
+  population: adulto
+  original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12075821/fullTextXML
+  license: CC BY 4.0
+  license_url: https://creativecommons.org/licenses/by/4.0/
+  license_verified_at: '2026-11-03'
+  license_evidence: 'PMC OA en AWS (metadata/PMC12075821.1.json, consultado el 2026-11-03): license_code=''CC BY'', is_pmc_openaccess=true,
+    is_retracted=false. Europe PMC REST (PMCID:PMC12075821, consultado el 2026-11-03): license=''cc by'', isOpenAccess=''Y''.
+    <license-p> del JATS: «Open Access This article is licensed under a Creative Commons Attribution 4.0 International License,
+    which permits use, sharing, adaptation, distribution and reproduction in any medium or format, as long as you give appropriate
+    credit to the original author(s)»'
+  downloaded_at: '2026-11-03'
+  checksum: 14d0b53f1a71bb6904fc2c90158aafeafea6e9ecc38ec8b15e3d6b7e413b597d
+  text_path: docs/pmc-mama-parp-neoadyuvante-eca.txt
+- document_key: pmc-mama-arx788-her2-eca
+  source_type: literature
+  source_name: PMC Open Access
+  external_id: 10.1038/s41392-025-02149-3
+  title: 'ACE-Breast-02: a randomized phase III trial of ARX788 versus lapatinib plus capecitabine for HER2-positive advanced
+    breast cancer'
+  language: en
+  cancer_type_tags:
+  - mama
+  published_at: '2025-02-17'
+  study_design: eca
+  population: adulto
+  original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11830773/fullTextXML
+  license: CC BY 4.0
+  license_url: https://creativecommons.org/licenses/by/4.0/
+  license_verified_at: '2026-11-03'
+  license_evidence: 'PMC OA en AWS (metadata/PMC11830773.1.json, consultado el 2026-11-03): license_code=''CC BY'', is_pmc_openaccess=true,
+    is_retracted=false. Europe PMC REST (PMCID:PMC11830773, consultado el 2026-11-03): license=''cc by'', isOpenAccess=''Y''.
+    <license-p> del JATS: «https://creativecommons.org/licenses/by/4.0/Open Access This article is licensed under a Creative
+    Commons Attribution 4.0 International License, which permits use, sharing, adaptation, distribution and reproduction in
+    any medium or format, as long as you give»'
+  downloaded_at: '2026-11-03'
+  checksum: bc2e3e33aca9b743ee32ebb6ea96844e7300ec7a1a02b92c5abe9f3c036112d8
+  text_path: docs/pmc-mama-arx788-her2-eca.txt
+- document_key: pmc-mama-linfocitos-her2-secundario
+  source_type: literature
+  source_name: PMC Open Access
+  external_id: 10.1001/jamaoncol.2024.6872
+  title: 'Tumor-Infiltrating Lymphocytes and Survival Outcomes in Early ERBB2-Positive Breast Cancer: 10-Year Analysis of
+    the ShortHER Randomized Clinical Trial'
+  language: en
+  cancer_type_tags:
+  - mama
+  published_at: '2025-02-13'
+  study_design: otro
+  population: adulto
+  original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11826437/fullTextXML
+  license: CC BY 4.0
+  license_url: https://creativecommons.org/licenses/by/4.0/
+  license_verified_at: '2026-11-03'
+  license_evidence: 'PMC OA en AWS (metadata/PMC11826437.1.json, consultado el 2026-11-03): license_code=''CC BY'', is_pmc_openaccess=true,
+    is_retracted=false. Europe PMC REST (PMCID:PMC11826437, consultado el 2026-11-03): license=''cc by'', isOpenAccess=''Y''.
+    <license-p> del JATS: «https://creativecommons.org/licenses/by/4.0/This is an open access article distributed under the
+    terms of the CC-BY License.»'
+  downloaded_at: '2026-11-03'
+  checksum: 0591bea8703bb7b3bbaef60d6a410177d4a8a7399e3ffb53cca1a45f75973349
+  text_path: docs/pmc-mama-linfocitos-her2-secundario.txt
+- document_key: pmc-prostata-niraparib-abiraterona-eca
+  source_type: literature
+  source_name: PMC Open Access
+  external_id: 10.1038/s41591-025-03961-8
+  title: 'Niraparib and abiraterone acetate plus prednisone for HRR-deficient metastatic castration-sensitive prostate cancer:
+    a randomized phase 3 trial'
+  language: en
+  cancer_type_tags:
+  - prostata
+  published_at: '2025-10-07'
+  study_design: eca
+  population: adulto
+  original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12705445/fullTextXML
+  license: CC BY 4.0
+  license_url: https://creativecommons.org/licenses/by/4.0/
+  license_verified_at: '2026-11-03'
+  license_evidence: 'PMC OA en AWS (metadata/PMC12705445.1.json, consultado el 2026-11-03): license_code=''CC BY'', is_pmc_openaccess=true,
+    is_retracted=false. Europe PMC REST (PMCID:PMC12705445, consultado el 2026-11-03): license=''cc by'', isOpenAccess=''Y''.
+    <license-p> del JATS: «Open Access This article is licensed under a Creative Commons Attribution 4.0 International License,
+    which permits use, sharing, adaptation, distribution and reproduction in any medium or format, as long as you give appropriate
+    credit to the original author(s)»'
+  downloaded_at: '2026-11-03'
+  checksum: aed2ddfe9bbb2d3501c2c977f0b2b167d237849b0b394b428f337b3c5df4a1b7
+  text_path: docs/pmc-prostata-niraparib-abiraterona-eca.txt
+- document_key: pmc-prostata-inhibidores-ar-taxanos-eca
+  source_type: literature
+  source_name: PMC Open Access
+  external_id: 10.1038/s41591-024-03204-2
+  title: 'Androgen receptor pathway inhibitors and taxanes in metastatic prostate cancer: an outcome-adaptive randomized platform
+    trial'
+  language: en
+  cancer_type_tags:
+  - prostata
+  published_at: '2024-08-20'
+  study_design: eca
+  population: adulto
+  original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11564108/fullTextXML
+  license: CC BY 4.0
+  license_url: https://creativecommons.org/licenses/by/4.0/
+  license_verified_at: '2026-11-03'
+  license_evidence: 'PMC OA en AWS (metadata/PMC11564108.1.json, consultado el 2026-11-03): license_code=''CC BY'', is_pmc_openaccess=true,
+    is_retracted=false. Europe PMC REST (PMCID:PMC11564108, consultado el 2026-11-03): license=''cc by'', isOpenAccess=''Y''.
+    <license-p> del JATS: «Open Access This article is licensed under a Creative Commons Attribution 4.0 International License,
+    which permits use, sharing, adaptation, distribution and reproduction in any medium or format, as long as you give appropriate
+    credit to the original author(s)»'
+  downloaded_at: '2026-11-03'
+  checksum: 681a38ad10c1a76c855c48936a6a949378481fb98b7c941cd8248149625282a7
+  text_path: docs/pmc-prostata-inhibidores-ar-taxanos-eca.txt
+- document_key: pmc-prostata-darolutamida-japon-eca
+  source_type: literature
+  source_name: PMC Open Access
+  external_id: 10.1002/cam4.70029
+  title: 'Darolutamide in Japanese patients with metastatic hormone-sensitive prostate cancer: Phase 3 ARASENS subgroup analysis'
+  language: en
+  cancer_type_tags:
+  - prostata
+  published_at: '2024-11-11'
+  study_design: eca
+  population: adulto
+  original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11552649/fullTextXML
+  license: CC BY 4.0
+  license_url: https://creativecommons.org/licenses/by/4.0/
+  license_verified_at: '2026-11-03'
+  license_evidence: 'PMC OA en AWS (metadata/PMC11552649.1.json, consultado el 2026-11-03): license_code=''CC BY'', is_pmc_openaccess=true,
+    is_retracted=false. Europe PMC REST (PMCID:PMC11552649, consultado el 2026-11-03): license=''cc by'', isOpenAccess=''Y''.
+    <license-p> del JATS: «This is an open access article under the terms of the http://creativecommons.org/licenses/by/4.0/
+    License, which permits use, distribution and reproduction in any medium, provided the original work is properly cited.»'
+  downloaded_at: '2026-11-03'
+  checksum: 19fe42e31f282b1457fb4ba5b06dac36c32e4dd18a0fa8667c25ada9d3a352e8
+  text_path: docs/pmc-prostata-darolutamida-japon-eca.txt
+- document_key: pmc-prostata-hormonoterapia-radioterapia-ma
+  source_type: literature
+  source_name: PMC Open Access
+  external_id: 10.1016/S0140-6736(26)00137-6
+  title: 'Hormone therapy use and duration with postoperative radiotherapy for recurrent prostate cancer: an individual patient
+    data meta-analysis'
+  language: en
+  cancer_type_tags:
+  - prostata
+  published_at: '2026-02-26'
+  study_design: revision_sistematica
+  population: adulto
+  original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13637963/fullTextXML
+  license: CC BY 4.0
+  license_url: https://creativecommons.org/licenses/by/4.0/
+  license_verified_at: '2026-11-03'
+  license_evidence: 'PMC OA en AWS (metadata/PMC13637963.1.json, consultado el 2026-11-03): license_code=''CC BY'', is_pmc_openaccess=true,
+    is_retracted=false. Europe PMC REST (PMCID:PMC13637963, consultado el 2026-11-03): license=''cc by'', isOpenAccess=''Y''.
+    <license-p> del JATS: «https://creativecommons.org/licenses/by/4.0/This is an Open Access article under the CC BY 4.0
+    license.» Versión de manuscrito de autor (is_manuscript=true) con CC BY explícita.'
+  downloaded_at: '2026-11-03'
+  checksum: 2b53f1927dd8b4705ccdafb83c0fc7272dce83a1ab44a02d4dedeb80b701670b
+  text_path: docs/pmc-prostata-hormonoterapia-radioterapia-ma.txt
+- document_key: pmc-prostata-talazoparib-enzalutamida-nma
+  source_type: literature
+  source_name: PMC Open Access
+  external_id: 10.1093/oncolo/oyae237
+  title: Comparative efficacy and safety of talazoparib plus enzalutamide and other first-line treatments for metastatic castration-resistant
+    prostate cancer
+  language: en
+  cancer_type_tags:
+  - prostata
+  published_at: '2024-10-19'
+  study_design: revision_sistematica
+  population: adulto
+  original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11954501/fullTextXML
+  license: CC BY 4.0
+  license_url: https://creativecommons.org/licenses/by/4.0/
+  license_verified_at: '2026-11-03'
+  license_evidence: 'PMC OA en AWS (metadata/PMC11954501.1.json, consultado el 2026-11-03): license_code=''CC BY'', is_pmc_openaccess=true,
+    is_retracted=false. Europe PMC REST (PMCID:PMC11954501, consultado el 2026-11-03): license=''cc by'', isOpenAccess=''Y''.
+    <license-p> del JATS: «https://creativecommons.org/licenses/by/4.0/This is an Open Access article distributed under the
+    terms of the Creative Commons Attribution License (https://creativecommons.org/licenses/by/4.0/), which permits unrestricted
+    reuse, distribution, and reproduction»'
+  downloaded_at: '2026-11-03'
+  checksum: 5f9afc5035331fd22db832d65b08a3629579e02e5fc085bbebd3705eff8d5b01
+  text_path: docs/pmc-prostata-talazoparib-enzalutamida-nma.txt
+- document_key: pmc-prostata-enzalutamida-abiraterona-ma
+  source_type: literature
+  source_name: PMC Open Access
+  external_id: 10.3389/fonc.2025.1491314
+  title: Meta-analysis to evaluate the comparative effectiveness of enzalutamide and abiraterone acetate for first-line treatment
+    of metastatic castration-resistant prostate cancer in real-world settings
+  language: en
+  cancer_type_tags:
+  - prostata
+  published_at: '2025-02-10'
+  study_design: revision_sistematica
+  population: adulto
+  original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11849621/fullTextXML
+  license: CC BY
+  license_url: https://creativecommons.org/share-your-work/cclicenses/
+  license_verified_at: '2026-11-03'
+  license_evidence: 'PMC OA en AWS (metadata/PMC11849621.1.json, consultado el 2026-11-03): license_code=''CC BY'', is_pmc_openaccess=true,
+    is_retracted=false. Europe PMC REST (PMCID:PMC11849621, consultado el 2026-11-03): license=''cc by'', isOpenAccess=''Y''.
+    <license-p> del JATS: «This is an open-access article distributed under the terms of the Creative Commons Attribution
+    License (CC BY). The use, distribution or reproduction in other forums is permitted, provided the original author(s) and
+    the copyright owner(s) are credited and that»'
+  downloaded_at: '2026-11-03'
+  checksum: 483e0b37e054d9de30dc0cce9bd4cb2f5a5565229152a3907fb412031355a83f
+  text_path: docs/pmc-prostata-enzalutamida-abiraterona-ma.txt
+- document_key: pmc-prostata-braquiterapia-focal-rs
+  source_type: literature
+  source_name: PMC Open Access
+  external_id: 10.1093/bjr/tqae254
+  title: 'Partial or focal brachytherapy for prostate cancer: a systematic review and meta-analysis'
+  language: en
+  cancer_type_tags:
+  - prostata
+  published_at: '2024-12-19'
+  study_design: revision_sistematica
+  population: adulto
+  original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11840170/fullTextXML
+  license: CC BY 4.0
+  license_url: https://creativecommons.org/licenses/by/4.0/
+  license_verified_at: '2026-11-03'
+  license_evidence: 'PMC OA en AWS (metadata/PMC11840170.1.json, consultado el 2026-11-03): license_code=''CC BY'', is_pmc_openaccess=true,
+    is_retracted=false. Europe PMC REST (PMCID:PMC11840170, consultado el 2026-11-03): license=''cc by'', isOpenAccess=''Y''.
+    <license-p> del JATS: «This is an Open Access article distributed under the terms of the Creative Commons Attribution
+    License (https://creativecommons.org/licenses/by/4.0/), which permits unrestricted reuse, distribution, and reproduction
+    in any medium, provided the original work is»'
+  downloaded_at: '2026-11-03'
+  checksum: 0e090a86b56a9029ecdac44635b6dafdb9c5b15e4904a3ff69fff07274bae140
+  text_path: docs/pmc-prostata-braquiterapia-focal-rs.txt
+- document_key: pmc-prostata-eventos-cardiovasculares-nma
+  source_type: literature
+  source_name: PMC Open Access
+  external_id: 10.1038/s41391-024-00886-0
+  title: 'Cardiovascular events among men with prostate cancer treated with androgen receptor signaling inhibitors: a systematic
+    review, meta-analysis, and network meta-analysis'
+  language: en
+  cancer_type_tags:
+  - prostata
+  published_at: '2024-09-05'
+  study_design: revision_sistematica
+  population: adulto
+  original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12106084/fullTextXML
+  license: CC BY 4.0
+  license_url: https://creativecommons.org/licenses/by/4.0/
+  license_verified_at: '2026-11-03'
+  license_evidence: 'PMC OA en AWS (metadata/PMC12106084.1.json, consultado el 2026-11-03): license_code=''CC BY'', is_pmc_openaccess=true,
+    is_retracted=false. Europe PMC REST (PMCID:PMC12106084, consultado el 2026-11-03): license=''cc by'', isOpenAccess=''Y''.
+    <license-p> del JATS: «Open Access This article is licensed under a Creative Commons Attribution 4.0 International License,
+    which permits use, sharing, adaptation, distribution and reproduction in any medium or format, as long as you give appropriate
+    credit to the original author(s)»'
+  downloaded_at: '2026-11-03'
+  checksum: 5fb1f249ade875a63c4b147f8526c7aaf935be2d398238ed3969a342307e0146
+  text_path: docs/pmc-prostata-eventos-cardiovasculares-nma.txt
+- document_key: pmc-prostata-cirugia-citorreductora-ma
+  source_type: literature
+  source_name: PMC Open Access
+  external_id: 10.1097/JS9.0000000000001308
+  title: 'Assessment of treatment outcomes: cytoreductive surgery compared to radiotherapy in oligometastatic prostate cancer
+    - an in-depth quantitative evaluation and retrospective cohort analysis'
+  language: en
+  cancer_type_tags:
+  - prostata
+  published_at: '2024-03-18'
+  study_design: revision_sistematica
+  population: adulto
+  original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11175786/fullTextXML
+  license: CC BY 4.0
+  license_url: https://creativecommons.org/licenses/by/4.0/
+  license_verified_at: '2026-11-03'
+  license_evidence: 'PMC OA en AWS (metadata/PMC11175786.1.json, consultado el 2026-11-03): license_code=''CC BY'', is_pmc_openaccess=true,
+    is_retracted=false. Europe PMC REST (PMCID:PMC11175786, consultado el 2026-11-03): license=''cc by'', isOpenAccess=''Y''.
+    <license-p> del JATS: «This is an open access article distributed under the Creative Commons Attribution License 4.0 (CCBY),
+    which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited.
+    http://creativecommons.org/license»'
+  downloaded_at: '2026-11-03'
+  checksum: 324d5551adf155753e84896f94818fa2be16cb9955676cd5afcda80190d016a0
+  text_path: docs/pmc-prostata-cirugia-citorreductora-ma.txt
+- document_key: pmc-prostata-lu-psma-comparadores
+  source_type: literature
+  source_name: PMC Open Access
+  external_id: 10.1001/jamanetworkopen.2024.33863
+  title: Lu-177 PSMA vs Comparator Treatments and Survival in Metastatic Castration-Resistant Prostate Cancer
+  language: en
+  cancer_type_tags:
+  - prostata
+  published_at: '2024-09-17'
+  study_design: otro
+  population: adulto
+  original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11409154/fullTextXML
+  license: CC BY 4.0
+  license_url: https://creativecommons.org/licenses/by/4.0/
+  license_verified_at: '2026-11-03'
+  license_evidence: 'PMC OA en AWS (metadata/PMC11409154.1.json, consultado el 2026-11-03): license_code=''CC BY'', is_pmc_openaccess=true,
+    is_retracted=false. Europe PMC REST (PMCID:PMC11409154, consultado el 2026-11-03): license=''cc by'', isOpenAccess=''Y''.
+    <license-p> del JATS: «https://creativecommons.org/licenses/by/4.0/This is an open access article distributed under the
+    terms of the CC-BY License.»'
+  downloaded_at: '2026-11-03'
+  checksum: 805055501596a88f737b3247daab44e5b9e14b9a0b5535e8b52db18829347fbb
+  text_path: docs/pmc-prostata-lu-psma-comparadores.txt
+- document_key: pmc-prostata-cribado-personalizado-es
+  source_type: literature
+  source_name: PMC Open Access
+  external_id: 10.1515/almed-2019-0012
+  title: Hacia un cribado personalizado del cáncer de próstata
+  language: es
+  cancer_type_tags:
+  - prostata
+  published_at: '2020-01-07'
+  study_design: otro
+  population: adulto
+  original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC10197698/fullTextXML
+  license: CC BY 4.0
+  license_url: https://creativecommons.org/licenses/by/4.0/
+  license_verified_at: '2026-11-03'
+  license_evidence: 'PMC OA en AWS (metadata/PMC10197698.1.json, consultado el 2026-11-03): license_code=''CC BY'', is_pmc_openaccess=true,
+    is_retracted=false. Europe PMC REST (PMCID:PMC10197698, consultado el 2026-11-03): license=''cc by'', isOpenAccess=''Y''.
+    <license-p> del JATS: «This work is licensed under the Creative Commons Attribution 4.0 International License.»'
+  downloaded_at: '2026-11-03'
+  checksum: 6fd1694aefb42d6d93245edd4bd795b681aca32f843864579c80b164412ebb94
+  text_path: docs/pmc-prostata-cribado-personalizado-es.txt
+- document_key: pmc-prostata-nueva-perspectiva-cribado-es
+  source_type: literature
+  source_name: PMC Open Access
+  external_id: 10.1515/almed-2023-0034
+  title: Una nueva perspectiva en el cribado del cáncer de próstata
+  language: es
+  cancer_type_tags:
+  - prostata
+  published_at: '2023-07-21'
+  study_design: otro
+  population: adulto
+  original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC10701491/fullTextXML
+  license: CC BY 4.0
+  license_url: https://creativecommons.org/licenses/by/4.0/
+  license_verified_at: '2026-11-03'
+  license_evidence: 'PMC OA en AWS (metadata/PMC10701491.1.json, consultado el 2026-11-03): license_code=''CC BY'', is_pmc_openaccess=true,
+    is_retracted=false. Europe PMC REST (PMCID:PMC10701491, consultado el 2026-11-03): license=''cc by'', isOpenAccess=''Y''.
+    <license-p> del JATS: «This work is licensed under the Creative Commons Attribution 4.0 International License.»'
+  downloaded_at: '2026-11-03'
+  checksum: 519d4fb99473711357056550b49c30f9d1881c7f9ac22a0d15b5d50f801c860a
+  text_path: docs/pmc-prostata-nueva-perspectiva-cribado-es.txt
+- document_key: ct-mama-aphinity
+  source_type: clinical_trial
+  source_name: ClinicalTrials.gov
+  external_id: NCT01358877
+  title: A Study of Pertuzumab in Addition to Chemotherapy and Trastuzumab as Adjuvant Therapy in Participants With Human
+    Epidermal Growth Receptor 2 (HER2)-Positive Primary Breast Cancer
+  language: en
+  cancer_type_tags:
+  - mama
+  published_at: '2011-05-24'
+  study_design: eca
+  population: adulto
+  original_format: html
+  original_url: https://clinicaltrials.gov/study/NCT01358877
+  license: Dominio público
+  license_url: https://clinicaltrials.gov/about-site/terms-conditions
+  license_verified_at: '2026-11-03'
+  license_evidence: 'https://clinicaltrials.gov/about-site/terms-conditions (consultada el 2026-11-03; texto servido por la
+    aplicación): «In any publication or distribution of these data, you should: Attribute the source of the data as ClinicalTrials.gov;
+    Update the data such that they are current at all times; Clearly display the date the data were processed by ClinicalTrials.gov;
+    State any modifications made to the content of the data, along with a complete description of the modifications». «Some
+    ClinicalTrials.gov data may be subject to the copyright of third parties.» Registro de ensayo, no evidencia de eficacia
+    (ADR-36, Enmienda 1). Clase dominio_publico decidida en la Enmienda 1 de ADR-36 (obra del gobierno de EE. UU.).'
+  downloaded_at: '2026-11-03'
+  trial_phase: III
+  primary_endpoint: Percentage of Participants With Invasive Disease-Free Survival (IDFS) Event (Excluding Second Primary
+    Non-Breast Cancer [SPNBC]), as Assessed Using Radiologic, Histologic Examinations or Laboratory Findings
+  sample_size: 4804
+  last_updated_at: '2025-11-28'
+  checksum: 095dcb22da4e37cda7f59f89f00cf30656dc249201b91155fca15d11656be56b
+  text_path: docs/ct-mama-aphinity.txt
+  population_criteria:
+    edad: 18 Years a sin máximo (ADULT, OLDER_ADULT)
+- document_key: ct-mama-monarche
+  source_type: clinical_trial
+  source_name: ClinicalTrials.gov
+  external_id: NCT03155997
+  title: Endocrine Therapy With or Without Abemaciclib (LY2835219) Following Surgery in Participants With Breast Cancer
+  language: en
+  cancer_type_tags:
+  - mama
+  published_at: '2017-05-16'
+  study_design: eca
+  population: adulto
+  original_format: html
+  original_url: https://clinicaltrials.gov/study/NCT03155997
+  license: Dominio público
+  license_url: https://clinicaltrials.gov/about-site/terms-conditions
+  license_verified_at: '2026-11-03'
+  license_evidence: 'https://clinicaltrials.gov/about-site/terms-conditions (consultada el 2026-11-03; texto servido por la
+    aplicación): «In any publication or distribution of these data, you should: Attribute the source of the data as ClinicalTrials.gov;
+    Update the data such that they are current at all times; Clearly display the date the data were processed by ClinicalTrials.gov;
+    State any modifications made to the content of the data, along with a complete description of the modifications». «Some
+    ClinicalTrials.gov data may be subject to the copyright of third parties.» Registro de ensayo, no evidencia de eficacia
+    (ADR-36, Enmienda 1). Clase dominio_publico decidida en la Enmienda 1 de ADR-36 (obra del gobierno de EE. UU.).'
+  downloaded_at: '2026-11-03'
+  trial_phase: III
+  primary_endpoint: Invasive Disease Free Survival (IDFS)
+  sample_size: 5637
+  last_updated_at: '2026-04-24'
+  checksum: 165aa59063b705731b09e4f8906ef6ea9564df39093f1f4681295fd309eb73ea
+  text_path: docs/ct-mama-monarche.txt
+  population_criteria:
+    edad: 18 Years a sin máximo (ADULT, OLDER_ADULT)
+- document_key: ct-mama-natalee
+  source_type: clinical_trial
+  source_name: ClinicalTrials.gov
+  external_id: NCT02941926
+  title: Study to Assess the Safety and Efficacy of Ribociclib (LEE011) in Combination With Letrozole for the Treatment of
+    Men and Pre/Postmenopausal Women With HR+ HER2- aBC
+  language: en
+  cancer_type_tags:
+  - mama
+  published_at: '2016-10-21'
+  study_design: eca
+  population: adulto
+  original_format: html
+  original_url: https://clinicaltrials.gov/study/NCT02941926
+  license: Dominio público
+  license_url: https://clinicaltrials.gov/about-site/terms-conditions
+  license_verified_at: '2026-11-03'
+  license_evidence: 'https://clinicaltrials.gov/about-site/terms-conditions (consultada el 2026-11-03; texto servido por la
+    aplicación): «In any publication or distribution of these data, you should: Attribute the source of the data as ClinicalTrials.gov;
+    Update the data such that they are current at all times; Clearly display the date the data were processed by ClinicalTrials.gov;
+    State any modifications made to the content of the data, along with a complete description of the modifications». «Some
+    ClinicalTrials.gov data may be subject to the copyright of third parties.» Registro de ensayo, no evidencia de eficacia
+    (ADR-36, Enmienda 1). Clase dominio_publico decidida en la Enmienda 1 de ADR-36 (obra del gobierno de EE. UU.).'
+  downloaded_at: '2026-11-03'
+  trial_phase: III
+  primary_endpoint: Number of Participants With Adverse Events (AEs) and Serious AEs (SAEs) During Treatment With Ribociclib
+    + Letrozole in the Core Phase
+  sample_size: 3246
+  last_updated_at: '2023-10-24'
+  checksum: db2e3f0b034144d62e8bb67f80cce64db8a5bcd8de8c10aa4461efb855d64fdd
+  text_path: docs/ct-mama-natalee.txt
+  population_criteria:
+    edad: 18 Years a sin máximo (ADULT, OLDER_ADULT)
+- document_key: ct-mama-destiny-breast06
+  source_type: clinical_trial
+  source_name: ClinicalTrials.gov
+  external_id: NCT04494425
+  title: Study of Trastuzumab Deruxtecan (T-DXd) vs Investigator's Choice Chemotherapy in HER2-low, Hormone Receptor Positive,
+    Metastatic Breast Cancer
+  language: en
+  cancer_type_tags:
+  - mama
+  published_at: '2020-07-31'
+  study_design: eca
+  population: adulto
+  original_format: html
+  original_url: https://clinicaltrials.gov/study/NCT04494425
+  license: Dominio público
+  license_url: https://clinicaltrials.gov/about-site/terms-conditions
+  license_verified_at: '2026-11-03'
+  license_evidence: 'https://clinicaltrials.gov/about-site/terms-conditions (consultada el 2026-11-03; texto servido por la
+    aplicación): «In any publication or distribution of these data, you should: Attribute the source of the data as ClinicalTrials.gov;
+    Update the data such that they are current at all times; Clearly display the date the data were processed by ClinicalTrials.gov;
+    State any modifications made to the content of the data, along with a complete description of the modifications». «Some
+    ClinicalTrials.gov data may be subject to the copyright of third parties.» Registro de ensayo, no evidencia de eficacia
+    (ADR-36, Enmienda 1). Clase dominio_publico decidida en la Enmienda 1 de ADR-36 (obra del gobierno de EE. UU.).'
+  downloaded_at: '2026-11-03'
+  trial_phase: III
+  primary_endpoint: Progression-Free Survival (PFS) Assessed by Blinded Independent Central Review (BICR) in the Hormone Receptor-Positive
+    (HR+), Human Epidermal Growth Factor Receptor 2 (HER2)-Low Population
+  sample_size: 866
+  last_updated_at: '2026-03-04'
+  checksum: a65d8c1bb091f73bff173465804266331407abfb58ce1cc0eb5431ea842bce07
+  text_path: docs/ct-mama-destiny-breast06.txt
+  population_criteria:
+    edad: 18 Years a 105 Years (ADULT, OLDER_ADULT)
+- document_key: ct-mama-katherine
+  source_type: clinical_trial
+  source_name: ClinicalTrials.gov
+  external_id: NCT01772472
+  title: A Study of Trastuzumab Emtansine Versus Trastuzumab as Adjuvant Therapy in Patients With HER2-Positive Breast Cancer
+    Who Have Residual Tumor in the Breast or Axillary Lymph Nodes Following Preoperative Therapy (KATHERINE)
+  language: en
+  cancer_type_tags:
+  - mama
+  published_at: '2013-01-21'
+  study_design: eca
+  population: adulto
+  original_format: html
+  original_url: https://clinicaltrials.gov/study/NCT01772472
+  license: Dominio público
+  license_url: https://clinicaltrials.gov/about-site/terms-conditions
+  license_verified_at: '2026-11-03'
+  license_evidence: 'https://clinicaltrials.gov/about-site/terms-conditions (consultada el 2026-11-03; texto servido por la
+    aplicación): «In any publication or distribution of these data, you should: Attribute the source of the data as ClinicalTrials.gov;
+    Update the data such that they are current at all times; Clearly display the date the data were processed by ClinicalTrials.gov;
+    State any modifications made to the content of the data, along with a complete description of the modifications». «Some
+    ClinicalTrials.gov data may be subject to the copyright of third parties.» Registro de ensayo, no evidencia de eficacia
+    (ADR-36, Enmienda 1). Clase dominio_publico decidida en la Enmienda 1 de ADR-36 (obra del gobierno de EE. UU.).'
+  downloaded_at: '2026-11-03'
+  trial_phase: III
+  primary_endpoint: Invasive Disease-free Survival (IDFS) Rate at 3 Years
+  sample_size: 1486
+  last_updated_at: '2025-07-22'
+  checksum: c054d65f371e83a37f852215ceef855f4afeafdce31220141e5add77bf0e2277
+  text_path: docs/ct-mama-katherine.txt
+  population_criteria:
+    edad: 18 Years a sin máximo (ADULT, OLDER_ADULT)
+- document_key: ct-prostata-arasens
+  source_type: clinical_trial
+  source_name: ClinicalTrials.gov
+  external_id: NCT02799602
+  title: Darolutamide in Addition to Standard Androgen Deprivation Therapy and Docetaxel in Metastatic Hormone-Sensitive Prostate
+    Cancer
+  language: en
+  cancer_type_tags:
+  - prostata
+  published_at: '2016-06-15'
+  study_design: eca
+  population: adulto
+  original_format: html
+  original_url: https://clinicaltrials.gov/study/NCT02799602
+  license: Dominio público
+  license_url: https://clinicaltrials.gov/about-site/terms-conditions
+  license_verified_at: '2026-11-03'
+  license_evidence: 'https://clinicaltrials.gov/about-site/terms-conditions (consultada el 2026-11-03; texto servido por la
+    aplicación): «In any publication or distribution of these data, you should: Attribute the source of the data as ClinicalTrials.gov;
+    Update the data such that they are current at all times; Clearly display the date the data were processed by ClinicalTrials.gov;
+    State any modifications made to the content of the data, along with a complete description of the modifications». «Some
+    ClinicalTrials.gov data may be subject to the copyright of third parties.» Registro de ensayo, no evidencia de eficacia
+    (ADR-36, Enmienda 1). Clase dominio_publico decidida en la Enmienda 1 de ADR-36 (obra del gobierno de EE. UU.).'
+  downloaded_at: '2026-11-03'
+  trial_phase: III
+  primary_endpoint: OS From Date of Randomization Until Death From Any Cause - Number of Events
+  sample_size: 1306
+  last_updated_at: '2025-12-04'
+  checksum: 015d470ab83c4525f112e2a39796b762dc8d4a6cd863f26e6418060509eb1f43
+  text_path: docs/ct-prostata-arasens.txt
+  population_criteria:
+    edad: 18 Years a sin máximo (ADULT, OLDER_ADULT)
+- document_key: ct-prostata-aramis
+  source_type: clinical_trial
+  source_name: ClinicalTrials.gov
+  external_id: NCT02200614
+  title: Efficacy and Safety Study of Darolutamide (ODM-201) in Men With High-risk Non-metastatic Castration-resistant Prostate
+    Cancer
+  language: en
+  cancer_type_tags:
+  - prostata
+  published_at: '2014-07-25'
+  study_design: eca
+  population: adulto
+  original_format: html
+  original_url: https://clinicaltrials.gov/study/NCT02200614
+  license: Dominio público
+  license_url: https://clinicaltrials.gov/about-site/terms-conditions
+  license_verified_at: '2026-11-03'
+  license_evidence: 'https://clinicaltrials.gov/about-site/terms-conditions (consultada el 2026-11-03; texto servido por la
+    aplicación): «In any publication or distribution of these data, you should: Attribute the source of the data as ClinicalTrials.gov;
+    Update the data such that they are current at all times; Clearly display the date the data were processed by ClinicalTrials.gov;
+    State any modifications made to the content of the data, along with a complete description of the modifications». «Some
+    ClinicalTrials.gov data may be subject to the copyright of third parties.» Registro de ensayo, no evidencia de eficacia
+    (ADR-36, Enmienda 1). Clase dominio_publico decidida en la Enmienda 1 de ADR-36 (obra del gobierno de EE. UU.).'
+  downloaded_at: '2026-11-03'
+  trial_phase: III
+  primary_endpoint: Metastasis-Free Survival
+  sample_size: 1509
+  last_updated_at: '2022-06-28'
+  checksum: 94ffc2473ea6a568314b97ad2a056005ddadeec9bdf3c998e20a3fd3e978a28e
+  text_path: docs/ct-prostata-aramis.txt
+  population_criteria:
+    edad: 18 Years a sin máximo (ADULT, OLDER_ADULT)
+- document_key: ct-prostata-latitude
+  source_type: clinical_trial
+  source_name: ClinicalTrials.gov
+  external_id: NCT01715285
+  title: A Study of Abiraterone Acetate Plus Low-Dose Prednisone Plus Androgen Deprivation Therapy (ADT) Versus ADT Alone
+    in Newly Diagnosed Participants With High-Risk, Metastatic Hormone-Naive Prostate Cancer (mHNPC)
+  language: en
+  cancer_type_tags:
+  - prostata
+  published_at: '2012-10-26'
+  study_design: eca
+  population: adulto
+  original_format: html
+  original_url: https://clinicaltrials.gov/study/NCT01715285
+  license: Dominio público
+  license_url: https://clinicaltrials.gov/about-site/terms-conditions
+  license_verified_at: '2026-11-03'
+  license_evidence: 'https://clinicaltrials.gov/about-site/terms-conditions (consultada el 2026-11-03; texto servido por la
+    aplicación): «In any publication or distribution of these data, you should: Attribute the source of the data as ClinicalTrials.gov;
+    Update the data such that they are current at all times; Clearly display the date the data were processed by ClinicalTrials.gov;
+    State any modifications made to the content of the data, along with a complete description of the modifications». «Some
+    ClinicalTrials.gov data may be subject to the copyright of third parties.» Registro de ensayo, no evidencia de eficacia
+    (ADR-36, Enmienda 1). Clase dominio_publico decidida en la Enmienda 1 de ADR-36 (obra del gobierno de EE. UU.).'
+  downloaded_at: '2026-11-03'
+  trial_phase: III
+  primary_endpoint: Radiographic Progression-Free Survival (PFS)
+  sample_size: 1209
+  last_updated_at: '2025-02-04'
+  checksum: 9d92fd13ae1c5f68103621bc3fb28bf03df3a58d227bd4d932ed058c5ed95eaa
+  text_path: docs/ct-prostata-latitude.txt
+  population_criteria:
+    edad: 18 Years a sin máximo (ADULT, OLDER_ADULT)
+- document_key: ct-prostata-spartan
+  source_type: clinical_trial
+  source_name: ClinicalTrials.gov
+  external_id: NCT01946204
+  title: A Study of Apalutamide (ARN-509) in Men With Non-Metastatic Castration-Resistant Prostate Cancer
+  language: en
+  cancer_type_tags:
+  - prostata
+  published_at: '2013-09-19'
+  study_design: eca
+  population: adulto
+  original_format: html
+  original_url: https://clinicaltrials.gov/study/NCT01946204
+  license: Dominio público
+  license_url: https://clinicaltrials.gov/about-site/terms-conditions
+  license_verified_at: '2026-11-03'
+  license_evidence: 'https://clinicaltrials.gov/about-site/terms-conditions (consultada el 2026-11-03; texto servido por la
+    aplicación): «In any publication or distribution of these data, you should: Attribute the source of the data as ClinicalTrials.gov;
+    Update the data such that they are current at all times; Clearly display the date the data were processed by ClinicalTrials.gov;
+    State any modifications made to the content of the data, along with a complete description of the modifications». «Some
+    ClinicalTrials.gov data may be subject to the copyright of third parties.» Registro de ensayo, no evidencia de eficacia
+    (ADR-36, Enmienda 1). Clase dominio_publico decidida en la Enmienda 1 de ADR-36 (obra del gobierno de EE. UU.).'
+  downloaded_at: '2026-11-03'
+  trial_phase: III
+  primary_endpoint: Metastasis-Free Survival (MFS) by Blinded Independent Central Review (BICR)
+  sample_size: 1207
+  last_updated_at: '2026-09-28'
+  checksum: dcf15619ad89af28bb9c6c3bf11f3af3c9e6c6958940e7a75e2a78d675b47193
+  text_path: docs/ct-prostata-spartan.txt
+  population_criteria:
+    edad: 18 Years a sin máximo (ADULT, OLDER_ADULT)
+- document_key: ct-prostata-prevail
+  source_type: clinical_trial
+  source_name: ClinicalTrials.gov
+  external_id: NCT01212991
+  title: A Safety and Efficacy Study of Oral MDV3100 in Chemotherapy-Naive Patients With Progressive Metastatic Prostate Cancer
+  language: en
+  cancer_type_tags:
+  - prostata
+  published_at: '2010-10-01'
+  study_design: eca
+  population: adulto
+  original_format: html
+  original_url: https://clinicaltrials.gov/study/NCT01212991
+  license: Dominio público
+  license_url: https://clinicaltrials.gov/about-site/terms-conditions
+  license_verified_at: '2026-11-03'
+  license_evidence: 'https://clinicaltrials.gov/about-site/terms-conditions (consultada el 2026-11-03; texto servido por la
+    aplicación): «In any publication or distribution of these data, you should: Attribute the source of the data as ClinicalTrials.gov;
+    Update the data such that they are current at all times; Clearly display the date the data were processed by ClinicalTrials.gov;
+    State any modifications made to the content of the data, along with a complete description of the modifications». «Some
+    ClinicalTrials.gov data may be subject to the copyright of third parties.» Registro de ensayo, no evidencia de eficacia
+    (ADR-36, Enmienda 1). Clase dominio_publico decidida en la Enmienda 1 de ADR-36 (obra del gobierno de EE. UU.).'
+  downloaded_at: '2026-11-03'
+  trial_phase: III
+  primary_endpoint: Overall Survival
+  sample_size: 1717
+  last_updated_at: '2020-03-17'
+  checksum: 48ae48c12bf67a48ef2d05ef03354f032947c1d3c1a0d756759f1cea6cda295d
+  text_path: docs/ct-prostata-prevail.txt
+  population_criteria:
+    edad: 18 Years a sin máximo (ADULT, OLDER_ADULT)

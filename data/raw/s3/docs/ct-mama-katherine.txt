@@ -1,0 +1,67 @@
+Source: ClinicalTrials.gov (U.S. National Library of Medicine), study record NCT01772472, last updated 2025-07-22; retrieved 2026-11-03 through the ClinicalTrials.gov API v2 (data timestamp 2026-11-03T10:00:05). Modifications: selected fields reordered as plain text; contacts, locations, results and documents omitted. This is a trial registry record, not evidence of efficacy.
+
+Title
+A Randomized, Multicenter, Open-Label Phase III Study to Evaluate the Efficacy and Safety of Trastuzumab Emtansine Versus Trastuzumab as Adjuvant Therapy for Patients With HER2-Positive Primary Breast Cancer Who Have Residual Tumor Present Pathologically in the Breast or Axillary Lymph Nodes Following Preoperative Therapy
+
+Brief title
+A Study of Trastuzumab Emtansine Versus Trastuzumab as Adjuvant Therapy in Patients With HER2-Positive Breast Cancer Who Have Residual Tumor in the Breast or Axillary Lymph Nodes Following Preoperative Therapy (KATHERINE)
+
+Sponsor
+Hoffmann-La Roche
+
+Status: COMPLETED. Phase: PHASE3. Study type: INTERVENTIONAL. Enrollment: 1486.
+
+Brief summary
+This 2-arm, randomized, open-label study will evaluate the efficacy and safety of trastuzumab emtansine versus trastuzumab as adjuvant therapy in patients with HER2-positive breast cancer who have residual tumor present in the breast or axillary lymph nodes following preoperative therapy. Eligible patients will be randomized to receive either trastuzumab emtansine 3.6 mg/kg or trastuzumab 6 mg/kg intravenously every 3 weeks for 14 cycles. Radiotherapy and/or hormone therapy will be given in addition if indicated.
+
+Conditions:
+- Breast Cancer
+
+Design
+Allocation: RANDOMIZED. Intervention model: PARALLEL. Masking: NONE.
+
+Arm (ACTIVE_COMPARATOR): Trastuzumab
+
+Arm (EXPERIMENTAL): Trastuzumab emtansine
+
+Primary outcomes
+- Invasive Disease-free Survival (IDFS) Rate at 3 Years (At Year 3). IDFS event was defined as the first occurrence of any one of the following events: ipsilateral invasive breast tumor recurrence (i.e., an invasive breast cancer involving the same breast parenchyma as the original primary lesion); ipsilateral local-regional invasive breast cancer recurrence (i.e., an invasive breast cancer in the axilla, regional lymph nodes, chest wall and/or skin of the ipsilateral breast); distant recurrence (i.e., evidence of breast cancer in any anatomic site-other than the 2 above-mentioned sites - that has either been histologically confirmed or clinically diagnosed as recurrent invasive breast cancer); contralateral invasive breast cancer; death attributable to any cause including breast cancer, non-breast cancer or unknown cause . 3-year IDFS rate in ITT population was estimated using Kaplan Meier (KM) method and the percentage of participants who were event-free 3 years after randomization was estimated.
+
+Eligibility criteria
+Inclusion Criteria:
+
+* Adult patient, \>/= 18 years of age
+* HER2-positive breast cancer
+* Histologically confirmed invasive breast carcinoma
+* Clinical stage T1-4/N0-3/M0 at presentation (patients with T1a/bN0 tumors will not be eligible)
+* Completion of preoperative systemic chemotherapy and HER2-directed treatment consisting of at least 6 cycles of chemotherapy with a total duration of at least 16 weeks, including at least 9 weeks of trastuzumab and at least 9 weeks of taxane-based therapy
+* Adequate excision: surgical removal of all clinically evident disease in the breast and lymph nodes as specified in protocol
+* Pathological evidence of residual invasive carcinoma in the breast or axillary lymph nodes following completion of preoperative therapy
+* An interval of no more than 12 weeks between the date of surgery and the date of randomization
+* Known hormone-receptor status
+* Eastern Cooperative Oncology Group (ECOG) performance status 0 or 1
+* Adequate hematologic, renal and liver function
+* Screening Left ventricular ejection fraction (LVEF) \>/= 50% on echocardiogram (ECHO) or multiple-gated acquisition (MUGA) after receiving neoadjuvant chemotherapy and no decrease in LVEF by more than 15% absolute points from the pre-chemotherapy LVEF. Or, if pre-chemotherapy LVEF was not assessed, the screening LVEF must be \>/= 55% after completion of neoadjuvant chemotherapy.
+* For women who are not postmenopausal or surgically sterile: agreement to remain abstinent or use single or combined contraceptive methods that result in a failure rate of \< 1% per year during the treatment period and for at least 7 months after the last dose of study drug
+* Documentation of hepatitis B virus and hepatitis C virus serology is required
+
+Exclusion Criteria:
+
+* Stage IV (metastatic) breast cancer
+* History of any prior (ipsi- or contralateral breast cancer except lobular carcinoma in situ
+* Evidence of clinically evident gross residual or recurrent disease following preoperative therapy and surgery
+* Progressive disease during preoperative systemic therapy
+* Treatment with any anti-cancer investigational drug within 28 days prior to commencing study treatment
+* History of other malignancy within the last 5 years except for appropriately treated carcinoma in situ of the cervix, non-melanoma skin carcinoma, Stage I uterine cancer, or other non-breast malignancies with a similar outcome to those mentioned above
+* Patients for whom radiotherapy would be recommended for breast cancer treatment but for whom it is contraindicated because of medical reasons
+* Current NCI CTCAE (Version 4.0) Grade \>/= 2 peripheral neuropathy
+* History of exposure to the following cumulative doses of anthracyclines: Doxorubicin \> 240 mg/m2; Epirubicin or Liposomal Doxorubicin-Hydrochloride (Myocet®) \> 480 mg/m2; For other anthracyclines, exposure equivalent to doxorubicin \> 240 mg/m2
+* Cardiopulmonary dysfunction as defined by protocol
+* Prior treatment with trastuzumab emtansine
+* Current severe, uncontrolled systemic disease
+* Pregnant or lactating women
+* Any known active liver disease, e.g. due to HBV, HCV, autoimmune hepatic disorders, or sclerosing cholangitis
+* Concurrent serious uncontrolled infections requiring treatment or known infection with HIV
+* History of intolerance, including Grade 3 to 4 infusion reaction or hypersensitivity to trastuzumab or murine proteins or any components of the product
+
+Sex: ALL. Minimum age: 18 Years. Maximum age: not stated. Standard ages: ADULT, OLDER_ADULT. Healthy volunteers: False.
