@@ -16,7 +16,8 @@ import { analizarYAbrirHilo, evidence, followUp, preguntar } from '../support/pa
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn() }) }));
 
 const bff = crearBffAnalisisSimulado();
-const PREGUNTA = '¿Existen ensayos que evalúen esta opción en pacientes con función renal reducida?';
+const PREGUNTA =
+  '¿Existen ensayos que evalúen esta opción en pacientes con función renal reducida?';
 const IMPERATIVOS = /\b(abre|reformula|escribe|consulta|reintenta|debe|recomend\w*)\b/i;
 
 function turnoDeEstado(estado: typeof seguimientoSinEvidencia) {
@@ -40,9 +41,9 @@ describe('Hilo de seguimiento · estados', () => {
     expect(await screen.findByText(followUp.limiteConTotal.replace('{max}', '10'))).toBeTruthy();
     expect(screen.getByRole('button', { name: followUp.nuevoAnalisis })).toBeTruthy();
     expect(screen.getByLabelText(followUp.campo).hasAttribute('disabled')).toBe(true);
-    expect(
-      screen.getByRole('button', { name: followUp.preguntar }).hasAttribute('disabled'),
-    ).toBe(true);
+    expect(screen.getByRole('button', { name: followUp.preguntar }).hasAttribute('disabled')).toBe(
+      true,
+    );
     expect(screen.getByText('10 de 10 preguntas usadas')).toBeTruthy();
     const hilo = screen.getByRole('region', { name: followUp.titulo });
     expect(hilo.textContent).not.toMatch(/409|LIMITE_SEGUIMIENTO/);
@@ -73,9 +74,7 @@ describe('Hilo de seguimiento · estados', () => {
     const turno = await turnoDeEstado(seguimientoFueraDeContexto);
     expect(within(turno).getByText(followUp.fueraDeContexto)).toBeTruthy();
     expect(within(turno).getByRole('button', { name: followUp.nuevoAnalisis })).toBeTruthy();
-    expect(within(turno).getByRole('note').textContent).toBe(
-      seguimientoFueraDeContexto.disclaimer,
-    );
+    expect(within(turno).getByRole('note').textContent).toBe(seguimientoFueraDeContexto.disclaimer);
     expect(within(turno).queryByRole('button', { name: /PMC|CDR/ })).toBeNull();
     expect(followUp.fueraDeContexto).not.toMatch(IMPERATIVOS);
   });

@@ -34,9 +34,9 @@ export async function solicitarSeguimiento(
 ): Promise<ResultadoDeSeguimiento> {
   const cuerpo = CUERPO_DE_SEGUIMIENTO.safeParse({ question });
   if (!cuerpo.success) return { tipo: 'no_procesable' };
-  const ruta = `/api/evidence-analyses/${encodeURIComponent(analysisId)}/follow-ups`;
+  const id = encodeURIComponent(analysisId);
   try {
-    const respuesta = await fetch(ruta, {
+    const respuesta = await fetch(`/api/evidence-analyses/${id}/follow-ups`, {
       method: 'POST',
       credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json' },

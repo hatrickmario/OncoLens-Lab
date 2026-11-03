@@ -10,7 +10,7 @@ import {
 /** Id del campo de pregunta del panel: «Nuevo análisis» del hilo de seguimiento lleva el foco aquí (design D6). */
 export const ID_CAMPO_PREGUNTA = 'pregunta-clinica';
 
-const CAMPO_PREGUNTA =zEvidenceAnalysisRequest.shape.query;
+const CAMPO_PREGUNTA = zEvidenceAnalysisRequest.shape.query;
 
 /**
  * Pregunta tal como la valida y la envía el cliente: la regla NFC + espacios de `clinical-api` (US-250) y después

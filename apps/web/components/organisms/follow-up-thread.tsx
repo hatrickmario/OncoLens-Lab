@@ -17,12 +17,11 @@ import {
   type FaseDelHilo,
 } from '../../lib/evidence/seguimiento/fase-tras-seguimiento';
 import { solicitarSeguimiento } from '../../lib/evidence/seguimiento/solicitar-seguimiento';
-import { mensajes, rellenar } from '../../lib/mensajes';
+import { mensajes } from '../../lib/mensajes';
 import { RUTA_LOGIN_EXPIRADA } from '../../lib/sesion/motivo-de-sesion';
-import { AnalysisFailure } from '../molecules/analysis-failure';
 import { FollowUpContext } from '../molecules/follow-up-context';
 import { FollowUpForm } from '../molecules/follow-up-form';
-import { FollowUpStateNotice } from '../molecules/follow-up-state-notice';
+import { FollowUpPhaseNotice } from '../molecules/follow-up-phase-notice';
 import { FollowUpTurnItem } from '../molecules/follow-up-turn-item';
 
 export interface FollowUpThreadProps {
@@ -84,25 +83,12 @@ export function FollowUpThread({ analisis, onVerFragmento }: FollowUpThreadProps
           />
         ))}
       </div>
-      {fase.tipo === 'enviando' && (
-        <div role="status">
-          <p>{followUp.progresoBuscando}</p>
-          <p>{followUp.progresoValidando}</p>
-        </div>
-      )}
-      {limite && (
-        <FollowUpStateNotice
-          texto={
-            maxFollowUps === undefined
-              ? followUp.limiteSinTotal
-              : rellenar(followUp.limiteConTotal, { max: maxFollowUps })
-          }
-          onNuevoAnalisis={enfocarCampoDelPanel}
-        />
-      )}
-      {(fase.tipo === 'error' || fase.tipo === 'red' || fase.tipo === 'limite') && (
-        <AnalysisFailure fallo={fase} onReintentar={() => void enviar(ultima.current)} />
-      )}
+      <FollowUpPhaseNotice
+        fase={fase}
+        maxFollowUps={maxFollowUps}
+        onNuevoAnalisis={enfocarCampoDelPanel}
+        onReintentar={() => void enviar(ultima.current)}
+      />
       <FollowUpForm
         valor={pregunta}
         enviando={fase.tipo === 'enviando'}

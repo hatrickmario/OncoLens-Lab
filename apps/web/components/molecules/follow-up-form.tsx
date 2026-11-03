@@ -35,7 +35,7 @@ export function FollowUpForm(props: FollowUpFormProps) {
         onChange={(evento) => onCambiar(evento.target.value)}
       />
       {error && (
-        <p id="pregunta-seguimiento-error" role="alert" className="m-0 text-error">
+        <p id="pregunta-seguimiento-error" role="alert" className="text-error m-0">
           {error}
         </p>
       )}

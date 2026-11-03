@@ -37,7 +37,9 @@ describe('Hilo de seguimiento · contenido', () => {
     const hilo = screen.getByRole('heading', { name: followUp.titulo });
     expect(base.compareDocumentPosition(hilo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.getByText(followUp.contextoTitulo)).toBeTruthy();
-    expect(screen.getByText(/Los hallazgos del análisis son contexto, no evidencia\./)).toBeTruthy();
+    expect(
+      screen.getByText(/Los hallazgos del análisis son contexto, no evidencia\./),
+    ).toBeTruthy();
     expect(screen.getByText('0 de 10 preguntas usadas')).toBeTruthy();
   });
 
@@ -80,7 +82,9 @@ describe('Hilo de seguimiento · contenido', () => {
     expect(chips[1]!.closest('li')!.textContent).not.toContain(followUp.nuevaFuente);
 
     await usuario.click(chips[1]!);
-    expect(within(turno).getByText('Autores').nextElementSibling?.textContent).toBe('No disponible');
+    expect(within(turno).getByText('Autores').nextElementSibling?.textContent).toBe(
+      'No disponible',
+    );
     await usuario.click(within(turno).getByRole('button', { name: 'Ver fragmento' }));
     expect(screen.getByText(seguimientoTurno.citedSources[1]!.chunkTextSnapshot)).toBeTruthy();
   });

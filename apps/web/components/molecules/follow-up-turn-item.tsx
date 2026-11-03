@@ -19,7 +19,12 @@ export interface FollowUpTurnItemProps {
 }
 
 /** Un turno: pregunta enmascarada, respuesta citada o estado, y el aviso de IA con la etiqueta académica (RN-19). */
-export function FollowUpTurnItem({ turno, base, onVerFragmento, onNuevoAnalisis }: FollowUpTurnItemProps) {
+export function FollowUpTurnItem({
+  turno,
+  base,
+  onVerFragmento,
+  onNuevoAnalisis,
+}: FollowUpTurnItemProps) {
   const { followUp, app } = mensajes();
   const idTitulo = `seguimiento-turno-${turno.turnNumber}`;
   const textoDeEstado =
