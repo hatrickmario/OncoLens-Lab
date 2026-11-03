@@ -1281,6 +1281,10 @@ export type GetPatientCaseErrors = {
      * Recurso no encontrado.
      */
     404: ErrorNoEncontrado;
+    /**
+     * Fallo interno de clinical-api. Mensaje fijo, sin eco ni detalle interno.
+     */
+    500: ErrorInterno;
 };
 
 export type GetPatientCaseError = GetPatientCaseErrors[keyof GetPatientCaseErrors];

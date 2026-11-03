@@ -497,6 +497,31 @@
       "target": "#/paths/~1platform~1patients~1{patientId}~1completeness/get/responses/500"
     },
     {
+      "file": "case-view-p-caso.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/CaseView"
+    },
+    {
+      "file": "error-no-autenticado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1case/get/responses/401"
+    },
+    {
+      "file": "error-permiso-denegado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1case/get/responses/403"
+    },
+    {
+      "file": "error-no-encontrado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1case/get/responses/404"
+    },
+    {
+      "file": "error-interno.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1case/get/responses/500"
+    },
+    {
       "file": "rag-query-request-poblacion-lista.json",
       "spec": "rag-orchestrator",
       "target": "#/components/schemas/RagQueryInternalRequest"

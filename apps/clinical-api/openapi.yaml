@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — Platform API (Backend 1 / clinical-api)
-  version: 1.15.1
+  version: 1.16.0
   description: >-
     API pública, accesible solo a través de los Route Handlers de web (clinical-api no
     publica puerto al host). Autenticación por cookie de sesión HttpOnly + Secure +
@@ -290,6 +290,15 @@ paths:
       responses:
         "200":
           description: Vista de caso.
+          headers:
+            Cache-Control:
+              description: >-
+                Siempre no-store: la vista lleva texto libre de los eventos sin enmascarar (lectura
+                clínica del oncólogo autorizado) y ni el navegador ni un intermedio deben guardarla.
+              required: true
+              schema:
+                type: string
+                const: no-store
           content:
             application/json:
               schema:
@@ -300,6 +309,8 @@ paths:
           $ref: '#/components/responses/PermisoDenegado'
         "404":
           $ref: '#/components/responses/NoEncontrado'
+        "500":
+          $ref: '#/components/responses/ErrorInterno'
 
   /platform/patients/{patientId}/documents:
     post:
