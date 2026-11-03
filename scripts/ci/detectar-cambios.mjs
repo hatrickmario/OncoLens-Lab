@@ -87,6 +87,9 @@ function motivoDeExclusion(ruta, reglas, reglasDeEval) {
   return null;
 }
 
+/** Una base real: ni vacía ni la `0000…` de un push que crea la rama. */
+const hayBaseValida = (base) => Boolean(base) && !/^0+$/.test(base);
+
 const COMPLETA = (motivo, excluidas = []) => ({ documentacion: false, omitibles: [], motivo, excluidas });
 
 /**
@@ -95,7 +98,7 @@ const COMPLETA = (motivo, excluidas = []) => ({ documentacion: false, omitibles:
  */
 export function clasificarCambios({ evento, base, diff, reglas, reglasDeEval }) {
   if (evento !== 'pull_request') return COMPLETA(`evento ${evento || '(desconocido)'}: la CI corre completa fuera de un pull_request`);
-  if (!base || /^0+$/.test(base)) return COMPLETA('base vacía o 0000…: sin referencia para comparar');
+  if (!hayBaseValida(base)) return COMPLETA('base vacía o 0000…: sin referencia para comparar');
   if (diff === null) return COMPLETA('sin merge-base con la base: no se compara con un diff de dos puntos');
   if (diff.length === 0) return COMPLETA('diff vacío');
   const { soloDocumentacion, excluidas } = esSoloDocumentacion(diff, reglas, reglasDeEval);
@@ -126,8 +129,8 @@ export function rutasDesdeMergeBase(raiz, base) {
 export function detectarCambios({ raiz = RAIZ, base, evento, archivoDeReglas, archivoDeWorkflow } = {}) {
   const reglas = cargarReglasDeCambios({ archivo: archivoDeReglas, workflow: archivoDeWorkflow });
   const reglasDeEval = cargarReglas();
-  const hayBase = evento === 'pull_request' && base && !/^0+$/.test(base);
-  return clasificarCambios({ evento, base, diff: hayBase ? rutasDesdeMergeBase(raiz, base) : null, reglas, reglasDeEval });
+  const diff = evento === 'pull_request' && hayBaseValida(base) ? rutasDesdeMergeBase(raiz, base) : null;
+  return clasificarCambios({ evento, base, diff, reglas, reglasDeEval });
 }
 
 function publicar(resultado) {
