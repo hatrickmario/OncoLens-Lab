@@ -1,5 +1,5 @@
-# 12 preguntas terapéuticas sintéticas (6 mama, 6 próstata). Todo inventado. `revisada_por_oncologo` marca los 4 casos que el
-# contrato de US-140 AC-5 declara revisados; la revisión humana real la confirma el oncólogo (H-1 de tasks.md).
+# 12 preguntas terapéuticas sintéticas (6 mama, 6 próstata). Todo inventado. Ningún caso está revisado todavía: el oncólogo
+# los revisa (H-2 de tasks.md; OP-01, OP-02, OP-07 y OP-08 son los 4 candidatos) y entonces cambia el flag a true.
 clase: sintetico
 preguntas:
   - id: OP-01
@@ -8,14 +8,14 @@ preguntas:
     modo_acierto: cualquiera
     pregunta: '¿Qué opciones describe la evidencia sobre adjuvant anti-HER2 therapy after surgery en cáncer de mama?'
     evidencia: [{documento: doc-a1, cita: 'Adjuvant anti-HER2 therapy after surgery'}]
-    revisada_por_oncologo: true
+    revisada_por_oncologo: false
   - id: OP-02
     idioma: es
     cancer: mama
     modo_acierto: cualquiera
     pregunta: '¿Qué opciones describe la evidencia sobre adjuvant therapy after surgery en cáncer de mama?'
     evidencia: [{documento: doc-a1, cita: 'Adjuvant anti-HER2 therapy after surgery'}]
-    revisada_por_oncologo: true
+    revisada_por_oncologo: false
   - id: OP-03
     idioma: es
     cancer: mama
@@ -50,14 +50,14 @@ preguntas:
     modo_acierto: cualquiera
     pregunta: '¿Qué opciones describe la evidencia sobre androgen deprivation therapy and androgen receptor inhibitor en cáncer de próstata?'
     evidencia: [{documento: doc-p1, cita: 'Androgen deprivation therapy plus an androgen receptor inhibitor'}]
-    revisada_por_oncologo: true
+    revisada_por_oncologo: false
   - id: OP-08
     idioma: es
     cancer: prostata
     modo_acierto: cualquiera
     pregunta: '¿Qué opciones describe la evidencia sobre androgen deprivation therapy plus chemotherapy en cáncer de próstata?'
     evidencia: [{documento: doc-p1, cita: 'Androgen deprivation therapy plus an androgen receptor inhibitor'}]
-    revisada_por_oncologo: true
+    revisada_por_oncologo: false
   - id: OP-09
     idioma: es
     cancer: prostata

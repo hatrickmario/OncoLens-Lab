@@ -10,6 +10,9 @@
   pregunta, contexto desidentificado, corpus de test, opciones esperadas y orden esperado por RN-28; 4 `revisada_por_oncologo`;
   2 con opción de fuente única no comparable; guiones falsos derivados de FX-10c-a (`LLM-CUATRO`, `LLM-TRES`, `APL-FIJA`) ·
   test después: test de carga del dataset (`dataset_opciones`) que comprueba 12/6/6/4/2 · commit `test(L1D-246)` + `feat(L1D-246)`.
+  Hecho: `test_dataset_y_config_opciones.py` y `test_opciones_coherencia_dataset.py` (el orden esperado por RN-28 coincide con el
+  de la corrida falsa). Ningún caso está marcado `revisada_por_oncologo` (no hay revisión humana): los 4 candidatos (OP-01,
+  OP-02, OP-07, OP-08) esperan H-2 y AC-5 se prueba con un fixture de test con 4 revisados.
 - [x] 1.2 `eval/configs/opciones-fake.yaml` (FX-T5a-a + FX-10c-a, reloj simulado, `maxOptions: 3`, `regresion.reporte_referencia:
   reports/eval/s3-cierre.json`, `faithfulness_regression_tolerance: 0.05`, metas desde `metas-iniciales.yaml`) y
   `eval/configs/s5.yaml` (`proveedor: local`, mismos campos, `regresion.reporte_referencia: reports/eval/l1d-298-evaluate-modelos-locales-fx-t5a-a.json`, reporte del S4, P1 decidido; solo el corpus del dataset, sin el ampliado de `l1d-119`, P2 decidido) · test después: carga
@@ -67,9 +70,10 @@
   ```
   python -m app.evaluation.evaluate --config eval/configs/opciones-fake.yaml --suite opciones --salida ../../reports/eval --nombre-archivo l1d-246-opciones-fake.json
   ```
-- [ ] H-2 DIFERIDA -> H-2 · El oncólogo confirma que los 4 casos marcados `revisada_por_oncologo: true` en `data/evaluation/opciones/preguntas.yaml`
-  (OP-01, OP-02, OP-07, OP-08) son clínicamente coherentes con la evidencia sintética; sin esa confirmación el rótulo
-  «validada» de AC-5 es nominal · DIFERIDA -> H-2
+- [ ] H-2 DIFERIDA -> H-2 · Un oncólogo revisa los 4 casos candidatos (OP-01, OP-02, OP-07, OP-08) de
+  `data/evaluation/opciones/preguntas.yaml` y, si los confirma, cambia `revisada_por_oncologo` a `true` en esos casos
+  (registrando solo rol y fecha de la revisión, sin nombre, RN-10). Hasta entonces toda métrica de la familia sale
+  `no_validada` (0 validados, 12 no validados) y el rótulo «validada» de AC-5 no existe para el dataset real.
 
 ## deuda propuesta
 

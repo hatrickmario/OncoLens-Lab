@@ -28,7 +28,6 @@ from app.schemas.generated.models import ClinicalContext
 
 CASOS_ESPERADOS = 12
 CASOS_POR_TIPO = 6
-CASOS_REVISADOS = 4
 CASOS_CON_NO_COMPARABLE = 2
 
 

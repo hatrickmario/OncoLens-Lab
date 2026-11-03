@@ -27,6 +27,7 @@ from tests.support.fakes import RelojFijo
 
 CONFIG = RAIZ_APP / "eval" / "configs" / "opciones-fake.yaml"
 DATASET = RAIZ_REPO / "data" / "evaluation" / "opciones"
+REVISADAS_DE_PRUEBA = frozenset({"OP-01", "OP-02", "OP-07", "OP-08"})
 METRICAS = (
     "m_10_1",
     "m_10_2",
@@ -402,7 +403,16 @@ def test_opciones_marca_fuera_de_meta_sin_cambiar_el_codigo_cuando_la_fidelidad_
 def test_opciones_rotula_validada_solo_la_metrica_de_los_4_casos_revisados_cuando_hay_8_sin_revisar(
     tmp_path: Path,
 ) -> None:
-    codigo, reporte = correr(tmp_path)
+    """Fixture de test con 4 casos revisados: el dataset real no tiene ninguno hasta que el oncólogo lo confirme (H-2)."""
+
+    def revisar_cuatro(_: dict[str, Any], dataset: Path) -> None:
+        ruta = dataset / "preguntas.yaml"
+        crudo = yaml.safe_load(ruta.read_text(encoding="utf-8"))
+        for pregunta in crudo["preguntas"]:
+            pregunta["revisada_por_oncologo"] = pregunta["id"] in REVISADAS_DE_PRUEBA
+        ruta.write_text(yaml.safe_dump(crudo, allow_unicode=True), encoding="utf-8")
+
+    codigo, reporte = correr(tmp_path / "s", config=variante(tmp_path, revisar_cuatro))
 
     assert codigo == 0 and reporte is not None
     for nombre in METRICAS:
@@ -417,6 +427,23 @@ def test_opciones_rotula_validada_solo_la_metrica_de_los_4_casos_revisados_cuand
             "rotulo": "validada",
         }
     assert reporte["metricas_validadas"]["opciones_por_analisis"]["analisis"] == 4
+
+
+@pytest.mark.ac("US-140", 5)
+def test_opciones_rotula_no_validada_toda_metrica_cuando_el_dataset_real_no_tiene_casos_revisados(
+    tmp_path: Path,
+) -> None:
+    codigo, reporte = correr(tmp_path)
+
+    assert codigo == 0 and reporte is not None
+    for nombre in METRICAS:
+        assert reporte["metricas"][nombre]["validacion"] == {
+            "preguntas_validadas": 0,
+            "preguntas_no_validadas": 12,
+            "rotulo": "no_validada",
+        }
+        assert reporte["metricas_validadas"][nombre]["validacion"]["rotulo"] == "no_validada"
+    assert reporte["metricas_validadas"]["opciones_por_analisis"]["analisis"] == 0
 
 
 # --- AC-6 -----------------------------------------------------------------------------------------------------------

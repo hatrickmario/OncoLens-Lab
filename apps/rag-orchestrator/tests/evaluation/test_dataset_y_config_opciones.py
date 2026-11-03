@@ -20,7 +20,6 @@ from app.evaluation.dataset_opciones import (
     CASOS_CON_NO_COMPARABLE,
     CASOS_ESPERADOS,
     CASOS_POR_TIPO,
-    CASOS_REVISADOS,
     cargar_dataset_opciones,
 )
 from tests.evaluation.conftest import RAIZ_APP, RAIZ_REPO
@@ -43,14 +42,16 @@ def con_cambio(tmp_path: Path, cambiar: Any) -> Path:
     return ruta
 
 
-def test_dataset_trae_12_casos_6_por_tipo_4_revisados_y_2_con_no_comparable() -> None:
+def test_dataset_trae_12_casos_6_por_tipo_ninguno_revisado_y_2_con_no_comparable() -> None:
     dataset = cargar_dataset_opciones(DATASET)
 
     preguntas = dataset.base.preguntas
     assert len(preguntas) == CASOS_ESPERADOS == len(dataset.casos)
     assert sum(p.cancer == "mama" for p in preguntas) == CASOS_POR_TIPO
     assert sum(p.cancer == "prostata" for p in preguntas) == CASOS_POR_TIPO
-    assert len(dataset.base.revisadas) == CASOS_REVISADOS
+    assert (
+        dataset.base.revisadas == frozenset()
+    )  # nadie lo ha revisado: lo confirma el oncólogo (H-2)
     assert sum(c.no_comparable_mostrada for c in dataset.casos) == CASOS_CON_NO_COMPARABLE
 
 
