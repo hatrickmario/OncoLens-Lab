@@ -15,9 +15,12 @@ import type { LineaDeLog, Registrar } from '../../infrastructure/logger.js';
 import { authorize } from '../../middleware/authorize.js';
 import { crearTraceIdMiddleware, traceIdDe } from '../../middleware/trace-id.middleware.js';
 import { FalloDePersistenciaError } from './analysis-completion.js';
+import { DesidentificacionNoDisponible } from './deidentification/context-deidentifier.js';
+import { EntornoNoSintetico } from './deidentification/entorno-sintetico.guard.js';
 import { followUpCreateSchema } from './follow-up.schema.js';
 import {
   AnalisisNoEncontradoError,
+  AnalisisSinEvidenciaError,
   LimiteDeSeguimientoError,
   type FollowUpService,
 } from './follow-up.service.js';
@@ -53,10 +56,29 @@ const LIMITE_ALCANZADO: Rechazo = {
   resultado: 'limite_alcanzado',
 };
 
+const ANALISIS_SIN_EVIDENCIA: Rechazo = {
+  status: 422,
+  codigo: 'ANALISIS_SIN_EVIDENCIA',
+  resultado: 'analisis_sin_evidencia',
+};
+const DESIDENTIFICACION_NO_DISPONIBLE: Rechazo = {
+  status: 503,
+  codigo: 'DESIDENTIFICACION_NO_DISPONIBLE',
+  resultado: 'desidentificacion_no_disponible',
+};
+const DESIDENTIFICACION_RECHAZADA: Rechazo = {
+  status: 502,
+  codigo: 'ERROR_SERVICIO_IA',
+  resultado: 'desidentificacion_rechazada',
+};
+
 /** Errores del dominio → respuesta HTTP; `undefined` si no es uno de ellos (sigue al 500 genérico). */
 function rechazoDe(error: unknown): Rechazo | undefined {
   if (error instanceof LimiteDeSeguimientoError) return LIMITE_ALCANZADO;
+  if (error instanceof AnalisisSinEvidenciaError) return ANALISIS_SIN_EVIDENCIA;
   if (error instanceof FalloDePersistenciaError) return ERROR_INTERNO;
+  if (error instanceof DesidentificacionNoDisponible) return DESIDENTIFICACION_NO_DISPONIBLE;
+  if (error instanceof EntornoNoSintetico) return DESIDENTIFICACION_RECHAZADA;
   return undefined;
 }
 

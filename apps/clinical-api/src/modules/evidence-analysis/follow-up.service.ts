@@ -5,6 +5,7 @@ import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type { RegistroDeAnalisis } from './analysis-record.js';
 import { FalloDePersistenciaError } from './analysis-completion.js';
 import { calcularDeadline } from './evidence-analysis.service.js';
+import { RESPUESTA_INTERNA_INVALIDA, mapearFalloRagDeSeguimiento } from './rag-failure.js';
 import type { FollowUpRepository, TurnoDeSeguimiento, TurnoNuevo } from './follow-up.repository.js';
 import {
   armarRagFollowUpRequest,
@@ -120,6 +121,13 @@ export function crearFollowUpService(dependencias: DependenciasDelSeguimiento): 
     return registro;
   }
 
+  /** Solo un análisis `con_evidencia` admite preguntas: ni el `sin_evidencia` ni el `tipo_no_habilitado` tienen sobre qué. */
+  async function leerAnalisisConEvidencia(analysisId: string): Promise<RegistroDeAnalisis> {
+    const registro = await leerAnalisisExistente(analysisId);
+    if (registro.status !== 'con_evidencia') throw new AnalisisSinEvidenciaError();
+    return registro;
+  }
+
   /** Pregunta, memoria del análisis y evolución posterior, enmascaradas con el desidentificador de ADR-40 (RN-11). */
   async function armarRequest(
     { traceId, peticion }: SolicitudDeSeguimiento,
@@ -165,14 +173,18 @@ export function crearFollowUpService(dependencias: DependenciasDelSeguimiento): 
     }
   }
 
+  /** El turno a persistir desde la respuesta validada; `null` si no cumple el contrato o cita un `dataRef` que el análisis no conoce. */
   function armarTurno(
     solicitud: SolicitudDeSeguimiento,
     registro: RegistroDeAnalisis,
     respuesta: Extract<RespuestaDeSeguimientoRag, { ok: true }>,
     request: RagFollowUpRequest,
-  ): TurnoNuevo {
-    const cuerpo = zRagFollowUpResponseRefinado.parse(respuesta.cuerpo);
-    const { enlaces } = enlacesDelTurno(cuerpo.answer, registro.patientDataLinks);
+  ): TurnoNuevo | null {
+    const validada = zRagFollowUpResponseRefinado.safeParse(respuesta.cuerpo);
+    if (!validada.success) return null;
+    const cuerpo = validada.data;
+    const { enlaces, sinResolver } = enlacesDelTurno(cuerpo.answer, registro.patientDataLinks);
+    if (sinResolver.length > 0) return null;
     return {
       id: idsDeTurnos(),
       analysisId: solicitud.analysisId,
@@ -200,17 +212,18 @@ export function crearFollowUpService(dependencias: DependenciasDelSeguimiento): 
 
   return {
     async crear(solicitud) {
-      const registro = await leerAnalisisExistente(solicitud.analysisId);
+      const registro = await leerAnalisisConEvidencia(solicitud.analysisId);
       const turnos = await seguimientos.contarTurnos(solicitud.analysisId);
       if (superaLimiteDeSeguimiento(turnos, config.analysisFollowupMax)) {
         throw new LimiteDeSeguimientoError();
       }
       const request = await armarRequest(solicitud, registro);
       const respuesta = await consultar(request);
-      if (!respuesta.ok) throw new Error('fallo de rag-orchestrator');
-      const turno = await persistirTurnoAntesDeResponder(
-        armarTurno(solicitud, registro, respuesta, request),
-      );
+      if (!respuesta.ok)
+        return { tipo: 'fallo', respuesta: mapearFalloRagDeSeguimiento(respuesta) };
+      const nuevo = armarTurno(solicitud, registro, respuesta, request);
+      if (nuevo === null) return { tipo: 'fallo', respuesta: RESPUESTA_INTERNA_INVALIDA };
+      const turno = await persistirTurnoAntesDeResponder(nuevo);
       return { tipo: 'creado', cuerpo: aFollowUpTurn(turno, config.aiDisclaimerText) };
     },
     async listar(analysisId) {

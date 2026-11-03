@@ -6,6 +6,7 @@ import type { SupportedClaim } from '../../../../../packages/api-contracts/src/c
 import type { Consultador } from '../auth/auth.repository.js';
 import { sqlDatoVigente } from '../compartido/estados-de-revision.js';
 import type { RegistroDeAnalisis } from './analysis-record.js';
+import { superaLimiteDeSeguimiento } from './follow-up.reglas.js';
 import {
   eventoDe,
   registroDeFila,
@@ -60,7 +61,7 @@ export type EjecutarEnTransaccion = <T>(trabajo: (tx: Consultador) => Promise<T>
 
 const aJson = (valor: unknown): string => JSON.stringify(valor);
 
-/** `turn_number` lo calcula la propia sentencia: `max + 1` del análisis (la transacción con bloqueo llega con US-218 AC-4). */
+/** `turn_number` lo calcula la propia sentencia (`max + 1` del análisis) dentro de la transacción que bloquea el análisis. */
 const INSERTAR_TURNO = `
   INSERT INTO clinical.analysis_follow_up (
     id, analysis_id, turn_number, question_text, status, answer, cited_sources, omitted_claims,
@@ -124,7 +125,13 @@ export function crearFollowUpRepository(
   db: Consultador,
   enTransaccion: EjecutarEnTransaccion,
 ): FollowUpRepository {
-  void enTransaccion;
+  const contar = async (consulta: Consultador, analysisId: string): Promise<number> => {
+    const { rows } = await consulta.query(
+      'SELECT count(*)::int AS n FROM clinical.analysis_follow_up WHERE analysis_id = $1',
+      [analysisId],
+    );
+    return (rows[0]?.['n'] as number | undefined) ?? 0;
+  };
   return {
     async leerAnalisis(analysisId) {
       const { rows } = await db.query('SELECT * FROM clinical.ai_analysis_record WHERE id = $1', [
@@ -133,13 +140,7 @@ export function crearFollowUpRepository(
       const fila = rows[0];
       return fila === undefined ? null : registroDeFila(fila);
     },
-    async contarTurnos(analysisId) {
-      const { rows } = await db.query(
-        'SELECT count(*)::int AS n FROM clinical.analysis_follow_up WHERE analysis_id = $1',
-        [analysisId],
-      );
-      return (rows[0]?.['n'] as number | undefined) ?? 0;
-    },
+    contarTurnos: (analysisId) => contar(db, analysisId),
     async leerEventosPosteriores(patientId, desde) {
       const { rows } = await db.query(
         `SELECT id, event_type, event_date::text AS event_date, description, entry_method,
@@ -152,10 +153,18 @@ export function crearFollowUpRepository(
       );
       return rows.map(eventoDe);
     },
-    async insertarTurno(turno) {
-      const { rows } = await db.query(INSERTAR_TURNO, parametrosDelTurno(turno));
-      return { tipo: 'insertado', turno: turnoDeFila(rows[0] ?? {}) };
-    },
+    insertarTurno: (turno, limite) =>
+      enTransaccion(async (tx) => {
+        // Bloquea la fila del análisis (no la actualiza: es inmutable) para que dos preguntas simultáneas se serialicen.
+        await tx.query('SELECT id FROM clinical.ai_analysis_record WHERE id = $1 FOR UPDATE', [
+          turno.analysisId,
+        ]);
+        if (superaLimiteDeSeguimiento(await contar(tx, turno.analysisId), limite)) {
+          return { tipo: 'limite_alcanzado' };
+        }
+        const { rows } = await tx.query(INSERTAR_TURNO, parametrosDelTurno(turno));
+        return { tipo: 'insertado', turno: turnoDeFila(rows[0] ?? {}) };
+      }),
     async listarTurnos(analysisId) {
       const { rows } = await db.query(
         'SELECT * FROM clinical.analysis_follow_up WHERE analysis_id = $1 ORDER BY turn_number',
