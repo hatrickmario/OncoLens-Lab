@@ -125,16 +125,22 @@ def validar_esquema_cerrado(valor: Any, esquema: Any, ruta: str = "$") -> None:
             validar_esquema_cerrado(valor, esquema.interior, ruta)
     elif isinstance(esquema, Objeto):
         _validar_objeto(valor, esquema, ruta)
-    elif isinstance(esquema, Huella):
+    elif isinstance(esquema, Lista):
+        _exigir(isinstance(valor, list), ruta, "no es una lista")
+        for i, elemento in enumerate(valor):
+            validar_esquema_cerrado(elemento, esquema.elemento, f"{ruta}[{i}]")
+    else:
+        _validar_hoja(valor, esquema, ruta)
+
+
+def _validar_hoja(valor: Any, esquema: Any, ruta: str) -> None:
+    """Hojas del esquema cerrado: huella, número, booleano, enumerado e identificador."""
+    if isinstance(esquema, Huella):
         _exigir(
             isinstance(valor, str) and _HUELLA.fullmatch(valor) is not None,
             ruta,
             "no es una huella",
         )
-    elif isinstance(esquema, Lista):
-        _exigir(isinstance(valor, list), ruta, "no es una lista")
-        for i, elemento in enumerate(valor):
-            validar_esquema_cerrado(elemento, esquema.elemento, f"{ruta}[{i}]")
     elif isinstance(esquema, Numero):
         _exigir(
             valor is None or (_es_numero(valor) and math.isfinite(valor)), ruta, "no es un número"
@@ -144,11 +150,7 @@ def validar_esquema_cerrado(valor: Any, esquema: Any, ruta: str = "$") -> None:
     elif isinstance(esquema, Enumerado):
         _exigir(isinstance(valor, str) and valor in esquema.valores, ruta, "fuera del conjunto")
     elif isinstance(esquema, Identificador):
-        _exigir(
-            es_identificador(valor),
-            ruta,
-            "no es un identificador",
-        )
+        _exigir(es_identificador(valor), ruta, "no es un identificador")
     else:
         raise TypeError("esquema desconocido")
 
