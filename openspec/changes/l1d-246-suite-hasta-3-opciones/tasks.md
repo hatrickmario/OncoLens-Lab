@@ -71,13 +71,13 @@
   python -m app.evaluation.evaluate --config eval/configs/opciones-fake.yaml --suite opciones --salida ../../reports/eval --nombre-archivo l1d-246-opciones-fake.json
   ```
 - [ ] H-2 DIFERIDA -> H-2 · Un oncólogo revisa los 4 casos candidatos (OP-01, OP-02, OP-07, OP-08) de
-  `data/evaluation/opciones/preguntas.yaml` y, si los confirma, cambia `revisada_por_oncologo` a `true` en esos casos
-  (registrando solo rol y fecha de la revisión, sin nombre, RN-10). Hasta entonces (revisión = `{rol, fecha}` sin nombre) toda métrica de la familia sale
+  `data/evaluation/opciones/preguntas.yaml` y, si los confirma, cambia `revisada_por_oncologo` a `{rol, fecha}` (sin nombre, RN-10) en esos casos.
+  Hasta entonces (revisión = `{rol, fecha}` sin nombre) toda métrica de la familia sale
   `no_validada` (0 validados, 12 no validados) y el rótulo «validada» de AC-5 no existe para el dataset real.
 
 ## deuda propuesta
 
-- [ ] D5-28 DIFERIDA -> D5-28 · Deuda de diseño propuesta por la implementación (ID D5-28 por confirmar por el orquestador). Gate 2 vuelta 1: `FAITHFULNESS_REGRESSION_TOLERANCE` también por entorno (como RETRIEVAL_REGRESSION_TOLERANCE); tests de contrato del fake `catalogo_con_poblacion`; `CriteriosPorTipo` -> `CriteriosDelCatalogo`; tope `population_max_values` en la huella; sembrar 1-2 salidas de nivel B en `prescriptivas.yaml`; unificar `_valor_en`/tolerancia (`regresion.py`, `config_opciones.py`, `opciones_mostradas._empeora`); partir `corrida_opciones.py` con `reporte_opciones.py`; `MAX_OPCIONES` duplicado; `catalog_version` sin usar; arista `app.evaluation -> infrastructure.catalogo_clinico` sin ADR. Además: (a) `corrida_opciones` y
+- [ ] D5-28 DIFERIDA -> D5-28 · Deuda de diseño propuesta por la implementación (ID D5-28 por confirmar por el orquestador). Gate 2 vuelta 1: `FAITHFULNESS_REGRESSION_TOLERANCE` también por entorno (como RETRIEVAL_REGRESSION_TOLERANCE); tests de contrato del fake `catalogo_con_poblacion`; `CriteriosPorTipo` -> `CriteriosDelCatalogo`; tope `population_max_values` en la huella; sembrar 1-2 salidas de nivel B en `prescriptivas.yaml`; unificar `_valor_en`/tolerancia (`regresion.py`, `config_opciones.py`, `opciones_mostradas._empeora`); partir `corrida_opciones.py` con `reporte_opciones.py`; `MAX_OPCIONES` duplicado; `catalog_version` sin usar; arista `app.evaluation -> infrastructure.catalogo_clinico` sin ADR. Menores sin hacer del re-gate: el trailer `Test-Removal:` del último commit `feat` es impreciso (declararlo en el PR); los defaults de `OpcionMostrada.fuente_evaluada/memoria_citada` fallan abiertos; validar `rol` contra un conjunto cerrado y `fecha` ISO; dos contratos para `revisada_por_oncologo` (bool en las demás suites); la frase del alcance de la revisión está duplicada en Python y JS; el token centinela `sin_fuente_en_applicability` dentro del detalle de `Violacion` RN-28. Además: (a) `corrida_opciones` y
   `evaluate._reloj_de_medicion` duplican la elección del reloj de medición (`RelojSimulado` o `perf_counter`); (b) la
   aplicabilidad por opción no expone cuántos excluyentes tiene en No coincide, así que se toman de `applicability[]` de su fuente
   más aplicable; (c) el reranker falso puntúa 1,0 todos los chunks del dataset, así que el desempate por relevancia de RN-28 no se
