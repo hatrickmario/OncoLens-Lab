@@ -28,8 +28,16 @@ import errorTipoCancer from '../../../../../contracts/examples/error-tipo-cancer
 import peticion from '../../../../../contracts/examples/evidence-analysis-request.json';
 import sinEvidencia from '../../../../../contracts/examples/sin-evidencia.json';
 import tipoNoHabilitado from '../../../../../contracts/examples/tipo-no-habilitado.json';
+import errorLimiteSeguimiento from '../../../../../contracts/examples/error-limite-seguimiento.json';
+import seguimientoFueraDeContexto from '../../../../../contracts/examples/follow-up-fuera-de-contexto.json';
+import seguimientoSinEvidencia from '../../../../../contracts/examples/follow-up-sin-evidencia.json';
+import seguimientoTurno from '../../../../../contracts/examples/follow-up-turn.json';
 
 export {
+  errorLimiteSeguimiento,
+  seguimientoFueraDeContexto,
+  seguimientoSinEvidencia,
+  seguimientoTurno,
   checklistF_M1,
   checklistF_M2,
   checklistTipoNoHabilitado,
@@ -80,6 +88,7 @@ export function crearBffAnalisisSimulado() {
   const servidor = setupServer();
   const cuerpos: unknown[] = [];
   const lecturasDelChecklist: string[] = [];
+  const peticionesDeSeguimiento: { url: string; cuerpo: unknown }[] = [];
   const checklistPorDefecto = () =>
     http.get('*/api/patients/:id/completeness', ({ request }) => {
       lecturasDelChecklist.push(request.url);
@@ -87,6 +96,8 @@ export function crearBffAnalisisSimulado() {
     });
   return {
     cuerpos,
+    /** `POST …/follow-ups` recibidos: la URL y el cuerpo de cada uno. */
+    peticionesDeSeguimiento,
     /** URLs de cada `GET /api/patients/{id}/completeness` recibido. */
     lecturasDelChecklist,
     iniciar: () => {
@@ -97,6 +108,7 @@ export function crearBffAnalisisSimulado() {
     reiniciar: () => {
       servidor.resetHandlers(checklistPorDefecto());
       cuerpos.length = 0;
+      peticionesDeSeguimiento.length = 0;
       lecturasDelChecklist.length = 0;
     },
     /** `GET /api/patients/{id}/completeness` del BFF; sin llamarla responde F-M1 (sin faltantes). */
@@ -107,6 +119,20 @@ export function crearBffAnalisisSimulado() {
           return red ? HttpResponse.error() : HttpResponse.json(cuerpo, { status });
         }),
       ),
+    /** `POST /api/evidence-analyses/{id}/follow-ups` (misma semántica de secuencia que `responder`). */
+    responderSeguimiento: (...respuestas: Respuesta[]) => {
+      let siguiente = 0;
+      servidor.use(
+        http.post('*/api/evidence-analyses/:id/follow-ups', async ({ request }) => {
+          peticionesDeSeguimiento.push({ url: request.url, cuerpo: await request.json() });
+          const { status, cuerpo, cabeceras, compuerta, red } =
+            respuestas[Math.min(siguiente++, respuestas.length - 1)]!;
+          await compuerta;
+          if (red) return HttpResponse.error();
+          return HttpResponse.json(cuerpo, { status, headers: cabeceras });
+        }),
+      );
+    },
     responder: (...respuestas: Respuesta[]) => {
       let siguiente = 0;
       servidor.use(

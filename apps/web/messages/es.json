@@ -79,7 +79,6 @@
       "poblacionNoComparable": "Según los datos registrados, al menos un criterio excluyente del estudio no coincide con este paciente. La opción se muestra igualmente.",
       "noEvaluada": "Aplicabilidad no evaluada: sin datos de población en las fuentes citadas",
       "verPorCriterio": "Ver aplicabilidad por criterio",
-      "etiquetaNoComparable": "Población no comparable",
       "columnas": {
         "criterio": "Criterio",
         "paciente": "Paciente",
@@ -424,5 +423,31 @@
       "titulo": "Paciente",
       "nota": "Vista de administración: sin datos clínicos ni nombre."
     }
+  },
+  "followUp": {
+    "titulo": "Preguntas de seguimiento sobre este análisis",
+    "contadorConTotal": "{n} de {max} preguntas usadas",
+    "contadorSinTotal": "{n} preguntas usadas",
+    "contextoTitulo": "Contexto fijo de esta conversación",
+    "contextoTexto": "Paciente desidentificado · datos usados por el análisis · su pregunta y hallazgos · evidencia del mismo corpus. Los hallazgos del análisis son contexto, no evidencia.",
+    "historial": "Historial de preguntas de seguimiento",
+    "campo": "Pregunta sobre los hallazgos de este análisis",
+    "preguntar": "Preguntar",
+    "preguntando": "Preguntando…",
+    "progresoBuscando": "Buscando evidencia…",
+    "progresoValidando": "Validando citas…",
+    "turno": "Pregunta {n}",
+    "afirmaciones": "Respuesta",
+    "nuevaFuente": "nueva en el seguimiento",
+    "notaCitas": "Cada afirmación cita un fragmento del corpus recuperado para esta pregunta o enlaza a un dato del paciente. Fuente, año y población: del catálogo, o «No disponible».",
+    "omitidas": "Afirmaciones omitidas: {n}",
+    "baseDeLaRespuesta": "Base de esta respuesta: datos del paciente usados: {usados} · ausentes: {ausentes}",
+    "ninguno": "ninguno",
+    "nuevoAnalisis": "Nuevo análisis",
+    "sinEvidencia": "No se encontró evidencia suficientemente relacionada con esta pregunta en el corpus. La pregunta puede reformularse o abrirse un análisis nuevo.",
+    "fueraDeContexto": "La pregunta no se refiere a los hallazgos de este análisis; no se generó respuesta. Otro tema o paciente se consulta en un análisis nuevo.",
+    "limiteConTotal": "Se alcanzó el límite de {max} preguntas de este análisis. Una pregunta distinta puede formularse en un análisis nuevo.",
+    "limiteSinTotal": "Se alcanzó el límite de preguntas de este análisis. Una pregunta distinta puede formularse en un análisis nuevo.",
+    "noProcesable": "La pregunta no pudo procesarse con este análisis; no se generó respuesta."
   }
 }
