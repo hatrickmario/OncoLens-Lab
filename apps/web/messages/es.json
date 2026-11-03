@@ -398,7 +398,10 @@
       "adyuvante": "Adyuvante",
       "primera_linea_metastasica": "Primera línea metastásica",
       "segunda_linea_metastasica": "Segunda línea metastásica",
-      "mantenimiento": "Mantenimiento"
+      "mantenimiento": "Mantenimiento",
+      "linea_posterior_metastasica": "Línea posterior metastásica",
+      "otro": "Otro",
+      "desconocido": "Desconocido"
     },
     "motivosDeFin": {
       "progresion": "Progresión",
@@ -418,6 +421,48 @@
       "oseo": "Óseo",
       "premenopausica": "Premenopáusica",
       "posmenopausica": "Posmenopáusica"
+    },
+    "noMapeado": "No mapeado",
+    "registro": {
+      "guardar": "Guardar",
+      "guardando": "Guardando…",
+      "cancelar": "Cancelar",
+      "cerrar": "Cerrar",
+      "tratamiento": {
+        "accion": "+ Agregar tratamiento previo",
+        "titulo": "Agregar tratamiento previo",
+        "descripcion": "Registro manual: el tratamiento queda registrado por ti en la vista de caso.",
+        "linea": "Línea (opcional)",
+        "contexto": "Contexto",
+        "esquema": "Esquema",
+        "inicio": "Inicio (opcional)",
+        "enCurso": "En curso",
+        "fin": "Fin (opcional)",
+        "motivoDeFin": "Motivo de fin",
+        "noMapeado": "Sin código en el catálogo versionado: queda como no mapeado; nunca se inventa un código."
+      },
+      "atributo": {
+        "accion": "+ Registrar atributo",
+        "titulo": "Registrar atributo clínico",
+        "descripcion": "Solo los atributos del catálogo para el tipo de cáncer de este paciente.",
+        "atributo": "Atributo",
+        "valor": "Valor",
+        "fecha": "Fecha observada (opcional)",
+        "elegir": "Elige una opción",
+        "cargando": "Cargando los atributos del catálogo",
+        "noDisponibles": "No se pudieron cargar los atributos del catálogo. Cierra el formulario e intenta de nuevo.",
+        "sinAtributos": "El catálogo no define atributos para el tipo de cáncer de este paciente."
+      },
+      "errores": {
+        "obligatorio": "Este campo es obligatorio.",
+        "campoInvalido": "Revisa este campo: no cumple el formato esperado.",
+        "finAnterior": "La fecha de fin no puede ser anterior al inicio.",
+        "valorFueraDeCatalogo": "Este valor no está en el catálogo vigente.",
+        "sinTipoDeCancer": "Registra primero el diagnóstico del paciente: sin tipo de cáncer no se puede validar el atributo.",
+        "permiso": "Tu cuenta no puede registrar datos clínicos.",
+        "noEncontrado": "El paciente ya no está disponible.",
+        "generico": "No se pudo guardar el registro. Intenta de nuevo."
+      }
     }
   },
   "ficha": {

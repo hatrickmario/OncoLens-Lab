@@ -30,7 +30,15 @@ function SeccionesDelCaso({ vista, hoy }: { vista: CaseView; hoy: string }) {
  * Vista de caso del paciente (US-090, D10): lee `GET /api/patients/{id}/case` y muestra solo lo ya validado. Único
  * componente cliente de la página; sin datos parciales si la lectura falla. Los avisos no bloquean (RN-26).
  */
-export function VistaDeCaso({ patientId, hoy }: { patientId: string; hoy: string }) {
+export function VistaDeCaso({
+  patientId,
+  hoy,
+}: {
+  patientId: string;
+  hoy: string;
+  /** Paciente egresado (RN-17): los registros manuales se deshabilitan. */
+  egresado?: boolean;
+}) {
   const { lectura, recargar } = useVistaDeCaso(patientId);
   const { caso, ficha } = mensajes();
   if (lectura === null || lectura.tipo === 'sin_sesion') {
