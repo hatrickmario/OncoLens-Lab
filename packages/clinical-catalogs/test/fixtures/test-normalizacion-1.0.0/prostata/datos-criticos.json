@@ -1,0 +1,43 @@
+{
+  "version": "test-normalizacion-1.0.0",
+  "verifiedReviewStatuses": [
+    "verificado",
+    "corregido"
+  ],
+  "items": [
+    {
+      "key": "psa_serie",
+      "cancerType": "prostata",
+      "label": {
+        "es": "Serie de PSA",
+        "en": "Serie de PSA"
+      },
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value",
+        "match": {
+          "name": "PSA"
+        }
+      },
+      "minValues": 2,
+      "estado": "propuesta"
+    },
+    {
+      "key": "ecog",
+      "cancerType": "prostata",
+      "label": {
+        "es": "ECOG",
+        "en": "ECOG"
+      },
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "performance_value",
+        "match": {
+          "performance_scale": "ECOG"
+        }
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    }
+  ]
+}
