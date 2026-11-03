@@ -13,6 +13,7 @@ from typing import Any
 
 from tests.support.afirmaciones_atomicas import ESCENARIOS_ATOMICOS
 from tests.support.generador_falso import OPCION_ANTI_HER2, RAZON_ANTI_HER2, TITULO_INVENTADO
+from tests.support.guiones_seguimiento import ESCENARIOS_SEGUIMIENTO
 
 OPCION_SOLA = "Terapia anti-HER2 sola"
 RAZON_SOLA = "La evidencia recuperada describe el uso de terapia anti-HER2 sin quimioterapia."
@@ -87,6 +88,7 @@ ESCENARIOS_LLM: dict[str, str] = {
 }
 
 ESCENARIOS_LLM.update(ESCENARIOS_ATOMICOS)
+ESCENARIOS_LLM.update(ESCENARIOS_SEGUIMIENTO)
 
 
 class FakeLlmClient:

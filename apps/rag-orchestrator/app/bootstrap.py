@@ -14,6 +14,7 @@ from app.api.contencion_de_errores import ContencionDeErroresInesperados
 from app.api.dependencies.service_jwt import DependenciaJwtServicio, crear_require_service_jwt
 from app.api.errors import registrar_manejadores_de_error
 from app.api.health import crear_router_health
+from app.api.rag_follow_up import crear_router_rag_follow_up
 from app.api.rag_query import crear_router_rag_query
 from app.api.trace import ContextoDeTraceId
 from app.application.aplicabilidad import ApplicabilityService
@@ -27,6 +28,7 @@ from app.application.ports import (
     CorpusReleaseReader,
     EvidenceGenerator,
     EvidenceQueryPort,
+    FollowUpPort,
     LanguageDetector,
     LlmHealthPort,
     NliClassifier,
@@ -215,6 +217,7 @@ def crear_app(
     trace_ids: TraceIdGenerator | None = None,
     clock: Clock | None = None,
     consulta: EvidenceQueryPort | None = None,
+    seguimiento: FollowUpPort | None = None,
     recuperacion: PuertosDeRecuperacion | None = None,
     corpus: PuertosDelCorpus | None = None,
     cargador_de_modelos: CargadorDeModelos | None = None,
@@ -254,6 +257,10 @@ def crear_app(
         catalogo_clinico=catalogo_clinico,
         criterios_de_aplicabilidad=app.state.criterios_de_aplicabilidad,
     )
+    if seguimiento is not None:
+        app.include_router(
+            crear_router_rag_follow_up(seguimiento, crear_require_service_jwt(verificador))
+        )
     app.include_router(
         crear_router_health(
             llm_health or _sonda_llm_segun(settings),
