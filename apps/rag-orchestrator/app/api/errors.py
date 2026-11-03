@@ -4,7 +4,7 @@ Cubre todo `RequestValidationError` (body, header, query y path). La autenticaci
 lanza 401 desde una dependencia, nunca con un `Header()` obligatorio: ese caso terminaría aquí como 422.
 También traduce `TokenServicioInvalido` a `401 TOKEN_SERVICIO_INVALIDO` y los errores de aplicación de la
 recuperación (US-055) a `503 RETRIEVAL_UNAVAILABLE`, `503 LOCAL_LLM_UNAVAILABLE`, `503 NLI_UNAVAILABLE` y `422 TIPO_CANCER_NO_REGISTRADO`
-`TipoNoHabilitadoError` (RN-20) a `422 TIPO_NO_HABILITADO` y `CatalogVersionMismatchError` (NFR-14) a `409 CATALOG_VERSION_MISMATCH`, todos con mensaje fijo y sin eco de la petición. El 500 de lo inesperado NO se maneja aquí: lo responde sin relanzar
+`FaltanteNoCatalogadoError` (US-116, RN-11) a `422 CUERPO_INVALIDO` por posición, `TipoNoHabilitadoError` (RN-20) a `422 TIPO_NO_HABILITADO` y `CatalogVersionMismatchError` (NFR-14) a `409 CATALOG_VERSION_MISMATCH`, todos con mensaje fijo y sin eco de la petición. El 500 de lo inesperado NO se maneja aquí: lo responde sin relanzar
 `ContencionDeErroresInesperados` (un manejador de `Exception` relanza y uvicorn escribiría el traceback).
 """
 
@@ -16,6 +16,7 @@ from fastapi.responses import JSONResponse
 
 from app.api.trace import resolver_trace_id
 from app.application.errores import (
+    FaltanteNoCatalogadoError,
     LlmLocalNoDisponibleError,
     LlmSalidaInvalidaError,
     NliNoDisponibleError,
@@ -42,22 +43,54 @@ from app.schemas.generated.models import (
 logger = logging.getLogger(__name__)
 
 
-def registrar_manejadores_de_error(app: FastAPI, trace_ids: TraceIdGenerator) -> None:
+def _cuerpo_invalido(trace_id: str, detalle: list[DetailItem]) -> JSONResponse:
+    """El `422 CUERPO_INVALIDO` del contrato (`ErrorValidacion`): solo posiciones, mensajes y tipos, nunca valores."""
+    cuerpo = ErrorValidacion(
+        error="CUERPO_INVALIDO",
+        message="El cuerpo de la petición no cumple el contrato.",
+        traceId=trace_id,
+        detail=detalle,
+    )
+    return JSONResponse(status_code=422, content=cuerpo.model_dump())
+
+
+def _registrar_manejadores_de_validacion(app: FastAPI, trace_ids: TraceIdGenerator) -> None:
+    """Los `422 CUERPO_INVALIDO`: contrato (Pydantic) y faltantes no catalogados (RN-11), ambos sin eco de valores."""
+
     @app.exception_handler(RequestValidationError)
     async def peticion_invalida_sin_eco(
         request: Request, error: RequestValidationError
     ) -> JSONResponse:
         """Responde 422 a cualquier `RequestValidationError` (body, header, query o path) sin eco de los valores."""
         # Solo loc, msg y type: input y ctx llevan los valores recibidos (contexto clínico desidentificado).
-        cuerpo = ErrorValidacion(
-            error="CUERPO_INVALIDO",
-            message="El cuerpo de la petición no cumple el contrato.",
-            traceId=resolver_trace_id(request, trace_ids),
-            detail=[
-                DetailItem(loc=list(e["loc"]), msg=e["msg"], type=e["type"]) for e in error.errors()
-            ],
+        detalle = [
+            DetailItem(loc=list(e["loc"]), msg=e["msg"], type=e["type"]) for e in error.errors()
+        ]
+        return _cuerpo_invalido(resolver_trace_id(request, trace_ids), detalle)
+
+    @app.exception_handler(FaltanteNoCatalogadoError)
+    async def faltante_no_catalogado(
+        request: Request, error: FaltanteNoCatalogadoError
+    ) -> JSONResponse:
+        """422 CUERPO_INVALIDO por cada posición inválida de ``missingCriticalData``: sin eco del valor, ni en el cuerpo ni
+        en el log (solo el conteo), porque puede ser texto libre con PHI (RN-10, RN-11)."""
+        trace_id = resolver_trace_id(request, trace_ids)
+        logger.warning(
+            "event=faltante_no_catalogado invalidos=%d traceId=%s", len(error.posiciones), trace_id
         )
-        return JSONResponse(status_code=422, content=cuerpo.model_dump())
+        detalle = [
+            DetailItem(
+                loc=["body", "clinicalContext", "missingCriticalData", posicion],
+                msg="El dato crítico faltante debe ser una clave del catálogo.",
+                type="faltante_no_catalogado",
+            )
+            for posicion in error.posiciones
+        ]
+        return _cuerpo_invalido(trace_id, detalle)
+
+
+def registrar_manejadores_de_error(app: FastAPI, trace_ids: TraceIdGenerator) -> None:
+    _registrar_manejadores_de_validacion(app, trace_ids)
 
     @app.exception_handler(RecuperacionNoDisponibleError)
     async def recuperacion_no_disponible(

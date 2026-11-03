@@ -54,8 +54,8 @@ def test_plantilla_avisa_de_los_modales_normativos_y_pide_parafrasear_los_requis
     assert "indicativo" in texto
 
 
-def test_version_del_prompt_es_rag_query_0_6_0_porque_avisa_de_los_modales_normativos():
-    assert VERSION_DEL_PROMPT == "rag-query@0.6.0"
+def test_version_del_prompt_es_rag_query_0_7_0_porque_declara_los_faltantes_como_desconocido():
+    assert VERSION_DEL_PROMPT == "rag-query@0.7.0"
 
 
 def test_prompt_incluye_pregunta_contexto_y_alias_de_cada_fragmento():
@@ -172,6 +172,44 @@ def test_bloque_de_datos_no_etiqueta_ningun_dato_cuando_todos_estan_verificados(
     assert "(sin verificar)" not in bloque
     assert "(en conflicto)" not in bloque
     assert "- Ki-67 20 %" in bloque.splitlines()
+
+
+def test_bloque_de_datos_agrega_una_linea_desconocido_por_etiqueta_despues_de_los_datos_presentes():
+    contexto = _contexto_de_fx_t1a_a(ki67="verificado")
+
+    lineas = bloque_de_datos_del_paciente(contexto, ["Estado menopáusico", "Ki-67"]).splitlines()
+
+    assert lineas[-2:] == ["- Estado menopáusico: desconocido", "- Ki-67: desconocido"]
+    assert lineas[:-2] == bloque_de_datos_del_paciente(contexto).splitlines()
+
+
+def test_bloque_de_datos_es_identico_al_de_siempre_cuando_no_hay_faltantes():
+    contexto = _contexto_de_fx_t1a_a(ki67="requiere_revision")
+
+    assert bloque_de_datos_del_paciente(contexto, []) == bloque_de_datos_del_paciente(contexto)
+    assert "desconocido" not in bloque_de_datos_del_paciente(contexto)
+
+
+def test_bloque_de_datos_no_etiqueta_con_procedencia_la_linea_de_un_faltante():
+    contexto = _contexto_de_fx_t1a_a(ki67="requiere_revision")
+
+    linea = bloque_de_datos_del_paciente(contexto, ["Ki-67"]).splitlines()[-1]
+
+    assert linea == "- Ki-67: desconocido"
+
+
+def test_plantilla_pide_describir_el_desconocido_como_sin_dato_registrado_y_no_como_no_disponible():
+    prompt = construir_prompt_rag_query(
+        "p", "- dato", [], "es", claims_min=1, claims_max=4, claim_max_words=20
+    )
+
+    texto = " ".join(prompt.split())
+    assert 'descríbelo como "sin dato registrado (desconocido)"' in texto
+    assert "no les atribuyas un valor" in texto
+    assert "ni lo deduzcas de otros datos del paciente ni de los fragmentos" in texto
+    assert "describen poblaciones de estudio y no a este caso" in texto
+    assert "indícalo en la Base del análisis como limitación, no como afirmación" in texto
+    assert "no disponibles" not in texto.lower()
 
 
 def test_etiqueta_de_procedencia_es_none_cuando_el_dato_es_auto_aceptado():

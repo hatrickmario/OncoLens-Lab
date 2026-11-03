@@ -147,7 +147,9 @@ class LlmEvidenceGenerator:
         )
         prompt = construir_prompt_rag_query(
             solicitud.query,
-            bloque_de_datos_del_paciente(solicitud.clinicalContext),
+            bloque_de_datos_del_paciente(
+                solicitud.clinicalContext, recuperacion.etiquetas_de_faltantes
+            ),
             tabla.fragmentos,
             idioma,
             claims_min=self._claims_min,

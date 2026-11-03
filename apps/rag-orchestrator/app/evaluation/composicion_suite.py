@@ -68,6 +68,7 @@ from app.evaluation.medidores import (
 )
 from app.evaluation.modelos_locales import PuertosLocales
 from app.infrastructure.catalogo_clinico.aplicabilidad import CriteriosDelCatalogo
+from app.infrastructure.catalogo_clinico.datos_criticos import cargar_datos_criticos
 from app.infrastructure.catalogo_clinico.manifiesto import cargar_catalogo_del_manifiesto
 from app.infrastructure.fake.tarea_de_poblacion_silenciosa import TareaDePoblacionSilenciosa
 from app.infrastructure.language.detector_local import DetectorDeIdiomaLocal
@@ -269,6 +270,7 @@ def componer_servicio(
         lector_release=LectorReleaseMedido(LectorReleaseFijo(dataset), cronometro),
         catalogo=CatalogoMedido(CatalogoEnMemoria(dataset), cronometro),
         catalogo_clinico=CatalogoClinicoDeConfig(config.catalogo_version, tipos_habilitados),
+        datos_criticos=cargar_datos_criticos(config.ruta_terminos, tipos_habilitados),
         # Sin criterios: la suite mide la recuperación y la generación; la aplicabilidad se mide en US-132 (M-08.2).
         aplicabilidad=ApplicabilityService(CriteriosDelCatalogo({})),
         proponente=adaptadores.proponente,

@@ -404,7 +404,7 @@ export type ClinicalContext = {
         points: number;
     }>;
     /**
-     * Faltantes del checklist; se tratan como "desconocido".
+     * Faltantes del checklist; se tratan como "desconocido". En `/rag/query` y `/rag/follow-up` cada elemento debe ser una clave de `datos-criticos.json` del tipo de cáncer del caso (`^[a-z0-9_]+$`); texto libre u otra clave responde 422 CUERPO_INVALIDO sin eco del valor (RN-11). `/case/summary` no aplica esta validación.
      */
     missingCriticalData: Array<TextoEnmascarado>;
     /**
@@ -840,7 +840,7 @@ export type RagQueryErrors = {
      */
     409: ErrorCatalogVersionMismatch;
     /**
-     * Cuerpo inválido (Pydantic); TIPO_NO_HABILITADO: cancerType fuera de ENABLED_CANCER_TYPES; o TIPO_CANCER_NO_REGISTRADO: el contexto no tiene tipo de cáncer (diagnosis null). Los dos últimos responden sin buscar ni invocar al LLM (defensa en profundidad).
+     * Cuerpo inválido (Pydantic); TIPO_NO_HABILITADO: cancerType fuera de ENABLED_CANCER_TYPES; o TIPO_CANCER_NO_REGISTRADO: el contexto no tiene tipo de cáncer (diagnosis null). Los dos últimos responden sin buscar ni invocar al LLM (defensa en profundidad). También responde CUERPO_INVALIDO (ErrorValidacion, `detail[].type = faltante_no_catalogado`, `detail[].loc = [body, clinicalContext, missingCriticalData, <posición>]`) cuando un elemento de `clinicalContext.missingCriticalData` no es una clave de `datos-criticos.json` del tipo de cáncer del caso (`^[a-z0-9_]+$`); sin eco del valor recibido y antes de invocar a cualquier modelo. El 409 de catálogo tiene prioridad.
      */
     422: ErrorTipoNoHabilitado | ErrorValidacion | ErrorTipoCancerNoRegistrado;
     /**
@@ -896,7 +896,7 @@ export type AnswerFollowUpErrors = {
      */
     409: ErrorCatalogVersionMismatch;
     /**
-     * Cuerpo inválido (Pydantic), o TIPO_NO_HABILITADO.
+     * Cuerpo inválido (Pydantic), o TIPO_NO_HABILITADO. También CUERPO_INVALIDO (`detail[].type = faltante_no_catalogado`, `loc` por posición) cuando un elemento de `clinicalContext.missingCriticalData` no es una clave del catálogo del tipo de cáncer del caso; sin eco del valor. El 409 de catálogo tiene prioridad.
      */
     422: ErrorTipoNoHabilitado | ErrorValidacion;
     /**

@@ -33,5 +33,16 @@ class LlmSalidaInvalidaError(ErrorDeAplicacion):
     """
 
 
+class FaltanteNoCatalogadoError(ErrorDeAplicacion):
+    """Un elemento de ``missingCriticalData`` no es una clave del catálogo del tipo del caso (`422 CUERPO_INVALIDO`, RN-11).
+
+    Lleva solo las posiciones de los elementos inválidos: nunca el valor recibido, que puede ser texto libre con PHI.
+    """
+
+    def __init__(self, posiciones: tuple[int, ...]) -> None:
+        self.posiciones = posiciones
+        super().__init__(f"{len(posiciones)} datos críticos faltantes no son claves del catálogo")
+
+
 class NliNoDisponibleError(ErrorDeAplicacion):
     """El verificador de soporte (NLI) falló o no respondió (`503 NLI_UNAVAILABLE`): ninguna opción sale sin validar (RN-01)."""
