@@ -14,6 +14,7 @@ import {
   eventosClinicos,
   eventosDerivados,
   ordenarTimeline,
+  procedenciaDelContrato,
   seriesDeBiomarcadores,
 } from './timeline.reglas.js';
 
@@ -32,14 +33,14 @@ const comoTratamientoDelCaso = (t: TratamientoPrevioLeido): TratamientoPrevioDel
   endedAt: t.endedAt,
   ongoing: t.ongoing,
   endReason: t.endReason,
-  provenance: { ...t.procedencia, additionalSourceDocumentIds: [] },
+  provenance: procedenciaDelContrato(t.procedencia),
 });
 
 const comoAtributoDelCaso = (a: AtributoLeido): AtributoDelCaso => ({
   key: a.key,
   value: a.value,
   observedAt: a.observedAt,
-  provenance: { ...a.procedencia, additionalSourceDocumentIds: [] },
+  provenance: procedenciaDelContrato(a.procedencia),
 });
 
 /** Del checklist de `/completeness` a la forma reducida de `CaseView` (`key` pasa a `item`); sin diagnóstico habilitado, `[]`. */

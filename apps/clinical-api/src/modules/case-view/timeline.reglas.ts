@@ -104,8 +104,10 @@ export function procedenciaDeExamen(
   };
 }
 
-/** Procedencia de un dato derivado de una fila: nunca lleva fuentes adicionales en la vista mínima (D8). */
-function procedenciaDelContrato(procedencia: ProcedenciaDeFila): EventoDelTimeline['provenance'] {
+/** Procedencia de un dato de la vista: nunca lleva fuentes adicionales en la vista mínima (D8). Única conversión, usada por el timeline, las series y el service. */
+export function procedenciaDelContrato(
+  procedencia: ProcedenciaDeFila,
+): EventoDelTimeline['provenance'] {
   return { ...procedencia, additionalSourceDocumentIds: [] };
 }
 
