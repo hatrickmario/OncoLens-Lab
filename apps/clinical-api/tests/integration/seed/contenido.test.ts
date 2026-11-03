@@ -17,8 +17,8 @@ import {
 import { createPasswordHasher } from '../../../src/modules/auth/password-hasher.js';
 import { ARGON2_DE_PRUEBA } from '../../support/usuarios.js';
 
-const PACIENTES = ['a', 'b', 'c', 'd', 'e', 'f'] as const;
-const idDe = (letra: (typeof PACIENTES)[number]): string => idSembrado(`paciente-${letra}`);
+const PACIENTES = PACIENTES_SEMILLA.map((paciente) => paciente.clave.replace('paciente-', ''));
+const idDe = (letra: string): string => idSembrado(`paciente-${letra}`);
 
 describe('Contenido del seed sintético', () => {
   let base: BaseDeTest;

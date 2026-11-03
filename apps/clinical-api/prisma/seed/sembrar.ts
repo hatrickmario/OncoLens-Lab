@@ -255,6 +255,15 @@ async function sembrarGradacionDeReferencia(
   });
 }
 
+/** Id sembrado de un biomarcador del examen por su `clave`: el mismo para su fila y para el conflicto que lo apunta. */
+function idDelBiomarcador(
+  contexto: ContextoDePaciente,
+  examen: ExamenSemilla,
+  claveDelBiomarcador: string,
+): string {
+  return idSembrado(`${contexto.paciente.clave}/${examen.clave}/${claveDelBiomarcador}`);
+}
+
 /** `conflicts_with_id` del biomarcador (RN-08): el id sembrado del otro biomarcador del mismo examen, o `null` sin conflicto. */
 function idDelBiomarcadorEnConflicto(
   contexto: ContextoDePaciente,
@@ -262,7 +271,7 @@ function idDelBiomarcadorEnConflicto(
   biomarcador: BiomarcadorSemilla,
 ): string | null {
   if (biomarcador.enConflictoCon === undefined) return null;
-  return idSembrado(`${contexto.paciente.clave}/${examen.clave}/${biomarcador.enConflictoCon}`);
+  return idDelBiomarcador(contexto, examen, biomarcador.enConflictoCon);
 }
 
 async function sembrarExamenes(siembra: Siembra, contexto: ContextoDePaciente): Promise<void> {
@@ -286,7 +295,7 @@ async function sembrarExamenes(siembra: Siembra, contexto: ContextoDePaciente): 
         biomarcador.nombre,
       );
       await upsertar(siembra, 'clinical.biomarker', {
-        id: idSembrado(`${contexto.paciente.clave}/${examen.clave}/${biomarcador.clave}`),
+        id: idDelBiomarcador(contexto, examen, biomarcador.clave),
         exam_id: examenId,
         name: biomarcador.nombre,
         original_name: biomarcador.nombre,
