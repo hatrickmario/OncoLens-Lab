@@ -8,7 +8,7 @@ import { fichaDelDoctor } from '../support/ficha-simulado';
 
 function abrirFichaCon(fragmento: string) {
   window.history.replaceState(null, '', `/pacientes/${fichaDelDoctor.id}${fragmento}`);
-  render(<FichaDelDoctor ficha={fichaDelDoctor as PatientSummary} />);
+  render(<FichaDelDoctor ficha={fichaDelDoctor as PatientSummary} notas={[]} />);
 }
 
 describe('Anclas de la ficha', () => {
@@ -65,6 +65,8 @@ describe('Anclas de la ficha', () => {
       'ficha-identificacion',
       'diagnostico',
       'biomarcadores',
+      // La sección de notas clínicas la añade US-253; el mecanismo de anclas (US-005) no crea ninguna.
+      'notas-clinicas',
     ]);
   });
 });

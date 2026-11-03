@@ -1,0 +1,78 @@
+import type { CorrectionHistoryEntry } from '../../../../packages/api-contracts/src/types/clinical-api';
+import { zCorrectionHistory } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
+import { mensajes } from '../mensajes';
+
+/** Error de una corrección ya traducido al texto que ve el oncólogo; `campo` es la propiedad del cuerpo, si la hay. */
+export interface ErrorDeCorreccion {
+  campo?: string;
+  mensaje: string;
+}
+
+export type ResultadoDeCorreccion = { tipo: 'ok' } | { tipo: 'error'; error: ErrorDeCorreccion };
+
+export type ResultadoDeHistorico =
+  { tipo: 'ok'; versiones: CorrectionHistoryEntry[] } | { tipo: 'error' };
+
+export type DatoCorregible = 'biomarkers' | 'clinical-notes';
+
+/** Rutas del BFF (nunca clinical-api): solo ids opacos, sin identidad del paciente (RN-10). */
+export function rutaDelDato(pacienteId: string, dato: DatoCorregible, id: string): string {
+  return `/api/patients/${pacienteId}/${dato}/${id}`;
+}
+
+function leerJson(texto: string): Record<string, unknown> {
+  try {
+    const dato: unknown = JSON.parse(texto);
+    return typeof dato === 'object' && dato !== null ? (dato as Record<string, unknown>) : {};
+  } catch {
+    return {};
+  }
+}
+
+/** 422: el texto del campo viene de clinical-api (sin eco del valor); 403/404/409 y lo demás, textos fijos. */
+function traducirError(status: number, cuerpo: Record<string, unknown>): ErrorDeCorreccion {
+  const { errores } = mensajes().ficha.correccion;
+  if (status === 409) return { mensaje: errores.noVigente };
+  if (status === 403) return { mensaje: errores.permiso };
+  if (status === 404) return { mensaje: errores.noEncontrado };
+  if (status === 422 && typeof cuerpo['message'] === 'string') {
+    const campo = typeof cuerpo['field'] === 'string' ? cuerpo['field'] : undefined;
+    return { ...(campo !== undefined && { campo }), mensaje: cuerpo['message'] };
+  }
+  return { mensaje: errores.generico };
+}
+
+/** `POST …/corrections` del BFF. El navegador añade `Origin` y la cookie `SameSite=Strict`; un fallo de red es genérico. */
+export async function enviarCorreccion(
+  ruta: string,
+  cuerpo: unknown,
+): Promise<ResultadoDeCorreccion> {
+  try {
+    const respuesta = await fetch(`${ruta}/corrections`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(cuerpo),
+      cache: 'no-store',
+    });
+    if (respuesta.status === 201) return { tipo: 'ok' };
+    return {
+      tipo: 'error',
+      error: traducirError(respuesta.status, leerJson(await respuesta.text())),
+    };
+  } catch {
+    return { tipo: 'error', error: { mensaje: mensajes().ficha.correccion.errores.generico } };
+  }
+}
+
+/** `GET …/history` del BFF, validado con el Zod del contrato; cualquier otra cosa es un error sin detalle. */
+export async function pedirHistorico(ruta: string): Promise<ResultadoDeHistorico> {
+  try {
+    const respuesta = await fetch(`${ruta}/history`, { cache: 'no-store' });
+    const leido = zCorrectionHistory.safeParse(leerJson(await respuesta.text()));
+    return respuesta.status === 200 && leido.success
+      ? { tipo: 'ok', versiones: leido.data.items }
+      : { tipo: 'error' };
+  } catch {
+    return { tipo: 'error' };
+  }
+}

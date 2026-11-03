@@ -2,6 +2,10 @@
 import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import type {
+  Biomarker,
+  ClinicalNote,
+} from '../../../../packages/api-contracts/src/types/clinical-api';
 import { NotasClinicasDeFicha } from '../../components/organisms/notas-clinicas-de-ficha';
 import { RecentBiomarkersTable } from '../../components/organisms/recent-biomarkers-table';
 import { mensajes } from '../../lib/mensajes';
@@ -30,7 +34,7 @@ if (her2 === undefined) throw new Error('El ejemplo no trae biomarcadores');
 function montarTabla(biomarcadores: unknown[] = [her2], egresado = false) {
   render(
     <RecentBiomarkersTable
-      biomarcadores={biomarcadores as (typeof her2)[]}
+      biomarcadores={biomarcadores as unknown as Biomarker[]}
       pacienteId={ID_DEL_PACIENTE}
       egresado={egresado}
     />,
@@ -41,7 +45,7 @@ function montarTabla(biomarcadores: unknown[] = [her2], egresado = false) {
 function montarNotas(notas: unknown[] = listaDeNotas.items, egresado = false) {
   render(
     <NotasClinicasDeFicha
-      notas={notas as (typeof listaDeNotas.items)[number][]}
+      notas={notas as unknown as ClinicalNote[]}
       pacienteId={ID_DEL_PACIENTE}
       egresado={egresado}
     />,

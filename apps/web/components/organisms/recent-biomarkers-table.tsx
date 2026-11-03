@@ -1,14 +1,16 @@
 import type { Biomarker } from '../../../../packages/api-contracts/src/types/clinical-api';
 import { formatearFecha, textoDeConfianza, textoDeOrigen } from '../../lib/ficha/presentacion';
 import { mensajes, rellenar } from '../../lib/mensajes';
+import { BiomarcadorCorregible } from '../molecules/biomarcador-corregible';
 import { SeccionDeFicha } from '../molecules/fila-de-ficha';
 
 const CELDA = 'border-border border-b px-3 py-2 text-left align-top';
+const ID_DE_AYUDA = 'correccion-egresado-biomarcadores';
 
-function FilaDeBiomarcador({ b }: { b: Biomarker }) {
+function CeldasDeBiomarcador({ b }: { b: Biomarker }) {
   const { biomarcadores, significancia, noRegistrado } = mensajes().ficha;
   return (
-    <tr>
+    <>
       <th scope="row" className={CELDA}>
         {b.name}
         {b.loincCode && (
@@ -30,13 +32,24 @@ function FilaDeBiomarcador({ b }: { b: Biomarker }) {
           {textoDeConfianza(b.provenance.extractionConfidence)}
         </span>
       </td>
-    </tr>
+    </>
   );
 }
 
-/** Último valor por biomarcador (S2-04): significancia con símbolo y texto; origen y revisión en texto. */
-export function RecentBiomarkersTable({ biomarcadores }: { biomarcadores: Biomarker[] }) {
-  const { biomarcadores: textos, noRegistrado } = mensajes().ficha;
+export interface RecentBiomarkersTableProps {
+  biomarcadores: Biomarker[];
+  pacienteId: string;
+  /** Paciente egresado: la corrección queda deshabilitada por regla legal (RN-17). */
+  egresado: boolean;
+}
+
+/** Último valor por biomarcador (S2-04): significancia, origen y revisión en texto; cada dato se puede corregir (US-253). */
+export function RecentBiomarkersTable({
+  biomarcadores,
+  pacienteId,
+  egresado,
+}: RecentBiomarkersTableProps) {
+  const { biomarcadores: textos, noRegistrado, correccion } = mensajes().ficha;
   const columnas = [
     textos.biomarcador,
     textos.valor,
@@ -50,22 +63,39 @@ export function RecentBiomarkersTable({ biomarcadores }: { biomarcadores: Biomar
       {biomarcadores.length === 0 ? (
         <p className="m-0">{noRegistrado}</p>
       ) : (
-        <table className="w-full border-collapse">
-          <thead className="bg-surface-alt">
-            <tr>
-              {columnas.map((columna) => (
-                <th key={columna} scope="col" className={CELDA}>
-                  {columna}
+        <>
+          {egresado && (
+            <p id={ID_DE_AYUDA} className="m-0 mb-2">
+              {correccion.egresado}
+            </p>
+          )}
+          <table className="w-full border-collapse">
+            <thead className="bg-surface-alt">
+              <tr>
+                {columnas.map((columna) => (
+                  <th key={columna} scope="col" className={CELDA}>
+                    {columna}
+                  </th>
+                ))}
+                <th scope="col" className={CELDA}>
+                  <span className="sr-only">{textos.acciones}</span>
                 </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
+              </tr>
+            </thead>
             {biomarcadores.map((b) => (
-              <FilaDeBiomarcador key={b.id} b={b} />
+              <BiomarcadorCorregible
+                key={b.name}
+                biomarcador={b}
+                pacienteId={pacienteId}
+                egresado={egresado}
+                idDeAyuda={ID_DE_AYUDA}
+                columnas={columnas.length}
+              >
+                <CeldasDeBiomarcador b={b} />
+              </BiomarcadorCorregible>
             ))}
-          </tbody>
-        </table>
+          </table>
+        </>
       )}
     </SeccionDeFicha>
   );
