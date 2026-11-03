@@ -1,23 +1,21 @@
-import express, { Router, type ErrorRequestHandler, type Request, type Response } from 'express';
-import {
-  enviarError,
-  esErrorDeCuerpoDelCliente,
-  rechazarNoEncontrado,
-  type CodigoDeError,
-} from '../../infrastructure/http-errores.js';
+import express, { Router, type Request, type Response } from 'express';
+import { rechazarNoEncontrado } from '../../infrastructure/http-errores.js';
 import type { Registrar } from '../../infrastructure/logger.js';
 import type { TraceIdGenerator } from '../../infrastructure/trace-id-generator.js';
 import { authorize } from '../../middleware/authorize.js';
 import { crearTraceIdMiddleware, traceIdDe } from '../../middleware/trace-id.middleware.js';
-import type { SesionAutenticada } from '../auth/auth.service.js';
+import {
+  CUERPO_INVALIDO,
+  crearCuerpoIlegible,
+  rechazar,
+  rechazoComunDe,
+  registrarResultado,
+  sesionDe,
+  type Rechazo,
+} from '../compartido/http-escritura.js';
 import { PacienteNoEncontradoError } from '../compartido/pacientes.errores.js';
 import { idDePacienteSchema } from '../patients/patients.schema.js';
-import {
-  CuerpoIncompletoError,
-  GradacionIncoherenteError,
-  PacienteEgresadoError,
-  ValorFueraDeCatalogoError,
-} from './manual-entry.errores.js';
+import { CuerpoIncompletoError, GradacionIncoherenteError } from './manual-entry.errores.js';
 import { leerCuerpoDeBiomarcador, leerCuerpoDeDiagnostico } from './manual-entry.schema.js';
 import type { ManualEntryService, SolicitudDeRegistro } from './manual-entry.service.js';
 
@@ -31,38 +29,16 @@ export interface DependenciasDelController {
 const EVENTO_BIOMARCADOR = 'manual_entry.biomarcador';
 const EVENTO_DIAGNOSTICO = 'manual_entry.diagnostico';
 
-interface Rechazo {
-  readonly status: number;
-  readonly codigo: CodigoDeError;
-  readonly resultado: string;
-}
-
-const CUERPO_INVALIDO: Rechazo = {
-  status: 422,
-  codigo: 'CUERPO_INVALIDO',
-  resultado: 'cuerpo_invalido',
-};
-
 /** Errores de dominio → respuesta HTTP; `undefined` si no es uno de ellos (sigue al 500 genérico). */
 function rechazoDe(error: unknown): Rechazo | undefined {
-  if (error instanceof PacienteEgresadoError) {
-    return { status: 422, codigo: 'PACIENTE_EGRESADO', resultado: 'paciente_egresado' };
-  }
-  if (error instanceof ValorFueraDeCatalogoError) {
-    return { status: 422, codigo: 'VALOR_FUERA_DE_CATALOGO', resultado: 'valor_fuera_de_catalogo' };
-  }
+  const comun = rechazoComunDe(error);
+  if (comun !== undefined) return comun;
   if (error instanceof GradacionIncoherenteError) {
     return { status: 422, codigo: 'GRADACION_INCOHERENTE', resultado: 'gradacion_incoherente' };
   }
   if (error instanceof CuerpoIncompletoError) return CUERPO_INVALIDO;
   return undefined;
 }
-
-/** El guard de sesión corre antes que este router: sin sesión es un montaje roto, no un error del cliente. */
-const sesionDe = (request: Request): SesionAutenticada => {
-  if (request.sesion === undefined) throw new Error('manual-entry montado sin el guard de sesión');
-  return request.sesion;
-};
 
 interface Operacion<C, R> {
   readonly evento: string;
@@ -73,33 +49,15 @@ interface Operacion<C, R> {
   ) => Promise<R>;
 }
 
-/** Línea de log: solo evento, resultado, `traceId` y `patientId` (UUID); nunca el cuerpo ni sus valores (RN-10). */
-function registrarResultado(
-  registrar: Registrar,
-  evento: string,
-  response: Response,
-  patientId: string | undefined,
-  resultado: string,
-): void {
-  registrar({
-    event: evento,
-    resultado,
-    traceId: traceIdDe(response),
-    ...(patientId !== undefined && { patientId }),
-  });
-}
-
 function crearRegistro<C, R>(dependencias: DependenciasDelController, operacion: Operacion<C, R>) {
   const { registrar, servicioPara } = dependencias;
   return async (request: Request, response: Response): Promise<void> => {
-    const rechazar = (rechazo: Rechazo, patientId?: string): void => {
-      registrarResultado(registrar, operacion.evento, response, patientId, rechazo.resultado);
-      enviarError(response, rechazo.status, rechazo.codigo, traceIdDe(response));
-    };
+    const rechazarCon = (rechazo: Rechazo, patientId?: string): void =>
+      rechazar(registrar, operacion.evento, response, rechazo, patientId);
     const patientId = idDePacienteSchema.safeParse(request.params['patientId']);
     const cuerpo = operacion.leerCuerpo(request.body);
     if (cuerpo === undefined) {
-      rechazar(CUERPO_INVALIDO, patientId.success ? patientId.data : undefined);
+      rechazarCon(CUERPO_INVALIDO, patientId.success ? patientId.data : undefined);
       return;
     }
     if (!patientId.success) {
@@ -109,7 +67,7 @@ function crearRegistro<C, R>(dependencias: DependenciasDelController, operacion:
     try {
       const creado = await operacion.ejecutar(servicioPara(traceIdDe(response)), {
         patientId: patientId.data,
-        userId: sesionDe(request).userId,
+        userId: sesionDe(request, 'manual-entry').userId,
         cuerpo,
       });
       registrarResultado(registrar, operacion.evento, response, patientId.data, 'ok');
@@ -122,20 +80,8 @@ function crearRegistro<C, R>(dependencias: DependenciasDelController, operacion:
       }
       const rechazo = rechazoDe(error);
       if (rechazo === undefined) throw error;
-      rechazar(rechazo, patientId.data);
+      rechazarCon(rechazo, patientId.data);
     }
-  };
-}
-
-/** JSON malformado o cuerpo excesivo: el mismo 422 del contrato, sin eco del error del parser. */
-function crearCuerpoIlegible(registrar: Registrar, evento: string): ErrorRequestHandler {
-  return (error: unknown, _request, response, next) => {
-    if (!esErrorDeCuerpoDelCliente(error)) {
-      next(error);
-      return;
-    }
-    registrarResultado(registrar, evento, response, undefined, CUERPO_INVALIDO.resultado);
-    enviarError(response, CUERPO_INVALIDO.status, CUERPO_INVALIDO.codigo, traceIdDe(response));
   };
 }
 

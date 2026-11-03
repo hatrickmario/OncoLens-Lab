@@ -71,6 +71,12 @@ const CAMPOS_DE_DESIGN_D5 = [
 ];
 
 describe('descarte de campos sensibles', () => {
+  it('redacta content en cualquier profundidad cuando es el texto de una nota clínica [US-253 AC-6]', () => {
+    const linea = registrarYLeer({ nota: { Content: 'texto-sintetico-de-nota-1' } });
+
+    expect(JSON.stringify(linea)).not.toContain('texto-sintetico-de-nota-1');
+  });
+
   it.each(CAMPOS_DE_DESIGN_D5)(
     'redacta %s en cualquier profundidad y sin distinguir mayúsculas cuando es parte de la base [US-037 AC-5]',
     (campo) => {

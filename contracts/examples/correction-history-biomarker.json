@@ -1,0 +1,22 @@
+{
+  "items": [
+    {
+      "id": "d5b8c1a3-6e2f-4d94-8a7b-4c5d6e7f8a9b",
+      "entryMethod": "manual_correction",
+      "reviewStatus": "reemplazado",
+      "recordedAt": "2026-09-10T00:00:00.000Z",
+      "createdAt": "2026-10-23T15:00:00.000Z",
+      "value": "25",
+      "unit": "%"
+    },
+    {
+      "id": "9d2b6f3a-1c4e-4b78-a5d0-3f4a5b6c7d8e",
+      "entryMethod": "manual",
+      "reviewStatus": "reemplazado",
+      "recordedAt": "2026-09-10T00:00:00.000Z",
+      "createdAt": "2026-10-11T15:00:00.000Z",
+      "value": "20",
+      "unit": "%"
+    }
+  ]
+}

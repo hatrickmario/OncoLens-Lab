@@ -21,7 +21,7 @@ export function SeccionDeFicha({
   titulo,
   children,
 }: {
-  id: AnclaDeFicha | 'ficha-identificacion' | `caso-${string}`;
+  id: AnclaDeFicha | 'ficha-identificacion' | 'notas-clinicas' | `caso-${string}`;
   titulo: string;
   children: ReactNode;
 }) {

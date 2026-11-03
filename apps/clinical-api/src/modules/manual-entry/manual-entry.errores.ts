@@ -3,19 +3,11 @@
  * valor (RN-10): el controller los traduce a 422 y, cuando el contrato declare `field` (l1d-80, D9), lo emite.
  */
 
-export class PacienteEgresadoError extends Error {
-  constructor() {
-    super('El paciente está egresado');
-    this.name = 'PacienteEgresadoError';
-  }
-}
-
-export class ValorFueraDeCatalogoError extends Error {
-  constructor(readonly campo: string) {
-    super('Valor fuera del catálogo');
-    this.name = 'ValorFueraDeCatalogoError';
-  }
-}
+// Compartidos con la corrección (L1D-309): un solo dueño de la regla RN-17 y del error de catálogo.
+export {
+  PacienteEgresadoError,
+  ValorFueraDeCatalogoError,
+} from '../compartido/errores-de-registro.js';
 
 export class GradacionIncoherenteError extends Error {
   constructor(readonly campo: 'gleasonScore' | 'isupGradeGroup') {

@@ -31,7 +31,12 @@ def test_rag_query_llega_al_buscador_cuando_el_codigo_excede_el_defecto_pero_cab
     chunk = ChunkFx("ch-largo-1", "doc-largo", "texto sintético", [1.0] + [0.0] * 7, True, tipo)
     entorno = crear_entorno(parametros=parametros, buscador=BuscadorFalso(chunks=[chunk]))
 
-    respuesta = entorno.consultar(solicitud_de(Q_HER2, tipo_de_cancer=tipo))
+    solicitud = solicitud_de(Q_HER2, tipo_de_cancer=tipo)
+    solicitud["clinicalContext"][
+        "missingCriticalData"
+    ] = []  # un tipo fuera del catálogo no tiene claves (RN-11)
+
+    respuesta = entorno.consultar(solicitud)
 
     assert respuesta.status_code == 200
     assert entorno.buscador.invocaciones >= 1

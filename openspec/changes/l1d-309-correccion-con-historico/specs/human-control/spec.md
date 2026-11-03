@@ -50,10 +50,12 @@ Un cuerpo inválido, un valor fuera del catálogo o una fecha posterior a hoy (r
 - **WHEN** el doctor corrige el Ki-67 de (a) con `performedAt` = mañana
 - **THEN** responde `422` con `error = CUERPO_INVALIDO` y `field = "performedAt"`, y el biomarcador vigente y su examen no cambian
 
-#### Scenario: Un valor fuera del catálogo se rechaza [US-253 AC-3] [RN-27]
-- **GIVEN** FX-01b-b con los valores admitidos de HER2
-- **WHEN** el doctor corrige HER2 con `value = "7+"`
+#### Scenario: Un valor cuantitativo no numérico se rechaza [US-253 AC-3] [RN-27] (Decidido (usuario, 2026-11-04))
+- **GIVEN** un biomarcador `cuantitativo` (Ki-67 de FX-01b-b)
+- **WHEN** el doctor lo corrige con un `value` no numérico (p. ej. `"7+x"`)
 - **THEN** responde `422` con `error = VALOR_FUERA_DE_CATALOGO` y `field = "value"`, sin filas nuevas
+
+Limitación: los «valores admitidos» de un biomarcador cualitativo (p. ej. HER2) dependen del catálogo, que no los trae (1.3.0); se validan con el oncólogo (D5-21) y no se inventa un enum clínico.
 
 #### Scenario: Una nota vacía o demasiado larga se rechaza [US-253 AC-3] [RN-22] (Decidido (usuario, 2026-11-03), `[S5 resp. 13]`)
 - **WHEN** el doctor corrige una nota con `content` vacío o con más de `CLINICAL_NOTE_MAX_CHARS` caracteres
@@ -90,7 +92,7 @@ La ficha MUST ofrecer «Corregir dato» en cada biomarcador y nota clínica vige
 - **GIVEN** la ficha de (a) con MSW sirviendo `biomarker-corrected.json` y `correction-history-biomarker.json`
 - **WHEN** el doctor pulsa «Corregir dato» en Ki-67, cambia el valor y pulsa «Guardar mi corrección»
 - **THEN** la fila muestra el valor nuevo con «Corrección manual», aparece «Histórico» bajo la fila y al desplegarlo lista el valor anterior rotulado «reemplazado»
-- **AND** se muestra «Los análisis anteriores se hicieron con el valor previo. Un análisis nuevo usará el valor corregido.» sin deshabilitar ninguna acción [US-253 AC-5] [RN-26]
+- **AND** al corregir un **biomarcador** se muestra «Los análisis anteriores se hicieron con el valor previo. Un análisis nuevo usará el valor corregido.» sin deshabilitar ninguna acción [US-253 AC-5] [RN-26]; al corregir una **nota** no se muestra aviso de análisis, porque las notas no entran al análisis
 
 #### Scenario: Las fechas del histórico se muestran relativas [US-253 AC-1] [S5 resp. 11]
 - **GIVEN** el reloj congelado y `correction-history-biomarker.json` con una entrada creada hoy y otra 12 días antes
@@ -114,4 +116,4 @@ La ficha MUST ofrecer «Corregir dato» en cada biomarcador y nota clínica vige
 
 #### Scenario: El formulario de nota libre muestra el aviso de nombres [US-253 AC-6] [ADR-40] [RN-11]
 - **WHEN** el doctor abre «Corregir dato» en una nota
-- **THEN** encima del campo de texto aparece fijo «No escribas nombres de personas (ni del paciente ni de terceros) en las notas. El texto se enmascara antes de llegar a la IA.»
+- **THEN** encima del campo de texto aparece fijo «No escribas nombres de personas (ni del paciente ni de terceros) en las notas. Las notas no se envían a la IA en esta versión; conviene no incluir nombres de personas en ellas.» (S5 resp. 12: el envío de notas, tras el detector de PII, se traslada a ADR-40)

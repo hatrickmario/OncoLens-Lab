@@ -65,6 +65,14 @@ export interface AtributoSemilla {
   readonly diasAntes: number;
 }
 
+/** Nota clínica sintética SIN PII (US-253, P-3): se siembra para la demo de la corrección con histórico. */
+export interface NotaSemilla {
+  readonly clave: string;
+  readonly tipo: 'antecedente' | 'comorbilidad' | 'alergia' | 'antecedente_familiar' | 'nota_libre';
+  readonly texto: string;
+  readonly diasAntes: number;
+}
+
 export interface PacienteSemilla {
   readonly clave: string;
   readonly anioDeNacimiento: number;
@@ -74,6 +82,8 @@ export interface PacienteSemilla {
   readonly tratamientosPrevios: readonly TratamientoPreviaSemilla[];
   readonly eventos: readonly EventoSemilla[];
   readonly atributos: readonly AtributoSemilla[];
+  /** Notas clínicas sintéticas sin PII (solo el paciente (a): la demo de la corrección, US-253). */
+  readonly notas?: readonly NotaSemilla[];
   /** Referencia sintética del opt-out de `analisis_ia` (solo el paciente (d)). */
   readonly optOutAnalisisIa?: string;
 }

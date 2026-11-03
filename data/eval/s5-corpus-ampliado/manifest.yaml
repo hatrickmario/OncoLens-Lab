@@ -4,7 +4,7 @@
 clase: sintetico
 nombre: s5-corpus-ampliado
 version: '1'
-descripcion: 'Corpus derivado de data/raw/s3 (53 documentos de NCI, PMC Open Access y ClinicalTrials.gov: hasta 5 fragmentos literales por documento) y 64 preguntas sintéticas (mama y próstata, es y en; 4 sin evidencia). Lo consume eval/configs/s5-calibracion.yaml con los modelos locales reales; la CI solo comprueba su integridad.'
+descripcion: 'Corpus derivado de data/raw/s3 (53 documentos de NCI, PMC Open Access y ClinicalTrials.gov: hasta 5 fragmentos literales por documento) y 69 preguntas sintéticas (mama y próstata, es y en; 5 sin evidencia; 5 con línea actual y faltantes declarados, US-116). Lo consume eval/configs/s5-calibracion.yaml con los modelos locales reales; la CI solo comprueba su integridad.'
 archivos:
   corpus: corpus.yaml
   preguntas: preguntas.yaml

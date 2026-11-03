@@ -1,14 +1,18 @@
 import type { Biomarker } from '../../../../packages/api-contracts/src/types/clinical-api';
-import { textoDeConfianza, textoDeOrigen } from '../../lib/ficha/presentacion';
+import { textoDeConfianza } from '../../lib/ficha/presentacion';
 import { mensajes, rellenar } from '../../lib/mensajes';
 import { FechaRelativa } from '../atoms/fecha-relativa';
-import { CELDA, EncabezadoDeTabla } from '../molecules/encabezado-de-tabla';
+import { CELDA } from '../molecules/encabezado-de-tabla';
 import { SeccionDeFicha } from '../molecules/fila-de-ficha';
+import { OrigenDelDato } from '../molecules/origen-del-dato';
+import { TablaDeBiomarcadoresCorregibles } from '../molecules/tabla-de-biomarcadores-corregibles';
 
-function FilaDeBiomarcador({ b, hoy }: { b: Biomarker; hoy: string }) {
+const ID_DE_AYUDA = 'correccion-egresado-biomarcadores';
+
+function CeldasDeBiomarcador({ b, hoy }: { b: Biomarker; hoy: string }) {
   const { biomarcadores, significancia, noRegistrado } = mensajes().ficha;
   return (
-    <tr>
+    <>
       <th scope="row" className={CELDA}>
         {b.name}
         {b.loincCode && (
@@ -27,24 +31,34 @@ function FilaDeBiomarcador({ b, hoy }: { b: Biomarker; hoy: string }) {
       <td className={CELDA}>{b.trend ?? biomarcadores.sinTendencia}</td>
       <td className={CELDA}>{significancia[b.clinicalSignificance]}</td>
       <td className={CELDA}>
-        <span>{textoDeOrigen(b.provenance)}</span>
+        <span>
+          <OrigenDelDato procedencia={b.provenance} fecha={b.performedAt} hoy={hoy} />
+        </span>
         <span className="text-text-muted block text-sm">
           {textoDeConfianza(b.provenance.extractionConfidence)}
         </span>
       </td>
-    </tr>
+    </>
   );
 }
 
-/** Último valor por biomarcador (S2-04): significancia con símbolo y texto; origen y revisión en texto. */
+export interface RecentBiomarkersTableProps {
+  biomarcadores: Biomarker[];
+  pacienteId: string;
+  /** Paciente egresado: la corrección queda deshabilitada por regla legal (RN-17). */
+  egresado: boolean;
+  /** «Hoy» del servidor para las fechas relativas. */
+  hoy: string;
+}
+
+/** Último valor por biomarcador (S2-04): significancia, origen y revisión en texto; cada dato se puede corregir (US-253). */
 export function RecentBiomarkersTable({
   biomarcadores,
+  pacienteId,
+  egresado,
   hoy,
-}: {
-  biomarcadores: Biomarker[];
-  hoy: string;
-}) {
-  const { biomarcadores: textos, noRegistrado } = mensajes().ficha;
+}: RecentBiomarkersTableProps) {
+  const { biomarcadores: textos, noRegistrado, correccion } = mensajes().ficha;
   const columnas = [
     textos.biomarcador,
     textos.valor,
@@ -58,14 +72,25 @@ export function RecentBiomarkersTable({
       {biomarcadores.length === 0 ? (
         <p className="m-0">{noRegistrado}</p>
       ) : (
-        <table className="w-full border-collapse">
-          <EncabezadoDeTabla columnas={columnas} />
-          <tbody>
-            {biomarcadores.map((b) => (
-              <FilaDeBiomarcador key={b.id} b={b} hoy={hoy} />
-            ))}
-          </tbody>
-        </table>
+        <>
+          {egresado && (
+            <p id={ID_DE_AYUDA} className="m-0 mb-2">
+              {correccion.egresado}
+            </p>
+          )}
+          <TablaDeBiomarcadoresCorregibles
+            columnas={columnas}
+            columnaDeAcciones={textos.acciones}
+            filas={biomarcadores.map((b) => ({
+              biomarcador: b,
+              celdas: <CeldasDeBiomarcador b={b} hoy={hoy} />,
+            }))}
+            pacienteId={pacienteId}
+            egresado={egresado}
+            idDeAyuda={ID_DE_AYUDA}
+            hoy={hoy}
+          />
+        </>
       )}
     </SeccionDeFicha>
   );
