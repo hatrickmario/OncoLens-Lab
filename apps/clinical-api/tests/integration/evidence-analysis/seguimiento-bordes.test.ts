@@ -1,5 +1,7 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import errorDesidentificacion from '../../../../../contracts/examples/error-desidentificacion-no-disponible.json' with { type: 'json' };
+import ragCatalogoEnConflicto from '../../../../../contracts/examples/rag-catalog-version-mismatch.json' with { type: 'json' };
+import ragValidacion from '../../../../../contracts/examples/rag-validacion-422.json' with { type: 'json' };
 import ragLlmNoDisponible from '../../../../../contracts/examples/rag-llm-local-no-disponible.json' with { type: 'json' };
 import ragNliNoDisponible from '../../../../../contracts/examples/rag-nli-no-disponible.json' with { type: 'json' };
 import { detectoresCaidos, lectorDeIdentidadFalso } from '../../support/desidentificacion.js';
@@ -180,6 +182,57 @@ describe('fallos de rag-orchestrator sin consumir turno', () => {
     const respuesta = await preguntar(app, analisis.id);
 
     expect(respuesta.status).toBe(502);
+    expect(await leerTurnos(mundo.cliente, analisis.id)).toEqual([]);
+  });
+});
+
+describe('409 y 422 de rag-orchestrator se exponen como 502 (el spec del seguimiento no los declara)', () => {
+  it('responde 502 con resultado catalogo_en_conflicto, sin persistir turno, cuando rag responde 409 CATALOG_VERSION_MISMATCH [US-218 AC-1]', async () => {
+    const { analisis } = await analisisConEvidencia();
+    const { app, logger } = await montar();
+    rag.seguimiento.responder({ tipo: 'json', status: 409, cuerpo: ragCatalogoEnConflicto });
+
+    const respuesta = await preguntar(app, analisis.id);
+
+    expect(respuesta.status).toBe(502);
+    expect(respuesta.body.error).toBe('ERROR_SERVICIO_IA');
+    expect(logger.lineas.map((l) => l['resultado'])).toContain('catalogo_en_conflicto');
+    expect(await leerTurnos(mundo.cliente, analisis.id)).toEqual([]);
+  });
+
+  it('responde 502 con resultado validacion_rechazada_por_rag, sin persistir turno, cuando rag responde 422 [US-218 AC-1]', async () => {
+    const { analisis } = await analisisConEvidencia();
+    const { app, logger } = await montar();
+    rag.seguimiento.responder({ tipo: 'json', status: 422, cuerpo: ragValidacion });
+
+    const respuesta = await preguntar(app, analisis.id);
+
+    expect(respuesta.status).toBe(502);
+    expect(logger.lineas.map((l) => l['resultado'])).toContain('validacion_rechazada_por_rag');
+    expect(await leerTurnos(mundo.cliente, analisis.id)).toEqual([]);
+  });
+});
+
+describe('datos no sintéticos no salen hacia la IA en el seguimiento (RN-12, defensa en profundidad)', () => {
+  it('responde 502 sin llamar a rag-orchestrator ni persistir turno cuando el análisis es de datos reales anonimizados [US-218 AC-6]', async () => {
+    const { app, analisis } = await analisisConEvidencia();
+    // El análisis es inmutable por trigger: el test lo reclasifica con el trigger apagado, solo en su base.
+    await mundo.cliente.query(
+      'ALTER TABLE clinical.ai_analysis_record DISABLE TRIGGER ai_analysis_record_inmutable',
+    );
+    await mundo.cliente.query(
+      `UPDATE clinical.ai_analysis_record SET data_classification = 'real_anonimizado' WHERE id = $1`,
+      [analisis.id],
+    );
+    await mundo.cliente.query(
+      'ALTER TABLE clinical.ai_analysis_record ENABLE TRIGGER ai_analysis_record_inmutable',
+    );
+
+    const respuesta = await preguntar(app, analisis.id);
+
+    expect(respuesta.status).toBe(502);
+    expect(respuesta.body.error).toBe('ERROR_SERVICIO_IA');
+    expect(rag.seguimiento.llamadas()).toBe(0);
     expect(await leerTurnos(mundo.cliente, analisis.id)).toEqual([]);
   });
 });
