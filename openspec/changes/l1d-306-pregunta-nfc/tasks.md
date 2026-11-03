@@ -68,7 +68,7 @@
       `feat(L1D-306)` · **test del AC primero**
 - [x] 4.3 Sin loop visual: el change no cambia la UI (`docs/ux/S5/pantallas-s5.md`, US-250 sin UI propia);
       se justifica en el PR · **exento**
-- [ ] 4.4 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento,
+- [x] 4.4 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento,
       tests en verde antes y después, commit refactor(L1D-306)
 
 ## 5. evaluación
