@@ -16,7 +16,9 @@
 
 > Linear: [L1D-191](https://linear.app/l1der-lab-mjbc/issue/L1D-191)
 
-`FEAT-T2c` · Post-MVP · Estimación **3** · HU-20, HU-24 · FR-27 (h, dueña) · AC-T2.1 (h), AC-T2.2 (h), AC-T2.4, AC-11.6 · ↪ US-189, US-066, US-067 · 🔗 Regresión [RN-24] → US-191
+`FEAT-T2c` · Sprint 6 *(usuario, 2026-11-02, PRD E-17)* · Estimación **3** · HU-20, HU-24 · FR-27 (h, dueña) · AC-T2.1 (h), AC-T2.2 (h), AC-T2.4, AC-11.6 · ↪ US-189, US-066, US-067 · 🔗 Regresión [RN-24] → US-191
+
+> **Decidido (usuario, 2026-11-02, PRD E-17):** pasa a **Sprint 6**: el análisis parte de los últimos análisis guardados (flujo de conversación con memoria).
 
 ## Story
 Como oncólogo, quiero ver en la Base del análisis qué análisis previos tuvo en cuenta la

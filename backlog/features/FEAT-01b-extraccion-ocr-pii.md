@@ -32,7 +32,9 @@
 
 > Linear: [L1D-63](https://linear.app/l1der-lab-mjbc/issue/L1D-63)
 
-`FEAT-01b` · Sprint 5 · Estimación **8** · HU-04, HU-05 · FR-06 (dueña), IA-08 · AC-01.1 (ilegible) · ⛔ ADR-39 (adapters reales) · ⛔ DEC-09 · escenario más probable (AC-7) · ↪ US-054, US-041 · 🔗 Regresión [RN-12] → US-050 · 🔗 Regresión [SEG-07] → US-054 · Ticket: OL-05
+`FEAT-01b` · Post-MVP *(usuario, 2026-11-02, PRD E-17)* · Estimación **8** · HU-04, HU-05 · FR-06 (dueña), IA-08 · AC-01.1 (ilegible) · ⛔ ADR-39 (adapters reales) · ⛔ DEC-09 · escenario más probable (AC-7) · ↪ US-054, US-041 · 🔗 Regresión [RN-12] → US-050 · 🔗 Regresión [SEG-07] → US-054 · Ticket: OL-05
+
+> **Decidido (usuario, 2026-11-02, PRD E-17):** pasa a **Post-MVP**: el OCR no se prioriza en el MVP (feedback de oncólogos y producto).
 
 > **Reordenamiento (usuario, 2026-10-23):** S3 → S5. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
@@ -92,7 +94,9 @@ Persistencia (US-087). Plantillas por laboratorio (excluidas, PRD §12). Registr
 
 > Linear: [L1D-64](https://linear.app/l1der-lab-mjbc/issue/L1D-64)
 
-`FEAT-01b` · Sprint 5 · Estimación **5** · HU-04 (escenario 3) · FR-06 (gate de PII), SEG-04 (documentos, dueña), RN-10 · AC-01.1 (`cuarentena_pii`, `requiere_revision_identidad`) · ⛔ ADR-40 (motor de PII) · ↪ US-082, US-078, US-046 · 🔗 Regresión [RN-10] → US-046 · 🔗 Medido en: US-103 (sensibilidad de PII en documentos, G-8)
+`FEAT-01b` · Post-MVP *(usuario, 2026-11-02, PRD E-17)* · Estimación **5** · HU-04 (escenario 3) · FR-06 (gate de PII), SEG-04 (documentos, dueña), RN-10 · AC-01.1 (`cuarentena_pii`, `requiere_revision_identidad`) · ⛔ ADR-40 (motor de PII) · ↪ US-082, US-078, US-046 · 🔗 Regresión [RN-10] → US-046 · 🔗 Medido en: US-103 (sensibilidad de PII en documentos, G-8)
+
+> **Decidido (usuario, 2026-11-02, PRD E-17):** pasa a **Post-MVP**: el OCR no se prioriza en el MVP (feedback de oncólogos y producto).
 
 > **Reordenamiento (usuario, 2026-10-23):** S3 → S5. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
@@ -148,7 +152,9 @@ Supertest con `rag-orchestrator` simulado (AC-1, AC-4 a AC-6).
 
 > Linear: [L1D-65](https://linear.app/l1der-lab-mjbc/issue/L1D-65)
 
-`FEAT-01b` · Sprint 5 · Estimación **5** · HU-05 · FR-06 (confianza por campo), IA-08, RN-07 · AC-01.3 · ⛔ ADR-39 (motor OCR) · ↪ US-082 · 🔗 Regresión [RN-07] → US-065 · 🔗 Medido en: US-103 (M-01.3), US-104 (calibración TBD-03)
+`FEAT-01b` · Post-MVP *(usuario, 2026-11-02, PRD E-17)* · Estimación **5** · HU-05 · FR-06 (confianza por campo), IA-08, RN-07 · AC-01.3 · ⛔ ADR-39 (motor OCR) · ↪ US-082 · 🔗 Regresión [RN-07] → US-065 · 🔗 Medido en: US-103 (M-01.3), US-104 (calibración TBD-03)
+
+> **Decidido (usuario, 2026-11-02, PRD E-17):** pasa a **Post-MVP**: el OCR no se prioriza en el MVP (feedback de oncólogos y producto).
 
 > **Reordenamiento (usuario, 2026-10-23):** S3 → S5. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
@@ -198,7 +204,9 @@ Vitest de la regla de revisión (AC-5).
 
 > Linear: [L1D-66](https://linear.app/l1der-lab-mjbc/issue/L1D-66)
 
-`FEAT-01b` · Sprint 5 · Estimación **5** · HU-04, HU-15 · FR-06 (eventos, tratamientos, atributos), FR-21 (extracción) · AC-01.3, AC-02.7 (extracción), AC-02.2 (fecha incierta) · ⛔ ADR-39 · ↪ US-082 · 🔗 Consumida por: US-087, US-088, US-089 · 🔗 Medido en: US-105 (M-02.1)
+`FEAT-01b` · Post-MVP *(usuario, 2026-11-02, PRD E-17)* · Estimación **5** · HU-04, HU-15 · FR-06 (eventos, tratamientos, atributos), FR-21 (extracción) · AC-01.3, AC-02.7 (extracción), AC-02.2 (fecha incierta) · ⛔ ADR-39 · ↪ US-082 · 🔗 Consumida por: US-087, US-088, US-089 · 🔗 Medido en: US-105 (M-02.1)
+
+> **Decidido (usuario, 2026-11-02, PRD E-17):** pasa a **Post-MVP**: el OCR no se prioriza en el MVP (feedback de oncólogos y producto).
 
 > **Reordenamiento (usuario, 2026-10-23):** S3 → S5. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
@@ -243,7 +251,9 @@ US-084. Tests: Pytest con FX-01a-a, FX-01b-a y FX-01b-b.
 
 > Linear: [L1D-67](https://linear.app/l1der-lab-mjbc/issue/L1D-67)
 
-`FEAT-01b` · Sprint 5 · Estimación **3** · HU-04, HU-17 · FR-06 (propuesta de códigos), FR-22 (B2 propone) · AC-03.3 (parte de propuesta) · ⛔ DEC-04 · *workaround* Q-07 · ↪ US-082 · 🔗 Consumida por: US-098 (Backend 1 decide) · 🔗 Regresión [RN-27] → US-098 · 🔗 Medido en: US-106 (M-03.4, M-03.5)
+`FEAT-01b` · Post-MVP *(usuario, 2026-11-02, PRD E-17)* · Estimación **3** · HU-04, HU-17 · FR-06 (propuesta de códigos), FR-22 (B2 propone) · AC-03.3 (parte de propuesta) · ⛔ DEC-04 · *workaround* Q-07 · ↪ US-082 · 🔗 Consumida por: US-098 (Backend 1 decide) · 🔗 Regresión [RN-27] → US-098 · 🔗 Medido en: US-106 (M-03.4, M-03.5)
+
+> **Decidido (usuario, 2026-11-02, PRD E-17):** pasa a **Post-MVP**: el OCR no se prioriza en el MVP (feedback de oncólogos y producto).
 
 > **Reordenamiento (usuario, 2026-10-23):** S3 → S5. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
@@ -288,7 +298,9 @@ Backend 1 (US-098) `[ADR-33]`. Tests: Pytest unitarios.
 
 > Linear: [L1D-68](https://linear.app/l1der-lab-mjbc/issue/L1D-68)
 
-`FEAT-01b` · Sprint 5 · Estimación **5** · HU-04, HU-05 · FR-06 (persistencia), RN-07 · AC-01.1 (reproceso idempotente), AC-01.3 · ↪ US-078, US-082…US-086, US-098, US-099, US-100 · 🔗 Regresión [RN-06] → US-053 (ningún dato a medias) · 🔗 Consumida por: US-088, US-089, US-092 · Ticket: OL-05
+`FEAT-01b` · Post-MVP *(usuario, 2026-11-02, PRD E-17)* · Estimación **5** · HU-04, HU-05 · FR-06 (persistencia), RN-07 · AC-01.1 (reproceso idempotente), AC-01.3 · ↪ US-078, US-082…US-086, US-098, US-099, US-100 · 🔗 Regresión [RN-06] → US-053 (ningún dato a medias) · 🔗 Consumida por: US-088, US-089, US-092 · Ticket: OL-05
+
+> **Decidido (usuario, 2026-11-02, PRD E-17):** pasa a **Post-MVP**: el OCR no se prioriza en el MVP (feedback de oncólogos y producto).
 
 > **Reordenamiento (usuario, 2026-10-23):** S3 → S5. Ver `README.md`, «Reordenamiento del 2026-10-23».
 

@@ -365,7 +365,9 @@ un proceso de evaluación) y calcula los dos medibles; deterministas, sin LLM ju
 
 > Linear: [L1D-261](https://linear.app/l1der-lab-mjbc/issue/L1D-261)
 
-`FEAT-T5d` · Post-MVP (junto con FEAT-11c) · Estimación **3** · — (técnica, PRD §17) · FR-20, FR-29 (c) · M-11.3, M-11.4 · AC-T4.3 (memoria) · ↪ US-189, US-190, US-191 · ⛔ ADR-40 (US-013) · detector de PII
+`FEAT-T5d` · Sprint 6 *(usuario, 2026-11-02, PRD E-17)* · Estimación **3** · — (técnica, PRD §17) · FR-20, FR-29 (c) · M-11.3, M-11.4 · AC-T4.3 (memoria) · ↪ US-189, US-190, US-191 · ⛔ ADR-40 (US-013) · detector de PII
+
+> **Decidido (usuario, 2026-11-02, PRD E-17):** pasa a **Sprint 6**: el análisis parte de los últimos análisis guardados (flujo de conversación con memoria).
 
 ## Story
 Como responsable de calidad, quiero sembrar en análisis previos afirmaciones que solo

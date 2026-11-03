@@ -28,7 +28,9 @@
 
 > Linear: [L1D-147](https://linear.app/l1der-lab-mjbc/issue/L1D-147)
 
-`FEAT-11a` · Sprint 6 (`si-hay-capacidad`) · Estimación **5** · HU-11 · FR-12 (dueña) · AC-11.1 (historial), AC-T2.4, AC-T1.4 · ↪ US-053, US-066 · 🔗 Regresión [FR-18] → US-150 · 🔗 Medido en: US-159 (M-11.2)
+`FEAT-11a` · Sprint 6 *(usuario, 2026-11-02, PRD E-17)* · Estimación **5** · HU-11 · FR-12 (dueña) · AC-11.1 (historial), AC-T2.4, AC-T1.4 · ↪ US-053, US-066 · 🔗 Regresión [FR-18] → US-150 · 🔗 Medido en: US-159 (M-11.2)
+
+> **Decidido (usuario, 2026-11-02, PRD E-17):** pasa a **Sprint 6**: las conversaciones previas se consultan como historial.
 
 ## Story
 Como oncólogo, quiero ver la lista de análisis previos del paciente y abrir cualquiera
@@ -240,7 +242,9 @@ Backend 2. Tests: Vitest del comparador y Supertest con FX-11a-a.
 
 > Linear: [L1D-152](https://linear.app/l1der-lab-mjbc/issue/L1D-152)
 
-`FEAT-11a` · Sprint 6 (`si-hay-capacidad`) · Estimación **5** · HU-11, HU-24 · FR-12, NFR-12 · AC-11.1, AC-11.2, AC-11.2b, AC-11.3 · ↪ US-174…US-178 · 🔗 Regresión [RN-23] → US-068 · 🔗 Regresión [RN-26] → US-071
+`FEAT-11a` · Sprint 6 *(usuario, 2026-11-02, PRD E-17)* · Estimación **5** · HU-11, HU-24 · FR-12, NFR-12 · AC-11.1, AC-11.2, AC-11.2b, AC-11.3 · ↪ US-174…US-178 · 🔗 Regresión [RN-23] → US-068 · 🔗 Regresión [RN-26] → US-071
+
+> **Decidido (usuario, 2026-11-02, PRD E-17):** pasa a **Sprint 6**: las conversaciones previas se consultan como historial.
 
 ## Story
 Como oncólogo, quiero una pantalla de historial donde vea qué análisis están

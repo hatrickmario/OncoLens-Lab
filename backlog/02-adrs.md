@@ -17,6 +17,7 @@
 > - **ADR-39 · encuadre decidido, cierre por medición:** hipótesis principal = combinación A (Gemma 4 26B A4B QAT `gemma4:26b-a4b-it-qat` en Ollama, ~16 GB `[S1 resp. 10]` (tope del LLM ampliado a 21 GB y del stack a ~30 GB, Decidido (usuario, 2026-10-20); candidatos añadidos: Qwen 3.6 35B-A3B Q4_K_M, MedGemma 1.5 4B Q8_0/BF16 y Gemma 4 26B-A4B Q4_K_M), medido 15 GB y ~79 tok/s; BGE-M3, bge-reranker-v2-m3, mDeBERTa-2mil7, OCRmyPDF + Tesseract), con B y C como respaldos medidos `[S1 resp. 5]`. La historia se parte en **US-012 · ADR-39 fase A** (5) y **US-224 · ADR-39 fase B** (3) `[S1 resp. 6]`; el documento `docs/architecture/adr/ADR-39-modelos-locales.md` (MADR) lo escribe la ejecución del S1 con las cifras.
 > - **DEC-05:** validación clínica del "Oncólogo asesor A" hecha `[S1 resp. 1]`; ya no bloquea US-038.
 > - **ADR-40:** sigue en el S2; en el S1 rige su escenario más probable (opción A) en US-049, aceptado `[S1 resp. 3]`.
+> - **ADR-40 decidido (usuario, 2026-11-02):** opción B adaptada al MVP sin OCR (PRD E-17): patrones e identidad exacta en el MVP; los nombres en documentos pasan a Post-MVP con el OCR; aviso en el formulario de notas (US-253 AC-6).
 
 > **ADR-41 · propuesto (2026-10-21, L1D-232):** [registro](../docs/architecture/adr/ADR-41-evaluacion-ia.md) — framework propio con Pytest, NLI como juez principal de fidelidad y juez LLM local G secundario (P-3, `[S2 resp. 3]`); lo acepta el humano al mergear.
 

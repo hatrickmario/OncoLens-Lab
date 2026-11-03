@@ -105,6 +105,17 @@ Guion completo, con pares paciente + pregunta, conteos esperados y límites hone
 
 Acercamiento a G-Demo/G-Piloto: el S4 no cierra ninguno; avanza el eje «caso reconstruido → faltantes → opciones más aplicables». G-Demo es el S5 (sobrecargado: se recorta en su refinamiento).
 
+### 4.1 Resultado de la Demo 4 (2026-11-02)
+
+- **Instalación desde cero** en una copia aparte del repositorio, con un proyecto Compose propio (`oncolens-demo4`, commit `d8f422e9`) para no tocar los volúmenes de la copia de desarrollo. La «Verificación del seed» cuadró: 5 pacientes, 5 identidades, 2 usuarios, 10 documentos y 8 con población verificada. Al terminar se bajó el stack con sus volúmenes y se borraron sus imágenes.
+- **Listado de verificación:** los **61 ítems pasaron**, según la verificación del usuario: [`docs/evidence/S4-demo4/checklist-verificacion-demo4.md`](../../docs/evidence/S4-demo4/checklist-verificacion-demo4.md). Pacientes, preguntas por estado y hallazgos de la sesión: [`pacientes-y-preguntas-demo4.md`](../../docs/evidence/S4-demo4/pacientes-y-preguntas-demo4.md).
+- **Estados de aplicabilidad en vivo:** Coincide (HER2, pregunta en inglés) y Parcial (estado menopáusico, en la tabla por fuente) sí se mostraron con el LLM real. No coincide solo es reproducible en modo fingido: ningún valor del corpus lleva una restricción explícita (DEC-11).
+- **Estabilidad del análisis:** con la pregunta en NFC, 57/57 ejecuciones idénticas; las 3 que el usuario vio distintas traían la pregunta en NFD (acentos descompuestos). Análisis y datos: [`docs/evidence/S4-demo4/estabilidad/`](../../docs/evidence/S4-demo4/estabilidad/).
+- **Feedback registrado:** OUT-01…OUT-08 en [`S4-demo-outcomes.md`](../../docs/evidence/S4-demo4/S4-demo-outcomes.md). OUT-01 y OUT-02 cerrados (PR #284); OUT-05…OUT-07 → US-250 (S5), US-251 y US-252 (S6).
+- **Feedback de oncólogos y producto** tras la demo, aplicado al backlog como **PRD E-17**: conversación con memoria en el S6, edición de exámenes y notas en el S5, más corpus y más pacientes sintéticos, y el OCR pasa a Post-MVP; G-Demo pasa a «caso editado a mano → faltantes → análisis con debate».
+- **Linear:** L1D-298 pasa a In Review (AC-7 verificado en la demo); L1D-117, L1D-244 y L1D-205 llevan un comentario con las filas F que pasaron y siguen en In Review hasta conciliar su `tasks.md` y archivar su change.
+- **Pendiente:** conciliar en el Markdown (`tasks.md` y `S4-deuda.md`: D4-02, D4-08, D4-21, D4-30, D4-35, D4-39) las verificaciones de las filas F, cuando se aporte su evidencia; cerrar el milestone «Sprint 4» en Linear (lo hace el humano).
+
 ## 5. Retrospectiva: lo implementado
 
 **Puntos** (criterio: DoD «Historia cerrada»): comprometidos **73** (20 tarjetas) → **76** con D4-18 (1) y D4-19 (2); cerrados **66/73 = 0,90** por puntos de changes archivados (69/76 con D4-18 y D4-19). Historias cerradas ÷ comprometidas: **17/20 = 0,85** si se cuentan 300 y 245 (archivados, con la medición real diferida a D4-30 y D4-21); **15/20 = 0,75** con el criterio estricto de la DoD («AC verificados») que aplicó el auditor de trazabilidad, que los dejó en In Review en Linear (58 de 73 pts). **La meta ≥ 0,80 se cumple solo con el primer criterio.** Decidido por el usuario (2026-11-02): L1D-300 y L1D-245 pasan a **Done** (verificación empírica en D4-30 y D4-21); el cierre queda en **17/20 = 85 %**, con esa salvedad explícita.

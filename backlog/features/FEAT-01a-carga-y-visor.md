@@ -130,7 +130,9 @@ FX-01a-a y MinIO de test con inyección de fallos.
 
 > Linear: [L1D-58](https://linear.app/l1der-lab-mjbc/issue/L1D-58)
 
-`FEAT-01a` · Sprint 5 *(desde S2, con US-082, `[S2 resp. 1]`)* · Estimación **5** · HU-04 · FR-06 (orquestación), NFR-07 (dueña) · AC-01.1 (3 reintentos, sin colgados) · ↪ US-076, US-054 · 🔗 Consume: US-082 (`/documents/extract`), US-087 (persistencia) · 🔗 Medido en: US-103 (M-01.2)
+`FEAT-01a` · Post-MVP *(usuario, 2026-11-02, PRD E-17)* · Estimación **5** · HU-04 · FR-06 (orquestación), NFR-07 (dueña) · AC-01.1 (3 reintentos, sin colgados) · ↪ US-076, US-054 · 🔗 Consume: US-082 (`/documents/extract`), US-087 (persistencia) · 🔗 Medido en: US-103 (M-01.2)
+
+> **Decidido (usuario, 2026-11-02, PRD E-17):** pasa a **Post-MVP**: el OCR no se prioriza en el MVP (feedback de oncólogos y producto).
 
 > **Reordenamiento (usuario, 2026-10-23):** S3 → S5. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
@@ -200,7 +202,9 @@ Lo que hace `rag-orchestrator` con el PDF (FEAT-01b) y cómo se persiste lo extr
 
 > Linear: [L1D-59](https://linear.app/l1der-lab-mjbc/issue/L1D-59)
 
-`FEAT-01a` · Sprint 5 *(desde S2, con US-082, `[S2 resp. 1]`)* · Estimación **3** · HU-04, HU-05 (escenario 2) · FR-05 (UI), NFR-12 · AC-01.2 (parte de estados) · ↪ US-076, US-078 · 🔗 Relacionada: US-090 (vista de caso), US-077 (carga múltiple, `si-hay-capacidad`), US-081 (estados de cuarentena, `si-hay-capacidad`)
+`FEAT-01a` · Post-MVP *(usuario, 2026-11-02, PRD E-17)* · Estimación **3** · HU-04, HU-05 (escenario 2) · FR-05 (UI), NFR-12 · AC-01.2 (parte de estados) · ↪ US-076, US-078 · 🔗 Relacionada: US-090 (vista de caso), US-077 (carga múltiple, `si-hay-capacidad`), US-081 (estados de cuarentena, `si-hay-capacidad`)
+
+> **Decidido (usuario, 2026-11-02, PRD E-17):** pasa a **Post-MVP**: el OCR no se prioriza en el MVP (feedback de oncólogos y producto).
 
 > **Reordenamiento (usuario, 2026-10-23):** S3 → S5. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
@@ -340,7 +344,9 @@ total o retención, Post-MVP).
 
 > Linear: [L1D-62](https://linear.app/l1der-lab-mjbc/issue/L1D-62)
 
-`FEAT-01a` · Sprint 5 · Estimación **2** · HU-05 (escenario 1, parte del archivo) · FR-07 (archivo servido sin caché y auditado), FR-18 (registro de la apertura), SEG-02 (RBAC), RN-10 · AC-T1.1 (abrir la fuente de un dato) · ↪ US-076 (`Document` y objeto en `clinical-minio`), US-034, US-211 (guard de sesión) · 🔗 Consumida por: US-090 (AC-2), US-092 (AC-1), US-004 (AC-4), US-080 (visor, `si-hay-capacidad`) · 🔗 Produce para: US-102 (AC-2, verificación de `document.file.read` en el S6) · 🔗 Regresión [RN-10] → US-046 · 🔗 Regresión [RN-15] → US-148 (activa desde S6: descargar no es generación con IA y no responde `403` por opt-out) · 🔗 Regresión [FR-15] → US-204 (Post-MVP)
+`FEAT-01a` · Post-MVP *(usuario, 2026-11-02, PRD E-17)* · Estimación **2** · HU-05 (escenario 1, parte del archivo) · FR-07 (archivo servido sin caché y auditado), FR-18 (registro de la apertura), SEG-02 (RBAC), RN-10 · AC-T1.1 (abrir la fuente de un dato) · ↪ US-076 (`Document` y objeto en `clinical-minio`), US-034, US-211 (guard de sesión) · 🔗 Consumida por: US-090 (AC-2), US-092 (AC-1), US-004 (AC-4), US-080 (visor, `si-hay-capacidad`) · 🔗 Produce para: US-102 (AC-2, verificación de `document.file.read` en el S6) · 🔗 Regresión [RN-10] → US-046 · 🔗 Regresión [RN-15] → US-148 (activa desde S6: descargar no es generación con IA y no responde `403` por opt-out) · 🔗 Regresión [FR-15] → US-204 (Post-MVP)
+
+> **Decidido (usuario, 2026-11-02, PRD E-17):** pasa a **Post-MVP**: el OCR no se prioriza en el MVP (feedback de oncólogos y producto).
 
 > **Reordenamiento (usuario, 2026-10-23):** S3 → S5. Ver `README.md`, «Reordenamiento del 2026-10-23».
 

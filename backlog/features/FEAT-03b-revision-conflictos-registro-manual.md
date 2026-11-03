@@ -22,7 +22,9 @@
 
 > Linear: [L1D-87](https://linear.app/l1der-lab-mjbc/issue/L1D-87)
 
-`FEAT-03b` · Sprint 5 *(S4 → S5, `[S4 resp. 1]`)* · Estimación **5** · HU-09 · FR-08 (dueña), RN-07, RN-08 · AC-03.4, AC-02.6, AC-T3.2 · ⛔ DEC-09 · escenario más probable (AC-4) · ↪ US-100, US-098 · 🔗 Regresión [RN-07] → US-065 · 🔗 Regresión [AC-T3.2] → US-070 · 🔗 Produce para: FEAT-11a (marca de desactualizado al cambiar datos usados, S6 si hay capacidad)
+`FEAT-03b` · Post-MVP *(usuario, 2026-11-02, PRD E-17)* · Estimación **5** · HU-09 · FR-08 (dueña), RN-07, RN-08 · AC-03.4, AC-02.6, AC-T3.2 · ⛔ DEC-09 · escenario más probable (AC-4) · ↪ US-100, US-098 · 🔗 Regresión [RN-07] → US-065 · 🔗 Regresión [AC-T3.2] → US-070 · 🔗 Produce para: FEAT-11a (marca de desactualizado al cambiar datos usados, S6 si hay capacidad)
+
+> **Decidido (usuario, 2026-11-02, PRD E-17):** pasa a **Post-MVP**: revisa datos extraídos por el OCR, que no se prioriza en el MVP.
 
 > **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 
@@ -80,7 +82,9 @@ Tests: Vitest + Supertest con FX-03a-a y FX-03b-a.
 
 > Linear: [L1D-88](https://linear.app/l1der-lab-mjbc/issue/L1D-88)
 
-`FEAT-03b` · Sprint 5 *(S4 → S5, `[S4 resp. 1]`)* · Estimación **3** · HU-09 · FR-08 (UI), NFR-12 · AC-T1.1 · ↪ US-107, US-090 · 🔗 Regresión [RN-23] → US-068
+`FEAT-03b` · Post-MVP *(usuario, 2026-11-02, PRD E-17)* · Estimación **3** · HU-09 · FR-08 (UI), NFR-12 · AC-T1.1 · ↪ US-107, US-090 · 🔗 Regresión [RN-23] → US-068
+
+> **Decidido (usuario, 2026-11-02, PRD E-17):** pasa a **Post-MVP**: lista pendientes de revisión de datos extraídos por el OCR, que no se prioriza en el MVP.
 
 > **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 
@@ -273,6 +277,34 @@ términos del catálogo a través de un endpoint de lectura del catálogo en `cl
 ## INVEST
 **Small** ✓ dos formularios sobre endpoints existentes.
 **Testable** ✓ cinco tests E2E.
+
+---
+
+## US-253 — Edito en la ficha los exámenes, biomarcadores y notas clínicas ya registrados, y cada cambio queda como corrección trazable
+
+> Linear: [L1D-309](https://linear.app/l1der-lab-mjbc/issue/L1D-309) (hija de L1D-13, Sprint 5, 5 pts; creada el 2026-11-02)
+
+`FEAT-03b` · Sprint 5 *(usuario, 2026-11-02, PRD E-17)* · Estimación **5** *(propuesta; se confirma en el refinamiento del S5)* · CAP-04 (AC-04.1) · RN-08, RN-11, RN-17, RN-26 · ↪ US-110, US-111 (registro manual), US-094 (tratamientos previos y atributos) · 🔗 Medido en: US-142 (G-Demo)
+
+> **Origen:** feedback de oncólogos y equipo de producto (2026-11-02), registrado en el PRD como **E-17**. Sin OCR en el MVP, el caso se construye y se corrige a mano: además de registrar, el oncólogo necesita **editar** lo ya registrado. La entidad `clinical_note` ya existe en el modelo de datos (`note_type`: antecedente, comorbilidad, alergia, antecedente familiar, nota libre).
+
+## Story
+Como oncólogo, quiero corregir en la ficha un examen, un biomarcador o una nota clínica ya registrados, para que el análisis parta de datos correctos sin perder la historia de lo que había.
+
+## AC (Given/When/Then)
+- **AC-1 (happy path · biomarcador)** · Dado un biomarcador registrado en la ficha del paciente (a), cuando el oncólogo cambia su valor y guarda, entonces la ficha muestra el valor nuevo con origen «Registro manual» y el anterior queda como histórico enlazado, nunca sobrescrito en silencio. `[RN-08]`
+- **AC-2 (happy path · nota clínica)** · Dada una nota clínica del paciente, cuando el oncólogo edita su texto o su tipo y guarda, entonces la ficha muestra la versión nueva, conserva la anterior como histórico y la nota libre llega a la IA solo desidentificada. `[RN-11]`
+- **AC-3 (borde · validación)** · Dado un valor fuera del formato del catálogo o una fecha posterior a hoy, cuando se guarda, entonces el servidor responde `422`, el mensaje aparece junto al campo y nada cambia. `[PRD §10]`
+- **AC-4 (borde · paciente egresado y permisos)** · Dado un paciente egresado, cuando se intenta editar, entonces `422` (RN-17); y una sesión de `admin` recibe `403`. `[RN-17]` `[PRD §11]`
+- **AC-5 (borde · análisis afectados)** · Dado un análisis previo que usó el dato editado, cuando se guarda la corrección, entonces la huella del contexto clínico cambia, de modo que un análisis nuevo no se reutiliza (US-251), y el aviso del análisis previo no bloquea nada. `[RN-26]`
+- **AC-6 (borde · nombres de terceros)** · Dado el formulario de una nota libre, cuando se abre, entonces muestra el aviso «No escribas nombres de personas (ni del paciente ni de terceros) en las notas» y la nota pasa por el detector de PII antes de llegar a la IA. `[ADR-40]` `[RN-11]`
+
+## Contexto técnico
+Endpoints de corrección en `clinical-api` sobre `Biomarker`, `Exam` y `ClinicalNote`, contrato primero (cambio compatible, ADR-26). La normalización final es de Backend 1 (ADR-33). La auditoría completa de la acción llega con US-150 (S6). TDD estricto en las reglas de corrección (RN-08) y test del AC primero en la UI.
+
+## INVEST
+**Small** ⚠ 5 puntos: tres entidades sobre el mismo patrón de corrección.
+**Testable** ✓ seis tests (Supertest con PostgreSQL real y Testing Library).
 
 ---
 

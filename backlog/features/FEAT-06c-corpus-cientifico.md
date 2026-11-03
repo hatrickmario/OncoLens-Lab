@@ -354,7 +354,7 @@ Tests: Pytest con PostgreSQL de test y Supertest de `clinical-api` para el AC-2.
 
 > Linear: [L1D-119](https://linear.app/l1der-lab-mjbc/issue/L1D-119)
 
-`FEAT-06c` · Sprint 5 *(S4 → S5, `[S4 resp. 1]`)* · Estimación **3** · — (técnica, PRD §17; OL-02) · FR-19, RN-21 · AC-06.1 (corpus abierto) · ⛔ ADR-36 · ↪ US-117a, US-117b, US-118 · 🔗 Relacionada: US-119 (`si-hay-capacidad`) · 🔗 Medido en: US-132 (M-08.3)
+`FEAT-06c` · Sprint 5 *(S4 → S5, `[S4 resp. 1]`)* · Estimación **5** *(era 3; usuario, 2026-11-02, PRD E-17)* · — (técnica, PRD §17; OL-02) · FR-19, RN-21 · AC-06.1 (corpus abierto) · ⛔ ADR-36 · ↪ US-117a, US-117b, US-118 · 🔗 Relacionada: US-119 (`si-hay-capacidad`) · 🔗 Medido en: US-132 (M-08.3)
 
 > **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 
@@ -392,6 +392,8 @@ demasiado pequeño.
   `[S2 resp. 19]`, `[S4 resp. 6]`)
   > **Nota (usuario, 2026-10-29):** si US-245 no alcanza la meta en `evaluate`, valorar aquí contexto del fragmento para el NLI (solapamiento o vecinos; exige reindexar → ADR) y un NLI más fuerte es↔en o un umbral por tipo de afirmación (OUT-08, soluciones 3 y 4) `[S4 resp. 15]`.
   > **Decidido (usuario, 2026-10-29):** los AC de US-233 que dependen del corpus de ≥ 20 documentos por tipo (AC-3 y AC-8) pasan aquí, al S5, con el corpus `[S4 resp. 6]`. La estimación (3) se revisa en el refinamiento del S5.
+- **AC-7 (borde · población de los documentos nuevos)** · Dado cada documento nuevo del AC-1, cuando se ingiere, entonces pasa por la extracción de población de US-242 y el reporte cuenta, por tipo de cáncer y por idioma, cuántos documentos tienen al menos un valor de `elegibilidad` verificado por criterio crítico; los de mama incluyen al menos uno en español y uno en inglés para HER2 y receptores hormonales. `[ADR-47]` `[Demo 4]`
+  > **Decidido (usuario, 2026-11-02, PRD E-17):** el feedback de oncólogos y producto pide integrar más estudios y documentación científica. Se amplía esta historia (3 → 5 pts) en lugar de crear otra; el AC-7 ataca la causa del «Coincide 0» de la Demo 4: el único valor de elegibilidad de HER2 positivo del corpus estaba en un fragmento en inglés.
 
 ## Contexto técnico
 Trabajo de curaduría más ejecución de la ingesta (US-117a, US-117b) y de la extracción de población (US-242) sobre el manifiesto real; los AC-5 y AC-6 corren la suite `evaluate` con `proveedor: local` (US-233a) en el MacBook de referencia. Las
@@ -619,6 +621,33 @@ S5). Herramienta de revisión humana a escala (S5).
 AC-2 se complica, separar la instalación (AC-5…AC-7) en una historia hermana (requiere
 aprobación y un ID nuevo).
 **Testable** ✓ una prueba de aceptación, dos humos de `levantar.sh` y chequeos de CI.
+
+---
+
+## US-254 — La demo incluye pacientes sintéticos en distintos momentos de la enfermedad, con su historia de tratamientos y eventos
+
+> Linear: [L1D-310](https://linear.app/l1der-lab-mjbc/issue/L1D-310) (hija de L1D-18, Sprint 5, 5 pts; creada el 2026-11-02)
+
+`FEAT-06c` · Sprint 5 *(usuario, 2026-11-02, PRD E-17)* · Estimación **5** *(propuesta; se confirma en el refinamiento del S5)* · CAP-02, CAP-08 · RN-13, RN-14 · ↪ US-247 (seed de la Demo 4), US-039 (seed sintético) · 🔗 Medido en: US-142 (G-Demo)
+
+> **Origen:** feedback de oncólogos y equipo de producto (2026-11-02), registrado en el PRD como **E-17**. Los 5 pacientes del seed actual no cubren la evolución de la enfermedad; los oncólogos piden casos en distintos momentos para probar el análisis y el debate.
+
+## Story
+Como oncólogo, quiero pacientes de prueba en distintos momentos de la enfermedad, para comprobar que el análisis cambia con la historia del paciente y no solo con la pregunta.
+
+## AC (Given/When/Then)
+- **AC-1 (happy path · momentos)** · Dado el seed, cuando se carga, entonces incluye al menos 6 pacientes sintéticos nuevos: en mama, diagnóstico inicial sin tratar, adyuvante tras cirugía, recaída local, metastásico en primera línea y metastásico tras trastuzumab, pertuzumab y trastuzumab emtansina; en próstata, metastásico sensible a la castración y resistente a la castración. `[CAP-02]`
+- **AC-2 (borde · historia)** · Dado cada paciente nuevo, cuando se abre su ficha, entonces muestra sus tratamientos previos por línea y sus eventos con fechas relativas coherentes con su momento de la enfermedad. `[RN-11]`
+- **AC-3 (borde · faltantes variados)** · Dados los pacientes nuevos, cuando se calcula el checklist, entonces al menos dos tienen faltantes críticos distintos y al menos uno no tiene ninguno. `[CAP-04]`
+- **AC-4 (borde · pregunta guiada)** · Dado cada paciente nuevo, cuando se consulta la guía de la demo, entonces tiene una pregunta sugerida con los estados de aplicabilidad que se esperan en modo fingido. `[US-247]`
+- **AC-5 (invariante · solo sintético)** · Dado el seed ampliado, cuando corren la CI y `levantar.sh`, entonces todos los identificadores son sintéticos, el escaneo de PII no encuentra nada y la «Verificación del seed» cuadra con los conteos nuevos. `[RN-13]` `[RN-14]`
+
+## Contexto técnico
+Ficheros nuevos en `apps/clinical-api/prisma/seed/pacientes/`, con identificadores deterministas (`idSembrado`). Ejemplos de contrato y conteos del modo fingido en `contracts/examples/` y en la guía de la demo. *Test después*: el seed tiene su test de conteos.
+
+## INVEST
+**Small** ✓ datos de seed y su guía.
+**Testable** ✓ cinco chequeos automatizados.
 
 ---
 
