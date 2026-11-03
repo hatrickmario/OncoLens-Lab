@@ -56,12 +56,14 @@ def politica_de_test(
     *,
     permitir_cc_by_nc: bool = False,
     aceptadas: frozenset[str] = frozenset({"dominio_publico", "cc_by", "cc_by_sa"}),
+    fuentes_admitidas: tuple[str, ...] | None = None,
 ) -> PoliticaDeLicencias:
     return PoliticaDeLicencias(
         aceptadas=aceptadas,
         excluidas=FUENTES_EXCLUIDAS_DE_TEST,
         mapa_de_clases=MAPA_DE_LICENCIAS_POR_DEFECTO,
         permitir_cc_by_nc=permitir_cc_by_nc,
+        fuentes_admitidas=fuentes_admitidas,
     )
 
 

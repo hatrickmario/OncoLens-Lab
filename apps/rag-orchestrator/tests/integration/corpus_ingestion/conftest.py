@@ -24,6 +24,7 @@ from sqlalchemy import text
 from app.application.corpus_ingestion.ingestion_pipeline_service import IngestionPipelineService
 from app.application.corpus_ingestion.reporte import ReporteDeIngesta
 from app.application.corpus_metadata.metadata_extraction_service import MetadataExtractionService
+from app.domain.corpus_seed.admisibilidad import PoliticaDeLicencias
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
 from app.infrastructure.catalog.conexion import crear_motor
 from app.infrastructure.catalog.corpus_document_repository import CorpusDocumentRepository
@@ -295,6 +296,7 @@ def _servicio(
     sparse: Any,
     llm: FakeMetadataLlm,
     nli: NliFalso,
+    politica: PoliticaDeLicencias | None = None,
 ) -> IngestionPipelineService:
     return IngestionPipelineService(
         catalogo=catalogo,
@@ -307,7 +309,7 @@ def _servicio(
         fuente=FuenteDeTextoDelManifiesto(directorio, None),
         reloj=RelojFijo(),
         ids=GeneradorDeIdsFijo(),
-        politica=politica_de_test(),
+        politica=politica or politica_de_test(),
         tokenizador=TokenizadorPorPalabras(),
         tamano_de_chunk=TAMANO_DE_CHUNK_DE_TEST,
         solape_de_chunk=SOLAPE_DE_CHUNK_DE_TEST,
@@ -315,11 +317,16 @@ def _servicio(
     )
 
 
-def montar(directorio_de_textos: Path = DIRECTORIO_DE_FIXTURES) -> Montaje:
+def montar(
+    directorio_de_textos: Path = DIRECTORIO_DE_FIXTURES,
+    politica: PoliticaDeLicencias | None = None,
+) -> Montaje:
     catalogo, almacen = CatalogoEnMemoria(), AlmacenDeChunksEnMemoria()
     embedder, sparse = EmbedderInterrumpible(), CodificadorSparseFalso()
     llm, nli = FakeMetadataLlm(), nli_de_metadatos()
-    servicio = _servicio(catalogo, almacen, directorio_de_textos, embedder, sparse, llm, nli)
+    servicio = _servicio(
+        catalogo, almacen, directorio_de_textos, embedder, sparse, llm, nli, politica
+    )
     observador = ObservadorEnMemoria(catalogo, almacen)
     return Montaje(
         catalogo,
@@ -340,7 +347,7 @@ def montaje() -> Montaje:
 
 
 @pytest.fixture(params=["memoria", pytest.param("real", marks=pytest.mark.servicios_reales)])
-def fabrica_de_montaje(request: pytest.FixtureRequest) -> Iterator[Callable[[Path], Montaje]]:
+def fabrica_de_montaje(request: pytest.FixtureRequest) -> Iterator[Callable[..., Montaje]]:
     """Fábrica de UN montaje por test, sobre memoria o sobre PostgreSQL y Milvus de test reales.
 
     El entorno real se pide solo si el parámetro es ``real``: la variante en memoria no necesita el Compose.
@@ -356,10 +363,12 @@ def fabrica_de_montaje(request: pytest.FixtureRequest) -> Iterator[Callable[[Pat
     almacen.ensure_collection()
     catalogo = CorpusDocumentRepository(motor)
 
-    def montar_real(directorio: Path = DIRECTORIO_DE_FIXTURES) -> Montaje:
+    def montar_real(
+        directorio: Path = DIRECTORIO_DE_FIXTURES, politica: PoliticaDeLicencias | None = None
+    ) -> Montaje:
         embedder, sparse = EmbedderInterrumpible(), CodificadorSparseFalso()
         llm, nli = FakeMetadataLlm(), nli_de_metadatos()
-        servicio = _servicio(catalogo, almacen, directorio, embedder, sparse, llm, nli)
+        servicio = _servicio(catalogo, almacen, directorio, embedder, sparse, llm, nli, politica)
         observador = ObservadorReal(motor, cliente, ajustes.milvus_collection_name)
         return Montaje(
             catalogo,
@@ -381,5 +390,5 @@ def fabrica_de_montaje(request: pytest.FixtureRequest) -> Iterator[Callable[[Pat
 
 
 @pytest.fixture
-def montaje_en_ambos(fabrica_de_montaje: Callable[[Path], Montaje]) -> Montaje:
+def montaje_en_ambos(fabrica_de_montaje: Callable[..., Montaje]) -> Montaje:
     return fabrica_de_montaje(DIRECTORIO_DE_FIXTURES)

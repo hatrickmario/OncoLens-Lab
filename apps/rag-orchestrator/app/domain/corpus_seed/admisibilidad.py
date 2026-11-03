@@ -57,6 +57,7 @@ class MotivoDeRechazo(StrEnum):
     FUENTE_EXCLUIDA = "fuente_excluida"
     SIN_LICENCIA = "sin_licencia"
     LICENCIA_NO_ACEPTADA = "licencia_no_aceptada"
+    FUENTE_NO_ADMITIDA = "fuente_no_admitida"
 
 
 @dataclass(frozen=True)
@@ -67,6 +68,8 @@ class PoliticaDeLicencias:
     excluidas: tuple[str, ...]
     mapa_de_clases: Mapping[str, str]
     permitir_cc_by_nc: bool = False
+    # ``CORPUS_ALLOWED_SOURCES`` (ADR-36, Decisión 7). ``None`` = sin lista (la semilla de US-059 no la aplica).
+    fuentes_admitidas: tuple[str, ...] | None = None
 
     def fuentes_excluidas(self) -> tuple[str, ...]:
         """Las fuentes excluidas efectivas: la configuración más las del piso que le falten (esta solo puede ampliarlo)."""
@@ -104,6 +107,11 @@ def contiene_nc(texto: str) -> bool:
 
 def contiene_sa(texto: str) -> bool:
     return _CLAUSULA_SA.search(texto) is not None
+
+
+def fuente_admitida(source_name: str, admitidas: tuple[str, ...]) -> bool:
+    """La fuente figura por nombre exacto en la lista admitida (ADR-36, RN-21); la regla única de la ingesta y del manifiesto."""
+    raise NotImplementedError
 
 
 def evaluar_admisibilidad(documento: DocumentoDeSemilla, politica: PoliticaDeLicencias) -> Admision:

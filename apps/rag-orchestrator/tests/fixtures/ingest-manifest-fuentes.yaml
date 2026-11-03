@@ -1,0 +1,46 @@
+# FX-06c-d · Manifiesto de test de fuentes admitidas (US-120 AC-4, ADR-36). TEXTOS SINTÉTICOS en línea: ninguna fuente real.
+# `f-nice` viene de una fuente fuera de la lista (NICE) aunque declara una licencia aceptada; `f-ct` es un registro de
+# ensayo de ClinicalTrials.gov; `f-nci` es de NCI.
+documentos:
+  - document_key: f-nice
+    source_type: guideline
+    source_name: NICE
+    external_id: sintetico-nice-1
+    title: Guía sintética de una fuente no admitida
+    language: en
+    cancer_type_tags: [mama]
+    license: Dominio público
+    license_url: https://example.org/licencia-sintetica
+    published_at: 2024-01-10
+    study_design: guia
+    population: adulto
+    original_format: html
+    text: Texto sintético de una guía de una fuente que ADR-36 no admite en el corpus del MVP académico de prueba.
+  - document_key: f-ct
+    source_type: clinical_trial
+    source_name: ClinicalTrials.gov
+    external_id: NCT00000002
+    title: Registro sintético de ensayo de mama
+    language: en
+    cancer_type_tags: [mama]
+    license: Dominio público
+    license_url: https://clinicaltrials.gov/about-site/terms-conditions
+    published_at: 2024-02-10
+    study_design: eca
+    population: adulto
+    original_format: xml
+    text: Texto sintético de un registro de ensayo clínico con criterios de elegibilidad ficticios para mama en adultos.
+  - document_key: f-nci
+    source_type: guideline
+    source_name: NCI
+    external_id: sintetico-nci-1
+    title: Resumen sintético de NCI
+    language: es
+    cancer_type_tags: [prostata]
+    license: Texto de NCI libre de copyright
+    license_url: https://www.cancer.gov/policies/copyright-reuse
+    published_at: 2024-03-10
+    study_design: guia
+    population: adulto
+    original_format: html
+    text: Texto sintético de un resumen de una fuente admitida sobre próstata en adultos para la prueba de ingesta.
