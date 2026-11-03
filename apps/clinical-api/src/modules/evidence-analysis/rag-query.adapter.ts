@@ -1,6 +1,9 @@
-import { ragQuery } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
+import {
+  answerFollowUp,
+  ragQuery,
+} from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import type { Client } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/client/index.js';
-import type { FalloDeRag, RagQueryClient } from './ports.js';
+import type { FalloDeRag, RagFollowUpPort, RagQueryClient } from './ports.js';
 
 /** Código `error` del cuerpo de un fallo de rag-orchestrator; cualquier otra forma del cuerpo es `null`. */
 function codigoDeError(cuerpo: unknown): string | null {
@@ -35,6 +38,33 @@ export function crearRagQueryClient(sdk: Client): RagQueryClient {
           ...(opciones?.signal !== undefined && { signal: opciones.signal }),
         });
         const { response, data, error } = resultado;
+        if (response?.ok === true && data !== undefined) return { ok: true, cuerpo: data };
+        if (response === undefined) return falloSinRespuesta(opciones?.signal);
+        return { ok: false, status: response.status, codigo: codigoDeError(error) };
+      } catch {
+        return falloSinRespuesta(opciones?.signal);
+      }
+    },
+  };
+}
+
+/**
+ * Puerto `RagFollowUpPort` sobre el mismo SDK y las mismas reglas de fallo que `crearRagQueryClient`: del fallo solo sale
+ * el estado HTTP y el código `error`, nunca el mensaje ni el cuerpo. El `traceId` del turno viaja también en la cabecera.
+ */
+export function crearRagFollowUpClient(sdk: Client): RagFollowUpPort {
+  return {
+    async responder(request, opciones) {
+      try {
+        const { response, data, error } = await answerFollowUp({
+          client: sdk,
+          body: request,
+          headers: {
+            'X-Trace-Id': request.traceId,
+            ...(opciones?.deadline !== undefined && { 'X-Request-Deadline': opciones.deadline }),
+          },
+          ...(opciones?.signal !== undefined && { signal: opciones.signal }),
+        });
         if (response?.ok === true && data !== undefined) return { ok: true, cuerpo: data };
         if (response === undefined) return falloSinRespuesta(opciones?.signal);
         return { ok: false, status: response.status, codigo: codigoDeError(error) };

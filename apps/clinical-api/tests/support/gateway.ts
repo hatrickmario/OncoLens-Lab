@@ -1,11 +1,13 @@
 import { createHash } from 'node:crypto';
 import { delay, http, HttpResponse } from 'msw';
-import type { Client } from 'pg';
+import type { Client, Pool } from 'pg';
 import { Router, type Express } from 'express';
 import type { CryptoKey } from 'jose';
 import respuestaEjemplo from '../../../../contracts/examples/rag-query-con-evidencia.json' with { type: 'json' };
+import respuestaSeguimientoEjemplo from '../../../../contracts/examples/rag-follow-up-response.json' with { type: 'json' };
 import respuestaSinEvidencia from '../../../../contracts/examples/rag-query-sin-evidencia.json' with { type: 'json' };
 import { idSembrado } from '../../prisma/seed/determinismo.js';
+import { crearEjecutorDeTransacciones } from '../../src/infrastructure/database.js';
 import { createRagOrchestratorClient } from '../../src/infrastructure/rag-orchestrator.client.js';
 import { createServiceTokenSigner } from '../../src/infrastructure/service-jwt.js';
 import { crearProveedorDeCatalogo } from '../../src/infrastructure/catalogo/catalog-version.provider.js';
@@ -16,7 +18,10 @@ import {
 } from '../../src/modules/evidence-analysis/evidence-analysis.module.js';
 import { crearTiposHabilitados } from '../../src/modules/evidence-analysis/tipos-habilitados.js';
 import { cargarEtiquetasDeDatosCriticos } from '../../src/modules/evidence-analysis/etiquetas-datos-criticos.js';
-import { crearRagQueryClient } from '../../src/modules/evidence-analysis/rag-query.adapter.js';
+import {
+  crearRagFollowUpClient,
+  crearRagQueryClient,
+} from '../../src/modules/evidence-analysis/rag-query.adapter.js';
 import { crearContextDeidentifier } from '../../src/modules/evidence-analysis/deidentification/context-deidentifier.js';
 import type {
   ChecklistDeFaltantes,
@@ -36,7 +41,7 @@ import {
   lectorDeIdentidadFalso,
 } from './desidentificacion.js';
 import type { BaseDeTest } from './db.js';
-import { conectar } from './db.js';
+import { conectar, crearPoolDeTest } from './db.js';
 import {
   INSTANTE_FIJO,
   filaDeDiagnostico,
@@ -103,9 +108,13 @@ const hashDe = (token: string) => createHash('sha256').update(token).digest('hex
 export interface MundoDeGateway {
   readonly base: BaseDeTest;
   readonly cliente: Client;
+  /** Pool de la misma base para las transacciones (el turno de seguimiento bajo bloqueo abre su propia conexión). */
+  readonly pool: Pool;
   readonly ids: GeneradorDeIds;
   /** UUID de los `AIAnalysisRecord`: un solo generador por base, para que los tests de un archivo no repitan ids. */
   readonly idsDeAnalisis: GeneradorDeIds;
+  /** UUID de los turnos de seguimiento (`analysis_follow_up`): un solo generador por base. */
+  readonly idsDeTurnos: GeneradorDeIds;
   readonly espacio: number;
   readonly cerrar: () => Promise<void>;
 }
@@ -123,13 +132,17 @@ export async function prepararMundoConSeed(
     archivos.limpiar();
   }
   const cliente = await conectar(base.url);
+  const pool = crearPoolDeTest(base.url);
   return {
     base,
     cliente,
+    pool,
     ids: generadorDeIds(espacio),
     idsDeAnalisis: generadorDeIds(espacio + 2000),
+    idsDeTurnos: generadorDeIds(espacio + 4000),
     espacio,
     cerrar: async () => {
+      await pool.end();
       await cliente.end();
       await base.destruir();
     },
@@ -147,6 +160,12 @@ export type EscenarioDeRag =
   | { tipo: 'red' }
   /** No responde dentro de `RAG_TIMEOUT_MS`: contesta con evidencia, pero mucho después del plazo. */
   | { tipo: 'tardia' };
+
+const SEGUIMIENTO_POR_DEFECTO: EscenarioDeRag = {
+  tipo: 'json',
+  status: 200,
+  cuerpo: respuestaSeguimientoEjemplo,
+};
 
 const ESCENARIO_POR_DEFECTO: EscenarioDeRag = {
   tipo: 'json',
@@ -174,8 +193,18 @@ export const CON_AFIRMACION_OMITIDA: EscenarioDeRag = {
   cuerpo: { ...structuredClone(respuestaEjemplo), limitations: [], omittedClaims: 1 },
 };
 
+/** `/rag/follow-up` simulado (US-218): captura cada request y cuenta las llamadas. */
+export interface SeguimientoSimulado {
+  readonly capturadas: CapturaDeRag[];
+  llamadas(): number;
+  /** Cambia lo que responde `/rag/follow-up` hasta el próximo `reiniciar()`. */
+  responder(escenario: EscenarioDeRag): void;
+}
+
 export interface RagSimulado {
   readonly capturadas: CapturaDeRag[];
+  /** El borde `/rag/follow-up` de la misma instancia de MSW. */
+  readonly seguimiento: SeguimientoSimulado;
   llamadas(): number;
   /** Cambia lo que responde `/rag/query` hasta el próximo `reiniciar()`. */
   responder(escenario: EscenarioDeRag): void;
@@ -187,8 +216,29 @@ export interface RagSimulado {
 /** `/rag/query` simulado: responde el escenario vigente (por defecto, con evidencia) y captura cada request. */
 export function ragSimulado(): RagSimulado {
   const capturadas: CapturaDeRag[] = [];
+  const capturadasDeSeguimiento: CapturaDeRag[] = [];
   let escenario: EscenarioDeRag = ESCENARIO_POR_DEFECTO;
+  let escenarioDeSeguimiento: EscenarioDeRag = SEGUIMIENTO_POR_DEFECTO;
   const servidor = servidorMswConLoopback(
+    http.post(`${RAG_BASE_URL}/rag/follow-up`, async ({ request }) => {
+      const texto = await request.text();
+      capturadasDeSeguimiento.push({
+        headers: request.headers,
+        texto,
+        cuerpo: JSON.parse(texto) as Record<string, unknown>,
+      });
+      if (escenarioDeSeguimiento.tipo === 'red') return HttpResponse.error();
+      if (escenarioDeSeguimiento.tipo === 'tardia') {
+        await delay(RESPUESTA_TARDIA_MS);
+        return HttpResponse.json(respuestaSeguimientoEjemplo);
+      }
+      return HttpResponse.json(escenarioDeSeguimiento.cuerpo, {
+        status: escenarioDeSeguimiento.status,
+        ...(escenarioDeSeguimiento.cabeceras !== undefined && {
+          headers: escenarioDeSeguimiento.cabeceras,
+        }),
+      });
+    }),
     http.post(`${RAG_BASE_URL}/rag/query`, async ({ request }) => {
       const texto = await request.text();
       capturadas.push({
@@ -209,13 +259,22 @@ export function ragSimulado(): RagSimulado {
   );
   return {
     capturadas,
+    seguimiento: {
+      capturadas: capturadasDeSeguimiento,
+      llamadas: () => capturadasDeSeguimiento.length,
+      responder: (nuevo) => {
+        escenarioDeSeguimiento = nuevo;
+      },
+    },
     llamadas: () => capturadas.length,
     responder: (nuevo) => {
       escenario = nuevo;
     },
     reiniciar: () => {
       capturadas.length = 0;
+      capturadasDeSeguimiento.length = 0;
       escenario = ESCENARIO_POR_DEFECTO;
+      escenarioDeSeguimiento = SEGUIMIENTO_POR_DEFECTO;
       servidor.servidor.resetHandlers();
     },
     iniciar: servidor.iniciar,
@@ -282,7 +341,8 @@ export async function montarGateway(
   const reloj = relojFijo(AHORA);
   const logger = opciones.logger ?? loggerEnMemoria();
   const signer = createServiceTokenSigner({ privateKey, clock: reloj, ttlSeconds: 60 });
-  const rag = crearRagQueryClient(createRagOrchestratorClient({ baseUrl: RAG_BASE_URL, signer }));
+  const clienteRag = createRagOrchestratorClient({ baseUrl: RAG_BASE_URL, signer });
+  const rag = crearRagQueryClient(clienteRag);
   const appEnv = Object.hasOwn(opciones, 'appEnv') ? opciones.appEnv : 'test';
   const pseudonimos = opciones.pseudonimos ?? pseudonimosFijos();
   const rutaDelCatalogo = opciones.rutaDelCatalogo ?? RUTA_DEL_CATALOGO;
@@ -293,6 +353,9 @@ export async function montarGateway(
   const ruta = componerGatewayDeAnalisis({
     db: mundo.cliente,
     rag,
+    ragFollowUp: crearRagFollowUpClient(clienteRag),
+    enTransaccion: crearEjecutorDeTransacciones(mundo.pool),
+    idsDeTurnos: mundo.idsDeTurnos,
     catalogo: crearProveedorDeCatalogo(rutaDelCatalogo, (archivo) => readFileSync(archivo, 'utf8')),
     etiquetaDe:
       opciones.etiquetaDe ??

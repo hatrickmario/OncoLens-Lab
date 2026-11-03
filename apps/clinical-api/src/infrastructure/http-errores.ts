@@ -29,6 +29,8 @@ export type CodigoDeError =
   | 'LLM_OUTPUT_INVALID'
   | 'DESIDENTIFICACION_NO_DISPONIBLE'
   | 'DEADLINE_VENCIDO'
+  | 'LIMITE_SEGUIMIENTO'
+  | 'ANALISIS_SIN_EVIDENCIA'
   | 'ERROR_INTERNO';
 
 const MENSAJES: Record<CodigoDeError, string> = {
@@ -49,6 +51,9 @@ const MENSAJES: Record<CodigoDeError, string> = {
   LLM_OUTPUT_INVALID: 'El modelo local devolvió una respuesta que no se pudo validar.',
   DESIDENTIFICACION_NO_DISPONIBLE: 'No fue posible preparar la consulta.',
   DEADLINE_VENCIDO: 'El servicio de IA no respondió dentro del plazo.',
+  LIMITE_SEGUIMIENTO:
+    'Este análisis alcanzó el máximo de preguntas de seguimiento configurado. Una pregunta distinta puede formularse en un análisis nuevo.',
+  ANALISIS_SIN_EVIDENCIA: 'El análisis no tiene evidencia sobre la cual preguntar.',
   ERROR_INTERNO: 'Error interno del servidor.',
 };
 

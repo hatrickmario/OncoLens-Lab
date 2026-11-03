@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { componerAplicacion, componerRutasProtegidas } from './composition.js';
 import { observarEntorno } from './config/index.js';
 import { crearAlmacenMinio } from './infrastructure/almacen-documentos.minio.js';
-import { crearPool } from './infrastructure/database.js';
+import { crearEjecutorDeTransacciones, crearPool } from './infrastructure/database.js';
 import { nuevoSeudonimo, nuevoTraceId } from './infrastructure/ids.js';
 import { crearRegistrador } from './infrastructure/logger.js';
 import { createRagOrchestratorClient } from './infrastructure/rag-orchestrator.client.js';
@@ -24,7 +24,10 @@ import {
   crearChecklistDeFaltantes,
 } from './modules/evidence-analysis/evidence-analysis.module.js';
 import { cargarEtiquetasDeDatosCriticos } from './modules/evidence-analysis/etiquetas-datos-criticos.js';
-import { crearRagQueryClient } from './modules/evidence-analysis/rag-query.adapter.js';
+import {
+  crearRagFollowUpClient,
+  crearRagQueryClient,
+} from './modules/evidence-analysis/rag-query.adapter.js';
 import { arrancar, cargarEtapaDeServicios, registrarEventoDeArranque } from './startup.js';
 
 const leerArchivo = (ruta: string): string => readFileSync(ruta, 'utf8');
@@ -70,14 +73,16 @@ arrancar({
           leerArchivo,
           tiposHabilitados,
         });
+        const clienteRag = createRagOrchestratorClient({
+          baseUrl: configuracion.analisis.ragOrchestratorUrl,
+          signer,
+        });
         const gateway = componerGatewayDeAnalisis({
           db: pool,
-          rag: crearRagQueryClient(
-            createRagOrchestratorClient({
-              baseUrl: configuracion.analisis.ragOrchestratorUrl,
-              signer,
-            }),
-          ),
+          rag: crearRagQueryClient(clienteRag),
+          ragFollowUp: crearRagFollowUpClient(clienteRag),
+          enTransaccion: crearEjecutorDeTransacciones(pool),
+          idsDeTurnos: randomUUID,
           catalogo,
           checklist: crearChecklistDeFaltantes(completitud),
           config: {

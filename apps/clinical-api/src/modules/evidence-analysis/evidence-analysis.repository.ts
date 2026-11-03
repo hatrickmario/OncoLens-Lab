@@ -96,7 +96,7 @@ export interface AnalisisRepository {
   persistirAnalisis(registro: RegistroDeAnalisis): Promise<RegistroDeAnalisis>;
 }
 
-type Fila = Record<string, unknown>;
+export type Fila = Record<string, unknown>;
 
 function procedenciaDe(fila: Fila): ProcedenciaDeFila {
   return {
@@ -315,7 +315,7 @@ function parametrosDelRegistro(r: RegistroDeAnalisis): unknown[] {
 }
 
 /** El registro tal como quedó en la fila (jsonb ya parseado por `pg`): de aquí sale la respuesta `200`. */
-function registroDeFila(f: Fila): RegistroDeAnalisis {
+export function registroDeFila(f: Fila): RegistroDeAnalisis {
   return {
     id: f['id'] as string,
     patientId: f['patient_id'] as string,
