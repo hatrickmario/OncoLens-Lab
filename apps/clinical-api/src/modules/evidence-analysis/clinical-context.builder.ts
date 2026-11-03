@@ -31,6 +31,15 @@ export function fechaConfiable(fecha: string | null, precision: PrecisionDeFecha
   return precision === 'incierta' ? null : fecha;
 }
 
+/** Meses relativos de una fecha de evento o atributo, o `null` si no tiene fecha confiable. */
+function mesesDeFechaConfiable(
+  fecha: string | null,
+  precision: PrecisionDeFecha,
+  ahora: Date,
+): number | null {
+  return mesesTranscurridos(fechaConfiable(fecha, precision), ahora);
+}
+
 /**
  * Regla única de procedencia de RN-07 (US-065): copia los dos ejes de la fila (`extractionConfidence`, `reviewStatus`)
  * y marca `conflict` solo cuando la fila tiene `conflicts_with_id`. Los `rechazado`/`reemplazado` no llegan aquí: el
@@ -125,7 +134,7 @@ function atributoPermitido(
     dataRef: asignador.asignar({ tabla: 'clinical_attribute', id: fila.id }),
     key: fila.attributeKey,
     value: fila.value,
-    monthsAgo: mesesTranscurridos(fechaConfiable(fila.observedAt, fila.datePrecision), ahora),
+    monthsAgo: mesesDeFechaConfiable(fila.observedAt, fila.datePrecision, ahora),
     provenance: provenanceDe(fila),
   };
 }
@@ -156,7 +165,7 @@ function eventoPermitido(
   return {
     dataRef: asignador.asignar({ tabla: 'clinical_event', id: fila.id }),
     eventType: fila.eventType,
-    monthsAgo: mesesTranscurridos(fechaConfiable(fila.eventDate, fila.datePrecision), ahora),
+    monthsAgo: mesesDeFechaConfiable(fila.eventDate, fila.datePrecision, ahora),
     description: fila.description,
     provenance: provenanceDe(fila),
   };
