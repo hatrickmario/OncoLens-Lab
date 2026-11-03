@@ -6,6 +6,7 @@ export {
   RUTA_LISTA_TERMINOS_PROHIBIDOS,
 } from './load-prohibited-terms.js';
 export { claveFlexiva, normalizarTexto } from './normalizar.js';
+export { normalizarPregunta } from './normalizar-pregunta.js';
 export type {
   Coincidencia,
   ListaTerminos,
