@@ -10,17 +10,37 @@ import { VistaDeCasoNoDisponible } from '../molecules/vista-de-caso-no-disponibl
 import { BiomarkerSeriesTables } from './biomarker-series-tables';
 import { CaseTimeline } from './case-timeline';
 import { ClinicalAttributesTable } from './clinical-attributes-table';
+import { DialogoAtributoClinico } from './dialogo-atributo-clinico';
+import { DialogoTratamientoPrevio } from './dialogo-tratamiento-previo';
 import { PriorTreatmentsTable } from './prior-treatments-table';
 import { UndatedEvents } from './undated-events';
 
-function SeccionesDelCaso({ vista, hoy }: { vista: CaseView; hoy: string }) {
+interface SeccionesDelCasoProps {
+  vista: CaseView;
+  hoy: string;
+  patientId: string;
+  egresado: boolean;
+  /** Recarga la vista tras un registro manual (`201`). */
+  alRegistrar: () => void;
+}
+
+function SeccionesDelCaso({ vista, hoy, patientId, egresado, alRegistrar }: SeccionesDelCasoProps) {
   const { fechados, sinFecha } = separarSinFecha(vista.timeline);
+  const registro = { pacienteId: patientId, egresado, alGuardar: alRegistrar };
   return (
     <>
       <CaseTimeline eventos={fechados} hoy={hoy} />
       {sinFecha.length > 0 && <UndatedEvents eventos={sinFecha} />}
-      <PriorTreatmentsTable tratamientos={vista.priorTreatments} hoy={hoy} />
-      <ClinicalAttributesTable atributos={vista.attributes} hoy={hoy} />
+      <PriorTreatmentsTable
+        tratamientos={vista.priorTreatments}
+        hoy={hoy}
+        accion={<DialogoTratamientoPrevio {...registro} />}
+      />
+      <ClinicalAttributesTable
+        atributos={vista.attributes}
+        hoy={hoy}
+        accion={<DialogoAtributoClinico {...registro} />}
+      />
       <BiomarkerSeriesTables series={vista.biomarkerSeries} hoy={hoy} />
     </>
   );
@@ -33,6 +53,7 @@ function SeccionesDelCaso({ vista, hoy }: { vista: CaseView; hoy: string }) {
 export function VistaDeCaso({
   patientId,
   hoy,
+  egresado = false,
 }: {
   patientId: string;
   hoy: string;
@@ -60,5 +81,13 @@ export function VistaDeCaso({
       </>
     );
   }
-  return <SeccionesDelCaso vista={lectura.vista} hoy={hoy} />;
+  return (
+    <SeccionesDelCaso
+      vista={lectura.vista}
+      hoy={hoy}
+      patientId={patientId}
+      egresado={egresado}
+      alRegistrar={() => void recargar()}
+    />
+  );
 }

@@ -96,11 +96,11 @@ describe('Registro manual de tratamientos previos y atributos en la vista de cas
       ongoing: false,
       endReason: 'desconocido',
     });
+    await usuario.click(screen.getByRole('button', { name: registro.cerrar }));
+    expect(screen.queryByRole('dialog')).toBeNull();
     const tratamientos = within(screen.getByRole('region', { name: secciones.tratamientos }));
     const fila = await tratamientos.findByRole('row', { name: /Fármaco experimental X/ });
     expect(fila.textContent).toContain(mensajes().caso.noMapeado);
-    await usuario.click(screen.getByRole('button', { name: registro.cerrar }));
-    expect(screen.queryByRole('dialog')).toBeNull();
   });
 
   it('lista solo los atributos del catálogo, anuncia el 422 junto al campo y Esc devuelve el foco al disparador [US-094 AC-6]', async () => {

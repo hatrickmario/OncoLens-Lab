@@ -76,7 +76,11 @@ export function crearBffDeRegistroSimulado() {
     },
     crearTratamiento: (cuerpo: typeof tratamientoCreado | typeof tratamientoNoMapeado) =>
       responderPost('prior-treatments', 201, cuerpo, () => {
-        caso = { ...casoVacio, priorTreatments: [cuerpo] } as unknown as Caso;
+        // La vista de caso no trae `id` ni `mappingStatus` del tratamiento (CaseView): se proyecta como lo haría el servidor.
+        const fila: Record<string, unknown> = { ...cuerpo };
+        delete fila.id;
+        delete fila.mappingStatus;
+        caso = { ...casoVacio, priorTreatments: [fila] } as unknown as Caso;
       }),
     rechazarTratamiento: (status: number, cuerpo: JsonBodyType) =>
       responderPost('prior-treatments', status, cuerpo),

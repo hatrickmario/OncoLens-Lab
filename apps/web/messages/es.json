@@ -420,9 +420,18 @@
       "no_castrado": "No castrado",
       "oseo": "Óseo",
       "premenopausica": "Premenopáusica",
-      "posmenopausica": "Posmenopáusica"
+      "posmenopausica": "Posmenopáusica",
+      "perimenopausica": "Perimenopáusica",
+      "sensible_castracion": "Sensible a la castración",
+      "resistente_castracion": "Resistente a la castración",
+      "desconocido": "Desconocido",
+      "ganglionar": "Ganglionar",
+      "hepatico": "Hepático",
+      "pulmonar": "Pulmonar",
+      "cerebral": "Cerebral",
+      "otro": "Otro"
     },
-    "noMapeado": "No mapeado",
+    "noMapeado": "Sin código ATC en el catálogo",
     "registro": {
       "guardar": "Guardar",
       "guardando": "Guardando…",
