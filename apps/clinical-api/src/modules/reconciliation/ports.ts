@@ -47,7 +47,7 @@ export interface DecisionDeNormalizacion {
 
 /** Estado persistible de una entidad que no admite `n_a` (todas menos `ClinicalEvent`): UNA sola ruta de estrechamiento. */
 export function estadoPersistible(decision: DecisionDeNormalizacion): 'mapeado' | 'no_mapeado' {
-  throw new Error(`no implementado: ${decision.mappingStatus}`);
+  return decision.mappingStatus === 'mapeado' ? 'mapeado' : 'no_mapeado';
 }
 
 export interface ReconciliationService {

@@ -112,9 +112,18 @@ export interface FuenteDeValoresValidos {
   readonly tiposHabilitados: TiposDeCancerHabilitados;
 }
 
-/** Valores que el cuerpo envía y que deben pertenecer al catálogo (los no enviados no se revalidan). */
-export interface ValoresAValidar extends CamposDeCorreccion {
-  readonly gradingSystem?: string | undefined;
+/** Lo que el cuerpo envió y condiciona qué se exige: el tipo de cáncer (habilitado) y un valor de escala sin escala. */
+export interface ValoresEnviados {
+  readonly cancerType?: string | undefined;
+  readonly performanceValue?: number | undefined;
+}
+
+/** El diagnóstico que quedaría tras el registro (lo enviado más lo heredado del vigente y las gradaciones copiadas). */
+export interface DiagnosticoResultante extends Pick<
+  DatosDelDiagnostico,
+  'cancerType' | 'stagingSystem' | 'performanceScale' | 'performanceValue'
+> {
+  readonly sistemasDeGradacion: readonly string[];
 }
 
 function valorDeEscalaFueraDeRango(
@@ -126,51 +135,53 @@ function valorDeEscalaFueraDeRango(
   return rango === undefined || valor < rango.minimo || valor > rango.maximo;
 }
 
-const enviado = (valor: unknown): boolean => valor !== undefined;
+const noNulo = (valor: unknown): boolean => valor !== null;
 
-/** Propiedades del cuerpo cuyo valor está fuera del catálogo, en el orden en que se comprueban (nombres, nunca valores). */
+/** Propiedades del diagnóstico resultante fuera del catálogo, en el orden en que se comprueban (nombres, nunca valores). */
 function camposFueraDelCatalogo(
   { escalas, tiposHabilitados }: FuenteDeValoresValidos,
-  valores: ValoresAValidar,
-  resultante: Pick<DatosDelDiagnostico, 'cancerType' | 'performanceScale'>,
+  enviados: ValoresEnviados,
+  resultante: DiagnosticoResultante,
 ): string[] {
-  const tipo = resultante.cancerType;
+  const { cancerType: tipo, stagingSystem, performanceScale, performanceValue } = resultante;
+  const exigeRango =
+    performanceValue !== null &&
+    (noNulo(performanceScale) || enviados.performanceValue !== undefined);
   const comprobaciones: readonly (readonly [string, boolean])[] = [
-    ['cancerType', enviado(valores.cancerType) && !tiposHabilitados.estaHabilitado(tipo)],
+    ['cancerType', enviados.cancerType !== undefined && !tiposHabilitados.estaHabilitado(tipo)],
     [
       'stagingSystem',
-      enviado(valores.stagingSystem) &&
-        !escalas.sistemaDeEstadificacionValido(valores.stagingSystem ?? '', tipo),
+      stagingSystem !== null && !escalas.sistemaDeEstadificacionValido(stagingSystem, tipo),
     ],
     [
       'performanceScale',
-      enviado(valores.performanceScale) &&
-        escalas.rangoDeEscala(valores.performanceScale ?? '') === undefined,
+      performanceScale !== null && escalas.rangoDeEscala(performanceScale) === undefined,
     ],
     [
       'performanceValue',
-      valores.performanceValue !== undefined &&
-        valorDeEscalaFueraDeRango(escalas, resultante.performanceScale, valores.performanceValue),
+      exigeRango && valorDeEscalaFueraDeRango(escalas, performanceScale, performanceValue),
     ],
     [
       'grading.gradingSystem',
-      enviado(valores.gradingSystem) &&
-        !escalas.sistemaDeGradacionValido(valores.gradingSystem ?? '', tipo),
+      resultante.sistemasDeGradacion.some(
+        (sistema) => !escalas.sistemaDeGradacionValido(sistema, tipo),
+      ),
     ],
   ];
   return comprobaciones.filter(([, fuera]) => fuera).map(([campo]) => campo);
 }
 
 /**
- * `cancerType`, `stagingSystem`, `performanceScale`, su rango y el sistema de gradación contra el catálogo montado.
- * `resultante` es el diagnóstico que quedaría (los valores enviados o, si no, los del vigente). Lanza
+ * Valida SIEMPRE el diagnóstico resultante contra el catálogo montado (decisión del Gate 2): una corrección que solo
+ * cambia el tipo de cáncer o la escala no deja pasar lo heredado (estadificación, valor de escala, gradaciones copiadas).
+ * Lo enviado solo decide si se exige que el tipo esté habilitado y si un valor sin escala es un error. Lanza
  * `ValorFueraDeCatalogoError` con el NOMBRE de la primera propiedad que falla, nunca su valor (RN-10).
  */
 export function validarValoresDeCatalogo(
   fuente: FuenteDeValoresValidos,
-  valores: ValoresAValidar,
-  resultante: Pick<DatosDelDiagnostico, 'cancerType' | 'performanceScale'>,
+  enviados: ValoresEnviados,
+  resultante: DiagnosticoResultante,
 ): void {
-  const [campo] = camposFueraDelCatalogo(fuente, valores, resultante);
+  const [campo] = camposFueraDelCatalogo(fuente, enviados, resultante);
   if (campo !== undefined) throw new ValorFueraDeCatalogoError(campo);
 }

@@ -52,10 +52,14 @@ export function createReconciliationService({
   catalogo,
   registrar,
 }: DependenciasDeReconciliation): ReconciliationService {
-  function resolverContraElCatalogo(propuesta: PropuestaDeNormalizacion, estandar: Estandar) {
+  function resolverContraElCatalogo(
+    propuesta: PropuestaDeNormalizacion,
+    tipoDeCancer: string,
+    estandar: Estandar,
+  ) {
     const resolucion = resolverCodigo({
-      entradas: catalogo.entradas(propuesta.tipoDeCancer ?? '', estandar),
-      sinonimos: catalogo.sinonimos(propuesta.tipoDeCancer ?? ''),
+      entradas: catalogo.entradas(tipoDeCancer, estandar),
+      sinonimos: catalogo.sinonimos(tipoDeCancer),
       textoOriginal: propuesta.textoOriginal,
       ...(propuesta.codigoPropuesto !== undefined && {
         codigoPropuesto: propuesta.codigoPropuesto,
@@ -72,7 +76,11 @@ export function createReconciliationService({
       const estandar = estandarDe(propuesta);
       if (estandar === null)
         return construirDecision(catalogo.version(), propuesta, 'n_a', null, null, []);
-      const resolucion = resolverContraElCatalogo(propuesta, estandar);
+      // Sin tipo de cáncer (paciente sin diagnóstico) no hay catálogo contra el que mapear: `no_mapeado`, sin centinelas.
+      if (propuesta.tipoDeCancer === null) {
+        return construirDecision(catalogo.version(), propuesta, 'no_mapeado', null, null, []);
+      }
+      const resolucion = resolverContraElCatalogo(propuesta, propuesta.tipoDeCancer, estandar);
       if (resolucion.resultado !== 'mapeado') {
         return construirDecision(catalogo.version(), propuesta, 'no_mapeado', null, null, []);
       }

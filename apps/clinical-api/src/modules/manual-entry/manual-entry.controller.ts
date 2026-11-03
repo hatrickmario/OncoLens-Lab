@@ -128,19 +128,13 @@ function crearRegistro<C, R>(dependencias: DependenciasDelController, operacion:
 }
 
 /** JSON malformado o cuerpo excesivo: el mismo 422 del contrato, sin eco del error del parser. */
-function crearCuerpoIlegible(registrar: Registrar): ErrorRequestHandler {
+function crearCuerpoIlegible(registrar: Registrar, evento: string): ErrorRequestHandler {
   return (error: unknown, _request, response, next) => {
     if (!esErrorDeCuerpoDelCliente(error)) {
       next(error);
       return;
     }
-    registrarResultado(
-      registrar,
-      EVENTO_BIOMARCADOR,
-      response,
-      undefined,
-      CUERPO_INVALIDO.resultado,
-    );
+    registrarResultado(registrar, evento, response, undefined, CUERPO_INVALIDO.resultado);
     enviarError(response, CUERPO_INVALIDO.status, CUERPO_INVALIDO.codigo, traceIdDe(response));
   };
 }
@@ -164,7 +158,7 @@ export function manualEntryController(dependencias: DependenciasDelController): 
       leerCuerpo: leerCuerpoDeBiomarcador,
       ejecutar: (servicio, solicitud) => servicio.registrarBiomarcador(solicitud),
     }),
-    crearCuerpoIlegible(dependencias.registrar),
+    crearCuerpoIlegible(dependencias.registrar, EVENTO_BIOMARCADOR),
   );
   router.post(
     '/patients/:patientId/diagnoses',
@@ -174,7 +168,7 @@ export function manualEntryController(dependencias: DependenciasDelController): 
       leerCuerpo: leerCuerpoDeDiagnostico,
       ejecutar: (servicio, solicitud) => servicio.registrarDiagnostico(solicitud),
     }),
-    crearCuerpoIlegible(dependencias.registrar),
+    crearCuerpoIlegible(dependencias.registrar, EVENTO_DIAGNOSTICO),
   );
   return router;
 }

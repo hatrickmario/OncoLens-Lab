@@ -7,7 +7,7 @@ import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
 import { PacienteNoEncontradoError } from '../compartido/pacientes.errores.js';
 import { pacienteAdmiteRegistros } from '../compartido/paciente-activo.js';
-import type { ReconciliationService } from '../reconciliation/ports.js';
+import { estadoPersistible, type ReconciliationService } from '../reconciliation/ports.js';
 import { PacienteEgresadoError } from './manual-entry.errores.js';
 import {
   armarRegistroDeBiomarcador,
@@ -75,7 +75,7 @@ function conCodigoDelTipoDeCancer(
   return {
     ...datos,
     icd10Code: decision.icd10Code,
-    mappingStatus: decision.mappingStatus === 'mapeado' ? 'mapeado' : 'no_mapeado',
+    mappingStatus: estadoPersistible(decision),
   };
 }
 
@@ -99,10 +99,10 @@ async function registrarBiomarcador(
   return repositorio.enTransaccion(async (tx) => {
     await exigirPacienteQueAdmiteRegistros(tx, patientId);
     const vigente = await tx.diagnosticoVigente(patientId);
-    // Sin diagnóstico no hay tipo de cáncer: el catálogo no tiene entradas para '' y la decisión es `no_mapeado`.
+    // Sin diagnóstico vigente no hay tipo de cáncer (`null`): `ReconciliationService` decide `no_mapeado`.
     const decision = reconciliacion.decidir({
       entidad: 'Biomarker',
-      tipoDeCancer: vigente?.datos.cancerType ?? '',
+      tipoDeCancer: vigente?.datos.cancerType ?? null,
       textoOriginal: cuerpo.name,
     });
     const registro = armarRegistroDeBiomarcador({
@@ -132,15 +132,17 @@ async function registrarDiagnostico(
       vigente === null
         ? conCodigoDelTipoDeCancer(reconciliacion, datosDelPrimerDiagnostico(cuerpo))
         : corregirDiagnosticoVigente(reconciliacion, vigente, cuerpo);
-    const valores = { ...cuerpo, gradingSystem: cuerpo.grading?.gradingSystem };
-    validarValoresDeCatalogo({ escalas, tiposHabilitados }, valores, datos);
-    exigirGradacionCoherente(cuerpo.grading);
-
     const id = generarId();
     const contexto = { generarId, diagnosisId: id, userId, ahora };
     const nueva =
       cuerpo.grading === undefined ? undefined : gradacionDelCuerpo(cuerpo.grading, contexto);
     const gradaciones = gradacionesDelDiagnosticoNuevo(vigente?.gradaciones ?? [], nueva, contexto);
+    const sistemasDeGradacion = gradaciones.map((g) => g.gradingSystem);
+    validarValoresDeCatalogo({ escalas, tiposHabilitados }, cuerpo, {
+      ...datos,
+      sistemasDeGradacion,
+    });
+    exigirGradacionCoherente(cuerpo.grading);
     const diagnostico = armarDiagnosticoNuevo({
       id,
       datos,

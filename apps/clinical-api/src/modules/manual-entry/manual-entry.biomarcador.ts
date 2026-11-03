@@ -1,7 +1,7 @@
 import type { Biomarker } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import { comoBiomarcador } from '../patients/ficha.reglas.js';
-import type { DecisionDeNormalizacion } from '../reconciliation/ports.js';
+import { estadoPersistible, type DecisionDeNormalizacion } from '../reconciliation/ports.js';
 import type { CuerpoDeBiomarcador } from './manual-entry.schema.js';
 import type { BiomarcadorAGuardar, ExamenAGuardar } from './ports.js';
 
@@ -42,7 +42,7 @@ export function armarRegistroDeBiomarcador(
       originalName: decision.originalName,
       loincCode: decision.loincCode,
       // Un `Biomarker` nunca es `n_a` (solo `ClinicalEvent` sin código): `estandarDe` lo garantiza.
-      mappingStatus: decision.mappingStatus === 'mapeado' ? 'mapeado' : 'no_mapeado',
+      mappingStatus: estadoPersistible(decision),
       value: cuerpo.value,
       unit: cuerpo.unit ?? null,
       resultType: cuerpo.resultType,
