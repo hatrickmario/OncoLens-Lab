@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import type { ClinicalNote } from '../../../../packages/api-contracts/src/types/clinical-api';
-import { rutaDelDato } from '../../lib/correcciones/cliente';
 import { fechaRelativa } from '../../lib/ficha/fecha-relativa';
 import { formatearFecha, textoDeOrigen } from '../../lib/ficha/presentacion';
 import { mensajes } from '../../lib/mensajes';
@@ -30,7 +29,7 @@ export function FilaDeNotaClinica({
   const { formulario } = ficha.correccion;
   const [corrigiendo, setCorrigiendo] = useState(false);
   const [guardada, setGuardada] = useState(false);
-  const ruta = rutaDelDato(pacienteId, 'clinical-notes', nota.id);
+  const dato = { pacienteId, dato: 'clinical-notes', id: nota.id } as const;
   const tipo = ficha.notas.tipos[nota.noteType];
 
   return (
@@ -53,7 +52,7 @@ export function FilaDeNotaClinica({
         }}
       />
       {guardada && <AvisoAnalisisAnteriores />}
-      {nota.supersedesId && <HistoricoDelDato key={nota.id} ruta={ruta} />}
+      {nota.supersedesId && <HistoricoDelDato key={nota.id} dato={dato} />}
       <Dialog
         abierto={corrigiendo}
         alCambiar={setCorrigiendo}
@@ -62,7 +61,7 @@ export function FilaDeNotaClinica({
       >
         <FormularioDeCorreccionDeNota
           nota={nota}
-          ruta={ruta}
+          dato={dato}
           alGuardar={() => {
             setCorrigiendo(false);
             setGuardada(true);

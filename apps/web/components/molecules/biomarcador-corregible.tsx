@@ -2,7 +2,6 @@
 
 import { useState, type ReactNode } from 'react';
 import type { Biomarker } from '../../../../packages/api-contracts/src/types/clinical-api';
-import { rutaDelDato } from '../../lib/correcciones/cliente';
 import { AvisoAnalisisAnteriores } from '../atoms/aviso-analisis-anteriores';
 import { AccionCorregirDato } from './accion-corregir-dato';
 import { FormularioDeCorreccionDeBiomarcador } from './formulario-de-correccion-de-biomarcador';
@@ -43,7 +42,7 @@ export function BiomarcadorCorregible({
 }: BiomarcadorCorregibleProps) {
   const [corrigiendo, setCorrigiendo] = useState(false);
   const [guardado, setGuardado] = useState(false);
-  const ruta = rutaDelDato(pacienteId, 'biomarkers', biomarcador.id);
+  const dato = { pacienteId, dato: 'biomarkers', id: biomarcador.id } as const;
 
   return (
     <tbody>
@@ -65,7 +64,7 @@ export function BiomarcadorCorregible({
         <FilaAncha columnas={columnas}>
           <FormularioDeCorreccionDeBiomarcador
             biomarcador={biomarcador}
-            ruta={ruta}
+            dato={dato}
             alGuardar={() => {
               setCorrigiendo(false);
               setGuardado(true);
@@ -81,7 +80,7 @@ export function BiomarcadorCorregible({
       )}
       {biomarcador.supersedesId && (
         <FilaAncha columnas={columnas}>
-          <HistoricoDelDato key={biomarcador.id} ruta={ruta} />
+          <HistoricoDelDato key={biomarcador.id} dato={dato} />
         </FilaAncha>
       )}
     </tbody>

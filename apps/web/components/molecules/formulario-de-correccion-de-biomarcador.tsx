@@ -6,6 +6,7 @@ import {
   cuerpoDeCorreccionDeBiomarcador,
   errorDelCuerpoDeBiomarcador,
 } from '../../lib/correcciones/cuerpos';
+import type { RefDeDato } from '../../lib/correcciones/cliente';
 import { useEnvioDeCorreccion } from '../../lib/correcciones/use-envio-de-correccion';
 import { mensajes } from '../../lib/mensajes';
 import { Button } from '../ui/button';
@@ -15,8 +16,7 @@ const CAMPOS = ['value', 'unit', 'performedAt'];
 
 export interface FormularioDeCorreccionDeBiomarcadorProps {
   biomarcador: Pick<Biomarker, 'id' | 'value' | 'unit'>;
-  /** Ruta del BFF del biomarcador (`…/biomarkers/{id}`). */
-  ruta: string;
+  dato: RefDeDato;
   alGuardar: () => void;
   alCancelar: () => void;
 }
@@ -24,12 +24,12 @@ export interface FormularioDeCorreccionDeBiomarcadorProps {
 /** Corrección en línea (variante A, S5-01): valor, unidad y fecha opcional; el error sale junto al campo y no se cierra. */
 export function FormularioDeCorreccionDeBiomarcador({
   biomarcador,
-  ruta,
+  dato,
   alGuardar,
   alCancelar,
 }: FormularioDeCorreccionDeBiomarcadorProps) {
   const { formulario } = mensajes().ficha.correccion;
-  const { enviando, error, enviar, fallar } = useEnvioDeCorreccion(ruta, alGuardar);
+  const { enviando, error, enviar, fallar } = useEnvioDeCorreccion(dato, alGuardar);
   const idBase = `correccion-${biomarcador.id}`;
   const errorDe = (campo: string) => (error?.campo === campo ? error.mensaje : undefined);
 

@@ -2,7 +2,11 @@
 
 import { useId, useState } from 'react';
 import type { CorrectionHistoryEntry } from '../../../../packages/api-contracts/src/types/clinical-api';
-import { pedirHistorico, type ResultadoDeHistorico } from '../../lib/correcciones/cliente';
+import {
+  pedirHistorico,
+  type RefDeDato,
+  type ResultadoDeHistorico,
+} from '../../lib/correcciones/cliente';
 import { fechaRelativa } from '../../lib/ficha/fecha-relativa';
 import { formatearFecha } from '../../lib/ficha/presentacion';
 import { mensajes } from '../../lib/mensajes';
@@ -41,7 +45,7 @@ function ContenidoDelHistorico({ estado }: { estado: ResultadoDeHistorico | 'car
 }
 
 /** «▸ Histórico» desplegable bajo un dato: pide las versiones reemplazadas al BFF al abrirse la primera vez (RN-08). */
-export function HistoricoDelDato({ ruta }: { ruta: string }) {
+export function HistoricoDelDato({ dato }: { dato: RefDeDato }) {
   const idDelPanel = useId();
   const [abierto, setAbierto] = useState(false);
   const [estado, setEstado] = useState<ResultadoDeHistorico | 'cargando' | null>(null);
@@ -51,7 +55,7 @@ export function HistoricoDelDato({ ruta }: { ruta: string }) {
     const yaCargado = estado !== null && estado !== 'cargando' && estado.tipo === 'ok';
     if (abierto || yaCargado) return;
     setEstado('cargando');
-    setEstado(await pedirHistorico(ruta));
+    setEstado(await pedirHistorico(dato));
   }
 
   return (

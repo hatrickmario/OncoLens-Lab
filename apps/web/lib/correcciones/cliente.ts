@@ -15,9 +15,11 @@ export type ResultadoDeHistorico =
 
 export type DatoCorregible = 'biomarkers' | 'clinical-notes';
 
-/** Rutas del BFF (nunca clinical-api): solo ids opacos, sin identidad del paciente (RN-10). */
-export function rutaDelDato(pacienteId: string, dato: DatoCorregible, id: string): string {
-  return `/api/patients/${pacienteId}/${dato}/${id}`;
+/** Un dato corregible del BFF (nunca clinical-api): solo ids opacos, sin identidad del paciente (RN-10). */
+export interface RefDeDato {
+  pacienteId: string;
+  dato: DatoCorregible;
+  id: string;
 }
 
 function leerJson(texto: string): Record<string, unknown> {
@@ -44,11 +46,11 @@ function traducirError(status: number, cuerpo: Record<string, unknown>): ErrorDe
 
 /** `POST …/corrections` del BFF. El navegador añade `Origin` y la cookie `SameSite=Strict`; un fallo de red es genérico. */
 export async function enviarCorreccion(
-  ruta: string,
+  { pacienteId, dato, id }: RefDeDato,
   cuerpo: unknown,
 ): Promise<ResultadoDeCorreccion> {
   try {
-    const respuesta = await fetch(`${ruta}/corrections`, {
+    const respuesta = await fetch(`/api/patients/${pacienteId}/${dato}/${id}/corrections`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(cuerpo),
@@ -65,9 +67,15 @@ export async function enviarCorreccion(
 }
 
 /** `GET …/history` del BFF, validado con el Zod del contrato; cualquier otra cosa es un error sin detalle. */
-export async function pedirHistorico(ruta: string): Promise<ResultadoDeHistorico> {
+export async function pedirHistorico({
+  pacienteId,
+  dato,
+  id,
+}: RefDeDato): Promise<ResultadoDeHistorico> {
   try {
-    const respuesta = await fetch(`${ruta}/history`, { cache: 'no-store' });
+    const respuesta = await fetch(`/api/patients/${pacienteId}/${dato}/${id}/history`, {
+      cache: 'no-store',
+    });
     const leido = zCorrectionHistory.safeParse(leerJson(await respuesta.text()));
     return respuesta.status === 200 && leido.success
       ? { tipo: 'ok', versiones: leido.data.items }

@@ -4,6 +4,7 @@ import type { FormEvent } from 'react';
 import type { ClinicalNote } from '../../../../packages/api-contracts/src/types/clinical-api';
 import { zNoteType } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
 import { cuerpoDeCorreccionDeNota, errorDelCuerpoDeNota } from '../../lib/correcciones/cuerpos';
+import type { RefDeDato } from '../../lib/correcciones/cliente';
 import { useEnvioDeCorreccion } from '../../lib/correcciones/use-envio-de-correccion';
 import { mensajes } from '../../lib/mensajes';
 import { Button } from '../ui/button';
@@ -12,8 +13,7 @@ import { CampoDeCorreccion } from './campo-de-correccion';
 
 export interface FormularioDeCorreccionDeNotaProps {
   nota: Pick<ClinicalNote, 'id' | 'noteType' | 'content'>;
-  /** Ruta del BFF de la nota (`…/clinical-notes/{id}`). */
-  ruta: string;
+  dato: RefDeDato;
   alGuardar: () => void;
   alCancelar: () => void;
 }
@@ -21,13 +21,13 @@ export interface FormularioDeCorreccionDeNotaProps {
 /** Corrección de una nota: el aviso fijo de nombres va encima del campo (ADR-40, RN-11); el texto es solo texto. */
 export function FormularioDeCorreccionDeNota({
   nota,
-  ruta,
+  dato,
   alGuardar,
   alCancelar,
 }: FormularioDeCorreccionDeNotaProps) {
   const { formulario, avisoNombres } = mensajes().ficha.correccion;
   const { notas } = mensajes().ficha;
-  const { enviando, error, enviar, fallar } = useEnvioDeCorreccion(ruta, alGuardar);
+  const { enviando, error, enviar, fallar } = useEnvioDeCorreccion(dato, alGuardar);
   const idBase = `correccion-${nota.id}`;
 
   function alEnviar(evento: FormEvent<HTMLFormElement>) {
