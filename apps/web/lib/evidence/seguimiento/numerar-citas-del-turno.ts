@@ -15,18 +15,30 @@ export interface AfirmacionNumerada {
   citas: CitaNumerada[];
 }
 
-/** Numera las citas de cada afirmación sobre `citedSources` del turno; una cita sin fuente en el turno no se muestra. */
+function fuenteDelTurno(turno: FollowUpTurn, chunkId: string): number {
+  return turno.citedSources.findIndex((fuente) => fuente.chunkId === chunkId);
+}
+
+/**
+ * Afirmaciones con soporte resoluble en el turno (RN-01): al menos una cita presente en `citedSources` del turno o un
+ * dato del paciente resuelto en `patientDataLinks`. Una afirmación sin ninguna de las dos no se muestra.
+ */
+export function afirmacionesConCita(turno: FollowUpTurn): SupportedClaim[] {
+  const enlaces = new Set(turno.patientDataLinks.map(({ dataRef }) => dataRef));
+  return turno.answer.filter(
+    ({ citedSources, patientDataRefs }) =>
+      citedSources.some(({ chunkId }) => fuenteDelTurno(turno, chunkId) >= 0) ||
+      patientDataRefs.some((ref) => enlaces.has(ref)),
+  );
+}
+
+/** Formato: numera las citas de cada afirmación mostrable sobre `citedSources` del turno. */
 export function numerarCitasDelTurno(turno: FollowUpTurn): AfirmacionNumerada[] {
-  return turno.answer.map(({ text, citedSources }) => ({
+  return afirmacionesConCita(turno).map(({ text, citedSources }) => ({
     texto: text,
     citas: citedSources.flatMap(({ chunkId }) => {
-      const indice = turno.citedSources.findIndex((fuente) => fuente.chunkId === chunkId);
+      const indice = fuenteDelTurno(turno, chunkId);
       return indice < 0 ? [] : [{ numero: indice + 1, cita: turno.citedSources[indice]! }];
     }),
   }));
-}
-
-/** Afirmaciones con soporte resoluble en el turno (RN-01): al menos una cita en `citedSources` o un dato del paciente. */
-export function afirmacionesConCita(_turno: FollowUpTurn): SupportedClaim[] {
-  throw new Error('no implementado');
 }

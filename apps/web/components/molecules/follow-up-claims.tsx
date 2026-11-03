@@ -22,12 +22,12 @@ export function FollowUpClaims({ turno, onVerFragmento }: FollowUpClaimsProps) {
   const { nuevaFuente } = mensajes().followUp;
   return (
     <ul className={estilos.citas}>
-      {numerarCitasDelTurno(turno).map(({ texto, citas }) => (
-        <li key={texto}>
+      {numerarCitasDelTurno(turno).map(({ texto, citas }, indiceAfirmacion) => (
+        <li key={`${indiceAfirmacion}-${texto}`}>
           <p>{texto}</p>
           <ul className={estilos.citas} aria-label={mensajes().evidence.cita.lista}>
             {citas.map(({ numero, cita }) => {
-              const id = `cita-seguimiento-${turno.turnNumber}-${cita.chunkId}`;
+              const id = `cita-seguimiento-${turno.turnNumber}-${indiceAfirmacion}-${cita.chunkId}`;
               const expandida = abierta === id;
               return (
                 <li key={cita.chunkId}>
