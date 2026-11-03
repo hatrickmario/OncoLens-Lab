@@ -10,6 +10,7 @@ import { pacienteB } from './pacientes/b.js';
 import { pacienteC } from './pacientes/c.js';
 import { pacienteD } from './pacientes/d.js';
 import { pacienteE } from './pacientes/e.js';
+import { pacienteF } from './pacientes/f.js';
 import type { DiagnosticoSemilla, GradacionSemilla, PacienteSemilla } from './pacientes/tipos.js';
 import type { ClavesDeIdentidad } from '../../src/infrastructure/crypto/claves-de-identidad.js';
 import type { RolDeUsuario } from '../../src/modules/auth/auth.repository.js';
@@ -54,12 +55,13 @@ export interface EntradasDelSeed {
 /** Filas escritas por tabla (los logs del seed solo llevan conteos, nunca valores). */
 export type FilasUpsertadas = Readonly<Record<string, number>>;
 
-const PACIENTES_SEMILLA: readonly PacienteSemilla[] = [
+export const PACIENTES_SEMILLA: readonly PacienteSemilla[] = [
   pacienteA,
   pacienteB,
   pacienteC,
   pacienteD,
   pacienteE,
+  pacienteF,
 ];
 
 const REFERENCIA_DE_CONVENIO = 'CONV-SEED-01';
@@ -297,8 +299,13 @@ async function sembrarExamenes(siembra: Siembra, contexto: ContextoDePaciente): 
         significance_source: 'documento',
         extraction_score: null,
         extraction_confidence: PROCEDENCIA_DEL_SEED.extraction_confidence,
-        review_status: PROCEDENCIA_DEL_SEED.review_status,
-        conflicts_with_id: null,
+        review_status: biomarcador.estadoDeRevision ?? PROCEDENCIA_DEL_SEED.review_status,
+        conflicts_with_id:
+          biomarcador.enConflictoCon === undefined
+            ? null
+            : idSembrado(
+                `${contexto.paciente.clave}/${examen.clave}/${biomarcador.enConflictoCon}`,
+              ),
         source_span: '{}',
         reviewed_by: null,
         reviewed_at: null,
@@ -478,7 +485,7 @@ async function sembrarTodo(siembra: Siembra): Promise<void> {
   }
 }
 
-/** Siembra roles, usuarios de demo y los pacientes (a)–(e), de forma idempotente, dentro de la sesión recibida. */
+/** Siembra roles, usuarios de demo y los pacientes (a)–(f), de forma idempotente, dentro de la sesión recibida. */
 export async function sembrar(db: ClienteSql, entradas: EntradasDelSeed): Promise<FilasUpsertadas> {
   const escritas: Record<string, number> = {};
   const identidad = crearServicioDeIdentidad({ claves: entradas.claves, db });

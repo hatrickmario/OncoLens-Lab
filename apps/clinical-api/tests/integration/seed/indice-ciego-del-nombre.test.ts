@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Client } from 'pg';
+import { PACIENTES_SEMILLA } from '../../../prisma/seed/sembrar.js';
 import { crearIndiceCiego } from '../../../src/infrastructure/crypto/indice-ciego.js';
 import { conectar, type BaseDeTest } from '../../support/db.js';
 import { generadorDeIds } from '../../support/filas-sinteticas.js';
@@ -46,12 +47,14 @@ describe('Índice ciego del nombre (full_name_hmac)', () => {
     await base.destruir();
   });
 
-  it('deja el índice del nombre en las cinco identidades sembradas, calculado del nombre normalizado [US-048 AC-3]', async () => {
+  it('deja el índice del nombre en las identidades sembradas, calculado del nombre normalizado [US-048 AC-3]', async () => {
     const filas = await indicesDelNombre();
 
-    expect(filas).toHaveLength(5);
+    expect(filas).toHaveLength(PACIENTES_SEMILLA.length);
     expect(filas.every((fila) => fila.full_name_hmac !== null)).toBe(true);
-    const esperados = [1, 2, 3, 4, 5].map((n) => indice.indiceDeNombre(`prueba sintetica ${n}`));
+    const esperados = PACIENTES_SEMILLA.map((_, n) => n + 1).map((n) =>
+      indice.indiceDeNombre(`prueba sintetica ${n}`),
+    );
     expect(new Set(filas.map((fila) => fila.full_name_hmac))).toEqual(new Set(esperados));
   });
 

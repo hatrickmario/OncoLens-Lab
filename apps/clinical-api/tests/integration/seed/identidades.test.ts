@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Client } from 'pg';
 import { SeedBloqueadoError } from '../../../prisma/seed/guarda.js';
 import { ejecutarSeed } from '../../../prisma/seed/principal.js';
+import { PACIENTES_SEMILLA } from '../../../prisma/seed/sembrar.js';
 import { conectar, type BaseDeTest } from '../../support/db.js';
 import { crearIndiceCiego } from '../../../src/infrastructure/crypto/indice-ciego.js';
 import { claveDeTest, entornoDeClaves, servicioDesdeEntorno } from '../../support/identidad.js';
@@ -48,7 +49,7 @@ describe('Identidades cifradas del seed sintético', () => {
     await base.destruir();
   });
 
-  it('deja las identidades de los pacientes (a)-(e) cifradas y descifrables, y no las duplica ni las recifra al repetirse [US-046 AC-6]', async () => {
+  it('deja las identidades de los pacientes semilla cifradas y descifrables, y no las duplica ni las recifra al repetirse [US-046 AC-6]', async () => {
     const entorno = entornoDelSeed(archivos);
     await seedContraLaBase(base.url).ejecutar(entorno);
     const primera = await leerFilas();
@@ -56,11 +57,12 @@ describe('Identidades cifradas del seed sintético', () => {
     await seedContraLaBase(base.url).ejecutar(entorno);
     const segunda = await leerFilas();
 
-    expect(primera).toHaveLength(5);
+    expect(primera).toHaveLength(PACIENTES_SEMILLA.length);
     expect(new Set(primera.map((fila) => fila.id_type))).toEqual(new Set(['sintetico']));
-    const numeros = [1, 2, 3, 4, 5].map((n) => `SINT-000000${n}`);
-    const nombres = [1, 2, 3, 4, 5].map((n) => `Prueba Sintética ${n}`);
-    // Ninguna fila contiene ninguno de los 5 números ni de los 5 nombres (no solo el suyo).
+    const ordinales = PACIENTES_SEMILLA.map((_, indice) => indice + 1);
+    const numeros = ordinales.map((n) => `SINT-000000${n}`);
+    const nombres = ordinales.map((n) => `Prueba Sintética ${n}`);
+    // Ninguna fila contiene ninguno de los números ni de los nombres (no solo el suyo).
     for (const fila of primera) {
       for (const valor of [...numeros, ...nombres]) {
         expect(fila.fila_como_texto).not.toContain(valor);
@@ -68,14 +70,14 @@ describe('Identidades cifradas del seed sintético', () => {
         expect(fila.full_name_ciphertext.includes(Buffer.from(valor))).toBe(false);
       }
     }
-    // El generador de nonce de producción (aleatorio) no repite los 12 B iniciales de los 10 blobs.
+    // El generador de nonce de producción (aleatorio) no repite los 12 B iniciales de los blobs.
     const nonces = primera.flatMap((fila) =>
       [fila.national_id_ciphertext, fila.full_name_ciphertext].map((blob) =>
         blob.subarray(0, 12).toString('hex'),
       ),
     );
-    expect(nonces).toHaveLength(10);
-    expect(new Set(nonces).size).toBe(10);
+    expect(nonces).toHaveLength(2 * PACIENTES_SEMILLA.length);
+    expect(new Set(nonces).size).toBe(nonces.length);
     const servicio = servicioDesdeEntorno({
       env: entornoDeClaves(archivos.claves, 1),
       db: cliente,
@@ -93,7 +95,7 @@ describe('Identidades cifradas del seed sintético', () => {
       );
     }
     expect(descifradas.sort()).toEqual(numeros);
-    expect(segunda).toHaveLength(5);
+    expect(segunda).toHaveLength(PACIENTES_SEMILLA.length);
     for (const [indice, fila] of segunda.entries()) {
       expect(
         fila.national_id_ciphertext.equals(

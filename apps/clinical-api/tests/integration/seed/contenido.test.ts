@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Client } from 'pg';
 import { idSembrado } from '../../../prisma/seed/determinismo.js';
+import { PACIENTES_SEMILLA } from '../../../prisma/seed/sembrar.js';
 import { conectar, type BaseDeTest } from '../../support/db.js';
 import {
   CONTRASENA_FICTICIA_ADMIN,
@@ -16,7 +17,7 @@ import {
 import { createPasswordHasher } from '../../../src/modules/auth/password-hasher.js';
 import { ARGON2_DE_PRUEBA } from '../../support/usuarios.js';
 
-const PACIENTES = ['a', 'b', 'c', 'd', 'e'] as const;
+const PACIENTES = ['a', 'b', 'c', 'd', 'e', 'f'] as const;
 const idDe = (letra: (typeof PACIENTES)[number]): string => idSembrado(`paciente-${letra}`);
 
 describe('Contenido del seed sintético', () => {
@@ -43,7 +44,7 @@ describe('Contenido del seed sintético', () => {
     await base.destruir();
   });
 
-  it('existen los pacientes (a)–(e) sintéticos con convenio, episodio abierto y datos seed verificados [US-039 AC-1]', async () => {
+  it('existen los pacientes (a)–(f) sintéticos con convenio, episodio abierto y datos seed verificados [US-039 AC-1]', async () => {
     const pacientes = await filas<{ id: string; data_origin: string; agreement_reference: string }>(
       'SELECT id, data_origin, agreement_reference FROM clinical.patient ORDER BY id',
     );
@@ -54,7 +55,7 @@ describe('Contenido del seed sintético', () => {
     const abiertos = await filas<{ patient_id: string; n: number }>(
       'SELECT patient_id, count(*)::int AS n FROM clinical.care_episode WHERE closed_at IS NULL GROUP BY patient_id',
     );
-    expect(abiertos).toHaveLength(5);
+    expect(abiertos).toHaveLength(PACIENTES_SEMILLA.length);
     expect(abiertos.every((e) => e.n === 1)).toBe(true);
 
     for (const tabla of [
@@ -70,8 +71,13 @@ describe('Contenido del seed sintético', () => {
       expect(ajenas, tabla).toEqual([]);
     }
     expect(await filas(`SELECT 1 FROM clinical.exam WHERE entry_method <> 'seed'`)).toEqual([]);
+    // Todo biomarcador está verificado salvo los de (f) = FX-T3-a, que acumula avisos a propósito (US-071).
     expect(
-      await filas(`SELECT 1 FROM clinical.biomarker WHERE review_status <> 'verificado'`),
+      await filas(
+        `SELECT 1 FROM clinical.biomarker b JOIN clinical.exam e ON e.id = b.exam_id
+          WHERE b.review_status <> 'verificado' AND e.patient_id <> $1`,
+        [idDe('f')],
+      ),
     ).toEqual([]);
   });
 
@@ -229,5 +235,38 @@ describe('Contenido del seed sintético', () => {
     expect(dx?.cancer_type).toBe('mama');
     expect(menopausia).toEqual([]);
     expect(ki67).toEqual([]);
+  });
+
+  it('(f) es FX-T3-a: Ki-67 requiere_revision, dos RE en conflicto y sin estado menopáusico, con HER2 3+ verificado [US-071 FX-T3-a]', async () => {
+    const biomarcadores = await filas<{
+      id: string;
+      name: string;
+      value: string;
+      review_status: string;
+      conflicts_with_id: string | null;
+    }>(
+      `SELECT b.id, b.name, b.value, b.review_status, b.conflicts_with_id
+         FROM clinical.biomarker b JOIN clinical.exam e ON e.id = b.exam_id
+        WHERE e.patient_id = $1 ORDER BY b.name, b.value`,
+      [idDe('f')],
+    );
+    const menopausia = await filas(
+      `SELECT 1 FROM clinical.clinical_attribute WHERE patient_id = $1 AND attribute_key = 'estado_menopausico'`,
+      [idDe('f')],
+    );
+    const porNombre = (nombre: string) => biomarcadores.filter((b) => b.name === nombre);
+    const [reBase, reEnConflicto] = [
+      porNombre('RE').find((b) => b.conflicts_with_id === null),
+      porNombre('RE').find((b) => b.conflicts_with_id !== null),
+    ];
+
+    expect(porNombre('HER2')).toMatchObject([{ value: '3+ (IHQ)', review_status: 'verificado' }]);
+    expect(porNombre('Ki-67')).toMatchObject([
+      { value: '20 %', review_status: 'requiere_revision' },
+    ]);
+    expect(porNombre('RE')).toHaveLength(2);
+    expect(reEnConflicto?.conflicts_with_id).toBe(reBase?.id);
+    expect(reEnConflicto?.review_status).toBe('requiere_revision');
+    expect(menopausia).toEqual([]);
   });
 });

@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { PACIENTES_SEMILLA } from '../../../prisma/seed/sembrar.js';
 import {
   iniciarEscenarioDePacientes,
   montarPacientes,
@@ -21,7 +22,7 @@ interface ElementoAdmin {
 
 describe('orden del listado', () => {
   it('ordena por alta descendente y desempata por id ascendente cuando varios pacientes comparten la fecha de alta [US-048 AC-1]', async () => {
-    // Los cinco pacientes semilla comparten `created_at`: sin desempate el orden no sería determinista.
+    // Los pacientes semilla comparten `created_at`: sin desempate el orden no sería determinista.
     await escenario.mundo.cliente.query(
       `UPDATE clinical.patient SET created_at = '2026-10-17T09:00:00Z' WHERE id IN
          (SELECT id FROM clinical.patient ORDER BY id DESC LIMIT 1)`,
@@ -33,7 +34,7 @@ describe('orden del listado', () => {
       .set('Cookie', escenario.cookieAdmin);
 
     const items: ElementoAdmin[] = respuesta.body.items;
-    expect(items).toHaveLength(5);
+    expect(items).toHaveLength(PACIENTES_SEMILLA.length);
     const esperado = [...items].sort(
       (a, b) => b.registeredAt.localeCompare(a.registeredAt) || a.id.localeCompare(b.id),
     );

@@ -34,6 +34,13 @@ export interface BiomarcadorSemilla {
   readonly unidad: string | null;
   readonly tipoResultado: 'cuantitativo' | 'cualitativo';
   readonly significadoClinico: 'normal' | 'alterado' | 'relevante';
+  /** Por defecto `verificado`, como todo dato sembrado; FX-T3-a (paciente (f)) lo deja `requiere_revision` (RN-26). */
+  readonly estadoDeRevision?: 'verificado' | 'requiere_revision';
+  /**
+   * `clave` de otro biomarcador DEL MISMO examen con el que este dato entra en conflicto (`conflicts_with_id`, RN-08):
+   * el otro va antes en la lista, porque la clave foránea exige que ya exista.
+   */
+  readonly enConflictoCon?: string;
 }
 
 export interface ExamenSemilla {
