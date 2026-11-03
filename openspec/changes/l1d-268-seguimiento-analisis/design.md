@@ -188,7 +188,7 @@ escrituras, la sesión de `corpus` en solo lectura y `caplog` sin el texto sembr
 
 Proveedores: `clinical-api` (`/follow-ups`, `AnalysisBasis`) y `rag-orchestrator` (`/rag/follow-up`). Consumidores: `web`
 (US-219) → `clinical-api`; `clinical-api` → `rag-orchestrator` (cliente generado). Cambios **solo aditivos** (ADR-26).
-Versiones `[S5 resp. 10]`: `clinical-api` 1.15.1 → **1.17.0** (provisional: L1D-74, #295, toma 1.16.0; el orden de merge decide, si 268 entra antes se renumera a 1.16.0), `rag-orchestrator` 1.10.1 → **1.11.0** (tras `l1d-306`);
+Versiones `[S5 resp. 10]`: `clinical-api` 1.15.1 → **1.17.0** (L1D-74 tomó 1.16.0; regla: quien entra segundo en `main` toma la siguiente versión libre y regenera `packages/api-contracts`), `rag-orchestrator` 1.10.1 → **1.11.0** (tras `l1d-306`);
 quien rebase renumera y regenera `packages/api-contracts`, nunca fusiona generados a mano.
 
 ```diff

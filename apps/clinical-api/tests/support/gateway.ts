@@ -400,6 +400,7 @@ export async function montarGateway(
     documents: Router(),
     patients: Router(),
     completeness: Router(),
+    caseView: Router(),
   });
   const app = appConAuth({
     cliente: mundo.cliente,

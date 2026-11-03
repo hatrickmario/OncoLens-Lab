@@ -17,5 +17,5 @@ El `503` de `POST /rag/follow-up` MUST ser un `oneOf` de `ErrorLlmLocalNoDisponi
 - **GIVEN** los dos `openapi.yaml` con el `503` del seguimiento ampliado y `scripts/ci/contracts-breaking-excepciones.json` sin entradas nuevas
 - **WHEN** se ejecuta `contracts:breaking` contra `main`
 - **THEN** termina con éxito con 0 ERR y un WARN `response-body-wrapped-in-one-of-original-preserved` por proveedor en las dos rutas del seguimiento
-- **AND** `info.version` es `1.11.0` en `rag-orchestrator` y `1.17.0` en `clinical-api` (provisional: L1D-74 toma 1.16.0; si 268 entra antes se renumera a 1.16.0, o la siguiente libre al rebasar, con `packages/api-contracts` regenerado)
+- **AND** `info.version` es `1.11.0` en `rag-orchestrator` y `1.17.0` en `clinical-api` (L1D-74 tomó 1.16.0; quien entra segundo en `main` toma la siguiente versión libre al rebasar, con `packages/api-contracts` regenerado)
 - **AND** los ejemplos `rag-nli-no-disponible.json` y `error-desidentificacion-no-disponible.json` validan contra los `503` del seguimiento

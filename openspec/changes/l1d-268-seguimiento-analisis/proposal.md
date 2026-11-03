@@ -28,7 +28,7 @@ Decisiones que se respetan (no se reabren):
   análisis; el `409 LIMITE_SEGUIMIENTO` es la autoridad) vive en **este** change; `l1d-269` solo lo consume. (2) Las
   excepciones E-18/E-19 de ADR-26 por el `503` del seguimiento quedan aprobadas: `H-2` añade la fila a la tabla de ADR-26
   «Decidido (usuario, 2026-11-03)» y el humano la sube a la rama justo tras el commit `contract(L1D-268)`.
-- **Cadena de versiones** `[S5 resp. 10]`: `clinical-api` 1.15.1 (`l1d-306`) → **1.17.0** (provisional: L1D-74, #295, toma 1.16.0; el orden de merge decide, si 268 entra antes se renumera a 1.16.0); `rag-orchestrator` 1.10.1
+- **Cadena de versiones** `[S5 resp. 10]`: `clinical-api` 1.15.1 (`l1d-306`) → **1.17.0** (L1D-74 tomó 1.16.0; regla: quien entra segundo en `main` toma la siguiente versión libre y regenera `packages/api-contracts`); `rag-orchestrator` 1.10.1
   (`l1d-306`) → **1.11.0**. Quien rebase renumera y regenera `packages/api-contracts` (nunca fusiona generados a mano).
 - **Decidido (usuario, 2026-11-03)** `[S5 resp. 12]`: se persiste el `trace_id` propio de cada turno (`data-model` §7),
   nunca el seudónimo (se corrige el texto de US-218 AC-8).

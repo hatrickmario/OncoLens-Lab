@@ -10,7 +10,7 @@
 ## 1. contratos
 
 - [x] 1.1 Editar `apps/clinical-api/openapi.yaml` (`FollowUpCreate.question.description`; `503` de `POST …/follow-ups` →
-      `GeneracionNoDisponible`; `AnalysisBasis.maxFollowUps` `[S5 resp. 10]`; `info.version` 1.15.1 → **1.17.0**, decisión del orquestador: L1D-74 toma 1.16.0) y
+      `GeneracionNoDisponible`; `AnalysisBasis.maxFollowUps` `[S5 resp. 10]`; `info.version` 1.15.1 → **1.17.0**, L1D-74 tomó 1.16.0) y
       `apps/rag-orchestrator/openapi.yaml` (`RagFollowUpRequest.question.description`; `503` de `/rag/follow-up` con el
       `oneOf` de cuatro errores; `info.version` 1.10.1 → **1.11.0**) según design.md §Contratos (skill `sync-contracts`).
       Si al rebasar la versión ya está tomada, renumerar y regenerar · **exento (contrato)** `[US-219 AC-1]`
@@ -156,7 +156,7 @@ ANALYSIS_FOLLOWUP_MAX=10
 - [ ] H-5 Pendientes de clinical-platform de la vuelta 1 del Gate 2 de L1D-268 (D5-15 y D5-16 están en H-4), DIFERIDA -> H-5 (el humano los registra donde corresponda):
   - **D5-15:** test de paridad de marcadores de identidad `rag-orchestrator` ↔ `clinical-api` (`pii-masks.json`) y reenviar `ANALYSIS_FOLLOWUP_MAX` en Compose (infra).
   - **D5-16:** P3 del design: #8 flag `con_reescritura`, #9 `_contar_mostradas`, #10 `calcularDeadline` a `rag-plazo.ts`, #11 `analysisFollowupMax` en `ConfiguracionDelAnalisis`, #12 `Consultador`/`ConsultaSql` y `release(true)` tras un `ROLLBACK` fallido, #13, #14 `SeguimientoNoComponible`, #16 vocabulario.
-  - **Menor (contract #3/#4):** la descripción de `AnalysisBasis.maxFollowUps` no dice «y en `tipo_no_habilitado`»; hoy ese análisis no trae el campo. No se tocó `openapi.yaml` (subir el patch por una descripción es decisión del equipo). `sqlEventoClinicoPropio()` de `compartido/estados-de-revision` no existe en `main`: la consulta común vive en `evidence-analysis.repository.ts:sqlEventosClinicosVigentes`.
+  - **Menor (contract #3/#4):** la descripción de `AnalysisBasis.maxFollowUps` no dice «y en `tipo_no_habilitado`»; hoy ese análisis no trae el campo. No se tocó `openapi.yaml` (subir el patch por una descripción es decisión del equipo). `sqlEventoClinicoPropio()` (L1D-74, ya en `main`) se usa dentro de la consulta común, que vive en `evidence-analysis.repository.ts:sqlEventosClinicosVigentes`.
   - **US-050 / US-040:** un `REVOKE UPDATE` a `clinical_api` sobre `ai_analysis_record` rompe el `SELECT … FOR UPDATE` del seguimiento (alternativa: `pg_advisory_xact_lock`).
   - **US-050 / opt-out por CLI (DEC-22):** deben listar «seguimiento» entre las generaciones con IA que dan `403`.
   - **Decisiones de producto pendientes del humano (no tomadas aquí):** (1) ¿un turno `fuera_de_contexto` cuenta en el límite de 10? (hoy sí); (2) ¿`maxFollowUps` de la Base (guardado al crear) o la configuración vigente en el `409`? (hoy el `409` usa la vigente); (3) `consulta_equivalente` ignora el filtro de fuentes del análisis original; (4) la evolución posterior usa `event_date >` estricto: los eventos del mismo día del análisis quedan fuera.
