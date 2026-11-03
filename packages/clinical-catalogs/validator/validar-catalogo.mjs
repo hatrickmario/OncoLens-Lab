@@ -138,7 +138,8 @@ function violacionesDeLosDeclaradosDeLaRaiz(archivos, esquemasCompilados) {
     ([nombre, { clave }]) => {
       if (archivos.manifest?.[clave] !== true) return [];
       const archivo = archivos[nombre];
-      if (!esquemasCompilados[nombre](archivo)) return [{ codigo: 'esquema_invalido', archivo: nombre }];
+      if (!esquemasCompilados[nombre](archivo))
+        return [{ codigo: 'esquema_invalido', archivo: nombre }];
       return violacionesDeEscalas(archivo, archivos.manifest?.cancerTypes);
     },
   );

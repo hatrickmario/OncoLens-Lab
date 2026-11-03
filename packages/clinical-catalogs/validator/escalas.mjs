@@ -9,11 +9,16 @@ export const ESCALAS_FUNCIONALES_DEL_ESQUEMA = ['ECOG', 'Karnofsky', 'Lansky'];
 /** Sistemas que `diagnosis_grading.grading_system` y el contrato (`DiagnosisGradingInput`) admiten. */
 export const SISTEMAS_DE_GRADACION_DEL_CONTRATO = ['nottingham', 'gleason_isup'];
 
-const lista = (valor) => (Array.isArray(valor) ? valor.filter((e) => e && typeof e === 'object') : []);
+const lista = (valor) =>
+  Array.isArray(valor) ? valor.filter((e) => e && typeof e === 'object') : [];
 
 /** @returns {{ codigo: string, archivo: string, elemento: string }[]} */
 export function violacionesDeEscalas(escalas, tiposDelManifiesto = []) {
-  const violacion = (codigo, elemento) => ({ codigo, archivo: 'escalas', elemento: String(elemento) });
+  const violacion = (codigo, elemento) => ({
+    codigo,
+    archivo: 'escalas',
+    elemento: String(elemento),
+  });
   const escalasFuncionales = lista(escalas?.escalasFuncionales).flatMap((escala) => [
     ...(ESCALAS_FUNCIONALES_DEL_ESQUEMA.includes(escala.codigo)
       ? []

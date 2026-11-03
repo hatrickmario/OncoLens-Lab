@@ -6,10 +6,7 @@ import { ConfiguracionInvalidaError } from '../../../src/config/index.js';
 import { crearProveedorDeCatalogo } from '../../../src/infrastructure/catalogo/catalog-version.provider.js';
 import { crearCatalogoTerminologico } from '../../../src/infrastructure/catalogo/catalogo-terminologico.js';
 import { ESTANDARES } from '../../../src/modules/reconciliation/ports.js';
-import {
-  RUTA_CATALOGO_FX01BB,
-  RUTA_CATALOGO_REAL,
-} from '../../support/catalogo-terminologico.js';
+import { RUTA_CATALOGO_FX01BB, RUTA_CATALOGO_REAL } from '../../support/catalogo-terminologico.js';
 import { leerTexto } from '../../support/reconciliation.js';
 
 let directorio: string;
