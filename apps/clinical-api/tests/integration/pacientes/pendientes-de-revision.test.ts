@@ -185,7 +185,7 @@ describe('pendingReviewCount de eventos sin fecha confiable', () => {
     });
   });
 
-  it('cuenta una vez un evento vigente con event_date NULL aunque su precisión sea dia, igual que su posición sin fecha en el timeline [US-088 AC-3]', async () => {
+  it('cuenta una vez un evento vigente con event_date NULL aunque su precisión sea dia [US-088 AC-3]', async () => {
     await conPCaso(7452, FX_T4A_A.numeroDeDocumento, async (patientId, toxicidadId) => {
       await escenario.mundo.cliente.query(
         "UPDATE clinical.clinical_event SET review_status = 'verificado', date_precision = 'dia', event_date = NULL WHERE id = $1",

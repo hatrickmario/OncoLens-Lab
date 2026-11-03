@@ -32,3 +32,4 @@
 
 - [ ] H-1 Deuda propuesta **D5-10** (Gate 2 #7, Menor): unificar la procedencia de los datos extraídos entre `case-view`, `ficha.reglas` y `clinical-context.builder` en una sola regla; historia propia antes de US-089. DIFERIDA -> D5-10
 - [ ] H-2 `Cache-Control: no-store` en los demás endpoints con texto libre clínico (contract-keeper): otro change. DIFERIDA -> D5-11
+- [ ] H-3 Deuda propuesta **D5-14** (Gate 2, pregunta e): `completeness.repository.ts` lee `ClinicalEvent` sin `sqlEventoClinicoPropio()`; el checklist de faltantes no ignora los reflejos de análisis (ADR-32). DIFERIDA -> D5-14

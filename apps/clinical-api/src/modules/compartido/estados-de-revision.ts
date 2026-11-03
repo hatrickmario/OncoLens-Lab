@@ -12,12 +12,8 @@ export const ESTADOS_DESCARTADOS: readonly EstadoDeRevision[] = ['rechazado', 'r
 export type EstadoDeRevisionVisible = Exclude<EstadoDeRevision, 'rechazado' | 'reemplazado'>;
 
 /**
- * Predicado SQL ÚNICO de RN-07 («el dato no fue rechazado ni reemplazado») sobre la columna indicada. Lo usan la ficha,
- * el tipo de cáncer del listado y el contador de pendientes, para que no diverjan.
- */
-/**
  * Predicado SQL ÚNICO de «sin fecha confiable» de un evento clínico: sin fecha o con precisión `incierta` (PRD AC-02.2).
- * Lo usan el timeline (en TS, `comoEventoConOrden`) y el contador de la ficha, para que coincidan.
+ * Lo usa el contador de la ficha; el timeline aplica el equivalente en TS de este predicado (`comoEventoConOrden`).
  */
 export function sqlFechaNoConfiable(fecha: string, precision: string): string {
   return `(${fecha} IS NULL OR ${precision} = 'incierta')`;
@@ -31,6 +27,10 @@ export function sqlEventoClinicoPropio(columna = 'analysis_id'): string {
   return `${columna} IS NULL`;
 }
 
+/**
+ * Predicado SQL ÚNICO de RN-07 («el dato no fue rechazado ni reemplazado») sobre la columna indicada. Lo usan la ficha,
+ * el tipo de cáncer del listado y el contador de pendientes, para que no diverjan.
+ */
 export function sqlDatoVigente(columna: string): string {
   const descartados = ESTADOS_DESCARTADOS.map((estado) => `'${estado}'`).join(', ');
   return `${columna} NOT IN (${descartados})`;
