@@ -129,3 +129,18 @@ Cambian el **prompt** (`rag-query@0.7.0`) y la **consulta de recuperación** (ra
   `clinical-api`; la suite lo mide.
 - **Catálogo de test sin una clave** usada por un fixture → `422` inesperado en tests de otros changes: los fixtures de
   `rag-orchestrator` y los ejemplos usan claves de `test-apl-*`/`1.1.0`; la tarea 1.1 lo comprueba.
+
+## Desviaciones de la implementación
+
+- **Dónde se validan y etiquetan los faltantes.** El design pedía la validación en `consultar()` y `faltantes_del_contexto()` en
+  `app/prompts/`. Como el `409` y el tipo habilitado se comprueban dentro de `recuperar()`, la validación vive ahí
+  (`_etiquetas_de_los_faltantes`, tras ambos y antes de idioma, embeddings, Milvus, LLM y NLI) y devuelve las **etiquetas**,
+  que `ResultadoDeRecuperacion.etiquetas_de_faltantes` entrega al generador. `bloque_de_datos_del_paciente(contexto,
+  faltantes=())` solo concatena líneas, así `app/prompts/` sigue sin importar puertos y el prompt de seguimiento (que llama
+  a la misma función sin faltantes) no cambia. Consecuencia: `/rag/follow-up` también rechaza con `422` una clave no
+  catalogada (RN-11 más estricta; `ErrorValidacion` ya está declarado en esa ruta).
+- **Puerto con `claves()`.** `EtiquetasDeDatosCriticos` expone además `claves(tipo)` (la regla pura recibe el conjunto de
+  claves conocidas) y `etiqueta(tipo, clave)`.
+- **Suite `evaluate`.** `corrida.solicitud_de` deja `missingCriticalData` vacío cuando el tipo de la pregunta difiere del del
+  ejemplo base (sus claves son del catálogo de mama) y toma `currentLine`/`missingCriticalData` del bloque `contexto` de la
+  pregunta cuando existe (dataset S5, `S5-L01…L05`).
