@@ -256,7 +256,10 @@ class RAGOrchestratorService:
         """Etapa RECUPERAR de `/rag/query` y de `/rag/follow-up`: catálogo → filtro → idioma y release → loop(s) → umbral.
 
         Entrega solo los chunks sobre el umbral (RN-02); sin ninguno, quien llama responde sin evidencia sin invocar al
-        generador. ``con_reescritura=False`` omite el segundo loop (el seguimiento no reescribe: ``no_aplica``)."""
+        generador. ``con_reescritura=False`` omite el segundo loop (el seguimiento no reescribe: ``no_aplica``).
+
+        Orden de las exigencias, todas antes de cualquier puerto: versión del catálogo (`409`) → filtro y tipo de cáncer
+        (`422`) → ``missingCriticalData`` solo con claves del catálogo (`422`, RN-11, US-116)."""
         trace_id = solicitud.traceId.root
         # Primer paso, antes de todo borde (D2): un catálogo de otra versión no consume embeddings, Milvus, LLM ni NLI.
         exigir_catalogo_de_la_solicitud(self._catalogo_clinico, trace_id, solicitud.catalogVersion)
@@ -265,7 +268,7 @@ class RAGOrchestratorService:
         self._exigir_tipo_habilitado(
             solicitud
         )  # un tipo inutilizable ya fue 422 propio; aquí, antes de recuperar (RN-20)
-        etiquetas_de_faltantes = self._etiquetas_de_los_faltantes(
+        etiquetas_de_faltantes = self.validar_y_etiquetar_faltantes(
             solicitud
         )  # RN-11: texto libre no llega a ningún puerto
         idioma, release = await self._idioma_y_release(trace_id, solicitud.query)
@@ -291,6 +294,9 @@ class RAGOrchestratorService:
         release, pero no invoca embeddings, búsqueda, *reranker*, LLM ni NLI."""
         trace_id = solicitud.traceId.root
         exigir_catalogo_de_la_solicitud(self._catalogo_clinico, trace_id, solicitud.catalogVersion)
+        self.validar_y_etiquetar_faltantes(
+            solicitud
+        )  # la misma petición inválida da siempre 422 (RN-11)
         inicio = self._reloj.ahora()
         idioma, release = await self._idioma_y_release(trace_id, solicitud.query)
         return self._armar_meta_de_recuperacion(
@@ -605,24 +611,19 @@ class RAGOrchestratorService:
             return
         exigir_tipo_habilitado(diagnostico.cancerType.root, self._parametros.tipos_habilitados)
 
-    def _etiquetas_de_los_faltantes(self, solicitud: RagQueryInternalRequest) -> tuple[str, ...]:
+    def validar_y_etiquetar_faltantes(self, solicitud: RagQueryInternalRequest) -> tuple[str, ...]:
         """Etiqueta del catálogo de cada ``missingCriticalData``; cada uno debe ser una clave de ``datos-criticos.json``
-        del tipo del caso (RN-11).
+        del tipo del caso (RN-11). Entrada compartida por ``recuperar()`` y ``meta_sin_recuperacion()``.
 
-        Sin diagnóstico no hay tipo (``_filtro_de_recuperacion`` ya lo rechazó). Lanza con posiciones, nunca valores."""
+        Sin diagnóstico no hay tipo ni claves: cualquier faltante es inválido. Lanza con posiciones, nunca valores."""
         contexto = solicitud.clinicalContext
-        if contexto.diagnosis is None:
-            return ()
-        tipo = contexto.diagnosis.cancerType.root
+        tipo = contexto.diagnosis.cancerType.root if contexto.diagnosis is not None else ""
+        etiquetas = self._datos_criticos.etiquetas(tipo)
         claves = [clave.root for clave in contexto.missingCriticalData]
-        posiciones = claves_de_faltantes_invalidas(claves, self._datos_criticos.claves(tipo))
+        posiciones = claves_de_faltantes_invalidas(claves, etiquetas.keys())
         if posiciones:
             raise FaltanteNoCatalogadoError(posiciones)
-        return tuple(
-            etiqueta
-            for clave in claves
-            if (etiqueta := self._datos_criticos.etiqueta(tipo, clave)) is not None
-        )
+        return tuple(etiquetas[clave] for clave in claves)
 
     def _filtro_de_recuperacion(self, solicitud: RagQueryInternalRequest) -> str:
         """Filtro vigente y del tipo de cáncer del caso; sin código de catálogo no hay búsqueda (`422`, OL-02)."""

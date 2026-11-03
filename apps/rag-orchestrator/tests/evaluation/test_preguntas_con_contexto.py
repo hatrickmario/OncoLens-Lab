@@ -121,7 +121,7 @@ def test_los_faltantes_del_dataset_s5_son_claves_del_catalogo_de_su_tipo(
         for p in dataset.preguntas
         if p.contexto is not None
         for f in p.contexto.faltantes
-        if f not in catalogo.claves(p.cancer)
+        if f not in catalogo.etiquetas(p.cancer)
     ]
 
     assert ajenas == []

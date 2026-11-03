@@ -8,8 +8,9 @@ validador del catálogo en la CI. Un archivo ausente, ilegible o fuera de esquem
 
 import json
 import re
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
+from types import MappingProxyType
 from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
@@ -50,17 +51,19 @@ class _Archivo(BaseModel):
         return self
 
 
+_SIN_DATOS: Mapping[str, str] = MappingProxyType({})
+
+
 class DatosCriticosDelCatalogo:
     """Implementa ``EtiquetasDeDatosCriticos`` sobre las etiquetas ya leídas."""
 
     def __init__(self, etiquetas_por_tipo: dict[str, dict[str, str]]) -> None:
-        self._etiquetas_por_tipo = {tipo: dict(datos) for tipo, datos in etiquetas_por_tipo.items()}
+        self._etiquetas_por_tipo = {
+            tipo: MappingProxyType(dict(datos)) for tipo, datos in etiquetas_por_tipo.items()
+        }
 
-    def etiqueta(self, tipo_de_cancer: str, clave: str) -> str | None:
-        return self._etiquetas_por_tipo.get(tipo_de_cancer, {}).get(clave)
-
-    def claves(self, tipo_de_cancer: str) -> frozenset[str]:
-        return frozenset(self._etiquetas_por_tipo.get(tipo_de_cancer, {}))
+    def etiquetas(self, tipo_de_cancer: str) -> Mapping[str, str]:
+        return self._etiquetas_por_tipo.get(tipo_de_cancer, _SIN_DATOS)
 
 
 def cargar_datos_criticos(

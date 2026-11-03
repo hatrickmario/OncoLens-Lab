@@ -29,29 +29,28 @@ def _catalogo_con(tmp_path: Path, contenido: object | None, tipo: str = "mama") 
 def test_devuelve_la_etiqueta_en_espanol_cuando_la_clave_es_del_tipo() -> None:
     datos = cargar_datos_criticos(CATALOGOS, ("mama", "prostata"))
 
-    assert datos.etiqueta("mama", "estado_menopausico") == "Estado menopáusico"
-    assert datos.etiqueta("mama", "ki67") == "Ki-67"
+    assert datos.etiquetas("mama")["estado_menopausico"] == "Estado menopáusico"
+    assert datos.etiquetas("mama")["ki67"] == "Ki-67"
 
 
 def test_devuelve_none_cuando_la_clave_es_de_otro_tipo() -> None:
     datos = cargar_datos_criticos(CATALOGOS, ("mama", "prostata"))
 
-    assert datos.etiqueta("mama", "psa_serie") is None
-    assert datos.etiqueta("prostata", "psa_serie") is not None
+    assert "psa_serie" not in datos.etiquetas("mama")
+    assert "psa_serie" in datos.etiquetas("prostata")
 
 
 def test_devuelve_none_y_sin_claves_cuando_el_tipo_no_esta_en_el_catalogo() -> None:
     datos = cargar_datos_criticos(CATALOGOS, ("mama",))
 
-    assert datos.etiqueta("leucemia", "ki67") is None
-    assert datos.claves("leucemia") == frozenset()
+    assert dict(datos.etiquetas("leucemia")) == {}
 
 
-def test_expone_las_claves_del_tipo() -> None:
+def test_expone_las_claves_del_tipo_con_su_etiqueta() -> None:
     datos = cargar_datos_criticos(CATALOGOS, ("mama",))
 
-    assert {"estado_menopausico", "ki67"} <= datos.claves("mama")
-    assert "psa_serie" not in datos.claves("mama")
+    assert {"estado_menopausico", "ki67"} <= set(datos.etiquetas("mama"))
+    assert all(etiqueta for etiqueta in datos.etiquetas("mama").values())
 
 
 def test_falla_cerrado_sin_ruta_cuando_el_archivo_falta(tmp_path: Path) -> None:
