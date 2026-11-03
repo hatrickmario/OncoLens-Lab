@@ -31,7 +31,7 @@
       regla D2, tabla medida, decisión, punto de enmascaramiento (AC-2), identidad exacta (AC-3),
       formatos en configuración (AC-4), motor de `pii/` e `identityFound` (AC-5), claves (AC-6);
       estado `propuesto` · **exento** `[US-013 AC-1…AC-6]`
-- [ ] 1.6 Fila de ADR-40 en `docs/architecture/adr/README.md` (hecha) y marca en `backlog/02-adrs.md` (al
+- [x] 1.6 Fila de ADR-40 en `docs/architecture/adr/README.md` (hecha) y marca en `backlog/02-adrs.md` (al · **Hecho (2026-11-02):** ADR-40 decidido por el usuario (opción B adaptada, PRD E-17) y marcado en `backlog/02-adrs.md` y en `docs/architecture/adr/README.md` (PR #286).
       implementarse; pendiente: fuera de los paths de ai-services-dev) · **exento**
 - [x] 1.7 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de
       comportamiento, tests en verde antes y después, commit refactor(L1D-205)
@@ -48,10 +48,10 @@
 
 ## 3. evaluación
 
-- [ ] 3.1 `ai-eval-runner` revisa el reporte de `reports/adr40/` (métrica PII ≥ 0,95) · **evaluate**
+- [ ] 3.1 `ai-eval-runner` revisa el reporte de `reports/adr40/` (métrica PII ≥ 0,95) · **evaluate** · **Pendiente para el S5** (decisión de ADR-40 del 2026-11-02): la familia `pii` ya existe en `evaluate`; la revisa `ai-eval-runner` sobre `reports/adr40/` y cierra 3.1 y 4.3 juntas.
 
 ## 4. Verificación
 
 - [x] 4.1 `openspec validate l1d-205-adr40-deteccion-pii --strict` en verde
-- [ ] 4.2 Tests de `rag-orchestrator` y `clinical-api` en verde; sin `contracts:verify-provider`
-- [ ] 4.3 `run-ai-eval` (familia `pii`) si la suite ya existe (US-072b); si no, la revisión 3.1
+- [x] 4.2 Tests de `rag-orchestrator` y `clinical-api` en verde; sin `contracts:verify-provider` · **Hecho (2026-11-02):** CI de `main` en verde en `b64ee2fc` (jobs `build-test`, `integration` e `integration-rag`), run https://github.com/hatrickmario/OncoLens-Lab/actions/runs/41570177500.
+- [ ] 4.3 `run-ai-eval` (familia `pii`) si la suite ya existe (US-072b); si no, la revisión 3.1 · **Pendiente para el S5** (decisión de ADR-40 del 2026-11-02): la familia `pii` ya existe en `evaluate`; la revisa `ai-eval-runner` sobre `reports/adr40/` y cierra 3.1 y 4.3 juntas.
