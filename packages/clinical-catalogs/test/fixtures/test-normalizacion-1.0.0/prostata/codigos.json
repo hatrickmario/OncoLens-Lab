@@ -1,0 +1,28 @@
+{
+  "entradas": [
+    {
+      "terminoCanonico": "prostata",
+      "estandar": "cie10",
+      "codigo": "C61",
+      "nombreOficial": "Tumor maligno de la próstata",
+      "etiquetaEs": "Cáncer de próstata",
+      "versionFuente": "CIE-10 de test"
+    },
+    {
+      "terminoCanonico": "PSA",
+      "estandar": "loinc",
+      "codigo": "LOINC-T-PSA",
+      "nombreOficial": "Antígeno prostático específico de test",
+      "etiquetaEs": "Antígeno prostático específico",
+      "versionFuente": "LOINC ficticio de test"
+    },
+    {
+      "terminoCanonico": "leuprorelina",
+      "estandar": "atc",
+      "codigo": "L02AE02",
+      "nombreOficial": "Leuprorelin",
+      "etiquetaEs": "Leuprorelina",
+      "versionFuente": "ATC de test"
+    }
+  ]
+}

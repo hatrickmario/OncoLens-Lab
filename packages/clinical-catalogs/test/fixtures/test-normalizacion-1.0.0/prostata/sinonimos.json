@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "items": [
+    {
+      "terminoCanonico": "leuprorelina",
+      "sinonimos": [{ "texto": "leuprolide", "idioma": "en" }]
+    },
+    {
+      "terminoCanonico": "PSA",
+      "sinonimos": [{ "texto": "prostate-specific antigen", "idioma": "en" }]
+    }
+  ]
+}
