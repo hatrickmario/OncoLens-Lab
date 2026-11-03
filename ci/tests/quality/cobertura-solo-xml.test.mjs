@@ -54,8 +54,9 @@ function repositorio({ conInforme }) {
 
 // El job quality exporta COBERTURA_INFORMES_XML vacía a todo `npm run test:quality`: el subproceso debe usar la lista por defecto.
 const entornoDeLaCi = (base) => {
-  const { COBERTURA_INFORMES_XML: _heredada, ...resto } = process.env;
-  return { ...resto, COBERTURA_BASE: base, CI: 'true' };
+  const entorno = { ...process.env, COBERTURA_BASE: base, CI: 'true' };
+  delete entorno.COBERTURA_INFORMES_XML;
+  return entorno;
 };
 
 const ejecutar = ({ raiz, base }, argumentos) =>
