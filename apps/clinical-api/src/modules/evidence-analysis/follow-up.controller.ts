@@ -177,12 +177,15 @@ function manejadorDeCuerpoIlegible(emisor: Emisor): ErrorRequestHandler {
 
 /**
  * `POST` y `GET /evidence-analyses/{analysisId}/follow-ups` (se montan bajo `/platform`, detrás del guard de sesión).
- * Solo traduce HTTP ↔ service.
+ * Solo traduce HTTP ↔ service. Registra sus rutas en el `router` que recibe (el del gateway de análisis, para que la
+ * raíz de composición y el test de coherencia con el contrato vean un solo router del módulo).
  */
-export function followUpController(dependencias: DependenciasDelControllerDeSeguimiento): Router {
+export function followUpController(
+  dependencias: DependenciasDelControllerDeSeguimiento,
+  router: Router = Router(),
+): Router {
   const { service, traceIds, registrar } = dependencias;
   const emisor = crearEmisor(registrar);
-  const router = Router();
   router.post(
     '/evidence-analyses/:analysisId/follow-ups',
     crearTraceIdMiddleware(traceIds),

@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import type { Router } from 'express';
 import type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
 import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
@@ -120,16 +120,17 @@ export function componerGatewayDeAnalisis(dependencias: DependenciasDelGateway):
     reloj: dependencias.reloj,
     config: dependencias.config,
   });
-  return Router().use(
-    evidenceAnalysisController({
-      service,
-      traceIds: dependencias.traceIds,
-      registrar: dependencias.registrar,
-    }),
-    followUpController({
+  const router = evidenceAnalysisController({
+    service,
+    traceIds: dependencias.traceIds,
+    registrar: dependencias.registrar,
+  });
+  return followUpController(
+    {
       service: componerSeguimiento(dependencias),
       traceIds: dependencias.traceIds,
       registrar: dependencias.registrar,
-    }),
+    },
+    router,
   );
 }
