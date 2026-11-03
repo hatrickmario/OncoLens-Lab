@@ -19,7 +19,7 @@ from app.api.rag_query import crear_router_rag_query
 from app.api.trace import ContextoDeTraceId
 from app.application.aplicabilidad import ApplicabilityService
 from app.application.catalogo_exigido import ConsultaConCatalogoExigido
-from app.application.consulta_no_componible import ConsultaNoComponible
+from app.application.consulta_no_componible import ConsultaNoComponible, SeguimientoNoComponible
 from app.application.ports import (
     CatalogoClinico,
     ChunkSearch,
@@ -40,6 +40,7 @@ from app.application.ports import (
     SparseChunkSearch,
     TraceIdGenerator,
 )
+from app.application.seguimiento import ResponderSeguimiento
 from app.application.rag_orchestrator_service import (
     ParametrosDeRecuperacion,
     RAGOrchestratorService,
@@ -56,7 +57,10 @@ from app.config.version import VERSION_DEL_SERVICIO
 from app.domain.criterios_aplicabilidad import CriteriosDeAplicabilidad
 from app.domain.fusion_de_candidatos import EstrategiaDeFusion
 from app.domain.tipos_habilitados import tipos_ausentes_del_catalogo
-from app.infrastructure.catalogo_clinico.sinonimos import cargar_terminos_del_catalogo
+from app.infrastructure.catalogo_clinico.sinonimos import (
+    cargar_terminos_del_catalogo,
+    cargar_terminos_por_tipo,
+)
 from app.infrastructure.catalogo_clinico.aplicabilidad import (
     CriteriosDelCatalogo,
     cargar_criterios_de_aplicabilidad,
@@ -68,12 +72,14 @@ from app.infrastructure.catalogo_clinico.manifiesto import (
 )
 from app.infrastructure.clock.system_clock import RelojDelSistema
 from app.infrastructure.fake.fake_evidence_query import FakeEvidenceQuery
+from app.infrastructure.fake.fake_follow_up import FakeFollowUp
 from app.infrastructure.fake.fake_llm_health import FakeLlmHealth
 from app.infrastructure.lenguaje.terminos_prohibidos import (
     ListaDeTerminosNoDisponible,
     cargar_verificador_de_terminos,
 )
 from app.infrastructure.llm.fabrica_local import (
+    crear_generador_de_seguimiento_local,
     crear_generador_local,
     crear_proponente_local,
     crear_reescritor_local,
@@ -250,6 +256,7 @@ def crear_app(
         app,
         settings,
         consulta=consulta,
+        seguimiento=seguimiento,
         autenticacion=crear_require_service_jwt(verificador),
         recuperacion=recuperacion,
         clock=clock,
@@ -257,10 +264,6 @@ def crear_app(
         catalogo_clinico=catalogo_clinico,
         criterios_de_aplicabilidad=app.state.criterios_de_aplicabilidad,
     )
-    if seguimiento is not None:
-        app.include_router(
-            crear_router_rag_follow_up(seguimiento, crear_require_service_jwt(verificador))
-        )
     app.include_router(
         crear_router_health(
             llm_health or _sonda_llm_segun(settings),
@@ -366,6 +369,7 @@ def _registrar_consulta_de_evidencia(
     settings: Settings,
     *,
     consulta: EvidenceQueryPort | None,
+    seguimiento: FollowUpPort | None,
     autenticacion: DependenciaJwtServicio,
     recuperacion: PuertosDeRecuperacion | None,
     clock: Clock,
@@ -373,23 +377,53 @@ def _registrar_consulta_de_evidencia(
     catalogo_clinico: CatalogoClinico,
     criterios_de_aplicabilidad: CriteriosDeAplicabilidad,
 ) -> None:
+    seguimiento_propio = seguimiento
     if consulta is None and settings.llm_provider == "fake":
         consulta = ConsultaConCatalogoExigido(
             FakeEvidenceQuery.desde_directorio(settings.fake_responses_path), catalogo_clinico
+        )
+        seguimiento_propio = seguimiento or FakeFollowUp.desde_directorio(
+            settings.fake_responses_path
         )
     elif consulta is None:
         # LLM_PROVIDER=local: la ruta siempre existe. La configuración se exige aunque falten los bordes reales
         # (adapters de embeddings, reranker e idioma, US-231): sin ellos responde 503 fallando cerrado.
         _exigir_configuracion_de_recuperacion(settings)
-        consulta = (
-            _crear_servicio_de_recuperacion(
+        if recuperacion is None:
+            consulta = ConsultaNoComponible()
+            seguimiento_propio = seguimiento or SeguimientoNoComponible()
+        else:
+            servicio = _crear_servicio_de_recuperacion(
                 settings, recuperacion, clock, generador, criterios_de_aplicabilidad
             )
-            if recuperacion is not None
-            else ConsultaNoComponible()
-        )
+            consulta = servicio
+            seguimiento_propio = seguimiento or _crear_seguimiento(
+                settings, servicio, catalogo_clinico
+            )
     if consulta is not None:
         app.include_router(crear_router_rag_query(consulta, autenticacion))
+    if seguimiento_propio is not None:
+        app.include_router(crear_router_rag_follow_up(seguimiento_propio, autenticacion))
+
+
+def _crear_seguimiento(
+    settings: Settings, servicio: RAGOrchestratorService, catalogo: CatalogoClinico
+) -> ResponderSeguimiento:
+    """Seguimiento (US-218) sobre el mismo servicio de recuperación y el LLM local (RN-12); sin estado propio."""
+    return ResponderSeguimiento(
+        servicio=servicio,
+        generador=crear_generador_de_seguimiento_local(settings),
+        terminos_por_tipo=_terminos_del_catalogo_por_tipo(settings, catalogo),
+    )
+
+
+def _terminos_del_catalogo_por_tipo(
+    settings: Settings, catalogo: CatalogoClinico
+) -> dict[str, frozenset[str]]:
+    """Los términos de cada tipo del manifiesto, para la regla determinista de pertinencia (design D7)."""
+    if settings.clinical_catalog_path is None:
+        return {}
+    return cargar_terminos_por_tipo(settings.clinical_catalog_path, catalogo.tipos_de_cancer())
 
 
 def _crear_servicio_de_recuperacion(

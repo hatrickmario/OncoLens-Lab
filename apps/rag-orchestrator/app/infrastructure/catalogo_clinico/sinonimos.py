@@ -46,3 +46,14 @@ def _items_de(archivo: Path) -> list[dict[str, Any]]:
 def cargar_terminos_del_catalogo(catalogos: Path, tipos_de_cancer: Sequence[str]) -> frozenset[str]:
     """Los términos canónicos y sinónimos del catálogo montado, normalizados: lo único que la reescritura puede agregar (RN-27)."""
     return frozenset(cargar_sinonimos(catalogos, tipos_de_cancer))
+
+
+def cargar_terminos_por_tipo(
+    catalogos: Path, tipos_de_cancer: Sequence[str]
+) -> dict[str, frozenset[str]]:
+    """Por tipo de cáncer: su código y los términos y sinónimos de su ``sinonimos.json``, normalizados. Lo usa la regla
+    determinista de pertinencia del seguimiento (US-218, design D7)."""
+    return {
+        tipo: frozenset({normalizar_texto(tipo), *cargar_sinonimos(catalogos, [tipo])})
+        for tipo in tipos_de_cancer
+    }
