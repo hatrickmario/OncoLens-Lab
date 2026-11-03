@@ -73,13 +73,18 @@ def solicitud_base() -> dict[str, Any]:
 
 
 def solicitud_de(
-    base: dict[str, Any], pregunta: Pregunta, clase: str, indice: int, catalogo_version: str
+    base: dict[str, Any],
+    pregunta: Pregunta,
+    clase: str,
+    indice: int,
+    catalogo_version: str,
+    max_opciones: int = MAX_OPCIONES,
 ) -> RagQueryInternalRequest:
     """La solicitud de ``contracts/examples`` con la pregunta del dataset; el ``traceId`` es el índice (sin azar)."""
     cruda = copy.deepcopy(base)
     cruda["traceId"] = f"req_eval{indice:04d}"
     cruda["query"] = pregunta.texto
-    cruda["maxOptions"] = MAX_OPCIONES
+    cruda["maxOptions"] = max_opciones
     cruda["catalogVersion"] = (
         catalogo_version  # NFR-14: la solicitud usa el catálogo de la configuración
     )
@@ -109,9 +114,12 @@ async def evaluar_pregunta_en_servicio(
     base: dict[str, Any],
     pregunta: Pregunta,
     indice: int,
+    max_opciones: int = MAX_OPCIONES,
 ) -> tuple[ResultadoConsulta, RagQueryInternalResponse]:
     """Una pregunta por ``RAGOrchestratorService`` en proceso: su resultado y la respuesta que dio."""
-    solicitud = solicitud_de(base, pregunta, dataset.clase, indice, suite.catalogo_version)
+    solicitud = solicitud_de(
+        base, pregunta, dataset.clase, indice, suite.catalogo_version, max_opciones
+    )
     generaciones_previas = suite.observaciones.generaciones
     respuesta = await suite.cronometro.medir_async("consulta", suite.servicio.consultar, solicitud)
     invocado = suite.observaciones.generaciones > generaciones_previas
