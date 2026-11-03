@@ -1,7 +1,7 @@
 import type { Consultador } from '../auth/auth.repository.js';
 import type { RegistroDeAnalisis } from './analysis-record.js';
 import { sqlOrdenDeDiagnosticoVigente } from '../compartido/diagnostico-vigente.js';
-import { sqlDatoVigente } from '../compartido/estados-de-revision.js';
+import { sqlDatoVigente, sqlEventoClinicoPropio } from '../compartido/estados-de-revision.js';
 import type { OrigenDeDatos } from './ports.js';
 
 export type EstadoDeRevisionMostrable =
@@ -229,7 +229,7 @@ async function leerEventos(leer: Leer): Promise<FilaDeEvento[]> {
     `SELECT id, event_type, event_date::text AS event_date, description, entry_method,
             extraction_confidence, review_status
        FROM clinical.clinical_event
-      WHERE patient_id = $1 AND analysis_id IS NULL AND ${sqlDatoVigente('review_status')}
+      WHERE patient_id = $1 AND ${sqlEventoClinicoPropio()} AND ${sqlDatoVigente('review_status')}
       ORDER BY event_date NULLS LAST, created_at`,
   );
   return filas.map(eventoDe);

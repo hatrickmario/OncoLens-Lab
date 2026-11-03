@@ -1,0 +1,371 @@
+{
+  "timeline": [
+    {
+      "id": "7d712c52-d81a-51e3-a23c-5022c56f2f6e",
+      "eventType": "diagnostico",
+      "derived": true,
+      "eventDate": "2025-10-05",
+      "datePrecision": "dia",
+      "description": "adenocarcinoma acinar",
+      "codes": {
+        "icd10": "C61",
+        "cups": null
+      },
+      "provenance": {
+        "entryMethod": "ocr",
+        "extractionConfidence": "alta",
+        "reviewStatus": "verificado",
+        "conflict": false,
+        "sourceDocumentId": "00001cf2-0000-4000-8000-000000000001",
+        "additionalSourceDocumentIds": []
+      }
+    },
+    {
+      "id": "112e037d-2b59-5872-911e-d846035a4733",
+      "eventType": "inicio_tratamiento_previo",
+      "derived": true,
+      "eventDate": "2025-10-20",
+      "datePrecision": "dia",
+      "description": "Bicalutamida",
+      "codes": {
+        "icd10": null,
+        "cups": null
+      },
+      "provenance": {
+        "entryMethod": "manual",
+        "extractionConfidence": "n_a",
+        "reviewStatus": "verificado",
+        "conflict": false,
+        "sourceDocumentId": null,
+        "additionalSourceDocumentIds": []
+      }
+    },
+    {
+      "id": "3519e3cd-cd47-5316-9eea-c3fd22b2b4b6",
+      "eventType": "inicio_tratamiento_previo",
+      "derived": true,
+      "eventDate": "2025-11-01",
+      "datePrecision": "dia",
+      "description": "Leuprorelina",
+      "codes": {
+        "icd10": null,
+        "cups": null
+      },
+      "provenance": {
+        "entryMethod": "ocr",
+        "extractionConfidence": "alta",
+        "reviewStatus": "verificado",
+        "conflict": false,
+        "sourceDocumentId": "00001cf2-0000-4000-8000-000000000001",
+        "additionalSourceDocumentIds": []
+      }
+    },
+    {
+      "id": "3474f11b-b776-58e9-9cda-58774390c96c",
+      "eventType": "fin_tratamiento_previo",
+      "derived": true,
+      "eventDate": "2025-11-15",
+      "datePrecision": "dia",
+      "description": "Bicalutamida",
+      "codes": {
+        "icd10": null,
+        "cups": null
+      },
+      "provenance": {
+        "entryMethod": "manual",
+        "extractionConfidence": "n_a",
+        "reviewStatus": "verificado",
+        "conflict": false,
+        "sourceDocumentId": null,
+        "additionalSourceDocumentIds": []
+      }
+    },
+    {
+      "id": "8354b2bf-099e-5e51-abed-c54f18b17003",
+      "eventType": "examen",
+      "derived": true,
+      "eventDate": "2026-01-10",
+      "datePrecision": "dia",
+      "description": "laboratorio",
+      "codes": {
+        "icd10": null,
+        "cups": null
+      },
+      "provenance": {
+        "entryMethod": "ocr",
+        "extractionConfidence": "alta",
+        "reviewStatus": "verificado",
+        "conflict": false,
+        "sourceDocumentId": "00001cf2-0000-4000-8000-000000000001",
+        "additionalSourceDocumentIds": []
+      }
+    },
+    {
+      "id": "f2d57af6-3e99-5740-ab9c-941615257d54",
+      "eventType": "examen",
+      "derived": true,
+      "eventDate": "2026-04-12",
+      "datePrecision": "dia",
+      "description": "laboratorio",
+      "codes": {
+        "icd10": null,
+        "cups": null
+      },
+      "provenance": {
+        "entryMethod": "ocr",
+        "extractionConfidence": "media",
+        "reviewStatus": "auto_aceptado",
+        "conflict": false,
+        "sourceDocumentId": "00001cf2-0000-4000-8000-000000000002",
+        "additionalSourceDocumentIds": []
+      }
+    },
+    {
+      "id": "6701d034-a470-5e9f-9dd1-959e0cfdc542",
+      "eventType": "examen",
+      "derived": true,
+      "eventDate": "2026-07-15",
+      "datePrecision": "dia",
+      "description": "laboratorio",
+      "codes": {
+        "icd10": null,
+        "cups": null
+      },
+      "provenance": {
+        "entryMethod": "ocr",
+        "extractionConfidence": "media",
+        "reviewStatus": "requiere_revision",
+        "conflict": false,
+        "sourceDocumentId": "00001cf2-0000-4000-8000-000000000003",
+        "additionalSourceDocumentIds": []
+      }
+    },
+    {
+      "id": "00001cf2-0000-4000-8000-000000000015",
+      "eventType": "progresion",
+      "derived": false,
+      "eventDate": "2026-07-20",
+      "datePrecision": "dia",
+      "description": "Progresión bioquímica por PSA",
+      "codes": {
+        "icd10": null,
+        "cups": null
+      },
+      "provenance": {
+        "entryMethod": "ocr",
+        "extractionConfidence": "alta",
+        "reviewStatus": "verificado",
+        "conflict": false,
+        "sourceDocumentId": "00001cf2-0000-4000-8000-000000000003",
+        "additionalSourceDocumentIds": []
+      }
+    },
+    {
+      "id": "198527b4-aa25-5559-ad28-6695a1207c93",
+      "eventType": "analisis_ia",
+      "derived": true,
+      "eventDate": "2026-08-01",
+      "datePrecision": "dia",
+      "description": "Análisis de IA",
+      "codes": {
+        "icd10": null,
+        "cups": null
+      },
+      "provenance": {
+        "entryMethod": "manual",
+        "extractionConfidence": "n_a",
+        "reviewStatus": "auto_aceptado",
+        "conflict": false,
+        "sourceDocumentId": null,
+        "additionalSourceDocumentIds": []
+      }
+    },
+    {
+      "id": "c79b65fc-206b-557e-a94e-9721d8d1978a",
+      "eventType": "resumen_caso",
+      "derived": true,
+      "eventDate": "2026-08-02",
+      "datePrecision": "dia",
+      "description": "Resumen del caso",
+      "codes": {
+        "icd10": null,
+        "cups": null
+      },
+      "provenance": {
+        "entryMethod": "manual",
+        "extractionConfidence": "n_a",
+        "reviewStatus": "auto_aceptado",
+        "conflict": false,
+        "sourceDocumentId": null,
+        "additionalSourceDocumentIds": []
+      }
+    },
+    {
+      "id": "00001cf2-0000-4000-8000-000000000016",
+      "eventType": "toxicidad",
+      "derived": false,
+      "eventDate": null,
+      "datePrecision": "incierta",
+      "description": "Toxicidad cutánea grado 2",
+      "codes": {
+        "icd10": null,
+        "cups": null
+      },
+      "provenance": {
+        "entryMethod": "ocr",
+        "extractionConfidence": "media",
+        "reviewStatus": "requiere_revision",
+        "conflict": false,
+        "sourceDocumentId": "00001cf2-0000-4000-8000-000000000002",
+        "additionalSourceDocumentIds": []
+      }
+    }
+  ],
+  "priorTreatments": [
+    {
+      "lineNumber": 1,
+      "setting": "primera_linea_metastasica",
+      "regimenName": "Leuprorelina",
+      "atcCodes": [
+        "L02AE02"
+      ],
+      "startedAt": "2025-11-01",
+      "endedAt": null,
+      "ongoing": true,
+      "endReason": "desconocido",
+      "provenance": {
+        "entryMethod": "ocr",
+        "extractionConfidence": "alta",
+        "reviewStatus": "verificado",
+        "conflict": false,
+        "sourceDocumentId": "00001cf2-0000-4000-8000-000000000001",
+        "additionalSourceDocumentIds": []
+      }
+    },
+    {
+      "lineNumber": null,
+      "setting": "primera_linea_metastasica",
+      "regimenName": "Bicalutamida",
+      "atcCodes": [
+        "L02BB03"
+      ],
+      "startedAt": "2025-10-20",
+      "endedAt": "2025-11-15",
+      "ongoing": false,
+      "endReason": "completado",
+      "provenance": {
+        "entryMethod": "manual",
+        "extractionConfidence": "n_a",
+        "reviewStatus": "verificado",
+        "conflict": false,
+        "sourceDocumentId": null,
+        "additionalSourceDocumentIds": []
+      }
+    }
+  ],
+  "attributes": [
+    {
+      "key": "estado_castracion",
+      "value": "castrado",
+      "observedAt": "2026-07-15",
+      "provenance": {
+        "entryMethod": "ocr",
+        "extractionConfidence": "media",
+        "reviewStatus": "auto_aceptado",
+        "conflict": false,
+        "sourceDocumentId": "00001cf2-0000-4000-8000-000000000003",
+        "additionalSourceDocumentIds": []
+      }
+    },
+    {
+      "key": "sitios_metastasicos",
+      "value": "oseo",
+      "observedAt": "2025-10-05",
+      "provenance": {
+        "entryMethod": "ocr",
+        "extractionConfidence": "alta",
+        "reviewStatus": "verificado",
+        "conflict": false,
+        "sourceDocumentId": "00001cf2-0000-4000-8000-000000000001",
+        "additionalSourceDocumentIds": []
+      }
+    }
+  ],
+  "biomarkerSeries": [
+    {
+      "name": "PSA",
+      "loincCode": null,
+      "points": [
+        {
+          "value": "4.1",
+          "unit": "ng/mL",
+          "performedAt": "2026-01-10",
+          "provenance": {
+            "entryMethod": "ocr",
+            "extractionConfidence": "alta",
+            "reviewStatus": "verificado",
+            "conflict": false,
+            "sourceDocumentId": "00001cf2-0000-4000-8000-000000000001",
+            "additionalSourceDocumentIds": []
+          }
+        },
+        {
+          "value": "6.8",
+          "unit": "ng/mL",
+          "performedAt": "2026-04-12",
+          "provenance": {
+            "entryMethod": "ocr",
+            "extractionConfidence": "media",
+            "reviewStatus": "auto_aceptado",
+            "conflict": false,
+            "sourceDocumentId": "00001cf2-0000-4000-8000-000000000002",
+            "additionalSourceDocumentIds": []
+          }
+        },
+        {
+          "value": "9.5",
+          "unit": "ng/mL",
+          "performedAt": "2026-07-15",
+          "provenance": {
+            "entryMethod": "ocr",
+            "extractionConfidence": "media",
+            "reviewStatus": "requiere_revision",
+            "conflict": false,
+            "sourceDocumentId": "00001cf2-0000-4000-8000-000000000003",
+            "additionalSourceDocumentIds": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Testosterona",
+      "loincCode": null,
+      "points": [
+        {
+          "value": "25",
+          "unit": "ng/dL",
+          "performedAt": "2026-07-15",
+          "provenance": {
+            "entryMethod": "ocr",
+            "extractionConfidence": "alta",
+            "reviewStatus": "verificado",
+            "conflict": false,
+            "sourceDocumentId": "00001cf2-0000-4000-8000-000000000003",
+            "additionalSourceDocumentIds": []
+          }
+        }
+      ]
+    }
+  ],
+  "completeness": [
+    {
+      "item": "psa_serie",
+      "status": "presente_sin_verificar"
+    },
+    {
+      "item": "ecog",
+      "status": "presente_verificado"
+    }
+  ],
+  "catalogVersion": "test-1.0.0"
+}

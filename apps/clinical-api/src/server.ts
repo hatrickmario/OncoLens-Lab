@@ -11,6 +11,9 @@ import { createServiceTokenSigner, loadServicePrivateKey } from './infrastructur
 import { componerInformacionDeSalud } from './routes/health.js';
 import { crearGeneradorDeToken } from './infrastructure/token.js';
 import { versionDelServicio } from './infrastructure/version-servicio.js';
+import { caseViewController } from './modules/case-view/case-view.controller.js';
+import { createCaseViewRepository } from './modules/case-view/case-view.repository.js';
+import { createCaseViewService } from './modules/case-view/case-view.service.js';
 import { componerCompletitud } from './modules/completeness/completeness.module.js';
 import { completenessController } from './modules/completeness/completeness.controller.js';
 import { createReconciliationService } from './modules/reconciliation/reconciliation.service.js';
@@ -153,6 +156,14 @@ arrancar({
           traceIds: { traceId: nuevoTraceId },
           registrar,
         });
+        const caseView = caseViewController({
+          service: createCaseViewService({
+            repo: createCaseViewRepository(pool),
+            completitud,
+          }),
+          traceIds: { traceId: nuevoTraceId },
+          registrar,
+        });
         const app = componerAplicacion({
           db: pool,
           auth: arranque.auth,
@@ -168,6 +179,7 @@ arrancar({
             patients,
             completeness,
             manualEntry,
+            caseView,
           }),
           // Solo nombres de claves y versión: nunca valores (RN-14). Va después de leer toda la configuración.
           salud: componerInformacionDeSalud({

@@ -12,6 +12,22 @@ export const ESTADOS_DESCARTADOS: readonly EstadoDeRevision[] = ['rechazado', 'r
 export type EstadoDeRevisionVisible = Exclude<EstadoDeRevision, 'rechazado' | 'reemplazado'>;
 
 /**
+ * Predicado SQL ÚNICO de «sin fecha confiable» de un evento clínico: sin fecha o con precisión `incierta` (PRD AC-02.2).
+ * Lo usa el contador de la ficha; el timeline aplica el equivalente en TS de este predicado (`comoEventoConOrden`).
+ */
+export function sqlFechaNoConfiable(fecha: string, precision: string): string {
+  return `(${fecha} IS NULL OR ${precision} = 'incierta')`;
+}
+
+/**
+ * Predicado SQL ÚNICO de «evento clínico propio»: sin `analysis_id`. Una fila con `analysis_id` es el reflejo de un
+ * análisis previo (ADR-32), no un dato clínico: ni se muestra ni cuenta como pendiente.
+ */
+export function sqlEventoClinicoPropio(columna = 'analysis_id'): string {
+  return `${columna} IS NULL`;
+}
+
+/**
  * Predicado SQL ÚNICO de RN-07 («el dato no fue rechazado ni reemplazado») sobre la columna indicada. Lo usan la ficha,
  * el tipo de cáncer del listado y el contador de pendientes, para que no diverjan.
  */
