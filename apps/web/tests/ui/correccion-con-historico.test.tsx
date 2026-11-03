@@ -187,6 +187,14 @@ describe('Corrección con histórico en la ficha', () => {
     expect(document.activeElement).toBe(accion);
   });
 
+  it('contiene el texto oculto de la columna de acciones dentro de su celda para no ensanchar la página en 375 px [US-253 AC-1]', () => {
+    montarTabla();
+
+    const cabecera = screen.getByRole('columnheader', { name: 'Acciones' });
+
+    expect(cabecera.classList.contains('relative')).toBe(true);
+  });
+
   it('envía el texto y el tipo de la nota y la muestra tras guardar [US-253 AC-2]', async () => {
     bff.corregirNota(201, corregidaNota);
     const usuario = montarNotas();
