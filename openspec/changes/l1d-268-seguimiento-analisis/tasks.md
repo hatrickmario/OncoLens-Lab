@@ -146,6 +146,14 @@ ANALYSIS_FOLLOWUP_MAX=10
 | D5-13 | L1D-268 | Medición del seguimiento (`rag-follow-up@0.1.0`) con modelos locales en la corrida nocturna del día 2: fidelidad, precisión de citas, «sin evidencia», salidas prescriptivas = 0 y RN-24 (`python -m app.evaluation.seguimiento` con proveedor local) | tasks 4.3 |
 ```
 
+- [ ] H-4 Deuda y pendientes de la vuelta 1 del Gate 2 de L1D-268, DIFERIDA -> H-4 (el humano los registra donde corresponda):
+  - **D5-15:** test de paridad de marcadores de identidad `rag-orchestrator` ↔ `clinical-api` (`pii-masks.json`) y reenviar `ANALYSIS_FOLLOWUP_MAX` en Compose (infra).
+  - **D5-16:** P3 del design: #8 flag `con_reescritura`, #9 `_contar_mostradas`, #10 `calcularDeadline` a `rag-plazo.ts`, #11 `analysisFollowupMax` en `ConfiguracionDelAnalisis`, #12 `Consultador`/`ConsultaSql` y `release(true)` tras un `ROLLBACK` fallido, #13, #14 `SeguimientoNoComponible`, #16 vocabulario.
+  - **Menor (contract #3/#4):** la descripción de `AnalysisBasis.maxFollowUps` no dice «y en `tipo_no_habilitado`»; hoy ese análisis no trae el campo. No se tocó `openapi.yaml` (subir el patch por una descripción es decisión del equipo). `sqlEventoClinicoPropio()` de `compartido/estados-de-revision` no existe en `main`: la consulta común vive en `evidence-analysis.repository.ts:sqlEventosClinicosVigentes`.
+  - **US-050 / US-040:** un `REVOKE UPDATE` a `clinical_api` sobre `ai_analysis_record` rompe el `SELECT … FOR UPDATE` del seguimiento (alternativa: `pg_advisory_xact_lock`).
+  - **US-050 / opt-out por CLI (DEC-22):** deben listar «seguimiento» entre las generaciones con IA que dan `403`.
+  - **Decisiones de producto pendientes del humano (no tomadas aquí):** (1) ¿un turno `fuera_de_contexto` cuenta en el límite de 10? (hoy sí); (2) ¿`maxFollowUps` de la Base (guardado al crear) o la configuración vigente en el `409`? (hoy el `409` usa la vigente); (3) `consulta_equivalente` ignora el filtro de fuentes del análisis original; (4) la evolución posterior usa `event_date >` estricto: los eventos del mismo día del análisis quedan fuera.
+
 ## 5. cierre
 
 - [x] 5.1 Buscar en el árbol `ANALYSIS_FOLLOWUP_MAX`, el mensaje de `LIMITE_SEGUIMIENTO`, `normalize('NFC')` /

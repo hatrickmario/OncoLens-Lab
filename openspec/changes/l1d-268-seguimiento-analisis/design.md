@@ -183,7 +183,7 @@ escrituras, la sesión de `corpus` en solo lectura y `caplog` sin el texto sembr
 
 Proveedores: `clinical-api` (`/follow-ups`, `AnalysisBasis`) y `rag-orchestrator` (`/rag/follow-up`). Consumidores: `web`
 (US-219) → `clinical-api`; `clinical-api` → `rag-orchestrator` (cliente generado). Cambios **solo aditivos** (ADR-26).
-Versiones `[S5 resp. 10]`: `clinical-api` 1.15.1 → **1.16.0**, `rag-orchestrator` 1.10.1 → **1.11.0** (tras `l1d-306`);
+Versiones `[S5 resp. 10]`: `clinical-api` 1.15.1 → **1.17.0** (provisional: L1D-74, #295, toma 1.16.0; el orden de merge decide, si 268 entra antes se renumera a 1.16.0), `rag-orchestrator` 1.10.1 → **1.11.0** (tras `l1d-306`);
 quien rebase renumera y regenera `packages/api-contracts`, nunca fusiona generados a mano.
 
 ```diff
@@ -343,6 +343,9 @@ Sin migración (tabla y permisos desde US-038; `maxFollowUps` viaja dentro de la
 el PR; los turnos persistidos quedan (tabla inmutable).
 
 ## Open Questions
+
+**Pendientes del humano (vuelta 1 del Gate 2, no decididos en la implementación):** ¿un turno `fuera_de_contexto` cuenta en el límite de 10 (hoy sí)?; ¿`maxFollowUps` de la Base o la configuración vigente en el `409` (hoy la vigente)?; `consulta_equivalente` ignora el filtro de fuentes del análisis original; la evolución posterior usa `event_date >` estricto. Ver `tasks.md` H-4.
+
 
 Ninguna abierta. Resueltas en el Gate 1 (usuario, 2026-11-03):
 
