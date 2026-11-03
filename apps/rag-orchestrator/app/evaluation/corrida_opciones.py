@@ -24,6 +24,7 @@ from typing import Any
 
 from app.application.ports import Clock
 from app.config.settings import Settings
+from app.domain.aplicabilidad_tipos import CriterioEvaluado
 from app.domain.support import OpcionPlanificada, PlanDeSoporte, afirmaciones_para_el_nli
 from app.evaluation.afirmaciones import plan_de_la_propuesta
 from app.evaluation.catalogo_con_poblacion import CatalogoConPoblacion
@@ -127,12 +128,12 @@ def ejecutar_opciones(
 async def medir_opciones(
     config: ConfigOpciones, dataset: DatasetOpciones, reloj: Clock, origen: OrigenLocal
 ) -> MedicionDeOpciones:
-    servicio = _servicio_de_la_familia(config, dataset, reloj, origen)
+    servicio = servicio_de_la_familia(config, dataset, reloj, origen)
     analisis: list[AnalisisDeOpciones] = []
     resultados: list[ResultadoConsulta] = []
     for indice, pregunta in enumerate(dataset.base.preguntas):
         caso = dataset.caso_de(pregunta.id)
-        base = _solicitud_del_caso(dataset.contextos[caso.paciente])
+        base = solicitud_del_caso(dataset.contextos[caso.paciente])
         resultado, respuesta = await evaluar_pregunta_en_servicio(
             servicio, dataset.base, base, pregunta, indice, config.max_options
         )
@@ -145,7 +146,7 @@ async def medir_opciones(
     )
 
 
-def _servicio_de_la_familia(
+def servicio_de_la_familia(
     config: ConfigOpciones, dataset: DatasetOpciones, reloj: Clock, origen: OrigenLocal
 ) -> ServicioDeSuite:
     """El servicio de la suite con la aplicabilidad por criterio y la población de cada documento del dataset."""
@@ -176,7 +177,7 @@ def _puertos_locales(
     return cargar_puertos_locales(suite, origen, RegistroDeLlamadas(), dataset.base.clase)
 
 
-def _solicitud_del_caso(contexto: Mapping[str, Any]) -> dict[str, Any]:
+def solicitud_del_caso(contexto: Mapping[str, Any]) -> dict[str, Any]:
     """La solicitud de ``contracts/examples`` con el contexto desidentificado del paciente del caso."""
     base = solicitud_base()
     base["clinicalContext"] = copy.deepcopy(dict(contexto))
@@ -245,7 +246,7 @@ async def _opcion_mostrada(
         documentos=tuple(sorted({f.externalId for f in fuentes})),
         cita_a_chunk_entregado=bool(fuentes) and all(f.chunkId in entregados for f in fuentes),
         soporte_nli=await _tiene_soporte(servicio, plan.get(opcion.option)),
-        ordenable=_ordenable_de(respuesta.applicability, opcion, f"o{posicion}"),
+        ordenable=ordenable_de(respuesta.applicability, opcion, f"o{posicion}"),
     )
 
 
@@ -265,7 +266,15 @@ async def _tiene_soporte(servicio: ServicioDeSuite, planificada: OpcionPlanifica
     return True
 
 
-def _ordenable_de(
+def criterios_evaluados_del_contrato(fuente: SourceApplicability) -> list[CriterioEvaluado]:
+    raise NotImplementedError("no implementado")
+
+
+def fuente_evaluada(aplicabilidad: Sequence[SourceApplicability], opcion: EvidenceOption) -> bool:
+    raise NotImplementedError("no implementado")
+
+
+def ordenable_de(
     aplicabilidad: Sequence[SourceApplicability], opcion: EvidenceOption, identificador: str
 ) -> OpcionOrdenable:
     """Los datos de la fuente más aplicable de la opción (``perSource[0]``, ADR-31): su resumen, si es no comparable y,

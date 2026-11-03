@@ -33,6 +33,8 @@ class OpcionMostrada:
     soporte_nli: bool
     """Todas sus afirmaciones atómicas tienen veredicto ``entailment`` del NLI registrado (RN-01)."""
     ordenable: OpcionOrdenable
+    fuente_evaluada: bool = True
+    memoria_citada: bool = False
 
 
 @dataclass(frozen=True)
