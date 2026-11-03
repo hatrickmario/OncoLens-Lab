@@ -129,3 +129,228 @@ Si `PatientSummary.completenessAvailable` es `false`, la ficha MUST mostrar el a
 - **GIVEN** la ficha de un paciente cuyo `PatientSummary` es `contracts/examples/patient-summary-doctor.json` (`completenessAvailable` ausente)
 - **WHEN** el oncólogo abre `/pacientes/{id}`
 - **THEN** no aparece «No se pudieron verificar los datos críticos»
+
+### Requirement: Ficha mínima del paciente para el doctor
+`GET /platform/patients/{patientId}` con una sesión con permiso `clinical:read` MUST responder `200` con `PatientSummary` (`view = doctor`) válido contra `apps/clinical-api/openapi.yaml`: `identification` descifrada solo para esta respuesta, `dataOrigin`, `diagnosis` (vigente), `recentBiomarkers`, `pendingReviewCount`, `missingCriticalCount` y `cancerTypeEnabled`. La página `/pacientes/[id]` de `web` SHALL mostrar esos datos según S2-04 con el distintivo de origen visible.
+
+#### Scenario: La ficha del paciente semilla (a) trae el diagnóstico y los biomarcadores del seed [US-051 AC-1] [HU-02] [FR-04]
+- **GIVEN** `doc1@test.local` autenticado y el paciente semilla (a) del seed sintético
+- **WHEN** solicita `GET /platform/patients/{id}` del paciente (a)
+- **THEN** la respuesta es `200`, válida contra `PatientSummary`, con `identification` descifrada, `dataOrigin = sintetico`, `diagnosis.cancerType = mama`, `stagingSystem = TNM_8`, `stageValue = IIA`, `performanceScale = ECOG`, `performanceValue = 1`
+- **AND** `recentBiomarkers` contiene HER2 `3+` y receptor de estrógeno positivo, cada uno con `clinicalSignificance`, unidad, rango de referencia y `provenance`
+
+#### Scenario: La página de la ficha muestra el distintivo SINTÉTICO [US-051 AC-1] [pantallas-s2 S2-04]
+- **GIVEN** la respuesta del escenario anterior servida por MSW desde `contracts/examples/patient-summary-doctor.json`
+- **WHEN** se renderiza `/pacientes/[id]`
+- **THEN** el encabezado muestra el nombre completo y la etiqueta "SINTÉTICO" como texto, y `<title>` es "Paciente · OncoLens" sin datos de identidad
+
+#### Scenario: La ficha muestra histología y gradación del diagnóstico vigente [US-051 AC-1] [DEC-05] (resuelto por el contrato)
+- **GIVEN** un `PatientSummary` cuyo `diagnosis` trae `histology`, `histologyCode`, `grade` y `gradings[]` (ejemplo `diagnosis-con-gradings.json`)
+- **WHEN** se renderiza la ficha
+- **THEN** las filas "Histología" y "Gradación" muestran esos valores y, por cada `gradings[]`, su sistema, valor, espécimen y alcance; un campo `null` se muestra como "No registrado"
+
+### Requirement: Paciente inexistente en la ficha
+Un `patientId` con formato UUID que no existe, o que no es un UUID, MUST responder `404 NO_ENCONTRADO` (sin cambio de contrato) sin datos de otro paciente, y la página SHALL mostrar "Paciente no encontrado" con el enlace "Volver a pacientes", sin romper la navegación. Sin sesión, la respuesta MUST ser `401` y la página redirige a `/login?motivo=expirada`.
+
+#### Scenario: Un UUID inexistente responde 404 [US-051 AC-2] [HU-02]
+- **GIVEN** `doc1@test.local` autenticado y un UUID válido que no corresponde a ningún paciente
+- **WHEN** solicita `GET /platform/patients/{uuid}`
+- **THEN** la respuesta es `404` con `error = NO_ENCONTRADO`, válida contra el spec, y el log de la petición contiene solo `traceId`, ruta parametrizada y código, sin el UUID en claro de otra identidad
+
+#### Scenario: Un patientId que no es UUID también responde 404 [US-051 AC-2] (Gate 1)
+- **GIVEN** `doc1@test.local` autenticado
+- **WHEN** solicita `GET /platform/patients/no-es-un-uuid`
+- **THEN** la respuesta es `404 NO_ENCONTRADO`, válida contra el spec, sin consultar la BD y sin eco del valor
+
+#### Scenario: La página muestra Paciente no encontrado [US-051 AC-2]
+- **GIVEN** MSW respondiendo `404` desde `contracts/examples/error-no-encontrado.json`
+- **WHEN** se renderiza `/pacientes/[id]`
+- **THEN** la página muestra "Paciente no encontrado" y un enlace "Volver a pacientes" a `/pacientes`, con la cabecera autenticada intacta
+
+#### Scenario: Sin sesión la ficha no se entrega [US-051 AC-2] [RN-10]
+- **GIVEN** una petición sin cookie `oncolens_session`
+- **WHEN** se solicita `GET /platform/patients/{id}` del paciente (a)
+- **THEN** la respuesta es `401 NO_AUTENTICADO` y el cuerpo no contiene datos del paciente
+
+### Requirement: Diagnóstico vigente en la ficha
+`PatientSummary.diagnosis` MUST ser el `Diagnosis` del paciente con `is_active = true`; si no hay ninguno, MUST ser `null` y la ficha muestra "No registrado".
+
+#### Scenario: Con un diagnóstico inactivo y uno activo se devuelve el activo [US-051 AC-3] [OL-01]
+- **GIVEN** el paciente semilla (c), con un diagnóstico inactivo y uno activo
+- **WHEN** se solicita su ficha
+- **THEN** `diagnosis.id` es el del `Diagnosis` con `is_active = true`
+
+### Requirement: Último valor por biomarcador
+`recentBiomarkers` MUST contener una sola entrada por biomarcador, la de `performedAt` más reciente, con `trend = null` hasta US-091, y MUST NOT incluir filas `rechazado` ni `reemplazado` (RN-07).
+
+#### Scenario: De tres PSA solo se devuelve el más reciente [US-051 AC-4] [FR-04] [AC-02.4]
+- **GIVEN** el paciente semilla (b), con tres valores de PSA fechados
+- **WHEN** se solicita su ficha
+- **THEN** `recentBiomarkers` contiene una sola entrada de PSA, la de `performedAt` más reciente, con `trend = null`
+
+### Requirement: Origen y revisión visibles en texto
+Cada valor del diagnóstico y de los biomarcadores en la ficha MUST mostrar su origen en texto según `provenance.entryMethod` ("Carga inicial" `seed`, "Registro manual" `manual`, "Extraído de documento" `ocr`, "Corrección manual" `manual_correction`) y su estado de revisión en texto, nunca solo con color; en biomarcadores SHALL mostrar además `extractionConfidence` como eje independiente (RN-07).
+
+#### Scenario: Los valores del seed muestran Carga inicial y su estado de revisión [US-051 AC-5] [AC-T1.1] [NFR-12]
+- **GIVEN** la ficha del paciente semilla (a) con `provenance.entryMethod = seed` y `reviewStatus = verificado`
+- **WHEN** se renderiza
+- **THEN** cada fila del diagnóstico y de los biomarcadores muestra "Carga inicial" y "Verificado" como texto visible
+
+#### Scenario: Un valor registrado a mano muestra Registro manual [US-051 AC-5]
+- **GIVEN** un `PatientSummary` con un biomarcador `provenance.entryMethod = manual` y `reviewStatus = requiere_revision`
+- **WHEN** se renderiza la ficha
+- **THEN** esa fila muestra "Registro manual" y "Por revisar" como texto, y el resto de filas no cambia
+
+### Requirement: Contador de datos pendientes de revisión
+`pendingReviewCount` MUST contar las filas clínicas del paciente con `review_status = requiere_revision` y MUST NOT contar `auto_aceptado`, `verificado`, `corregido`, `rechazado` ni `reemplazado` (decidido en el refinamiento del S2, P-4). Si es mayor que 0, la ficha SHALL mostrar el aviso informativo "[n] datos por revisar · no bloquean el análisis" y la acción "Analizar evidencia" sigue disponible (RN-26).
+
+#### Scenario: Con todo verificado el contador es 0 y sube a 1 con un biomarcador por revisar [US-051 AC-6] [FR-04] [S2 resp. 5]
+- **GIVEN** el paciente semilla (a) con todos sus datos `verificado`
+- **WHEN** se solicita la ficha
+- **THEN** `pendingReviewCount = 0`
+- **AND WHEN** el test cambia un biomarcador del paciente a `requiere_revision` y vuelve a solicitarla
+- **THEN** `pendingReviewCount = 1`
+
+#### Scenario: Un dato auto_aceptado no cuenta como pendiente [US-051 AC-6] [RN-26] [S2 resp. 5]
+- **GIVEN** el paciente semilla (a) con un biomarcador cambiado a `auto_aceptado`
+- **WHEN** se solicita la ficha
+- **THEN** `pendingReviewCount = 0` y la fila de ese biomarcador muestra "Sin verificar" como texto
+
+#### Scenario: El aviso de pendientes no bloquea el análisis [US-051 AC-6] [RN-26]
+- **GIVEN** un `PatientSummary` con `pendingReviewCount = 2`
+- **WHEN** se renderiza la ficha
+- **THEN** se muestra el aviso informativo "2 datos por revisar · no bloquean el análisis" (no de error) y el enlace "Analizar evidencia" a `/pacientes/[id]/analisis` está visible y habilitado
+
+#### Scenario: Los datos auto_aceptado muestran un aviso agregado que no bloquea [US-051 AC-6] [RN-26] (Gate 1)
+- **GIVEN** un `PatientSummary` con dos valores mostrados en `reviewStatus = auto_aceptado`
+- **WHEN** se renderiza la ficha
+- **THEN** se muestra el aviso informativo "2 datos sin verificar · no bloquean el análisis" y "Analizar evidencia" sigue habilitado
+
+### Requirement: Vista del administrador en la ficha
+`GET /platform/patients/{patientId}` con una sesión con `patients:lookup` y sin `clinical:read` MUST responder `200` con `PatientAdminSummary` (vista `default` de `x-view-by-permission`), sin datos clínicos ni nombre; un rol sin ninguno de los dos permisos MUST recibir `403`. El doctor MUST leer la ficha de cualquier paciente sin consultar `clinical.care_team_member` (P-02).
+
+#### Scenario: El admin recibe PatientAdminSummary en la ficha [US-045 AC-6] [Pre-S1 resp. 27] (Regresión delegada por L1D-199)
+- **GIVEN** `admin@test.local` con sesión
+- **WHEN** solicita `GET /platform/patients/{id}` del paciente (a)
+- **THEN** la respuesta es `200` válida contra `PatientAdminSummary`, sin `diagnosis`, `recentBiomarkers` ni nombre, y el *repository* no lee tablas de `clinical`
+
+#### Scenario: El doctor lee la ficha de cualquier paciente semilla [US-045 AC-4] [P-02] (Regresión delegada por L1D-199)
+- **GIVEN** `doc1@test.local`
+- **WHEN** consulta `GET /platform/patients/{id}` de cada paciente semilla
+- **THEN** todas responden `200` con `PatientSummary`, sin consultar `clinical.care_team_member`
+
+### Requirement: La ficha no se cachea ni filtra la identidad
+La página `/pacientes/[id]` y sus lecturas del BFF MUST usar `cache: 'no-store'` y responder `Cache-Control: no-store`; leer la ficha MUST NOT dejar la identidad en *logs*, `audit`, `research` ni URLs.
+
+#### Scenario: La ficha responde Cache-Control no-store [US-051 AC-1] [RN-10] (Gate 1)
+- **WHEN** se pide `/pacientes/[id]` con sesión
+- **THEN** la respuesta de `web` lleva `Cache-Control: no-store` y la lectura hacia `clinical-api` usa `cache: 'no-store'`
+
+#### Scenario: Consultar la ficha no filtra la identidad [US-046 AC-4] [RN-10] (Regresión → US-046)
+- **GIVEN** el arnés de no-fuga de L1D-200 con FX-T4a-a
+- **WHEN** se añade el paso "consultar la ficha"
+- **THEN** ni `1234567`, "Lucía", "Rondón", "lucia fernanda rondon pena" ni los valores de los índices ciegos aparecen en *logs*, `audit.*`, `research.*` ni URLs
+
+Regresión [FR-18, auditoría de la lectura de la ficha] activa desde S6 (US-102).
+
+### Requirement: Listado paginado de pacientes con filtros sin identidad
+`GET /platform/patients` MUST exigir sesión y `patients:lookup`, SHALL aceptar solo los filtros `status`, `dataOrigin` y `page`, y devolver `PatientPage` paginado por `PATIENTS_PAGE_SIZE` (configuración, RN-22) en orden determinista, con cada elemento en la vista de su permiso (`PatientListItem` con `clinical:read`, `PatientAdminSummary` sin él). La página `/pacientes` de `web` SHALL mostrar "SINTÉTICO" en todo paciente con `dataOrigin = sintetico`.
+
+#### Scenario: El doctor ve el listado paginado del seed con la etiqueta SINTÉTICO [US-048 AC-1] [HU-06] [FR-02]
+- **GIVEN** el seed sintético y `doc1@test.local` con sesión, con `PATIENTS_PAGE_SIZE = 3` en la configuración de test
+- **WHEN** abre `/pacientes` y `web` pide `GET /platform/patients?page=1`
+- **THEN** la respuesta es `200` `PatientPage` validada contra el spec, con `pageSize = 3`, `total = 5` y 3 elementos `PatientListItem` con `dataOrigin` y `lifecycleStatus`
+- **AND** la tabla muestra "SINTÉTICO" en cada fila y "Página 1 de 2"
+
+#### Scenario: Los filtros del listado restringen por origen y estado [US-048 AC-4] [FR-02]
+- **GIVEN** el seed sintético
+- **WHEN** se pide `GET /platform/patients?dataOrigin=real_identificado` y luego `GET /platform/patients?status=activo`
+- **THEN** la primera lista está vacía (`total = 0`) y la segunda contiene los cinco pacientes semilla
+
+#### Scenario: Un filtro fuera del enum responde 422 [US-048 AC-4] (asumido)
+- **WHEN** se pide `GET /platform/patients?status=borrado`
+- **THEN** responde `422` `ErrorCuerpoInvalido` sin eco del valor
+
+#### Scenario: Sin sesión el listado responde 401 sin datos [US-048 AC-6] [FR-01]
+- **WHEN** se pide `GET /platform/patients` sin cookie de sesión
+- **THEN** responde `401 NO_AUTENTICADO` y el cuerpo no contiene ningún dato de paciente
+- **AND** en `web`, abrir `/pacientes` sin sesión lleva a `/login` sin renderizar la tabla
+
+### Requirement: Búsqueda exacta por documento con la identidad en el cuerpo
+`POST /platform/patients/search` con `idType` y `nationalId` MUST calcular el índice ciego del documento recibido y buscar por igualdad; un número parcial MUST NOT encontrar nada. La identidad SHALL viajar solo en el cuerpo y no se restringe por equipo tratante (P-02).
+
+#### Scenario: El documento exacto encuentra al paciente y el parcial no encuentra nada [US-048 AC-2] [FR-02] [ADR-6]
+- **GIVEN** FX-T4a-a registrado con `IdentityService`
+- **WHEN** se busca con `POST /platform/patients/search` y `{ idType: "cedula_ciudadania", nationalId: "1234567" }`
+- **THEN** la respuesta `200` contiene exactamente ese paciente, enmascarado
+- **AND** con `nationalId = "12345"` la respuesta contiene cero resultados
+
+#### Scenario: El país emisor no participa en la búsqueda por documento [US-048 AC-2] [ADR-6] (Gate 1)
+- **GIVEN** FX-T4a-a registrado con `issuing_country = CO`
+- **WHEN** se busca con `{ idType: "cedula_ciudadania", nationalId: "1234567" }` (sin país, como permite `PatientSearchRequest`)
+- **THEN** la respuesta contiene a FX-T4a-a; el índice se calcula sin `issuing_country`, como fija L1D-200
+
+### Requirement: Búsqueda por nombre exacta sobre el nombre normalizado
+Decidido en el refinamiento del S2 (P-4, decidido por el usuario el 2026-10-21): `POST /platform/patients/search` con `name` MUST buscar por igualdad del índice ciego del nombre completo normalizado (Unicode sin marcas diacríticas, minúsculas, espacios colapsados), sin descifrar identidades para comparar y sin restringir por equipo tratante (P-02); un nombre parcial MUST NOT encontrar nada.
+
+#### Scenario: El nombre completo con otras tildes, mayúsculas y espacios encuentra al paciente [US-048 AC-3] [FR-02] [P-02] (asumido en la semántica de coincidencia; P-4 decidido por el usuario el 2026-10-21)
+- **GIVEN** FX-T4a-a ("Lucía Fernanda Rondón Peña") registrado
+- **WHEN** se busca con `{ name: "LUCIA  fernanda rondon PEÑA" }`
+- **THEN** el resultado contiene a FX-T4a-a, sin consultar `clinical.care_team_member`
+
+#### Scenario: Un apellido suelto no encuentra al paciente [US-048 AC-3] [S2 resp. 4]
+- **GIVEN** FX-T4a-a registrado
+- **WHEN** se busca con `{ name: "Rondón" }`
+- **THEN** la respuesta `200` contiene cero resultados y la UI muestra "No hay pacientes con ese nombre."
+
+#### Scenario: La pestaña Por nombre pide el nombre completo [US-048 AC-3] [S2-02] (Gate 1)
+- **WHEN** el doctor abre la pestaña "Por nombre" en `/pacientes`
+- **THEN** el campo muestra la ayuda "Escribe el nombre completo", asociada con `aria-describedby`
+
+#### Scenario: La búsqueda por nombre no descifra identidades para comparar [US-048 AC-3] [RN-10] (asumido)
+- **GIVEN** el seed con cinco identidades
+- **WHEN** se busca un nombre que no existe
+- **THEN** `IdentityService.descifrar` no se invoca (contador del puerto real instrumentado en el test) y la respuesta tiene cero resultados
+
+### Requirement: La identidad no aparece en URLs ni en logs de acceso
+Las rutas de listado MUST NOT aceptar identidad en la URL ni en cabeceras, y los *logs* de acceso de `web` y `clinical-api` MUST NOT registrar cuerpos de petición.
+
+#### Scenario: Tras buscar por documento ninguna URL ni log contiene la identidad [US-048 AC-5] [RN-10] [NFR-11] [Pre-S1 resp. 22]
+- **GIVEN** la búsqueda del AC-2 hecha desde `/pacientes` en `web`
+- **WHEN** se leen los *logs* de acceso de `web` y `clinical-api` y las URLs pedidas
+- **THEN** ninguna contiene `1234567`, `Lucía`, `Rondón`, "lucia fernanda rondon pena" ni los valores de `national_id_hmac` o `full_name_hmac` de FX-T4a-a
+- **AND** el test de no-fuga de L1D-200 gana el paso "buscarlo por documento y por nombre" y sigue sin encontrar esas formas (`Regresión [RN-10] → US-046`)
+
+#### Scenario: Las respuestas con identidad no se cachean [US-048 AC-5] [RN-10] (Gate 1)
+- **WHEN** se piden `/pacientes`, `GET /api/patients` y `POST /api/patients/search` con sesión
+- **THEN** cada respuesta de `web` lleva `Cache-Control: no-store` y las lecturas del BFF hacia `clinical-api` se hacen con `cache: 'no-store'`
+
+### Requirement: Error de integridad declarado en las operaciones de pacientes
+`getPatient`, `listPatients` y `searchPatients` MUST declarar `500 ErrorInterno` en `apps/clinical-api/openapi.yaml` (cambio *minor*, `info.version` 1.9.0) y, ante `IDENTITY_INTEGRITY_ERROR`, SHALL responder ese cuerpo genérico sin datos del paciente.
+
+#### Scenario: Una identidad alterada en la página da 500 genérico en el listado [US-046 AC-3] [US-048 AC-7] (Gate 1)
+- **GIVEN** FX-T4a-a con `full_name_ciphertext` alterado en un byte con SQL crudo
+- **WHEN** se pide `GET /platform/patients`
+- **THEN** responde `500 ErrorInterno` validado contra el spec, sin `1234567`, `Lucía` ni `Rondón`
+
+#### Scenario: La búsqueda de web rechaza un Origin ajeno [US-048 AC-5] [SEG-01] (asumido)
+- **WHEN** llega `POST /api/patients/search` con `Origin: https://evil.example`
+- **THEN** `web` responde `403 PERMISO_DENEGADO` sin llamar a `clinical-api`
+
+### Requirement: Identidad enmascarada en el listado y la búsqueda
+Cada fila del listado y de la búsqueda MUST devolver `fullNameMasked` como las iniciales de cada palabra en mayúscula seguidas de punto y `nationalIdMasked` de longitud fija, "•••• " seguido de los 2 últimos caracteres, que no revela la longitud del documento; nunca el valor en claro. La identidad completa SHALL aparecer solo en la ficha, con auditoría.
+
+#### Scenario: FX-T4a-a sale enmascarado con el formato fijado [US-048 AC-7] [Pre-S1 resp. 36] [Pre-S1 resp. 42] [Pre-S1 trazabilidad M-1]
+- **GIVEN** FX-T4a-a registrado
+- **WHEN** aparece en el listado o en la búsqueda
+- **THEN** su fila trae `fullNameMasked = "L. F. R. P."` y `nationalIdMasked = "•••• 67"`, y el cuerpo de la respuesta no contiene `1234567`, `Lucía` ni `Rondón`
+
+#### Scenario: La máscara no revela la longitud del documento [US-048 AC-7] (Gate 1)
+- **GIVEN** el paciente semilla con documento `SINT-0000001` y FX-T4a-a con `1234567`
+- **WHEN** aparecen en el listado
+- **THEN** sus máscaras son `"•••• 01"` y `"•••• 67"`, de la misma longitud
+
+#### Scenario: El admin recibe la vista sin datos clínicos en el listado [US-048 AC-7] [Pre-S1 resp. 27]
+- **GIVEN** `admin@test.local` con sesión
+- **WHEN** pide `GET /platform/patients`
+- **THEN** cada elemento es `PatientAdminSummary` (sin `pendingReviewCount`, `missingCriticalCount` ni `fullNameMasked`), validado contra el spec
