@@ -1,0 +1,81 @@
+Source: ClinicalTrials.gov (U.S. National Library of Medicine), study record NCT02941926, last updated 2023-10-24; retrieved 2026-11-03 through the ClinicalTrials.gov API v2 (data timestamp 2026-11-03T10:00:05). Modifications: selected fields reordered as plain text; contacts, locations, results and documents omitted. This is a trial registry record, not evidence of efficacy.
+
+Title
+COMPLEEMENT-1: An Open-label, Multicenter, Phase IIIb Study to Assess the Safety and Efficacy of Ribociclib (LEE011) in Combination With Letrozole for the Treatment of Men and Pre/Postmenopausal Women With Hormone Receptor-positive (HR+) HER2-negative (HER2-) Advanced Breast Cancer (aBC) With no Prior Hormonal Therapy for Advanced Disease
+
+Brief title
+Study to Assess the Safety and Efficacy of Ribociclib (LEE011) in Combination With Letrozole for the Treatment of Men and Pre/Postmenopausal Women With HR+ HER2- aBC
+
+Sponsor
+Novartis Pharmaceuticals
+
+Status: COMPLETED. Phase: PHASE3. Study type: INTERVENTIONAL. Enrollment: 3246.
+
+Brief summary
+The purpose of this study is to collect additional safety and efficacy data for the combination of ribociclib + letrozole in men and pre/postmenopausal women with HR+HER2- advanced breast cancer and no prior hormonal treatment for advanced disease..
+
+Detailed description
+This was an open-label, single arm, multi-center Phase IIIb study. The study was composed of 2 phases: Core Phase and Extension Phase. In the Core Phase, safety and efficacy data was collected. The study treatment during the Core Phase was provided until disease progression, death, unacceptable toxicities, physician's decision, subject/guardian's decision, protocol deviation, study termination by sponsor, lost to follow-up, technical problems or up to 18 months after LPFV.
+
+In the event that patients were still deriving benefit at the end of the Core phase and ribociclib was not approved or available and reimbursed, patients were transitioned to the Extension Phase and continued to receive study treatment until progression, intolerance, death or physician/patient decision. Only safety and clinical benefit (as assessed by investigator) data was collected in the Extension Phase. During the Extension Phase, if ribociclib became locally approved and reimbursed, patients were to be transitioned to prescription. Patients who completed the Extension Phase and continued to derive clinical benefit from the treatment based on the investigator's evaluation received ribociclib from prescription (if approved and reimbursed), another post-trial access program, or other drug access/support program(s).
+
+Canadian sub-study: this sub-study was a multicenter Canadian exploratory correlative sample collection sub-study that aimed to better understand mechanisms of response and resistance to ribociclib in combination with letrozole therapy. This sub-study was available for all Canadian subjects enrolled on the main study and did not alter the planned treatment.
+
+Conditions:
+- Breast Cancer
+
+Design
+Allocation: NA. Intervention model: SINGLE_GROUP. Masking: NONE.
+
+Arm (EXPERIMENTAL): Ribociclib + letrozole+goserelin/leuprolide
+Participants received ribociclib (orally taken, 3 weeks on/1 week off) in combination with letrozole (orally taken once daily). For men and premenopausal women, either goserelin was given as an injectable subcutaneous implant or leuprolide was given as an intramuscular injection.
+
+Primary outcomes
+- Number of Participants With Adverse Events (AEs) and Serious AEs (SAEs) During Treatment With Ribociclib + Letrozole in the Core Phase (From start of treatment up to 30 days after last treatment (for participants who did not enter to the Extension phase) or up to last treatment in the Core phase (for participants who entered the Extension phase), assessed up to approximately 33 months.). AEs were defined as the appearance of (or worsening of any pre-existing) undesirable sign(s), symptom(s), or medical condition(s).
+
+SAEs were defined as meeting at least 1 of the following criteria: is fatal or life-threatening, Results in persistent or significant disability/incapacity, constitutes a congenital anomaly/birth defect, is medically significant, requires inpatient hospitalization or prolongation of existing hospitalization. A SAE which caused death of the participant was considered as fatal SAE.
+
+AEs were assessed and graded according to the Common Terminology Criteria for Adverse Events (CTCAE) version 4.03. Grade 1 to 5 were used to characterize the severity of the Adverse Event. Grade 1: mild; Grade 2: moderate; Grade 3: severe; Grade 4: life-threatening and Grade 5: death related to AE.
+
+A participant with multiple severity grades for an AE is only counted under the maximum grade.
+
+Eligibility criteria
+Key Inclusion Criteria:
+
+* Male or female advanced (locoregionally recurrent or metastatic) breast cancer not amenable to curative therapy.
+* In the case of women, both pre/perimenopausal and postmenopausal patients were allowed to be included in this study; menopausal status was relevant for the requirement of goserelin to be used concomitantly with ribociclib and letrozole.
+
+1. Postmenopausal status was defined either by: I).Prior bilateral oophorectomy OR ii). Age ≥ 60 OR iii). Age \< 60 and amenorrhea for 12 or more months (in the absence of chemotherapy, tamoxifen, toremifen, or ovarian suppression) and FSH and estradiol in the postmenopausal range per local normal range. If patient was taking tamoxifen or toremifene and age \< 60, then FSH and plasma estradiol levels would be in post-menopausal range per local normal range (NCCN Guidelines version 2.2017).
+
+Note: For women with therapy-induced amenorrhea, serial measurements of FSH and/or estradiol were needed to ensure menopausal status.
+2. Premenopausal status was defined as either: I).Patient had last menstrual period within the last 12 months OR ii). If on tamoxifen or toremifene within the past 14 days, plasma estradiol and FSH must be in the premenopausal range per local normal range OR iii). In case of therapy induced amenorrhea, plasma estradiol and/or FSH must be in the premenopausal range per local normal range.
+3. Perimenopausal status was define as neither premenopausal nor postmenopausal
+* Patient had a histologically and/or cytologically confirmed diagnosis of estrogen-receptor positive and/or progesterone receptor positive breast cancer by local laboratory.
+* Patient had HER2-negative breast cancer defined as a negative in situ hybridization test or an IHC status of 0, 1+ or 2+. If IHC is 2+, a negative in situ hybridization (FISH, CISH, or SISH) test was required by local laboratory testing.
+* Patient had an Eastern Cooperative Oncology Group (ECOG) performance status ≤2
+* Patient had adequate bone marrow and organ function as defined by ALL of the following laboratory values (as assessed by local laboratory):
+
+* Absolute neutrophil count ≥ 1.5 × 10\^9/L
+* Platelets ≥ 100 × 10\^9/L
+* Hemoglobin ≥ 9.0 g/dL
+* Potassium, sodium, calcium corrected for serum albumin and magnesium within normal limits or corrected to within normal limits with supplements before first dose of the study medication
+* INR ≤1.5
+* Serum creatinine \<1.5 mg/dl or creatinine clearance≥50 mL/min
+* In absence of liver metastases, alanine aminotransferase (ALT) and aspartate aminotransferase (AST) should be below 2.5 × ULN. If the patient had liver metastases, ALT and AST should be \< 5 × ULN.
+* Total serum bilirubin \< ULN; or total bilirubin ≤ 3.0 × ULN with direct bilirubin within normal range in patients with well-documented Gilbert's Syndrome
+* Patient must have had a 12-lead ECG with ALL of the following parameters at screening:
+
+* QTcF interval at screening \<450 msec (using Fridericia's correction)
+* Resting heart rate ≥ 50 bpm
+
+Key Exclusion Criteria:
+
+* Patient who received any CDK4/6 inhibitor
+* Patient who received any prior systemic hormonal therapy for advanced breast cancer; no more than one prior regimen of chemotherapy for the treatment of metastatic disease was permitted. Note:
+
+* Patients who received (neo) adjuvant therapy for breast cancer were eligible. If the prior neo (adjuvant) therapy included letrozole or anastrozole the disease free interval had to be greater than 12 months from the completion of treatment until study entry.
+* Patients who received ≤ 28 days of letrozole or anastrozole for advanced disease prior to inclusion in this trial were eligible.
+* Any prior (neo) adjuvant anti-cancer therapy or prior chemotherapy for metastatic disease had to be stopped at least 5 half-lives or 7 days, whichever was longer, before study inclusion.
+* Patient was concurrently using other anti-cancer therapy.
+
+Sex: ALL. Minimum age: 18 Years. Maximum age: not stated. Standard ages: ADULT, OLDER_ADULT. Healthy volunteers: False.

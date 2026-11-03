@@ -1,0 +1,265 @@
+Título
+
+Assessment of treatment outcomes: cytoreductive surgery compared to radiotherapy in oligometastatic prostate cancer – an in-depth quantitative evaluation and retrospective cohort analysis
+
+Resumen
+
+Abstract
+
+Background:
+
+The management of oligometastatic prostate cancer, defined by its few metastatic sites, poses distinct clinical dilemmas. Debates persist regarding the most effective treatment approach, with both cytoreductive surgery and radiotherapy being key contenders. The purpose of this research is to thoroughly evaluate and compare the effectiveness of these two treatments in managing patients with oligometastatic prostate cancer.
+
+Methods:
+
+A comprehensive search of the literature was carried out to find pertinent publications that compared the results of radiation and cytoreductive surgery for oligometastatic prostate cancer. A meta-analysis was conducted in order to evaluate both short-term and long-term survival. Furthermore, utilizing institutional patient data, a retrospective cohort research was conducted to offer practical insights into the relative performances of the two treatment regimens.
+
+Results:
+
+Five relevant studies’ worth of data were included for this meta-analysis, which included 1425 patients with oligometastatic prostate cancer. The outcomes showed that, in comparison to radiation, cytoreductive surgery was linked to a substantially better cancer-specific survival (CSS) [hazard ratio (HR): 0.70, 95% (CI): 0.59–0.81, P<0.001] and overall survival (OS) [HR, 0.80; 95% (CI), 0.77–0.82; P<0.01]. The two therapy groups’ Progression-Free Survival (PFS) and Castration-Resistant Prostate Cancer-Free Survival (CRPCFS), however, did not differ significantly (HR: 0.56, 95% CI: 0.17–1.06; HR: 0.67, 95% CI: 0.26–1.02, respectively). Out of the 102 patients who were recruited in the retrospective cohort research, 36 had cytoreductive surgery (CRP), 36 had radiation therapy (primary lesion), and 30 had radiation therapy (metastatic lesion). The follow-up time was 46.3 months (18.6–60.0) on average. The enhanced OS in the CRP group [OS interquartile range (IQR): 45–60 months] in comparison to the radiation group (OS IQR: 39.0–59.0 months and 25.8–55.0 months, respectively) was further supported by the cohort research. Furthermore, CRP had a better OS than both radiation (primary region) and radiotherapy (metastatic region), with the latter two therapeutic methods having similar OS.
+
+Conclusion:
+
+This meta-analysis and retrospective research provide valuable insights into the comparative efficacy of cytoreductive surgery and radiotherapy for oligometastatic prostate cancer. While short-term survival (PFS, CRPCFS) was similar between the two groups, cytoreductive surgery exhibited superior CSS and OS. Adverse event rates were manageable in both modalities. These findings contribute to informed treatment decision-making for clinicians managing oligometastatic prostate cancer patients. Further prospective studies and randomized controlled trials are essential to corroborate these results and guide personalized therapeutic approaches for this distinct subset of patients.
+
+Keywords: cytoreductive surgery, oligometastatic, prostate cancer, radiotherapy, retrospective study
+
+Introduction
+
+A comprehensive review and meta-analysis to compare cytoreductive surgery versus radiotherapy in oligometastatic prostate cancer treatment.
+
+Inclusion of data from five studies encompassing 1425 patients for robust comparative efficacy evaluation.
+
+Cytoreductive surgery associated with significantly improved overall survival compared to radiotherapy.
+
+No significant difference in progression-free survival between the two treatment modalities.
+
+Retrospective cohort study supports the superior overall survival with cytoreductive surgery.
+
+Findings aid in informed decision-making and underscore the need for further studies to refine treatment approaches.
+
+Oligometastatic prostate cancer represents a distinct clinical entity within the spectrum of metastatic disease, characterized by a limited number of metastases predominantly localized to specific anatomical sites. This intermediate stage between localized and widespread metastases has sparked considerable interest in exploring optimal treatment strategies that may prolong survival and enhance the quality of life for affected patients––. Among the therapeutic modalities gaining prominence are cytoreductive surgery and radiotherapy,,, each offering distinct advantages and potential outcomes.
+
+Cytoreductive surgery involves the surgical removal of metastatic lesions with the intent of reducing tumor burden and potentially delaying disease progression––. Radiotherapy, on the other hand, delivers targeted ionizing radiation to cancer cells, aiming to achieve local tumor control and alleviate symptoms––. Both approaches have demonstrated efficacy in certain clinical settings, but a comprehensive comparison of their relative benefits and limitations is essential to guide clinical decision-making. While clinical trials have contributed to our understanding of these treatments, they often have limitations in terms of patient selection and follow-up duration. In addition, real-world retrospective cohort studies, by virtue of their inclusion of broader patient populations and longer-term outcomes, can provide valuable insights into the practical application and outcomes of cytoreductive surgery and radiotherapy in the management of oligometastatic prostate cancer.
+
+In this context, we conducted a comprehensive meta-analysis and retrospective cohort study to systematically compare the efficacy of cytoreductive surgery with radiotherapy in treating oligometastatic prostate cancer. By synthesizing existing evidence from the literature and evaluating the outcomes of a well-defined cohort of patients, we sought to address critical questions regarding overall survival, progression-free survival, and treatment-related adverse events associated with these interventions.
+
+This study contributes to the growing body of knowledge surrounding the management of oligometastatic prostate cancer, shedding light on the practical effectiveness and potential benefits of cytoreductive surgery and radiotherapy. The insights gained from this research are poised to inform clinical decision-making and guide the development of personalized treatment strategies for patients at this intermediate stage of disease progression. Furthermore, the findings may underscore the importance of considering real-world evidence in shaping treatment guidelines and optimizing patient outcomes in the context of oligometastatic prostate cancer.
+
+Methods
+
+The results of this investigation are presented in compliance with academic paper standards by following the recommendations of PRISMA (Preferred Reporting Items for Systematic Reviews and Meta-Analyses), STROCSS (Strengthening the reporting of cohort, cross-sectional and case–control studies in surgery) 2021 criteria and AMSTAR (Assessing the methodological quality of systematic reviews). The following page, https://www.crd.york.ac.uk/prospero, has more comprehensive information regarding the registration procedure.
+
+Study design
+
+To find pertinent studies reporting CRP findings in OmPCa patients up to October 2023, a thorough search of the main medical databases, including PubMed, Embase, Web of Science, and CNKI, was conducted. Appropriate keywords for “oligometastatic prostate cancer,” “cytoreductive surgery,” and “rediotherapy” were included in the search approach.
+
+Meta-analysis
+
+Search of literature
+
+A comprehensive exploration of prominent medical databases, such as PubMed, Embase, Web of Science, and CNKI, was carried out to find pertinent research articles detailing the results of cytoreductive surgery for patients with oligometastatic prostate cancer till October 2023.
+
+Inclusion and exclusion criteria
+
+The literature search was carried out by two impartial reviewers, and papers were included in the meta-analysis provided they satisfied the following requirements:
+
+Study design and participants: Included were studies that discussed the results of CRP in OmPCa patients. Histopathological testing revealed the presence of PCa in all cases. Imaging modalities such as CT (computed tomography), MRI (magnetic resonance imaging), or ECT (emission computed tomography) were used to assess the tumor metastatic status of the patients.
+
+Intervention measures: Radical and transurethral prostatectomy were among the tumor reduction treatments that the experimental group underwent. Radiotherapy was accepted by the control group.
+
+Prognostic survival analysis in individuals with oligometastatic prostate cancer needs to be the primary focus of the study. In order to enable survival analysis, studies should include enough follow-up data, guaranteeing that the survival rate at every follow-up time point may be obtained either directly or indirectly from the study’s original text.
+
+Study type: The meta-analysis deemed both retrospective studies and randomized controlled trials (RCTs) suitable for incorporation.
+
+Exclusion criteria:
+
+Study types: The meta-analysis excluded review articles, secondary literature, case reports, conference abstracts, and other types of non-primary research.
+
+Animal research: Studies involving animal research were not considered for inclusion in the meta-analysis.
+
+Oligometastases definition: Studies that focused on transitional states not meeting the defined criteria for oligometastases were excluded from the meta-analysis.
+
+Unavailability of full text: Studies for which the full text could not be obtained through various methods were excluded.
+
+Insufficient data: Studies lacking relevant outcome data or having incomplete information essential for the meta-analysis were excluded.
+
+Data extraction and quality assessment
+
+Literature screening was conducted independently by two researchers according to the above criteria. And then, the data were systematically compared. In cases of discordance, the researchers engage in discussion to reconcile their opinions. If a consensus still remains elusive, professionals in the field are consulted for further input. The following data components were retrieved from the publications after a thorough investigation was conducted: first author, publication year, median age, country, literature type, follow-up period, total patient count, intervention methods, survival analysis, HR, 95% CI, Gleason score, and TNM stage. Direct data is the main source used to extract the risk ratio and 95% CI, while data derived using the Kaplan–Meier approach is the backup option. Survival rates were calculated using Kaplan–Meier curves, and the HR index was calculated using techniques from Tierney et al.. The quality of the studies was assessed using appropriate tools. The proper instruments were used to evaluate the studies’ quality. The Newcastle–Ottawa Scale (NOS) was used for non-randomized research, while the Cochrane Risk of Bias Tool was used for randomized controlled trials (RCTs). These instruments aided in the assessment of methodological quality as well as bias risk. Three areas are covered by the NOS literature quality assessment, which has eight sub-evaluation questions. On a scale of 0–9, the literature is given a score; a score of 6 or above is seen as indicative of good quality.
+
+Statistical analysis
+
+Meta-analyses were conducted to determine the HRs with relevant 95% CI based on a proper statistical approach. In cases of significant heterogeneity, random-effects models were applied to identify potential variations in different studies. Subgroup analyses were carried out to analyze the sources of heterogeneity, considering factors like study design, sample size, and treatment modality. Heterogeneity was determined based on the I2 tests. A P<0.05 for the Cochran Q statistic or an I2 statistic exceeding 50% indicated statistically significant heterogeneity among the studies. The random-effects model was applied under the condition of heterogeneity existed.
+
+Retrospective research analysis
+
+Patient selection
+
+In our retrospective analysis, we examined a cohort of patients diagnosed with oligometastatic prostate cancer who underwent treatment at our institution from January 2008 to August 2018. This cohort included individuals who received either cytoreductive surgery or radiotherapy (targeting either primary lesions or metastatic lesions). The selection of treatment modality was based on a multidisciplinary team’s decision, taking into account various factors such as the patient’s overall health, tumor characteristics, and patient preference. To mitigate selection bias, we also considered the influence of the physician’s strategy and any potential investigator preferences. These aspects were evaluated and controlled for in our analysis to ensure a balanced comparison between the two treatment groups.
+
+Inclusion and exclusion criteria
+
+The medical records of eligible patients were identified, and inclusion criteria for the retrospective analysis were as follows:
+
+Primary diagnosis: Confirmed primary prostate cancer via histopathological analysis.
+
+Limited metastatic spread: Evidence of up to five metastatic lesions, typically identified using imaging techniques such as CT, MRI, PET-CT, or bone scans.
+
+Site of metastases: Common sites include bones, lymph nodes, and occasionally visceral organs.
+
+Absence of widespread disease: No evidence of widespread metastatic disease or involvement of critical organs that would classify the disease as advanced or widespread metastatic prostate cancer.
+
+Adequate follow-up data is available for survival analysis. Patients with incomplete data or those lost to follow-up were excluded from the analysis.
+
+Data collection
+
+Patient demographics (e.g. age, Gleason score), tumor characteristics (e.g. number and location of metastases), surgical outcomes (e.g. surgical complications), treatment-related events (e.g. radiotherapy-related adverse reactions), and survival rates (OS, PFS, CRPCFS) were collected from medical records and analyzed. The median follow-up time for the cohort was calculated.
+
+Statistical analysis
+
+Depending on the sample size and anticipated population frequencies, two tests were used to compare categorical variables: Pearson’s Chi-squared test and Fisher’s exact test. For continuous variables that did not match the normalcy criteria, the Mann–Whitney U test was used. Frequencies and percentages for categorical variables were used to display descriptive data. The means±standard deviation (SD) were used to characterize continuous parametric variables, while the median with the interquartile range was used to represent nonparametric variables. Using the Kaplan–Meier technique, survival rates were determined for castration-resistant prostate cancer-free survival (CRPCFS), progression-free survival (PFS), and overall survival (OS). The log-rank test was used to evaluate differences between groups. SPSS version 22.0 (IBM Corp., Armonk, New York, USA) and GraphPad Prism version 9.1.0 (GraphPad Software, San Diego, California, USA) were used for all statistical analyses. For all tests, statistical significance was defined as a two-sided P value of less than 0.05.
+
+Results
+
+Quantitative analysis
+
+Study characteristics
+
+A total of 1832 relevant articles were initially screened. Among these, 798 duplicate articles were removed. Additionally, 782 articles, including basic experimental studies, case reports, and reviews, were excluded according to their titles and abstracts. According to the analysis results of the full-text version, 56 unreachable reports and 191 articles did not meet the inclusion criteria for the control group, lacked clear information on metastasis or had incomplete data for prognosis evaluation. Eventually, five studies–– were considered eligible for inclusion in the present study. These five studies encompassed a total of 1425 cases of oligometastatic prostate cancer (OmPCa), of which 808 cases were in the CRP group and 617 in the radiotherapy group. Details of the search process and methodology are provided in Figure , and the characteristics of the included studies are presented in Table , and the characteristics of the included studies are presented in Table . Among the selected studies, four were subjected to OS analysis, three to PFS analysis, four to CSS analysis, and two to CRPCFS analysis. Hazard ratios (HR) and their corresponding 95% confidence intervals (CI) were extracted either directly from the original articles or indirectly obtained from Kaplan–Meier curves using an EXCEL program developed by Tierney.. Among the selected studies, four were subjected to OS analysis, three to PFS analysis, four to CSS analysis, and two to CRPCFS analysis. Hazard ratios (HR) and their corresponding 95% confidence intervals (CI) were extracted either directly from the original articles or indirectly obtained from Kaplan–Meier curves using an EXCEL program developed by Tierney.
+
+Quality assessment
+
+The quality assessment results, using either the Cochrane Risk of Bias tool or the Newcastle–Ottawa Scale (NOS), are presented in Tables and and . Regarding one randomized controlled trial (RCT). Regarding one randomized controlled trial (RCT), it revealed a risk of blinding (detection bias) due to its open-label nature. The non-RCT studies received scores ranging from six to seven points on the NOS, indicating relatively good methodological quality. In two specific studies,,, there was a disparity in treatment modality between the two groups based on the clinical judgment of the practitioners. Except for concerns related to control selection and non-response rates, no other significant issues that could affect the quality of the studies were identified.
+
+Efficacy of cytoreductive surgery versus radiotherapy
+
+Progression-free survival (PFS)
+
+The comparison of progression-free survival (PFS) according to cytoreductive prostatectomy (CRP) and radiotherapy (RT) for oligometastatic prostate cancer (OmPCa) involved a total of three studies comprising 577 patients. Heterogeneity across the studies was also identified, with Cochran’s Q statistic showing a P value of 0.003 and an I2 statistic of 82.5%. In the meta-analysis encompassing all three studies, no significant difference in PFS was found (random effects HR: 0.56, 95% CI: 0.17–1.06, P>0.05). Figure --, , -- presents the forest plots illustrating the PFS analysis for visual representation. presents the forest plots illustrating the PFS analysis for visual representation.
+
+Castration-resistant prostate cancer-free survival (CRPCFS)
+
+A total of nine studies,, involving 503 patients were included in the comparison of time to castration-resistant prostate cancer (CRPC) in association with continuous androgen deprivation therapy (ADT) for oligometastatic prostate cancer (OmPCa). This analysis revealed certain heterogeneity across the studies, as evidenced by Cochran’s Q statistic (P=0.175) and I2 statistic (78.2%). No significant differences were observed in progression-free survival (random effects HR: 0.67, 95% CI: 0.26–1.02, P>0.05). Figure presents forest plots of the CRPC-free survival analysis for visual representation. presents forest plots of the CRPC-free survival analysis for visual representation.
+
+Cancer-specific survival (CSS)
+
+Up to four researches (with 1347 cases) were included in comparing CSS based on CRP and RT for OmPCa. According to the analysis result, there exist obvious differences [random effects HR, 0.70; 95% (CI), 0.59–0.81; P<0.01] reinforcing the notion that CRP leads to better survival outcomes in oligometastatic prostate cancer patients. Heterogeneity existed in different researches (P=0.0001; I2=85.2%) (Fig. ).).
+
+Overall survival (OS)
+
+Four studies with 1091 cases were included in the comparison of OS between the two groups for OmPCa. Initial findings reflected that OS was obviously higher in the CRP group [HR, 0.80; 95% (CI), 0.77–0.82; P<0.01], with no notable heterogeneity identified across the studies (Cochran’s Q statistic, P=0.822). Forest plots depicting the OS data are provided in Figure --, , -- for visual representation. The results of further subgroup analysis indicate that patients receiving primary radiotherapy demonstrate a higher overall survival rate compared to those undergoing radiotherapy solely for metastatic disease (Figure for visual representation. The results of further subgroup analysis indicate that patients receiving primary radiotherapy demonstrate a higher overall survival rate compared to those undergoing radiotherapy solely for metastatic disease (Figure --).).
+
+Retrospective study
+
+In this section, we present the findings of the retrospective research analysis that aimed to compare the outcomes of patients with oligometastatic prostate cancer who underwent cytoreductive surgery (CRS) versus those who received radiotherapy (RT) at our institution between January 2008 and August 2018.
+
+A total of 102 patients with oligometastatic prostate cancer were included in the retrospective analysis. Among them, 36 patients underwent cytoreductive surgery (CRS group), and the remaining 66 patients received radiotherapy (either to the primary lesion or metastatic lesions). The two groups were well-matched in terms of baseline characteristics, ensuring a fair comparison. The median follow-up time for the entire cohort was 46.3 months, with a range between 18.6 and 60.0 months (Tables , , ). It is important to note that all patients in this study, regardless of whether they underwent CRS or RT, received endocrine supplemental therapy as part of their post-treatment regimen. This inclusion of endocrine therapy across both treatment groups was integral to our analysis, allowing for a more uniform comparison of outcomes between the CRS and RT cohorts. The impact of this consistent approach to hormonal therapy on patient outcomes was carefully considered and controlled for in our analysis, ensuring that our comparative evaluation of cytoreductive surgery and radiotherapy reflects a comprehensive treatment perspective.). It is important to note that all patients in this study, regardless of whether they underwent CRS or RT, received endocrine supplemental therapy as part of their post-treatment regimen. This inclusion of endocrine therapy across both treatment groups was integral to our analysis, allowing for a more uniform comparison of outcomes between the CRS and RT cohorts. The impact of this consistent approach to hormonal therapy on patient outcomes was carefully considered and controlled for in our analysis, ensuring that our comparative evaluation of cytoreductive surgery and radiotherapy reflects a comprehensive treatment perspective.
+
+During the perioperative period, a total of 10 cases (27.7%) of complications were observed within 90 days after cytoreductive surgery (CRP). Of these, four cases were classified as Clavien–Dindo grade 1, two cases as grade 2, and two cases as grade 3a. Two patients experienced more severe complications classified as grade 3b or 4a, namely a pelvic hematoma and an anastomotic stenosis, respectively. There were no grade 4b complications or perioperative deaths recorded. The most prevalent complication was urinary incontinence, accounting for 11.1% of cases accepted CRP after the first year, which decreased to 5.5% in the second year (Table ).).
+
+We further evaluated radiotherapy-related events in patients undergoing radiotherapy using the Common Terminology Criteria for Adverse Events (CTCAE) scale and the Radiation Therapy Oncology Group (RTOG) scale. A total of seven patients experienced Grade 1 adverse reactions, according to CTCAE, while two patients experienced Grade 2 adverse reactions. No patients had adverse reactions of Grade 3 or above, according to CTCAE. On the other hand, nine patients experienced Grade 1 adverse reactions according to RTOG, and no other more severe adverse reactions were observed. The incidence of radiotherapy-related events showed no statistically significant difference between the RT (Primary lesion) group and the RT (Metastatic lesion) group. In conclusion, the above results suggest that radiotherapy is relatively safe and manageable for the treatment of oligometastatic prostate cancer (Table ).).
+
+Insights from retrospective cohort study
+
+A retrospective cohort study comprising 102 patients diagnosed with oligometastatic prostate cancer was conducted to provide real-world insights into the comparative outcomes of CRP and RT. The key findings from this study were:
+
+5-year overall survival (OS)
+
+5-year OS was a significant endpoint assessed in the retrospective evaluation to evaluate the long-term influence of CRP versus RT on the survival rates. The results indicated that there exists an obvious difference in OS between the two groups (Log-rank, Chi-square, P=0.0034). The results of further subgroup analysis indicate that the OS in the CRP group is superior to that in the RT (Primary lesion) and RT (Metastatic lesion) groups, whereas no statistically significant difference is observed between the RT (Primary lesion) and RT (Metastatic lesion) groups. This finding suggests that patients who underwent cytoreductive surgery had a prolonged survival period than that of the other group (Table and Fig. and Fig. ).).
+
+Progression-free survival (PFS) and castration-resistant prostate cancer-free survival (CRPCFS)
+
+Similar to the results of our previous meta-analysis, no significant differences were observed in progression-free survival (Log-rank, Chi-square, P=0.2593) or castration-resistant prostate cancer-free survival (Log-rank, Chi-square, P=0.3991) between the CRP and RT groups. Notably, there were no significant differences in PFS and CRPCFS between RT (Primary lesion) and RT (Metastatic lesion) groups (Table and Fig. and Fig. ).).
+
+Discussion
+
+The management of oligometastatic prostate cancer remains a challenging and evolving field––, with the selection of appropriate treatment strategies significantly influencing patient outcomes and quality of life. In this study, we conducted a comprehensive meta-analysis alongside a real-world retrospective cohort investigation to compare the efficacy of cytoreductive surgery and radiotherapy for the treatment of oligometastatic prostate cancer. The combined approach of synthesizing existing evidence from the literature and analyzing outcomes within a well-defined patient cohort provides a comprehensive perspective on the relative benefits and limitations of these therapeutic modalities.
+
+The meta-analysis incorporated data from five eligible studies, involving a substantial cohort of 1425 patients with oligometastatic prostate cancer. The results of the meta-analysis revealed that cytoreductive surgery demonstrated a significant improvement in OS when compared to radiotherapy [hazard ratio (HR): 0.80, 95% confidence interval [CI]: 0.77–0.82, P<0.001). Similarly, cytoreductive surgery exhibited superior cancer-specific survival (CSS) compared to radiotherapy (HR: 0.70, 95% CI: 0.59–0.81, P<0.001). These findings underscore the potential benefits of cytoreductive surgery in terms of extending survival outcomes, offering a valuable option for patients and clinicians.
+
+In contrast, the analysis did not identify significant differences in progression-free survival (PFS) and castration-resistant prostate cancer-free survival (CRPCFS) between the cytoreductive surgery and radiotherapy groups (HR: 0.56, 95% CI: 0.17–1.06; HR: 0.67, 95% CI: 0.26–1.02, respectively). This suggests that while cytoreductive surgery may confer advantages in terms of OS and CSS, short-term disease control measures remain comparable between the two modalities. These results underscore the need to consider a range of factors when selecting treatment approaches, including patient preferences, tumor burden, and potential side effects.
+
+The retrospective cohort study, conducted with institutional patient data, added further insights by providing real-world evidence of treatment outcomes. Involving 102 patients, the cohort study reaffirmed the improved OS in the cytoreductive surgery group when compared to the radiotherapy group. This finding was consistent with the meta-analysis results, thereby reinforcing the potential survival benefits associated with cytoreductive surgery for oligometastatic prostate cancer patients.
+
+Furthermore, the cohort study’s breakdown of radiotherapy into primary lesion and metastatic lesion groups highlighted interesting distinctions. The superiority of cytoreductive surgery was evident in both overall survival and cancer-specific survival when compared to radiotherapy for the primary region. However, there was no significant difference in overall survival between radiotherapy for the primary region and radiotherapy for the metastatic region. This nuanced insight emphasizes the potential importance of targeting metastatic lesions directly through radiotherapy, potentially offering comparable survival outcomes for these patients.
+
+The manageable adverse event rates observed in both cytoreductive surgery and radiotherapy modalities suggest that both treatment options are reasonably safe and well-tolerated. However, it is important to note that patient selection, comorbidities, and individual preferences should influence the choice of treatment to optimize outcomes while minimizing potential risks.
+
+In conclusion, this study’s comprehensive analysis, combining a meta-analysis and a retrospective cohort study, contributes valuable insights into the comparative efficacy of cytoreductive surgery and radiotherapy for oligometastatic prostate cancer. The results highlight that while short-term survival measures are similar between the two modalities, cytoreductive surgery offers superior cancer-specific survival and overall survival outcomes. These findings provide clinicians with essential information for making informed treatment decisions tailored to individual patient circumstances. Nonetheless, it is crucial to acknowledge the study’s limitations, including potential selection biases in retrospective data, variations in treatment protocols, and the evolving definition of oligometastasis, particularly in light of advanced imaging technologies like PSMA-PET. This variability underscores the need for a standardized approach in defining oligometastasis to ensure consistency in future research. As a result, further prospective studies and randomized controlled trials are warranted to corroborate these findings and establish evidence-based therapeutic approaches for this distinct subset of patients.
+
+Conclusion
+
+In conclusion, our comprehensive study addresses the clinical challenge presented by oligometastatic prostate cancer, offering insights into the comparative efficacy of cytoreductive surgery and radiotherapy. This investigation, comprising a meta-analysis and a retrospective cohort study, highlights the distinct benefits of cytoreductive surgery in the management of this condition. While short-term survival measures were comparable between the two groups, cytoreductive surgery exhibited superior cancer-specific survival and overall survival. The manageable adverse event rates associated with both modalities further enhance their viability as treatment options. These findings provide valuable guidance for clinicians managing oligometastatic prostate cancer patients, facilitating informed decision-making. However, to validate these results and guide personalized therapeutic approaches, future prospective studies and randomized controlled trials are imperative.
+
+Ethical approval
+
+Not applicable.
+
+Consent
+
+Not relevant.
+
+Sources of funding
+
+There is no funding for this work.
+
+Author contribution
+
+The authors of this paper participated in the study design. They also read, critiqued, and approved the manuscript revisions, as well as the final version of the manuscript. Also, all authors participated in a session to discuss the results and consider strategies for analysis and interpretation of the data before the final data analysis was performed and the manuscript written. All authors have the appropriate permissions and rights to the reported data.
+
+Conflicts of interest disclosure
+
+No relevant conflicts of interest.
+
+Research registration unique identifying number (UIN)
+
+Name of the registry: Assessment of Treatment Outcomes: Cytoreductive Surgery Compared to Radiotherapy in Oligometastatic Prostate Cancer – An In-Depth Quantitative Evaluation and Retrospective Cohort Analysis.
+
+Unique identifying number or registration ID: CRD[registro PROSPERO omitido].
+
+Hyperlink to your specific registration: https://www.crd.york.ac.uk/prospero/.
+
+Guarantor
+
+Bisheng Cheng.
+
+Data availability statement
+
+The datasets generated and/or analyzed during the current study are available from the corresponding author on reasonable request.
+
+Provenance and peer review
+
+Not commissioned, externally peer-reviewed.
+
+Acknowledgements
+
+We are grateful to the specialists who graciously answered our particular inquiries while this study was being conducted.
+
+Footnotes
+
+Contributor Information
+
+Bisheng Cheng, Email:
+
+Haixia He, Email:
+
+Bingliang Chen, Email:
+
+Qianghua Zhou, Email:
+
+Tianlong Luo, Email:
+
+Kaiwen Li, Email:
+
+Tao Du, Email:
+
+Hai Huang, Email:
+
+References
+
+Associated Data
+
+Data Availability Statement
+
+The datasets generated and/or analyzed during the current study are available from the corresponding author on reasonable request.

@@ -35,6 +35,7 @@ import sys
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from pydantic import ValidationError
 from pymilvus import MilvusClient
@@ -50,6 +51,7 @@ from app.application.corpus_ingestion.reindexar_sparse import (
     ReindexarSparse,
 )
 from app.application.corpus_ingestion.reporte import ReporteDeIngesta
+from app.application.corpus_ingestion.resumen_corpus import contar_corpus_por_tipo_y_fuente
 from app.application.corpus_metadata.esquema import PROMPT_VERSION
 from app.application.corpus_metadata.esquema_poblacion import PlantillaDePoblacionNoDisponible
 from app.application.corpus_metadata.metadata_extraction_service import MetadataExtractionService
@@ -79,7 +81,11 @@ from app.infrastructure.milvus.repository import MilvusRepository
 from app.infrastructure.models.verificacion import ModeloNoVerificadoError
 from app.infrastructure.seed_manifest.lector import ManifiestoInvalido, leer_manifiesto
 from app.infrastructure.tokenizer.por_palabras import TokenizadorPorPalabras
-from app.scripts.ingest_poblacion import CatalogoDePoblacionNoConfigurado, extractor_de_poblacion
+from app.scripts.ingest_poblacion import (
+    CatalogoDePoblacionNoConfigurado,
+    extractor_de_poblacion,
+    resumen_de_poblacion_del_corpus,
+)
 from app.scripts.load_seed_corpus import (
     ajustes_de_modelos_del_entorno,
     allow_cc_by_nc_del_entorno,
@@ -246,8 +252,11 @@ def _ejecutar_ingesta(
     tokenizador: Tokenizador,
     metadatos: ModelosDeMetadatos,
     reloj: Clock,
-) -> tuple[ReporteDeIngesta, dict[str, object]]:
-    """Raíz de composición: adapters reales -> ``IngestionPipelineService``. Cierra las conexiones a PostgreSQL al terminar."""
+) -> tuple[ReporteDeIngesta, dict[str, object], dict[str, Any] | None, dict[str, dict[str, int]]]:
+    """Raíz de composición: adapters reales -> ``IngestionPipelineService``. Cierra las conexiones a PostgreSQL al terminar.
+
+    Devuelve el reporte, la muestra de metadatos y, si corrió la extracción en abanico, el resumen de población por tipo de
+    cáncer e idioma (US-120 AC-7)."""
     documentos = leer_manifiesto(manifiesto)
     extractor = _extractor_de_poblacion(
         metadatos, ajustes
@@ -295,7 +304,17 @@ def _ejecutar_ingesta(
             llm_model=metadatos.nombre_del_llm,
             nli_model=metadatos.nli.version,
         )
-        return reporte, escribir_muestra(generador, reporte.release_id)
+        poblacion = (
+            None
+            if extractor is None
+            else resumen_de_poblacion_del_corpus(
+                catalogo,
+                ajustes,
+                Settings(_env_file=None, modelos=None),  # type: ignore[call-arg]
+            )
+        )
+        corpus = contar_corpus_por_tipo_y_fuente(catalogo.documentos_vigentes_con_poblacion())
+        return reporte, escribir_muestra(generador, reporte.release_id), poblacion, corpus
     finally:
         motor.dispose()
 
@@ -422,7 +441,7 @@ def main(
     try:
         _exigir_llm_local()  # RN-12: antes de cargar embeddings o abrir conexiones
         modelos = _modelos_de_la_ingesta(ajustes, embedder, sparse, tokenizador)
-        reporte, muestra = _ejecutar_ingesta(
+        reporte, muestra, poblacion, corpus = _ejecutar_ingesta(
             argumentos.manifest,
             ajustes,
             milvus,
@@ -444,7 +463,13 @@ def main(
     except Exception as error:  # noqa: BLE001 - se informa la clase; el mensaje de la base o de pymilvus puede traer una URI
         print(f"{NOMBRE}: falló ({type(error).__name__})", file=sys.stderr)
         return 1
-    resumen = {**reporte.como_diccionario(), "muestra_de_metadatos": muestra}
+    resumen = {
+        **reporte.como_diccionario(),
+        "corpus_por_tipo_y_fuente": corpus,
+        "muestra_de_metadatos": muestra,
+    }
+    if poblacion is not None:
+        resumen["poblacion_por_tipo_e_idioma"] = poblacion
     print(json.dumps(resumen, ensure_ascii=False))
     return 1 if reporte.hubo_errores else 0
 

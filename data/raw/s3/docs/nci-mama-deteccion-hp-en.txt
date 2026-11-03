@@ -1,0 +1,1720 @@
+Overview
+
+Note: The Overview section summarizes the published evidence on this topic. The rest of the summary describes the evidence in more detail.
+
+Breast Cancer Prevention
+
+Breast Cancer Treatment
+
+Male Breast Cancer Treatment
+
+Breast Cancer Treatment During Pregnancy
+
+Mammography is the most widely used screening modality for the detection of breast cancer. There is evidence that it decreases breast cancer mortality in women aged 50 to 69 years and that it is associated with harms, including the detection of clinically insignificant cancers that pose no threat to life (overdiagnosis). The benefit of mammography for women aged 40 to 49 years is uncertain.[1,2] Randomized trials in India, Iran, and Egypt have studied the use of clinical breast examination (CBE) as a screening test . Some of these studies suggested a shift in late-stage disease; however, there is still insufficient evidence to conclude a mortality benefit.[3-8]Breast self-examination has been shown to have no mortality benefit .
+
+Technologies such as ultrasound, magnetic resonance imaging, and molecular breast imaging are being evaluated, usually as adjuncts to mammography. They are not primary screening tools in the average population.
+
+Shared decision making is increasingly recommended for individuals who are considering cancer screening. Many different types and formats of decision aids have been studied. For more information, see Cancer Screening Overview.
+
+Screening With Mammography
+
+Benefits
+
+Randomized controlled trials (RCTs) initiated 50 years ago provide evidence that screening mammography reduces breast cancer–specific mortality for women aged 60 to 69 years (solid evidence) and women aged 50 to 59 years (fair evidence). Population-based studies done more recently raise questions about the benefits for populations who participate in screening for longer time periods.
+
+Magnitude of Effect: Based on a meta-analysis of RCTs, the number of women needed to invite for screening to prevent one breast cancer death depends on the woman’s age: for women aged 39 to 49 years, 1,904 women needed (95% confidence interval [CI], 929–6,378); for women aged 50 to 59 years, 1,339 women needed (95% CI, 322–7,455);
+and for women aged 60 to 69 years, 377 women needed (95% CI, 230–1,050).[9]
+
+Study Design: RCTs, population-based evidence.
+
+Internal Validity: Variable, but meta-analysis of RCTs is good.
+
+Consistency: Poor.
+
+External Validity: Uncertain.
+
+The validity of meta-analyses of RCT demonstrating a mortality benefit is limited by improvements in medical imaging and treatment in the decades since their completion. The 25-year follow-up from the Canadian National Breast Screening Study (CNBSS),[10] completed in 2014, showed no mortality benefit associated with screening mammograms.
+
+Harms
+
+Based on solid evidence, screening mammography may lead to the following harms:
+
+Overdiagnosis and Resulting Treatment of Insignificant Cancers: Some screen-detected cancers are life threatening and others are not, with no definitive way of discriminating between them. Therefore, standard cancer therapies, including surgery, radiation, endocrine therapy, chemotherapy, and therapies targeting the HER2 receptor, are recommended for all cases, even for patients who will not benefit.
+
+Magnitude of Effect: Between 20% and 50% of screen-detected cancers represent overdiagnosis based on patient age, life expectancy, and tumor type (ductal carcinoma in situ and/or invasive).[11,12] These estimates are based on two imperfect analytic methods:[11,13]
+
+Long-term follow-up of RCTs of screening.
+
+The calculation of excess incidence in large screening programs.[11,12]
+
+Study Design: RCTs, descriptive, population-based comparisons, autopsy series, and series of mammary reduction specimens.
+
+False-Positives With Additional Testing and Anxiety.
+
+Magnitude of Effect: In the United States, approximately 10% of women are recalled for further testing after a screening examination. However, only 0.5% of tested women have cancer. Thus, approximately 9.5% of tested women have a false-positive exam.[14,15] Approximately 50% of women screened annually for 10 years in the United States experience a false-positive exam; of these, 7% to 17% will undergo biopsies.[16,17] Additional testing is less likely when prior mammograms are available for comparison.
+
+Study Design: Descriptive, population-based.
+
+False-Negatives With False Sense of Security and Potential Delay in Cancer Diagnosis.
+
+Magnitude of Effect: Invasive breast cancer is present but undetected by mammography (false-negative) in 6% to 46% of exams. False-negative exams are more likely for mucinous and lobular types of cancer and for rapidly growing interval tumors, which become detectable between regular mammograms and in dense breasts, which are common in younger women.[18-20]
+
+Study Design: Descriptive, population-based.
+
+Radiation-Induced Breast Cancer: Radiation-induced mutations occur with radiation doses higher than those used in a single mammography examination, so the exposure associated with a typical two-view mammogram is extremely unlikely to cause cancer.[21,22]
+
+Magnitude of Effect: Theoretically, annual mammograms in women aged 40 to 80 years may cause up to one breast cancer per 1,000 women.[21,22]
+
+Study Design: Descriptive, population-based.
+
+For all of these conclusions regarding potential harms from screening mammography, internal validity, consistency, and external validity are good.
+
+Clinical Breast Examination (CBE)
+
+Benefits
+
+The CNBSS trial did not study the efficacy of CBE versus no screening. Ongoing randomized trials, two in India and one in Egypt, are designed to assess the efficacy of screening CBE but have not reported mortality data.[3-8]Thus, the efficacy of screening CBE cannot be assessed yet.
+
+Magnitude of Effect: The current evidence is insufficient to assess the additional benefits and harms of CBE. The single RCT comparing high-quality CBE with screening mammography showed equivalent benefit. CBE accuracy in the community setting might be lower than in the RCT.[3-6]
+
+Study Design: Single RCT, population cohort studies.
+
+Internal Validity: Good.
+
+Consistency and External Validity: Poor.
+
+Harms
+
+Screening by CBE may lead to the following harms:
+
+False-Positives With Additional Testing and Anxiety.
+
+Magnitude of Effect: Specificity in women aged 50 to 59 years was 88% to 99%, yielding a false-positive rate of 1% to 12% for all women screened.[23]
+
+Study Design: Descriptive, population based.
+
+Internal Validity, Consistency, and External Validity: Good.
+
+False-Negatives With Potential False Reassurance and Delay in Cancer Diagnosis.
+
+Magnitude of Effect: Of women with cancer, 17% to 43% have a negative CBE. Sensitivity is higher with longer duration and higher quality of the examination by trained personnel.
+
+Study Design: Descriptive, population based.
+
+Internal and External Validity: Good.
+
+Consistency: Fair.
+
+Breast Self-Examination (BSE)
+
+Benefits
+
+BSE has been compared with no screening and has been shown to have no benefit in reducing breast cancer mortality.
+
+Magnitude of Effect: No effect.[24,25]
+
+Study Design: Two RCTs.
+
+Internal Validity and Consistency: Fair.
+
+External Validity: Poor.
+
+Harms
+
+There is solid evidence that formal instruction and encouragement to perform BSE leads to more breast biopsies and more diagnoses of benign breast lesions.
+
+Magnitude of Effects on Health Outcomes: Biopsy rate was 1.8% among the study population, compared with 1.0% among the control group.[24]
+
+Study Design: Two RCTs, cohort studies.
+
+Internal Validity: Good.
+
+Consistency: Fair.
+
+External Validity: Poor.
+
+References
+
+Moss SM, Cuckle H, Evans A, et al.: Effect of mammographic screening from age 40 years on breast cancer mortality at 10 years' follow-up: a randomised controlled trial. Lancet 368 (9552): 2053-60, 2006. [PUBMED Abstract]
+
+Moss SM, Wale C, Smith R, et al.: Effect of mammographic screening from age 40 years on breast cancer mortality in the UK Age trial at 17 years' follow-up: a randomised controlled trial. Lancet Oncol 16 (9): 1123-32, 2015. [PUBMED Abstract]
+
+Hassan LM, Mahmoud N, Miller AB, et al.: Evaluation of effect of self-examination and physical examination on breast cancer. Breast 24 (4): 487-90, 2015. [PUBMED Abstract]
+
+Anderson BO, Bevers TB, Carlson RW: Clinical Breast Examination and Breast Cancer Screening Guideline. JAMA 315 (13): 1403-4, 2016. [PUBMED Abstract]
+
+Yen AM, Tsau HS, Fann JC, et al.: Population-Based Breast Cancer Screening With Risk-Based and Universal Mammography Screening Compared With Clinical Breast Examination: A Propensity Score Analysis of 1 429 890 Taiwanese Women. JAMA Oncol 2 (7): 915-21, 2016. [PUBMED Abstract]
+
+Myers ER, Moorman P, Gierisch JM, et al.: Benefits and Harms of Breast Cancer Screening: A Systematic Review. JAMA 314 (15): 1615-34, 2015. [PUBMED Abstract]
+
+Mittra I, Mishra GA, Singh S, et al.: A cluster randomized, controlled trial of breast and cervix cancer screening in Mumbai, India: methodology and interim results after three rounds of screening. Int J Cancer 126 (4): 976-84, 2010. [PUBMED Abstract]
+
+Sankaranarayanan R, Ramadas K, Thara S, et al.: Clinical breast examination: preliminary results from a cluster randomized controlled trial in India. J Natl Cancer Inst 103 (19): 1476-80, 2011. [PUBMED Abstract]
+
+Nelson HD, Tyne K, Naik A, et al.: Screening for breast cancer: an update for the U.S. Preventive Services Task Force. Ann Intern Med 151 (10): 727-37, W237-42, 2009. [PUBMED Abstract]
+
+Miller AB, Wall C, Baines CJ, et al.: Twenty five year follow-up for breast cancer incidence and mortality of the Canadian National Breast Screening Study: randomised screening trial. BMJ 348: g366, 2014. [PUBMED Abstract]
+
+Welch HG, Black WC: Overdiagnosis in cancer. J Natl Cancer Inst 102 (9): 605-13, 2010. [PUBMED Abstract]
+
+Bleyer A, Welch HG: Effect of three decades of screening mammography on breast-cancer incidence. N Engl J Med 367 (21): 1998-2005, 2012. [PUBMED Abstract]
+
+Yen MF, Tabár L, Vitak B, et al.: Quantifying the potential problem of overdiagnosis of ductal carcinoma in situ in breast cancer screening. Eur J Cancer 39 (12): 1746-54, 2003. [PUBMED Abstract]
+
+Jørgensen KJ, Gøtzsche PC: Overdiagnosis in publicly organised mammography screening programmes: systematic review of incidence trends. BMJ 339: b2587, 2009. [PUBMED Abstract]
+
+Rosenberg RD, Yankaskas BC, Abraham LA, et al.: Performance benchmarks for screening mammography. Radiology 241 (1): 55-66, 2006. [PUBMED Abstract]
+
+Elmore JG, Barton MB, Moceri VM, et al.: Ten-year risk of false positive screening mammograms and clinical breast examinations. N Engl J Med 338 (16): 1089-96, 1998. [PUBMED Abstract]
+
+Hubbard RA, Kerlikowske K, Flowers CI, et al.: Cumulative probability of false-positive recall or biopsy recommendation after 10 years of screening mammography: a cohort study. Ann Intern Med 155 (8): 481-92, 2011. [PUBMED Abstract]
+
+Rosenberg RD, Hunt WC, Williamson MR, et al.: Effects of age, breast density, ethnicity, and estrogen replacement therapy on screening mammographic sensitivity and cancer stage at diagnosis: review of 183,134 screening mammograms in Albuquerque, New Mexico. Radiology 209 (2): 511-8, 1998. [PUBMED Abstract]
+
+Kerlikowske K, Grady D, Barclay J, et al.: Likelihood ratios for modern screening mammography. Risk of breast cancer based on age and mammographic interpretation. JAMA 276 (1): 39-43, 1996. [PUBMED Abstract]
+
+Porter PL, El-Bastawissi AY, Mandelson MT, et al.: Breast tumor characteristics as predictors of mammographic detection: comparison of interval- and screen-detected cancers. J Natl Cancer Inst 91 (23): 2020-8, 1999. [PUBMED Abstract]
+
+Ronckers CM, Erdmann CA, Land CE: Radiation and breast cancer: a review of current evidence. Breast Cancer Res 7 (1): 21-32, 2005. [PUBMED Abstract]
+
+Goss PE, Sierra S: Current perspectives on radiation-induced breast cancer. J Clin Oncol 16 (1): 338-47, 1998. [PUBMED Abstract]
+
+Fenton JJ, Rolnick SJ, Harris EL, et al.: Specificity of clinical breast examination in community practice. J Gen Intern Med 22 (3): 332-7, 2007. [PUBMED Abstract]
+
+Thomas DB, Gao DL, Ray RM, et al.: Randomized trial of breast self-examination in Shanghai: final results. J Natl Cancer Inst 94 (19): 1445-57, 2002. [PUBMED Abstract]
+
+Semiglazov VF, Manikhas AG, Moiseenko VM, et al.: [Results of a prospective randomized investigation [Russia (St.Petersburg)/WHO] to evaluate the significance of self-examination for the early detection of breast cancer]. Vopr Onkol 49 (4): 434-41, 2003. [PUBMED Abstract]
+
+Description of the Evidence
+
+Breast Cancer Incidence and Mortality
+
+Breast cancer is the most common noncutaneous cancer in U.S. women, with an estimated 316,950 cases of invasive disease, 59,080 cases of in situ disease, and 42,170 deaths expected in 2025.[1] Women with inherited risk, including BRCA1 and BRCA2 gene carriers, make up approximately 5% to 10% of breast cancer cases.[2] Men account for about 1% of breast cancer cases and breast cancer deaths.[1]
+
+The biggest risk factor for breast cancer is being female followed by advancing age. Other risk factors include hormonal aspects (such as early menarche, late menopause, nulliparity, late first pregnancy, and postmenopausal hormone therapy use), alcohol consumption, and exposure to ionizing radiation.
+
+Breast cancer incidence is higher in White women than in Black women, although Black women have a lower survival rate for every stage of disease.[3] This disparity may reflect differences in screening quality, timeliness of follow-up after abnormal screening results, quality of breast cancer treatment, and tumor type.[4] Hispanic women, Asian or Pacific Islander women, and American Indian or Alaska Native women have lower incidence and mortality rates than White or Black women.[5]
+
+Breast cancer incidence depends on reproductive issues (such as early vs. late pregnancy, multiparity, and breastfeeding), participation in screening, and postmenopausal hormone usage. The incidence of breast cancer (especially ductal carcinoma in situ [DCIS]) increased dramatically after mammography was widely adopted in the United States and the United Kingdom.[6] Widespread use of postmenopausal hormone therapy was associated with a dramatic increase in breast cancer incidence, a trend that reversed when its use decreased.[7]
+
+In any population, the adoption of screening is not followed by a decline in the incidence of advanced-stage cancer.
+
+Evaluation of Breast Symptoms
+
+Women with breast symptoms undergo diagnostic mammography as opposed to screening mammography, which is done in asymptomatic women. In a 10-year study of breast symptoms prompting medical attention, a breast mass led to a cancer diagnosis in 10.7% of cases, whereas pain was associated with cancer in only 1.8% of cases.[8]
+
+Pathological Evaluation of Breast Tissue
+
+Invasive breast cancer
+
+Breast cancer can be diagnosed when breast tissue cells removed during a biopsy are studied microscopically. The breast tissue to be sampled can be identified by an abnormality on an imaging study or because it is palpable. Breast biopsies can be performed with a thin needle attached to a syringe (fine-needle aspirate), a larger needle (core biopsy), or by excision (excisional biopsy). Image guidance can improve accuracy. Needle biopsies sample an abnormal area large enough to make a diagnosis. Excisional biopsies aim to remove the entire region of abnormality.
+
+Ductal carcinoma in situ (DCIS)
+
+DCIS is a noninvasive condition that can be associated with, or evolve into, invasive cancer, with variable frequency and time course.[9] Some authors include DCIS with invasive breast cancer statistics, but others argue that it would be better if the term were replaced with ductal intraepithelial neoplasia, similar to the terminology used for cervical and prostate precursor lesions, and that excluding DCIS from breast cancer statistics should be considered.
+
+DCIS is most often diagnosed by mammography. In the United States, only 4,900 women were diagnosed with DCIS in 1983 before the adoption of mammography screening, compared with approximately 59,080 women who are expected to be diagnosed in 2025.[1,9,10] The Canadian National Breast Screening Study-2, which evaluated women aged 50 to 59 years, found a fourfold increase in DCIS cases in women screened by clinical breast examination (CBE) plus mammography, compared with those screened by CBE alone, with no difference in breast cancer mortality.[11] For more information, see Breast Cancer Treatment.
+
+The natural history of DCIS is poorly understood because nearly all DCIS cases are detected by screening and nearly all are treated. Development of breast cancer after treatment of DCIS depends on the pathological characteristics of the lesion and on the treatment. In a randomized trial, 13.4% of women whose DCIS was excised by lumpectomy developed ipsilateral invasive breast cancer within 90 months, compared with 3.9% of those treated by both lumpectomy and radiation.[12] Among women diagnosed and treated for DCIS, the percentage of women who died of breast cancer is lower than that for the age-matched population at large.[13,14] This favorable outcome may reflect the benign nature of the condition, the benefits of treatment, or the volunteer effect (i.e., women who undergo breast cancer screening are generally healthier than those who do not do so).
+
+Atypia
+
+Atypia, which is a risk factor for breast cancer, is found in 4% to 10% of breast biopsies.[15,16] Atypia is a diagnostic classification with considerable variation among practicing pathologists.[17]
+
+Variability of pathologists’ diagnoses on the interpretation of breast biopsy specimens
+
+The range of pathologists' diagnoses of breast tissue includes benign without atypia, atypia, DCIS, and invasive breast cancer. The incidence of atypia and DCIS breast lesions has increased over the past three decades as a result of widespread mammography screening, although atypia is generally mammographically occult.[18,19] Misclassification of breast lesions may contribute to either overtreatment or undertreatment of lesions—with variability especially in the diagnoses of atypia and DCIS.[17,20-24]
+
+The largest study on this topic, the B-Path study, involved 115 practicing U.S. pathologists who interpreted a single-breast biopsy slide per case, and it compared their interpretations with an expert consensus-derived reference diagnosis.[17] While the overall agreement between the individual pathologists’ interpretations and the expert reference diagnoses was highest for invasive carcinoma, there were markedly lower levels of agreement for DCIS and atypia.[17] As the B-Path study included higher proportions of cases of atypia and DCIS than typically seen in clinical practice, the authors expanded their work by applying Bayes’ theorem to estimate how diagnostic variability affects accuracy from the perspective of a U.S. woman aged 50 to 59 years having a breast biopsy.[20] At the U.S. population level, it is estimated that 92.3% (95% confidence interval [CI], 91.4%–93.1%) of breast biopsy diagnoses would be verified by an expert reference consensus diagnosis, with 4.6% (95% CI, 3.9%–5.3%) of initial breast biopsies estimated to be overinterpreted and 3.2% (95% CI, 2.7%–3.6%) under interpreted. Figure 1 shows the predicted outcomes per 100 breast biopsies, overall and by diagnostic category.
+
+To address the high rates of discordance in breast tissue diagnosis, laboratory policies that require second opinions are becoming more common. A national survey of 252 breast pathologists participating in the B-Path study found that 65% of respondents reported having a laboratory policy that requires second opinions for all cases initially diagnosed as invasive disease. Additionally, 56% of respondents reported policies that require second opinions for initial diagnoses of DCIS, while 36% of respondents reported mandatory second opinion policies for cases initially diagnosed as atypical ductal hyperplasia.[25] In this same survey, pathologists overwhelmingly agreed that second opinions improved diagnostic accuracy (96%).
+
+A simulation study that used B-Path study data evaluated 12 strategies for obtaining second opinions to improve interpretation of breast histopathology.[26] Accuracy improved significantly with all second-opinion strategies, except for the strategy limiting second opinions only to cases of invasive cancer. Accuracy improved regardless of the pathologists’ confidence in their diagnosis or their level of experience. While the second opinions improved accuracy, they did not completely eliminate diagnostic variability, especially in the challenging case of breast atypia.
+
+Special Populations
+
+Women at increased risk who may benefit more from screening
+
+Women with BRCA1 and BRCA2 genetic mutations
+
+Women with an increased risk of breast cancer caused by a BRCA1 or BRCA2 genetic mutation might benefit from increased screening. For more information, see BRCA1 and BRCA2: Cancer Risks and Management.
+
+Recipients of thoracic radiation
+
+Women with Hodgkin and non-Hodgkin lymphoma who were treated with mantle irradiation have an increased risk of breast cancer, starting 10 years after completing therapy and continuing life-long. Therefore, screening mammography has been advocated, even though it may begin at a relatively young age.[27,28]
+
+Black women
+
+Women who self-identify as Black in the United States have a lower overall lifetime risk of developing breast cancer than White women, although they have a slightly higher breast cancer incidence in their 30s and 40s. However, Black women have a 40% higher breast cancer mortality than White women, a finding that is attributed to multiple factors, such as delayed follow-up of abnormal mammograms, later stage at diagnosis, inferior breast cancer treatment, and more aggressive tumor types.
+
+To inform the U.S. Preventive Services Task Force (USPSTF) 2024 breast cancer screening recommendations, a modeling study was commissioned. This study used the six Cancer Intervention and Surveillance Modeling Network (CISNET) models to assess the benefits and harms of mammography screening at different starting ages and frequencies in the average-risk population of U.S. women, overall, and for Black women, specifically. The models incorporated race-specific data on breast cancer incidence, tumor subtypes, stage distribution, treatment quality/effectiveness, and mortality. Because of Black women’s inferior breast cancer outcomes, the models found that Black women experienced a slightly greater absolute benefit (i.e., more breast cancer deaths prevented) from mammography screening compared with the general population.[29] For example, the models estimated that screening 1,000 women in the general population every 2 years between the ages of 50 years and 74 years (as recommended by previous USPSTF guidelines) would avert an estimated 6.7 breast cancer deaths, while biennial screening starting at age 40 years would avert an additional 1.3 breast cancer deaths. Among Black women, screening every 2 years between the ages of 50 years and 74 years would avert an estimated 9.2 breast cancer deaths per 1,000 women screened, while biennial screening starting at age 40 years would avert an additional 1.8 breast cancer deaths. (See Table 1.)
+
+In response to these findings and to address inequities in breast cancer outcomes, the USPSTF recommended that all average-risk women initiate screening at age 40 years (instead of at age 50 years, as previously recommended) and be screened every 2 years until age 74 years. Although this approach may result in additional lives saved, the models demonstrate that earlier screening also increases the likelihood of harm from mammography screening. In the general population of women, biennial screening from age 40 to 74 years, rather than age 50 to 74 years, would result in 503 additional false-positive results, 65 additional biopsies, and 2 additional overdiagnosed breast cancers per 1,000 women screened. Among Black women specifically, biennial screening starting at age 40 years, rather than at age 50 years, would result in 439 additional false-positive results, 75 additional biopsies, and 2 additional overdiagnosed breast cancers per 1,000 women screened. (See Table 1.)
+
+Although mathematical modeling is increasingly used to estimate mammography’s benefits and harms, it has a number of limitations, as described later in this summary. Limitations include models’ reliance on multiple assumptions and their inability to predict and incorporate factors that are as highly dynamic as breast cancer diagnosis and treatment. The assumptions and methods used by mathematical models are difficult for nonmodelers to understand. Therefore, it can be risky to base policy decisions on the findings of mathematical models. Further, as the USPSTF has noted, to address higher breast cancer mortality in Black women, systematic approaches are needed to address existing inequities in screening quality, diagnostic processes, and treatment quality. It is not clear whether earlier screening initiation in the general population will improve outcomes among Black women without dedicated efforts to address such documented inequities.
+
+Table 1. Lifetime Benefits and Harms of Screening 1,000 Women With Digital Breast Tomosynthesis Every 2 Years in Black Women Versus all Women, From CISNET Modeling Study to Inform the USPSTF 2024 Breast Cancer Screening Recommendationsa
+
+Screening Group
+No. of Mammograms
+No. of Breast Cancer Deaths Averted
+No. of False Positives
+No. of Unnecessary Biopsies
+No. of Overdiagnosed Breast Cancers
+
+CISNET = Cancer Intervention and Surveillance Modeling Network; No. = number; USPSTF = U.S. Preventive Services Task Force.
+
+aAdapted from Trentham-Dietz et al.[29]
+
+All Women
+
+Age 50–74 y (biennial)
+
+11,192
+6.7
+873
+136
+12
+
+Age 40–74 y (biennial)
+
+16,116
+8.2
+1,376
+201
+14
+
+Black Women
+
+Age 50–74 y (biennial)
+
+10,905
+9.2
+814
+158
+16
+
+Age 40–74 y (biennial)
+
+15,801
+10.7
+1,253
+233
+18
+
+Individuals who benefit less from screening
+
+Women with limited life expectancy
+
+The potential benefits of screening mammography occur well after the examination, often many years later, whereas the harms occur immediately. Therefore, women with limited life expectancy and comorbidities who suffer harms may do so without benefit. Nonetheless, many of these women undergo screening mammography.[30] In one study, approximately 9% of women with advanced cancer underwent cancer screening tests.[31]
+
+Older women
+
+Screening mammography may yield cancer diagnoses in approximately 1% of women aged 66 to 79 years, but most of these cancers are low risk.[32] The question remains whether the diagnosis and treatment of localized breast cancer in older women is beneficial.
+
+Young women
+
+There is no evidence of benefit in performing screening mammography in average-risk women younger than 40 years.
+
+Men
+
+Approximately 1% of all breast cancers occur in men.[33] Most cases are diagnosed during the evaluation of palpable lesions, which are generally easy to detect. Treatment consists of surgery, radiation, and systemic adjuvant hormone therapy or chemotherapy. For more information, see Male Breast Cancer Treatment. In this population, screening is unlikely to be beneficial.
+
+References
+
+American Cancer Society: Cancer Facts and Figures 2025. American Cancer Society, 2025. Available online. Last accessed January 16, 2025.
+
+Kurian AW, Griffith KA, Hamilton AS, et al.: Genetic Testing and Counseling Among Patients With Newly Diagnosed Breast Cancer. JAMA 317 (5): 531-534, 2017. [PUBMED Abstract]
+
+Ellington TD, Henley SJ, Wilson RJ, et al.: Trends in breast cancer mortality by race/ethnicity, age, and US census region, United States─1999-2020. Cancer 129 (1): 32-38, 2023. [PUBMED Abstract]
+
+Jatoi I, Sung H, Jemal A: The Emergence of the Racial Disparity in U.S. Breast-Cancer Mortality. N Engl J Med 386 (25): 2349-2352, 2022. [PUBMED Abstract]
+
+Surveillance Research Program, National Cancer Institute: SEER*Explorer: An interactive website for SEER cancer statistics. Bethesda, MD: National Cancer Institute. Available online. Last accessed December 30, 2024.
+
+Johnson A, Shekhdar J: Breast cancer incidence: what do the figures mean? J Eval Clin Pract 11 (1): 27-31, 2005. [PUBMED Abstract]
+
+Haas JS, Kaplan CP, Gerstenberger EP, et al.: Changes in the use of postmenopausal hormone therapy after the publication of clinical trial results. Ann Intern Med 140 (3): 184-8, 2004. [PUBMED Abstract]
+
+Barton MB, Elmore JG, Fletcher SW: Breast symptoms among women enrolled in a health maintenance organization: frequency, evaluation, and outcome. Ann Intern Med 130 (8): 651-7, 1999. [PUBMED Abstract]
+
+Allegra CJ, Aberle DR, Ganschow P, et al.: National Institutes of Health State-of-the-Science Conference statement: Diagnosis and Management of Ductal Carcinoma In Situ September 22-24, 2009. J Natl Cancer Inst 102 (3): 161-9, 2010. [PUBMED Abstract]
+
+Virnig BA, Tuttle TM, Shamliyan T, et al.: Ductal carcinoma in situ of the breast: a systematic review of incidence, treatment, and outcomes. J Natl Cancer Inst 102 (3): 170-8, 2010. [PUBMED Abstract]
+
+Miller AB, To T, Baines CJ, et al.: Canadian National Breast Screening Study-2: 13-year results of a randomized trial in women aged 50-59 years. J Natl Cancer Inst 92 (18): 1490-9, 2000. [PUBMED Abstract]
+
+Fisher B, Dignam J, Wolmark N, et al.: Lumpectomy and radiation therapy for the treatment of intraductal breast cancer: findings from National Surgical Adjuvant Breast and Bowel Project B-17. J Clin Oncol 16 (2): 441-52, 1998. [PUBMED Abstract]
+
+Ernster VL, Barclay J, Kerlikowske K, et al.: Mortality among women with ductal carcinoma in situ of the breast in the population-based surveillance, epidemiology and end results program. Arch Intern Med 160 (7): 953-8, 2000. [PUBMED Abstract]
+
+Welch HG, Prorok PC, O'Malley AJ, et al.: Breast-Cancer Tumor Size, Overdiagnosis, and Mammography Screening Effectiveness. N Engl J Med 375 (15): 1438-1447, 2016. [PUBMED Abstract]
+
+Weaver DL, Rosenberg RD, Barlow WE, et al.: Pathologic findings from the Breast Cancer Surveillance Consortium: population-based outcomes in women undergoing biopsy after screening mammography. Cancer 106 (4): 732-42, 2006. [PUBMED Abstract]
+
+Rubin E, Visscher DW, Alexander RW, et al.: Proliferative disease and atypia in biopsies performed for nonpalpable lesions detected mammographically. Cancer 61 (10): 2077-82, 1988. [PUBMED Abstract]
+
+Elmore JG, Longton GM, Carney PA, et al.: Diagnostic concordance among pathologists interpreting breast biopsy specimens. JAMA 313 (11): 1122-32, 2015. [PUBMED Abstract]
+
+Bleyer A, Welch HG: Effect of three decades of screening mammography on breast-cancer incidence. N Engl J Med 367 (21): 1998-2005, 2012. [PUBMED Abstract]
+
+Hall FM: Identification, biopsy, and treatment of poorly understood premalignant, in situ, and indolent low-grade cancers: are we becoming victims of our own success? Radiology 254 (3): 655-9, 2010. [PUBMED Abstract]
+
+Elmore JG, Nelson HD, Pepe MS, et al.: Variability in Pathologists' Interpretations of Individual Breast Biopsy Slides: A Population Perspective. Ann Intern Med 164 (10): 649-55, 2016. [PUBMED Abstract]
+
+Rosai J: Borderline epithelial lesions of the breast. Am J Surg Pathol 15 (3): 209-21, 1991. [PUBMED Abstract]
+
+Schnitt SJ, Connolly JL, Tavassoli FA, et al.: Interobserver reproducibility in the diagnosis of ductal proliferative breast lesions using standardized criteria. Am J Surg Pathol 16 (12): 1133-43, 1992. [PUBMED Abstract]
+
+Wells WA, Carney PA, Eliassen MS, et al.: Statewide study of diagnostic agreement in breast pathology. J Natl Cancer Inst 90 (2): 142-5, 1998. [PUBMED Abstract]
+
+Della Mea V, Puglisi F, Bonzanini M, et al.: Fine-needle aspiration cytology of the breast: a preliminary report on telepathology through Internet multimedia electronic mail. Mod Pathol 10 (6): 636-41, 1997. [PUBMED Abstract]
+
+Geller BM, Nelson HD, Carney PA, et al.: Second opinion in breast pathology: policy, practice and perception. J Clin Pathol 67 (11): 955-60, 2014. [PUBMED Abstract]
+
+Elmore JG, Tosteson AN, Pepe MS, et al.: Evaluation of 12 strategies for obtaining second opinions to improve interpretation of breast histopathology: simulation study. BMJ 353: i3069, 2016. [PUBMED Abstract]
+
+Mariscotti G, Belli P, Bernardi D, et al.: Mammography and MRI for screening women who underwent chest radiation therapy (lymphoma survivors): recommendations for surveillance from the Italian College of Breast Radiologists by SIRM. Radiol Med 121 (11): 834-837, 2016. [PUBMED Abstract]
+
+Allen SD, Wallis MG, Cooke R, et al.: Radiologic features of breast cancer after mantle radiation therapy for Hodgkin disease: a study of 230 cases. Radiology 272 (1): 73-8, 2014. [PUBMED Abstract]
+
+Trentham-Dietz A, Chapman CH, Jayasekera J, et al.: Collaborative Modeling to Compare Different Breast Cancer Screening Strategies: A Decision Analysis for the US Preventive Services Task Force. JAMA 331 (22): 1947-1960, 2024. [PUBMED Abstract]
+
+Walter LC, Lindquist K, Covinsky KE: Relationship between health status and use of screening mammography and Papanicolaou smears among women older than 70 years of age. Ann Intern Med 140 (9): 681-8, 2004. [PUBMED Abstract]
+
+Sima CS, Panageas KS, Schrag D: Cancer screening among patients with advanced cancer. JAMA 304 (14): 1584-91, 2010. [PUBMED Abstract]
+
+Smith-Bindman R, Kerlikowske K, Gebretsadik T, et al.: Is screening mammography effective in elderly women? Am J Med 108 (2): 112-9, 2000. [PUBMED Abstract]
+
+Fentiman IS, Fourquet A, Hortobagyi GN: Male breast cancer. Lancet 367 (9510): 595-604, 2006. [PUBMED Abstract]
+
+Mammography
+
+Description and Background
+
+Mammography uses ionizing radiation to image breast tissue. The examination is performed by compressing the breast firmly between two plates, which spreads out overlapping tissues and reduces the amount of radiation needed for the image. For routine screening in the United States, examinations are taken in both mediolateral oblique and craniocaudal projections.[1] Both views will include breast tissue from the nipple to the pectoral muscle. Radiation exposure is 4 to 24 mSv per standard two-view screening examination. Two-view examinations have a lower recall rate than single-view examinations because they reduce concern about abnormalities caused by superimposition of normal breast structures.[2] Two-view exams have lower interval cancer rates than single-view exams.[3]
+
+Under the Mammography Quality Standards Act (MQSA) enacted by Congress in 1992, all U.S. facilities that perform mammography must be certified by the U.S. Food and Drug Administration (FDA) to ensure the use of standardized training for personnel and a standardized mammography technique utilizing a low radiation dose.[4] (See the FDA's web page on Mammography Facility Surveys, Mammography Equipment Evaluations, and Medical Physicist Qualification Requirement under MQSA.) The 1998 MQSA Reauthorization Act requires that patients receive a written lay-language summary of mammography results.
+
+The following Breast Imaging Reporting and Data System (BI-RADS) categories are used for reporting mammographic results:[5]
+
+0: Incomplete—needs additional image evaluation and/or prior mammograms for comparison.
+
+1: Negative; the risk of cancer diagnosis within 1 year is 1%.
+
+2: Benign; the risk of cancer diagnosis within 1 year is 1%.
+
+3: Probably benign; the risk of cancer diagnosis within 1 year is 2%.
+
+4: Suspicious; the risk of cancer diagnosis within 1 year is 2%–95%.
+
+4a: 2%–10%.
+
+4b: 10%–50%.
+
+4c: 50%–95%.
+
+5: Highly suggestive of malignancy; the risk of cancer diagnosis within 1 year is 95%.
+
+6: Known biopsy—proven malignancy.
+
+Most screening mammograms are interpreted as negative or benign (BI-RADS 1 or 2, respectively); about 10% of women in the United States are asked to return for additional evaluation.[6] The percentage of women asked to return for additional evaluation varies not only by the inherent characteristics of each woman but also by the mammography facility and radiologist.
+
+Tumor detection has not been validated as a proper surrogate outcome measure for breast cancer mortality, and novel screening methods that simply increase tumor detection rates may not necessarily reduce the risk of dying from breast cancer. Nonetheless, there are numerous studies demonstrating improvements in breast tumor detection rates with modern imaging technology, with the absence of mortality data. Between 1963 and 1990, screening mammography was assessed in nine randomized trials with breast cancer-specific mortality as the primary end point, and screening mammography recommendations were largely based on the results of these trials. However, in more recent years, novel breast screening technologies have often been assessed in clinical trials and observational studies with end points that have not been validated as proper surrogate outcome measures for breast cancer mortality.[7]
+
+A systematic review of studies with a total of 488,099 patients compared digital breast tomosynthesis (DBT) alone, combined DBT and digital mammography (DM), and DM alone. DBT alone and combined DBT and DM were more sensitive than DM alone for breast cancer detection, but there appeared to be no significant difference in diagnostic accuracy between DBT alone and the combination of DBT and DM. A subsequent systematic review and meta-analysis by the same authors seemed to support the replacement of DM by synthetic 2-dimensional mammography (S2D) combined with DBT for breast cancer screening, as combining S2D and DBT improved tumor detection rates, and reduced recall rates, radiation dose, and overall costs.[7-9]
+
+Digital Mammography and Computer-Aided Detection
+
+DM is more expensive than screen-film mammography (SFM) but is more amenable to data storage and sharing. Performance of both SFM and DM for cancer detection rate, sensitivity, specificity, and positive predictive value (PPV) has been compared directly in several trials, with similar results in most patient groups.
+
+The Digital Mammographic Imaging Screening Trial (DMIST) compared the findings of digital and film mammograms in 42,760 women at 33 U.S. centers. Although DM detected more cancers in women younger than 50 years (area under the curve [AUC] of 0.84 +/- 0.03 for digital; AUC of 0.69 +/- 0.05 for film; P = .002), there was no difference in breast cancer detection overall.[10] A second DMIST report found a trend toward higher AUC for film mammography than for DM in women aged 65 years and older.[11]
+
+Another large U.S. cohort study [12] also found slightly better sensitivity for film mammography for women younger than 50 years with similar specificity.
+
+A Dutch study compared the findings of 1.5 million digital versus 4.5 million screen-film screening mammograms performed between 2004 and 2010. A higher recall and cancer detection rate was observed for the digital screens.[13] A meta-analysis [14] of 10 studies, including the DMIST [10,11] and the U.S. cohort study,[12] compared DM and film mammography in 82,573 women who underwent both types of the exam. In a random-effects model, there was no statistically significant difference in cancer detection between the two types of mammography (AUC of 0.92 for film and AUC of 0.91 for digital). For women younger than 50 years, all studies found that sensitivity was higher for DM, but specificity was either the same or higher for film mammography.
+
+Computer-aided detection (CAD) systems highlight suspicious regions, such as clustered microcalcifications and masses,[15] generally increasing sensitivity, decreasing specificity,[16] and increasing detection of ductal carcinoma in situ (DCIS).[17] Several CAD systems are in use. One large population-based study that compared recall rates and breast cancer detection rates before and after the introduction of CAD systems, found no change in either rate.[15,18] Another large study noted an increase in recall rate and increased DCIS detection but no improvement in invasive cancer detection rate.[17,19] Another study, using a large database and DM in women aged 40 to 89 years, found that CAD did not improve sensitivity, specificity, or detection of interval cancers, but it did detect more DCIS.[20]
+
+The use of new screening mammography modalities by more than 270,000 women aged 65 years and older in two time periods, 2001 to 2002 and 2008 to 2009, was examined, relying on a Surveillance, Epidemiology, and End Results (SEER)–Medicare-linked database. DM increased from 2% to 30%, CAD increased from 3% to 33%, and spending increased from $660 million to $962 million. CAD was used in 74% of screening mammograms paid for by Medicare in 2008, almost twice as many screening mammograms as in 2004. There was no difference in detection rates of early-stage (DCIS or stage I) or late-stage (stage IV) tumors.[21]
+
+Digital Breast Tomosynthesis
+
+DBT is a mammographic technique, which was approved by the FDA (April 2018).[22] Like conventional mammography, DBT compresses the breast and uses x-rays to create images. In DBT, an x-ray tube moves in an arc around the compressed breast, taking multiple images at different angles, which are then reconstructed or synthesized into a set of 3-dimensional images by a computer. Some cancers are better seen with this method than on conventional DM or ultrasound.
+
+DBT has rapidly become a prominent method of breast cancer screening in the United States, especially in higher-income regions with larger White populations. Use of DBT for breast cancer screening increased from 13% in 2015 to over 40% in 2017.[23] Seventy-three percent of facilities now report use of DBT.[22]
+
+Observational data from eight screening facilities in Vermont compared the findings from 86,379 DBT and 97,378 full-field DM screening examinations performed between 2012 and 2016. Women were included if they had no history of breast cancer or breast implants. Demographic and risk factor information was obtained by questionnaire, and pathology for all biopsies was obtained through the Vermont Breast Cancer Surveillance System. Recall rate was lower with DBT than with DM (7.9% vs. 10.9%; odds ratio [OR], 0.81; 95% confidence interval [CI], 0.77–0.85), but there was no difference in the rates of biopsy or the detection of benign or malignant disease.[24]
+
+The Oslo Tomosynthesis Screening Trial was conducted between November 2010 and December 2012 and included 24,301 women with 281 cancers. The trial compared the sensitivity of DM with DM plus DBT and with DM plus computer-aided detection and of DM plus DBT with synthesized 2-dimensional mammography plus DBT. Researchers report that DBT plus DM detected more breast cancers than DM alone (230 vs. 177, a 22.7% relative increase [95% CI, 17%–28.6%]). The trial also reported somewhat fewer false-positive findings on DBT plus DM compared with DM alone (2,081 vs. 2,466, a 0.8% relative reduction [95% CI, -1.03 to -0.57]), except in women with extremely dense breasts.[25] Difference between CAD plus DM and DM alone were not statistically significant.
+
+The Tomosynthesis Trial in Bergen (To-Be) compared DBT plus synthesized mammography (SM) with conventional DM in population-based screening, including all women aged 50 to 69 years who were invited for breast cancer screening in Bergen, Norway. Screening was performed with two-view DBT plus SM or two-view conventional DM. A pool of eight radiologists independently double read the screening mammograms. Interim results from the first year of the trial showed:[26]
+
+Longer interpretation times for DBT plus SM (71 vs. 41 seconds).
+
+Equivalent mean glandular radiation dose.
+
+Lower overall recall rate for DBT plus SM (3.6% vs. 3.0%), despite an equivalent recall rate for women with dense breasts (3.6%).
+
+The primary outcome results were published later.[27] The authors suggested explanations for the difference between these results and those from previous studies. First, SM may produce inferior quality images when compared with conventional DM, including poor visualization of microcalcifications. Second, the eight radiologists had wide variations in experience (ranging from 0–19 years) reading screen film and/or DM and DBT in population-based breast cancer screening.
+
+Another study used three different Cancer Intervention and Surveillance Modeling Network (CISNET) breast cancer models and incorporated DBT screening performance data into the models to determine the cost and benefits of DBT versus DM. The study concluded that the use of DBT screening instead of DM reduced false-positives and recall rates and was projected to reduce breast cancer deaths (0–0.21 deaths per 1,000 women) and increased quality-adjusted life-years (QALYs) (1.97–3.27 per 1,000 women). However, these improvements were generally small and were associated with high costs relative to benefits: cost-effectiveness ratios ranged from $195,026 to $270,135 per QALY gained. These are greater than commonly accepted thresholds of $50,000 to $150,000 per QALY.[28]
+
+An important limitation of the available studies and statistical modeling is lack of evidence of the clinical significance of the additional breast cancers detected by DBT (with or without DM) versus DM alone. The extent to which DBT may contribute to overdiagnosis of non–life-threatening lesions or lesions that would have still been detected in an asymptomatic woman at the time of a future DM is unknown. To date, there are no studies of DBT that show a reduction in metastatic disease or other late-stage disease.
+
+Five ongoing randomized controlled trials with a combined recruitment of 430,000 women in Europe, the United Kingdom, and the United States are expected to provide information about clinical breast cancer outcomes of mammographic screening using DBT compared with DM.[25,29]
+
+The randomized TOSYMA trial assessed DBT plus synthesized mammography versus digital screening mammography alone for the detection of breast cancer. The primary end points were detection of invasive breast cancer and the interval invasive cancer detection rate at 24 months. However, neither of these end points has been validated as proper surrogate outcome measures for mortality. The detection of greater numbers of early-stage cancers may confer no mortality benefit, as many of these cancers may fail to progress or progress so slowly that they pose no threat to the patient’s life (i.e., result in overdiagnosis). Moreover, if the detection of nonlethal cancers substantially increases, then the interval cancer detection rates may decrease with no subsequent reduction in mortality.[7]
+
+A cohort study comparing DBT with DM found that the two modalities were not associated with a significant difference in risk of interval invasive cancer. However, DBT was associated with a significantly lower risk of advanced breast cancer among women with extremely dense breasts at high risk of developing breast cancer.[30]
+
+Better clarification on this issue may come from the ongoing Tomosynthesis Mammographic Imaging Screening Trial (TMIST), in which women are randomly assigned to either standard digital breast imaging or DBT, and the primary outcome is rate of advanced cancers, a composite end point that includes distant metastases.
+
+Characteristics of Cancers Detected by Breast Imaging
+
+Regardless of stage, nodal status, and tumor size, screen-detected cancers have a better prognosis than those diagnosed outside of screening.[2] This suggests that they are biologically less lethal (perhaps slower growing and less likely to invade locally and metastasize). This is consistent with the length bias effect associated with screening. That is, screening is more likely to detect indolent (i.e., slow-growing) breast cancers, while the more aggressive cancers are detected in the intervals between screening sessions.
+
+A 10-year follow-up study of 1,983 Finnish women with invasive breast cancer demonstrated that the method of cancer detection is an independent prognostic variable. When controlled for age, nodal status, and tumor size, screen-detected cancers had a lower risk of relapse and better overall survival. For women whose cancers were detected outside of screening, the hazard ratio (HR) for death was 1.90 (95% CI, 1.15–3.11), even though they were more likely to receive adjuvant systemic therapy.[31]
+
+Similarly, an examination of the breast cancers found in three randomized screening trials (Health Insurance Plan, National Breast Screening Study [NBSS]-1, and NBSS-2) accounted for stage, nodal status, and tumor size and determined that patients whose cancer was found via screening had a more favorable prognosis. The relative risks (RRs) for death were 1.53 (95% CI, 1.17–2.00) for interval and incident cancers, compared with screen-detected cancers; and 1.36 (95% CI, 1.10–1.68) for cancers in the control group, compared with screen-detected cancers.[32]
+
+A third study compared the outcomes of 5,604 English women with screen-detected cancers to those with symptomatic breast cancers diagnosed between 1998 and 2003. After controlling for tumor size, nodal status, grade, and patient age, researchers found that the women with screen-detected cancers fared better. The HR for survival of the symptomatic women was 0.79 (95% CI, 0.63–0.99).[31,33]
+
+The findings of these studies are also consistent with the evidence that some screen-detected cancers are low risk and represent overdiagnosis.
+
+Screening biases–concepts
+
+Numerous uncontrolled trials and retrospective series have documented the ability of mammography to diagnose small, early-stage breast cancers, which have a favorable clinical course.[34] Individuals whose cancer is detected by screening show a higher survival rate than those whose cancers are not detected by screening even when screening has not prolonged any lives. This concept is explained by the following four types of statistical bias:
+
+Lead-time bias: Cancer detected by screening earlier than the cancer would have been detected based on symptoms does nothing but advance the date of diagnosis. Earlier detection and treatment do not alter the natural disease progression. The 5-year survival rate from the time of diagnosis is longer for a cancer caught early even when the screening has made no difference in how long the person lives.
+
+Length bias: Screening mammography detects slowly growing cancers that have a better prognosis than cancers presenting clinically (detected by the doctor or the person when he or she gets ill). Adding these nonprogressive cancers to the life-threatening cancers (whose outcome is not affected by earlier treatment) increases the 5-year survival rate, even though screening has made no difference in how many lives are saved.
+
+Overdiagnosis bias: Screening detects cancers that would never cause symptoms or death and will increase survival rates without changing length of life.
+
+Healthy volunteer bias: Those who volunteer to participate in screening may be the healthiest, and the most health-conscious women in the general population. Therefore, their outcomes will be better than those of women who are neither healthy nor health-conscious, regardless of possible benefits of early diagnosis. One study identified that women who accept invitations to screening are more health-conscious, have better access to health care, and have lower mortality from causes other than breast cancer.[35]
+
+The impact of these biases is not known. A new randomized controlled trial (RCT) with cause-specific mortality as the end point is needed to determine both survival benefit and impact of overdiagnosis, lead time, length time, and healthy volunteer biases. This is not achievable; randomly assigning patients to screen and nonscreen groups would be unethical, and at least three decades of follow-up would be needed, during which time changes in treatment and imaging technology would invalidate the results. Decisions must therefore be based on available RCTs, despite their limitations, and on ecological or cohort studies with adequate control groups and adjustment for confounding. For more information, see Cancer Screening Overview.
+
+Assessment of performance and accuracy
+
+Performance benchmarks for screening mammography in the United States are described on the Breast Cancer Surveillance Consortium (BCSC) website. For more information, see Cancer Screening Overview.
+
+Sensitivity
+
+The sensitivity of mammography is the percentage of women with breast cancers detected by mammographic screening. Sensitivity depends on tumor size, conspicuity, hormone sensitivity, breast tissue density, patient age, timing within the menstrual cycle, overall image quality, and interpretive skill of the radiologist. Overall sensitivity is approximately 79% but is lower in younger women and in those with dense breast tissue (see the BCSC website).[36-38] Sensitivity is not the same as benefit because some woman with possible breast cancer are harmed by overdiagnosis. According to the Physician's Insurance Association of America (PIAA), delay in diagnosis of breast cancer and errors in diagnosis are common causes of medical malpractice litigation. PIAA data from 2002 through 2011 note that the largest total indemnity payments for breast cancer claims are for errors in diagnosis.[39]
+
+Specificity and false-positive rate
+
+The specificity of mammography is the percentage of all women without breast cancer whose mammograms are negative. The false-positive rate is the likelihood of a positive test in women without breast cancer. Low specificity and high rate of false-positives result in unnecessary follow-up examinations and procedures. Because specificity includes all women without cancer in the denominator, even a small percentage of false-positives turns out to be a large number in absolute terms. Thus—in screening—a good specificity must be very high. Even 95% specificity is quite low for a screening test.
+
+Interval cancers
+
+Interval cancers are cancers that are diagnosed in the interval between a normal screening examination and the anticipated date of the next screening mammogram. One study found interval cancers occurred more often in women younger than 50 years, and had mucinous or lobular histology, high histological grade, high proliferative activity with relatively benign mammographic features, and no calcifications. Conversely, screen-detected cancers often had tubular histology, small size, low stage, hormone sensitivity, and a major component of DCIS.[40] Overall, interval cancers have characteristics of rapid growth,[40,41] are diagnosed at an advanced stage, and carry a poor prognosis.[42]
+
+Analysis of mammography screening length bias preferentially detects indolent cancers that grow more slowly (e.g., exist for a longer length of time in the preclinical phase). In contrast, the more aggressive cancers grow faster (e.g., spend a shorter length of time in the preclinical phase) and are often detected clinically in the intervals between screening sessions. For a more detailed explanation of length and lead-time bias in cancer screening, see Cancer Screening Overview.
+
+In recent years, novel breast cancer screening technologies have been assessed in clinical trials with the interval cancer detection rate as the primary outcome of interest, and newer screening methods recommended on the basis of reductions in interval cancer detection rates. However, the interval cancer detection rate has not been validated as a proper surrogate for breast cancer mortality, and its use as a surrogate outcome measure in breast cancer screening trials remains controversial.
+
+In breast cancer screening programs, screen-detected breast cancers tend to have a better prognosis than cancers detected during the intervals between screening sessions (interval breast cancers). This was confirmed in a registry-based cohort study from Manitoba in which interval breast cancers were more likely than were screen-detected breast cancers to be high-grade and estrogen receptor–negative, and associated with greater than a threefold increased risk of breast cancer death.[43]
+
+The Nova Scotia Breast Screening Program defined missed cancers as those that were false-negatives on the previous screening exam, occurring less often than 1 per 1,000 women. It concluded that interval cancers occurred in approximately 1 per 1,000 women aged 40 to 49 years, and 3 per 1,000 women aged 50 to 59 years.[44]
+
+Conversely, a larger trial found that interval cancers were more prevalent in women aged 40 to 49 years. Those appearing within 12 months of a negative screening mammogram were usually attributable to greater breast density. Those appearing within a 24-month interval were related to decreased mammographic sensitivity caused by greater breast density or to rapid tumor growth.[45]
+
+Variables Associated With Accuracy
+
+Patient characteristics
+
+The accuracy of mammography has been noted to vary with patient characteristics, such as a woman's age, breast density, whether it is her first or subsequent exam, and the time since her last mammogram. Younger women have lower sensitivity and higher false-positive rates than do older women.
+
+The Million Women Study in the United Kingdom found decreased sensitivity and specificity in women aged 50 to 64 years if they used postmenopausal hormone therapy, had prior breast surgery, or had a body mass index below 25.[46] Increased time since the last mammogram increases sensitivity, recall rate, and cancer detection rate and decreases specificity.[47]
+
+The United Kingdom Age Trial assessed the efficacy of mammography screening for women younger than 50 years. After a median follow-up of 22.8 years, there was no difference in breast cancer mortality between women randomly assigned to initiate screening at age 39 to 41 years until entry into the National Health Service (NHS) breast screening program at age 50 to 52 years, versus the group that did not initiate mammography screening until entry into the NHS breast screening program (RR, 0.98; 95% CI, 0.79–1.22; P = .86).[48]
+
+Sensitivity may be improved by scheduling the exam after the initiation of menses or during an interruption from hormone therapy.[49] Obese women have more than a 20% increased risk of having false-positive mammography, although sensitivity is unchanged.[50]
+
+Breast density
+
+Dense breasts may obscure the detection of small masses on mammography, thereby reducing the sensitivity of mammography.[12] For women of all ages, high breast density is associated with 10% to 29% lower sensitivity.[37] High breast density is also associated with a modestly increased risk of developing breast cancer.[51] High breast density does not confer a higher risk of breast cancer death.
+
+High breast density is an inherent trait, which can be inherited [52,53] or affected by age; endogenous [54] and exogenous [55,56] hormones;[57] selective estrogen receptor modulators, such as tamoxifen;[58] and diet.[59] Hormone therapy is associated with increased breast density, lower mammographic sensitivity, and an increased rate of interval cancers.[60]
+
+Dense breast tissue is not abnormal. Breast density describes the proportion of dense versus fatty tissue in a mammographic image.[61] The American College of Radiology’s BI-RADS classifies breast density as follows:
+
+Almost entirely fatty.
+
+Scattered fibroglandular densities.
+
+Heterogeneously dense.
+
+Extremely dense.
+
+The latter two categories are considered dense breast tissue, a description affecting 43% of women aged 40 to 74 years.[62] A radiologist's assignment of breast density is subjective and may vary over time in any woman.[62,63]
+
+There is limited high-quality evidence to guide optimal breast cancer screening in individuals with dense breasts. For dense breasts, digital breast tomosynthesis has improved sensitivity and modestly lowers false-positive rates compared with conventional digital mammography.[64]
+
+Supplemental imaging with ultrasonography or breast magnetic resonance imaging (MRI) has been suggested by some groups for screening women with dense breasts, but there are no data showing that this strategy results in lower breast cancer mortality. The potential harm of adding these supplemental screening tests is the likelihood of producing more false-positives, leading to additional imaging and breast biopsies, with resultant anxiety and cost.[65] Supplemental screening may also increase overdiagnosis of breast cancer with resultant overtreatment.
+
+A study examining cancer detection end points in women with dense breasts undergoing supplemental screening (e.g., ultrasound, MRI, digital resources) showed higher breast cancer detection, but it is not known if that translates into cancer protection.[66] An RCT of supplemental MRI versus mammography only in 40,373 individuals aged 50 to 75 years with extremely dense breasts in the Netherlands was performed.[67] The study showed lower incidence of interval cancers at 2 years of follow-up in the MRI group (2.5 per 1,000 screenings in the group invited to receive MRI, 0.8 per 1,000 in the group that actually received MRI, and 5.0 per 1,000 in the group that received mammography only). This finding suggests that at least some of the excess cancers detected by MRI in the MRI group were earlier diagnoses of cancers that would have become clinically apparent. However, whether earlier diagnoses facilitated by MRI resulted in improved clinical outcomes has not been shown. As would be expected, cancers detected by MRI were more likely to have favorable tumor characteristics than interval cancers. MRI screening was associated with 79.8 false-positive results per 1,000 screenings.[67]
+
+A prospective multicenter study, known as the Dense Breast Tomosynthesis Ultrasound Screening Trial (DBTUST), investigated whether ultrasound improved cancer detection after DBT in women with dense breasts.[68] Between December 2015 and June 2021, 6,179 women at three Pennsylvania locations underwent three rounds of annual screening with DBT and technologist-performed handheld ultrasounds. The images were interpreted by two radiologists at baseline, 12 months, and 24 months. The study concluded that technologist-performed ultrasound screening modestly improved detection of cancer in women with dense breasts by 1.3 cases per 1,000 in year 1 and by 1 case per 1,000 in years 2 to 3. This screening also increased the false-positive recall rate. In 3 years, 1,007 (16.3%) women had a false-positive recall based on DBT, and an additional 761 (12.3%) women had a false-positive recall based on ultrasound.
+
+The FDA mandates that mammography facilities report breast density to patients and suggest that patients speak with their primary care clinician about supplemental screening.[69] However, limited evidence, inconsistent guidelines, and wording of breast density reports have generated confusion and anxiety among patients and health care providers.[70]
+
+Tumor characteristics
+
+Mucinous and lobular cancers are more easily detected by mammography. Rapidly growing cancers can sometimes be mistaken for normal breast tissue (e.g., medullary carcinomas, an uncommon type of invasive ductal breast cancer that is often associated with the BRCA1 mutation and aggressive characteristics, but that may demonstrate comparatively favorable responses to treatment).[40,71] Some other cancers associated with BRCA1/2 mutations, which may appear indolent, can also be missed.[72,73]
+
+Physician characteristics
+
+Radiologists’ performance is variable, affected by levels of experience and the volume of mammograms they interpret.[74] Biopsy recommendations of radiologists in academic settings have a higher positive PPV than do community radiologists.[75] Fellowship training in breast imaging may improve detection.[10]
+
+Performance also varies by facility. Mammographic screening accuracy was higher at facilities offering only screening examinations than at those also performing diagnostic tests. Accuracy was also better at facilities with a breast imaging specialist on staff, performing single rather than double readings, and reviewing performance audits two or more times each year.[76]
+
+False-positive rates are higher at facilities where concern about malpractice is high and at facilities serving vulnerable women (racial or ethnic minority women and women with less education, limited household income, or rural residence).[77] These populations may have a higher cancer prevalence and a lack of follow-up.[78]
+
+Artificial intelligence algorithms
+
+Artificial intelligence (AI) algorithms are being developed to interpret screening mammograms and breast biopsy specimens.[79-81] While such tools may improve interpretive speed and reproducibility in the future, it is unknown if they will exacerbate overdiagnosis [82] and how they might influence physicians’ final assessments.
+
+International comparisons
+
+International comparisons of screening mammography have found higher specificity in countries with more highly centralized screening systems and national quality assurance programs.[83,84]
+
+The recall rate in the United States is twice that of the United Kingdom, with no difference in the rate of cancer detection.[83]
+
+Prevalent versus subsequent examination and the interval between exams
+
+The likelihood of diagnosing cancer is highest with the prevalent (first) screening examination, ranging from 9 to 26 cancers per 1,000 screens, depending on the woman’s age. The likelihood decreases for follow-up examinations, ranging from 1 to 3 cancers per 1,000 screens.[85]
+
+The optimal interval between screening mammograms is unknown; there is little variability across the trials despite differences in protocols and screening intervals. A prospective U.K. trial randomly assigned women aged 50 to 62 years to receive mammograms annually or triennially. Although tumor grade and nodal status were similar in the two groups, more cancers of slightly smaller size were detected in the annual screening group than in the triennial screening group.[86]
+
+A large observational study found a slightly increased risk of late-stage disease at diagnosis for women in their 40s who were adhering to a 2-year versus a 1-year schedule (28% vs. 21%; OR, 1.35; 95% CI, 1.01–1.81), but no difference was seen for women in their 50s or 60s based on schedule difference.[87,88]
+
+A Finnish study of 14,765 women aged 40 to 49 years randomly assigned women to receive either annual screens or triennial screens. There were 18 deaths from breast cancer in 100,738 life-years in the triennial screening group and 18 deaths from breast cancer in 88,780 life-years in the annual screening group (HR, 0.88; 95% CI, 0.59–1.27).[89]
+
+Benefit of Mammographic Screening on Breast Cancer Mortality
+
+Randomized controlled trials (RCTs)
+
+RCTs that studied the effect of screening mammography on breast cancer mortality were performed between 1963 and 2015, with participation by over half-a-million women in four countries. One trial, the Canadian NBSS-2, compared mammography plus clinical breast examination (CBE) to CBE alone; the other trials compared screening mammography with or without CBE to usual care. For a detailed description of the trials, see the Appendix of Randomized Controlled Trials section.
+
+The trials differed in design, recruitment of participants, interventions (both screening and treatment), management of the control group, compliance with assignment to screening and control groups, and analysis of outcomes. Some trials used individual randomization, while others used cluster randomization in which cohorts were identified and then offered screening; one trial used nonrandomized allocation by day of birth in any given month. Cluster randomization sometimes led to imbalances between the intervention and control groups. Age differences have been identified in several trials, although the differences had no major effect on the trial outcome.[90] In the Edinburgh Trial, socioeconomic status, which correlates with the risk of breast cancer mortality, differed markedly between the intervention and control groups, rendering the results uninterpretable.
+
+Breast cancer mortality was the major outcome parameter for each of these trials, so the attribution of cause of death required scrupulous attention. The use of a blinded monitoring committee (New York) and a linkage to independent data sources, such as national mortality registries (Swedish trials), were incorporated but could not ensure impartial attributions of cancer death for women in the screening or control arms. Possible misclassification of breast cancer deaths in the Two-County Trial biasing the results in favor of screening has been suggested.[91]
+
+There were also differences in the methodology used to analyze the results of these trials. Four of the five Swedish trials were designed to include a single screening mammogram in the control group and were timed to correspond with the end of the series of screening mammograms in the study group. The initial analysis of these trials used an evaluation analysis, tallying only the breast cancer deaths that occurred in women whose cancer was discovered at or before the last study mammogram. In some of the trials, a delay occurred in the performance of the end-of-study mammogram, resulting in more time for members of the control group to develop or be diagnosed with breast cancer. Other trials used a follow-up analysis, which counts all deaths attributed to breast cancer, regardless of the time of diagnosis. This type of analysis was used in a meta-analysis of four of the five Swedish trials as a response to concerns about the evaluation analyses.[91]
+
+The accessibility of the data for international audits and verification also varied, with a formal audit having been undertaken only in the Canadian trials. Other trials have been audited to varying degrees, but with less rigor.[92]
+
+All of these studies were designed to study breast cancer mortality rather than all-cause mortality because breast cancer deaths contribute only a small proportion of total mortality in any given population. When all-cause mortality in these trials was examined retrospectively, only the Edinburgh Trial showed a difference attributable to the previously noted socioeconomic differences in the study groups. The meta-analysis (follow-up methods) of the four Swedish trials also showed a small improvement in all-cause mortality.
+
+The relative improvement in breast cancer mortality attributable to screening is approximately 15% to 20%, and the absolute improvement at the individual level is much less. The potential benefit of breast cancer screening can be expressed as the number of lives extended because of early breast cancer detection.[93,94]
+
+The RCT results represent experiences in a defined period of regular examinations, but in practice, women undergo 20 to 30 years of screening throughout their lifetimes.[88,95]
+
+There are several problems with using these RCTs that were performed up to 50 years ago to estimate the current benefits of screening on breast cancer mortality. These problems include the following:
+
+Improvements in mammography technology, with the ability to identify increasingly subtle abnormalities.
+
+Enhanced breast cancer awareness in the general population, with women seeking evaluation and treatment earlier.
+
+Changes in the risk factors for breast cancer in the population (including age at menarche, age at first pregnancy, obesity, and use of postmenopausal hormone treatment).
+
+Improvements in breast cancer treatment, such that larger, more advanced cancers have higher cure rates than in the past.
+
+Applying results of short-term RCTs (e.g., 5 to 10 years) to make estimates of lifetime effects of breast cancer screening.
+
+For these reasons, estimates of the breast cancer mortality reduction resulting from current screening are based on well-conducted cohort and ecological studies in addition to the RCTs.
+
+Effectiveness of population-based screening programs
+
+An estimate of screening effectiveness can be obtained from nonrandomized controlled studies of screened versus nonscreened populations, case-control studies of screening in real communities, and modeling studies that examine the impact of screening on large populations. These studies must be designed to minimize or exclude the effects of unrelated trends influencing breast cancer mortality such as improved treatment and heightened awareness of breast cancer in the community.
+
+Three population-based, observational studies from Sweden compared breast cancer mortality in the presence and absence of screening mammography programs. One study compared two adjacent time periods in 7 of the 25 counties in Sweden and found a statistically significant breast cancer mortality reduction of 18% to 32% attributable to screening.[96] The most important bias in this study is that the advent of screening in these counties occurred over a period during which dramatic improvements in the effectiveness of adjuvant breast cancer therapy were being made, changes that were not addressed by the study authors. The second study considered an 11-year period comparing seven counties with screening programs with five counties without them.[97] There was a trend in favor of screening, but again, the authors did not consider the effect of adjuvant therapy or differences in geography (urban vs. rural) that might affect treatment practices.
+
+The third study attempted to account for the effects of treatment by using a detailed analysis by county. It found screening had little impact, a conclusion weakened by several flaws in design and analysis.[98]
+
+In Nijmegen, the Netherlands, where a population-based screening program was undertaken in 1975, a case-cohort study found that screened women had decreased mortality compared with unscreened women (OR, 0.48).[99] However, a subsequent study comparing Nijmegen breast cancer mortality rates with neighboring Arnhem in the Netherlands, which had no screening program, showed no difference in breast cancer mortality.[100]
+
+A community-based case-control study of screening in high-quality U.S. health care systems between 1983 and 1998 found no association between previous screening and reduced breast cancer mortality, but the mammography screening rates were generally low.[101]
+
+A well-conducted ecological study compared three pairs of neighboring European countries that were matched on similarity in health care systems and population structure, one of which had started a national screening program some years earlier than the others. The investigators found that each country had experienced a reduction in breast cancer mortality, with no difference between matched pairs that could be attributed to screening. The authors suggested that improvements in breast cancer treatment and/or health care organizations were more likely responsible for the reduction in mortality than was screening.[102]
+
+A systematic review of ecological and large cohort studies published through March 2011 compared breast cancer mortality in large populations of women, aged 50 to 69 years, who started breast cancer screening at different times. Seventeen studies met inclusion criteria, but all studies had methodological problems, including control group dissimilarities, insufficient adjustment for differences between areas in breast cancer risk and breast cancer treatment, and problems with similarity of measurement of breast cancer mortality between compared areas. There was great variation in results among the studies, with four studies finding a relative reduction in breast cancer mortality of 33% or more (with wide CIs) and five studies finding no reduction in breast cancer mortality. Because only a part of the overall reduction in breast cancer mortality could possibly be attributed to screening, the review concluded that any relative reduction in breast cancer mortality resulting from screening would likely be no more than 10%.[103]
+
+A U.S. ecological analysis conducted between 1976 and 2008 examined the incidence of early-stage versus late-stage breast cancer for women aged 40 years and older. To assess a screening effect, the authors compared the magnitude of increase in early-stage cancer with the magnitude of an expected decrease in late-stage cancer. Over the study, the absolute increase in the incidence of early-stage cancer was 122 cancers per 100,000 women, while the absolute decrease in late-stage cancers was 8 cases per 100,000 women. After adjusting for changes in incidence resulting from hormone therapy and other undefined causes, the authors concluded (1) the benefit of screening on breast cancer mortality was small, (2) between 22% and 31% of diagnosed breast cancers represented overdiagnosis, and (3) the observed improvement in breast cancer mortality was probably attributable to improved treatment rather than screening.[104]
+
+An analytic approach was used to approximate the contributions of screening versus treatment to breast cancer mortality reduction and the magnitude of overdiagnosis.[105] The shift in the size distribution of breast cancers in the United States (before the introduction of mammography) to 2012 (after its widespread dissemination), was investigated using SEER data in women aged 40 years and older. The rate of clinically meaningful breast cancer was assumed to be stable during this time. The authors documented a lower incidence of larger (≥2 cm) tumors as well as a reduction in breast cancer case fatality. The lower mortality for women with larger tumors was attributed to improvements in therapy. Two-thirds of the decline in size-specific case fatality was ascribed to improved treatment.
+
+A prospective cohort study of community-based screening programs in the United States found that annual compared with biennial screening mammography did not reduce the proportion of unfavorable breast cancers detected in women aged 50 to 74 years or in women aged 40 to 49 years without extremely dense breasts. Women aged 40 to 49 years with extremely dense breasts did have a reduction in cancers larger than 2.0 cm with annual screening (OR, 2.39; 95% CI, 1.37–4.18).[106]
+
+An observational study of women aged 40 to 74 years conducted in 7 of 12 Canadian screening programs compared breast cancer mortality in those participants screened at least once between 1990 and 2009 (85% of the population) with those not screened (15% of the population). The abstract reported a 40% average breast cancer mortality among participants; however, it was likely intended to report a 40% reduction in breast cancer mortality on the basis of language used in the Discussion section.[107]
+
+Limitations of this study included the lack of all-cause mortality data, the extent of screening, screening outside of the study, screening prior to the study, the method used for calculating expected mortality and the referent rates of nonparticipants, nonparticipant survival, province-specific population differences, the extent to which limitations of the database prevented correcting for age and other differences between participants, the generalizability of the substudy data of a single province (British Columbia), and the potentially large impact of selection bias. Overall, the study lacked important data and had limitations in methodology and data analysis.
+
+Statistical modeling of breast cancer incidence and mortality in the United States
+
+The optimal screening interval has been addressed by modelers. Modeling makes assumptions that may not be correct; however, the credibility of modeling is greater when the model produces overall results that are consistent with randomized trials and when the model is used to interpolate or extrapolate. For example, if a model’s output agrees with RCT outcomes for annual screening, it has greater credibility to compare the relative effectiveness of biennial versus annual screening.
+
+In 2000, the National Cancer Institute formed a consortium of modeling groups (Cancer Intervention and Surveillance Modeling Network [CISNET]) to address the relative contribution of screening and adjuvant therapy to the observed decline in breast cancer mortality in the United States.[108] These models predicted reductions in breast cancer mortality similar to those expected in the circumstances of the RCTs but updated to the use of modern adjuvant therapy. In 2009, CISNET modelers addressed several questions related to the harms and benefits of mammography, including comparing annual versus biennial screening.[88] Women aged 50 to 74 years received most of the mortality benefit of annual screening by having a mammogram every 2 years. The reduction in breast cancer deaths that was maintained because of the move from annual to biennial screening ranged across the six models from 72% to 95%, with a median of 80%.
+
+Data are limited as to how much of the reduction in mortality, seen over time from 1990 onward, is attributable to advances in imaging techniques for screening and as to how much is the result of the improved effectiveness of therapy. In one CISNET study of six simulation models, about one-third of the decrease in breast cancer mortality in 2012 was attributable to screening, with the balance attributed to treatment.[109] In this CISNET study, the mean estimated reduction in overall breast cancer mortality rate was 49% (model range, 39%–58%), relative to the estimated baseline rate in 2012 if there was no screening or treatment; 37% (model range, 26%–51%) of this reduction was associated with screening, and 63% (model range, 49%–74%) of this reduction was associated with treatment.
+
+Harms of Mammographic Screening
+
+The negative effects of screening mammography are overdiagnosis (true positives that will not become clinically significant), false-positives (related to the specificity of the test), false-negatives (related to the sensitivity of the test), discomfort associated with the test, radiation risk, psychological harm, financial stress, and opportunity costs.
+
+Table 2 provides an overview of the estimated benefits and harms of screening mammography for 10,000 women who underwent annual screening mammography over a 10-year period.[110]
+
+Table 2. Estimated Benefits and Harms of Mammography Screening for 10,000 Women Who Underwent Annual Screening Mammography During a 10-Year Perioda
+
+Age, y
+No. of Breast Cancer Deaths Averted With Mammography Screening During the Next 15 yb
+No. (95% CI) With ≥1 False-Positive Result During the 10 yc
+No. (95% CI) With ≥1 False-Positive Resulting in a Biopsy During the 10 yc
+No. of Breast Cancers or DCIS Diagnosed During the 10 y That Would Never Become Clinically Important (Overdiagnosis)d
+
+No. = number; CI = confidence interval; DCIS = ductal carcinoma in situ.
+
+aAdapted from Pace and Keating.[110]
+
+bNumber of deaths averted are from Welch and Passow.[111] The lower bound represents breast cancer mortality reduction if the breast cancer mortality relative risk were 0.95 (based on minimal benefit from the Canadian trials [112,113]), and the upper bound represents the breast cancer mortality reduction if the relative risk were 0.64 (based on the Swedish 2-County Trial [114]).
+
+cFalse-positive and biopsy estimates and 95% confidence intervals are 10-year cumulative risks reported in Hubbard et al. [115] and Braithwaite et al.[116]
+
+dThe number of overdiagnosed cases are calculated by Welch and Passow.[111] The lower bound represents overdiagnosis based on results from the Malmö trial,[117] whereas the upper bound represents the estimate from Bleyer and Welch.[104]
+
+eThe lower-bound estimate for overdiagnosis reported by Welch and Passow [111] came from the Malmö study.[117] The study did not enroll women younger than 50 years.
+
+40
+1–16
+6,130 (5,940–6,310)
+700 (610–780)
+?–104e
+
+50
+3–32
+6,130 (5,800–6,470)
+940 (740–1,150)
+30–137
+
+60
+5–49
+4,970 (4,780–5,150)
+980 (840–1,130)
+64–194
+
+Overdiagnosis
+
+Overdiagnosis occurs when screening procedures detect cancers that would never become clinically apparent in the absence of screening. It is a special concern because identification of the cancer does not benefit the individual, while the side effects of diagnostic procedures and cancer treatment may cause significant harm. The magnitude of overdiagnosis is debated, particularly regarding DCIS, a cancer precursor whose natural history is unknown. By reason of this inability to predict confidently the tumor behavior at time of diagnosis, standard treatment for invasive cancers and DCIS can cause overtreatment. The related harms include treatment-related side effects and the number of harms associated with a cancer diagnosis, which are immediate. Conversely, a mortality benefit would occur at an uncertain point in the future.
+
+One approach to understanding overdiagnosis is to examine the prevalence of occult cancer in women who died of noncancer causes. In an overview of seven autopsy studies, the median prevalence of occult invasive breast cancer was 1.3% (range, 0%–1.8%) and of DCIS was 8.9% (range, 0%–14.7%).[118,119]
+
+Overdiagnosis can be indirectly measured by comparing breast cancer incidence in screened versus unscreened populations. These comparisons can be confounded by differences in the populations, such as time, geography, health behaviors, and hormone usage. The calculations of overdiagnosis can vary in their adjustment for lead-time bias.[120,121] An overview of 29 studies found calculated rates of overdiagnosis to be 0%–54%, with rates from randomized studies between 11% and 22%.[122] In Denmark, where screened and unscreened populations existed concurrently, the rate of overdiagnosis of invasive cancer was calculated to be 14% and 39%, using two different methodologies. If DCIS cases were included, the overdiagnosis rates were 24% and 48%. The second methodology accounts for regional differences in women younger than the screening age and is likely more accurate.[123]
+
+Theoretically, in a given population, the detection of more breast cancers at an early stage would result in a subsequent reduction in the incidence of advanced-stage cancers. This has not occurred in any of the populations studied to date. Thus, the detection of more early-stage cancers likely represents overdiagnosis. A population-based study in the Netherlands showed that about one-half of all screen-detected breast cancers, including DCIS, would represent overdiagnosis and is consistent with other studies, which showed substantial rates of overdiagnosis associated with screening.[124]
+
+A cohort study in Norway compared the increase in cancer incidence in women who were eligible for screening with the cancer incidence in younger women who were not eligible for screening, eligibility was based on age and residence. Eligible women experienced a 60% increase in incidence of localized cancers (RR, 1.60; 95% CI, 1.42–1.79), while the incidence of advanced cancers remained similar in the two groups (RR, 1.08; 95% CI, 0.86–1.35).[125]
+
+A population study that compared different counties in the United States showed that higher rates of screening mammography use were associated with higher rates of breast cancer diagnoses, yet there was no corresponding decrease in 10-year breast cancer mortality.[126] The strengths of this study include its very large size (16 million women) and the strength and consistency of correlation observed across counties. The limitations of this study include the self-reporting of mammograms, the use of a 2-year window to estimate screening prevalence, and the period of analysis (when menopausal hormone use was present).[126]
+
+The extent of overdiagnosis has been estimated in the Canadian NBSS, a randomized clinical trial. At the end of the five screening rounds, 142 more invasive breast cancer cases were diagnosed in the mammography arm, compared with the control arm.[127] At 15 years, the excess number of cancer cases in the mammography arm versus the control arm was 106, representing an overdiagnosis rate of 22% for the 484 screen-detected invasive cancers.[127]
+
+As a consequence of screening mammography, greater numbers of breast cancers with indolent behavior are now identified, resulting in potential overtreatment. In a secondary analysis of a randomized trial of tamoxifen versus no systemic therapy in patients with early breast cancer, the authors utilized the 70-gene MammaPrint assay and identified 15% of patients at ultra-low risk, with 20-year disease-specific survival rates of 97% in the tamoxifen group and 94% in the control group. Thus, these patients would likely have extremely good outcomes with surgery alone. The frequency of such ultra-low risk cancers in the screened population is likely around 25%. Tools such as the 70-gene MammaPrint assay might be utilized in the future to identify these cancers, and thereby, reduce the risk of overtreatment. However, additional studies are needed to confirm these findings.[128]
+
+In 2016, the Canadian NBSS, a randomized screening trial with 25-year follow-up, re-estimated overdiagnosis of breast cancer from mammography screening by age group and concluded that approximately 30% of invasive screen-detected cancers in women aged 40 to 49 years and up to 20% of those detected in women aged 50 to 59 years were overdiagnosed. When in situ cancers are included, the estimated risks of overdiagnosis are 40% aged 40 to 49 years and 30% in women aged 50 to 59 years. Overdiagnosis was calculated as the persistent excess incidence in the screened arm versus the control arm divided by the number of screen-detected cases (excess incidence method).
+
+Requirements for adequate estimation of overdiagnosis utilizing this method included the following:
+
+Cessation of screening among participants in the screened arm when the trial screening protocol is completed.
+
+Follow-up after screening ceases needs to be as long as the longest lead time (the time between the identification of a screen-detected cancer until symptomatic diagnosis of that cancer in the absence of screening) among the screen-detected cases.
+
+The comparison population for the cancer incidence during screening and after screening cessation in the screened arm needs to comprise individuals with comparable cancer risk in the absence of screening, as in a randomized control arm.
+
+Compliance with screening is high in the screened arm during the trial protocol screening phase, and contamination (nonprotocol screening) in the control arm is low.
+
+These conditions were largely met in the CNBSS because population-based screening did not become available throughout Canada until a minimum of 2 years later and in most instances 5 to 10 years later (thereby, allowing for cessation of screening after the trial screening period and follow-up longer than most estimates of lead time), because contamination is documented to have been minimal, and because individual randomization resulted in 44 almost identically distributed demographic factors and risk factors between the two trial arms.
+
+Since the conclusion of the trial screening period in 1988, differences in screening quality, intensity, invited age range, and biopsy thresholds decrease the generalizability of these results. These factors and improved imaging technique/quality and low threshold for biopsy, likely contribute to lower estimates of overdiagnosis of in situ cancer than that of invasive cancer.[129]
+
+Table 2 shows results from a 10-year period of screening 10,000 women, estimating the number of women with breast cancer or DCIS that would never become clinically important (overdiagnosis). There was likely no overdiagnosis in the Health Insurance Plan study, which used old-technology mammography and CBE. Overdiagnosis has become more prominent in the era of improved-technology mammography. The improved technology has not, however, been shown to make further reductions in mortality than the original technology. In summary, breast cancer overdiagnosis is a complex topic. Studies that used many different methods reported a wide range of estimates, and there is currently no way to assess whether new cancer cases are overdiagnosed or are of real harm to patients.[110]
+
+False-positives leading to additional interventions
+
+Because fewer than 5 per 1,000 women screened have breast cancer, most abnormal mammograms are false-positives, even given the 90% specificity of mammography (i.e., 90% of all women without breast cancer will have a negative mammogram).[85]
+
+This high false-positive rate of mammography is underestimated and can seem counterintuitive because of a statistically based cognitive bias known as the base rate fallacy. Because the base rate of breast cancer is low, (5/1000), the false-positive rate vastly exceeds the true-positive rate, even when using a very accurate test.
+
+Mammography’s true-positive rate of approximately 90% means that, of women with breast cancer, approximately 90% will test positive. The true-negative rate of 90% means that, of women without breast cancer, 90% will test negative. A 10% false-positive rate over 1,000 people means that there will be 100 false-positives in 1,000 people. If 5 in 1,000 women have breast cancer, then 4.5 women with breast cancer will have a positive test. In other words, there will approximately 100 false-positives for every 4.5 true positives.
+
+Further, abnormal results from screening mammograms prompt additional tests and procedures, such as mammographic views of the region of concern, ultrasound, MRI, and tissue sampling (by fine-needle aspiration, core biopsy, or excisional biopsy). Overall, the harm from unnecessary tests and treatments must be weighed against the benefit of early detection.
+
+A study of breast cancer screening in 2,400 women enrolled in a health maintenance organization found that over a decade, 88 cancers were diagnosed, 58 of which were identified by mammography. One-third of the women had an abnormal mammogram result that required additional testing: 539 additional mammograms, 186 ultrasound examinations, and 188 biopsies. The cumulative biopsy rate (the rate of true positives) resulting from mammographic findings was approximately 1 in 4 (23.6%). The PPV of an abnormal screening mammogram in this population was 6.3% for women aged 40 to 49 years, 6.6% for women aged 50 to 59 years, and 7.8% for women aged 60 to 69 years.[130] A subsequent analysis and modeling of data from the same cohort of women, estimated that the risk of having at least one false-positive mammogram was 7.4% (95% CI, 6.4%–8.5%) at the first mammogram, 26.0% (95% CI, 24.0%–28.2%) by the fifth mammogram, and 43.1% (95% CI, 36.6%–53.6%) by the ninth mammogram.[131] Cumulative risk of at least one false-positive result depended on four patient variables (younger age, higher number of previous breast biopsies, family history of breast cancer, and current estrogen use) and three radiologic variables (longer time between screenings, failure to compare the current and previous mammograms, and the individual radiologist’s tendency to interpret mammograms as abnormal). Overall, the factor most responsible for a false-positive mammogram was the individual radiologist’s tendency to read mammograms as abnormal.
+
+A prospective cohort study of community-based screening found that a greater proportion of women undergoing annual screening had at least one false-positive screen after 10 years than did women undergoing biennial screening, regardless of breast density. For women with scattered fibroglandular densities, the difference was 68.9% (annual) versus 46.3% (biennial) for women in their 40s. For women aged 50 to 74 years, the difference for this density group was 49.8% (annual) versus 30.7% (biennial).[106]
+
+As shown in Table 2, the estimated number of women out of 10,000 who underwent annual screening mammography during a 10-year period with at least one false-positive test result is 6,130 for women aged 40 to 50 years and 4,970 for women aged 60 years. The number of women with a false-positive test that results in a biopsy is estimated to range from 700 to 980, depending on age.[110]
+
+Relationship between prior screening results and subsequent breast cancer diagnosis
+
+A longitudinal Norwegian study correlated benign abnormal screening results with long-term breast cancer outcomes. Women with any abnormal screening examination had an increased risk of subsequent breast cancer, despite a negative evaluation (see Table 3). The features of the subsequent breast cancer were more favorable for the women who had prior screening abnormalities, possibly because the preexisting breast abnormality was a marker for slow-growing premalignant disease.[132]
+
+Table 3. Relationship Between Prior Screening Results and Subsequent Breast Cancer Diagnosis
+
+Screening Result
+Absolute Risk per 1,000 Women-Years
+Relative Risk vs. Women Who Screened Negative
+
+Benign with additional imaging
+4.4
+1.8
+
+Negative biopsy
+4.7
+2.0
+
+Atypia
+6.9
+2.9
+
+In situ cancer
+9.5
+3.8
+
+False-negatives leading to a false sense of security
+
+The sensitivity of mammography ranges from 70% to 90%, depending on characteristics of the interpreting radiologist (level of experience) and characteristics of the woman (age, breast density, hormone status, and diet). Assuming an average sensitivity of 80%, mammograms will miss approximately 20% of the breast cancers that are present at the time of screening (false-negatives). Many of these missed cancers are high risk, with adverse biological characteristics. If a normal mammogram dissuades or postpones a woman or her doctor from evaluating breast symptoms, she may suffer adverse consequences. Thus, a negative mammogram should never dissuade a woman or her physician from additional evaluation of breast symptoms.
+
+Discomfort
+
+Positioning of the woman and breast compression reduce motion artifact and improve mammogram image quality. Pain and/or discomfort was reported by 90% of women undergoing mammography, with 12% of women rating the sensation as intense or intolerable.[133] A systematic review of 22 studies investigating mammography-associated pain and discomfort found wide variations, some of which were associated with menstrual cycle stage, anxiety, and premammography anticipation of pain.[134]
+
+Radiation exposure
+
+The major risk factors for radiation-associated breast cancer are young age at exposure and dose; however, rarely there are women with an inherited susceptibility to radiation-induced damage who must avoid radiation exposure at any age.[135,136] For many women older than 40 years, the likely benefits of screening mammography outweigh the risks.[137,135,138] Standard two-view screening mammography exposes the breasts to a mean dose of 4 mSv, and the whole body to 0.29 mSv.[136,139] Thus, up to one breast cancer may be induced per 1,000 women undergoing annual mammograms from ages 40 to 80 years. Such risk is doubled in women with large breasts who require increased radiation doses and in women with breast augmentation who require additional views. Radiation-induced breast cancers may be reduced fivefold for women who begin biennial screening at age 50 years rather than annually at age 40 years.[140]
+
+Psychological harms of false-positives
+
+A telephone survey of 308 women performed 3 months after screening mammography revealed that about one-fourth of the 68 women recalled for additional testing were still experiencing worry that affected their mood or functioning, even though that testing had ruled out cancer.[141] Research into whether the psychological impact of a false-positive test is long-standing yields mixed results. A cohort study in Spain in 2002 found immediate psychological impact to a woman after receiving a false-positive mammogram, but these results dissipated within a few months.[142] A cohort study in Denmark in 2013 that measured the psychological effects of a false-positive test result several years after the event found long-term negative psychological consequences.[143] Several studies have shown that the anxiety after evaluation of a false-positive test leads to increased participation in future screening examinations.[144-147]
+
+Financial strain and opportunity costs
+
+These potential harms of screening have not been well researched, but it is clear that they exist.
+
+References
+
+Siu AL; U.S. Preventive Services Task Force: Screening for Breast Cancer: U.S. Preventive Services Task Force Recommendation Statement. Ann Intern Med 164 (4): 279-96, 2016. [PUBMED Abstract]
+
+Sickles EA: Findings at mammographic screening on only one standard projection: outcomes analysis. Radiology 208 (2): 471-5, 1998. [PUBMED Abstract]
+
+Dibden A, Offman J, Parmar D, et al.: Reduction in interval cancer rates following the introduction of two-view mammography in the UK breast screening programme. Br J Cancer 110 (3): 560-4, 2014. [PUBMED Abstract]
+
+Lillie-Blanton M: Mammography Quality Standards Act : X-ray Quality Improved, Access Unaffected, but Impact on Health Outcomes Unknown: Testimony Before the Subcommittee on Health and the Environment, Committee on Commerce, House of Representatives. Washington, D.C.: Committee on Commerce, 1998. Available online. Last accessed April 9, 2025.
+
+Magny SJ, Skikhman R, Keppke AL: Breast Imaging Reporting and Data System. StatPearls Publishing, 2025. Also available online. Last accessed April 10, 2025.
+
+Rosenberg RD, Yankaskas BC, Abraham LA, et al.: Performance benchmarks for screening mammography. Radiology 241 (1): 55-66, 2006. [PUBMED Abstract]
+
+Jatoi I, Pinsky PF: Breast Cancer Screening Trials: Endpoints and Overdiagnosis. J Natl Cancer Inst 113 (9): 1131-1135, 2021. [PUBMED Abstract]
+
+Alabousi M, Zha N, Salameh JP, et al.: Digital breast tomosynthesis for breast cancer detection: a diagnostic test accuracy systematic review and meta-analysis. Eur Radiol 30 (4): 2058-2071, 2020. [PUBMED Abstract]
+
+Alabousi M, Wadera A, Kashif Al-Ghita M, et al.: Performance of Digital Breast Tomosynthesis, Synthetic Mammography, and Digital Mammography in Breast Cancer Screening: A Systematic Review and Meta-Analysis. J Natl Cancer Inst 113 (6): 680-690, 2021. [PUBMED Abstract]
+
+Pisano ED, Gatsonis C, Hendrick E, et al.: Diagnostic performance of digital versus film mammography for breast-cancer screening. N Engl J Med 353 (17): 1773-83, 2005. [PUBMED Abstract]
+
+Pisano ED, Hendrick RE, Yaffe MJ, et al.: Diagnostic accuracy of digital versus film mammography: exploratory analysis of selected population subgroups in DMIST. Radiology 246 (2): 376-83, 2008. [PUBMED Abstract]
+
+Kerlikowske K, Hubbard RA, Miglioretti DL, et al.: Comparative effectiveness of digital versus film-screen mammography in community practice in the United States: a cohort study. Ann Intern Med 155 (8): 493-502, 2011. [PUBMED Abstract]
+
+van Luijt PA, Fracheboud J, Heijnsdijk EA, et al.: Nation-wide data on screening performance during the transition to digital mammography: observations in 6 million screens. Eur J Cancer 49 (16): 3517-25, 2013. [PUBMED Abstract]
+
+Souza FH, Wendland EM, Rosa MI, et al.: Is full-field digital mammography more accurate than screen-film mammography in overall population screening? A systematic review and meta-analysis. Breast 22 (3): 217-24, 2013. [PUBMED Abstract]
+
+Gur D, Sumkin JH, Rockette HE, et al.: Changes in breast cancer detection and mammography recall rates after the introduction of a computer-aided detection system. J Natl Cancer Inst 96 (3): 185-90, 2004. [PUBMED Abstract]
+
+Ciatto S, Del Turco MR, Risso G, et al.: Comparison of standard reading and computer aided detection (CAD) on a national proficiency test of screening mammography. Eur J Radiol 45 (2): 135-8, 2003. [PUBMED Abstract]
+
+Fenton JJ, Taplin SH, Carney PA, et al.: Influence of computer-aided detection on performance of screening mammography. N Engl J Med 356 (14): 1399-409, 2007. [PUBMED Abstract]
+
+Elmore JG, Carney PA: Computer-aided detection of breast cancer: has promise outstripped performance? J Natl Cancer Inst 96 (3): 162-3, 2004. [PUBMED Abstract]
+
+Fenton JJ, Xing G, Elmore JG, et al.: Short-term outcomes of screening mammography using computer-aided detection: a population-based study of medicare enrollees. Ann Intern Med 158 (8): 580-7, 2013. [PUBMED Abstract]
+
+Lehman CD, Wellman RD, Buist DS, et al.: Diagnostic Accuracy of Digital Screening Mammography With and Without Computer-Aided Detection. JAMA Intern Med 175 (11): 1828-37, 2015. [PUBMED Abstract]
+
+Killelea BK, Long JB, Chagpar AB, et al.: Evolution of breast cancer screening in the Medicare population: clinical and economic implications. J Natl Cancer Inst 106 (8): , 2014. [PUBMED Abstract]
+
+U.S. Food and Drug Administration: Mammography Quality Standards Act (MQSA) National Statistics. Silver Spring, Md: Food and Drug Administration, 2021. Available online. Last accessed April 9, 2025.
+
+Richman IB, Hoag JR, Xu X, et al.: Adoption of Digital Breast Tomosynthesis in Clinical Practice. JAMA Intern Med 179 (9): 1292-1295, 2019. [PUBMED Abstract]
+
+Fujii MH, Herschorn SD, Sowden M, et al.: Detection Rates for Benign and Malignant Diagnoses on Breast Cancer Screening With Digital Breast Tomosynthesis in a Statewide Mammography Registry Study. AJR Am J Roentgenol 212 (3): 706-711, 2019. [PUBMED Abstract]
+
+Østerås BH, Martinsen ACT, Gullien R, et al.: Digital Mammography versus Breast Tomosynthesis: Impact of Breast Density on Diagnostic Performance in Population-based Screening. Radiology 293 (1): 60-68, 2019. [PUBMED Abstract]
+
+Aase HS, Holen ÅS, Pedersen K, et al.: A randomized controlled trial of digital breast tomosynthesis versus digital mammography in population-based screening in Bergen: interim analysis of performance indicators from the To-Be trial. Eur Radiol 29 (3): 1175-1186, 2019. [PUBMED Abstract]
+
+Hofvind S, Holen ÅS, Aase HS, et al.: Two-view digital breast tomosynthesis versus digital mammography in a population-based breast cancer screening programme (To-Be): a randomised, controlled trial. Lancet Oncol 20 (6): 795-805, 2019. [PUBMED Abstract]
+
+Lowry KP, Trentham-Dietz A, Schechter CB, et al.: Long-Term Outcomes and Cost-Effectiveness of Breast Cancer Screening With Digital Breast Tomosynthesis in the United States. J Natl Cancer Inst 112 (6): 582-589, 2020. [PUBMED Abstract]
+
+Melnikow J, Fenton JJ: Digital Breast Tomosynthesis-Diffusion Into Practice Preceding Evidence. JAMA Intern Med 179 (9): 1295-1296, 2019. [PUBMED Abstract]
+
+Kerlikowske K, Su YR, Sprague BL, et al.: Association of Screening With Digital Breast Tomosynthesis vs Digital Mammography With Risk of Interval Invasive and Advanced Breast Cancer. JAMA 327 (22): 2220-2230, 2022. [PUBMED Abstract]
+
+Joensuu H, Lehtimäki T, Holli K, et al.: Risk for distant recurrence of breast cancer detected by mammography screening or other methods. JAMA 292 (9): 1064-73, 2004. [PUBMED Abstract]
+
+Shen Y, Yang Y, Inoue LY, et al.: Role of detection method in predicting breast cancer survival: analysis of randomized screening trials. J Natl Cancer Inst 97 (16): 1195-203, 2005. [PUBMED Abstract]
+
+Wishart GC, Greenberg DC, Britton PD, et al.: Screen-detected vs symptomatic breast cancer: is improved survival due to stage migration alone? Br J Cancer 98 (11): 1741-4, 2008. [PUBMED Abstract]
+
+Moody-Ayers SY, Wells CK, Feinstein AR: "Benign" tumors and "early detection" in mammography-screened patients of a natural cohort with breast cancer. Arch Intern Med 160 (8): 1109-15, 2000. [PUBMED Abstract]
+
+Walpole E, Dunn N, Youl P, et al.: Nonbreast cancer incidence, treatment received and outcomes: Are there differences in breast screening attendees versus nonattendees? Int J Cancer 147 (3): 856-865, 2020. [PUBMED Abstract]
+
+Carney PA, Miglioretti DL, Yankaskas BC, et al.: Individual and combined effects of age, breast density, and hormone replacement therapy use on the accuracy of screening mammography. Ann Intern Med 138 (3): 168-75, 2003. [PUBMED Abstract]
+
+Rosenberg RD, Hunt WC, Williamson MR, et al.: Effects of age, breast density, ethnicity, and estrogen replacement therapy on screening mammographic sensitivity and cancer stage at diagnosis: review of 183,134 screening mammograms in Albuquerque, New Mexico. Radiology 209 (2): 511-8, 1998. [PUBMED Abstract]
+
+Kerlikowske K, Grady D, Barclay J, et al.: Likelihood ratios for modern screening mammography. Risk of breast cancer based on age and mammographic interpretation. JAMA 276 (1): 39-43, 1996. [PUBMED Abstract]
+
+Lee MV, Konstantinoff K, Gegios A, et al.: Breast cancer malpractice litigation: A 10-year analysis and update in trends. Clin Imaging 60 (1): 26-32, 2020. [PUBMED Abstract]
+
+Porter PL, El-Bastawissi AY, Mandelson MT, et al.: Breast tumor characteristics as predictors of mammographic detection: comparison of interval- and screen-detected cancers. J Natl Cancer Inst 91 (23): 2020-8, 1999. [PUBMED Abstract]
+
+Hakama M, Holli K, Isola J, et al.: Aggressiveness of screen-detected breast cancers. Lancet 345 (8944): 221-4, 1995. [PUBMED Abstract]
+
+Tabár L, Faberberg G, Day NE, et al.: What is the optimum interval between mammographic screening examinations? An analysis based on the latest results of the Swedish two-county breast cancer screening trial. Br J Cancer 55 (5): 547-51, 1987. [PUBMED Abstract]
+
+Niraula S, Biswanger N, Hu P, et al.: Incidence, Characteristics, and Outcomes of Interval Breast Cancers Compared With Screening-Detected Breast Cancers. JAMA Netw Open 3 (9): e2018179, 2020. [PUBMED Abstract]
+
+Payne JI, Caines JS, Gallant J, et al.: A review of interval breast cancers diagnosed among participants of the Nova Scotia Breast Screening Program. Radiology 266 (1): 96-103, 2013. [PUBMED Abstract]
+
+Buist DS, Porter PL, Lehman C, et al.: Factors contributing to mammography failure in women aged 40-49 years. J Natl Cancer Inst 96 (19): 1432-40, 2004. [PUBMED Abstract]
+
+Banks E, Reeves G, Beral V, et al.: Influence of personal characteristics of individual women on sensitivity and specificity of mammography in the Million Women Study: cohort study. BMJ 329 (7464): 477, 2004. [PUBMED Abstract]
+
+Yankaskas BC, Taplin SH, Ichikawa L, et al.: Association between mammography timing and measures of screening performance in the United States. Radiology 234 (2): 363-73, 2005. [PUBMED Abstract]
+
+Duffy SW, Vulkan D, Cuckle H, et al.: Effect of mammographic screening from age 40 years on breast cancer mortality (UK Age trial): final results of a randomised, controlled trial. Lancet Oncol 21 (9): 1165-1172, 2020. [PUBMED Abstract]
+
+American Cancer Society: Breast Density and Your Mammogram Report. Atlanta, Ga: American Cancer Society, 2017. Available online. Last accessed date April 9, 2025.
+
+Elmore JG, Carney PA, Abraham LA, et al.: The association between obesity and screening mammography accuracy. Arch Intern Med 164 (10): 1140-7, 2004. [PUBMED Abstract]
+
+McCormack VA, dos Santos Silva I: Breast density and parenchymal patterns as markers of breast cancer risk: a meta-analysis. Cancer Epidemiol Biomarkers Prev 15 (6): 1159-69, 2006. [PUBMED Abstract]
+
+Pankow JS, Vachon CM, Kuni CC, et al.: Genetic analysis of mammographic breast density in adult women: evidence of a gene effect. J Natl Cancer Inst 89 (8): 549-56, 1997. [PUBMED Abstract]
+
+Boyd NF, Dite GS, Stone J, et al.: Heritability of mammographic density, a risk factor for breast cancer. N Engl J Med 347 (12): 886-94, 2002. [PUBMED Abstract]
+
+White E, Velentgas P, Mandelson MT, et al.: Variation in mammographic breast density by time in menstrual cycle among women aged 40-49 years. J Natl Cancer Inst 90 (12): 906-10, 1998. [PUBMED Abstract]
+
+Harvey JA, Pinkerton JV, Herman CR: Short-term cessation of hormone replacement therapy and improvement of mammographic specificity. J Natl Cancer Inst 89 (21): 1623-5, 1997. [PUBMED Abstract]
+
+Laya MB, Larson EB, Taplin SH, et al.: Effect of estrogen replacement therapy on the specificity and sensitivity of screening mammography. J Natl Cancer Inst 88 (10): 643-9, 1996. [PUBMED Abstract]
+
+Baines CJ, Dayan R: A tangled web: factors likely to affect the efficacy of screening mammography. J Natl Cancer Inst 91 (10): 833-8, 1999. [PUBMED Abstract]
+
+Brisson J, Brisson B, Coté G, et al.: Tamoxifen and mammographic breast densities. Cancer Epidemiol Biomarkers Prev 9 (9): 911-5, 2000. [PUBMED Abstract]
+
+Boyd NF, Greenberg C, Lockwood G, et al.: Effects at two years of a low-fat, high-carbohydrate diet on radiologic features of the breast: results from a randomized trial. Canadian Diet and Breast Cancer Prevention Study Group. J Natl Cancer Inst 89 (7): 488-96, 1997. [PUBMED Abstract]
+
+Crouchley K, Wylie E, Khong E: Hormone replacement therapy and mammographic screening outcomes in Western Australia. J Med Screen 13 (2): 93-7, 2006. [PUBMED Abstract]
+
+Melnikow J, Fenton JJ, Whitlock EP, et al.: Supplemental Screening for Breast Cancer in Women With Dense Breasts: A Systematic Review for the U.S. Preventive Services Task Force. Ann Intern Med 164 (4): 268-78, 2016. [PUBMED Abstract]
+
+Sprague BL, Gangnon RE, Burt V, et al.: Prevalence of mammographically dense breasts in the United States. J Natl Cancer Inst 106 (10): , 2014. [PUBMED Abstract]
+
+Ho JM, Jafferjee N, Covarrubias GM, et al.: Dense breasts: a review of reporting legislation and available supplemental screening options. AJR Am J Roentgenol 203 (2): 449-56, 2014. [PUBMED Abstract]
+
+Ho TH, Bissell MCS, Kerlikowske K, et al.: Cumulative Probability of False-Positive Results After 10 Years of Screening With Digital Breast Tomosynthesis vs Digital Mammography. JAMA Netw Open 5 (3): e222440, 2022. [PUBMED Abstract]
+
+Smetana GW, Elmore JG, Lee CI, et al.: Should This Woman With Dense Breasts Receive Supplemental Breast Cancer Screening?: Grand Rounds Discussion From Beth Israel Deaconess Medical Center. Ann Intern Med 169 (7): 474-484, 2018. [PUBMED Abstract]
+
+Comstock CE, Gatsonis C, Newstead GM, et al.: Comparison of Abbreviated Breast MRI vs Digital Breast Tomosynthesis for Breast Cancer Detection Among Women With Dense Breasts Undergoing Screening. JAMA 323 (8): 746-756, 2020. [PUBMED Abstract]
+
+Bakker MF, de Lange SV, Pijnappel RM, et al.: Supplemental MRI Screening for Women with Extremely Dense Breast Tissue. N Engl J Med 381 (22): 2091-2102, 2019. [PUBMED Abstract]
+
+Berg WA, Zuley ML, Chang TS, et al.: Prospective Multicenter Diagnostic Performance of Technologist-Performed Screening Breast Ultrasound After Tomosynthesis in Women With Dense Breasts (the DBTUST). J Clin Oncol 41 (13): 2403-2415, 2023. [PUBMED Abstract]
+
+U.S. Food and Drug Administration: Mammography Quality Standards Act. Food and Drug Administration, 2023. Available online. Last accessed April 9, 2025.
+
+DenseBreast-info: Legislation and Regulations for Dense Breast [News]. Deer Park, NY: DenseBreast-info, Inc., 2019. Available online. May 6, 2019.
+
+Wallis MG, Walsh MT, Lee JR: A review of false negative mammography in a symptomatic population. Clin Radiol 44 (1): 13-5, 1991. [PUBMED Abstract]
+
+Tilanus-Linthorst M, Verhoog L, Obdeijn IM, et al.: A BRCA1/2 mutation, high breast density and prominent pushing margins of a tumor independently contribute to a frequent false-negative mammography. Int J Cancer 102 (1): 91-5, 2002. [PUBMED Abstract]
+
+Ganott MA, Harris KM, Klaman HM, et al.: Analysis of False-Negative Cancer Cases Identified with a Mammography Audit. Breast J 5 (3): 166-175, 1999. [PUBMED Abstract]
+
+Elmore JG, Jackson SL, Abraham L, et al.: Variability in interpretive performance at screening mammography and radiologists' characteristics associated with accuracy. Radiology 253 (3): 641-51, 2009. [PUBMED Abstract]
+
+Meyer JE, Eberlein TJ, Stomper PC, et al.: Biopsy of occult breast lesions. Analysis of 1261 abnormalities. JAMA 263 (17): 2341-3, 1990. [PUBMED Abstract]
+
+Taplin S, Abraham L, Barlow WE, et al.: Mammography facility characteristics associated with interpretive accuracy of screening mammography. J Natl Cancer Inst 100 (12): 876-87, 2008. [PUBMED Abstract]
+
+Jackson SL, Taplin SH, Sickles EA, et al.: Variability of interpretive accuracy among diagnostic mammography facilities. J Natl Cancer Inst 101 (11): 814-27, 2009. [PUBMED Abstract]
+
+Goldman LE, Walker R, Miglioretti DL, et al.: Accuracy of diagnostic mammography at facilities serving vulnerable women. Med Care 49 (1): 67-75, 2011. [PUBMED Abstract]
+
+Schaffter T, Buist DSM, Lee CI, et al.: Evaluation of Combined Artificial Intelligence and Radiologist Assessment to Interpret Screening Mammograms. JAMA Netw Open 3 (3): e200265, 2020. [PUBMED Abstract]
+
+McKinney SM, Sieniek M, Godbole V, et al.: International evaluation of an AI system for breast cancer screening. Nature 577 (7788): 89-94, 2020. [PUBMED Abstract]
+
+Mercan E, Mehta S, Bartlett J, et al.: Assessment of Machine Learning of Breast Pathology Structures for Automated Differentiation of Breast Cancer and High-Risk Proliferative Lesions. JAMA Netw Open 2 (8): e198777, 2019. [PUBMED Abstract]
+
+Adamson AS, Welch HG: Machine Learning and the Cancer-Diagnosis Problem - No Gold Standard. N Engl J Med 381 (24): 2285-2287, 2019. [PUBMED Abstract]
+
+Smith-Bindman R, Chu PW, Miglioretti DL, et al.: Comparison of screening mammography in the United States and the United kingdom. JAMA 290 (16): 2129-37, 2003. [PUBMED Abstract]
+
+Elmore JG, Nakano CY, Koepsell TD, et al.: International variation in screening mammography interpretations in community-based programs. J Natl Cancer Inst 95 (18): 1384-93, 2003. [PUBMED Abstract]
+
+Kerlikowske K, Grady D, Barclay J, et al.: Positive predictive value of screening mammography by age and family history of breast cancer. JAMA 270 (20): 2444-50, 1993. [PUBMED Abstract]
+
+The Breast Screening Frequency Trial Group: The frequency of breast cancer screening: results from the UKCCCR Randomised Trial. United Kingdom Co-ordinating Committee on Cancer Research. Eur J Cancer 38 (11): 1458-64, 2002. [PUBMED Abstract]
+
+White E, Miglioretti DL, Yankaskas BC, et al.: Biennial versus annual mammography and the risk of late-stage breast cancer. J Natl Cancer Inst 96 (24): 1832-9, 2004. [PUBMED Abstract]
+
+Mandelblatt JS, Cronin KA, Bailey S, et al.: Effects of mammography screening under different screening schedules: model estimates of potential benefits and harms. Ann Intern Med 151 (10): 738-47, 2009. [PUBMED Abstract]
+
+Parvinen I, Chiu S, Pylkkänen L, et al.: Effects of annual vs triennial mammography interval on breast cancer incidence and mortality in ages 40-49 in Finland. Br J Cancer 105 (9): 1388-91, 2011. [PUBMED Abstract]
+
+Gøtzsche PC, Olsen O: Is screening for breast cancer with mammography justifiable? Lancet 355 (9198): 129-34, 2000. [PUBMED Abstract]
+
+Gøtzsche PC, Nielsen M: Screening for breast cancer with mammography. Cochrane Database Syst Rev (4): CD001877, 2006. [PUBMED Abstract]
+
+Nyström L, Andersson I, Bjurstam N, et al.: Long-term effects of mammography screening: updated overview of the Swedish randomised trials. Lancet 359 (9310): 909-19, 2002. [PUBMED Abstract]
+
+Kerlikowske K: Efficacy of screening mammography among women aged 40 to 49 years and 50 to 69 years: comparison of relative and absolute benefit. J Natl Cancer Inst Monogr (22): 79-86, 1997. [PUBMED Abstract]
+
+Glasziou PP, Woodward AJ, Mahon CM: Mammographic screening trials for women aged under 50. A quality assessment and meta-analysis. Med J Aust 162 (12): 625-9, 1995. [PUBMED Abstract]
+
+Nelson HD, Tyne K, Naik A, et al.: Screening for breast cancer: an update for the U.S. Preventive Services Task Force. Ann Intern Med 151 (10): 727-37, W237-42, 2009. [PUBMED Abstract]
+
+Duffy SW, Tabár L, Chen HH, et al.: The impact of organized mammography service screening on breast carcinoma mortality in seven Swedish counties. Cancer 95 (3): 458-69, 2002. [PUBMED Abstract]
+
+Jonsson H, Nyström L, Törnberg S, et al.: Service screening with mammography of women aged 50-69 years in Sweden: effects on mortality from breast cancer. J Med Screen 8 (3): 152-60, 2001. [PUBMED Abstract]
+
+Autier P, Koechlin A, Smans M, et al.: Mammography screening and breast cancer mortality in Sweden. J Natl Cancer Inst 104 (14): 1080-93, 2012. [PUBMED Abstract]
+
+Broeders MJ, Peer PG, Straatman H, et al.: Diverging breast cancer mortality rates in relation to screening? A comparison of Nijmegen to Arnhem and the Netherlands, 1969-1997. Int J Cancer 92 (2): 303-8, 2001. [PUBMED Abstract]
+
+Verbeek AL, Hendriks JH, Holland R, et al.: Reduction of breast cancer mortality through mass screening with modern mammography. First results of the Nijmegen project, 1975-1981. Lancet 1 (8388): 1222-4, 1984. [PUBMED Abstract]
+
+Elmore JG, Reisch LM, Barton MB, et al.: Efficacy of breast cancer screening in the community according to risk level. J Natl Cancer Inst 97 (14): 1035-43, 2005. [PUBMED Abstract]
+
+Autier P, Boniol M, Gavin A, et al.: Breast cancer mortality in neighbouring European countries with different levels of screening but similar access to treatment: trend analysis of WHO mortality database. BMJ 343: d4411, 2011. [PUBMED Abstract]
+
+Harris R, Yeatts J, Kinsinger L: Breast cancer screening for women ages 50 to 69 years a systematic review of observational evidence. Prev Med 53 (3): 108-14, 2011. [PUBMED Abstract]
+
+Bleyer A, Welch HG: Effect of three decades of screening mammography on breast-cancer incidence. N Engl J Med 367 (21): 1998-2005, 2012. [PUBMED Abstract]
+
+Welch HG, Prorok PC, O'Malley AJ, et al.: Breast-Cancer Tumor Size, Overdiagnosis, and Mammography Screening Effectiveness. N Engl J Med 375 (15): 1438-1447, 2016. [PUBMED Abstract]
+
+Kerlikowske K, Zhu W, Hubbard RA, et al.: Outcomes of screening mammography by frequency, breast density, and postmenopausal hormone therapy. JAMA Intern Med 173 (9): 807-16, 2013. [PUBMED Abstract]
+
+Coldman A, Phillips N, Wilson C, et al.: Pan-Canadian study of mammography screening and mortality from breast cancer. J Natl Cancer Inst 106 (11): , 2014. [PUBMED Abstract]
+
+Berry DA, Cronin KA, Plevritis SK, et al.: Effect of screening and adjuvant therapy on mortality from breast cancer. N Engl J Med 353 (17): 1784-92, 2005. [PUBMED Abstract]
+
+Plevritis SK, Munoz D, Kurian AW, et al.: Association of Screening and Treatment With Breast Cancer Mortality by Molecular Subtype in US Women, 2000-2012. JAMA 319 (2): 154-164, 2018. [PUBMED Abstract]
+
+Pace LE, Keating NL: A systematic assessment of benefits and risks to guide breast cancer screening decisions. JAMA 311 (13): 1327-35, 2014. [PUBMED Abstract]
+
+Welch HG, Passow HJ: Quantifying the benefits and harms of screening mammography. JAMA Intern Med 174 (3): 448-54, 2014. [PUBMED Abstract]
+
+Miller AB, To T, Baines CJ, et al.: The Canadian National Breast Screening Study-1: breast cancer mortality after 11 to 16 years of follow-up. A randomized screening trial of mammography in women age 40 to 49 years. Ann Intern Med 137 (5 Part 1): 305-12, 2002. [PUBMED Abstract]
+
+Miller AB, To T, Baines CJ, et al.: Canadian National Breast Screening Study-2: 13-year results of a randomized trial in women aged 50-59 years. J Natl Cancer Inst 92 (18): 1490-9, 2000. [PUBMED Abstract]
+
+Tabár L, Vitak B, Chen TH, et al.: Swedish two-county trial: impact of mammographic screening on breast cancer mortality during 3 decades. Radiology 260 (3): 658-63, 2011. [PUBMED Abstract]
+
+Hubbard RA, Kerlikowske K, Flowers CI, et al.: Cumulative probability of false-positive recall or biopsy recommendation after 10 years of screening mammography: a cohort study. Ann Intern Med 155 (8): 481-92, 2011. [PUBMED Abstract]
+
+Braithwaite D, Zhu W, Hubbard RA, et al.: Screening outcomes in older US women undergoing multiple mammograms in community practice: does interval, age, or comorbidity score affect tumor characteristics or false positive rates? J Natl Cancer Inst 105 (5): 334-41, 2013. [PUBMED Abstract]
+
+Zackrisson S, Andersson I, Janzon L, et al.: Rate of over-diagnosis of breast cancer 15 years after end of Malmö mammographic screening trial: follow-up study. BMJ 332 (7543): 689-92, 2006. [PUBMED Abstract]
+
+Welch HG, Black WC: Using autopsy series to estimate the disease "reservoir" for ductal carcinoma in situ of the breast: how much more breast cancer can we find? Ann Intern Med 127 (11): 1023-8, 1997. [PUBMED Abstract]
+
+Black WC, Welch HG: Advances in diagnostic imaging and overestimations of disease prevalence and the benefits of therapy. N Engl J Med 328 (17): 1237-43, 1993. [PUBMED Abstract]
+
+Duffy SW, Lynge E, Jonsson H, et al.: Complexities in the estimation of overdiagnosis in breast cancer screening. Br J Cancer 99 (7): 1176-8, 2008. [PUBMED Abstract]
+
+Gøtzsche PC, Jørgensen KJ, Maehlen J, et al.: Estimation of lead time and overdiagnosis in breast cancer screening. Br J Cancer 100 (1): 219; author reply 220, 2009. [PUBMED Abstract]
+
+Nelson HD, Pappas M, Cantor A, et al.: Harms of Breast Cancer Screening: Systematic Review to Update the 2009 U.S. Preventive Services Task Force Recommendation. Ann Intern Med 164 (4): 256-67, 2016. [PUBMED Abstract]
+
+Jørgensen KJ, Gøtzsche PC, Kalager M, et al.: Breast Cancer Screening in Denmark: A Cohort Study of Tumor Size and Overdiagnosis. Ann Intern Med 166 (5): 313-323, 2017. [PUBMED Abstract]
+
+Autier P, Boniol M, Koechlin A, et al.: Effectiveness of and overdiagnosis from mammography screening in the Netherlands: population based study. BMJ 359: j5224, 2017. [PUBMED Abstract]
+
+Lousdal ML, Kristiansen IS, Møller B, et al.: Effect of organised mammography screening on stage-specific incidence in Norway: population study. Br J Cancer 114 (5): 590-6, 2016. [PUBMED Abstract]
+
+Harding C, Pompei F, Burmistrov D, et al.: Breast Cancer Screening, Incidence, and Mortality Across US Counties. JAMA Intern Med 175 (9): 1483-9, 2015. [PUBMED Abstract]
+
+Miller AB, Wall C, Baines CJ, et al.: Twenty five year follow-up for breast cancer incidence and mortality of the Canadian National Breast Screening Study: randomised screening trial. BMJ 348: g366, 2014. [PUBMED Abstract]
+
+Esserman LJ, Yau C, Thompson CK, et al.: Use of Molecular Tools to Identify Patients With Indolent Breast Cancers With Ultralow Risk Over 2 Decades. JAMA Oncol 3 (11): 1503-1510, 2017. [PUBMED Abstract]
+
+Baines CJ, To T, Miller AB: Revised estimates of overdiagnosis from the Canadian National Breast Screening Study. Prev Med 90: 66-71, 2016. [PUBMED Abstract]
+
+Elmore JG, Barton MB, Moceri VM, et al.: Ten-year risk of false positive screening mammograms and clinical breast examinations. N Engl J Med 338 (16): 1089-96, 1998. [PUBMED Abstract]
+
+Christiansen CL, Wang F, Barton MB, et al.: Predicting the cumulative risk of false-positive mammograms. J Natl Cancer Inst 92 (20): 1657-66, 2000. [PUBMED Abstract]
+
+Lilleborge M, Falk RS, Russnes H, et al.: Risk of breast cancer by prior screening results among women participating in BreastScreen Norway. Cancer 125 (19): 3330-3337, 2019. [PUBMED Abstract]
+
+Freitas R, Fiori WF, Ramos FJ, et al.: [Discomfort and pain during mammography]. Rev Assoc Med Bras 52 (5): 333-6, 2006 Sep-Oct. [PUBMED Abstract]
+
+Armstrong K, Moye E, Williams S, et al.: Screening mammography in women 40 to 49 years of age: a systematic review for the American College of Physicians. Ann Intern Med 146 (7): 516-26, 2007. [PUBMED Abstract]
+
+Swift M, Morrell D, Massey RB, et al.: Incidence of cancer in 161 families affected by ataxia-telangiectasia. N Engl J Med 325 (26): 1831-6, 1991. [PUBMED Abstract]
+
+Kopans DB: Mammography and radiation risk. In: Janower ML, Linton OW, eds.: Radiation Risk: a Primer. American College of Radiology, 1996, pp 21-22.
+
+Feig SA, Ehrlich SM: Estimation of radiation risk from screening mammography: recent trends and comparison with expected benefits. Radiology 174 (3 Pt 1): 638-47, 1990. [PUBMED Abstract]
+
+Helzlsouer KJ, Harris EL, Parshad R, et al.: Familial clustering of breast cancer: possible interaction between DNA repair proficiency and radiation exposure in the development of breast cancer. Int J Cancer 64 (1): 14-7, 1995. [PUBMED Abstract]
+
+Suleiman OH, Spelic DC, McCrohan JL, et al.: Mammography in the 1990s: the United States and Canada. Radiology 210 (2): 345-51, 1999. [PUBMED Abstract]
+
+Miglioretti DL, Lange J, van den Broek JJ, et al.: Radiation-Induced Breast Cancer Incidence and Mortality From Digital Mammography Screening: A Modeling Study. Ann Intern Med 164 (4): 205-14, 2016. [PUBMED Abstract]
+
+Lerman C, Trock B, Rimer BK, et al.: Psychological side effects of breast cancer screening. Health Psychol 10 (4): 259-67, 1991. [PUBMED Abstract]
+
+Sandin B, Chorot P, Valiente RM, et al.: Adverse psychological effects in women attending a second-stage breast cancer screening. J Psychosom Res 52 (5): 303-9, 2002. [PUBMED Abstract]
+
+Brodersen J, Siersma VD: Long-term psychosocial consequences of false-positive screening mammography. Ann Fam Med 11 (2): 106-15, 2013 Mar-Apr. [PUBMED Abstract]
+
+Gram IT, Lund E, Slenker SE: Quality of life following a false positive mammogram. Br J Cancer 62 (6): 1018-22, 1990. [PUBMED Abstract]
+
+Burman ML, Taplin SH, Herta DF, et al.: Effect of false-positive mammograms on interval breast cancer screening in a health maintenance organization. Ann Intern Med 131 (1): 1-6, 1999. [PUBMED Abstract]
+
+Pisano ED, Earp J, Schell M, et al.: Screening behavior of women after a false-positive mammogram. Radiology 208 (1): 245-9, 1998. [PUBMED Abstract]
+
+Brewer NT, Salz T, Lillie SE: Systematic review: the long-term effects of false-positive mammograms. Ann Intern Med 146 (7): 502-10, 2007. [PUBMED Abstract]
+
+Other Imaging Modalities: Ultrasound, Magnetic Resonance Imaging (MRI), and Thermography
+
+Ultrasound
+
+Ultrasound is used for the diagnostic evaluation of palpable or mammographically identified masses, rather than serving as a primary screening modality. A review of the literature and expert opinion by the European Group for Breast Cancer Screening concluded that “there is little evidence to support the use of ultrasound in population breast cancer screening at any age.”[1] The Japan Strategic Anti-cancer Randomized Trial (J-START) is a screening trial that randomly assigned women aged 40 to 49 years to either mammography and ultrasound screening (intervention group) or mammography screening alone (control group). The initial results of this trial indicated that supplemental screening with ultrasound (i.e., mammography + ultrasound versus mammography alone) increased the detection rate of early-stage breast cancers, but its effect on mortality is not clear at this time.[2]
+
+Breast MRI
+
+Breast MRI is used in women for diagnostic evaluation, including evaluating the integrity of silicone breast implants, assessing palpable masses after surgery or radiation therapy, detecting mammographically and sonographically occult breast cancer in patients with axillary nodal metastasis, and preoperative planning for some patients with known breast cancer. There is no ionizing radiation exposure with this procedure. MRI has been promoted as a screening test for breast cancer among women at elevated risk of breast cancer based on BRCA1/2 mutation carriers, a strong family history of breast cancer, or several genetic syndromes, such as Li-Fraumeni syndrome or Cowden disease.[3-5] Breast MRI is more sensitive but less specific than screening mammography [6,7] and is up to 35 times as expensive.[8-12]
+
+Thermography
+
+Using infrared imaging techniques, thermography of the breast identifies temperature changes in the skin as a possible indicator of an underlying tumor, displaying these changes in color patterns. Thermographic devices have been approved by the U.S. Food and Drug Administration under the 510(k) process, but no randomized trials have compared thermography to other screening modalities. Small cohort studies do not suggest any additional benefit for the use of thermography as an adjunct modality.[13,14]
+
+References
+
+Teh W, Wilson AR: The role of ultrasound in breast cancer screening. A consensus statement by the European Group for Breast Cancer Screening. Eur J Cancer 34 (4): 449-50, 1998. [PUBMED Abstract]
+
+Ohuchi N, Suzuki A, Sobue T, et al.: Sensitivity and specificity of mammography and adjunctive ultrasonography to screen for breast cancer in the Japan Strategic Anti-cancer Randomized Trial (J-START): a randomised controlled trial. Lancet 387 (10016): 341-348, 2016. [PUBMED Abstract]
+
+Warner E, Plewes DB, Hill KA, et al.: Surveillance of BRCA1 and BRCA2 mutation carriers with magnetic resonance imaging, ultrasound, mammography, and clinical breast examination. JAMA 292 (11): 1317-25, 2004. [PUBMED Abstract]
+
+Kriege M, Brekelmans CT, Boetes C, et al.: Efficacy of MRI and mammography for breast-cancer screening in women with a familial or genetic predisposition. N Engl J Med 351 (5): 427-37, 2004. [PUBMED Abstract]
+
+Warner E, Hill K, Causer P, et al.: Prospective study of breast cancer incidence in women with a BRCA1 or BRCA2 mutation under surveillance with and without magnetic resonance imaging. J Clin Oncol 29 (13): 1664-9, 2011. [PUBMED Abstract]
+
+Lord SJ, Lei W, Craft P, et al.: A systematic review of the effectiveness of magnetic resonance imaging (MRI) as an addition to mammography and ultrasound in screening young women at high risk of breast cancer. Eur J Cancer 43 (13): 1905-17, 2007. [PUBMED Abstract]
+
+Lehman CD, Gatsonis C, Kuhl CK, et al.: MRI evaluation of the contralateral breast in women with recently diagnosed breast cancer. N Engl J Med 356 (13): 1295-303, 2007. [PUBMED Abstract]
+
+Pataky R, Armstrong L, Chia S, et al.: Cost-effectiveness of MRI for breast cancer screening in BRCA1/2 mutation carriers. BMC Cancer 13: 339, 2013. [PUBMED Abstract]
+
+Saadatmand S, Tilanus-Linthorst MM, Rutgers EJ, et al.: Cost-effectiveness of screening women with familial risk for breast cancer with magnetic resonance imaging. J Natl Cancer Inst 105 (17): 1314-21, 2013. [PUBMED Abstract]
+
+Ahern CH, Shih YC, Dong W, et al.: Cost-effectiveness of alternative strategies for integrating MRI into breast cancer screening for women at high risk. Br J Cancer 111 (8): 1542-51, 2014. [PUBMED Abstract]
+
+Pistolese CA, Ciarrapico AM, della Gatta F, et al.: Inappropriateness of breast imaging: cost analysis. Radiol Med 118 (6): 984-94, 2013. [PUBMED Abstract]
+
+Cott Chubiz JE, Lee JM, Gilmore ME, et al.: Cost-effectiveness of alternating magnetic resonance imaging and digital mammography screening in BRCA1 and BRCA2 gene mutation carriers. Cancer 119 (6): 1266-76, 2013. [PUBMED Abstract]
+
+Wishart GC, Campisi M, Boswell M, et al.: The accuracy of digital infrared imaging for breast cancer detection in women undergoing breast biopsy. Eur J Surg Oncol 36 (6): 535-40, 2010. [PUBMED Abstract]
+
+Arora N, Martins D, Ruggerio D, et al.: Effectiveness of a noninvasive digital infrared thermal imaging system in the detection of breast cancer. Am J Surg 196 (4): 523-6, 2008. [PUBMED Abstract]
+
+Nonimaging Screening Modalities
+
+Clinical Breast Examination
+
+The effect of screening clinical breast examination (CBE) on breast cancer mortality has not been fully established. The Canadian National Breast Screening Study (CNBSS) compared high-quality CBE plus mammography with CBE alone in women aged 50 to 59 years. CBE, lasting 5 to 10 minutes per breast, was conducted by trained health professionals, with periodic evaluations of performance quality. The frequency of cancer diagnosis, stage, interval cancers, and breast cancer mortality were similar in the two groups and similar to outcomes with mammography alone.[1] With a mean follow-up of 13 years, breast cancer mortality was similar in the two groups (mortality rate ratio, 1.02; 95% confidence interval [CI], 0.78–1.33).[2] The investigators estimated the operating characteristics for CBE alone; for 19,965 women aged 50 to 59 years, sensitivity was 83%, 71%, 57%, 83%, and 77% for years 1, 2, 3, 4, and 5 of the trial, respectively; specificity ranged between 88% and 96%. Positive predictive value (PPV), which is the proportion of cancers detected per abnormal examination, was estimated to be 3% to 4%. For 25,620 women aged 40 to 49 years who were examined only at entry, the estimated sensitivity was 71%, specificity was 84%, and PPV was 1.5%.[3]
+
+In clinical trials involving community clinicians, CBE-type screening had higher specificity (97%–99%) [4] and lower sensitivity (22%–36%) than that experienced by examiners.[5-8] A study of screening in women with a positive family history of breast cancer showed that, after a normal initial evaluation, the patient herself, or her clinician performing a CBE, identified more cancers than did mammography.[9]
+
+Another study examined the usefulness of adding CBE to screening mammography; among 61,688 women older than 40 years and screened by mammography and CBE, sensitivity for mammography was 78%, and combined mammography-CBE sensitivity was 82%. Specificity was lower for women undergoing both screening modalities than it was for women undergoing mammography alone (97% vs. 99%).[10] Another study reported the results of a large cluster randomized controlled trial in India that assessed the efficacy of screening with CBE versus no screening on breast cancer mortality.[11] This trial recruited 151,538 women aged 35 to 64 years with no history of breast cancer. After 20 years of follow-up, there was an overall statistically nonsignificant 15% reduction in breast cancer mortality in the screening with CBE arm versus the control arm, but a post hoc subset analysis demonstrated a statistically significant 30% relative reduction in mortality attributable to screening with CBE for women older than 50 years. However, the results of the subset analysis should be interpreted with caution, as this was a cluster randomized trial with only 20 clusters, which raises concerns about potential imbalances between the control and study arms of the trial. Other international trials of CBE are under way, one in India and one in Egypt.
+
+Breast Self-Examination (BSE)
+
+Monthly BSE has been promoted, but there is no evidence that it reduces breast cancer mortality.[12,13] The only large, randomized clinical trial of BSE assigned 266,064 female Shanghai factory workers to either BSE instruction with reinforcement and encouragement, or instruction on the prevention of lower back pain. Neither group underwent any other breast cancer screening. After 10 to 11 years of follow-up, 135 breast cancer deaths occurred in the instruction group, and 131 cancer deaths occurred in the control group (relative risk [RR], 1.04; 95% CI, 0.82–1.33). Although the number of invasive breast cancers diagnosed in the two groups was about the same, women in the instruction group had more breast biopsies and more benign lesions diagnosed than did women in the control group.[14]
+
+Other research results on BSE come from three trials. First, more than 100,000 Leningrad women were assigned to BSE training or control by cluster randomization; the BSE group training had more breast biopsies without improved breast cancer mortality.[15] Second, in the United Kingdom Trial of Early Detection of Breast Cancer, more than 63,500 women aged 45 to 64 years were invited to educational sessions about BSE. After 10 years of follow-up, breast cancer mortality rates were similar to the rates in centers without organized BSE education (RR, 1.07; 95% CI, 0.93–1.22).[16] Thirdly, in contrast, a case-control study nested within the CNBSS compared self-reported BSE frequency before enrollment with breast cancer mortality. Women who examined their breasts visually, used their finger pads for palpation, and used their three middle fingers had a lower breast cancer mortality rate.[17]
+
+Tissue Sampling (Fine-Needle Aspiration, Nipple Aspirate, Ductal Lavage)
+
+Various methods to analyze breast tissue for malignancy have been proposed to screen for breast cancer, but none have been associated with mortality reduction.
+
+References
+
+Baines CJ: The Canadian National Breast Screening Study: a perspective on criticisms. Ann Intern Med 120 (4): 326-34, 1994. [PUBMED Abstract]
+
+Miller AB, To T, Baines CJ, et al.: Canadian National Breast Screening Study-2: 13-year results of a randomized trial in women aged 50-59 years. J Natl Cancer Inst 92 (18): 1490-9, 2000. [PUBMED Abstract]
+
+Baines CJ, Miller AB, Bassett AA: Physical examination. Its role as a single screening modality in the Canadian National Breast Screening Study. Cancer 63 (9): 1816-22, 1989. [PUBMED Abstract]
+
+Fenton JJ, Rolnick SJ, Harris EL, et al.: Specificity of clinical breast examination in community practice. J Gen Intern Med 22 (3): 332-7, 2007. [PUBMED Abstract]
+
+Fenton JJ, Barton MB, Geiger AM, et al.: Screening clinical breast examination: how often does it miss lethal breast cancer? J Natl Cancer Inst Monogr (35): 67-71, 2005. [PUBMED Abstract]
+
+Bobo JK, Lee NC, Thames SF: Findings from 752,081 clinical breast examinations reported to a national screening program from 1995 through 1998. J Natl Cancer Inst 92 (12): 971-6, 2000. [PUBMED Abstract]
+
+Oestreicher N, White E, Lehman CD, et al.: Predictors of sensitivity of clinical breast examination (CBE). Breast Cancer Res Treat 76 (1): 73-81, 2002. [PUBMED Abstract]
+
+Kolb TM, Lichy J, Newhouse JH: Comparison of the performance of screening mammography, physical examination, and breast US and evaluation of factors that influence them: an analysis of 27,825 patient evaluations. Radiology 225 (1): 165-75, 2002. [PUBMED Abstract]
+
+Gui GP, Hogben RK, Walsh G, et al.: The incidence of breast cancer from screening women according to predicted family history risk: Does annual clinical examination add to mammography? Eur J Cancer 37 (13): 1668-73, 2001. [PUBMED Abstract]
+
+Oestreicher N, Lehman CD, Seger DJ, et al.: The incremental contribution of clinical breast examination to invasive cancer detection in a mammography screening program. AJR Am J Roentgenol 184 (2): 428-32, 2005. [PUBMED Abstract]
+
+Mittra I, Mishra GA, Dikshit RP, et al.: Effect of screening by clinical breast examination on breast cancer incidence and mortality after 20 years: prospective, cluster randomised controlled trial in Mumbai. BMJ 372: n256, 2021. [PUBMED Abstract]
+
+Baxter N; Canadian Task Force on Preventive Health Care: Preventive health care, 2001 update: should women be routinely taught breast self-examination to screen for breast cancer? CMAJ 164 (13): 1837-46, 2001. [PUBMED Abstract]
+
+Humphrey LL, Helfand M, Chan BK, et al.: Breast cancer screening: a summary of the evidence for the U.S. Preventive Services Task Force. Ann Intern Med 137 (5 Part 1): 347-60, 2002. [PUBMED Abstract]
+
+Thomas DB, Gao DL, Ray RM, et al.: Randomized trial of breast self-examination in Shanghai: final results. J Natl Cancer Inst 94 (19): 1445-57, 2002. [PUBMED Abstract]
+
+Semiglazov VF, Moiseyenko VM, Bavli JL, et al.: The role of breast self-examination in early breast cancer detection (results of the 5-years USSR/WHO randomized study in Leningrad). Eur J Epidemiol 8 (4): 498-502, 1992. [PUBMED Abstract]
+
+Ellman R, Moss SM, Coleman D, et al.: Breast cancer mortality after 10 years in the UK trial of early detection of breast cancer. UK Trial of Early Detection of Breast Cancer Group. The Breast 2 (1): 13-20, 1993.
+
+Harvey BJ, Miller AB, Baines CJ, et al.: Effect of breast self-examination techniques on the risk of death from breast cancer. CMAJ 157 (9): 1205-12, 1997. [PUBMED Abstract]
+
+Appendix of Randomized Controlled Trials
+
+Health Insurance Plan, United States 1963
+[1,2]
+
+Age at entry: 40 to 64 years.
+
+Randomization: Individual, but with significant imbalances in the
+distribution of women between assigned arms, as evidenced by menopausal status (P < .0001)
+and education (P = .05).
+
+Sample size: 30,000 to 31,092 in study group and 30,565 to 30,765 in control
+group.
+
+Consistency of reports: Variation in sample size reports.
+
+Intervention: Annual two-view mammography (MMG) and clinical breast examination (CBE) for 3 years.
+
+Control: Usual care.
+
+Compliance: Nonattenders to first screening (35% of the screened population)
+were not reinvited.
+
+Contamination: Screening MMG was not available outside the trial; frequency of CBE performance among control women is unknown.
+
+Cause of death attribution: Women who died of breast cancer that had been diagnosed before entry into the study were excluded from the comparison between the screening and control groups. However, these exclusions were determined differently within the two groups. Women in the screening
+group were excluded based on determinations made during the study
+period at their initial screening visits. These women were dropped
+from all further consideration in the study. By design, controls did
+not have regular clinic visits, so the prestudy cancer status of
+control patients was not determined. When a control patient died and
+her cause of death was determined to be breast cancer, a
+retrospective examination was made to determine the date of diagnosis
+of her disease. If the date preceded the study period, the control patient was
+excluded from the analysis. This difference in methodology has the
+potential for a substantial bias when comparing breast cancer mortality
+between the two groups, and this bias is likely to favor screening.
+
+Analysis: Follow-up.
+
+External audit: No.
+
+Follow-up duration: 18 years.
+
+Relative risk of breast cancer death, screening versus control (95% confidence interval [CI]): 0.71
+(0.55–0.93) at 10 years and 0.77 (0.61–0.97) at 15 years.
+
+Comments: The MMGs were of poor quality compared with those of later
+trials, because of outdated equipment and techniques. The intervention consisted of both MMG and CBE. Major concerns about trial
+performance are the validity of the initial randomization and the differential
+exclusion of women with a prior history of breast cancer.
+
+Malmo, Sweden 1976
+[3,4]
+
+Age at entry: 45 to 69 years.
+
+Randomization: Individual, within each birth-year cohort for the first phase,
+MMG screening trial (MMST I). Individual for the entire birth cohort 1933 to 1945 for MMST II but with
+variations imposed by limited resources. Validation by analysis of age in both
+groups shows no significant difference.
+
+Exclusions: In a Swedish meta-analysis, there were 393 women with preexisting
+breast cancer excluded from the intervention group and 412 from the control
+group. Overall, however, 86 more women were excluded from the
+intervention group than from the control group.
+
+Sample size:
+21,088 study and 21,195 control.
+
+Consistency of reports: No variation in patient numbers.
+
+Intervention: Two-view MMG every 18 to 24 months × 5.
+
+Control: Usual care, with MMG at study end.
+
+Compliance: Participants migrating from Malmo (2% per year) were not followed.
+The participation rate of study women was 74% for the first round and 70% for
+subsequent rounds.
+
+Contamination: 24% of all control women had at least one MMG, as did 35% of the
+control women aged 45 to 49 years.
+
+Cause of death attribution: 76% autopsy rate in early report, lower rate later.
+Cause of death assessment blinded for women with a breast cancer diagnosis.
+Linked to Swedish Cause of Death Registry.
+
+Analysis: Evaluation, initially. Follow-up analysis, as part of the Swedish
+meta-analysis.[5]
+
+External audit: No.
+
+Follow-up duration: 12 years.
+
+Relative risk of breast cancer death, screening versus control (95% CI): 0.81
+(0.62–1.07).
+
+Comments: Evaluation analysis required a correction factor for the delay in the
+performance of MMG in the control group. The two Malmo trials, MMST I and MMST II,
+have been combined for most analyses.
+
+Östergötland (County E of Two-County Trial), Sweden 1977
+[6-8]
+
+Age at entry: 40 to 74 years.
+
+Randomization: Geographic cluster, with stratification for residence (urban or
+rural), socioeconomic factors, and size. Baseline breast cancer incidence and
+mortality were comparable between the randomly assigned geographic clusters.
+The study women were older than the control women, P < .0001, which would not have had a major effect on the outcome of the trial.
+
+Exclusions: Women with preexisting breast cancer were excluded from both
+groups, but the numbers were reported differently in different publications.
+The Swedish meta-analysis excluded all women with a prior breast cancer
+diagnosis, regardless of group assignment.
+
+Sample size: Variably reported, ranging from 38,405 to 39,034 in the study and from
+37,145 to 37,936 in the control.
+
+Consistency of reports: Variable.
+
+Intervention: Three single-view MMGs every 2 years for women younger than 50 years and every 33 months
+for women 50 years and older.
+
+Control: Usual care, with MMG at study end.
+
+Compliance: 89% screened.
+
+Contamination: 13% of women in the Two-County trial had MMG as part of routine care,
+mostly in 1983 and 1984.
+
+Cause of death attribution: Determined by a team of local physicians. When
+results were recalculated in the Swedish meta-analysis, using data from the
+Swedish Cause of Death Registry, there was less benefit for screening than had
+been previously reported.
+
+Analysis: Evaluation initially, with correction for delay in control group MMG.
+Follow-up analysis, as part of the Swedish meta-analysis.[5]
+
+External audit: No. However, breast cancer cases and deaths were adjudicated by a Swedish panel that included the trial's investigators.[9]
+
+Follow-up duration: 12 years.
+
+Relative risk of breast cancer death, screening versus control (95% CI): 0.82
+(0.64–1.05), Östergötland.
+
+Comments: Concerns were raised about the randomization methodology and the
+evaluation analysis, which required a correction for late performance of the
+control group MMG. The Swedish meta-analysis resolved these questions
+appropriately.
+
+Kopparberg (County W of Two-County Trial), Sweden 1977
+[6-8]
+
+Age at entry: 40 to 74 years.
+
+Randomization: Geographic cluster, with stratification for residence (urban or
+rural), socioeconomic factors, and size. The process for randomization has not
+been described. The study women were older than the control women, P < .0001, but this would not have had a major effect on the outcome of the trial.
+
+Exclusions: Women with preexisting breast cancer were excluded from both
+groups, but the numbers were reported differently in different publications.
+
+Sample size: Variably reported, ranging from 38,562 to 39,051 in intervention
+and from 18,478 to 18,846 in control.
+
+Consistency of reports: Variable.
+
+Intervention: Three single-view MMGs every 2 years for women younger than 50 years and every 33 months
+for women aged 50 years and older.
+
+Control: Usual care, with MMG at study end.
+
+Compliance: 89% participation.
+
+Contamination:
+13% of women in the Two-County trial had MMG as part of routine care,
+mostly between 1983 and 1984.
+
+Cause of death attribution:
+Determined by a team of local physicians (see
+Östergötland).
+
+Analysis: Evaluation.
+
+External audit: No. However, breast cancer cases and deaths were adjudicated by a Swedish panel that included the trial's investigators.[9]
+
+Follow-up duration: 12 years.
+
+Relative risk of breast cancer death, screening versus control (95% CI): 0.68
+(0.52–0.89).
+
+Edinburgh, United Kingdom 1976
+[10]
+
+Age at entry: 45 to 64 years.
+
+Randomization: Cluster by physician practices, though many randomization
+assignments were changed after study start. Within each practice, there was
+inconsistent recruitment of women, according to the physician’s judgment about
+each woman’s suitability for the trial. Large differences in socioeconomic
+status between practices were not recognized until after the study end.
+
+Exclusions: More women (338) with preexisting breast cancer were excluded
+from the intervention group than from the control group (177).
+
+Sample size: 23,226 study and 21,904 control.
+
+Consistency of reports: Good.
+
+Intervention: Initially, two-view MMG and CBE; then annual CBE, with single-view MMG
+in years 3, 5, and 7.
+
+Control: Usual care.
+
+Compliance: 61% screened.
+
+Contamination: None.
+
+Cause of death attribution:
+Cancer Registry Data.
+
+Analysis: Follow-up.
+
+External audit:
+No.
+
+Follow-up duration: 10 years.
+
+Relative risk of breast cancer death, screening versus control (95% CI): 0.84
+(0.63–1.12).
+
+Comments: Randomization process was flawed. Socioeconomic differences between
+study and control groups probably account for the higher all-cause mortality in control
+women compared with screened women. This difference in all-cause mortality was four
+times greater than the breast cancer mortality in the control group, and
+therefore, may account for the higher breast cancer mortality in the control group
+compared with screened women. Although a correction factor was used in the
+final analysis, this may not adjust the analysis sufficiently.
+
+The study design and conduct make these results difficult to assess or combine
+with the results of other trials.
+
+National Breast Screening Study (NBSS)-1, Canada 1980
+[11]
+
+Age at entry: 40 to 49 years.
+
+Randomization: Individual volunteers, with names entered successively on
+allocation lists. Although criticisms of the randomization procedure have
+been made, a thorough independent review found no evidence of subversion and
+that subversion on a scale large enough to affect the results was unlikely.[12]
+
+Exclusions:
+Few, balanced between groups.
+
+Sample size: 25,214 study (100% screened after entry CBE) and 25,216 control.
+
+Consistency of reports:
+Good.
+
+Intervention: Annual two-view MMG and CBE for 4 to 5 years.
+
+Control: Usual care.
+
+Compliance: Initially 100%, decreased to 85.5% by screen five.
+
+Contamination: 26.4% in usual care group.
+
+Cause of death attribution:
+Death certificates, with review of questionable
+cases by a blinded review panel. Also linked with the Canadian Mortality Data
+Base, Statistics Canada.
+
+Analysis: Follow-up.
+
+External audit:
+Yes. Independent, with analysis of data by several reviewers.
+
+Follow-up duration: 25 years.
+
+Relative risk of breast cancer death, screening versus control (95% CI):
+
+1.09 (0.80–1.49).
+
+Comments:
+This is the only trial specifically designed to study women aged 40
+to 49 years. Cancers diagnosed at entry in both study and control groups were
+included. Concerns were expressed before the completion of the trial about
+the technical adequacy of the MMGs, the training of the radiologists, and the
+standardization of the equipment, which prompted an independent external
+review. The primary deficiency identified by this review was the use of the
+mediolateral view from 1980 to 1985 instead of the mediolateral oblique view,
+which was used after 1985.[13] Subsequent analyses found the size and stage
+of the cancers detected mammographically in this trial to be equivalent to
+those of other trials.[14] This trial and NBSS-2 differ from the other randomized controlled trials (RCTs) in
+the consistent use of adjuvant hormone therapy and chemotherapy following local breast
+cancer therapy in women with axillary node-positive disease.
+
+NBSS-2, Canada 1980
+[15]
+
+Age at entry: 50 to 59 years.
+
+Randomization:
+Individual volunteer (see NBSS-1).
+
+Exclusions: Few, balanced between groups.
+
+Sample size: 19,711 study (100% screened after entry CBE) and 19,694 control.
+
+Intervention: Annual two-view MMG and CBE.
+
+Control:
+Annual CBE.
+
+Compliance: Initially 100%, decreased to 86.7% by screen five in the MMG and CBE
+group. Initially 100%, decreased to 85.4% by screen five in the CBE only group.
+
+Contamination: 16.9% of the CBE only group.
+
+Cause of death attribution: Death certificates, with review of questionable
+cases by a blinded review panel. Also linked with the Canadian Mortality Data
+Base, Statistics Canada.
+
+Analysis: Follow-up.
+
+External audit: Yes. Independent with analysis of data by several reviewers.
+
+Follow-up duration: 25 years.
+
+Relative risk of breast cancer death, screening versus control: 1.02 (95% CI, 0.77–1.36)
+
+Comments: This trial is unique in that it compares one screening modality to
+another and does not include an unscreened control. Regarding criticisms and
+comments about this trial, see NBSS-1.
+
+Stockholm, Sweden 1981
+[16]
+
+Age at entry: 40 to 64 years.
+
+Randomization:
+Cluster by birth date. There were two subtrials with balanced
+randomization in the first and a significant imbalance in the second, with 508
+more women in the screened group than the control.
+
+Exclusions: Inconsistently reported.
+
+Sample size: Between published reports, the size declined from 40,318 to 38,525 in the intervention group and rose from
+19,943 to 20,978 in the control group.
+
+Consistency of reports: Variable.
+
+Intervention:
+Single-view MMG every 28 months × 2.
+
+Control: MMG at year 5.
+
+Compliance: 82% screened.
+
+Contamination: 25% of women entering the study had MMG in the 3 years before
+entry.
+
+Cause of death attribution:
+Linked to Swedish Cause of Death Registry.
+
+Analysis: Evaluation, with 1-year delay in the post-trial MMG in the control
+group. Follow-up analysis as part of the Swedish meta-analysis.[5]
+
+External audit: No.
+
+Follow-up duration:
+8 years.
+
+Relative risk of breast cancer death, screening versus control (95% CI): 0.80
+(0.53–1.22).
+
+Comments: Concerns exist about randomization, especially in the second
+subtrial, exclusions, and the delay in control group MMG.
+Inclusion of these data in the Swedish meta-analysis resolves many of these
+questions.
+
+Gothenburg, Sweden 1982
+
+Age at entry: 39 to 59 years.
+
+Randomization: Complex; cluster randomly assigned within birth year by day of birth for older group (aged 50–59 years) and by individual for younger group (aged 39–49 years); ratio of study to control varied by year depending on MMG availability (randomization took place, 1982–1984).
+
+Exclusions:
+A similar proportion of women were excluded from both groups for
+prior breast cancer diagnosis (1.2% each).
+
+Sample size: Most recent publication: 21,650 invited; 29,961 controls.
+
+Consistency of reports: Variable.
+
+Intervention: Initial two-view MMG, then single-view MMG every 18 months × 4. Single-read first three rounds, then double-read.
+
+Control: Control group received one screening exam approximately 3 to 8 months after the final screen in study group.
+
+Cause of death attribution: Linked to Swedish Cause of Death Registry; also used an independent end point committee.
+
+Analysis: Both evaluation and follow-up methods.[5]
+
+External audit: No.
+
+Follow-up duration: 12 to 14 years.
+
+Relative risk of breast cancer death, screening versus control (95% CI): Aged 39 to 59 years: 0.79 (0.58–1.08) [evaluation]; 0.77 (0.60–1.00) [follow-up].
+
+Comments: No reduction for women aged 50 to 54 years, but similar reductions for other 5-year age groups.
+
+Conclusions: Delay in the performance of MMG in the control group and unequal numbers of women in invited and control groups (complex randomization process) complicates interpretation.
+
+AGE Trial
+[17,18]
+
+Age at entry: 39 to 41 years.
+
+Randomization: Individuals from lists of general practitioners in geographically defined areas of England, Wales, and Scotland; allocation was concealed.
+
+Exclusions:
+Small (n = 30 in invited group and n = 51 in not invited group) number excluded in each group because individuals could not be located or were deceased.
+
+Sample size: 160,921 (53,884 invited; 106,956 not invited).
+
+Consistency of reports: Not applicable.
+
+Intervention: Invited group aged 48 years and younger were offered annual screening by MMG (double-view first screen, then single mediolateral oblique view thereafter); 68% accepted first screening and 69% to 70% were reinvited (81% attended at least one screen).
+
+Control: Those who were not invited received usual medical care, unaware of their participation, and few were screened before randomization.
+
+Cause of death attribution: From the National Health Service (NHS) central register, death certificate code accepted.
+
+Analysis: Follow-up method was intention-to-treat (although all women aged 50 years would be offered screening by NHS).
+
+External audit: None.
+
+Follow-up duration: 10.7 years.
+
+Relative risk of breast cancer death, screening versus control (95% CI): 0.83 (0.66–1.04).
+
+Conclusions: Not a statistically significant result but fits with other studies.
+
+Follow-up duration: Restricted to 10 years from randomization.
+
+Relative risk of breast cancer death, screening versus control (95% CI): 0.75 (0.58–0.97).
+
+Conclusions: A statistically significant result.
+
+Follow-up duration: Median 17.7 years.
+
+Relative risk of breast cancer death, screening versus control (95% CI): 0.88 (0.74–1.04).
+
+Conclusions: Not a statistically significant result.
+
+Follow-up duration: Median 17.7 years.
+
+Relative risk of all-cause mortality, screening versus control (95% CI): 0.98 (0.93–1.03).
+
+Conclusions: Not a statistically significant result.
+
+The United Kingdom Age Trial, a large RCT, compared the effect of mammographic screening on breast cancer mortality in women invited for annual mammography aged 40 years and older when compared with NHS screening programs that began at age 50 years. The primary end point of the AGE Trial was mortality from breast cancer diagnosed during the intervention period until immediately before participants’ first NHS screening. This trial remains the only trial designed specifically to study the effect of mammographic screening starting at age 40 years and is one of three RCTs, which the Cochrane group’s 2013 meta-analysis deemed adequately randomized.
+
+In 2006, the AGE Trial published results of breast cancer mortality at a mean follow-up at 10.7 years: a reduction in breast cancer mortality in the intervention group, which did not reach statistical significance (105 breast cancer deaths in intervention group vs. 251 breast cancer death in control group).
+
+In 2015, the AGE Trial published results of breast cancer mortality at a median follow-up of 17.7 years: no statistically significant reduction after more than 10 years of follow-up and no statistically significant decrease in all-cause mortality. At this time, it also published results of a reanalysis of the original data set: a small, transient, statistically significant reduction in breast cancer mortality in the intervention group during the first 10 years after randomization (83 breast cancer deaths in intervention group vs. 219 breast cancer death in control group).
+
+In 2020, the AGE Trial published final results based on median follow-up of 22.9 years including:
+
+Positive effect in the first 10 years after randomization. The absolute difference in breast cancer mortality was -0.6 deaths per 1,667 women in the 40 to 49 years age group; 1,150 women would need to be screened to prevent one breast cancer death in this age group. A post hoc analysis showed that years of life lost caused by breast cancer mortality were 67.4 out of 1,000 women in the intervention group versus 78.9 out of 1,000 women in the control group; this is equivalent to 11.5 years of life saved per 1,000 women invited to screening in the intervention group and a total of 620 years of life saved.
+
+There was no statistically significant reduction in breast cancer mortality or all-cause mortality in the intervention group compared with the control group.
+
+In the intervention group, 18.1% of women had at least one false-positive result.
+
+This evidence is inadequate to support the conclusion of a clinically significant breast cancer mortality reduction attributable to initiation of screening mammography among women aged 39 to 49 years. The reported mortality reduction is a small, transient reduction in breast cancer mortality based on post hoc, subset analysis, nonstandard imaging protocol, and nonstandard threshold for biopsy (microcalcifications were not biopsied). In absolute terms, the difference in breast cancer mortality was -0.6 deaths per 1,667 women in the 40 to 49 years age group based on a reanalysis of the original data set, which was not statistically significant, and the recalculation of breast cancer mortality in a subgroup restricted to 10 years of follow-up. At a median follow-up of 22.9 years, there was no statistically significant decrease in risk of breast cancer or all-cause mortality.[18]
+
+This evidence is inadequate to make a clear determination of the magnitude of overdiagnosis. Because the evidence is based on subgroup analysis and nonstandard imaging schedule, nonstandard imaging protocol, and a nonstandard threshold for biopsy (microcalcifications were not biopsied) with uncertain relevance to the general population, it does not support the investigators' conclusion of “at worst a small amount of overdiagnosis."[18]
+
+References
+
+Shapiro S, Venet W, Strax P, et al.: Ten- to fourteen-year effect of screening on breast cancer mortality. J Natl Cancer Inst 69 (2): 349-55, 1982. [PUBMED Abstract]
+
+Shapiro S: Periodic screening for breast cancer: the Health Insurance Plan project and its sequelae, 1963-1986. Johns Hopkins University Press, 1988.
+
+Andersson I, Aspegren K, Janzon L, et al.: Mammographic screening and mortality from breast cancer: the Malmö mammographic screening trial. BMJ 297 (6654): 943-8, 1988. [PUBMED Abstract]
+
+Nyström L, Rutqvist LE, Wall S, et al.: Breast cancer screening with mammography: overview of Swedish randomised trials. Lancet 341 (8851): 973-8, 1993. [PUBMED Abstract]
+
+Nyström L, Andersson I, Bjurstam N, et al.: Long-term effects of mammography screening: updated overview of the Swedish randomised trials. Lancet 359 (9310): 909-19, 2002. [PUBMED Abstract]
+
+Tabár L, Fagerberg CJ, Gad A, et al.: Reduction in mortality from breast cancer after mass screening with mammography. Randomised trial from the Breast Cancer Screening Working Group of the Swedish National Board of Health and Welfare. Lancet 1 (8433): 829-32, 1985. [PUBMED Abstract]
+
+Tabàr L, Fagerberg G, Duffy SW, et al.: Update of the Swedish two-county program of mammographic screening for breast cancer. Radiol Clin North Am 30 (1): 187-210, 1992. [PUBMED Abstract]
+
+Tabar L, Fagerberg G, Duffy SW, et al.: The Swedish two county trial of mammographic screening for breast cancer: recent results and calculation of benefit. J Epidemiol Community Health 43 (2): 107-14, 1989. [PUBMED Abstract]
+
+Holmberg L, Duffy SW, Yen AM, et al.: Differences in endpoints between the Swedish W-E (two county) trial of mammographic screening and the Swedish overview: methodological consequences. J Med Screen 16 (2): 73-80, 2009. [PUBMED Abstract]
+
+Roberts MM, Alexander FE, Anderson TJ, et al.: Edinburgh trial of screening for breast cancer: mortality at seven years. Lancet 335 (8684): 241-6, 1990. [PUBMED Abstract]
+
+Miller AB, To T, Baines CJ, et al.: The Canadian National Breast Screening Study-1: breast cancer mortality after 11 to 16 years of follow-up. A randomized screening trial of mammography in women age 40 to 49 years. Ann Intern Med 137 (5 Part 1): 305-12, 2002. [PUBMED Abstract]
+
+Bailar JC, MacMahon B: Randomization in the Canadian National Breast Screening Study: a review for evidence of subversion. CMAJ 156 (2): 193-9, 1997. [PUBMED Abstract]
+
+Baines CJ, Miller AB, Kopans DB, et al.: Canadian National Breast Screening Study: assessment of technical quality by external review. AJR Am J Roentgenol 155 (4): 743-7; discussion 748-9, 1990. [PUBMED Abstract]
+
+Fletcher SW, Black W, Harris R, et al.: Report of the International Workshop on Screening for Breast Cancer. J Natl Cancer Inst 85 (20): 1644-56, 1993. [PUBMED Abstract]
+
+Miller AB, Baines CJ, To T, et al.: Canadian National Breast Screening Study: 2. Breast cancer detection and death rates among women aged 50 to 59 years. CMAJ 147 (10): 1477-88, 1992. [PUBMED Abstract]
+
+Frisell J, Eklund G, Hellström L, et al.: Randomized study of mammography screening--preliminary report on mortality in the Stockholm trial. Breast Cancer Res Treat 18 (1): 49-56, 1991. [PUBMED Abstract]
+
+Moss SM, Cuckle H, Evans A, et al.: Effect of mammographic screening from age 40 years on breast cancer mortality at 10 years' follow-up: a randomised controlled trial. Lancet 368 (9552): 2053-60, 2006. [PUBMED Abstract]
+
+Moss SM, Wale C, Smith R, et al.: Effect of mammographic screening from age 40 years on breast cancer mortality in the UK Age trial at 17 years' follow-up: a randomised controlled trial. Lancet Oncol 16 (9): 1123-32, 2015. [PUBMED Abstract]

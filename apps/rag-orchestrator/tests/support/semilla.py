@@ -20,6 +20,21 @@ from tests.support.milvus import DIMENSION_DE_TEST
 DIRECTORIO_DE_FIXTURES = Path(__file__).resolve().parents[1] / "fixtures"
 MANIFIESTO_FX_06C_A = DIRECTORIO_DE_FIXTURES / "seed-manifest.yaml"
 FUENTES_EXCLUIDAS_DE_TEST = ("NCCN", "ESMO")
+CLASES_ACEPTADAS_DE_TEST = frozenset({"dominio_publico", "cc_by", "cc_by_sa"})
+# Las fuentes que usan los fixtures y los manifiestos reales (ADR-36); un test de rechazo pasa su propia lista.
+FUENTES_ADMITIDAS_DE_TEST = ("NCI", "PMC Open Access", "ClinicalTrials.gov")
+# Cómo se identifica un producto de NCI/PDQ a sí mismo: no puede aparecer en un extracto (ADR-36, política de cancer.gov).
+AUTOIDENTIFICACION_DE_PDQ = (
+    "pdq",
+    "physician data query",
+    "purpose of this summary",
+    "propósito de este resumen",
+    "editorial board",
+    "consejo editorial",
+    "junta editorial",
+    "comité editorial",
+    "permission to use this summary",
+)
 FECHA_DE_CORTE_DE_TEST = date(2026, 10, 15)
 TAMANO_DE_CHUNK_DE_TEST = 12  # palabras: cada texto sintético da 2 o 3 chunks
 SOLAPE_DE_CHUNK_DE_TEST = 0
@@ -55,13 +70,15 @@ def documento_de_prueba(**cambios: object) -> DocumentoDeSemilla:
 def politica_de_test(
     *,
     permitir_cc_by_nc: bool = False,
-    aceptadas: frozenset[str] = frozenset({"dominio_publico", "cc_by", "cc_by_sa"}),
+    aceptadas: frozenset[str] = CLASES_ACEPTADAS_DE_TEST,
+    fuentes_admitidas: tuple[str, ...] = FUENTES_ADMITIDAS_DE_TEST,
 ) -> PoliticaDeLicencias:
     return PoliticaDeLicencias(
         aceptadas=aceptadas,
         excluidas=FUENTES_EXCLUIDAS_DE_TEST,
         mapa_de_clases=MAPA_DE_LICENCIAS_POR_DEFECTO,
         permitir_cc_by_nc=permitir_cc_by_nc,
+        fuentes_admitidas=fuentes_admitidas,
     )
 
 

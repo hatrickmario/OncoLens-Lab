@@ -11,6 +11,7 @@ from app.domain.corpus_seed.admisibilidad import (
     clase_contradice_el_texto,
     es_fuente_excluida,
     evaluar_admisibilidad,
+    fuente_admitida,
 )
 from tests.support.semilla import documento_de_prueba, politica_de_test
 
@@ -41,7 +42,10 @@ def test_la_fuente_excluida_gana_a_la_falta_de_licencia() -> None:
 
 
 def test_una_fuente_con_el_nombre_de_una_excluida_dentro_de_otro_no_se_excluye() -> None:
-    admision = evaluar_admisibilidad(documento_de_prueba(source_name="NCCNx"), politica_de_test())
+    admision = evaluar_admisibilidad(
+        documento_de_prueba(source_name="NCCNx"),
+        politica_de_test(fuentes_admitidas=("NCCNx",)),
+    )
 
     assert admision.admitido
 
@@ -227,7 +231,9 @@ def test_compara_la_licencia_sin_distinguir_mayusculas_ni_espacios_de_mas(licenc
     assert admision.license_class == "cc_by"
 
 
-POLITICA_SIN_EXCLUIDAS = replace(politica_de_test(), excluidas=())
+POLITICA_SIN_EXCLUIDAS = replace(
+    politica_de_test(fuentes_admitidas=("NCI", "Annals of Surgery")), excluidas=()
+)
 
 
 @pytest.mark.parametrize("excluidas", [(), ("Foo",), ("Foo", "Bar")])
@@ -350,7 +356,7 @@ def test_la_sigla_con_puntos_tambien_es_la_fuente_excluida(fuente: str) -> None:
 @pytest.mark.parametrize("fuente", ["A.B.C.", "Dr. N. C. Smith", "NCI"])
 def test_una_sigla_con_puntos_que_no_es_nccn_ni_esmo_no_se_excluye(fuente: str) -> None:
     assert evaluar_admisibilidad(
-        documento_de_prueba(source_name=fuente), politica_de_test()
+        documento_de_prueba(source_name=fuente), politica_de_test(fuentes_admitidas=(fuente,))
     ).admitido
 
 
@@ -395,3 +401,56 @@ def test_las_revistas_de_esmo_se_excluyen_aunque_la_configuracion_este_vacia() -
         evaluar_admisibilidad(revista, POLITICA_SIN_EXCLUIDAS).motivo
         is MotivoDeRechazo.FUENTE_EXCLUIDA
     )
+
+
+ADMITIDAS = ("NCI", "PMC Open Access", "ClinicalTrials.gov")
+
+
+@pytest.mark.parametrize("fuente", ["NCI", "  nci ", "PMC Open Access", "clinicaltrials.gov"])
+def test_fuente_admitida_reconoce_el_nombre_exacto_sin_distinguir_mayusculas_ni_espacios(
+    fuente: str,
+) -> None:
+    assert fuente_admitida(fuente, ADMITIDAS)
+
+
+@pytest.mark.parametrize("fuente", ["NICE", "NCI PDQ", "PMC", "NCCN", ""])
+def test_fuente_admitida_rechaza_un_nombre_que_no_es_de_la_lista(fuente: str) -> None:
+    assert not fuente_admitida(fuente, ADMITIDAS)
+
+
+def test_fuente_admitida_rechaza_todo_cuando_la_lista_esta_vacia() -> None:
+    assert not fuente_admitida("NCI", ())
+
+
+def test_rechaza_con_fuente_no_admitida_una_fuente_fuera_de_la_lista_aunque_declare_licencia() -> (
+    None
+):
+    politica = politica_de_test(fuentes_admitidas=ADMITIDAS)
+
+    admision = evaluar_admisibilidad(documento_de_prueba(source_name="NICE"), politica)
+
+    assert admision.motivo is MotivoDeRechazo.FUENTE_NO_ADMITIDA
+
+
+def test_la_fuente_no_admitida_gana_a_la_falta_de_licencia() -> None:
+    politica = politica_de_test(fuentes_admitidas=ADMITIDAS)
+
+    admision = evaluar_admisibilidad(
+        documento_de_prueba(source_name="NICE", license=None), politica
+    )
+
+    assert admision.motivo is MotivoDeRechazo.FUENTE_NO_ADMITIDA
+
+
+def test_la_fuente_excluida_gana_a_la_fuente_no_admitida() -> None:
+    politica = politica_de_test(fuentes_admitidas=ADMITIDAS)
+
+    admision = evaluar_admisibilidad(documento_de_prueba(source_name="NCCN"), politica)
+
+    assert admision.motivo is MotivoDeRechazo.FUENTE_EXCLUIDA
+
+
+def test_admite_una_fuente_de_la_lista_con_licencia_aceptada() -> None:
+    politica = politica_de_test(fuentes_admitidas=ADMITIDAS)
+
+    assert evaluar_admisibilidad(documento_de_prueba(source_name="NCI"), politica).admitido

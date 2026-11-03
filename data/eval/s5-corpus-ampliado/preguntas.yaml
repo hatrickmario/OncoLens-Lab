@@ -1,0 +1,475 @@
+clase: sintetico
+# Preguntas SINTÉTICAS (inventadas por el equipo; ningún dato de pacientes) sobre el corpus ampliado de data/raw/s3 (US-120).
+# Cada `cita` es un fragmento literal del documento esperado (lo comprueba tests/evaluation/test_dataset_s5_corpus_ampliado.py).
+# Pares es/en: la pregunta en inglés es el control de la española (`control_de`), para medir recall es->en (meta >= 0,70).
+preguntas:
+  - id: S5-M01
+    idioma: es
+    cancer: mama
+    modo_acierto: cualquiera
+    pregunta: '¿Qué describe la evidencia sobre añadir pembrolizumab a la quimioterapia neoadyuvante en cáncer de mama ER positivo HER2 negativo?'
+    evidencia: [{documento: pmc-mama-pembrolizumab-er-eca, cita: 'Addition of pembrolizumab to neoadjuvant chemotherapy followed by adjuvant pembrolizumab improved outcomes'}]
+    revisada_por_oncologo: false
+  - id: S5-M02
+    idioma: en
+    cancer: mama
+    modo_acierto: cualquiera
+    control_de: S5-M01
+    pregunta: 'What does the evidence describe about adding pembrolizumab to neoadjuvant chemotherapy in ER-positive HER2-negative breast cancer?'
+    evidencia: [{documento: pmc-mama-pembrolizumab-er-eca, cita: 'Addition of pembrolizumab to neoadjuvant chemotherapy followed by adjuvant pembrolizumab improved outcomes'}]
+    revisada_por_oncologo: false
+  - id: S5-M03
+    idioma: es
+    cancer: mama
+    modo_acierto: cualquiera
+    pregunta: '¿Qué compara la evidencia entre trastuzumab deruxtecán y trastuzumab emtansina en cáncer de mama HER2 positivo metastásico?'
+    evidencia: [{documento: pmc-mama-trastuzumab-deruxtecan-eca, cita: 'Trastuzumab deruxtecan (T-DXd) demonstrated significantly improved efficacy over trastuzumab emtansine (T-DM1)'}]
+    revisada_por_oncologo: false
+  - id: S5-M04
+    idioma: en
+    cancer: mama
+    modo_acierto: cualquiera
+    control_de: S5-M03
+    pregunta: 'What does the evidence compare between trastuzumab deruxtecan and trastuzumab emtansine in metastatic HER2-positive breast cancer?'
+    evidencia: [{documento: pmc-mama-trastuzumab-deruxtecan-eca, cita: 'Trastuzumab deruxtecan (T-DXd) demonstrated significantly improved efficacy over trastuzumab emtansine (T-DM1)'}]
+    revisada_por_oncologo: false
+  - id: S5-M05
+    idioma: es
+    cancer: mama
+    modo_acierto: cualquiera
+    pregunta: '¿Qué describe la evidencia sobre elacestrant en tumores con mutación ESR1 de cáncer de mama metastásico?'
+    evidencia: [{documento: pmc-mama-elacestrant-esr1-eca, cita: 'Elacestrant significantly prolonged progression-free survival (PFS) with manageable safety'}]
+    revisada_por_oncologo: false
+  - id: S5-M06
+    idioma: en
+    cancer: mama
+    modo_acierto: cualquiera
+    control_de: S5-M05
+    pregunta: 'What does the evidence describe about elacestrant in ESR1-mutated metastatic breast cancer?'
+    evidencia: [{documento: pmc-mama-elacestrant-esr1-eca, cita: 'Elacestrant significantly prolonged progression-free survival (PFS) with manageable safety'}]
+    revisada_por_oncologo: false
+  - id: S5-M07
+    idioma: es
+    cancer: mama
+    modo_acierto: cualquiera
+    pregunta: '¿Qué describe la evidencia sobre capivasertib con fulvestrant en cáncer de mama avanzado con receptores hormonales positivos y HER2 negativo?'
+    evidencia: [{documento: pmc-mama-capivasertib-eca, cita: 'In the global CAPItello-291 randomized phase 3 study'}]
+    revisada_por_oncologo: false
+  - id: S5-M08
+    idioma: en
+    cancer: mama
+    modo_acierto: cualquiera
+    control_de: S5-M07
+    pregunta: 'What does the evidence describe about capivasertib plus fulvestrant in hormone receptor-positive HER2-negative advanced breast cancer?'
+    evidencia: [{documento: pmc-mama-capivasertib-eca, cita: 'In the global CAPItello-291 randomized phase 3 study'}]
+    revisada_por_oncologo: false
+  - id: S5-M09
+    idioma: es
+    cancer: mama
+    modo_acierto: cualquiera
+    pregunta: '¿Qué relación describe la evidencia entre el ADN tumoral circulante y la supervivencia en cáncer de mama metastásico?'
+    evidencia: [{documento: pmc-mama-adn-tumoral-metastasico-rs, cita: 'detection of ctDNA was associated with worse overall, progression-free, and disease-free survival'}]
+    revisada_por_oncologo: false
+  - id: S5-M10
+    idioma: en
+    cancer: mama
+    modo_acierto: cualquiera
+    control_de: S5-M09
+    pregunta: 'What association does the evidence describe between circulating tumor DNA and survival in metastatic breast cancer?'
+    evidencia: [{documento: pmc-mama-adn-tumoral-metastasico-rs, cita: 'detection of ctDNA was associated with worse overall, progression-free, and disease-free survival'}]
+    revisada_por_oncologo: false
+  - id: S5-M11
+    idioma: es
+    cancer: mama
+    modo_acierto: cualquiera
+    pregunta: '¿Qué describe la evidencia sobre omitir la irradiación de la pared torácica tras la mastectomía en cáncer de mama de riesgo intermedio?'
+    evidencia: [{documento: pmc-mama-irradiacion-pared-toracica-eca, cita: 'investigating the omission of chest wall irradiation in women with'}]
+    revisada_por_oncologo: false
+  - id: S5-M12
+    idioma: es
+    cancer: mama
+    modo_acierto: cualquiera
+    pregunta: '¿Qué describe la evidencia sobre los inhibidores de PARP neoadyuvantes en cáncer de mama con variantes patogénicas germinales de BRCA?'
+    evidencia: [{documento: pmc-mama-parp-neoadyuvante-eca, cita: 'exploit DNA repair deficiency in germline BRCA1 and BRCA2 pathogenic variant'}]
+    revisada_por_oncologo: false
+  - id: S5-M13
+    idioma: en
+    cancer: mama
+    modo_acierto: cualquiera
+    control_de: S5-M12
+    pregunta: 'What does the evidence describe about neoadjuvant PARP inhibitors in breast cancer with germline BRCA pathogenic variants?'
+    evidencia: [{documento: pmc-mama-parp-neoadyuvante-eca, cita: 'exploit DNA repair deficiency in germline BRCA1 and BRCA2 pathogenic variant'}]
+    revisada_por_oncologo: false
+  - id: S5-M14
+    idioma: es
+    cancer: mama
+    modo_acierto: cualquiera
+    pregunta: '¿Qué describe la evidencia sobre el tratamiento del cáncer de mama en hombres?'
+    evidencia: [{documento: nci-mama-hombre-hp-en, cita: 'The approach to the treatment of men with breast cancer is similar to that for women'}]
+    revisada_por_oncologo: false
+  - id: S5-M15
+    idioma: es
+    cancer: mama
+    modo_acierto: cualquiera
+    pregunta: '¿Qué dice la información para pacientes sobre el tamoxifeno para reducir el riesgo de cáncer de mama con receptor de estrógeno positivo?'
+    evidencia: [{documento: nci-mama-prevencion-pac-es, cita: 'El tratamiento con tamoxifeno disminuye el riesgo de cáncer de mama positivo para el receptor de estrógeno'}]
+    revisada_por_oncologo: false
+  - id: S5-M16
+    idioma: en
+    cancer: mama
+    modo_acierto: cualquiera
+    control_de: S5-M15
+    pregunta: 'What does the patient information say about tamoxifen to reduce the risk of estrogen receptor-positive breast cancer?'
+    evidencia: [{documento: nci-mama-prevencion-pac-es, cita: 'El tratamiento con tamoxifeno disminuye el riesgo de cáncer de mama positivo para el receptor de estrógeno'}]
+    revisada_por_oncologo: false
+  - id: S5-M17
+    idioma: es
+    cancer: mama
+    modo_acierto: cualquiera
+    pregunta: '¿Qué describe la evidencia sobre los resultados falsos positivos de la mamografía de detección?'
+    evidencia: [{documento: nci-mama-deteccion-pac-es, cita: 'Es más probable que una mamografía dé un resultado positivo falso en la primera mamografía de detección que en los exámenes posteriores'}]
+    revisada_por_oncologo: false
+  - id: S5-M18
+    idioma: en
+    cancer: mama
+    modo_acierto: cualquiera
+    pregunta: 'What does the evidence describe about mammography as a screening modality for breast cancer?'
+    evidencia: [{documento: nci-mama-deteccion-hp-en, cita: 'Mammography is the most widely used screening modality for the detection of breast cancer'}]
+    revisada_por_oncologo: false
+  - id: S5-M19
+    idioma: es
+    cancer: mama
+    modo_acierto: cualquiera
+    pregunta: '¿Qué compara el ensayo de fase III de ARX788 frente a lapatinib con capecitabina en cáncer de mama HER2 positivo?'
+    evidencia: [{documento: pmc-mama-arx788-her2-eca, cita: 'This phase III trial aimed to compare ARX788, a site-specific, construct-homogeneous antibody-drug conjugate'}]
+    revisada_por_oncologo: false
+  - id: S5-M20
+    idioma: en
+    cancer: mama
+    modo_acierto: cualquiera
+    control_de: S5-M19
+    pregunta: 'What does the phase III trial of ARX788 compare against lapatinib plus capecitabine in HER2-positive breast cancer?'
+    evidencia: [{documento: pmc-mama-arx788-her2-eca, cita: 'This phase III trial aimed to compare ARX788, a site-specific, construct-homogeneous antibody-drug conjugate'}]
+    revisada_por_oncologo: false
+  - id: S5-M21
+    idioma: es
+    cancer: mama
+    modo_acierto: cualquiera
+    pregunta: '¿Qué describe el seguimiento a 10 años del ensayo ShortHER sobre los linfocitos infiltrantes de tumor en cáncer de mama ERBB2 positivo?'
+    evidencia: [{documento: pmc-mama-linfocitos-her2-secundario, cita: 'In this 10-year follow-up analysis of the ShortHER randomized clinical trial'}]
+    revisada_por_oncologo: false
+  - id: S5-M22
+    idioma: en
+    cancer: mama
+    modo_acierto: cualquiera
+    control_de: S5-M21
+    pregunta: 'What does the 10-year follow-up of the ShortHER trial describe about tumor-infiltrating lymphocytes in ERBB2-positive breast cancer?'
+    evidencia: [{documento: pmc-mama-linfocitos-her2-secundario, cita: 'In this 10-year follow-up analysis of the ShortHER randomized clinical trial'}]
+    revisada_por_oncologo: false
+  - id: S5-M23
+    idioma: es
+    cancer: mama
+    modo_acierto: cualquiera
+    pregunta: '¿Qué criterio de elegibilidad de receptores hormonales y HER2 declara el registro del ensayo de abemaciclib adyuvante?'
+    evidencia: [{documento: ct-mama-monarche, cita: 'The participant has confirmed HR+, HER2-, early stage resected invasive breast cancer'}]
+    revisada_por_oncologo: false
+  - id: S5-M24
+    idioma: en
+    cancer: mama
+    modo_acierto: cualquiera
+    control_de: S5-M23
+    pregunta: 'What hormone receptor and HER2 eligibility criterion does the registry record of the adjuvant abemaciclib trial declare?'
+    evidencia: [{documento: ct-mama-monarche, cita: 'The participant has confirmed HR+, HER2-, early stage resected invasive breast cancer'}]
+    revisada_por_oncologo: false
+  - id: S5-M25
+    idioma: es
+    cancer: mama
+    modo_acierto: cualquiera
+    pregunta: '¿Qué estudia el registro del ensayo con pertuzumab añadido a quimioterapia y trastuzumab como tratamiento adyuvante?'
+    evidencia: [{documento: ct-mama-aphinity, cita: 'will assess the safety and efficacy of pertuzumab in addition to chemotherapy plus trastuzumab as adjuvant therapy'}]
+    revisada_por_oncologo: false
+  - id: S5-M26
+    idioma: en
+    cancer: mama
+    modo_acierto: cualquiera
+    control_de: S5-M25
+    pregunta: 'What does the trial registry record study about pertuzumab added to chemotherapy and trastuzumab as adjuvant therapy?'
+    evidencia: [{documento: ct-mama-aphinity, cita: 'will assess the safety and efficacy of pertuzumab in addition to chemotherapy plus trastuzumab as adjuvant therapy'}]
+    revisada_por_oncologo: false
+  - id: S5-M27
+    idioma: es
+    cancer: mama
+    modo_acierto: cualquiera
+    pregunta: '¿Qué describe la revisión sistemática sobre el papel de las antraciclinas en el cáncer de mama HER2 positivo temprano?'
+    evidencia: [{documento: pmc-mama-antraciclinas-rs, cita: 'Anthracyclines have historically remained a cornerstone of treatment for early HER2-positive breast cancer'}]
+    revisada_por_oncologo: false
+  - id: S5-M28
+    idioma: en
+    cancer: mama
+    modo_acierto: cualquiera
+    pregunta: 'What does the practical guidance describe about adjuvant CDK4/6 inhibitors in HR-positive HER2-negative early breast cancer?'
+    evidencia: [{documento: pmc-mama-cdk46-guia, cita: 'inhibitors have become a key component of adjuvant treatment for patients with hormone receptor-positive'}]
+    revisada_por_oncologo: false
+  - id: S5-M29
+    idioma: en
+    cancer: mama
+    modo_acierto: cualquiera
+    pregunta: 'What does the 20-year follow-up describe about the late risk of distant recurrence and tamoxifen benefit?'
+    evidencia: [{documento: pmc-mama-tamoxifeno-eca, cita: 'breast cancer have a substantial late risk of distant recurrence'}]
+    revisada_por_oncologo: false
+  - id: S5-M30
+    idioma: es
+    cancer: mama
+    modo_acierto: sin_evidencia
+    pregunta: '¿Qué describe la evidencia sobre el tratamiento del melanoma uveal?'
+    revisada_por_oncologo: false
+  - id: S5-M31
+    idioma: en
+    cancer: mama
+    modo_acierto: sin_evidencia
+    pregunta: 'What does the evidence describe about glioblastoma radiotherapy dose escalation?'
+    revisada_por_oncologo: false
+  - id: S5-P01
+    idioma: es
+    cancer: prostata
+    modo_acierto: cualquiera
+    pregunta: '¿Qué describe la evidencia sobre añadir quimioterapia a la deprivación androgénica en cáncer de próstata metastásico?'
+    evidencia: [{documento: nci-prostata-hp-en, cita: 'The addition of chemotherapy has been shown in randomized trials to improve OS compared with ADT alone'}]
+    revisada_por_oncologo: false
+  - id: S5-P02
+    idioma: en
+    cancer: prostata
+    modo_acierto: cualquiera
+    control_de: S5-P01
+    pregunta: 'What does the evidence describe about adding chemotherapy to androgen deprivation in metastatic prostate cancer?'
+    evidencia: [{documento: nci-prostata-hp-en, cita: 'The addition of chemotherapy has been shown in randomized trials to improve OS compared with ADT alone'}]
+    revisada_por_oncologo: false
+  - id: S5-P03
+    idioma: es
+    cancer: prostata
+    modo_acierto: cualquiera
+    pregunta: '¿Qué tipos de tratamiento describe la información para pacientes sobre el cáncer de próstata?'
+    evidencia: [{documento: nci-prostata-pac-es, cita: 'Hay diferentes tipos de tratamientos para las personas de cáncer de próstata'}]
+    revisada_por_oncologo: false
+  - id: S5-P04
+    idioma: en
+    cancer: prostata
+    modo_acierto: cualquiera
+    control_de: S5-P03
+    pregunta: 'What types of treatment does the patient information describe for prostate cancer?'
+    evidencia: [{documento: nci-prostata-pac-es, cita: 'Hay diferentes tipos de tratamientos para las personas de cáncer de próstata'}]
+    revisada_por_oncologo: false
+  - id: S5-P05
+    idioma: es
+    cancer: prostata
+    modo_acierto: cualquiera
+    pregunta: '¿Qué describe la evidencia sobre niraparib con abiraterona en cáncer de próstata metastásico sensible a la castración con deficiencia de reparación homóloga?'
+    evidencia: [{documento: pmc-prostata-niraparib-abiraterona-eca, cita: 'Inhibition of poly(ADP-ribose) polymerase (PARP) after relapse on hormone therapy is well established'}]
+    revisada_por_oncologo: false
+  - id: S5-P06
+    idioma: en
+    cancer: prostata
+    modo_acierto: cualquiera
+    control_de: S5-P05
+    pregunta: 'What does the evidence describe about niraparib plus abiraterone in HRR-deficient metastatic castration-sensitive prostate cancer?'
+    evidencia: [{documento: pmc-prostata-niraparib-abiraterona-eca, cita: 'Inhibition of poly(ADP-ribose) polymerase (PARP) after relapse on hormone therapy is well established'}]
+    revisada_por_oncologo: false
+  - id: S5-P07
+    idioma: es
+    cancer: prostata
+    modo_acierto: cualquiera
+    pregunta: '¿Qué describe el ensayo adaptativo ProBio sobre inhibidores de la vía del receptor de andrógenos frente a taxanos?'
+    evidencia: [{documento: pmc-prostata-inhibidores-ar-taxanos-eca, cita: 'ProBio is the first outcome-adaptive platform trial in prostate cancer utilizing a Bayesian framework'}]
+    revisada_por_oncologo: false
+  - id: S5-P08
+    idioma: en
+    cancer: prostata
+    modo_acierto: cualquiera
+    control_de: S5-P07
+    pregunta: 'What does the ProBio adaptive trial describe about androgen receptor pathway inhibitors versus taxanes?'
+    evidencia: [{documento: pmc-prostata-inhibidores-ar-taxanos-eca, cita: 'ProBio is the first outcome-adaptive platform trial in prostate cancer utilizing a Bayesian framework'}]
+    revisada_por_oncologo: false
+  - id: S5-P09
+    idioma: es
+    cancer: prostata
+    modo_acierto: cualquiera
+    pregunta: '¿Qué describe la evidencia sobre darolutamida en el subgrupo japonés del estudio ARASENS?'
+    evidencia: [{documento: pmc-prostata-darolutamida-japon-eca, cita: 'Interpretation of the findings in Japanese patients must take into account that the study was not powered for this subgroup analysis'}]
+    revisada_por_oncologo: false
+  - id: S5-P10
+    idioma: en
+    cancer: prostata
+    modo_acierto: cualquiera
+    control_de: S5-P09
+    pregunta: 'What does the evidence describe about darolutamide in the Japanese subgroup of the ARASENS study?'
+    evidencia: [{documento: pmc-prostata-darolutamida-japon-eca, cita: 'Interpretation of the findings in Japanese patients must take into account that the study was not powered for this subgroup analysis'}]
+    revisada_por_oncologo: false
+  - id: S5-P11
+    idioma: es
+    cancer: prostata
+    modo_acierto: cualquiera
+    pregunta: '¿Qué describe el metanálisis sobre añadir hormonoterapia a la radioterapia posoperatoria en cáncer de próstata recurrente?'
+    evidencia: [{documento: pmc-prostata-hormonoterapia-radioterapia-ma, cita: 'Adding hormone therapy to definitive radiotherapy in localised prostate cancer improves overall survival'}]
+    revisada_por_oncologo: false
+  - id: S5-P12
+    idioma: en
+    cancer: prostata
+    modo_acierto: cualquiera
+    control_de: S5-P11
+    pregunta: 'What does the meta-analysis describe about adding hormone therapy to postoperative radiotherapy in recurrent prostate cancer?'
+    evidencia: [{documento: pmc-prostata-hormonoterapia-radioterapia-ma, cita: 'Adding hormone therapy to definitive radiotherapy in localised prostate cancer improves overall survival'}]
+    revisada_por_oncologo: false
+  - id: S5-P13
+    idioma: en
+    cancer: prostata
+    modo_acierto: cualquiera
+    pregunta: 'What does the network meta-analysis describe about talazoparib plus enzalutamide compared with other first-line treatments?'
+    evidencia: [{documento: pmc-prostata-talazoparib-enzalutamida-nma, cita: 'Talazoparib plus enzalutamide (TALA + ENZA) has demonstrated antitumor activity in the phase 3 clinical trial'}]
+    revisada_por_oncologo: false
+  - id: S5-P14
+    idioma: es
+    cancer: prostata
+    modo_acierto: cualquiera
+    control_de: S5-P13
+    pregunta: '¿Qué describe el metanálisis en red sobre talazoparib con enzalutamida frente a otros tratamientos de primera línea?'
+    evidencia: [{documento: pmc-prostata-talazoparib-enzalutamida-nma, cita: 'Talazoparib plus enzalutamide (TALA + ENZA) has demonstrated antitumor activity in the phase 3 clinical trial'}]
+    revisada_por_oncologo: false
+  - id: S5-P15
+    idioma: en
+    cancer: prostata
+    modo_acierto: cualquiera
+    pregunta: 'What does the evidence describe about abiraterone compared with enzalutamide in metastatic castration-resistant prostate cancer?'
+    evidencia: [{documento: pmc-prostata-enzalutamida-abiraterona-ma, cita: 'such as abiraterone and enzalutamide have demonstrated clinical benefit in patients with metastatic'}]
+    revisada_por_oncologo: false
+  - id: S5-P16
+    idioma: es
+    cancer: prostata
+    modo_acierto: cualquiera
+    control_de: S5-P15
+    pregunta: '¿Qué describe la evidencia sobre abiraterona frente a enzalutamida en cáncer de próstata metastásico resistente a la castración?'
+    evidencia: [{documento: pmc-prostata-enzalutamida-abiraterona-ma, cita: 'such as abiraterone and enzalutamide have demonstrated clinical benefit in patients with metastatic'}]
+    revisada_por_oncologo: false
+  - id: S5-P17
+    idioma: es
+    cancer: prostata
+    modo_acierto: cualquiera
+    pregunta: '¿Qué describe la revisión sobre la braquiterapia focal guiada por imagen en cáncer de próstata?'
+    evidencia: [{documento: pmc-prostata-braquiterapia-focal-rs, cita: 'Recent advances in image-guided brachytherapy have allowed for treatment volume reduction'}]
+    revisada_por_oncologo: false
+  - id: S5-P18
+    idioma: es
+    cancer: prostata
+    modo_acierto: cualquiera
+    pregunta: '¿Qué riesgo cardiovascular describe la evidencia para los inhibidores de la vía del receptor de andrógenos con deprivación androgénica?'
+    evidencia: [{documento: pmc-prostata-eventos-cardiovasculares-nma, cita: 'ARPIs plus ADT were associated with a statistically significant increase in the risk of both any grade'}]
+    revisada_por_oncologo: false
+  - id: S5-P19
+    idioma: en
+    cancer: prostata
+    modo_acierto: cualquiera
+    control_de: S5-P18
+    pregunta: 'What cardiovascular risk does the evidence describe for androgen receptor pathway inhibitors combined with androgen deprivation?'
+    evidencia: [{documento: pmc-prostata-eventos-cardiovasculares-nma, cita: 'ARPIs plus ADT were associated with a statistically significant increase in the risk of both any grade'}]
+    revisada_por_oncologo: false
+  - id: S5-P20
+    idioma: es
+    cancer: prostata
+    modo_acierto: cualquiera
+    pregunta: '¿Qué dilemas clínicos describe la evidencia sobre el manejo del cáncer de próstata oligometastásico?'
+    evidencia: [{documento: pmc-prostata-cirugia-citorreductora-ma, cita: 'The management of oligometastatic prostate cancer, defined by its few metastatic sites, poses distinct clinical dilemmas'}]
+    revisada_por_oncologo: false
+  - id: S5-P21
+    idioma: en
+    cancer: prostata
+    modo_acierto: cualquiera
+    pregunta: 'What does the evidence say about whether PSA or digital rectal exam screening reduces prostate cancer mortality?'
+    evidencia: [{documento: nci-prostata-deteccion-hp-en, cita: 'The evidence is insufficient to determine whether screening for prostate cancer with prostate-specific antigen (PSA) or digital rectal exam (DRE) reduces mortality'}]
+    revisada_por_oncologo: false
+  - id: S5-P22
+    idioma: es
+    cancer: prostata
+    modo_acierto: cualquiera
+    control_de: S5-P21
+    pregunta: '¿Qué dice la evidencia sobre si el cribado con PSA o el tacto rectal reduce la mortalidad por cáncer de próstata?'
+    evidencia: [{documento: nci-prostata-deteccion-hp-en, cita: 'The evidence is insufficient to determine whether screening for prostate cancer with prostate-specific antigen (PSA) or digital rectal exam (DRE) reduces mortality'}]
+    revisada_por_oncologo: false
+  - id: S5-P23
+    idioma: es
+    cancer: prostata
+    modo_acierto: cualquiera
+    pregunta: '¿Qué estudió el ensayo de prevención del cáncer de próstata con finasterida?'
+    evidencia: [{documento: nci-prostata-prevencion-pac-es, cita: 'se estudió si el medicamento finasterida puede prevenir el cáncer de'}]
+    revisada_por_oncologo: false
+  - id: S5-P24
+    idioma: en
+    cancer: prostata
+    modo_acierto: cualquiera
+    control_de: S5-P23
+    pregunta: 'What did the prostate cancer prevention trial of finasteride study?'
+    evidencia:
+      - {documento: nci-prostata-prevencion-pac-en, cita: 'The Prostate Cancer Prevention Trial (PCPT) studied whether the drug finasteride can prevent prostate cancer'}
+      - {documento: nci-prostata-prevencion-pac-es, cita: 'se estudió si el medicamento finasterida puede prevenir el cáncer de'}
+    revisada_por_oncologo: false
+  - id: S5-P25
+    idioma: en
+    cancer: prostata
+    modo_acierto: cualquiera
+    pregunta: 'What does the registry record of the abiraterone trial in newly diagnosed metastatic prostate cancer set out to determine?'
+    evidencia: [{documento: ct-prostata-latitude, cita: 'The purpose of this study is to determine if newly diagnosed (within previous 3 months) participants with metastatic'}]
+    revisada_por_oncologo: false
+  - id: S5-P26
+    idioma: es
+    cancer: prostata
+    modo_acierto: cualquiera
+    control_de: S5-P25
+    pregunta: '¿Qué se propone determinar el registro del ensayo de abiraterona en cáncer de próstata metastásico recién diagnosticado?'
+    evidencia: [{documento: ct-prostata-latitude, cita: 'The purpose of this study is to determine if newly diagnosed (within previous 3 months) participants with metastatic'}]
+    revisada_por_oncologo: false
+  - id: S5-P27
+    idioma: es
+    cancer: prostata
+    modo_acierto: cualquiera
+    pregunta: '¿Cómo define el registro del ensayo con apalutamida la supervivencia libre de metástasis?'
+    evidencia: [{documento: ct-prostata-spartan, cita: 'Metastasis-Free Survival (MFS) by Blinded Independent Central Review (BICR)'}]
+    revisada_por_oncologo: false
+  - id: S5-P28
+    idioma: en
+    cancer: prostata
+    modo_acierto: cualquiera
+    control_de: S5-P27
+    pregunta: 'How does the registry record of the apalutamide trial define metastasis-free survival?'
+    evidencia: [{documento: ct-prostata-spartan, cita: 'Metastasis-Free Survival (MFS) by Blinded Independent Central Review (BICR)'}]
+    revisada_por_oncologo: false
+  - id: S5-P29
+    idioma: en
+    cancer: prostata
+    modo_acierto: cualquiera
+    pregunta: 'What does the comparative effectiveness study describe about Lu-177 PSMA in the TheraP and VISION trials?'
+    evidencia: [{documento: pmc-prostata-lu-psma-comparadores, cita: 'In this comparative effectiveness study using data from 2 randomized clinical trials involving 200 patients in TheraP and 831 patients in VISION'}]
+    revisada_por_oncologo: false
+  - id: S5-P30
+    idioma: es
+    cancer: prostata
+    modo_acierto: cualquiera
+    pregunta: '¿Qué controversia describe la revisión sobre el cribado del cáncer de próstata con PSA?'
+    evidencia: [{documento: pmc-prostata-nueva-perspectiva-cribado-es, cita: 'El cribado del cáncer de próstata mediante la medida del antígeno específico de la próstata (PSA) ha sido objeto de una intensa polémica'}]
+    revisada_por_oncologo: false
+  - id: S5-P31
+    idioma: en
+    cancer: prostata
+    modo_acierto: cualquiera
+    pregunta: 'What does the network meta-analysis describe about the therapeutic landscape of metastatic hormone-sensitive prostate cancer?'
+    evidencia: [{documento: pmc-prostata-mhsp-nma, cita: 'The therapeutic landscape of metastatic hormone-sensitive prostate cancer (mHSPC) has expanded rapidly'}]
+    revisada_por_oncologo: false
+  - id: S5-P32
+    idioma: es
+    cancer: prostata
+    modo_acierto: sin_evidencia
+    pregunta: '¿Qué describe la evidencia sobre el tratamiento del cáncer papilar de tiroides?'
+    revisada_por_oncologo: false
+  - id: S5-P33
+    idioma: en
+    cancer: prostata
+    modo_acierto: sin_evidencia
+    pregunta: 'What does the evidence describe about pediatric leukemia maintenance therapy?'
+    revisada_por_oncologo: false

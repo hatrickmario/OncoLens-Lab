@@ -1,0 +1,3 @@
+# Este dataset se evalúa con el generador LOCAL real (s5-calibracion.yaml): no hay propuestas guionadas del generador falso.
+clase: sintetico
+propuestas: {}

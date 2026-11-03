@@ -1,0 +1,135 @@
+Título
+
+Circulating Tumor DNA and Survival in Metastatic Breast Cancer
+
+Resumen
+
+Key Points
+
+Question
+
+What is the association between detection of specific alterations in circulating tumor DNA (ctDNA) and survival in patients with metastatic breast cancer?
+
+Findings
+
+In this systematic review and meta-analysis reporting data from 4264 patients in 37 studies, detection of ctDNA was associated with worse overall, progression-free, and disease-free survival in patients with metastatic breast cancer. This association remained significant irrespective of differences in study design, including ctDNA detection method and type of blood collection tubes.
+
+Meaning
+
+These findings suggest the potential of ctDNA detection as a prognostic biomarker in patients with metastatic breast cancer and may help guide the design of future clinical studies.
+
+Resumen
+
+Abstract
+
+Importance
+
+Metastatic breast cancer (MBC) poses a substantial clinical challenge despite advancements in diagnosis and treatment. While tissue biopsies offer a static snapshot of disease, liquid biopsy—through detection of circulating tumor DNA (ctDNA)—provides minimally invasive, real-time insight into tumor biology.
+
+Objective
+
+To determine the association between ctDNA and survival outcomes in patients with MBC.
+
+Data Sources
+
+An electronic search was performed in 5 databases (CINAHL, Cochrane Library, Embase, Medline, and Web of Science) and included all articles published from inception until October 23, 2023.
+
+Study Selection
+
+To be included in the meta-analysis, studies had to (1) include women diagnosed with MBC; (2) report baseline plasma ctDNA data; and (3) report overall survival, progression-free survival, or disease-free survival with associated hazards ratios.
+
+Data Extraction and Synthesis
+
+Titles and abstracts were screened independently by 2 authors. Data were pooled using a random-effects model. This study adhered to the Preferred Reporting Items for Systematic Reviews and Meta-analyses (PRISMA) reporting guideline, and quality was assessed using the Newcastle-Ottawa Scale.
+
+Main Outcomes and Measures
+
+The primary study outcome was the association between detection of specific genomic alterations in ctDNA with survival outcomes. Secondary objectives were associations of study methodology with survival.
+
+Results
+
+Of 3162 articles reviewed, 37 met the inclusion criteria and reported data from 4264 female patients aged 20 to 94 years. Aggregated analysis revealed a significant association between ctDNA detection and worse survival (hazard ratio, 1.40; 95% CI, 1.22-1.58). Subgroup analysis identified significant associations of TP53 and ESR1 alterations with worse survival (hazard ratios, 1.58 [95% CI, 1.34-1.81] and 1.28 [95% CI, 0.96-1.60], respectively), while PIK3CA alterations were not associated with survival outcomes. Stratifying by detection method, ctDNA detection through next-generation sequencing and digital polymerase chain reaction was associated with worse survival (hazard ratios, 1.48 [95% CI, 1.22-1.74] and 1.28 [95% CI, 1.05-1.50], respectively).
+
+Conclusions and Relevance
+
+In this systematic review and meta-analysis, detection of specific genomic alterations in ctDNA was associated with worse overall, progression-free, and disease-free survival, suggesting its potential as a prognostic biomarker in MBC. These results may help guide the design of future studies to determine the actionability of ctDNA findings.
+
+Introduction
+
+Metastatic breast cancer (MBC) has a very poor prognosis, with an average survival of 2 to 3 years, posing a significant clinical challenge due to low response rates to existing therapies. Current diagnostic and surveillance methods for MBC rely heavily on imaging modalities and function tests, which often detect lesions that developed months or years before the test. Tissue biopsies of metastatic lesions offer insights into the molecular profile of the tumor; however, these biopsies are invasive, introducing risks and morbidity, and cannot be performed longitudinally to monitor disease changes, treatment response, and progression. To overcome this challenge, liquid biopsy has emerged as a valuable tool for diagnosing and monitoring treatment response in various cancers. The minimally invasive nature of liquid biopsy allows for more frequent sample collection, offering a comprehensive view of an individual’s disease compared with a single tissue biopsy. A key analyte in liquid biopsy is circulating tumor DNA (ctDNA), representing small fragments of cell-free DNA (cfDNA) released mainly by apoptotic or necrotic tumor cells into the circulation. Due to its relatively short half-life in the blood, ctDNA provides real-time information on treatment response, tumor biology, and evolution.
+
+TP53 and PIK3CA emerge as the most frequently reported driver alterations in primary breast cancer; however, in MBC, additional alterations in different metastatic sites add complexity to the overall genetic profile. Monitoring techniques currently used in practice, though, lack the capability to identify the onset of disease progression and treatment resistance at an early stage, thus hindering the timely transition to a more potent and effective treatment strategy. Therefore, using ctDNA to track the variant profile of a tumor in real time holds considerable implications for the clinical management of MBC.
+
+While promising data on ctDNA in MBC exist,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,, inconsistencies among studies regarding study design, cohort size, analysis methods, and other factors have led to conflicting conclusions. Consequently, a systematic review of the current literature is needed to establish the association of ctDNA with clinical parameters and to identify the methodological factors influencing the findings. As such a review has not yet been conducted in the MBC setting, we investigated the association between detection of specific alterations in ctDNA and overall survival (OS), progression-free survival (PFS), and disease-free survival (DFS) in patients with MBC. In secondary analyses, we evaluated the association of various elements of clinical study design with the correlation between ctDNA and survival outcomes. By evaluating the influence of detecting specific ctDNA alterations and considering differences in study design, we may better understand the prognostic ability of ctDNA in MBC.
+
+Methods
+
+Search Strategy and Study Selection
+
+This systematic review and meta-analysis adhered to the Preferred Reporting Items for Systematic Reviews and Meta-Analyses (PRISMA) reporting guideline. Patient consent and ethnical approval were not required for this study as the data and results were extracted from previously approved studies.
+
+An electronic search of the following databases was performed: CINAHL, Cochrane Library, Embase, Medline, and Web of Science. The search strategies used in each database were formulated with help from the McGill University Health Centre Library and are described in detail in eTable 1 in Supplement 2. All studies were screened from database inception to October 23, 2023. Articles were imported into EndNote, version 20 (Clarivate), and duplicates were removed. The full texts of selected articles were downloaded and reviewed to determine eligibility. To be included in the analysis, we selected clinical studies (prospective or retrospective) that (1) included women (aged ≥18 years) diagnosed with MBC, advanced breast cancer, or stage IV breast cancer; (2) reported baseline plasma ctDNA data; and (3) reported OS, PFS, or DFS with associated hazards ratios. Non–English-language studies, conference abstracts, review articles, studies with no sample size given for the survival analysis, case reports or series, ctDNA results from body fluids other than plasma, and studies that did not report survival outcomes using hazard ratios were excluded. Titles and abstracts were independently screened by K.D. and A.S. The review was not registered.
+
+Data Extraction and Quality Assessment
+
+The following variables were extracted from the included articles: title, sample size, survival outcome (hazard ratio including 95% CI and P value), study design (prospective or retrospective), breast cancer subtype, timing of blood draw (before or after treatment), target alteration, method of ctDNA analysis, blood tube used, cfDNA extraction method (column or magnetic bead), and primary objective of the study (ie, whether ctDNA was analyzed as a primary or secondary objective). Data tables used for the analysis are available upon request.
+
+The Newcastle Ottawa Scale was used for the quality assessment of the included studies. Newcastle Ottawa Scale scores for all included studies and a description of the scoring system are provided in eTable 2 in Supplement 2.
+
+Statistical Analysis
+
+Forest plots were used to visually represent pooled hazard ratios alongside their corresponding 95% CIs using a random-effects model. To gauge statistical heterogeneity, the inconsistency index (I2) was used. Examination for publication bias was conducted through a visual assessment using a funnel plot. All statistical analyses, including sensitivity analyses, were performed using Stata, version 14.2 (StataCorp LLC).
+
+Results
+
+Eligible Studies
+
+A total of 3162 publications were identified using our comprehensive search string (eTable 1 in Supplement 2). After applying our inclusion and exclusion criteria, we included 37 publications (1.2%) reporting data from 4264 female patients aged 20 to 94 years with MBC or stage IV breast cancer ().).,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,, Of the 37 included studies, 20 (54%) were prospective,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,, and 17 (46%) were retrospective.,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,, Some studies featured multiple survival analyses,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,, each distinct in terms of survival outcomes, detected variants, or breast cancer subtype. Consequently, each of these analyses were treated as an individual study for a total of 75 studies in our meta-analysis extracted from the 37 articles. Study and patient characteristics are reported in and represented visually in and represented visually in ..
+
+Study and Patient Characteristics
+
+The most common survival outcome reported among the 75 studies was PFS (43 studies [57%]),,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,, followed by OS (21 studies [28%]),,,,,,,,,,,,,,,,,,,,,,,,,, and DFS (11 studies [15%]).,,,,,,,, Breast cancer subtype of the patient populations differed among studies. Hormone receptor (HR)–positive, ERBB2 (formerly HER2)–negative tumors were analyzed in 34 studies (45%),,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,, while other studies did not restrict the breast cancer subtype in their analysis and included all subtypes (31 studies [41%]).,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,, The least represented subtypes were ERBB2-positive (6 studies [8%]),,, HR-positive with ERBB2 status not described (2 studies [3%]),,, and triple-negative breast cancer (TNBC) (2 studies [3%]).
+
+The methods for ctDNA detection also differed among studies, with researchers analyzing plasma ctDNA alterations at baseline by either digital polymerase chain reaction (dPCR) (22 studies 29%),,,,,,,,,,,,,,,,,,,,,,,,,,,, or next-generation sequencing (NGS) (50 studies [67%]),,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,, or a combination of both (3 studies [4%]).,, All studies that performed NGS used targeted sequencing, except for 1 study that used whole-exome sequencing. For studies that performed NGS, those reporting survival associated with a single alteration were included.,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,, Studies using a variant-agnostic approach by stratifying survival of patients by ctDNA positivity or negativity were excluded.,,,,,,,,,,,, The most common alterations identified were TP53 (20 studies [27%]),,,,,,,,,,,,,,,,,,, ESR1 (19 studies [25%]),,,,,,,,,,,,,,,,,,,,,,,,, and PIK3CA (19 studies [25%]).,,,,,,,,,,,,,,,,,,,,,,,,,,,, Two studies (3%),, combined patients with either ESR1, TP53, or PIK3CA alterations into their survival analysis. Alterations in CTCF, ERBB2,,, FGFR,,, GATA3, KRAS,,, MAPK, NOTCH2, PTEN, and TOP1 were also reported (15 studies [20%]). The distribution of blood tube types across the included studies was as follows: 36 studies (48%) used EDTA tubes,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,, 25 (33%) used cfDNA blood-collection (Streck) tubes,,,,,,,,,,,,,,,,,,,,,,, and 14 (19%) used heparin or ACD tubes or did not report the blood tube used.,,,,,,,, For cfDNA extraction, the majority of studies (67 [89%]) used column-based DNA extraction kits.,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,, The remaining 8 (11%) studies used various magnetic bead extraction kits.,,,,,,,,
+
+Other differences were observed in the overall study design among the included studies, such as the timing of the blood draw or the objective of the study (primary vs secondary ctDNA analysis). These differences were accounted for in our meta-regression.
+
+Association of ctDNA Detection With Survival
+
+First, we investigated the association between ctDNA detection and subsequent survival outcomes. Upon synthesizing findings from all 75 individual studies, the identification of specific alterations in ctDNA was significantly associated with reduced survival (hazard ratio, 1.40; 95% CI, 1.22-1.58; P < .001) (eFigure 1 in Supplement 1). Notably, there was statistically significant heterogeneity among these studies (I2 = 62.10%). Subsequently, the significance persisted on subgroup analysis for each survival outcome (OS: hazard ratio, 1.44 [95% CI, 1.24-1.65; P < .001]; PFS: hazard ratio, 1.31 [95% CI, 1.07-1.55; P < .001]; DFS: hazard ratio, 1.56 [95% CI, 1.22-1.89; P < .001]). All subgroup analyses are summarized in ..
+
+Next, we evaluated the strength of the association between ctDNA detection and survival across various breast cancer subtypes. In a subgroup analysis, we found that ctDNA alteration detection in patients with HR-positive, ERBB2-negative breast cancer was associated with reduced survival (hazard ratio, 1.38; 95% CI, 1.15-1.61; P < .001) (eFigure 2 in Supplement 1). Combining the less common subtypes examined in the included publications (TNBC, HR-positive, and ERBB2-positive), we identified a consistent pattern of reduced survival in patients with ctDNA alterations (hazard ratio, 2.05; 95% CI, 1.49-2.60; P < .001). While studies encompassing all subtypes indicated an association with worse survival, the effect was borderline (hazard ratio, 1.29; 95% CI, 0.98-1.59; P < .001).
+
+Given the diverse variant landscape of MBC, we evaluated the association between detection of specific ctDNA alterations and patient survival. We found that TP53 and ESR1 alterations were linked to a significantly shorter survival (hazard ratio, 1.58 [95% CI, 1.34-1.81] and 1.28 [95% CI, 0.96-1.60], respectively; P < .001) (eFigure 3 in Supplement 1). Furthermore, there was an association between diminished survival and alterations less frequently detected in breast cancer, encompassing CTCF, ERBB2, FGFR, GATA3, KRAS, MAPK, NOTCH2, PTEN, and TOP1 (hazard ratio, 1.82; 95% CI, 1.26-2.39; P < .001). Interestingly, this pattern was not evident in patients with ctDNA alterations in PIK3CA (hazard ratio, 1.19; 95% CI, 0.85-1.53).
+
+Subsequently, we investigated whether variations in the study design characteristics among the included studies were associated with the prognostic value of ctDNA. Reduced survival was observed in both prospective (hazard ratio, 1.48; 95% CI, 1.15-1.80; P < .001) and retrospective (hazard ratio, 1.37; 95% CI, 1.17-1.56; P < .001) studies (eFigure 4 in Supplement 1). Detection of ctDNA by either NGS (hazard ratio, 1.48; 95% CI, 1.22-1.74; P < .001) or dPCR (hazard ratio, 1.28; 95% CI, 1.05-1.50; P < .001) was associated with reduced survival (eFigure 5 in Supplement 1). Shorter survival was also observed regardless of the blood tube used, with both Streck and EDTA showing similar outcomes (hazard ratios, 1.41 [95% CI, 1.07-1.74; P < .001] and 1.40 [95% CI, 1.18-1.63; P < .001], respectively) (eFigure 6 in Supplement 1).
+
+To assess publication bias, we generated a funnel plot. Based on the nonparametric Begg test of rank correlation, publication bias was not significant (eFigure 7 in Supplement 1).
+
+Discussion
+
+In this systematic review and meta-analysis, detection of specific alterations in ctDNA at baseline was associated with worse survival outcomes in patients with MBC. Subgroup analysis by ctDNA showed that TP53 and ESR1 alterations, common driver and treatment resistance events in breast cancer, were significantly associated with worse survival. PIK3CA alterations did not show an association with worse survival, however. Our primary finding is consistent with a previously published meta-analysis by Cullinane et al, which showed an association between elevated ctDNA levels and shorter DFS and PFS; however, their study included patients with all stages of breast cancer. MBC has added genomic complexity compared with early-stage breast cancer that stems from the innate tumor heterogeneity not only of the primary tumor but also across each metastatic site. As a result, studying patients with MBC remains crucial and pertinent.
+
+Owing to the ability of ctDNA to provide a systemic view of metastatic disease, recent studies have investigated the variant landscape of ctDNA in MBC. In a comprehensive study involving 255 patients with MBC, Davis et al performed NGS on cfDNA, identifying the prevalent ctDNA alterations in distinct breast cancer subtypes. Notably, in patients with HR-positive breast cancer, recurrent alterations were identified in PIK3CA, ESR1, and TP53. Patients with ERBB2-positive MBC exhibited prominent alterations in TP53, PIK3CA, and ERBB2, while those with TNBC harbored alterations in TP53 and PIK3CA. Other commonly altered genes included MYC, EGFR, FGFR1, CCNE1, NF1, and ARID1A. In our meta-analysis, we found that a majority (77%) of the included studies focused on analyzing these hotspot genes. Although worse survival was associated with ESR1 and not PIK3CA alterations, these data shed light on potential avenues for tailored therapeutic interventions in the pursuit of more effective and personalized treatment strategies for patients with MBC.
+
+In our study, we incorporated the results of ctDNA extracted from baseline plasma samples. Defining a baseline sample in the context of metastatic disease is often challenging due to variations in when patients are initially diagnosed with MBC. Approximately 30% of patients diagnosed with early-stage disease progress to metastasis, while approximately 6% are initially diagnosed with metastatic disease. This distinction is crucial when analyzing ctDNA due to the effect treatments can have on the variant profiles of tumors. For instance, patients with estrogen receptor–positive breast cancer undergoing endocrine therapy may develop treatment resistance due to alterations in ESR1, ultimately reducing treatment efficacy.,, These factors are also important in terms of the approval process of ctDNA tests for clinical use. In 2023, the American Society of Clinical Oncology recommended using liquid biopsy and ctDNA to inform treatment decisions for patients with advanced estrogen receptor–positive, ERBB2-negative breast cancer who experience disease progression after at least 1 line of endocrine therapy. We conducted an additional subgroup analysis by breast cancer subtype of the 19 studies reporting the survival of patients with ESR1.,,,,,,,,,,,,,,,,,,,,,,,, Interestingly, we did not observe a significant association between the presence of ESR1 and survival in patients with HR-positive, ERBB2-negative MBC. The lack of significance may be a result of both intra- and interstudy heterogeneity of patient populations. While some studies in our analysis restricted the number of prior treatments received at the time of enrollment, many included patients who received between 0 and 4 lines of treatment at the time of blood collection. Given that ESR1 alterations are typically linked with treatment resistance and are found very infrequently (approximately 3%) in primary breast cancers, the ratio of treatment-naive to treatment-exposed patients may have skewed our analysis. We lacked access to patient data for stratification in our analysis. The recent American Society of Clinical Oncology guidelines approve ctDNA tests for specific indications. Therefore, to enhance liquid biopsy’s clinical integration, increased data transparency and reporting of standardized patient characteristics are imperative. With ctDNA being a limited and valuable resource, data from large, prospective studies could be leveraged for secondary analyses, such as this meta-analysis, to generate significant results to advance the field of liquid biopsy.
+
+The analysis of ctDNA presents a challenge due to its small fraction compared with total cfDNA in a plasma sample, making the choice of blood collection tube crucial. In recent years, several cfDNA stabilizing tubes containing solutions that prevent cfDNA degradation and white blood cell lysis, thereby reducing genomic DNA (gDNA) contamination, have been produced. Additionally, these tubes offer the convenience of room temperature storage for an extended duration (up to 14 days), unlike EDTA tubes, which require processing within a few hours. Determining the purity of a cfDNA sample is important because the presence of gDNA in a plasma sample dilutes the fraction of ctDNA and cfDNA, thereby diminishing the sensitivity of downstream analysis and distorting measures such as variant allele fraction.,, In a study by Diaz et al, blood samples from various cancer types were analyzed using either EDTA or Streck tubes. Interestingly, comparable levels of cfDNA yield and gDNA contamination were observed when EDTA and Streck tubes were stored for 3 hours and 6 days, respectively. In our meta-analysis, despite differences in blood collection tubes used among studies, our analysis did not reveal significant differences in the association between ctDNA and survival across groups. Nonetheless, it is imperative for investigators to remain vigilant while performing and documenting blood collection and processing protocols, as minor deviations may considerably influence interpretation of the results.
+
+The choice of cfDNA extraction method is important in ctDNA studies given reported disparities in cfDNA yield and composition across commonly used kits. Bronkhorst et al conducted a comparative analysis using cell culture supernatant, examining 6 distinct cfDNA extraction kits. Notably, column-based methods showed superior cfDNA yield, albeit with a tendency to capture larger DNA fragments. Conversely, magnetic bead–based methods yielded less cfDNA but exhibited a bias toward recovering shorter DNA fragments. In our meta-analysis, there was a high level of consensus among studies regarding both cfDNA extraction methods, with a majority of studies using column-based methods. While we did not conduct a subgroup analysis, there appears to be a growing trend toward standardized cfDNA extraction protocols in MBC. This trend underscores the need for ongoing refinement in cfDNA extraction methodologies to guarantee robust and reproducible results in ctDNA studies.
+
+In examining the study design, another crucial aspect we investigated was the method used for ctDNA detection. A significant proportion of studies (67%) opted for NGS despite its reduced sensitivity compared with dPCR. Next-generation sequencing offers distinct advantages, particularly in the context of breast cancer and other metastatic cancers, by allowing a tumor-agnostic approach for cfDNA analysis. This approach permits the identification of variants without the need for molecular profiling of tumor tissue, offering a systemic view of the disease by capturing the molecular profiles of both primary and metastatic tumors. However, false-positive results may arise due to clonal hematopoiesis of indeterminate potential. While these variants can be filtered to improve sensitivity, several studies included in our meta-analysis did not describe their bioinformatics pipeline in detail, making it difficult to ascertain whether these variants were removed. On the contrary, dPCR uses a tumor-informed approach, necessitating specific information about the tumor to design variant-specific ctDNA assays. While dPCR boasts higher sensitivity compared with NGS, its reliance on tissue biopsies, primarily from primary tumors, may overlook the tumor heterogeneity observed at other metastatic sites. To incorporate studies using both NGS and dPCR to detect ctDNA, our meta-analysis specifically focused on those examining survival associated with the detection of a single variant in cfDNA at baseline. Our findings revealed that both dPCR and NGS were associated with worse survival outcomes in patients with MBC. Hence, an optimal strategy in a clinical setting might involve using a combination of NGS and dPCR throughout a patient’s treatment course. This integrated strategy would improve ctDNA surveillance, ensuring a more comprehensive understanding and timely response to changes in the molecular landscape.
+
+Limitations
+
+This study has some limitations. Although we included 37 articles in our meta-analysis, several relevant studies were excluded due to lack of data availability. Many studies were missing key information, such as sample size of each group in the survival analysis, hazard ratios, and/or confidence intervals. Additionally, we encountered several studies that stratified patient survival using metrics such as z score or genomic instability number. We also identified several articles that established an association between ctDNA levels and treatment resistance and/or response. However, these articles were beyond the scope of our research question. None of the included studies enrolled male participants, which is a limitation of our meta-analysis as this population remains important to, yet often underrepresented in, breast cancer research.
+
+Conclusions
+
+In this systematic review and meta-analysis, we highlight the prognostic value of single ctDNA alteration detection in patients with MBC. While prognostic biomarkers are not yet clinically actionable, the field is moving in this direction. By identifying the associations between prognosis and ctDNA, ctDNA can subsequently be correlated with specific therapeutic decisions in the future. These findings may guide the design of future clinical trials and prospective studies that will ultimately benefit patients with MBC.
+
+References
+
+Associated Data
+
+Supplementary Materials

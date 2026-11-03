@@ -5,14 +5,24 @@ configuración, nunca textos de preguntas ni de salidas (RN-14). Determinista: s
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, get_args
 
 from app.evaluation.barrido import Eleccion, FilaBarrido
 from app.evaluation.config_suite import PROVEEDORES
 from app.evaluation.fuente_dataset import CLASES_ADMITIDAS
 from app.evaluation.metas import Estado, Meta, MetricaMarcada, marcar_frente_a_meta, nota_adr42
-from app.evaluation.reporte import Booleano, Enumerado, Huella, Identificador, Lista, Numero, Objeto
+from app.evaluation.desagregacion import ETIQUETA_DE_IDIOMA, IDIOMAS_DEL_BASELINE
+from app.evaluation.reporte import (
+    Anulable,
+    Booleano,
+    Enumerado,
+    Huella,
+    Identificador,
+    Lista,
+    Numero,
+    Objeto,
+)
 
 NO_EJECUTABLE = "NO-EJECUTABLE aquí"
 CLAVE_P95 = "p95_evidence_analyses_s"
@@ -45,6 +55,15 @@ class DatosDelInforme:
     metricas_por_cancer: Mapping[str, Mapping[str, float | None]]
     metas: Mapping[str, Meta]
     p95_e2e_s: float | None
+    # US-120 AC-6: una celda por tipo de cáncer e idioma; ``None`` = sin consultas («no medida»). Vacío si no se desagrega.
+    metricas_por_tipo_e_idioma: Mapping[str, Mapping[str, Mapping[str, float | None] | None]] = (
+        field(default_factory=dict)
+    )
+    # ``EVAL_P95_RUNS``: corridas de las que sale la mediana del p95; ``None`` = una sola medición (la que se pasó).
+    p95_corridas: int | None = None
+    # De dónde sale ``p95_e2e_s``: ``medicion_externa`` (``--p95-e2e-s``), ``corridas_en_proceso`` (etapa ``consulta`` de
+    # ``EVAL_P95_RUNS`` corridas) o ``no_declarado``.
+    p95_origen: str = "no_declarado"
 
 
 def _numero(valor: float | None) -> str:
@@ -149,16 +168,71 @@ def _seccion_baseline(d: DatosDelInforme) -> list[str]:
         "| Métrica | Valor | Meta inicial | Estado |",
         "|---|---|---|---|",
         *por_cancer,
+        *([""] + _seccion_por_tipo_e_idioma(d) if d.metricas_por_tipo_e_idioma else []),
     ]
+
+
+def _filas_por_tipo_e_idioma(d: DatosDelInforme) -> list[str]:
+    filas: list[str] = []
+    for tipo, por_idioma in d.metricas_por_tipo_e_idioma.items():
+        for idioma in IDIOMAS_DEL_BASELINE:
+            celda = por_idioma.get(idioma)
+            prefijo = f"{ETIQUETAS_CANCER.get(tipo, tipo)} · {ETIQUETA_DE_IDIOMA[idioma]}"
+            if celda is None:
+                filas.append(f"| {prefijo} | no medida | — | — |")
+                continue
+            filas.extend(
+                _fila_de_metrica(m, f"{prefijo} · ")
+                for m in marcar_frente_a_meta(celda, d.metas)
+                if m.clave != CLAVE_P95
+            )
+    return filas
+
+
+def _seccion_por_tipo_e_idioma(d: DatosDelInforme) -> list[str]:
+    if not d.metricas_por_tipo_e_idioma:
+        return []
+    return [
+        "### Por tipo de cáncer e idioma (es, en, es→en)",
+        "",
+        "Una celda sin consultas es «no medida» (no 0.0). es→en: consultas en español contra el corpus en inglés.",
+        "",
+        "| Métrica | Valor | Meta inicial | Estado |",
+        "|---|---|---|---|",
+        *_filas_por_tipo_e_idioma(d),
+    ]
+
+
+VALORACION_OUT_08 = """\
+La fidelidad (proxy) quedó fuera de meta. Se valoran, **sin implementarlas** (`[S4 resp. 15]`, OUT-08, soluciones 3 y 4), dos
+palancas para una decisión posterior: (3) dar contexto del fragmento al NLI (la afirmación se verifica contra el fragmento citado
+y su entorno) y (4) un NLI más fuerte es↔en o un umbral por tipo de afirmación. Este baseline no cambia modelos, *chunking* ni
+prompts; la decisión es de una historia aparte con su propia evaluación (OL-06)."""
+
+
+def _seccion_out_08(d: DatosDelInforme) -> list[str]:
+    marcas = marcar_frente_a_meta(d.metricas_totales, d.metas)
+    fidelidad = next((m for m in marcas if m.clave == "fidelidad_proxy"), None)
+    if fidelidad is None or fidelidad.estado != "fuera de meta":
+        return []
+    return ["## 5. Valoración de OUT-08 (fidelidad fuera de meta)", "", VALORACION_OUT_08]
+
+
+def _medida_del_p95(d: DatosDelInforme) -> str:
+    """Qué se midió y de dónde sale: nunca «punta a punta» ni un número de corridas que la configuración no declara."""
+    if d.p95_e2e_s is None:
+        return f"p95 de `/platform/evidence-analyses` de punta a punta: {NO_EJECUTABLE} (requiere Compose y los modelos de ADR-39)."
+    if d.p95_origen == "medicion_externa":
+        return f"p95 medido de punta a punta: {d.p95_e2e_s:g} s (una medición externa)."
+    corridas = (
+        f"mediana de {d.p95_corridas} corridas" if d.p95_corridas else "corridas no declaradas"
+    )
+    return f"p95 medido en proceso (etapa `consulta`): {d.p95_e2e_s:g} s ({corridas})."
 
 
 def _seccion_p95(d: DatosDelInforme, meta_p95: Meta | None) -> list[str]:
     nota = nota_adr42(d.p95_e2e_s, meta_p95.maximo or 0.0) if meta_p95 else None
-    medida = (
-        f"p95 medido de punta a punta: {d.p95_e2e_s:g} s (mediana de 3 corridas)."
-        if d.p95_e2e_s is not None
-        else f"p95 de `/platform/evidence-analyses` de punta a punta: {NO_EJECUTABLE} (requiere Compose y los modelos de ADR-39)."
-    )
+    medida = _medida_del_p95(d)
     return ["## 3. Latencia de punta a punta (G-5)", "", medida, *([""] + [nota] if nota else [])]
 
 
@@ -197,6 +271,7 @@ def renderizar_informe(d: DatosDelInforme) -> str:
         _seccion_p95(d, d.metas.get(CLAVE_P95)),
         [""],
         _seccion_real(d),
+        ([""] + _seccion_out_08(d)) if _seccion_out_08(d) else [],
     ]
     return "\n".join(linea for bloque in secciones for linea in bloque).rstrip() + "\n"
 
@@ -237,6 +312,13 @@ def agregados_del_informe(d: DatosDelInforme) -> dict[str, Any]:
         ],
         "metricasPorCancer": {c: dict(v) for c, v in d.metricas_por_cancer.items()},
         "p95E2eS": d.p95_e2e_s,
+        "p95Corridas": d.p95_corridas,
+        "metricasPorTipoEIdioma": {
+            tipo: {
+                idioma: (None if celda is None else dict(celda)) for idioma, celda in por.items()
+            }
+            for tipo, por in d.metricas_por_tipo_e_idioma.items()
+        },
     }
 
 
@@ -290,5 +372,14 @@ ESQUEMA_BASELINE = Objeto(
             {c: _POR_CANCER for c in ETIQUETAS_CANCER}, opcionales=frozenset(ETIQUETAS_CANCER)
         ),
         "p95E2eS": Numero(),
+        "p95Corridas": Numero(),
+        # Una clave por tipo habilitado y por idioma del baseline; una celda sin consultas es ``null`` (no medida).
+        "metricasPorTipoEIdioma": Objeto(
+            {
+                c: Objeto({i: Anulable(_POR_CANCER) for i in IDIOMAS_DEL_BASELINE})
+                for c in ETIQUETAS_CANCER
+            },
+            opcionales=frozenset(ETIQUETAS_CANCER),
+        ),
     }
 )

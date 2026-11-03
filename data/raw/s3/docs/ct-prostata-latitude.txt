@@ -1,0 +1,54 @@
+Source: ClinicalTrials.gov (U.S. National Library of Medicine), study record NCT01715285, last updated 2025-02-04; retrieved 2026-11-03 through the ClinicalTrials.gov API v2 (data timestamp 2026-11-03T10:00:05). Modifications: selected fields reordered as plain text; contacts, locations, results and documents omitted. This is a trial registry record, not evidence of efficacy.
+
+Title
+A Randomized, Double-blind, Comparative Study of Abiraterone Acetate Plus Low-Dose Prednisone Plus Androgen Deprivation Therapy (ADT) Versus ADT Alone in Newly Diagnosed Subjects With High-Risk, Metastatic Hormone-naive Prostate Cancer (mHNPC)
+
+Brief title
+A Study of Abiraterone Acetate Plus Low-Dose Prednisone Plus Androgen Deprivation Therapy (ADT) Versus ADT Alone in Newly Diagnosed Participants With High-Risk, Metastatic Hormone-Naive Prostate Cancer (mHNPC)
+
+Sponsor
+Janssen Research & Development, LLC
+
+Status: COMPLETED. Phase: PHASE3. Study type: INTERVENTIONAL. Enrollment: 1209.
+
+Brief summary
+The purpose of this study is to determine if newly diagnosed (within previous 3 months) participants with metastatic (spread of cancer cells from one part of the body to another ) hormone-naive prostate cancer (mHNPC) who have high-risk prognostic factors will benefit from the addition of abiraterone acetate plus low-dose prednisone to androgen deprivation therapy (ADT; lutenizing hormone releasing hormone \[LHRH\] agonists or surgical castration).
+
+Detailed description
+This is a randomized (the treatment group is assigned by chance), double-blind (neither physician nor participant knows the treatment that the participant receives), placebo (an inactive substance that is compared with a drug to test whether the drug has a real effect in a clinical trial)-controlled study designed to determine the efficacy of abiraterone acetate plus low-dose prednisone in participants with mHNPC. The study consists of 4 parts: Screening Phase (that is, 28 days before study commences on Day 1); Double-blind treatment Phase (consists of 4-week dosing cycles wherein abiraterone acetate will be administered as 1,000 milligram \[mg\] plus 5 mg prednisone or only placebo orally); Follow-up Phase (every 4 months up to 60 months or until death, lost to follow up, withdrawal of consent or study termination) Open-label Extension (OLE) Phase. Participants in the Double-blind Treatment Phase will have the opportunity to enroll into the OLE Phase. The OLE Phase will allow participants to receive active drug (abiraterone acetate plus prednisone) until Long-term Extension (LTE) Phase for an additional period of up to 3 years. Participants will discontinue study treatment at disease progression or unacceptable toxicity unless, in the Investigator's opinion, it is deemed that the participants will continue to derive benefit from study treatment. Participants will be randomized in a 1:1 ratio to the active treatment group (abiraterone acetate 1000 mg daily plus prednisone 5 mg daily plus ADT) or the control group (ADT plus placebos).Efficacy will be evaluated primarily by overall survival and radiographic progression-free survival. Participants' safety will be monitored throughout the study.
+
+Conditions:
+- Prostate Neoplasms
+
+Design
+Allocation: RANDOMIZED. Intervention model: PARALLEL. Masking: TRIPLE.
+
+Arm (EXPERIMENTAL): Abiraterone acetate + Prednisone + ADT
+Participants will receive abiraterone acetate tablet at a total dose of 1000 milligram (mg) plus 5 mg capsule of prednisone orally once daily until disease progression, withdrawal of consent or unacceptable toxicity. Stable regimen of androgen deprivation therapy (ADT) will be administered.
+
+Arm (PLACEBO_COMPARATOR): Placebo + Androgen Deprivation Therapy (ADT)
+Participants will receive placebo matched to abiraterone acetate plus prednisone orally once daily until disease progression, withdrawal of consent or unacceptable toxicity. Stable regimen of ADT will be administered.
+
+Primary outcomes
+- Radiographic Progression-Free Survival (PFS) (Up to 44 months). Radiographic PFS was defined as the time (in months) interval from randomization to the first date of radiographic progression or death. Radiographic progression included progression by bone scan (according to modified Prostate Cancer Working Group 2 \[PCWG2\] criteria), defined as at least 2 new lesions on bone scan and progression of soft tissue lesions by computed tomography (CT) or magnetic resonance imaging (MRI) (according to Response Evaluation Criteria in Solid Tumors \[RECIST\] 1.1 criteria). As per the RECIST 1.1 guideline, progression requires a 20 percent (%) increase in the sum of diameters of all target lesions and a minimum absolute increase of 5 millimeter (mm) in the sum as compared to nadir sum of diameter.
+- Overall Survival (OS) (Up to 66 months). Overall survival was defined as the time from randomization to date of death from any cause.
+
+Eligibility criteria
+Inclusion Criteria:
+
+* Newly diagnosed metastatic prostate cancer within 3 months prior to randomization with histologically or cytologically confirmed adenocarcinoma of the prostate without neuroendocrine differentiation or small cell histology
+* Distant metastatic disease documented by positive bone scan or metastatic lesions on computed tomography (CT) or magnetic resonance imaging (MRI) scan
+* At least 2 of the following high-risk prognostic factors: Gleason score of greater than or equal to (\>=8); presence of 3 or more lesions on bone scan; presence of measurable visceral (excluding lymph node disease) metastasis on CT or MRI Response Evaluation Criteria in Solid Tumors (RECIST) Version 1.1 scan
+* Eastern Cooperative Oncology Group (ECOG) performance status grade of 0, 1 or 2
+* Adequate hematologic, hepatic, and renal function
+* Agrees to protocol-defined use of effective contraception
+
+Exclusion Criteria:
+
+* Active infection or other medical condition that would make prednisone use contraindicated
+* Any chronic medical condition requiring a higher systemic dose of corticosteroid than 5 mg prednisone per day
+* Pathological finding consistent with small cell carcinoma of the prostate
+* Known brain metastasis
+* Any prior pharmacotherapy, radiation therapy, or surgery for metastatic prostate cancer (the following exception are permitted): up to 3 months of androgen deprivation therapy (ADT) with lutenizing hormone releasing hormone agonists or antagonists or orchiectomy with or without concurrent anti-androgens prior Cycle 1 Day 1; participants may have one course of palliative radiation or surgical therapy to treat symptoms resulting from metastatic disease if it was administered at least 28 days prior to Cycle 1 Day 1)
+
+Sex: MALE. Minimum age: 18 Years. Maximum age: not stated. Standard ages: ADULT, OLDER_ADULT. Healthy volunteers: False.
