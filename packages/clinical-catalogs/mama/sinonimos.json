@@ -1,4 +1,60 @@
 {
   "version": "1.1.0",
-  "items": []
+  "items": [
+    {
+      "terminoCanonico": "Ki-67",
+      "sinonimos": [
+        {
+          "texto": "Ki67",
+          "idioma": "en"
+        },
+        {
+          "texto": "MIB-1",
+          "idioma": "en"
+        },
+        {
+          "texto": "índice de proliferación",
+          "idioma": "es"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "RE",
+      "sinonimos": [
+        {
+          "texto": "ER",
+          "idioma": "en"
+        },
+        {
+          "texto": "receptor de estrógeno",
+          "idioma": "es"
+        },
+        {
+          "texto": "receptores de estrógeno",
+          "idioma": "es"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "RP",
+      "sinonimos": [
+        {
+          "texto": "PR",
+          "idioma": "en"
+        },
+        {
+          "texto": "PgR",
+          "idioma": "en"
+        },
+        {
+          "texto": "receptor de progesterona",
+          "idioma": "es"
+        },
+        {
+          "texto": "receptores de progesterona",
+          "idioma": "es"
+        }
+      ]
+    }
+  ]
 }

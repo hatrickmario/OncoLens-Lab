@@ -40,6 +40,19 @@ interface TerminologiaDeUnTipo {
   readonly sinonimos: readonly SinonimosDeTermino[];
 }
 
+/** Solo ATC admite varios códigos por término canónico (un régimen combina fármacos); el resto, uno (P3-3 de l1d-84). */
+const ESTANDAR_CON_VARIOS_CODIGOS = 'atc';
+
+function exigirUnCodigoPorTerminoYEstandar(entradas: readonly EntradaDeCodigo[]): void {
+  const vistas = new Set<string>();
+  for (const { terminoCanonico, estandar } of entradas) {
+    if (estandar === ESTANDAR_CON_VARIOS_CODIGOS) continue;
+    const clave = `${estandar}\u0000${terminoCanonico}`;
+    if (vistas.has(clave)) throw new Error('codigo_repetido');
+    vistas.add(clave);
+  }
+}
+
 function leerTerminologiaDe(
   rutaDelCatalogo: string,
   tipo: string,
@@ -49,6 +62,7 @@ function leerTerminologiaDe(
     JSON.parse(leerArchivo(`${rutaDelCatalogo}/${tipo}/${archivo}`));
   const codigos = esquemaDeCodigos.parse(leer('codigos.json'));
   const sinonimos = esquemaDeSinonimos.parse(leer('sinonimos.json'));
+  exigirUnCodigoPorTerminoYEstandar(codigos.entradas);
   return {
     entradas: codigos.entradas.map(
       ({ terminoCanonico, estandar, codigo, nombreOficial, etiquetaEs }) => ({

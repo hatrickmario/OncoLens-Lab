@@ -88,6 +88,21 @@ describe('clinical.diagnosis y clinical.diagnosis_grading', () => {
     }
   });
 
+  it('acepta histology NULL cuando se crea el primer diagnóstico a mano sin histología [US-110 AC-6]', async () => {
+    await conTransaccionRevertida(urlBase, async (cliente) => {
+      const ids = generadorDeIds(ESPACIO_DE_IDS);
+      const contexto = await insertarContextoClinico(cliente, ids);
+
+      const guardado = await insertar(
+        cliente,
+        'clinical.diagnosis',
+        filaDeDiagnostico(ids, contexto.patientId, contexto.episodeId, { histology: null }),
+      );
+
+      expect(guardado['histology']).toBeNull();
+    });
+  });
+
   it('guarda la gradación Gleason 4+3=7 con ISUP 3 cuando es coherente [US-038 AC-3]', async () => {
     await conTransaccionRevertida(urlBase, async (cliente) => {
       const { ids, diagnosisId } = await diagnosticoSintetico(cliente);

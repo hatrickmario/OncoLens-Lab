@@ -334,6 +334,7 @@ export async function montarGateway(
     documents: Router(),
     patients: Router(),
     completeness: Router(),
+    manualEntry: Router(),
     caseView: Router(),
   });
   const app = appConAuth({

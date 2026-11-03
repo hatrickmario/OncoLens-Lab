@@ -63,6 +63,14 @@ export const ARCHIVOS_DECLARADOS_POR_EL_MANIFIESTO = {
   'poblacion-reglas': { esquema: 'poblacion-reglas', clave: 'poblacionReglas' },
 };
 
+/**
+ * Archivos de la raíz que existen solo si el manifiesto lo declara (`escalas: true`, L1D-90): `clave` es la del
+ * manifiesto. Un catálogo sin la declaración no lo tiene (los fixtures anteriores siguen válidos).
+ */
+export const ARCHIVOS_DE_RAIZ_DECLARADOS_POR_EL_MANIFIESTO = {
+  escalas: { esquema: 'escalas', clave: 'escalas' },
+};
+
 /** Archivos de la raíz del catálogo (no por tipo): cada entrada nombra su esquema. */
 export const ARCHIVOS_DE_RAIZ = {
   atributos: { esquema: 'atributos' },

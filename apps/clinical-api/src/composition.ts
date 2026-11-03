@@ -20,6 +20,8 @@ export interface RoutersProtegidos {
   patients: Router;
   /** Checklist de datos críticos (L1D-95). Obligatorio: olvidarlo en `server.ts` rompe el build. */
   completeness: Router;
+  /** Registro manual de biomarcador y diagnóstico (L1D-90). Obligatorio: olvidarlo en `server.ts` rompe el build. */
+  manualEntry: Router;
   /** Vista de caso con timeline (L1D-74). Obligatorio: olvidarlo en `server.ts` rompe el build. */
   caseView: Router;
 }
@@ -34,6 +36,7 @@ export function componerRutasProtegidas(routers: RoutersProtegidos): readonly Ro
     routers.documents,
     routers.patients,
     routers.completeness,
+    routers.manualEntry,
     routers.caseView,
   ];
 }
