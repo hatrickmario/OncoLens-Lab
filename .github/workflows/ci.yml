@@ -20,8 +20,47 @@ env:
   BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
 
 jobs:
-  build-test:
-    name: build-test
+  # ARR-11 (D-12.1): decide si el PR solo cambia documentación (scripts/ci/detectar-cambios.mjs, reglas en
+  # scripts/ci/cambios-paths.yaml). `omitibles` es la ÚNICA fuente de los jobs que un PR de documentación no ejecuta: cada
+  # uno la lee en su `if` y `ci-ok` solo acepta como omitido lo que figura en ella. Los escáneres (secret-scan, data-scan),
+  # lint-lenguaje y higiene-proceso nunca son omitibles. Necesita node_modules: eval-trigger.mjs importa `yaml`.
+  cambios:
+    name: cambios
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      documentacion: ${{ steps.detectar.outputs.documentacion }}
+      omitibles: ${{ steps.detectar.outputs.omitibles }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # Historial completo: el diff se calcula contra `git merge-base` y sin él el detector pide la CI completa.
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Restaurar node_modules (clave exacta por .nvmrc y package-lock.json, sin claves parciales)
+        id: cache-node
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: node-${{ runner.os }}-${{ hashFiles('.nvmrc', 'package-lock.json') }}
+      - name: Instalar dependencias de Node
+        if: steps.cache-node.outputs.cache-hit != 'true'
+        run: npm ci
+      - name: Detector de cambios (PR de documentación → jobs omitibles)
+        id: detectar
+        run: node scripts/ci/detectar-cambios.mjs --base "$BASE_REF"
+
+  build-test-node:
+    name: build-test-node
+    needs: cambios
+    if: ${{ !contains(fromJSON(needs.cambios.outputs.omitibles || '[]'), 'build-test-node') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -40,8 +79,31 @@ jobs:
             apps/rag-orchestrator/requirements.txt
             apps/rag-orchestrator/requirements-dev.txt
             apps/rag-orchestrator/requirements-eval.txt
+      - name: Restaurar node_modules (clave exacta por .nvmrc y package-lock.json, sin claves parciales)
+        id: cache-node
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: node-${{ runner.os }}-${{ hashFiles('.nvmrc', 'package-lock.json') }}
       - name: Instalar dependencias de Node
+        if: steps.cache-node.outputs.cache-hit != 'true'
         run: npm ci
+      - name: Restaurar el venv de Python (clave exacta por .python-version y los requirements que instala este job)
+        id: cache-venv
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .venv-ci
+          key: venv-${{ runner.os }}-${{ hashFiles('.python-version', 'apps/rag-orchestrator/requirements.txt', 'apps/rag-orchestrator/requirements-dev.txt', 'apps/rag-orchestrator/requirements-eval.txt') }}
+      - name: Entorno virtual de rag-orchestrator (dev, ruff para ci/tests/quality, y eval, que importan tests/evaluation y test_settings_modelos; el Vitest raíz ejecuta evaluate)
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        run: |
+          python -m venv .venv-ci
+          .venv-ci/bin/pip install --only-binary=:all: -r apps/rag-orchestrator/requirements.txt -r apps/rag-orchestrator/requirements-dev.txt -r apps/rag-orchestrator/requirements-eval.txt
+      - name: Activar el venv (python y pip del PATH son los de .venv-ci)
+        run: echo "$GITHUB_WORKSPACE/.venv-ci/bin" >> "$GITHUB_PATH"
       - name: Herramientas de la CI (oasdiff, que usa el test de contracts-breaking.sh)
         run: scripts/ci/install-tools.sh
       - name: Build de los workspaces
@@ -58,14 +120,64 @@ jobs:
         run: npm run catalog:version-guard -- --base "$BASE_REF"
       - name: La allowlist del modelo commiteada coincide con el esquema de Prisma (US-001 AC-4)
         run: npm run catalog:allowlist:check
-      - name: Dependencias de rag-orchestrator (dev, ruff para ci/tests/quality, y eval, que importan tests/evaluation y test_settings_modelos)
-        run: pip install -r apps/rag-orchestrator/requirements.txt -r apps/rag-orchestrator/requirements-dev.txt -r apps/rag-orchestrator/requirements-eval.txt
       - name: Vitest raíz (scripts, infra y fixtures de la CI)
         run: npx vitest run
+      - name: Tests de secretos (L1D-165)
+        run: npm run test:secrets
+
+  # Pytest y la verificación del proveedor de rag-orchestrator, en paralelo con build-test-node (ARR-11, D-12.2).
+  # Publica la cobertura XML que consume cobertura-rag (US-213 AC-11).
+  build-test-rag:
+    name: build-test-rag
+    needs: cambios
+    if: ${{ !contains(fromJSON(needs.cambios.outputs.omitibles || '[]'), 'build-test-rag') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: |
+            apps/rag-orchestrator/requirements.txt
+            apps/rag-orchestrator/requirements-dev.txt
+            apps/rag-orchestrator/requirements-eval.txt
+      - name: Restaurar node_modules (clave exacta por .nvmrc y package-lock.json, sin claves parciales)
+        id: cache-node
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: node-${{ runner.os }}-${{ hashFiles('.nvmrc', 'package-lock.json') }}
+      - name: Instalar dependencias de Node
+        if: steps.cache-node.outputs.cache-hit != 'true'
+        run: npm ci
+      - name: Restaurar el venv de Python (clave exacta por .python-version y los requirements que instala este job)
+        id: cache-venv
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .venv-ci
+          key: venv-${{ runner.os }}-${{ hashFiles('.python-version', 'apps/rag-orchestrator/requirements.txt', 'apps/rag-orchestrator/requirements-dev.txt', 'apps/rag-orchestrator/requirements-eval.txt') }}
+      - name: Entorno virtual de rag-orchestrator (dev, ruff para ci/tests/quality, y eval, que importan tests/evaluation y test_settings_modelos)
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        run: |
+          python -m venv .venv-ci
+          .venv-ci/bin/pip install --only-binary=:all: -r apps/rag-orchestrator/requirements.txt -r apps/rag-orchestrator/requirements-dev.txt -r apps/rag-orchestrator/requirements-eval.txt
+      - name: Activar el venv (python y pip del PATH son los de .venv-ci)
+        run: echo "$GITHUB_WORKSPACE/.venv-ci/bin" >> "$GITHUB_PATH"
       - name: Pytest de rag-orchestrator (con Node, el helper empaqueta el spec con bundle-json.mjs)
         run: python -m pytest --cov=app --cov-report=xml:coverage/coverage.xml
         working-directory: apps/rag-orchestrator
-      - name: Publicar la Cobertura XML de rag-orchestrator (insumo del job quality, US-213 AC-11)
+      - name: Publicar la Cobertura XML de rag-orchestrator (insumo del job cobertura-rag, US-213 AC-11)
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -75,11 +187,11 @@ jobs:
           retention-days: 1
       - name: Verificación del proveedor de rag-orchestrator, estricta (contracts:verify-provider, US-214)
         run: npm run contracts:verify-provider -- --proveedor rag-orchestrator
-      - name: Tests de secretos (L1D-165)
-        run: npm run test:secrets
 
   contracts:
     name: contracts
+    needs: cambios
+    if: ${{ !contains(fromJSON(needs.cambios.outputs.omitibles || '[]'), 'contracts') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -96,7 +208,17 @@ jobs:
           python-version-file: .python-version
           cache: pip
           cache-dependency-path: scripts/contracts/requirements-codegen.txt
+      - name: Restaurar node_modules (clave exacta por .nvmrc y package-lock.json, sin claves parciales)
+        id: cache-node
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: node-${{ runner.os }}-${{ hashFiles('.nvmrc', 'package-lock.json') }}
       - name: Instalar dependencias de Node
+        if: steps.cache-node.outputs.cache-hit != 'true'
         run: npm ci
       - name: Herramientas de la CI (oasdiff, versión y suma de ci/tools.lock)
         run: scripts/ci/install-tools.sh
@@ -116,6 +238,11 @@ jobs:
           CODEGEN_PYTHON: .venv-codegen/bin/python
       - name: Cambios incompatibles contra la base (oasdiff, nivel ERR)
         run: scripts/ci/contracts-breaking.sh "$BASE_REF"
+      # D5-02 (ARR-11): el merge ref del PR queda fijo al disparar el evento; si main cambió después, esto revalida sus ejemplos
+      # y specs contra la punta actual. Solo en pull_request, sin credenciales; vuelve a ejecutar `contracts` antes del merge si main avanzó.
+      - name: Ejemplos y specs del PR contra la punta actual de main (contracts:check sobre main fusionado, D5-02)
+        if: github.event_name == 'pull_request'
+        run: scripts/ci/contracts-contra-main.sh "$BASE_REF"
 
   secret-scan:
     name: secret-scan
@@ -143,7 +270,17 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
+      - name: Restaurar node_modules (clave exacta por .nvmrc y package-lock.json, sin claves parciales)
+        id: cache-node
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: node-${{ runner.os }}-${{ hashFiles('.nvmrc', 'package-lock.json') }}
       - name: Instalar dependencias de Node
+        if: steps.cache-node.outputs.cache-hit != 'true'
         run: npm ci
       - name: PII en los archivos versionados
         run: node scripts/ci/pii-scan.mjs
@@ -152,6 +289,8 @@ jobs:
 
   stack-smoke:
     name: stack-smoke
+    needs: cambios
+    if: ${{ !contains(fromJSON(needs.cambios.outputs.omitibles || '[]'), 'stack-smoke') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -162,7 +301,17 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
+      - name: Restaurar node_modules (clave exacta por .nvmrc y package-lock.json, sin claves parciales)
+        id: cache-node
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: node-${{ runner.os }}-${{ hashFiles('.nvmrc', 'package-lock.json') }}
       - name: Instalar dependencias de Node
+        if: steps.cache-node.outputs.cache-hit != 'true'
         run: npm ci
       - name: Smoke del stack de Compose (secretos ficticios, sin LLM real)
         run: npm run smoke:compose
@@ -171,6 +320,8 @@ jobs:
 
   integration:
     name: integration
+    needs: cambios
+    if: ${{ !contains(fromJSON(needs.cambios.outputs.omitibles || '[]'), 'integration') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -181,13 +332,25 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
+      - name: Restaurar node_modules (clave exacta por .nvmrc y package-lock.json, sin claves parciales)
+        id: cache-node
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: node-${{ runner.os }}-${{ hashFiles('.nvmrc', 'package-lock.json') }}
       - name: Instalar dependencias de Node
+        if: steps.cache-node.outputs.cache-hit != 'true'
         run: npm ci
       - name: Integración de clinical-api contra PostgreSQL real de test con verificación del proveedor (US-038, US-214)
         run: scripts/ci/integracion-clinical-api.sh
 
   integration-rag:
     name: integration-rag
+    needs: cambios
+    if: ${{ !contains(fromJSON(needs.cambios.outputs.omitibles || '[]'), 'integration-rag') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -198,15 +361,27 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
+      - name: Restaurar node_modules (clave exacta por .nvmrc y package-lock.json, sin claves parciales)
+        id: cache-node
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: node-${{ runner.os }}-${{ hashFiles('.nvmrc', 'package-lock.json') }}
       - name: Instalar dependencias de Node
+        if: steps.cache-node.outputs.cache-hit != 'true'
         run: npm ci
       - name: Integración de rag-orchestrator contra PostgreSQL y Milvus reales de test (L1D-277, pytest -m servicios_reales)
         run: scripts/ci/integracion-rag-orchestrator.sh
 
+  # ARR-11 (D-12.3): corre en paralelo con los builds. La cobertura de líneas cambiadas de Python (US-213 AC-11) la mide el job
+  # cobertura-rag con el informe de build-test-rag; aquí `COBERTURA_INFORMES_XML` vacío deja solo los LCOV de web y clinical-api.
   quality:
     name: quality
-    # La cobertura de rag-orchestrator la produce el Pytest completo de build-test (US-213 AC-11); sin ella no hay medición de Python.
-    needs: build-test
+    needs: cambios
+    if: ${{ !contains(fromJSON(needs.cambios.outputs.omitibles || '[]'), 'quality') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -224,7 +399,17 @@ jobs:
           python-version-file: .python-version
           cache: pip
           cache-dependency-path: apps/rag-orchestrator/requirements-dev.txt
+      - name: Restaurar node_modules (clave exacta por .nvmrc y package-lock.json, sin claves parciales)
+        id: cache-node
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: node-${{ runner.os }}-${{ hashFiles('.nvmrc', 'package-lock.json') }}
       - name: Instalar dependencias de Node
+        if: steps.cache-node.outputs.cache-hit != 'true'
         run: npm ci
       - name: Ruff (formato de Python)
         run: pip install -r apps/rag-orchestrator/requirements-dev.txt
@@ -236,17 +421,14 @@ jobs:
         run: node scripts/quality/format-no-toca-generados.mjs
       - name: Compilar clinical-language (lo importan los tests de web y clinical-api)
         run: npm run build -w @oncolens/clinical-language
-      - name: Cobertura XML de rag-orchestrator (la publicó build-test)
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: cobertura-rag-orchestrator
-          path: apps/rag-orchestrator/coverage
       - name: Cobertura LCOV de clinical-api (insumo de la cobertura de líneas cambiadas)
         run: npm run test:coverage -w apps/clinical-api
       - name: Cobertura LCOV de web (insumo de la cobertura de líneas cambiadas)
         run: npm run test:coverage -w apps/web
-      - name: Calidad de capas, umbrales, higiene de tests, AC y cobertura de líneas cambiadas (escribe reports/quality/latest.json)
+      - name: Calidad de capas, umbrales, higiene de tests, AC y cobertura de líneas cambiadas de web y clinical-api (escribe reports/quality/latest.json)
         run: npm run quality:report
+        env:
+          COBERTURA_INFORMES_XML: ''
       - name: Subir el reporte de calidad
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -257,6 +439,43 @@ jobs:
           retention-days: 14
       - name: Tests de lint, formato, capas y umbrales (fixtures)
         run: npm run test:quality
+        # Los tests lanzan quality.mjs como subproceso con CI=true: heredan la misma lista de informes que quality:report (solo LCOV).
+        env:
+          COBERTURA_INFORMES_XML: ''
+
+  # ARR-11 (D-12.3, US-213 AC-11): cobertura de líneas cambiadas de rag-orchestrator con el informe XML de build-test-rag y la
+  # misma función que `quality` (scripts/quality/cobertura.mjs). Una cobertura baja es alerta, nunca error; un informe ausente
+  # es un paso roto. Sin dependencias de Node: el script solo usa módulos del propio repositorio.
+  cobertura-rag:
+    name: cobertura-rag
+    needs: [cambios, build-test-rag]
+    if: ${{ !contains(fromJSON(needs.cambios.outputs.omitibles || '[]'), 'cobertura-rag') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # origin/main completo: la cobertura de líneas cambiadas compara contra el ancestro común.
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+      - name: Cobertura XML de rag-orchestrator (la publicó build-test-rag)
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: cobertura-rag-orchestrator
+          path: apps/rag-orchestrator/coverage
+      - name: Cobertura de líneas cambiadas de rag-orchestrator (escribe reports/quality/cobertura-rag.json)
+        run: node scripts/quality/cobertura.mjs --solo-xml --salida reports/quality/cobertura-rag.json
+      - name: Subir el reporte de cobertura de rag-orchestrator
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: quality-report-rag
+          path: reports/quality/cobertura-rag.json
+          if-no-files-found: ignore
+          retention-days: 14
 
   lint-lenguaje:
     name: lint-lenguaje
@@ -270,7 +489,17 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
+      - name: Restaurar node_modules (clave exacta por .nvmrc y package-lock.json, sin claves parciales)
+        id: cache-node
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: node-${{ runner.os }}-${{ hashFiles('.nvmrc', 'package-lock.json') }}
       - name: Instalar dependencias de Node
+        if: steps.cache-node.outputs.cache-hit != 'true'
         run: npm ci
       - name: lint:lenguaje (mensajes de la UI sin términos prohibidos de RN-23)
         run: npm run lint:lenguaje
@@ -279,6 +508,8 @@ jobs:
 
   dependencies:
     name: dependencies
+    needs: cambios
+    if: ${{ !contains(fromJSON(needs.cambios.outputs.omitibles || '[]'), 'dependencies') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -299,11 +530,14 @@ jobs:
       - name: Auditoría de npm y pip con excepciones vigentes (US-217, security/audit-exceptions.json)
         run: scripts/ci/auditar-dependencias.sh
 
-  # US-074 (L1D-237): siempre corre y decide en su script si el diff toca un disparador (scripts/ci/eval-trigger-paths.yaml);
-  # así su check nunca queda «pendiente». Adapters falsos, sin red ni modelos pesados; compara con data/evaluation/baseline.json
+  # US-074 (L1D-237): corre en todo PR y decide en su script si el diff toca un disparador (scripts/ci/eval-trigger-paths.yaml);
+  # así su check nunca queda «pendiente». Solo lo omite el detector `cambios` en un PR de documentación pura, y nunca si un
+  # disparador casa con un .md (ARR-11, D-12.1). Adapters falsos, sin red ni modelos pesados; compara con data/evaluation/baseline.json
   # y con los mínimos de apps/rag-orchestrator/eval/configs/regression.yaml.
   eval-required:
     name: eval-required
+    needs: cambios
+    if: ${{ !contains(fromJSON(needs.cambios.outputs.omitibles || '[]'), 'eval-required') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     # Defensa en profundidad (RN-12): ninguna librería descarga modelos durante la suite.
@@ -326,10 +560,31 @@ jobs:
           cache-dependency-path: |
             apps/rag-orchestrator/requirements.txt
             apps/rag-orchestrator/requirements-eval.txt
+      - name: Restaurar node_modules (clave exacta por .nvmrc y package-lock.json, sin claves parciales)
+        id: cache-node
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: node-${{ runner.os }}-${{ hashFiles('.nvmrc', 'package-lock.json') }}
       - name: Instalar dependencias de Node
+        if: steps.cache-node.outputs.cache-hit != 'true'
         run: npm ci
-      - name: Dependencias de la suite evaluate (rag-orchestrator y requirements-eval)
-        run: pip install -r apps/rag-orchestrator/requirements.txt -r apps/rag-orchestrator/requirements-eval.txt
+      - name: Restaurar el venv de la suite evaluate (clave propia, solo requirements.txt y requirements-eval.txt)
+        id: cache-venv
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .venv-ci
+          key: venv-eval-${{ runner.os }}-${{ hashFiles('.python-version', 'apps/rag-orchestrator/requirements.txt', 'apps/rag-orchestrator/requirements-eval.txt') }}
+      - name: Dependencias de la suite evaluate (rag-orchestrator y requirements-eval; sin torch ni transformers, D-11)
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        run: |
+          python -m venv .venv-ci
+          .venv-ci/bin/pip install --only-binary=:all: -r apps/rag-orchestrator/requirements.txt -r apps/rag-orchestrator/requirements-eval.txt
+      - name: Activar el venv (python y pip del PATH son los de .venv-ci)
+        run: echo "$GITHUB_WORKSPACE/.venv-ci/bin" >> "$GITHUB_PATH"
       - name: Suite evaluate si el PR cambia modelo, prompt, umbral, catálogo o corpus, y regresión contra el baseline y regression.yaml (US-074)
         run: node scripts/ci/eval-required.mjs --base "$BASE_REF"
       - name: Publicar el reporte de evaluate (agregados y configuración, sin datos)
@@ -367,7 +622,7 @@ jobs:
   ci-ok:
     name: ci-ok
     if: always()
-    needs: [build-test, contracts, secret-scan, data-scan, stack-smoke, integration, integration-rag, quality, lint-lenguaje, dependencies, eval-required, higiene-proceso]
+    needs: [cambios, build-test-node, build-test-rag, contracts, secret-scan, data-scan, stack-smoke, integration, integration-rag, quality, cobertura-rag, lint-lenguaje, dependencies, eval-required, higiene-proceso]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -377,7 +632,7 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
-      - name: Todos los jobs en success (un job omitido o cancelado no cuenta como verde)
+      - name: Todos los jobs en success (un job omitido solo cuenta si el detector `cambios` lo declaró; uno cancelado, nunca)
         run: node scripts/ci/verificar-needs.mjs
         env:
           NEEDS: ${{ toJSON(needs) }}

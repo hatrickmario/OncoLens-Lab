@@ -17,10 +17,14 @@ const ID_DESTINO = /\b(?:D\d+-\d+|H-\d+|US-\d+[a-z]?|L1D-\d+)\b/g;
 const ENTREGA_POSTERIOR = /\bentrega\s+\d/i;
 const TAREA_ABIERTA = /^\s*- \[ \]/;
 
-/** IDs `L1D-nn` que el título del PR declara entre corchetes iniciales: `[L1D-145][L1D-300] ...`. */
+/**
+ * IDs `L1D-nn` que el título del PR declara al inicio, sin duplicados y en orden: corchetes consecutivos
+ * (`[L1D-145][L1D-300]`, `[L1D-145] [L1D-300]`) o separados por comas en un corchete (`[L1D-145, L1D-300]`) (ARR-11, D-12.5).
+ */
 export function historiasDelTitulo(titulo) {
-  const inicio = /^(?:\s*\[L1D-\d+\])+/.exec(titulo ?? '');
-  return inicio ? [...inicio[0].matchAll(/\[L1D-(\d+)\]/g)].map((m) => `L1D-${m[1]}`) : [];
+  const inicio = /^(?:\s*\[L1D-\d+(?:\s*,\s*L1D-\d+)*\])+/.exec(titulo ?? '');
+  if (!inicio) return [];
+  return [...new Set([...inicio[0].matchAll(/L1D-(\d+)/g)].map((m) => `L1D-${m[1]}`))];
 }
 
 /** Tareas abiertas sin traslado nombrado. `propias` son los L1D-nn del PR, que no valen como destino. */

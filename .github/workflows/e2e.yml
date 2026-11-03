@@ -17,9 +17,47 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  # Misma base que ci.yml: la del PR o, en push, el commit anterior.
+  BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
+
 jobs:
+  # ARR-11 (D-12.1): el mismo detector que ci.yml. Un PR de documentación pura no levanta el Compose de E2E.
+  cambios:
+    name: cambios
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      documentacion: ${{ steps.detectar.outputs.documentacion }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Restaurar node_modules (clave exacta por .nvmrc y package-lock.json, sin claves parciales)
+        id: cache-node
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: node-${{ runner.os }}-${{ hashFiles('.nvmrc', 'package-lock.json') }}
+      - name: Instalar dependencias de Node
+        if: steps.cache-node.outputs.cache-hit != 'true'
+        run: npm ci
+      - name: Detector de cambios (PR de documentación → sin E2E)
+        id: detectar
+        run: node scripts/ci/detectar-cambios.mjs --base "$BASE_REF"
+
   e2e:
     name: e2e
+    needs: cambios
+    if: ${{ needs.cambios.outputs.documentacion != 'true' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -30,7 +68,17 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
+      - name: Restaurar node_modules (clave exacta por .nvmrc y package-lock.json, sin claves parciales)
+        id: cache-node
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: node-${{ runner.os }}-${{ hashFiles('.nvmrc', 'package-lock.json') }}
       - name: Instalar dependencias de Node
+        if: steps.cache-node.outputs.cache-hit != 'true'
         run: npm ci
       - name: Rechazar E2E desactivados (test.skip, test.only, test.fixme)
         run: node scripts/ci/verificar-e2e-activos.mjs

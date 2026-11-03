@@ -13,21 +13,101 @@ coincide).
 
 | Job | Qué hace | Comandos |
 |---|---|---|
-| `build-test` | Build y tests de `web` y `clinical-api`, `vitest` raíz (scripts, `infra/`, fixtures de la CI; excluye `ci/tests/quality/`, que corre en `quality`), Pytest de `rag-orchestrator` (tras instalar `requirements.txt`, `requirements-dev.txt` y `requirements-eval.txt`, que importan `tests/evaluation/` y `test_settings_modelos`; con Node ya instalado: el *helper* de L1D-164 empaqueta el spec con `scripts/contracts/bundle-json.mjs`), `test:secrets`, y la **verificación del proveedor de `rag-orchestrator`** (US-214: el *hook* de respuesta del `TestClient` valida cada respuesta contra su `openapi.yaml`; `CONTRACT_VERIFY=strict` exige que se haya verificado alguna) | `npm run build --workspaces --if-present`, `npm run test:build --workspace apps/web` (US-060 AC-5: la URL interna no aparece en `.next/static`; `web` lo excluye de `npm test`), `npm test --workspaces --if-present`, `npx vitest run`, `python -m pytest`, `npm run contracts:verify-provider -- --proveedor rag-orchestrator` |
+| `cambios` | **Detector de cambios** (ARR-11, D-12.1; sección «Detector de cambios»). Decide si el PR solo cambia documentación y publica `documentacion` y `omitibles`; los jobs omitibles lo leen en su `if` y `ci-ok` solo acepta como omitido lo que figura ahí. Necesita `node_modules` (importa `yaml`): restaura la caché y, si falla, instala | `node scripts/ci/detectar-cambios.mjs --base "$BASE_REF"` |
+| `build-test-node` | Build y tests de `web` y `clinical-api` y del resto de workspaces, `vitest` raíz (scripts, `infra/`, fixtures de la CI; excluye `ci/tests/quality/`, que corre en `quality`; ejecuta `evaluate` de verdad, así que prepara el venv de Python con `requirements.txt`, `requirements-dev.txt` y `requirements-eval.txt`), catálogo (`catalog:validate`, `version-guard`, `allowlist:check`) y `test:secrets`. Corre en paralelo con `build-test-rag` (ARR-11, D-12.2; antes eran un solo job `build-test`) | `npm run build --workspaces --if-present`, `npm run test:build --workspace apps/web` (US-060 AC-5: la URL interna no aparece en `.next/static`; `web` lo excluye de `npm test`), `npm test --workspaces --if-present`, `npx vitest run`, `npm run test:secrets` |
+| `build-test-rag` | Pytest de `rag-orchestrator` con cobertura (tras instalar `requirements.txt`, `requirements-dev.txt` y `requirements-eval.txt`, que importan `tests/evaluation/` y `test_settings_modelos`; con Node ya instalado: el *helper* de L1D-164 empaqueta el spec con `scripts/contracts/bundle-json.mjs`) y la **verificación del proveedor de `rag-orchestrator`** (US-214: el *hook* de respuesta del `TestClient` valida cada respuesta contra su `openapi.yaml`; `CONTRACT_VERIFY=strict` exige que se haya verificado alguna). Publica el artefacto `cobertura-rag-orchestrator` (`coverage.xml`, 1 día) que consume `cobertura-rag` | `python -m pytest --cov=app --cov-report=xml:coverage/coverage.xml`, `npm run contracts:verify-provider -- --proveedor rag-orchestrator` |
+| `cobertura-rag` | Cobertura de líneas cambiadas de `rag-orchestrator` (US-213 AC-11; ARR-11, D-12.3): descarga `cobertura-rag-orchestrator` de `build-test-rag` y mide con la **misma** `medirCoberturaDelPr`/`alertasDeCobertura` que `quality`. Una cobertura baja es alerta (nunca falla); un informe ausente es un paso roto. Publica `quality-report-rag` (`reports/quality/cobertura-rag.json`, con la forma de `latest.json`). Sin instalar dependencias de Node: el script solo importa módulos del repositorio | `node scripts/quality/cobertura.mjs --solo-xml --salida reports/quality/cobertura-rag.json` |
 | `contracts` | Validación de los specs, código generado al día, cambios incompatibles contra la base del PR | `npm run contracts:check`, `npm run contracts:generate:check`, `scripts/ci/contracts-breaking.sh "$BASE_REF"` (local: `npm run contracts:breaking`, contra `origin/main`; imprime la excepción E-n aplicada). `contracts:check` rechaza además un `fetch` o cliente HTTP directo a un proveedor fuera de los clientes generados |
 | `secret-scan` | gitleaks sobre el árbol y sobre los commits del PR (un secreto añadido y borrado en el mismo PR también falla), siempre con `--redact` | `scripts/ci/secret-scan.sh "$BASE_REF"` |
 | `data-scan` | PII en **todo** `git ls-files` y clase de datos de los datasets de evaluación | `node scripts/ci/pii-scan.mjs`, `node scripts/ci/dataset-class-check.mjs` |
 | `stack-smoke` | Levanta el Compose con `LLM_PROVIDER=fake` y secretos ficticios | `npm run smoke:compose` |
 | `integration` | Integración de `clinical-api` contra el PostgreSQL de test del Compose (secretos ficticios; B-1 del S1). Última ejecución en `main` verificada en L1D-277 (AC-1): 199 tests en verde, job en `needs` de `ci-ok`. Corre con la **verificación del proveedor** activa (US-214): `clienteVerificado` de `apps/clinical-api/tests/support/` valida cada respuesta (código declarado, cabeceras obligatorias y cuerpo) contra `apps/clinical-api/openapi.yaml` y `CONTRACT_VERIFY=strict` falla si no se verificó ninguna | `scripts/ci/integracion-clinical-api.sh` (secretos ficticios de test, postgres del Compose y `npm run contracts:verify-provider -- --proveedor clinical-api`, que ejecuta los tests de `clinical-api` y `scripts/test-integration.sh`) |
 | `integration-rag` | `pytest -m "servicios_reales and not models"` de `rag-orchestrator` (L1D-277, ARR-01) contra el PostgreSQL de test y el Milvus de test (etcd, MinIO de Milvus y standalone) del Compose. Pytest corre en el contenedor `rag-pruebas` (perfil `integracion-rag` de `infra/docker/docker-compose.test.yml`, target `pruebas` de la imagen) unido a `corpus-db-net` y `ai-net`: ningún servicio publica puerto al host y se usa el rol `rag_corpus` real. Solo recoge `tests/integration` (ahí viven todos los `servicios_reales`; un test lo comprueba) y solo este job los ejecuta: `addopts` los excluye de `build-test`. El contenedor monta únicamente los secretos `pg_test_admin_password`, `pg_rag_corpus_password` y `pg_rag_corpus_migrator_password` (los que exige el arnés `tests/support/pg.py`) y una copia de solo lectura de los archivos versionados que leen los tests: el script lo comprueba dentro del contenedor antes de correr Pytest (secretos montados, variables de entorno y árbol sin credenciales ni `.env`). Imprime el resumen por `@pytest.mark.ac` y falla si alguno de US-058 AC-1/3/4 y US-059 AC-1/3/4/5 no queda en verde. Si Milvus o PostgreSQL no quedan sanos en `INTEGRACION_RAG_ESPERA_SEGUNDOS` (420 s) el job falla nombrando el servicio. Sin reintentos; `timeout-minutes: 30`. Local (Docker + `npm ci`): `scripts/ci/integracion-rag-orchestrator.sh`; si otra pila usa las subredes `172.28.x`, fija `CLINICAL_NET_SUBNET` y `CORPUS_DB_NET_SUBNET` | `scripts/ci/integracion-rag-orchestrator.sh`, `node scripts/ci/verificar-acs-rag.mjs` (plugin `scripts/ci/pytest_plugins/resumen_por_ac.py`) |
-| `quality` | Lint y formato del código (L1D-265): ESLint con `--max-warnings 0`, Prettier y `ruff format` en modo `--check`; capas y umbrales (L1D-263, US-213a): `npm run quality:report` ejecuta ESLint (tamaño y complejidad), `dependency-cruiser`, Ruff (`C901`, `PLR0915`) e `import-linter` y escribe `reports/quality/latest.json` (artefacto `quality-report`); y los tests de `ci/tests/quality/` (fixtures de AC-1…AC-5 de L1D-265 y de capas y umbrales de L1D-263). Instala `ruff` de `apps/rag-orchestrator/requirements-dev.txt`; sin él `format:check` falla (nunca se omite). Higiene de tests (L1D-285): ESLint con `@vitest/eslint-plugin` y las reglas propias `oncolens/tests-sin-pendientes-ni-foco-jest` y `oncolens/mock-solo-en-bordes` (nivel `error`), y `scripts/quality/check-pytest-hygiene.py` (prohíbe `skip`, `skipif` y `xfail` en `tests/**/*.py`) más Ruff `PT` (con `PT001`, `PT006`, `PT011` y `PT018` ignoradas en `tests/**`, deuda de estilo). Alertas, sin bloquear: cobertura de líneas cambiadas (`coverage.changedLinesWarn`, `scripts/quality/cobertura.mjs`, sobre LCOV de `web` y `clinical-api` y Cobertura XML de `rag-orchestrator`, excluidos los `*.service.ts` de `coverage.alertPaths`) y `check-ac-coverage` (AC sin test con su etiqueta `[US-xxx AC-n]`, filtrado a los changes que toca el diff; `--todos` o `QUALITY_AC_TODOS=1` para el barrido completo). Necesita `build-test` (`needs`) para descargar `coverage/coverage.xml`; `timeout-minutes: 15` (medición: 4 min 48 s). Local: `npm run lint`, `npm run format` y `npm run format:check` antes de cada commit | `npm run lint`, `npm run format:check`, `npm run quality:report`, `npm run test:quality` (config propia `vitest.quality.config.ts`) |
-| `eval-required` | Evaluación de IA obligatoria (US-074, L1D-237, ADR-41 «DoD»). **Siempre corre** y su script decide: si el diff contra `$BASE_REF` toca un disparador de `scripts/ci/eval-trigger-paths.yaml` (prompts de `rag-orchestrator`, `packages/clinical-catalogs/**/*.json`, manifiesto del corpus en `data/raw/`, configuraciones de `evaluate`, o una línea que nombre una clave de modelo, umbral o PII en los `.env.example` y en `app/config/`) ejecuta `npm run evaluate -- --suite all --report json` con la configuración de la CI (`eval/configs/test-fake.yaml`: adapters falsos, FX-T5a-a, sin red ni modelos pesados ni juez LLM); si no, termina en éxito diciendo «omitido». Compara el reporte con `data/evaluation/baseline.json` (que es el de esta misma configuración) y, además, con los mínimos de `apps/rag-orchestrator/eval/configs/regression.yaml` (CLI `python -m app.evaluation.comparar_regresion` de ai-services; vacío = pasa con «Sin baseline de regresión: umbral no aplicado»); **falla nombrando cada métrica** que cae más que la tolerancia o queda bajo su mínimo (`EVAL_MAX_REGRESSION`, o `regresion.tolerancia_maxima` del YAML, hoy 0: la suite es determinista; en las métricas `violaciones*` menos es mejor). La tabla de métricas con la marca validada / no validada va al resumen del job y al artefacto `eval-reporte` (`reporte.json` y `comentario.md`, retención 3 días; solo agregados y configuración, RN-14). Sin baseline: pasa con «Sin baseline de regresión: umbral no aplicado». Base ilegible: ejecuta la suite (nunca se omite por error). **No** publica comentario en el PR: exigiría `pull-requests: write`, que `ci/tests/workflow.test.mjs` prohíbe (ver `design.md` de L1D-237). El reporte con modelos reales se genera en la máquina de referencia (ADR-41 AC-5) | `node scripts/ci/eval-required.mjs --base "$BASE_REF"` (local: `npm run eval:required`; `EVAL_PYTHON` elige el intérprete con `requirements-eval.txt`) |
+| `quality` | Lint y formato del código (L1D-265): ESLint con `--max-warnings 0`, Prettier y `ruff format` en modo `--check`; capas y umbrales (L1D-263, US-213a): `npm run quality:report` ejecuta ESLint (tamaño y complejidad), `dependency-cruiser`, Ruff (`C901`, `PLR0915`) e `import-linter` y escribe `reports/quality/latest.json` (artefacto `quality-report`); y los tests de `ci/tests/quality/` (fixtures de AC-1…AC-5 de L1D-265 y de capas y umbrales de L1D-263). Instala `ruff` de `apps/rag-orchestrator/requirements-dev.txt`; sin él `format:check` falla (nunca se omite). Higiene de tests (L1D-285): ESLint con `@vitest/eslint-plugin` y las reglas propias `oncolens/tests-sin-pendientes-ni-foco-jest` y `oncolens/mock-solo-en-bordes` (nivel `error`), y `scripts/quality/check-pytest-hygiene.py` (prohíbe `skip`, `skipif` y `xfail` en `tests/**/*.py`) más Ruff `PT` (con `PT001`, `PT006`, `PT011` y `PT018` ignoradas en `tests/**`, deuda de estilo). Alertas, sin bloquear: cobertura de líneas cambiadas (`coverage.changedLinesWarn`, `scripts/quality/cobertura.mjs`, sobre LCOV de `web` y `clinical-api` en este job y Cobertura XML de `rag-orchestrator` en `cobertura-rag`, excluidos los `*.service.ts` de `coverage.alertPaths`) y `check-ac-coverage` (AC sin test con su etiqueta `[US-xxx AC-n]`, filtrado a los changes que toca el diff; `--todos` o `QUALITY_AC_TODOS=1` para el barrido completo). Corre en paralelo con los builds (ARR-11, D-12.3): ya no depende de `build-test-rag`, la Cobertura XML de `rag-orchestrator` la mide `cobertura-rag` y aquí `COBERTURA_INFORMES_XML` queda vacía (solo LCOV de `web` y `clinical-api`); `timeout-minutes: 15` (medición: 4 min 48 s). Local: `npm run lint`, `npm run format` y `npm run format:check` antes de cada commit | `npm run lint`, `npm run format:check`, `npm run quality:report`, `npm run test:quality` (config propia `vitest.quality.config.ts`) |
+| `eval-required` | Evaluación de IA obligatoria (US-074, L1D-237, ADR-41 «DoD»). Corre en todo PR (salvo uno de documentación pura que el detector declare omitible, y nunca si un disparador casa con un `.md`) y su script decide: si el diff contra `$BASE_REF` toca un disparador de `scripts/ci/eval-trigger-paths.yaml` (prompts de `rag-orchestrator`, `packages/clinical-catalogs/**/*.json`, manifiesto del corpus en `data/raw/`, configuraciones de `evaluate`, o una línea que nombre una clave de modelo, umbral o PII en los `.env.example` y en `app/config/`) ejecuta `npm run evaluate -- --suite all --report json` con la configuración de la CI (`eval/configs/test-fake.yaml`: adapters falsos, FX-T5a-a, sin red ni modelos pesados ni juez LLM); si no, termina en éxito diciendo «omitido». Compara el reporte con `data/evaluation/baseline.json` (que es el de esta misma configuración) y, además, con los mínimos de `apps/rag-orchestrator/eval/configs/regression.yaml` (CLI `python -m app.evaluation.comparar_regresion` de ai-services; vacío = pasa con «Sin baseline de regresión: umbral no aplicado»); **falla nombrando cada métrica** que cae más que la tolerancia o queda bajo su mínimo (`EVAL_MAX_REGRESSION`, o `regresion.tolerancia_maxima` del YAML, hoy 0: la suite es determinista; en las métricas `violaciones*` menos es mejor). La tabla de métricas con la marca validada / no validada va al resumen del job y al artefacto `eval-reporte` (`reporte.json` y `comentario.md`, retención 3 días; solo agregados y configuración, RN-14). Sin baseline: pasa con «Sin baseline de regresión: umbral no aplicado». Base ilegible: ejecuta la suite (nunca se omite por error). **No** publica comentario en el PR: exigiría `pull-requests: write`, que `ci/tests/workflow.test.mjs` prohíbe (ver `design.md` de L1D-237). El reporte con modelos reales se genera en la máquina de referencia (ADR-41 AC-5) | `node scripts/ci/eval-required.mjs --base "$BASE_REF"` (local: `npm run eval:required`; `EVAL_PYTHON` elige el intérprete con `requirements-eval.txt`) |
 | `dependencies` | Auditoría de dependencias (US-217): `npm audit --audit-level=high` del workspace y `pip-audit` (versión fijada en `scripts/ci/requirements-audit.txt`, `--no-deps` sobre los `requirements*.txt` de `rag-orchestrator`), interpretados por `auditar-dependencias.mjs`. Falla nombrando paquete, versión instalada e identificador (GHSA/CVE/PYSEC); todo aviso de `pip-audit` bloquea (no da severidad). Las excepciones viven en `security/audit-exceptions.json` (`id`, `paquete`, `motivo`, `mitigacion`, `revisarAntesDe`): una vencida o incompleta falla el job. Dependabot (`.github/dependabot.yml`) propone actualizaciones semanales; el merge es humano | `scripts/ci/auditar-dependencias.sh` |
 | `higiene-proceso` | Higiene del proceso en los PR (retro S4, M4b y M5). **Siempre corre** y sus scripts deciden si aplica (evento `pull_request`; el título del PR entra por la variable `PR_TITLE`, nunca interpolado). (1) Si el título empieza por `[L1D-nn]`, falla cuando el `tasks.md` del change `l1d-nn-*` conserva una tarea abierta sin la palabra DIFERIDA/TRASLADADA/MOVIDA y un ID destino (`D<n>-<nn>`, `H-<n>`, `US-<nnn>` o un `L1D-<nn>` distinto del propio; también vale «entrega <n>»). (2) Falla si un commit del PR escribe `Test-Removal:` donde `git interpret-trailers --parse` no lo ve (debe ir en el último párrafo, junto a `Co-Authored-By`). (3) **Avisa sin fallar** si el primer commit de una historia no sigue el orden `contract` → `test` → `feat` | `node scripts/ci/tasks-destino.mjs` y `node scripts/ci/verificar-commits-tdd.mjs --base "$BASE_REF"` |
-| `ci-ok` | Agregador: `needs` de todos los jobs, `if: always()`; falla si alguno no terminó en `success` (fallido, cancelado u omitido) y lo nombra | `node scripts/ci/verificar-needs.mjs` |
+| `ci-ok` | Agregador: `needs` de todos los jobs, `if: always()`; falla si alguno no terminó en `success` (fallido, cancelado u omitido) y lo nombra; **una sola excepción**: un `skipped` que `cambios` (en `success`) declaró en `omitibles` | `node scripts/ci/verificar-needs.mjs` |
 
 `ci-ok` es el **único** *required status check* de la protección de `main`: añadir un job no obliga a tocar la
 configuración de GitHub.
+
+### Detector de cambios (ARR-11, D-12.1)
+
+El job `cambios` ejecuta `scripts/ci/detectar-cambios.mjs`, que calcula el diff contra `git merge-base <base> HEAD` con
+`git diff --no-renames --name-status` (un `git mv` de código a `docs/*.md` aparece como borrado del código, que no es
+documentación) y lee sus reglas de `scripts/ci/cambios-paths.yaml`:
+
+| Lista | Qué contiene |
+|---|---|
+| `documentacion` | `backlog/**`, `docs/**`, `openspec/**`, `**/*.md` |
+| `consumidos_por_codigo` | `.md` que un test o script lee (`readme.md`, `docs/architecture/data-model.md`, `docs/architecture/adr/ADR-39-*.md`, `docs/decisions/DEC-02-*.md`, `docs/demo/guia-demo-S4.md`, `docs/operations/claves.md`), `data/**`, `apps/**/prompts/**`, `contracts/**`: no cuentan como documentación |
+| `omitibles_en_documentacion` | Jobs de `ci.yml` que un PR de documentación no ejecuta: todos salvo `cambios`, `ci-ok`, `secret-scan`, `data-scan`, `lint-lenguaje` y `higiene-proceso` (los escáneres y la higiene corren siempre) |
+
+Un PR es de documentación si **todos** sus archivos casan con `documentacion`, **ninguno** con `consumidos_por_codigo` y
+ninguno es disparador de `eval-required` (`scripts/ci/eval-trigger-paths.yaml`, que se reutiliza sin duplicar globs). Falla
+hacia la **CI completa**, nunca hacia omitir: evento `push` (main siempre corre completo), base vacía o `0000…`, **sin
+merge-base** (historia superficial o base inexistente; nunca se recurre a un diff de dos puntos), diff vacío o cualquier
+ruta desconocida. Una configuración inválida (YAML ilegible, glob inválido, un job omitible que no existe en `ci.yml` o que
+corre siempre) sale con código 2: `cambios` queda en rojo y `ci-ok` también. La salida imprime **rutas y motivos**, nunca
+contenido (RN-14). Escribe `documentacion` y `omitibles` (JSON) en `$GITHUB_OUTPUT`.
+
+Cada job omitible lleva `needs: cambios` e `if: ${{ !contains(fromJSON(needs.cambios.outputs.omitibles || '[]'), '<job>') }}`
+(`|| '[]'` evita un error de `fromJSON('')` si `cambios` falla). **La lista del detector es la única fuente**:
+`ci/tests/workflow.test.mjs` comprueba que el conjunto de jobs con ese `if` es exactamente `omitibles_en_documentacion` y
+que cada `if` nombra a su propio job. `e2e.yml` ejecuta el mismo detector y omite `e2e` con `documentacion == 'true'`.
+
+`ci/**` está en `consumidos_por_codigo`: los fixtures `*.md` de `ci/tests/quality/fixtures/` y `ci/tests/cases/` los leen los
+tests por directorio y un PR que solo los edite corre la CI completa. En cambio `.claude/agents/*.md`, `CLAUDE.md` y
+`.github/pull_request_template.md` **sí cuentan como documentación**: un PR que solo los toque omite los jobs de la lista,
+pero sigue pasando `secret-scan`, `data-scan`, `lint-lenguaje` y `higiene-proceso`.
+
+**Límite aceptado (decidido en el Gate 2):** en un PR de solo documentación `quality` se omite, así que la trazabilidad de AC
+(`check-ac-coverage`, filtrada a los changes que toca el diff) no se verifica en ese PR; se verifica en el `push` a `main`,
+que siempre corre completo.
+
+**Cómo añadir un omitible o un documento que el código lee:** edita `cambios-paths.yaml` (sin tocar el script ni el
+workflow). Un job nuevo omitible además lleva el `needs`/`if` anteriores; un `.md` que un script nuevo lea va a
+`consumidos_por_codigo` (`scripts/ci/__tests__/cambiosPathsCobertura.test.mjs` recorre `scripts/`, `apps/`, `packages/` e
+`infra/` buscando rutas `*.md` literales que se lean y falla nombrando la ruta y el archivo que la lee si una no casa).
+
+### Cachés de dependencias (ARR-11, D-12.4)
+
+`actions/cache` (fijada por SHA) restaura `node_modules` (raíz, `apps/*`, `packages/*`) con la clave exacta
+`node-<os>-<hash de .nvmrc y package-lock.json>` y el venv de Python `.venv-ci` con
+`venv-<os>-<hash de .python-version y los requirements que instala el job>` (`eval-required`, que instala menos ficheros,
+tiene su clave propia `venv-eval-…`). **Sin `restore-keys`**: una caché parcial con la instalación saltada sería un árbol
+inconsistente. En acierto se omiten `npm ci` y `pip install` (el venv se instala con `--only-binary=:all:`, US-231a); sin acierto se instala como siempre. Invalidación: cambiar
+`package-lock.json`, `.nvmrc`, `.python-version` o un `requirements*.txt` cambia la clave y fuerza la instalación completa; un
+fallo atribuible a la caché se arregla (es un bug del sprint), no se reintenta. Las cachés de un PR se escriben en el ámbito
+de su ref y no envenenan las de `main`. Los `dist/` no se cachean. `setup-node` mantiene `cache: npm` y `setup-python`
+`cache: pip` para el caso de fallo de caché.
+
+### `requirements-export.txt` (ARR-11, D-11)
+
+`torch` y `transformers` viven solo en `apps/rag-orchestrator/requirements-export.txt` (exportación manual a ONNX, ADR-39;
+`scripts/demo/exportar-modelos.py`): ningún workflow ni la imagen lo instalan, así que la CI ya no descarga ~4 GB de ruedas
+`nvidia-*` (`No space left on device` en `eval-required`). `test_dependencias_de_inferencia.py` exige que ni
+`requirements.txt` ni `requirements-eval.txt` los contengan; `ci/tests/workflow.test.mjs`, que ningún paso instale el
+fichero. `scripts/ci/auditar-dependencias.sh` lo pasa a `pip-audit --no-deps --disable-pip -r …`, que no instala nada.
+
+### Reportes de calidad
+
+`quality` escribe `reports/quality/latest.json` (artefacto `quality-report`: capas, umbrales, higiene, AC y cobertura de
+`web` y `clinical-api`) y `cobertura-rag` escribe `reports/quality/cobertura-rag.json` (artefacto `quality-report-rag`:
+cobertura de líneas cambiadas de `rag-orchestrator`, misma forma de hallazgo). `design-principles-reviewer` lee los dos.
+
+### Ejemplos y specs contra la punta de `main` (ARR-11, D5-02)
+
+El checkout de un `pull_request` es el *merge ref* calculado **cuando se disparó el evento**; si después entra en `main` un
+cambio que vuelve requerido un campo (#271, #274), los ejemplos del PR (#276) seguían verdes. El último paso del job
+`contracts` (`scripts/ci/contracts-contra-main.sh "$BASE_REF"`) lo cierra: solo en `pull_request` y solo si el diff toca
+`contracts/examples/**` o `apps/*/openapi.yaml` (si no, imprime `omitido: el PR no toca ejemplos ni specs`), trae
+`origin/main` sin credenciales, lo fusiona (`--no-ff`, identidad local) y ejecuta `npm run contracts:check`. Un conflicto
+falla con «el PR tiene conflictos con main: actualiza la rama» y la lista de rutas, sin imprimir contenido (RN-14).
+**Vuelve a ejecutar el job `contracts` antes del merge si `main` avanzó**: en un re-run el *merge ref* no cambia, pero este
+paso vuelve a traer la punta de `main` de ese momento (la regla para el orquestador es la tarea humana H-1; no se exige
+«Require branches to be up to date» porque obligaría a actualizar todos los PR).
 
 ### Capas y umbrales de calidad (US-213a, `l1d-263`)
 
@@ -70,7 +150,9 @@ L1D-193 (`lint-lenguaje`), L1D-265 (`lint`), US-213/214/217 y US-068 cuelgan sus
 
 1. Añade el job a `ci.yml` con un nombre estable; el paso llama a un script de `scripts/` o a un `npm run`, nunca a
    lógica escrita en el YAML (así el fixture de PR prueba lo mismo que la CI).
-2. Súmalo al `needs:` de `ci-ok`. Quien llegue segundo integra el `needs:` sin borrar el del otro.
+2. Súmalo al `needs:` de `ci-ok`. Quien llegue segundo integra el `needs:` sin borrar el del otro. **Decide si es omitible**
+   en un PR de documentación (ARR-11): si lo es, añádelo a `omitibles_en_documentacion` de `scripts/ci/cambios-paths.yaml` y
+   dale `needs: cambios` + el `if` del detector (sección «Detector de cambios»); un escáner o una higiene **no** lo son.
 3. Si la historia tiene un caso de PR, créalo en `ci/tests/cases/<caso>/` (siguiente sección).
 4. `ci/tests/workflow.test.mjs` falla si el job no está en `needs`, si usa `continue-on-error` o `secrets.*`, si una acción
    no está fijada por SHA o si el job que corre `pytest` no tiene `setup-node` y `npm ci` antes.
@@ -113,7 +195,7 @@ y `timeout-minutes: 30`.
   Qué variable es un secreto lo decide una sola convención (`esVariableSecretaDeE2e`: `E2E_*` con `CONTRASENA`,
   `PASSWORD`, `CLAVE`, `SECRET` o `TOKEN`), con un test que obliga a clasificar toda variable `E2E_*` nueva. En CI,
   `ejecutar.sh` enmascara la contraseña con `::add-mask::`. La prueba con Playwright y Chromium reales
-  (`scripts/e2e/integracion/informe.integracion.mjs`, sonda de control incluida) no la recoge `build-test`: la corre el
+  (`scripts/e2e/integracion/informe.integracion.mjs`, sonda de control incluida) no la recoge `build-test-node`: la corre el
   job `e2e` con `npx vitest run --config scripts/e2e/vitest.integracion.config.mjs`. Los usuarios de los E2E son
   sintéticos y su contraseña la genera `setup-secrets.sh` dentro de `ejecutar.sh`: no se versiona.
 - **Criterio de estabilidad para hacerlo requerido (design.md D2):** 10 ejecuciones consecutivas en verde en `main` sin
@@ -124,6 +206,9 @@ y `timeout-minutes: 30`.
   con `CI=true npm run test:e2e`).
 
 ## Fixtures de PR (`ci/tests/`)
+
+Los casos de ARR-11 (`ac-detector-solo-docs`, `ac-detector-docs-leido-por-codigo`, `ac-contratos-contra-main`) usan la clave
+`entorno` de `case.json` para fijar `GITHUB_EVENT_NAME=pull_request`, de modo que su `comando` sea, tal cual, el paso de `ci.yml`.
 
 Cada AC de US-036 es un caso `ci/tests/cases/<caso>/case.json` que clona el repositorio con `git clone --local` a un
 directorio temporal, aplica un cambio sintético y ejecuta **el mismo comando** que el job. Claves y tokens se generan en
@@ -239,6 +324,10 @@ job lo ejecuta, se verifica a mano y se adjunta al PR. `npm audit` completo mues
 altas por esa única cadena; no se relaja nada más.
 
 ## Seguimiento: duración de `build-test` (PR #41)
+
+> **ARR-11:** `build-test` se partió en `build-test-node` y `build-test-rag`, y `torch` y `transformers` salieron de la CI
+> (`requirements-export.txt`), así que esta medición queda superada. La medición de ARR-11 (3 PR de código y 3 de
+> documentación frente a ~22 min, CI de `main` 41581630153) se anotará aquí tras el merge (tarea 6.4 del change).
 
 Decidido (usuario, 2026-10-20): tras el merge del PR #41 se **mide la duración del job `build-test`** (se compara con la de `main` antes del merge y se anota en el PR). Si la instalación de `torch` domina el tiempo, se pasa a la rueda CPU solo con `--index-url` en esa instalación (versión exacta y sin cambiar el resto de dependencias). Sin umbral nuevo ni cambio de la CI hasta tener la medición.
 

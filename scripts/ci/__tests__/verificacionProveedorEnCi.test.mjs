@@ -17,12 +17,12 @@ describe('contracts:verify-provider en la CI [US-214 AC-1] (design D2)', () => {
     expect(script.indexOf('up -d --wait postgres')).toBeLessThan(script.lastIndexOf('npm run contracts:verify-provider'));
   });
 
-  it('el job build-test verifica rag-orchestrator con el Pytest de sus adapters falsos', () => {
-    expect(comandosDe('build-test')).toContain('npm run contracts:verify-provider -- --proveedor rag-orchestrator');
+  it('el job build-test-rag verifica rag-orchestrator con el Pytest de sus adapters falsos', () => {
+    expect(comandosDe('build-test-rag')).toContain('npm run contracts:verify-provider -- --proveedor rag-orchestrator');
   });
 
   it('ambos jobs son bloqueantes porque están en el needs de ci-ok', () => {
-    expect(ci.jobs['ci-ok'].needs).toEqual(expect.arrayContaining(['integration', 'build-test']));
+    expect(ci.jobs['ci-ok'].needs).toEqual(expect.arrayContaining(['integration', 'build-test-rag']));
   });
 
   it('el script de la raíz ejecuta el verificador y contracts:breaking compara contra origin/main', () => {
