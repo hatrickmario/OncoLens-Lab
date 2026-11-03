@@ -138,7 +138,7 @@ describe('planDeCorreccionDeBiomarcador', () => {
     const plan = planDeCorreccionDeBiomarcador(KI67, { value: '25' }, DECISION, 0, contexto());
 
     expect(plan.biomarcadorAReemplazar).toBe('bio-1');
-    expect(plan.examenAReemplazar).toBe('examen-1');
+    expect(plan.examen.supersedesId).toBe('examen-1');
     expect(plan.biomarcador).toMatchObject({
       examId: plan.examen.id,
       name: 'Ki-67',

@@ -1,6 +1,7 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { lectorDeIdentidadFalso } from '../../support/desidentificacion.js';
 import {
+  idDeBiomarcador,
   iniciarEscenarioDeCorrecciones,
   montarCorrecciones,
   type EscenarioDeCorrecciones,
@@ -141,6 +142,25 @@ describe('una nota corregida y la desidentificación (ADR-40, RN-11)', () => {
       'Rondón',
     ]) {
       expect(registrado).not.toContain(fragmento);
+    }
+  });
+
+  it('no envía a la IA la PII tecleada en el value de un biomarcador cualitativo corregido [US-253 AC-6] [RN-11]', async () => {
+    const patientId = await crearPacienteFxT4aA(escenario.mundo);
+    const her2 = await idDeBiomarcador(escenario.mundo.cliente, patientId, 'HER2');
+    const valor = `2+ (IHQ) CC ${PII_FX_T4A_A.cedula} tel ${PII_FX_T4A_A.telefono}`;
+    const correccion = await clienteVerificado(montarCorrecciones(escenario.mundo).app)
+      .post(`/platform/patients/${patientId}/biomarkers/${her2}/corrections`)
+      .set('Cookie', escenario.cookieDoctor)
+      .send({ value: valor });
+
+    const analisis = await analizar(patientId, 'req_ValorPii0001', {});
+
+    expect(correccion.status).toBe(201);
+    expect(analisis.status).toBe(200);
+    const enviado = rag.capturadas[0]!.texto;
+    for (const fragmento of [PII_FX_T4A_A.cedula, PII_FX_T4A_A.telefono]) {
+      expect(enviado).not.toContain(fragmento);
     }
   });
 });
