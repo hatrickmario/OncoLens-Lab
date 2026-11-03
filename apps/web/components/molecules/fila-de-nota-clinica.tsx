@@ -15,8 +15,6 @@ export interface FilaDeNotaClinicaProps {
   pacienteId: string;
   egresado: boolean;
   idDeAyuda: string;
-  /** Avisa a la lista de que se guardó una corrección (el aviso de RN-26 vive allí, no en la fila que se remonta). */
-  alCorregir: () => void;
 }
 
 /** Una nota vigente: tipo, texto (solo texto, nunca HTML), origen, fecha relativa, corrección en diálogo e histórico. */
@@ -25,7 +23,6 @@ export function FilaDeNotaClinica({
   pacienteId,
   egresado,
   idDeAyuda,
-  alCorregir,
 }: FilaDeNotaClinicaProps) {
   const { ficha } = mensajes();
   const { formulario } = ficha.correccion;
@@ -66,7 +63,6 @@ export function FilaDeNotaClinica({
           dato={dato}
           alGuardar={() => {
             setCorrigiendo(false);
-            alCorregir();
           }}
           alCancelar={() => setCorrigiendo(false)}
         />

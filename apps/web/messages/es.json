@@ -515,7 +515,7 @@
         "descripcionDeNota": "Tu corrección crea una versión nueva; la anterior queda en el histórico."
       },
       "errores": {
-        "noVigente": "El dato ya fue reemplazado: recarga la ficha para ver su versión vigente.",
+        "noVigente": "El dato ya fue reemplazado: vuelve a abrir la ficha para ver su versión vigente.",
         "permiso": "Tu cuenta no puede corregir datos clínicos.",
         "noEncontrado": "El dato ya no está en la ficha.",
         "obligatorio": "Este campo es obligatorio.",

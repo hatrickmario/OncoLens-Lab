@@ -1,7 +1,7 @@
 import type { ClinicalNote } from '../../../../packages/api-contracts/src/types/clinical-api';
 import { mensajes } from '../../lib/mensajes';
+import { FilaDeNotaClinica } from '../molecules/fila-de-nota-clinica';
 import { SeccionDeFicha } from '../molecules/fila-de-ficha';
-import { ListaDeNotasClinicas } from './lista-de-notas-clinicas';
 
 export interface NotasClinicasDeFichaProps {
   /** `null` cuando la lectura falló: la ficha se muestra igual (RN-26). */
@@ -23,12 +23,17 @@ function ContenidoDeNotas({ notas, pacienteId, egresado }: NotasClinicasDeFichaP
           {correccion.egresado}
         </p>
       )}
-      <ListaDeNotasClinicas
-        notas={notas}
-        pacienteId={pacienteId}
-        egresado={egresado}
-        idDeAyuda={ID_DE_AYUDA}
-      />
+      <ul className="m-0 list-none p-0">
+        {notas.map((nota) => (
+          <FilaDeNotaClinica
+            key={nota.id}
+            nota={nota}
+            pacienteId={pacienteId}
+            egresado={egresado}
+            idDeAyuda={ID_DE_AYUDA}
+          />
+        ))}
+      </ul>
     </>
   );
 }
