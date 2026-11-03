@@ -54,13 +54,6 @@ describe('coherencia del módulo documents con el contrato [US-045 AC-3]', () =>
       caseView,
     });
 
-    expect(protegidas).toEqual([
-      gateway,
-      rutas[0],
-      patients,
-      completeness,
-      manualEntry,
-      caseView,
-    ]);
+    expect(protegidas).toEqual([gateway, rutas[0], patients, completeness, manualEntry, caseView]);
   });
 });
