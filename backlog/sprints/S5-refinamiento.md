@@ -12,13 +12,14 @@
 - **Higiene pendiente:** 12 changes activos de sprints anteriores sin archivar (`l1d-202`, `l1d-72`, `l1d-194` completos; `l1d-205` 13/15, `l1d-285` 24/26, `l1d-116` 14/15, `l1d-126` 26/30, `us-231b` 16/22, `l1d-197` 22/23, `l1d-166` 24/25, `l1d-173` 13/14, `l1d-299` 13/21). Varios están en In Review con el hito del S5 (L1D-116, L1D-126, L1D-205, L1D-285).
 - **Contratos ya congelados** (US-033): `GET …/case`, `POST …/biomarkers`, `POST …/diagnoses`, `POST/GET …/follow-ups` y `/rag/follow-up`. El esquema tiene `ClinicalNote`, `PriorTreatment`, `ClinicalAttribute`, `AnalysisFollowUp` y `entry_method = manual_correction`. **Faltan** en el contrato: `clinical-attributes`, `prior-treatments`, la corrección (US-253) y las notas en la ficha.
 
-## 2. Compromiso del S5 · 85 pts `[S5 resp. 3]`
+## 2. Compromiso del S5 · 90 pts `[S5 resp. 3]` `[S5 resp. 7]`
 
-Meta ≥ 80 % = **68 pts cerrados**.
+Meta ≥ 80 % = **72 pts cerrados**.
 
 | Oleada propuesta | L1D | US | Pts | Contexto | DoR |
 |---|---|---|---|---|---|
 | O1 | — | **ARR-10** conciliar y archivar los 12 changes activos + D5-02 (CI de `contracts/examples/**` contra `main`) + D-11 (`torch`/`transformers` fuera de la CI) | 2 | todos | ✓ (tarjeta de arrastre sin issue, como ARR-09; D-11 cabe en los 2 pts: mover dos líneas y ajustar 2 tests y 3 documentos) |
+| O1 | — | **ARR-11** CI más rápida: detector de cambios, `build-test` partido, `quality` en paralelo y cachés (D-12) | 5 | plataforma (CI) | ✓ (tarjeta de arrastre sin issue; va **primero** en O1: acelera los ~25 PR del sprint) |
 | O1 | L1D-306 | US-250 NFC de la pregunta | 2 | clinical-platform · ai-services · frontend | ✓ (D-6) |
 | O1 | L1D-305 | US-249 RN-23 voz propia y nivel B | 3 | ai-services | ✓ |
 | O1 | L1D-119 | US-120 corpus ≥ 20 docs por tipo + barridos | 5 | ai-services | ✓ (ADR-36 decidido; AC-5/AC-6 en la corrida nocturna, §5) |
@@ -42,9 +43,9 @@ Meta ≥ 80 % = **68 pts cerrados**.
 | O4 | L1D-248 | US-142 G-Demo | 5 | todos | ✓ (D-5) |
 | humano | L1D-92 | DEC-01 catálogo de datos críticos | 1 | — | Escenario `propuesta_revisada` aceptado `[S3 resp. 1]`; no bloquea |
 | humano | L1D-125 | DEC-11 firma (arrastre) | 1 | — | No bloquea |
-| | | **Total** | **85** | | |
+| | | **Total** | **90** | | |
 
-Cuenta: 79 de historias del S5 (con US-098 en 3) + 4 de arrastre (L1D-299 3, L1D-125 1) + 2 de ARR-10 = 85. Las oleadas son orientativas: `/sprint-start` las fija con el grafo de dependencias.
+Cuenta: 79 de historias del S5 (con US-098 en 3) + 4 de arrastre (L1D-299 3, L1D-125 1) + 2 de ARR-10 + 5 de ARR-11 = 90. Las oleadas son orientativas: `/sprint-start` las fija con el grafo de dependencias.
 
 **Orden de recorte dentro del S5** si a mitad del día 2 el ritmo no da (lo último se recorta primero, `[S5 resp. 3]`): (1) US-071 → (2) US-093 → (3) US-070 → (4) US-254 de 7 a 4 pacientes → (5) US-094 solo atributos → (6) US-253 sin exámenes → (7) US-140. **Nunca:** US-249, US-250, US-218, US-219, US-120, US-110, US-111, US-088/US-090 (G-Demo).
 
@@ -120,6 +121,27 @@ AC-5 se verifica como «la huella del contexto clínico del paciente cambia tras
 
 *Descartadas:* `torch` CPU desde `download.pytorch.org/whl/cpu` en la CI (mezcla dos índices de paquetes y la CI sigue instalando lo que no usa) y liberar disco en el runner (tapa el síntoma; la CI sigue bajando ~4 GB inútiles).
 
+### D-12 · CI más rápida y PR agrupados · caro de revertir (CI y protección de `main`) · **Decidido (usuario, 2026-11-03): la recomendación** `[S5 resp. 7]`
+
+**Diagnóstico** (CI de `main` 41581630153 y los últimos 40 PR mergeados): ~22 min por PR. El camino crítico es `build-test` (15 m 25 s) → `quality` (5 m 05 s, con `needs: build-test`). Dentro de `build-test`: `pytest` 4 m 38 s, Vitest raíz 2 m 59 s, verificación del proveedor 1 m 52 s, tests de los workspaces 1 m 47 s y `pip` 1 m 20 s. **16 de 40 PR (40 %) solo tocan `backlog/`, `docs/`, `openspec/` o `*.md`** y pagan la CI completa. `ci-ok` (`verificar-needs.mjs`) trata `skipped` como fallo. El mayor coste oculto son las vueltas en rojo (#276, y #272/#274 → #279 en el S4).
+
+**ARR-11 (5 pts, O1, primera tarea del sprint)**, «test después» (configuración de CI, fixtures en `ci/tests/`):
+1. **Detector de cambios** (job `cambios`, script propio en `scripts/ci/`, como `eval-required`): si el PR solo toca `backlog/`, `docs/`, `openspec/` o `*.md`, corren solo `secret-scan`, `data-scan`, `lint-lenguaje` y `higiene-proceso`. `verificar-needs.mjs` acepta `skipped` **solo** en los jobs que el detector declaró no aplicables; cualquier otro `skipped` sigue siendo fallo. E2E lee el mismo detector. Un PR que toca deltas de `openspec/` puede seguir disparando `contracts`. Estimado: ~22 → ~2 min en los PR de documentación.
+2. **`build-test` partido** en `build-test-node` (build, workspaces, Vitest raíz, catálogo) y `build-test-rag` (`pip`, `pytest` con cobertura, verificación del proveedor), en paralelo; los dos entran en los `needs` de `ci-ok`. Estimado: 15,4 → ~8 min.
+3. **`quality` sin `needs: build-test`**: corre en paralelo y solo su parte de Python consume el `coverage.xml` de `build-test-rag` (misma medición de líneas cambiadas, US-213 AC-11).
+4. **Caché de `node_modules` y de wheels de pip**, con la clave del hash del lockfile y de los `requirements*.txt`.
+5. `higiene-proceso` acepta varios `[L1D-nn]` en el título (PR de lote, abajo).
+
+Resultado esperado con D-11: un PR de código pasa de ~22 a ~10 min y uno de documentación tarda ~2 min. **Fuera de ARR-11** (después, si hay capacidad): `pytest -n auto`, empezando por los unitarios (los de integración solo con el aislamiento verificado, nunca con `skip`); `eval-required` que decide antes del `pip install`; y el pre-vuelo local `scripts/ci/preflight-local.sh` (diff → subconjunto de la CI + `contracts:check` contra `main` fusionado, que es D5-02).
+
+**Agrupación de PR** (regla para `/sprint-start S5` y el orquestador):
+- **Un PR `docs` por oleada** con las conciliaciones de `tasks.md`, la deuda, el status y los bloques humanos `H-n` (`.env.example`).
+- **PR de lote** para historias pequeñas del mismo contexto **sin cambio de contrato, de migración ni de RN de privacidad**, ≤ 5 pts en total: commits por historia (`test(L1D-nn)` → `feat(L1D-nn)`), todos los `[L1D-nn]` en el título y Gate 2 en modo lote (`gate-review lote`).
+- **PR individual** para lo que cambia un `openapi.yaml`, el esquema o la privacidad, que es la unidad de revisión de `contract-keeper` y `privacy-guardian`.
+- **Nunca PR apilados.** Si ocurre, se retargetea el hijo antes de mergear el padre (retro S4, M3).
+
+*Descartadas:* runners más grandes de pago (presupuesto); mover integración y E2E solo al push de `main` (dejaría entrar regresiones de RN-10/11 y de `rag_corpus`); bajar la cobertura o desactivar suites (política TDD).
+
 ### Lo que no se reabre
 
 D-01 (análisis de evidencia, no recomendaciones), RN-23, RN-24 (los hallazgos del análisis son memoria no citable en el seguimiento), ADR-47 / DEC-11, ADR-40 (PII: patrones e identidad exacta; nombres en notas con el aviso de US-253 AC-6).
@@ -131,6 +153,7 @@ D-01 (análisis de evidencia, no recomendaciones), RN-23, RN-24 (los hallazgos d
 - `[S5 resp. 3]` (2026-11-03) D-3: comprometer **85 pts** (59 base + vista de caso mínima + US-140, US-116, US-070, US-093, US-071).
 - `[S5 resp. 4]` (2026-11-03) D-4…D-7 aprobadas y variante **A** de S5-01 (corrección en línea con histórico desplegable).
 - `[S5 resp. 5]` (2026-11-03, derivada de 1 y 3, aplicada por la sesión principal): G-Demo incluye la vista de caso mínima; D-8, D-9 y D-10 son consecuencias baratas de esas respuestas.
+- `[S5 resp. 7]` (2026-11-03) D-12: CI más rápida (ARR-11, 5 pts, O1: detector de cambios, `build-test` partido, `quality` en paralelo y cachés) y estrategia de PR agrupados; el compromiso pasa a 90 pts.
 - `[S5 resp. 6]` (2026-11-03) D-11: `torch` y `transformers` pasan a `requirements-export.txt`, fuera de la CI (opción 1); se hace en ARR-10.
 
 ## 5. Stack técnico (fase 2)
