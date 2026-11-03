@@ -1,0 +1,6 @@
+{
+  "error": "VALOR_FUERA_DE_CATALOGO",
+  "field": "value",
+  "message": "Un valor enviado no está en el catálogo vigente.",
+  "traceId": "req_b2c3d4e5"
+}

@@ -57,7 +57,7 @@ y los diálogos S5-03 c y d. La normalización final es de `ReconciliationServic
   `manifest.json` → 1.4.0, el mismo en `clinical-api` y `rag-orchestrator` (sin `409`).
 - **D10 · `field` en los `422` (`[S5 resp. 10]`).** Propiedad **opcional**, `type: string`, **sin enum**, con la misma
   descripción en `ErrorRegistroClinicoInvalido` (nuevo) y en los existentes `ErrorRegistroManualInvalido` y
-  `ErrorDiagnosticoInvalido` (aditivo, `contracts:breaking` = 0). Este change la introduce porque sale antes (1.18.0);
+  `ErrorDiagnosticoInvalido` (aditivo, `contracts:breaking` = 0). Este change la introduce porque sale antes (1.19.0);
   `l1d-90` y `l1d-91` la usan igual y `l1d-309` la replica en `ErrorCorreccionInvalida`. Aquí se rellena con la
   propiedad del cuerpo causante (`attributeKey`, `value`, `regimenName`, `endedAt`, …; primera ruta del error de Zod),
   nunca con su valor, y se omite en `PACIENTE_EGRESADO` y `TIPO_CANCER_NO_REGISTRADO`. *Descartado:* enum por
@@ -84,8 +84,8 @@ y los diálogos S5-03 c y d. La normalización final es de `ReconciliationServic
 
 Proveedor: `clinical-api`. Consumidor: `web` (cliente/Zod generados en `packages/api-contracts`). Cambio
 **aditivo** (tres operaciones y seis schemas nuevos; los dos schemas de error existentes solo ganan `field` opcional):
-`contracts:breaking` = 0 incompatibles, compatible con ADR-26. `info.version` 1.17.0 → **1.18.0** (cadena del S5:
-`l1d-74` 1.17.0 → `l1d-80` 1.18.0 → `l1d-309` 1.19.0 → `l1d-91` 1.20.0; quien rebase renumera y regenera
+`contracts:breaking` = 0 incompatibles, compatible con ADR-26. `info.version` 1.18.0 → **1.19.0** (cadena del S5:
+`l1d-74` 1.17.0 → `l1d-309` 1.18.0 → `l1d-80` 1.19.0 → `l1d-91` 1.20.0; quien rebase renumera y regenera
 `packages/api-contracts`).
 
 ```yaml

@@ -1,0 +1,20 @@
+{
+  "id": "5b1d7a40-3c2e-4f6a-9b8d-0e1f2a3b4c5d",
+  "lineNumber": 2,
+  "setting": "segunda_linea_metastasica",
+  "regimenName": "Leuprorelina",
+  "atcCodes": ["L02AE02"],
+  "mappingStatus": "mapeado",
+  "startedAt": "2026-08-01",
+  "endedAt": null,
+  "ongoing": true,
+  "endReason": "desconocido",
+  "provenance": {
+    "entryMethod": "manual",
+    "extractionConfidence": "n_a",
+    "reviewStatus": "verificado",
+    "conflict": false,
+    "sourceDocumentId": null,
+    "additionalSourceDocumentIds": []
+  }
+}

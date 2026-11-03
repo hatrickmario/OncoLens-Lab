@@ -1,7 +1,7 @@
 # Tasks — l1d-80-tratamientos-atributos-manuales
 
 > ⛔ `l1d-84-normalizacion-final-manual` (ReconciliationService + FX-01b-b), `l1d-74-vista-caso-timeline` (`/case`,
-> `openapi.yaml` 1.17.0) y `l1d-90-…` (catálogo 1.3.0) antes de §1–§2; ⛔ `l1d-76-…` (US-090, página de la vista de caso) antes de §4. 🔗 `l1d-90-…` (US-110) comparte
+> `openapi.yaml` 1.18.0, de L1D-309) y `l1d-90-…` (catálogo 1.3.0) antes de §1–§2; ⛔ `l1d-76-…` (US-090, página de la vista de caso) antes de §4. 🔗 `l1d-90-…` (US-110) comparte
 > `compartido/registro-manual.ts` y el `Dialog`. Matriz TDD (CLAUDE.md): endpoints y services con lógica → TDD
 > estricto, doble bucle; UI → test del AC primero; catálogo → `evaluate`; cableado y fixtures → test después.
 > Integración con PostgreSQL real; MSW solo en el HTTP saliente; nunca `vi.mock` de módulos propios ni de Prisma;
@@ -14,7 +14,7 @@
   `PriorTreatmentManualCreate`, `PriorTreatment`, `ClinicalAttributeManualCreate`, `ClinicalAttribute`,
   `ClinicalAttributeList`, `ErrorRegistroClinicoInvalido`; propiedad opcional `field` (`type: string`, sin enum, misma
   descripción) en `ErrorRegistroClinicoInvalido`, `ErrorRegistroManualInvalido` y `ErrorDiagnosticoInvalido`
-  (`[S5 resp. 10]`); `atcCodes` con el patrón ATC de `rag-orchestrator`; `info.version` 1.17.0 → **1.18.0** (quien
+  (`[S5 resp. 10]`); `atcCodes` con el patrón ATC de `rag-orchestrator`; `info.version` 1.18.0 → **1.19.0** (quien
   rebase renumera y regenera `packages/api-contracts`). Ejemplos nuevos en `contracts/examples/` registrados en
   `index.json` (`prior-treatment-manual`, `prior-treatment-manual-creado`, `prior-treatment-no-mapeado`,
   `clinical-attribute-manual`, `clinical-attribute-creado`, `clinical-attributes-list`,

@@ -172,6 +172,89 @@ export const zCaseView = z.strictObject({
 });
 
 /**
+ * Registro manual de una línea de tratamiento previa. Un tratamiento en curso (ongoing = true) no lleva endedAt ni endReason; uno terminado (ongoing = false) exige endReason. endedAt no puede ser anterior a startedAt.
+ */
+export const zPriorTreatmentManualCreate = z.strictObject({
+    lineNumber: z.int().gte(1).optional(),
+    setting: z.enum([
+        'neoadyuvante',
+        'adyuvante',
+        'primera_linea_metastasica',
+        'segunda_linea_metastasica',
+        'linea_posterior_metastasica',
+        'otro',
+        'desconocido'
+    ]),
+    regimenName: z.string().min(1).max(200),
+    startedAt: z.iso.date().optional(),
+    endedAt: z.iso.date().optional(),
+    ongoing: z.boolean(),
+    endReason: z.enum([
+        'progresion',
+        'toxicidad',
+        'completado',
+        'otro',
+        'desconocido'
+    ]).optional()
+});
+
+export const zPriorTreatment = z.strictObject({
+    id: z.uuid(),
+    lineNumber: z.int().nullable(),
+    setting: z.string(),
+    regimenName: z.string(),
+    atcCodes: z.array(z.string().regex(/^[A-Z][0-9]{2}[A-Z]{2}[0-9]{2}$/)),
+    mappingStatus: z.enum(['mapeado', 'no_mapeado']),
+    startedAt: z.iso.date().nullable(),
+    endedAt: z.iso.date().nullable(),
+    ongoing: z.boolean(),
+    endReason: z.enum([
+        'progresion',
+        'toxicidad',
+        'completado',
+        'otro',
+        'desconocido'
+    ]),
+    provenance: zProvenance
+});
+
+/**
+ * Registro manual de un atributo clínico. La clave y el valor se validan contra el catálogo montado para el tipo de cáncer del diagnóstico vigente (RN-29).
+ */
+export const zClinicalAttributeManualCreate = z.strictObject({
+    attributeKey: z.string().max(100).regex(/^[a-z0-9_]+$/),
+    value: z.string().min(1).max(100),
+    observedAt: z.iso.date().optional()
+});
+
+export const zClinicalAttribute = z.strictObject({
+    id: z.uuid(),
+    key: z.string(),
+    value: z.string(),
+    observedAt: z.iso.date().nullable(),
+    datePrecision: z.enum([
+        'dia',
+        'mes',
+        'anio',
+        'incierta'
+    ]),
+    provenance: zProvenance
+});
+
+export const zClinicalAttributeList = z.strictObject({
+    items: z.array(zClinicalAttribute),
+    allowedAttributes: z.array(z.strictObject({
+        key: z.string(),
+        label: z.string(),
+        values: z.array(z.strictObject({
+            value: z.string(),
+            label: z.string()
+        }))
+    })),
+    catalogVersion: z.string().min(1)
+});
+
+/**
  * Registro manual de un biomarcador desde un faltante. El nombre viaja en el cuerpo, nunca en la URL.
  */
 export const zBiomarkerManualCreate = z.strictObject({
@@ -711,6 +794,19 @@ export const zErrorRegistroManualInvalido = z.strictObject({
         'PACIENTE_EGRESADO',
         'VALOR_FUERA_DE_CATALOGO'
     ]),
+    field: z.string().optional(),
+    message: z.string(),
+    traceId: z.string()
+});
+
+export const zErrorRegistroClinicoInvalido = z.strictObject({
+    error: z.enum([
+        'CUERPO_INVALIDO',
+        'PACIENTE_EGRESADO',
+        'VALOR_FUERA_DE_CATALOGO',
+        'TIPO_CANCER_NO_REGISTRADO'
+    ]),
+    field: z.string().optional(),
     message: z.string(),
     traceId: z.string()
 });
@@ -722,6 +818,7 @@ export const zErrorDiagnosticoInvalido = z.strictObject({
         'VALOR_FUERA_DE_CATALOGO',
         'GRADACION_INCOHERENTE'
     ]),
+    field: z.string().optional(),
     message: z.string(),
     traceId: z.string()
 });
@@ -1157,6 +1254,37 @@ export const zCreateManualDiagnosisPath = z.object({
  * Diagnóstico registrado.
  */
 export const zCreateManualDiagnosisResponse = zDiagnosis;
+
+export const zCreateManualPriorTreatmentBody = zPriorTreatmentManualCreate;
+
+export const zCreateManualPriorTreatmentPath = z.object({
+    patientId: z.uuid()
+});
+
+/**
+ * Tratamiento previo registrado.
+ */
+export const zCreateManualPriorTreatmentResponse = zPriorTreatment;
+
+export const zListClinicalAttributesPath = z.object({
+    patientId: z.uuid()
+});
+
+/**
+ * Atributos vigentes y atributos permitidos.
+ */
+export const zListClinicalAttributesResponse = zClinicalAttributeList;
+
+export const zCreateManualClinicalAttributeBody = zClinicalAttributeManualCreate;
+
+export const zCreateManualClinicalAttributePath = z.object({
+    patientId: z.uuid()
+});
+
+/**
+ * Atributo clínico registrado.
+ */
+export const zCreateManualClinicalAttributeResponse = zClinicalAttribute;
 
 export const zCorrectBiomarkerBody = zBiomarkerCorrection;
 
