@@ -258,20 +258,20 @@ async function sembrarGradacionDeReferencia(
 /** Id sembrado de un biomarcador del examen por su `clave`: el mismo para su fila y para el conflicto que lo apunta. */
 function idDelBiomarcador(
   contexto: ContextoDePaciente,
-  examen: ExamenSemilla,
+  examen: Pick<ExamenSemilla, 'clave'>,
   claveDelBiomarcador: string,
 ): string {
   return idSembrado(`${contexto.paciente.clave}/${examen.clave}/${claveDelBiomarcador}`);
 }
 
-/** `conflicts_with_id` del biomarcador (RN-08): el id sembrado del otro biomarcador del mismo examen, o `null` sin conflicto. */
+/** `conflicts_with_id` del biomarcador (RN-08): el id sembrado del otro biomarcador con el que choca, o `null` sin conflicto. */
 function idDelBiomarcadorEnConflicto(
   contexto: ContextoDePaciente,
-  examen: ExamenSemilla,
   biomarcador: BiomarcadorSemilla,
 ): string | null {
   if (biomarcador.enConflictoCon === undefined) return null;
-  return idDelBiomarcador(contexto, examen, biomarcador.enConflictoCon);
+  const { examen: claveDelExamen, biomarcador: claveDelBiomarcador } = biomarcador.enConflictoCon;
+  return idDelBiomarcador(contexto, { clave: claveDelExamen }, claveDelBiomarcador);
 }
 
 async function sembrarExamenes(siembra: Siembra, contexto: ContextoDePaciente): Promise<void> {
@@ -311,7 +311,7 @@ async function sembrarExamenes(siembra: Siembra, contexto: ContextoDePaciente): 
         extraction_score: null,
         extraction_confidence: PROCEDENCIA_DEL_SEED.extraction_confidence,
         review_status: biomarcador.estadoDeRevision ?? PROCEDENCIA_DEL_SEED.review_status,
-        conflicts_with_id: idDelBiomarcadorEnConflicto(contexto, examen, biomarcador),
+        conflicts_with_id: idDelBiomarcadorEnConflicto(contexto, biomarcador),
         source_span: '{}',
         reviewed_by: null,
         reviewed_at: null,

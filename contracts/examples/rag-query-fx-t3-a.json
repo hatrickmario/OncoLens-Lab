@@ -33,7 +33,7 @@
         "text": "El paciente tiene registrado un resultado de HER2 3+ por inmunohistoquímica.",
         "citedSources": [],
         "patientDataRefs": [
-          "r2"
+          "r4"
         ]
       }
     ],
@@ -202,11 +202,11 @@
   "discardedOptions": [],
   "limitations": [
     {
-      "text": "Falta el estado menopáusico del paciente: no se pudo comparar ese criterio con la fuente.",
+      "text": "Faltan datos críticos del paciente, entre ellos el estado menopáusico y los tratamientos previos: no se pudieron comparar con la fuente.",
       "origin": "estructural"
     },
     {
-      "text": "El Ki-67 (20 %) y un resultado de receptor de estrógeno están pendientes de revisión, y dos resultados de receptor de estrógeno están en conflicto.",
+      "text": "El Ki-67 (20 %) y el resultado de receptor de estrógeno están pendientes de revisión; este último está en conflicto con otro resultado registrado (lo declara la Base del análisis).",
       "origin": "estructural"
     },
     {

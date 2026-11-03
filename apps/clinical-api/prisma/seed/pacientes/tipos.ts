@@ -37,10 +37,10 @@ export interface BiomarcadorSemilla {
   /** Por defecto `verificado`, como todo dato sembrado; FX-T3-a (paciente (f)) lo deja `requiere_revision` (RN-26). */
   readonly estadoDeRevision?: 'verificado' | 'requiere_revision';
   /**
-   * `clave` de otro biomarcador DEL MISMO examen con el que este dato entra en conflicto (`conflicts_with_id`, RN-08):
-   * el otro va antes en la lista, porque la clave foránea exige que ya exista.
+   * Biomarcador (`examen` y `clave`) con el que este dato entra en conflicto (`conflicts_with_id`, RN-08): ese examen va
+   * antes en la lista del paciente, porque la clave foránea exige que la fila ya exista.
    */
-  readonly enConflictoCon?: string;
+  readonly enConflictoCon?: { readonly examen: string; readonly biomarcador: string };
 }
 
 export interface ExamenSemilla {

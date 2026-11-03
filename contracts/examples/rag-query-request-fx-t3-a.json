@@ -39,34 +39,6 @@
     "biomarkers": [
       {
         "dataRef": "r2",
-        "biomarkerName": "HER2",
-        "value": "3+ (IHQ)",
-        "resultType": "cualitativo",
-        "clinicalSignificance": "relevante",
-        "monthsAgo": 1,
-        "provenance": {
-          "entryMethod": "seed",
-          "extractionConfidence": "n_a",
-          "reviewStatus": "verificado",
-          "conflict": false
-        }
-      },
-      {
-        "dataRef": "r3",
-        "biomarkerName": "RE",
-        "value": "Positivo (80%)",
-        "resultType": "cualitativo",
-        "clinicalSignificance": "relevante",
-        "monthsAgo": 1,
-        "provenance": {
-          "entryMethod": "seed",
-          "extractionConfidence": "n_a",
-          "reviewStatus": "verificado",
-          "conflict": false
-        }
-      },
-      {
-        "dataRef": "r4",
         "biomarkerName": "RE",
         "value": "Negativo",
         "resultType": "cualitativo",
@@ -80,7 +52,7 @@
         }
       },
       {
-        "dataRef": "r5",
+        "dataRef": "r3",
         "biomarkerName": "Ki-67",
         "value": "20 %",
         "resultType": "cuantitativo",
@@ -92,6 +64,20 @@
           "reviewStatus": "requiere_revision",
           "conflict": false
         }
+      },
+      {
+        "dataRef": "r4",
+        "biomarkerName": "HER2",
+        "value": "3+ (IHQ)",
+        "resultType": "cualitativo",
+        "clinicalSignificance": "relevante",
+        "monthsAgo": 1,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
       }
     ],
     "clinicalNotes": [],
@@ -101,7 +87,10 @@
     "events": [],
     "biomarkerTrends": [],
     "missingCriticalData": [
-      "estado_menopausico"
+      "rp",
+      "estado_menopausico",
+      "tratamientos_previos",
+      "brca_germinal"
     ],
     "priorAnalyses": []
   }
