@@ -337,3 +337,196 @@ La comparación MUST evaluar únicamente preguntas del conjunto de desarrollo de
 - **GIVEN** un `golden_sha256` que no coincide con el golden vigente
 - **WHEN** se ejecuta la comparación
 - **THEN** la corrida termina con código distinto de cero sin producir métricas
+
+### Requirement: Familia de aplicabilidad con verdad conocida
+`evaluate --suite aplicabilidad` MUST evaluar la aplicabilidad en proceso sobre los pares paciente-fuente de `data/evaluation/aplicabilidad/` con contextos desidentificados y SHALL reportar el porcentaje de criterios con el estado esperado, M-08.2 «Criterios en "Coincide" sin cita» (clave `criterios_coincide_sin_cita`) y el número de valores del paciente que no coinciden con el contexto enviado (M-08.6), solo como agregados.
+
+#### Scenario: El reporte trae concordancia de estados, coincidencias sin cita y valores no copiados [US-132 AC-1] [AC-T5.1] [M-08.2] [M-08.6]
+- **GIVEN** el dataset `data/evaluation/aplicabilidad/` con manifiesto `clase: sintetico`, el catálogo `test-apl-1.0.0` y la configuración falsa de la suite
+- **WHEN** se ejecuta `evaluate --suite aplicabilidad`
+- **THEN** el reporte trae el porcentaje de criterios con el estado esperado, el número de criterios en `coincide` sin cita y el número de valores del paciente distintos del contexto enviado, junto con la configuración evaluada y `catalogVersion`
+- **AND** el par A-M1 × `doc-a1` cuenta como acierto con el resumen esperado `{ coincide: 2, parcial: 0, noCoincide: 0, desconocido: 3 }` (`estado_her2` y `ecog` coinciden; `estadio` queda `desconocido` porque `TNM_8` no tiene escala comparable, y `estado_menopausico` y `linea_tratamiento` también, conteo real ya mergeado en L1D-127 y fijado por L1D-130)
+
+#### Scenario: Un guion del LLM que propone otro valor del paciente no altera M-08.6 [US-132 AC-1] [M-08.6] [ADR-34]
+- **GIVEN** el par A-M1 × `doc-a2` con el guion `APL-VALOR-PACIENTE`, cuyo LLM falso propone para `estado_her2` el valor «2+» como si fuera el del paciente
+- **WHEN** se ejecuta `evaluate --suite aplicabilidad`
+- **THEN** el `patientValue` evaluado de `estado_her2` es el literal del contexto enviado, no el propuesto, y M-08.6 vale 0 (el reporte solo lleva el conteo, nunca el valor)
+
+#### Scenario: Una afirmación textual sin soporte o con cita ajena no cuenta como Coincide [US-132 AC-1] [M-08.2] [RN-01]
+- **GIVEN** los pares con los guiones `APL-SIN-SOPORTE` (NLI `neutral`) y `APL-CITA-AJENA` (cita `ch-x-999`)
+- **WHEN** se ejecuta `evaluate --suite aplicabilidad`
+- **THEN** esos criterios no aparecen en `coincide`, coinciden con su estado esperado `desconocido` y M-08.2 vale 0
+
+#### Scenario: Un paciente de próstata con el catálogo real mide `isup` (grado), `estado_castracion` y `extension` como desconocidos [US-132 AC-1] [M-08.2] [RN-27]
+- **GIVEN** el par P-A1 × una fuente de próstata que declara solo `ecog` y el catálogo de `packages/clinical-catalogs` (el catálogo `test-apl-1.0.0` no declara criterios de próstata)
+- **WHEN** se ejecuta `evaluate --suite aplicabilidad`
+- **THEN** `ecog` queda `coincide`; `isup`, `estado_castracion`, `extension` y `hrr_brca` quedan `desconocido` con su causa esperada, nunca inventados, y el par cuenta como acierto
+
+#### Scenario: La familia se niega a correr con un dataset no sintético [US-132 AC-1] [RN-14]
+- **GIVEN** un dataset de aplicabilidad cuyo manifiesto no declara `clase: sintetico`
+- **WHEN** se ejecuta `evaluate --suite aplicabilidad`
+- **THEN** la suite termina con código 1 sin calcular métricas y el mensaje nombra el manifiesto, sin textos de pacientes ni de fuentes
+
+#### Scenario: Las claves de población del dataset siguen el studyKey del catálogo [US-132 AC-1] [S3 resp. 16] (asumido)
+- **GIVEN** el dataset `data/evaluation/aplicabilidad/` y el catálogo `test-apl-1.0.0` con un `studyKey` por criterio
+- **WHEN** se carga el dataset
+- **THEN** cada `studyKey` del catálogo resuelve en las claves de `population_criteria` de las fuentes que declaran criterios
+- **AND** con un `studyKey` que no resuelve la suite termina con código 2 y el mensaje nombra el criterio, sin valores de metadatos
+
+### Requirement: Invariantes de la evaluación: coincidencias sin cita o valores del paciente no copiados (afecta solo a la CI)
+Al terminar la familia `aplicabilidad`, si M-08.2 > 0 o M-08.6 > 0 la suite MUST terminar con un código de salida distinto de 0 propio de la violación de invariante, nombrando cada métrica violada; el reporte SHALL escribirse igualmente. Estos dos ceros son invariantes del PRD (§18), no metas calibrables.
+
+#### Scenario: M-08.2 mayor que cero rompe la suite [US-132 AC-2] [M-08.2]
+- **GIVEN** un resultado de aplicabilidad con un criterio en `coincide` sin cita
+- **WHEN** termina la suite
+- **THEN** sale con un código distinto de 0, la salida nombra `criterios_coincide_sin_cita` y el reporte se escribe con M-08.2 = 1
+
+#### Scenario: M-08.6 mayor que cero rompe la suite [US-132 AC-2] [M-08.6]
+- **GIVEN** un resultado de aplicabilidad con un `patientValue` distinto del valor del contexto enviado
+- **WHEN** termina la suite
+- **THEN** sale con un código distinto de 0 y la salida nombra `valores_paciente_no_copiados`
+
+#### Scenario: Con ambas métricas en cero la suite termina bien [US-132 AC-2]
+- **GIVEN** un resultado con M-08.2 = 0 y M-08.6 = 0
+- **WHEN** termina la suite
+- **THEN** sale con código 0
+
+### Requirement: Cobertura de metadatos de población con la versión del corpus por configuración
+La familia `aplicabilidad` MUST reportar la versión del corpus fijada en `CORPUS_CUTOFF_DATE` y el porcentaje de documentos vigentes (`is_current = true`) del catálogo del corpus con al menos una clave de `population_criteria` distinta de `no_disponible` (M-08.3, `[S3 resp. 16]`), leído con el rol `rag_corpus`, frente a la meta de configuración (RN-22), marcado "en meta" o "fuera de meta".
+
+#### Scenario: El reporte trae la versión y la cobertura frente a la meta [US-132 AC-3] [M-08.3] [RN-22]
+- **GIVEN** un catálogo del corpus de test con 10 documentos vigentes, 7 de ellos con al menos un criterio de población distinto de `no_disponible`, 2 documentos no vigentes con criterios, `CORPUS_CUTOFF_DATE = 2026-10-16` y la meta de cobertura 0,90 en configuración
+- **WHEN** se evalúa
+- **THEN** el reporte trae la versión `2026-10-16`, la cobertura 0,70 sobre 10 documentos vigentes y la marca "fuera de meta"
+- **AND** los documentos no vigentes no entran ni en el numerador ni en el denominador
+
+#### Scenario: La versión reportada es la misma que publica el corpus [US-132 AC-3] [M-08.3] `[S3 resp. 8]`
+- **GIVEN** un corpus de test cargado con `CORPUS_CUTOFF_DATE = 2026-10-16`
+- **WHEN** se evalúa
+- **THEN** la versión del reporte coincide con la fecha de corte que reporta `meta.corpusRelease` para ese corpus
+
+#### Scenario: Sin documentos vigentes la cobertura es nula, no cero [US-132 AC-3] [M-08.3] (asumido)
+- **GIVEN** un catálogo del corpus sin documentos vigentes
+- **WHEN** se evalúa
+- **THEN** la cobertura se reporta como `null` con 0 documentos vigentes y la marca "no medida", nunca como 0,0
+
+#### Scenario: Sin acceso al catálogo del corpus la familia falla con causa [US-132 AC-3] (asumido)
+- **GIVEN** el catálogo del corpus no disponible
+- **WHEN** se evalúa
+- **THEN** la suite termina con código 1 y el mensaje nombra la dependencia caída, sin credenciales ni cadenas de conexión
+
+### Requirement: Exactitud de los metadatos `extraido_verificado` desde la muestra revisada
+La familia `aplicabilidad` MUST leer el archivo de revisión humana de la muestra de metadatos (US-118) y SHALL reportar la exactitud (campos `correcto` sobre campos revisados) de los metadatos `extraido_verificado` (M-08.4), el tamaño de la muestra en documentos y campos, los campos aún `pendiente` y la marca frente a la meta de configuración (RN-22).
+
+#### Scenario: El reporte trae exactitud y tamaño de la muestra frente a la meta [US-132 AC-4] [M-08.4] [TBD-20]
+- **GIVEN** un archivo de revisión con 2 documentos y 20 campos revisados, 19 `correcto` y 1 `incorrecto`, y la meta 0,95 en configuración
+- **WHEN** se evalúa
+- **THEN** el reporte trae la exactitud 0,95, una muestra de 2 documentos y 20 campos revisados y la marca "en meta"
+
+#### Scenario: El formato es el que escribe la ingesta de US-118 [US-132 AC-4] [M-08.4] (asumido)
+- **GIVEN** un archivo con `release` y `documentos[]`, cada uno con `document_id` y `campos[]` de `campo`, `valor`, `revision` y `nota` (solo campos extraídos por el LLM y verificados por el NLI)
+- **WHEN** se evalúa
+- **THEN** se cuentan los campos de todos los documentos y el reporte no copia `valor` ni `nota`
+
+#### Scenario: Los campos pendientes no cuentan en la exactitud [US-132 AC-4] [M-08.4] (asumido)
+- **GIVEN** un archivo de revisión con 10 campos `correcto`, 0 `incorrecto` y 5 `pendiente`
+- **WHEN** se evalúa
+- **THEN** la exactitud es 1,0 sobre 10 campos revisados y el reporte indica 5 campos pendientes
+
+#### Scenario: Sin archivo de revisión la exactitud no se mide [US-132 AC-4] [M-08.4] (asumido)
+- **GIVEN** que no existe el archivo de revisión configurado o todos sus campos están `pendiente`
+- **WHEN** se evalúa
+- **THEN** la exactitud se reporta como `null` con la marca "no medida" y la causa, el resto de métricas se calcula y la suite no falla por ello
+
+#### Scenario: Un archivo de revisión mal formado se rechaza [US-132 AC-4] (asumido)
+- **GIVEN** un archivo de revisión con un valor de `revision` distinto de `correcto`, `incorrecto` o `pendiente`
+- **WHEN** se evalúa
+- **THEN** la suite termina con código 2 y el mensaje nombra el campo y el documento por su `document_id`, sin el valor del metadato
+
+### Requirement: Reproducibilidad de la familia de aplicabilidad
+Con la configuración falsa, la familia `aplicabilidad` MUST producir métricas deterministas idénticas y la misma huella de configuración entre corridas; el reloj se inyecta.
+
+#### Scenario: Dos corridas con la configuración falsa dan las mismas métricas [US-132 AC-5] [OL-06]
+- **GIVEN** la configuración falsa de la suite, el dataset de aplicabilidad, el catálogo del corpus de test y el archivo de revisión de test
+- **WHEN** se ejecuta `evaluate --suite aplicabilidad` dos veces
+- **THEN** la concordancia de estados, M-08.2, M-08.3, M-08.4, M-08.6 y la huella de configuración son idénticas
+
+### Requirement: La suite evaluate corre con los modelos locales reales
+Con `adaptadores.proveedor: local`, `evaluate` MUST componer los adapters reales (NLI, reranker, *embeddings*, generador por Ollama `/v1`) y SHALL escribir en `reports/eval/` un reporte con fidelidad, precisión de citas y «sin evidencia» frente a las metas de TBD-02, con configuración y modelos usados.
+
+#### Scenario: El reporte con modelos reales trae las métricas y la configuración [US-233a AC-1] [M-07.2] [ARR-03 AC-1]
+- **GIVEN** la suite con `proveedor: local`, los pesos de ADR-39 y Ollama con el generador en el MacBook de referencia
+- **WHEN** se ejecuta `evaluate`
+- **THEN** escribe en `reports/eval/` fidelidad, precisión de citas y exactitud de «sin evidencia» comparadas con las metas de TBD-02, junto con la configuración y las versiones de los modelos, sin modificar las metas
+
+#### Scenario: Sin los pesos la suite termina sin cifras [US-233a AC-4] [OL-06]
+- **GIVEN** un entorno sin los pesos de algún modelo
+- **WHEN** se pide `proveedor: local`
+- **THEN** la suite termina con código distinto de 0 nombrando la variable de configuración que falta, no marca PASS y no escribe cifras
+
+#### Scenario: Ningún request sale de la máquina y el resultado solo trae agregados [US-233a AC-3] [RN-12] [RN-14]
+- **GIVEN** `proveedor: local` y un dataset `clase: sintetico`
+- **WHEN** se ejecuta con el HTTP saliente fingido (`respx`)
+- **THEN** todo request va a loopback o `host.docker.internal`, `llamadas_nube_datos_reales` cubre a todos los adapters y vale 0, y el archivo de resultados no contiene textos de preguntas, fragmentos ni salidas
+
+#### Scenario: Un alias de modelo de nube aborta antes de crear el cliente [US-233a AC-3] [RN-12] (asumido, hallazgo del S2)
+- **GIVEN** un modelo de Ollama con alias de nube (por ejemplo `x:cloud`)
+- **WHEN** se compone la suite local
+- **THEN** termina con código distinto de 0 sin enviar ningún request
+
+### Requirement: Lenguaje no prescriptivo medido con el generador real
+Con el generador real, `evaluate` MUST medir la propuesta cruda y la salida mostrada, SHALL exigir salidas prescriptivas mostradas = 0 (RN-23) y SHALL anotar cuántas propuestas crudas corrigió el filtro, incluidos los casos fuera del nivel A del S2.
+
+#### Scenario: Las salidas prescriptivas mostradas son 0 con el LLM real [US-233a AC-2] [RN-23] [ARR-03 AC-2]
+- **GIVEN** el generador real y `data/eval/fx-rn23` con casos de nivel A y de nivel B
+- **WHEN** se evalúan la propuesta cruda y la salida mostrada
+- **THEN** las salidas prescriptivas mostradas son 0 y el reporte anota cuántas propuestas crudas corrigió el filtro por nivel
+
+#### Scenario: La salida mostrada se mide por nivel y por campo, sin texto [US-233a AC-2] [RN-23] [RN-14]
+- **GIVEN** el reporte de `fx-rn23`
+- **WHEN** se mide la salida mostrada
+- **THEN** trae `salida_mostrada_nivel_a` (bloqueante) y `salida_mostrada_nivel_b` (seguimiento) y `campos_mostrados` con nombre de campo e id de regla, nunca texto
+
+#### Scenario: AC-2 NO CUMPLIDA con el generador real (estado registrado) [US-233a AC-2] [RN-23]
+- **GIVEN** la corrida con G real sobre `fx-rn23`: 1 salida prohibida mostrada (nivel A = 0, nivel B = 1; meta 0) y 6 en la propuesta cruda (A = 5, B = 1) que copian términos del corpus citado
+- **WHEN** se evalúa el criterio
+- **THEN** AC-2 queda «no cumplida», con dueño y destino en la historia D4-01 (filtro de nivel B o política de citas del corpus, y deuda D7 de L1D-193 con «Se recomendaría», «Se aconseja», «Considere iniciar»), sin cambiar el filtro de producción en este change y con la meta decidida por el usuario (2026-10-31): A+B bloqueante, hasta que el filtro cubra el nivel B (historia D4-01, S5)
+
+### Requirement: Juez local secundario acotado y de salida estricta
+El juez LLM local MUST recibir una sola afirmación y solo los fragmentos que cita, con rúbrica binaria y tres ejemplos, y responder `{"veredicto": "soportada|no_soportada", "cita": "<id>"}` con `temperature` y semilla de configuración. Un veredicto sin cita existente o un JSON inválido SHALL contar como no soportado y contabilizarse.
+
+#### Scenario: El juez solo ve la afirmación y sus fragmentos [US-233a AC-5] [ADR-41] [RN-12]
+- **GIVEN** el juez local (Ollama `/v1` fingido en su puerto) y una afirmación con sus fragmentos citados
+- **WHEN** juzga la afirmación
+- **THEN** el request contiene solo esa afirmación y esos fragmentos, sin la respuesta completa ni el modelo generador, con `temperature` y semilla de configuración
+
+#### Scenario: Un veredicto inválido cuenta como no soportado [US-233a AC-5] [ADR-41]
+- **GIVEN** una respuesta del juez con JSON inválido, o con una cita que no está entre los fragmentos
+- **WHEN** se interpreta el veredicto
+- **THEN** la afirmación cuenta como no soportada y el reporte incrementa el contador de veredictos inválidos
+
+### Requirement: Acuerdo medido del juez, nunca promediado
+El reporte MUST incluir el acuerdo juez↔NLI y, cuando exista la muestra del oncólogo, juez↔humano (porcentaje y kappa de Cohen) con la lista de discrepancias. El NLI SHALL seguir siendo el juez principal, sin promediarse con el juez local; bajo `JUEZ_ACUERDO_MINIMO` o con una muestra menor que `JUEZ_MUESTRA_MINIMA` (ambos de configuración, sin valor por defecto en código) la fidelidad del juez SHALL marcarse «no concluyente», con `fidelidad: null` y la cifra solo como `valor_informativo`.
+
+#### Scenario: El reporte trae acuerdo y discrepancias sin promediar [US-233a AC-6] [ADR-41]
+- **GIVEN** veredictos del NLI y del juez local sobre el mismo conjunto
+- **WHEN** se genera el reporte
+- **THEN** incluye porcentaje de acuerdo y kappa de Cohen juez↔NLI, las discrepancias por id de afirmación y la fidelidad del NLI y la del juez por separado
+
+#### Scenario: Acuerdo bajo el mínimo marca la fidelidad del juez como no concluyente [US-233a AC-6] (asumido el umbral)
+- **GIVEN** un acuerdo inferior a `JUEZ_ACUERDO_MINIMO`
+- **WHEN** se genera el reporte
+- **THEN** la fidelidad del juez aparece «no concluyente» y el juez nunca decide solo
+
+#### Scenario: Sin muestra humana el acuerdo juez↔humano queda sin medir [US-233a AC-6] (asumido, DEC-06 en S5)
+- **GIVEN** que aún no existe la muestra revisada por el oncólogo
+- **WHEN** se genera el reporte
+- **THEN** juez↔humano figura `sin_medir`, no `0`
+
+### Requirement: Recursos del NLI en el reporte local
+Con `proveedor: local`, el reporte MUST registrar el pico de RSS del proceso (`rss_pico_proceso_mib`, `ru_maxrss` con los tres modelos cargados; no es el RSS del NLI ni el del régimen) y la latencia p50 y p95 del NLI por lote y la media por hipótesis del lote (la duración del lote repartida entre sus hipótesis), incluidas las hipótesis de población, y SHALL marcar si el RSS supera el límite de memoria de configuración.
+
+#### Scenario: El reporte registra RSS y latencia del NLI [US-233a AC-7] [ADR47-R7] [M-10.1]
+- **GIVEN** el NLI real y el lote de hipótesis de la suite, con reloj inyectado
+- **WHEN** se ejecuta `evaluate` con `proveedor: local`
+- **THEN** el reporte trae el pico de RSS del proceso, p50 y p95 del NLI por lote y de la media por hipótesis del lote, y la marca de exceso si el RSS supera el límite configurado, sin ajustar el presupuesto

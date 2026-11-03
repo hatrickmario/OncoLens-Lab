@@ -36,9 +36,9 @@
 
 ## evaluación
 
-- [ ] 5.1 (TRASLADADA a `ai-eval-runner` en el Gate 2: exige el LLM local real) Brazo "reescritura" en el runner de variantes (US-226) con latencia añadida solo de las consultas que disparan el loop, recall@10/MRR con y sin reescritura y «sin evidencia» ≥ 0,90 (AC-9) · evaluate · reporte de `ai-eval-runner` DIFERIDA -> D4-30 (S5)
-- [ ] 5.2 (TRASLADADA a `ai-eval-runner`: `QUERY_REWRITE_ENABLED` queda `false` por defecto hasta la medición) Decidir el valor por defecto de `QUERY_REWRITE_ENABLED` según el criterio de adopción de AC-9 y registrarlo en `.env.example` · evaluate DIFERIDA -> D4-30 (S5)
+- [x] 5.1 (TRASLADADA a `ai-eval-runner` en el Gate 2: exige el LLM local real) Brazo "reescritura" en el runner de variantes (US-226) con latencia añadida solo de las consultas que disparan el loop, recall@10/MRR con y sin reescritura y «sin evidencia» ≥ 0,90 (AC-9) · evaluate · reporte de `ai-eval-runner` DIFERIDA -> D4-30 (S5) · **Hecho: verificado por el usuario en la Demo 4 (2026-11-02), fila F5 de `docs/evidence/S4-demo4/checklist-verificacion-demo4.md`.** El valor concreto del resultado no está registrado en el repo: se anota al aportar el reporte.
+- [x] 5.2 (TRASLADADA a `ai-eval-runner`: `QUERY_REWRITE_ENABLED` queda `false` por defecto hasta la medición) Decidir el valor por defecto de `QUERY_REWRITE_ENABLED` según el criterio de adopción de AC-9 y registrarlo en `.env.example` · evaluate DIFERIDA -> D4-30 (S5) · **Hecho: verificado por el usuario en la Demo 4 (2026-11-02), fila F5 de `docs/evidence/S4-demo4/checklist-verificacion-demo4.md`.** El valor concreto del resultado no está registrado en el repo: se anota al aportar el reporte.
 
 ## Cierre
 
-- [ ] 6.1 (pendiente solo `run-ai-eval`, TRASLADADA a `ai-eval-runner`) `openspec validate l1d-300-reescritura-consulta-segundo-loop --strict`, tests de `apps/rag-orchestrator`, `apps/clinical-api` y `apps/web` en verde, `contracts:check`, `contracts:breaking`, `contracts:verify-provider`, `run-ai-eval` DIFERIDA -> D4-30 (S5)
+- [x] 6.1 (pendiente solo `run-ai-eval`, TRASLADADA a `ai-eval-runner`) `openspec validate l1d-300-reescritura-consulta-segundo-loop --strict`, tests de `apps/rag-orchestrator`, `apps/clinical-api` y `apps/web` en verde, `contracts:check`, `contracts:breaking`, `contracts:verify-provider`, `run-ai-eval` DIFERIDA -> D4-30 (S5) · **Hecho: verificado por el usuario en la Demo 4 (2026-11-02), fila F5 de `docs/evidence/S4-demo4/checklist-verificacion-demo4.md`.**
