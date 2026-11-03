@@ -8,7 +8,8 @@ import { piiSinteticaDePCaso, sembrarPCaso } from '../../support/caso.js';
 import { montarCaso } from '../../support/caso-http.js';
 import { prepararSiembra, sembrarFM2, type ContextoDeSiembra } from '../../support/completitud.js';
 import { montarCompletitud } from '../../support/completitud-http.js';
-import { generadorDeIds } from '../../support/filas-sinteticas.js';
+import { generadorDeIds, insertar } from '../../support/filas-sinteticas.js';
+import { createCaseViewRepository } from '../../../src/modules/case-view/case-view.repository.js';
 import { abrirSesion, prepararMundoConSeed, type MundoDeGateway } from '../../support/gateway.js';
 import { loggerJsonEnMemoria } from '../../support/usuarios.js';
 import { clienteVerificado } from '../../support/verificarProveedor.js';
@@ -208,11 +209,72 @@ describe('GET /platform/patients/{id}/case · contenido y contrato', () => {
         Promise.reject(new Error('SINT conexión rechazada')),
     };
 
-    const respuesta = await pedirCaso(p.patientId, { repositorio: repositorioQueFalla }).respuesta;
+    let lecturas = 0;
+    const repositorioContado: RepositorioDeLaVistaDeCaso = {
+      existePaciente: repositorioQueFalla.existePaciente,
+      leerDatosDelCaso: (id) => {
+        lecturas += 1;
+        return repositorioQueFalla.leerDatosDelCaso(id);
+      },
+    };
+
+    const { respuesta: pendiente, logger } = pedirCaso(p.patientId, {
+      repositorio: repositorioContado,
+    });
+    const respuesta = await pendiente;
 
     expect(respuesta.status).toBe(500);
     expect(respuesta.body).toMatchObject({ error: 'ERROR_INTERNO' });
     expect(JSON.stringify(respuesta.body)).not.toContain(piiSinteticaDePCaso().nombre);
     expect(JSON.stringify(respuesta.body)).not.toContain('timeline');
+    expect(lecturas).toBe(1);
+    expect(
+      logger.lineas.some(
+        (linea) => linea['event'] === 'case_view.consulta' && linea['resultado'] === 'ok',
+      ),
+    ).toBe(false);
+  });
+
+  it('no lee los datos del caso cuando el paciente no existe [US-088 AC-6]', async () => {
+    let lecturas = 0;
+    const real = createCaseViewRepository(mundo.cliente);
+    const repositorio: RepositorioDeLaVistaDeCaso = {
+      existePaciente: real.existePaciente,
+      leerDatosDelCaso: (id) => {
+        lecturas += 1;
+        return real.leerDatosDelCaso(id);
+      },
+    };
+
+    const respuesta = await pedirCaso('00000000-0000-4000-8000-00000000dead', { repositorio })
+      .respuesta;
+
+    expect(respuesta.status).toBe(404);
+    expect(lecturas).toBe(0);
+  });
+
+  it('no incluye en la respuesta el texto de una ClinicalNote ni el payload del registro de IA [RN-10]', async () => {
+    const textoDeLaNota = 'SINT-nota-clinica-no-debe-salir';
+    const textoDelAnalisis = 'SINT-sintesis-del-analisis-no-debe-salir';
+    const p = await sembrarPCaso(siembra, { espacio: ++espacioDePCaso, textoDelAnalisis });
+    await insertar(mundo.cliente, 'clinical.clinical_note', {
+      id: mundo.ids(),
+      patient_id: p.patientId,
+      episode_id: p.episodeId,
+      created_by: p.userId,
+      note_type: 'nota_libre',
+      entry_method: 'seed',
+      content: textoDeLaNota,
+      recorded_at: '2026-08-01',
+      is_active: true,
+      extraction_confidence: 'n_a',
+      review_status: 'verificado',
+      created_at: '2026-08-01T12:00:00.000Z',
+    });
+    const respuesta = await pedirCaso(p.patientId).respuesta;
+
+    expect(respuesta.status).toBe(200);
+    expect(JSON.stringify(respuesta.body)).not.toContain(textoDeLaNota);
+    expect(JSON.stringify(respuesta.body)).not.toContain(textoDelAnalisis);
   });
 });

@@ -33,6 +33,8 @@ export interface OpcionesDeSiembraDePCaso {
   espacio?: number;
   /** Arma en `description` de la toxicidad el nombre y el documento sintéticos (test de no-fuga en logs, RN-10). */
   conPiiEnLaToxicidad?: boolean;
+  /** Texto sembrado en la síntesis del análisis (el registro es inmutable: va en la siembra); no debe salir en la vista. */
+  textoDelAnalisis?: string;
 }
 
 export interface IdsDePCaso {
@@ -337,6 +339,9 @@ export async function sembrarPCaso(
     'clinical.ai_analysis_record',
     filaDeAnalisisConEvidencia(siguiente, p.patientId, p.episodeId, p.userId, {
       created_at: '2026-08-01T12:00:00.000Z',
+      ...(opciones.textoDelAnalisis !== undefined && {
+        synthesis: JSON.stringify({ texto: opciones.textoDelAnalisis }),
+      }),
     }),
   );
   const resumen = await insertar(
