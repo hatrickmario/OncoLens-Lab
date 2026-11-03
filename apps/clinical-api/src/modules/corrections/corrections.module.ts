@@ -3,7 +3,7 @@ import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type { Registrar } from '../../infrastructure/logger.js';
 import type { TraceIdGenerator } from '../../infrastructure/trace-id-generator.js';
-import type { FuenteDeConexiones } from '../manual-entry/manual-entry.repository.js';
+import type { FuenteDeConexiones } from '../compartido/transaccion.js';
 import type { ReconciliationService } from '../reconciliation/ports.js';
 import { correctionsController } from './corrections.controller.js';
 import { createCorrectionsRepository } from './corrections.repository.js';

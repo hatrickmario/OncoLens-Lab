@@ -1,6 +1,7 @@
 import type { Consultador } from '../auth/auth.repository.js';
 import { elegirDiagnosticoVigente } from '../compartido/diagnostico-vigente.js';
 import { sqlDatoVigente } from '../compartido/estados-de-revision.js';
+import { ejecutarEnTransaccion, type FuenteDeConexiones } from '../compartido/transaccion.js';
 import type { EstadoDelPaciente } from '../patients/patients.repository.js';
 import type {
   BiomarcadorAGuardar,
@@ -14,15 +15,7 @@ import type {
   TransaccionDeRegistro,
 } from './ports.js';
 
-/** Conexión del pool que se devuelve al terminar (`pg.PoolClient` la cumple). */
-export interface ConexionLiberable extends Consultador {
-  release(): void;
-}
-
-/** Fuente de conexiones: `pg.Pool` la cumple. La transacción necesita UNA conexión, nunca el pool entero. */
-export interface FuenteDeConexiones {
-  connect(): Promise<ConexionLiberable>;
-}
+export type { ConexionLiberable, FuenteDeConexiones } from '../compartido/transaccion.js';
 
 type FilaSql = Record<string, unknown>;
 
@@ -227,19 +220,7 @@ export function createManualEntryRepository(
   fuente: FuenteDeConexiones,
 ): RepositorioDeRegistroManual {
   return {
-    async enTransaccion(trabajo) {
-      const conexion = await fuente.connect();
-      try {
-        await conexion.query('BEGIN');
-        const resultado = await trabajo(transaccionSobre(conexion));
-        await conexion.query('COMMIT');
-        return resultado;
-      } catch (error) {
-        await conexion.query('ROLLBACK').catch(() => undefined);
-        throw error;
-      } finally {
-        conexion.release();
-      }
-    },
+    enTransaccion: (trabajo) =>
+      ejecutarEnTransaccion(fuente, (conexion) => trabajo(transaccionSobre(conexion))),
   };
 }

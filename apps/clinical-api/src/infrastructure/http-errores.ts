@@ -26,6 +26,7 @@ export type CodigoDeError =
   | 'PACIENTE_EGRESADO'
   | 'VALOR_FUERA_DE_CATALOGO'
   | 'GRADACION_INCOHERENTE'
+  | 'DATO_NO_VIGENTE'
   | 'CATALOG_VERSION_MISMATCH'
   | 'ERROR_SERVICIO_IA'
   | 'LOCAL_LLM_UNAVAILABLE'
@@ -51,6 +52,7 @@ const MENSAJES: Record<CodigoDeError, string> = {
   PACIENTE_EGRESADO: 'El paciente está egresado y no admite registros.',
   VALOR_FUERA_DE_CATALOGO: 'Un valor no pertenece al catálogo clínico montado.',
   GRADACION_INCOHERENTE: 'El puntaje o el grupo ISUP no cuadran con los patrones de Gleason.',
+  DATO_NO_VIGENTE: 'El dato ya fue reemplazado: recarga la ficha para ver su versión vigente.',
   CATALOG_VERSION_MISMATCH: 'La versión del catálogo clínico difiere entre servicios.',
   ERROR_SERVICIO_IA: 'El servicio de IA no respondió correctamente.',
   LOCAL_LLM_UNAVAILABLE: 'El modelo local no está disponible.',
@@ -80,14 +82,19 @@ export function esErrorDeCuerpoDelCliente(error: unknown): boolean {
   return typeof tipo === 'string' && ERRORES_DE_CUERPO.has(tipo);
 }
 
-/** Cuerpo de error del contrato `{ error, message, traceId }`: el mensaje es fijo, nunca eco de la entrada. */
+/**
+ * Cuerpo de error del contrato `{ error, message, traceId }`: el mensaje es fijo, nunca eco de la entrada. `campo` es el
+ * NOMBRE de la propiedad del cuerpo que causó el error (`field` del contrato), nunca el valor enviado.
+ */
 export function enviarError(
   respuesta: Response,
   status: number,
   codigo: CodigoDeError,
   traceId: string,
+  campo?: string,
 ): void {
-  respuesta.status(status).json({ error: codigo, message: MENSAJES[codigo], traceId });
+  const cuerpo = { error: codigo, ...(campo !== undefined && { field: campo }) };
+  respuesta.status(status).json({ ...cuerpo, message: MENSAJES[codigo], traceId });
 }
 
 /** `404 NO_ENCONTRADO` sin eco, con su línea de log (`resultado: no_encontrado`, `traceId`): un UUID inexistente y un identificador mal formado son indistinguibles para el cliente. */

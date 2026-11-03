@@ -1,5 +1,5 @@
 import type { z } from 'zod';
-import type {
+import {
   zCorrectBiomarkerBody,
   zCorrectClinicalNoteBody,
 } from '../../../../../packages/api-contracts/src/zod/clinical-api/zod.gen.js';
@@ -15,12 +15,33 @@ export type LecturaDeCuerpo<C> =
   | { readonly valido: true; readonly cuerpo: C }
   | { readonly valido: false; readonly campo?: string };
 
-export function leerCorreccionDeBiomarcador(
-  _cuerpo: unknown,
-): LecturaDeCuerpo<CuerpoDeCorreccionDeBiomarcador> {
-  throw new Error('no implementado');
+/** El nombre de la propiedad que falló; ausente si el fallo no es de un campo (p. ej. una clave desconocida). */
+function campoDelFallo(error: z.ZodError): string | undefined {
+  const propiedad = error.issues[0]?.path[0];
+  return typeof propiedad === 'string' ? propiedad : undefined;
 }
 
-export function leerCorreccionDeNota(_cuerpo: unknown): LecturaDeCuerpo<CuerpoDeCorreccionDeNota> {
-  throw new Error('no implementado');
+function leer<C extends object>(
+  esquema: z.ZodType<C>,
+  cuerpo: unknown,
+  exigirAlgunaPropiedad = false,
+): LecturaDeCuerpo<C> {
+  const leido = esquema.safeParse(cuerpo);
+  if (!leido.success) {
+    const campo = campoDelFallo(leido.error);
+    return campo === undefined ? { valido: false } : { valido: false, campo };
+  }
+  if (exigirAlgunaPropiedad && Object.keys(leido.data).length === 0) return { valido: false };
+  return { valido: true, cuerpo: leido.data };
+}
+
+export function leerCorreccionDeBiomarcador(
+  cuerpo: unknown,
+): LecturaDeCuerpo<CuerpoDeCorreccionDeBiomarcador> {
+  return leer(zCorrectBiomarkerBody, cuerpo);
+}
+
+/** `minProperties: 1`: una corrección de nota sin `content` ni `noteType` no corrige nada. */
+export function leerCorreccionDeNota(cuerpo: unknown): LecturaDeCuerpo<CuerpoDeCorreccionDeNota> {
+  return leer(zCorrectClinicalNoteBody, cuerpo, true);
 }
