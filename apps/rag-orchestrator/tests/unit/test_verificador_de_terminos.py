@@ -73,6 +73,30 @@ def test_la_carga_falla_cuando_la_lista_no_es_valida(tmp_path: Path) -> None:
         cargar_verificador_de_terminos(tmp_path)
 
 
+@pytest.mark.ac("US-249", 2)
+@pytest.mark.parametrize("alteracion", ["id_desconocido", "ausente", "vacio"])
+def test_la_carga_falla_cerrada_cuando_salida_generada_es_invalida(
+    tmp_path: Path, alteracion: str
+) -> None:
+    datos = json.loads(
+        (CATALOGOS / "lenguaje" / "terminos-prohibidos.json").read_text(encoding="utf-8")
+    )
+    if alteracion == "id_desconocido":
+        datos["salidaGenerada"]["nivelB"].append("b-no-existe")
+    elif alteracion == "ausente":
+        datos.pop("salidaGenerada")
+    else:
+        datos["salidaGenerada"]["nivelB"] = []
+    (tmp_path / "lenguaje").mkdir()
+    (tmp_path / "lenguaje" / "terminos-prohibidos.json").write_text(json.dumps(datos))
+
+    with pytest.raises(ListaDeTerminosNoDisponible) as error:
+        cargar_verificador_de_terminos(tmp_path)
+
+    assert "terminos-prohibidos.json" in str(error.value)
+    assert str(tmp_path) not in str(error.value)
+
+
 def _campos_generados_del_origen(ruta: Path) -> set[str]:
     return set(json.loads(ruta.read_text(encoding="utf-8"))["camposGenerados"])
 
