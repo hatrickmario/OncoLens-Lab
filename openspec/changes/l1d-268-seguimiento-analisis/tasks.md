@@ -146,6 +146,13 @@ ANALYSIS_FOLLOWUP_MAX=10
 | D5-13 | L1D-268 | Medición del seguimiento (`rag-follow-up@0.1.0`) con modelos locales en la corrida nocturna del día 2: fidelidad, precisión de citas, «sin evidencia», salidas prescriptivas = 0 y RN-24 (`python -m app.evaluation.seguimiento` con proveedor local) | tasks 4.3 |
 ```
 
+- [ ] H-4 `backlog/sprints/S5-deuda.md`: registrar D5-15 y D5-16 (vuelta 1 del Gate 2), DIFERIDA -> H-4. Bloque literal:
+
+```
+| D5-15 | L1D-268 | `MARCADORES_DE_IDENTIDAD` de `contexto_del_seguimiento.py` duplica los marcadores de `apps/clinical-api/config/pii-masks.json`: añadir un test de paridad entre ambos | design #5 |
+| D5-16 | L1D-268 | P3 del Gate 2: #8 flag `con_reescritura` de `recuperar()`, #9 `_contar_mostradas` con 8 parámetros, #13 patrón `FalloDelLlm` duplicado en los generadores, #14 `seguimiento_propio` / `SeguimientoNoComponible` en bootstrap | design #8, #9, #13, #14 |
+```
+
 ## 5. cierre
 
 - [x] 5.1 Buscar en el árbol `ANALYSIS_FOLLOWUP_MAX`, el mensaje de `LIMITE_SEGUIMIENTO`, `normalize('NFC')` /

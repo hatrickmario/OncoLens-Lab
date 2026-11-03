@@ -18,7 +18,10 @@ from app.api.rag_follow_up import crear_router_rag_follow_up
 from app.api.rag_query import crear_router_rag_query
 from app.api.trace import ContextoDeTraceId
 from app.application.aplicabilidad import ApplicabilityService
-from app.application.catalogo_exigido import ConsultaConCatalogoExigido
+from app.application.catalogo_exigido import (
+    ConsultaConCatalogoExigido,
+    SeguimientoConCatalogoExigido,
+)
 from app.application.consulta_no_componible import ConsultaNoComponible, SeguimientoNoComponible
 from app.application.ports import (
     CatalogoClinico,
@@ -382,8 +385,8 @@ def _registrar_consulta_de_evidencia(
         consulta = ConsultaConCatalogoExigido(
             FakeEvidenceQuery.desde_directorio(settings.fake_responses_path), catalogo_clinico
         )
-        seguimiento_propio = seguimiento or FakeFollowUp.desde_directorio(
-            settings.fake_responses_path
+        seguimiento_propio = seguimiento or SeguimientoConCatalogoExigido(
+            FakeFollowUp.desde_directorio(settings.fake_responses_path), catalogo_clinico
         )
     elif consulta is None:
         # LLM_PROVIDER=local: la ruta siempre existe. La configuración se exige aunque falten los bordes reales

@@ -1,4 +1,4 @@
-"""Prompt `rag-follow-up@0.1.0` del seguimiento de un análisis (US-218): función pura, sin E/S.
+"""Prompt `rag-follow-up@0.1.1` del seguimiento de un análisis (US-218): función pura, sin E/S.
 
 Redactado en positivo y sin términos de RN-23 (un test lo verifica con ``check_prohibited_terms``). La memoria del
 análisis viaja en un bloque rotulado como contexto no citable, separado de los fragmentos con alias (RN-24); el prompt
@@ -18,7 +18,7 @@ from app.prompts.rag_query import (
 )
 from app.schemas.generated.models import PriorAnalysisMemory, RagFollowUpRequest
 
-VERSION_DEL_PROMPT_DE_SEGUIMIENTO = "rag-follow-up@0.1.0"
+VERSION_DEL_PROMPT_DE_SEGUIMIENTO = "rag-follow-up@0.1.1"
 
 MARCADOR_FUERA_DE_CONTEXTO = "fuera_de_contexto"
 MARCADOR_RESPUESTA = "respuesta"
@@ -48,7 +48,9 @@ Instrucciones:
 Pregunta: {pregunta}
 
 {rotulo_de_la_memoria}:
+{inicio_de_la_memoria}
 {memoria}
+{fin_de_la_memoria}
 
 Datos del paciente (las etiquetas "{etiqueta_sin_verificar}" y "{etiqueta_en_conflicto}" indican el estado de revisión del dato; no forman parte del dato):
 {contexto}
@@ -79,6 +81,8 @@ def construir_prompt_de_seguimiento(
         maximo_de_palabras=claim_max_words,
         pregunta=solicitud.question,
         rotulo_de_la_memoria=ROTULO_DE_LA_MEMORIA,
+        inicio_de_la_memoria=INICIO_DE_LA_MEMORIA,
+        fin_de_la_memoria=FIN_DE_LA_MEMORIA,
         memoria="\n".join(_bloque_de_memoria(m) for m in solicitud.analysisMemory)
         or "No disponible",
         contexto=bloque_de_datos_del_paciente(solicitud.clinicalContext) or "No disponible",

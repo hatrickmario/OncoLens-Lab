@@ -24,12 +24,7 @@ import yaml
 from app.application.generacion_de_seguimiento import LlmSeguimientoGenerator
 from app.application.ports import FalloDelLlm
 from app.application.seguimiento import ResponderSeguimiento
-from app.domain.atribucion import (
-    CLAIM_MAX_WORDS_INICIAL,
-    CLAIMS_MAX_INICIAL,
-    CLAIMS_MIN_INICIAL,
-    marco_de_atribucion,
-)
+from app.domain.atribucion import marco_de_atribucion
 from app.domain.nli import ParNli
 from app.evaluation.adaptadores_falsos import NliLexico
 from app.evaluation.composicion_suite import componer_servicio
@@ -38,7 +33,10 @@ from app.evaluation.cronometro import Cronometro, RelojSimulado
 from app.evaluation.dataset_loader import CLASE_SINTETICA, DatasetInvalido
 from app.evaluation.fuente_dataset import DatasetSuite, FuenteDatasetEnDirectorio
 from app.evaluation.rutas import raiz_repo
+from app.config.settings import Settings
+from app.infrastructure.catalogo_clinico.manifiesto import cargar_catalogo_del_manifiesto
 from app.infrastructure.catalogo_clinico.sinonimos import cargar_terminos_por_tipo
+from app.infrastructure.llm.fabrica_local import crear_generador_de_seguimiento_local
 from app.infrastructure.clock.system_clock import RelojDelSistema
 from app.schemas.generated.models import RagFollowUpRequest, RagFollowUpResponse
 
@@ -119,20 +117,32 @@ def _frases_de_la_memoria(solicitud: RagFollowUpRequest) -> list[str]:
     ]
 
 
+def ajustes_de_la_suite(config: ConfigSuite) -> Settings:
+    """Los ``Settings`` de la suite: el tope de palabras del ``ConfigSuite`` y los tipos del catálogo montado (RN-20, RN-22)."""
+    return Settings(
+        _env_file=None,  # type: ignore[call-arg]
+        claim_max_words=config.umbrales.claim_max_words,
+        enabled_cancer_types=cargar_catalogo_del_manifiesto(config.ruta_terminos).tipos_de_cancer(),
+    )
+
+
+def generador_de_la_suite(settings: Settings, cliente: ClienteGuionado) -> LlmSeguimientoGenerator:
+    """El generador de PRODUCCIÓN (la misma fábrica y los mismos valores de configuración); solo el cliente del LLM es el guion."""
+    return crear_generador_de_seguimiento_local(settings, envolver_cliente=lambda _real: cliente)  # type: ignore[arg-type,return-value]
+
+
 async def evaluar(
     config: ConfigSuite, dataset: DatasetSuite, casos: Sequence[CasoDeSeguimiento]
 ) -> dict[str, Any]:
     cliente = ClienteGuionado({c.pregunta: c.guion for c in casos})
     suite = componer_servicio(config, dataset, Cronometro(RelojSimulado()), RelojDelSistema())
+    settings = ajustes_de_la_suite(config)
     responder = ResponderSeguimiento(
         servicio=suite.servicio,
-        generador=LlmSeguimientoGenerator(
-            cliente,
-            claims_min=CLAIMS_MIN_INICIAL,
-            claims_max=CLAIMS_MAX_INICIAL,
-            claim_max_words=CLAIM_MAX_WORDS_INICIAL,
+        generador=generador_de_la_suite(settings, cliente),
+        terminos_por_tipo=cargar_terminos_por_tipo(
+            config.ruta_terminos, settings.enabled_cancer_types
         ),
-        terminos_por_tipo=cargar_terminos_por_tipo(config.ruta_terminos, ("mama", "prostata")),
     )
     juez = NliLexico()
     textos = {c.id: c.texto for c in dataset.chunks}
