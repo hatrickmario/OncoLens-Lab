@@ -12,6 +12,7 @@
 | OUT-05 | Bug (estabilidad) | La misma pregunta visible da otro resultado si llega en Unicode NFD: no se normaliza antes del prompt | triage | **US-250** (FEAT-06a, S5) |
 | OUT-06 | Mejora (estabilidad) | Ante la misma entrada, devolver el análisis ya guardado; «Re-ejecutar» genera uno nuevo | triage | **US-251** (FEAT-11a, S6) |
 | OUT-07 | Mejora (evaluación) | Medir reproducibilidad y estabilidad en `evaluate`, con hashes de prompt y salida en los logs | triage | **US-252** (FEAT-T5b, S6) |
+| OUT-08 | UX | En la tabla de aplicabilidad, la columna «Estudio» muestra la fuente (URL o DOI) como texto, no como enlace | triage | Por asignar (decidido el criterio de destino, 2026-11-02) |
 
 ## OUT-05 · La misma pregunta da otro resultado si llega en Unicode NFD
 
@@ -33,6 +34,18 @@
 
 - **Motivo:** la inestabilidad solo se pudo explicar consultando la base de datos. Los logs no distinguían una salida de otra y ninguna suite medía la reproducibilidad.
 - **Corrección:** US-252.
+
+
+## OUT-08 · La fuente de la columna «Estudio» no es un enlace
+
+- **Observado (2026-11-02):** en «Criterios del estudio frente a datos registrados», la columna «Estudio (valores extraídos de la fuente por IA y verificados contra el fragmento)» muestra «según {fuente} · {externalId}» como texto. En las guías del NCI el `externalId` es una URL, pero no se puede pulsar.
+- **Causa:** `presentarValor` (`apps/web/lib/evidence/presentar-valor.ts`) une el valor, el fragmento y la fuente en **una sola cadena** de texto. El detalle de la cita del panel sí enlaza la fuente con `EnlaceFuenteOriginal` (`apps/web/components/molecules/citation-details.tsx`): solo si la URL es segura (`esUrlHttpSegura`), en otra pestaña y con `rel="noopener noreferrer"`. La tabla de aplicabilidad no lo reutiliza.
+- **Criterio de destino (decidido por el usuario, 2026-11-02):**
+  - si la fuente tiene DOI (artículos de PMC, p. ej. `10.1093/jnci/djag049`), el enlace va a `https://doi.org/<doi>`;
+  - si no, a la URL de la fuente (guías del NCI);
+  - no se enlaza la URL de la API de Europe PMC (`…/fullTextXML`), que devuelve XML;
+  - el destino pasa siempre por `esUrlHttpSegura`, y sin URL válida se muestra «No disponible» (RN-25).
+- **Corrección propuesta:** que `presentarValor` devuelva partes estructuradas (texto y destino) y que la fila de aplicabilidad reutilice `EnlaceFuenteOriginal` con el destino calculado. Prueba del AC primero (Testing Library), con un caso NCI (URL), un caso PMC (DOI) y uno sin URL segura.
 
 ## Alternativas descartadas para OUT-05…OUT-07
 
