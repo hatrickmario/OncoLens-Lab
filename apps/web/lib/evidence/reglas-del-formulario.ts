@@ -1,15 +1,22 @@
+import { esquemaPreguntaNormalizada } from '../../../../packages/clinical-language/src/normalizar-pregunta';
 import { zEvidenceAnalysisRequest } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
 
 const CAMPO_PREGUNTA = zEvidenceAnalysisRequest.shape.query;
+
+/**
+ * Pregunta tal como la valida y la envía el cliente: la regla NFC + espacios de `clinical-api` (US-250) y después
+ * los límites del contrato. Único punto de composición en `web`; el campo conserva el texto pegado.
+ */
+export const ESQUEMA_PREGUNTA = esquemaPreguntaNormalizada(CAMPO_PREGUNTA);
 
 /** Máximo de `EvidenceAnalysisRequest.query`: sale del schema generado del contrato, no de un literal. */
 export const MAXIMO_PREGUNTA: number = CAMPO_PREGUNTA.maxLength ?? Number.POSITIVE_INFINITY;
 
 export type ValidacionDePregunta = { ok: true } | { ok: false; max: number };
 
-/** Valida el largo de la pregunta con el Zod del contrato; el Route Handler vuelve a validar (UX, no seguridad). */
+/** Valida el largo de la pregunta ya normalizada (AC-3: NFC, no NFD); el Route Handler vuelve a validar (UX, no seguridad). */
 export function validarPregunta(pregunta: string): ValidacionDePregunta {
-  const resultado = CAMPO_PREGUNTA.safeParse(pregunta);
+  const resultado = ESQUEMA_PREGUNTA.safeParse(pregunta);
   const excede = !resultado.success && resultado.error.issues.some((i) => i.code === 'too_big');
   return excede ? { ok: false, max: MAXIMO_PREGUNTA } : { ok: true };
 }

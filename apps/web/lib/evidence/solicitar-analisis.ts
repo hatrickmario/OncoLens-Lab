@@ -7,7 +7,7 @@ import {
   zEvidenceAnalysisRequest,
 } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
 import { esCodigoConMensajePropio, type CodigoConMensajePropio } from './clasificar-fallo';
-import { leerRetryAfter } from './reglas-del-formulario';
+import { ESQUEMA_PREGUNTA, leerRetryAfter } from './reglas-del-formulario';
 
 export type ResultadoDeSolicitud =
   | { tipo: 'ok'; analisis: EvidenceAnalysis }
@@ -31,6 +31,8 @@ export function armarSolicitud(
 ): EvidenceAnalysisRequest {
   return { patientId, query, continueWithWarning, sourcesSelected: { ...FUENTES_POR_DEFECTO_S1 } };
 }
+
+const CUERPO_DE_SOLICITUD = zEvidenceAnalysisRequest.extend({ query: ESQUEMA_PREGUNTA });
 
 const FALLO_DE_TRANSPORTE: ResultadoDeSolicitud = {
   tipo: 'error',
@@ -61,7 +63,7 @@ async function leerError(respuesta: Response): Promise<ResultadoDeSolicitud> {
 export async function solicitarAnalisis(
   solicitud: EvidenceAnalysisRequest,
 ): Promise<ResultadoDeSolicitud> {
-  const cuerpo = zEvidenceAnalysisRequest.safeParse(solicitud);
+  const cuerpo = CUERPO_DE_SOLICITUD.safeParse(solicitud);
   if (!cuerpo.success) return FALLO_DE_TRANSPORTE;
   try {
     const respuesta = await fetch('/api/evidence-analyses', {

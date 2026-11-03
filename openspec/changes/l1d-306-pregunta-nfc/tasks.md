@@ -58,15 +58,15 @@
 
 ## 4. frontend
 
-- [ ] 4.1 Test del AC primero, en rojo: «envía la pregunta en NFC cuando el oncólogo pega la de la Demo 4 en
+- [x] 4.1 Test del AC primero, en rojo: «envía la pregunta en NFC cuando el oncólogo pega la de la Demo 4 en
       NFD [US-250 AC-1]» y «no muestra el error de máximo y envía 2000 caracteres NFC cuando el NFD supera
       2000 [US-250 AC-3]» · Vitest + Testing Library + MSW desde `contracts/examples/` que registra el cuerpo;
       commit `test(L1D-306)` · **test del AC primero**
-- [ ] 4.2 `reglas-del-formulario.ts` (longitud y contador) y `solicitar-analisis.ts` (cuerpo) usan
+- [x] 4.2 `reglas-del-formulario.ts` (longitud y contador) y `solicitar-analisis.ts` (cuerpo) usan
       `esquemaPreguntaNormalizada` de `packages/clinical-language`; el campo conserva el texto pegado. Tests
       4.1 y los existentes del panel (`panel-estados-s3.test.tsx`, máximo 2000) en verde; commit
       `feat(L1D-306)` · **test del AC primero**
-- [ ] 4.3 Sin loop visual: el change no cambia la UI (`docs/ux/S5/pantallas-s5.md`, US-250 sin UI propia);
+- [x] 4.3 Sin loop visual: el change no cambia la UI (`docs/ux/S5/pantallas-s5.md`, US-250 sin UI propia);
       se justifica en el PR · **exento**
 - [ ] 4.4 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento,
       tests en verde antes y después, commit refactor(L1D-306)
