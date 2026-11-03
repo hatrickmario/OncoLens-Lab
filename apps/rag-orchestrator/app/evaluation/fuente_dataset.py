@@ -14,7 +14,13 @@ from typing import Any, Protocol
 
 import yaml
 
-from app.evaluation.dataset_loader import CLASE_SINTETICA, DatasetInvalido, Evidencia, Pregunta
+from app.evaluation.dataset_loader import (
+    CLASE_SINTETICA,
+    DatasetInvalido,
+    Evidencia,
+    Pregunta,
+    contexto_de_pregunta,
+)
 from app.evaluation.rutas import raiz_repo
 
 CLASE_REAL_ANONIMIZADO = "real_anonimizado"
@@ -244,4 +250,5 @@ def _pregunta(crudo: dict[str, Any]) -> Pregunta:
         documentos=tuple(dict.fromkeys(e.documento for e in evidencia)),
         evidencia=evidencia,
         control_de=crudo.get("control_de"),
+        contexto=contexto_de_pregunta(crudo),
     )

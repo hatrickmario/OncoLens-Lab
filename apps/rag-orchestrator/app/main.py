@@ -19,4 +19,5 @@ app = crear_app(
     corpus=puertos_del_corpus_segun_proveedores(_settings),
     catalogo_clinico=_montado.catalogo,
     criterios_de_aplicabilidad=_montado.criterios,
+    datos_criticos=_montado.datos_criticos,
 )
