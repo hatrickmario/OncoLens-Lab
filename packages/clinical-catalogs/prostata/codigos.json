@@ -7,6 +7,14 @@
       "nombreOficial": "Tumor maligno de la próstata",
       "etiquetaEs": "Cáncer de próstata",
       "versionFuente": "CIE-10 OMS/OPS · pendiente de verificar contra MinSalud/SISPRO"
+    },
+    {
+      "terminoCanonico": "PSA",
+      "estandar": "loinc",
+      "codigo": "2857-1",
+      "nombreOficial": "Prostate specific Ag [Mass/volume] in Serum or Plasma",
+      "etiquetaEs": "Antígeno prostático específico (PSA)",
+      "versionFuente": "LOINC 2.83 (data_version de NLM Clinical Tables loinc_items v3, consultada el 2026-11-03)"
     }
   ]
 }

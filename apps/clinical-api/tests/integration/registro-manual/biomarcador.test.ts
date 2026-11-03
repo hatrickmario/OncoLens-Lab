@@ -9,6 +9,7 @@ import {
   sembrarSinDiagnostico,
   type EscenarioDeRegistroManual,
 } from '../../support/registro-manual.js';
+import { RUTA_CATALOGO_REAL } from '../../support/catalogo-terminologico.js';
 import { clienteVerificado } from '../../support/verificarProveedor.js';
 
 const ESPACIO_DE_IDS = 9850;
@@ -69,6 +70,23 @@ describe('registro manual de un biomarcador', () => {
       (fila) => fila.item === 'ki67',
     );
     expect(ki67?.status).toBe('presente_verificado');
+  });
+
+  it('registra Ki-67 mapeado con su LOINC cuando se monta el catálogo real [US-110 AC-1] [RN-27] [DEC-04]', async () => {
+    const paciente = (await sembrarMamaFM2(escenario.siembra)).patientId;
+    const { app } = montarRegistroManual(escenario.mundo, { rutaDelCatalogo: RUTA_CATALOGO_REAL });
+
+    const respuesta = await clienteVerificado(app)
+      .post(`/platform/patients/${paciente}/biomarkers`)
+      .set('Cookie', escenario.cookieDoctor)
+      .send(CUERPO_KI67);
+
+    expect(respuesta.status).toBe(201);
+    expect(respuesta.body).toMatchObject({
+      name: 'Ki-67',
+      mappingStatus: 'mapeado',
+      loincCode: '85330-9',
+    });
   });
 
   it('guarda la significancia, la fuente y el tipo de examen que devuelve el contrato cuando se registra Ki-67 [US-110 AC-1]', async () => {
