@@ -25,6 +25,10 @@ describe('fechaConfiable', () => {
     expect(fechaConfiable('2026-05-10', 'dia')).toBe('2026-05-10');
   });
 
+  it.each(['mes', 'anio'] as const)('devuelve la fecha cuando la precisión es %s', (precision) => {
+    expect(fechaConfiable('2026-05-10', precision)).toBe('2026-05-10');
+  });
+
   it('devuelve null cuando la fecha es null', () => {
     expect(fechaConfiable(null, 'dia')).toBeNull();
   });

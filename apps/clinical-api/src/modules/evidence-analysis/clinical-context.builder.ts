@@ -26,6 +26,8 @@ export function mesesTranscurridos(fecha: string | null, ahora: Date): number | 
 /**
  * Regla única de «sin fecha confiable» del contexto (RN-11, readme §4.2): una fecha de precisión `incierta` no viaja
  * como meses relativos aunque esté informada, igual que en la vista de caso (US-088). La fecha ausente sigue ausente.
+ * Misma regla que `comoEventoConOrden` (case-view/timeline.reglas.ts) y `sqlFechaNoConfiable`
+ * (compartido/estados-de-revision.ts); unificarlas es D5-22.
  */
 export function fechaConfiable(fecha: string | null, precision: PrecisionDeFecha): string | null {
   return precision === 'incierta' ? null : fecha;

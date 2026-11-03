@@ -5,6 +5,7 @@ import type {
 import type { SupportedClaim } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import type { Consultador } from '../auth/auth.repository.js';
 import type { RegistroDeAnalisis } from './analysis-record.js';
+import { sqlFechaNoConfiable } from '../compartido/estados-de-revision.js';
 import { alcanzaLimiteDeSeguimiento } from './follow-up.reglas.js';
 import {
   eventoDe,
@@ -133,10 +134,12 @@ async function leerEventosPosteriores(
   patientId: string,
   desde: string,
 ): Promise<FilaDeEvento[]> {
-  const { rows } = await db.query(sqlEventosClinicosVigentes('AND event_date > $2::date'), [
-    patientId,
-    desde,
-  ]);
+  const { rows } = await db.query(
+    sqlEventosClinicosVigentes(
+      `AND event_date > $2::date AND NOT ${sqlFechaNoConfiable('event_date', 'date_precision')}`,
+    ),
+    [patientId, desde],
+  );
   return rows.map(eventoDe);
 }
 
