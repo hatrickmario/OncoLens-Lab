@@ -30,7 +30,9 @@ MANIFIESTO_S3 = DIRECTORIO_S3 / "manifest.yaml"
 DIRECTORIO_SEMILLA = RAIZ_REPOSITORIO / "data/raw/seed"
 MANIFIESTO_SEMILLA = DIRECTORIO_SEMILLA / "manifest.yaml"
 TIPOS = ("mama", "prostata")
-CHUNK_GRANDE = 800  # palabras: acota los chunks del corpus real a unos cientos y no a decenas de miles
+CHUNK_GRANDE = (
+    800  # palabras: acota los chunks del corpus real a unos cientos y no a decenas de miles
+)
 CLASES_ACEPTADAS = {"dominio_publico", "cc_by", "cc_by_sa"}
 
 
@@ -66,7 +68,10 @@ def test_ingesta_del_manifiesto_real_deja_el_minimo_por_tipo_de_cancer_y_fuente_
         t: len(f) for t, f in por_tipo.items()
     }
     assert set(resumen) == set(TIPOS)
-    assert all(set(por_fuente) == set(CORPUS_FUENTES_ADMITIDAS_INICIALES) for por_fuente in resumen.values())
+    assert all(
+        set(por_fuente) == set(CORPUS_FUENTES_ADMITIDAS_INICIALES)
+        for por_fuente in resumen.values()
+    )
     serializado = json.dumps(resumen)
     assert "http" not in serializado and "@" not in serializado
 
@@ -84,11 +89,11 @@ def test_ingesta_del_manifiesto_real_deja_la_licencia_completa_en_el_catalogo_y_
     assert filas
     incompletas = [f.document_id for f in filas if not (f.license and f.license_url)]
     fuera_de_clase = [f.document_id for f in filas if f.license_class not in CLASES_ACEPTADAS]
-    excluidas = [
-        f.document_id for f in filas if f.source_name.casefold() in {"nccn", "esmo"}
-    ]
+    excluidas = [f.document_id for f in filas if f.source_name.casefold() in {"nccn", "esmo"}]
     assert incompletas == [] and fuera_de_clase == [] and excluidas == []
-    assert {f.source_type for f in filas if f.source_name == "ClinicalTrials.gov"} == {"clinical_trial"}
+    assert {f.source_type for f in filas if f.source_name == "ClinicalTrials.gov"} == {
+        "clinical_trial"
+    }
 
 
 def test_ingesta_del_manifiesto_real_no_duplica_ni_reindexa_la_semilla_ya_vigente(

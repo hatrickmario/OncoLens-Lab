@@ -51,6 +51,7 @@ from app.application.corpus_ingestion.reindexar_sparse import (
     ReindexarSparse,
 )
 from app.application.corpus_ingestion.reporte import ReporteDeIngesta
+from app.application.corpus_ingestion.resumen_corpus import contar_corpus_por_tipo_y_fuente
 from app.application.corpus_metadata.esquema import PROMPT_VERSION
 from app.application.corpus_metadata.esquema_poblacion import PlantillaDePoblacionNoDisponible
 from app.application.corpus_metadata.metadata_extraction_service import MetadataExtractionService
@@ -461,7 +462,13 @@ def main(
     except Exception as error:  # noqa: BLE001 - se informa la clase; el mensaje de la base o de pymilvus puede traer una URI
         print(f"{NOMBRE}: falló ({type(error).__name__})", file=sys.stderr)
         return 1
-    resumen = {**reporte.como_diccionario(), "muestra_de_metadatos": muestra}
+    resumen = {
+        **reporte.como_diccionario(),
+        "corpus_por_tipo_y_fuente": contar_corpus_por_tipo_y_fuente(
+            leer_manifiesto(argumentos.manifest), reporte
+        ),
+        "muestra_de_metadatos": muestra,
+    }
     if poblacion is not None:
         resumen["poblacion_por_tipo_e_idioma"] = poblacion
     print(json.dumps(resumen, ensure_ascii=False))

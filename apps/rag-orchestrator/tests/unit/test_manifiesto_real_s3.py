@@ -73,18 +73,25 @@ def test_el_manifiesto_ampliado_conserva_cada_entrada_de_la_semilla_con_su_check
     cambiadas = [
         d.document_key
         for d in semilla
-        if d.document_key in ampliado and ampliado[d.document_key].checksum_esperado != d.checksum_esperado
+        if d.document_key in ampliado
+        and ampliado[d.document_key].checksum_esperado != d.checksum_esperado
     ]
 
     assert faltan == [] and cambiadas == []
 
 
-def test_los_registros_de_ensayos_clinicos_se_ingieren_como_clinical_trial_y_no_como_literatura() -> None:
+def test_los_registros_de_ensayos_clinicos_se_ingieren_como_clinical_trial_y_no_como_literatura() -> (
+    None
+):
     de_ct = [d for d in DOCUMENTOS if d.source_name == "ClinicalTrials.gov"]
 
     assert de_ct
     assert all(d.source_type == "clinical_trial" for d in de_ct)
-    assert all(d.source_type != "clinical_trial" for d in DOCUMENTOS if d.source_name != "ClinicalTrials.gov")
+    assert all(
+        d.source_type != "clinical_trial"
+        for d in DOCUMENTOS
+        if d.source_name != "ClinicalTrials.gov"
+    )
 
 
 @pytest.mark.ac("US-120", 2)
@@ -101,7 +108,9 @@ def test_cada_documento_del_corpus_ampliado_declara_licencia_aceptada_con_su_ver
     assert documento.license_url.startswith("https://")
 
 
-def test_cada_documento_del_corpus_ampliado_registra_cuando_y_con_que_evidencia_se_verifico_la_licencia() -> None:
+def test_cada_documento_del_corpus_ampliado_registra_cuando_y_con_que_evidencia_se_verifico_la_licencia() -> (
+    None
+):
     crudo = (DIRECTORIO / "manifest.yaml").read_text(encoding="utf-8")
 
     assert crudo.count("license_verified_at:") == len(DOCUMENTOS)
@@ -110,7 +119,9 @@ def test_cada_documento_del_corpus_ampliado_registra_cuando_y_con_que_evidencia_
 
 
 @pytest.mark.ac("US-120", 3)
-def test_el_manifiesto_ampliado_declara_nccn_y_esmo_como_excluidas_y_ningun_documento_las_usa() -> None:
+def test_el_manifiesto_ampliado_declara_nccn_y_esmo_como_excluidas_y_ningun_documento_las_usa() -> (
+    None
+):
     """[US-120 AC-3]"""
     crudo = (DIRECTORIO / "manifest.yaml").read_text(encoding="utf-8")
     cabecera = crudo.split("documentos:", 1)[0]
@@ -119,14 +130,18 @@ def test_el_manifiesto_ampliado_declara_nccn_y_esmo_como_excluidas_y_ningun_docu
     for documento in DOCUMENTOS:
         assert documento.source_name.casefold() not in {"nccn", "esmo"}, documento.document_key
         for valor in (documento.external_id, documento.url_original or ""):
-            assert not re.search(r"nccn\.org|esmo\.org|esmoopen|annalsofoncology|10\.1016/j\.(annonc|esmoop)", valor, re.I), (
-                documento.document_key
-            )
+            assert not re.search(
+                r"nccn\.org|esmo\.org|esmoopen|annalsofoncology|10\.1016/j\.(annonc|esmoop)",
+                valor,
+                re.I,
+            ), documento.document_key
 
 
 @pytest.mark.ac("US-120", 4)
 @pytest.mark.parametrize("documento", DOCUMENTOS, ids=lambda d: d.document_key)
-def test_todo_source_name_del_corpus_ampliado_pasa_fuente_admitida(documento: DocumentoDeSemilla) -> None:
+def test_todo_source_name_del_corpus_ampliado_pasa_fuente_admitida(
+    documento: DocumentoDeSemilla,
+) -> None:
     """[US-120 AC-4]"""
     assert fuente_admitida(documento.source_name, CORPUS_FUENTES_ADMITIDAS_INICIALES)
 
@@ -165,7 +180,8 @@ def test_los_textos_de_la_semilla_son_identicos_en_el_corpus_ampliado() -> None:
         d.ruta_texto
         for d in semilla
         if d.ruta_texto
-        and (DIRECTORIO_SEMILLA / d.ruta_texto).read_bytes() != (DIRECTORIO / d.ruta_texto).read_bytes()
+        and (DIRECTORIO_SEMILLA / d.ruta_texto).read_bytes()
+        != (DIRECTORIO / d.ruta_texto).read_bytes()
     ]
 
     assert distintos == []
@@ -191,7 +207,9 @@ def test_el_cuerpo_de_un_documento_de_nci_ampliado_no_se_autoidentifica_como_pdq
     documento: DocumentoDeSemilla,
 ) -> None:
     assert documento.ruta_texto is not None
-    cuerpo = " ".join((DIRECTORIO / documento.ruta_texto).read_text(encoding="utf-8").split()).casefold()
+    cuerpo = " ".join(
+        (DIRECTORIO / documento.ruta_texto).read_text(encoding="utf-8").split()
+    ).casefold()
 
     assert [p for p in AUTOIDENTIFICACION_DE_PDQ if p in cuerpo] == []
     assert "pdq" not in documento.title.casefold()
@@ -211,7 +229,7 @@ def test_cada_documento_del_corpus_ampliado_declara_la_url_https_de_su_origen(
 
 
 @pytest.mark.ac("US-120", 7)
-@pytest.mark.parametrize("idioma", ("es", "en"))
+@pytest.mark.parametrize("idioma", ["es", "en"])
 def test_mama_tiene_al_menos_un_documento_por_idioma_con_elegibilidad_her2_y_receptores_hormonales(
     idioma: str,
 ) -> None:
@@ -243,5 +261,3 @@ def test_el_corpus_ampliado_no_mezcla_tipos_de_cancer_en_una_misma_entrada() -> 
     assert ClaseDeLicencia.CC_BY_NC not in {
         evaluar_admisibilidad(d, POLITICA).license_class for d in DOCUMENTOS
     }
-
-
