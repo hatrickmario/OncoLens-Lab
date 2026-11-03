@@ -82,4 +82,25 @@ describe('la evolución posterior que viaja en la memoria del seguimiento (RN-07
       'Evolución vigente posterior',
     ]);
   });
+
+  it('no incluye un evento posterior con precisión incierta aunque traiga fecha, porque monthsAgo exige un entero [US-093 AC-5]', async () => {
+    const { app } = await montarGateway(mundo, { analysisMaxOptions: 3 });
+    const analisis = await crearAnalisisConEvidencia(app, cookie, rag, patientId);
+    rag.reiniciar();
+    await evento('Evolución con fecha confiable');
+    await evento('Evolución con fecha incierta', { date_precision: 'incierta' });
+
+    const respuesta = await clienteVerificado(app)
+      .post(rutaDeSeguimiento(analisis.id))
+      .set('Cookie', cookie)
+      .send({ question: PREGUNTA_DE_SEGUIMIENTO });
+
+    expect(respuesta.status).toBe(201);
+    const [memoria] = rag.seguimiento.capturadas[0]!.cuerpo['analysisMemory'] as {
+      outcomesSince: { description: string }[];
+    }[];
+    const descripciones = memoria!.outcomesSince.map((o) => o.description);
+    expect(descripciones).toContain('Evolución con fecha confiable');
+    expect(descripciones).not.toContain('Evolución con fecha incierta');
+  });
 });

@@ -52,6 +52,7 @@ export function atributoDeEjemplo(resto: Partial<FilaDeAtributo> = {}): FilaDeAt
     attributeKey: 'estado_castracion',
     value: 'sensible',
     observedAt: '2026-08-20',
+    datePrecision: 'dia',
     ...PROCEDENCIA_SEMBRADA,
     ...resto,
   };
@@ -80,6 +81,7 @@ export function eventoDeEjemplo(resto: Partial<FilaDeEvento> = {}): FilaDeEvento
     id: 'ev-1',
     eventType: 'progresion',
     eventDate: '2026-09-26',
+    datePrecision: 'dia',
     description: 'Progresión bioquímica',
     ...PROCEDENCIA_SEMBRADA,
     ...resto,
