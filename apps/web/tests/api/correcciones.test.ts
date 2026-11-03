@@ -49,7 +49,12 @@ describe('Route Handlers de corrección con histórico', () => {
     });
     expect(clinicalApi.peticiones).toHaveLength(0);
     expect(lineas).toEqual([
-      { event: 'correcciones.proxy', status: 403, traceId: 'req_web00001', motivo: 'origen' },
+      {
+        event: 'correcciones.biomarcador.corregir',
+        status: 403,
+        traceId: 'req_web00001',
+        motivo: 'origen',
+      },
     ]);
   });
 
@@ -146,6 +151,23 @@ describe('Route Handlers de corrección con histórico', () => {
     expect(texto).not.toContain('Prisma');
     expect(JSON.parse(texto)).toMatchObject({ error: 'ERROR_INTERNO', traceId: 'req_web00001' });
     expect(JSON.stringify(lineas)).not.toContain('Prisma');
+  });
+
+  it('registra el evento propio de cada operación en el log [US-253 AC-1]', async () => {
+    clinicalApi.responder(
+      'get',
+      RUTAS.historicoNota,
+      200,
+      ejemplo('correction-history-clinical-note.json'),
+    );
+    const { dependencias, lineas } = crearDependenciasDeTest();
+
+    await crearManejadorDeRegistroManual(dependencias, 'getClinicalNoteHistory')(
+      peticionDeLectura({ Cookie: COOKIE }),
+      PARAMETROS_NOTA,
+    );
+
+    expect(lineas.map((linea) => linea.event)).toEqual(['correcciones.nota.historico']);
   });
 
   it('corrige una nota sin escribir su texto en el log [US-253 AC-6]', async () => {

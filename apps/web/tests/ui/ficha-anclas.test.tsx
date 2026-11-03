@@ -58,7 +58,7 @@ describe('Anclas de la ficha', () => {
     expect(document.activeElement).toBe(encabezado);
   });
 
-  it('no crea secciones nuevas: las secciones de la ficha son las mismas [US-005 AC-3]', () => {
+  it('no crea secciones por el ancla: las regiones de la ficha son las tres de siempre más Notas clínicas, que añade US-253 [US-005 AC-3]', () => {
     abrirFichaCon('#diagnostico');
 
     expect(screen.getAllByRole('region').map((r) => r.getAttribute('aria-labelledby'))).toEqual([
@@ -68,6 +68,7 @@ describe('Anclas de la ficha', () => {
       // La sección de notas clínicas la añade US-253; el mecanismo de anclas (US-005) no crea ninguna.
       'notas-clinicas',
     ]);
+    expect(anclaPermitida('#notas-clinicas')).toBeNull();
   });
 });
 

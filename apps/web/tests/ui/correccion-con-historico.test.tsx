@@ -76,6 +76,10 @@ describe('Corrección con histórico en la ficha', () => {
 
     const fila = screen.getByRole('row', { name: /Ki-67/ });
     expect(within(fila).getByText(/Corrección manual/)).toBeTruthy();
+    expect(within(fila).queryByText(/Verificado/)).toBeNull();
+    expect(within(fila).getByText('hace 12 días').closest('time')?.getAttribute('datetime')).toBe(
+      '2026-09-10',
+    );
     expect(within(fila).getByText(/25 %/)).toBeTruthy();
     const alternar = screen.getByRole('button', { name: /Histórico/ });
     expect(alternar.getAttribute('aria-expanded')).toBe('false');
@@ -112,7 +116,7 @@ describe('Corrección con histórico en la ficha', () => {
     await usuario.type(screen.getByLabelText(correccion.formulario.fecha), '2099-01-01');
     await usuario.click(screen.getByRole('button', { name: correccion.formulario.guardar }));
 
-    const mensaje = await screen.findByText(errorFechaFutura.message);
+    const mensaje = await screen.findByText('La fecha no puede ser posterior a hoy.');
     expect(mensaje.closest('[aria-live="assertive"]')).not.toBeNull();
     const campo = screen.getByLabelText(correccion.formulario.fecha);
     expect(campo.getAttribute('aria-invalid')).toBe('true');
@@ -120,6 +124,51 @@ describe('Corrección con histórico en la ficha', () => {
     expect(screen.getByRole('button', { name: correccion.formulario.guardar })).toBeTruthy();
     expect(bff.peticiones[0]?.cuerpo).toEqual({ value: '3+ (IHQ)', performedAt: '2099-01-01' });
     expect(refresh).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [
+      { error: 'VALOR_FUERA_DE_CATALOGO', field: 'value' },
+      'Este valor no coincide con el formato esperado.',
+    ],
+    [{ error: 'CUERPO_INVALIDO' }, 'No hay cambios respecto de la versión vigente.'],
+    [{ error: 'PACIENTE_EGRESADO' }, correccion.egresado],
+  ])(
+    'muestra el texto fijo de %j y nunca el message del servidor [US-253 AC-3]',
+    async (cuerpo, texto) => {
+      bff.corregirBiomarcador(422, {
+        ...cuerpo,
+        message: 'Detalle interno del servidor.',
+        traceId: 'req_1',
+      });
+      const usuario = montarTabla();
+      await abrirCorreccion(usuario);
+
+      await usuario.click(screen.getByRole('button', { name: correccion.formulario.guardar }));
+
+      const dentroDelFormulario = await screen.findAllByText(texto);
+      expect(dentroDelFormulario.length).toBeGreaterThan(0);
+      expect(screen.queryByText('Detalle interno del servidor.')).toBeNull();
+    },
+  );
+
+  it('mantiene el aviso de análisis anteriores tras una segunda corrección de la misma nota [US-253 AC-5]', async () => {
+    bff.corregirNota(201, corregidaNota);
+    const props = { pacienteId: ID_DEL_PACIENTE, egresado: false };
+    const notas = listaDeNotas.items as unknown as ClinicalNote[];
+    const { rerender } = render(<NotasClinicasDeFicha notas={notas} {...props} />);
+    const usuario = userEvent.setup();
+    await usuario.click(screen.getAllByRole('button', { name: /Corregir dato/ })[0]!);
+    await usuario.click(screen.getByRole('button', { name: correccion.formulario.guardar }));
+    expect(await screen.findByText(correccion.avisoAnalisisAnteriores)).toBeTruthy();
+
+    const siguiente = [
+      { ...notas[0]!, id: 'a1b2c3d4-0000-4000-8000-000000000001', supersedesId: notas[0]!.id },
+      ...notas.slice(1),
+    ];
+    rerender(<NotasClinicasDeFicha notas={siguiente} {...props} />);
+
+    expect(screen.getByText(correccion.avisoAnalisisAnteriores)).toBeTruthy();
   });
 
   it.each([
@@ -171,7 +220,9 @@ describe('Corrección con histórico en la ficha', () => {
     await usuario.click(screen.getAllByRole('button', { name: /Corregir dato/ })[0]!);
 
     const dialogo = screen.getByRole('dialog');
-    const aviso = within(dialogo).getByText(correccion.avisoNombres);
+    const aviso = within(dialogo).getByText(
+      'Las notas no se envían a la IA en esta versión; conviene no incluir nombres de personas en ellas.',
+    );
     const campo = within(dialogo).getByLabelText(correccion.formulario.nota);
     expect(aviso.compareDocumentPosition(campo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
