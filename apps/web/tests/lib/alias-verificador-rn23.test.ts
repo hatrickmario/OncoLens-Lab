@@ -55,6 +55,7 @@ describe('alias de Turbopack para el verificador RN-23 en el navegador', () => {
       .map((ruta) => ruta.slice(WEB.length + 1));
 
     // `normalizar-pregunta.ts` solo importa `zod` (sin importaciones relativas `.js`): no necesita alias de Turbopack.
+    expect(importacionesJs('normalizar-pregunta.ts')).toEqual([]);
     expect(importadores.sort()).toEqual([
       'lib/evidence/reglas-del-formulario.ts',
       'lib/evidence/texto-si-permitido.ts',
