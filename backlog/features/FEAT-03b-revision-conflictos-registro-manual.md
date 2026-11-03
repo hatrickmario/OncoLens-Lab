@@ -295,11 +295,13 @@ Como oncólogo, quiero corregir en la ficha un examen, un biomarcador o una nota
 
 ## AC (Given/When/Then)
 - **AC-1 (happy path · biomarcador)** · Dado un biomarcador registrado en la ficha del paciente (a), cuando el oncólogo cambia su valor y guarda, entonces la ficha muestra el valor nuevo con origen «Registro manual» y el anterior queda como histórico enlazado, nunca sobrescrito en silencio. `[RN-08]`
-- **AC-2 (happy path · nota clínica)** · Dada una nota clínica del paciente, cuando el oncólogo edita su texto o su tipo y guarda, entonces la ficha muestra la versión nueva, conserva la anterior como histórico y la nota libre llega a la IA solo desidentificada. `[RN-11]`
+- **AC-2 (happy path · nota clínica)** · Dada una nota clínica del paciente, cuando el oncólogo edita su texto o su tipo y guarda, entonces la ficha muestra la versión nueva y conserva la anterior. `[RN-08]`
 - **AC-3 (borde · validación)** · Dado un valor fuera del formato del catálogo o una fecha posterior a hoy, cuando se guarda, entonces el servidor responde `422`, el mensaje aparece junto al campo y nada cambia. `[PRD §10]`
 - **AC-4 (borde · paciente egresado y permisos)** · Dado un paciente egresado, cuando se intenta editar, entonces `422` (RN-17); y una sesión de `admin` recibe `403`. `[RN-17]` `[PRD §11]`
 - **AC-5 (borde · análisis afectados)** · Dado un análisis previo que usó el dato editado, cuando se guarda la corrección, entonces la huella del contexto clínico cambia, de modo que un análisis nuevo no se reutiliza (US-251), y el aviso del análisis previo no bloquea nada. `[RN-26]`
-- **AC-6 (borde · nombres de terceros)** · Dado el formulario de una nota libre, cuando se abre, entonces muestra el aviso «No escribas nombres de personas (ni del paciente ni de terceros) en las notas» y la nota pasa por el detector de PII antes de llegar a la IA. `[ADR-40]` `[RN-11]`
+- **AC-6 (borde · nombres de terceros)** · Dado el formulario de una nota libre, cuando se abre, entonces muestra el aviso «No escribas nombres de personas (ni del paciente ni de terceros) en las notas». `[ADR-40]` `[RN-11]`
+
+> **Decidido (usuario, 2026-11-04):** AC-2 y AC-6 se reescriben: la nota libre corregida no viaja a la IA en el MVP. «Llega a la IA solo desidentificada» y «pasa por el detector de PII (`PiiDetector`) antes de llegar a la IA» se trasladan a una historia posterior (OCR / detector de nombres, ADR-40, Post-MVP); hasta entonces la PII tecleada en una nota queda en el histórico (ADR-50). IDs sin cambio.
 
 ## Contexto técnico
 Endpoints de corrección en `clinical-api` sobre `Biomarker`, `Exam` y `ClinicalNote`, contrato primero (cambio compatible, ADR-26). La normalización final es de Backend 1 (ADR-33). La auditoría completa de la acción llega con US-150 (S6). TDD estricto en las reglas de corrección (RN-08) y test del AC primero en la UI.

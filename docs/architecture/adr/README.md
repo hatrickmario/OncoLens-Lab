@@ -7,7 +7,7 @@ van como DEC en [`docs/decisions/`](../../decisions/).
 | ADR | Título | Estado | Fecha | Historia |
 |---|---|---|---|---|
 | [ADR-26](ADR-26-contrato-congelado-y-excepciones-declaradas.md) | El contrato se cambia solo de forma aditiva; todo ERR de oasdiff aceptado se declara (E-1: 422 TIPO_CANCER_NO_REGISTRADO) | aceptado | 2026-10-17 | US-055 (L1D-106) |
-| [ADR-36](ADR-36-fuentes-y-licencias.md) | Fuentes y licencias del corpus científico (Enmienda 1: ClinicalTrials.gov admitida, 2026-10-24) | aceptado | 2026-10-09 · enm. 2026-10-24 | US-007 (L1D-50) |
+| [ADR-36](ADR-36-fuentes-y-licencias.md) | Fuentes y licencias del corpus científico (Enmienda 1: ClinicalTrials.gov admitida, 2026-10-24; v1.1b: etiqueta de licencia, copia estática y NCCN/ESMO, 2026-11-04) | aceptado | 2026-10-09 · enm. 2026-10-24 · v1.1b 2026-11-04 | US-007 (L1D-50) |
 | [ADR-39](ADR-39-modelos-locales.md) | Modelos locales y runtime (fase A: recuperación y verificación; fase B pendiente) | propuesto | 2026-10-16 | US-012 (L1D-102) |
 | [ADR-40](ADR-40-deteccion-pii.md) | Detección de PII: patrones configurables en ambos backends e identidad exacta en el MVP; los nombres en documentos pasan a Post-MVP con el OCR (PRD E-17) | decidido (2026-11-02) | 2026-10-21 | US-013 (L1D-205) |
 | [ADR-41](ADR-41-evaluacion-ia.md) | Evaluación de la calidad de la IA: framework propio con Pytest, NLI como juez principal de fidelidad y juez LLM local secundario | propuesto | 2026-10-21 | US-014 (L1D-232) |
