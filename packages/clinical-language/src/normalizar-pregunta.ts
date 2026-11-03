@@ -7,7 +7,8 @@ import { z } from 'zod';
  * (`app/domain/pregunta.py`) acepte exactamente los mismos separadores; los dos recorren la tabla
  * `fixtures/normalizacion-pregunta.json`.
  */
-const ESPACIOS_UNICODE = /[\t\n\v\f\r \u{85}\u{a0}\u{1680}\u{2000}-\u{200a}\u{2028}\u{2029}\u{202f}\u{205f}\u{3000}]+/gu;
+const ESPACIOS_UNICODE =
+  /[\t\n\v\f\r \u{85}\u{a0}\u{1680}\u{2000}-\u{200a}\u{2028}\u{2029}\u{202f}\u{205f}\u{3000}]+/gu;
 
 /** Un único espacio en cada extremo (ya colapsado); `trim()` quitaría además U+FEFF y divergiría de Python. */
 const BORDES = /^ | $/g;
@@ -20,6 +21,8 @@ export function normalizarPregunta(texto: string): string {
  * Esquema del borde: normaliza y después aplica los límites del contrato (`minLength`/`maxLength` del Zod generado,
  * que se pasa por parámetro para no duplicar el 2000). La longitud se mide sobre el texto ya normalizado (AC-3).
  */
-export function esquemaPreguntaNormalizada<S extends z.ZodType<string, string>>(limitesDelContrato: S) {
+export function esquemaPreguntaNormalizada<S extends z.ZodType<string, string>>(
+  limitesDelContrato: S,
+) {
   return z.string().transform(normalizarPregunta).pipe(limitesDelContrato);
 }

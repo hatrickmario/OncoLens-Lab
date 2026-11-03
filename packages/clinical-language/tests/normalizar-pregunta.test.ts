@@ -1,10 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import {
-  esquemaPreguntaNormalizada,
-  normalizarPregunta,
-} from '../src/normalizar-pregunta.js';
+import { esquemaPreguntaNormalizada, normalizarPregunta } from '../src/normalizar-pregunta.js';
 
 interface CasoDeNormalizacion {
   nombre: string;
@@ -17,8 +14,7 @@ const tabla = JSON.parse(
   readFileSync(new URL('../fixtures/normalizacion-pregunta.json', import.meta.url), 'utf8'),
 ) as { casos: CasoDeNormalizacion[] };
 
-const repetido = (texto: string, veces: number | undefined): string =>
-  texto.repeat(veces ?? 1);
+const repetido = (texto: string, veces: number | undefined): string => texto.repeat(veces ?? 1);
 
 describe('normalizarPregunta', () => {
   for (const caso of tabla.casos) {
