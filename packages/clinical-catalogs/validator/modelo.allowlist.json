@@ -18,7 +18,9 @@
         "value"
       ],
       "relaciones": {
-        "exam": "Exam"
+        "correcciones": "Biomarker",
+        "exam": "Exam",
+        "supersedes": "Biomarker"
       }
     },
     "ClinicalAttribute": {
@@ -83,7 +85,9 @@
         "performed_at"
       ],
       "relaciones": {
-        "biomarkers": "Biomarker"
+        "biomarkers": "Biomarker",
+        "correcciones": "Exam",
+        "supersedes": "Exam"
       }
     },
     "PriorTreatment": {

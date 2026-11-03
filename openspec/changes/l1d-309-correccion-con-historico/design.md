@@ -25,10 +25,13 @@ desidentificado) cambia sola cuando cambia un dato vigente (AC-5, D-10). No se r
   manual, US-110); si tenía otros, `supersedes_id = null` y el examen anterior sigue vigente con los demás. Regla:
   `examenDeLaCorreccion()`. *Descartado:* endpoint propio de corrección de examen completo (copia N biomarcadores;
   sin OCR no hay exámenes con varios biomarcadores; Post-MVP).
+  **Desviación implementada (Gate 2, vuelta 1):** la procedencia (`entry_method`) de un biomarcador vive en su `Exam`,
+  así que la corrección cuelga SIEMPRE de un `Exam` nuevo `manual_correction` (con la fecha anterior si no se envía
+  `performedAt`), no del mismo examen; `supersedes_id` al examen anterior sigue siendo solo si el corregido era su único
+  biomarcador vigente (test: dos biomarcadores del mismo examen corregidos en secuencia).
 - **D4 · Normalización.** El `originalName` del biomarcador no se corrige (el término es el mismo dato); el nuevo
   registro conserva `originalName`, y `name`/`loincCode`/`mappingStatus` los vuelve a decidir `ReconciliationService`
-  (l1d-84) con el catálogo montado. `VALOR_FUERA_DE_CATALOGO` cuando el valor cualitativo no está en los valores
-  admitidos del catálogo para ese biomarcador (misma regla que US-110, reutilizada, no copiada).
+  (l1d-84) con el catálogo montado. `VALOR_FUERA_DE_CATALOGO` (`field = value`) cuando un resultado `cuantitativo` no es numérico (Decidido (usuario, 2026-11-04)); los valores admitidos de un cualitativo (HER2) dependen del catálogo, que no los trae: limitación a validar con el oncólogo (D5-21), sin enum inventado.
 - **D5 · Validación** con el schema Zod generado del spec en el borde (cliente y servidor): fecha posterior a hoy
   (reloj inyectado) → `422 CUERPO_INVALIDO` con `field = "performedAt"`; texto de nota vacío o > `CLINICAL_NOTE_MAX_CHARS`
   (configuración, RN-22) → `422` con `field = "content"`. Paciente egresado → `422 PACIENTE_EGRESADO` **antes** de
@@ -66,6 +69,11 @@ desidentificado) cambia sola cuando cambia un dato vigente (AC-5, D-10). No se r
   paquete; se audita igual).
 
 ## Contratos
+
+> **Notas (Gate 2, vuelta 1):** `info.version` **provisional 1.18.0** (siguiente libre sobre 1.17.0); la cadena de este
+> documento dice 1.19.0: al rebasar sobre L1D-80, renumerar a 1.19.0 y regenerar `packages/api-contracts`. Los cinco
+> endpoints no declaran `500 ErrorInterno`: se sigue el patrón del tag `registro-manual` (`createManualBiomarker`,
+> `createManualDiagnosis`), que tampoco lo declara; añadirlo cambiaría `openapi.yaml` y se decide con el resto del tag.
 
 Proveedor: `clinical-api` (`apps/clinical-api/openapi.yaml`). Consumidor: `web` (cliente generado en
 `packages/api-contracts`). Cambio **aditivo** (oasdiff: 0 incompatibles; rutas y schemas nuevos, propiedad opcional
@@ -259,6 +267,12 @@ components:
 
 ## Componentes y patrones
 
+> **Ajustes de la implementación (Gate 2, vuelta 1):** (1) hook `useEnvioDeCorreccion` (`lib/correcciones/`, dos
+> consumidores: formulario de biomarcador y de nota), contra el «sin custom hook nuevo» de abajo; (2) `Dialog` (molécula)
+> sobre la dependencia **`@radix-ui/react-dialog` 1.3.1** (MIT; jsdom no soporta `<dialog>`; segundo consumidor declarado
+> en l1d-91, que comparte `Dialog` y `lib/server/registro-manual.ts`); (3) `BiomarcadorCorregible` (molécula) agrupa la
+> fila, su acción y el histórico; (4) desviación de D3 (examen de corrección siempre nuevo, arriba).
+
 - `RecentBiomarkersTable` (organismo, RSC) añade por fila un `AccionCorregirDato` (`'use client'`, molécula) que
   alterna la fila entre lectura y `FormularioDeCorreccionDeBiomarcador` (molécula cliente: valor, unidad, fecha;
   «Guardar mi corrección», «Cancelar»; error `aria-live="assertive"` junto al campo).
@@ -266,7 +280,7 @@ components:
   `reemplazado`. Dos consumidores (biomarcador y nota) → componente compartido, sin patrón adicional.
 - **Nuevo** `NotasClinicasDeFicha` (organismo RSC) con `FilaDeNotaClinica` y `FormularioDeCorreccionDeNota`
   (molécula cliente: tipo, texto, aviso fijo de nombres encima del campo).
-- `AvisoAnalisisAnteriores` (átomo): texto no bloqueante tras guardar (RN-26).
+- `AvisoAnalisisAnteriores` (átomo): texto no bloqueante tras corregir un **biomarcador** (RN-26); una nota corregida no lo muestra (las notas no entran al análisis en el S5).
 - Revalidación del RSC tras guardar (`router.refresh()`); sin provider ni custom hook nuevo (un solo uso de cada
   estado). Ningún componente supera 100 líneas; `admin` no ve la acción (vista `PatientAdminSummary` sin clínica) y el
   paciente egresado la ve deshabilitada con el texto de RN-17.

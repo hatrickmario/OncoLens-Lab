@@ -18,6 +18,7 @@ export default defineConfig({
       'tests/integration/pacientes/**/*.test.ts',
       'tests/integration/completeness/**/*.test.ts',
       'tests/integration/registro-manual/**/*.test.ts',
+      'tests/integration/correcciones/**/*.test.ts',
       'tests/integration/case-view/**/*.test.ts',
     ],
     // El empaquetado de los specs va antes que la BD: si falla, no se crea ninguna base de test.
