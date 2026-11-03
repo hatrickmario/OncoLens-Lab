@@ -3,7 +3,7 @@
 > Linear: [L1D-205](https://linear.app/l1der-lab-mjbc/issue/L1D-205) · Historia: US-013 · Feature: FEAT-T4a
 > Plantilla: MADR 4 (variante mínima, en español). Change: `l1d-205-adr40-deteccion-pii`.
 
-- **Estado:** propuesto (la medición no permite elegir motor para nombres en documentos; ver "Decisión pendiente del usuario")
+- **Estado:** **decidido** (usuario, 2026-11-02): opción B adaptada al MVP sin OCR (PRD E-17); ver «Decisión del usuario (2026-11-02)». Antes: propuesto, porque la medición no permitía elegir motor para nombres en documentos.
 - **Fecha:** 2026-10-21
 - **Decisores:** usuario (producto y privacidad); medición: `ai-services-dev`
 - **Consultados / informados:** `privacy-guardian`, `design-principles-reviewer`, `ai-eval-runner` (revisión del reporte)
@@ -79,7 +79,7 @@ Qué sí queda establecido: en direcciones, fechas de nacimiento, documentos con
 5. **Configuración (AC-6, RN-22).** Claves: `PII_ENGINE` (`patrones` | `patrones_ner`), `PII_ENGINE_VERSION`, `PII_NER_MODEL` (solo con NER), `PII_NER_MIN_SCORE` (solo con Presidio) y el umbral de sensibilidad de la suite `evaluate` (0,95). Las rutas de `pii-formats*.json` entran en los disparadores de `eval-required` (`l1d-237-eval-required-ci`).
 6. **Pesos GPL-3.0.** Si algún modelo de spaCy llega a producción, los pesos se descargan fuera del repo y no se redistribuyen; es riesgo aceptado del MVP académico (RN-21) y se registra en la decisión final.
 
-### Decisión pendiente del usuario
+### Decisión pendiente del usuario (resuelta el 2026-11-02)
 
 El motor de nombres en documentos no se elige. Opciones y recomendación:
 
@@ -92,6 +92,16 @@ El motor de nombres en documentos no se elige. Opciones y recomendación:
 Hasta que decida, rige la opción A de `[S1 resp. 3]` en B1 (identidad exacta más `config/pii-formats.json`). **Esa opción no cubre por sí sola todos los identificadores directos de los textos que B1 envía a B2**: el informe de B1 (`npm run eval:pii` en `clinical-api`, escribe `reports/adr40/clinical-api-pii.json`; no se commitea, se regenera) da, solo con formatos, dirección 0/120 (incluidos eventos y atributos), teléfono 141/160, documento 90/140 (130/140 con identidad conocida) y nombre 0/340. Los formatos ampliados (dirección, documento alfanumérico, teléfono espaciado) hoy solo existen en el gemelo de B2.
 
 **Deuda/decisión 7 (condición de G-Piloto).** B1 debe aplicar los mismos formatos ampliados que B2 (la dirección no forma parte de la identidad y solo se tapa con patrones). Responsable: FEAT-01b (S3). Es condición del `preflight real-data` y de G-Piloto: no se habilitan datos reales mientras B1 no cumpla G-8 en sus propios textos. Historia de deuda propuesta: "gemelo B1/B2 antes de FEAT-01b" (incluye un test de paridad B1/B2 de los formatos y la restricción del grupo de bandera en línea `(?i:` frente a Node 22). La ingesta de documentos real es de S3 y no depende de esta decisión para S2.
+
+### Decisión del usuario (2026-11-02)
+
+**Opción B adaptada al MVP sin OCR.** Con PRD E-17 el OCR pasa a Post-MVP: en el MVP no entran documentos, y el texto libre que llega a la IA es el que escribe el oncólogo (la pregunta y las notas clínicas editables de US-253).
+
+- **En el MVP:** candidato 1 (patrones de `config/pii-formats.json`, sensibilidad 1,00 en documento, correo, dirección, fecha de nacimiento y teléfono) más el enmascaramiento por coincidencia exacta con la identidad del paciente en `clinical-api` (RN-10, RN-11).
+- **Nombres en documentos:** pasan a **Post-MVP con el OCR**. Al retomarlo se hace la segunda medición de la opción A (candidato 2 con reglas ancladas a etiquetas y lista de exclusión de términos clínicos, y un modelo de spaCy mayor).
+- **Riesgo residual:** nombres de terceros (p. ej. familiares) escritos a mano en una nota libre. Se mitiga con un aviso en el formulario de notas (US-253, AC-6).
+- **Se mantiene** la deuda/decisión 7 como condición de G-Piloto: no se habilitan datos reales mientras `clinical-api` no cumpla G-8 en sus propios textos.
+- **Alternativa descartada:** hacer ahora la segunda medición (opción A). Cuesta tiempo y resuelve sobre todo los nombres en documentos, que con E-17 ya no entran en el MVP.
 
 ### Consecuencias
 

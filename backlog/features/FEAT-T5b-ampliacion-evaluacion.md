@@ -33,7 +33,9 @@
 
 > Linear: [L1D-239](https://linear.app/l1der-lab-mjbc/issue/L1D-239)
 
-`FEAT-T5b` · Sprint 5 · Estimación **5** · — (técnica, PRD §17; OL-06) · FR-20 · AC-T5.1 (parte), AC-T5.3 · M-01.1, M-01.2, M-01.3, G-6, G-7, G-8 (documentos) · ↪ US-072, US-082, US-083, US-084 · ⛔ ADR-39 (mediciones reales) · 🔗 Regresión [AC-T5.4] → US-074 · 🔗 Mide a: FEAT-01b
+`FEAT-T5b` · Post-MVP *(usuario, 2026-11-02, PRD E-17)* · Estimación **5** · — (técnica, PRD §17; OL-06) · FR-20 · AC-T5.1 (parte), AC-T5.3 · M-01.1, M-01.2, M-01.3, G-6, G-7, G-8 (documentos) · ↪ US-072, US-082, US-083, US-084 · ⛔ ADR-39 (mediciones reales) · 🔗 Regresión [AC-T5.4] → US-074 · 🔗 Mide a: FEAT-01b
+
+> **Decidido (usuario, 2026-11-02, PRD E-17):** pasa a **Post-MVP**: el OCR no se prioriza en el MVP (feedback de oncólogos y producto).
 
 > **Reordenamiento (usuario, 2026-10-23):** S3 → S5. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
@@ -116,7 +118,9 @@ calibrador con un set falso de resultados conocidos.
 
 > Linear: [L1D-241](https://linear.app/l1der-lab-mjbc/issue/L1D-241)
 
-`FEAT-T5b` · Sprint 5 · Estimación **5** · — (técnica, PRD §17; OL-06) · FR-20 · AC-T5.1 (eventos y timeline) · M-02.1, M-02.2, M-02.3, M-02.4, G-11 · ↪ US-072, US-085, US-088 · 🔗 Relacionada: US-095 (resumen, `si-hay-capacidad`: AC-3 condicional) · 🔗 Mide a: FEAT-01b (eventos), FEAT-02b, FEAT-02c
+`FEAT-T5b` · Post-MVP *(usuario, 2026-11-02, PRD E-17)* · Estimación **5** · — (técnica, PRD §17; OL-06) · FR-20 · AC-T5.1 (eventos y timeline) · M-02.1, M-02.2, M-02.3, M-02.4, G-11 · ↪ US-072, US-085, US-088 · 🔗 Relacionada: US-095 (resumen, `si-hay-capacidad`: AC-3 condicional) · 🔗 Mide a: FEAT-01b (eventos), FEAT-02b, FEAT-02c
+
+> **Decidido (usuario, 2026-11-02, PRD E-17):** pasa a **Post-MVP**: el OCR no se prioriza en el MVP (feedback de oncólogos y producto).
 
 > **Reordenamiento (usuario, 2026-10-23):** S3 → S5. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
