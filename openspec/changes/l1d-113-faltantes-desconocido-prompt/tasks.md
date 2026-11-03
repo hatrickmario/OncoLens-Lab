@@ -72,9 +72,9 @@
   (= 0) frente al baseline · evaluate. *Evidencia:* `node scripts/ci/eval-required.mjs --base origin/main` → «sin regresión
   contra data/evaluation/baseline.json (tolerancia 0)»; `baseline.json` regenerado (solo cambia `promptVersion`
   `rag-query@0.7.0`). El informe de `ai-eval-runner` en `reports/eval/` (protegido para el implementador) es H-1.
-- [ ] 4.3 DIFERIDA -> D5-17. **Con modelos locales** (P-2, decidido: entra): en la **corrida nocturna única del cierre del día 2** (`S5-refinamiento.md` §5),
+- [ ] 4.3 DIFERIDA -> D5-24. **Con modelos locales** (P-2, decidido: entra): en la **corrida nocturna única del cierre del día 2** (`S5-refinamiento.md` §5),
   recall@10/MRR de la rama dense con y sin `currentLine`, fidelidad y no inferencia con faltantes; informe en
-  `reports/eval/`. Destino D5-17 (fila propuesta para `S5-deuda.md`; el orquestador la añade y la asocia a la corrida
+  `reports/eval/`. Destino D5-24 (fila propuesta para `S5-deuda.md`; el orquestador la añade y la asocia a la corrida
   nocturna con D5-06/D5-08/D5-13). Nunca `[x]` sin informe. Si recall retrocede, se ajusta el literal de P-1, no la regla ·
   evaluate
 
