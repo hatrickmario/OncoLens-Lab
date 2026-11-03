@@ -13,6 +13,8 @@ import { crearGeneradorDeToken } from './infrastructure/token.js';
 import { versionDelServicio } from './infrastructure/version-servicio.js';
 import { componerCompletitud } from './modules/completeness/completeness.module.js';
 import { completenessController } from './modules/completeness/completeness.controller.js';
+import { createReconciliationService } from './modules/reconciliation/reconciliation.service.js';
+import { componerModuloDeRegistroManual } from './modules/manual-entry/manual-entry.module.js';
 import { componerModuloDeDocumentos } from './modules/documents/documents.module.js';
 import { componerModuloDePacientes } from './modules/patients/patients.module.js';
 import { crearServicioDeIdentidad } from './modules/patients/identity.module.js';
@@ -130,6 +132,22 @@ arrancar({
           registrar,
           config: { pageSize: configuracion.pacientes.pageSize },
         });
+        // Registro manual (L1D-90): la normalización es de `ReconciliationService` (RN-27); su log lleva el `traceId` de
+        // la petición (nunca el texto clínico) y el módulo toma una conexión del pool por transacción.
+        const manualEntry = componerModuloDeRegistroManual({
+          fuente: pool,
+          reconciliacionPara: (traceId) =>
+            createReconciliationService({
+              catalogo: servicios.terminologia,
+              registrar: (linea) => registrar({ ...linea, traceId }),
+            }),
+          escalas: servicios.escalas,
+          tiposHabilitados,
+          reloj,
+          generarId: randomUUID,
+          traceIds: { traceId: nuevoTraceId },
+          registrar,
+        });
         const completeness = completenessController({
           service: completitud,
           traceIds: { traceId: nuevoTraceId },
@@ -144,7 +162,13 @@ arrancar({
           ids: randomUUID,
           nuevoTraceId,
           registrar,
-          rutasProtegidas: componerRutasProtegidas({ gateway, documents, patients, completeness }),
+          rutasProtegidas: componerRutasProtegidas({
+            gateway,
+            documents,
+            patients,
+            completeness,
+            manualEntry,
+          }),
           // Solo nombres de claves y versión: nunca valores (RN-14). Va después de leer toda la configuración.
           salud: componerInformacionDeSalud({
             configKeys: entorno.clavesCargadas(),

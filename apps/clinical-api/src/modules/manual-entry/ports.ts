@@ -1,0 +1,128 @@
+import type { EstadoDelPaciente } from '../patients/patients.repository.js';
+
+/*
+ * Glosario: «registro manual» es el dato que el oncólogo escribe a mano (no extraído de un documento); «corrección» es
+ * un diagnóstico nuevo que reemplaza al vigente sin tocar sus valores (RN-08); «gradación de referencia» es la de la
+ * que se deriva el texto de `Diagnosis.grade` (DEC-05).
+ */
+
+/** Puerto de lectura de `escalas.json` del catálogo montado (L1D-90, D6, RN-29). */
+export interface CatalogoDeEscalas {
+  version(): string;
+  sistemaDeEstadificacionValido(sistema: string, tipoDeCancer: string): boolean;
+  /** Rango inclusivo de la escala funcional; `undefined` si la escala no está en el catálogo. */
+  rangoDeEscala(escala: string): { readonly minimo: number; readonly maximo: number } | undefined;
+  sistemaDeGradacionValido(sistema: string, tipoDeCancer: string): boolean;
+}
+
+export type SistemaDeGradacion = 'gleason_isup' | 'nottingham';
+export type EstadoDeRevisionGuardado =
+  'auto_aceptado' | 'requiere_revision' | 'verificado' | 'corregido';
+export type MetodoDeEntrada = 'ocr' | 'manual' | 'manual_correction' | 'seed';
+export type ConfianzaDeExtraccion = 'alta' | 'media' | 'baja' | 'n_a';
+
+/** Procedencia que se copia tal cual al duplicar una gradación al diagnóstico de la corrección. */
+export interface ProcedenciaDeGradacion {
+  readonly entryMethod: MetodoDeEntrada;
+  readonly extractionConfidence: ConfianzaDeExtraccion;
+  readonly extractionScore: number | null;
+  readonly reviewStatus: EstadoDeRevisionGuardado;
+  readonly sourceDocumentId: string | null;
+  readonly reviewedBy: string | null;
+  readonly reviewedAt: Date | null;
+}
+
+export interface GradacionGuardada extends ProcedenciaDeGradacion {
+  readonly id: string;
+  readonly gradingSystem: SistemaDeGradacion;
+  readonly specimenType: string | null;
+  readonly gradeScope: string | null;
+  readonly gleasonPrimaryPattern: number | null;
+  readonly gleasonSecondaryPattern: number | null;
+  readonly gleasonScore: number | null;
+  readonly isupGradeGroup: number | null;
+  readonly nottinghamGrade: number | null;
+  readonly isReference: boolean;
+  readonly createdAt: Date;
+}
+
+/** Gradación que se inserta bajo un diagnóstico nuevo (id nuevo, referencia recalculada). */
+export interface GradacionAGuardar extends GradacionGuardada {
+  readonly diagnosisId: string;
+}
+
+/** Valores clínicos de un diagnóstico (lo que `fusionarCorreccion` combina). */
+export interface DatosDelDiagnostico {
+  readonly cancerType: string;
+  readonly icd10Code: string | null;
+  readonly mappingStatus: 'mapeado' | 'no_mapeado';
+  readonly histology: string | null;
+  readonly histologyCode: string | null;
+  readonly grade: string | null;
+  readonly stagingSystem: string | null;
+  readonly stageValue: string | null;
+  readonly performanceScale: string | null;
+  readonly performanceValue: number | null;
+  readonly diagnosedAt: string;
+}
+
+export interface DiagnosticoVigente {
+  readonly id: string;
+  readonly datos: DatosDelDiagnostico;
+  readonly gradaciones: readonly GradacionGuardada[];
+}
+
+export interface DiagnosticoAGuardar extends DatosDelDiagnostico {
+  readonly id: string;
+  readonly patientId: string;
+  readonly episodeId: string;
+  readonly entryMethod: 'manual' | 'manual_correction';
+  readonly reviewedBy: string;
+  readonly reviewedAt: Date;
+  readonly createdAt: Date;
+}
+
+export interface ExamenAGuardar {
+  readonly id: string;
+  readonly patientId: string;
+  readonly episodeId: string;
+  readonly performedAt: string;
+  readonly createdAt: Date;
+}
+
+export interface BiomarcadorAGuardar {
+  readonly id: string;
+  readonly examId: string;
+  readonly name: string;
+  readonly originalName: string;
+  readonly loincCode: string | null;
+  readonly mappingStatus: 'mapeado' | 'no_mapeado';
+  readonly value: string;
+  readonly unit: string | null;
+  readonly resultType: 'cuantitativo' | 'cualitativo';
+  readonly reviewedBy: string;
+  readonly reviewedAt: Date;
+  readonly createdAt: Date;
+}
+
+/** Operaciones de UNA transacción de registro manual (el repository las ejecuta sobre una sola conexión). */
+export interface TransaccionDeRegistro {
+  /** Bloquea la fila del paciente (serializa los registros concurrentes); `null` si no existe. */
+  bloquearPaciente(patientId: string): Promise<{ readonly estado: EstadoDelPaciente } | null>;
+  /** Episodio al que se asocia el registro: el abierto, o el más reciente. */
+  episodioDelRegistro(patientId: string): Promise<string>;
+  /** Diagnóstico vigente (activo, no rechazado ni reemplazado) con sus gradaciones; `null` si no hay. */
+  diagnosticoVigente(patientId: string): Promise<DiagnosticoVigente | null>;
+  guardarBiomarcador(examen: ExamenAGuardar, biomarcador: BiomarcadorAGuardar): Promise<void>;
+  /** Inserta el diagnóstico nuevo (activo, verificado) con sus gradaciones y, si `reemplazaA`, deja ese como `reemplazado` e inactivo. */
+  guardarDiagnostico(
+    nuevo: DiagnosticoAGuardar,
+    gradaciones: readonly GradacionAGuardar[],
+    reemplazaA: string | null,
+  ): Promise<void>;
+}
+
+export interface RepositorioDeRegistroManual {
+  /** Ejecuta `trabajo` en una transacción: si lanza, se revierte todo (D8). */
+  enTransaccion<T>(trabajo: (tx: TransaccionDeRegistro) => Promise<T>): Promise<T>;
+}
