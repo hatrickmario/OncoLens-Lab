@@ -44,27 +44,27 @@
 
 ### 3. Workflow `ci.yml`
 
-- [ ] 3.1 (test después) Job `cambios` (checkout `fetch-depth: 0`, `persist-credentials: false`, `setup-node`, sin
+- [x] 3.1 (test después) Job `cambios` (checkout `fetch-depth: 0`, `persist-credentials: false`, `setup-node`, sin
   `npm ci` si el script no lo necesita) y `needs: cambios` + `if: ${{ !contains(fromJSON(needs.cambios.outputs.omitibles), '<job>') }}`
   en cada job de `omitibles_en_documentacion`; `cambios` en `needs` de `ci-ok` `[D-12.1]`.
-- [ ] 3.2 (test después) Partir `build-test` en `build-test-node` y `build-test-rag` según la tabla de design D3,
+- [x] 3.2 (test después) Partir `build-test` en `build-test-node` y `build-test-rag` según la tabla de design D3,
   conservando el nombre y el comando de cada paso; ambos en `needs` de `ci-ok` `[D-12.2]`.
-- [ ] 3.3 (test después) `quality` sin `needs: build-test` ni descarga de cobertura; `COBERTURA_INFORMES_XML` vacío. En
+- [x] 3.3 (test después) `quality` sin `needs: build-test` ni descarga de cobertura; `COBERTURA_INFORMES_XML` vacío. En
   `scripts/quality/cobertura.mjs`, informes XML desde esa variable (defecto: `INFORMES_COBERTURA_XML`) y modo
   `--solo-xml --salida <archivo>` que reutiliza `medirCoberturaDelPr`/`alertasDeCobertura`. Job `cobertura-rag`
   (`needs: [cambios, build-test-rag]`, omitible) que descarga `cobertura-rag-orchestrator` y publica `quality-report-rag`.
   Tests de `cobertura.mjs` para el modo nuevo y el informe ausente `[D-12.3] [US-213 AC-11]`.
-- [ ] 3.4 (test después) Cachés de design D5: `actions/cache` fijada por SHA (versión vigente comprobada en la fuente) para
+- [x] 3.4 (test después) Cachés de design D5: `actions/cache` fijada por SHA (versión vigente comprobada en la fuente) para
   `node_modules` en todos los jobs con `npm ci` (que pasa a `if: cache-hit != 'true'`) y venv `.venv-ci` en
   `build-test-node`, `build-test-rag` y `eval-required` (clave propia); sin `restore-keys`; actualizar
   `cache-dependency-path` de `setup-python` sin `requirements-eval` donde ya no aplique `[D-12.4]`.
-- [ ] 3.5 (test después) D5-02: `scripts/ci/contracts-contra-main.sh "$BASE_REF"` con `tocaContratos()` (diff contra la base
+- [x] 3.5 (test después) D5-02: `scripts/ci/contracts-contra-main.sh "$BASE_REF"` con `tocaContratos()` (diff contra la base
   sobre `contracts/examples/**` y `apps/*/openapi.yaml`), `git fetch --no-tags origin main`, `git merge --no-edit --no-ff`
   con identidad local, `npm run contracts:check`; conflicto → mensaje fijo y rutas, sin contenido; fuera de
   `pull_request` o sin rutas → `omitido: …`. Último paso del job `contracts`. Test hermético con repositorio temporal
   (ejemplo invalidado por un commit posterior de `main` → falla; PR sin contratos → omitido; conflicto → mensaje fijo),
   tiempo máximo explícito `[D5-02]`.
-- [ ] 3.6 (test después) `ci/tests/workflow.test.mjs`: renombrar las aserciones de `build-test` a `build-test-node` o
+- [x] 3.6 (test después) `ci/tests/workflow.test.mjs`: renombrar las aserciones de `build-test` a `build-test-node` o
   `build-test-rag`; excluir `requirements-export.txt` del test de instalación previa a Pytest y añadir «ningún workflow
   instala `requirements-export.txt`»; añadir los escenarios de los requisitos de detector (`if` ↔ lista), partición,
   `quality` sin `needs` de build, `cobertura-rag`, cachés (SHA, sin `restore-keys`) y D5-02 (solo `pull_request`, sin
@@ -73,20 +73,20 @@
 
 ### 4. Workflow `e2e.yml` y higiene
 
-- [ ] 4.1 (test después) `e2e.yml`: job `cambios` con el mismo script y `e2e` con `needs: cambios` + `if` sobre
+- [x] 4.1 (test después) `e2e.yml`: job `cambios` con el mismo script y `e2e` con `needs: cambios` + `if` sobre
   `omitibles` (o `documentacion == 'true'`); sigue sin secretos, sin `pull_request_target` y fuera de `ci-ok`. Test en
   `workflow.test.mjs` `[D-12.1] [ARR-02 AC-1]`.
-- [ ] 4.2 (test después) `historiasDelTitulo` de `scripts/ci/tasks-destino.mjs` acepta `[L1D-1, L1D-2]` además de los
+- [x] 4.2 (test después) `historiasDelTitulo` de `scripts/ci/tasks-destino.mjs` acepta `[L1D-1, L1D-2]` además de los
   corchetes consecutivos, sin duplicados; casos en `scripts/ci/__tests__/tasksDestino.test.mjs`: lote con tarea sin destino
   en la segunda historia, destino que es otra historia del lote, `[ARR-11] …` sin comprobación `[D-12.5]`.
 
 ### 5. Casos de PR y documentación
 
-- [ ] 5.1 (test después) Casos en `ci/tests/cases/` (`case.json` + `aplicar.sh`): `ac-detector-solo-docs` (detector →
+- [x] 5.1 (test después) Casos en `ci/tests/cases/` (`case.json` + `aplicar.sh`): `ac-detector-solo-docs` (detector →
   omitibles completos), `ac-detector-docs-leido-por-codigo` (`docs/architecture/data-model.md` → CI completa) y
   `ac-contratos-contra-main` (D5-02); el comando de cada caso figura tal cual en un paso de `ci.yml`
   `[D-12.1] [D5-02]`.
-- [ ] 5.2 (test después) `docs/process/ci.md`: tabla de jobs (`cambios`, `build-test-node`, `build-test-rag`,
+- [x] 5.2 (test después) `docs/process/ci.md`: tabla de jobs (`cambios`, `build-test-node`, `build-test-rag`,
   `cobertura-rag`), sección «Detector de cambios» (listas, reglas conservadoras, cómo añadir un omitible o un documento
   leído por el código), cachés y su invalidación, D5-02 («vuelve a ejecutar `contracts` antes del merge si `main` avanzó»),
   `requirements-export.txt`, reportes de calidad (`latest.json` + `cobertura-rag.json`) y paso 2 de «Cómo añadir un job»

@@ -1,0 +1,16 @@
+{
+  "ac": "ARR-11 D-12.1",
+  "descripcion": "Un PR que solo cambia documentación (docs/ y backlog/): el detector lo declara de documentación y publica como omitibles los jobs de la lista, sin los escáneres.",
+  "esperado": "pasa",
+  "comando": "node scripts/ci/detectar-cambios.mjs --base \"$BASE_REF\"",
+  "entorno": { "GITHUB_EVENT_NAME": "pull_request" },
+  "aplicar": "aplicar.sh",
+  "mensajes": [
+    "cambios — PR de documentación: solo documentación",
+    "omitibles: build-test-node, build-test-rag, contracts"
+  ],
+  "ausentes": [
+    "secret-scan",
+    "data-scan"
+  ]
+}

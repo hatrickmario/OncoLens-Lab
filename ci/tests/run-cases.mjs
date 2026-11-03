@@ -5,9 +5,10 @@
  * Compara código de salida, mensajes esperados (y ausentes) y, si se pide, que el valor sembrado no salga en el log.
  *
  * case.json: { ac, descripcion, esperado: "pasa" | "falla", comando: string | string[], aplicar?: "archivo.sh|.mjs",
- *              mensajes?: string[], ausentes?: string[], sinValor?: "ruta/relativa/al/clon",
+ *              mensajes?: string[], ausentes?: string[], sinValor?: "ruta/relativa/al/clon", entorno?: { NOMBRE: "valor" },
  *              pendiente?: { motivo: string, hastaQueSeArchive: string[] } }
  *   - `comando` se ejecuta con `bash -c` en el clon y `BASE_REF` = el commit base del caso (antes de `aplicar`).
+ *   - `entorno` añade variables al entorno de `aplicar` y de los comandos (p. ej. `GITHUB_EVENT_NAME` para los scripts de CI que deciden por el evento): así el `comando` del caso sigue siendo, tal cual, el paso de `ci.yml`.
  *   - `aplicar` se ejecuta en el clon con CASE_DIR = la carpeta del caso; si deja cambios sin commitear se commitean.
  *   - `pendiente`: el caso depende de changes aún no mergeados; se lista como PENDIENTE (y falla con --estricto). Cuando alguno
  *     de `hastaQueSeArchive` aparece en openspec/changes/archive/ el caso deja de poder estar pendiente y cuenta como FALLA.
@@ -54,9 +55,9 @@ function clonar(destino) {
   git(destino, 'commit', '--quiet', '--allow-empty', '-m', 'base del fixture');
 }
 
-function entornoDelCaso(base) {
+function entornoDelCaso(base, caso) {
   const herramientas = path.join(ORIGEN, '.ci-tools');
-  const entorno = { ...process.env, BASE_REF: base };
+  const entorno = { ...process.env, BASE_REF: base, ...caso.entorno };
   if (existsSync(herramientas)) entorno.PATH = `${herramientas}${path.delimiter}${process.env.PATH}`;
   const venv = path.join(ORIGEN, '.venv-codegen/bin/python');
   if (!entorno.CODEGEN_PYTHON && existsSync(venv)) entorno.CODEGEN_PYTHON = venv;
@@ -136,7 +137,7 @@ function correrCaso(nombre) {
     const clon = path.join(temporal, 'clon');
     clonar(clon);
     const base = git(clon, 'rev-parse', 'HEAD').trim();
-    const entorno = entornoDelCaso(base);
+    const entorno = entornoDelCaso(base, caso);
     aplicarCambio(caso, dirCaso, clon, entorno);
     const ejecuciones = ejecutarComandos([].concat(caso.comando), clon, entorno);
     const { razones, salida } = incumplimientos(caso, ejecuciones, clon);

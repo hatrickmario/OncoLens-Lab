@@ -2,7 +2,7 @@
  * Fixtures de PR del job `eval-required` (US-074 AC-1…AC-6, L1D-237): cada caso clona el repositorio con el árbol de
  * trabajo encima, aplica el cambio de un PR sintético, lo commitea y ejecuta `scripts/ci/eval-required.mjs` con la base
  * anterior, como lo hace la CI. Corre `evaluate` de verdad (adapters falsos): necesita las dependencias de Python de
- * `requirements-eval.txt`, que `build-test` instala antes del vitest raíz (EVAL_PYTHON elige el intérprete).
+ * `requirements-eval.txt`, que `build-test-node` instala antes del vitest raíz (EVAL_PYTHON elige el intérprete).
  */
 import { execFileSync, spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
