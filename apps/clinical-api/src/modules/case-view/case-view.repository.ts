@@ -1,5 +1,9 @@
 import type { Consultador } from '../auth/auth.repository.js';
-import { sqlDatoVigente, type EstadoDeRevisionVisible } from '../compartido/estados-de-revision.js';
+import {
+  sqlDatoVigente,
+  sqlEventoClinicoPropio,
+  type EstadoDeRevisionVisible,
+} from '../compartido/estados-de-revision.js';
 import type {
   AtributoLeido,
   BiomarcadorDelCaso,
@@ -62,7 +66,7 @@ const SQL_EVENTOS = `SELECT t.id, t.event_type::text AS event_type, ${FECHA('t.e
          t.extraction_confidence::text AS extraction_confidence, t.review_status::text AS review_status,
          false AS conflict, t.source_document_id
     FROM clinical.clinical_event t
-   WHERE t.patient_id = $1 AND ${sqlDatoVigente('t.review_status')}
+   WHERE t.patient_id = $1 AND ${sqlEventoClinicoPropio('t.analysis_id')} AND ${sqlDatoVigente('t.review_status')}
    ORDER BY t.event_date NULLS LAST, t.id`;
 
 const SQL_ATRIBUTOS = `SELECT t.id, t.attribute_key, t.value, ${FECHA('t.observed_at')} AS observed_at,
