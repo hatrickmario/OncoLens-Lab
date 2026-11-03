@@ -38,6 +38,12 @@ Ninguna es cara de revertir (sin contrato, sin esquema, sin modelos): una recome
   detectan porque P-CASO tiene identidad en el lector falso (ADR-40: sin identidad exacta, los patrones no ven nombres).
 - **D5 · `biomarkerTrends = []`** se mantiene (requisito «Contexto clínico por allowlist explícita»). Cuando US-091 exista,
   su change lo puebla y modifica ese requisito.
+- **D6 · Seguimiento (Gate 2, hallazgo Mayor 2):** `leerEventosPosteriores` (`follow-up.repository.ts`) comparte la
+  lectura de eventos con el contexto y `outcomesSince[].monthsAgo` es entero requerido; un evento `incierta` con fecha
+  entraría con meses. Se excluye con `AND NOT sqlFechaNoConfiable('event_date', 'date_precision')` (predicado único de
+  `compartido/`), sin cambio de contrato. La unificación de las tres expresiones de «sin fecha confiable»
+  (`fechaConfiable`, `comoEventoConOrden`, `sqlFechaNoConfiable`) queda como **D5-22** (mover a `compartido/` con
+  aserción de paridad vista de caso/contexto), porque `compartido/` es de L1D-309.
 
 ## Privacidad y ownership
 

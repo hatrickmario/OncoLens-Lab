@@ -135,7 +135,10 @@ interface DatosDeUnEvento {
   readonly datePrecision?: EventoDelTimeline['datePrecision'];
 }
 
-/** Un evento sin fecha confiable sale siempre con `eventDate = null` e `incierta`, sea cual sea la precisión guardada. */
+/**
+ * Un evento sin fecha confiable sale siempre con `eventDate = null` e `incierta`, sea cual sea la precisión guardada.
+ * Misma regla que `fechaConfiable` (evidence-analysis/clinical-context.builder.ts) y `sqlFechaNoConfiable`; unificarlas es D5-22.
+ */
 function comoEventoConOrden(datos: DatosDeUnEvento): EventoConOrden {
   const incierta = datos.eventDate === null || datos.datePrecision === 'incierta';
   return {
