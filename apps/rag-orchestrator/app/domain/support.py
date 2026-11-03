@@ -6,9 +6,9 @@ Un solo camino: la opción llega con afirmaciones atómicas por papel (US-245). 
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Literal, get_args
+from typing import Literal, Protocol, get_args
 
 from app.domain.atribucion import (
     FormaDeAfirmacion,
@@ -17,7 +17,14 @@ from app.domain.atribucion import (
 )
 from app.domain.citations import OpcionAceptada, OpcionGenerada
 from app.domain.claims import AfirmacionAtomica, PapelDeAfirmacion
-from app.domain.lenguaje import Coincidencia, ListaTerminos, Nivel, check_prohibited_terms
+from app.domain.lenguaje import (
+    Coincidencia,
+    FuenteCitada,
+    ListaTerminos,
+    Nivel,
+    check_prohibited_terms,
+    tapar_citas_textuales_del_corpus,
+)
 from app.domain.nli import ParNli, ResultadoNli
 from app.domain.soporte_por_papel import MotivoDeSoporte
 
@@ -35,9 +42,38 @@ CAMPOS_GENERADOS: tuple[CampoGenerado, ...] = get_args(CampoGenerado)
 
 
 def coincidencias_en_campo_generado(
+    texto: str,
+    campo: CampoGenerado,
+    lista: ListaTerminos,
+    fuentes: Sequence[FuenteCitada] = (),
+) -> list[Coincidencia]:
+    """RN-23: la política de la salida generada es el Nivel A más ``salidaGenerada.nivelB`` de la lista.
+
+    Solo se revisan los campos GENERADOS; los copiados del corpus pueden traer vocabulario de la lista. Una cita textual
+    atribuida de un fragmento que la opción cita no activa el subconjunto B, pero nunca habilita el Nivel A.
+    """
+    if campo not in CAMPOS_GENERADOS:
+        return []
+    reglas = lista.reglas_para_salida_generada()
+    tapado = tapar_citas_textuales_del_corpus(texto, fuentes)
+    coincidencias = check_prohibited_terms(
+        tapado,
+        lista,
+        niveles=reglas.niveles,
+        permitir_frases=False,
+        solo_ids_b=reglas.ids_nivel_b,
+        excepciones_b=reglas.excepciones_nivel_b,
+    )
+    if tapado == texto:
+        return coincidencias
+    del_nivel_a = check_prohibited_terms(texto, lista, niveles=("A",), permitir_frases=False)
+    return list({c.id: c for c in [*coincidencias, *del_nivel_a]}.values())
+
+
+def coincidencias_estrictas_en_campo_generado(
     texto: str, campo: CampoGenerado, lista: ListaTerminos, niveles: Sequence[Nivel]
 ) -> list[Coincidencia]:
-    """RN-23: solo se revisan los campos GENERADOS; los copiados del corpus pueden traer vocabulario de la lista."""
+    """Lo que mide la suite sobre lo que PROPONE el generador: todos los niveles pedidos, sin la política de salida."""
     if campo not in CAMPOS_GENERADOS:
         return []
     return check_prohibited_terms(texto, lista, niveles=niveles, permitir_frases=False)
@@ -48,8 +84,17 @@ RETIRO_EN = "[claim removed: disallowed wording]"
 NO_MOSTRADO_ES = "(texto no mostrado)"
 NO_MOSTRADO_EN = "(text not shown)"
 
-BuscadorDeTerminos = Callable[[str, CampoGenerado], Sequence[str]]
-"""``(texto, campo) -> ids de regla``: el puerto ``ProhibitedTermsChecker`` visto desde el dominio."""
+
+class BuscadorDeTerminos(Protocol):
+    """``(texto, campo, fuentes) -> ids de regla``: el puerto ``ProhibitedTermsChecker`` visto desde el dominio.
+
+    ``fuentes`` son los fragmentos que cita la afirmación (título y texto del corpus): con ellos una cita textual
+    atribuida no activa el subconjunto B (RN-23, US-249); sin ellos, ninguna cita se tapa.
+    """
+
+    def __call__(
+        self, texto: str, campo: CampoGenerado, fuentes: Sequence[FuenteCitada] = ()
+    ) -> Sequence[str]: ...
 
 
 @dataclass(frozen=True, eq=False)
@@ -160,14 +205,17 @@ def planificar_soporte(
     buscar_terminos: BuscadorDeTerminos,
     *,
     max_palabras: int,
+    titulos_de_chunks: Mapping[str, str] | None = None,
 ) -> PlanDeSoporte:
     """Asigna a cada afirmación atómica su papel, su forma, su lenguaje (RN-23) y SOLO los chunks que ella cita.
 
     Las premisas de una limitación son todos los chunks entregados a la generación. ``max_palabras`` es
-    ``CLAIM_MAX_WORDS``.
+    ``CLAIM_MAX_WORDS``. ``titulos_de_chunks`` (``chunkId -> título del catálogo``, RN-25) permite reconocer la cita
+    textual atribuida («Según ‹título›: «…»») de los fragmentos que cita la opción; sin él no se tapa ninguna cita.
     """
+    fuentes = _FuentesDeLaConsulta(textos_de_chunks, titulos_de_chunks or {})
     opciones = tuple(
-        _planificar_opcion(a, textos_de_chunks, buscar_terminos, max_palabras) for a in aceptadas
+        _planificar_opcion(a, fuentes, buscar_terminos, max_palabras) for a in aceptadas
     )
     todas = tuple(textos_de_chunks.values())
     limitaciones = tuple(
@@ -188,13 +236,30 @@ def reglas_del_titulo(buscar_terminos: BuscadorDeTerminos, titulo: str) -> tuple
     return (*reglas, REGLA_MODAL_NORMATIVO) if tiene_modal_normativo(titulo) else reglas
 
 
+@dataclass(frozen=True)
+class _FuentesDeLaConsulta:
+    """Texto y título de cada fragmento entregado a la generación en esta consulta."""
+
+    textos: Mapping[str, str]
+    titulos: Mapping[str, str]
+
+    def citadas_por(self, chunk_ids: Sequence[str]) -> tuple[FuenteCitada, ...]:
+        """Los fragmentos que cita una opción y de los que se conoce título y texto."""
+        return tuple(
+            FuenteCitada(self.titulos[c], self.textos[c])
+            for c in dict.fromkeys(chunk_ids)
+            if c in self.titulos and c in self.textos
+        )
+
+
 def _planificar_opcion(
     aceptada: OpcionAceptada,
-    textos_de_chunks: Mapping[str, str],
+    fuentes: _FuentesDeLaConsulta,
     buscar_terminos: BuscadorDeTerminos,
     max_palabras: int,
 ) -> OpcionPlanificada:
     exigir_afirmaciones_atomicas(aceptada.opcion)
+    citadas = fuentes.citadas_por(aceptada.chunk_ids_validos)
     return OpcionPlanificada(
         aceptada,
         Afirmacion(
@@ -205,7 +270,12 @@ def _planificar_opcion(
         ),
         tuple(
             _planificar_afirmacion(
-                a, aceptada.chunk_ids_validos, textos_de_chunks, buscar_terminos, max_palabras
+                a,
+                aceptada.chunk_ids_validos,
+                fuentes.textos,
+                citadas,
+                buscar_terminos,
+                max_palabras,
             )
             for a in aceptada.opcion.afirmaciones
         ),
@@ -216,6 +286,7 @@ def _planificar_afirmacion(
     afirmacion: AfirmacionAtomica,
     chunk_ids_validos: Sequence[str],
     textos_de_chunks: Mapping[str, str],
+    citadas_por_la_opcion: Sequence[FuenteCitada],
     buscar_terminos: BuscadorDeTerminos,
     max_palabras: int,
 ) -> AfirmacionPorPapel:
@@ -226,7 +297,7 @@ def _planificar_afirmacion(
     return AfirmacionPorPapel(
         afirmacion.texto,
         campo,
-        tuple(buscar_terminos(afirmacion.texto, campo)),
+        tuple(buscar_terminos(afirmacion.texto, campo, citadas_por_la_opcion)),
         tuple(textos_de_chunks[c] for c in citados if c in textos_de_chunks),
         afirmacion.papel,
         validar_forma_de_afirmacion(afirmacion.texto, max_palabras),

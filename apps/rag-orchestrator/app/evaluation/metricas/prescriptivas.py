@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from app.domain.atribucion import FORMULA_DE_ATRIBUCION
+from app.domain.lenguaje import FuenteCitada
 from app.domain.support import CampoGenerado
 from app.evaluation.lenguaje_estricto import VerificadorEstricto
 from app.evaluation.metricas.resultado import LenguajeCrudo, ResultadoConsulta
@@ -33,13 +34,18 @@ class SalidaMostrada:
 
 
 def medir_salida_mostrada(
-    textos: Iterable[TextoGenerado], verificador: VerificadorEstricto
+    textos: Iterable[TextoGenerado],
+    verificador: VerificadorEstricto,
+    fuentes: Sequence[FuenteCitada] = (),
 ) -> SalidaMostrada:
-    """Cuántos campos mostrados traen términos de nivel A, de nivel B o de cualquiera, y cuáles reglas coinciden."""
+    """Cuántos campos mostrados traen términos de nivel A, de nivel B o de cualquiera, y cuáles reglas coinciden.
+
+    Con la política del filtro de producción (Nivel A y ``salidaGenerada.nivelB``): una cita textual atribuida de
+    ``fuentes`` no cuenta como Nivel B, igual que en el filtro (US-249)."""
     campos_a = campos_b = con_termino = 0
     coincidentes: list[tuple[str, str]] = []
     for campo, texto in textos:
-        coincidencias = verificador.coincidencias_generadas(texto, campo)
+        coincidencias = verificador.coincidencias_mostradas(texto, campo, fuentes)
         campos_a += any(c.nivel == "A" for c in coincidencias)
         campos_b += any(c.nivel == "B" for c in coincidencias)
         con_termino += bool(coincidencias)

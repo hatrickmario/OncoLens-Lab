@@ -141,6 +141,13 @@ class SalidaGenerada(_Modelo):
     """Subconjunto del Nivel B que también rige la salida generada (US-249 AC-2): ids de ``nivelB``."""
 
     nivel_b: list[str] = Field(alias="nivelB", min_length=1)
+    excepciones: list[str] = Field(default_factory=list)
+    """Palabras completas que un prefijo del subconjunto no cuenta: el sustantivo describe, no recomienda."""
+
+    @field_validator("excepciones")
+    @classmethod
+    def _excepciones_normalizables(cls, valores: list[str]) -> list[str]:
+        return [_texto_normalizable(valor) for valor in valores]
 
 
 @dataclass(frozen=True)
@@ -149,6 +156,7 @@ class ReglasDeSalidaGenerada:
 
     niveles: tuple[Nivel, ...]
     ids_nivel_b: frozenset[str]
+    excepciones_nivel_b: frozenset[str]
 
 
 class ListaTerminos(_Modelo):
@@ -161,14 +169,20 @@ class ListaTerminos(_Modelo):
 
     def reglas_para_salida_generada(self) -> ReglasDeSalidaGenerada:
         """RN-23: el Nivel A más el subconjunto B declarado por la lista; única fuente de la política de salida."""
-        return ReglasDeSalidaGenerada(("A", "B"), frozenset(self.salida_generada.nivel_b))
+        return ReglasDeSalidaGenerada(
+            ("A", "B"),
+            frozenset(self.salida_generada.nivel_b),
+            frozenset(self.salida_generada.excepciones),
+        )
 
     @model_validator(mode="after")
     def _salida_generada_solo_con_ids_del_nivel_b(self) -> Self:
         existentes = {t.id for t in self.nivel_b.terminos} | {p.id for p in self.nivel_b.prefijos}
         desconocidos = sorted(set(self.salida_generada.nivel_b) - existentes)
         if desconocidos:
-            raise ValueError(f"salidaGenerada.nivelB con ids desconocidos: {', '.join(desconocidos)}")
+            raise ValueError(
+                f"salidaGenerada.nivelB con ids desconocidos: {', '.join(desconocidos)}"
+            )
         return self
 
     @field_validator("version")
@@ -198,6 +212,45 @@ class Coincidencia(_Modelo):
 
 
 @dataclass(frozen=True)
+class FuenteCitada:
+    """Un fragmento que la opción cita: el título del catálogo (RN-25) y el texto del corpus (RN-04), nunca lo generado."""
+
+    titulo: str
+    texto: str
+
+
+# Palabra que ocupa el lugar de una cita tapada: ninguna regla de la lista la iguala y rompe las secuencias que la cruzan.
+_MARCA_DE_CITA = "citatapada"
+_COMILLAS = r"(?:«([^»]*)»|\"([^\"]*)\"|“([^”]*)”)"
+
+
+def tapar_citas_textuales_del_corpus(texto: str, fuentes: Sequence[FuenteCitada]) -> str:
+    """RN-23, RN-04: tapa el tramo entre comillas atribuido («Según ‹título›: «…»») que está literalmente en la fuente.
+
+    Solo con el título del catálogo de ESA fuente y un tramo cuyo texto normalizado aparece, palabra por palabra, en el
+    texto de la misma fuente; comillas sin atribución, de otro título o sin coincidencia literal no tapan nada.
+    """
+    tapado = texto
+    for fuente in fuentes:
+        if not normalizar_texto(fuente.titulo):
+            continue
+        atribucion = re.compile(
+            rf"Seg[uú]n\s+{re.escape(fuente.titulo)}\s*:\s*{_COMILLAS}", re.IGNORECASE
+        )
+        tapado = atribucion.sub(lambda m, f=fuente: _tapar_si_es_literal(m, f.texto), tapado)
+    return tapado
+
+
+def _tapar_si_es_literal(atribucion: re.Match[str], texto_de_la_fuente: str) -> str:
+    tramo = next(grupo for grupo in atribucion.groups() if grupo is not None)
+    normalizado = normalizar_texto(tramo)
+    literal = (
+        bool(normalizado) and f" {normalizado} " in f" {normalizar_texto(texto_de_la_fuente)} "
+    )
+    return f" {_MARCA_DE_CITA} " if literal else atribucion.group(0)
+
+
+@dataclass(frozen=True)
 class _Candidata:
     """Aparición de un término o prefijo: tramo ``[inicio, inicio + longitud)`` en palabras."""
 
@@ -217,13 +270,19 @@ def check_prohibited_terms(
     niveles: Sequence[Nivel] = ("A",),
     permitir_frases: bool = False,
     solo_ids_b: Collection[str] | None = None,
+    excepciones_b: Collection[str] | None = None,
 ) -> list[Coincidencia]:
-    """RN-23: coincidencias de la lista en ``texto``, en orden de aparición. Por defecto solo Nivel A."""
+    """RN-23: coincidencias de la lista en ``texto``, en orden de aparición. Por defecto solo Nivel A.
+
+    ``solo_ids_b`` limita el Nivel B a esos ids; ``excepciones_b`` son palabras completas que un prefijo del Nivel B no
+    debe contar (el sustantivo «recomendación» describe, no recomienda).
+    """
     palabras = _palabras_de(texto)
     if permitir_frases:
         palabras = _tapar_frases_permitidas(palabras, lista.frases_permitidas.frases)
     claves = [clave_flexiva(p) for p in palabras]
-    candidatas = _recolectar_candidatas(palabras, claves, lista, niveles, solo_ids_b)
+    excepciones = frozenset(normalizar_texto(e) for e in excepciones_b or ())
+    candidatas = _recolectar_candidatas(palabras, claves, lista, niveles, solo_ids_b, excepciones)
     return [
         Coincidencia(id=c.id, termino=c.termino, nivel=c.nivel)
         for c in _elegir_tramos_mas_largos(candidatas)
@@ -245,6 +304,7 @@ def _recolectar_candidatas(
     lista: ListaTerminos,
     niveles: Sequence[Nivel],
     solo_ids_b: Collection[str] | None,
+    excepciones_b: frozenset[str],
 ) -> list[_Candidata]:
     candidatas: list[_Candidata] = []
     orden = 0
@@ -255,7 +315,7 @@ def _recolectar_candidatas(
     if "B" in niveles:
         for prefijo in lista.nivel_b.prefijos:
             if solo_ids_b is None or prefijo.id in solo_ids_b:
-                candidatas += _candidatas_de_prefijo(prefijo, orden, palabras)
+                candidatas += _candidatas_de_prefijo(prefijo, orden, palabras, excepciones_b)
             orden += 1
         for termino in lista.nivel_b.terminos:
             if solo_ids_b is None or termino.id in solo_ids_b:
@@ -265,14 +325,16 @@ def _recolectar_candidatas(
 
 
 def _candidatas_de_prefijo(
-    prefijo: PrefijoProhibido, orden: int, palabras: list[str]
+    prefijo: PrefijoProhibido, orden: int, palabras: list[str], excepciones: frozenset[str]
 ) -> list[_Candidata]:
-    """Cada palabra de la normalización base que empieza por el prefijo es una candidata de una palabra."""
+    """Cada palabra de la normalización base que empieza por el prefijo es una candidata de una palabra.
+
+    Una palabra completa de ``excepciones`` no cuenta."""
     normalizado = normalizar_texto(prefijo.prefijo)
     return [
         _Candidata(prefijo.id, prefijo.prefijo, "B", inicio, 1, orden, palabra == normalizado)
         for inicio, palabra in enumerate(palabras)
-        if palabra.startswith(normalizado)
+        if palabra.startswith(normalizado) and palabra not in excepciones
     ]
 
 

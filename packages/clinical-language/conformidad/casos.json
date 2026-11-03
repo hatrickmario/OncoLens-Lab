@@ -1,5 +1,5 @@
 {
-  "descripcion": "Casos de conformidad de checkProhibitedTerms (TS) y check_prohibited_terms (Python) sobre terminos-prohibidos.json 1.6.0. Ambas implementaciones deben dar, caso por caso, los mismos id y niveles, en orden de aparición (US-068 AC-2, US-249 AC-3, RN-23). Cada caso lleva `id`; `soloIdsB` limita el Nivel B al subconjunto de salidaGenerada. Solo texto sintético de dominio público.",
+  "descripcion": "Casos de conformidad de checkProhibitedTerms (TS) y check_prohibited_terms (Python) sobre terminos-prohibidos.json 1.6.0. Ambas implementaciones deben dar, caso por caso, los mismos id y niveles, en orden de aparición (US-068 AC-2, US-249 AC-3, RN-23). Cada caso lleva `id`; `soloIdsB` limita el Nivel B al subconjunto de salidaGenerada y `excepcionesB` son las palabras completas (sustantivos) que no cuentan dentro de ese subconjunto. Solo texto sintético de dominio público.",
   "listaVersion": "1.6.0",
   "casos": [
     {
@@ -2310,7 +2310,8 @@
           "id": "b-recommend",
           "nivel": "B"
         }
-      ]
+      ],
+      "excepcionesB": ["recomendación", "recomendaciones", "recommendation", "recommendations"]
     },
     {
       "id": "VPB-02",
@@ -2324,7 +2325,8 @@
           "id": "b-recomiend",
           "nivel": "B"
         }
-      ]
+      ],
+      "excepcionesB": ["recomendación", "recomendaciones", "recommendation", "recommendations"]
     },
     {
       "id": "VPB-03",
@@ -2338,7 +2340,8 @@
           "id": "b-recomiend",
           "nivel": "B"
         }
-      ]
+      ],
+      "excepcionesB": ["recomendación", "recomendaciones", "recommendation", "recommendations"]
     },
     {
       "id": "VPB-04",
@@ -2352,7 +2355,8 @@
           "id": "b-recomend",
           "nivel": "B"
         }
-      ]
+      ],
+      "excepcionesB": ["recomendación", "recomendaciones", "recommendation", "recommendations"]
     },
     {
       "id": "VPB-05",
@@ -2366,7 +2370,8 @@
           "id": "b-recomend",
           "nivel": "B"
         }
-      ]
+      ],
+      "excepcionesB": ["recomendación", "recomendaciones", "recommendation", "recommendations"]
     },
     {
       "id": "VPB-06",
@@ -2380,7 +2385,8 @@
           "id": "b-recommend",
           "nivel": "B"
         }
-      ]
+      ],
+      "excepcionesB": ["recomendación", "recomendaciones", "recommendation", "recommendations"]
     },
     {
       "id": "VPB-07",
@@ -2389,7 +2395,8 @@
       "niveles": ["A", "B"],
       "permitirFrases": false,
       "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
-      "esperado": []
+      "esperado": [],
+      "excepcionesB": ["recomendación", "recomendaciones", "recommendation", "recommendations"]
     },
     {
       "id": "VPB-08",
@@ -2398,7 +2405,8 @@
       "niveles": ["A", "B"],
       "permitirFrases": false,
       "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
-      "esperado": []
+      "esperado": [],
+      "excepcionesB": ["recomendación", "recomendaciones", "recommendation", "recommendations"]
     },
     {
       "id": "VPB-09",
@@ -2407,7 +2415,8 @@
       "niveles": ["A", "B"],
       "permitirFrases": false,
       "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
-      "esperado": []
+      "esperado": [],
+      "excepcionesB": ["recomendación", "recomendaciones", "recommendation", "recommendations"]
     },
     {
       "id": "VPB-10",
@@ -2416,7 +2425,53 @@
       "niveles": ["A", "B"],
       "permitirFrases": false,
       "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
+      "esperado": [],
+      "excepcionesB": ["recomendación", "recomendaciones", "recommendation", "recommendations"]
+    },
+    {
+      "id": "VPB-11",
+      "grupo": "Nivel B atribuido 1.6.0 (el sustantivo recomendación describe, no recomienda)",
+      "texto": "Los autores del ensayo no emiten una recomendación formal",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
+      "excepcionesB": ["recomendación", "recomendaciones", "recommendation", "recommendations"],
       "esperado": []
+    },
+    {
+      "id": "VPB-12",
+      "grupo": "Nivel B atribuido 1.6.0 (el sustantivo recomendación describe, no recomienda)",
+      "texto": "The panel issued no recommendation for this setting",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
+      "excepcionesB": ["recomendación", "recomendaciones", "recommendation", "recommendations"],
+      "esperado": []
+    },
+    {
+      "id": "VPB-13",
+      "grupo": "Nivel B atribuido 1.6.0 (el sustantivo recomendación describe, no recomienda)",
+      "texto": "Las recomendaciones del panel no se evaluaron en el ensayo",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
+      "excepcionesB": ["recomendación", "recomendaciones", "recommendation", "recommendations"],
+      "esperado": []
+    },
+    {
+      "id": "VPB-14",
+      "grupo": "Nivel B atribuido 1.6.0 (el sustantivo recomendación describe, no recomienda)",
+      "texto": "The panel recommends the combination and issued recommendations",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
+      "excepcionesB": ["recomendación", "recomendaciones", "recommendation", "recommendations"],
+      "esperado": [
+        {
+          "id": "b-recommend",
+          "nivel": "B"
+        }
+      ]
     }
   ]
 }

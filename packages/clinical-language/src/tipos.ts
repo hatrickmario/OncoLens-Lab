@@ -24,7 +24,7 @@ export interface ListaTerminos {
   nivelB: { aplicaA: string[]; prefijos: PrefijoProhibido[]; terminos: TerminoProhibido[] };
   frasesPermitidas: { aplicaA: string[]; frases: string[] };
   /** Subconjunto del Nivel B que también rige la salida generada (US-249 AC-2): ids de `nivelB`. */
-  salidaGenerada: { nivelB: string[] };
+  salidaGenerada: { nivelB: string[]; excepciones: string[] };
 }
 
 export interface Coincidencia {
@@ -38,4 +38,6 @@ export interface OpcionesDeVerificacion {
   permitirFrases?: boolean;
   /** Limita el Nivel B a estos ids (p. ej. `salidaGenerada.nivelB`); sin él, todo el Nivel B cuando se pide. */
   soloIdsB?: readonly string[] | undefined;
+  /** Palabras completas que un prefijo del Nivel B no cuenta (el sustantivo «recomendación» describe, no recomienda). */
+  excepcionesB?: readonly string[] | undefined;
 }

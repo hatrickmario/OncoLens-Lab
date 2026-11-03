@@ -10,6 +10,7 @@ interface CasoDeConformidad {
   niveles: Nivel[];
   permitirFrases: boolean;
   soloIdsB?: string[];
+  excepcionesB?: string[];
   esperado: { id: string; nivel: Nivel }[];
 }
 
@@ -106,6 +107,7 @@ describe('checkProhibitedTerms', () => {
         niveles: caso.niveles,
         permitirFrases: caso.permitirFrases,
         soloIdsB: caso.soloIdsB,
+        excepcionesB: caso.excepcionesB,
       }).map(({ id, nivel }) => ({ id, nivel }));
 
       expect(obtenido, `${caso.id} [${caso.grupo}]: "${caso.texto}"`).toEqual(caso.esperado);

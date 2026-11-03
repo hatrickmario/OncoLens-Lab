@@ -590,6 +590,7 @@
     ]
   },
   "salidaGenerada": {
-    "nivelB": ["b-recomend", "b-recomiend", "b-recommend"]
+    "nivelB": ["b-recomend", "b-recomiend", "b-recommend"],
+    "excepciones": ["recomendación", "recomendaciones", "recommendation", "recommendations"]
   }
 }

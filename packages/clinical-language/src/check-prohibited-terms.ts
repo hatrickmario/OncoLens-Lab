@@ -33,13 +33,14 @@ const HUECO = '';
 export function checkProhibitedTerms(
   texto: string,
   lista: ListaTerminos,
-  { niveles = ['A'], permitirFrases = false, soloIdsB }: OpcionesDeVerificacion = {},
+  { niveles = ['A'], permitirFrases = false, soloIdsB, excepcionesB }: OpcionesDeVerificacion = {},
 ): Coincidencia[] {
   const palabras = permitirFrases
     ? taparFrasesPermitidas(palabrasDe(texto), lista.frasesPermitidas.frases)
     : palabrasDe(texto);
   const claves = palabras.map(claveFlexiva);
-  const candidatas = recolectarCandidatas(palabras, claves, lista, niveles, soloIdsB);
+  const excepciones = new Set((excepcionesB ?? []).map(normalizarTexto));
+  const candidatas = recolectarCandidatas(palabras, claves, lista, niveles, soloIdsB, excepciones);
   return elegirTramosMasLargos(candidatas).map(({ id, termino, nivel }) => ({
     id,
     termino,
@@ -64,6 +65,7 @@ function recolectarCandidatas(
   lista: ListaTerminos,
   niveles: readonly Nivel[],
   soloIdsB: readonly string[] | undefined,
+  excepcionesB: ReadonlySet<string>,
 ): Candidata[] {
   const candidatas: Candidata[] = [];
   let orden = 0;
@@ -76,7 +78,9 @@ function recolectarCandidatas(
   if (niveles.includes('B')) {
     for (const prefijo of lista.nivelB.prefijos) {
       const posicion = orden++;
-      if (admiteB(prefijo.id)) candidatas.push(...candidatasDePrefijo(prefijo, posicion, palabras));
+      if (admiteB(prefijo.id)) {
+        candidatas.push(...candidatasDePrefijo(prefijo, posicion, palabras, excepcionesB));
+      }
     }
     for (const termino of lista.nivelB.terminos) {
       const posicion = orden++;
@@ -88,15 +92,19 @@ function recolectarCandidatas(
   return candidatas;
 }
 
-/** Cada palabra de la normalización base que empieza por el prefijo es una candidata de una palabra. */
+/**
+ * Cada palabra de la normalización base que empieza por el prefijo es una candidata de una palabra; una palabra
+ * completa de `excepciones` no cuenta.
+ */
 function candidatasDePrefijo(
   prefijo: PrefijoProhibido,
   orden: number,
   palabras: string[],
+  excepciones: ReadonlySet<string>,
 ): Candidata[] {
   const normalizado = normalizarTexto(prefijo.prefijo);
   return palabras.flatMap((palabra, inicio) =>
-    palabra.startsWith(normalizado)
+    palabra.startsWith(normalizado) && !excepciones.has(palabra)
       ? [
           {
             id: prefijo.id,

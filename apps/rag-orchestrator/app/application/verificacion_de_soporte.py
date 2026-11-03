@@ -58,8 +58,11 @@ class VerificadorDeSoporte:
         aceptadas: Sequence[OpcionAceptada],
         limitaciones_propuestas: Sequence[str],
         textos_de_chunks: Mapping[str, str],
+        titulos_de_chunks: Mapping[str, str],
     ) -> ResultadoSoporte:
-        """Etapa SOPORTE: va antes del recorte a ``maxOptions``; nunca se recortan candidatas sin verificar."""
+        """Etapa SOPORTE: va antes del recorte a ``maxOptions``; nunca se recortan candidatas sin verificar.
+
+        ``titulos_de_chunks`` (``chunkId -> título del catálogo``) reconoce la cita textual atribuida (RN-23, RN-25)."""
         inicio = self._reloj.ahora()
         plan = planificar_soporte(
             aceptadas,
@@ -67,6 +70,7 @@ class VerificadorDeSoporte:
             textos_de_chunks,
             self._terminos.reglas_coincidentes,
             max_palabras=self._max_palabras,
+            titulos_de_chunks=titulos_de_chunks,
         )
         self._registrar_retiros(trace_id, plan.retiros)
         pares = pares_a_verificar(plan)

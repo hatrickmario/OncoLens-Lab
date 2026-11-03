@@ -20,7 +20,7 @@ IMPLICA = ResultadoNli("entailment", 0.97)
 NEUTRAL = ResultadoNli("neutral", 0.02)
 
 
-def _buscar(texto: str, campo: str) -> tuple[str, ...]:
+def _buscar(texto: str, campo: str, fuentes=()) -> tuple[str, ...]:
     return ("regla-x",) if "PROHIBIDO" in texto else ()
 
 

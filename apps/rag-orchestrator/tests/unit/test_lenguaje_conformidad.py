@@ -41,10 +41,13 @@ def test_check_prohibited_terms_casos_de_conformidad_mismos_ids_y_niveles_y_nomb
             niveles=tuple(caso["niveles"]),
             permitir_frases=caso["permitirFrases"],
             solo_ids_b=caso.get("soloIdsB"),
+            excepciones_b=caso.get("excepcionesB"),
         )
         obtenido = [{"id": c.id, "nivel": c.nivel} for c in coincidencias]
         if obtenido != caso["esperado"]:
-            discrepancias.append((caso["id"], caso["grupo"], caso["texto"], caso["esperado"], obtenido))
+            discrepancias.append(
+                (caso["id"], caso["grupo"], caso["texto"], caso["esperado"], obtenido)
+            )
 
     assert discrepancias == []
 
@@ -57,8 +60,7 @@ def test_check_prohibited_terms_limita_el_nivel_b_a_los_ids_pedidos_cuando_recib
 
     def ids(solo: list[str] | None) -> list[str]:
         return [
-            c.id
-            for c in check_prohibited_terms(texto, lista, niveles=("A", "B"), solo_ids_b=solo)
+            c.id for c in check_prohibited_terms(texto, lista, niveles=("A", "B"), solo_ids_b=solo)
         ]
 
     assert ids(None) == ["b-recomiend", "b-es-administrar"]
@@ -73,7 +75,9 @@ def test_lista_vigente_declara_la_version_1_6_0_y_el_subconjunto_b_de_la_salida_
     assert lista.salida_generada.nivel_b == ["b-recomend", "b-recomiend", "b-recommend"]
 
 
-def test_lista_falla_cerrada_cuando_salida_generada_trae_un_id_que_no_existe_en_el_nivel_b() -> None:
+def test_lista_falla_cerrada_cuando_salida_generada_trae_un_id_que_no_existe_en_el_nivel_b() -> (
+    None
+):
     datos = json.loads(LISTA.read_text(encoding="utf-8"))
     datos["salidaGenerada"]["nivelB"].append("b-no-existe")
 

@@ -102,8 +102,8 @@ def test_el_plan_de_la_propuesta_marca_fuera_de_forma_una_afirmacion_larga_segun
     )
     textos = {"c1": "texto"}
 
-    con_20 = plan_de_la_propuesta(propuesta, textos, lambda t, c: (), max_palabras=20)
-    con_3 = plan_de_la_propuesta(propuesta, textos, lambda t, c: (), max_palabras=3)
+    con_20 = plan_de_la_propuesta(propuesta, textos, lambda t, c, f=(): (), max_palabras=20)
+    con_3 = plan_de_la_propuesta(propuesta, textos, lambda t, c, f=(): (), max_palabras=3)
 
     assert con_20.opciones[0].afirmaciones[0].forma is FormaDeAfirmacion.valida
     assert con_3.opciones[0].afirmaciones[0].forma is FormaDeAfirmacion.demasiado_larga

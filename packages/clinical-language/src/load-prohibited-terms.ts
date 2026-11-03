@@ -57,7 +57,10 @@ const esquemaLista = z
       terminos: z.array(termino),
     }),
     frasesPermitidas: z.object({ aplicaA, frases: z.array(texto) }),
-    salidaGenerada: z.object({ nivelB: z.array(texto).min(1) }),
+    salidaGenerada: z.object({
+      nivelB: z.array(texto).min(1),
+      excepciones: z.array(textoNormalizable).default([]),
+    }),
   })
   .superRefine((lista, contexto) => {
     const existentes = new Set([

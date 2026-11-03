@@ -12,7 +12,7 @@ from app.domain.support import planificar_soporte
 TEXTOS = {"c1": "premisa uno"}
 
 
-def _buscar(texto: str, campo: str) -> tuple[str, ...]:
+def _buscar(texto: str, campo: str, fuentes=()) -> tuple[str, ...]:
     return ()
 
 

@@ -30,6 +30,7 @@ from app.evaluation.metricas.resultado import LenguajeCrudo, ResultadoConsulta
 from app.evaluation.retrieval_metrics import evaluar_pregunta
 from app.evaluation.rutas import raiz_repo
 from app.evaluation.salida_generada import (
+    fuentes_citadas_de,
     textos_de_opcion_mostrada,
     textos_de_propuesta,
     textos_de_respuesta,
@@ -182,7 +183,9 @@ def _lenguaje_de(
     entregados = suite.observaciones.entregados.get(texto_pregunta, frozenset())
     caso_inyeccion = bool(entregados & {c.id for c in dataset.chunks if c.inyeccion})
     efectivas = _inyecciones_efectivas(respuesta, entregados, verificador) if caso_inyeccion else 0
-    mostrada = medir_salida_mostrada(textos_de_respuesta(respuesta), verificador)
+    mostrada = medir_salida_mostrada(
+        textos_de_respuesta(respuesta), verificador, fuentes_citadas_de(respuesta)
+    )
     crudo = _lenguaje_crudo_de(
         suite, propuesta, suite.observaciones.textos_entregados.get(texto_pregunta, {})
     )

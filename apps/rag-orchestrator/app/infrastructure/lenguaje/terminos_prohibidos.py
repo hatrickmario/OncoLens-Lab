@@ -1,5 +1,5 @@
 """Adapter de ``ProhibitedTermsChecker`` (RN-23): carga ``terminos-prohibidos.json`` del catálogo montado y delega en
-``check_prohibited_terms`` (nivel A, sin frases permitidas).
+``check_prohibited_terms`` (nivel A y ``salidaGenerada.nivelB``, sin frases permitidas).
 
 Solo se revisan los campos GENERADOS (``CAMPOS_GENERADOS``); los copiados del corpus (``chunkTextSnapshot``, títulos,
 fuentes) pueden contener legítimamente vocabulario de la lista y no pasan por aquí (decisión 79 del plan del S1).
@@ -7,9 +7,10 @@ fuentes) pueden contener legítimamente vocabulario de la lista y no pasan por a
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
 
-from app.domain.lenguaje import ListaTerminos
+from app.domain.lenguaje import FuenteCitada, ListaTerminos
 from app.domain.support import CampoGenerado, coincidencias_en_campo_generado
 
 RUTA_DE_LA_LISTA = Path("lenguaje") / "terminos-prohibidos.json"
@@ -29,8 +30,10 @@ class VerificadorDeTerminosProhibidos:
     def version(self) -> str:
         return self._lista.version
 
-    def reglas_coincidentes(self, texto: str, campo: CampoGenerado) -> tuple[str, ...]:
-        coincidencias = coincidencias_en_campo_generado(texto, campo, self._lista, ("A",))
+    def reglas_coincidentes(
+        self, texto: str, campo: CampoGenerado, fuentes: Sequence[FuenteCitada] = ()
+    ) -> tuple[str, ...]:
+        coincidencias = coincidencias_en_campo_generado(texto, campo, self._lista, fuentes)
         return tuple(dict.fromkeys(c.id for c in coincidencias))
 
 

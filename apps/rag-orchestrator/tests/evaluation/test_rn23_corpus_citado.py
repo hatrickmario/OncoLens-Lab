@@ -43,7 +43,8 @@ def test_evaluate_mide_que_el_generador_reproduce_el_nivel_b_y_el_nivel_a_del_co
     assert familia.get("terminos_compartidos_con_corpus_citado") == 2
     assert familia.get("propuesta_cruda_por_nivel") == {"A": 1, "B": 1}
     assert familia.get("terminos_nivel_b") == ["b-recommend"]
-    assert familia.get("salida_mostrada") == 1  # el nivel B que el filtro de producción deja pasar
+    # US-249 AC-2: el filtro de producción retira el b-recommend, así que ya no llega a la salida mostrada.
+    assert familia.get("salida_mostrada") == 0
 
 
 @pytest.mark.ac("L1D-279", 3)
@@ -53,10 +54,12 @@ def test_evaluate_separa_lo_mostrado_por_nivel_y_lista_el_campo_y_la_regla_sin_t
     familia = correr(tmp_path)["metricas"]["completa"]["terminos_prohibidos"]
 
     assert familia.get("salida_mostrada_nivel_a") == 0  # bloqueante
-    assert familia.get("salida_mostrada_nivel_b") == 1  # seguimiento
-    assert familia.get("salida_mostrada_por_nivel") == {"A": 0, "B": 1}
+    assert familia.get("salida_mostrada_nivel_b") == 0  # bloqueante desde US-249 AC-4
+    assert familia.get("salida_mostrada_por_nivel") == {"A": 0, "B": 0}
     mostrados = familia.get("campos_mostrados")
-    assert [m["regla"] for m in mostrados] == ["b-recommend"]
+    assert (
+        mostrados == []
+    )  # la medición de lo mostrado no lista ni siquiera el campo: no queda nada
     assert all(set(m) == {"campo", "regla"} for m in mostrados)
 
 
@@ -125,13 +128,13 @@ def test_la_formula_de_atribucion_se_importa_del_modulo_del_dominio() -> None:
 @pytest.mark.parametrize(
     "texto", ["The guideline recommends it.", "It is the standard of care.", "Hola."]
 )
-def test_el_verificador_de_la_suite_con_nivel_a_da_los_mismos_ids_que_el_filtro_de_produccion(
+def test_el_verificador_de_la_suite_da_los_mismos_ids_que_el_filtro_de_produccion_en_lo_mostrado(
     texto: str,
 ) -> None:
     lista = cargar_lista_de_terminos(CATALOGOS)
-    suite = VerificadorEstricto(lista, niveles=("A",))
+    suite = VerificadorEstricto(lista)
     produccion = cargar_verificador_de_terminos(CATALOGOS)
 
-    ids = tuple(dict.fromkeys(c.id for c in suite.coincidencias_generadas(texto, "rationale")))
+    ids = tuple(dict.fromkeys(c.id for c in suite.coincidencias_mostradas(texto, "rationale")))
 
     assert ids == produccion.reglas_coincidentes(texto, "rationale")

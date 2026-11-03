@@ -6,6 +6,7 @@ Solo viven en memoria durante la corrida: lo que llega al reporte son conteos (R
 from __future__ import annotations
 
 from app.application.ports import EvidenciaGenerada
+from app.domain.lenguaje import FuenteCitada
 from app.domain.support import CampoGenerado
 from app.evaluation.metricas.prescriptivas import TextoGenerado
 from app.schemas.generated.models import EvidenceOption, RagQueryInternalResponse
@@ -30,6 +31,15 @@ def textos_de_opcion_mostrada(opcion: EvidenceOption) -> list[TextoGenerado]:
         ("option", opcion.option),
         ("rationale", opcion.rationale),
         *(("details", detalle.root) for detalle in opcion.details or []),
+    ]
+
+
+def fuentes_citadas_de(respuesta: RagQueryInternalResponse) -> list[FuenteCitada]:
+    """Título y texto de los fragmentos que citan las opciones mostradas: lo que permite reconocer una cita atribuida (RN-23)."""
+    return [
+        FuenteCitada(fuente.title, fuente.chunkTextSnapshot)
+        for opcion in respuesta.evidenceOptions
+        for fuente in opcion.citedSources
     ]
 
 

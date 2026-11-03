@@ -47,7 +47,12 @@ CH_DEBE = ChunkFx(
     "ch-g1-3", "doc-m1", "The patient debe recibir the combination.", _vector(e0=0.6), True, "mama"
 )
 CH_RECOMIENDA = ChunkFx(
-    "ch-g1-4", "doc-m1", "La guía recomienda añadir terapia anti-HER2.", _vector(e0=0.5), True, "mama"
+    "ch-g1-4",
+    "doc-m1",
+    "La guía recomienda añadir terapia anti-HER2.",
+    _vector(e0=0.5),
+    True,
+    "mama",
 )
 CHUNKS = (*CORPUS_FX06A, CH_G1, CH_G1_AJENO, CH_DEBE, CH_RECOMIENDA)
 PUNTAJES = {
@@ -126,7 +131,9 @@ def test_rag_query_descarta_la_opcion_con_lenguaje_no_permitido_cuando_la_justif
 
 
 @pytest.mark.ac("US-249", 1)
-@pytest.mark.parametrize("frase", ["Se aconseja administrar dos ciclos", "Considere iniciar hormonoterapia"])
+@pytest.mark.parametrize(
+    "frase", ["Se aconseja administrar dos ciclos", "Considere iniciar hormonoterapia"]
+)
 def test_rag_query_descarta_la_opcion_con_lenguaje_no_permitido_cuando_una_afirmacion_secundaria_esta_en_voz_propia(
     frase: str,
 ):
@@ -151,7 +158,9 @@ def test_rag_query_descarta_la_opcion_con_lenguaje_no_permitido_cuando_una_afirm
 @pytest.mark.ac("US-249", 1)
 def test_rag_query_omite_la_limitacion_y_cuenta_cuando_esta_en_voz_propia():
     generador = GeneradorDeGuion(
-        opcion_atomica(OPCION, "La evidencia describe la adición de terapia anti-HER2.", ("ch-m1-1",)),
+        opcion_atomica(
+            OPCION, "La evidencia describe la adición de terapia anti-HER2.", ("ch-m1-1",)
+        ),
         limitaciones=("No se aconseja en mayores de 70 años",),
     )
 
@@ -198,9 +207,7 @@ def test_rag_query_rechaza_con_b_recomiend_cuando_la_forma_espanola_atribuida_ci
 ):
     caplog.set_level(logging.INFO)
 
-    cuerpo = _consultar(
-        _con_razon("La guía recomienda añadir terapia anti-HER2", ("ch-g1-4",))
-    )
+    cuerpo = _consultar(_con_razon("La guía recomienda añadir terapia anti-HER2", ("ch-g1-4",)))
 
     _descartada_por_lenguaje(cuerpo)
     assert "ruleId=b-recomiend" in _eventos_de_retiro(caplog)[0]
@@ -232,7 +239,9 @@ def test_rag_query_rechaza_la_cita_cuando_el_tramo_no_es_literal_del_fragmento()
     cuerpo = _consultar(_con_razon(_atribuida("The guideline recommends adding anti-HER2 therapy")))
     assert cuerpo["evidenceOptions"], "un tramo literal sí está en el fragmento"
 
-    cuerpo = _consultar(_con_razon(_atribuida("The guideline recommends stopping anti-HER2 therapy")))
+    cuerpo = _consultar(
+        _con_razon(_atribuida("The guideline recommends stopping anti-HER2 therapy"))
+    )
     _descartada_por_lenguaje(cuerpo)
 
 
