@@ -535,6 +535,9 @@ export type EvidenceAnalysisFilters = {
 
 export type EvidenceAnalysisRequest = {
     patientId: string;
+    /**
+     * Pregunta del oncólogo. clinical-api la normaliza antes de validarla, persistirla y enviarla (Unicode NFC, espacios colapsados a uno y recortados; mayúsculas y puntuación sin cambios). minLength y maxLength se miden después de normalizar (US-250).
+     */
     query: string;
     /**
      * Plantilla de origen (FR-28).
