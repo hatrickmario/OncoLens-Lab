@@ -1,4 +1,5 @@
 - [Entorno de integracion en worktree](reference_entorno_integracion_worktree.md) — receta para PostgreSQL de test, secretos, redes y codegen sin chocar con otros agentes
 - [Entorno de tests y trampas](entorno-de-tests.md) — correr integración/codegen en un worktree; pii-scan y oasdiff
 - [Hook de worktree y calidad S3](reference_hook_worktree_y_calidad_s3.md) — trampas del hook, plugin vitest sin todo/fit, fixtures .fixture.ts
+- [Trampas de ejemplos y módulos nuevos](reference_trampas_ejemplos_y_modulos_nuevos.md) — /responses/ en index.json, pii-scan en uuid, include/exclude de vitest, ruff
 - [Validador del catálogo y entorno](reference_validador_catalogo_y_entorno.md) — dónde vive catalog:validate; trampas de Ajv strict, hook y venv
