@@ -3,7 +3,7 @@ import { textoDeConfianza } from '../../lib/ficha/presentacion';
 import { mensajes, rellenar } from '../../lib/mensajes';
 import { FechaRelativa } from '../atoms/fecha-relativa';
 import { BiomarcadorCorregible } from '../molecules/biomarcador-corregible';
-import { CELDA } from '../molecules/encabezado-de-tabla';
+import { CELDA, EncabezadoDeTabla } from '../molecules/encabezado-de-tabla';
 import { SeccionDeFicha } from '../molecules/fila-de-ficha';
 import { OrigenDelDato } from '../molecules/origen-del-dato';
 
@@ -79,18 +79,7 @@ export function RecentBiomarkersTable({
             </p>
           )}
           <table className="w-full border-collapse">
-            <thead className="bg-surface-alt">
-              <tr>
-                {columnas.map((columna) => (
-                  <th key={columna} scope="col" className={CELDA}>
-                    {columna}
-                  </th>
-                ))}
-                <th scope="col" className={`${CELDA} relative`}>
-                  <span className="sr-only">{textos.acciones}</span>
-                </th>
-              </tr>
-            </thead>
+            <EncabezadoDeTabla columnas={columnas} columnaDeAcciones={textos.acciones} />
             {biomarcadores.map((b) => (
               <BiomarcadorCorregible
                 key={b.id}
