@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import type {
   Biomarker,
   ClinicalNote,
@@ -29,6 +29,10 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh }) }));
 
 const { correccion } = mensajes().ficha;
 const HOY = '2026-09-22';
+
+/** UUID v4 sintético distinto por prefijo e índice, sin la forma de un número de documento. */
+const idDePrueba = (prefijo: string, i: number): string =>
+  `${prefijo}3c5e7f1-b2d4-4a6c-9e8f-${(0xa1b2c3d4e5f0 + i).toString(16)}`;
 const bff = crearBffDeCorreccionSimulado();
 const [her2] = fichaDelDoctor.recentBiomarkers;
 if (her2 === undefined) throw new Error('El ejemplo no trae biomarcadores');
@@ -220,13 +224,13 @@ describe('Corrección con histórico en la ficha', () => {
     bff.historicoDeBiomarcador({
       items: fechas.map((recordedAt, i) => ({
         ...historicoDeBiomarcador.items[0]!,
-        id: `00000000-0000-4000-8000-00000000000${i}`,
+        id: idDePrueba('0', i),
         recordedAt,
       })),
     });
     const corregidos = fechas.map((performedAt, i) => ({
       ...biomarcadorCorregido,
-      id: `10000000-0000-4000-8000-00000000000${i}`,
+      id: idDePrueba('1', i),
       name: `Marcador ${i}`,
       performedAt: performedAt.slice(0, 10),
     }));
@@ -244,7 +248,7 @@ describe('Corrección con histórico en la ficha', () => {
     montarNotas(
       fechas.map((recordedAt, i) => ({
         ...listaDeNotas.items[1]!,
-        id: `20000000-0000-4000-8000-00000000000${i}`,
+        id: idDePrueba('2', i),
         recordedAt,
       })),
     );
