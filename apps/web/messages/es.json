@@ -339,6 +339,7 @@
       "errorSinTraza": "No pudimos cargar el listado. Intenta de nuevo."
     }
   },
+  "caso": {},
   "ficha": {
     "tituloDocumento": "Paciente · OncoLens",
     "noRegistrado": "No registrado",

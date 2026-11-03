@@ -24,6 +24,10 @@ export function esUuid(valor: string): boolean {
  * otras pantallas arman `/pacientes/{id}/analisis` por su cuenta (deuda anotada en tasks.md).
  * Precondición: `patientId` es un UUID; cualquier otro valor lanza en vez de armar una ruta con él.
  */
+export function hrefDeVistaDeCaso(_patientId: string): string {
+  throw new Error('no implementado');
+}
+
 export function hrefDeFicha(patientId: string, ancla?: AnclaDeFicha): string {
   if (!esUuid(patientId)) throw new Error('patientId debe ser un UUID');
   return ancla ? `/pacientes/${patientId}#${ancla}` : `/pacientes/${patientId}`;
