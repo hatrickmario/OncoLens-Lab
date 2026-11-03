@@ -2,8 +2,11 @@ import 'server-only';
 import {
   correctBiomarker,
   correctClinicalNote,
+  createManualClinicalAttribute,
+  createManualPriorTreatment,
   getBiomarkerHistory,
   getClinicalNoteHistory,
+  listClinicalAttributes,
   listClinicalNotes,
 } from '../../../../packages/api-contracts/src/client-web/clinical-api';
 import {
@@ -11,6 +14,8 @@ import {
   zCorrectBiomarkerPath,
   zCorrectClinicalNoteBody,
   zCorrectClinicalNotePath,
+  zCreateManualClinicalAttributeBody,
+  zCreateManualPriorTreatmentBody,
   zGetBiomarkerHistoryPath,
   zCreateManualClinicalAttributePath,
   zCreateManualPriorTreatmentPath,
@@ -106,27 +111,24 @@ const DEFINICIONES: Record<OperacionDeRegistroManual, Definicion> = {
     ruta: zGetClinicalNoteHistoryPath,
     llamar: (sdk, path) => getClinicalNoteHistory({ client: sdk.client, path, ...base }),
   }),
-  // Esqueleto de L1D-80 (tarea 2.9): el cuerpo y la llamada llegan con el commit `feat`.
   createManualPriorTreatment: definir({
     evento: 'registro_clinico.tratamiento.crear',
     ruta: zCreateManualPriorTreatmentPath,
-    llamar: () => {
-      throw new Error('no implementado');
-    },
+    cuerpo: zCreateManualPriorTreatmentBody,
+    llamar: (sdk, path, body) =>
+      createManualPriorTreatment({ client: sdk.client, path, body, ...base }),
   }),
   listClinicalAttributes: definir({
     evento: 'registro_clinico.atributos.listar',
     ruta: zListClinicalAttributesPath,
-    llamar: () => {
-      throw new Error('no implementado');
-    },
+    llamar: (sdk, path) => listClinicalAttributes({ client: sdk.client, path, ...base }),
   }),
   createManualClinicalAttribute: definir({
     evento: 'registro_clinico.atributo.crear',
     ruta: zCreateManualClinicalAttributePath,
-    llamar: () => {
-      throw new Error('no implementado');
-    },
+    cuerpo: zCreateManualClinicalAttributeBody,
+    llamar: (sdk, path, body) =>
+      createManualClinicalAttribute({ client: sdk.client, path, body, ...base }),
   }),
 };
 
@@ -213,7 +215,7 @@ async function pedir(llamada: () => Promise<Respuesta>): Promise<Response | unde
 }
 
 /**
- * Proxy de las cinco operaciones de corrección con histórico (US-253). Las lecturas van sin `Origin` (cookie
+ * Proxy de las cinco operaciones de corrección con histórico (US-253) y de las tres del tratamiento previo y el atributo manuales (US-094). Las lecturas van sin `Origin` (cookie
  * `SameSite=Strict`); las mutaciones verifican `Origin` y validan el cuerpo con el Zod generado antes de reenviarlo.
  * Solo la cookie de sesión sale hacia clinical-api; 2xx y 4xx se retransmiten sin reinterpretar y un 5xx o un fallo
  * de red responde `ERROR_INTERNO` propio. El log lleva el evento de la operación, status y traceId: nunca ids,
