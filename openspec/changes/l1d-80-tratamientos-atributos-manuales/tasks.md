@@ -87,25 +87,30 @@
 
 ## 4. frontend
 
-- [ ] 4.1 (test del AC primero) Tests en rojo (Vitest + Testing Library + MSW): `DialogoTratamientoPrevio` envía el
+- [x] 4.1 (test del AC primero) Tests en rojo (Vitest + Testing Library + MSW): `DialogoTratamientoPrevio` envía el
   cuerpo del contrato y muestra el aviso RN-27 con `no_mapeado`; `DialogoAtributoClinico` lista solo
   `allowedAttributes`, anuncia el `422` junto al campo con `aria-live` y `Esc` devuelve el foco al disparador
   [US-094 AC-6]. Commit `test(L1D-80)`.
-- [ ] 4.2 (test del AC primero) E2E Playwright en rojo contra Compose con P-CASO: "el tratamiento y el atributo
+  Hecho: `apps/web/tests/ui/registro-manual-caso.test.tsx` (6 tests; 3 con `[US-094 AC-6]`), rojo en la aserción en `0e3e8833` (no se encuentra el botón «+ Agregar tratamiento previo»), verde en `96e513fa`.
+- [x] 4.2 (test del AC primero) E2E Playwright en rojo contra Compose con P-CASO: "el tratamiento y el atributo
   registrados aparecen en su sección sin recargar [US-094 AC-6]", con aserción de que solo hay peticiones a `/api/*`
   del mismo origen. Commit `test(L1D-80)`.
-- [ ] 4.3 (test del AC primero) Implementar los dos diálogos (S5-03 c y d, `docs/ux/S5/pantallas-s5.md`) y los
+  Hecho: `apps/web/e2e/registro-manual-caso.spec.ts` contra Compose (`scripts/e2e/ejecutar.sh`), 1 passed. Desviación: el spec se escribió después del `feat` (su primera corrida falló porque el catálogo real deja «Leuprorelina» sin ATC en mama; el spec usa «Fármaco experimental X» y comprueba el aviso RN-27), sin rojo previo contra el build sin la UI.
+- [x] 4.3 (test del AC primero) Implementar los dos diálogos (S5-03 c y d, `docs/ux/S5/pantallas-s5.md`) y los
   botones «+ Agregar tratamiento previo» y «+ Registrar atributo» en la página de `l1d-76`; `router.refresh()` tras
   el `201`. Añadir `Dialog` de shadcn/ui si no está en `main` (`npm audit` en el PR). Verificación: 4.1 y 4.2 en
   verde, `lint:lenguaje` limpio. Commit `feat(L1D-80)`.
-- [ ] 4.4 Loop visual (visual-check): estados, consola sin errores ni violaciones de CSP, red solo /api/* sin PII en
+  Desviación: la recarga tras el `201` es `recargar()` de `useVistaDeCaso` (la vista de caso es un componente cliente), no `router.refresh()`. `Dialog` ya estaba en `main`.
+- [x] 4.4 Loop visual (visual-check): estados, consola sin errores ni violaciones de CSP, red solo /api/* sin PII en
   URLs, accesibilidad y teclado, rendimiento y capturas a 375 y 1280 px; cada fallo se convierte primero en un test
   en rojo.
-- [ ] 4.5 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en
+  Hecho (visual-check, 375 y 1280 px, Compose `oncolens-e2e` con seed sintético): consola 0 errores, red solo `/api/*`, foco y `Esc` correctos; capturas en `reports/visual/L1D-80/` (carpeta ignorada).
+- [x] 4.5 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en
   verde antes y después, commit `refactor(L1D-80)`.
 
 ## 5. Verificación
 
+  Hecho: `Extract · formulario-de-tratamiento-previo.tsx · CamposDeTratamiento, CamposDeFinDeTratamiento y PieDeFormularioDeRegistro (este último también en formulario-de-atributo-clinico.tsx) · el formulario superaba los 100 de max-lines`.
 - [x] 5.1 `openspec validate l1d-80-tratamientos-atributos-manuales --strict` en verde.
 - [x] 5.2 Suites de `apps/clinical-api`, `apps/web` y `packages/clinical-catalogs` en verde; `contracts:verify-provider`
   (tres operaciones, incluidos los códigos de error), `tsc --noEmit`, `eslint`, `lint:lenguaje` y `pii-scan` limpios;
@@ -116,6 +121,9 @@
 - [ ] D5-29 Adoptar `compartido/registro-http.ts` (fábrica HTTP de los registros) en los controllers de `manual-entry` y `corrections` y rellenar `field` en los 422 de `manual-entry` (el contrato ya lo declara). DIFERIDA -> D5-29 (fuera de los archivos de este change; reportado al coordinador).
 - [ ] D5-30 La fila «Deprivación androgénica» del seed (b) es una clase sin ATC: decidir con el oncólogo si se siembra un fármaco concreto (p. ej. leuprorelina) para que la demo la muestre `mapeado`. DIFERIDA -> D5-30.
 - [ ] D5-31 Al mergear L1D-195, añadir a `sembrarFilasManuales()` (`apps/clinical-api/tests/integration/evidence-analysis/analisis-sin-escrituras.test.ts`) un paso que registre un tratamiento previo y un atributo por los endpoints de este change. DIFERIDA -> L1D-195.
+
+- [ ] D5-33 `CaseView.priorTreatments` no trae `mappingStatus` ni `id`: la tabla del caso muestra «Sin código ATC en el catálogo» cuando `atcCodes` está vacío. Añadir `mappingStatus` (aditivo) al contrato del proveedor para mostrar «No mapeado» con certeza (RN-27). DIFERIDA -> D5-33 (clinical-platform-dev; fuera del alcance de `frontend-dev`).
+- [ ] D5-34 `useEnvioDeRegistro` (L1D-80) y `useEnvioDeCorreccion` (L1D-309) son casi iguales, y `CampoDeSeleccion`/`PieDeFormularioDeRegistro`/`AccionDeRegistro` son nuevos: unificar cuando L1D-91 sea el tercer consumidor. DIFERIDA -> L1D-91.
 
 ## humano
 

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
-import { zPriorTreatmentManualCreate } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
 import { quedoSinCodigo } from '../../lib/registro-manual/cliente';
 import {
   cuerpoDeTratamiento,
@@ -10,12 +9,9 @@ import {
 import { useEnvioDeRegistro } from '../../lib/registro-manual/use-envio-de-registro';
 import { mensajes } from '../../lib/mensajes';
 import { Button } from '../ui/button';
-import { Label } from '../ui/label';
-import { CampoDeCorreccion } from './campo-de-correccion';
-import { CampoDeSeleccion } from './campo-de-seleccion';
-
-const CONTEXTOS = zPriorTreatmentManualCreate.shape.setting.options;
-const MOTIVOS = zPriorTreatmentManualCreate.shape.endReason.unwrap().options;
+import { CamposDeTratamiento } from './campos-de-tratamiento';
+import { CamposDeFinDeTratamiento } from './campos-de-fin-de-tratamiento';
+import { PieDeFormularioDeRegistro } from './pie-de-formulario-de-registro';
 
 export interface FormularioDeTratamientoPreviaProps {
   pacienteId: string;
@@ -30,8 +26,7 @@ export function FormularioDeTratamientoPrevio({
   alGuardar,
   alCerrar,
 }: FormularioDeTratamientoPreviaProps) {
-  const { tratamiento: t, guardar, guardando, cancelar, cerrar } = mensajes().caso.registro;
-  const { contextos, motivosDeFin } = mensajes().caso;
+  const { tratamiento: t, cerrar } = mensajes().caso.registro;
   const [enCurso, setEnCurso] = useState(false);
   const [sinCodigo, setSinCodigo] = useState(false);
   const { enviando, error, enviar, fallar } = useEnvioDeRegistro(
@@ -65,86 +60,13 @@ export function FormularioDeTratamientoPrevio({
   }
   return (
     <form onSubmit={alEnviar} noValidate className="flex flex-col gap-3">
-      <CampoDeCorreccion
-        id="tp-linea"
-        name="lineNumber"
-        type="number"
-        min={1}
-        etiqueta={t.linea}
-        error={de('lineNumber')}
+      <CamposDeTratamiento errorDe={de} enCurso={enCurso} alCambiarEnCurso={setEnCurso} />
+      {!enCurso && <CamposDeFinDeTratamiento errorDe={de} />}
+      <PieDeFormularioDeRegistro
+        enviando={enviando}
+        errorGeneral={error && error.campo === undefined ? error.mensaje : undefined}
+        alCancelar={alCerrar}
       />
-      <CampoDeSeleccion
-        id="tp-contexto"
-        name="setting"
-        defaultValue="desconocido"
-        etiqueta={t.contexto}
-        error={de('setting')}
-      >
-        {CONTEXTOS.map((c) => (
-          <option key={c} value={c}>
-            {contextos[c]}
-          </option>
-        ))}
-      </CampoDeSeleccion>
-      <CampoDeCorreccion
-        id="tp-esquema"
-        name="regimenName"
-        etiqueta={t.esquema}
-        error={de('regimenName')}
-      />
-      <CampoDeCorreccion
-        id="tp-inicio"
-        name="startedAt"
-        type="date"
-        etiqueta={t.inicio}
-        error={de('startedAt')}
-      />
-      <div className="flex min-h-11 items-center gap-2">
-        <input
-          id="tp-en-curso"
-          name="ongoing"
-          type="checkbox"
-          checked={enCurso}
-          onChange={(e) => setEnCurso(e.target.checked)}
-        />
-        <Label htmlFor="tp-en-curso">{t.enCurso}</Label>
-      </div>
-      {!enCurso && (
-        <>
-          <CampoDeCorreccion
-            id="tp-fin"
-            name="endedAt"
-            type="date"
-            etiqueta={t.fin}
-            error={de('endedAt')}
-          />
-          <CampoDeSeleccion
-            id="tp-motivo"
-            name="endReason"
-            defaultValue=""
-            etiqueta={t.motivoDeFin}
-            error={de('endReason')}
-          >
-            <option value="">{mensajes().caso.registro.atributo.elegir}</option>
-            {MOTIVOS.map((m) => (
-              <option key={m} value={m}>
-                {motivosDeFin[m]}
-              </option>
-            ))}
-          </CampoDeSeleccion>
-        </>
-      )}
-      <p aria-live="assertive" className="text-error m-0">
-        {error && error.campo === undefined ? error.mensaje : null}
-      </p>
-      <div className="flex flex-wrap gap-2">
-        <Button type="submit" disabled={enviando}>
-          {enviando ? guardando : guardar}
-        </Button>
-        <Button variante="secundario" onClick={alCerrar}>
-          {cancelar}
-        </Button>
-      </div>
     </form>
   );
 }

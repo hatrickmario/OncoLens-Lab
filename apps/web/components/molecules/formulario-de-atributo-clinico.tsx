@@ -5,9 +5,9 @@ import { cuerpoDeAtributo, errorDelCuerpoDeAtributo } from '../../lib/registro-m
 import type { AtributoPermitido } from '../../lib/registro-manual/cliente';
 import { useEnvioDeRegistro } from '../../lib/registro-manual/use-envio-de-registro';
 import { mensajes } from '../../lib/mensajes';
-import { Button } from '../ui/button';
 import { CampoDeCorreccion } from './campo-de-correccion';
 import { CampoDeSeleccion } from './campo-de-seleccion';
+import { PieDeFormularioDeRegistro } from './pie-de-formulario-de-registro';
 
 export interface FormularioDeAtributoClinicoProps {
   pacienteId: string;
@@ -25,7 +25,7 @@ export function FormularioDeAtributoClinico({
   alGuardar,
   alCerrar,
 }: FormularioDeAtributoClinicoProps) {
-  const { atributo: t, guardar, guardando, cancelar } = mensajes().caso.registro;
+  const { atributo: t } = mensajes().caso.registro;
   const [clave, setClave] = useState('');
   const { enviando, error, enviar, fallar } = useEnvioDeRegistro(
     pacienteId,
@@ -82,17 +82,11 @@ export function FormularioDeAtributoClinico({
         etiqueta={t.fecha}
         error={de('observedAt')}
       />
-      <p aria-live="assertive" className="text-error m-0">
-        {error && error.campo === undefined ? error.mensaje : null}
-      </p>
-      <div className="flex flex-wrap gap-2">
-        <Button type="submit" disabled={enviando}>
-          {enviando ? guardando : guardar}
-        </Button>
-        <Button variante="secundario" onClick={alCerrar}>
-          {cancelar}
-        </Button>
-      </div>
+      <PieDeFormularioDeRegistro
+        enviando={enviando}
+        errorGeneral={error && error.campo === undefined ? error.mensaje : undefined}
+        alCancelar={alCerrar}
+      />
     </form>
   );
 }
