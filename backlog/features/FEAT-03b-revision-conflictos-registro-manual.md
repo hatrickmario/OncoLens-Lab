@@ -297,13 +297,14 @@ Como oncólogo, quiero corregir en la ficha un examen, un biomarcador o una nota
 - **AC-3 (borde · validación)** · Dado un valor fuera del formato del catálogo o una fecha posterior a hoy, cuando se guarda, entonces el servidor responde `422`, el mensaje aparece junto al campo y nada cambia. `[PRD §10]`
 - **AC-4 (borde · paciente egresado y permisos)** · Dado un paciente egresado, cuando se intenta editar, entonces `422` (RN-17); y una sesión de `admin` recibe `403`. `[RN-17]` `[PRD §11]`
 - **AC-5 (borde · análisis afectados)** · Dado un análisis previo que usó el dato editado, cuando se guarda la corrección, entonces la huella del contexto clínico cambia, de modo que un análisis nuevo no se reutiliza (US-251), y el aviso del análisis previo no bloquea nada. `[RN-26]`
+- **AC-6 (borde · nombres de terceros)** · Dado el formulario de una nota libre, cuando se abre, entonces muestra el aviso «No escribas nombres de personas (ni del paciente ni de terceros) en las notas» y la nota pasa por el detector de PII antes de llegar a la IA. `[ADR-40]` `[RN-11]`
 
 ## Contexto técnico
 Endpoints de corrección en `clinical-api` sobre `Biomarker`, `Exam` y `ClinicalNote`, contrato primero (cambio compatible, ADR-26). La normalización final es de Backend 1 (ADR-33). La auditoría completa de la acción llega con US-150 (S6). TDD estricto en las reglas de corrección (RN-08) y test del AC primero en la UI.
 
 ## INVEST
 **Small** ⚠ 5 puntos: tres entidades sobre el mismo patrón de corrección.
-**Testable** ✓ cinco tests (Supertest con PostgreSQL real y Testing Library).
+**Testable** ✓ seis tests (Supertest con PostgreSQL real y Testing Library).
 
 ---
 
