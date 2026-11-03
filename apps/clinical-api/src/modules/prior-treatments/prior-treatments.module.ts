@@ -1,10 +1,13 @@
-import { Router } from 'express';
+import type { Router } from 'express';
 import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type { Registrar } from '../../infrastructure/logger.js';
 import type { TraceIdGenerator } from '../../infrastructure/trace-id-generator.js';
 import type { FuenteDeConexiones } from '../compartido/transaccion.js';
 import type { ReconciliationService } from '../reconciliation/ports.js';
+import { priorTreatmentsController } from './prior-treatments.controller.js';
+import { createPriorTreatmentsRepository } from './prior-treatments.repository.js';
+import { createPriorTreatmentsService } from './prior-treatments.service.js';
 
 export interface DependenciasDelModulo {
   /** Pool de PostgreSQL: cada registro toma UNA conexión para su transacción. */
@@ -19,10 +22,17 @@ export interface DependenciasDelModulo {
 }
 
 /** Composición del módulo `prior-treatments`: devuelve el router que se monta detrás del guard de sesión. */
-export function componerModuloDeTratamientos(_dependencias: DependenciasDelModulo): Router {
-  const router = Router();
-  router.post('/patients/:patientId/prior-treatments', () => {
-    throw new Error('no implementado');
+export function componerModuloDeTratamientos(dependencias: DependenciasDelModulo): Router {
+  const repositorio = createPriorTreatmentsRepository(dependencias.fuente);
+  return priorTreatmentsController({
+    servicioPara: (traceId) =>
+      createPriorTreatmentsService({
+        repositorio,
+        reconciliacion: dependencias.reconciliacionPara(traceId),
+        reloj: dependencias.reloj,
+        generarId: dependencias.generarId,
+      }),
+    traceIds: dependencias.traceIds,
+    registrar: dependencias.registrar,
   });
-  return router;
 }
