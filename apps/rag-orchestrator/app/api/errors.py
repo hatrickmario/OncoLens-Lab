@@ -54,7 +54,9 @@ def _cuerpo_invalido(trace_id: str, detalle: list[DetailItem]) -> JSONResponse:
     return JSONResponse(status_code=422, content=cuerpo.model_dump())
 
 
-def registrar_manejadores_de_error(app: FastAPI, trace_ids: TraceIdGenerator) -> None:
+def _registrar_manejadores_de_validacion(app: FastAPI, trace_ids: TraceIdGenerator) -> None:
+    """Los `422 CUERPO_INVALIDO`: contrato (Pydantic) y faltantes no catalogados (RN-11), ambos sin eco de valores."""
+
     @app.exception_handler(RequestValidationError)
     async def peticion_invalida_sin_eco(
         request: Request, error: RequestValidationError
@@ -65,6 +67,30 @@ def registrar_manejadores_de_error(app: FastAPI, trace_ids: TraceIdGenerator) ->
             DetailItem(loc=list(e["loc"]), msg=e["msg"], type=e["type"]) for e in error.errors()
         ]
         return _cuerpo_invalido(resolver_trace_id(request, trace_ids), detalle)
+
+    @app.exception_handler(FaltanteNoCatalogadoError)
+    async def faltante_no_catalogado(
+        request: Request, error: FaltanteNoCatalogadoError
+    ) -> JSONResponse:
+        """422 CUERPO_INVALIDO por cada posición inválida de ``missingCriticalData``: sin eco del valor, ni en el cuerpo ni
+        en el log (solo el conteo), porque puede ser texto libre con PHI (RN-10, RN-11)."""
+        trace_id = resolver_trace_id(request, trace_ids)
+        logger.warning(
+            "event=faltante_no_catalogado invalidos=%d traceId=%s", len(error.posiciones), trace_id
+        )
+        detalle = [
+            DetailItem(
+                loc=["body", "clinicalContext", "missingCriticalData", posicion],
+                msg="El dato crítico faltante debe ser una clave del catálogo.",
+                type="faltante_no_catalogado",
+            )
+            for posicion in error.posiciones
+        ]
+        return _cuerpo_invalido(trace_id, detalle)
+
+
+def registrar_manejadores_de_error(app: FastAPI, trace_ids: TraceIdGenerator) -> None:
+    _registrar_manejadores_de_validacion(app, trace_ids)
 
     @app.exception_handler(RecuperacionNoDisponibleError)
     async def recuperacion_no_disponible(
@@ -120,26 +146,6 @@ def registrar_manejadores_de_error(app: FastAPI, trace_ids: TraceIdGenerator) ->
             traceId=trace_id,
         )
         return JSONResponse(status_code=503, content=cuerpo.model_dump())
-
-    @app.exception_handler(FaltanteNoCatalogadoError)
-    async def faltante_no_catalogado(
-        request: Request, error: FaltanteNoCatalogadoError
-    ) -> JSONResponse:
-        """422 CUERPO_INVALIDO por cada posición inválida de ``missingCriticalData``: sin eco del valor, ni en el cuerpo ni
-        en el log (solo el conteo), porque puede ser texto libre con PHI (RN-10, RN-11)."""
-        trace_id = resolver_trace_id(request, trace_ids)
-        logger.warning(
-            "event=faltante_no_catalogado invalidos=%d traceId=%s", len(error.posiciones), trace_id
-        )
-        detalle = [
-            DetailItem(
-                loc=["body", "clinicalContext", "missingCriticalData", posicion],
-                msg="El dato crítico faltante debe ser una clave del catálogo.",
-                type="faltante_no_catalogado",
-            )
-            for posicion in error.posiciones
-        ]
-        return _cuerpo_invalido(trace_id, detalle)
 
     @app.exception_handler(TipoCancerNoRegistradoError)
     async def tipo_cancer_no_registrado(
