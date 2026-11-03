@@ -50,7 +50,7 @@ const MENSAJES: Record<CodigoDeError, string> = {
   TIPO_CANCER_NO_REGISTRADO:
     'Análisis no realizado: falta el tipo de cáncer; no fue posible filtrar la evidencia.',
   PACIENTE_EGRESADO: 'El paciente está egresado y no admite registros.',
-  VALOR_FUERA_DE_CATALOGO: 'Un valor no pertenece al catálogo clínico montado.',
+  VALOR_FUERA_DE_CATALOGO: 'Un valor no figura en el catálogo clínico.',
   GRADACION_INCOHERENTE: 'El puntaje o el grupo ISUP no cuadran con los patrones de Gleason.',
   DATO_NO_VIGENTE: 'El dato ya fue reemplazado: recarga la ficha para ver su versión vigente.',
   CATALOG_VERSION_MISMATCH: 'La versión del catálogo clínico difiere entre servicios.',

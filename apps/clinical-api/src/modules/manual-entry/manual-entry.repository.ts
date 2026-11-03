@@ -1,8 +1,11 @@
 import type { Consultador } from '../auth/auth.repository.js';
-import { elegirDiagnosticoVigente } from '../compartido/diagnostico-vigente.js';
+import {
+  elegirDiagnosticoVigente,
+  sqlDiagnosticoCandidato,
+} from '../compartido/diagnostico-vigente.js';
+import { bloquearPaciente } from '../compartido/paciente-activo.js';
 import { sqlDatoVigente } from '../compartido/estados-de-revision.js';
 import { ejecutarEnTransaccion, type FuenteDeConexiones } from '../compartido/transaccion.js';
-import type { EstadoDelPaciente } from '../patients/patients.repository.js';
 import type {
   BiomarcadorAGuardar,
   DatosDelDiagnostico,
@@ -67,15 +70,6 @@ function datosDelDiagnostico(f: FilaSql): DatosDelDiagnostico {
   };
 }
 
-async function bloquearPaciente(db: Consultador, patientId: string) {
-  const { rows } = await db.query(
-    'SELECT lifecycle_status::text AS estado FROM clinical.patient WHERE id = $1 FOR UPDATE',
-    [patientId],
-  );
-  const fila = rows[0];
-  return fila === undefined ? null : { estado: fila['estado'] as EstadoDelPaciente };
-}
-
 async function episodioDelRegistro(db: Consultador, patientId: string): Promise<string> {
   const { rows } = await db.query(
     `SELECT id FROM clinical.care_episode WHERE patient_id = $1
@@ -104,7 +98,7 @@ async function diagnosticoVigente(
 ): Promise<DiagnosticoVigente | null> {
   const { rows } = await db.query(
     `SELECT ${COLUMNAS_DE_DIAGNOSTICO} FROM clinical.diagnosis
-      WHERE patient_id = $1 AND is_active AND ${sqlDatoVigente('review_status')}`,
+      WHERE patient_id = $1 AND ${sqlDiagnosticoCandidato()}`,
     [patientId],
   );
   const elegida = elegirDiagnosticoVigente(rows, (f) => ({

@@ -191,7 +191,6 @@ export function planDeCorreccionDeBiomarcador(
   return {
     examen,
     biomarcadorAReemplazar: actual.id,
-    examenAReemplazar: examen.supersedesId,
     biomarcador: biomarcadorCorregido(actual, cambios, decision, examen.id, contexto),
   };
 }

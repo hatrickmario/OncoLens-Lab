@@ -110,4 +110,20 @@ describe('el examen de una corrección de biomarcador (ADR-50, D3)', () => {
     expect(respuesta.status).toBe(201);
     expect(respuesta.body.performedAt).toBe(anterior.performed_at);
   });
+
+  it('reemplaza el examen solo con la segunda corrección cuando dos biomarcadores comparten examen [US-253 AC-1]', async () => {
+    const paciente = await pacienteConNotas(escenario);
+    const ki67 = await registrarKi67(escenario, paciente.patientId);
+    const hermano = await acompanarEnElExamen(ki67);
+    const { examen: examenOriginal } = await examenDe(ki67);
+
+    const primera = await corregir(paciente.patientId, ki67, { value: '25', unit: '%' });
+    const segunda = await corregir(paciente.patientId, hermano, { value: 'Negativo' });
+
+    expect([primera.status, segunda.status]).toEqual([201, 201]);
+    const deLaPrimera = await filaDeBiomarcador(escenario.mundo.cliente, primera.body.id);
+    const deLaSegunda = await filaDeBiomarcador(escenario.mundo.cliente, segunda.body.id);
+    expect(deLaPrimera.exam_supersedes_id).toBeNull();
+    expect(deLaSegunda.exam_supersedes_id).toBe(examenOriginal);
+  });
 });
