@@ -54,8 +54,8 @@ export function createReconciliationService({
 }: DependenciasDeReconciliation): ReconciliationService {
   function resolverContraElCatalogo(propuesta: PropuestaDeNormalizacion, estandar: Estandar) {
     const resolucion = resolverCodigo({
-      entradas: catalogo.entradas(propuesta.tipoDeCancer, estandar),
-      sinonimos: catalogo.sinonimos(propuesta.tipoDeCancer),
+      entradas: catalogo.entradas(propuesta.tipoDeCancer ?? '', estandar),
+      sinonimos: catalogo.sinonimos(propuesta.tipoDeCancer ?? ''),
       textoOriginal: propuesta.textoOriginal,
       ...(propuesta.codigoPropuesto !== undefined && {
         codigoPropuesto: propuesta.codigoPropuesto,

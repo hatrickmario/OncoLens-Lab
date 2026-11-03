@@ -20,7 +20,8 @@ export type TipoDeEvento =
 
 export interface PropuestaDeNormalizacion {
   readonly entidad: EntidadNormalizable;
-  readonly tipoDeCancer: string;
+  /** `null` = el paciente no tiene diagnóstico: no hay catálogo contra el que mapear y la decisión es `no_mapeado`. */
+  readonly tipoDeCancer: string | null;
   /** Texto tal como lo escribió quien registra (dato clínico: nunca va a logs). */
   readonly textoOriginal: string;
   /** Código sugerido por el formulario o por Backend 2: solo se acepta si existe en el catálogo para su estándar. */
@@ -42,6 +43,11 @@ export interface DecisionDeNormalizacion {
   readonly atcCodes: readonly string[];
   /** Versión del catálogo montado: la devuelve la decisión y no se persiste por fila (D5). */
   readonly catalogVersion: string;
+}
+
+/** Estado persistible de una entidad que no admite `n_a` (todas menos `ClinicalEvent`): UNA sola ruta de estrechamiento. */
+export function estadoPersistible(decision: DecisionDeNormalizacion): 'mapeado' | 'no_mapeado' {
+  throw new Error(`no implementado: ${decision.mappingStatus}`);
 }
 
 export interface ReconciliationService {
