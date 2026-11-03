@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — RAG & AI Services API (Backend 2 / rag-orchestrator)
-  version: 1.10.1
+  version: 1.11.0
   description: >-
     API interna, alcanzable solo desde la red ai-net y solo por clinical-api (JWT de servicio
     asimétrico; la cookie de sesión del doctor nunca llega aquí). No persiste PHI y procesa los
@@ -168,12 +168,18 @@ paths:
           $ref: '#/components/responses/ErrorInterno'
         "503":
           description: >-
-            LLM local no disponible (LOCAL_LLM_UNAVAILABLE). Con datos reales solo se usan
+            Un componente local no está disponible o su salida no es válida (LOCAL_LLM_UNAVAILABLE,
+            LLM_OUTPUT_INVALID, RETRIEVAL_UNAVAILABLE, NLI_UNAVAILABLE): falla cerrada, ninguna
+            afirmación se devuelve sin validar (RN-01), sin respuesta parcial. Con datos reales solo se usan
             modelos locales, sin fallback a la nube (RN-12).
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorLlmLocalNoDisponible'
+                oneOf:
+                  - $ref: '#/components/schemas/ErrorLlmLocalNoDisponible'
+                  - $ref: '#/components/schemas/ErrorRecuperacionNoDisponible'
+                  - $ref: '#/components/schemas/ErrorNliNoDisponible'
+                  - $ref: '#/components/schemas/ErrorSalidaLlmInvalida'
         "504":
           $ref: '#/components/responses/DeadlineVencido'
 
@@ -1154,7 +1160,10 @@ components:
           type: string
           minLength: 1
           maxLength: 2000
-          description: Pregunta ya enmascarada (RN-11).
+          description: >-
+            Pregunta ya enmascarada (RN-11) y normalizada por clinical-api (Unicode NFC, espacios
+            colapsados y recortados). rag-orchestrator vuelve a normalizarla al recibirla; vacía tras
+            normalizar → 422 (US-250, US-218).
         clinicalContext:
           $ref: '#/components/schemas/ClinicalContext'
         analysisMemory:

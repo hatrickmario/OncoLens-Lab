@@ -661,7 +661,7 @@ class RagFollowUpRequest(BaseModel):
     question: Annotated[
         str,
         Field(
-            description='Pregunta ya enmascarada (RN-11).',
+            description='Pregunta ya enmascarada (RN-11) y normalizada por clinical-api (Unicode NFC, espacios colapsados y recortados). rag-orchestrator vuelve a normalizarla al recibirla; vacía tras normalizar → 422 (US-250, US-218).',
             max_length=2000,
             min_length=1,
         ),

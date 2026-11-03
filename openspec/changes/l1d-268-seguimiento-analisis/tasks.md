@@ -9,17 +9,17 @@
 
 ## 1. contratos
 
-- [ ] 1.1 Editar `apps/clinical-api/openapi.yaml` (`FollowUpCreate.question.description`; `503` de `POST …/follow-ups` →
-      `GeneracionNoDisponible`; `AnalysisBasis.maxFollowUps` `[S5 resp. 10]`; `info.version` 1.15.1 → **1.16.0**) y
+- [x] 1.1 Editar `apps/clinical-api/openapi.yaml` (`FollowUpCreate.question.description`; `503` de `POST …/follow-ups` →
+      `GeneracionNoDisponible`; `AnalysisBasis.maxFollowUps` `[S5 resp. 10]`; `info.version` 1.15.1 → **1.17.0**, decisión del orquestador: L1D-74 toma 1.16.0) y
       `apps/rag-orchestrator/openapi.yaml` (`RagFollowUpRequest.question.description`; `503` de `/rag/follow-up` con el
       `oneOf` de cuatro errores; `info.version` 1.10.1 → **1.11.0**) según design.md §Contratos (skill `sync-contracts`).
       Si al rebasar la versión ya está tomada, renumerar y regenerar · **exento (contrato)** `[US-219 AC-1]`
-- [ ] 1.2 Ejemplos nuevos `contracts/examples/follow-up-sin-evidencia.json` y `rag-follow-up-sin-evidencia.json`
+- [x] 1.2 Ejemplos nuevos `contracts/examples/follow-up-sin-evidencia.json` y `rag-follow-up-sin-evidencia.json`
       (`topRelevanceScore: null`, `queryRewrite = no_aplica`), y registro en `contracts/examples/index.json` de esos dos y
       de `rag-nli-no-disponible.json` / `error-desidentificacion-no-disponible.json` contra los `503` del seguimiento;
       `"maxFollowUps": 10` en `con-evidencia-s4-tres-opciones.json` (y en los `EvidenceAnalysis` nuevos del S5); sin PII ·
       **exento (contrato)**
-- [ ] 1.3 `npm run contracts:check`; `contracts:breaking` → esperado **0 ERR** y un WARN
+- [x] 1.3 `npm run contracts:check`; `contracts:breaking` → esperado **0 ERR** y un WARN
       `response-body-wrapped-in-one-of-original-preserved` por proveedor (medido 2026-11-03, design.md §Contratos), que
       se declara en el PR; si aparece un ERR, parar y avisar al humano (`H-2` añadiría las entradas exactas al JSON);
       `contracts:generate` (sin editar generados a mano); commit `contract(L1D-268)`. Tras el commit, avisar al humano

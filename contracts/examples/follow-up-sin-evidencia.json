@@ -1,0 +1,13 @@
+{
+  "id": "a4c8e1b7-2d5f-4a6b-9c3e-7f1d2b8a4c8e",
+  "analysisId": "b3d9f2a0-1c3e-4f9a-8b1a-9e2f0c3d9f2a",
+  "turnNumber": 2,
+  "question": "¿Existen ensayos que evalúen esta opción en pacientes con función renal reducida?",
+  "status": "sin_evidencia",
+  "answer": [],
+  "citedSources": [],
+  "omittedClaims": 0,
+  "patientDataLinks": [],
+  "disclaimer": "Generado por IA; requiere validación clínica independiente por el oncólogo tratante.",
+  "createdAt": "2026-10-12T15:35:00Z"
+}
