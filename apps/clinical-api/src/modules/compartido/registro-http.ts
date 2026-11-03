@@ -25,10 +25,12 @@ export interface DependenciasDelRegistro<S> {
   readonly registrar: Registrar;
 }
 
-export interface OperacionDeRegistro<S, C> {
+export interface OperacionDeRegistro<S, C, R> {
   readonly evento: string;
   readonly leerCuerpo: (cuerpo: unknown) => LecturaDeCuerpo<C>;
-  readonly ejecutar: (servicio: S, solicitud: { patientId: string; cuerpo: C }) => Promise<unknown>;
+  readonly ejecutar: (servicio: S, solicitud: { patientId: string; cuerpo: C }) => Promise<R>;
+  /** Etiquetas no clínicas del resultado para la línea de log (p. ej. `mappingStatus`); nunca textos del paciente. */
+  readonly etiquetasDelLog?: (creado: R) => Readonly<Record<string, string>>;
   /** Errores de dominio propios de la operación → rechazo; `undefined` si no es uno de ellos. */
   readonly rechazoPropioDe?: (error: unknown) => Rechazo | undefined;
 }
@@ -42,9 +44,9 @@ function rechazoDeRegistro(error: unknown): Rechazo | undefined {
   return comun;
 }
 
-export function crearRegistroHttp<S, C>(
+export function crearRegistroHttp<S, C, R>(
   dependencias: DependenciasDelRegistro<S>,
-  operacion: OperacionDeRegistro<S, C>,
+  operacion: OperacionDeRegistro<S, C, R>,
 ) {
   const { registrar, servicioPara } = dependencias;
   return async (request: Request, response: Response): Promise<void> => {
@@ -68,7 +70,14 @@ export function crearRegistroHttp<S, C>(
         patientId: patientId.data,
         cuerpo: lectura.cuerpo,
       });
-      registrarResultado(registrar, operacion.evento, response, patientId.data, 'ok');
+      registrarResultado(
+        registrar,
+        operacion.evento,
+        response,
+        patientId.data,
+        'ok',
+        operacion.etiquetasDelLog?.(creado),
+      );
       response.setHeader('Cache-Control', 'no-store');
       response.status(201).json(creado);
     } catch (error) {

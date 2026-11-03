@@ -41,6 +41,8 @@ describe('coherencia del módulo completeness con el contrato', () => {
       manualEntry: Router(),
       caseView: Router(),
       corrections: Router(),
+      priorTreatments: Router(),
+      clinicalAttributes: Router(),
     });
 
     expect(protegidas).toContain(router);

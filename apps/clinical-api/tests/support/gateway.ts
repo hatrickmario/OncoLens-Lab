@@ -403,6 +403,8 @@ export async function montarGateway(
     manualEntry: Router(),
     caseView: Router(),
     corrections: Router(),
+    priorTreatments: Router(),
+    clinicalAttributes: Router(),
   });
   const app = appConAuth({
     cliente: mundo.cliente,

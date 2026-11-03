@@ -32,6 +32,7 @@ export function priorTreatmentsController(dependencias: DependenciasDelControlle
       evento: EVENTO_TRATAMIENTO,
       leerCuerpo: leerCuerpoDeTratamiento,
       ejecutar: (servicio, solicitud) => servicio.registrarTratamiento(solicitud),
+      etiquetasDelLog: (creado) => ({ mappingStatus: creado.mappingStatus }),
     }),
     crearCuerpoIlegible(dependencias.registrar, EVENTO_TRATAMIENTO),
   );
