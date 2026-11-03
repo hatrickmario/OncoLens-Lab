@@ -25,7 +25,7 @@
       **test después** `[US-013 AC-1]`
 - [x] 1.3 Tests Pytest del script: sensibilidad e IC con un fake de detector, descarte < 0,95, empate
       → más simple, ninguno cumple → código ≠ 0, reporte sin valores de PII · **test después**
-- [ ] 1.4 **[HUMANO]** (medido aquí sin el stack: ver design.md; falta RSS con el stack y G cargado) Medición de 1 y 2 en la máquina de referencia (RSS con el stack y G cargado) ·
+- [x] 1.4 **[HUMANO]** (medido aquí sin el stack: ver design.md; falta RSS con el stack y G cargado) Medición de 1 y 2 en la máquina de referencia (RSS con el stack y G cargado) · · **Hecho: verificado por el usuario en la Demo 4 (2026-11-02), fila F2 de `docs/evidence/S4-demo4/checklist-verificacion-demo4.md`.** Medido en una máquina de 48 GB (referencia: 32 GB).
       **evaluate** `[US-013 AC-1]`
 - [x] 1.5 Redactar `docs/architecture/adr/ADR-40-deteccion-pii.md` (MADR): candidatos, descartes,
       regla D2, tabla medida, decisión, punto de enmascaramiento (AC-2), identidad exacta (AC-3),

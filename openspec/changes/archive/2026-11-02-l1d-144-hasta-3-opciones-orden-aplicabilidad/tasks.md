@@ -20,7 +20,7 @@
 
 - [x] 3.1 Tests de aceptación en rojo (Supertest + PostgreSQL real + MSW desde `contracts/examples/`): "responde [O-B, O-D, O-C] y analysisBasis.maxOptions = 3 [US-134 AC-1]", "persiste optionsNotShown igual en la Base y el registro [US-134 AC-3]", "propaga O-A última y visible [US-134 AC-4]", "persiste evidence_options en el mismo orden sin reordenar [US-134 AC-8]" · TDD estricto · commit `test(L1D-144)`
 - [x] 3.2 `ANALYSIS_MAX_OPTIONS` con defecto 3 (RN-22) y validación 1–3 en `src/config/secciones.ts`; `optionsNotShown` y `maxOptions` en `analysis-basis.ts`, `analysis-record.ts` y mapper, sin reordenar · TDD estricto (test unitario de config uno a uno) · commit `feat(L1D-144)`
-- [ ] 3.3 (DIFERIDA -> D4-39, tarea humana: verificar `ANALYSIS_MAX_OPTIONS=3` en `.env.example`, que los agentes no pueden leer; Compose pasa `ANALYSIS_MAX_OPTIONS` vacío y el defecto 3 vive en `secciones.ts`) Actualizar `.env.example`/Compose con `ANALYSIS_MAX_OPTIONS=3` · test después (humo de configuración)
+- [x] 3.3 (DIFERIDA -> D4-39, tarea humana: verificar `ANALYSIS_MAX_OPTIONS=3` en `.env.example`, que los agentes no pueden leer; Compose pasa `ANALYSIS_MAX_OPTIONS` vacío y el defecto 3 vive en `secciones.ts`) Actualizar `.env.example`/Compose con `ANALYSIS_MAX_OPTIONS=3` · test después (humo de configuración) · **Hecho: verificado por el usuario en la Demo 4 (2026-11-02), fila F7 de `docs/evidence/S4-demo4/checklist-verificacion-demo4.md`.**
 
 ## Cierre
 

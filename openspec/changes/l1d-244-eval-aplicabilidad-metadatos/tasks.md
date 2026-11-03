@@ -61,7 +61,7 @@ dependen las claves de `population_criteria` del dataset `[S3 resp. 16]`). Sin c
 
 - [x] 2.1 (evaluate) `run-ai-eval` en el PR: las familias existentes mantienen sus métricas y la familia
       `aplicabilidad` da M-08.2 = 0 y M-08.6 = 0 con la configuración falsa. Verificación: `reports/eval/l1d-244-eval-aplicabilidad-metadatos.md` (PASS; `all` idéntico a `baseline.json`).
-- [ ] 2.2 TRASLADADA a US-233 (S4) / tarea `[HUMANO]` de l1d-117 (evaluate) `[HUMANO]` dependiente: cuando el usuario complete la revisión de la muestra de
+- [x] 2.2 TRASLADADA a US-233 (S4) / tarea `[HUMANO]` de l1d-117 (evaluate) `[HUMANO]` dependiente: cuando el usuario complete la revisión de la muestra de · **Hecho: verificado por el usuario en la Demo 4 (2026-11-02), fila F4 de `docs/evidence/S4-demo4/checklist-verificacion-demo4.md`.**
       `l1d-117-metadatos-poblacion-verificados` `[S3 resp. 13]`, ejecutar la familia sobre ese archivo y anotar
       M-08.4 en el PR; si no hay documentos `extraido_verificado` en el S3, diferir a US-233. Verificación: valor o
       `null` con causa en el reporte.

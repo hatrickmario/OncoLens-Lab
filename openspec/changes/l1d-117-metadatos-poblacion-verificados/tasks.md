@@ -79,10 +79,10 @@
 
 - [x] 2.1 `run-ai-eval` sobre la rama: confirmar que recuperación y fidelidad no cambian frente al baseline (prompt
       nuevo de metadatos; ver `design.md`, Evaluación) · evaluate
-- [ ] 2.2 TRASLADADA a US-233 (P1: sin pesos reales de BGE-M3/mDeBERTa ni corpus de literatura en el S3, no hay documentos `extraido_verificado` reales; la CLI ya escribe el archivo al ingerir con `MODEL_PROVIDER=local`). Generar la muestra para el revisor según P1: ingesta con `MODEL_PROVIDER=local` (ADR-39) y archivo
+- [x] 2.2 TRASLADADA a US-233 (P1: sin pesos reales de BGE-M3/mDeBERTa ni corpus de literatura en el S3, no hay documentos `extraido_verificado` reales; la CLI ya escribe el archivo al ingerir con `MODEL_PROVIDER=local`). Generar la muestra para el revisor según P1: ingesta con `MODEL_PROVIDER=local` (ADR-39) y archivo · **Hecho: verificado por el usuario en la Demo 4 (2026-11-02), fila F4 de `docs/evidence/S4-demo4/checklist-verificacion-demo4.md`.**
       `data/evaluation/corpus-metadatos/<release>.yaml`; si no hay documentos `extraido_verificado`, diferir a US-233 ·
       evaluate
-- [ ] 2.3 TRASLADADA a US-233 (S4) `[HUMANO]` (pendiente del usuario; no la ejecuta ai-services, depende de 2.2) El usuario revisa la muestra con `PLANTILLA.md` (unos 20 min) y marca cada campo
+- [x] 2.3 TRASLADADA a US-233 (S4) `[HUMANO]` (pendiente del usuario; no la ejecuta ai-services, depende de 2.2) El usuario revisa la muestra con `PLANTILLA.md` (unos 20 min) y marca cada campo · **Hecho: verificado por el usuario en la Demo 4 (2026-11-02), fila F4 de `docs/evidence/S4-demo4/checklist-verificacion-demo4.md`.**
       `correcto | incorrecto`; el agente versiona el archivo revisado para US-132 AC-4 `[S3 resp. 13]` · exento
 
 ## cierre
