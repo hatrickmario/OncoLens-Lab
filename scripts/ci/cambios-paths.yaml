@@ -10,7 +10,8 @@ documentacion:
   - "**/*.md"
 
 # `consumidos_por_codigo`: documentos que un test o un script LEEN en tiempo de ejecución; cambiarlos puede romper tests, así
-# que no cuentan como documentación aunque casen con `documentacion`. Un test (cambiosPathsCobertura.test.mjs) comprueba que
+# que no cuentan como documentación aunque casen con `documentacion`. `ci/**` incluye los fixtures `*.md` que leen los tests
+# por directorio (ci/tests/quality/fixtures, ci/tests/cases). Un test (cambiosPathsCobertura.test.mjs) comprueba que
 # toda ruta `*.md` literal leída por scripts/, apps/ y packages/ casa con alguno de estos globs.
 consumidos_por_codigo:
   - readme.md
@@ -19,6 +20,7 @@ consumidos_por_codigo:
   - docs/decisions/DEC-02-*.md
   - docs/demo/guia-demo-S4.md
   - docs/operations/claves.md
+  - ci/**
   - data/**
   - apps/**/prompts/**
   - contracts/**

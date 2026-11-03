@@ -13,7 +13,7 @@ const TIEMPO_MAXIMO = 30_000;
 const RUTA_DE_DOCUMENTO = /(?<![\w./-])((?:docs|backlog|openspec|reports)\/[A-Za-z0-9_./-]+\.md|readme\.md)(?![\w.-])/g;
 // Una mención en un comentario o en un mensaje no es una lectura: solo cuentan las líneas que abren o resuelven la ruta.
 const LECTURA = /readFileSync|read_text|read_bytes|\bopen\(|\bPath\(|new URL\(|fileURLToPath|path\.(?:join|resolve)\(|\bcp\(|\braiz\s*\/|\$raiz\/|RUTA_|DOCUMENTO_DE|\breadme:|dataModel:/;
-const CARPETAS = ['scripts', 'apps', 'packages', 'infra'];
+const CARPETAS = ['scripts', 'apps', 'packages', 'infra', 'ci', '.claude'];
 
 /** Rutas literales `*.md` que leen los archivos de código y de tests, con el primer archivo que las lee. */
 function documentosLeidosPorElCodigo() {

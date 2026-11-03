@@ -57,6 +57,15 @@ Cada job omitible lleva `needs: cambios` e `if: ${{ !contains(fromJSON(needs.cam
 `ci/tests/workflow.test.mjs` comprueba que el conjunto de jobs con ese `if` es exactamente `omitibles_en_documentacion` y
 que cada `if` nombra a su propio job. `e2e.yml` ejecuta el mismo detector y omite `e2e` con `documentacion == 'true'`.
 
+`ci/**` está en `consumidos_por_codigo`: los fixtures `*.md` de `ci/tests/quality/fixtures/` y `ci/tests/cases/` los leen los
+tests por directorio y un PR que solo los edite corre la CI completa. En cambio `.claude/agents/*.md`, `CLAUDE.md` y
+`.github/pull_request_template.md` **sí cuentan como documentación**: un PR que solo los toque omite los jobs de la lista,
+pero sigue pasando `secret-scan`, `data-scan`, `lint-lenguaje` y `higiene-proceso`.
+
+**Límite aceptado (decidido en el Gate 2):** en un PR de solo documentación `quality` se omite, así que la trazabilidad de AC
+(`check-ac-coverage`, filtrada a los changes que toca el diff) no se verifica en ese PR; se verifica en el `push` a `main`,
+que siempre corre completo.
+
 **Cómo añadir un omitible o un documento que el código lee:** edita `cambios-paths.yaml` (sin tocar el script ni el
 workflow). Un job nuevo omitible además lleva el `needs`/`if` anteriores; un `.md` que un script nuevo lea va a
 `consumidos_por_codigo` (`scripts/ci/__tests__/cambiosPathsCobertura.test.mjs` recorre `scripts/`, `apps/`, `packages/` e
@@ -68,7 +77,7 @@ workflow). Un job nuevo omitible además lleva el `needs`/`if` anteriores; un `.
 `node-<os>-<hash de .nvmrc y package-lock.json>` y el venv de Python `.venv-ci` con
 `venv-<os>-<hash de .python-version y los requirements que instala el job>` (`eval-required`, que instala menos ficheros,
 tiene su clave propia `venv-eval-…`). **Sin `restore-keys`**: una caché parcial con la instalación saltada sería un árbol
-inconsistente. En acierto se omiten `npm ci` y `pip install`; sin acierto se instala como siempre. Invalidación: cambiar
+inconsistente. En acierto se omiten `npm ci` y `pip install` (el venv se instala con `--only-binary=:all:`, US-231a); sin acierto se instala como siempre. Invalidación: cambiar
 `package-lock.json`, `.nvmrc`, `.python-version` o un `requirements*.txt` cambia la clave y fuerza la instalación completa; un
 fallo atribuible a la caché se arregla (es un bug del sprint), no se reintenta. Las cachés de un PR se escriben en el ámbito
 de su ref y no envenenan las de `main`. Los `dist/` no se cachean. `setup-node` mantiene `cache: npm` y `setup-python`

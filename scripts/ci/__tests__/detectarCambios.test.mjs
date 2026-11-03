@@ -234,6 +234,20 @@ describe('esSoloDocumentacion', () => {
     expect(resultado.excluidas).toEqual([{ ruta: 'apps/rag-orchestrator/app/prompts/guia.md', motivo: expect.stringContaining('eval-required') }]);
   });
 
+  it.each([
+    'ci/tests/quality/fixtures/ac-coverage/dos-changes/backlog/features/FEAT-X.md',
+    'ci/tests/quality/fixtures/ac-coverage/dos-changes/openspec/changes/us-900-fixture/proposal.md',
+    'ci/tests/cases/ac4-allowlist/datos.md',
+  ])('no cuenta como documentación el fixture %s, que leen los tests [D-12.1]', (ruta) => {
+    const resultado = esSoloDocumentacion([ruta], REGLAS, REGLAS_DE_EVAL);
+
+    expect(resultado.excluidas).toEqual([{ ruta, motivo: expect.stringContaining('consumidos_por_codigo') }]);
+  });
+
+  it.each(['.claude/agents/ai-services-dev.md', 'CLAUDE.md', '.github/pull_request_template.md'])('sí cuenta como documentación %s [D-12.1]', (ruta) => {
+    expect(esSoloDocumentacion([ruta], REGLAS, REGLAS_DE_EVAL).soloDocumentacion).toBe(true);
+  });
+
   it('acepta rutas de documentación que ningún código lee [D-12.1]', () => {
     expect(esSoloDocumentacion(['backlog/features/FEAT-01.md', 'docs/PRD.md', 'CHANGELOG.md'], REGLAS, REGLAS_DE_EVAL).soloDocumentacion).toBe(true);
   });

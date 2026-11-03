@@ -101,7 +101,7 @@ jobs:
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
           python -m venv .venv-ci
-          .venv-ci/bin/pip install -r apps/rag-orchestrator/requirements.txt -r apps/rag-orchestrator/requirements-dev.txt -r apps/rag-orchestrator/requirements-eval.txt
+          .venv-ci/bin/pip install --only-binary=:all: -r apps/rag-orchestrator/requirements.txt -r apps/rag-orchestrator/requirements-dev.txt -r apps/rag-orchestrator/requirements-eval.txt
       - name: Activar el venv (python y pip del PATH son los de .venv-ci)
         run: echo "$GITHUB_WORKSPACE/.venv-ci/bin" >> "$GITHUB_PATH"
       - name: Herramientas de la CI (oasdiff, que usa el test de contracts-breaking.sh)
@@ -171,7 +171,7 @@ jobs:
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
           python -m venv .venv-ci
-          .venv-ci/bin/pip install -r apps/rag-orchestrator/requirements.txt -r apps/rag-orchestrator/requirements-dev.txt -r apps/rag-orchestrator/requirements-eval.txt
+          .venv-ci/bin/pip install --only-binary=:all: -r apps/rag-orchestrator/requirements.txt -r apps/rag-orchestrator/requirements-dev.txt -r apps/rag-orchestrator/requirements-eval.txt
       - name: Activar el venv (python y pip del PATH son los de .venv-ci)
         run: echo "$GITHUB_WORKSPACE/.venv-ci/bin" >> "$GITHUB_PATH"
       - name: Pytest de rag-orchestrator (con Node, el helper empaqueta el spec con bundle-json.mjs)
@@ -579,7 +579,7 @@ jobs:
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
           python -m venv .venv-ci
-          .venv-ci/bin/pip install -r apps/rag-orchestrator/requirements.txt -r apps/rag-orchestrator/requirements-eval.txt
+          .venv-ci/bin/pip install --only-binary=:all: -r apps/rag-orchestrator/requirements.txt -r apps/rag-orchestrator/requirements-eval.txt
       - name: Activar el venv (python y pip del PATH son los de .venv-ci)
         run: echo "$GITHUB_WORKSPACE/.venv-ci/bin" >> "$GITHUB_PATH"
       - name: Suite evaluate si el PR cambia modelo, prompt, umbral, catálogo o corpus, y regresión contra el baseline y regression.yaml (US-074)
