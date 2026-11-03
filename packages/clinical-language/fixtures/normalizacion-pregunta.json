@@ -1,0 +1,72 @@
+{
+  "descripcion": "Tabla de casos compartida de la regla de normalizar la pregunta (US-250). La recorren Vitest y Pytest. 'repetir' concatena entrada y esperada N veces. Texto sint\u00e9tico, sin PII.",
+  "casos": [
+    {
+      "nombre": "deja igual la pregunta de la Demo 4 cuando ya llega en NFC",
+      "entrada": "\u00bfQu\u00e9 indican las pruebas cient\u00edficas sobre la terapia dirigida para el c\u00e1ncer de mama metast\u00e1sico HER2-positivo en pacientes que han recibido previamente trastuzumab, pertuzumab y trastuzumab emtansina?",
+      "esperada": "\u00bfQu\u00e9 indican las pruebas cient\u00edficas sobre la terapia dirigida para el c\u00e1ncer de mama metast\u00e1sico HER2-positivo en pacientes que han recibido previamente trastuzumab, pertuzumab y trastuzumab emtansina?"
+    },
+    {
+      "nombre": "pasa a NFC la pregunta de la Demo 4 cuando llega en NFD",
+      "entrada": "\u00bfQue\u0301 indican las pruebas cienti\u0301ficas sobre la terapia dirigida para el ca\u0301ncer de mama metasta\u0301sico HER2-positivo en pacientes que han recibido previamente trastuzumab, pertuzumab y trastuzumab emtansina?",
+      "esperada": "\u00bfQu\u00e9 indican las pruebas cient\u00edficas sobre la terapia dirigida para el c\u00e1ncer de mama metast\u00e1sico HER2-positivo en pacientes que han recibido previamente trastuzumab, pertuzumab y trastuzumab emtansina?"
+    },
+    {
+      "nombre": "recorta los espacios de los extremos",
+      "entrada": "  \u00bfQu\u00e9 indican las pruebas cient\u00edficas sobre la terapia dirigida para el c\u00e1ncer de mama metast\u00e1sico HER2-positivo en pacientes que han recibido previamente trastuzumab, pertuzumab y trastuzumab emtansina?  ",
+      "esperada": "\u00bfQu\u00e9 indican las pruebas cient\u00edficas sobre la terapia dirigida para el c\u00e1ncer de mama metast\u00e1sico HER2-positivo en pacientes que han recibido previamente trastuzumab, pertuzumab y trastuzumab emtansina?"
+    },
+    {
+      "nombre": "colapsa los espacios repetidos a uno",
+      "entrada": "HER2   positivo     tras   progresi\u00f3n",
+      "esperada": "HER2 positivo tras progresi\u00f3n"
+    },
+    {
+      "nombre": "trata el tabulador y los saltos de l\u00ednea como espacio",
+      "entrada": "HER2\t\tpositivo\r\ntras\nprogresi\u00f3n",
+      "esperada": "HER2 positivo tras progresi\u00f3n"
+    },
+    {
+      "nombre": "trata el espacio no separable U+00A0 como espacio",
+      "entrada": "HER2\u00a0positivo\u00a0\u00a0tras",
+      "esperada": "HER2 positivo tras"
+    },
+    {
+      "nombre": "trata el espacio de cifra U+2007 como espacio",
+      "entrada": "HER2\u2007positivo",
+      "esperada": "HER2 positivo"
+    },
+    {
+      "nombre": "trata el espacio fino no separable U+202F como espacio",
+      "entrada": "HER2\u202fpositivo",
+      "esperada": "HER2 positivo"
+    },
+    {
+      "nombre": "trata el espacio ideogr\u00e1fico U+3000 como espacio",
+      "entrada": "\u3000HER2\u3000positivo\u3000",
+      "esperada": "HER2 positivo"
+    },
+    {
+      "nombre": "conserva may\u00fasculas, signos y puntuaci\u00f3n",
+      "entrada": "\u00bfHER2+ (Ki-67 \u2265 20 %) ; \u00a1s\u00ed!",
+      "esperada": "\u00bfHER2+ (Ki-67 \u2265 20 %) ; \u00a1s\u00ed!"
+    },
+    {
+      "nombre": "devuelve cadena vac\u00eda cuando solo hay espacios",
+      "entrada": " \t\u00a0\u2007\u202f\u3000\n ",
+      "esperada": ""
+    },
+    {
+      "nombre": "devuelve 2000 caracteres NFC cuando la entrada NFD mide el doble",
+      "entrada": "e\u0301",
+      "esperada": "\u00e9",
+      "repetir": 2000
+    },
+    {
+      "nombre": "deja 2000 caracteres NFC en 2000",
+      "entrada": "\u00e9",
+      "esperada": "\u00e9",
+      "repetir": 2000
+    }
+  ]
+}
