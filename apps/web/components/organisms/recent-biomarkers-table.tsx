@@ -2,10 +2,10 @@ import type { Biomarker } from '../../../../packages/api-contracts/src/types/cli
 import { textoDeConfianza } from '../../lib/ficha/presentacion';
 import { mensajes, rellenar } from '../../lib/mensajes';
 import { FechaRelativa } from '../atoms/fecha-relativa';
-import { BiomarcadorCorregible } from '../molecules/biomarcador-corregible';
-import { CELDA, EncabezadoDeTabla } from '../molecules/encabezado-de-tabla';
+import { CELDA } from '../molecules/encabezado-de-tabla';
 import { SeccionDeFicha } from '../molecules/fila-de-ficha';
 import { OrigenDelDato } from '../molecules/origen-del-dato';
+import { TablaDeBiomarcadoresCorregibles } from '../molecules/tabla-de-biomarcadores-corregibles';
 
 const ID_DE_AYUDA = 'correccion-egresado-biomarcadores';
 
@@ -32,7 +32,7 @@ function CeldasDeBiomarcador({ b, hoy }: { b: Biomarker; hoy: string }) {
       <td className={CELDA}>{significancia[b.clinicalSignificance]}</td>
       <td className={CELDA}>
         <span>
-          <OrigenDelDato procedencia={b.provenance} fecha={b.performedAt} />
+          <OrigenDelDato procedencia={b.provenance} fecha={b.performedAt} hoy={hoy} />
         </span>
         <span className="text-text-muted block text-sm">
           {textoDeConfianza(b.provenance.extractionConfidence)}
@@ -78,21 +78,18 @@ export function RecentBiomarkersTable({
               {correccion.egresado}
             </p>
           )}
-          <table className="w-full border-collapse">
-            <EncabezadoDeTabla columnas={columnas} columnaDeAcciones={textos.acciones} />
-            {biomarcadores.map((b) => (
-              <BiomarcadorCorregible
-                key={b.id}
-                biomarcador={b}
-                pacienteId={pacienteId}
-                egresado={egresado}
-                idDeAyuda={ID_DE_AYUDA}
-                columnas={columnas.length}
-              >
-                <CeldasDeBiomarcador b={b} hoy={hoy} />
-              </BiomarcadorCorregible>
-            ))}
-          </table>
+          <TablaDeBiomarcadoresCorregibles
+            columnas={columnas}
+            columnaDeAcciones={textos.acciones}
+            filas={biomarcadores.map((b) => ({
+              biomarcador: b,
+              celdas: <CeldasDeBiomarcador b={b} hoy={hoy} />,
+            }))}
+            pacienteId={pacienteId}
+            egresado={egresado}
+            idDeAyuda={ID_DE_AYUDA}
+            hoy={hoy}
+          />
         </>
       )}
     </SeccionDeFicha>

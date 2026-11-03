@@ -2,7 +2,6 @@
 
 import { useState, type ReactNode } from 'react';
 import type { Biomarker } from '../../../../packages/api-contracts/src/types/clinical-api';
-import { AvisoAnalisisAnteriores } from '../atoms/aviso-analisis-anteriores';
 import { AccionCorregirDato } from './accion-corregir-dato';
 import { FormularioDeCorreccionDeBiomarcador } from './formulario-de-correccion-de-biomarcador';
 import { HistoricoDelDato } from './historico-del-dato';
@@ -14,6 +13,10 @@ export interface BiomarcadorCorregibleProps {
   idDeAyuda: string;
   /** Número de columnas de lectura de la tabla; la acción añade una. */
   columnas: number;
+  /** «Hoy» del servidor para las fechas relativas del histórico. */
+  hoy: string;
+  /** Avisa a la tabla de que se guardó una corrección (el aviso de RN-26 vive allí, no en esta fila que se remonta). */
+  alCorregir: () => void;
   /** Celdas de lectura de la fila, renderizadas en el servidor. */
   children: ReactNode;
 }
@@ -38,10 +41,11 @@ export function BiomarcadorCorregible({
   egresado,
   idDeAyuda,
   columnas,
+  hoy,
+  alCorregir,
   children,
 }: BiomarcadorCorregibleProps) {
   const [corrigiendo, setCorrigiendo] = useState(false);
-  const [guardado, setGuardado] = useState(false);
   const dato = { pacienteId, dato: 'biomarkers', id: biomarcador.id } as const;
 
   return (
@@ -54,7 +58,6 @@ export function BiomarcadorCorregible({
             egresado={egresado}
             idDeAyuda={idDeAyuda}
             alAbrir={() => {
-              setGuardado(false);
               setCorrigiendo(true);
             }}
           />
@@ -67,20 +70,15 @@ export function BiomarcadorCorregible({
             dato={dato}
             alGuardar={() => {
               setCorrigiendo(false);
-              setGuardado(true);
+              alCorregir();
             }}
             alCancelar={() => setCorrigiendo(false)}
           />
         </FilaAncha>
       )}
-      {guardado && (
-        <FilaAncha columnas={columnas}>
-          <AvisoAnalisisAnteriores />
-        </FilaAncha>
-      )}
       {biomarcador.supersedesId && (
         <FilaAncha columnas={columnas}>
-          <HistoricoDelDato key={biomarcador.id} dato={dato} />
+          <HistoricoDelDato key={biomarcador.id} dato={dato} hoy={hoy} />
         </FilaAncha>
       )}
     </tbody>

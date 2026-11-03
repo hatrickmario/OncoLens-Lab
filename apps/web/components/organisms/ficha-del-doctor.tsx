@@ -46,7 +46,7 @@ export function FichaDelDoctor({
         egresado={egresado}
         hoy={hoy}
       />
-      <NotasClinicasDeFicha notas={notas} pacienteId={ficha.id} egresado={egresado} />
+      <NotasClinicasDeFicha notas={notas} pacienteId={ficha.id} egresado={egresado} hoy={hoy} />
       <div className="flex flex-wrap gap-3">
         <Link
           href={`/pacientes/${ficha.id}/analisis`}

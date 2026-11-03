@@ -7,30 +7,33 @@ import {
   type RefDeDato,
   type ResultadoDeHistorico,
 } from '../../lib/correcciones/cliente';
-import { fechaRelativa } from '../../lib/ficha/fecha-relativa';
-import { formatearFecha } from '../../lib/ficha/presentacion';
 import { mensajes } from '../../lib/mensajes';
+import { FechaRelativa } from '../atoms/fecha-relativa';
 
 function textoDeLaVersion(version: CorrectionHistoryEntry): string {
   if (version.content !== undefined) return version.content;
   return [version.value, version.unit].filter(Boolean).join(' ');
 }
 
-function VersionAnterior({ version }: { version: CorrectionHistoryEntry }) {
+function VersionAnterior({ version, hoy }: { version: CorrectionHistoryEntry; hoy: string }) {
   const { ficha } = mensajes();
   return (
     <li className="border-border flex flex-wrap items-baseline gap-x-2 border-b py-1 last:border-b-0">
       <span className="whitespace-pre-wrap">{textoDeLaVersion(version)}</span>
-      <time dateTime={version.recordedAt} title={formatearFecha(version.recordedAt)}>
-        {fechaRelativa(version.recordedAt, new Date())}
-      </time>
+      <FechaRelativa fecha={version.recordedAt} hoy={hoy} />
       <span>{ficha.origen[version.entryMethod]}</span>
       <span className="text-text-muted">{ficha.correccion.historico.reemplazado}</span>
     </li>
   );
 }
 
-function ContenidoDelHistorico({ estado }: { estado: ResultadoDeHistorico | 'cargando' }) {
+function ContenidoDelHistorico({
+  estado,
+  hoy,
+}: {
+  estado: ResultadoDeHistorico | 'cargando';
+  hoy: string;
+}) {
   const { historico } = mensajes().ficha.correccion;
   if (estado === 'cargando') return <p className="m-0">{historico.cargando}</p>;
   if (estado.tipo === 'error') return <p className="m-0">{historico.error}</p>;
@@ -38,14 +41,14 @@ function ContenidoDelHistorico({ estado }: { estado: ResultadoDeHistorico | 'car
   return (
     <ul aria-label={historico.etiqueta} className="m-0 list-none p-0">
       {estado.versiones.map((version) => (
-        <VersionAnterior key={version.id} version={version} />
+        <VersionAnterior key={version.id} version={version} hoy={hoy} />
       ))}
     </ul>
   );
 }
 
 /** «▸ Histórico» desplegable bajo un dato: pide las versiones reemplazadas al BFF al abrirse la primera vez (RN-08). */
-export function HistoricoDelDato({ dato }: { dato: RefDeDato }) {
+export function HistoricoDelDato({ dato, hoy }: { dato: RefDeDato; hoy: string }) {
   const idDelPanel = useId();
   const [abierto, setAbierto] = useState(false);
   const [estado, setEstado] = useState<ResultadoDeHistorico | 'cargando' | null>(null);
@@ -71,7 +74,7 @@ export function HistoricoDelDato({ dato }: { dato: RefDeDato }) {
         {mensajes().ficha.correccion.historico.abrir}
       </button>
       <div id={idDelPanel} hidden={!abierto}>
-        {abierto && estado !== null && <ContenidoDelHistorico estado={estado} />}
+        {abierto && estado !== null && <ContenidoDelHistorico estado={estado} hoy={hoy} />}
       </div>
     </div>
   );

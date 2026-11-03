@@ -8,11 +8,13 @@ export interface NotasClinicasDeFichaProps {
   notas: ClinicalNote[] | null;
   pacienteId: string;
   egresado: boolean;
+  /** «Hoy» del servidor para las fechas relativas. */
+  hoy: string;
 }
 
 const ID_DE_AYUDA = 'correccion-egresado-notas';
 
-function ContenidoDeNotas({ notas, pacienteId, egresado }: NotasClinicasDeFichaProps) {
+function ContenidoDeNotas({ notas, pacienteId, egresado, hoy }: NotasClinicasDeFichaProps) {
   const { notas: textos, correccion } = mensajes().ficha;
   if (notas === null) return <p className="m-0">{textos.noDisponibles}</p>;
   if (notas.length === 0) return <p className="m-0">{textos.vacio}</p>;
@@ -31,6 +33,7 @@ function ContenidoDeNotas({ notas, pacienteId, egresado }: NotasClinicasDeFichaP
             pacienteId={pacienteId}
             egresado={egresado}
             idDeAyuda={ID_DE_AYUDA}
+            hoy={hoy}
           />
         ))}
       </ul>

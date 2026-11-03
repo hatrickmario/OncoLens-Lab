@@ -533,15 +533,6 @@
         "cargando": "Cargando el histórico…",
         "vacio": "Este dato no tiene versiones anteriores.",
         "error": "No se pudo cargar el histórico."
-      },
-      "fechaRelativa": {
-        "hoy": "hoy",
-        "ayer": "ayer",
-        "dias": "hace {n} días",
-        "mes": "hace 1 mes",
-        "meses": "hace {n} meses",
-        "anio": "hace 1 año",
-        "anios": "hace {n} años"
       }
     },
     "notas": {
