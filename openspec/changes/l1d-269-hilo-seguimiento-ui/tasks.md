@@ -9,18 +9,18 @@
 
 ## 1. clinical-platform
 
-- [ ] 1.1 Tests del Route Handler en rojo: «retransmite el turno 201 con solo la cookie de sesión [US-219 AC-2]»,
+- [x] 1.1 Tests del Route Handler en rojo: «retransmite el turno 201 con solo la cookie de sesión [US-219 AC-2]»,
       «retransmite el 409 de límite sin reinterpretar [US-219 AC-4]», «rechaza otro origen sin contactar a clinical-api»,
       «responde 404 propio a un analysisId que no es UUID» y «responde 502 propio sin URL interna si clinical-api no
       responde» · integración (Vitest + MSW hacia `clinical-api` desde `contracts/examples/`, `assertMatchesSpec`) en
       `apps/web/tests/api/follow-ups.test.ts`; commit `test(L1D-269)` · **test del AC primero**
-- [ ] 1.2 Implementar `crearManejadorSeguimiento()` en `apps/web/lib/server/follow-ups.ts` (`server-only`; reutiliza
+- [x] 1.2 Implementar `crearManejadorSeguimiento()` en `apps/web/lib/server/follow-ups.ts` (`server-only`; reutiliza
       `verificarOrigen`, `leerCuerpoAcotado`, `retransmitir` y el SDK generado `createFollowUp`) y
       `apps/web/app/api/evidence-analyses/[analysisId]/follow-ups/route.ts` (`runtime = 'nodejs'`,
       `dynamic = 'force-dynamic'`). Tests 1.1 en verde; commit `feat(L1D-269)` · **test del AC primero**
-- [ ] 1.3 Suite de `web` (`tests/api`) en verde · **verificación**
-- [ ] 1.4 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde
-      antes y después, commit refactor(L1D-269)
+- [x] 1.3 Suite de `web` (`tests/api`) en verde · **verificación**
+- [x] 1.4 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde
+      antes y después, commit refactor(L1D-269) (sin cambios: el handler es un proxy de 1 paso, sin duplicación)
 
 ## 2. frontend
 
@@ -50,7 +50,7 @@
       accesibilidad y teclado, rendimiento y capturas a 375 y 1280 px; cada fallo se convierte primero en un test en rojo
       (⛔ necesita `l1d-268` en `main` y el Compose con `LLM_PROVIDER=fake`) `[US-219 AC-5]`
 - [ ] 2.7 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde
-      antes y después, commit refactor(L1D-269)
+      antes y después, commit refactor(L1D-269) (sin cambios: el handler es un proxy de 1 paso, sin duplicación)
 
 ## 3. cierre
 
