@@ -236,6 +236,7 @@ def _datos_del_informe(
     valores: list[ValorBarrido],
     fijar: bool,
     p95_del_umbral: Callable[[float], float | None],
+    p95_origen: str,
 ) -> DatosDelInforme:
     filas = [v.fila for v in valores]
     eleccion = elegir_umbral(filas, barrido.umbral_de_referencia, barrido.tolerancia_recall)
@@ -260,6 +261,7 @@ def _datos_del_informe(
             lambda consultas: metricas_de(list(consultas), config),
         ),
         p95_corridas=config.p95_corridas,
+        p95_origen=p95_origen,
     )
 
 
@@ -291,7 +293,16 @@ def ejecutar_barrido(
             config, dataset, umbral, reloj, cronometro_de, config.p95_corridas, puertos_locales
         )
 
-    datos = _datos_del_informe(config, config.barrido, dataset, valores, fijar, p95_del_umbral)
+    p95_origen = (
+        "medicion_externa"
+        if p95_e2e_s is not None
+        else "corridas_en_proceso"
+        if config.p95_corridas is not None
+        else "no_declarado"
+    )
+    datos = _datos_del_informe(
+        config, config.barrido, dataset, valores, fijar, p95_del_umbral, p95_origen
+    )
     texto_fijado = (
         config_con_umbral(ruta_config.read_text(encoding="utf-8"), datos.eleccion.umbral)
         if fijar

@@ -8,7 +8,7 @@ import pytest
 
 from app.application.corpus_ingestion.reporte import Estado
 from app.domain.corpus_seed.admisibilidad import evaluar_admisibilidad
-from tests.integration.corpus_ingestion.conftest import Montaje, montar
+from tests.integration.corpus_ingestion.conftest import Montaje
 from tests.support.semilla import DIRECTORIO_DE_FIXTURES, politica_de_test
 
 MANIFIESTO_DE_FUENTES = DIRECTORIO_DE_FIXTURES / "ingest-manifest-fuentes.yaml"
@@ -38,11 +38,3 @@ def test_ingesta_rechaza_fuente_no_admitida_y_admite_clinicaltrials_como_ensayo_
     assert documento.source_type == "clinical_trial"
     assert evaluar_admisibilidad(documento, politica).license_class == "dominio_publico"
     assert reporte.resultado_de("f-nci").estado is Estado.EMBEBIDO
-
-
-def test_ingesta_no_rechaza_por_fuente_cuando_la_politica_no_declara_lista() -> None:
-    montaje = montar(DIRECTORIO_DE_FIXTURES, politica_de_test())
-
-    reporte = montaje.ingerir(MANIFIESTO_DE_FUENTES)
-
-    assert reporte.resultado_de("f-nice").estado is Estado.EMBEBIDO

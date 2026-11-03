@@ -15,11 +15,9 @@ from app.config.settings import (
     CORPUS_FUENTES_ADMITIDAS_INICIALES,
     CORPUS_MIN_DOCUMENTOS_POR_TIPO_INICIAL,
     CORPUS_MIN_FUENTES_POR_TIPO_INICIAL,
-    MAPA_DE_LICENCIAS_POR_DEFECTO,
 )
 from app.domain.corpus_seed.admisibilidad import (
     ClaseDeLicencia,
-    PoliticaDeLicencias,
     evaluar_admisibilidad,
     fuente_admitida,
 )
@@ -28,16 +26,16 @@ from app.domain.corpus_seed.documento import DocumentoDeSemilla
 from app.domain.corpus_seed.versionado import calcular_checksum
 from app.infrastructure.seed_manifest.lector import leer_manifiesto
 from tests.support.contract import RAIZ_REPOSITORIO
+from tests.support.semilla import (
+    AUTOIDENTIFICACION_DE_PDQ,
+    CLASES_ACEPTADAS_DE_TEST,
+    politica_de_test,
+)
 
 DIRECTORIO = RAIZ_REPOSITORIO / "data/raw/s3"
 DIRECTORIO_SEMILLA = RAIZ_REPOSITORIO / "data/raw/seed"
-CLASES_ACEPTADAS = frozenset({"dominio_publico", "cc_by", "cc_by_sa"})
-POLITICA = PoliticaDeLicencias(
-    aceptadas=CLASES_ACEPTADAS,
-    excluidas=("NCCN", "ESMO"),
-    mapa_de_clases=MAPA_DE_LICENCIAS_POR_DEFECTO,
-    fuentes_admitidas=CORPUS_FUENTES_ADMITIDAS_INICIALES,
-)
+CLASES_ACEPTADAS = CLASES_ACEPTADAS_DE_TEST
+POLITICA = politica_de_test(fuentes_admitidas=CORPUS_FUENTES_ADMITIDAS_INICIALES)
 DOCUMENTOS = leer_manifiesto(DIRECTORIO / "manifest.yaml")
 TIPOS = ("mama", "prostata")
 CLASES_REDISTRIBUIBLES = CLASES_ACEPTADAS
@@ -185,19 +183,6 @@ def test_los_textos_de_la_semilla_son_identicos_en_el_corpus_ampliado() -> None:
     ]
 
     assert distintos == []
-
-
-AUTOIDENTIFICACION_DE_PDQ = (
-    "pdq",
-    "physician data query",
-    "purpose of this summary",
-    "propósito de este resumen",
-    "editorial board",
-    "consejo editorial",
-    "junta editorial",
-    "comité editorial",
-    "permission to use this summary",
-)
 
 
 @pytest.mark.parametrize(

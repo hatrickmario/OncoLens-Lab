@@ -42,7 +42,10 @@ def test_la_fuente_excluida_gana_a_la_falta_de_licencia() -> None:
 
 
 def test_una_fuente_con_el_nombre_de_una_excluida_dentro_de_otro_no_se_excluye() -> None:
-    admision = evaluar_admisibilidad(documento_de_prueba(source_name="NCCNx"), politica_de_test())
+    admision = evaluar_admisibilidad(
+        documento_de_prueba(source_name="NCCNx"),
+        politica_de_test(fuentes_admitidas=("NCCNx",)),
+    )
 
     assert admision.admitido
 
@@ -228,7 +231,9 @@ def test_compara_la_licencia_sin_distinguir_mayusculas_ni_espacios_de_mas(licenc
     assert admision.license_class == "cc_by"
 
 
-POLITICA_SIN_EXCLUIDAS = replace(politica_de_test(), excluidas=())
+POLITICA_SIN_EXCLUIDAS = replace(
+    politica_de_test(fuentes_admitidas=("NCI", "Annals of Surgery")), excluidas=()
+)
 
 
 @pytest.mark.parametrize("excluidas", [(), ("Foo",), ("Foo", "Bar")])
@@ -351,7 +356,7 @@ def test_la_sigla_con_puntos_tambien_es_la_fuente_excluida(fuente: str) -> None:
 @pytest.mark.parametrize("fuente", ["A.B.C.", "Dr. N. C. Smith", "NCI"])
 def test_una_sigla_con_puntos_que_no_es_nccn_ni_esmo_no_se_excluye(fuente: str) -> None:
     assert evaluar_admisibilidad(
-        documento_de_prueba(source_name=fuente), politica_de_test()
+        documento_de_prueba(source_name=fuente), politica_de_test(fuentes_admitidas=(fuente,))
     ).admitido
 
 

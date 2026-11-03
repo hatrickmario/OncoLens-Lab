@@ -218,13 +218,21 @@ def _seccion_out_08(d: DatosDelInforme) -> list[str]:
     return ["## 5. Valoración de OUT-08 (fidelidad fuera de meta)", "", VALORACION_OUT_08]
 
 
+def _medida_del_p95(d: DatosDelInforme) -> str:
+    """Qué se midió y de dónde sale: nunca «punta a punta» ni un número de corridas que la configuración no declara."""
+    if d.p95_e2e_s is None:
+        return f"p95 de `/platform/evidence-analyses` de punta a punta: {NO_EJECUTABLE} (requiere Compose y los modelos de ADR-39)."
+    if d.p95_origen == "medicion_externa":
+        return f"p95 medido de punta a punta: {d.p95_e2e_s:g} s (una medición externa)."
+    corridas = (
+        f"mediana de {d.p95_corridas} corridas" if d.p95_corridas else "corridas no declaradas"
+    )
+    return f"p95 medido en proceso (etapa `consulta`): {d.p95_e2e_s:g} s ({corridas})."
+
+
 def _seccion_p95(d: DatosDelInforme, meta_p95: Meta | None) -> list[str]:
     nota = nota_adr42(d.p95_e2e_s, meta_p95.maximo or 0.0) if meta_p95 else None
-    medida = (
-        f"p95 medido de punta a punta: {d.p95_e2e_s:g} s (mediana de {d.p95_corridas or 3} corridas)."
-        if d.p95_e2e_s is not None
-        else f"p95 de `/platform/evidence-analyses` de punta a punta: {NO_EJECUTABLE} (requiere Compose y los modelos de ADR-39)."
-    )
+    medida = _medida_del_p95(d)
     return ["## 3. Latencia de punta a punta (G-5)", "", medida, *([""] + [nota] if nota else [])]
 
 

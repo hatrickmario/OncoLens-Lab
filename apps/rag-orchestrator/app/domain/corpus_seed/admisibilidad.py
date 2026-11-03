@@ -67,9 +67,9 @@ class PoliticaDeLicencias:
     aceptadas: frozenset[str]
     excluidas: tuple[str, ...]
     mapa_de_clases: Mapping[str, str]
+    # ``CORPUS_ALLOWED_SOURCES`` (ADR-36, Decisión 7): obligatoria; sin lista la política fallaría abierta (RN-21).
+    fuentes_admitidas: tuple[str, ...]
     permitir_cc_by_nc: bool = False
-    # ``CORPUS_ALLOWED_SOURCES`` (ADR-36, Decisión 7). ``None`` = sin lista (la semilla de US-059 no la aplica).
-    fuentes_admitidas: tuple[str, ...] | None = None
 
     def fuentes_excluidas(self) -> tuple[str, ...]:
         """Las fuentes excluidas efectivas: la configuración más las del piso que le falten (esta solo puede ampliarlo)."""
@@ -118,9 +118,7 @@ def evaluar_admisibilidad(documento: DocumentoDeSemilla, politica: PoliticaDeLic
     # La fuente excluida se decide ANTES que la licencia: NCCN se rechaza aunque declare una aceptada (D-09).
     if es_fuente_excluida(documento, politica):
         return Admision(MotivoDeRechazo.FUENTE_EXCLUIDA)
-    if politica.fuentes_admitidas is not None and not fuente_admitida(
-        documento.source_name, politica.fuentes_admitidas
-    ):
+    if not fuente_admitida(documento.source_name, politica.fuentes_admitidas):
         return Admision(MotivoDeRechazo.FUENTE_NO_ADMITIDA)
     if not documento.license:
         return Admision(MotivoDeRechazo.SIN_LICENCIA)

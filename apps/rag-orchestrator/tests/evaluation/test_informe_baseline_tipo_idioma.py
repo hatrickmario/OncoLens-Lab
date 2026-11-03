@@ -94,9 +94,7 @@ def test_los_agregados_con_celdas_nulas_cumplen_el_esquema_cerrado() -> None:
 
 
 def _con_p95(origen: str, corridas: int | None) -> DatosDelInforme:
-    return replace(
-        datos(EN_META, CELDAS), p95_e2e_s=2.5, p95_origen=origen, p95_corridas=corridas
-    )
+    return replace(datos(EN_META, CELDAS), p95_e2e_s=2.5, p95_origen=origen, p95_corridas=corridas)
 
 
 def test_el_p95_pasado_por_la_linea_de_comandos_se_declara_una_medicion_externa() -> None:
@@ -106,7 +104,9 @@ def test_el_p95_pasado_por_la_linea_de_comandos_se_declara_una_medicion_externa(
     assert "corridas" not in informe.split("## 3.")[1].split("##")[0]
 
 
-def test_el_p95_en_proceso_declara_la_etapa_consulta_y_las_corridas_y_no_dice_punta_a_punta() -> None:
+def test_el_p95_en_proceso_declara_la_etapa_consulta_y_las_corridas_y_no_dice_punta_a_punta() -> (
+    None
+):
     informe = renderizar_informe(_con_p95("corridas_en_proceso", 5))
 
     seccion = informe.split("## 3.")[1].split("\n## ")[0]

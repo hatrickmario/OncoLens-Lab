@@ -6,13 +6,12 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
+from app.application.corpus_ingestion.resumen_corpus import tipos_de_cancer_de
 from app.application.seed_corpus.ports import RegistroDeDocumento
 from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
 from app.domain.corpus_metadata.resultado import EXTRAIDO_VERIFICADO
 from app.domain.criterios_aplicabilidad import CriterioDeAplicabilidad
-from app.domain.poblacion_del_estudio import poblacion_desde_lo_guardado
-
-ALCANCE_DE_ELEGIBILIDAD = "elegibilidad"
+from app.domain.poblacion_del_estudio import poblacion_desde_lo_guardado, tiene_elegibilidad
 
 
 @dataclass(frozen=True)
@@ -47,15 +46,10 @@ def resumir_poblacion_por_tipo_e_idioma(
             poblaciones = [
                 _poblacion_verificada(registro, max_valores)
                 for registro in documentos
-                if registro.language == idioma and tipo in _tipos_del(registro)
+                if registro.language == idioma and tipo in tipos_de_cancer_de(registro)
             ]
             resumen[tipo][idioma] = _celda(poblaciones, de_ese_tipo)
     return resumen
-
-
-def _tipos_del(registro: RegistroDeDocumento) -> tuple[str, ...]:
-    """``cancer_type_tags`` se guarda como etiquetas separadas por coma, sin espacios."""
-    return tuple(etiqueta for etiqueta in registro.cancer_type_tags.split(",") if etiqueta)
 
 
 def _poblacion_verificada(
@@ -79,21 +73,12 @@ def _celda(
         len(poblaciones),
         {
             criterio.clave: sum(
-                1 for poblacion in poblaciones if _tiene_elegibilidad(poblacion, criterio)
+                1
+                for poblacion in poblaciones
+                if tiene_elegibilidad(poblacion, criterio.clave_de_estudio)
             )
             for criterio in criterios
         },
-    )
-
-
-def _tiene_elegibilidad(
-    poblacion: PoblacionDelEstudio | None, criterio: CriterioDeAplicabilidad
-) -> bool:
-    if poblacion is None:
-        return False
-    del_estudio = poblacion.criterios.get(criterio.clave_de_estudio)
-    return del_estudio is not None and any(
-        valor.alcance == ALCANCE_DE_ELEGIBILIDAD for valor in del_estudio.valores
     )
 
 

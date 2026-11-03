@@ -252,9 +252,7 @@ def _ejecutar_ingesta(
     tokenizador: Tokenizador,
     metadatos: ModelosDeMetadatos,
     reloj: Clock,
-) -> tuple[
-    ReporteDeIngesta, dict[str, object], dict[str, Any] | None, dict[str, dict[str, int]]
-]:
+) -> tuple[ReporteDeIngesta, dict[str, object], dict[str, Any] | None, dict[str, dict[str, int]]]:
     """Raíz de composición: adapters reales -> ``IngestionPipelineService``. Cierra las conexiones a PostgreSQL al terminar.
 
     Devuelve el reporte, la muestra de metadatos y, si corrió la extracción en abanico, el resumen de población por tipo de

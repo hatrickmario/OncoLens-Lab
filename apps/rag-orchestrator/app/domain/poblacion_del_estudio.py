@@ -32,7 +32,10 @@ ESTADO_PENDIENTE = "pendiente"
 
 def tiene_elegibilidad(poblacion: PoblacionDelEstudio | None, clave_de_estudio: str) -> bool:
     """¿La población trae ≥ 1 valor de alcance ``elegibilidad`` para la clave? ``mencion`` y ``subgrupo`` no cuentan (DEC-11)."""
-    raise NotImplementedError
+    if poblacion is None:
+        return False
+    del_estudio = poblacion.criterios.get(clave_de_estudio)
+    return del_estudio is not None and any(v.alcance == "elegibilidad" for v in del_estudio.valores)
 
 
 def poblacion_desde_lo_guardado(

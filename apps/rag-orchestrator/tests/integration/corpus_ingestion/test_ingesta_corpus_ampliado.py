@@ -24,7 +24,7 @@ from app.config.settings import (
 from app.infrastructure.seed_manifest.lector import leer_manifiesto
 from tests.integration.corpus_ingestion.conftest import Montaje
 from tests.support.contract import RAIZ_REPOSITORIO
-from tests.support.semilla import politica_de_test
+from tests.support.semilla import CLASES_ACEPTADAS_DE_TEST, politica_de_test
 
 DIRECTORIO_S3 = RAIZ_REPOSITORIO / "data/raw/s3"
 MANIFIESTO_S3 = DIRECTORIO_S3 / "manifest.yaml"
@@ -34,7 +34,6 @@ TIPOS = ("mama", "prostata")
 CHUNK_GRANDE = (
     800  # palabras: acota los chunks del corpus real a unos cientos y no a decenas de miles
 )
-CLASES_ACEPTADAS = {"dominio_publico", "cc_by", "cc_by_sa"}
 
 
 def _politica() -> Any:
@@ -112,7 +111,9 @@ def test_ingesta_del_manifiesto_real_deja_la_licencia_completa_en_el_catalogo_y_
     filas = montaje.catalogo.documentos_vigentes_con_poblacion()
     assert filas
     incompletas = [f.document_id for f in filas if not (f.license and f.license_url)]
-    fuera_de_clase = [f.document_id for f in filas if f.license_class not in CLASES_ACEPTADAS]
+    fuera_de_clase = [
+        f.document_id for f in filas if f.license_class not in CLASES_ACEPTADAS_DE_TEST
+    ]
     excluidas = [f.document_id for f in filas if f.source_name.casefold() in {"nccn", "esmo"}]
     assert incompletas == [] and fuera_de_clase == [] and excluidas == []
     assert {f.source_type for f in filas if f.source_name == "ClinicalTrials.gov"} == {

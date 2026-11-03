@@ -4,7 +4,11 @@ from __future__ import annotations
 
 import pytest
 
-from app.domain.aplicabilidad_tipos import CriterioDePoblacion, PoblacionDelEstudio, ValorDePoblacion
+from app.domain.aplicabilidad_tipos import (
+    CriterioDePoblacion,
+    PoblacionDelEstudio,
+    ValorDePoblacion,
+)
 from app.domain.poblacion_del_estudio import tiene_elegibilidad
 
 
