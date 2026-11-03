@@ -210,7 +210,7 @@ Toda FK del schema `clinical` MUST declararse con `ON DELETE RESTRICT` (Prisma `
 - **THEN** todas tienen la acción de borrado `RESTRICT` y ninguna `CASCADE` ni `SET NULL`
 
 ### Requirement: Índice ciego único de la identidad
-`identity.patient_identity` MUST tener una restricción única sobre `(id_type, issuing_country, national_id_hmac)` y sus columnas de documento y nombre MUST ser `bytea` cifrables (`national_id_ciphertext`, `full_name_ciphertext`), sin ninguna columna con el dato en claro (ADR-6, RN-10). Decidido en el refinamiento del S2 (P-4, decidido por el usuario el 2026-10-21): la tabla SHALL tener además `full_name_hmac` (índice ciego del nombre completo normalizado, con índice no único), que `IdentityService` escribe siempre y el seed completa en las filas sembradas.
+`identity.patient_identity` MUST tener una restricción única sobre `(id_type, issuing_country, national_id_hmac)` y sus columnas de documento y nombre MUST ser `bytea` cifrables (`national_id_ciphertext`, `full_name_ciphertext`), sin ninguna columna con el dato en claro (ADR-6, RN-10).
 
 #### Scenario: Una segunda identidad con el mismo índice ciego falla [US-038 AC-6] [ADR-6]
 - **WHEN** se insertan en `identity.patient_identity` dos filas sintéticas (con `id_type = sintetico`, para dos pacientes sintéticos) con el mismo `id_type`, `issuing_country` y `national_id_hmac`
@@ -228,6 +228,13 @@ Toda FK del schema `clinical` MUST declararse con `ON DELETE RESTRICT` (Prisma `
 - **GIVEN** la migración de `full_name_hmac` aplicada y el seed sintético ejecutado
 - **WHEN** se insertan dos identidades sintéticas con documentos distintos y el mismo `full_name_hmac`
 - **THEN** ambas inserciones se aceptan y ninguna fila de `identity.patient_identity` tiene `full_name_hmac` nulo
+
+### Requirement: Índice ciego del nombre completo
+La tabla `identity.patient_identity` SHALL tener además `full_name_hmac` (índice ciego del nombre completo normalizado, con índice no único), que `IdentityService` escribe siempre y el seed completa en las filas sembradas. Decidido en el refinamiento del S2 (P-4, decidido por el usuario el 2026-10-21).
+
+#### Scenario: El nombre completo tiene índice ciego no único [US-038 AC-6] [ADR-6]
+- **WHEN** se listan las columnas e índices de `identity.patient_identity`
+- **THEN** existe `full_name_hmac` con un índice no único
 
 ### Requirement: Enums nativos con valores en español
 Las columnas de `data-model.md` con lista cerrada de valores MUST materializarse como enums nativos de PostgreSQL con los valores en español (OL-01 tarea 3), mapeando las tildes con `@map` (`critico @map("crítico")`). Donde el documento fija un `CHECK` literal (`diagnosis_grading`, `llm_provider`) SHALL conservarse el `CHECK`; las listas abiertas o de catálogo SHALL quedar como `text`.
