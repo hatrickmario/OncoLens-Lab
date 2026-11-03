@@ -105,11 +105,12 @@ definitiva.
 
 ## Contratos
 
-Sin cambio (ADR-26). `ClinicalContext.currentLine` y `ClinicalContext.missingCriticalData` existen en
-`apps/rag-orchestrator/openapi.yaml`; el `422` de `/rag/query` ya admite `ErrorValidacion` (`CUERPO_INVALIDO`). Los ejemplos
-`contracts/examples/rag-query-request*.json` ya traen claves catalogadas (`estado_menopausico`, `ki67`). La tarea
-`## contratos` solo verifica `contracts:check` y `contracts:breaking` sin diff. Si `contract-keeper` pidiera documentar el
-nuevo motivo del `422`, sería un cambio de **descripción** (no incompatible) en un commit `contract(L1D-113)` previo al test.
+Sin cambio de **esquema** ni de `info.version` (ADR-26): `ClinicalContext.currentLine`, `ClinicalContext.missingCriticalData` y
+`ErrorValidacion` (`CUERPO_INVALIDO`) ya existen y los ejemplos `contracts/examples/rag-query-request*.json` ya traen claves
+catalogadas. Gate 2 (contract-keeper) pidió describir el comportamiento observable nuevo: un commit `contract(L1D-113)` solo de
+**descripción** (como L1D-306) en el `422` de `/rag/query` y de `/rag/follow-up` y en `missingCriticalData`, acotado a esas dos
+rutas (`/case/summary` no aplica; alinearlo es deuda D5-25). El commit va tras los de test y feat (orden invertido benigno:
+solo texto). No se añade `pattern` al esquema (estrecharía la entrada: incompatible).
 
 ## Evaluación
 
@@ -129,3 +130,18 @@ Cambian el **prompt** (`rag-query@0.7.0`) y la **consulta de recuperación** (ra
   `clinical-api`; la suite lo mide.
 - **Catálogo de test sin una clave** usada por un fixture → `422` inesperado en tests de otros changes: los fixtures de
   `rag-orchestrator` y los ejemplos usan claves de `test-apl-*`/`1.1.0`; la tarea 1.1 lo comprueba.
+
+## Desviaciones de la implementación
+
+- **Dónde se validan y etiquetan los faltantes.** El design pedía la validación en `consultar()` y `faltantes_del_contexto()` en
+  `app/prompts/`. Como el `409` y el tipo habilitado se comprueban dentro de `recuperar()`, la validación vive ahí
+  (`_etiquetas_de_los_faltantes`, tras ambos y antes de idioma, embeddings, Milvus, LLM y NLI) y devuelve las **etiquetas**,
+  que `ResultadoDeRecuperacion.etiquetas_de_faltantes` entrega al generador. `bloque_de_datos_del_paciente(contexto,
+  faltantes=())` solo concatena líneas, así `app/prompts/` sigue sin importar puertos y el prompt de seguimiento (que llama
+  a la misma función sin faltantes) no cambia. Consecuencia: `/rag/follow-up` también rechaza con `422` una clave no
+  catalogada (RN-11 más estricta; `ErrorValidacion` ya está declarado en esa ruta).
+- **Puerto con `claves()`.** `EtiquetasDeDatosCriticos` expone además `claves(tipo)` (la regla pura recibe el conjunto de
+  claves conocidas) y `etiqueta(tipo, clave)`.
+- **Suite `evaluate`.** `corrida.solicitud_de` deja `missingCriticalData` vacío cuando el tipo de la pregunta difiere del del
+  ejemplo base (sus claves son del catálogo de mama) y toma `currentLine`/`missingCriticalData` del bloque `contexto` de la
+  pregunta cuando existe (dataset S5, `S5-L01…L05`).

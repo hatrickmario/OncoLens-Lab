@@ -29,6 +29,7 @@ from app.application.ports import (
     Clock,
     CorpusCatalogReader,
     CorpusReleaseReader,
+    EtiquetasDeDatosCriticos,
     EvidenceGenerator,
     EvidenceQueryPort,
     FollowUpPort,
@@ -67,6 +68,10 @@ from app.infrastructure.catalogo_clinico.sinonimos import (
 from app.infrastructure.catalogo_clinico.aplicabilidad import (
     CriteriosDelCatalogo,
     cargar_criterios_de_aplicabilidad,
+)
+from app.infrastructure.catalogo_clinico.datos_criticos import (
+    DatosCriticosDelCatalogo,
+    cargar_datos_criticos,
 )
 from app.infrastructure.catalogo_clinico.manifiesto import (
     CatalogoNoConfigurado,
@@ -131,10 +136,11 @@ CargadorDeModelos = Callable[[Settings], "ModelosDeRecuperacion"]
 
 @dataclass(frozen=True)
 class CatalogoMontado:
-    """El catálogo clínico y sus criterios de aplicabilidad, leídos una sola vez al arrancar (sin doble lectura)."""
+    """El catálogo clínico, sus criterios de aplicabilidad y sus datos críticos, leídos una sola vez al arrancar."""
 
     catalogo: CatalogoClinico
     criterios: CriteriosDeAplicabilidad
+    datos_criticos: EtiquetasDeDatosCriticos
 
 
 def cargar_settings_o_salir() -> Settings:
@@ -212,10 +218,12 @@ def cargar_catalogo_clinico_o_eventos(
     else:
         try:
             criterios = _montar_criterios_de_aplicabilidad(settings, catalogo)
+            datos_criticos = _montar_datos_criticos(settings, catalogo)
         except CatalogoNoDisponible:
-            regla, motivo = "aplicabilidad.json válido por tipo", MOTIVO_CATALOGO_NO_DISPONIBLE
+            regla = "aplicabilidad.json y datos-criticos.json válidos por tipo"
+            motivo = MOTIVO_CATALOGO_NO_DISPONIBLE
         else:
-            return CatalogoMontado(catalogo, criterios), []
+            return CatalogoMontado(catalogo, criterios, datos_criticos), []
     return None, [{"variable": "CLINICAL_CATALOG_PATH", "regla": regla, "motivo": motivo}]
 
 
@@ -233,6 +241,7 @@ def crear_app(
     generador: EvidenceGenerator | None = None,
     catalogo_clinico: CatalogoClinico | None = None,
     criterios_de_aplicabilidad: CriteriosDeAplicabilidad | None = None,
+    datos_criticos: EtiquetasDeDatosCriticos | None = None,
 ) -> FastAPI:
     silenciar_urls_de_httpx_en_logs()
     modelos = _cargar_modelos_segun(settings, cargador_de_modelos)
@@ -249,6 +258,7 @@ def crear_app(
         if criterios_de_aplicabilidad is not None
         else _montar_criterios_de_aplicabilidad(settings, catalogo_clinico)
     )
+    datos_criticos = datos_criticos or _montar_datos_criticos(settings, catalogo_clinico)
     registrar_manejadores_de_error(app, trace_ids)
     app.add_middleware(ContencionDeErroresInesperados, trace_ids=trace_ids)
     app.add_middleware(
@@ -266,6 +276,7 @@ def crear_app(
         generador=generador,
         catalogo_clinico=catalogo_clinico,
         criterios_de_aplicabilidad=app.state.criterios_de_aplicabilidad,
+        datos_criticos=datos_criticos,
     )
     app.include_router(
         crear_router_health(
@@ -339,6 +350,17 @@ def _montar_criterios_de_aplicabilidad(
     )
 
 
+def _montar_datos_criticos(
+    settings: Settings, catalogo: CatalogoClinico
+) -> EtiquetasDeDatosCriticos:
+    """Las etiquetas de ``<tipo>/datos-criticos.json`` de cada tipo del manifiesto; sin ruta de catálogo (solo con un
+    catálogo inyectado) no hay datos que leer y ninguna clave de ``missingCriticalData`` es válida (falla cerrado). Un
+    archivo ilegible o fuera de esquema lanza ``CatalogoNoDisponible``."""
+    if settings.clinical_catalog_path is None:
+        return DatosCriticosDelCatalogo({})
+    return cargar_datos_criticos(settings.clinical_catalog_path, catalogo.tipos_de_cancer())
+
+
 def _cargar_lista_de_terminos(settings: Settings) -> ProhibitedTermsChecker:
     """La lista versionada de términos prohibidos del catálogo montado (RN-23); sin ella no hay respuesta con evidencia."""
     _exigir_claves({"CLINICAL_CATALOG_PATH": settings.clinical_catalog_path})
@@ -379,6 +401,7 @@ def _registrar_consulta_de_evidencia(
     generador: EvidenceGenerator | None,
     catalogo_clinico: CatalogoClinico,
     criterios_de_aplicabilidad: CriteriosDeAplicabilidad,
+    datos_criticos: EtiquetasDeDatosCriticos,
 ) -> None:
     seguimiento_propio = seguimiento
     if consulta is None and settings.llm_provider == "fake":
@@ -397,7 +420,7 @@ def _registrar_consulta_de_evidencia(
             seguimiento_propio = seguimiento or SeguimientoNoComponible()
         else:
             servicio = _crear_servicio_de_recuperacion(
-                settings, recuperacion, clock, generador, criterios_de_aplicabilidad
+                settings, recuperacion, clock, generador, criterios_de_aplicabilidad, datos_criticos
             )
             consulta = servicio
             seguimiento_propio = seguimiento or _crear_seguimiento(
@@ -435,6 +458,7 @@ def _crear_servicio_de_recuperacion(
     clock: Clock,
     generador: EvidenceGenerator | None,
     criterios_de_aplicabilidad: CriteriosDeAplicabilidad,
+    datos_criticos: EtiquetasDeDatosCriticos,
 ) -> RAGOrchestratorService:
     _exigir_ramas_de_la_recuperacion_hibrida(settings, puertos)
     return RAGOrchestratorService(
@@ -445,6 +469,7 @@ def _crear_servicio_de_recuperacion(
         lector_release=puertos.lector_release,
         catalogo=puertos.catalogo,
         catalogo_clinico=puertos.catalogo_clinico,
+        datos_criticos=datos_criticos,
         aplicabilidad=ApplicabilityService(criterios_de_aplicabilidad),
         # Producción: el mismo LLM local (RN-12); la validación de cita, lenguaje y NLI es del servicio, no del adapter.
         proponente=crear_proponente_local(settings),
