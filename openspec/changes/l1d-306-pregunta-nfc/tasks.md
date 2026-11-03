@@ -40,20 +40,20 @@
 
 ## 3. ai-services
 
-- [ ] 3.1 Esqueleto `app/domain/pregunta.py::normalizar_pregunta()` (`raise NotImplementedError`) y tests de
+- [x] 3.1 Esqueleto `app/domain/pregunta.py::normalizar_pregunta()` (`raise NotImplementedError`) y tests de
       aceptación en rojo con `@pytest.mark.ac("US-250", 4)` y `("US-250", 5)`: «el prompt contiene la
       pregunta en NFC cuando llega en NFD» y «NFC y NFD producen el mismo SHA-256 de prompt y la misma
       consulta en recuperación y *reranker*» · integración (`TestClient` + LLM falso que registra el prompt,
       adapters falsos); más «solo espacios → 422 `CUERPO_INVALIDO` sin llamar adapters»; commit
       `test(L1D-306)` · **TDD estricto**
-- [ ] 3.2 Implementar `normalizar_pregunta()` con unitarios Pytest sobre la tabla compartida
+- [x] 3.2 Implementar `normalizar_pregunta()` con unitarios Pytest sobre la tabla compartida
       `packages/clinical-language/fixtures/normalizacion-pregunta.json` (los dos gemelos dan la misma salida)
       y aplicarla en `app/api/rag_query.py` antes de delegar en `EvidenceQueryPort` (sin editar el modelo
       generado). Si el LLM falso o los adapters falsos necesitan registrar prompt o consulta, extenderlos y
       mantener verde su test de contrato. Tests 3.1 en verde; commit `feat(L1D-306)` · **TDD estricto**
       `[US-250 AC-2, AC-4, AC-5]`
-- [ ] 3.3 Suite de `rag-orchestrator` en verde y verificación del proveedor de `/rag/query` · **verificación**
-- [ ] 3.4 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento,
+- [x] 3.3 Suite de `rag-orchestrator` en verde y verificación del proveedor de `/rag/query` · **verificación**
+- [x] 3.4 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento,
       tests en verde antes y después, commit refactor(L1D-306)
 
 ## 4. frontend
@@ -78,7 +78,7 @@
 
 ## 6. cierre
 
-- [ ] 6.1 Buscar `normalize('NFC')` y `unicodedata.normalize("NFC"` en el árbol y confirmar que la pregunta
+- [x] 6.1 Buscar `normalize('NFC')` y `unicodedata.normalize("NFC"` en el árbol y confirmar que la pregunta
       tiene un solo dueño por lenguaje (design.md §Dependencias) · **verificación**
 - [ ] 6.2 `openspec validate l1d-306-pregunta-nfc --strict`, tests de los tres contextos en verde,
       `contracts:verify-provider` en verde · **verificación**
