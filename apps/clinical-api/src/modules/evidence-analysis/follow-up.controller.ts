@@ -1,23 +1,10 @@
-import express, {
-  Router,
-  type ErrorRequestHandler,
-  type Request,
-  type RequestHandler,
-  type Response,
-} from 'express';
+import express, { Router, type Request, type RequestHandler, type Response } from 'express';
 import { z } from 'zod';
-import {
-  enviarError,
-  esErrorDeCuerpoDelCliente,
-  rechazarNoEncontrado,
-  type CodigoDeError,
-} from '../../infrastructure/http-errores.js';
-import type { LineaDeLog, Registrar } from '../../infrastructure/logger.js';
+import { rechazarNoEncontrado } from '../../infrastructure/http-errores.js';
+import type { Registrar } from '../../infrastructure/logger.js';
 import { authorize } from '../../middleware/authorize.js';
 import { crearTraceIdMiddleware, traceIdDe } from '../../middleware/trace-id.middleware.js';
 import { FalloDePersistenciaError } from './analysis-completion.js';
-import { DesidentificacionNoDisponible } from './deidentification/context-deidentifier.js';
-import { EntornoNoSintetico } from './deidentification/entorno-sintetico.guard.js';
 import { followUpCreateSchema } from './follow-up.schema.js';
 import {
   AnalisisNoEncontradoError,
@@ -26,6 +13,14 @@ import {
   type FollowUpService,
 } from './follow-up.service.js';
 import type { TraceIdGenerator } from './ports.js';
+import {
+  CUERPO_INVALIDO,
+  ERROR_INTERNO,
+  crearEmisor,
+  manejadorDeCuerpoIlegible,
+  rechazoDeDesidentificacion,
+  type Rechazo,
+} from './rechazos-http.js';
 
 export interface DependenciasDelControllerDeSeguimiento {
   service: FollowUpService;
@@ -35,23 +30,6 @@ export interface DependenciasDelControllerDeSeguimiento {
 
 const EVENTO = 'follow_up.solicitud';
 
-interface Rechazo {
-  status: number;
-  codigo: CodigoDeError;
-  resultado: string;
-  extra?: LineaDeLog;
-}
-
-const CUERPO_INVALIDO: Rechazo = {
-  status: 422,
-  codigo: 'CUERPO_INVALIDO',
-  resultado: 'cuerpo_invalido',
-};
-const ERROR_INTERNO: Rechazo = {
-  status: 500,
-  codigo: 'ERROR_INTERNO',
-  resultado: 'error_de_persistencia',
-};
 const LIMITE_ALCANZADO: Rechazo = {
   status: 409,
   codigo: 'LIMITE_SEGUIMIENTO',
@@ -62,27 +40,13 @@ const ANALISIS_SIN_EVIDENCIA: Rechazo = {
   codigo: 'ANALISIS_SIN_EVIDENCIA',
   resultado: 'analisis_sin_evidencia',
 };
-const DESIDENTIFICACION_NO_DISPONIBLE: Rechazo = {
-  status: 503,
-  codigo: 'DESIDENTIFICACION_NO_DISPONIBLE',
-  resultado: 'desidentificacion_no_disponible',
-};
 
 /** Errores del dominio → respuesta HTTP; `undefined` si no es uno de ellos (sigue al 500 genérico). */
 function rechazoDe(error: unknown): Rechazo | undefined {
   if (error instanceof LimiteDeSeguimientoError) return LIMITE_ALCANZADO;
   if (error instanceof AnalisisSinEvidenciaError) return ANALISIS_SIN_EVIDENCIA;
   if (error instanceof FalloDePersistenciaError) return ERROR_INTERNO;
-  if (error instanceof DesidentificacionNoDisponible) return DESIDENTIFICACION_NO_DISPONIBLE;
-  if (error instanceof EntornoNoSintetico) {
-    return {
-      status: 502,
-      codigo: 'ERROR_SERVICIO_IA',
-      resultado: 'desidentificacion_rechazada',
-      extra: { motivo: error.motivo },
-    };
-  }
-  return undefined;
+  return rechazoDeDesidentificacion(error);
 }
 
 /** Un identificador mal formado es indistinguible de uno inexistente: `404` sin eco. */
@@ -91,26 +55,22 @@ function analisisIdDe(request: Request): string | null {
   return analisisId.success ? analisisId.data : null;
 }
 
-/** El log lleva solo evento, resultado, `traceId` y el UUID del análisis: nunca la pregunta, la respuesta ni la memoria (RN-11). */
-function crearEmisor(registrar: Registrar) {
-  const registrarResultado = (response: Response, resultado: string, extra: LineaDeLog = {}) => {
-    registrar({ event: EVENTO, resultado, traceId: traceIdDe(response), ...extra });
-  };
+/** Emisor del seguimiento: el común del módulo más el `404` sin eco. */
+function crearEmisorDeSeguimiento(registrar: Registrar) {
   return {
-    registrarResultado,
-    rechazar(response: Response, rechazo: Rechazo, extra: LineaDeLog = {}): void {
-      registrarResultado(response, rechazo.resultado, { ...extra, ...rechazo.extra });
-      enviarError(response, rechazo.status, rechazo.codigo, traceIdDe(response));
-    },
+    ...crearEmisor(registrar, EVENTO),
     noEncontrado: (response: Response) => {
       rechazarNoEncontrado(response, registrar, EVENTO);
     },
   };
 }
 
-type Emisor = ReturnType<typeof crearEmisor>;
+type EmisorDeSeguimiento = ReturnType<typeof crearEmisorDeSeguimiento>;
 
-function manejadorDeCreacion(service: FollowUpService, emisor: Emisor): RequestHandler {
+function manejadorDeCreacion(
+  service: FollowUpService,
+  emisor: EmisorDeSeguimiento,
+): RequestHandler {
   return async (request, response) => {
     const analysisId = analisisIdDe(request);
     if (analysisId === null) {
@@ -146,7 +106,7 @@ function manejadorDeCreacion(service: FollowUpService, emisor: Emisor): RequestH
   };
 }
 
-function manejadorDeListado(service: FollowUpService, emisor: Emisor): RequestHandler {
+function manejadorDeListado(service: FollowUpService, emisor: EmisorDeSeguimiento): RequestHandler {
   return async (request, response) => {
     const analysisId = analisisIdDe(request);
     if (analysisId === null) {
@@ -164,17 +124,6 @@ function manejadorDeListado(service: FollowUpService, emisor: Emisor): RequestHa
   };
 }
 
-/** JSON malformado o cuerpo excesivo: mismo 422 del contrato, sin eco del error del parser. */
-function manejadorDeCuerpoIlegible(emisor: Emisor): ErrorRequestHandler {
-  return (error: unknown, _request, response, next) => {
-    if (!esErrorDeCuerpoDelCliente(error)) {
-      next(error);
-      return;
-    }
-    emisor.rechazar(response, CUERPO_INVALIDO);
-  };
-}
-
 /**
  * `POST` y `GET /evidence-analyses/{analysisId}/follow-ups` (se montan bajo `/platform`, detrás del guard de sesión).
  * Solo traduce HTTP ↔ service. Registra sus rutas en el `router` que recibe (el del gateway de análisis, para que la
@@ -185,7 +134,7 @@ export function followUpController(
   router: Router = Router(),
 ): Router {
   const { service, traceIds, registrar } = dependencias;
-  const emisor = crearEmisor(registrar);
+  const emisor = crearEmisorDeSeguimiento(registrar);
   router.post(
     '/evidence-analyses/:analysisId/follow-ups',
     crearTraceIdMiddleware(traceIds),
