@@ -14,7 +14,14 @@ from tests.evaluation.conftest import RAIZ_APP, RAIZ_REPO
 from tests.support.fakes import RelojFijo
 
 CONFIG = RAIZ_APP / "eval" / "configs" / "test-fake.yaml"
-METRICAS = {"recall_at_10", "mrr", "fidelidad_proxy", "precision_citas", "sin_evidencia"}
+METRICAS = {
+    "recall_at_10",
+    "recall_at_10_es_a_en",
+    "mrr",
+    "fidelidad_proxy",
+    "precision_citas",
+    "sin_evidencia",
+}
 IDIOMAS = {"es", "en", "es_a_en"}
 P95_CORRIDAS = 3
 

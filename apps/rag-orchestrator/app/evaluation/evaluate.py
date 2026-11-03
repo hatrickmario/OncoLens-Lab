@@ -251,37 +251,9 @@ def _ejecutar(
     exigir_proveedor_local(config)  # RN-12: los adapters locales y su modelo, antes de cargar pesos
     if config.comparacion is not None and config.particion is not None:
         verificar_golden_sha256(config.particion)  # ADR-45 P2: antes de abrir ninguna pregunta
-    if args.sweep in PARAMETROS_DE_CALIBRACION:
-        exigir_dataset_sintetico(fuente.clase())  # RN-14: antes de cargar nada
-        dataset = fuente.cargar()
-        puertos_locales = (  # una sola carga de modelos para toda la grilla
-            cargar_puertos_locales(config, origen, RegistroDeLlamadas(), dataset.clase)
-            if config.proveedor == "local"
-            else None
-        )
-        return ejecutar_calibracion(
-            config,
-            args.sweep,
-            dataset,
-            puertos_locales=puertos_locales,
-            reloj=reloj,
-            cronometro_de=lambda: Cronometro(_reloj_de_medicion(config)),
-            salida=args.salida,
-            fijar=args.fijar,
-        )
     if args.sweep:
         exigir_dataset_sintetico(fuente.clase())  # RN-14: antes de cargar nada
-        return ejecutar_barrido(
-            config,
-            args.config,
-            fuente.cargar(),
-            reloj=reloj,
-            cronometro_de=lambda: Cronometro(_reloj_de_medicion(config)),
-            salida=args.salida,
-            fijar=args.fijar,
-            p95_e2e_s=args.p95_e2e_s,
-            directorio_de_configs=directorio_de_configs,
-        )
+        return _barrer(config, args, fuente, reloj, origen, directorio_de_configs)
     informe_pii = _proveedor_pii(
         config, args
     ).leer()  # antes de consultar: un informe roto no cuesta una corrida
@@ -290,6 +262,48 @@ def _ejecutar(
     )
     escribir_reporte_cerrado(_ruta_del_resultado(config, args, reloj), reporte, ESQUEMA_SUITE)
     return CODIGO_RETROCESO if hay_retroceso else 0
+
+
+def _barrer(
+    config: ConfigSuite,
+    args: argparse.Namespace,
+    fuente: FuenteDatasetEnDirectorio,
+    reloj: Clock,
+    origen: OrigenLocal,
+    directorio_de_configs: Path | None,
+) -> int:
+    """``--sweep``: el umbral de relevancia (US-073) o la calibración del S5 (US-120 AC-5). Con ``proveedor: local`` los
+    modelos se cargan una sola vez para toda la grilla."""
+    dataset = fuente.cargar()
+    puertos_locales = (
+        cargar_puertos_locales(config, origen, RegistroDeLlamadas(), dataset.clase)
+        if config.proveedor == "local"
+        else None
+    )
+    cronometro_de = lambda: Cronometro(_reloj_de_medicion(config))  # noqa: E731
+    if args.sweep in PARAMETROS_DE_CALIBRACION:
+        return ejecutar_calibracion(
+            config,
+            args.sweep,
+            dataset,
+            puertos_locales=puertos_locales,
+            reloj=reloj,
+            cronometro_de=cronometro_de,
+            salida=args.salida,
+            fijar=args.fijar,
+        )
+    return ejecutar_barrido(
+        config,
+        args.config,
+        dataset,
+        puertos_locales=puertos_locales,
+        reloj=reloj,
+        cronometro_de=cronometro_de,
+        salida=args.salida,
+        fijar=args.fijar,
+        p95_e2e_s=args.p95_e2e_s,
+        directorio_de_configs=directorio_de_configs,
+    )
 
 
 def _proveedor_pii(config: ConfigSuite, args: argparse.Namespace) -> ProveedorPii:

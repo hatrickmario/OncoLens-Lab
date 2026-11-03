@@ -18,6 +18,7 @@ bootstrap_repeticiones: 200
 medicion:
   reloj: real # time.perf_counter: el p95 de búsqueda y el del NLI son de verdad
   rss_limite_mib: 4489 # el mismo límite de US-233a / local.yaml
+  p95_corridas: 3 # EVAL_P95_RUNS (US-120 AC-6): el p95 del baseline es la mediana de 3 corridas
 adaptadores:
   proveedor: local
   urls:

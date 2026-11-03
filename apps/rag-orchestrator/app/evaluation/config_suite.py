@@ -120,6 +120,8 @@ class ConfigSuite:
     """Bloque ``origen`` de la medición de US-236 (pregunta de la demo y ``EVAL_ORIGIN_RUNS``); ``None`` en el resto."""
     comparacion: Comparacion | None = None
     """Bloque ``comparacion`` de US-133: varios brazos de recuperación en una sola corrida; ``None`` en el resto."""
+    p95_corridas: int | None = None
+    """``EVAL_P95_RUNS`` (US-120 AC-6, RN-22): corridas del baseline de las que sale la mediana del p95; ``None`` = no declarado."""
 
 
 def huella_de_config(crudo: dict[str, Any]) -> str:
@@ -283,6 +285,12 @@ def _calibracion_del_s5(seccion: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _corridas_de_p95(crudo: dict[str, Any]) -> int | None:
+    """``medicion.p95_corridas`` (``EVAL_P95_RUNS``): sin valor por defecto en código (RN-22); entero positivo si se declara."""
+    corridas = crudo["medicion"].get("p95_corridas")
+    return None if corridas is None else _exigir_entero_positivo(corridas, "medicion.p95_corridas")
+
+
 def _limite_de_rss(crudo: dict[str, Any]) -> float | None:
     """``medicion.rss_limite_mib``: sin valor por defecto en código (RN-22). Exigirlo al correr la suite con modelos
     reales es de ``exigir_proveedor_local``: otras herramientas cargan esta configuración sin medir el NLI."""
@@ -404,4 +412,5 @@ def cargar_config_suite(ruta: Path, entorno: Mapping[str, str] | None = None) ->
         rss_limite_mib=_limite_de_rss(crudo),
         origen=crudo.get("origen"),
         comparacion=_comparacion_de(crudo, sub),
+        p95_corridas=_corridas_de_p95(crudo),
     )

@@ -101,6 +101,13 @@ class Lista:
     elemento: Any
 
 
+@dataclasses.dataclass(frozen=True)
+class Anulable:
+    """``None`` (``null``: «no medida», ≠ ``0.0``) o un valor que cumple el esquema interior."""
+
+    interior: Any
+
+
 _HUELLA = re.compile(r"[0-9a-f]{64}")
 MAXIMO_DE_IDENTIFICADOR = 255  # «<modelo>@<revisión>#sha256:<hash>» de ADR-39 supera los 128
 _IDENTIFICADOR = re.compile(rf"[A-Za-z0-9][A-Za-z0-9._:@#+/-]{{0,{MAXIMO_DE_IDENTIFICADOR - 1}}}")
@@ -113,7 +120,10 @@ def es_identificador(valor: object) -> bool:
 
 def validar_esquema_cerrado(valor: Any, esquema: Any, ruta: str = "$") -> None:
     """Lista blanca de claves y de tipos de hoja (ADR-41, «Reporte»): lo demás hace fallar la escritura."""
-    if isinstance(esquema, Objeto):
+    if isinstance(esquema, Anulable):
+        if valor is not None:
+            validar_esquema_cerrado(valor, esquema.interior, ruta)
+    elif isinstance(esquema, Objeto):
         _validar_objeto(valor, esquema, ruta)
     elif isinstance(esquema, Huella):
         _exigir(
