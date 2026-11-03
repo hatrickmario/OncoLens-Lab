@@ -57,11 +57,8 @@ export function createCaseViewService(dependencias: DependenciasDelServicio): Ca
   const { repo, completitud } = dependencias;
   return {
     async obtener(patientId): Promise<CaseView> {
-      const [existe, datos] = await Promise.all([
-        repo.existePaciente(patientId),
-        repo.leerDatosDelCaso(patientId),
-      ]);
-      if (!existe) throw new PacienteNoEncontradoError();
+      if (!(await repo.existePaciente(patientId))) throw new PacienteNoEncontradoError();
+      const datos = await repo.leerDatosDelCaso(patientId);
       const checklist = await completitud.calcular(patientId);
       return {
         timeline: ordenarTimeline([...eventosDerivados(datos), ...eventosClinicos(datos.eventos)]),

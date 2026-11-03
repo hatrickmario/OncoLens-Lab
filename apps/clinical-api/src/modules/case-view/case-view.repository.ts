@@ -6,10 +6,10 @@ import {
 } from '../compartido/estados-de-revision.js';
 import type {
   AtributoLeido,
-  BiomarcadorDelCaso,
+  BiomarcadorLeido,
   ConfianzaDeExtraccion,
   DatosDelCaso,
-  DiagnosticoDelCaso,
+  DiagnosticoLeido,
   EventoClinicoLeido,
   MetodoDeEntrada,
   PrecisionDeFecha,
@@ -22,7 +22,8 @@ import type {
 
 /**
  * Lectura de la vista de caso (US-088, design D9 y D12): una consulta por entidad, siempre por `patient_id` (UUID) y con
- * `sqlDatoVigente()` en cada una (RN-07: nada `rechazado` ni `reemplazado`). Solo proyecta las columnas que la vista
+ * `sqlDatoVigente()` en las cinco con estado de revisión (diagnóstico, biomarcador, tratamiento previo, evento clínico y
+ * atributo; RN-07: nada `rechazado` ni `reemplazado`); el registro de IA no tiene estado de revisión. Solo proyecta las columnas que la vista
  * muestra. Nunca lee `identity`, `ClinicalNote` ni el contenido de un `AIAnalysisRecord`; sin lógica de derivación.
  */
 
@@ -76,7 +77,7 @@ const SQL_ATRIBUTOS = `SELECT t.id, t.attribute_key, t.value, ${FECHA('t.observe
    WHERE t.patient_id = $1 AND ${sqlDatoVigente('t.review_status')}
    ORDER BY t.attribute_key, t.observed_at NULLS LAST, t.id`;
 
-/** Solo identificador, tipo y fecha: del registro de IA nunca sale el análisis ni el contexto (RN-10). */
+/** Sin estado de revisión (RN-07 no aplica). Solo identificador, tipo y fecha: del registro de IA nunca sale el análisis ni el contexto (RN-10). */
 const SQL_REGISTROS_DE_IA = `SELECT t.id, t.analysis_type::text AS analysis_type,
          ${FECHA("t.created_at AT TIME ZONE 'UTC'")} AS fecha, ${INSTANTE('t.created_at')} AS created_at
     FROM clinical.ai_analysis_record t
@@ -96,7 +97,7 @@ function procedenciaDeLaFila(fila: Fila): ProcedenciaDeFila {
   };
 }
 
-const comoDiagnostico = (fila: Fila): DiagnosticoDelCaso => ({
+const comoDiagnostico = (fila: Fila): DiagnosticoLeido => ({
   id: texto(fila['id']),
   histology: texto(fila['histology']),
   icd10Code: textoONulo(fila['icd10_code']),
@@ -105,7 +106,7 @@ const comoDiagnostico = (fila: Fila): DiagnosticoDelCaso => ({
   procedencia: procedenciaDeLaFila(fila),
 });
 
-const comoBiomarcador = (fila: Fila): BiomarcadorDelCaso => ({
+const comoBiomarcador = (fila: Fila): BiomarcadorLeido => ({
   examId: texto(fila['exam_id']),
   examType: texto(fila['exam_type']),
   performedAt: texto(fila['performed_at']),
@@ -179,15 +180,13 @@ export function createCaseViewRepository(db: Consultador): RepositorioDeLaVistaD
       return rows.length > 0;
     },
     async leerDatosDelCaso(patientId): Promise<DatosDelCaso> {
-      const [diagnosticos, biomarcadores, tratamientos, eventos, atributos, registrosDeIa] =
-        await Promise.all([
-          leer(SQL_DIAGNOSTICOS, patientId, comoDiagnostico),
-          leer(SQL_BIOMARCADORES, patientId, comoBiomarcador),
-          leer(SQL_TRATAMIENTOS, patientId, comoTratamiento),
-          leer(SQL_EVENTOS, patientId, comoEventoClinico),
-          leer(SQL_ATRIBUTOS, patientId, comoAtributo),
-          leer(SQL_REGISTROS_DE_IA, patientId, comoRegistroDeIa),
-        ]);
+      // Secuencial: el `Consultador` puede ser un `Client` único y pg 8 desaprueba consultas concurrentes sobre él.
+      const diagnosticos = await leer(SQL_DIAGNOSTICOS, patientId, comoDiagnostico);
+      const biomarcadores = await leer(SQL_BIOMARCADORES, patientId, comoBiomarcador);
+      const tratamientos = await leer(SQL_TRATAMIENTOS, patientId, comoTratamiento);
+      const eventos = await leer(SQL_EVENTOS, patientId, comoEventoClinico);
+      const atributos = await leer(SQL_ATRIBUTOS, patientId, comoAtributo);
+      const registrosDeIa = await leer(SQL_REGISTROS_DE_IA, patientId, comoRegistroDeIa);
       return { diagnosticos, biomarcadores, tratamientos, eventos, atributos, registrosDeIa };
     },
   };

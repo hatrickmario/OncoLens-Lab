@@ -73,12 +73,13 @@ por decisión y las descartadas en una línea. Los supuestos antes marcados `(as
 - **D10 · Checklist (AC-8).** El service recibe `CompletenessService` por la factory y copia `items` → `{ item, status }`
   y `catalogVersion`. Sin diagnóstico activo o tipo no habilitado: `completeness = []` con la `catalogVersion` montada.
   El `404` lo decide primero la vista (`existePaciente`) para no depender del orden del checklist.
+- **D3b · «Sin fecha confiable» y «evento clínico propio» (Gate 2 #1 y #2).** Un evento clínico está sin fecha confiable si `event_date IS NULL` o `date_precision = 'incierta'` (`sqlFechaNoConfiable()`, el mismo criterio con que el timeline lo coloca al final); solo cuenta/aparece si no tiene `analysis_id` (`sqlEventoClinicoPropio()`, ADR-32: el reflejo de un análisis no es un dato clínico). Ambos viven junto a `sqlDatoVigente()` y los usan el timeline, el contador y el análisis. **Decisión explícita:** un tratamiento previo sin `started_at` produce su evento `incierta` en el timeline pero **no** suma en `pendingReviewCount` (el contador solo mira `clinical_event`, PRD AC-02.2).
 - **D11 · Contador de la ficha (AC-3).** Se modifica la entrada `clinical_event` de `FUENTES_POR_REVISAR`: cuenta las
   filas vigentes con `review_status = ANY($2)` **o** `date_precision = 'incierta'`, una vez por fila. No cambia
   `ESTADOS_PENDIENTES_DE_REVISION` (P-4 sigue: `auto_aceptado` no cuenta por su estado).
 - **D12 · Una consulta por entidad (M-02.4):** diagnósticos, exámenes con biomarcadores (`JOIN`), tratamientos
   previos, eventos clínicos, atributos, registros de IA (solo `id`, `analysis_type`, `created_at`) y existencia del
-  paciente: 7 consultas fijas + las del checklist, sin N+1. Se lanzan con `Promise.all`.
+  paciente: 7 consultas fijas + las del checklist, sin N+1. Se lanzan **en secuencia** (Gate 2 vuelta 1, #4): el `Consultador` puede ser un `Client` único y `pg` 8 desaprueba las consultas concurrentes sobre él; el service comprueba `existePaciente` primero, así un paciente inexistente no dispara las lecturas.
 - **D13 · `description` tal como está guardada.** La vista es una lectura clínica del oncólogo autorizado
   (`clinical:read`), que ya ve la identidad en la ficha; el enmascaramiento de RN-11 aplica al contexto hacia la IA
   (US-052/US-093), no a esta vista. Nunca se registra en logs. La respuesta lleva `Cache-Control: no-store` (ni el
@@ -133,7 +134,7 @@ Proveedor: `clinical-api`. Consumidores: `web` (US-090, por el cliente generado)
 ```
 
 `info.version` sube un *minor*: **1.16.0 → 1.17.0** (cadena del S5: `l1d-306` 1.15.1 → `l1d-268` 1.16.0 → `l1d-74`
-1.17.0 → `l1d-80` 1.18.0 …); quien rebase renumera y **regenera** `packages/api-contracts`, nunca fusiona generados a
+1.17.0 → `l1d-80` 1.18.0 …); quien rebase renumera y **regenera** (provisional: este PR se mergea antes de `l1d-268`, publica 1.16.0 y `l1d-268` renumera a 1.17.0 al rebasar) `packages/api-contracts`, nunca fusiona generados a
 mano. Ejemplo **nuevo** `contracts/examples/case-view-p-caso.json` (D15) con su entrada en
 `contracts/examples/index.json` → `#/paths/~1platform~1patients~1{patientId}~1case/get/responses/200`, más las
 entradas de `401`/`403`/`404`/`500` de `/case` con los ejemplos de error existentes (`error-no-autenticado.json`,
