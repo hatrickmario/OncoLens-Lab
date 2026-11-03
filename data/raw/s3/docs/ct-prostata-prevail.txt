@@ -1,0 +1,64 @@
+Source: ClinicalTrials.gov (U.S. National Library of Medicine), study record NCT01212991, last updated 2020-03-17; retrieved 2026-11-03 through the ClinicalTrials.gov API v2 (data timestamp 2026-11-03T10:00:05). Modifications: selected fields reordered as plain text; contacts, locations, results and documents omitted. This is a trial registry record, not evidence of efficacy.
+
+Title
+PREVAIL: A MULTINATIONAL PHASE 3, RANDOMIZED, DOUBLE-BLIND, PLACEBO-CONTROLLED EFFICACY AND SAFETY STUDY OF ORAL MDV3100 IN CHEMOTHERAPY-NAÏVE PATIENTS WITH PROGRESSIVE METASTATIC PROSTATE CANCER WHO HAVE FAILED ANDROGEN DEPRIVATION THERAPY
+
+Brief title
+A Safety and Efficacy Study of Oral MDV3100 in Chemotherapy-Naive Patients With Progressive Metastatic Prostate Cancer
+
+Sponsor
+Pfizer
+
+Status: COMPLETED. Phase: PHASE3. Study type: INTERVENTIONAL. Enrollment: 1717.
+
+Brief summary
+The purpose of this study is to determine the benefit of enzalutamide versus placebo as assessed by overall survival and progression-free survival in patients with progressive metastatic prostate cancer who have failed androgen deprivation therapy but not yet received chemotherapy.
+
+Conditions:
+- Prostate Cancer
+
+Design
+Allocation: RANDOMIZED. Intervention model: PARALLEL. Masking: TRIPLE.
+
+Arm (EXPERIMENTAL): Enzalutamide
+
+Arm (PLACEBO_COMPARATOR): Placebo
+
+Primary outcomes
+- Overall Survival (During study period (up to 3 years)). Overall survival was defined as the time from randomization to death due to any cause. For patients who were alive at the time of the analysis data cutoff, overall survival was censored at the last date the patient was known to be alive or analysis data cutoff date, whichever was first. This included patients who were known to have died after the data analysis cutoff date. Patients with no post-baseline survival information were censored on the date of randomization.
+- Radiographic Progression-free Survival (rPFS) (During study period (up to 20 months)). Radiographic progression-free survival was defined as the time from randomization to the first objective evidence of radiographic disease progression assessed by independent central radiology review or death due to any cause within 168 days after treatment discontinuation, whichever was first. Radiographic disease progression was evaluated by CT scan or MRI and radionuclide bone scans at regularly scheduled visits. Radiographic disease progression in bone required a confirmatory scan. Radiographic disease progression in soft tissue did not require a confirmatory scan for purposes of analysis. Radiographic disease progression was evaluated by independent central radiology review using RECIST 1.1 for soft tissue disease and PCWG2 guidelines for bone disease. Patients who did not reach the endpoint were censored at their last assessment.
+
+Eligibility criteria
+Randomized, Double Blind Treatment Period:
+
+Inclusion Criteria:
+
+* Histologically confirmed adenocarcinoma of the prostate without neuroendocrine differentiation or small cell features
+* Ongoing androgen deprivation therapy with a GnRH analogue or bilateral orchiectomy
+* Progressive disease despite androgen deprivation therapy as defined by rising PSA levels or progressive soft tissue or bony disease
+* No prior treatment with cytotoxic chemotherapy
+* Asymptomatic or mildly symptomatic from prostate cancer
+
+Exclusion Criteria:
+
+* Severe concurrent disease, infection, or co-morbidity that, in the judgment of the Investigator, would make the patient inappropriate for enrollment
+* Known or suspected brain metastasis or active leptomeningeal disease
+* History of another malignancy within the previous 5 years other than curatively treated non-melanomatous skin cancer
+
+Open-Label Treatment Period:
+
+The following inclusion criteria apply to patients receiving enzalutamide or placebo during double-blind treatment.
+
+Eligible patients must meet all inclusion criteria.
+
+* Received randomized double-blind treatment in PREVAIL;
+* Open-label day 1 visit is within 6 months after this amendment is approved and becomes effective at the study site;
+* Is willing to maintain androgen deprivation therapy with a gonadotropin-releasing hormone (GnRH) agonist/antagonist or has had a bilateral orchiectomy;
+
+The exclusion criteria apply only to patients starting new treatment with enzalutamide after receiving placebo as randomized treatment. Each patient must not meet any of the following criteria:
+
+* Has taken commercially available enzalutamide (Xtandi);
+* Severe concurrent disease, infection, or co-morbidity that, in the judgment of the Investigator, would make the patient inappropriate for enrollment
+* Known or suspected brain metastasis or active leptomeningeal disease
+
+Sex: MALE. Minimum age: 18 Years. Maximum age: not stated. Standard ages: ADULT, OLDER_ADULT. Healthy volunteers: False.

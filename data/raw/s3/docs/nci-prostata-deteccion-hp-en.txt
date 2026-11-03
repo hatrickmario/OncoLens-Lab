@@ -1,0 +1,871 @@
+Overview
+
+Go to Patient Version
+
+Note: The Overview section summarizes the published evidence on this topic. The rest of the summary describes the evidence in more detail.
+
+Inadequate Evidence of Benefit Associated With Screening for Prostate Cancer Using Prostate-Specific Antigen (PSA) or Digital Rectal Exam (DRE)
+
+The evidence is insufficient to determine whether screening for prostate cancer with prostate-specific antigen (PSA) or digital rectal exam (DRE) reduces mortality from prostate cancer. Screening tests can detect prostate cancer at an early stage, but it is not clear whether earlier detection and consequent earlier treatment leads to any change in the natural history and outcome of the disease. Observational evidence shows a trend toward lower mortality for prostate cancer in some countries, but the relationship between these trends and intensity of screening is not clear, and associations with screening patterns are inconsistent. The observed trends may be due to screening or to other factors such as improved treatment.[1] Results from randomized trials are inconsistent.
+
+Magnitude of Effect: Uncertain.
+
+Study Design: Evidence obtained from randomized trials and from observational and descriptive studies (e.g., international patterns studies, time series).
+
+Internal Validity: Fair.
+
+Consistency: Poor.
+
+External Validity: Poor.
+
+Harms
+
+Based on solid evidence, screening with PSA and/or DRE results in overdiagnosis of prostate cancers and detection of some prostate cancers that would never have caused significant clinical problems. Thus, screening leads to some degree of overtreatment. Based on solid evidence, current prostate cancer treatments, including radical prostatectomy and radiation therapy, result in permanent side effects in many men. The most common of these side effects are erectile dysfunction and urinary incontinence.[1-4] Screening also leads to false-positive findings, with sequelae involving unnecessary diagnostic procedures. In addition, the screening process itself can lead to adverse psychological effects in men who have a prostate biopsy but do not have identified prostate cancer.[5] Prostatic biopsies are associated with complications, including fever, pain, hematospermia/hematuria, positive urine cultures, and, rarely, sepsis.[6]
+
+Magnitude of Effect: 20% to 70% of men who had no problems before radical prostatectomy or external-beam radiation therapy will have reduced sexual function and/or urinary problems.[1]
+
+Study Design: Evidence obtained from cohort studies, case-control studies, and randomized controlled trials.
+
+Internal Validity: Good.
+
+Consistency: Good.
+
+External Validity: Good.
+
+References
+
+Moyer VA; U.S. Preventive Services Task Force: Screening for prostate cancer: U.S. Preventive Services Task Force recommendation statement. Ann Intern Med 157 (2): 120-34, 2012. [PUBMED Abstract]
+
+Chou R, Croswell JM, Dana T, et al.: Screening for prostate cancer: a review of the evidence for the U.S. Preventive Services Task Force. Ann Intern Med 155 (11): 762-71, 2011. [PUBMED Abstract]
+
+Resnick MJ, Koyama T, Fan KH, et al.: Long-term functional outcomes after treatment for localized prostate cancer. N Engl J Med 368 (5): 436-45, 2013. [PUBMED Abstract]
+
+Johansson E, Steineck G, Holmberg L, et al.: Long-term quality-of-life outcomes after radical prostatectomy or watchful waiting: the Scandinavian Prostate Cancer Group-4 randomised trial. Lancet Oncol 12 (9): 891-9, 2011. [PUBMED Abstract]
+
+Fowler FJ, Barry MJ, Walker-Corkery B, et al.: The impact of a suspicious prostate biopsy on patients' psychological, socio-behavioral, and medical care outcomes. J Gen Intern Med 21 (7): 715-21, 2006. [PUBMED Abstract]
+
+Loeb S, Vellekoop A, Ahmed HU, et al.: Systematic review of complications of prostate biopsy. Eur Urol 64 (6): 876-92, 2013. [PUBMED Abstract]
+
+Incidence and Mortality of Prostate Cancer
+
+Prostate cancer is the most common cancer diagnosed in North American men, excluding skin cancers. It is estimated that in 2025, approximately 313,780
+new cases and 35,770 prostate cancer–related deaths will occur in the United
+States. Prostate cancer is now the second-leading cause of cancer death in
+men, after lung cancer. In males, it accounts for 30% of all cancers and
+11% of cancer-related deaths.[1] For 2022, age-adjusted prostate cancer mortality rates per 100,000 were 18.7 overall, 17.9 for White men, and 36.4 for Black men.[2] Age-adjusted incidence rates increased
+steadily from 1975 through 1992, with particularly dramatic increases associated with
+the inception of widespread use of prostate-specific antigen (PSA) screening in the late
+1980s and early 1990s, followed by a fall in incidence. A decline in early-stage prostate cancer incidence rates from 2011 to 2012 (19%) in men aged 50 years and older persisted through 2013 (6%) in Surveillance,
+Epidemiology, and End Results (SEER) Program registries following the 2012 U.S. Preventive Services Task Force recommendations against routine PSA testing of all men. Whether this pattern will lead to an increase in diagnosis of distant-stage disease and prostate cancer mortality is not yet known and will require long-term follow-up.[3] Between 1993 and 2022, mortality rates declined by about 50%. However, between 1993 and 2012, mortality rates decreased from 3.6% per year to 0.5% per year, respectively. This trend may reflect an increase in advanced-stage diagnoses.[1] It has been suggested
+that declines in mortality rates in certain jurisdictions reflect the
+benefit of PSA screening,[4] but others have noted that these
+observations may be explained by independent phenomena such as improved
+treatments.[5] The estimated lifetime risk of a prostate cancer diagnosis is between 12% and 13%,[1] and the lifetime risk of dying from this disease is 2.0%.[2]
+
+Cancer statistics from the National Cancer
+Institute indicated that between 2014 and 2020, the proportion of disease diagnosed at a
+locoregional stage was 82%, and the proportion of disease diagnosed as distant disease was 8%.[6] Stage distribution of prostate cancer is affected
+substantially by the intensity of early detection efforts.
+
+References
+
+American Cancer Society: Cancer Facts and Figures 2025. American Cancer Society, 2025. Available online. Last accessed January 16, 2025.
+
+Surveillance Research Program, National Cancer Institute: SEER*Explorer: An interactive website for SEER cancer statistics. Bethesda, MD: National Cancer Institute. Available online. Last accessed December 30, 2024.
+
+Jemal A, Ma J, Siegel R, et al.: Prostate Cancer Incidence Rates 2 Years After the US Preventive Services Task Force Recommendations Against Screening. JAMA Oncol 2 (12): 1657-1660, 2016. [PUBMED Abstract]
+
+Bartsch G, Horninger W, Klocker H, et al.: Prostate cancer mortality after introduction of prostate-specific antigen mass screening in the Federal State of Tyrol, Austria. Urology 58 (3): 417-24, 2001. [PUBMED Abstract]
+
+Etzioni R, Gulati R, Cooperberg MR, et al.: Limitations of basing screening policies on screening trials: The US Preventive Services Task Force and Prostate Cancer Screening. Med Care 51 (4): 295-300, 2013. [PUBMED Abstract]
+
+National Cancer Institute: SEER Stat Fact Sheets: Prostate. Bethesda, Md: National Cancer Institute. Available online. Last accessed April 8, 2025.
+
+Biology and Natural History of Prostate Cancer
+
+The biology and natural history of prostate cancer is not completely understood. Rigorous evaluation of any prostate cancer screening modality is desirable because the natural history of the disease is variable, and appropriate treatment is not clearly defined. Although the prevalence of prostate cancer and preneoplastic lesions found at
+autopsy steadily increases for each decade of age, most of these lesions remain
+clinically undetected.[1]
+An autopsy study of White and Asian men also found an increase in occult prostate cancer with age, reaching nearly 60% in men older than 80 years. More than 50% of cancers in Asian men and 25% of cancers in White men had a Gleason score of 7 or greater, suggesting that Gleason score may be an imprecise indicator of clinically insignificant prostate cancer.[2,3]
+
+There is an association between primary tumor volume and
+local extent of disease, progression, and survival.[4] A review of a large
+number of prostate cancers in radical prostatectomy, cystectomy, and autopsy
+specimens showed that capsular penetration, seminal vesicle invasion, and lymph
+node metastases were usually found only with tumors larger than 1.4 mL.[5]
+Furthermore, the semiquantitative histopathological grading scheme proposed by
+Gleason is reasonably reproducible among pathologists and correlates with the
+incidence of nodal metastases and with patient survival in a number of reported
+studies.[6]
+
+Pathological stage does not always reflect clinical stage and upstaging (owing
+to extracapsular extension, positive margins, seminal vesicle invasion, or
+lymph node involvement) occurs frequently. Of the prostate cancers detected by
+digital rectal exam (DRE) in the pre–prostate-specific antigen screening era, 67% to 88% were at a
+clinically localized stage (T1–2, NX, M0 [T = tumor size, N = lymph node involvement, and M = metastasis]).[7,8] However, in one series
+of 2,002 patients undergoing annual screening DRE, only
+one-third of men proved to have pathologically organ-confined disease.[8]
+
+References
+
+Sakr WA, Haas GP, Cassin BF, et al.: The frequency of carcinoma and intraepithelial neoplasia of the prostate in young male patients. J Urol 150 (2 Pt 1): 379-85, 1993. [PUBMED Abstract]
+
+Zlotta AR, Egawa S, Pushkar D, et al.: Prevalence of prostate cancer on autopsy: cross-sectional study on unscreened Caucasian and Asian men. J Natl Cancer Inst 105 (14): 1050-8, 2013. [PUBMED Abstract]
+
+Bell KJ, Del Mar C, Wright G, et al.: Prevalence of incidental prostate cancer: A systematic review of autopsy studies. Int J Cancer 137 (7): 1749-57, 2015. [PUBMED Abstract]
+
+Freedland SJ, Humphreys EB, Mangold LA, et al.: Risk of prostate cancer-specific mortality following biochemical recurrence after radical prostatectomy. JAMA 294 (4): 433-9, 2005. [PUBMED Abstract]
+
+McNeal JE, Bostwick DG, Kindrachuk RA, et al.: Patterns of progression in prostate cancer. Lancet 1 (8472): 60-3, 1986. [PUBMED Abstract]
+
+Resnick MI: Background for screening--epidemiology and cost effectiveness. Prog Clin Biol Res 269: 111-22, 1988. [PUBMED Abstract]
+
+Chodak GW, Keller P, Schoenberg HW: Assessment of screening for prostate cancer using the digital rectal examination. J Urol 141 (5): 1136-8, 1989. [PUBMED Abstract]
+
+Thompson IM, Ernst JJ, Gangai MP, et al.: Adenocarcinoma of the prostate: results of routine urological screening. J Urol 132 (4): 690-2, 1984. [PUBMED Abstract]
+
+Risk Factors for Prostate Cancer
+
+Prostate cancer is not commonly seen in men younger than 50 years; the
+incidence rises rapidly each decade thereafter. The incidence rate is higher in Black men than in White men. From 2017 to 2021, the overall age-adjusted incidence rate was 188.7 per 100,000 for Black men and 114.9 per 100,000 for White men.[1] Black men have a higher
+mortality from prostate cancer, even after attempts to adjust for
+access-to-care factors.[2] Men with a family history of prostate cancer are
+at an increased risk of the disease compared with men without this history.[3,4]
+
+Other potential risk factors besides age, race, and family history of prostate
+cancer include alcohol consumption, vitamin or mineral interactions, and other
+dietary habits.[5-9] A significant body of evidence suggests that a diet high in fat, especially saturated fats and fats of animal origin, is associated with a higher risk of prostate cancer.[10,11] Other possible dietary influences include selenium, vitamin E, vitamin D, lycopene, and isoflavones. For more information, see Prostate
+Cancer Prevention.
+
+Evidence from a nested case-control study within the
+Physicians’ Health Study,[12] in addition to a case-control study [13] and a retrospective review of screened prostate cancer patients,[14] suggests that higher plasma insulin-like growth
+factor-I levels may be associated with a higher prostate cancer risk.[15] However, not all studies have confirmed this association.[16]
+
+References
+
+Surveillance Research Program, National Cancer Institute: SEER*Explorer: An interactive website for SEER cancer statistics. Bethesda, MD: National Cancer Institute. Available online. Last accessed December 30, 2024.
+
+Robbins AS, Whittemore AS, Van Den Eeden SK: Race, prostate cancer survival, and membership in a large health maintenance organization. J Natl Cancer Inst 90 (13): 986-90, 1998. [PUBMED Abstract]
+
+Steinberg GD, Carter BS, Beaty TH, et al.: Family history and the risk of prostate cancer. Prostate 17 (4): 337-47, 1990. [PUBMED Abstract]
+
+Matikainen MP, Schleutker J, Mörsky P, et al.: Detection of subclinical cancers by prostate-specific antigen screening in asymptomatic men from high-risk prostate cancer families. Clin Cancer Res 5 (6): 1275-9, 1999. [PUBMED Abstract]
+
+Hayes RB, Brown LM, Schoenberg JB, et al.: Alcohol use and prostate cancer risk in US blacks and whites. Am J Epidemiol 143 (7): 692-7, 1996. [PUBMED Abstract]
+
+Platz EA, Leitzmann MF, Rimm EB, et al.: Alcohol intake, drinking patterns, and risk of prostate cancer in a large prospective cohort study. Am J Epidemiol 159 (5): 444-53, 2004. [PUBMED Abstract]
+
+Eichholzer M, Stähelin HB, Gey KF, et al.: Prediction of male cancer mortality by plasma levels of interacting vitamins: 17-year follow-up of the prospective Basel study. Int J Cancer 66 (2): 145-50, 1996. [PUBMED Abstract]
+
+Gann PH, Hennekens CH, Sacks FM, et al.: Prospective study of plasma fatty acids and risk of prostate cancer. J Natl Cancer Inst 86 (4): 281-6, 1994. [PUBMED Abstract]
+
+Morton MS, Griffiths K, Blacklock N: The preventive role of diet in prostatic disease. Br J Urol 77 (4): 481-93, 1996. [PUBMED Abstract]
+
+Fleshner NE, Klotz LH: Diet, androgens, oxidative stress and prostate cancer susceptibility. Cancer Metastasis Rev 17 (4): 325-30, 1998-99. [PUBMED Abstract]
+
+Clinton SK, Giovannucci E: Diet, nutrition, and prostate cancer. Annu Rev Nutr 18: 413-40, 1998. [PUBMED Abstract]
+
+Chan JM, Stampfer MJ, Giovannucci E, et al.: Plasma insulin-like growth factor-I and prostate cancer risk: a prospective study. Science 279 (5350): 563-6, 1998. [PUBMED Abstract]
+
+Oliver SE, Barrass B, Gunnell DJ, et al.: Serum insulin-like growth factor-I is positively associated with serum prostate-specific antigen in middle-aged men without evidence of prostate cancer. Cancer Epidemiol Biomarkers Prev 13 (1): 163-5, 2004. [PUBMED Abstract]
+
+Turkes A, Peeling WB, Griffiths K: Serum IGF-1 determination in relation to prostate cancer screening: possible differential diagnosis in relation to PSA assays. Prostate Cancer Prostatic Dis 3 (3): 173-175, 2000. [PUBMED Abstract]
+
+Stattin P, Rinaldi S, Biessy C, et al.: High levels of circulating insulin-like growth factor-I increase prostate cancer risk: a prospective study in a population-based nonscreened cohort. J Clin Oncol 22 (15): 3104-12, 2004. [PUBMED Abstract]
+
+Chen C, Lewis SK, Voigt L, et al.: Prostate carcinoma incidence in relation to prediagnostic circulating levels of insulin-like growth factor I, insulin-like growth factor binding protein 3, and insulin. Cancer 103 (1): 76-84, 2005. [PUBMED Abstract]
+
+Screening by Serum PSA
+
+The prostate-specific antigen (PSA) test has been examined in several observational settings for initial diagnosis of disease, as a tool in monitoring for recurrence after initial therapy, and for prognosis of outcomes after therapy. Numerous studies have also assessed its value as a screening intervention for the early detection of prostate cancer. The potential value of the test appears to be its simplicity, objectivity, reproducibility, relative lack of invasiveness, and relatively low cost. PSA testing has increased the detection rate of early-stage cancers, some of which may be curable by local-modality therapies, and others that do not require treatment.[1-4] The possibility of identifying an excessive number of false-positive results in the form of benign prostatic lesions requires that the test be evaluated carefully. Furthermore, there is a risk of overdiagnosis and overtreatment (i.e., the detection of a histological malignancy that, if left untreated, would have had a benign or indolent natural history and would have been of no clinical significance). Randomized trials have therefore been conducted.
+
+Randomized Trials of PSA Screening
+
+The Prostate, Lung, Colorectal, and Ovarian (PLCO) Cancer Screening Trial
+
+The PLCO Cancer Screening Trial is a multicenter, randomized, two-armed trial designed to evaluate the effect of screening for prostate, lung, colorectal, and ovarian cancers on disease-specific mortality. From 1993 through 2001, 76,693 men at ten U.S. study centers were randomly assigned to receive annual screening (38,343 subjects) or usual care (38,350 control subjects). Men in the screening group were offered annual PSA testing for 6 years and digital rectal exam (DRE) for 4 years. The subjects and health care providers received the results and decided on the type of follow-up evaluation. Usual care sometimes included screening, as some organizations have recommended. [5]
+
+In the screening group, rates of compliance were 85% for PSA testing and 86% for DRE. Self-reported rates of screening in the control group increased from 40% in the first year to 52% in the sixth year for PSA testing and ranged from 41% to 46% for DRE.[6]
+
+After 7 years of follow-up, with vital status known for 98% of men, the incidence of prostate cancer per 10,000 person-years was 116 (2,820 cancers) in the screening group and 95 (2,322 cancers) in the control group (rate ratio, 1.22; 95% confidence interval [CI], 1.16–1.29). The incidence of death per 10,000 person-years was 2.0 (50 deaths) in the screening group and 1.7 (44 deaths) in the control group (ratio rate, 1.13; 95% CI, 0.75–1.70). The data at 10 years were 67% complete and consistent with these overall findings (incidence ratio rate, 1.17; 95% CI, 1.11–1.22 and mortality ratio rate, 1.11; 95% CI, 0.83–1.50). Thus, after 7 to 10 years of follow-up, the rate of death from prostate cancer was very low and did not differ significantly between the two study groups.[6]
+
+Prostate cancer mortality data after 13 years of follow-up continued to show no reduction in mortality resulting from prostate cancer screening with PSA and DRE.[5] Organized screening in the intervention group of the trial did not produce a mortality reduction compared with opportunistic screening in the usual care group. There were 4,250 men diagnosed with prostate cancer in the intervention group and 3,815 men in the usual care group. Cumulative incidence rates were 108.4 per 10,000 person-years in the intervention group and 97.1 per 10,000 person-years in the usual care group (relative risk [RR], 1.12; 95% CI, 1.07–1.17). The cumulative prostate cancer mortality rates were 3.7 (158 deaths) per 10,000 person-years in the intervention group and 3.4 (145 deaths) per 10,000 person-years in the usual care group (RR, 1.09; 95% CI, 0.87–1.36).
+
+There were no apparent associations with age, baseline comorbidity, or PSA testing before the trial, as hypothesized in an intervening analysis by a subgroup analysis. These results are consistent with the previous report at 7 to 10 years of follow-up described above.[6] All prostate cancer incidents and deaths through 13 years of follow-up or through December 31, 2009, were ascertained.[5]
+
+The 13-year follow-up analysis reported 45% of men in the PLCO trial had at least one PSA test in the 3 years before randomization. Annual PSA screening in the usual care arm was estimated to be as high as 52% by the end of the screening period. The intensity of PSA screening in the usual care group was estimated to be one-half of that in the intervention group. Stage-specific treatment between the two arms was similar.[5]
+
+An extended follow-up analysis for mortality, with median follow-up of almost 17 years (intervention group, 16.9 years; usual-care group, 16.7 years), showed prostate cancer mortality rates of 5.5 (333 deaths) per 10,000 person-years in the intervention group and 5.9 (352 deaths) per 10,000 person-years in the usual-care group, producing a rate ratio of 0.93 (95% CI, 0.81–1.08).[7] An analysis of nonprotocol screening during the postscreening phase of the trial showed that 78.7% of men in the usual-care group and 80.3% of men in the intervention group had received a PSA test within the past 3 years, and that 85.9% of men in the usual-care group and 98.9% of men in the intervention group had ever had a PSA test.[8]
+
+Possible explanations for the lack of a significant reduction in mortality in this trial include the following:[6,9]
+
+Annual screening with the PSA test using the standard U.S. threshold of 4 ng/L and DRE to trigger diagnostic evaluation may not be effective.
+
+The substantial level of screening in the control group could have diluted any modest effect of annual screening in the intervention group.
+
+Approximately 44% of the men in each study group had undergone one or more PSA tests at baseline, which would have eliminated some cancers detectable on screening from the randomly assigned population. Thus, the cumulative death rate from prostate cancer at 10 years in the two groups combined was 25% lower in those who had undergone two or more PSA tests at baseline than in those who had not been tested.
+
+Improvement in therapy for prostate cancer during the trial may have resulted in fewer prostate-cancer deaths in the two study groups, which blunted any potential benefits of screening.
+
+After a PSA finding greater than 4 ng/mL, within 1 year only 41% of men underwent prostate biopsy; within 3 years of this finding, only 64% of men underwent prostate biopsy. Such lower biopsy rates, associated with lower prostate cancer detection rates, may have blunted the impact of screening on mortality.
+
+The European Randomized Study of Screening for Prostate Cancer (ERSPC)
+
+The ERSPC was initiated in the early 1990s to evaluate the effect of screening with PSA testing on death rates from prostate cancer. Through registries in seven European countries, investigators identified 182,000 men between the ages of 50 and 74 years for inclusion in the study. Although the protocols differed considerably among countries, generally the men were randomly assigned to either a group that offered PSA screening at an average of once every 4 years or to a control group that did not receive screening. The predefined core age group for this study included 162,243 men between the ages of 55 years and 69 years. The primary outcome was the rate of death from prostate cancer. Mortality follow-up was identical for the two study groups and has been reported through 2010.[10]
+
+The protocol, including recruitment, randomization procedures, and treatment definition and schedule, differed among countries and was developed in accordance with national regulations and standards. In Finland, Sweden, and Italy, the men in the trial were identified from population registries and were randomly assigned to the centers before written informed consent was provided. In the Netherlands, Belgium, Switzerland, and Spain, the target population was also identified from population lists, but when the men were invited to participate in the trial, only those who provided consent were randomly assigned. Randomization was 1:1 in all countries except Finland, in which it was 1:1.5. The definition of a positive test and the testing schedule also varied by country.
+
+In the screening group, 82% of men accepted at least one offer of screening. At a median follow-up of 9 years, there were 5,990 prostate cancers diagnosed in the screening group (a cumulative incidence of 8.2%) and 4,307 prostate cancers in the control group (a cumulative incidence of 4.8%). There were 214 prostate-cancer deaths in the screening group and 326 prostate-cancer deaths in the control group in the core age group (RR, 0.80; 95% CI, 0.67–0.95). The rates of death in the two study groups began to diverge after 7 to 8 years and continued to diverge further over time.[11] With follow-up through 13 years, there were 7,408 prostate cancers in the intervention group during 775,527 person-years of follow-up and 6,107 cancers in the control group with 980,474 person-years of follow-up (RR, 1.57; 95% CI, 1.51–1.62). There were also 355 prostate cancer deaths over 825,018 person-years of follow-up in the intervention group and 545 deaths over 1,011,192 person-years of follow-up in the control group (RR, 0.79; 95% CI, 0.69–0.91). Consequently, 781 men needed to be invited for screening to avert one prostate cancer death, and 48 men needed to be biopsied.[10] At 16 years of follow-up, the prostate cancer mortality rate ratio was 0.80 (95% CI, 0.72–0.89), and the prostate cancer incidence rate ratio was 1.41 (95% CI, 1.36–1.45). Therefore, 570 men needed to be invited to prevent one prostate cancer death, and 18 men needed to be diagnosed to prevent one prostate cancer death.[12]
+
+Overall, PSA-based screening was reported to reduce the rate of death from prostate cancer by about 20% but was associated with a high risk of overdiagnosis.[10]
+
+Of the seven centers included in the study, two individually reported a significant mortality benefit associated with prostate cancer screening (the Netherlands and Sweden). It is not readily apparent which factors at these two centers (PSA thresholds or intervals between testing used, mean age of patients, sample size) might explain the observed difference. It is important to note that the trial was not designed for individual countries to have adequate statistical power to find a significant mortality reduction.
+
+Important information that was not reported included the contamination rate in the entire control group. Further, there was some evidence that the treatment administered to the prostate cancer patients differed by stage and by randomly assigned group, with the screening group receiving radical prostatectomy (40.3%) more often than the control group (30.3%). Such a difference in treatment could have contributed to any mortality difference between the trial arms. To address this issue, an analysis was conducted for each treatment, separately in each trial arm, in which logistic regression models were fitted for treatment allocation and risk of prostate cancer death, then combined to estimate prostate cancer deaths. The differences in prostate cancer deaths when the screened arm model was applied to the control arm, and vice versa, were very small, leading the authors to conclude that differential treatment explains only a trivial proportion of the main trial findings.[13]
+
+However, concerns with this analysis include the following:
+
+Data from only four of the trial countries were used.
+
+There was a considerable amount of missing data on clinical M and clinical N stage.
+
+The risk of prostate cancer death model from the screened arm was used in both comparisons, so that any enhanced survival bias caused by possibly better treatment quality in the screened arm was not accounted for.
+
+All prostate cancer cases were included in the analysis, with results averaged over all cases.
+
+Most of these cases were early stage, including overdiagnosed cases, for which treatment differences would likely make little difference, and from which only a limited fraction of the prostate cancer deaths arise. Thus, any treatment difference effect on the advanced cases, and deaths, would likely be diluted by using this approach.
+
+Possible harms included overdiagnosis, which was estimated at 30% in the Finnish center on the basis of excess cases in the screening arm if the cumulative risk of prostate cancer had been the same as the control arm.[14] The Spanish center also reported an excess of prostate cancers in the intervention arm (7.8%) versus the control arm (5.2%) after a median 21 years of follow-up.[15]
+
+The Goteborg (Sweden) trial
+
+In December 1994, 20,000 men born between 1930 and 1944 (aged 50–64 years) and living in Goteborg, Sweden, were randomly assigned in a 1:1 allocation to either a control group or a screened group and offered PSA testing every 2 years. The PSA threshold for biopsy was 2.5 ng/mL. Seventy-seven percent of men in the screened group attended at least one screen. At 18 years of follow-up, 1,396 men in the screened group and 962 in the control group had been diagnosed with prostate cancer (hazard ratio, 1.51; 95% CI, 1.39–1.64). There was an absolute reduction in prostate cancer mortality of 0.52% (95% CI, 0.17%–0.87%), with an RR of 0.65 (95% CI, 0.49–0.87).[16]
+
+A concern with this trial is double reporting of information, because most participants were included in the ERSPC trial, but results have been reported separately for each trial. An initial publication indicated that in 1996 this study became associated with the ERSPC trial, and results from men born between 1930 and 1939 were published in a previous ERSPC report.[17] A later publication states that since 1996 the Goteborg trial has constituted the Swedish arm of ERSPC;[16] however, an ERSPC publication included about 12,000 participants from Sweden, or about 60% of the Goteborg trial population.[12]
+
+Unlike the other ERSPC centers, not all the participants from the Goteborg center were included in the ERSPC study. Some have argued that the ERSPC trial should be treated as a meta-analysis.[18]
+
+The Cluster Randomized Trial of PSA Testing for Prostate Cancer (CAP)
+
+The CAP trial of PSA screening was conducted in the United Kingdom.[19] This was a primary care–based cluster randomized trial of an invitation to a single PSA test, followed by standardized prostate biopsy in men with PSA levels of 3 ng/mL or higher. The trial was designed to determine the effect of the intervention on prostate cancer mortality. The primary end point was definite, probable, or intervention-related prostate cancer mortality at a median follow-up of 10 years. Participants were aged 50 to 69 years at entry and were enrolled between 2001 and 2009, with passive follow-up through national database linkage completed on March 31, 2016. Randomization was stratified within geographical groups and block sizes of 10 to 12 neighboring practices using a computerized random number generator. Men with a positive PSA test diagnosed with clinically localized prostate cancer were recruited to the Prostate Testing for Cancer and Treatment (ProtecT) study for treatment. All other cancers received standard National Health Service management. The design called for 209,000 men in each group to provide sufficient events to allow a prostate cancer mortality RR of 0.87 to be detected with 80% power at a significance level of 0.05, assuming an uptake of PSA testing between 35% and 50%.
+
+Nine hundred-eleven primary care practices were randomly assigned within 99 geographical areas in the United Kingdom; 466 practices were assigned to the intervention group, and 445 were assigned to the control group. After various exclusions among both practices and potential participants, the analyses were conducted using data from 189,386 men in 271 practices in the intervention group and 219,439 men in 302 practices in the control group. In the intervention group, 75,707 (40%) men attended a PSA testing clinic, and 67,313 (36%) men had a PSA blood sample taken. Among these men, 11% of men had a PSA level between 3 ng/mL and 19.9 ng/mL (eligible for the ProtecT trial); of whom, 85% of men had a prostate biopsy. Cumulative contamination in the control group was estimated to be 10% to 15% over 10 years.
+
+After a median 10-year follow-up, there was no significant difference between the two groups in prostate cancer mortality. The prostate cancer death rates were 0.30 per 1,000 person-years (549 deaths) in the intervention group and 0.31 per 1,000 person-years (647 deaths) in the control group (rate difference, -0.013 per 1,000 person years [95% CI, -0.047 to 0.022]; RR, 0.96 [95% CI, 0.85–1.08]). Secondary analyses indicated no effect on all-cause mortality (RR, 0.99; 95% CI, 0.94–1.03), but there was a higher prostate cancer incidence rate in the intervention group (4.45 per 1,000 person-years) compared with the control group (3.80 per 1,000 person-years). There was no reduction in advanced prostate cancers (Gleason 8–10 or T4, N1, or M1). The
+increased detection was confined to lower Gleason grade or lower-stage cancers, emerged at the beginning of screening, and persisted throughout the duration of follow-up, suggesting overdiagnosis.
+
+An update to the initial 10-year outcomes reported on four prespecified, secondary, 15-year outcomes (prostate cancer-specific mortality, all-cause mortality, prostate cancer stage, and prostate cancer grade at diagnosis).[20] The 15-year analysis included 98% of men from the initial 10-year report. At a median follow-up of 15 years, 0.69% (95% CI, 0.65%–0.73%) of men in the intervention group and 0.78% (95% CI, 0.73%–0.82%; P = .03) of men in the control group died of prostate cancer. There was no difference in all-cause mortality between the intervention group (76.8%; 95% CI, 76.6%–77%) and the control group (76.7%; 95% CI, 76.5%–76.9%; P = .11). The single PSA screening intervention increased detection of low-grade disease (Gleason score ≤6: 2.2% vs. 1.6%; P < .001) but not intermediate- or high-grade disease. Furthermore, PSA screening increased detection of localized disease (T1/T2: 3.6% vs. 3.1%; P < .001) but not locally advanced (T3) or distally advanced (T4, N1, M1) disease. While a relative difference in prostate cancer mortality favoring a single PSA screening test was observed, the absolute magnitude of this difference was small (0.09%). This finding did not translate into a difference in all-cause mortality. Furthermore, achieving this small difference in prostate cancer mortality came at the cost of overdiagnosis of low-grade localized disease, leading to additional medical interventions that did not impact all-cause mortality at a population level.
+
+Limitations of the CAP trial include the following:[19]
+
+The intervention was only a single round of PSA testing, a different screening strategy than that typically used in the United States.
+
+There were many postrandomization exclusions that could lead to bias; however, there was little evidence of bias in comparing the characteristics of the groups.
+
+There were fewer prostate cancer deaths at the 10-year median follow-up than stipulated in the design.
+
+Compliance with screening was low.
+
+There is the possibility of a treatment difference by group because of the imbedded ProtecT trial; however, if a treatment difference exists, it is likely small because the results of the ProtecT trial were negative.
+
+The Norrkoping (Sweden) study
+
+The Norrkoping study is a population-based nonrandomized trial of prostate cancer screening. All men aged 50 to 69 years living in Norrkoping, Sweden, in 1987 were allocated to either an invited group (every sixth man allocated to invited group) or a not-invited group. The 1,494 men in the invited group were offered screening every 3 years from 1987 to 1996. The first two rounds were by DRE; the last two rounds were by both DRE and PSA. About 85% of men in the invited group attended at least one screening; contamination by screening in the not-invited group (n = 7,532) was thought to be low. After 20 years of follow-up, the invited group had a 46% relative increase in prostate cancer diagnosis. Over the period of the study, 30 men (2%) in the invited group died of prostate cancer, compared with 130 (1.7%) men in the not-invited group. The RR of prostate cancer mortality was 1.16 (95% CI, 0.78–1.73).[21]
+
+The Quebec (Canada) trial
+
+In the randomized prospective Quebec study, 46,486 men identified from the electoral rolls of Quebec City, Canada, and its metropolitan area were randomly assigned to be either approached or not approached for PSA and DRE screening. A total of 31,133 men were randomly assigned to screening, while a total of 15,353 men were randomly assigned to observation. Using an intention-to-treat analysis based on the study arm to which an individual was originally assigned, no difference in mortality was seen. There were 75 (0.49%) deaths among the 15,353 men who were randomly assigned to the observation group, compared with 153 (0.49%) deaths among the 31,133 men randomly assigned to the screening group (RR, 1.085).[22]
+
+The Stockholm (Sweden) trial
+
+In 1988, from a population of 27,464 men in the southern part of Stockholm, 2,400 men aged 55 to 70 years were randomly selected to undergo screening with DRE, transrectal ultrasound, and PSA (cutoff >10 ng/mL). Seventy-four percent of the men accepted the screening invitation. After 20 years of follow-up, there was no indication of a reduction in prostate cancer mortality (RR,1.05; 95% CI, 0.83–1.27) or in overall mortality (RR, 1.01; 95% CI, 0.95–1.06), but screening was limited to a single episode. There was an indication of excess prostate cancer incidence in the invited population (RR, 1.12; 95% CI, 0.99–1.25), suggesting overdiagnosis.[23]
+
+The authors of a large, randomized, Swedish-based noninferiority trial that was designed to study the performance of magnetic resonance imaging (MRI) in prostate cancer screenings of general populations reported that MRI-targeted biopsy was noninferior to standard biopsy in detecting clinically significant cancers in men with elevated PSA levels. The authors also reported that MRI-targeted biopsy decreased unnecessary biopsies and diagnosis of clinically insignificant cancers. In this prospective, population-based, noninferiority trial, 1,532 men with a PSA level more than 3 ng/mL were randomly assigned in a 2:3 ratio; 603 underwent standard biopsy, and 929 underwent targeted and standard biopsy if MRI findings were concerning for prostate cancer.
+The primary outcome was the probability of detecting clinically significant cancer (Gleason score of >3+4). The key secondary outcome was the detection of clinically insignificant cancers (Gleason score of <6) and the number of biopsies.[24]
+
+Key findings of the intention-to-treat analysis included the following:
+
+Clinically significant cancer was diagnosed in 192 (21%) of 929 men in the MRI-targeted biopsy group versus 106 (18%) of 603 men in the standard-biopsy group (difference, 3%; 95% CI, −1% to 7%; P < .001 for noninferiority).
+
+Clinically insignificant prostate cancer was diagnosed in 41 men in the MRI-targeted group versus 73 (12%) men in the standard-biopsy group (difference, −8%; 95% CI, −11% to 5%).
+
+Biopsies were benign in 105 (11%) men in the MRI-targeted group versus 259 (43%) men in the standard-biopsy group (difference, −32%; 95% CI, −36% to −27%).
+
+Antibiotic-treated postbiopsy infections occurred in 2% of the MRI-targeted group versus 4% of the standard-biopsy group (difference, −2%, 95% CI, −4% to 0.1%).
+
+When normalized to 10,000 men, MRI-targeted biopsies resulted in 409 fewer men undergoing biopsy (48% lower incidence), 366 fewer men with benign biopsies (78% lower incidence), and 88 fewer men with clinically insignificant cancers (62% lower incidence).
+
+The authors calculated that a detection of 1.7 clinically significant cancers would be delayed for each clinically insignificant cancer avoided and recommended use of standard biopsy, in addition to targeted biopsy, for men with positive MRI results.
+
+In summary, initial results of this large randomized trial suggest that men older than 50 years with elevated PSA levels and negative MRI-targeted biopsy may be able to reduce overdiagnosis and overtreatment of low-risk cancer while maintaining the ability to detect clinically significant cancer. Study limitations included low uptake (26% of invited men participated in the trial). Additionally, some participants did not undergo the assigned intervention, and the true disease status of participants was unknown. Another challenge was implementing high-quality MRI screening because of variability of skill and experience among participating radiologists.
+
+Post hoc analysis of randomized screening trials
+
+The problems associated with drawing valid inferences from observational studies also apply to post hoc analyses of randomized trials. For example, analyzing randomized trial results in various ways is subject to the problem association caused by multiplicities. Statistical conclusions maintain their standard interpretations only when analyzing the trial’s primary end point according to the trial’s protocol or statistical analysis plan. In some settings, statistical adjustments are possible to account for multiplicities. But quite beyond problems of multiplicities, some analyses are so prone to bias that they are of limited value.
+
+Randomization eliminates or at least minimizes many systematic biases. However, randomization shields an analysis from bias only if it considers a group randomly assigned to one intervention compared with a second group randomly assigned to another intervention. If an analysis mixes the two groups, then the virtue of randomization is lost.
+
+Patients can deviate from the intervention to which they were assigned. This is sometimes called contamination. But to preserve the protection of randomization, they are counted within the group to which they were assigned: termed an intention-to-treat or intention-to-screen analysis. An alternative that is sometimes used is an as-treated or as-screened analysis, which is prone to important biases. In such analyses, participants who are screened are compared with those who were not screened, regardless of their assigned group. This is attractive to some investigators because it seems to address the right question. In addition, it seems to correct for contamination in both directions, and thereby, increases statistical power; but such an approach is flawed.
+
+There are powerful biases associated with as-screened analyses; some are easily recognized, and some are not. A participant who chooses to be screened despite randomization to the control group differs from one who accepts an assignment to be screened. For example, such a person may be generally in better health or may have been screened previously, and so is less likely to be diagnosed with cancer. There are similar differences for participants who eschew invitations to be screened versus those who accept assignment to the control group.
+
+In addition to preserving randomization, an intention-to-screen analysis is most relevant for informing a decision about instituting a screening program or recommendation in some populations.
+The following section considers two analyses that are subject to the as-screened flaw.
+
+The Quebec study
+
+As indicated above, the intention-to-screen analysis of this trial showed no detectable difference in prostate cancer mortality between the two groups. However, the investigators focused on as-screened analyses. They observed that there were 4 prostate cancer deaths (0.056%) among the 7,155 men who were screened and 44 prostate cancer deaths (0.31%) among the 14,255 men who were not screened, an RR of 5.5. Based on exposure times, the investigators attributed the 67.1% reduction in prostate cancer death rate to screening.[22] This conclusion is flawed, as pointed out by other investigators.[25] (see above)
+
+Modeling the ERSPC combined with the PLCO Cancer Screening Trial
+
+The PLCO cancer screening trial evinced greater contamination than did the ERSPC trials, especially in the control group. Three modeling groups attempted to account for the effect of differential contamination using a novel derived measure called mean lead time (MLT), which reflected the average intensity of screening in each arm in the two trials. The investigators found substantial reductions in prostate cancer mortality caused by screening. Moreover, they found very similar reductions per MLT in PLCO and ERSPC.[26] Both methods and conclusions are prone to biased conclusions and have been criticized by several groups of scientists.[27,28] This analysis also ignored the other potential shortcomings identified above (see above).
+
+References
+
+Catalona WJ, Smith DS, Ratliff TL, et al.: Detection of organ-confined prostate cancer is increased through prostate-specific antigen-based screening. JAMA 270 (8): 948-54, 1993. [PUBMED Abstract]
+
+Babaian RJ, Mettlin C, Kane R, et al.: The relationship of prostate-specific antigen to digital rectal examination and transrectal ultrasonography. Findings of the American Cancer Society National Prostate Cancer Detection Project. Cancer 69 (5): 1195-200, 1992. [PUBMED Abstract]
+
+Brawer MK, Chetner MP, Beatie J, et al.: Screening for prostatic carcinoma with prostate specific antigen. J Urol 147 (3 Pt 2): 841-5, 1992. [PUBMED Abstract]
+
+Mettlin C, Murphy GP, Lee F, et al.: Characteristics of prostate cancers detected in a multimodality early detection program. The Investigators of the American Cancer Society-National Prostate Cancer Detection Project. Cancer 72 (5): 1701-8, 1993. [PUBMED Abstract]
+
+Andriole GL, Crawford ED, Grubb RL, et al.: Prostate cancer screening in the randomized Prostate, Lung, Colorectal, and Ovarian Cancer Screening Trial: mortality results after 13 years of follow-up. J Natl Cancer Inst 104 (2): 125-32, 2012. [PUBMED Abstract]
+
+Andriole GL, Grubb RL, Buys SS, et al.: Mortality results from a randomized prostate-cancer screening trial. N Engl J Med 360 (13): 1310-9, 2009. [PUBMED Abstract]
+
+Pinsky PF, Miller E, Prorok P, et al.: Extended follow-up for prostate cancer incidence and mortality among participants in the Prostate, Lung, Colorectal and Ovarian randomized cancer screening trial. BJU Int 123 (5): 854-860, 2019. [PUBMED Abstract]
+
+Pinsky PF, Prorok PC, Yu K, et al.: Extended mortality results for prostate cancer screening in the PLCO trial with median follow-up of 15 years. Cancer 123 (4): 592-599, 2017. [PUBMED Abstract]
+
+Pinsky PF, Andriole GL, Kramer BS, et al.: Prostate biopsy following a positive screen in the prostate, lung, colorectal and ovarian cancer screening trial. J Urol 173 (3): 746-50; discussion 750-1, 2005. [PUBMED Abstract]
+
+Schröder FH, Hugosson J, Roobol MJ, et al.: Screening and prostate cancer mortality: results of the European Randomised Study of Screening for Prostate Cancer (ERSPC) at 13 years of follow-up. Lancet 384 (9959): 2027-35, 2014. [PUBMED Abstract]
+
+Schröder FH, Hugosson J, Roobol MJ, et al.: Screening and prostate-cancer mortality in a randomized European study. N Engl J Med 360 (13): 1320-8, 2009. [PUBMED Abstract]
+
+Hugosson J, Roobol MJ, Månsson M, et al.: A 16-yr Follow-up of the European Randomized study of Screening for Prostate Cancer. Eur Urol 76 (1): 43-51, 2019. [PUBMED Abstract]
+
+Carlsson SV, Månsson M, Moss S, et al.: Could Differences in Treatment Between Trial Arms Explain the Reduction in Prostate Cancer Mortality in the European Randomized Study of Screening for Prostate Cancer? Eur Urol 75 (6): 1015-1022, 2019. [PUBMED Abstract]
+
+Kilpeläinen TP, Tammela TL, Malila N, et al.: Prostate cancer mortality in the Finnish randomized screening trial. J Natl Cancer Inst 105 (10): 719-25, 2013. [PUBMED Abstract]
+
+Luján Galán M, Páez Borda Á, Llanes González L, et al.: Results of the spanish section of the European Randomized Study of Screening for Prostate Cancer (ERSPC). Update after 21 years of follow-up. Actas Urol Esp (Engl Ed) 44 (6): 430-436, 2020 Jul - Aug. [PUBMED Abstract]
+
+Hugosson J, Godtman RA, Carlsson SV, et al.: Eighteen-year follow-up of the Göteborg Randomized Population-based Prostate Cancer Screening Trial: effect of sociodemographic variables on participation, prostate cancer incidence and mortality. Scand J Urol 52 (1): 27-37, 2018. [PUBMED Abstract]
+
+Hugosson J, Carlsson S, Aus G, et al.: Mortality results from the Göteborg randomised population-based prostate-cancer screening trial. Lancet Oncol 11 (8): 725-32, 2010. [PUBMED Abstract]
+
+Auvinen A, Moss SM, Tammela TL, et al.: Absolute Effect of Prostate Cancer Screening: Balance of Benefits and Harms by Center within the European Randomized Study of Prostate Cancer Screening. Clin Cancer Res 22 (1): 243-9, 2016. [PUBMED Abstract]
+
+Martin RM, Donovan JL, Turner EL, et al.: Effect of a Low-Intensity PSA-Based Screening Intervention on Prostate Cancer Mortality: The CAP Randomized Clinical Trial. JAMA 319 (9): 883-895, 2018. [PUBMED Abstract]
+
+Martin RM, Turner EL, Young GJ, et al.: Prostate-Specific Antigen Screening and 15-Year Prostate Cancer Mortality: A Secondary Analysis of the CAP Randomized Clinical Trial. JAMA 331 (17): 1460-1470, 2024. [PUBMED Abstract]
+
+Sandblom G, Varenhorst E, Rosell J, et al.: Randomised prostate cancer screening trial: 20 year follow-up. BMJ 342: d1539, 2011. [PUBMED Abstract]
+
+Labrie F, Candas B, Cusan L, et al.: Screening decreases prostate cancer mortality: 11-year follow-up of the 1988 Quebec prospective randomized controlled trial. Prostate 59 (3): 311-8, 2004. [PUBMED Abstract]
+
+Lundgren PO, Kjellman A, Norming U, et al.: Long-Term Outcome of a Single Intervention Population Based Prostate Cancer Screening Study. J Urol 200 (1): 82-88, 2018. [PUBMED Abstract]
+
+Nordström T, Discacciati A, Bergman M, et al.: Prostate cancer screening using a combination of risk-prediction, MRI, and targeted prostate biopsies (STHLM3-MRI): a prospective, population-based, randomised, open-label, non-inferiority trial. Lancet Oncol 22 (9): 1240-1249, 2021. [PUBMED Abstract]
+
+Pinsky PF: Results of a randomized controlled trail of prostate cancer screening. Prostate 61 (4): 371, 2004. [PUBMED Abstract]
+
+Tsodikov A, Gulati R, Heijnsdijk EAM, et al.: Reconciling the Effects of Screening on Prostate Cancer Mortality in the ERSPC and PLCO Trials. Ann Intern Med 167 (7): 449-455, 2017. [PUBMED Abstract]
+
+Prorok PC, Andriole GL, Bresalier RS, et al.: Design of the Prostate, Lung, Colorectal and Ovarian (PLCO) Cancer Screening Trial. Control Clin Trials 21 (6 Suppl): 273S-309S, 2000. [PUBMED Abstract]
+
+Boniol M, Autier P, Perrin P, et al.: Variation of Prostate-specific Antigen Value in Men and Risk of High-grade Prostate Cancer: Analysis of the Prostate, Lung, Colorectal, and Ovarian Cancer Screening Trial Study. Urology 85 (5): 1117-22, 2015. [PUBMED Abstract]
+
+Prostate Cancer Diagnosis
+
+Needle biopsy is the most common method used to diagnose prostate cancer. Most urologists perform a transrectal biopsy using a bioptic gun with ultrasound guidance. Less frequently, a transperineal ultrasound-guided approach can be used for patients who may be at increased risk of complications from a transrectal approach.[1] Over the years, there has been a trend toward taking eight to ten or more biopsy samples from several areas of the prostate with a consequent increased yield of cancer detection after an elevated prostate-specific antigen (PSA) blood test, with a 12-core biopsy now standard practice.[2]
+
+Whether and how magnetic resonance imaging (MRI)−directed biopsy should be incorporated into the diagnostic evaluation of prostate cancer is also under evaluation, either as a replacement of, or in addition to, standard systematic prostate needle biopsies. A multiparametric MRI is performed initially to identify and localize abnormalities that are likely to represent clinically significant prostate cancer. The MRI results are summarized using the 5-point Prostate Imaging–Reporting and Data System (PI-RADS) classification scheme, with 1 being very low likelihood and 5 being very high likelihood of clinically significant prostate cancer.[3] Generally, men with a PI-RADS score of 3 or higher for any area of the prostate gland are recommended for MRI-guided biopsy, with the biopsy targeting those areas, and typically, systematic biopsy. Men without any area with a PI-RADS score of 3 or higher may undergo systematic biopsy alone or be followed up without immediate biopsy.
+
+The data on MRI-guided biopsy have been reported primarily by experienced MRI radiologists and urologists in referral centers, and generalizability of results is uncertain. A multicenter trial randomly assigned 500 men with clinical suspicion of prostate cancer to either a systematic biopsy or MRI-guided biopsy. For the latter, men received MRI and then subsequent MRI-guided biopsy if the MRI was suggestive of prostate cancer. There were more men with a Gleason score of 7 or less (95 vs. 64) and fewer men with a Gleason score of less than 7 (23 vs. 55) in the MRI group compared with the systematic biopsy group, with fewer biopsies overall in the MRI group.[4] In this study, most of the participating investigators had modest experience with MRI-targeted biopsy. Since men received only systematic or MRI-guided biopsy (and not both), it is unknown how many of the men with Gleason scores less than 7 in the systematic biopsy group would have been upgraded to a Gleason score of 7+ if they had undergone an MRI-guided biopsy.
+
+A large, single-arm, single-center study of 2,103 men with MRI-visible lesions who underwent both MRI-directed biopsies and standard systematic prostate needle biopsies under ultrasound visualization showed that MRI-directed biopsy alone detected more clinically significant (Gleason score of 4+3 or higher) disease than did systematic biopsy alone.[5] Of 466 men with clinically significant disease that was detected on either type of biopsy modality, MRI-guided biopsy correctly classified 91% of them as clinically significant, while systematic biopsy correctly classified 62% of them as clinically significant. Of all the men studied, 1.9% of men would have had clinically significant disease missed (or misclassified as clinically insignificant disease) if they underwent MRI-guided biopsy alone, compared with 8.3% of men if they underwent systematic biopsy alone. Both studies reported only on histology end points at the time of diagnosis, rather than health outcomes on follow-up.
+
+A Swedish noninferiority trial randomly assigned 1,532 men with PSA levels more than 3 ng/mL to a standard-biopsy group (n = 603) versus experimental-biopsy group (n = 929).[6] In the experimental group, men received MRI and then standard biopsy plus targeted biopsy, if the MRI findings were suggestive of prostate cancer. The primary outcome was detection of clinically significant cancer (Gleason score ≥7). Detection rates of clinically significant cancer were 18% in the standard group versus 21% in the experimental group, with the experimental group meeting the noninferiority criterion. Biopsy rates were 73% in the standard-treatment group versus 36% in the experimental group.
+
+A meta-analysis examined the efficacy of integrating MRI into the diagnostic pathway for prostate cancer screening when compared with standard PSA-based screening only.[7] The study analyzed data from 12 randomized clinical trials and prospective cohort studies involving 80,114 men and found that MRI-based screening reduced unnecessary biopsies and decreased the detection of clinically insignificant prostate cancer, while maintaining the detection of clinically significant cases. Compared with standard
+PSA-based screening, the MRI pathway (sequential screening, PI-RADS score ≥3 cutoff for
+biopsy) was associated with a greater likelihood of confirming clinically significant prostate cancer when tests results were positive (odds ratio [OR], 4.15;
+95% confidence interval [CI], 2.93–5.88; P ≤ .001). The MRI pathway also decreased the chance of biopsies (OR, 0.28; 95% CI, 0.22–0.36;
+P ≤ .001) and the detection of clinically insignificant prostate cancers (OR, 0.34; 95% CI, 0.23–0.49; P = .002),
+without significant differences in the detection of clinically significant prostate cancer (OR, 1.02; 95% CI, 0.75–1.37; P = .86). Elevating the PI-RADS cutoff to a score of 4 or higher further reduced biopsy rates and the detection of clinically insignificant prostate cancers compared with PSA-based screening, with no significant difference in clinically significant prostate cancer detection. The study concluded that prostate MRI with targeted biopsies may enhance the accuracy of prostate cancer detection and reduce the risk of overdiagnosis, but further assessment of the type and timing of MRI and biopsy is needed.
+
+Several blood- or urine-based markers have been developed to triage men with elevated PSA, especially those with PSA levels ranging from 4 ng/mL to 10 ng/mL. These men should receive biopsy or MRI. Some of these markers have been combined into predictive scores, including the 4K Score, the Prostate Health Index Score, and the Mi Prostate Score.[8]
+
+Prophylactic antibiotics, especially fluoroquinolones, are often used before transrectal needle biopsies. There are reports of increasing rates of sepsis, particularly with fluoroquinolone-resistant Escherichia coli, and hospitalization after the procedure.[9,10] Therefore, men who undergo transrectal biopsy should be told to seek medical attention immediately if they experience fever after biopsy.
+
+References
+
+Webb JA, Shanmuganathan K, McLean A: Complications of ultrasound-guided transperineal prostate biopsy. A prospective study. Br J Urol 72 (5 Pt 2): 775-7, 1993. [PUBMED Abstract]
+
+Bjurlin MA, Wysock JS, Taneja SS: Optimization of prostate biopsy: review of technique and complications. Urol Clin North Am 41 (2): 299-313, 2014. [PUBMED Abstract]
+
+Barentsz JO, Weinreb JC, Verma S, et al.: Synopsis of the PI-RADS v2 Guidelines for Multiparametric Prostate Magnetic Resonance Imaging and Recommendations for Use. Eur Urol 69 (1): 41-9, 2016. [PUBMED Abstract]
+
+Kasivisvanathan V, Rannikko AS, Borghi M, et al.: MRI-Targeted or Standard Biopsy for Prostate-Cancer Diagnosis. N Engl J Med 378 (19): 1767-1777, 2018. [PUBMED Abstract]
+
+Ahdoot M, Wilbur AR, Reese SE, et al.: MRI-Targeted, Systematic, and Combined Biopsy for Prostate Cancer Diagnosis. N Engl J Med 382 (10): 917-928, 2020. [PUBMED Abstract]
+
+Eklund M, Jäderling F, Discacciati A, et al.: MRI-Targeted or Standard Biopsy in Prostate Cancer Screening. N Engl J Med 385 (10): 908-920, 2021. [PUBMED Abstract]
+
+Fazekas T, Shim SR, Basile G, et al.: Magnetic Resonance Imaging in Prostate Cancer Screening: A Systematic Review and Meta-Analysis. JAMA Oncol 10 (6): 745-754, 2024. [PUBMED Abstract]
+
+Saltman A, Zegar J, Haj-Hamed M, et al.: Prostate cancer biomarkers and multiparametric MRI: is there a role for both in prostate cancer management? Ther Adv Urol 13: 1756287221997186, 2021 Jan-Dec. [PUBMED Abstract]
+
+Nam RK, Saskin R, Lee Y, et al.: Increasing hospital admission rates for urological complications after transrectal ultrasound guided prostate biopsy. J Urol 183 (3): 963-8, 2010. [PUBMED Abstract]
+
+Liss MA, Chang A, Santos R, et al.: Prevalence and significance of fluoroquinolone resistant Escherichia coli in patients undergoing transrectal ultrasound guided prostate needle biopsy. J Urol 185 (4): 1283-8, 2011. [PUBMED Abstract]
+
+Treatment of Prostate Cancer
+
+Because the efficacy of screening depends on the effectiveness of management of screen-detected lesions, studies of treatment efficacy in early-stage disease are relevant to the issue of screening. Treatment options for early-stage disease include radical prostatectomy, definitive radiation therapy, and active surveillance (no immediate treatment until indications of progression are present, but treatment is not designed with curative intent). Multiple series from various years and institutions have reported the outcomes of patients with localized prostate cancer who received no treatment but were followed with surveillance alone. Outcomes have also been reported for active treatments, but valid comparisons of efficacy between surgery, radiation therapy, and watchful waiting are seldom possible because of differences in reporting and selection factors in the various reported series.
+
+A randomized trial in Scandinavian men published in 2002 explored the benefit of radical prostatectomy over watchful waiting in men with newly diagnosed, well-differentiated, or moderately well-differentiated prostate cancers of clinical stages T1b, T1c, or T2.[1] In this trial, 698 men younger than 75 years, most with clinically detected rather than screen-detected cancers (unlike most newly diagnosed patients in North America) were randomly assigned to the two-arm trial. After 5 years of follow-up, the difference in prostate cancer-specific mortality between radical prostatectomy and watchful waiting groups was 2%; after 10 years of follow-up, the difference was 5.3% (relative risk [RR], 0.56; 95% confidence interval [CI], 0.36–0.88). There was also a difference of about 5% in all-cause mortality that was apparent only after 10 years of follow-up (RR, 0.74; 95% CI, 0.56–0.99). Thus, to extend one life, 20 men with palpable, clinically localized prostate cancer would need to undergo radical prostatectomy rather than watchful waiting. Because most prostate cancers that are detected today with prostate-specific antigen (PSA) screening are not palpable, this study may not be directly generalizable to the average newly diagnosed patient in the United States.[2]
+
+A Swedish retrospective study of a nationwide cohort of patients with localized prostate cancer aged 70 years or younger reported that 10-year prostate cancer-specific mortality was 2.4% among men diagnosed with clinically local stage T1a, T1b, or T1c, with a serum PSA of less than 10 ng/mL, and with a Gleason score of 2 to 6, referred to as low-risk cases, of which there were 2,686.[3] This subgroup analysis was derived from a cohort study of 6,849 men diagnosed between January 1, 1997 and December 31, 2002, aged 70 years or younger, who had local stage T1 to T2 with no signs of lymph node metastases or bone metastases, and a PSA serum level of less than 20 ng/mL, as was abstracted from the Swedish Cancer Registry, which captured 98% of solid tumors among men aged 75 years or younger. Cohort treatment options were surveillance (n = 2,021) or curative intent by radical prostatectomy (n = 3,399) or radiation therapy (n = 1,429), which were to be determined at the discretion of treating physicians. Surveillance or expectancy treatment was either active surveillance with curative treatment if progression occurred or watchful waiting—a strategy for administering hormonal treatment upon symptomatic progression.
+
+Using all-cause mortality as the benchmark, the study calculated cumulative incidence mortality for the three treatment groups of the entire cohort and the low-risk subgroup. Surveillance was more common among men with high comorbidity and among men with low-risk tumors. The 10-year cumulative risk of death from prostate cancer for the entire 6,849-person cohort was 3.6% in the surveillance group and 2.7% in the curative-intent group, compared with the low-risk surveillance group (2.4%) and the low-risk curative-intent group (0.7%). Biases inherent in treatment assignment could not be accounted for adequately in the analysis, which prevented conclusions about the relative effectiveness of alternative treatments. However, a 10-year prostate cancer-specific mortality of 2.4% among patients with low-risk prostate cancer in the surveillance group suggested that surveillance may be a suitable treatment for many patients with low-risk disease compared, with the 19.2% 10-year risk of death from competing causes observed in the surveillance group and 10.2% in the curative-intent group of the total 6,849 person cohort.[3,4]
+
+The Prostate Intervention Versus Observation Trial (PIVOT) was the first trial conducted in the PSA screening era that directly compared radical prostatectomy with watchful waiting.[5] From November 1994 through January 2002, 731 men aged 75 years or younger with localized prostate cancer were randomly assigned to one of the two management strategies. About 50% of the men had nonpalpable, screen-detected disease. After a median follow-up of 10 years (maximum up to about 15 years), there was no statistically significant difference in overall or prostate-specific mortality. For a more detailed description of the study and results, see the Treatment Option Overview for Prostate Cancer section in Prostate Cancer Treatment.
+
+A second trial done in the PSA screening era, the Prostate Testing for Cancer and Treatment (ProtecT) study,[6] randomly assigned 1,643 men with localized prostate cancer equally to active monitoring, surgery, or radiation therapy. The primary end point was death from prostate cancer, and secondary outcomes were clinical (local) progression, metastases, and death from all causes. Active monitoring in this study, unlike the PIVOT and Scandinavian Prostate Cancer Group Trial 4 (SPCG-4) trials, used PSA levels to determine when more aggressive treatment would be administered. Within 9 months of randomization, compliance rates for the three groups were 88% for the monitoring group, 71% for the surgery group, and 74% for the radiation therapy group. By 10 years, 55% of men in the active monitoring group had undergone radical prostatectomy. Seventeen deaths occurred during the median 10 years of follow-up, and no significant differences were seen between the groups in prostate cancer-specific or all-cause mortality. More metastases (P = .004) and more disease progression (P < .001) were seen in the monitoring group. There were 62 cases of metastases and 204 cases of disease progression.
+
+The results suggest that radical treatment has no effect on mortality, although the power to see cause-specific mortality effects was low. Avoidance of metastases or progression could be a rationale for more aggressive treatment, although another study [7] showed that active monitoring eliminated much of the pain and suffering caused by aggressive treatments.
+
+In a substudy of ProtecT that examined patient-reported outcomes, the response rate was over 85% for most of the questionnaires used to examine quality of life. The study addressed urinary, bowel, and sexual function, and specific effects of treatment on quality of life, anxiety and depression, and general health. No methods were employed to deal with nonresponse or missing responses. In a quality-of-life study, nonresponse tends to be informative, so this is unusual.[7]
+
+Results showed that men who had undergone prostatectomy reported more impotence and incontinence; men who received radiation therapy reported more bowel dysfunction; and men who received active monitoring reported the lowest levels of these adverse effects. In general, differences decreased over the 6 years that data were collected. Overall, mental and physical health did not differ by treatment.[7]
+
+References
+
+Holmberg L, Bill-Axelson A, Helgesen F, et al.: A randomized trial comparing radical prostatectomy with watchful waiting in early prostate cancer. N Engl J Med 347 (11): 781-9, 2002. [PUBMED Abstract]
+
+Bill-Axelson A, Holmberg L, Ruutu M, et al.: Radical prostatectomy versus watchful waiting in early prostate cancer. N Engl J Med 352 (19): 1977-84, 2005. [PUBMED Abstract]
+
+Stattin P, Holmberg E, Johansson JE, et al.: Outcomes in localized prostate cancer: National Prostate Cancer Register of Sweden follow-up study. J Natl Cancer Inst 102 (13): 950-8, 2010. [PUBMED Abstract]
+
+Bokhorst LP, Kranse R, Venderbos LD, et al.: Differences in Treatment and Outcome After Treatment with Curative Intent in the Screening and Control Arms of the ERSPC Rotterdam. Eur Urol 68 (2): 179-82, 2015. [PUBMED Abstract]
+
+Wilt TJ, Brawer MK, Jones KM, et al.: Radical prostatectomy versus observation for localized prostate cancer. N Engl J Med 367 (3): 203-13, 2012. [PUBMED Abstract]
+
+Hamdy FC, Donovan JL, Lane JA, et al.: 10-Year Outcomes after Monitoring, Surgery, or Radiotherapy for Localized Prostate Cancer. N Engl J Med 375 (15): 1415-1424, 2016. [PUBMED Abstract]
+
+Donovan JL, Hamdy FC, Lane JA, et al.: Patient-Reported Outcomes after Monitoring, Surgery, or Radiotherapy for Prostate Cancer. N Engl J Med 375 (15): 1425-1437, 2016. [PUBMED Abstract]
+
+Methods to Improve the Performance of Serum PSA Measurement for the Early Detection of Prostate Cancer
+
+Various methods to improve prostate-specific antigen (PSA) testing in early cancer detection have been developed (see below). The proportion of men who have abnormal PSA test results that revert to normal after 1 year is high (65%–83%, depending on the method).[1] This is likely because of a substantial biological or other variability in PSA levels in individual men. Several variables can affect PSA levels. Besides normal biological fluctuations that appear to occur,[1,2] pharmaceuticals such as finasteride (which reduces PSA by approximately 50%) and over-the-counter agents such as PC-SPES (an herbal agent that appears to have estrogenic effects) can affect PSA levels.[3,4] Some authors have suggested that ejaculation and digital rectal exam (DRE) can also affect PSA levels, but subsequent examination of these variables has found that they do not have a clinically important effect on PSA.[5]
+
+Complexed PSA and Percent-Free PSA
+
+Serum PSA exists in both free form and complexed to several protease inhibitors, especially alpha-1-antichymotrypsin. Assays for total PSA measure both free and complexed forms. Assays for free PSA are available. Complexed PSA can be found by subtracting free PSA from the total PSA. Several studies have addressed whether complexed PSA or percent-free PSA (ratio of free to total) are more sensitive and specific than total PSA. One retrospective study evaluated total PSA, free/total, and complexed PSA in a group of 300 men, 75 of whom had prostate cancer. Large values of total, small values of free/total, and large values of complexed PSA were associated with the presence of cancer; the authors chose the cutoff of each measure to yield 95% sensitivity and found estimated specificities of 21.8% in total PSA, 15.6% in free/total PSA, and 26.7% in complexed PSA.[6] The preponderance of evidence concerning the utility of complexed and percent-free PSA is not clear; however, total PSA remains the standard.
+
+Several authors have considered whether complexed PSA or percent-free PSA in conjunction with total PSA can improve total PSA sensitivity. Of special interest is the gray zone of total PSA, the range from 2.5 ng/mL to 4.0 ng/mL. A meta-analysis of 18 studies addressed the added diagnostic benefit of percent-free PSA. There was no uniformity of cutoff among these studies. For cutoffs ranging from 8% to 25% (free/total), results ranged from about 45% sensitivity/95% specificity to 95% sensitivity/15% specificity.[7]
+
+Percent-free PSA may be related to biological activity of the tumor. One study compared the percent-free PSA with the pathological features of prostate cancer among 108 men with clinically localized disease who ultimately underwent radical prostatectomy. Lower percent-free PSA values were associated with higher risk of extracapsular disease and greater capsular volume.[8] Similar findings were reported in another large series.[9]
+
+Third-Generation PSA
+
+The third-generation (ultrasensitive) PSA test is an enzyme immunometric assay intended strictly (or solely) as an aid in the management of patients with prostate cancer. The clinical usefulness of this assay as a diagnostic or screening test is unproven.[10,11]
+
+Age-Adjusted PSA
+
+Many series have noted that PSA levels increase with age, such that men without prostate cancer will have higher PSA values as they grow older. One study examined the impact of the use of age-adjusted PSA values during screening and estimated that it would reduce the false-positive screenings by 27% and overdiagnosis by more than 33%, while retaining 95% of any survival advantage gained by early diagnosis.[12] While age adjustment tends to improve sensitivity for younger men and specificity for older men, the trade-off in terms of more biopsies in younger men and potentially missed cancers in older men has prevented uniform acceptance of this approach.
+
+PSA Velocity
+
+Several studies have examined the potential added value of PSA velocity (change over time) for the detection of prostate cancer with mixed results. In a definitive analysis of the Prostate Cancer Prevention Trial (PCPT) data, in which full ascertainment was attempted, regardless of PSA value, PSA velocity added no independent value to the prediction of prostate cancer after adjustment for family history, age, race and ethnicity, PSA, and history of prostate biopsy. For this reason, in the PCPT risk calculator, PSA velocity is not an included variable.[13,14]
+
+Alteration of PSA Cutoff Level
+
+Several authors have explored the possibility of using PSA levels lower than 4.0 ng/mL as the upper limit of normal for screening examinations. One study screened 14,209 White men and 1,004 Black men for prostate cancer using an upper limit of normal of 2.5 ng/mL for PSA. A major confounding factor of this study was that only 40% of those men in whom a prostate biopsy was recommended underwent biopsy. Nevertheless, 27% of all men undergoing biopsy were found to have prostate cancer.[15] Several collaborating European jurisdictions, including Rotterdam (the Netherlands) and Finland, are conducting prostate cancer screening trials. In Rotterdam, data for 7,943 screened men between the ages of 55 and 74 years have been reported. Of the 534 men who had PSA levels between 3.0 ng/mL and 3.9 ng/mL, 446 (83.5%) had biopsies and 96 (18%) of these had prostate cancer. In all, 4.7% of the screened population had prostate cancer.[16] In Finland, 15,685 men were screened and 14% of screened men had PSA levels of at least 3.0 ng/mL. All men with PSAs higher than 4.0 ng/mL were recommended for diagnostic follow-up by DRE, ultrasound, and biopsy; 92% complied, and 2.6% of the 15,685 men screened were diagnosed with prostate cancer. Of the 801 men with screening PSAs between 3.0 ng/mL and 3.9 ng/mL (all biopsied), 22 (3%) had cancer. Of the 1,116 men with screening PSAs between 4.0 ng/mL and 9.9 ng/mL, 247 (22%) had cancer. Of the 226 men with screening PSAs of at least 10 ng/mL, 139 (62%) had cancer.[17] Several factors could have contributed to these differences, including background prostate cancer prevalence, background screening levels, and details regarding diagnostic follow-up practices; the necessary comparative data are not available.
+
+Another study adopted a change in the PSA cutoff to a level of 3.0 ng/mL to study the impact of this change in 243 men with PSA levels between 3.0 ng/mL and 4.0 ng/mL. Thirty-two of the men (13.2%) were ultimately found to have prostate cancer. An analysis of radical prostatectomy specimens from this series found a mean tumor volume of 1.8 mL (range, 0.6–4.4). The extent of disease was significant in a number of cases, with positive margins in five cases and pathological pT3 disease in six cases.[18]
+
+References
+
+Eastham JA, Riedel E, Scardino PT, et al.: Variation of serum prostate-specific antigen levels: an evaluation of year-to-year fluctuations. JAMA 289 (20): 2695-700, 2003. [PUBMED Abstract]
+
+Carter HB, Pearson JD, Waclawiw Z, et al.: Prostate-specific antigen variability in men without prostate cancer: effect of sampling interval on prostate-specific antigen velocity. Urology 45 (4): 591-6, 1995. [PUBMED Abstract]
+
+Andriole GL, Guess HA, Epstein JI, et al.: Treatment with finasteride preserves usefulness of prostate-specific antigen in the detection of prostate cancer: results of a randomized, double-blind, placebo-controlled clinical trial. PLESS Study Group. Proscar Long-term Efficacy and Safety Study. Urology 52 (2): 195-201; discussion 201-2, 1998. [PUBMED Abstract]
+
+DiPaola RS, Zhang H, Lambert GH, et al.: Clinical and biologic activity of an estrogenic herbal combination (PC-SPES) in prostate cancer. N Engl J Med 339 (12): 785-91, 1998. [PUBMED Abstract]
+
+Stenner J, Holthaus K, Mackenzie SH, et al.: The effect of ejaculation on prostate-specific antigen in a prostate cancer-screening population. Urology 51 (3): 455-9, 1998. [PUBMED Abstract]
+
+Brawer MK, Meyer GE, Letran JL, et al.: Measurement of complexed PSA improves specificity for early detection of prostate cancer. Urology 52 (3): 372-8, 1998. [PUBMED Abstract]
+
+Hoffman RM, Clanon DL, Littenberg B, et al.: Using the free-to-total prostate-specific antigen ratio to detect prostate cancer in men with nonspecific elevations of prostate-specific antigen levels. J Gen Intern Med 15 (10): 739-48, 2000. [PUBMED Abstract]
+
+Arcangeli CG, Humphrey PA, Smith DS, et al.: Percentage of free serum prostate-specific antigen as a predictor of pathologic features of prostate cancer in a screening population. Urology 51 (4): 558-64; discussion 564-5, 1998. [PUBMED Abstract]
+
+Pannek J, Rittenhouse HG, Chan DW, et al.: The use of percent free prostate specific antigen for staging clinically localized prostate cancer. J Urol 159 (4): 1238-42, 1998. [PUBMED Abstract]
+
+Taylor JA, Koff SG, Dauser DA, et al.: The relationship of ultrasensitive measurements of prostate-specific antigen levels to prostate cancer recurrence after radical prostatectomy. BJU Int 98 (3): 540-3, 2006. [PUBMED Abstract]
+
+Sakai I, Harada K, Kurahashi T, et al.: Usefulness of the nadir value of serum prostate-specific antigen measured by an ultrasensitive assay as a predictor of biochemical recurrence after radical prostatectomy for clinically localized prostate cancer. Urol Int 76 (3): 227-31, 2006. [PUBMED Abstract]
+
+Etzioni R, Cha R, Cowen ME: Serial prostate specific antigen screening for prostate cancer: a computer model evaluates competing strategies. J Urol 162 (3 Pt 1): 741-8, 1999. [PUBMED Abstract]
+
+Thompson IM, Ankerst DP, Chi C, et al.: Assessing prostate cancer risk: results from the Prostate Cancer Prevention Trial. J Natl Cancer Inst 98 (8): 529-34, 2006. [PUBMED Abstract]
+
+Vickers AJ, Savage C, O'Brien MF, et al.: Systematic review of pretreatment prostate-specific antigen velocity and doubling time as predictors for prostate cancer. J Clin Oncol 27 (3): 398-403, 2009. [PUBMED Abstract]
+
+Smith DS, Carvalhal GF, Mager DE, et al.: Use of lower prostate specific antigen cutoffs for prostate cancer screening in black and white men. J Urol 160 (5): 1734-8, 1998. [PUBMED Abstract]
+
+Schröder FH, Roobol-Bouts M, Vis AN, et al.: Prostate-specific antigen-based early detection of prostate cancer--validation of screening without rectal examination. Urology 57 (1): 83-90, 2001. [PUBMED Abstract]
+
+Määttänen L, Auvinen A, Stenman UH, et al.: Three-year results of the Finnish prostate cancer screening trial. J Natl Cancer Inst 93 (7): 552-3, 2001. [PUBMED Abstract]
+
+Lodding P, Aus G, Bergdahl S, et al.: Characteristics of screening detected prostate cancer in men 50 to 66 years old with 3 to 4 ng./ml. Prostate specific antigen. J Urol 159 (3): 899-903, 1998. [PUBMED Abstract]
+
+Population Observations of Early Detection, Incidence, and Prostate Cancer Mortality
+
+While digital rectal exam has been a staple of medical practice for many decades, prostate-specific antigen (PSA) did not
+come into common use until the late 1980s for the early diagnosis of prostate
+cancer. Following widespread dissemination of PSA testing, incidence rates rose abruptly. In a study of Medicare
+beneficiaries, a first-time PSA test was associated with a 4.7% likelihood of a
+prostate cancer diagnosis within 3 months. Subsequent tests were associated
+with statistically significant lower rates of prostate cancer diagnosis.[1]
+
+A study examined trends in prostate cancer detection and diagnosis among
+140,936 White men and 15,662 African American men diagnosed with prostate cancer
+between 1973 and 1994 by analyzing data from the National Cancer Institute's Surveillance, Epidemiology, and End Results (SEER) database.[2] Substantial changes were found
+beginning in the late 1980s as use of PSA spread throughout the United States. Age at diagnosis fell, stage of disease at diagnosis
+decreased, and most tumors were noted to be moderately differentiated. For
+African American men, however, a larger proportion of tumors were poorly
+differentiated.
+
+Because the outset of PSA screening beginning around 1988, incidence rates
+initially rose dramatically and fell, presumably as the fraction of the
+population undergoing their first PSA screening initially rose and subsequently
+fell. There has also been an observed decrease in mortality rates. In Olmsted
+County, Minnesota, age-adjusted prostate cancer mortality rates
+increased from 25.8 per 100,000 men from 1980 to
+1984 to a peak of 34 per 100,000 from 1989 to 1992; rates subsequently
+decreased to 19.4 per 100,000 from 1993 to 1997.[3] Similar observations
+have been made elsewhere in the world,[4,5] leading some to hypothesize that
+the mortality decline is related to PSA testing. In Quebec, Canada,
+however, examinations of the association between the size of the increase in
+incidence rates (1989–1993) and the size of the decrease in mortality
+rates (1995–1999), by birth cohort and residential grouping, showed no
+correlation between these two variables.[5] This study suggests that, at least
+during this time frame, the decline in mortality was not related to widespread PSA
+testing.
+
+Cause-of-death misclassification has also been studied as a possible explanation for changes in prostate cancer mortality. A relatively fixed rate was found at which individuals who had been diagnosed with prostate cancer were mislabeled as having died from prostate cancer. As such, the substantial increase in prostate cancer diagnoses in the late 1980s and early 1990s would then explain the increased rate of prostate cancer death during those years. As the rate of prostate cancer diagnosis fell in the early 1990s, this reduced rate of mislabeling death due to prostate cancer would fall, as would the overall rate of prostate cancer death.[6] Because the evidence in this respect is inconsistent, it remains
+unclear whether the causes of these mortality trends are chance, misclassification, early detection,
+improved treatments, or a combination of effects.
+
+The incidence of distant-stage prostate carcinoma was relatively flat until 1991 and then started declining rapidly. This decline probably was caused by the shift to earlier stage disease associated with the rapid dissemination of PSA screening. This stage shift can have a fairly sizable and rapid impact on population mortality, but it is possible that other factors such as hormonal therapy are responsible for much of the decline in mortality. Ongoing randomized clinical trials in the United States and Europe are designed to determine whether a mortality benefit is associated with PSA screening.[7]
+
+The Gleason score is an important prognostic measure relying on the pathological assessment of the architectural growth patterns of prostate biopsy. The Gleason grading system assigns a grade to each of the two largest areas of prostate cancer in the tissue samples. A sampling of eight or more biopsy cores improves the pathological grading accuracy.[8] Grades range from 1 to 5, with 1 being the most differentiated and 5 the least differentiated. Grade 3 tumors seldom have associated metastases, but metastases are common with grade 4 or grade 5 tumors. The two grades are added together to produce a Gleason score. A score of 2 to 4 is rarely given, 5 to 6 is low grade, 7 is intermediate grade, and 8 to 10 is high grade. The overall rate of concordance between original interpretations and review of the needle biopsy specimens has been reported to be 60%, with accuracy improving with increased tumor grade and percentage of tumor involvement in the biopsy specimen.[9]
+
+As of 2005, approximately 90% of prostate cancers detected were clinically localized and had more favorable tumor characteristics or grades than in the pre-PSA screening era.[10] A retrospective population-cohort study using the Connecticut Tumor registry reviewed the mortality probability from prostate cancer given the patient’s age at diagnosis and tumor grade.[11] Patients were treated with either observation or immediate or delayed androgen withdrawal therapy, with a median observation of 24 years. This study was initiated before the PSA screening era. Transurethral resection or open surgery for benign prostatic hyperplasia identified 71% of the tumors incidentally.
+The prostate cancer mortality rate was 33 per 1,000 person-years during the first 15 years of follow-up (95% confidence interval [CI], 28–38) and 18 per 1,000 person-years after 15 years of follow-up (95% CI, 10–29). Men with low-grade prostate cancers had a minimal risk of dying from prostate cancer during 20 years of follow-up (Gleason score of 2 to 4; six deaths per 1,000 person-years; 95% CI, 2–11). Men with high-grade prostate cancers had an increased probability of dying from prostate cancer within 10 years of diagnosis (Gleason score of 8 to 10, 121 deaths per 1,000 person-years; 95% CI, 90–156). Men with tumors that had a Gleason score of 5 or 6 had an intermediate risk of prostate cancer death. The annual mortality rate from prostate cancer appears to remain stable after 15 years from diagnosis.[11]
+
+References
+
+Legler JM, Feuer EJ, Potosky AL, et al.: The role of prostate-specific antigen (PSA) testing patterns in the recent prostate cancer incidence decline in the United States. Cancer Causes Control 9 (5): 519-27, 1998. [PUBMED Abstract]
+
+Farkas A, Schneider D, Perrotti M, et al.: National trends in the epidemiology of prostate cancer, 1973 to 1994: evidence for the effectiveness of prostate-specific antigen screening. Urology 52 (3): 444-8; discussion 448-9, 1998. [PUBMED Abstract]
+
+Roberts RO, Bergstralh EJ, Katusic SK, et al.: Decline in prostate cancer mortality from 1980 to 1997, and an update on incidence trends in Olmsted County, Minnesota. J Urol 161 (2): 529-33, 1999. [PUBMED Abstract]
+
+Bartsch G, Horninger W, Klocker H, et al.: Prostate cancer mortality after introduction of prostate-specific antigen mass screening in the Federal State of Tyrol, Austria. Urology 58 (3): 417-24, 2001. [PUBMED Abstract]
+
+Perron L, Moore L, Bairati I, et al.: PSA screening and prostate cancer mortality. CMAJ 166 (5): 586-91, 2002. [PUBMED Abstract]
+
+Feuer EJ, Merrill RM, Hankey BF: Cancer surveillance series: interpreting trends in prostate cancer--part II: Cause of death misclassification and the recent rise and fall in prostate cancer mortality. J Natl Cancer Inst 91 (12): 1025-32, 1999. [PUBMED Abstract]
+
+Feuer EJ, Mariotto A, Merrill R: Modeling the impact of the decline in distant stage disease on prostate carcinoma mortality rates. Cancer 95 (4): 870-80, 2002. [PUBMED Abstract]
+
+Makhlouf AA, Krupski TL, Kunkle D, et al.: The effect of sampling more cores on the predictive accuracy of pathological grade and tumour distribution in the prostate biopsy. BJU Int 93 (3): 271-4, 2004. [PUBMED Abstract]
+
+Coard KC, Freeman VL: Gleason grading of prostate cancer: level of concordance between pathologists at the University Hospital of the West Indies. Am J Clin Pathol 122 (3): 373-6, 2004. [PUBMED Abstract]
+
+Carroll PR: Early stage prostate cancer--do we have a problem with over-detection, overtreatment or both? J Urol 173 (4): 1061-2, 2005. [PUBMED Abstract]
+
+Albertsen PC, Hanley JA, Fine J: 20-year outcomes following conservative management of clinically localized prostate cancer. JAMA 293 (17): 2095-101, 2005. [PUBMED Abstract]
+
+Digital Rectal Exam
+
+Although digital rectal exam (DRE) has been used for many years, careful evaluation of this modality
+has yet to take place. The examination is inexpensive, relatively noninvasive, and nonmorbid and can be taught to nonprofessional health workers; however, its effectiveness depends on the skill and experience of the examiner. The possible contribution of routine annual screening by rectal examination in reducing prostate cancer mortality remains to be determined.
+
+Several observational studies have examined process measures such as sensitivity and case-survival data,
+but without appropriate controls and with no adjustment for lead-time and
+length biases.[1,2]
+
+In 1984, one study reported on 811 unselected patients aged 50 to 80 years who underwent rectal examination and follow-up.[3] Of 43
+patients with a palpable abnormality in the prostate, 38 agreed to undergo biopsy.
+The positive predictive value (PPV) of a palpable nodule, i.e., prostate cancer on
+biopsy, was 29% (11 of 38). Further evaluation revealed that 45% of the cases
+were stage B, 36% were stage C, and 18% were stage D. More results from the
+same investigators revealed a 25% PPV, with 68% of the
+detected tumors clinically localized but only approximately 30% pathologically
+localized after radical prostatectomy.[4] Some investigators reported a high proportion of clinically localized disease when prostate cancer
+is detected by routine rectal examination,[5] while others reported that even
+with annual rectal examination, only 20% of cases are localized at
+diagnosis.[6] It has been reported that 25% of men
+presenting with metastatic disease had a normal prostate examination.[7]
+Another case-control study examining screening with both DRE and prostate-specific antigen (PSA) found a reduction in prostate cancer mortality that was not statistically significant (odds ratio [OR], 0.7; 95% confidence interval [CI], 0.46–1.1). Most men in this study were screened with DRE rather than PSA.[8] All four of these case-control studies are consistent with a reduction of 20% to 30% in prostate cancer mortality. Potential biases inherent in this study design, however, limit the ability to draw conclusions on the basis of this evidence alone.
+
+Since PSA assays became widely available in the late 1980s, DRE alone is rarely discussed as a screening modality. Several studies have found that DRE has a poor predictive value for
+prostate cancer if PSA is at very low levels. In the European Study on
+Screening for Prostate Cancer, it was found that if DRE is used only for a
+PSA higher than 1.5 ng/mL (thus, no DRE is performed with PSA <1.5 ng/mL), 29% of all
+biopsies would be eliminated while maintaining a 95% prostate cancer detection
+sensitivity. By applying DRE only for patients with a PSA higher than 2.0 ng/mL, the
+biopsy rate would decrease by 36%, while sensitivity would drop to only 92%.[9]
+A previous report from this same institution found DRE to have poor performance
+characteristics. Among 10,523 men randomly assigned to screening, it was
+reported that the overall prostate cancer detection rate using PSA, DRE, and
+transrectal ultrasound was 4.5%, compared with only 2.5% if DRE alone was used. Among men
+with a PSA lower than 3.0 ng/mL, the PPV of DRE was only
+4% to 11%.[10] Despite the poor performance of DRE, a retrospective
+case-control study of men in Olmsted County, Minnesota, who died of prostate
+cancer found that case patients were less likely to have undergone DRE during
+the 10 years before diagnosis of prostate cancer (OR, 0.51; 95%
+CI, 0.31–0.84). These data suggested that screening DREs
+may prevent 50% to 70% of deaths from prostate cancer.[11] Contrary to
+these findings, results from a case-control study of 150 men who ultimately
+died of prostate cancer were compared with 299 controls without disease. In this
+different population, a similar number of cases and controls had undergone DRE
+during the 10-year interval before prostate cancer diagnosis.[12] One
+case-control study reported no statistically significant association between
+routine screening with DRE and occurrence of metastatic
+prostate cancer.[13]
+The Prostate Cancer Prevention Trial requested that all men undergo prostate biopsy at study end to address ascertainment bias; the sensitivity of DRE for prostate cancer was 16.7%. The sensitivity increased to 21.3% in men receiving finasteride.[14]
+
+References
+
+Gilbertsen VA: Cancer of the prostate gland. Results of early diagnosis and therapy undertaken for cure of the disease. JAMA 215 (1): 81-4, 1971. [PUBMED Abstract]
+
+Jenson CB, Shahon DB, Wangensteen OH: Evaluation of annual examinations in the detection of cancer. Special reference to cancer of the gastrointestinal tract, prostate, breast, and female generative tract. JAMA 174: 1783-8, 1960. [PUBMED Abstract]
+
+Chodak GW, Schoenberg HW: Early detection of prostate cancer by routine screening. JAMA 252 (23): 3261-4, 1984. [PUBMED Abstract]
+
+Chodak GW, Keller P, Schoenberg HW: Assessment of screening for prostate cancer using the digital rectal examination. J Urol 141 (5): 1136-8, 1989. [PUBMED Abstract]
+
+Donohue RE, Fauver HE, Whitesel JA, et al.: Staging prostatic cancer: a different distribution. J Urol 122 (3): 327-9, 1979. [PUBMED Abstract]
+
+Wajsman Z, Chu TM: Detection and diagnosis of prostatic cancer. In: Murphy GP, ed.: Prostatic cancer. PSG Pub. Co., 1987, pp 94-99.
+
+Thompson IM, Zeidman EJ: Presentation and clinical course of patients ultimately succumbing to carcinoma of the prostate. Scand J Urol Nephrol 25 (2): 111-4, 1991. [PUBMED Abstract]
+
+Weinmann S, Richert-Boe K, Glass AG, et al.: Prostate cancer screening and mortality: a case-control study (United States). Cancer Causes Control 15 (2): 133-8, 2004. [PUBMED Abstract]
+
+Beemsterboer PM, Kranse R, de Koning HJ, et al.: Changing role of 3 screening modalities in the European randomized study of screening for prostate cancer (Rotterdam). Int J Cancer 84 (4): 437-41, 1999. [PUBMED Abstract]
+
+Schröder FH, van der Maas P, Beemsterboer P, et al.: Evaluation of the digital rectal examination as a screening test for prostate cancer. Rotterdam section of the European Randomized Study of Screening for Prostate Cancer. J Natl Cancer Inst 90 (23): 1817-23, 1998. [PUBMED Abstract]
+
+Jacobsen SJ, Bergstralh EJ, Katusic SK, et al.: Screening digital rectal examination and prostate cancer mortality: a population-based case-control study. Urology 52 (2): 173-9, 1998. [PUBMED Abstract]
+
+Richert-Boe KE, Humphrey LL, Glass AG, et al.: Screening digital rectal examination and prostate cancer mortality: a case-control study. J Med Screen 5 (2): 99-103, 1998. [PUBMED Abstract]
+
+Friedman GD, Hiatt RA, Quesenberry CP, et al.: Case-control study of screening for prostatic cancer by digital rectal examinations. Lancet 337 (8756): 1526-9, 1991. [PUBMED Abstract]
+
+Thompson IM, Tangen CM, Goodman PJ, et al.: Finasteride improves the sensitivity of digital rectal examination for prostate cancer detection. J Urol 177 (5): 1749-52, 2007. [PUBMED Abstract]
+
+PCA3
+
+The U.S. Food and Drug Administration approved the PCA3 gene assay in early 2012 to aid in the decision for repeat biopsy in men with a previous negative biopsy for an elevated prostate-specific antigen (PSA) and for whom a repeat biopsy is being considered for a persistently elevated PSA. This test is performed on a urine sample collected after an attentive digital rectal exam (several strokes applied firmly to the prostate to the right and left prostatic lobes). Using a threshold value of 60, this test enhances the detection of prostate cancer while reducing the number of biopsies in men who are expected to ultimately have a negative biopsy.[1]
+
+References
+
+PROGENSA® PCA3 Assay - P100033. Silver Spring, Md: U.S. Food and Drug Administration, 2012. Available online. Last accessed April 8, 2025.
+
+Frequency of Screening
+
+The optimal frequency and age range for prostate-specific antigen (PSA) testing and digital rectal exam are
+unknown.[1-3] Cancer detection rates have been reported to be similar for intervals of 1 to 4 years.[4] With serial annual screening in the Prostate, Lung, Colorectal, and Ovarian (PLCO) Cancer Screening Trial, 8% of men with baseline PSA lower than 1 ng/mL had a prostate cancer diagnosis within 2 years.[5] In the same trial, 2-year intervals in screening produced average delays of 5.4 to 6.5 months, while 4-year screening intervals produced average delays of 15.6 months (baseline PSA, <1 ng/mL) to 20.9 months (baseline PSA, 3–4 ng/mL).[5] While the authors caution that an optimal prostate screening frequency cannot be determined from these data, they conclude that among men who choose to be screened, these data may provide a context for determining a PSA screening schedule.
+
+A report from the European Randomized Study of Screening for Prostate Cancer (ERSPC) trial demonstrated that while more frequent screenings lead to more diagnosed cancers, the detection rate reported for aggressive interval cancers was very similar in the two countries despite their use of different screening frequencies (0.11 with a 4-year interval in Rotterdam and 0.12 with a 2-year interval in Gothenburg). The report suggests that mortality outcomes from the ERSPC (2- and 4-year intervals) and PLCO (1-year interval relative to opportunistic screening) trials should facilitate a more reliable assessment of the benefits and costs of different screening intervals.[6]
+
+References
+
+Etzioni R, Cha R, Cowen ME: Serial prostate specific antigen screening for prostate cancer: a computer model evaluates competing strategies. J Urol 162 (3 Pt 1): 741-8, 1999. [PUBMED Abstract]
+
+Ross KS, Carter HB, Pearson JD, et al.: Comparative efficiency of prostate-specific antigen screening strategies for prostate cancer detection. JAMA 284 (11): 1399-405, 2000. [PUBMED Abstract]
+
+Carter HB, Landis PK, Metter EJ, et al.: Prostate-specific antigen testing of older men. J Natl Cancer Inst 91 (20): 1733-7, 1999. [PUBMED Abstract]
+
+van der Cruijsen-Koeter IW, Roobol MJ, Wildhagen MF, et al.: Tumor characteristics and prognostic factors in two subsequent screening rounds with four-year interval within prostate cancer screening trial, ERSPC Rotterdam. Urology 68 (3): 615-20, 2006. [PUBMED Abstract]
+
+Crawford ED, Pinsky PF, Chia D, et al.: Prostate specific antigen changes as related to the initial prostate specific antigen: data from the prostate, lung, colorectal and ovarian cancer screening trial. J Urol 175 (4): 1286-90; discussion 1290, 2006. [PUBMED Abstract]
+
+Roobol MJ, Grenabo A, Schröder FH, et al.: Interval cancers in prostate cancer screening: comparing 2- and 4-year screening intervals in the European Randomized Study of Screening for Prostate Cancer, Gothenburg and Rotterdam. J Natl Cancer Inst 99 (17): 1296-303, 2007. [PUBMED Abstract]
+
+Types of Tumors Detected by Prostate Cancer Screening
+
+Of serious concern regarding prostate cancer screening is the high
+prevalence of histologically defined cancer. It has been demonstrated that
+a considerable fraction (approximately one-third) of men in their fourth and
+fifth decades have histologically evident prostate cancer.[1] Most of these
+tumors are well-differentiated and microscopic in size. Conversely, evidence
+suggests that tumors of potential clinical importance are larger and of higher
+grade.[2] Since the inception of prostate-specific antigen (PSA) screening, the following events have occurred:
+(1) a contemporaneous but unrelated decrease in detection of transition-zone
+tumors, caused by a fall in the number of transurethral resections of the
+prostate due to the advent of effective treatment for benign prostatic
+hyperplasia (including alpha blockers and finasteride); and (2) an increase in
+detection of peripheral-zone tumors due to the incorporation of transrectal ultrasound-guided prostate biopsies. Because transition-zone tumors are
+predominantly low volume and low grade and because peripheral-zone tumors have a
+preponderance of moderate-grade and high-grade disease, the proportion of higher-grade tumors detected by current screening practices has increased
+substantially. A Detroit study found that between 1989 and 1996,
+poorly differentiated tumors remained stable and well-differentiated tumors
+fell in frequency while moderately differentiated disease increased in
+frequency. The largest rise in incidence was in clinically localized
+disease.[3] It is now known that systematic changes to the histological interpretation of biopsy specimens by anatomical pathologists has occurred during the PSA screening era (i.e., since about 1985) in the United States.[4] This phenomenon, sometimes called grade inflation, is the apparent increase in the distribution of high-grade tumors in the population over time but in the absence of a true biological or clinical change. It is possibly the result of an increasing tendency for pathologists to read tumor grade as more aggressive.[5]
+
+Prostate biopsies in a small percentage of men will demonstrate prostatic intraepithelial neoplasia (PIN). High-grade PIN is not cancer but may predict an increased risk of prostate cancer. PSA does not appear to be elevated with PIN.[6,7]
+
+References
+
+Sakr WA, Haas GP, Cassin BF, et al.: The frequency of carcinoma and intraepithelial neoplasia of the prostate in young male patients. J Urol 150 (2 Pt 1): 379-85, 1993. [PUBMED Abstract]
+
+Stamey TA, McNeal JE, Yemoto CM, et al.: Biological determinants of cancer progression in men with prostate cancer. JAMA 281 (15): 1395-400, 1999. [PUBMED Abstract]
+
+Schwartz KL, Grignon DJ, Sakr WA, et al.: Prostate cancer histologic trends in the metropolitan Detroit area, 1982 to 1996. Urology 53 (4): 769-74, 1999. [PUBMED Abstract]
+
+Albertsen PC, Hanley JA, Barrows GH, et al.: Prostate cancer and the Will Rogers phenomenon. J Natl Cancer Inst 97 (17): 1248-53, 2005. [PUBMED Abstract]
+
+Thompson IM, Canby-Hagino E, Lucia MS: Stage migration and grade inflation in prostate cancer: Will Rogers meets Garrison Keillor. J Natl Cancer Inst 97 (17): 1236-7, 2005. [PUBMED Abstract]
+
+Lefkowitz GK, Sidhu GS, Torre P, et al.: Is repeat prostate biopsy for high-grade prostatic intraepithelial neoplasia necessary after routine 12-core sampling? Urology 58 (6): 999-1003, 2001. [PUBMED Abstract]
+
+O'Shaughnessy JA, Kelloff GJ, Gordon GB, et al.: Treatment and prevention of intraepithelial neoplasia: an important target for accelerated new agent development. Clin Cancer Res 8 (2): 314-46, 2002. [PUBMED Abstract]
+
+Simulation Models
+
+Several computer simulation models have been developed to analyze trends in prostate cancer detection. The models were also developed to compare these trends with the reported decrease in prostate cancer deaths observed in the United States since the early 1990s, to investigate the cost-effectiveness of various screening strategies, and to attempt to estimate overdiagnosis resulting from screening.
+
+One of the first models looked at trends in prostate cancer detection compared with prostate cancer deaths between 1992 and 1994. Changes in prostate cancer mortality could not be explained entirely by prostate-specific antigen (PSA) screening alone.[1] Simulation modeling from the National Cancer Institute's Cancer Intervention and Surveillance Modeling Network (CISNET) program suggested that the combination of changes in prostate cancer treatment, improvements in disease management after primary therapy, and screening contributed to the drop in prostate cancer mortality.[2] CISNET models calibrated to Surveillance, Epidemiology, and End Results (SEER) Program incidence data were also used to estimate overdiagnosis caused by PSA screening in the United States, suggesting 23% to 42% of all screen-detected prostate cancers were overdiagnosed.[3] An analysis using the Microsimulation Screening Analysis (MISCAN) model and data from the European Randomized Study of Screening for Prostate Cancer trial predicted the numbers of prostate cancers diagnosed, the prostate cancer deaths averted, the quality-adjusted life years gained, and the cost-effectiveness of 68 screening strategies.[4]
+
+An example of the underlying assumptions and concerns about models is provided by a microsimulation modeling effort that examined the comparative effectiveness of 35 screening strategies, which varied by start and stop ages, screening intervals, and thresholds for biopsy referral.[5] The CISNET model assumes prostate cancer progression from onset to metastasis to clinical diagnosis in the absence of screening, with risks of events indicated by PSA levels. Event rates through the progression states are identified by matching model incidence to observed incidence, although it is not clear that the rates so identified are unique. Survival depends on stage at diagnosis, and screening is assumed to identify some cancers at an earlier stage than without screening, leading to a reduction in mortality. This stage-shift model is virtually guaranteed to produce a benefit of screening.
+
+References
+
+Etzioni R, Legler JM, Feuer EJ, et al.: Cancer surveillance series: interpreting trends in prostate cancer--part III: Quantifying the link between population prostate-specific antigen testing and recent declines in prostate cancer mortality. J Natl Cancer Inst 91 (12): 1033-9, 1999. [PUBMED Abstract]
+
+Etzioni R, Gulati R, Tsodikov A, et al.: The prostate cancer conundrum revisited: treatment changes and prostate cancer mortality declines. Cancer 118 (23): 5955-63, 2012. [PUBMED Abstract]
+
+Draisma G, Etzioni R, Tsodikov A, et al.: Lead time and overdiagnosis in prostate-specific antigen screening: importance of methods and context. J Natl Cancer Inst 101 (6): 374-83, 2009. [PUBMED Abstract]
+
+Heijnsdijk EA, de Carvalho TM, Auvinen A, et al.: Cost-effectiveness of prostate cancer screening: a simulation study based on ERSPC data. J Natl Cancer Inst 107 (1): 366, 2015. [PUBMED Abstract]
+
+Gulati R, Gore JL, Etzioni R: Comparative effectiveness of alternative prostate-specific antigen--based prostate cancer screening strategies: model estimates of potential benefits and harms. Ann Intern Med 158 (3): 145-53, 2013. [PUBMED Abstract]
+
+Providing Information to the Public, Patients, and Their Families
+
+While awaiting results of current studies, physicians and men (and their partners) are faced with the dilemma of whether to recommend or request a screening test. A qualitative study undertaken on focus groups of men, physician experts, and couples with screened and unscreened men has explored types of information that may help inform a man making a decision regarding prostate-specific antigen screening.[1] At a minimum, men should be informed about the possibility that false-positive or false-negative test results can occur, that it is not known whether regular screening will reduce the number of deaths from prostate cancer, and that among experts, the recommendation to screen is controversial.[2,3]
+
+References
+
+Chan EC, Sulmasy DP: What should men know about prostate-specific antigen screening before giving informed consent? Am J Med 105 (4): 266-74, 1998. [PUBMED Abstract]
+
+O'Connor AM, Stacey D, Rovner D, et al.: Decision aids for people facing health treatment or screening decisions. Cochrane Database Syst Rev (3): CD001431, 2001. [PUBMED Abstract]
+
+Volk RJ, Hawley ST, Kneuper S, et al.: Trials of decision aids for prostate cancer screening: a systematic review. Am J Prev Med 33 (5): 428-434, 2007. [PUBMED Abstract]
+
+Harms of Screening
+
+Screening increases the detection of indolent, unsuspected, and asymptomatic prostate cancer. Any potential benefits derived from screening asymptomatic men need to be weighed against the harms of screening and diagnostic procedures and treatments for prostate cancer. These harms are particularly burdensome to men with false-positive screening results and men who are unnecessarily treated because of overdiagnosis.
+
+An unintended consequence of screening and biopsy is the erroneous assumption that a screened population is at increased risk of developing significant disease. In a study that examined the magnitude of prostate cancer risk associated with specific factors across the Selenium and Vitamin E Cancer Prevention Trial (SELECT) and Prostate Cancer Prevention Trial cohorts, the authors demonstrated that the likelihood of undergoing screening and biopsy depends on certain known or suspected risk factors. In turn, differential screening and biopsy can result in spurious conclusions regarding risk factors for prostate cancer.[1] For example, the authors explained that the labeling of a random characteristic such as blue eyes as a risk factor may increase biopsy rates among men with blue eyes, resulting in detection of indolent prostate cancer and leading to the inaccurate conclusion that blue eyes are a risk factor for prostate cancer.
+
+Negative impacts of screen detection on measures of risk may include the following:
+
+Interventions that may have no effect on prostate cancer course and may have harmful side effects.
+
+Time, cost, and anxiety associated with a diagnosis of inconsequential disease.
+
+Misdirection of research focus and resources.
+
+Measurements of risk in men who undergo screening differ from measurements of risk in men who do not undergo screening. Past and current screening and biopsy practices may misrepresent prostate cancer risk factors. Better methods for identifying consequential prostate cancer are needed to avoid unnecessary biopsies.[1]
+
+Three cohort studies in Sweden and the United States linked databases to examine the association between a new diagnosis of prostate cancer and cardiovascular events/death or suicide. One Swedish study found that in the first year after a diagnosis of prostate cancer, the risk of death from cardiovascular disease (CVD) was increased in men diagnosed with prostate cancer compared with men who were not diagnosed with prostate cancer (relative risk [RR], 1.9; 95% confidence interval [CI], 1.9–2.0; adjusted for age, calendar period, and time since diagnosis). The risk of death from CVD was highest in the first week after diagnosis (RR, 11.2; 95% CI, 10.4–12.1) and was also higher in younger men (age <54 years). These risks were lower in men diagnosed in the most recent time periods. Also, in the first year after diagnosis, the risk of committing suicide was higher for men who had been diagnosed with prostate cancer (RR, 2.6; 95% CI, 2.1–3.0; adjusted for age, calendar period, marital status, educational level, and history of psychiatric hospitalization). Again, this was highest in the first week after diagnosis (RR, 8.4; 95% CI, 1.9–22.7).[2] A second Swedish study largely confirmed these findings.[3]
+
+A U.S. cohort study explored the association between prostate cancer diagnosis and CVD mortality or suicide in men diagnosed with prostate cancer, compared with population-level expected rates during three different time periods (preprostate-specific antigen [pre-PSA], peri-PSA, and post-PSA). For CVD mortality, the standardized mortality ratio (SMR) was elevated for men diagnosed with prostate cancer in the first month after diagnosis in all time periods (overall SMR, 2.05; 95% CI, 1.89–2.22), but the SMR decreased in later months during the first year (decreasing to <1.0 in the PSA time period). This association was not changed significantly by age, race, or tumor grade. SMRs were higher for nonmarried men, for men who lived in lower educational status or higher poverty counties, and for men with metastatic disease at diagnosis. Also, in the first 3 months after diagnosis, the SMR for suicide was higher in men with prostate cancer (SMR, 1.9; 95% CI, 1.4–2.6). In months 4 to 12, the SMR was lower but still greater than 1.0. The SMR for suicide, however, was greater than 1.0 only in the pre-PSA and peri-PSA time periods, but not in the post-PSA time period. SMR was higher for nonmarried men but did not vary by education or poverty.[4]
+
+These data lend credence to the concern that overdiagnosis of prostate cancer due to screening could lead to an increased risk of CVD mortality or suicide.
+
+Although there is no literature suggesting serious complications of digital rectal examination (DRE) or transrectal sonography, and the harms associated with venipuncture for PSA testing can be regarded as trivial, prostatic biopsies are associated with important complications. Transient fever, pain, hematospermia, and hematuria are all common, as are positive urine cultures.[5-7] Sepsis occurs in approximately 0.4% of men.[6,8]
+
+Long-term complications of radical prostatectomy include urinary incontinence, urethral stricture, erectile dysfunction, and the morbidity associated with general anesthesia and a major surgical procedure. Fecal incontinence can also occur. The associated mortality rate is reported to be 0.1% to 1%, depending on age. In the population-based Prostate Cancer Outcomes Study, 8.4% of 1,291 men were incontinent and 59.9% were impotent at 18 or 24 months following radical prostatectomy. More than 40% of men reported that their sexual performance was a moderate-to-large problem. Both sexual and urinary function varied by age, with younger men relatively less affected.[8,9]
+
+Definitive external-beam radiation therapy can result in acute cystitis, proctitis, and sometimes enteritis. These conditions are generally reversible but may be chronic. In the short-term, potency is preserved with irradiation in most cases but may diminish over time. A systematic review of evidence radiation therapy complications shows that 20% to 40% of men who had no erectile dysfunction before treatment developed dysfunction 12 to 24 months afterward. Furthermore, 2% to 16% of men who had no urinary incontinence before treatment developed dysfunction 12 to 24 months afterward, and about 18% of men had some bowel dysfunction 1 year after treatment. The magnitude of effects of brachytherapy has not been determined, but the spectrum of complications are similar.[10] Radiation to the prostate has been reported to increase the risk of secondary malignancies, most notably of the rectum and bladder. While the relative risk in a large Surveillance, Epidemiology and End Results (SEER)-based study was 1.26 (95% CI, 1.21–1.30), the absolute increase in risk is low. The same review of evidence found hormone therapy with luteinizing hormone-releasing hormone (LHRH) agonists reduces sexual function by 40% to 70%, and hormone therapy is associated with breast swelling in 5% to 25% of men. Hot flashes occur in 50% to 60% of men taking LHRH agonists.[8] For more information, see Prostate Cancer Treatment.
+
+The question of whether prostate cancer treatment contributes to symptoms among screened prostate cancer survivors was addressed in an analysis from the Prostate, Lung, Colorectal and Ovarian (PLCO) Cancer Screening Trial. The
+randomized controlled PLCO analysis compared 529 prostate cancer survivors, 5 to 10 years postdiagnosis, with 514 noncancer controls, regarding prostate cancer-specific symptomatology. There was poorer sexual and urinary function among prostate cancer survivors compared with noncancer controls, suggesting that these symptoms are related to prostate cancer treatment, not aging or comorbidities.[11]
+
+Screening has increased the incidence of prostate cancer. In the current medical climate, most early-stage prostate cancers are treated by radical surgery or irradiation with intent to eradicate the pathology. There is evidence that not all patients diagnosed with prostate cancer because of screening are in immediate need of curative treatment. Death from other causes often occurs before screen detected, localized, and well-differentiated malignancies affect the survival of these patients. To avoid overtreatment and consequent morbid events, active surveillance (AS) is an emerging strategy applicable in these kinds of cases wherein curative treatment is delayed pending objective medical evidence of disease progression.[12]
+
+The effectiveness of AS was investigated retrospectively in the European Randomized Study of Screening for Prostate Cancer (ERSPC) trial. Data from 577 men diagnosed with prostate cancer because of periodic screening between 1994 and 2007 at a mean age of 66.3 years in four participating clinical centers in the Netherlands, Sweden, and Finland were evaluated. Selection criteria for inclusion in the analysis were:
+
+PSA less than or equal to 10 ng/mL.
+
+PSA density less than 0.2 ng/mL.
+
+Stage T1C/T2.
+
+Gleason score less than or equal to 3 + 3 = 6.
+
+No more than two positive biopsy cores.
+
+Men with positive lymph nodes or distant metastases at the time of diagnosis were excluded from the analysis. These are the same thresholds being applied in the (yet unreported) prospective Prostate Cancer Research International: Active Surveillance study on AS originating from ERSPC and in the (also unreported) protocol-based prospective study of AS in Canada.
+
+The mean follow-up time for the 577 men in the retrospective assessment was 4.35 years (0–11.63 years). The calculated 10-year prostate cancer-specific survival rate was 100%. The overall 10-year survival rate was 77%. The calculated 10-year deferred treatment-free survival rate was 43%.
+
+After 7.75 years, 50% of men had received treatment. The median treatment-free survival was 2.5 years. Men treated during follow-up were slightly younger at diagnosis than men remaining untreated (64.7 years vs. 67.0 years; P < .001). Of the 110 men shifting to active treatment despite favorable PSA levels and PSA doubling times, DRE was known in 53 of the men and played a role in nine of them, whereas rebiopsies were known in 27 of the men and played a role in none of them. On the basis of PSA characteristics, 1.9% of patients who remained untreated may have been better candidates for active treatment, while 55.8% of men who received active treatment were not obvious candidates for radical treatment, and neither DRE nor rebiopsy explained the discrepancy. Factors like anxiety and urologic complaints may have been more explanatory, but the data were not available.
+
+The authors concluded that their data confirmed previous studies' findings, that many screen-detected prostate cancers may be actively followed (e.g., AS), and curative treatment delayed, thereby delaying or avoiding the morbid consequences of radical therapy without diminishing survival. The authors also noted that a considerable fraction of men do not comply with the AS regimen, apparently for psychological reasons, and AS often resulted in delay, not avoidance, of radical therapy.
+
+In the Prostate Testing for Cancer and Treatment (ProtecT) study, 1,643 men with localized prostate cancer were randomly assigned equally to active monitoring, surgery, or radiation therapy. The primary end point was death from prostate cancer, and secondary outcomes were clinical (local) progression, metastases, and death from all causes.[13]
+
+In a substudy of ProtecT that examined patient-reported outcomes, the response rate was over 85% for most of the questionnaires used to examine quality of life. The study addressed urinary, bowel, and sexual function and specific effects on quality of life, anxiety and depression, and general health. No methods were employed to deal with nonresponse or missing responses. In a quality-of-life study, nonresponse tends to be informative, so this lapse is unusual.[14]
+
+Results showed that men who had undergone prostatectomy reported more impotence and incontinence; men who received radiation reported more bowel dysfunction; and men who received active monitoring reported the lowest levels of these adverse effects. In general, differences decreased over the 6 years that data were collected. Overall, mental and physical health did not differ by treatment.[14]
+
+Whatever the screening modality, the screening process itself can lead to psychological effects in men who have a prostate biopsy but do not have prostate cancer. One study of these men at 12 months after their negative biopsy who reported worrying that they may develop cancer (P < .001), showed large increases in prostate-cancer worry compared with men with a normal PSA (26% vs. 6%).[15] In the same study, biopsied men were more likely than those in the normal PSA group to have had at least one follow-up PSA test in the first year (73% vs. 42%; P < .001), more likely to have had another biopsy (15% vs. 1%; P < .001), and more likely to have visited a urologist (71% vs. 13%; P < .001).
+
+References
+
+Tangen CM, Goodman PJ, Till C, et al.: Biases in Recommendations for and Acceptance of Prostate Biopsy Significantly Affect Assessment of Prostate Cancer Risk Factors: Results From Two Large Randomized Clinical Trials. J Clin Oncol 34 (36): 4338-4344, 2016. [PUBMED Abstract]
+
+Fall K, Fang F, Mucci LA, et al.: Immediate risk for cardiovascular events and suicide following a prostate cancer diagnosis: prospective cohort study. PLoS Med 6 (12): e1000197, 2009. [PUBMED Abstract]
+
+Carlsson S, Sandin F, Fall K, et al.: Risk of suicide in men with low-risk prostate cancer. Eur J Cancer 49 (7): 1588-99, 2013. [PUBMED Abstract]
+
+Fang F, Keating NL, Mucci LA, et al.: Immediate risk of suicide and cardiovascular death after a prostate cancer diagnosis: cohort study in the United States. J Natl Cancer Inst 102 (5): 307-14, 2010. [PUBMED Abstract]
+
+Aus G, Ahlgren G, Bergdahl S, et al.: Infection after transrectal core biopsies of the prostate--risk factors and antibiotic prophylaxis. Br J Urol 77 (6): 851-5, 1996. [PUBMED Abstract]
+
+Rietbergen JB, Kruger AE, Kranse R, et al.: Complications of transrectal ultrasound-guided systematic sextant biopsies of the prostate: evaluation of complication rates and risk factors within a population-based screening program. Urology 49 (6): 875-80, 1997. [PUBMED Abstract]
+
+Sharpe JR, Sadlowski RW, Finney RP, et al.: Urinary tract infection after transrectal needle biopsy of the prostate. J Urol 127 (2): 255-6, 1982. [PUBMED Abstract]
+
+Walter LC, Fung KZ, Kirby KA, et al.: Five-year downstream outcomes following prostate-specific antigen screening in older men. JAMA Intern Med 173 (10): 866-73, 2013. [PUBMED Abstract]
+
+Stanford JL, Feng Z, Hamilton AS, et al.: Urinary and sexual function after radical prostatectomy for clinically localized prostate cancer: the Prostate Cancer Outcomes Study. JAMA 283 (3): 354-60, 2000. [PUBMED Abstract]
+
+Screening for Prostate Cancer. Rockville, Md: U.S. Preventive Services Task Force, 2011. Available online. Last accessed April 8, 2025.
+
+Taylor KL, Luta G, Miller AB, et al.: Long-term disease-specific functioning among prostate cancer survivors and noncancer controls in the prostate, lung, colorectal, and ovarian cancer screening trial. J Clin Oncol 30 (22): 2768-75, 2012. [PUBMED Abstract]
+
+Mahal BA, Butler S, Franco I, et al.: Use of Active Surveillance or Watchful Waiting for Low-Risk Prostate Cancer and Management Trends Across Risk Groups in the United States, 2010-2015. JAMA 321 (7): 704-706, 2019. [PUBMED Abstract]
+
+Hamdy FC, Donovan JL, Lane JA, et al.: 10-Year Outcomes after Monitoring, Surgery, or Radiotherapy for Localized Prostate Cancer. N Engl J Med 375 (15): 1415-1424, 2016. [PUBMED Abstract]
+
+Donovan JL, Hamdy FC, Lane JA, et al.: Patient-Reported Outcomes after Monitoring, Surgery, or Radiotherapy for Prostate Cancer. N Engl J Med 375 (15): 1425-1437, 2016. [PUBMED Abstract]
+
+Fowler FJ, Barry MJ, Walker-Corkery B, et al.: The impact of a suspicious prostate biopsy on patients' psychological, socio-behavioral, and medical care outcomes. J Gen Intern Med 21 (7): 715-21, 2006. [PUBMED Abstract]

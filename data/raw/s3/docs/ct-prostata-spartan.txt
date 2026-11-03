@@ -1,0 +1,73 @@
+Source: ClinicalTrials.gov (U.S. National Library of Medicine), study record NCT01946204, last updated 2026-09-28; retrieved 2026-11-03 through the ClinicalTrials.gov API v2 (data timestamp 2026-11-03T10:00:05). Modifications: selected fields reordered as plain text; contacts, locations, results and documents omitted. This is a trial registry record, not evidence of efficacy.
+
+Title
+A Multicenter, Randomized, Double-Blind, Placebo-Controlled, Phase III Study of ARN-509 in Men With Non-Metastatic (M0) Castration-Resistant Prostate Cancer
+
+Brief title
+A Study of Apalutamide (ARN-509) in Men With Non-Metastatic Castration-Resistant Prostate Cancer
+
+Sponsor
+Aragon Pharmaceuticals, Inc.
+
+Status: ACTIVE_NOT_RECRUITING. Phase: PHASE3. Study type: INTERVENTIONAL. Enrollment: 1207.
+
+Brief summary
+The purpose of this study is to evaluate the efficacy and safety of apalutamide in adult men with high-risk non-metastatic castration-resistant prostate cancer.
+
+Detailed description
+This Phase 3 clinical trial is an essential step in the evaluation of an investigational medication to see if it may be useful in treating prostate cancer. The purpose of the SPARTAN study is to compare the safety and effectiveness of the investigational medication to placebo in delaying prostate cancer from spreading to other parts of the body. A placebo is a pill that looks like the investigational medication but does not contain any active medication, a dummy pill.
+
+Phase 3 studies are performed after preliminary evidence suggesting effectiveness of the drug has been obtained in previous Phase 2 studies. These studies are intended to gather the additional information about effectiveness and safety that is needed to evaluate the overall benefit-risk relationship of the drug.
+
+Study participants will take the oral investigational medication daily. One cycle of study treatment lasts 4 weeks or 28 days. The number of cycles will depend on how you and your cancer respond to the study medication.
+
+In order for the researchers to evaluate and compare the study results, there are two different study groups. Study participants will be randomly (like flipping a coin) assigned to one of these groups:
+
+* One group will receive their current treatment along with the investigational medication
+* One group will receive their current medications along with a placebo
+
+The investigational medication will be given to 2 out of every 3 study participants. Neither you nor the study staff will know which group you are in. However, in case of a medical emergency, your study doctor can quickly find out which treatment group you are in.
+
+All participants will continue to receive their current treatment along with either the investigational medication or a placebo. The selections will be random, and you may remain on investigational treatment until your disease worsens, or until significant side effects occur or you can no longer tolerate treatment.
+
+Conditions:
+- Prostatic Neoplasms
+
+Design
+Allocation: RANDOMIZED. Intervention model: PARALLEL. Masking: TRIPLE.
+
+Arm (EXPERIMENTAL): Treatment Arm A: Apalutamide
+
+Arm (PLACEBO_COMPARATOR): Treatment Arm B: Placebo
+
+Primary outcomes
+- Metastasis-Free Survival (MFS) by Blinded Independent Central Review (BICR) (Up to approximately 43 Months). MFS was defined as the time from randomization to the time of first evidence of BICR-confirmed bone or soft tissue distant metastasis or death due to any cause, whichever occurred first. The MFS data for participants without metastasis or death were performed for US or ex-US regulatory purposes. Radiographic scans (bone scans and computerized tomography \[CT\] or magnetic resonance imaging \[MRI\] of the chest, abdomen, and pelvis) were performed for detection of metastasis throughout the study.
+
+Eligibility criteria
+Inclusion Criteria:
+
+* Histologically or cytologically confirmed adenocarcinoma of the prostate without neuroendocrine differentiation or small cell features with high risk for development of metastases, defined as prostate-specific antigen doubling time (PSADT) less than or equal to (\<=) 10 months. PSADT is calculated using at least 3 prostate-specific antigen (PSA) values obtained during continuous ADT (androgen deprivation therapy)
+* Castration-resistant prostate cancer demonstrated during continuous ADT, defined as 3 PSA rises, at least 1 week apart, with the last PSA greater than (\>) 2 nanogram per milliliter (ng/mL)
+* Maintain castrate levels of testosterone within 4 weeks prior to randomization and throughout the study
+* Patients currently receiving bone loss prevention treatment with bone-sparing agents must be on stable doses for at least 4 weeks prior to randomization
+* Patients who received a first generation anti-androgen (for example, bicalutamide, flutamide, nilutamide) must have at least a 4-week washout prior to randomization AND must show continuing disease (PSA) progression (an increase in PSA) after washout
+* At least 4 weeks must have elapsed from the use of 5-alpha reductase inhibitors, estrogens, and any other anti-cancer therapy prior to randomization
+* At least 4 weeks must have elapsed from major surgery or radiation therapy prior to randomization
+* Eastern Cooperative Oncology Group Performance Status 0 or 1
+* Resolution of all acute toxic effects of prior therapy or surgical procedure to Grade \<= 1 or baseline prior to randomization
+* Adequate organ function according to protocol-defined criteria
+* Administration of growth factors or blood transfusions will not be allowed within 4 weeks of the hematology labs required to confirm eligibility
+
+Exclusion Criteria:
+
+* Presence of confirmed distant metastases, including central nervous system and vertebral or meningeal involvement
+* Symptomatic local or regional disease requiring medical intervention
+* Prior treatment with second generation anti-androgens
+* Prior treatment with CYP17 inhibitors
+* Prior treatment with radiopharmaceutical agents, or any other investigational agent for non-metastatic castration-resistant prostate cancer
+* Prior chemotherapy for prostate cancer except if administered in the adjuvant/neoadjuvant setting
+* History of seizure or condition that may pre-dispose to seizure
+* Concurrent therapy with protocol-defined excluded medications
+* History or evidence of any of the following conditions: any prior malignancy (other than adequately treated basal cell or squamous cell skin cancer, superficial bladder cancer, or any other cancer in situ currently in complete remission) within 5 years prior to randomization; severe/unstable angina, myocardial infarction, symptomatic congestive heart failure, arterial or venous thromboembolic events, or clinically significant ventricular arrhythmias within 6 months prior to randomization; uncontrolled hypertension; gastrointestinal disorder affecting absorption; active infection; and, any other condition that, in the opinion of the investigator, would impair the patient's ability to comply with study procedures
+
+Sex: MALE. Minimum age: 18 Years. Maximum age: not stated. Standard ages: ADULT, OLDER_ADULT. Healthy volunteers: False.

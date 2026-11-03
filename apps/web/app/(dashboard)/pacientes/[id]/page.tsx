@@ -1,12 +1,13 @@
 import { headers } from 'next/headers';
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { Alert } from '../../../../components/ui/alert';
 import { FichaDeAdministrador } from '../../../../components/organisms/ficha-de-administrador';
 import { FichaDelDoctor } from '../../../../components/organisms/ficha-del-doctor';
-import { mensajes, rellenar } from '../../../../lib/mensajes';
+import { FichaNoDisponible } from '../../../../components/molecules/ficha-no-disponible';
+import { mensajes } from '../../../../lib/mensajes';
+import { hoyDelServidor } from '../../../../lib/server/hoy';
 import { leerNotasDeLaFicha } from '../../../../lib/server/notas-de-la-ficha';
 import { obtenerFicha, type ResultadoDeFicha } from '../../../../lib/server/pacientes';
+import { RUTA_LOGIN_EXPIRADA } from '../../../../lib/sesion/motivo-de-sesion';
 import type { ClinicalNote } from '../../../../../../packages/api-contracts/src/types/clinical-api';
 
 export const metadata = { title: mensajes().ficha.tituloDocumento };
@@ -14,32 +15,15 @@ export const metadata = { title: mensajes().ficha.tituloDocumento };
 function Contenido({
   resultado,
   notas,
+  hoy,
 }: {
   resultado: Exclude<ResultadoDeFicha, { tipo: 'no_autenticado' }>;
   notas: ClinicalNote[] | null;
+  hoy: string;
 }) {
-  const { ficha } = mensajes();
-  if (resultado.tipo === 'no_encontrada') {
-    return (
-      <>
-        <h1 className="m-0 mb-3 text-2xl font-semibold">{ficha.noEncontrado.titulo}</h1>
-        <Link href="/pacientes" className="text-primary font-semibold">
-          {ficha.noEncontrado.volver}
-        </Link>
-      </>
-    );
-  }
-  if (resultado.tipo === 'error') {
-    return (
-      <Alert>
-        {resultado.traceId === undefined
-          ? ficha.errorSinTraza
-          : rellenar(ficha.error, { traceId: resultado.traceId })}
-      </Alert>
-    );
-  }
+  if (resultado.tipo !== 'ok') return <FichaNoDisponible resultado={resultado} />;
   return resultado.ficha.view === 'doctor' ? (
-    <FichaDelDoctor ficha={resultado.ficha} notas={notas} />
+    <FichaDelDoctor ficha={resultado.ficha} notas={notas} hoy={hoy} />
   ) : (
     <FichaDeAdministrador ficha={resultado.ficha} />
   );
@@ -51,13 +35,13 @@ export default async function FichaPage({ params }: { params: Promise<{ id: stri
   const cookie = (await headers()).get('cookie');
   const resultado = await obtenerFicha(cookie, id);
   if (resultado.tipo === 'no_autenticado') {
-    redirect('/login?motivo=expirada');
+    redirect(RUTA_LOGIN_EXPIRADA);
   }
   const esDelDoctor = resultado.tipo === 'ok' && resultado.ficha.view === 'doctor';
   const notas = esDelDoctor ? await leerNotasDeLaFicha(cookie, id) : null;
   return (
     <main className="mx-auto max-w-6xl p-4 sm:p-6">
-      <Contenido resultado={resultado} notas={notas} />
+      <Contenido resultado={resultado} notas={notas} hoy={hoyDelServidor()} />
     </main>
   );
 }

@@ -425,6 +425,12 @@ MAPA_DE_LICENCIAS_POR_DEFECTO = {
 }
 
 
+CORPUS_FUENTES_ADMITIDAS_INICIALES = ("NCI", "PMC Open Access", "ClinicalTrials.gov")
+CORPUS_MIN_DOCUMENTOS_POR_TIPO_INICIAL = 20
+CORPUS_MIN_FUENTES_POR_TIPO_INICIAL = 3
+"""Valores iniciales del corpus ampliado (US-120, ADR-36 Decisión 7 y Enmienda 1, RN-22): el único lugar donde aparecen."""
+
+
 def _lista_separada_por_comas(valor: Any) -> Any:
     if isinstance(valor, str):
         return tuple(x.strip() for x in valor.split(",") if x.strip())
@@ -438,6 +444,16 @@ class AjustesDeCorpus(BaseSettings):
 
     corpus_accepted_licenses: Annotated[tuple[str, ...], NoDecode]
     corpus_excluded_sources: Annotated[tuple[str, ...], NoDecode]
+    # Fuentes admitidas por nombre exacto (ADR-36, Decisión 7) y mínimos por tipo de cáncer del corpus ampliado (US-120).
+    corpus_allowed_sources: Annotated[tuple[str, ...], NoDecode] = (
+        CORPUS_FUENTES_ADMITIDAS_INICIALES
+    )
+    corpus_min_documents_per_cancer_type: int = Field(
+        default=CORPUS_MIN_DOCUMENTOS_POR_TIPO_INICIAL, gt=0
+    )
+    corpus_min_sources_per_cancer_type: int = Field(
+        default=CORPUS_MIN_FUENTES_POR_TIPO_INICIAL, gt=0
+    )
     corpus_cutoff_date: date
     corpus_chunk_size: int
     corpus_chunk_overlap: int
@@ -455,6 +471,7 @@ class AjustesDeCorpus(BaseSettings):
     @field_validator(
         "corpus_accepted_licenses",
         "corpus_excluded_sources",
+        "corpus_allowed_sources",
         "corpus_fetch_allowed_hosts",
         mode="before",
     )
@@ -468,6 +485,13 @@ class AjustesDeCorpus(BaseSettings):
         desconocidas = sorted(set(valor) - set(CLASES_DE_LICENCIA))
         if not valor or desconocidas:
             raise ValueError(f"debe listar clases de {CLASES_DE_LICENCIA}")
+        return valor
+
+    @field_validator("corpus_allowed_sources")
+    @classmethod
+    def _fuentes_admitidas_no_vacias(cls, valor: tuple[str, ...]) -> tuple[str, ...]:
+        if not valor:
+            raise ValueError("debe listar al menos una fuente")
         return valor
 
     @field_validator("corpus_license_class_map")

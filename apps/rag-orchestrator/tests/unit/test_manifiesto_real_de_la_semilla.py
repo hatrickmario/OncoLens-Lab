@@ -9,20 +9,20 @@ from collections import Counter
 
 import pytest
 
-from app.config.settings import MAPA_DE_LICENCIAS_POR_DEFECTO
-from app.domain.corpus_seed.admisibilidad import PoliticaDeLicencias, evaluar_admisibilidad
+from app.domain.corpus_seed.admisibilidad import evaluar_admisibilidad
 from app.domain.corpus_seed.chunking import normalizar_texto
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
 from app.domain.corpus_seed.versionado import calcular_checksum
 from app.infrastructure.seed_manifest.lector import leer_manifiesto
 from tests.support.contract import RAIZ_REPOSITORIO
+from tests.support.semilla import (
+    AUTOIDENTIFICACION_DE_PDQ,
+    CLASES_ACEPTADAS_DE_TEST,
+    politica_de_test,
+)
 
 DIRECTORIO = RAIZ_REPOSITORIO / "data/raw/seed"
-POLITICA = PoliticaDeLicencias(
-    aceptadas=frozenset({"dominio_publico", "cc_by", "cc_by_sa"}),
-    excluidas=("NCCN", "ESMO"),
-    mapa_de_clases=MAPA_DE_LICENCIAS_POR_DEFECTO,
-)
+POLITICA = politica_de_test()
 DOCUMENTOS = leer_manifiesto(DIRECTORIO / "manifest.yaml")
 
 
@@ -43,7 +43,7 @@ def test_cada_documento_de_la_semilla_real_es_admisible_con_la_politica_de_adr_3
     admision = evaluar_admisibilidad(documento, POLITICA)
 
     assert admision.admitido, admision.motivo
-    assert admision.license_class in {"dominio_publico", "cc_by", "cc_by_sa"}
+    assert admision.license_class in CLASES_ACEPTADAS_DE_TEST
 
 
 def test_ningun_documento_de_la_semilla_real_viene_de_nccn_ni_de_esmo_ni_usa_la_marca_pdq() -> None:
@@ -55,17 +55,6 @@ def test_ningun_documento_de_la_semilla_real_viene_de_nccn_ni_de_esmo_ni_usa_la_
 
 DOCUMENTOS_DE_NCI = [d for d in DOCUMENTOS if d.source_name == "NCI"]
 # Cómo se identifica un producto de NCI/PDQ a sí mismo: no puede aparecer en un extracto (ADR-36, política de cancer.gov).
-AUTOIDENTIFICACION_DE_PDQ = (
-    "pdq",
-    "physician data query",
-    "purpose of this summary",
-    "propósito de este resumen",
-    "editorial board",
-    "consejo editorial",
-    "junta editorial",
-    "comité editorial",
-    "permission to use this summary",
-)
 
 
 def test_la_semilla_real_tiene_documentos_de_nci_que_vigilar() -> None:

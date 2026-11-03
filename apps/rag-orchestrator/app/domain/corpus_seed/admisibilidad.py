@@ -57,6 +57,7 @@ class MotivoDeRechazo(StrEnum):
     FUENTE_EXCLUIDA = "fuente_excluida"
     SIN_LICENCIA = "sin_licencia"
     LICENCIA_NO_ACEPTADA = "licencia_no_aceptada"
+    FUENTE_NO_ADMITIDA = "fuente_no_admitida"
 
 
 @dataclass(frozen=True)
@@ -66,6 +67,8 @@ class PoliticaDeLicencias:
     aceptadas: frozenset[str]
     excluidas: tuple[str, ...]
     mapa_de_clases: Mapping[str, str]
+    # ``CORPUS_ALLOWED_SOURCES`` (ADR-36, Decisión 7): obligatoria; sin lista la política fallaría abierta (RN-21).
+    fuentes_admitidas: tuple[str, ...]
     permitir_cc_by_nc: bool = False
 
     def fuentes_excluidas(self) -> tuple[str, ...]:
@@ -106,10 +109,17 @@ def contiene_sa(texto: str) -> bool:
     return _CLAUSULA_SA.search(texto) is not None
 
 
+def fuente_admitida(source_name: str, admitidas: tuple[str, ...]) -> bool:
+    """La fuente figura por nombre exacto en la lista admitida (ADR-36, RN-21); la regla única de la ingesta y del manifiesto."""
+    return normalizar_clave(source_name) in {normalizar_clave(fuente) for fuente in admitidas}
+
+
 def evaluar_admisibilidad(documento: DocumentoDeSemilla, politica: PoliticaDeLicencias) -> Admision:
     # La fuente excluida se decide ANTES que la licencia: NCCN se rechaza aunque declare una aceptada (D-09).
     if es_fuente_excluida(documento, politica):
         return Admision(MotivoDeRechazo.FUENTE_EXCLUIDA)
+    if not fuente_admitida(documento.source_name, politica.fuentes_admitidas):
+        return Admision(MotivoDeRechazo.FUENTE_NO_ADMITIDA)
     if not documento.license:
         return Admision(MotivoDeRechazo.SIN_LICENCIA)
     clase = clase_de_licencia(documento.license, politica.mapa_de_clases)

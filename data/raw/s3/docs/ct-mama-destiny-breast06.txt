@@ -1,0 +1,66 @@
+Source: ClinicalTrials.gov (U.S. National Library of Medicine), study record NCT04494425, last updated 2026-03-04; retrieved 2026-11-03 through the ClinicalTrials.gov API v2 (data timestamp 2026-11-03T10:00:05). Modifications: selected fields reordered as plain text; contacts, locations, results and documents omitted. This is a trial registry record, not evidence of efficacy.
+
+Title
+A Phase 3, Randomized, Multi-center, Open-label Study of Trastuzumab Deruxtecan (T-DXd) Versus Investigator's Choice Chemotherapy in HER2-Low, Hormone Receptor Positive Breast Cancer Patients Whose Disease Has Progressed on Endocrine Therapy in the Metastatic Setting (DESTINY-Breast06)
+
+Brief title
+Study of Trastuzumab Deruxtecan (T-DXd) vs Investigator's Choice Chemotherapy in HER2-low, Hormone Receptor Positive, Metastatic Breast Cancer
+
+Sponsor
+AstraZeneca
+
+Status: ACTIVE_NOT_RECRUITING. Phase: PHASE3. Study type: INTERVENTIONAL. Enrollment: 866.
+
+Brief summary
+This study will evaluate the efficacy, safety and tolerability of trastuzumab deruxtecan compared with investigator's choice chemotherapy in human epidermal growth factor receptor (HER)2-low, hormone receptor (HR) positive breast cancer patients whose disease has progressed on endocrine therapy in the metastatic setting.
+
+Detailed description
+Eligible patients will be those patients who have had disease progression on at least 2 previous lines of endocrine therapies given for the treatment of metastatic disease or disease progression within 6 months of starting first line treatment for metastatic disease with an endocrine therapy combined with a CDK4/6 inhibitor. All patients must have historically confirmed HR positive (either estrogen receptor and/or progesterone receptor positive), HER2-low (defined as IHC2+/ISH- and IHC 1+) or HER2 IHC \>0 \<1+ expression, as determined by central laboratory testing results, advanced or metastatic breast cancer.
+
+The study aims to evaluate the efficacy, safety and tolerability of trastuzumab deruxtecan compared with investigator's choice chemotherapy. This study aims to see if trastuzumab deruxtecan allows patients to live longer without the cancer getting worse, or simply to live longer, compared to patients receiving standard of care chemotherapy. This study is also looking to see how the treatment and the cancer affects patients' quality of life.
+
+Conditions:
+- Advanced or Metastatic Breast Cancer
+
+Design
+Allocation: RANDOMIZED. Intervention model: PARALLEL. Masking: NONE.
+
+Arm (EXPERIMENTAL): Trastuzumab deruxtecan
+Trastuzumab deruxtecan (T-DXd; DS-8201a) arm
+
+Arm (ACTIVE_COMPARATOR): Standard of Care
+Investigator's choice standard of care chemotherapy (capecitabine, paclitaxel, nab-paclitaxel) arm
+
+Primary outcomes
+- Progression-Free Survival (PFS) Assessed by Blinded Independent Central Review (BICR) in the Hormone Receptor-Positive (HR+), Human Epidermal Growth Factor Receptor 2 (HER2)-Low Population (Response evaluations performed at screening, every 6 weeks (q6w) ± 1 week from randomization for 48 weeks, and then every 9 weeks (q9w) ± 1 week, starting at Week 48 until PD, up to PCD of 18 March 2024 (maximum of approximately 43.85 months)). PFS per Response Evaluation Criteria in Solid Tumors version 1.1 (RECIST 1.1) assessed by BICR was defined as the time from the date of randomization until the date of PD, as defined or death (by any cause in the absence of progression) regardless of whether the participant withdrew from randomized therapy or received another anticancer therapy prior to progression. PD was defined as at least a 20% increase in the sum of diameters of target lesions (TLs), taking as reference the smallest previous sum of diameters (nadir), this included the baseline sum if that was the smallest on study. In addition to the relative increase of 20%, the sum must demonstrate an absolute increase of at least 5 millimeter (mm) from nadir. Median PFS was calculated using Kaplan-Meier method and its confidence interval (CI) using Brookmeyer-Crowley method.
+
+Eligibility criteria
+Key Inclusion Criteria:
+
+* Patients must be ≥18 years of age
+* Pathologically documented breast cancer that:
+
+1. is advanced or metastatic
+2. has a history of HER2-low or negative expression by local test, defined as IHC 2+/ISH- or IHC 1+ (ISH- or untested) or HER2 IHC 0 (ISH- or untested)
+3. has HER2-low or HER2 IHC \>0 \<1+ expression as determined by the central laboratory result established on a tissue sample taken in the metastatic setting
+4. was never previously HER2-positive
+5. is documented HR+ disease in the metastatic setting.
+* No prior chemotherapy for advanced or metastatic breast cancer.
+* Has adequate tumor samples for assessment of HER2 status
+* Must have either:
+
+1. disease progression within 6 months of starting first line metastatic treatment with an endocrine therapy combined with a CDK4/6 inhibitor or
+2. disease progression on at least 2 previous lines of endocrine therapy with or without a targeted therapy in the metastatic setting. Of note with regards to the ≥2 lines of previous ET requirement: disease recurrence while on the first 24 months of starting adjuvant ET, will be considered a line of therapy; these patients will only require 1 line of ET in the metastatic setting.
+* Has protocol-defined adequate organ and bone marrow function
+
+Key Exclusion Criteria:
+
+* Ineligible for all options in the investigator's choice chemotherapy arm
+* Lung-specific intercurrent clinically significant illnesses
+* Uncontrolled or significant cardiovascular disease or infection
+* Prior documented interstitial lung disease (ILD)/ pneumonitis that required steroids, current ILD/ pneumonitis, or suspected ILD/ pneumonitis that cannot be ruled out by imaging at screening.
+* Patients with spinal cord compression or clinically active central nervous system metastases
+* Prior randomization or treatment in a previous trastuzumab deruxtecan study regardless of treatment arm assignment
+* Concurrent enrolment in another clinical study, unless it is an observational (non-interventional) clinical study during the follow up period of a prior interventional study (prescreening for this study while a patient is on treatment in another clinical study is acceptable)
+
+Sex: ALL. Minimum age: 18 Years. Maximum age: 105 Years. Standard ages: ADULT, OLDER_ADULT. Healthy volunteers: False.

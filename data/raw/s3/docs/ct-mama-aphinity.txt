@@ -1,0 +1,60 @@
+Source: ClinicalTrials.gov (U.S. National Library of Medicine), study record NCT01358877, last updated 2025-11-28; retrieved 2026-11-03 through the ClinicalTrials.gov API v2 (data timestamp 2026-11-03T10:00:05). Modifications: selected fields reordered as plain text; contacts, locations, results and documents omitted. This is a trial registry record, not evidence of efficacy.
+
+Title
+A Randomized Multicenter, Double-Blind, Placebo-Controlled Comparison of Chemotherapy Plus Trastuzumab Plus Placebo Versus Chemotherapy Plus Trastuzumab Plus Pertuzumab as Adjuvant Therapy in Patients With Operable HER2-Positive Primary Breast Cancer
+
+Brief title
+A Study of Pertuzumab in Addition to Chemotherapy and Trastuzumab as Adjuvant Therapy in Participants With Human Epidermal Growth Receptor 2 (HER2)-Positive Primary Breast Cancer
+
+Sponsor
+Hoffmann-La Roche
+
+Status: COMPLETED. Phase: PHASE3. Study type: INTERVENTIONAL. Enrollment: 4804.
+
+Brief summary
+This randomized, double-blind, placebo-controlled, two-arm study will assess the safety and efficacy of pertuzumab in addition to chemotherapy plus trastuzumab as adjuvant therapy in participants with operable HER2-positive primary breast cancer. This study will be carried out in collaboration with the Breast International Group (BIG).
+
+Conditions:
+- Breast Cancer
+
+Design
+Allocation: RANDOMIZED. Intervention model: PARALLEL. Masking: DOUBLE.
+
+Arm (EXPERIMENTAL): Pertuzumab + Trastuzumab + Chemotherapy
+Participants will receive pertuzumab (840 mg loading dose, then 420 mg) and trastuzumab (8 mg/kg loading dose, then 6 mg/kg) intravenously (IV) every 3 weeks (Q3W) for 1 year (maximum 18 cycles) in combination with 1 of the following IV chemotherapy regimen (anthracycline-based or nonanthracycline-based) per Investigator's choice: 1) 3-4 cycles (Q3W) of 5-fluorouracil 500-600 mg/m\^2 + epirubicin 90-120 mg/m\^2 or doxorubicin 50 mg/m\^2 + cyclophosphamide 500-600 mg/m\^2 followed by either 3-4 cycles of docetaxel Q3W (100 mg/m\^2 for 3 cycles, 75 mg/m\^2 in first cycle and 100 mg/m\^2 in subsequent cycles, or 75 mg/m\^2 for 4 cycles) or 12 cycles of paclitaxel 80 mg/m\^2 once weekly (QW); 2) 4 cycles (Q3W) of doxorubicin 60 mg/m\^2 or epirubicin 90-120 mg/m\^2 + cyclophosphamide 500-600 mg/m\^2 followed by either 3-4 cycles of docetaxel Q3W or 12 cycles of paclitaxel QW (as described in Option 1); 3) 6 cycles (Q3W) of docetaxel 75 mg/m\^2 + carboplatin area under the curve (AUC) 6 (up to 900 mg).
+
+Arm (PLACEBO_COMPARATOR): Placebo + Trastuzumab + Chemotherapy
+Participants will receive placebo matching to pertuzumab IV Q3W and trastuzumab (8 milligrams per kilogram \[mg/kg\] loading dose, then 6 mg/kg) IV Q3W for 1 year (maximum 18 cycles) in combination with 1 of the following IV chemotherapy regimen (anthracycline-based or nonanthracycline-based) per Investigator's choice: 1) 3-4 cycles (Q3W) of 5-fluorouracil 500-600 milligrams per square meter (mg/m\^2) + epirubicin 90-120 mg/m\^2 or doxorubicin 50 mg/m\^2 + cyclophosphamide 500-600 mg/m\^2 followed by either 3-4 cycles of docetaxel Q3W (100 mg/m\^2 for 3 cycles, 75 mg/m\^2 in first cycle and 100 mg/m\^2 in subsequent cycles, or 75 mg/m\^2 for 4 cycles) or 12 cycles of paclitaxel 80 mg/m\^2 QW; 2) 4 cycles (Q3W) of doxorubicin 60 mg/m\^2 or epirubicin 90-120 mg/m\^2 + cyclophosphamide 500-600 mg/m\^2 followed by either 3-4 cycles of docetaxel Q3W or 12 cycles of paclitaxel QW (as described in Option 1); 3) 6 cycles (Q3W) of docetaxel 75 mg/m\^2 + carboplatin AUC 6 (up to 900 milligrams \[mg\]).
+
+Primary outcomes
+- Percentage of Participants With Invasive Disease-Free Survival (IDFS) Event (Excluding Second Primary Non-Breast Cancer [SPNBC]), as Assessed Using Radiologic, Histologic Examinations or Laboratory Findings (Randomization to the first occurrence of IDFS event (excluding SPNBC) (until data cut-off date 19 December 2016; median [range] follow-up: 3.8 [0-4.9] years)). Percentage of participants with IDFS events (excluding SPNBC) is reported. IDFS event was defined as the first occurrence of one of the following events: Ipsilateral invasive breast tumor recurrence (that is \[i.e.\], an invasive breast cancer involving the same breast parenchyma as the original primary lesion); ipsilateral local-regional invasive breast cancer recurrence (i.e., an invasive breast cancer in the axilla, regional lymph nodes, chest wall, and/or skin of the ipsilateral breast); distant recurrence (i.e., evidence of breast cancer in any anatomic site - other than the two above mentioned sites); death attributable to any cause; contralateral invasive breast cancer. All SPNBCs and in situ carcinomas (including ductal carcinoma in situ \[DCIS\] and lobular carcinoma in situ \[LCIS\]) and non-melanoma skin cancer were excluded as an event.
+- Kaplan-Meier Estimate of the Percentage of Participants Who Were IDFS Event-Free (Excluding SPNBC) at 3 Years, as Assessed Using Radiologic, Histologic Examinations or Laboratory Findings (3 years). Kaplan-Meier estimate of the percentage of participants who were IDFS event-free (excluding SPNBC) at 3 years is reported. IDFS event was defined as the first occurrence of one of the following events: Ipsilateral invasive breast tumor recurrence (i.e., an invasive breast cancer involving the same breast parenchyma as the original primary lesion); ipsilateral local-regional invasive breast cancer recurrence (i.e., an invasive breast cancer in the axilla, regional lymph nodes, chest wall, and/or skin of the ipsilateral breast); distant recurrence (i.e., evidence of breast cancer in any anatomic site - other than the two above mentioned sites); death attributable to any cause; contralateral invasive breast cancer. All SPNBCs and in situ carcinomas (including DCIS and LCIS) and non-melanoma skin cancer were excluded as an event.
+
+Eligibility criteria
+Inclusion Criteria:
+
+* Non-metastatic operable primary invasive HER2-positive carcinoma of the breast that is histologically confirmed, and adequately excised
+* Eastern Cooperative Oncology Group (ECOG) performance status less than or equal to (\</=) 1
+* Known hormone receptor status (estrogen receptor and progesterone receptor)
+* The interval between definitive surgery for breast cancer and the first dose of chemotherapy must be no more than 8 weeks (56 days). The first cycle of chemotherapy must be administered within 7 days of randomization or on Day 56, whichever occurs first
+* Baseline left ventricular ejection fraction (LVEF) greater than or equal to (\>/=) 55 percent (%) measured by echocardiogram (ECHO) or Multiple-Gated Acquisition (MUGA) Scan
+* Confirmed HER2 positive status
+* Completion of all necessary baseline laboratory and radiologic investigations prior to randomization
+* Women of childbearing potential and male participants with partners of childbearing potential must agree to use effective contraception (as defined by the protocol) by the participant and/or partner for the duration of the study treatment and for at least 7 months after the last dose of study drug
+
+Exclusion Criteria:
+
+* History of any prior (ipsi- and/or contralateral) invasive breast cancer
+* History of non-breast malignancies within the 5 years prior to study entry, except for carcinoma in situ of the cervix, carcinoma in situ of the colon, melanoma in situ, and basal cell and squamous cell carcinomas of the skin
+* Any "clinical" T4 tumor as defined by primary tumor/regional lymph nodes/distant metastasis (TNM), including inflammatory breast cancer
+* Any node-negative tumor
+* Any previous systemic chemotherapy for cancer or radiotherapy for cancer
+* Prior use of anti-HER2 therapy for any reason or other prior biologic or immunotherapy for cancer
+* Concurrent anti-cancer treatment in another investigational trial
+* Serious cardiac or cardiovascular disease or condition
+* Other concurrent serious diseases that may interfere with planned treatment including severe pulmonary conditions/illness
+* Abnormal laboratory tests immediately prior to randomization
+* Pregnant or lactating women
+* Sensitivity to any of the study medications or any of the ingredients or excipients of these medications
+
+Sex: ALL. Minimum age: 18 Years. Maximum age: not stated. Standard ages: ADULT, OLDER_ADULT. Healthy volunteers: False.

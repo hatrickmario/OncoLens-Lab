@@ -1,14 +1,15 @@
 import type { Biomarker } from '../../../../packages/api-contracts/src/types/clinical-api';
-import { formatearFecha, textoDeConfianza } from '../../lib/ficha/presentacion';
+import { textoDeConfianza } from '../../lib/ficha/presentacion';
 import { mensajes, rellenar } from '../../lib/mensajes';
+import { FechaRelativa } from '../atoms/fecha-relativa';
 import { BiomarcadorCorregible } from '../molecules/biomarcador-corregible';
+import { CELDA } from '../molecules/encabezado-de-tabla';
 import { SeccionDeFicha } from '../molecules/fila-de-ficha';
 import { OrigenDelDato } from '../molecules/origen-del-dato';
 
-const CELDA = 'border-border border-b px-3 py-2 text-left align-top';
 const ID_DE_AYUDA = 'correccion-egresado-biomarcadores';
 
-function CeldasDeBiomarcador({ b }: { b: Biomarker }) {
+function CeldasDeBiomarcador({ b, hoy }: { b: Biomarker; hoy: string }) {
   const { biomarcadores, significancia, noRegistrado } = mensajes().ficha;
   return (
     <>
@@ -22,7 +23,9 @@ function CeldasDeBiomarcador({ b }: { b: Biomarker }) {
       </th>
       <td className={CELDA}>
         {[b.value, b.unit].filter(Boolean).join(' ')}
-        <span className="text-text-muted block text-sm">{formatearFecha(b.performedAt)}</span>
+        <span className="text-text-muted block text-sm">
+          <FechaRelativa fecha={b.performedAt} hoy={hoy} />
+        </span>
       </td>
       <td className={CELDA}>{b.referenceRange ?? noRegistrado}</td>
       <td className={CELDA}>{b.trend ?? biomarcadores.sinTendencia}</td>
@@ -44,6 +47,8 @@ export interface RecentBiomarkersTableProps {
   pacienteId: string;
   /** Paciente egresado: la corrección queda deshabilitada por regla legal (RN-17). */
   egresado: boolean;
+  /** «Hoy» del servidor para las fechas relativas. */
+  hoy: string;
 }
 
 /** Último valor por biomarcador (S2-04): significancia, origen y revisión en texto; cada dato se puede corregir (US-253). */
@@ -51,6 +56,7 @@ export function RecentBiomarkersTable({
   biomarcadores,
   pacienteId,
   egresado,
+  hoy,
 }: RecentBiomarkersTableProps) {
   const { biomarcadores: textos, noRegistrado, correccion } = mensajes().ficha;
   const columnas = [
@@ -87,14 +93,14 @@ export function RecentBiomarkersTable({
             </thead>
             {biomarcadores.map((b) => (
               <BiomarcadorCorregible
-                key={b.name}
+                key={b.id}
                 biomarcador={b}
                 pacienteId={pacienteId}
                 egresado={egresado}
                 idDeAyuda={ID_DE_AYUDA}
                 columnas={columnas.length}
               >
-                <CeldasDeBiomarcador b={b} />
+                <CeldasDeBiomarcador b={b} hoy={hoy} />
               </BiomarcadorCorregible>
             ))}
           </table>

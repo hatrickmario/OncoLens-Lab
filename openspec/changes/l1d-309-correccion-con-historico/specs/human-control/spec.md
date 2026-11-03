@@ -50,10 +50,12 @@ Un cuerpo inválido, un valor fuera del catálogo o una fecha posterior a hoy (r
 - **WHEN** el doctor corrige el Ki-67 de (a) con `performedAt` = mañana
 - **THEN** responde `422` con `error = CUERPO_INVALIDO` y `field = "performedAt"`, y el biomarcador vigente y su examen no cambian
 
-#### Scenario: Un valor fuera del catálogo se rechaza [US-253 AC-3] [RN-27]
-- **GIVEN** FX-01b-b con los valores admitidos de HER2
-- **WHEN** el doctor corrige HER2 con `value = "7+"`
+#### Scenario: Un valor cuantitativo no numérico se rechaza [US-253 AC-3] [RN-27] (Decidido (usuario, 2026-11-04))
+- **GIVEN** un biomarcador `cuantitativo` (Ki-67 de FX-01b-b)
+- **WHEN** el doctor lo corrige con un `value` no numérico (p. ej. `"7+x"`)
 - **THEN** responde `422` con `error = VALOR_FUERA_DE_CATALOGO` y `field = "value"`, sin filas nuevas
+
+Limitación: los «valores admitidos» de un biomarcador cualitativo (p. ej. HER2) dependen del catálogo, que no los trae (1.3.0); se validan con el oncólogo (D5-21) y no se inventa un enum clínico.
 
 #### Scenario: Una nota vacía o demasiado larga se rechaza [US-253 AC-3] [RN-22] (Decidido (usuario, 2026-11-03), `[S5 resp. 13]`)
 - **WHEN** el doctor corrige una nota con `content` vacío o con más de `CLINICAL_NOTE_MAX_CHARS` caracteres

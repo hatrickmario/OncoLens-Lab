@@ -48,6 +48,7 @@ from app.evaluation.corrida_poblacion import (
     ejecutar_poblacion,
 )
 from app.evaluation.corrida_barrido import ejecutar_barrido, exigir_dataset_sintetico
+from app.evaluation.corrida_calibracion import PARAMETROS_DE_CALIBRACION, ejecutar_calibracion
 from app.evaluation.corrida_brazos import ResultadoDeBrazo, evaluar_brazos
 from app.evaluation.cronometro import Cronometro, RelojSimulado
 from app.evaluation.dataset_loader import DatasetInvalido
@@ -115,7 +116,9 @@ def _parser() -> argparse.ArgumentParser:
         clave
     ) in ENTORNO_DEL_JUEZ:  # --juez-modelo, --juez-base-url, --juez-temperatura, --juez-semilla
         parser.add_argument(f"--juez-{clave.replace('_', '-')}", dest=f"juez_{clave}", default=None)
-    parser.add_argument("--sweep", choices=("relevance_threshold",), default=None)
+    parser.add_argument(
+        "--sweep", choices=("relevance_threshold", *PARAMETROS_DE_CALIBRACION), default=None
+    )
     parser.add_argument("--fijar", action="store_true")
     parser.add_argument("--p95-e2e-s", type=float, default=None)
     parser.add_argument("--corpus-cutoff-date", default=None)
@@ -262,17 +265,7 @@ def _ejecutar(
         verificar_golden_sha256(config.particion)  # ADR-45 P2: antes de abrir ninguna pregunta
     if args.sweep:
         exigir_dataset_sintetico(fuente.clase())  # RN-14: antes de cargar nada
-        return ejecutar_barrido(
-            config,
-            args.config,
-            fuente.cargar(),
-            reloj=reloj,
-            cronometro_de=lambda: Cronometro(_reloj_de_medicion(config)),
-            salida=args.salida,
-            fijar=args.fijar,
-            p95_e2e_s=args.p95_e2e_s,
-            directorio_de_configs=directorio_de_configs,
-        )
+        return _barrer(config, args, fuente, reloj, origen, directorio_de_configs)
     informe_pii = _proveedor_pii(
         config, args
     ).leer()  # antes de consultar: un informe roto no cuesta una corrida
@@ -293,6 +286,48 @@ def _avisar_de_los_falsos_positivos(rechazos: RechazosLegitimos) -> None:
         f"evaluate: el filtro de RN-23 rechaza más salidas legítimas que la lista 1.5.0 "
         f"(diferencia {rechazos.diferencia} sobre la tolerancia): {casos}",
         file=sys.stderr,
+    )
+
+
+def _barrer(
+    config: ConfigSuite,
+    args: argparse.Namespace,
+    fuente: FuenteDatasetEnDirectorio,
+    reloj: Clock,
+    origen: OrigenLocal,
+    directorio_de_configs: Path | None,
+) -> int:
+    """``--sweep``: el umbral de relevancia (US-073) o la calibración del S5 (US-120 AC-5). Con ``proveedor: local`` los
+    modelos se cargan una sola vez para toda la grilla."""
+    dataset = fuente.cargar()
+    puertos_locales = (
+        cargar_puertos_locales(config, origen, RegistroDeLlamadas(), dataset.clase)
+        if config.proveedor == "local"
+        else None
+    )
+    cronometro_de = lambda: Cronometro(_reloj_de_medicion(config))  # noqa: E731
+    if args.sweep in PARAMETROS_DE_CALIBRACION:
+        return ejecutar_calibracion(
+            config,
+            args.sweep,
+            dataset,
+            puertos_locales=puertos_locales,
+            reloj=reloj,
+            cronometro_de=cronometro_de,
+            salida=args.salida,
+            fijar=args.fijar,
+        )
+    return ejecutar_barrido(
+        config,
+        args.config,
+        dataset,
+        puertos_locales=puertos_locales,
+        reloj=reloj,
+        cronometro_de=cronometro_de,
+        salida=args.salida,
+        fijar=args.fijar,
+        p95_e2e_s=args.p95_e2e_s,
+        directorio_de_configs=directorio_de_configs,
     )
 
 

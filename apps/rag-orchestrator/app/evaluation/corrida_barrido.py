@@ -19,15 +19,18 @@ from app.evaluation.composicion_suite import componer_servicio
 from app.evaluation.config_suite import Barrido, ConfigInvalida, ConfigSuite, minimos_del_juez
 from app.evaluation.corrida import evaluar_dataset
 from app.evaluation.cronometro import Cronometro
+from app.evaluation.desagregacion import agregar_por_tipo_e_idioma, mediana_de_p95
 from app.evaluation.fuente_dataset import CLASE_SINTETICA, DatasetSuite
 from app.evaluation.guardas import SuiteAbortada
 from app.evaluation.informe_baseline import (
     ESQUEMA_BASELINE,
+    ETIQUETAS_CANCER,
     DatosDelInforme,
     agregados_del_informe,
     renderizar_informe,
 )
 from app.evaluation.metas import cargar_metas
+from app.evaluation.modelos_locales import PuertosLocales
 from app.evaluation.metricas.familias import calcular_familias
 from app.evaluation.metricas.resultado import ResultadoConsulta
 from app.evaluation.metricas.sin_evidencia import exactitud_sin_evidencia
@@ -41,7 +44,7 @@ NOMBRE_DEL_INFORME = "S1-baseline"
 _UMBRAL_EN_CONFIG = re.compile(r"^(\s+relevance_threshold:\s*)[-+0-9.eE]+", re.MULTILINE)
 
 
-def _directorio_de_la_app() -> Path:
+def directorio_de_la_app() -> Path:
     return raiz_repo() / "apps" / "rag-orchestrator"
 
 
@@ -84,13 +87,18 @@ def barrer(
     grilla: Sequence[float],
     reloj: Clock,
     cronometro_de: Callable[[], Cronometro],
+    puertos_locales: PuertosLocales | None = None,
 ) -> list[ValorBarrido]:
     """Una corrida completa de la suite por valor de la grilla; solo cambia ``relevance_threshold``."""
     valores: list[ValorBarrido] = []
     for umbral in grilla:
         umbrales = dataclasses.replace(config.umbrales, relevance_threshold=umbral)
         suite = componer_servicio(
-            dataclasses.replace(config, umbrales=umbrales), dataset, cronometro_de(), reloj
+            dataclasses.replace(config, umbrales=umbrales),
+            dataset,
+            cronometro_de(),
+            reloj,
+            puertos_locales=puertos_locales,
         )
         resultados, _ = asyncio.run(evaluar_dataset(suite, dataset))
         fila = FilaBarrido(
@@ -123,7 +131,7 @@ def metricas_planas(familias: dict[str, Any]) -> dict[str, float | None]:
 
 
 def directorio_de_configuraciones() -> Path:
-    return _directorio_de_la_app() / "eval" / "configs"
+    return directorio_de_la_app() / "eval" / "configs"
 
 
 def _dentro_de(ruta: Path, directorio: Path) -> bool:
@@ -171,7 +179,7 @@ def fijar_umbral_en_config(
     _escribir_atomico(ruta, config_con_umbral(ruta.read_text(encoding="utf-8"), umbral))
 
 
-def _metricas_de(
+def metricas_de(
     resultados: list[ResultadoConsulta], config: ConfigSuite
 ) -> dict[str, float | None]:
     familias = calcular_familias(
@@ -189,9 +197,36 @@ def _por_cancer(
 ) -> dict[str, dict[str, float | None]]:
     cancers = sorted({r.recuperacion.cancer for r in resultados})
     return {
-        c: _metricas_de([r for r in resultados if r.recuperacion.cancer == c], config)
+        c: metricas_de([r for r in resultados if r.recuperacion.cancer == c], config)
         for c in cancers
     }
+
+
+def p95_en_proceso(
+    config: ConfigSuite,
+    dataset: DatasetSuite,
+    umbral: float,
+    reloj: Clock,
+    cronometro_de: Callable[[], Cronometro],
+    corridas: int,
+    puertos_locales: PuertosLocales | None,
+) -> float | None:
+    """Mediana (s) de los p95 de la etapa ``consulta`` de ``EVAL_P95_RUNS`` corridas completas con el umbral elegido."""
+    umbrales = dataclasses.replace(config.umbrales, relevance_threshold=umbral)
+    p95_por_corrida: list[float | None] = []
+    for _ in range(corridas):
+        cronometro = cronometro_de()
+        suite = componer_servicio(
+            dataclasses.replace(config, umbrales=umbrales),
+            dataset,
+            cronometro,
+            reloj,
+            puertos_locales=puertos_locales,
+        )
+        asyncio.run(evaluar_dataset(suite, dataset))
+        p95_ms = cronometro.p95_ms()["consulta"]
+        p95_por_corrida.append(None if p95_ms is None else p95_ms / 1000.0)
+    return mediana_de_p95(p95_por_corrida)
 
 
 def _datos_del_informe(
@@ -200,7 +235,8 @@ def _datos_del_informe(
     dataset: DatasetSuite,
     valores: list[ValorBarrido],
     fijar: bool,
-    p95_e2e_s: float | None,
+    p95_del_umbral: Callable[[float], float | None],
+    p95_origen: str,
 ) -> DatosDelInforme:
     filas = [v.fila for v in valores]
     eleccion = elegir_umbral(filas, barrido.umbral_de_referencia, barrido.tolerancia_recall)
@@ -215,10 +251,17 @@ def _datos_del_informe(
         filas=filas,
         eleccion=eleccion,
         fijado=fijar,
-        metricas_totales=_metricas_de(del_elegido.resultados, config),
+        metricas_totales=metricas_de(del_elegido.resultados, config),
         metricas_por_cancer=_por_cancer(del_elegido.resultados, config),
-        metas=cargar_metas(_directorio_de_la_app() / RUTA_DE_METAS),
-        p95_e2e_s=p95_e2e_s,
+        metas=cargar_metas(directorio_de_la_app() / RUTA_DE_METAS),
+        p95_e2e_s=p95_del_umbral(eleccion.umbral),
+        metricas_por_tipo_e_idioma=agregar_por_tipo_e_idioma(
+            del_elegido.resultados,
+            tuple(ETIQUETAS_CANCER),
+            lambda consultas: metricas_de(list(consultas), config),
+        ),
+        p95_corridas=config.p95_corridas,
+        p95_origen=p95_origen,
     )
 
 
@@ -233,20 +276,39 @@ def ejecutar_barrido(
     fijar: bool,
     p95_e2e_s: float | None,
     directorio_de_configs: Path | None = None,
+    puertos_locales: PuertosLocales | None = None,
 ) -> int:
     if config.barrido is None:
         raise ConfigInvalida("falta la sección barrido en la configuración")
     exigir_dataset_sintetico(dataset.clase)
     if fijar:
         exigir_fijado_permitido(ruta_config, config.proveedor, directorio_de_configs)
-    valores = barrer(config, dataset, config.barrido.grilla, reloj, cronometro_de)
-    datos = _datos_del_informe(config, config.barrido, dataset, valores, fijar, p95_e2e_s)
+    valores = barrer(config, dataset, config.barrido.grilla, reloj, cronometro_de, puertos_locales)
+
+    def p95_del_umbral(umbral: float) -> float | None:
+        """El p95 pasado (``--p95-e2e-s``, de punta a punta) manda; sin él, la mediana de las corridas en proceso."""
+        if p95_e2e_s is not None or config.p95_corridas is None:
+            return p95_e2e_s
+        return p95_en_proceso(
+            config, dataset, umbral, reloj, cronometro_de, config.p95_corridas, puertos_locales
+        )
+
+    p95_origen = (
+        "medicion_externa"
+        if p95_e2e_s is not None
+        else "corridas_en_proceso"
+        if config.p95_corridas is not None
+        else "no_declarado"
+    )
+    datos = _datos_del_informe(
+        config, config.barrido, dataset, valores, fijar, p95_del_umbral, p95_origen
+    )
     texto_fijado = (
         config_con_umbral(ruta_config.read_text(encoding="utf-8"), datos.eleccion.umbral)
         if fijar
         else None
     )  # lanza ConfigInvalida antes de escribir nada: «fijado» en el informe es el resultado, no la intención
-    carpeta = salida or _directorio_de_la_app() / SALIDA_DEL_BASELINE
+    carpeta = salida or directorio_de_la_app() / SALIDA_DEL_BASELINE
     carpeta.mkdir(parents=True, exist_ok=True)
     # El JSON se valida contra la lista blanca ANTES de escribir nada: un rechazo no deja un informe a medias.
     escribir_reporte_cerrado(

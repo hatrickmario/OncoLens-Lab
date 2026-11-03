@@ -37,6 +37,7 @@ function montarTabla(biomarcadores: unknown[] = [her2], egresado = false) {
       biomarcadores={biomarcadores as unknown as Biomarker[]}
       pacienteId={ID_DEL_PACIENTE}
       egresado={egresado}
+      hoy="2026-10-01"
     />,
   );
   return userEvent.setup();

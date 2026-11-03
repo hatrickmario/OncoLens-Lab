@@ -1,0 +1,1103 @@
+Who Is at Risk?
+
+Besides female sex, advancing age is the biggest risk factor for breast cancer. Reproductive factors that increase exposure to endogenous estrogen, such as early menarche and late menopause, increase risk, as does the use of combination estrogen-progesterone hormones after menopause. Nulliparity and alcohol consumption also are associated with increased risk.
+
+Women with a family history or personal history of invasive breast cancer, ductal carcinoma in situ or lobular carcinoma in situ, or a history of breast biopsies that show benign proliferative disease have an increased risk of breast cancer.[1-4]
+
+Increased breast density is associated with increased risk. It is often a heritable trait but is also seen more frequently in nulliparous women, women whose first pregnancy occurs late in life, and women who use postmenopausal hormones and alcohol.
+
+Exposure to ionizing radiation, especially during puberty or young adulthood, and the inheritance of detrimental genetic mutations increase breast cancer risk.
+
+References
+
+Kotsopoulos J, Chen WY, Gates MA, et al.: Risk factors for ductal and lobular breast cancer: results from the nurses' health study. Breast Cancer Res 12 (6): R106, 2010. [PUBMED Abstract]
+
+Goldacre MJ, Abisgold JD, Yeates DG, et al.: Benign breast disease and subsequent breast cancer: English record linkage studies. J Public Health (Oxf) 32 (4): 565-71, 2010. [PUBMED Abstract]
+
+Kabat GC, Jones JG, Olson N, et al.: A multi-center prospective cohort study of benign breast disease and risk of subsequent breast cancer. Cancer Causes Control 21 (6): 821-8, 2010. [PUBMED Abstract]
+
+Worsham MJ, Raju U, Lu M, et al.: Risk factors for breast cancer from benign breast disease in a diverse population. Breast Cancer Res Treat 118 (1): 1-7, 2009. [PUBMED Abstract]
+
+Overview
+
+Note: The Overview section summarizes the published evidence on this topic. The rest of the summary describes the evidence in more detail.
+
+Breast Cancer Screening
+
+Breast Cancer
+Treatment
+
+Male Breast Cancer Treatment
+
+Breast Cancer Treatment During Pregnancy
+
+Factors With Adequate Evidence of Increased Risk of Breast Cancer
+
+Sex and age
+
+Based on solid evidence, female sex and increasing age are the major risk factors for the development of breast cancer.
+
+Magnitude of Effect: Women have a lifetime risk of developing breast cancer that is approximately 100 times the risk for men. The short-term risk of breast cancer in a 70-year-old woman is about ten times that of a 30-year-old woman.
+
+Study Design: Many epidemiological trials.
+
+Internal Validity: Good.
+
+Consistency: Good.
+
+External Validity: Good.
+
+Inherited risk
+
+Based on solid evidence, women who have a family history of breast cancer, especially in a first-degree relative, have an increased risk of breast cancer.
+
+Magnitude of Effect: Risk is doubled if a single first-degree relative is affected; risk is increased fivefold if two first-degree relatives are diagnosed.
+
+Study Design: Population studies, cohort studies, and case-control studies.
+
+Internal Validity: Good.
+
+Consistency: Good.
+
+External Validity: Good.
+
+Based on solid evidence, women who inherit gene mutations associated with breast cancer have an increased risk.
+
+Magnitude of Effect: Variable, depending on gene mutation, family history, and other risk factors affecting gene expression.
+
+Study Design: Cohort or case-control studies.
+
+Internal Validity: Good.
+
+Consistency: Good.
+
+External Validity: Good.
+
+Breast density
+
+Based on solid evidence, women with dense breasts have an increased risk of breast cancer. This is most often an inherent characteristic, to some extent modifiable by reproductive behavior, medications, and alcohol.[1]
+
+Magnitude of Effect: Women with dense breasts have increased risk, proportionate to the degree of density. This increased relative risk (RR) ranges from 1.79 for women with slightly increased density to 4.64 for women with very dense breasts, compared with women who have the lowest breast density.[2]
+
+Study Design: Cohort, case-control studies.
+
+Internal Validity: Good.
+
+Consistency: Good.
+
+External Validity: Good.
+
+Modifiable Factors With Adequate Evidence of Increased Risk of Breast Cancer
+
+Menopausal hormone therapy (MHT)
+
+Based on solid evidence, MHT is associated with an increased risk of developing breast cancer, especially hormone-sensitive cancers. Estrogen-progesterone use significantly increases breast cancer risk starting with 1 to 4 years of usage and increases with duration of use. For estrogen use alone, the breast cancer risk is less but also significant. The excess risk persists after cessation of MHT.
+
+Study Design: Randomized controlled trials (RCTs), prospective studies and ecological observations.
+
+Internal Validity: Good.
+
+Consistency: Good.
+
+External Validity: Good.
+
+Combination hormone therapy
+
+Based on solid evidence, combination hormone therapy (estrogen-progestin) is associated with an increased risk of developing breast cancer.
+
+Magnitude of Effect: Approximately a 26% increase in incidence of invasive breast cancer; the number needed to produce one excess breast cancer is 237.
+
+Study Design: RCTs and ecological observations. Furthermore, cohort and ecological studies show that cessation of combination HT is associated with a decrease in rates of breast cancer.
+
+Internal Validity: Good.
+
+Consistency: Good.
+
+External Validity: Good.
+
+Estrogen therapy
+
+Based on solid evidence, estrogen therapy that began close to the time of menopause is associated with an increased risk of breast cancer. Estrogen therapy that began at or after menopause is associated with an increased risk of endometrial cancer and total cardiovascular disease, especially stroke.
+
+Magnitude of Effect: The increased incidence of breast cancer associated with estrogen therapy that began at the time of menopause ranged from 17% to 33%, depending on duration of use. Breast cancer incidence in women who have undergone hysterectomy is 23% lower if estrogen use began many years after menopause.[3] There is a 39% increase in stroke (RR, 1.12; 95% confidence interval [CI], 1.1–1.77) and a 12% increase in cardiovascular disease (RR, 1.12; 95% CI, 1.01–1.24).[3]
+
+Study Design: RCTs and ecological observations.
+
+Internal Validity: Good.
+
+Consistency: Good, although in women who have undergone hysterectomy, estrogen use that began many years after menopause was associated with a decrease in breast cancer incidence.
+
+External Validity: Good.
+
+Ionizing radiation
+
+Based on solid evidence, exposure of the breast to ionizing radiation is associated with an increased risk of developing breast cancer, starting 10 years after exposure and persisting lifelong. Risk depends on radiation dose and age at exposure, and is especially high if exposure occurs during puberty, when the breast develops.
+
+Magnitude of Effect: Variable but approximately a sixfold increase overall.
+
+Study Design: Cohort or case-control studies.
+
+Internal Validity: Good.
+
+Consistency: Good.
+
+External Validity: Good.
+
+Obesity
+
+Based on solid evidence, obesity is associated with an increased breast cancer risk in postmenopausal women who have not used HT. It is uncertain whether weight reduction decreases the risk of breast cancer in women with obesity.
+
+Magnitude of Effect: The Women's Health Initiative observational study of 85,917 postmenopausal women found body weight to be associated with breast cancer. Comparing women weighing more than 82.2 kg with those weighing less than 58.7 kg, the RR was 2.85 (95% CI, 1.81–4.49).
+
+Study Design: Case-control and cohort studies.
+
+Internal Validity: Good.
+
+Consistency: Good.
+
+External Validity: Good.
+
+Alcohol
+
+Based on solid evidence, alcohol consumption is associated with increased breast cancer risk in a dose-dependent fashion. It is uncertain whether decreasing alcohol intake by heavy drinkers reduces the risk.
+
+Magnitude of Effect: The RR for women consuming approximately four alcoholic drinks per day compared with nondrinkers is 1.32 (95% CI, 1.19–1.45). The RR increases by 7% (95% CI, 5.5%–8.7%) for each drink per day.
+
+Study Design: Case-control and cohort studies.
+
+Internal Validity: Good.
+
+Consistency: Good.
+
+External Validity: Good.
+
+Factors With Adequate Evidence of Decreased Risk of Breast Cancer
+
+Early pregnancy
+
+Based on solid evidence, women who have a full-term pregnancy before age 20 years have decreased breast cancer risk.
+
+Magnitude of Effect: 50% decrease in breast cancer, compared with nulliparous women or women who give birth after age 35 years.
+
+Study Design: Case-control and cohort studies.
+
+Internal Validity: Good.
+
+Consistency: Good.
+
+External Validity: Good.
+
+Breast-feeding
+
+Based on solid evidence, women who breast-feed have a decreased risk of breast cancer.
+
+Magnitude of Effect: The RR of breast cancer is decreased 4.3% for every 12 months of breast-feeding, in addition to 7% for each birth.[4]
+
+Study Design: Case-control and cohort studies.
+
+Internal Validity: Good.
+
+Consistency: Good.
+
+External Validity: Good.
+
+Exercise
+
+Based on solid evidence, physical exercise is associated with reduced breast cancer risk.
+
+Magnitude of Effect: Average RR reduction association is 20% for both postmenopausal and premenopausal women and affects the risk of both hormone-sensitive and hormone-resistant cancers.
+
+Study Design: Prospective observational and retrospective studies.
+
+Internal Validity: Good.
+
+Consistency: Good.
+
+External Validity: Good.
+
+Interventions With Adequate Evidence of Decreased Risk of Breast Cancer
+
+Selective estrogen receptor modulators (SERMs): Benefits
+
+Based on solid evidence, tamoxifen and raloxifene reduce the incidence of breast cancer in postmenopausal women, and tamoxifen reduces the risk of breast cancer in high-risk premenopausal women. The effects observed for tamoxifen and raloxifene persist several years after active treatment is discontinued, with longer duration of effect noted for tamoxifen than for raloxifene.[5]
+
+All fractures were reduced by SERMs, primarily noted with raloxifene but not with tamoxifen. Reductions in vertebral fractures (34% reduction) and small reductions in nonvertebral fractures (7%) were noted.[5]
+
+Magnitude of Effect: Tamoxifen reduced the incidence of estrogen receptor–positive (ER-positive) breast cancer and ductal carcinoma in situ (DCIS) in high-risk women by about 30% to 50% over 5 years of treatment. The reduction in ER-positive invasive breast cancer was maintained for at least 16 years after starting treatment (11 years after tamoxifen cessation). Breast cancer mortality was not affected.[6]
+
+Study Design: RCTs.
+
+Internal Validity: Good.
+
+Consistency: Good.
+
+External Validity: Good.
+
+Selective estrogen receptor modulators: Harms
+
+Based on solid evidence, tamoxifen increases the risk of endometrial cancer, thrombotic vascular events (i.e., pulmonary embolism, stroke, and deep venous thrombosis), and cataracts. The endometrial cancer risk persists for 5 years after tamoxifen cessation but not the risk of vascular events or cataracts. Based on solid evidence, raloxifene also increases venous pulmonary embolism and deep venous thrombosis but not endometrial cancer.
+
+Magnitude of Effect: Meta-analysis showed RR of 2.4 (95% CI, 1.5–4.0) for endometrial cancer and 1.9 (95% CI, 1.4–2.6) for venous thromboembolic events. Meta-analysis showed the hazard ratio (HR) for endometrial cancer was 2.18 (95% CI, 1.39–3.42) for tamoxifen and 1.09 (95% CI, 0.74–1.62) for raloxifene. Overall, HR for venous thromboembolic events was 1.73 (95% CI, 1.47–2.05). Harms were significantly higher in women over 50 years than in younger women.
+
+Study Design: RCTs.
+
+Internal Validity: Good.
+
+Consistency: Good.
+
+External Validity: Good.
+
+Aromatase inhibitors or inactivators: Benefits
+
+Based on solid evidence, aromatase inhibitors or inactivators (AIs) reduce breast cancer incidence in postmenopausal women who have an increased risk.
+
+Magnitude of Effect: In postmenopausal women treated with adjuvant tamoxifen for hormone-sensitive breast cancer, subsequent therapy with AIs reduced the incidence of new primary breast cancers by 50% to 67%, compared with controls. In postmenopausal women at high risk of developing breast cancer, 3 years of exemestane treatment reduced breast cancer incidence by 65%, compared with controls. A similar trial of 5 years of anastrozole treatment reduced breast cancer incidence by 53%, an effect persisting at 11 years.[7] After a median follow-up of 35 months, women aged 35 years and older who had at least one risk factor (age >60 years, a Gail 5-year risk >1.66%, or DCIS with mastectomy) and who took 25 mg of exemestane daily had a decreased risk of invasive breast cancer (HR, 0.35; 95% CI, 0.18–0.70) compared with controls. The absolute risk reduction was 21 cancers avoided out of 2,280 participants over 35 months. The number needed to treat was about 100.[8]
+
+Study Design: Multiple RCTs.
+
+Internal Validity: Good.
+
+Consistency: Good.
+
+External Validity: Good.
+
+Aromatase inhibitors or inactivators: Harms
+
+Based on fair evidence from a single RCT of 4,560 women over 35 months, exemestane is associated with hot flashes and fatigue compared with placebo.[8,9]
+
+Magnitude of Effect: The absolute increase in hot flashes was 8% and the absolute increase in fatigue was 2%.
+
+Study Design: One RCT.
+
+Internal Validity: Good.
+
+Consistency: Good.
+
+External Validity: Good for women who meet inclusion criteria.
+
+Prophylactic mastectomy: Benefits
+
+Based on solid evidence, bilateral prophylactic mastectomy reduces the risk of breast cancer in women with a strong family history, and most women experience relief from anxiety about breast cancer risk. Based on strong evidence, bilateral prophylactic mastectomy reduces the risk of breast cancer in women with a strong family history of breast cancer or other factors putting them at high risk (e.g., certain previous chest-wall radiation or previous personal history of breast cancer). Most women experience relief from anxiety about breast cancer risk after undergoing prophylactic mastectomy. Although some studies have suggested a survival benefit associated with contralateral prophylactic mastectomy, these results are generally attributed to selection bias, and there are no high-quality studies demonstrating a clear survival advantage. For more information, see Genetics of Breast and Gynecologic Cancers.
+
+Magnitude of Effect: Breast cancer risk after bilateral prophylactic mastectomy in women at high risk may be reduced as much as 90%.
+
+Study Design: Evidence obtained from case-control and cohort studies.
+
+Internal Validity: Good.
+
+Consistency: Good.
+
+External Validity: Good.
+
+Prophylactic oophorectomy or ovarian ablation: Benefits
+
+Based on solid evidence, prophylactic oophorectomy in premenopausal women with a BRCA gene mutation is associated with decreased breast cancer incidence. Similar results are seen for oophorectomy or ovarian ablation in normal premenopausal women and in women with increased breast cancer risk resulting from thoracic irradiation.
+
+Magnitude of Effect: Breast cancer incidence may be decreased by up to 50%.
+
+Study Design: Observational, case-control, and cohort studies.
+
+Internal Validity: Good.
+
+Consistency: Good.
+
+External Validity: Good.
+
+Prophylactic oophorectomy or ovarian ablation: Harms
+
+Based on solid evidence, castration may cause the abrupt onset of menopausal symptoms such as hot flashes, insomnia, anxiety, and depression. Long-term effects include decreased libido, vaginal dryness, and decreased bone mineral density.
+
+Magnitude of Effect: Nearly all women experience some sleep disturbances, mood changes, hot flashes, and bone demineralization, but the severity of these symptoms varies greatly.
+
+Study Design: Observational, case-control, and cohort studies.
+
+Internal Validity: Good.
+
+Consistency: Good.
+
+External Validity: Good.
+
+Estrogen use by women with previous hysterectomy: Benefits
+
+Based on fair evidence, women who have undergone a previous hysterectomy and who are treated with conjugated equine estrogen have a lower incidence of breast cancer.[3]
+
+Magnitude of Effect: After 6.8 years, breast cancer incidence was 23% lower in women treated with estrogen in an RCT (0.27% per year, with a median of 5.9 years of use, compared with 0.35% per year among those taking a placebo). However, the risk was 30% higher in women treated with estrogen in an observational study. The difference in these results may be explained by different screening behaviors of the women in these studies.
+
+Study Design: One RCT, observational studies.
+
+Internal Validity: Fair.
+
+Consistency: Poor.
+
+External Validity: Poor.
+
+References
+
+Boyd NF, Martin LJ, Rommens JM, et al.: Mammographic density: a heritable risk factor for breast cancer. Methods Mol Biol 472: 343-60, 2009. [PUBMED Abstract]
+
+McCormack VA, dos Santos Silva I: Breast density and parenchymal patterns as markers of breast cancer risk: a meta-analysis. Cancer Epidemiol Biomarkers Prev 15 (6): 1159-69, 2006. [PUBMED Abstract]
+
+Anderson GL, Limacher M, Assaf AR, et al.: Effects of conjugated equine estrogen in postmenopausal women with hysterectomy: the Women's Health Initiative randomized controlled trial. JAMA 291 (14): 1701-12, 2004. [PUBMED Abstract]
+
+Col: Breast cancer and breastfeeding: collaborative reanalysis of individual data from 47 epidemiological studies in 30 countries, including 50302 women with breast cancer and 96973 women without the disease. Lancet 360 (9328): 187-95, 2002. [PUBMED Abstract]
+
+Cuzick J, Sestak I, Bonanni B, et al.: Selective oestrogen receptor modulators in prevention of breast cancer: an updated meta-analysis of individual participant data. Lancet 381 (9880): 1827-34, 2013. [PUBMED Abstract]
+
+Cuzick J, Sestak I, Cawthorn S, et al.: Tamoxifen for prevention of breast cancer: extended long-term follow-up of the IBIS-I breast cancer prevention trial. Lancet Oncol 16 (1): 67-75, 2015. [PUBMED Abstract]
+
+Batur P: In high-risk, postmenopausal women, 5 years of anastrozole reduced breast cancer incidence at 11 years. Ann Intern Med 172 (8): JC45, 2020. [PUBMED Abstract]
+
+Goss PE, Ingle JN, Alés-Martínez JE, et al.: Exemestane for breast-cancer prevention in postmenopausal women. N Engl J Med 364 (25): 2381-91, 2011. [PUBMED Abstract]
+
+Maunsell E, Goss PE, Chlebowski RT, et al.: Quality of life in MAP.3 (Mammary Prevention 3): a randomized, placebo-controlled trial evaluating exemestane for prevention of breast cancer. J Clin Oncol 32 (14): 1427-36, 2014. [PUBMED Abstract]
+
+Incidence and Mortality
+
+Breast
+cancer is the most frequently diagnosed nonskin malignancy in U.S. women and is second only to lung cancer in cancer deaths in women.[1] Estimates for the U.S. population in 2025 are that 316,950 women will be diagnosed with breast cancer, with 42,170 deaths from this disease, and 2,800 men will be diagnosed with breast cancer, with 510 deaths from this disease.[1] Breast cancer
+incidence in women had been gradually increasing for many years until the early 2000s, when it decreased rapidly, coincident with a drop in postmenopausal hormone therapy use. However, since the initial decrease between 2000 and 2005, there has been a small but steady increase in incidence, approaching incidence rates seen before that decrease.[2]
+
+According to data from the Surveillance, Epidemiology, and End Results (SEER) Program, breast cancer mortality rates declined by 44% from 1989 to 2022. However, mortality rates in Black women remain about 38% higher than in White women.[1] Incidence rates are now similar between Black and White women.
+
+The major risk factor for breast cancer is advancing age. A 30-year-old woman has about a 1 in 175 chance of being diagnosed with breast cancer in the next 10 years, whereas a 70-year-old woman has a 1 in 9 chance over the same time period.[2]
+
+Screening by mammography decreases breast cancer mortality by identifying cases for treatment at an earlier stage. However, screening also identifies more cases than would become symptomatic in a woman’s lifetime, so screening increases breast cancer incidence. For more information, see the Overdiagnosis section in Breast Cancer Screening.
+
+References
+
+American Cancer Society: Cancer Facts and Figures 2025. American Cancer Society, 2025. Available online. Last accessed January 16, 2025.
+
+Surveillance Research Program, National Cancer Institute: SEER*Explorer: An interactive website for SEER cancer statistics. Bethesda, MD: National Cancer Institute. Available online. Last accessed December 30, 2024.
+
+Etiology and Pathogenesis of Breast Cancer
+
+Breast cancer develops when a series of genetic mutations occurs.[1] Some cancer-associated mutations are inherited, but most are somatic mutations that occur as random events during a woman’s lifetime. Initially, mutations do not change the histological appearance of the tissue, but accumulated mutations will result in hyperplasia, dysplasia, carcinoma in situ, and eventually, invasive cancer.[2] The longer a woman lives, the more somatic mutations occur, and the more likely it is that these mutations will produce populations of cells that may eventually become malignancies. Estrogen and progestin hormones, whether endogenous or exogenous, stimulate growth and proliferation of breast cells, perhaps via growth factors such as transforming growth factor-alpha.[3] The stimulation by these hormones can promote the development and proliferation of breast cancer cells.
+
+International variation in breast cancer rates may be explained by differences in genetics, reproductive factors, diet, exercise, and screening behavior. The relative importance of these factors was demonstrated in a study of breast cancer incidence of Japanese immigrants to the United States. Whereas Japanese women in Japan had a low breast cancer incidence, Japanese women in the United States had a much higher breast cancer incidence, similar to that of American women, within two generations of migration.[4-6]
+
+References
+
+Boone CW, Kelloff GJ, Freedman LS: Intraepithelial and postinvasive neoplasia as a stochastic continuum of clonal evolution, and its relationship to mechanisms of chemopreventive drug action. J Cell Biochem Suppl 17G: 14-25, 1993. [PUBMED Abstract]
+
+Kelloff GJ, Boone CW, Steele VE, et al.: Progress in cancer chemoprevention: perspectives on agent selection and short-term clinical intervention trials. Cancer Res 54 (7 Suppl): 2015s-2024s, 1994. [PUBMED Abstract]
+
+Knabbe C, Lippman ME, Wakefield LM, et al.: Evidence that transforming growth factor-beta is a hormonally regulated negative growth factor in human breast cancer cells. Cell 48 (3): 417-28, 1987. [PUBMED Abstract]
+
+Parkin DM: Cancers of the breast, endometrium and ovary: geographic correlations. Eur J Cancer Clin Oncol 25 (12): 1917-25, 1989. [PUBMED Abstract]
+
+Dunn JE: Breast cancer among American Japanese in the San Francisco Bay area. Natl Cancer Inst Monogr 47: 157-60, 1977. [PUBMED Abstract]
+
+Kliewer EV, Smith KR: Breast cancer mortality among immigrants in Australia and Canada. J Natl Cancer Inst 87 (15): 1154-61, 1995. [PUBMED Abstract]
+
+Endogenous Estrogen
+
+Endogenous estrogen plays a role in the development of breast cancer. Women whose menarche occurred at or before age 11 years have about a 20% greater chance of developing breast cancer than do women whose menarche occurred at or after age 14 years.[1-3] Women who experience late menopause also have an increased risk. Women who develop breast cancer tend to have higher endogenous estrogen and androgen levels.[3-7]
+
+Conversely, women who experience premature menopause have a lower risk of breast cancer. Following ovarian ablation,
+breast cancer risk may be reduced as much as 75% depending on age, weight, and parity, with the greatest reduction for young,
+thin, nulliparous women.[8-11] The removal of one ovary
+also reduces the risk of breast cancer but to a lesser degree.[12]
+
+Other hormonal changes also
+influence breast cancer risk. For more information, see the sections on Early Pregnancy and Breast-feeding in the Factors With Adequate Evidence of Decreased Risk of Breast Cancer section.
+
+The interaction of endogenous estrogen levels, insulin levels, and obesity—all of which affect breast cancer risk—are poorly understood but suggest strategies for interventions to decrease that risk. It is likely that reproductive risk factors interact with predisposing genotypes. For example, in the Nurses’ Health Study,[13] the associations between age at first birth, menarche, and menopause and the development of breast cancer were observed only among women without a family history of breast cancer in a mother or sister.
+
+References
+
+Brinton LA, Schairer C, Hoover RN, et al.: Menstrual factors and risk of breast cancer. Cancer Invest 6 (3): 245-54, 1988. [PUBMED Abstract]
+
+Collaborative Group on Hormonal Factors in Breast Cancer: Menarche, menopause, and breast cancer risk: individual participant meta-analysis, including 118 964 women with breast cancer from 117 epidemiological studies. Lancet Oncol 13 (11): 1141-51, 2012. [PUBMED Abstract]
+
+Ritte R, Lukanova A, Tjønneland A, et al.: Height, age at menarche and risk of hormone receptor-positive and -negative breast cancer: a cohort study. Int J Cancer 132 (11): 2619-29, 2013. [PUBMED Abstract]
+
+Endogenous Hormones and Breast Cancer Collaborative Group: Endogenous sex hormones and breast cancer in postmenopausal women: reanalysis of nine prospective studies. J Natl Cancer Inst 94 (8): 606-16, 2002. [PUBMED Abstract]
+
+Key TJ, Appleby PN, Reeves GK, et al.: Circulating sex hormones and breast cancer risk factors in postmenopausal women: reanalysis of 13 studies. Br J Cancer 105 (5): 709-22, 2011. [PUBMED Abstract]
+
+Kaaks R, Rinaldi S, Key TJ, et al.: Postmenopausal serum androgens, oestrogens and breast cancer risk: the European prospective investigation into cancer and nutrition. Endocr Relat Cancer 12 (4): 1071-82, 2005. [PUBMED Abstract]
+
+Kaaks R, Berrino F, Key T, et al.: Serum sex steroids in premenopausal women and breast cancer risk within the European Prospective Investigation into Cancer and Nutrition (EPIC). J Natl Cancer Inst 97 (10): 755-65, 2005. [PUBMED Abstract]
+
+Smith PG, Doll R: Late effects of x irradiation in patients treated for metropathia haemorrhagica. Br J Radiol 49 (579): 224-32, 1976. [PUBMED Abstract]
+
+Trichopoulos D, MacMahon B, Cole P: Menopause and breast cancer risk. J Natl Cancer Inst 48 (3): 605-13, 1972. [PUBMED Abstract]
+
+Feinleib M: Breast cancer and artificial menopause: a cohort study. J Natl Cancer Inst 41 (2): 315-29, 1968. [PUBMED Abstract]
+
+Kampert JB, Whittemore AS, Paffenbarger RS: Combined effect of childbearing, menstrual events, and body size on age-specific breast cancer risk. Am J Epidemiol 128 (5): 962-79, 1988. [PUBMED Abstract]
+
+Hirayama T, Wynder EL: A study of the epidemiology of cancer of the breast. II. The influence of hysterectomy. Cancer 15: 28-38, 1962 Jan-Feb. [PUBMED Abstract]
+
+Colditz GA, Kaphingst KA, Hankinson SE, et al.: Family history and risk of breast cancer: nurses' health study. Breast Cancer Res Treat 133 (3): 1097-104, 2012. [PUBMED Abstract]
+
+Inherited Risk
+
+Breast cancer risk increases in women with a positive family history, particularly if first-degree relatives are affected.[1] The following risk assessment models, derived from databases, cohort, and case-control studies, quantitate this risk:
+
+Breast Cancer Risk Assessment Tool [Gail Model].
+
+Breast Cancer Surveillance Consortium [BCSC] Risk Calculator.
+
+Breast Cancer Referral Screening Tool [B-RST].
+
+Hall Detailed Breast Risk Calculator.
+
+IBIS Breast Cancer Risk Calculator Tool.
+
+Specific abnormal alleles are associated with approximately 5% of breast cancers. For more information, see Genetics of Breast and Gynecologic Cancers. Mutations in BRCA genes are inherited in an autosomal dominant fashion and are highly penetrant in causing cancer, often at a younger age.[2-4] Family history and mutation location within the BRCA1 or BRCA2 gene may contribute to the risk of cancer development among those with an inherited predisposition to breast cancer.[5] The lifetime risk of breast cancer is 55% to 65% for BRCA1 mutation carriers and 45% to 47% for BRCA2 mutation carriers.[6,7] In comparison, the lifetime risk of breast cancer is 13% in the general population.[8]
+
+Some women inherit a susceptibility to mutagens or growth factors, which increase breast cancer risk.[9,10] For more information, see the Ionizing Radiation Exposure section.
+
+References
+
+Colditz GA, Kaphingst KA, Hankinson SE, et al.: Family history and risk of breast cancer: nurses' health study. Breast Cancer Res Treat 133 (3): 1097-104, 2012. [PUBMED Abstract]
+
+Miki Y, Swensen J, Shattuck-Eidens D, et al.: A strong candidate for the breast and ovarian cancer susceptibility gene BRCA1. Science 266 (5182): 66-71, 1994. [PUBMED Abstract]
+
+Futreal PA, Liu Q, Shattuck-Eidens D, et al.: BRCA1 mutations in primary breast and ovarian carcinomas. Science 266 (5182): 120-2, 1994. [PUBMED Abstract]
+
+Wooster R, Neuhausen SL, Mangion J, et al.: Localization of a breast cancer susceptibility gene, BRCA2, to chromosome 13q12-13. Science 265 (5181): 2088-90, 1994. [PUBMED Abstract]
+
+Kuchenbaecker KB, Hopper JL, Barnes DR, et al.: Risks of Breast, Ovarian, and Contralateral Breast Cancer for BRCA1 and BRCA2 Mutation Carriers. JAMA 317 (23): 2402-2416, 2017. [PUBMED Abstract]
+
+Antoniou A, Pharoah PD, Narod S, et al.: Average risks of breast and ovarian cancer associated with BRCA1 or BRCA2 mutations detected in case Series unselected for family history: a combined analysis of 22 studies. Am J Hum Genet 72 (5): 1117-30, 2003. [PUBMED Abstract]
+
+Chen S, Parmigiani G: Meta-analysis of BRCA1 and BRCA2 penetrance. J Clin Oncol 25 (11): 1329-33, 2007. [PUBMED Abstract]
+
+National Cancer Institute: SEER Cancer Stat Facts: Female Breast Cancer. Bethesda, Md: National Cancer Institute. Available online. Last accessed April 9, 2025.
+
+Swift M, Morrell D, Massey RB, et al.: Incidence of cancer in 161 families affected by ataxia-telangiectasia. N Engl J Med 325 (26): 1831-6, 1991. [PUBMED Abstract]
+
+Cybulski C, Wokołorczyk D, Jakubowska A, et al.: Risk of breast cancer in women with a CHEK2 mutation with and without a family history of breast cancer. J Clin Oncol 29 (28): 3747-52, 2011. [PUBMED Abstract]
+
+Increased Breast Density
+
+Widespread use of screening mammograms has demonstrated great variability in breast tissue density. Women with a greater proportion of dense tissue have a higher incidence of breast cancer. Mammographic density also confounds the identification of cancers by mammograms. The extent of increased risk was described in a report of three nested case-control studies in screened populations with 1,112 matched case-control pairs. Compared with women with density comprising less than 10% of breast tissue, women with density in 75% or more of their breast had an increased risk of breast cancer (odds ratio [OR], 4.7; 95% confidence interval [CI], 3.0–7.4), whether the cancer was detected by screening (OR, 3.5; 95% CI, 2.0–6.2) or detected less than 12 months after a negative screening examination (OR, 17.8; 95% CI, 4.8–65.9). Increased risk of breast cancer, whether detected by screening or other means, persisted for at least 8 years after study entry and was greater in younger women than in older women. For women younger than the median age of 56 years, 26% of all breast cancers and 50% of cancers detected less than 12 months after a negative screening test were identified in women with mammographic breast density of 50% or more.[1,2]
+
+Compared with women who have the lowest breast density, women with dense breasts have increased risk, proportionate to the degree of density. This increased relative risk ranges from 1.79 for women with slightly increased breast density to 4.64 for women with very dense breasts.[3] There is no increased risk of breast cancer mortality among women with dense breast tissue.[4]
+
+References
+
+Boyd NF, Guo H, Martin LJ, et al.: Mammographic density and the risk and detection of breast cancer. N Engl J Med 356 (3): 227-36, 2007. [PUBMED Abstract]
+
+Razzaghi H, Troester MA, Gierach GL, et al.: Mammographic density and breast cancer risk in White and African American Women. Breast Cancer Res Treat 135 (2): 571-80, 2012. [PUBMED Abstract]
+
+McCormack VA, dos Santos Silva I: Breast density and parenchymal patterns as markers of breast cancer risk: a meta-analysis. Cancer Epidemiol Biomarkers Prev 15 (6): 1159-69, 2006. [PUBMED Abstract]
+
+Gierach GL, Ichikawa L, Kerlikowske K, et al.: Relationship between mammographic density and breast cancer death in the Breast Cancer Surveillance Consortium. J Natl Cancer Inst 104 (16): 1218-27, 2012. [PUBMED Abstract]
+
+Factors With Adequate Evidence of Increased Risk of Breast Cancer
+
+Menopausal Hormone Therapy (MHT)
+
+MHT has been used to alleviate hot flashes and other symptoms associated with menopause. Single-agent estrogen is associated with an increased incidence of uterine cancer, but estrogen-progesterone use is not. Women with intact uteri are prescribed the combination, with oral progesterone given continuously or intermittently, or intrauterine progesterone delivered locally by intrauterine device (IUD). Estrogen therapy that began close to the time of menopause is associated with an increased risk of developing breast cancer. Estrogen therapy that began at or after menopause is associated with an increased risk of developing endometrial cancer and total cardiovascular disease, especially stroke.[1] Women who have undergone hysterectomy often take unopposed estrogen.
+
+In 1997, 51 epidemiological studies were reanalyzed, encompassing more than 150,000 women, and it was found that MHT was associated with increased breast cancer risk.[2]
+
+The Heart and Estrogen/Progestin Replacement Study, published in 2002, extended these findings by randomly assigning 2,763 women, with coronary heart disease (median age, 67), to receive either estrogen-progestin or placebo.[3] At 6.8 years of follow-up, breast cancer incidence was higher for hormone users (relative risk [RR], 1.27; 95% confidence interval [CI], 0.84–1.94).
+
+The Women’s Health Initiative (WHI), also published in 2002, randomly assigned over 16,000 women aged 50 to 79 years with intact uteri to receive either estrogen-progesterone or placebo.[4] The WHI was terminated early because the risk for coronary heart disease was unchanged, but the risk for stroke was increased with MHT. The incidence of invasive breast cancer was also increased in women who had taken MHT (hazard ratio, 1.24; 95% CI, 10.2–1.50). In addition to the randomized trial, the WHI conducted an observational study that examined women aged 50 to 79 years and found an increased risk of breast cancer, especially for those starting MHT at menopause. The WHI also randomly assigned 10,739 women who had undergone hysterectomy and were aged 50 to 79 years to receive either estrogen or placebo. Estrogen use was associated with an increased risk of stroke, so the trial was stopped early. After the publication of the WHI results, MHT use dropped worldwide, and breast cancer risk declined in countries where MHT usage had been high.
+
+In 2003, the Cancer Surveillance System of Puget Sound reported results of a population-based survey of 965 women with breast cancer and 1,007 controls.[5] This study showed a 1.7-fold increased risk of invasive breast cancer with estrogen-progesterone use, but not with estrogen use alone.
+
+While the association between estrogen-progesterone MHT and breast cancer risk was consistently observed, questions arose about the use of estrogen-only in women who had undergone hysterectomy, especially about the timing of therapy in relation to menopause and the participation in screening activities by MHT users.
+
+The United Kingdom Million Women Study [6] recruited 1,084,110 women aged 50 to 64 years between 1996 and 2001. This study obtained information about MHT use, along with other health information, and followed them for breast cancer incidence and death. One-half of the women had used MHT. At 2.6 years of follow up, there were 9,364 invasive breast cancers, and at 4.1 years, there were 637 breast cancer deaths. At recruitment, current MHT users were more likely than were never-users to develop breast cancer (adjusted RR, 1.66; 95% CI, 1.58–1.75; P < .0001) and to die from the disease (adjusted RR, 1.22; 95% CI, 1.00–1.48; P = .05). Past MHT users had no increased risk of incident breast cancer (odds ratio [OR], 1.01; 95% CI, 0.94–1.09) or fatal breast cancer (OR, 1.05; 95% CI, 0.82–1.34). Incidence was increased for current users of estrogen (RR, 1.30; 95% CI, 1.21–1.40; P < .0001), combined MHT (RR, 2.00; 95% CI, 1.88–2.12; P < .0001), and tibolone (RR, 1.45; 95% CI, 1.25–1.68; P < .0001). The magnitude of the associated risk was greater for combined MHT than for other types of MHT (P < .0001). Tibolone is approved for use to manage menopausal symptoms or to prevent osteoporosis in many countries. However, it is not approved for use in Canada or the United States.
+
+A population-based survey of 965 women with breast cancer and 1,007 controls was conducted by the Cancer Surveillance System of Puget Sound. It showed that combined MHT users had a 1.7-fold increased risk of invasive breast cancer, whereas estrogen-only users did not.[5]
+
+In 2019, the Collaborative Group on Hormonal Factors in Breast Cancer reported results of a meta-analysis of 24 prospective and 34 retrospective studies of MHT and breast cancer risk, encompassing 143,887 women who developed breast cancer and 424,972 controls. Overall, MHT users had higher breast cancer risk, especially for hormone-sensitive tumors.[7]
+
+Table 1. Breast Cancer Risk Among Menopausal Hormone Therapy Usersa
+
+Years 1–4 of Use
+Years 5–14 of Use
+
+CI = confidence interval; RR = relative risk.
+
+a
+[7]
+
+Estrogen-progesterone
+
+RR, 1.60 (95% CI, 1.52–1.62)
+RR, 2.08 (95% CI, 2.02–2.15)
+
+Estrogen-only
+
+RR, 1.17 (95% CI, 1.10–1.26)
+RR, 1.33 (95% CI, 1.28–1.37)
+
+The associations between MHT and breast cancer were weaker for women starting MHT after age 60 years and for women with obesity. Women with obesity had minimal risk from estrogen MHT that began after age 60 years. In summary, women of average weight who used 5 years of MHT starting at 50 years have an increased risk of breast cancer incidence of 1 in 50 users for estrogen-progesterone, 1 in 70 users for estrogen plus intermittent progesterone, and 1 in 200 users for estrogen-only products.
+
+This meta-analysis, confirming and expanding the understanding of estrogen-progesterone risk of breast cancer, also resolves the question of estrogen use in women who have undergone hysterectomy. If the estrogen use began at menopause, it is associated with an increase in breast cancer risk, but not if it began many years later. These findings, as well as the documented increase in stroke risk with estrogen therapy, should be considered when reviewing options to treat.
+
+In 2022, an evidence review concluded that the use of combined estrogen and progestin for the primary prevention of chronic disease (i.e., cardiovascular disease, cancer, osteoporosis, and fracture) in postmenopausal women with an intact uterus was associated with some benefits. However, this combination therapy was also associated with an increased risk of harms. Therefore, it has no net benefit. Moreover, the systematic review concluded with moderate certainty that the use of estrogen alone for the primary prevention of chronic diseases in postmenopausal women who had a hysterectomy also has no net benefit.[8]
+
+Ionizing Radiation Exposure
+
+A well-established relationship exists between exposure to ionizing radiation
+and subsequent breast cancer.[9] Excess breast cancer risk has been observed in association with atomic bomb exposure, frequent
+fluoroscopy for tuberculosis, and radiation therapy for acne, tinea, thymic
+enlargement, postpartum mastitis, and lymphoma. Risk is higher for the young, especially around puberty. An
+estimate of the risk of breast cancer associated with medical radiology puts
+the figure at less than 1% of all breast cancer cases.[10] However, it has been theorized that
+certain populations, such as AT heterozygotes, are at
+an increased risk of breast cancer from radiation exposure.[11] A large cohort study of women who carry mutations of BRCA1 or BRCA2 concluded that chest x-rays, especially before age 20 years increased their risk of breast cancer beyond already increased levels (RR, 1.54; 95% CI, 1.1–2.1).[12]
+
+Women treated for Hodgkin lymphoma with mantle radiation by age 16 years have a subsequent risk up to 35% of
+developing breast cancer by age 40 years.[13-15] Higher radiation doses (median dose, 40 Gy in breast cancer cases) and
+treatment between the ages of 10 and 16 years are associated with higher risk.[13] Unlike the risk for secondary leukemia, the risk of
+treatment-related breast cancer does not abate with duration of follow-up, persisting more than 25 years after treatment.[13,15,16]
+In these studies, most patients (85%–100%) who developed
+breast cancer did so either within the field of radiation or at the
+margin.[13,14,16] A Dutch study examined 48 women who developed breast cancer at least 5 years after treatment for Hodgkin disease and compared them with 175 matched female Hodgkin disease patients who did not develop breast cancer. Patients treated with chemotherapy and mantle radiation were less likely to develop breast cancer than were those treated with mantle radiation alone, possibly because of chemotherapy-induced ovarian suppression (RR, 0.06; 95% CI, 0.01–0.45).[17] Another study of 105 radiation-associated breast cancer patients and 266 age-matched and radiation-matched controls showed a similar protective effect for ovarian radiation.[15] These studies suggest that reduction of ovarian hormones limits the proliferation of breast tissue with radiation-induced mutations.[15]
+
+The question arises whether breast cancer patients treated with lumpectomy and radiation therapy
+(L-RT) are at higher risk for second breast malignancies or other malignancies
+than are those treated by mastectomy. Outcomes of 1,029 L-RT patients
+were compared with outcomes of 1,387 patients who underwent mastectomies.
+After a median follow-up of 15 years, there was no difference in the risk of
+second malignancies.[18] Further evidence from three RCTs is also reassuring. One report of 1,851 women randomly assigned to undergo total mastectomy, lumpectomy alone, or L-RT showed rates of contralateral breast cancer to be 8.5%, 8.8%, and 9.4%, respectively.[19] Another study of 701 women randomly assigned to undergo radical mastectomy or breast-conserving surgery followed by radiation therapy demonstrated the rate of contralateral breast carcinomas per 100 woman-years to be 10.2 versus 8.7, respectively.[20] The third study compared 25-year outcomes of 1,665 women randomly assigned to undergo radical mastectomy, total mastectomy, or total mastectomy with radiation. There was no significant difference in the rate of contralateral breast cancer according to treatment group, and the overall rate was 6%.[21]
+
+Obesity
+
+Obesity is associated with increased breast cancer risk, especially among postmenopausal women who do not use hormone therapy (HT). The WHI observed 85,917 women aged 50 to 79 years and collected information on weight history and known risk factors for breast cancer.[22,23] Height, weight, and waist and hip circumferences were measured. With a median follow-up of 34.8 months, 1,030 of the women developed invasive breast cancer. Among the women who never used HT, increased breast cancer risk was associated with weight at entry, body mass index (BMI) at entry, BMI at age 50 years, maximum BMI, adult and postmenopausal weight change, and waist and hip circumferences. Weight was the strongest predictor, with a RR of 2.85 (95% CI, 1.81–4.49) for women weighing more than 82.2 kg, compared with those weighing less than 58.7 kg.
+
+The association between obesity, diabetes, and insulin levels with breast cancer risk have been studied but not clearly defined. The British Women’s Heart and Health Study of women aged 60 to 79 years compared 151 women who had a diagnosis of breast cancer with 3,690 women who did not. The age-adjusted OR was 1.34 (95% CI, 1.02–1.77) for each unit increase in log(e) insulin level among nondiabetic women. The association was observed, after adjustment for confounders and for potential mediating factors, for both pre- and postmenopausal breast cancers. In addition, fasting glucose level, homeostatic model assessment score (the product of fasting glucose and insulin levels divided by 22.5), diabetes, and a history of gestational glycosuria or diabetes were also associated with breast cancer.[24]
+
+Alcohol
+
+Alcohol consumption increases the risk of breast cancer. A British meta-analysis included individual data from 53 case-control and cohort studies.[25] Compared with the RR of breast cancer for women who reported no alcohol consumption, the RR of breast cancer was 1.32 (95% CI, 1.19–1.45; P < .001) for women consuming 35 g to 44 g of alcohol per day and 1.46 (95% CI, 1.33–1.61; P < .001) for those consuming at least 45 g of alcohol per day. The RR of breast cancer increases by about 7% (95% CI, 5.5%–8.7%; P < .001) for each 10 g of alcohol (i.e., one drink) consumed per day. These findings persist after stratification for race, education, family history, age at menarche, height, weight, BMI, breast-feeding, oral contraceptive use, menopausal hormone use and type, and age at menopause.
+
+References
+
+Cuzick J, Sestak I, Forbes JF, et al.: Use of anastrozole for breast cancer prevention (IBIS-II): long-term results of a randomised controlled trial. Lancet 395 (10218): 117-122, 2020. [PUBMED Abstract]
+
+Breast cancer and hormone replacement therapy: collaborative reanalysis of data from 51 epidemiological studies of 52,705 women with breast cancer and 108,411 women without breast cancer. Collaborative Group on Hormonal Factors in Breast Cancer. Lancet 350 (9084): 1047-59, 1997. [PUBMED Abstract]
+
+Hulley S, Furberg C, Barrett-Connor E, et al.: Noncardiovascular disease outcomes during 6.8 years of hormone therapy: Heart and Estrogen/progestin Replacement Study follow-up (HERS II). JAMA 288 (1): 58-66, 2002. [PUBMED Abstract]
+
+Writing Group for the Women's Health Initiative Investigators: Risks and benefits of estrogen plus progestin in healthy postmenopausal women: principal results From the Women's Health Initiative randomized controlled trial. JAMA 288 (3): 321-33, 2002. [PUBMED Abstract]
+
+Li CI, Malone KE, Porter PL, et al.: Relationship between long durations and different regimens of hormone therapy and risk of breast cancer. JAMA 289 (24): 3254-63, 2003. [PUBMED Abstract]
+
+Beral V, Reeves G, Bull D, et al.: Breast cancer risk in relation to the interval between menopause and starting hormone therapy. J Natl Cancer Inst 103 (4): 296-305, 2011. [PUBMED Abstract]
+
+Collaborative Group on Hormonal Factors in Breast Cancer: Type and timing of menopausal hormone therapy and breast cancer risk: individual participant meta-analysis of the worldwide epidemiological evidence. Lancet 394 (10204): 1159-1168, 2019. [PUBMED Abstract]
+
+Gartlehner G, Patel SV, Reddy S, et al.: Hormone Therapy for the Primary Prevention of Chronic Conditions in Postmenopausal Persons: Updated Evidence Report and Systematic Review for the US Preventive Services Task Force. JAMA 328 (17): 1747-1765, 2022. [PUBMED Abstract]
+
+John EM, Kelsey JL: Radiation and other environmental exposures and breast cancer. Epidemiol Rev 15 (1): 157-62, 1993. [PUBMED Abstract]
+
+Evans JS, Wennberg JE, McNeil BJ: The influence of diagnostic radiography on the incidence of breast cancer and leukemia. N Engl J Med 315 (13): 810-5, 1986. [PUBMED Abstract]
+
+Swift M, Morrell D, Massey RB, et al.: Incidence of cancer in 161 families affected by ataxia-telangiectasia. N Engl J Med 325 (26): 1831-6, 1991. [PUBMED Abstract]
+
+Andrieu N, Easton DF, Chang-Claude J, et al.: Effect of chest X-rays on the risk of breast cancer among BRCA1/2 mutation carriers in the international BRCA1/2 carrier cohort study: a report from the EMBRACE, GENEPSO, GEO-HEBON, and IBCCS Collaborators' Group. J Clin Oncol 24 (21): 3361-6, 2006. [PUBMED Abstract]
+
+Bhatia S, Robison LL, Oberlin O, et al.: Breast cancer and other second neoplasms after childhood Hodgkin's disease. N Engl J Med 334 (12): 745-51, 1996. [PUBMED Abstract]
+
+Hancock SL, Tucker MA, Hoppe RT: Breast cancer after treatment of Hodgkin's disease. J Natl Cancer Inst 85 (1): 25-31, 1993. [PUBMED Abstract]
+
+Travis LB, Hill DA, Dores GM, et al.: Breast cancer following radiotherapy and chemotherapy among young women with Hodgkin disease. JAMA 290 (4): 465-75, 2003. [PUBMED Abstract]
+
+Sankila R, Garwicz S, Olsen JH, et al.: Risk of subsequent malignant neoplasms among 1,641 Hodgkin's disease patients diagnosed in childhood and adolescence: a population-based cohort study in the five Nordic countries. Association of the Nordic Cancer Registries and the Nordic Society of Pediatric Hematology and Oncology. J Clin Oncol 14 (5): 1442-6, 1996. [PUBMED Abstract]
+
+van Leeuwen FE, Klokman WJ, Stovall M, et al.: Roles of radiation dose, chemotherapy, and hormonal factors in breast cancer following Hodgkin's disease. J Natl Cancer Inst 95 (13): 971-80, 2003. [PUBMED Abstract]
+
+Obedian E, Fischer DB, Haffty BG: Second malignancies after treatment of early-stage breast cancer: lumpectomy and radiation therapy versus mastectomy. J Clin Oncol 18 (12): 2406-12, 2000. [PUBMED Abstract]
+
+Fisher B, Anderson S, Bryant J, et al.: Twenty-year follow-up of a randomized trial comparing total mastectomy, lumpectomy, and lumpectomy plus irradiation for the treatment of invasive breast cancer. N Engl J Med 347 (16): 1233-41, 2002. [PUBMED Abstract]
+
+Veronesi U, Cascinelli N, Mariani L, et al.: Twenty-year follow-up of a randomized study comparing breast-conserving surgery with radical mastectomy for early breast cancer. N Engl J Med 347 (16): 1227-32, 2002. [PUBMED Abstract]
+
+Fisher B, Jeong JH, Anderson S, et al.: Twenty-five-year follow-up of a randomized trial comparing radical mastectomy, total mastectomy, and total mastectomy followed by irradiation. N Engl J Med 347 (8): 567-75, 2002. [PUBMED Abstract]
+
+Morimoto LM, White E, Chen Z, et al.: Obesity, body size, and risk of postmenopausal breast cancer: the Women's Health Initiative (United States). Cancer Causes Control 13 (8): 741-51, 2002. [PUBMED Abstract]
+
+Wolin KY, Carson K, Colditz GA: Obesity and cancer. Oncologist 15 (6): 556-65, 2010. [PUBMED Abstract]
+
+Lawlor DA, Smith GD, Ebrahim S: Hyperinsulinaemia and increased risk of breast cancer: findings from the British Women's Heart and Health Study. Cancer Causes Control 15 (3): 267-75, 2004. [PUBMED Abstract]
+
+Hamajima N, Hirose K, Tajima K, et al.: Alcohol, tobacco and breast cancer--collaborative reanalysis of individual data from 53 epidemiological studies, including 58,515 women with breast cancer and 95,067 women without the disease. Br J Cancer 87 (11): 1234-45, 2002. [PUBMED Abstract]
+
+Factors With Adequate Evidence of Decreased Risk of Breast Cancer
+
+Early Pregnancy
+
+Childbirth is followed by an increase in risk of breast cancer for several years, and then a long-term reduction in risk, which is greater for younger women.[1-3] In one study, women who experienced a first full-term pregnancy before age 20 years were half as likely to develop breast cancer as nulliparous women or women whose first full-term pregnancy occurred at age 35 years or older.[4,5]
+
+The effect of childbirth on breast cancer risk was demonstrated by the International Premenopausal Breast Cancer Collaborative Group, which undertook a pooled analysis of individual-level data from about 890,000 women from 15 prospective cohort studies. When compared with nulliparous women, parous women had an increased risk of developing both estrogen receptor–positive (ER–positive) and estrogen receptor–negative (ER–negative) breast cancer for up to 20 years after childbirth. However, after about 24 years, the risk of developing ER–positive breast cancer decreased, but the risk of developing ER–negative breast cancer remained elevated. Thus, the association between parity and breast cancer risk is complex and appears to be influenced by the time period after childbirth, as well as tumor phenotype.[6]
+
+Breast-feeding
+
+Breast-feeding is associated with a decreased risk of breast cancer.[7] A reanalysis of individual data from 47 epidemiological studies in 30 countries of 50,302 women with breast cancer and 96,973 controls revealed that breast cancer incidence was lower in parous women who had ever breast-fed than in parous women who had not. It was also proportionate to duration of breast-feeding.[8] The relative risk (RR) of breast cancer decreased by 4.3% (95%, confidence interval [CI], 2.9%–5.8%; P < .0001) for every 12 months of breast-feeding in addition to a decrease of 7.0% (95% CI, 5.0%–9.0%; P < .0001) for each birth.
+
+Exercise
+
+Many studies have shown an associated benefit between physical exercise and breast cancer risk. A French study of 59,308 women, averaging 8.5 years postmenopause, found that recreational activity greater than 12 metabolic equivalent task (MET) h/wk was associated with decreased risk of invasive breast cancer (hazard ratio [HR], 0.9; 95% CI, 0.83–0.99).[9] The Nurses' Health Study included 95,396 postmenopausal women and found that women who exercised more than 27 MET h/wk (equivalent to 1 h/d of brisk walking) had decreased breast cancer incidence compared with those who had fewer than 3 MET h/wk (HR, 0.85; 95% CI, 0.78–0.93; P < .001 for trend). There was no difference in the association between exercise and breast cancer risk for hormone-positive or hormone-negative cancers.[10] Two meta-analyses yielded the same conclusions. One meta-analysis included 38 prospective trials performed from 1987 to 2014. The summary RR was 0.88 (95% CI, 0.85–0.90); results were similar for hormone-positive or hormone-negative cancers.[11] Another meta-analysis reviewed 139 studies encompassing 236,955 women with 3,963 controls. Women who exercised had a significant decrease in breast cancer (odds ratio, 0.78; 95% CI, 0.76–0.81), with a similar effect size for premenopausal and postmenopausal women.[12]
+
+References
+
+Kampert JB, Whittemore AS, Paffenbarger RS: Combined effect of childbearing, menstrual events, and body size on age-specific breast cancer risk. Am J Epidemiol 128 (5): 962-79, 1988. [PUBMED Abstract]
+
+Pike MC, Krailo MD, Henderson BE, et al.: 'Hormonal' risk factors, 'breast tissue age' and the age-incidence of breast cancer. Nature 303 (5920): 767-70, 1983. [PUBMED Abstract]
+
+Lambe M, Hsieh C, Trichopoulos D, et al.: Transient increase in the risk of breast cancer after giving birth. N Engl J Med 331 (1): 5-9, 1994. [PUBMED Abstract]
+
+Henderson BE, Pike MC, Ross RK, et al.: Epidemiology and risk factors. In: Bonadonna G, ed.: Breast Cancer: Diagnosis and Management. John Wiley & Sons, 1984, pp 15-33.
+
+Gail MH, Brinton LA, Byar DP, et al.: Projecting individualized probabilities of developing breast cancer for white females who are being examined annually. J Natl Cancer Inst 81 (24): 1879-86, 1989. [PUBMED Abstract]
+
+Nichols HB, Schoemaker MJ, Cai J, et al.: Breast Cancer Risk After Recent Childbirth: A Pooled Analysis of 15 Prospective Studies. Ann Intern Med 170 (1): 22-30, 2019. [PUBMED Abstract]
+
+Col: Breast cancer and breastfeeding: collaborative reanalysis of individual data from 47 epidemiological studies in 30 countries, including 50302 women with breast cancer and 96973 women without the disease. Lancet 360 (9328): 187-95, 2002. [PUBMED Abstract]
+
+Furberg H, Newman B, Moorman P, et al.: Lactation and breast cancer risk. Int J Epidemiol 28 (3): 396-402, 1999. [PUBMED Abstract]
+
+Fournier A, Dos Santos G, Guillas G, et al.: Recent recreational physical activity and breast cancer risk in postmenopausal women in the E3N cohort. Cancer Epidemiol Biomarkers Prev 23 (9): 1893-902, 2014. [PUBMED Abstract]
+
+Eliassen AH, Hankinson SE, Rosner B, et al.: Physical activity and risk of breast cancer among postmenopausal women. Arch Intern Med 170 (19): 1758-64, 2010. [PUBMED Abstract]
+
+Pizot C, Boniol M, Mullie P, et al.: Physical activity, hormone replacement therapy and breast cancer risk: A meta-analysis of prospective studies. Eur J Cancer 52: 138-54, 2016. [PUBMED Abstract]
+
+Hardefeldt PJ, Penninkilampi R, Edirimanne S, et al.: Physical Activity and Weight Loss Reduce the Risk of Breast Cancer: A Meta-analysis of 139 Prospective and Retrospective Studies. Clin Breast Cancer 18 (4): e601-e612, 2018. [PUBMED Abstract]
+
+Interventions With Adequate Evidence of Benefit
+
+Selective Estrogen Receptor Modulators (SERMs)
+
+Tamoxifen
+
+Tamoxifen is used to treat metastatic breast cancer and to suppress local recurrences and new primary breast cancers after surgical excision of breast cancer.[1] Tamoxifen also maintains bone density among postmenopausal women with breast cancer.[2-6] Adverse effects include hot flashes, venous thromboembolic events, and endometrial cancer.[7-9]
+
+The Breast Cancer Prevention Trial (BCPT) randomly assigned 13,388 patients at elevated risk of breast cancer to receive tamoxifen or placebo.[10,11]
+The study was closed early because the
+incidence of breast cancer for the tamoxifen group was 49% lower than for the control group (85 vs. 154 invasive breast cancer cases and 31 vs. 59 in situ cases at 4 years). Tamoxifen-treated women also had fewer fractures (47 vs. 71) but more endometrial cancer (33 vs. 14 cases) and thrombotic events (99 vs. 70), including pulmonary emboli (17 vs. 6).[11]
+
+An update of the BCPT results after 7 years of follow-up confirmed and extended those results.[12] Benefits and risks of tamoxifen were not significantly different from those in the original report, with persistent benefit of fewer fractures and persistent increased risk of endometrial cancer, thrombosis, and cataract surgery. No overall mortality benefit was observed after 7 years of follow-up (relative risk [RR], 1.10; 95% confidence interval [CI], 0.85–1.43).
+
+Three other trials of tamoxifen for primary prevention of breast cancer have been completed.[13-15]
+
+A study in the United Kingdom [13]
+enrolled 2,471 women at increased breast cancer risk because of a family
+history of breast and/or ovarian cancer. Risk of estrogen receptor–positive (ER-positive) breast cancer was significantly reduced in the tamoxifen arm (hazard ratio [HR], 0.61; 95% CI, 0.43–0.86), an effect noted predominantly in the posttreatment period. Overall, tamoxifen was associated with decreased breast cancer risk at 13 years (HR, 0.78; 95% CI, 0.58–1.04) but not at 6 years (RR, 1.06).[16]
+
+An Italian study [14] focused on 5,408
+women who had undergone hysterectomy and who were described as low to normal
+risk. After nearly 4 years of follow-up, no protective effect of tamoxifen was observed. Longer follow-up and subgroup analysis in this trial found a protective effect of tamoxifen among women at high risk for hormone receptor–positive breast cancer (RR, 0.24; 95% CI, 0.10–0.59) and among women who were taking HT during the trial (RR, 0.43; 95% CI, 0.20–0.95).[17,18]
+
+The International Breast Cancer Intervention Study (IBIS-I) randomly assigned 7,152 women aged 35 to 70 years who were at an increased risk of breast cancer to receive tamoxifen (20 mg/day) or placebo for 5 years.[15] After a median follow-up of 50 months, fewer tamoxifen-treated women had developed invasive or in situ breast cancer (absolute rate, 4.6 vs. 6.75 per 1,000 woman-years; risk reduction, 32%; 95% CI, 8%–50%). The RR reduction in ER-positive invasive breast cancer was 31%; there was no reduction in estrogen receptor–negative (ER-negative) cancers. The nonsignificant increase in all-cause mortality in the tamoxifen group (25 vs. 11; P = .028) was attributed to chance. The beneficial effect of tamoxifen on breast cancer persisted beyond active treatment; 46 months after the 5-year treatment, fewer women in the tamoxifen arm developed breast cancer (142 vs. 195 cases; RR, 0.73; 95% CI, 0.58–0.91).[19]
+
+A meta-analysis of these primary prevention tamoxifen trials showed a 38% reduction in the incidence of breast cancer without statistically significant heterogeneity.[9] Incidence rates of ER-positive tumors were reduced by 48%. Rates of endometrial cancer were increased (consensus RR, 2.4; 95% CI, 1.5–4.0), as were venous thromboembolic events (RR, 1.9; 95% CI, 1.4–2.6). None of these primary prevention trials was designed to detect differences in breast cancer mortality.
+
+The Cochrane Database of Systematic Reviews found that tamoxifen administered at the standard dose of 20 mg/day for 5 years is effective in decreasing breast cancer incidence, but the increased risk of toxicity has limited its broad use.[20] This finding warrants further investigation because the clinical implications of the lower dose, whether it may prevent cancer or improve mortality, was not studied.
+
+Women with a history of ductal carcinoma in situ (DCIS) are at increased risk
+of contralateral breast cancer. The National Surgical Adjuvant Breast and Bowel Project (NSABP) trial B-24 addressed the management of these patients. Women were randomly assigned to receive lumpectomy and radiation therapy either with or without adjuvant tamoxifen. At 6 years, the tamoxifen-treated women had fewer invasive and in situ breast cancers (8.2% vs. 13.4%; RR, 0.63; 95% CI, 0.47–0.83). The risk of contralateral breast cancer was also lower in women treated with tamoxifen (RR, 0.49; 95% CI, 0.26–0.87).[21]
+
+Low-dose tamoxifen
+
+The above-referenced clinical trials assessed tamoxifen use at a dose of 20 mg per day taken for 5 years. Because of the toxicity associated with tamoxifen and low adherence rates, several recent studies have examined the effects of lower-dose tamoxifen. In a double-blind, placebo-controlled, randomized controlled trial, researchers at the Karolinska Institutet found that a lower dose of 2.5 mg was similarly effective in reducing breast density as was a 20 mg dose. This effect was most pronounced in premenopausal women. In addition, vasomotor symptoms declined as the dose of tamoxifen decreased. The authors postulated that decreased mammographic density may be a surrogate for response to tamoxifen therapy and that adherence may improve with less severe symptoms.[22]
+
+The TAM-01 randomized, placebo-controlled, double-blind study examined the use of low-dose (5 mg) tamoxifen as a strategy to prevent invasive breast cancer.[23] The study enrolled 500 women aged 75 years and younger with hormone-sensitive (67%) or unknown breast intraepithelial neoplasia, including atypical ductal hyperplasia, lobular carcinoma in situ, and DCIS (69%); 60% of the women were postmenopausal. Patients in the treatment group received tamoxifen 5 mg per day for 3 years. Of those with DCIS, 45% received radiation therapy. The following results were reported:
+
+After a median follow-up of 9.7 years, there were 25 breast cancers in the tamoxifen group (41 invasive cancers) and 41 in the placebo group (59 invasive) (HR, 0.58; 95% CI, 0.35–0.95; log-rank P = .03).
+
+For contralateral breast cancers, there were 6 events in the tamoxifen group and 16 in the placebo group (HR, 0.36; 95% CI, 0.14–0.92; P = .025). During the 3-year treatment period, there were 12 serious adverse events with tamoxifen and 16 with placebo. There was one deep vein thrombosis and one stage I endometrial cancer with tamoxifen treatment and one pulmonary embolism with placebo. A limitation of this study is the small sample size.
+
+Post-hoc sub-group analyses suggested possible clinically important differences in effects by menopausal status. The study was also not powered to assess differences in effect by DCIS versus non-DCIS breast disease. However, particularly in the United States, DCIS is typically managed differently than atypia.
+
+Raloxifene
+
+Raloxifene hydrochloride (Evista) is a SERM that has antiestrogenic effects on breast
+and estrogenic effects on bone, lipid metabolism, and
+blood clotting. Unlike tamoxifen, it has antiestrogenic effects on the endometrium.[24] The Multiple Outcomes of Raloxifene Evaluation (MORE) trial was a
+randomized, double-blind trial that evaluated 7,705 postmenopausal women with
+osteoporosis from 1994 to 1998 at 180 clinical centers in the United States. Vertebral fractures were reduced. The
+effect on breast cancer incidence was a secondary end point. After a median follow-up of 47 months, the risk of invasive breast cancer was
+decreased in the raloxifene-treated women (RR, 0.25; 95% CI, 0.17–0.45).[25] As with tamoxifen, raloxifene
+reduced the risk of ER-positive breast cancer but not
+ER-negative breast cancer and was associated with an excess risk of hot flashes and thromboembolic events. No excess risk of endometrial cancer or hyperplasia was
+observed.[26]
+
+An extension of the MORE trial was the Continuing Outcomes Relevant to Evista (CORE) trial, which studied about 80% of MORE participants in their randomly assigned groups for an additional 4 years. Although there was a median 10-month gap between the two studies, and only about 55% of women were adherent to their assigned medications, the raloxifene group continued to experience a lower incidence of invasive ER-positive breast cancer. The overall reduction in invasive breast cancer during the 8 years of MORE and CORE was 66% (HR, 0.34; 95% CI, 0.22–0.50); the reduction for ER-positive invasive breast cancer was 76% (HR, 0.24; 95% CI, 0.15–0.40).[27]
+
+The Raloxifene Use for the Heart trial was a randomized, placebo-controlled trial to evaluate the effects of raloxifene on incidence of coronary events and invasive breast cancer. As in the MORE and CORE studies, raloxifene reduced the risk of invasive breast cancer (HR, 0.56; 95% CI, 0.38–0.83).[28]
+
+The Study of Tamoxifen and Raloxifene (STAR) (NSABP P-2) compared tamoxifen and raloxifene in 19,747 high-risk women who were monitored for a mean of 3.9 years. Invasive breast cancer incidence was approximately the same for both drugs, but there were fewer noninvasive cancers in the tamoxifen group. Adverse events of uterine cancer, venous thromboembolic events, and cataracts were more common in tamoxifen-treated women, and there was no difference in ischemic heart disease events, strokes, or fractures.[29] Treatment-associated symptoms of dyspareunia, musculoskeletal problems, and weight gain occurred less frequently in tamoxifen-treated women, whereas vasomotor flushing, bladder control symptoms, gynecologic symptoms, and leg cramps occurred less frequently in those receiving raloxifene.[30]
+
+Table 2. Incidence of Outcomes Per 1,000 Women
+
+Tamoxifen
+Raloxifene
+RR, 95% CI
+
+CI = confidence interval; RR = relative risk; VTE = venous thromboembolism.
+
+Invasive breast cancer
+4.3
+4.41
+1.02, 0.82–1.28
+
+Noninvasive breast cancer
+1.51
+2.11
+1.4, 0.98–2.00
+
+Uterine cancer
+2.0
+1.25
+0.62, 0.35–1.08
+
+VTE
+3.8
+2.6
+0.7, 0.68–0.99
+
+Cataracts
+12.3
+9.72
+0.79, 0.68–0.92
+
+Incidence of Symptoms (0–4 scale)
+
+Favor Tamoxifen
+
+Dyspareunia
+0.68
+0.78
+P < .001
+
+Musculoskeletal problems
+1.10
+1.15
+P = .002
+
+Weight gain
+0.76
+0.82
+P < .001
+
+Favor Raloxifene
+
+Vasomotor symptoms
+0.96
+0.85
+P < .001
+
+Bladder control symptoms
+0.88
+0.73
+P < .001
+
+Leg cramps
+1.10
+0.91
+P < .001
+
+Gynecologic problems
+0.29
+0.19
+P < .001
+
+Aromatase Inhibitors or Inactivators (Als)
+
+Another class of agents used to treat women with hormone-sensitive breast cancer may also prevent breast cancer. These drugs interfere with aromatase, the adrenal enzyme that allows estrogen production in postmenopausal women. Anastrozole and letrozole inhibit aromatase activity, whereas exemestane inactivates the enzyme. Side effects for all three drugs include fatigue, arthralgia, myalgia, decreased bone mineral density, and increased fracture rate.
+
+Women with a previous diagnosis of breast cancer have a lower risk of recurrence and of new breast cancers when treated with AIs, as shown in the following studies:
+
+In the Arimidex, Tamoxifen, Alone or in Combination trial, which compared anastrozole with tamoxifen as adjuvant therapy for primary breast cancer, the rate of locoregional and distant recurrence was lower for anastrozole when compared with tamoxifen (7.1% vs. 8.5%) but higher for the combination (9.1%).[31] Anastrozole was also more effective in reducing the incidence of new contralateral breast cancer (0.4% vs. 1.1% vs. 0.9%).
+
+In another trial, 5,187 women who received 5 years of adjuvant tamoxifen were randomly assigned to receive either letrozole or placebo.[32] After only 2.5 years of median follow-up, the study was terminated because previously defined efficacy end points had been reached. Patients treated with letrozole had a lower incidence of locoregional and distant cancer recurrence and a lower incidence of new contralateral breast cancer (14 vs. 26).
+
+Another placebo-controlled trial of 1,918 women with breast cancer examined the effect of extending letrozole treatment for an additional 5 years in women who had received adjuvant tamoxifen followed by 5 years of letrozole.[33] At a median of 6.3 years from study entry, the extended letrozole group had an improved 5-year disease-free survival rate of 95% (95% CI, 93%–96%) compared with 91% (95% CI, 89%–93%) for the control group (HR, 0.66) but no difference in overall survival. The difference in new contralateral breast cancer diagnoses was statistically significant: 21% (95% CI, 10%–32%) for the extended letrozole group compared with 49% (32%–67%) for the control group (HR, 0.42). Women treated with letrozole had an increased risk of bone pain (18% vs. 14%), bone fracture (14% vs. 9%), and new-onset osteoporosis (11% vs. 6%).
+
+A trial randomly assigned 4,742 women who had received 2 years of adjuvant tamoxifen to either continue the tamoxifen or switch to exemestane.[34] After 2.4 years of median follow-up, the exemestane group had a decreased risk of local or metastatic recurrence and a decreased incidence of new contralateral breast cancer (9 vs. 20).
+
+Aromatase inhibitors or inactivators also have been shown to prevent breast cancer in women at increased risk, as shown in the following studies:
+
+An RCT of primary prevention of breast cancer compared exemestane with placebo in 4,560 women with at least one risk factor (age >60 years, a Gail 5-year risk >1.66%, or a history of DCIS with mastectomy). After 35 months of median follow-up, invasive breast cancer was diagnosed less frequently in the exemestane group (11 vs. 32; HR, 0.35; 95% CI, 0.18–0.70; number needed-to-treat, about 100 for 35 months). Compared with the placebo group, the exemestane-treated women had more hot flashes (increase, 8%) and fatigue (increase, 2%) but no difference in fractures or cardiovascular events.[35]
+
+The International Breast Cancer Intervention Study II (IBIS-II) randomly assigned 3,864 postmenopausal women who were at increased risk of developing breast cancer to receive either daily anastrozole (1 mg) or placebo for 5 years.[36] After a median follow-up of 5 years, fewer breast cancers (invasive and DCIS) occurred in the anastrozole-treated group than in the placebo group (HR, 0.47; 95% CI, 0.32–0.68). The risk of hormone receptor–positive, but not hormone receptor–negative, breast cancer was reduced. Additional follow-up, up to a median of 131 months, showed continued benefit for women treated with anastrozole, who had a 49% reduction in breast cancer (HR, 0.51; 95% CI, 0.39–0.66). No difference in breast cancer mortality was observed.[37] Women treated with anastrozole were more likely than those taking placebo to have musculoskeletal symptoms, including arthralgias (51% vs. 46%), joint stiffness (7% vs. 5%), carpal tunnel syndrome (3% vs. 2%); hypertension (5% vs. 3%); vasomotor symptoms (57% vs. 49%); and dry eyes (4% vs. 2%).
+
+Prophylactic Mastectomy
+
+A retrospective cohort study evaluated the impact of bilateral prophylactic mastectomy on breast cancer incidence among women at high and moderate risk on the basis of family history.[38] BRCA mutation status was not known. Subcutaneous, rather than total, mastectomy was performed in 90% of these women. After a median follow-up of 14 years postsurgery, the risk reduction for the 425 moderate-risk women was 89%; for the 214 high-risk women, it was 90% to 94%, depending on the method used to calculate expected rates of breast cancer. The risk reduction for breast cancer mortality was 100% for moderate-risk women and 81% for high-risk women. Because the study used family history as a risk indicator rather than genetic testing, breast cancer risk may be overestimated.
+
+Contralateral prophylactic mastectomy (CPM) refers to the surgical removal of the opposite uninvolved breast in women who present with unilateral breast cancer. Women who undergo CPM therefore generally undergo bilateral mastectomy for the treatment of unilateral breast cancer, and rates of this procedure among women with unilateral disease (DCIS and early-stage invasive breast cancer) was reported to have increased from 1.9% in 1998 to 11.2% in 2011 based on data from the U.S. National Cancer Data Base.[39]
+
+Some observational studies have suggested that CPM is associated with reduced breast cancer mortality, but these results are generally attributed to selection bias. As of yet, there is no high-quality evidence that CPM is associated with improvements in overall survival. However, some women with unilateral breast cancer, who have a high risk of developing contralateral breast cancer, may reasonably choose CPM to reduce the risk of a new primary cancer in the opposite breast.[40]
+
+Prophylactic Oophorectomy
+
+Ovarian ablation and oophorectomy are associated with decreased breast cancer risk in average-risk women and in women with increased risk resulting from thoracic irradiation. For more information, see the Endogenous Estrogen section. Observational studies of women with high breast cancer risk resulting from BRCA1 or BRCA2 gene mutations showed that prophylactic oophorectomy to prevent ovarian cancer was also associated with a 50% decrease in breast cancer incidence.[41-43] These studies are confounded by selection bias, family relationships between patients and controls, indications for oophorectomy, and inadequate information about hormone use. A prospective cohort study had similar findings, with a greater breast cancer risk reduction in BRCA2 mutation carriers than in BRCA1 carriers.[44]
+
+References
+
+Nayfield SG, Karp JE, Ford LG, et al.: Potential role of tamoxifen in prevention of breast cancer. J Natl Cancer Inst 83 (20): 1450-9, 1991. [PUBMED Abstract]
+
+Love RR, Barden HS, Mazess RB, et al.: Effect of tamoxifen on lumbar spine bone mineral density in postmenopausal women after 5 years. Arch Intern Med 154 (22): 2585-8, 1994. [PUBMED Abstract]
+
+Powles TJ, Hickish T, Kanis JA, et al.: Effect of tamoxifen on bone mineral density measured by dual-energy x-ray absorptiometry in healthy premenopausal and postmenopausal women. J Clin Oncol 14 (1): 78-84, 1996. [PUBMED Abstract]
+
+Costantino JP, Kuller LH, Ives DG, et al.: Coronary heart disease mortality and adjuvant tamoxifen therapy. J Natl Cancer Inst 89 (11): 776-82, 1997. [PUBMED Abstract]
+
+McDonald CC, Stewart HJ: Fatal myocardial infarction in the Scottish adjuvant tamoxifen trial. The Scottish Breast Cancer Committee. BMJ 303 (6800): 435-7, 1991. [PUBMED Abstract]
+
+Rutqvist LE, Mattsson A: Cardiac and thromboembolic morbidity among postmenopausal women with early-stage breast cancer in a randomized trial of adjuvant tamoxifen. The Stockholm Breast Cancer Study Group. J Natl Cancer Inst 85 (17): 1398-406, 1993. [PUBMED Abstract]
+
+Fisher B, Costantino JP, Redmond CK, et al.: Endometrial cancer in tamoxifen-treated breast cancer patients: findings from the National Surgical Adjuvant Breast and Bowel Project (NSABP) B-14. J Natl Cancer Inst 86 (7): 527-37, 1994. [PUBMED Abstract]
+
+Bergman L, Beelen ML, Gallee MP, et al.: Risk and prognosis of endometrial cancer after tamoxifen for breast cancer. Comprehensive Cancer Centres' ALERT Group. Assessment of Liver and Endometrial cancer Risk following Tamoxifen. Lancet 356 (9233): 881-7, 2000. [PUBMED Abstract]
+
+Cuzick J, Powles T, Veronesi U, et al.: Overview of the main outcomes in breast-cancer prevention trials. Lancet 361 (9354): 296-300, 2003. [PUBMED Abstract]
+
+Redmond CK, Wickerham DL, Cronin W, et al.: The NSABP breast cancer prevention trial (BCPT): a progress report. [Abstract] Proceedings of the American Society of Clinical Oncology 12: A-78, 69, 1993.
+
+Fisher B, Costantino JP, Wickerham DL, et al.: Tamoxifen for prevention of breast cancer: report of the National Surgical Adjuvant Breast and Bowel Project P-1 Study. J Natl Cancer Inst 90 (18): 1371-88, 1998. [PUBMED Abstract]
+
+Fisher B, Costantino JP, Wickerham DL, et al.: Tamoxifen for the prevention of breast cancer: current status of the National Surgical Adjuvant Breast and Bowel Project P-1 study. J Natl Cancer Inst 97 (22): 1652-62, 2005. [PUBMED Abstract]
+
+Powles T, Eeles R, Ashley S, et al.: Interim analysis of the incidence of breast cancer in the Royal Marsden Hospital tamoxifen randomised chemoprevention trial. Lancet 352 (9122): 98-101, 1998. [PUBMED Abstract]
+
+Veronesi U, Maisonneuve P, Costa A, et al.: Prevention of breast cancer with tamoxifen: preliminary findings from the Italian randomised trial among hysterectomised women. Italian Tamoxifen Prevention Study. Lancet 352 (9122): 93-7, 1998. [PUBMED Abstract]
+
+Cuzick J, Forbes J, Edwards R, et al.: First results from the International Breast Cancer Intervention Study (IBIS-I): a randomised prevention trial. Lancet 360 (9336): 817-24, 2002. [PUBMED Abstract]
+
+Powles TJ, Ashley S, Tidy A, et al.: Twenty-year follow-up of the Royal Marsden randomized, double-blinded tamoxifen breast cancer prevention trial. J Natl Cancer Inst 99 (4): 283-90, 2007. [PUBMED Abstract]
+
+Veronesi U, Maisonneuve P, Rotmensz N, et al.: Tamoxifen for the prevention of breast cancer: late results of the Italian Randomized Tamoxifen Prevention Trial among women with hysterectomy. J Natl Cancer Inst 99 (9): 727-37, 2007. [PUBMED Abstract]
+
+Martino S, Costantino J, McNabb M, et al.: The role of selective estrogen receptor modulators in the prevention of breast cancer: comparison of the clinical trials. Oncologist 9 (2): 116-25, 2004. [PUBMED Abstract]
+
+Cuzick J, Forbes JF, Sestak I, et al.: Long-term results of tamoxifen prophylaxis for breast cancer--96-month follow-up of the randomized IBIS-I trial. J Natl Cancer Inst 99 (4): 272-82, 2007. [PUBMED Abstract]
+
+Mocellin S, Goodwin A, Pasquali S: Risk-reducing medications for primary breast cancer: a network meta-analysis. Cochrane Database Syst Rev 4 (4): CD012191, 2019. [PUBMED Abstract]
+
+Fisher B, Dignam J, Wolmark N, et al.: Tamoxifen in treatment of intraductal breast cancer: National Surgical Adjuvant Breast and Bowel Project B-24 randomised controlled trial. Lancet 353 (9169): 1993-2000, 1999. [PUBMED Abstract]
+
+Eriksson M, Eklund M, Borgquist S, et al.: Low-Dose Tamoxifen for Mammographic Density Reduction: A Randomized Controlled Trial. J Clin Oncol 39 (17): 1899-1908, 2021. [PUBMED Abstract]
+
+Lazzeroni M, Puntoni M, Guerrieri-Gonzaga A, et al.: Randomized Placebo Controlled Trial of Low-Dose Tamoxifen to Prevent Recurrence in Breast Noninvasive Neoplasia: A 10-Year Follow-Up of TAM-01 Study. J Clin Oncol 41 (17): 3116-3121, 2023. [PUBMED Abstract]
+
+Khovidhunkit W, Shoback DM: Clinical effects of raloxifene hydrochloride in women. Ann Intern Med 130 (5): 431-9, 1999. [PUBMED Abstract]
+
+Cauley JA, Norton L, Lippman ME, et al.: Continued breast cancer risk reduction in postmenopausal women treated with raloxifene: 4-year results from the MORE trial. Multiple outcomes of raloxifene evaluation. Breast Cancer Res Treat 65 (2): 125-34, 2001. [PUBMED Abstract]
+
+Cummings SR, Eckert S, Krueger KA, et al.: The effect of raloxifene on risk of breast cancer in postmenopausal women: results from the MORE randomized trial. Multiple Outcomes of Raloxifene Evaluation. JAMA 281 (23): 2189-97, 1999. [PUBMED Abstract]
+
+Martino S, Cauley JA, Barrett-Connor E, et al.: Continuing outcomes relevant to Evista: breast cancer incidence in postmenopausal osteoporotic women in a randomized trial of raloxifene. J Natl Cancer Inst 96 (23): 1751-61, 2004. [PUBMED Abstract]
+
+Grady D, Cauley JA, Geiger MJ, et al.: Reduced incidence of invasive breast cancer with raloxifene among women at increased coronary risk. J Natl Cancer Inst 100 (12): 854-61, 2008. [PUBMED Abstract]
+
+Vogel VG, Costantino JP, Wickerham DL, et al.: Effects of tamoxifen vs raloxifene on the risk of developing invasive breast cancer and other disease outcomes: the NSABP Study of Tamoxifen and Raloxifene (STAR) P-2 trial. JAMA 295 (23): 2727-41, 2006. [PUBMED Abstract]
+
+Land SR, Wickerham DL, Costantino JP, et al.: Patient-reported symptoms and quality of life during treatment with tamoxifen or raloxifene for breast cancer prevention: the NSABP Study of Tamoxifen and Raloxifene (STAR) P-2 trial. JAMA 295 (23): 2742-51, 2006. [PUBMED Abstract]
+
+The ATAC Trialists' Group. Arimidex, tamoxifen alone or in combination: Anastrozole alone or in combination with tamoxifen versus tamoxifen alone for adjuvant treatment of postmenopausal women with early breast cancer: first results of the ATAC randomised trial. Lancet 359 (9324): 2131-9, 2002. [PUBMED Abstract]
+
+Goss PE, Ingle JN, Martino S, et al.: A randomized trial of letrozole in postmenopausal women after five years of tamoxifen therapy for early-stage breast cancer. N Engl J Med 349 (19): 1793-802, 2003. [PUBMED Abstract]
+
+Goss PE, Ingle JN, Pritchard KI, et al.: Extending Aromatase-Inhibitor Adjuvant Therapy to 10 Years. N Engl J Med 375 (3): 209-19, 2016. [PUBMED Abstract]
+
+Coombes RC, Hall E, Gibson LJ, et al.: A randomized trial of exemestane after two to three years of tamoxifen therapy in postmenopausal women with primary breast cancer. N Engl J Med 350 (11): 1081-92, 2004. [PUBMED Abstract]
+
+Goss PE, Ingle JN, Alés-Martínez JE, et al.: Exemestane for breast-cancer prevention in postmenopausal women. N Engl J Med 364 (25): 2381-91, 2011. [PUBMED Abstract]
+
+Cuzick J, Sestak I, Forbes JF, et al.: Anastrozole for prevention of breast cancer in high-risk postmenopausal women (IBIS-II): an international, double-blind, randomised placebo-controlled trial. Lancet 383 (9922): 1041-8, 2014. [PUBMED Abstract]
+
+Batur P: In high-risk, postmenopausal women, 5 years of anastrozole reduced breast cancer incidence at 11 years. Ann Intern Med 172 (8): JC45, 2020. [PUBMED Abstract]
+
+Hartmann LC, Schaid DJ, Woods JE, et al.: Efficacy of bilateral prophylactic mastectomy in women with a family history of breast cancer. N Engl J Med 340 (2): 77-84, 1999. [PUBMED Abstract]
+
+Kummerow KL, Du L, Penson DF, et al.: Nationwide trends in mastectomy for early-stage breast cancer. JAMA Surg 150 (1): 9-16, 2015. [PUBMED Abstract]
+
+Carbine NE, Lostumbo L, Wallace J, et al.: Risk-reducing mastectomy for the prevention of primary breast cancer. Cochrane Database Syst Rev 4: CD002748, 2018. [PUBMED Abstract]
+
+Rebbeck TR, Levin AM, Eisen A, et al.: Breast cancer risk after bilateral prophylactic oophorectomy in BRCA1 mutation carriers. J Natl Cancer Inst 91 (17): 1475-9, 1999. [PUBMED Abstract]
+
+Kauff ND, Satagopan JM, Robson ME, et al.: Risk-reducing salpingo-oophorectomy in women with a BRCA1 or BRCA2 mutation. N Engl J Med 346 (21): 1609-15, 2002. [PUBMED Abstract]
+
+Rebbeck TR, Lynch HT, Neuhausen SL, et al.: Prophylactic oophorectomy in carriers of BRCA1 or BRCA2 mutations. N Engl J Med 346 (21): 1616-22, 2002. [PUBMED Abstract]
+
+Kauff ND, Domchek SM, Friebel TM, et al.: Risk-reducing salpingo-oophorectomy for the prevention of BRCA1- and BRCA2-associated breast and gynecologic cancer: a multicenter, prospective study. J Clin Oncol 26 (8): 1331-7, 2008. [PUBMED Abstract]
+
+Factors and Interventions With Inadequate Evidence of an Association
+
+Hormonal Contraceptives
+
+Oral contraceptives have been associated with a small increased risk of breast cancer in current users that diminishes over time.[1] A well-conducted case-control study did not observe an association between breast cancer risk and oral contraceptive use for ever use, duration of use, or recent use.[2]
+
+Another case-control study found no increased risk of breast cancer associated with the use of injectable or implantable progestin-only contraceptives in women aged 35 to 64 years.[3]
+
+A nationwide prospective cohort study in Denmark found that women who currently or recently used hormonal contraceptives had a higher risk of breast cancer than did women who had never used hormonal contraceptives. Moreover, the risk of breast cancer increased with longer duration of hormonal contraceptive use. However, in absolute terms, the effect of oral contraceptives on breast cancer risk was very small; approximately one extra case of breast cancer may be expected for every 7,690 women using hormonal contraception for 1 year.[4]
+
+Environmental Factors
+
+Occupational, environmental, or chemical exposures have all been proposed as causes of breast cancer. Meta-analyses, describing up to 134 environmental chemicals, their sources, and biomarkers of their exposures, suggest that some may be associated with cancer.[5,6] Epidemiological and animal data summarized by the National Academy of Medicine [7] and the Interagency Breast Cancer and Environmental Research Coordinating Committee [8] for a wide range of metals, chemicals, and consumer products indicated that there may be biological plausibility for an association between breast cancer risk and environmental factors. However, the data were largely inconclusive as to whether or not definitive associations exist between specific exposures and increased breast cancer risk, particularly at levels relevant to the general population.
+
+Clearly determining whether specific environmental exposures influence the risk of breast cancer in humans poses important challenges. People are exposed to a variable, difficult-to-measure mix of environmental factors over a lifetime; additionally, cancer can take decades to develop after a potential exposure, making accurate recall challenging. Therefore, teasing out the effects of any individual substance on breast cancer risk is not easy. Because so many factors must be considered, any observed associations can be easily confounded by the analytical problems of multiplicities, measurement challenges, and recall and publication bias.[9,10] Additionally, although a specific environmental exposure might be determined to have the potential to be harmful as observed in an animal model or other toxicological studies using high-dose exposures, this does not necessarily mean that the substance, under conditions in which the general human population is exposed, leads to adverse health outcomes. The ultimate risk to human health depends not only on the intrinsic toxic potential of the substance, but also on the dose or amount the population is exposed to and the timing or length of time of the exposure. Overall, available human studies evaluating potential associations between breast cancer and specific environmental exposures are not conclusive.
+
+References
+
+Breast cancer and hormonal contraceptives: further results. Collaborative Group on Hormonal Factors in Breast Cancer. Contraception 54 (3 Suppl): 1S-106S, 1996. [PUBMED Abstract]
+
+Marchbanks PA, McDonald JA, Wilson HG, et al.: Oral contraceptives and the risk of breast cancer. N Engl J Med 346 (26): 2025-32, 2002. [PUBMED Abstract]
+
+Strom BL, Berlin JA, Weber AL, et al.: Absence of an effect of injectable and implantable progestin-only contraceptives on subsequent risk of breast cancer. Contraception 69 (5): 353-60, 2004. [PUBMED Abstract]
+
+Mørch LS, Skovlund CW, Hannaford PC, et al.: Contemporary Hormonal Contraception and the Risk of Breast Cancer. N Engl J Med 377 (23): 2228-2239, 2017. [PUBMED Abstract]
+
+Brody JG, Rudel RA, Michels KB, et al.: Environmental pollutants, diet, physical activity, body size, and breast cancer: where do we stand in research to identify opportunities for prevention? Cancer 109 (12 Suppl): 2627-34, 2007. [PUBMED Abstract]
+
+Rodgers KM, Udesky JO, Rudel RA, et al.: Environmental chemicals and breast cancer: An updated review of epidemiological literature informed by biological mechanisms. Environ Res 160: 152-182, 2018. [PUBMED Abstract]
+
+Institute of Medicine: Breast Cancer and the Environment: A Life Course Approach. The National Academies Press, 2012. Also available online. Last accessed April 9, 2025.
+
+Interagency Breast Cancer and Environmental Research Coordinating Committee: Breast Cancer and The Environment: Prioritizing Prevention. Bethesda, Md: National Institute of Environmental Health Sciences, 2013. Available online. Last accessed April 9, 2025.
+
+Berry D: Multiplicities in cancer research: ubiquitous and necessary evils. J Natl Cancer Inst 104 (15): 1124-32, 2012. [PUBMED Abstract]
+
+Dickersin K: The existence of publication bias and risk factors for its occurrence. JAMA 263 (10): 1385-9, 1990. [PUBMED Abstract]
+
+Factors and Interventions With Adequate Evidence of Little or No Association
+
+Abortion
+
+Abortion has been proposed as a risk factor for breast cancer. Findings from observational studies have varied; some studies showed an association, while other studies did not. Observational studies that support this association were less rigorous and potentially biased because of differential recall by women on a socially sensitive issue.[1-4] For example, the impact of recall or reporting bias was demonstrated in a study that compared regions with different social attitudes on abortion.[5] The Committee on Gynecologic Practice of the American College of Obstetricians and Gynecologists has concluded that “more rigorous recent studies demonstrate no causal relationship between induced abortion and a subsequent increase in breast cancer risk.”[6] Studies that used prospectively recorded data regarding abortion, thereby avoiding recall bias, largely showed no association with the subsequent development of breast cancer.[7-12]
+
+Diet
+
+There is little evidence that dietary modifications of any kind have an impact on the incidence of breast cancer.
+
+Very few randomized trials in humans compare cancer incidence for different diets. Most studies are observational—including post hoc analyses of randomized trials—and are subject to biases that may be so large as to render the observation difficult to interpret. In particular, P values and confidence intervals (CIs) do not have the same interpretation as when calculated for the primary end point in a randomized trial.
+
+A summary of ecological studies published before 1975 showed a positive correlation between international age-adjusted breast cancer mortality rates and the estimated per capita consumption of dietary fat.[13] Results of case-control studies have been mixed. Twenty years later, a pooled analysis of results from seven cohort studies found no association between total dietary fat intake and breast cancer risk.[14]
+
+A randomized, controlled, dietary modification study was undertaken among 48,835 postmenopausal women aged 50 to 79 years who were also enrolled in the Women's Health Initiative. The intervention promoted a goal of reducing total fat intake by 20% by increasing vegetable, fruit, and grain consumption. The intervention group reduced fat intake by approximately 10% for more than 8.1 years of follow-up, resulting in lower estradiol and gamma-tocopherol levels, but no persistent weight loss. The incidence of invasive breast cancer was numerically, but not statistically lower in the intervention group, with a hazard ratio (HR) of 0.91 (95% CI, 0.83–1.01).[15] There was no difference in all-cause mortality, overall mortality, or the incidence of cardiovascular events.[16]
+
+With regard to fruit and vegetable intake, a pooled analysis of eight cohort studies including more than 350,000 women with 7,377 incident breast cancers showed little or no association for various assumed statistical models.[17]
+
+The Women's Healthy Eating and Living Randomized Trial [18] examined the effect of diet on the incidence of new primary breast cancers in women previously diagnosed with breast cancer. More than 3,000 women were enrolled and randomly assigned to an intense regimen of increased fruit and vegetable intake, increased fiber intake, and decreased fat intake, or a comparison group receiving printed materials on the “5-A-Day” dietary guidelines. After a mean of 7.3 years of follow-up, there was no reduction in new primary cancers, no difference in disease-free survival, and no difference in overall survival.
+
+A randomized trial in Spain [19] assigned participants who were at high cardiovascular risk to one of three diets: a Mediterranean diet supplemented with extra-virgin olive oil, a Mediterranean diet supplemented with mixed nuts, or a control Mediterranean diet (counseling to reduce dietary fat). The investigators reported a statistically significant reduction in major cardiovascular events, which was the trial’s primary end point.[20] The investigators also addressed other end points, including the incidence of breast cancer, although it is not specified how many were examined. Based on only 35 cases of invasive breast cancer (as compared with 288 major cardiovascular events), the respective rates of breast cancer were 8 of 1,476 (0.54%); 10 of 1,285 (0.78%); and 17 of 1,391 (1.22%) with respective average follow-up durations of 4.8, 4.3, and 4.2 years. The circumstances of the study make it difficult to determine the statistical significance of these differences.
+
+Vitamins
+
+The potential role of specific micronutrients for breast cancer risk reduction has been examined in clinical trials, with cardiovascular disease and cancer as outcomes. The Women’s Health Study, a randomized trial with 39,876 women, found no difference in breast cancer incidence at 2 years between women assigned to take either beta carotene or placebo.[21] In this same study, no overall effect on cancer was seen in women taking 600 IU of vitamin E every other day.[22] The Women’s Antioxidant Cardiovascular Study examined 8,171 women for incidence of total cancer and invasive breast cancer and found no effect for vitamin C, vitamin E, or beta carotene.[23] Two years later, a subset of 5,442 women were randomly assigned to take 1.5 mg of folic acid, 50 mg of vitamin B6, and 1 mg of vitamin B12, or placebo. After 7.3 years, there was no difference in the incidence of total invasive cancer or invasive breast cancer.[24]
+
+Fenretinide [25] is a vitamin A analog that has been shown to reduce breast carcinogenesis in preclinical studies. A phase III Italian trial compared the efficacy of a 5-year intervention with fenretinide versus no treatment in 2,972 women, aged 30 to 70 years, with surgically removed stage I breast cancer or DCIS. At a median observation time of 97 months, there were no statistically significant differences in the occurrence of contralateral breast cancer (P = .642), ipsilateral breast cancer (P = .177), incidence of distant metastases, nonbreast malignancies, and all-cause mortality.[26]
+
+Active and Passive Cigarette Smoking
+
+The potential role of active cigarette smoking in the etiology of breast cancer has been studied for more than three decades, with no clear-cut evidence of an association.[27] Since the mid-1990s, studies of cigarette smoking and breast cancer have more carefully accounted for secondhand smoke exposure.[27,28] A recent meta-analysis suggests that there is no overall association between passive smoking and breast cancer and that study methodology (ascertainment of exposure after breast cancer diagnosis) may be responsible for the apparent risk associations seen in some studies.[29]
+
+Underarm Deodorants/Antiperspirants
+
+Despite warnings to women in lay publications that underarm deodorants and antiperspirants cause breast cancer, there is no evidence to support these concerns. A study based on interviews with 813 women who had breast cancer and 793 controls found no association between the risk of breast cancer and the use of antiperspirants, the use of deodorants, or the use of blade razors before these products were applied.[30] In contrast, a study of 437 breast cancer survivors found that women who used antiperspirants/deodorants and shaved their underarms more frequently had cancer diagnosed at a significantly younger age. It is likely that this finding could be explained by differences in endogenous hormones rather than shaving and antiperspirant/deodorant use. Early menarche and increased body hair are both associated with increased levels of endogenous hormones, known to be risk factors for breast cancer.[31]
+
+Statins
+
+Two well-conducted meta-analyses of randomized controlled trials (RCTs) [32] and RCTs plus observational studies [33] found no evidence that statin use either increases or decreases the risk of breast cancer.
+
+Bisphosphonates
+
+Oral and intravenous bisphosphonates for the treatment of hypercalcemia and osteoporosis have been studied for a possible beneficial effect on breast cancer prevention. Initial observational studies suggested that women who used these drugs for durations of approximately 1 to 4 years had a lower incidence of breast cancer.[34-37] These findings are confounded by the fact that women with osteoporosis have lower breast cancer risk than those with normal bone density. Additional evidence came from studies of women with a breast cancer diagnosis; the use of these drugs was associated with fewer new contralateral cancers.[38] With this background, two large randomized placebo-controlled trials were done. The Fracture Intervention Trial (FIT) treated 6,194 postmenopausal osteopenic women with either alendronate or placebo and found no difference at 3.8 years in breast cancer incidence, with incidence of 1.8% and 1.5%, respectively (HR, 1.24; 95% CI, 0.84–1.83). The Health Outcomes and Reduced Incidence With Zoledronic Acid Once Yearly-Pivotal Fracture Trial (HORIZON-PRT) examined 7,580 postmenopausal osteoporotic women with either intravenous zoledronate or placebo and found no difference at 2.8 years in breast cancer incidence, with incidence of 0.8% and 0.9%, respectively (HR, 1.15; 95% CI, 0.7–1.89).[39]
+
+Working Night Shifts
+
+Based on evidence from animal studies, the World Health Organization’s International Agency for Research on Cancer (IARC) classified shift work that involves circadian disruption as a probable breast carcinogen.[40] In 2013, a meta-analysis of 15 epidemiological studies found only weak evidence of an increased incidence of breast cancer among women who had ever worked night shifts.[41] In 2016, the results from three recent prospective studies from the United Kingdom, involving nearly 800,000 women, were combined with results from seven other prospective studies and showed no evidence of any association between breast cancer incidence and night shift work. In particular, the confidence intervals for the incidence rate ratios were narrow, even for 20 years or more of night shift work (rate ratio, 1.01; 95% CI, 0.93–1.10). These results exclude a moderate association of breast cancer incidence with long duration of night shift work.[42]
+
+The U.K. Generations Study was established in 2003 to address risk factors and causes of breast cancer. In a prospective cohort of 105,000 women, information was obtained by questionnaire on bedroom light levels at night at the time of study recruitment and at age 20 years. They followed women for an average of 6.1 years and observed 1,775 breast cancers. Adjusting for potentially confounding factors, including night shift work, they found no evidence that the amount of bedroom light at night was associated with breast cancer risk. For the highest-to-lowest levels of light at night, the HR of breast cancer incidence was 1.01 (95% CI, 0.88–1.15).[43]
+
+References
+
+Huang Y, Zhang X, Li W, et al.: A meta-analysis of the association between induced abortion and breast cancer risk among Chinese females. Cancer Causes Control 25 (2): 227-36, 2014. [PUBMED Abstract]
+
+Sanderson M, Shu XO, Jin F, et al.: Abortion history and breast cancer risk: results from the Shanghai Breast Cancer Study. Int J Cancer 92 (6): 899-905, 2001. [PUBMED Abstract]
+
+Beral V, Bull D, Doll R, et al.: Breast cancer and abortion: collaborative reanalysis of data from 53 epidemiological studies, including 83,000 women with breast cancer from 16 countries. Lancet 363 (9414): 1007-16, 2004. [PUBMED Abstract]
+
+Melbye M, Wohlfahrt J, Olsen JH, et al.: Induced abortion and the risk of breast cancer. N Engl J Med 336 (2): 81-5, 1997. [PUBMED Abstract]
+
+Rookus MA, van Leeuwen FE: Induced abortion and risk for breast cancer: reporting (recall) bias in a Dutch case-control study. J Natl Cancer Inst 88 (23): 1759-64, 1996. [PUBMED Abstract]
+
+Committee on Gynecologic Practice: ACOG Committee Opinion No. 434: induced abortion and breast cancer risk. Obstet Gynecol 113 (6): 1417-8, 2009. [PUBMED Abstract]
+
+Henderson KD, Sullivan-Halley J, Reynolds P, et al.: Incomplete pregnancy is not associated with breast cancer risk: the California Teachers Study. Contraception 77 (6): 391-6, 2008. [PUBMED Abstract]
+
+Lash TL, Fink AK: Null association between pregnancy termination and breast cancer in a registry-based study of parous women. Int J Cancer 110 (3): 443-8, 2004. [PUBMED Abstract]
+
+Michels KB, Xue F, Colditz GA, et al.: Induced and spontaneous abortion and incidence of breast cancer among young women: a prospective cohort study. Arch Intern Med 167 (8): 814-20, 2007. [PUBMED Abstract]
+
+Wu JQ, Li YY, Ren JC, et al.: Induced abortion and breast cancer: results from a population-based case control study in China. Asian Pac J Cancer Prev 15 (8): 3635-40, 2014. [PUBMED Abstract]
+
+Braüner CM, Overvad K, Tjønneland A, et al.: Induced abortion and breast cancer among parous women: a Danish cohort study. Acta Obstet Gynecol Scand 92 (6): 700-5, 2013. [PUBMED Abstract]
+
+Guo J, Huang Y, Yang L, et al.: Association between abortion and breast cancer: an updated systematic review and meta-analysis based on prospective studies. Cancer Causes Control 26 (6): 811-9, 2015. [PUBMED Abstract]
+
+Carroll KK, Khor HT: Dietary fat in relation to tumorigenesis. Prog Biochem Pharmacol 10: 308-53, 1975. [PUBMED Abstract]
+
+Hunter DJ, Spiegelman D, Adami HO, et al.: Cohort studies of fat intake and the risk of breast cancer--a pooled analysis. N Engl J Med 334 (6): 356-61, 1996. [PUBMED Abstract]
+
+Prentice RL, Caan B, Chlebowski RT, et al.: Low-fat dietary pattern and risk of invasive breast cancer: the Women's Health Initiative Randomized Controlled Dietary Modification Trial. JAMA 295 (6): 629-42, 2006. [PUBMED Abstract]
+
+Howard BV, Van Horn L, Hsia J, et al.: Low-fat dietary pattern and risk of cardiovascular disease: the Women's Health Initiative Randomized Controlled Dietary Modification Trial. JAMA 295 (6): 655-66, 2006. [PUBMED Abstract]
+
+Smith-Warner SA, Spiegelman D, Yaun SS, et al.: Intake of fruits and vegetables and risk of breast cancer: a pooled analysis of cohort studies. JAMA 285 (6): 769-76, 2001. [PUBMED Abstract]
+
+Pierce JP, Natarajan L, Caan BJ, et al.: Influence of a diet very high in vegetables, fruit, and fiber and low in fat on prognosis following treatment for breast cancer: the Women's Healthy Eating and Living (WHEL) randomized trial. JAMA 298 (3): 289-98, 2007. [PUBMED Abstract]
+
+Toledo E, Salas-Salvadó J, Donat-Vargas C, et al.: Mediterranean Diet and Invasive Breast Cancer Risk Among Women at High Cardiovascular Risk in the PREDIMED Trial: A Randomized Clinical Trial. JAMA Intern Med 175 (11): 1752-60, 2015. [PUBMED Abstract]
+
+Estruch R, Ros E, Salas-Salvadó J, et al.: Primary prevention of cardiovascular disease with a Mediterranean diet. N Engl J Med 368 (14): 1279-90, 2013. [PUBMED Abstract]
+
+Lee IM, Cook NR, Manson JE, et al.: Beta-carotene supplementation and incidence of cancer and cardiovascular disease: the Women's Health Study. J Natl Cancer Inst 91 (24): 2102-6, 1999. [PUBMED Abstract]
+
+Lee IM, Cook NR, Gaziano JM, et al.: Vitamin E in the primary prevention of cardiovascular disease and cancer: the Women's Health Study: a randomized controlled trial. JAMA 294 (1): 56-65, 2005. [PUBMED Abstract]
+
+Lin J, Cook NR, Albert C, et al.: Vitamins C and E and beta carotene supplementation and cancer risk: a randomized controlled trial. J Natl Cancer Inst 101 (1): 14-23, 2009. [PUBMED Abstract]
+
+Zhang SM, Cook NR, Albert CM, et al.: Effect of combined folic acid, vitamin B6, and vitamin B12 on cancer risk in women: a randomized trial. JAMA 300 (17): 2012-21, 2008. [PUBMED Abstract]
+
+Costa A, Formelli F, Chiesa F, et al.: Prospects of chemoprevention of human cancers with the synthetic retinoid fenretinide. Cancer Res 54 (7 Suppl): 2032s-2037s, 1994. [PUBMED Abstract]
+
+Veronesi U, De Palo G, Marubini E, et al.: Randomized trial of fenretinide to prevent second breast malignancy in women with early breast cancer. J Natl Cancer Inst 91 (21): 1847-56, 1999. [PUBMED Abstract]
+
+The Health Consequences of Smoking: A Report of the Surgeon General. U.S. Department of Health and Human Services, CDC, National Center for Chronic Disease Prevention and Health Promotion, Office on Smoking and Health, 2004. Also available online. Last accessed April 9, 2025.
+
+U.S. Department of Health and Human Services: The Health Consequences of Involuntary Exposure to Tobacco Smoke: A Report of the Surgeon General. U.S. Department of Health and Human Services, Centers for Disease Control and
+Prevention, Coordinating Center for Health Promotion, National Center for Chronic Disease Prevention and Health Promotion, Office on Smoking and Health, 2006. Also available online. Last accessed February 20, 2025.
+
+Pirie K, Beral V, Peto R, et al.: Passive smoking and breast cancer in never smokers: prospective study and meta-analysis. Int J Epidemiol 37 (5): 1069-79, 2008. [PUBMED Abstract]
+
+Mirick DK, Davis S, Thomas DB: Antiperspirant use and the risk of breast cancer. J Natl Cancer Inst 94 (20): 1578-80, 2002. [PUBMED Abstract]
+
+McGrath KG: An earlier age of breast cancer diagnosis related to more frequent use of antiperspirants/deodorants and underarm shaving. Eur J Cancer Prev 12 (6): 479-85, 2003. [PUBMED Abstract]
+
+Dale KM, Coleman CI, Henyan NN, et al.: Statins and cancer risk: a meta-analysis. JAMA 295 (1): 74-80, 2006. [PUBMED Abstract]
+
+Bonovas S, Filioussi K, Tsavaris N, et al.: Use of statins and breast cancer: a meta-analysis of seven randomized clinical trials and nine observational studies. J Clin Oncol 23 (34): 8606-12, 2005. [PUBMED Abstract]
+
+Newcomb PA, Trentham-Dietz A, Hampton JM: Bisphosphonates for osteoporosis treatment are associated with reduced breast cancer risk. Br J Cancer 102 (5): 799-802, 2010. [PUBMED Abstract]
+
+Rennert G, Pinchev M, Rennert HS: Use of bisphosphonates and risk of postmenopausal breast cancer. J Clin Oncol 28 (22): 3577-81, 2010. [PUBMED Abstract]
+
+Chlebowski RT, Chen Z, Cauley JA, et al.: Oral bisphosphonate use and breast cancer incidence in postmenopausal women. J Clin Oncol 28 (22): 3582-90, 2010. [PUBMED Abstract]
+
+Cardwell CR, Abnet CC, Veal P, et al.: Exposure to oral bisphosphonates and risk of cancer. Int J Cancer 131 (5): E717-25, 2012. [PUBMED Abstract]
+
+Monsees GM, Malone KE, Tang MT, et al.: Bisphosphonate use after estrogen receptor-positive breast cancer and risk of contralateral breast cancer. J Natl Cancer Inst 103 (23): 1752-60, 2011. [PUBMED Abstract]
+
+Hue TF, Cummings SR, Cauley JA, et al.: Effect of bisphosphonate use on risk of postmenopausal breast cancer: results from the randomized clinical trials of alendronate and zoledronic acid. JAMA Intern Med 174 (10): 1550-7, 2014. [PUBMED Abstract]
+
+Straif K, Baan R, Grosse Y, et al.: Carcinogenicity of shift-work, painting, and fire-fighting. Lancet Oncol 8 (12): 1065-1066, 2007. [PUBMED Abstract]
+
+Kamdar BB, Tergas AI, Mateen FJ, et al.: Night-shift work and risk of breast cancer: a systematic review and meta-analysis. Breast Cancer Res Treat 138 (1): 291-301, 2013. [PUBMED Abstract]
+
+Travis RC, Balkwill A, Fensom GK, et al.: Night Shift Work and Breast Cancer Incidence: Three Prospective Studies and Meta-analysis of Published Studies. J Natl Cancer Inst 108 (12): , 2016. [PUBMED Abstract]
+
+Johns LE, Jones ME, Schoemaker MJ, et al.: Domestic light at night and breast cancer risk: a prospective analysis of 105 000 UK women in the Generations Study. Br J Cancer 118 (4): 600-606, 2018. [PUBMED Abstract]

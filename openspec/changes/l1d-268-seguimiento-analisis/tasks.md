@@ -113,12 +113,12 @@
       memoria como única base) y la comprobación de RN-24 sobre lo mostrado; sin PII · **evaluate**
       Hecho como módulo propio `app/evaluation/seguimiento.py` + `data/eval/fx-seguimiento/` (corpus de FX-T5a-a), sobre el
       `ResponderSeguimiento` de producción; integrarlo a `evaluate --suite all` queda para US-140.
-- [ ] 4.2 DIFERIDA -> entrega 2 (Gate 2: el orquestador lanza `ai-eval-runner`). `run-ai-eval` con adapters falsos sobre la rama (job `eval-required`): reporte de `ai-eval-runner` en
+- [x] 4.2 Hecho en el Gate 2 (PASS): el orquestador lanzó `ai-eval-runner`. `run-ai-eval` con adapters falsos sobre la rama (job `eval-required`): reporte de `ai-eval-runner` en
       `reports/eval/` adjunto al PR con fidelidad, precisión de citas, «sin evidencia», salidas prescriptivas = 0 y RN-24 ·
       **evaluate**
 - [ ] 4.3 DIFERIDA -> D5-13 (corrida nocturna de L1D-268). Medición con modelos locales en la corrida nocturna del día 2 (`S5-refinamiento.md` §5), registrada en el reporte
       de la corrida; si no cabe, DIFERIDA -> US-140 · **evaluate**
-- [ ] 4.4 DIFERIDA -> entrega 2 (Gate 2). Revisión de la plantilla de seguimiento por `clinical-language-auditor` (RN-23, RN-24, RN-19) en el Gate 2 ·
+- [x] 4.4 Hecho en el Gate 2 (PASS). Revisión de la plantilla de seguimiento por `clinical-language-auditor` (RN-23, RN-24, RN-19) en el Gate 2 ·
       **verificación**
 
 ## humano
@@ -140,13 +140,13 @@ ANALYSIS_FOLLOWUP_MAX=10
 | E-18 y E-19 | rag-orchestrator · clinical-api | `response-body-wrapped-in-one-of-original-preserved` (WARN, no rompe; sin entrada en el JSON) en `POST /rag/follow-up` y `POST /platform/evidence-analyses/{analysisId}/follow-ups`: el `503` pasa de `ErrorLlmLocalNoDisponible` a un `oneOf` que lo conserva (+ `ErrorRecuperacionNoDisponible`, `ErrorNliNoDisponible`, `ErrorSalidaLlmInvalida` en Backend 2; `GeneracionNoDisponible` en Backend 1) | l1d-268-seguimiento-analisis | El seguimiento reutiliza el pipeline del análisis y falla cerrado por las mismas causas; clinical-api y web clasifican por código HTTP y de error. Decidido (usuario, 2026-11-03, `[S5 resp. 10]`) |
 ```
 
-- [ ] H-3 `backlog/sprints/S5-deuda.md`: registrar D5-13 (corrida nocturna de L1D-268), DIFERIDA -> H-3. Bloque literal:
+- [x] H-3 `backlog/sprints/S5-deuda.md`: registrar D5-13 (corrida nocturna de L1D-268); registrado en S5-deuda.md. Bloque literal:
 
 ```
 | D5-13 | L1D-268 | Medición del seguimiento (`rag-follow-up@0.1.0`) con modelos locales en la corrida nocturna del día 2: fidelidad, precisión de citas, «sin evidencia», salidas prescriptivas = 0 y RN-24 (`python -m app.evaluation.seguimiento` con proveedor local) | tasks 4.3 |
 ```
 
-- [ ] H-4 `backlog/sprints/S5-deuda.md`: registrar D5-15 y D5-16 (vuelta 1 del Gate 2), DIFERIDA -> H-4. Bloque literal:
+- [x] H-4 `backlog/sprints/S5-deuda.md`: registrar D5-15 y D5-16 (vuelta 1 del Gate 2); registrado en S5-deuda.md. Bloque literal:
 
 ```
 | D5-15 | L1D-268 | `MARCADORES_DE_IDENTIDAD` de `contexto_del_seguimiento.py` duplica los marcadores de `apps/clinical-api/config/pii-masks.json`: añadir un test de paridad entre ambos | design #5 |

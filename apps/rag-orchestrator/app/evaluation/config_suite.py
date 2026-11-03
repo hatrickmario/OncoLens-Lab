@@ -75,6 +75,12 @@ class Barrido:
     grilla: tuple[float, ...]
     umbral_de_referencia: float
     tolerancia_recall: float
+    # Calibración del S5 (US-120 AC-5, RN-22): ``NLI_ENTAILMENT_THRESHOLD_GRID``, ``RETRIEVAL_TOP_K_GRID``,
+    # ``RETRIEVAL_TOP_K_RECALL_TOLERANCE`` y el límite opcional del p95 de búsqueda; vacíos/``None`` = no declarados.
+    nli_entailment_threshold_grid: tuple[float, ...] = ()
+    retrieval_top_k_grid: tuple[int, ...] = ()
+    retrieval_top_k_recall_tolerance: float | None = None
+    retrieval_p95_maximo_ms: float | None = None
 
 
 @dataclass(frozen=True)
@@ -114,6 +120,8 @@ class ConfigSuite:
     """Bloque ``origen`` de la medición de US-236 (pregunta de la demo y ``EVAL_ORIGIN_RUNS``); ``None`` en el resto."""
     comparacion: Comparacion | None = None
     """Bloque ``comparacion`` de US-133: varios brazos de recuperación en una sola corrida; ``None`` en el resto."""
+    p95_corridas: int | None = None
+    """``EVAL_P95_RUNS`` (US-120 AC-6, RN-22): corridas del baseline de las que sale la mediana del p95; ``None`` = no declarado."""
     rn23_tolerancia_falsos_positivos: int | None = None
     """``rn23_tolerancia_falsos_positivos`` (RN-22, US-249 AC-5): cuántos rechazos legítimos más que la línea base 1.5.0
     tolera la suite. Sin valor por defecto en código: ``None`` = no declarada y la suite no corre un dataset con salidas
@@ -242,7 +250,49 @@ def _barrido_de(crudo: dict[str, Any]) -> Barrido | None:
         raise ConfigInvalida("barrido.umbral_de_referencia debe estar en la grilla")
     if not 0.0 <= tolerancia <= 1.0:
         raise ConfigInvalida("barrido.tolerancia_recall debe estar en [0, 1]")
-    return Barrido(grilla, referencia, tolerancia)
+    return Barrido(
+        grilla,
+        referencia,
+        tolerancia,
+        **_calibracion_del_s5(seccion),
+    )
+
+
+def _calibracion_del_s5(seccion: dict[str, Any]) -> dict[str, Any]:
+    """Las grillas de ``nli_entailment_threshold`` y ``retrieval_top_k`` (US-120 AC-5); opcionales, pero una grilla de ``k``
+    exige su tolerancia de recall (RN-22: sin valor por defecto en código)."""
+    entailment = tuple(float(v) for v in seccion.get("nli_entailment_threshold_grid") or ())
+    top_k = tuple(
+        _exigir_entero_positivo(v, "barrido.retrieval_top_k_grid")
+        for v in seccion.get("retrieval_top_k_grid") or ()
+    )
+    if any(not 0.0 <= v <= 1.0 for v in entailment):
+        raise ConfigInvalida("barrido.nli_entailment_threshold_grid debe tener valores en [0, 1]")
+    tolerancia = seccion.get("retrieval_top_k_recall_tolerance")
+    if top_k and tolerancia is None:
+        raise ConfigInvalida(
+            "barrido.retrieval_top_k_recall_tolerance es obligatoria con retrieval_top_k_grid"
+        )
+    if (
+        tolerancia is not None
+        and not 0.0 <= _numero(tolerancia, "barrido.retrieval_top_k_recall_tolerance") <= 1.0
+    ):
+        raise ConfigInvalida("barrido.retrieval_top_k_recall_tolerance debe estar en [0, 1]")
+    p95 = seccion.get("retrieval_p95_maximo_ms")
+    if p95 is not None and _numero(p95, "barrido.retrieval_p95_maximo_ms") <= 0:
+        raise ConfigInvalida("barrido.retrieval_p95_maximo_ms debe ser positivo")
+    return {
+        "nli_entailment_threshold_grid": entailment,
+        "retrieval_top_k_grid": top_k,
+        "retrieval_top_k_recall_tolerance": None if tolerancia is None else float(tolerancia),
+        "retrieval_p95_maximo_ms": None if p95 is None else float(p95),
+    }
+
+
+def _corridas_de_p95(crudo: dict[str, Any]) -> int | None:
+    """``medicion.p95_corridas`` (``EVAL_P95_RUNS``): sin valor por defecto en código (RN-22); entero positivo si se declara."""
+    corridas = crudo["medicion"].get("p95_corridas")
+    return None if corridas is None else _exigir_entero_positivo(corridas, "medicion.p95_corridas")
 
 
 def _limite_de_rss(crudo: dict[str, Any]) -> float | None:
@@ -388,5 +438,6 @@ def cargar_config_suite(ruta: Path, entorno: Mapping[str, str] | None = None) ->
         rss_limite_mib=_limite_de_rss(crudo),
         origen=crudo.get("origen"),
         comparacion=_comparacion_de(crudo, sub),
+        p95_corridas=_corridas_de_p95(crudo),
         rn23_tolerancia_falsos_positivos=_tolerancia_de_falsos_positivos(crudo),
     )

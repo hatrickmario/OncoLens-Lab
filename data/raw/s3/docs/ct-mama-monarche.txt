@@ -1,0 +1,67 @@
+Source: ClinicalTrials.gov (U.S. National Library of Medicine), study record NCT03155997, last updated 2026-04-24; retrieved 2026-11-03 through the ClinicalTrials.gov API v2 (data timestamp 2026-11-03T10:00:05). Modifications: selected fields reordered as plain text; contacts, locations, results and documents omitted. This is a trial registry record, not evidence of efficacy.
+
+Title
+A Randomized, Open-Label, Phase 3 Study of Abemaciclib Combined With Standard Adjuvant Endocrine Therapy Versus Standard Adjuvant Endocrine Therapy Alone in Patients With High Risk, Node Positive, Early Stage, Hormone Receptor Positive, Human Epidermal Receptor 2 Negative, Breast Cancer
+
+Brief title
+Endocrine Therapy With or Without Abemaciclib (LY2835219) Following Surgery in Participants With Breast Cancer
+
+Sponsor
+Eli Lilly and Company
+
+Status: ACTIVE_NOT_RECRUITING. Phase: PHASE3. Study type: INTERVENTIONAL. Enrollment: 5637.
+
+Brief summary
+The purpose of this study is to evaluate the safety and efficacy of the study drug abemaciclib in participants with high risk, node positive, early stage, hormone receptor positive (HR+), human epidermal receptor 2 negative (HER2-), breast cancer.
+
+Conditions:
+- Breast Cancer
+
+Design
+Allocation: RANDOMIZED. Intervention model: PARALLEL. Masking: NONE.
+
+Arm (EXPERIMENTAL): 150 mg Abemaciclib + Endocrine Therapy
+Participants received Abemaciclib orally at 150 milligrams (mg) twice daily with at least 6 hours between doses for up to 2 years or until evidence of disease recurrence or other discontinuation criteria were met, whichever occurs first. Endocrine therapy (physicians' choice) standard-of-care was administered according to package label until discontinuation criteria were met.
+
+Arm (OTHER): Endocrine Therapy
+Endocrine therapy (physicians' choice) standard-of-care was administered according to package label until discontinuation criteria were met.
+
+Primary outcomes
+- Invasive Disease Free Survival (IDFS) (Baseline to Recurrence or Death from Any Cause (Up to 32 Months)). IDFS, as defined by the STEEP System, was measured from the date of randomization to the date of first occurrence of one of the following events: ipsilateral invasive breast tumor recurrence, regional invasive breast cancer recurrence, distant recurrence, contralateral invasive breast cancer, second primary non-breast invasive cancer, death attributable to any cause.
+
+Eligibility criteria
+Inclusion Criteria:
+
+* Women (regardless of menopausal status) or men ≥18 years of age (or per local regulations).
+* The participant has confirmed HR+, HER2-, early stage resected invasive breast cancer without evidence of distant metastases.
+* The participant must have undergone definitive surgery of the primary breast tumor.
+* The participant must have tumor tissue from breast (preferred) or lymph node for exploratory biomarker analysis available prior to randomization.
+* Pathologic lymph node involvement and at least one of the following indicating a higher risk of recurrence:
+
+* 4 or more positive axillary lymph nodes
+* Tumor size of at least 5 centimeters
+* Grade 3 defined as at least 8 points on the Bloom Richardson grading system
+* Ki-67 index by central analysis of ≥20% on untreated breast tissue
+* The participant must be randomized within 16 months from the time of definitive breast cancer surgery.
+* The participant may receive up to 12 weeks of endocrine therapy until randomization following the last non-endocrine therapy (surgery, chemotherapy, or radiation) whichever is last.
+* Participants must have recovered (grade ≤1) from the acute effects of chemotherapy and radiotherapy and from surgical side effects following definitive breast surgery.
+* Women of reproductive potential must have a negative blood pregnancy test and agree to use highly effective contraceptive methods.
+* The participant has a Eastern Cooperative Oncology Group (ECOG) performance status ≤1.
+* The participant has adequate organ function.
+* The participant is able to swallow oral medications.
+
+Exclusion Criteria:
+
+* Metastatic disease (including contralateral axillary lymph nodes) or node-negative disease.
+* Participants with inflammatory breast cancer.
+* Participants with a history of previous breast cancer, with the exception of ipsilateral ductal carcinoma in situ (DCIS) treated by locoregional therapy alone ≥5 years ago. Participants with a history of contralateral DCIS treated by local regional therapy at any time may be eligible. Participants with a history of any other cancer (except non-melanoma skin cancer or carcinoma in situ of the cervix), unless in complete remission with no therapy for a minimum of 5 years from the date of randomization are excluded.
+* Females who are pregnant or lactating.
+* The participant has previously received treatment with any CDK4 and CDK6 inhibitor.
+* The participant is receiving concurrent exogenous reproductive hormone therapy (for example, birth control pills, hormone replacement therapy, or megestrol acetate).
+* The participant has previously received endocrine therapy for breast cancer prevention (tamoxifen or aromatase inhibitors) or raloxifene.
+* The participant has serious preexisting medical condition(s) that, in the judgment of the investigator, would preclude participation in this study.
+* The participant has a personal history of any of the following conditions: syncope of cardiovascular etiology, ventricular arrhythmia of pathological origin or sudden cardiac arrest. Any participant with a history of venous thromboembolism (VTE).
+* The participant has active systemic infections or viral load.
+* The participant has received an experimental treatment in a clinical trial within the last 30 days or 5 half-lives, whichever is longer.
+
+Sex: ALL. Minimum age: 18 Years. Maximum age: not stated. Standard ages: ADULT, OLDER_ADULT. Healthy volunteers: False.

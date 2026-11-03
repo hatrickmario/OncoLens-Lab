@@ -31,8 +31,7 @@ desidentificado) cambia sola cuando cambia un dato vigente (AC-5, D-10). No se r
   biomarcador vigente (test: dos biomarcadores del mismo examen corregidos en secuencia).
 - **D4 · Normalización.** El `originalName` del biomarcador no se corrige (el término es el mismo dato); el nuevo
   registro conserva `originalName`, y `name`/`loincCode`/`mappingStatus` los vuelve a decidir `ReconciliationService`
-  (l1d-84) con el catálogo montado. `VALOR_FUERA_DE_CATALOGO` cuando el valor cualitativo no está en los valores
-  admitidos del catálogo para ese biomarcador (misma regla que US-110, reutilizada, no copiada).
+  (l1d-84) con el catálogo montado. `VALOR_FUERA_DE_CATALOGO` (`field = value`) cuando un resultado `cuantitativo` no es numérico (Decidido (usuario, 2026-11-04)); los valores admitidos de un cualitativo (HER2) dependen del catálogo, que no los trae: limitación a validar con el oncólogo (D5-21), sin enum inventado.
 - **D5 · Validación** con el schema Zod generado del spec en el borde (cliente y servidor): fecha posterior a hoy
   (reloj inyectado) → `422 CUERPO_INVALIDO` con `field = "performedAt"`; texto de nota vacío o > `CLINICAL_NOTE_MAX_CHARS`
   (configuración, RN-22) → `422` con `field = "content"`. Paciente egresado → `422 PACIENTE_EGRESADO` **antes** de

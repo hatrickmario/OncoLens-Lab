@@ -168,6 +168,19 @@ class CorpusDocumentRepository:
                 "con_poblacion_verificada": conexion.execute(verificados).scalar_one(),
             }
 
+    def documentos_vigentes_con_poblacion(self) -> list[RegistroDeDocumento]:
+        """Filas vigentes y embebidas con su población, para el resumen por tipo de cáncer e idioma (US-120 AC-7)."""
+        consulta = (
+            sa.select(corpus_document)
+            .where(
+                corpus_document.c.is_current.is_(True),
+                corpus_document.c.status == STATUS_EMBEBIDO,
+            )
+            .order_by(corpus_document.c.document_id)
+        )
+        with self._motor.connect() as conexion:
+            return [_registro_de(fila) for fila in conexion.execute(consulta).mappings()]
+
     def ids_de_documentos_vigentes(self) -> frozenset[str]:
         consulta = sa.select(corpus_document.c.document_id).where(
             corpus_document.c.is_current.is_(True), corpus_document.c.status == STATUS_EMBEBIDO

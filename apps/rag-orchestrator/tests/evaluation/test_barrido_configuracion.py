@@ -57,8 +57,8 @@ def test_fijar_umbral_reescribe_solo_el_valor_y_conserva_los_comentarios(tmp_pat
 
     antes, despues = CONFIG.read_text(encoding="utf-8"), ruta.read_text(encoding="utf-8")
     assert cargar_config_suite(ruta).umbrales.relevance_threshold == 0.45
-    assert [l for l in despues.splitlines() if "relevance_threshold:" not in l] == [
-        l for l in antes.splitlines() if "relevance_threshold:" not in l
+    assert [x for x in despues.splitlines() if "relevance_threshold:" not in x] == [
+        x for x in antes.splitlines() if "relevance_threshold:" not in x
     ]
 
 

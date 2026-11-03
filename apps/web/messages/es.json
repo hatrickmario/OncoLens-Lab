@@ -79,7 +79,6 @@
       "poblacionNoComparable": "Según los datos registrados, al menos un criterio excluyente del estudio no coincide con este paciente. La opción se muestra igualmente.",
       "noEvaluada": "Aplicabilidad no evaluada: sin datos de población en las fuentes citadas",
       "verPorCriterio": "Ver aplicabilidad por criterio",
-      "etiquetaNoComparable": "Población no comparable",
       "columnas": {
         "criterio": "Criterio",
         "paciente": "Paciente",
@@ -339,6 +338,88 @@
       "errorSinTraza": "No pudimos cargar el listado. Intenta de nuevo."
     }
   },
+  "fecha": {
+    "hoy": "hoy",
+    "dia1": "hace 1 día",
+    "diasN": "hace {n} días",
+    "mes1": "hace 1 mes",
+    "mesesN": "hace {n} meses",
+    "anio1": "hace 1 año",
+    "aniosN": "hace {n} años"
+  },
+  "caso": {
+    "tituloDocumento": "Caso clínico · OncoLens",
+    "titulo": "Caso clínico",
+    "verCaso": "Ver caso clínico",
+    "analizar": "Analizar la evidencia para este caso",
+    "cargando": "Cargando la vista de caso",
+    "origenIa": "Generado por IA · Sin verificar",
+    "textoGeneradoPorIa": "Texto generado por IA, sin verificar",
+    "sinPermiso": "No tienes permiso para ver el caso clínico de este paciente.",
+    "sinDatos": "Sin datos registrados",
+    "enCurso": "En curso",
+    "secciones": {
+      "lineaDeTiempo": "Línea de tiempo",
+      "sinFecha": "Sin fecha confiable",
+      "tratamientos": "Tratamientos previos",
+      "atributos": "Atributos clínicos",
+      "series": "Series de biomarcadores"
+    },
+    "notaSinFecha": "Eventos cuya fecha no se pudo establecer con confianza; se muestran aparte del orden cronológico.",
+    "columnas": {
+      "linea": "Línea",
+      "contexto": "Contexto",
+      "esquema": "Esquema",
+      "inicio": "Inicio",
+      "fin": "Fin",
+      "origen": "Origen y revisión",
+      "atributo": "Atributo",
+      "valor": "Valor",
+      "fecha": "Fecha"
+    },
+    "error": {
+      "titulo": "No se pudo cargar la vista de caso",
+      "reintentar": "Reintentar"
+    },
+    "tipoDesconocido": "Evento clínico",
+    "tiposDeEvento": {
+      "diagnostico": "Diagnóstico",
+      "inicio_tratamiento_previo": "Tratamiento previo · inicio",
+      "fin_tratamiento_previo": "Tratamiento previo · fin",
+      "examen": "Examen",
+      "analisis_ia": "Análisis de IA",
+      "resumen_caso": "Resumen del caso",
+      "progresion": "Progresión",
+      "toxicidad": "Toxicidad",
+      "cirugia": "Cirugía"
+    },
+    "contextos": {
+      "neoadyuvante": "Neoadyuvante",
+      "adyuvante": "Adyuvante",
+      "primera_linea_metastasica": "Primera línea metastásica",
+      "segunda_linea_metastasica": "Segunda línea metastásica",
+      "mantenimiento": "Mantenimiento"
+    },
+    "motivosDeFin": {
+      "progresion": "Progresión",
+      "toxicidad": "Toxicidad",
+      "completado": "Completado",
+      "otro": "Otro",
+      "desconocido": "Desconocido"
+    },
+    "atributosClave": {
+      "estado_menopausico": "Estado menopáusico",
+      "estado_castracion": "Estado de castración",
+      "sitios_metastasicos": "Sitios metastásicos"
+    },
+    "valoresDeAtributo": {
+      "castrado": "Castrado",
+      "no_castrado": "No castrado",
+      "oseo": "Óseo",
+      "premenopausica": "Premenopáusica",
+      "posmenopausica": "Posmenopáusica"
+    }
+  },
   "ficha": {
     "tituloDocumento": "Paciente · OncoLens",
     "noRegistrado": "No registrado",
@@ -390,7 +471,7 @@
     "origen": {
       "seed": "Carga inicial",
       "manual": "Registro manual",
-      "ocr": "Extraído de documento",
+      "ocr": "Documento",
       "manual_correction": "Corrección manual"
     },
     "avisos": {
@@ -485,5 +566,30 @@
       "titulo": "Paciente",
       "nota": "Vista de administración: sin datos clínicos ni nombre."
     }
+  },
+  "followUp": {
+    "titulo": "Preguntas de seguimiento sobre este análisis",
+    "contadorConTotal": "{n} de {max} preguntas usadas",
+    "contadorSinTotal": "{n} preguntas usadas",
+    "contextoTitulo": "Contexto fijo de esta conversación",
+    "contextoTexto": "Paciente desidentificado · datos usados por el análisis · su pregunta y hallazgos · evidencia del mismo corpus. Los hallazgos del análisis son contexto, no evidencia.",
+    "historial": "Historial de preguntas de seguimiento",
+    "campo": "Pregunta sobre los hallazgos de este análisis",
+    "preguntar": "Preguntar",
+    "preguntando": "Preguntando…",
+    "progresoBuscando": "Buscando evidencia…",
+    "progresoValidando": "Validando citas…",
+    "turno": "Pregunta {n}",
+    "nuevaFuente": "nueva en el seguimiento",
+    "notaCitas": "Cada afirmación cita un fragmento del corpus recuperado para esta pregunta o enlaza a un dato del paciente. Fuente, año y población: del catálogo, o «No disponible».",
+    "omitidas": "Afirmaciones omitidas: {n}",
+    "baseDeLaRespuesta": "Base de esta respuesta: datos del paciente usados: {usados} · ausentes: {ausentes}",
+    "ninguno": "ninguno",
+    "nuevoAnalisis": "Nuevo análisis",
+    "sinEvidencia": "No se encontró evidencia suficientemente relacionada con esta pregunta en el corpus. La pregunta puede replantearse o formularse en un análisis nuevo.",
+    "fueraDeContexto": "La pregunta no se refiere a los hallazgos de este análisis; no se generó respuesta. Otro tema o paciente corresponde a un análisis nuevo.",
+    "limiteConTotal": "Se alcanzó el límite de {max} preguntas de este análisis. Una pregunta distinta puede formularse en un análisis nuevo.",
+    "limiteSinTotal": "Se alcanzó el límite de preguntas de este análisis. Una pregunta distinta puede formularse en un análisis nuevo.",
+    "noProcesable": "La pregunta no pudo procesarse con este análisis; no se generó respuesta."
   }
 }

@@ -48,7 +48,7 @@ decisión y las descartadas en una línea.
   «hoy»; 1–30 días → «hace n días» («hace 1 día»); 31 días a 23 meses → «hace n meses» («hace 1 mes»; meses de
   calendario completos); desde 24 meses → «hace n años»; una fecha futura o inválida → la absoluta de
   `formatearFecha()`. La absoluta (dd/mm/aaaa) queda en `<time dateTime="AAAA-MM-DD" title="dd/mm/aaaa">` para quien
-  necesite el día exacto. `hoy` lo calcula la página RSC con el reloj inyectado del servidor y baja por prop (sin
+  necesite el día exacto. `hoy` lo calcula la página RSC con el reloj inyectado del servidor **en UTC** (decidido en el Gate 2, vuelta 1: la misma definición de «hoy» que clinical-api, sin depender de la zona del proceso ni del Compose; no hay parámetro de zona en la config de web) y baja por prop (sin
   `Date.now()` en componentes); los tests lo congelan en 2026-10-01 (reloj de FX-02b-a). Una fecha sin día
   (`eventDate = null`) sigue sin fecha (D6). *Descartado:* fechas absolutas (contradice S5-02/S5-05 y la decisión).
 - **D6 · Orden del servidor.** La UI no reordena ni agrupa: la línea de tiempo y las secciones usan el orden de

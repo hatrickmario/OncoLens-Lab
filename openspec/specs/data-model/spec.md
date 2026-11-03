@@ -222,7 +222,19 @@ Toda FK del schema `clinical` MUST declararse con `ON DELETE RESTRICT` (Prisma `
 
 #### Scenario: La identidad no tiene columnas en claro [US-038 AC-6] [RN-10]
 - **WHEN** se listan las columnas de `identity.patient_identity` y `identity.legal_representative`
-- **THEN** el documento y el nombre solo existen como columnas `bytea` `*_ciphertext` y el índice ciego como `national_id_hmac`; no hay columnas de texto con el documento ni el nombre
+- **THEN** el documento y el nombre solo existen como columnas `bytea` `*_ciphertext` y los índices ciegos como `national_id_hmac` y `full_name_hmac`; no hay columnas de texto con el documento ni el nombre
+
+#### Scenario: Dos pacientes con el mismo nombre normalizado comparten índice sin chocar [US-048 AC-3] [S2 resp. 4]
+- **GIVEN** la migración de `full_name_hmac` aplicada y el seed sintético ejecutado
+- **WHEN** se insertan dos identidades sintéticas con documentos distintos y el mismo `full_name_hmac`
+- **THEN** ambas inserciones se aceptan y ninguna fila de `identity.patient_identity` tiene `full_name_hmac` nulo
+
+### Requirement: Índice ciego del nombre completo
+La tabla `identity.patient_identity` SHALL tener además `full_name_hmac` (índice ciego del nombre completo normalizado, con índice no único), que `IdentityService` escribe siempre y el seed completa en las filas sembradas. Decidido en el refinamiento del S2 (P-4, decidido por el usuario el 2026-10-21).
+
+#### Scenario: El nombre completo tiene índice ciego no único [US-038 AC-6] [ADR-6]
+- **WHEN** se listan las columnas e índices de `identity.patient_identity`
+- **THEN** existe `full_name_hmac` con un índice no único
 
 ### Requirement: Enums nativos con valores en español
 Las columnas de `data-model.md` con lista cerrada de valores MUST materializarse como enums nativos de PostgreSQL con los valores en español (OL-01 tarea 3), mapeando las tildes con `@map` (`critico @map("crítico")`). Donde el documento fija un `CHECK` literal (`diagnosis_grading`, `llm_provider`) SHALL conservarse el `CHECK`; las listas abiertas o de catálogo SHALL quedar como `text`.

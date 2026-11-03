@@ -105,6 +105,12 @@ class CatalogoEnMemoria:
             extracted_fields=tuple(extracted_fields),
         )
 
+    def documentos_vigentes_con_poblacion(self) -> list[RegistroDeDocumento]:
+        return sorted(
+            (r for r in self.documentos.values() if r.is_current and r.status == STATUS_EMBEBIDO),
+            key=lambda r: r.document_id,
+        )
+
     def ids_de_documentos_vigentes(self) -> frozenset[str]:
         return frozenset(
             i for i, r in self.documentos.items() if r.is_current and r.status == STATUS_EMBEBIDO

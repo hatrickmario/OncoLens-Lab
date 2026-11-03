@@ -1,0 +1,65 @@
+Source: ClinicalTrials.gov (U.S. National Library of Medicine), study record NCT02200614, last updated 2022-06-28; retrieved 2026-11-03 through the ClinicalTrials.gov API v2 (data timestamp 2026-11-03T10:00:05). Modifications: selected fields reordered as plain text; contacts, locations, results and documents omitted. This is a trial registry record, not evidence of efficacy.
+
+Title
+A Multinational, Randomised, Double-blind, Placebo-controlled, Phase III Efficacy and Safety Study of Darolutamide (ODM-201) in Men With High-risk Non-metastatic Castration-resistant Prostate Cancer
+
+Brief title
+Efficacy and Safety Study of Darolutamide (ODM-201) in Men With High-risk Non-metastatic Castration-resistant Prostate Cancer
+
+Sponsor
+Bayer
+
+Status: COMPLETED. Phase: PHASE3. Study type: INTERVENTIONAL. Enrollment: 1509.
+
+Brief summary
+The purpose of this study is to assess the safety and efficacy of BAY1841788 (ODM-201) in patients with non-metastatic castration-resistant prostate cancer.
+
+Conditions:
+- Prostate Cancer Non-Metastatic
+- Castration-Resistant
+
+Design
+Allocation: RANDOMIZED. Intervention model: PARALLEL. Masking: QUADRUPLE.
+
+Arm (EXPERIMENTAL): Darolutamide (BAY1841788)
+Participants received Darolutamide 600 mg (2 tablets of 300 mg) twice daily with food, equal to a total daily dose of 1200 mg.
+
+Arm (PLACEBO_COMPARATOR): Placebo
+Participants received matching placebo 2 tablets twice daily with food.
+
+Primary outcomes
+- Metastasis-Free Survival (From randomization to the time approximately 385 MFS events were observed (approximately 48 months)). Metastasis-Free Survival (MFS) is defined as the time from randomisation to evidence of metastasis or death from any cause, whichever occurs first (cut-off date 15 Nov 2019)
+
+Eligibility criteria
+Inclusion Criteria:
+
+* Histologically or cytologically confirmed adenocarcinoma of prostate without neuroendocrine differentiation or small cell features.
+* Castration-resistant prostate cancer (CRPC) with castrate level of serum testosterone.
+* Prostate-specific Antigen (PSA) doubling time of ≤ 10 months and PSA \> 2ng/ml.
+* Eastern Cooperative Oncology Group (ECOG) performance status of 0-1.
+* Blood counts at screening: haemoglobin ≥ 9.0 g/dl,absolute neutrophil count ≥ 1500/µl, platelet count ≥ 100,000/µl.
+* Screening values of serum alanine aminotransferase (ALT) and/or aspartate transaminase (AST) ≤ 2.5 x upper limit of normal (ULN), total bilirubin ≤ 1.5 x ULN, creatinine ≤ 2.0 x ULN.
+* Sexually active patients, unless surgically sterile, must agree to use condoms as an effective barrier method and refrain from sperm donation during the study treatment and for 3 months after the end of the study treatment.
+
+Exclusion Criteria:
+
+* History of metastatic disease at any time or presence of detectable metastases.
+* Acute toxicities of prior treatments and procedures not resolved to grade ≤ 1 or baseline before randomisation.
+* Prior treatment with: second generation androgen receptor (AR) inhibitors, other investigational AR inhibitors, or CYP17 enzyme inhibitor.
+* Use of estrogens or 5-α reductase inhibitors or AR inhibitors.
+* Prior chemotherapy or immunotherapy for prostate cancer.
+* Use of systemic corticosteroid.
+* Radiation therapy within 12 weeks before randomisation.
+* Severe or uncontrolled concurrent disease, infection or co-morbidity.
+* Treatment with bisphosphonate or denosumab within 12 weeks before randomisation.
+* Known hypersensitivity to the study treatment or any of its ingredients.
+* Major surgery within 28 days before randomisation.
+* Any of the following within 6 months before randomisation: stroke, myocardial infarction, severe/unstable angina pectoris, coronary/peripheral artery bypass graft; congestive heart failure New York Heart Association (NYHA) Class III or IV.
+* Uncontrolled hypertension.
+* Prior malignancy.
+* Gastrointestinal disorder or procedure which expects to interfere significantly with absorption of study treatment.
+* Active viral hepatitis, active human immunodeficiency virus (HIV) or chronic liver disease.
+* Treatment with any investigational drug within 28 days before randomisation.
+* Any condition that in the opinion of the investigator would impair the patients' ability to comply with the study procedures.
+
+Sex: MALE. Minimum age: 18 Years. Maximum age: not stated. Standard ages: ADULT, OLDER_ADULT. Healthy volunteers: False.
