@@ -1,5 +1,6 @@
-import { describe, expect, inject, it } from 'vitest';
-import { conTransaccionRevertida } from '../../support/db.js';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { conTransaccionRevertida, type BaseDeTest } from '../../support/db.js';
+import { crearBaseDelSeed } from '../../support/seed.js';
 import {
   generadorDeIds,
   insertar,
@@ -7,7 +8,14 @@ import {
 } from '../../support/filas-sinteticas.js';
 import { instantaneaDeTablas, tablasConDiferencia } from '../../support/instantanea-de-tablas.js';
 
-const urlBase = inject('urlBaseDeTest');
+// Base propia: la compartida recibe escrituras de otros archivos en paralelo y el conteo no sería estable.
+let base: BaseDeTest;
+let urlBase = '';
+beforeAll(async () => {
+  base = await crearBaseDelSeed('instantanea');
+  urlBase = base.url;
+});
+afterAll(() => base.destruir());
 const ESPACIO_DE_IDS = 9990;
 const SCHEMAS = ['clinical', 'identity'] as const;
 
