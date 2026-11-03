@@ -17,6 +17,7 @@ import { createCaseViewService } from './modules/case-view/case-view.service.js'
 import { componerCompletitud } from './modules/completeness/completeness.module.js';
 import { completenessController } from './modules/completeness/completeness.controller.js';
 import { createReconciliationService } from './modules/reconciliation/reconciliation.service.js';
+import { componerModuloDeCorrecciones } from './modules/corrections/corrections.module.js';
 import { componerModuloDeRegistroManual } from './modules/manual-entry/manual-entry.module.js';
 import { componerModuloDeDocumentos } from './modules/documents/documents.module.js';
 import { componerModuloDePacientes } from './modules/patients/patients.module.js';
@@ -157,6 +158,23 @@ arrancar({
           traceIds: { traceId: nuevoTraceId },
           registrar,
         });
+        // Corrección con histórico (L1D-309): misma normalización que el registro manual (RN-27) y límites de RN-22.
+        const corrections = componerModuloDeCorrecciones({
+          fuente: pool,
+          reconciliacionPara: (traceId) =>
+            createReconciliationService({
+              catalogo: servicios.terminologia,
+              registrar: (linea) => registrar({ ...linea, traceId }),
+            }),
+          limites: {
+            notaMaxChars: configuracion.correcciones.clinicalNoteMaxChars,
+            historialMax: configuracion.correcciones.correctionHistoryMax,
+          },
+          reloj,
+          generarId: randomUUID,
+          traceIds: { traceId: nuevoTraceId },
+          registrar,
+        });
         const completeness = completenessController({
           service: completitud,
           traceIds: { traceId: nuevoTraceId },
@@ -186,6 +204,7 @@ arrancar({
             completeness,
             manualEntry,
             caseView,
+            corrections,
           }),
           // Solo nombres de claves y versión: nunca valores (RN-14). Va después de leer toda la configuración.
           salud: componerInformacionDeSalud({

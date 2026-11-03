@@ -84,7 +84,14 @@ def solicitud_de(
         catalogo_version  # NFR-14: la solicitud usa el catálogo de la configuración
     )
     cruda["dataClassification"] = DataClassification(clase).value
-    cruda["clinicalContext"]["diagnosis"]["cancerType"] = pregunta.cancer
+    contexto = cruda["clinicalContext"]
+    if pregunta.contexto is not None:
+        contexto["currentLine"] = pregunta.contexto.linea_actual
+        contexto["missingCriticalData"] = list(pregunta.contexto.faltantes)
+    elif contexto["diagnosis"]["cancerType"] != pregunta.cancer:
+        # Los faltantes del ejemplo son claves del catálogo de su tipo (US-116, RN-11): con otro tipo no son válidos.
+        contexto["missingCriticalData"] = []
+    contexto["diagnosis"]["cancerType"] = pregunta.cancer
     return RagQueryInternalRequest.model_validate(cruda)
 
 

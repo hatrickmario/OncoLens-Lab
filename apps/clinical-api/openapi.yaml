@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — Platform API (Backend 1 / clinical-api)
-  version: 1.17.0
+  version: 1.18.0
   description: >-
     API pública, accesible solo a través de los Route Handlers de web (clinical-api no
     publica puerto al host). Autenticación por cookie de sesión HttpOnly + Secure +
@@ -524,6 +524,216 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorDiagnosticoInvalido'
 
+  /platform/patients/{patientId}/biomarkers/{biomarkerId}/corrections:
+    post:
+      operationId: correctBiomarker
+      tags: [registro-manual]
+      summary: Corrige un biomarcador vigente conservando el anterior como histórico
+      description: >-
+        Crea un Biomarker nuevo (entry_method = manual_correction, verificado) con supersedesId
+        hacia el anterior, que pasa a reemplazado con su valor intacto (RN-08, ADR-50). El
+        término no cambia: name, loincCode y mappingStatus los vuelve a decidir Backend 1
+        (ADR-33). Solo se corrige un dato vigente (409 si ya fue reemplazado) y un paciente
+        activo (RN-17).
+      x-permission: clinical:write
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+        - $ref: '#/components/parameters/BiomarkerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BiomarkerCorrection'
+      responses:
+        "201":
+          description: Biomarcador corregido (la fila nueva, vigente).
+          headers:
+            Cache-Control:
+              description: Siempre no-store.
+              required: true
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Biomarker'
+        "401":
+          $ref: '#/components/responses/NoAutenticado'
+        "403":
+          $ref: '#/components/responses/PermisoDenegado'
+        "404":
+          $ref: '#/components/responses/NoEncontrado'
+        "409":
+          description: El dato ya no está vigente (fue reemplazado o rechazado).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDatoNoVigente'
+        "422":
+          description: >-
+            Cuerpo inválido (fecha posterior a hoy, corrección sin cambios), valor fuera del
+            catálogo o paciente egresado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCorreccionInvalida'
+
+  /platform/patients/{patientId}/biomarkers/{biomarkerId}/history:
+    get:
+      operationId: getBiomarkerHistory
+      tags: [registro-manual]
+      summary: Histórico de correcciones de un biomarcador
+      description: >-
+        Sigue supersedesId hacia atrás desde la fila vigente: las versiones reemplazadas, de la
+        más reciente a la más antigua, acotadas por CORRECTION_HISTORY_MAX. Es una lectura
+        clínica: el administrador recibe 403.
+      x-permission: clinical:read
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+        - $ref: '#/components/parameters/BiomarkerId'
+      responses:
+        "200":
+          description: Versiones reemplazadas (vacía si el dato nunca se corrigió).
+          headers:
+            Cache-Control:
+              description: Siempre no-store.
+              required: true
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorrectionHistory'
+        "401":
+          $ref: '#/components/responses/NoAutenticado'
+        "403":
+          $ref: '#/components/responses/PermisoDenegado'
+        "404":
+          $ref: '#/components/responses/NoEncontrado'
+
+  /platform/patients/{patientId}/clinical-notes:
+    get:
+      operationId: listClinicalNotes
+      tags: [registro-manual]
+      summary: Notas clínicas vigentes del paciente
+      description: >-
+        Lista completa (sin paginación) de las notas clínicas vigentes de la ficha. Es una
+        lectura clínica: el administrador recibe 403.
+      x-permission: clinical:read
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+      responses:
+        "200":
+          description: Notas vigentes.
+          headers:
+            Cache-Control:
+              description: Siempre no-store.
+              required: true
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClinicalNoteList'
+        "401":
+          $ref: '#/components/responses/NoAutenticado'
+        "403":
+          $ref: '#/components/responses/PermisoDenegado'
+        "404":
+          $ref: '#/components/responses/NoEncontrado'
+
+  /platform/patients/{patientId}/clinical-notes/{noteId}/corrections:
+    post:
+      operationId: correctClinicalNote
+      tags: [registro-manual]
+      summary: Corrige el texto o el tipo de una nota vigente conservando la anterior
+      description: >-
+        Crea una ClinicalNote nueva (manual_correction, verificada, activa) con supersedesId
+        hacia la anterior, que pasa a reemplazado e inactiva con su texto intacto (RN-08,
+        ADR-50). El texto no viaja a la IA mientras rija la minimización de notas (RN-11).
+      x-permission: clinical:write
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+        - $ref: '#/components/parameters/NoteId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClinicalNoteCorrection'
+      responses:
+        "201":
+          description: Nota corregida (la fila nueva, vigente).
+          headers:
+            Cache-Control:
+              description: Siempre no-store.
+              required: true
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClinicalNote'
+        "401":
+          $ref: '#/components/responses/NoAutenticado'
+        "403":
+          $ref: '#/components/responses/PermisoDenegado'
+        "404":
+          $ref: '#/components/responses/NoEncontrado'
+        "409":
+          description: La nota ya no está vigente (fue reemplazada).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDatoNoVigente'
+        "422":
+          description: >-
+            Cuerpo inválido (texto vacío o mayor que CLINICAL_NOTE_MAX_CHARS, corrección sin
+            cambios) o paciente egresado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCorreccionInvalida'
+
+  /platform/patients/{patientId}/clinical-notes/{noteId}/history:
+    get:
+      operationId: getClinicalNoteHistory
+      tags: [registro-manual]
+      summary: Histórico de correcciones de una nota clínica
+      description: >-
+        Sigue supersedesId hacia atrás desde la nota vigente: las versiones reemplazadas, de la
+        más reciente a la más antigua, acotadas por CORRECTION_HISTORY_MAX. Es una lectura
+        clínica: el administrador recibe 403.
+      x-permission: clinical:read
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+        - $ref: '#/components/parameters/NoteId'
+      responses:
+        "200":
+          description: Versiones reemplazadas (vacía si la nota nunca se corrigió).
+          headers:
+            Cache-Control:
+              description: Siempre no-store.
+              required: true
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorrectionHistory'
+        "401":
+          $ref: '#/components/responses/NoAutenticado'
+        "403":
+          $ref: '#/components/responses/PermisoDenegado'
+        "404":
+          $ref: '#/components/responses/NoEncontrado'
+
   /platform/evidence-analyses/{analysisId}/follow-ups:
     post:
       operationId: createFollowUp
@@ -621,6 +831,20 @@ components:
         format: uuid
     AnalysisId:
       name: analysisId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    BiomarkerId:
+      name: biomarkerId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    NoteId:
+      name: noteId
       in: path
       required: true
       schema:
@@ -882,6 +1106,12 @@ components:
           format: date
         provenance:
           $ref: '#/components/schemas/Provenance'
+        supersedesId:
+          type: [string, "null"]
+          format: uuid
+          description: >-
+            Fila a la que esta corrección reemplazó (ADR-50); ausente en un dato que nunca se
+            corrigió. Le dice a la UI si hay histórico.
 
     CaseView:
       type: object
@@ -1046,6 +1276,146 @@ components:
         performedAt:
           type: string
           format: date
+
+    # ---- Corrección con histórico (ADR-50, L1D-309)
+    BiomarkerCorrection:
+      type: object
+      description: >-
+        Corrección del valor de un biomarcador vigente. El término no cambia. performedAt es
+        opcional: si se envía y difiere del examen, el dato pasa a un Examen de corrección.
+      additionalProperties: false
+      required: [value]
+      properties:
+        value:
+          type: string
+          minLength: 1
+          maxLength: 200
+        unit:
+          type: [string, "null"]
+          maxLength: 50
+        referenceRange:
+          type: [string, "null"]
+          maxLength: 200
+        performedAt:
+          type: string
+          format: date
+          description: Posterior a hoy se rechaza con 422 y field = performedAt.
+
+    NoteType:
+      type: string
+      enum: [antecedente, comorbilidad, alergia, antecedente_familiar, nota_libre]
+
+    ClinicalNote:
+      type: object
+      additionalProperties: false
+      required: [id, noteType, content, recordedAt, provenance, supersedesId]
+      properties:
+        id:
+          type: string
+          format: uuid
+        noteType:
+          $ref: '#/components/schemas/NoteType'
+        content:
+          type: string
+          minLength: 1
+          description: El máximo lo impone CLINICAL_NOTE_MAX_CHARS (configuración, RN-22).
+        recordedAt:
+          type: string
+          format: date-time
+        provenance:
+          $ref: '#/components/schemas/Provenance'
+        supersedesId:
+          type: [string, "null"]
+          format: uuid
+
+    ClinicalNoteList:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClinicalNote'
+
+    ClinicalNoteCorrection:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        content:
+          type: string
+          minLength: 1
+        noteType:
+          $ref: '#/components/schemas/NoteType'
+
+    CorrectionHistoryEntry:
+      type: object
+      description: >-
+        Una versión reemplazada. value y unit solo en biomarcadores; content y noteType solo en
+        notas.
+      additionalProperties: false
+      required: [id, entryMethod, reviewStatus, recordedAt, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        entryMethod:
+          type: string
+          enum: [ocr, manual, manual_correction, seed]
+        reviewStatus:
+          type: string
+          const: reemplazado
+        recordedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        value:
+          type: string
+        unit:
+          type: [string, "null"]
+        content:
+          type: string
+        noteType:
+          $ref: '#/components/schemas/NoteType'
+
+    CorrectionHistory:
+      type: object
+      description: De la más reciente a la más antigua, sin la vigente; tope CORRECTION_HISTORY_MAX (RN-22).
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CorrectionHistoryEntry'
+
+    ErrorCorreccionInvalida:
+      type: object
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error:
+          type: string
+          enum: [CUERPO_INVALIDO, PACIENTE_EGRESADO, VALOR_FUERA_DE_CATALOGO]
+        field:
+          type: string
+          description: >-
+            Propiedad del cuerpo que causó el error, cuando el error es de un campo; ausente si no
+            lo es (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.
+        message: { type: string }
+        traceId: { type: string }
+
+    ErrorDatoNoVigente:
+      type: object
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error: { type: string, const: DATO_NO_VIGENTE }
+        message: { type: string }
+        traceId: { type: string }
 
     # ---- Diagnóstico y gradación (DEC-05)
     DiagnosisGrading:

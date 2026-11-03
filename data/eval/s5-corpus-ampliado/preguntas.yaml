@@ -473,3 +473,46 @@ preguntas:
     modo_acierto: sin_evidencia
     pregunta: 'What does the evidence describe about pediatric leukemia maintenance therapy?'
     revisada_por_oncologo: false
+  # US-116 (L1D-113): casos SINTÉTICOS con la línea de tratamiento actual y datos críticos faltantes (claves del catálogo del
+  # tipo). Mismas preguntas y evidencia que S5-M01/M03/P01/P05, para medir el efecto de `línea de tratamiento {n}` en el recall
+  # dense frente a su versión sin contexto. Expectativa de no inferencia: ninguna afirmación mostrada atribuye un valor al dato
+  # faltante (la mide la corrida nocturna con el LLM local). Sin pareja en inglés: no entran en el recall es->en.
+  - id: S5-L01
+    idioma: es
+    cancer: mama
+    modo_acierto: cualquiera
+    contexto: {linea_actual: 1, faltantes: [estado_menopausico, ki67]}
+    pregunta: '¿Qué describe la evidencia sobre añadir pembrolizumab a la quimioterapia neoadyuvante en cáncer de mama ER positivo HER2 negativo?'
+    evidencia: [{documento: pmc-mama-pembrolizumab-er-eca, cita: 'Addition of pembrolizumab to neoadjuvant chemotherapy followed by adjuvant pembrolizumab improved outcomes'}]
+    revisada_por_oncologo: false
+  - id: S5-L02
+    idioma: es
+    cancer: mama
+    modo_acierto: cualquiera
+    contexto: {linea_actual: 2, faltantes: [her2_ish]}
+    pregunta: '¿Qué compara la evidencia entre trastuzumab deruxtecán y trastuzumab emtansina en cáncer de mama HER2 positivo metastásico?'
+    evidencia: [{documento: pmc-mama-trastuzumab-deruxtecan-eca, cita: 'Trastuzumab deruxtecan (T-DXd) demonstrated significantly improved efficacy over trastuzumab emtansine (T-DM1)'}]
+    revisada_por_oncologo: false
+  - id: S5-L03
+    idioma: es
+    cancer: prostata
+    modo_acierto: cualquiera
+    contexto: {linea_actual: 1, faltantes: [estado_castracion, psa_serie]}
+    pregunta: '¿Qué describe la evidencia sobre añadir quimioterapia a la deprivación androgénica en cáncer de próstata metastásico?'
+    evidencia: [{documento: nci-prostata-hp-en, cita: 'The addition of chemotherapy has been shown in randomized trials to improve OS compared with ADT alone'}]
+    revisada_por_oncologo: false
+  - id: S5-L04
+    idioma: es
+    cancer: prostata
+    modo_acierto: cualquiera
+    contexto: {linea_actual: 2, faltantes: [hrr_brca]}
+    pregunta: '¿Qué describe la evidencia sobre niraparib con abiraterona en cáncer de próstata metastásico sensible a la castración con deficiencia de reparación homóloga?'
+    evidencia: [{documento: pmc-prostata-niraparib-abiraterona-eca, cita: 'Inhibition of poly(ADP-ribose) polymerase (PARP) after relapse on hormone therapy is well established'}]
+    revisada_por_oncologo: false
+  - id: S5-L05
+    idioma: es
+    cancer: mama
+    modo_acierto: sin_evidencia
+    contexto: {linea_actual: 1, faltantes: [estado_menopausico, ki67]}
+    pregunta: '¿Qué describe la evidencia sobre el tratamiento del cáncer papilar de tiroides?'
+    revisada_por_oncologo: false

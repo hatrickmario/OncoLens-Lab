@@ -47,6 +47,29 @@ class Evidencia:
 
 
 @dataclass(frozen=True)
+class ContextoDePregunta:
+    """Lo que el caso sintético de una pregunta declara además del tipo de cáncer (US-116): la línea de tratamiento
+    actual y las claves de los datos críticos faltantes (del catálogo del tipo; ningún valor se atribuye a un faltante)."""
+
+    linea_actual: int | None = None
+    faltantes: tuple[str, ...] = ()
+
+
+def contexto_de_pregunta(crudo: dict[str, Any]) -> ContextoDePregunta | None:
+    """El bloque ``contexto`` de una pregunta del dataset; ausente = el caso base de ``contracts/examples``."""
+    contexto = crudo.get("contexto")
+    if contexto is None:
+        return None
+    linea = contexto.get("linea_actual")
+    if linea is not None and (not isinstance(linea, int) or isinstance(linea, bool) or linea < 1):
+        raise DatasetInvalido(f"{crudo.get('id')}: linea_actual debe ser un entero positivo")
+    faltantes = tuple(str(f) for f in contexto.get("faltantes", []))
+    if any(not re.fullmatch(r"[a-z0-9_]+", f) for f in faltantes):
+        raise DatasetInvalido(f"{crudo.get('id')}: un faltante no es una clave del catálogo")
+    return ContextoDePregunta(linea, faltantes)
+
+
+@dataclass(frozen=True)
 class Pregunta:
     id: str
     idioma: str
@@ -58,6 +81,7 @@ class Pregunta:
     evidencia: tuple[Evidencia, ...]
     control_de: str | None = None
     alias: str | None = None
+    contexto: ContextoDePregunta | None = None
 
     @property
     def es_espanol_contra_ingles(self) -> bool:
@@ -211,6 +235,7 @@ def _construir_pregunta(crudo: dict[str, Any], ids_fuentes: set[str]) -> Pregunt
         evidencia=evidencia,
         control_de=crudo.get("control_de"),
         alias=crudo.get("alias"),
+        contexto=contexto_de_pregunta(crudo),
     )
 
 

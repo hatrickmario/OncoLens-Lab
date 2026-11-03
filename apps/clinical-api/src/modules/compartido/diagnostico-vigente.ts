@@ -1,3 +1,5 @@
+import { sqlDatoVigente } from './estados-de-revision.js';
+
 /** Lo único que la regla necesita saber de un diagnóstico: su `id` y su fecha (`diagnosed_at`, ISO `YYYY-MM-DD`). */
 export interface DatosDeVigencia {
   readonly id: string;
@@ -37,4 +39,12 @@ export function elegirDiagnosticoVigente<T>(
  */
 export function sqlOrdenDeDiagnosticoVigente(prefijo = ''): string {
   return `${prefijo}diagnosed_at DESC, ${prefijo}id ASC`;
+}
+
+/**
+ * Predicado SQL ÚNICO de «diagnóstico candidato a vigente»: activo y no rechazado ni reemplazado. Lo usan el registro
+ * manual y la corrección (el tipo de cáncer que normaliza RN-27 es el del mismo diagnóstico que muestra la ficha).
+ */
+export function sqlDiagnosticoCandidato(prefijo = ''): string {
+  return `${prefijo}is_active AND ${sqlDatoVigente(`${prefijo}review_status`)}`;
 }

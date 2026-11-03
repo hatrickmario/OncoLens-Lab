@@ -1,7 +1,11 @@
 import type { Consultador } from '../auth/auth.repository.js';
-import { elegirDiagnosticoVigente } from '../compartido/diagnostico-vigente.js';
+import {
+  elegirDiagnosticoVigente,
+  sqlDiagnosticoCandidato,
+} from '../compartido/diagnostico-vigente.js';
+import { bloquearPaciente } from '../compartido/paciente-activo.js';
 import { sqlDatoVigente } from '../compartido/estados-de-revision.js';
-import type { EstadoDelPaciente } from '../patients/patients.repository.js';
+import { ejecutarEnTransaccion, type FuenteDeConexiones } from '../compartido/transaccion.js';
 import type {
   BiomarcadorAGuardar,
   DatosDelDiagnostico,
@@ -14,15 +18,7 @@ import type {
   TransaccionDeRegistro,
 } from './ports.js';
 
-/** Conexión del pool que se devuelve al terminar (`pg.PoolClient` la cumple). */
-export interface ConexionLiberable extends Consultador {
-  release(): void;
-}
-
-/** Fuente de conexiones: `pg.Pool` la cumple. La transacción necesita UNA conexión, nunca el pool entero. */
-export interface FuenteDeConexiones {
-  connect(): Promise<ConexionLiberable>;
-}
+export type { ConexionLiberable, FuenteDeConexiones } from '../compartido/transaccion.js';
 
 type FilaSql = Record<string, unknown>;
 
@@ -74,15 +70,6 @@ function datosDelDiagnostico(f: FilaSql): DatosDelDiagnostico {
   };
 }
 
-async function bloquearPaciente(db: Consultador, patientId: string) {
-  const { rows } = await db.query(
-    'SELECT lifecycle_status::text AS estado FROM clinical.patient WHERE id = $1 FOR UPDATE',
-    [patientId],
-  );
-  const fila = rows[0];
-  return fila === undefined ? null : { estado: fila['estado'] as EstadoDelPaciente };
-}
-
 async function episodioDelRegistro(db: Consultador, patientId: string): Promise<string> {
   const { rows } = await db.query(
     `SELECT id FROM clinical.care_episode WHERE patient_id = $1
@@ -111,7 +98,7 @@ async function diagnosticoVigente(
 ): Promise<DiagnosticoVigente | null> {
   const { rows } = await db.query(
     `SELECT ${COLUMNAS_DE_DIAGNOSTICO} FROM clinical.diagnosis
-      WHERE patient_id = $1 AND is_active AND ${sqlDatoVigente('review_status')}`,
+      WHERE patient_id = $1 AND ${sqlDiagnosticoCandidato()}`,
     [patientId],
   );
   const elegida = elegirDiagnosticoVigente(rows, (f) => ({
@@ -227,19 +214,7 @@ export function createManualEntryRepository(
   fuente: FuenteDeConexiones,
 ): RepositorioDeRegistroManual {
   return {
-    async enTransaccion(trabajo) {
-      const conexion = await fuente.connect();
-      try {
-        await conexion.query('BEGIN');
-        const resultado = await trabajo(transaccionSobre(conexion));
-        await conexion.query('COMMIT');
-        return resultado;
-      } catch (error) {
-        await conexion.query('ROLLBACK').catch(() => undefined);
-        throw error;
-      } finally {
-        conexion.release();
-      }
-    },
+    enTransaccion: (trabajo) =>
+      ejecutarEnTransaccion(fuente, (conexion) => trabajo(transaccionSobre(conexion))),
   };
 }

@@ -1,4 +1,5 @@
 import { readDocumentosConfig, type DocumentosConfig } from './documentos.js';
+import { readCorreccionesConfig, type CorreccionesConfig } from './correcciones.js';
 import { readPacientesConfig, type PacientesConfig } from './pacientes.js';
 import {
   ConfiguracionInvalidaError,
@@ -29,6 +30,7 @@ import {
  */
 export * from './secciones.js';
 export * from './documentos.js';
+export * from './correcciones.js';
 export * from './pacientes.js';
 
 /**
@@ -169,6 +171,7 @@ export interface ConfiguracionDeServicios {
   deidentificacion: DeidentificationConfig;
   documentos: DocumentosConfig;
   pacientes: PacientesConfig;
+  correcciones: CorreccionesConfig;
 }
 
 export function cargarConfiguracionDeServicios(
@@ -184,6 +187,7 @@ export function cargarConfiguracionDeServicios(
     deidentificacion: readDeidentificationConfig(env),
     documentos: readDocumentosConfig(env, readFile),
     pacientes: readPacientesConfig(env),
+    correcciones: readCorreccionesConfig(env),
   };
 }
 

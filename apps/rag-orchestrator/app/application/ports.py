@@ -241,6 +241,8 @@ class ResultadoDeRecuperacion:
     chunks_sobre_umbral: tuple[ChunkPuntuado, ...]
     recuperados: int
     meta: RagMeta
+    etiquetas_de_faltantes: tuple[str, ...] = ()
+    """Etiqueta del catálogo de cada dato crítico faltante, en el orden recibido (US-116): ya validadas, nunca claves ni texto libre."""
 
 
 @dataclass(frozen=True)
@@ -300,6 +302,16 @@ class CatalogoClinico(Protocol):
 
     def tipos_de_cancer(self) -> tuple[str, ...]:
         """Tipos de cáncer que declara el manifiesto (``cancerTypes``): contra ellos se valida ``ENABLED_CANCER_TYPES``."""
+        ...
+
+
+class EtiquetasDeDatosCriticos(Protocol):
+    """Datos críticos del catálogo clínico montado (``<tipo>/datos-criticos.json``, solo lectura): clave → etiqueta."""
+
+    def etiquetas(self, tipo_de_cancer: str) -> Mapping[str, str]:
+        """Clave → etiqueta en español de los datos críticos del tipo; vacío si el tipo no está en el catálogo.
+
+        Una sola operación: una clave catalogada siempre trae su etiqueta (no hay clave sin etiqueta)."""
         ...
 
 
