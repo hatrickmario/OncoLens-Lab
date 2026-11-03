@@ -373,8 +373,14 @@ class RAGOrchestratorService:
             por_motivo[MotivoDeDescarte.cita_invalida],
         )
         textos = {chunk_id: c.chunk.chunk_text for chunk_id, c in citables.items()}
+        titulos = {chunk_id: c.ficha.title for chunk_id, c in citables.items()}
         soporte = await self._soporte.verificar(
-            trace_id, idioma, resultado.aceptadas, evidencia.limitaciones_propuestas, textos
+            trace_id,
+            idioma,
+            resultado.aceptadas,
+            evidencia.limitaciones_propuestas,
+            textos,
+            titulos,
         )
         reevaluar = self._reevaluador_de_aplicabilidad(solicitud)
         recortadas = self._recortar_soportadas(

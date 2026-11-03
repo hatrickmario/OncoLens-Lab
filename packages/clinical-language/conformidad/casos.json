@@ -1,8 +1,9 @@
 {
-  "descripcion": "Casos de conformidad de checkProhibitedTerms (TS) y check_prohibited_terms (Python) sobre terminos-prohibidos.json 1.5.0. Ambas implementaciones deben dar, caso por caso, los mismos id y niveles, en orden de aparición (US-068 AC-2, RN-23). Solo texto sintético de dominio público.",
-  "listaVersion": "1.5.0",
+  "descripcion": "Casos de conformidad de checkProhibitedTerms (TS) y check_prohibited_terms (Python) sobre terminos-prohibidos.json 1.6.0. Ambas implementaciones deben dar, caso por caso, los mismos id y niveles, en orden de aparición (US-068 AC-2, US-249 AC-3, RN-23). Cada caso lleva `id`; `soloIdsB` limita el Nivel B al subconjunto de salidaGenerada y `excepcionesB` son frases (el sustantivo negado: «no emite una recomendación») que no cuentan dentro de ese subconjunto. Solo texto sintético de dominio público.",
+  "listaVersion": "1.6.0",
   "casos": [
     {
+      "id": "CF-001",
       "grupo": "AC-2 (variantes de mayúsculas, tildes y puntuación)",
       "texto": "RECOMENDADO PARA ESTE PACIENTE",
       "niveles": ["A"],
@@ -15,6 +16,7 @@
       ]
     },
     {
+      "id": "CF-002",
       "grupo": "AC-2 (variantes de mayúsculas, tildes y puntuación)",
       "texto": "Recomendado para este paciente.",
       "niveles": ["A"],
@@ -27,6 +29,7 @@
       ]
     },
     {
+      "id": "CF-003",
       "grupo": "AC-2 (variantes de mayúsculas, tildes y puntuación)",
       "texto": "debe recibir",
       "niveles": ["A"],
@@ -39,6 +42,7 @@
       ]
     },
     {
+      "id": "CF-004",
       "grupo": "AC-2 (variantes de mayúsculas, tildes y puntuación)",
       "texto": "DEBE RECIBIR",
       "niveles": ["A"],
@@ -51,6 +55,7 @@
       ]
     },
     {
+      "id": "CF-005",
       "grupo": "AC-2 (variantes de mayúsculas, tildes y puntuación)",
       "texto": "Recomendado, para: este paciente!",
       "niveles": ["A"],
@@ -63,6 +68,7 @@
       ]
     },
     {
+      "id": "CF-006",
       "grupo": "AC-2 (variantes de mayúsculas, tildes y puntuación)",
       "texto": "Recommended for this patient",
       "niveles": ["A"],
@@ -75,6 +81,7 @@
       ]
     },
     {
+      "id": "CF-007",
       "grupo": "AC-2 (variantes de mayúsculas, tildes y puntuación)",
       "texto": "el mejor tratamiento",
       "niveles": ["A"],
@@ -87,6 +94,7 @@
       ]
     },
     {
+      "id": "CF-008",
       "grupo": "AC-2 (variantes de mayúsculas, tildes y puntuación)",
       "texto": "indicado para usted",
       "niveles": ["A"],
@@ -99,6 +107,7 @@
       ]
     },
     {
+      "id": "CF-009",
       "grupo": "AC-2 (variantes de mayúsculas, tildes y puntuación)",
       "texto": "Should receive",
       "niveles": ["A"],
@@ -111,6 +120,7 @@
       ]
     },
     {
+      "id": "CF-010",
       "grupo": "AC-2 (variantes de mayúsculas, tildes y puntuación)",
       "texto": "the best treatment",
       "niveles": ["A"],
@@ -123,6 +133,7 @@
       ]
     },
     {
+      "id": "CF-011",
       "grupo": "AC-2 (variantes de mayúsculas, tildes y puntuación)",
       "texto": "indicated for you",
       "niveles": ["A"],
@@ -135,6 +146,7 @@
       ]
     },
     {
+      "id": "CF-012",
       "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
       "texto": "deben recibir",
       "niveles": ["A"],
@@ -147,6 +159,7 @@
       ]
     },
     {
+      "id": "CF-013",
       "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
       "texto": "recomendada para esta paciente",
       "niveles": ["A"],
@@ -159,6 +172,7 @@
       ]
     },
     {
+      "id": "CF-014",
       "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
       "texto": "debe recibirlo",
       "niveles": ["A"],
@@ -171,6 +185,7 @@
       ]
     },
     {
+      "id": "CF-015",
       "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
       "texto": "debe recibirse",
       "niveles": ["A"],
@@ -183,6 +198,7 @@
       ]
     },
     {
+      "id": "CF-016",
       "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
       "texto": "Deberían recibir",
       "niveles": ["A"],
@@ -195,6 +211,7 @@
       ]
     },
     {
+      "id": "CF-017",
       "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
       "texto": "las mejores opciones",
       "niveles": ["A"],
@@ -207,6 +224,7 @@
       ]
     },
     {
+      "id": "CF-018",
       "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
       "texto": "tratamientos indicados",
       "niveles": ["A"],
@@ -219,6 +237,7 @@
       ]
     },
     {
+      "id": "CF-019",
       "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
       "texto": "The patients should",
       "niveles": ["A"],
@@ -231,6 +250,7 @@
       ]
     },
     {
+      "id": "CF-020",
       "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
       "texto": "Tratamientos de elección",
       "niveles": ["A"],
@@ -243,6 +263,7 @@
       ]
     },
     {
+      "id": "CF-021",
       "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
       "texto": "Se sugiere iniciar trastuzumab",
       "niveles": ["A"],
@@ -255,6 +276,7 @@
       ]
     },
     {
+      "id": "CF-022",
       "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
       "texto": "usted debe",
       "niveles": ["A"],
@@ -267,6 +289,7 @@
       ]
     },
     {
+      "id": "CF-023",
       "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
       "texto": "You should",
       "niveles": ["A"],
@@ -279,6 +302,7 @@
       ]
     },
     {
+      "id": "CF-024",
       "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
       "texto": "indicated for this patient",
       "niveles": ["A"],
@@ -291,6 +315,7 @@
       ]
     },
     {
+      "id": "CF-025",
       "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
       "texto": "La probabilidad de éxito es alta",
       "niveles": ["A"],
@@ -303,6 +328,7 @@
       ]
     },
     {
+      "id": "CF-026",
       "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
       "texto": "chance of success",
       "niveles": ["A"],
@@ -315,6 +341,7 @@
       ]
     },
     {
+      "id": "CF-027",
       "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
       "texto": "opciones preferidas",
       "niveles": ["A"],
@@ -327,6 +354,7 @@
       ]
     },
     {
+      "id": "CF-028",
       "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
       "texto": "tratamiento óptimo",
       "niveles": ["A"],
@@ -339,6 +367,7 @@
       ]
     },
     {
+      "id": "CF-029",
       "grupo": "AC-2 (dos términos, dos apariciones)",
       "texto": "Debe recibir trastuzumab y el mejor tratamiento",
       "niveles": ["A"],
@@ -355,6 +384,7 @@
       ]
     },
     {
+      "id": "CF-030",
       "grupo": "AC-2 (dos términos, dos apariciones)",
       "texto": "debe recibir A. Debe recibir B",
       "niveles": ["A"],
@@ -371,6 +401,7 @@
       ]
     },
     {
+      "id": "CF-031",
       "grupo": "AC-2 (descriptivo)",
       "texto": "Opciones descritas en la evidencia",
       "niveles": ["A"],
@@ -378,6 +409,7 @@
       "esperado": []
     },
     {
+      "id": "CF-032",
       "grupo": "AC-2 (descriptivo)",
       "texto": "Opciones descritas en la evidencia",
       "niveles": ["A", "B"],
@@ -385,6 +417,7 @@
       "esperado": []
     },
     {
+      "id": "CF-033",
       "grupo": "AC-2 (texto vacío)",
       "texto": "",
       "niveles": ["A", "B"],
@@ -392,6 +425,7 @@
       "esperado": []
     },
     {
+      "id": "CF-034",
       "grupo": "AC-2 (literales de retirada, S1 resp. 16)",
       "texto": "[afirmación retirada: formulación no permitida]",
       "niveles": ["A", "B"],
@@ -399,6 +433,7 @@
       "esperado": []
     },
     {
+      "id": "CF-035",
       "grupo": "AC-2 (literales de retirada, S1 resp. 16)",
       "texto": "[claim removed: disallowed wording]",
       "niveles": ["A", "B"],
@@ -406,6 +441,7 @@
       "esperado": []
     },
     {
+      "id": "CF-036",
       "grupo": "AC-2 (literales de retirada, S1 resp. 16)",
       "texto": "[afirmación retirada: formulación no permitida]",
       "niveles": ["A", "B"],
@@ -413,6 +449,7 @@
       "esperado": []
     },
     {
+      "id": "CF-037",
       "grupo": "AC-2 (literales de retirada, S1 resp. 16)",
       "texto": "[claim removed: disallowed wording]",
       "niveles": ["A", "B"],
@@ -420,6 +457,7 @@
       "esperado": []
     },
     {
+      "id": "CF-038",
       "grupo": "AC-5 (raíz recomend, solo con el Nivel B)",
       "texto": "La guía recomienda el esquema X",
       "niveles": ["A"],
@@ -427,6 +465,7 @@
       "esperado": []
     },
     {
+      "id": "CF-039",
       "grupo": "AC-5 (raíz recomend, solo con el Nivel B)",
       "texto": "La guía recomienda el esquema X",
       "niveles": ["A", "B"],
@@ -439,6 +478,7 @@
       ]
     },
     {
+      "id": "CF-040",
       "grupo": "AC-5 (raíz recomend, Nivel A desde 1.5.0)",
       "texto": "Opción recomendada",
       "niveles": ["A", "B"],
@@ -451,6 +491,7 @@
       ]
     },
     {
+      "id": "CF-041",
       "grupo": "AC-5 (raíz recomend, Nivel A desde 1.5.0)",
       "texto": "Recommended option",
       "niveles": ["A", "B"],
@@ -463,6 +504,7 @@
       ]
     },
     {
+      "id": "CF-042",
       "grupo": "AC-5 (raíz recomend, solo con el Nivel B)",
       "texto": "no constituye una recomendación",
       "niveles": ["A"],
@@ -470,6 +512,7 @@
       "esperado": []
     },
     {
+      "id": "CF-043",
       "grupo": "AC-5 (raíz recomend, solo con el Nivel B)",
       "texto": "no constituye una recomendación",
       "niveles": ["A", "B"],
@@ -477,6 +520,7 @@
       "esperado": []
     },
     {
+      "id": "CF-044",
       "grupo": "AC-5 (raíz recomend, solo con el Nivel B)",
       "texto": "no constituye una recomendación",
       "niveles": ["A", "B"],
@@ -489,6 +533,7 @@
       ]
     },
     {
+      "id": "CF-045",
       "grupo": "AC-5 (raíz recomend, solo con el Nivel B)",
       "texto": "Este es el mejor tratamiento",
       "niveles": ["A", "B"],
@@ -501,6 +546,7 @@
       ]
     },
     {
+      "id": "CF-046",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "administre trastuzumab",
       "niveles": ["A"],
@@ -513,6 +559,7 @@
       ]
     },
     {
+      "id": "CF-047",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "administre trastuzumab",
       "niveles": ["A", "B"],
@@ -525,6 +572,7 @@
       ]
     },
     {
+      "id": "CF-048",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "No administre trastuzumab",
       "niveles": ["A"],
@@ -537,6 +585,7 @@
       ]
     },
     {
+      "id": "CF-049",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "Adminístrelo cada 3 semanas",
       "niveles": ["A"],
@@ -549,6 +598,7 @@
       ]
     },
     {
+      "id": "CF-050",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "Adminístrelo cada 3 semanas",
       "niveles": ["A", "B"],
@@ -561,6 +611,7 @@
       ]
     },
     {
+      "id": "CF-051",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "Administren el fármaco",
       "niveles": ["A"],
@@ -573,6 +624,7 @@
       ]
     },
     {
+      "id": "CF-052",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "no debe recibir",
       "niveles": ["A"],
@@ -585,6 +637,7 @@
       ]
     },
     {
+      "id": "CF-053",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "no debe recibir",
       "niveles": ["A", "B"],
@@ -597,6 +650,7 @@
       ]
     },
     {
+      "id": "CF-054",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "No se debe administrar en embarazo",
       "niveles": ["A"],
@@ -609,6 +663,7 @@
       ]
     },
     {
+      "id": "CF-055",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "No se debe administrar en embarazo",
       "niveles": ["A", "B"],
@@ -621,6 +676,7 @@
       ]
     },
     {
+      "id": "CF-056",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "se debe administrar con precaución",
       "niveles": ["A"],
@@ -633,6 +689,7 @@
       ]
     },
     {
+      "id": "CF-057",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "se debe administrar con precaución",
       "niveles": ["A", "B"],
@@ -645,6 +702,7 @@
       ]
     },
     {
+      "id": "CF-058",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "debe iniciarse en las 12 semanas",
       "niveles": ["A"],
@@ -657,6 +715,7 @@
       ]
     },
     {
+      "id": "CF-059",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "debe iniciarse en las 12 semanas",
       "niveles": ["A", "B"],
@@ -669,6 +728,7 @@
       ]
     },
     {
+      "id": "CF-060",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "Debe suspender el esquema",
       "niveles": ["A"],
@@ -681,6 +741,7 @@
       ]
     },
     {
+      "id": "CF-061",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "Inicie trastuzumab",
       "niveles": ["A"],
@@ -693,6 +754,7 @@
       ]
     },
     {
+      "id": "CF-062",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "Inicie trastuzumab",
       "niveles": ["A", "B"],
@@ -705,6 +767,7 @@
       ]
     },
     {
+      "id": "CF-063",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "Prescriba el esquema",
       "niveles": ["A"],
@@ -717,6 +780,7 @@
       ]
     },
     {
+      "id": "CF-064",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "Suspenda el fármaco",
       "niveles": ["A"],
@@ -729,6 +793,7 @@
       ]
     },
     {
+      "id": "CF-065",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "cambie a pertuzumab",
       "niveles": ["A"],
@@ -741,6 +806,7 @@
       ]
     },
     {
+      "id": "CF-066",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "cambie a pertuzumab",
       "niveles": ["A", "B"],
@@ -753,6 +819,7 @@
       ]
     },
     {
+      "id": "CF-067",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "Elijan el esquema",
       "niveles": ["A"],
@@ -765,6 +832,7 @@
       ]
     },
     {
+      "id": "CF-068",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "Escoja una opción",
       "niveles": ["A"],
@@ -777,6 +845,7 @@
       ]
     },
     {
+      "id": "CF-069",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "Ofrezca cirugía",
       "niveles": ["A"],
@@ -789,6 +858,7 @@
       ]
     },
     {
+      "id": "CF-070",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "Ofrezca cirugía",
       "niveles": ["A", "B"],
@@ -801,6 +871,7 @@
       ]
     },
     {
+      "id": "CF-071",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "es necesaria una biopsia",
       "niveles": ["A"],
@@ -813,6 +884,7 @@
       ]
     },
     {
+      "id": "CF-072",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "es necesaria una biopsia",
       "niveles": ["A", "B"],
@@ -825,6 +897,7 @@
       ]
     },
     {
+      "id": "CF-073",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "Es imprescindible la confirmación",
       "niveles": ["A"],
@@ -837,6 +910,7 @@
       ]
     },
     {
+      "id": "CF-074",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "Se recomienda trastuzumab",
       "niveles": ["A"],
@@ -849,6 +923,7 @@
       ]
     },
     {
+      "id": "CF-075",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "Se recomienda trastuzumab",
       "niveles": ["A", "B"],
@@ -861,6 +936,7 @@
       ]
     },
     {
+      "id": "CF-076",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "se recomienda iniciar trastuzumab",
       "niveles": ["A"],
@@ -873,6 +949,7 @@
       ]
     },
     {
+      "id": "CF-077",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "se recomienda iniciar trastuzumab",
       "niveles": ["A", "B"],
@@ -885,6 +962,7 @@
       ]
     },
     {
+      "id": "CF-078",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "la mejor opción es trastuzumab",
       "niveles": ["A"],
@@ -897,6 +975,7 @@
       ]
     },
     {
+      "id": "CF-079",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "la mejor opción es trastuzumab",
       "niveles": ["A", "B"],
@@ -909,6 +988,7 @@
       ]
     },
     {
+      "id": "CF-080",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "se indica trastuzumab",
       "niveles": ["A"],
@@ -921,6 +1001,7 @@
       ]
     },
     {
+      "id": "CF-081",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "se indica trastuzumab",
       "niveles": ["A", "B"],
@@ -933,6 +1014,7 @@
       ]
     },
     {
+      "id": "CF-082",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "no está indicado",
       "niveles": ["A"],
@@ -945,6 +1027,7 @@
       ]
     },
     {
+      "id": "CF-083",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "no está indicado",
       "niveles": ["A", "B"],
@@ -957,6 +1040,7 @@
       ]
     },
     {
+      "id": "CF-084",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "está contraindicada",
       "niveles": ["A"],
@@ -969,6 +1053,7 @@
       ]
     },
     {
+      "id": "CF-085",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "manejo de elección",
       "niveles": ["A"],
@@ -981,6 +1066,7 @@
       ]
     },
     {
+      "id": "CF-086",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "We recommend trastuzumab",
       "niveles": ["A"],
@@ -993,6 +1079,7 @@
       ]
     },
     {
+      "id": "CF-087",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "We recommend trastuzumab",
       "niveles": ["A", "B"],
@@ -1005,6 +1092,7 @@
       ]
     },
     {
+      "id": "CF-088",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "Trastuzumab is recommended",
       "niveles": ["A"],
@@ -1017,6 +1105,7 @@
       ]
     },
     {
+      "id": "CF-089",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "Trastuzumab is recommended",
       "niveles": ["A", "B"],
@@ -1029,6 +1118,7 @@
       ]
     },
     {
+      "id": "CF-090",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "should be started",
       "niveles": ["A"],
@@ -1041,6 +1131,7 @@
       ]
     },
     {
+      "id": "CF-091",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "must receive",
       "niveles": ["A"],
@@ -1053,6 +1144,7 @@
       ]
     },
     {
+      "id": "CF-092",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "should not receive",
       "niveles": ["A"],
@@ -1065,6 +1157,7 @@
       ]
     },
     {
+      "id": "CF-093",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "is indicated for you",
       "niveles": ["A"],
@@ -1077,6 +1170,7 @@
       ]
     },
     {
+      "id": "CF-094",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "is indicated for you",
       "niveles": ["A", "B"],
@@ -1089,6 +1183,7 @@
       ]
     },
     {
+      "id": "CF-095",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "is contraindicated",
       "niveles": ["A"],
@@ -1101,6 +1196,7 @@
       ]
     },
     {
+      "id": "CF-096",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "preferred treatment",
       "niveles": ["A"],
@@ -1113,6 +1209,7 @@
       ]
     },
     {
+      "id": "CF-097",
       "grupo": "S1 resp. 33 (positivos)",
       "texto": "treatment of choice",
       "niveles": ["A"],
@@ -1125,6 +1222,7 @@
       ]
     },
     {
+      "id": "CF-098",
       "grupo": "S1 resp. 33 y 34 (negativos, usos descriptivos)",
       "texto": "los ensayos evaluaron administrar trastuzumab",
       "niveles": ["A"],
@@ -1132,6 +1230,7 @@
       "esperado": []
     },
     {
+      "id": "CF-099",
       "grupo": "S1 resp. 33 y 34 (negativos, usos descriptivos)",
       "texto": "los ensayos evaluaron administrar trastuzumab",
       "niveles": ["A", "B"],
@@ -1144,6 +1243,7 @@
       ]
     },
     {
+      "id": "CF-100",
       "grupo": "S1 resp. 33 y 34 (negativos, usos descriptivos)",
       "texto": "la guía recomienda X para pacientes con HER2 positivo",
       "niveles": ["A"],
@@ -1151,6 +1251,7 @@
       "esperado": []
     },
     {
+      "id": "CF-101",
       "grupo": "S1 resp. 33 y 34 (negativos, usos descriptivos)",
       "texto": "la guía recomienda X para pacientes con HER2 positivo",
       "niveles": ["A", "B"],
@@ -1163,6 +1264,7 @@
       ]
     },
     {
+      "id": "CF-102",
       "grupo": "S1 resp. 33 y 34 (negativos, usos descriptivos)",
       "texto": "el fármaco se administra cada 3 semanas",
       "niveles": ["A"],
@@ -1170,6 +1272,7 @@
       "esperado": []
     },
     {
+      "id": "CF-103",
       "grupo": "S1 resp. 33 y 34 (negativos, usos descriptivos)",
       "texto": "el fármaco se administra cada 3 semanas",
       "niveles": ["A", "B"],
@@ -1177,6 +1280,7 @@
       "esperado": []
     },
     {
+      "id": "CF-104",
       "grupo": "S1 resp. 33 y 34 (negativos, usos descriptivos)",
       "texto": "la paciente inicia tratamiento",
       "niveles": ["A"],
@@ -1184,6 +1288,7 @@
       "esperado": []
     },
     {
+      "id": "CF-105",
       "grupo": "S1 resp. 33 y 34 (negativos, usos descriptivos)",
       "texto": "la paciente inicia tratamiento",
       "niveles": ["A", "B"],
@@ -1191,6 +1296,7 @@
       "esperado": []
     },
     {
+      "id": "CF-106",
       "grupo": "S1 resp. 33 y 34 (negativos, usos descriptivos)",
       "texto": "fecha de inicio del tratamiento",
       "niveles": ["A"],
@@ -1198,6 +1304,7 @@
       "esperado": []
     },
     {
+      "id": "CF-107",
       "grupo": "S1 resp. 33 y 34 (negativos, usos descriptivos)",
       "texto": "fecha de inicio del tratamiento",
       "niveles": ["A", "B"],
@@ -1205,6 +1312,7 @@
       "esperado": []
     },
     {
+      "id": "CF-108",
       "grupo": "S1 resp. 33 y 34 (negativos, usos descriptivos)",
       "texto": "el cambio a trastuzumab",
       "niveles": ["A"],
@@ -1212,6 +1320,7 @@
       "esperado": []
     },
     {
+      "id": "CF-109",
       "grupo": "S1 resp. 33 y 34 (negativos, usos descriptivos)",
       "texto": "el cambio a trastuzumab",
       "niveles": ["A", "B"],
@@ -1219,6 +1328,7 @@
       "esperado": []
     },
     {
+      "id": "CF-110",
       "grupo": "S1 resp. 33 (excepciones)",
       "texto": "la toxicidad se debe a la quimioterapia",
       "niveles": ["A"],
@@ -1226,6 +1336,7 @@
       "esperado": []
     },
     {
+      "id": "CF-111",
       "grupo": "S1 resp. 33 (excepciones)",
       "texto": "la toxicidad se debe a la quimioterapia",
       "niveles": ["A", "B"],
@@ -1233,6 +1344,7 @@
       "esperado": []
     },
     {
+      "id": "CF-112",
       "grupo": "S1 resp. 33 (excepciones)",
       "texto": "el efecto se debe al fármaco",
       "niveles": ["A"],
@@ -1240,6 +1352,7 @@
       "esperado": []
     },
     {
+      "id": "CF-113",
       "grupo": "S1 resp. 33 (excepciones)",
       "texto": "como se indica en la tabla",
       "niveles": ["A"],
@@ -1247,6 +1360,7 @@
       "esperado": []
     },
     {
+      "id": "CF-114",
       "grupo": "S1 resp. 33 (excepciones)",
       "texto": "como se indica en la tabla",
       "niveles": ["A", "B"],
@@ -1254,6 +1368,7 @@
       "esperado": []
     },
     {
+      "id": "CF-115",
       "grupo": "S1 resp. 33 (frase permitida: iniciar sesión)",
       "texto": "Iniciar sesión",
       "niveles": ["A"],
@@ -1261,6 +1376,7 @@
       "esperado": []
     },
     {
+      "id": "CF-116",
       "grupo": "S1 resp. 33 (frase permitida: iniciar sesión)",
       "texto": "Iniciar sesión",
       "niveles": ["A", "B"],
@@ -1268,6 +1384,7 @@
       "esperado": []
     },
     {
+      "id": "CF-117",
       "grupo": "S1 resp. 33 (frase permitida: iniciar sesión)",
       "texto": "Iniciar sesión",
       "niveles": ["A", "B"],
@@ -1280,6 +1397,7 @@
       ]
     },
     {
+      "id": "CF-118",
       "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
       "texto": "Relevancia de recuperación de evidencia",
       "niveles": ["A"],
@@ -1287,6 +1405,7 @@
       "esperado": []
     },
     {
+      "id": "CF-119",
       "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
       "texto": "Relevancia de recuperación de evidencia",
       "niveles": ["A", "B"],
@@ -1294,6 +1413,7 @@
       "esperado": []
     },
     {
+      "id": "CF-120",
       "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
       "texto": "Relevancia de recuperación de evidencia",
       "niveles": ["A", "B"],
@@ -1301,6 +1421,7 @@
       "esperado": []
     },
     {
+      "id": "CF-121",
       "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
       "texto": "Metadato secundario: no mide eficacia ni solidez clínica",
       "niveles": ["A"],
@@ -1308,6 +1429,7 @@
       "esperado": []
     },
     {
+      "id": "CF-122",
       "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
       "texto": "Metadato secundario: no mide eficacia ni solidez clínica",
       "niveles": ["A", "B"],
@@ -1315,6 +1437,7 @@
       "esperado": []
     },
     {
+      "id": "CF-123",
       "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
       "texto": "Metadato secundario: no mide eficacia ni solidez clínica",
       "niveles": ["A", "B"],
@@ -1322,6 +1445,7 @@
       "esperado": []
     },
     {
+      "id": "CF-124",
       "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
       "texto": "Ordenado por relevancia de recuperación de la búsqueda; no representa prioridad ni aplicabilidad clínica.",
       "niveles": ["A"],
@@ -1329,6 +1453,7 @@
       "esperado": []
     },
     {
+      "id": "CF-125",
       "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
       "texto": "Ordenado por relevancia de recuperación de la búsqueda; no representa prioridad ni aplicabilidad clínica.",
       "niveles": ["A", "B"],
@@ -1336,6 +1461,7 @@
       "esperado": []
     },
     {
+      "id": "CF-126",
       "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
       "texto": "Ordenado por relevancia de recuperación de la búsqueda; no representa prioridad ni aplicabilidad clínica.",
       "niveles": ["A", "B"],
@@ -1343,6 +1469,7 @@
       "esperado": []
     },
     {
+      "id": "CF-127",
       "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
       "texto": "Orden basado en la cita recuperada más relevante asociada a cada opción",
       "niveles": ["A"],
@@ -1350,6 +1477,7 @@
       "esperado": []
     },
     {
+      "id": "CF-128",
       "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
       "texto": "Orden basado en la cita recuperada más relevante asociada a cada opción",
       "niveles": ["A", "B"],
@@ -1357,6 +1485,7 @@
       "esperado": []
     },
     {
+      "id": "CF-129",
       "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
       "texto": "Orden basado en la cita recuperada más relevante asociada a cada opción",
       "niveles": ["A", "B"],
@@ -1364,6 +1493,7 @@
       "esperado": []
     },
     {
+      "id": "CF-130",
       "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
       "texto": "No resume la aplicabilidad, la eficacia ni la calidad global de la opción.",
       "niveles": ["A"],
@@ -1371,6 +1501,7 @@
       "esperado": []
     },
     {
+      "id": "CF-131",
       "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
       "texto": "No resume la aplicabilidad, la eficacia ni la calidad global de la opción.",
       "niveles": ["A", "B"],
@@ -1378,6 +1509,7 @@
       "esperado": []
     },
     {
+      "id": "CF-132",
       "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
       "texto": "No resume la aplicabilidad, la eficacia ni la calidad global de la opción.",
       "niveles": ["A", "B"],
@@ -1385,6 +1517,7 @@
       "esperado": []
     },
     {
+      "id": "CF-133",
       "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
       "texto": "Registro solo para auditoría: no es contenido clínico utilizable.",
       "niveles": ["A"],
@@ -1392,6 +1525,7 @@
       "esperado": []
     },
     {
+      "id": "CF-134",
       "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
       "texto": "Registro solo para auditoría: no es contenido clínico utilizable.",
       "niveles": ["A", "B"],
@@ -1399,6 +1533,7 @@
       "esperado": []
     },
     {
+      "id": "CF-135",
       "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
       "texto": "Registro solo para auditoría: no es contenido clínico utilizable.",
       "niveles": ["A", "B"],
@@ -1406,6 +1541,7 @@
       "esperado": []
     },
     {
+      "id": "CF-136",
       "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
       "texto": "Reintentar",
       "niveles": ["A"],
@@ -1413,6 +1549,7 @@
       "esperado": []
     },
     {
+      "id": "CF-137",
       "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
       "texto": "Reintentar",
       "niveles": ["A", "B"],
@@ -1420,6 +1557,7 @@
       "esperado": []
     },
     {
+      "id": "CF-138",
       "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
       "texto": "Reintentar",
       "niveles": ["A", "B"],
@@ -1427,6 +1565,7 @@
       "esperado": []
     },
     {
+      "id": "CF-139",
       "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
       "texto": "Análisis no realizado: falta el tipo de cáncer; no fue posible filtrar la evidencia.",
       "niveles": ["A"],
@@ -1434,6 +1573,7 @@
       "esperado": []
     },
     {
+      "id": "CF-140",
       "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
       "texto": "Análisis no realizado: falta el tipo de cáncer; no fue posible filtrar la evidencia.",
       "niveles": ["A", "B"],
@@ -1441,6 +1581,7 @@
       "esperado": []
     },
     {
+      "id": "CF-141",
       "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
       "texto": "Análisis no realizado: falta el tipo de cáncer; no fue posible filtrar la evidencia.",
       "niveles": ["A", "B"],
@@ -1448,6 +1589,7 @@
       "esperado": []
     },
     {
+      "id": "CF-142",
       "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
       "texto": "En pacientes con cáncer de mama HER2 positivo temprano, ¿qué describe la evidencia sobre mortalidad con terapia anti-HER2 adyuvante?",
       "niveles": ["A"],
@@ -1455,6 +1597,7 @@
       "esperado": []
     },
     {
+      "id": "CF-143",
       "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
       "texto": "En pacientes con cáncer de mama HER2 positivo temprano, ¿qué describe la evidencia sobre mortalidad con terapia anti-HER2 adyuvante?",
       "niveles": ["A", "B"],
@@ -1462,6 +1605,7 @@
       "esperado": []
     },
     {
+      "id": "CF-144",
       "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
       "texto": "En pacientes con cáncer de mama HER2 positivo temprano, ¿qué describe la evidencia sobre mortalidad con terapia anti-HER2 adyuvante?",
       "niveles": ["A", "B"],
@@ -1469,6 +1613,7 @@
       "esperado": []
     },
     {
+      "id": "CF-145",
       "grupo": "Literales de L1D-194 (S1 resp. 32)",
       "texto": "Generado por IA; requiere validación clínica independiente por el oncólogo tratante.",
       "niveles": ["A"],
@@ -1476,6 +1621,7 @@
       "esperado": []
     },
     {
+      "id": "CF-146",
       "grupo": "Literales de L1D-194 (S1 resp. 32)",
       "texto": "Generado por IA; requiere validación clínica independiente por el oncólogo tratante.",
       "niveles": ["A", "B"],
@@ -1483,6 +1629,7 @@
       "esperado": []
     },
     {
+      "id": "CF-147",
       "grupo": "Literales de L1D-194 (S1 resp. 32)",
       "texto": "Generado por IA; requiere validación clínica independiente por el oncólogo tratante.",
       "niveles": ["A", "B"],
@@ -1490,6 +1637,7 @@
       "esperado": []
     },
     {
+      "id": "CF-148",
       "grupo": "Literales de L1D-194 (S1 resp. 32)",
       "texto": "Uso académico/investigación",
       "niveles": ["A"],
@@ -1497,6 +1645,7 @@
       "esperado": []
     },
     {
+      "id": "CF-149",
       "grupo": "Literales de L1D-194 (S1 resp. 32)",
       "texto": "Uso académico/investigación",
       "niveles": ["A", "B"],
@@ -1504,6 +1653,7 @@
       "esperado": []
     },
     {
+      "id": "CF-150",
       "grupo": "Literales de L1D-194 (S1 resp. 32)",
       "texto": "Uso académico/investigación",
       "niveles": ["A", "B"],
@@ -1511,6 +1661,7 @@
       "esperado": []
     },
     {
+      "id": "CF-151",
       "grupo": "AC-2 (marcas Mc y Me no se quitan, solo Mn)",
       "texto": "debःe recibir",
       "niveles": ["A"],
@@ -1518,6 +1669,7 @@
       "esperado": []
     },
     {
+      "id": "CF-152",
       "grupo": "AC-2 (marcas Mc y Me no se quitan, solo Mn)",
       "texto": "debeःrecibir",
       "niveles": ["A"],
@@ -1530,6 +1682,7 @@
       ]
     },
     {
+      "id": "CF-153",
       "grupo": "AC-2 (marcas Mc y Me no se quitan, solo Mn)",
       "texto": "deb⃝e recibir",
       "niveles": ["A"],
@@ -1537,6 +1690,7 @@
       "esperado": []
     },
     {
+      "id": "CF-154",
       "grupo": "AC-2 (marcas Mc y Me no se quitan, solo Mn)",
       "texto": "debe⃝recibir",
       "niveles": ["A"],
@@ -1549,6 +1703,7 @@
       ]
     },
     {
+      "id": "CF-155",
       "grupo": "AC-2 (minúsculas sin casefold)",
       "texto": "Straße: debe recibir",
       "niveles": ["A"],
@@ -1561,6 +1716,7 @@
       ]
     },
     {
+      "id": "CF-156",
       "grupo": "Gate 2 (indicado para este paciente, género y número)",
       "texto": "indicado para este paciente",
       "niveles": ["A"],
@@ -1573,6 +1729,7 @@
       ]
     },
     {
+      "id": "CF-157",
       "grupo": "Gate 2 (indicado para este paciente, género y número)",
       "texto": "Indicado para esta paciente.",
       "niveles": ["A"],
@@ -1585,6 +1742,7 @@
       ]
     },
     {
+      "id": "CF-158",
       "grupo": "Gate 2 (indicado para este paciente, género y número)",
       "texto": "indicada para esta paciente",
       "niveles": ["A"],
@@ -1597,6 +1755,7 @@
       ]
     },
     {
+      "id": "CF-159",
       "grupo": "Gate 2 (indicado para este paciente, género y número)",
       "texto": "Indicados para estos pacientes",
       "niveles": ["A"],
@@ -1609,6 +1768,7 @@
       ]
     },
     {
+      "id": "CF-160",
       "grupo": "Gate 2 (indicado para este paciente, género y número)",
       "texto": "indicado para pacientes con HER2 positivo",
       "niveles": ["A"],
@@ -1616,6 +1776,7 @@
       "esperado": []
     },
     {
+      "id": "CF-161",
       "grupo": "Nivel A inglés 1.4.0 (best option, preferred option, success rate)",
       "texto": "the best option",
       "niveles": ["A"],
@@ -1628,6 +1789,7 @@
       ]
     },
     {
+      "id": "CF-162",
       "grupo": "Nivel A inglés 1.4.0 (best option, preferred option, success rate)",
       "texto": "Preferred option",
       "niveles": ["A"],
@@ -1640,6 +1802,7 @@
       ]
     },
     {
+      "id": "CF-163",
       "grupo": "Nivel A inglés 1.4.0 (best option, preferred option, success rate)",
       "texto": "a success rate of 80%",
       "niveles": ["A"],
@@ -1652,6 +1815,7 @@
       ]
     },
     {
+      "id": "CF-164",
       "grupo": "Nivel A inglés 1.4.0 (falsos positivos)",
       "texto": "best practice",
       "niveles": ["A"],
@@ -1659,6 +1823,7 @@
       "esperado": []
     },
     {
+      "id": "CF-165",
       "grupo": "Nivel A inglés 1.4.0 (falsos positivos)",
       "texto": "optional",
       "niveles": ["A"],
@@ -1666,6 +1831,7 @@
       "esperado": []
     },
     {
+      "id": "CF-166",
       "grupo": "Nivel A inglés 1.4.0 (falsos positivos)",
       "texto": "options described in the evidence",
       "niveles": ["A"],
@@ -1673,6 +1839,7 @@
       "esperado": []
     },
     {
+      "id": "CF-167",
       "grupo": "Nivel A inglés 1.4.0 (falsos positivos)",
       "texto": "the response rate was 80%",
       "niveles": ["A"],
@@ -1680,6 +1847,7 @@
       "esperado": []
     },
     {
+      "id": "CF-168",
       "grupo": "Nivel A 1.5.0 (recomendación directa)",
       "texto": "El tratamiento recomendado es trastuzumab.",
       "niveles": ["A"],
@@ -1692,6 +1860,7 @@
       ]
     },
     {
+      "id": "CF-169",
       "grupo": "Nivel A 1.5.0 (recomendación directa)",
       "texto": "Los tratamientos recomendados incluyen X.",
       "niveles": ["A"],
@@ -1704,6 +1873,7 @@
       ]
     },
     {
+      "id": "CF-170",
       "grupo": "Nivel A 1.5.0 (recomendación directa)",
       "texto": "Trastuzumab es el régimen recomendado.",
       "niveles": ["A"],
@@ -1716,6 +1886,7 @@
       ]
     },
     {
+      "id": "CF-171",
       "grupo": "Nivel A 1.5.0 (recomendación directa)",
       "texto": "La terapia recomendada es X.",
       "niveles": ["A"],
@@ -1728,6 +1899,7 @@
       ]
     },
     {
+      "id": "CF-172",
       "grupo": "Nivel A 1.5.0 (recomendación directa)",
       "texto": "Es la opción recomendada.",
       "niveles": ["A"],
@@ -1740,6 +1912,7 @@
       ]
     },
     {
+      "id": "CF-173",
       "grupo": "Nivel A 1.5.0 (recomendación directa)",
       "texto": "RECOMENDAMOS trastuzumab.",
       "niveles": ["A"],
@@ -1752,6 +1925,7 @@
       ]
     },
     {
+      "id": "CF-174",
       "grupo": "Nivel A 1.5.0 (recomendación directa)",
       "texto": "Se sugiere considerar trastuzumab.",
       "niveles": ["A"],
@@ -1764,6 +1938,7 @@
       ]
     },
     {
+      "id": "CF-175",
       "grupo": "Nivel A 1.5.0 (recomendación directa)",
       "texto": "Es la opción preferible.",
       "niveles": ["A"],
@@ -1776,6 +1951,7 @@
       ]
     },
     {
+      "id": "CF-176",
       "grupo": "Nivel A 1.5.0 (recomendación directa)",
       "texto": "Trastuzumab is the recommended regimen.",
       "niveles": ["A"],
@@ -1788,6 +1964,7 @@
       ]
     },
     {
+      "id": "CF-177",
       "grupo": "Nivel A 1.5.0 (recomendación directa)",
       "texto": "The recommended treatment is X.",
       "niveles": ["A"],
@@ -1800,6 +1977,7 @@
       ]
     },
     {
+      "id": "CF-178",
       "grupo": "Nivel A 1.5.0 (recomendación directa)",
       "texto": "A recommended therapy for X.",
       "niveles": ["A"],
@@ -1812,6 +1990,7 @@
       ]
     },
     {
+      "id": "CF-179",
       "grupo": "Nivel A 1.5.0 (recomendación directa)",
       "texto": "It is the recommended option.",
       "niveles": ["A"],
@@ -1824,6 +2003,7 @@
       ]
     },
     {
+      "id": "CF-180",
       "grupo": "Nivel A 1.5.0 (recomendación directa)",
       "texto": "Trastuzumab is the standard of care.",
       "niveles": ["A"],
@@ -1836,6 +2016,7 @@
       ]
     },
     {
+      "id": "CF-181",
       "grupo": "Nivel A 1.5.0 (falsos positivos)",
       "texto": "Los autores no emiten una recomendación formal.",
       "niveles": ["A"],
@@ -1843,6 +2024,7 @@
       "esperado": []
     },
     {
+      "id": "CF-182",
       "grupo": "Nivel A 1.5.0 (falsos positivos)",
       "texto": "Las recomendaciones del panel no se reproducen aquí.",
       "niveles": ["A"],
@@ -1850,6 +2032,7 @@
       "esperado": []
     },
     {
+      "id": "CF-183",
       "grupo": "Nivel A 1.5.0 (falsos positivos)",
       "texto": "La opción descrita en la evidencia es trastuzumab.",
       "niveles": ["A"],
@@ -1857,6 +2040,7 @@
       "esperado": []
     },
     {
+      "id": "CF-184",
       "grupo": "Nivel A 1.5.0 (falsos positivos)",
       "texto": "The trial describes a treatment regimen for X.",
       "niveles": ["A"],
@@ -1864,6 +2048,7 @@
       "esperado": []
     },
     {
+      "id": "CF-185",
       "grupo": "Nivel A 1.5.0 (falsos positivos)",
       "texto": "The guideline describes trastuzumab as one option.",
       "niveles": ["A"],
@@ -1871,8 +2056,740 @@
       "esperado": []
     },
     {
+      "id": "CF-186",
       "grupo": "Nivel A 1.5.0 (falsos positivos)",
       "texto": "Se sugiere el ensayo como lectura complementaria.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "id": "VP-01",
+      "grupo": "Voz propia 1.6.0 (condicional: se recomendaría)",
+      "texto": "Se recomendaría iniciar trastuzumab adyuvante",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-se-recomendaria",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "id": "VP-02",
+      "grupo": "Voz propia 1.6.0 (condicional: se recomendaría)",
+      "texto": "Se recomendarían dos ciclos adicionales",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-se-recomendaria",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "id": "VP-03",
+      "grupo": "Voz propia 1.6.0 (condicional: se recomendaría)",
+      "texto": "No se recomendaría en mayores de 70 años",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-se-recomendaria",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "id": "VP-04",
+      "grupo": "Voz propia 1.6.0 (impersonal con «se»: se aconseja)",
+      "texto": "Se aconseja administrar dos ciclos",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-se-aconseja",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "id": "VP-05",
+      "grupo": "Voz propia 1.6.0 (impersonal con «se»: se aconseja)",
+      "texto": "Se aconsejan dos ciclos de quimioterapia",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-se-aconseja",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "id": "VP-06",
+      "grupo": "Voz propia 1.6.0 (impersonal con «se»: se aconseja)",
+      "texto": "Se aconsejaría iniciar hormonoterapia",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-se-aconseja",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "id": "VP-07",
+      "grupo": "Voz propia 1.6.0 (impersonal con «se»: se aconseja)",
+      "texto": "No se aconseja en mayores de 70 años",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-se-aconseja",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "id": "VP-08",
+      "grupo": "Voz propia 1.6.0 (imperativo: considere iniciar)",
+      "texto": "Considere iniciar hormonoterapia",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-considere-iniciar",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "id": "VP-09",
+      "grupo": "Voz propia 1.6.0 (imperativo: considere iniciar)",
+      "texto": "Consideren administrar el esquema",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-considere-iniciar",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "id": "VP-10",
+      "grupo": "Voz propia 1.6.0 (imperativo: considere iniciar)",
+      "texto": "Considere suspender el fármaco",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-considere-iniciar",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "id": "VP-11",
+      "grupo": "Voz propia 1.6.0 (imperativo: considere iniciar)",
+      "texto": "Considérese iniciar el tratamiento",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-considere-iniciar",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "id": "VP-12",
+      "grupo": "Voz propia 1.6.0 (imperativo: considere iniciar)",
+      "texto": "No considere iniciar el tratamiento",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-considere-iniciar",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "id": "VP-13",
+      "grupo": "Voz propia 1.6.0 (condicional de sugerencia: se sugeriría)",
+      "texto": "Se sugeriría iniciar la combinación",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-se-sugeriria",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "id": "VP-14",
+      "grupo": "Voz propia 1.6.0 (condicional de sugerencia: se sugeriría)",
+      "texto": "Se sugerirían dos esquemas",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-se-sugeriria",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "id": "VP-15",
+      "grupo": "Voz propia 1.6.0 (condicional de sugerencia: se sugeriría)",
+      "texto": "No se sugeriría en mayores de 70 años",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-se-sugeriria",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "id": "VP-16",
+      "grupo": "Voz propia 1.6.0 (negativos, usos descriptivos)",
+      "texto": "Los autores consideran iniciar el tratamiento como una opción",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "id": "VP-17",
+      "grupo": "Voz propia 1.6.0 (negativos, usos descriptivos)",
+      "texto": "La fuente reporta que se recomendó la combinación en el ensayo",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "id": "VP-18",
+      "grupo": "Voz propia 1.6.0 (negativos, usos descriptivos)",
+      "texto": "El comité aconsejó a los centros participantes",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "id": "VP-19",
+      "grupo": "Voz propia 1.6.0 (negativos, usos descriptivos)",
+      "texto": "Los autores sugirieron un esquema alternativo",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "id": "VP-20",
+      "grupo": "Voz propia 1.6.0 (negativos, usos descriptivos)",
+      "texto": "La fuente reporta que se consideró suspender el fármaco por toxicidad",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "id": "VPB-01",
+      "grupo": "Nivel B atribuido 1.6.0 (salidaGenerada.nivelB)",
+      "texto": "The guideline recommends adding anti-HER2 therapy",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
+      "esperado": [
+        {
+          "id": "b-recommend",
+          "nivel": "B"
+        }
+      ],
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ]
+    },
+    {
+      "id": "VPB-02",
+      "grupo": "Nivel B atribuido 1.6.0 (salidaGenerada.nivelB)",
+      "texto": "La guía recomienda añadir terapia anti-HER2",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
+      "esperado": [
+        {
+          "id": "b-recomiend",
+          "nivel": "B"
+        }
+      ],
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ]
+    },
+    {
+      "id": "VPB-03",
+      "grupo": "Nivel B atribuido 1.6.0 (salidaGenerada.nivelB)",
+      "texto": "Los autores recomiendan el esquema combinado",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
+      "esperado": [
+        {
+          "id": "b-recomiend",
+          "nivel": "B"
+        }
+      ],
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ]
+    },
+    {
+      "id": "VPB-04",
+      "grupo": "Nivel B atribuido 1.6.0 (salidaGenerada.nivelB)",
+      "texto": "El esquema recomendado por la guía incluye trastuzumab",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
+      "esperado": [
+        {
+          "id": "b-recomend",
+          "nivel": "B"
+        }
+      ],
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ]
+    },
+    {
+      "id": "VPB-05",
+      "grupo": "Nivel B atribuido 1.6.0 (salidaGenerada.nivelB)",
+      "texto": "La combinación recomendada incluye trastuzumab",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
+      "esperado": [
+        {
+          "id": "b-recomend",
+          "nivel": "B"
+        }
+      ],
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ]
+    },
+    {
+      "id": "VPB-06",
+      "grupo": "Nivel B atribuido 1.6.0 (salidaGenerada.nivelB)",
+      "texto": "The panel does not recommend the combination",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
+      "esperado": [
+        {
+          "id": "b-recommend",
+          "nivel": "B"
+        }
+      ],
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ]
+    },
+    {
+      "id": "VPB-07",
+      "grupo": "Nivel B atribuido 1.6.0 (negativos, el resto del Nivel B no aplica)",
+      "texto": "Los ensayos evaluaron administrar trastuzumab durante un año",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
+      "esperado": [],
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ]
+    },
+    {
+      "id": "VPB-08",
+      "grupo": "Nivel B atribuido 1.6.0 (negativos, el resto del Nivel B no aplica)",
+      "texto": "The trial evaluated starting therapy at week 12",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
+      "esperado": [],
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ]
+    },
+    {
+      "id": "VPB-09",
+      "grupo": "Nivel B atribuido 1.6.0 (negativos, el resto del Nivel B no aplica)",
+      "texto": "La fuente describe iniciar tratamiento con inhibidores",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
+      "esperado": [],
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ]
+    },
+    {
+      "id": "VPB-10",
+      "grupo": "Nivel B atribuido 1.6.0 (negativos, el resto del Nivel B no aplica)",
+      "texto": "The report describes the trial design in this setting",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
+      "esperado": [],
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ]
+    },
+    {
+      "id": "VPB-11",
+      "grupo": "Nivel B atribuido 1.6.0 (el sustantivo recomendación describe, no recomienda)",
+      "texto": "Los autores del ensayo no emiten una recomendación formal",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ],
+      "esperado": []
+    },
+    {
+      "id": "VPB-12",
+      "grupo": "Nivel B atribuido 1.6.0 (el sustantivo recomendación describe, no recomienda)",
+      "texto": "The panel issued no recommendation for this setting",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ],
+      "esperado": []
+    },
+    {
+      "id": "VPB-13",
+      "grupo": "Nivel B atribuido 1.6.0 (el sustantivo solo se excepciona negado)",
+      "texto": "Las recomendaciones del panel no se evaluaron en el ensayo",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ],
+      "esperado": [
+        {
+          "id": "b-recomend",
+          "nivel": "B"
+        }
+      ]
+    },
+    {
+      "id": "VPB-14",
+      "grupo": "Nivel B atribuido 1.6.0 (el sustantivo recomendación describe, no recomienda)",
+      "texto": "The panel recommends the combination and issued recommendations",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ],
+      "esperado": [
+        {
+          "id": "b-recommend",
+          "nivel": "B"
+        },
+        {
+          "id": "b-recommend",
+          "nivel": "B"
+        }
+      ]
+    },
+    {
+      "id": "VPB-15",
+      "grupo": "Nivel B atribuido 1.6.0 (el sustantivo en voz propia no se excepciona, Gate 2)",
+      "texto": "Nuestra recomendación es iniciar el régimen con trastuzumab.",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ],
+      "esperado": [
+        {
+          "id": "b-recomend",
+          "nivel": "B"
+        }
+      ]
+    },
+    {
+      "id": "VPB-16",
+      "grupo": "Nivel B atribuido 1.6.0 (el sustantivo en voz propia no se excepciona, Gate 2)",
+      "texto": "La recomendación es que reciba quimioterapia.",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ],
+      "esperado": [
+        {
+          "id": "b-recomend",
+          "nivel": "B"
+        }
+      ]
+    },
+    {
+      "id": "VPB-17",
+      "grupo": "Nivel B atribuido 1.6.0 (el sustantivo en voz propia no se excepciona, Gate 2)",
+      "texto": "Recomendación: trastuzumab más pertuzumab para esta paciente.",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ],
+      "esperado": [
+        {
+          "id": "b-recomend",
+          "nivel": "B"
+        }
+      ]
+    },
+    {
+      "id": "VPB-18",
+      "grupo": "Nivel B atribuido 1.6.0 (el sustantivo en voz propia no se excepciona, Gate 2)",
+      "texto": "The recommendation for this patient is adjuvant T-DM1.",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ],
+      "esperado": [
+        {
+          "id": "b-recommend",
+          "nivel": "B"
+        }
+      ]
+    },
+    {
+      "id": "VPB-19",
+      "grupo": "Nivel B atribuido 1.6.0 (el sustantivo en voz propia no se excepciona, Gate 2)",
+      "texto": "My recommendation: switch to T-DM1.",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ],
+      "esperado": [
+        {
+          "id": "b-recommend",
+          "nivel": "B"
+        }
+      ]
+    },
+    {
+      "id": "VP-21",
+      "grupo": "Voz propia 1.6.0 (inglés: consider starting)",
+      "texto": "Consider starting T-DM1.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "en-consider-starting",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "id": "VP-22",
+      "grupo": "Voz propia 1.6.0 (inglés: consider starting)",
+      "texto": "Consider initiating adjuvant therapy.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "en-consider-initiating",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "id": "VP-23",
+      "grupo": "Voz propia 1.6.0 (inglés: consider starting)",
+      "texto": "Consider discontinuing trastuzumab.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "en-consider-discontinuing",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "id": "VP-24",
+      "grupo": "Voz propia 1.6.0 (inglés: consider starting)",
+      "texto": "The authors considered starting T-DM1 in the trial.",
       "niveles": ["A"],
       "permitirFrases": false,
       "esperado": []

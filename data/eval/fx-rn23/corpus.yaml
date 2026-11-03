@@ -5,13 +5,32 @@ documentos:
   - {id: doc-g1, titulo: 'Breast Guideline Statement (test)', cancer: mama}
   - {id: doc-g2, titulo: 'Prostate Practice Summary (test)', cancer: prostata}
   - {id: doc-g3, titulo: 'Anti-HER2 Safety (test)', cancer: mama}
+  - {id: doc-g4, titulo: 'Resumen de práctica en mama (test)', cancer: mama}
 chunks:
   - id: ch-g1-1
     documento: doc-g1
     texto: 'The guideline recommends adding anti-HER2 therapy to adjuvant chemotherapy for HER2-positive early breast cancer.'
+  - id: ch-g1-2
+    documento: doc-g1
+    texto: 'The panel issued no recommendation for this setting of adjuvant anti-HER2 therapy.'
+  - id: ch-g1-3
+    documento: doc-g1
+    texto: 'Según Breast Guideline Statement (test): The guideline recommends adding anti-HER2 therapy to adjuvant chemotherapy.'
   - id: ch-g2-1
     documento: doc-g2
     texto: 'Androgen deprivation therapy combined with an androgen receptor inhibitor is the standard of care and a recommended treatment in metastatic hormone-sensitive prostate cancer.'
   - id: ch-g3-1
     documento: doc-g3
     texto: 'Cardiac monitoring with echocardiography is described for patients receiving anti-HER2 therapy.'
+  - id: ch-g4-1
+    documento: doc-g4
+    texto: 'La guía describe la adición de terapia anti-HER2 a la quimioterapia adyuvante en cáncer de mama HER2 positivo temprano.'
+  - id: ch-g4-2
+    documento: doc-g4
+    texto: 'La guía recomienda añadir terapia anti-HER2 a la quimioterapia adyuvante en cáncer de mama HER2 positivo temprano.'
+  - id: ch-g4-3
+    documento: doc-g4
+    texto: 'Los autores del ensayo no emiten una recomendación formal sobre terapia anti-HER2 adyuvante en cáncer de mama.'
+  - id: ch-g4-4
+    documento: doc-g4
+    texto: 'Los ensayos evaluaron administrar trastuzumab durante un año como terapia anti-HER2 adyuvante en cáncer de mama.'

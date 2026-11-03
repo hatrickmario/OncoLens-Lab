@@ -57,8 +57,23 @@ const esquemaLista = z
       terminos: z.array(termino),
     }),
     frasesPermitidas: z.object({ aplicaA, frases: z.array(texto) }),
+    salidaGenerada: z.object({
+      nivelB: z.array(texto).min(1),
+      excepciones: z.array(textoNormalizable).default([]),
+    }),
   })
   .superRefine((lista, contexto) => {
+    const existentes = new Set([
+      ...lista.nivelB.terminos.map((t) => t.id),
+      ...lista.nivelB.prefijos.map((p) => p.id),
+    ]);
+    const desconocidos = lista.salidaGenerada.nivelB.filter((id) => !existentes.has(id));
+    if (desconocidos.length > 0) {
+      contexto.addIssue({
+        code: 'custom',
+        message: `salidaGenerada.nivelB con ids desconocidos: ${desconocidos.join(', ')}`,
+      });
+    }
     const ids = [
       ...lista.nivelA.terminos.map((t) => t.id),
       ...lista.nivelB.terminos.map((t) => t.id),

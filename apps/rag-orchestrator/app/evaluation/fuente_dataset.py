@@ -52,6 +52,8 @@ class OpcionPropuesta:
     opcion: str
     justificacion: str
     citas: tuple[str, ...]
+    legitima: bool = False
+    """Describe lo que dice la evidencia sin dirigirse al paciente: el filtro de RN-23 no debe rechazarla más que la línea base."""
 
 
 @dataclass(frozen=True)
@@ -68,6 +70,13 @@ class DatasetSuite:
     propuestas: dict[str, tuple[OpcionPropuesta, ...]]
     textos_pii: tuple[str, ...]
     salidas_prescriptivas: tuple[SalidaPrescriptiva, ...]
+    linea_base_de_lenguaje: Path | None = None
+    """Copia fija de la lista de términos que sirve de línea base de la regresión de falsos positivos (US-249 AC-5)."""
+
+    def titulos_de_chunks(self) -> dict[str, str]:
+        """``chunkId -> título del catálogo`` del documento de cada chunk (RN-25): lo que reconoce la cita atribuida."""
+        titulo = {d.id: d.titulo for d in self.documentos}
+        return {c.id: titulo[c.documento] for c in self.chunks if c.documento in titulo}
 
 
 class FuenteDataset(Protocol):
@@ -139,7 +148,12 @@ class FuenteDatasetEnDirectorio:
             propuestas=_propuestas(partes["propuestas"]),
             textos_pii=tuple(str(t["texto"]) for t in partes["pii"].get("textos", [])),
             salidas_prescriptivas=_salidas_prescriptivas(partes["prescriptivas"]),
+            linea_base_de_lenguaje=self._linea_base_de(manifiesto),
         )
+
+    def _linea_base_de(self, manifiesto: dict[str, Any]) -> Path | None:
+        declarada = manifiesto.get("linea_base_de_lenguaje")
+        return None if declarada is None else self._directorio / str(declarada)
 
     def _exigir_clase_admitida(self, manifiesto: dict[str, Any]) -> str:
         clase = str(manifiesto.get("clase"))
@@ -207,7 +221,10 @@ def _salidas_prescriptivas(crudo: dict[str, Any]) -> tuple[SalidaPrescriptiva, .
 def _propuestas(crudo: dict[str, Any]) -> dict[str, tuple[OpcionPropuesta, ...]]:
     return {
         str(pregunta): tuple(
-            OpcionPropuesta(o["opcion"], o["justificacion"], tuple(o["citas"])) for o in opciones
+            OpcionPropuesta(
+                o["opcion"], o["justificacion"], tuple(o["citas"]), bool(o.get("legitima"))
+            )
+            for o in opciones
         )
         for pregunta, opciones in crudo.get("propuestas", {}).items()
     }

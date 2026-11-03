@@ -4,10 +4,13 @@ import { checkProhibitedTerms, loadProhibitedTerms } from '../src/index.js';
 import type { Nivel } from '../src/index.js';
 
 interface CasoDeConformidad {
+  id: string;
   grupo: string;
   texto: string;
   niveles: Nivel[];
   permitirFrases: boolean;
+  soloIdsB?: string[];
+  excepcionesB?: string[];
   esperado: { id: string; nivel: Nivel }[];
 }
 
@@ -95,16 +98,36 @@ describe('checkProhibitedTerms', () => {
     }
   });
 
-  it('da los id y niveles esperados en cada caso de conformidad [US-068 AC-2]', () => {
+  it('da los id y niveles esperados en cada caso de conformidad y nombra el id y el grupo del caso que falla [US-068 AC-2] [US-249 AC-3]', () => {
     expect(casos.length).toBeGreaterThan(100);
+    expect(new Set(casos.map((caso) => caso.id)).size).toBe(casos.length);
 
     for (const caso of casos) {
       const obtenido = checkProhibitedTerms(caso.texto, lista(), {
         niveles: caso.niveles,
         permitirFrases: caso.permitirFrases,
+        soloIdsB: caso.soloIdsB,
+        excepcionesB: caso.excepcionesB,
       }).map(({ id, nivel }) => ({ id, nivel }));
 
-      expect(obtenido, `${caso.grupo}: "${caso.texto}"`).toEqual(caso.esperado);
+      expect(obtenido, `${caso.id} [${caso.grupo}]: "${caso.texto}"`).toEqual(caso.esperado);
     }
+  });
+
+  it('trae casos positivos y negativos de voz propia en los casos compartidos con Python', () => {
+    const voces = casos.filter((caso) => caso.id.startsWith('VP-'));
+
+    expect(voces.length).toBeGreaterThanOrEqual(20);
+    expect(voces.filter((caso) => caso.esperado.length > 0).length).toBeGreaterThanOrEqual(15);
+  });
+
+  it('limita el Nivel B a los ids de soloIdsB cuando se piden los niveles A y B [US-249 AC-2]', () => {
+    const texto = 'La guía recomienda evaluar administrar trastuzumab';
+    const ids = (soloIdsB?: string[]) =>
+      checkProhibitedTerms(texto, lista(), { niveles: ['A', 'B'], soloIdsB }).map((c) => c.id);
+
+    expect(ids()).toEqual(['b-recomiend', 'b-es-administrar']);
+    expect(ids(['b-recomiend'])).toEqual(['b-recomiend']);
+    expect(ids([])).toEqual([]);
   });
 });

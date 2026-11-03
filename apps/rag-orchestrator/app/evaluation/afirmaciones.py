@@ -30,8 +30,11 @@ def plan_de_la_propuesta(
     textos_entregados: Mapping[str, str],
     buscar_terminos: BuscadorDeTerminos,
     max_palabras: int,
+    titulos_de_chunks: Mapping[str, str] | None = None,
 ) -> PlanDeSoporte:
-    """El plan de soporte de las opciones cuyas citas son válidas (las demás se descartan antes del NLI)."""
+    """El plan de soporte de las opciones cuyas citas son válidas (las demás se descartan antes del NLI).
+
+    ``titulos_de_chunks`` reconoce la cita textual atribuida igual que el servicio (RN-23, RN-25)."""
     aceptadas = validar_citas(propuesta.opciones, textos_entregados.keys()).aceptadas
     return planificar_soporte(
         aceptadas,
@@ -39,6 +42,7 @@ def plan_de_la_propuesta(
         textos_entregados,
         buscar_terminos,
         max_palabras=max_palabras,
+        titulos_de_chunks=titulos_de_chunks,
     )
 
 

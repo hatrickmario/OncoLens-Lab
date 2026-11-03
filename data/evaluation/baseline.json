@@ -129,6 +129,10 @@
           "opciones": 5
         },
         "campos_mostrados": [],
+        "corregidas_por_el_filtro": {
+          "A": 2,
+          "B": 0
+        },
         "propuesta_cruda": 2,
         "propuesta_cruda_por_nivel": {
           "A": 2,
@@ -243,6 +247,10 @@
           "opciones": 0
         },
         "campos_mostrados": [],
+        "corregidas_por_el_filtro": {
+          "A": 0,
+          "B": 0
+        },
         "propuesta_cruda": 0,
         "propuesta_cruda_por_nivel": {
           "A": 0,

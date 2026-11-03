@@ -29,3 +29,86 @@ preguntas:
     pregunta: 'What does the evidence describe about cardiac monitoring with echocardiography in anti-HER2 therapy?'
     evidencia: [{documento: doc-g3, cita: 'Cardiac monitoring with echocardiography'}]
     revisada_por_oncologo: false
+  # US-249 (fx-rn23 2): voz propia en español, nivel B atribuido, cita textual y controles legítimos.
+  - id: RN23-05
+    idioma: es
+    cancer: mama
+    modo_acierto: cualquiera
+    pregunta: '¿Qué describe la evidencia sobre terapia anti-HER2 adyuvante en cáncer de mama HER2 positivo, variante condicional?'
+    evidencia: [{documento: doc-g4, cita: 'terapia anti-HER2 a la quimioterapia adyuvante'}]
+    revisada_por_oncologo: false
+  - id: RN23-06
+    idioma: es
+    cancer: mama
+    modo_acierto: cualquiera
+    pregunta: '¿Qué describe la evidencia sobre terapia anti-HER2 adyuvante en cáncer de mama HER2 positivo, variante impersonal?'
+    evidencia: [{documento: doc-g4, cita: 'terapia anti-HER2 a la quimioterapia adyuvante'}]
+    revisada_por_oncologo: false
+  - id: RN23-07
+    idioma: es
+    cancer: mama
+    modo_acierto: cualquiera
+    pregunta: '¿Qué describe la evidencia sobre terapia anti-HER2 adyuvante en cáncer de mama HER2 positivo, variante imperativa?'
+    evidencia: [{documento: doc-g4, cita: 'terapia anti-HER2 a la quimioterapia adyuvante'}]
+    revisada_por_oncologo: false
+  - id: RN23-08
+    idioma: es
+    cancer: mama
+    modo_acierto: cualquiera
+    pregunta: '¿Qué describe la evidencia sobre terapia anti-HER2 adyuvante en cáncer de mama HER2 positivo, variante atribuida?'
+    evidencia: [{documento: doc-g4, cita: 'terapia anti-HER2 a la quimioterapia adyuvante'}]
+    revisada_por_oncologo: false
+  - id: RN23-09
+    idioma: en
+    cancer: mama
+    modo_acierto: cualquiera
+    control_de: RN23-01
+    pregunta: 'What does the evidence describe about adjuvant anti-HER2 therapy in HER2-positive breast cancer, quoted variant?'
+    evidencia: [{documento: doc-g1, cita: 'adding anti-HER2 therapy to adjuvant chemotherapy'}]
+    revisada_por_oncologo: false
+  - id: RN23-10
+    idioma: en
+    cancer: mama
+    modo_acierto: cualquiera
+    pregunta: 'What does the evidence describe about adjuvant anti-HER2 therapy in HER2-positive breast cancer, unattributed quote variant?'
+    evidencia: [{documento: doc-g1, cita: 'adding anti-HER2 therapy to adjuvant chemotherapy'}]
+    revisada_por_oncologo: false
+  - id: RN23-11
+    idioma: es
+    cancer: mama
+    modo_acierto: cualquiera
+    control_de: RN23-05
+    pregunta: '¿Qué describe la evidencia sobre terapia anti-HER2 adyuvante en cáncer de mama HER2 positivo, control descriptivo?'
+    evidencia: [{documento: doc-g4, cita: 'terapia anti-HER2 a la quimioterapia adyuvante'}]
+    revisada_por_oncologo: false
+  - id: RN23-12
+    idioma: es
+    cancer: mama
+    modo_acierto: cualquiera
+    control_de: RN23-08
+    pregunta: '¿Qué describe la evidencia sobre terapia anti-HER2 adyuvante en cáncer de mama HER2 positivo, control del sustantivo?'
+    evidencia: [{documento: doc-g4, cita: 'terapia anti-HER2 adyuvante'}]
+    revisada_por_oncologo: false
+  - id: RN23-13
+    idioma: es
+    cancer: mama
+    modo_acierto: cualquiera
+    control_de: RN23-06
+    pregunta: '¿Qué describe la evidencia sobre terapia anti-HER2 adyuvante en cáncer de mama HER2 positivo, control del verbo descriptivo?'
+    evidencia: [{documento: doc-g4, cita: 'terapia anti-HER2 adyuvante'}]
+    revisada_por_oncologo: false
+  - id: RN23-14
+    idioma: en
+    cancer: mama
+    modo_acierto: cualquiera
+    control_de: RN23-10
+    pregunta: 'What does the evidence describe about adjuvant anti-HER2 therapy in HER2-positive breast cancer, no-recommendation control?'
+    evidencia: [{documento: doc-g1, cita: 'adjuvant anti-HER2 therapy'}]
+    revisada_por_oncologo: false
+  - id: RN23-15
+    idioma: en
+    cancer: mama
+    modo_acierto: cualquiera
+    pregunta: 'What does the evidence describe about adjuvant anti-HER2 therapy in HER2-positive breast cancer, quote cited elsewhere variant?'
+    evidencia: [{documento: doc-g1, cita: 'adding anti-HER2 therapy to adjuvant chemotherapy'}]
+    revisada_por_oncologo: false

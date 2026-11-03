@@ -62,7 +62,7 @@ def propuesta(
     return PropuestaDePoblacion(external_id, criterio, valor, chunk_id)
 
 
-def sin_terminos(texto: str, campo: str) -> tuple[str, ...]:
+def sin_terminos(texto: str, campo: str, fuentes=()) -> tuple[str, ...]:
     return ()
 
 
@@ -193,7 +193,7 @@ def test_planificar_rechaza_la_cita_a_un_chunk_recuperado_de_otra_fuente():
 def test_planificar_rechaza_sin_nli_el_valor_con_lenguaje_prohibido_y_lo_revisa_como_campo_generado():
     revisados: list[tuple[str, str]] = []
 
-    def buscar(texto: str, campo: str) -> tuple[str, ...]:
+    def buscar(texto: str, campo: str, fuentes=()) -> tuple[str, ...]:
         revisados.append((texto, campo))
         return ("N-001",)
 

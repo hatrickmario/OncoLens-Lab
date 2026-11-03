@@ -26,6 +26,11 @@ def _lista(
     frases: list[str] | None = None,
     version: str = "1.0.0",
 ) -> ListaTerminos:
+    prefijos_b = (
+        prefijos
+        if prefijos is not None
+        else [{"id": "b-recomend", "idioma": "es", "prefijo": "recomend"}]
+    )
     return ListaTerminos.model_validate(
         {
             "version": version,
@@ -34,14 +39,9 @@ def _lista(
                 "aplicaA": ["salida_generada"],
                 "terminos": a if a is not None else [_termino("a-debe", "debe recibir")],
             },
-            "nivelB": {
-                "aplicaA": ["ui"],
-                "prefijos": prefijos
-                if prefijos is not None
-                else [{"id": "b-recomend", "idioma": "es", "prefijo": "recomend"}],
-                "terminos": b or [],
-            },
+            "nivelB": {"aplicaA": ["ui"], "prefijos": prefijos_b, "terminos": b or []},
             "frasesPermitidas": {"aplicaA": ["ui"], "frases": frases or []},
+            "salidaGenerada": {"nivelB": [p["id"] for p in prefijos_b[:1]] or ["b-recomend"]},
         }
     )
 

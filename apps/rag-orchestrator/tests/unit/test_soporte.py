@@ -32,7 +32,7 @@ NEUTRAL = ResultadoNli("neutral", 0.02)
 CONTRADICE = ResultadoNli("contradiction", 0.01)
 
 
-def _buscar(texto: str, campo: str) -> tuple[str, ...]:
+def _buscar(texto: str, campo: str, fuentes) -> tuple[str, ...]:
     return ("regla-x",) if "PROHIBIDO" in texto else ()
 
 

@@ -114,6 +114,10 @@ class ConfigSuite:
     """Bloque ``origen`` de la medición de US-236 (pregunta de la demo y ``EVAL_ORIGIN_RUNS``); ``None`` en el resto."""
     comparacion: Comparacion | None = None
     """Bloque ``comparacion`` de US-133: varios brazos de recuperación en una sola corrida; ``None`` en el resto."""
+    rn23_tolerancia_falsos_positivos: int | None = None
+    """``rn23_tolerancia_falsos_positivos`` (RN-22, US-249 AC-5): cuántos rechazos legítimos más que la línea base 1.5.0
+    tolera la suite. Sin valor por defecto en código: ``None`` = no declarada y la suite no corre un dataset con salidas
+    ``legitima: true`` (``exigir_tolerancia_de_falsos_positivos``)."""
 
 
 def huella_de_config(crudo: dict[str, Any]) -> str:
@@ -256,6 +260,28 @@ def _limite_de_rss(crudo: dict[str, Any]) -> float | None:
     return numero
 
 
+CLAVE_DE_LA_TOLERANCIA_DE_FALSOS_POSITIVOS = "rn23_tolerancia_falsos_positivos"
+
+
+def _tolerancia_de_falsos_positivos(crudo: dict[str, Any]) -> int | None:
+    """Entero no negativo; ausente = ``None`` (la exige la corrida que la necesita, sin valor por defecto en código)."""
+    if CLAVE_DE_LA_TOLERANCIA_DE_FALSOS_POSITIVOS not in crudo:
+        return None
+    valor = crudo[CLAVE_DE_LA_TOLERANCIA_DE_FALSOS_POSITIVOS]
+    if isinstance(valor, bool) or not isinstance(valor, int) or valor < 0:
+        raise ConfigInvalida(
+            f"{CLAVE_DE_LA_TOLERANCIA_DE_FALSOS_POSITIVOS} debe ser un entero no negativo"
+        )
+    return valor
+
+
+def exigir_tolerancia_de_falsos_positivos(config: ConfigSuite) -> int:
+    """La corrida con salidas ``legitima: true`` exige la clave (RN-22): sin valor por defecto en código."""
+    if config.rn23_tolerancia_falsos_positivos is None:
+        raise ConfigInvalida(f"falta la clave {CLAVE_DE_LA_TOLERANCIA_DE_FALSOS_POSITIVOS}")
+    return config.rn23_tolerancia_falsos_positivos
+
+
 def _brazo_de(crudo: object) -> Brazo:
     if not isinstance(crudo, dict):
         raise ConfigInvalida("cada brazo de comparacion.brazos debe ser un mapa")
@@ -362,4 +388,5 @@ def cargar_config_suite(ruta: Path, entorno: Mapping[str, str] | None = None) ->
         rss_limite_mib=_limite_de_rss(crudo),
         origen=crudo.get("origen"),
         comparacion=_comparacion_de(crudo, sub),
+        rn23_tolerancia_falsos_positivos=_tolerancia_de_falsos_positivos(crudo),
     )

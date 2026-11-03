@@ -1,7 +1,8 @@
 """Runner `evaluate` (US-072, ADR-41): ``python -m app.evaluation.evaluate --config <ruta> --suite <familia>``.
 
 Códigos de salida: 0 correcto; 1 la suite se negó a correr (dataset, proveedores, prueba congelada, golden de la
-partición distinto); 2 uso o configuración inválidos; 3 la comparación de brazos terminó con un retroceso (US-133). Los mensajes nombran la causa y nunca llevan textos de preguntas ni de salidas (RN-14).
+partición distinto); 2 uso o configuración inválidos; 3 la comparación de brazos terminó con un retroceso (US-133); 4 el filtro
+de RN-23 rechaza más salidas legítimas que la lista 1.5.0 por encima de la tolerancia (US-249 AC-5). Los mensajes nombran la causa y nunca llevan textos de preguntas ni de salidas (RN-14).
 """
 
 from __future__ import annotations
@@ -32,6 +33,7 @@ from app.evaluation.config_suite import (
     ConfigInvalida,
     ConfigSuite,
     cargar_config_suite,
+    exigir_tolerancia_de_falsos_positivos,
 )
 from app.evaluation.corrida import evaluar_dataset
 from app.evaluation.corrida_aplicabilidad import (
@@ -76,6 +78,10 @@ from app.evaluation.llamadas import RegistroDeLlamadas
 from app.evaluation.medicion_modelos import informe_de_recursos_nli
 from app.evaluation.medidores import LatenciasNli
 from app.evaluation.metricas.privacidad import privacidad
+from app.evaluation.metricas.rechazos_legitimos import (
+    RechazosLegitimos,
+    ids_de_preguntas_de_control_legitimo,
+)
 from app.evaluation.metricas.resultado import ResultadoConsulta
 from app.evaluation.modelos_locales import (
     CargadorDeModelos,
@@ -93,6 +99,7 @@ SALIDA_POR_DEFECTO = Path("eval") / "results"
 SUITE_PII = "pii"
 SUITES_CON_PRIVACIDAD = (SUITE_PII, SUITE_COMPLETA)
 CODIGO_RETROCESO = 3
+CODIGO_FALSOS_POSITIVOS = 4
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -142,7 +149,12 @@ def main(
             puertos_poblacion or PuertosDePoblacion(),
         )
     except (argparse.ArgumentError, SystemExit, ConfigInvalida) as error:
-        print(f"evaluate: uso o configuración inválidos ({type(error).__name__})", file=sys.stderr)
+        # El mensaje de ConfigInvalida nombra la clave y nunca su valor (RN-14).
+        causa = f": {error}" if isinstance(error, ConfigInvalida) else ""
+        print(
+            f"evaluate: uso o configuración inválidos ({type(error).__name__}{causa})",
+            file=sys.stderr,
+        )
         return 2
     except ValidationError as error:  # solo ubicación y tipo: nunca ``input_value`` (RN-14)
         detalle = "; ".join(f"{'.'.join(map(str, e['loc']))}:{e['type']}" for e in error.errors())
@@ -199,10 +211,10 @@ def _medidor_de_sin_evidencia(
 
     def medir(ruta_de_config: Path) -> MedicionSinEvidencia:
         config = cargar_config_suite(ruta_de_config, {})
-        reporte, _ = _correr_suite(
+        corrida = _correr_suite(
             config, _fuente_de(config, raiz).cargar(), SUITE_COMPLETA, reloj, None, origen
         )
-        medida = reporte["metricas"]["completa"]["sin_evidencia"]
+        medida = corrida.reporte["metricas"]["completa"]["sin_evidencia"]
         return MedicionSinEvidencia(medida["exactitud"], medida["violaciones_rn02"])
 
     return medir
@@ -264,11 +276,24 @@ def _ejecutar(
     informe_pii = _proveedor_pii(
         config, args
     ).leer()  # antes de consultar: un informe roto no cuesta una corrida
-    reporte, hay_retroceso = _correr_suite(
-        config, fuente.cargar(), args.suite, reloj, informe_pii, origen
+    corrida = _correr_suite(config, fuente.cargar(), args.suite, reloj, informe_pii, origen)
+    escribir_reporte_cerrado(
+        _ruta_del_resultado(config, args, reloj), corrida.reporte, ESQUEMA_SUITE
     )
-    escribir_reporte_cerrado(_ruta_del_resultado(config, args, reloj), reporte, ESQUEMA_SUITE)
-    return CODIGO_RETROCESO if hay_retroceso else 0
+    if corrida.rechazos is not None and corrida.rechazos.supera_la_tolerancia:
+        _avisar_de_los_falsos_positivos(corrida.rechazos)
+        return CODIGO_FALSOS_POSITIVOS
+    return CODIGO_RETROCESO if corrida.hay_retroceso else 0
+
+
+def _avisar_de_los_falsos_positivos(rechazos: RechazosLegitimos) -> None:
+    """Solo ids de pregunta y de regla: nunca el texto de la salida (RN-14)."""
+    casos = ", ".join(f"{pregunta}:{regla}" for pregunta, regla in rechazos.nuevos)
+    print(
+        f"evaluate: el filtro de RN-23 rechaza más salidas legítimas que la lista 1.5.0 "
+        f"(diferencia {rechazos.diferencia} sobre la tolerancia): {casos}",
+        file=sys.stderr,
+    )
 
 
 def _proveedor_pii(config: ConfigSuite, args: argparse.Namespace) -> ProveedorPii:
@@ -278,6 +303,15 @@ def _proveedor_pii(config: ConfigSuite, args: argparse.Namespace) -> ProveedorPi
     return ProveedorPiiDeArchivo(ruta if ruta.is_absolute() else raiz_repo() / ruta)
 
 
+@dataclass(frozen=True)
+class _Corrida:
+    reporte: dict[str, Any]
+    hay_retroceso: bool
+    """La comparación de brazos terminó con un retroceso (US-133)."""
+    rechazos: RechazosLegitimos | None
+    """La regresión de falsos positivos de RN-23 (US-249 AC-5); ``None`` si el dataset no trae salidas legítimas."""
+
+
 def _correr_suite(
     config: ConfigSuite,
     dataset: DatasetSuite,
@@ -285,8 +319,12 @@ def _correr_suite(
     reloj: Clock,
     informe_pii: InformePiiB1 | None,
     origen: OrigenLocal,
-) -> tuple[dict[str, Any], bool]:
-    """El reporte de la suite y si la comparación de brazos terminó con un retroceso (US-133)."""
+) -> _Corrida:
+    """El reporte de la suite, si la comparación de brazos retrocedió (US-133) y los rechazos legítimos (US-249 AC-5)."""
+    if ids_de_preguntas_de_control_legitimo(dataset):
+        exigir_tolerancia_de_falsos_positivos(
+            config
+        )  # antes de consultar: sin clave, la suite no corre
     registro = RegistroDeLlamadas()
     medido = _Medicion([], None, Cronometro(_reloj_de_medicion(config)), None, None)
     if suite != SUITE_PII:  # la familia pii no consulta al servicio: mide solo la privacidad
@@ -300,6 +338,7 @@ def _correr_suite(
         if suite in SUITES_CON_PRIVACIDAD
         else None
     )
+    rechazos = _rechazos_legitimos_de(config, medido.resultados)
     reporte = armar_reporte(
         config,
         dataset,
@@ -310,8 +349,19 @@ def _correr_suite(
         privacidad_medida,
         medido.recursos_nli,
         medido.comparacion,
+        None if rechazos is None else rechazos.para_el_reporte(),
     )
-    return reporte, medido.retroceso
+    return _Corrida(reporte, medido.retroceso, rechazos)
+
+
+def _rechazos_legitimos_de(
+    config: ConfigSuite, resultados: Sequence[ResultadoConsulta]
+) -> RechazosLegitimos | None:
+    tolerancia = config.rn23_tolerancia_falsos_positivos
+    if tolerancia is None:
+        return None
+    rechazos = RechazosLegitimos(resultados, tolerancia)
+    return rechazos if rechazos.hay_controles else None
 
 
 @dataclass(frozen=True)
