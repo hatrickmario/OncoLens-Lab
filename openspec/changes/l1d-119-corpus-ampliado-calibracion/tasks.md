@@ -89,5 +89,5 @@ npm run evaluate -- --config apps/rag-orchestrator/eval/configs/s4-hibrida.yaml 
 ## Cierre
 
 - [x] 9.1 `openspec validate l1d-119-corpus-ampliado-calibracion --strict` en verde.
-- [ ] 9.2 Tests de `rag-orchestrator` (unitarios e integración) y de `infra/docker/__tests__` en verde; `eval-required` en verde en la CI.
+- [x] 9.2 Tests de `rag-orchestrator` (unitarios e integración) y de `infra/docker/__tests__` en verde; `eval-required` en verde en la CI.
 - [ ] 9.3 `run-ai-eval` adjunto al PR (8.7). DIFERIDA -> D5-08
