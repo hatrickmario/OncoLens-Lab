@@ -31,7 +31,7 @@ export type InstanteIso = string;
 /** Fecha `YYYY-MM-DD`. */
 export type FechaIso = string;
 
-export interface DiagnosticoDelCaso {
+export interface DiagnosticoLeido {
   readonly id: string;
   readonly histology: string;
   readonly icd10Code: string | null;
@@ -41,7 +41,7 @@ export interface DiagnosticoDelCaso {
 }
 
 /** Un biomarcador vigente con el examen del que cuelga (una sola consulta con `JOIN`, D12). */
-export interface BiomarcadorDelCaso {
+export interface BiomarcadorLeido {
   readonly examId: string;
   readonly examType: string;
   readonly performedAt: FechaIso;
@@ -106,8 +106,8 @@ export interface RegistroDeIaLeido {
 
 /** Todo lo vigente del paciente que la vista necesita, leído con una consulta por entidad. */
 export interface DatosDelCaso {
-  readonly diagnosticos: readonly DiagnosticoDelCaso[];
-  readonly biomarcadores: readonly BiomarcadorDelCaso[];
+  readonly diagnosticos: readonly DiagnosticoLeido[];
+  readonly biomarcadores: readonly BiomarcadorLeido[];
   readonly tratamientos: readonly TratamientoPrevioLeido[];
   readonly eventos: readonly EventoClinicoLeido[];
   readonly atributos: readonly AtributoLeido[];

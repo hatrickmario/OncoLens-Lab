@@ -1,10 +1,10 @@
 import { v5 as uuidV5 } from 'uuid';
 import type { EstadoDeRevisionVisible } from '../compartido/estados-de-revision.js';
 import type {
-  BiomarcadorDelCaso,
+  BiomarcadorLeido,
   ConfianzaDeExtraccion,
   DatosDelCaso,
-  DiagnosticoDelCaso,
+  DiagnosticoLeido,
   EventoClinicoLeido,
   EventoDelTimeline,
   ProcedenciaDeFila,
@@ -64,18 +64,19 @@ export function idDeEventoDerivado(origen: string, idDeLaFila: string, hito: str
   return uuidV5(`${origen}:${idDeLaFila}:${hito}`, ESPACIO_DE_NOMBRES_DEL_TIMELINE);
 }
 
-/** De más pendiente a menos pendiente (D6): `requiere_revision` primero. */
-const ESTADOS_DE_MAS_A_MENOS_PENDIENTE: readonly EstadoDeRevisionVisible[] = [
-  'requiere_revision',
-  'auto_aceptado',
-  'corregido',
-  'verificado',
-];
+/** Cuánto pesa cada estado en la procedencia de un examen (D6): 0 = el más pendiente. */
+const PENDIENCIA_DEL_ESTADO: Record<EstadoDeRevisionVisible, number> = {
+  requiere_revision: 0,
+  auto_aceptado: 1,
+  corregido: 2,
+  verificado: 3,
+};
 const CONFIANZAS_DE_MENOR_A_MAYOR: readonly ConfianzaDeExtraccion[] = ['baja', 'media', 'alta'];
 
 function elMasPendiente(estados: readonly EstadoDeRevisionVisible[]): EstadoDeRevisionVisible {
-  const rangos = estados.map((estado) => ESTADOS_DE_MAS_A_MENOS_PENDIENTE.indexOf(estado));
-  return ESTADOS_DE_MAS_A_MENOS_PENDIENTE[Math.min(...rangos)] ?? 'verificado';
+  return estados.reduce((masPendiente, estado) =>
+    PENDIENCIA_DEL_ESTADO[estado] < PENDIENCIA_DEL_ESTADO[masPendiente] ? estado : masPendiente,
+  );
 }
 
 function laConfianzaMasBaja(confianzas: readonly ConfianzaDeExtraccion[]): ConfianzaDeExtraccion {
@@ -90,9 +91,7 @@ function laConfianzaMasBaja(confianzas: readonly ConfianzaDeExtraccion[]): Confi
  * pendiente y la confianza más baja de sus biomarcadores vigentes, y conflicto si alguno lo tiene. Precondición: al
  * menos un biomarcador vigente (un examen sin ellos no produce evento).
  */
-export function procedenciaDeExamen(
-  biomarcadores: readonly BiomarcadorDelCaso[],
-): ProcedenciaDeFila {
+export function procedenciaDeExamen(biomarcadores: readonly BiomarcadorLeido[]): ProcedenciaDeFila {
   const [primero] = biomarcadores;
   if (primero === undefined) throw new Error('examen_sin_biomarcadores_vigentes');
   return {
@@ -155,7 +154,7 @@ function comoEventoConOrden(datos: DatosDeUnEvento): EventoConOrden {
   };
 }
 
-function eventoDeDiagnostico(diagnostico: DiagnosticoDelCaso): EventoConOrden {
+function eventoDeDiagnostico(diagnostico: DiagnosticoLeido): EventoConOrden {
   return comoEventoConOrden({
     id: idDeEventoDerivado('diagnosis', diagnostico.id, 'diagnostico'),
     eventType: TIPOS_DE_EVENTO.diagnostico,
@@ -196,8 +195,8 @@ function eventosDeTratamiento(tratamiento: TratamientoPrevioLeido): EventoConOrd
 }
 
 /** Un evento por examen con al menos un biomarcador vigente; su procedencia sale de todos ellos (D6). */
-function eventosDeExamen(biomarcadores: readonly BiomarcadorDelCaso[]): EventoConOrden[] {
-  const porExamen = new Map<string, BiomarcadorDelCaso[]>();
+function eventosDeExamen(biomarcadores: readonly BiomarcadorLeido[]): EventoConOrden[] {
+  const porExamen = new Map<string, BiomarcadorLeido[]>();
   for (const biomarcador of biomarcadores) {
     porExamen.set(biomarcador.examId, [...(porExamen.get(biomarcador.examId) ?? []), biomarcador]);
   }
@@ -291,7 +290,7 @@ export function ordenarTimeline(eventos: readonly EventoConOrden[]): EventoDelTi
   return [...fechados, ...sinFecha].map((e) => e.evento);
 }
 
-function compararPuntos(a: BiomarcadorDelCaso, b: BiomarcadorDelCaso): number {
+function compararPuntos(a: BiomarcadorLeido, b: BiomarcadorLeido): number {
   return compararTexto(a.performedAt, b.performedAt) || compararTexto(a.biomarkerId, b.biomarkerId);
 }
 
@@ -299,10 +298,8 @@ function compararPuntos(a: BiomarcadorDelCaso, b: BiomarcadorDelCaso): number {
  * Una serie por nombre de biomarcador (orden alfabético, D8), aunque tenga un solo punto: los puntos por fecha e `id`,
  * el código LOINC del más reciente y `additionalSourceDocumentIds = []` (las reglas de US-089 no aplican).
  */
-export function seriesDeBiomarcadores(
-  biomarcadores: readonly BiomarcadorDelCaso[],
-): SerieDelCaso[] {
-  const porNombre = new Map<string, BiomarcadorDelCaso[]>();
+export function seriesDeBiomarcadores(biomarcadores: readonly BiomarcadorLeido[]): SerieDelCaso[] {
+  const porNombre = new Map<string, BiomarcadorLeido[]>();
   for (const biomarcador of biomarcadores) {
     porNombre.set(biomarcador.name, [...(porNombre.get(biomarcador.name) ?? []), biomarcador]);
   }

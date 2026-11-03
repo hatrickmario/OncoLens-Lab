@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type {
-  BiomarcadorDelCaso,
+  BiomarcadorLeido,
   DatosDelCaso,
   ProcedenciaDeFila,
   TratamientoPrevioLeido,
@@ -22,7 +22,7 @@ const MANUAL: ProcedenciaDeFila = {
   sourceDocumentId: null,
 };
 
-const biomarcador = (resto: Partial<BiomarcadorDelCaso> = {}): BiomarcadorDelCaso => ({
+const biomarcador = (resto: Partial<BiomarcadorLeido> = {}): BiomarcadorLeido => ({
   examId: 'examen-1',
   examType: 'laboratorio',
   performedAt: '2026-01-10',
@@ -113,12 +113,25 @@ describe('procedenciaDeExamen', () => {
   });
 
   it('ordena los estados requiere_revision antes de auto_aceptado, corregido y verificado', () => {
-    const estado = (reviewStatus: BiomarcadorDelCaso['reviewStatus'][]) =>
+    const estado = (reviewStatus: BiomarcadorLeido['reviewStatus'][]) =>
       procedenciaDeExamen(reviewStatus.map((valor) => biomarcador({ reviewStatus: valor })))
         .reviewStatus;
 
     expect(estado(['verificado', 'corregido'])).toBe('corregido');
     expect(estado(['corregido', 'auto_aceptado'])).toBe('auto_aceptado');
+  });
+
+  it('devuelve los cuatro estados en orden de más a menos pendiente cuando se toman de a uno contra verificado', () => {
+    const estado = (reviewStatus: BiomarcadorLeido['reviewStatus'][]) =>
+      procedenciaDeExamen(reviewStatus.map((valor) => biomarcador({ reviewStatus: valor })))
+        .reviewStatus;
+
+    expect(estado(['verificado', 'requiere_revision', 'corregido', 'auto_aceptado'])).toBe(
+      'requiere_revision',
+    );
+    expect(estado(['verificado', 'corregido', 'auto_aceptado'])).toBe('auto_aceptado');
+    expect(estado(['verificado', 'corregido'])).toBe('corregido');
+    expect(estado(['verificado'])).toBe('verificado');
   });
 
   it('toma la confianza más baja cuando mezclan alta y media y n_a solo si todas lo son', () => {
