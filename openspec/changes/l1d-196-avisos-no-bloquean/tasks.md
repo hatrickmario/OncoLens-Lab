@@ -2,7 +2,7 @@
 
 ## 1. contratos
 
-- [ ] 1.1 Añadir `contracts/examples/rag-query-request-fx-t3-a.json` y `rag-query-fx-t3-a.json` (design «Contratos», D2, D5) y sus entradas en `contracts/examples/index.json`; sin tocar ningún `openapi.yaml` · test después · verificación: `npm run contracts:check` y `contracts:breaking` sin diferencias · commit `contract(L1D-196)`
+- [x] 1.1 Añadir `contracts/examples/rag-query-request-fx-t3-a.json` y `rag-query-fx-t3-a.json` (design «Contratos», D2, D5) y sus entradas en `contracts/examples/index.json`; sin tocar ningún `openapi.yaml` · test después · verificación: `npm run contracts:check` y `contracts:breaking` sin diferencias · commit `contract(L1D-196)`
 
 ## 2. clinical-platform
 

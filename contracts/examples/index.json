@@ -652,6 +652,17 @@
       "file": "con-evidencia-s4-tres-opciones-no-comparable.json",
       "spec": "clinical-api",
       "target": "#/components/schemas/EvidenceAnalysis"
+    },
+    {
+      "file": "rag-query-request-fx-t3-a.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalRequest"
+    },
+    {
+      "file": "rag-query-fx-t3-a.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalResponse",
+      "request": "rag-query-request-fx-t3-a.json"
     }
   ],
   "pendingExamples": [
