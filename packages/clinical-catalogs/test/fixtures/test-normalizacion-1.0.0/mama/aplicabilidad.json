@@ -1,0 +1,29 @@
+{
+  "version": "test-normalizacion-1.0.0",
+  "items": [
+    {
+      "key": "estado_menopausico",
+      "cancerType": "mama",
+      "studyKey": "estado_menopausico",
+      "label": {
+        "es": "Estado menopausico",
+        "en": "Menopausal status"
+      },
+      "destination": {
+        "entity": "ClinicalAttribute",
+        "field": "value",
+        "match": {
+          "attribute_key": "estado_menopausico"
+        }
+      },
+      "isExclusionary": false,
+      "rule": {
+        "operator": "pertenencia",
+        "partial": {
+          "when": "solo_subgrupo"
+        }
+      },
+      "estado": "propuesta"
+    }
+  ]
+}

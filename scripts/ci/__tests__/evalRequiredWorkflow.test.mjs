@@ -14,8 +14,9 @@ describe('job eval-required de ci.yml', () => {
     expect(job['timeout-minutes']).toBeGreaterThan(0);
   });
 
-  it('corre siempre, sin filtro de rutas del workflow que dejaría el check pendiente [US-074 AC-1]', () => {
-    expect(job.if).toBeUndefined();
+  it('solo lo omite el detector de cambios en un PR de documentación, sin filtro de rutas del workflow que dejaría el check pendiente [US-074 AC-1] [D-12.1]', () => {
+    expect(job.if).toBe("${{ !contains(fromJSON(needs.cambios.outputs.omitibles || '[]'), 'eval-required') }}");
+    expect(job.needs).toBe('cambios');
     expect(ci.on.pull_request).toBeNull();
   });
 

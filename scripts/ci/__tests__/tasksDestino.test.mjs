@@ -14,7 +14,18 @@ describe('historiasDelTitulo', () => {
     expect(historiasDelTitulo('[L1D-145][L1D-300] Llevar a main')).toEqual(['L1D-145', 'L1D-300']);
   });
 
+  it.each([
+    ['[L1D-110, L1D-113] Faltantes en el prompt', ['L1D-110', 'L1D-113']],
+    ['[L1D-110,L1D-113,L1D-120] Lote', ['L1D-110', 'L1D-113', 'L1D-120']],
+    ['[L1D-110] [L1D-113] Lote con espacio', ['L1D-110', 'L1D-113']],
+    ['[L1D-110, L1D-113][L1D-120] Mixto', ['L1D-110', 'L1D-113', 'L1D-120']],
+    ['[L1D-110, L1D-110][L1D-110] Repetidas', ['L1D-110']],
+  ])('lee las historias de un lote en %j [D-12.5]', (titulo, esperadas) => {
+    expect(historiasDelTitulo(titulo)).toEqual(esperadas);
+  });
+
   it('devuelve vacío cuando el título no es de una historia', () => {
+    expect(historiasDelTitulo('[ARR-11] CI más rápida (D-11, D-12, D5-02)')).toEqual([]);
     expect(historiasDelTitulo('[S4] Cierre: archivo')).toEqual([]);
     expect(historiasDelTitulo('docs: menciona [L1D-144] al final')).toEqual([]);
   });
@@ -92,6 +103,40 @@ describe('main sobre un árbol de changes', () => {
     });
 
     expect(main({ titulo: '[L1D-144] Hasta 3 opciones', raiz })).toBe(0);
+  });
+
+  it('comprueba el tasks.md de cada historia de un lote y nombra la línea de la segunda [D-12.5]', () => {
+    const raiz = arbol({ 'l1d-110-a': '- [x] 1.1 hecha', 'l1d-113-b': '- [x] 1.1 hecha\n- [ ] 2.1 pendiente' });
+    const errores = [];
+    const original = console.error;
+    console.error = (mensaje) => errores.push(mensaje);
+
+    try {
+      expect(main({ titulo: '[L1D-110, L1D-113] Faltantes en el prompt', raiz })).toBe(1);
+    } finally {
+      console.error = original;
+    }
+
+    expect(errores).toHaveLength(1);
+    expect(errores[0]).toContain(path.join('openspec', 'changes', 'l1d-113-b', 'tasks.md') + ':2');
+  });
+
+  it('no vale como destino otra historia del mismo lote [D-12.5]', () => {
+    const raiz = arbol({ 'l1d-110-a': '- [ ] 1.1 DIFERIDA -> L1D-113', 'l1d-113-b': '- [x] 1.1 hecha' });
+
+    expect(main({ titulo: '[L1D-110][L1D-113] Lote', raiz })).toBe(1);
+  });
+
+  it('vale como destino una historia ajena al lote [D-12.5]', () => {
+    const raiz = arbol({ 'l1d-110-a': '- [ ] 1.1 DIFERIDA -> L1D-200', 'l1d-113-b': '- [x] 1.1 hecha' });
+
+    expect(main({ titulo: '[L1D-110, L1D-113] Lote', raiz })).toBe(0);
+  });
+
+  it('no comprueba nada en un PR [ARR-11] sin historia en el título aunque haya tareas abiertas [D-12.5]', () => {
+    const raiz = arbol({ 'arr-11-ci-rapida': '- [ ] 1.1 pendiente' });
+
+    expect(main({ titulo: '[ARR-11] CI más rápida (D-11, D-12, D5-02)', raiz })).toBe(0);
   });
 
   it('no mira la carpeta archive', () => {

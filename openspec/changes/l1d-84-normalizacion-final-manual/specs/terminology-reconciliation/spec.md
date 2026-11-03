@@ -4,7 +4,7 @@
 `ReconciliationService` de `clinical-api` MUST ser el único que decide término canónico, código estándar y `mapping_status` de todo dato con códigos registrado a mano (`Diagnosis`, `Biomarker`, `PriorTreatment`, `ClinicalEvent`), usando solo el catálogo montado en `CLINICAL_CATALOG_PATH`. SHALL conservar el texto original, resolver sinónimos ES/EN del catálogo y devolver la `catalogVersion` montada.
 
 #### Scenario: Un sinónimo del catálogo se normaliza a su término canónico [US-098 AC-3] [AC-03.3] [ADR-33]
-- **GIVEN** el catálogo de test `test-s2-1.0.0` (FX-01b-b) montado y una propuesta de `Biomarker` de mama sin código y con `textoOriginal = "ERBB2"`
+- **GIVEN** el catálogo de test `test-normalizacion-1.0.0` (FX-01b-b) montado y una propuesta de `Biomarker` de mama sin código y con `textoOriginal = "ERBB2"`
 - **WHEN** `ReconciliationService` la decide
 - **THEN** el resultado tiene `name = HER2`, `loincCode = LOINC-T-HER2`, `originalName = "ERBB2"` y `mappingStatus = mapeado`
 
@@ -16,7 +16,7 @@
 #### Scenario: Un tratamiento previo manual recibe su código ATC [US-098 AC-4] [AC-03.3] [ADR-33]
 - **GIVEN** FX-01b-b montado y un `PriorTreatment` manual con `regimenName = "leuprorelina"` de un paciente de próstata
 - **WHEN** `ReconciliationService` lo decide
-- **THEN** el resultado tiene `atcCodes = [L02AE02]`, `mappingStatus = mapeado` y `catalogVersion = test-s2-1.0.0`, la misma que la decisión de cualquier otro dato del mismo arranque
+- **THEN** el resultado tiene `atcCodes = [L02AE02]`, `mappingStatus = mapeado` y `catalogVersion = test-normalizacion-1.0.0`, la misma que la decisión de cualquier otro dato del mismo arranque
 
 #### Scenario: Un término ausente del catálogo queda no_mapeado sin código [US-098 AC-4] [RN-27]
 - **GIVEN** FX-01b-b montado y un `PriorTreatment` con `regimenName = "Fármaco experimental X"`

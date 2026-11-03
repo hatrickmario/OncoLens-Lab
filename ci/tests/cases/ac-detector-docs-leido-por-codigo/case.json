@@ -1,0 +1,16 @@
+{
+  "ac": "ARR-11 D-12.1",
+  "descripcion": "Un PR que solo cambia docs/architecture/data-model.md, que leen los tests del código: el detector pide la CI completa y nombra la ruta y la lista consumidos_por_codigo.",
+  "esperado": "pasa",
+  "comando": "node scripts/ci/detectar-cambios.mjs --base \"$BASE_REF\"",
+  "entorno": { "GITHUB_EVENT_NAME": "pull_request" },
+  "aplicar": "aplicar.sh",
+  "mensajes": [
+    "cambios — CI completa",
+    "docs/architecture/data-model.md: lo lee el código (consumidos_por_codigo)"
+  ],
+  "ausentes": [
+    "PR de documentación",
+    "omitibles:"
+  ]
+}

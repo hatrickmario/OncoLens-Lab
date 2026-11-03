@@ -2,10 +2,13 @@
 // informes LCOV de `vitest --coverage` (v8). Es una ALERTA, nunca un error: el job no falla por cobertura ni hay umbral
 // global. El umbral y las rutas acotadas viven en quality-thresholds.json (RN-22), no aquí.
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { valorDeArgumento } from '../ci/lib/cli.mjs';
 import { globARegExp } from '../ci/lib/glob.mjs';
-import { hallazgo } from './normalizar.mjs';
+import { armarReporte, hallazgo } from './normalizar.mjs';
+import { leerUmbrales } from './umbrales.mjs';
 
 /** Informes LCOV por workspace: la ruta de sus archivos fuente se resuelve relativa a él. */
 export const INFORMES_LCOV = [
@@ -15,6 +18,15 @@ export const INFORMES_LCOV = [
 
 /** Cobertura XML de `pytest-cov` (`--cov-report=xml:coverage/coverage.xml`, L1D-285 tarea 3.4); `coverage/` está ignorado por git. */
 export const INFORMES_COBERTURA_XML = ['apps/rag-orchestrator/coverage/coverage.xml'];
+
+/**
+ * Informes XML esperados: `COBERTURA_INFORMES_XML` (rutas separadas por comas) o, sin la variable, `INFORMES_COBERTURA_XML`.
+ * Vacía, ninguno: el job `quality` de la CI mide solo los LCOV y deja el XML al job `cobertura-rag` (ARR-11, D-12.3).
+ */
+export function informesXmlEsperados(env = process.env) {
+  if (env.COBERTURA_INFORMES_XML === undefined) return INFORMES_COBERTURA_XML;
+  return env.COBERTURA_INFORMES_XML.split(',').map((ruta) => ruta.trim()).filter(Boolean);
+}
 
 /** Diff unificado sin contexto (`-U0`) → archivo → conjunto de líneas añadidas o modificadas. */
 export function lineasCambiadas(diff) {
@@ -145,18 +157,21 @@ function ejecutarGit(raiz, argumentos) {
  * los informes esperados LANZA: en la CI una medición ausente es un paso roto, no una cobertura vacía. Git roto (la rama base
  * no existe, el diff falla) lanza siempre.
  */
-export function medirCoberturaDelPr(raiz, { baseGit, env = process.env } = {}) {
-  const rutas = [...INFORMES_LCOV.map(({ lcov }) => lcov), ...INFORMES_COBERTURA_XML];
+export function medirCoberturaDelPr(raiz, { baseGit, env = process.env, soloXml = false } = {}) {
+  const informesLcov = soloXml ? [] : INFORMES_LCOV;
+  const informesXml = informesXmlEsperados(env);
+  const rutas = [...informesLcov.map(({ lcov }) => lcov), ...informesXml];
   const ausentes = rutas.filter((ruta) => !existsSync(path.join(raiz, ruta)));
-  if (env.CI === 'true' && ausentes.length > 0) {
+  // Con `soloXml` (job `cobertura-rag`) el informe es el único insumo: faltar es un paso roto también fuera de la CI.
+  if ((env.CI === 'true' || soloXml) && ausentes.length > 0) {
     throw new Error(`cobertura de líneas cambiadas: faltan los informes esperados en la CI: ${ausentes.join(', ')}`);
   }
   const informes = [
-    ...INFORMES_LCOV.filter(({ lcov }) => !ausentes.includes(lcov)).map(({ lcov, base }) => ({
+    ...informesLcov.filter(({ lcov }) => !ausentes.includes(lcov)).map(({ lcov, base }) => ({
       lcov: readFileSync(path.join(raiz, lcov), 'utf8'),
       base,
     })),
-    ...INFORMES_COBERTURA_XML.filter((ruta) => !ausentes.includes(ruta)).map((ruta) => ({
+    ...informesXml.filter((ruta) => !ausentes.includes(ruta)).map((ruta) => ({
       coberturaXml: readFileSync(path.join(raiz, ruta), 'utf8'),
     })),
   ];
@@ -177,4 +192,43 @@ export function archivosDelPr(raiz, { baseGit, env = process.env } = {}) {
   if (existe.status !== 0) return null;
   const ancestro = ejecutarGit(raiz, ['merge-base', rama, 'HEAD']).trim();
   return ejecutarGit(raiz, ['diff', '--name-only', ancestro]).split('\n').filter(Boolean);
+}
+
+/**
+ * Reporte del job `cobertura-rag` (ARR-11, D-12.3): la misma medición y las mismas alertas que `quality`, solo con el informe
+ * XML de Pytest, con la forma de `reports/quality/latest.json`. Una cobertura baja es alerta, nunca error.
+ */
+export function reporteDeCoberturaXml(raiz, { env = process.env, ahora = new Date() } = {}) {
+  const umbrales = leerUmbrales();
+  const medidas = medirCoberturaDelPr(raiz, { env, soloXml: true });
+  const alertas = alertasDeCobertura(medidas ?? [], umbrales.coverage);
+  const commit = ejecutarGit(raiz, ['rev-parse', 'HEAD']).trim();
+  return armarReporte(umbrales, alertas, { ahora, commit, cobertura: medidas });
+}
+
+function main(argumentos) {
+  if (!argumentos.includes('--solo-xml')) {
+    console.error('cobertura: uso: node scripts/quality/cobertura.mjs --solo-xml --salida <archivo>');
+    return 2;
+  }
+  const salida = valorDeArgumento(argumentos, '--salida');
+  if (!salida) {
+    console.error('cobertura: falta --salida <archivo>');
+    return 2;
+  }
+  const raiz = path.resolve(valorDeArgumento(argumentos, '--root') ?? path.resolve(import.meta.dirname, '../..'));
+  const reporte = reporteDeCoberturaXml(raiz);
+  mkdirSync(path.dirname(path.resolve(raiz, salida)), { recursive: true });
+  writeFileSync(path.resolve(raiz, salida), `${JSON.stringify(reporte, null, 2)}\n`);
+  console.log(`cobertura-rag: ${reporte.resumen.alertas} alertas; reporte en ${salida}`);
+  return 0;
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  try {
+    process.exitCode = main(process.argv.slice(2));
+  } catch (error) {
+    console.error(`cobertura: ${error.message}`);
+    process.exitCode = 1;
+  }
 }

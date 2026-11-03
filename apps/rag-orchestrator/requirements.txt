@@ -1,7 +1,7 @@
 # Versiones exactas (US-034). Runtime y pruebas en un solo archivo; pip-audit se corre aparte.
 # Instalar siempre con --only-binary=:all: (US-231a): solo wheels, sin setup.py ni compilación en la instalación.
 # Inferencia local (US-231a, design D9): onnxruntime (MIT) y tokenizers (Apache-2.0) son las únicas dependencias de
-# modelos del servicio. `transformers` está prohibido aquí (solo requirements-eval.txt). huggingface-hub y las
+# modelos del servicio. `transformers` está prohibido aquí (solo requirements-export.txt, exportación manual a ONNX; D-11). huggingface-hub y las
 # transitivas que arrastra tokenizers (filelock, fsspec, hf-xet, httpcore2, httpx2, tqdm, truststore) quedan
 # fijadas pero NUNCA se importan: un test lo comprueba. flatbuffers es transitiva de onnxruntime.
 alembic==1.20.0

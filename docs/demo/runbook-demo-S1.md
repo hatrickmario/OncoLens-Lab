@@ -5,7 +5,7 @@ Recorrido local de punta a punta: login → paciente semilla → pregunta clíni
 ## 1. Preparar (una vez)
 1. **Docker Desktop**: VM con ≥ 12 GB (Settings → Resources). Equipo con ≥ 32 GB; el stack suma ~29 GB con el LLM (ADR-39: margen de 0,7 GB, cierra apps pesadas).
 2. **Ollama** y el modelo: `ollama pull gemma4:26b-a4b-it-q4_K_M` (17 GB).
-3. **Pesos ONNX** (fuera del repo, ~7 GB de descarga, ~10 min): con un venv que tenga `apps/rag-orchestrator/requirements-eval.txt`,
+3. **Pesos ONNX** (fuera del repo, ~7 GB de descarga, ~10 min): con un venv que tenga `apps/rag-orchestrator/requirements-eval.txt` y `requirements-export.txt` (torch y transformers, D-11),
    `python scripts/demo/exportar-modelos.py ~/adr39-modelos`. Genera `~/adr39-modelos/` con `model.onnx` + `tokenizer.json` por modelo y `modelos.env` (rutas y SHA-256).
 
 ## 2. Levantar y apagar
