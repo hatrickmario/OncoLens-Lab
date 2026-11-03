@@ -40,7 +40,7 @@ Biomarcadores recientes                                      [+ Registrar biomar
 ├───────────┼────────────┼──────────────┼─────────────────────────────┼───────────┤
 │ Ki-67     │ 25 %       │ hace 12 días │ Corrección manual · hoy     │ Corregir dato │
 │   ▸ Histórico (1): 20 % · hace 12 días · Registro manual · reemplazado         │
-│ HER2      │ 3+ (IHQ)   │ hace 40 días │ Semilla sintética           │ Corregir dato │
+│ HER2      │ 3+ (IHQ)   │ hace 40 días │ Carga inicial           │ Corregir dato │
 └───────────┴────────────┴──────────────┴─────────────────────────────┴───────────┘
   «Corregir» abre en la misma fila: [valor] [unidad] [fecha]  (Guardar mi corrección) (Cancelar)
 ```
@@ -79,7 +79,7 @@ Columna izquierda **«Datos críticos»** de la vista de caso (`CaseView.complet
 
 ```
 Datos críticos · catálogo 1.2.0                        3 faltantes · no bloquean el análisis
-✓ HER2                 Presente y verificado     Semilla sintética
+✓ HER2                 Presente y verificado     Carga inicial
 ◐ Receptores hormonales Presente sin verificar   —
 ◌ Ki-67                Faltante                  [Registrar a mano]
 ◌ Estado menopáusico   Faltante                  [Registrar a mano]
@@ -90,7 +90,7 @@ Los faltantes no bloquean: si continúas, el análisis los trata como «desconoc
 
 - Estados con **símbolo y palabra** (✓ / ◐ / ◌ / ·), nunca solo color; «Faltante» con icono neutro, no ✕ rojo (sistema de diseño §3.5).
 - Acción según `destination.entity` del ítem: `Biomarker` → «Registrar a mano» (formulario S5-03a prellenado con `?item=`); `Diagnosis` → «Completar diagnóstico a mano» (S5-03b); `ClinicalAttribute` → «Registrar a mano» (S5-03c); `PriorTreatment` → «Agregar tratamiento previo» (S5-03d). **Sin «Cargar documento»** (OCR a Post-MVP).
-- Origen visible: «Registro manual», «Corrección manual» o «Semilla sintética», sin enlace a PDF (US-004 AC-4 recortado: US-212 es Post-MVP).
+- Origen visible: «Registro manual», «Corrección manual» o «Carga inicial», sin enlace a PDF (US-004 AC-4 recortado: US-212 es Post-MVP).
 - `completeness` `5xx` → «No se pudo calcular el checklist» (`ChecklistNoDisponible`, ya existe) y el resto de la ficha se muestra igual (US-004 AC-5).
 - Tras guardar un registro, la fila pasa a «Presente y verificado» sin recargar la página (revalidación del RSC).
 
@@ -142,7 +142,7 @@ Preguntas de seguimiento sobre este análisis                       2 de 10 preg
 └────────────────────────────────────────────────────────────────────────────────────┘
 Pregunta 1 · ¿Qué población estudió la fuente de la opción descrita 2?
   La fuente reporta que … [1] [2]           [2] nueva en el seguimiento
-  Cada afirmación cita un fragmento del corpus recuperado para esta pregunta. Fuente, año y población: del catálogo, o «No disponible».
+  Cada afirmación cita un fragmento del corpus recuperado para esta pregunta o enlaza a un dato del paciente. Fuente, año y población: del catálogo, o «No disponible».
   Base de esta respuesta: datos del paciente usados · ausentes: [missingCriticalData]
   [Aviso RN-19 y «Uso académico/investigación», leídos de configuración (B-06), en cada turno generado]
 [ Escribe una pregunta sobre los hallazgos de este análisis ]                   (Preguntar)
@@ -169,6 +169,8 @@ Pregunta 1 · ¿Qué población estudió la fuente de la opción descrita 2?
 | Notas clínicas en la ficha | `ClinicalNote` en `PatientSummary` | ✗ → US-253 (`## contratos`, aditivo) |
 
 ## Revisiones
+
+- **Gate 1 del S5 (2026-11-03, `[S5 resp. 11]`):** eventos de IA en el timeline «Generado por IA · Sin verificar»; origen OCR «Documento»; semilla «Carga inicial»; enlace del aviso de faltantes del panel «Ir a ‹etiqueta› en el caso clínico» (lleva a `#datos-criticos` de la vista de caso); fechas relativas en ficha y vista de caso; una cita textual de la guía solo se muestra atribuida («Según ‹fuente›: «…»», con enlace al fragmento). La columna «Datos críticos» lee `/completeness` (etiqueta, destino y origen), no `CaseView.completeness`.
 
 - `clinical-language-auditor` (modo Diseño, 2026-11-03): **PASS**, 0 bloqueantes; aplicados los 2 Mayores (citas solo del corpus y metadatos del catálogo en cada respuesta de seguimiento; «Completar diagnóstico a mano» para que no parezca que lo completa la IA, AC-T3.2) y los Menores 3, 4, 5, 7 y 8. La pregunta 6 (redacción única del aviso RN-19) se resuelve leyendo el texto de configuración, como ya hace `AiDisclaimer`. Detalle en [`S5-refinamiento.md`](../../../backlog/sprints/S5-refinamiento.md).
 - Accesibilidad: los criterios de §4 del sistema de diseño aplican sin excepción; los diálogos de S5-03 son el único patrón nuevo de foco (atrapado, `Esc`, retorno al disparador).

@@ -282,6 +282,7 @@ repetir el análisis completo.
   entonces responde `403`; y dada una pregunta y una evolución (`outcomesSince`) con PII
   sembrada, entonces el texto que sale hacia la IA está enmascarado, la pregunta se guarda
   y se devuelve enmascarada, y los logs no la contienen. `[RN-15]` `[RN-11]` `[Pre-S1 resp. 23]`
+  > **Decidido (usuario, 2026-11-03, Gate 1 del S5):** el `403` por opt-out pasa a US-148 (S6) por [DEC-22](../../docs/decisions/DEC-22-opt-out-403-diferido-s6.md) `[S5 resp. 8]`; en el S5 este AC verifica solo la parte de PII. En AC-8, el `traceId` del turno **sí** se persiste (`analysis_follow_up.trace_id`, data-model); lo que nunca se persiste es el `pseudoPatientId` `[S5 resp. 12]`.
 - **AC-8 (borde · seudónimo por turno y Backend 2 sin estado)** · Dados dos turnos del
   mismo análisis, cuando se envían a `rag-orchestrator`, entonces cada uno lleva un
   `pseudoPatientId` y un `traceId` distintos, ninguno se persiste en

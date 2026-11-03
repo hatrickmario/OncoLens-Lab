@@ -156,6 +156,9 @@ D-01 (análisis de evidencia, no recomendaciones), RN-23, RN-24 (los hallazgos d
 - `[S5 resp. 7]` (2026-11-03) D-12: CI más rápida (ARR-11, 5 pts, O1: detector de cambios, `build-test` partido, `quality` en paralelo y cachés) y estrategia de PR agrupados; el compromiso pasa a 90 pts.
 - `[S5 resp. 6]` (2026-11-03) D-11: `torch` y `transformers` pasan a `requirements-export.txt`, fuera de la CI (opción 1); se hace en ARR-10.
 
+- `[S5 resp. 8]`…`[S5 resp. 14]` (2026-11-03, Gate 1 en `/sprint-start S5`): opt-out → DEC-22 (S6); subconjunto mínimo LOINC/ATC; 4 decisiones de contrato; 5 literales de UI; 4 respuestas de privacidad; supuestos de los changes aceptados; puntos sin cambio (90). Detalle: [`S5-plan.md`](S5-plan.md) §5.
+- `[S5 resp. 15]` (2026-11-03) plan aprobado: oleadas O1…O6, máximo 4 en paralelo, merge por oleada.
+
 ## 5. Stack técnico (fase 2)
 
 | Necesidad | Estado (2026-11-03) |
