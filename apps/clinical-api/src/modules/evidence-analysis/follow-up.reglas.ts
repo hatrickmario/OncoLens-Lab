@@ -10,7 +10,7 @@ import type {
 } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 
 /** RN-22: ¿el análisis ya tiene el máximo de turnos? El tope sale de configuración (`ANALYSIS_FOLLOWUP_MAX`). */
-export function superaLimiteDeSeguimiento(turnosExistentes: number, maximo: number): boolean {
+export function alcanzaLimiteDeSeguimiento(turnosExistentes: number, maximo: number): boolean {
   return turnosExistentes >= maximo;
 }
 

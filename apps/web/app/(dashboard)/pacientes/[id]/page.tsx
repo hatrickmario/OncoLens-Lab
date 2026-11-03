@@ -1,41 +1,25 @@
 import { headers } from 'next/headers';
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { Alert } from '../../../../components/ui/alert';
 import { FichaDeAdministrador } from '../../../../components/organisms/ficha-de-administrador';
 import { FichaDelDoctor } from '../../../../components/organisms/ficha-del-doctor';
-import { mensajes, rellenar } from '../../../../lib/mensajes';
+import { FichaNoDisponible } from '../../../../components/molecules/ficha-no-disponible';
+import { mensajes } from '../../../../lib/mensajes';
+import { hoyDelServidor } from '../../../../lib/server/hoy';
 import { obtenerFicha, type ResultadoDeFicha } from '../../../../lib/server/pacientes';
+import { RUTA_LOGIN_EXPIRADA } from '../../../../lib/sesion/motivo-de-sesion';
 
 export const metadata = { title: mensajes().ficha.tituloDocumento };
 
 function Contenido({
   resultado,
+  hoy,
 }: {
   resultado: Exclude<ResultadoDeFicha, { tipo: 'no_autenticado' }>;
+  hoy: string;
 }) {
-  const { ficha } = mensajes();
-  if (resultado.tipo === 'no_encontrada') {
-    return (
-      <>
-        <h1 className="m-0 mb-3 text-2xl font-semibold">{ficha.noEncontrado.titulo}</h1>
-        <Link href="/pacientes" className="text-primary font-semibold">
-          {ficha.noEncontrado.volver}
-        </Link>
-      </>
-    );
-  }
-  if (resultado.tipo === 'error') {
-    return (
-      <Alert>
-        {resultado.traceId === undefined
-          ? ficha.errorSinTraza
-          : rellenar(ficha.error, { traceId: resultado.traceId })}
-      </Alert>
-    );
-  }
+  if (resultado.tipo !== 'ok') return <FichaNoDisponible resultado={resultado} />;
   return resultado.ficha.view === 'doctor' ? (
-    <FichaDelDoctor ficha={resultado.ficha} />
+    <FichaDelDoctor ficha={resultado.ficha} hoy={hoy} />
   ) : (
     <FichaDeAdministrador ficha={resultado.ficha} />
   );
@@ -46,11 +30,11 @@ export default async function FichaPage({ params }: { params: Promise<{ id: stri
   const { id } = await params;
   const resultado = await obtenerFicha((await headers()).get('cookie'), id);
   if (resultado.tipo === 'no_autenticado') {
-    redirect('/login?motivo=expirada');
+    redirect(RUTA_LOGIN_EXPIRADA);
   }
   return (
     <main className="mx-auto max-w-6xl p-4 sm:p-6">
-      <Contenido resultado={resultado} />
+      <Contenido resultado={resultado} hoy={hoyDelServidor()} />
     </main>
   );
 }

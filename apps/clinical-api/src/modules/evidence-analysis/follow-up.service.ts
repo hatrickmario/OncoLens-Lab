@@ -20,7 +20,7 @@ import {
   chunksCitadosPorElAnalisis,
   enlacesDelTurno,
   marcarFuentesNuevas,
-  superaLimiteDeSeguimiento,
+  alcanzaLimiteDeSeguimiento,
 } from './follow-up.reglas.js';
 import type { PeticionDeSeguimiento } from './follow-up.schema.js';
 import type {
@@ -251,7 +251,7 @@ async function exigirTurnoDisponible(
   analysisId: string,
 ): Promise<void> {
   const turnos = await seguimientos.contarTurnos(analysisId);
-  if (superaLimiteDeSeguimiento(turnos, config.analysisFollowupMax)) {
+  if (alcanzaLimiteDeSeguimiento(turnos, config.analysisFollowupMax)) {
     throw new LimiteDeSeguimientoError();
   }
 }

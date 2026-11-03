@@ -1,11 +1,11 @@
 import type { Biomarker } from '../../../../packages/api-contracts/src/types/clinical-api';
-import { formatearFecha, textoDeConfianza, textoDeOrigen } from '../../lib/ficha/presentacion';
+import { textoDeConfianza, textoDeOrigen } from '../../lib/ficha/presentacion';
 import { mensajes, rellenar } from '../../lib/mensajes';
+import { FechaRelativa } from '../atoms/fecha-relativa';
+import { CELDA, EncabezadoDeTabla } from '../molecules/encabezado-de-tabla';
 import { SeccionDeFicha } from '../molecules/fila-de-ficha';
 
-const CELDA = 'border-border border-b px-3 py-2 text-left align-top';
-
-function FilaDeBiomarcador({ b }: { b: Biomarker }) {
+function FilaDeBiomarcador({ b, hoy }: { b: Biomarker; hoy: string }) {
   const { biomarcadores, significancia, noRegistrado } = mensajes().ficha;
   return (
     <tr>
@@ -19,7 +19,9 @@ function FilaDeBiomarcador({ b }: { b: Biomarker }) {
       </th>
       <td className={CELDA}>
         {[b.value, b.unit].filter(Boolean).join(' ')}
-        <span className="text-text-muted block text-sm">{formatearFecha(b.performedAt)}</span>
+        <span className="text-text-muted block text-sm">
+          <FechaRelativa fecha={b.performedAt} hoy={hoy} />
+        </span>
       </td>
       <td className={CELDA}>{b.referenceRange ?? noRegistrado}</td>
       <td className={CELDA}>{b.trend ?? biomarcadores.sinTendencia}</td>
@@ -35,7 +37,13 @@ function FilaDeBiomarcador({ b }: { b: Biomarker }) {
 }
 
 /** Último valor por biomarcador (S2-04): significancia con símbolo y texto; origen y revisión en texto. */
-export function RecentBiomarkersTable({ biomarcadores }: { biomarcadores: Biomarker[] }) {
+export function RecentBiomarkersTable({
+  biomarcadores,
+  hoy,
+}: {
+  biomarcadores: Biomarker[];
+  hoy: string;
+}) {
   const { biomarcadores: textos, noRegistrado } = mensajes().ficha;
   const columnas = [
     textos.biomarcador,
@@ -51,18 +59,10 @@ export function RecentBiomarkersTable({ biomarcadores }: { biomarcadores: Biomar
         <p className="m-0">{noRegistrado}</p>
       ) : (
         <table className="w-full border-collapse">
-          <thead className="bg-surface-alt">
-            <tr>
-              {columnas.map((columna) => (
-                <th key={columna} scope="col" className={CELDA}>
-                  {columna}
-                </th>
-              ))}
-            </tr>
-          </thead>
+          <EncabezadoDeTabla columnas={columnas} />
           <tbody>
             {biomarcadores.map((b) => (
-              <FilaDeBiomarcador key={b.id} b={b} />
+              <FilaDeBiomarcador key={b.id} b={b} hoy={hoy} />
             ))}
           </tbody>
         </table>

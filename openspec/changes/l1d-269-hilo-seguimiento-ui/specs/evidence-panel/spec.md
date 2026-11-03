@@ -69,19 +69,19 @@ Ante `409 LIMITE_SEGUIMIENTO`, un turno `sin_evidencia` o un turno `fuera_de_con
 #### Scenario: El 409 muestra el límite y deshabilita el campo [US-219 AC-4] [RN-22]
 - **GIVEN** el hilo con `maxFollowUps = 10` y MSW respondiendo `409` con `contracts/examples/error-limite-seguimiento.json`
 - **WHEN** el oncólogo envía una pregunta
-- **THEN** ve «Se alcanzó el límite de 10 preguntas de este análisis. Abre un análisis nuevo para continuar.» y el botón «Nuevo análisis»
+- **THEN** ve «Se alcanzó el límite de N preguntas de este análisis. Una pregunta distinta puede formularse en un análisis nuevo.» (N = `analysisBasis.maxFollowUps`, 10 en el ejemplo) y el botón «Nuevo análisis»
 - **AND** el campo de pregunta y «Preguntar» quedan deshabilitados
 - **AND** la pantalla no muestra `409`, `LIMITE_SEGUIMIENTO` ni el `traceId` del ejemplo
 
 #### Scenario: Un turno sin evidencia muestra su texto y la acción [US-219 AC-4] [RN-02]
 - **GIVEN** MSW respondiendo `201` con `contracts/examples/follow-up-sin-evidencia.json` (de `l1d-268`)
 - **WHEN** el oncólogo envía una pregunta
-- **THEN** el turno muestra «No se encontró evidencia suficientemente relacionada con esta pregunta en el corpus. Puedes reformularla o abrir un análisis nuevo.» y «Nuevo análisis», sin citas, con el aviso de IA
+- **THEN** el turno muestra «No se encontró evidencia suficientemente relacionada con esta pregunta en el corpus. La pregunta puede replantearse o formularse en un análisis nuevo.» y «Nuevo análisis», sin citas, con el aviso de IA
 
 #### Scenario: Un turno fuera de contexto muestra su texto y la acción [US-219 AC-4]
 - **GIVEN** MSW respondiendo `201` con `contracts/examples/follow-up-fuera-de-contexto.json`
 - **WHEN** el oncólogo envía una pregunta
-- **THEN** el turno muestra «Esta pregunta no trata sobre los hallazgos de este análisis. Para otro tema o paciente, abre un análisis nuevo.» y «Nuevo análisis», sin citas, con el aviso de IA
+- **THEN** el turno muestra «La pregunta no se refiere a los hallazgos de este análisis; no se generó respuesta. Otro tema o paciente corresponde a un análisis nuevo.» y «Nuevo análisis», sin citas, con el aviso de IA
 
 #### Scenario: Nuevo análisis lleva el foco al campo del panel [US-219 AC-4] (design D6; Decidido, usuario, 2026-11-03, [S5 resp. 13])
 - **GIVEN** un turno `fuera_de_contexto` en el hilo

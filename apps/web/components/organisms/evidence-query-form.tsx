@@ -1,7 +1,11 @@
 'use client';
 
 import { useEffect, useRef, type FormEvent, type ReactNode, type RefObject } from 'react';
-import { longitudDePregunta, MAXIMO_PREGUNTA } from '../../lib/evidence/reglas-del-formulario';
+import {
+  ID_CAMPO_PREGUNTA,
+  longitudDePregunta,
+  MAXIMO_PREGUNTA,
+} from '../../lib/evidence/reglas-del-formulario';
 import { mensajes, rellenar } from '../../lib/mensajes';
 import estilos from '../evidence.module.css';
 
@@ -42,9 +46,9 @@ export function EvidenceQueryForm(props: EvidenceQueryFormProps) {
     .join(' ');
   return (
     <form className={estilos.formulario} onSubmit={alEnviar} noValidate>
-      <label htmlFor="pregunta-clinica">{formulario.pregunta}</label>
+      <label htmlFor={ID_CAMPO_PREGUNTA}>{formulario.pregunta}</label>
       <textarea
-        id="pregunta-clinica"
+        id={ID_CAMPO_PREGUNTA}
         className={estilos.campo}
         value={pregunta}
         aria-describedby={describe}
