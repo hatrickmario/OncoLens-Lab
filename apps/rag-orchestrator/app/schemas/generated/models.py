@@ -561,7 +561,9 @@ class ClinicalContext(BaseModel):
     biomarkerTrends: list[BiomarkerTrend]
     missingCriticalData: Annotated[
         list[TextoEnmascarado],
-        Field(description='Faltantes del checklist; se tratan como "desconocido".'),
+        Field(
+            description='Faltantes del checklist; se tratan como "desconocido". En `/rag/query` y `/rag/follow-up` cada elemento debe ser una clave de `datos-criticos.json` del tipo de cáncer del caso (`^[a-z0-9_]+$`); texto libre u otra clave responde 422 CUERPO_INVALIDO sin eco del valor (RN-11). `/case/summary` no aplica esta validación.'
+        ),
     ]
     priorAnalyses: Annotated[
         list[PriorAnalysisMemory],

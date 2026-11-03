@@ -8,11 +8,9 @@
 
 ## contratos
 
-- [x] 0.1 Sin cambio de contrato (ADR-26): confirmar que `apps/rag-orchestrator/openapi.yaml`,
-  `apps/clinical-api/openapi.yaml` y `contracts/examples/` no cambian (`currentLine`, `missingCriticalData` y
-  `ErrorValidacion` ya existen); `npm run contracts:check` y `contracts:breaking` en verde al final. Si `contract-keeper`
-  pide documentar el nuevo motivo del `422`, solo la **descripción**, en un commit `contract(L1D-113)` antes de 1.1 · test
-  después
+- [x] 0.1 Sin cambio de esquema ni de `info.version` (ADR-26). Por el Gate 2 (contract-keeper), commit `contract(L1D-113)` solo de
+  **descripción** en el `422` de `/rag/query` y `/rag/follow-up` y en `missingCriticalData` (orden invertido benigno: tras test y
+  feat); `contracts:generate`, `generate:check`, `contracts:check` y `contracts:breaking` en verde · test después
 
 ## ai-services
 

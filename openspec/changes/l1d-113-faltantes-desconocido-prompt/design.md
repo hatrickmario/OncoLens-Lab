@@ -105,11 +105,12 @@ definitiva.
 
 ## Contratos
 
-Sin cambio (ADR-26). `ClinicalContext.currentLine` y `ClinicalContext.missingCriticalData` existen en
-`apps/rag-orchestrator/openapi.yaml`; el `422` de `/rag/query` ya admite `ErrorValidacion` (`CUERPO_INVALIDO`). Los ejemplos
-`contracts/examples/rag-query-request*.json` ya traen claves catalogadas (`estado_menopausico`, `ki67`). La tarea
-`## contratos` solo verifica `contracts:check` y `contracts:breaking` sin diff. Si `contract-keeper` pidiera documentar el
-nuevo motivo del `422`, sería un cambio de **descripción** (no incompatible) en un commit `contract(L1D-113)` previo al test.
+Sin cambio de **esquema** ni de `info.version` (ADR-26): `ClinicalContext.currentLine`, `ClinicalContext.missingCriticalData` y
+`ErrorValidacion` (`CUERPO_INVALIDO`) ya existen y los ejemplos `contracts/examples/rag-query-request*.json` ya traen claves
+catalogadas. Gate 2 (contract-keeper) pidió describir el comportamiento observable nuevo: un commit `contract(L1D-113)` solo de
+**descripción** (como L1D-306) en el `422` de `/rag/query` y de `/rag/follow-up` y en `missingCriticalData`, acotado a esas dos
+rutas (`/case/summary` no aplica; alinearlo es deuda D5-25). El commit va tras los de test y feat (orden invertido benigno:
+solo texto). No se añade `pattern` al esquema (estrecharía la entrada: incompatible).
 
 ## Evaluación
 
