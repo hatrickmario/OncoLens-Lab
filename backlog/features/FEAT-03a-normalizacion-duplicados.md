@@ -20,7 +20,9 @@
 
 > Linear: [L1D-84](https://linear.app/l1der-lab-mjbc/issue/L1D-84)
 
-`FEAT-03a` · Sprint 5 *(S4 → S5, `[S4 resp. 1]`)* · Estimación **5** · HU-17 · FR-22 (normalización final), RN-27 (dueña), ADR-33 · AC-03.3, AC-03.5 · ⛔ DEC-04 · *workaround* Q-07 · ↪ US-041, US-086 · 🔗 Consumida por: US-087, US-094, US-110 · 🔗 Medido en: US-106 (M-03.4, M-03.5)
+`FEAT-03a` · Sprint 5 *(S4 → S5, `[S4 resp. 1]`)* · Estimación **3** *(era 5; D-4, `[S5 resp. 4]`)* · HU-17 · FR-22 (normalización final), RN-27 (dueña), ADR-33 · AC-03.3, AC-03.5 · ⛔ DEC-04 · *workaround* Q-07 · ↪ US-041, US-086 · 🔗 Consumida por: US-087, US-094, US-110 · 🔗 Medido en: US-106 (M-03.4, M-03.5)
+
+> **Decidido (usuario, 2026-11-03, refinamiento del S5):** D-4: se recorta a los datos manuales y la invariante del catálogo (AC-2, AC-3, AC-4, AC-5, AC-7); **AC-1 y AC-6 pasan a Post-MVP** con la extracción (FEAT-01b). Estimación 5 → **3** `[S5 resp. 4]`. Ver [`S5-refinamiento.md`](../sprints/S5-refinamiento.md).
 
 > **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 

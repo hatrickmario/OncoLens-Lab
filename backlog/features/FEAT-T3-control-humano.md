@@ -121,6 +121,8 @@ configuración (AC-2).
 
 `FEAT-T3` · Sprint 5 *(S4 → S5, `[S4 resp. 1]`)* · Estimación **2** · HU-03 · AC-T3.2 (dueña), RN-06 · ↪ US-053, US-061 · 🔗 Relacionada: RN-08 (FEAT-03a, S2), RN-09 (FEAT-01c), que llevan `🔗 Regresión [AC-T3.2] → US-070`
 
+> **Decidido (usuario, 2026-11-03, refinamiento del S5):** comprometida en el S5 `[S5 resp. 3]`; con la escritura manual de US-094/110/253, el test de diff de tablas cubre también que el análisis no toca esas filas.
+
 > **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 
 ## Story
@@ -161,6 +163,8 @@ vinculación opcional de una decisión a un análisis (FR-13) llega con FEAT-11b
 > Linear: [L1D-196](https://linear.app/l1der-lab-mjbc/issue/L1D-196)
 
 `FEAT-T3` · Sprint 5 · Estimación **3** · — (transversal, PRD §17) · RN-26 (dueña) · AC-T3.3 (parte de avisos; verificación completa en G-Piloto con el `403` por opt-out) · ↪ US-101 (S4), FEAT-04 US-005 (S4), US-124 (S5), US-136 (S5) · 🔗 Regresión [RN-15] → US-148 (activa desde S6)
+
+> **Decidido (usuario, 2026-11-03, refinamiento del S5):** D-9: con US-101 y US-136 fuera del S5, verifica los avisos que existen al cierre del S5 (`datos_faltantes`, `poblacion_no_comparable`, y `datos_sin_verificar` si el fixture lo produce con el código actual); los que lleguen después llevan `🔗 Regresión [RN-26] → US-071`. Comprometida en el S5 `[S5 resp. 3]`.
 
 ## Story
 Como oncólogo, quiero que los avisos sobre datos sin verificar, en conflicto, faltantes

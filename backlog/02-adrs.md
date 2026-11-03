@@ -25,6 +25,7 @@
 
 > **Estado tras el refinamiento del S4 (usuario, 2026-10-29; respuestas `[S4 resp. 1…10]`):**
 > - **Resuelta: ADR-47 · La población del estudio se extrae en la ingesta, en abanico por documento y criterio, como lista acotada por fragmento** — [registro](../docs/architecture/adr/ADR-47-extraccion-poblacion-en-abanico.md), estado **aceptado** (2026-10-29), opción A `[S4 resp. 3]`, contrato aditivo `[S4 resp. 5]`. Sin historia de ADR propia (la escribió la sesión principal); la implementan US-240, US-241, US-242, US-243, US-244 y US-233b (FEAT-06c, FEAT-08b, FEAT-T5a).
+> - **Resuelta: ADR-50 · Una corrección manual crea una fila nueva y la anterior queda `reemplazado`, enlazadas por `supersedes_id`** — [registro](../docs/architecture/adr/ADR-50-correccion-con-historico-supersedes.md), estado **aceptado** (2026-11-03), opción A `[S5 resp. 2]`. Sin historia de ADR propia (la escribió la sesión principal en el refinamiento del S5); la implementa US-253 (FEAT-03b).
 > - **DEC-11 (US-021):** F-20…F-24 aceptadas como escenario más probable de la semántica de la lista de población; firma formal en la sesión de oncólogos del S4 `[S4 resp. 8]`; conflicto → Desconocido con `valores_en_conflicto` `[S4 resp. 9]`. Registro: [`DEC-11-aplicabilidad-lista-de-poblacion.md`](../docs/decisions/DEC-11-aplicabilidad-lista-de-poblacion.md).
 > - **Cambios de sprint `[S4 resp. 1]`:** DEC-01, US-016 · DEC-06, US-017 · DEC-07, US-018 · DEC-08 y US-019 · DEC-09 pasan al **S5**.
 
@@ -64,6 +65,7 @@
 | US-019 | DEC-09 | Semáforo y vigencia de diagnósticos | TBD-06 · readme #12 ⚠️ | DEC clínica | Oncólogo asesor | S1 (antes de la extracción) | 1 | sí (1) | FEAT-01b, FEAT-03a, FEAT-03b | Alta |
 | — | DEC-01 (existe) | Catálogo de datos críticos | TBD-12 · M-04.3 | DEC clínica | Oncólogo asesor | S3 (ver P-03) | 2 → **1** | sí (2) | FEAT-04 | **Crítica** |
 | — | ADR-47 (aceptado 2026-10-29) | Población del estudio en abanico por documento × criterio, lista acotada por fragmento | OUT-06 · OUT-07 · TBD-13 · `S4-insumo-extraccion-poblacion.md` | ADR | Usuario (PO) + Ingeniería | S4 (resuelta) | — (sin historia propia; la implementan US-240…US-244 y US-233b) | sí (3) | FEAT-08b, FEAT-06c, FEAT-T5a | **Crítica** · resuelta |
+| — | ADR-50 (aceptado 2026-11-03) | Corrección manual con histórico: fila nueva + `supersedes_id` en biomarcador, examen y nota | PRD E-17 · RN-08 · `S5-refinamiento.md` D-2 | ADR | Usuario (PO) + Ingeniería | S5 (resuelta) | — (sin historia propia; la implementa US-253) | sí (3) | FEAT-03b | **Alta** · resuelta |
 | US-021 | DEC-11 | Criterios de aplicabilidad, excluyentes y "Parcial" | TBD-13 (aplicabilidad) | DEC clínica | Oncólogo asesor | S3 (antes de aplicabilidad; ver P-03) | 1 | sí (3) | FEAT-08b, FEAT-10c, FEAT-08c, FEAT-T5b | **Crítica** |
 | US-024 | DEC-14 | Revisión de la muestra de aplicabilidad (VM-3) | M-08.1 · VM-3 | DEC clínica | Oncólogo asesor | S4 (o al cerrar aplicabilidad) | 1 | sí (mide 3) | G-Demo, FEAT-T5d | Alta |
 | US-023 | DEC-13 | Motivos de egreso | TBD-06 (motivos) | DEC clínica | Oncólogo asesor | Con FEAT-T4b (hoy S4); Post-MVP si se difiere | 1 | no | FEAT-T4b | Baja |

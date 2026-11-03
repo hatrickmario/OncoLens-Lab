@@ -24,7 +24,9 @@
 
 > Linear: [L1D-249](https://linear.app/l1der-lab-mjbc/issue/L1D-249)
 
-`FEAT-T5c` · Sprint 5 · Estimación **5** · HU-25 · FR-20 (VM-4, VM-5), FR-01 (RBAC) · AC-T5.3 (parte: medición separada por cohorte) · ↪ US-053, FEAT-04 US-006, US-045 · ⛔ DEC-02 (US-008) · escenario más probable · 🔗 Produce para: US-139, FEAT-T5d · 🔗 Regresión [RN-10] → US-046
+`FEAT-T5c` · Sprint 6 *(S5 → S6, `[S5 resp. 3]`)* · Estimación **5** · HU-25 · FR-20 (VM-4, VM-5), FR-01 (RBAC) · AC-T5.3 (parte: medición separada por cohorte) · ↪ US-053, FEAT-04 US-006, US-045 · ⛔ DEC-02 (US-008) · escenario más probable · 🔗 Produce para: US-139, FEAT-T5d · 🔗 Regresión [RN-10] → US-046
+
+> **Decidido (usuario, 2026-11-03, refinamiento del S5):** D-3: pasa del S5 al **S6** para que el S5 (3 días) quepa con G-Demo. Ver [`S5-refinamiento.md`](../sprints/S5-refinamiento.md).
 
 ## Story
 Como oncólogo, quiero calificar en un clic la utilidad de cada análisis y decir si el
@@ -81,7 +83,9 @@ capturados (AC-3).
 
 > Linear: [L1D-250](https://linear.app/l1der-lab-mjbc/issue/L1D-250)
 
-`FEAT-T5c` · Sprint 5 · Estimación **3** · HU-25 · FR-20 (VM-4, VM-5), NFR-12 · ↪ US-137, US-061, FEAT-04 US-005 · 🔗 Regresión [RN-23] → US-068 · 🔗 Regresión [RN-26] → US-071
+`FEAT-T5c` · Sprint 6 *(S5 → S6, `[S5 resp. 3]`)* · Estimación **3** · HU-25 · FR-20 (VM-4, VM-5), NFR-12 · ↪ US-137, US-061, FEAT-04 US-005 · 🔗 Regresión [RN-23] → US-068 · 🔗 Regresión [RN-26] → US-071
+
+> **Decidido (usuario, 2026-11-03, refinamiento del S5):** D-3: pasa del S5 al **S6** para que el S5 (3 días) quepa con G-Demo. Ver [`S5-refinamiento.md`](../sprints/S5-refinamiento.md).
 
 ## Story
 Como oncólogo, quiero calificar el análisis con un clic al terminar de leerlo y marcar
@@ -129,7 +133,9 @@ Testing Library (AC-3, AC-5).
 
 > Linear: [L1D-251](https://linear.app/l1der-lab-mjbc/issue/L1D-251)
 
-`FEAT-T5c` · Sprint 5 · Estimación **3** · — (técnica, PRD §17; HU-25) · FR-20, RN-22 · AC-T5.3 · VM-4, VM-5 · validación de DEC-01 y DEC-11 (P-03) · ↪ US-137 · ⛔ DEC-02 (US-008) · escenario más probable (muestra mínima; metas y regla por catálogo fijadas por §15 resp. 5) · 🔗 Produce para: US-142 (G-Demo), FEAT-T5d (piloto), DEC-01, US-021 · DEC-11
+`FEAT-T5c` · Sprint 6 *(S5 → S6, `[S5 resp. 3]`)* · Estimación **3** · — (técnica, PRD §17; HU-25) · FR-20, RN-22 · AC-T5.3 · VM-4, VM-5 · validación de DEC-01 y DEC-11 (P-03) · ↪ US-137 · ⛔ DEC-02 (US-008) · escenario más probable (muestra mínima; metas y regla por catálogo fijadas por §15 resp. 5) · 🔗 Produce para: US-142 (G-Demo), FEAT-T5d (piloto), DEC-01, US-021 · DEC-11
+
+> **Decidido (usuario, 2026-11-03, refinamiento del S5):** D-3: pasa del S5 al **S6** para que el S5 (3 días) quepa con G-Demo. Ver [`S5-refinamiento.md`](../sprints/S5-refinamiento.md).
 
 ## Story
 Como product owner, quiero un reporte que agregue las calificaciones por cohorte y por
@@ -186,7 +192,9 @@ integración del comando contra la BD de test sembrada con FX-T5c-a (AC-1, AC-2,
 
 > Linear: [L1D-252](https://linear.app/l1der-lab-mjbc/issue/L1D-252)
 
-`FEAT-T5c` · Sprint 5 · Estimación **1** · — (decisión) · M-08.1 (mixto) · VM-3 · Dueño: oncólogo asesor · ⛔ Bloqueada por: DEC-02 (US-008, tamaño de muestra y número de revisores), US-126 (tablas de aplicabilidad generadas) · 🔗 Bloquea: US-142 (G-Demo, VM-3 registrada), FEAT-T5d
+`FEAT-T5c` · Sprint 6 *(S5 → S6, `[S5 resp. 3]`)* · Estimación **1** · — (decisión) · M-08.1 (mixto) · VM-3 · Dueño: oncólogo asesor · ⛔ Bloqueada por: DEC-02 (US-008, tamaño de muestra y número de revisores), US-126 (tablas de aplicabilidad generadas) · 🔗 Bloquea: US-142 (G-Demo, VM-3 registrada), FEAT-T5d
+
+> **Decidido (usuario, 2026-11-03, refinamiento del S5):** D-3: pasa del S5 al **S6** para que el S5 (3 días) quepa con G-Demo. Se decide en la sesión con oncólogos del S6, junto a ARR-05. Ver [`S5-refinamiento.md`](../sprints/S5-refinamiento.md).
 
 ## Story
 Como oncólogo asesor, quiero revisar una muestra de tablas de aplicabilidad, para que la

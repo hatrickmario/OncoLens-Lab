@@ -205,7 +205,9 @@ Pytest del *runner* y Vitest del comando.
 
 > Linear: [L1D-243](https://linear.app/l1der-lab-mjbc/issue/L1D-243)
 
-`FEAT-T5b` · Sprint 5 *(S4 → S5, `[S4 resp. 1]`)* · Estimación **3** · — (técnica, PRD §17; OL-06) · FR-20 · AC-T5.1 (faltantes) · M-04.1, M-04.2, G-12 · ↪ US-072, FEAT-04 US-002 · 🔗 Regresión [AC-T5.4] → US-074 (cambio de catálogo) · 🔗 Mide a: FEAT-04
+`FEAT-T5b` · Sprint 6 *(S5 → S6, `[S5 resp. 3]`)* · Estimación **3** · — (técnica, PRD §17; OL-06) · FR-20 · AC-T5.1 (faltantes) · M-04.1, M-04.2, G-12 · ↪ US-072, FEAT-04 US-002 · 🔗 Regresión [AC-T5.4] → US-074 (cambio de catálogo) · 🔗 Mide a: FEAT-04
+
+> **Decidido (usuario, 2026-11-03, refinamiento del S5):** D-3: pasa del S5 al **S6** para que el S5 (3 días) quepa con G-Demo. Ver [`S5-refinamiento.md`](../sprints/S5-refinamiento.md).
 
 > **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 
@@ -353,6 +355,8 @@ recuperación *dense* y *sparse*; la corrida con modelos locales la ejecuta
 
 `FEAT-T5b` · Sprint 5 *(S4 → S5, `[S4 resp. 1]`)* · Estimación **5** · — (técnica, PRD §17; OL-06) · FR-20 · AC-T5.1 (opciones), AC-T5.3 · M-10.1, M-10.2, M-07.2 (con hasta 3 opciones), G-2, G-14 · ↪ US-072, US-074, US-134, US-136 · ⛔ ADR-39 (LLM y NLI reales para la medición final) · ⛔ DEC-07 · escenario más probable (metas y tolerancias) · 🔗 Mide a: FEAT-10c, FEAT-10b (S4)
 
+> **Decidido (usuario, 2026-11-03, refinamiento del S5):** comprometida en el S5 `[S5 resp. 3]`; DEC-07 pasa al S6, así que las metas y tolerancias son las iniciales de `CLAUDE.md` (escenario más probable) y la configuración pasa de `s4.yaml` a `s5.yaml`.
+
 > **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 
 > **Reordenamiento (usuario, 2026-10-23):** S5 → S4. Ver `README.md`, «Reordenamiento del 2026-10-23».
@@ -450,6 +454,8 @@ medición real (AC-1, AC-3) es una ejecución registrada en `eval/results/`.
 > Linear: [L1D-248](https://linear.app/l1der-lab-mjbc/issue/L1D-248)
 
 `FEAT-T5b` · Sprint 5 (cierre) · Estimación **5** · — (técnica, PRD §17) · FR-20 · G-1, G-2, G-14 · AC-T5.1, AC-T5.3 · PRD §14 G-Demo (redefinido) · ↪ US-140, US-139, US-024 · DEC-14, US-071, US-134…US-136 · 🔗 Integra: US-141 (`si-hay-capacidad`; su medición de p95 es el AC-7) · ⛔ DEC-07 · escenario más probable (metas) · 🔗 Regresión [RN-13] → US-143
+
+> **Decidido (usuario, 2026-11-03, refinamiento del S5):** D-5: AC-1 recorre login → listado → ficha (con una corrección de biomarcador) → **vista de caso mínima** con timeline y datos críticos → registro a mano de un faltante → análisis con hasta 3 opciones → **2 preguntas de seguimiento** con citas; **sin feedback** (FEAT-T5c pasa al S6). AC-2: las metas iniciales de `CLAUDE.md` son el escenario de DEC-07 (que pasa al S6), con US-140 como suite de opciones; las métricas no medidas se declaran. AC-5: el reporte de US-139 y DEC-14 figuran como «se miden en el piloto» `[S5 resp. 4]` `[S5 resp. 5]`.
 
 ## Story
 Como product owner, quiero verificar al cierre del S5 que el recorrido de la hipótesis

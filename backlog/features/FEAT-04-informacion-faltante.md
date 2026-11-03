@@ -378,6 +378,8 @@ AC-7 movido).
 
 `FEAT-04` · Sprint 5 *(S4 → S5, `[S4 resp. 1]`)* · Estimación **3** · HU-18 · FR-23, NFR-12 · AC-04.1, AC-T1.1 · ↪ US-003, US-090, US-079, US-111, US-212 · 🔗 Relacionada: US-094 (registro manual de atributos y tratamientos, `si-hay-capacidad`), US-080 (visor, `si-hay-capacidad`) · 🔗 Consume: US-110 (registro manual de biomarcadores y diagnóstico, FEAT-03b) · 🔗 Regresión [RN-23] → US-068 (textos nuevos de UI) · 🔗 Regresión [RN-17] → US-198 (Post-MVP)
 
+> **Decidido (usuario, 2026-11-03, refinamiento del S5):** D-7: con el OCR en Post-MVP, toda fila «Faltante» ofrece solo la acción manual según `destination.entity` (`Biomarker`/`Diagnosis` → US-111; `ClinicalAttribute`/`PriorTreatment` → US-094); **sin «Cargar documento»**. Resuelve el pendiente de AC-2: el ítem `estado_menopausico` ofrece «Registrar a mano». AC-4 muestra «Registro manual», «Corrección manual» o «Carga inicial», sin enlace a PDF (US-212 es Post-MVP). La sección vive en la vista de caso mínima (D-1) `[S5 resp. 1]` `[S5 resp. 4]`. Diseño: `docs/ux/S5/pantallas-s5.md` S5-02.
+
 > **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 
 ## Story
@@ -394,7 +396,7 @@ para completar el caso sin buscar dónde se ingresa cada dato.
   `estado_menopausico` (destino `ClinicalAttribute`) en "Faltante", cuando se muestra la
   fila, entonces ofrece "Cargar documento", que abre la carga de US-079, y no ofrece
   "Registrar a mano". `[AC-04.1]` (asumido: *workaround* del slicing v2)
-  > Pendiente de definir en refinamiento (dueño: usuario · afecta: AC-2, AC-3): con US-094 en `si-hay-capacidad`, los ítems con destino `ClinicalAttribute` o `PriorTreatment` solo se completan cargando un documento, de modo que AC-04.1 ("cargarlo o registrarlo a mano") queda parcial para ellos; ¿se acepta para el MVP o se adelanta el registro manual de atributos (parte de US-094)?
+  > ~~Pendiente de definir~~ **Resuelto (D-7, 2026-11-03, `[S5 resp. 4]`): solo «Registrar a mano».** Texto original: (dueño: usuario · afecta: AC-2, AC-3): con US-094 en `si-hay-capacidad`, los ítems con destino `ClinicalAttribute` o `PriorTreatment` solo se completan cargando un documento, de modo que AC-04.1 ("cargarlo o registrarlo a mano") queda parcial para ellos; ¿se acepta para el MVP o se adelanta el registro manual de atributos (parte de US-094)?
 - **AC-3 (registrar a mano cualquier faltante)** · Dados los ítems `ki67` (destino
   `Biomarker`) y `grado` (destino `Diagnosis`) en "Faltante", cuando el oncólogo elige
   "Registrar a mano", entonces se abre el formulario de US-111 prellenado con ese ítem

@@ -76,7 +76,9 @@ scoring (ADR-7).
 
 > Linear: [L1D-233](https://linear.app/l1der-lab-mjbc/issue/L1D-233)
 
-`FEAT-T5a` · Sprint 5 *(desde S1 → S2 → S4, sesión con oncólogos junto a ARR-05, `[S2 resp. 1]`; S4 → S5, `[S4 resp. 1]`)* · Estimación **1** · — (decisión) · IA-10 · AC-T5.3 · Dueño: oncólogo asesor · ↪ US-072 (dataset y diccionario en borrador) · 🔗 Produce para: US-072 AC-4 (rótulo "validada" en el S1), US-073 (baseline técnico, S2)
+`FEAT-T5a` · Sprint 6 *(S5 → S6, `[S5 resp. 3]`)* · Estimación **1** · — (decisión) · IA-10 · AC-T5.3 · Dueño: oncólogo asesor · ↪ US-072 (dataset y diccionario en borrador) · 🔗 Produce para: US-072 AC-4 (rótulo "validada" en el S1), US-073 (baseline técnico, S2)
+
+> **Decidido (usuario, 2026-11-03, refinamiento del S5):** D-3: pasa del S5 al **S6** para que el S5 (3 días) quepa con G-Demo. Se decide en la sesión con oncólogos del S6, junto a ARR-05. Ver [`S5-refinamiento.md`](../sprints/S5-refinamiento.md).
 
 > **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 
@@ -115,7 +117,9 @@ dataset (`data/evaluation/`, sintético). La mecánica del reporte es de US-072.
 
 > Linear: [L1D-234](https://linear.app/l1der-lab-mjbc/issue/L1D-234)
 
-`FEAT-T5a` · Sprint 5 *(desde S2, cierre del S2, `[S2 resp. 20]`: depende de US-233, hoy US-233a y US-120 AC-5/AC-6; S4 → S5, `[S4 resp. 1]`)* · Estimación **1** · — (decisión) · TBD-02 · Dueño: usuario (PO) + Ingeniería · ↪ US-073 (baseline técnico), US-014 · ADR-41 · 🔗 Produce para: US-074 AC-5 (umbrales reales de regresión en `eval/configs/regression.yaml` desde el S2), FEAT-T5b
+`FEAT-T5a` · Sprint 6 *(S5 → S6, `[S5 resp. 3]`)* · Estimación **1** · — (decisión) · TBD-02 · Dueño: usuario (PO) + Ingeniería · ↪ US-073 (baseline técnico), US-014 · ADR-41 · 🔗 Produce para: US-074 AC-5 (umbrales reales de regresión en `eval/configs/regression.yaml` desde el S2), FEAT-T5b
+
+> **Decidido (usuario, 2026-11-03, refinamiento del S5):** D-3: pasa del S5 al **S6** para que el S5 (3 días) quepa con G-Demo. DEC-07 se decide con el baseline real de la corrida nocturna del S5. Ver [`S5-refinamiento.md`](../sprints/S5-refinamiento.md).
 
 > **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 
