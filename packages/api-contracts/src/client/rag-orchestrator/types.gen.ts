@@ -416,7 +416,7 @@ export type ClinicalContext = {
 export type RagQueryInternalRequest = {
     traceId: TraceId;
     /**
-     * Pregunta ya enmascarada (RN-11).
+     * Pregunta ya enmascarada (RN-11) y normalizada por clinical-api (Unicode NFC, espacios colapsados y recortados). rag-orchestrator vuelve a normalizarla al recibirla; vacía tras normalizar → 422 CUERPO_INVALIDO (US-250).
      */
     query: string;
     sourcesSelected: SourcesSelected;

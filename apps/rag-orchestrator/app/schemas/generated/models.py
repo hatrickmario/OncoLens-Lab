@@ -587,7 +587,7 @@ class RagQueryInternalRequest(BaseModel):
     query: Annotated[
         str,
         Field(
-            description='Pregunta ya enmascarada (RN-11).',
+            description='Pregunta ya enmascarada (RN-11) y normalizada por clinical-api (Unicode NFC, espacios colapsados y recortados). rag-orchestrator vuelve a normalizarla al recibirla; vacía tras normalizar → 422 CUERPO_INVALIDO (US-250).',
             max_length=2000,
             min_length=1,
         ),
