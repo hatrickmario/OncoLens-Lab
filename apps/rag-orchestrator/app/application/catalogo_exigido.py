@@ -2,9 +2,14 @@
 
 import logging
 
-from app.application.ports import CatalogoClinico, EvidenceQueryPort
+from app.application.ports import CatalogoClinico, EvidenceQueryPort, FollowUpPort
 from app.domain.catalogo import CatalogVersionMismatchError, exigir_misma_version_de_catalogo
-from app.schemas.generated.models import RagQueryInternalRequest, RagQueryInternalResponse
+from app.schemas.generated.models import (
+    RagFollowUpRequest,
+    RagFollowUpResponse,
+    RagQueryInternalRequest,
+    RagQueryInternalResponse,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -32,3 +37,17 @@ class ConsultaConCatalogoExigido:
             self._catalogo, solicitud.traceId.root, solicitud.catalogVersion
         )
         return await self._interna.consultar(solicitud)
+
+
+class SeguimientoConCatalogoExigido:
+    """Decorador de ``FollowUpPort``: comprueba el catálogo antes de delegar (lo usa el modo ``fake``, como el análisis)."""
+
+    def __init__(self, interna: FollowUpPort, catalogo: CatalogoClinico) -> None:
+        self._interna = interna
+        self._catalogo = catalogo
+
+    async def responder(self, solicitud: RagFollowUpRequest) -> RagFollowUpResponse:
+        exigir_catalogo_de_la_solicitud(
+            self._catalogo, solicitud.traceId.root, solicitud.catalogVersion
+        )
+        return await self._interna.responder(solicitud)

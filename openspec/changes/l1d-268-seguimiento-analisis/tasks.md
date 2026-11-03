@@ -146,7 +146,14 @@ ANALYSIS_FOLLOWUP_MAX=10
 | D5-13 | L1D-268 | Medición del seguimiento (`rag-follow-up@0.1.0`) con modelos locales en la corrida nocturna del día 2: fidelidad, precisión de citas, «sin evidencia», salidas prescriptivas = 0 y RN-24 (`python -m app.evaluation.seguimiento` con proveedor local) | tasks 4.3 |
 ```
 
-- [ ] H-4 Deuda y pendientes de la vuelta 1 del Gate 2 de L1D-268, DIFERIDA -> H-4 (el humano los registra donde corresponda):
+- [ ] H-4 `backlog/sprints/S5-deuda.md`: registrar D5-15 y D5-16 (vuelta 1 del Gate 2), DIFERIDA -> H-4. Bloque literal:
+
+```
+| D5-15 | L1D-268 | `MARCADORES_DE_IDENTIDAD` de `contexto_del_seguimiento.py` duplica los marcadores de `apps/clinical-api/config/pii-masks.json`: añadir un test de paridad entre ambos | design #5 |
+| D5-16 | L1D-268 | P3 del Gate 2: #8 flag `con_reescritura` de `recuperar()`, #9 `_contar_mostradas` con 8 parámetros, #13 patrón `FalloDelLlm` duplicado en los generadores, #14 `seguimiento_propio` / `SeguimientoNoComponible` en bootstrap | design #8, #9, #13, #14 |
+```
+
+- [ ] H-5 Pendientes de clinical-platform de la vuelta 1 del Gate 2 de L1D-268 (D5-15 y D5-16 están en H-4), DIFERIDA -> H-5 (el humano los registra donde corresponda):
   - **D5-15:** test de paridad de marcadores de identidad `rag-orchestrator` ↔ `clinical-api` (`pii-masks.json`) y reenviar `ANALYSIS_FOLLOWUP_MAX` en Compose (infra).
   - **D5-16:** P3 del design: #8 flag `con_reescritura`, #9 `_contar_mostradas`, #10 `calcularDeadline` a `rag-plazo.ts`, #11 `analysisFollowupMax` en `ConfiguracionDelAnalisis`, #12 `Consultador`/`ConsultaSql` y `release(true)` tras un `ROLLBACK` fallido, #13, #14 `SeguimientoNoComponible`, #16 vocabulario.
   - **Menor (contract #3/#4):** la descripción de `AnalysisBasis.maxFollowUps` no dice «y en `tipo_no_habilitado`»; hoy ese análisis no trae el campo. No se tocó `openapi.yaml` (subir el patch por una descripción es decisión del equipo). `sqlEventoClinicoPropio()` de `compartido/estados-de-revision` no existe en `main`: la consulta común vive en `evidence-analysis.repository.ts:sqlEventosClinicosVigentes`.

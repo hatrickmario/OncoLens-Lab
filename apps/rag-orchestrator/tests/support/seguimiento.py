@@ -11,11 +11,12 @@ import json
 from dataclasses import dataclass
 from typing import Any
 
-from app.application.generacion_de_seguimiento import LlmSeguimientoGenerator
 from app.application.seguimiento import ResponderSeguimiento
 from app.bootstrap import crear_app
-from app.domain.atribucion import CLAIM_MAX_WORDS_INICIAL, CLAIMS_MAX_INICIAL, CLAIMS_MIN_INICIAL
+from app.infrastructure.catalogo_clinico.sinonimos import cargar_terminos_por_tipo
+from app.infrastructure.llm.fabrica_local import crear_generador_de_seguimiento_local
 from fastapi.testclient import TestClient
+from tests.support.contract import CATALOGOS
 from tests.support.fakes import GeneradorTraceFijo, RelojFijo, par_de_sesion, settings_de_prueba
 from tests.support.llm_falso import FakeLlmClient
 from tests.support.nli_falso import IMPLICA, NliFalso
@@ -35,10 +36,6 @@ Q_OTRO_CANCER = "¿Qué describe la evidencia sobre cáncer de próstata metast�
 Q_OTRA_PERSONA = "¿Lo descrito aplica al tratamiento que recibió [NOMBRE]?"
 # Solo ``ch-m1-1`` (C1) supera el umbral de los tests (0.30).
 PUNTAJES_DEL_SEGUIMIENTO = {"ch-m1-1": 0.80, "ch-inj-1": 0.05, "ch-m1v0-1": 0.05, "ch-p1-1": 0.05}
-TERMINOS_POR_TIPO = {
-    "mama": frozenset({"mama"}),
-    "prostata": frozenset({"prostata", "cancer de prostata"}),
-}
 
 
 @dataclass
@@ -89,15 +86,14 @@ def crear_entorno_de_seguimiento(
         **cambios,
     )
     llm = llm or FakeLlmClient(escenario)
+    settings = settings_de_prueba()
     responder = ResponderSeguimiento(
         servicio=base.servicio,
-        generador=LlmSeguimientoGenerator(
-            llm,
-            claims_min=CLAIMS_MIN_INICIAL,
-            claims_max=CLAIMS_MAX_INICIAL,
-            claim_max_words=CLAIM_MAX_WORDS_INICIAL,
-        ),
-        terminos_por_tipo=TERMINOS_POR_TIPO,
+        # La fábrica de producción con los valores de Settings; solo el cliente del LLM es el falso.
+        generador=crear_generador_de_seguimiento_local(
+            settings, envolver_cliente=lambda _real: llm
+        ),  # type: ignore[arg-type,return-value]
+        terminos_por_tipo=cargar_terminos_por_tipo(CATALOGOS, settings.enabled_cancer_types),
     )
     app = crear_app(
         settings_de_prueba(),

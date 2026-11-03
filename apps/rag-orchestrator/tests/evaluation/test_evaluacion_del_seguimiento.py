@@ -45,3 +45,19 @@ def test_cargar_casos_rechaza_un_dataset_que_no_es_sintetico(tmp_path):
 
     with pytest.raises(DatasetInvalido):
         cargar_casos(tmp_path)
+
+
+def test_generador_de_la_suite_usa_los_valores_del_config_suite_y_los_tipos_del_catalogo():
+    from app.evaluation.seguimiento import (
+        ClienteGuionado,
+        ajustes_de_la_suite,
+        generador_de_la_suite,
+    )
+
+    config = cargar_config_suite(CONFIG)
+    ajustes = ajustes_de_la_suite(config)
+
+    generador = generador_de_la_suite(ajustes, ClienteGuionado({}))
+
+    assert generador._claim_max_words == config.umbrales.claim_max_words
+    assert set(ajustes.enabled_cancer_types) >= {"mama", "prostata"}

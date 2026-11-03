@@ -120,6 +120,11 @@ compartir (Extract Method), sin duplicar la regla. Router `app/api/rag_follow_up
 *Descartadas:* clasificador con el LLM como única señal (no determinista, no testeable sin modelo); umbral de similitud con
 la memoria (mide relevancia, no pertinencia; RN-03).
 
+**Estados de salida (vuelta 1 del Gate 2).** `sin_evidencia` también cubre «ninguna afirmación pasó la validación» (citas,
+NLI o RN-23): `answer` y `citedSources` vacíos, `topRelevanceScore = null` y `omittedClaims` con lo omitido (> 0). Un contexto sin
+`diagnosis` se rechaza con `422 CUERPO_INVALIDO` (el contrato solo admite ese 422 además de `TIPO_NO_HABILITADO`). El prompt
+(`rag-follow-up@0.1.1`) delimita la memoria con «[inicio del contexto no citable]» y «[fin del contexto no citable]».
+
 ### D8 · Memoria no citable (RN-24) por construcción
 
 El prompt lleva la memoria en un bloque rotulado («Contexto del análisis previo, no es evidencia; no lo cites») distinto del
@@ -344,7 +349,7 @@ el PR; los turnos persistidos quedan (tabla inmutable).
 
 ## Open Questions
 
-**Pendientes del humano (vuelta 1 del Gate 2, no decididos en la implementación):** ¿un turno `fuera_de_contexto` cuenta en el límite de 10 (hoy sí)?; ¿`maxFollowUps` de la Base o la configuración vigente en el `409` (hoy la vigente)?; `consulta_equivalente` ignora el filtro de fuentes del análisis original; la evolución posterior usa `event_date >` estricto. Ver `tasks.md` H-4.
+**Pendientes del humano (vuelta 1 del Gate 2, no decididos en la implementación):** ¿un turno `fuera_de_contexto` cuenta en el límite de 10 (hoy sí)?; ¿`maxFollowUps` de la Base o la configuración vigente en el `409` (hoy la vigente)?; `consulta_equivalente` ignora el filtro de fuentes del análisis original; la evolución posterior usa `event_date >` estricto. Ver `tasks.md` H-5.
 
 
 Ninguna abierta. Resueltas en el Gate 1 (usuario, 2026-11-03):

@@ -30,7 +30,7 @@ def test_plantilla_de_seguimiento_no_contiene_terminos_de_nivel_a_ni_b_cuando_se
 
 
 def test_version_del_prompt_de_seguimiento_es_propia_cuando_se_compara_con_la_del_analisis():
-    assert VERSION_DEL_PROMPT_DE_SEGUIMIENTO == "rag-follow-up@0.1.0"
+    assert VERSION_DEL_PROMPT_DE_SEGUIMIENTO == "rag-follow-up@0.1.1"
 
 
 def test_prompt_de_seguimiento_rotula_la_memoria_y_omite_el_seudonimo_cuando_se_arma_con_el_ejemplo_del_contrato():
