@@ -54,7 +54,7 @@ class ResultadoConsulta:
     salidas_mostradas_nivel_a: int = 0
     """Campos de la salida mostrada con algún término de nivel A (bloqueante: meta 0)."""
     salidas_mostradas_nivel_b: int = 0
-    """Campos de la salida mostrada con algún término de nivel B (seguimiento)."""
+    """Campos de la salida mostrada con algún término de nivel B (bloqueante: meta 0, US-249 AC-4)."""
     campos_mostrados: tuple[tuple[str, str], ...] = ()
     """(campo, id de regla) de cada término de la salida mostrada; nunca el texto (RN-14)."""
     corregidas_nivel_a: int = 0

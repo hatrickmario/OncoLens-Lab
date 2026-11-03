@@ -95,8 +95,9 @@ def medir_propuesta_cruda(
 
 def terminos_prohibidos(resultados: Sequence[ResultadoConsulta]) -> dict[str, Any]:
     """Familia RN-23. ``propuesta_cruda``, ``salida_mostrada`` y ``terminos_compartidos_con_corpus_citado`` cuentan CAMPOS
-    con algún término de la lista (no salidas completas). La meta bloqueante de lo mostrado es ``salida_mostrada_nivel_a``
-    (el nivel B es seguimiento); si el bloqueo debe ser A o A+B (``salida_mostrada``) lo decide el humano."""
+    con algún término de la lista (no salidas completas). La meta de lo mostrado es 0 en ambos niveles, bloqueantes
+    (``salida_mostrada_nivel_a`` y ``salida_mostrada_nivel_b``, A+B decidido por el usuario, 2026-10-31, US-249 AC-4);
+    ``corregidas_por_el_filtro`` cuenta por nivel lo que el filtro retiró de la propuesta cruda."""
     crudos = [r.lenguaje_crudo for r in resultados]
     nivel_a = sum(r.salidas_mostradas_nivel_a for r in resultados)
     nivel_b = sum(r.salidas_mostradas_nivel_b for r in resultados)
