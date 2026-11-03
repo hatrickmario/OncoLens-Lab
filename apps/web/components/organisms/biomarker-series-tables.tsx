@@ -2,27 +2,18 @@ import type { CaseView } from '../../../../packages/api-contracts/src/types/clin
 import { valorConUnidad } from '../../lib/caso/presentacion';
 import { mensajes } from '../../lib/mensajes';
 import { FechaRelativa } from '../atoms/fecha-relativa';
+import { CELDA, EncabezadoDeTabla } from '../molecules/encabezado-de-tabla';
 import { SeccionDeFicha } from '../molecules/fila-de-ficha';
 import { ProcedenciaDelDato } from '../molecules/procedencia-del-dato';
 
 type Serie = CaseView['biomarkerSeries'][number];
-
-const CELDA = 'border-border border-b px-3 py-2 text-left align-top';
 
 function TablaDeSerie({ serie, hoy }: { serie: Serie; hoy: string }) {
   const c = mensajes().caso.columnas;
   return (
     <table className="mb-4 w-full border-collapse">
       <caption className="mb-1 text-left font-semibold">{serie.name}</caption>
-      <thead className="bg-surface-alt">
-        <tr>
-          {[c.fecha, c.valor, c.origen].map((columna) => (
-            <th key={columna} scope="col" className={CELDA}>
-              {columna}
-            </th>
-          ))}
-        </tr>
-      </thead>
+      <EncabezadoDeTabla columnas={[c.fecha, c.valor, c.origen]} />
       <tbody>
         {serie.points.map((p) => (
           <tr key={`${p.performedAt}-${p.value}`}>

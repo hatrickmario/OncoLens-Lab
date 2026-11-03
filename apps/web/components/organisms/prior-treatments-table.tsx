@@ -1,18 +1,12 @@
 import type { CaseView } from '../../../../packages/api-contracts/src/types/clinical-api';
 import { rotuloOValor } from '../../lib/caso/presentacion';
 import { mensajes } from '../../lib/mensajes';
-import { FechaRelativa } from '../atoms/fecha-relativa';
+import { FechaRelativaOpcional } from '../atoms/fecha-relativa';
+import { CELDA, EncabezadoDeTabla } from '../molecules/encabezado-de-tabla';
 import { SeccionDeFicha } from '../molecules/fila-de-ficha';
 import { ProcedenciaDelDato } from '../molecules/procedencia-del-dato';
 
 type Tratamiento = CaseView['priorTreatments'][number];
-
-const CELDA = 'border-border border-b px-3 py-2 text-left align-top';
-
-function Fecha({ fecha, hoy }: { fecha: string | null; hoy: string }) {
-  const { noRegistrado } = mensajes().ficha;
-  return fecha === null ? <>{noRegistrado}</> : <FechaRelativa fecha={fecha} hoy={hoy} />;
-}
 
 function FilaDeTratamiento({ t, hoy }: { t: Tratamiento; hoy: string }) {
   const { caso, ficha } = mensajes();
@@ -27,10 +21,10 @@ function FilaDeTratamiento({ t, hoy }: { t: Tratamiento; hoy: string }) {
         )}
       </th>
       <td className={CELDA}>
-        <Fecha fecha={t.startedAt} hoy={hoy} />
+        <FechaRelativaOpcional fecha={t.startedAt} hoy={hoy} />
       </td>
       <td className={CELDA}>
-        {t.ongoing ? caso.enCurso : <Fecha fecha={t.endedAt} hoy={hoy} />}
+        {t.ongoing ? caso.enCurso : <FechaRelativaOpcional fecha={t.endedAt} hoy={hoy} />}
         {!t.ongoing && (
           <span className="text-text-muted block text-sm">
             {rotuloOValor(caso.motivosDeFin, t.endReason)}
@@ -60,15 +54,9 @@ export function PriorTreatmentsTable({
         <p className="m-0">{caso.sinDatos}</p>
       ) : (
         <table className="w-full border-collapse">
-          <thead className="bg-surface-alt">
-            <tr>
-              {[c.linea, c.contexto, c.esquema, c.inicio, c.fin, c.origen].map((columna) => (
-                <th key={columna} scope="col" className={CELDA}>
-                  {columna}
-                </th>
-              ))}
-            </tr>
-          </thead>
+          <EncabezadoDeTabla
+            columnas={[c.linea, c.contexto, c.esquema, c.inicio, c.fin, c.origen]}
+          />
           <tbody>
             {tratamientos.map((t) => (
               <FilaDeTratamiento key={`${t.regimenName}-${t.startedAt}`} t={t} hoy={hoy} />

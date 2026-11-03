@@ -2,9 +2,8 @@ import type { Biomarker } from '../../../../packages/api-contracts/src/types/cli
 import { textoDeConfianza, textoDeOrigen } from '../../lib/ficha/presentacion';
 import { mensajes, rellenar } from '../../lib/mensajes';
 import { FechaRelativa } from '../atoms/fecha-relativa';
+import { CELDA, EncabezadoDeTabla } from '../molecules/encabezado-de-tabla';
 import { SeccionDeFicha } from '../molecules/fila-de-ficha';
-
-const CELDA = 'border-border border-b px-3 py-2 text-left align-top';
 
 function FilaDeBiomarcador({ b, hoy }: { b: Biomarker; hoy: string }) {
   const { biomarcadores, significancia, noRegistrado } = mensajes().ficha;
@@ -60,15 +59,7 @@ export function RecentBiomarkersTable({
         <p className="m-0">{noRegistrado}</p>
       ) : (
         <table className="w-full border-collapse">
-          <thead className="bg-surface-alt">
-            <tr>
-              {columnas.map((columna) => (
-                <th key={columna} scope="col" className={CELDA}>
-                  {columna}
-                </th>
-              ))}
-            </tr>
-          </thead>
+          <EncabezadoDeTabla columnas={columnas} />
           <tbody>
             {biomarcadores.map((b) => (
               <FilaDeBiomarcador key={b.id} b={b} hoy={hoy} />
