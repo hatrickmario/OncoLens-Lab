@@ -53,34 +53,20 @@
       },
       {
         "dataRef": "r3",
-        "biomarkerName": "Ki-67",
-        "value": "20%",
-        "resultType": "cuantitativo",
-        "clinicalSignificance": "relevante",
-        "monthsAgo": 1,
-        "provenance": {
-          "entryMethod": "seed",
-          "extractionConfidence": "n_a",
-          "reviewStatus": "requiere_revision",
-          "conflict": false
-        }
-      },
-      {
-        "dataRef": "r6",
         "biomarkerName": "RE",
-        "value": "Positivo",
+        "value": "Positivo (80%)",
         "resultType": "cualitativo",
         "clinicalSignificance": "relevante",
         "monthsAgo": 1,
         "provenance": {
           "entryMethod": "seed",
           "extractionConfidence": "n_a",
-          "reviewStatus": "requiere_revision",
-          "conflict": true
+          "reviewStatus": "verificado",
+          "conflict": false
         }
       },
       {
-        "dataRef": "r7",
+        "dataRef": "r4",
         "biomarkerName": "RE",
         "value": "Negativo",
         "resultType": "cualitativo",
@@ -92,45 +78,27 @@
           "reviewStatus": "requiere_revision",
           "conflict": true
         }
+      },
+      {
+        "dataRef": "r5",
+        "biomarkerName": "Ki-67",
+        "value": "20 %",
+        "resultType": "cuantitativo",
+        "clinicalSignificance": "relevante",
+        "monthsAgo": 1,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "requiere_revision",
+          "conflict": false
+        }
       }
     ],
     "clinicalNotes": [],
-    "currentLine": 2,
+    "currentLine": null,
     "attributes": [],
-    "priorTreatments": [
-      {
-        "dataRef": "r5",
-        "lineNumber": 1,
-        "setting": "adyuvante",
-        "regimenName": "Esquema previo de prueba",
-        "atcCodes": [
-          "L01XC03"
-        ],
-        "monthsSinceStart": 6,
-        "monthsSinceEnd": 3,
-        "endReason": "completado",
-        "provenance": {
-          "entryMethod": "seed",
-          "extractionConfidence": "n_a",
-          "reviewStatus": "verificado",
-          "conflict": false
-        }
-      }
-    ],
-    "events": [
-      {
-        "dataRef": "r4",
-        "eventType": "diagnostico",
-        "monthsAgo": 1,
-        "description": "Carcinoma ductal infiltrante de mama",
-        "provenance": {
-          "entryMethod": "seed",
-          "extractionConfidence": "n_a",
-          "reviewStatus": "verificado",
-          "conflict": false
-        }
-      }
-    ],
+    "priorTreatments": [],
+    "events": [],
     "biomarkerTrends": [],
     "missingCriticalData": [
       "estado_menopausico"

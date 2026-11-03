@@ -3,7 +3,7 @@
   "synthesis": {
     "agreements": [
       {
-        "text": "Las fuentes recuperadas describen la adición de terapia anti-HER2 a la quimioterapia adyuvante en tumores HER2 positivos.",
+        "text": "Las fuentes recuperadas describen la quimioterapia adyuvante en una población de tumores HER2 negativos.",
         "citedSources": [
           {
             "title": "Breast Cancer Treatment (PDQ®)–Health Professional Version",
@@ -23,7 +23,7 @@
             "sourceUrl": "https://corpus.oncolens.test/documentos/CDR0000062787",
             "possiblyOutdated": false,
             "newerVersionAvailable": false,
-            "chunkTextSnapshot": "Texto sintético de ejemplo: the addition of anti-HER2 therapy to adjuvant chemotherapy is described for HER2-positive tumors in a study population with stage I–III disease, including both premenopausal and postmenopausal patients.",
+            "chunkTextSnapshot": "Texto sintético de ejemplo: the study population included only HER2-negative (IHC 2+, ISH not amplified) early breast cancer treated with adjuvant chemotherapy.",
             "chunkId": "chunk_88231"
           }
         ],
@@ -46,7 +46,7 @@
         {
           "criterion": "estado_her2",
           "patientValue": "3+ (IHQ)",
-          "studyPopulationValue": "negativo",
+          "studyPopulationValue": "only HER2-negative (IHC 2+, ISH not amplified)",
           "status": "no_coincide",
           "unknownReason": null,
           "isExclusionary": true,
@@ -70,13 +70,13 @@
               "sourceUrl": "https://corpus.oncolens.test/documentos/CDR0000062787",
               "possiblyOutdated": false,
               "newerVersionAvailable": false,
-              "chunkTextSnapshot": "Texto sintético de ejemplo: the addition of anti-HER2 therapy to adjuvant chemotherapy is described for HER2-positive tumors in a study population with stage I–III disease, including both premenopausal and postmenopausal patients.",
+              "chunkTextSnapshot": "Texto sintético de ejemplo: the study population included only HER2-negative (IHC 2+, ISH not amplified) early breast cancer treated with adjuvant chemotherapy.",
               "chunkId": "chunk_88231"
             }
           ],
           "studyPopulationValues": [
             {
-              "value": "negativo",
+              "value": "only HER2-negative (IHC 2+, ISH not amplified)",
               "chunkId": "chunk_88231",
               "scope": "elegibilidad"
             }
@@ -85,117 +85,87 @@
         },
         {
           "criterion": "receptores_hormonales",
-          "patientValue": "Positivo",
-          "studyPopulationValue": "positivo",
-          "status": "coincide",
-          "unknownReason": null,
-          "isExclusionary": false,
-          "patientDataWarning": "en_conflicto",
-          "citedSources": [
-            {
-              "title": "Breast Cancer Treatment (PDQ®)–Health Professional Version",
-              "sourceName": "NCI PDQ",
-              "externalId": "CDR0000062787",
-              "language": "en",
-              "sourceType": "guideline",
-              "licenseClass": "dominio_publico",
-              "studyDesign": "guia",
-              "trialPhase": null,
-              "primaryEndpoint": null,
-              "sampleSize": null,
-              "publishedAt": "2024-03-15",
-              "lastUpdatedAt": "2026-05-01",
-              "guidelineVersion": "2026-05",
-              "authors": null,
-              "sourceUrl": "https://corpus.oncolens.test/documentos/CDR0000062787",
-              "possiblyOutdated": false,
-              "newerVersionAvailable": false,
-              "chunkTextSnapshot": "Texto sintético de ejemplo: the addition of anti-HER2 therapy to adjuvant chemotherapy is described for HER2-positive tumors in a study population with stage I–III disease, including both premenopausal and postmenopausal patients.",
-              "chunkId": "chunk_88231"
-            }
-          ],
-          "studyPopulationValues": [
-            {
-              "value": "positivo",
-              "chunkId": "chunk_88231",
-              "scope": "elegibilidad"
-            }
-          ],
-          "partialReason": null
-        },
-        {
-          "criterion": "estado_menopausico",
           "patientValue": null,
-          "studyPopulationValue": "ambos",
+          "studyPopulationValue": null,
           "status": "desconocido",
           "unknownReason": "falta_en_paciente",
           "isExclusionary": false,
           "patientDataWarning": "faltante",
-          "citedSources": [
-            {
-              "title": "Breast Cancer Treatment (PDQ®)–Health Professional Version",
-              "sourceName": "NCI PDQ",
-              "externalId": "CDR0000062787",
-              "language": "en",
-              "sourceType": "guideline",
-              "licenseClass": "dominio_publico",
-              "studyDesign": "guia",
-              "trialPhase": null,
-              "primaryEndpoint": null,
-              "sampleSize": null,
-              "publishedAt": "2024-03-15",
-              "lastUpdatedAt": "2026-05-01",
-              "guidelineVersion": "2026-05",
-              "authors": null,
-              "sourceUrl": "https://corpus.oncolens.test/documentos/CDR0000062787",
-              "possiblyOutdated": false,
-              "newerVersionAvailable": false,
-              "chunkTextSnapshot": "Texto sintético de ejemplo: the addition of anti-HER2 therapy to adjuvant chemotherapy is described for HER2-positive tumors in a study population with stage I–III disease, including both premenopausal and postmenopausal patients.",
-              "chunkId": "chunk_88231"
-            }
-          ],
-          "studyPopulationValues": [
-            {
-              "value": "ambos",
-              "chunkId": "chunk_88231",
-              "scope": "elegibilidad"
-            }
-          ],
-          "partialReason": null
+          "citedSources": []
+        },
+        {
+          "criterion": "estadio",
+          "patientValue": "IIA",
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "no_reportado_por_fuente",
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "citedSources": []
+        },
+        {
+          "criterion": "linea_tratamiento",
+          "patientValue": null,
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "falta_en_paciente",
+          "isExclusionary": false,
+          "patientDataWarning": "faltante",
+          "citedSources": []
+        },
+        {
+          "criterion": "estado_menopausico",
+          "patientValue": null,
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "falta_en_paciente",
+          "isExclusionary": false,
+          "patientDataWarning": "faltante",
+          "citedSources": []
+        },
+        {
+          "criterion": "ecog",
+          "patientValue": "1",
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "no_reportado_por_fuente",
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "citedSources": []
         }
       ],
       "summary": {
-        "coincide": 1,
+        "coincide": 0,
         "parcial": 0,
         "noCoincide": 1,
-        "desconocido": 1
+        "desconocido": 5
       },
       "populationNotComparable": true
     }
   ],
   "evidenceOptions": [
     {
-      "option": "Quimioterapia combinada con terapia dirigida anti-HER2",
-      "rationale": "La evidencia recuperada describe la adición de terapia anti-HER2 a la quimioterapia adyuvante en tumores HER2 positivos.",
+      "option": "Quimioterapia adyuvante descrita en una población HER2 negativa",
+      "rationale": "La evidencia recuperada describe el esquema adyuvante en una población de tumores HER2 negativos.",
       "details": [
         "Texto sintético de ejemplo: el detalle describe, según los fragmentos recuperados, el diseño del estudio y la población incluida.",
         "Texto sintético de ejemplo: el detalle describe los resultados que reporta la fuente para el grupo estudiado."
       ],
       "applicabilitySummary": {
-        "coincide": 1,
+        "coincide": 0,
         "parcial": 0,
         "noCoincide": 1,
-        "desconocido": 1
+        "desconocido": 5
       },
       "populationNotComparable": true,
       "perSource": [
         {
           "externalId": "CDR0000062787",
           "summary": {
-            "coincide": 1,
+            "coincide": 0,
             "parcial": 0,
             "noCoincide": 1,
-            "desconocido": 1
+            "desconocido": 5
           },
           "populationNotComparable": true
         }
@@ -223,7 +193,7 @@
           "sourceUrl": "https://corpus.oncolens.test/documentos/CDR0000062787",
           "possiblyOutdated": false,
           "newerVersionAvailable": false,
-          "chunkTextSnapshot": "Texto sintético de ejemplo: the addition of anti-HER2 therapy to adjuvant chemotherapy is described for HER2-positive tumors in a study population with stage I–III disease, including both premenopausal and postmenopausal patients.",
+          "chunkTextSnapshot": "Texto sintético de ejemplo: the study population included only HER2-negative (IHC 2+, ISH not amplified) early breast cancer treated with adjuvant chemotherapy.",
           "chunkId": "chunk_88231"
         }
       ]
@@ -232,11 +202,23 @@
   "discardedOptions": [],
   "limitations": [
     {
+      "text": "Falta el estado menopáusico del paciente: no se pudo comparar ese criterio con la fuente.",
+      "origin": "estructural"
+    },
+    {
+      "text": "El Ki-67 (20 %) y un resultado de receptor de estrógeno están pendientes de revisión, y dos resultados de receptor de estrógeno están en conflicto.",
+      "origin": "estructural"
+    },
+    {
       "text": "Síntesis basada en una sola fuente.",
       "origin": "estructural"
     }
   ],
-  "assumptions": [],
+  "assumptions": [
+    {
+      "text": "Se asume que el resultado de HER2 3+ registrado corresponde al tumor actual."
+    }
+  ],
   "retrievalStats": {
     "retrieved": 40,
     "aboveThreshold": 1
