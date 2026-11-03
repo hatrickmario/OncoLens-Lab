@@ -11,7 +11,7 @@
 - [x] 2.3 Test de aceptación «la ficha, la vista de caso y el checklist responden 200 con sus avisos cuando el paciente es FX-T3-a [US-071 AC-4]» en `tests/integration/pacientes/lecturas-con-avisos.test.ts`, con verificación del proveedor · TDD estricto (caracterización si pasa) · commit `test(L1D-196)` · evidencia: caracterización; mutación (404 en la vista de caso si hay faltantes) → rojo `expected [200, 404, 200]`
 - [x] 2.4 Si 2.2 o 2.3 fallan en la aserción: corrección mínima en el módulo que bloquea, con sus unitarios, hasta verde · TDD estricto · commit `feat(L1D-196)`; si pasan, marcar con la evidencia de caracterización · evidencia: 2.2 y 2.3 pasan sin corrección; no hubo código de producto
 - [x] 2.5 Seed: campos opcionales `estadoDeRevision` y `enConflictoCon` en `BiomarcadorSemilla` y paciente semilla (f) = FX-T3-a en `prisma/seed/pacientes/f.ts` (D4); pacientes (a)…(e) sin cambios · test después · verificación: test de integración del seed (`tests/integration/seed/`) que comprueba Ki-67 `requiere_revision`, el par RE con `conflicts_with_id` y la ausencia de `estado_menopausico`
-- [ ] 2.6 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-196)`
+- [x] 2.6 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-196)` · hecho: Extract `prisma/seed/sembrar.ts:idDelBiomarcadorEnConflicto` (la regla de `conflicts_with_id` en un solo lugar) y Extract del índice `pacientes/indice.ts`; integración de seed y pacientes en verde antes y después
 
 ## 3. frontend
 
@@ -21,7 +21,7 @@
 - [x] 3.4 E2E «llega al resultado sin ningún dialog ni alertdialog cuando recorre login, ficha, vista de caso («Analizar la evidencia para este caso»), faltantes y panel («Analizar evidencia») con FX-T3-a [US-071 AC-5]» (paso «faltantes» en la columna de `l1d-96`; si se recortó, en el aviso del panel) · test del AC primero · commit `test(L1D-196)` · evidencia: caracterización; mutación (botón deshabilitado con aviso) → rojo
 - [x] 3.5 Si 3.2–3.4 fallan en la aserción: corrección mínima en el componente que bloquea, con su test de componente · commit `feat(L1D-196)`; si pasan, anotar la ejecución como evidencia · evidencia: 3.2–3.4 pasan sin corrección; no hubo código de producto
 - [x] 3.6 Loop visual (visual-check) solo si 3.5 tocó UI: estados, consola sin errores ni violaciones de CSP, red solo /api/* sin PII en URLs, accesibilidad y teclado, rendimiento y capturas a 375 y 1280 px; cada fallo se convierte primero en un test en rojo · no aplica: 3.5 no tocó UI; sin cambios de componentes
-- [ ] 3.7 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-196)`
+- [x] 3.7 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-196)` · hecho: sin cambios (el frontend solo añadió E2E y soporte; nada que extraer ni inlinar)
 
 ## 4. Cierre
 

@@ -6,7 +6,13 @@ import { columnasDeGradacion } from './columnas-de-gradacion.js';
 import { derivarTextoGrade } from './grade.js';
 import { identidadSinteticaDe } from './identidades.js';
 import { PACIENTES_SEMILLA } from './pacientes/indice.js';
-import type { DiagnosticoSemilla, GradacionSemilla, PacienteSemilla } from './pacientes/tipos.js';
+import type {
+  BiomarcadorSemilla,
+  DiagnosticoSemilla,
+  ExamenSemilla,
+  GradacionSemilla,
+  PacienteSemilla,
+} from './pacientes/tipos.js';
 import type { ClavesDeIdentidad } from '../../src/infrastructure/crypto/claves-de-identidad.js';
 import type { RolDeUsuario } from '../../src/modules/auth/auth.repository.js';
 import { crearServicioDeIdentidad } from '../../src/modules/patients/identity.module.js';
@@ -249,6 +255,16 @@ async function sembrarGradacionDeReferencia(
   });
 }
 
+/** `conflicts_with_id` del biomarcador (RN-08): el id sembrado del otro biomarcador del mismo examen, o `null` sin conflicto. */
+function idDelBiomarcadorEnConflicto(
+  contexto: ContextoDePaciente,
+  examen: ExamenSemilla,
+  biomarcador: BiomarcadorSemilla,
+): string | null {
+  if (biomarcador.enConflictoCon === undefined) return null;
+  return idSembrado(`${contexto.paciente.clave}/${examen.clave}/${biomarcador.enConflictoCon}`);
+}
+
 async function sembrarExamenes(siembra: Siembra, contexto: ContextoDePaciente): Promise<void> {
   for (const examen of contexto.paciente.examenes) {
     const examenId = idSembrado(`${contexto.paciente.clave}/${examen.clave}`);
@@ -286,12 +302,7 @@ async function sembrarExamenes(siembra: Siembra, contexto: ContextoDePaciente): 
         extraction_score: null,
         extraction_confidence: PROCEDENCIA_DEL_SEED.extraction_confidence,
         review_status: biomarcador.estadoDeRevision ?? PROCEDENCIA_DEL_SEED.review_status,
-        conflicts_with_id:
-          biomarcador.enConflictoCon === undefined
-            ? null
-            : idSembrado(
-                `${contexto.paciente.clave}/${examen.clave}/${biomarcador.enConflictoCon}`,
-              ),
+        conflicts_with_id: idDelBiomarcadorEnConflicto(contexto, examen, biomarcador),
         source_span: '{}',
         reviewed_by: null,
         reviewed_at: null,
