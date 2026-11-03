@@ -280,7 +280,7 @@ components:
   `reemplazado`. Dos consumidores (biomarcador y nota) → componente compartido, sin patrón adicional.
 - **Nuevo** `NotasClinicasDeFicha` (organismo RSC) con `FilaDeNotaClinica` y `FormularioDeCorreccionDeNota`
   (molécula cliente: tipo, texto, aviso fijo de nombres encima del campo).
-- `AvisoAnalisisAnteriores` (átomo): texto no bloqueante tras guardar (RN-26).
+- `AvisoAnalisisAnteriores` (átomo): texto no bloqueante tras corregir un **biomarcador** (RN-26); una nota corregida no lo muestra (las notas no entran al análisis en el S5).
 - Revalidación del RSC tras guardar (`router.refresh()`); sin provider ni custom hook nuevo (un solo uso de cada
   estado). Ningún componente supera 100 líneas; `admin` no ve la acción (vista `PatientAdminSummary` sin clínica) y el
   paciente egresado la ve deshabilitada con el texto de RN-17.
