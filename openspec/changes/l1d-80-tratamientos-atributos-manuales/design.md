@@ -11,10 +11,11 @@ y los diálogos S5-03 c y d. La normalización final es de `ReconciliationServic
 ## Decisiones
 
 - **D1 · Dos módulos, una guarda común.** `prior-treatments` y `clinical-attributes` (Controller → Service →
-  Repository). La regla de RN-17 y la elección del episodio vigente viven una sola vez en
-  `src/modules/compartido/registro-manual.ts` (`exigirPacienteActivo()`, `episodioVigente()`), compartida con
-  US-110 (`l1d-90`). Si `l1d-90` llega antes, se reutiliza la suya. *Descartado:* comprobar RN-17 en cada controller
-  (dos dueños de la regla).
+  Repository). La regla de RN-17 (`exigirPacienteQueAdmiteRegistros()`) y el bloqueo del paciente ya viven en
+  `src/modules/compartido/paciente-activo.ts` (L1D-90/309) y se reutilizan; el episodio del registro y el tipo de
+  cáncer del diagnóstico vigente se leen una sola vez en `compartido/contexto-de-registro.ts`, y la traducción HTTP
+  común de los dos `POST` en `compartido/registro-http.ts` (implementado así en L1D-80). *Descartado:* comprobar
+  RN-17 en cada controller (dos dueños de la regla).
 - **D2 · Orden de comprobaciones** (una sola vez cada una): sesión (`401`) → RBAC (`403`, `admin` no tiene
   `clinical:write` ni `clinical:read`) → `patientId` UUID y paciente existente (`404`, sin distinguir mal formado) →
   cuerpo Zod (`422 CUERPO_INVALIDO`) → paciente egresado (`422 PACIENTE_EGRESADO`) → catálogo

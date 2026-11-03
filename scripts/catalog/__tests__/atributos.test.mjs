@@ -14,7 +14,10 @@ afterEach(limpiarCopias);
 
 const atributosReales = () =>
   JSON.parse(readFileSync(path.join(CATALOGO, 'atributos.json'), 'utf8')).keys;
-const valoresDe = (clave) => atributosReales().find((k) => k.key === clave)?.values.map((v) => v.value);
+const valoresDe = (clave) =>
+  atributosReales()
+    .find((k) => k.key === clave)
+    ?.values.map((v) => v.value);
 
 describe('catalog:validate · atributos.json con valores permitidos (L1D-80, [US-094 AC-3])', () => {
   it(
