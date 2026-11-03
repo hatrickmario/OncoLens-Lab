@@ -27,3 +27,22 @@ export async function analizar(pregunta: string = PREGUNTA_DE_PRUEBA) {
   await usuario.click(screen.getByRole('button', { name: evidence.formulario.analizar }));
   return usuario;
 }
+
+export const { followUp } = mensajes();
+
+/** Muestra un análisis `con_evidencia` en el panel y espera a que aparezca el hilo de seguimiento. */
+export async function analizarYAbrirHilo(
+  bff: { responder: (r: { status: number; cuerpo: object }) => void },
+  analisis: object,
+) {
+  bff.responder({ status: 200, cuerpo: analisis });
+  const usuario = await analizar();
+  await screen.findByRole('heading', { name: followUp.titulo });
+  return usuario;
+}
+
+/** Escribe la pregunta de seguimiento y pulsa «Preguntar». */
+export async function preguntar(usuario: ReturnType<typeof userEvent.setup>, texto: string) {
+  await usuario.type(screen.getByLabelText(followUp.campo), texto);
+  await usuario.click(screen.getByRole('button', { name: followUp.preguntar }));
+}
