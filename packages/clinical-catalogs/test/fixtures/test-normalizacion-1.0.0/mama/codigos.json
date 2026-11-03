@@ -1,0 +1,44 @@
+{
+  "entradas": [
+    {
+      "terminoCanonico": "mama",
+      "estandar": "cie10",
+      "codigo": "C50.9",
+      "nombreOficial": "Tumor maligno de la mama, parte no especificada",
+      "etiquetaEs": "Cáncer de mama",
+      "versionFuente": "CIE-10 de test"
+    },
+    {
+      "terminoCanonico": "HER2",
+      "estandar": "loinc",
+      "codigo": "LOINC-T-HER2",
+      "nombreOficial": "HER2 de test",
+      "etiquetaEs": "HER2",
+      "versionFuente": "LOINC ficticio de test"
+    },
+    {
+      "terminoCanonico": "RE",
+      "estandar": "loinc",
+      "codigo": "LOINC-T-RE",
+      "nombreOficial": "Receptor de estrógeno de test",
+      "etiquetaEs": "Receptores de estrógeno",
+      "versionFuente": "LOINC ficticio de test"
+    },
+    {
+      "terminoCanonico": "Ki-67",
+      "estandar": "loinc",
+      "codigo": "LOINC-T-KI67",
+      "nombreOficial": "Ki-67 de test",
+      "etiquetaEs": "Índice de proliferación Ki-67",
+      "versionFuente": "LOINC ficticio de test"
+    },
+    {
+      "terminoCanonico": "biopsia_de_mama",
+      "estandar": "cups",
+      "codigo": "CUPS-T-BIOPSIA",
+      "nombreOficial": "Biopsia de mama de test",
+      "etiquetaEs": "Biopsia de mama",
+      "versionFuente": "CUPS ficticio de test"
+    }
+  ]
+}

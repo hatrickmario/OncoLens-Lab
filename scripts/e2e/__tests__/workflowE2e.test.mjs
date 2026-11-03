@@ -15,7 +15,8 @@ const indiceDe = (patron) => pasos.findIndex((paso) => patron.test(paso.run ?? p
 
 describe('e2e.yml', () => {
   it('es un workflow aparte: ningún job suyo está en el needs de ci-ok [ARR-02 AC-1]', () => {
-    expect(Object.keys(e2e.jobs)).toEqual(['e2e']);
+    // ARR-11 (D-12.1): el workflow gana el job `cambios` (el mismo detector que ci.yml) que decide si `e2e` se omite.
+    expect(Object.keys(e2e.jobs)).toEqual(['cambios', 'e2e']);
     expect(ci.jobs['ci-ok'].needs).not.toContain('e2e');
     expect(Object.keys(ci.jobs)).not.toContain('e2e');
   });

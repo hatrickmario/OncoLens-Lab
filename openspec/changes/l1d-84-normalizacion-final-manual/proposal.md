@@ -28,7 +28,7 @@ ruta y a la invariante del catálogo.
   La decisión devuelve además la `catalogVersion` montada (AC-4).
 - `clinical-api`: puerto `CatalogoTerminologico` y su adaptador de lectura de `codigos.json` y `sinonimos.json` por tipo
   de cáncer (validado ya en el arranque por `exigirCatalogoValido`).
-- `packages/clinical-catalogs`: fixture de test **FX-01b-b** `test/fixtures/test-s2-1.0.0/` (HER2 `LOINC-T-HER2` con
+- `packages/clinical-catalogs`: fixture de test **FX-01b-b** `test/fixtures/test-normalizacion-1.0.0/` (HER2 `LOINC-T-HER2` con
   sinónimos "c-erbB-2", "ERBB2", "HER-2/neu"; RE `LOINC-T-RE`; PSA `LOINC-T-PSA`; Ki-67 `LOINC-T-KI67`; CIE-10 `C50.9` y
   `C61`; leuprorelina con el código ATC real `L02AE02`; un procedimiento CUPS de test). Datos sintéticos y códigos
   ficticios salvo CIE-10 y ATC: el patrón de `atcCodes` del contrato de `rag-orchestrator` no admite `ATC-T-*` y no se

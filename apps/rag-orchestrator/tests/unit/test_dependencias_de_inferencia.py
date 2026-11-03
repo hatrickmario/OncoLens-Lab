@@ -33,9 +33,14 @@ def test_cada_requisito_de_ejecucion_tiene_version_exacta() -> None:
     assert sin_fijar == []
 
 
-def test_transformers_esta_prohibido_en_el_runtime_y_solo_vive_en_la_medicion() -> None:
-    assert "transformers" not in _requisitos("requirements.txt")
-    assert "transformers" in _requisitos("requirements-eval.txt")
+def test_transformers_solo_esta_en_requirements_export_txt_y_no_en_el_runtime_ni_en_la_medicion() -> (
+    None
+):
+    """D-11: torch y transformers (exportación manual a ONNX) nunca entran en la CI ni en la imagen."""
+    for paquete in ("transformers", "torch"):
+        assert paquete in _requisitos("requirements-export.txt")
+        assert paquete not in _requisitos("requirements.txt")
+        assert paquete not in _requisitos("requirements-eval.txt")
 
 
 def test_huggingface_hub_solo_figura_como_transitiva_fijada_de_tokenizers() -> None:

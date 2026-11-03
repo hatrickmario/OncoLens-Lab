@@ -2,6 +2,7 @@
 # Versiones fijadas a las resueltas en el contenedor de medición del 2026-10-16. Licencia entre paréntesis.
 # No se usan FlagEmbedding, optimum ni sentence-transformers: el sparse de BGE-M3 se calcula con sparse_linear.pt
 # y la exportación usa torch.onnx (torch.export), por lo que no se registran sus licencias.
+# torch y transformers (solo exportación manual a ONNX) viven en requirements-export.txt, fuera de la CI (D-11).
 pyyaml==6.0.3            # MIT
 numpy==2.5.4             # BSD-3-Clause
 pillow==13.0.0           # MIT-CMU (HPND) (solo data/eval/ocr-mini/generar.py)
@@ -14,8 +15,6 @@ tokenizers==0.23.3       # Apache-2.0
 onnx==1.23.2             # Apache-2.0
 onnxscript==0.7.2        # MIT
 onnxruntime==1.31.0      # MIT
-torch==2.14.1            # BSD-3-Clause (solo para exportar)
-transformers==5.20.2     # Apache-2.0 (solo para exportar; gte exporta con transformers 4.57.6 en /opt/tf4)
 pymilvus==3.0.2          # Apache-2.0 (solo T5)
 pytest==9.1.1            # MIT
 respx==0.23.1            # BSD-3-Clause

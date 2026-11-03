@@ -14,6 +14,6 @@ trap 'rm -rf "$salida"' EXIT
 npm audit --json > "$salida/npm.json" || test -s "$salida/npm.json"
 req=apps/rag-orchestrator
 pip-audit --no-deps --disable-pip -f json -o "$salida/pip.json" \
-  -r "$req/requirements.txt" -r "$req/requirements-dev.txt" -r "$req/requirements-eval.txt" || test -s "$salida/pip.json"
+  -r "$req/requirements.txt" -r "$req/requirements-dev.txt" -r "$req/requirements-eval.txt" -r "$req/requirements-export.txt" || test -s "$salida/pip.json"
 
 node scripts/ci/auditar-dependencias.mjs --npm "$salida/npm.json" --pip "$salida/pip.json" "$@"

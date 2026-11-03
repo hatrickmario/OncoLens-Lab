@@ -15,8 +15,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     OMP_NUM_THREADS=8
 
 WORKDIR /work/apps/rag-orchestrator
-COPY requirements-eval.txt /tmp/requirements-eval.txt
-RUN pip install -r /tmp/requirements-eval.txt
+# torch y transformers (exportación a ONNX) están en requirements-export.txt, fuera de la CI (D-11).
+COPY requirements-eval.txt requirements-export.txt /tmp/
+RUN pip install -r /tmp/requirements-eval.txt -r /tmp/requirements-export.txt
 
 # Solo para EXPORTAR gte-multilingual-reranker-base (código remoto incompatible con transformers 5):
 # se usa mediante PYTHONPATH=/opt/tf4 en el proceso de exportación; la medición no importa transformers.

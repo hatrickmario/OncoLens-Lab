@@ -1,0 +1,24 @@
+{
+  "version": "1.0.0",
+  "items": [
+    {
+      "terminoCanonico": "HER2",
+      "sinonimos": [
+        { "texto": "c-erbB-2", "idioma": "en" },
+        { "texto": "ERBB2", "idioma": "en" },
+        { "texto": "HER-2/neu", "idioma": "en" }
+      ]
+    },
+    {
+      "terminoCanonico": "RE",
+      "sinonimos": [
+        { "texto": "ER", "idioma": "en" },
+        { "texto": "receptor de estrógeno", "idioma": "es" }
+      ]
+    },
+    {
+      "terminoCanonico": "Ki-67",
+      "sinonimos": [{ "texto": "MIB-1", "idioma": "en" }]
+    }
+  ]
+}

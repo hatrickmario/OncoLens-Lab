@@ -1,0 +1,12 @@
+{
+  "ac": "ARR-11 D5-02",
+  "descripcion": "Un PR que toca un ejemplo de contrato falla cuando la punta actual de main volvió requerido un campo que el ejemplo no trae: contracts-contra-main.sh fusiona main y contracts:check nombra el campo.",
+  "esperado": "falla",
+  "comando": "scripts/ci/contracts-contra-main.sh \"$BASE_REF\"",
+  "entorno": { "GITHUB_EVENT_NAME": "pull_request" },
+  "aplicar": "aplicar.sh",
+  "mensajes": [
+    "origin/main fusionado sobre el PR",
+    "campoNuevoObligatorio"
+  ]
+}
