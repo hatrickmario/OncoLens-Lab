@@ -8,6 +8,8 @@ export type EstadoDeRevisionMostrable =
   'auto_aceptado' | 'requiere_revision' | 'verificado' | 'corregido';
 export type MetodoDeIngreso = 'ocr' | 'manual' | 'manual_correction' | 'seed';
 export type ConfianzaDeExtraccion = 'alta' | 'media' | 'baja' | 'n_a';
+/** Precisión con la que se conoce la fecha de un evento o atributo; `incierta` = sin fecha confiable (PRD AC-02.2). */
+export type PrecisionDeFecha = 'dia' | 'mes' | 'anio' | 'incierta';
 
 /** Campos de procedencia que comparten todas las filas clínicas que viajan en el contexto. */
 export interface ProcedenciaDeFila {
@@ -46,6 +48,7 @@ export interface FilaDeAtributo extends ProcedenciaDeFila {
   attributeKey: string;
   value: string;
   observedAt: string | null;
+  datePrecision: PrecisionDeFecha;
 }
 
 export interface FilaDeTratamientoPrevio extends ProcedenciaDeFila {
@@ -64,6 +67,7 @@ export interface FilaDeEvento extends ProcedenciaDeFila {
   id: string;
   eventType: string;
   eventDate: string | null;
+  datePrecision: PrecisionDeFecha;
   description: string;
 }
 
@@ -143,6 +147,7 @@ function atributoDe(fila: Fila): FilaDeAtributo {
     attributeKey: fila['attribute_key'] as string,
     value: fila['value'] as string,
     observedAt: fila['observed_at'] as string | null,
+    datePrecision: fila['date_precision'] as PrecisionDeFecha,
     ...procedenciaDe(fila),
   };
 }
@@ -167,6 +172,7 @@ export function eventoDe(fila: Fila): FilaDeEvento {
     id: fila['id'] as string,
     eventType: fila['event_type'] as string,
     eventDate: fila['event_date'] as string | null,
+    datePrecision: fila['date_precision'] as PrecisionDeFecha,
     description: fila['description'] as string,
     ...procedenciaDe(fila),
   };
@@ -202,7 +208,7 @@ async function leerBiomarcadores(leer: Leer): Promise<FilaDeBiomarcador[]> {
 
 async function leerAtributos(leer: Leer): Promise<FilaDeAtributo[]> {
   const filas = await leer(
-    `SELECT id, attribute_key, value, observed_at::text AS observed_at, entry_method,
+    `SELECT id, attribute_key, value, observed_at::text AS observed_at, date_precision, entry_method,
             extraction_confidence, review_status
        FROM clinical.clinical_attribute
       WHERE patient_id = $1 AND ${sqlDatoVigente('review_status')}
@@ -230,7 +236,7 @@ async function leerTratamientosPrevios(leer: Leer): Promise<FilaDeTratamientoPre
  * condición `AND …` con sus propios parámetros; es SOLO SQL constante del código, nunca texto del cliente.
  */
 export function sqlEventosClinicosVigentes(filtroExtra = ''): string {
-  return `SELECT id, event_type, event_date::text AS event_date, description, entry_method,
+  return `SELECT id, event_type, event_date::text AS event_date, date_precision, description, entry_method,
             extraction_confidence, review_status
        FROM clinical.clinical_event
       WHERE patient_id = $1 AND ${sqlEventoClinicoPropio()} AND ${sqlDatoVigente('review_status')} ${filtroExtra}

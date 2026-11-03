@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   asignarDataRefs,
   construirContextoPermitido,
+  fechaConfiable,
   mesesTranscurridos,
   provenanceDe,
 } from '../../../src/modules/evidence-analysis/clinical-context.builder.js';
@@ -14,6 +15,24 @@ import {
   eventoDeEjemplo,
   tratamientoPrevioDeEjemplo,
 } from './casos.js';
+
+describe('fechaConfiable', () => {
+  it('devuelve null cuando la precisión es incierta aunque la fecha venga informada', () => {
+    expect(fechaConfiable('2026-05-10', 'incierta')).toBeNull();
+  });
+
+  it('devuelve la fecha cuando la precisión es dia', () => {
+    expect(fechaConfiable('2026-05-10', 'dia')).toBe('2026-05-10');
+  });
+
+  it.each(['mes', 'anio'] as const)('devuelve la fecha cuando la precisión es %s', (precision) => {
+    expect(fechaConfiable('2026-05-10', precision)).toBe('2026-05-10');
+  });
+
+  it('devuelve null cuando la fecha es null', () => {
+    expect(fechaConfiable(null, 'dia')).toBeNull();
+  });
+});
 
 describe('mesesTranscurridos', () => {
   it('devuelve null cuando la fecha es null', () => {

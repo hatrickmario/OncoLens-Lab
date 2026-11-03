@@ -761,6 +761,7 @@ Documento y nombres se cifran en la aplicación (AES-256-GCM); `national_id_hmac
 | `extraction_confidence` | text |  |  |
 | `review_status` | text |  |  |
 | `created_at` | timestamptz |  |  |
+| `supersedes_id` | uuid | FK | nullable; autorreferencia restrictiva a la versión anterior (ADR-50, US-253); índice único parcial: una fila se reemplaza una sola vez |
 
 #### `clinical.exam`
 
@@ -775,6 +776,7 @@ Documento y nombres se cifran en la aplicación (AES-256-GCM); `national_id_hmac
 | `entry_method` | text |  |  |
 | `performed_at` | date |  |  |
 | `created_at` | timestamptz |  |  |
+| `supersedes_id` | uuid | FK | nullable; examen anterior que reemplaza una corrección de fecha (ADR-50, US-253); índice único parcial. La vigencia del examen es derivada (sin `review_status`): un examen sin biomarcadores vigentes no se muestra |
 
 #### `clinical.biomarker`
 
@@ -801,6 +803,7 @@ Documento y nombres se cifran en la aplicación (AES-256-GCM); `national_id_hmac
 | `reviewed_by` | uuid |  | nullable |
 | `reviewed_at` | timestamptz |  | nullable |
 | `created_at` | timestamptz |  |  |
+| `supersedes_id` | uuid | FK | nullable; autorreferencia restrictiva al biomarcador que esta corrección reemplaza (ADR-50, US-253); índice único parcial |
 
 #### `clinical.document`
 
@@ -1172,6 +1175,7 @@ Vacío resuelto (US-033), `[Pre-S1 resp. 3]`: se congela la **estructura** de la
 - `document (patient_id, checksum)`: único; `document (ocr_status, uploaded_at)`.
 - `diagnosis (patient_id, is_active)`; `clinical_note (patient_id, note_type, recorded_at)`; `exam (patient_id, performed_at)`.
 - Índices por `review_status` para el contador de pendientes.
+- `biomarker (supersedes_id)`, `exam (supersedes_id)`, `clinical_note (supersedes_id)` `WHERE supersedes_id IS NOT NULL`: únicos (ADR-50: una fila se reemplaza una sola vez).
 - `patient_opt_out (patient_id, opt_out_type, recorded_at DESC)`; `ai_analysis_record (patient_id, created_at)`; `patient (retention_until)`.
 - v1.1: `clinical_event (patient_id, event_date)`; `prior_treatment (patient_id, line_number)`; `clinical_data_source (data_type, data_id)`; `biomarker (exam_id, loinc_code)`; índices por `mapping_status` para la revisión de términos no mapeados; `clinical_attribute (patient_id, attribute_key, observed_at)`; `ai_analysis_record (patient_id, analysis_type, created_at)`.
 - FKs del schema `clinical` con `onDelete: Restrict`. El borrado solo lo ejecuta el proceso de retención o de baja total, que borra la identidad y seudonimiza.
@@ -1287,8 +1291,8 @@ Vacío resuelto (US-033), `[Pre-S1 resp. 24, 27, 29]`, E-04, PRD B-03. En el MVP
 | `patients:create` | sí | sí | Alta de pacientes (US-047) |
 | `patients:lookup` | sí | sí | `GET /platform/patients`, `POST /platform/patients/search`, `GET /platform/patients/{patientId}` (junto con `clinical:read`) |
 | `opt_outs:write` | no | sí | Marcas de opt-out (CLI en el MVP, B-05) |
-| `clinical:read` | sí | no | Ficha clínica, vista de caso, serie de biomarcadores |
-| `clinical:write` | sí | no | `POST …/biomarkers`, `POST …/diagnoses` |
+| `clinical:read` | sí | no | Ficha clínica, vista de caso, serie de biomarcadores, `GET …/clinical-notes`, `GET …/biomarkers/{biomarkerId}/history`, `GET …/clinical-notes/{noteId}/history` |
+| `clinical:write` | sí | no | `POST …/biomarkers`, `POST …/diagnoses`, `POST …/biomarkers/{biomarkerId}/corrections`, `POST …/clinical-notes/{noteId}/corrections` |
 | `documents:read` | sí | no | Listado, estado y visor de documentos |
 | `documents:upload` | sí | no | `POST /platform/patients/{patientId}/documents` |
 | `intake_drafts:read` | sí | no | Borradores del registro asistido |

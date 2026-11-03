@@ -2,7 +2,15 @@ import { clienteVerificado } from '../../support/verificarProveedor.js';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { nuevoSeudonimo } from '../../../src/infrastructure/ids.js';
 import { huellaDelContexto } from '../../../src/modules/evidence-analysis/analysis-record.js';
-import { INSTANTE_FIJO, insertar } from '../../support/filas-sinteticas.js';
+import { INSTANTE_FIJO, generadorDeIds, insertar } from '../../support/filas-sinteticas.js';
+import {
+  DESCRIPCION_DE_LA_TOXICIDAD,
+  piiSinteticaDePCaso,
+  sembrarPCaso,
+  type PCasoSembrado,
+} from '../../support/caso.js';
+import { sembrarTratamientoConDocumento } from '../../support/caso-trayectoria.js';
+import { prepararSiembra, type ContextoDeSiembra } from '../../support/completitud.js';
 import {
   PII_FX_T4A_A,
   TODAS_LAS_FUENTES,
@@ -222,5 +230,77 @@ describe('fechas absolutas en el texto libre de un evento', () => {
     expect(eventos.map((e) => e.description)).toContain(
       'Progresión en [FECHA], control [FECHA] y [FECHA] con Gleason 4+3',
     );
+  });
+});
+
+describe('la trayectoria del caso sale desidentificada', () => {
+  const ESPACIO_DE_PCASO = 7440;
+  let siembra: ContextoDeSiembra;
+  let siguienteEspacio = ESPACIO_DE_PCASO;
+
+  const sembrarPCasoConIdentidad = async (conPii: boolean): Promise<PCasoSembrado> => {
+    siembra ??= await prepararSiembra(mundo.cliente, generadorDeIds(ESPACIO_DE_IDS + 500));
+    return sembrarPCaso(siembra, { espacio: siguienteEspacio++, conPiiEnLaToxicidad: conPii });
+  };
+
+  /** Analiza a P-CASO con su identidad sintética en el lector falso y devuelve el contexto capturado. */
+  async function analizarPCaso(p: PCasoSembrado) {
+    const { nombre, documento } = piiSinteticaDePCaso();
+    const { app } = await montar({
+      identidades: lectorDeIdentidadFalso({
+        [p.patientId]: { nombreCompleto: nombre, documento },
+      }),
+    });
+    const respuesta = await clienteVerificado(app)
+      .post('/platform/evidence-analyses')
+      .set('Cookie', cookie)
+      .send({ patientId: p.patientId, query: PREGUNTA_AC1, sourcesSelected: TODAS_LAS_FUENTES });
+    expect(respuesta.status).toBe(200);
+    expect(rag.llamadas()).toBe(1);
+    return { contexto: contextoDe(0), texto: rag.capturadas[0]!.texto };
+  }
+
+  it('la descripción de la toxicidad no contiene el nombre ni el documento y conserva Toxicidad cutánea grado 2 con marcadores [US-093 AC-2]', async () => {
+    const p = await sembrarPCasoConIdentidad(true);
+    const { nombre, documento } = piiSinteticaDePCaso();
+
+    const { contexto, texto } = await analizarPCaso(p);
+
+    for (const prohibido of [...nombre.split(' '), documento]) {
+      expect(texto).not.toContain(prohibido);
+    }
+    const eventos = contexto['events'] as { eventType: string; description: string }[];
+    const toxicidad = eventos.find((e) => e.eventType === 'toxicidad');
+    expect(toxicidad?.description).toContain(DESCRIPCION_DE_LA_TOXICIDAD);
+    expect(toxicidad?.description).toContain('[NOMBRE]');
+    expect(toxicidad?.description).toContain('[DOCUMENTO]');
+  });
+
+  it('el regimenName con el documento de P-CASO sale enmascarado y conserva Docetaxel [US-093 AC-2]', async () => {
+    const p = await sembrarPCasoConIdentidad(false);
+    const { documento } = piiSinteticaDePCaso();
+    await sembrarTratamientoConDocumento(p, siembra.ids(), documento);
+
+    const { contexto, texto } = await analizarPCaso(p);
+
+    const tratamientos = contexto['priorTreatments'] as unknown as { regimenName: string }[];
+    const docetaxel = tratamientos.find((t) => t.regimenName.includes('Docetaxel'));
+    expect(docetaxel?.regimenName).toContain('[DOCUMENTO]');
+    expect(texto).not.toContain(documento);
+  });
+
+  it('events, priorTreatments y attributes no contienen ninguna fecha AAAA-MM-DD cuando se analiza P-CASO [US-093 AC-4]', async () => {
+    const p = await sembrarPCasoConIdentidad(false);
+
+    const { contexto } = await analizarPCaso(p);
+
+    const trayectoria = JSON.stringify([
+      contexto['events'],
+      contexto['priorTreatments'],
+      contexto['attributes'],
+    ]);
+    expect(trayectoria).not.toMatch(/\d{4}-\d{2}-\d{2}/);
+    expect((contexto['events'] as unknown[]).length).toBeGreaterThan(0);
+    expect((contexto['priorTreatments'] as unknown[]).length).toBeGreaterThan(0);
   });
 });

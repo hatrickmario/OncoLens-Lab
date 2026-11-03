@@ -24,6 +24,8 @@ export interface RoutersProtegidos {
   manualEntry: Router;
   /** Vista de caso con timeline (L1D-74). Obligatorio: olvidarlo en `server.ts` rompe el build. */
   caseView: Router;
+  /** Corrección con histórico, notas clínicas e histórico (L1D-309). Obligatorio: olvidarlo en `server.ts` rompe el build. */
+  corrections: Router;
 }
 
 /**
@@ -38,6 +40,7 @@ export function componerRutasProtegidas(routers: RoutersProtegidos): readonly Ro
     routers.completeness,
     routers.manualEntry,
     routers.caseView,
+    routers.corrections,
   ];
 }
 

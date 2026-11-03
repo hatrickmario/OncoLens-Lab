@@ -100,6 +100,20 @@ async function upsertar(siembra: Siembra, tabla: string, fila: Fila): Promise<vo
   contarFilaEscrita(siembra, tabla);
 }
 
+/**
+ * INSERT ... ON CONFLICT (id) DO NOTHING: para los datos que el oncólogo puede corregir (US-253). Re-ejecutar el seed no
+ * debe revivir una nota ya reemplazada ni pisar su versión corregida; el conteo es el de filas aseguradas.
+ */
+async function insertarSiFalta(siembra: Siembra, tabla: string, fila: Fila): Promise<void> {
+  const columnas = Object.keys(fila);
+  const marcadores = columnas.map((_, indice) => `$${indice + 1}`);
+  await siembra.db.query(
+    `INSERT INTO ${tabla} (${columnas.join(', ')}) VALUES (${marcadores.join(', ')}) ON CONFLICT (id) DO NOTHING`,
+    Object.values(fila),
+  );
+  contarFilaEscrita(siembra, tabla);
+}
+
 /** Los logs del seed solo llevan conteos por tabla (nunca valores). */
 function contarFilaEscrita(siembra: Siembra, tabla: string): void {
   siembra.escritas[tabla] = (siembra.escritas[tabla] ?? 0) + 1;
@@ -394,6 +408,26 @@ async function sembrarAtributos(siembra: Siembra, contexto: ContextoDePaciente):
   }
 }
 
+async function sembrarNotas(siembra: Siembra, contexto: ContextoDePaciente): Promise<void> {
+  for (const nota of contexto.paciente.notas ?? []) {
+    // Una nota corregida por el oncólogo no se pisa al re-sembrar (a diferencia de los demás datos del seed).
+    await insertarSiFalta(siembra, 'clinical.clinical_note', {
+      id: idSembrado(`${contexto.paciente.clave}/${nota.clave}`),
+      patient_id: contexto.pacienteId,
+      episode_id: contexto.episodioId,
+      source_document_id: null,
+      created_by: contexto.doctorId,
+      note_type: nota.tipo,
+      content: nota.texto,
+      recorded_at: fechaRelativa(siembra.ahora, nota.diasAntes),
+      is_active: true,
+      ...PROCEDENCIA_DEL_SEED,
+      supersedes_id: null,
+      created_at: siembra.ahora,
+    });
+  }
+}
+
 /** Identidad cifrada con `IdentityService` (no una copia del cifrador); si ya existe no se recifra. */
 async function sembrarIdentidad(
   siembra: Siembra,
@@ -455,6 +489,7 @@ async function sembrarPaciente(
   await sembrarTratamientosPrevios(siembra, contexto);
   await sembrarEventos(siembra, contexto);
   await sembrarAtributos(siembra, contexto);
+  await sembrarNotas(siembra, contexto);
   if (paciente.optOutAnalisisIa !== undefined) {
     await upsertar(siembra, 'clinical.patient_opt_out', {
       id: idSembrado(`${paciente.clave}/opt-out-analisis-ia`),

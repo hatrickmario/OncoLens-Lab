@@ -663,6 +663,51 @@
       "spec": "rag-orchestrator",
       "target": "#/components/schemas/RagQueryInternalResponse",
       "request": "rag-query-request-fx-t3-a.json"
+    },
+    {
+      "file": "biomarker-correction-request.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1biomarkers~1{biomarkerId}~1corrections/post/requestBody"
+    },
+    {
+      "file": "biomarker-corrected.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/Biomarker"
+    },
+    {
+      "file": "clinical-note-correction-request.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1clinical-notes~1{noteId}~1corrections/post/requestBody"
+    },
+    {
+      "file": "clinical-note-corrected.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/ClinicalNote"
+    },
+    {
+      "file": "clinical-notes-list.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/ClinicalNoteList"
+    },
+    {
+      "file": "correction-history-biomarker.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/CorrectionHistory"
+    },
+    {
+      "file": "correction-history-clinical-note.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/CorrectionHistory"
+    },
+    {
+      "file": "error-correccion-fecha-futura.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1biomarkers~1{biomarkerId}~1corrections/post/responses/422"
+    },
+    {
+      "file": "error-dato-no-vigente.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1biomarkers~1{biomarkerId}~1corrections/post/responses/409"
     }
   ],
   "pendingExamples": [

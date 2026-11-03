@@ -411,6 +411,8 @@ MAPA_DE_LICENCIAS_POR_DEFECTO = {
     "cc0": "dominio_publico",
     "cc0 1.0": "dominio_publico",
     "dominio público": "dominio_publico",
+    # ClinicalTrials.gov: obra del gobierno de EE. UU. (ADR-36, Enmienda 1 y versión 1.1b); la clase no cambia.
+    "obra del gobierno de ee. uu.; atribución courtesy of the u.s. national library of medicine": "dominio_publico",
     "texto de nci libre de copyright": "dominio_publico",
     # Europe PMC publica la licencia sin versión ("cc by"); el XML del artículo puede precisarla (4.0, 3.0).
     "cc by": "cc_by",
