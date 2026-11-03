@@ -58,6 +58,10 @@
 
 ## humano
 
+- [ ] H-3 Decisión sobre la etiqueta de licencia de los 10 registros de ClinicalTrials.gov (hoy `license: Dominio público`, clase `dominio_publico` por la Enmienda 1 de ADR-36): los términos de uso reservan derechos internacionales fuera de EE. UU. y posibles derechos de terceros y piden mantener los datos actualizados. Recomendación del privacy-guardian: mantener la CLASE `dominio_publico` y cambiar solo el texto de `license` a «Datos de ClinicalTrials.gov (obra del gobierno de EE. UU.; condiciones de uso)» con la misma clase en `MAPA_DE_LICENCIAS_POR_DEFECTO`, y dejar constancia en ADR-36 de que la copia es estática. No se cambió: DIFERIDA -> H-3
+- [ ] D5-20 Deuda de diseño del Gate 2 (vuelta 1), propuesta de ID D5-20 y sin tocar aquí: (5) `CORPUS_MIN_DOCUMENTS_PER_CANCER_TYPE` y `CORPUS_MIN_SOURCES_PER_CANCER_TYPE` están declarados sin consumidor (consumirlos con una marca `bajo_el_minimo` o borrarlos: decisión de producto); (7) la CLI `ingest` devuelve una tupla de 4, lee `Settings` en línea y `main` no tiene test; (8) `ETIQUETAS_CANCER` fijas en el informe frente al catálogo o `ENABLED_CANCER_TYPES`; P3: doble llamada a `_seccion_out_08`, bandera `fijar`, tres `if` por parámetro de barrido, firmas posicionales del `conftest.py` de ingesta, formato de etiquetas por coma, igualdades `==` de fuentes que deben ser `<=`/`>=`. DIFERIDA -> D5-20
+- [ ] H-4 Atribución de PMC: el bucket exige reconocer a NLM (hecho como línea global en `ATTRIBUTION.md`). Las menciones a NCCN/ESMO dentro del texto CC BY de terceros (referencias bibliográficas y conflictos de interés; sin contenido de guías ni entradas de manifiesto) quedan a decisión del humano: admisibles o recortar. DIFERIDA -> H-4
+
 - [ ] H-1 `.env.example` (rag-orchestrator) con las claves nuevas y los valores calibrados, DIFERIDA -> H-1. Bloque literal (los valores marcados `<…>` se rellenan tras 8.3, 8.4 y 8.6):
 
 ```

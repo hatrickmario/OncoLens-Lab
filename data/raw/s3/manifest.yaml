@@ -619,11 +619,11 @@ documentos:
   original_format: jats_xml
   original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11378006/fullTextXML
   license: CC BY
-  license_url: https://creativecommons.org/share-your-work/cclicenses/
+  license_url: https://creativecommons.org/licenses/by/4.0/
   license_verified_at: '2026-11-03'
   license_evidence: 'PMC OA en AWS (metadata/PMC11378006.1.json, consultado el 2026-11-03): license_code=''CC BY'', is_pmc_openaccess=true,
     is_retracted=false. Europe PMC REST (PMCID:PMC11378006, consultado el 2026-11-03): license=''cc by'', isOpenAccess=''Y''.
-    <license-p> del JATS: «This is an open access article distributed under the terms of the CC-BY License.»'
+    <license-p> del JATS: «This is an open access article distributed under the terms of the CC-BY License.» La versión de la licencia no consta en la fuente: se conserva «CC BY» sin inventar una versión y el license_url remite al deed 4.0 solo como referencia.'
   downloaded_at: '2026-11-03'
   checksum: 1d1bfbd8ca4f94a0614f3cf0c03a71135b394c49354bca263473e942630e6a61
   text_path: docs/pmc-mama-adn-tumoral-metastasico-rs.txt
@@ -861,13 +861,13 @@ documentos:
   original_format: jats_xml
   original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11849621/fullTextXML
   license: CC BY
-  license_url: https://creativecommons.org/share-your-work/cclicenses/
+  license_url: https://creativecommons.org/licenses/by/4.0/
   license_verified_at: '2026-11-03'
   license_evidence: 'PMC OA en AWS (metadata/PMC11849621.1.json, consultado el 2026-11-03): license_code=''CC BY'', is_pmc_openaccess=true,
     is_retracted=false. Europe PMC REST (PMCID:PMC11849621, consultado el 2026-11-03): license=''cc by'', isOpenAccess=''Y''.
     <license-p> del JATS: «This is an open-access article distributed under the terms of the Creative Commons Attribution
     License (CC BY). The use, distribution or reproduction in other forums is permitted, provided the original author(s) and
-    the copyright owner(s) are credited and that»'
+    the copyright owner(s) are credited and that» La versión de la licencia no consta en la fuente: se conserva «CC BY» sin inventar una versión y el license_url remite al deed 4.0 solo como referencia.'
   downloaded_at: '2026-11-03'
   checksum: 483e0b37e054d9de30dc0cce9bd4cb2f5a5565229152a3907fb412031355a83f
   text_path: docs/pmc-prostata-enzalutamida-abiraterona-ma.txt

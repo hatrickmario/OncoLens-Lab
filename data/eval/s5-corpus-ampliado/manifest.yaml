@@ -13,3 +13,4 @@ archivos:
   prescriptivas: prescriptivas.yaml
 derivado_de: data/raw/s3/manifest.yaml
 generador: generar_corpus.py
+atribucion: data/raw/s3/ATTRIBUTION.md # fuente y licencia de cada fragmento del corpus
