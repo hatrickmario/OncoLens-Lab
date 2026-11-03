@@ -176,6 +176,17 @@ describe('Corrección con histórico en la ficha', () => {
     expect(aviso.compareDocumentPosition(campo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
+  it('devuelve el foco al botón Corregir dato cuando se cierra el diálogo con Escape [US-253 AC-2]', async () => {
+    const usuario = montarNotas();
+    const accion = screen.getAllByRole('button', { name: /Corregir dato/ })[0]!;
+    await usuario.click(accion);
+
+    await usuario.keyboard('{Escape}');
+
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(document.activeElement).toBe(accion);
+  });
+
   it('envía el texto y el tipo de la nota y la muestra tras guardar [US-253 AC-2]', async () => {
     bff.corregirNota(201, corregidaNota);
     const usuario = montarNotas();
