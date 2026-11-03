@@ -12,7 +12,7 @@ import { crearAnalysisCompletion } from './analysis-completion.js';
 import { evidenceAnalysisController } from './evidence-analysis.controller.js';
 import { followUpController } from './follow-up.controller.js';
 import { crearFollowUpRepository, type EjecutarEnTransaccion } from './follow-up.repository.js';
-import { crearFollowUpService } from './follow-up.service.js';
+import { crearFollowUpService, type FollowUpService } from './follow-up.service.js';
 import { createEvidenceAnalysisRepository } from './evidence-analysis.repository.js';
 import {
   crearEvidenceAnalysisService,
@@ -82,6 +82,20 @@ export function crearChecklistDeFaltantes(completitud: CompletenessService): Che
   };
 }
 
+/** Servicio del seguimiento (US-218): comparte desidentificador, catálogo, reloj y configuración con el gateway. */
+function componerSeguimiento(dependencias: DependenciasDelGateway): FollowUpService {
+  const { analysisFollowupMax, ragTimeoutMs, aiDisclaimerText } = dependencias.config;
+  return crearFollowUpService({
+    seguimientos: crearFollowUpRepository(dependencias.db, dependencias.enTransaccion),
+    desidentificador: dependencias.desidentificador,
+    rag: dependencias.ragFollowUp,
+    catalogo: dependencias.catalogo,
+    reloj: dependencias.reloj,
+    idsDeTurnos: dependencias.idsDeTurnos,
+    config: { analysisFollowupMax, ragTimeoutMs, aiDisclaimerText },
+  });
+}
+
 /** Composición del módulo `evidence-analysis`: devuelve el router que se monta detrás del guard de sesión. */
 export function componerGatewayDeAnalisis(dependencias: DependenciasDelGateway): Router {
   const repositorio = createEvidenceAnalysisRepository(dependencias.db);
@@ -106,19 +120,6 @@ export function componerGatewayDeAnalisis(dependencias: DependenciasDelGateway):
     reloj: dependencias.reloj,
     config: dependencias.config,
   });
-  const seguimiento = crearFollowUpService({
-    seguimientos: crearFollowUpRepository(dependencias.db, dependencias.enTransaccion),
-    desidentificador: dependencias.desidentificador,
-    rag: dependencias.ragFollowUp,
-    catalogo: dependencias.catalogo,
-    reloj: dependencias.reloj,
-    idsDeTurnos: dependencias.idsDeTurnos,
-    config: {
-      analysisFollowupMax: dependencias.config.analysisFollowupMax,
-      ragTimeoutMs: dependencias.config.ragTimeoutMs,
-      aiDisclaimerText: dependencias.config.aiDisclaimerText,
-    },
-  });
   return Router().use(
     evidenceAnalysisController({
       service,
@@ -126,7 +127,7 @@ export function componerGatewayDeAnalisis(dependencias: DependenciasDelGateway):
       registrar: dependencias.registrar,
     }),
     followUpController({
-      service: seguimiento,
+      service: componerSeguimiento(dependencias),
       traceIds: dependencias.traceIds,
       registrar: dependencias.registrar,
     }),

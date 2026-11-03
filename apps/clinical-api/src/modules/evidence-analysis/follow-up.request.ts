@@ -8,7 +8,8 @@ import type { FilaDeEvento } from './evidence-analysis.repository.js';
 import { mesesTranscurridos } from './clinical-context.builder.js';
 import type { ContextoPermitido } from './ports.js';
 
-const fechaUtc = (instante: Date): string => instante.toISOString().slice(0, 10);
+/** Fecha UTC `AAAA-MM-DD` de un instante: la unidad de las fechas del contexto y de la evolución posterior. */
+export const fechaUtc = (instante: Date): string => instante.toISOString().slice(0, 10);
 
 /** Texto de las afirmaciones de la síntesis (acuerdos y discrepancias): contexto del hilo, nunca una cita (RN-24). */
 function resumenDeLaSintesis(sintesis: RegistroDeAnalisis['synthesis']): string {

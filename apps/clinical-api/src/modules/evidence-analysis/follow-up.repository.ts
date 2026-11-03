@@ -120,18 +120,57 @@ function turnoDeFila(f: Fila): TurnoDeSeguimiento {
   };
 }
 
+async function contarTurnos(consulta: Consultador, analysisId: string): Promise<number> {
+  const { rows } = await consulta.query(
+    'SELECT count(*)::int AS n FROM clinical.analysis_follow_up WHERE analysis_id = $1',
+    [analysisId],
+  );
+  return (rows[0]?.['n'] as number | undefined) ?? 0;
+}
+
+async function leerEventosPosteriores(
+  db: Consultador,
+  patientId: string,
+  desde: string,
+): Promise<FilaDeEvento[]> {
+  const { rows } = await db.query(
+    `SELECT id, event_type, event_date::text AS event_date, description, entry_method,
+            extraction_confidence, review_status
+       FROM clinical.clinical_event
+      WHERE patient_id = $1 AND analysis_id IS NULL AND ${sqlDatoVigente('review_status')}
+        AND event_date > $2::date
+      ORDER BY event_date, created_at`,
+    [patientId, desde],
+  );
+  return rows.map(eventoDe);
+}
+
+/**
+ * Inserta el turno en una transacción que bloquea la fila del análisis (no la actualiza: es inmutable), para que dos
+ * preguntas simultáneas se serialicen, y revisa el límite (RN-22) antes de insertar.
+ */
+function insertarTurnoBajoBloqueo(
+  enTransaccion: EjecutarEnTransaccion,
+  turno: TurnoNuevo,
+  limite: number,
+): Promise<ResultadoDeInsercion> {
+  return enTransaccion(async (tx) => {
+    await tx.query('SELECT id FROM clinical.ai_analysis_record WHERE id = $1 FOR UPDATE', [
+      turno.analysisId,
+    ]);
+    if (superaLimiteDeSeguimiento(await contarTurnos(tx, turno.analysisId), limite)) {
+      return { tipo: 'limite_alcanzado' };
+    }
+    const { rows } = await tx.query(INSERTAR_TURNO, parametrosDelTurno(turno));
+    return { tipo: 'insertado', turno: turnoDeFila(rows[0] ?? {}) };
+  });
+}
+
 /** Lectura y escritura de `clinical.analysis_follow_up` con `pg` sobre el pool inyectado (migración a Prisma = deuda D-1). */
 export function crearFollowUpRepository(
   db: Consultador,
   enTransaccion: EjecutarEnTransaccion,
 ): FollowUpRepository {
-  const contar = async (consulta: Consultador, analysisId: string): Promise<number> => {
-    const { rows } = await consulta.query(
-      'SELECT count(*)::int AS n FROM clinical.analysis_follow_up WHERE analysis_id = $1',
-      [analysisId],
-    );
-    return (rows[0]?.['n'] as number | undefined) ?? 0;
-  };
   return {
     async leerAnalisis(analysisId) {
       const { rows } = await db.query('SELECT * FROM clinical.ai_analysis_record WHERE id = $1', [
@@ -140,31 +179,9 @@ export function crearFollowUpRepository(
       const fila = rows[0];
       return fila === undefined ? null : registroDeFila(fila);
     },
-    contarTurnos: (analysisId) => contar(db, analysisId),
-    async leerEventosPosteriores(patientId, desde) {
-      const { rows } = await db.query(
-        `SELECT id, event_type, event_date::text AS event_date, description, entry_method,
-                extraction_confidence, review_status
-           FROM clinical.clinical_event
-          WHERE patient_id = $1 AND analysis_id IS NULL AND ${sqlDatoVigente('review_status')}
-            AND event_date > $2::date
-          ORDER BY event_date, created_at`,
-        [patientId, desde],
-      );
-      return rows.map(eventoDe);
-    },
-    insertarTurno: (turno, limite) =>
-      enTransaccion(async (tx) => {
-        // Bloquea la fila del análisis (no la actualiza: es inmutable) para que dos preguntas simultáneas se serialicen.
-        await tx.query('SELECT id FROM clinical.ai_analysis_record WHERE id = $1 FOR UPDATE', [
-          turno.analysisId,
-        ]);
-        if (superaLimiteDeSeguimiento(await contar(tx, turno.analysisId), limite)) {
-          return { tipo: 'limite_alcanzado' };
-        }
-        const { rows } = await tx.query(INSERTAR_TURNO, parametrosDelTurno(turno));
-        return { tipo: 'insertado', turno: turnoDeFila(rows[0] ?? {}) };
-      }),
+    contarTurnos: (analysisId) => contarTurnos(db, analysisId),
+    leerEventosPosteriores: (patientId, desde) => leerEventosPosteriores(db, patientId, desde),
+    insertarTurno: (turno, limite) => insertarTurnoBajoBloqueo(enTransaccion, turno, limite),
     async listarTurnos(analysisId) {
       const { rows } = await db.query(
         'SELECT * FROM clinical.analysis_follow_up WHERE analysis_id = $1 ORDER BY turn_number',
