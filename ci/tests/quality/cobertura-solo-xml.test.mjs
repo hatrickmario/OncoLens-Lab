@@ -52,8 +52,14 @@ function repositorio({ conInforme }) {
   return { raiz, base };
 }
 
+// El job quality exporta COBERTURA_INFORMES_XML vacía a todo `npm run test:quality`: el subproceso debe usar la lista por defecto.
+const entornoDeLaCi = (base) => {
+  const { COBERTURA_INFORMES_XML: _heredada, ...resto } = process.env;
+  return { ...resto, COBERTURA_BASE: base, CI: 'true' };
+};
+
 const ejecutar = ({ raiz, base }, argumentos) =>
-  spawnSync(process.execPath, [SCRIPT, ...argumentos, '--root', raiz], { encoding: 'utf8', timeout: 30_000, env: { ...process.env, COBERTURA_BASE: base, CI: 'true' } });
+  spawnSync(process.execPath, [SCRIPT, ...argumentos, '--root', raiz], { encoding: 'utf8', timeout: 30_000, env: entornoDeLaCi(base) });
 
 describe('informesXmlEsperados', () => {
   it('usa el informe de Pytest por defecto cuando no hay variable [D-12.3]', () => {
