@@ -5,6 +5,7 @@ export type LecturaDeCaso =
   | { tipo: 'ok'; vista: CaseView }
   | { tipo: 'error' }
   | { tipo: 'no_encontrado' }
+  | { tipo: 'sin_permiso' }
   | { tipo: 'sin_sesion' };
 
 /**
@@ -18,6 +19,7 @@ export async function leerVistaDeCaso(patientId: string): Promise<LecturaDeCaso>
       cache: 'no-store',
     });
     if (respuesta.status === 401) return { tipo: 'sin_sesion' };
+    if (respuesta.status === 403) return { tipo: 'sin_permiso' };
     if (respuesta.status === 404) return { tipo: 'no_encontrado' };
     if (!respuesta.ok) return { tipo: 'error' };
     const vista = zCaseView.safeParse(await respuesta.json().catch(() => null));

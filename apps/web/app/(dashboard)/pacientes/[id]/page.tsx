@@ -6,6 +6,7 @@ import { FichaNoDisponible } from '../../../../components/molecules/ficha-no-dis
 import { mensajes } from '../../../../lib/mensajes';
 import { hoyDelServidor } from '../../../../lib/server/hoy';
 import { obtenerFicha, type ResultadoDeFicha } from '../../../../lib/server/pacientes';
+import { RUTA_LOGIN_EXPIRADA } from '../../../../lib/sesion/motivo-de-sesion';
 
 export const metadata = { title: mensajes().ficha.tituloDocumento };
 
@@ -29,7 +30,7 @@ export default async function FichaPage({ params }: { params: Promise<{ id: stri
   const { id } = await params;
   const resultado = await obtenerFicha((await headers()).get('cookie'), id);
   if (resultado.tipo === 'no_autenticado') {
-    redirect('/login?motivo=expirada');
+    redirect(RUTA_LOGIN_EXPIRADA);
   }
   return (
     <main className="mx-auto max-w-6xl p-4 sm:p-6">

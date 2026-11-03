@@ -5,6 +5,7 @@ import type { CaseView } from '../../../../packages/api-contracts/src/types/clin
 import { separarSinFecha } from '../../lib/caso/presentacion';
 import { useVistaDeCaso } from '../../lib/caso/use-vista-de-caso';
 import { mensajes } from '../../lib/mensajes';
+import { Alert } from '../ui/alert';
 import { VistaDeCasoNoDisponible } from '../molecules/vista-de-caso-no-disponible';
 import { BiomarkerSeriesTables } from './biomarker-series-tables';
 import { CaseTimeline } from './case-timeline';
@@ -40,6 +41,7 @@ export function VistaDeCaso({ patientId, hoy }: { patientId: string; hoy: string
     );
   }
   if (lectura.tipo === 'error') return <VistaDeCasoNoDisponible onReintentar={recargar} />;
+  if (lectura.tipo === 'sin_permiso') return <Alert>{caso.sinPermiso}</Alert>;
   if (lectura.tipo === 'no_encontrado') {
     return (
       <>

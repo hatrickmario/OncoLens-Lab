@@ -2,7 +2,7 @@ import { esEventoDeIa, rotuloDeEvento, type EventoDelCaso } from '../../lib/caso
 import { mensajes } from '../../lib/mensajes';
 import { FechaRelativa } from '../atoms/fecha-relativa';
 import { SeccionDeFicha } from '../molecules/fila-de-ficha';
-import { ProcedenciaDelDato } from '../molecules/procedencia-del-dato';
+import { ProcedenciaDelEvento } from '../molecules/procedencia-del-evento';
 
 /** Evento de la línea de tiempo: tipo, fecha, descripción, procedencia. `hoy = null` (sin fecha confiable) no pinta fecha. */
 export function EventoDelCasoItem({ evento, hoy }: { evento: EventoDelCaso; hoy: string | null }) {
@@ -18,7 +18,10 @@ export function EventoDelCasoItem({ evento, hoy }: { evento: EventoDelCaso; hoy:
         )}
       </p>
       <p className="m-0">{evento.description}</p>
-      <ProcedenciaDelDato procedencia={evento.provenance} esDeIa={esEventoDeIa(evento.eventType)} />
+      {esEventoDeIa(evento.eventType) && (
+        <p className="text-text-muted m-0 text-sm italic">{mensajes().caso.textoGeneradoPorIa}</p>
+      )}
+      <ProcedenciaDelEvento evento={evento} />
     </li>
   );
 }

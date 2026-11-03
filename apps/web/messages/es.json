@@ -355,6 +355,8 @@
     "analizar": "Analizar la evidencia para este caso",
     "cargando": "Cargando la vista de caso",
     "origenIa": "Generado por IA · Sin verificar",
+    "textoGeneradoPorIa": "Texto generado por IA, sin verificar",
+    "sinPermiso": "No tienes permiso para ver el caso clínico de este paciente.",
     "sinDatos": "Sin datos registrados",
     "enCurso": "En curso",
     "secciones": {
