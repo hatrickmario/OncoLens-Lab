@@ -1,4 +1,7 @@
-import { esquemaPreguntaNormalizada } from '../../../../packages/clinical-language/src/normalizar-pregunta';
+import {
+  esquemaPreguntaNormalizada,
+  normalizarPregunta,
+} from '../../../../packages/clinical-language/src/normalizar-pregunta';
 import { zEvidenceAnalysisRequest } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
 
 const CAMPO_PREGUNTA = zEvidenceAnalysisRequest.shape.query;
@@ -11,6 +14,11 @@ export const ESQUEMA_PREGUNTA = esquemaPreguntaNormalizada(CAMPO_PREGUNTA);
 
 /** Máximo de `EvidenceAnalysisRequest.query`: sale del schema generado del contrato, no de un literal. */
 export const MAXIMO_PREGUNTA: number = CAMPO_PREGUNTA.maxLength ?? Number.POSITIVE_INFINITY;
+
+/** Longitud que cuenta el contrato: la de la pregunta ya normalizada, no la del texto pegado (AC-3). */
+export function longitudDePregunta(texto: string): number {
+  return normalizarPregunta(texto).length;
+}
 
 export type ValidacionDePregunta = { ok: true } | { ok: false; max: number };
 

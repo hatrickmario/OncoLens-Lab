@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, type FormEvent, type ReactNode, type RefObject } from 'react';
-import { MAXIMO_PREGUNTA } from '../../lib/evidence/reglas-del-formulario';
+import { longitudDePregunta, MAXIMO_PREGUNTA } from '../../lib/evidence/reglas-del-formulario';
 import { mensajes, rellenar } from '../../lib/mensajes';
 import estilos from '../evidence.module.css';
 
@@ -64,7 +64,7 @@ export function EvidenceQueryForm(props: EvidenceQueryFormProps) {
         className={estilos.contador}
         aria-live={errorMaximo !== null ? 'polite' : 'off'}
       >
-        {rellenar(formulario.contador, { n: pregunta.length, max: MAXIMO_PREGUNTA })}
+        {rellenar(formulario.contador, { n: longitudDePregunta(pregunta), max: MAXIMO_PREGUNTA })}
       </p>
       {aviso}
       <button
