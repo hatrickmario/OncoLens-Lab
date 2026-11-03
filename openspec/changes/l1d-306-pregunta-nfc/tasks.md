@@ -73,12 +73,12 @@
 
 ## 5. evaluación
 
-- [ ] 5.1 Confirmar que el diff no toca modelo, plantilla de prompt, umbral, catálogo ni corpus (job
+- [x] 5.1 Confirmar que el diff no toca modelo, plantilla de prompt, umbral, catálogo ni corpus (job
       `eval-required` en verde sin pedir `run-ai-eval`); la reproducibilidad la mide US-252 (S6) · **exento**
 
 ## 6. cierre
 
 - [x] 6.1 Buscar `normalize('NFC')` y `unicodedata.normalize("NFC"` en el árbol y confirmar que la pregunta
       tiene un solo dueño por lenguaje (design.md §Dependencias) · **verificación**
-- [ ] 6.2 `openspec validate l1d-306-pregunta-nfc --strict`, tests de los tres contextos en verde,
+- [x] 6.2 `openspec validate l1d-306-pregunta-nfc --strict`, tests de los tres contextos en verde,
       `contracts:verify-provider` en verde · **verificación**
