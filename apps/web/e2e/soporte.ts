@@ -17,6 +17,9 @@ export const { evidence: textos, pacientes, ficha, alcance } = es;
 /** Paciente semilla (a), de mama (L1D-169): el mismo UUID determinista que `WEB_HOME_PATH` en `scripts/e2e/ejecutar.sh`. */
 export const ID_SEMILLA_A = '0fd028e2-f8b0-56c7-a748-2a4e473d879d';
 
+/** Paciente semilla (f) = FX-T3-a (L1D-196): mama con avisos clínicos acumulados; `idSembrado('paciente-f')`. */
+export const ID_SEMILLA_F = '380dd24c-0458-55f7-bd22-23b87d965c86';
+
 /** Usuario sintético sembrado (L1D-197); la contraseña de la fixture llega por entorno, nunca versionada. */
 export const CORREO_DOC1 = process.env.E2E_DOC_CORREO ?? 'doc1@test.local';
 

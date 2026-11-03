@@ -15,12 +15,12 @@
 
 ## 3. frontend
 
-- [ ] 3.1 `apps/web/e2e/soporte.ts`: ID del paciente (f) y conteo del listado derivado del seed en `pacientes-listado.spec.ts` (D4; si `l1d-310` ya lo derivó, solo añadir (f)) · test después · verificación: `pacientes-listado.spec.ts` en verde contra Compose
-- [ ] 3.2 E2E «ejecuta el análisis y muestra el resultado cuando el doctor continúa con el aviso de faltantes de FX-T3-a [US-071 AC-2]» en `apps/web/e2e/avisos-no-bloquean.spec.ts` · test del AC primero · commit `test(L1D-196)`
-- [ ] 3.3 E2E «muestra la opción con la etiqueta Población no comparable y sin ocultarla cuando se renderiza el análisis de FX-T3-a [US-071 AC-3]» · test del AC primero · commit `test(L1D-196)`
-- [ ] 3.4 E2E «llega al resultado sin ningún dialog ni alertdialog cuando recorre login, ficha, vista de caso («Analizar la evidencia para este caso»), faltantes y panel («Analizar evidencia») con FX-T3-a [US-071 AC-5]» (paso «faltantes» en la columna de `l1d-96`; si se recortó, en el aviso del panel) · test del AC primero · commit `test(L1D-196)`
-- [ ] 3.5 Si 3.2–3.4 fallan en la aserción: corrección mínima en el componente que bloquea, con su test de componente · commit `feat(L1D-196)`; si pasan, anotar la ejecución como evidencia
-- [ ] 3.6 Loop visual (visual-check) solo si 3.5 tocó UI: estados, consola sin errores ni violaciones de CSP, red solo /api/* sin PII en URLs, accesibilidad y teclado, rendimiento y capturas a 375 y 1280 px; cada fallo se convierte primero en un test en rojo
+- [x] 3.1 `apps/web/e2e/soporte.ts`: ID del paciente (f) y conteo del listado derivado del seed en `pacientes-listado.spec.ts` (D4; si `l1d-310` ya lo derivó, solo añadir (f)) · test después · verificación: `pacientes-listado.spec.ts` en verde contra Compose · evidencia: `pacientes-listado.spec.ts` 2/2 en verde contra Compose; el conteo sale de `PACIENTES_SEMILLA` (`prisma/seed/pacientes/indice.ts`), no de un literal
+- [x] 3.2 E2E «ejecuta el análisis y muestra el resultado cuando el doctor continúa con el aviso de faltantes de FX-T3-a [US-071 AC-2]» en `apps/web/e2e/avisos-no-bloquean.spec.ts` · test del AC primero · commit `test(L1D-196)` · evidencia: caracterización, pasó al primer intento; mutación (botón deshabilitado con aviso) → rojo `toBeEnabled() failed`
+- [x] 3.3 E2E «muestra la opción con la etiqueta Población no comparable y sin ocultarla cuando se renderiza el análisis de FX-T3-a [US-071 AC-3]» · test del AC primero · commit `test(L1D-196)` · evidencia: caracterización; mutación (etiqueta de población oculta) → rojo `element(s) not found`
+- [x] 3.4 E2E «llega al resultado sin ningún dialog ni alertdialog cuando recorre login, ficha, vista de caso («Analizar la evidencia para este caso»), faltantes y panel («Analizar evidencia») con FX-T3-a [US-071 AC-5]» (paso «faltantes» en la columna de `l1d-96`; si se recortó, en el aviso del panel) · test del AC primero · commit `test(L1D-196)` · evidencia: caracterización; mutación (botón deshabilitado con aviso) → rojo
+- [x] 3.5 Si 3.2–3.4 fallan en la aserción: corrección mínima en el componente que bloquea, con su test de componente · commit `feat(L1D-196)`; si pasan, anotar la ejecución como evidencia · evidencia: 3.2–3.4 pasan sin corrección; no hubo código de producto
+- [x] 3.6 Loop visual (visual-check) solo si 3.5 tocó UI: estados, consola sin errores ni violaciones de CSP, red solo /api/* sin PII en URLs, accesibilidad y teclado, rendimiento y capturas a 375 y 1280 px; cada fallo se convierte primero en un test en rojo · no aplica: 3.5 no tocó UI; sin cambios de componentes
 - [ ] 3.7 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-196)`
 
 ## 4. Cierre
