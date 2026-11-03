@@ -286,6 +286,8 @@ términos del catálogo a través de un endpoint de lectura del catálogo en `cl
 
 `FEAT-03b` · Sprint 5 *(usuario, 2026-11-02, PRD E-17)* · Estimación **5** *(propuesta; se confirma en el refinamiento del S5)* · CAP-04 (AC-04.1) · RN-08, RN-11, RN-17, RN-26 · ↪ US-110, US-111 (registro manual), US-094 (tratamientos previos y atributos) · 🔗 Medido en: US-142 (G-Demo)
 
+> **Decidido (usuario, 2026-11-03, refinamiento del S5):** D-2: la corrección crea una fila nueva `manual_correction`, la anterior pasa a `reemplazado` y se enlazan con `supersedes_id` (migración aditiva en `biomarker`, `exam`, `clinical_note`) → [ADR-50](../../docs/architecture/adr/ADR-50-correccion-con-historico-supersedes.md) `[S5 resp. 2]`. D-6: estimación **5** confirmada. D-10: AC-5 se verifica como «la huella del contexto clínico cambia y el aviso del análisis previo no bloquea»; la reutilización es de US-251 (S6). Vive en la ficha, variante A (corrección en línea con histórico desplegable) `[S5 resp. 4]`; diseño `docs/ux/S5/pantallas-s5.md` S5-01.
+
 > **Origen:** feedback de oncólogos y equipo de producto (2026-11-02), registrado en el PRD como **E-17**. Sin OCR en el MVP, el caso se construye y se corrige a mano: además de registrar, el oncólogo necesita **editar** lo ya registrado. La entidad `clinical_note` ya existe en el modelo de datos (`note_type`: antecedente, comorbilidad, alergia, antecedente familiar, nota libre).
 
 ## Story

@@ -172,7 +172,9 @@ contra Compose con el seed; AC-4: Pytest con adapters falsos; AC-5: test de arra
 
 > Linear: [L1D-174](https://linear.app/l1der-lab-mjbc/issue/L1D-174)
 
-`FEAT-PL3` · Sprint 5 *(desde S2, sesión con oncólogos junto a ARR-05, `[S2 resp. 1]`; S4 → S5, `[S4 resp. 1]`)* · Estimación **1** · — (decisión) · FR-04 · TBD-13 (tendencias), R-24 · Dueño: oncólogo asesor · 🔗 Bloquea: FEAT-02b (cálculo de la tendencia ↑ ↓ = en ficha, vista de caso y contexto, US-091)
+`FEAT-PL3` · Sprint 6 *(S5 → S6, `[S5 resp. 3]`)* · Estimación **1** · — (decisión) · FR-04 · TBD-13 (tendencias), R-24 · Dueño: oncólogo asesor · 🔗 Bloquea: FEAT-02b (cálculo de la tendencia ↑ ↓ = en ficha, vista de caso y contexto, US-091)
+
+> **Decidido (usuario, 2026-11-03, refinamiento del S5):** D-3: pasa del S5 al **S6** para que el S5 (3 días) quepa con G-Demo. Se decide en la sesión con oncólogos del S6, junto a ARR-05. Ver [`S5-refinamiento.md`](../sprints/S5-refinamiento.md).
 
 > **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 

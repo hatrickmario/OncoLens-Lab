@@ -215,6 +215,8 @@ contra Compose en perfil de test.
 
 `FEAT-06b` · Sprint 5 · Estimación **3** · HU-18 · FR-09 (contexto con faltantes), FR-23 ("desconocido"), IA-03 · AC-04.3 (parte de Backend 2) · ↪ FEAT-04 US-006, US-057 · 🔗 Regresión [RN-11] → US-049 · 🔗 Regresión [RN-02] → US-055
 
+> **Decidido (usuario, 2026-11-03, refinamiento del S5):** comprometida en el S5 `[S5 resp. 3]`.
+
 ## Story
 Como oncólogo, quiero que la IA sepa qué datos críticos de mi paciente no se conocen y
 no los suponga, y que la búsqueda tenga en cuenta su línea de tratamiento, para que la
@@ -255,7 +257,9 @@ Tests: Pytest unitarios del constructor de prompt y de la consulta.
 
 > Linear: [L1D-270](https://linear.app/l1der-lab-mjbc/issue/L1D-270)
 
-`FEAT-06b` · Sprint 5 · Estimación **3** · — (técnica, PRD §17) · FR-09 (filtros), FR-27, RN-05, RN-22 · ↪ US-033 (AC-14), US-055, US-058 (`published_year` en Milvus) · Diseño: pantalla 08 · `[Pre-S1 resp. 15]`
+`FEAT-06b` · Sprint 6 *(S5 → S6, `[S5 resp. 3]`)* · Estimación **3** · — (técnica, PRD §17) · FR-09 (filtros), FR-27, RN-05, RN-22 · ↪ US-033 (AC-14), US-055, US-058 (`published_year` en Milvus) · Diseño: pantalla 08 · `[Pre-S1 resp. 15]`
+
+> **Decidido (usuario, 2026-11-03, refinamiento del S5):** D-3: pasa del S5 al **S6** para que el S5 (3 días) quepa con G-Demo. Ver [`S5-refinamiento.md`](../sprints/S5-refinamiento.md).
 
 ## Story
 Como oncólogo, quiero acotar la evidencia por año de publicación con un control deslizante,

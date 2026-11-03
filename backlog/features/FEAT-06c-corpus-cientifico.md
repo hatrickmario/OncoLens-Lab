@@ -630,6 +630,8 @@ aprobación y un ID nuevo).
 
 `FEAT-06c` · Sprint 5 *(usuario, 2026-11-02, PRD E-17)* · Estimación **5** *(propuesta; se confirma en el refinamiento del S5)* · CAP-02, CAP-08 · RN-13, RN-14 · ↪ US-247 (seed de la Demo 4), US-039 (seed sintético) · 🔗 Medido en: US-142 (G-Demo)
 
+> **Decidido (usuario, 2026-11-03, refinamiento del S5):** D-6: estimación **5** confirmada `[S5 resp. 4]`. Primer punto del orden de recorte del S5: si no da el ritmo, 4 pacientes en lugar de 7.
+
 > **Origen:** feedback de oncólogos y equipo de producto (2026-11-02), registrado en el PRD como **E-17**. Los 5 pacientes del seed actual no cubren la evolución de la enfermedad; los oncólogos piden casos en distintos momentos para probar el análisis y el debate.
 
 ## Story

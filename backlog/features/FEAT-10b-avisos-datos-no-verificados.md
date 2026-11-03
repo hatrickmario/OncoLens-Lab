@@ -17,7 +17,9 @@
 
 > Linear: [L1D-142](https://linear.app/l1der-lab-mjbc/issue/L1D-142)
 
-`FEAT-10b` · Sprint 5 *(S4 → S5, `[S4 resp. 1]`)* · Estimación **5** · HU-05 (escenario 3) · FR-11 (S2, dueña), RN-26 · AC-10.2 (avisos), AC-T3.3 (parte) · ↪ US-053, US-061, US-065, US-087 · 🔗 Regresión [RN-26] → US-071 · 🔗 Regresión [RN-23] → US-068 (texto nuevo) · 🔗 Produce para: US-136 (conflicto y faltantes, S5)
+`FEAT-10b` · Sprint 6 *(S5 → S6, `[S5 resp. 3]`)* · Estimación **5** · HU-05 (escenario 3) · FR-11 (S2, dueña), RN-26 · AC-10.2 (avisos), AC-T3.3 (parte) · ↪ US-053, US-061, US-065, US-087 · 🔗 Regresión [RN-26] → US-071 · 🔗 Regresión [RN-23] → US-068 (texto nuevo) · 🔗 Produce para: US-136 (conflicto y faltantes, S5)
+
+> **Decidido (usuario, 2026-11-03, refinamiento del S5):** D-3: pasa del S5 al **S6** para que el S5 (3 días) quepa con G-Demo. Ver [`S5-refinamiento.md`](../sprints/S5-refinamiento.md).
 
 > **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 
@@ -81,7 +83,9 @@ AC-3, AC-5, AC-6) y Playwright (AC-1, AC-4).
 
 > Linear: [L1D-143](https://linear.app/l1der-lab-mjbc/issue/L1D-143)
 
-`FEAT-10b` · Sprint 5 · Estimación **5** · HU-05 (escenario 3), HU-10, HU-22 · FR-11 (S3/S4: conflicto y faltantes, dueña), RN-26 · AC-10.2 (avisos de conflicto), AC-03.2 (aviso en dependientes), AC-08.4 (consumo), AC-04.3 (consumo), AC-T3.3 (parte) · ↪ US-101, US-124, US-099, FEAT-04 US-006 · 🔗 Relacionada: US-109 (resolución de conflictos, `si-hay-capacidad`) · 🔗 Consume: US-124 (`patientDataWarning` por criterio), US-125 (fuente más aplicable) · 🔗 Regresión [RN-26] → US-071 · 🔗 Regresión [RN-06] → US-053 · 🔗 Regresión [RN-23] → US-068 (texto nuevo)
+`FEAT-10b` · Post-MVP *(S5 → Post-MVP con el OCR, `[S5 resp. 3]`)* · Estimación **5** · HU-05 (escenario 3), HU-10, HU-22 · FR-11 (S3/S4: conflicto y faltantes, dueña), RN-26 · AC-10.2 (avisos de conflicto), AC-03.2 (aviso en dependientes), AC-08.4 (consumo), AC-04.3 (consumo), AC-T3.3 (parte) · ↪ US-101, US-124, US-099, FEAT-04 US-006 · 🔗 Relacionada: US-109 (resolución de conflictos, `si-hay-capacidad`) · 🔗 Consume: US-124 (`patientDataWarning` por criterio), US-125 (fuente más aplicable) · 🔗 Regresión [RN-26] → US-071 · 🔗 Regresión [RN-06] → US-053 · 🔗 Regresión [RN-23] → US-068 (texto nuevo)
+
+> **Decidido (usuario, 2026-11-03, refinamiento del S5):** D-3: sin extracción en el MVP (PRD E-17) no hay datos extraídos ni conflictos entre documentos que mostrar; pasa a **Post-MVP** con FEAT-01b `[S5 resp. 3]`.
 
 > **Dependencia hacia adelante (slicing v2, 2026-10-07):** US-109 (resolución de conflictos) es `si-hay-capacidad`. El conflicto lo detecta US-099 (S3) y queda `requiere_revision`; en el MVP se resuelve rechazando uno de los valores en la revisión (US-107, S4), y A-M2r del AC-3 representa ese estado.
 

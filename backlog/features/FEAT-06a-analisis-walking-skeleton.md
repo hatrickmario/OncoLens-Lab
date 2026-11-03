@@ -730,6 +730,8 @@ Autoescalado o varias réplicas de `rag-orchestrator`. Cola persistente entre re
 
 `FEAT-06a` · Sprint 5 *(usuario, 2026-11-02)* · Estimación **2** *(propuesta; se confirma en el refinamiento del S5)* · HU-03 · RN-06 · ↪ pasarela `POST /platform/evidence-analyses` (FEAT-06a) · 🔗 Medido en: US-252
 
+> **Decidido (usuario, 2026-11-03, refinamiento del S5):** D-6: estimación **2** confirmada `[S5 resp. 4]`.
+
 > **Origen:** Demo 4 (2026-11-02), [`docs/evidence/S4-demo4/S4-demo-outcomes.md`](../../docs/evidence/S4-demo4/S4-demo-outcomes.md), **OUT-05**. Con la pregunta en NFC (forma normal), 57 de 57 ejecuciones sobre el paciente semilla (a) dieron el mismo análisis; las 3 ejecuciones del usuario que dieron «0 opciones» traían la **misma pregunta visible en NFD** (`é`, `í`, `á`, `á` como letra + acento combinante: 206 caracteres frente a 202). Con NFD se reprodujo a propósito: 3 de 3 resultados distintos del de NFC, y variables entre sí. La recuperación no cambió; cambió lo que recibe el LLM.
 
 ## Story
