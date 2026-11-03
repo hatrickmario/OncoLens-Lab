@@ -86,10 +86,20 @@ function hallazgosDeOpciones(carpeta) {
   }
 }
 
-function seccionDeOpciones({ codigo, hallazgos }) {
+/** Alcance de la revisión humana de la familia (US-140 AC-5): solo las preguntas; el reporte da cuántas de 12. */
+function avisoDeRevisionDeOpciones(carpeta) {
+  try {
+    const { preguntas_validadas: revisadas, preguntas_no_validadas: sinRevisar } = leerJson(path.join(carpeta, NOMBRE_REPORTE_DE_OPCIONES)).metricas.m_10_1.validacion;
+    return `Preguntas revisadas por el oncólogo: ${revisadas} de ${revisadas + sinRevisar}; las fuentes esperadas y el orden no están revisados clínicamente.`;
+  } catch {
+    return null;
+  }
+}
+
+function seccionDeOpciones({ codigo, hallazgos, revision }) {
   const veredicto = codigo === 0 ? 'Invariantes cumplidas (M-10.1, M-10.2, orden de RN-28) y sin retroceso.' : `La familia terminó con código ${codigo}.`;
   const detalle = (hallazgos ?? []).map((h) => `- \`${textoSeguro(h)}\``);
-  return ['', '### Familia `opciones` (US-140)', '', veredicto, ...detalle];
+  return ['', '### Familia `opciones` (US-140)', '', veredicto, ...(revision ? [revision] : []), ...detalle];
 }
 
 /**
@@ -181,7 +191,7 @@ export function ejecutar({ raiz = RAIZ, base, baseline = BASELINE_POR_DEFECTO, s
   }
   const umbrales = comprobarUmbrales(raiz, reporte, entorno);
   const codigoDeOpciones = ejecutarFamiliaDeOpciones(raiz, carpeta, entorno);
-  const opciones = { codigo: codigoDeOpciones, hallazgos: codigoDeOpciones === 0 ? [] : hallazgosDeOpciones(carpeta) };
+  const opciones = { codigo: codigoDeOpciones, hallazgos: codigoDeOpciones === 0 ? [] : hallazgosDeOpciones(carpeta), revision: avisoDeRevisionDeOpciones(carpeta) };
   publicarComentario(comentario({ motivos, tolerancia, comparacion, umbrales, opciones }), carpeta, entorno);
   const contraBaseline = comparacion ? veredictoDeRegresion(comparacion, { baseline, tolerancia }) : { codigo: 0, salida: [], errores: [] };
   imprimir(contraBaseline, umbrales);

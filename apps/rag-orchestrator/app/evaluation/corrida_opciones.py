@@ -25,6 +25,7 @@ from typing import Any
 from app.application.ports import Clock
 from app.config.settings import Settings
 from app.domain.aplicabilidad_tipos import CriterioEvaluado
+from app.domain.applicability_order import contar_excluyentes_no_coincide
 from app.domain.support import OpcionPlanificada, PlanDeSoporte, afirmaciones_para_el_nli
 from app.evaluation.afirmaciones import plan_de_la_propuesta
 from app.evaluation.catalogo_con_poblacion import CatalogoConPoblacion
@@ -80,6 +81,7 @@ SALIDA_POR_DEFECTO = Path("eval") / "results"
 CLAVE_DE_META_FIDELIDAD = "fidelidad_proxy"
 CLAVE_DE_META_PRECISION = "precision_citas"
 ORIGEN_DE_LAS_METAS = "metas_iniciales_dec07_pendiente"
+ALCANCE_DE_LA_REVISION = "preguntas"
 
 
 @dataclass(frozen=True)
@@ -121,8 +123,18 @@ def ejecutar_opciones(
     medidor = puertos.medidor or (lambda c, d: asyncio.run(medir_opciones(c, d, reloj, origen)))
     medido = medidor(config, dataset)
     reporte = _reporte(config, dataset, medido, referencia)
+    print(_aviso_de_la_revision(medido))
     escribir_reporte_cerrado(_ruta_del_resultado(config, args, reloj), reporte, ESQUEMA_OPCIONES)
     return _veredicto(medido, _retrocesos(medido, config, referencia))
+
+
+def _aviso_de_la_revision(medido: MedicionDeOpciones) -> str:
+    """Qué alcanza la revisión humana: solo las preguntas; las fuentes esperadas y el orden no están revisados."""
+    revisadas = sum(a.revisada for a in medido.analisis)
+    return (
+        f"evaluate: preguntas revisadas por el oncólogo: {revisadas} de {len(medido.analisis)}; "
+        "las fuentes esperadas y el orden no están revisados clínicamente"
+    )
 
 
 async def medir_opciones(
@@ -198,8 +210,11 @@ async def _analisis_de(
     caso = dataset.caso_de(caso_id)
     por_nombre = _plan_por_opcion(servicio, dataset, texto_de_la_pregunta)
     entregados = servicio.observaciones.entregados.get(texto_de_la_pregunta, frozenset())
+    memoria = _Memoria.de(dataset, caso.paciente)
     mostradas = [
-        await _opcion_mostrada(servicio, respuesta, opcion, posicion, entregados, por_nombre)
+        await _opcion_mostrada(
+            servicio, respuesta, opcion, posicion, entregados, por_nombre, memoria
+        )
         for posicion, opcion in enumerate(respuesta.evidenceOptions, 1)
     ]
     return AnalisisDeOpciones(
@@ -212,6 +227,36 @@ async def _analisis_de(
         campos_nivel_b=resultado.salidas_mostradas_nivel_b,
         campos_con_termino=resultado.campos_mostrados,
     )
+
+
+@dataclass(frozen=True)
+class _Memoria:
+    """Lo que no puede ser cita (RN-24): todo lo que no es un chunk del corpus y los textos de los análisis previos."""
+
+    chunks_del_corpus: frozenset[str]
+    textos_previos: tuple[str, ...]
+
+    @classmethod
+    def de(cls, dataset: DatasetOpciones, paciente: str) -> _Memoria:
+        previos = dataset.contextos[paciente].get("priorAnalyses") or []
+        textos = [
+            texto
+            for p in previos
+            for texto in (
+                p.get("question"),
+                p.get("synthesisSummary"),
+                *p.get("optionsDescribed", []),
+            )
+            if texto
+        ]
+        return cls(frozenset(c.id for c in dataset.base.chunks), tuple(textos))
+
+    def es_citada_por(self, opcion: EvidenceOption) -> bool:
+        return any(
+            f.chunkId not in self.chunks_del_corpus
+            or any(texto in f.chunkTextSnapshot for texto in self.textos_previos)
+            for f in opcion.citedSources
+        )
 
 
 def _plan_por_opcion(
@@ -239,6 +284,7 @@ async def _opcion_mostrada(
     posicion: int,
     entregados: frozenset[str],
     plan: Mapping[str, OpcionPlanificada],
+    memoria: _Memoria,
 ) -> OpcionMostrada:
     fuentes = opcion.citedSources
     return OpcionMostrada(
@@ -247,6 +293,8 @@ async def _opcion_mostrada(
         cita_a_chunk_entregado=bool(fuentes) and all(f.chunkId in entregados for f in fuentes),
         soporte_nli=await _tiene_soporte(servicio, plan.get(opcion.option)),
         ordenable=ordenable_de(respuesta.applicability, opcion, f"o{posicion}"),
+        fuente_evaluada=fuente_evaluada(respuesta.applicability, opcion),
+        memoria_citada=memoria.es_citada_por(opcion),
     )
 
 
@@ -267,11 +315,32 @@ async def _tiene_soporte(servicio: ServicioDeSuite, planificada: OpcionPlanifica
 
 
 def criterios_evaluados_del_contrato(fuente: SourceApplicability) -> list[CriterioEvaluado]:
-    raise NotImplementedError("no implementado")
+    """Los criterios de la respuesta como ``CriterioEvaluado`` del dominio: así la regla de los excluyentes en No coincide
+    tiene un solo dueño (``domain/applicability_order``)."""
+    return [
+        CriterioEvaluado(
+            clave=c.criterion,
+            valor_paciente=c.patientValue,
+            valor_estudio=c.studyPopulationValue,
+            estado=c.status.value,
+            causa=None,
+            es_excluyente=c.isExclusionary,
+        )
+        for c in fuente.criteria
+    ]
+
+
+def _fuente_mas_aplicable(
+    aplicabilidad: Sequence[SourceApplicability], opcion: EvidenceOption
+) -> SourceApplicability | None:
+    """La fuente de ``perSource[0]`` (ya en orden de RN-28, ADR-31) tal como figura en ``applicability``."""
+    if not opcion.perSource:
+        return None
+    return next((f for f in aplicabilidad if f.externalId == opcion.perSource[0].externalId), None)
 
 
 def fuente_evaluada(aplicabilidad: Sequence[SourceApplicability], opcion: EvidenceOption) -> bool:
-    raise NotImplementedError("no implementado")
+    return _fuente_mas_aplicable(aplicabilidad, opcion) is not None
 
 
 def ordenable_de(
@@ -279,13 +348,11 @@ def ordenable_de(
 ) -> OpcionOrdenable:
     """Los datos de la fuente más aplicable de la opción (``perSource[0]``, ADR-31): su resumen, si es no comparable y,
     de ``applicability``, cuántos criterios excluyentes tiene en No coincide (el contrato no los trae por opción)."""
-    mas_aplicable = opcion.perSource[0].externalId if opcion.perSource else None
-    criterios = next((f.criteria for f in aplicabilidad if f.externalId == mas_aplicable), [])
+    fuente = _fuente_mas_aplicable(aplicabilidad, opcion)
+    criterios = criterios_evaluados_del_contrato(fuente) if fuente else []
     return OpcionOrdenable(
         id=identificador,
-        excluyentes_no_coincide=sum(
-            1 for c in criterios if c.isExclusionary and c.status.value == "no_coincide"
-        ),
+        excluyentes_no_coincide=contar_excluyentes_no_coincide(criterios),
         coincide=opcion.applicabilitySummary.coincide,
         relevance_score=opcion.relevanceScore,
         poblacion_no_comparable=opcion.populationNotComparable,
@@ -349,6 +416,7 @@ def _reporte(
         "suite": SUITE_OPCIONES,
         "configuracion": _configuracion(config, dataset, medido.version_de_la_lista),
         "metricas": _metricas(medido),
+        "alcance_de_la_revision": ALCANCE_DE_LA_REVISION,
         "metricas_validadas": _metricas(revisadas),
         "invariantes": _invariantes(medido),
         "regresion": _regresion(config, medido, referencia),

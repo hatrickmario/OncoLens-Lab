@@ -113,6 +113,7 @@ describe('eval-required', { timeout: 90_000 }, () => {
     expect(JSON.parse(resultado.opciones).suite).toBe('opciones');
     expect(resultado.comentario).toContain('### Familia `opciones` (US-140)');
     expect(resultado.comentario).toContain('Invariantes cumplidas');
+    expect(resultado.comentario).toContain('Preguntas revisadas por el oncólogo: 0 de 12; las fuentes esperadas y el orden no están revisados clínicamente');
   });
 
   it('falla y nombra la familia opciones y la métrica cuando su fidelidad retrocede más que la tolerancia [US-140 AC-4] [US-140 AC-2]', () => {

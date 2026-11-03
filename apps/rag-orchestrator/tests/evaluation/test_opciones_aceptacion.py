@@ -409,7 +409,11 @@ def test_opciones_rotula_validada_solo_la_metrica_de_los_4_casos_revisados_cuand
         ruta = dataset / "preguntas.yaml"
         crudo = yaml.safe_load(ruta.read_text(encoding="utf-8"))
         for pregunta in crudo["preguntas"]:
-            pregunta["revisada_por_oncologo"] = pregunta["id"] in REVISADAS_DE_PRUEBA
+            pregunta["revisada_por_oncologo"] = (
+                {"rol": "oncologo", "fecha": "2026-11-03"}
+                if pregunta["id"] in REVISADAS_DE_PRUEBA
+                else None
+            )
         ruta.write_text(yaml.safe_dump(crudo, allow_unicode=True), encoding="utf-8")
 
     codigo, reporte = correr(tmp_path / "s", config=variante(tmp_path, revisar_cuatro))

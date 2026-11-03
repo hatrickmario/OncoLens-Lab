@@ -17,8 +17,8 @@ from app.evaluation.metricas.orden_opciones import (
     ids_no_comparables_antes_de_una_comparable,
 )
 
-Invariante = Literal["M-10.1", "M-10.2", "RN-28", "RN-28-no-comparable"]
-INVARIANTES: tuple[Invariante, ...] = ("M-10.1", "M-10.2", "RN-28", "RN-28-no-comparable")
+Invariante = Literal["M-10.1", "M-10.2", "RN-24", "RN-28", "RN-28-no-comparable"]
+INVARIANTES: tuple[Invariante, ...] = ("M-10.1", "M-10.2", "RN-24", "RN-28", "RN-28-no-comparable")
 
 
 @dataclass(frozen=True)
@@ -34,7 +34,9 @@ class OpcionMostrada:
     """Todas sus afirmaciones atómicas tienen veredicto ``entailment`` del NLI registrado (RN-01)."""
     ordenable: OpcionOrdenable
     fuente_evaluada: bool = True
+    """Su fuente más aplicable figura en ``applicability``: sin ella no se pudo comprobar el orden (falla cerrado)."""
     memoria_citada: bool = False
+    """Cita algo que no es un chunk del corpus o reproduce un análisis previo (RN-24: la memoria nunca es cita ni soporte)."""
 
 
 @dataclass(frozen=True)
@@ -78,15 +80,23 @@ def violaciones_de(analisis: AnalisisDeOpciones) -> tuple[Violacion, ...]:
     sin_soporte = [o.id for o in analisis.opciones if not opcion_con_cita_y_soporte(o)]
     orden = ids_con_orden_violado(analisis.ordenables)
     no_comparables = ids_no_comparables_antes_de_una_comparable(analisis.ordenables)
+    sin_fuente = [o.id for o in analisis.opciones if not o.fuente_evaluada]
+    con_memoria = [o.id for o in analisis.opciones if o.memoria_citada]
     return (
-        *([Violacion("M-10.1", caso, ",".join(sin_soporte))] if sin_soporte else []),
+        *([Violacion("M-10.1", caso, "+".join(sin_soporte))] if sin_soporte else []),
+        *([Violacion("RN-24", caso, "+".join(con_memoria))] if con_memoria else []),
+        *(
+            [Violacion("RN-28", caso, "+".join([*sin_fuente, "sin_fuente_en_applicability"]))]
+            if sin_fuente
+            else []
+        ),
         *(
             Violacion("M-10.2", caso, f"{campo}:{regla}")
             for campo, regla in analisis.campos_con_termino
         ),
-        *([Violacion("RN-28", caso, ",".join(orden))] if orden else []),
+        *([Violacion("RN-28", caso, "+".join(orden))] if orden else []),
         *(
-            [Violacion("RN-28-no-comparable", caso, ",".join(no_comparables))]
+            [Violacion("RN-28-no-comparable", caso, "+".join(no_comparables))]
             if no_comparables
             else []
         ),

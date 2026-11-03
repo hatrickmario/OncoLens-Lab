@@ -285,7 +285,8 @@ def componer_servicio(
             aplicabilidad.catalogo if aplicabilidad else CatalogoEnMemoria(dataset), cronometro
         ),
         catalogo_clinico=CatalogoClinicoDeConfig(config.catalogo_version, tipos_habilitados),
-        # Sin criterios: la suite mide la recuperación y la generación; la aplicabilidad se mide en US-132 (M-08.2).
+        # Sin ``aplicabilidad`` la suite no calcula criterios (mide recuperación y generación; M-08.2 es de US-132); con ella
+        # (familia `opciones`, US-140) el servicio evalúa la aplicabilidad por fuente.
         aplicabilidad=ApplicabilityService(
             aplicabilidad.criterios if aplicabilidad else CriteriosDelCatalogo({})
         ),

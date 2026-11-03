@@ -104,6 +104,7 @@ def cargar_dataset_opciones(directorio: Path) -> DatasetOpciones:
     except (KeyError, TypeError, AttributeError, ValueError, ValidationError):
         raise DatasetInvalido("el dataset de opciones no tiene la forma esperada") from None
     _exigir_coherencia(dataset)
+    _exigir_revisiones_con_rol_y_fecha(directorio / str(manifiesto["archivos"]["preguntas"]))
     return dataset
 
 
@@ -130,6 +131,30 @@ def _exigir_coherencia(dataset: DatasetOpciones) -> None:
         raise DatasetInvalido(
             "los documentos y las poblaciones del dataset de opciones no coinciden"
         )
+
+
+def _exigir_revisiones_con_rol_y_fecha(ruta: Path) -> None:
+    """``revisada_por_oncologo`` es ``null`` (sin revisar) o ``{rol, fecha}`` sin nombre de persona (RN-10): un booleano o una
+    revisión sin rol o sin fecha fabricaría una validación humana sin saber quién la hizo ni cuándo."""
+    for pregunta in _leer_yaml(ruta, "preguntas.yaml")["preguntas"]:
+        revision = pregunta.get("revisada_por_oncologo")
+        if revision is None:
+            continue
+        if not _es_revision_con_rol_y_fecha(revision):
+            raise DatasetInvalido(
+                "revisada_por_oncologo debe ser null o {rol, fecha} sin nombre (RN-10)"
+            )
+
+
+def _es_revision_con_rol_y_fecha(revision: object) -> bool:
+    """Exactamente ``rol`` (texto) y ``fecha`` (texto o fecha YAML): ninguna otra clave, ninguna vacía."""
+    return (
+        isinstance(revision, dict)
+        and set(revision) == {"rol", "fecha"}
+        and isinstance(revision["rol"], str)
+        and bool(revision["rol"].strip())
+        and bool(revision["fecha"])
+    )
 
 
 def _caso(identificador: str, crudo: Mapping[str, Any]) -> CasoDeOpciones:

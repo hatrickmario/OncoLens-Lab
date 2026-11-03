@@ -452,7 +452,7 @@ _METRICAS_DE_OPCIONES = Objeto(
         for nombre, campos in _FAMILIA_DE_OPCIONES.items()
     }
 )
-_INVARIANTES_DE_OPCIONES = frozenset({"M-10.1", "M-10.2", "RN-28", "RN-28-no-comparable"})
+_INVARIANTES_DE_OPCIONES = frozenset({"M-10.1", "M-10.2", "RN-24", "RN-28", "RN-28-no-comparable"})
 
 ESQUEMA_OPCIONES = Objeto(
     {
@@ -475,6 +475,9 @@ ESQUEMA_OPCIONES = Objeto(
             }
         ),
         "metricas": _METRICAS_DE_OPCIONES,
+        # Qué alcanza la revisión humana: solo la pregunta de cada caso; las fuentes esperadas, el orden y las propuestas
+        # los fija quien lee la regla, no un oncólogo.
+        "alcance_de_la_revision": Enumerado(frozenset({"preguntas"})),
         # Las mismas métricas calculadas solo sobre los casos revisados por el oncólogo: la única cifra rotulada «validada».
         "metricas_validadas": _METRICAS_DE_OPCIONES,
         "invariantes": Objeto(
