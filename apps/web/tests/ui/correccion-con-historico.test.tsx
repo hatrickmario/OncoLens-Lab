@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
@@ -153,25 +153,6 @@ describe('Corrección con histórico en la ficha', () => {
     },
   );
 
-  it('mantiene el aviso de análisis anteriores tras una segunda corrección de la misma nota [US-253 AC-5]', async () => {
-    bff.corregirNota(201, corregidaNota);
-    const props = { pacienteId: ID_DEL_PACIENTE, egresado: false };
-    const notas = listaDeNotas.items as unknown as ClinicalNote[];
-    const { rerender } = render(<NotasClinicasDeFicha notas={notas} {...props} />);
-    const usuario = userEvent.setup();
-    await usuario.click(screen.getAllByRole('button', { name: /Corregir dato/ })[0]!);
-    await usuario.click(screen.getByRole('button', { name: correccion.formulario.guardar }));
-    expect(await screen.findByText(correccion.avisoAnalisisAnteriores)).toBeTruthy();
-
-    const siguiente = [
-      { ...notas[0]!, id: 'a1b2c3d4-0000-4000-8000-000000000001', supersedesId: notas[0]!.id },
-      ...notas.slice(1),
-    ];
-    rerender(<NotasClinicasDeFicha notas={siguiente} {...props} />);
-
-    expect(screen.getByText(correccion.avisoAnalisisAnteriores)).toBeTruthy();
-  });
-
   it.each([
     [409, errorDatoNoVigente, correccion.errores.noVigente],
     [403, errorPermisoDenegado, correccion.errores.permiso],
@@ -247,7 +228,7 @@ describe('Corrección con histórico en la ficha', () => {
     expect(cabecera.classList.contains('relative')).toBe(true);
   });
 
-  it('envía el texto y el tipo de la nota y la muestra tras guardar [US-253 AC-2]', async () => {
+  it('envía el texto y el tipo de la nota, cierra el diálogo y no muestra el aviso de análisis anteriores [US-253 AC-2]', async () => {
     bff.corregirNota(201, corregidaNota);
     const usuario = montarNotas();
     await usuario.click(screen.getAllByRole('button', { name: /Corregir dato/ })[0]!);
@@ -257,7 +238,8 @@ describe('Corrección con histórico en la ficha', () => {
     await usuario.type(campo, 'Texto corregido.');
     await usuario.click(screen.getByRole('button', { name: correccion.formulario.guardar }));
 
-    expect(await screen.findByText(correccion.avisoAnalisisAnteriores)).toBeTruthy();
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(screen.queryByText(correccion.avisoAnalisisAnteriores)).toBeNull();
     expect(bff.peticiones[0]?.cuerpo).toEqual({
       noteType: 'antecedente',
       content: 'Texto corregido.',
