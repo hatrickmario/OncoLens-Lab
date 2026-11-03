@@ -77,7 +77,12 @@ describe('Route Handlers del tratamiento previo manual', () => {
   });
 
   it('retransmite el esquema no mapeado del 201 sin código inventado [US-094 AC-2]', async () => {
-    clinicalApi.responder('post', RUTAS.tratamiento, 201, ejemplo('prior-treatment-no-mapeado.json'));
+    clinicalApi.responder(
+      'post',
+      RUTAS.tratamiento,
+      201,
+      ejemplo('prior-treatment-no-mapeado.json'),
+    );
 
     const { respuesta } = crearTratamiento(VALIDAS, {
       setting: 'otro',
@@ -128,7 +133,12 @@ describe('Route Handlers del tratamiento previo manual', () => {
   });
 
   it('no escribe el esquema registrado en el log [US-094 AC-1] [RN-10]', async () => {
-    clinicalApi.responder('post', RUTAS.tratamiento, 201, ejemplo('prior-treatment-manual-creado.json'));
+    clinicalApi.responder(
+      'post',
+      RUTAS.tratamiento,
+      201,
+      ejemplo('prior-treatment-manual-creado.json'),
+    );
 
     const { respuesta, lineas } = crearTratamiento(VALIDAS, ejemplo('prior-treatment-manual.json'));
     await respuesta;
@@ -154,7 +164,12 @@ describe('Route Handlers del atributo clínico', () => {
   });
 
   it('retransmite el 422 con el campo que indica clinical-api [US-094 AC-6]', async () => {
-    clinicalApi.responder('post', RUTAS.atributos, 422, ejemplo('error-registro-clinico-campo.json'));
+    clinicalApi.responder(
+      'post',
+      RUTAS.atributos,
+      422,
+      ejemplo('error-registro-clinico-campo.json'),
+    );
 
     const { respuesta } = crearAtributo(VALIDAS, ejemplo('clinical-attribute-manual.json'));
     const recibida = await respuesta;
@@ -199,6 +214,8 @@ describe('Route Handlers del atributo clínico', () => {
     assertMatchesSpec('clinical-api', '#/components/schemas/ClinicalAttributeList', cuerpo);
     expect(cuerpo).toEqual(ejemplo('clinical-attributes-list.json'));
     expect(recibida.headers.get('cache-control')).toBe('no-store');
-    expect(clinicalApi.peticiones[0]!.cabeceras['cookie']).toBe('oncolens_session=sesion-sintetica-1');
+    expect(clinicalApi.peticiones[0]!.cabeceras['cookie']).toBe(
+      'oncolens_session=sesion-sintetica-1',
+    );
   });
 });

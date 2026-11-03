@@ -34,7 +34,10 @@ describe('los logs del registro manual de tratamientos y atributos', () => {
       ongoing: false,
       endReason: 'desconocido',
     });
-    const rechazado = await enviar('clinical-attributes', { attributeKey: 'color_ojos', value: 'azules' });
+    const rechazado = await enviar('clinical-attributes', {
+      attributeKey: 'color_ojos',
+      value: 'azules',
+    });
     const atributo = await enviar('clinical-attributes', {
       attributeKey: 'estado_castracion',
       value: 'castrado',

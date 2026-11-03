@@ -17,7 +17,11 @@ export type CuerpoDeTratamiento = z.output<typeof zCreateManualPriorTreatmentBod
 const CAMPOS_DEL_CONTRATO = Object.keys(zCreateManualPriorTreatmentBody.shape);
 
 export function leerCuerpoDeTratamiento(cuerpo: unknown): LecturaDeCuerpo<CuerpoDeTratamiento> {
-  const lectura = leerCuerpoDelContrato(zCreateManualPriorTreatmentBody, CAMPOS_DEL_CONTRATO, cuerpo);
+  const lectura = leerCuerpoDelContrato(
+    zCreateManualPriorTreatmentBody,
+    CAMPOS_DEL_CONTRATO,
+    cuerpo,
+  );
   if (!lectura.valido) return lectura;
   const incoherente = campoIncoherenteDelFin(lectura.cuerpo);
   return incoherente === undefined ? lectura : cuerpoInvalido(incoherente);

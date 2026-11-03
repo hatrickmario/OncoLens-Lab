@@ -26,7 +26,9 @@ function montar() {
   return [
     componerModuloDeTratamientos({
       ...SIN_USO,
-      reconciliacionPara: () => ({ decidir: () => Promise.reject(new Error('no se usa')) as never }),
+      reconciliacionPara: () => ({
+        decidir: () => Promise.reject(new Error('no se usa')) as never,
+      }),
     }),
     componerModuloDeAtributos({
       ...SIN_USO,

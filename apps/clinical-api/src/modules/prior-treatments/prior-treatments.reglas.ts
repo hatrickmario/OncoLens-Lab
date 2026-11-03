@@ -1,9 +1,14 @@
-import type { CuerpoDeTratamiento } from './prior-treatments.schema.js';
+import type { MotivoDeFin } from './ports.js';
 
 /** Motivo de fin que se guarda de un tratamiento en curso: la columna es `NOT NULL` (`[S5 resp. 13]`). */
-export const MOTIVO_DE_FIN_EN_CURSO = 'desconocido';
+export const MOTIVO_DE_FIN_EN_CURSO: MotivoDeFin = 'desconocido';
 
-type CamposDelFin = Pick<CuerpoDeTratamiento, 'ongoing' | 'startedAt' | 'endedAt' | 'endReason'>;
+interface CamposDelFin {
+  readonly ongoing: boolean;
+  readonly startedAt?: string | undefined;
+  readonly endedAt?: string | undefined;
+  readonly endReason?: MotivoDeFin | undefined;
+}
 
 /**
  * Coherencia entre `ongoing`, las fechas y el motivo de fin (design D3): uno en curso no lleva `endedAt` ni
@@ -17,11 +22,13 @@ export function campoIncoherenteDelFin(cuerpo: CamposDelFin): 'endedAt' | 'endRe
   }
   if (cuerpo.endReason === undefined) return 'endReason';
   const terminaAntesDeEmpezar =
-    cuerpo.startedAt !== undefined && cuerpo.endedAt !== undefined && cuerpo.endedAt < cuerpo.startedAt;
+    cuerpo.startedAt !== undefined &&
+    cuerpo.endedAt !== undefined &&
+    cuerpo.endedAt < cuerpo.startedAt;
   return terminaAntesDeEmpezar ? 'endedAt' : undefined;
 }
 
 /** Motivo de fin que se persiste: el enviado, o `desconocido` mientras el tratamiento sigue en curso. */
-export function motivoDeFinPersistido(cuerpo: Pick<CuerpoDeTratamiento, 'endReason'>) {
+export function motivoDeFinPersistido(cuerpo: Pick<CamposDelFin, 'endReason'>): MotivoDeFin {
   return cuerpo.endReason ?? MOTIVO_DE_FIN_EN_CURSO;
 }

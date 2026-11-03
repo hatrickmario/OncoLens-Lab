@@ -76,7 +76,9 @@ describe('subconjunto de ATC del catálogo real (DEC-04)', () => {
   ])(
     'los fármacos de la demo de %s resuelven con ReconciliationService a su código ATC real: %s [US-094 AC-1] [RN-27]',
     (tipo, regimen, codigo) => {
-      const proveedor = crearProveedorDeCatalogo(RUTA_CATALOGO_REAL, (r) => readFileSync(r, 'utf8'));
+      const proveedor = crearProveedorDeCatalogo(RUTA_CATALOGO_REAL, (r) =>
+        readFileSync(r, 'utf8'),
+      );
       const catalogo = crearCatalogoTerminologico(
         RUTA_CATALOGO_REAL,
         (r) => readFileSync(r, 'utf8'),

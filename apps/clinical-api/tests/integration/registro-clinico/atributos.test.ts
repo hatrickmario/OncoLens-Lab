@@ -108,7 +108,10 @@ describe('registro manual de un atributo clínico', () => {
   });
 
   it('guarda observedAt nulo y precisión incierta cuando el atributo no trae fecha [US-094 AC-3]', async () => {
-    const respuesta = await registrar({ attributeKey: 'estado_castracion', value: 'castrado' }, pCaso);
+    const respuesta = await registrar(
+      { attributeKey: 'estado_castracion', value: 'castrado' },
+      pCaso,
+    );
 
     expect(respuesta.status).toBe(201);
     expect(respuesta.body).toMatchObject({ observedAt: null, datePrecision: 'incierta' });
@@ -169,13 +172,15 @@ describe('lectura de atributos clínicos', () => {
     const claves = (respuesta.body.items as { key: string; observedAt: string | null }[]).map(
       (a) => [a.key, a.observedAt],
     );
-    expect(claves).toEqual([...claves].sort(([a, fa], [b, fb]) => {
-      if (a !== b) return String(a) < String(b) ? -1 : 1;
-      if (fa === fb) return 0;
-      if (fa === null) return 1;
-      if (fb === null) return -1;
-      return String(fa) < String(fb) ? -1 : 1;
-    }));
+    expect(claves).toEqual(
+      [...claves].sort(([a, fa], [b, fb]) => {
+        if (a !== b) return String(a) < String(b) ? -1 : 1;
+        if (fa === fb) return 0;
+        if (fa === null) return 1;
+        if (fb === null) return -1;
+        return String(fa) < String(fb) ? -1 : 1;
+      }),
+    );
   });
 
   it('trae los atributos permitidos del tipo de cáncer y la versión del catálogo montado [US-094 AC-6] [RN-29]', async () => {
@@ -187,7 +192,10 @@ describe('lectura de atributos clínicos', () => {
       label: string;
       values: { value: string; label: string }[];
     }[];
-    expect(permitidos.map((a) => a.key).sort()).toEqual(['estado_castracion', 'sitios_metastasicos']);
+    expect(permitidos.map((a) => a.key).sort()).toEqual([
+      'estado_castracion',
+      'sitios_metastasicos',
+    ]);
     expect(
       permitidos.find((a) => a.key === 'estado_castracion')?.values.map((v) => v.value),
     ).toContain('sensible_castracion');
@@ -270,7 +278,9 @@ describe('validación y acceso de los atributos clínicos', () => {
     const fuenteCaida = {
       connect: () => {
         intentos += 1;
-        return Promise.reject(new Error('FATAL: password authentication failed; value posmenopausica'));
+        return Promise.reject(
+          new Error('FATAL: password authentication failed; value posmenopausica'),
+        );
       },
     };
 

@@ -11,7 +11,10 @@ export async function GET(
   request: Request,
   contexto: { params: Promise<{ id: string }> },
 ): Promise<Response> {
-  const manejador = crearManejadorDeRegistroManual(dependenciasDeEntorno(), 'listClinicalAttributes');
+  const manejador = crearManejadorDeRegistroManual(
+    dependenciasDeEntorno(),
+    'listClinicalAttributes',
+  );
   return manejador(request, await contexto.params);
 }
 

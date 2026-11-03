@@ -4,7 +4,10 @@ import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import { exigirPacienteQueAdmiteRegistros } from '../compartido/paciente-activo.js';
 import type { ReconciliationService } from '../reconciliation/ports.js';
 import type { CuerpoDeTratamiento } from './prior-treatments.schema.js';
-import { armarTratamientoManual, comoTratamientoDelContrato } from './prior-treatments.tratamiento.js';
+import {
+  armarTratamientoManual,
+  comoTratamientoDelContrato,
+} from './prior-treatments.tratamiento.js';
 import type { RepositorioDeTratamientos } from './ports.js';
 
 export interface SolicitudDeTratamiento {

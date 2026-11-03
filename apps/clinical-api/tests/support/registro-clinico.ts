@@ -73,7 +73,10 @@ export function montarRegistroClinico(
     catalogo: crearCatalogoDeAtributos(
       opciones.rutaDelCatalogoDeAtributos ?? RUTA_CATALOGO_REAL,
       leerTexto,
-      crearProveedorDeCatalogo(opciones.rutaDelCatalogoDeAtributos ?? RUTA_CATALOGO_REAL, leerTexto),
+      crearProveedorDeCatalogo(
+        opciones.rutaDelCatalogoDeAtributos ?? RUTA_CATALOGO_REAL,
+        leerTexto,
+      ),
     ),
     reloj,
     generarId: mundo.ids,

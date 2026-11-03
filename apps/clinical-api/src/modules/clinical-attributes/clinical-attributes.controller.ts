@@ -4,7 +4,11 @@ import type { Registrar } from '../../infrastructure/logger.js';
 import type { TraceIdGenerator } from '../../infrastructure/trace-id-generator.js';
 import { authorize } from '../../middleware/authorize.js';
 import { crearTraceIdMiddleware } from '../../middleware/trace-id.middleware.js';
-import { crearCuerpoIlegible, registrarResultado, type Rechazo } from '../compartido/http-escritura.js';
+import {
+  crearCuerpoIlegible,
+  registrarResultado,
+  type Rechazo,
+} from '../compartido/http-escritura.js';
 import { PacienteNoEncontradoError } from '../compartido/pacientes.errores.js';
 import { crearRegistroHttp } from '../compartido/registro-http.js';
 import { idDePacienteSchema } from '../patients/patients.schema.js';

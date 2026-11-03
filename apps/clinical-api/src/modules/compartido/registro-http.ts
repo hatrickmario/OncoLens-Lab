@@ -44,50 +44,56 @@ function rechazoDeRegistro(error: unknown): Rechazo | undefined {
   return comun;
 }
 
+/** El 422 de un cuerpo que no cumple el contrato, con el NOMBRE del campo cuando se sabe cuál es. */
+function rechazoPorCuerpoInvalido(campo: string | undefined): Rechazo {
+  return { ...CUERPO_INVALIDO, ...(campo !== undefined && { campo }) };
+}
+
+/** Ejecuta la operación y responde 201 `no-store`, o traduce el error de dominio (404, 422) a su rechazo. */
+async function ejecutarYResponder<S, C, R>(
+  { servicioPara, registrar }: DependenciasDelRegistro<S>,
+  operacion: OperacionDeRegistro<S, C, R>,
+  response: Response,
+  solicitud: { patientId: string; cuerpo: C },
+): Promise<void> {
+  const { patientId } = solicitud;
+  try {
+    const creado = await operacion.ejecutar(servicioPara(traceIdDe(response)), solicitud);
+    const etiquetas = operacion.etiquetasDelLog?.(creado);
+    registrarResultado(registrar, operacion.evento, response, patientId, 'ok', etiquetas);
+    response.setHeader('Cache-Control', 'no-store');
+    response.status(201).json(creado);
+  } catch (error) {
+    if (error instanceof PacienteNoEncontradoError) {
+      rechazarNoEncontrado(response, registrar, operacion.evento);
+      return;
+    }
+    const rechazo = operacion.rechazoPropioDe?.(error) ?? rechazoDeRegistro(error);
+    if (rechazo === undefined) throw error;
+    rechazar(registrar, operacion.evento, response, rechazo, patientId);
+  }
+}
+
 export function crearRegistroHttp<S, C, R>(
   dependencias: DependenciasDelRegistro<S>,
   operacion: OperacionDeRegistro<S, C, R>,
 ) {
-  const { registrar, servicioPara } = dependencias;
+  const { registrar } = dependencias;
   return async (request: Request, response: Response): Promise<void> => {
-    const rechazarCon = (rechazo: Rechazo, patientId?: string): void =>
-      rechazar(registrar, operacion.evento, response, rechazo, patientId);
     const patientId = idDePacienteSchema.safeParse(request.params['patientId']);
     const lectura = operacion.leerCuerpo(request.body);
     if (!lectura.valido) {
-      rechazarCon(
-        { ...CUERPO_INVALIDO, ...(lectura.campo !== undefined && { campo: lectura.campo }) },
-        patientId.success ? patientId.data : undefined,
-      );
+      const rechazo = rechazoPorCuerpoInvalido(lectura.campo);
+      rechazar(registrar, operacion.evento, response, rechazo, patientId.data);
       return;
     }
     if (!patientId.success) {
       rechazarNoEncontrado(response, registrar, operacion.evento);
       return;
     }
-    try {
-      const creado = await operacion.ejecutar(servicioPara(traceIdDe(response)), {
-        patientId: patientId.data,
-        cuerpo: lectura.cuerpo,
-      });
-      registrarResultado(
-        registrar,
-        operacion.evento,
-        response,
-        patientId.data,
-        'ok',
-        operacion.etiquetasDelLog?.(creado),
-      );
-      response.setHeader('Cache-Control', 'no-store');
-      response.status(201).json(creado);
-    } catch (error) {
-      if (error instanceof PacienteNoEncontradoError) {
-        rechazarNoEncontrado(response, registrar, operacion.evento);
-        return;
-      }
-      const rechazo = operacion.rechazoPropioDe?.(error) ?? rechazoDeRegistro(error);
-      if (rechazo === undefined) throw error;
-      rechazarCon(rechazo, patientId.data);
-    }
+    await ejecutarYResponder(dependencias, operacion, response, {
+      patientId: patientId.data,
+      cuerpo: lectura.cuerpo,
+    });
   };
 }
