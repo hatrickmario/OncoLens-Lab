@@ -1,5 +1,5 @@
 {
-  "descripcion": "Casos de conformidad de checkProhibitedTerms (TS) y check_prohibited_terms (Python) sobre terminos-prohibidos.json 1.6.0. Ambas implementaciones deben dar, caso por caso, los mismos id y niveles, en orden de aparición (US-068 AC-2, US-249 AC-3, RN-23). Cada caso lleva `id`; `soloIdsB` limita el Nivel B al subconjunto de salidaGenerada y `excepcionesB` son las palabras completas (sustantivos) que no cuentan dentro de ese subconjunto. Solo texto sintético de dominio público.",
+  "descripcion": "Casos de conformidad de checkProhibitedTerms (TS) y check_prohibited_terms (Python) sobre terminos-prohibidos.json 1.6.0. Ambas implementaciones deben dar, caso por caso, los mismos id y niveles, en orden de aparición (US-068 AC-2, US-249 AC-3, RN-23). Cada caso lleva `id`; `soloIdsB` limita el Nivel B al subconjunto de salidaGenerada y `excepcionesB` son frases (el sustantivo negado: «no emite una recomendación») que no cuentan dentro de ese subconjunto. Solo texto sintético de dominio público.",
   "listaVersion": "1.6.0",
   "casos": [
     {
@@ -2311,7 +2311,17 @@
           "nivel": "B"
         }
       ],
-      "excepcionesB": ["recomendación", "recomendaciones", "recommendation", "recommendations"]
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ]
     },
     {
       "id": "VPB-02",
@@ -2326,7 +2336,17 @@
           "nivel": "B"
         }
       ],
-      "excepcionesB": ["recomendación", "recomendaciones", "recommendation", "recommendations"]
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ]
     },
     {
       "id": "VPB-03",
@@ -2341,7 +2361,17 @@
           "nivel": "B"
         }
       ],
-      "excepcionesB": ["recomendación", "recomendaciones", "recommendation", "recommendations"]
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ]
     },
     {
       "id": "VPB-04",
@@ -2356,7 +2386,17 @@
           "nivel": "B"
         }
       ],
-      "excepcionesB": ["recomendación", "recomendaciones", "recommendation", "recommendations"]
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ]
     },
     {
       "id": "VPB-05",
@@ -2371,7 +2411,17 @@
           "nivel": "B"
         }
       ],
-      "excepcionesB": ["recomendación", "recomendaciones", "recommendation", "recommendations"]
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ]
     },
     {
       "id": "VPB-06",
@@ -2386,7 +2436,17 @@
           "nivel": "B"
         }
       ],
-      "excepcionesB": ["recomendación", "recomendaciones", "recommendation", "recommendations"]
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ]
     },
     {
       "id": "VPB-07",
@@ -2396,7 +2456,17 @@
       "permitirFrases": false,
       "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
       "esperado": [],
-      "excepcionesB": ["recomendación", "recomendaciones", "recommendation", "recommendations"]
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ]
     },
     {
       "id": "VPB-08",
@@ -2406,7 +2476,17 @@
       "permitirFrases": false,
       "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
       "esperado": [],
-      "excepcionesB": ["recomendación", "recomendaciones", "recommendation", "recommendations"]
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ]
     },
     {
       "id": "VPB-09",
@@ -2416,7 +2496,17 @@
       "permitirFrases": false,
       "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
       "esperado": [],
-      "excepcionesB": ["recomendación", "recomendaciones", "recommendation", "recommendations"]
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ]
     },
     {
       "id": "VPB-10",
@@ -2426,7 +2516,17 @@
       "permitirFrases": false,
       "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
       "esperado": [],
-      "excepcionesB": ["recomendación", "recomendaciones", "recommendation", "recommendations"]
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ]
     },
     {
       "id": "VPB-11",
@@ -2435,7 +2535,17 @@
       "niveles": ["A", "B"],
       "permitirFrases": false,
       "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
-      "excepcionesB": ["recomendación", "recomendaciones", "recommendation", "recommendations"],
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ],
       "esperado": []
     },
     {
@@ -2445,18 +2555,43 @@
       "niveles": ["A", "B"],
       "permitirFrases": false,
       "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
-      "excepcionesB": ["recomendación", "recomendaciones", "recommendation", "recommendations"],
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ],
       "esperado": []
     },
     {
       "id": "VPB-13",
-      "grupo": "Nivel B atribuido 1.6.0 (el sustantivo recomendación describe, no recomienda)",
+      "grupo": "Nivel B atribuido 1.6.0 (el sustantivo solo se excepciona negado)",
       "texto": "Las recomendaciones del panel no se evaluaron en el ensayo",
       "niveles": ["A", "B"],
       "permitirFrases": false,
       "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
-      "excepcionesB": ["recomendación", "recomendaciones", "recommendation", "recommendations"],
-      "esperado": []
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ],
+      "esperado": [
+        {
+          "id": "b-recomend",
+          "nivel": "B"
+        }
+      ]
     },
     {
       "id": "VPB-14",
@@ -2465,13 +2600,195 @@
       "niveles": ["A", "B"],
       "permitirFrases": false,
       "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
-      "excepcionesB": ["recomendación", "recomendaciones", "recommendation", "recommendations"],
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ],
       "esperado": [
         {
           "id": "b-recommend",
           "nivel": "B"
         }
       ]
+    },
+    {
+      "id": "VPB-15",
+      "grupo": "Nivel B atribuido 1.6.0 (el sustantivo en voz propia no se excepciona, Gate 2)",
+      "texto": "Nuestra recomendación es iniciar el régimen con trastuzumab.",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ],
+      "esperado": [
+        {
+          "id": "b-recomend",
+          "nivel": "B"
+        }
+      ]
+    },
+    {
+      "id": "VPB-16",
+      "grupo": "Nivel B atribuido 1.6.0 (el sustantivo en voz propia no se excepciona, Gate 2)",
+      "texto": "La recomendación es que reciba quimioterapia.",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ],
+      "esperado": [
+        {
+          "id": "b-recomend",
+          "nivel": "B"
+        }
+      ]
+    },
+    {
+      "id": "VPB-17",
+      "grupo": "Nivel B atribuido 1.6.0 (el sustantivo en voz propia no se excepciona, Gate 2)",
+      "texto": "Recomendación: trastuzumab más pertuzumab para esta paciente.",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ],
+      "esperado": [
+        {
+          "id": "b-recomend",
+          "nivel": "B"
+        }
+      ]
+    },
+    {
+      "id": "VPB-18",
+      "grupo": "Nivel B atribuido 1.6.0 (el sustantivo en voz propia no se excepciona, Gate 2)",
+      "texto": "The recommendation for this patient is adjuvant T-DM1.",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ],
+      "esperado": [
+        {
+          "id": "b-recommend",
+          "nivel": "B"
+        }
+      ]
+    },
+    {
+      "id": "VPB-19",
+      "grupo": "Nivel B atribuido 1.6.0 (el sustantivo en voz propia no se excepciona, Gate 2)",
+      "texto": "My recommendation: switch to T-DM1.",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "soloIdsB": ["b-recomend", "b-recomiend", "b-recommend"],
+      "excepcionesB": [
+        "no emite una recomendación",
+        "no emiten una recomendación",
+        "sin recomendación",
+        "sin recomendaciones",
+        "no hace recomendaciones",
+        "issued no recommendation",
+        "made no recommendation",
+        "no recommendation",
+        "no recommendations"
+      ],
+      "esperado": [
+        {
+          "id": "b-recommend",
+          "nivel": "B"
+        }
+      ]
+    },
+    {
+      "id": "VP-21",
+      "grupo": "Voz propia 1.6.0 (inglés: consider starting)",
+      "texto": "Consider starting T-DM1.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "en-consider-starting",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "id": "VP-22",
+      "grupo": "Voz propia 1.6.0 (inglés: consider starting)",
+      "texto": "Consider initiating adjuvant therapy.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "en-consider-initiating",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "id": "VP-23",
+      "grupo": "Voz propia 1.6.0 (inglés: consider starting)",
+      "texto": "Consider discontinuing trastuzumab.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "en-consider-discontinuing",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "id": "VP-24",
+      "grupo": "Voz propia 1.6.0 (inglés: consider starting)",
+      "texto": "The authors considered starting T-DM1 in the trial.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
     }
   ]
 }

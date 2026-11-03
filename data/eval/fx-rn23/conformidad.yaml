@@ -31,6 +31,13 @@ casos:
   - {id: CF-B-07, forma: nivel_b_atribuido, variante: descriptivo, campo: rationale, texto: 'Los ensayos evaluaron administrar trastuzumab durante un año.', esperado: acepta}
   - {id: CF-B-08, forma: nivel_b_atribuido, variante: descriptivo, campo: rationale, texto: 'Los autores del ensayo no emiten una recomendación formal.', esperado: acepta}
   - {id: CF-B-09, forma: nivel_b_atribuido, variante: descriptivo, campo: rationale, texto: 'The panel issued no recommendation for this setting.', esperado: acepta}
+  - {id: CF-B-10, forma: nivel_b_atribuido, variante: base, campo: rationale, texto: 'Nuestra recomendación es iniciar el régimen con trastuzumab.', esperado: rechaza, regla: b-recomend}
+  - {id: CF-B-11, forma: nivel_b_atribuido, variante: base, campo: rationale, texto: 'La recomendación es que reciba quimioterapia.', esperado: rechaza, regla: b-recomend}
+  - {id: CF-B-12, forma: nivel_b_atribuido, variante: base, campo: rationale, texto: 'Recomendación: trastuzumab más pertuzumab para esta paciente.', esperado: rechaza, regla: b-recomend}
+  - {id: CF-B-13, forma: nivel_b_atribuido, variante: base, campo: rationale, texto: 'The recommendation for this patient is adjuvant T-DM1.', esperado: rechaza, regla: b-recommend}
+  - {id: CF-B-14, forma: nivel_b_atribuido, variante: base, campo: rationale, texto: 'My recommendation: switch to T-DM1.', esperado: rechaza, regla: b-recommend}
+  - {id: CF-IMPER-05, forma: imperativo, variante: base, campo: rationale, texto: 'Consider starting T-DM1.', esperado: rechaza, regla: en-consider-starting}
+  - {id: CF-IMPER-06, forma: imperativo, variante: descriptivo, campo: rationale, texto: 'The authors considered starting T-DM1 in the trial.', esperado: acepta}
   # La cita textual atribuida usa el título del catálogo (RN-25) y es literal del fragmento citado (RN-04): en todo campo generado.
   - {id: CF-CITA-01, forma: cita_atribuida, variante: base, campo: todos, cita: ch-g1-1, texto: 'Según Breast Guideline Statement (test): "The guideline recommends adding anti-HER2 therapy to adjuvant chemotherapy"', esperado: acepta}
   - {id: CF-CITA-02, forma: cita_atribuida, variante: descriptivo, campo: todos, cita: ch-g1-1, texto: 'Según Otra Fuente (test): "The guideline recommends adding anti-HER2 therapy to adjuvant chemotherapy"', esperado: rechaza, regla: b-recommend}

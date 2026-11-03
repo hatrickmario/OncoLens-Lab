@@ -92,7 +92,7 @@ describe('loadProhibitedTerms', () => {
         'treatment of choice',
       ]),
     );
-    expect(lista.nivelA.terminos).toHaveLength(75);
+    expect(lista.nivelA.terminos).toHaveLength(78);
     expect(prefijosB).toEqual(['recomend', 'recomiend', 'recommend']);
     expect(textosB).toEqual([
       'iniciar',
