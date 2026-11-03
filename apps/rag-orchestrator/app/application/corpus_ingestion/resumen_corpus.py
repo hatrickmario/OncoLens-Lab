@@ -5,24 +5,18 @@ Solo identificadores y cifras: nunca contenido, URLs ni credenciales (se imprime
 
 from __future__ import annotations
 
-from collections import Counter, defaultdict
 from collections.abc import Sequence
 
-from app.application.corpus_ingestion.reporte import Estado, ReporteDeIngesta
-from app.domain.corpus_seed.documento import DocumentoDeSemilla
+from app.application.seed_corpus.ports import RegistroDeDocumento
 
-# ``omitido`` = el documento ya estaba ``embebido`` y vigente con ese contenido: sigue contando en el corpus.
-ESTADOS_VIGENTES = frozenset({Estado.EMBEBIDO, Estado.OMITIDO})
+
+def tipos_de_cancer_de(registro: RegistroDeDocumento) -> tuple[str, ...]:
+    """``cancer_type_tags`` se guarda como etiquetas separadas por coma, sin espacios."""
+    raise NotImplementedError
 
 
 def contar_corpus_por_tipo_y_fuente(
-    documentos: Sequence[DocumentoDeSemilla], reporte: ReporteDeIngesta
+    vigentes: Sequence[RegistroDeDocumento],
 ) -> dict[str, dict[str, int]]:
-    """``{tipo: {fuente: n}}`` con los documentos del manifiesto que quedan vigentes tras la corrida."""
-    vigentes = {r.document_key for r in reporte.resultados if r.estado in ESTADOS_VIGENTES}
-    cuenta: defaultdict[str, Counter[str]] = defaultdict(Counter)
-    for documento in documentos:
-        if documento.document_key in vigentes:
-            for tipo in documento.cancer_type_tags:
-                cuenta[tipo][documento.source_name] += 1
-    return {tipo: dict(sorted(cuenta[tipo].items())) for tipo in sorted(cuenta)}
+    """``{tipo: {fuente: n}}`` con los documentos vigentes y embebidos del catálogo (la misma fuente que el resumen de población)."""
+    raise NotImplementedError

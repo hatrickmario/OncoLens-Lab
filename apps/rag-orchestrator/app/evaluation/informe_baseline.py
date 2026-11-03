@@ -61,6 +61,9 @@ class DatosDelInforme:
     )
     # ``EVAL_P95_RUNS``: corridas de las que sale la mediana del p95; ``None`` = una sola medición (la que se pasó).
     p95_corridas: int | None = None
+    # De dónde sale ``p95_e2e_s``: ``medicion_externa`` (``--p95-e2e-s``), ``corridas_en_proceso`` (etapa ``consulta`` de
+    # ``EVAL_P95_RUNS`` corridas) o ``no_declarado``.
+    p95_origen: str = "no_declarado"
 
 
 def _numero(valor: float | None) -> str:

@@ -30,6 +30,11 @@ ALCANCE_ANTIGUO_DE_SUBGRUPO = "subgrupo"
 ESTADO_PENDIENTE = "pendiente"
 
 
+def tiene_elegibilidad(poblacion: PoblacionDelEstudio | None, clave_de_estudio: str) -> bool:
+    """¿La población trae ≥ 1 valor de alcance ``elegibilidad`` para la clave? ``mencion`` y ``subgrupo`` no cuentan (DEC-11)."""
+    raise NotImplementedError
+
+
 def poblacion_desde_lo_guardado(
     metadata_source: OrigenDeMetadatos, guardado: Mapping[str, object], max_valores: int
 ) -> PoblacionDelEstudio:

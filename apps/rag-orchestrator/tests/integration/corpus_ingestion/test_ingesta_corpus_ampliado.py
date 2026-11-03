@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 from collections import defaultdict
 from collections.abc import Callable
+from dataclasses import replace
 from typing import Any
 
 import pytest
@@ -63,7 +64,7 @@ def test_ingesta_del_manifiesto_real_deja_el_minimo_por_tipo_de_cancer_y_fuente_
         filas = por_tipo[tipo]
         assert len(filas) >= CORPUS_MIN_DOCUMENTOS_POR_TIPO_INICIAL
         assert len({f.source_name for f in filas}) >= CORPUS_MIN_FUENTES_POR_TIPO_INICIAL
-    resumen = contar_corpus_por_tipo_y_fuente(montaje.documentos(MANIFIESTO_S3), reporte)
+    resumen = contar_corpus_por_tipo_y_fuente(montaje.catalogo.documentos_vigentes_con_poblacion())
     assert {t: sum(por_fuente.values()) for t, por_fuente in resumen.items()} == {
         t: len(f) for t, f in por_tipo.items()
     }
@@ -74,6 +75,29 @@ def test_ingesta_del_manifiesto_real_deja_el_minimo_por_tipo_de_cancer_y_fuente_
     )
     serializado = json.dumps(resumen)
     assert "http" not in serializado and "@" not in serializado
+
+
+def test_el_resumen_por_tipo_y_fuente_sigue_al_catalogo_cuando_la_reingesta_de_un_documento_vigente_falla(
+    fabrica_de_montaje: Callable[..., Montaje],
+) -> None:
+    """Un documento vigente cuya nueva versión falla la integridad sigue vigente en el catálogo y el resumen lo cuenta."""
+    montaje = fabrica_de_montaje(DIRECTORIO_S3, _politica(), CHUNK_GRANDE)
+    montaje.ingerir(MANIFIESTO_S3)
+    antes = contar_corpus_por_tipo_y_fuente(montaje.catalogo.documentos_vigentes_con_poblacion())
+    afectado = montaje.documentos(MANIFIESTO_S3)[0].document_key
+    documentos = [
+        replace(d, checksum_esperado="0" * 64) if d.document_key == afectado else d
+        for d in montaje.documentos(MANIFIESTO_S3)
+    ]
+
+    reporte = montaje.servicio.ingerir(documentos)
+
+    assert reporte.resultado_de(afectado).estado is Estado.ERROR
+    despues = contar_corpus_por_tipo_y_fuente(montaje.catalogo.documentos_vigentes_con_poblacion())
+    assert despues == antes
+    assert sum(sum(por_fuente.values()) for por_fuente in despues.values()) == len(
+        montaje.catalogo.documentos_vigentes_con_poblacion()
+    )
 
 
 @pytest.mark.ac("US-120", 2)

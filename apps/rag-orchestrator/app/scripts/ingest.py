@@ -252,7 +252,9 @@ def _ejecutar_ingesta(
     tokenizador: Tokenizador,
     metadatos: ModelosDeMetadatos,
     reloj: Clock,
-) -> tuple[ReporteDeIngesta, dict[str, object], dict[str, Any] | None]:
+) -> tuple[
+    ReporteDeIngesta, dict[str, object], dict[str, Any] | None, dict[str, dict[str, int]]
+]:
     """Raíz de composición: adapters reales -> ``IngestionPipelineService``. Cierra las conexiones a PostgreSQL al terminar.
 
     Devuelve el reporte, la muestra de metadatos y, si corrió la extracción en abanico, el resumen de población por tipo de
@@ -313,7 +315,8 @@ def _ejecutar_ingesta(
                 Settings(_env_file=None, modelos=None),  # type: ignore[call-arg]
             )
         )
-        return reporte, escribir_muestra(generador, reporte.release_id), poblacion
+        corpus = contar_corpus_por_tipo_y_fuente(catalogo.documentos_vigentes_con_poblacion())
+        return reporte, escribir_muestra(generador, reporte.release_id), poblacion, corpus
     finally:
         motor.dispose()
 
@@ -440,7 +443,7 @@ def main(
     try:
         _exigir_llm_local()  # RN-12: antes de cargar embeddings o abrir conexiones
         modelos = _modelos_de_la_ingesta(ajustes, embedder, sparse, tokenizador)
-        reporte, muestra, poblacion = _ejecutar_ingesta(
+        reporte, muestra, poblacion, corpus = _ejecutar_ingesta(
             argumentos.manifest,
             ajustes,
             milvus,
@@ -464,9 +467,7 @@ def main(
         return 1
     resumen = {
         **reporte.como_diccionario(),
-        "corpus_por_tipo_y_fuente": contar_corpus_por_tipo_y_fuente(
-            leer_manifiesto(argumentos.manifest), reporte
-        ),
+        "corpus_por_tipo_y_fuente": corpus,
         "muestra_de_metadatos": muestra,
     }
     if poblacion is not None:
