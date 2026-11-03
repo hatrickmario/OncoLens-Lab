@@ -17,7 +17,7 @@
 ## 3. cierre
 
 - [x] 3.1 `openspec validate l1d-74-vista-caso-timeline --strict`; suites de `clinical-api` (unitarios e integración) en verde; `contracts:verify-provider` con `getPatientCase` (200, 401, 403, 404, 500) verificado. `run-ai-eval` no aplica (sin modelo, prompt, umbral, catálogo ni corpus).
-- [ ] 3.2 Archivo: no archivar antes de que ARR-10 haya archivado `l1d-72-ficha-minima-paciente` (el MODIFIED de `patients-identity` lo necesita en `openspec/specs/`). TRASLADADA -> ARR-10 (L1D-72 se archiva por ARR-10; el archivo de este change lo hace `/sprint-close` después, y este PR no archiva nada). ID destino para el job `higiene-proceso`: L1D-72.
+- [x] 3.2 Archivo: no archivar antes de que ARR-10 haya archivado `l1d-72-ficha-minima-paciente` (el MODIFIED de `patients-identity` lo necesita en `openspec/specs/`). TRASLADADA -> ARR-10, cumplida: `l1d-72` archivado el 2026-11-03 por ARR-10 (L1D-72 se archiva por ARR-10; el archivo de este change lo hace `/sprint-close` después, y este PR no archiva nada). ID destino para el job `higiene-proceso`: L1D-72.
 
 ## Notas de la ejecución (clinical-platform-dev, 2026-11-03)
 

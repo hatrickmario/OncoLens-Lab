@@ -28,7 +28,7 @@ export interface RespuestaSimulada {
 }
 
 /** clinical-api simulado en el borde HTTP saliente (MSW), con contador y captura de lo recibido. */
-export function crearClinicalApiSimulado() {
+export function crearClinicalApiSimulado(rutaUpstream: string = RUTA_UPSTREAM) {
   const servidor = setupServer();
   const peticiones: PeticionCapturada[] = [];
 
@@ -50,7 +50,7 @@ export function crearClinicalApiSimulado() {
     },
     responder: ({ status, cuerpo, cabeceras }: RespuestaSimulada) =>
       servidor.use(
-        http.post(RUTA_UPSTREAM, async ({ request }) => {
+        http.post(rutaUpstream, async ({ request }) => {
           await capturar(request);
           return HttpResponse.json(cuerpo, { status, headers: cabeceras ?? {} });
         }),
@@ -66,21 +66,21 @@ export function crearClinicalApiSimulado() {
       cabeceras?: Record<string, string>;
     }) =>
       servidor.use(
-        http.post(RUTA_UPSTREAM, async ({ request }) => {
+        http.post(rutaUpstream, async ({ request }) => {
           await capturar(request);
           return new HttpResponse(texto, { status, headers: cabeceras ?? {} });
         }),
       ),
     fallarConErrorDeRed: () =>
       servidor.use(
-        http.post(RUTA_UPSTREAM, async ({ request }) => {
+        http.post(rutaUpstream, async ({ request }) => {
           await capturar(request);
           return HttpResponse.error();
         }),
       ),
     noResponder: () =>
       servidor.use(
-        http.post(RUTA_UPSTREAM, async ({ request }) => {
+        http.post(rutaUpstream, async ({ request }) => {
           await capturar(request);
           await delay('infinite');
           return HttpResponse.error();

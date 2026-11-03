@@ -145,13 +145,13 @@ Pregunta 1 · ¿Qué población estudió la fuente de la opción descrita 2?
   Cada afirmación cita un fragmento del corpus recuperado para esta pregunta o enlaza a un dato del paciente. Fuente, año y población: del catálogo, o «No disponible».
   Base de esta respuesta: datos del paciente usados · ausentes: [missingCriticalData]
   [Aviso RN-19 y «Uso académico/investigación», leídos de configuración (B-06), en cada turno generado]
-[ Escribe una pregunta sobre los hallazgos de este análisis ]                   (Preguntar)
+[ Pregunta sobre los hallazgos de este análisis ]                   (Preguntar)
 ```
 
 - Mientras se procesa: solo pasos de progreso («Buscando evidencia…», «Validando citas…»), nunca texto parcial (TBD-08).
-- `sin_evidencia`: «No se encontró evidencia suficientemente relacionada con esta pregunta en el corpus. Puedes reformularla o abrir un análisis nuevo.» + «Nuevo análisis» (el filtro de antigüedad es de US-220, fuera del S5).
-- `fuera_de_contexto`: «Esta pregunta no trata sobre los hallazgos de este análisis. Para otro tema o paciente, abre un análisis nuevo.» + «Nuevo análisis».
-- `409 LIMITE_SEGUIMIENTO`: «Se alcanzó el límite de 10 preguntas de este análisis. Abre un análisis nuevo para continuar.» + «Nuevo análisis».
+- `sin_evidencia`: «No se encontró evidencia suficientemente relacionada con esta pregunta en el corpus. La pregunta puede replantearse o formularse en un análisis nuevo.» + «Nuevo análisis» (el filtro de antigüedad es de US-220, fuera del S5).
+- `fuera_de_contexto`: «La pregunta no se refiere a los hallazgos de este análisis; no se generó respuesta. Otro tema o paciente corresponde a un análisis nuevo.» + «Nuevo análisis».
+- `409 LIMITE_SEGUIMIENTO`: «Se alcanzó el límite de {max} preguntas de este análisis. Una pregunta distinta puede formularse en un análisis nuevo.» (`{max}` = `analysisBasis.maxFollowUps`) + «Nuevo análisis».
 - Historial de turnos con `aria-live="polite"`; `visual-check` a 375 y 1280 px.
 
 ## Dato del contrato por elemento (verificación)
