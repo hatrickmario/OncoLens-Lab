@@ -52,3 +52,15 @@ def test_cargar_terminos_por_tipo_incluye_el_codigo_del_tipo_normalizado_cuando_
 
     assert "mama" in terminos["mama"] and "prostata" in terminos["prostata"]
     assert "prostata" not in terminos["mama"]
+
+
+def test_crear_generador_de_seguimiento_local_usa_los_valores_de_configuracion_cuando_se_compone_en_produccion():
+    from app.application.generacion_de_seguimiento import LlmSeguimientoGenerator
+    from app.infrastructure.llm.fabrica_local import crear_generador_de_seguimiento_local
+
+    settings = settings_de_prueba(claims_max_per_option=3)
+
+    generador = crear_generador_de_seguimiento_local(settings)
+
+    assert isinstance(generador, LlmSeguimientoGenerator)
+    assert generador._esquema["properties"]["claims"]["maxItems"] == 3
