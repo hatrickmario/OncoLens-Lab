@@ -85,7 +85,10 @@ def solicitud_de(
     )
     cruda["dataClassification"] = DataClassification(clase).value
     contexto = cruda["clinicalContext"]
-    if contexto["diagnosis"]["cancerType"] != pregunta.cancer:
+    if pregunta.contexto is not None:
+        contexto["currentLine"] = pregunta.contexto.linea_actual
+        contexto["missingCriticalData"] = list(pregunta.contexto.faltantes)
+    elif contexto["diagnosis"]["cancerType"] != pregunta.cancer:
         # Los faltantes del ejemplo son claves del catálogo de su tipo (US-116, RN-11): con otro tipo no son válidos.
         contexto["missingCriticalData"] = []
     contexto["diagnosis"]["cancerType"] = pregunta.cancer
