@@ -59,3 +59,37 @@
 - [x] 3.1 `openspec validate l1d-269-hilo-seguimiento-ui --strict` y tests de `web` en verde; sin
       `contracts:verify-provider` (no cambia la API) ni `run-ai-eval` (no cambia modelo, prompt, umbral, catálogo ni
       corpus) · **verificación**
+- [x] 3.2 Gate 2 vuelta 1: `afirmacionesConCita()` (RN-01, una afirmación sin cita resoluble no se muestra), ids de cita
+      con el índice de la afirmación, textos de spec y `docs/ux/S5/pantallas-s5.md` alineados con `es.json` (sin
+      imperativos; el límite sale de `maxFollowUps`), Inline de `no_realizado` y clave muerta `followUp.afirmaciones`
+      eliminadas; rename `alcanzaLimiteDeSeguimiento` en `clinical-api` (lote R3 L-2). Nota de pruebas: el literal
+      «Uso académico/investigación» no puede reaparecer en `apps/web/tests` (`literal-uso-academico.test.ts` prohíbe el
+      literal fuera de `messages/es.json`), así que los tests lo leen de `mensajes().app.academicUseLabel`; la aserción
+      sigue comparando contra el texto de configuración. El regex `IMPERATIVOS` es el original (sin `\b` final):
+      `followUp.sinEvidencia` se reescribió («replantearse o formularse») para cumplirlo · **verificación**
+
+## humano
+
+- 269-4 (el hilo no hidrata `listFollowUps`: un análisis con turnos previos se ve «0 de 10» al reabrir; probable
+  US-174 historial) → propuesta D5-18 hidratar el hilo desde `listFollowUps`.
+- 269-6 (h4/h5 anidado bajo la Base h3; hoy evita romper los tests de heading de solo-descartadas) → D5-16.
+- 269-7 (foco por `document.getElementById` y `ID_CAMPO_PREGUNTA` en `reglas-del-formulario`) → D5-16.
+- 269-8 (`no_procesable` mezcla tres causas: 422, vacía, demasiado larga) → D5-16.
+- 269-9 (lógica repetida con el panel: extraer hook o `ResultadoDeFallo` al tercer uso) → D5-16.
+- L-1 (marcadores de identidad rag↔clinical-api) → D5-15 (ya registrado).
+- L-3…L-8 (`_como_opcion`, flag `con_reescritura`, `verificador_de_soporte`, `consulta_equivalente` sin filtro de
+  fuentes [decisión confirmada], orden de `citedSources` en el contrato, `armarTurno`) → D5-16 (ya registrado).
+
+### Red del visual-check (peticiones del recorrido, 127.0.0.1:3000, sin PII en URLs)
+
+| # | Método y ruta | Estado |
+|---|---|---|
+| 13 | POST `/api/auth/login` | 204 |
+| 14 | GET `/pacientes/<uuid>/analisis?_rsc=…` | 200 |
+| 20, 23 | GET `/api/patients/<uuid>/completeness` | 200 |
+| 21, 22 | GET `/pacientes/<uuid>?_rsc=…` (prefetch) | 200 |
+| 24 | POST `/api/evidence-analyses` | 200 |
+| 25 | POST `/api/evidence-analyses/<analysisId>/follow-ups` | 201 |
+
+Solo rutas `/api/*` o páginas del mismo origen, UUID opacos, la pregunta solo en el cuerpo, 17 peticiones estáticas
+omitidas.
