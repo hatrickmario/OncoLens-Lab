@@ -13,7 +13,8 @@ export type EstadoDeRevisionVisible = Exclude<EstadoDeRevision, 'rechazado' | 'r
 
 /**
  * Predicado SQL ÚNICO de «sin fecha confiable» de un evento clínico: sin fecha o con precisión `incierta` (PRD AC-02.2).
- * Lo usa el contador de la ficha; el timeline aplica el equivalente en TS de este predicado (`comoEventoConOrden`).
+ * Lo usa el contador de la ficha; el timeline aplica el equivalente en TS de este predicado (`comoEventoConOrden`) y el
+ * contexto del análisis otro (`fechaConfiable`); unificarlos es D5-22.
  */
 export function sqlFechaNoConfiable(fecha: string, precision: string): string {
   return `(${fecha} IS NULL OR ${precision} = 'incierta')`;

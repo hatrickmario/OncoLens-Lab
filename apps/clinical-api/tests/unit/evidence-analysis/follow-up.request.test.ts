@@ -39,6 +39,7 @@ const evento = (resto: Partial<FilaDeEvento> = {}): FilaDeEvento => ({
   id: 'ev-1',
   eventType: 'evolucion',
   eventDate: '2026-09-16',
+  datePrecision: 'dia',
   description: 'Control sin hallazgos nuevos',
   entryMethod: 'manual',
   extractionConfidence: 'n_a',
