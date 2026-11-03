@@ -54,4 +54,19 @@ export const pacienteA: PacienteSemilla = {
       diasAntes: 45,
     },
   ],
+  // Sin nombres, documentos ni teléfonos: texto clínico genérico (RN-13, RN-14).
+  notas: [
+    {
+      clave: 'nota-comorbilidad',
+      tipo: 'comorbilidad',
+      texto: 'Hipertensión arterial en tratamiento.',
+      diasAntes: 30,
+    },
+    {
+      clave: 'nota-libre',
+      tipo: 'nota_libre',
+      texto: 'Refiere buena tolerancia al tratamiento y sin molestias nuevas.',
+      diasAntes: 7,
+    },
+  ],
 };

@@ -19,7 +19,7 @@ enlace `supersedes_id`.
 ## Qué cambia
 
 - **Contrato primero** (`apps/clinical-api/openapi.yaml`, cambio **aditivo**, ADR-26; hoy no existen; `info.version`
-  *minor* **1.19.0** según la cadena de versiones del S5: l1d-306 1.15.1 → l1d-268 1.16.0 → l1d-74 1.17.0 → l1d-80
+  *minor* **1.19.0** (provisional: se implementó **1.18.0**; L1D-80 renumera a 1.19.0 al rebasar) según la cadena de versiones del S5: l1d-306 1.15.1 → l1d-268 1.16.0 → l1d-74 1.17.0 → l1d-80
   1.18.0 → **l1d-309 1.19.0** → l1d-91 1.20.0; quien rebasa renumera y regenera `packages/api-contracts`):
   - `POST /platform/patients/{patientId}/biomarkers/{biomarkerId}/corrections` → `201 Biomarker` (valor, unidad,
     rango y, opcional, fecha del examen).

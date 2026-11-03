@@ -2,7 +2,7 @@
 
 import { client } from './client.gen.js';
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client/index.js';
-import type { CreateEvidenceAnalysisData, CreateEvidenceAnalysisErrors, CreateEvidenceAnalysisResponses, CreateFollowUpData, CreateFollowUpErrors, CreateFollowUpResponses, CreateManualBiomarkerData, CreateManualBiomarkerErrors, CreateManualBiomarkerResponses, CreateManualDiagnosisData, CreateManualDiagnosisErrors, CreateManualDiagnosisResponses, GetCompletenessData, GetCompletenessErrors, GetCompletenessResponses, GetHealthData, GetHealthResponses, GetPatientCaseData, GetPatientCaseErrors, GetPatientCaseResponses, GetPatientData, GetPatientErrors, GetPatientResponses, ListFollowUpsData, ListFollowUpsErrors, ListFollowUpsResponses, ListPatientsData, ListPatientsErrors, ListPatientsResponses, LoginData, LoginErrors, LoginResponses, LogoutData, LogoutErrors, LogoutResponses, SearchPatientsData, SearchPatientsErrors, SearchPatientsResponses, UploadDocumentData, UploadDocumentErrors, UploadDocumentResponses } from './types.gen.js';
+import type { CorrectBiomarkerData, CorrectBiomarkerErrors, CorrectBiomarkerResponses, CorrectClinicalNoteData, CorrectClinicalNoteErrors, CorrectClinicalNoteResponses, CreateEvidenceAnalysisData, CreateEvidenceAnalysisErrors, CreateEvidenceAnalysisResponses, CreateFollowUpData, CreateFollowUpErrors, CreateFollowUpResponses, CreateManualBiomarkerData, CreateManualBiomarkerErrors, CreateManualBiomarkerResponses, CreateManualDiagnosisData, CreateManualDiagnosisErrors, CreateManualDiagnosisResponses, GetBiomarkerHistoryData, GetBiomarkerHistoryErrors, GetBiomarkerHistoryResponses, GetClinicalNoteHistoryData, GetClinicalNoteHistoryErrors, GetClinicalNoteHistoryResponses, GetCompletenessData, GetCompletenessErrors, GetCompletenessResponses, GetHealthData, GetHealthResponses, GetPatientCaseData, GetPatientCaseErrors, GetPatientCaseResponses, GetPatientData, GetPatientErrors, GetPatientResponses, ListClinicalNotesData, ListClinicalNotesErrors, ListClinicalNotesResponses, ListFollowUpsData, ListFollowUpsErrors, ListFollowUpsResponses, ListPatientsData, ListPatientsErrors, ListPatientsResponses, LoginData, LoginErrors, LoginResponses, LogoutData, LogoutErrors, LogoutResponses, SearchPatientsData, SearchPatientsErrors, SearchPatientsResponses, UploadDocumentData, UploadDocumentErrors, UploadDocumentResponses } from './types.gen.js';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -206,6 +206,89 @@ export const createManualDiagnosis = <ThrowOnError extends boolean = false>(opti
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+/**
+ * Corrige un biomarcador vigente conservando el anterior como histórico
+ *
+ * Crea un Biomarker nuevo (entry_method = manual_correction, verificado) con supersedesId hacia el anterior, que pasa a reemplazado con su valor intacto (RN-08, ADR-50). El término no cambia: name, loincCode y mappingStatus los vuelve a decidir Backend 1 (ADR-33). Solo se corrige un dato vigente (409 si ya fue reemplazado) y un paciente activo (RN-17).
+ */
+export const correctBiomarker = <ThrowOnError extends boolean = false>(options: Options<CorrectBiomarkerData, ThrowOnError>): RequestResult<CorrectBiomarkerResponses, CorrectBiomarkerErrors, ThrowOnError> => (options.client ?? client).post<CorrectBiomarkerResponses, CorrectBiomarkerErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'oncolens_session',
+            type: 'apiKey'
+        }],
+    url: '/platform/patients/{patientId}/biomarkers/{biomarkerId}/corrections',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Histórico de correcciones de un biomarcador
+ *
+ * Sigue supersedesId hacia atrás desde la fila vigente: las versiones reemplazadas, de la más reciente a la más antigua, acotadas por CORRECTION_HISTORY_MAX. Es una lectura clínica: el administrador recibe 403.
+ */
+export const getBiomarkerHistory = <ThrowOnError extends boolean = false>(options: Options<GetBiomarkerHistoryData, ThrowOnError>): RequestResult<GetBiomarkerHistoryResponses, GetBiomarkerHistoryErrors, ThrowOnError> => (options.client ?? client).get<GetBiomarkerHistoryResponses, GetBiomarkerHistoryErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'oncolens_session',
+            type: 'apiKey'
+        }],
+    url: '/platform/patients/{patientId}/biomarkers/{biomarkerId}/history',
+    ...options
+});
+
+/**
+ * Notas clínicas vigentes del paciente
+ *
+ * Lista completa (sin paginación) de las notas clínicas vigentes de la ficha. Es una lectura clínica: el administrador recibe 403.
+ */
+export const listClinicalNotes = <ThrowOnError extends boolean = false>(options: Options<ListClinicalNotesData, ThrowOnError>): RequestResult<ListClinicalNotesResponses, ListClinicalNotesErrors, ThrowOnError> => (options.client ?? client).get<ListClinicalNotesResponses, ListClinicalNotesErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'oncolens_session',
+            type: 'apiKey'
+        }],
+    url: '/platform/patients/{patientId}/clinical-notes',
+    ...options
+});
+
+/**
+ * Corrige el texto o el tipo de una nota vigente conservando la anterior
+ *
+ * Crea una ClinicalNote nueva (manual_correction, verificada, activa) con supersedesId hacia la anterior, que pasa a reemplazado e inactiva con su texto intacto (RN-08, ADR-50). El texto no viaja a la IA mientras rija la minimización de notas (RN-11).
+ */
+export const correctClinicalNote = <ThrowOnError extends boolean = false>(options: Options<CorrectClinicalNoteData, ThrowOnError>): RequestResult<CorrectClinicalNoteResponses, CorrectClinicalNoteErrors, ThrowOnError> => (options.client ?? client).post<CorrectClinicalNoteResponses, CorrectClinicalNoteErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'oncolens_session',
+            type: 'apiKey'
+        }],
+    url: '/platform/patients/{patientId}/clinical-notes/{noteId}/corrections',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Histórico de correcciones de una nota clínica
+ *
+ * Sigue supersedesId hacia atrás desde la nota vigente: las versiones reemplazadas, de la más reciente a la más antigua, acotadas por CORRECTION_HISTORY_MAX. Es una lectura clínica: el administrador recibe 403.
+ */
+export const getClinicalNoteHistory = <ThrowOnError extends boolean = false>(options: Options<GetClinicalNoteHistoryData, ThrowOnError>): RequestResult<GetClinicalNoteHistoryResponses, GetClinicalNoteHistoryErrors, ThrowOnError> => (options.client ?? client).get<GetClinicalNoteHistoryResponses, GetClinicalNoteHistoryErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'oncolens_session',
+            type: 'apiKey'
+        }],
+    url: '/platform/patients/{patientId}/clinical-notes/{noteId}/history',
+    ...options
 });
 
 /**

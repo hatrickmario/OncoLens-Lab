@@ -129,5 +129,7 @@ export function comoBiomarcador(
     examType: fila.examType,
     performedAt: fila.performedAt,
     provenance: comoProvenance(fila, documentosAdicionales),
+    // Opcional en el contrato: solo una corrección lo trae, así la UI sabe si hay histórico (ADR-50).
+    ...(typeof fila.supersedesId === 'string' && { supersedesId: fila.supersedesId }),
   };
 }

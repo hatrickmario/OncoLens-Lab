@@ -145,6 +145,20 @@ describe('Contenido del seed sintético', () => {
     expect(atributos.map((a) => a.attribute_key)).toContain('estado_menopausico');
   });
 
+  it('(a) tiene una nota comorbilidad y una nota_libre sintéticas, sin PII, vigentes y del seed [US-253 AC-2]', async () => {
+    const notas = await filas<{ note_type: string; content: string; supersedes_id: string | null }>(
+      `SELECT note_type::text AS note_type, content, supersedes_id FROM clinical.clinical_note
+        WHERE patient_id = $1 AND is_active AND review_status = 'verificado' AND entry_method = 'seed'
+        ORDER BY note_type`,
+      [idDe('a')],
+    );
+
+    expect(notas.map((nota) => nota.note_type)).toEqual(['comorbilidad', 'nota_libre']);
+    expect(notas.every((nota) => nota.supersedes_id === null)).toBe(true);
+    // Sin nombres propios, documentos ni teléfonos: ninguna secuencia de 6 o más dígitos ni un correo (RN-13, RN-14).
+    for (const nota of notas) expect(nota.content).not.toMatch(/\d{6,}|@/);
+  });
+
   it('(b) tiene el contenido de OL-01: próstata ISUP 3, tres PSA fechados, ADT y progresión [US-039 AC-2]', async () => {
     const [dx] = await filas<Record<string, unknown>>(
       `SELECT id, cancer_type, grade FROM clinical.diagnosis WHERE patient_id = $1 AND is_active`,

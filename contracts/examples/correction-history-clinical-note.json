@@ -1,0 +1,13 @@
+{
+  "items": [
+    {
+      "id": "b3a9d5e7-4f1c-4a28-b6d0-7c8d9e0f1a2b",
+      "entryMethod": "seed",
+      "reviewStatus": "reemplazado",
+      "recordedAt": "2026-09-01T00:00:00.000Z",
+      "createdAt": "2026-09-01T15:00:00.000Z",
+      "content": "Hipertensión arterial en tratamiento.",
+      "noteType": "comorbilidad"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "error": "CUERPO_INVALIDO",
+  "field": "performedAt",
+  "message": "El cuerpo de la petición no cumple el contrato.",
+  "traceId": "req_c9d0e1f2"
+}

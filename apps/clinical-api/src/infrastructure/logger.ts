@@ -35,6 +35,8 @@ export const CAMPOS_SENSIBLES_BASE: readonly string[] = Object.freeze([
   'secret',
   'clinicalContext',
   'clinicalNotes',
+  // Texto libre de una nota clínica (corrección, L1D-309): contenido clínico, nunca a logs (RN-10).
+  'content',
 ]);
 const MARCA_DE_REDACCION = '[REDACTADO]';
 
