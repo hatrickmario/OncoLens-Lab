@@ -91,7 +91,7 @@
   leído por el código), cachés y su invalidación, D5-02 («vuelve a ejecutar `contracts` antes del merge si `main` avanzó»),
   `requirements-export.txt`, reportes de calidad (`latest.json` + `cobertura-rag.json`) y paso 2 de «Cómo añadir un job»
   (decidir si es omitible) `[D-12] [D-11] [D5-02]`.
-- [ ] 5.3 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde
+- [x] 5.3 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde
   antes y después, commit `refactor(ARR-11)`.
 
 ## humano
@@ -102,13 +102,13 @@
 
 ## cierre
 
-- [ ] 6.1 `openspec validate arr-11-ci-rapida --strict` en verde.
-- [ ] 6.2 Vitest raíz (`npx vitest run`), `ci/tests/run-cases.sh` de los casos nuevos y Pytest de
+- [x] 6.1 `openspec validate arr-11-ci-rapida --strict` en verde.
+- [x] 6.2 Vitest raíz (`npx vitest run`), `ci/tests/run-cases.sh` de los casos nuevos y Pytest de
   `test_dependencias_de_inferencia.py` en verde en local.
 - [ ] 6.3 PR con la CI completa en verde (0 checks en fallo, 0 pendientes, 0 alertas), `eval-required` sin descargar
   ruedas `nvidia-*` (log del `pip install`), y un PR de prueba de solo documentación (p. ej., el PR `docs` de la oleada O1)
   con `ci-ok` en verde y solo los cuatro jobs de documentación ejecutados.
 - [ ] 6.4 Medición tras el merge (design «Medición»): duración de `ci-ok` en 3 PR de código y 3 de documentación frente a
   ~22 min, anotada en el PR y en `docs/process/ci.md`.
-- [ ] 6.5 Sin `contracts:verify-provider` ni `run-ai-eval` adicionales: el change no toca APIs, modelo, prompt, umbral,
+- [x] 6.5 Sin `contracts:verify-provider` ni `run-ai-eval` adicionales: el change no toca APIs, modelo, prompt, umbral,
   catálogo ni corpus (la dependencia movida en D-11 no la importa ningún test ni `evaluate`).
