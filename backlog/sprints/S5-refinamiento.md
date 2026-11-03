@@ -18,7 +18,7 @@ Meta ≥ 80 % = **68 pts cerrados**.
 
 | Oleada propuesta | L1D | US | Pts | Contexto | DoR |
 |---|---|---|---|---|---|
-| O1 | — | **ARR-10** conciliar y archivar los 12 changes activos + D5-02 (CI de `contracts/examples/**` contra `main`) | 2 | todos | ✓ (tarjeta de arrastre sin issue, como ARR-09) |
+| O1 | — | **ARR-10** conciliar y archivar los 12 changes activos + D5-02 (CI de `contracts/examples/**` contra `main`) + D-11 (`torch`/`transformers` fuera de la CI) | 2 | todos | ✓ (tarjeta de arrastre sin issue, como ARR-09; D-11 cabe en los 2 pts: mover dos líneas y ajustar 2 tests y 3 documentos) |
 | O1 | L1D-306 | US-250 NFC de la pregunta | 2 | clinical-platform · ai-services · frontend | ✓ (D-6) |
 | O1 | L1D-305 | US-249 RN-23 voz propia y nivel B | 3 | ai-services | ✓ |
 | O1 | L1D-119 | US-120 corpus ≥ 20 docs por tipo + barridos | 5 | ai-services | ✓ (ADR-36 decidido; AC-5/AC-6 en la corrida nocturna, §5) |
@@ -112,6 +112,14 @@ Con US-101 y US-136 fuera del S5, US-071 verifica `datos_faltantes` y `poblacion
 
 AC-5 se verifica como «la huella del contexto clínico del paciente cambia tras la corrección y el aviso del análisis previo no bloquea»; la reutilización de un análisis guardado es de US-251 (S6). *Descartada:* adelantar US-251.
 
+### D-11 · `torch` y `transformers` fuera de las dependencias de la CI · barato · **Decidido (usuario, 2026-11-03): opción 1** `[S5 resp. 6]`
+
+**Origen:** en el PR #288, `eval-required` falló con `No space left on device` en el `pip install`. `torch==2.14.1` de PyPI para Linux arrastra ~4 GB de CUDA (`cuda-toolkit 13.0.3`, `nvidia-cusparselt-cu13`…) en un runner sin GPU. `torch` y `transformers` solo los importa `app/evaluation/exportar_onnx.py` (exportación puntual de modelos a ONNX para ADR-39); ningún test los importa y `evaluate` en la CI usa adapters falsos.
+
+**Decisión:** sacar `torch` y `transformers` de `requirements-eval.txt` a un fichero nuevo `apps/rag-orchestrator/requirements-export.txt`, que solo se instala a mano para exportar modelos. Tarea de **ARR-10** (oleada O1): mover las dos líneas con su comentario de licencia; apuntar a `requirements-export.txt` en `adr39-medicion.Dockerfile`, `docs/demo/runbook-demo-S1.md` (venv de los pesos ONNX) y `docs/process/ci.md`; ajustar `tests/unit/test_dependencias_de_inferencia.py` (`transformers` en `requirements-export.txt` y **ni** en `requirements.txt` **ni** en `requirements-eval.txt`) y `ci/tests/workflow.test.mjs` si comprueba la lista; `pip-audit` sobre el fichero nuevo si la CI audita los tres. Test después (configuración): la CI verde sin las ruedas CUDA es la evidencia.
+
+*Descartadas:* `torch` CPU desde `download.pytorch.org/whl/cpu` en la CI (mezcla dos índices de paquetes y la CI sigue instalando lo que no usa) y liberar disco en el runner (tapa el síntoma; la CI sigue bajando ~4 GB inútiles).
+
 ### Lo que no se reabre
 
 D-01 (análisis de evidencia, no recomendaciones), RN-23, RN-24 (los hallazgos del análisis son memoria no citable en el seguimiento), ADR-47 / DEC-11, ADR-40 (PII: patrones e identidad exacta; nombres en notas con el aviso de US-253 AC-6).
@@ -123,6 +131,7 @@ D-01 (análisis de evidencia, no recomendaciones), RN-23, RN-24 (los hallazgos d
 - `[S5 resp. 3]` (2026-11-03) D-3: comprometer **85 pts** (59 base + vista de caso mínima + US-140, US-116, US-070, US-093, US-071).
 - `[S5 resp. 4]` (2026-11-03) D-4…D-7 aprobadas y variante **A** de S5-01 (corrección en línea con histórico desplegable).
 - `[S5 resp. 5]` (2026-11-03, derivada de 1 y 3, aplicada por la sesión principal): G-Demo incluye la vista de caso mínima; D-8, D-9 y D-10 son consecuencias baratas de esas respuestas.
+- `[S5 resp. 6]` (2026-11-03) D-11: `torch` y `transformers` pasan a `requirements-export.txt`, fuera de la CI (opción 1); se hace en ARR-10.
 
 ## 5. Stack técnico (fase 2)
 
