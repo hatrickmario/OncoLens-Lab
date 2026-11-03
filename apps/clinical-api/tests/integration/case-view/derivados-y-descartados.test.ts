@@ -1,7 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { TIPOS_DE_EVENTO_DE_IA } from '../../../src/modules/case-view/timeline.reglas.js';
 import type { CaseViewService } from '../../../src/modules/case-view/ports.js';
-import { sembrarPCaso, type PCasoSembrado } from '../../support/caso.js';
+import {
+  sembrarEventoReflejoDeAnalisis,
+  sembrarPCaso,
+  type PCasoSembrado,
+} from '../../support/caso.js';
 import { montarCaso } from '../../support/caso-http.js';
 import {
   nuevoPaciente,
@@ -188,6 +192,17 @@ describe('GET /platform/patients/{id}/case · eventos derivados y descartados', 
       ['2026-08-02', 'Resumen del caso', true],
     ]);
     expect(rows[0]?.n).toBe(0);
+  });
+
+  it('no muestra en el timeline una fila de clinical_event con analysis_id [US-088 AC-5] [ADR-32]', async () => {
+    const p = await sembrarOtroPCaso();
+    const idDelReflejo = mundo.ids();
+    await sembrarEventoReflejoDeAnalisis(p, idDelReflejo, 'verificado');
+
+    const vista = await pedirVista(p);
+
+    expect(vista.timeline.map((evento) => evento.id)).not.toContain(idDelReflejo);
+    expect(vista.timeline).toHaveLength(11);
   });
 
   it('marca los eventos de IA con provenance n_a, auto_aceptado y sourceDocumentId null, y su eventType en la lista de eventos de IA [US-088 AC-5]', async () => {

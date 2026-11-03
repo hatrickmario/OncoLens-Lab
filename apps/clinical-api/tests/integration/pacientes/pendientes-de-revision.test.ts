@@ -1,5 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { sembrarPCaso } from '../../support/caso.js';
+import {
+  sembrarEventoReflejoDeAnalisis,
+  sembrarPCaso,
+  type PCasoSembrado,
+} from '../../support/caso.js';
 import { prepararSiembra } from '../../support/completitud.js';
 import {
   FECHA_FIJA,
@@ -125,7 +129,7 @@ describe('pendingReviewCount de eventos sin fecha confiable', () => {
   async function conPCaso(
     espacio: number,
     numeroDeDocumento: string,
-    cuerpo: (patientId: string, toxicidadId: string) => Promise<void>,
+    cuerpo: (patientId: string, toxicidadId: string, p: PCasoSembrado) => Promise<void>,
   ): Promise<void> {
     const { cliente } = escenario.mundo;
     await cliente.query('BEGIN');
@@ -139,7 +143,7 @@ describe('pendingReviewCount de eventos sin fecha confiable', () => {
         numeroDeDocumento,
         nombreCompleto: FX_T4A_A.nombreCompleto,
       });
-      await cuerpo(p.patientId, p.filas.toxicidad);
+      await cuerpo(p.patientId, p.filas.toxicidad, p);
     } finally {
       await cliente.query('ROLLBACK');
     }
@@ -178,6 +182,25 @@ describe('pendingReviewCount de eventos sin fecha confiable', () => {
 
       // Solo el PSA por revisar: la cirugía rechazada y la toxicidad rechazada no cuentan.
       expect(await pendientesDeLaFicha(patientId)).toBe(1);
+    });
+  });
+
+  it('cuenta una vez un evento vigente con event_date NULL aunque su precisión sea dia, igual que su posición sin fecha en el timeline [US-088 AC-3]', async () => {
+    await conPCaso(7452, FX_T4A_A.numeroDeDocumento, async (patientId, toxicidadId) => {
+      await escenario.mundo.cliente.query(
+        "UPDATE clinical.clinical_event SET review_status = 'verificado', date_precision = 'dia', event_date = NULL WHERE id = $1",
+        [toxicidadId],
+      );
+
+      expect(await pendientesDeLaFicha(patientId)).toBe(2);
+    });
+  });
+
+  it('no suma en pendingReviewCount un evento con analysis_id [US-088 AC-5] [ADR-32]', async () => {
+    await conPCaso(7453, FX_T4A_A.numeroDistinto, async (patientId, _toxicidadId, p) => {
+      await sembrarEventoReflejoDeAnalisis(p, generadorDeIds(7454)(), 'requiere_revision');
+
+      expect(await pendientesDeLaFicha(patientId)).toBe(2);
     });
   });
 });

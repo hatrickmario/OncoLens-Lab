@@ -371,3 +371,25 @@ export async function sembrarPCaso(
     },
   };
 }
+
+/**
+ * Un `ClinicalEvent` con `analysis_id`: el reflejo de un análisis previo, que no es un dato clínico propio. No debe
+ * aparecer en el timeline ni sumar en `pendingReviewCount` (US-088 AC-5, ADR-32).
+ */
+export async function sembrarEventoReflejoDeAnalisis(
+  p: PCasoSembrado,
+  id: string,
+  reviewStatus: string,
+): Promise<void> {
+  await sembrarEventoClinico(p, id, {
+    event_type: 'evolucion',
+    event_date: '2026-08-01',
+    date_precision: 'dia',
+    description: 'Reflejo del analisis previo',
+    mapping_status: 'n_a',
+    analysis_id: p.filas.analisis,
+    entry_method: 'manual',
+    extraction_confidence: 'n_a',
+    review_status: reviewStatus,
+  });
+}
