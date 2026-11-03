@@ -26,6 +26,7 @@ from app.application.ports import (
     ChunkEncontradoSparse,
     ChunkSearch,
     CorpusChunkStore,
+    EtiquetasDeDatosCriticos,
     EvidenceGenerator,
     FalloDeInferencia,
     Idioma,
@@ -52,6 +53,7 @@ from app.domain.retrieval_filter import (
     expresion_solo_vigente,
 )
 from app.infrastructure.catalogo_clinico.aplicabilidad import CriteriosDelCatalogo
+from app.infrastructure.catalogo_clinico.datos_criticos import cargar_datos_criticos
 from app.infrastructure.fake.tarea_de_poblacion_silenciosa import TareaDePoblacionSilenciosa
 from app.infrastructure.lenguaje.terminos_prohibidos import cargar_verificador_de_terminos
 from app.schemas.generated.models import (
@@ -540,6 +542,7 @@ def crear_entorno(
     clasificador_nli: NliClassifier | None = None,
     verificador_terminos: ProhibitedTermsChecker | None = None,
     criterios: CriteriosDeAplicabilidad | None = None,
+    datos_criticos: EtiquetasDeDatosCriticos | None = None,
     proponente: PoblacionTask | None = None,
     buscador_sparse: SparseChunkSearch | None = None,
     embedder_sparse: QuerySparseEncoder | None = None,
@@ -569,6 +572,7 @@ def crear_entorno(
         lector_release=lector_release,
         catalogo=catalogo,
         catalogo_clinico=catalogo_clinico,
+        datos_criticos=datos_criticos or cargar_datos_criticos(CATALOGOS, ("mama", "prostata")),
         aplicabilidad=ApplicabilityService(criterios or CriteriosDelCatalogo({})),
         proponente=proponente or TareaDePoblacionSilenciosa(),
         generador=generador,

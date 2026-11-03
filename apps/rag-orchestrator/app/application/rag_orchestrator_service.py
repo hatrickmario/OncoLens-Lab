@@ -36,7 +36,11 @@ from app.application.aplicabilidad_textual import (
 from app.application.catalogo_exigido import exigir_catalogo_de_la_solicitud
 from app.application.chunk_citable import ChunkCitable
 from app.application.contexto_del_paciente import contexto_del_paciente
-from app.application.errores import RecuperacionNoDisponibleError, TipoCancerNoRegistradoError
+from app.application.errores import (
+    FaltanteNoCatalogadoError,
+    RecuperacionNoDisponibleError,
+    TipoCancerNoRegistradoError,
+)
 from app.application.generador_fallando_cerrado import GeneradorFallandoCerrado
 from app.application.ports import (
     CandidatoDeRecuperacion,
@@ -47,6 +51,7 @@ from app.application.ports import (
     Clock,
     CorpusCatalogReader,
     CorpusReleaseReader,
+    EtiquetasDeDatosCriticos,
     EvidenceGenerator,
     EvidenciaGenerada,
     Idioma,
@@ -72,6 +77,7 @@ from app.domain.citations import (
     contar_por_motivo,
     validar_citas,
 )
+from app.domain.faltantes import claves_de_faltantes_invalidas
 from app.domain.fusion_de_candidatos import (
     HYBRID_SPARSE_WEIGHT_INICIAL,
     RRF_K_INICIAL,
@@ -184,6 +190,7 @@ class RAGOrchestratorService:
         lector_release: CorpusReleaseReader,
         catalogo: CorpusCatalogReader,
         catalogo_clinico: CatalogoClinico,
+        datos_criticos: EtiquetasDeDatosCriticos,
         aplicabilidad: ApplicabilityService,
         proponente: PoblacionTask,
         generador: EvidenceGenerator,
@@ -211,6 +218,7 @@ class RAGOrchestratorService:
         self._lector_release = lector_release
         self._catalogo = catalogo
         self._catalogo_clinico = catalogo_clinico
+        self._datos_criticos = datos_criticos
         self._aplicabilidad = aplicabilidad
         self._generador: EvidenceGenerator = GeneradorFallandoCerrado(generador)
         self._reloj = reloj
@@ -257,6 +265,7 @@ class RAGOrchestratorService:
         self._exigir_tipo_habilitado(
             solicitud
         )  # un tipo inutilizable ya fue 422 propio; aquí, antes de recuperar (RN-20)
+        self._exigir_faltantes_catalogados(solicitud)  # RN-11: texto libre no llega a ningún puerto
         idioma, release = await self._idioma_y_release(trace_id, solicitud.query)
         loop = await self._recuperar_y_puntuar(trace_id, solicitud, filtro, solicitud.query, 1)
         if con_reescritura:
@@ -591,6 +600,20 @@ class RAGOrchestratorService:
         if diagnostico is None:
             return
         exigir_tipo_habilitado(diagnostico.cancerType.root, self._parametros.tipos_habilitados)
+
+    def _exigir_faltantes_catalogados(self, solicitud: RagQueryInternalRequest) -> None:
+        """Cada ``missingCriticalData`` debe ser una clave de ``datos-criticos.json`` del tipo del caso (RN-11).
+
+        Sin diagnóstico no hay tipo (``_filtro_de_recuperacion`` ya lo rechazó). Lanza con posiciones, nunca valores."""
+        contexto = solicitud.clinicalContext
+        if contexto.diagnosis is None:
+            return
+        conocidas = self._datos_criticos.claves(contexto.diagnosis.cancerType.root)
+        posiciones = claves_de_faltantes_invalidas(
+            [clave.root for clave in contexto.missingCriticalData], conocidas
+        )
+        if posiciones:
+            raise FaltanteNoCatalogadoError(posiciones)
 
     def _filtro_de_recuperacion(self, solicitud: RagQueryInternalRequest) -> str:
         """Filtro vigente y del tipo de cáncer del caso; sin código de catálogo no hay búsqueda (`422`, OL-02)."""

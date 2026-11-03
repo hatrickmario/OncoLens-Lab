@@ -303,6 +303,18 @@ class CatalogoClinico(Protocol):
         ...
 
 
+class EtiquetasDeDatosCriticos(Protocol):
+    """Datos críticos del catálogo clínico montado (``<tipo>/datos-criticos.json``, solo lectura): clave → etiqueta."""
+
+    def etiqueta(self, tipo_de_cancer: str, clave: str) -> str | None:
+        """Etiqueta en español de la clave en ese tipo de cáncer; ``None`` si el catálogo no la declara (no ``""``)."""
+        ...
+
+    def claves(self, tipo_de_cancer: str) -> frozenset[str]:
+        """Claves de los datos críticos del tipo; vacío si el tipo no está en el catálogo."""
+        ...
+
+
 class CorpusCatalogReader(Protocol):
     """Fichas de fuente del catálogo (schema ``corpus``, rol ``rag_corpus``) para copiar los metadatos de las citas (RN-04)."""
 
