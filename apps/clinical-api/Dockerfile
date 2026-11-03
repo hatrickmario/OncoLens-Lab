@@ -17,6 +17,10 @@ COPY packages/api-contracts/src/zod/rag-orchestrator packages/api-contracts/src/
 # `catalog:validate` al arrancar (L1D-93): el núcleo del validador, su allowlist y los esquemas del catálogo se compilan con la app.
 COPY packages/clinical-catalogs/validator packages/clinical-catalogs/validator
 COPY packages/clinical-catalogs/schemas packages/clinical-catalogs/schemas
+# La regla de normalizar la pregunta (US-250) vive en packages/clinical-language y el esquema del borde la importa; el
+# package.json fija `type: module` para compilar ese archivo como el resto.
+COPY packages/clinical-language/package.json packages/clinical-language/package.json
+COPY packages/clinical-language/src/normalizar-pregunta.ts packages/clinical-language/src/normalizar-pregunta.ts
 RUN npm run build --workspace apps/clinical-api
 
 FROM node:24.22.0-alpine3.24 AS runtime
