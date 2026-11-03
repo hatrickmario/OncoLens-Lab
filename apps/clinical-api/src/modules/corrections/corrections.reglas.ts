@@ -92,6 +92,30 @@ export function hayCambioRealDeNota(actual: NotaActual, cambios: CambiosDeNota):
 }
 
 /**
+ * Lo que una corrección de biomarcador debe cumplir antes de escribir (PRD §10), en un solo lugar: fecha no futura,
+ * formato del valor y algún cambio real. Cada fallo es un `422` y no cambia nada.
+ */
+export function exigirCorreccionValidaDeBiomarcador(
+  actual: BiomarcadorActual,
+  cambios: CambiosDeBiomarcador,
+  hoy: string,
+): void {
+  exigirFechaNoFutura(cambios.performedAt, hoy);
+  exigirValorDelFormatoDelResultado(actual.resultType, cambios.value);
+  if (!hayCambioRealDeBiomarcador(actual, cambios)) throw new CorreccionInvalidaError();
+}
+
+/** Lo mismo para la nota: texto no vacío ni mayor que `CLINICAL_NOTE_MAX_CHARS` y algún cambio real. */
+export function exigirCorreccionValidaDeNota(
+  actual: NotaActual,
+  cambios: CambiosDeNota,
+  maximoDeCaracteres: number,
+): void {
+  exigirTextoDeNotaValido(cambios.content, maximoDeCaracteres);
+  if (!hayCambioRealDeNota(actual, cambios)) throw new CorreccionInvalidaError();
+}
+
+/**
  * `examenDeLaCorreccion()` (D3): la corrección cuelga siempre de un examen nuevo `manual_correction` (la procedencia de
  * un biomarcador vive en su examen), con la fecha enviada o la del anterior. Reemplaza al examen anterior solo si el
  * corregido era su único biomarcador vigente; si tenía otros, el anterior sigue vigente con ellos.

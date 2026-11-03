@@ -132,27 +132,25 @@ function crearCorreccion<C>(dependencias: DependenciasDelController, operacion: 
   };
 }
 
-interface Lectura {
+/** Una lectura: qué ids exige la ruta (`undefined` = 404), cómo se lee y de qué paciente es (para el log). */
+interface Lectura<O> {
   readonly evento: string;
-  /** Parámetro de la ruta que identifica el dato; ausente en la lista de notas (solo el paciente). */
-  readonly parametroDelDato?: string;
-  readonly leer: (servicio: CorrectionsService, ids: Identificadores) => Promise<unknown>;
+  readonly identificar: (request: Request) => O | undefined;
+  readonly pacienteDe: (objetivo: O) => string;
+  readonly leer: (servicio: CorrectionsService, objetivo: O) => Promise<unknown>;
 }
 
-function crearLectura(dependencias: DependenciasDelController, lectura: Lectura) {
+function crearLectura<O>(dependencias: DependenciasDelController, lectura: Lectura<O>) {
   const { registrar, servicioPara } = dependencias;
   return async (request: Request, response: Response): Promise<void> => {
-    const ids =
-      lectura.parametroDelDato === undefined
-        ? soloElPaciente(request)
-        : identificadoresDe(request, lectura.parametroDelDato);
-    if (ids === undefined) {
+    const objetivo = lectura.identificar(request);
+    if (objetivo === undefined) {
       rechazarNoEncontrado(response, registrar, lectura.evento);
       return;
     }
     try {
-      const cuerpo = await lectura.leer(servicioPara(traceIdDe(response)), ids);
-      registrarResultado(registrar, lectura.evento, response, ids.patientId, 'ok');
+      const cuerpo = await lectura.leer(servicioPara(traceIdDe(response)), objetivo);
+      registrarResultado(registrar, lectura.evento, response, lectura.pacienteDe(objetivo), 'ok');
       response.setHeader('Cache-Control', 'no-store');
       response.status(200).json(cuerpo);
     } catch (error) {
@@ -162,10 +160,12 @@ function crearLectura(dependencias: DependenciasDelController, lectura: Lectura)
   };
 }
 
-function soloElPaciente(request: Request): Identificadores | undefined {
-  const patientId = idDePacienteSchema.safeParse(request.params['patientId']);
-  return patientId.success ? { patientId: patientId.data, datoId: '' } : undefined;
-}
+/** Lectura de un dato (histórico): el paciente y el dato de la ruta. */
+const delDato = (evento: string, parametroDelDato: string) => ({
+  evento,
+  identificar: (request: Request) => identificadoresDe(request, parametroDelDato),
+  pacienteDe: (ids: Identificadores) => ids.patientId,
+});
 
 type Permiso = 'clinical:write' | 'clinical:read';
 
@@ -207,8 +207,7 @@ function montarLecturas(router: Router, dependencias: DependenciasDelController)
     '/patients/:patientId/biomarkers/:biomarkerId/history',
     ...alLeer, // x-permission de getBiomarkerHistory
     crearLectura(dependencias, {
-      evento: EVENTO_HISTORIAL,
-      parametroDelDato: 'biomarkerId',
+      ...delDato(EVENTO_HISTORIAL, 'biomarkerId'),
       leer: (servicio, ids) => servicio.historialDeBiomarcador(ids),
     }),
   );
@@ -217,15 +216,19 @@ function montarLecturas(router: Router, dependencias: DependenciasDelController)
     ...alLeer, // x-permission de listClinicalNotes
     crearLectura(dependencias, {
       evento: EVENTO_NOTAS,
-      leer: (servicio, ids) => servicio.notasVigentes(ids.patientId),
+      identificar: (request) => {
+        const patientId = idDePacienteSchema.safeParse(request.params['patientId']);
+        return patientId.success ? patientId.data : undefined;
+      },
+      pacienteDe: (patientId) => patientId,
+      leer: (servicio, patientId) => servicio.notasVigentes(patientId),
     }),
   );
   router.get(
     '/patients/:patientId/clinical-notes/:noteId/history',
     ...alLeer, // x-permission de getClinicalNoteHistory
     crearLectura(dependencias, {
-      evento: EVENTO_HISTORIAL,
-      parametroDelDato: 'noteId',
+      ...delDato(EVENTO_HISTORIAL, 'noteId'),
       leer: (servicio, ids) => servicio.historialDeNota(ids),
     }),
   );

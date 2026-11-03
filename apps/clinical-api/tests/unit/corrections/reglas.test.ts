@@ -6,6 +6,8 @@ import {
 } from '../../../src/modules/corrections/corrections.errores.js';
 import {
   examenDeLaCorreccion,
+  exigirCorreccionValidaDeBiomarcador,
+  exigirCorreccionValidaDeNota,
   exigirDatoVigente,
   exigirFechaNoFutura,
   exigirTextoDeNotaValido,
@@ -268,5 +270,51 @@ describe('validaciones de la corrección', () => {
   it('acepta un texto de nota de exactamente el máximo y la ausencia de texto', () => {
     expect(() => exigirTextoDeNotaValido('x'.repeat(10), 10)).not.toThrow();
     expect(() => exigirTextoDeNotaValido(undefined, 10)).not.toThrow();
+  });
+});
+
+describe('exigirCorreccionValidaDeBiomarcador', () => {
+  it('acepta un valor nuevo numérico con una fecha de hoy', () => {
+    expect(() =>
+      exigirCorreccionValidaDeBiomarcador(
+        KI67,
+        { value: '25', performedAt: '2026-10-16' },
+        '2026-10-16',
+      ),
+    ).not.toThrow();
+  });
+
+  it('rechaza con field performedAt una fecha futura antes de mirar el valor', () => {
+    expect(() =>
+      exigirCorreccionValidaDeBiomarcador(
+        KI67,
+        { value: 'x', performedAt: '2026-10-17' },
+        '2026-10-16',
+      ),
+    ).toThrow(expect.objectContaining({ campo: 'performedAt' }) as Error);
+  });
+
+  it('rechaza sin field una corrección que deja todo igual', () => {
+    expect(() =>
+      exigirCorreccionValidaDeBiomarcador(KI67, { value: '20', unit: '%' }, '2026-10-16'),
+    ).toThrow(expect.objectContaining({ campo: undefined }) as Error);
+  });
+});
+
+describe('exigirCorreccionValidaDeNota', () => {
+  it('acepta un texto nuevo dentro del máximo', () => {
+    expect(() => exigirCorreccionValidaDeNota(NOTA, { content: 'Otro texto.' }, 50)).not.toThrow();
+  });
+
+  it('rechaza con field content un texto mayor que el máximo', () => {
+    expect(() => exigirCorreccionValidaDeNota(NOTA, { content: 'x'.repeat(51) }, 50)).toThrow(
+      expect.objectContaining({ campo: 'content' }) as Error,
+    );
+  });
+
+  it('rechaza sin field una corrección sin cambios', () => {
+    expect(() => exigirCorreccionValidaDeNota(NOTA, { noteType: 'comorbilidad' }, 50)).toThrow(
+      CorreccionInvalidaError,
+    );
   });
 });

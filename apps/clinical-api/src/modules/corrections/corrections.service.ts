@@ -15,19 +15,12 @@ import {
   comoNotaCorregida,
   comoNotaDelContrato,
 } from './corrections.contrato.js';
+import { DatoNoEncontradoError, DatoNoVigenteError } from './corrections.errores.js';
 import {
-  CorreccionInvalidaError,
-  DatoNoEncontradoError,
-  DatoNoVigenteError,
-} from './corrections.errores.js';
-import {
+  exigirCorreccionValidaDeBiomarcador,
+  exigirCorreccionValidaDeNota,
   exigirDatoVigente,
-  exigirFechaNoFutura,
-  exigirTextoDeNotaValido,
-  exigirValorDelFormatoDelResultado,
   fechaDeHoy,
-  hayCambioRealDeBiomarcador,
-  hayCambioRealDeNota,
   planDeCorreccionDeBiomarcador,
   planDeCorreccionDeNota,
   type ContextoDeCorreccion,
@@ -102,9 +95,7 @@ async function corregirBiomarcador(
     if (actual === null) throw new DatoNoEncontradoError();
     exigirDatoVigente(actual.reviewStatus);
     const contexto = contextoDe(dependencias, solicitud);
-    exigirFechaNoFutura(cuerpo.performedAt, fechaDeHoy(contexto.ahora));
-    exigirValorDelFormatoDelResultado(actual.resultType, cuerpo.value);
-    if (!hayCambioRealDeBiomarcador(actual, cuerpo)) throw new CorreccionInvalidaError();
+    exigirCorreccionValidaDeBiomarcador(actual, cuerpo, fechaDeHoy(contexto.ahora));
     // RN-27: la normalización final es de `ReconciliationService`; el texto original del dato no cambia (D4).
     const decision = reconciliacion.decidir({
       entidad: 'Biomarker',
@@ -128,8 +119,7 @@ async function corregirNota(
     const actual = await tx.nota(patientId, datoId);
     if (actual === null) throw new DatoNoEncontradoError();
     exigirDatoVigente(actual.reviewStatus);
-    exigirTextoDeNotaValido(cuerpo.content, dependencias.limites.notaMaxChars);
-    if (!hayCambioRealDeNota(actual, cuerpo)) throw new CorreccionInvalidaError();
+    exigirCorreccionValidaDeNota(actual, cuerpo, dependencias.limites.notaMaxChars);
     const plan = planDeCorreccionDeNota(actual, cuerpo, contextoDe(dependencias, solicitud));
     if (!(await tx.guardarCorreccionDeNota(plan))) throw new DatoNoVigenteError();
     return comoNotaCorregida(plan.nota);
