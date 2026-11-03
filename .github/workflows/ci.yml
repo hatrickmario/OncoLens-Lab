@@ -439,6 +439,9 @@ jobs:
           retention-days: 14
       - name: Tests de lint, formato, capas y umbrales (fixtures)
         run: npm run test:quality
+        # Los tests lanzan quality.mjs como subproceso con CI=true: heredan la misma lista de informes que quality:report (solo LCOV).
+        env:
+          COBERTURA_INFORMES_XML: ''
 
   # ARR-11 (D-12.3, US-213 AC-11): cobertura de líneas cambiadas de rag-orchestrator con el informe XML de build-test-rag y la
   # misma función que `quality` (scripts/quality/cobertura.mjs). Una cobertura baja es alerta, nunca error; un informe ausente

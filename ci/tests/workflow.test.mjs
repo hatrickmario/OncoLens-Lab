@@ -301,6 +301,7 @@ describe('partición de build-test y quality en paralelo (ARR-11)', () => {
     expect(necesita(ci.jobs.quality)).toEqual(['cambios']);
     expect(pasos.filter((paso) => paso.with?.name === 'cobertura-rag-orchestrator')).toEqual([]);
     expect(reporte.env).toEqual({ COBERTURA_INFORMES_XML: '' });
+    expect(pasos.find((paso) => paso.run === 'npm run test:quality').env).toEqual({ COBERTURA_INFORMES_XML: '' });
   });
 
   it('cobertura-rag necesita cambios y build-test-rag, publica quality-report-rag y solo falla por un informe ausente [D-12.3] [US-213 AC-11]', () => {
