@@ -4,6 +4,7 @@ import {
   iniciarEscenarioDeRegistroManual,
   montarRegistroManual,
   sembrarMamaConNottingham1,
+  sembrarMamaConKarnofsky80,
   sembrarMamaFM2,
   sembrarProstataConProstatectomiaGlobal,
   sembrarProstataTnm8,
@@ -90,6 +91,27 @@ describe('corrección explícita del diagnóstico vigente', () => {
     expect(filas.filter((fila) => fila.is_active)).toHaveLength(1);
   });
 
+  it('guarda is_active y la procedencia que devuelve el contrato cuando se crea la corrección [US-110 AC-2]', async () => {
+    const { patientId } = await sembrarMamaFM2(escenario.siembra);
+
+    const respuesta = await registrar(patientId, {
+      grading: { gradingSystem: 'nottingham', nottinghamGrade: 2 },
+    });
+
+    const { rows } = await escenario.mundo.cliente.query(
+      `SELECT is_active, entry_method::text AS entry_method, review_status::text AS review_status,
+              extraction_confidence::text AS extraction_confidence
+         FROM clinical.diagnosis WHERE id = $1`,
+      [respuesta.body.id],
+    );
+    expect(rows[0]).toEqual({
+      is_active: respuesta.body.isActive,
+      entry_method: respuesta.body.provenance.entryMethod,
+      review_status: respuesta.body.provenance.reviewStatus,
+      extraction_confidence: respuesta.body.provenance.extractionConfidence,
+    });
+  });
+
   it('rechaza un grade escrito a mano con 422 y no crea ni modifica filas [US-110 AC-2]', async () => {
     const { patientId } = await sembrarMamaFM2(escenario.siembra);
     const antes = await contarFilasDelPaciente(escenario.mundo.cliente, patientId);
@@ -131,6 +153,50 @@ describe('corrección explícita del diagnóstico vigente', () => {
 
     expect(respuesta.status).toBe(422);
     expect(respuesta.body.error).toBe('CUERPO_INVALIDO');
+  });
+});
+
+describe('la corrección valida el diagnóstico resultante, no solo lo enviado (decisión del Gate 2)', () => {
+  it('rechaza con VALOR_FUERA_DE_CATALOGO cuando solo cambia la escala y el valor heredado queda fuera de su rango [US-110 AC-5]', async () => {
+    const { patientId } = await sembrarMamaConKarnofsky80(escenario.siembra);
+    const antes = await contarFilasDelPaciente(escenario.mundo.cliente, patientId);
+
+    const respuesta = await registrar(patientId, { performanceScale: 'ECOG' });
+
+    expect(respuesta.status).toBe(422);
+    expect(respuesta.body.error).toBe('VALOR_FUERA_DE_CATALOGO');
+    expect(await contarFilasDelPaciente(escenario.mundo.cliente, patientId)).toEqual(antes);
+  });
+
+  it('rechaza con VALOR_FUERA_DE_CATALOGO cuando solo cambia el tipo de cáncer y la gradación copiada es de otro tipo [US-110 AC-3]', async () => {
+    const { patientId } = await sembrarMamaConNottingham1(escenario.siembra);
+    const antes = await contarFilasDelPaciente(escenario.mundo.cliente, patientId);
+
+    const respuesta = await registrar(patientId, { cancerType: 'prostata' });
+
+    expect(respuesta.status).toBe(422);
+    expect(respuesta.body.error).toBe('VALOR_FUERA_DE_CATALOGO');
+    expect(await contarFilasDelPaciente(escenario.mundo.cliente, patientId)).toEqual(antes);
+  });
+});
+
+describe('concurrencia del registro sobre el mismo paciente', () => {
+  it('deja un solo diagnóstico activo y encadena la segunda corrección sobre la primera cuando llegan dos peticiones a la vez [US-110 AC-2]', async () => {
+    const { patientId } = await sembrarMamaFM2(escenario.siembra);
+    const { app } = montarRegistroManual(escenario.mundo, { conexionesIndependientes: true });
+    const enviar = (stageValue: string) =>
+      clienteVerificado(app)
+        .post(`/platform/patients/${patientId}/diagnoses`)
+        .set('Cookie', escenario.cookieDoctor)
+        .send({ stageValue });
+
+    const [a, b] = await Promise.all([enviar('IIA'), enviar('IIB')]);
+
+    expect([a.status, b.status]).toEqual([201, 201]);
+    const filas = await diagnosticosDe(patientId);
+    expect(filas).toHaveLength(3);
+    expect(filas.filter((fila) => fila.is_active)).toHaveLength(1);
+    expect(filas.filter((fila) => fila.review_status === 'reemplazado')).toHaveLength(2);
   });
 });
 

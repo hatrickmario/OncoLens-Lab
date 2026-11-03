@@ -103,4 +103,33 @@ describe('bordes del registro manual', () => {
     }
     expect(logs).toContain(patientId);
   });
+
+  it('registra el evento del diagnóstico cuando el JSON del cuerpo está malformado [US-110 AC-1]', async () => {
+    const { patientId } = await sembrarMamaFM2(escenario.siembra);
+    const montaje = montarRegistroManual(escenario.mundo);
+
+    const respuesta = await clienteVerificado(montaje.app)
+      .post(`/platform/patients/${patientId}/diagnoses`)
+      .set('Cookie', escenario.cookieDoctor)
+      .set('Content-Type', 'application/json')
+      .send('{no es json');
+
+    expect(respuesta.status).toBe(422);
+    expect(montaje.logger.lineas.map((linea) => linea['event'])).toContain(
+      'manual_entry.diagnostico',
+    );
+  });
+
+  it('no escribe la histología en los logs cuando el registro se rechaza con 422 [US-110 AC-1] [RN-10]', async () => {
+    const { patientId } = await sembrarMamaFM2(escenario.siembra);
+    const montaje = montarRegistroManual(escenario.mundo);
+
+    const respuesta = await clienteVerificado(montaje.app)
+      .post(`/platform/patients/${patientId}/diagnoses`)
+      .set('Cookie', escenario.cookieDoctor)
+      .send({ histology: 'carcinoma ductal', performanceScale: 'ECOG', performanceValue: 99 });
+
+    expect(respuesta.status).toBe(422);
+    expect(montaje.logger.texto()).not.toContain('carcinoma ductal');
+  });
 });

@@ -7,6 +7,8 @@ import { completenessController } from '../../src/modules/completeness/completen
 import { crearTiposHabilitados } from '../../src/modules/evidence-analysis/tipos-habilitados.js';
 import { componerModuloDeRegistroManual } from '../../src/modules/manual-entry/manual-entry.module.js';
 import { createReconciliationService } from '../../src/modules/reconciliation/reconciliation.service.js';
+import type { FuenteDeConexiones } from '../../src/modules/manual-entry/manual-entry.repository.js';
+import { conectar } from './db.js';
 import { appConAuth } from './app-auth.js';
 import { RUTA_CATALOGO_FX01BB } from './catalogo-terminologico.js';
 import { servicioDeCompletitud } from './completitud-http.js';
@@ -44,6 +46,30 @@ export interface AppDeRegistroManual {
 export interface OpcionesDeRegistroManual {
   /** Catálogo montado; por defecto el fixture `test-normalizacion-1.0.0`. */
   rutaDelCatalogo?: string;
+  /** Cada transacción abre su PROPIA conexión (como el Pool de producción): para probar el bloqueo entre peticiones. */
+  conexionesIndependientes?: boolean;
+}
+
+function fuenteUnica(mundo: MundoDeGateway): FuenteDeConexiones {
+  return {
+    connect: () =>
+      Promise.resolve({
+        query: (sql, valores) => mundo.cliente.query(sql, valores),
+        release: () => undefined,
+      }),
+  };
+}
+
+function fuenteIndependiente(mundo: MundoDeGateway): FuenteDeConexiones {
+  return {
+    connect: async () => {
+      const cliente = await conectar(mundo.base.url);
+      return {
+        query: (sql, valores) => cliente.query(sql, valores),
+        release: () => void cliente.end(),
+      };
+    },
+  };
 }
 
 export function montarRegistroManual(
@@ -58,13 +84,8 @@ export function montarRegistroManual(
   const traceIds = { traceId: () => TRACE_ID_GENERADO };
   const router = componerModuloDeRegistroManual({
     // La conexión única del arnés: BEGIN/COMMIT caen en la misma sesión que las lecturas del test.
-    fuente: {
-      connect: () =>
-        Promise.resolve({
-          query: (sql, valores) => mundo.cliente.query(sql, valores),
-          release: () => undefined,
-        }),
-    },
+    fuente:
+      opciones.conexionesIndependientes === true ? fuenteIndependiente(mundo) : fuenteUnica(mundo),
     reconciliacionPara: () =>
       createReconciliationService({ catalogo: terminologia, registrar: logger.registrar }),
     escalas: crearCatalogoDeEscalas(ruta, leerTexto, proveedor),
@@ -246,4 +267,16 @@ export async function contarFilasDelPaciente(
       'SELECT count(*)::int AS n FROM clinical.diagnosis_grading g JOIN clinical.diagnosis d ON d.id = g.diagnosis_id WHERE d.patient_id = $1',
     ),
   };
+}
+
+/** Mama con ECOG... reemplazado por Karnofsky 80: el valor solo es válido en su escala (0-100). */
+export async function sembrarMamaConKarnofsky80(
+  contexto: ContextoDeSiembra,
+): Promise<PacienteSembrado> {
+  const paciente = await sembrarMamaConNottingham1(contexto);
+  await contexto.cliente.query(
+    "UPDATE clinical.diagnosis SET performance_scale = 'Karnofsky', performance_value = 80 WHERE patient_id = $1",
+    [paciente.patientId],
+  );
+  return paciente;
 }

@@ -6,6 +6,7 @@ import {
   iniciarEscenarioDeRegistroManual,
   montarRegistroManual,
   sembrarMamaFM2,
+  sembrarSinDiagnostico,
   type EscenarioDeRegistroManual,
 } from '../../support/registro-manual.js';
 import { clienteVerificado } from '../../support/verificarProveedor.js';
@@ -68,6 +69,33 @@ describe('registro manual de un biomarcador', () => {
       (fila) => fila.item === 'ki67',
     );
     expect(ki67?.status).toBe('presente_verificado');
+  });
+
+  it('guarda la significancia, la fuente y el tipo de examen que devuelve el contrato cuando se registra Ki-67 [US-110 AC-1]', async () => {
+    const paciente = (await sembrarMamaFM2(escenario.siembra)).patientId;
+
+    const respuesta = await registrar(CUERPO_KI67, paciente);
+
+    const { rows } = await escenario.mundo.cliente.query(
+      `SELECT b.clinical_significance::text AS clinical_significance,
+              b.significance_source::text AS significance_source, e.exam_type
+         FROM clinical.biomarker b JOIN clinical.exam e ON e.id = b.exam_id WHERE b.id = $1`,
+      [respuesta.body.id],
+    );
+    expect(rows[0]).toEqual({
+      clinical_significance: respuesta.body.clinicalSignificance,
+      significance_source: respuesta.body.significanceSource,
+      exam_type: respuesta.body.examType,
+    });
+  });
+
+  it('deja no_mapeado un término del catálogo cuando el paciente no tiene diagnóstico vigente [US-110 AC-4]', async () => {
+    const paciente = (await sembrarSinDiagnostico(escenario.siembra)).patientId;
+
+    const respuesta = await registrar(CUERPO_KI67, paciente);
+
+    expect(respuesta.status).toBe(201);
+    expect(respuesta.body).toMatchObject({ mappingStatus: 'no_mapeado', loincCode: null });
   });
 
   it('guarda el término canónico y el texto original de un sinónimo cuando se registra "ki 67" [US-110 AC-1]', async () => {
