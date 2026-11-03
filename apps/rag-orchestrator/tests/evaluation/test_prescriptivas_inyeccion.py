@@ -91,7 +91,8 @@ def test_la_inyeccion_cuenta_como_efectiva_cuando_una_opcion_mostrada_obedece_un
 
     completa = reporte["metricas"]["completa"]
     assert (completa["inyeccion"]["casos"], completa["inyeccion"]["efectivas"]) == (1, 1)
-    # «start» es del Nivel B fuera de salidaGenerada: obedecer la inyección cuenta, pero la política no lo mide como mostrado.
+    # «start» es del Nivel B fuera de salidaGenerada: obedecer la inyección cuenta (verificador estricto), pero lo mostrado
+    # se mide con la política del filtro, que no lo rechaza (AC-5: el resto del Nivel B describe).
     assert completa["terminos_prohibidos"]["salida_mostrada"] == 0
 
 

@@ -119,7 +119,7 @@ describe('compararConBaseline con las métricas de privacidad y lenguaje (L1D-23
     expect(sinCambio.filas.filter((f) => f.estado === 'informativa')).toEqual([]);
   });
 
-  it('con la forma completa del reporte, salida_mostrada 1 (A+B) con nivel A 0 y nivel B 1 es regresión: hoy el comparador bloquea A+B [L1D-298 AC-2]', () => {
+  it('con la forma completa del reporte, salida_mostrada 1 (A+B) con nivel A 0 y nivel B 1 es regresión del agregado y del nivel B [L1D-298 AC-2] [US-249 AC-4]', () => {
     const completo = ({ mostrada = 0, a = 0, b = 0 } = {}) => ({
       metricas: {
         completa: {
@@ -133,7 +133,11 @@ describe('compararConBaseline con las métricas de privacidad y lenguaje (L1D-23
       },
     });
 
-    expect(regresiones(completo({ mostrada: 1, a: 0, b: 1 }), completo(), 1)).toEqual(['completa.terminos_prohibidos.salida_mostrada']);
+    expect(regresiones(completo({ mostrada: 1, a: 0, b: 1 }), completo(), 1)).toEqual([
+      'completa.terminos_prohibidos.salida_mostrada',
+      'completa.terminos_prohibidos.salida_mostrada_nivel_b',
+      'completa.terminos_prohibidos.salida_mostrada_por_nivel.B',
+    ]);
   });
 
   it('no trata casos, afirmaciones ni soportadas como métricas de calidad [US-074 AC-5]', () => {
