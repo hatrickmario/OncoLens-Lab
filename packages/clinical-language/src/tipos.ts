@@ -23,6 +23,8 @@ export interface ListaTerminos {
   nivelA: { aplicaA: string[]; terminos: TerminoProhibido[] };
   nivelB: { aplicaA: string[]; prefijos: PrefijoProhibido[]; terminos: TerminoProhibido[] };
   frasesPermitidas: { aplicaA: string[]; frases: string[] };
+  /** Subconjunto del Nivel B que también rige la salida generada (US-249 AC-2): ids de `nivelB`. */
+  salidaGenerada: { nivelB: string[] };
 }
 
 export interface Coincidencia {
@@ -34,4 +36,6 @@ export interface Coincidencia {
 export interface OpcionesDeVerificacion {
   niveles?: readonly Nivel[];
   permitirFrases?: boolean;
+  /** Limita el Nivel B a estos ids (p. ej. `salidaGenerada.nivelB`); sin él, todo el Nivel B cuando se pide. */
+  soloIdsB?: readonly string[] | undefined;
 }

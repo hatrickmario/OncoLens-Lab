@@ -137,12 +137,39 @@ class FrasesPermitidas(_Modelo):
     frases: list[str]
 
 
+class SalidaGenerada(_Modelo):
+    """Subconjunto del Nivel B que también rige la salida generada (US-249 AC-2): ids de ``nivelB``."""
+
+    nivel_b: list[str] = Field(alias="nivelB", min_length=1)
+
+
+@dataclass(frozen=True)
+class ReglasDeSalidaGenerada:
+    """Qué reglas de la lista aplica el filtro de producción a cada campo generado: el Nivel A y estos ids del B."""
+
+    niveles: tuple[Nivel, ...]
+    ids_nivel_b: frozenset[str]
+
+
 class ListaTerminos(_Modelo):
     version: str
     normalizacion: str = Field(min_length=1)
     nivel_a: NivelA = Field(alias="nivelA")
     nivel_b: NivelB = Field(alias="nivelB")
     frases_permitidas: FrasesPermitidas = Field(alias="frasesPermitidas")
+    salida_generada: SalidaGenerada = Field(alias="salidaGenerada")
+
+    def reglas_para_salida_generada(self) -> ReglasDeSalidaGenerada:
+        """RN-23: el Nivel A más el subconjunto B declarado por la lista; única fuente de la política de salida."""
+        return ReglasDeSalidaGenerada(("A", "B"), frozenset(self.salida_generada.nivel_b))
+
+    @model_validator(mode="after")
+    def _salida_generada_solo_con_ids_del_nivel_b(self) -> Self:
+        existentes = {t.id for t in self.nivel_b.terminos} | {p.id for p in self.nivel_b.prefijos}
+        desconocidos = sorted(set(self.salida_generada.nivel_b) - existentes)
+        if desconocidos:
+            raise ValueError(f"salidaGenerada.nivelB con ids desconocidos: {', '.join(desconocidos)}")
+        return self
 
     @field_validator("version")
     @classmethod
@@ -192,13 +219,11 @@ def check_prohibited_terms(
     solo_ids_b: Collection[str] | None = None,
 ) -> list[Coincidencia]:
     """RN-23: coincidencias de la lista en ``texto``, en orden de aparición. Por defecto solo Nivel A."""
-    if solo_ids_b is not None:
-        raise NotImplementedError("no implementado")
     palabras = _palabras_de(texto)
     if permitir_frases:
         palabras = _tapar_frases_permitidas(palabras, lista.frases_permitidas.frases)
     claves = [clave_flexiva(p) for p in palabras]
-    candidatas = _recolectar_candidatas(palabras, claves, lista, niveles)
+    candidatas = _recolectar_candidatas(palabras, claves, lista, niveles, solo_ids_b)
     return [
         Coincidencia(id=c.id, termino=c.termino, nivel=c.nivel)
         for c in _elegir_tramos_mas_largos(candidatas)
@@ -215,7 +240,11 @@ def _tapar_frases_permitidas(palabras: list[str], frases: list[str]) -> list[str
 
 
 def _recolectar_candidatas(
-    palabras: list[str], claves: list[str], lista: ListaTerminos, niveles: Sequence[Nivel]
+    palabras: list[str],
+    claves: list[str],
+    lista: ListaTerminos,
+    niveles: Sequence[Nivel],
+    solo_ids_b: Collection[str] | None,
 ) -> list[_Candidata]:
     candidatas: list[_Candidata] = []
     orden = 0
@@ -225,10 +254,12 @@ def _recolectar_candidatas(
             orden += 1
     if "B" in niveles:
         for prefijo in lista.nivel_b.prefijos:
-            candidatas += _candidatas_de_prefijo(prefijo, orden, palabras)
+            if solo_ids_b is None or prefijo.id in solo_ids_b:
+                candidatas += _candidatas_de_prefijo(prefijo, orden, palabras)
             orden += 1
         for termino in lista.nivel_b.terminos:
-            candidatas += _candidatas_de_termino(termino, "B", orden, palabras, claves)
+            if solo_ids_b is None or termino.id in solo_ids_b:
+                candidatas += _candidatas_de_termino(termino, "B", orden, palabras, claves)
             orden += 1
     return candidatas
 

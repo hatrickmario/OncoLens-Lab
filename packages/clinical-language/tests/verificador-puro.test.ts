@@ -34,6 +34,7 @@ const lista: ListaTerminos = {
     aplicaA: ['ui'],
     frases: ['iniciar sesión', 'no constituye una recomendación'],
   },
+  salidaGenerada: { nivelB: ['b-recomend'] },
 };
 
 const ids = (texto: string, opciones?: Parameters<typeof checkProhibitedTerms>[2]) =>
