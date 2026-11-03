@@ -24,36 +24,38 @@
 
 ## 2. frontend
 
-- [ ] 2.1 Tests del AC en rojo (Testing Library + MSW desde `contracts/examples/`, sobre `/api/evidence-analyses/*`):
+- [x] 2.1 Tests del AC en rojo (Testing Library + MSW desde `contracts/examples/`, sobre `/api/evidence-analyses/*`):
       AC-1 (encabezado, contexto fijo, «0 de 10 preguntas usadas», sin hilo en `sin_evidencia`, sin total si falta
       `maxFollowUps`) y AC-2 (citas con «ver fragmento», «nueva en el seguimiento» solo en `chunk_90412`, «No
       disponible», la nota de citas con el texto corregido en el Gate 1 (design D5), `disclaimer` del turno y etiqueta académica en cada turno, texto no interpretado como
       HTML) en `apps/web/tests/ui/hilo-seguimiento.test.tsx`; commit `test(L1D-269)` · **test del AC primero**
-- [ ] 2.2 Tests del AC en rojo: AC-3 (progreso sin `answer` con la respuesta retenida, una sola petición ante doble
+- [x] 2.2 Tests del AC en rojo: AC-3 (progreso sin `answer` con la respuesta retenida, una sola petición ante doble
       clic) en `hilo-seguimiento-espera.test.tsx`; AC-4 (`409` con el límite de `maxFollowUps` y campo deshabilitado,
       `sin_evidencia`, `fuera_de_contexto`, «Nuevo análisis» con foco en el campo del panel, `502` sin turno) y AC-5
       (`aria-live="polite"`, `<label>` visible, teclado) en `hilo-seguimiento-estados.test.tsx`; commit
       `test(L1D-269)` · **test del AC primero**
-- [ ] 2.3 Extraer `contadorDeSeguimiento()` (RN-22: usados = `turnNumber` del último turno; total =
+- [x] 2.3 Extraer `contadorDeSeguimiento()` (RN-22: usados = `turnNumber` del último turno; total =
       `analysisBasis.maxFollowUps` o ninguno) y `numerarCitasDelTurno()` en `apps/web/lib/evidence/seguimiento/`, con
       unitarios Vitest uno a uno · **test del AC primero**
-- [ ] 2.4 Implementar `solicitarSeguimiento()` y `faseTrasSeguimiento()` (reutilizan `clasificarFallo`), las moléculas
+- [x] 2.4 Implementar `solicitarSeguimiento()` y `faseTrasSeguimiento()` (reutilizan `clasificarFallo`), las moléculas
       `FollowUpContext`, `FollowUpTurnItem`, `FollowUpStateNotice`, `FollowUpForm` y el organismo `FollowUpThread`
       (reutilizan `CitationChip`, `CitedFragment`, `AiDisclaimer`, `AnalysisFailure`, `ui/*`), las claves `followUp.*`
       de `messages/es.json` con los literales de S5-04, y montarlo en `analysis-result.tsx` tras la Base solo con
       `con_evidencia`, keyed por `analysisId`. Validación del campo con `esquemaPreguntaNormalizada` (si `l1d-306` está en
       `main`) o el `zFollowUpCreate` generado. Tests 2.1 y 2.2 en verde; commit `feat(L1D-269)` · **test del AC primero**
       `[US-219 AC-1…AC-5]`
-- [ ] 2.5 Suite de `web` (Vitest) y lint en verde; buscar en `apps/web` `ANALYSIS_FOLLOWUP_MAX`, un `10` en textos y el
+- [x] 2.5 Suite de `web` (Vitest) y lint en verde; buscar en `apps/web` `ANALYSIS_FOLLOWUP_MAX`, un `10` en textos y el
       literal del aviso RN-19 para confirmar que no se duplican · **verificación**
-- [ ] 2.6 Loop visual (visual-check): estados, consola sin errores ni violaciones de CSP, red solo /api/* sin PII en URLs,
+- [x] 2.6 Loop visual (visual-check): estados, consola sin errores ni violaciones de CSP, red solo /api/* sin PII en URLs,
       accesibilidad y teclado, rendimiento y capturas a 375 y 1280 px; cada fallo se convierte primero en un test en rojo
-      (⛔ necesita `l1d-268` en `main` y el Compose con `LLM_PROVIDER=fake`) `[US-219 AC-5]`
-- [ ] 2.7 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde
+      (⛔ necesita `l1d-268` en `main` y el Compose con `LLM_PROVIDER=fake`) `[US-219 AC-5]`. Hecho en vivo: vacío, enviando
+      (RTL), turno con citas, consola, red, 375/1280 px; `sin_evidencia`, `fuera_de_contexto`, `409` y `502` solo en RTL
+      porque el LLM fingido responde siempre con evidencia
+- [x] 2.7 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde
       antes y después, commit refactor(L1D-269) (sin cambios: el handler es un proxy de 1 paso, sin duplicación)
 
 ## 3. cierre
 
-- [ ] 3.1 `openspec validate l1d-269-hilo-seguimiento-ui --strict` y tests de `web` en verde; sin
+- [x] 3.1 `openspec validate l1d-269-hilo-seguimiento-ui --strict` y tests de `web` en verde; sin
       `contracts:verify-provider` (no cambia la API) ni `run-ai-eval` (no cambia modelo, prompt, umbral, catálogo ni
       corpus) · **verificación**
