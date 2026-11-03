@@ -1563,6 +1563,10 @@ export type CreateFollowUpErrors = {
      */
     429: ErrorLimiteGeneracion;
     /**
+     * Fallo interno de clinical-api. Mensaje fijo, sin eco ni detalle interno.
+     */
+    500: ErrorInterno;
+    /**
      * Error de comunicación con rag-orchestrator (sin detalles internos).
      */
     502: ErrorServicioIa;
