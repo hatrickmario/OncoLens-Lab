@@ -7,6 +7,9 @@
  *   2. contra los mínimos de `apps/rag-orchestrator/eval/configs/regression.yaml` (DEC-07), con
  *      `python -m app.evaluation.comparar_regresion` (ai-services): su stdout y stderr se reenvían tal cual y sus líneas
  *      van al resumen; aquí no se interpreta ni se imprime ninguna excepción (RN-14: solo el código de salida y las líneas del CLI).
+ * Además ejecuta la familia `opciones` (US-140, L1D-246) con su configuración de adapters falsos: un código de salida
+ * distinto de 0 (3 = invariante violada o retroceso de fidelidad/precisión de citas) rompe el job y el resumen nombra la
+ * familia, con ids de caso e invariante, nunca texto.
  * No exige juez LLM. La lógica vive aquí y no en el YAML del workflow (docs/process/ci.md).
  *
  * Uso: node scripts/ci/eval-required.mjs [--base <sha>] [--root <dir>] [--baseline <archivo>] [--salida <dir>]
@@ -31,6 +34,7 @@ const DIRECTORIO_RAG = path.join('apps', 'rag-orchestrator');
 const CONFIG_DE_UMBRALES = path.join('eval', 'configs', 'regression.yaml');
 const FORMATO_DE_TOLERANCIA = /^\d+(\.\d+)?$/;
 const MENSAJE_ENTRADA_ILEGIBLE = 'eval-required — reporte o baseline ilegible';
+const NOMBRE_REPORTE_DE_OPCIONES = 'opciones.json';
 
 /** Error de configuración con mensaje fijo, seguro de imprimir (los demás se reportan solo por su nombre, RN-14). */
 class ConfiguracionInvalida extends Error {}
@@ -60,6 +64,34 @@ function ejecutarSuite(raiz, salida, entorno) {
   return resultado.status ?? 1;
 }
 
+/** La familia `opciones` (US-140) con su configuración de la CI; devuelve su código de salida (0, 1 no corre, 2 configuración, 3 bloqueo). */
+function ejecutarFamiliaDeOpciones(raiz, salida, entorno) {
+  const resultado = spawnSync(
+    'node',
+    ['scripts/eval/evaluate.mjs', '--suite', 'opciones', '--report', 'json', '--salida', salida, '--nombre-archivo', NOMBRE_REPORTE_DE_OPCIONES],
+    { cwd: raiz, stdio: 'inherit', env: entorno },
+  );
+  return resultado.status ?? 1;
+}
+
+/** Invariantes violadas y retrocesos del reporte de la familia, solo como ids de caso e invariante (RN-14); `null` si no se puede leer. */
+function hallazgosDeOpciones(carpeta) {
+  try {
+    const reporte = leerJson(path.join(carpeta, NOMBRE_REPORTE_DE_OPCIONES));
+    const violaciones = reporte.invariantes.violaciones.map(({ invariante, caso }) => `${invariante} en ${caso}`);
+    const retrocesos = reporte.regresion.metricas.filter((m) => m.retroceso).map((m) => `retroceso de ${m.metrica}`);
+    return [...violaciones, ...retrocesos];
+  } catch {
+    return null;
+  }
+}
+
+function seccionDeOpciones({ codigo, hallazgos }) {
+  const veredicto = codigo === 0 ? 'Invariantes cumplidas (M-10.1, M-10.2, orden de RN-28) y sin retroceso.' : `La familia terminó con código ${codigo}.`;
+  const detalle = (hallazgos ?? []).map((h) => `- \`${textoSeguro(h)}\``);
+  return ['', '### Familia `opciones` (US-140)', '', veredicto, ...detalle];
+}
+
 /**
  * Mínimos de `regression.yaml` sobre el reporte (CLI de ai-services). Devuelve el código y las líneas de stdout y stderr tal
  * cual; si el proceso no arranca o se agota, devuelve 2 sin el motivo.
@@ -87,9 +119,9 @@ function seccionDeUmbrales({ salida, errores }) {
   return ['', '### Mínimos de `regression.yaml`', '', ...[...salida, ...errores].map((linea) => `> ${textoSeguro(linea)}`)];
 }
 
-function comentario({ motivos, tolerancia, comparacion, umbrales }) {
+function comentario({ motivos, tolerancia, comparacion, umbrales, opciones }) {
   const encabezado = ['## eval-required', '', 'La suite `evaluate` se ejecutó (adapters falsos, FX-T5a-a) porque el diff toca:', lineasDeMotivos(motivos), ''];
-  return [...encabezado, ...seccionDeBaseline(comparacion, tolerancia), ...seccionDeUmbrales(umbrales)].join('\n');
+  return [...encabezado, ...seccionDeBaseline(comparacion, tolerancia), ...seccionDeUmbrales(umbrales), ...seccionDeOpciones(opciones)].join('\n');
 }
 
 /** Líneas de consola y código de salida del control contra el baseline. */
@@ -148,11 +180,16 @@ export function ejecutar({ raiz = RAIZ, base, baseline = BASELINE_POR_DEFECTO, s
     return 2;
   }
   const umbrales = comprobarUmbrales(raiz, reporte, entorno);
-  publicarComentario(comentario({ motivos, tolerancia, comparacion, umbrales }), carpeta, entorno);
+  const codigoDeOpciones = ejecutarFamiliaDeOpciones(raiz, carpeta, entorno);
+  const opciones = { codigo: codigoDeOpciones, hallazgos: codigoDeOpciones === 0 ? [] : hallazgosDeOpciones(carpeta) };
+  publicarComentario(comentario({ motivos, tolerancia, comparacion, umbrales, opciones }), carpeta, entorno);
   const contraBaseline = comparacion ? veredictoDeRegresion(comparacion, { baseline, tolerancia }) : { codigo: 0, salida: [], errores: [] };
   imprimir(contraBaseline, umbrales);
   if (contraBaseline.codigo !== 0) return contraBaseline.codigo;
-  return umbrales.codigo === 0 ? 0 : Math.min(umbrales.codigo, 2);
+  if (umbrales.codigo !== 0) return Math.min(umbrales.codigo, 2);
+  if (codigoDeOpciones === 0) return 0;
+  console.error(`eval-required — la familia opciones terminó con código ${codigoDeOpciones}`);
+  return codigoDeOpciones === 2 ? 2 : 1;
 }
 
 function main(argumentos) {

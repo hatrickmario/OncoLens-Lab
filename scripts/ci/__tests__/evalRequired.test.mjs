@@ -62,6 +62,7 @@ function correr({ clon, base }, entorno = {}) {
     codigo: resultado.status,
     salida: `${resultado.stdout}${resultado.stderr}`,
     reporte: leer('apps/rag-orchestrator/eval/results/ci/reporte.json'),
+    opciones: leer('apps/rag-orchestrator/eval/results/ci/opciones.json'),
     comentario: leer('apps/rag-orchestrator/eval/results/ci/comentario.md'),
     resumen: leer('resumen.md'),
   };
@@ -102,6 +103,33 @@ describe('eval-required', { timeout: 90_000 }, () => {
     expect(resultado.reporte).toBeNull();
     expect(resultado.salida).toContain('omitido: ningún disparador en el diff');
     expect(resultado.resumen).toContain('`evaluate` no se ejecutó');
+    expect(resultado.opciones).toBeNull();
+  });
+
+  it('ejecuta también la familia opciones y la nombra en el resumen cuando el PR cambia un prompt [US-140 AC-2] [US-074]', () => {
+    const resultado = correr(pr(CAMBIO_DE_PROMPT));
+
+    expect(resultado.codigo).toBe(0);
+    expect(JSON.parse(resultado.opciones).suite).toBe('opciones');
+    expect(resultado.comentario).toContain('### Familia `opciones` (US-140)');
+    expect(resultado.comentario).toContain('Invariantes cumplidas');
+  });
+
+  it('falla y nombra la familia opciones y la métrica cuando su fidelidad retrocede más que la tolerancia [US-140 AC-4] [US-140 AC-2]', () => {
+    const referenciaAlta = JSON.stringify({ metricas: { completa: { fidelidad: { nli: { fidelidad: 0.99 } }, citas: { precision: 0.8 } } } });
+    const resultado = correr(
+      pr({
+        ...CAMBIO_DE_PROMPT,
+        'apps/rag-orchestrator/eval/results/referencia-alta.json': () => referenciaAlta,
+        'apps/rag-orchestrator/eval/configs/opciones-fake.yaml': (texto) => texto.replace('reports/eval/s3-cierre.json', 'apps/rag-orchestrator/eval/results/referencia-alta.json'),
+      }),
+    );
+
+    expect(resultado.codigo).toBe(1);
+    expect(resultado.salida).toContain('eval-required — la familia opciones terminó con código 3');
+    expect(resultado.comentario).toContain('### Familia `opciones` (US-140)');
+    expect(resultado.comentario).toContain('retroceso de fidelidad');
+    expect(resultado.resumen).toBe(resultado.comentario);
   });
 
   it('falla y nombra la métrica cuando el PR cambia un prompt y una métrica cae bajo el baseline [US-074 AC-5]', () => {
