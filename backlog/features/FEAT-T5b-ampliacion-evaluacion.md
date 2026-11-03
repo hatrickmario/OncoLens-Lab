@@ -3,6 +3,8 @@
 > Linear: [L1D-47](https://linear.app/l1der-lab-mjbc/issue/L1D-47)
 
 **Talla:** XL (Feature completa, propone división por sprint) · **Sprint:** 3 (US-132) · 5 (US-131, US-140, S4 → S5, `[S4 resp. 1]`; US-103, US-105, US-142, → G-Demo; reordenamiento del 2026-10-23) · 4 (US-133: híbrida frente a *dense*, `[S4 resp. 19]`) · `si-hay-capacidad` (US-104, US-106, US-141) · **Capacidad:** T-5 (AC-T5.1, AC-T5.3, AC-T5.4 por regresión) · **Recorrido principal:** sí (mide las hipótesis 1, 2 y 3) · no (US-104, US-106, US-133, US-141)
+
+> **Añadida (usuario, 2026-11-02):** US-252 (S6, 5 pts), desde el feedback de la Demo 4 (estabilidad del análisis).
 **Requisitos:** FR-20 (ampliación de datasets y métricas, OL-06) · TBD-03 (umbrales de confianza OCR, CAL) · medibles técnicos: M-01.1, M-01.2, M-01.3, M-02.1, M-02.2, M-02.3, M-02.4, M-03.1–M-03.5 (S2) · M-04.1, M-04.2, M-08.2, M-08.3, M-08.4, M-08.6, M-06.1 sin retroceso (S3) · M-10.1 y M-10.2 con hasta 3 opciones, M-07.2 con hasta 3 opciones, orden por aplicabilidad (RN-28), M-06.2 recalibrado (S5, en US-142) · verificación de G-Demo redefinido (S5) · G-6, G-7, G-8 (documentos), G-11, G-12, G-13
 **Evidencia:** [→ PRD §5 FR-20], [→ PRD §2.1 G-6, G-7, G-8, G-11, G-12, G-13], [→ PRD §7 NFR (extracción ≤ 60 s; vista de caso ≤ 2 s)], [→ PRD §12 Evaluación], [→ PRD §16 TBD-02, TBD-03, TBD-20], [→ PRD §18.3.1 M-01.1–M-01.3], [→ PRD §18.3.2 M-02.1–M-02.4], [→ PRD §18.3.3 M-03.1–M-03.5], [→ PRD §18.3.4 M-04.1, M-04.2], [→ PRD §18.3.6 M-06.1], [→ PRD §18.3.8 M-08.2–M-08.4, M-08.6], [→ PRD §18.4 AC-T5.1, AC-T5.3, AC-T5.4], [→ readme §6 OL-05 (tests de exactitud), OL-06 (datasets v1.1 y v1.2)], [→ readme §5.0 S2 KR1–KR4, S3 KR1, KR3, KR4], [→ backlog/02-adrs.md §4.1 TBD-03, TBD-20], [→ PRD §18.3.10 M-10.1, M-10.2], [→ PRD §2.1 G-2, G-5, G-14], [→ PRD §14 G-Demo], [→ readme §5.0 S4 KR1], [→ backlog/01-requisitos.md §15 (slicing por hipótesis: G-Demo redefinido)]
 **Dependencias:** ↪ US-072 (*runner* y reporte), US-074 (suite en la DoD), US-014 · ADR-41 · ⛔ ADR-39 (motores de OCR, LLM y NLI fijados para las mediciones reales) · ⛔ DEC-07 · escenario más probable (metas y umbrales de regresión) · 🔗 Mide a: FEAT-01b, FEAT-02b, FEAT-03a (S3) · FEAT-04, FEAT-06c (S4) · FEAT-08b (S5) · FEAT-10c, FEAT-10b (S5) · 🔗 Consume: US-139 (reporte de feedback), US-024 · DEC-14 (VM-3) para G-Demo
@@ -501,6 +503,33 @@ Medir VM-1…VM-6 con casos reales (FEAT-T5d, S6). Bloqueos por opt-out (US-148,
 **Small** ✓ ensambla verificaciones existentes en un E2E y un registro.
 **Testable** ✓ siete verificaciones con resultado observable (E2E, código de salida, registro).
 *(Estimable ⚠ absorbe la medición de p95 de US-141 (3 puntos) sin cambiar el 5; si el S5 no la absorbe, re-estimar a 8.)*
+
+---
+
+## US-252 — La suite `evaluate` mide la reproducibilidad y la estabilidad del análisis ante variantes que no cambian el significado
+
+> Linear: [L1D-308](https://linear.app/l1der-lab-mjbc/issue/L1D-308) (hija de L1D-47, Sprint 6, 5 pts; creada el 2026-11-02)
+
+`FEAT-T5b` · Sprint 6 *(usuario, 2026-11-02)* · Estimación **5** *(propuesta; se confirma en el refinamiento del S6)* · FR-20 · OL-06 · T-5 · ↪ US-072 (runner de evaluate), US-233a (modelos locales), US-250 · 🔗 Mide a: US-250, US-251
+
+> **Origen:** Demo 4 (2026-11-02), [`docs/evidence/S4-demo4/S4-demo-outcomes.md`](../../docs/evidence/S4-demo4/S4-demo-outcomes.md), **OUT-07**. En la Demo 4 la inestabilidad solo se pudo explicar consultando la base de datos: los logs no distinguían una salida de otra y ninguna suite medía la reproducibilidad. Medición de referencia: 57/57 idénticas con NFC (IC 95 % de Wilson 0,94–1,00); con NFD, 3 de 3 distintas.
+
+## Story
+Como responsable técnico, quiero medir si la misma pregunta da el mismo análisis y si variantes que no cambian el significado lo alteran, para detectar la inestabilidad antes de que la vea un oncólogo.
+
+## AC (Given/When/Then)
+- **AC-1 (happy path · reproducibilidad)** · Dada cada pregunta *golden* del conjunto de desarrollo, cuando `evaluate --suite reproducibilidad` la ejecuta N veces con los modelos locales (N en configuración, por defecto 10), entonces el reporte trae por pregunta el número de salidas distintas, la tasa de la salida más frecuente y su intervalo de confianza; la meta inicial (a calibrar, RN-22) es una sola salida. `[OUT-07]` `[OL-06]`
+- **AC-2 (borde · variantes metamórficas)** · Dadas variantes de cada pregunta que no cambian el significado (NFC frente a NFD, espacios, mayúsculas y paráfrasis revisadas), cuando se ejecutan, entonces el reporte compara las opciones mostradas y descartadas con las de la pregunta original y marca las variantes que difieren. `[OUT-07]`
+- **AC-3 (caso fijo de la Demo 4)** · Dada la pregunta de la Demo 4 sobre el paciente semilla (a) en NFC y en NFD, cuando corre la suite, entonces ambas forman parte del conjunto y, con US-250 mergeada, dan la misma salida. `[OUT-05]` `[OUT-07]`
+- **AC-4 (trazabilidad sin contenido)** · Dada cada llamada al LLM de generación, cuando se registra, entonces el log de `rag-orchestrator` incluye el hash del prompt, el hash de la salida cruda y el digest del modelo, sin texto (RN-14), y el reporte usa esos hashes para contar salidas distintas. `[OUT-07]` `[RN-14]`
+- **AC-5 (CI)** · Dado un PR que cambie modelo, prompt, umbral, catálogo o corpus, cuando `eval-required` corre con adapters falsos, entonces el caso NFC/NFD del AC-3 se comprueba con prompts de hash idéntico y una diferencia falla el job nombrando la pregunta. `[OL-06]`
+
+## Contexto técnico
+Familia nueva de `evaluate` sobre el runner de US-072; la medición con el LLM real corre en la máquina de referencia (no en la CI) y su reporte va a `reports/eval/`. Coste: N × preguntas × ~8 s por consulta. Los hashes del AC-4 son *test después* (configuración de logging); la familia, con adapters falsos y TDD de su orquestación.
+
+## INVEST
+**Small** ⚠ 5 puntos: una familia nueva más el registro de hashes.
+**Testable** ✓ cinco chequeos (tres con adapters falsos, dos sobre el reporte).
 
 ---
 
