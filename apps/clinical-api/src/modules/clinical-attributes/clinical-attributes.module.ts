@@ -1,9 +1,12 @@
-import { Router } from 'express';
+import type { Router } from 'express';
 import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type { Registrar } from '../../infrastructure/logger.js';
 import type { TraceIdGenerator } from '../../infrastructure/trace-id-generator.js';
 import type { FuenteDeConexiones } from '../compartido/transaccion.js';
+import { clinicalAttributesController } from './clinical-attributes.controller.js';
+import { createClinicalAttributesRepository } from './clinical-attributes.repository.js';
+import { createClinicalAttributesService } from './clinical-attributes.service.js';
 import type { CatalogoDeAtributos } from './ports.js';
 
 export interface DependenciasDelModulo {
@@ -19,12 +22,15 @@ export interface DependenciasDelModulo {
 }
 
 /** Composición del módulo `clinical-attributes`: devuelve el router que se monta detrás del guard de sesión. */
-export function componerModuloDeAtributos(_dependencias: DependenciasDelModulo): Router {
-  const router = Router();
-  const noImplementado = (): never => {
-    throw new Error('no implementado');
-  };
-  router.post('/patients/:patientId/clinical-attributes', noImplementado);
-  router.get('/patients/:patientId/clinical-attributes', noImplementado);
-  return router;
+export function componerModuloDeAtributos(dependencias: DependenciasDelModulo): Router {
+  return clinicalAttributesController({
+    servicio: createClinicalAttributesService({
+      repositorio: createClinicalAttributesRepository(dependencias.fuente),
+      catalogo: dependencias.catalogo,
+      reloj: dependencias.reloj,
+      generarId: dependencias.generarId,
+    }),
+    traceIds: dependencias.traceIds,
+    registrar: dependencias.registrar,
+  });
 }
