@@ -415,8 +415,8 @@
       "castrado": "Castrado",
       "no_castrado": "No castrado",
       "oseo": "Óseo",
-      "pre_menopausica": "Premenopáusica",
-      "post_menopausica": "Posmenopáusica"
+      "premenopausica": "Premenopáusica",
+      "posmenopausica": "Posmenopáusica"
     }
   },
   "ficha": {
