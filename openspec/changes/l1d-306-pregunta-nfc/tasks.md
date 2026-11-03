@@ -8,7 +8,7 @@
 
 ## 1. contratos
 
-- [ ] 1.1 Editar la `description` de `EvidenceAnalysisRequest.query` en `apps/clinical-api/openapi.yaml` y de
+- [x] 1.1 Editar la `description` de `EvidenceAnalysisRequest.query` en `apps/clinical-api/openapi.yaml` y de
       `RagQueryInternalRequest.query` en `apps/rag-orchestrator/openapi.yaml` según el diff de design.md
       §Contratos (skill `sync-contracts`) y subir `info.version` *patch*: `clinical-api` 1.15.0 → **1.15.1**,
       `rag-orchestrator` 1.10.0 → **1.10.1** (cadena del S5; si cambia el orden de merge, quien rebasa renumera
@@ -17,25 +17,25 @@
 
 ## 2. clinical-platform
 
-- [ ] 2.1 Tabla de casos compartida `packages/clinical-language/fixtures/normalizacion-pregunta.json`
+- [x] 2.1 Tabla de casos compartida `packages/clinical-language/fixtures/normalizacion-pregunta.json`
       (pregunta de la Demo 4 en NFC y NFD con escapes `́`, espacios en extremos, repetidos, `\t`,
       U+00A0, U+2007, U+202F, U+3000, solo espacios → `""`, par 2000 NFC / >2000 NFD) y esqueleto
       `normalizarPregunta()` que lanza `no implementado` · **TDD estricto** `[US-250 AC-2]`
-- [ ] 2.2 Test de aceptación en rojo: «persiste y envía la pregunta en NFC idéntica byte a byte cuando
+- [x] 2.2 Test de aceptación en rojo: «persiste y envía la pregunta en NFC idéntica byte a byte cuando
       llega en NFD [US-250 AC-1]» · integración (Supertest + PostgreSQL real + MSW desde `contracts/examples/`
       que registra el cuerpo; respuesta validada contra el spec del proveedor), en
       `apps/clinical-api/tests/integration/evidence-analysis/pregunta-nfc.test.ts`; junto a él, en rojo,
       AC-2 (espacios), AC-3 (NFD > 2000, NFC = 2000 → aceptada) y solo espacios → `422 CUERPO_INVALIDO` sin
       llamadas; commit `test(L1D-306)` · **TDD estricto**
-- [ ] 2.3 Implementar `normalizarPregunta()` en `packages/clinical-language/src/normalizar-pregunta.ts` con
+- [x] 2.3 Implementar `normalizarPregunta()` en `packages/clinical-language/src/normalizar-pregunta.ts` con
       unitarios uno a uno sobre la tabla compartida (Vitest), exportarla y componer el esquema del borde en
       `evidence-analysis.schema.ts` (normaliza `query` y después aplica el Zod generado; el máximo sale del
       generado). Extraer `normalizarPregunta()` (OUT-05). Tests 2.2 en verde; commit `feat(L1D-306)` ·
       **TDD estricto** `[US-250 AC-1…AC-3]`
-- [ ] 2.4 Suite de `clinical-api` y de `packages/clinical-language` en verde (incluidos
+- [x] 2.4 Suite de `clinical-api` y de `packages/clinical-language` en verde (incluidos
       `desidentificacion-pregunta.test.ts` y `gateway-rechazos.test.ts`); `contracts:verify-provider` en verde ·
       **verificación**
-- [ ] 2.5 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento,
+- [x] 2.5 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento,
       tests en verde antes y después, commit refactor(L1D-306)
 
 ## 3. ai-services

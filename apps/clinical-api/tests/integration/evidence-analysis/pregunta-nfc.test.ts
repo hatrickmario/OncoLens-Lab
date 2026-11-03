@@ -15,7 +15,10 @@ const ESPACIO_DE_IDS = 3060;
 const TOKEN_DE_SESION = 'SINT-cookie-sesion-pregunta-nfc-0001';
 
 // Pregunta de la Demo 4 (OUT-05): se ve igual en NFC y NFD, pero el LLM recibe otros tokens.
-const PREGUNTA_NFC = '¿Qué indican las pruebas científicas sobre la terapia dirigida para el cáncer de mama HER2-positivo?'.normalize('NFC');
+const PREGUNTA_NFC =
+  '¿Qué indican las pruebas científicas sobre la terapia dirigida para el cáncer de mama HER2-positivo?'.normalize(
+    'NFC',
+  );
 const PREGUNTA_NFD = PREGUNTA_NFC.normalize('NFD');
 
 const rag = ragSimulado();
