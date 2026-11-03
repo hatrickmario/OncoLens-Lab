@@ -63,3 +63,38 @@ documentos:
 ```
 
 `revision` admite solo `pendiente`, `correcto` o `incorrecto`.
+
+## Ampliación: conjunto dorado de población del estudio (US-233b, L1D-299)
+
+El conjunto dorado de población (`data/evaluation/poblacion-dorado/`) usa la misma revisión humana y el mismo criterio
+general («se revisa lo que el documento declara»). Lo que cambia es la unidad: no es un campo de metadatos sino un
+**valor de población por (documento, criterio)**. Un revisor (rol clínico o de investigación; solo el rol y la fecha se
+versionan, nunca el nombre, RN-10) completa en `manifest.json` `revisor.rol` y `revisor.fecha`; mientras falten, la suite
+`evaluate --suite poblacion` marca precisión y cobertura «no concluyentes» y nunca PASS.
+
+### Qué se revisa en `pares.yaml` (≥ 30 pares; estratos guía / ensayo / revisión × es / en)
+
+| Campo | Qué verifica el revisor |
+|---|---|
+| `valor` | Es lo que el fragmento declara de forma explícita para ese criterio, con las palabras del texto o una forma que el catálogo reconoce como sinónimo. Un valor inferido o no expresado se rechaza. |
+| `scope` | `elegibilidad` (la restricción rige para toda la población), `subgrupo` (solo una cohorte) o `mencion` (se nombra sin ser criterio). Ante la duda se elige el alcance más estrecho. |
+| `chunk` | El `chunk_id` contiene el valor tal como se declara. Un valor que solo aparece en otro fragmento del mismo documento es `incorrecto`. |
+| lista vacía | Si el documento no declara el criterio, el par debe esperar la lista vacía (cuenta como acierto, no como cobertura perdida). |
+
+### Qué se revisa en `estados.yaml` (F-20 … F-24, DEC-11)
+
+Para cada caso, el estado esperado (`coincide`, `parcial`, `no_coincide`, `desconocido`) lo decide el revisor leyendo **la
+regla de DEC-11 y el catálogo**, no la salida del código: población inclusiva o mezclada → `parcial`; `no_coincide` solo
+con una restricción explícita; conflicto entre fragmentos → `desconocido` con ambos valores visibles. Solo se usan
+pacientes de prueba sintéticos.
+
+### Qué se revisa en `pares-bucle.yaml` (≥ 20 pares, distintos del caso del tamoxifeno)
+
+Pares de pregunta y fuente que no se evalúan por su contenido clínico sino por si la tarea corta termina sin cortes
+(`finish_reason = length`, OUT-06). El revisor solo confirma que cada fuente es realmente distinta de las demás.
+
+### Reglas que no cambian
+
+- Solo corpus público con licencia aceptada (RN-21) o texto sintético propio; nada de NCCN ni ESMO como contenido.
+- Ningún dato de pacientes, ni siquiera anonimizado (RN-14).
+- La revisión no la hace ninguna herramienta: quien la firma deja `rol` y `fecha` en el manifiesto y avisa para versionarla.
