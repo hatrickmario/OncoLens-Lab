@@ -5,7 +5,7 @@ import type {
 import type { SupportedClaim } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import type { Consultador } from '../auth/auth.repository.js';
 import type { RegistroDeAnalisis } from './analysis-record.js';
-import { superaLimiteDeSeguimiento } from './follow-up.reglas.js';
+import { alcanzaLimiteDeSeguimiento } from './follow-up.reglas.js';
 import {
   eventoDe,
   registroDeFila,
@@ -153,7 +153,7 @@ function insertarTurnoBajoBloqueo(
     await tx.query('SELECT id FROM clinical.ai_analysis_record WHERE id = $1 FOR UPDATE', [
       turno.analysisId,
     ]);
-    if (superaLimiteDeSeguimiento(await contarTurnos(tx, turno.analysisId), limite)) {
+    if (alcanzaLimiteDeSeguimiento(await contarTurnos(tx, turno.analysisId), limite)) {
       return { tipo: 'limite_alcanzado' };
     }
     const { rows } = await tx.query(INSERTAR_TURNO, parametrosDelTurno(turno));

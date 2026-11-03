@@ -7,19 +7,19 @@ import {
   chunksCitadosPorElAnalisis,
   enlacesDelTurno,
   marcarFuentesNuevas,
-  superaLimiteDeSeguimiento,
+  alcanzaLimiteDeSeguimiento,
 } from '../../../src/modules/evidence-analysis/follow-up.reglas.js';
 
 const analisis = validarRespuestaInterna(ragTresOpciones);
 
-describe('superaLimiteDeSeguimiento', () => {
+describe('alcanzaLimiteDeSeguimiento', () => {
   it('es falso cuando el análisis tiene menos turnos que el máximo configurado', () => {
-    expect(superaLimiteDeSeguimiento(9, 10)).toBe(false);
+    expect(alcanzaLimiteDeSeguimiento(9, 10)).toBe(false);
   });
 
   it('es verdadero cuando el análisis ya tiene el máximo de turnos, sea cual sea el máximo configurado', () => {
-    expect(superaLimiteDeSeguimiento(10, 10)).toBe(true);
-    expect(superaLimiteDeSeguimiento(2, 2)).toBe(true);
+    expect(alcanzaLimiteDeSeguimiento(10, 10)).toBe(true);
+    expect(alcanzaLimiteDeSeguimiento(2, 2)).toBe(true);
   });
 });
 
