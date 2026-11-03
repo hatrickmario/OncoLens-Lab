@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — Platform API (Backend 1 / clinical-api)
-  version: 1.15.0
+  version: 1.15.1
   description: >-
     API pública, accesible solo a través de los Route Handlers de web (clinical-api no
     publica puerto al host). Autenticación por cookie de sesión HttpOnly + Secure +
@@ -1612,6 +1612,10 @@ components:
           type: string
           minLength: 1
           maxLength: 2000
+          description: >-
+            Pregunta del oncólogo. clinical-api la normaliza antes de validarla, persistirla y enviarla
+            (Unicode NFC, espacios colapsados a uno y recortados; mayúsculas y puntuación sin cambios).
+            minLength y maxLength se miden después de normalizar (US-250).
         questionTemplateId:
           type: [string, "null"]
           description: Plantilla de origen (FR-28).
