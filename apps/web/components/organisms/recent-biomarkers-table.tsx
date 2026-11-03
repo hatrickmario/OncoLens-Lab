@@ -77,7 +77,7 @@ export function RecentBiomarkersTable({
                     {columna}
                   </th>
                 ))}
-                <th scope="col" className={CELDA}>
+                <th scope="col" className={`${CELDA} relative`}>
                   <span className="sr-only">{textos.acciones}</span>
                 </th>
               </tr>
