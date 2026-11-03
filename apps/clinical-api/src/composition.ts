@@ -20,6 +20,8 @@ export interface RoutersProtegidos {
   patients: Router;
   /** Checklist de datos críticos (L1D-95). Obligatorio: olvidarlo en `server.ts` rompe el build. */
   completeness: Router;
+  /** Vista de caso con timeline (L1D-74). Obligatorio: olvidarlo en `server.ts` rompe el build. */
+  caseView: Router;
 }
 
 /**
@@ -27,7 +29,13 @@ export interface RoutersProtegidos {
  * coherencia ruta ↔ contrato (US-045 AC-3) recorre los mismos routers que producción.
  */
 export function componerRutasProtegidas(routers: RoutersProtegidos): readonly Router[] {
-  return [routers.gateway, routers.documents, routers.patients, routers.completeness];
+  return [
+    routers.gateway,
+    routers.documents,
+    routers.patients,
+    routers.completeness,
+    routers.caseView,
+  ];
 }
 
 export interface DependenciasDeComposicion {

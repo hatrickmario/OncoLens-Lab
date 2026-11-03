@@ -3,6 +3,8 @@ import { sqlOrdenDeDiagnosticoVigente } from '../compartido/diagnostico-vigente.
 import {
   ESTADOS_PENDIENTES_DE_REVISION,
   sqlDatoVigente,
+  sqlEventoClinicoPropio,
+  sqlFechaNoConfiable,
 } from '../compartido/estados-de-revision.js';
 
 export type EstadoDelPaciente = 'activo' | 'egresado';
@@ -89,8 +91,9 @@ export const FUENTES_POR_REVISAR: readonly FuentePorRevisar[] = [
   },
   {
     tabla: 'clinical_event',
-    pacienteSql:
-      'SELECT patient_id FROM clinical.clinical_event WHERE review_status = ANY($2::clinical.review_status[])',
+    // Además de los `requiere_revision`, un evento vigente sin fecha confiable (`incierta`, PRD AC-02.2) cuenta aunque
+    // esté verificado; una sola vez por fila (US-088 AC-3).
+    pacienteSql: `SELECT patient_id FROM clinical.clinical_event WHERE ${sqlEventoClinicoPropio()} AND (review_status = ANY($2::clinical.review_status[]) OR (${sqlFechaNoConfiable('event_date', 'date_precision')} AND ${sqlDatoVigente('review_status')}))`,
   },
   {
     tabla: 'clinical_attribute',
