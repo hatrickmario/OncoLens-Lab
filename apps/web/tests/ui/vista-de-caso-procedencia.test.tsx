@@ -117,4 +117,15 @@ describe('VistaDeCaso · procedencia y secciones', () => {
     await screen.findByRole('region', { name: 'Línea de tiempo' });
     expect(screen.queryByRole('region', { name: 'Sin fecha confiable' })).toBeNull();
   });
+
+  it('rotula bajo la descripción de los eventos de IA Texto generado por IA, sin verificar y no lo repite en los demás [RN-24]', async () => {
+    bff.responder(200, casoPCaso);
+
+    montarVistaDeCaso();
+
+    for (const tipo of ['Análisis de IA', 'Resumen del caso']) {
+      expect((await evento(tipo)).textContent).toContain('Texto generado por IA, sin verificar');
+    }
+    expect((await evento('Progresión')).textContent).not.toContain('Texto generado por IA');
+  });
 });

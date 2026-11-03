@@ -8,6 +8,7 @@ import {
   errorInterno,
   errorNoAutenticado,
   errorNoEncontrado,
+  errorPermisoDenegado,
   ID_DEL_CASO,
   montarPaginaDeCaso,
   montarVistaDeCaso,
@@ -122,5 +123,17 @@ describe('VistaDeCaso · estados y accesibilidad', () => {
 
     await screen.findByRole('region', { name: 'Línea de tiempo' });
     expect(bff.peticiones).toEqual([`/api/patients/${ID_DEL_CASO}/case`]);
+  });
+
+  it('muestra No tienes permiso sin Reintentar ni secciones cuando responde 403', async () => {
+    bff.responder(403, errorPermisoDenegado);
+
+    montarVistaDeCaso();
+
+    expect(
+      await screen.findByText('No tienes permiso para ver el caso clínico de este paciente.'),
+    ).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Reintentar' })).toBeNull();
+    expect(screen.queryByRole('region')).toBeNull();
   });
 });

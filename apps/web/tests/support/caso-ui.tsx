@@ -3,12 +3,13 @@ import { http, HttpResponse, type JsonBodyType } from 'msw';
 import { setupServer } from 'msw/node';
 import casoPCaso from '../../../../contracts/examples/case-view-p-caso.json';
 import errorInterno from '../../../../contracts/examples/error-interno.json';
+import errorPermisoDenegado from '../../../../contracts/examples/error-permiso-denegado.json';
 import errorNoAutenticado from '../../../../contracts/examples/error-no-autenticado.json';
 import errorNoEncontrado from '../../../../contracts/examples/error-no-encontrado.json';
 import { VistaDeCaso } from '../../components/organisms/vista-de-caso';
 import { CaseViewTemplate } from '../../components/templates/case-view-template';
 
-export { casoPCaso, errorInterno, errorNoAutenticado, errorNoEncontrado };
+export { casoPCaso, errorInterno, errorNoAutenticado, errorNoEncontrado, errorPermisoDenegado };
 
 export const ID_DEL_CASO = '0b5c9c1e-5f0e-4d6b-8c55-3f7a1a2b9d10';
 /** Reloj congelado de FX-02b-a (design D5): las fechas relativas se calculan contra este día. */
