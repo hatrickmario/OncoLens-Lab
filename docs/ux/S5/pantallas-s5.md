@@ -102,7 +102,7 @@ Ruta `/pacientes/[id]/caso`, a la que se llega desde la ficha con «Ver caso cl�
 Caso clínico · Paciente sintético M-02 · CC ••• 0002              [Analizar la evidencia para este caso]
 Línea de tiempo
   hace 14 meses  Diagnóstico · carcinoma ductal infiltrante   Carga inicial
-  hace 10 meses  Tratamiento previo · línea 1 (adyuvante)      Registro manual
+  hace 10 meses  Tratamiento previo · inicio · Bicalutamida    Registro manual
   hace 2 meses   Progresión                                    Documento
 Sin fecha confiable
   Toxicidad cutánea grado 2                                    Documento

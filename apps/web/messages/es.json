@@ -338,6 +338,88 @@
       "errorSinTraza": "No pudimos cargar el listado. Intenta de nuevo."
     }
   },
+  "fecha": {
+    "hoy": "hoy",
+    "dia1": "hace 1 día",
+    "diasN": "hace {n} días",
+    "mes1": "hace 1 mes",
+    "mesesN": "hace {n} meses",
+    "anio1": "hace 1 año",
+    "aniosN": "hace {n} años"
+  },
+  "caso": {
+    "tituloDocumento": "Caso clínico · OncoLens",
+    "titulo": "Caso clínico",
+    "verCaso": "Ver caso clínico",
+    "analizar": "Analizar la evidencia para este caso",
+    "cargando": "Cargando la vista de caso",
+    "origenIa": "Generado por IA · Sin verificar",
+    "textoGeneradoPorIa": "Texto generado por IA, sin verificar",
+    "sinPermiso": "No tienes permiso para ver el caso clínico de este paciente.",
+    "sinDatos": "Sin datos registrados",
+    "enCurso": "En curso",
+    "secciones": {
+      "lineaDeTiempo": "Línea de tiempo",
+      "sinFecha": "Sin fecha confiable",
+      "tratamientos": "Tratamientos previos",
+      "atributos": "Atributos clínicos",
+      "series": "Series de biomarcadores"
+    },
+    "notaSinFecha": "Eventos cuya fecha no se pudo establecer con confianza; se muestran aparte del orden cronológico.",
+    "columnas": {
+      "linea": "Línea",
+      "contexto": "Contexto",
+      "esquema": "Esquema",
+      "inicio": "Inicio",
+      "fin": "Fin",
+      "origen": "Origen y revisión",
+      "atributo": "Atributo",
+      "valor": "Valor",
+      "fecha": "Fecha"
+    },
+    "error": {
+      "titulo": "No se pudo cargar la vista de caso",
+      "reintentar": "Reintentar"
+    },
+    "tipoDesconocido": "Evento clínico",
+    "tiposDeEvento": {
+      "diagnostico": "Diagnóstico",
+      "inicio_tratamiento_previo": "Tratamiento previo · inicio",
+      "fin_tratamiento_previo": "Tratamiento previo · fin",
+      "examen": "Examen",
+      "analisis_ia": "Análisis de IA",
+      "resumen_caso": "Resumen del caso",
+      "progresion": "Progresión",
+      "toxicidad": "Toxicidad",
+      "cirugia": "Cirugía"
+    },
+    "contextos": {
+      "neoadyuvante": "Neoadyuvante",
+      "adyuvante": "Adyuvante",
+      "primera_linea_metastasica": "Primera línea metastásica",
+      "segunda_linea_metastasica": "Segunda línea metastásica",
+      "mantenimiento": "Mantenimiento"
+    },
+    "motivosDeFin": {
+      "progresion": "Progresión",
+      "toxicidad": "Toxicidad",
+      "completado": "Completado",
+      "otro": "Otro",
+      "desconocido": "Desconocido"
+    },
+    "atributosClave": {
+      "estado_menopausico": "Estado menopáusico",
+      "estado_castracion": "Estado de castración",
+      "sitios_metastasicos": "Sitios metastásicos"
+    },
+    "valoresDeAtributo": {
+      "castrado": "Castrado",
+      "no_castrado": "No castrado",
+      "oseo": "Óseo",
+      "premenopausica": "Premenopáusica",
+      "posmenopausica": "Posmenopáusica"
+    }
+  },
   "ficha": {
     "tituloDocumento": "Paciente · OncoLens",
     "noRegistrado": "No registrado",
@@ -388,7 +470,7 @@
     "origen": {
       "seed": "Carga inicial",
       "manual": "Registro manual",
-      "ocr": "Extraído de documento",
+      "ocr": "Documento",
       "manual_correction": "Corrección manual"
     },
     "avisos": {

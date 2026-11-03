@@ -1,6 +1,7 @@
 import type { Diagnosis } from '../../../../packages/api-contracts/src/types/clinical-api';
-import { describirGradacion, formatearFecha, textoDeOrigen } from '../../lib/ficha/presentacion';
+import { describirGradacion, textoDeOrigen } from '../../lib/ficha/presentacion';
 import { mensajes } from '../../lib/mensajes';
+import { FechaRelativa } from '../atoms/fecha-relativa';
 import { FilaDeFicha, SeccionDeFicha } from '../molecules/fila-de-ficha';
 
 /** Gradaciones con su espécimen y alcance; el texto canónico `grade` encabeza la lista. */
@@ -21,7 +22,7 @@ function Gradacion({ diagnostico }: { diagnostico: Diagnosis }) {
   );
 }
 
-function filasDelDiagnostico(d: Diagnosis) {
+function filasDelDiagnostico(d: Diagnosis, hoy: string) {
   const { diagnostico, noRegistrado } = mensajes().ficha;
   const estadoFuncional =
     d.performanceScale && d.performanceValue !== null
@@ -36,13 +37,19 @@ function filasDelDiagnostico(d: Diagnosis) {
     [diagnostico.gradacion, <Gradacion key="g" diagnostico={d} />],
     [diagnostico.estadio, `${d.stagingSystem} ${d.stageValue}`],
     [diagnostico.estadoFuncional, estadoFuncional],
-    [diagnostico.diagnosticado, formatearFecha(d.diagnosedAt)],
+    [diagnostico.diagnosticado, <FechaRelativa key="f" fecha={d.diagnosedAt} hoy={hoy} />],
     [diagnostico.origen, textoDeOrigen(d.provenance)],
   ] as const;
 }
 
 /** Diagnóstico vigente (S2-04): una fila por dato; un campo ausente se muestra "No registrado" (dato del paciente). */
-export function ActiveDiagnosisTable({ diagnostico }: { diagnostico: Diagnosis | null }) {
+export function ActiveDiagnosisTable({
+  diagnostico,
+  hoy,
+}: {
+  diagnostico: Diagnosis | null;
+  hoy: string;
+}) {
   const { diagnostico: textos, noRegistrado } = mensajes().ficha;
   return (
     <SeccionDeFicha id="diagnostico" titulo={textos.titulo}>
@@ -51,7 +58,7 @@ export function ActiveDiagnosisTable({ diagnostico }: { diagnostico: Diagnosis |
       ) : (
         <table className="w-full border-collapse">
           <tbody>
-            {filasDelDiagnostico(diagnostico).map(([titulo, valor]) => (
+            {filasDelDiagnostico(diagnostico, hoy).map(([titulo, valor]) => (
               <FilaDeFicha key={titulo} titulo={titulo}>
                 {valor}
               </FilaDeFicha>

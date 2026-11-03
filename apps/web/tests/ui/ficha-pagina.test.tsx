@@ -159,7 +159,7 @@ describe('FichaPage', () => {
       ),
     ).toBeTruthy();
     expect(within(fila('^RE ')).getByText('Registro manual · Por revisar')).toBeTruthy();
-    expect(within(fila('HER2')).getByText('Extraído de documento · Sin verificar')).toBeTruthy();
+    expect(within(fila('HER2')).getByText('Documento · Sin verificar')).toBeTruthy();
     expect(within(fila('HER2')).getByText('Sin tendencia calculada')).toBeTruthy();
   });
 
