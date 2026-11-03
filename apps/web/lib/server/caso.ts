@@ -1,84 +1,23 @@
 import 'server-only';
 import { getPatientCase } from '../../../../packages/api-contracts/src/client-web/clinical-api';
 import { zGetPatientCasePath } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
-import { crearSdkClinicalApi, type SdkClinicalApi } from './clinical-api';
 import type { DependenciasDelBff } from './dependencias';
-import { retransmitir } from './proxy-json';
-import { respuestaPropia } from './respuestas';
-
-const EVENTO = 'case.proxy';
-
-type Manejador = (request: Request, patientId: string) => Promise<Response>;
-
-function responderNoEncontrado(dependencias: DependenciasDelBff): Response {
-  const traceId = dependencias.nuevoTraceId();
-  dependencias.registrar({ event: EVENTO, status: 404, traceId });
-  return respuestaPropia(
-    { error: 'NO_ENCONTRADO', message: 'Paciente no encontrado.', traceId },
-    404,
-  );
-}
-
-/** Único 5xx que sale al navegador: código y mensaje fijos, `traceId` de web, nada de clinical-api. */
-function responderVistaNoDisponible(
-  dependencias: DependenciasDelBff,
-  inicio: number,
-  motivo: 'status_5xx' | 'clinical_api_inalcanzable',
-): Response {
-  const traceId = dependencias.nuevoTraceId();
-  dependencias.registrar({
-    event: EVENTO,
-    status: 500,
-    traceId,
-    duracionMs: dependencias.ahora() - inicio,
-    motivo,
-  });
-  return respuestaPropia(
-    {
-      error: 'ERROR_INTERNO',
-      message: 'No se pudo obtener la vista de caso del paciente.',
-      traceId,
-    },
-    500,
-  );
-}
-
-async function pedirVistaDeCaso(
-  sdk: SdkClinicalApi,
-  patientId: string,
-): Promise<Response | undefined> {
-  try {
-    const resultado = await getPatientCase({
-      client: sdk.client,
-      path: { patientId },
-      parseAs: 'text',
-      throwOnError: false,
-    });
-    return resultado.response;
-  } catch {
-    return undefined;
-  }
-}
+import { crearProxyDeLectura } from './proxy-de-lectura';
 
 /**
- * Proxy de `GET /platform/patients/{id}/case` (US-090). Un id que no es UUID es 404 propio sin llamar; `200` y `4xx`
- * se retransmiten con su cuerpo y `no-store` (el caso es dato clínico); `5xx`, fallo de red o timeout responden
- * `ERROR_INTERNO` saneado. El log no lleva id, cuerpo ni cookie.
+ * Proxy de `GET /platform/patients/{id}/case` (US-090). Sin caché (lo fija `retransmitir`): el caso es dato clínico.
  */
-export function crearManejadorVistaDeCaso(dependencias: DependenciasDelBff): Manejador {
-  return async (request, patientId) => {
-    if (!zGetPatientCasePath.safeParse({ patientId }).success) {
-      return responderNoEncontrado(dependencias);
-    }
-    const inicio = dependencias.ahora();
-    const sdk = crearSdkClinicalApi(dependencias.config, { request, fetch: dependencias.fetch });
-    const respuesta = await pedirVistaDeCaso(sdk, patientId);
-    if (respuesta === undefined) {
-      return responderVistaNoDisponible(dependencias, inicio, 'clinical_api_inalcanzable');
-    }
-    if (respuesta.status >= 500) {
-      return responderVistaNoDisponible(dependencias, inicio, 'status_5xx');
-    }
-    return retransmitir(dependencias, { evento: EVENTO, sdk, respuesta, inicio });
-  };
+export function crearManejadorVistaDeCaso(dependencias: DependenciasDelBff) {
+  return crearProxyDeLectura(dependencias, {
+    evento: 'case.proxy',
+    mensajeDeFallo: 'No se pudo obtener la vista de caso del paciente.',
+    idValido: (patientId) => zGetPatientCasePath.safeParse({ patientId }).success,
+    pedir: (sdk, patientId) =>
+      getPatientCase({
+        client: sdk.client,
+        path: { patientId },
+        parseAs: 'text',
+        throwOnError: false,
+      }),
+  });
 }
