@@ -10,6 +10,7 @@ from typing import Any, TypedDict
 from app.application.ports import EvidenciaGenerada
 from app.domain.alias_de_chunks import CITA_NO_TRADUCIBLE
 from app.domain.citations import OpcionGenerada, validar_citas
+from app.domain.lenguaje import FuenteCitada
 from app.evaluation.afirmaciones import (
     AfirmacionAJuzgar,
     afirmaciones_a_juzgar,
@@ -22,15 +23,24 @@ from app.evaluation.juez_fidelidad import JuezFidelidad
 from app.evaluation.lenguaje_estricto import VerificadorEstricto
 from app.evaluation.metricas.inyeccion import es_inyeccion_efectiva
 from app.evaluation.metricas.prescriptivas import (
+    SalidaMostrada,
     contar_salidas_con_terminos,
     medir_propuesta_cruda,
     medir_salida_mostrada,
 )
-from app.evaluation.metricas.resultado import LenguajeCrudo, ResultadoConsulta
+from app.evaluation.metricas.rechazos_legitimos import (
+    ids_de_preguntas_de_control_legitimo,
+    medir_salida_legitima,
+)
+from app.evaluation.metricas.resultado import (
+    LenguajeCrudo,
+    RechazoDeSalidaLegitima,
+    ResultadoConsulta,
+)
 from app.evaluation.retrieval_metrics import evaluar_pregunta
 from app.evaluation.rutas import raiz_repo
 from app.evaluation.salida_generada import (
-    fuentes_citadas_de,
+    fuentes_entregadas,
     textos_de_opcion_mostrada,
     textos_de_propuesta,
     textos_de_respuesta,
@@ -140,7 +150,9 @@ async def _resultado_de(
         citas_validas = sum(len(a.chunk_ids_validos) for a in revisadas.aceptadas)
         citas_propuestas = citas_propuestas_de(propuesta.opciones)
     top = respuesta.topRelevanceScore
-    en_nli, en_juez, invalidos = await _fidelidad_de(suite, pregunta.texto, generador_invocado)
+    en_nli, en_juez, invalidos = await _fidelidad_de(
+        suite, pregunta.texto, generador_invocado, dataset.titulos_de_chunks()
+    )
     return ResultadoConsulta(
         recuperacion=evaluar_pregunta(pregunta, obs.rankings.get(pregunta.texto, [])),
         revisada=pregunta.id in dataset.revisadas,
@@ -152,7 +164,7 @@ async def _resultado_de(
         citas_validas=citas_validas,
         opciones_mostradas=len(respuesta.evidenceOptions),
         opciones_descartadas=len(respuesta.discardedOptions),
-        **_lenguaje_de(suite, dataset, pregunta.texto, respuesta),
+        **_lenguaje_de(suite, dataset, pregunta, respuesta),
         afirmaciones_nli=en_nli,
         ids_afirmaciones=tuple(f"{pregunta.id}/a{n}" for n, _ in enumerate(en_nli, 1)),
         veredictos_invalidos_juez=invalidos,
@@ -166,6 +178,9 @@ class _LenguajeDeLaConsulta(TypedDict):
     salidas_mostradas_nivel_a: int
     salidas_mostradas_nivel_b: int
     campos_mostrados: tuple[tuple[str, str], ...]
+    corregidas_nivel_a: int
+    corregidas_nivel_b: int
+    salida_legitima: RechazoDeSalidaLegitima | None
     lenguaje_crudo: LenguajeCrudo
     caso_inyeccion: bool
     inyecciones_efectivas: int
@@ -174,31 +189,72 @@ class _LenguajeDeLaConsulta(TypedDict):
 def _lenguaje_de(
     suite: ServicioDeSuite,
     dataset: DatasetSuite,
-    texto_pregunta: str,
+    pregunta: Pregunta,
     respuesta: RagQueryInternalResponse,
 ) -> _LenguajeDeLaConsulta:
     """Términos prohibidos (RN-23) en la propuesta cruda y en lo mostrado, e inyección efectiva (SEG-13)."""
+    texto_pregunta = pregunta.texto
     verificador = suite.verificador_estricto
     propuesta = suite.observaciones.propuestas.get(texto_pregunta)
     entregados = suite.observaciones.entregados.get(texto_pregunta, frozenset())
+    textos_entregados = suite.observaciones.textos_entregados.get(texto_pregunta, {})
     caso_inyeccion = bool(entregados & {c.id for c in dataset.chunks if c.inyeccion})
     efectivas = _inyecciones_efectivas(respuesta, entregados, verificador) if caso_inyeccion else 0
-    mostrada = medir_salida_mostrada(
-        textos_de_respuesta(respuesta), verificador, fuentes_citadas_de(respuesta)
-    )
-    crudo = _lenguaje_crudo_de(
-        suite, propuesta, suite.observaciones.textos_entregados.get(texto_pregunta, {})
-    )
+    fuentes = fuentes_entregadas(dataset.titulos_de_chunks(), textos_entregados)
+    mostrada = medir_salida_mostrada(textos_de_respuesta(respuesta), verificador, fuentes)
+    crudo = _lenguaje_crudo_de(suite, propuesta, textos_entregados)
+    corregidas = _corregidas_por_el_filtro(propuesta, verificador, fuentes, mostrada)
     return {
         "salidas_prohibidas_crudas": crudo.campos_con_termino,
         "salidas_prohibidas_mostradas": mostrada.campos_con_termino,
         "salidas_mostradas_nivel_a": mostrada.campos_nivel_a,
         "salidas_mostradas_nivel_b": mostrada.campos_nivel_b,
         "campos_mostrados": mostrada.campos,
+        "corregidas_nivel_a": corregidas[0],
+        "corregidas_nivel_b": corregidas[1],
+        "salida_legitima": _salida_legitima_de(
+            suite, dataset, pregunta, propuesta, textos_entregados
+        ),
         "lenguaje_crudo": crudo,
         "caso_inyeccion": caso_inyeccion,
         "inyecciones_efectivas": efectivas,
     }
+
+
+def _corregidas_por_el_filtro(
+    propuesta: EvidenciaGenerada | None,
+    verificador: VerificadorEstricto,
+    fuentes: Sequence[FuenteCitada],
+    mostrada: SalidaMostrada,
+) -> tuple[int, int]:
+    """Campos de la propuesta cruda que la política de salida rechaza y que ya no aparecen en lo mostrado, por nivel."""
+    if propuesta is None:
+        return 0, 0
+    segun_la_politica = medir_salida_mostrada(textos_de_propuesta(propuesta), verificador, fuentes)
+    return (
+        max(0, segun_la_politica.campos_nivel_a - mostrada.campos_nivel_a),
+        max(0, segun_la_politica.campos_nivel_b - mostrada.campos_nivel_b),
+    )
+
+
+def _salida_legitima_de(
+    suite: ServicioDeSuite,
+    dataset: DatasetSuite,
+    pregunta: Pregunta,
+    propuesta: EvidenciaGenerada | None,
+    textos_entregados: dict[str, str],
+) -> RechazoDeSalidaLegitima | None:
+    """``None`` si la pregunta no es un control legítimo; si lo es, lo que cada filtro aplica a lo que el generador propuso."""
+    controles = ids_de_preguntas_de_control_legitimo(dataset)
+    if pregunta.id not in controles or propuesta is None or suite.verificador_linea_base is None:
+        return None
+    return medir_salida_legitima(
+        propuesta,
+        textos_entregados,
+        dataset.titulos_de_chunks(),
+        suite.verificador_produccion,
+        suite.verificador_linea_base,
+    )
 
 
 def _lenguaje_crudo_de(
@@ -235,7 +291,10 @@ def _inyecciones_efectivas(
 
 
 async def _fidelidad_de(
-    suite: ServicioDeSuite, texto_pregunta: str, generador_invocado: bool
+    suite: ServicioDeSuite,
+    texto_pregunta: str,
+    generador_invocado: bool,
+    titulos_de_chunks: dict[str, str],
 ) -> tuple[tuple[bool, ...], tuple[bool, ...] | None, int]:
     """Veredicto por afirmación de la propuesta cruda: el NLI (principal), el juez LLM (secundario, si lo hay) y
     cuántos veredictos del juez no se pudieron interpretar en esta consulta."""
@@ -247,6 +306,7 @@ async def _fidelidad_de(
         suite.observaciones.textos_entregados[texto_pregunta],
         suite.verificador_produccion.reglas_coincidentes,
         max_palabras=suite.claim_max_words,
+        titulos_de_chunks=titulos_de_chunks,
     )
     afirmaciones = afirmaciones_a_juzgar(plan)
     del_nli = await _veredictos(suite.juez_nli, afirmaciones)

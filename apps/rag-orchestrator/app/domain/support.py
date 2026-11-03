@@ -22,6 +22,7 @@ from app.domain.lenguaje import (
     FuenteCitada,
     ListaTerminos,
     Nivel,
+    ReglasDeSalidaGenerada,
     check_prohibited_terms,
     tapar_citas_textuales_del_corpus,
 )
@@ -46,15 +47,17 @@ def coincidencias_en_campo_generado(
     campo: CampoGenerado,
     lista: ListaTerminos,
     fuentes: Sequence[FuenteCitada] = (),
+    reglas: ReglasDeSalidaGenerada | None = None,
 ) -> list[Coincidencia]:
     """RN-23: la política de la salida generada es el Nivel A más ``salidaGenerada.nivelB`` de la lista.
 
     Solo se revisan los campos GENERADOS; los copiados del corpus pueden traer vocabulario de la lista. Una cita textual
     atribuida de un fragmento que la opción cita no activa el subconjunto B, pero nunca habilita el Nivel A.
+    ``reglas`` solo lo pasa la suite para reproducir la política de una lista anterior (línea base, US-249 AC-5).
     """
     if campo not in CAMPOS_GENERADOS:
         return []
-    reglas = lista.reglas_para_salida_generada()
+    reglas = reglas or lista.reglas_para_salida_generada()
     tapado = tapar_citas_textuales_del_corpus(texto, fuentes)
     coincidencias = check_prohibited_terms(
         tapado,

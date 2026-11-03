@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from pathlib import Path
 
-from app.domain.lenguaje import FuenteCitada, ListaTerminos
+from app.domain.lenguaje import FuenteCitada, ListaTerminos, ReglasDeSalidaGenerada
 from app.domain.support import CampoGenerado, coincidencias_en_campo_generado
 
 RUTA_DE_LA_LISTA = Path("lenguaje") / "terminos-prohibidos.json"
@@ -23,8 +23,10 @@ class ListaDeTerminosNoDisponible(RuntimeError):
 class VerificadorDeTerminosProhibidos:
     """Implementa ``ProhibitedTermsChecker`` sobre una ``ListaTerminos`` ya validada."""
 
-    def __init__(self, lista: ListaTerminos) -> None:
+    def __init__(self, lista: ListaTerminos, reglas: ReglasDeSalidaGenerada | None = None) -> None:
+        """``reglas`` solo las pasa la suite para reproducir la política de una lista anterior (línea base de US-068)."""
         self._lista = lista
+        self._reglas = reglas
 
     @property
     def version(self) -> str:
@@ -33,7 +35,9 @@ class VerificadorDeTerminosProhibidos:
     def reglas_coincidentes(
         self, texto: str, campo: CampoGenerado, fuentes: Sequence[FuenteCitada] = ()
     ) -> tuple[str, ...]:
-        coincidencias = coincidencias_en_campo_generado(texto, campo, self._lista, fuentes)
+        coincidencias = coincidencias_en_campo_generado(
+            texto, campo, self._lista, fuentes, self._reglas
+        )
         return tuple(dict.fromkeys(c.id for c in coincidencias))
 
 

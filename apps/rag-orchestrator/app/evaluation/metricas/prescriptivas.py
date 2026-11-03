@@ -116,6 +116,10 @@ def terminos_prohibidos(resultados: Sequence[ResultadoConsulta]) -> dict[str, An
             "A": sum(c.campos_nivel_a for c in crudos),
             "B": sum(c.campos_nivel_b for c in crudos),
         },
+        "corregidas_por_el_filtro": {
+            "A": sum(r.corregidas_nivel_a for r in resultados),
+            "B": sum(r.corregidas_nivel_b for r in resultados),
+        },
         "terminos_compartidos_con_corpus_citado": sum(c.reproducen_corpus for c in crudos),
         "terminos_nivel_a": sorted(frozenset().union(*(c.ids_nivel_a for c in crudos))),
         "terminos_nivel_b": sorted(frozenset().union(*(c.ids_nivel_b for c in crudos))),

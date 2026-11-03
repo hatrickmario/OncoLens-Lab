@@ -86,8 +86,9 @@ _CAMPOS_DE_FAMILIA = {
             "propuesta_cruda": Numero(),
             "salida_mostrada": Numero(),
             "salida_mostrada_nivel_a": Numero(),  # bloqueante (meta 0)
-            "salida_mostrada_nivel_b": Numero(),  # seguimiento
+            "salida_mostrada_nivel_b": Numero(),  # bloqueante (meta 0, US-249 AC-4)
             "salida_mostrada_por_nivel": Objeto({"A": Numero(), "B": Numero()}),
+            "corregidas_por_el_filtro": Objeto({"A": Numero(), "B": Numero()}),
             "campos_mostrados": Lista(Objeto({"campo": Identificador(), "regla": Identificador()})),
             "propuesta_cruda_por_nivel": Objeto({"A": Numero(), "B": Numero()}),
             "terminos_compartidos_con_corpus_citado": Numero(),
@@ -216,6 +217,17 @@ _COMPARACION_RECUPERACION = Objeto(
     }
 )
 
+_RECHAZOS_LEGITIMOS = Objeto(
+    {
+        # US-249 AC-5: salidas legítimas que rechaza el filtro con la lista 1.5.0 (línea base de US-068) y con la vigente.
+        "salidas_legitimas": Numero(),
+        "con_la_lista_1_5_0": Numero(),
+        "con_la_lista_vigente": Numero(),
+        "diferencia": Numero(),
+        "tolerancia": Numero(),
+    }
+)
+
 ESQUEMA_SUITE = Objeto(
     {
         "esquema": Enumerado(frozenset({VERSION_ESQUEMA})),
@@ -225,9 +237,12 @@ ESQUEMA_SUITE = Objeto(
         "privacidad": _PRIVACIDAD,
         "recursos_nli": _RECURSOS_NLI,
         "comparacion_recuperacion": _COMPARACION_RECUPERACION,
+        "rechazos_legitimos": _RECHAZOS_LEGITIMOS,
         "latencia_p95_ms": Objeto({etapa: Numero() for etapa in ETAPAS}),
     },
-    opcionales=frozenset({"privacidad", "recursos_nli", "comparacion_recuperacion"}),
+    opcionales=frozenset(
+        {"privacidad", "recursos_nli", "comparacion_recuperacion", "rechazos_legitimos"}
+    ),
 )
 
 

@@ -5,6 +5,8 @@ Solo viven en memoria durante la corrida: lo que llega al reporte son conteos (R
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from app.application.ports import EvidenciaGenerada
 from app.domain.lenguaje import FuenteCitada
 from app.domain.support import CampoGenerado
@@ -34,12 +36,14 @@ def textos_de_opcion_mostrada(opcion: EvidenceOption) -> list[TextoGenerado]:
     ]
 
 
-def fuentes_citadas_de(respuesta: RagQueryInternalResponse) -> list[FuenteCitada]:
-    """Título y texto de los fragmentos que citan las opciones mostradas: lo que permite reconocer una cita atribuida (RN-23)."""
+def fuentes_entregadas(
+    titulos_de_chunks: Mapping[str, str], textos_entregados: Mapping[str, str]
+) -> list[FuenteCitada]:
+    """Título y texto de los fragmentos entregados a la generación: lo que permite reconocer una cita atribuida (RN-23)."""
     return [
-        FuenteCitada(fuente.title, fuente.chunkTextSnapshot)
-        for opcion in respuesta.evidenceOptions
-        for fuente in opcion.citedSources
+        FuenteCitada(titulos_de_chunks[chunk], texto)
+        for chunk, texto in textos_entregados.items()
+        if chunk in titulos_de_chunks
     ]
 
 
