@@ -5,7 +5,17 @@ import type {
 } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import type { RegistroDeAnalisis } from './analysis-record.js';
 import type { FilaDeEvento } from './evidence-analysis.repository.js';
+import { mesesTranscurridos } from './clinical-context.builder.js';
 import type { ContextoPermitido } from './ports.js';
+
+const fechaUtc = (instante: Date): string => instante.toISOString().slice(0, 10);
+
+/** Texto de las afirmaciones de la síntesis (acuerdos y discrepancias): contexto del hilo, nunca una cita (RN-24). */
+function resumenDeLaSintesis(sintesis: RegistroDeAnalisis['synthesis']): string {
+  return [...sintesis.agreements, ...sintesis.discrepancies.map(({ claim }) => claim)]
+    .map(({ text }) => text)
+    .join(' ');
+}
 
 /** Memoria rotulada y no citable del análisis de origen (RN-24), con fechas relativas respecto de `ahora`. */
 export function memoriaDelAnalisis(
@@ -13,10 +23,20 @@ export function memoriaDelAnalisis(
   eventosPosteriores: readonly FilaDeEvento[],
   ahora: Date,
 ): PriorAnalysisMemory {
-  void registro;
-  void eventosPosteriores;
-  void ahora;
-  throw new Error('no implementado');
+  return {
+    source: 'analisis_previo_ia',
+    citable: false,
+    monthsAgo: mesesTranscurridos(fechaUtc(registro.createdAt), ahora) ?? 0,
+    question: registro.queryText,
+    synthesisSummary: resumenDeLaSintesis(registro.synthesis),
+    optionsDescribed: registro.evidenceOptions.map(({ option }) => option),
+    linkedDecision: null,
+    outcomesSince: eventosPosteriores.map((evento) => ({
+      eventType: evento.eventType,
+      monthsAgo: mesesTranscurridos(evento.eventDate, ahora) ?? 0,
+      description: evento.description,
+    })),
+  };
 }
 
 /**
@@ -27,9 +47,7 @@ export function contextoConMemoria(
   registro: RegistroDeAnalisis,
   memoria: PriorAnalysisMemory,
 ): ContextoPermitido {
-  void registro;
-  void memoria;
-  throw new Error('no implementado');
+  return { ...registro.clinicalContextSnapshot, priorAnalyses: [memoria] };
 }
 
 export interface EntradaDelRequestDeSeguimiento {
@@ -46,6 +64,14 @@ export interface EntradaDelRequestDeSeguimiento {
 export function armarRagFollowUpRequest(
   entrada: EntradaDelRequestDeSeguimiento,
 ): RagFollowUpRequest {
-  void entrada;
-  throw new Error('no implementado');
+  const { priorAnalyses, ...contexto } = entrada.clinicalContext;
+  return {
+    traceId: entrada.traceId,
+    dataClassification: entrada.registro.dataClassification,
+    catalogVersion: entrada.catalogVersion,
+    question: entrada.question,
+    clinicalContext: { ...contexto, priorAnalyses: [] },
+    analysisMemory: priorAnalyses,
+    filtersApplied: entrada.registro.filtersApplied,
+  };
 }

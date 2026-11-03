@@ -162,7 +162,7 @@ function tratamientoPrevioDe(fila: Fila): FilaDeTratamientoPrevio {
   };
 }
 
-function eventoDe(fila: Fila): FilaDeEvento {
+export function eventoDe(fila: Fila): FilaDeEvento {
   return {
     id: fila['id'] as string,
     eventType: fila['event_type'] as string,
