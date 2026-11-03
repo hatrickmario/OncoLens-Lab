@@ -1,0 +1,39 @@
+# Qué es «solo documentación» para el job `cambios` de la CI (ARR-11, D-12.1; docs/process/ci.md). Lo lee
+# scripts/ci/detectar-cambios.mjs. Es configuración (RN-22): añadir un omitible o un documento que el código lee es editar
+# este archivo, no el workflow ni el script. Ante cualquier duda el detector pide la CI completa.
+#
+# `documentacion`: globs (lib/glob.mjs) de los archivos que un PR puede cambiar sin tocar el comportamiento del código.
+documentacion:
+  - backlog/**
+  - docs/**
+  - openspec/**
+  - "**/*.md"
+
+# `consumidos_por_codigo`: documentos que un test o un script LEEN en tiempo de ejecución; cambiarlos puede romper tests, así
+# que no cuentan como documentación aunque casen con `documentacion`. Un test (cambiosPathsCobertura.test.mjs) comprueba que
+# toda ruta `*.md` literal leída por scripts/, apps/ y packages/ casa con alguno de estos globs.
+consumidos_por_codigo:
+  - readme.md
+  - docs/architecture/data-model.md
+  - docs/architecture/adr/ADR-39-*.md
+  - docs/decisions/DEC-02-*.md
+  - docs/demo/guia-demo-S4.md
+  - docs/operations/claves.md
+  - data/**
+  - apps/**/prompts/**
+  - contracts/**
+
+# `omitibles_en_documentacion`: jobs de ci.yml que un PR de documentación no ejecuta. Nunca figuran `secret-scan`, `data-scan`,
+# `lint-lenguaje` ni `higiene-proceso` (los escáneres y la higiene corren siempre), ni `cambios` ni `ci-ok`.
+# Cada nombre debe existir en ci.yml (si no, el detector termina con código 2).
+omitibles_en_documentacion:
+  - build-test-node
+  - build-test-rag
+  - contracts
+  - stack-smoke
+  - integration
+  - integration-rag
+  - quality
+  - cobertura-rag
+  - dependencies
+  - eval-required

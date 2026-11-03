@@ -26,19 +26,19 @@
 
 ### 2. Detector de cambios y agregador
 
-- [ ] 2.1 (test después) `scripts/ci/cambios-paths.yaml` (`documentacion`, `consumidos_por_codigo`,
+- [x] 2.1 (test después) `scripts/ci/cambios-paths.yaml` (`documentacion`, `consumidos_por_codigo`,
   `omitibles_en_documentacion`) y `scripts/ci/detectar-cambios.mjs` con `esSoloDocumentacion()` pura y E/S solo en
   `main()`; reutiliza `cargarReglas`/`tocaDisparador` de `eval-trigger.mjs` y `casaConGlob` de `lib/glob.mjs`. Escribe
   `documentacion` y `omitibles` en `GITHUB_OUTPUT`; diff con `git merge-base` + `git diff --no-renames --name-status`; push,
   base vacía/`0000…`, sin merge-base (falla cerrado) o diff vacío → CI completa; configuración
   inválida → código 2 `[D-12.1]`.
-- [ ] 2.2 (test después) `scripts/ci/__tests__/detectarCambios.test.mjs`: un escenario por cada uno del requisito
+- [x] 2.2 (test después) `scripts/ci/__tests__/detectarCambios.test.mjs`: un escenario por cada uno del requisito
   «Un detector de cambios…» (solo docs, mezcla, documento leído por el código, renombre `git mv` de código a `docs/*.md`, sin merge-base,
   disparador de eval, push, base ilegible, configuración inválida), con repositorio git temporal y tiempo máximo explícito `[D-12.1]`.
-- [ ] 2.3 (test después) Test de cobertura de `consumidos_por_codigo`: compara con `git grep` las rutas literales `*.md`
+- [x] 2.3 (test después) Test de cobertura de `consumidos_por_codigo`: compara con `git grep` las rutas literales `*.md`
   que leen `scripts/` y `apps/` (y `packages/`) con `consumidos_por_codigo`, nombrando ruta y lector si una no casa
   (riesgo «omitir de más» del design) `[D-12.1]`.
-- [ ] 2.4 (test después) `scripts/ci/verificar-needs.mjs`: `omitiblesDeclarados(needs)` y `jobsSinExito` que acepta
+- [x] 2.4 (test después) `scripts/ci/verificar-needs.mjs`: `omitiblesDeclarados(needs)` y `jobsSinExito` que acepta
   `skipped` solo si `cambios` está en `success` y el job está en su `omitibles`; JSON ilegible → `[]`. Tests unitarios en
   `scripts/ci/__tests__/` con los cuatro escenarios de «ci-ok acepta omitidos…» `[D-12.1] [US-036 AC-1]`.
 
