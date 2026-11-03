@@ -23,6 +23,8 @@ VERSION_DEL_PROMPT_DE_SEGUIMIENTO = "rag-follow-up@0.1.0"
 MARCADOR_FUERA_DE_CONTEXTO = "fuera_de_contexto"
 MARCADOR_RESPUESTA = "respuesta"
 ROTULO_DE_LA_MEMORIA = "Contexto del análisis previo (no es evidencia; no lo cites)"
+INICIO_DE_LA_MEMORIA = "[inicio del contexto no citable]"
+FIN_DE_LA_MEMORIA = "[fin del contexto no citable]"
 
 _NOMBRE_DEL_IDIOMA = {"es": "español", "en": "inglés"}
 
