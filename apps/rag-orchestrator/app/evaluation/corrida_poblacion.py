@@ -141,7 +141,7 @@ def _extractor(config: ConfigPoblacion, llm: LlmGuionadoDePoblacion) -> Populati
         plantilla_del_prompt=cargar_plantilla(VERSION_DEL_PROMPT),
         sinonimos=cargar_sinonimos(config.catalogo, tipos),
         buscar_terminos_prohibidos=lambda texto: verificador.reglas_coincidentes(
-            texto, CAMPO_DE_VALOR_GENERADO
+            texto, CAMPO_DE_VALOR_GENERADO, ()
         ),
         configuracion=ConfiguracionDePoblacion(
             top_k=extraccion.top_k,

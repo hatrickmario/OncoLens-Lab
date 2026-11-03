@@ -33,7 +33,7 @@ class VerificadorDeTerminosProhibidos:
         return self._lista.version
 
     def reglas_coincidentes(
-        self, texto: str, campo: CampoGenerado, fuentes: Sequence[FuenteCitada] = ()
+        self, texto: str, campo: CampoGenerado, fuentes: Sequence[FuenteCitada]
     ) -> tuple[str, ...]:
         coincidencias = coincidencias_en_campo_generado(
             texto, campo, self._lista, fuentes, self._reglas

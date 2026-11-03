@@ -10,7 +10,7 @@ from typing import Any, TypedDict
 from app.application.ports import EvidenciaGenerada
 from app.domain.alias_de_chunks import CITA_NO_TRADUCIBLE
 from app.domain.citations import OpcionGenerada, validar_citas
-from app.domain.lenguaje import FuenteCitada
+from app.domain.support import FuentesDeLaConsulta
 from app.evaluation.afirmaciones import (
     AfirmacionAJuzgar,
     afirmaciones_a_juzgar,
@@ -27,6 +27,7 @@ from app.evaluation.metricas.prescriptivas import (
     contar_salidas_con_terminos,
     medir_propuesta_cruda,
     medir_salida_mostrada,
+    sumar_salidas_mostradas,
 )
 from app.evaluation.metricas.rechazos_legitimos import (
     ids_de_preguntas_de_control_legitimo,
@@ -40,10 +41,10 @@ from app.evaluation.metricas.resultado import (
 from app.evaluation.retrieval_metrics import evaluar_pregunta
 from app.evaluation.rutas import raiz_repo
 from app.evaluation.salida_generada import (
-    fuentes_entregadas,
+    grupos_de_propuesta,
+    grupos_de_respuesta,
     textos_de_opcion_mostrada,
     textos_de_propuesta,
-    textos_de_respuesta,
 )
 from app.schemas.generated.models import (
     DataClassification,
@@ -200,10 +201,13 @@ def _lenguaje_de(
     textos_entregados = suite.observaciones.textos_entregados.get(texto_pregunta, {})
     caso_inyeccion = bool(entregados & {c.id for c in dataset.chunks if c.inyeccion})
     efectivas = _inyecciones_efectivas(respuesta, entregados, verificador) if caso_inyeccion else 0
-    fuentes = fuentes_entregadas(dataset.titulos_de_chunks(), textos_entregados)
-    mostrada = medir_salida_mostrada(textos_de_respuesta(respuesta), verificador, fuentes)
+    consulta = FuentesDeLaConsulta(textos_entregados, dataset.titulos_de_chunks())
+    mostrada = sumar_salidas_mostradas(
+        medir_salida_mostrada(g.textos, verificador, g.fuentes)
+        for g in grupos_de_respuesta(respuesta, consulta)
+    )
     crudo = _lenguaje_crudo_de(suite, propuesta, textos_entregados)
-    corregidas = _corregidas_por_el_filtro(propuesta, verificador, fuentes, mostrada)
+    corregidas = _corregidas_por_el_filtro(propuesta, verificador, consulta, mostrada)
     return {
         "salidas_prohibidas_crudas": crudo.campos_con_termino,
         "salidas_prohibidas_mostradas": mostrada.campos_con_termino,
@@ -212,9 +216,7 @@ def _lenguaje_de(
         "campos_mostrados": mostrada.campos,
         "corregidas_nivel_a": corregidas[0],
         "corregidas_nivel_b": corregidas[1],
-        "salida_legitima": _salida_legitima_de(
-            suite, dataset, pregunta, propuesta, textos_entregados
-        ),
+        "salida_legitima": _salida_legitima_de(suite, dataset, pregunta, propuesta, consulta),
         "lenguaje_crudo": crudo,
         "caso_inyeccion": caso_inyeccion,
         "inyecciones_efectivas": efectivas,
@@ -224,13 +226,16 @@ def _lenguaje_de(
 def _corregidas_por_el_filtro(
     propuesta: EvidenciaGenerada | None,
     verificador: VerificadorEstricto,
-    fuentes: Sequence[FuenteCitada],
+    consulta: FuentesDeLaConsulta,
     mostrada: SalidaMostrada,
 ) -> tuple[int, int]:
     """Campos de la propuesta cruda que la política de salida rechaza y que ya no aparecen en lo mostrado, por nivel."""
     if propuesta is None:
         return 0, 0
-    segun_la_politica = medir_salida_mostrada(textos_de_propuesta(propuesta), verificador, fuentes)
+    segun_la_politica = sumar_salidas_mostradas(
+        medir_salida_mostrada(g.textos, verificador, g.fuentes)
+        for g in grupos_de_propuesta(propuesta, consulta)
+    )
     return (
         max(0, segun_la_politica.campos_nivel_a - mostrada.campos_nivel_a),
         max(0, segun_la_politica.campos_nivel_b - mostrada.campos_nivel_b),
@@ -242,18 +247,14 @@ def _salida_legitima_de(
     dataset: DatasetSuite,
     pregunta: Pregunta,
     propuesta: EvidenciaGenerada | None,
-    textos_entregados: dict[str, str],
+    consulta: FuentesDeLaConsulta,
 ) -> RechazoDeSalidaLegitima | None:
     """``None`` si la pregunta no es un control legítimo; si lo es, lo que cada filtro aplica a lo que el generador propuso."""
     controles = ids_de_preguntas_de_control_legitimo(dataset)
     if pregunta.id not in controles or propuesta is None or suite.verificador_linea_base is None:
         return None
     return medir_salida_legitima(
-        propuesta,
-        textos_entregados,
-        dataset.titulos_de_chunks(),
-        suite.verificador_produccion,
-        suite.verificador_linea_base,
+        propuesta, consulta, suite.verificador_produccion, suite.verificador_linea_base
     )
 
 

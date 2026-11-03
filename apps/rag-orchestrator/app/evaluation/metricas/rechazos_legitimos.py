@@ -8,16 +8,14 @@ la del dataset; con el real, la que produjo. Solo ids de pregunta y de regla: nu
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from typing import Any
 
 from app.application.ports import EvidenciaGenerada, ProhibitedTermsChecker
-from app.domain.citations import OpcionGenerada
-from app.domain.claims import PapelDeAfirmacion
-from app.domain.lenguaje import FuenteCitada
-from app.domain.support import CampoGenerado
+from app.domain.support import FuentesDeLaConsulta
 from app.evaluation.fuente_dataset import DatasetSuite
 from app.evaluation.metricas.resultado import RechazoDeSalidaLegitima, ResultadoConsulta
+from app.evaluation.salida_generada import grupos_de_propuesta
 
 
 def ids_de_preguntas_de_control_legitimo(dataset: DatasetSuite) -> frozenset[str]:
@@ -31,34 +29,18 @@ def ids_de_preguntas_de_control_legitimo(dataset: DatasetSuite) -> frozenset[str
 
 def medir_salida_legitima(
     propuesta: EvidenciaGenerada,
-    textos_de_chunks: Mapping[str, str],
-    titulos_de_chunks: Mapping[str, str],
+    consulta: FuentesDeLaConsulta,
     vigente: ProhibitedTermsChecker,
     linea_base: ProhibitedTermsChecker,
 ) -> RechazoDeSalidaLegitima:
-    """Las reglas que cada filtro aplica a lo que la propuesta cruda dice (título, justificación y detalles de cada opción)."""
+    """Las reglas que cada filtro aplica a lo que la propuesta cruda dice, con las mismas fuentes que da producción."""
     vigentes: list[str] = []
     de_la_base: list[str] = []
-    for opcion in propuesta.opciones:
-        fuentes = tuple(
-            FuenteCitada(titulos_de_chunks[c], textos_de_chunks[c])
-            for c in dict.fromkeys(opcion.chunk_ids_citados)
-            if c in titulos_de_chunks and c in textos_de_chunks
-        )
-        for texto, campo in _textos_de(opcion):
-            vigentes += vigente.reglas_coincidentes(texto, campo, fuentes)
-            de_la_base += linea_base.reglas_coincidentes(texto, campo, fuentes)
+    for grupo in grupos_de_propuesta(propuesta, consulta):
+        for campo, texto in grupo.textos:
+            vigentes += vigente.reglas_coincidentes(texto, campo, grupo.fuentes)
+            de_la_base += linea_base.reglas_coincidentes(texto, campo, grupo.fuentes)
     return RechazoDeSalidaLegitima(tuple(dict.fromkeys(vigentes)), tuple(dict.fromkeys(de_la_base)))
-
-
-def _textos_de(opcion: OpcionGenerada) -> list[tuple[str, CampoGenerado]]:
-    textos: list[tuple[str, CampoGenerado]] = [(opcion.option, "option")]
-    for afirmacion in opcion.afirmaciones:
-        campo: CampoGenerado = (
-            "rationale" if afirmacion.papel is PapelDeAfirmacion.principal else "details"
-        )
-        textos.append((afirmacion.texto, campo))
-    return textos
 
 
 class RechazosLegitimos:

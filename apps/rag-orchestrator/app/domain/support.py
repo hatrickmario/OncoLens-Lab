@@ -91,12 +91,16 @@ NO_MOSTRADO_EN = "(text not shown)"
 class BuscadorDeTerminos(Protocol):
     """``(texto, campo, fuentes) -> ids de regla``: el puerto ``ProhibitedTermsChecker`` visto desde el dominio.
 
-    ``fuentes`` son los fragmentos que cita la afirmación (título y texto del corpus): con ellos una cita textual
-    atribuida no activa el subconjunto B (RN-23, US-249); sin ellos, ninguna cita se tapa.
+    ``fuentes`` es OBLIGATORIO: los fragmentos (título y texto del corpus) con los que una cita textual atribuida no activa
+    el subconjunto B (RN-23, US-249). Decisión por campo, y ``()`` solo donde es intencional:
+    ``rationale`` y ``details`` reciben los fragmentos que cita la opción; ``limitations[].text`` recibe todos los
+    entregados (son también sus premisas); ``option``, ``unsupportedClaims`` y las opciones descartadas por citas no
+    reciben ninguno (un título o una afirmación sin soporte no es una cita), y ``studyPopulationValue(s)`` tampoco (valor
+    extraído, no cita); ``synthesis`` no pasa por este puerto.
     """
 
     def __call__(
-        self, texto: str, campo: CampoGenerado, fuentes: Sequence[FuenteCitada] = ()
+        self, texto: str, campo: CampoGenerado, fuentes: Sequence[FuenteCitada]
     ) -> Sequence[str]: ...
 
 
@@ -216,13 +220,18 @@ def planificar_soporte(
     ``CLAIM_MAX_WORDS``. ``titulos_de_chunks`` (``chunkId -> título del catálogo``, RN-25) permite reconocer la cita
     textual atribuida («Según ‹título›: «…»») de los fragmentos que cita la opción; sin él no se tapa ninguna cita.
     """
-    fuentes = _FuentesDeLaConsulta(textos_de_chunks, titulos_de_chunks or {})
+    fuentes = FuentesDeLaConsulta(textos_de_chunks, titulos_de_chunks or {})
     opciones = tuple(
         _planificar_opcion(a, fuentes, buscar_terminos, max_palabras) for a in aceptadas
     )
     todas = tuple(textos_de_chunks.values())
     limitaciones = tuple(
-        Afirmacion(t, "limitations[].text", tuple(buscar_terminos(t, "limitations[].text")), todas)
+        Afirmacion(
+            t,
+            "limitations[].text",
+            tuple(buscar_terminos(t, "limitations[].text", fuentes.todas())),
+            todas,
+        )
         for t in limitaciones_propuestas
     )
     return PlanDeSoporte(opciones, limitaciones)
@@ -235,29 +244,38 @@ REGLA_MODAL_NORMATIVO = "modal_normativo"
 def reglas_del_titulo(buscar_terminos: BuscadorDeTerminos, titulo: str) -> tuple[str, ...]:
     """Reglas que incumple el título de la opción (``option``): las de la lista prohibida (RN-23) y, además, la lista de
     modales normativos, que antes solo miraba las afirmaciones (D4-20)."""
-    reglas = tuple(buscar_terminos(titulo, "option"))
+    reglas = tuple(buscar_terminos(titulo, "option", ()))
     return (*reglas, REGLA_MODAL_NORMATIVO) if tiene_modal_normativo(titulo) else reglas
 
 
 @dataclass(frozen=True)
-class _FuentesDeLaConsulta:
+class FuentesDeLaConsulta:
     """Texto y título de cada fragmento entregado a la generación en esta consulta."""
 
     textos: Mapping[str, str]
     titulos: Mapping[str, str]
 
     def citadas_por(self, chunk_ids: Sequence[str]) -> tuple[FuenteCitada, ...]:
-        """Los fragmentos que cita una opción y de los que se conoce título y texto."""
+        """Los fragmentos que cita una opción y de los que se conoce título y texto. Única regla, de producción y de la suite."""
         return tuple(
             FuenteCitada(self.titulos[c], self.textos[c])
             for c in dict.fromkeys(chunk_ids)
             if c in self.titulos and c in self.textos
         )
 
+    def todas(self) -> tuple[FuenteCitada, ...]:
+        """Todos los fragmentos entregados: las fuentes de una limitación, cuyas premisas también son todos (RN-01)."""
+        return self.citadas_por(tuple(self.textos))
+
+
+def campo_de_papel(papel: PapelDeAfirmacion) -> CampoGenerado:
+    """El campo de la respuesta en el que cae una afirmación atómica: la principal es ``rationale`` y el resto ``details``."""
+    return "rationale" if papel is PapelDeAfirmacion.principal else "details"
+
 
 def _planificar_opcion(
     aceptada: OpcionAceptada,
-    fuentes: _FuentesDeLaConsulta,
+    fuentes: FuentesDeLaConsulta,
     buscar_terminos: BuscadorDeTerminos,
     max_palabras: int,
 ) -> OpcionPlanificada:
@@ -293,9 +311,7 @@ def _planificar_afirmacion(
     buscar_terminos: BuscadorDeTerminos,
     max_palabras: int,
 ) -> AfirmacionPorPapel:
-    campo: CampoGenerado = (
-        "rationale" if afirmacion.papel is PapelDeAfirmacion.principal else "details"
-    )
+    campo = campo_de_papel(afirmacion.papel)
     citados = dict.fromkeys(c for c in afirmacion.chunk_ids if c in chunk_ids_validos)
     return AfirmacionPorPapel(
         afirmacion.texto,

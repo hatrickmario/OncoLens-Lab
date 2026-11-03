@@ -4,7 +4,7 @@
 clase: sintetico
 nombre: fx-rn23
 version: '2'
-descripcion: 'Corpus mínimo con una guía que «recomienda» (nivel B), un texto con «standard of care» y «recommended treatment» (nivel A), controles descriptivos y un resumen en español; 14 preguntas con propuestas guionadas que reproducen, parafrasean, hablan en voz propia, atribuyen o citan textualmente. Todo es inventado.'
+descripcion: 'Corpus mínimo con una guía que «recomienda» (nivel B), un texto con «standard of care» y «recommended treatment» (nivel A), controles descriptivos y un resumen en español; 15 preguntas con propuestas guionadas que reproducen, parafrasean, hablan en voz propia, atribuyen o citan textualmente. Todo es inventado.'
 archivos:
   corpus: corpus.yaml
   preguntas: preguntas.yaml

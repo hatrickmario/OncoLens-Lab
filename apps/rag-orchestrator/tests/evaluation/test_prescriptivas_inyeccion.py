@@ -122,7 +122,7 @@ def test_el_verificador_estricto_detecta_el_nivel_b_que_el_filtro_de_produccion_
     texto = "Clinicians may start the therapy."
 
     assert estricto.contiene_terminos(texto, "rationale") is True
-    assert produccion.reglas_coincidentes(texto, "rationale") == ()
+    assert produccion.reglas_coincidentes(texto, "rationale", ()) == ()
 
 
 def test_el_verificador_estricto_detecta_el_nivel_a() -> None:

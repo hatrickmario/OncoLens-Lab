@@ -65,3 +65,14 @@ En cada campo de `CAMPOS_GENERADOS` el filtro MUST aplicar, además del Nivel A,
 - **GIVEN** `CLINICAL_CATALOG_PATH` sin `lenguaje/terminos-prohibidos.json` o con un `salidaGenerada` inválido
 - **WHEN** arranca `rag-orchestrator`
 - **THEN** no arranca y el error nombra el archivo; nunca valida con una lista o un subconjunto vacíos
+
+#### Scenario: La recomendación en voz propia con el sustantivo se rechaza [US-249 AC-2] [RN-23] (Gate 2)
+- **GIVEN** una justificación «Nuestra recomendación es iniciar el régimen con trastuzumab», «The recommendation for this patient is adjuvant T-DM1» o «My recommendation: switch to T-DM1»
+- **WHEN** se valida la opción
+- **THEN** la opción va a `discardedOptions` con `discardReason = lenguaje_no_permitido`; solo el sustantivo negado («no emite una recomendación», «issued no recommendation») no coincide (`salidaGenerada.excepciones`)
+
+#### Scenario: «Consider starting» se rechaza como «Considere iniciar» [US-249 AC-1] [RN-23] (Gate 2)
+- **GIVEN** una afirmación «Consider starting T-DM1» y otra «The authors considered starting T-DM1 in the trial»
+- **WHEN** se valida la opción
+- **THEN** la primera se rechaza con `lenguaje_no_permitido` y la segunda no
+

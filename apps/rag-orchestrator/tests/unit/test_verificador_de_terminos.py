@@ -29,30 +29,33 @@ def test_declara_la_version_de_la_lista_cargada(verificador) -> None:
 
 
 def test_devuelve_el_id_de_la_regla_coincidente_en_un_campo_generado(verificador) -> None:
-    assert verificador.reglas_coincidentes("recomendado para este paciente", "rationale") == (
+    assert verificador.reglas_coincidentes("recomendado para este paciente", "rationale", ()) == (
         "es-recomendado-para-este-paciente",
     )
 
 
 def test_no_devuelve_reglas_cuando_el_texto_no_incumple(verificador) -> None:
-    assert verificador.reglas_coincidentes("La evidencia describe una opción.", "option") == ()
+    assert verificador.reglas_coincidentes("La evidencia describe una opción.", "option", ()) == ()
 
 
 @pytest.mark.parametrize("campo", CAMPOS_GENERADOS)
 def test_revisa_todos_los_campos_generados(verificador, campo: str) -> None:
-    assert verificador.reglas_coincidentes("El paciente debe recibir quimioterapia.", campo)
+    assert verificador.reglas_coincidentes("El paciente debe recibir quimioterapia.", campo, ())
 
 
 @pytest.mark.parametrize("campo", ["chunkTextSnapshot", "title", "sourceName", "citedSources"])
 def test_no_revisa_los_campos_copiados_del_corpus_aunque_traigan_vocabulario_de_la_lista(
     verificador, campo: str
 ) -> None:
-    assert verificador.reglas_coincidentes("Patients should receive adjuvant therapy.", campo) == ()  # type: ignore[arg-type]
+    assert (
+        verificador.reglas_coincidentes("Patients should receive adjuvant therapy.", campo, ())
+        == ()
+    )  # type: ignore[arg-type]
 
 
 def test_no_repite_una_regla_que_coincide_dos_veces_en_el_mismo_texto(verificador) -> None:
     reglas = verificador.reglas_coincidentes(
-        "recomendado para este paciente y recomendado para este paciente", "rationale"
+        "recomendado para este paciente y recomendado para este paciente", "rationale", ()
     )
 
     assert reglas == ("es-recomendado-para-este-paciente",)
@@ -130,3 +133,14 @@ def test_study_population_value_figura_como_campo_generado_en_el_json_y_en_pytho
     """US-123 [S3 resp. 16] (RN-23): el valor textual de la población lo redacta el LLM; en el JSON y en Python."""
     assert "studyPopulationValue" in CAMPOS_GENERADOS
     assert "studyPopulationValue" in _campos_generados_del_origen(ORIGEN_DE_CAMPOS)
+
+
+@pytest.mark.ac("US-249", 2)
+@pytest.mark.parametrize("campo", ["studyPopulationValue", "studyPopulationValues[].value"])
+def test_un_valor_de_poblacion_con_recomendada_se_rechaza_porque_el_subconjunto_b_rige_toda_la_salida_generada(
+    verificador, campo: str
+) -> None:
+    """Resultado actual documentado (Gate 2 #3): los valores de población del fanout no reciben fuentes (un valor extraído no
+    es una cita) y sí el subconjunto B, así que «recomendada» se omite y se cuenta como cualquier término prohibido."""
+    assert verificador.reglas_coincidentes("recomendada", campo, ()) == ("b-recomend",)
+    assert verificador.reglas_coincidentes("HER2-positive", campo, ()) == ()

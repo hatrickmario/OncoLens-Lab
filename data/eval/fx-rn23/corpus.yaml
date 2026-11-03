@@ -13,6 +13,9 @@ chunks:
   - id: ch-g1-2
     documento: doc-g1
     texto: 'The panel issued no recommendation for this setting of adjuvant anti-HER2 therapy.'
+  - id: ch-g1-3
+    documento: doc-g1
+    texto: 'Según Breast Guideline Statement (test): The guideline recommends adding anti-HER2 therapy to adjuvant chemotherapy.'
   - id: ch-g2-1
     documento: doc-g2
     texto: 'Androgen deprivation therapy combined with an androgen receptor inhibitor is the standard of care and a recommended treatment in metastatic hormone-sensitive prostate cancer.'

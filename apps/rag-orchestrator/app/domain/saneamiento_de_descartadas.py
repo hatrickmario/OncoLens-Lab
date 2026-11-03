@@ -54,7 +54,7 @@ def retirar_texto_prohibido(
     if reglas_de_la_opcion:
         retiros.append(RetiroDeLenguaje("option", reglas_de_la_opcion))
     principal = next(a for a in opcion.afirmaciones if a.papel is PapelDeAfirmacion.principal)
-    reglas = tuple(buscar_terminos(principal.texto, "rationale"))
+    reglas = tuple(buscar_terminos(principal.texto, "rationale", ()))
     if reglas:
         retiros.append(RetiroDeLenguaje("rationale", reglas, PapelDeAfirmacion.principal))
     estado = estado_por_lenguaje_y_forma(

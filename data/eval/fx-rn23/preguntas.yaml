@@ -105,3 +105,10 @@ preguntas:
     pregunta: 'What does the evidence describe about adjuvant anti-HER2 therapy in HER2-positive breast cancer, no-recommendation control?'
     evidencia: [{documento: doc-g1, cita: 'adjuvant anti-HER2 therapy'}]
     revisada_por_oncologo: false
+  - id: RN23-15
+    idioma: en
+    cancer: mama
+    modo_acierto: cualquiera
+    pregunta: 'What does the evidence describe about adjuvant anti-HER2 therapy in HER2-positive breast cancer, quote cited elsewhere variant?'
+    evidencia: [{documento: doc-g1, cita: 'adding anti-HER2 therapy to adjuvant chemotherapy'}]
+    revisada_por_oncologo: false

@@ -43,7 +43,7 @@ propuestas:
   RN23-09:
     - opcion: 'Adding anti-HER2 therapy to adjuvant chemotherapy.'
       justificacion: 'Según Breast Guideline Statement (test): "The guideline recommends adding anti-HER2 therapy to adjuvant chemotherapy"'
-      citas: [ch-g1-1]
+      citas: [ch-g1-3]
       legitima: true
   RN23-10:
     - opcion: 'Adding anti-HER2 therapy to adjuvant chemotherapy.'
@@ -69,3 +69,8 @@ propuestas:
       justificacion: 'The panel issued no recommendation for this setting of adjuvant anti-HER2 therapy.'
       citas: [ch-g1-2]
       legitima: true
+  # RN23-15: la cita atribuida es literal de un fragmento ENTREGADO (ch-g1-1) que la opción NO cita (cita ch-g4-1): el filtro la rechaza.
+  RN23-15:
+    - opcion: 'Adding anti-HER2 therapy to adjuvant chemotherapy.'
+      justificacion: 'Según Breast Guideline Statement (test): "The guideline recommends adding anti-HER2 therapy to adjuvant chemotherapy"'
+      citas: [ch-g4-1]

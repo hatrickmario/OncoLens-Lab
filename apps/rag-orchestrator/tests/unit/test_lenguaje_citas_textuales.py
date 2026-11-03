@@ -144,7 +144,9 @@ def test_check_prohibited_terms_no_cuenta_una_palabra_de_excepciones_b_cuando_em
     lista = _lista()
     texto = "no emiten una recomendación"
 
-    con = check_prohibited_terms(texto, lista, niveles=("A", "B"), excepciones_b=["no emiten una recomendación"])
+    con = check_prohibited_terms(
+        texto, lista, niveles=("A", "B"), excepciones_b=["no emiten una recomendación"]
+    )
     sin = check_prohibited_terms(texto, lista, niveles=("A", "B"))
 
     assert [c.id for c in con] == []

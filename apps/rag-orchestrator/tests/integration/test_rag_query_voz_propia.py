@@ -274,3 +274,33 @@ def test_rag_query_no_aplica_el_resto_del_nivel_b_cuando_la_justificacion_es_des
 
     assert cuerpo["discardedOptions"] == []
     assert len(cuerpo["evidenceOptions"]) == 1
+
+
+@pytest.mark.ac("US-249", 2)
+def test_rag_query_conserva_la_limitacion_cuando_la_cita_atribuida_es_literal_de_un_fragmento_entregado():
+    generador = GeneradorDeGuion(
+        opcion_atomica(
+            OPCION, "La evidencia describe la adición de terapia anti-HER2.", ("ch-m1-1",)
+        ),
+        limitaciones=(_atribuida(CITA_G1),),
+    )
+
+    cuerpo = _consultar(generador)
+
+    assert [limitacion["text"] for limitacion in cuerpo["limitations"]] == [_atribuida(CITA_G1)]
+    assert cuerpo["omittedClaims"] == 0
+
+
+@pytest.mark.ac("US-249", 2)
+def test_rag_query_omite_la_limitacion_y_cuenta_cuando_la_cita_entre_comillas_no_trae_la_atribucion():
+    generador = GeneradorDeGuion(
+        opcion_atomica(
+            OPCION, "La evidencia describe la adición de terapia anti-HER2.", ("ch-m1-1",)
+        ),
+        limitaciones=(f'The statement reads: "{CITA_G1}"',),
+    )
+
+    cuerpo = _consultar(generador)
+
+    assert cuerpo["limitations"] == []
+    assert cuerpo["omittedClaims"] == 1

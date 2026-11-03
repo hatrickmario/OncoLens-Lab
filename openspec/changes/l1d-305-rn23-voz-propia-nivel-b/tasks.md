@@ -97,3 +97,9 @@
 - **H-2 (3.6).** Entregar el JSON a `ai-eval-runner` para que lo escriba en `reports/eval/` (D5-03) y comprobar en él `salida_mostrada_nivel_a`, `salida_mostrada_nivel_b`, `propuesta_cruda_por_nivel`, `corregidas_por_el_filtro`, `rechazos_legitimos` y `privacidad.llamadas_nube_datos_reales = 0`.
 - **H-3 (3.7).** Si A o B > 0 o la diferencia de `rechazos_legitimos` supera la tolerancia: no relajar la meta; abrir el hallazgo para `/sprint-close` con los ids de regla y de caso (sin texto) y no contar la historia como cerrada.
 - **H-4 (3.6).** Si la corrida no cabe en el día 2: marcar 3.6 `DIFERIDA -> D5-nn` y crear la deuda en `S5-deuda.md`; nunca `[x]` sin el informe.
+
+## Gate 2 (vuelta 1)
+
+- Evidencia de AC-1: su rojo son los casos VP-nn de conformidad del commit 54d4a5fe; los tests de integración `[US-249 AC-1]` (576d7b27) ya pasaban porque la regla es dato del catálogo 1.6.0. El commit 2979271c usa `feat(` para notas y se deja.
+- Hecho: excepciones del sustantivo como frases, `consider starting/initiating/discontinuing`, `fuentes` obligatorio, suite con las mismas reglas de producción (`FuentesDeLaConsulta`, `campo_de_papel`), caso fx-rn23 RN23-15 y test que ancla la decisión de `web` (Nivel A).
+- Deuda propuesta (P3 #6–#9 y unificación): historia de deuda «unificar la política de salida generada Node/Python» (ID destino a asignar por el orquestador, p. ej. D5-nn en `S5-deuda.md`); «recommended» suelto como límite conocido, a vigilar en la corrida nocturna. Un modal normativo en una opción `legitima: true` no cupo: el generador guionado los aparta antes del filtro de lenguaje.

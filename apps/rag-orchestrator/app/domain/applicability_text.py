@@ -25,6 +25,7 @@ from app.domain.applicability_rules import (
 from app.domain.citations import OpcionGenerada, validar_citas
 from app.domain.corpus_metadata.campos import LONGITUD_MAXIMA_DE_VALOR
 from app.domain.criterios_aplicabilidad import CriterioDeAplicabilidad
+from app.domain.lenguaje import FuenteCitada
 from app.domain.nli import ParNli
 from app.domain.support import CampoGenerado
 
@@ -169,8 +170,8 @@ class MotivoDeRechazo(StrEnum):
     lenguaje_no_permitido = "lenguaje_no_permitido"
 
 
-BuscadorDeTerminos = Callable[[str, CampoGenerado], Sequence[str]]
-"""``(texto, campo) -> ids de regla``: el puerto ``ProhibitedTermsChecker`` visto desde el dominio."""
+BuscadorDeTerminos = Callable[[str, CampoGenerado, Sequence[FuenteCitada]], Sequence[str]]
+"""``(texto, campo, fuentes) -> ids de regla``: el puerto ``ProhibitedTermsChecker`` visto desde el dominio."""
 
 
 @dataclass(frozen=True)
@@ -239,7 +240,7 @@ def _motivo_de_rechazo(
     ids_de_la_fuente = {c.chunk_id for c in fuente.chunks}
     if not validar_citas([citada], ids_de_la_fuente).aceptadas:
         return MotivoDeRechazo.cita_fuera_de_la_fuente
-    if buscar_terminos(propuesta.valor, "studyPopulationValue"):
+    if buscar_terminos(propuesta.valor, "studyPopulationValue", ()):
         return MotivoDeRechazo.lenguaje_no_permitido
     return None
 

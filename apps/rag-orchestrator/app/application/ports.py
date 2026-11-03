@@ -367,7 +367,7 @@ class ProhibitedTermsChecker(Protocol):
         ...
 
     def reglas_coincidentes(
-        self, texto: str, campo: CampoGenerado, fuentes: Sequence[FuenteCitada] = ()
+        self, texto: str, campo: CampoGenerado, fuentes: Sequence[FuenteCitada]
     ) -> tuple[str, ...]:
         """``id`` de cada regla que coincide con ``texto`` (``campo`` es uno de ``CAMPOS_GENERADOS``); vacío = limpio.
 

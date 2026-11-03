@@ -33,6 +33,17 @@ class SalidaMostrada:
     """(nombre del campo, id de la regla) de cada coincidencia; nunca el texto."""
 
 
+def sumar_salidas_mostradas(partes: Iterable[SalidaMostrada]) -> SalidaMostrada:
+    """La suma de las mediciones de varios grupos de textos (cada grupo con sus fuentes citadas)."""
+    lista = list(partes)
+    return SalidaMostrada(
+        sum(p.campos_nivel_a for p in lista),
+        sum(p.campos_nivel_b for p in lista),
+        sum(p.campos_con_termino for p in lista),
+        tuple(c for p in lista for c in p.campos),
+    )
+
+
 def medir_salida_mostrada(
     textos: Iterable[TextoGenerado],
     verificador: VerificadorEstricto,
