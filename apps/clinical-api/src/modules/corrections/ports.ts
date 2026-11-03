@@ -96,7 +96,6 @@ export interface PlanDeCorreccionDeBiomarcador {
   readonly examen: ExamenDeCorreccionAGuardar;
   readonly biomarcador: BiomarcadorCorregidoAGuardar;
   readonly biomarcadorAReemplazar: string;
-  readonly examenAReemplazar: string | null;
 }
 
 export interface PlanDeCorreccionDeNota {
