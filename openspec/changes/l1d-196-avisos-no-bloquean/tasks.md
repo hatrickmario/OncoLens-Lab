@@ -25,5 +25,5 @@
 
 ## 4. Cierre
 
-- [ ] 4.1 `openspec validate l1d-196-avisos-no-bloquean --strict` en verde
-- [ ] 4.2 Tests de `clinical-api` (unitarios + integración) y E2E (`scripts/e2e/ejecutar.sh`) en verde; `contracts:verify-provider` en verde (sin cambios de API, solo ejemplos). Sin `run-ai-eval`: no cambia modelo, prompt, umbral, catálogo ni corpus
+- [x] 4.1 `openspec validate l1d-196-avisos-no-bloquean --strict` en verde · `openspec validate l1d-196-avisos-no-bloquean --strict` válido
+- [x] 4.2 Tests de `clinical-api` (unitarios + integración) y E2E (`scripts/e2e/ejecutar.sh`) en verde; `contracts:verify-provider` en verde (sin cambios de API, solo ejemplos). Sin `run-ai-eval`: no cambia modelo, prompt, umbral, catálogo ni corpus · unitarios 1109/1109, integración 588/588, E2E 26/26 (avisos, listado, ficha, vista de caso, aviso de faltantes, panel), `contracts:verify-provider` 520 respuestas, `contracts:check` y `contracts:breaking` sin hallazgos
