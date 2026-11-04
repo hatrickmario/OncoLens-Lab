@@ -1,0 +1,180 @@
+{
+  "traceId": "req_s5mdemo01",
+  "query": "¿Qué describe la evidencia del corpus de la demo sobre el tratamiento del cáncer de próstata metastásico resistente a la castración tras progresión a docetaxel?",
+  "sourcesSelected": {
+    "guias": true,
+    "ensayos": false,
+    "publicaciones": true
+  },
+  "dataClassification": "sintetico",
+  "catalogVersion": "2026.10.0",
+  "maxOptions": 3,
+  "filtersApplied": {
+    "historiaCompleta": false,
+    "soloBiomarcadoresRelevantes": true,
+    "ultimosSeisMeses": true,
+    "antecedentesFamiliares": false,
+    "publishedFromYear": 2021
+  },
+  "clinicalContext": {
+    "pseudoPatientId": "psd_Ex3qJ7yTg4Vm",
+    "population": "adulto",
+    "diagnosis": {
+      "dataRef": "r1",
+      "cancerType": "prostata",
+      "histology": "adenocarcinoma acinar",
+      "grade": "Gleason 4+5 (grupo ISUP 5)",
+      "stagingSystem": "TNM_8",
+      "stageValue": "T3bN1M1b",
+      "performanceScale": "ECOG",
+      "performanceValue": 1,
+      "monthsSinceDiagnosis": 36,
+      "provenance": {
+        "entryMethod": "seed",
+        "extractionConfidence": "n_a",
+        "reviewStatus": "verificado",
+        "conflict": false
+      }
+    },
+    "biomarkers": [
+      {
+        "dataRef": "r2",
+        "biomarkerName": "PSA",
+        "value": "85.0",
+        "resultType": "cuantitativo",
+        "clinicalSignificance": "alterado",
+        "monthsAgo": 36,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      },
+      {
+        "dataRef": "r3",
+        "biomarkerName": "PSA",
+        "value": "0.8",
+        "resultType": "cuantitativo",
+        "clinicalSignificance": "alterado",
+        "monthsAgo": 13,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      },
+      {
+        "dataRef": "r4",
+        "biomarkerName": "PSA",
+        "value": "14.5",
+        "resultType": "cuantitativo",
+        "clinicalSignificance": "alterado",
+        "monthsAgo": 0,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      },
+      {
+        "dataRef": "r5",
+        "biomarkerName": "HRR",
+        "value": "No mutado",
+        "resultType": "cualitativo",
+        "clinicalSignificance": "relevante",
+        "monthsAgo": 3,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      }
+    ],
+    "clinicalNotes": [],
+    "currentLine": 2,
+    "attributes": [
+      {
+        "dataRef": "r6",
+        "key": "estado_castracion",
+        "value": "resistente_castracion",
+        "monthsAgo": 3,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      },
+      {
+        "dataRef": "r7",
+        "key": "sitios_metastasicos",
+        "value": "oseo",
+        "monthsAgo": 3,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      }
+    ],
+    "priorTreatments": [
+      {
+        "dataRef": "r8",
+        "lineNumber": 1,
+        "setting": "primera_linea_metastasica",
+        "regimenName": "Leuprorelina + docetaxel",
+        "atcCodes": [
+          "L02AE02",
+          "L01CD02"
+        ],
+        "monthsSinceStart": 35,
+        "monthsSinceEnd": 2,
+        "endReason": "progresion",
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      },
+      {
+        "dataRef": "r9",
+        "lineNumber": 2,
+        "setting": "segunda_linea_metastasica",
+        "regimenName": "Enzalutamida",
+        "atcCodes": [],
+        "monthsSinceStart": 1,
+        "monthsSinceEnd": null,
+        "endReason": "desconocido",
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      }
+    ],
+    "events": [
+      {
+        "dataRef": "r10",
+        "eventType": "progresion",
+        "monthsAgo": 2,
+        "description": "Progresión bioquímica y ósea",
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      }
+    ],
+    "biomarkerTrends": [],
+    "missingCriticalData": [],
+    "priorAnalyses": []
+  }
+}

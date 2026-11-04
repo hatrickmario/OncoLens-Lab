@@ -1,0 +1,152 @@
+{
+  "traceId": "req_s5jdemo01",
+  "query": "¿Qué opciones sistémicas describe la evidencia del corpus de la demo para una paciente con cáncer de mama metastásico, receptores hormonales positivos y HER2 0 en primera línea?",
+  "sourcesSelected": {
+    "guias": true,
+    "ensayos": false,
+    "publicaciones": true
+  },
+  "dataClassification": "sintetico",
+  "catalogVersion": "2026.10.0",
+  "maxOptions": 3,
+  "filtersApplied": {
+    "historiaCompleta": false,
+    "soloBiomarcadoresRelevantes": true,
+    "ultimosSeisMeses": true,
+    "antecedentesFamiliares": false,
+    "publishedFromYear": 2021
+  },
+  "clinicalContext": {
+    "pseudoPatientId": "psd_Bt5yF1uPd8Gh",
+    "population": "adulto",
+    "diagnosis": {
+      "dataRef": "r1",
+      "cancerType": "mama",
+      "histology": "carcinoma ductal infiltrante",
+      "grade": "Nottingham grado 2",
+      "stagingSystem": "TNM_8",
+      "stageValue": "IV",
+      "performanceScale": "ECOG",
+      "performanceValue": 1,
+      "monthsSinceDiagnosis": 2,
+      "provenance": {
+        "entryMethod": "seed",
+        "extractionConfidence": "n_a",
+        "reviewStatus": "verificado",
+        "conflict": false
+      }
+    },
+    "biomarkers": [
+      {
+        "dataRef": "r2",
+        "biomarkerName": "RE",
+        "value": "Positivo (90%)",
+        "resultType": "cualitativo",
+        "clinicalSignificance": "relevante",
+        "monthsAgo": 2,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      },
+      {
+        "dataRef": "r3",
+        "biomarkerName": "RP",
+        "value": "Positivo (50%)",
+        "resultType": "cualitativo",
+        "clinicalSignificance": "relevante",
+        "monthsAgo": 2,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      },
+      {
+        "dataRef": "r4",
+        "biomarkerName": "HER2",
+        "value": "0 (IHQ)",
+        "resultType": "cualitativo",
+        "clinicalSignificance": "relevante",
+        "monthsAgo": 2,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      },
+      {
+        "dataRef": "r5",
+        "biomarkerName": "Ki-67",
+        "value": "15 %",
+        "resultType": "cuantitativo",
+        "clinicalSignificance": "relevante",
+        "monthsAgo": 2,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      },
+      {
+        "dataRef": "r6",
+        "biomarkerName": "BRCA",
+        "value": "No mutado",
+        "resultType": "cualitativo",
+        "clinicalSignificance": "relevante",
+        "monthsAgo": 2,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      }
+    ],
+    "clinicalNotes": [],
+    "currentLine": 1,
+    "attributes": [
+      {
+        "dataRef": "r7",
+        "key": "estado_menopausico",
+        "value": "posmenopáusica",
+        "monthsAgo": 2,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      }
+    ],
+    "priorTreatments": [
+      {
+        "dataRef": "r8",
+        "lineNumber": 1,
+        "setting": "primera_linea_metastasica",
+        "regimenName": "Letrozol + palbociclib",
+        "atcCodes": [
+          "L02BG04"
+        ],
+        "monthsSinceStart": 1,
+        "monthsSinceEnd": null,
+        "endReason": "desconocido",
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      }
+    ],
+    "events": [],
+    "biomarkerTrends": [],
+    "missingCriticalData": [],
+    "priorAnalyses": []
+  }
+}

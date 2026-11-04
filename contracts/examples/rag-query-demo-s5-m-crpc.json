@@ -1,0 +1,460 @@
+{
+  "status": "con_evidencia",
+  "synthesis": {
+    "agreements": [
+      {
+        "text": "La fuente recuperada describe, según su población, terapia dirigida según variantes de BRCA o ATM.",
+        "citedSources": [
+          {
+            "title": "Prostate Cancer Treatment, health professional version",
+            "sourceName": "NCI",
+            "externalId": "https://www.cancer.gov/types/prostate/hp/prostate-treatment-pdq",
+            "language": "en",
+            "sourceType": "guideline",
+            "licenseClass": "dominio_publico",
+            "studyDesign": "guia",
+            "trialPhase": null,
+            "primaryEndpoint": null,
+            "sampleSize": null,
+            "publishedAt": "2026-02-10",
+            "lastUpdatedAt": "2026-02-10",
+            "guidelineVersion": null,
+            "authors": null,
+            "sourceUrl": "https://www.cancer.gov/types/prostate/hp/prostate-treatment-pdq",
+            "possiblyOutdated": false,
+            "newerVersionAvailable": false,
+            "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: men with metastatic castration-resistant prostate cancer (mCRPC) and BRCA1, BRCA2 or ATM variants were included in the cohorts that received PARP inhibitor therapy.",
+            "chunkId": "nci-prostata-hp-en@1007e2dd59d2#0084"
+          }
+        ],
+        "patientDataRefs": []
+      }
+    ],
+    "discrepancies": []
+  },
+  "applicability": [
+    {
+      "externalId": "https://www.cancer.gov/types/prostate/hp/prostate-treatment-pdq",
+      "criteria": [
+        {
+          "criterion": "estado_castracion",
+          "patientValue": "resistente_castracion",
+          "studyPopulationValue": "resistente_castracion",
+          "status": "coincide",
+          "unknownReason": null,
+          "isExclusionary": true,
+          "patientDataWarning": null,
+          "studyPopulationValues": [
+            {
+              "value": "resistente_castracion",
+              "chunkId": "nci-prostata-hp-en@1007e2dd59d2#0084",
+              "scope": "elegibilidad"
+            }
+          ],
+          "partialReason": null,
+          "citedSources": [
+            {
+              "title": "Prostate Cancer Treatment, health professional version",
+              "sourceName": "NCI",
+              "externalId": "https://www.cancer.gov/types/prostate/hp/prostate-treatment-pdq",
+              "language": "en",
+              "sourceType": "guideline",
+              "licenseClass": "dominio_publico",
+              "studyDesign": "guia",
+              "trialPhase": null,
+              "primaryEndpoint": null,
+              "sampleSize": null,
+              "publishedAt": "2026-02-10",
+              "lastUpdatedAt": "2026-02-10",
+              "guidelineVersion": null,
+              "authors": null,
+              "sourceUrl": "https://www.cancer.gov/types/prostate/hp/prostate-treatment-pdq",
+              "possiblyOutdated": false,
+              "newerVersionAvailable": false,
+              "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: men with metastatic castration-resistant prostate cancer (mCRPC) and BRCA1, BRCA2 or ATM variants were included in the cohorts that received PARP inhibitor therapy.",
+              "chunkId": "nci-prostata-hp-en@1007e2dd59d2#0084"
+            }
+          ]
+        },
+        {
+          "criterion": "extension",
+          "patientValue": "metastásico",
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "no_reportado_por_fuente",
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "citedSources": []
+        },
+        {
+          "criterion": "isup",
+          "patientValue": "ISUP 5",
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "no_reportado_por_fuente",
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "citedSources": []
+        },
+        {
+          "criterion": "linea_tratamiento",
+          "patientValue": "2",
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "no_reportado_por_fuente",
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "citedSources": []
+        },
+        {
+          "criterion": "ecog",
+          "patientValue": "1",
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "no_reportado_por_fuente",
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "citedSources": []
+        },
+        {
+          "criterion": "hrr_brca",
+          "patientValue": "no mutado",
+          "studyPopulationValue": "BRCA1, BRCA2, ATM alterados",
+          "status": "no_coincide",
+          "unknownReason": null,
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "studyPopulationValues": [
+            {
+              "value": "BRCA1, BRCA2, ATM alterados",
+              "chunkId": "nci-prostata-hp-en@1007e2dd59d2#0084",
+              "scope": "elegibilidad"
+            }
+          ],
+          "partialReason": null,
+          "citedSources": [
+            {
+              "title": "Prostate Cancer Treatment, health professional version",
+              "sourceName": "NCI",
+              "externalId": "https://www.cancer.gov/types/prostate/hp/prostate-treatment-pdq",
+              "language": "en",
+              "sourceType": "guideline",
+              "licenseClass": "dominio_publico",
+              "studyDesign": "guia",
+              "trialPhase": null,
+              "primaryEndpoint": null,
+              "sampleSize": null,
+              "publishedAt": "2026-02-10",
+              "lastUpdatedAt": "2026-02-10",
+              "guidelineVersion": null,
+              "authors": null,
+              "sourceUrl": "https://www.cancer.gov/types/prostate/hp/prostate-treatment-pdq",
+              "possiblyOutdated": false,
+              "newerVersionAvailable": false,
+              "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: men with metastatic castration-resistant prostate cancer (mCRPC) and BRCA1, BRCA2 or ATM variants were included in the cohorts that received PARP inhibitor therapy.",
+              "chunkId": "nci-prostata-hp-en@1007e2dd59d2#0084"
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "coincide": 1,
+        "parcial": 0,
+        "noCoincide": 1,
+        "desconocido": 4
+      },
+      "populationNotComparable": false
+    },
+    {
+      "externalId": "10.3389/fphar.2026.1818807",
+      "criteria": [
+        {
+          "criterion": "estado_castracion",
+          "patientValue": "resistente_castracion",
+          "studyPopulationValue": "sensible_castracion",
+          "status": "no_coincide",
+          "unknownReason": null,
+          "isExclusionary": true,
+          "patientDataWarning": null,
+          "studyPopulationValues": [
+            {
+              "value": "sensible_castracion",
+              "chunkId": "pmc-prostata-darolutamida-rs@f3b7c87b164e#0002",
+              "scope": "elegibilidad"
+            }
+          ],
+          "partialReason": null,
+          "citedSources": [
+            {
+              "title": "The efficacy and safety of darolutamide combination therapy in advanced prostate cancer: a systematic review",
+              "sourceName": "PMC Open Access",
+              "externalId": "10.3389/fphar.2026.1818807",
+              "language": "en",
+              "sourceType": "literature",
+              "licenseClass": "cc_by",
+              "studyDesign": "revision_sistematica",
+              "trialPhase": null,
+              "primaryEndpoint": null,
+              "sampleSize": null,
+              "publishedAt": "2026-05-18",
+              "lastUpdatedAt": "2026-05-18",
+              "guidelineVersion": null,
+              "authors": null,
+              "sourceUrl": "https://doi.org/10.3389/fphar.2026.1818807",
+              "possiblyOutdated": false,
+              "newerVersionAvailable": false,
+              "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: darolutamide, either doublet therapy or triplet therapy with docetaxel, was evaluated in advanced prostate cancer, including metastatic hormone-sensitive prostate cancer (mHSPC) and non-metastatic castration-resistant disease.",
+              "chunkId": "pmc-prostata-darolutamida-rs@f3b7c87b164e#0002"
+            }
+          ]
+        },
+        {
+          "criterion": "extension",
+          "patientValue": "metastásico",
+          "studyPopulationValue": "no metastásico, metastásico",
+          "status": "parcial",
+          "unknownReason": null,
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "studyPopulationValues": [
+            {
+              "value": "no metastásico",
+              "chunkId": "pmc-prostata-darolutamida-rs@f3b7c87b164e#0002",
+              "scope": "elegibilidad"
+            },
+            {
+              "value": "metastásico",
+              "chunkId": "pmc-prostata-darolutamida-rs@f3b7c87b164e#0002",
+              "scope": "elegibilidad"
+            }
+          ],
+          "partialReason": "mezclada",
+          "citedSources": [
+            {
+              "title": "The efficacy and safety of darolutamide combination therapy in advanced prostate cancer: a systematic review",
+              "sourceName": "PMC Open Access",
+              "externalId": "10.3389/fphar.2026.1818807",
+              "language": "en",
+              "sourceType": "literature",
+              "licenseClass": "cc_by",
+              "studyDesign": "revision_sistematica",
+              "trialPhase": null,
+              "primaryEndpoint": null,
+              "sampleSize": null,
+              "publishedAt": "2026-05-18",
+              "lastUpdatedAt": "2026-05-18",
+              "guidelineVersion": null,
+              "authors": null,
+              "sourceUrl": "https://doi.org/10.3389/fphar.2026.1818807",
+              "possiblyOutdated": false,
+              "newerVersionAvailable": false,
+              "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: darolutamide, either doublet therapy or triplet therapy with docetaxel, was evaluated in advanced prostate cancer, including metastatic hormone-sensitive prostate cancer (mHSPC) and non-metastatic castration-resistant disease.",
+              "chunkId": "pmc-prostata-darolutamida-rs@f3b7c87b164e#0002"
+            }
+          ]
+        },
+        {
+          "criterion": "isup",
+          "patientValue": "ISUP 5",
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "no_reportado_por_fuente",
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "citedSources": []
+        },
+        {
+          "criterion": "linea_tratamiento",
+          "patientValue": "2",
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "no_reportado_por_fuente",
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "citedSources": []
+        },
+        {
+          "criterion": "ecog",
+          "patientValue": "1",
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "no_reportado_por_fuente",
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "citedSources": []
+        },
+        {
+          "criterion": "hrr_brca",
+          "patientValue": "no mutado",
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "no_reportado_por_fuente",
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "citedSources": []
+        }
+      ],
+      "summary": {
+        "coincide": 0,
+        "parcial": 1,
+        "noCoincide": 1,
+        "desconocido": 4
+      },
+      "populationNotComparable": true
+    }
+  ],
+  "evidenceOptions": [
+    {
+      "option": "Terapia dirigida según variantes de BRCA o ATM",
+      "rationale": "La guía describe cohortes de cáncer de próstata metastásico resistente a la castración con variantes de BRCA1, BRCA2 o ATM.",
+      "details": [
+        "Texto sintético de ejemplo: el detalle describe, según los fragmentos recuperados, el diseño del estudio y la población incluida.",
+        "Texto sintético de ejemplo: el detalle describe los resultados que reporta la fuente para el grupo estudiado."
+      ],
+      "applicabilitySummary": {
+        "coincide": 1,
+        "parcial": 0,
+        "noCoincide": 1,
+        "desconocido": 4
+      },
+      "populationNotComparable": false,
+      "perSource": [
+        {
+          "externalId": "https://www.cancer.gov/types/prostate/hp/prostate-treatment-pdq",
+          "summary": {
+            "coincide": 1,
+            "parcial": 0,
+            "noCoincide": 1,
+            "desconocido": 4
+          },
+          "populationNotComparable": false
+        }
+      ],
+      "relevanceScore": 0.82,
+      "warnings": [],
+      "citedSources": [
+        {
+          "title": "Prostate Cancer Treatment, health professional version",
+          "sourceName": "NCI",
+          "externalId": "https://www.cancer.gov/types/prostate/hp/prostate-treatment-pdq",
+          "language": "en",
+          "sourceType": "guideline",
+          "licenseClass": "dominio_publico",
+          "studyDesign": "guia",
+          "trialPhase": null,
+          "primaryEndpoint": null,
+          "sampleSize": null,
+          "publishedAt": "2026-02-10",
+          "lastUpdatedAt": "2026-02-10",
+          "guidelineVersion": null,
+          "authors": null,
+          "sourceUrl": "https://www.cancer.gov/types/prostate/hp/prostate-treatment-pdq",
+          "possiblyOutdated": false,
+          "newerVersionAvailable": false,
+          "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: men with metastatic castration-resistant prostate cancer (mCRPC) and BRCA1, BRCA2 or ATM variants were included in the cohorts that received PARP inhibitor therapy.",
+          "chunkId": "nci-prostata-hp-en@1007e2dd59d2#0084"
+        }
+      ]
+    },
+    {
+      "option": "Intensificación de la deprivación androgénica con darolutamida",
+      "rationale": "La revisión describe darolutamida combinada con deprivación androgénica en cáncer de próstata avanzado, incluido el metastásico sensible a la castración.",
+      "details": [
+        "Texto sintético de ejemplo: el detalle describe, según los fragmentos recuperados, el diseño del estudio y la población incluida.",
+        "Texto sintético de ejemplo: el detalle describe los resultados que reporta la fuente para el grupo estudiado."
+      ],
+      "applicabilitySummary": {
+        "coincide": 0,
+        "parcial": 1,
+        "noCoincide": 1,
+        "desconocido": 4
+      },
+      "populationNotComparable": true,
+      "perSource": [
+        {
+          "externalId": "10.3389/fphar.2026.1818807",
+          "summary": {
+            "coincide": 0,
+            "parcial": 1,
+            "noCoincide": 1,
+            "desconocido": 4
+          },
+          "populationNotComparable": true
+        }
+      ],
+      "relevanceScore": 0.7,
+      "warnings": [
+        "poblacion_no_comparable"
+      ],
+      "citedSources": [
+        {
+          "title": "The efficacy and safety of darolutamide combination therapy in advanced prostate cancer: a systematic review",
+          "sourceName": "PMC Open Access",
+          "externalId": "10.3389/fphar.2026.1818807",
+          "language": "en",
+          "sourceType": "literature",
+          "licenseClass": "cc_by",
+          "studyDesign": "revision_sistematica",
+          "trialPhase": null,
+          "primaryEndpoint": null,
+          "sampleSize": null,
+          "publishedAt": "2026-05-18",
+          "lastUpdatedAt": "2026-05-18",
+          "guidelineVersion": null,
+          "authors": null,
+          "sourceUrl": "https://doi.org/10.3389/fphar.2026.1818807",
+          "possiblyOutdated": false,
+          "newerVersionAvailable": false,
+          "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: darolutamide, either doublet therapy or triplet therapy with docetaxel, was evaluated in advanced prostate cancer, including metastatic hormone-sensitive prostate cancer (mHSPC) and non-metastatic castration-resistant disease.",
+          "chunkId": "pmc-prostata-darolutamida-rs@f3b7c87b164e#0002"
+        }
+      ]
+    }
+  ],
+  "discardedOptions": [],
+  "limitations": [
+    {
+      "text": "Síntesis basada en pocas fuentes del corpus de la demo.",
+      "origin": "estructural"
+    }
+  ],
+  "assumptions": [],
+  "retrievalStats": {
+    "retrieved": 40,
+    "aboveThreshold": 2
+  },
+  "omittedClaims": 0,
+  "optionsNotShown": 0,
+  "agentSteps": [],
+  "topRelevanceScore": 0.82,
+  "meta": {
+    "queryLanguage": "es",
+    "responseLanguage": "es",
+    "llmProvider": "local",
+    "llmModel": "llm-local-ejemplo",
+    "embeddingModel": "embedding-local-ejemplo",
+    "rerankerModel": "reranker-local-ejemplo",
+    "nliModel": "nli-local-ejemplo",
+    "promptVersion": "rag-query@0.1.0",
+    "catalogVersion": "2026.10.0",
+    "corpusRelease": "2026-09-30",
+    "corpusCutoffDate": "2026-09-30",
+    "excludedSources": [
+      "NCCN",
+      "ESMO"
+    ],
+    "retrievalParams": {
+      "topK": 40,
+      "rerankTopN": 10,
+      "relevanceThreshold": 0.5,
+      "retrievalMode": "dense",
+      "fusion": "ninguna",
+      "fusionParam": 0,
+      "queryRewrite": {
+        "applied": false,
+        "reason": "no_disparado"
+      }
+    },
+    "latencyMs": 8200
+  }
+}

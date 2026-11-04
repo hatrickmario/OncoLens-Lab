@@ -1,0 +1,163 @@
+{
+  "traceId": "req_s5idemo01",
+  "query": "¿Qué opciones sistémicas describe la evidencia del corpus de la demo tras una recaída local en una paciente con cáncer de mama con receptores hormonales positivos que recibió tamoxifeno adyuvante?",
+  "sourcesSelected": {
+    "guias": true,
+    "ensayos": false,
+    "publicaciones": true
+  },
+  "dataClassification": "sintetico",
+  "catalogVersion": "2026.10.0",
+  "maxOptions": 3,
+  "filtersApplied": {
+    "historiaCompleta": false,
+    "soloBiomarcadoresRelevantes": true,
+    "ultimosSeisMeses": true,
+    "antecedentesFamiliares": false,
+    "publishedFromYear": 2021
+  },
+  "clinicalContext": {
+    "pseudoPatientId": "psd_Wm2xD7tNa6Qf",
+    "population": "adulto",
+    "diagnosis": {
+      "dataRef": "r1",
+      "cancerType": "mama",
+      "histology": "carcinoma ductal infiltrante",
+      "grade": "Nottingham grado 3",
+      "stagingSystem": "TNM_8",
+      "stageValue": "IIB",
+      "performanceScale": "ECOG",
+      "performanceValue": 1,
+      "monthsSinceDiagnosis": 62,
+      "provenance": {
+        "entryMethod": "seed",
+        "extractionConfidence": "n_a",
+        "reviewStatus": "verificado",
+        "conflict": false
+      }
+    },
+    "biomarkers": [
+      {
+        "dataRef": "r2",
+        "biomarkerName": "RE",
+        "value": "Positivo (80%)",
+        "resultType": "cualitativo",
+        "clinicalSignificance": "relevante",
+        "monthsAgo": 62,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      },
+      {
+        "dataRef": "r3",
+        "biomarkerName": "RP",
+        "value": "Negativo",
+        "resultType": "cualitativo",
+        "clinicalSignificance": "relevante",
+        "monthsAgo": 62,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      },
+      {
+        "dataRef": "r4",
+        "biomarkerName": "HER2",
+        "value": "1+ (IHQ)",
+        "resultType": "cualitativo",
+        "clinicalSignificance": "relevante",
+        "monthsAgo": 62,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      },
+      {
+        "dataRef": "r5",
+        "biomarkerName": "Ki-67",
+        "value": "30 %",
+        "resultType": "cuantitativo",
+        "clinicalSignificance": "relevante",
+        "monthsAgo": 62,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      }
+    ],
+    "clinicalNotes": [],
+    "currentLine": 1,
+    "attributes": [
+      {
+        "dataRef": "r6",
+        "key": "estado_menopausico",
+        "value": "posmenopáusica",
+        "monthsAgo": 62,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      }
+    ],
+    "priorTreatments": [
+      {
+        "dataRef": "r7",
+        "lineNumber": 1,
+        "setting": "adyuvante",
+        "regimenName": "Tamoxifeno",
+        "atcCodes": [],
+        "monthsSinceStart": 60,
+        "monthsSinceEnd": 0,
+        "endReason": "progresion",
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      }
+    ],
+    "events": [
+      {
+        "dataRef": "r8",
+        "eventType": "cirugia",
+        "monthsAgo": 61,
+        "description": "Mastectomía",
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      },
+      {
+        "dataRef": "r9",
+        "eventType": "recaida",
+        "monthsAgo": 0,
+        "description": "Recaída local en pared torácica",
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      }
+    ],
+    "biomarkerTrends": [],
+    "missingCriticalData": [
+      "brca_germinal"
+    ],
+    "priorAnalyses": []
+  }
+}

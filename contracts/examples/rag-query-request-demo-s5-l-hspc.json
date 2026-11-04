@@ -1,0 +1,124 @@
+{
+  "traceId": "req_s5ldemo01",
+  "query": "¿Qué opciones sistémicas describe la evidencia del corpus de la demo para un paciente con cáncer de próstata metastásico sensible a la castración?",
+  "sourcesSelected": {
+    "guias": true,
+    "ensayos": false,
+    "publicaciones": true
+  },
+  "dataClassification": "sintetico",
+  "catalogVersion": "2026.10.0",
+  "maxOptions": 3,
+  "filtersApplied": {
+    "historiaCompleta": false,
+    "soloBiomarcadoresRelevantes": true,
+    "ultimosSeisMeses": true,
+    "antecedentesFamiliares": false,
+    "publishedFromYear": 2021
+  },
+  "clinicalContext": {
+    "pseudoPatientId": "psd_Dy6pH2wRf9Sk",
+    "population": "adulto",
+    "diagnosis": {
+      "dataRef": "r1",
+      "cancerType": "prostata",
+      "histology": "adenocarcinoma acinar",
+      "grade": "Gleason 4+4 (grupo ISUP 4)",
+      "stagingSystem": "TNM_8",
+      "stageValue": "T3aN1M1b",
+      "performanceScale": "ECOG",
+      "performanceValue": 1,
+      "monthsSinceDiagnosis": 1,
+      "provenance": {
+        "entryMethod": "seed",
+        "extractionConfidence": "n_a",
+        "reviewStatus": "verificado",
+        "conflict": false
+      }
+    },
+    "biomarkers": [
+      {
+        "dataRef": "r2",
+        "biomarkerName": "PSA",
+        "value": "48.0",
+        "resultType": "cuantitativo",
+        "clinicalSignificance": "alterado",
+        "monthsAgo": 1,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      },
+      {
+        "dataRef": "r3",
+        "biomarkerName": "PSA",
+        "value": "6.2",
+        "resultType": "cuantitativo",
+        "clinicalSignificance": "alterado",
+        "monthsAgo": 0,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      }
+    ],
+    "clinicalNotes": [],
+    "currentLine": 1,
+    "attributes": [
+      {
+        "dataRef": "r4",
+        "key": "estado_castracion",
+        "value": "sensible_castracion",
+        "monthsAgo": 1,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      },
+      {
+        "dataRef": "r5",
+        "key": "sitios_metastasicos",
+        "value": "oseo",
+        "monthsAgo": 1,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      }
+    ],
+    "priorTreatments": [
+      {
+        "dataRef": "r6",
+        "lineNumber": 1,
+        "setting": "primera_linea_metastasica",
+        "regimenName": "Leuprorelina + abiraterona",
+        "atcCodes": [
+          "L02AE02"
+        ],
+        "monthsSinceStart": 1,
+        "monthsSinceEnd": null,
+        "endReason": "desconocido",
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      }
+    ],
+    "events": [],
+    "biomarkerTrends": [],
+    "missingCriticalData": [
+      "hrr_brca"
+    ],
+    "priorAnalyses": []
+  }
+}
