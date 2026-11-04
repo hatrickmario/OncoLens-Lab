@@ -15,3 +15,8 @@ export function relojDelSeed(fechaDeReferencia: string): Clock {
 export function idSembrado(claveNatural: string): string {
   return v5(claveNatural, NAMESPACE_DEL_SEED);
 }
+
+/** Id sembrado de un tratamiento previo: lo comparten su fila y el evento que cierra su línea (`prior_treatment_id`). */
+export function idDeTratamiento(pacienteClave: string, tratamientoClave: string): string {
+  return idSembrado(`${pacienteClave}/${tratamientoClave}`);
+}

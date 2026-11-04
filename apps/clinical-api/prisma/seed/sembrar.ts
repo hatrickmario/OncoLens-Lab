@@ -1,7 +1,11 @@
 import type { Clock } from '../../src/infrastructure/clock.js';
 import type { PasswordHasher } from '../../src/modules/auth/password-hasher.js';
-import { resolverCodigoDelCatalogo, type CatalogoClinico } from './catalogo.js';
-import { idSembrado } from './determinismo.js';
+import {
+  resolverAtcDelRegimen,
+  resolverCodigoDelCatalogo,
+  type CatalogoClinico,
+} from './catalogo.js';
+import { idDeTratamiento, idSembrado } from './determinismo.js';
 import { columnasDeGradacion } from './columnas-de-gradacion.js';
 import { derivarTextoGrade } from './grade.js';
 import { identidadSinteticaDe } from './identidades.js';
@@ -12,7 +16,6 @@ import type {
   ExamenSemilla,
   GradacionSemilla,
   PacienteSemilla,
-  TratamientoPreviaSemilla,
 } from './pacientes/tipos.js';
 import type { ClavesDeIdentidad } from '../../src/infrastructure/crypto/claves-de-identidad.js';
 import type { RolDeUsuario } from '../../src/modules/auth/auth.repository.js';
@@ -336,25 +339,6 @@ async function sembrarExamenes(siembra: Siembra, contexto: ContextoDePaciente): 
   }
 }
 
-/**
- * Códigos ATC de un régimen (RN-27): cada fármaco se resuelve con el catálogo (sin `farmacos`, el nombre del régimen);
- * `atc_codes` lleva los que encuentra y el régimen solo queda `mapeado` si todos resuelven. Nunca un código escrito a mano.
- */
-function resolverAtcDelRegimen(
-  catalogo: CatalogoClinico,
-  tratamiento: TratamientoPreviaSemilla,
-): { codigos: string[]; mappingStatus: 'mapeado' | 'no_mapeado' } {
-  const resueltos = (tratamiento.farmacos ?? [tratamiento.regimen]).map((farmaco) =>
-    resolverCodigoDelCatalogo(catalogo, 'atc', farmaco),
-  );
-  return {
-    codigos: resueltos.flatMap((resuelto) => (resuelto.codigo === null ? [] : [resuelto.codigo])),
-    mappingStatus: resueltos.every((resuelto) => resuelto.mappingStatus === 'mapeado')
-      ? 'mapeado'
-      : 'no_mapeado',
-  };
-}
-
 async function sembrarTratamientosPrevios(
   siembra: Siembra,
   contexto: ContextoDePaciente,
@@ -363,7 +347,7 @@ async function sembrarTratamientosPrevios(
     const atc = resolverAtcDelRegimen(siembra.entradas.catalogo, tratamiento);
     const { fin } = tratamiento;
     await upsertar(siembra, 'clinical.prior_treatment', {
-      id: idSembrado(`${contexto.paciente.clave}/${tratamiento.clave}`),
+      id: idDeTratamiento(contexto.paciente.clave, tratamiento.clave),
       patient_id: contexto.pacienteId,
       episode_id: contexto.episodioId,
       source_document_id: null,
@@ -403,7 +387,7 @@ async function sembrarEventos(siembra: Siembra, contexto: ContextoDePaciente): P
       prior_treatment_id:
         evento.cierraLinea === undefined
           ? null
-          : idSembrado(`${contexto.paciente.clave}/${evento.cierraLinea}`),
+          : idDeTratamiento(contexto.paciente.clave, evento.cierraLinea),
       treatment_id: null,
       analysis_id: null,
       ...PROCEDENCIA_DEL_SEED,
