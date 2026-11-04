@@ -20,19 +20,32 @@ export function SeccionDeFicha({
   id,
   titulo,
   children,
+  accion,
 }: {
   id: AnclaDeFicha | 'ficha-identificacion' | 'notas-clinicas' | `caso-${string}`;
   titulo: string;
   children: ReactNode;
+  /** Acción de la sección (p. ej. «+ Agregar …»), a la derecha del título. */
+  accion?: ReactNode;
 }) {
+  const encabezado = (
+    <h2 id={id} tabIndex={-1} className="m-0 text-lg font-semibold">
+      {titulo}
+    </h2>
+  );
   return (
     <section
       aria-labelledby={id}
       className="bg-surface rounded-tarjeta border-border mb-4 border p-4"
     >
-      <h2 id={id} tabIndex={-1} className="m-0 mb-3 text-lg font-semibold">
-        {titulo}
-      </h2>
+      {accion === undefined ? (
+        <div className="mb-3">{encabezado}</div>
+      ) : (
+        <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
+          {encabezado}
+          {accion}
+        </div>
+      )}
       <div className="overflow-x-auto">{children}</div>
     </section>
   );

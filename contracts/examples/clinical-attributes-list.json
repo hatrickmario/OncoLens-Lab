@@ -1,0 +1,60 @@
+{
+  "items": [
+    {
+      "id": "8e4a0d73-6f5b-4c9d-8ebf-3b4c5d6e7f80",
+      "key": "estado_castracion",
+      "value": "castrado",
+      "observedAt": "2026-02-10",
+      "datePrecision": "dia",
+      "provenance": {
+        "entryMethod": "ocr",
+        "extractionConfidence": "alta",
+        "reviewStatus": "verificado",
+        "conflict": false,
+        "sourceDocumentId": "9f5b1e84-7a6c-4dae-9fc0-4c5d6e7f8091",
+        "additionalSourceDocumentIds": []
+      }
+    },
+    {
+      "id": "a06c2f95-8b7d-4ebf-80d1-5d6e7f8091a2",
+      "key": "sitios_metastasicos",
+      "value": "oseo",
+      "observedAt": null,
+      "datePrecision": "incierta",
+      "provenance": {
+        "entryMethod": "manual",
+        "extractionConfidence": "n_a",
+        "reviewStatus": "verificado",
+        "conflict": false,
+        "sourceDocumentId": null,
+        "additionalSourceDocumentIds": []
+      }
+    }
+  ],
+  "allowedAttributes": [
+    {
+      "key": "estado_castracion",
+      "label": "Estado de castración",
+      "values": [
+        { "value": "castrado", "label": "Castrado" },
+        { "value": "no_castrado", "label": "No castrado" },
+        { "value": "sensible_castracion", "label": "Sensible a la castración" },
+        { "value": "resistente_castracion", "label": "Resistente a la castración" },
+        { "value": "desconocido", "label": "Desconocido" }
+      ]
+    },
+    {
+      "key": "sitios_metastasicos",
+      "label": "Sitios metastásicos",
+      "values": [
+        { "value": "oseo", "label": "Óseo" },
+        { "value": "ganglionar", "label": "Ganglionar" },
+        { "value": "hepatico", "label": "Hepático" },
+        { "value": "pulmonar", "label": "Pulmonar" },
+        { "value": "cerebral", "label": "Cerebral" },
+        { "value": "otro", "label": "Otro" }
+      ]
+    }
+  ],
+  "catalogVersion": "test-normalizacion-1.0.0"
+}

@@ -2,7 +2,7 @@
 
 import { client } from './client.gen.js';
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client/index.js';
-import type { CorrectBiomarkerData, CorrectBiomarkerErrors, CorrectBiomarkerResponses, CorrectClinicalNoteData, CorrectClinicalNoteErrors, CorrectClinicalNoteResponses, CreateEvidenceAnalysisData, CreateEvidenceAnalysisErrors, CreateEvidenceAnalysisResponses, CreateFollowUpData, CreateFollowUpErrors, CreateFollowUpResponses, CreateManualBiomarkerData, CreateManualBiomarkerErrors, CreateManualBiomarkerResponses, CreateManualDiagnosisData, CreateManualDiagnosisErrors, CreateManualDiagnosisResponses, GetBiomarkerHistoryData, GetBiomarkerHistoryErrors, GetBiomarkerHistoryResponses, GetClinicalNoteHistoryData, GetClinicalNoteHistoryErrors, GetClinicalNoteHistoryResponses, GetCompletenessData, GetCompletenessErrors, GetCompletenessResponses, GetHealthData, GetHealthResponses, GetPatientCaseData, GetPatientCaseErrors, GetPatientCaseResponses, GetPatientData, GetPatientErrors, GetPatientResponses, ListClinicalNotesData, ListClinicalNotesErrors, ListClinicalNotesResponses, ListFollowUpsData, ListFollowUpsErrors, ListFollowUpsResponses, ListPatientsData, ListPatientsErrors, ListPatientsResponses, LoginData, LoginErrors, LoginResponses, LogoutData, LogoutErrors, LogoutResponses, SearchPatientsData, SearchPatientsErrors, SearchPatientsResponses, UploadDocumentData, UploadDocumentErrors, UploadDocumentResponses } from './types.gen.js';
+import type { CorrectBiomarkerData, CorrectBiomarkerErrors, CorrectBiomarkerResponses, CorrectClinicalNoteData, CorrectClinicalNoteErrors, CorrectClinicalNoteResponses, CreateEvidenceAnalysisData, CreateEvidenceAnalysisErrors, CreateEvidenceAnalysisResponses, CreateFollowUpData, CreateFollowUpErrors, CreateFollowUpResponses, CreateManualBiomarkerData, CreateManualBiomarkerErrors, CreateManualBiomarkerResponses, CreateManualClinicalAttributeData, CreateManualClinicalAttributeErrors, CreateManualClinicalAttributeResponses, CreateManualDiagnosisData, CreateManualDiagnosisErrors, CreateManualDiagnosisResponses, CreateManualPriorTreatmentData, CreateManualPriorTreatmentErrors, CreateManualPriorTreatmentResponses, GetBiomarkerHistoryData, GetBiomarkerHistoryErrors, GetBiomarkerHistoryResponses, GetClinicalNoteHistoryData, GetClinicalNoteHistoryErrors, GetClinicalNoteHistoryResponses, GetCompletenessData, GetCompletenessErrors, GetCompletenessResponses, GetHealthData, GetHealthResponses, GetPatientCaseData, GetPatientCaseErrors, GetPatientCaseResponses, GetPatientData, GetPatientErrors, GetPatientResponses, ListClinicalAttributesData, ListClinicalAttributesErrors, ListClinicalAttributesResponses, ListClinicalNotesData, ListClinicalNotesErrors, ListClinicalNotesResponses, ListFollowUpsData, ListFollowUpsErrors, ListFollowUpsResponses, ListPatientsData, ListPatientsErrors, ListPatientsResponses, LoginData, LoginErrors, LoginResponses, LogoutData, LogoutErrors, LogoutResponses, SearchPatientsData, SearchPatientsErrors, SearchPatientsResponses, UploadDocumentData, UploadDocumentErrors, UploadDocumentResponses } from './types.gen.js';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -201,6 +201,59 @@ export const createManualDiagnosis = <ThrowOnError extends boolean = false>(opti
             type: 'apiKey'
         }],
     url: '/platform/patients/{patientId}/diagnoses',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Registra a mano una línea de tratamiento previa
+ *
+ * Crea un PriorTreatment con entry_method = manual, extraction_confidence = n_a y review_status = verificado. Backend 1 decide atcCodes y mappingStatus con el catálogo versionado (ADR-33); sin mapeo queda no_mapeado y sin código, nunca inventado (RN-27). regimenName se conserva tal como llegó. Exige un paciente activo (RN-17).
+ */
+export const createManualPriorTreatment = <ThrowOnError extends boolean = false>(options: Options<CreateManualPriorTreatmentData, ThrowOnError>): RequestResult<CreateManualPriorTreatmentResponses, CreateManualPriorTreatmentErrors, ThrowOnError> => (options.client ?? client).post<CreateManualPriorTreatmentResponses, CreateManualPriorTreatmentErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'oncolens_session',
+            type: 'apiKey'
+        }],
+    url: '/platform/patients/{patientId}/prior-treatments',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Lista los atributos clínicos vigentes y los permitidos por el catálogo
+ *
+ * Devuelve solo atributos vigentes (sin rechazado ni reemplazado, RN-07), ordenados por clave y fecha de observación (los de fecha nula al final), y los atributos que el catálogo montado permite registrar para el tipo de cáncer del paciente (RN-29). Es una lectura clínica: el administrador recibe 403.
+ */
+export const listClinicalAttributes = <ThrowOnError extends boolean = false>(options: Options<ListClinicalAttributesData, ThrowOnError>): RequestResult<ListClinicalAttributesResponses, ListClinicalAttributesErrors, ThrowOnError> => (options.client ?? client).get<ListClinicalAttributesResponses, ListClinicalAttributesErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'oncolens_session',
+            type: 'apiKey'
+        }],
+    url: '/platform/patients/{patientId}/clinical-attributes',
+    ...options
+});
+
+/**
+ * Registra a mano un atributo clínico validado contra el catálogo
+ *
+ * attributeKey debe estar declarada en el catálogo para el tipo de cáncer del diagnóstico vigente y value en su lista de valores (RN-29). El dato queda entry_method = manual, extraction_confidence = n_a y review_status = verificado. Sin diagnóstico vigente no se puede validar (TIPO_CANCER_NO_REGISTRADO). Un segundo registro de la misma clave es una fila nueva, no una corrección. Exige un paciente activo (RN-17).
+ */
+export const createManualClinicalAttribute = <ThrowOnError extends boolean = false>(options: Options<CreateManualClinicalAttributeData, ThrowOnError>): RequestResult<CreateManualClinicalAttributeResponses, CreateManualClinicalAttributeErrors, ThrowOnError> => (options.client ?? client).post<CreateManualClinicalAttributeResponses, CreateManualClinicalAttributeErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'oncolens_session',
+            type: 'apiKey'
+        }],
+    url: '/platform/patients/{patientId}/clinical-attributes',
     ...options,
     headers: {
         'Content-Type': 'application/json',

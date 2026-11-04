@@ -2,8 +2,11 @@ import 'server-only';
 import {
   correctBiomarker,
   correctClinicalNote,
+  createManualClinicalAttribute,
+  createManualPriorTreatment,
   getBiomarkerHistory,
   getClinicalNoteHistory,
+  listClinicalAttributes,
   listClinicalNotes,
 } from '../../../../packages/api-contracts/src/client-web/clinical-api';
 import {
@@ -11,8 +14,13 @@ import {
   zCorrectBiomarkerPath,
   zCorrectClinicalNoteBody,
   zCorrectClinicalNotePath,
+  zCreateManualClinicalAttributeBody,
+  zCreateManualPriorTreatmentBody,
   zGetBiomarkerHistoryPath,
+  zCreateManualClinicalAttributePath,
+  zCreateManualPriorTreatmentPath,
   zGetClinicalNoteHistoryPath,
+  zListClinicalAttributesPath,
   zListClinicalNotesPath,
 } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
 import type { ZodType } from 'zod';
@@ -28,7 +36,10 @@ export type OperacionDeRegistroManual =
   | 'getBiomarkerHistory'
   | 'listClinicalNotes'
   | 'correctClinicalNote'
-  | 'getClinicalNoteHistory';
+  | 'getClinicalNoteHistory'
+  | 'createManualPriorTreatment'
+  | 'listClinicalAttributes'
+  | 'createManualClinicalAttribute';
 
 export interface ParametrosDeRuta {
   id: string;
@@ -99,6 +110,25 @@ const DEFINICIONES: Record<OperacionDeRegistroManual, Definicion> = {
     evento: 'correcciones.nota.historico',
     ruta: zGetClinicalNoteHistoryPath,
     llamar: (sdk, path) => getClinicalNoteHistory({ client: sdk.client, path, ...base }),
+  }),
+  createManualPriorTreatment: definir({
+    evento: 'registro_clinico.tratamiento.crear',
+    ruta: zCreateManualPriorTreatmentPath,
+    cuerpo: zCreateManualPriorTreatmentBody,
+    llamar: (sdk, path, body) =>
+      createManualPriorTreatment({ client: sdk.client, path, body, ...base }),
+  }),
+  listClinicalAttributes: definir({
+    evento: 'registro_clinico.atributos.listar',
+    ruta: zListClinicalAttributesPath,
+    llamar: (sdk, path) => listClinicalAttributes({ client: sdk.client, path, ...base }),
+  }),
+  createManualClinicalAttribute: definir({
+    evento: 'registro_clinico.atributo.crear',
+    ruta: zCreateManualClinicalAttributePath,
+    cuerpo: zCreateManualClinicalAttributeBody,
+    llamar: (sdk, path, body) =>
+      createManualClinicalAttribute({ client: sdk.client, path, body, ...base }),
   }),
 };
 
@@ -185,7 +215,7 @@ async function pedir(llamada: () => Promise<Respuesta>): Promise<Response | unde
 }
 
 /**
- * Proxy de las cinco operaciones de corrección con histórico (US-253). Las lecturas van sin `Origin` (cookie
+ * Proxy de las cinco operaciones de corrección con histórico (US-253) y de las tres del tratamiento previo y el atributo manuales (US-094). Las lecturas van sin `Origin` (cookie
  * `SameSite=Strict`); las mutaciones verifican `Origin` y validan el cuerpo con el Zod generado antes de reenviarlo.
  * Solo la cookie de sesión sale hacia clinical-api; 2xx y 4xx se retransmiten sin reinterpretar y un 5xx o un fallo
  * de red responde `ERROR_INTERNO` propio. El log lleva el evento de la operación, status y traceId: nunca ids,

@@ -55,6 +55,28 @@
           "idioma": "es"
         }
       ]
+    },
+    {
+      "terminoCanonico": "trastuzumab emtansina",
+      "sinonimos": [
+        {
+          "texto": "T-DM1",
+          "idioma": "en"
+        },
+        {
+          "texto": "trastuzumab emtansine",
+          "idioma": "en"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "letrozol",
+      "sinonimos": [
+        {
+          "texto": "letrozole",
+          "idioma": "en"
+        }
+      ]
     }
   ]
 }

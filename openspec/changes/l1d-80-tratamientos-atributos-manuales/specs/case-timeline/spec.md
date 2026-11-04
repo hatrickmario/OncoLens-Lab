@@ -4,7 +4,7 @@
 `POST /platform/patients/{patientId}/prior-treatments` MUST crear un `PriorTreatment` con `entry_method = manual`, `extraction_confidence = n_a` y `review_status = verificado`, conservando `regimenName` tal como llegó. `atcCodes` y `mappingStatus` SHALL salir de `ReconciliationService` con el catálogo montado (ADR-33); sin mapeo, `no_mapeado` sin código (RN-27). El dato SHALL aparecer en `GET …/case`.
 
 #### Scenario: Un tratamiento previo manual se registra mapeado y aparece en la vista de caso [US-094 AC-1] [AC-02.3] [ADR-33]
-- **GIVEN** P-CASO (FX-02b-a) con el catálogo de test `test-s2-1.0.0` (FX-01b-b) montado y una sesión de `doctor`
+- **GIVEN** P-CASO (FX-02b-a) con el catálogo de test `test-normalizacion-1.0.0` (FX-01b-b) montado y una sesión de `doctor`
 - **WHEN** envía `POST /platform/patients/{id}/prior-treatments` con `lineNumber = 2`, `setting = segunda_linea_metastasica`, `regimenName = "Leuprorelina"`, `startedAt = 2026-08-01` y `ongoing = true`
 - **THEN** responde `201` con un `PriorTreatment` válido contra el spec, `provenance.entryMethod = manual`, `provenance.extractionConfidence = n_a`, `provenance.reviewStatus = verificado`, `atcCodes = [L02AE02]` y `mappingStatus = mapeado`
 - **AND** `GET /platform/patients/{id}/case` incluye ese tratamiento en `priorTreatments` y su inicio como evento derivado del timeline

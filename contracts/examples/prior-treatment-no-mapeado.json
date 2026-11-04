@@ -1,0 +1,20 @@
+{
+  "id": "6c2e8b51-4d3f-4a7b-8c9e-1f2a3b4c5d6e",
+  "lineNumber": null,
+  "setting": "otro",
+  "regimenName": "Fármaco experimental X",
+  "atcCodes": [],
+  "mappingStatus": "no_mapeado",
+  "startedAt": null,
+  "endedAt": null,
+  "ongoing": false,
+  "endReason": "desconocido",
+  "provenance": {
+    "entryMethod": "manual",
+    "extractionConfidence": "n_a",
+    "reviewStatus": "verificado",
+    "conflict": false,
+    "sourceDocumentId": null,
+    "additionalSourceDocumentIds": []
+  }
+}
