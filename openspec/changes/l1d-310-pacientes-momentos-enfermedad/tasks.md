@@ -64,7 +64,7 @@
   clinical.prior_treatment cuando hay menos de los publicados [US-254 AC-5]», «pasa con un tratamiento manual de más
   [US-254 AC-5]»); el humo existente de 0 identidades sigue en verde.
   Evidencia: seed-contar y levantar.test.mjs 15 passed.
-- [ ] 2.9 (test después: humo) `levantar.sh` desde cero imprime en «Verificación del seed» `esperado=13 obtenido=13`
+- [ ] 2.9 DIFERIDA -> H-2 (ensayo de `levantar.sh` desde cero) (test después: humo) `levantar.sh` desde cero imprime en «Verificación del seed» `esperado=13 obtenido=13`
   para pacientes e identidades y los tres mínimos nuevos; salida sin cadena de conexión ni contraseñas (privacy P2).
   Evidencia en el PR (salida recortada) [US-254 AC-5].
   TRASLADADA a H-2: `levantar.sh` desde cero exige Ollama y el corpus real; cubierto por los unitarios del verificador y por el seed de 13 pacientes en el Compose del E2E.
@@ -78,9 +78,9 @@
   cada paciente (g)–(m) con su pregunta devuelve esos conteos y la marca de no comparable [US-254 AC-4]. Actualizar
   `apps/web/e2e/pacientes-listado.spec.ts` (US-048 AC-1) para que no dependa de «cinco». `setTimeout` explícito.
   Evidencia: E2E completo 59 passed (1.8 min), incl. 9 de demo-s5 y el listado; (l) y (m): ficha con aviso de alcance (el stack E2E es solo mama).
-- [ ] 2.12 (test después: CI) Comprobar en el PR que los jobs de escaneo de secretos (gitleaks) y de PII (data-scan)
+- [x] 2.12 (test después: CI) Comprobar en el PR que los jobs de escaneo de secretos (gitleaks) y de PII (data-scan)
   pasan sin hallazgos con los ficheros nuevos [US-254 AC-5].
-  TRASLADADA a la CI del PR (gitleaks no está en local; pii-scan y dataset-class-check locales sin hallazgos); no se abre PR en esta entrega.
+  Cumplida por los jobs de secretos (`secret-scan`) y `data-scan` de la CI del PR #316, ambos en pass; `pii-scan` y `dataset-class-check` locales también sin hallazgos.
 - [x] 2.13 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde
   antes y después, commit `refactor(L1D-310)`.
 
@@ -105,7 +105,7 @@
 - [x] H-1 Comprobar que `l1d-80` ya añadió «sensible a la castración» (`sensible_castracion`) en `estado_castracion`
   (P-1 decidido, `[S5 resp. 13]`; también para (b)) antes del merge de este change. DIFERIDA -> H-1
   Verificado en main: `atributos.json` 1.2.0 trae `sensible_castracion` en `estado_castracion`; manifest 1.4.0.
-- [ ] H-2 Ensayo de la demo: `levantar.sh` desde cero y recorrido de (g)–(m) en la vista de caso (US-142, G-Demo).
+- [ ] H-2 DIFERIDA -> H-2 Ensayo de la demo: `levantar.sh` desde cero y recorrido de (g)–(m) en la vista de caso (US-142, G-Demo).
   DIFERIDA -> H-2
 
 ## 5. Verificación
@@ -117,7 +117,7 @@
 
 ## 6. Corte opcional (orden de recorte del S5, punto 4)
 
-- [ ] 6.1 (solo si el humano activa el recorte, P-3) Sembrar 4 pacientes en lugar de 7: (g) mama inicial, (k) mama
+- [ ] 6.1 DIFERIDA -> H-2 (el humano decide el recorte P-3; no se activó, no aplica) (solo si el humano activa el recorte, P-3) Sembrar 4 pacientes en lugar de 7: (g) mama inicial, (k) mama
   HER2+ tras T-DM1, (l) próstata sensible y (m) próstata resistente (mantienen AC-2…AC-5: (g) y (l) con faltantes
   distintos, (k) sin faltantes). Se omiten (h), (i), (j) y sus 3 pares de ejemplos; el conteo esperado pasa a 10
   pacientes semilla. Exige reescribir el AC-1 de US-254 en `backlog/features/FEAT-06c-corpus-cientifico.md` (Markdown
