@@ -178,7 +178,10 @@ def test_rag_query_responde_503_nli_unavailable_sin_opciones_cuando_el_nli_falla
 
 
 @pytest.mark.ac("US-245", 1)
-@pytest.mark.parametrize("escenario", ["LLM-ATOM-DOS-PRINCIPALES", "LLM-ATOM-SIN-PRINCIPAL"])
+@pytest.mark.parametrize(
+    "escenario",
+    ["LLM-ATOM-DOS-PRINCIPALES", "LLM-ATOM-SIN-PRINCIPAL", "LLM-ATOM-CENTRAL-Y-PRINCIPAL"],
+)
 def test_rag_query_responde_503_llm_output_invalid_sin_eco_cuando_la_salida_no_tiene_una_sola_principal(
     escenario, caplog
 ):

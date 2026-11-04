@@ -1,4 +1,4 @@
-"""Prompt `rag-query@0.7.0` de la rama con evidencia de `/rag/query` (US-225): función pura, sin E/S.
+"""Prompt `rag-query@0.8.0` de la rama con evidencia de `/rag/query` (US-225): función pura, sin E/S.
 
 Las instrucciones están redactadas en positivo (describir lo que reporta la evidencia citada) y sin términos de
 RN-23; un test las verifica con ``check_prohibited_terms``. El prompt solo recibe campos clínicos ya enmascarados,
@@ -12,7 +12,7 @@ from collections.abc import Sequence
 from app.domain.alias_de_chunks import FragmentoConAlias
 from app.schemas.generated.models import ClinicalContext, Diagnosis, Provenance, ReviewStatus
 
-VERSION_DEL_PROMPT = "rag-query@0.7.0"
+VERSION_DEL_PROMPT = "rag-query@0.8.0"
 
 # Etiquetas de procedencia del bloque de datos del paciente (RN-07): texto del prompt, versionado con él (no RN-22).
 ETIQUETA_SIN_VERIFICAR = "(sin verificar)"
@@ -31,9 +31,9 @@ Describe únicamente lo que reportan los fragmentos rotulados con su alias; el c
 
 Instrucciones:
 - Describe, una por elemento de "options", las opciones que la evidencia recuperada reporta para la pregunta.
-- Cada opción lleva "option" (su nombre, en tercera persona y en presente) y "claims": de {minimo_de_afirmaciones} a {maximo_de_afirmaciones} afirmaciones.
+- Cada opción lleva "option" (su nombre, en tercera persona y en presente), "main_claim" (su afirmación central: lo central que reporta la fuente sobre la opción) y "other_claims" (de {minimo_de_adicionales} a {maximo_de_adicionales} afirmaciones adicionales).
 - Cada afirmación es una oración declarativa de {maximo_de_palabras} palabras como máximo que describe lo que reporta un fragmento. Escríbela sin atribución, sin nombrar el fragmento ni su alias: el sistema añade la atribución a la fuente.
-- Asigna a cada afirmación un "role": exactamente una "principal" (lo central que reporta la fuente sobre la opción), y las demás "secundaria" (un dato que amplía la principal) o "salvedad" (una limitación o condición que la fuente señala).
+- Cada elemento de "other_claims" lleva un "role": "secundaria" (un dato que amplía la afirmación central) o "salvedad" (una limitación o condición que la fuente señala).
 - Cuando un fragmento formule un requisito de inclusión o de elegibilidad con un verbo modal (por ejemplo "must", "should" o "debe"), descríbelo en indicativo y en pasado o presente (por ejemplo "el estudio incluyó a pacientes con..."): el sistema retira las afirmaciones y los nombres de opción que contienen un verbo modal.
 - Indica en "citations" de cada afirmación el alias de cada fragmento que la sustenta; usa solo los alias de los fragmentos entregados, escritos exactamente como aparecen.
 - Cuando describas lo que establece una guía, indica la población y el escenario a los que se refiere \
@@ -71,8 +71,9 @@ def construir_prompt_rag_query(
         valor_desconocido=VALOR_DESCONOCIDO,
         descripcion_del_faltante=DESCRIPCION_DEL_FALTANTE,
         idioma=_NOMBRE_DEL_IDIOMA.get(idioma, idioma),
-        minimo_de_afirmaciones=claims_min,
-        maximo_de_afirmaciones=claims_max,
+        minimo_de_adicionales=claims_min
+        - 1,  # la afirmación central cuenta dentro del rango de RN-22
+        maximo_de_adicionales=claims_max - 1,
         maximo_de_palabras=claim_max_words,
         pregunta=pregunta,
         contexto=datos_del_paciente or "No disponible",

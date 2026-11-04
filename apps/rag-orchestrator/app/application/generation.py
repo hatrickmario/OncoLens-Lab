@@ -1,9 +1,12 @@
 """Generación de la rama con evidencia de `/rag/query` (US-225, US-245): prompt → LLM local → opciones crudas.
 
-El LLM solo aporta por opción su nombre y de 1 a N afirmaciones atómicas ``{text, role, citations}``, con los alias de chunk
-traducidos a ``chunkId`` reales (RN-04); la atribución («La fuente reporta que…») la compone el código (ADR-34). Todo campo
-de más (títulos, fuentes, puntajes) se descarta al parsear. Una salida que no es JSON o no valida el esquema interno (p. ej.
-dos ``principal``) es ``LlmSalidaInvalidaError`` (`503 LLM_OUTPUT_INVALID`); un LLM que no responde es
+El LLM solo aporta por opción su nombre, UNA afirmación central (``main_claim``, la ``principal``) y de 0 a N-1 adicionales
+(``other_claims``, ``secundaria`` o ``salvedad``), cada una ``{text, citations}`` (más ``role`` en las adicionales), con los
+alias de chunk traducidos a ``chunkId`` reales (RN-04); la atribución («La fuente reporta que…») la compone el código
+(ADR-34). Todo campo de más (títulos, fuentes, puntajes) se descarta al parsear. La forma central + adicionales del esquema
+del runtime impide que la gramática emita dos ``principal`` (D5-06); el parseo acepta también la lista plana ``claims[]``.
+Una salida que no es JSON o no valida el esquema interno (p. ej. dos ``principal`` en una lista plana) es
+``LlmSalidaInvalidaError`` (`503 LLM_OUTPUT_INVALID`); un LLM que no responde es
 ``LlmLocalNoDisponibleError`` (`503 LOCAL_LLM_UNAVAILABLE`). Sin reintento silencioso ni respuesta parcial.
 """
 
@@ -12,7 +15,7 @@ from __future__ import annotations
 import copy
 import logging
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 from pydantic_core import PydanticCustomError
@@ -49,11 +52,66 @@ class _AfirmacionCruda(BaseModel):
     citas: list[str] = Field(alias="citations")
 
 
+class _AfirmacionCentral(BaseModel):
+    """La afirmación ``principal`` en la forma del esquema del runtime: sin papel, porque solo puede haber una."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    texto: str = Field(alias="text", min_length=1)
+    citas: list[str] = Field(alias="citations")
+
+
+class _AfirmacionAdicional(BaseModel):
+    """Una afirmación ``secundaria`` o ``salvedad`` en la forma del esquema del runtime (nunca ``principal``)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    texto: str = Field(alias="text", min_length=1)
+    papel: Literal["secundaria", "salvedad"] = Field(alias="role")
+    citas: list[str] = Field(alias="citations")
+
+
+class _OpcionPropuesta(BaseModel):
+    """La opción en la forma del esquema del runtime (D5-06): la gramática fija UNA afirmación central y deja el resto en
+    ``other_claims``, así que el modelo no puede emitir ``principal_duplicada`` ni ``principal_ausente``."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    option: str = Field(min_length=1)
+    afirmacion_central: _AfirmacionCentral = Field(alias="main_claim")
+    afirmaciones_adicionales: list[_AfirmacionAdicional] = Field(alias="other_claims")
+
+
+class _SalidaPropuesta(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    options: list[_OpcionPropuesta]
+
+
 class _OpcionCruda(BaseModel):
+    """La opción ya validada, con sus afirmaciones en lista plana y su papel (``principal`` primero)."""
+
     model_config = ConfigDict(extra="ignore")
 
     option: str = Field(min_length=1)
     afirmaciones: list[_AfirmacionCruda] = Field(alias="claims", min_length=1)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _desde_la_forma_del_runtime(cls, datos: Any) -> Any:
+        """La salida del runtime trae ``main_claim`` + ``other_claims``: la central pasa a ser la primera ``principal``.
+
+        La lista plana ``claims[]`` (la forma anterior) sigue aceptada y se valida igual: exactamente una ``principal``."""
+        if not isinstance(datos, dict) or "main_claim" not in datos:
+            return datos
+        central = datos["main_claim"]
+        adicionales = datos.get("other_claims")
+        if not isinstance(central, dict) or not isinstance(adicionales, list):
+            return datos
+        return {
+            "option": datos.get("option"),
+            "claims": [{**central, "role": PapelDeAfirmacion.principal.value}, *adicionales],
+        }
 
     @model_validator(mode="after")
     def _exactamente_una_principal(self) -> _OpcionCruda:
@@ -73,20 +131,23 @@ class GenerationOutput(BaseModel):
     options: list[_OpcionCruda]
 
 
-ESQUEMA_DE_GENERACION: dict[str, Any] = GenerationOutput.model_json_schema()
+ESQUEMA_DE_GENERACION: dict[str, Any] = _SalidaPropuesta.model_json_schema()
 
 
 def esquema_de_generacion(claims_min: int, claims_max: int) -> dict[str, Any]:
-    """Esquema entregado al LLM (salida estructurada): de ``claims_min`` a ``claims_max`` afirmaciones por opción (RN-22)
-    y, en ``citations``, solo alias con el formato de la consulta."""
+    """Esquema entregado al LLM (salida estructurada): la afirmación central más de ``claims_min - 1`` a ``claims_max - 1``
+    adicionales, es decir, de ``claims_min`` a ``claims_max`` afirmaciones por opción (RN-22), y, en ``citations``, solo
+    alias con el formato de la consulta."""
     esquema = copy.deepcopy(ESQUEMA_DE_GENERACION)
-    opcion = esquema["$defs"]["_OpcionCruda"]
-    opcion["properties"]["claims"]["minItems"] = claims_min
-    opcion["properties"]["claims"]["maxItems"] = claims_max
+    adicionales = esquema["$defs"]["_OpcionPropuesta"]["properties"]["other_claims"]
+    adicionales["minItems"] = claims_min - 1
+    adicionales["maxItems"] = claims_max - 1
     # Solo en el esquema entregado al runtime (gramática): el parseo no lo valida, un token fuera de patrón es
     # ``cita_invalida`` y no un 503 (US-236, design D4).
-    afirmacion = esquema["$defs"]["_AfirmacionCruda"]
-    afirmacion["properties"]["citations"]["items"]["pattern"] = PATRON_DE_ALIAS
+    for afirmacion in ("_AfirmacionCentral", "_AfirmacionAdicional"):
+        esquema["$defs"][afirmacion]["properties"]["citations"]["items"]["pattern"] = (
+            PATRON_DE_ALIAS
+        )
     return esquema
 
 

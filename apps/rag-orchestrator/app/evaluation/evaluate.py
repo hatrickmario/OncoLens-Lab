@@ -441,7 +441,9 @@ def _medir_un_brazo(
     )
     return _Medicion(
         resultados,
-        respuestas[0].meta if respuestas else None,  # todas las salidas inválidas: sin respuesta, sin meta
+        respuestas[0].meta
+        if respuestas
+        else None,  # todas las salidas inválidas: sin respuesta, sin meta
         cronometro,
         _recursos_del_nli(config, latencias, origen),
         None,

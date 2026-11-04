@@ -77,4 +77,16 @@ ESCENARIOS_ATOMICOS: dict[str, str] = {
         afirmacion(f"{SENTINELA} uno", "principal"), afirmacion(f"{SENTINELA} dos", "principal")
     ),
     "LLM-ATOM-SIN-PRINCIPAL": salida_con_afirmaciones(afirmacion(SECUNDARIA, "secundaria")),
+    # Un runtime sin gramática puede emitir otra «principal» entre las adicionales: sigue siendo salida inválida (D5-06).
+    "LLM-ATOM-CENTRAL-Y-PRINCIPAL": json.dumps(
+        {
+            "options": [
+                {
+                    "option": OPCION_ANTI_HER2,
+                    "main_claim": {"text": f"{SENTINELA} uno", "citations": ["C1"]},
+                    "other_claims": [afirmacion(f"{SENTINELA} dos", "principal")],
+                }
+            ]
+        }
+    ),
 }

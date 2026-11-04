@@ -16,13 +16,17 @@ def _adicionales(esquema: dict) -> dict:
     return _opcion(esquema)["properties"]["other_claims"]
 
 
-def test_el_esquema_acota_las_afirmaciones_adicionales_al_rango_configurado_menos_la_central() -> None:
+def test_el_esquema_acota_las_afirmaciones_adicionales_al_rango_configurado_menos_la_central() -> (
+    None
+):
     adicionales = _adicionales(esquema_de_generacion(2, 3))
 
     assert (adicionales["minItems"], adicionales["maxItems"]) == (1, 2)
 
 
-def test_el_esquema_admite_una_opcion_con_solo_la_afirmacion_central_cuando_el_minimo_es_uno() -> None:
+def test_el_esquema_admite_una_opcion_con_solo_la_afirmacion_central_cuando_el_minimo_es_uno() -> (
+    None
+):
     adicionales = _adicionales(esquema_de_generacion(1, 4))
 
     assert (adicionales["minItems"], adicionales["maxItems"]) == (0, 3)
