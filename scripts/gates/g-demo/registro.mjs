@@ -5,16 +5,15 @@
 export const NO_DISPONIBLE = 'No disponible';
 export const DUENO = 'usuario (PO)';
 
-const valorOTexto = (valor) =>
+export const valorOTexto = (valor) =>
   valor === null || valor === undefined || valor === '' ? NO_DISPONIBLE : String(valor);
 
 /** Sustituye `{{clave}}`; una clave sin dato o un marcador sin sustituir es un error: el registro nunca sale a medias. */
 export function renderizarRegistro(plantilla, datos) {
-  const completa = plantilla.replace(/\{\{([a-zA-Z0-9_]+)\}\}/g, (_, clave) => {
+  return plantilla.replace(/\{\{([a-zA-Z0-9_]+)\}\}/g, (_, clave) => {
     if (!(clave in datos)) throw new Error(`la plantilla pide «${clave}» y no hay dato`);
     return String(datos[clave]);
   });
-  return completa;
 }
 
 function textoDeMeta(meta) {
@@ -85,5 +84,3 @@ export function textoDeBanderas(soloSintetico) {
     .map(([nombre, activa]) => `${nombre}=${activa}`)
     .join(', ');
 }
-
-export { valorOTexto };

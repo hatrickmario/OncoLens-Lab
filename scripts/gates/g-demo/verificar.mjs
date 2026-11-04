@@ -19,7 +19,6 @@ import { cargarMetas, evaluarMetricas, validarReporte } from './metricas.mjs';
 import { evaluarP95 } from './p95.mjs';
 import {
   DUENO,
-  NO_DISPONIBLE,
   listaDeExcepciones,
   listaDeNoMedidas,
   listaDeValidacionClinica,
@@ -91,61 +90,83 @@ function leerP95(args, modo) {
   return Number.isFinite(valor) ? valor : null;
 }
 
-export async function verificar(argv, deps) {
-  const args = leerArgumentos(argv);
-  const modo = args.modo ?? 'fingido';
+const CLAVE_CONTEO_POR_ORIGEN = 'clinical.patient.por_data_origin';
+
+/** Todas las comprobaciones del gate, cada una evaluada por su módulo; ninguna decide el veredicto. */
+function reunirComprobaciones({ args, modo, deps }) {
   const leerJson = (ruta) => (ruta ? jsonONulo(deps.leerTexto(ruta)) : null);
   const metas = cargarMetas(deps.leerTexto(RUTA_METAS));
   const catalogo = JSON.parse(deps.leerTexto('scripts/gates/g-demo/metricas.json'));
   const reportes = args.reportes.map(leerJson).filter(Boolean);
   const e2e = leerJson(args.e2e);
-  const excepciones = cargarExcepciones(
-    JSON.parse(deps.leerTexto('docs/gates/g-demo-excepciones.json')),
-  );
-  const metaP95 = metas[catalogo.p95.claveMeta];
-
-  const comprobaciones = {
-    e2e: resultadoDelE2e(e2e),
-    reporte: validarReporte(reportes),
-    metricas: evaluarMetricas(reportes, catalogo.definiciones, metas),
-    soloSintetico: verificarSoloSintetico(
-      jsonONulo(args.conteo)?.conteos?.['clinical.patient.por_data_origin'] ?? null,
-      jsonONulo(args.banderas),
-    ),
-    excepciones,
-    procedencia: procedenciaDe(e2e, reportes),
-    p95: evaluarP95(leerP95(args, modo), { clave: catalogo.p95.claveMeta, maximo: metaP95.maximo }),
+  const metaP95 = { clave: catalogo.p95.claveMeta, maximo: metas[catalogo.p95.claveMeta].maximo };
+  return {
+    reportes,
+    comprobaciones: {
+      e2e: resultadoDelE2e(e2e),
+      reporte: validarReporte(reportes),
+      metricas: evaluarMetricas(reportes, catalogo.definiciones, metas),
+      soloSintetico: verificarSoloSintetico(
+        jsonONulo(args.conteo)?.conteos?.[CLAVE_CONTEO_POR_ORIGEN] ?? null,
+        jsonONulo(args.banderas),
+      ),
+      excepciones: cargarExcepciones(
+        JSON.parse(deps.leerTexto('docs/gates/g-demo-excepciones.json')),
+      ),
+      procedencia: procedenciaDe(e2e, reportes),
+      p95: evaluarP95(leerP95(args, modo), metaP95),
+    },
   };
-  const veredicto = decidirResultado(comprobaciones, modo);
-  const fecha = deps.reloj().toISOString().slice(0, 10);
+}
+
+/** Los datos que rellenan la plantilla: solo agregados, versiones y nombres (RN-14). */
+function armarDatosDelRegistro({ veredicto, comprobaciones, reportes, args, modo, fecha }) {
   const modelos = modelosDe(reportes);
-  const datos = {
+  const { procedencia, soloSintetico, metricas, excepciones, p95 } = comprobaciones;
+  return {
     titulo: veredicto.titulo,
     resultado: veredicto.resultado,
     modo,
     fecha,
     commit: valorOTexto(args.commit),
-    catalogVersion: valorOTexto(comprobaciones.procedencia.valores.catalogVersion),
-    corpusRelease: valorOTexto(comprobaciones.procedencia.valores.corpusRelease),
+    catalogVersion: valorOTexto(procedencia.valores.catalogVersion),
+    corpusRelease: valorOTexto(procedencia.valores.corpusRelease),
     modeloGeneracion: valorOTexto(modelos.llm),
     modeloEmbeddings: valorOTexto(modelos.embeddings),
     modeloReranker: valorOTexto(modelos.reranker),
     modeloNli: valorOTexto(modelos.nli),
-    soloSintetico: comprobaciones.soloSintetico.ok ? 'sí' : 'no',
-    conteoPorOrigen: textoDelConteo(comprobaciones.soloSintetico),
-    banderas: textoDeBanderas(comprobaciones.soloSintetico),
-    tablaMetricas: tablaDeMetricas(comprobaciones.metricas),
-    noMedidas: listaDeNoMedidas(comprobaciones.metricas),
+    soloSintetico: soloSintetico.ok ? 'sí' : 'no',
+    conteoPorOrigen: textoDelConteo(soloSintetico),
+    banderas: textoDeBanderas(soloSintetico),
+    tablaMetricas: tablaDeMetricas(metricas),
+    noMedidas: listaDeNoMedidas(metricas),
     excepciones: listaDeExcepciones(excepcionesDeCapacidad(excepciones)),
     validacionClinica: listaDeValidacionClinica(declararValidacionClinica(excepciones)),
-    p95: textoDelP95(comprobaciones.p95, { fuente: FUENTE_DEL_P95, consultas: args.p95Consultas }),
+    p95: textoDelP95(p95, { fuente: FUENTE_DEL_P95, consultas: args.p95Consultas }),
     dueno: DUENO,
     firma: 'pendiente',
   };
-  const plantilla = deps.leerTexto('docs/gates/plantilla-G-Demo.md');
-  const destino =
-    modo === 'real' ? `docs/gates/G-Demo-${fecha}.md` : `reports/gates/G-Demo-fingido-${fecha}.md`;
-  deps.escribirTexto(destino, renderizarRegistro(plantilla, datos));
+}
+
+/** El registro real se versiona en docs/gates; el fingido (regresión) va a reports/gates, ignorado por Git. */
+function rutaDelRegistro(modo, fecha) {
+  return modo === 'real'
+    ? `docs/gates/G-Demo-${fecha}.md`
+    : `reports/gates/G-Demo-fingido-${fecha}.md`;
+}
+
+export async function verificar(argv, deps) {
+  const args = leerArgumentos(argv);
+  const modo = args.modo ?? 'fingido';
+  const { reportes, comprobaciones } = reunirComprobaciones({ args, modo, deps });
+  const veredicto = decidirResultado(comprobaciones, modo);
+  const fecha = deps.reloj().toISOString().slice(0, 10);
+  const datos = armarDatosDelRegistro({ veredicto, comprobaciones, reportes, args, modo, fecha });
+  const destino = rutaDelRegistro(modo, fecha);
+  deps.escribirTexto(
+    destino,
+    renderizarRegistro(deps.leerTexto('docs/gates/plantilla-G-Demo.md'), datos),
+  );
   deps.salida(`${veredicto.titulo}\nRegistro: ${destino}`);
   return veredicto.resultado === 'no_superado' ? 1 : 0;
 }
@@ -168,8 +189,6 @@ export function depsDelSistema(raiz = RAIZ) {
     salida: (texto) => process.stdout.write(`${texto}\n`),
   };
 }
-
-export { NO_DISPONIBLE };
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {
