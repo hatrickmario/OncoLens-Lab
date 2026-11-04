@@ -9,7 +9,16 @@ from app.evaluation.dataset_poblacion import CLASES_DEL_DORADO
 from app.evaluation.fuente_dataset import CLASES_ADMITIDAS
 from app.evaluation.informe_pii import MODOS, TIPOS_DIRECTOS
 from app.evaluation.metricas.fidelidad import ROTULO_SECUNDARIA
-from app.evaluation.reporte import Booleano, Enumerado, Huella, Identificador, Lista, Numero, Objeto
+from app.evaluation.reporte import (
+    Anulable,
+    Booleano,
+    Enumerado,
+    Huella,
+    Identificador,
+    Lista,
+    Numero,
+    Objeto,
+)
 from app.evaluation.rotulo import ROTULOS
 from app.schemas.generated.models import Fusion, RetrievalMode
 
@@ -419,6 +428,104 @@ ESQUEMA_POBLACION = Objeto(
                 "cobertura": Enumerado(_ESTADOS_DE_LA_MEDICION),
                 "causas": Lista(Enumerado(frozenset({"sin_revisor", "muestra_insuficiente"}))),
                 "invariantes_violadas": Lista(Identificador()),
+            }
+        ),
+    }
+)
+
+
+# --- Familia `opciones` (US-140): reporte propio, solo agregados e identificadores de caso, de opción y de regla --------
+
+_FAMILIA_DE_OPCIONES = {
+    "m_10_1": {"mostradas": Numero(), "con_cita_y_soporte": Numero(), "porcentaje": Numero()},
+    "m_10_2": {"nivel_a": Numero(), "nivel_b": Numero(), "campos_con_termino": Numero()},
+    "citas": {"precision": Numero(), "n": Numero()},
+    "fidelidad": _FRACCION_DE_AFIRMACIONES,
+    "opciones_por_analisis": {"analisis": Numero(), "media": Numero()},
+    "orden_rn28": {"analisis": Numero(), "conformes": Numero(), "porcentaje": Numero()},
+    "no_comparable": {"casos": Numero(), "mostrada_al_final": Numero(), "no_mostrada": Numero()},
+    "esperadas_presentes": {"esperadas": Numero(), "presentes": Numero(), "porcentaje": Numero()},
+}
+_METRICAS_DE_OPCIONES = Objeto(
+    {
+        nombre: Objeto({**campos, "validacion": _VALIDACION})
+        for nombre, campos in _FAMILIA_DE_OPCIONES.items()
+    }
+)
+_INVARIANTES_DE_OPCIONES = frozenset({"M-10.1", "M-10.2", "RN-24", "RN-28", "RN-28-no-comparable"})
+
+ESQUEMA_OPCIONES = Objeto(
+    {
+        "esquema": Enumerado(frozenset({VERSION_ESQUEMA})),
+        "suite": Enumerado(frozenset({"opciones"})),
+        "configuracion": Objeto(
+            {
+                "nombre": Identificador(),
+                "hashConfig": Huella(),
+                "fixture": Identificador(),
+                "claseDataset": Enumerado(frozenset(CLASES_ADMITIDAS)),
+                "dataset": Objeto({"nombre": Identificador(), "version": Identificador()}),
+                "proveedor": Enumerado(frozenset(PROVEEDORES)),
+                "reloj": Enumerado(frozenset(RELOJES)),
+                "catalogVersion": Identificador(),
+                "maxOptions": Numero(),
+                "modelos": Objeto({"llm": Identificador()}),
+                "umbrales": _UMBRALES,
+                "versionListaTerminos": Identificador(),
+            }
+        ),
+        "metricas": _METRICAS_DE_OPCIONES,
+        # Qué alcanza la revisión humana: solo la pregunta de cada caso; las fuentes esperadas, el orden y las propuestas
+        # los fija quien lee la regla, no un oncólogo.
+        "alcance_de_la_revision": Enumerado(frozenset({"preguntas"})),
+        # Las mismas métricas calculadas solo sobre los casos revisados por el oncólogo: la única cifra rotulada «validada».
+        "metricas_validadas": _METRICAS_DE_OPCIONES,
+        "invariantes": Objeto(
+            {
+                "cumplidas": Booleano(),
+                "violaciones": Lista(
+                    Objeto(
+                        {
+                            "invariante": Enumerado(_INVARIANTES_DE_OPCIONES),
+                            "caso": Identificador(),
+                            "detalle": Anulable(Identificador()),
+                        }
+                    )
+                ),
+            }
+        ),
+        "regresion": Objeto(
+            {
+                "reporte_referencia": Identificador(),
+                "dataset_de_la_referencia": Identificador(),
+                "tolerancia": Numero(),
+                "metricas": Lista(
+                    Objeto(
+                        {
+                            "metrica": Identificador(),
+                            "valor": Numero(),
+                            "referencia": Numero(),
+                            "retroceso": Booleano(),
+                        }
+                    )
+                ),
+            }
+        ),
+        "metas": Objeto(
+            {
+                "origen": Enumerado(frozenset({"metas_iniciales_dec07_pendiente"})),
+                "metricas": Lista(
+                    Objeto(
+                        {
+                            "metrica": Identificador(),
+                            "valor": Numero(),
+                            "meta": Numero(),
+                            "estado": Enumerado(
+                                frozenset({"en_meta", "fuera_de_meta", "sin_medir"})
+                            ),
+                        }
+                    )
+                ),
             }
         ),
     }

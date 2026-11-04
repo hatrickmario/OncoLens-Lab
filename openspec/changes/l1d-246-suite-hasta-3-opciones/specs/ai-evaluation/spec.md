@@ -90,7 +90,7 @@ Mientras DEC-07 no fije metas definitivas, la familia `opciones` MUST comparar f
 Cada métrica de la familia `opciones` MUST indicar cuántos casos `revisada_por_oncologo` y cuántos no validados la componen, y SHALL rotularse «validada» solo la calculada sobre los casos revisados.
 
 #### Scenario: Las métricas separan los 4 casos revisados [US-140 AC-5] [AC-T5.3]
-- **GIVEN** los 4 casos marcados `revisada_por_oncologo` del dataset
+- **GIVEN** los 4 casos con `revisada_por_oncologo` = `{rol, fecha}` (sin nombre, RN-10) en el dataset de la prueba
 - **WHEN** se genera el reporte
 - **THEN** cada métrica indica 4 casos validados y 8 no validados, y solo la calculada sobre los 4 revisados lleva el rótulo «validada»
 

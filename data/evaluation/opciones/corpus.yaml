@@ -1,0 +1,24 @@
+# Corpus de test de la familia `opciones`. La población de cada documento vive en casos.yaml (fuentes).
+clase: sintetico
+release: rel-opciones-1
+corte: '2026-09-30'
+documentos:
+  - {id: doc-a1, titulo: 'Estudio sintético doc-a1 (test)', cancer: mama}
+  - {id: doc-a3, titulo: 'Estudio sintético doc-a3 (test)', cancer: mama}
+  - {id: doc-a4, titulo: 'Estudio sintético doc-a4 (test)', cancer: mama}
+  - {id: doc-a5, titulo: 'Estudio sintético doc-a5 (test)', cancer: mama}
+  - {id: doc-a6, titulo: 'Estudio sintético doc-a6 (test)', cancer: mama}
+  - {id: doc-p1, titulo: 'Estudio sintético doc-p1 (test)', cancer: prostata}
+  - {id: doc-p2, titulo: 'Estudio sintético doc-p2 (test)', cancer: prostata}
+  - {id: doc-p3, titulo: 'Estudio sintético doc-p3 (test)', cancer: prostata}
+  - {id: doc-p4, titulo: 'Estudio sintético doc-p4 (test)', cancer: prostata}
+chunks:
+  - {id: ch-a1-1, documento: doc-a1, texto: 'Adjuvant anti-HER2 therapy after surgery improved disease-free survival in a synthetic trial (test).'}
+  - {id: ch-a3-1, documento: doc-a3, texto: 'Adjuvant chemotherapy alone after surgery is described in a synthetic cohort (test).'}
+  - {id: ch-a4-1, documento: doc-a4, texto: 'Adjuvant anti-HER2 therapy after surgery was studied in a synthetic HER2-negative cohort (test).'}
+  - {id: ch-a5-1, documento: doc-a5, texto: 'Adjuvant anti-HER2 therapy with extended duration after surgery in a synthetic registry (test).'}
+  - {id: ch-a6-1, documento: doc-a6, texto: 'Adjuvant anti-HER2 therapy after surgery with dose adjustment in a synthetic trial (test).'}
+  - {id: ch-p1-1, documento: doc-p1, texto: 'Androgen deprivation therapy plus an androgen receptor inhibitor prolonged survival in castration-sensitive prostate cancer (test).'}
+  - {id: ch-p2-1, documento: doc-p2, texto: 'Androgen deprivation therapy plus chemotherapy was described in castration-resistant prostate cancer (test).'}
+  - {id: ch-p3-1, documento: doc-p3, texto: 'Androgen deprivation therapy alone is described in a synthetic prostate cohort (test).'}
+  - {id: ch-p4-1, documento: doc-p4, texto: 'Androgen receptor inhibitor with radiotherapy is described in synthetic prostate cancer (test).'}
