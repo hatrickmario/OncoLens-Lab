@@ -8,16 +8,16 @@ def test_el_prompt_pide_el_rango_de_afirmaciones_y_el_maximo_de_palabras_configu
         "pregunta", "contexto", [], "es", claims_min=2, claims_max=3, claim_max_words=15
     )
 
-    assert '"claims": de 2 a 3 afirmaciones' in prompt
+    assert '"other_claims" (de 1 a 2 afirmaciones adicionales)' in prompt
     assert "de 15 palabras como máximo" in prompt
 
 
-def test_el_prompt_define_los_tres_papeles_y_exige_una_sola_principal() -> None:
+def test_el_prompt_define_la_afirmacion_central_y_los_dos_papeles_de_las_adicionales() -> None:
     prompt = construir_prompt_rag_query(
         "pregunta", "contexto", [], "es", claims_min=1, claims_max=4, claim_max_words=20
     )
 
-    assert 'exactamente una "principal"' in prompt
+    assert '"main_claim" (su afirmación central' in prompt
     assert '"secundaria"' in prompt and '"salvedad"' in prompt
 
 

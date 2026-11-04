@@ -53,7 +53,7 @@ def test_rag_query_declara_los_faltantes_como_desconocido_en_el_bloque_de_datos_
     assert "estado_menopausico" not in prompt
     assert "ki67" not in prompt
     assert solicitud["clinicalContext"]["pseudoPatientId"] not in prompt
-    assert cuerpo["meta"]["promptVersion"] == "rag-query@0.7.0"
+    assert cuerpo["meta"]["promptVersion"] == "rag-query@0.8.0"
 
 
 @pytest.mark.ac("US-116", 1)

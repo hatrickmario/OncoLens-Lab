@@ -7,6 +7,7 @@ import json
 from collections.abc import Sequence
 from typing import Any, TypedDict
 
+from app.application.errores import LlmSalidaInvalidaError
 from app.application.ports import EvidenciaGenerada
 from app.domain.alias_de_chunks import CITA_NO_TRADUCIBLE
 from app.domain.citations import OpcionGenerada, validar_citas
@@ -107,12 +108,31 @@ async def evaluar_dataset(
     resultados: list[ResultadoConsulta] = []
     respuestas: list[RagQueryInternalResponse] = []
     for indice, pregunta in enumerate(dataset.preguntas):
-        resultado, respuesta = await evaluar_pregunta_en_servicio(
+        resultado, respuesta = await evaluar_pregunta_tolerante(
             suite, dataset, base, pregunta, indice
         )
         resultados.append(resultado)
-        respuestas.append(respuesta)
+        if respuesta is not None:
+            respuestas.append(respuesta)
     return resultados, respuestas
+
+
+async def evaluar_pregunta_tolerante(
+    suite: ServicioDeSuite,
+    dataset: DatasetSuite,
+    base: dict[str, Any],
+    pregunta: Pregunta,
+    indice: int,
+    max_opciones: int = MAX_OPCIONES,
+) -> tuple[ResultadoConsulta, RagQueryInternalResponse | None]:
+    """Como ``evaluar_pregunta_en_servicio``, pero una salida inválida del LLM es un caso fallido contabilizado (sin
+    respuesta) y no el fin de la suite (D5-06, D5-28); cualquier otro error de la aplicación sigue abortando."""
+    try:
+        return await evaluar_pregunta_en_servicio(
+            suite, dataset, base, pregunta, indice, max_opciones
+        )
+    except LlmSalidaInvalidaError as error:
+        return resultado_con_salida_invalida(suite, dataset, pregunta, error.reglas), None
 
 
 async def evaluar_pregunta_en_servicio(
@@ -148,6 +168,28 @@ def resultado_sin_recuperacion(pregunta: Pregunta, dataset: DatasetSuite) -> Res
         citas_validas=0,
         opciones_mostradas=0,
         opciones_descartadas=0,
+    )
+
+
+def resultado_con_salida_invalida(
+    suite: ServicioDeSuite, dataset: DatasetSuite, pregunta: Pregunta, reglas: tuple[str, ...]
+) -> ResultadoConsulta:
+    """Lo que la suite conserva de una pregunta cuyo generador devolvió una salida inválida: la recuperación sí ocurrió,
+    pero no hay respuesta (``null`` ≠ ``0.0``), opciones ni afirmaciones que medir; solo el id de cada regla incumplida."""
+    return ResultadoConsulta(
+        recuperacion=evaluar_pregunta(
+            pregunta, suite.observaciones.rankings.get(pregunta.texto, [])
+        ),
+        revisada=pregunta.id in dataset.revisadas,
+        esperaba_sin_evidencia=pregunta.modo_acierto == "sin_evidencia",
+        sin_evidencia=False,
+        generador_invocado=True,
+        top_relevance_score=None,
+        citas_propuestas=0,
+        citas_validas=0,
+        opciones_mostradas=0,
+        opciones_descartadas=0,
+        salida_invalida=reglas,
     )
 
 

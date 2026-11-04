@@ -46,8 +46,23 @@ def _completa(secundaria: str = SECUNDARIA, principal: str = PRINCIPAL) -> str:
     )
 
 
+def salida_estructurada() -> str:
+    """La misma opción que ``LLM-ATOM-OK`` en la forma que pide el esquema del runtime (D5-06): una ``main_claim`` sin
+    papel y las demás en ``other_claims``. Es la única forma que la gramática de Ollama puede producir."""
+    opcion = {
+        "option": OPCION_ANTI_HER2,
+        "main_claim": {"text": PRINCIPAL, "citations": ["C1"]},
+        "other_claims": [
+            {"text": SECUNDARIA, "role": "secundaria", "citations": ["C1"]},
+            {"text": SALVEDAD, "role": "salvedad", "citations": ["C1"]},
+        ],
+    }
+    return json.dumps({"options": [opcion]}, ensure_ascii=False)
+
+
 ESCENARIOS_ATOMICOS: dict[str, str] = {
     "LLM-ATOM-OK": _completa(),
+    "LLM-ATOM-ESTRUCTURADA": salida_estructurada(),
     # Misma salida: lo que cambia es el veredicto del NLI falso sobre cada afirmación (AC-2, AC-3, AC-4).
     "LLM-ATOM-SEC": _completa(),
     "LLM-ATOM-PRIN": _completa(),
@@ -62,4 +77,16 @@ ESCENARIOS_ATOMICOS: dict[str, str] = {
         afirmacion(f"{SENTINELA} uno", "principal"), afirmacion(f"{SENTINELA} dos", "principal")
     ),
     "LLM-ATOM-SIN-PRINCIPAL": salida_con_afirmaciones(afirmacion(SECUNDARIA, "secundaria")),
+    # Un runtime sin gramática puede emitir otra «principal» entre las adicionales: sigue siendo salida inválida (D5-06).
+    "LLM-ATOM-CENTRAL-Y-PRINCIPAL": json.dumps(
+        {
+            "options": [
+                {
+                    "option": OPCION_ANTI_HER2,
+                    "main_claim": {"text": f"{SENTINELA} uno", "citations": ["C1"]},
+                    "other_claims": [afirmacion(f"{SENTINELA} dos", "principal")],
+                }
+            ]
+        }
+    ),
 }

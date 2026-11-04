@@ -24,7 +24,8 @@ SALIDA_VALIDA = json.dumps(
         "options": [
             {
                 "option": "o",
-                "claims": [{"text": "r", "role": "principal", "citations": ["C1"]}],
+                "main_claim": {"text": "r", "citations": ["C1"]},
+                "other_claims": [],
             }
         ]
     }

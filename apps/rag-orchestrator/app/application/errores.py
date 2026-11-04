@@ -32,6 +32,11 @@ class LlmSalidaInvalidaError(ErrorDeAplicacion):
     validar. Sin reintento silencioso ni eco del texto generado; solo viaja el tipo del error de validación en el log.
     """
 
+    def __init__(self, reglas: tuple[str, ...] = ()) -> None:
+        """``reglas``: el id de cada regla del esquema interno que la salida incumple (``principal_duplicada``…); nunca texto."""
+        self.reglas = reglas
+        super().__init__("salida del LLM inválida")
+
 
 class FaltanteNoCatalogadoError(ErrorDeAplicacion):
     """Un elemento de ``missingCriticalData`` no es una clave del catálogo del tipo del caso (`422 CUERPO_INVALIDO`, RN-11).
