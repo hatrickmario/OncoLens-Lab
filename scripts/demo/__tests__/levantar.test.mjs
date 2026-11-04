@@ -181,6 +181,35 @@ describe('verificar-conteos.py · [US-247 AC-6]', () => {
     expect(salida).toContain('FALLA identity.patient_identity: esperado 5, obtenido 0');
   });
 
+  const conHistoria = {
+    ...semilla,
+    'clinical.prior_treatment': 12,
+    'clinical.clinical_event': 6,
+    'clinical.clinical_attribute': 14,
+  };
+
+  it('termina distinto de 0 y nombra clinical.prior_treatment cuando hay menos tratamientos de los publicados [US-254 AC-5]', () => {
+    const { codigo, salida } = verificar({
+      clinico: { ...conHistoria, 'clinical.prior_treatment': 11 },
+      corpus: corpusOk,
+      publicado: conHistoria,
+    });
+
+    expect(codigo).not.toBe(0);
+    expect(salida).toContain('FALLA clinical.prior_treatment: esperado al menos 12, obtenido 11');
+  });
+
+  it('pasa con un tratamiento manual de más y publica el mínimo cuando el seed publicó la historia [US-254 AC-5]', () => {
+    const { codigo, salida } = verificar({
+      clinico: { ...conHistoria, 'clinical.prior_treatment': 13 },
+      corpus: corpusOk,
+      publicado: conHistoria,
+    });
+
+    expect(codigo).toBe(0);
+    expect(salida).toContain('clinical.prior_treatment: minimo=12 obtenido=13');
+  });
+
   it('nombra los documentos del corpus cuando faltan metadatos de población cargados', () => {
     const { codigo, salida } = verificar({
       clinico: semilla,

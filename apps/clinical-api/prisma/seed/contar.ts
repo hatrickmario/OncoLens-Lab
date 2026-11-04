@@ -9,6 +9,9 @@ const CONSULTAS_DE_CONTEO = {
   'clinical.patient': 'SELECT count(*)::int AS n FROM clinical.patient',
   'identity.patient_identity': 'SELECT count(*)::int AS n FROM identity.patient_identity',
   'auth."user"': 'SELECT count(*)::int AS n FROM auth."user"',
+  'clinical.prior_treatment': 'SELECT count(*)::int AS n FROM clinical.prior_treatment',
+  'clinical.clinical_event': 'SELECT count(*)::int AS n FROM clinical.clinical_event',
+  'clinical.clinical_attribute': 'SELECT count(*)::int AS n FROM clinical.clinical_attribute',
 } as const;
 
 export type ConteosDelSeed = Readonly<Record<keyof typeof CONSULTAS_DE_CONTEO, number>>;

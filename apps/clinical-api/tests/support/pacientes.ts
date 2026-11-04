@@ -1,4 +1,5 @@
 import type { Express, Router } from 'express';
+import { PACIENTES_SEMILLA } from '../../prisma/seed/pacientes/indice.js';
 import type { IdentityService } from '../../src/modules/patients/identity.service.js';
 import { componerModuloDePacientes } from '../../src/modules/patients/patients.module.js';
 import { crearTiposHabilitados } from '../../src/modules/evidence-analysis/tipos-habilitados.js';
@@ -20,11 +21,11 @@ import { loggerEnMemoria, relojFijo, tokensFijos, type LoggerEnMemoria } from '.
 /**
  * Soporte de los tests del listado y la búsqueda de pacientes (L1D-202): la aplicación de producción (login → guard →
  * pacientes) sobre la base sembrada. Las claves de identidad son las de test, las mismas con las que el seed cifró a
- * los cinco pacientes semilla. Todo dato es sintético (RN-13, RN-14).
+ * los pacientes semilla. Todo dato es sintético (RN-13, RN-14).
  */
 
-/** `PATIENTS_PAGE_SIZE` de la configuración de test: con cinco pacientes semilla da dos páginas (US-048 AC-1). */
-export const PAGE_SIZE_DE_TEST = 3;
+/** `PATIENTS_PAGE_SIZE` de la configuración de test: la mitad (redondeada hacia arriba) de los pacientes semilla, siempre dos páginas (US-048 AC-1). */
+export const PAGE_SIZE_DE_TEST = Math.ceil(PACIENTES_SEMILLA.length / 2);
 
 export interface AppDePacientes {
   readonly app: Express;

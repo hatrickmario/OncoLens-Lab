@@ -12,6 +12,7 @@ import type {
   ExamenSemilla,
   GradacionSemilla,
   PacienteSemilla,
+  TratamientoPreviaSemilla,
 } from './pacientes/tipos.js';
 import type { ClavesDeIdentidad } from '../../src/infrastructure/crypto/claves-de-identidad.js';
 import type { RolDeUsuario } from '../../src/modules/auth/auth.repository.js';
@@ -335,12 +336,32 @@ async function sembrarExamenes(siembra: Siembra, contexto: ContextoDePaciente): 
   }
 }
 
+/**
+ * Códigos ATC de un régimen (RN-27): cada fármaco se resuelve con el catálogo (sin `farmacos`, el nombre del régimen);
+ * `atc_codes` lleva los que encuentra y el régimen solo queda `mapeado` si todos resuelven. Nunca un código escrito a mano.
+ */
+function resolverAtcDelRegimen(
+  catalogo: CatalogoClinico,
+  tratamiento: TratamientoPreviaSemilla,
+): { codigos: string[]; mappingStatus: 'mapeado' | 'no_mapeado' } {
+  const resueltos = (tratamiento.farmacos ?? [tratamiento.regimen]).map((farmaco) =>
+    resolverCodigoDelCatalogo(catalogo, 'atc', farmaco),
+  );
+  return {
+    codigos: resueltos.flatMap((resuelto) => (resuelto.codigo === null ? [] : [resuelto.codigo])),
+    mappingStatus: resueltos.every((resuelto) => resuelto.mappingStatus === 'mapeado')
+      ? 'mapeado'
+      : 'no_mapeado',
+  };
+}
+
 async function sembrarTratamientosPrevios(
   siembra: Siembra,
   contexto: ContextoDePaciente,
 ): Promise<void> {
   for (const tratamiento of contexto.paciente.tratamientosPrevios) {
-    const atc = resolverCodigoDelCatalogo(siembra.entradas.catalogo, 'atc', tratamiento.regimen);
+    const atc = resolverAtcDelRegimen(siembra.entradas.catalogo, tratamiento);
+    const { fin } = tratamiento;
     await upsertar(siembra, 'clinical.prior_treatment', {
       id: idSembrado(`${contexto.paciente.clave}/${tratamiento.clave}`),
       patient_id: contexto.pacienteId,
@@ -349,13 +370,13 @@ async function sembrarTratamientosPrevios(
       line_number: tratamiento.numeroDeLinea,
       setting: tratamiento.setting,
       regimen_name: tratamiento.regimen,
-      atc_codes: atc.codigo === null ? [] : [atc.codigo],
+      atc_codes: atc.codigos,
       cups_code: null,
       mapping_status: atc.mappingStatus,
       started_at: fechaRelativa(siembra.ahora, tratamiento.diasDesdeElInicio),
-      ended_at: null,
-      ongoing: true,
-      end_reason: 'desconocido',
+      ended_at: fin === undefined ? null : fechaRelativa(siembra.ahora, fin.diasAntes),
+      ongoing: fin === undefined,
+      end_reason: fin === undefined ? 'desconocido' : fin.motivo,
       best_response: null,
       ...PROCEDENCIA_DEL_SEED,
       source_span: null,
@@ -379,7 +400,10 @@ async function sembrarEventos(siembra: Siembra, contexto: ContextoDePaciente): P
       cups_code: null,
       mapping_status: 'n_a',
       toxicity_grade: null,
-      prior_treatment_id: null,
+      prior_treatment_id:
+        evento.cierraLinea === undefined
+          ? null
+          : idSembrado(`${contexto.paciente.clave}/${evento.cierraLinea}`),
       treatment_id: null,
       analysis_id: null,
       ...PROCEDENCIA_DEL_SEED,
@@ -526,7 +550,7 @@ async function sembrarTodo(siembra: Siembra): Promise<void> {
   }
 }
 
-/** Siembra roles, usuarios de demo y los pacientes (a)–(f), de forma idempotente, dentro de la sesión recibida. */
+/** Siembra roles, usuarios de demo y los pacientes (a)–(m), de forma idempotente, dentro de la sesión recibida. */
 export async function sembrar(db: ClienteSql, entradas: EntradasDelSeed): Promise<FilasUpsertadas> {
   const escritas: Record<string, number> = {};
   const identidad = crearServicioDeIdentidad({ claves: entradas.claves, db });

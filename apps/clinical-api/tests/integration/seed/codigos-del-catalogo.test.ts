@@ -37,6 +37,13 @@ function entradaDe(estandar: string, termino: string): EntradaLeida | undefined 
   );
 }
 
+/** Términos canónicos de un dato sembrado: los fármacos de un régimen ATC separados por ` + `; el resto, el término entero. */
+function terminosDe(dato: { estandar: string; termino: string }): string[] {
+  return dato.estandar === 'atc'
+    ? dato.termino.split(' + ').map((farmaco) => farmaco.toLowerCase())
+    : [dato.termino];
+}
+
 describe('Códigos del seed solo desde el catálogo versionado', () => {
   let base: BaseDeTest;
   let cliente: Client;
@@ -96,10 +103,13 @@ describe('Códigos del seed solo desde el catálogo versionado', () => {
     const conCodigo = sembrados.filter((dato) => dato.codigos.length > 0);
     expect(conCodigo.length).toBeGreaterThan(0);
     for (const dato of sembrados) {
-      const entrada = entradaDe(dato.estandar, dato.termino);
-      expect(dato.codigos).toEqual(entrada === undefined ? [] : [entrada.codigo]);
-      expect(dato.estado).toBe(entrada === undefined ? 'no_mapeado' : 'mapeado');
-      if (entrada !== undefined) {
+      // Un régimen combinado (US-254) lleva el código de cada fármaco que el catálogo conoce y solo es `mapeado` si los
+      // conoce todos; un término sin combinar sigue resolviéndose entero, como antes.
+      const entradas = terminosDe(dato).map((termino) => entradaDe(dato.estandar, termino));
+      const conocidas = entradas.flatMap((entrada) => (entrada === undefined ? [] : [entrada]));
+      expect(dato.codigos).toEqual(conocidas.map((entrada) => entrada.codigo));
+      expect(dato.estado).toBe(conocidas.length === entradas.length ? 'mapeado' : 'no_mapeado');
+      if (conocidas.length > 0) {
         expect(existsSync(join(RUTA_DEL_CATALOGO, `NOTICE-${dato.estandar}.txt`))).toBe(true);
       }
     }

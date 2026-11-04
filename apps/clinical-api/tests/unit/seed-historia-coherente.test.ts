@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { historiaCoherente } from '../../prisma/seed/pacientes/coherencia.js';
+import { PACIENTES_SEMILLA } from '../../prisma/seed/pacientes/indice.js';
+import { pacienteK } from '../../prisma/seed/pacientes/k.js';
 import type {
   PacienteSemilla,
   TratamientoPreviaSemilla,
@@ -139,6 +141,30 @@ describe('historiaCoherente', () => {
     expect(historiaCoherente(paciente)).toContainEqual({
       regla: 'fecha_futura',
       clave: 'linea-1',
+    });
+  });
+});
+
+describe('historias de los pacientes semilla de US-254', () => {
+  const nuevos = PACIENTES_SEMILLA.filter((paciente) => /^paciente-[g-m]$/.test(paciente.clave));
+
+  it('los 7 pacientes nuevos tienen una historia coherente [US-254 AC-2]', () => {
+    expect(nuevos).toHaveLength(7);
+    for (const paciente of nuevos) {
+      expect(historiaCoherente(paciente), paciente.clave).toEqual([]);
+    }
+  });
+
+  it('detecta la línea 2 de (k) que empieza antes del fin de la línea 1 [US-254 AC-2]', () => {
+    const [linea1, linea2] = pacienteK.tratamientosPrevios;
+    const incoherente = {
+      ...pacienteK,
+      tratamientosPrevios: [linea1!, { ...linea2!, diasDesdeElInicio: 600 }],
+    };
+
+    expect(historiaCoherente(incoherente)).toContainEqual({
+      regla: 'solape_con_la_linea_siguiente',
+      clave: 'linea-2',
     });
   });
 });
