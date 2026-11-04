@@ -96,7 +96,7 @@ export const DISCLAIMER_DE_TEST =
 export const RAG_TIMEOUT_MS_DE_TEST = 150;
 const RESPUESTA_TARDIA_MS = 2000;
 
-export const idDePaciente = (letra: 'a' | 'b' | 'c' | 'd' | 'e'): string =>
+export const idDePaciente = (letra: 'a' | 'b' | 'c' | 'd' | 'e' | 'f'): string =>
   idSembrado(`paciente-${letra}`);
 
 /** Versión del `manifest.json` del catálogo montado (por defecto el del monorepo): los tests no repiten el literal. */

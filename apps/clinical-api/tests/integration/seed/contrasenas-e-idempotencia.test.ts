@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { Client } from 'pg';
+import { PACIENTES_SEMILLA } from '../../../prisma/seed/pacientes/indice.js';
 import { createPasswordHasher } from '../../../src/modules/auth/password-hasher.js';
 import { conectar, type BaseDeTest } from '../../support/db.js';
 import {
@@ -150,9 +151,9 @@ describe('Contraseñas e idempotencia del seed', () => {
     }
 
     expect(await contarFilasDeTodasLasTablas(cliente)).toEqual(conteos);
-    expect(conteos['clinical.patient']).toBe(5);
+    expect(conteos['clinical.patient']).toBe(PACIENTES_SEMILLA.length);
     expect(conteos['auth.user']).toBe(2);
-    expect(conteos['identity.patient_identity']).toBe(5); // US-046 AC-6: una identidad cifrada por paciente
+    expect(conteos['identity.patient_identity']).toBe(PACIENTES_SEMILLA.length); // US-046 AC-6: una identidad cifrada por paciente
     expect((await cliente.query('SELECT id FROM clinical.patient ORDER BY id')).rows).toEqual(
       ids.rows,
     );
