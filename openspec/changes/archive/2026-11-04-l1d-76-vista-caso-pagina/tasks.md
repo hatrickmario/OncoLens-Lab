@@ -41,6 +41,6 @@
 ## humano
 
 - [x] 5.1 Vuelta 1 del Gate 2 aplicada (procedencia del evento sin flag, `hoyDelServidor` en UTC, texto de IA bajo la descripción, `sin_permiso`, `RUTA_LOGIN_EXPIRADA`, boceto de S5-05 alineado).
-- [ ] 5.2 DIFERIDA -> L1D-96: la columna «Datos críticos» (hueco `datosCriticos` del template).
-- [ ] 5.3 DIFERIDA -> L1D-80: los botones «+ Agregar tratamiento previo» y «+ Registrar atributo» del boceto S5-05 (el diálogo y el `recargar()` son de esa historia).
+- [x] 5.2 Cumplida por L1D-96 (#320): la columna «Datos críticos» vive en `apps/web/components/organisms/critical-data-checklist.tsx`; el hueco `datosCriticos` del template se retiró.
+- [x] 5.3 Cumplida por L1D-80 (#315): los botones «+ Agregar tratamiento previo» y «+ Registrar atributo» y sus diálogos existen en `apps/web/components/organisms/dialogo-tratamiento-previo.tsx` y `dialogo-atributo-clinico.tsx`.
 - [ ] 5.4 DIFERIDA -> D5-19 (ID propuesto, lo registra el orquestador): rótulos de atributos duplicados con `packages/clinical-catalogs/atributos.json` (campo `label` en el contrato); campo explícito `generatedByAi` en `EventoDelTimeline` (hoy `TIPOS_DE_IA` duplica `TIPOS_DE_EVENTO_DE_IA` de clinical-api); estado de `useVistaDeCaso` por instancia frente a los diálogos de l1d-96/l1d-80 (decidir en el lote R2); hooks `useVistaDeCaso`/`useChecklistDeFaltantes` → `useLecturaConSesion` al tercer uso; claves de fila repetibles en las tablas; vocabulario; «inicio» frente a la flexión de «iniciar» (confirmar excepción RN-23).
