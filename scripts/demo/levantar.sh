@@ -121,8 +121,10 @@ paso "Colección de Milvus"
 "${compose[@]}" run --rm rag-orchestrator python -m app.scripts.init_corpus_store 2>&1 | tail -1
 
 paso "Esquema clínico (prisma migrate deploy como clinical_api, dueño de la base)"
-red=$(docker network ls --filter "name=clinical-net" --format '{{.Name}}' | head -1)
-[ -n "$red" ] || fallar "no encuentro la red clinical-net"
+# shellcheck source=scripts/demo/red-clinica.sh
+source "$raiz/scripts/demo/red-clinica.sh"
+red=$(red_clinica_del_proyecto)
+[ -n "$red" ] || fallar "no encuentro la red clinical-net del proyecto ${COMPOSE_PROJECT_NAME:-oncolens}"
 imagen_node=$(awk '/^FROM/{print $2; exit}' "$raiz/apps/clinical-api/Dockerfile")
 version_prisma=$(python3 -c "import json;print(json.load(open('$raiz/apps/clinical-api/package.json'))['devDependencies']['prisma'])")
 # La URL con la contraseña viaja en un archivo temporal 0600 (--env-file), no en los argumentos de `docker run` (visibles en `ps`).
