@@ -6,7 +6,9 @@ export const ORIGENES = ['sintetico', 'real_anonimizado', 'real_identificado'];
 export const VARIABLES_DE_DATOS_REALES = ['REAL_ANONYMIZED_ENABLED', 'REAL_IDENTIFIED_ENABLED'];
 
 function conteoAgregado(conteoPorOrigen) {
-  return Object.fromEntries(ORIGENES.map((origen) => [origen, Number(conteoPorOrigen[origen] ?? 0)]));
+  return Object.fromEntries(
+    ORIGENES.map((origen) => [origen, Number(conteoPorOrigen[origen] ?? 0)]),
+  );
 }
 
 export function verificarSoloSintetico(conteoPorOrigen, banderas) {

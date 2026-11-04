@@ -37,7 +37,11 @@ const DEFINICIONES = [
 
 function metas() {
   return cargarMetas(
-    ['metas:', '  fidelidad_proxy: {etiqueta: f, minimo: 0.5}', '  recall_at_10: {etiqueta: r, minimo: 0.5}'].join('\n'),
+    [
+      'metas:',
+      '  fidelidad_proxy: {etiqueta: f, minimo: 0.5}',
+      '  recall_at_10: {etiqueta: r, minimo: 0.5}',
+    ].join('\n'),
   );
 }
 
@@ -85,7 +89,11 @@ describe('verificarSoloSintetico', () => {
     expect(r.ok).toBe(false);
     expect(r.motivos).toContain('datos no sintéticos');
     expect(r.conteo).toEqual({ sintetico: 4, real_anonimizado: 1, real_identificado: 0 });
-    expect(Object.keys(r.conteo).sort()).toEqual(['real_anonimizado', 'real_identificado', 'sintetico']);
+    expect(Object.keys(r.conteo).sort()).toEqual([
+      'real_anonimizado',
+      'real_identificado',
+      'sintetico',
+    ]);
   });
 
   it('falla y nombra la variable cuando REAL_ANONYMIZED_ENABLED es true [US-142 AC-3]', () => {
@@ -118,7 +126,10 @@ describe('evaluarMetricas', () => {
       metas(),
     );
 
-    expect(metricas.find((m) => m.id === 'M-10.1')).toMatchObject({ estado: 'fuera_de_meta', valor: 0.96 });
+    expect(metricas.find((m) => m.id === 'M-10.1')).toMatchObject({
+      estado: 'fuera_de_meta',
+      valor: 0.96,
+    });
     const r = decidirResultado(comprobacionesEnVerde({ metricas }), 'real');
     expect(r.resultado).toBe('no_superado');
     expect(r.motivos.join(' ')).toContain('M-10.1');
@@ -142,7 +153,9 @@ describe('evaluarMetricas', () => {
 
     const a = evaluarMetricas([sinRecall], DEFINICIONES, metas());
     expect(a.find((m) => m.id === 'recall@10')).toMatchObject({ estado: 'no_medida' });
-    expect(decidirResultado(comprobacionesEnVerde({ metricas: a }), 'real').resultado).toBe('superado');
+    expect(decidirResultado(comprobacionesEnVerde({ metricas: a }), 'real').resultado).toBe(
+      'superado',
+    );
 
     const b = evaluarMetricas([sinM101], DEFINICIONES, metas());
     const r = decidirResultado(comprobacionesEnVerde({ metricas: b }), 'real');
@@ -159,12 +172,26 @@ describe('evaluarMetricas', () => {
 
 describe('cargarExcepciones', () => {
   it('lista las excepciones sin contarlas como fallo y falla con una sin destino [US-142 AC-4]', () => {
-    const completa = { id: 'CAP-07', descripcion: 'd', feature: 'FEAT-X', destino: 'S6', motivo: 'm' };
-    const sinDestino = { id: 'CAP-09', descripcion: 'd', feature: 'FEAT-Y', destino: '', motivo: 'm' };
+    const completa = {
+      id: 'CAP-07',
+      descripcion: 'd',
+      feature: 'FEAT-X',
+      destino: 'S6',
+      motivo: 'm',
+    };
+    const sinDestino = {
+      id: 'CAP-09',
+      descripcion: 'd',
+      feature: 'FEAT-Y',
+      destino: '',
+      motivo: 'm',
+    };
 
     const buena = cargarExcepciones([completa]);
     expect(buena.incompletas).toEqual([]);
-    expect(decidirResultado(comprobacionesEnVerde({ excepciones: buena }), 'real').resultado).toBe('superado');
+    expect(decidirResultado(comprobacionesEnVerde({ excepciones: buena }), 'real').resultado).toBe(
+      'superado',
+    );
 
     const mala = cargarExcepciones([completa, sinDestino]);
     expect(mala.incompletas).toEqual(['CAP-09']);
@@ -177,7 +204,14 @@ describe('cargarExcepciones', () => {
 describe('declararValidacionClinica', () => {
   it('declara la validación clínica como se mide en el piloto [US-142 AC-5]', () => {
     const excepciones = cargarExcepciones([
-      { id: 'VM-1', tipo: 'se_mide_en_el_piloto', descripcion: 'd', feature: 'FEAT-T5d', destino: 'S6', motivo: 'm' },
+      {
+        id: 'VM-1',
+        tipo: 'se_mide_en_el_piloto',
+        descripcion: 'd',
+        feature: 'FEAT-T5d',
+        destino: 'S6',
+        motivo: 'm',
+      },
       { id: 'CAP-07', descripcion: 'd', feature: 'FEAT-X', destino: 'S6', motivo: 'm' },
     ]);
 
@@ -185,7 +219,9 @@ describe('declararValidacionClinica', () => {
 
     expect(validacion.map((v) => v.id)).toEqual(['VM-1']);
     expect(validacion[0].estado).toBe('se mide en el piloto');
-    expect(decidirResultado(comprobacionesEnVerde({ excepciones }), 'real').resultado).toBe('superado');
+    expect(decidirResultado(comprobacionesEnVerde({ excepciones }), 'real').resultado).toBe(
+      'superado',
+    );
   });
 });
 
@@ -193,7 +229,11 @@ describe('evaluarP95', () => {
   it('marca el p95 fuera de meta como insumo de ADR-42 sin bloquear [US-142 AC-7]', () => {
     const p95 = evaluarP95(22, { clave: 'p95_evidence_analyses_s', maximo: 15 });
 
-    expect(p95).toMatchObject({ estado: 'insumo_adr42', valor: 22, clave: 'p95_evidence_analyses_s' });
+    expect(p95).toMatchObject({
+      estado: 'insumo_adr42',
+      valor: 22,
+      clave: 'p95_evidence_analyses_s',
+    });
     expect(decidirResultado(comprobacionesEnVerde({ p95 }), 'real').resultado).toBe('superado');
   });
 

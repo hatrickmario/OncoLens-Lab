@@ -71,7 +71,10 @@ function metaDe(definicion, metas) {
   const declarada = metas[definicion.claveMeta];
   if (!declarada) throw new Error(`la meta ${definicion.claveMeta} no está en ${ORIGEN_METAS}`);
   const { minimo, maximo } = declarada;
-  return { meta: { ...(minimo !== undefined && { minimo }), ...(maximo !== undefined && { maximo }) }, origen: ORIGEN_METAS };
+  return {
+    meta: { ...(minimo !== undefined && { minimo }), ...(maximo !== undefined && { maximo }) },
+    origen: ORIGEN_METAS,
+  };
 }
 
 function estadoFrenteALaMeta(valor, meta) {
@@ -97,7 +100,8 @@ export function evaluarMetricas(reportes, definiciones, metas) {
       estado,
       validadas,
       noValidadas,
-      motivo: estado === 'no_medida' ? definicion.motivoSiNoSeMide ?? 'el reporte no la trae' : null,
+      motivo:
+        estado === 'no_medida' ? (definicion.motivoSiNoSeMide ?? 'el reporte no la trae') : null,
     };
   });
 }

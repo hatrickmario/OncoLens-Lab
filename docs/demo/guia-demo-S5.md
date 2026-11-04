@@ -170,6 +170,28 @@ scripts/e2e/ejecutar.sh -- --grep "US-254"      # Compose de test, LLM_PROVIDER=
 
 Cada paciente de mama (g)–(k) con su pregunta devuelve los conteos del bloque y la marca de no comparable `[US-254 AC-4]`; (l) y (m) abren su ficha con el aviso de tipo no habilitado, y sus conteos se comprueban solo contra los ejemplos fijos. Es determinista: el modo fingido responde con los ejemplos de `contracts/examples/`.
 
+## G-Demo: verificación y registro (US-142)
+
+Uso académico/investigación; solo pacientes sintéticos (RN-13). Se corre en la máquina de referencia el día de la Demo 5
+y deja `docs/gates/G-Demo-<fecha>.md` para la firma del dueño (usuario, PO). La utilidad clínica de lo mostrado la valida de
+forma independiente el oncólogo tratante: aquí solo se declara como se mide en el piloto (US-139, DEC-14, VM-1, VM-2, VM-4,
+VM-5; FEAT-T5c / FEAT-T5d, S6), sin simularla.
+
+1. `scripts/demo/levantar.sh`: stack con modelos reales de ADR-39 y seed sintético.
+2. Corrida de `evaluate` con `eval/configs/s5.yaml` (suite `all` y suite `opciones`) por `ai-eval-runner`, pasando
+   `--p95-e2e-s` con el p95 del baseline de `l1d-119` (mediana de 3 corridas). Sin reporte de `s5*.yaml` el gate no se supera.
+3. E2E `g-demo.spec.ts` en modo real (`LLM_PROVIDER=local`); su adjunto JSON (`pasos`, `catalogVersion`, `corpusRelease`) es la
+   entrada `--e2e-resultado`.
+4. `scripts/verify-g-demo --modo real --e2e-resultado <json> --reporte-evaluate <json> [--reporte-evaluate <json>] --p95-e2e-s <s>`.
+   Cuenta pacientes por `data_origin` con el rol de `clinical-api` dentro de su contenedor, lee solo las dos banderas
+   `REAL_*_ENABLED` y escribe el registro. Código de salida 1 = «G-Demo no superado», con la métrica, la variable o el paso
+   nombrados.
+5. PR `docs` con `docs/gates/G-Demo-<fecha>.md` (pasa `secret-scan` y `data-scan`) y la firma del dueño. Si dice «G-Demo no
+   superado», se decide en `/sprint-close` (recorte o arrastre al S6).
+6. `scripts/demo/apagar.sh` (y `--borrar-datos` si se empieza de cero).
+
+El modo fingido (`LLM_PROVIDER=fake`, CI y regresión local) escribe en `reports/gates/` (ignorado) y nunca declara G-Demo.
+
 ## Si algo falla
 
 Ver `docs/demo/runbook-demo-S1.md` §5. Apagar y limpiar al terminar: `scripts/demo/apagar.sh` (y `--borrar-datos` para empezar de cero).

@@ -4,6 +4,7 @@
  */
 export function evaluarP95(p95, meta) {
   const base = { clave: meta.clave, meta: meta.maximo, valor: p95 ?? null };
-  if (p95 === null || p95 === undefined || !Number.isFinite(p95)) return { ...base, estado: 'no_medido' };
+  if (p95 === null || p95 === undefined || !Number.isFinite(p95))
+    return { ...base, estado: 'no_medido' };
   return { ...base, estado: p95 > meta.maximo ? 'insumo_adr42' : 'en_meta' };
 }

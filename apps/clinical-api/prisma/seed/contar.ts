@@ -14,6 +14,14 @@ const CONSULTAS_DE_CONTEO = {
   'clinical.clinical_attribute': 'SELECT count(*)::int AS n FROM clinical.clinical_attribute',
 } as const;
 
+/** Clave aditiva de `contar-en-proceso`: pacientes por `data_origin` (US-142 AC-3; RN-13). */
+export const CLAVE_PACIENTES_POR_ORIGEN = 'clinical.patient.por_data_origin';
+const ORIGENES_DE_DATOS = ['sintetico', 'real_anonimizado', 'real_identificado'] as const;
+const CONSULTA_PACIENTES_POR_ORIGEN =
+  'SELECT data_origin::text AS origen, count(*)::int AS n FROM clinical.patient GROUP BY data_origin';
+
+export type ConteoPorOrigen = Readonly<Record<(typeof ORIGENES_DE_DATOS)[number], number>>;
+
 export type ConteosDelSeed = Readonly<Record<keyof typeof CONSULTAS_DE_CONTEO, number>>;
 
 export async function contarFilasDelSeed(db: ClienteSql): Promise<ConteosDelSeed> {
@@ -23,4 +31,15 @@ export async function contarFilasDelSeed(db: ClienteSql): Promise<ConteosDelSeed
     conteos[tabla] = (rows[0] as { n: number }).n;
   }
   return conteos as ConteosDelSeed;
+}
+
+/**
+ * Pacientes por `data_origin`, solo agregados: la consulta nunca lee una fila ni una columna de identidad. Todo origen sin
+ * pacientes cuenta 0, así el gate G-Demo distingue «ninguno no sintético» de «no se pudo contar».
+ */
+export async function contarPacientesPorOrigen(db: ClienteSql): Promise<ConteoPorOrigen> {
+  const conteo: Record<string, number> = Object.fromEntries(ORIGENES_DE_DATOS.map((o) => [o, 0]));
+  const { rows } = await db.query(CONSULTA_PACIENTES_POR_ORIGEN);
+  for (const fila of rows as { origen: string; n: number }[]) conteo[fila.origen] = fila.n;
+  return conteo as ConteoPorOrigen;
 }
