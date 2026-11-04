@@ -60,7 +60,7 @@ export function DialogoRegistroBiomarcador({
       >
         <FormularioDeBiomarcador
           pacienteId={pacienteId}
-          opciones={apertura.lectura}
+          lectura={apertura.lectura}
           terminoInicial={termino}
           alGuardar={() => {
             apertura.refrescar();

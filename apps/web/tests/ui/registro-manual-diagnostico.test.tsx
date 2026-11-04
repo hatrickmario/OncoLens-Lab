@@ -5,7 +5,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { mensajes, rellenar } from '../../lib/mensajes';
 import {
   crearBffDeFormulariosSimulado,
-  diagnosticoManual,
+  diagnosticoCorregido,
   errorGradacion,
   errorInterno,
   errorPacienteEgresado,
@@ -66,7 +66,7 @@ describe('Completar el diagnóstico a mano (US-111)', () => {
   });
 
   it('muestra los valores vigentes, el aviso de corrección y el grado de solo lectura, y envía solo la gradación [US-111 AC-3]', async () => {
-    bff.crearDiagnostico(diagnosticoManual);
+    bff.crearDiagnostico(diagnosticoCorregido);
     const usuario = userEvent.setup();
     montarFichaConFormularios(fichaSinGrado);
     const { disparador, dialogo } = await abrir(usuario);

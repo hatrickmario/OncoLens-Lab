@@ -19,7 +19,7 @@ import { PieDeFormularioDeRegistro } from './pie-de-formulario-de-registro';
 export interface FormularioDeBiomarcadorProps {
   pacienteId: string;
   /** Opciones del catálogo; `null` mientras se leen y `error` si no cargaron: el formulario sigue usable con texto libre. */
-  opciones: LecturaDelCatalogo | null;
+  lectura: LecturaDelCatalogo | null;
   /** Término de `?item=`: llega seleccionado y el foco va al valor. */
   terminoInicial?: string;
   /** El registro se creó: el llamador refresca la ficha o la vista de caso. */
@@ -30,7 +30,7 @@ export interface FormularioDeBiomarcadorProps {
 /** Biomarcador a mano (S5-03 a): autocompletado nativo con los términos del catálogo y texto libre (RN-27). */
 export function FormularioDeBiomarcador({
   pacienteId,
-  opciones,
+  lectura,
   terminoInicial,
   alGuardar,
   alCerrar,
@@ -50,7 +50,7 @@ export function FormularioDeBiomarcador({
   );
   const errores = { ...locales, ...(error?.campo ? { [error.campo]: error.mensaje } : {}) };
   const general = error && error.campo === undefined ? error.mensaje : undefined;
-  const terminos = opciones?.tipo === 'ok' ? opciones.opciones.biomarkerTerms : [];
+  const terminos = lectura?.tipo === 'ok' ? lectura.opciones.biomarkerTerms : [];
 
   function alEnviar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
@@ -74,7 +74,7 @@ export function FormularioDeBiomarcador({
   return (
     <form onSubmit={alEnviar} noValidate className="flex flex-col gap-3">
       {general && <Alert>{general}</Alert>}
-      {opciones?.tipo === 'error' && (
+      {lectura?.tipo === 'error' && (
         <p role="status" className="m-0">
           {t.terminosNoDisponibles}
         </p>

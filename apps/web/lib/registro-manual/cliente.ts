@@ -31,7 +31,7 @@ export function leerJson(texto: string): unknown {
 }
 
 /** Texto fijo de un 422 por `error` y `field`; el `message` del servidor nunca se muestra (sin jerga ni eco de valores). */
-function textoDelError422(error: string, campo: string | undefined): ErrorDeRegistro {
+function textoDelErrorDeRegistroClinico(error: string, campo: string | undefined): ErrorDeRegistro {
   const { errores } = mensajes().caso.registro;
   const sinCampo: Record<string, string> = {
     PACIENTE_EGRESADO: mensajes().ficha.correccion.egresado,
@@ -51,7 +51,7 @@ function traducirError(ruta: RutaDeRegistro, status: number, cuerpo: unknown): E
   if (status === 404) return { mensaje: errores.noEncontrado };
   const invalido = status === 422 ? zErrorRegistroClinicoInvalido.safeParse(cuerpo) : null;
   if (!invalido?.success) return { mensaje: errores.generico };
-  return textoDelError422(invalido.data.error, invalido.data.field);
+  return textoDelErrorDeRegistroClinico(invalido.data.error, invalido.data.field);
 }
 
 /** `POST …/{prior-treatments|clinical-attributes|biomarkers|diagnoses}` del BFF: el navegador añade `Origin` y la cookie `SameSite=Strict`. */

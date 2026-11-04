@@ -32,7 +32,11 @@ const LOINC: Record<string, readonly string[]> = {
   prostata: ['PSA'],
 };
 
-const ESTADIFICACION = ['TNM_8'];
+const ESTADIFICACION: Record<string, readonly string[]> = {
+  mama: ['TNM_8'],
+  prostata: ['TNM_8'],
+};
+const estadificacionDe = (tipo: string): readonly string[] => ESTADIFICACION[tipo] ?? [];
 const ESCALAS_FUNCIONALES = [{ codigo: 'ECOG', minimo: 0, maximo: 5 }];
 const GRADACION: Record<string, readonly string[]> = {
   mama: ['nottingham'],
@@ -48,13 +52,13 @@ function fuente(sobrescribe: Partial<FuenteDeOpciones> = {}): FuenteDeOpciones {
   return {
     escalas: {
       version: () => 'v-test',
-      sistemaDeEstadificacionValido: (sistema) => ESTADIFICACION.includes(sistema),
+      sistemaDeEstadificacionValido: (sistema, tipo) => estadificacionDe(tipo).includes(sistema),
       rangoDeEscala: (escala) => {
         const encontrada = ESCALAS_FUNCIONALES.find((e) => e.codigo === escala);
         return encontrada && { minimo: encontrada.minimo, maximo: encontrada.maximo };
       },
       sistemaDeGradacionValido: (sistema, tipo) => gradacionDe(tipo).includes(sistema),
-      sistemasDeEstadificacion: () => ESTADIFICACION,
+      sistemasDeEstadificacion: (tipo) => estadificacionDe(tipo),
       escalasFuncionales: () => ESCALAS_FUNCIONALES,
       sistemasDeGradacion: (tipo) => gradacionDe(tipo),
     },
@@ -121,6 +125,13 @@ describe('opcionesDeRegistroManual', () => {
     expect(opciones.gradingSystems).toEqual(['nottingham', 'gleason_isup']);
     expect(opciones.stagingSystems).toEqual(['TNM_8']);
     expect(opciones.biomarkerTerms.map((t) => t.term)).toEqual(['Ki-67', 'PSA', 'RE']);
+  });
+
+  it('no ofrece sistemas de estadificación ni de gradación cuando el tipo no los define', () => {
+    const opciones = opcionesDeRegistroManual(fuente(), 'pulmon');
+
+    expect(opciones.stagingSystems).toEqual([]);
+    expect(opciones.gradingSystems).toEqual([]);
   });
 
   it('no repite un ítem crítico con la misma clave en dos tipos de cáncer', () => {

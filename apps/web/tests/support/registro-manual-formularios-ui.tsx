@@ -3,7 +3,6 @@ import { http, HttpResponse, type JsonBodyType } from 'msw';
 import { setupServer } from 'msw/node';
 import biomarcadorManual from '../../../../contracts/examples/biomarker-manual.json';
 import biomarcadorNoMapeado from '../../../../contracts/examples/biomarker-manual-no-mapeado.json';
-import diagnosticoManual from '../../../../contracts/examples/diagnosis-manual-nottingham.json';
 import diagnosticoCreado from '../../../../contracts/examples/diagnosis-con-gradings.json';
 import errorGradacion from '../../../../contracts/examples/error-gradacion-incoherente-campo.json';
 import errorInterno from '../../../../contracts/examples/error-interno.json';
@@ -19,23 +18,33 @@ import type {
   PatientAdminSummary,
   PatientSummary,
 } from '../../../../packages/api-contracts/src/types/clinical-api';
+import {
+  zBiomarker,
+  zDiagnosis,
+} from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
 import { FichaDeAdministrador } from '../../components/organisms/ficha-de-administrador';
 import { FichaDelDoctor } from '../../components/organisms/ficha-del-doctor';
 import { VistaDeCaso } from '../../components/organisms/vista-de-caso';
 import { casoVacio, HOY, ID_DEL_CASO } from './caso-ui';
 
 /** 201 de `createManualBiomarker` para Ki-67: el cuerpo del ejemplo de la operación, completado como lo respondería el servidor. */
-const biomarcadorCreado = {
+const biomarcadorCreado = zBiomarker.parse({
   ...biomarcadorNoMapeado,
   ...biomarcadorManual,
   loincCode: '85330-9',
   mappingStatus: 'mapeado',
   clinicalSignificance: 'relevante',
-};
+});
+
+/** 201 de `createManualDiagnosis` con vigente: el ejemplo de respuesta `Diagnosis`, con la procedencia que le daría el servidor. */
+const diagnosticoCorregido = zDiagnosis.parse({
+  ...diagnosticoCreado,
+  provenance: { ...diagnosticoCreado.provenance, entryMethod: 'manual_correction' },
+});
 
 export {
   biomarcadorCreado,
-  diagnosticoManual,
+  diagnosticoCorregido,
   biomarcadorNoMapeado,
   diagnosticoCreado,
   errorGradacion,

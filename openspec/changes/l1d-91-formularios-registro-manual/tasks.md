@@ -66,7 +66,7 @@
   Evidencia: rojo c49f8c15 (2 fallan: no existe el botón), verde en c45f7c50 y tras el refactor bb2ac557 (2/2 contra Compose con LLM fingido).
 - [x] 3.3 (test del AC primero) Implementar `DialogoRegistroBiomarcador`, `DialogoCompletarDiagnostico`,
   `CamposDeGradacion`, `CampoConError`, `AnuncioDeErrores` y la isla `AccionesDeRegistroManual` (S5-03 a y b,
-  `docs/ux/S5/pantallas-s5.md`); hooks `useEnvioRegistroManual` y `useOpcionesDeRegistroManual`; funciones puras
+  `docs/ux/S5/pantallas-s5.md`); hooks `useEnvioDeRegistro` y `useValoresDelCatalogo`; funciones puras
   `cambiosDelDiagnostico()`, `erroresDelServidor()`, `resolverItem()` y `hrefDeRegistroManual()` en
   `lib/registro-manual/` con sus unitarios uno a uno; botones en `VistaDeCaso` (sección de biomarcadores, con
   `recargar()`) y en `FichaDelDoctor` (diagnóstico y biomarcadores, con `router.refresh()`); textos en

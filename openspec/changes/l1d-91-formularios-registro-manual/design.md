@@ -114,9 +114,9 @@ Pantalla de referencia S5-03 a y b; sin desviaciones (el `grade` derivado se mue
 - Las páginas (ficha y vista de caso) siguen siendo RSC; la isla cliente `AccionesDeRegistroManual` recibe
   `patientId`, `diagnosticoVigente` (de `obtenerFicha`) y `alGuardar`. En la vista de caso se monta dentro de
   `VistaDeCaso` (ya cliente) para tener `recargar()`.
-- **Custom hook `useEnvioRegistroManual(operacion)`** (`lib/registro-manual/use-envio-registro-manual.ts`):
+- **Custom hook `useEnvioDeRegistro(operacion)`** (`lib/registro-manual/use-envio-registro-manual.ts`):
   `{ enviar, enviando, erroresPorCampo, errorGeneral }`. Evidencia: dos consumidores en este change (los dos diálogos)
-  y `l1d-80` puede reutilizarlo. **Hook `useOpcionesDeRegistroManual(patientId)`**: dos consumidores (los dos
+  y `l1d-80` puede reutilizarlo. **Hook `useValoresDelCatalogo(patientId)`**: dos consumidores (los dos
   diálogos). Sin provider ni compound components (sin prop drilling ≥ 3).
 - Lógica pura en `lib/registro-manual/`: `cambiosDelDiagnostico()`, `erroresDelServidor(respuesta)` (`field` →
   error de campo; sin `field` → general), `resolverItem(opciones, item)`, `hrefDeRegistroManual()`.
