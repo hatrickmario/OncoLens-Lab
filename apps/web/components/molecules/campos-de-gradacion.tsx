@@ -2,6 +2,8 @@ import type { FormularioDeGradacion } from '../../lib/registro-manual/diagnostic
 import { ID_DE_CAMPO } from '../../lib/registro-manual/foco';
 import { mensajes } from '../../lib/mensajes';
 import { CampoDeSeleccion } from './campo-de-seleccion';
+import { CamposDeGleason } from './campos-de-gleason';
+import { Opciones } from './opciones-de-seleccion';
 
 export interface CamposDeGradacionProps {
   valor: FormularioDeGradacion;
@@ -12,29 +14,7 @@ export interface CamposDeGradacionProps {
   error: string | undefined;
 }
 
-const PATRONES = ['3', '4', '5'];
 const GRADOS_NOTTINGHAM = ['1', '2', '3'];
-
-/** Lista de opciones de un valor del contrato con su rótulo de `messages`; `rotulos` vacío usa el valor mismo. */
-function Opciones({
-  valores,
-  rotulos = {},
-}: {
-  valores: readonly string[];
-  rotulos?: Record<string, string>;
-}) {
-  const { elegir } = mensajes().registroManual;
-  return (
-    <>
-      <option value="">{elegir}</option>
-      {valores.map((v) => (
-        <option key={v} value={v}>
-          {rotulos[v] ?? v}
-        </option>
-      ))}
-    </>
-  );
-}
 
 /**
  * Gradación estructurada (S5-03 b, D5): Nottingham en mama; Gleason con patrones, espécimen y alcance en próstata.
@@ -78,46 +58,7 @@ export function CamposDeGradacion({ valor, alCambiar, sistemas, error }: CamposD
           <Opciones valores={GRADOS_NOTTINGHAM} />
         </CampoDeSeleccion>
       )}
-      {valor.sistema === 'gleason_isup' && (
-        <>
-          <CampoDeSeleccion
-            id={ID_DE_CAMPO.patronPrimario}
-            value={valor.patronPrimario}
-            onChange={cambiar('patronPrimario')}
-            etiqueta={g.patronPrimario}
-            error={undefined}
-          >
-            <Opciones valores={PATRONES} />
-          </CampoDeSeleccion>
-          <CampoDeSeleccion
-            id="rm-diagnostico-patron-secundario"
-            value={valor.patronSecundario}
-            onChange={cambiar('patronSecundario')}
-            etiqueta={g.patronSecundario}
-            error={undefined}
-          >
-            <Opciones valores={PATRONES} />
-          </CampoDeSeleccion>
-          <CampoDeSeleccion
-            id="rm-diagnostico-especimen"
-            value={valor.especimen}
-            onChange={cambiar('especimen')}
-            etiqueta={g.especimen}
-            error={undefined}
-          >
-            <Opciones valores={['biopsia', 'prostatectomia']} rotulos={g.especimenes} />
-          </CampoDeSeleccion>
-          <CampoDeSeleccion
-            id="rm-diagnostico-alcance"
-            value={valor.alcance}
-            onChange={cambiar('alcance')}
-            etiqueta={g.alcance}
-            error={undefined}
-          >
-            <Opciones valores={['nucleo_sitio', 'peor', 'global']} rotulos={g.alcances} />
-          </CampoDeSeleccion>
-        </>
-      )}
+      {valor.sistema === 'gleason_isup' && <CamposDeGleason valor={valor} cambiar={cambiar} />}
       <p id="rm-diagnostico-grading-error" aria-live="assertive" className="text-error m-0">
         {error}
       </p>

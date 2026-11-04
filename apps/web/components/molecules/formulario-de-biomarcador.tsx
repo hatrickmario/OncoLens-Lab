@@ -13,8 +13,7 @@ import { mensajes } from '../../lib/mensajes';
 import { Alert } from '../ui/alert';
 import { Button } from '../ui/button';
 import { AnuncioDeErrores } from './anuncio-de-errores';
-import { CampoDeSeleccion } from './campo-de-seleccion';
-import { CampoDeTexto } from './campo-de-texto';
+import { CamposDeBiomarcador } from './campos-de-biomarcador';
 import { PieDeFormularioDeRegistro } from './pie-de-formulario-de-registro';
 
 export interface FormularioDeBiomarcadorProps {
@@ -36,7 +35,7 @@ export function FormularioDeBiomarcador({
   alGuardar,
   alCerrar,
 }: FormularioDeBiomarcadorProps) {
-  const { biomarcador: t, elegir } = mensajes().registroManual;
+  const t = mensajes().registroManual.biomarcador;
   const [locales, setLocales] = useState<Record<string, string>>({});
   const [sinCodigo, setSinCodigo] = useState(false);
   useFocoInicial(terminoInicial === undefined ? undefined : ID_DE_CAMPO.biomarcadorValor);
@@ -80,51 +79,7 @@ export function FormularioDeBiomarcador({
           {t.terminosNoDisponibles}
         </p>
       )}
-      <CampoDeTexto
-        id="rm-biomarcador-nombre"
-        name="name"
-        list="rm-biomarcador-terminos"
-        defaultValue={terminoInicial ?? ''}
-        etiqueta={t.nombre}
-        error={errores.name}
-        autoComplete="off"
-      />
-      <datalist id="rm-biomarcador-terminos">
-        {terminos.map((termino) => (
-          <option key={termino.term} value={termino.term} label={termino.label} />
-        ))}
-      </datalist>
-      <CampoDeTexto
-        id={ID_DE_CAMPO.biomarcadorValor}
-        name="value"
-        etiqueta={t.valor}
-        error={errores.value}
-        autoComplete="off"
-      />
-      <CampoDeTexto
-        id="rm-biomarcador-unidad"
-        name="unit"
-        etiqueta={t.unidad}
-        error={errores.unit}
-      />
-      <CampoDeSeleccion
-        id="rm-biomarcador-tipo"
-        name="resultType"
-        defaultValue=""
-        etiqueta={t.tipoDeResultado}
-        error={errores.resultType}
-      >
-        <option value="">{elegir}</option>
-        <option value="cuantitativo">{t.cuantitativo}</option>
-        <option value="cualitativo">{t.cualitativo}</option>
-      </CampoDeSeleccion>
-      <CampoDeTexto
-        id="rm-biomarcador-fecha"
-        name="performedAt"
-        type="date"
-        etiqueta={t.fecha}
-        error={errores.performedAt}
-      />
+      <CamposDeBiomarcador errores={errores} terminos={terminos} terminoInicial={terminoInicial} />
       <AnuncioDeErrores cantidad={Object.keys(errores).length} />
       <PieDeFormularioDeRegistro
         enviando={enviando}

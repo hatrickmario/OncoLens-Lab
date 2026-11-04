@@ -7,13 +7,12 @@ import { useVistaDeCaso } from '../../lib/caso/use-vista-de-caso';
 import { mensajes } from '../../lib/mensajes';
 import { Alert } from '../ui/alert';
 import { VistaDeCasoNoDisponible } from '../molecules/vista-de-caso-no-disponible';
-import { BiomarkerSeriesTables } from './biomarker-series-tables';
 import { CaseTimeline } from './case-timeline';
 import { ClinicalAttributesTable } from './clinical-attributes-table';
-import { DialogoRegistroBiomarcador } from './dialogo-registro-biomarcador';
 import { DialogoAtributoClinico } from './dialogo-atributo-clinico';
 import { DialogoTratamientoPrevio } from './dialogo-tratamiento-previo';
 import { PriorTreatmentsTable } from './prior-treatments-table';
+import { SeriesConRegistroManual } from './series-con-registro-manual';
 import { UndatedEvents } from './undated-events';
 
 interface SeccionesDelCasoProps {
@@ -51,18 +50,7 @@ function SeccionesDelCaso({
         hoy={hoy}
         accion={<DialogoAtributoClinico {...registro} />}
       />
-      <BiomarkerSeriesTables
-        series={vista.biomarkerSeries}
-        hoy={hoy}
-        accion={
-          <DialogoRegistroBiomarcador
-            {...registro}
-            pagina="caso"
-            item={item}
-            idDelEncabezado="caso-series"
-          />
-        }
-      />
+      <SeriesConRegistroManual series={vista.biomarkerSeries} hoy={hoy} item={item} {...registro} />
     </>
   );
 }
