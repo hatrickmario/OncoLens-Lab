@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import type { CompletenessView } from '../../../../packages/api-contracts/src/types/clinical-api';
+import type {
+  CompletenessItem,
+  CompletenessView,
+} from '../../../../packages/api-contracts/src/types/clinical-api';
 import checklistF_M2 from '../../../../contracts/examples/completeness-f-m2.json';
-import { hrefDeFicha } from '../../lib/ficha/anclas';
+import { hrefDeVistaDeCaso } from '../../lib/ficha/anclas';
 import {
   debeContinuarConAviso,
+  accionDeFaltante,
   enlaceDeRegistro,
   lecturaDeLaVista,
+  presentarEstado,
   type LecturaDelChecklist,
 } from '../../lib/evidence/faltantes';
 
@@ -27,6 +32,53 @@ describe('lecturaDeLaVista', () => {
   });
 });
 
+describe('lecturaDeLaVista con todos los ítems', () => {
+  it('conserva los 12 ítems en el orden del servidor y la versión del catálogo', () => {
+    const lectura = lecturaDeLaVista(vista);
+
+    expect(lectura.tipo === 'ok' && lectura.items.map((i) => i.item)).toEqual(
+      vista.items.map((i) => i.item),
+    );
+    expect(lectura.tipo === 'ok' && lectura.catalogVersion).toBe('test-1.0.0');
+  });
+});
+
+describe('accionDeFaltante', () => {
+  const de = (entity: CompletenessItem['destination']['entity']) =>
+    ({
+      ...vista.items[1]!,
+      item: 'ki67',
+      destination: { entity, field: null },
+    }) as CompletenessItem;
+
+  it.each([
+    ['Biomarker', 'biomarcador'],
+    ['Diagnosis', 'diagnostico'],
+    ['ClinicalAttribute', 'atributo'],
+    ['PriorTreatment', 'tratamiento'],
+  ] as const)(
+    'devuelve la acción %s → %s con la clave del ítem y nunca cargar documento',
+    (entidad, tipo) => {
+      expect(accionDeFaltante(de(entidad))).toEqual({ tipo, item: 'ki67' });
+    },
+  );
+
+  it('no devuelve acción cuando la entidad de destino es desconocida', () => {
+    expect(accionDeFaltante(de('Otra' as never))).toBeNull();
+  });
+});
+
+describe('presentarEstado', () => {
+  it.each([
+    ['presente_verificado', '✓', 'Presente y verificado'],
+    ['presente_sin_verificar', '◐', 'Presente sin verificar'],
+    ['faltante', '◌', 'Faltante'],
+    ['no_aplica', '·', 'No aplica'],
+  ] as const)('devuelve símbolo y texto cuando el estado es %s', (estado, simbolo, texto) => {
+    expect(presentarEstado(estado)).toEqual({ simbolo, texto });
+  });
+});
+
 describe('enlaceDeRegistro', () => {
   const item = (entity: CompletenessView['items'][number]['destination']['entity']) =>
     ({
@@ -34,22 +86,29 @@ describe('enlaceDeRegistro', () => {
       destination: { entity, field: null },
     }) as CompletenessView['items'][number];
 
-  it('lleva a #diagnostico para Diagnosis y a #biomarcadores para Biomarker', () => {
-    expect(enlaceDeRegistro(ID, item('Diagnosis'))).toBe(hrefDeFicha(ID, 'diagnostico'));
-    expect(enlaceDeRegistro(ID, item('Biomarker'))).toBe(hrefDeFicha(ID, 'biomarcadores'));
-  });
-
-  it('lleva a la ficha sin ancla para ClinicalAttribute y PriorTreatment', () => {
-    expect(enlaceDeRegistro(ID, item('ClinicalAttribute'))).toBe(hrefDeFicha(ID));
-    expect(enlaceDeRegistro(ID, item('PriorTreatment'))).toBe(hrefDeFicha(ID));
-  });
+  it.each(['Diagnosis', 'Biomarker', 'ClinicalAttribute', 'PriorTreatment'] as const)(
+    'lleva a los datos críticos de la vista de caso cuando el destino es %s',
+    (entidad) => {
+      expect(enlaceDeRegistro(ID, item(entidad))).toBe(hrefDeVistaDeCaso(ID, 'datos-criticos'));
+    },
+  );
 });
 
 describe('debeContinuarConAviso', () => {
   it.each<[string, LecturaDelChecklist, boolean]>([
     ['hay faltantes', lecturaDeLaVista(vista), true],
     ['el checklist no está disponible', { tipo: 'no_disponible' }, true],
-    ['no hay faltantes', { tipo: 'ok', cancerTypeEnabled: true, faltantes: [] }, false],
+    [
+      'no hay faltantes',
+      {
+        tipo: 'ok',
+        cancerTypeEnabled: true,
+        catalogVersion: 'test-1.0.0',
+        items: [],
+        faltantes: [],
+      },
+      false,
+    ],
   ])('devuelve el valor esperado cuando %s', (_caso, lectura, esperado) => {
     expect(debeContinuarConAviso(lectura)).toBe(esperado);
   });

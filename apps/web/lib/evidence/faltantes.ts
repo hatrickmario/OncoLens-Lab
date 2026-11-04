@@ -38,3 +38,19 @@ export function debeContinuarConAviso(lectura: LecturaDelChecklist): boolean {
   if (lectura.tipo === 'no_disponible') return true;
   return lectura.tipo === 'ok' && lectura.faltantes.length > 0;
 }
+
+export interface AccionDeFaltante {
+  tipo: 'biomarcador' | 'diagnostico' | 'atributo' | 'tratamiento';
+  item: string;
+}
+
+export function accionDeFaltante(_item: CompletenessItem): AccionDeFaltante | null {
+  throw new Error('no implementado');
+}
+
+export function presentarEstado(_estado: CompletenessItem['status']): {
+  simbolo: string;
+  texto: string;
+} {
+  throw new Error('no implementado');
+}
