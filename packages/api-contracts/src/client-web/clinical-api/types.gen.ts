@@ -345,6 +345,41 @@ export type ClinicalAttributeList = {
 };
 
 /**
+ * Valores del catálogo versionado para los formularios de registro manual. Backend 1 es el dueño de la normalización: el cliente solo ofrece estos valores y el servidor decide el mapeo (RN-27, ADR-33).
+ */
+export type ManualEntryOptions = {
+    catalogVersion: string;
+    /**
+     * Tipo de cáncer del diagnóstico vigente; null sin diagnóstico vigente.
+     */
+    cancerType: string | null;
+    enabledCancerTypes: Array<string>;
+    biomarkerTerms: Array<{
+        term: string;
+        label: string;
+    }>;
+    stagingSystems: Array<string>;
+    performanceScales: Array<{
+        code: string;
+        minimum: number;
+        maximum: number;
+    }>;
+    gradingSystems: Array<'nottingham' | 'gleason_isup'>;
+    /**
+     * Destino de cada ítem crítico del catálogo, para abrir el formulario desde un faltante.
+     */
+    criticalItems: Array<{
+        item: string;
+        entity: 'Diagnosis' | 'Biomarker' | 'ClinicalAttribute' | 'PriorTreatment';
+        field: string | null;
+        /**
+         * Término del biomarcador (match.name) si entity es Biomarker; null en otro caso.
+         */
+        term: string | null;
+    }>;
+};
+
+/**
  * Registro manual de un biomarcador desde un faltante. El nombre viaja en el cuerpo, nunca en la URL.
  */
 export type BiomarkerManualCreate = {
@@ -1663,6 +1698,45 @@ export type CreateManualDiagnosisResponses = {
 };
 
 export type CreateManualDiagnosisResponse = CreateManualDiagnosisResponses[keyof CreateManualDiagnosisResponses];
+
+export type GetManualEntryOptionsData = {
+    body?: never;
+    path: {
+        patientId: string;
+    };
+    query?: never;
+    url: '/platform/patients/{patientId}/manual-entry-options';
+};
+
+export type GetManualEntryOptionsErrors = {
+    /**
+     * Sesión ausente o expirada.
+     */
+    401: ErrorNoAutenticado;
+    /**
+     * Permiso denegado por RBAC u opt-out.
+     */
+    403: ErrorPermisoDenegado;
+    /**
+     * Recurso no encontrado.
+     */
+    404: ErrorNoEncontrado;
+    /**
+     * Fallo interno de clinical-api. Mensaje fijo, sin eco ni detalle interno.
+     */
+    500: ErrorInterno;
+};
+
+export type GetManualEntryOptionsError = GetManualEntryOptionsErrors[keyof GetManualEntryOptionsErrors];
+
+export type GetManualEntryOptionsResponses = {
+    /**
+     * Opciones del catálogo para los formularios.
+     */
+    200: ManualEntryOptions;
+};
+
+export type GetManualEntryOptionsResponse = GetManualEntryOptionsResponses[keyof GetManualEntryOptionsResponses];
 
 export type CreateManualPriorTreatmentData = {
     body: PriorTreatmentManualCreate;

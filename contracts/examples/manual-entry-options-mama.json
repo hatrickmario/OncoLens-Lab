@@ -1,0 +1,35 @@
+{
+  "catalogVersion": "test-normalizacion-1.0.0",
+  "cancerType": "mama",
+  "enabledCancerTypes": ["mama", "prostata"],
+  "biomarkerTerms": [
+    { "term": "Receptor de estrógeno", "label": "Receptor de estrógeno" },
+    { "term": "Receptor de progesterona", "label": "Receptor de progesterona" },
+    { "term": "HER2", "label": "HER2 (IHQ)" },
+    { "term": "HER2 ISH", "label": "HER2 (ISH)" },
+    { "term": "Ki-67", "label": "Ki-67" },
+    { "term": "BRCA germinal", "label": "BRCA germinal" },
+    { "term": "RE", "label": "Receptores de estrógeno" }
+  ],
+  "stagingSystems": ["TNM_8"],
+  "performanceScales": [
+    { "code": "ECOG", "minimum": 0, "maximum": 5 },
+    { "code": "Karnofsky", "minimum": 0, "maximum": 100 },
+    { "code": "Lansky", "minimum": 0, "maximum": 100 }
+  ],
+  "gradingSystems": ["nottingham"],
+  "criticalItems": [
+    { "item": "histologia", "entity": "Diagnosis", "field": "histology", "term": null },
+    { "item": "grado", "entity": "Diagnosis", "field": "grade", "term": null },
+    { "item": "tnm", "entity": "Diagnosis", "field": "stage_value", "term": null },
+    { "item": "ecog", "entity": "Diagnosis", "field": "performance_value", "term": null },
+    { "item": "re", "entity": "Biomarker", "field": "value", "term": "Receptor de estrógeno" },
+    { "item": "rp", "entity": "Biomarker", "field": "value", "term": "Receptor de progesterona" },
+    { "item": "her2_ihq", "entity": "Biomarker", "field": "value", "term": "HER2" },
+    { "item": "her2_ish", "entity": "Biomarker", "field": "value", "term": "HER2 ISH" },
+    { "item": "ki67", "entity": "Biomarker", "field": "value", "term": "Ki-67" },
+    { "item": "estado_menopausico", "entity": "ClinicalAttribute", "field": "value", "term": null },
+    { "item": "tratamientos_previos", "entity": "PriorTreatment", "field": null, "term": null },
+    { "item": "brca_germinal", "entity": "Biomarker", "field": "value", "term": "BRCA germinal" }
+  ]
+}

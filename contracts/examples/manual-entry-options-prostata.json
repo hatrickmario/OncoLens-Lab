@@ -1,0 +1,17 @@
+{
+  "catalogVersion": "test-normalizacion-1.0.0",
+  "cancerType": "prostata",
+  "enabledCancerTypes": ["mama", "prostata"],
+  "biomarkerTerms": [{ "term": "PSA", "label": "Serie de PSA" }],
+  "stagingSystems": ["TNM_8"],
+  "performanceScales": [
+    { "code": "ECOG", "minimum": 0, "maximum": 5 },
+    { "code": "Karnofsky", "minimum": 0, "maximum": 100 },
+    { "code": "Lansky", "minimum": 0, "maximum": 100 }
+  ],
+  "gradingSystems": ["gleason_isup"],
+  "criticalItems": [
+    { "item": "psa_serie", "entity": "Biomarker", "field": "value", "term": "PSA" },
+    { "item": "ecog", "entity": "Diagnosis", "field": "performance_value", "term": null }
+  ]
+}
