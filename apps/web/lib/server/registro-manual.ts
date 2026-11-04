@@ -2,10 +2,13 @@ import 'server-only';
 import {
   correctBiomarker,
   correctClinicalNote,
+  createManualBiomarker,
   createManualClinicalAttribute,
+  createManualDiagnosis,
   createManualPriorTreatment,
   getBiomarkerHistory,
   getClinicalNoteHistory,
+  getManualEntryOptions,
   listClinicalAttributes,
   listClinicalNotes,
 } from '../../../../packages/api-contracts/src/client-web/clinical-api';
@@ -142,24 +145,18 @@ const DEFINICIONES: Record<OperacionDeRegistroManual, Definicion> = {
     evento: 'registro_manual.biomarcador.crear',
     ruta: zCreateManualBiomarkerPath,
     cuerpo: zCreateManualBiomarkerBody,
-    llamar: () => {
-      throw new Error('no implementado');
-    },
+    llamar: (sdk, path, body) => createManualBiomarker({ client: sdk.client, path, body, ...base }),
   }),
   createManualDiagnosis: definir({
     evento: 'registro_manual.diagnostico.crear',
     ruta: zCreateManualDiagnosisPath,
     cuerpo: zCreateManualDiagnosisBody,
-    llamar: () => {
-      throw new Error('no implementado');
-    },
+    llamar: (sdk, path, body) => createManualDiagnosis({ client: sdk.client, path, body, ...base }),
   }),
   getManualEntryOptions: definir({
     evento: 'registro_manual.opciones.leer',
     ruta: zGetManualEntryOptionsPath,
-    llamar: () => {
-      throw new Error('no implementado');
-    },
+    llamar: (sdk, path) => getManualEntryOptions({ client: sdk.client, path, ...base }),
   }),
 };
 
@@ -246,7 +243,7 @@ async function pedir(llamada: () => Promise<Respuesta>): Promise<Response | unde
 }
 
 /**
- * Proxy de las cinco operaciones de corrección con histórico (US-253) y de las tres del tratamiento previo y el atributo manuales (US-094). Las lecturas van sin `Origin` (cookie
+ * Proxy de las cinco operaciones de corrección con histórico (US-253), de las tres del tratamiento previo y el atributo manuales (US-094) y de las tres de los formularios de biomarcador y diagnóstico (US-111). Las lecturas van sin `Origin` (cookie
  * `SameSite=Strict`); las mutaciones verifican `Origin` y validan el cuerpo con el Zod generado antes de reenviarlo.
  * Solo la cookie de sesión sale hacia clinical-api; 2xx y 4xx se retransmiten sin reinterpretar y un 5xx o un fallo
  * de red responde `ERROR_INTERNO` propio. El log lleva el evento de la operación, status y traceId: nunca ids,
