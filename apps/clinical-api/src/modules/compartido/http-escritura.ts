@@ -29,6 +29,11 @@ export const CUERPO_INVALIDO: Rechazo = {
   resultado: 'cuerpo_invalido',
 };
 
+/** El 422 de un cuerpo que no cumple el contrato, con el NOMBRE del campo cuando se sabe cuál es. */
+export function cuerpoInvalidoDelCampo(campo: string | undefined): Rechazo {
+  return { ...CUERPO_INVALIDO, ...(campo !== undefined && { campo }) };
+}
+
 /**
  * Los rechazos que toda escritura clínica comparte: paciente egresado (RN-17) y valor fuera del catálogo (RN-27). El
  * `campo` lo añade quien lo declara en su contrato (la corrección hoy; el registro manual con l1d-80).

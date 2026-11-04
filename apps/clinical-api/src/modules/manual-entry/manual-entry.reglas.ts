@@ -1,6 +1,10 @@
 import type { ManualEntryOptions } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
 import type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
-import { ValorFueraDeCatalogoError } from './manual-entry.errores.js';
+import {
+  CuerpoIncompletoError,
+  GradacionIncoherenteError,
+  ValorFueraDeCatalogoError,
+} from './manual-entry.errores.js';
 import type {
   CatalogoDeEscalas,
   DatosDelDiagnostico,
@@ -198,4 +202,13 @@ export function opcionesDeRegistroManual(
   _tipoDeCancer: string | null,
 ): ManualEntryOptions {
   throw new Error('no implementado');
+}
+
+/** Propiedad del cuerpo (`field` del 422) que causó el error de dominio; `undefined` si no es de un campo (p. ej. paciente egresado). Nunca el valor (RN-10). */
+export function campoDelError(error: unknown): string | undefined {
+  // Los campos anidados (`grading.gradingSystem`) se informan por la propiedad de primer nivel del contrato.
+  if (error instanceof ValorFueraDeCatalogoError) return error.campo.split('.')[0];
+  if (error instanceof GradacionIncoherenteError) return 'grading';
+  if (error instanceof CuerpoIncompletoError) return error.campo;
+  return undefined;
 }
