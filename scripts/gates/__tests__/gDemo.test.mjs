@@ -357,8 +357,8 @@ describe('comprobarE2e', () => {
   });
 
   it('no supera el gate cuando el E2E no declara su modo o su fecha [US-142 AC-6]', () => {
-    const { modoLlm: _m, ...sinModo } = E2E_REAL;
-    const { generadoEn: _g, ...sinFecha } = E2E_REAL;
+    const sinModo = { ...E2E_REAL, modoLlm: undefined };
+    const sinFecha = { ...E2E_REAL, generadoEn: undefined };
 
     expect(comprobarE2e(sinModo, 'real').ok).toBe(false);
     expect(comprobarE2e(sinFecha, 'real').ok).toBe(false);
