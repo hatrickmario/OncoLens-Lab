@@ -21,6 +21,21 @@ export const ID_SEMILLA_A = '0fd028e2-f8b0-56c7-a748-2a4e473d879d';
 export const ID_SEMILLA_F = '380dd24c-0458-55f7-bd22-23b87d965c86';
 
 /**
+ * Pacientes semilla (g)–(m) de US-254 por su momento de la enfermedad: `idSembrado('paciente-<letra>')`, el mismo UUID
+ * determinista del seed. `web` no importa código de `clinical-api`: el test unitario `seed-pacientes-semilla` compara estos
+ * ids con `idSembrado` y detecta una deriva.
+ */
+export const IDS_SEMILLA_S5 = {
+  'g-inicial': 'eae9ce34-3ec2-5e5d-ae96-be3f767f7467',
+  'h-adyuvante': '70189996-cf62-5a0a-af54-c1dd82ab8daf',
+  'i-recaida': '0a209e51-6730-59a5-aaf0-d32c9f64dc5d',
+  'j-metastasica-1l': '4d601eb2-b0b1-5926-811e-5641a892281c',
+  'k-her2-tras-tdm1': '7d4a70db-1ff3-5b20-ada2-5389f0fa4ae8',
+  'l-hspc': '5fc9c4ac-4c78-581e-ad25-10c185627932',
+  'm-crpc': 'd8fc5ac0-4cbe-522c-9220-db949d7c2085',
+} as const;
+
+/**
  * Cuántos pacientes siembra el seed: un archivo `<letra>.ts` por paciente en `prisma/seed/pacientes/`. Se lee del
  * sistema de archivos, como `ejemplo()`: `web` no importa código de `clinical-api` (`web-solo-por-bff`).
  */

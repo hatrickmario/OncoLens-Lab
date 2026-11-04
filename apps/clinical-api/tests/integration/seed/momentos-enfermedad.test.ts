@@ -72,9 +72,9 @@ describe('Pacientes semilla por momento de la enfermedad', () => {
     );
     const tipoDe = (letra: string) =>
       tipos.filter((t) => t.patient_id === idDe(letra)).map((t) => t.cancer_type);
-    const [{ n }] = await filas<{ n: number }>('SELECT count(*)::int AS n FROM clinical.patient');
+    const [total] = await filas<{ n: number }>('SELECT count(*)::int AS n FROM clinical.patient');
 
-    expect(n).toBe(TOTAL_PACIENTES_SEMILLA);
+    expect(total?.n).toBe(TOTAL_PACIENTES_SEMILLA);
     expect(PACIENTES_SEMILLA).toHaveLength(TOTAL_PACIENTES_SEMILLA);
     for (const letra of ['g', 'h', 'i', 'j', 'k']) expect(tipoDe(letra)).toEqual(['mama']);
     for (const letra of ['l', 'm']) expect(tipoDe(letra)).toEqual(['prostata']);

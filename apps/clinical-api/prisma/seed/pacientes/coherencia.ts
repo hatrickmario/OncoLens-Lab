@@ -75,11 +75,11 @@ function incumplimientosDeLosEventos(
   paciente: PacienteSemilla,
   diagnostico: number,
 ): IncoherenciaDeHistoria[] {
-  return paciente.eventos.flatMap((evento) => {
+  return paciente.eventos.flatMap<IncoherenciaDeHistoria>((evento) => {
     if (evento.diasAntes > diagnostico) {
-      return [{ regla: 'evento_antes_del_diagnostico' as const, clave: evento.clave }];
+      return [{ regla: 'evento_antes_del_diagnostico', clave: evento.clave }];
     }
-    if (evento.diasAntes < 0) return [{ regla: 'fecha_futura' as const, clave: evento.clave }];
+    if (evento.diasAntes < 0) return [{ regla: 'fecha_futura', clave: evento.clave }];
     return [];
   });
 }
