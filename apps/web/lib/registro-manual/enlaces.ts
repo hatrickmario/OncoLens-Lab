@@ -11,7 +11,8 @@ export function rutaDeLaPagina(patientId: string, pagina: PaginaDeRegistro): str
 }
 
 /**
- * Único constructor del enlace que abre el formulario de registro manual de un dato faltante (`?item=<clave>`, D7).
+ * Constructor del enlace `?item=<clave>` que abre el formulario de registro manual (D7); sin consumidor de producción
+ * aún (lo usará `l1d-96`; `enlaceDeRegistro` de faltantes sigue armando anclas, deuda anotada).
  * Solo lleva la clave del catálogo, nunca un valor del paciente. Precondición: `patientId` UUID e `item` clave válida;
  * cualquier otro valor lanza en vez de armar una ruta con él.
  */

@@ -14,7 +14,10 @@ export function useValoresDelCatalogo(
 ): LecturaDelCatalogo | null {
   const [lectura, setLectura] = useState<LecturaDelCatalogo | null>(null);
   useEffect(() => {
-    if (!activo) return;
+    if (!activo) {
+      setLectura(null);
+      return;
+    }
     let vigente = true;
     void pedirValoresDelCatalogo(pacienteId).then((nueva) => {
       if (vigente) setLectura(nueva);
