@@ -17,6 +17,24 @@
           "idioma": "en"
         }
       ]
+    },
+    {
+      "terminoCanonico": "leuprorelina",
+      "sinonimos": [
+        {
+          "texto": "leuprorelin",
+          "idioma": "en"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "bicalutamida",
+      "sinonimos": [
+        {
+          "texto": "bicalutamide",
+          "idioma": "en"
+        }
+      ]
     }
   ]
 }

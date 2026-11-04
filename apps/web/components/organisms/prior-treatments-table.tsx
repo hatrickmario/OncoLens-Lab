@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { CaseView } from '../../../../packages/api-contracts/src/types/clinical-api';
 import { rotuloOValor } from '../../lib/caso/presentacion';
 import { mensajes } from '../../lib/mensajes';
@@ -16,9 +17,9 @@ function FilaDeTratamiento({ t, hoy }: { t: Tratamiento; hoy: string }) {
       <td className={CELDA}>{rotuloOValor(caso.contextos, t.setting)}</td>
       <th scope="row" className={`${CELDA} font-semibold`}>
         {t.regimenName}
-        {t.atcCodes.length > 0 && (
-          <span className="text-text-muted block text-sm font-normal">{t.atcCodes.join(', ')}</span>
-        )}
+        <span className="text-text-muted block text-sm font-normal">
+          {t.atcCodes.length > 0 ? t.atcCodes.join(', ') : caso.noMapeado}
+        </span>
       </th>
       <td className={CELDA}>
         <FechaRelativaOpcional fecha={t.startedAt} hoy={hoy} />
@@ -42,14 +43,16 @@ function FilaDeTratamiento({ t, hoy }: { t: Tratamiento; hoy: string }) {
 export function PriorTreatmentsTable({
   tratamientos,
   hoy,
+  accion,
 }: {
   tratamientos: Tratamiento[];
   hoy: string;
+  accion?: ReactNode;
 }) {
   const { caso } = mensajes();
   const c = caso.columnas;
   return (
-    <SeccionDeFicha id="caso-tratamientos" titulo={caso.secciones.tratamientos}>
+    <SeccionDeFicha id="caso-tratamientos" titulo={caso.secciones.tratamientos} accion={accion}>
       {tratamientos.length === 0 ? (
         <p className="m-0">{caso.sinDatos}</p>
       ) : (

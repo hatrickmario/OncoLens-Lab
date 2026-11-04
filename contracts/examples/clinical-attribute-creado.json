@@ -1,0 +1,15 @@
+{
+  "id": "7d3f9c62-5e4a-4b8c-9dae-2a3b4c5d6e7f",
+  "key": "estado_menopausico",
+  "value": "posmenopausica",
+  "observedAt": "2026-09-01",
+  "datePrecision": "dia",
+  "provenance": {
+    "entryMethod": "manual",
+    "extractionConfidence": "n_a",
+    "reviewStatus": "verificado",
+    "conflict": false,
+    "sourceDocumentId": null,
+    "additionalSourceDocumentIds": []
+  }
+}

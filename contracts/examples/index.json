@@ -654,6 +654,17 @@
       "target": "#/components/schemas/EvidenceAnalysis"
     },
     {
+      "file": "rag-query-request-fx-t3-a.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalRequest"
+    },
+    {
+      "file": "rag-query-fx-t3-a.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalResponse",
+      "request": "rag-query-request-fx-t3-a.json"
+    },
+    {
       "file": "biomarker-correction-request.json",
       "spec": "clinical-api",
       "target": "#/paths/~1platform~1patients~1{patientId}~1biomarkers~1{biomarkerId}~1corrections/post/requestBody"
@@ -697,6 +708,131 @@
       "file": "error-dato-no-vigente.json",
       "spec": "clinical-api",
       "target": "#/paths/~1platform~1patients~1{patientId}~1biomarkers~1{biomarkerId}~1corrections/post/responses/409"
+    },
+    {
+      "file": "prior-treatment-manual.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1prior-treatments/post/requestBody"
+    },
+    {
+      "file": "prior-treatment-manual-creado.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/PriorTreatment"
+    },
+    {
+      "file": "prior-treatment-no-mapeado.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/PriorTreatment"
+    },
+    {
+      "file": "clinical-attribute-manual.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1clinical-attributes/post/requestBody"
+    },
+    {
+      "file": "clinical-attribute-creado.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/ClinicalAttribute"
+    },
+    {
+      "file": "clinical-attributes-list.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/ClinicalAttributeList"
+    },
+    {
+      "file": "error-no-autenticado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1prior-treatments/post/responses/401"
+    },
+    {
+      "file": "error-permiso-denegado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1prior-treatments/post/responses/403"
+    },
+    {
+      "file": "error-no-encontrado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1prior-treatments/post/responses/404"
+    },
+    {
+      "file": "error-cuerpo-invalido.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1prior-treatments/post/responses/422"
+    },
+    {
+      "file": "error-interno.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1prior-treatments/post/responses/500"
+    },
+    {
+      "file": "error-no-autenticado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1clinical-attributes/get/responses/401"
+    },
+    {
+      "file": "error-permiso-denegado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1clinical-attributes/get/responses/403"
+    },
+    {
+      "file": "error-no-encontrado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1clinical-attributes/get/responses/404"
+    },
+    {
+      "file": "error-interno.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1clinical-attributes/get/responses/500"
+    },
+    {
+      "file": "error-no-autenticado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1clinical-attributes/post/responses/401"
+    },
+    {
+      "file": "error-permiso-denegado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1clinical-attributes/post/responses/403"
+    },
+    {
+      "file": "error-no-encontrado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1clinical-attributes/post/responses/404"
+    },
+    {
+      "file": "error-cuerpo-invalido.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1clinical-attributes/post/responses/422"
+    },
+    {
+      "file": "error-interno.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1clinical-attributes/post/responses/500"
+    },
+    {
+      "file": "error-paciente-egresado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1prior-treatments/post/responses/422"
+    },
+    {
+      "file": "error-paciente-egresado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1clinical-attributes/post/responses/422"
+    },
+    {
+      "file": "error-valor-fuera-de-catalogo.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1clinical-attributes/post/responses/422"
+    },
+    {
+      "file": "error-atributo-sin-tipo-cancer.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1clinical-attributes/post/responses/422"
+    },
+    {
+      "file": "error-registro-clinico-campo.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1clinical-attributes/post/responses/422"
     }
   ],
   "pendingExamples": [

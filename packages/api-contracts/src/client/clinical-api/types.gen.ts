@@ -278,6 +278,73 @@ export type CaseView = {
 };
 
 /**
+ * Registro manual de una línea de tratamiento previa. Un tratamiento en curso (ongoing = true) no lleva endedAt ni endReason; uno terminado (ongoing = false) exige endReason. endedAt no puede ser anterior a startedAt.
+ */
+export type PriorTreatmentManualCreate = {
+    lineNumber?: number;
+    setting: 'neoadyuvante' | 'adyuvante' | 'primera_linea_metastasica' | 'segunda_linea_metastasica' | 'linea_posterior_metastasica' | 'otro' | 'desconocido';
+    regimenName: string;
+    startedAt?: string;
+    endedAt?: string;
+    ongoing: boolean;
+    endReason?: 'progresion' | 'toxicidad' | 'completado' | 'otro' | 'desconocido';
+};
+
+export type PriorTreatment = {
+    id: string;
+    lineNumber: number | null;
+    setting: string;
+    /**
+     * Tal como lo escribió quien registra.
+     */
+    regimenName: string;
+    /**
+     * Solo códigos ATC del catálogo versionado; vacío si no hay mapeo (RN-27).
+     */
+    atcCodes: Array<string>;
+    mappingStatus: 'mapeado' | 'no_mapeado';
+    startedAt: string | null;
+    endedAt: string | null;
+    ongoing: boolean;
+    endReason: 'progresion' | 'toxicidad' | 'completado' | 'otro' | 'desconocido';
+    provenance: Provenance;
+};
+
+/**
+ * Registro manual de un atributo clínico. La clave y el valor se validan contra el catálogo montado para el tipo de cáncer del diagnóstico vigente (RN-29).
+ */
+export type ClinicalAttributeManualCreate = {
+    attributeKey: string;
+    value: string;
+    observedAt?: string;
+};
+
+export type ClinicalAttribute = {
+    id: string;
+    key: string;
+    value: string;
+    observedAt: string | null;
+    datePrecision: 'dia' | 'mes' | 'anio' | 'incierta';
+    provenance: Provenance;
+};
+
+export type ClinicalAttributeList = {
+    items: Array<ClinicalAttribute>;
+    /**
+     * Atributos que el catálogo permite registrar para el tipo de cáncer del paciente (RN-29).
+     */
+    allowedAttributes: Array<{
+        key: string;
+        label: string;
+        values: Array<{
+            value: string;
+            label: string;
+        }>;
+    }>;
+    catalogVersion: string;
+};
+
+/**
  * Registro manual de un biomarcador desde un faltante. El nombre viaja en el cuerpo, nunca en la URL.
  */
 export type BiomarkerManualCreate = {
@@ -909,12 +976,30 @@ export type ErrorAnalisisNoProcesable = {
 
 export type ErrorRegistroManualInvalido = {
     error: 'CUERPO_INVALIDO' | 'PACIENTE_EGRESADO' | 'VALOR_FUERA_DE_CATALOGO';
+    /**
+     * Propiedad del cuerpo que causó el error, cuando el error es de un campo; ausente si no lo es (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.
+     */
+    field?: string;
+    message: string;
+    traceId: string;
+};
+
+export type ErrorRegistroClinicoInvalido = {
+    error: 'CUERPO_INVALIDO' | 'PACIENTE_EGRESADO' | 'VALOR_FUERA_DE_CATALOGO' | 'TIPO_CANCER_NO_REGISTRADO';
+    /**
+     * Propiedad del cuerpo que causó el error, cuando el error es de un campo; ausente si no lo es (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.
+     */
+    field?: string;
     message: string;
     traceId: string;
 };
 
 export type ErrorDiagnosticoInvalido = {
     error: 'CUERPO_INVALIDO' | 'PACIENTE_EGRESADO' | 'VALOR_FUERA_DE_CATALOGO' | 'GRADACION_INCOHERENTE';
+    /**
+     * Propiedad del cuerpo que causó el error, cuando el error es de un campo; ausente si no lo es (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.
+     */
+    field?: string;
     message: string;
     traceId: string;
 };
@@ -1578,6 +1663,131 @@ export type CreateManualDiagnosisResponses = {
 };
 
 export type CreateManualDiagnosisResponse = CreateManualDiagnosisResponses[keyof CreateManualDiagnosisResponses];
+
+export type CreateManualPriorTreatmentData = {
+    body: PriorTreatmentManualCreate;
+    path: {
+        patientId: string;
+    };
+    query?: never;
+    url: '/platform/patients/{patientId}/prior-treatments';
+};
+
+export type CreateManualPriorTreatmentErrors = {
+    /**
+     * Sesión ausente o expirada.
+     */
+    401: ErrorNoAutenticado;
+    /**
+     * Permiso denegado por RBAC u opt-out.
+     */
+    403: ErrorPermisoDenegado;
+    /**
+     * Recurso no encontrado.
+     */
+    404: ErrorNoEncontrado;
+    /**
+     * Cuerpo inválido (fechas o motivo de fin incoherentes) o paciente egresado.
+     */
+    422: ErrorRegistroClinicoInvalido;
+    /**
+     * Fallo interno de clinical-api. Mensaje fijo, sin eco ni detalle interno.
+     */
+    500: ErrorInterno;
+};
+
+export type CreateManualPriorTreatmentError = CreateManualPriorTreatmentErrors[keyof CreateManualPriorTreatmentErrors];
+
+export type CreateManualPriorTreatmentResponses = {
+    /**
+     * Tratamiento previo registrado.
+     */
+    201: PriorTreatment;
+};
+
+export type CreateManualPriorTreatmentResponse = CreateManualPriorTreatmentResponses[keyof CreateManualPriorTreatmentResponses];
+
+export type ListClinicalAttributesData = {
+    body?: never;
+    path: {
+        patientId: string;
+    };
+    query?: never;
+    url: '/platform/patients/{patientId}/clinical-attributes';
+};
+
+export type ListClinicalAttributesErrors = {
+    /**
+     * Sesión ausente o expirada.
+     */
+    401: ErrorNoAutenticado;
+    /**
+     * Permiso denegado por RBAC u opt-out.
+     */
+    403: ErrorPermisoDenegado;
+    /**
+     * Recurso no encontrado.
+     */
+    404: ErrorNoEncontrado;
+    /**
+     * Fallo interno de clinical-api. Mensaje fijo, sin eco ni detalle interno.
+     */
+    500: ErrorInterno;
+};
+
+export type ListClinicalAttributesError = ListClinicalAttributesErrors[keyof ListClinicalAttributesErrors];
+
+export type ListClinicalAttributesResponses = {
+    /**
+     * Atributos vigentes y atributos permitidos.
+     */
+    200: ClinicalAttributeList;
+};
+
+export type ListClinicalAttributesResponse = ListClinicalAttributesResponses[keyof ListClinicalAttributesResponses];
+
+export type CreateManualClinicalAttributeData = {
+    body: ClinicalAttributeManualCreate;
+    path: {
+        patientId: string;
+    };
+    query?: never;
+    url: '/platform/patients/{patientId}/clinical-attributes';
+};
+
+export type CreateManualClinicalAttributeErrors = {
+    /**
+     * Sesión ausente o expirada.
+     */
+    401: ErrorNoAutenticado;
+    /**
+     * Permiso denegado por RBAC u opt-out.
+     */
+    403: ErrorPermisoDenegado;
+    /**
+     * Recurso no encontrado.
+     */
+    404: ErrorNoEncontrado;
+    /**
+     * Cuerpo inválido, clave o valor fuera del catálogo, paciente sin tipo de cáncer o paciente egresado.
+     */
+    422: ErrorRegistroClinicoInvalido;
+    /**
+     * Fallo interno de clinical-api. Mensaje fijo, sin eco ni detalle interno.
+     */
+    500: ErrorInterno;
+};
+
+export type CreateManualClinicalAttributeError = CreateManualClinicalAttributeErrors[keyof CreateManualClinicalAttributeErrors];
+
+export type CreateManualClinicalAttributeResponses = {
+    /**
+     * Atributo clínico registrado.
+     */
+    201: ClinicalAttribute;
+};
+
+export type CreateManualClinicalAttributeResponse = CreateManualClinicalAttributeResponses[keyof CreateManualClinicalAttributeResponses];
 
 export type CorrectBiomarkerData = {
     body: BiomarkerCorrection;

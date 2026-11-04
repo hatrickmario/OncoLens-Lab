@@ -26,7 +26,7 @@ fila «Faltante» de esas dos entidades ofrezca la acción manual de US-094, y D
   `ErrorRegistroClinicoInvalido`. Ejemplos nuevos en `contracts/examples/`. Introduce además la propiedad **opcional
   `field`** (`type: string`, sin enum, misma descripción) en `ErrorRegistroClinicoInvalido` y en los existentes
   `ErrorRegistroManualInvalido` y `ErrorDiagnosticoInvalido` (aditivo; `[S5 resp. 10]`): `l1d-90` y `l1d-91` la usan
-  igual y `l1d-309` la replica en `ErrorCorreccionInvalida`. `info.version` 1.17.0 → **1.18.0**. `PriorTreatment.atcCodes`
+  igual y `l1d-309` la replica en `ErrorCorreccionInvalida`. `info.version` 1.18.0 → **1.19.0**. `PriorTreatment.atcCodes`
   usa códigos ATC reales con el mismo patrón que el contrato de `rag-orchestrator` (`^[A-Z][0-9]{2}[A-Z]{2}[0-9]{2}$`,
   sin relajarlo; `[S5 resp. 10]`).
 - **`clinical-api`:** módulos nuevos `src/modules/prior-treatments/` y `src/modules/clinical-attributes/`
@@ -76,7 +76,7 @@ contratos · clinical-platform (`apps/clinical-api`, Route Handlers de `apps/web
   primero que llegue a `main` crea `compartido/registro-manual.ts`, el otro lo reutiliza. También el `Dialog` de
   shadcn/ui (S5-refinamiento §Stack): se añade en el primer change que lo necesite.
 - 🔗 Cadena de versiones del `openapi.yaml` de `clinical-api` (orden de merge): 1.15.0 → `l1d-306` 1.15.1 → `l1d-268`
-  1.16.0 → `l1d-74` 1.17.0 → **`l1d-80` 1.18.0** → `l1d-309` 1.19.0 → `l1d-91` 1.20.0. Quien rebase renumera y regenera
+  1.16.0 → `l1d-74` 1.17.0 → `l1d-309` 1.18.0 → **`l1d-80` 1.19.0** → `l1d-91` 1.20.0. Quien rebase renumera y regenera
   `packages/api-contracts` (nunca fusiona generados a mano).
 - 🔗 Consumida por: FEAT-04 US-004 (`l1d-96`, faltantes con acción, D-7) reutiliza los dos diálogos.
 - 🔗 Regresión [RN-27] → US-098 · 🔗 Regresión [RN-17] → US-198 (Post-MVP).

@@ -57,13 +57,13 @@ describe('subconjunto mínimo de LOINC del catálogo real (DEC-04)', () => {
     }
   });
 
-  it('acompaña el subconjunto con el aviso de Regenstrief, la fuente, la fecha y la versión, y el manifest 1.3.0 [US-110 AC-1]', () => {
+  it('acompaña el subconjunto con el aviso de Regenstrief, la fuente, la fecha y la versión, y el manifest 1.4.0 [US-110 AC-1]', () => {
     const aviso = leer('NOTICE-loinc.txt');
 
     expect(aviso).toContain('LOINC is copyright © Regenstrief Institute, Inc.');
     expect(aviso).toContain('https://clinicaltables.nlm.nih.gov/api/loinc_items/v3/search');
     expect(aviso).toContain('2026-11-03');
     expect(aviso).toContain('2.83');
-    expect((JSON.parse(leer('manifest.json')) as { version: string }).version).toBe('1.3.0');
+    expect((JSON.parse(leer('manifest.json')) as { version: string }).version).toBe('1.4.0');
   });
 });

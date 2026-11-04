@@ -64,7 +64,7 @@ export const pacienteB: PacienteSemilla = {
     {
       clave: 'estado-castracion',
       atributo: 'estado_castracion',
-      valor: 'sensible',
+      valor: 'sensible_castracion',
       diasAntes: 57,
     },
   ],

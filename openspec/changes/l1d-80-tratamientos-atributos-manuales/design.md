@@ -11,10 +11,11 @@ y los diálogos S5-03 c y d. La normalización final es de `ReconciliationServic
 ## Decisiones
 
 - **D1 · Dos módulos, una guarda común.** `prior-treatments` y `clinical-attributes` (Controller → Service →
-  Repository). La regla de RN-17 y la elección del episodio vigente viven una sola vez en
-  `src/modules/compartido/registro-manual.ts` (`exigirPacienteActivo()`, `episodioVigente()`), compartida con
-  US-110 (`l1d-90`). Si `l1d-90` llega antes, se reutiliza la suya. *Descartado:* comprobar RN-17 en cada controller
-  (dos dueños de la regla).
+  Repository). La regla de RN-17 (`exigirPacienteQueAdmiteRegistros()`) y el bloqueo del paciente ya viven en
+  `src/modules/compartido/paciente-activo.ts` (L1D-90/309) y se reutilizan; el episodio del registro y el tipo de
+  cáncer del diagnóstico vigente se leen una sola vez en `compartido/contexto-de-registro.ts`, y la traducción HTTP
+  común de los dos `POST` en `compartido/registro-http.ts` (implementado así en L1D-80). *Descartado:* comprobar
+  RN-17 en cada controller (dos dueños de la regla).
 - **D2 · Orden de comprobaciones** (una sola vez cada una): sesión (`401`) → RBAC (`403`, `admin` no tiene
   `clinical:write` ni `clinical:read`) → `patientId` UUID y paciente existente (`404`, sin distinguir mal formado) →
   cuerpo Zod (`422 CUERPO_INVALIDO`) → paciente egresado (`422 PACIENTE_EGRESADO`) → catálogo
@@ -45,8 +46,10 @@ y los diálogos S5-03 c y d. La normalización final es de `ReconciliationServic
   `estado_castracion` = `castrado | no_castrado | sensible_castracion | resistente_castracion | desconocido`;
   `sitios_metastasicos` = `oseo | ganglionar | hepatico | pulmonar | cerebral | otro`. Los valores del seed y de
   FX-02b-a (`posmenopausica`, `castrado`, `oseo`) deben estar en la lista (test).
-- **D8 · UI.** Diálogos en `organisms/` de la vista de caso; al `201` llaman a `router.refresh()` (revalidación del
-  RSC) y la fila aparece sin recarga completa (AC-6). Errores `422` se pintan junto al campo que indica `field` (D10),
+- **D8 · UI (como quedó implementada).** Diálogos en `components/organisms/` (plano, sin subcarpeta `case-view/`);
+  al `201` llaman a `recargar()` del hook de la vista de caso (`useVistaDeCaso`) y la fila aparece sin recarga
+  completa (AC-6). Se añadieron dos hooks en `lib/registro-manual/` (`use-envio-de-registro.ts`,
+  `use-atributos-permitidos.ts`), porque dos diálogos los comparten (≥2 consumidores). Errores `422` se pintan junto al campo que indica `field` (D10),
   o arriba del formulario sin `field`, con `aria-live`.
 - **D9 · Subconjunto de ATC (`[S5 resp. 9]`, DEC-04).** Entradas `estandar = atc` en `mama/codigos.json` y
   `prostata/codigos.json` para los fármacos del seed sintético y de la demo: `L02AE02` (leuprorelina), `L02BB03`
@@ -57,7 +60,7 @@ y los diálogos S5-03 c y d. La normalización final es de `ReconciliationServic
   `manifest.json` → 1.4.0, el mismo en `clinical-api` y `rag-orchestrator` (sin `409`).
 - **D10 · `field` en los `422` (`[S5 resp. 10]`).** Propiedad **opcional**, `type: string`, **sin enum**, con la misma
   descripción en `ErrorRegistroClinicoInvalido` (nuevo) y en los existentes `ErrorRegistroManualInvalido` y
-  `ErrorDiagnosticoInvalido` (aditivo, `contracts:breaking` = 0). Este change la introduce porque sale antes (1.18.0);
+  `ErrorDiagnosticoInvalido` (aditivo, `contracts:breaking` = 0). Este change la introduce porque sale antes (1.19.0);
   `l1d-90` y `l1d-91` la usan igual y `l1d-309` la replica en `ErrorCorreccionInvalida`. Aquí se rellena con la
   propiedad del cuerpo causante (`attributeKey`, `value`, `regimenName`, `endedAt`, …; primera ruta del error de Zod),
   nunca con su valor, y se omite en `PACIENTE_EGRESADO` y `TIPO_CANCER_NO_REGISTRADO`. *Descartado:* enum por
@@ -73,6 +76,11 @@ y los diálogos S5-03 c y d. La normalización final es de `ReconciliationServic
   identidad). Ninguno de los dos va a *logs*: el log de la operación lleva `traceId`, UUID del paciente, código de
   error y `mappingStatus`, nunca el texto (test de no-fuga).
 - `rag-orchestrator` no toca datos clínicos ni `clinical-minio`; no cambia.
+- La desidentificación de `regimenName` y `value` hacia `/rag/query` no se reimplementa: el contexto del análisis ya
+  pasa por `clinical-context.builder.ts` y `context-deidentifier.ts` (RN-11), y la PII sembrada en `regimen_name` la
+  cubre `desidentificacion-contexto.test.ts` (tratamiento con documento sintético).
+- Los códigos ATC versionados quedan cubiertos por DEC-04 y ADR-36 (aviso de WHOCC en `NOTICE-atc.txt`, uso académico no
+  comercial, sin DDD).
 - Solo datos sintéticos (P-CASO / FX-02b-a, seed `sintetico`).
 - **Seguridad web:** validación con el schema Zod **generado** del spec, compartido en cliente y servidor; el Route
   Handler es `server-only`, reenvía la cookie y verifica `Origin` (CSRF) como los existentes; sin variables
@@ -84,8 +92,8 @@ y los diálogos S5-03 c y d. La normalización final es de `ReconciliationServic
 
 Proveedor: `clinical-api`. Consumidor: `web` (cliente/Zod generados en `packages/api-contracts`). Cambio
 **aditivo** (tres operaciones y seis schemas nuevos; los dos schemas de error existentes solo ganan `field` opcional):
-`contracts:breaking` = 0 incompatibles, compatible con ADR-26. `info.version` 1.17.0 → **1.18.0** (cadena del S5:
-`l1d-74` 1.17.0 → `l1d-80` 1.18.0 → `l1d-309` 1.19.0 → `l1d-91` 1.20.0; quien rebase renumera y regenera
+`contracts:breaking` = 0 incompatibles, compatible con ADR-26. `info.version` 1.18.0 → **1.19.0** (cadena del S5:
+`l1d-74` 1.17.0 → `l1d-309` 1.18.0 → `l1d-80` 1.19.0 → `l1d-91` 1.20.0; quien rebase renumera y regenera
 `packages/api-contracts`).
 
 ```yaml
@@ -160,8 +168,8 @@ components:
       field: &field { type: string, description: "Propiedad del cuerpo que causó el error, cuando el error es de un campo; ausente si no lo es (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado." }   # opcional
     ErrorRegistroManualInvalido:    # existente: + field opcional (misma definición)
       field: *field
-    ErrorDiagnosticoInvalido:       # existente: + field opcional (misma definición)
-      field: *field
+    ErrorDiagnosticoInvalido:       # existente; error: [CUERPO_INVALIDO, PACIENTE_EGRESADO, VALOR_FUERA_DE_CATALOGO,
+      field: *field                 #   GRADACION_INCOHERENTE]; + field opcional (misma definición)
 ```
 
 Ejemplos nuevos (registrados en `contracts/examples/index.json`): `prior-treatment-manual.json` (AC-1, request),
@@ -218,6 +226,11 @@ la comparación con el baseline y el `409` de versión entre backends no debe ap
 - Un código o nombre ATC copiado mal rompería DEC-04: se verifica cada entrada en la fuente, sin DDD. Con el catálogo
   real 1.4.0, «Leuprorelina» manual sale `mapeado` con `L02AE02` en la demo; AC-1 se sigue verificando con FX-01b-b.
 - `l1d-74` (FX-02b-a) usa `L02AE02` y `L02BB03` (resuelto en el Gate 1, `[S5 resp. 10]`).
+
+- **Riesgo aceptado/abierto (Gate 2, para el humano):** un tratamiento en curso se guarda con
+  `end_reason = desconocido` (columna `NOT NULL`, `[S5 resp. 13]`) y el contexto de análisis no lleva la bandera
+  `ongoing`: el análisis podría leer «motivo de fin desconocido» en un tratamiento que sigue en curso. Se acepta en el
+  MVP; decidir si el constructor de contexto debe exponer `ongoing` (historia nueva, no cambia el esquema).
 
 ## Decisiones del Gate 1 (usuario, 2026-11-03)
 

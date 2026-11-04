@@ -7,6 +7,7 @@ import {
   NOMBRES_DE_ARCHIVO,
 } from './archivos.mjs';
 import { catalogHashDeReglasDePoblacion } from './canonico.mjs';
+import { violacionesDeAtributos } from './atributos.mjs';
 import { violacionesDeEscalas } from './escalas.mjs';
 import { nombrable } from './nombrable.mjs';
 import { clavesRepetidasEn, verificarCatalogHash, vocabularioDe } from './reglas.mjs';
@@ -182,6 +183,7 @@ export function validarCatalogo({ archivos, allowlist, esquemas }) {
     ),
     ...violacionesDeLosDeclarados(archivos.manifest, archivos.tipos, esquemasCompilados),
     ...violacionesDeLosDeclaradosDeLaRaiz(archivos, esquemasCompilados),
+    ...violacionesDeAtributos(archivos.atributos),
   ];
   return {
     valido: violaciones.length === 0,

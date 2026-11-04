@@ -10,7 +10,7 @@ import type { RefDeDato } from '../../lib/correcciones/cliente';
 import { useEnvioDeCorreccion } from '../../lib/correcciones/use-envio-de-correccion';
 import { mensajes } from '../../lib/mensajes';
 import { Button } from '../ui/button';
-import { CampoDeCorreccion } from './campo-de-correccion';
+import { CampoDeTexto } from './campo-de-texto';
 
 const CAMPOS = ['value', 'unit', 'performedAt'];
 
@@ -46,7 +46,7 @@ export function FormularioDeCorreccionDeBiomarcador({
 
   return (
     <form onSubmit={alEnviar} noValidate className="flex flex-wrap items-start gap-3">
-      <CampoDeCorreccion
+      <CampoDeTexto
         id={`${idBase}-valor`}
         name="value"
         etiqueta={formulario.valor}
@@ -54,7 +54,7 @@ export function FormularioDeCorreccionDeBiomarcador({
         error={errorDe('value')}
         autoComplete="off"
       />
-      <CampoDeCorreccion
+      <CampoDeTexto
         id={`${idBase}-unidad`}
         name="unit"
         etiqueta={formulario.unidad}
@@ -62,7 +62,7 @@ export function FormularioDeCorreccionDeBiomarcador({
         error={errorDe('unit')}
         autoComplete="off"
       />
-      <CampoDeCorreccion
+      <CampoDeTexto
         id={`${idBase}-fecha`}
         name="performedAt"
         type="date"
