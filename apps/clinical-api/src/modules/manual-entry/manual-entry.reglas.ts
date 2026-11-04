@@ -214,11 +214,14 @@ function sinRepetidos<T>(elementos: readonly T[], claveDe: (elemento: T) => stri
   });
 }
 
-/** El tipo del diagnóstico vigente; sin vigente, todos los tipos del catálogo que el despliegue habilita (RN-20). */
+/** Tipos del catálogo que el despliegue habilita (`ENABLED_CANCER_TYPES`, RN-20), en el orden del manifiesto. */
+function tiposHabilitadosDelCatalogo(fuente: FuenteDeOpciones): readonly string[] {
+  return fuente.tiposDelCatalogo.filter((tipo) => fuente.tiposHabilitados.estaHabilitado(tipo));
+}
+
+/** El tipo del diagnóstico vigente; sin vigente, todos los tipos habilitados. */
 function tiposEnAlcance(fuente: FuenteDeOpciones, tipoDeCancer: string | null): readonly string[] {
-  return tipoDeCancer === null
-    ? fuente.tiposDelCatalogo.filter((tipo) => fuente.tiposHabilitados.estaHabilitado(tipo))
-    : [tipoDeCancer];
+  return tipoDeCancer === null ? tiposHabilitadosDelCatalogo(fuente) : [tipoDeCancer];
 }
 
 /** Términos de los biomarcadores del checklist y, tras ellos, los LOINC del catálogo; el checklist manda en la etiqueta. */
@@ -268,9 +271,7 @@ export function opcionesDeRegistroManual(
   return {
     catalogVersion: fuente.escalas.version(),
     cancerType: tipoDeCancer,
-    enabledCancerTypes: fuente.tiposDelCatalogo.filter((tipo) =>
-      fuente.tiposHabilitados.estaHabilitado(tipo),
-    ),
+    enabledCancerTypes: [...tiposHabilitadosDelCatalogo(fuente)],
     biomarkerTerms: terminosDeBiomarcador(fuente, itemsCriticos, tipos),
     stagingSystems: delTipo((tipo) => fuente.escalas.sistemasDeEstadificacion(tipo)),
     performanceScales: fuente.escalas
