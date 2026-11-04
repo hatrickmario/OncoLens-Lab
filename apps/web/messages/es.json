@@ -440,12 +440,12 @@
       "tratamiento": {
         "accion": "+ Agregar tratamiento previo",
         "titulo": "Agregar tratamiento previo",
-        "descripcion": "Registro manual: el tratamiento queda registrado por ti en la vista de caso.",
-        "linea": "Línea (opcional)",
-        "contexto": "Contexto",
+        "descripcion": "Registro manual de un tratamiento previo del paciente (dato histórico de la ficha). Queda con origen \"Registro manual\" en la vista de caso.",
+        "linea": "Línea del tratamiento previo (opcional)",
+        "contexto": "Contexto del tratamiento previo",
         "esquema": "Esquema",
         "inicio": "Inicio (opcional)",
-        "enCurso": "En curso",
+        "enCurso": "Aún en curso (según lo informado)",
         "fin": "Fin (opcional)",
         "motivoDeFin": "Motivo de fin",
         "noMapeado": "Sin código en el catálogo versionado: queda como no mapeado; nunca se inventa un código."
@@ -465,7 +465,6 @@
       "errores": {
         "obligatorio": "Este campo es obligatorio.",
         "campoInvalido": "Revisa este campo: no cumple el formato esperado.",
-        "finAnterior": "La fecha de fin no puede ser anterior al inicio.",
         "valorFueraDeCatalogo": "Este valor no está en el catálogo vigente.",
         "sinTipoDeCancer": "Registra primero el diagnóstico del paciente: sin tipo de cáncer no se puede validar el atributo.",
         "permiso": "Tu cuenta no puede registrar datos clínicos.",

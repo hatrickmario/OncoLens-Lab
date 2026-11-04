@@ -212,6 +212,8 @@ describe('Registro manual de tratamientos previos y atributos en la vista de cas
     await usuario.click(within(dialogo).getByRole('button', { name: registro.guardar }));
 
     expect(await within(dialogo).findByText(registro.errores.campoInvalido)).toBeTruthy();
-    expect(within(dialogo).queryByText(registro.errores.finAnterior)).toBeNull();
+    expect(
+      within(dialogo).queryByText('La fecha de fin no puede ser anterior al inicio.'),
+    ).toBeNull();
   });
 });

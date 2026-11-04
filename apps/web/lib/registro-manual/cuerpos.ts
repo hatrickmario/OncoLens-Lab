@@ -51,15 +51,11 @@ function primerErrorDeZod(resultado: {
   return typeof campo === 'string' ? { campo, mensaje } : { mensaje };
 }
 
-/** Validación de UX con el Zod del contrato y la coherencia de fechas y fin; el BFF y clinical-api vuelven a validar. */
+/** Validación de UX: lo obligatorio vacío y el Zod del contrato; la coherencia de fechas y fin la decide el 422 del servidor. */
 export function errorDelCuerpoDeTratamiento(
   cuerpo: PriorTreatmentManualCreate,
 ): ErrorDeRegistro | null {
   if (cuerpo.regimenName === '') return obligatorio('regimenName');
-  if (!cuerpo.ongoing && cuerpo.endReason === undefined) return obligatorio('endReason');
-  if (cuerpo.startedAt && cuerpo.endedAt && cuerpo.endedAt < cuerpo.startedAt) {
-    return { campo: 'endedAt', mensaje: mensajes().caso.registro.errores.finAnterior };
-  }
   return primerErrorDeZod(zPriorTreatmentManualCreate.safeParse(cuerpo));
 }
 

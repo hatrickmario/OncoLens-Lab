@@ -33,11 +33,15 @@ function leerJson(texto: string): unknown {
 /** Texto fijo de un 422 por `error` y `field`; el `message` del servidor nunca se muestra (sin jerga ni eco de valores). */
 function textoDelError422(error: string, campo: string | undefined): ErrorDeRegistro {
   const { errores } = mensajes().caso.registro;
-  const conCampo = (mensaje: string): ErrorDeRegistro => (campo ? { campo, mensaje } : { mensaje });
-  if (error === 'PACIENTE_EGRESADO') return { mensaje: mensajes().ficha.correccion.egresado };
-  if (error === 'TIPO_CANCER_NO_REGISTRADO') return { mensaje: errores.sinTipoDeCancer };
-  if (error === 'VALOR_FUERA_DE_CATALOGO') return conCampo(errores.valorFueraDeCatalogo);
-  return conCampo(campo === 'endedAt' ? errores.finAnterior : errores.campoInvalido);
+  const sinCampo: Record<string, string> = {
+    PACIENTE_EGRESADO: mensajes().ficha.correccion.egresado,
+    TIPO_CANCER_NO_REGISTRADO: errores.sinTipoDeCancer,
+  };
+  const mensajeSinCampo = sinCampo[error];
+  if (mensajeSinCampo !== undefined) return { mensaje: mensajeSinCampo };
+  const mensaje =
+    error === 'VALOR_FUERA_DE_CATALOGO' ? errores.valorFueraDeCatalogo : errores.campoInvalido;
+  return campo ? { campo, mensaje } : { mensaje };
 }
 
 function traducirError(status: number, cuerpo: unknown): ErrorDeRegistro {
