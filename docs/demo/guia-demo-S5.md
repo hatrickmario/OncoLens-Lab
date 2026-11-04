@@ -212,6 +212,12 @@ la redacción varía y la prueba solo comprueba estructura (citas, avisos), nunc
 
 <!-- g-demo:fin -->
 
+El recorrido **muta al paciente** (corrige RP y registra Ki-67): necesita el seed recién sembrado (`scripts/e2e/ejecutar.sh` hace
+`down -v`; en la demo, apagar con `--borrar-datos` y volver a levantar), corre después de `demo-s5-pacientes.spec.ts` y no admite
+reintentos. Si el faltante ya está presente, el primer paso falla pidiendo reiniciar el seed. Con una sola opción visible (lo
+habitual en modo fingido para (g)) el paso del orden por aplicabilidad (RN-28) queda `no_verificable`, y el gate no lo da por
+superado: con el LLM real conviene comprobar que el análisis trae al menos 2 opciones.
+
 Lo que la prueba comprueba (estructura, no texto generado): la corrección aparece con «Corrección manual» y el valor anterior
 en el histórico desplegable; la línea de tiempo tiene al menos un evento y la columna «Datos críticos» muestra el faltante;
 tras registrarlo a mano, la fila deja de ser «Faltante» también después de recargar; el análisis muestra entre 1 y el máximo

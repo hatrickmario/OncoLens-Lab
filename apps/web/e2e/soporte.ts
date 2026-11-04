@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { expect, type Page } from '@playwright/test';
 import es from '../messages/es.json' with { type: 'json' };
+import { opcionDelRotulo, type OpcionVisible } from './orden-rn28';
 
 /** Ejemplos del contrato: el E2E lee de ahí lo que sirve el modo falso, sin literales fijos (`[S1 resp. 18]`). */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON de ejemplos sin tipo: el E2E lee campos concretos
@@ -176,29 +177,6 @@ export async function pasoSeguimiento(page: Page, pregunta: string, n: number) {
   await expect(turno.getByText(es.app.academicUseLabel)).toBeVisible();
 }
 
-export interface OpcionVisible {
-  coincide: number;
-  noCoincide: number;
-  noComparable: boolean;
-}
-
-/**
- * Orden RN-28 recalculado solo desde lo que la UI muestra (no repite `applicability_order`): «Población no comparable»
- * (≥ 1 excluyente en No coincide) nunca precede a una comparable, y entre dos comparables (0 excluyentes en ambas) los
- * Coincide no aumentan. Entre dos no comparables la UI no muestra cuántos excluyentes hay: no se compara.
- */
-export function violacionesDeOrdenRn28(opciones: OpcionVisible[]): string[] {
-  const violaciones: string[] = [];
-  opciones.slice(1).forEach((siguiente, i) => {
-    const previa = opciones[i]!;
-    if (previa.noComparable && !siguiente.noComparable)
-      violaciones.push(`la opción ${i + 1} no comparable precede a una comparable`);
-    if (!previa.noComparable && !siguiente.noComparable && previa.coincide < siguiente.coincide)
-      violaciones.push(`la opción ${i + 1} tiene menos Coincide que la ${i + 2}`);
-  });
-  return violaciones;
-}
-
 /** Los conteos que muestra cada tarjeta («Coincide 2, Parcial 0, No coincide 0, Desconocido 3») y su etiqueta de no comparable. */
 export async function opcionesVisibles(page: Page): Promise<OpcionVisible[]> {
   const tarjetas = page
@@ -207,14 +185,28 @@ export async function opcionesVisibles(page: Page): Promise<OpcionVisible[]> {
   const { aplicabilidad } = evidence;
   const opciones: OpcionVisible[] = [];
   for (const tarjeta of await tarjetas.all()) {
-    const grupo = tarjeta.getByRole('group', { name: /Coincide \d+,/ });
-    const rotulo = (await grupo.getAttribute('aria-label')) ?? '';
-    const cuenta = (patron: string) => Number(new RegExp(`${patron} (\\d+)`).exec(rotulo)?.[1]);
-    opciones.push({
-      coincide: cuenta(`(?<!No )${aplicabilidad.coincide}`),
-      noCoincide: cuenta(aplicabilidad.noCoincide),
-      noComparable: (await tarjeta.getByText(aplicabilidad.etiquetaNoComparable).count()) > 0,
+    const grupo = tarjeta.getByRole('group', {
+      name: new RegExp(`${aplicabilidad.coincide} \\d+,`),
     });
+    const rotulo = (await grupo.getAttribute('aria-label')) ?? '';
+    const noComparable = (await tarjeta.getByText(aplicabilidad.etiquetaNoComparable).count()) > 0;
+    opciones.push(opcionDelRotulo(rotulo, noComparable));
   }
   return opciones;
+}
+
+/**
+ * El recorrido del gate muta al paciente (corrige un biomarcador y registra el faltante): solo corre sobre un seed
+ * recién sembrado. Si el faltante ya está presente, falla con la causa y no con un paso posterior confuso.
+ */
+export async function exigirPacienteSinModificar(
+  page: Page,
+  idPaciente: string,
+  datos: DatosDelGate,
+) {
+  await page.goto(`/pacientes/${idPaciente}/caso`);
+  await expect(
+    filaDeDatoCritico(page, datos.faltante.nombre),
+    `${datos.faltante.nombre} ya no está faltante: el recorrido necesita el seed intacto; reiniciar el seed (scripts/e2e/ejecutar.sh hace down -v)`,
+  ).toContainText(datosCriticos.estado.faltante);
 }

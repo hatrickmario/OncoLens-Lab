@@ -1,8 +1,9 @@
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
 import {
   IDS_SEMILLA_S5,
   datosDelGate,
+  exigirPacienteSinModificar,
   iniciarSesion,
   opcionesVisibles,
   pasoCorreccion,
@@ -10,8 +11,9 @@ import {
   pasoSeguimiento,
   pasoVistaDeCaso,
   textos,
-  violacionesDeOrdenRn28,
 } from './soporte';
+import { estadoDelOrden, violacionesDeOrdenRn28 } from './orden-rn28';
+import { modoDelLlm, type ResultadoDelGate, type ResultadoDePaso } from './resultado-del-gate';
 import es from '../messages/es.json' with { type: 'json' };
 
 /**
@@ -22,37 +24,39 @@ import es from '../messages/es.json' with { type: 'json' };
  * de `scripts/verify-g-demo`: solo nombres de paso, su resultado y la versión del catálogo; sin PII ni texto generado.
  * `corpusRelease` no se adjunta: el contrato que ve el navegador no lo expone (solo `corpusCutoffDate`, que no es lo mismo);
  * `verify-g-demo` lo toma del reporte de `evaluate`, que sí lo trae (`configuracion.corpusRelease`).
+ * El JSON lleva también `modoLlm` (de `LLM_PROVIDER`) y `generadoEn`; el paso del orden RN-28 es `no_verificable` con menos
+ * de 2 opciones visibles (en modo fingido, el paciente (g) devuelve una): el gate no lo da por superado.
+ *
+ * Depende del orden: muta al paciente (corrige un biomarcador y registra el faltante), así que necesita el seed recién
+ * sembrado y corre después de `demo-s5-pacientes.spec.ts` (orden alfabético, `workers: 1`). Sin reintentos: un segundo
+ * intento ya no encontraría el paciente sin modificar.
  */
-const datos = datosDelGate();
-const idPaciente = IDS_SEMILLA_S5[datos.paciente];
-const NUMERO_EN_EL_LISTADO = datos.paciente.charCodeAt(0) - 'a'.charCodeAt(0) + 1;
 const RUTA_DEL_RESULTADO = new URL('../../../reports/gates/e2e-g-demo.json', import.meta.url);
-
-interface PasoDelGate {
-  paso: string;
-  resultado: 'ok' | 'fallo';
-}
-interface ResultadoDelGate {
-  pasos: PasoDelGate[];
-  catalogVersion?: string;
-}
 
 /** Un `test.step` que deja constancia de su resultado aunque falle: el fallo nombra el paso (US-142 AC-1). */
 function crearRegistroDePasos() {
-  const resultado: ResultadoDelGate = { pasos: [] };
-  async function paso(nombre: string, cuerpo: () => Promise<void>) {
+  const resultado: ResultadoDelGate = {
+    pasos: [],
+    modoLlm: modoDelLlm(process.env.LLM_PROVIDER),
+    generadoEn: new Date().toISOString(),
+  };
+  async function paso(nombre: string, cuerpo: () => Promise<ResultadoDePaso | void>) {
+    let estado: ResultadoDePaso = 'ok';
     try {
-      await test.step(nombre, cuerpo);
-      resultado.pasos.push({ paso: nombre, resultado: 'ok' });
+      await test.step(nombre, async () => {
+        estado = (await cuerpo()) ?? 'ok';
+      });
     } catch (error) {
-      resultado.pasos.push({ paso: nombre, resultado: 'fallo' });
+      estado = 'fallo';
       throw error;
+    } finally {
+      resultado.pasos.push({ paso: nombre, resultado: estado });
     }
   }
   return { resultado, paso };
 }
 
-async function adjuntarResultado(resultado: ResultadoDelGate, testInfo: TestInfo) {
+async function publicarResultado(resultado: ResultadoDelGate, testInfo: TestInfo) {
   const cuerpo = JSON.stringify(resultado, null, 2);
   await testInfo.attach('g-demo-resultado', { body: cuerpo, contentType: 'application/json' });
   mkdirSync(new URL('./', RUTA_DEL_RESULTADO), { recursive: true });
@@ -74,7 +78,11 @@ async function comprobarOpcionesDescritas(page: Page, maxOpciones: number, aviso
     await expect(
       tarjeta.getByRole('list', { name: textos.cita.lista }).getByRole('listitem').first(),
     ).toBeVisible();
-    await expect(tarjeta.getByRole('group', { name: /Coincide \d+, Parcial/ })).toBeVisible();
+    await expect(
+      tarjeta.getByRole('group', {
+        name: new RegExp(`${textos.aplicabilidad.coincide} \\d+, ${textos.aplicabilidad.parcial}`),
+      }),
+    ).toBeVisible();
   }
   const criterio = es.evidence.orderCriterion;
   await expect(
@@ -89,9 +97,11 @@ async function comprobarBaseConFaltantes(page: Page, esperados: number) {
   expect(esperados).toBeGreaterThan(0);
 
   await expect(page.getByRole('heading', { level: 3, name: textos.base.titulo })).toBeVisible();
-  await expect(
-    page.getByText(new RegExp(`${esperados} datos? críticos? faltantes?`)),
-  ).toBeVisible();
+  const resumen =
+    esperados === 1
+      ? textos.base.faltantesUno
+      : textos.base.faltantesVarios.replace('{n}', String(esperados));
+  await expect(page.getByText(resumen)).toBeVisible();
   await page.getByRole('button', { name: textos.base.verDetalle }).click();
   const bloque = page
     .getByRole('heading', { level: 4, name: textos.base.datosCriticosFaltantes })
@@ -102,11 +112,18 @@ async function comprobarBaseConFaltantes(page: Page, esperados: number) {
 
 test.describe('Gate G-Demo: la hipótesis de punta a punta (L1D-248)', () => {
   test.setTimeout(180_000);
+  test.describe.configure({ retries: 0 });
 
   test('el doctor recorre login, ficha con corrección, vista de caso, registro del faltante, análisis, Base del análisis con los faltantes como desconocido y 2 seguimientos con citas [US-142 AC-1]', async ({
     page,
     baseURL,
   }, testInfo) => {
+    // El JSON anterior se borra al inicio: si esta corrida falla antes de publicar, no queda uno viejo que parezca de hoy.
+    rmSync(RUTA_DEL_RESULTADO, { force: true });
+    const datos = datosDelGate();
+    const idPaciente = IDS_SEMILLA_S5[datos.paciente];
+    // Los pacientes (g)–(m) del seed son «Prueba Sintética 7»…«13», en el orden de `IDS_SEMILLA_S5`.
+    const numeroEnElListado = Object.keys(IDS_SEMILLA_S5).indexOf(datos.paciente) + 7;
     const { resultado, paso } = crearRegistroDePasos();
     const origen = new URL(baseURL ?? 'http://127.0.0.1:3000').origin;
     const peticiones: string[] = [];
@@ -118,15 +135,17 @@ test.describe('Gate G-Demo: la hipótesis de punta a punta (L1D-248)', () => {
     page.on('pageerror', (error) => erroresDeConsola.push(error.message));
 
     try {
-      await paso('inicio de sesión y paciente en el listado', async () => {
+      await paso('inicio de sesión y paciente sin modificar', async () => {
         await iniciarSesion(page);
+        await exigirPacienteSinModificar(page, idPaciente, datos);
+      });
+
+      await paso('paciente en el listado', async () => {
         await page.goto('/pacientes');
-        const enmascarado = String(NUMERO_EN_EL_LISTADO).padStart(2, '0');
+        const enmascarado = String(numeroEnElListado).padStart(2, '0');
         await page
           .getByRole('link', {
-            name: new RegExp(
-              `P\\. S\\. ${String(NUMERO_EN_EL_LISTADO)[0]}\\. •••• ${enmascarado}\\b`,
-            ),
+            name: new RegExp(`P\\. S\\. ${String(numeroEnElListado)[0]}\\. •••• ${enmascarado}\\b`),
           })
           .click();
         await expect(page).toHaveURL(new RegExp(`/pacientes/${idPaciente}$`));
@@ -182,6 +201,7 @@ test.describe('Gate G-Demo: la hipótesis de punta a punta (L1D-248)', () => {
         const opciones = await opcionesVisibles(page);
         expect(opciones.length).toBeGreaterThanOrEqual(1);
         expect(violacionesDeOrdenRn28(opciones)).toEqual([]);
+        return estadoDelOrden(opciones) === 'no_verificable' ? 'no_verificable' : undefined;
       });
 
       await paso('Base del análisis con los faltantes como desconocido', () =>
@@ -202,7 +222,7 @@ test.describe('Gate G-Demo: la hipótesis de punta a punta (L1D-248)', () => {
         ).toEqual([]);
       });
     } finally {
-      await adjuntarResultado(resultado, testInfo);
+      await publicarResultado(resultado, testInfo);
     }
   });
 });
