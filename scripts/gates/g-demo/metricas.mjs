@@ -31,6 +31,11 @@ export function validarReporte(reportes) {
   return todosDelGate ? { ok: true } : { ok: false, motivo };
 }
 
+/** Cómo se muestra una meta (`≥ n` o `≤ n`): una sola definición para el motivo y la tabla. */
+export function textoDeMeta(meta) {
+  return meta.minimo !== undefined ? `≥ ${meta.minimo}` : `≤ ${meta.maximo}`;
+}
+
 function valorEn(objeto, ruta) {
   let actual = objeto;
   for (const clave of ruta) {

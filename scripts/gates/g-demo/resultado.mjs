@@ -4,15 +4,13 @@
  * fingido es regresión del recorrido. Las métricas no medidas (salvo las obligatorias), las excepciones declaradas, la
  * validación clínica y el p95 fuera de meta NUNCA son motivo de fallo.
  */
+import { textoDeMeta } from './metricas.mjs';
+
 export const MODOS = ['fingido', 'real'];
 
 const TITULO_SUPERADO = 'G-Demo superado';
 const TITULO_REGRESION =
   'Regresión del recorrido en verde (modo fingido); G-Demo se declara solo en modo real';
-
-function textoDeMeta(meta) {
-  return meta.minimo !== undefined ? `≥ ${meta.minimo}` : `≤ ${meta.maximo}`;
-}
 
 function motivosDeMetricas(metricas) {
   return metricas.flatMap((m) => {

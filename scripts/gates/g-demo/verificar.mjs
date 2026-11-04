@@ -7,7 +7,7 @@
  * `--e2e-resultado` (JSON del E2E: pasos, catalogVersion, corpusRelease), `--reporte-evaluate` (repetible), `--p95-e2e-s`.
  * Sale con 0 si el resultado es «superado» o «regresión fingida»; con 1 si «no superado».
  */
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
@@ -163,6 +163,10 @@ export async function verificar(argv, deps) {
   const fecha = deps.reloj().toISOString().slice(0, 10);
   const datos = armarDatosDelRegistro({ veredicto, comprobaciones, reportes, args, modo, fecha });
   const destino = rutaDelRegistro(modo, fecha);
+  // Un registro real ya escrito puede estar firmado: nunca se pisa (se borra a mano para repetir la verificación).
+  if (modo === 'real' && deps.existe(destino)) {
+    throw new Error(`ya existe ${destino}; no se sobrescribe un registro que puede estar firmado`);
+  }
   deps.escribirTexto(
     destino,
     renderizarRegistro(deps.leerTexto('docs/gates/plantilla-G-Demo.md'), datos),
@@ -185,6 +189,7 @@ export function depsDelSistema(raiz = RAIZ) {
       mkdirSync(path.dirname(completa), { recursive: true });
       writeFileSync(completa, texto);
     },
+    existe: (ruta) => existsSync(path.resolve(raiz, ruta)),
     reloj: () => new Date(),
     salida: (texto) => process.stdout.write(`${texto}\n`),
   };

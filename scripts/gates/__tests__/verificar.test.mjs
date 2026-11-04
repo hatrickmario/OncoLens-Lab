@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { extraerBanderas } from '../g-demo/banderas.mjs';
 import { cargarMetas } from '../g-demo/metricas.mjs';
 import { renderizarRegistro } from '../g-demo/registro.mjs';
+import { verificarSoloSintetico } from '../g-demo/solo-sintetico.mjs';
 import { depsDelSistema, verificar } from '../g-demo/verificar.mjs';
 
 const TIEMPO_MAXIMO_MS = 30_000;
@@ -63,6 +64,7 @@ async function correr({
   conteo = CONTEO_SINTETICO,
   banderas = BANDERAS_APAGADAS,
   p95 = ['--p95-e2e-s', '9.5'],
+  existentes = [],
 } = {}) {
   const insumos = { '/in/e2e.json': e2e, '/in/r0.json': reportes[0], '/in/r1.json': reportes[1] };
   const escritos = {};
@@ -77,6 +79,7 @@ async function correr({
     escribirTexto: (ruta, texto) => {
       escritos[ruta] = texto;
     },
+    existe: (ruta) => existentes.includes(ruta),
     reloj: () => FECHA,
     salida: (texto) => salidas.push(texto),
   };
@@ -350,6 +353,23 @@ describe('metricas.json', () => {
       expect(Object.keys(metas)).toContain(d.claveMeta);
     expect(definiciones.filter((x) => x.metaFija).map((x) => x.id)).toEqual(['M-10.1', 'M-10.2']);
     expect(Object.keys(metas)).toContain(p95.claveMeta);
+  });
+});
+
+describe('registro real ya existente', () => {
+  it('no sobrescribe un registro real que puede estar firmado [US-142 AC-6]', async () => {
+    await expect(correr({ existentes: ['docs/gates/G-Demo-2026-11-05.md'] })).rejects.toThrow(
+      /no se sobrescribe/,
+    );
+  });
+});
+
+describe('verificarSoloSintetico con un origen desconocido', () => {
+  it('falla con datos no sintéticos cuando aparece un origen nuevo con pacientes [US-142 AC-3]', () => {
+    const r = verificarSoloSintetico({ sintetico: 14, real_nuevo: 1 }, BANDERAS_APAGADAS);
+
+    expect(r.ok).toBe(false);
+    expect(r.motivos).toContain('datos no sintéticos');
   });
 });
 

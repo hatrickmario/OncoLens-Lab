@@ -2,6 +2,8 @@
  * Registro del gate (US-142 AC-6): Markdown desde `docs/gates/plantilla-G-Demo.md`. Solo agregados, nombres de métrica y
  * de variable, identificadores públicos de versión y modelos: nunca filas, identidad, credenciales ni cadenas de conexión.
  */
+import { textoDeMeta } from './metricas.mjs';
+
 export const NO_DISPONIBLE = 'No disponible';
 export const DUENO = 'usuario (PO)';
 
@@ -14,10 +16,6 @@ export function renderizarRegistro(plantilla, datos) {
     if (!(clave in datos)) throw new Error(`la plantilla pide «${clave}» y no hay dato`);
     return String(datos[clave]);
   });
-}
-
-function textoDeMeta(meta) {
-  return meta.minimo !== undefined ? `≥ ${meta.minimo}` : `≤ ${meta.maximo}`;
 }
 
 const ESTADOS_DE_METRICA = {
