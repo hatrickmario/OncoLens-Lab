@@ -11,7 +11,7 @@
 
 ## 1. contratos
 
-- [ ] 1.1 (`sync-contracts`) Editar primero `apps/clinical-api/openapi.yaml` según `design.md` §Contratos:
+- [x] 1.1 (`sync-contracts`) Editar primero `apps/clinical-api/openapi.yaml` según `design.md` §Contratos:
   `getManualEntryOptions` y schema `ManualEntryOptions` (`field` ya lo declara `l1d-80`, `[S5 resp. 10]`: no se
   redefine); `info.version` 1.19.0 → **1.20.0** (quien rebase renumera y regenera `packages/api-contracts`). Ejemplos
   nuevos en `contracts/examples/` registrados en `index.json` (`manual-entry-options-mama`,
@@ -22,30 +22,30 @@
 
 ## 2. clinical-platform
 
-- [ ] 2.1 (TDD estricto) Tests de aceptación en rojo, Supertest + PostgreSQL de test + catálogo `test-normalizacion-1.0.0`, con
+- [x] 2.1 (TDD estricto) Tests de aceptación en rojo, Supertest + PostgreSQL de test + catálogo `test-normalizacion-1.0.0`, con
   verificación del proveedor: "devuelve términos, TNM_8, ECOG 0–5, nottingham y el destino de ki67 y grado para F-M2
   [US-111 AC-1] · integración", "devuelve gleason_isup para próstata y todos los tipos habilitados sin diagnóstico
   vigente [US-111 AC-3] · integración", "responde 401, 403 al admin y 404 sin datos del paciente [US-111 AC-1] ·
   integración", "criticalItems coincide con el destination del checklist para F-M2 y próstata [US-111 AC-2] ·
   integración" (paridad, mismo lector de `datos-criticos.json`, design D10). Esqueleto de `opciones()` en el service
   con `throw new Error('no implementado')`. Commit `test(L1D-91)`.
-- [ ] 2.2 (TDD estricto) Tests de aceptación en rojo: "responde field = performanceValue con ECOG 7 sin repetir el
+- [x] 2.2 (TDD estricto) Tests de aceptación en rojo: "responde field = performanceValue con ECOG 7 sin repetir el
   valor [US-111 AC-4]", "responde field = grading con Gleason incoherente [US-111 AC-4]", "responde
   PACIENTE_EGRESADO sin field [US-111 AC-4]", "responde field = name con un nombre vacío [US-111 AC-4]" · integración.
   Commit `test(L1D-91)`.
-- [ ] 2.3 (TDD estricto) Implementar la ruta `GET …/manual-entry-options` en `manual-entry` (`authorize('clinical:read')`),
+- [x] 2.3 (TDD estricto) Implementar la ruta `GET …/manual-entry-options` en `manual-entry` (`authorize('clinical:read')`),
   `opciones()` del service con los puertos de catálogo inyectados y el mapeo de errores con `field`, con unitarios
   uno a uno. Verificación: 2.1 y 2.2 en verde y los tests de `l1d-90` sin cambios. Commit `feat(L1D-91)`.
-- [ ] 2.4 Extraer `opcionesDeRegistroManual()` (RN-29) y `campoDelError()` en `manual-entry.reglas.ts`; reutilizar el
+- [x] 2.4 Extraer `opcionesDeRegistroManual()` (RN-29) y `campoDelError()` en `manual-entry.reglas.ts`; reutilizar el
   lector de `datos-criticos.json` del checklist (`grep -rn "match.name" apps/clinical-api/src`), sin un segundo parser.
-- [ ] 2.5 (test del AC primero) Route Handlers BFF `apps/web/app/api/patients/[id]/biomarkers/route.ts` (POST),
+- [x] 2.5 (test del AC primero) Route Handlers BFF `apps/web/app/api/patients/[id]/biomarkers/route.ts` (POST),
   `.../diagnoses/route.ts` (POST) y `.../manual-entry-options/route.ts` (GET) con manejadores en
   `lib/server/registro-manual.ts` (crearlo o ampliarlo si `l1d-80` ya lo creó): `server-only`, cookie reenviada,
   `Origin` en los `POST`, cuerpo sin reserializar con tope, UUID validado, `Cache-Control: no-store`. Tests en rojo
   Vitest + MSW: "retransmite 201 [US-111 AC-1]", "retransmite 422 con field [US-111 AC-4]", "rechaza Origin ajeno
   con 403 sin llamar [US-111 AC-4]", "sanea 5xx y timeout [US-111 AC-4]", "404 propio sin UUID [US-111 AC-1]",
   "el log no contiene cuerpo ni id del paciente". Commits `test(L1D-91)` → `feat(L1D-91)`.
-- [ ] 2.6 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde
+- [x] 2.6 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde
   antes y después, commit `refactor(L1D-91)`.
 
 ## 3. frontend
