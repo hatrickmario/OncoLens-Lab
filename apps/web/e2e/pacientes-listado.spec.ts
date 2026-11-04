@@ -9,8 +9,15 @@ test.describe('Listado y búsqueda de pacientes (L1D-202, ARR-09)', () => {
     await expect(page.getByRole('heading', { level: 1, name: pacientes.titulo })).toBeVisible();
     const filas = page.getByRole('row').filter({ has: page.getByRole('rowheader') });
     await expect(filas).toHaveCount(TOTAL_PACIENTES_SEMILLA);
+    // Las iniciales toman el primer carácter de cada palabra («Prueba Sintética 10» → «P. S. 1.»): el número se distingue
+    // por el final enmascarado del documento («•••• 10»).
     for (let n = 1; n <= TOTAL_PACIENTES_SEMILLA; n += 1) {
-      await expect(page.getByRole('link', { name: new RegExp(`P\\. S\\. ${n}\\.`) })).toBeVisible();
+      const enmascarado = String(n).padStart(2, '0');
+      await expect(
+        page.getByRole('link', {
+          name: new RegExp(`P\\. S\\. ${String(n)[0]}\\. •••• ${enmascarado}\\b`),
+        }),
+      ).toBeVisible();
     }
     await expect(filas.filter({ hasText: 'SINTÉTICO' })).toHaveCount(TOTAL_PACIENTES_SEMILLA);
   });

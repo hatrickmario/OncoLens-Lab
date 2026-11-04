@@ -1,0 +1,197 @@
+{
+  "traceId": "req_s5kdemo01",
+  "query": "¿Qué describe la evidencia del corpus de la demo para pacientes con cáncer de mama metastásico HER2 positivo que ya recibieron trastuzumab, pertuzumab y trastuzumab emtansina?",
+  "sourcesSelected": {
+    "guias": true,
+    "ensayos": false,
+    "publicaciones": true
+  },
+  "dataClassification": "sintetico",
+  "catalogVersion": "2026.10.0",
+  "maxOptions": 3,
+  "filtersApplied": {
+    "historiaCompleta": false,
+    "soloBiomarcadoresRelevantes": true,
+    "ultimosSeisMeses": true,
+    "antecedentesFamiliares": false,
+    "publishedFromYear": 2021
+  },
+  "clinicalContext": {
+    "pseudoPatientId": "psd_Cz8nG4vQe3Rj",
+    "population": "adulto",
+    "diagnosis": {
+      "dataRef": "r1",
+      "cancerType": "mama",
+      "histology": "carcinoma ductal infiltrante",
+      "grade": "Nottingham grado 3",
+      "stagingSystem": "TNM_8",
+      "stageValue": "IV",
+      "performanceScale": "ECOG",
+      "performanceValue": 1,
+      "monthsSinceDiagnosis": 46,
+      "provenance": {
+        "entryMethod": "seed",
+        "extractionConfidence": "n_a",
+        "reviewStatus": "verificado",
+        "conflict": false
+      }
+    },
+    "biomarkers": [
+      {
+        "dataRef": "r2",
+        "biomarkerName": "HER2",
+        "value": "3+ (IHQ)",
+        "resultType": "cualitativo",
+        "clinicalSignificance": "relevante",
+        "monthsAgo": 45,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      },
+      {
+        "dataRef": "r3",
+        "biomarkerName": "RE",
+        "value": "Negativo",
+        "resultType": "cualitativo",
+        "clinicalSignificance": "relevante",
+        "monthsAgo": 45,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      },
+      {
+        "dataRef": "r4",
+        "biomarkerName": "RP",
+        "value": "Negativo",
+        "resultType": "cualitativo",
+        "clinicalSignificance": "relevante",
+        "monthsAgo": 45,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      },
+      {
+        "dataRef": "r5",
+        "biomarkerName": "Ki-67",
+        "value": "40 %",
+        "resultType": "cuantitativo",
+        "clinicalSignificance": "relevante",
+        "monthsAgo": 45,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      },
+      {
+        "dataRef": "r6",
+        "biomarkerName": "BRCA",
+        "value": "No mutado",
+        "resultType": "cualitativo",
+        "clinicalSignificance": "relevante",
+        "monthsAgo": 45,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      }
+    ],
+    "clinicalNotes": [],
+    "currentLine": 2,
+    "attributes": [
+      {
+        "dataRef": "r7",
+        "key": "estado_menopausico",
+        "value": "posmenopáusica",
+        "monthsAgo": 46,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      }
+    ],
+    "priorTreatments": [
+      {
+        "dataRef": "r8",
+        "lineNumber": 1,
+        "setting": "primera_linea_metastasica",
+        "regimenName": "Trastuzumab + pertuzumab + docetaxel",
+        "atcCodes": [
+          "L01FD01",
+          "L01FD02",
+          "L01CD02"
+        ],
+        "monthsSinceStart": 45,
+        "monthsSinceEnd": 18,
+        "endReason": "progresion",
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      },
+      {
+        "dataRef": "r9",
+        "lineNumber": 2,
+        "setting": "segunda_linea_metastasica",
+        "regimenName": "Trastuzumab emtansina",
+        "atcCodes": [
+          "L01FD03"
+        ],
+        "monthsSinceStart": 17,
+        "monthsSinceEnd": 1,
+        "endReason": "progresion",
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      }
+    ],
+    "events": [
+      {
+        "dataRef": "r10",
+        "eventType": "progresion",
+        "monthsAgo": 18,
+        "description": "Progresión hepática",
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      },
+      {
+        "dataRef": "r11",
+        "eventType": "progresion",
+        "monthsAgo": 1,
+        "description": "Progresión pulmonar y hepática",
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      }
+    ],
+    "biomarkerTrends": [],
+    "missingCriticalData": [],
+    "priorAnalyses": []
+  }
+}

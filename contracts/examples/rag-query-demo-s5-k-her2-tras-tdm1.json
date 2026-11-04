@@ -1,0 +1,299 @@
+{
+  "status": "con_evidencia",
+  "synthesis": {
+    "agreements": [
+      {
+        "text": "La guía describe a pacientes con cáncer de mama metastásico HER2 positivo con al menos dos regímenes anti-HER2 previos.",
+        "citedSources": [
+          {
+            "title": "Breast Cancer Treatment, health professional version",
+            "sourceName": "NCI",
+            "externalId": "https://www.cancer.gov/types/breast/hp/breast-treatment-pdq",
+            "language": "en",
+            "sourceType": "guideline",
+            "licenseClass": "dominio_publico",
+            "studyDesign": "guia",
+            "trialPhase": null,
+            "primaryEndpoint": null,
+            "sampleSize": null,
+            "publishedAt": "2026-02-10",
+            "lastUpdatedAt": "2026-02-10",
+            "guidelineVersion": null,
+            "authors": null,
+            "sourceUrl": "https://www.cancer.gov/types/breast/hp/breast-treatment-pdq",
+            "possiblyOutdated": false,
+            "newerVersionAvailable": false,
+            "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: patients with HER2-positive metastatic breast cancer who had received at least two previous anti-HER2 regimens, including trastuzumab, pertuzumab and trastuzumab emtansine, with ECOG performance status of 0 or 1.",
+            "chunkId": "nci-mama-hp-en@70b3b48a1249#0093"
+          }
+        ],
+        "patientDataRefs": []
+      }
+    ],
+    "discrepancies": []
+  },
+  "applicability": [
+    {
+      "externalId": "https://www.cancer.gov/types/breast/hp/breast-treatment-pdq",
+      "criteria": [
+        {
+          "criterion": "estado_her2",
+          "patientValue": "3+ (IHQ)",
+          "studyPopulationValue": "positivo",
+          "status": "coincide",
+          "unknownReason": null,
+          "isExclusionary": true,
+          "patientDataWarning": null,
+          "studyPopulationValues": [
+            {
+              "value": "positivo",
+              "chunkId": "nci-mama-hp-en@70b3b48a1249#0093",
+              "scope": "elegibilidad"
+            }
+          ],
+          "partialReason": null,
+          "citedSources": [
+            {
+              "title": "Breast Cancer Treatment, health professional version",
+              "sourceName": "NCI",
+              "externalId": "https://www.cancer.gov/types/breast/hp/breast-treatment-pdq",
+              "language": "en",
+              "sourceType": "guideline",
+              "licenseClass": "dominio_publico",
+              "studyDesign": "guia",
+              "trialPhase": null,
+              "primaryEndpoint": null,
+              "sampleSize": null,
+              "publishedAt": "2026-02-10",
+              "lastUpdatedAt": "2026-02-10",
+              "guidelineVersion": null,
+              "authors": null,
+              "sourceUrl": "https://www.cancer.gov/types/breast/hp/breast-treatment-pdq",
+              "possiblyOutdated": false,
+              "newerVersionAvailable": false,
+              "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: patients with HER2-positive metastatic breast cancer who had received at least two previous anti-HER2 regimens, including trastuzumab, pertuzumab and trastuzumab emtansine, with ECOG performance status of 0 or 1.",
+              "chunkId": "nci-mama-hp-en@70b3b48a1249#0093"
+            }
+          ]
+        },
+        {
+          "criterion": "receptores_hormonales",
+          "patientValue": "negativo",
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "no_reportado_por_fuente",
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "citedSources": []
+        },
+        {
+          "criterion": "estadio",
+          "patientValue": "IV",
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "no_reportado_por_fuente",
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "citedSources": []
+        },
+        {
+          "criterion": "linea_tratamiento",
+          "patientValue": "3",
+          "studyPopulationValue": "al menos dos regímenes anti-HER2 previos",
+          "status": "coincide",
+          "unknownReason": null,
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "studyPopulationValues": [
+            {
+              "value": "al menos dos regímenes anti-HER2 previos",
+              "chunkId": "nci-mama-hp-en@70b3b48a1249#0093",
+              "scope": "elegibilidad"
+            }
+          ],
+          "partialReason": null,
+          "citedSources": [
+            {
+              "title": "Breast Cancer Treatment, health professional version",
+              "sourceName": "NCI",
+              "externalId": "https://www.cancer.gov/types/breast/hp/breast-treatment-pdq",
+              "language": "en",
+              "sourceType": "guideline",
+              "licenseClass": "dominio_publico",
+              "studyDesign": "guia",
+              "trialPhase": null,
+              "primaryEndpoint": null,
+              "sampleSize": null,
+              "publishedAt": "2026-02-10",
+              "lastUpdatedAt": "2026-02-10",
+              "guidelineVersion": null,
+              "authors": null,
+              "sourceUrl": "https://www.cancer.gov/types/breast/hp/breast-treatment-pdq",
+              "possiblyOutdated": false,
+              "newerVersionAvailable": false,
+              "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: patients with HER2-positive metastatic breast cancer who had received at least two previous anti-HER2 regimens, including trastuzumab, pertuzumab and trastuzumab emtansine, with ECOG performance status of 0 or 1.",
+              "chunkId": "nci-mama-hp-en@70b3b48a1249#0093"
+            }
+          ]
+        },
+        {
+          "criterion": "estado_menopausico",
+          "patientValue": "posmenopáusica",
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "no_reportado_por_fuente",
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "citedSources": []
+        },
+        {
+          "criterion": "ecog",
+          "patientValue": "1",
+          "studyPopulationValue": "0 o 1",
+          "status": "coincide",
+          "unknownReason": null,
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "studyPopulationValues": [
+            {
+              "value": "0 o 1",
+              "chunkId": "nci-mama-hp-en@70b3b48a1249#0093",
+              "scope": "elegibilidad"
+            }
+          ],
+          "partialReason": null,
+          "citedSources": [
+            {
+              "title": "Breast Cancer Treatment, health professional version",
+              "sourceName": "NCI",
+              "externalId": "https://www.cancer.gov/types/breast/hp/breast-treatment-pdq",
+              "language": "en",
+              "sourceType": "guideline",
+              "licenseClass": "dominio_publico",
+              "studyDesign": "guia",
+              "trialPhase": null,
+              "primaryEndpoint": null,
+              "sampleSize": null,
+              "publishedAt": "2026-02-10",
+              "lastUpdatedAt": "2026-02-10",
+              "guidelineVersion": null,
+              "authors": null,
+              "sourceUrl": "https://www.cancer.gov/types/breast/hp/breast-treatment-pdq",
+              "possiblyOutdated": false,
+              "newerVersionAvailable": false,
+              "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: patients with HER2-positive metastatic breast cancer who had received at least two previous anti-HER2 regimens, including trastuzumab, pertuzumab and trastuzumab emtansine, with ECOG performance status of 0 or 1.",
+              "chunkId": "nci-mama-hp-en@70b3b48a1249#0093"
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "coincide": 3,
+        "parcial": 0,
+        "noCoincide": 0,
+        "desconocido": 3
+      },
+      "populationNotComparable": false
+    }
+  ],
+  "evidenceOptions": [
+    {
+      "option": "Terapia anti-HER2 en enfermedad metastásica previamente tratada",
+      "rationale": "La guía describe a pacientes con cáncer de mama metastásico HER2 positivo con al menos dos regímenes anti-HER2 previos.",
+      "details": [
+        "Texto sintético de ejemplo: el detalle describe, según los fragmentos recuperados, el diseño del estudio y la población incluida.",
+        "Texto sintético de ejemplo: el detalle describe los resultados que reporta la fuente para el grupo estudiado."
+      ],
+      "applicabilitySummary": {
+        "coincide": 3,
+        "parcial": 0,
+        "noCoincide": 0,
+        "desconocido": 3
+      },
+      "populationNotComparable": false,
+      "perSource": [
+        {
+          "externalId": "https://www.cancer.gov/types/breast/hp/breast-treatment-pdq",
+          "summary": {
+            "coincide": 3,
+            "parcial": 0,
+            "noCoincide": 0,
+            "desconocido": 3
+          },
+          "populationNotComparable": false
+        }
+      ],
+      "relevanceScore": 0.86,
+      "warnings": [],
+      "citedSources": [
+        {
+          "title": "Breast Cancer Treatment, health professional version",
+          "sourceName": "NCI",
+          "externalId": "https://www.cancer.gov/types/breast/hp/breast-treatment-pdq",
+          "language": "en",
+          "sourceType": "guideline",
+          "licenseClass": "dominio_publico",
+          "studyDesign": "guia",
+          "trialPhase": null,
+          "primaryEndpoint": null,
+          "sampleSize": null,
+          "publishedAt": "2026-02-10",
+          "lastUpdatedAt": "2026-02-10",
+          "guidelineVersion": null,
+          "authors": null,
+          "sourceUrl": "https://www.cancer.gov/types/breast/hp/breast-treatment-pdq",
+          "possiblyOutdated": false,
+          "newerVersionAvailable": false,
+          "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: patients with HER2-positive metastatic breast cancer who had received at least two previous anti-HER2 regimens, including trastuzumab, pertuzumab and trastuzumab emtansine, with ECOG performance status of 0 or 1.",
+          "chunkId": "nci-mama-hp-en@70b3b48a1249#0093"
+        }
+      ]
+    }
+  ],
+  "discardedOptions": [],
+  "limitations": [
+    {
+      "text": "Síntesis basada en pocas fuentes del corpus de la demo.",
+      "origin": "estructural"
+    }
+  ],
+  "assumptions": [],
+  "retrievalStats": {
+    "retrieved": 40,
+    "aboveThreshold": 1
+  },
+  "omittedClaims": 0,
+  "optionsNotShown": 0,
+  "agentSteps": [],
+  "topRelevanceScore": 0.86,
+  "meta": {
+    "queryLanguage": "es",
+    "responseLanguage": "es",
+    "llmProvider": "local",
+    "llmModel": "llm-local-ejemplo",
+    "embeddingModel": "embedding-local-ejemplo",
+    "rerankerModel": "reranker-local-ejemplo",
+    "nliModel": "nli-local-ejemplo",
+    "promptVersion": "rag-query@0.1.0",
+    "catalogVersion": "2026.10.0",
+    "corpusRelease": "2026-09-30",
+    "corpusCutoffDate": "2026-09-30",
+    "excludedSources": [
+      "NCCN",
+      "ESMO"
+    ],
+    "retrievalParams": {
+      "topK": 40,
+      "rerankTopN": 10,
+      "relevanceThreshold": 0.5,
+      "retrievalMode": "dense",
+      "fusion": "ninguna",
+      "fusionParam": 0,
+      "queryRewrite": {
+        "applied": false,
+        "reason": "no_disparado"
+      }
+    },
+    "latencyMs": 8200
+  }
+}

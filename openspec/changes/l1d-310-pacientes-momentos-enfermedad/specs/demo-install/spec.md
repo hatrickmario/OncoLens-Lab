@@ -14,9 +14,9 @@
 - **THEN** pacientes, identidades, usuarios y documentos coinciden con los conteos publicados por el seed
 
 #### Scenario: La verificación cuadra con los conteos del seed ampliado [US-254 AC-5] [RN-13]
-- **GIVEN** el seed con los 12 pacientes semilla y sus tratamientos, eventos y atributos
+- **GIVEN** el seed con los 13 pacientes semilla y sus tratamientos, eventos y atributos
 - **WHEN** `levantar.sh` ejecuta «Verificación del seed»
-- **THEN** imprime `clinical.patient` e `identity.patient_identity` con `esperado=12 obtenido=12` y `clinical.prior_treatment`, `clinical.clinical_event` y `clinical.clinical_attribute` con `minimo=N obtenido≥N`, siendo N lo que publicó el seed, y termina con código 0
+- **THEN** imprime `clinical.patient` e `identity.patient_identity` con `esperado=13 obtenido=13` y `clinical.prior_treatment`, `clinical.clinical_event` y `clinical.clinical_attribute` con `minimo=N obtenido≥N`, siendo N lo que publicó el seed, y termina con código 0
 
 #### Scenario: Faltan tratamientos sembrados y la verificación falla [US-254 AC-5] (Decidido, usuario, 2026-11-03)
 - **GIVEN** conteos publicados por el seed con N filas de `clinical.prior_treatment` y una base con menos de N
@@ -31,19 +31,20 @@
 ## ADDED Requirements
 
 ### Requirement: Guía de la demo con pregunta sugerida y estados esperados por paciente nuevo
-`docs/demo/guia-demo-S5.md` MUST documentar, por cada paciente (f)–(l), su momento de la enfermedad, sus faltantes esperados, una pregunta sugerida exacta y los conteos de aplicabilidad esperados en modo fingido en un bloque `conteos-demo-s5` (fuente única), con un par request/response de `contracts/examples/` por pregunta.
+`docs/demo/guia-demo-S5.md` MUST documentar, por cada paciente (g)–(m), su momento de la enfermedad, sus faltantes esperados, una pregunta sugerida exacta y los conteos de aplicabilidad esperados en modo fingido en un bloque `conteos-demo-s5` (fuente única), con un par request/response de `contracts/examples/` por pregunta.
 
 #### Scenario: Cada paciente nuevo tiene su pregunta guiada con estados esperados [US-254 AC-4] [US-247]
 - **GIVEN** `docs/demo/guia-demo-S5.md` y `contracts/examples/index.json`
 - **WHEN** se revisa la guía
-- **THEN** cada paciente (f)–(l) tiene una pregunta sugerida exacta, distinta de las demás y de las de la Demo 4, y sus conteos `coincide · parcial · noCoincide · desconocido` por opción en el bloque `conteos-demo-s5`
+- **THEN** cada paciente (g)–(m) tiene una pregunta sugerida exacta, distinta de las demás y de las de la Demo 4, y sus conteos `coincide · parcial · noCoincide · desconocido` por opción en el bloque `conteos-demo-s5`
 - **AND** cada pregunta tiene en `index.json` un `rag-query-demo-s5-<paciente>.json` cuyo `request` es esa pregunta y cuyos `applicabilitySummary` son los del bloque
 
 #### Scenario: El modo fingido devuelve los estados de la guía [US-254 AC-4] [US-247]
 - **GIVEN** Compose con el seed y `LLM_PROVIDER=fake`
-- **WHEN** la prueba de aceptación abre cada paciente (f)–(l) y envía su pregunta sugerida
+- **WHEN** la prueba de aceptación abre cada paciente de mama (g)–(k) y envía su pregunta sugerida
 - **THEN** el análisis devuelve `con_evidencia` con los conteos de `applicabilitySummary` del bloque `conteos-demo-s5`
 - **AND** la opción que la guía marca con criterio excluyente en No coincide trae `populationNotComparable = true` y `warnings` con `poblacion_no_comparable`
+- **AND** (alcance reducido, pendiente de confirmación humana) para (l) y (m), de próstata, el stack del E2E corre con `ENABLED_CANCER_TYPES=mama`: la prueba abre su ficha y comprueba el aviso de tipo no habilitado, y sus conteos se comprueban solo contra los ejemplos fijos y la guía
 
 #### Scenario: Un ejemplo que no cumple el contrato rompe la carga del modo fingido [US-254 AC-4] (Decidido, usuario, 2026-11-03)
 - **GIVEN** los ejemplos `rag-query-demo-s5-*.json`

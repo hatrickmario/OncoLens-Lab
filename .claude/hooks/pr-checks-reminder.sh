@@ -19,7 +19,7 @@ fi
 OBJETIVO="${PR:+el PR #$PR}"
 OBJETIVO="${OBJETIVO:-el PR de la rama ${RAMA:-actual}}"
 
-MENSAJE="Verificación de CI obligatoria: antes de decir al humano que ${OBJETIVO} está listo para merge, espera a que la CI termine (\`gh pr checks ${PR:-<n>} --watch\`, en segundo plano si tarda) y comprueba 0 checks en fallo, 0 pendientes y 0 alertas de code scanning abiertas. Si algo falla, lee el log del job, corrige o pregunta, y vuelve a verificar. Nunca anuncies el merge con checks pendientes o en rojo."
+MENSAJE="Verificación de CI obligatoria: antes de decir al humano que ${OBJETIVO} está listo para merge, espera a que la CI termine lanzando ahora, en segundo plano (Bash con run_in_background), el vigilante \`.claude/hooks/vigilar-pr.sh ${PR:-<n>}\` (sin esperar en primer plano); cuando termine, su última línea dice «#n listo para merge» (0 fallos, 0 pendientes, 0 alertas, CLEAN) o «#n falla <check> <url>». Avisa al humano con ese resultado. Si falla, lee el log del job (\`gh run view --job <id> --log-failed\`): un flake de infraestructura se relanza con \`gh run rerun --failed\` y se registra como deuda; un fallo real se corrige o se pregunta; luego vuelve a lanzar el vigilante. Nunca anuncies el merge con checks pendientes o en rojo."
 
 python3 -I -c 'import json,sys; print(json.dumps({"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":sys.argv[1]}}))' "$MENSAJE"
 exit 0

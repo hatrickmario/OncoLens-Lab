@@ -15,17 +15,23 @@ function dbFalsa(filasPorTabla: Record<string, number>): { db: ClienteSql; consu
 }
 
 describe('contarFilasDelSeed', () => {
-  it('devuelve los conteos de pacientes, identidades y usuarios con las claves que publica el seed [US-247 AC-6]', async () => {
+  it('devuelve los conteos de pacientes, identidades, usuarios e historia clínica con las claves que publica el seed [US-247 AC-6] [US-254 AC-5]', async () => {
     const { db } = dbFalsa({
       'clinical.patient': 5,
       'identity.patient_identity': 0,
       'auth."user"': 2,
+      'clinical.prior_treatment': 9,
+      'clinical.clinical_event': 7,
+      'clinical.clinical_attribute': 11,
     });
 
     await expect(contarFilasDelSeed(db)).resolves.toEqual({
       'clinical.patient': 5,
       'identity.patient_identity': 0,
       'auth."user"': 2,
+      'clinical.prior_treatment': 9,
+      'clinical.clinical_event': 7,
+      'clinical.clinical_attribute': 11,
     });
   });
 
@@ -34,11 +40,14 @@ describe('contarFilasDelSeed', () => {
       'clinical.patient': 5,
       'identity.patient_identity': 5,
       'auth."user"': 2,
+      'clinical.prior_treatment': 9,
+      'clinical.clinical_event': 7,
+      'clinical.clinical_attribute': 11,
     });
 
     await contarFilasDelSeed(db);
 
-    expect(consultas).toHaveLength(3);
+    expect(consultas).toHaveLength(6);
     for (const consulta of consultas)
       expect(consulta).toMatch(/^SELECT count\(\*\)::int AS n FROM [a-z_."]+$/);
   });

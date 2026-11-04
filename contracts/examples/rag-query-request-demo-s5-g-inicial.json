@@ -1,0 +1,110 @@
+{
+  "traceId": "req_s5gdemo01",
+  "query": "¿Qué opciones de terapia sistémica describe la evidencia del corpus de la demo para una paciente premenopáusica con cáncer de mama en estadio inicial, receptores hormonales positivos y HER2 2+ sin confirmar?",
+  "sourcesSelected": {
+    "guias": true,
+    "ensayos": false,
+    "publicaciones": true
+  },
+  "dataClassification": "sintetico",
+  "catalogVersion": "2026.10.0",
+  "maxOptions": 3,
+  "filtersApplied": {
+    "historiaCompleta": false,
+    "soloBiomarcadoresRelevantes": true,
+    "ultimosSeisMeses": true,
+    "antecedentesFamiliares": false,
+    "publishedFromYear": 2021
+  },
+  "clinicalContext": {
+    "pseudoPatientId": "psd_Hn4tB8cWq2Zp",
+    "population": "adulto",
+    "diagnosis": {
+      "dataRef": "r1",
+      "cancerType": "mama",
+      "histology": "carcinoma ductal infiltrante",
+      "grade": "Nottingham grado 2",
+      "stagingSystem": "TNM_8",
+      "stageValue": "IIA",
+      "performanceScale": "ECOG",
+      "performanceValue": 0,
+      "monthsSinceDiagnosis": 0,
+      "provenance": {
+        "entryMethod": "seed",
+        "extractionConfidence": "n_a",
+        "reviewStatus": "verificado",
+        "conflict": false
+      }
+    },
+    "biomarkers": [
+      {
+        "dataRef": "r2",
+        "biomarkerName": "HER2",
+        "value": "2+ (IHQ)",
+        "resultType": "cualitativo",
+        "clinicalSignificance": "relevante",
+        "monthsAgo": 0,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      },
+      {
+        "dataRef": "r3",
+        "biomarkerName": "RE",
+        "value": "Positivo (90%)",
+        "resultType": "cualitativo",
+        "clinicalSignificance": "relevante",
+        "monthsAgo": 0,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      },
+      {
+        "dataRef": "r4",
+        "biomarkerName": "RP",
+        "value": "Positivo (70%)",
+        "resultType": "cualitativo",
+        "clinicalSignificance": "relevante",
+        "monthsAgo": 0,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      }
+    ],
+    "clinicalNotes": [],
+    "currentLine": null,
+    "attributes": [
+      {
+        "dataRef": "r5",
+        "key": "estado_menopausico",
+        "value": "premenopáusica",
+        "monthsAgo": 0,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      }
+    ],
+    "priorTreatments": [],
+    "events": [],
+    "biomarkerTrends": [],
+    "missingCriticalData": [
+      "her2_ish",
+      "ki67",
+      "tratamientos_previos",
+      "brca_germinal"
+    ],
+    "priorAnalyses": []
+  }
+}

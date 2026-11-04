@@ -1,7 +1,11 @@
 import type { Clock } from '../../src/infrastructure/clock.js';
 import type { PasswordHasher } from '../../src/modules/auth/password-hasher.js';
-import { resolverCodigoDelCatalogo, type CatalogoClinico } from './catalogo.js';
-import { idSembrado } from './determinismo.js';
+import {
+  resolverAtcDelRegimen,
+  resolverCodigoDelCatalogo,
+  type CatalogoClinico,
+} from './catalogo.js';
+import { idDeTratamiento, idSembrado } from './determinismo.js';
 import { columnasDeGradacion } from './columnas-de-gradacion.js';
 import { derivarTextoGrade } from './grade.js';
 import { identidadSinteticaDe } from './identidades.js';
@@ -340,22 +344,23 @@ async function sembrarTratamientosPrevios(
   contexto: ContextoDePaciente,
 ): Promise<void> {
   for (const tratamiento of contexto.paciente.tratamientosPrevios) {
-    const atc = resolverCodigoDelCatalogo(siembra.entradas.catalogo, 'atc', tratamiento.regimen);
+    const atc = resolverAtcDelRegimen(siembra.entradas.catalogo, tratamiento);
+    const { fin } = tratamiento;
     await upsertar(siembra, 'clinical.prior_treatment', {
-      id: idSembrado(`${contexto.paciente.clave}/${tratamiento.clave}`),
+      id: idDeTratamiento(contexto.paciente.clave, tratamiento.clave),
       patient_id: contexto.pacienteId,
       episode_id: contexto.episodioId,
       source_document_id: null,
       line_number: tratamiento.numeroDeLinea,
       setting: tratamiento.setting,
       regimen_name: tratamiento.regimen,
-      atc_codes: atc.codigo === null ? [] : [atc.codigo],
+      atc_codes: atc.codigos,
       cups_code: null,
       mapping_status: atc.mappingStatus,
       started_at: fechaRelativa(siembra.ahora, tratamiento.diasDesdeElInicio),
-      ended_at: null,
-      ongoing: true,
-      end_reason: 'desconocido',
+      ended_at: fin === undefined ? null : fechaRelativa(siembra.ahora, fin.diasAntes),
+      ongoing: fin === undefined,
+      end_reason: fin === undefined ? 'desconocido' : fin.motivo,
       best_response: null,
       ...PROCEDENCIA_DEL_SEED,
       source_span: null,
@@ -379,7 +384,10 @@ async function sembrarEventos(siembra: Siembra, contexto: ContextoDePaciente): P
       cups_code: null,
       mapping_status: 'n_a',
       toxicity_grade: null,
-      prior_treatment_id: null,
+      prior_treatment_id:
+        evento.cierraLinea === undefined
+          ? null
+          : idDeTratamiento(contexto.paciente.clave, evento.cierraLinea),
       treatment_id: null,
       analysis_id: null,
       ...PROCEDENCIA_DEL_SEED,
@@ -526,7 +534,7 @@ async function sembrarTodo(siembra: Siembra): Promise<void> {
   }
 }
 
-/** Siembra roles, usuarios de demo y los pacientes (a)–(f), de forma idempotente, dentro de la sesión recibida. */
+/** Siembra roles, usuarios de demo y los pacientes (a)–(m), de forma idempotente, dentro de la sesión recibida. */
 export async function sembrar(db: ClienteSql, entradas: EntradasDelSeed): Promise<FilasUpsertadas> {
   const escritas: Record<string, number> = {};
   const identidad = crearServicioDeIdentidad({ claves: entradas.claves, db });
