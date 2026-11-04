@@ -54,7 +54,7 @@ export function VistaDeCaso({
       patientId={patientId}
       egresado={egresado}
       checklist={checklist}
-      alRegistrar={() => void Promise.all([recargar(), releer()])}
+      alGuardar={() => void Promise.all([recargar(), releer()])}
       item={item}
     />
   );

@@ -1,7 +1,7 @@
 import type { CompletenessItem } from '../../../../packages/api-contracts/src/types/clinical-api';
 import { accionDeFaltante, presentarEstado } from '../../lib/evidence/faltantes';
 import { nombreDeOrigen } from '../../lib/ficha/presentacion';
-import { AccionDeFaltante } from './accion-de-faltante';
+import { AccionDeFaltante } from '../organisms/accion-de-faltante';
 
 /**
  * Una fila de la columna «Datos críticos» (S5-02): símbolo decorativo, etiqueta del catálogo, estado en palabra y, o el

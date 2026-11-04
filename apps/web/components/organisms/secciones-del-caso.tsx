@@ -18,7 +18,7 @@ export interface SeccionesDelCasoProps {
   patientId: string;
   egresado: boolean;
   /** Recarga la vista y relee el checklist tras un registro manual (`201`). */
-  alRegistrar: () => void;
+  alGuardar: () => void;
   /** Clave de `?item=` (US-111). */
   item?: string;
 }
@@ -30,11 +30,11 @@ export function SeccionesDelCaso({
   hoy,
   patientId,
   egresado,
-  alRegistrar,
+  alGuardar,
   item,
 }: SeccionesDelCasoProps) {
   const { fechados, sinFecha } = separarSinFecha(vista.timeline);
-  const registro = { pacienteId: patientId, egresado, alGuardar: alRegistrar };
+  const registro = { pacienteId: patientId, egresado, alGuardar };
   return (
     <div className="grid gap-4 lg:grid-cols-[18rem_1fr]">
       <aside>
@@ -42,7 +42,7 @@ export function SeccionesDelCaso({
           lectura={checklist}
           pacienteId={patientId}
           egresado={egresado}
-          alGuardar={alRegistrar}
+          alGuardar={alGuardar}
         />
       </aside>
       <div>

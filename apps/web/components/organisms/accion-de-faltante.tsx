@@ -1,9 +1,9 @@
 import Link from 'next/link';
-import type { AccionDeFaltante as Accion } from '../../lib/evidence/faltantes';
+import type { AccionManual } from '../../lib/evidence/faltantes';
 import { mensajes } from '../../lib/mensajes';
 import { hrefDeRegistroManual } from '../../lib/registro-manual/enlaces';
-import { DialogoAtributoClinico } from '../organisms/dialogo-atributo-clinico';
-import { DialogoTratamientoPrevio } from '../organisms/dialogo-tratamiento-previo';
+import { DialogoAtributoClinico } from './dialogo-atributo-clinico';
+import { DialogoTratamientoPrevio } from './dialogo-tratamiento-previo';
 
 const ENLACE = 'text-primary inline-block py-1 font-semibold underline';
 
@@ -18,7 +18,7 @@ export function AccionDeFaltante({
   pacienteId,
   alGuardar,
 }: {
-  accion: Accion;
+  accion: AccionManual;
   etiqueta: string;
   pacienteId: string;
   /** Tras el `201` de un diálogo: releer el checklist y recargar la vista (D5). */
@@ -30,6 +30,7 @@ export function AccionDeFaltante({
       {texto} <span className="sr-only">{etiqueta}</span>
     </>
   );
+  // El paciente egresado no llega aquí: `FilaDeDatoCritico` no ofrece acciones de registro (RN-17).
   const registro = { pacienteId, egresado: false, alGuardar };
   switch (accion.tipo) {
     case 'biomarcador':

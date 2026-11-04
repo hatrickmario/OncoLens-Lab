@@ -103,5 +103,5 @@ export const atributosDeMama = {
 export const accionesDe = (elemento: HTMLElement) =>
   Array.from(elemento.querySelectorAll<HTMLElement>('a[href], button'));
 
-export const montarVistaConDatosCriticos = (item?: string) =>
-  render(<VistaDeCaso patientId={ID_DEL_CASO} hoy={HOY} item={item} />);
+export const montarVistaConDatosCriticos = (item?: string, egresado = false) =>
+  render(<VistaDeCaso patientId={ID_DEL_CASO} hoy={HOY} item={item} egresado={egresado} />);

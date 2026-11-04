@@ -32,18 +32,18 @@ export function lecturaDeLaVista(vista: CompletenessView): LecturaDelChecklist {
 }
 
 /** Todo faltante lleva a la columna «Datos críticos» de la vista de caso, donde está su acción manual (D9). */
-export function enlaceDeRegistro(patientId: string): string {
+export function hrefDeColumnaDatosCriticos(patientId: string): string {
   return hrefDeVistaDeCaso(patientId, 'datos-criticos');
 }
 
-export interface AccionDeFaltante {
+export interface AccionManual {
   tipo: 'biomarcador' | 'diagnostico' | 'atributo' | 'tratamiento';
   /** Clave del catálogo del ítem (`ki67`): lo único que viaja en `?item=`. */
   item: string;
 }
 
 const TIPO_DE_ACCION: Partial<
-  Record<CompletenessItem['destination']['entity'], AccionDeFaltante['tipo']>
+  Record<CompletenessItem['destination']['entity'], AccionManual['tipo']>
 > = {
   Biomarker: 'biomarcador',
   Diagnosis: 'diagnostico',
@@ -55,7 +55,7 @@ const TIPO_DE_ACCION: Partial<
  * Única acción manual de un faltante según `destination.entity` (D3, D-7): ninguna entidad devuelve «cargar documento»
  * (OCR, Post-MVP). Entidad desconocida → sin acción: la fila se muestra igual.
  */
-export function accionDeFaltante(item: CompletenessItem): AccionDeFaltante | null {
+export function accionDeFaltante(item: CompletenessItem): AccionManual | null {
   const tipo = TIPO_DE_ACCION[item.destination.entity];
   const clave = claveDeItem(item.item);
   return tipo === undefined || clave === undefined ? null : { tipo, item: clave };

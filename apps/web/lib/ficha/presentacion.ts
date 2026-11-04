@@ -11,7 +11,7 @@ export function formatearFecha(iso: string): string {
   return `${dia}/${mes}/${anio}`;
 }
 
-/** Nombre del origen de un dato («Carga inicial», «Registro manual»…): único dueño del literal (`ficha.origen`). */
+/** Nombre del origen de un dato («Carga inicial», «Registro manual»…) de `ficha.origen`; lo usan `textoDeOrigen` y la columna «Datos críticos». */
 export function nombreDeOrigen(metodo: Provenance['entryMethod']): string {
   return mensajes().ficha.origen[metodo];
 }

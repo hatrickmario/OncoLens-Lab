@@ -8,7 +8,7 @@ import { hrefDeVistaDeCaso } from '../../lib/ficha/anclas';
 import {
   debeContinuarConAviso,
   accionDeFaltante,
-  enlaceDeRegistro,
+  hrefDeColumnaDatosCriticos,
   lecturaDeLaVista,
   presentarEstado,
   type LecturaDelChecklist,
@@ -79,9 +79,9 @@ describe('presentarEstado', () => {
   });
 });
 
-describe('enlaceDeRegistro', () => {
+describe('hrefDeColumnaDatosCriticos', () => {
   it('lleva a los datos críticos de la vista de caso cualquiera que sea el destino', () => {
-    expect(enlaceDeRegistro(ID)).toBe(hrefDeVistaDeCaso(ID, 'datos-criticos'));
+    expect(hrefDeColumnaDatosCriticos(ID)).toBe(hrefDeVistaDeCaso(ID, 'datos-criticos'));
   });
 });
 

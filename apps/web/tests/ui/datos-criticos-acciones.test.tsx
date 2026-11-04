@@ -138,4 +138,16 @@ describe('Columna «Datos críticos» · acciones de los faltantes', () => {
 
     expect(screen.queryByRole('dialog')).toBeNull();
   });
+
+  it('no ofrece acciones de registro y explica el motivo cuando el paciente está egresado [US-004 AC-3] [RN-17]', async () => {
+    montarVistaConDatosCriticos(undefined, true);
+
+    const datos = await columna();
+
+    expect(datos.getAllByText('Faltante')).toHaveLength(6);
+    expect(accionesDe(await screen.findByRole('region', { name: 'Datos críticos' }))).toHaveLength(
+      0,
+    );
+    expect(datos.getByText(/egresado/)).toBeTruthy();
+  });
 });
