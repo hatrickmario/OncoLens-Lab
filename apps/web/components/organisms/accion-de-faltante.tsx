@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { AccionManual } from '../../lib/evidence/faltantes';
 import { mensajes } from '../../lib/mensajes';
-import { hrefDeRegistroManual } from '../../lib/registro-manual/enlaces';
+import { hrefDeAccionManual } from '../../lib/registro-manual/destinos';
 import { DialogoAtributoClinico } from './dialogo-atributo-clinico';
 import { DialogoTratamientoPrevio } from './dialogo-tratamiento-previo';
 
@@ -36,13 +36,13 @@ export function AccionDeFaltante({
   switch (faltante.tipo) {
     case 'biomarcador':
       return (
-        <Link href={hrefDeRegistroManual(pacienteId, faltante.item, 'caso')} className={ENLACE}>
+        <Link href={hrefDeAccionManual(pacienteId, faltante)} className={ENLACE}>
           {conEtiqueta(t.registrarAMano)}
         </Link>
       );
     case 'diagnostico':
       return (
-        <Link href={hrefDeRegistroManual(pacienteId, faltante.item, 'ficha')} className={ENLACE}>
+        <Link href={hrefDeAccionManual(pacienteId, faltante)} className={ENLACE}>
           {conEtiqueta(t.completarDiagnostico)}
         </Link>
       );

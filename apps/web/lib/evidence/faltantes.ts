@@ -3,6 +3,7 @@ import type {
   CompletenessView,
 } from '../../../../packages/api-contracts/src/types/clinical-api';
 import { hrefDeVistaDeCaso } from '../ficha/anclas';
+import { DESTINO_DE_REGISTRO, type TipoDeAccionManual } from '../registro-manual/destinos';
 import { claveDeItem } from '../registro-manual/enlaces';
 import { mensajes } from '../mensajes';
 
@@ -37,28 +38,22 @@ export function hrefDeColumnaDatosCriticos(patientId: string): string {
 }
 
 export interface AccionManual {
-  tipo: 'biomarcador' | 'diagnostico' | 'atributo' | 'tratamiento';
+  tipo: TipoDeAccionManual;
   /** Clave del catálogo del ítem (`ki67`): lo único que viaja en `?item=`. */
   item: string;
 }
 
-const TIPO_DE_ACCION: Partial<
-  Record<CompletenessItem['destination']['entity'], AccionManual['tipo']>
-> = {
-  Biomarker: 'biomarcador',
-  Diagnosis: 'diagnostico',
-  ClinicalAttribute: 'atributo',
-  PriorTreatment: 'tratamiento',
-};
-
 /**
- * Única acción manual de un faltante según `destination.entity` (D3, D-7): ninguna entidad devuelve «cargar documento»
- * (OCR, Post-MVP). Entidad desconocida → sin acción: la fila se muestra igual.
+ * Única acción manual de un faltante según `destination.entity` (D3, D-7): el catálogo `DESTINO_DE_REGISTRO` la
+ * decide y ninguna entidad devuelve «cargar documento» (OCR, Post-MVP). Entidad desconocida o clave fuera del catálogo
+ * → sin acción: la fila se muestra igual.
  */
 export function accionManualDe(item: CompletenessItem): AccionManual | null {
-  const tipo = TIPO_DE_ACCION[item.destination.entity];
+  const destino = Object.hasOwn(DESTINO_DE_REGISTRO, item.destination.entity)
+    ? DESTINO_DE_REGISTRO[item.destination.entity]
+    : undefined;
   const clave = claveDeItem(item.item);
-  return tipo === undefined || clave === undefined ? null : { tipo, item: clave };
+  return destino === undefined || clave === undefined ? null : { tipo: destino.tipo, item: clave };
 }
 
 const SIMBOLOS: Record<CompletenessItem['status'], string> = {
