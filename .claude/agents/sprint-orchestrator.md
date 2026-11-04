@@ -73,6 +73,10 @@ Para cada oleada del plan, en orden:
    (`gh run view … --log-failed`) y reanuda al implementador con el error exacto. Solo con 0
    checks en fallo, 0 pendientes y 0 alertas abiertas el PR es `pr-listo`; si no, no informes
    «listo». Nunca desactives un control, toques la allowlist ni descartes una alerta a mano.
+   **Alertas en `main` tras el merge (retro S5):** las de CodeQL nacen en `main` después del merge y el
+   chequeo del `ref` del PR da 0. Cuando el humano confirme un merge, lanza en segundo plano
+   `.claude/hooks/vigilar-pr.sh --main <fecha del merge>`; si lista alertas nuevas, la historia no pasa a
+   `Done` ni cuenta como cerrada hasta que se corrijan o el humano las descarte con motivo.
 6. Actualiza `S<n>-status.md` después de **cada** transición de estado.
 
 Cuando ninguna historia sea elegible porque todas esperan merges, **devuelve el control**.

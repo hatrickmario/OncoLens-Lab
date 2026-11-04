@@ -6,6 +6,7 @@
 rutas:
   - apps/rag-orchestrator/app/prompts/**
   - apps/rag-orchestrator/app/**/prompts/**
+  - apps/rag-orchestrator/app/application/generation.py
   - packages/clinical-catalogs/**/*.json
   - data/raw/**/manifest.{yaml,json}
   - apps/rag-orchestrator/eval/configs/*.yaml
