@@ -34,7 +34,9 @@
     "catalogo": "catálogo {version}",
     "contador": "{n} faltantes · no bloquean el análisis",
     "contadorUno": "1 faltante · no bloquea el análisis",
-    "nota": "Los faltantes no bloquean: si continúas, el análisis los trata como «desconocido» y lo deja escrito en la Base del análisis.",
+    "contadorSin": "sin faltantes entre los datos críticos del catálogo",
+    "origenNoDisponible": "Origen no disponible",
+    "nota": "Los faltantes no bloquean: si continúas, el análisis los trata como «Desconocido» y lo deja escrito en la Base del análisis.",
     "noCalculable": "No se pudo calcular el checklist",
     "cargando": "Cargando los datos críticos",
     "estado": {

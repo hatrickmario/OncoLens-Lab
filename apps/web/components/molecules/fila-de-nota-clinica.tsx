@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import type { ClinicalNote } from '../../../../packages/api-contracts/src/types/clinical-api';
+import { nombreDeOrigen } from '../../lib/ficha/presentacion';
 import { mensajes } from '../../lib/mensajes';
 import { FechaRelativa } from '../atoms/fecha-relativa';
 import { Dialog } from '../ui/dialog';
@@ -37,7 +38,7 @@ export function FilaDeNotaClinica({
       <p className="m-0 flex flex-wrap items-baseline gap-x-2">
         <strong>{tipo}</strong>
         <FechaRelativa fecha={nota.recordedAt} hoy={hoy} />
-        <span className="text-text-muted">{ficha.origen[nota.provenance.entryMethod]}</span>
+        <span className="text-text-muted">{nombreDeOrigen(nota.provenance.entryMethod)}</span>
       </p>
       <p className="m-0 my-2 whitespace-pre-wrap">{nota.content}</p>
       <AccionCorregirDato

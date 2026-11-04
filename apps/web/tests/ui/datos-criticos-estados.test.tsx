@@ -56,9 +56,10 @@ describe('Columna «Datos críticos» · origen, errores y accesibilidad', () =>
     const fila = datos.getByText('HER2 (IHQ)').closest('li')!;
 
     expect(fila.textContent).toContain('Origen no disponible');
-    expect(datos.getByText('Grado').closest('li')?.textContent ?? '').not.toContain(
-      'Origen no disponible',
-    );
+    const filaDeGrado = datos
+      .getAllByRole('listitem')
+      .find((li) => li.textContent?.startsWith('◌Grado'));
+    expect(filaDeGrado?.textContent).not.toContain('Origen no disponible');
   });
 
   it('muestra No se pudo calcular el checklist sin filas ni 0 faltantes y la vista completa cuando el checklist responde 500 [US-004 AC-5]', async () => {
