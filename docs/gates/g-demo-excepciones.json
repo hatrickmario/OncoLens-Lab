@@ -1,0 +1,148 @@
+[
+  {
+    "id": "AC-T1.5",
+    "descripcion": "Auditoría completa de accesos y generaciones (FR-18)",
+    "feature": "FEAT-T1b",
+    "destino": "S6 (se verifica en G-Piloto)",
+    "motivo": "R-14: el PRD §14 la excluye de G-Demo y la verifica en G-Piloto"
+  },
+  {
+    "id": "AC-T3.3",
+    "descripcion": "Bloqueo por opt-out de analisis_ia en toda generación con IA (RN-15)",
+    "feature": "FEAT-T4c",
+    "destino": "S6 (se verifica en G-Piloto)",
+    "motivo": "R-14 y DEC-22: el 403 por opt-out se construye en el S6; en el S5 solo hay datos sintéticos"
+  },
+  {
+    "id": "CAP-05",
+    "descripcion": "Plantillas de preguntas clínicas (FR-28)",
+    "feature": "FEAT-05",
+    "destino": "S6 (si hay capacidad)",
+    "motivo": "B-02: el slicing v2 la reporta como diferida, no como fallo"
+  },
+  {
+    "id": "CAP-07",
+    "descripcion": "Síntesis de evidencia: acuerdos y discrepancias explicadas (FR-24)",
+    "feature": "FEAT-07",
+    "destino": "S6 (si hay capacidad)",
+    "motivo": "B-02: diferida por el slicing v2"
+  },
+  {
+    "id": "CAP-09",
+    "descripcion": "Vigencia visible de la evidencia (FR-26)",
+    "feature": "FEAT-09",
+    "destino": "S6 (si hay capacidad)",
+    "motivo": "B-02: diferida por el slicing v2"
+  },
+  {
+    "id": "CAP-11",
+    "descripcion": "Historial, re-ejecución y comparación de análisis (FR-12)",
+    "feature": "FEAT-11a",
+    "destino": "S6 (si hay capacidad)",
+    "motivo": "B-02: diferida por el slicing v2; la decisión y la evolución (FEAT-11b) son Post-MVP"
+  },
+  {
+    "id": "CAP-08-agente",
+    "descripcion": "Agente acotado de búsqueda complementaria (FR-30, AC-08.7)",
+    "feature": "FEAT-08c",
+    "destino": "Post-MVP",
+    "motivo": "PRD §14: la aplicabilidad entra en G-Demo; el agente queda fuera"
+  },
+  {
+    "id": "AC-02.5",
+    "descripcion": "Resumen del caso verificable (FR-21)",
+    "feature": "FEAT-02c",
+    "destino": "S6 (si hay capacidad)",
+    "motivo": "Slicing v2: primer candidato si hay capacidad"
+  },
+  {
+    "id": "busqueda-hibrida-y-filtros",
+    "descripcion": "Búsqueda híbrida con expansión bilingüe y filtros (FR-09, IA-02, IA-03)",
+    "feature": "FEAT-06b",
+    "destino": "S6 (si hay capacidad)",
+    "motivo": "Slicing v2: el análisis denso cubre el recorrido; la híbrida se mide aparte contra la densa"
+  },
+  {
+    "id": "visor-de-documentos",
+    "descripcion": "Visor del documento de origen, descarga y cola de carga múltiple (FR-05, FR-07)",
+    "feature": "FEAT-01a",
+    "destino": "Post-MVP",
+    "motivo": "PRD E-17: la ingesta de documentos pasa a Post-MVP"
+  },
+  {
+    "id": "ocr-y-normalizacion-de-documentos",
+    "descripcion": "Extracción local con OCR, gate de PII y normalización de documentos (FR-06)",
+    "feature": "FEAT-01b",
+    "destino": "Post-MVP",
+    "motivo": "PRD E-17: el OCR, su gate de PII y la normalización de documentos pasan a Post-MVP"
+  },
+  {
+    "id": "resolucion-de-conflictos",
+    "descripcion": "Resolución de conflictos de diagnóstico entre fuentes (FR-08, RN-08)",
+    "feature": "FEAT-03b",
+    "destino": "S6 (si hay capacidad)",
+    "motivo": "Slicing v2: el registro manual y la corrección entran en el S5; la resolución guiada queda diferida"
+  },
+  {
+    "id": "supuestos-y-limitaciones",
+    "descripcion": "Supuestos y limitaciones del análisis redactados por IA (US-129, US-130)",
+    "feature": "FEAT-T2b",
+    "destino": "S6 (si hay capacidad)",
+    "motivo": "Slicing v2: diferidas; la Base del análisis del S5 lista los faltantes como desconocido"
+  },
+  {
+    "id": "feedback-del-analisis",
+    "descripcion": "Feedback 1-5 al cerrar cada análisis (FR-20, AnalysisFeedback)",
+    "feature": "FEAT-T5c",
+    "destino": "S6",
+    "motivo": "D-5 (refinamiento del S5): el recorrido de G-Demo no incluye feedback"
+  },
+  {
+    "id": "US-139",
+    "tipo": "se_mide_en_el_piloto",
+    "descripcion": "Reporte de feedback agregado (VM-4 y VM-5) por cohorte y versión de catálogo",
+    "feature": "FEAT-T5c",
+    "destino": "S6",
+    "motivo": "Se mide en el piloto con oncólogos; no se simula en G-Demo"
+  },
+  {
+    "id": "DEC-14",
+    "tipo": "se_mide_en_el_piloto",
+    "descripcion": "Registro de la concordancia de aplicabilidad (VM-3)",
+    "feature": "FEAT-T5d",
+    "destino": "S6",
+    "motivo": "Se mide en el piloto con revisión del oncólogo"
+  },
+  {
+    "id": "VM-1",
+    "tipo": "se_mide_en_el_piloto",
+    "descripcion": "Tiempo para reconstruir el caso con el sistema (el baseline manual ya está registrado)",
+    "feature": "FEAT-T5d",
+    "destino": "S6",
+    "motivo": "Se mide en el piloto con el mismo protocolo congelado en DEC-02"
+  },
+  {
+    "id": "VM-2",
+    "tipo": "se_mide_en_el_piloto",
+    "descripcion": "Tiempo para localizar evidencia citada con su aplicabilidad por criterio (el baseline manual ya está registrado)",
+    "feature": "FEAT-T5d",
+    "destino": "S6",
+    "motivo": "Se mide en el piloto con el mismo protocolo congelado en DEC-02"
+  },
+  {
+    "id": "VM-4",
+    "tipo": "se_mide_en_el_piloto",
+    "descripcion": "Utilidad percibida de las opciones descritas (feedback)",
+    "feature": "FEAT-T5c",
+    "destino": "S6",
+    "motivo": "Se mide en el piloto con oncólogos"
+  },
+  {
+    "id": "VM-5",
+    "tipo": "se_mide_en_el_piloto",
+    "descripcion": "Verificabilidad percibida de las fuentes citadas (feedback)",
+    "feature": "FEAT-T5c",
+    "destino": "S6",
+    "motivo": "Se mide en el piloto con oncólogos"
+  }
+]

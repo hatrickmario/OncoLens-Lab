@@ -19,6 +19,7 @@ consumidos_por_codigo:
   - docs/architecture/adr/ADR-39-*.md
   - docs/decisions/DEC-02-*.md
   - docs/demo/guia-demo-S4.md
+  - docs/gates/plantilla-G-Demo.md
   - docs/operations/claves.md
   - ci/**
   - data/**

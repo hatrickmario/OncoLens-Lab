@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { expect, type Page } from '@playwright/test';
 import es from '../messages/es.json' with { type: 'json' };
+import { opcionDelRotulo, type OpcionVisible } from './orden-rn28';
 
 /** Ejemplos del contrato: el E2E lee de ahí lo que sirve el modo falso, sin literales fijos (`[S1 resp. 18]`). */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON de ejemplos sin tipo: el E2E lee campos concretos
@@ -69,4 +70,143 @@ export async function analizar(page: Page, pregunta: string) {
 
 export async function esperarResultado(page: Page) {
   await expect(page.getByTestId('analysis-result')).toBeVisible();
+}
+
+/** Lo que el recorrido del gate G-Demo (US-142) lee del bloque `g-demo` de `docs/demo/guia-demo-S5.md`: una sola fuente con la demo. */
+export interface DatosDelGate {
+  paciente: keyof typeof IDS_SEMILLA_S5;
+  correccion: { biomarcador: string; valorAnterior: string; valorNuevo: string };
+  faltante: {
+    nombre: string;
+    valor: string;
+    unidad: string;
+    tipoDeResultado: 'cuantitativo' | 'cualitativo';
+    fecha: string;
+  };
+  pregunta: string;
+  seguimientos: string[];
+}
+
+export function datosDelGate(): DatosDelGate {
+  const guia = readFileSync(new URL('../../../docs/demo/guia-demo-S5.md', import.meta.url), 'utf8');
+  const bloque = guia
+    .split('<!-- g-demo:inicio -->')[1]
+    ?.split('<!-- g-demo:fin -->')[0]
+    ?.replace(/```json|```/g, '');
+  if (!bloque) throw new Error('la guía no trae el bloque g-demo del recorrido del gate');
+  return JSON.parse(bloque) as DatosDelGate;
+}
+
+const { caso, datosCriticos, registroManual, followUp, evidence } = es;
+const { correccion } = ficha;
+const columnaDeDatosCriticos = (page: Page) =>
+  page.getByRole('region', { name: datosCriticos.titulo });
+const filaDeDatoCritico = (page: Page, etiqueta: string) =>
+  columnaDeDatosCriticos(page).getByRole('listitem').filter({ hasText: etiqueta });
+
+/** Ficha → «Corregir dato» → «Guardar mi corrección»: el valor nuevo con «Corrección manual» y el anterior en el histórico. */
+export async function pasoCorreccion(page: Page, idPaciente: string, datos: DatosDelGate) {
+  const { biomarcador, valorAnterior, valorNuevo } = datos.correccion;
+  await page.goto(`/pacientes/${idPaciente}`);
+  const tabla = page.getByRole('region', { name: ficha.biomarcadores.titulo });
+  await tabla.getByRole('button', { name: `${correccion.accion} · ${biomarcador}` }).click();
+  await tabla.getByLabel(correccion.formulario.valor).fill(valorNuevo);
+  await tabla.getByRole('button', { name: correccion.formulario.guardar }).click();
+
+  const fila = tabla.getByRole('row', { name: new RegExp(biomarcador) }).first();
+  await expect(fila).toContainText(valorNuevo);
+  await expect(fila).toContainText(ficha.origen.manual_correction);
+  await tabla.getByRole('button', { name: /Histórico/ }).click();
+  const historico = tabla.getByRole('list', { name: correccion.historico.etiqueta });
+  await expect(historico).toContainText(valorAnterior);
+  await expect(historico).toContainText(correccion.historico.reemplazado);
+}
+
+/** Ficha → «Ver caso clínico»: línea de tiempo con ≥ 1 evento y el faltante en «Datos críticos» (que no bloquea). */
+export async function pasoVistaDeCaso(page: Page, idPaciente: string, datos: DatosDelGate) {
+  await page.getByRole('link', { name: caso.verCaso }).click();
+  await expect(page).toHaveURL(new RegExp(`/pacientes/${idPaciente}/caso$`));
+  const linea = page.getByRole('region', { name: caso.secciones.lineaDeTiempo });
+  await expect(linea.getByRole('listitem').first()).toBeVisible();
+  await expect(filaDeDatoCritico(page, datos.faltante.nombre)).toContainText(
+    datosCriticos.estado.faltante,
+  );
+  await expect(columnaDeDatosCriticos(page).getByText(datosCriticos.nota)).toBeVisible();
+}
+
+/** «Registrar a mano» desde la fila del faltante: la fila deja de ser «Faltante» y sigue así tras recargar. */
+export async function pasoRegistroManual(page: Page, datos: DatosDelGate) {
+  const { nombre, valor, unidad, tipoDeResultado, fecha } = datos.faltante;
+  const { biomarcador } = registroManual;
+  await columnaDeDatosCriticos(page)
+    .getByRole('link', { name: `${datosCriticos.acciones.registrarAMano} ${nombre}` })
+    .click();
+  const dialogo = page.getByRole('dialog', { name: biomarcador.titulo });
+  await dialogo.getByLabel(biomarcador.valor).fill(valor);
+  await dialogo.getByLabel(biomarcador.unidad).fill(unidad);
+  await dialogo.getByLabel(biomarcador.tipoDeResultado).selectOption(tipoDeResultado);
+  await dialogo.getByLabel(biomarcador.fecha).fill(fecha);
+  await dialogo.getByRole('button', { name: caso.registro.guardar }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+
+  for (const recargar of [false, true]) {
+    // Recargar con `?item=` reabriría el diálogo del faltante: se vuelve a cargar la vista de caso sin él.
+    if (recargar) await page.goto(new URL('caso', `${page.url().split('/caso')[0]}/`).toString());
+    const fila = filaDeDatoCritico(page, nombre);
+    await expect(fila).toContainText(datosCriticos.estado.presente_verificado);
+    await expect(fila).not.toContainText(datosCriticos.estado.faltante);
+  }
+  return columnaDeDatosCriticos(page)
+    .getByRole('listitem')
+    .filter({ hasText: datosCriticos.estado.faltante })
+    .count();
+}
+
+/** Una pregunta de seguimiento: el turno `n` muestra ≥ 1 afirmación con ≥ 1 cita, el aviso de IA y la etiqueta académica. */
+export async function pasoSeguimiento(page: Page, pregunta: string, n: number) {
+  await page.getByLabel(followUp.campo).fill(pregunta);
+  await page.getByRole('button', { name: followUp.preguntar, exact: true }).click();
+
+  const turno = page.getByRole('article', { name: new RegExp(`^Pregunta ${n} ·`) });
+  await expect(turno).toBeVisible();
+  const citasPorAfirmacion = turno.getByRole('list', { name: evidence.cita.lista });
+  await expect(citasPorAfirmacion.first()).toBeVisible();
+  for (const citas of await citasPorAfirmacion.all())
+    await expect(citas.getByRole('listitem').first()).toBeVisible();
+  await expect(turno.getByRole('note')).not.toHaveCount(0);
+  await expect(turno.getByText(es.app.academicUseLabel)).toBeVisible();
+}
+
+/** Los conteos que muestra cada tarjeta («Coincide 2, Parcial 0, No coincide 0, Desconocido 3») y su etiqueta de no comparable. */
+export async function opcionesVisibles(page: Page): Promise<OpcionVisible[]> {
+  const tarjetas = page
+    .getByRole('list', { name: evidence.resultado.encabezado })
+    .getByRole('article');
+  const { aplicabilidad } = evidence;
+  const opciones: OpcionVisible[] = [];
+  for (const tarjeta of await tarjetas.all()) {
+    const grupo = tarjeta.getByRole('group', {
+      name: new RegExp(`${aplicabilidad.coincide} \\d+,`),
+    });
+    const rotulo = (await grupo.getAttribute('aria-label')) ?? '';
+    const noComparable = (await tarjeta.getByText(aplicabilidad.etiquetaNoComparable).count()) > 0;
+    opciones.push(opcionDelRotulo(rotulo, noComparable));
+  }
+  return opciones;
+}
+
+/**
+ * El recorrido del gate muta al paciente (corrige un biomarcador y registra el faltante): solo corre sobre un seed
+ * recién sembrado. Si el faltante ya está presente, falla con la causa y no con un paso posterior confuso.
+ */
+export async function exigirPacienteSinModificar(
+  page: Page,
+  idPaciente: string,
+  datos: DatosDelGate,
+) {
+  await page.goto(`/pacientes/${idPaciente}/caso`);
+  await expect(
+    filaDeDatoCritico(page, datos.faltante.nombre),
+    `${datos.faltante.nombre} ya no está faltante: el recorrido necesita el seed intacto; reiniciar el seed (scripts/e2e/ejecutar.sh hace down -v)`,
+  ).toContainText(datosCriticos.estado.faltante);
 }

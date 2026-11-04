@@ -1,7 +1,11 @@
 import { registrarEnConsola } from '../../src/infrastructure/logger.js';
 import { leerArchivoDeTexto } from './archivos.js';
 import { conectarConTlsVerificado } from './conexion.js';
-import { contarFilasDelSeed } from './contar.js';
+import {
+  CLAVE_PACIENTES_POR_ORIGEN,
+  contarFilasDelSeed,
+  contarPacientesPorOrigen,
+} from './contar.js';
 
 /**
  * Punto de entrada de `node dist/apps/clinical-api/prisma/seed/contar-en-proceso.js` (L1D-297): imprime una línea JSON con los
@@ -14,7 +18,10 @@ try {
     registrarEnConsola,
   );
   try {
-    const conteos = await conexion.enTransaccion((sesion) => contarFilasDelSeed(sesion));
+    const conteos = await conexion.enTransaccion(async (sesion) => ({
+      ...(await contarFilasDelSeed(sesion)),
+      [CLAVE_PACIENTES_POR_ORIGEN]: await contarPacientesPorOrigen(sesion),
+    }));
     process.stdout.write(`${JSON.stringify({ conteos })}\n`);
   } finally {
     await conexion.end();

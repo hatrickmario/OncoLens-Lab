@@ -1,6 +1,8 @@
 .DS_Store
 node_modules/
 reports/visual/
+# Registros del gate G-Demo en modo fingido (regresión; solo el modo real se versiona en docs/gates/, L1D-248)
+reports/gates/
 .playwright-mcp/
 __pycache__/
 *.pyc
