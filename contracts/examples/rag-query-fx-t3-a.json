@@ -1,0 +1,260 @@
+{
+  "status": "con_evidencia",
+  "synthesis": {
+    "agreements": [
+      {
+        "text": "Las fuentes recuperadas describen la quimioterapia adyuvante en una población de tumores HER2 negativos.",
+        "citedSources": [
+          {
+            "title": "Breast Cancer Treatment (PDQ®)–Health Professional Version",
+            "sourceName": "NCI PDQ",
+            "externalId": "CDR0000062787",
+            "language": "en",
+            "sourceType": "guideline",
+            "licenseClass": "dominio_publico",
+            "studyDesign": "guia",
+            "trialPhase": null,
+            "primaryEndpoint": null,
+            "sampleSize": null,
+            "publishedAt": "2024-03-15",
+            "lastUpdatedAt": "2026-05-01",
+            "guidelineVersion": "2026-05",
+            "authors": null,
+            "sourceUrl": "https://corpus.oncolens.test/documentos/CDR0000062787",
+            "possiblyOutdated": false,
+            "newerVersionAvailable": false,
+            "chunkTextSnapshot": "Texto sintético de ejemplo: the study population included only HER2-negative (IHC 2+, ISH not amplified) early breast cancer treated with adjuvant chemotherapy.",
+            "chunkId": "chunk_88231"
+          }
+        ],
+        "patientDataRefs": []
+      },
+      {
+        "text": "El paciente tiene registrado un resultado de HER2 3+ por inmunohistoquímica.",
+        "citedSources": [],
+        "patientDataRefs": [
+          "r4"
+        ]
+      }
+    ],
+    "discrepancies": []
+  },
+  "applicability": [
+    {
+      "externalId": "CDR0000062787",
+      "criteria": [
+        {
+          "criterion": "estado_her2",
+          "patientValue": "3+ (IHQ)",
+          "studyPopulationValue": "only HER2-negative (IHC 2+, ISH not amplified)",
+          "status": "no_coincide",
+          "unknownReason": null,
+          "isExclusionary": true,
+          "patientDataWarning": null,
+          "citedSources": [
+            {
+              "title": "Breast Cancer Treatment (PDQ®)–Health Professional Version",
+              "sourceName": "NCI PDQ",
+              "externalId": "CDR0000062787",
+              "language": "en",
+              "sourceType": "guideline",
+              "licenseClass": "dominio_publico",
+              "studyDesign": "guia",
+              "trialPhase": null,
+              "primaryEndpoint": null,
+              "sampleSize": null,
+              "publishedAt": "2024-03-15",
+              "lastUpdatedAt": "2026-05-01",
+              "guidelineVersion": "2026-05",
+              "authors": null,
+              "sourceUrl": "https://corpus.oncolens.test/documentos/CDR0000062787",
+              "possiblyOutdated": false,
+              "newerVersionAvailable": false,
+              "chunkTextSnapshot": "Texto sintético de ejemplo: the study population included only HER2-negative (IHC 2+, ISH not amplified) early breast cancer treated with adjuvant chemotherapy.",
+              "chunkId": "chunk_88231"
+            }
+          ],
+          "studyPopulationValues": [
+            {
+              "value": "only HER2-negative (IHC 2+, ISH not amplified)",
+              "chunkId": "chunk_88231",
+              "scope": "elegibilidad"
+            }
+          ],
+          "partialReason": null
+        },
+        {
+          "criterion": "receptores_hormonales",
+          "patientValue": null,
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "falta_en_paciente",
+          "isExclusionary": false,
+          "patientDataWarning": "faltante",
+          "citedSources": []
+        },
+        {
+          "criterion": "estadio",
+          "patientValue": "IIA",
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "no_reportado_por_fuente",
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "citedSources": []
+        },
+        {
+          "criterion": "linea_tratamiento",
+          "patientValue": null,
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "falta_en_paciente",
+          "isExclusionary": false,
+          "patientDataWarning": "faltante",
+          "citedSources": []
+        },
+        {
+          "criterion": "estado_menopausico",
+          "patientValue": null,
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "falta_en_paciente",
+          "isExclusionary": false,
+          "patientDataWarning": "faltante",
+          "citedSources": []
+        },
+        {
+          "criterion": "ecog",
+          "patientValue": "1",
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "no_reportado_por_fuente",
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "citedSources": []
+        }
+      ],
+      "summary": {
+        "coincide": 0,
+        "parcial": 0,
+        "noCoincide": 1,
+        "desconocido": 5
+      },
+      "populationNotComparable": true
+    }
+  ],
+  "evidenceOptions": [
+    {
+      "option": "Quimioterapia adyuvante descrita en una población HER2 negativa",
+      "rationale": "La evidencia recuperada describe el esquema adyuvante en una población de tumores HER2 negativos.",
+      "details": [
+        "Texto sintético de ejemplo: el detalle describe, según los fragmentos recuperados, el diseño del estudio y la población incluida.",
+        "Texto sintético de ejemplo: el detalle describe los resultados que reporta la fuente para el grupo estudiado."
+      ],
+      "applicabilitySummary": {
+        "coincide": 0,
+        "parcial": 0,
+        "noCoincide": 1,
+        "desconocido": 5
+      },
+      "populationNotComparable": true,
+      "perSource": [
+        {
+          "externalId": "CDR0000062787",
+          "summary": {
+            "coincide": 0,
+            "parcial": 0,
+            "noCoincide": 1,
+            "desconocido": 5
+          },
+          "populationNotComparable": true
+        }
+      ],
+      "relevanceScore": 0.87,
+      "warnings": [
+        "poblacion_no_comparable"
+      ],
+      "citedSources": [
+        {
+          "title": "Breast Cancer Treatment (PDQ®)–Health Professional Version",
+          "sourceName": "NCI PDQ",
+          "externalId": "CDR0000062787",
+          "language": "en",
+          "sourceType": "guideline",
+          "licenseClass": "dominio_publico",
+          "studyDesign": "guia",
+          "trialPhase": null,
+          "primaryEndpoint": null,
+          "sampleSize": null,
+          "publishedAt": "2024-03-15",
+          "lastUpdatedAt": "2026-05-01",
+          "guidelineVersion": "2026-05",
+          "authors": null,
+          "sourceUrl": "https://corpus.oncolens.test/documentos/CDR0000062787",
+          "possiblyOutdated": false,
+          "newerVersionAvailable": false,
+          "chunkTextSnapshot": "Texto sintético de ejemplo: the study population included only HER2-negative (IHC 2+, ISH not amplified) early breast cancer treated with adjuvant chemotherapy.",
+          "chunkId": "chunk_88231"
+        }
+      ]
+    }
+  ],
+  "discardedOptions": [],
+  "limitations": [
+    {
+      "text": "Faltan datos críticos del paciente, entre ellos el estado menopáusico y los tratamientos previos: no se pudieron comparar con la fuente.",
+      "origin": "estructural"
+    },
+    {
+      "text": "El Ki-67 (20 %) y el resultado de receptor de estrógeno están pendientes de revisión; este último está en conflicto con otro resultado registrado (lo declara la Base del análisis).",
+      "origin": "estructural"
+    },
+    {
+      "text": "Síntesis basada en una sola fuente.",
+      "origin": "estructural"
+    }
+  ],
+  "assumptions": [
+    {
+      "text": "Se asume que el resultado de HER2 3+ registrado corresponde al tumor actual."
+    }
+  ],
+  "retrievalStats": {
+    "retrieved": 40,
+    "aboveThreshold": 1
+  },
+  "omittedClaims": 0,
+  "optionsNotShown": 0,
+  "agentSteps": [],
+  "topRelevanceScore": 0.87,
+  "meta": {
+    "queryLanguage": "es",
+    "responseLanguage": "es",
+    "llmProvider": "local",
+    "llmModel": "llm-local-ejemplo",
+    "embeddingModel": "embedding-local-ejemplo",
+    "rerankerModel": "reranker-local-ejemplo",
+    "nliModel": "nli-local-ejemplo",
+    "promptVersion": "rag-query@0.1.0",
+    "catalogVersion": "2026.10.0",
+    "corpusRelease": "2026-09-30",
+    "corpusCutoffDate": "2026-09-30",
+    "excludedSources": [
+      "NCCN",
+      "ESMO"
+    ],
+    "retrievalParams": {
+      "topK": 40,
+      "rerankTopN": 10,
+      "relevanceThreshold": 0.5,
+      "retrievalMode": "dense",
+      "fusion": "ninguna",
+      "fusionParam": 0,
+      "queryRewrite": {
+        "applied": false,
+        "reason": "no_disparado"
+      }
+    },
+    "latencyMs": 8200
+  }
+}
