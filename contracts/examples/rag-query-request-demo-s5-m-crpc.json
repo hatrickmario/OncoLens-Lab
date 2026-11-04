@@ -23,7 +23,7 @@
       "dataRef": "r1",
       "cancerType": "prostata",
       "histology": "adenocarcinoma acinar",
-      "grade": "Gleason 4+5 (grupo ISUP 5)",
+      "grade": "Gleason 4+5=9 · ISUP 5",
       "stagingSystem": "TNM_8",
       "stageValue": "T3bN1M1b",
       "performanceScale": "ECOG",
