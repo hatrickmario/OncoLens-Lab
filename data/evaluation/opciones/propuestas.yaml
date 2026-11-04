@@ -1,0 +1,50 @@
+# Salida cruda del generador falso por pregunta (lo que un LLM propondría ANTES de validar citas y soporte). Guiones derivados
+# de FX-10c-a: LLM-CUATRO (OP-01), LLM-TRES (OP-02) y variantes. Cada justificación copia una frase de su chunk (el NLI falso
+# implica la hipótesis cuando todas sus palabras están en la premisa); las «sin soporte» traen una palabra que el chunk no tiene.
+clase: sintetico
+propuestas:
+  OP-01: # LLM-CUATRO
+    - {opcion: 'Opción A (test)', justificacion: 'Adjuvant anti-HER2 therapy after surgery was studied', citas: [ch-a4-1]}
+    - {opcion: 'Opción B (test)', justificacion: 'Adjuvant anti-HER2 therapy after surgery improved disease-free survival', citas: [ch-a1-1]}
+    - {opcion: 'Opción C (test)', justificacion: 'Adjuvant chemotherapy alone after surgery is described', citas: [ch-a3-1]}
+    - {opcion: 'Opción D (test)', justificacion: 'Adjuvant anti-HER2 therapy after surgery with dose adjustment', citas: [ch-a6-1]}
+    - {opcion: 'Opción E (test)', justificacion: 'Adjuvant anti-HER2 therapy duplicates survival', citas: [ch-a1-1]}
+  OP-02: # LLM-TRES
+    - {opcion: 'Opción A (test)', justificacion: 'Adjuvant anti-HER2 therapy after surgery was studied', citas: [ch-a4-1]}
+    - {opcion: 'Opción B (test)', justificacion: 'Adjuvant anti-HER2 therapy after surgery improved disease-free survival', citas: [ch-a1-1]}
+    - {opcion: 'Opción C (test)', justificacion: 'Adjuvant chemotherapy alone after surgery is described', citas: [ch-a3-1]}
+  OP-03:
+    - {opcion: 'Opción B (test)', justificacion: 'Adjuvant anti-HER2 therapy after surgery improved disease-free survival', citas: [ch-a1-1]}
+    - {opcion: 'Opción D (test)', justificacion: 'Adjuvant anti-HER2 therapy after surgery with dose adjustment', citas: [ch-a6-1]}
+  OP-04:
+    - {opcion: 'Opción B (test)', justificacion: 'Adjuvant anti-HER2 therapy after surgery improved disease-free survival', citas: [ch-a1-1]}
+    - {opcion: 'Opción C (test)', justificacion: 'Adjuvant chemotherapy alone after surgery is described', citas: [ch-a3-1]}
+    - {opcion: 'Opción F (test)', justificacion: 'Adjuvant anti-HER2 therapy with extended duration after surgery', citas: [ch-a5-1]}
+  OP-05: # LLM-MULTIFUENTE
+    - {opcion: 'Opción M (test)', justificacion: 'Adjuvant anti-HER2 therapy after surgery was studied', citas: [ch-a4-1, ch-a1-1]}
+    - {opcion: 'Opción C (test)', justificacion: 'Adjuvant chemotherapy alone after surgery is described', citas: [ch-a3-1]}
+    - {opcion: 'Opción D (test)', justificacion: 'Adjuvant anti-HER2 therapy after surgery with dose adjustment', citas: [ch-a6-1]}
+  OP-06:
+    - {opcion: 'Opción B (test)', justificacion: 'Adjuvant anti-HER2 therapy after surgery improved disease-free survival', citas: [ch-a1-1]}
+    - {opcion: 'Opción G (test)', justificacion: 'Adjuvant anti-HER2 therapy after surgery was studied', citas: [ch-x-999]}
+  OP-07:
+    - {opcion: 'Opción P1 (test)', justificacion: 'Androgen deprivation therapy plus an androgen receptor inhibitor prolonged survival', citas: [ch-p1-1]}
+    - {opcion: 'Opción P3 (test)', justificacion: 'Androgen deprivation therapy alone is described', citas: [ch-p3-1]}
+    - {opcion: 'Opción P4 (test)', justificacion: 'Androgen receptor inhibitor with radiotherapy is described', citas: [ch-p4-1]}
+  OP-08:
+    - {opcion: 'Opción P1 (test)', justificacion: 'Androgen deprivation therapy plus an androgen receptor inhibitor prolonged survival', citas: [ch-p1-1]}
+    - {opcion: 'Opción P2 (test)', justificacion: 'Androgen deprivation therapy plus chemotherapy was described', citas: [ch-p2-1]}
+    - {opcion: 'Opción P3 (test)', justificacion: 'Androgen deprivation therapy alone is described', citas: [ch-p3-1]}
+  OP-09:
+    - {opcion: 'Opción P1 (test)', justificacion: 'Androgen deprivation therapy plus an androgen receptor inhibitor prolonged survival', citas: [ch-p1-1]}
+    - {opcion: 'Opción P3 (test)', justificacion: 'Androgen deprivation therapy alone is described', citas: [ch-p3-1]}
+    - {opcion: 'Opción P4 (test)', justificacion: 'Androgen receptor inhibitor with radiotherapy is described', citas: [ch-p4-1]}
+    - {opcion: 'Opción P5 (test)', justificacion: 'Androgen deprivation therapy doubles survival', citas: [ch-p1-1]}
+  OP-10:
+    - {opcion: 'Opción P1 (test)', justificacion: 'Androgen deprivation therapy plus an androgen receptor inhibitor prolonged survival', citas: [ch-p1-1]}
+    - {opcion: 'Opción P4 (test)', justificacion: 'Androgen receptor inhibitor with radiotherapy is described', citas: [ch-p4-1]}
+  OP-11:
+    - {opcion: 'Opción PM (test)', justificacion: 'Androgen deprivation therapy alone is described', citas: [ch-p1-1, ch-p3-1]}
+    - {opcion: 'Opción P4 (test)', justificacion: 'Androgen receptor inhibitor with radiotherapy is described', citas: [ch-p4-1]}
+  OP-12:
+    - {opcion: 'Opción P3 (test)', justificacion: 'Androgen deprivation therapy alone is described', citas: [ch-p3-1]}

@@ -9,6 +9,7 @@ from app.application.aplicabilidad import ApplicabilityService
 from app.application.aplicabilidad_textual import ParametrosDelRespaldo
 from app.application.ports import (
     Clock,
+    CorpusCatalogReader,
     EvidenceGenerator,
     FalloDeInferencia,
     LanguageDetector,
@@ -30,6 +31,7 @@ from app.config.settings import (
     POBLACION_PLAZO_DEL_RESPALDO_MS_INICIAL,
     POBLACION_VERSION_DEL_PROMPT_INICIAL,
 )
+from app.domain.criterios_aplicabilidad import CriteriosDeAplicabilidad
 from app.evaluation.adaptadores_falsos import (
     BuscadorEnMemoria,
     BuscadorSparseEnMemoria,
@@ -96,6 +98,15 @@ class ServicioDeSuite:
     """``CLAIM_MAX_WORDS`` de la suite: el mismo que usa el verificador del servicio (RN-22)."""
     verificador_linea_base: ProhibitedTermsChecker | None = None
     """El filtro de la línea base de US-068 (lista 1.5.0, solo Nivel A) para la regresión de falsos positivos (US-249 AC-5)."""
+
+
+@dataclass(frozen=True)
+class AplicabilidadDeLaSuite:
+    """Lo que la familia `opciones` (US-140) inyecta para que el servicio evalúe la aplicabilidad: los criterios del
+    catálogo y el catálogo del corpus con la población de cada documento."""
+
+    criterios: CriteriosDeAplicabilidad
+    catalogo: CorpusCatalogReader
 
 
 PARAMETROS_DEL_RESPALDO_DE_LA_SUITE = ParametrosDelRespaldo(
@@ -249,9 +260,12 @@ def componer_servicio(
     puertos_locales: PuertosLocales | None = None,
     brazo: Brazo | None = None,
     adaptadores: Adaptadores | None = None,
+    aplicabilidad: AplicabilidadDeLaSuite | None = None,
 ) -> ServicioDeSuite:
     """El servicio de la suite. Con ``brazo`` recupera con sus ``RETRIEVAL_*`` (US-133); con ``adaptadores`` ya cargados
-    (los mismos modelos y el mismo índice para todos los brazos) no vuelve a cargar ni a indexar nada."""
+    (los mismos modelos y el mismo índice para todos los brazos) no vuelve a cargar ni a indexar nada. Con
+    ``aplicabilidad`` (familia `opciones`, US-140) el servicio calcula la aplicabilidad por fuente con esos criterios y
+    esa población; sin ella, la suite mide solo la recuperación y la generación."""
     adaptadores = adaptadores or adaptadores_de_suite(config, dataset, puertos_locales)
     observaciones = Observaciones()
     nli = NliMedido(adaptadores.clasificador_nli, cronometro)
@@ -268,11 +282,16 @@ def componer_servicio(
         ),
         reranker=RerankerObservado(adaptadores.reranker, cronometro, observaciones),
         lector_release=LectorReleaseMedido(LectorReleaseFijo(dataset), cronometro),
-        catalogo=CatalogoMedido(CatalogoEnMemoria(dataset), cronometro),
+        catalogo=CatalogoMedido(
+            aplicabilidad.catalogo if aplicabilidad else CatalogoEnMemoria(dataset), cronometro
+        ),
         catalogo_clinico=CatalogoClinicoDeConfig(config.catalogo_version, tipos_habilitados),
         datos_criticos=cargar_datos_criticos(config.ruta_terminos, tipos_habilitados),
-        # Sin criterios: la suite mide la recuperación y la generación; la aplicabilidad se mide en US-132 (M-08.2).
-        aplicabilidad=ApplicabilityService(CriteriosDelCatalogo({})),
+        # Sin ``aplicabilidad`` la suite no calcula criterios (mide recuperación y generación; M-08.2 es de US-132); con ella
+        # (familia `opciones`, US-140) el servicio evalúa la aplicabilidad por fuente.
+        aplicabilidad=ApplicabilityService(
+            aplicabilidad.criterios if aplicabilidad else CriteriosDelCatalogo({})
+        ),
         proponente=adaptadores.proponente,
         generador=GeneradorObservado(adaptadores.generador, cronometro, observaciones),
         clasificador_nli=nli,

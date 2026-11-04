@@ -1,0 +1,46 @@
+# Verdad conocida de la familia `opciones` (US-140). `fuentes`: la población de cada documento en la forma de L1D-117
+# (APL-FIJA: las aplicabilidades salen de aquí y del catálogo de criterios, nunca de un LLM). `casos`: el paciente de cada
+# pregunta, las fuentes que debe citar alguna opción mostrada (`esperadas`, informativa) y el orden de RN-28 que fija un
+# humano leyendo la regla (`orden_esperado`, por fuente de la opción; solo para el test de coherencia del dataset).
+clase: sintetico
+fuentes:
+  doc-a1:
+    metadata_source: fuente_estructurada
+    population_criteria: {subtipo: no_disponible, estadio: I–III, linea: no_disponible, biomarcadores: {her2: positivo}, edad: no_disponible, ecog: 0-1}
+  doc-a3:
+    metadata_source: fuente_estructurada
+    population_criteria: {subtipo: no_disponible, estadio: no_disponible, linea: no_disponible, biomarcadores: no_disponible, edad: no_disponible, ecog: no_disponible}
+  doc-a4:
+    metadata_source: fuente_estructurada
+    population_criteria: {subtipo: no_disponible, estadio: no_disponible, linea: no_disponible, biomarcadores: {her2: negativo}, edad: no_disponible, ecog: no_disponible}
+  doc-a5:
+    metadata_source: fuente_estructurada
+    population_criteria: {subtipo: no_disponible, estadio: no_disponible, linea: no_disponible, biomarcadores: no_disponible, edad: no_disponible, ecog: {valor: 0-1, alcance: subgrupo}}
+  doc-a6:
+    metadata_source: fuente_estructurada
+    population_criteria: {subtipo: no_disponible, estadio: I–III, linea: no_disponible, biomarcadores: {her2: positivo}, edad: no_disponible, ecog: 0-1}
+  doc-p1:
+    metadata_source: fuente_estructurada
+    population_criteria: {subtipo: no_disponible, estadio: no_disponible, linea: no_disponible, biomarcadores: no_disponible, edad: no_disponible, ecog: 0-1, estado_castracion: sensible a castración}
+  doc-p2:
+    metadata_source: fuente_estructurada
+    population_criteria: {subtipo: no_disponible, estadio: no_disponible, linea: no_disponible, biomarcadores: no_disponible, edad: no_disponible, ecog: no_disponible, estado_castracion: resistente a castración}
+  doc-p3:
+    metadata_source: fuente_estructurada
+    population_criteria: {subtipo: no_disponible, estadio: no_disponible, linea: no_disponible, biomarcadores: no_disponible, edad: no_disponible, ecog: no_disponible}
+  doc-p4:
+    metadata_source: fuente_estructurada
+    population_criteria: {subtipo: no_disponible, estadio: no_disponible, linea: no_disponible, biomarcadores: no_disponible, edad: no_disponible, ecog: 0-1}
+casos:
+  OP-01: {paciente: a-m1, esperadas: [doc-a1, doc-a6, doc-a3], orden_esperado: [doc-a1, doc-a6, doc-a3]}
+  OP-02: {paciente: a-m1, esperadas: [doc-a1, doc-a3, doc-a4], orden_esperado: [doc-a1, doc-a3, doc-a4], no_comparable_mostrada: true}
+  OP-03: {paciente: a-m1, esperadas: [doc-a1, doc-a6], orden_esperado: [doc-a1, doc-a6]}
+  OP-04: {paciente: a-m2, esperadas: [doc-a1, doc-a3, doc-a5], orden_esperado: [doc-a1, doc-a3, doc-a5]}
+  OP-05: {paciente: a-m1, esperadas: [doc-a1, doc-a3, doc-a6], orden_esperado: [doc-a1, doc-a6, doc-a3]}
+  OP-06: {paciente: a-m2, esperadas: [doc-a1], orden_esperado: [doc-a1]}
+  OP-07: {paciente: p-a2, esperadas: [doc-p1, doc-p3, doc-p4], orden_esperado: [doc-p1, doc-p4, doc-p3]}
+  OP-08: {paciente: p-a2, esperadas: [doc-p1, doc-p2, doc-p3], orden_esperado: [doc-p1, doc-p3, doc-p2], no_comparable_mostrada: true}
+  OP-09: {paciente: p-a2, esperadas: [doc-p1, doc-p3, doc-p4], orden_esperado: [doc-p1, doc-p4, doc-p3]}
+  OP-10: {paciente: p-a1, esperadas: [doc-p1, doc-p4], orden_esperado: [doc-p1, doc-p4]}
+  OP-11: {paciente: p-a2, esperadas: [doc-p1, doc-p3, doc-p4], orden_esperado: [doc-p1, doc-p4]}
+  OP-12: {paciente: p-a1, esperadas: [doc-p3], orden_esperado: [doc-p3]}
