@@ -7,6 +7,7 @@ Aquí vive el registro de cada gate del MVP. Hoy solo G-Demo (US-142, L1D-248).
 | `plantilla-G-Demo.md` | Plantilla del registro; `scripts/verify-g-demo` la rellena. |
 | `g-demo-excepciones.json` | Excepciones y capacidades diferidas con su Feature y destino; las entradas con `tipo: "se_mide_en_el_piloto"` forman la sección «Validación clínica». Una entrada sin `feature` o sin `destino` hace fallar la verificación. |
 | `G-Demo-<fecha>.md` | Registro firmado en **modo real**, versionado en el PR `docs` del cierre del S5 (lo firma el dueño: usuario, PO). |
+| `aceptaciones-del-po/` | Aceptación del dueño (PO) de G-Demo **con excepciones** cuando el script dice «no superado»: documenta la decisión y sus hallazgos, sin cambiar cifras ni metas. No es el registro «superado» del script. |
 | `no-superados/` | Registros «no superado» conservados por decisión del humano como evidencia de un intento; no declaran G-Demo. `docs/gates/G-Demo-<fecha>.md` queda reservado al registro superado y firmado (el test de higiene lee solo la raíz de `docs/gates/`). |
 
 Un registro en modo fingido (`LLM_PROVIDER=fake`) es regresión del recorrido: se escribe en `reports/gates/` (ignorado por
