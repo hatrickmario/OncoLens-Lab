@@ -14,6 +14,14 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn(), refres
 const bff = crearBffDeDatosCriticosSimulado();
 const columna = async () => within(await screen.findByRole('region', { name: 'Datos críticos' }));
 
+/** Las opciones del catálogo ya se leyeron y se aplicaron: sin esto, `queryByRole('dialog')` nulo sería vacuo. */
+async function esperarOpcionesDeRegistro() {
+  await waitFor(() =>
+    expect(bff.rutas.some((r) => r.endsWith('/manual-entry-options'))).toBe(true),
+  );
+  await new Promise((resolver) => setTimeout(resolver, 50));
+}
+
 describe('Columna «Datos críticos» · acciones de los faltantes', () => {
   beforeAll(bff.iniciar);
   afterAll(bff.detener);
@@ -135,6 +143,16 @@ describe('Columna «Datos críticos» · acciones de los faltantes', () => {
     montarVistaConDatosCriticos('no_existe');
 
     await columna();
+    await esperarOpcionesDeRegistro();
+
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('no abre ningún formulario con ?item=ki67 cuando el paciente está egresado [US-004 AC-3] [RN-17]', async () => {
+    montarVistaConDatosCriticos('ki67', true);
+
+    await columna();
+    await esperarOpcionesDeRegistro();
 
     expect(screen.queryByRole('dialog')).toBeNull();
   });
