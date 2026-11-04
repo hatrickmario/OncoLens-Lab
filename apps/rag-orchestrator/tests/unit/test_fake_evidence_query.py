@@ -62,7 +62,9 @@ PACIENTES_DEMO_S5 = (
 def test_select_fixture_response_devuelve_la_respuesta_con_evidencia_de_cada_paciente_cuando_se_carga_demo_s5():
     # Un ejemplo demo-s5 que no cumpla RagQueryInternalResponse, o dos preguntas iguales, rompe el modo fingido.
     fake = FakeEvidenceQuery.desde_directorio(EJEMPLOS)
-    preguntas = [_pregunta(f"rag-query-request-demo-s5-{nombre}.json") for nombre in PACIENTES_DEMO_S5]
+    preguntas = [
+        _pregunta(f"rag-query-request-demo-s5-{nombre}.json") for nombre in PACIENTES_DEMO_S5
+    ]
 
     assert len(set(preguntas)) == len(PACIENTES_DEMO_S5)
     for nombre, pregunta in zip(PACIENTES_DEMO_S5, preguntas, strict=True):
