@@ -155,6 +155,17 @@ describe('historias de los pacientes semilla de US-254', () => {
     }
   });
 
+  it('cada evento que cierra una línea apunta a un tratamiento existente y cae el día de su fin [US-254 AC-2]', () => {
+    for (const paciente of nuevos) {
+      for (const evento of paciente.eventos.filter((e) => e.cierraLinea !== undefined)) {
+        const linea = paciente.tratamientosPrevios.find((t) => t.clave === evento.cierraLinea);
+
+        expect(linea, `${paciente.clave}/${evento.clave}`).toBeDefined();
+        expect(evento.diasAntes, `${paciente.clave}/${evento.clave}`).toBe(linea?.fin?.diasAntes);
+      }
+    }
+  });
+
   it('detecta la línea 2 de (k) que empieza antes del fin de la línea 1 [US-254 AC-2]', () => {
     const [linea1, linea2] = pacienteK.tratamientosPrevios;
     const incoherente = {

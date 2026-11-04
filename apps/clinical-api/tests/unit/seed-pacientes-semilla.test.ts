@@ -1,5 +1,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { mesesTranscurridos } from '../../src/modules/evidence-analysis/clinical-context.builder.js';
+import { leerCatalogo, resolverAtcDelRegimen } from '../../prisma/seed/catalogo.js';
 import { idSembrado } from '../../prisma/seed/determinismo.js';
 import { PACIENTES_SEMILLA } from '../../prisma/seed/pacientes/indice.js';
 
@@ -23,5 +25,60 @@ describe('PACIENTES_SEMILLA', () => {
 
     expect(ids).toHaveLength(7);
     for (const [, letra, id] of ids) expect(id).toBe(idSembrado(`paciente-${letra}`));
+  });
+
+  it('los tratamientos del contexto de cada ejemplo demo-s5 son los del paciente semilla resuelto con el catálogo [US-254 AC-4]', () => {
+    // Los ejemplos del modo fingido llevan el contexto ya desidentificado a mano: este cruce detecta su deriva del seed.
+    const referencia = new Date('2026-10-16T12:00:00.000Z');
+    const catalogo = leerCatalogo(
+      new URL('../../../../packages/clinical-catalogs', import.meta.url).pathname,
+      (ruta) => readFileSync(ruta, 'utf8'),
+    );
+    const mesesDesde = (dias: number): number => {
+      const fecha = new Date(referencia);
+      fecha.setUTCDate(fecha.getUTCDate() - dias);
+      return mesesTranscurridos(fecha.toISOString().slice(0, 10), referencia) ?? 0;
+    };
+    const ejemplos = [
+      ['g', 'g-inicial'],
+      ['h', 'h-adyuvante'],
+      ['i', 'i-recaida'],
+      ['j', 'j-metastasica-1l'],
+      ['k', 'k-her2-tras-tdm1'],
+      ['l', 'l-hspc'],
+      ['m', 'm-crpc'],
+    ] as const;
+
+    for (const [letra, nombre] of ejemplos) {
+      const paciente = PACIENTES_SEMILLA.find((p) => p.clave === `paciente-${letra}`);
+      const ruta = new URL(
+        `../../../../contracts/examples/rag-query-request-demo-s5-${nombre}.json`,
+        import.meta.url,
+      );
+      const contexto = JSON.parse(readFileSync(ruta, 'utf8')).clinicalContext;
+
+      expect(
+        contexto.priorTreatments.map((t: Record<string, unknown>) => [
+          t.lineNumber,
+          t.setting,
+          t.regimenName,
+          t.atcCodes,
+          t.monthsSinceStart,
+          t.monthsSinceEnd,
+          t.endReason,
+        ]),
+        nombre,
+      ).toEqual(
+        (paciente?.tratamientosPrevios ?? []).map((t) => [
+          t.numeroDeLinea,
+          t.setting,
+          t.regimen,
+          resolverAtcDelRegimen(catalogo, t).codigos,
+          mesesDesde(t.diasDesdeElInicio),
+          t.fin === undefined ? null : mesesDesde(t.fin.diasAntes),
+          t.fin?.motivo ?? 'desconocido',
+        ]),
+      );
+    }
   });
 });

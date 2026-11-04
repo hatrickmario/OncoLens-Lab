@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Client } from 'pg';
 import { leerCatalogo } from '../../../prisma/seed/catalogo.js';
-import { idSembrado } from '../../../prisma/seed/determinismo.js';
+import { idDeTratamiento, idSembrado } from '../../../prisma/seed/determinismo.js';
 import { ejecutarSeed } from '../../../prisma/seed/principal.js';
 import { SeedBloqueadoError } from '../../../prisma/seed/guarda.js';
 import { PACIENTES_SEMILLA } from '../../../prisma/seed/pacientes/indice.js';
@@ -116,6 +116,20 @@ describe('Pacientes semilla por momento de la enfermedad', () => {
       for (const codigo of fila.atc_codes) expect(subconjunto).toContain(codigo);
   });
 
+  it('un régimen combinado con un fármaco fuera del catálogo conserva el código del que sí está y queda no_mapeado [US-254 AC-1] [RN-27]', async () => {
+    const [letrozolConPalbociclib] = await tratamientosDe('j');
+    const [leuprorelinaConAbiraterona] = await tratamientosDe('l');
+
+    expect(letrozolConPalbociclib).toMatchObject({
+      atc_codes: ['L02BG04'],
+      mapping_status: 'no_mapeado',
+    });
+    expect(leuprorelinaConAbiraterona).toMatchObject({
+      atc_codes: ['L02AE02'],
+      mapping_status: 'no_mapeado',
+    });
+  });
+
   it('un régimen sin ATC en el catálogo queda no_mapeado y sin código [US-254 AC-1] [RN-27]', async () => {
     const tamoxifeno = (await tratamientosDe('i'))[0];
     const enzalutamida = (await tratamientosDe('m'))[1];
@@ -138,7 +152,7 @@ describe('Pacientes semilla por momento de la enfermedad', () => {
     expect(primera).toMatchObject({ ongoing: false, end_reason: 'progresion' });
     expect(primera?.ended_at).toBeInstanceOf(Date);
     expect(segunda).toMatchObject({ ongoing: false, end_reason: 'progresion' });
-    expect(cierre?.prior_treatment_id).toBe(idSembrado('paciente-k/linea-1'));
+    expect(cierre?.prior_treatment_id).toBe(idDeTratamiento('paciente-k', 'linea-1'));
     expect(enCurso).toMatchObject({ ongoing: true, ended_at: null, end_reason: 'desconocido' });
   });
 
