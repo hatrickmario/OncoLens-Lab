@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { PACIENTES_SEMILLA } from '../../../prisma/seed/pacientes/indice.js';
 import { idDePaciente } from '../../support/gateway.js';
 import { servicioDeIdentidad } from '../../support/identidad.js';
 import type { IdentityService } from '../../../src/modules/patients/identity.service.js';
@@ -19,7 +20,7 @@ beforeAll(async () => {
 afterAll(() => escenario.cerrar());
 
 describe('listado de pacientes', () => {
-  it('devuelve la página 1 con pageSize, total 5 y dataOrigin y lifecycleStatus en cada elemento [US-048 AC-1]', async () => {
+  it('devuelve la página 1 con pageSize, el total de pacientes semilla y dataOrigin y lifecycleStatus en cada elemento [US-048 AC-1]', async () => {
     const { app } = montarPacientes(escenario.mundo);
 
     const respuesta = await clienteVerificado(app)
@@ -29,7 +30,7 @@ describe('listado de pacientes', () => {
     expect(respuesta.status).toBe(200);
     expect(respuesta.body.page).toBe(1);
     expect(respuesta.body.pageSize).toBe(PAGE_SIZE_DE_TEST);
-    expect(respuesta.body.total).toBe(5);
+    expect(respuesta.body.total).toBe(PACIENTES_SEMILLA.length);
     expect(respuesta.body.items).toHaveLength(PAGE_SIZE_DE_TEST);
     for (const elemento of respuesta.body.items) {
       expect(elemento).toMatchObject({
@@ -54,7 +55,7 @@ describe('listado de pacientes', () => {
     }
   });
 
-  it('filtra a vacío con dataOrigin=real_identificado y a cinco con status=activo [US-048 AC-4]', async () => {
+  it('filtra a vacío con dataOrigin=real_identificado y a todos los pacientes semilla con status=activo [US-048 AC-4]', async () => {
     const { app } = montarPacientes(escenario.mundo, { pageSize: 10 });
 
     const reales = await clienteVerificado(app)
@@ -67,8 +68,8 @@ describe('listado de pacientes', () => {
     expect(reales.status).toBe(200);
     expect(reales.body).toMatchObject({ items: [], total: 0 });
     expect(activos.status).toBe(200);
-    expect(activos.body.total).toBe(5);
-    expect(activos.body.items).toHaveLength(5);
+    expect(activos.body.total).toBe(PACIENTES_SEMILLA.length);
+    expect(activos.body.items).toHaveLength(PACIENTES_SEMILLA.length);
   });
 
   it('responde 422 sin eco del valor cuando status está fuera del enum [US-048 AC-4]', async () => {
@@ -121,7 +122,7 @@ describe('listado de pacientes', () => {
     }
   });
 
-  it('devuelve los dos pacientes restantes en la página 2 sin repetir los de la página 1 [US-048 AC-1]', async () => {
+  it('devuelve los pacientes restantes en la página 2 sin repetir los de la página 1 [US-048 AC-1]', async () => {
     const { app } = montarPacientes(escenario.mundo);
     const pedir = (pagina: number) =>
       clienteVerificado(app)
@@ -134,8 +135,10 @@ describe('listado de pacientes', () => {
     const ids = (cuerpo: { items: { id: string }[] }) =>
       cuerpo.items.map((elemento) => elemento.id);
     expect(segunda.body.page).toBe(2);
-    expect(ids(segunda.body)).toHaveLength(2);
-    expect(new Set([...ids(primera.body), ...ids(segunda.body)]).size).toBe(5);
+    expect(ids(segunda.body)).toHaveLength(PACIENTES_SEMILLA.length - PAGE_SIZE_DE_TEST);
+    expect(new Set([...ids(primera.body), ...ids(segunda.body)]).size).toBe(
+      PACIENTES_SEMILLA.length,
+    );
   });
 
   it('responde 422 cuando page es 0 [US-048 AC-4]', async () => {

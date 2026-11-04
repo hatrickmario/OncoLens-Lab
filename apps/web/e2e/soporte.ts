@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { expect, type Page } from '@playwright/test';
 import es from '../messages/es.json' with { type: 'json' };
 
@@ -16,6 +16,17 @@ export const { evidence: textos, pacientes, ficha, alcance } = es;
 
 /** Paciente semilla (a), de mama (L1D-169): el mismo UUID determinista que `WEB_HOME_PATH` en `scripts/e2e/ejecutar.sh`. */
 export const ID_SEMILLA_A = '0fd028e2-f8b0-56c7-a748-2a4e473d879d';
+
+/** Paciente semilla (f) = FX-T3-a (L1D-196): mama con avisos clínicos acumulados; `idSembrado('paciente-f')`. */
+export const ID_SEMILLA_F = '380dd24c-0458-55f7-bd22-23b87d965c86';
+
+/**
+ * Cuántos pacientes siembra el seed: un archivo `<letra>.ts` por paciente en `prisma/seed/pacientes/`. Se lee del
+ * sistema de archivos, como `ejemplo()`: `web` no importa código de `clinical-api` (`web-solo-por-bff`).
+ */
+export const TOTAL_PACIENTES_SEMILLA = readdirSync(
+  new URL('../../clinical-api/prisma/seed/pacientes/', import.meta.url),
+).filter((archivo) => /^[a-z]\.ts$/.test(archivo)).length;
 
 /** Usuario sintético sembrado (L1D-197); la contraseña de la fixture llega por entorno, nunca versionada. */
 export const CORREO_DOC1 = process.env.E2E_DOC_CORREO ?? 'doc1@test.local';
