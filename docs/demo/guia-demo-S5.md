@@ -204,13 +204,21 @@ la redacción varía y la prueba solo comprueba estructura (citas, avisos), nunc
   },
   "pregunta": "¿Qué opciones de terapia sistémica describe la evidencia del corpus de la demo para una paciente premenopáusica con cáncer de mama en estadio inicial, receptores hormonales positivos y HER2 2+ sin confirmar?",
   "seguimientos": [
-    "¿La evidencia describe diferencias según el estado menopáusico?",
-    "¿Qué limitaciones señalan las fuentes citadas sobre la población de esos estudios?"
+    "¿Qué describe la evidencia sobre las diferencias del beneficio del tamoxifeno entre pacientes premenopáusicas y posmenopáusicas?",
+    "¿Qué limitaciones señala la evidencia sobre el seguimiento a largo plazo del tamoxifeno en cáncer de mama?"
   ]
 }
 ```
 
 <!-- g-demo:fin -->
+
+**Por qué estas preguntas (D5-54).** Con el LLM real, un seguimiento que no nombra el tema («esos estudios», «las fuentes citadas»,
+«según el estado menopáusico» sin decir de qué intervención) no recupera nada sobre el umbral de relevancia y devuelve «sin
+evidencia» (RN-02), que es el comportamiento correcto del producto. Las preguntas del bloque nombran una intervención y un
+resultado que sí están en los documentos del corpus de la demo (el tamoxifeno a 20 años y sus ensayos con pacientes pre y
+posmenopáusicas, `pmc-mama-tamoxifeno-eca`). Medido en la corrida real del 2026-11-04 (`gemma4:26b-a4b-it-q4_K_M`, 30 candidatos
+por recuperación): ambas dieron `aboveThreshold` ≥ 7 y al menos una afirmación con cita validada en 2 de 2 intentos. Si se cambian,
+repetir la prueba con el modelo real: la redacción es parte de lo que la recuperación necesita.
 
 El recorrido **muta al paciente** (corrige RP y registra Ki-67): necesita el seed recién sembrado (`scripts/e2e/ejecutar.sh` hace
 `down -v`; en la demo, apagar con `--borrar-datos` y volver a levantar), corre después de `demo-s5-pacientes.spec.ts` y no admite
@@ -231,6 +239,36 @@ navegador solo pide al origen de `web`.
 scripts/e2e/ejecutar.sh -- --grep "US-142"      # modo fingido; en modo real lo corre la sesión del gate (ver abajo)
 ```
 
+## Antes de la demo: calentar el modelo y comprobar la memoria
+
+Con el LLM real el primer análisis tras un rato sin uso carga el modelo en memoria. Ollama lo descarga a los 5 minutos sin
+peticiones (`OLLAMA_KEEP_ALIVE`, 5 m por defecto): en la corrida del 2026-11-04 `ollama ps` ya estaba vacío cuando se volvió a
+mirar, sin haber hecho nada. Lo medido en esa corrida (gemma4:26b-a4b-it-q4_K_M, contexto 8192, MacBook de 48 GB, análisis del
+paciente (g) con su pregunta de la tabla, por el proxy de `web`; cada valor en segundos, una muestra por fila):
+
+| Estado del modelo                   | Muestra 1 | Muestra 2 | Muestra 3 |
+| ----------------------------------- | --------- | --------- | --------- |
+| Frío (descargado con `ollama stop`) | 31,4      | 29,1      | 34,4      |
+| Caliente (tras una llamada previa)  | 28,4      | 29,7      | 29,6      |
+
+El modelo frío sumó unos 2 a 5 s sobre el caliente; casi todo el tiempo es la generación, no la carga. Son 3 muestras por
+estado en una sola máquina: no son un p95 y no sustituyen la medición del NFR (15 s, que se recalibra).
+
+Paso de calentamiento (sin tocar el producto), 2 minutos antes de empezar:
+
+1. Arrancar Ollama con `OLLAMA_KEEP_ALIVE=30m` además de las variables de ADR-39 (`OLLAMA_CONTEXT_LENGTH=8192
+OLLAMA_FLASH_ATTENTION=1`), para que no se descargue entre preguntas. (Valor propuesto; no se midió su efecto, solo se observó
+   la descarga a los 5 minutos con el valor por defecto.)
+2. Cargar el modelo con una llamada mínima (lo mismo que hace `levantar.sh`, y repetirlo si pasaron más de 5 minutos sin
+   `KEEP_ALIVE` largo):
+   `curl -s http://127.0.0.1:11434/api/generate -d '{"model":"gemma4:26b-a4b-it-q4_K_M","prompt":"hola","stream":false,"think":false,"options":{"num_predict":1}}'`
+   (el puerto es el de `OLLAMA_PUERTO` si se usó otro).
+3. Comprobar la memoria: `ollama ps` debe mostrar el modelo con `CONTEXT 8192` y `100% GPU`. La columna `SIZE` marcó solo
+   1 a 1,3 GB (los pesos se mapean a memoria), así que no sirve para medir: el consumo real se ve con
+   `ps -axo rss,comm | grep llama-server` (unos 18 GB medidos) o en el Monitor de Actividad. Con Docker (VM de 12 GB o más) y el
+   modelo, cerrar navegadores pesados y la app de Ollama (`levantar.sh` se niega a seguir con la app abierta en el 11434).
+4. Ejecutar una vez un análisis de prueba (otro paciente, no el (g), que el recorrido del gate muta) antes de que entre el público.
+
 ## G-Demo: verificación y registro (US-142)
 
 Uso académico/investigación; solo pacientes sintéticos (RN-13). Se corre en la máquina de referencia el día de la Demo 5
@@ -241,7 +279,11 @@ VM-5; FEAT-T5c / FEAT-T5d, S6), sin simularla.
 1. `scripts/demo/levantar.sh`: stack con modelos reales de ADR-39 y seed sintético.
 2. Corrida de `evaluate` con `eval/configs/s5.yaml` (suite `all` y suite `opciones`) por `ai-eval-runner`, pasando
    `--p95-e2e-s` con el p95 del baseline de `l1d-119` (mediana de 3 corridas). Sin reporte de `s5*.yaml` el gate no se supera.
-3. E2E `g-demo.spec.ts` en modo real (`LLM_PROVIDER=local`); su adjunto JSON (`modoLlm`, `generadoEn`, `pasos`, `catalogVersion`) es la
+3. E2E `g-demo.spec.ts` en modo real (`LLM_PROVIDER=local`). Dos trampas medidas el 2026-11-04: el spec fija `expect.timeout` en 5 s y
+   el análisis real tarda ~30 s (D5-57: hace falta una config de Playwright con `expect.timeout` largo, fuera del repo, hasta
+   que se resuelva), y `levantar.sh` fija `WEB_HOME_PATH=/pacientes` mientras `iniciarSesion` espera la URL
+   `/pacientes/<id>/analisis`: recrear `web` con `WEB_HOME_PATH=/pacientes/0fd028e2-f8b0-56c7-a748-2a4e473d879d/analisis`
+   (`docker compose up -d --no-deps web`) antes de correrlo. Con eso pasaron los 11 pasos registrados. Su adjunto JSON (`modoLlm`, `generadoEn`, `pasos`, `catalogVersion`) es la
    entrada `--e2e-resultado`.
 4. `scripts/verify-g-demo --modo real --e2e-resultado <json> --reporte-evaluate <json> [--reporte-evaluate <json>] --p95-baseline-s <s>`.
    Cuenta pacientes por `data_origin` con el rol de `clinical-api` dentro de su contenedor, lee solo las dos banderas

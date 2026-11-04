@@ -113,6 +113,47 @@ describe('levantar.sh · verificación del seed [US-247 AC-6]', () => {
   });
 });
 
+describe('red-clinica.sh · red del proyecto Compose [D5-56]', () => {
+  const RED_CLINICA = path.join(RAIZ, 'scripts/demo/red-clinica.sh');
+
+  // `docker network ls` falso: respeta el filtro de etiqueta del proyecto y, sin filtro, lista primero la red de OTRO proyecto.
+  function stubDeRedes() {
+    const dir = mkdtempSync(path.join(os.tmpdir(), 'redes-'));
+    temporales.push(dir);
+    const stub = `#!/bin/sh
+case "$*" in
+  *"label=com.docker.compose.project=oncolens-demo5"*) echo "oncolens-demo5_clinical-net" ;;
+  *"label=com.docker.compose.project="*) ;;
+  *) printf 'ol310_clinical-net\\noncolens-demo5_clinical-net\\n' ;;
+esac
+`;
+    writeFileSync(path.join(dir, 'docker'), stub);
+    chmodSync(path.join(dir, 'docker'), 0o755);
+    return dir;
+  }
+
+  function elegirRed(dir, proyecto) {
+    const resultado = spawnSync(
+      'bash',
+      ['-c', `source "${RED_CLINICA}"; red_clinica_del_proyecto`],
+      {
+        encoding: 'utf8',
+        timeout: PLAZO_MS,
+        env: { PATH: `${dir}:/usr/bin:/bin`, COMPOSE_PROJECT_NAME: proyecto },
+      },
+    );
+    return resultado.stdout.trim();
+  }
+
+  it('elige la red del proyecto Compose actual y no la de otro proyecto que aparece antes', () => {
+    expect(elegirRed(stubDeRedes(), 'oncolens-demo5')).toBe('oncolens-demo5_clinical-net');
+  });
+
+  it('no devuelve ninguna red cuando el proyecto actual no tiene clinical-net', () => {
+    expect(elegirRed(stubDeRedes(), 'oncolens-otro')).toBe('');
+  });
+});
+
 describe('verificar-conteos.py · [US-247 AC-6]', () => {
   const semilla = { 'clinical.patient': 5, 'identity.patient_identity': 5, 'auth."user"': 2 };
 
