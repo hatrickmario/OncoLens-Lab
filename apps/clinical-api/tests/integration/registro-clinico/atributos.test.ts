@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { sembrarPCaso } from '../../support/caso.js';
-import { generadorDeIds, insertar } from '../../support/filas-sinteticas.js';
+import { tipoDeCancerVigente } from '../../../src/modules/compartido/contexto-de-registro.js';
+import { filaDeDiagnostico, generadorDeIds, insertar } from '../../support/filas-sinteticas.js';
 import { contarAtributos, montarRegistroClinico } from '../../support/registro-clinico.js';
 import {
   iniciarEscenarioDeRegistroManual,
@@ -129,6 +130,29 @@ describe('registro manual de un atributo clínico', () => {
       [mama],
     );
     expect(rows).toHaveLength(0);
+  });
+});
+
+describe('tipo de cáncer vigente con dos diagnósticos activos', () => {
+  it('resuelve el del diagnóstico más reciente tanto en el atributo como en la regla compartida con la corrección [US-094 AC-3] [L1D-309]', async () => {
+    const { patientId, episodeId } = await sembrarMamaFM2(escenario.siembra);
+    await insertar(
+      escenario.mundo.cliente,
+      'clinical.diagnosis',
+      filaDeDiagnostico(generadorDeIds(9160), patientId, episodeId, {
+        cancer_type: 'prostata',
+        diagnosed_at: '2030-01-01',
+      }),
+    );
+
+    const compartido = await tipoDeCancerVigente(escenario.mundo.cliente, patientId);
+    const respuesta = await registrar(
+      { attributeKey: 'estado_castracion', value: 'castrado' },
+      patientId,
+    );
+
+    expect(compartido).toBe('prostata');
+    expect(respuesta.status).toBe(201);
   });
 });
 
