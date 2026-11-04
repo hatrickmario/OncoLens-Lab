@@ -38,7 +38,7 @@
       Commit `test(L1D-195)`. Pasó a la primera; la misma mutación de 2.2 lo hace fallar
       (`expected [ 'clinical.ai_analysis_record', … ] to deeply equal [ 'clinical.ai_analysis_record' ]`). La fila
       `reemplazado` conserva `review_status` y valor, y la sucesora sigue `verificado`.
-- [ ] 2.3b DIFERIDA -> US-094 (`l1d-80-tratamientos-atributos-manuales` no está en `main` al implementar esta historia):
+- [ ] 2.3b DIFERIDA -> US-094 (D5-31; `l1d-80-tratamientos-atributos-manuales` no está en `main` al implementar esta historia):
       los pasos del fixture de tratamiento previo y de atributo clínico manuales. Al fusionarse `l1d-80`, añadirlos a
       `sembrarFilasManuales()` de `analisis-sin-escrituras.test.ts`; las siete tablas del AC-1 ya incluyen
       `prior_treatment` y `clinical_attribute`, así que el guardia de conteo y *hash* ya las cubre vacías.
@@ -57,6 +57,7 @@
       lo que no hay commit `feat(L1D-195)` ni código de producto cambiado (design: «Código de producto: ninguno»). La
       evidencia de la mutación de cada test está en 2.2–2.5.
 - [x] 2.7 Refactor: sin cambios. Solo hay archivos de test y un ayudante nuevo; sin duplicación ni método que extraer.
+      Menores del Gate 2: DIFERIDOS -> D5-32 (`backlog/sprints/S5-deuda.md`); no son tareas de este change.
 
 ## 3. frontend
 
