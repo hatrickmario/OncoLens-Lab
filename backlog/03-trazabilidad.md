@@ -1,10 +1,10 @@
 # Matriz de trazabilidad — OncoLens (PRD v1.4)
 
-> **Generada:** 2026-11-02 · cierre del sprint **S4** (`traceability-auditor`, `/sprint-close S4`), sobre la rama `sprint/S4-close` (`main` db43e9ea más los 15 changes archivados el 2026-11-02). Regenera la del cierre del S3 (2026-10-27).
-> **Historias:** cada requisito → historias (y, para CAP y T, Features) cuyo texto lo cita en `backlog/features/*.md`; la sección de una historia va de su `## US-xxx` (o `## DEC-`/`## ADR-`) a la siguiente e incluye sus subsecciones (Story, AC, INVEST, Contexto técnico, Partes); se excluyen "Conflictos de fuentes", los *Fixtures* y los *Non-goals*, y los rangos explícitos (`VM-1…VM-6`) cuentan para cada ID. Universos: FR, RN, CAP-01…CAP-11 (MVP), T, AC, ACT, ACP, M y TBD de `docs/PRD.md` v1.4; HU y OL de `readme.md`; NFR, SEG e IA de `backlog/01-requisitos.md` §4 (sin cambios respecto del S3). Desde el S4, US-233 figura partida en US-233a (L1D-298) y US-233b (L1D-299) `[S4 resp. 6]`, y entran US-240…US-249.
-> **Spec (openspec):** escenarios de `openspec/specs/**` (925 escenarios) que citan el ID (en el título, el cuerpo o su requisito) o que llevan el tag `[US-xxx AC-n]` de un AC que lo cita (o de cualquier AC de una historia que lo cita en su línea de metadatos). "+n en changes sin archivar" cuenta los escenarios equivalentes en los deltas de los 15 changes abiertos (`openspec/changes/<change>/specs`, sin las secciones `REMOVED`; 228 escenarios), que aún no están en la spec principal: entre ellos los dos del S4 que pasan al S5 (`l1d-298`, `l1d-299`) y los arrastres con PR mergeado (l1d-116, l1d-117, l1d-126, l1d-244, l1d-285, us-231b, l1d-72, l1d-166, l1d-173, l1d-194, l1d-197, l1d-202, l1d-205).
-> **Test:** tests con el tag `[US-xxx AC-n]` (o `@pytest.mark.ac`, `"ac"` de los casos de `ci/tests/cases`, o la etiqueta `US-xxx AC-n` de los chequeos `bien` de `scripts/smoke`) de esos AC, o que nombran el ID (5220 unidades de test). La CI de `main` está en verde en db43e9ea (flujos `CI`, `E2E` y `Push on main`, 2026-11-01; *code scanning* con 2 alertas abiertas ajenas al sprint, D4-23), así que cuentan como ejecutados. "(+n sin ejecutar)" = solo los Pytest `models`, que necesitan pesos reales. Cada `it`/`test` o función de Pytest cuenta una vez (sin expandir `each`/`parametrize`). "—" = sin spec o sin test todavía.
-> Fuente: el Markdown de las Features; regenerar al cierre de cada sprint. El reporte del sprint está en [`sprints/S4-trazabilidad.md`](sprints/S4-trazabilidad.md); los anteriores, en [`sprints/S3-trazabilidad.md`](sprints/S3-trazabilidad.md), [`sprints/S2-trazabilidad.md`](sprints/S2-trazabilidad.md), [`sprints/S1-trazabilidad.md`](sprints/S1-trazabilidad.md) y [`sprints/Pre-S1-trazabilidad.md`](sprints/Pre-S1-trazabilidad.md).
+> **Generada:** 2026-11-04 · cierre del sprint **S5** (`traceability-auditor`, `/sprint-close S5`), sobre la rama `sprint/S5-close` (`main` 4cedab28 más los 16 changes archivados el 2026-11-04, sin commit todavía). Regenera la del cierre del S4 (2026-11-02) con el mismo método: los conteos se pueden comparar.
+> **Historias:** cada requisito → historias (y, para CAP y T, Features) cuyo texto lo cita en `backlog/features/*.md`; la sección de una historia va de su `## US-xxx` (o `## DEC-`/`## ADR-`) a la siguiente e incluye sus subsecciones (Story, AC, INVEST, Contexto técnico, Partes); se excluyen "Conflictos de fuentes", los *Fixtures* y los *Non-goals*, y los rangos explícitos (`VM-1…VM-6`) cuentan para cada ID. Universos: FR, RN, CAP-01…CAP-11 (MVP), T, AC, ACT, ACP, M y TBD de `docs/PRD.md` v1.4; HU y OL de `readme.md`; NFR, SEG e IA de `backlog/01-requisitos.md` §4 (sin cambios respecto del S4). En el S5 entran US-250…US-254.
+> **Spec (openspec):** escenarios de `openspec/specs/**` (1339 escenarios en 28 capabilities; nuevas en el S5: `case-timeline`, `manual-clinical-entry` y `terminology-reconciliation`) que citan el ID (en el título, el cuerpo o su requisito) o que llevan el tag `[US-xxx AC-n]` de un AC que lo cita (o de cualquier AC de una historia que lo cita en su línea de metadatos). "+n en changes sin archivar" cuenta los escenarios equivalentes en los deltas de los 14 changes abiertos (`openspec/changes/<change>/specs`, sin las secciones `REMOVED`; 240 escenarios), que aún no están en la spec principal: los seis del S5 movidos al S6 (`l1d-113`, `l1d-119`, `l1d-246`, `l1d-248`, `l1d-268`, `l1d-299`) y los arrastres con PR mergeado que ARR-10 cerró con ID destino sin archivarlos (`l1d-116`, `l1d-126`, `l1d-166`, `l1d-173`, `l1d-197`, `l1d-205`, `l1d-285`, `us-231b`).
+> **Test:** tests con el tag `[US-xxx AC-n]` (o `@pytest.mark.ac`, `"ac"` de los casos de `ci/tests/cases`, o la etiqueta `US-xxx AC-n` de los chequeos `bien` de `scripts/smoke`) de esos AC, o que nombran el ID (6376 unidades de test). La CI de `main` está en verde en e9306375 (`CI`, `E2E` y `CodeQL`, 2026-11-04; los commits posteriores, #333 y #334, solo tocan documentación). *Code scanning* tiene 4 alertas abiertas: #1 y #12, anteriores al sprint (D4-23), y **#14 y #15, nuevas del S5** (`js/sensitive-get-query`, de los PR #315 y #318). Los tests cuentan como ejecutados. "(+n sin ejecutar)" = solo los Pytest `models`, que necesitan pesos reales. Cada `it`/`test` o función de Pytest cuenta una vez (sin expandir `each`/`parametrize`; un `it.each(...)` con paréntesis anidados en su argumento no se detecta, p. ej. `[US-070 AC-3]`). "—" = sin spec o sin test todavía.
+> Fuente: el Markdown de las Features; regenerar al cierre de cada sprint. El reporte del sprint está en [`sprints/S5-trazabilidad.md`](sprints/S5-trazabilidad.md); los anteriores, en [`sprints/S4-trazabilidad.md`](sprints/S4-trazabilidad.md), [`sprints/S3-trazabilidad.md`](sprints/S3-trazabilidad.md), [`sprints/S2-trazabilidad.md`](sprints/S2-trazabilidad.md), [`sprints/S1-trazabilidad.md`](sprints/S1-trazabilidad.md) y [`sprints/Pre-S1-trazabilidad.md`](sprints/Pre-S1-trazabilidad.md).
 
 > **Post-MVP y «si hay capacidad»:** esas historias y sus Features ya no están en Linear (se retiraron para liberar cupo). Cuando una fila de esta matriz apunte a una historia Post-MVP o de «si hay capacidad», o a un `L1D-nn` que ya no resuelve en Linear, **consulta [`sprints/V2-Post-MVP.md`](sprints/V2-Post-MVP.md)**: ahí están su US, su `L1D-nn`, la Feature, el sprint propuesto, la estimación y cómo recuperarla. El texto completo sigue en `backlog/features/FEAT-*.md`.
 
@@ -12,92 +12,92 @@
 
 | Familia | Universo | Con historia | Sin historia | Con spec (openspec) | Solo en changes sin archivar | Con test |
 |---|---|---|---|---|---|---|
-| FR | 31 | 31 | — | 19 | 0 | 17 |
-| RN | 30 | 30 | — | 26 | 0 | 26 |
+| FR | 31 | 31 | — | 21 | 0 | 21 |
+| RN | 30 | 30 | — | 28 | 0 | 28 |
 | NFR | 14 | 14 | — | 9 | 0 | 9 |
 | SEG | 13 | 13 | — | 10 | 0 | 10 |
 | IA | 11 | 11 | — | 7 | 0 | 7 |
-| CAP | 11 | 11 | — | 0 | 0 | 0 |
+| CAP | 11 | 11 | — | 3 | 4 | 7 |
 | T | 5 | 5 | — | 0 | 0 | 0 |
-| AC | 54 | 54 | — | 27 | 1 | 27 |
-| ACT | 23 | 23 | — | 17 | 1 | 18 |
+| AC | 54 | 54 | — | 34 | 0 | 33 |
+| ACT | 23 | 23 | — | 20 | 1 | 21 |
 | ACP | 2 | 2 | — | 0 | 0 | 0 |
-| M | 36 | 36 | — | 14 | 2 | 13 |
-| HU | 26 | 26 | — | 9 | 1 | 9 |
+| M | 36 | 36 | — | 19 | 1 | 17 |
+| HU | 26 | 26 | — | 12 | 0 | 12 |
 | OL | 6 | 6 | — | 6 | 0 | 6 |
 | TBD | 21 | 21 (TBD-05 como exclusión) | — | 7 | 1 | 7 |
-| VM | 6 | 6 | — | 3 | 0 | 3 |
-| G | 16 | 16 | — | 5 | 0 | 5 |
+| VM | 6 | 6 | — | 3 | 2 | 5 |
+| G | 16 | 16 | — | 5 | 3 | 8 |
 
 ## FR
 
 | ID | Historias | Spec (openspec) | Test |
 |---|---|---|---|
-| FR-01 | US-003, US-044, US-045, US-048, US-052, US-062, US-076, US-094, US-137, US-171, US-211, US-212, US-221, US-222 | `api-contracts` (3 esc.), `auth-session` (22 esc.), `completeness` (7 esc.), `data-model` (3 esc.), `documents-ingestion` (10 esc.), `evidence-analysis-gateway` (4 esc.), `evidence-panel` (1 esc.), `patients-identity` (5 esc.), `web-bff` (1 esc.) · +13 en changes sin archivar | 115 · US-003, US-044, US-045, US-048, US-052, US-062, US-076, US-211 |
-| FR-02 | US-046, US-047, US-048, US-204, US-234 | `patients-identity` (3 esc.) · +18 en changes sin archivar | 81 · US-046, US-048 |
+| FR-01 | US-003, US-044, US-045, US-048, US-052, US-062, US-076, US-094, US-137, US-171, US-211, US-212, US-221, US-222 | `api-contracts` (3 esc.), `auth-session` (22 esc.), `case-timeline` (6 esc.), `completeness` (7 esc.), `data-model` (3 esc.), `documents-ingestion` (10 esc.), `evidence-analysis-gateway` (4 esc.), `evidence-panel` (1 esc.), `patients-identity` (8 esc.), `web-bff` (1 esc.) · +10 en changes sin archivar | 133 · US-003, US-044, US-045, US-048, US-052, US-062, US-076, US-094, US-211 |
+| FR-02 | US-046, US-047, US-048, US-204, US-234 | `data-model` (1 esc.), `patients-identity` (20 esc.) | 81 · US-046, US-048 |
 | FR-03 | US-047, US-180, US-181, US-182, US-222 | — | — |
-| FR-04 | US-003, US-018, US-043, US-051, US-091, US-092, US-102 | `completeness` (1 esc.) · +23 en changes sin archivar | 52 · US-003, US-043, US-051 |
+| FR-04 | US-003, US-018, US-043, US-051, US-091, US-092, US-102 | `completeness` (1 esc.), `patients-identity` (16 esc.) · +7 en changes sin archivar | 53 · US-003, US-043, US-051 |
 | FR-05 | US-076, US-077, US-079 | `documents-ingestion` (10 esc.) | 12 · US-076 |
 | FR-06 | US-078, US-081, US-082, US-083, US-084, US-085, US-086, US-087, US-092 | — | — |
-| FR-07 | US-004, US-080, US-090, US-102, US-212, US-235 | — | — |
-| FR-08 | US-100, US-107, US-108, US-109, US-110 | — | — |
-| FR-09 | US-006, US-033, US-043, US-050, US-052, US-053, US-055, US-056, US-060, US-061, US-062, US-091, US-093, US-112, US-113, US-114, US-115, US-116, US-125, US-134, US-135, US-148, US-173, US-218, US-220, US-225, US-230, US-231a, US-238, US-239, US-248 | `ai-evaluation` (1 esc.), `analysis-basis` (3 esc.), `api-contracts` (90 esc.), `applicability` (5 esc.), `corpus-ingestion` (2 esc.), `data-model` (20 esc.), `evidence-analysis` (57 esc.), `evidence-analysis-gateway` (44 esc.), `evidence-panel` (36 esc.), `web-bff` (11 esc.) · +13 en changes sin archivar | 222 · US-006, US-033, US-043, US-052, US-053, US-055, US-060, US-061, US-062, US-112, US-125, US-134, US-135, US-225, US-231a, US-238 (+6 sin ejecutar) |
-| FR-10 | US-061, US-064, US-066, US-067, US-070, US-095, US-097, US-125, US-129, US-130, US-134, US-166, US-196, US-231b, US-237, US-245, US-246 | `analysis-basis` (2 esc.), `api-contracts` (2 esc.), `applicability` (2 esc.), `evidence-analysis` (26 esc.), `evidence-analysis-gateway` (1 esc.), `evidence-panel` (20 esc.) · +21 en changes sin archivar | 93 · US-061, US-064, US-066, US-067, US-125, US-134, US-231b, US-237, US-245, US-246 (+7 sin ejecutar) |
-| FR-11 | US-071, US-101, US-124, US-136, US-172 | `applicability` (8 esc.), `evidence-analysis-gateway` (1 esc.) | 7 · US-124 |
+| FR-07 | US-004, US-080, US-090, US-102, US-212, US-235 | `case-timeline` (1 esc.), `completeness` (1 esc.) | 3 · US-004, US-090 |
+| FR-08 | US-100, US-107, US-108, US-109, US-110 | `manual-clinical-entry` (3 esc.) | 6 · US-110 |
+| FR-09 | US-006, US-033, US-043, US-050, US-052, US-053, US-055, US-056, US-060, US-061, US-062, US-091, US-093, US-112, US-113, US-114, US-115, US-116, US-125, US-134, US-135, US-148, US-173, US-218, US-220, US-225, US-230, US-231a, US-238, US-239, US-248 | `ai-evaluation` (1 esc.), `analysis-basis` (3 esc.), `api-contracts` (91 esc.), `applicability` (5 esc.), `ci-pipeline` (1 esc.), `corpus-ingestion` (2 esc.), `data-model` (20 esc.), `deidentification` (3 esc.), `evidence-analysis` (57 esc.), `evidence-analysis-gateway` (48 esc.), `evidence-panel` (36 esc.), `web-bff` (11 esc.) · +52 en changes sin archivar | 280 · US-006, US-033, US-043, US-052, US-053, US-055, US-060, US-061, US-062, US-093, US-112, US-116, US-125, US-134, US-135, US-218, US-225, US-231a, US-238 (+6 sin ejecutar) |
+| FR-10 | US-061, US-064, US-066, US-067, US-070, US-095, US-097, US-125, US-129, US-130, US-134, US-166, US-196, US-231b, US-237, US-245, US-246 | `analysis-basis` (2 esc.), `api-contracts` (2 esc.), `applicability` (2 esc.), `evidence-analysis` (26 esc.), `evidence-analysis-gateway` (1 esc.), `evidence-panel` (20 esc.), `human-control` (1 esc.) · +21 en changes sin archivar | 93 · US-061, US-064, US-066, US-067, US-125, US-134, US-231b, US-237, US-245, US-246 (+7 sin ejecutar) |
+| FR-11 | US-071, US-101, US-124, US-136, US-172 | `applicability` (8 esc.), `evidence-analysis-gateway` (1 esc.), `human-control` (1 esc.) | 8 · US-071, US-124 |
 | FR-12 | US-159, US-165, US-174, US-175, US-176, US-177, US-178, US-179, US-192 | — | — |
 | FR-13 | US-070, US-193, US-194, US-196 | — | — |
 | FR-14 | US-023, US-197, US-198, US-199, US-200, US-202, US-207, US-208 | — | — |
-| FR-15 | US-003, US-006, US-045, US-048, US-203, US-204, US-212 | `api-contracts` (3 esc.), `auth-session` (10 esc.), `completeness` (7 esc.), `data-model` (3 esc.), `evidence-analysis-gateway` (9 esc.), `patients-identity` (5 esc.) · +20 en changes sin archivar | 123 · US-003, US-006, US-045, US-048 |
-| FR-16 | US-003, US-006, US-022, US-026, US-030, US-038, US-039, US-146, US-148, US-149, US-150, US-174, US-178, US-200, US-201, US-207, US-208 | `api-contracts` (3 esc.), `completeness` (7 esc.), `data-model` (47 esc.), `patients-identity` (5 esc.) · +3 en changes sin archivar | 81 · US-003, US-038, US-039 |
-| FR-17 | US-025, US-038, US-047, US-209, US-210 | `data-model` (22 esc.) · +3 en changes sin archivar | 35 · US-038 |
-| FR-18 | US-003, US-051, US-080, US-088, US-102, US-137, US-146, US-150, US-151, US-174, US-177, US-193, US-195, US-197, US-199, US-200, US-201, US-203, US-209, US-212, US-234 | `api-contracts` (3 esc.), `completeness` (7 esc.), `data-model` (3 esc.), `patients-identity` (5 esc.) · +17 en changes sin archivar | 53 · US-003, US-051 |
-| FR-19 | US-007, US-058, US-059, US-117a, US-117b, US-118, US-119, US-120, US-242, US-247 | `ci-pipeline` (1 esc.), `corpus-ingestion` (46 esc.), `data-model` (1 esc.), `demo-install` (9 esc.) · +19 en changes sin archivar | 74 · US-058, US-059, US-117a, US-117b, US-118, US-242, US-247 (+1 sin ejecutar) |
-| FR-20 | US-008, US-013, US-014, US-072, US-073, US-074, US-075, US-103, US-105, US-106, US-131, US-132, US-133, US-137, US-138, US-139, US-140, US-141, US-142, US-152, US-153, US-154, US-155, US-156, US-157, US-158, US-159, US-160, US-161, US-226, US-227, US-228, US-229, US-230, US-233a, US-233b | `ai-evaluation` (29 esc.), `value-metrics` (20 esc.) · +44 en changes sin archivar | 133 · US-072, US-073, US-074, US-075, US-132, US-133, US-233a, US-233b |
-| FR-21 | US-038, US-085, US-088, US-089, US-090, US-094, US-095, US-096, US-097, US-148, US-194, US-195 | `data-model` (22 esc.) · +3 en changes sin archivar | 35 · US-038 |
-| FR-22 | US-086, US-094, US-098, US-099, US-109, US-110, US-113 | `evidence-analysis-gateway` (1 esc.) | — |
-| FR-23 | US-001, US-002, US-003, US-004, US-005, US-006, US-110, US-111, US-116, US-175, US-177 | `api-contracts` (3 esc.), `clinical-catalogs` (16 esc.), `completeness` (22 esc.), `data-model` (3 esc.), `evidence-analysis-gateway` (9 esc.), `evidence-panel` (8 esc.), `patients-identity` (7 esc.), `web-bff` (2 esc.) · +2 en changes sin archivar | 98 · US-001, US-002, US-003, US-005, US-006 |
+| FR-15 | US-003, US-006, US-045, US-048, US-203, US-204, US-212 | `api-contracts` (3 esc.), `auth-session` (10 esc.), `completeness` (7 esc.), `data-model` (4 esc.), `evidence-analysis-gateway` (9 esc.), `patients-identity` (24 esc.) | 123 · US-003, US-006, US-045, US-048 |
+| FR-16 | US-003, US-006, US-022, US-026, US-030, US-038, US-039, US-146, US-148, US-149, US-150, US-174, US-178, US-200, US-201, US-207, US-208 | `api-contracts` (3 esc.), `completeness` (7 esc.), `data-model` (48 esc.), `patients-identity` (5 esc.) | 81 · US-003, US-038, US-039 |
+| FR-17 | US-025, US-038, US-047, US-209, US-210 | `data-model` (23 esc.) | 35 · US-038 |
+| FR-18 | US-003, US-051, US-080, US-088, US-102, US-137, US-146, US-150, US-151, US-174, US-177, US-193, US-195, US-197, US-199, US-200, US-201, US-203, US-209, US-212, US-234 | `api-contracts` (3 esc.), `case-timeline` (15 esc.), `completeness` (7 esc.), `data-model` (3 esc.), `patients-identity` (24 esc.) | 75 · US-003, US-051, US-088 |
+| FR-19 | US-007, US-058, US-059, US-117a, US-117b, US-118, US-119, US-120, US-242, US-247 | `ci-pipeline` (1 esc.), `corpus-ingestion` (57 esc.), `data-model` (1 esc.), `demo-install` (9 esc.) · +31 en changes sin archivar | 87 · US-058, US-059, US-117a, US-117b, US-118, US-120, US-242, US-247 (+1 sin ejecutar) |
+| FR-20 | US-008, US-013, US-014, US-072, US-073, US-074, US-075, US-103, US-105, US-106, US-131, US-132, US-133, US-137, US-138, US-139, US-140, US-141, US-142, US-152, US-153, US-154, US-155, US-156, US-157, US-158, US-159, US-160, US-161, US-226, US-227, US-228, US-229, US-230, US-233a, US-233b, US-252 | `ai-evaluation` (61 esc.), `value-metrics` (20 esc.) · +52 en changes sin archivar | 230 · US-072, US-073, US-074, US-075, US-132, US-133, US-140, US-142, US-233a, US-233b |
+| FR-21 | US-038, US-085, US-088, US-089, US-090, US-094, US-095, US-096, US-097, US-148, US-194, US-195 | `case-timeline` (47 esc.), `clinical-catalogs` (4 esc.), `data-model` (23 esc.), `patients-identity` (6 esc.), `web-bff` (3 esc.) | 129 · US-038, US-088, US-090, US-094 |
+| FR-22 | US-086, US-094, US-098, US-099, US-109, US-110, US-113 | `case-timeline` (20 esc.), `clinical-catalogs` (8 esc.), `evidence-analysis-gateway` (1 esc.), `manual-clinical-entry` (25 esc.), `terminology-reconciliation` (14 esc.) | 109 · US-094, US-098, US-110 |
+| FR-23 | US-001, US-002, US-003, US-004, US-005, US-006, US-110, US-111, US-116, US-175, US-177 | `api-contracts` (5 esc.), `case-timeline` (2 esc.), `ci-pipeline` (1 esc.), `clinical-catalogs` (20 esc.), `completeness` (29 esc.), `data-model` (3 esc.), `evidence-analysis-gateway` (9 esc.), `evidence-panel` (8 esc.), `manual-clinical-entry` (48 esc.), `patients-identity` (7 esc.), `web-bff` (7 esc.) · +11 en changes sin archivar | 216 · US-001, US-002, US-003, US-004, US-005, US-006, US-110, US-111, US-116 |
 | FR-24 | US-157, US-166, US-167, US-168, US-169, US-170 | — | — |
-| FR-25 | US-021, US-033, US-052, US-055, US-121, US-122, US-123, US-124, US-125, US-126, US-225, US-231a, US-231b, US-233b, US-241, US-243, US-244, US-247 | `api-contracts` (89 esc.), `applicability` (45 esc.), `corpus-ingestion` (5 esc.), `data-model` (20 esc.), `demo-install` (9 esc.), `evidence-analysis` (30 esc.), `evidence-analysis-gateway` (14 esc.), `evidence-panel` (14 esc.) · +49 en changes sin archivar | 197 · US-033, US-052, US-055, US-121, US-122, US-123, US-124, US-125, US-126, US-225, US-231a, US-231b, US-233b, US-241, US-243, US-244, US-247 (+13 sin ejecutar) |
+| FR-25 | US-021, US-033, US-052, US-055, US-121, US-122, US-123, US-124, US-125, US-126, US-225, US-231a, US-231b, US-233b, US-241, US-243, US-244, US-247 | `api-contracts` (90 esc.), `applicability` (45 esc.), `corpus-ingestion` (5 esc.), `data-model` (20 esc.), `demo-install` (9 esc.), `evidence-analysis` (30 esc.), `evidence-analysis-gateway` (14 esc.), `evidence-panel` (14 esc.) · +50 en changes sin archivar | 197 · US-033, US-052, US-055, US-121, US-122, US-123, US-124, US-125, US-126, US-225, US-231a, US-231b, US-233b, US-241, US-243, US-244, US-247 (+13 sin ejecutar) |
 | FR-26 | US-158, US-162, US-163, US-164, US-165 | — | — |
-| FR-27 | US-006, US-033, US-066, US-067, US-114, US-115, US-119, US-128, US-129, US-130, US-136, US-169, US-205, US-206, US-220 | `analysis-basis` (26 esc.), `api-contracts` (87 esc.), `data-model` (20 esc.), `evidence-analysis-gateway` (10 esc.), `evidence-panel` (2 esc.) · +7 en changes sin archivar | 56 · US-006, US-033, US-066, US-067, US-128 |
+| FR-27 | US-006, US-033, US-066, US-067, US-114, US-115, US-119, US-128, US-129, US-130, US-136, US-169, US-205, US-206, US-220 | `analysis-basis` (26 esc.), `api-contracts` (88 esc.), `data-model` (20 esc.), `evidence-analysis-gateway` (10 esc.), `evidence-panel` (2 esc.) · +4 en changes sin archivar | 56 · US-006, US-033, US-066, US-067, US-128 |
 | FR-28 | US-020, US-171, US-172, US-173 | — | — |
 | FR-29 | US-160, US-189, US-190, US-191, US-192, US-194, US-195, US-196 | — | — |
 | FR-30 | US-161, US-186, US-187, US-188, US-206, US-238 | — | — |
-| FR-31 | US-218, US-219 | `api-contracts` (6 esc.), `data-model` (4 esc.) | — |
+| FR-31 | US-218, US-219 | `api-contracts` (6 esc.), `data-model` (4 esc.), `evidence-panel` (16 esc.), `web-bff` (4 esc.) · +31 en changes sin archivar | 62 · US-218, US-219 |
 
 ## RN
 
 | ID | Historias | Spec (openspec) | Test |
 |---|---|---|---|
-| RN-01 | US-007, US-009, US-033, US-057, US-063, US-064, US-095, US-105, US-123, US-125, US-129, US-130, US-134, US-161, US-166, US-169, US-170, US-187, US-191, US-216, US-218, US-219, US-236, US-237, US-242, US-244, US-245 | `ai-evaluation` (1 esc.), `analysis-basis` (2 esc.), `api-contracts` (28 esc.), `applicability` (19 esc.), `corpus-ingestion` (10 esc.), `data-model` (1 esc.), `evidence-analysis` (52 esc.), `evidence-analysis-gateway` (4 esc.), `evidence-panel` (8 esc.) · +7 en changes sin archivar | 96 · US-033, US-063, US-064, US-123, US-125, US-134, US-236, US-237, US-242, US-244, US-245 |
-| RN-02 | US-006, US-012, US-033, US-053, US-055, US-062, US-066, US-112, US-116, US-124, US-128, US-161, US-166, US-169, US-186, US-187, US-206, US-214, US-218, US-220, US-230, US-231a, US-233b, US-238, US-243, US-248 | `ai-evaluation` (3 esc.), `analysis-basis` (14 esc.), `api-contracts` (15 esc.), `applicability` (16 esc.), `corpus-ingestion` (2 esc.), `data-model` (1 esc.), `evidence-analysis` (27 esc.), `evidence-analysis-gateway` (11 esc.), `evidence-panel` (8 esc.) · +3 en changes sin archivar | 126 · US-006, US-012, US-053, US-055, US-062, US-066, US-112, US-124, US-128, US-214, US-231a, US-233b, US-238, US-243 |
-| RN-03 | US-032, US-033, US-055, US-061, US-062, US-112, US-125, US-134, US-135, US-231a, US-238, US-248 | `ai-evaluation` (1 esc.), `analysis-basis` (3 esc.), `api-contracts` (32 esc.), `applicability` (6 esc.), `corpus-ingestion` (2 esc.), `data-model` (1 esc.), `evidence-analysis` (53 esc.), `evidence-analysis-gateway` (3 esc.), `evidence-panel` (28 esc.) · +4 en changes sin archivar | 116 · US-033, US-055, US-061, US-062, US-112, US-125, US-134, US-135, US-231a, US-238 (+6 sin ejecutar) |
-| RN-04 | US-033, US-063, US-113, US-123, US-127, US-162, US-170, US-187, US-191, US-216, US-218, US-236, US-242, US-245 | `ai-evaluation` (1 esc.), `api-contracts` (6 esc.), `applicability` (6 esc.), `corpus-ingestion` (10 esc.), `data-model` (1 esc.), `evidence-analysis` (35 esc.), `evidence-analysis-gateway` (1 esc.), `evidence-panel` (2 esc.), `human-control` (3 esc.) | 53 · US-063, US-123, US-127, US-236, US-242, US-245 |
-| RN-05 | US-055, US-059, US-112, US-117b, US-119, US-159, US-165, US-174, US-220, US-231b, US-241, US-248 | `api-contracts` (3 esc.), `ci-pipeline` (1 esc.), `corpus-ingestion` (28 esc.), `evidence-analysis` (13 esc.) · +21 en changes sin archivar | 77 · US-055, US-059, US-112, US-117b, US-231b, US-241 (+7 sin ejecutar) |
-| RN-06 | US-006, US-009, US-015, US-038, US-053, US-066, US-070, US-087, US-096, US-101, US-124, US-134, US-136, US-150, US-166, US-177, US-189, US-218, US-236, US-238, US-241, US-244, US-245 | `analysis-basis` (4 esc.), `api-contracts` (7 esc.), `applicability` (20 esc.), `corpus-ingestion` (2 esc.), `data-model` (7 esc.), `evidence-analysis` (10 esc.), `evidence-analysis-gateway` (33 esc.), `evidence-panel` (9 esc.) · +3 en changes sin archivar | 71 · US-006, US-053, US-066, US-124, US-134, US-236, US-238, US-241, US-244, US-245 |
-| RN-07 | US-002, US-065, US-066, US-084, US-087, US-088, US-089, US-091, US-093, US-096, US-099, US-107, US-124 | `analysis-basis` (2 esc.), `applicability` (3 esc.), `completeness` (16 esc.), `evidence-analysis` (6 esc.), `evidence-analysis-gateway` (6 esc.) · +3 en changes sin archivar | 25 · US-002, US-065, US-066 |
-| RN-08 | US-019, US-070, US-100, US-107, US-110, US-111 | — | — |
-| RN-09 | US-070, US-180, US-181, US-182 | — | — |
-| RN-10 | US-009, US-013, US-022, US-028, US-033, US-035, US-037, US-039, US-046, US-048, US-051, US-052, US-081, US-083, US-096, US-102, US-107, US-137, US-139, US-143, US-146, US-148, US-149, US-150, US-151, US-153, US-155, US-171, US-172, US-174, US-177, US-180, US-183, US-184, US-185, US-197, US-199, US-201, US-207, US-209, US-210, US-212, US-222, US-232, US-234, US-235, US-238 | `ai-evaluation` (1 esc.), `analysis-basis` (4 esc.), `api-contracts` (29 esc.), `ci-pipeline` (1 esc.), `clinical-catalogs` (4 esc.), `corpus-ingestion` (2 esc.), `data-model` (36 esc.), `deidentification` (6 esc.), `documents-ingestion` (2 esc.), `evidence-analysis` (13 esc.), `evidence-analysis-gateway` (6 esc.), `evidence-panel` (2 esc.), `patients-identity` (11 esc.), `platform-observability` (8 esc.), `platform-stack` (7 esc.), `real-data-gate` (2 esc.), `service-auth` (1 esc.), `web-bff` (1 esc.) · +43 en changes sin archivar | 230 · US-013, US-033, US-035, US-037, US-039, US-046, US-048, US-051, US-052, US-238 |
-| RN-11 | US-006, US-009, US-013, US-033, US-049, US-093, US-096, US-107, US-114, US-116, US-160, US-172, US-188, US-190, US-195, US-207, US-218, US-228, US-229, US-231b, US-238 | `ai-evaluation` (1 esc.), `analysis-basis` (4 esc.), `api-contracts` (28 esc.), `data-model` (5 esc.), `deidentification` (15 esc.), `evidence-analysis` (12 esc.), `evidence-analysis-gateway` (11 esc.), `evidence-panel` (2 esc.) · +7 en changes sin archivar | 50 · US-006, US-013, US-033, US-049, US-238 |
-| RN-12 | US-009, US-012, US-014, US-033, US-034, US-037, US-050, US-072, US-082, US-095, US-143, US-166, US-177, US-180, US-224, US-230, US-231a, US-231b, US-233a, US-238 | `ai-evaluation` (7 esc.), `analysis-basis` (2 esc.), `api-contracts` (8 esc.), `applicability` (1 esc.), `corpus-ingestion` (3 esc.), `data-model` (1 esc.), `deidentification` (1 esc.), `evidence-analysis` (36 esc.), `evidence-analysis-gateway` (1 esc.), `evidence-panel` (2 esc.), `platform-observability` (1 esc.), `platform-stack` (7 esc.) · +29 en changes sin archivar | 90 · US-034, US-037, US-072, US-224, US-231a, US-231b, US-233a, US-238 (+13 sin ejecutar) |
-| RN-13 | US-009, US-012, US-034, US-036, US-037, US-039, US-047, US-083, US-104, US-142, US-143, US-149, US-152, US-154, US-181, US-226, US-229, US-231b, US-235, US-240, US-247 | `ai-evaluation` (2 esc.), `api-contracts` (3 esc.), `corpus-ingestion` (2 esc.), `data-model` (25 esc.), `deidentification` (2 esc.), `demo-install` (9 esc.), `evidence-analysis` (3 esc.), `patients-identity` (1 esc.), `platform-observability` (6 esc.), `platform-stack` (11 esc.), `real-data-gate` (2 esc.), `value-metrics` (3 esc.) · +3 en changes sin archivar | 107 · US-012, US-034, US-036, US-037, US-039, US-247 |
-| RN-14 | DEC-01, US-009, US-012, US-014, US-035, US-036, US-039, US-059, US-072, US-104, US-120, US-143, US-144, US-145, US-152, US-153, US-156, US-216, US-217, US-226, US-227, US-228, US-229, US-233a, US-233b, US-237, US-239, US-240, US-241, US-242, US-244, US-247, US-248 | `ai-evaluation` (6 esc.), `api-contracts` (1 esc.), `applicability` (10 esc.), `ci-pipeline` (8 esc.), `corpus-ingestion` (1 esc.), `data-model` (28 esc.), `demo-install` (9 esc.), `evidence-analysis` (4 esc.), `platform-observability` (4 esc.), `platform-stack` (12 esc.), `value-metrics` (6 esc.) · +47 en changes sin archivar | 251 · US-012, US-035, US-036, US-039, US-072, US-217, US-233a, US-233b, US-237, US-241, US-244, US-247 |
-| RN-15 | US-003, US-006, US-026, US-039, US-047, US-052, US-071, US-096, US-134, US-148, US-156, US-177, US-179, US-181, US-200, US-201, US-212, US-218 | `analysis-basis` (1 esc.), `api-contracts` (5 esc.), `completeness` (7 esc.), `data-model` (11 esc.), `deidentification` (1 esc.), `evidence-analysis` (6 esc.), `evidence-analysis-gateway` (25 esc.), `patients-identity` (5 esc.) · +1 en changes sin archivar | 61 · US-003, US-006, US-039, US-052, US-134 |
+| RN-01 | US-007, US-009, US-033, US-057, US-063, US-064, US-095, US-105, US-123, US-125, US-129, US-130, US-134, US-161, US-166, US-169, US-170, US-187, US-191, US-216, US-218, US-219, US-236, US-237, US-242, US-244, US-245 | `ai-evaluation` (2 esc.), `analysis-basis` (2 esc.), `api-contracts` (29 esc.), `applicability` (19 esc.), `corpus-ingestion` (10 esc.), `data-model` (1 esc.), `evidence-analysis` (52 esc.), `evidence-analysis-gateway` (4 esc.), `evidence-panel` (24 esc.), `web-bff` (4 esc.) · +39 en changes sin archivar | 158 · US-033, US-063, US-064, US-123, US-125, US-134, US-218, US-219, US-236, US-237, US-242, US-244, US-245 |
+| RN-02 | US-006, US-012, US-033, US-053, US-055, US-062, US-066, US-112, US-116, US-124, US-128, US-161, US-166, US-169, US-186, US-187, US-206, US-214, US-218, US-220, US-230, US-231a, US-233b, US-238, US-243, US-248 | `ai-evaluation` (3 esc.), `analysis-basis` (14 esc.), `api-contracts` (15 esc.), `applicability` (16 esc.), `corpus-ingestion` (2 esc.), `data-model` (1 esc.), `evidence-analysis` (27 esc.), `evidence-analysis-gateway` (11 esc.), `evidence-panel` (9 esc.), `human-control` (1 esc.) · +13 en changes sin archivar | 141 · US-006, US-012, US-053, US-055, US-062, US-066, US-112, US-116, US-124, US-128, US-214, US-218, US-231a, US-233b, US-238, US-243 |
+| RN-03 | US-032, US-033, US-055, US-061, US-062, US-112, US-125, US-134, US-135, US-231a, US-238, US-248 | `ai-evaluation` (1 esc.), `analysis-basis` (3 esc.), `api-contracts` (33 esc.), `applicability` (6 esc.), `corpus-ingestion` (2 esc.), `data-model` (1 esc.), `evidence-analysis` (53 esc.), `evidence-analysis-gateway` (3 esc.), `evidence-panel` (28 esc.) · +7 en changes sin archivar | 116 · US-033, US-055, US-061, US-062, US-112, US-125, US-134, US-135, US-231a, US-238 (+6 sin ejecutar) |
+| RN-04 | US-033, US-063, US-113, US-123, US-127, US-162, US-170, US-187, US-191, US-216, US-218, US-236, US-242, US-245 | `ai-evaluation` (1 esc.), `api-contracts` (6 esc.), `applicability` (6 esc.), `corpus-ingestion` (10 esc.), `data-model` (1 esc.), `evidence-analysis` (36 esc.), `evidence-analysis-gateway` (1 esc.), `evidence-panel` (2 esc.), `human-control` (3 esc.) · +29 en changes sin archivar | 90 · US-063, US-123, US-127, US-218, US-236, US-242, US-245 |
+| RN-05 | US-055, US-059, US-112, US-117b, US-119, US-159, US-165, US-174, US-220, US-231b, US-241, US-248 | `api-contracts` (3 esc.), `ci-pipeline` (1 esc.), `corpus-ingestion` (28 esc.), `evidence-analysis` (13 esc.) · +22 en changes sin archivar | 78 · US-055, US-059, US-112, US-117b, US-231b, US-241 (+7 sin ejecutar) |
+| RN-06 | US-006, US-009, US-015, US-038, US-053, US-066, US-070, US-087, US-096, US-101, US-124, US-134, US-136, US-150, US-166, US-177, US-189, US-218, US-236, US-238, US-241, US-244, US-245, US-250, US-251 | `analysis-basis` (4 esc.), `api-contracts` (7 esc.), `applicability` (20 esc.), `corpus-ingestion` (2 esc.), `data-model` (7 esc.), `evidence-analysis` (13 esc.), `evidence-analysis-gateway` (37 esc.), `evidence-panel` (12 esc.), `human-control` (7 esc.) · +37 en changes sin archivar | 126 · US-006, US-053, US-066, US-070, US-124, US-134, US-218, US-236, US-238, US-241, US-244, US-245, US-250 |
+| RN-07 | US-002, US-065, US-066, US-084, US-087, US-088, US-089, US-091, US-093, US-096, US-099, US-107, US-124 | `analysis-basis` (2 esc.), `applicability` (3 esc.), `case-timeline` (5 esc.), `completeness` (16 esc.), `deidentification` (3 esc.), `evidence-analysis` (6 esc.), `evidence-analysis-gateway` (12 esc.), `patients-identity` (4 esc.) | 39 · US-002, US-065, US-066, US-088, US-093 |
+| RN-08 | US-019, US-070, US-100, US-107, US-110, US-111, US-253 | `api-contracts` (3 esc.), `clinical-catalogs` (4 esc.), `data-model` (3 esc.), `deidentification` (2 esc.), `human-control` (25 esc.), `manual-clinical-entry` (30 esc.), `web-bff` (2 esc.) | 106 · US-070, US-110, US-111, US-253 |
+| RN-09 | US-070, US-180, US-181, US-182 | `human-control` (6 esc.) | 5 · US-070 |
+| RN-10 | US-009, US-013, US-022, US-028, US-033, US-035, US-037, US-039, US-046, US-048, US-051, US-052, US-081, US-083, US-096, US-102, US-107, US-137, US-139, US-143, US-146, US-148, US-149, US-150, US-151, US-153, US-155, US-171, US-172, US-174, US-177, US-180, US-183, US-184, US-185, US-197, US-199, US-201, US-207, US-209, US-210, US-212, US-222, US-232, US-234, US-235, US-238 | `ai-evaluation` (1 esc.), `analysis-basis` (4 esc.), `api-contracts` (30 esc.), `case-timeline` (3 esc.), `ci-pipeline` (1 esc.), `clinical-catalogs` (4 esc.), `corpus-ingestion` (2 esc.), `data-model` (37 esc.), `deidentification` (6 esc.), `documents-ingestion` (2 esc.), `evidence-analysis` (14 esc.), `evidence-analysis-gateway` (6 esc.), `evidence-panel` (2 esc.), `human-control` (1 esc.), `manual-clinical-entry` (1 esc.), `patients-identity` (45 esc.), `platform-observability` (8 esc.), `platform-stack` (7 esc.), `real-data-gate` (2 esc.), `service-auth` (1 esc.), `web-bff` (1 esc.) · +5 en changes sin archivar | 238 · US-013, US-033, US-035, US-037, US-039, US-046, US-048, US-051, US-052, US-238 |
+| RN-11 | US-006, US-009, US-013, US-033, US-049, US-093, US-096, US-107, US-114, US-116, US-160, US-172, US-188, US-190, US-195, US-207, US-218, US-228, US-229, US-231b, US-238, US-253, US-254, US-255 | `ai-evaluation` (1 esc.), `analysis-basis` (4 esc.), `api-contracts` (32 esc.), `case-timeline` (1 esc.), `data-model` (11 esc.), `deidentification` (20 esc.), `evidence-analysis` (12 esc.), `evidence-analysis-gateway` (16 esc.), `evidence-panel` (2 esc.), `human-control` (19 esc.), `web-bff` (2 esc.) · +42 en changes sin archivar | 166 · US-006, US-013, US-033, US-049, US-093, US-116, US-218, US-238, US-253, US-254 |
+| RN-12 | US-009, US-012, US-014, US-033, US-034, US-037, US-050, US-072, US-082, US-095, US-143, US-166, US-177, US-180, US-224, US-230, US-231a, US-231b, US-233a, US-238 | `ai-evaluation` (12 esc.), `analysis-basis` (2 esc.), `api-contracts` (8 esc.), `applicability` (1 esc.), `corpus-ingestion` (7 esc.), `data-model` (1 esc.), `deidentification` (1 esc.), `evidence-analysis` (36 esc.), `evidence-analysis-gateway` (1 esc.), `evidence-panel` (2 esc.), `platform-observability` (1 esc.), `platform-stack` (7 esc.) · +21 en changes sin archivar | 90 · US-034, US-037, US-072, US-224, US-231a, US-231b, US-233a, US-238 (+13 sin ejecutar) |
+| RN-13 | US-009, US-012, US-034, US-036, US-037, US-039, US-047, US-083, US-104, US-142, US-143, US-149, US-152, US-154, US-181, US-226, US-229, US-231b, US-235, US-240, US-247, US-254 | `ai-evaluation` (2 esc.), `api-contracts` (3 esc.), `corpus-ingestion` (2 esc.), `data-model` (34 esc.), `deidentification` (2 esc.), `demo-install` (15 esc.), `evidence-analysis` (3 esc.), `patients-identity` (1 esc.), `platform-observability` (6 esc.), `platform-stack` (11 esc.), `real-data-gate` (2 esc.), `value-metrics` (3 esc.) · +23 en changes sin archivar | 200 · US-012, US-034, US-036, US-037, US-039, US-142, US-247, US-254 |
+| RN-14 | DEC-01, US-009, US-012, US-014, US-035, US-036, US-039, US-059, US-072, US-104, US-120, US-143, US-144, US-145, US-152, US-153, US-156, US-216, US-217, US-226, US-227, US-228, US-229, US-233a, US-233b, US-237, US-239, US-240, US-241, US-242, US-244, US-247, US-248, US-252, US-254 | `ai-evaluation` (10 esc.), `api-contracts` (1 esc.), `applicability` (10 esc.), `ci-pipeline` (15 esc.), `corpus-ingestion` (3 esc.), `data-model` (37 esc.), `demo-install` (15 esc.), `evidence-analysis` (4 esc.), `platform-observability` (4 esc.), `platform-stack` (12 esc.), `value-metrics` (6 esc.) · +49 en changes sin archivar | 282 · US-012, US-035, US-036, US-039, US-072, US-120, US-217, US-233a, US-233b, US-237, US-241, US-244, US-247, US-254 |
+| RN-15 | US-003, US-006, US-026, US-039, US-047, US-052, US-071, US-096, US-134, US-148, US-156, US-177, US-179, US-181, US-200, US-201, US-212, US-218, US-251, US-255 | `analysis-basis` (1 esc.), `api-contracts` (5 esc.), `completeness` (7 esc.), `data-model` (11 esc.), `deidentification` (1 esc.), `evidence-analysis` (6 esc.), `evidence-analysis-gateway` (26 esc.), `evidence-panel` (1 esc.), `human-control` (6 esc.), `patients-identity` (5 esc.) · +35 en changes sin archivar | 103 · US-003, US-006, US-039, US-052, US-071, US-134, US-218 |
 | RN-16 | US-047, US-146, US-181 | — | — |
-| RN-17 | US-004, US-006, US-047, US-052, US-076, US-094, US-096, US-107, US-110, US-193, US-195, US-196, US-197, US-198, US-202 | `api-contracts` (1 esc.), `documents-ingestion` (10 esc.), `evidence-analysis-gateway` (22 esc.) | 32 · US-006, US-052, US-076 |
+| RN-17 | US-004, US-006, US-047, US-052, US-076, US-094, US-096, US-107, US-110, US-193, US-195, US-196, US-197, US-198, US-202, US-253 | `api-contracts` (4 esc.), `case-timeline` (20 esc.), `clinical-catalogs` (8 esc.), `completeness` (8 esc.), `data-model` (3 esc.), `deidentification` (2 esc.), `documents-ingestion` (10 esc.), `evidence-analysis-gateway` (22 esc.), `evidence-panel` (1 esc.), `human-control` (19 esc.), `manual-clinical-entry` (27 esc.), `web-bff` (2 esc.) · +5 en changes sin archivar | 203 · US-004, US-006, US-052, US-076, US-094, US-110, US-253 |
 | RN-18 | US-047, US-199, US-209 | — | — |
-| RN-19 | US-033, US-069, US-097, US-135, US-170, US-179, US-219, US-237, US-246 | `api-contracts` (25 esc.), `data-model` (1 esc.), `evidence-analysis` (2 esc.), `evidence-panel` (27 esc.) · +13 en changes sin archivar | 48 · US-033, US-069, US-135, US-237, US-246 |
-| RN-20 | US-007, US-031, US-033, US-043, US-062, US-143, US-171 | `analysis-basis` (1 esc.), `api-contracts` (2 esc.), `evidence-panel` (15 esc.) · +7 en changes sin archivar | 31 · US-043, US-062 |
-| RN-21 | US-007, US-012, US-058, US-059, US-117a, US-120, US-206, US-228, US-229, US-233b, US-242, US-247 | `ai-evaluation` (2 esc.), `analysis-basis` (1 esc.), `ci-pipeline` (1 esc.), `corpus-ingestion` (40 esc.), `data-model` (2 esc.), `demo-install` (9 esc.) · +9 en changes sin archivar | 67 · US-012, US-058, US-059, US-117a, US-233b, US-242, US-247 (+1 sin ejecutar) |
-| RN-22 | US-001, US-002, US-007, US-012, US-013, US-017, US-019, US-023, US-036, US-037, US-041, US-043, US-044, US-049, US-053, US-055, US-056, US-059, US-064, US-069, US-073, US-074, US-076, US-077, US-078, US-084, US-091, US-103, US-104, US-105, US-112, US-117a, US-119, US-120, US-121, US-125, US-132, US-133, US-134, US-139, US-140, US-141, US-142, US-145, US-146, US-149, US-152, US-154, US-157, US-161, US-162, US-163, US-180, US-185, US-186, US-188, US-189, US-197, US-208, US-209, US-211, US-213, US-216, US-218, US-220, US-221, US-222, US-224, US-230, US-231a, US-231b, US-232, US-233a, US-233b, US-234, US-238, US-239, US-240, US-241, US-242, US-243, US-244, US-248 | `ai-evaluation` (10 esc.), `analysis-basis` (3 esc.), `api-contracts` (11 esc.), `applicability` (24 esc.), `auth-session` (6 esc.), `clinical-catalogs` (17 esc.), `code-quality` (12 esc.), `completeness` (16 esc.), `corpus-ingestion` (18 esc.), `data-model` (5 esc.), `deidentification` (5 esc.), `documents-ingestion` (3 esc.), `evidence-analysis` (59 esc.), `evidence-analysis-gateway` (5 esc.), `evidence-panel` (6 esc.), `platform-observability` (5 esc.), `platform-stack` (8 esc.), `real-data-gate` (2 esc.), `service-auth` (1 esc.), `value-metrics` (2 esc.), `web-bff` (1 esc.) · +81 en changes sin archivar | 444 · US-001, US-002, US-012, US-013, US-037, US-041, US-043, US-044, US-055, US-064, US-069, US-073, US-074, US-076, US-112, US-121, US-125, US-132, US-133, US-134, US-213, US-224, US-231a, US-231b, US-233a, US-238, US-241, US-242, US-243, US-244 (+13 sin ejecutar) |
-| RN-23 | US-004, US-005, US-009, US-020, US-033, US-061, US-064, US-068, US-081, US-090, US-095, US-097, US-101, US-108, US-111, US-115, US-126, US-129, US-130, US-135, US-136, US-138, US-150, US-155, US-156, US-164, US-166, US-170, US-173, US-179, US-182, US-190, US-196, US-202, US-211, US-218, US-219, US-233a, US-237, US-245, US-246, US-249 | `ai-evaluation` (2 esc.), `analysis-basis` (1 esc.), `api-contracts` (29 esc.), `applicability` (2 esc.), `auth-session` (3 esc.), `corpus-ingestion` (1 esc.), `data-model` (1 esc.), `evidence-analysis` (38 esc.), `evidence-analysis-gateway` (3 esc.), `evidence-panel` (49 esc.), `human-control` (19 esc.), `patients-identity` (3 esc.), `web-bff` (2 esc.) · +17 en changes sin archivar | 152 · US-005, US-033, US-061, US-064, US-068, US-126, US-135, US-211, US-237, US-245, US-246 |
-| RN-24 | US-033, US-063, US-160, US-170, US-187, US-190, US-191, US-205, US-218, US-236, US-237, US-245 | `api-contracts` (19 esc.), `data-model` (4 esc.), `evidence-analysis` (18 esc.), `evidence-analysis-gateway` (1 esc.), `evidence-panel` (3 esc.) | 21 · US-033, US-236, US-237, US-245 |
-| RN-25 | US-033, US-059, US-118, US-122, US-127, US-130, US-157, US-162, US-164, US-167, US-168, US-241, US-242, US-247 | `api-contracts` (7 esc.), `applicability` (14 esc.), `ci-pipeline` (1 esc.), `corpus-ingestion` (23 esc.), `data-model` (1 esc.), `demo-install` (9 esc.), `evidence-analysis` (4 esc.), `evidence-panel` (4 esc.), `human-control` (2 esc.) · +13 en changes sin archivar | 74 · US-059, US-118, US-122, US-127, US-241, US-242, US-247 (+1 sin ejecutar) |
-| RN-26 | US-005, US-006, US-051, US-062, US-071, US-101, US-107, US-124, US-126, US-134, US-135, US-136, US-138, US-148, US-164, US-172, US-173, US-175, US-179, US-198, US-204, US-219, US-241, US-242, US-244 | `analysis-basis` (4 esc.), `api-contracts` (2 esc.), `applicability` (21 esc.), `completeness` (1 esc.), `corpus-ingestion` (2 esc.), `evidence-analysis` (6 esc.), `evidence-analysis-gateway` (11 esc.), `evidence-panel` (32 esc.), `patients-identity` (7 esc.), `web-bff` (2 esc.) · +5 en changes sin archivar | 94 · US-005, US-006, US-051, US-062, US-124, US-126, US-134, US-135, US-241, US-242, US-244 |
-| RN-27 | US-002, US-010, US-029, US-039, US-041, US-042, US-086, US-092, US-094, US-098, US-106, US-107, US-109, US-110, US-193, US-207, US-238, US-242, US-243 | `analysis-basis` (1 esc.), `applicability` (9 esc.), `clinical-catalogs` (7 esc.), `completeness` (16 esc.), `corpus-ingestion` (10 esc.), `data-model` (25 esc.), `evidence-analysis` (2 esc.), `evidence-analysis-gateway` (1 esc.), `evidence-panel` (1 esc.) · +3 en changes sin archivar | 83 · US-002, US-039, US-041, US-238, US-242, US-243 |
-| RN-28 | US-021, US-032, US-033, US-061, US-062, US-121, US-124, US-125, US-126, US-134, US-135, US-140, US-225, US-243 | `analysis-basis` (1 esc.), `api-contracts` (26 esc.), `applicability` (24 esc.), `data-model` (1 esc.), `evidence-analysis` (14 esc.), `evidence-analysis-gateway` (4 esc.), `evidence-panel` (47 esc.) · +14 en changes sin archivar | 113 · US-033, US-061, US-062, US-121, US-124, US-125, US-126, US-134, US-135, US-225, US-243 |
-| RN-29 | DEC-01, US-001, US-011, US-018, US-021, US-042, US-085, US-094, US-107, US-121, US-129, US-171 | `clinical-catalogs` (16 esc.) · +12 en changes sin archivar | 46 · US-001, US-121 |
+| RN-19 | US-033, US-069, US-097, US-135, US-170, US-179, US-219, US-237, US-246, US-251 | `api-contracts` (27 esc.), `case-timeline` (2 esc.), `data-model` (1 esc.), `evidence-analysis` (2 esc.), `evidence-panel` (43 esc.), `human-control` (7 esc.), `web-bff` (4 esc.) · +5 en changes sin archivar | 73 · US-033, US-069, US-135, US-219, US-237, US-246 |
+| RN-20 | US-007, US-031, US-033, US-043, US-062, US-143, US-171 | `analysis-basis` (1 esc.), `api-contracts` (2 esc.), `evidence-panel` (15 esc.) · +7 en changes sin archivar | 32 · US-043, US-062 |
+| RN-21 | US-007, US-012, US-058, US-059, US-117a, US-120, US-206, US-228, US-229, US-233b, US-242, US-247 | `ai-evaluation` (2 esc.), `analysis-basis` (1 esc.), `ci-pipeline` (1 esc.), `corpus-ingestion` (40 esc.), `data-model` (2 esc.), `demo-install` (9 esc.) · +32 en changes sin archivar | 80 · US-012, US-058, US-059, US-117a, US-120, US-233b, US-242, US-247 (+1 sin ejecutar) |
+| RN-22 | US-001, US-002, US-007, US-012, US-013, US-017, US-019, US-023, US-036, US-037, US-041, US-043, US-044, US-049, US-053, US-055, US-056, US-059, US-064, US-069, US-073, US-074, US-076, US-077, US-078, US-084, US-091, US-103, US-104, US-105, US-112, US-117a, US-119, US-120, US-121, US-125, US-132, US-133, US-134, US-139, US-140, US-141, US-142, US-145, US-146, US-149, US-152, US-154, US-157, US-161, US-162, US-163, US-180, US-185, US-186, US-188, US-189, US-197, US-208, US-209, US-211, US-213, US-216, US-218, US-220, US-221, US-222, US-224, US-230, US-231a, US-231b, US-232, US-233a, US-233b, US-234, US-238, US-239, US-240, US-241, US-242, US-243, US-244, US-248, US-251, US-252, US-255 | `ai-evaluation` (23 esc.), `analysis-basis` (3 esc.), `api-contracts` (12 esc.), `applicability` (24 esc.), `auth-session` (6 esc.), `ci-pipeline` (5 esc.), `clinical-catalogs` (17 esc.), `code-quality` (12 esc.), `completeness` (16 esc.), `corpus-ingestion` (20 esc.), `data-model` (5 esc.), `deidentification` (5 esc.), `documents-ingestion` (3 esc.), `evidence-analysis` (59 esc.), `evidence-analysis-gateway` (5 esc.), `evidence-panel` (11 esc.), `human-control` (5 esc.), `patients-identity` (4 esc.), `platform-observability` (5 esc.), `platform-stack` (8 esc.), `real-data-gate` (2 esc.), `service-auth` (1 esc.), `value-metrics` (2 esc.), `web-bff` (1 esc.) · +88 en changes sin archivar | 470 · US-001, US-002, US-012, US-013, US-037, US-041, US-043, US-044, US-055, US-064, US-069, US-073, US-074, US-076, US-112, US-120, US-121, US-125, US-132, US-133, US-134, US-140, US-142, US-213, US-218, US-224, US-231a, US-231b, US-233a, US-238, US-241, US-242, US-243, US-244 (+13 sin ejecutar) |
+| RN-23 | US-004, US-005, US-009, US-020, US-033, US-061, US-064, US-068, US-081, US-090, US-095, US-097, US-101, US-108, US-111, US-115, US-126, US-129, US-130, US-135, US-136, US-138, US-150, US-155, US-156, US-164, US-166, US-170, US-173, US-179, US-182, US-190, US-196, US-202, US-211, US-218, US-219, US-233a, US-237, US-245, US-246, US-249 | `ai-evaluation` (14 esc.), `analysis-basis` (1 esc.), `api-contracts` (32 esc.), `applicability` (2 esc.), `auth-session` (3 esc.), `case-timeline` (13 esc.), `completeness` (8 esc.), `corpus-ingestion` (1 esc.), `data-model` (1 esc.), `evidence-analysis` (51 esc.), `evidence-analysis-gateway` (3 esc.), `evidence-panel` (65 esc.), `human-control` (23 esc.), `manual-clinical-entry` (26 esc.), `patients-identity` (3 esc.), `web-bff` (14 esc.) · +43 en changes sin archivar | 328 · US-004, US-005, US-033, US-061, US-064, US-068, US-090, US-111, US-126, US-135, US-211, US-218, US-219, US-237, US-245, US-246, US-249 |
+| RN-24 | US-033, US-063, US-160, US-170, US-187, US-190, US-191, US-205, US-218, US-236, US-237, US-245, US-255 | `api-contracts` (19 esc.), `case-timeline` (1 esc.), `data-model` (4 esc.), `evidence-analysis` (18 esc.), `evidence-analysis-gateway` (1 esc.), `evidence-panel` (3 esc.) · +29 en changes sin archivar | 63 · US-033, US-218, US-236, US-237, US-245 |
+| RN-25 | US-033, US-059, US-118, US-122, US-127, US-130, US-157, US-162, US-164, US-167, US-168, US-241, US-242, US-247 | `api-contracts` (7 esc.), `applicability` (14 esc.), `ci-pipeline` (1 esc.), `corpus-ingestion` (34 esc.), `data-model` (1 esc.), `demo-install` (9 esc.), `evidence-analysis` (4 esc.), `evidence-panel` (5 esc.), `human-control` (2 esc.) · +3 en changes sin archivar | 75 · US-059, US-118, US-122, US-127, US-241, US-242, US-247 (+1 sin ejecutar) |
+| RN-26 | US-005, US-006, US-051, US-062, US-071, US-101, US-107, US-124, US-126, US-134, US-135, US-136, US-138, US-148, US-164, US-172, US-173, US-175, US-179, US-198, US-204, US-219, US-241, US-242, US-244, US-253 | `analysis-basis` (4 esc.), `api-contracts` (5 esc.), `applicability` (21 esc.), `case-timeline` (2 esc.), `completeness` (4 esc.), `corpus-ingestion` (2 esc.), `data-model` (4 esc.), `deidentification` (2 esc.), `evidence-analysis` (6 esc.), `evidence-analysis-gateway` (11 esc.), `evidence-panel` (48 esc.), `human-control` (24 esc.), `manual-clinical-entry` (1 esc.), `patients-identity` (13 esc.), `web-bff` (8 esc.) · +8 en changes sin archivar | 180 · US-005, US-006, US-051, US-062, US-071, US-124, US-126, US-134, US-135, US-219, US-241, US-242, US-244, US-253 |
+| RN-27 | US-002, US-010, US-029, US-039, US-041, US-042, US-086, US-092, US-094, US-098, US-106, US-107, US-109, US-110, US-193, US-207, US-238, US-242, US-243 | `ai-evaluation` (1 esc.), `analysis-basis` (1 esc.), `applicability` (9 esc.), `case-timeline` (20 esc.), `clinical-catalogs` (15 esc.), `completeness` (16 esc.), `corpus-ingestion` (10 esc.), `data-model` (27 esc.), `evidence-analysis` (2 esc.), `evidence-analysis-gateway` (1 esc.), `evidence-panel` (1 esc.), `human-control` (2 esc.), `manual-clinical-entry` (26 esc.), `terminology-reconciliation` (14 esc.) · +2 en changes sin archivar | 198 · US-002, US-039, US-041, US-094, US-098, US-110, US-238, US-242, US-243 |
+| RN-28 | US-021, US-032, US-033, US-061, US-062, US-121, US-124, US-125, US-126, US-134, US-135, US-140, US-225, US-243 | `analysis-basis` (1 esc.), `api-contracts` (27 esc.), `applicability` (24 esc.), `data-model` (1 esc.), `evidence-analysis` (14 esc.), `evidence-analysis-gateway` (4 esc.), `evidence-panel` (47 esc.) · +24 en changes sin archivar | 135 · US-033, US-061, US-062, US-121, US-124, US-125, US-126, US-134, US-135, US-140, US-225, US-243 |
+| RN-29 | DEC-01, US-001, US-011, US-018, US-021, US-042, US-085, US-094, US-107, US-121, US-129, US-171 | `case-timeline` (7 esc.), `ci-pipeline` (1 esc.), `clinical-catalogs` (22 esc.), `data-model` (2 esc.), `manual-clinical-entry` (2 esc.) · +12 en changes sin archivar | 61 · US-001, US-094, US-121 |
 | RN-30 | US-015, US-056, US-062, US-095, US-096, US-137, US-141, US-177, US-188, US-234, US-239 | `evidence-analysis-gateway` (1 esc.), `evidence-panel` (15 esc.), `web-bff` (1 esc.) | 15 · US-062 |
 
 ## NFR
@@ -114,27 +114,27 @@
 | NFR-08 | US-053, US-096, US-177, US-239 | `evidence-analysis-gateway` (19 esc.), `evidence-panel` (1 esc.) | 19 · US-053 |
 | NFR-09 | US-046 | `patients-identity` (1 esc.) | 1 · US-046 |
 | NFR-10 | US-028, US-034, US-037, US-183, US-184 | `api-contracts` (7 esc.), `platform-observability` (12 esc.), `platform-stack` (22 esc.), `real-data-gate` (2 esc.) | 64 · US-034, US-037 |
-| NFR-11 | US-037, US-045, US-046, US-048, US-078, US-102, US-143, US-146, US-149, US-150, US-151, US-180, US-183, US-184, US-211, US-216, US-234, US-235 | `auth-session` (1 esc.), `patients-identity` (1 esc.), `platform-observability` (5 esc.), `platform-stack` (5 esc.), `real-data-gate` (2 esc.) · +6 en changes sin archivar | 56 · US-037, US-045, US-046, US-048, US-211 |
-| NFR-12 | US-004, US-005, US-051, US-061, US-067, US-079, US-090, US-097, US-108, US-111, US-115, US-126, US-135, US-138, US-164, US-165, US-170, US-173, US-179, US-182, US-194, US-196, US-202, US-215, US-246 | `analysis-basis` (7 esc.), `api-contracts` (1 esc.), `code-quality` (13 esc.), `evidence-panel` (45 esc.), `patients-identity` (3 esc.), `web-bff` (2 esc.) · +2 en changes sin archivar | 128 · US-005, US-051, US-061, US-067, US-126, US-135, US-215, US-246 |
-| NFR-13 | US-033, US-036, US-213, US-214, US-215, US-223, US-232 | `api-contracts` (101 esc.), `code-quality` (25 esc.), `data-model` (20 esc.), `value-metrics` (1 esc.) · +62 en changes sin archivar | 389 · US-033, US-036, US-213, US-214, US-215, US-223 |
+| NFR-11 | US-037, US-045, US-046, US-048, US-078, US-102, US-143, US-146, US-149, US-150, US-151, US-180, US-183, US-184, US-211, US-216, US-234, US-235 | `auth-session` (1 esc.), `patients-identity` (5 esc.), `platform-observability` (5 esc.), `platform-stack` (5 esc.), `real-data-gate` (2 esc.) · +2 en changes sin archivar | 56 · US-037, US-045, US-046, US-048, US-211 |
+| NFR-12 | US-004, US-005, US-051, US-061, US-067, US-079, US-090, US-097, US-108, US-111, US-115, US-126, US-135, US-138, US-164, US-165, US-170, US-173, US-179, US-182, US-194, US-196, US-202, US-215, US-246 | `analysis-basis` (7 esc.), `api-contracts` (3 esc.), `case-timeline` (12 esc.), `code-quality` (13 esc.), `completeness` (7 esc.), `evidence-panel` (45 esc.), `manual-clinical-entry` (26 esc.), `patients-identity` (5 esc.), `web-bff` (10 esc.) | 213 · US-004, US-005, US-051, US-061, US-067, US-090, US-111, US-126, US-135, US-215, US-246 |
+| NFR-13 | US-033, US-036, US-213, US-214, US-215, US-223, US-232 | `api-contracts` (102 esc.), `ci-pipeline` (9 esc.), `code-quality` (25 esc.), `data-model` (20 esc.), `value-metrics` (1 esc.) · +59 en changes sin archivar | 398 · US-033, US-036, US-213, US-214, US-215, US-223 |
 | NFR-14 | US-041, US-121, US-171, US-176 | `clinical-catalogs` (7 esc.), `evidence-analysis-gateway` (1 esc.) · +12 en changes sin archivar | 28 · US-041, US-121 |
 
 ## SEG
 
 | ID | Historias | Spec (openspec) | Test |
 |---|---|---|---|
-| SEG-01 | US-044, US-060, US-144, US-147, US-211, US-216 | `auth-session` (13 esc.), `evidence-analysis-gateway` (2 esc.), `web-bff` (11 esc.) · +12 en changes sin archivar | 71 · US-044, US-060, US-211 |
-| SEG-02 | US-045, US-147, US-204, US-212, US-221, US-222 | `auth-session` (10 esc.) · +3 en changes sin archivar | 16 · US-045 |
-| SEG-03 | US-046, US-102, US-147, US-185, US-234 | `data-model` (1 esc.), `patients-identity` (11 esc.) · +2 en changes sin archivar | 15 · US-046 |
+| SEG-01 | US-044, US-060, US-144, US-147, US-211, US-216 | `auth-session` (13 esc.), `ci-pipeline` (1 esc.), `evidence-analysis-gateway` (2 esc.), `patients-identity` (1 esc.), `web-bff` (12 esc.) · +11 en changes sin archivar | 72 · US-044, US-060, US-211 |
+| SEG-02 | US-045, US-147, US-204, US-212, US-221, US-222 | `auth-session` (10 esc.), `patients-identity` (2 esc.) · +1 en changes sin archivar | 16 · US-045 |
+| SEG-03 | US-046, US-102, US-147, US-185, US-234 | `data-model` (1 esc.), `patients-identity` (13 esc.) | 15 · US-046 |
 | SEG-04 | US-049, US-083, US-147 | `deidentification` (13 esc.) | 17 · US-049 |
 | SEG-05 | US-050, US-147 | — | — |
 | SEG-06 | US-027, US-034, US-040, US-078, US-095, US-117a, US-117b, US-122, US-147, US-186, US-241 | `corpus-ingestion` (4 esc.), `data-model` (9 esc.), `platform-stack` (4 esc.) · +2 en changes sin archivar | 26 · US-034, US-040, US-241 |
 | SEG-07 | US-035, US-054, US-082, US-147 | `api-contracts` (2 esc.), `data-model` (3 esc.), `evidence-analysis-gateway` (1 esc.), `platform-observability` (3 esc.), `platform-stack` (12 esc.), `service-auth` (10 esc.) | 49 · US-035, US-054 |
 | SEG-08 | US-035, US-144, US-145, US-147 | `data-model` (3 esc.), `platform-observability` (3 esc.), `platform-stack` (12 esc.) | 34 · US-035 |
-| SEG-09 | US-034, US-060, US-144, US-147, US-183, US-212 | `api-contracts` (7 esc.), `platform-observability` (7 esc.), `platform-stack` (17 esc.), `web-bff` (11 esc.) | 49 · US-034, US-060 |
+| SEG-09 | US-034, US-060, US-144, US-147, US-183, US-212 | `api-contracts` (7 esc.), `ci-pipeline` (1 esc.), `platform-observability` (7 esc.), `platform-stack` (17 esc.), `web-bff` (11 esc.) | 50 · US-034, US-060 |
 | SEG-10 | US-147, US-149 | — | — |
 | SEG-11 | US-143, US-144, US-147, US-204 | — | — |
-| SEG-12 | US-036, US-042, US-144, US-147, US-216, US-217 | `ci-pipeline` (7 esc.), `value-metrics` (1 esc.) · +32 en changes sin archivar | 148 · US-036, US-217 |
+| SEG-12 | US-036, US-042, US-144, US-147, US-216, US-217 | `ci-pipeline` (13 esc.), `value-metrics` (1 esc.) · +32 en changes sin archivar | 153 · US-036, US-217 |
 | SEG-13 | US-057, US-072, US-147, US-190 | `ai-evaluation` (1 esc.) | 1 · US-072 |
 
 ## IA
@@ -143,7 +143,7 @@
 |---|---|---|---|
 | IA-01 | US-012, US-224, US-231a, US-231b | `ai-evaluation` (13 esc.), `evidence-analysis` (18 esc.) · +21 en changes sin archivar | 99 · US-012, US-224, US-231a, US-231b (+13 sin ejecutar) |
 | IA-02 | US-113, US-230, US-238 | `ai-evaluation` (1 esc.), `analysis-basis` (2 esc.), `api-contracts` (3 esc.), `evidence-analysis` (11 esc.), `evidence-panel` (2 esc.) | 15 · US-238 |
-| IA-03 | US-112, US-114, US-116, US-248 | `api-contracts` (3 esc.), `evidence-analysis` (8 esc.) | 21 · US-112 |
+| IA-03 | US-112, US-114, US-116, US-248 | `api-contracts` (3 esc.), `evidence-analysis` (8 esc.) · +9 en changes sin archivar | 33 · US-112, US-116 |
 | IA-04 | US-064 | `analysis-basis` (1 esc.), `applicability` (1 esc.), `evidence-analysis` (10 esc.) | 10 · US-064 |
 | IA-05 | US-186 | — | — |
 | IA-06 | US-166 | — | — |
@@ -158,16 +158,16 @@
 | ID | Historias | Spec (openspec) | Test |
 |---|---|---|---|
 | CAP-01 | FEAT-01c, FEAT-01a, FEAT-01b | — | — |
-| CAP-02 | FEAT-00, FEAT-01b, FEAT-02c, FEAT-02a, FEAT-02b, FEAT-11b, FEAT-PL2, FEAT-PL3 | — | — |
+| CAP-02 | US-254, FEAT-00, FEAT-01b, FEAT-02c, FEAT-02a, FEAT-02b, FEAT-11b, FEAT-PL2, FEAT-PL3 | `data-model` (9 esc.), `demo-install` (6 esc.) | 25 · US-254 |
 | CAP-03 | US-009, FEAT-01b, FEAT-03a, FEAT-03b, FEAT-PL3 | — | — |
-| CAP-04 | FEAT-00, FEAT-03b, FEAT-04, FEAT-06b, FEAT-08b, FEAT-PL2, FEAT-PL3, FEAT-T2b | — | — |
-| CAP-05 | US-020, US-142, FEAT-05, FEAT-06a, FEAT-06b, FEAT-07, FEAT-10a, FEAT-PL3 | — | — |
+| CAP-04 | US-253, US-254, FEAT-00, FEAT-03b, FEAT-04, FEAT-06b, FEAT-08b, FEAT-PL2, FEAT-PL3, FEAT-T2b | `api-contracts` (3 esc.), `data-model` (4 esc.), `deidentification` (2 esc.), `human-control` (19 esc.), `web-bff` (2 esc.) | 55 · US-253, US-254 |
+| CAP-05 | US-020, US-142, FEAT-05, FEAT-06a, FEAT-06b, FEAT-07, FEAT-10a, FEAT-PL3 | — · +2 en changes sin archivar | 2 · US-142 |
 | CAP-06 | FEAT-00, FEAT-02b, FEAT-06c, FEAT-06a, FEAT-06b | — | — |
-| CAP-07 | US-009, US-142, FEAT-06c, FEAT-07, FEAT-T5d | — | — |
-| CAP-08 | US-142, FEAT-00, FEAT-06c, FEAT-08c, FEAT-08b, FEAT-10c, FEAT-PL3, FEAT-T2c, FEAT-T5d | — | — |
-| CAP-09 | US-142, FEAT-06c, FEAT-09, FEAT-T5d | — | — |
+| CAP-07 | US-009, US-142, FEAT-06c, FEAT-07, FEAT-T5d | — · +2 en changes sin archivar | 2 · US-142 |
+| CAP-08 | US-142, US-254, FEAT-00, FEAT-06c, FEAT-08c, FEAT-08b, FEAT-10c, FEAT-PL3, FEAT-T2c, FEAT-T5d | `data-model` (9 esc.), `demo-install` (6 esc.) · +2 en changes sin archivar | 27 · US-142, US-254 |
+| CAP-09 | US-142, FEAT-06c, FEAT-09, FEAT-T5d | — · +2 en changes sin archivar | 2 · US-142 |
 | CAP-10 | FEAT-00, FEAT-06a, FEAT-08b, FEAT-09, FEAT-10c, FEAT-10a, FEAT-10b, FEAT-T1a, FEAT-T3 | — | — |
-| CAP-11 | US-142, FEAT-02b, FEAT-11c, FEAT-11a, FEAT-11b, FEAT-PL2, FEAT-T2c, FEAT-T4b, FEAT-T5d | — | — |
+| CAP-11 | US-142, US-251, US-255, FEAT-02b, FEAT-11c, FEAT-11a, FEAT-11b, FEAT-PL2, FEAT-T2c, FEAT-T4b, FEAT-T5d | — · +2 en changes sin archivar | 2 · US-142 |
 
 ## T
 
@@ -176,8 +176,8 @@
 | T-1 | US-195, FEAT-01a, FEAT-02c, FEAT-02a, FEAT-02b, FEAT-04, FEAT-06a, FEAT-07, FEAT-08b, FEAT-09, FEAT-11c, FEAT-11a, FEAT-PL5, FEAT-T1a, FEAT-T1b | — | — |
 | T-2 | FEAT-04, FEAT-08c, FEAT-10a, FEAT-11a, FEAT-T2a, FEAT-T2b, FEAT-T2c | — | — |
 | T-3 | FEAT-01c, FEAT-02c, FEAT-03a, FEAT-03b, FEAT-10a, FEAT-10b, FEAT-11b, FEAT-T3, FEAT-T4b, FEAT-T4c, FEAT-T4e | — | — |
-| T-4 | FEAT-01c, FEAT-01b, FEAT-02c, FEAT-02b, FEAT-06a, FEAT-11c, FEAT-AP1, FEAT-PL1, FEAT-PL2, FEAT-PL5, FEAT-T1b, FEAT-T4a, FEAT-T4b, FEAT-T4c, FEAT-T4d, FEAT-T4e, FEAT-T4f | — | — |
-| T-5 | FEAT-00, FEAT-PL1, FEAT-T3, FEAT-T5a, FEAT-T5b, FEAT-T5c, FEAT-T5d, FEAT-T5e | — | — |
+| T-4 | US-255, FEAT-01c, FEAT-01b, FEAT-02c, FEAT-02b, FEAT-06a, FEAT-11c, FEAT-AP1, FEAT-PL1, FEAT-PL2, FEAT-PL5, FEAT-T1b, FEAT-T4a, FEAT-T4b, FEAT-T4c, FEAT-T4d, FEAT-T4e, FEAT-T4f | — | — |
+| T-5 | US-252, FEAT-00, FEAT-PL1, FEAT-T3, FEAT-T5a, FEAT-T5b, FEAT-T5c, FEAT-T5d, FEAT-T5e | — | — |
 
 ## AC
 
@@ -186,28 +186,28 @@
 | AC-01.1 | US-076, US-078, US-080, US-081, US-082, US-083, US-087, US-099 | `documents-ingestion` (10 esc.), `evidence-analysis-gateway` (1 esc.) | 12 · US-076 |
 | AC-01.2 | US-077, US-079 | — | — |
 | AC-01.3 | US-084, US-085, US-087 | — | — |
-| AC-02.1 | US-088, US-090, US-194 | — | — |
-| AC-02.2 | US-085, US-088, US-090 | — | — |
-| AC-02.3 | US-089, US-090, US-094, US-194 | — | — |
-| AC-02.4 | US-051, US-089, US-090, US-091 | — · +1 en changes sin archivar | 1 · US-051 |
+| AC-02.1 | US-088, US-090, US-194 | `case-timeline` (27 esc.), `patients-identity` (6 esc.), `web-bff` (3 esc.) | 42 · US-088, US-090 |
+| AC-02.2 | US-085, US-088, US-090 | `case-timeline` (28 esc.), `patients-identity` (6 esc.), `web-bff` (3 esc.) | 42 · US-088, US-090 |
+| AC-02.3 | US-089, US-090, US-094, US-194 | `case-timeline` (33 esc.), `clinical-catalogs` (4 esc.), `web-bff` (3 esc.) | 72 · US-090, US-094 |
+| AC-02.4 | US-051, US-089, US-090, US-091 | `case-timeline` (13 esc.), `patients-identity` (1 esc.), `web-bff` (3 esc.) | 21 · US-051, US-090 |
 | AC-02.5 | US-095, US-096, US-097, US-148, US-198 | — | — |
-| AC-02.6 | US-002, US-065, US-088, US-089, US-091, US-094, US-096, US-107 | `completeness` (1 esc.), `evidence-analysis` (6 esc.), `evidence-analysis-gateway` (5 esc.) | 10 · US-002, US-065 |
-| AC-02.7 | US-051, US-085, US-087, US-089, US-094 | — | — |
+| AC-02.6 | US-002, US-065, US-088, US-089, US-091, US-094, US-096, US-107 | `case-timeline` (16 esc.), `completeness` (1 esc.), `evidence-analysis` (6 esc.), `evidence-analysis-gateway` (6 esc.), `patients-identity` (6 esc.) | 34 · US-002, US-065, US-088, US-094 |
+| AC-02.7 | US-051, US-085, US-087, US-089, US-094 | `case-timeline` (21 esc.), `clinical-catalogs` (4 esc.) | 52 · US-094 |
 | AC-03.1 | US-080, US-089, US-099 | `evidence-analysis-gateway` (1 esc.) | — |
 | AC-03.2 | US-099, US-109, US-124, US-136 | `applicability` (1 esc.), `evidence-analysis-gateway` (1 esc.) | 1 · US-124 |
-| AC-03.3 | US-086, US-094, US-098, US-109, US-110 | — | — |
+| AC-03.3 | US-086, US-094, US-098, US-109, US-110 | `case-timeline` (20 esc.), `clinical-catalogs` (8 esc.), `manual-clinical-entry` (26 esc.), `terminology-reconciliation` (14 esc.) | 109 · US-094, US-098, US-110 |
 | AC-03.4 | US-076, US-077, US-100, US-107 | `documents-ingestion` (10 esc.) | 12 · US-076 |
-| AC-03.5 | US-098 | — | — |
-| AC-04.1 | US-002, US-003, US-004, US-088, US-110, US-111 | `api-contracts` (3 esc.), `completeness` (22 esc.), `data-model` (3 esc.), `patients-identity` (5 esc.) | 31 · US-002, US-003 |
-| AC-04.2 | US-005, US-006, US-071 | `api-contracts` (1 esc.), `evidence-analysis-gateway` (9 esc.), `evidence-panel` (8 esc.), `patients-identity` (3 esc.), `web-bff` (2 esc.) | 37 · US-005, US-006 |
-| AC-04.3 | US-006, US-116, US-124, US-128, US-136 | `analysis-basis` (10 esc.), `applicability` (8 esc.), `evidence-analysis-gateway` (10 esc.) | 26 · US-006, US-124, US-128 |
-| AC-04.4 | US-001, US-002, US-006, US-131 | `clinical-catalogs` (16 esc.), `completeness` (16 esc.), `evidence-analysis-gateway` (1 esc.) · +2 en changes sin archivar | 45 · US-001, US-002, US-006 |
-| AC-04.5 | US-001, US-121 | `clinical-catalogs` (16 esc.) · +12 en changes sin archivar | 46 · US-001, US-121 |
-| AC-05.1 | US-052, US-062, US-114, US-115, US-173 | `evidence-analysis-gateway` (13 esc.), `evidence-panel` (1 esc.) | 13 · US-052, US-062 |
+| AC-03.5 | US-098 | `manual-clinical-entry` (1 esc.), `terminology-reconciliation` (14 esc.) | 16 · US-098 |
+| AC-04.1 | US-002, US-003, US-004, US-088, US-110, US-111, US-253 | `api-contracts` (8 esc.), `case-timeline` (1 esc.), `clinical-catalogs` (4 esc.), `completeness` (29 esc.), `data-model` (6 esc.), `deidentification` (2 esc.), `evidence-panel` (1 esc.), `human-control` (19 esc.), `manual-clinical-entry` (48 esc.), `patients-identity` (5 esc.), `web-bff` (7 esc.) | 191 · US-002, US-003, US-004, US-088, US-110, US-111, US-253 |
+| AC-04.2 | US-005, US-006, US-071 | `api-contracts` (1 esc.), `evidence-analysis-gateway` (9 esc.), `evidence-panel` (8 esc.), `human-control` (1 esc.), `patients-identity` (3 esc.), `web-bff` (2 esc.) | 39 · US-005, US-006, US-071 |
+| AC-04.3 | US-006, US-116, US-124, US-128, US-136 | `analysis-basis` (10 esc.), `applicability` (8 esc.), `evidence-analysis-gateway` (10 esc.) · +9 en changes sin archivar | 38 · US-006, US-116, US-124, US-128 |
+| AC-04.4 | US-001, US-002, US-006, US-131 | `ci-pipeline` (1 esc.), `clinical-catalogs` (16 esc.), `completeness` (16 esc.), `evidence-analysis-gateway` (1 esc.) · +2 en changes sin archivar | 45 · US-001, US-002, US-006 |
+| AC-04.5 | US-001, US-121 | `ci-pipeline` (1 esc.), `clinical-catalogs` (16 esc.) · +12 en changes sin archivar | 46 · US-001, US-121 |
+| AC-05.1 | US-052, US-062, US-114, US-115, US-173 | `evidence-analysis-gateway` (14 esc.), `evidence-panel` (1 esc.) | 13 · US-052, US-062 |
 | AC-05.2 | US-171, US-172, US-173 | — | — |
-| AC-05.3 | US-033, US-061, US-169, US-225 | `api-contracts` (86 esc.), `data-model` (20 esc.), `evidence-analysis` (3 esc.), `evidence-panel` (8 esc.) · +6 en changes sin archivar | 34 · US-033, US-061, US-225 |
-| AC-06.1 | US-043, US-050, US-055, US-056, US-059, US-062, US-112, US-113, US-114, US-117a, US-117b, US-120, US-148, US-166, US-177, US-231a, US-231b, US-238, US-239 | `ai-evaluation` (1 esc.), `analysis-basis` (2 esc.), `api-contracts` (6 esc.), `ci-pipeline` (1 esc.), `corpus-ingestion` (20 esc.), `evidence-analysis` (42 esc.), `evidence-panel` (17 esc.) · +35 en changes sin archivar | 152 · US-043, US-055, US-059, US-062, US-112, US-117a, US-117b, US-231a, US-231b, US-238 (+13 sin ejecutar) |
-| AC-06.2 | US-049, US-052, US-091, US-093 | `deidentification` (13 esc.), `evidence-analysis-gateway` (13 esc.) | 29 · US-049, US-052 |
+| AC-05.3 | US-033, US-061, US-169, US-225 | `api-contracts` (87 esc.), `data-model` (20 esc.), `evidence-analysis` (3 esc.), `evidence-panel` (8 esc.) · +3 en changes sin archivar | 34 · US-033, US-061, US-225 |
+| AC-06.1 | US-043, US-050, US-055, US-056, US-059, US-062, US-112, US-113, US-114, US-117a, US-117b, US-120, US-148, US-166, US-177, US-231a, US-231b, US-238, US-239 | `ai-evaluation` (1 esc.), `analysis-basis` (2 esc.), `api-contracts` (6 esc.), `ci-pipeline` (1 esc.), `corpus-ingestion` (20 esc.), `evidence-analysis` (42 esc.), `evidence-panel` (17 esc.) · +58 en changes sin archivar | 166 · US-043, US-055, US-059, US-062, US-112, US-117a, US-117b, US-120, US-231a, US-231b, US-238 (+13 sin ejecutar) |
+| AC-06.2 | US-049, US-052, US-091, US-093 | `deidentification` (16 esc.), `evidence-analysis-gateway` (17 esc.) | 37 · US-049, US-052, US-093 |
 | AC-07.1 | US-166, US-170 | — | — |
 | AC-07.2 | US-167, US-170 | — | — |
 | AC-07.3 | US-168, US-170 | — | — |
@@ -218,23 +218,23 @@
 | AC-08.3 | US-122, US-123, US-187, US-244 | `applicability` (15 esc.) | 14 · US-122, US-123, US-244 |
 | AC-08.4 | US-099, US-124, US-126, US-136 | `applicability` (8 esc.), `evidence-analysis-gateway` (1 esc.), `evidence-panel` (14 esc.) | 27 · US-124, US-126 |
 | AC-08.5 | US-124, US-126 | `applicability` (8 esc.), `evidence-analysis-gateway` (1 esc.), `evidence-panel` (14 esc.) | 27 · US-124, US-126 |
-| AC-08.6 | US-021, US-071, US-121, US-124, US-126, US-130, US-135, US-247 | `applicability` (8 esc.), `demo-install` (1 esc.), `evidence-analysis-gateway` (1 esc.), `evidence-panel` (15 esc.) · +4 en changes sin archivar | 37 · US-121, US-124, US-126, US-135, US-247 |
+| AC-08.6 | US-021, US-071, US-121, US-124, US-126, US-130, US-135, US-247 | `applicability` (8 esc.), `demo-install` (1 esc.), `evidence-analysis-gateway` (1 esc.), `evidence-panel` (15 esc.), `human-control` (1 esc.) · +4 en changes sin archivar | 38 · US-071, US-121, US-124, US-126, US-135, US-247 |
 | AC-08.7 | US-161, US-186, US-187, US-188, US-206 | — | — |
-| AC-08.8 | US-062, US-125, US-126, US-134, US-140 | `analysis-basis` (1 esc.), `api-contracts` (1 esc.), `applicability` (5 esc.), `evidence-analysis` (9 esc.), `evidence-analysis-gateway` (3 esc.), `evidence-panel` (20 esc.) | 43 · US-062, US-125, US-126, US-134 |
+| AC-08.8 | US-062, US-125, US-126, US-134, US-140 | `analysis-basis` (1 esc.), `api-contracts` (1 esc.), `applicability` (5 esc.), `evidence-analysis` (9 esc.), `evidence-analysis-gateway` (3 esc.), `evidence-panel` (20 esc.) · +4 en changes sin archivar | 46 · US-062, US-125, US-126, US-134, US-140 |
 | AC-08.9 | US-122, US-127, US-241, US-243 | `api-contracts` (3 esc.), `applicability` (22 esc.), `corpus-ingestion` (2 esc.), `evidence-analysis` (4 esc.), `evidence-panel` (3 esc.) | 33 · US-122, US-127, US-241, US-243 |
 | AC-09.1 | US-158, US-162, US-164 | — | — |
 | AC-09.2 | US-164 | — | — |
 | AC-09.3 | US-162, US-163, US-164 | — | — |
 | AC-09.4 | US-165 | — | — |
-| AC-10.1 | US-061, US-125, US-126, US-134, US-135, US-225 | `analysis-basis` (1 esc.), `api-contracts` (1 esc.), `applicability` (5 esc.), `evidence-analysis` (12 esc.), `evidence-analysis-gateway` (3 esc.), `evidence-panel` (30 esc.) | 65 · US-061, US-125, US-126, US-134, US-135, US-225 |
+| AC-10.1 | US-061, US-125, US-126, US-134, US-135, US-225 | `analysis-basis` (1 esc.), `api-contracts` (1 esc.), `applicability` (5 esc.), `evidence-analysis` (12 esc.), `evidence-analysis-gateway` (3 esc.), `evidence-panel` (30 esc.) · +4 en changes sin archivar | 65 · US-061, US-125, US-126, US-134, US-135, US-225 |
 | AC-10.2 | US-061, US-101, US-126, US-135, US-136, US-164 | `evidence-panel` (30 esc.) | 43 · US-061, US-126, US-135 |
-| AC-10.3 | US-068, US-135, US-170, US-249 | `api-contracts` (2 esc.), `evidence-panel` (1 esc.), `human-control` (19 esc.) | 23 · US-068, US-135 |
+| AC-10.3 | US-068, US-135, US-170, US-249 | `ai-evaluation` (10 esc.), `api-contracts` (2 esc.), `evidence-analysis` (13 esc.), `evidence-panel` (1 esc.), `human-control` (23 esc.) | 50 · US-068, US-135, US-249 |
 | AC-10.4 | US-053, US-055, US-061, US-062, US-063, US-064, US-134, US-236, US-237, US-245, US-246 | `ai-evaluation` (1 esc.), `analysis-basis` (1 esc.), `api-contracts` (2 esc.), `applicability` (1 esc.), `corpus-ingestion` (2 esc.), `evidence-analysis` (42 esc.), `evidence-analysis-gateway` (20 esc.), `evidence-panel` (36 esc.) | 119 · US-053, US-055, US-061, US-062, US-063, US-064, US-134, US-236, US-237, US-245, US-246 |
 | AC-11.1 | US-174, US-179, US-193 | — | — |
 | AC-11.2 | US-175, US-176, US-179, US-192, US-195 | — | — |
 | AC-11.2b | US-176, US-179 | — | — |
 | AC-11.3 | US-177, US-178, US-179 | — | — |
-| AC-11.4 | US-033, US-053, US-088, US-096, US-194, US-196 | `api-contracts` (2 esc.), `evidence-analysis-gateway` (19 esc.), `evidence-panel` (1 esc.) | 19 · US-053 |
+| AC-11.4 | US-033, US-053, US-088, US-096, US-194, US-196 | `api-contracts` (2 esc.), `case-timeline` (15 esc.), `evidence-analysis-gateway` (19 esc.), `evidence-panel` (1 esc.), `patients-identity` (6 esc.) | 41 · US-053, US-088 |
 | AC-11.5 | US-195, US-196, US-198 | — | — |
 | AC-11.6 | US-189, US-190, US-191, US-192, US-205 | — | — |
 
@@ -242,29 +242,29 @@
 
 | ID | Historias | Spec (openspec) | Test |
 |---|---|---|---|
-| AC-T1.1 | US-003, US-004, US-051, US-065, US-080, US-090, US-092, US-108, US-111, US-212 | `api-contracts` (3 esc.), `completeness` (7 esc.), `data-model` (3 esc.), `evidence-analysis` (6 esc.), `evidence-analysis-gateway` (4 esc.), `patients-identity` (5 esc.) · +16 en changes sin archivar | 62 · US-003, US-051, US-065 |
+| AC-T1.1 | US-003, US-004, US-051, US-065, US-080, US-090, US-092, US-108, US-111, US-212 | `api-contracts` (4 esc.), `case-timeline` (13 esc.), `completeness` (14 esc.), `data-model` (3 esc.), `evidence-analysis` (6 esc.), `evidence-analysis-gateway` (4 esc.), `evidence-panel` (1 esc.), `manual-clinical-entry` (5 esc.), `patients-identity` (21 esc.), `web-bff` (5 esc.) | 115 · US-003, US-004, US-051, US-065, US-090, US-111 |
 | AC-T1.2 | US-063, US-064, US-095, US-123, US-166, US-187, US-191, US-236, US-245 | `ai-evaluation` (1 esc.), `analysis-basis` (1 esc.), `api-contracts` (2 esc.), `applicability` (6 esc.), `evidence-analysis` (34 esc.), `evidence-analysis-gateway` (1 esc.), `evidence-panel` (2 esc.) | 48 · US-063, US-064, US-123, US-236, US-245 |
 | AC-T1.3 | US-063, US-127, US-236 | `ai-evaluation` (1 esc.), `applicability` (1 esc.), `evidence-analysis` (17 esc.), `evidence-panel` (2 esc.) | 23 · US-063, US-127, US-236 |
 | AC-T1.4 | US-006, US-041, US-049, US-053, US-101, US-112, US-119, US-124, US-134, US-136, US-166, US-174, US-177, US-188, US-189 | `analysis-basis` (1 esc.), `api-contracts` (2 esc.), `clinical-catalogs` (2 esc.), `deidentification` (1 esc.), `evidence-analysis` (2 esc.), `evidence-analysis-gateway` (33 esc.), `evidence-panel` (1 esc.) | 43 · US-006, US-041, US-049, US-053, US-112, US-124, US-134 |
-| AC-T1.5 | US-102, US-142, US-150, US-151, US-177 | — | — |
-| AC-T2.1 | US-033, US-066, US-067, US-128, US-129, US-205, US-206 | `analysis-basis` (23 esc.), `api-contracts` (86 esc.), `data-model` (20 esc.) · +6 en changes sin archivar | 48 · US-033, US-066, US-067, US-128 |
+| AC-T1.5 | US-102, US-142, US-150, US-151, US-177 | — · +2 en changes sin archivar | 2 · US-142 |
+| AC-T2.1 | US-033, US-066, US-067, US-128, US-129, US-205, US-206 | `analysis-basis` (23 esc.), `api-contracts` (87 esc.), `data-model` (20 esc.) · +3 en changes sin archivar | 48 · US-033, US-066, US-067, US-128 |
 | AC-T2.2 | US-066, US-128, US-129, US-130, US-205, US-206 | `analysis-basis` (11 esc.) | 13 · US-066, US-128 |
 | AC-T2.3 | US-066, US-067, US-114, US-115, US-164, US-169, US-206 | `analysis-basis` (13 esc.) | 20 · US-066, US-067 |
 | AC-T2.4 | US-066, US-128, US-174, US-205 | `analysis-basis` (18 esc.) | 20 · US-066, US-128 |
-| AC-T3.1 | US-069, US-097, US-170 | `evidence-panel` (2 esc.) · +12 en changes sin archivar | 17 · US-069 |
-| AC-T3.2 | US-070, US-099, US-100, US-107, US-109, US-180, US-181, US-182, US-193 | — | — |
-| AC-T3.3 | US-071, US-101, US-136, US-142, US-148, US-197, US-198, US-202, US-204 | — | — |
-| AC-T3.4 | US-068, US-173, US-196, US-249 | `api-contracts` (2 esc.), `human-control` (19 esc.) | 22 · US-068 |
-| AC-T4.1 | US-044, US-045, US-046, US-054, US-102, US-143, US-144, US-145, US-147, US-148, US-150, US-183, US-185, US-198, US-199, US-203, US-204, US-209, US-211 | `api-contracts` (2 esc.), `auth-session` (22 esc.), `data-model` (1 esc.), `evidence-analysis-gateway` (3 esc.), `patients-identity` (11 esc.), `service-auth` (10 esc.) · +14 en changes sin archivar | 96 · US-044, US-045, US-046, US-054, US-211 |
-| AC-T4.2 | US-046, US-049, US-093 | `deidentification` (13 esc.), `patients-identity` (1 esc.) · +1 en changes sin archivar | 19 · US-046, US-049 |
-| AC-T4.3 | US-006, US-049, US-093, US-096, US-114, US-160, US-190, US-195 | `deidentification` (13 esc.), `evidence-analysis-gateway` (9 esc.) | 25 · US-006, US-049 |
+| AC-T3.1 | US-069, US-097, US-170 | `api-contracts` (4 esc.), `evidence-panel` (2 esc.), `human-control` (7 esc.) · +1 en changes sin archivar | 17 · US-069 |
+| AC-T3.2 | US-070, US-099, US-100, US-107, US-109, US-180, US-181, US-182, US-193 | `human-control` (6 esc.), `manual-clinical-entry` (1 esc.) | 5 · US-070 |
+| AC-T3.3 | US-071, US-101, US-136, US-142, US-148, US-197, US-198, US-202, US-204 | `human-control` (5 esc.) · +2 en changes sin archivar | 7 · US-071, US-142 |
+| AC-T3.4 | US-068, US-173, US-196, US-249 | `ai-evaluation` (10 esc.), `api-contracts` (2 esc.), `evidence-analysis` (13 esc.), `human-control` (23 esc.) | 49 · US-068, US-249 |
+| AC-T4.1 | US-044, US-045, US-046, US-054, US-102, US-143, US-144, US-145, US-147, US-148, US-150, US-183, US-185, US-198, US-199, US-203, US-204, US-209, US-211 | `api-contracts` (2 esc.), `auth-session` (22 esc.), `data-model` (1 esc.), `evidence-analysis-gateway` (3 esc.), `patients-identity` (15 esc.), `service-auth` (10 esc.) · +10 en changes sin archivar | 96 · US-044, US-045, US-046, US-054, US-211 |
+| AC-T4.2 | US-046, US-049, US-093 | `deidentification` (16 esc.), `evidence-analysis-gateway` (4 esc.), `patients-identity` (2 esc.) | 27 · US-046, US-049, US-093 |
+| AC-T4.3 | US-006, US-049, US-093, US-096, US-114, US-160, US-190, US-195, US-255 | `deidentification` (16 esc.), `evidence-analysis-gateway` (13 esc.) | 33 · US-006, US-049, US-093 |
 | AC-T4.4 | US-040, US-122, US-147, US-166, US-186, US-241 | `api-contracts` (3 esc.), `applicability` (12 esc.), `corpus-ingestion` (2 esc.), `data-model` (7 esc.) | 31 · US-040, US-122, US-241 |
 | AC-T4.5 | US-047, US-143, US-146 | — | — |
 | AC-T4.6 | US-148, US-149, US-150, US-177, US-200, US-201 | — | — |
-| AC-T5.1 | US-103, US-105, US-106, US-131, US-132, US-140, US-142, US-157 | — · +19 en changes sin archivar | 6 · US-132 |
+| AC-T5.1 | US-103, US-105, US-106, US-131, US-132, US-140, US-142, US-157 | `ai-evaluation` (19 esc.) · +37 en changes sin archivar | 103 · US-132, US-140, US-142 |
 | AC-T5.2 | US-075 | `value-metrics` (20 esc.) | 30 · US-075 |
-| AC-T5.3 | US-014, US-016, US-072, US-074, US-103, US-137, US-139, US-140, US-142, US-152, US-153, US-154, US-155, US-156, US-160, US-226, US-227, US-228, US-229, US-230 | `ai-evaluation` (20 esc.), `value-metrics` (1 esc.) | 68 · US-072, US-074 |
-| AC-T5.4 | US-001, US-014, US-074, US-103, US-131, US-157, US-159, US-160, US-226, US-230, US-233b | `ai-evaluation` (7 esc.), `clinical-catalogs` (16 esc.) · +14 en changes sin archivar | 97 · US-001, US-074, US-233b |
+| AC-T5.3 | US-014, US-016, US-072, US-074, US-103, US-137, US-139, US-140, US-142, US-152, US-153, US-154, US-155, US-156, US-160, US-226, US-227, US-228, US-229, US-230 | `ai-evaluation` (20 esc.), `value-metrics` (1 esc.) · +37 en changes sin archivar | 165 · US-072, US-074, US-140, US-142 |
+| AC-T5.4 | US-001, US-014, US-074, US-103, US-131, US-157, US-159, US-160, US-226, US-230, US-233b | `ai-evaluation` (7 esc.), `ci-pipeline` (1 esc.), `clinical-catalogs` (16 esc.) · +14 en changes sin archivar | 97 · US-001, US-074, US-233b |
 
 ## ACP
 
@@ -281,34 +281,34 @@
 | M-01.2 | US-078, US-103 | — | — |
 | M-01.3 | US-084, US-103, US-104 | — | — |
 | M-02.1 | US-085, US-105 | — | — |
-| M-02.2 | US-088, US-089, US-105 | — | — |
-| M-02.3 | US-095, US-105, US-142 | — | — |
-| M-02.4 | US-003, US-006, US-088, US-105 | `api-contracts` (3 esc.), `completeness` (7 esc.), `data-model` (3 esc.), `patients-identity` (5 esc.) | 19 · US-003 |
+| M-02.2 | US-088, US-089, US-105 | `case-timeline` (15 esc.), `patients-identity` (6 esc.) | 22 · US-088 |
+| M-02.3 | US-095, US-105, US-142 | — · +4 en changes sin archivar | 10 · US-142 |
+| M-02.4 | US-003, US-006, US-088, US-105 | `api-contracts` (3 esc.), `case-timeline` (15 esc.), `completeness` (7 esc.), `data-model` (3 esc.), `patients-identity` (11 esc.) | 41 · US-003, US-088 |
 | M-02.5 | US-008, US-075, US-152 | `value-metrics` (20 esc.) | 30 · US-075 |
 | M-03.1 | US-099, US-106 | `evidence-analysis-gateway` (1 esc.) | — |
 | M-03.2 | US-099, US-106 | `evidence-analysis-gateway` (1 esc.) | — |
 | M-03.3 | US-099, US-106 | `evidence-analysis-gateway` (1 esc.) | — |
-| M-03.4 | US-086, US-098, US-106 | — | — |
-| M-03.5 | US-086, US-098, US-106, US-109 | — | — |
+| M-03.4 | US-086, US-098, US-106 | `manual-clinical-entry` (1 esc.), `terminology-reconciliation` (14 esc.) | 16 · US-098 |
+| M-03.5 | US-086, US-098, US-106, US-109 | `manual-clinical-entry` (1 esc.), `terminology-reconciliation` (14 esc.) | 16 · US-098 |
 | M-04.1 | US-002, US-131 | `completeness` (16 esc.) | 12 · US-002 |
 | M-04.2 | US-002, US-131 | `completeness` (16 esc.) | 12 · US-002 |
 | M-04.3 | DEC-01 | — | — |
 | M-05.1 | US-020 | — | — |
-| M-06.1 | US-055, US-072, US-073, US-120, US-133, US-226, US-230 | `ai-evaluation` (22 esc.), `corpus-ingestion` (2 esc.), `evidence-analysis` (5 esc.) | 29 · US-055, US-072, US-073, US-133 |
-| M-06.2 | US-053, US-073, US-120, US-141, US-142, US-161 | `ai-evaluation` (4 esc.), `evidence-analysis-gateway` (19 esc.), `evidence-panel` (1 esc.) | 23 · US-053, US-073 |
+| M-06.1 | US-055, US-072, US-073, US-120, US-133, US-226, US-230 | `ai-evaluation` (22 esc.), `corpus-ingestion` (2 esc.), `evidence-analysis` (5 esc.) · +7 en changes sin archivar | 30 · US-055, US-072, US-073, US-120, US-133 |
+| M-06.2 | US-053, US-073, US-120, US-141, US-142, US-161 | `ai-evaluation` (4 esc.), `evidence-analysis-gateway` (19 esc.), `evidence-panel` (1 esc.) · +10 en changes sin archivar | 33 · US-053, US-073, US-120, US-142 |
 | M-07.1 | US-157, US-167 | — | — |
-| M-07.2 | US-064, US-072, US-073, US-140, US-166, US-233a, US-236 | `ai-evaluation` (18 esc.), `analysis-basis` (1 esc.), `applicability` (1 esc.), `evidence-analysis` (16 esc.) · +13 en changes sin archivar | 45 · US-064, US-072, US-073, US-233a, US-236 |
+| M-07.2 | US-064, US-072, US-073, US-140, US-166, US-233a, US-236 | `ai-evaluation` (31 esc.), `analysis-basis` (1 esc.), `applicability` (1 esc.), `evidence-analysis` (16 esc.) · +20 en changes sin archivar | 73 · US-064, US-072, US-073, US-140, US-233a, US-236 |
 | M-07.3 | US-157, US-168 | — | — |
 | M-08.1 | US-024, US-132, US-153 | — | — |
-| M-08.2 | US-122, US-132, US-233b | `applicability` (9 esc.) · +21 en changes sin archivar | 15 · US-122, US-132, US-233b |
-| M-08.3 | US-007, US-118, US-119, US-120, US-132, US-233b | — · +42 en changes sin archivar | 28 · US-118, US-132, US-233b |
-| M-08.4 | US-118, US-132, US-233b | — · +42 en changes sin archivar | 29 · US-118, US-132, US-233b |
+| M-08.2 | US-122, US-132, US-233b | `ai-evaluation` (19 esc.), `applicability` (9 esc.) · +2 en changes sin archivar | 15 · US-122, US-132, US-233b |
+| M-08.3 | US-007, US-118, US-119, US-120, US-132, US-233b | `ai-evaluation` (19 esc.), `corpus-ingestion` (11 esc.) · +35 en changes sin archivar | 41 · US-118, US-120, US-132, US-233b |
+| M-08.4 | US-118, US-132, US-233b | `ai-evaluation` (19 esc.), `corpus-ingestion` (11 esc.) · +12 en changes sin archivar | 29 · US-118, US-132, US-233b |
 | M-08.5 | US-161 | — | — |
-| M-08.6 | US-122, US-132 | `applicability` (9 esc.) · +19 en changes sin archivar | 14 · US-122, US-132 |
+| M-08.6 | US-122, US-132 | `ai-evaluation` (19 esc.), `applicability` (9 esc.) | 14 · US-122, US-132 |
 | M-09.1 | US-158 | — | — |
 | M-09.2 | US-158 | — | — |
-| M-10.1 | US-055, US-063, US-064, US-072, US-140, US-142, US-233a | `ai-evaluation` (13 esc.), `analysis-basis` (1 esc.), `applicability` (1 esc.), `corpus-ingestion` (2 esc.), `evidence-analysis` (20 esc.) · +13 en changes sin archivar | 49 · US-055, US-063, US-064, US-072, US-233a |
-| M-10.2 | US-068, US-072, US-140, US-142, US-249 | `ai-evaluation` (13 esc.), `api-contracts` (2 esc.), `human-control` (19 esc.) | 33 · US-068, US-072 |
+| M-10.1 | US-055, US-063, US-064, US-072, US-140, US-142, US-233a | `ai-evaluation` (26 esc.), `analysis-basis` (1 esc.), `applicability` (1 esc.), `corpus-ingestion` (2 esc.), `evidence-analysis` (20 esc.) · +21 en changes sin archivar | 87 · US-055, US-063, US-064, US-072, US-140, US-142, US-233a |
+| M-10.2 | US-068, US-072, US-140, US-142, US-249 | `ai-evaluation` (23 esc.), `api-contracts` (2 esc.), `evidence-analysis` (13 esc.), `human-control` (23 esc.) · +21 en changes sin archivar | 98 · US-068, US-072, US-140, US-142, US-249 |
 | M-11.1 | US-159, US-175, US-192 | — | — |
 | M-11.2 | US-159, US-165, US-174 | — | — |
 | M-11.3 | US-160, US-191 | — | — |
@@ -319,27 +319,27 @@
 | ID | Historias | Spec (openspec) | Test |
 |---|---|---|---|
 | HU-01 | US-044, US-211 | `auth-session` (13 esc.), `evidence-analysis-gateway` (2 esc.) · +10 en changes sin archivar | 50 · US-044, US-211 |
-| HU-02 | US-045, US-051, US-091 | `auth-session` (1 esc.) · +17 en changes sin archivar | 35 · US-045, US-051 |
-| HU-03 | US-043, US-049, US-050, US-052, US-053, US-055, US-056, US-060, US-061, US-062, US-063, US-064, US-065, US-068, US-069, US-070, US-093, US-114, US-115, US-225, US-231a, US-231b, US-236, US-237, US-239, US-245, US-246, US-249 | `ai-evaluation` (1 esc.), `analysis-basis` (1 esc.), `api-contracts` (4 esc.), `applicability` (1 esc.), `corpus-ingestion` (2 esc.), `deidentification` (13 esc.), `evidence-analysis` (67 esc.), `evidence-analysis-gateway` (37 esc.), `evidence-panel` (38 esc.), `human-control` (19 esc.), `web-bff` (11 esc.) · +40 en changes sin archivar | 288 · US-043, US-049, US-052, US-053, US-055, US-060, US-061, US-062, US-063, US-064, US-065, US-068, US-069, US-225, US-231a, US-231b, US-236, US-237, US-245, US-246 (+13 sin ejecutar) |
+| HU-02 | US-045, US-051, US-091 | `auth-session` (1 esc.), `patients-identity` (17 esc.) | 35 · US-045, US-051 |
+| HU-03 | US-043, US-049, US-050, US-052, US-053, US-055, US-056, US-060, US-061, US-062, US-063, US-064, US-065, US-068, US-069, US-070, US-093, US-114, US-115, US-225, US-231a, US-231b, US-236, US-237, US-239, US-245, US-246, US-249, US-250 | `ai-evaluation` (11 esc.), `analysis-basis` (1 esc.), `api-contracts` (8 esc.), `applicability` (1 esc.), `ci-pipeline` (1 esc.), `corpus-ingestion` (2 esc.), `deidentification` (16 esc.), `evidence-analysis` (83 esc.), `evidence-analysis-gateway` (45 esc.), `evidence-panel` (40 esc.), `human-control` (36 esc.), `web-bff` (11 esc.) · +31 en changes sin archivar | 343 · US-043, US-049, US-052, US-053, US-055, US-060, US-061, US-062, US-063, US-064, US-065, US-068, US-069, US-070, US-093, US-225, US-231a, US-231b, US-236, US-237, US-245, US-246, US-249, US-250 (+13 sin ejecutar) |
 | HU-04 | US-076, US-077, US-078, US-079, US-081, US-082, US-083, US-085, US-086, US-087 | `documents-ingestion` (10 esc.) | 12 · US-076 |
 | HU-05 | US-019, US-079, US-080, US-082, US-084, US-087, US-092, US-101, US-136, US-212 | — | — |
-| HU-06 | US-048 | — · +18 en changes sin archivar | 80 · US-048 |
+| HU-06 | US-048 | `data-model` (1 esc.), `patients-identity` (17 esc.) | 80 · US-048 |
 | HU-07 | US-047, US-181 | — | — |
 | HU-08 | US-180, US-181, US-182 | — | — |
-| HU-09 | US-100, US-107, US-108, US-109, US-110 | — | — |
-| HU-10 | US-134, US-135, US-136 | `analysis-basis` (1 esc.), `api-contracts` (1 esc.), `evidence-analysis` (6 esc.), `evidence-analysis-gateway` (3 esc.), `evidence-panel` (8 esc.) | 20 · US-134, US-135 |
+| HU-09 | US-100, US-107, US-108, US-109, US-110 | `clinical-catalogs` (4 esc.), `manual-clinical-entry` (25 esc.) | 41 · US-110 |
+| HU-10 | US-134, US-135, US-136 | `analysis-basis` (1 esc.), `api-contracts` (1 esc.), `evidence-analysis` (6 esc.), `evidence-analysis-gateway` (3 esc.), `evidence-panel` (8 esc.) · +4 en changes sin archivar | 20 · US-134, US-135 |
 | HU-11 | US-165, US-174, US-175, US-179 | — | — |
 | HU-12 | US-193, US-194, US-196 | — | — |
 | HU-13 | US-149, US-197, US-198, US-199, US-200, US-201, US-202, US-207 | — | — |
 | HU-14 | US-146, US-148, US-149, US-200, US-201, US-203, US-204 | — | — |
-| HU-15 | US-085, US-088, US-089, US-090, US-091, US-093, US-094, US-194 | — | — |
+| HU-15 | US-085, US-088, US-089, US-090, US-091, US-093, US-094, US-194 | `case-timeline` (47 esc.), `clinical-catalogs` (4 esc.), `deidentification` (3 esc.), `evidence-analysis-gateway` (4 esc.), `patients-identity` (6 esc.), `web-bff` (3 esc.) | 102 · US-088, US-090, US-093, US-094 |
 | HU-16 | US-095, US-096, US-097 | — | — |
-| HU-17 | US-086, US-098, US-099, US-100, US-109 | `evidence-analysis-gateway` (1 esc.) | — |
-| HU-18 | US-002, US-003, US-004, US-005, US-006, US-110, US-111, US-116 | `api-contracts` (3 esc.), `completeness` (22 esc.), `data-model` (3 esc.), `evidence-analysis-gateway` (9 esc.), `evidence-panel` (8 esc.), `patients-identity` (7 esc.), `web-bff` (2 esc.) | 66 · US-002, US-003, US-005, US-006 |
+| HU-17 | US-086, US-098, US-099, US-100, US-109 | `evidence-analysis-gateway` (1 esc.), `manual-clinical-entry` (1 esc.), `terminology-reconciliation` (14 esc.) | 16 · US-098 |
+| HU-18 | US-002, US-003, US-004, US-005, US-006, US-110, US-111, US-116 | `api-contracts` (5 esc.), `clinical-catalogs` (4 esc.), `completeness` (29 esc.), `data-model` (3 esc.), `evidence-analysis-gateway` (9 esc.), `evidence-panel` (8 esc.), `manual-clinical-entry` (48 esc.), `patients-identity` (7 esc.), `web-bff` (7 esc.) · +9 en changes sin archivar | 184 · US-002, US-003, US-004, US-005, US-006, US-110, US-111, US-116 |
 | HU-19 | US-171, US-172, US-173 | — | — |
 | HU-20 | US-066, US-067, US-127, US-128, US-129, US-130, US-162, US-163, US-164, US-165, US-205, US-206 | `analysis-basis` (23 esc.), `applicability` (1 esc.), `evidence-analysis` (4 esc.), `evidence-panel` (2 esc.) | 39 · US-066, US-067, US-127, US-128 |
 | HU-21 | US-166, US-167, US-168, US-169, US-170 | — | — |
-| HU-22 | US-121, US-122, US-123, US-124, US-125, US-126, US-127, US-136, US-243, US-244 | `applicability` (42 esc.), `evidence-analysis` (7 esc.), `evidence-analysis-gateway` (1 esc.), `evidence-panel` (16 esc.) · +10 en changes sin archivar | 89 · US-121, US-122, US-123, US-124, US-125, US-126, US-127, US-243, US-244 |
+| HU-22 | US-121, US-122, US-123, US-124, US-125, US-126, US-127, US-136, US-243, US-244 | `applicability` (42 esc.), `evidence-analysis` (7 esc.), `evidence-analysis-gateway` (1 esc.), `evidence-panel` (16 esc.) · +14 en changes sin archivar | 89 · US-121, US-122, US-123, US-124, US-125, US-126, US-127, US-243, US-244 |
 | HU-23 | US-195, US-196 | — | — |
 | HU-24 | US-175, US-176, US-177, US-178, US-179, US-189, US-190, US-191, US-192, US-205 | — | — |
 | HU-25 | US-137, US-138, US-139, US-154 | — | — |
@@ -349,25 +349,25 @@
 
 | ID | Historias | Spec (openspec) | Test |
 |---|---|---|---|
-| OL-01 | US-002, US-006, US-035, US-038, US-039, US-040, US-046, US-051, US-247 | `corpus-ingestion` (1 esc.), `data-model` (55 esc.), `demo-install` (9 esc.), `patients-identity` (4 esc.), `platform-stack` (4 esc.) · +4 en changes sin archivar | 101 · US-035, US-038, US-039, US-040, US-046, US-051, US-247 |
-| OL-02 | US-041, US-050, US-054, US-055, US-057, US-058, US-059, US-063, US-082, US-117a, US-117b, US-118, US-120, US-225, US-242, US-247 | `ci-pipeline` (1 esc.), `clinical-catalogs` (2 esc.), `corpus-ingestion` (46 esc.), `data-model` (1 esc.), `demo-install` (9 esc.), `evidence-analysis` (7 esc.), `evidence-analysis-gateway` (2 esc.), `service-auth` (7 esc.) · +21 en changes sin archivar | 89 · US-041, US-054, US-055, US-058, US-059, US-063, US-117a, US-117b, US-118, US-225, US-242, US-247 (+1 sin ejecutar) |
+| OL-01 | US-002, US-006, US-035, US-038, US-039, US-040, US-046, US-051, US-247 | `corpus-ingestion` (1 esc.), `data-model` (56 esc.), `demo-install` (9 esc.), `patients-identity` (5 esc.), `platform-stack` (4 esc.) | 101 · US-035, US-038, US-039, US-040, US-046, US-051, US-247 |
+| OL-02 | US-041, US-050, US-054, US-055, US-057, US-058, US-059, US-063, US-082, US-117a, US-117b, US-118, US-120, US-225, US-242, US-247 | `ci-pipeline` (1 esc.), `clinical-catalogs` (2 esc.), `corpus-ingestion` (57 esc.), `data-model` (1 esc.), `demo-install` (9 esc.), `evidence-analysis` (7 esc.), `evidence-analysis-gateway` (2 esc.), `service-auth` (7 esc.) · +33 en changes sin archivar | 102 · US-041, US-054, US-055, US-058, US-059, US-063, US-117a, US-117b, US-118, US-120, US-225, US-242, US-247 (+1 sin ejecutar) |
 | OL-03 | US-002, US-006, US-043, US-049, US-050, US-052, US-053, US-054, US-096, US-115, US-211 | `deidentification` (6 esc.), `evidence-analysis-gateway` (36 esc.), `evidence-panel` (1 esc.), `service-auth` (1 esc.) · +2 en changes sin archivar | 45 · US-006, US-049, US-052, US-053, US-054, US-211 |
-| OL-04 | US-005, US-060, US-061, US-062, US-067, US-069, US-115, US-126, US-164, US-173 | `evidence-panel` (17 esc.), `web-bff` (11 esc.) · +3 en changes sin archivar | 50 · US-060, US-061, US-062, US-069 |
+| OL-04 | US-005, US-060, US-061, US-062, US-067, US-069, US-115, US-126, US-164, US-173 | `ci-pipeline` (1 esc.), `evidence-panel` (17 esc.), `human-control` (2 esc.), `web-bff` (12 esc.) · +1 en changes sin archivar | 51 · US-060, US-061, US-062, US-069 |
 | OL-05 | US-013, US-076, US-078, US-079, US-080, US-082, US-083, US-084, US-085, US-087, US-099, US-100, US-212 | `documents-ingestion` (10 esc.) | 12 · US-076 |
-| OL-06 | US-012, US-013, US-014, US-016, US-036, US-072, US-073, US-074, US-075, US-103, US-105, US-106, US-131, US-132, US-133, US-140, US-141, US-152, US-157, US-226, US-228, US-229, US-230, US-233, US-233a, US-233b, US-236, US-238, US-242, US-245 | `ai-evaluation` (31 esc.), `value-metrics` (20 esc.) · +62 en changes sin archivar | 218 · US-013, US-036, US-072, US-073, US-074, US-075, US-132, US-133, US-233a, US-233b, US-236 |
+| OL-06 | US-012, US-013, US-014, US-016, US-036, US-072, US-073, US-074, US-075, US-103, US-105, US-106, US-131, US-132, US-133, US-140, US-141, US-152, US-157, US-226, US-228, US-229, US-230, US-233, US-233a, US-233b, US-236, US-238, US-242, US-245, US-252 | `ai-evaluation` (63 esc.), `value-metrics` (20 esc.) · +51 en changes sin archivar | 246 · US-013, US-036, US-072, US-073, US-074, US-075, US-132, US-133, US-140, US-233a, US-233b, US-236 |
 
 ## TBD
 
 | ID | Historias | Spec (openspec) | Test |
 |---|---|---|---|
 | TBD-01 | US-012, US-224 | `ai-evaluation` (13 esc.) | 46 · US-012, US-224 |
-| TBD-02 | US-017, US-073, US-074, US-103, US-233a, US-233b, US-238 | `ai-evaluation` (4 esc.) · +25 en changes sin archivar | 46 · US-073, US-074, US-233a, US-233b |
-| TBD-03 | US-055, US-073, US-084, US-104, US-120 | `ai-evaluation` (4 esc.), `evidence-analysis` (1 esc.) | 5 · US-055, US-073 |
+| TBD-02 | US-017, US-073, US-074, US-103, US-233a, US-233b, US-238 | `ai-evaluation` (17 esc.) · +13 en changes sin archivar | 46 · US-073, US-074, US-233a, US-233b |
+| TBD-03 | US-055, US-073, US-084, US-104, US-120 | `ai-evaluation` (4 esc.), `evidence-analysis` (1 esc.) · +7 en changes sin archivar | 6 · US-055, US-073, US-120 |
 | TBD-04 | US-007 | — | — |
 | TBD-05 | EXC (leucemia post-piloto, `02-adrs.md` §1.3) | — | — |
 | TBD-06 | US-019, US-023, US-197 | — | — |
 | TBD-07 | US-030, US-146 | — | — |
-| TBD-08 | US-015, US-073, US-141, US-219 | `ai-evaluation` (1 esc.) | 1 · US-073 |
+| TBD-08 | US-015, US-073, US-141, US-219 | `ai-evaluation` (1 esc.), `evidence-panel` (3 esc.), `web-bff` (1 esc.) · +1 en changes sin archivar | 3 · US-073, US-219 |
 | TBD-09 | US-032, US-168 | — | — |
 | TBD-10 | US-027, US-147 | — | — |
 | TBD-11 | US-008 | — | — |
@@ -379,29 +379,29 @@
 | TBD-17 | US-010, US-039, US-042 | `data-model` (3 esc.) | 4 · US-039 |
 | TBD-18 | US-186, US-188 | — | — |
 | TBD-19 | US-009 | — | — |
-| TBD-20 | US-118, US-132, US-233b, US-242 | `corpus-ingestion` (10 esc.) · +28 en changes sin archivar | 37 · US-118, US-132, US-233b, US-242 |
+| TBD-20 | US-118, US-132, US-233b, US-242 | `ai-evaluation` (5 esc.), `corpus-ingestion` (21 esc.) · +12 en changes sin archivar | 37 · US-118, US-132, US-233b, US-242 |
 | TBD-21 | US-022, US-149 | — | — |
 
 ## VM
 
 | ID | Historias | Spec (openspec) | Test |
 |---|---|---|---|
-| VM-1 | US-008, US-017, US-075, US-142, US-152, US-156 | `value-metrics` (20 esc.) | 30 · US-075 |
-| VM-2 | US-008, US-017, US-075, US-142, US-152, US-156 | `value-metrics` (20 esc.) | 30 · US-075 |
-| VM-3 | US-008, US-017, US-021, US-024, US-132, US-142, US-153, US-156 | — | — |
-| VM-4 | US-008, US-017, US-021, US-031, US-137, US-138, US-139, US-142, US-154, US-156 | — | — |
-| VM-5 | DEC-01, US-005, US-006, US-008, US-017, US-031, US-137, US-138, US-139, US-142, US-154, US-156 | `api-contracts` (1 esc.), `evidence-panel` (8 esc.), `patients-identity` (3 esc.), `web-bff` (2 esc.) | 29 · US-005 |
+| VM-1 | US-008, US-017, US-075, US-142, US-152, US-156 | `value-metrics` (20 esc.) · +1 en changes sin archivar | 32 · US-075, US-142 |
+| VM-2 | US-008, US-017, US-075, US-142, US-152, US-156 | `value-metrics` (20 esc.) · +1 en changes sin archivar | 32 · US-075, US-142 |
+| VM-3 | US-008, US-017, US-021, US-024, US-132, US-142, US-153, US-156 | — · +1 en changes sin archivar | 2 · US-142 |
+| VM-4 | US-008, US-017, US-021, US-031, US-137, US-138, US-139, US-142, US-154, US-156 | — · +1 en changes sin archivar | 2 · US-142 |
+| VM-5 | DEC-01, US-005, US-006, US-008, US-017, US-031, US-137, US-138, US-139, US-142, US-154, US-156 | `api-contracts` (1 esc.), `evidence-panel` (8 esc.), `patients-identity` (3 esc.), `web-bff` (2 esc.) · +1 en changes sin archivar | 32 · US-005, US-142 |
 | VM-6 | US-008, US-017, US-155, US-156 | — | — |
 
 ## G
 
 | ID | Historias | Spec (openspec) | Test |
 |---|---|---|---|
-| G-1 | US-142 | — | — |
-| G-2 | US-017, US-140, US-142 | — | — |
+| G-1 | US-142 | — · +20 en changes sin archivar | 69 · US-142 |
+| G-2 | US-017, US-140, US-142 | — · +37 en changes sin archivar | 97 · US-140, US-142 |
 | G-3 | US-012, US-224 | `ai-evaluation` (1 esc.) | 3 · US-012, US-224 |
 | G-4 | US-072, US-233b | `ai-evaluation` (13 esc.) · +2 en changes sin archivar | 12 · US-072, US-233b |
-| G-5 | US-012, US-015, US-073, US-141, US-142, US-161, US-224 | `ai-evaluation` (2 esc.) | 6 · US-012, US-073, US-224 |
+| G-5 | US-012, US-015, US-073, US-141, US-142, US-161, US-224 | `ai-evaluation` (2 esc.) · +4 en changes sin archivar | 15 · US-012, US-073, US-142, US-224 |
 | G-6 | US-012, US-103, US-224 | `ai-evaluation` (1 esc.) | 5 · US-012, US-224 |
 | G-7 | US-103, US-104 | — | — |
 | G-8 | US-013, US-049, US-050, US-072, US-083, US-103 | `ai-evaluation` (13 esc.), `deidentification` (13 esc.) | 34 · US-013, US-049, US-072 |
@@ -410,7 +410,7 @@
 | G-11 | US-105 | — | — |
 | G-12 | US-131 | — | — |
 | G-13 | US-029, US-106 | — | — |
-| G-14 | US-017, US-140, US-142, US-156 | — | — |
+| G-14 | US-017, US-140, US-142, US-156 | — · +37 en changes sin archivar | 97 · US-140, US-142 |
 | G-15 | US-008, US-156 | — | — |
 | G-16 | US-161 | — | — |
 
@@ -442,31 +442,31 @@
 | US-180 | L1D-69 | FEAT-01c | 6 (si-hay-capacidad) | 5 | — | Al subir un PDF de alta, el sistema crea un borrador con los datos sugeridos y su confianza, sin crear ningún paciente |
 | US-181 | L1D-70 | FEAT-01c | 6 (si-hay-capacidad) | 3 | — | El doctor confirma el borrador y solo entonces se crea el paciente, con las mismas reglas que el alta manual |
 | US-182 | L1D-71 | FEAT-01c | 6 (si-hay-capacidad) | 3 | — | La pantalla "Nuevo paciente desde PDF" muestra lo sugerido, resalta lo de confianza media o baja y exige confirmar |
-| US-051 | L1D-72 | FEAT-02a | 2 | 5 | — (abierto: `l1d-72-ficha-minima-paciente`) | Veo la ficha mínima del paciente con su diagnóstico vigente y sus biomarcadores recientes |
+| US-051 | L1D-72 | FEAT-02a | 2 | 5 | `2026-11-03-l1d-72-ficha-minima-paciente` | Veo la ficha mínima del paciente con su diagnóstico vigente y sus biomarcadores recientes |
 | US-019 | L1D-73 | FEAT-02a | 4 | 1 | — | DEC-09 — Reglas del semáforo de biomarcadores y de vigencia de diagnósticos |
-| US-088 | L1D-74 | FEAT-02b | 4 | 5 | — | `GET …/case` arma el timeline con eventos derivados, sin duplicados y sin datos rechazados |
+| US-088 | L1D-74 | FEAT-02b | 5 | 5 | `2026-11-04-l1d-74-vista-caso-timeline` | `GET …/case` arma el timeline con eventos derivados, sin duplicados y sin datos rechazados |
 | US-089 | L1D-75 | FEAT-02b | 4 | 5 | — | La vista de caso agrupa los tratamientos previos por línea y muestra series de biomarcadores y atributos |
-| US-090 | L1D-76 | FEAT-02b | 4 | 5 | — | Veo la vista de caso con el timeline, la sección sin fecha confiable, los tratamientos y las series |
+| US-090 | L1D-76 | FEAT-02b | 5 | 5 | `2026-11-04-l1d-76-vista-caso-pagina` | Veo la vista de caso con el timeline, la sección sin fecha confiable, los tratamientos y las series |
 | US-091 | L1D-77 | FEAT-02b | si-hay-capacidad | 3 | — | La tendencia de cada biomarcador se calcula con el umbral del catálogo y se muestra en la ficha, la vista de caso y el contexto |
 | US-092 | L1D-78 | FEAT-02b | 4 | 3 | — | La ficha muestra los datos extraídos con su origen, confianza, revisión y semáforo |
-| US-093 | L1D-79 | FEAT-02b | 4 | 3 | — | El contexto del análisis incluye las tendencias y los eventos extraídos, desidentificados |
-| US-094 | L1D-80 | FEAT-02b | si-hay-capacidad | 5 | — | Registro a mano tratamientos previos y atributos clínicos que no están en los documentos |
+| US-093 | L1D-79 | FEAT-02b | 5 | 3 | `2026-11-04-l1d-79-contexto-trayectoria-caso` | El contexto del análisis incluye las tendencias y los eventos extraídos, desidentificados |
+| US-094 | L1D-80 | FEAT-02b | 5 | 5 | `2026-11-04-l1d-80-tratamientos-atributos-manuales` | Registro a mano tratamientos previos y atributos clínicos que no están en los documentos |
 | US-095 | L1D-81 | FEAT-02c | si-hay-capacidad | 5 | — | Backend 2 genera el resumen y solo devuelve afirmaciones respaldadas por los datos que referencian |
 | US-096 | L1D-82 | FEAT-02c | si-hay-capacidad | 5 | — | `clinical-api` pide el resumen con referencias opacas, lo persiste antes de responder y lo enlaza a los datos |
 | US-097 | L1D-83 | FEAT-02c | si-hay-capacidad | 3 | — | Veo el resumen del caso con sus enlaces, los avisos y cuántas afirmaciones se omitieron |
-| US-098 | L1D-84 | FEAT-03a | 4 | 5 | — | Backend 1 decide la normalización final de todo dato, también del manual, y nunca acepta un código fuera del catálogo |
+| US-098 | L1D-84 | FEAT-03a | 5 | 3 | `2026-11-04-l1d-84-normalizacion-final-manual` | Backend 1 decide la normalización final de todo dato, también del manual, y nunca acepta un código fuera del catálogo |
 | US-099 | L1D-85 | FEAT-03a | 5 | 5 | — | El mismo dato en dos documentos queda como un solo dato con dos fuentes, y dos valores distintos del mismo día quedan en conflicto |
 | US-100 | L1D-86 | FEAT-03a | 5 | 5 | — | Un dato extraído nunca reemplaza en silencio a uno verificado; en diagnósticos decide la fecha |
 | US-107 | L1D-87 | FEAT-03b | 4 | 5 | — | El oncólogo verifica, corrige o rechaza un dato extraído y confirma o descarta un diagnóstico en conflicto |
 | US-108 | L1D-88 | FEAT-03b | 4 | 3 | — | En la vista de caso tengo una lista de pendientes de revisión con sus acciones |
 | US-109 | L1D-89 | FEAT-03b | si-hay-capacidad | 5 | — | El oncólogo resuelve los valores en conflicto y mapea los términos no reconocidos |
-| US-110 | L1D-90 | FEAT-03b | 4 | 5 | — | Registro a mano un biomarcador o un dato del diagnóstico y queda normalizado por Backend 1 |
-| US-111 | L1D-91 | FEAT-03b | 4 | 3 | — | Formularios de registro manual de biomarcadores y diagnóstico, prellenables desde un faltante |
-| DEC-01 | L1D-92 | FEAT-04 | 3 | 1 | — | Catálogo de datos críticos de mama y próstata revisado por el oncólogo |
+| US-110 | L1D-90 | FEAT-03b | 5 | 5 | `2026-11-04-l1d-90-registro-manual-biomarcador-diagnostico` | Registro a mano un biomarcador o un dato del diagnóstico y queda normalizado por Backend 1 |
+| US-111 | L1D-91 | FEAT-03b | 5 | 3 | `2026-11-04-l1d-91-formularios-registro-manual` | Formularios de registro manual de biomarcadores y diagnóstico, prellenables desde un faltante |
+| DEC-01 | L1D-92 | FEAT-04 | 5 | 1 | — | Catálogo de datos críticos de mama y próstata revisado por el oncólogo |
 | US-001 | L1D-93 | FEAT-04 | 3 | 5 | `2026-10-27-l1d-93-catalogo-datos-criticos-validado` | El catálogo de datos críticos se publica versionado y solo si cada ítem tiene campo de destino |
 | US-002 | L1D-94 | FEAT-04 | 3 | 5 | `2026-10-27-l1d-94-checklist-determinista` | El checklist calcula de forma determinista el estado de cada dato crítico |
 | US-003 | L1D-95 | FEAT-04 | 4 | 3 | `2026-10-27-l1d-95a-seed-codigos-catalogo`, `2026-11-02-l1d-95-completeness-endpoint-ficha` | El checklist se expone por API en `/completeness`, en la vista de caso y en la ficha |
-| US-004 | L1D-96 | FEAT-04 | 4 | 3 | — | En la vista de caso veo el checklist y desde un faltante puedo cargarlo o registrarlo |
+| US-004 | L1D-96 | FEAT-04 | 5 | 3 | `2026-11-04-l1d-96-datos-criticos-vista-caso` | En la vista de caso veo el checklist y desde un faltante puedo cargarlo o registrarlo |
 | US-005 | L1D-97 | FEAT-04 | 4 | 5 | `2026-11-02-l1d-97-aviso-faltantes-panel` | Antes de analizar, el panel lista los faltantes y me deja cargar información o continuar con aviso |
 | US-006 | L1D-98 | FEAT-04 | 3 | 3 | `2026-10-27-l1d-98-faltantes-al-analisis` | Los faltantes viajan al análisis como "desconocido" y quedan persistidos con el análisis |
 | US-171 | L1D-99 | FEAT-05 | 6 (si-hay-capacidad) | 3 | — | Las plantillas viven en el catálogo versionado, cada marcador tiene campo de destino y `GET /platform/question-templates` las sirve por tipo de cáncer |
@@ -483,14 +483,14 @@
 | US-113 | L1D-110 | FEAT-06b | si-hay-capacidad | 3 | — | Una pregunta en español recupera también evidencia en inglés, y viceversa |
 | US-114 | L1D-111 | FEAT-06b | si-hay-capacidad | 5 | — | Las fuentes y los filtros del panel se aplican de verdad a la búsqueda y al contexto |
 | US-115 | L1D-112 | FEAT-06b | si-hay-capacidad | 3 | — | El panel ofrece los selectores de fuentes y filtros que el backend ya aplica |
-| US-116 | L1D-113 | FEAT-06b | 5 | 3 | — | Los datos críticos faltantes viajan como "desconocido" al prompt y enriquecen la consulta |
+| US-116 | L1D-113 | FEAT-06b | 5 → 6 (movida) | 3 | — (movida al S6, abierto: `l1d-113-faltantes-desconocido-prompt`) | Los datos críticos faltantes viajan como "desconocido" al prompt y enriquecen la consulta |
 | US-058 | L1D-114 | FEAT-06c | 1 | 5 | `2026-10-22-l1d-114-corpus-catalog-milvus` | El catálogo del corpus y la colección de Milvus se crean con su esquema final |
 | US-059 | L1D-115 | FEAT-06c | 1 | 5 | `2026-10-24-l1d-115-seed-corpus-licensed` | El corpus semilla de mama y próstata se carga solo con documentos de licencia aceptada |
 | US-117a | L1D-116 | FEAT-06c | 3 | 5 | — (abierto: `l1d-116-ingesta-reanudable-licencia`) | La ingesta del corpus es reanudable, indexa *dense* y *sparse* y rechaza lo que no tiene licencia |
 | US-117b | L1D-302 | FEAT-06c | 3 | 3 | `2026-10-30-us-117b-versionado-sparse-semilla` | La ingesta versiona sin borrar y puebla el *sparse* de la semilla |
-| US-118 | L1D-117 | FEAT-06c | 3 | 5 | — (abierto: `l1d-117-metadatos-poblacion-verificados`) | Los metadatos de población, diseño y endpoint se toman de la fuente o se extraen y verifican, y una muestra se revisa a mano |
+| US-118 | L1D-117 | FEAT-06c | 3 | 5 | `2026-11-02-l1d-117-metadatos-poblacion-verificados` | Los metadatos de población, diseño y endpoint se toman de la fuente o se extraen y verifican, y una muestra se revisa a mano |
 | US-119 | L1D-118 | FEAT-06c | si-hay-capacidad | 3 | — | Cada ingesta publica una `CorpusRelease` con su fecha de corte y la Base del análisis la usa |
-| US-120 | L1D-119 | FEAT-06c | 4 | 3 | — | El corpus del S3 alcanza al menos 20 documentos por tipo de cáncer de al menos 3 fuentes abiertas |
+| US-120 | L1D-119 | FEAT-06c | 5 → 6 (movida) | 5 | — (movida al S6, abierto: `l1d-119-corpus-ampliado-calibracion`) | El corpus del S3 alcanza al menos 20 documentos por tipo de cáncer de al menos 3 fuentes abiertas |
 | US-166 | L1D-120 | FEAT-07 | 6 (si-hay-capacidad) | 5 | — | Con dos o más fuentes sobre el umbral, `/rag/query` devuelve "Puntos de acuerdo" y "Discrepancias" y cada afirmación queda citada y con soporte |
 | US-167 | L1D-121 | FEAT-07 | 6 (si-hay-capacidad) | 5 | — | Cada discrepancia explica la diferencia de contexto desde los metadatos, o dice "Causa de la discrepancia no identificada" |
 | US-168 | L1D-122 | FEAT-07 | 6 (si-hay-capacidad) | 3 | — | Las etiquetas factuales de cada fuente se copian del catálogo y no se muestra ningún puntaje de solidez |
@@ -565,15 +565,15 @@
 | US-205 | L1D-191 | FEAT-T2c | Post-MVP | 3 | — | La Base del análisis lista los análisis previos usados como contexto, con la marca "contexto, no evidencia" |
 | US-206 | L1D-192 | FEAT-T2c | Post-MVP | 3 | — | La Base del análisis lista cada sub-consulta de la búsqueda complementaria, su objetivo y si encontró evidencia |
 | US-068 | L1D-193 | FEAT-T3 | 1 | 3 | `2026-10-24-l1d-193-terminos-prohibidos-rn23` | Ningún texto de la UI ni salida generada usa términos prescriptivos de la lista prohibida |
-| US-069 | L1D-194 | FEAT-T3 | 1 | 2 | — (abierto: `l1d-194-aviso-ia-etiqueta-academica`) | Toda salida generada muestra el aviso de IA y la etiqueta "Uso académico/investigación" |
-| US-070 | L1D-195 | FEAT-T3 | 4 | 2 | — | El análisis nunca ejecuta acciones clínicas por su cuenta |
-| US-071 | L1D-196 | FEAT-T3 | 5 | 3 | — | Los avisos clínicos nunca bloquean; solo bloquean las reglas legales y de acceso |
+| US-069 | L1D-194 | FEAT-T3 | 1 | 2 | `2026-11-03-l1d-194-aviso-ia-etiqueta-academica` | Toda salida generada muestra el aviso de IA y la etiqueta "Uso académico/investigación" |
+| US-070 | L1D-195 | FEAT-T3 | 5 | 2 | `2026-11-04-l1d-195-analisis-sin-escrituras` | El análisis nunca ejecuta acciones clínicas por su cuenta |
+| US-071 | L1D-196 | FEAT-T3 | 5 | 3 | `2026-11-04-l1d-196-avisos-no-bloquean` | Los avisos clínicos nunca bloquean; solo bloquean las reglas legales y de acceso |
 | US-211 | L1D-197 | FEAT-T4a | 1 | 3 | — (abierto: `l1d-197-sesion-login-guard`) | Sesión mínima del S1: login con cookie opaca y guard en `web` y `clinical-api` |
 | US-044 | L1D-198 | FEAT-T4a | 2 | 3 | `2026-10-22-l1d-198-sesion-expiracion-bloqueo` | Expiración, cierre de sesión y bloqueo por intentos fallidos |
 | US-045 | L1D-199 | FEAT-T4a | 2 | 3 | `2026-10-22-l1d-199-usuarios-cli-rbac` | Los usuarios se gestionan por CLI y cada acción exige el permiso de su rol |
 | US-046 | L1D-200 | FEAT-T4a | 2 | 5 | `2026-10-22-l1d-200-identidad-cifrada-indice-ciego` | La identidad del paciente se guarda cifrada y se busca por índice ciego |
 | US-047 | L1D-201 | FEAT-T4a | 4 | 5 | — | Registro manual de un paciente con identidad cifrada, convenio y retención |
-| US-048 | L1D-202 | FEAT-T4a | 2 | 5 | — (abierto: `l1d-202-listado-busqueda-pacientes`) | Listado y búsqueda exacta de pacientes |
+| US-048 | L1D-202 | FEAT-T4a | 2 | 5 | `2026-11-03-l1d-202-listado-busqueda-pacientes` | Listado y búsqueda exacta de pacientes |
 | US-049 | L1D-203 | FEAT-T4a | 1 | 5 | `2026-10-18-l1d-203-desidentificacion-contexto-ia` | El contexto que sale hacia la IA está siempre desidentificado |
 | US-050 | L1D-204 | FEAT-T4a | 6 | 3 | — | Los datos reales solo se procesan con modelos locales, sin respaldo en la nube |
 | US-013 | L1D-205 | FEAT-T4a | 2 | 5 | — (abierto: `l1d-205-adr40-deteccion-pii`) | ADR-40 — Detección y enmascaramiento de PII en texto libre y documentos |
@@ -615,11 +615,11 @@
 | US-105 | L1D-241 | FEAT-T5b | 5 | 5 | — | La suite mide la fidelidad del caso reconstruido, el origen de cada dato, el soporte del resumen y el p95 de la vista de caso |
 | US-106 | L1D-242 | FEAT-T5b | si-hay-capacidad | 5 | — | La suite mide duplicados fusionados, conflictos detectados, fusiones incorrectas y mapeo terminológico |
 | US-131 | L1D-243 | FEAT-T5b | 4 | 3 | — | La suite mide la sensibilidad y la especificidad del checklist de faltantes con faltantes sembrados |
-| US-132 | L1D-244 | FEAT-T5b | 3 | 5 | — (abierto: `l1d-244-eval-aplicabilidad-metadatos`) | La suite verifica que la aplicabilidad no inventa valores ni coincidencias y mide los metadatos del corpus |
+| US-132 | L1D-244 | FEAT-T5b | 3 | 5 | `2026-11-02-l1d-244-eval-aplicabilidad-metadatos` | La suite verifica que la aplicabilidad no inventa valores ni coincidencias y mide los metadatos del corpus |
 | US-133 | L1D-245 | FEAT-T5b | 4 | 3 | `2026-11-02-l1d-245-hibrida-vs-dense-misma-corrida` | La recuperación híbrida no retrocede respecto del baseline del S1 |
-| US-140 | L1D-246 | FEAT-T5b | 4 | 5 | — | La suite mide que hasta 3 opciones siguen citadas, con soporte, no prescriptivas y en el orden de RN-28 |
+| US-140 | L1D-246 | FEAT-T5b | 5 → 6 (movida) | 5 | — (movida al S6, abierto: `l1d-246-suite-hasta-3-opciones`) | La suite mide que hasta 3 opciones siguen citadas, con soporte, no prescriptivas y en el orden de RN-28 |
 | US-141 | L1D-247 | FEAT-T5b | si-hay-capacidad | 3 | — | El p95 del análisis se mide con aplicabilidad y hasta 3 opciones y la meta de G-5 se recalibra con ese dato |
-| US-142 | L1D-248 | FEAT-T5b | 5 | 5 | — | G-Demo se verifica con el recorrido de la hipótesis sobre casos sintéticos y queda registrado |
+| US-142 | L1D-248 | FEAT-T5b | 5 → 6 (movida) | 5 | — (movida al S6, abierto: `l1d-248-g-demo-verificacion`) | G-Demo se verifica con el recorrido de la hipótesis sobre casos sintéticos y queda registrado |
 | US-137 | L1D-249 | FEAT-T5c | 5 | 5 | — | `POST /platform/evidence-analyses/{id}/feedback` guarda la calificación 1–5 y los dos checkboxes de faltantes, sin texto libre |
 | US-138 | L1D-250 | FEAT-T5c | 5 | 3 | — | Al cerrar cada análisis el panel ofrece la calificación 1–5 y, si hubo aviso de faltantes, los dos checkboxes, sin bloquear nada |
 | US-139 | L1D-251 | FEAT-T5c | 5 | 3 | — | El reporte de feedback agrega VM-4 y VM-5 por cohorte y por versión de catálogo y dice si el catálogo queda validado |
@@ -639,8 +639,8 @@
 | US-215 | L1D-265 | FEAT-PL1 | 1 | 2 | `2026-10-22-l1d-265-lint-format-base` | Lint base y formato automático: ESLint con reglas de TypeScript, React, Next.js y accesibilidad, Prettier y `ruff format` |
 | US-216 | L1D-266 | FEAT-PL1 | 6 | 3 | — | `web` envía cabeceras de seguridad, impide el clickjacking y no expone secretos ni HTML sin sanitizar |
 | US-217 | L1D-267 | FEAT-PL1 | 2 | 2 | `2026-10-22-l1d-267-auditoria-dependencias` | Las dependencias se auditan en cada PR y se actualizan con Dependabot |
-| US-218 | L1D-268 | FEAT-10c | 4 | 5 | — | El oncólogo hace hasta 10 preguntas de seguimiento sobre un análisis y cada respuesta llega citada, validada y anclada a ese análisis |
-| US-219 | L1D-269 | FEAT-10c | 4 | 3 | — | El panel muestra la conversación de seguimiento bajo el análisis, con su contexto fijo y el contador de preguntas |
+| US-218 | L1D-268 | FEAT-10c | 5 → 6 (movida) | 5 | — (movida al S6, abierto: `l1d-268-seguimiento-analisis`) | El oncólogo hace hasta 10 preguntas de seguimiento sobre un análisis y cada respuesta llega citada, validada y anclada a ese análisis |
+| US-219 | L1D-269 | FEAT-10c | 5 | 3 | `2026-11-04-l1d-269-hilo-seguimiento-ui` | El panel muestra la conversación de seguimiento bajo el análisis, con su contexto fijo y el contador de preguntas |
 | US-220 | L1D-270 | FEAT-06b | 5 | 3 | — | El oncólogo filtra la evidencia por antigüedad y el filtro queda registrado en la Base del análisis |
 | US-221 | L1D-271 | FEAT-T4a | 6 (baja prioridad) | 3 | — | Una persona solicita una cuenta y el administrador la aprueba o la rechaza |
 | US-222 | L1D-272 | FEAT-T4a | 6 (baja prioridad) | 5 | — | El administrador gestiona usuarios y altas de pacientes desde una consola, sin acceso a datos clínicos |
@@ -663,8 +663,8 @@
 | US-237 | L1D-288 | FEAT-10a | 3 | 2 | `2026-10-27-l1d-288-motivos-solo-descartadas` | Cuando todas las opciones se descartan, el panel y el log dicen por qué |
 | US-238 | L1D-300 | FEAT-06b | 4 | 5 | `2026-11-02-l1d-300-reescritura-consulta-segundo-loop` | Si el primer loop de recuperación no supera el umbral, un segundo loop con el LLM local reescribe la consulta solo para recuperar |
 | US-239 | L1D-289 | FEAT-06a | 4 | 5 | — | Cuatro oncólogos pueden analizar a la vez sin que `rag-orchestrator` se caiga: las etapas pesadas se serializan y el resto espera en cola o falla limpio |
-| US-233a | L1D-298 | FEAT-T5a | 4 | 3 | — (abierto: `l1d-298-evaluate-modelos-locales`) | La suite `evaluate` corre con los modelos locales, acota y calibra el juez local y mide los recursos del NLI |
-| US-233b | L1D-299 | FEAT-T5a | 4 | 3 | — (abierto: `l1d-299-poblacion-dorado-suite`) | Un conjunto dorado revisado a mano mide la extracción de la población por criterio y la concordancia de los estados |
+| US-233a | L1D-298 | FEAT-T5a | 4 | 3 | `2026-11-02-l1d-298-evaluate-modelos-locales` | La suite `evaluate` corre con los modelos locales, acota y calibra el juez local y mide los recursos del NLI |
+| US-233b | L1D-299 | FEAT-T5a | 4 → 5 → 6 (movida) | 3 | — (movida al S6, abierto: `l1d-299-poblacion-dorado-suite`) | Un conjunto dorado revisado a mano mide la extracción de la población por criterio y la concordancia de los estados |
 | US-240 | L1D-290 | FEAT-06c | 4 | 2 | — (*spike*: informe `reports/spikes/s4-capacidad-paralelismo.md`, PR #249) | El spike de capacidad mide cuántas tareas de extracción en paralelo aguanta el equipo de referencia y fija los valores por defecto |
 | US-241 | L1D-291 | FEAT-08b | 4 | 3 | `2026-11-02-l1d-291-poblacion-lista-contrato-migracion` | El contrato y el catálogo del corpus guardan la población del estudio como lista acotada por criterio, con su fragmento y su alcance |
 | US-242 | L1D-292 | FEAT-06c | 4 | 5 | `2026-11-02-l1d-292-poblacion-abanico-ingesta` | La ingesta extrae la población de cada estudio en abanico, una tarea corta por documento y criterio, y solo guarda valores verificados |
@@ -674,4 +674,10 @@
 | US-246 | L1D-296 | FEAT-10a | 4 | 2 | `2026-11-02-l1d-296-motivo-descarte-separado` | El panel dice si una opción se descartó por falta de soporte o por lenguaje no permitido, sin mezclar los dos motivos |
 | US-247 | L1D-297 | FEAT-06c | 4 | 7 | `2026-11-02-l1d-297-demo-datos-levantar-verificacion` | La demo y la instalación traen metadatos de población verificados, pacientes que producen Coincide, Parcial y No coincide, y un `levantar.sh` que verifica el seed |
 | US-248 | L1D-304 | FEAT-06b | si-hay-capacidad | 2 | — | ADR-48 — Cuando una rama de la recuperación híbrida no devuelve candidatos, la fusión conserva la calidad de la otra o la degrada |
-| US-249 | L1D-305 | FEAT-T3 | 5 | 3 | — | La salida generada rechaza el lenguaje de recomendación en la voz propia del modelo y el nivel B atribuido, con casos de conformidad |
+| US-249 | L1D-305 | FEAT-T3 | 5 | 3 | `2026-11-04-l1d-305-rn23-voz-propia-nivel-b` | La salida generada rechaza el lenguaje de recomendación en la voz propia del modelo y el nivel B atribuido, con casos de conformidad |
+| US-250 | L1D-306 | FEAT-06a | 5 | 2 | `2026-11-04-l1d-306-pregunta-nfc` | La pregunta del análisis se normaliza a Unicode NFC antes de guardarse y de llegar al LLM, para que la misma pregunta dé el mismo resultado |
+| US-251 | L1D-307 | FEAT-11a | 6 | 5 | — | La misma entrada devuelve el análisis ya guardado, rotulado como reutilizado, y «Re-ejecutar» genera uno nuevo |
+| US-252 | L1D-308 | FEAT-T5b | 6 | 5 | — | La suite `evaluate` mide la reproducibilidad y la estabilidad del análisis ante variantes que no cambian el significado |
+| US-253 | L1D-309 | FEAT-03b | 5 | 5 | `2026-11-04-l1d-309-correccion-con-historico` | Edito en la ficha los exámenes, biomarcadores y notas clínicas ya registrados, y cada cambio queda como corrección trazable |
+| US-254 | L1D-310 | FEAT-06c | 5 | 5 | `2026-11-04-l1d-310-pacientes-momentos-enfermedad` | La demo incluye pacientes sintéticos en distintos momentos de la enfermedad, con su historia de tratamientos y eventos |
+| US-255 | L1D-311 | FEAT-11c | 6 | 5 | — | Las conversaciones de seguimiento quedan como historial, las 3 últimas se ven al abrir el análisis y entran como memoria rotulada del análisis nuevo |

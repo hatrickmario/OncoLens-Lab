@@ -429,3 +429,71 @@ Si el cálculo del checklist falla durante el análisis, `clinical-api` MUST res
 - **GIVEN** `rag-orchestrator` simulado con [O-B, O-C, O-A] (O-A con `populationNotComparable = true` y `poblacion_no_comparable`)
 - **WHEN** se envía la consulta
 - **THEN** la respuesta y el registro traen [O-B, O-C, O-A] con el aviso de O-A intacto
+
+### Requirement: La pregunta se normaliza a NFC en el borde antes de validarse, persistirse y enviarse
+`clinical-api` MUST normalizar la `query` de `POST /platform/evidence-analyses` en el borde, antes de validar su longitud y de desidentificarla: Unicode NFC, todo espacio en blanco Unicode (incluidos los no separables) colapsado a un espacio y recortado en los extremos, sin cambiar mayúsculas, signos ni puntuación. El `queryText` persistido y la `query` enviada a `rag-orchestrator` SHALL ser los de la pregunta normalizada (RN-06, OUT-05).
+
+#### Scenario: La pregunta de la Demo 4 en NFD se persiste y se envía byte a byte igual que en NFC [US-250 AC-1] [OUT-05] [RN-06]
+- **GIVEN** `doc1@test.local` con sesión válida, el paciente semilla (a) y `rag-orchestrator` simulado (MSW desde `contracts/examples/`) que registra el cuerpo recibido
+- **WHEN** envía `POST /platform/evidence-analyses` con la pregunta de la Demo 4 en NFD y, en otra petición, la misma pregunta en NFC
+- **THEN** ambas responden `200`, válidas contra el spec de `clinical-api`
+- **AND** la `query` que recibe `rag-orchestrator` está en NFC y es idéntica byte a byte en las dos peticiones
+- **AND** el `queryText` de los dos `AIAnalysisRecord` persistidos está en NFC y es idéntico byte a byte
+
+#### Scenario: Espacios en los extremos, repetidos o no separables se recortan y colapsan sin tocar el resto [US-250 AC-2] [OUT-05]
+- **GIVEN** el mismo contexto
+- **WHEN** envía una pregunta con espacios al inicio y al final, dos espacios seguidos, un tabulador y un espacio no separable (U+00A0) entre palabras, con mayúsculas, `¿`, `?` y comas
+- **THEN** la `query` enviada y el `queryText` persistido no tienen espacios en los extremos y cada secuencia de espacios es un único espacio U+0020
+- **AND** las mayúsculas, los signos y la puntuación son los mismos que en la pregunta enviada
+
+#### Scenario: Una pregunta cuyo NFD supera el máximo y cuyo NFC no se acepta [US-250 AC-3] [OUT-05]
+- **GIVEN** el mismo contexto y una pregunta de 2000 caracteres en NFC cuya forma NFD supera 2000 caracteres
+- **WHEN** la envía en NFD
+- **THEN** no responde `422` y el cliente de `rag-orchestrator` registra una llamada con la pregunta en NFC de 2000 caracteres
+
+#### Scenario: Una pregunta formada solo por espacios responde 422 sin llamar a rag-orchestrator [US-250 AC-3] [AC-05.1] (Decidido (usuario, 2026-11-03): el mínimo de 1 carácter también se mide tras normalizar, `[S5 resp. 13]`)
+- **GIVEN** el mismo contexto
+- **WHEN** envía una `query` formada solo por espacios, tabuladores y espacios no separables
+- **THEN** responde `422` con `error = CUERPO_INVALIDO`, `message` y `traceId`, válido contra el spec de `clinical-api`
+- **AND** el cliente de `rag-orchestrator` registra cero llamadas y no se persiste ningún `AIAnalysisRecord`
+
+### Requirement: La trayectoria del caso viaja en el contexto clínico
+El `clinicalContext` MUST incluir los eventos clínicos, los tratamientos previos vigentes y `currentLine` (la mayor línea numerada en curso, o `null`), con tiempos en meses relativos y su `provenance`. Un evento sin fecha confiable (`event_date` nula o `date_precision = incierta`) SHALL viajar con `monthsAgo = null`. Los datos `rechazado`/`reemplazado` MUST NOT viajar (RN-07, ADR-50); `biomarkerTrends` sigue vacío hasta US-091.
+
+#### Scenario: P-CASO envía la progresión, los dos tratamientos y la línea actual sin la cirugía rechazada [US-093 AC-1] [AC-06.2] [readme §4.2]
+- **GIVEN** FX-02b-a (P-CASO) sembrado con el reloj de test fijo en 2026-10-01, `doc1@test.local` con sesión válida y `rag-orchestrator` simulado que captura el request
+- **WHEN** envía `POST /platform/evidence-analyses` sobre P-CASO
+- **THEN** `clinicalContext.events` trae la progresión con `monthsAgo = 2` y no trae ningún evento cuyo `dataRef` enlace a la cirugía `rechazado`
+- **AND** `priorTreatments` trae Leuprorelina (`lineNumber = 1`, `atcCodes = [L02AE02]`) y Bicalutamida (`lineNumber = null`, `atcCodes = [L02BB03]`), ambos con `monthsSinceStart` no nulo
+- **AND** `currentLine = 1` y `biomarkerTrends` es una lista vacía
+- **AND** el `clinicalContext` valida contra `ClinicalContext` de `apps/rag-orchestrator/openapi.yaml`
+
+#### Scenario: El PSA sin verificar viaja con su etiqueta de revisión [US-093 AC-3] [RN-07]
+- **GIVEN** P-CASO, cuyo PSA más reciente (2026-07-15, 9,5 ng/mL) está en `requiere_revision`
+- **WHEN** se captura el `clinicalContext` del análisis
+- **THEN** el biomarcador PSA viaja con `value` 9,5 y `provenance.reviewStatus = requiere_revision`
+- **AND** el evento `toxicidad` viaja con `provenance.reviewStatus = requiere_revision`, etiquetado y no omitido
+
+#### Scenario: La toxicidad sin fecha confiable viaja con monthsAgo null [US-093 AC-5] [readme §4.2]
+- **GIVEN** la toxicidad de P-CASO con `date_precision = incierta`
+- **WHEN** se captura el `clinicalContext`
+- **THEN** el evento `toxicidad` viaja con `monthsAgo = null`
+
+#### Scenario: Un evento con fecha informada pero precisión incierta viaja sin meses [US-093 AC-5] (Decidido (usuario, 2026-11-03): misma regla que la vista de caso de l1d-74, `[S5 resp. 13]`)
+- **GIVEN** P-CASO más un evento sintético `respuesta` con `event_date = 2026-05-10` y `date_precision = incierta`
+- **WHEN** se captura el `clinicalContext`
+- **THEN** ese evento viaja con `monthsAgo = null`, nunca con 4
+
+#### Scenario: Un tratamiento y un atributo reemplazados no viajan [RN-07] [ADR-50] [AC-02.6]
+- **GIVEN** P-CASO más un `PriorTreatment` y un `ClinicalAttribute` sintéticos que el test inserta en `reemplazado` (estas tablas no llevan `supersedes_id`; ADR-50 lo añade solo a `biomarker`, `exam` y `clinical_note`)
+- **WHEN** se captura el `clinicalContext` y se lee el `clinical_context_snapshot` persistido
+- **THEN** ningún `dataRef` del payload ni del snapshot enlaza a esas filas `reemplazado`
+- **AND** ninguna `provenance.reviewStatus` vale `rechazado` ni `reemplazado`
+
+#### Scenario: Un paciente sin trayectoria envía las listas vacías y currentLine null [US-093] (Decidido (usuario, 2026-11-03): borde de dato ausente, `[S5 resp. 13]`)
+- **GIVEN** un paciente sintético con diagnóstico activo y sin eventos, tratamientos ni atributos
+- **WHEN** se captura el `clinicalContext`
+- **THEN** `events`, `priorTreatments` y `attributes` son listas vacías y `currentLine = null`
+
+Regresión [RN-11] activa desde S1 (US-049): el enmascaramiento y las fechas relativas de la trayectoria los fija `deidentification`.
+Regresión [RN-15] activa desde S6 (DEC-22): el opt-out de `analisis_ia` responde `403` antes de construir el contexto.

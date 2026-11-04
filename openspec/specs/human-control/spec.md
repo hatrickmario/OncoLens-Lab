@@ -6,18 +6,26 @@ Control humano del lenguaje: la lista versionada de términos prescriptivos proh
 ## Requirements
 
 ### Requirement: Lista versionada de términos prescriptivos prohibidos en dos niveles
-La lista de RN-23 MUST vivir en `packages/clinical-catalogs/lenguaje/terminos-prohibidos.json` (1.4.0, `[S1 resp. 33]`) con `version`, `normalizacion`, un **Nivel A** de términos (salida generada y textos propios), un **Nivel B** de prefijos y términos y `frasesPermitidas` (ambos solo textos propios). Un término MAY declarar `formas` (conjugación dirigida) y `excepciones` (usos descriptivos). Los backends SHALL leerla de solo lectura desde `CLINICAL_CATALOG_PATH`.
+La lista de RN-23 MUST vivir en `packages/clinical-catalogs/lenguaje/terminos-prohibidos.json` (1.6.0, US-249) con `version`, `normalizacion`, un **Nivel A** (salida generada y textos propios), un **Nivel B** de prefijos y términos (textos propios), `salidaGenerada.nivelB` (ids del Nivel B que también se aplican a la salida generada) y `frasesPermitidas`. Un término MAY declarar `formas` y `excepciones`. Los backends SHALL leerla de solo lectura desde `CLINICAL_CATALOG_PATH`.
 
 #### Scenario: La lista cargada contiene los términos de RN-23 y los de S1 resp. 15 y 33 [US-068 AC-1] [AC-10.3] [RN-23] [S1 resp. 33]
 - **GIVEN** la lista versionada `packages/clinical-catalogs/lenguaje/terminos-prohibidos.json`
 - **WHEN** `loadProhibitedTerms()` la carga
-- **THEN** devuelve `version` "1.4.0" y un Nivel A que incluye "recomendado para este paciente", "debe recibir", "el mejor tratamiento", "indicado para usted", "indicado para este paciente", "indicado para esta paciente", "recommended for this patient", "should receive", "the best treatment" e "indicated for you"
+- **THEN** devuelve `version` "1.6.0" y un Nivel A que incluye "recomendado para este paciente", "debe recibir", "el mejor tratamiento", "indicado para usted", "indicado para este paciente", "indicado para esta paciente", "recommended for this patient", "should receive", "the best treatment" e "indicated for you"
 - **AND** el Nivel A incluye además "deben recibir", "debería recibir", "se sugiere iniciar", "tratamiento indicado", "mejor opción", "usted debe", "you should", "the patient should", "indicated for this patient", "probabilidad de éxito" y "chance of success" `[S1 resp. 15]`
 - **AND** el Nivel A conserva de la lista provisional del Pre-S1 "opción preferida", "tratamiento de elección" y "tratamiento óptimo"
 - **AND** el Nivel A incluye los términos de `[S1 resp. 33]`: "inicie", "administre", "prescriba", "suspenda", "cambie a", "elija", "escoja" y "ofrezca" (con `formas`), "se debe", "debe iniciar", "debe suspender", "se debe administrar", "no debe recibir", "no se debe administrar", "es necesario", "es imprescindible", "se recomienda", "se recomienda iniciar", "se indica", "está indicado", "está contraindicado", "la mejor opción es", "manejo de elección", "we recommend", "is recommended", "should be started", "must receive", "should not receive", "is indicated", "is contraindicated", "preferred treatment" y "treatment of choice"
+- **AND** el Nivel A incluye las formas en voz propia de US-249: "se recomendaría", "se aconseja", "considere iniciar" y "se sugeriría", con sus `formas`
 - **AND** el Nivel B contiene los prefijos `recomend`, `recomiend` y `recommend` y los términos de `[S1 resp. 33]` "iniciar", "administrar", "prescribir", "suspender", "ofrecer", "elegir", "start", "initiate", "administer", "prescribe", "discontinue", "offer", "choose", "switch to" y "standard of care"
+- **AND** `salidaGenerada.nivelB` contiene exactamente `b-recomend`, `b-recomiend` y `b-recommend`
 - **AND** `frasesPermitidas` incluye "iniciar sesión"
 - **AND** cada término o prefijo tiene un `id` único entre niveles e `idioma`
+
+#### Scenario: Un id de salidaGenerada que no existe en el Nivel B hace fallar la carga [US-249 AC-2] [RN-23] (Decidido, usuario, 2026-11-03)
+- **GIVEN** una copia de la lista cuyo `salidaGenerada.nivelB` incluye un id que no está en el Nivel B
+- **WHEN** `loadProhibitedTerms()` y el cargador de `rag-orchestrator` la cargan
+- **THEN** ambos lanzan un error que nombra el archivo y el id desconocido
+- **AND** ningún consumidor continúa con un subconjunto vacío
 
 ### Requirement: La carga de la lista falla cerrada
 Una lista ausente, ilegible o que no cumpla su esquema MUST producir un error que nombre el archivo y SHALL NOT tratarse como lista vacía por ningún consumidor.
@@ -192,3 +200,241 @@ Toda página autenticada de `web` MUST mostrar la etiqueta "Uso académico/inves
 - **THEN** `web` redirige a `/login` (L1D-197) y el HTML servido no contiene datos del paciente ni del análisis
 
 > Regresión [RN-19] activa desde S2: el resumen del caso (US-096, US-097) lleva el mismo aviso más "Verifique contra las fuentes" y las páginas de listado y ficha muestran la etiqueta. Regresión [RN-19] activa desde S5: cada turno de seguimiento (`FollowUpTurn.disclaimer`). Regresión [RN-15] activa desde S6: con opt-out de `analisis_ia` no hay resultado (`403`) y por tanto no hay aviso.
+
+### Requirement: Una corrección crea una fila nueva y conserva la anterior como histórico
+Al corregir un `Biomarker` o una `ClinicalNote` vigente, `clinical-api` MUST crear en una transacción una fila nueva con `entry_method = manual_correction`, `review_status = verificado` y `supersedes_id` hacia la anterior, y pasar la anterior a `reemplazado` (y `is_active = false` en la nota). Ningún `UPDATE` SHALL cambiar `value` ni `content` de una fila existente (RN-08, ADR-50).
+
+#### Scenario: Corregir el valor de un biomarcador deja el anterior como histórico enlazado [US-253 AC-1] [RN-08] [AC-04.1]
+- **GIVEN** el paciente semilla (a) activo con su Ki-67 `20 %` registrado y `doc1@test.local` con sesión válida
+- **WHEN** envía `POST /platform/patients/{a}/biomarkers/{ki67}/corrections` con `value = "25"` y `unit = "%"`
+- **THEN** responde `201` con un `Biomarker` `value = "25"`, `provenance.entryMethod = manual_correction` y `supersedesId = {ki67}`
+- **AND** la fila `{ki67}` conserva `value = "20"` con `review_status = reemplazado`, y `GET /platform/patients/{a}` muestra en `recentBiomarkers` solo el Ki-67 `25 %` con origen «Corrección manual»
+
+#### Scenario: El histórico del biomarcador se lee siguiendo supersedes_id [US-253 AC-1] [RN-08]
+- **GIVEN** el Ki-67 de (a) corregido dos veces (`20` → `25` → `30`)
+- **WHEN** el doctor pide `GET …/biomarkers/{vigente}/history`
+- **THEN** recibe dos entradas `reemplazado`, de la más reciente (`25`) a la más antigua (`20`), con su `entryMethod` y fecha, y la lista no supera `CORRECTION_HISTORY_MAX`
+
+#### Scenario: Corregir la fecha de un examen manual reemplaza también el examen [US-253 AC-1] [ADR-50] (Decidido (usuario, 2026-11-03): D3 del design, `[S5 resp. 13]`)
+- **GIVEN** un biomarcador registrado a mano en un `Exam` `registro_manual` cuyo único biomarcador vigente es él
+- **WHEN** el doctor corrige su `performedAt` a una fecha anterior a hoy
+- **THEN** se crea un `Exam` nuevo `manual_correction` con esa fecha y `supersedes_id` al examen anterior, y el biomarcador nuevo cuelga de él
+- **AND** si el examen anterior tenía otros biomarcadores vigentes, el examen nuevo lleva `supersedes_id = null` y el anterior sigue vigente con ellos
+
+#### Scenario: Corregir texto o tipo de una nota crea una versión nueva [US-253 AC-2] [RN-08]
+- **GIVEN** la nota `comorbilidad` sintética de (a) (FX-253-a)
+- **WHEN** el doctor envía `POST …/clinical-notes/{nota}/corrections` con otro `content` y `noteType = antecedente`
+- **THEN** responde `201` con la nota nueva (`manual_correction`, `supersedesId = {nota}`), `GET …/clinical-notes` lista solo la nueva y la anterior queda `reemplazado`, `is_active = false`, con su texto intacto en `GET …/clinical-notes/{nueva}/history`
+
+#### Scenario: Una fila ya reemplazada no se puede volver a corregir [US-253 AC-1] [RN-08] (Decidido (usuario, 2026-11-03): concurrencia, D2 del design, `[S5 resp. 13]`)
+- **GIVEN** el Ki-67 `{ki67}` ya reemplazado por una corrección anterior
+- **WHEN** llega otra corrección sobre `{ki67}` (doble envío o dos pestañas)
+- **THEN** responde `409 DATO_NO_VIGENTE`, no se crea ninguna fila y el vigente no cambia
+
+#### Scenario: Una corrección sin cambios no crea filas [US-253 AC-3] (Decidido (usuario, 2026-11-03), `[S5 resp. 13]`)
+- **WHEN** el doctor envía una corrección con los mismos valores que la fila vigente
+- **THEN** responde `422 CUERPO_INVALIDO` sin `field` y no se crea ninguna fila
+
+### Requirement: El biomarcador corregido se normaliza con el servicio de Backend 1
+El biomarcador corregido MUST conservar el `originalName` de la fila anterior y obtener `name`, `loincCode` y `mappingStatus` de `ReconciliationService` (ADR-33, RN-27); el módulo de correcciones SHALL NOT asignar `mapeado` ni `no_mapeado` por su cuenta.
+
+#### Scenario: La corrección pasa por la normalización final [US-253 AC-1] [RN-27] [ADR-33]
+- **GIVEN** FX-01b-b montado y un biomarcador manual `originalName = "ERBB2"`
+- **WHEN** el doctor corrige su valor
+- **THEN** la fila nueva tiene `name = HER2`, `loincCode = LOINC-T-HER2`, `mappingStatus = mapeado` y `originalName = "ERBB2"`
+
+### Requirement: Validación de la corrección sin cambios parciales
+Un cuerpo inválido, un valor fuera del catálogo o una fecha posterior a hoy (reloj inyectado) MUST responder `422` con `ErrorCorreccionInvalida` y el campo afectado en `field`, sin crear ni modificar filas. Los límites de texto SHALL vivir en configuración (`CLINICAL_NOTE_MAX_CHARS`, RN-22).
+
+#### Scenario: Una fecha posterior a hoy se rechaza junto al campo [US-253 AC-3] [PRD §10]
+- **GIVEN** el reloj congelado en una fecha fija
+- **WHEN** el doctor corrige el Ki-67 de (a) con `performedAt` = mañana
+- **THEN** responde `422` con `error = CUERPO_INVALIDO` y `field = "performedAt"`, y el biomarcador vigente y su examen no cambian
+
+#### Scenario: Un valor cuantitativo no numérico se rechaza [US-253 AC-3] [RN-27] (Decidido (usuario, 2026-11-04))
+- **GIVEN** un biomarcador `cuantitativo` (Ki-67 de FX-01b-b)
+- **WHEN** el doctor lo corrige con un `value` no numérico (p. ej. `"7+x"`)
+- **THEN** responde `422` con `error = VALOR_FUERA_DE_CATALOGO` y `field = "value"`, sin filas nuevas
+
+Limitación: los «valores admitidos» de un biomarcador cualitativo (p. ej. HER2) dependen del catálogo, que no los trae (1.3.0); se validan con el oncólogo (D5-21) y no se inventa un enum clínico.
+
+#### Scenario: Una nota vacía o demasiado larga se rechaza [US-253 AC-3] [RN-22] (Decidido (usuario, 2026-11-03), `[S5 resp. 13]`)
+- **WHEN** el doctor corrige una nota con `content` vacío o con más de `CLINICAL_NOTE_MAX_CHARS` caracteres
+- **THEN** responde `422` con `field = "content"` y la nota vigente no cambia
+
+### Requirement: Paciente egresado y administrador no corrigen
+Toda corrección MUST responder `422 PACIENTE_EGRESADO` si el paciente está egresado (RN-17), comprobado antes de escribir, y `403` a una sesión sin `clinical:write` (`admin`, PRD §11); las lecturas de notas e histórico SHALL exigir `clinical:read`.
+
+#### Scenario: Corregir un dato de un paciente egresado responde 422 [US-253 AC-4] [RN-17]
+- **GIVEN** un paciente sintético egresado con un biomarcador y una nota
+- **WHEN** el doctor intenta corregir cualquiera de los dos
+- **THEN** responde `422` con `error = PACIENTE_EGRESADO` y no se crea ni modifica ninguna fila
+
+#### Scenario: El administrador recibe 403 al corregir y al leer notas [US-253 AC-4] [PRD §11] (Decidido (usuario, 2026-11-03): lecturas, `[S5 resp. 13]`)
+- **GIVEN** `admin@test.local` con sesión válida
+- **WHEN** envía una corrección de biomarcador o de nota, o pide `GET …/clinical-notes` o `…/history`
+- **THEN** responde `403` en todos los casos y no se crea ninguna fila
+
+### Requirement: La corrección cambia el contexto del próximo análisis sin bloquear
+Tras una corrección, el contexto clínico vigente del paciente MUST reflejar el valor nuevo, de modo que `huellaDelContexto()` del próximo análisis difiera de la del análisis previo; los análisis guardados SHALL quedar intactos y el aviso al usuario no bloquea ninguna acción (RN-26, D-10).
+
+#### Scenario: La huella del contexto cambia tras corregir un dato que usó un análisis previo [US-253 AC-5] [RN-26] [RN-06]
+- **GIVEN** un análisis guardado de (a) cuyo contexto incluyó Ki-67 `20 %`, con `rag-orchestrator` simulado desde `contracts/examples/`
+- **WHEN** el doctor corrige Ki-67 a `25 %` y pide un análisis nuevo con la misma pregunta
+- **THEN** el `contextFingerprint` del análisis nuevo difiere del previo, el contexto enviado lleva `25` y no `20`, y el `AIAnalysisRecord` previo conserva su snapshot y su huella sin cambios
+- **AND** la corrección y el análisis nuevo responden `201` sin ningún bloqueo por el análisis previo
+
+Regresión [RN-26] activa desde S6: la no reutilización de un análisis por huella la verifica US-251.
+
+### Requirement: Corrección en línea con histórico desplegable en la ficha
+La ficha MUST ofrecer «Corregir dato» en cada biomarcador y nota clínica vigente (variante A de S5-01), con formulario en línea («Guardar mi corrección», «Cancelar»), origen «Corrección manual» tras guardar, histórico desplegable con las filas `reemplazado` y aviso no bloqueante sobre análisis anteriores. Las fechas se muestran relativas («hoy», «hace 12 días», `[S5 resp. 11]` (d)). Textos en `messages/es.json`.
+
+#### Scenario: El oncólogo corrige un biomarcador en la fila y ve el histórico [US-253 AC-1] [RN-08]
+- **GIVEN** la ficha de (a) con MSW sirviendo `biomarker-corrected.json` y `correction-history-biomarker.json`
+- **WHEN** el doctor pulsa «Corregir dato» en Ki-67, cambia el valor y pulsa «Guardar mi corrección»
+- **THEN** la fila muestra el valor nuevo con «Corrección manual», aparece «Histórico» bajo la fila y al desplegarlo lista el valor anterior rotulado «reemplazado»
+- **AND** al corregir un **biomarcador** se muestra «Los análisis anteriores se hicieron con el valor previo. Un análisis nuevo usará el valor corregido.» sin deshabilitar ninguna acción [US-253 AC-5] [RN-26]; al corregir una **nota** no se muestra aviso de análisis, porque las notas no entran al análisis
+
+#### Scenario: Las fechas del histórico se muestran relativas [US-253 AC-1] [S5 resp. 11]
+- **GIVEN** el reloj congelado y `correction-history-biomarker.json` con una entrada creada hoy y otra 12 días antes
+- **WHEN** el doctor despliega «Histórico» en Ki-67
+- **THEN** las entradas muestran «hoy» y «hace 12 días», cada una con la fecha absoluta en un `<time dateTime>`
+
+#### Scenario: El oncólogo corrige una nota y conserva la versión anterior visible [US-253 AC-2]
+- **GIVEN** la sección «Notas clínicas» de la ficha de (a)
+- **WHEN** cambia el texto y el tipo de una nota y guarda
+- **THEN** la sección muestra la versión nueva y el histórico desplegable muestra la anterior
+
+#### Scenario: El error 422 aparece junto al campo y nada cambia [US-253 AC-3]
+- **GIVEN** MSW respondiendo `error-correccion-fecha-futura.json`
+- **WHEN** el doctor guarda una fecha posterior a hoy
+- **THEN** el mensaje aparece junto al campo de fecha, se anuncia con `aria-live="assertive"`, el formulario sigue abierto con lo escrito y la fila no cambia
+
+#### Scenario: Con paciente egresado la acción está deshabilitada y explicada [US-253 AC-4] [RN-17]
+- **GIVEN** la ficha de un paciente sintético egresado
+- **WHEN** se renderiza
+- **THEN** «Corregir dato» está deshabilitado con «El paciente está egresado: no admite registros hasta su reactivación»
+
+#### Scenario: El formulario de nota libre muestra el aviso de nombres [US-253 AC-6] [ADR-40] [RN-11]
+- **WHEN** el doctor abre «Corregir dato» en una nota
+- **THEN** encima del campo de texto aparece fijo «No escribas nombres de personas (ni del paciente ni de terceros) en las notas. Las notas no se envían a la IA en esta versión; conviene no incluir nombres de personas en ellas.» (S5 resp. 12: el envío de notas, tras el detector de PII, se traslada a ADR-40)
+
+### Requirement: Pedir un análisis nunca modifica datos clínicos
+Completar un análisis de evidencia MUST dejar intactas, en número de filas y en contenido, todas las tablas de los schemas `clinical` e `identity` salvo `clinical.ai_analysis_record`, que SHALL recibir exactamente una fila nueva (RN-06). Ningún `review_status` SHALL cambiar, tampoco en las filas registradas o corregidas a mano por el doctor (AC-T3.2).
+
+#### Scenario: Un análisis con evidencia no cambia el número de filas clínicas ni ningún review_status [US-070 AC-1] [AC-T3.2]
+- **GIVEN** el paciente semilla (a) y la instantánea (conteo y *hash* por tabla) de `patient`, `diagnosis`, `biomarker`, `treatment`, `clinical_event`, `prior_treatment` y `clinical_attribute`
+- **WHEN** `doc1@test.local` completa un análisis `con_evidencia` (MSW con `contracts/examples/rag-query-con-evidencia.json`) y recibe `200`
+- **THEN** el número de filas de esas siete tablas es el mismo que antes
+- **AND** su *hash* de contenido no cambia, de modo que ningún `review_status` ha cambiado
+
+#### Scenario: La única diferencia en clinical e identity es la fila nueva de ai_analysis_record [US-070 AC-2] [AC-T3.2] [RN-06]
+- **GIVEN** el mismo paciente y la instantánea de todas las tablas de `clinical` e `identity` (asumido: `identity` se incluye por RN-10)
+- **WHEN** se completa el análisis del escenario anterior
+- **THEN** la única tabla con diferencia es `clinical.ai_analysis_record`, con una fila más
+- **AND** esa fila tiene el `id` y el `traceId` de la respuesta, válida contra el spec de `clinical-api`
+
+#### Scenario: Las filas registradas y corregidas a mano no cambian al analizar [US-070 AC-2] [AC-T3.2] [RN-08] [S5 resp. 3]
+- **GIVEN** el paciente (a) con un biomarcador y un diagnóstico registrados a mano (US-110), un tratamiento previo y un atributo clínico manuales (US-094) y un biomarcador corregido (US-253: fila `reemplazado` y su sucesora `manual_correction`), creados por sus endpoints con la sesión del doctor
+- **WHEN** se toma la instantánea de `clinical` e `identity` y se completa un análisis `con_evidencia`
+- **THEN** la única tabla con diferencia es `clinical.ai_analysis_record`
+- **AND** la fila `reemplazado` conserva su `review_status` y su valor, y las filas manuales siguen `verificado` con su `entry_method`
+
+### Requirement: Una pregunta de seguimiento nunca modifica datos clínicos
+Completar una pregunta de seguimiento sobre un análisis MUST dejar intactas todas las tablas de `clinical` e `identity` salvo `clinical.analysis_follow_up`, que SHALL recibir exactamente una fila nueva; la fila del análisis de origen en `ai_analysis_record` SHALL NOT cambiar (AC-T3.2, RN-06).
+
+#### Scenario: La única diferencia tras un seguimiento es la fila nueva de analysis_follow_up [US-070 AC-2] [AC-T3.2] [RN-06] (asumido: instrucción de /sprint-start del S5)
+- **GIVEN** el análisis `con_evidencia` del paciente (a) con las filas manuales del requisito anterior y la instantánea de `clinical` e `identity`
+- **WHEN** `doc1@test.local` envía `POST /platform/evidence-analyses/{analysisId}/follow-ups` (MSW con `contracts/examples/rag-follow-up-response.json`) y recibe `201`
+- **THEN** la única tabla con diferencia es `clinical.analysis_follow_up`, con una fila más cuyo `id` es el del turno respondido
+- **AND** la fila del análisis de origen en `ai_analysis_record` tiene el mismo *hash* que antes
+
+### Requirement: Una respuesta interna con campos inesperados no persiste nada
+Si la respuesta de `rag-orchestrator` trae un campo no declarado en su contrato (p. ej. `actions`), `clinical-api` MUST rechazarla con el Zod generado estricto y responder `502 ERROR_SERVICIO_IA` sin persistir `AIAnalysisRecord` ni devolver el campo; ninguna tabla de `clinical` ni de `identity` SHALL cambiar.
+
+#### Scenario: Un campo actions en la respuesta interna no se persiste ni se devuelve y ninguna tabla cambia [US-070 AC-4] [AC-T3.2]
+- **GIVEN** el paciente (a), la instantánea de `clinical` e `identity` y MSW respondiendo `/rag/query` con `rag-query-con-evidencia.json` más `actions: [{"type":"registrar_tratamiento"}]`
+- **WHEN** `doc1@test.local` pide el análisis
+- **THEN** la respuesta es `502` con `error = ERROR_SERVICIO_IA`, válida contra el spec de `clinical-api`, y su cuerpo no contiene `actions` ni `registrar_tratamiento`
+- **AND** ninguna tabla de `clinical` ni de `identity` tiene diferencia, incluida `ai_analysis_record` (el supuesto «Zod descarta campos desconocidos» se sustituye por el rechazo del contrato estricto, design D4)
+
+### Requirement: La tarjeta de opción no ofrece acciones clínicas
+La tarjeta de cada opción descrita en el panel MUST NOT contener botones ni enlaces que registren un tratamiento, apliquen la opción o modifiquen datos del paciente; sus únicos controles SHALL ser de lectura (desplegar detalle, ver la cita) (AC-T3.2, FR-10).
+
+#### Scenario: Los controles de la tarjeta de opción son solo de lectura [US-070 AC-3] [AC-T3.2] [FR-10]
+- **GIVEN** la tarjeta de opción renderizada con cada opción de `contracts/examples/con-evidencia-s4-tres-opciones.json`
+- **WHEN** se recorren sus controles (botones, enlaces y `summary`)
+- **THEN** ninguno tiene un nombre accesible ni un destino que registre un tratamiento, aplique la opción o modifique datos del paciente
+- **AND** los controles presentes son solo de lectura (detalle de la opción y de la cita)
+
+### Requirement: El análisis de un paciente con avisos clínicos responde 200 con sus avisos
+Para un paciente de un tipo habilitado con datos `requiere_revision`, datos en conflicto, datos críticos faltantes y una fuente de población no comparable, `POST /platform/evidence-analyses` MUST responder `200` con la opción y los avisos que existen en el S5 en su lugar del contrato; ningún aviso clínico SHALL convertirse en `4xx` ni ocultar la opción (RN-26).
+
+#### Scenario: FX-T3-a con continueWithWarning responde 200 con población no comparable en warnings[] y faltantes y sin verificar declarados en la Base del análisis, no emitidos en warnings[] [US-071 AC-1] [RN-26] [AC-T3.3]
+- **GIVEN** FX-T3-a (HER2 `3+` `verificado`, Ki-67 `20 %` `requiere_revision`, dos RE en conflicto, sin `estado_menopausico`) y `rag-orchestrator` simulado con `contracts/examples/rag-query-fx-t3-a.json`
+- **WHEN** el doctor solicita el análisis con `continueWithWarning = true`
+- **THEN** la respuesta es `200`, válida contra el spec del proveedor, con una opción en `evidenceOptions`
+- **AND** esa opción trae `populationNotComparable = true` y `warnings = [poblacion_no_comparable]`
+- **AND** el aviso de faltantes está declarado en la Base del análisis: `analysisBasis.missingCriticalData` contiene `estado_menopausico` y `continuedWithWarning` es `true`
+- **AND** el aviso de dato sin verificar está declarado en la Base del análisis: `analysisBasis.patientDataUsed` incluye Ki-67 con `reviewStatus = requiere_revision`
+- **AND** `warnings[]` no contiene `datos_faltantes`, `datos_sin_verificar` ni `datos_en_conflicto` (D1, `[S5 resp. 12]`)
+- **AND** el `AIAnalysisRecord` queda persistido con los mismos faltantes
+
+Notas de alcance:
+- Regresión [RN-26] `datos_en_conflicto` (opción y tarjeta) y `datos_sin_verificar` en `evidenceOptions[].warnings`: activa desde S6/Post-MVP con US-101 y US-136; hoy FX-T3-a incluye el conflicto solo para probar que no bloquea.
+- Regresión [RN-26] `patientDataWarning = en_conflicto` por criterio (US-124): activa desde S6/Post-MVP; ningún escenario del S5 lo afirma (`[S5 resp. 12]`).
+- Regresión [RN-26] «desactualizado»: activa desde S6 con FEAT-11a (si hay capacidad).
+- Regresión [RN-15] `403` por opt-out de `analisis_ia`: activa desde S6 con US-148. El `401` sin sesión y el `422 PACIENTE_EGRESADO` en registros siguen cubiertos por `auth-session` y `manual-clinical-entry`.
+
+### Requirement: Las lecturas del paciente responden 200 con sus avisos
+La ficha (`GET /platform/patients/{id}`), la vista de caso (`GET /platform/patients/{id}/case`) y el checklist (`GET /platform/patients/{id}/completeness`) MUST responder `200` para un paciente con avisos clínicos, mostrando el estado de cada dato en lugar de rechazar la lectura (RN-26, FR-11).
+
+#### Scenario: Ficha, vista de caso y checklist de FX-T3-a responden 200 con sus avisos [US-071 AC-4] [RN-26] [FR-11]
+- **GIVEN** FX-T3-a sembrado con el catálogo de datos críticos `test-1.0.0`
+- **WHEN** se consultan la ficha, la vista de caso y `GET …/completeness` con una sesión `doctor`
+- **THEN** las tres responden `200`, válidas contra el spec del proveedor
+- **AND** la ficha y la vista de caso traen Ki-67 con `provenance.reviewStatus = requiere_revision`
+- **AND** el checklist trae `ki67` en `presente_sin_verificar` y `estado_menopausico` en `faltante`
+
+### Requirement: El panel ejecuta el análisis y muestra la opción no comparable pese a los avisos
+Con avisos clínicos, el panel de análisis MUST permitir ejecutar el análisis desde el aviso previo de faltantes y MUST mostrar cada opción con la etiqueta «Población no comparable» cuando corresponda, sin ocultarla ni deshabilitarla (RN-26).
+
+#### Scenario: Continuar con el aviso de faltantes ejecuta el análisis y muestra el resultado [US-071 AC-2] [RN-26] [AC-04.2]
+- **GIVEN** FX-T3-a en el panel `/pacientes/{id}/analisis` contra Compose en perfil de test (`LLM_PROVIDER=fake`)
+- **WHEN** el bloque de faltantes (`role="status"`) lista «Estado menopáusico» y el doctor pulsa «Analizar evidencia» con la pregunta de `rag-query-request-fx-t3-a.json`
+- **THEN** se envía un solo `POST /api/evidence-analyses` con `continueWithWarning = true`
+- **AND** se muestra el resultado del análisis
+
+#### Scenario: La opción de población no comparable se muestra con su etiqueta [US-071 AC-3] [RN-26] [AC-08.6]
+- **GIVEN** el resultado del escenario anterior
+- **WHEN** se renderiza el análisis
+- **THEN** la opción de la fuente no comparable es visible con la etiqueta «Población no comparable» en texto
+- **AND** no está oculta, plegada sin acceso ni deshabilitada
+
+### Requirement: El recorrido del doctor no tiene ningún diálogo obligatorio
+El recorrido login → ficha → vista de caso → faltantes → análisis MUST completarse sin ningún `dialog` ni `alertdialog` obligatorio; solo MAY aparecer los diálogos de registro que el oncólogo abre por su cuenta («Registrar biomarcador», «Completar diagnóstico a mano», «Agregar tratamiento previo», «Registrar atributo»), y ninguno se abre solo ni se interpone entre el oncólogo y el análisis (AC-T3.3, PP-6, `[S5 resp. 12]`).
+
+#### Scenario: El doctor llega al resultado de FX-T3-a sin ningún diálogo obligatorio [US-071 AC-5] [AC-T3.3] [PP-6]
+- **GIVEN** FX-T3-a sembrado en Compose en perfil de test
+- **WHEN** en Playwright el doctor inicia sesión, abre la ficha de FX-T3-a, elige «Ver caso clínico», revisa los datos críticos faltantes sin abrir ninguna acción de registro, elige «Analizar la evidencia para este caso» en la vista de caso y pulsa «Analizar evidencia» en el panel
+- **THEN** llega a `analysis-result` con la opción visible
+- **AND** en ningún paso aparece un elemento `role="dialog"` o `role="alertdialog"` (los diálogos «Registrar biomarcador», «Completar diagnóstico a mano», «Agregar tratamiento previo» y «Registrar atributo» solo existen si el oncólogo los abre, y en este recorrido no los abre)
+- **AND** ningún botón del recorrido queda deshabilitado por un aviso clínico
+
+### Requirement: Conformidad por forma de la voz propia de recomendación
+El archivo compartido `packages/clinical-language/conformidad/casos.json` MUST incluir, por cada forma de voz propia (condicional, impersonal con «se», imperativo) y por variante de número, género y negación, al menos un caso positivo y uno negativo, cada uno con un `id` de caso; Node y Python MUST dar el mismo resultado y un fallo SHALL nombrar el `id` del caso.
+
+#### Scenario: Las formas en voz propia coinciden en el Nivel A en Node y en Python [US-249 AC-3] [AC-T3.4] [RN-23]
+- **GIVEN** la lista 1.6.0 y los casos positivos de voz propia de `casos.json` («Se recomendaría iniciar trastuzumab», «No se recomendaría suspender», «Se aconseja administrar», «Se aconsejan dos ciclos», «Considere iniciar hormonoterapia», «Consideren iniciar», «Se sugeriría iniciar»)
+- **WHEN** se evalúan con `checkProhibitedTerms` (Vitest) y `check_prohibited_terms` (Pytest) con el Nivel A
+- **THEN** cada caso devuelve exactamente la coincidencia esperada, con el mismo `id` en ambas implementaciones
+
+#### Scenario: Los usos descriptivos de las mismas palabras no coinciden [US-249 AC-3] [US-249 AC-5] [RN-23]
+- **GIVEN** los casos negativos de voz propia de `casos.json` («los autores consideraron iniciar el tratamiento tras la cirugía», «el ensayo considera la recaída como evento», «Opciones descritas en la evidencia»)
+- **WHEN** se evalúan con el Nivel A en Node y en Python
+- **THEN** cada caso devuelve cero coincidencias
+
+#### Scenario: Un caso de conformidad que falla nombra su id [US-249 AC-3] [RN-23]
+- **GIVEN** un caso de `casos.json` cuyo resultado esperado no coincide con el del verificador
+- **WHEN** corre la suite de conformidad
+- **THEN** el fallo nombra el `id` del caso y su grupo, sin depender del orden de los casos

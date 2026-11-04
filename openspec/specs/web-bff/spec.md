@@ -109,3 +109,101 @@ Ante un `5xx` o un fallo de red de `clinical-api`, el Route Handler del checklis
 - **WHEN** el navegador pide el checklist
 - **THEN** recibe un `5xx` con forma `{ error, message }`
 - **AND** el cuerpo no contiene la pila, los detalles internos ni la URL de `clinical-api`
+
+### Requirement: La vista de caso se lee por un Route Handler que reenvía la sesión
+`web` MUST exponer `GET /api/patients/{id}/case` que valida el UUID de la ruta, reenvía solo la cookie de sesión a `GET /platform/patients/{id}/case` de `clinical-api` con el cliente generado y retransmite el `200` y los `4xx` con su cuerpo del contrato, sin caché. Un id que no es UUID MUST responder `404` propio sin llamar a `clinical-api`. MUST NOT llamar a `rag-orchestrator`.
+
+#### Scenario: El CaseView llega al navegador por el mismo origen [US-090 AC-5] [AC-02.1]
+- **GIVEN** una sesión válida y `clinical-api` simulado (MSW) con `case-view-p-caso.json`
+- **WHEN** el navegador pide `GET /api/patients/{id}/case`
+- **THEN** recibe `200` con el mismo cuerpo, válido contra `CaseView`, con `Cache-Control: no-store`, sin `Set-Cookie` de `clinical-api`
+- **AND** `clinical-api` recibe una sola petición con solo la cookie de sesión
+
+#### Scenario: Los 4xx de clinical-api se retransmiten sin reinterpretar [US-090 AC-6]
+- **GIVEN** `clinical-api` responde `401`, `403` o `404` con su cuerpo del contrato
+- **WHEN** el navegador pide la vista de caso
+- **THEN** recibe el mismo estado y cuerpo
+
+#### Scenario: Un id que no es UUID no llega a clinical-api [S5 resp. 13]
+- **GIVEN** la ruta `/api/patients/no-es-uuid/case`
+- **WHEN** el navegador la pide
+- **THEN** recibe `404` con `{ error, message, traceId }` y `clinical-api` recibe cero peticiones
+
+### Requirement: Un fallo de la vista de caso llega saneado al navegador
+Ante un `5xx`, un fallo de red o un timeout de `clinical-api`, el Route Handler de la vista de caso MUST responder `500` propio con `{ error: ERROR_INTERNO, message, traceId }` (código y mensaje fijos, `traceId` de `web`), sin pila, detalles internos, URL de `clinical-api` ni datos parciales, y registrar solo evento, estado, `traceId`, duración y motivo.
+
+#### Scenario: Un 5xx de clinical-api llega saneado [US-090 AC-6] [S5 resp. 13]
+- **GIVEN** `clinical-api` responde `500` con un cuerpo que incluye detalles internos
+- **WHEN** el navegador pide la vista de caso
+- **THEN** recibe `500` con forma `{ error, message, traceId }` y el cuerpo no contiene la pila, los detalles internos ni la URL de `clinical-api`
+
+#### Scenario: clinical-api inalcanzable [S5 resp. 13]
+- **GIVEN** `clinical-api` no responde (fallo de red)
+- **WHEN** el navegador pide la vista de caso
+- **THEN** recibe el mismo `500` saneado y el log registra `motivo=clinical_api_inalcanzable` sin el id del paciente ni contenido clínico
+
+### Requirement: Las correcciones, el histórico y las notas pasan por Route Handlers de web
+`web` MUST exponer Route Handlers bajo `app/api/patients/[id]/` para corregir biomarcadores y notas, leer notas y leer el histórico, que reenvían la sesión a `clinical-api`, verifican `Origin` en las mutaciones antes de contactarlo y retransmiten sus errores sin reinterpretar.
+
+#### Scenario: Una corrección con Origin ajeno no llega a clinical-api [US-253 AC-1] (Decidido (usuario, 2026-11-03): regla vigente de web-bff, `[S5 resp. 13]`)
+- **GIVEN** `clinical-api` simulado con MSW
+- **WHEN** llega `POST /api/patients/{a}/biomarkers/{ki67}/corrections` con `Origin` de otro sitio
+- **THEN** `web` responde `403` y MSW no registra ninguna llamada a `clinical-api`
+
+#### Scenario: Los errores de la corrección se retransmiten tal cual [US-253 AC-3] [US-253 AC-4]
+- **GIVEN** `clinical-api` simulado respondiendo `422` (`error-correccion-fecha-futura.json`), `422 PACIENTE_EGRESADO`, `403` o `409`
+- **WHEN** el navegador envía la corrección por el Route Handler
+- **THEN** recibe el mismo código y el mismo cuerpo, incluido `field` cuando viene
+
+### Requirement: La pregunta de seguimiento se envía por un Route Handler que reenvía la sesión
+`web` MUST exponer `POST /api/evidence-analyses/{analysisId}/follow-ups` como Route Handler (nunca Server Action) que, tras `verificarOrigen()` y el tope del cuerpo, SHALL reenviar con el SDK generado el cuerpo sin reserializar y solo la cookie `oncolens_session` a `clinical-api`, y devolver el mismo status y cuerpo, sin streaming. Un `analysisId` no UUID MUST responder `404` propio sin llamar a `clinical-api`.
+
+#### Scenario: Un doctor autenticado recibe el turno tal como lo respondió clinical-api [US-219 AC-2] [OL-04]
+- **GIVEN** un `POST /api/evidence-analyses/b3d9f2a0-1c3e-4f9a-8b1a-9e2f0c3d9f2a/follow-ups` con `Origin` permitido, la cookie `oncolens_session`, una cookie ajena y el cuerpo de `contracts/examples/follow-up-create.json`, y `clinical-api` simulado con MSW respondiendo `201` con `follow-up-turn.json`
+- **WHEN** el Route Handler procesa el request
+- **THEN** MSW registra un único request a `${CLINICAL_API_URL}/platform/evidence-analyses/b3d9f2a0-1c3e-4f9a-8b1a-9e2f0c3d9f2a/follow-ups` con el cuerpo idéntico y solo la cookie `oncolens_session`
+- **AND** la respuesta es `201` con el cuerpo idéntico, validado contra `FollowUpTurn` con `assertMatchesSpec()`, y sin `Set-Cookie`
+
+#### Scenario: El 409 de límite se retransmite sin reinterpretar [US-219 AC-4]
+- **GIVEN** `clinical-api` simulado respondiendo `409` con `contracts/examples/error-limite-seguimiento.json`
+- **WHEN** el Route Handler procesa un request válido
+- **THEN** devuelve `409` con el mismo cuerpo, validado contra `ErrorLimiteSeguimiento`
+
+#### Scenario: Otro origen se rechaza sin contactar a clinical-api [US-219 AC-2] [SEG-01]
+- **GIVEN** un POST con `Origin: https://otro-origen.test` y MSW que cuenta requests
+- **WHEN** llega a `web`
+- **THEN** la respuesta es `403` `PERMISO_DENEGADO` y el contador de requests a `clinical-api` es cero
+
+#### Scenario: Un analysisId que no es UUID no llega a clinical-api (design D2; Decidido, usuario, 2026-11-03, [S5 resp. 13])
+- **GIVEN** un POST a `/api/evidence-analyses/no-es-uuid/follow-ups` con `Origin` y sesión válidos
+- **WHEN** llega a `web`
+- **THEN** la respuesta es `404` con forma `ErrorNoEncontrado` y el contador de requests a `clinical-api` es cero
+
+#### Scenario: clinical-api inalcanzable da el 502 propio sin URL interna [US-219 AC-4] [TBD-08]
+- **GIVEN** `clinical-api` que no responde dentro de `WEB_UPSTREAM_TIMEOUT_MS`
+- **WHEN** el Route Handler procesa un request válido
+- **THEN** responde `502` con `error = ERROR_SERVICIO_IA` y un `traceId` propio, sin la URL de `clinical-api` ni cuerpo parcial
+
+### Requirement: El registro manual y sus opciones pasan por Route Handlers de web
+`web` MUST exponer `POST /api/patients/{id}/biomarkers`, `POST /api/patients/{id}/diagnoses` y `GET /api/patients/{id}/manual-entry-options`, que reenvían solo la cookie de sesión con el SDK generado, verifican `Origin` en los `POST`, retransmiten `2xx` y `4xx` sin reinterpretar y responden un `500 ERROR_INTERNO` saneado ante `5xx`, red caída o timeout.
+
+#### Scenario: Un registro válido se retransmite con 201 [US-111 AC-1] [AC-04.1]
+- **GIVEN** una sesión `doctor` y `clinical-api` (MSW desde `biomarker-manual.json`) que responde `201`
+- **WHEN** el navegador envía `POST /api/patients/{id}/biomarkers` con `Origin` de `web`
+- **THEN** `web` reenvía el cuerpo sin reserializar con la cookie de sesión y responde `201` con el mismo `Biomarker`
+
+#### Scenario: Un 422 con field llega intacto al navegador [US-111 AC-4]
+- **WHEN** `clinical-api` responde `422` con `error-valor-fuera-de-catalogo-campo.json`
+- **THEN** `web` responde `422` con el mismo cuerpo, incluido `field`
+
+#### Scenario: Origin ajeno se rechaza sin contactar a clinical-api [US-111 AC-4] [S5 resp. 13]
+- **WHEN** llega `POST /api/patients/{id}/diagnoses` con un `Origin` distinto del de `web`
+- **THEN** responde `403` y no se hace ninguna petición a `clinical-api`
+
+#### Scenario: Un fallo de clinical-api llega saneado [US-111 AC-4] [S5 resp. 13]
+- **WHEN** `clinical-api` responde `500` o no responde al pedir las opciones o al guardar
+- **THEN** `web` responde `500` con `error = ERROR_INTERNO`, un `traceId` propio y sin detalle del proveedor, y el log del BFF no contiene el cuerpo ni el id del paciente
+
+#### Scenario: Un id que no es UUID no llega a clinical-api [US-111 AC-1] [S5 resp. 13]
+- **WHEN** se pide `GET /api/patients/no-es-uuid/manual-entry-options`
+- **THEN** `web` responde `404` propio sin contactar a `clinical-api`

@@ -383,12 +383,12 @@ seguir visible en la región `role="note"`.
 - **AND** se lee el aviso «Generado por IA; requiere validación clínica independiente por el oncólogo tratante.» en la región `role="note"`
 
 ### Requirement: Aviso no bloqueante de datos críticos faltantes antes de analizar
-Antes de cada análisis, `web` MUST leer el checklist por `GET /api/patients/{id}/completeness` y, si hay ítems `faltante` y `cancerTypeEnabled` es `true`, mostrar sobre «Analizar evidencia» un bloque `role="status"` informativo con la lista de faltantes por etiqueta del catálogo y un enlace «Registrar ‹etiqueta› en la ficha» por ítem. El bloque MUST NOT enviar ningún análisis ni deshabilitar el botón (RN-26) y MUST NOT usar términos prohibidos (RN-23).
+Antes de cada análisis, `web` MUST leer el checklist por `GET /api/patients/{id}/completeness` y, si hay ítems `faltante` y `cancerTypeEnabled` es `true`, mostrar sobre «Analizar evidencia» un bloque `role="status"` informativo con la lista de faltantes por etiqueta del catálogo y un enlace «Ir a ‹etiqueta› en el caso clínico» por ítem. El bloque MUST NOT enviar ningún análisis ni deshabilitar el botón (RN-26) y MUST NOT usar términos prohibidos (RN-23).
 
 #### Scenario: Se avisan los seis faltantes de F-M2 antes de analizar [US-005 AC-1] [AC-04.2] [FR-23] [docs/ux/S4 S4-03]
 - **GIVEN** F-M2 (FX-04-b, `test-1.0.0`) con seis faltantes y `GET …/completeness` simulado desde `contracts/examples/`
 - **WHEN** el oncólogo abre `/pacientes/{id}/analisis`
-- **THEN** antes del botón aparece «⚠ Faltan 6 datos críticos para este tipo de cáncer» con `role="status"` y una lista `ul` de 6 etiquetas del catálogo, cada una con «Registrar ‹etiqueta› en la ficha»
+- **THEN** antes del botón aparece «⚠ Faltan 6 datos críticos para este tipo de cáncer» con `role="status"` y una lista `ul` de 6 etiquetas del catálogo, cada una con «Ir a ‹etiqueta› en el caso clínico» [US-004] [docs/ux/S5 S5-02]
 - **AND** se lee «El análisis puede hacerse igual; los criterios de aplicabilidad que dependan de esos datos saldrán como «Desconocido» y el orden por aplicabilidad puede cambiar al registrarlos.»
 - **AND** no se envió ningún `POST /api/evidence-analyses`
 - **AND** el texto no contiene términos de la lista prohibida de RN-23
@@ -400,20 +400,6 @@ Antes de cada análisis, `web` MUST leer el checklist por `GET /api/patients/{id
 - **GIVEN** el bloque del escenario anterior
 - **WHEN** el oncólogo pulsa «Analizar evidencia» (habilitado)
 - **THEN** el navegador envía exactamente un `POST /api/evidence-analyses` con `continueWithWarning = true`
-
-### Requirement: El enlace del faltante lleva a la sección existente de la ficha
-Cada enlace «Registrar ‹etiqueta› en la ficha» MUST navegar a `/pacientes/{id}#diagnostico` si `destination.entity` es `Diagnosis`, a `/pacientes/{id}#biomarcadores` si es `Biomarker`, y a `/pacientes/{id}` (encabezado principal) para cualquier otro destino; MUST NOT enviar petición de análisis ni crear secciones nuevas.
-
-#### Scenario: Ki-67 va a biomarcadores y grado a diagnóstico [US-005 AC-3] [AC-04.2] [FR-23] [S4 resp. 14]
-- **GIVEN** el bloque con los faltantes Ki-67 (`Biomarker`) y grado (`Diagnosis`)
-- **WHEN** el oncólogo pulsa «Registrar Ki-67 en la ficha» y, en otra prueba, «Registrar grado en la ficha»
-- **THEN** navega a `/pacientes/{id}#biomarcadores` y a `/pacientes/{id}#diagnostico`, respectivamente, con el foco en el encabezado de esa sección
-- **AND** no se envía ninguna petición de análisis
-
-#### Scenario: Un destino sin sección propia enlaza al encabezado principal [US-005 AC-3] [S4 resp. 14] (asumido)
-- **GIVEN** un faltante con `destination.entity` `ClinicalAttribute` o `PriorTreatment`
-- **WHEN** se pulsa su enlace
-- **THEN** navega a `/pacientes/{id}` sin ancla de sección y el foco queda en el encabezado principal de la ficha
 
 ### Requirement: Sin faltantes no hay aviso y el análisis no lleva la bandera
 Sin ítems `faltante`, `web` MUST NOT mostrar el bloque y «Analizar evidencia» MUST enviar `POST /api/evidence-analyses` con `continueWithWarning = false`.
@@ -441,13 +427,13 @@ Con `cancerTypeEnabled = false`, el panel MUST NOT mostrar el bloque de faltante
 - **THEN** no aparece el bloque de faltantes y se ve el estado de «tipo no habilitado»
 
 ### Requirement: Aviso operable con teclado y asociado al botón
-El bloque MUST asociarse al botón «Analizar evidencia» con `aria-describedby` y cada enlace «Registrar … en la ficha» MUST ser operable con teclado.
+El bloque MUST asociarse al botón «Analizar evidencia» con `aria-describedby` y cada enlace «Ir a … en el caso clínico» MUST ser operable con teclado.
 
 #### Scenario: Teclado y descripción accesible [US-005 AC-7] [NFR-12]
 - **GIVEN** el bloque del primer escenario
 - **WHEN** se navega con Tab y se activa un enlace con Enter
 - **THEN** el botón «Analizar evidencia» tiene `aria-describedby` apuntando al resumen y cada enlace recibe el foco en orden
-- **AND** al llegar a la ficha el encabezado de destino recibe el foco (ver `patients-identity`)
+- **AND** al llegar a la vista de caso el encabezado «Datos críticos» (`h2#datos-criticos`, `tabindex="-1"`) recibe el foco [US-004] [docs/ux/S5 S5-02]
 
 Regresión [RN-26] activa desde S4: ningún estado del aviso deshabilita «Analizar evidencia» (verificada por US-071). Regresión [RN-23]: textos del aviso fuera de la lista prohibida (US-068).
 
@@ -710,3 +696,141 @@ Con `analysisBasis.sourcesConsulted.queryRewritten = true` y `status = con_evide
 - **GIVEN** la respuesta de `contracts/examples/con-evidencia-s1.json` (`queryRewritten = false`)
 - **WHEN** se renderiza el panel
 - **THEN** no se lee «La búsqueda se repitió con una reformulación»
+
+### Requirement: El enlace del faltante lleva a los datos críticos de la vista de caso
+Cada enlace «Ir a ‹etiqueta› en el caso clínico» MUST navegar a `/pacientes/{id}/caso#datos-criticos`, con el foco en el encabezado de la columna «Datos críticos», cualquiera que sea su `destination.entity`; MUST NOT enviar petición de análisis ni abrir por sí solo un formulario de registro.
+
+#### Scenario: Ki-67 y grado llevan a la columna de la vista de caso [US-005 AC-3] [US-004] [AC-04.2] [FR-23] [docs/ux/S5 S5-02]
+- **GIVEN** el bloque con los faltantes Ki-67 (`Biomarker`) y grado (`Diagnosis`)
+- **WHEN** el oncólogo pulsa «Ir a Ki-67 en el caso clínico» y, en otra prueba, «Ir a Grado en el caso clínico»
+- **THEN** navega a `/pacientes/{id}/caso#datos-criticos` con el foco en el encabezado «Datos críticos»
+- **AND** no se envía ninguna petición de análisis
+
+#### Scenario: Un destino de atributo o tratamiento lleva al mismo lugar [US-005 AC-3] [US-004 AC-2] [S5 resp. 4]
+- **GIVEN** un faltante con `destination.entity` `ClinicalAttribute` o `PriorTreatment`
+- **WHEN** se pulsa su enlace
+- **THEN** navega a `/pacientes/{id}/caso#datos-criticos`, donde su fila ofrece la acción manual de US-094
+
+### Requirement: El panel valida y envía la pregunta normalizada
+El panel MUST medir la longitud de la pregunta y enviarla a `POST /api/evidence-analyses` después de normalizarla con la misma regla que `clinical-api` (Unicode NFC, espacios colapsados y recortados), usando el esquema compartido; el campo SHALL conservar el texto tal como lo escribió o pegó el oncólogo. La validación del cliente es de UX: `clinical-api` vuelve a normalizar y validar (OUT-05).
+
+#### Scenario: Una pregunta pegada en NFD se envía en NFC [US-250 AC-1] [OUT-05]
+- **GIVEN** el panel del paciente semilla (a) y `POST /api/evidence-analyses` simulado con MSW desde `contracts/examples/` que registra el cuerpo
+- **WHEN** el oncólogo pega la pregunta de la Demo 4 en NFD y la envía
+- **THEN** el cuerpo registrado tiene la `query` en NFC, idéntica byte a byte a la de la misma pregunta escrita en NFC
+- **AND** el campo sigue mostrando el texto pegado
+
+#### Scenario: Una pregunta cuyo NFD supera el máximo y cuyo NFC no se envía sin error [US-250 AC-3] [OUT-05]
+- **GIVEN** el mismo panel y una pregunta de 2000 caracteres en NFC cuya forma NFD supera 2000 caracteres
+- **WHEN** el oncólogo la pega en NFD y la envía
+- **THEN** no aparece "La pregunta admite como máximo 2000 caracteres." y sale un `POST /api/evidence-analyses` con la pregunta en NFC de 2000 caracteres
+
+### Requirement: Hilo de seguimiento bajo un análisis con evidencia
+Bajo un resultado `con_evidencia`, después de la Base y antes del feedback, el panel MUST mostrar el organismo `FollowUpThread` con el encabezado «Preguntas de seguimiento sobre este análisis», el recuadro «Contexto fijo de esta conversación» con el texto de S5-04 y el contador «n de N preguntas usadas», donde n es el `turnNumber` del último turno (0 sin turnos) y N es `analysisBasis.maxFollowUps` (RN-22). Un resultado sin evidencia MUST NOT mostrar el hilo.
+
+#### Scenario: El análisis con evidencia muestra encabezado, contexto fijo y contador [US-219 AC-1] [Pre-S1 resp. 14] [FR-31]
+- **GIVEN** el panel con la respuesta `con-evidencia-s4-tres-opciones.json` (`analysisBasis.maxFollowUps = 10`) servida por MSW desde `contracts/examples/`
+- **WHEN** el oncólogo ve el resultado
+- **THEN** ve «Preguntas de seguimiento sobre este análisis» después de la Base del análisis
+- **AND** ve el recuadro «Contexto fijo de esta conversación» con «Los hallazgos del análisis son contexto, no evidencia.»
+- **AND** ve «0 de 10 preguntas usadas»
+
+#### Scenario: El contador sigue al turnNumber devuelto por el servidor [US-219 AC-1] [RN-22]
+- **GIVEN** el hilo anterior y MSW respondiendo `201` con `follow-up-turn.json` modificado a `turnNumber = 2`
+- **WHEN** el oncólogo envía una pregunta
+- **THEN** el contador muestra «2 de 10 preguntas usadas»
+
+#### Scenario: Un análisis sin evidencia no muestra el hilo [US-219 AC-1] (422 ANALISIS_SIN_EVIDENCIA de US-218; Decidido, usuario, 2026-11-03, [S5 resp. 13])
+- **GIVEN** el panel con una respuesta `status = sin_evidencia`
+- **WHEN** se muestra el resultado
+- **THEN** no aparece «Preguntas de seguimiento sobre este análisis»
+
+#### Scenario: Un análisis histórico sin maxFollowUps muestra el contador sin total [US-219 AC-1] (design D1; Decidido, usuario, 2026-11-03, [S5 resp. 10] [S5 resp. 13])
+- **GIVEN** una respuesta `con_evidencia` cuya `analysisBasis` no trae `maxFollowUps`
+- **WHEN** se muestra el hilo
+- **THEN** el contador dice «0 preguntas usadas» y no contiene un número total fijado en el código
+
+### Requirement: Cada turno respondido muestra afirmaciones citadas, fuentes nuevas y el aviso de IA
+Un turno `con_evidencia` MUST mostrar la pregunta devuelta, cada afirmación de `answer` con sus chips de cita y «ver fragmento» (metadatos del catálogo o «No disponible»), «nueva en el seguimiento» en cada cita con `isNewSource = true`, la nota de citas de S5-04 (texto corregido en el Gate 1) y la línea «Base de esta respuesta» de S5-04. Todo turno MUST mostrar el `disclaimer` recibido y la etiqueta «Uso académico/investigación» de configuración, sin texto propio del aviso RN-19.
+
+#### Scenario: Un turno con evidencia trae citas, marca de fuente nueva y aviso [US-219 AC-2] [RN-01] [RN-19] [RN-25]
+- **GIVEN** el hilo de un análisis `con_evidencia` y MSW respondiendo `201` con `contracts/examples/follow-up-turn.json`
+- **WHEN** el oncólogo envía «¿La evidencia describe diferencias según el estado menopáusico?»
+- **THEN** la afirmación del turno se muestra con dos chips de cita y cada uno abre «ver fragmento» con su `chunkTextSnapshot`
+- **AND** solo la cita `chunk_90412` lleva «nueva en el seguimiento»
+- **AND** la cita sin `authors` muestra «No disponible» en autoría
+- **AND** el turno muestra «Cada afirmación cita un fragmento del corpus recuperado para esta pregunta o enlaza a un dato del paciente. Fuente, año y población: del catálogo, o «No disponible».»
+- **AND** el turno muestra el `disclaimer` del ejemplo y «Uso académico/investigación»
+
+#### Scenario: El aviso de cada turno es el texto de configuración recibido [US-219 AC-2] [RN-19] [PRD E-11]
+- **GIVEN** MSW respondiendo dos turnos con `disclaimer` = «Texto de aviso configurado en la prueba.»
+- **WHEN** se muestran los dos turnos
+- **THEN** cada turno muestra «Texto de aviso configurado en la prueba.» y ninguno muestra el literal por defecto de RN-19
+
+#### Scenario: El texto generado se pinta como texto, nunca como HTML [US-219 AC-2] [RN-23] (Seguridad web; Decidido, usuario, 2026-11-03, [S5 resp. 13])
+- **GIVEN** un turno cuya afirmación contiene `<img src=x onerror=alert(1)>`
+- **WHEN** se muestra
+- **THEN** el texto aparece literal y el DOM no contiene un elemento `img` dentro del turno
+
+Regresión [RN-23] (términos prescriptivos filtrados en Backend 2) activa desde S2 (US-068): la UI no añade texto prescriptivo propio.
+
+### Requirement: Mientras se procesa una pregunta de seguimiento solo se muestra progreso
+Mientras el POST del seguimiento está en curso, el hilo MUST mostrar solo los pasos de progreso de S5-04 («Buscando evidencia…», «Validando citas…») en un `role="status"`, con el botón «Preguntar» deshabilitado, y MUST NOT mostrar ningún fragmento del turno nuevo hasta recibir la respuesta completa (TBD-08). Una sola petición SHALL estar en curso a la vez.
+
+#### Scenario: La respuesta aparece completa solo al llegar validada [US-219 AC-3] [TBD-08] [RN-06]
+- **GIVEN** MSW que retiene la respuesta `201` de `follow-up-turn.json` hasta que el test la libera
+- **WHEN** el oncólogo envía una pregunta
+- **THEN** antes de liberar se ven «Buscando evidencia…» y «Validando citas…», el botón «Preguntar» está deshabilitado y no hay texto de `answer`
+- **AND** tras liberar, el turno aparece completo en un único render y el progreso desaparece
+
+#### Scenario: Un doble envío produce una sola petición [US-219 AC-3]
+- **GIVEN** MSW que cuenta las peticiones al Route Handler y retiene la respuesta
+- **WHEN** el oncólogo pulsa «Preguntar» dos veces seguidas
+- **THEN** MSW registra exactamente una petición
+
+### Requirement: Límite, sin evidencia y fuera de contexto se muestran sin errores técnicos
+Ante `409 LIMITE_SEGUIMIENTO`, un turno `sin_evidencia` o un turno `fuera_de_contexto`, el hilo MUST mostrar el texto literal de S5-04 de cada estado y la acción «Nuevo análisis», sin código HTTP, sin `traceId` y sin mensaje técnico. Tras el `409` el campo SHALL quedar deshabilitado. El número del límite MUST salir de `analysisBasis.maxFollowUps`.
+
+#### Scenario: El 409 muestra el límite y deshabilita el campo [US-219 AC-4] [RN-22]
+- **GIVEN** el hilo con `maxFollowUps = 10` y MSW respondiendo `409` con `contracts/examples/error-limite-seguimiento.json`
+- **WHEN** el oncólogo envía una pregunta
+- **THEN** ve «Se alcanzó el límite de N preguntas de este análisis. Una pregunta distinta puede formularse en un análisis nuevo.» (N = `analysisBasis.maxFollowUps`, 10 en el ejemplo) y el botón «Nuevo análisis»
+- **AND** el campo de pregunta y «Preguntar» quedan deshabilitados
+- **AND** la pantalla no muestra `409`, `LIMITE_SEGUIMIENTO` ni el `traceId` del ejemplo
+
+#### Scenario: Un turno sin evidencia muestra su texto y la acción [US-219 AC-4] [RN-02]
+- **GIVEN** MSW respondiendo `201` con `contracts/examples/follow-up-sin-evidencia.json` (de `l1d-268`)
+- **WHEN** el oncólogo envía una pregunta
+- **THEN** el turno muestra «No se encontró evidencia suficientemente relacionada con esta pregunta en el corpus. La pregunta puede replantearse o formularse en un análisis nuevo.» y «Nuevo análisis», sin citas, con el aviso de IA
+
+#### Scenario: Un turno fuera de contexto muestra su texto y la acción [US-219 AC-4]
+- **GIVEN** MSW respondiendo `201` con `contracts/examples/follow-up-fuera-de-contexto.json`
+- **WHEN** el oncólogo envía una pregunta
+- **THEN** el turno muestra «La pregunta no se refiere a los hallazgos de este análisis; no se generó respuesta. Otro tema o paciente corresponde a un análisis nuevo.» y «Nuevo análisis», sin citas, con el aviso de IA
+
+#### Scenario: Nuevo análisis lleva el foco al campo del panel [US-219 AC-4] (design D6; Decidido, usuario, 2026-11-03, [S5 resp. 13])
+- **GIVEN** un turno `fuera_de_contexto` en el hilo
+- **WHEN** el oncólogo activa «Nuevo análisis»
+- **THEN** el foco pasa al campo de pregunta del panel y el análisis actual sigue visible
+
+#### Scenario: Un fallo del servicio no muestra resultado parcial [US-219 AC-4] [TBD-08]
+- **GIVEN** MSW respondiendo `502` con `contracts/examples/error-servicio-ia.json`
+- **WHEN** el oncólogo envía una pregunta
+- **THEN** el hilo muestra el mensaje genérico de fallo del panel con su código de traza y no añade ningún turno
+
+Regresión [RN-15] activa desde S6 (DEC-22): `403` por opt-out en el seguimiento. Regresión [RN-26] (los avisos clínicos no bloquean) activa desde S5 (US-071).
+
+### Requirement: Hilo de seguimiento accesible
+El historial de turnos MUST estar en una región con `aria-live="polite"`, el campo de pregunta MUST tener un `<label>` visible asociado, y el hilo SHALL ser operable solo con teclado (Tab hasta el campo, Enter envía, chips y «Nuevo análisis» alcanzables). MUST pasar `visual-check` a 375 y 1280 px.
+
+#### Scenario: Región viva, etiqueta visible y teclado [US-219 AC-5]
+- **GIVEN** el hilo de un análisis `con_evidencia`
+- **WHEN** se inspecciona con Testing Library
+- **THEN** el historial está dentro de un elemento con `aria-live="polite"`
+- **AND** `getByLabelText` encuentra el campo de pregunta por el texto de su `<label>` visible
+- **AND** con `userEvent.tab()` se llega al campo, se escribe y `Enter` envía la pregunta
+
+#### Scenario: El hilo pasa el loop visual a 375 y 1280 px [US-219 AC-5]
+- **GIVEN** el Compose local con seed sintético y `LLM_PROVIDER=fake`
+- **WHEN** `visual-check` recorre los estados del hilo (vacío, enviando, turno con citas, sin evidencia, fuera de contexto, límite)
+- **THEN** no hay errores de consola ni violaciones de CSP, la red solo usa `/api/*` del mismo origen sin la pregunta en la URL, y las capturas a 375 y 1280 px no tienen desbordamiento horizontal

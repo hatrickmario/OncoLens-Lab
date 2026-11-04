@@ -202,7 +202,7 @@ Cada valor del diagnóstico y de los biomarcadores en la ficha MUST mostrar su o
 - **THEN** esa fila muestra "Registro manual" y "Por revisar" como texto, y el resto de filas no cambia
 
 ### Requirement: Contador de datos pendientes de revisión
-`pendingReviewCount` MUST contar las filas clínicas del paciente con `review_status = requiere_revision` y MUST NOT contar `auto_aceptado`, `verificado`, `corregido`, `rechazado` ni `reemplazado` (decidido en el refinamiento del S2, P-4). Si es mayor que 0, la ficha SHALL mostrar el aviso informativo "[n] datos por revisar · no bloquean el análisis" y la acción "Analizar evidencia" sigue disponible (RN-26).
+`pendingReviewCount` MUST contar, una sola vez cada una, las filas clínicas vigentes con `review_status = requiere_revision` y los `ClinicalEvent` vigentes con `date_precision = incierta` aunque estén `verificado` (US-088 AC-3). MUST NOT contar los demás estados (P-4). Si es mayor que 0, la ficha SHALL mostrar "[n] datos por revisar · no bloquean el análisis" y "Analizar evidencia" sigue disponible (RN-26).
 
 #### Scenario: Con todo verificado el contador es 0 y sube a 1 con un biomarcador por revisar [US-051 AC-6] [FR-04] [S2 resp. 5]
 - **GIVEN** el paciente semilla (a) con todos sus datos `verificado`
@@ -225,6 +225,16 @@ Cada valor del diagnóstico y de los biomarcadores en la ficha MUST mostrar su o
 - **GIVEN** un `PatientSummary` con dos valores mostrados en `reviewStatus = auto_aceptado`
 - **WHEN** se renderiza la ficha
 - **THEN** se muestra el aviso informativo "2 datos sin verificar · no bloquean el análisis" y "Analizar evidencia" sigue habilitado
+
+#### Scenario: Un evento sin fecha confiable cuenta como pendiente aunque esté verificado [US-088 AC-3] [AC-02.2] [HU-15]
+- **GIVEN** P-CASO (FX-02b-a), cuya toxicidad tiene `date_precision = incierta` y `review_status = requiere_revision`
+- **WHEN** se solicita la ficha, el test cambia la revisión de esa toxicidad a `verificado` y se vuelve a solicitar
+- **THEN** la toxicidad cuenta exactamente una vez en `pendingReviewCount` en las dos respuestas, y el contador no baja tras el cambio a `verificado`
+
+#### Scenario: Un evento sin fecha confiable rechazado no cuenta [US-088 AC-3] [RN-07] [S5 resp. 13]
+- **GIVEN** un paciente sintético con un único `ClinicalEvent` de `date_precision = incierta` en `rechazado` y el resto `verificado`
+- **WHEN** se solicita la ficha
+- **THEN** `pendingReviewCount = 0`
 
 ### Requirement: Vista del administrador en la ficha
 `GET /platform/patients/{patientId}` con una sesión con `patients:lookup` y sin `clinical:read` MUST responder `200` con `PatientAdminSummary` (vista `default` de `x-view-by-permission`), sin datos clínicos ni nombre; un rol sin ninguno de los dos permisos MUST recibir `403`. El doctor MUST leer la ficha de cualquier paciente sin consultar `clinical.care_team_member` (P-02).
