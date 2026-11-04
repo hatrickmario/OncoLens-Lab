@@ -327,7 +327,7 @@ altas por esa única cadena; no se relaja nada más.
 
 > **ARR-11:** `build-test` se partió en `build-test-node` y `build-test-rag`, y `torch` y `transformers` salieron de la CI
 > (`requirements-export.txt`), así que esta medición queda superada. La medición de ARR-11 (3 PR de código y 3 de
-> documentación frente a ~22 min, CI de `main` 41581630153) se anotará aquí tras el merge (tarea 6.4 del change).
+> documentación frente a ~22 min, CI de `main` 41581630153) se anotó el 2026-11-04 (tarea 6.4): CI de PR de código 12 min 24 s (#316), 11 min 19 s (#320) y 13 min 52 s (#322), media 12 min 32 s (meta del design ~10 min: no alcanzada); PR de documentación 40 s (#311), 1 min 9 s (#319) y 40 s (#321) (meta ~2 min: cumplida). Medido como duración del run del workflow CI hasta `ci-ok`, con cola.
 
 Decidido (usuario, 2026-10-20): tras el merge del PR #41 se **mide la duración del job `build-test`** (se compara con la de `main` antes del merge y se anota en el PR). Si la instalación de `torch` domina el tiempo, se pasa a la rueda CPU solo con `--index-url` en esa instalación (versión exacta y sin cambiar el resto de dependencias). Sin umbral nuevo ni cambio de la CI hasta tener la medición.
 
