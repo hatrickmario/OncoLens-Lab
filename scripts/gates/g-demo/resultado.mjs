@@ -8,6 +8,22 @@ import { textoDeMeta } from './metricas.mjs';
 
 export const MODOS = ['fingido', 'real'];
 
+export const RESULTADOS = {
+  SUPERADO: 'superado',
+  NO_SUPERADO: 'no_superado',
+  REGRESION_FINGIDA: 'regresion_fingida',
+};
+
+/** Esqueleto (L1D-248). */
+export function rutaDelRegistro(_resultado, _modo, _fecha) {
+  throw new Error('no implementado');
+}
+
+/** Esqueleto (L1D-248). */
+export function codigoDeSalida(_resultado) {
+  throw new Error('no implementado');
+}
+
 const TITULO_SUPERADO = 'G-Demo superado';
 const TITULO_REGRESION =
   'Regresión del recorrido en verde (modo fingido); G-Demo se declara solo en modo real';

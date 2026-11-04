@@ -11,6 +11,14 @@ export const ORIGEN_META_FIJA = 'metricas.json (invariante del gate)';
 /** La configuración de `evaluate` que el gate acepta (`eval/configs/s5*.yaml`). */
 export const PREFIJO_CONFIGURACION_DEL_GATE = 's5';
 
+/** Esqueleto (L1D-248): el commit feat los usa en todas las comprobaciones. */
+export const ESTADOS = {
+  EN_META: 'en_meta',
+  FUERA_DE_META: 'fuera_de_meta',
+  NO_MEDIDA: 'no_medida',
+  INSUMO_ADR42: 'insumo_adr42',
+};
+
 /** Metas por clave, tal como las declara el YAML (`minimo` o `maximo`). */
 export function cargarMetas(textoYaml) {
   const documento = parse(textoYaml);
