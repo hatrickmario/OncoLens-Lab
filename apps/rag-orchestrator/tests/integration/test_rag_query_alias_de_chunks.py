@@ -50,8 +50,9 @@ def test_rag_query_entrega_al_runtime_el_esquema_con_el_patron_de_alias():
     _, llm, _ = _consultar("LLM-OK")
 
     (esquema,) = llm.esquemas
-    campo = esquema["$defs"]["_AfirmacionCruda"]["properties"]["citations"]
-    assert campo["items"]["pattern"] == PATRON_DE_ALIAS
+    for afirmacion in ("_AfirmacionCentral", "_AfirmacionAdicional"):
+        campo = esquema["$defs"][afirmacion]["properties"]["citations"]
+        assert campo["items"]["pattern"] == PATRON_DE_ALIAS
 
 
 @pytest.mark.ac("US-236", 2)

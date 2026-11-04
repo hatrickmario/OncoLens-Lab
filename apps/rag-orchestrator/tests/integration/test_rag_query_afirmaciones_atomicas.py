@@ -57,6 +57,18 @@ def test_rag_query_afirmaciones_atomicas_con_soporte_conserva_opcion_con_marco()
     assert cuerpo["omittedClaims"] == 0 and cuerpo["discardedOptions"] == []
 
 
+@pytest.mark.ac("D5-06", 2)
+def test_rag_query_compone_la_misma_opcion_cuando_el_llm_entrega_la_afirmacion_central_aparte():
+    """La forma del esquema del runtime (``main_claim`` + ``other_claims``) da la misma opción que la lista plana."""
+    respuesta, nli, _ = _consultar("LLM-ATOM-ESTRUCTURADA")
+
+    assert respuesta.status_code == 200
+    (opcion,) = respuesta.json()["evidenceOptions"]
+    assert opcion["rationale"] == MARCO + PRINCIPAL
+    assert opcion["details"] == [MARCO + SECUNDARIA, MARCO + SALVEDAD]
+    assert [p.hipotesis for p in nli.pares_recibidos] == [PRINCIPAL, SECUNDARIA, SALVEDAD]
+
+
 @pytest.mark.ac("US-245", 2)
 def test_rag_query_omite_la_secundaria_sin_soporte_y_conserva_la_opcion():
     nli = NliFalso(resultados={SECUNDARIA: NEUTRAL}, por_defecto=IMPLICA)
