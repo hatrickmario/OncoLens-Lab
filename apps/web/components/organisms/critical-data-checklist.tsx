@@ -44,7 +44,7 @@ function CuerpoDelChecklist({
             key={item.item}
             item={item}
             pacienteId={pacienteId}
-            conAcciones={!egresado}
+            egresado={egresado}
             alGuardar={alGuardar}
           />
         ))}

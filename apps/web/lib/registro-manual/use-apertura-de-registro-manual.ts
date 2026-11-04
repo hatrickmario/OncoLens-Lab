@@ -29,6 +29,8 @@ export interface ConfiguracionDeApertura {
   pagina: PaginaDeRegistro;
   entidad: Entidad;
   item: string | undefined;
+  /** Paciente egresado (RN-17): `?item=` no abre ningún formulario. */
+  egresado: boolean;
   /** Id del encabezado de la sección, a donde vuelve el foco si abrió la URL. */
   idDelEncabezado: AnclaDeFicha | 'caso-series';
 }
@@ -40,7 +42,7 @@ export interface ConfiguracionDeApertura {
 export function useAperturaDeRegistroManual(
   config: ConfiguracionDeApertura,
 ): AperturaDeRegistroManual {
-  const { pacienteId, pagina, entidad, item, idDelEncabezado } = config;
+  const { pacienteId, pagina, entidad, item, idDelEncabezado, egresado } = config;
   const router = useRouter();
   const [abierto, setAbierto] = useState(false);
   const retornoDeFoco = useRef<HTMLElement | null>(null);
@@ -51,7 +53,7 @@ export function useAperturaDeRegistroManual(
     item !== undefined && lectura?.tipo === 'ok'
       ? resolverItem(lectura.catalogoDeRegistro, item)
       : null;
-  const deLaUrl = resuelto?.entidad === entidad ? resuelto : null;
+  const deLaUrl = !egresado && resuelto?.entidad === entidad ? resuelto : null;
 
   useEffect(() => {
     if (item === undefined) claveAbierta.current = undefined;

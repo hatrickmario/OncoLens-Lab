@@ -16,11 +16,13 @@ export function AccionDeFaltante({
   faltante,
   etiqueta,
   pacienteId,
+  egresado,
   alGuardar,
 }: {
   faltante: AccionManual;
   etiqueta: string;
   pacienteId: string;
+  egresado: boolean;
   /** Tras el `201` de un diálogo: releer el checklist y recargar la vista (D5). */
   alGuardar: () => void;
 }) {
@@ -30,8 +32,7 @@ export function AccionDeFaltante({
       {texto} <span className="sr-only">{etiqueta}</span>
     </>
   );
-  // El paciente egresado no llega aquí: `FilaDeDatoCritico` no ofrece acciones de registro (RN-17).
-  const registro = { pacienteId, egresado: false, alGuardar };
+  const registro = { pacienteId, egresado, alGuardar };
   switch (faltante.tipo) {
     case 'biomarcador':
       return (

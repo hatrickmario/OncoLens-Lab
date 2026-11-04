@@ -52,12 +52,13 @@ export function crearCasoUiSimulado() {
   };
 }
 
-export const montarVistaDeCaso = () => render(<VistaDeCaso patientId={ID_DEL_CASO} hoy={HOY} />);
+export const montarVistaDeCaso = () =>
+  render(<VistaDeCaso patientId={ID_DEL_CASO} hoy={HOY} egresado={false} />);
 
 /** La página completa sin su barra de paciente: plantilla con la acción de analizar y la vista de caso. */
 export const montarPaginaDeCaso = () =>
   render(
     <CaseViewTemplate patientId={ID_DEL_CASO}>
-      <VistaDeCaso patientId={ID_DEL_CASO} hoy={HOY} />
+      <VistaDeCaso patientId={ID_DEL_CASO} hoy={HOY} egresado={false} />
     </CaseViewTemplate>,
   );

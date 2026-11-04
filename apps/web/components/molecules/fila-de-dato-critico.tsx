@@ -10,17 +10,17 @@ import { AccionDeFaltante } from '../organisms/accion-de-faltante';
 export function FilaDeDatoCritico({
   item,
   pacienteId,
-  conAcciones,
+  egresado,
   alGuardar,
 }: {
   item: CompletenessItem;
   pacienteId: string;
-  /** Falso con el paciente egresado (RN-17): no se ofrece ninguna acción de registro. */
-  conAcciones: boolean;
+  /** Paciente egresado (RN-17): no se ofrece ninguna acción de registro. */
+  egresado: boolean;
   alGuardar: () => void;
 }) {
   const { simbolo, texto } = presentarEstado(item.status);
-  const faltante = conAcciones && item.status === 'faltante' ? accionManualDe(item) : null;
+  const faltante = !egresado && item.status === 'faltante' ? accionManualDe(item) : null;
   return (
     <li className="border-border flex flex-wrap items-baseline gap-x-2 border-b py-2 last:border-b-0">
       <span aria-hidden="true">{simbolo}</span>
@@ -36,6 +36,7 @@ export function FilaDeDatoCritico({
           faltante={faltante}
           etiqueta={item.label}
           pacienteId={pacienteId}
+          egresado={egresado}
           alGuardar={alGuardar}
         />
       )}

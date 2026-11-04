@@ -15,13 +15,13 @@ import { SeccionesDelCaso } from './secciones-del-caso';
 export function VistaDeCaso({
   patientId,
   hoy,
-  egresado = false,
+  egresado,
   item,
 }: {
   patientId: string;
   hoy: string;
   /** Paciente egresado (RN-17): los registros manuales se deshabilitan. */
-  egresado?: boolean;
+  egresado: boolean;
   /** Clave del catálogo de `?item=` (US-111): abre el formulario de su entidad. */
   item?: string;
 }) {

@@ -146,7 +146,7 @@ export function crearBffDeFormulariosSimulado() {
 }
 
 export const montarCasoConFormularios = (item?: string) =>
-  render(<VistaDeCaso patientId={ID_DEL_CASO} hoy={HOY} item={item} />);
+  render(<VistaDeCaso patientId={ID_DEL_CASO} hoy={HOY} item={item} egresado={false} />);
 
 /** Los ejemplos del contrato son JSON sin literales de unión: se afirma el tipo del contrato al montar. */
 export const montarFichaConFormularios = (ficha: object = fichaDelDoctor, item?: string) =>

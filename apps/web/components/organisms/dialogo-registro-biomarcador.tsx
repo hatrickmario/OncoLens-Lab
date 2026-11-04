@@ -38,6 +38,7 @@ export function DialogoRegistroBiomarcador({
     entidad: 'Biomarker',
     item,
     idDelEncabezado,
+    egresado,
   });
   const termino = apertura.deLaUrl?.entidad === 'Biomarker' ? apertura.deLaUrl.termino : undefined;
   return (

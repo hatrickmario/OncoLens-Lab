@@ -42,6 +42,7 @@ export function DialogoCompletarDiagnostico({
     entidad: 'Diagnosis',
     item,
     idDelEncabezado,
+    egresado,
   });
   return (
     <>
