@@ -45,7 +45,7 @@ describe('Columna «Datos críticos» de la vista de caso', () => {
     expect(datos.getByText(/6 faltantes/)).toBeTruthy();
     expect(
       datos.getByText(
-        'Los faltantes no bloquean: si continúas, el análisis los trata como «desconocido» y lo deja escrito en la Base del análisis.',
+        'Los faltantes no bloquean: si continúas, el análisis los trata como «Desconocido» y lo deja escrito en la Base del análisis.',
       ),
     ).toBeTruthy();
   });
@@ -56,7 +56,10 @@ describe('Columna «Datos críticos» de la vista de caso', () => {
     montarVistaConDatosCriticos();
 
     const datos = await columna();
-    expect(datos.getByText(/0 faltantes/)).toBeTruthy();
+    expect(
+      datos.getByText(/test-1\.0\.0 · sin faltantes entre los datos críticos del catálogo/),
+    ).toBeTruthy();
+    expect(datos.queryByText(/Los faltantes no bloquean/)).toBeNull();
     expect(datos.queryAllByRole('link')).toHaveLength(0);
     expect(datos.queryAllByRole('button')).toHaveLength(0);
   });

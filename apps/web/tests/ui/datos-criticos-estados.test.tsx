@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import {
   accionesDe,
+  checklistF_M2,
   crearBffDeDatosCriticosSimulado,
   errorInterno,
   errorNoAutenticado,
@@ -39,6 +40,25 @@ describe('Columna «Datos críticos» · origen, errores y accesibilidad', () =>
       expect(accionesDe(fila(etiqueta))).toHaveLength(0);
       expect(fila(etiqueta).innerHTML).not.toMatch(/href=|3b8e5a21|documents?\//);
     }
+  });
+
+  it('muestra Origen no disponible cuando un dato presente llega sin procedencia [US-004 AC-4] [RN-25]', async () => {
+    const sinProcedencia = {
+      ...checklistF_M2,
+      items: checklistF_M2.items.map((i) =>
+        i.item === 'her2_ihq' ? { ...i, provenance: null } : i,
+      ),
+    };
+    bff.responderChecklist(200, sinProcedencia);
+    montarVistaConDatosCriticos();
+    const datos = await columna();
+
+    const fila = datos.getByText('HER2 (IHQ)').closest('li')!;
+
+    expect(fila.textContent).toContain('Origen no disponible');
+    expect(datos.getByText('Grado').closest('li')?.textContent ?? '').not.toContain(
+      'Origen no disponible',
+    );
   });
 
   it('muestra No se pudo calcular el checklist sin filas ni 0 faltantes y la vista completa cuando el checklist responde 500 [US-004 AC-5]', async () => {
