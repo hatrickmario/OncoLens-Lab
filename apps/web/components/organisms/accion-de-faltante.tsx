@@ -13,12 +13,12 @@ const ENLACE = 'text-primary inline-block py-1 font-semibold underline';
  * dato completa el nombre accesible y se oculta a la vista porque la fila ya la muestra. Nunca «Cargar documento».
  */
 export function AccionDeFaltante({
-  accion,
+  faltante,
   etiqueta,
   pacienteId,
   alGuardar,
 }: {
-  accion: AccionManual;
+  faltante: AccionManual;
   etiqueta: string;
   pacienteId: string;
   /** Tras el `201` de un diálogo: releer el checklist y recargar la vista (D5). */
@@ -32,16 +32,16 @@ export function AccionDeFaltante({
   );
   // El paciente egresado no llega aquí: `FilaDeDatoCritico` no ofrece acciones de registro (RN-17).
   const registro = { pacienteId, egresado: false, alGuardar };
-  switch (accion.tipo) {
+  switch (faltante.tipo) {
     case 'biomarcador':
       return (
-        <Link href={hrefDeRegistroManual(pacienteId, accion.item, 'caso')} className={ENLACE}>
+        <Link href={hrefDeRegistroManual(pacienteId, faltante.item, 'caso')} className={ENLACE}>
           {conEtiqueta(t.registrarAMano)}
         </Link>
       );
     case 'diagnostico':
       return (
-        <Link href={hrefDeRegistroManual(pacienteId, accion.item, 'ficha')} className={ENLACE}>
+        <Link href={hrefDeRegistroManual(pacienteId, faltante.item, 'ficha')} className={ENLACE}>
           {conEtiqueta(t.completarDiagnostico)}
         </Link>
       );
@@ -49,7 +49,7 @@ export function AccionDeFaltante({
       return (
         <DialogoAtributoClinico
           {...registro}
-          claveInicial={accion.item}
+          claveInicial={faltante.item}
           textoDeAccion={conEtiqueta(t.registrarAMano)}
         />
       );

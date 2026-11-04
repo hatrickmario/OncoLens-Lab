@@ -8,7 +8,7 @@ import { CampoDeTexto } from './campo-de-texto';
 export interface CamposDelDiagnosticoProps {
   formulario: FormularioDeDiagnostico;
   alCambiar: (campo: keyof Omit<FormularioDeDiagnostico, 'gradacion'>, valor: string) => void;
-  opciones: ManualEntryOptions;
+  catalogoDeRegistro: ManualEntryOptions;
   /** Mensaje de error por propiedad del cuerpo (`field` del servidor o validación local). */
   errores: Record<string, string>;
 }
@@ -21,7 +21,7 @@ const conActual = (lista: readonly string[], actual: string): string[] =>
 export function CamposDelDiagnostico({
   formulario: f,
   alCambiar,
-  opciones,
+  catalogoDeRegistro,
   errores,
 }: CamposDelDiagnosticoProps) {
   const t = mensajes().registroManual.diagnostico;
@@ -31,7 +31,7 @@ export function CamposDelDiagnostico({
     onChange: (e: { target: { value: string } }) => alCambiar(campo, e.target.value),
     error: errores[campo],
   });
-  const escala = opciones.performanceScales.find((e) => e.code === f.performanceScale);
+  const escala = catalogoDeRegistro.performanceScales.find((e) => e.code === f.performanceScale);
   const lista = (valores: readonly string[], actual: string) =>
     conActual(valores, actual).map((v) => (
       <option key={v} value={v}>
@@ -42,7 +42,7 @@ export function CamposDelDiagnostico({
     <>
       <CampoDeSeleccion id="rm-diagnostico-tipo" etiqueta={t.tipoDeCancer} {...de('cancerType')}>
         <option value="">{elegir}</option>
-        {lista(opciones.enabledCancerTypes, f.cancerType)}
+        {lista(catalogoDeRegistro.enabledCancerTypes, f.cancerType)}
       </CampoDeSeleccion>
       <CampoDeTexto id={ID_DE_CAMPO.histologia} etiqueta={t.histologia} {...de('histology')} />
       <CampoDeSeleccion
@@ -51,7 +51,7 @@ export function CamposDelDiagnostico({
         {...de('stagingSystem')}
       >
         <option value="">{elegir}</option>
-        {lista(opciones.stagingSystems, f.stagingSystem)}
+        {lista(catalogoDeRegistro.stagingSystems, f.stagingSystem)}
       </CampoDeSeleccion>
       <CampoDeTexto
         id={ID_DE_CAMPO.valorDeEstadio}
@@ -65,7 +65,7 @@ export function CamposDelDiagnostico({
       >
         <option value="">{elegir}</option>
         {lista(
-          opciones.performanceScales.map((e) => e.code),
+          catalogoDeRegistro.performanceScales.map((e) => e.code),
           f.performanceScale,
         )}
       </CampoDeSeleccion>

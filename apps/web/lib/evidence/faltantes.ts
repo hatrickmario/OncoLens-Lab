@@ -55,7 +55,7 @@ const TIPO_DE_ACCION: Partial<
  * Única acción manual de un faltante según `destination.entity` (D3, D-7): ninguna entidad devuelve «cargar documento»
  * (OCR, Post-MVP). Entidad desconocida → sin acción: la fila se muestra igual.
  */
-export function accionDeFaltante(item: CompletenessItem): AccionManual | null {
+export function accionManualDe(item: CompletenessItem): AccionManual | null {
   const tipo = TIPO_DE_ACCION[item.destination.entity];
   const clave = claveDeItem(item.item);
   return tipo === undefined || clave === undefined ? null : { tipo, item: clave };

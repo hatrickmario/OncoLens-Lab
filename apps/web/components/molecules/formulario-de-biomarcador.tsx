@@ -50,7 +50,7 @@ export function FormularioDeBiomarcador({
   );
   const errores = { ...locales, ...(error?.campo ? { [error.campo]: error.mensaje } : {}) };
   const general = error && error.campo === undefined ? error.mensaje : undefined;
-  const terminos = lectura?.tipo === 'ok' ? lectura.opciones.biomarkerTerms : [];
+  const terminos = lectura?.tipo === 'ok' ? lectura.catalogoDeRegistro.biomarkerTerms : [];
 
   function alEnviar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();

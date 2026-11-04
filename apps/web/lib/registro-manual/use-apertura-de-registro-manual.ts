@@ -48,7 +48,9 @@ export function useAperturaDeRegistroManual(
   const lectura = useValoresDelCatalogo(pacienteId, abierto || item !== undefined);
 
   const resuelto =
-    item !== undefined && lectura?.tipo === 'ok' ? resolverItem(lectura.opciones, item) : null;
+    item !== undefined && lectura?.tipo === 'ok'
+      ? resolverItem(lectura.catalogoDeRegistro, item)
+      : null;
   const deLaUrl = resuelto?.entidad === entidad ? resuelto : null;
 
   useEffect(() => {

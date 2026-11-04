@@ -18,8 +18,11 @@ const CAMPO_POR_DESTINO: Readonly<Record<string, CampoConFoco>> = {
  * Qué formulario abre la clave `?item=` según el destino que declara el catálogo (RN-29): `Biomarker` con su término,
  * `Diagnosis` con el foco en su campo. Clave desconocida, de otra entidad o sin destino reconocido → `null`: no se abre nada.
  */
-export function resolverItem(opciones: ManualEntryOptions, item: string): ItemResuelto | null {
-  const critico = opciones.criticalItems.find((c) => c.item === item);
+export function resolverItem(
+  catalogoDeRegistro: ManualEntryOptions,
+  item: string,
+): ItemResuelto | null {
+  const critico = catalogoDeRegistro.criticalItems.find((c) => c.item === item);
   if (critico === undefined) return null;
   if (critico.entity === 'Biomarker') {
     return critico.term === null ? null : { entidad: 'Biomarker', termino: critico.term };

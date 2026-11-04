@@ -1,5 +1,5 @@
 import type { CompletenessItem } from '../../../../packages/api-contracts/src/types/clinical-api';
-import { accionDeFaltante, presentarEstado } from '../../lib/evidence/faltantes';
+import { accionManualDe, presentarEstado } from '../../lib/evidence/faltantes';
 import { nombreDeOrigen } from '../../lib/ficha/presentacion';
 import { AccionDeFaltante } from '../organisms/accion-de-faltante';
 
@@ -20,7 +20,7 @@ export function FilaDeDatoCritico({
   alGuardar: () => void;
 }) {
   const { simbolo, texto } = presentarEstado(item.status);
-  const accion = conAcciones && item.status === 'faltante' ? accionDeFaltante(item) : null;
+  const faltante = conAcciones && item.status === 'faltante' ? accionManualDe(item) : null;
   return (
     <li className="border-border flex flex-wrap items-baseline gap-x-2 border-b py-2 last:border-b-0">
       <span aria-hidden="true">{simbolo}</span>
@@ -31,9 +31,9 @@ export function FilaDeDatoCritico({
           {nombreDeOrigen(item.provenance.entryMethod)}
         </span>
       )}
-      {accion && (
+      {faltante && (
         <AccionDeFaltante
-          accion={accion}
+          faltante={faltante}
           etiqueta={item.label}
           pacienteId={pacienteId}
           alGuardar={alGuardar}

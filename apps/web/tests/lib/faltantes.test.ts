@@ -7,7 +7,7 @@ import checklistF_M2 from '../../../../contracts/examples/completeness-f-m2.json
 import { hrefDeVistaDeCaso } from '../../lib/ficha/anclas';
 import {
   debeContinuarConAviso,
-  accionDeFaltante,
+  accionManualDe,
   hrefDeColumnaDatosCriticos,
   lecturaDeLaVista,
   presentarEstado,
@@ -43,7 +43,7 @@ describe('lecturaDeLaVista con todos los ítems', () => {
   });
 });
 
-describe('accionDeFaltante', () => {
+describe('accionManualDe', () => {
   const de = (entity: CompletenessItem['destination']['entity']) =>
     ({
       ...vista.items[1]!,
@@ -59,12 +59,12 @@ describe('accionDeFaltante', () => {
   ] as const)(
     'devuelve la acción %s → %s con la clave del ítem y nunca cargar documento',
     (entidad, tipo) => {
-      expect(accionDeFaltante(de(entidad))).toEqual({ tipo, item: 'ki67' });
+      expect(accionManualDe(de(entidad))).toEqual({ tipo, item: 'ki67' });
     },
   );
 
   it('no devuelve acción cuando la entidad de destino es desconocida', () => {
-    expect(accionDeFaltante(de('Otra' as never))).toBeNull();
+    expect(accionManualDe(de('Otra' as never))).toBeNull();
   });
 });
 
