@@ -483,6 +483,11 @@
       "target": "#/paths/~1platform~1patients~1{patientId}~1completeness/get/responses/200"
     },
     {
+      "file": "completeness-f-m2-ki67-registrado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1completeness/get/responses/200"
+    },
+    {
       "file": "completeness-f-m1.json",
       "spec": "clinical-api",
       "target": "#/paths/~1platform~1patients~1{patientId}~1completeness/get/responses/200"

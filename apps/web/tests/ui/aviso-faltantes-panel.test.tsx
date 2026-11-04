@@ -49,7 +49,7 @@ describe('EvidencePanel · aviso de faltantes', () => {
     expect(within(lista).getAllByRole('listitem')).toHaveLength(6);
     for (const etiqueta of ['Grado', 'Ki-67', 'BRCA germinal']) {
       expect(
-        within(lista).getByRole('link', { name: `Registrar ${etiqueta} en la ficha` }),
+        within(lista).getByRole('link', { name: `Ir a ${etiqueta} en el caso clínico` }),
       ).toBeTruthy();
     }
     expect(
@@ -173,7 +173,7 @@ describe('EvidencePanel · aviso de faltantes', () => {
     expect(bff.cuerpos).toEqual([]);
   });
 
-  it('apunta cada enlace a su sección de la ficha o al encabezado principal sin enviar análisis [US-005 AC-3]', async () => {
+  it('apunta cada enlace a los datos críticos de la vista de caso sin enviar análisis [US-005 AC-3]', async () => {
     const conDestinos = {
       ...checklistF_M2,
       items: checklistF_M2.items.filter((i) =>
@@ -185,11 +185,14 @@ describe('EvidencePanel · aviso de faltantes', () => {
     await screen.findByText('Faltan 3 datos críticos para este tipo de cáncer');
 
     const href = (etiqueta: string) =>
-      screen.getByRole('link', { name: `Registrar ${etiqueta} en la ficha` }).getAttribute('href');
+      screen
+        .getByRole('link', { name: `Ir a ${etiqueta} en el caso clínico` })
+        .getAttribute('href');
+    const destino = `/pacientes/${ID_PACIENTE}/caso#datos-criticos`;
 
-    expect(href('Ki-67')).toBe(`/pacientes/${ID_PACIENTE}#biomarcadores`);
-    expect(href('Grado')).toBe(`/pacientes/${ID_PACIENTE}#diagnostico`);
-    expect(href('Estado menopáusico')).toBe(`/pacientes/${ID_PACIENTE}`);
+    expect(href('Ki-67')).toBe(destino);
+    expect(href('Grado')).toBe(destino);
+    expect(href('Estado menopáusico')).toBe(destino);
     expect(bff.cuerpos).toEqual([]);
   });
 
@@ -204,7 +207,7 @@ describe('EvidencePanel · aviso de faltantes', () => {
     screen.getByLabelText(evidence.formulario.pregunta).focus();
     await usuario.tab();
     expect(document.activeElement).toBe(
-      screen.getByRole('link', { name: 'Registrar Grado en la ficha' }),
+      screen.getByRole('link', { name: 'Ir a Grado en el caso clínico' }),
     );
     for (let i = 0; i < 6; i++) await usuario.tab();
     expect(document.activeElement).toBe(BOTON());

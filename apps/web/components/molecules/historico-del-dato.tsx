@@ -7,6 +7,7 @@ import {
   type RefDeDato,
   type ResultadoDeHistorico,
 } from '../../lib/correcciones/cliente';
+import { nombreDeOrigen } from '../../lib/ficha/presentacion';
 import { mensajes } from '../../lib/mensajes';
 import { FechaRelativa } from '../atoms/fecha-relativa';
 
@@ -21,7 +22,7 @@ function VersionAnterior({ version, hoy }: { version: CorrectionHistoryEntry; ho
     <li className="border-border flex flex-wrap items-baseline gap-x-2 border-b py-1 last:border-b-0">
       <span className="whitespace-pre-wrap">{textoDeLaVersion(version)}</span>
       <FechaRelativa fecha={version.recordedAt} hoy={hoy} />
-      <span>{ficha.origen[version.entryMethod]}</span>
+      <span>{nombreDeOrigen(version.entryMethod)}</span>
       <span className="text-text-muted">{ficha.correccion.historico.reemplazado}</span>
     </li>
   );

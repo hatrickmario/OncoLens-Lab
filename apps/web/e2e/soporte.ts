@@ -17,6 +17,9 @@ export const { evidence: textos, pacientes, ficha, alcance } = es;
 /** Paciente semilla (a), de mama (L1D-169): el mismo UUID determinista que `WEB_HOME_PATH` en `scripts/e2e/ejecutar.sh`. */
 export const ID_SEMILLA_A = '0fd028e2-f8b0-56c7-a748-2a4e473d879d';
 
+/** Paciente semilla (d): mama sin exámenes, tratamientos ni atributos (casi todo el checklist en «Faltante»); `idSembrado('paciente-d')`. */
+export const ID_SEMILLA_D = 'c257f30f-8341-5f51-a219-8e4bca373918';
+
 /** Paciente semilla (f) = FX-T3-a (L1D-196): mama con avisos clínicos acumulados; `idSembrado('paciente-f')`. */
 export const ID_SEMILLA_F = '380dd24c-0458-55f7-bd22-23b87d965c86';
 

@@ -13,6 +13,8 @@ export interface FormularioDeAtributoClinicoProps {
   pacienteId: string;
   /** Solo los atributos del catálogo para el tipo de cáncer del paciente (RN-29). */
   permitidos: AtributoPermitido[];
+  /** Atributo que abre seleccionado; si no está entre los permitidos, ninguno. */
+  claveInicial?: string;
   /** El registro se creó: el llamador recarga la vista de caso y cierra el diálogo. */
   alGuardar: () => void;
   alCerrar: () => void;
@@ -22,11 +24,14 @@ export interface FormularioDeAtributoClinicoProps {
 export function FormularioDeAtributoClinico({
   pacienteId,
   permitidos,
+  claveInicial,
   alGuardar,
   alCerrar,
 }: FormularioDeAtributoClinicoProps) {
   const { atributo: t } = mensajes().caso.registro;
-  const [clave, setClave] = useState('');
+  const [clave, setClave] = useState(
+    permitidos.some((a) => a.key === claveInicial) ? (claveInicial ?? '') : '',
+  );
   const { enviando, error, enviar, fallar } = useEnvioDeRegistro(
     pacienteId,
     'clinical-attributes',

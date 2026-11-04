@@ -25,7 +25,7 @@ export interface FormularioDeDiagnosticoProps {
   pacienteId: string;
   /** Diagnóstico vigente de la ficha: precarga los campos; `null` si el paciente no tiene (crea uno). */
   vigente: Diagnosis | null;
-  opciones: ManualEntryOptions;
+  catalogoDeRegistro: ManualEntryOptions;
   /** Campo de `?item=` que recibe el foco al abrir. */
   enfocar: CampoConFoco | undefined;
   /** El registro se creó: el llamador refresca la ficha o la vista de caso. */
@@ -40,17 +40,19 @@ export interface FormularioDeDiagnosticoProps {
 export function FormularioDeDiagnostico({
   pacienteId,
   vigente,
-  opciones,
+  catalogoDeRegistro,
   enfocar,
   alGuardar,
   alCerrar,
 }: FormularioDeDiagnosticoProps) {
   const t = mensajes().registroManual.diagnostico;
   const [formulario, setFormulario] = useState<Formulario>(() =>
-    formularioInicial(vigente, opciones.gradingSystems),
+    formularioInicial(vigente, catalogoDeRegistro.gradingSystems),
   );
   const [locales, setLocales] = useState<Record<string, string>>({});
-  useFocoInicial(idDelCampoConFoco(enfocar, opciones.gradingSystems, formulario.gradacion.sistema));
+  useFocoInicial(
+    idDelCampoConFoco(enfocar, catalogoDeRegistro.gradingSystems, formulario.gradacion.sistema),
+  );
   const { enviando, error, enviar, fallar } = useEnvioDeRegistro(pacienteId, 'diagnoses', () => {
     alGuardar();
     alCerrar();
@@ -75,13 +77,13 @@ export function FormularioDeDiagnostico({
       <CamposDelDiagnostico
         formulario={formulario}
         alCambiar={(campo, valor) => setFormulario({ ...formulario, [campo]: valor })}
-        opciones={opciones}
+        catalogoDeRegistro={catalogoDeRegistro}
         errores={errores}
       />
       <CamposDeGradacion
         valor={formulario.gradacion}
         alCambiar={(gradacion) => setFormulario({ ...formulario, gradacion })}
-        sistemas={opciones.gradingSystems}
+        sistemas={catalogoDeRegistro.gradingSystems}
         error={errores.grading}
       />
       {vigente && <p className="m-0">{`${t.gradoDerivado}: ${vigente.grade ?? t.sinGrado}`}</p>}

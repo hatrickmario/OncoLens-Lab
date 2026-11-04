@@ -1,6 +1,5 @@
 import type { Provenance } from '../../../../packages/api-contracts/src/types/clinical-api';
-import { textoDeOrigen } from '../../lib/ficha/presentacion';
-import { mensajes } from '../../lib/mensajes';
+import { nombreDeOrigen, textoDeOrigen } from '../../lib/ficha/presentacion';
 import { FechaRelativa } from '../atoms/fecha-relativa';
 
 /**
@@ -19,7 +18,7 @@ export function OrigenDelDato({
   if (procedencia.entryMethod !== 'manual_correction') return <>{textoDeOrigen(procedencia)}</>;
   return (
     <>
-      {mensajes().ficha.origen.manual_correction} · <FechaRelativa fecha={fecha} hoy={hoy} />
+      {nombreDeOrigen('manual_correction')} · <FechaRelativa fecha={fecha} hoy={hoy} />
     </>
   );
 }

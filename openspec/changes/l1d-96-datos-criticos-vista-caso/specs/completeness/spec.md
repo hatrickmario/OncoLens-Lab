@@ -8,12 +8,12 @@ La vista de caso SHALL mostrar en la columna «Datos críticos» (`h2#datos-crit
 - **WHEN** se carga la sección «Datos críticos»
 - **THEN** se ven 12 filas, cada una con su etiqueta del catálogo y uno de los cuatro textos de estado
 - **AND** 6 filas dicen «Faltante» (Grado, Receptor de progesterona, HER2 (ISH), Ki-67, Estado menopáusico, BRCA germinal) y la cabecera indica `test-1.0.0` y 6 faltantes
-- **AND** se lee la nota «Los faltantes no bloquean: si continúas, el análisis los trata como «desconocido» y lo deja escrito en la Base del análisis.»
+- **AND** se lee la nota «Los faltantes no bloquean: si continúas, el análisis los trata como «Desconocido» y lo deja escrito en la Base del análisis.»
 
 #### Scenario: Sin faltantes no hay acciones [S5 resp. 13]
 - **GIVEN** F-M1 (`completeness-f-m1.json`), sin ítems `faltante`
 - **WHEN** se carga la sección
-- **THEN** la cabecera indica 0 faltantes y ninguna fila ofrece acción de registro
+- **THEN** la cabecera indica «sin faltantes entre los datos críticos del catálogo», no muestra la nota de que no bloquean y ninguna fila ofrece acción de registro
 
 #### Scenario: Tipo de cáncer no habilitado [S5 resp. 13]
 - **GIVEN** `completeness-tipo-no-habilitado.json` (`cancerTypeEnabled = false`)

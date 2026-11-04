@@ -29,7 +29,7 @@ export function ContenidoDelDiagnostico({
     <FormularioDeDiagnostico
       pacienteId={pacienteId}
       vigente={diagnostico}
-      opciones={lectura.opciones}
+      catalogoDeRegistro={lectura.catalogoDeRegistro}
       enfocar={deLaUrl?.entidad === 'Diagnosis' ? deLaUrl.campo : undefined}
       alGuardar={alGuardar}
       alCerrar={apertura.cerrar}

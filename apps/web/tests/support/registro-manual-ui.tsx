@@ -9,7 +9,7 @@ import tratamientoCreado from '../../../../contracts/examples/prior-treatment-ma
 import tratamientoManual from '../../../../contracts/examples/prior-treatment-manual.json';
 import tratamientoNoMapeado from '../../../../contracts/examples/prior-treatment-no-mapeado.json';
 import { VistaDeCaso } from '../../components/organisms/vista-de-caso';
-import { casoVacio, HOY, ID_DEL_CASO } from './caso-ui';
+import { casoVacio, checklistSinFaltantes, HOY, ID_DEL_CASO } from './caso-ui';
 
 export {
   atributoManual,
@@ -63,7 +63,7 @@ export function crearBffDeRegistroSimulado() {
         return HttpResponse.json(cuerpo, { status });
       }),
     );
-  servidor.use(leerCaso());
+  servidor.use(leerCaso(), checklistSinFaltantes());
   return {
     peticiones,
     iniciar: () => servidor.listen({ onUnhandledFrame: 'error' }),
@@ -72,7 +72,7 @@ export function crearBffDeRegistroSimulado() {
       servidor.resetHandlers();
       peticiones.length = 0;
       caso = casoVacio;
-      servidor.use(leerCaso());
+      servidor.use(leerCaso(), checklistSinFaltantes());
     },
     crearTratamiento: (cuerpo: typeof tratamientoCreado | typeof tratamientoNoMapeado) =>
       responderPost('prior-treatments', 201, cuerpo, () => {
