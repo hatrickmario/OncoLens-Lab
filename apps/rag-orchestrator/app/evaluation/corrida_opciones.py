@@ -42,6 +42,7 @@ from app.evaluation.config_opciones import (
 )
 from app.evaluation.config_suite import ConfigSuite, cargar_config_suite
 from app.evaluation.corrida import evaluar_pregunta_tolerante, solicitud_base
+from app.evaluation.juez_fidelidad import JuezFidelidad
 from app.evaluation.cronometro import Cronometro, RelojSimulado
 from app.evaluation.dataset_opciones import (
     DatasetOpciones,
@@ -301,14 +302,24 @@ async def _opcion_mostrada(
         id=f"o{posicion}",
         documentos=tuple(sorted({f.externalId for f in fuentes})),
         cita_a_chunk_entregado=bool(fuentes) and all(f.chunkId in entregados for f in fuentes),
-        soporte_nli=await _tiene_soporte(servicio, plan.get(opcion.option)),
+        soporte_nli=await tiene_soporte(
+            servicio.juez_nli,
+            plan.get(opcion.option),
+            opcion.rationale,
+            tuple(d.root for d in opcion.details or ()),
+        ),
         ordenable=ordenable_de(respuesta.applicability, opcion, f"o{posicion}"),
         fuente_evaluada=fuente_evaluada(respuesta.applicability, opcion),
         memoria_citada=memoria.es_citada_por(opcion),
     )
 
 
-async def _tiene_soporte(servicio: ServicioDeSuite, planificada: OpcionPlanificada | None) -> bool:
+async def tiene_soporte(
+    juez: JuezFidelidad,
+    planificada: OpcionPlanificada | None,
+    rationale: str,
+    detalles: Sequence[str],
+) -> bool:
     """Todas las afirmaciones atómicas de la opción tienen veredicto ``entailment`` del NLI registrado (RN-01).
 
     Recalculado aquí, no leído del ensamblado del servicio. Una opción que el plan no conoce o sin afirmaciones no tiene
@@ -319,7 +330,7 @@ async def _tiene_soporte(servicio: ServicioDeSuite, planificada: OpcionPlanifica
     if not afirmaciones:
         return False
     for afirmacion in afirmaciones:
-        if not await servicio.juez_nli.juzgar_soporte(afirmacion.texto, afirmacion.premisas):
+        if not await juez.juzgar_soporte(afirmacion.texto, afirmacion.premisas):
             return False
     return True
 
