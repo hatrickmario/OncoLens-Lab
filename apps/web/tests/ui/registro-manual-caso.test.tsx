@@ -2,6 +2,7 @@
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import errorCuerpoInvalido from '../../../../contracts/examples/error-cuerpo-invalido.json';
 import { mensajes } from '../../lib/mensajes';
 import {
   crearBffDeRegistroSimulado,
@@ -179,5 +180,38 @@ describe('Registro manual de tratamientos previos y atributos en la vista de cas
     expect(await within(dialogo).findByText(registro.errores.permiso)).toBeTruthy();
     expect(screen.queryByText(errorPermisoDenegado.message)).toBeNull();
     expect(screen.getByRole('dialog', { name: tratamiento.titulo })).toBeTruthy();
+  });
+
+  it('pinta junto al campo el 422 del servidor y envía cuando falta el motivo de fin de un tratamiento terminado', async () => {
+    bff.rechazarTratamiento(422, { ...errorCuerpoInvalido, field: 'endReason' });
+    const usuario = userEvent.setup();
+    montarCasoConRegistro();
+    const { dialogo } = await abrirTratamiento(usuario);
+
+    await usuario.type(within(dialogo).getByLabelText(tratamiento.esquema), 'Leuprorelina');
+    await usuario.click(within(dialogo).getByRole('button', { name: registro.guardar }));
+
+    const mensaje = await within(dialogo).findByText(registro.errores.campoInvalido);
+    const campo = within(dialogo).getByLabelText(tratamiento.motivoDeFin);
+    expect(campo.getAttribute('aria-invalid')).toBe('true');
+    expect(campo.getAttribute('aria-describedby')).toContain(mensaje.id);
+    expect(bff.peticiones.filter((p) => p.metodo === 'POST')).toHaveLength(1);
+  });
+
+  it('no muestra fin anterior cuando el 422 de la fecha de fin no es de coherencia de fechas', async () => {
+    bff.rechazarTratamiento(422, { ...errorCuerpoInvalido, field: 'endedAt' });
+    const usuario = userEvent.setup();
+    montarCasoConRegistro();
+    const { dialogo } = await abrirTratamiento(usuario);
+
+    await usuario.type(within(dialogo).getByLabelText(tratamiento.esquema), 'Leuprorelina');
+    await usuario.selectOptions(
+      within(dialogo).getByLabelText(tratamiento.motivoDeFin),
+      'Desconocido',
+    );
+    await usuario.click(within(dialogo).getByRole('button', { name: registro.guardar }));
+
+    expect(await within(dialogo).findByText(registro.errores.campoInvalido)).toBeTruthy();
+    expect(within(dialogo).queryByText(registro.errores.finAnterior)).toBeNull();
   });
 });
