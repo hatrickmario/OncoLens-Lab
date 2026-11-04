@@ -59,17 +59,20 @@ gate no lo da por superado. El JSON del E2E lleva además `modoLlm` y `generadoE
 
 ### D3 · `verify-g-demo`: entrada fina + módulos puros
 
-`scripts/verify-g-demo` (bash, `set -euo pipefail`) solo orquesta: lee el modo (`LLM_PROVIDER`), ejecuta o recibe el
+`scripts/verify-g-demo` (bash, `set -euo pipefail`) solo orquesta: recibe `--modo fingido|real` (obligatorio; el E2E declara el suyo y debe coincidir), recibe el
 resultado del E2E (`--e2e-resultado <json>`), recibe el reporte de `evaluate` (`--reporte-evaluate <json>`), obtiene el
 conteo por `data_origin` y las dos variables, y llama a `node scripts/gates/g-demo/verificar.mjs`. La lógica vive en
 módulos `.mjs` con funciones con nombre propio:
 
-- `evaluarMetricas(reporte, metas)` → lista de {métrica, valor, meta, estado: `en_meta | fuera_de_meta | no_medida`,
+- `evaluarMetricas(reportes, definiciones, metas, configuraciones)` → `{mediciones, motivos}`; cada medición {métrica, valor, meta, estado: `en_meta | fuera_de_meta | no_medida`,
   validados/no validados}; G-2 y G-14 obligatorias.
 - `verificarSoloSintetico(conteoPorOrigen, banderas)` → RN-13.
 - `cargarExcepciones(json)` → valida Feature y destino.
-- `evaluarP95(p95, meta)` → `en_meta | insumo_adr42 | no_medido` (nunca bloquea).
-- `decidirResultado(comprobaciones, modo)` → `superado | no_superado | regresion_fingida` con los motivos.
+- `evaluarP95(p95, meta, modo)` → `en_meta | insumo_adr42 | no_medida` (nunca bloquea; el modo fingido siempre es `no_medida`; `--p95-baseline-s` en `verify-g-demo`, `--p95-e2e-s` en `evaluate`).
+- `decidirResultado(comprobaciones, modo)` → `superado | no_superado | regresion_fingida` con los motivos; solo concatena
+  los `{motivos}` de cada comprobación. Título del superado: «G-Demo superado (criterios técnicos del MVP sobre datos
+  sintéticos; la utilidad clínica no se valida aquí)». También es suya la ruta del registro (`rutaDelRegistro`) y el código
+  de salida (`codigoDeSalida`): solo el real superado va a `docs/gates/`.
 - `renderizarRegistro(plantilla, datos)` → Markdown.
 
 Un único dueño de la decisión del gate (`decidirResultado`). _Descartada:_ todo en bash (sin tests unitarios de la

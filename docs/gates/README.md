@@ -22,6 +22,8 @@ scripts/verify-g-demo --modo real \
 
 - `--e2e-resultado`: JSON que adjunta `apps/web/e2e/g-demo.spec.ts`, solo con
   `{"modoLlm": "fingido" | "real", "generadoEn": "<ISO>", "pasos": [{"paso": "<nombre del test.step>", "resultado": "ok" | "fallo"}], "catalogVersion": "..."}`.
+  Un paso admite `"ok" | "fallo" | "no_verificable"`; `no_verificable` (p. ej., el orden RN-28 con menos de 2 opciones
+  visibles) no cuenta como superado: bloquea en modo real y solo avisa en modo fingido (el aviso queda en el registro).
   Sin PII ni texto generado. Su `modoLlm` debe coincidir con `--modo`: un E2E fingido nunca respalda un registro real.
   `corpusRelease` **no** viene del E2E: el contrato que ve el navegador no lo expone (D5-47); sale de
   `configuracion.corpusRelease` del reporte de `evaluate`.

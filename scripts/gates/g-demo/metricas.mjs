@@ -29,12 +29,35 @@ export function cargarMetas(textoYaml) {
   return documento.metas;
 }
 
-/** El reporte de `evaluate` debe existir y ser de una de las configuraciones aceptadas (lista explícita en metricas.json). */
+/**
+ * El reporte de `evaluate` debe existir y ser de una de las configuraciones aceptadas (lista explícita en metricas.json).
+ * `reportes` trae un elemento por cada `--reporte-evaluate` declarado (`null` si no se pudo leer): uno ilegible no se ignora.
+ */
 export function validarReporte(reportes, nombresAceptados) {
-  const lista = Array.isArray(reportes) ? reportes.filter(Boolean) : [];
+  const declarados = Array.isArray(reportes) ? reportes : [];
+  const legibles = declarados.filter(Boolean);
+  if (legibles.length < declarados.length) {
+    return { ok: false, motivos: ['reporte de evaluate ilegible'] };
+  }
   const ok =
-    lista.length > 0 && lista.every((r) => nombresAceptados.includes(r?.configuracion?.nombre));
+    legibles.length > 0 &&
+    legibles.every((r) => nombresAceptados.includes(r?.configuracion?.nombre));
   return { ok, motivos: ok ? [] : [MOTIVO_REPORTE] };
+}
+
+/** Una meta declara `minimo` o `maximo` numéricos; la misma regla para las métricas y para el p95. */
+export function resolverMeta(declarada, nombre) {
+  if (!declarada) throw new Error(`la meta ${nombre} no está en ${ORIGEN_METAS}`);
+  const { minimo, maximo } = declarada;
+  if (minimo === undefined && maximo === undefined) {
+    throw new Error(`la meta ${nombre} no declara minimo ni maximo`);
+  }
+  for (const cota of [minimo, maximo].filter((c) => c !== undefined)) {
+    if (typeof cota !== 'number' || !Number.isFinite(cota)) {
+      throw new Error(`la meta ${nombre} debe ser numérica`);
+    }
+  }
+  return { ...(minimo !== undefined && { minimo }), ...(maximo !== undefined && { maximo }) };
 }
 
 /** Cómo se muestra una meta (`≥ n` o `≤ n`): una sola definición para el motivo y la tabla. */
@@ -80,13 +103,8 @@ function buscarEnReportes(reportes, rutas) {
 function metaDe(definicion, metas) {
   const nombre = definicion.claveMeta ?? definicion.id;
   const declarada = definicion.metaFija ?? metas[definicion.claveMeta];
-  if (!declarada) throw new Error(`la meta ${nombre} no está en ${ORIGEN_METAS}`);
-  const { minimo, maximo } = declarada;
-  if (minimo === undefined && maximo === undefined) {
-    throw new Error(`la meta ${nombre} no declara minimo ni maximo`);
-  }
   return {
-    meta: { ...(minimo !== undefined && { minimo }), ...(maximo !== undefined && { maximo }) },
+    meta: resolverMeta(declarada, nombre),
     origen: definicion.metaFija ? ORIGEN_META_FIJA : ORIGEN_METAS,
   };
 }

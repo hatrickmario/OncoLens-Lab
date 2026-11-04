@@ -3,12 +3,13 @@
  * de ADR-42. La meta llega de `metas-iniciales.yaml` (RN-22); aquí no hay literal. Tiene la misma forma de meta que las
  * métricas (`meta: {maximo}`) y el mismo vocabulario de estados.
  */
-import { ESTADOS } from './metricas.mjs';
+import { ESTADOS, resolverMeta } from './metricas.mjs';
 import { MODO } from './resultado.mjs';
 
 /** El modo fingido no mide el p95: no hay modelos reales, aunque llegue un valor. */
 export function evaluarP95(p95, { clave, maximo }, modo) {
-  const base = { clave, meta: { maximo }, motivos: [] };
+  const meta = resolverMeta({ maximo }, clave);
+  const base = { clave, meta, motivos: [] };
   if (modo === MODO.FINGIDO) {
     return {
       ...base,
@@ -20,6 +21,6 @@ export function evaluarP95(p95, { clave, maximo }, modo) {
   if (typeof p95 !== 'number' || !Number.isFinite(p95)) {
     return { ...base, valor: null, estado: ESTADOS.NO_MEDIDA, motivo: 'sin medición del baseline' };
   }
-  const estado = p95 > maximo ? ESTADOS.INSUMO_ADR42 : ESTADOS.EN_META;
+  const estado = p95 > meta.maximo ? ESTADOS.INSUMO_ADR42 : ESTADOS.EN_META;
   return { ...base, valor: p95, estado, motivo: null };
 }

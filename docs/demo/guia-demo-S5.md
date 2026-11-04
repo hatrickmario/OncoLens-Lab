@@ -240,7 +240,7 @@ VM-5; FEAT-T5c / FEAT-T5d, S6), sin simularla.
 
 1. `scripts/demo/levantar.sh`: stack con modelos reales de ADR-39 y seed sintético.
 2. Corrida de `evaluate` con `eval/configs/s5.yaml` (suite `all` y suite `opciones`) por `ai-eval-runner`, pasando
-   `--p95-baseline-s` con el p95 del baseline de `l1d-119` (mediana de 3 corridas). Sin reporte de `s5*.yaml` el gate no se supera.
+   `--p95-e2e-s` con el p95 del baseline de `l1d-119` (mediana de 3 corridas). Sin reporte de `s5*.yaml` el gate no se supera.
 3. E2E `g-demo.spec.ts` en modo real (`LLM_PROVIDER=local`); su adjunto JSON (`modoLlm`, `generadoEn`, `pasos`, `catalogVersion`) es la
    entrada `--e2e-resultado`.
 4. `scripts/verify-g-demo --modo real --e2e-resultado <json> --reporte-evaluate <json> [--reporte-evaluate <json>] --p95-baseline-s <s>`.

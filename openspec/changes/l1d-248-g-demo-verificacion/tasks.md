@@ -31,7 +31,7 @@
       `corpusRelease`, modelos, métricas, no medidas, excepciones, validación clínica, p95, dueño, fecha, firma) y
       `docs/gates/g-demo-excepciones.json` (design D6) · **exento (documentación y datos)**
 - [x] 1.6 Sección «G-Demo» en el runbook de la Demo 5 (`docs/demo/`): `levantar.sh` → `evaluate` con `s5.yaml` y
-      `--p95-e2e-s` del baseline de `l1d-119` → E2E en modo real → `scripts/verify-g-demo --modo real` → PR `docs` con la
+      `--p95-e2e-s` del baseline de `l1d-119` → E2E en modo real → `scripts/verify-g-demo --modo real` (con `--p95-baseline-s`) → PR `docs` con la
       firma · **exento (documentación)**
 - [x] 1.7 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde
       antes y después, commit `refactor(L1D-248)`

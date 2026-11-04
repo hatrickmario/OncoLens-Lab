@@ -24,6 +24,17 @@ const ESTADOS_DE_METRICA = {
   [ESTADOS.NO_MEDIDA]: 'no medida',
 };
 
+function textoDelEstado(estado) {
+  const texto = ESTADOS_DE_METRICA[estado];
+  if (!texto) throw new Error('estado de métrica desconocido');
+  return texto;
+}
+
+/** Avisos que no bloquean (p. ej., RN-28 no verificable en modo fingido); visibles en el registro. */
+export function listaDeAvisos(avisos) {
+  return avisos.length === 0 ? '- Ninguno.' : avisos.map((a) => `- ${a}`).join('\n');
+}
+
 export function tablaDeMetricas(metricas) {
   const filas = metricas.map((m) =>
     [
@@ -31,7 +42,7 @@ export function tablaDeMetricas(metricas) {
       valorOTexto(m.valor),
       textoDeMeta(m.meta),
       m.origen,
-      ESTADOS_DE_METRICA[m.estado],
+      textoDelEstado(m.estado),
       `${valorOTexto(m.validadas)} / ${valorOTexto(m.noValidadas)}`,
     ].join(' | '),
   );

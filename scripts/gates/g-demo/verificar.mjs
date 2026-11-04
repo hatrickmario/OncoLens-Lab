@@ -23,6 +23,7 @@ import {
   PATRON_DE_COMMIT,
   PATRON_DE_VERSION_O_MODELO,
   enteroSeguro,
+  listaDeAvisos,
   listaDeExcepciones,
   listaDeNoMedidas,
   listaDeValidacionClinica,
@@ -115,7 +116,7 @@ function reunirComprobaciones({ args, modo, deps }) {
   const leerJson = (ruta) => (ruta ? jsonONulo(deps.leerTextoOpcional(ruta)) : null);
   const metas = cargarMetas(deps.leerTexto(RUTA_METAS));
   const catalogo = JSON.parse(deps.leerTexto(RUTA_METRICAS));
-  const reportes = args.reportes.map(leerJson).filter(Boolean);
+  const reportes = args.reportes.map(leerJson);
   const e2e = leerJson(args.e2e);
   const metaP95 = { clave: catalogo.p95.claveMeta, maximo: metas[catalogo.p95.claveMeta]?.maximo };
   return {
@@ -157,6 +158,7 @@ function armarDatosDelRegistro({ veredicto, comprobaciones, reportes, args, modo
     banderas: textoDeBanderas(soloSintetico),
     tablaMetricas: tablaDeMetricas(metricas.mediciones),
     noMedidas: listaDeNoMedidas(metricas.mediciones),
+    avisos: listaDeAvisos(comprobaciones.e2e.avisos ?? []),
     excepciones: listaDeExcepciones(excepcionesDeCapacidad(excepciones)),
     validacionClinica: listaDeValidacionClinica(declararValidacionClinica(excepciones)),
     p95: textoDelP95(p95, { fuente: FUENTE_DEL_P95, consultas: enteroSeguro(args.p95Consultas) }),

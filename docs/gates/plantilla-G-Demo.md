@@ -45,6 +45,12 @@ Se declaran, no se cuentan como superadas ni como fallo (salvo M-10.1 y M-10.2).
 
 Un p95 fuera de meta es insumo de ADR-42 y no cambia el resultado del gate.
 
+## Avisos del recorrido
+
+No bloquean el resultado en modo fingido; en modo real un paso no verificable impide superar el gate.
+
+{{avisos}}
+
 ## Excepciones declaradas
 
 Capacidades diferidas por el slicing y criterios que se verifican en G-Piloto. No se cuentan como fallo.
