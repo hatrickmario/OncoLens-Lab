@@ -22,7 +22,7 @@
 
 ## 2. clinical-platform
 
-- [ ] 2.1 (TDD estricto) Tests de aceptación en rojo, Supertest + PostgreSQL de test + catálogo `test-s2-1.0.0`, con
+- [ ] 2.1 (TDD estricto) Tests de aceptación en rojo, Supertest + PostgreSQL de test + catálogo `test-normalizacion-1.0.0`, con
   verificación del proveedor: "devuelve términos, TNM_8, ECOG 0–5, nottingham y el destino de ki67 y grado para F-M2
   [US-111 AC-1] · integración", "devuelve gleason_isup para próstata y todos los tipos habilitados sin diagnóstico
   vigente [US-111 AC-3] · integración", "responde 401, 403 al admin y 404 sin datos del paciente [US-111 AC-1] ·

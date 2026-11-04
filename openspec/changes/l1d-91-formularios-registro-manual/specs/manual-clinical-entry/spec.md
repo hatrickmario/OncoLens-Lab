@@ -114,7 +114,7 @@ Los dos diálogos MUST usarse solo con teclado: foco atrapado mientras están ab
 `GET /platform/patients/{patientId}/manual-entry-options` MUST devolver, desde el catálogo montado y para el tipo de cáncer del diagnóstico vigente (todos los habilitados sin vigente), los términos de biomarcador, sistemas de estadificación, escalas funcionales con rango, sistemas de gradación y el destino de cada ítem crítico, con la versión del catálogo; nunca valores del paciente.
 
 #### Scenario: Opciones de mama para F-M2 [US-111 AC-1] [US-111 AC-2] [RN-29] [S5 resp. 13]
-- **GIVEN** F-M2 (mama) y el catálogo de test `test-s2-1.0.0` con `escalas.json`
+- **GIVEN** F-M2 (mama) y el catálogo de test `test-normalizacion-1.0.0` con `escalas.json`
 - **WHEN** un `doctor` pide `GET /platform/patients/{id}/manual-entry-options`
 - **THEN** responde `200` válido contra `ManualEntryOptions` con `cancerType = mama`, `biomarkerTerms` que incluye `Ki-67`, `stagingSystems = [TNM_8]`, `performanceScales` con `ECOG` 0–5, `gradingSystems = [nottingham]` y `criticalItems` con `ki67` → `Biomarker` (`term = Ki-67`) y `grado` → `Diagnosis`
 
