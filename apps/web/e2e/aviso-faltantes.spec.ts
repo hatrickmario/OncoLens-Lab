@@ -27,7 +27,7 @@ test.describe('Aviso de faltantes antes de analizar (L1D-97)', () => {
     expect(JSON.parse(cuerpos[0]!).continueWithWarning).toBe(true);
   });
 
-  test('lleva el enlace de Ki-67 a la ficha con el foco en Biomarcadores sin enviar análisis [US-005 AC-3]', async ({
+  test('lleva el enlace de Ki-67 a los datos críticos de la vista de caso con el foco en su encabezado sin enviar análisis [US-005 AC-3] [US-005 AC-7]', async ({
     page,
   }) => {
     let posts = 0;
@@ -36,10 +36,10 @@ test.describe('Aviso de faltantes antes de analizar (L1D-97)', () => {
     });
     await iniciarSesion(page);
 
-    await page.getByRole('link', { name: 'Registrar Ki-67 en la ficha' }).click();
+    await page.getByRole('link', { name: 'Ir a Ki-67 en el caso clínico' }).click();
 
-    await expect(page).toHaveURL(new RegExp(`/pacientes/${ID_SEMILLA_A}#biomarcadores$`));
-    await expect(page.locator('h2#biomarcadores')).toBeFocused();
+    await expect(page).toHaveURL(new RegExp(`/pacientes/${ID_SEMILLA_A}/caso#datos-criticos$`));
+    await expect(page.locator('h2#datos-criticos')).toBeFocused();
     expect(posts).toBe(0);
   });
 });
