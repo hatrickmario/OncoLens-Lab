@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import biomarcadorManual from '../../../../contracts/examples/biomarker-manual.json';
 import biomarcadorNoMapeado from '../../../../contracts/examples/biomarker-manual-no-mapeado.json';
-import biomarcadorCreado from '../../../../contracts/examples/biomarker-corrected.json';
 import errorGradacion from '../../../../contracts/examples/error-gradacion-incoherente-campo.json';
 import errorGradacionSinCampo from '../../../../contracts/examples/error-gradacion-incoherente.json';
 import errorPacienteEgresado from '../../../../contracts/examples/error-paciente-egresado.json';
@@ -11,6 +10,7 @@ import {
   cuerpoDeBiomarcador,
   erroresDelBiomarcador,
 } from '../../lib/registro-manual/biomarcador';
+import { biomarcadorCreado } from '../support/registro-manual-formularios-ui';
 import { errorDelServidor } from '../../lib/registro-manual/errores-del-servidor';
 import { mensajes } from '../../lib/mensajes';
 
@@ -98,6 +98,7 @@ describe('biomarcadorSinCodigo', () => {
 
   it('devuelve falso cuando quedó mapeado o la respuesta no es un biomarcador', () => {
     expect(biomarcadorSinCodigo(biomarcadorCreado)).toBe(false);
+    expect(biomarcadorCreado.provenance.entryMethod).toBe('manual');
     expect(biomarcadorSinCodigo({ algo: 1 })).toBe(false);
   });
 });

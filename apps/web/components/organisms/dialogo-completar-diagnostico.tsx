@@ -2,58 +2,26 @@
 
 import { useRef } from 'react';
 import type { Diagnosis } from '../../../../packages/api-contracts/src/types/clinical-api';
-import type { PaginaDeRegistro } from '../../lib/registro-manual/enlaces';
 import {
   useAperturaDeRegistroManual,
-  type AperturaDeRegistroManual,
+  type ConfiguracionDeApertura,
 } from '../../lib/registro-manual/use-apertura-de-registro-manual';
 import { mensajes } from '../../lib/mensajes';
 import { AccionDeRegistro } from '../molecules/accion-de-registro';
-import { FormularioDeDiagnostico } from '../molecules/formulario-de-diagnostico';
+import { ContenidoDelDiagnostico } from '../molecules/contenido-del-diagnostico';
 import { Dialog } from '../ui/dialog';
 
-export interface DialogoCompletarDiagnosticoProps {
+export interface DialogoCompletarDiagnosticoProps extends Pick<
+  ConfiguracionDeApertura,
+  'pagina' | 'idDelEncabezado'
+> {
   pacienteId: string;
   egresado: boolean;
   /** Diagnóstico vigente de la ficha (de `obtenerFicha`); `null` sin vigente. */
   diagnostico: Diagnosis | null;
-  pagina: PaginaDeRegistro;
   /** Clave de `?item=` de la página; si es un dato del diagnóstico, abre el diálogo con el foco en su campo. */
   item?: string;
-  idDelEncabezado: string;
   alGuardar?: () => void;
-}
-
-/** Contenido del diálogo: espera las opciones del catálogo; sin ellas no hay con qué llenar las listas. */
-function ContenidoDelDiagnostico({
-  apertura,
-  pacienteId,
-  diagnostico,
-  alGuardar,
-}: Pick<DialogoCompletarDiagnosticoProps, 'pacienteId' | 'diagnostico'> & {
-  apertura: AperturaDeRegistroManual;
-  alGuardar: () => void;
-}) {
-  const t = mensajes().registroManual.diagnostico;
-  const { lectura, deLaUrl } = apertura;
-  if (lectura === null) {
-    return (
-      <p role="status" aria-busy="true" className="m-0">
-        {t.cargando}
-      </p>
-    );
-  }
-  if (lectura.tipo === 'error') return <p className="m-0">{t.opcionesNoDisponibles}</p>;
-  return (
-    <FormularioDeDiagnostico
-      pacienteId={pacienteId}
-      vigente={diagnostico}
-      opciones={lectura.opciones}
-      enfocar={deLaUrl?.entidad === 'Diagnosis' ? deLaUrl.campo : undefined}
-      alGuardar={alGuardar}
-      alCerrar={apertura.cerrar}
-    />
-  );
 }
 
 /** «Completar diagnóstico a mano» y su diálogo (S5-03 b); el foco vuelve al botón, o al encabezado si lo abrió `?item=`. */

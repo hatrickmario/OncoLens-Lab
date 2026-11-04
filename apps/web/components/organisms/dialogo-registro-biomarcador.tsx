@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
+import type { AnclaDeFicha } from '../../lib/ficha/anclas';
 import type { PaginaDeRegistro } from '../../lib/registro-manual/enlaces';
 import { useAperturaDeRegistroManual } from '../../lib/registro-manual/use-apertura-de-registro-manual';
 import { mensajes } from '../../lib/mensajes';
@@ -15,7 +16,7 @@ export interface DialogoRegistroBiomarcadorProps {
   /** Clave de `?item=` de la página; si es un biomarcador del catálogo, abre el diálogo con su término. */
   item?: string;
   /** Id del encabezado de la sección que lo aloja: a donde vuelve el foco si lo abrió la URL. */
-  idDelEncabezado: string;
+  idDelEncabezado: AnclaDeFicha | 'caso-series';
   /** Recarga la vista de caso tras el `201`; la ficha y la barra se refrescan siempre. */
   alGuardar?: () => void;
 }

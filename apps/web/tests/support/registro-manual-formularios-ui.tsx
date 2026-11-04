@@ -1,8 +1,9 @@
 import { render } from '@testing-library/react';
 import { http, HttpResponse, type JsonBodyType } from 'msw';
 import { setupServer } from 'msw/node';
-import biomarcadorCreado from '../../../../contracts/examples/biomarker-corrected.json';
+import biomarcadorManual from '../../../../contracts/examples/biomarker-manual.json';
 import biomarcadorNoMapeado from '../../../../contracts/examples/biomarker-manual-no-mapeado.json';
+import diagnosticoManual from '../../../../contracts/examples/diagnosis-manual-nottingham.json';
 import diagnosticoCreado from '../../../../contracts/examples/diagnosis-con-gradings.json';
 import errorGradacion from '../../../../contracts/examples/error-gradacion-incoherente-campo.json';
 import errorInterno from '../../../../contracts/examples/error-interno.json';
@@ -23,8 +24,18 @@ import { FichaDelDoctor } from '../../components/organisms/ficha-del-doctor';
 import { VistaDeCaso } from '../../components/organisms/vista-de-caso';
 import { casoVacio, HOY, ID_DEL_CASO } from './caso-ui';
 
+/** 201 de `createManualBiomarker` para Ki-67: el cuerpo del ejemplo de la operación, completado como lo respondería el servidor. */
+const biomarcadorCreado = {
+  ...biomarcadorNoMapeado,
+  ...biomarcadorManual,
+  loincCode: '85330-9',
+  mappingStatus: 'mapeado',
+  clinicalSignificance: 'relevante',
+};
+
 export {
   biomarcadorCreado,
+  diagnosticoManual,
   biomarcadorNoMapeado,
   diagnosticoCreado,
   errorGradacion,

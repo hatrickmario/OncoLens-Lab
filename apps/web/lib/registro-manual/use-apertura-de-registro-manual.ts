@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, type RefObject } from 'react';
+import type { AnclaDeFicha } from '../ficha/anclas';
 import { rutaDeLaPagina, type PaginaDeRegistro } from './enlaces';
 import { resolverItem, type ItemResuelto } from './resolver-item';
 import { useValoresDelCatalogo } from './use-valores-del-catalogo';
@@ -29,7 +30,7 @@ export interface ConfiguracionDeApertura {
   entidad: Entidad;
   item: string | undefined;
   /** Id del encabezado de la sección, a donde vuelve el foco si abrió la URL. */
-  idDelEncabezado: string;
+  idDelEncabezado: AnclaDeFicha | 'caso-series';
 }
 
 /**
