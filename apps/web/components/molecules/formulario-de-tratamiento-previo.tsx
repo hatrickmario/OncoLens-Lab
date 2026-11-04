@@ -13,7 +13,7 @@ import { CamposDeTratamiento } from './campos-de-tratamiento';
 import { CamposDeFinDeTratamiento } from './campos-de-fin-de-tratamiento';
 import { PieDeFormularioDeRegistro } from './pie-de-formulario-de-registro';
 
-export interface FormularioDeTratamientoPreviaProps {
+export interface FormularioDeTratamientoPrevioProps {
   pacienteId: string;
   /** El registro se creó: el llamador recarga la vista de caso. */
   alGuardar: () => void;
@@ -25,7 +25,7 @@ export function FormularioDeTratamientoPrevio({
   pacienteId,
   alGuardar,
   alCerrar,
-}: FormularioDeTratamientoPreviaProps) {
+}: FormularioDeTratamientoPrevioProps) {
   const { tratamiento: t, cerrar } = mensajes().caso.registro;
   const [enCurso, setEnCurso] = useState(false);
   const [sinCodigo, setSinCodigo] = useState(false);

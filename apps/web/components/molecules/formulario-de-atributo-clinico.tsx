@@ -5,7 +5,7 @@ import { cuerpoDeAtributo, errorDelCuerpoDeAtributo } from '../../lib/registro-m
 import type { AtributoPermitido } from '../../lib/registro-manual/cliente';
 import { useEnvioDeRegistro } from '../../lib/registro-manual/use-envio-de-registro';
 import { mensajes } from '../../lib/mensajes';
-import { CampoDeCorreccion } from './campo-de-correccion';
+import { CampoDeTexto } from './campo-de-texto';
 import { CampoDeSeleccion } from './campo-de-seleccion';
 import { PieDeFormularioDeRegistro } from './pie-de-formulario-de-registro';
 
@@ -75,7 +75,7 @@ export function FormularioDeAtributoClinico({
           </option>
         ))}
       </CampoDeSeleccion>
-      <CampoDeCorreccion
+      <CampoDeTexto
         id="ac-fecha"
         name="observedAt"
         type="date"
