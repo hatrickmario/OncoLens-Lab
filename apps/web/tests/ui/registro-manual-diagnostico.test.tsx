@@ -16,6 +16,7 @@ import {
   fichaSinDiagnostico,
   montarFichaConFormularios,
   montarFichaDeAdministrador,
+  opcionesMama,
   opcionesProstata,
   opcionesSinDiagnostico,
 } from '../support/registro-manual-formularios-ui';
@@ -139,6 +140,21 @@ describe('Completar el diagnóstico a mano (US-111)', () => {
       ).toBe(registroManual.errores.obligatorio);
     }
     expect(bff.peticiones.filter((p) => p.metodo === 'POST')).toHaveLength(0);
+  });
+
+  it('relee las opciones al reabrir el diálogo y no muestra las anteriores cuando cambió el tipo de cáncer [US-111 AC-3]', async () => {
+    bff.opciones(opcionesSinDiagnostico);
+    const usuario = userEvent.setup();
+    montarFichaConFormularios(fichaSinDiagnostico);
+    const primera = await abrir(usuario);
+    expect(within(primera.dialogo).getByLabelText(g.sistema)).toBeTruthy();
+    await usuario.keyboard('{Escape}');
+
+    bff.opciones(opcionesMama);
+    const { dialogo } = await abrir(usuario);
+
+    expect(within(dialogo).queryByLabelText(g.sistema)).toBeNull();
+    expect(within(dialogo).getByLabelText(g.nottingham)).toBeTruthy();
   });
 
   it('abre con el foco en la gradación con ?item=grado y solo el formulario de su entidad [US-111 AC-2]', async () => {
