@@ -13,11 +13,14 @@ export function useValoresDelCatalogo(
   activo: boolean,
 ): LecturaDelCatalogo | null {
   const [lectura, setLectura] = useState<LecturaDelCatalogo | null>(null);
+  const [estabaActivo, setEstabaActivo] = useState(activo);
+  if (activo !== estabaActivo) {
+    // Al reabrir no se muestran los valores de la apertura anterior: se descartan en el mismo render.
+    setEstabaActivo(activo);
+    if (activo) setLectura(null);
+  }
   useEffect(() => {
-    if (!activo) {
-      setLectura(null);
-      return;
-    }
+    if (!activo) return;
     let vigente = true;
     void pedirValoresDelCatalogo(pacienteId).then((nueva) => {
       if (vigente) setLectura(nueva);
