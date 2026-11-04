@@ -32,16 +32,31 @@ const LOINC: Record<string, readonly string[]> = {
   prostata: ['PSA'],
 };
 
+const ESTADIFICACION = ['TNM_8'];
+const ESCALAS_FUNCIONALES = [{ codigo: 'ECOG', minimo: 0, maximo: 5 }];
+const GRADACION: Record<string, readonly string[]> = {
+  mama: ['nottingham'],
+  prostata: ['gleason_isup'],
+};
+
+function gradacionDe(tipo: string): readonly string[] {
+  return GRADACION[tipo] ?? [];
+}
+
+/** Coherente con `crearCatalogoDeEscalas`: la validez y el rango salen de las mismas tablas que las listas. */
 function fuente(sobrescribe: Partial<FuenteDeOpciones> = {}): FuenteDeOpciones {
   return {
     escalas: {
       version: () => 'v-test',
-      sistemaDeEstadificacionValido: () => true,
-      rangoDeEscala: () => undefined,
-      sistemaDeGradacionValido: () => true,
-      sistemasDeEstadificacion: () => ['TNM_8'],
-      escalasFuncionales: () => [{ codigo: 'ECOG', minimo: 0, maximo: 5 }],
-      sistemasDeGradacion: (tipo) => (tipo === 'mama' ? ['nottingham'] : ['gleason_isup']),
+      sistemaDeEstadificacionValido: (sistema) => ESTADIFICACION.includes(sistema),
+      rangoDeEscala: (escala) => {
+        const encontrada = ESCALAS_FUNCIONALES.find((e) => e.codigo === escala);
+        return encontrada && { minimo: encontrada.minimo, maximo: encontrada.maximo };
+      },
+      sistemaDeGradacionValido: (sistema, tipo) => gradacionDe(tipo).includes(sistema),
+      sistemasDeEstadificacion: () => ESTADIFICACION,
+      escalasFuncionales: () => ESCALAS_FUNCIONALES,
+      sistemasDeGradacion: (tipo) => gradacionDe(tipo),
     },
     terminologia: {
       version: () => 'v-test',
