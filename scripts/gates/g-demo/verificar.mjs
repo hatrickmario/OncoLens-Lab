@@ -53,7 +53,7 @@ const FUENTE_DEL_P95 =
 /** Clave aditiva que escribe `contar-en-proceso` (apps/clinical-api/prisma/seed/contar.ts); un test la fija en ambos lados. */
 const CLAVE_CONTEO_POR_ORIGEN = 'clinical.patient.por_data_origin';
 
-const CLAVES_DE_ARGUMENTOS = {
+export const CLAVES_DE_ARGUMENTOS = {
   '--modo': 'modo',
   '--e2e-resultado': 'e2e',
   '--p95-baseline-s': 'p95',
@@ -62,7 +62,7 @@ const CLAVES_DE_ARGUMENTOS = {
   '--banderas-json': 'banderas',
   '--commit': 'commit',
 };
-const ARGUMENTO_REPETIBLE = '--reporte-evaluate';
+export const ARGUMENTO_REPETIBLE = '--reporte-evaluate';
 
 /** Los mensajes de error son fijos: nunca repiten lo que llegó por la línea de comandos (RN-14). */
 export function leerArgumentos(argv) {

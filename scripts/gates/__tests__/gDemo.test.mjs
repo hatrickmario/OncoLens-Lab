@@ -1,9 +1,10 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { comprobarE2e } from '../g-demo/e2e.mjs';
 import { cargarExcepciones, declararValidacionClinica } from '../g-demo/excepciones.mjs';
 import { ESTADOS, cargarMetas, evaluarMetricas, validarReporte } from '../g-demo/metricas.mjs';
 import { evaluarP95 } from '../g-demo/p95.mjs';
-import { textoDelP95 } from '../g-demo/registro.mjs';
+import { tablaDeMetricas, textoDelP95 } from '../g-demo/registro.mjs';
 import {
   MODOS,
   RESULTADOS,
@@ -372,6 +373,75 @@ describe('comprobarE2e', () => {
 
     expect(r.ok).toBe(false);
     expect(r.motivos.join(' ')).toContain('paso fallido: vista de caso');
+  });
+});
+
+describe('comprobarE2e con pasos no verificables', () => {
+  const sinVerificar = {
+    ...E2E_REAL,
+    pasos: [
+      { paso: 'login', resultado: 'ok' },
+      { paso: 'orden RN-28', resultado: 'no_verificable' },
+    ],
+  };
+
+  it('bloquea en modo real y lo nombra como no verificable, nunca como fallido [US-142 AC-1]', () => {
+    const r = comprobarE2e(sinVerificar, 'real');
+
+    expect(r.ok).toBe(false);
+    expect(r.motivos).toContain(
+      'paso no verificable: orden RN-28 (menos de 2 opciones visibles; no se da por comprobado)',
+    );
+    expect(r.motivos.join(' ')).not.toContain('paso fallido');
+    expect(decidirResultado(comprobacionesEnVerde({ e2e: r }), 'real').resultado).toBe(
+      RESULTADOS.NO_SUPERADO,
+    );
+  });
+
+  it('solo avisa en modo fingido y deja la regresión en verde [US-142 AC-1]', () => {
+    const r = comprobarE2e({ ...sinVerificar, modoLlm: 'fingido' }, 'fingido');
+
+    expect(r).toMatchObject({ ok: true, motivos: [] });
+    expect(r.avisos).toEqual(['RN-28 no verificable con 1 opción: orden RN-28']);
+    expect(decidirResultado(comprobacionesEnVerde({ e2e: r }), 'fingido').resultado).toBe(
+      RESULTADOS.REGRESION_FINGIDA,
+    );
+  });
+
+  it('un paso fallido sigue siendo fallido aunque haya otro no verificable [US-142 AC-1]', () => {
+    const r = comprobarE2e(
+      {
+        ...sinVerificar,
+        pasos: [...sinVerificar.pasos, { paso: 'vista de caso', resultado: 'fallo' }],
+      },
+      'real',
+    );
+
+    expect(r.motivos.join(' ')).toContain('paso fallido: vista de caso');
+  });
+});
+
+describe('metas del p95 y de las métricas', () => {
+  it('lanza cuando falta el maximo numérico de la meta del p95 [US-142 AC-7]', () => {
+    expect(() => evaluarP95(5, { clave: 'x', maximo: undefined }, 'real')).toThrow(/x/);
+    expect(() => evaluarP95(5, { clave: 'x', maximo: '15' }, 'real')).toThrow(/x/);
+  });
+
+  it('trae un maximo numérico en la clave del p95 de metas-iniciales.yaml [US-142 AC-7]', () => {
+    const yaml = readFileSync(
+      new URL('../../../apps/rag-orchestrator/eval/configs/metas-iniciales.yaml', import.meta.url),
+      'utf8',
+    );
+
+    expect(typeof cargarMetas(yaml).p95_evidence_analyses_s.maximo).toBe('number');
+  });
+});
+
+describe('tablaDeMetricas', () => {
+  it('lanza cuando una medición trae un estado desconocido [US-142 AC-2]', () => {
+    const medicion = { id: 'x', valor: 1, meta: { minimo: 1 }, origen: 'o', estado: 'raro' };
+
+    expect(() => tablaDeMetricas([medicion])).toThrow(/estado/);
   });
 });
 

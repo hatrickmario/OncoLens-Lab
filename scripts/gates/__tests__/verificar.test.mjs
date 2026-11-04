@@ -1,4 +1,5 @@
 import { spawnSync } from 'node:child_process';
+import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -10,7 +11,13 @@ import { extraerBanderas } from '../g-demo/banderas.mjs';
 import { cargarMetas } from '../g-demo/metricas.mjs';
 import { renderizarRegistro } from '../g-demo/registro.mjs';
 import { verificarSoloSintetico } from '../g-demo/solo-sintetico.mjs';
-import { depsDelSistema, leerArgumentos, verificar } from '../g-demo/verificar.mjs';
+import {
+  ARGUMENTO_REPETIBLE,
+  CLAVES_DE_ARGUMENTOS,
+  depsDelSistema,
+  leerArgumentos,
+  verificar,
+} from '../g-demo/verificar.mjs';
 
 const TIEMPO_MAXIMO_MS = 30_000;
 const REAL = depsDelSistema();
@@ -522,6 +529,72 @@ describe('depsDelSistema', () => {
 
     expect(() => deps.leerTexto('no/existe.json')).toThrow(/no\/existe\.json/);
     expect(deps.leerTextoOpcional('no/existe.json')).toBeNull();
+  });
+});
+
+describe('higiene de docs/gates', () => {
+  it('no deja en el árbol ningún registro G-Demo no superado en docs/gates [US-142 AC-6]', () => {
+    const carpeta = path.resolve(
+      path.dirname(fileURLToPath(import.meta.url)),
+      '../../../docs/gates',
+    );
+    const registros = readdirSync(carpeta).filter((f) => /^G-Demo-.*\.md$/.test(f));
+
+    for (const registro of registros) {
+      expect(readFileSync(path.join(carpeta, registro), 'utf8'), registro).not.toContain(
+        'G-Demo no superado',
+      );
+    }
+  });
+});
+
+describe('guía de la Demo 5', () => {
+  const guia = readFileSync(
+    path.resolve(
+      path.dirname(fileURLToPath(import.meta.url)),
+      '../../../docs/demo/guia-demo-S5.md',
+    ),
+    'utf8',
+  );
+
+  it('usa en el comando de verify-g-demo solo flags que el script acepta [US-142 AC-6]', () => {
+    const linea = guia.split('\n').find((l) => l.includes('scripts/verify-g-demo --modo'));
+    const aceptados = [...Object.keys(CLAVES_DE_ARGUMENTOS), ARGUMENTO_REPETIBLE];
+
+    for (const flag of linea.match(/--[a-z0-9-]+/g)) expect(aceptados).toContain(flag);
+  });
+
+  it('deja --p95-e2e-s para evaluate y --p95-baseline-s solo para verify-g-demo [US-142 AC-7]', () => {
+    const paso = guia.split('\n').find((l) => l.startsWith('2. Corrida de `evaluate`'));
+    const bloque = guia.slice(guia.indexOf(paso), guia.indexOf('3. E2E `g-demo.spec.ts`'));
+
+    expect(bloque).toContain('--p95-e2e-s');
+    expect(bloque).not.toContain('--p95-baseline-s');
+  });
+});
+
+describe('verify-g-demo: reportes ilegibles y avisos', () => {
+  it('sale con 1 cuando un --reporte-evaluate declarado no se puede leer [US-142 AC-2]', async () => {
+    const r = await correr({ extra: ['--reporte-evaluate', '/in/inexistente.json'] });
+
+    expect(r.codigo).toBe(1);
+    expect(r.salida).toContain('reporte de evaluate ilegible');
+  });
+
+  it('muestra en el registro fingido el aviso de RN-28 no verificable sin bloquear [US-142 AC-1]', async () => {
+    const e2e = {
+      ...E2E_OK,
+      modoLlm: 'fingido',
+      pasos: [
+        { paso: 'login', resultado: 'ok' },
+        { paso: 'orden RN-28', resultado: 'no_verificable' },
+      ],
+    };
+
+    const r = await correr({ modo: 'fingido', e2e });
+
+    expect(r.codigo).toBe(0);
+    expect(r.registro).toContain('RN-28 no verificable con 1 opción: orden RN-28');
   });
 });
 
