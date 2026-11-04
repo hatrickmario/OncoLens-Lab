@@ -210,7 +210,7 @@ class LlmEvidenceGenerator:
                 len(crudo),
                 ",".join(tipos),
             )
-            raise LlmSalidaInvalidaError() from None
+            raise LlmSalidaInvalidaError(tuple(tipos)) from None
         return salida
 
     def _exigir_cantidad_de_afirmaciones(self, salida: GenerationOutput) -> None:

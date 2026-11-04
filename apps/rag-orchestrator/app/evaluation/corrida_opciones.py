@@ -41,7 +41,7 @@ from app.evaluation.config_opciones import (
     leer_referencia,
 )
 from app.evaluation.config_suite import ConfigSuite, cargar_config_suite
-from app.evaluation.corrida import evaluar_pregunta_en_servicio, solicitud_base
+from app.evaluation.corrida import evaluar_pregunta_tolerante, solicitud_base
 from app.evaluation.cronometro import Cronometro, RelojSimulado
 from app.evaluation.dataset_opciones import (
     DatasetOpciones,
@@ -65,6 +65,11 @@ from app.evaluation.metricas.opciones_mostradas import (
 )
 from app.evaluation.metricas.orden_opciones import OpcionOrdenable
 from app.evaluation.metricas.resultado import ResultadoConsulta
+from app.evaluation.metricas.salidas_invalidas import (
+    CODIGO_SALIDAS_INVALIDAS,
+    avisar_de_las_salidas_invalidas,
+    salidas_invalidas,
+)
 from app.evaluation.modelos_locales import OrigenLocal, PuertosLocales, cargar_puertos_locales
 from app.evaluation.reporte import escribir_reporte_cerrado
 from app.evaluation.rotulo import rotular_validada
@@ -146,7 +151,7 @@ async def medir_opciones(
     for indice, pregunta in enumerate(dataset.base.preguntas):
         caso = dataset.caso_de(pregunta.id)
         base = solicitud_del_caso(dataset.contextos[caso.paciente])
-        resultado, respuesta = await evaluar_pregunta_en_servicio(
+        resultado, respuesta = await evaluar_pregunta_tolerante(
             servicio, dataset.base, base, pregunta, indice, config.max_options
         )
         analisis.append(
@@ -205,18 +210,23 @@ async def _analisis_de(
     caso_id: str,
     texto_de_la_pregunta: str,
     resultado: ResultadoConsulta,
-    respuesta: RagQueryInternalResponse,
+    respuesta: RagQueryInternalResponse | None,
 ) -> AnalisisDeOpciones:
+    """``respuesta`` ``None`` = salida inválida del LLM: el caso no muestra ninguna opción y cuenta contra las esperadas."""
     caso = dataset.caso_de(caso_id)
     por_nombre = _plan_por_opcion(servicio, dataset, texto_de_la_pregunta)
     entregados = servicio.observaciones.entregados.get(texto_de_la_pregunta, frozenset())
     memoria = _Memoria.de(dataset, caso.paciente)
-    mostradas = [
-        await _opcion_mostrada(
-            servicio, respuesta, opcion, posicion, entregados, por_nombre, memoria
-        )
-        for posicion, opcion in enumerate(respuesta.evidenceOptions, 1)
-    ]
+    mostradas = (
+        []
+        if respuesta is None
+        else [
+            await _opcion_mostrada(
+                servicio, respuesta, opcion, posicion, entregados, por_nombre, memoria
+            )
+            for posicion, opcion in enumerate(respuesta.evidenceOptions, 1)
+        ]
+    )
     return AnalisisDeOpciones(
         caso=caso_id,
         revisada=resultado.revisada,
@@ -394,7 +404,12 @@ def _veredicto(medido: MedicionDeOpciones, retrocesos: Sequence[Retroceso]) -> i
             f"tolerancia {r.tolerancia}",
             file=sys.stderr,
         )
-    return CODIGO_INVARIANTE_VIOLADA if violaciones or retrocesos else 0
+    invalidas = salidas_invalidas(medido.resultados)
+    if invalidas is not None:
+        print(avisar_de_las_salidas_invalidas(invalidas), file=sys.stderr)
+    if violaciones or retrocesos:
+        return CODIGO_INVARIANTE_VIOLADA
+    return 0 if invalidas is None else CODIGO_SALIDAS_INVALIDAS
 
 
 # --- reporte --------------------------------------------------------------------------------------------------------
@@ -411,6 +426,7 @@ def _reporte(
         tuple(r for r in medido.resultados if r.revisada),
         medido.version_de_la_lista,
     )
+    invalidas = salidas_invalidas(medido.resultados)
     return {
         "esquema": VERSION_ESQUEMA,
         "suite": SUITE_OPCIONES,
@@ -421,6 +437,7 @@ def _reporte(
         "invariantes": _invariantes(medido),
         "regresion": _regresion(config, medido, referencia),
         "metas": _metas(config, medido),
+        **({} if invalidas is None else {"salidas_invalidas": invalidas}),
     }
 
 

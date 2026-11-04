@@ -237,6 +237,14 @@ _RECHAZOS_LEGITIMOS = Objeto(
     }
 )
 
+_SALIDAS_INVALIDAS = Objeto(
+    {
+        # D5-06, D5-28: preguntas cuya generación falló la validación del esquema interno; solo ids de pregunta y de regla.
+        "casos": Numero(),
+        "preguntas": Lista(Objeto({"caso": Identificador(), "reglas": Lista(Identificador())})),
+    }
+)
+
 ESQUEMA_SUITE = Objeto(
     {
         "esquema": Enumerado(frozenset({VERSION_ESQUEMA})),
@@ -247,10 +255,17 @@ ESQUEMA_SUITE = Objeto(
         "recursos_nli": _RECURSOS_NLI,
         "comparacion_recuperacion": _COMPARACION_RECUPERACION,
         "rechazos_legitimos": _RECHAZOS_LEGITIMOS,
+        "salidas_invalidas": _SALIDAS_INVALIDAS,
         "latencia_p95_ms": Objeto({etapa: Numero() for etapa in ETAPAS}),
     },
     opcionales=frozenset(
-        {"privacidad", "recursos_nli", "comparacion_recuperacion", "rechazos_legitimos"}
+        {
+            "privacidad",
+            "recursos_nli",
+            "comparacion_recuperacion",
+            "rechazos_legitimos",
+            "salidas_invalidas",
+        }
     ),
 )
 
@@ -528,5 +543,7 @@ ESQUEMA_OPCIONES = Objeto(
                 ),
             }
         ),
-    }
+        "salidas_invalidas": _SALIDAS_INVALIDAS,
+    },
+    opcionales=frozenset({"salidas_invalidas"}),
 )

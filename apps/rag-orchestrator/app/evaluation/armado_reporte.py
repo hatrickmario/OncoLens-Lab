@@ -10,6 +10,7 @@ from app.evaluation.esquema_suite import VERSION_ESQUEMA
 from app.evaluation.fuente_dataset import DatasetSuite
 from app.evaluation.metricas.familias import calcular_familias
 from app.evaluation.metricas.resultado import ResultadoConsulta
+from app.evaluation.metricas.salidas_invalidas import salidas_invalidas
 from app.schemas.generated.models import RagMeta
 
 
@@ -93,7 +94,9 @@ def armar_reporte(
     comparacion: dict[str, Any] | None = None,
     rechazos_legitimos: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    invalidas = salidas_invalidas(resultados)
     return {
+        **({} if invalidas is None else {"salidas_invalidas": invalidas}),
         **({} if comparacion is None else {"comparacion_recuperacion": comparacion}),
         **({} if rechazos_legitimos is None else {"rechazos_legitimos": rechazos_legitimos}),
         **({} if privacidad is None else {"privacidad": privacidad}),

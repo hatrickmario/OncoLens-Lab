@@ -72,7 +72,7 @@ def test_evaluate_all_termina_con_5_y_cuenta_cada_pregunta_con_su_regla_sin_text
     assert all(p["reglas"] == ["principal_ausente"] for p in invalidas["preguntas"])
     assert len(invalidas["preguntas"]) == invalidas["casos"]
     error = capsys.readouterr().err
-    assert invalidas["preguntas"][0]["pregunta"] in error and "principal_ausente" in error
+    assert invalidas["preguntas"][0]["caso"] in error and "principal_ausente" in error
     for texto in _preguntas_de_fx_t5a_a():  # solo ids de pregunta y de regla (RN-14)
         assert texto not in error and texto not in json.dumps(reporte, ensure_ascii=False)
 
@@ -111,7 +111,7 @@ def test_opciones_termina_con_5_y_reporta_el_caso_y_la_regla_cuando_un_analisis_
     assert codigo == 5 and reporte is not None
     assert reporte["salidas_invalidas"] == {
         "casos": 1,
-        "preguntas": [{"pregunta": "OP-03", "reglas": ["principal_duplicada"]}],
+        "preguntas": [{"caso": "OP-03", "reglas": ["principal_duplicada"]}],
     }
     assert "OP-03" in capsys.readouterr().err
 

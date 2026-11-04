@@ -80,6 +80,10 @@ from app.evaluation.llamadas import RegistroDeLlamadas
 from app.evaluation.medicion_modelos import informe_de_recursos_nli
 from app.evaluation.medidores import LatenciasNli
 from app.evaluation.metricas.privacidad import privacidad
+from app.evaluation.metricas.salidas_invalidas import (
+    CODIGO_SALIDAS_INVALIDAS,
+    avisar_de_las_salidas_invalidas,
+)
 from app.evaluation.metricas.rechazos_legitimos import (
     RechazosLegitimos,
     ids_de_preguntas_de_control_legitimo,
@@ -280,10 +284,15 @@ def _ejecutar(
     escribir_reporte_cerrado(
         _ruta_del_resultado(config, args, reloj), corrida.reporte, ESQUEMA_SUITE
     )
+    invalidas = corrida.reporte.get("salidas_invalidas")
+    if invalidas is not None:
+        print(avisar_de_las_salidas_invalidas(invalidas), file=sys.stderr)
     if corrida.rechazos is not None and corrida.rechazos.supera_la_tolerancia:
         _avisar_de_los_falsos_positivos(corrida.rechazos)
         return CODIGO_FALSOS_POSITIVOS
-    return CODIGO_RETROCESO if corrida.hay_retroceso else 0
+    if corrida.hay_retroceso:
+        return CODIGO_RETROCESO
+    return 0 if invalidas is None else CODIGO_SALIDAS_INVALIDAS
 
 
 def _avisar_de_los_falsos_positivos(rechazos: RechazosLegitimos) -> None:
@@ -432,7 +441,7 @@ def _medir_un_brazo(
     )
     return _Medicion(
         resultados,
-        respuestas[0].meta,
+        respuestas[0].meta if respuestas else None,  # todas las salidas inválidas: sin respuesta, sin meta
         cronometro,
         _recursos_del_nli(config, latencias, origen),
         None,
