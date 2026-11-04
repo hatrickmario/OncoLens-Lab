@@ -752,6 +752,11 @@
       "target": "#/components/schemas/Biomarker"
     },
     {
+      "file": "biomarker-manual-no-mapeado.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/Biomarker"
+    },
+    {
       "file": "clinical-note-correction-request.json",
       "spec": "clinical-api",
       "target": "#/paths/~1platform~1patients~1{patientId}~1clinical-notes~1{noteId}~1corrections/post/requestBody"
@@ -910,6 +915,51 @@
       "file": "error-registro-clinico-campo.json",
       "spec": "clinical-api",
       "target": "#/paths/~1platform~1patients~1{patientId}~1clinical-attributes/post/responses/422"
+    },
+    {
+      "file": "manual-entry-options-mama.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/ManualEntryOptions"
+    },
+    {
+      "file": "manual-entry-options-prostata.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/ManualEntryOptions"
+    },
+    {
+      "file": "manual-entry-options-sin-diagnostico.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/ManualEntryOptions"
+    },
+    {
+      "file": "error-valor-fuera-de-catalogo-campo.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1diagnoses/post/responses/422"
+    },
+    {
+      "file": "error-gradacion-incoherente-campo.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1diagnoses/post/responses/422"
+    },
+    {
+      "file": "error-no-autenticado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1manual-entry-options/get/responses/401"
+    },
+    {
+      "file": "error-permiso-denegado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1manual-entry-options/get/responses/403"
+    },
+    {
+      "file": "error-no-encontrado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1manual-entry-options/get/responses/404"
+    },
+    {
+      "file": "error-interno.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1manual-entry-options/get/responses/500"
     }
   ],
   "pendingExamples": [

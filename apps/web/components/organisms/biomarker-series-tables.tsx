@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { CaseView } from '../../../../packages/api-contracts/src/types/clinical-api';
 import { valorConUnidad } from '../../lib/caso/presentacion';
 import { mensajes } from '../../lib/mensajes';
@@ -32,10 +33,19 @@ function TablaDeSerie({ serie, hoy }: { serie: Serie; hoy: string }) {
 }
 
 /** Una tabla por serie de biomarcador (fecha, valor con unidad, origen); el gráfico llega con US-089 (D-8). */
-export function BiomarkerSeriesTables({ series, hoy }: { series: Serie[]; hoy: string }) {
+export function BiomarkerSeriesTables({
+  series,
+  hoy,
+  accion,
+}: {
+  series: Serie[];
+  hoy: string;
+  /** Acción de la sección («Registrar biomarcador»), a la derecha del título. */
+  accion?: ReactNode;
+}) {
   const { secciones, sinDatos } = mensajes().caso;
   return (
-    <SeccionDeFicha id="caso-series" titulo={secciones.series}>
+    <SeccionDeFicha id="caso-series" titulo={secciones.series} accion={accion}>
       {series.length === 0 ? (
         <p className="m-0">{sinDatos}</p>
       ) : (

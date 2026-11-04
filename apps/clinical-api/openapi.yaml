@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — Platform API (Backend 1 / clinical-api)
-  version: 1.19.0
+  version: 1.20.0
   description: >-
     API pública, accesible solo a través de los Route Handlers de web (clinical-api no
     publica puerto al host). Autenticación por cookie de sesión HttpOnly + Secure +
@@ -523,6 +523,44 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorDiagnosticoInvalido'
+
+  /platform/patients/{patientId}/manual-entry-options:
+    get:
+      operationId: getManualEntryOptions
+      tags: [registro-manual]
+      summary: Valores del catálogo para los formularios de registro manual
+      description: >-
+        Devuelve los valores del catálogo montado que el oncólogo ofrece al registrar un
+        biomarcador o completar el diagnóstico a mano (RN-29): términos de biomarcador, sistemas
+        de estadificación, escalas funcionales con su rango, sistemas de gradación y el destino
+        de cada ítem crítico (para abrir el formulario desde un faltante). Se calcula para el tipo
+        de cáncer del diagnóstico vigente; sin diagnóstico vigente, para todos los tipos
+        habilitados y cancerType es null. Es una lectura clínica: el administrador recibe 403.
+      x-permission: clinical:read
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+      responses:
+        "200":
+          description: Opciones del catálogo para los formularios.
+          headers:
+            Cache-Control:
+              description: Siempre no-store.
+              required: true
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ManualEntryOptions'
+        "401":
+          $ref: '#/components/responses/NoAutenticado'
+        "403":
+          $ref: '#/components/responses/PermisoDenegado'
+        "404":
+          $ref: '#/components/responses/NoEncontrado'
+        "500":
+          $ref: '#/components/responses/ErrorInterno'
 
   /platform/patients/{patientId}/prior-treatments:
     post:
@@ -1547,6 +1585,78 @@ components:
         catalogVersion:
           type: string
           minLength: 1
+
+    ManualEntryOptions:
+      type: object
+      description: >-
+        Valores del catálogo versionado para los formularios de registro manual. Backend 1 es el
+        dueño de la normalización: el cliente solo ofrece estos valores y el servidor decide el
+        mapeo (RN-27, ADR-33).
+      additionalProperties: false
+      required: [catalogVersion, cancerType, enabledCancerTypes, biomarkerTerms, stagingSystems,
+                 performanceScales, gradingSystems, criticalItems]
+      properties:
+        catalogVersion:
+          type: string
+          minLength: 1
+        cancerType:
+          type: [string, "null"]
+          description: Tipo de cáncer del diagnóstico vigente; null sin diagnóstico vigente.
+        enabledCancerTypes:
+          type: array
+          items:
+            type: string
+        biomarkerTerms:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [term, label]
+            properties:
+              term:
+                type: string
+              label:
+                type: string
+        stagingSystems:
+          type: array
+          items:
+            type: string
+        performanceScales:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [code, minimum, maximum]
+            properties:
+              code:
+                type: string
+              minimum:
+                type: integer
+              maximum:
+                type: integer
+        gradingSystems:
+          type: array
+          items:
+            type: string
+            enum: [nottingham, gleason_isup]
+        criticalItems:
+          type: array
+          description: Destino de cada ítem crítico del catálogo, para abrir el formulario desde un faltante.
+          items:
+            type: object
+            additionalProperties: false
+            required: [item, entity, field, term]
+            properties:
+              item:
+                type: string
+              entity:
+                type: string
+                enum: [Diagnosis, Biomarker, ClinicalAttribute, PriorTreatment]
+              field:
+                type: [string, "null"]
+              term:
+                type: [string, "null"]
+                description: Término del biomarcador (match.name) si entity es Biomarker; null en otro caso.
 
     BiomarkerManualCreate:
       type: object

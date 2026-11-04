@@ -6,6 +6,9 @@ import { hrefDeVistaDeCaso } from '../../lib/ficha/anclas';
 import { ORIGEN_PERMITIDO, URL_CLINICAL_API } from '../support/clinical-api-simulado';
 import { crearFichaSimulada, fichaDelDoctor, ID_DE_FICHA } from '../support/ficha-simulado';
 
+// Las islas de registro manual (US-111) usan el router de Next: es el borde de framework, no un módulo propio.
+vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }) }));
+
 vi.mock('next/headers', () => ({
   headers: () => Promise.resolve(new Headers({ cookie: 'oncolens_session=sesion-sintetica-1' })),
 }));

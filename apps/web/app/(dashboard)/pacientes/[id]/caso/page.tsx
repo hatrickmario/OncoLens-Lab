@@ -6,6 +6,7 @@ import { VistaDeCaso } from '../../../../../components/organisms/vista-de-caso';
 import { CaseViewTemplate } from '../../../../../components/templates/case-view-template';
 import { hrefDeFicha } from '../../../../../lib/ficha/anclas';
 import { mensajes } from '../../../../../lib/mensajes';
+import { claveDeItem } from '../../../../../lib/registro-manual/enlaces';
 import { hoyDelServidor } from '../../../../../lib/server/hoy';
 import { obtenerFicha } from '../../../../../lib/server/pacientes';
 import { RUTA_LOGIN_EXPIRADA } from '../../../../../lib/sesion/motivo-de-sesion';
@@ -17,8 +18,15 @@ export const metadata = { title: mensajes().caso.tituloDocumento };
  * nunca en la URL ni en el estado cliente); la vista de caso la pide el organismo cliente al Route Handler. El
  * administrador no lee datos clínicos: vuelve a su ficha.
  */
-export default async function CasoPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function CasoPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams?: Promise<{ item?: string | string[] }>;
+}) {
   const { id } = await params;
+  const item = claveDeItem((await searchParams)?.item);
   const resultado = await obtenerFicha((await headers()).get('cookie'), id);
   if (resultado.tipo === 'no_autenticado') redirect(RUTA_LOGIN_EXPIRADA);
   if (resultado.tipo !== 'ok') {
@@ -37,6 +45,7 @@ export default async function CasoPage({ params }: { params: Promise<{ id: strin
           patientId={id}
           hoy={hoyDelServidor()}
           egresado={resultado.ficha.lifecycleStatus === 'egresado'}
+          item={item}
         />
       </CaseViewTemplate>
     </main>

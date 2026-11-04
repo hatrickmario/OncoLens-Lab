@@ -1,0 +1,33 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { pedirValoresDelCatalogo, type LecturaDelCatalogo } from './valores-del-catalogo';
+
+/**
+ * Opciones del catálogo para los formularios de registro manual. Se leen cuando `activo` pasa a verdadero (diálogo
+ * abierto o `?item=` presente), de nuevo en cada apertura: tras corregir el diagnóstico cambia el tipo de cáncer.
+ * `null` mientras se leen.
+ */
+export function useValoresDelCatalogo(
+  pacienteId: string,
+  activo: boolean,
+): LecturaDelCatalogo | null {
+  const [lectura, setLectura] = useState<LecturaDelCatalogo | null>(null);
+  const [estabaActivo, setEstabaActivo] = useState(activo);
+  if (activo !== estabaActivo) {
+    // Al reabrir no se muestran los valores de la apertura anterior: se descartan en el mismo render.
+    setEstabaActivo(activo);
+    if (activo) setLectura(null);
+  }
+  useEffect(() => {
+    if (!activo) return;
+    let vigente = true;
+    void pedirValoresDelCatalogo(pacienteId).then((nueva) => {
+      if (vigente) setLectura(nueva);
+    });
+    return () => {
+      vigente = false;
+    };
+  }, [pacienteId, activo]);
+  return lectura;
+}

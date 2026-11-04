@@ -255,6 +255,37 @@ export const zClinicalAttributeList = z.strictObject({
 });
 
 /**
+ * Valores del catálogo versionado para los formularios de registro manual. Backend 1 es el dueño de la normalización: el cliente solo ofrece estos valores y el servidor decide el mapeo (RN-27, ADR-33).
+ */
+export const zManualEntryOptions = z.strictObject({
+    catalogVersion: z.string().min(1),
+    cancerType: z.string().nullable(),
+    enabledCancerTypes: z.array(z.string()),
+    biomarkerTerms: z.array(z.strictObject({
+        term: z.string(),
+        label: z.string()
+    })),
+    stagingSystems: z.array(z.string()),
+    performanceScales: z.array(z.strictObject({
+        code: z.string(),
+        minimum: z.int(),
+        maximum: z.int()
+    })),
+    gradingSystems: z.array(z.enum(['nottingham', 'gleason_isup'])),
+    criticalItems: z.array(z.strictObject({
+        item: z.string(),
+        entity: z.enum([
+            'Diagnosis',
+            'Biomarker',
+            'ClinicalAttribute',
+            'PriorTreatment'
+        ]),
+        field: z.string().nullable(),
+        term: z.string().nullable()
+    }))
+});
+
+/**
  * Registro manual de un biomarcador desde un faltante. El nombre viaja en el cuerpo, nunca en la URL.
  */
 export const zBiomarkerManualCreate = z.strictObject({
@@ -1254,6 +1285,15 @@ export const zCreateManualDiagnosisPath = z.object({
  * Diagnóstico registrado.
  */
 export const zCreateManualDiagnosisResponse = zDiagnosis;
+
+export const zGetManualEntryOptionsPath = z.object({
+    patientId: z.uuid()
+});
+
+/**
+ * Opciones del catálogo para los formularios.
+ */
+export const zGetManualEntryOptionsResponse = zManualEntryOptions;
 
 export const zCreateManualPriorTreatmentBody = zPriorTreatmentManualCreate;
 

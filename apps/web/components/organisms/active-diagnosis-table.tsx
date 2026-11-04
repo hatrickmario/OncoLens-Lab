@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { Diagnosis } from '../../../../packages/api-contracts/src/types/clinical-api';
 import { describirGradacion, textoDeOrigen } from '../../lib/ficha/presentacion';
 import { mensajes } from '../../lib/mensajes';
@@ -46,13 +47,16 @@ function filasDelDiagnostico(d: Diagnosis, hoy: string) {
 export function ActiveDiagnosisTable({
   diagnostico,
   hoy,
+  accion,
 }: {
   diagnostico: Diagnosis | null;
   hoy: string;
+  /** Acción de la sección (p. ej. «Completar diagnóstico a mano»), a la derecha del título. */
+  accion?: ReactNode;
 }) {
   const { diagnostico: textos, noRegistrado } = mensajes().ficha;
   return (
-    <SeccionDeFicha id="diagnostico" titulo={textos.titulo}>
+    <SeccionDeFicha id="diagnostico" titulo={textos.titulo} accion={accion}>
       {diagnostico === null ? (
         <p className="m-0">{noRegistrado}</p>
       ) : (

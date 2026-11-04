@@ -7,15 +7,18 @@ import { crearTraceIdMiddleware, traceIdDe } from '../../middleware/trace-id.mid
 import {
   CUERPO_INVALIDO,
   crearCuerpoIlegible,
+  cuerpoInvalidoDelCampo,
   rechazar,
   rechazoComunDe,
   registrarResultado,
   sesionDe,
   type Rechazo,
 } from '../compartido/http-escritura.js';
+import type { LecturaDeCuerpo } from '../compartido/cuerpo-de-registro.js';
 import { PacienteNoEncontradoError } from '../compartido/pacientes.errores.js';
 import { idDePacienteSchema } from '../patients/patients.schema.js';
 import { CuerpoIncompletoError, GradacionIncoherenteError } from './manual-entry.errores.js';
+import { campoDelError } from './manual-entry.reglas.js';
 import { leerCuerpoDeBiomarcador, leerCuerpoDeDiagnostico } from './manual-entry.schema.js';
 import type { ManualEntryService, SolicitudDeRegistro } from './manual-entry.service.js';
 
@@ -28,9 +31,9 @@ export interface DependenciasDelController {
 
 const EVENTO_BIOMARCADOR = 'manual_entry.biomarcador';
 const EVENTO_DIAGNOSTICO = 'manual_entry.diagnostico';
+const EVENTO_OPCIONES = 'manual_entry.opciones';
 
-/** Errores de dominio → respuesta HTTP; `undefined` si no es uno de ellos (sigue al 500 genérico). */
-function rechazoDe(error: unknown): Rechazo | undefined {
+function rechazoSinCampoDe(error: unknown): Rechazo | undefined {
   const comun = rechazoComunDe(error);
   if (comun !== undefined) return comun;
   if (error instanceof GradacionIncoherenteError) {
@@ -40,9 +43,16 @@ function rechazoDe(error: unknown): Rechazo | undefined {
   return undefined;
 }
 
+/** Errores de dominio → respuesta HTTP con su `field` (RN-10: el nombre, nunca el valor); `undefined` si no es uno de ellos (sigue al 500 genérico). */
+function rechazoDe(error: unknown): Rechazo | undefined {
+  const rechazo = rechazoSinCampoDe(error);
+  const campo = campoDelError(error);
+  return rechazo === undefined || campo === undefined ? rechazo : { ...rechazo, campo };
+}
+
 interface Operacion<C, R> {
   readonly evento: string;
-  readonly leerCuerpo: (cuerpo: unknown) => C | undefined;
+  readonly leerCuerpo: (cuerpo: unknown) => LecturaDeCuerpo<C>;
   readonly ejecutar: (
     servicio: ManualEntryService,
     solicitud: SolicitudDeRegistro<C>,
@@ -55,9 +65,12 @@ function crearRegistro<C, R>(dependencias: DependenciasDelController, operacion:
     const rechazarCon = (rechazo: Rechazo, patientId?: string): void =>
       rechazar(registrar, operacion.evento, response, rechazo, patientId);
     const patientId = idDePacienteSchema.safeParse(request.params['patientId']);
-    const cuerpo = operacion.leerCuerpo(request.body);
-    if (cuerpo === undefined) {
-      rechazarCon(CUERPO_INVALIDO, patientId.success ? patientId.data : undefined);
+    const lectura = operacion.leerCuerpo(request.body);
+    if (!lectura.valido) {
+      rechazarCon(
+        cuerpoInvalidoDelCampo(lectura.campo),
+        patientId.success ? patientId.data : undefined,
+      );
       return;
     }
     if (!patientId.success) {
@@ -68,7 +81,7 @@ function crearRegistro<C, R>(dependencias: DependenciasDelController, operacion:
       const creado = await operacion.ejecutar(servicioPara(traceIdDe(response)), {
         patientId: patientId.data,
         userId: sesionDe(request, 'manual-entry').userId,
-        cuerpo,
+        cuerpo: lectura.cuerpo,
       });
       registrarResultado(registrar, operacion.evento, response, patientId.data, 'ok');
       response.setHeader('Cache-Control', 'no-store');
@@ -85,8 +98,27 @@ function crearRegistro<C, R>(dependencias: DependenciasDelController, operacion:
   };
 }
 
+function crearOpciones({ registrar, servicioPara }: DependenciasDelController) {
+  return async (request: Request, response: Response): Promise<void> => {
+    const patientId = idDePacienteSchema.safeParse(request.params['patientId']);
+    if (!patientId.success) {
+      rechazarNoEncontrado(response, registrar, EVENTO_OPCIONES);
+      return;
+    }
+    try {
+      const opciones = await servicioPara(traceIdDe(response)).opciones(patientId.data);
+      registrarResultado(registrar, EVENTO_OPCIONES, response, patientId.data, 'ok');
+      response.setHeader('Cache-Control', 'no-store');
+      response.status(200).json(opciones);
+    } catch (error) {
+      if (!(error instanceof PacienteNoEncontradoError)) throw error;
+      rechazarNoEncontrado(response, registrar, EVENTO_OPCIONES);
+    }
+  };
+}
+
 /**
- * `POST /platform/patients/{id}/biomarkers` y `…/diagnoses` (se montan bajo `/platform`, detrás del guard). Solo traducen
+ * `POST /platform/patients/{id}/biomarkers` y `…/diagnoses` y `GET …/manual-entry-options` (se montan bajo `/platform`, detrás del guard). Solo traducen
  * HTTP ↔ service: `authorize` corre antes de leer el cuerpo (403 sin efectos) y el log nunca lleva valores clínicos.
  */
 export function manualEntryController(dependencias: DependenciasDelController): Router {
@@ -96,6 +128,12 @@ export function manualEntryController(dependencias: DependenciasDelController): 
     authorize('clinical:write'), // x-permission de createManualBiomarker y createManualDiagnosis
     express.json(),
   ];
+  router.get(
+    '/patients/:patientId/manual-entry-options',
+    crearTraceIdMiddleware(dependencias.traceIds),
+    authorize('clinical:read'), // x-permission de getManualEntryOptions
+    crearOpciones(dependencias),
+  );
   router.post(
     '/patients/:patientId/biomarkers',
     ...alRegistrar,

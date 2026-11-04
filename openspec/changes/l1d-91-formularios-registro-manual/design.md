@@ -114,9 +114,9 @@ Pantalla de referencia S5-03 a y b; sin desviaciones (el `grade` derivado se mue
 - Las páginas (ficha y vista de caso) siguen siendo RSC; la isla cliente `AccionesDeRegistroManual` recibe
   `patientId`, `diagnosticoVigente` (de `obtenerFicha`) y `alGuardar`. En la vista de caso se monta dentro de
   `VistaDeCaso` (ya cliente) para tener `recargar()`.
-- **Custom hook `useEnvioRegistroManual(operacion)`** (`lib/registro-manual/use-envio-registro-manual.ts`):
+- **Custom hook `useEnvioDeRegistro(operacion)`** (`lib/registro-manual/use-envio-registro-manual.ts`):
   `{ enviar, enviando, erroresPorCampo, errorGeneral }`. Evidencia: dos consumidores en este change (los dos diálogos)
-  y `l1d-80` puede reutilizarlo. **Hook `useOpcionesDeRegistroManual(patientId)`**: dos consumidores (los dos
+  y `l1d-80` puede reutilizarlo. **Hook `useValoresDelCatalogo(patientId)`**: dos consumidores (los dos
   diálogos). Sin provider ni compound components (sin prop drilling ≥ 3).
 - Lógica pura en `lib/registro-manual/`: `cambiosDelDiagnostico()`, `erroresDelServidor(respuesta)` (`field` →
   error de campo; sin `field` → general), `resolverItem(opciones, item)`, `hrefDeRegistroManual()`.
@@ -219,7 +219,7 @@ de `web` salen de estos ejemplos (US-213).
 
 ## Tests
 
-- `clinical-api` (TDD estricto, integración Supertest + PostgreSQL de test + catálogo `test-s2-1.0.0`, verificación del
+- `clinical-api` (TDD estricto, integración Supertest + PostgreSQL de test + catálogo `test-normalizacion-1.0.0`, verificación del
   proveedor): opciones de mama, próstata y sin diagnóstico; `401/403/404`; `field` en los `422` de ambos `POST`;
   paridad `criticalItems` ↔ `CompletenessItem.destination` (D10).
   Unitarios de `opcionesDeRegistroManual()` y `campoDelError()`.
@@ -234,7 +234,7 @@ de `web` salen de estos ejemplos (US-213).
 
 - Estimación: la historia (3 pts) suponía «endpoints existentes»; la lectura de opciones y el relleno de `field`
   añaden trabajo en `clinical-api` (US-111 sigue en 3, `[S5 resp. 14]`).
-- En la demo, con el catálogo real 1.3.0+ (subconjunto LOINC de `l1d-90`, `[S5 resp. 9]`), Ki-67 manual sale
+- En la demo, con el catálogo real clinical-catalogs 1.4.0 (atributos 1.2.0, manifest 1.4.0, con `sensible_castracion`; subconjunto LOINC de `l1d-90`, `[S5 resp. 9]`), Ki-67 manual sale
   `mapeado`; un término fuera del subconjunto sigue `no_mapeado` (RN-27). AC-1 se verifica con el catálogo de test.
 
 ## Decisiones del Gate 1 (usuario, 2026-11-03)

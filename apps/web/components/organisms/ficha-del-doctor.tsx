@@ -10,6 +10,8 @@ import { ChecklistNoDisponible } from '../molecules/checklist-no-disponible';
 import { FocoPorAncla } from '../molecules/foco-por-ancla';
 import { PendingReviewNotice } from '../molecules/pending-review-notice';
 import { ActiveDiagnosisTable } from './active-diagnosis-table';
+import { DialogoCompletarDiagnostico } from './dialogo-completar-diagnostico';
+import { DialogoRegistroBiomarcador } from './dialogo-registro-biomarcador';
 import { NotasClinicasDeFicha } from './notas-clinicas-de-ficha';
 import { PatientHeaderBar } from './patient-header-bar';
 import { PatientSummaryCard } from './patient-summary-card';
@@ -20,14 +22,18 @@ export function FichaDelDoctor({
   ficha,
   notas,
   hoy,
+  item,
 }: {
   ficha: PatientSummary;
   /** `null` si la lectura de notas falló: el resto de la ficha se muestra igual. */
   notas: ClinicalNote[] | null;
   hoy: string;
+  /** Clave del catálogo de `?item=` (US-111): abre el formulario de su entidad. */
+  item?: string;
 }) {
   const { ficha: textos, caso } = mensajes();
   const egresado = ficha.lifecycleStatus === 'egresado';
+  const registro = { pacienteId: ficha.id, egresado, pagina: 'ficha', item } as const;
   return (
     <>
       <FocoPorAncla />
@@ -39,12 +45,23 @@ export function FichaDelDoctor({
       />
       {ficha.completenessAvailable === false && <ChecklistNoDisponible />}
       <PatientSummaryCard ficha={ficha} />
-      <ActiveDiagnosisTable diagnostico={ficha.diagnosis} hoy={hoy} />
+      <ActiveDiagnosisTable
+        diagnostico={ficha.diagnosis}
+        hoy={hoy}
+        accion={
+          <DialogoCompletarDiagnostico
+            {...registro}
+            diagnostico={ficha.diagnosis}
+            idDelEncabezado="diagnostico"
+          />
+        }
+      />
       <RecentBiomarkersTable
         biomarcadores={ficha.recentBiomarkers}
         pacienteId={ficha.id}
         egresado={egresado}
         hoy={hoy}
+        accion={<DialogoRegistroBiomarcador {...registro} idDelEncabezado="biomarcadores" />}
       />
       <NotasClinicasDeFicha notas={notas} pacienteId={ficha.id} egresado={egresado} hoy={hoy} />
       <div className="flex flex-wrap gap-3">

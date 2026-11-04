@@ -18,6 +18,15 @@ const esquemaDeEscalas = z.object({
 
 const esquemaDeManifiesto = z.object({ escalas: z.literal(true).optional() });
 
+type SistemasPorTipo = readonly { codigo: string; tiposDeCancer: string[] }[] | undefined;
+
+/** Códigos de los sistemas que declaran el tipo de cáncer, en el orden del catálogo. */
+const codigosDelTipo = (sistemas: SistemasPorTipo, tipoDeCancer: string): string[] =>
+  (sistemas ?? []).filter((s) => s.tiposDeCancer.includes(tipoDeCancer)).map((s) => s.codigo);
+
+const sistemaValido = (sistemas: SistemasPorTipo, sistema: string, tipoDeCancer: string): boolean =>
+  codigosDelTipo(sistemas, tipoDeCancer).includes(sistema);
+
 const CATALOGO_SIN_ESCALAS: CatalogoDeEscalas['rangoDeEscala'] = () => undefined;
 
 /**
@@ -44,12 +53,6 @@ export function crearCatalogoDeEscalas(
       motivo: 'catalogo_invalido',
     });
   }
-  const sistemaValido = (
-    sistemas: readonly { codigo: string; tiposDeCancer: string[] }[] | undefined,
-    sistema: string,
-    tipoDeCancer: string,
-  ): boolean =>
-    sistemas?.some((s) => s.codigo === sistema && s.tiposDeCancer.includes(tipoDeCancer)) ?? false;
   return {
     version: () => proveedor.version(),
     sistemaDeEstadificacionValido: (sistema, tipo) =>
@@ -63,5 +66,8 @@ export function crearCatalogoDeEscalas(
           },
     sistemaDeGradacionValido: (sistema, tipo) =>
       sistemaValido(escalas?.sistemasDeGradacion, sistema, tipo),
+    sistemasDeEstadificacion: (tipo) => codigosDelTipo(escalas?.sistemasDeEstadificacion, tipo),
+    escalasFuncionales: () => escalas?.escalasFuncionales ?? [],
+    sistemasDeGradacion: (tipo) => codigosDelTipo(escalas?.sistemasDeGradacion, tipo),
   };
 }

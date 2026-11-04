@@ -2,7 +2,7 @@
 
 import { client } from './client.gen.js';
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client/index.js';
-import type { CorrectBiomarkerData, CorrectBiomarkerErrors, CorrectBiomarkerResponses, CorrectClinicalNoteData, CorrectClinicalNoteErrors, CorrectClinicalNoteResponses, CreateEvidenceAnalysisData, CreateEvidenceAnalysisErrors, CreateEvidenceAnalysisResponses, CreateFollowUpData, CreateFollowUpErrors, CreateFollowUpResponses, CreateManualBiomarkerData, CreateManualBiomarkerErrors, CreateManualBiomarkerResponses, CreateManualClinicalAttributeData, CreateManualClinicalAttributeErrors, CreateManualClinicalAttributeResponses, CreateManualDiagnosisData, CreateManualDiagnosisErrors, CreateManualDiagnosisResponses, CreateManualPriorTreatmentData, CreateManualPriorTreatmentErrors, CreateManualPriorTreatmentResponses, GetBiomarkerHistoryData, GetBiomarkerHistoryErrors, GetBiomarkerHistoryResponses, GetClinicalNoteHistoryData, GetClinicalNoteHistoryErrors, GetClinicalNoteHistoryResponses, GetCompletenessData, GetCompletenessErrors, GetCompletenessResponses, GetHealthData, GetHealthResponses, GetPatientCaseData, GetPatientCaseErrors, GetPatientCaseResponses, GetPatientData, GetPatientErrors, GetPatientResponses, ListClinicalAttributesData, ListClinicalAttributesErrors, ListClinicalAttributesResponses, ListClinicalNotesData, ListClinicalNotesErrors, ListClinicalNotesResponses, ListFollowUpsData, ListFollowUpsErrors, ListFollowUpsResponses, ListPatientsData, ListPatientsErrors, ListPatientsResponses, LoginData, LoginErrors, LoginResponses, LogoutData, LogoutErrors, LogoutResponses, SearchPatientsData, SearchPatientsErrors, SearchPatientsResponses, UploadDocumentData, UploadDocumentErrors, UploadDocumentResponses } from './types.gen.js';
+import type { CorrectBiomarkerData, CorrectBiomarkerErrors, CorrectBiomarkerResponses, CorrectClinicalNoteData, CorrectClinicalNoteErrors, CorrectClinicalNoteResponses, CreateEvidenceAnalysisData, CreateEvidenceAnalysisErrors, CreateEvidenceAnalysisResponses, CreateFollowUpData, CreateFollowUpErrors, CreateFollowUpResponses, CreateManualBiomarkerData, CreateManualBiomarkerErrors, CreateManualBiomarkerResponses, CreateManualClinicalAttributeData, CreateManualClinicalAttributeErrors, CreateManualClinicalAttributeResponses, CreateManualDiagnosisData, CreateManualDiagnosisErrors, CreateManualDiagnosisResponses, CreateManualPriorTreatmentData, CreateManualPriorTreatmentErrors, CreateManualPriorTreatmentResponses, GetBiomarkerHistoryData, GetBiomarkerHistoryErrors, GetBiomarkerHistoryResponses, GetClinicalNoteHistoryData, GetClinicalNoteHistoryErrors, GetClinicalNoteHistoryResponses, GetCompletenessData, GetCompletenessErrors, GetCompletenessResponses, GetHealthData, GetHealthResponses, GetManualEntryOptionsData, GetManualEntryOptionsErrors, GetManualEntryOptionsResponses, GetPatientCaseData, GetPatientCaseErrors, GetPatientCaseResponses, GetPatientData, GetPatientErrors, GetPatientResponses, ListClinicalAttributesData, ListClinicalAttributesErrors, ListClinicalAttributesResponses, ListClinicalNotesData, ListClinicalNotesErrors, ListClinicalNotesResponses, ListFollowUpsData, ListFollowUpsErrors, ListFollowUpsResponses, ListPatientsData, ListPatientsErrors, ListPatientsResponses, LoginData, LoginErrors, LoginResponses, LogoutData, LogoutErrors, LogoutResponses, SearchPatientsData, SearchPatientsErrors, SearchPatientsResponses, UploadDocumentData, UploadDocumentErrors, UploadDocumentResponses } from './types.gen.js';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -206,6 +206,21 @@ export const createManualDiagnosis = <ThrowOnError extends boolean = false>(opti
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+/**
+ * Valores del catálogo para los formularios de registro manual
+ *
+ * Devuelve los valores del catálogo montado que el oncólogo ofrece al registrar un biomarcador o completar el diagnóstico a mano (RN-29): términos de biomarcador, sistemas de estadificación, escalas funcionales con su rango, sistemas de gradación y el destino de cada ítem crítico (para abrir el formulario desde un faltante). Se calcula para el tipo de cáncer del diagnóstico vigente; sin diagnóstico vigente, para todos los tipos habilitados y cancerType es null. Es una lectura clínica: el administrador recibe 403.
+ */
+export const getManualEntryOptions = <ThrowOnError extends boolean = false>(options: Options<GetManualEntryOptionsData, ThrowOnError>): RequestResult<GetManualEntryOptionsResponses, GetManualEntryOptionsErrors, ThrowOnError> => (options.client ?? client).get<GetManualEntryOptionsResponses, GetManualEntryOptionsErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'oncolens_session',
+            type: 'apiKey'
+        }],
+    url: '/platform/patients/{patientId}/manual-entry-options',
+    ...options
 });
 
 /**

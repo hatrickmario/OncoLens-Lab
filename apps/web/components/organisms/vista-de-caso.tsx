@@ -7,12 +7,12 @@ import { useVistaDeCaso } from '../../lib/caso/use-vista-de-caso';
 import { mensajes } from '../../lib/mensajes';
 import { Alert } from '../ui/alert';
 import { VistaDeCasoNoDisponible } from '../molecules/vista-de-caso-no-disponible';
-import { BiomarkerSeriesTables } from './biomarker-series-tables';
 import { CaseTimeline } from './case-timeline';
 import { ClinicalAttributesTable } from './clinical-attributes-table';
 import { DialogoAtributoClinico } from './dialogo-atributo-clinico';
 import { DialogoTratamientoPrevio } from './dialogo-tratamiento-previo';
 import { PriorTreatmentsTable } from './prior-treatments-table';
+import { SeriesConRegistroManual } from './series-con-registro-manual';
 import { UndatedEvents } from './undated-events';
 
 interface SeccionesDelCasoProps {
@@ -22,9 +22,18 @@ interface SeccionesDelCasoProps {
   egresado: boolean;
   /** Recarga la vista tras un registro manual (`201`). */
   alRegistrar: () => void;
+  /** Clave de `?item=` (US-111). */
+  item?: string;
 }
 
-function SeccionesDelCaso({ vista, hoy, patientId, egresado, alRegistrar }: SeccionesDelCasoProps) {
+function SeccionesDelCaso({
+  vista,
+  hoy,
+  patientId,
+  egresado,
+  alRegistrar,
+  item,
+}: SeccionesDelCasoProps) {
   const { fechados, sinFecha } = separarSinFecha(vista.timeline);
   const registro = { pacienteId: patientId, egresado, alGuardar: alRegistrar };
   return (
@@ -41,7 +50,7 @@ function SeccionesDelCaso({ vista, hoy, patientId, egresado, alRegistrar }: Secc
         hoy={hoy}
         accion={<DialogoAtributoClinico {...registro} />}
       />
-      <BiomarkerSeriesTables series={vista.biomarkerSeries} hoy={hoy} />
+      <SeriesConRegistroManual series={vista.biomarkerSeries} hoy={hoy} item={item} {...registro} />
     </>
   );
 }
@@ -54,11 +63,14 @@ export function VistaDeCaso({
   patientId,
   hoy,
   egresado = false,
+  item,
 }: {
   patientId: string;
   hoy: string;
   /** Paciente egresado (RN-17): los registros manuales se deshabilitan. */
   egresado?: boolean;
+  /** Clave del catálogo de `?item=` (US-111): abre el formulario de su entidad. */
+  item?: string;
 }) {
   const { lectura, recargar } = useVistaDeCaso(patientId);
   const { caso, ficha } = mensajes();
@@ -88,6 +100,7 @@ export function VistaDeCaso({
       patientId={patientId}
       egresado={egresado}
       alRegistrar={() => void recargar()}
+      item={item}
     />
   );
 }

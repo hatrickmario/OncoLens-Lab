@@ -43,6 +43,20 @@ describe('crearCatalogoDeEscalas', () => {
     expect(escalas.sistemaDeEstadificacionValido('TNM_8', 'pulmon')).toBe(false);
   });
 
+  it('lista sistemas y escalas en el orden del catálogo cuando se leen para el formulario', () => {
+    const escalas = catalogoSobre(RUTA_CATALOGO_FX01BB);
+
+    expect(escalas.sistemasDeEstadificacion('mama')).toEqual(['TNM_8']);
+    expect(escalas.sistemasDeEstadificacion('pulmon')).toEqual([]);
+    expect(escalas.sistemasDeGradacion('mama')).toEqual(['nottingham']);
+    expect(escalas.sistemasDeGradacion('prostata')).toEqual(['gleason_isup']);
+    expect(escalas.escalasFuncionales()).toEqual([
+      { codigo: 'ECOG', minimo: 0, maximo: 5 },
+      { codigo: 'Karnofsky', minimo: 0, maximo: 100 },
+      { codigo: 'Lansky', minimo: 0, maximo: 100 },
+    ]);
+  });
+
   it('informa la versión del catálogo montado', () => {
     expect(catalogoSobre(RUTA_CATALOGO_FX01BB).version()).toBe('test-normalizacion-1.0.0');
   });
@@ -60,6 +74,9 @@ describe('crearCatalogoDeEscalas', () => {
     expect(escalas.rangoDeEscala('ECOG')).toBeUndefined();
     expect(escalas.sistemaDeEstadificacionValido('TNM_8', 'mama')).toBe(false);
     expect(escalas.sistemaDeGradacionValido('nottingham', 'mama')).toBe(false);
+    expect(escalas.sistemasDeEstadificacion('mama')).toEqual([]);
+    expect(escalas.sistemasDeGradacion('mama')).toEqual([]);
+    expect(escalas.escalasFuncionales()).toEqual([]);
   });
 
   it('impide el arranque cuando el manifiesto declara escalas y el archivo está roto', () => {

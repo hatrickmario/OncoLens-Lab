@@ -6,7 +6,7 @@ import { idDePacienteSchema } from '../patients/patients.schema.js';
 import type { LecturaDeCuerpo } from './cuerpo-de-registro.js';
 import { ValorFueraDeCatalogoError } from './errores-de-registro.js';
 import {
-  CUERPO_INVALIDO,
+  cuerpoInvalidoDelCampo,
   rechazar,
   rechazoComunDe,
   registrarResultado,
@@ -44,11 +44,6 @@ function rechazoDeRegistro(error: unknown): Rechazo | undefined {
   return comun;
 }
 
-/** El 422 de un cuerpo que no cumple el contrato, con el NOMBRE del campo cuando se sabe cuál es. */
-function rechazoPorCuerpoInvalido(campo: string | undefined): Rechazo {
-  return { ...CUERPO_INVALIDO, ...(campo !== undefined && { campo }) };
-}
-
 /** Ejecuta la operación y responde 201 `no-store`, o traduce el error de dominio (404, 422) a su rechazo. */
 async function ejecutarYResponder<S, C, R>(
   { servicioPara, registrar }: DependenciasDelRegistro<S>,
@@ -83,7 +78,7 @@ export function crearRegistroHttp<S, C, R>(
     const patientId = idDePacienteSchema.safeParse(request.params['patientId']);
     const lectura = operacion.leerCuerpo(request.body);
     if (!lectura.valido) {
-      const rechazo = rechazoPorCuerpoInvalido(lectura.campo);
+      const rechazo = cuerpoInvalidoDelCampo(lectura.campo);
       rechazar(registrar, operacion.evento, response, rechazo, patientId.data);
       return;
     }

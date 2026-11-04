@@ -14,7 +14,10 @@ import { versionDelServicio } from './infrastructure/version-servicio.js';
 import { caseViewController } from './modules/case-view/case-view.controller.js';
 import { createCaseViewRepository } from './modules/case-view/case-view.repository.js';
 import { createCaseViewService } from './modules/case-view/case-view.service.js';
-import { componerCompletitud } from './modules/completeness/completeness.module.js';
+import {
+  cargarCatalogoDeDatosCriticos,
+  componerCompletitud,
+} from './modules/completeness/completeness.module.js';
 import { completenessController } from './modules/completeness/completeness.controller.js';
 import { createReconciliationService } from './modules/reconciliation/reconciliation.service.js';
 import { componerModuloDeAtributos } from './modules/clinical-attributes/clinical-attributes.module.js';
@@ -154,6 +157,13 @@ arrancar({
               registrar: (linea) => registrar({ ...linea, traceId }),
             }),
           escalas: servicios.escalas,
+          terminologia: servicios.terminologia,
+          // El MISMO lector de datos-criticos.json que el checklist (D10 de l1d-91): `criticalItems` = `destination`.
+          datosCriticos: cargarCatalogoDeDatosCriticos(
+            configuracion.analisis.catalogPath,
+            leerArchivo,
+          ),
+          tiposDelCatalogo: catalogo.cancerTypes(),
           tiposHabilitados,
           reloj,
           generarId: randomUUID,

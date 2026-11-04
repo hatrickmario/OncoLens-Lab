@@ -5,24 +5,24 @@ import {
   zPriorTreatment,
 } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
 import { mensajes } from '../mensajes';
+import { errorDelServidor, type ErrorDeRegistro } from './errores-del-servidor';
 
 export type AtributoPermitido = z.infer<typeof zClinicalAttributeList>['allowedAttributes'][number];
 
-/** Error de un registro ya traducido al texto que ve el oncólogo; `campo` es la propiedad del cuerpo, si la hay. */
-export interface ErrorDeRegistro {
-  campo?: string;
-  mensaje: string;
-}
+export type { ErrorDeRegistro };
 
 export type ResultadoDeRegistro =
-  { tipo: 'ok'; creado: unknown } | { tipo: 'error'; error: ErrorDeRegistro };
+  | { tipo: 'ok'; creado: unknown }
+  | { tipo: 'sin_sesion' }
+  | { tipo: 'error'; error: ErrorDeRegistro };
 
 export type LecturaDePermitidos =
   { tipo: 'ok'; permitidos: AtributoPermitido[] } | { tipo: 'error' };
 
-export type RutaDeRegistro = 'prior-treatments' | 'clinical-attributes';
+export type RutaDeRegistro =
+  'prior-treatments' | 'clinical-attributes' | 'biomarkers' | 'diagnoses';
 
-function leerJson(texto: string): unknown {
+export function leerJson(texto: string): unknown {
   try {
     return JSON.parse(texto);
   } catch {
@@ -31,7 +31,7 @@ function leerJson(texto: string): unknown {
 }
 
 /** Texto fijo de un 422 por `error` y `field`; el `message` del servidor nunca se muestra (sin jerga ni eco de valores). */
-function textoDelError422(error: string, campo: string | undefined): ErrorDeRegistro {
+function textoDelErrorDeRegistroClinico(error: string, campo: string | undefined): ErrorDeRegistro {
   const { errores } = mensajes().caso.registro;
   const sinCampo: Record<string, string> = {
     PACIENTE_EGRESADO: mensajes().ficha.correccion.egresado,
@@ -44,16 +44,17 @@ function textoDelError422(error: string, campo: string | undefined): ErrorDeRegi
   return campo ? { campo, mensaje } : { mensaje };
 }
 
-function traducirError(status: number, cuerpo: unknown): ErrorDeRegistro {
+function traducirError(ruta: RutaDeRegistro, status: number, cuerpo: unknown): ErrorDeRegistro {
+  if (ruta === 'biomarkers' || ruta === 'diagnoses') return errorDelServidor(status, cuerpo);
   const { errores } = mensajes().caso.registro;
   if (status === 403) return { mensaje: errores.permiso };
   if (status === 404) return { mensaje: errores.noEncontrado };
   const invalido = status === 422 ? zErrorRegistroClinicoInvalido.safeParse(cuerpo) : null;
   if (!invalido?.success) return { mensaje: errores.generico };
-  return textoDelError422(invalido.data.error, invalido.data.field);
+  return textoDelErrorDeRegistroClinico(invalido.data.error, invalido.data.field);
 }
 
-/** `POST …/{prior-treatments|clinical-attributes}` del BFF: el navegador añade `Origin` y la cookie `SameSite=Strict`. */
+/** `POST …/{prior-treatments|clinical-attributes|biomarkers|diagnoses}` del BFF: el navegador añade `Origin` y la cookie `SameSite=Strict`. */
 export async function enviarRegistro(
   pacienteId: string,
   ruta: RutaDeRegistro,
@@ -68,7 +69,8 @@ export async function enviarRegistro(
     });
     const leido = leerJson(await respuesta.text());
     if (respuesta.status === 201) return { tipo: 'ok', creado: leido };
-    return { tipo: 'error', error: traducirError(respuesta.status, leido) };
+    if (respuesta.status === 401) return { tipo: 'sin_sesion' };
+    return { tipo: 'error', error: traducirError(ruta, respuesta.status, leido) };
   } catch {
     return { tipo: 'error', error: { mensaje: mensajes().caso.registro.errores.generico } };
   }
