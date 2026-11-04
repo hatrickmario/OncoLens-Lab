@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Verifica el gate G-Demo (US-142, L1D-248) y escribe su registro. Solo datos SINTÉTICOS; nunca imprime filas, correos,
+# identidad, credenciales ni cadenas de conexión (RN-14).
+#
+#   scripts/verify-g-demo --modo fingido|real --e2e-resultado <json> --reporte-evaluate <json> [--reporte-evaluate <json>] \
+#                         [--p95-baseline-s <segundos>] [--p95-consultas <n>]
+#
+# Con el stack de la demo arriba (`scripts/demo/levantar.sh`): cuenta pacientes por `data_origin` con el rol de clinical-api
+# DENTRO del contenedor (como levantar.sh) y lee de `docker compose config` solo las dos banderas REAL_*_ENABLED. Si no puede
+# contar o leer, el gate no se da por superado. La lógica de la decisión vive en scripts/gates/g-demo/*.mjs.
+# Modo real superado -> docs/gates/G-Demo-<fecha>.md; todo lo demás (fingido o no superado) -> reports/gates/ (ignorado).
+# Las banderas se leen de la configuración efectiva de Compose (entorno del shell), no del contenedor en ejecución: riesgo
+# aceptado y documentado en docs/gates/README.md (D5-47).
+set -euo pipefail
+
+# El conteo, las banderas y el commit los fija este wrapper: un duplicado pasado por "$@" no puede falsificarlos (RN-13).
+for argumento in "$@"; do
+  case "$argumento" in
+    --conteo-json | --banderas-json | --commit)
+      echo "verify-g-demo: ese argumento lo fija el wrapper y no se acepta" >&2
+      exit 2
+      ;;
+  esac
+done
+
+raiz="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+compose=(docker compose -f "$raiz/infra/docker/docker-compose.yml")
+contador="dist/apps/clinical-api/prisma/seed/contar-en-proceso.js"
+
+conteo_json="$("${compose[@]}" exec -T clinical-api node "$contador" 2>/dev/null)" || conteo_json=""
+banderas_json="$("${compose[@]}" --profile seed config --format json 2>/dev/null \
+  | node "$raiz/scripts/gates/g-demo/banderas.mjs" 2>/dev/null)" || banderas_json=""
+commit="$(git -C "$raiz" rev-parse HEAD 2>/dev/null)" || commit=""
+
+exec node "$raiz/scripts/gates/g-demo/verificar.mjs" \
+  --conteo-json "$conteo_json" --banderas-json "$banderas_json" --commit "$commit" "$@"
