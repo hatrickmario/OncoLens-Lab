@@ -204,8 +204,8 @@ def test_validar_contra_esquema_acepta_la_salida_del_s1_y_rechaza_json_invalido_
     None
 ):
     valida = (
-        '{"options": [{"option": "o", "claims": '
-        '[{"text": "r", "role": "principal", "citations": ["C1"]}]}]}'
+        '{"options": [{"option": "o", "main_claim": {"text": "r", "citations": ["C1"]}, '
+        '"other_claims": []}]}'
     )
 
     assert validar_contra_esquema(valida, ESQUEMA_DE_GENERACION) is True

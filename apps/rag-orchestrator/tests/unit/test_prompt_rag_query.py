@@ -54,8 +54,22 @@ def test_plantilla_avisa_de_los_modales_normativos_y_pide_parafrasear_los_requis
     assert "indicativo" in texto
 
 
-def test_version_del_prompt_es_rag_query_0_7_0_porque_declara_los_faltantes_como_desconocido():
-    assert VERSION_DEL_PROMPT == "rag-query@0.7.0"
+def test_version_del_prompt_es_rag_query_0_8_0_porque_pide_la_afirmacion_central_aparte():
+    assert VERSION_DEL_PROMPT == "rag-query@0.8.0"
+
+
+def test_el_prompt_pide_la_afirmacion_central_aparte_y_no_pide_asignarle_papel():
+    """D5-06: coincide con el esquema del runtime; el modelo no elige cuántas afirmaciones son ``principal``."""
+    fragmentos = asignar_alias([ChunkPuntuado("ch-1", "doc-1", "texto", 0.9)]).fragmentos
+
+    prompt = construir_prompt_rag_query(
+        "p", "", fragmentos, "es", claims_min=1, claims_max=4, claim_max_words=20
+    )
+
+    assert '"main_claim"' in prompt and '"other_claims"' in prompt
+    assert "de 0 a 3 afirmaciones adicionales" in prompt
+    assert '"principal"' not in prompt and "exactamente una" not in prompt
+    assert '"secundaria"' in prompt and '"salvedad"' in prompt
 
 
 def test_prompt_incluye_pregunta_contexto_y_alias_de_cada_fragmento():

@@ -75,3 +75,5 @@ class ResultadoConsulta:
     """Veredictos del juez LLM que no se pudieron interpretar o citaron un fragmento inexistente (cuentan no soportados)."""
     afirmaciones_juez: tuple[bool, ...] | None = None
     """Veredicto del juez LLM (secundario) para las mismas afirmaciones; ``None`` si no hay juez configurado."""
+    salida_invalida: tuple[str, ...] | None = None
+    """``None`` = el generador devolvió una salida válida; si no, el id de cada regla que incumplió (nunca el texto, RN-14)."""
