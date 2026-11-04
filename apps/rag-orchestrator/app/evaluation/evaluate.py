@@ -41,6 +41,7 @@ from app.evaluation.corrida_aplicabilidad import (
     PuertosDeAplicabilidad,
     ejecutar_aplicabilidad,
 )
+from app.evaluation.corrida_opciones import SUITE_OPCIONES, PuertosDeOpciones, ejecutar_opciones
 from app.evaluation.corrida_poblacion import (
     SUITE_POBLACION,
     MedicionSinEvidencia,
@@ -138,6 +139,7 @@ def main(
     directorio_de_configs: Path | None = None,
     puertos_aplicabilidad: PuertosDeAplicabilidad | None = None,
     puertos_poblacion: PuertosDePoblacion | None = None,
+    puertos_opciones: PuertosDeOpciones | None = None,
     cargador_de_modelos: CargadorDeModelos | None = None,
     lector_rss: LectorDeRss | None = None,
 ) -> int:
@@ -150,6 +152,7 @@ def main(
             directorio_de_configs,
             puertos_aplicabilidad or PuertosDeAplicabilidad(),
             puertos_poblacion or PuertosDePoblacion(),
+            puertos_opciones or PuertosDeOpciones(),
         )
     except (argparse.ArgumentError, SystemExit, ConfigInvalida) as error:
         # El mensaje de ConfigInvalida nombra la clave y nunca su valor (RN-14).
@@ -191,9 +194,10 @@ def _despachar_familia(
     directorio_de_configs: Path | None,
     puertos_aplicabilidad: PuertosDeAplicabilidad,
     puertos_poblacion: PuertosDePoblacion,
+    puertos_opciones: PuertosDeOpciones,
 ) -> int:
-    """Las familias `aplicabilidad` (US-132) y `poblacion` (L1D-299) tienen configuración, dataset y reporte propios; el
-    resto, la configuración común."""
+    """Las familias `aplicabilidad` (US-132), `poblacion` (L1D-299) y `opciones` (US-140) tienen configuración, dataset y
+    reporte propios; el resto, la configuración común."""
     if args.suite not in SUITES:
         raise ConfigInvalida(f"familia no disponible: {args.suite}")
     if args.suite == SUITE_APLICABILIDAD:
@@ -203,7 +207,10 @@ def _despachar_familia(
             reloj, raiz, origen
         )
         return ejecutar_poblacion(args, reloj, PuertosDePoblacion(medidor))
-    config = cargar_config_suite(args.config, _ajustes_de_la_suite(args, origen.entorno))
+    ajustes = _ajustes_de_la_suite(args, origen.entorno)
+    if args.suite == SUITE_OPCIONES:
+        return ejecutar_opciones(args, ajustes, reloj, origen, puertos_opciones)
+    config = cargar_config_suite(args.config, ajustes)
     return _ejecutar(config, args, reloj, raiz, origen, directorio_de_configs)
 
 
