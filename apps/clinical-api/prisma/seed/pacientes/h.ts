@@ -1,4 +1,4 @@
-import { biomarcador, examen, ki67, nottingham } from './auxiliares.js';
+import { biomarcador, examen, ki67, nottingham, estadoMenopausico } from './auxiliares.js';
 import type { PacienteSemilla } from './tipos.js';
 
 /** (h) US-254 · mama adyuvante tras cirugía: cuadrantectomía y letrozol en curso; HER2 1+, Ki-67 20 %, sin BRCA. */
@@ -41,12 +41,5 @@ export const pacienteH: PacienteSemilla = {
   eventos: [
     { clave: 'cirugia-1', tipo: 'cirugia', diasAntes: 120, descripcion: 'Cuadrantectomía' },
   ],
-  atributos: [
-    {
-      clave: 'estado-menopausico',
-      atributo: 'estado_menopausico',
-      valor: 'posmenopausica',
-      diasAntes: 150,
-    },
-  ],
+  atributos: [estadoMenopausico('posmenopausica', 150)],
 };

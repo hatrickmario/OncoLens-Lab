@@ -1,4 +1,9 @@
-import type { BiomarcadorSemilla, ExamenSemilla, GradacionSemilla } from './tipos.js';
+import type {
+  AtributoSemilla,
+  BiomarcadorSemilla,
+  ExamenSemilla,
+  GradacionSemilla,
+} from './tipos.js';
 
 /** Constructores de los pacientes semilla de US-254 (g)–(m): solo reducen la repetición, sin lógica clínica. */
 
@@ -55,4 +60,12 @@ export function gleasonEnBiopsia(
     patronSecundario,
     muestra: { specimenType: 'biopsia', gradeScope: 'peor' },
   };
+}
+
+/** Atributo `estado_menopausico` (valores del catálogo de atributos) observado `diasAntes` de la fecha de referencia. */
+export function estadoMenopausico(
+  valor: 'premenopausica' | 'posmenopausica',
+  diasAntes: number,
+): AtributoSemilla {
+  return { clave: 'estado-menopausico', atributo: 'estado_menopausico', valor, diasAntes };
 }

@@ -23,21 +23,21 @@
 
 - [ ] 2.1 (test después: tipos del seed) `pacientes/tipos.ts`: `TratamientoPreviaSemilla.fin?` y
   `EventoSemilla.tipo` ampliado (D2); `sembrar.ts` escribe `ended_at`, `ongoing = false`, `end_reason` y el
-  `prior_treatment_id` del evento de progresión que cierra una línea; exporta `PACIENTES_SEMILLA`. (a)–(e) sin cambios
+  `prior_treatment_id` del evento de progresión que cierra una línea; exporta `PACIENTES_SEMILLA`. (a)–(f) sin cambios
   (los tests de contenido de US-039 AC-2 siguen en verde).
-- [ ] 2.2 (test después: datos) Ficheros `pacientes/{f,g,h,i,j,k,l}.ts` con el contenido de `design.md` D1, términos
+- [ ] 2.2 (test después: datos) Ficheros `pacientes/{g,h,i,j,k,l,m}.ts` con el contenido de `design.md` D1, términos
   canónicos y biomarcadores con los nombres del catálogo de datos críticos; valores de atributos y `setting` de las
-  listas de `l1d-80` (D6/D7; (k) con `sensible_castracion`, decidido; deprivación androgénica = leuprorelina `L02AE02`, solo ATC reales del subconjunto de `l1d-80`); añadirlos al final de `PACIENTES_SEMILLA` (ordinales 6–12);
+  listas de `l1d-80` (D6/D7; (l) con `sensible_castracion`, decidido; deprivación androgénica = leuprorelina `L02AE02`, solo ATC reales del subconjunto de `l1d-80`); añadirlos al final de `PACIENTES_SEMILLA` (ordinales 7–13);
   actualizar el comentario de `identidades.ts`.
 - [ ] 2.3 (TDD: regla pura) Extraer `historiaCoherente()` (D3) en `pacientes/coherencia.ts`: unitarios uno a uno
   (línea antes del diagnóstico, fin antes del inicio, solape con la línea siguiente, hueco en la numeración, evento
-  antes del diagnóstico, fecha futura) y test «los 12 pacientes semilla tienen una historia coherente [US-254 AC-2]»
-  y «detecta la línea 2 de (j) que empieza antes del fin de la línea 1 [US-254 AC-2]».
+  antes del diagnóstico, fecha futura) y test «los 13 pacientes semilla tienen una historia coherente [US-254 AC-2]»
+  y «detecta la línea 2 de (k) que empieza antes del fin de la línea 1 [US-254 AC-2]».
 - [ ] 2.4 (test después: seed, integración) Test de conteos del seed `tests/integration/seed/momentos-enfermedad.test.ts`:
-  «carga los 7 pacientes nuevos con su tipo de cáncer y 12 pacientes semilla [US-254 AC-1]», «(j) tiene trastuzumab,
-  pertuzumab y trastuzumab emtansina por línea; (k) sensible y (l) resistente_castracion [US-254 AC-1]», «un régimen
+  «carga los 7 pacientes nuevos con su tipo de cáncer y 13 pacientes semilla [US-254 AC-1]», «(k) tiene trastuzumab,
+  pertuzumab y trastuzumab emtansina por línea; (l) sensible y (m) resistente_castracion [US-254 AC-1]», «un régimen
   sin ATC en el catálogo queda no_mapeado [US-254 AC-1]», «ids deterministas e idempotentes e identidades
-  SINT-0000006…12 [US-254 AC-5]», «en piloto no escribe ninguna fila de (a)–(l) [US-254 AC-5]». Tiempo máximo
+  SINT-0000007…13 [US-254 AC-5]», «en piloto no escribe ninguna fila de (a)–(m) [US-254 AC-5]». Tiempo máximo
   explícito si arranca procesos.
 - [ ] 2.5 (test después) Una sola fuente del número de pacientes (D5): `listado.test.ts`, `orden.test.ts`,
   `contrasenas-e-idempotencia.test.ts`, `identidades.test.ts`, `indice-ciego-del-nombre.test.ts`, `contenido.test.ts`
@@ -46,7 +46,7 @@
   quita ni se relaja.
 - [ ] 2.6 (test después: integración, ↪ `l1d-74`) «GET /case de cada paciente nuevo trae priorTreatments por línea y
   sus eventos en orden cronológico, validado contra el spec [US-254 AC-2]» (Supertest + PostgreSQL real con el seed).
-- [ ] 2.7 (test después: integración) «(f) y (k) tienen faltantes distintos y no vacíos y (j) ninguno, sin bloquear la
+- [ ] 2.7 (test después: integración) «(g) y (l) tienen faltantes distintos y no vacíos y (k) ninguno, sin bloquear la
   ficha [US-254 AC-3]» con el servicio de completitud y el catálogo real; el test imprime la lista que se copia a la
   guía (§2.10).
 - [ ] 2.8 (test después: verificación del seed) `contar.ts` suma `clinical.prior_treatment`, `clinical.clinical_event`
@@ -54,7 +54,7 @@
   `tests/unit/seed-contar.test.ts` y `scripts/demo/__tests__/levantar.test.mjs` («falla nombrando
   clinical.prior_treatment cuando hay menos de los publicados [US-254 AC-5]», «pasa con un tratamiento manual de más
   [US-254 AC-5]»); el humo existente de 0 identidades sigue en verde.
-- [ ] 2.9 (test después: humo) `levantar.sh` desde cero imprime en «Verificación del seed» `esperado=12 obtenido=12`
+- [ ] 2.9 (test después: humo) `levantar.sh` desde cero imprime en «Verificación del seed» `esperado=13 obtenido=13`
   para pacientes e identidades y los tres mínimos nuevos; salida sin cadena de conexión ni contraseñas (privacy P2).
   Evidencia en el PR (salida recortada) [US-254 AC-5].
 - [ ] 2.10 (test después: guía) `docs/demo/guia-demo-S5.md`, sección «Pacientes en distintos momentos de la
@@ -63,7 +63,7 @@
   `runbook-demo-S1.md` y nota «solo modo fingido; en vivo los estados los calculan las reglas».
 - [ ] 2.11 (test después: E2E) `apps/web/e2e/demo-s5-pacientes.spec.ts` (patrón de `demo-s4-pares.spec.ts`): lee el
   bloque de la guía, comprueba que los ejemplos fijos coinciden con él y, contra Compose con `LLM_PROVIDER=fake`, que
-  cada paciente (f)–(l) con su pregunta devuelve esos conteos y la marca de no comparable [US-254 AC-4]. Actualizar
+  cada paciente (g)–(m) con su pregunta devuelve esos conteos y la marca de no comparable [US-254 AC-4]. Actualizar
   `apps/web/e2e/pacientes-listado.spec.ts` (US-048 AC-1) para que no dependa de «cinco». `setTimeout` explícito.
 - [ ] 2.12 (test después: CI) Comprobar en el PR que los jobs de escaneo de secretos (gitleaks) y de PII (data-scan)
   pasan sin hallazgos con los ficheros nuevos [US-254 AC-5].
@@ -79,7 +79,7 @@
 
 - [ ] H-1 Comprobar que `l1d-80` ya añadió «sensible a la castración» (`sensible_castracion`) en `estado_castracion`
   (P-1 decidido, `[S5 resp. 13]`; también para (b)) antes del merge de este change. DIFERIDA -> H-1
-- [ ] H-2 Ensayo de la demo: `levantar.sh` desde cero y recorrido de (f)–(l) en la vista de caso (US-142, G-Demo).
+- [ ] H-2 Ensayo de la demo: `levantar.sh` desde cero y recorrido de (g)–(m) en la vista de caso (US-142, G-Demo).
   DIFERIDA -> H-2
 
 ## 5. Verificación
@@ -91,9 +91,9 @@
 
 ## 6. Corte opcional (orden de recorte del S5, punto 4)
 
-- [ ] 6.1 (solo si el humano activa el recorte, P-3) Sembrar 4 pacientes en lugar de 7: (f) mama inicial, (j) mama
-  HER2+ tras T-DM1, (k) próstata sensible y (l) próstata resistente (mantienen AC-2…AC-5: (f) y (k) con faltantes
-  distintos, (j) sin faltantes). Se omiten (g), (h), (i) y sus 3 pares de ejemplos; el conteo esperado pasa a 9
+- [ ] 6.1 (solo si el humano activa el recorte, P-3) Sembrar 4 pacientes en lugar de 7: (g) mama inicial, (k) mama
+  HER2+ tras T-DM1, (l) próstata sensible y (m) próstata resistente (mantienen AC-2…AC-5: (g) y (l) con faltantes
+  distintos, (k) sin faltantes). Se omiten (h), (i), (j) y sus 3 pares de ejemplos; el conteo esperado pasa a 10
   pacientes semilla. Exige reescribir el AC-1 de US-254 en `backlog/features/FEAT-06c-corpus-cientifico.md` (Markdown
   primero, Linear después) y los escenarios de `specs/data-model` y `specs/demo-install` antes del commit; los tres
   pacientes omitidos pasan a una historia hija. Si no se activa: DIFERIDA -> L1D-310 (no aplica).

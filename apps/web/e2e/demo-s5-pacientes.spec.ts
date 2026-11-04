@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
-import { IDS_SEMILLA_S5, ejemplo, esperarResultado, iniciarSesion } from './soporte';
+import { IDS_SEMILLA_S5, alcance, ejemplo, esperarResultado, iniciarSesion } from './soporte';
 
 /**
  * Prueba de aceptación de la demo del S5 (L1D-310, US-254 AC-4): contra Compose con `LLM_PROVIDER=fake` y las
@@ -71,7 +71,28 @@ test.describe('Pacientes de la demo del S5 (L1D-310)', () => {
     }
   });
 
-  for (const [nombre, paciente] of Object.entries(pacientes)) {
+  // El stack del E2E corre con ENABLED_CANCER_TYPES=mama (scripts/e2e/ejecutar.sh): los pacientes de próstata no admiten
+  // análisis aquí (US-043 AC-3); sus conteos se comprueban contra los ejemplos fijos (arriba) y en la demo con ambos tipos.
+  const tipoDe = (nombre: string): string =>
+    ejemplo(`rag-query-request-demo-s5-${nombre}.json`).clinicalContext.diagnosis.cancerType;
+  const deMama = Object.entries(pacientes).filter(([, p]) => tipoDe(p.ejemplo) === 'mama');
+  const deProstata = Object.entries(pacientes).filter(([, p]) => tipoDe(p.ejemplo) === 'prostata');
+
+  for (const [nombre, paciente] of deProstata) {
+    test(`abre la ficha de ${nombre} con su diagnóstico y avisa que el tipo está fuera del alcance de este stack sin bloquear [US-254 AC-4] [US-043 AC-3]`, async ({
+      page,
+    }) => {
+      await iniciarSesion(page);
+      await page.goto(`/pacientes/${IDS_SEMILLA_S5[paciente.ejemplo]}`);
+
+      await expect(
+        page.getByRole('status').filter({ hasText: alcance.tipoNoHabilitado }),
+      ).toBeVisible();
+      await expect(page.getByRole('link', { name: 'Analizar evidencia' })).toBeVisible();
+    });
+  }
+
+  for (const [nombre, paciente] of deMama) {
     test(`devuelve los conteos de applicabilitySummary de la guía y la marca de no comparable para ${nombre} [US-254 AC-4]`, async ({
       page,
     }) => {

@@ -1,4 +1,4 @@
-import { biomarcador, examen, ki67, nottingham } from './auxiliares.js';
+import { biomarcador, examen, ki67, nottingham, estadoMenopausico } from './auxiliares.js';
 import type { PacienteSemilla } from './tipos.js';
 
 /**
@@ -43,12 +43,5 @@ export const pacienteJ: PacienteSemilla = {
     },
   ],
   eventos: [],
-  atributos: [
-    {
-      clave: 'estado-menopausico',
-      atributo: 'estado_menopausico',
-      valor: 'posmenopausica',
-      diasAntes: 75,
-    },
-  ],
+  atributos: [estadoMenopausico('posmenopausica', 75)],
 };
