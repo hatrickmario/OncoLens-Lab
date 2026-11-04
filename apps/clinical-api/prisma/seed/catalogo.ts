@@ -68,3 +68,23 @@ export function resolverCodigoDelCatalogo(
   if (entrada === undefined) return { codigo: null, mappingStatus: 'no_mapeado' };
   return { codigo: entrada.codigo, nombreOficial: entrada.nombreOficial, mappingStatus: 'mapeado' };
 }
+
+/**
+ * Códigos ATC de un régimen del seed: cada fármaco (`farmacos`, o el nombre del régimen si no hay) se resuelve con el
+ * catálogo; `codigos` lleva los que encuentra y el estado es `mapeado` solo si resuelven todos. Solo del seed:
+ * `ReconciliationService` es el dueño de RN-27 y devuelve `no_mapeado` con `atcCodes` vacío ante cualquier mapeo parcial.
+ */
+export function resolverAtcDelRegimen(
+  catalogo: CatalogoClinico,
+  tratamiento: { readonly regimen: string; readonly farmacos?: readonly string[] },
+): { codigos: string[]; mappingStatus: 'mapeado' | 'no_mapeado' } {
+  const resueltos = (tratamiento.farmacos ?? [tratamiento.regimen]).map((farmaco) =>
+    resolverCodigoDelCatalogo(catalogo, 'atc', farmaco),
+  );
+  return {
+    codigos: resueltos.flatMap((resuelto) => (resuelto.codigo === null ? [] : [resuelto.codigo])),
+    mappingStatus: resueltos.every((resuelto) => resuelto.mappingStatus === 'mapeado')
+      ? 'mapeado'
+      : 'no_mapeado',
+  };
+}

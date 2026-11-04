@@ -60,7 +60,7 @@ describe('Identidades cifradas del seed sintético', () => {
     expect(primera).toHaveLength(PACIENTES_SEMILLA.length);
     expect(new Set(primera.map((fila) => fila.id_type))).toEqual(new Set(['sintetico']));
     const ordinales = PACIENTES_SEMILLA.map((_, indice) => indice + 1);
-    const numeros = ordinales.map((n) => `SINT-000000${n}`);
+    const numeros = ordinales.map((n) => `SINT-${String(n).padStart(7, '0')}`);
     const nombres = ordinales.map((n) => `Prueba Sintética ${n}`);
     // Ninguna fila contiene ninguno de los números ni de los nombres (no solo el suyo).
     for (const fila of primera) {
@@ -88,7 +88,7 @@ describe('Identidades cifradas del seed sintético', () => {
       const identidad = await servicio.descifrar(fila.patient_id);
       descifradas.push(identidad?.numeroDeDocumento ?? '');
       // El emparejamiento solo se hace con lo descifrado: nombre e índice ciego corresponden al número de su fila.
-      const ordinal = Number(identidad?.numeroDeDocumento.slice(-1));
+      const ordinal = Number(identidad?.numeroDeDocumento.slice('SINT-'.length));
       expect(identidad?.nombreCompleto).toBe(`Prueba Sintética ${ordinal}`);
       expect(fila.national_id_hmac).toBe(
         indice.indiceDeDocumento('sintetico', identidad?.numeroDeDocumento ?? ''),

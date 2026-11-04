@@ -1,5 +1,7 @@
 import json
 
+import pytest
+
 from app.infrastructure.fake.fake_evidence_query import FakeEvidenceQuery
 from app.schemas.generated.models import RagQueryInternalResponse, RagQueryStatus
 from tests.support.contract import RAIZ_REPOSITORIO
@@ -41,5 +43,32 @@ def test_desde_directorio_carga_los_ejemplos_demo_s4_cuando_el_smoke_monta_contr
     for nombre in ("her2-adyuvante", "cdk46-excluyente"):
         pregunta = _pregunta(f"rag-query-request-demo-s4-mama-{nombre}.json")
         respuesta = fake.select_fixture_response(pregunta)
+        assert respuesta.status == RagQueryStatus.con_evidencia
+        assert respuesta.optionsNotShown == 0
+
+
+PACIENTES_DEMO_S5 = (
+    "g-inicial",
+    "h-adyuvante",
+    "i-recaida",
+    "j-metastasica-1l",
+    "k-her2-tras-tdm1",
+    "l-hspc",
+    "m-crpc",
+)
+
+
+@pytest.mark.ac("US-254", 4)
+def test_select_fixture_response_devuelve_la_respuesta_con_evidencia_de_cada_paciente_cuando_se_carga_demo_s5():
+    # Un ejemplo demo-s5 que no cumpla RagQueryInternalResponse, o dos preguntas iguales, rompe el modo fingido.
+    fake = FakeEvidenceQuery.desde_directorio(EJEMPLOS)
+    preguntas = [
+        _pregunta(f"rag-query-request-demo-s5-{nombre}.json") for nombre in PACIENTES_DEMO_S5
+    ]
+
+    assert len(set(preguntas)) == len(PACIENTES_DEMO_S5)
+    for nombre, pregunta in zip(PACIENTES_DEMO_S5, preguntas, strict=True):
+        respuesta = fake.select_fixture_response(pregunta)
+        assert respuesta == _respuesta(f"rag-query-demo-s5-{nombre}.json")
         assert respuesta.status == RagQueryStatus.con_evidencia
         assert respuesta.optionsNotShown == 0

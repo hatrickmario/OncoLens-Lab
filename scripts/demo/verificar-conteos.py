@@ -15,19 +15,28 @@ import sys
 PACIENTES = "clinical.patient"
 IDENTIDADES = "identity.patient_identity"
 USUARIOS = 'auth."user"'
-MINIMOS = {"corpus.con_poblacion_verificada"}
+# Historia clínica sembrada (US-254): un registro manual de la demo (US-094, US-110) los sube y no es un fallo.
+HISTORIA = (
+    "clinical.prior_treatment",
+    "clinical.clinical_event",
+    "clinical.clinical_attribute",
+)
+MINIMOS = {"corpus.con_poblacion_verificada", *HISTORIA}
 
 
 def comparaciones(
     seed: dict, clinico: dict, corpus: dict, documentos: int, con_poblacion: int
 ):
-    """(nombre, esperado, obtenido): pacientes = identidades = pacientes del seed, usuarios y documentos del corpus."""
+    """(nombre, esperado, obtenido): pacientes = identidades = pacientes del seed, usuarios, documentos del corpus y la
+    historia clínica sembrada (como mínimos, solo si el seed la publicó)."""
     pacientes_del_seed = seed[PACIENTES]
+    historia = [(tabla, seed[tabla], clinico[tabla]) for tabla in HISTORIA if tabla in seed]
     return [
         (PACIENTES, pacientes_del_seed, clinico[PACIENTES]),
         (IDENTIDADES, pacientes_del_seed, clinico[IDENTIDADES]),
         # Una re-ejecución idempotente del seed no republica los usuarios que ya existen: sin conteo publicado basta con que haya.
         (USUARIOS, seed.get(USUARIOS, 1), clinico[USUARIOS]),
+        *historia,
         ("corpus.documentos_vigentes", documentos, corpus["documentos_vigentes"]),
         (
             "corpus.con_poblacion_verificada",

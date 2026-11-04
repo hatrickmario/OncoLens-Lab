@@ -27,7 +27,7 @@ describe('orden del listado', () => {
       `UPDATE clinical.patient SET created_at = '2026-10-17T09:00:00Z' WHERE id IN
          (SELECT id FROM clinical.patient ORDER BY id DESC LIMIT 1)`,
     );
-    const { app } = montarPacientes(escenario.mundo, { pageSize: 10 });
+    const { app } = montarPacientes(escenario.mundo, { pageSize: PACIENTES_SEMILLA.length });
 
     const respuesta = await clienteVerificado(app)
       .get('/platform/patients')

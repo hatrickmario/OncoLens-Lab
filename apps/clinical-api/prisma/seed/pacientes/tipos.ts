@@ -50,19 +50,32 @@ export interface ExamenSemilla {
   readonly biomarcadores: readonly BiomarcadorSemilla[];
 }
 
+/** Motivo de fin de una línea (subconjunto del enum `end_reason` de data-model.md). */
+export type MotivoDeFinSemilla = 'progresion' | 'toxicidad' | 'completado';
+
 export interface TratamientoPreviaSemilla {
   readonly clave: string;
   readonly numeroDeLinea: number;
   readonly setting: string;
+  /** Nombre del régimen tal como se muestra; sin `farmacos` el catálogo ATC lo resuelve entero (RN-27). */
   readonly regimen: string;
+  /**
+   * Términos canónicos de cada fármaco de una combinación: el catálogo ATC resuelve cada uno y `atc_codes` lleva los
+   * que encuentra; el régimen solo queda `mapeado` si todos resuelven (RN-27, nunca un código escrito a mano).
+   */
+  readonly farmacos?: readonly string[];
   readonly diasDesdeElInicio: number;
+  /** Sin `fin` la línea sigue en curso (`ongoing = true`, `ended_at = null`, `end_reason = desconocido`). */
+  readonly fin?: { readonly diasAntes: number; readonly motivo: MotivoDeFinSemilla };
 }
 
 export interface EventoSemilla {
   readonly clave: string;
-  readonly tipo: 'progresion';
+  readonly tipo: 'cirugia' | 'recaida' | 'progresion' | 'respuesta';
   readonly diasAntes: number;
   readonly descripcion: string;
+  /** Clave del tratamiento previo cuyo fin marca este evento (`prior_treatment_id`); sin ella, `null`. */
+  readonly cierraLinea?: string;
 }
 
 export interface AtributoSemilla {

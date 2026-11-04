@@ -622,6 +622,83 @@
       "request": "rag-query-request-demo-s4-mama-cdk46-excluyente.json"
     },
     {
+      "file": "rag-query-request-demo-s5-g-inicial.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalRequest"
+    },
+    {
+      "file": "rag-query-demo-s5-g-inicial.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalResponse",
+      "request": "rag-query-request-demo-s5-g-inicial.json"
+    },
+    {
+      "file": "rag-query-request-demo-s5-h-adyuvante.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalRequest"
+    },
+    {
+      "file": "rag-query-demo-s5-h-adyuvante.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalResponse",
+      "request": "rag-query-request-demo-s5-h-adyuvante.json"
+    },
+    {
+      "file": "rag-query-request-demo-s5-i-recaida.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalRequest"
+    },
+    {
+      "file": "rag-query-demo-s5-i-recaida.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalResponse",
+      "request": "rag-query-request-demo-s5-i-recaida.json"
+    },
+    {
+      "file": "rag-query-request-demo-s5-j-metastasica-1l.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalRequest"
+    },
+    {
+      "file": "rag-query-demo-s5-j-metastasica-1l.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalResponse",
+      "request": "rag-query-request-demo-s5-j-metastasica-1l.json"
+    },
+    {
+      "file": "rag-query-request-demo-s5-k-her2-tras-tdm1.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalRequest"
+    },
+    {
+      "file": "rag-query-demo-s5-k-her2-tras-tdm1.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalResponse",
+      "request": "rag-query-request-demo-s5-k-her2-tras-tdm1.json"
+    },
+    {
+      "file": "rag-query-request-demo-s5-l-hspc.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalRequest"
+    },
+    {
+      "file": "rag-query-demo-s5-l-hspc.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalResponse",
+      "request": "rag-query-request-demo-s5-l-hspc.json"
+    },
+    {
+      "file": "rag-query-request-demo-s5-m-crpc.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalRequest"
+    },
+    {
+      "file": "rag-query-demo-s5-m-crpc.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalResponse",
+      "request": "rag-query-request-demo-s5-m-crpc.json"
+    },
+    {
       "file": "rag-query-request-tres-opciones.json",
       "spec": "rag-orchestrator",
       "target": "#/components/schemas/RagQueryInternalRequest"

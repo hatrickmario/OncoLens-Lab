@@ -56,7 +56,7 @@ describe('listado de pacientes', () => {
   });
 
   it('filtra a vacío con dataOrigin=real_identificado y a todos los pacientes semilla con status=activo [US-048 AC-4]', async () => {
-    const { app } = montarPacientes(escenario.mundo, { pageSize: 10 });
+    const { app } = montarPacientes(escenario.mundo, { pageSize: PACIENTES_SEMILLA.length });
 
     const reales = await clienteVerificado(app)
       .get('/platform/patients?dataOrigin=real_identificado')
@@ -167,7 +167,7 @@ describe('listado de pacientes', () => {
 
   it('cuenta en pendingReviewCount los datos clínicos en requiere_revision del paciente [US-048 AC-1]', async () => {
     const paciente = idDePaciente('a');
-    const { app } = montarPacientes(escenario.mundo, { pageSize: 10 });
+    const { app } = montarPacientes(escenario.mundo, { pageSize: PACIENTES_SEMILLA.length });
     const pendientesDe = async (): Promise<number> => {
       const respuesta = await clienteVerificado(app)
         .get('/platform/patients')

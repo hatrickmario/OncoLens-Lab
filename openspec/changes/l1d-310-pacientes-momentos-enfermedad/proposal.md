@@ -9,18 +9,18 @@ RN-11, RN-13, RN-14, RN-27, RN-29 · PRD E-17 (3) · US-254 AC-1…AC-5 · ↪ U
 
 ## Por qué
 
-Los 5 pacientes del seed (a)–(e) no cubren la evolución de la enfermedad. Los oncólogos (feedback del 2026-11-02, PRD
+Los 6 pacientes del seed (a)–(f) no cubren la evolución de la enfermedad. Los oncólogos (feedback del 2026-11-02, PRD
 E-17) piden casos en distintos momentos para comprobar que el análisis cambia con la historia del paciente y no solo con
 la pregunta, y G-Demo (US-142) necesita esos casos para «caso registrado y editado a mano → faltantes → análisis con
 debate».
 
 ## Qué cambia
 
-- **Seed sintético** (`apps/clinical-api/prisma/seed/pacientes/`): 7 pacientes nuevos (f)–(l) con identificadores
-  deterministas (`idSembrado`, claves `paciente-f`…`paciente-l`, identidades sintéticas ordinales 6–12):
-  - mama: (f) diagnóstico inicial sin tratar · (g) adyuvante tras cirugía · (h) recaída local · (i) metastásico en
-    primera línea · (j) metastásico tras trastuzumab, pertuzumab y trastuzumab emtansina;
-  - próstata: (k) metastásico sensible a la castración · (l) resistente a la castración.
+- **Seed sintético** (`apps/clinical-api/prisma/seed/pacientes/`): 7 pacientes nuevos (g)–(m) con identificadores
+  deterministas (`idSembrado`, claves `paciente-g`…`paciente-m`, identidades sintéticas ordinales 7–13):
+  - mama: (g) diagnóstico inicial sin tratar · (h) adyuvante tras cirugía · (i) recaída local · (j) metastásico en
+    primera línea · (k) metastásico tras trastuzumab, pertuzumab y trastuzumab emtansina;
+  - próstata: (l) metastásico sensible a la castración · (m) resistente a la castración.
   Cada uno con tratamientos previos por línea (con fin y motivo cuando terminaron) y eventos (`cirugia`, `recaida`,
   `progresion`) con fechas relativas a `SEED_REFERENCE_DATE` coherentes con su momento. Tipos del seed ampliados de
   forma aditiva (`EventoSemilla.tipo`, fin de un tratamiento). Se usan las tablas existentes `prior_treatment`,
@@ -45,7 +45,7 @@ debate».
   historia coherente, faltantes variados e identificadores sintéticos deterministas).
 - `demo-install` (MODIFIED «levantar.sh verifica el seed contra los conteos que publica el propio seed»; ADDED guía de
   la demo con pregunta sugerida y estados esperados por paciente nuevo).
-- `patients-identity`: sin delta (su requisito afirma las identidades de (a)–(e), que siguen siendo ciertas; las
+- `patients-identity`: sin delta (su requisito afirma las identidades de (a)–(f), que siguen siendo ciertas; las
   nuevas las cubre el requisito ADDED de `data-model`).
 
 ## Bounded contexts
@@ -58,7 +58,7 @@ cualquier ejemplo de `index.json`) ni frontend.
 
 - ↪ `l1d-80-tratamientos-atributos-manuales` (US-094, O2): fija `setting` (D6) y `values` de los atributos (D7) del
   catálogo (`atributos.json` 1.2.0 / manifest 1.4.0, cadena del catálogo `[S5 resp. 10]`) y el subconjunto ATC con los
-  códigos reales (`L02AE02` leuprorelina, `L02BB03` bicalutamida, trastuzumab, pertuzumab, T-DM1; `[S5 resp. 9]`); su test «los valores del seed sintético están en el catálogo» cubrirá también a (f)–(l). Los
+  códigos reales (`L02AE02` leuprorelina, `L02BB03` bicalutamida, trastuzumab, pertuzumab, T-DM1; `[S5 resp. 9]`); su test «los valores del seed sintético están en el catálogo» cubrirá también a (g)–(m). Los
   valores de este seed se toman de esas listas. El valor «sensible a la castración» lo añade `l1d-80` (`[S5 resp. 13]`).
 - ↪ `l1d-74-vista-caso-timeline` (US-088, O1): `GET …/case` (`priorTreatments`, `timeline`) es por donde se verifica el
   AC-2. Si no ha mergeado, el AC-2 espera; el resto del change no.
@@ -80,5 +80,5 @@ cualquier ejemplo de `index.json`) ni frontend.
 - Conteos de aplicabilidad en vivo con el LLM real (la guía los documenta solo en modo fingido; los de vivo los mide
   US-142).
 - Corpus nuevo (US-120) y pacientes de leucemia (RN-20).
-- **Orden de recorte del S5 (4):** si a mitad del día 2 el ritmo no da, se siembran 4 pacientes ((f), (j), (k), (l)) en
+- **Orden de recorte del S5 (4):** si a mitad del día 2 el ritmo no da, se siembran 4 pacientes ((g), (k), (l), (m)) en
   lugar de 7; exige aprobación del humano y reescribir el AC-1 (ver `tasks.md` §6).

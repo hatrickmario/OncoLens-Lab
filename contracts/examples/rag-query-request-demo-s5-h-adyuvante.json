@@ -1,0 +1,153 @@
+{
+  "traceId": "req_s5hdemo01",
+  "query": "¿Qué describe la evidencia del corpus de la demo sobre la duración y el beneficio de la terapia endocrina adyuvante en una paciente posmenopáusica operada con receptores hormonales positivos y HER2 1+?",
+  "sourcesSelected": {
+    "guias": true,
+    "ensayos": false,
+    "publicaciones": true
+  },
+  "dataClassification": "sintetico",
+  "catalogVersion": "2026.10.0",
+  "maxOptions": 3,
+  "filtersApplied": {
+    "historiaCompleta": false,
+    "soloBiomarcadoresRelevantes": true,
+    "ultimosSeisMeses": true,
+    "antecedentesFamiliares": false,
+    "publishedFromYear": 2021
+  },
+  "clinicalContext": {
+    "pseudoPatientId": "psd_Lk9vC3rJe5Ys",
+    "population": "adulto",
+    "diagnosis": {
+      "dataRef": "r1",
+      "cancerType": "mama",
+      "histology": "carcinoma ductal infiltrante",
+      "grade": "Nottingham grado 2",
+      "stagingSystem": "TNM_8",
+      "stageValue": "IIA",
+      "performanceScale": "ECOG",
+      "performanceValue": 0,
+      "monthsSinceDiagnosis": 4,
+      "provenance": {
+        "entryMethod": "seed",
+        "extractionConfidence": "n_a",
+        "reviewStatus": "verificado",
+        "conflict": false
+      }
+    },
+    "biomarkers": [
+      {
+        "dataRef": "r2",
+        "biomarkerName": "RE",
+        "value": "Positivo (95%)",
+        "resultType": "cualitativo",
+        "clinicalSignificance": "relevante",
+        "monthsAgo": 4,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      },
+      {
+        "dataRef": "r3",
+        "biomarkerName": "RP",
+        "value": "Positivo (40%)",
+        "resultType": "cualitativo",
+        "clinicalSignificance": "relevante",
+        "monthsAgo": 4,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      },
+      {
+        "dataRef": "r4",
+        "biomarkerName": "HER2",
+        "value": "1+ (IHQ)",
+        "resultType": "cualitativo",
+        "clinicalSignificance": "relevante",
+        "monthsAgo": 4,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      },
+      {
+        "dataRef": "r5",
+        "biomarkerName": "Ki-67",
+        "value": "20 %",
+        "resultType": "cuantitativo",
+        "clinicalSignificance": "relevante",
+        "monthsAgo": 4,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      }
+    ],
+    "clinicalNotes": [],
+    "currentLine": 1,
+    "attributes": [
+      {
+        "dataRef": "r6",
+        "key": "estado_menopausico",
+        "value": "posmenopáusica",
+        "monthsAgo": 4,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      }
+    ],
+    "priorTreatments": [
+      {
+        "dataRef": "r7",
+        "lineNumber": 1,
+        "setting": "adyuvante",
+        "regimenName": "Letrozol",
+        "atcCodes": [
+          "L02BG04"
+        ],
+        "monthsSinceStart": 1,
+        "monthsSinceEnd": null,
+        "endReason": "desconocido",
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      }
+    ],
+    "events": [
+      {
+        "dataRef": "r8",
+        "eventType": "cirugia",
+        "monthsAgo": 3,
+        "description": "Cuadrantectomía",
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      }
+    ],
+    "biomarkerTrends": [],
+    "missingCriticalData": [
+      "brca_germinal"
+    ],
+    "priorAnalyses": []
+  }
+}

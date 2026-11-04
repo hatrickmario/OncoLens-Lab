@@ -142,7 +142,7 @@ grep seed_completo "$estado/seed.log" | tail -1 | python3 -c "
 import json, sys
 filas = json.loads(sys.stdin.read()).get('filas', {})
 json.dump(filas, open(sys.argv[1], 'w'))
-claves = ('clinical.patient', 'identity.patient_identity', 'auth.\"user\"')
+claves = ('clinical.patient', 'identity.patient_identity', 'auth.\"user\"', 'clinical.prior_treatment', 'clinical.clinical_event', 'clinical.clinical_attribute')
 print('seed:', ', '.join(f'{t}={n}' for t, n in sorted(filas.items()) if t in claves))" "$estado/seed-conteos.json" \
   || fallar "el seed no publicó sus conteos (seed_completo)"
 
