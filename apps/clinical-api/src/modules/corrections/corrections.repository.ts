@@ -1,8 +1,5 @@
 import type { Consultador } from '../auth/auth.repository.js';
-import {
-  sqlDiagnosticoCandidato,
-  sqlOrdenDeDiagnosticoVigente,
-} from '../compartido/diagnostico-vigente.js';
+import { tipoDeCancerVigente } from '../compartido/contexto-de-registro.js';
 import { bloquearPaciente } from '../compartido/paciente-activo.js';
 import { sqlDatoVigente } from '../compartido/estados-de-revision.js';
 import { ejecutarEnTransaccion, type FuenteDeConexiones } from '../compartido/transaccion.js';
@@ -84,17 +81,6 @@ async function contarOtrosBiomarcadoresVigentes(
     [examId, exceptoId],
   );
   return (rows[0]?.['n'] as number | undefined) ?? 0;
-}
-
-/** Tipo de cáncer del diagnóstico vigente (misma regla de vigencia que la ficha y el registro manual). */
-async function tipoDeCancerVigente(db: Consultador, patientId: string): Promise<string | null> {
-  const { rows } = await db.query(
-    `SELECT cancer_type FROM clinical.diagnosis
-      WHERE patient_id = $1 AND ${sqlDiagnosticoCandidato()}
-      ORDER BY ${sqlOrdenDeDiagnosticoVigente()} LIMIT 1`,
-    [patientId],
-  );
-  return (rows[0]?.['cancer_type'] as string | undefined) ?? null;
 }
 
 /**

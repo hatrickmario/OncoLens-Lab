@@ -5,7 +5,7 @@ import { Label } from '../ui/label';
 const CAJA =
   'rounded-control border-control-border bg-surface text-text box-border w-full border px-3 py-2';
 
-export interface CampoDeCorreccionProps {
+export interface CampoDeTextoProps {
   id: string;
   etiqueta: string;
   /** Texto del error de este campo; el elemento `aria-live="assertive"` existe siempre, para que se anuncie al aparecer. */
@@ -13,14 +13,14 @@ export interface CampoDeCorreccionProps {
   multilinea?: boolean;
 }
 
-/** Campo de un formulario de corrección: etiqueta visible, control y error anunciado junto al campo (AC-3). */
-export function CampoDeCorreccion({
+/** Campo de texto, número o fecha de un formulario (corrección o registro manual): etiqueta visible, control y error anunciado junto al campo (AC-3). */
+export function CampoDeTexto({
   id,
   etiqueta,
   error,
   multilinea = false,
   ...control
-}: CampoDeCorreccionProps & Omit<ComponentProps<'input'>, 'id'>) {
+}: CampoDeTextoProps & Omit<ComponentProps<'input'>, 'id'>) {
   const idDelError = `${id}-error`;
   const accesibilidad = {
     id,

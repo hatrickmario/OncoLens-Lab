@@ -1,0 +1,5 @@
+{
+  "error": "TIPO_CANCER_NO_REGISTRADO",
+  "message": "El paciente no tiene un diagnóstico vigente con tipo de cáncer: no se puede validar el atributo contra el catálogo.",
+  "traceId": "req_a1b2c3d4"
+}

@@ -14,7 +14,9 @@ import {
   type ClavesDeIdentidad,
 } from './infrastructure/crypto/claves-de-identidad.js';
 import { crearProveedorDeCatalogo } from './infrastructure/catalogo/catalog-version.provider.js';
+import { crearCatalogoDeAtributos } from './infrastructure/catalogo/catalogo-de-atributos.js';
 import { crearCatalogoDeEscalas } from './infrastructure/catalogo/catalogo-de-escalas.js';
+import type { CatalogoDeAtributos } from './modules/clinical-attributes/ports.js';
 import { crearCatalogoTerminologico } from './infrastructure/catalogo/catalogo-terminologico.js';
 import type { CatalogoDeEscalas } from './modules/manual-entry/ports.js';
 import type { CatalogoTerminologico } from './modules/reconciliation/ports.js';
@@ -35,6 +37,8 @@ export interface ServiciosCargados {
   readonly terminologia: CatalogoTerminologico;
   /** `escalas.json` ya leído: valores válidos del registro manual de diagnósticos (L1D-90). */
   readonly escalas: CatalogoDeEscalas;
+  /** `atributos.json` ya leído: atributos y valores permitidos del registro manual (L1D-80, RN-29). */
+  readonly atributos: CatalogoDeAtributos;
   readonly clavesDeIdentidad: ClavesDeIdentidad;
   /** `ENABLED_CANCER_TYPES` ya validada contra el `manifest.json` (US-043, RN-20). */
   readonly tiposHabilitados: TiposDeCancerHabilitados;
@@ -128,6 +132,7 @@ export function cargarEtapaDeServicios(
     catalogo,
     terminologia,
     escalas: crearCatalogoDeEscalas(servicios.analisis.catalogPath, readFile, catalogo),
+    atributos: crearCatalogoDeAtributos(servicios.analisis.catalogPath, readFile, catalogo),
     clavesDeIdentidad: cargarClavesDeIdentidad(arranque.identidad, readFile),
     tiposHabilitados: crearTiposHabilitados(
       servicios.alcance.enabledCancerTypes,

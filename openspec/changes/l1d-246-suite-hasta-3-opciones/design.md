@@ -54,6 +54,16 @@ definitivas (DEC-07); regenerar `data/evaluation/baseline.json`.
 8. **Corpus de la medición nocturna**: solo el del dataset (verdad conocida y reproducible). **No** se mide sobre el corpus
    ampliado de `l1d-119` (P2 decidido, usuario, 2026-11-03).
 
+## Revisión humana y su alcance
+
+`revisada_por_oncologo` es `null` (sin revisar) o `{rol, fecha}` sin nombre (RN-10); `dataset_opciones` rechaza un booleano o una
+revisión sin rol o fecha. El dataset real tiene **0 casos revisados** hasta que un oncólogo confirme los 4 candidatos (H-2), por eso
+AC-5 se prueba con una copia de test con 4 revisados y otra prueba exige `no_validada` con el dataset real. Lo revisado es solo la
+**pregunta** de cada caso (`alcance_de_la_revision: preguntas`): las fuentes esperadas, el orden esperado y las propuestas los fija
+quien lee la regla, y el reporte y el resumen de CI lo dicen. Además: una opción cuya fuente más aplicable no figura en
+`applicability[]` es violación de RN-28 (falla cerrado), y una cita que no es un chunk del corpus o que reproduce un análisis previo
+es violación de RN-24.
+
 ## Dependencias y colaboradores
 
 - **Se crean:** `app/evaluation/corrida_opciones.py` (despacho, invoca `RAGOrchestratorService` vía `componer_servicio` con

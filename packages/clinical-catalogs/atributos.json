@@ -1,5 +1,5 @@
 {
-  "version": "1.1.0",
+  "version": "1.2.0",
   "keys": [
     {
       "key": "estado_menopausico",
@@ -9,7 +9,33 @@
       "label": {
         "es": "Estado menopáusico",
         "en": "Menopausal status"
-      }
+      },
+      "values": [
+        {
+          "value": "premenopausica",
+          "label": {
+            "es": "Premenopáusica"
+          }
+        },
+        {
+          "value": "perimenopausica",
+          "label": {
+            "es": "Perimenopáusica"
+          }
+        },
+        {
+          "value": "posmenopausica",
+          "label": {
+            "es": "Posmenopáusica"
+          }
+        },
+        {
+          "value": "desconocido",
+          "label": {
+            "es": "Desconocido"
+          }
+        }
+      ]
     },
     {
       "key": "sitios_metastasicos",
@@ -19,7 +45,45 @@
       "label": {
         "es": "Sitios metastásicos",
         "en": "Metastatic sites"
-      }
+      },
+      "values": [
+        {
+          "value": "oseo",
+          "label": {
+            "es": "Óseo"
+          }
+        },
+        {
+          "value": "ganglionar",
+          "label": {
+            "es": "Ganglionar"
+          }
+        },
+        {
+          "value": "hepatico",
+          "label": {
+            "es": "Hepático"
+          }
+        },
+        {
+          "value": "pulmonar",
+          "label": {
+            "es": "Pulmonar"
+          }
+        },
+        {
+          "value": "cerebral",
+          "label": {
+            "es": "Cerebral"
+          }
+        },
+        {
+          "value": "otro",
+          "label": {
+            "es": "Otro"
+          }
+        }
+      ]
     },
     {
       "key": "estado_castracion",
@@ -29,7 +93,39 @@
       "label": {
         "es": "Estado de castración",
         "en": "Castration status"
-      }
+      },
+      "values": [
+        {
+          "value": "castrado",
+          "label": {
+            "es": "Castrado"
+          }
+        },
+        {
+          "value": "no_castrado",
+          "label": {
+            "es": "No castrado"
+          }
+        },
+        {
+          "value": "sensible_castracion",
+          "label": {
+            "es": "Sensible a la castración"
+          }
+        },
+        {
+          "value": "resistente_castracion",
+          "label": {
+            "es": "Resistente a la castración"
+          }
+        },
+        {
+          "value": "desconocido",
+          "label": {
+            "es": "Desconocido"
+          }
+        }
+      ]
     }
   ]
 }

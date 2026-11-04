@@ -3,6 +3,7 @@ import {
   elegirDiagnosticoVigente,
   sqlDiagnosticoCandidato,
 } from '../compartido/diagnostico-vigente.js';
+import { episodioDelRegistro } from '../compartido/contexto-de-registro.js';
 import { bloquearPaciente } from '../compartido/paciente-activo.js';
 import { sqlDatoVigente } from '../compartido/estados-de-revision.js';
 import { ejecutarEnTransaccion, type FuenteDeConexiones } from '../compartido/transaccion.js';
@@ -68,18 +69,6 @@ function datosDelDiagnostico(f: FilaSql): DatosDelDiagnostico {
     performanceValue: f['performance_value'] as number | null,
     diagnosedAt: f['diagnosed_at'] as string,
   };
-}
-
-async function episodioDelRegistro(db: Consultador, patientId: string): Promise<string> {
-  const { rows } = await db.query(
-    `SELECT id FROM clinical.care_episode WHERE patient_id = $1
-      ORDER BY (closed_at IS NULL) DESC, opened_at DESC, id LIMIT 1`,
-    [patientId],
-  );
-  const id = rows[0]?.['id'];
-  // Un paciente siempre nace con su episodio: que falte es un dato corrupto, no un error del cliente.
-  if (typeof id !== 'string') throw new Error('El paciente no tiene episodio de atención');
-  return id;
 }
 
 async function gradacionesDe(db: Consultador, diagnosisId: string): Promise<GradacionGuardada[]> {

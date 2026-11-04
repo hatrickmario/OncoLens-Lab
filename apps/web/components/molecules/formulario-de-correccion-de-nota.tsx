@@ -9,7 +9,7 @@ import { useEnvioDeCorreccion } from '../../lib/correcciones/use-envio-de-correc
 import { mensajes } from '../../lib/mensajes';
 import { Button } from '../ui/button';
 import { Label } from '../ui/label';
-import { CampoDeCorreccion } from './campo-de-correccion';
+import { CampoDeTexto } from './campo-de-texto';
 
 export interface FormularioDeCorreccionDeNotaProps {
   nota: Pick<ClinicalNote, 'id' | 'noteType' | 'content'>;
@@ -56,7 +56,7 @@ export function FormularioDeCorreccionDeNota({
         </select>
       </div>
       <p className="text-text-muted m-0">{avisoNombres}</p>
-      <CampoDeCorreccion
+      <CampoDeTexto
         id={`${idBase}-texto`}
         name="content"
         etiqueta={formulario.nota}

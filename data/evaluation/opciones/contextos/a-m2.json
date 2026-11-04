@@ -1,0 +1,73 @@
+{
+  "pseudoPatientId": "psd_AM2synthetic02",
+  "population": "adulto",
+  "diagnosis": {
+    "dataRef": "r1",
+    "cancerType": "mama",
+    "histology": "carcinoma ductal infiltrante",
+    "grade": "Nottingham grado 2",
+    "stagingSystem": "TNM_8",
+    "stageValue": "IIA",
+    "performanceScale": "Karnofsky",
+    "performanceValue": 80,
+    "monthsSinceDiagnosis": 1,
+    "provenance": {
+      "entryMethod": "seed",
+      "extractionConfidence": "n_a",
+      "reviewStatus": "verificado",
+      "conflict": false
+    }
+  },
+  "biomarkers": [
+    {
+      "dataRef": "r2",
+      "biomarkerName": "HER2",
+      "value": "3+ (IHQ)",
+      "resultType": "cualitativo",
+      "clinicalSignificance": "relevante",
+      "monthsAgo": 1,
+      "provenance": {
+        "entryMethod": "ocr",
+        "extractionConfidence": "media",
+        "reviewStatus": "requiere_revision",
+        "conflict": false
+      }
+    }
+  ],
+  "clinicalNotes": [],
+  "currentLine": null,
+  "attributes": [],
+  "priorTreatments": [],
+  "events": [
+    {
+      "dataRef": "r4",
+      "eventType": "diagnostico",
+      "monthsAgo": 1,
+      "description": "Carcinoma ductal infiltrante de mama",
+      "provenance": {
+        "entryMethod": "seed",
+        "extractionConfidence": "n_a",
+        "reviewStatus": "verificado",
+        "conflict": false
+      }
+    }
+  ],
+  "biomarkerTrends": [],
+  "missingCriticalData": [
+    "estado_menopausico"
+  ],
+  "priorAnalyses": [
+    {
+      "source": "analisis_previo_ia",
+      "citable": false,
+      "monthsAgo": 2,
+      "question": "Pregunta de prueba sobre HER2 (test)",
+      "synthesisSummary": "Resumen previo de prueba: HER2 negativo (test)",
+      "optionsDescribed": [
+        "Opcion previa descrita de prueba"
+      ],
+      "linkedDecision": null,
+      "outcomesSince": []
+    }
+  ]
+}

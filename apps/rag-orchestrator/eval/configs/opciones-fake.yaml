@@ -1,0 +1,32 @@
+# Configuración de la familia `opciones` de `evaluate` con adapters falsos (US-140, L1D-246; FX-T5a-a + FX-10c-a). Es la
+# configuración de la CI de esta familia y de AC-6: no carga modelos, no abre sockets y es reproducible (misma
+# configuración, mismas métricas, misma huella). Es independiente de test-fake.yaml: `--suite all` no la usa y
+# data/evaluation/baseline.json no depende de ella. `s5.yaml` es su par con los modelos locales (corrida nocturna).
+nombre: opciones-fake
+fixture: FX-T5a-a+FX-10c-a
+dataset:
+  ruta: data/evaluation/opciones
+semilla_bootstrap: 20261021
+bootstrap_repeticiones: 200
+medicion:
+  reloj: simulado # simulado: 1 ms por lectura (reproducible); real: time.perf_counter
+adaptadores:
+  proveedor: fake
+modelos:
+  llm: fake-guion@1
+umbrales:
+  relevance_threshold: 0.30
+  nli_entailment_threshold: 0.7
+  retrieval_top_k: 40
+  rerank_top_n: 10
+catalogo:
+  version: test-apl-1.0.0 # el catálogo de aplicabilidad de test de mama; próstata usa el real (manifiesto del dataset)
+  ruta_terminos: packages/clinical-catalogs
+opciones:
+  maxOptions: 3 # ANALYSIS_MAX_OPTIONS (FR-09)
+regresion:
+  # El reporte del S3 con adapters falsos (FX-T5a-a: fidelidad 0,75, precisión de citas 0,80). Declara su propio dataset: la
+  # comparación entre datasets distintos queda dicha en el reporte; DEC-07 (S6) fija la referencia definitiva.
+  reporte_referencia: reports/eval/s3-cierre.json
+  faithfulness_regression_tolerance: 0.05 # FAITHFULNESS_REGRESSION_TOLERANCE (RN-22; decidido, usuario, 2026-11-03; DEC-07 la recalibra)
+metas_iniciales: apps/rag-orchestrator/eval/configs/metas-iniciales.yaml # metas sin DEC-07; M-10.1 = 100 % y M-10.2 = 0 son invariantes, no metas

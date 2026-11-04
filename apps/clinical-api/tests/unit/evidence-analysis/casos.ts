@@ -50,7 +50,7 @@ export function atributoDeEjemplo(resto: Partial<FilaDeAtributo> = {}): FilaDeAt
   return {
     id: 'at-1',
     attributeKey: 'estado_castracion',
-    value: 'sensible',
+    value: 'sensible_castracion',
     observedAt: '2026-08-20',
     datePrecision: 'dia',
     ...PROCEDENCIA_SEMBRADA,

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { CaseView } from '../../../../packages/api-contracts/src/types/clinical-api';
 import { rotuloOValor } from '../../lib/caso/presentacion';
 import { mensajes } from '../../lib/mensajes';
@@ -12,14 +13,16 @@ type Atributo = CaseView['attributes'][number];
 export function ClinicalAttributesTable({
   atributos,
   hoy,
+  accion,
 }: {
   atributos: Atributo[];
   hoy: string;
+  accion?: ReactNode;
 }) {
   const { caso } = mensajes();
   const c = caso.columnas;
   return (
-    <SeccionDeFicha id="caso-atributos" titulo={caso.secciones.atributos}>
+    <SeccionDeFicha id="caso-atributos" titulo={caso.secciones.atributos} accion={accion}>
       {atributos.length === 0 ? (
         <p className="m-0">{caso.sinDatos}</p>
       ) : (
