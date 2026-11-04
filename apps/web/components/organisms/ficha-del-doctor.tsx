@@ -25,6 +25,8 @@ export function FichaDelDoctor({
   /** `null` si la lectura de notas falló: el resto de la ficha se muestra igual. */
   notas: ClinicalNote[] | null;
   hoy: string;
+  /** Clave del catálogo de `?item=` (US-111): abre el formulario de su entidad; sin uso hasta el feat. */
+  item?: string;
 }) {
   const { ficha: textos, caso } = mensajes();
   const egresado = ficha.lifecycleStatus === 'egresado';

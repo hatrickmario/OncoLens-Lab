@@ -59,6 +59,8 @@ export function VistaDeCaso({
   hoy: string;
   /** Paciente egresado (RN-17): los registros manuales se deshabilitan. */
   egresado?: boolean;
+  /** Clave del catálogo de `?item=` (US-111): abre el formulario de su entidad; sin uso hasta el feat. */
+  item?: string;
 }) {
   const { lectura, recargar } = useVistaDeCaso(patientId);
   const { caso, ficha } = mensajes();

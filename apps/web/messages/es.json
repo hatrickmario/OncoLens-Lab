@@ -611,6 +611,79 @@
       "nota": "Vista de administración: sin datos clínicos ni nombre."
     }
   },
+  "registroManual": {
+    "elegir": "Elige una opción",
+    "biomarcador": {
+      "accion": "Registrar biomarcador",
+      "titulo": "Registrar biomarcador",
+      "descripcion": "Registro manual de un resultado del paciente. Queda con origen \"Registro manual\".",
+      "nombre": "Biomarcador",
+      "valor": "Valor",
+      "unidad": "Unidad (opcional)",
+      "tipoDeResultado": "Tipo de resultado",
+      "cuantitativo": "Cuantitativo",
+      "cualitativo": "Cualitativo",
+      "fecha": "Fecha del examen",
+      "terminosNoDisponibles": "No se pudieron cargar los términos del catálogo. Puedes escribir el nombre del biomarcador.",
+      "noMapeado": "Sin código en el catálogo versionado: queda como no mapeado; nunca se inventa un código."
+    },
+    "diagnostico": {
+      "accion": "Completar diagnóstico a mano",
+      "titulo": "Completar diagnóstico a mano",
+      "descripcion": "Registro manual del diagnóstico del paciente. Queda con origen \"Registro manual\" o \"Corrección manual\".",
+      "avisoDeCorreccion": "Guardar registra tu corrección manual; el diagnóstico vigente pasa a histórico.",
+      "tipoDeCancer": "Tipo de cáncer",
+      "histologia": "Histología",
+      "sistemaDeEstadio": "Sistema de estadio",
+      "valorDeEstadio": "Valor de estadio",
+      "escalaFuncional": "Escala funcional",
+      "valorFuncional": "Valor funcional",
+      "fecha": "Fecha del diagnóstico",
+      "gradoDerivado": "Grado (derivado de la gradación)",
+      "sinGrado": "No registrado",
+      "sinCambios": "No hay cambios que guardar",
+      "cargando": "Cargando las opciones del catálogo",
+      "opcionesNoDisponibles": "No se pudieron cargar las opciones del catálogo. Cierra el formulario e intenta de nuevo.",
+      "gradacion": {
+        "titulo": "Gradación",
+        "sistema": "Sistema de gradación",
+        "sinGradacion": "Sin gradación",
+        "nottingham": "Grado de Nottingham",
+        "patronPrimario": "Patrón primario de Gleason",
+        "patronSecundario": "Patrón secundario de Gleason",
+        "especimen": "Tipo de espécimen",
+        "alcance": "Alcance de la gradación",
+        "sistemas": {
+          "nottingham": "Nottingham",
+          "gleason_isup": "Gleason e ISUP"
+        },
+        "especimenes": {
+          "biopsia": "Biopsia",
+          "prostatectomia": "Prostatectomía"
+        },
+        "alcances": {
+          "nucleo_sitio": "Núcleo o sitio",
+          "peor": "Peor",
+          "global": "Global"
+        }
+      }
+    },
+    "anuncio": {
+      "uno": "1 campo necesita revisión.",
+      "varios": "{cantidad} campos necesitan revisión."
+    },
+    "errores": {
+      "obligatorio": "Este campo es obligatorio.",
+      "campoInvalido": "Revisa este campo: no cumple el formato esperado.",
+      "valorFueraDeCatalogo": "Este valor no está en el catálogo vigente.",
+      "valorFueraDeRango": "El valor está fuera del rango del catálogo para esta escala",
+      "gradacionIncoherente": "La gradación no es coherente: revisa los patrones y el espécimen.",
+      "egresado": "El paciente está egresado: no admite registros hasta su reactivación.",
+      "permiso": "No tienes permiso para registrar datos clínicos.",
+      "noEncontrado": "Paciente no encontrado",
+      "generico": "No se pudo guardar. Inténtalo de nuevo."
+    }
+  },
   "followUp": {
     "titulo": "Preguntas de seguimiento sobre este análisis",
     "contadorConTotal": "{n} de {max} preguntas usadas",
