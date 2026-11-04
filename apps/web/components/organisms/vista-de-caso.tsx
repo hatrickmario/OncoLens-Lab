@@ -1,59 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import type { CaseView } from '../../../../packages/api-contracts/src/types/clinical-api';
-import { separarSinFecha } from '../../lib/caso/presentacion';
 import { useVistaDeCaso } from '../../lib/caso/use-vista-de-caso';
+import { useChecklistDeFaltantes } from '../../lib/evidence/use-checklist-de-faltantes';
 import { mensajes } from '../../lib/mensajes';
 import { Alert } from '../ui/alert';
 import { VistaDeCasoNoDisponible } from '../molecules/vista-de-caso-no-disponible';
-import { CaseTimeline } from './case-timeline';
-import { ClinicalAttributesTable } from './clinical-attributes-table';
-import { DialogoAtributoClinico } from './dialogo-atributo-clinico';
-import { DialogoTratamientoPrevio } from './dialogo-tratamiento-previo';
-import { PriorTreatmentsTable } from './prior-treatments-table';
-import { SeriesConRegistroManual } from './series-con-registro-manual';
-import { UndatedEvents } from './undated-events';
-
-interface SeccionesDelCasoProps {
-  vista: CaseView;
-  hoy: string;
-  patientId: string;
-  egresado: boolean;
-  /** Recarga la vista tras un registro manual (`201`). */
-  alRegistrar: () => void;
-  /** Clave de `?item=` (US-111). */
-  item?: string;
-}
-
-function SeccionesDelCaso({
-  vista,
-  hoy,
-  patientId,
-  egresado,
-  alRegistrar,
-  item,
-}: SeccionesDelCasoProps) {
-  const { fechados, sinFecha } = separarSinFecha(vista.timeline);
-  const registro = { pacienteId: patientId, egresado, alGuardar: alRegistrar };
-  return (
-    <>
-      <CaseTimeline eventos={fechados} hoy={hoy} />
-      {sinFecha.length > 0 && <UndatedEvents eventos={sinFecha} />}
-      <PriorTreatmentsTable
-        tratamientos={vista.priorTreatments}
-        hoy={hoy}
-        accion={<DialogoTratamientoPrevio {...registro} />}
-      />
-      <ClinicalAttributesTable
-        atributos={vista.attributes}
-        hoy={hoy}
-        accion={<DialogoAtributoClinico {...registro} />}
-      />
-      <SeriesConRegistroManual series={vista.biomarkerSeries} hoy={hoy} item={item} {...registro} />
-    </>
-  );
-}
+import { SeccionesDelCaso } from './secciones-del-caso';
 
 /**
  * Vista de caso del paciente (US-090, D10): lee `GET /api/patients/{id}/case` y muestra solo lo ya validado. Único
@@ -73,6 +26,7 @@ export function VistaDeCaso({
   item?: string;
 }) {
   const { lectura, recargar } = useVistaDeCaso(patientId);
+  const { lectura: checklist, releer } = useChecklistDeFaltantes(patientId);
   const { caso, ficha } = mensajes();
   if (lectura === null || lectura.tipo === 'sin_sesion') {
     return (
@@ -99,7 +53,8 @@ export function VistaDeCaso({
       hoy={hoy}
       patientId={patientId}
       egresado={egresado}
-      alRegistrar={() => void recargar()}
+      checklist={checklist}
+      alRegistrar={() => void Promise.all([recargar(), releer()])}
       item={item}
     />
   );

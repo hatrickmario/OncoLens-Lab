@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { mensajes } from '../../lib/mensajes';
 import { AccionDeRegistro } from '../molecules/accion-de-registro';
 import { FormularioDeTratamientoPrevio } from '../molecules/formulario-de-tratamiento-previo';
@@ -11,6 +11,8 @@ export interface DialogoTratamientoPrevioProps {
   egresado: boolean;
   /** Recarga la vista de caso tras el `201`: la fila aparece sin recargar la página. */
   alGuardar: () => void;
+  /** Texto del botón que abre el diálogo; por defecto «+ Agregar tratamiento previo». */
+  textoDeAccion?: ReactNode;
 }
 
 /** «+ Agregar tratamiento previo» y su diálogo (S5-03 d); el foco vuelve al botón al cerrar. */
@@ -18,6 +20,7 @@ export function DialogoTratamientoPrevio({
   pacienteId,
   egresado,
   alGuardar,
+  textoDeAccion,
 }: DialogoTratamientoPrevioProps) {
   const { accion, titulo, descripcion } = mensajes().caso.registro.tratamiento;
   const [abierto, setAbierto] = useState(false);
@@ -26,7 +29,7 @@ export function DialogoTratamientoPrevio({
     <>
       <AccionDeRegistro
         ref={disparador}
-        texto={accion}
+        texto={textoDeAccion ?? accion}
         egresado={egresado}
         idDeAyuda="registro-egresado-tratamientos"
         alAbrir={() => setAbierto(true)}

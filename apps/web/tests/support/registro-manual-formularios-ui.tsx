@@ -25,7 +25,7 @@ import {
 import { FichaDeAdministrador } from '../../components/organisms/ficha-de-administrador';
 import { FichaDelDoctor } from '../../components/organisms/ficha-del-doctor';
 import { VistaDeCaso } from '../../components/organisms/vista-de-caso';
-import { casoVacio, HOY, ID_DEL_CASO } from './caso-ui';
+import { casoVacio, checklistSinFaltantes, HOY, ID_DEL_CASO } from './caso-ui';
 
 /** 201 de `createManualBiomarker` para Ki-67: el cuerpo del ejemplo de la operación, completado como lo respondería el servidor. */
 const biomarcadorCreado = zBiomarker.parse({
@@ -112,6 +112,7 @@ export function crearBffDeFormulariosSimulado() {
     );
   const predeterminados = () =>
     servidor.use(
+      checklistSinFaltantes(),
       http.get('*/api/patients/:id/case', async ({ request }) => {
         await registrar(request);
         return HttpResponse.json(caso);

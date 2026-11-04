@@ -11,9 +11,14 @@ export function formatearFecha(iso: string): string {
   return `${dia}/${mes}/${anio}`;
 }
 
+/** Nombre del origen de un dato («Carga inicial», «Registro manual»…): único dueño del literal (`ficha.origen`). */
+export function nombreDeOrigen(metodo: Provenance['entryMethod']): string {
+  return mensajes().ficha.origen[metodo];
+}
+
 /** Origen y revisión siempre en texto ("Carga inicial · Verificado"), nunca solo por color (WCAG, RN-07). */
 export function textoDeOrigen(procedencia: Provenance): string {
-  return `${mensajes().ficha.origen[procedencia.entryMethod]} · ${textoDeRevision(procedencia)}`;
+  return `${nombreDeOrigen(procedencia.entryMethod)} · ${textoDeRevision(procedencia)}`;
 }
 
 type SistemaDeGradacion = DiagnosisGrading['gradingSystem'];

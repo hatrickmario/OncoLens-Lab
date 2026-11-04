@@ -3,6 +3,7 @@ import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/re
 import userEvent from '@testing-library/user-event';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import {
+  accionesDe,
   crearBffDeDatosCriticosSimulado,
   ID_DEL_CASO,
   montarVistaConDatosCriticos,
@@ -25,6 +26,10 @@ describe('Columna «Datos críticos» · acciones de los faltantes', () => {
     const usuario = userEvent.setup();
     montarVistaConDatosCriticos();
     const datos = await columna();
+    const fila = datos
+      .getAllByRole('listitem')
+      .find((li) => li.textContent?.includes('Estado menopáusico'))!;
+    expect(fila.textContent).not.toMatch(/Cargar documento/i);
 
     await usuario.click(datos.getByRole('button', { name: 'Registrar a mano Estado menopáusico' }));
 
@@ -34,8 +39,6 @@ describe('Columna «Datos críticos» · acciones de los faltantes', () => {
         'estado_menopausico',
       ),
     );
-    const fila = datos.getByText('Estado menopáusico').closest('li')!;
-    expect(fila.textContent).not.toMatch(/Cargar documento/i);
   });
 
   it('lleva Ki-67 a ?item=ki67 y Grado a ?item=grado para abrir el formulario de US-111 [US-004 AC-3]', async () => {
@@ -97,7 +100,7 @@ describe('Columna «Datos críticos» · acciones de los faltantes', () => {
 
     expect(faltantes).toHaveLength(6);
     for (const fila of faltantes) {
-      expect(within(fila).getAllByRole(/^(link|button)$/)).toHaveLength(1);
+      expect(accionesDe(fila)).toHaveLength(1);
       expect(fila.textContent).not.toMatch(/Cargar documento/i);
     }
   });

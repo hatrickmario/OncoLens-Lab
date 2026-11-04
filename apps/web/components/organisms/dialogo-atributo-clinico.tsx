@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { useAtributosPermitidos } from '../../lib/registro-manual/use-atributos-permitidos';
 import { mensajes } from '../../lib/mensajes';
 import { AccionDeRegistro } from '../molecules/accion-de-registro';
@@ -12,15 +12,21 @@ export interface DialogoAtributoClinicoProps {
   egresado: boolean;
   /** Recarga la vista de caso tras el `201`: la fila aparece sin recargar la página. */
   alGuardar: () => void;
+  /** Atributo del catálogo que el formulario abre seleccionado (p. ej., desde un faltante); sin él, ninguno. */
+  claveInicial?: string;
+  /** Texto del botón que abre el diálogo; por defecto «+ Registrar atributo». */
+  textoDeAccion?: ReactNode;
 }
 
 /** Contenido del diálogo: lee los atributos del catálogo al abrirse (el contenido se desmonta al cerrar). */
 function ContenidoDelAtributo({
   pacienteId,
+  claveInicial,
   alGuardar,
   alCerrar,
 }: {
   pacienteId: string;
+  claveInicial?: string;
   alGuardar: () => void;
   alCerrar: () => void;
 }) {
@@ -39,6 +45,7 @@ function ContenidoDelAtributo({
     <FormularioDeAtributoClinico
       pacienteId={pacienteId}
       permitidos={lectura.permitidos}
+      claveInicial={claveInicial}
       alGuardar={() => {
         alGuardar();
         alCerrar();
@@ -53,6 +60,8 @@ export function DialogoAtributoClinico({
   pacienteId,
   egresado,
   alGuardar,
+  claveInicial,
+  textoDeAccion,
 }: DialogoAtributoClinicoProps) {
   const { accion, titulo, descripcion } = mensajes().caso.registro.atributo;
   const [abierto, setAbierto] = useState(false);
@@ -61,7 +70,7 @@ export function DialogoAtributoClinico({
     <>
       <AccionDeRegistro
         ref={disparador}
-        texto={accion}
+        texto={textoDeAccion ?? accion}
         egresado={egresado}
         idDeAyuda="registro-egresado-atributos"
         alAbrir={() => setAbierto(true)}
@@ -75,6 +84,7 @@ export function DialogoAtributoClinico({
       >
         <ContenidoDelAtributo
           pacienteId={pacienteId}
+          claveInicial={claveInicial}
           alGuardar={alGuardar}
           alCerrar={() => setAbierto(false)}
         />

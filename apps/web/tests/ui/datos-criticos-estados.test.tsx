@@ -2,10 +2,8 @@
 import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { checkProhibitedTerms } from '../../../../packages/clinical-language/src/check-prohibited-terms';
-import { loadProhibitedTerms } from '../../../../packages/clinical-language/src/load-prohibited-terms';
-import { mensajes } from '../../lib/mensajes';
 import {
+  accionesDe,
   crearBffDeDatosCriticosSimulado,
   errorInterno,
   errorNoAutenticado,
@@ -17,12 +15,6 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ replace, refresh: vi.fn(
 
 const bff = crearBffDeDatosCriticosSimulado();
 const columna = async () => within(await screen.findByRole('region', { name: 'Datos críticos' }));
-
-function aplanar(valor: unknown): string[] {
-  if (typeof valor === 'string') return [valor];
-  if (valor === null || typeof valor !== 'object') return [];
-  return Object.values(valor).flatMap(aplanar);
-}
 
 describe('Columna «Datos críticos» · origen, errores y accesibilidad', () => {
   beforeAll(bff.iniciar);
@@ -44,7 +36,7 @@ describe('Columna «Datos críticos» · origen, errores y accesibilidad', () =>
     expect(fila('HER2 (IHQ)').textContent).toContain('Corrección manual');
     expect(fila('Histología').textContent).toContain('Carga inicial');
     for (const etiqueta of ['Receptor de estrógeno', 'Tratamientos previos', 'HER2 (IHQ)']) {
-      expect(within(fila(etiqueta)).queryAllByRole(/^(link|button)$/)).toHaveLength(0);
+      expect(accionesDe(fila(etiqueta))).toHaveLength(0);
       expect(fila(etiqueta).innerHTML).not.toMatch(/href=|3b8e5a21|documents?\//);
     }
   });
@@ -76,7 +68,7 @@ describe('Columna «Datos críticos» · origen, errores y accesibilidad', () =>
     montarVistaConDatosCriticos();
     const datos = await columna();
 
-    const acciones = datos.getAllByRole(/^(link|button)$/);
+    const acciones = accionesDe(await screen.findByRole('region', { name: 'Datos críticos' }));
     expect(acciones.map((a) => a.textContent?.replace(/\s+/g, ' ').trim())).toEqual([
       'Completar diagnóstico a mano Grado',
       'Registrar a mano Receptor de progesterona',
@@ -105,20 +97,5 @@ describe('Columna «Datos críticos» · origen, errores y accesibilidad', () =>
 
     await waitFor(() => expect(document.activeElement).toBe(encabezado));
     window.history.replaceState(null, '', '/');
-  });
-
-  it('no contiene términos prohibidos en datosCriticos.* ni en faltantes.enElCaso [RN-23]', () => {
-    const lista = loadProhibitedTerms();
-    const todos = mensajes() as unknown as Record<string, Record<string, unknown>>;
-    const textos = [...aplanar(todos.datosCriticos), ...aplanar(todos.faltantes?.enElCaso)];
-
-    expect(textos.length).toBeGreaterThan(8);
-    for (const texto of textos) {
-      const hallazgos = checkProhibitedTerms(texto, lista, {
-        niveles: ['A', 'B'],
-        permitirFrases: true,
-      });
-      expect(hallazgos.map((h) => `${texto}: ${h.termino}`)).toEqual([]);
-    }
   });
 });

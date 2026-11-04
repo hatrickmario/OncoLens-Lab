@@ -99,5 +99,9 @@ export const atributosDeMama = {
   ],
 };
 
+/** Enlaces y botones de un elemento: las acciones que ofrece una fila o la columna. */
+export const accionesDe = (elemento: HTMLElement) =>
+  Array.from(elemento.querySelectorAll<HTMLElement>('a[href], button'));
+
 export const montarVistaConDatosCriticos = (item?: string) =>
   render(<VistaDeCaso patientId={ID_DEL_CASO} hoy={HOY} item={item} />);

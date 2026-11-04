@@ -80,18 +80,9 @@ describe('presentarEstado', () => {
 });
 
 describe('enlaceDeRegistro', () => {
-  const item = (entity: CompletenessView['items'][number]['destination']['entity']) =>
-    ({
-      ...vista.items[0]!,
-      destination: { entity, field: null },
-    }) as CompletenessView['items'][number];
-
-  it.each(['Diagnosis', 'Biomarker', 'ClinicalAttribute', 'PriorTreatment'] as const)(
-    'lleva a los datos críticos de la vista de caso cuando el destino es %s',
-    (entidad) => {
-      expect(enlaceDeRegistro(ID, item(entidad))).toBe(hrefDeVistaDeCaso(ID, 'datos-criticos'));
-    },
-  );
+  it('lleva a los datos críticos de la vista de caso cualquiera que sea el destino', () => {
+    expect(enlaceDeRegistro(ID)).toBe(hrefDeVistaDeCaso(ID, 'datos-criticos'));
+  });
 });
 
 describe('debeContinuarConAviso', () => {

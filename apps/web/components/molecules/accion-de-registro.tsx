@@ -1,9 +1,9 @@
-import type { Ref } from 'react';
+import type { ReactNode, Ref } from 'react';
 import { mensajes } from '../../lib/mensajes';
 import { Button } from '../ui/button';
 
 export interface AccionDeRegistroProps {
-  texto: string;
+  texto: ReactNode;
   egresado: boolean;
   /** Id del texto de egresado que explica el botón deshabilitado (RN-17). */
   idDeAyuda: string;
