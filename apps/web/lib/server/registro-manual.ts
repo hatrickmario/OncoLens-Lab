@@ -14,7 +14,12 @@ import {
   zCorrectBiomarkerPath,
   zCorrectClinicalNoteBody,
   zCorrectClinicalNotePath,
+  zCreateManualBiomarkerBody,
+  zCreateManualBiomarkerPath,
   zCreateManualClinicalAttributeBody,
+  zCreateManualDiagnosisBody,
+  zCreateManualDiagnosisPath,
+  zGetManualEntryOptionsPath,
   zCreateManualPriorTreatmentBody,
   zGetBiomarkerHistoryPath,
   zCreateManualClinicalAttributePath,
@@ -39,7 +44,10 @@ export type OperacionDeRegistroManual =
   | 'getClinicalNoteHistory'
   | 'createManualPriorTreatment'
   | 'listClinicalAttributes'
-  | 'createManualClinicalAttribute';
+  | 'createManualClinicalAttribute'
+  | 'createManualBiomarker'
+  | 'createManualDiagnosis'
+  | 'getManualEntryOptions';
 
 export interface ParametrosDeRuta {
   id: string;
@@ -129,6 +137,29 @@ const DEFINICIONES: Record<OperacionDeRegistroManual, Definicion> = {
     cuerpo: zCreateManualClinicalAttributeBody,
     llamar: (sdk, path, body) =>
       createManualClinicalAttribute({ client: sdk.client, path, body, ...base }),
+  }),
+  createManualBiomarker: definir({
+    evento: 'registro_manual.biomarcador.crear',
+    ruta: zCreateManualBiomarkerPath,
+    cuerpo: zCreateManualBiomarkerBody,
+    llamar: () => {
+      throw new Error('no implementado');
+    },
+  }),
+  createManualDiagnosis: definir({
+    evento: 'registro_manual.diagnostico.crear',
+    ruta: zCreateManualDiagnosisPath,
+    cuerpo: zCreateManualDiagnosisBody,
+    llamar: () => {
+      throw new Error('no implementado');
+    },
+  }),
+  getManualEntryOptions: definir({
+    evento: 'registro_manual.opciones.leer',
+    ruta: zGetManualEntryOptionsPath,
+    llamar: () => {
+      throw new Error('no implementado');
+    },
   }),
 };
 
