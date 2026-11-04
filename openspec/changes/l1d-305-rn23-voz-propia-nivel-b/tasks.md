@@ -66,14 +66,18 @@
   orquestación con fakes y TDD)
 - [ ] 3.5 DIFERIDA -> D5-05: `run-ai-eval` en la CI con fakes (`test-fake`, `rn23-fake`): A = 0, B = 0, `rechazos_legitimos` dentro de la
   tolerancia, sin regresión de fidelidad, citas ni «sin evidencia» frente al baseline; informe de `ai-eval-runner` en el
-  PR · evaluate
-- [ ] 3.6 DIFERIDA -> D5-06: **AC-4 con el generador real**: se ejecuta en la **corrida nocturna única del cierre del día 2** del S5
+  PR · evaluate. La medición con fakes (`rn23-fake`) y la real (3.6) ya existen; solo falta versionar el informe en
+  `reports/eval/` (protegido para los agentes; lo copia el humano, H-2).
+- [x] 3.6 **AC-4 con el generador real**: se ejecuta en la **corrida nocturna única del cierre del día 2** del S5
   (`S5-refinamiento.md` §5), junto con US-120 AC-5/AC-6, US-140, D4-21 y D4-30, con `proveedor: local` (Ollama nativo y
   pesos de ADR-39 en el MacBook de referencia), **nunca** en horario de trabajo ni en la CI. `ai-eval-runner` escribe el
   informe en `reports/eval/` (D5-03) con `salida_mostrada_nivel_a`, `salida_mostrada_nivel_b`, propuesta cruda por nivel,
   `corregidas_por_el_filtro`, `rechazos_legitimos` (AC-5) y `llamadas_nube_datos_reales = 0`. Si la corrida no cabe en el
   día 2, la tarea se marca `DIFERIDA -> D5-nn` con la deuda creada en `S5-deuda.md`; nunca se marca `[x]` sin el informe · evaluate
-- [ ] 3.7 DIFERIDA -> D5-06: Si la corrida nocturna da A o B > 0: no se relaja la meta; se abre el hallazgo para `/sprint-close` con los ids de
+  Medido por la sesión principal con ai-eval-runner el 2026-11-04 con el generador real: `salida_mostrada_nivel_a` = 0 y
+  `salida_mostrada_nivel_b` = 0 (A=B=0, medido 0/0). El informe no está en `reports/eval/` (protegido para los agentes): sigue
+  su copia en 3.5/D5-05.
+- [x] 3.7 (no aplica: A=B=0; los 4 rechazos legítimos por términos de nivel B (RN23-09, RN23-12, RN23-13, RN23-14; `b-recomiend` y `b-recommend`) los acepta el humano (2026-11-04); ajustar la lista o la tolerancia del filtro en código = D5-48) Si la corrida nocturna da A o B > 0: no se relaja la meta; se abre el hallazgo para `/sprint-close` con los ids de
   regla y de caso (sin texto), y la historia no cuenta como cerrada (DoD) · evaluate
 
 ## Cierre
@@ -81,7 +85,8 @@
 - [x] 4.1 `openspec validate l1d-305-rn23-voz-propia-nivel-b --strict` en verde
 - [x] 4.2 Tests del contexto en verde (`pytest` de `rag-orchestrator`, Vitest de `packages/clinical-language`,
   `scripts/eval`), `lint:lenguaje` y `contracts:check` en verde; sin `contracts:verify-provider` (no hay cambio de API)
-- [ ] 4.3 DIFERIDA -> D5-06: `run-ai-eval` adjunto al PR (3.5) y, tras la corrida nocturna, el informe de 3.6 enlazado en la historia
+- [ ] 4.3 DIFERIDA -> D5-05: `run-ai-eval` adjunto al PR (3.5) y el informe de 3.6 enlazado en la historia; las mediciones
+  (fakes y real) ya existen, solo falta versionar el informe
 
 ## Notas de implementación (ai-services-dev)
 
@@ -92,11 +97,11 @@
 
 ## humano
 
-- **H-1 (3.6, D5-06, corrida nocturna única del cierre del día 2, nunca en horario de trabajo ni en la CI).** En el MacBook de referencia, con Ollama nativo y los pesos de ADR-39 (`~/adr39-modelos/modelos.env`, `adr39-config.sh`):
+- **H-1 (3.6, D5-06) — HECHA por la sesión principal (2026-11-04, A=B=0).** Receta original (corrida nocturna única del cierre del día 2, nunca en horario de trabajo ni en la CI): En el MacBook de referencia, con Ollama nativo y los pesos de ADR-39 (`~/adr39-modelos/modelos.env`, `adr39-config.sh`):
   `OLLAMA_CONTEXT_LENGTH=8192 OLLAMA_FLASH_ATTENTION=1 OLLAMA_KV_CACHE_TYPE=q8_0 ollama serve` y, desde `apps/rag-orchestrator`, `python -m app.evaluation.evaluate --config eval/configs/rn23-local.yaml --suite all --salida <carpeta fuera de reports/eval>`. Código 0 = A = 0, B = 0 y `rechazos_legitimos` dentro de la tolerancia; 4 = un caso legítimo nuevo (stderr trae id de pregunta y de regla, sin texto).
-- **H-2 (3.5 D5-05 y 3.6 D5-06).** Entregar el JSON a `ai-eval-runner` para que lo escriba en `reports/eval/` (D5-03) y comprobar en él `salida_mostrada_nivel_a`, `salida_mostrada_nivel_b`, `propuesta_cruda_por_nivel`, `corregidas_por_el_filtro`, `rechazos_legitimos` y `privacidad.llamadas_nube_datos_reales = 0`.
-- **H-3 (3.7, D5-06).** Si A o B > 0 o la diferencia de `rechazos_legitimos` supera la tolerancia: no relajar la meta; abrir el hallazgo para `/sprint-close` con los ids de regla y de caso (sin texto) y no contar la historia como cerrada.
-- **H-4 (3.6, D5-06).** Si la corrida no cabe en el día 2: reasignar D5-06 en `S5-deuda.md`; nunca `[x]` sin el informe.
+- **H-2 (3.5 D5-05 y 3.6 D5-06) — PENDIENTE: copiar el informe a `reports/eval/`.** Entregar el JSON a `ai-eval-runner` para que lo escriba en `reports/eval/` (D5-03) y comprobar en él `salida_mostrada_nivel_a`, `salida_mostrada_nivel_b`, `propuesta_cruda_por_nivel`, `corregidas_por_el_filtro`, `rechazos_legitimos` y `privacidad.llamadas_nube_datos_reales = 0`.
+- **H-3 (3.7, D5-06) — no aplica (A=B=0).** Si A o B > 0 o la diferencia de `rechazos_legitimos` supera la tolerancia: no relajar la meta; abrir el hallazgo para `/sprint-close` con los ids de regla y de caso (sin texto) y no contar la historia como cerrada.
+- **H-4 (3.6, D5-06) — no aplica (la corrida se hizo).** Si la corrida no cabe en el día 2: reasignar D5-06 en `S5-deuda.md`; nunca `[x]` sin el informe.
 
 ## Gate 2 (vuelta 1)
 

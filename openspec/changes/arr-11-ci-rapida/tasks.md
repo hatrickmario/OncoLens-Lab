@@ -96,19 +96,23 @@
 
 ## humano
 
-- [ ] H-1 Añadir a `.claude/agents/sprint-orchestrator.md` la regla «antes de pedir el merge de un PR que toca
+- [x] H-1 (hecho en #298: regla «`contracts` contra `main` antes del merge (S5, H-3)» presente en `.claude/agents/sprint-orchestrator.md`) Añadir a `.claude/agents/sprint-orchestrator.md` la regla «antes de pedir el merge de un PR que toca
   `contracts/examples/**` o un `openapi.yaml`, si `main` avanzó, volver a ejecutar el job `contracts`» (D5-02; los agentes
-  no editan su configuración) · DIFERIDA -> H-1
+  no editan su configuración)
 
 ## cierre
 
 - [x] 6.1 `openspec validate arr-11-ci-rapida --strict` en verde.
 - [x] 6.2 Vitest raíz (`npx vitest run`), `ci/tests/run-cases.sh` de los casos nuevos y Pytest de
   `test_dependencias_de_inferencia.py` en verde en local.
-- [ ] 6.3 PR con la CI completa en verde (0 checks en fallo, 0 pendientes, 0 alertas), `eval-required` sin descargar
+- [x] 6.3 (PR #291 mergeado el 2026-11-03T15:32:59Z con `gh pr checks 291`: 0 en fallo y 0 pendientes, `ci-ok` pass, `eval-required` pass 2m23s con 0 coincidencias de `nvidia` en el log del job, `higiene-proceso` pass; alertas de code scanning no consultadas; el PR de solo documentación está medido en 6.4) PR con la CI completa en verde (0 checks en fallo, 0 pendientes, 0 alertas), `eval-required` sin descargar
   ruedas `nvidia-*` (log del `pip install`), y un PR de prueba de solo documentación (p. ej., el PR `docs` de la oleada O1)
   con `ci-ok` en verde y solo los cuatro jobs de documentación ejecutados.
-- [ ] 6.4 Medición tras el merge (design «Medición»): duración de `ci-ok` en 3 PR de código y 3 de documentación frente a
-  ~22 min, anotada en el PR y en `docs/process/ci.md`.
+- [x] 6.4 Medición tras el merge (design «Medición»): duración de `ci-ok` en 3 PR de código y 3 de documentación frente a
+  ~22 min, anotada en el PR y en `docs/process/ci.md`. Medido (2026-11-04, `gh run list`, workflow CI del último run verde
+  del PR; inicio del run a fin de `ci-ok`, incluye cola): código #316 12 min 24 s, #320 11 min 19 s, #322 13 min 52 s
+  (media 12 min 32 s, ~43 % menos que ~22 min; **meta del design ~10 min: no alcanzada**, queda ~2,5 min por encima);
+  documentación #311 40 s, #319 1 min 9 s, #321 40 s (media 50 s; **meta ~2 min: cumplida**). Anotada en
+  `docs/process/ci.md`.
 - [x] 6.5 Sin `contracts:verify-provider` ni `run-ai-eval` adicionales: el change no toca APIs, modelo, prompt, umbral,
   catálogo ni corpus (la dependencia movida en D-11 no la importa ningún test ni `evaluate`).
