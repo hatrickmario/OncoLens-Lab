@@ -23,7 +23,11 @@ export function verificarSoloSintetico(conteoPorOrigen, banderas) {
   }
   const conteo = conteoAgregado(conteoPorOrigen);
   const motivos = [];
-  if (conteo.real_anonimizado + conteo.real_identificado > 0) motivos.push('datos no sintéticos');
+  // Cualquier origen distinto de sintetico con pacientes cuenta, aunque el enum crezca con un origen nuevo.
+  const noSinteticos = Object.entries(conteoPorOrigen).some(
+    ([origen, n]) => origen !== 'sintetico' && Number(n) > 0,
+  );
+  if (noSinteticos) motivos.push('datos no sintéticos');
   // Solo el nombre de la variable y si está activa: ningún otro valor de la configuración llega al registro.
   // Una variable que no se pudo leer cuenta como activa: el gate nunca la da por apagada.
   const valores = Object.fromEntries(
