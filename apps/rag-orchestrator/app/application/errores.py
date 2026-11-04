@@ -32,6 +32,8 @@ class LlmSalidaInvalidaError(ErrorDeAplicacion):
     validar. Sin reintento silencioso ni eco del texto generado; solo viaja el tipo del error de validación en el log.
     """
 
+    reglas: tuple[str, ...] = ()
+
 
 class FaltanteNoCatalogadoError(ErrorDeAplicacion):
     """Un elemento de ``missingCriticalData`` no es una clave del catálogo del tipo del caso (`422 CUERPO_INVALIDO`, RN-11).
