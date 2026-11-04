@@ -1,12 +1,18 @@
 import type {
   Biomarker,
   Diagnosis,
+  ManualEntryOptions,
 } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
 import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
+import type { CatalogoDeDatosCriticos } from '../completeness/ports.js';
 import { exigirPacienteQueAdmiteRegistros } from '../compartido/paciente-activo.js';
-import type { DecisionDeNormalizacion, ReconciliationService } from '../reconciliation/ports.js';
+import type {
+  CatalogoTerminologico,
+  DecisionDeNormalizacion,
+  ReconciliationService,
+} from '../reconciliation/ports.js';
 import {
   armarRegistroDeBiomarcador,
   comoBiomarcadorDelContrato,
@@ -40,12 +46,18 @@ export interface SolicitudDeRegistro<C> {
 export interface ManualEntryService {
   registrarBiomarcador(solicitud: SolicitudDeRegistro<CuerpoDeBiomarcador>): Promise<Biomarker>;
   registrarDiagnostico(solicitud: SolicitudDeRegistro<CuerpoDeDiagnostico>): Promise<Diagnosis>;
+  /** Valores del catálogo para los formularios, según el diagnóstico vigente del paciente (RN-29). */
+  opciones(patientId: string): Promise<ManualEntryOptions>;
 }
 
 export interface DependenciasDelService {
   readonly repositorio: RepositorioDeRegistroManual;
   readonly reconciliacion: ReconciliationService;
   readonly escalas: CatalogoDeEscalas;
+  readonly terminologia: CatalogoTerminologico;
+  readonly datosCriticos: CatalogoDeDatosCriticos;
+  /** Tipos de cáncer del `manifest.json`. */
+  readonly tiposDelCatalogo: readonly string[];
   readonly tiposHabilitados: TiposDeCancerHabilitados;
   readonly reloj: Clock;
   readonly generarId: GeneradorDeIds;
@@ -158,5 +170,6 @@ export function createManualEntryService(dependencias: DependenciasDelService): 
   return {
     registrarBiomarcador: (solicitud) => registrarBiomarcador(dependencias, solicitud),
     registrarDiagnostico: (solicitud) => registrarDiagnostico(dependencias, solicitud),
+    opciones: () => Promise.reject(new Error('no implementado')),
   };
 }

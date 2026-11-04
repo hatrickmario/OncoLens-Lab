@@ -3,6 +3,7 @@ import type { Client } from 'pg';
 import { crearCatalogoDeEscalas } from '../../src/infrastructure/catalogo/catalogo-de-escalas.js';
 import { crearProveedorDeCatalogo } from '../../src/infrastructure/catalogo/catalog-version.provider.js';
 import { crearCatalogoTerminologico } from '../../src/infrastructure/catalogo/catalogo-terminologico.js';
+import { cargarCatalogoDeDatosCriticos } from '../../src/modules/completeness/completeness.module.js';
 import { completenessController } from '../../src/modules/completeness/completeness.controller.js';
 import { crearTiposHabilitados } from '../../src/modules/evidence-analysis/tipos-habilitados.js';
 import { componerModuloDeRegistroManual } from '../../src/modules/manual-entry/manual-entry.module.js';
@@ -46,6 +47,8 @@ export interface AppDeRegistroManual {
 export interface OpcionesDeRegistroManual {
   /** Catálogo montado; por defecto el fixture `test-normalizacion-1.0.0`. */
   rutaDelCatalogo?: string;
+  /** Catálogo del checklist montado junto al registro; por defecto `test-1.0.0` (los tests de l1d-90). */
+  rutaDelChecklist?: string;
   /** Cada transacción abre su PROPIA conexión (como el Pool de producción): para probar el bloqueo entre peticiones. */
   conexionesIndependientes?: boolean;
 }
@@ -89,6 +92,9 @@ export function montarRegistroManual(
     reconciliacionPara: () =>
       createReconciliationService({ catalogo: terminologia, registrar: logger.registrar }),
     escalas: crearCatalogoDeEscalas(ruta, leerTexto, proveedor),
+    terminologia,
+    datosCriticos: cargarCatalogoDeDatosCriticos(ruta, leerTexto),
+    tiposDelCatalogo: proveedor.cancerTypes(),
     tiposHabilitados: crearTiposHabilitados(['mama', 'prostata'], ['mama', 'prostata']),
     reloj,
     generarId: mundo.ids,
@@ -96,7 +102,9 @@ export function montarRegistroManual(
     registrar: logger.registrar,
   });
   const checklist = completenessController({
-    service: servicioDeCompletitud(mundo, { rutaDelCatalogo: RUTA_CATALOGO_TEST_1_0_0 }),
+    service: servicioDeCompletitud(mundo, {
+      rutaDelCatalogo: opciones.rutaDelChecklist ?? RUTA_CATALOGO_TEST_1_0_0,
+    }),
     traceIds,
     registrar: logger.registrar,
   });

@@ -1,5 +1,8 @@
+import type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
+import type { CatalogoDeDatosCriticos } from '../completeness/ports.js';
 import type { PacienteBloqueable } from '../compartido/paciente-activo.js';
 import type { EstadoDeRevisionVisible } from '../compartido/estados-de-revision.js';
+import type { CatalogoTerminologico } from '../reconciliation/ports.js';
 
 /*
  * Glosario: «registro manual» es el dato que el oncólogo escribe a mano (no extraído de un documento); «corrección» es
@@ -14,6 +17,26 @@ export interface CatalogoDeEscalas {
   /** Rango inclusivo de la escala funcional; `undefined` si la escala no está en el catálogo. */
   rangoDeEscala(escala: string): { readonly minimo: number; readonly maximo: number } | undefined;
   sistemaDeGradacionValido(sistema: string, tipoDeCancer: string): boolean;
+  /** Sistemas de estadificación del tipo de cáncer, en el orden del catálogo (los que ofrece el formulario, RN-29). */
+  sistemasDeEstadificacion(tipoDeCancer: string): readonly string[];
+  /** Escalas funcionales con su rango inclusivo, en el orden del catálogo. */
+  escalasFuncionales(): readonly {
+    readonly codigo: string;
+    readonly minimo: number;
+    readonly maximo: number;
+  }[];
+  /** Sistemas de gradación del tipo de cáncer, en el orden del catálogo. */
+  sistemasDeGradacion(tipoDeCancer: string): readonly string[];
+}
+
+/** Lo que `opcionesDeRegistroManual` lee del catálogo montado: escalas, términos, datos críticos y tipos de cáncer. */
+export interface FuenteDeOpciones {
+  readonly escalas: CatalogoDeEscalas;
+  readonly terminologia: CatalogoTerminologico;
+  readonly datosCriticos: CatalogoDeDatosCriticos;
+  /** Tipos del `manifest.json`, en su orden; los habilitados son los que `tiposHabilitados` acepta (RN-20). */
+  readonly tiposDelCatalogo: readonly string[];
+  readonly tiposHabilitados: TiposDeCancerHabilitados;
 }
 
 export type SistemaDeGradacion = 'gleason_isup' | 'nottingham';
@@ -133,6 +156,10 @@ export interface TransaccionDeRegistro extends PacienteBloqueable {
 }
 
 export interface RepositorioDeRegistroManual {
+  /** Tipo de cáncer del diagnóstico vigente (`null` sin vigente); `undefined` si el paciente no existe. Lectura sin bloqueo. */
+  tipoDeCancerVigente(
+    patientId: string,
+  ): Promise<{ readonly tipoDeCancer: string | null } | undefined>;
   /** Ejecuta `trabajo` en una transacción: si lanza, se revierte todo (D8). */
   enTransaccion<T>(trabajo: (tx: TransaccionDeRegistro) => Promise<T>): Promise<T>;
 }

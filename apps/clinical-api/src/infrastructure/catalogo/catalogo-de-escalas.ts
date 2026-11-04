@@ -63,5 +63,14 @@ export function crearCatalogoDeEscalas(
           },
     sistemaDeGradacionValido: (sistema, tipo) =>
       sistemaValido(escalas?.sistemasDeGradacion, sistema, tipo),
+    sistemasDeEstadificacion: () => {
+      throw new Error('no implementado');
+    },
+    escalasFuncionales: () => {
+      throw new Error('no implementado');
+    },
+    sistemasDeGradacion: () => {
+      throw new Error('no implementado');
+    },
   };
 }

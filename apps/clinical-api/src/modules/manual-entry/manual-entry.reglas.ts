@@ -1,6 +1,12 @@
+import type { ManualEntryOptions } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
 import type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
 import { ValorFueraDeCatalogoError } from './manual-entry.errores.js';
-import type { CatalogoDeEscalas, DatosDelDiagnostico, GradacionGuardada } from './ports.js';
+import type {
+  CatalogoDeEscalas,
+  DatosDelDiagnostico,
+  FuenteDeOpciones,
+  GradacionGuardada,
+} from './ports.js';
 
 /** Campos de la corrección que el cuerpo del contrato puede traer (sin `grading`, que se trata aparte). */
 export interface CamposDeCorreccion {
@@ -184,4 +190,12 @@ export function validarValoresDeCatalogo(
 ): void {
   const [campo] = camposFueraDelCatalogo(fuente, enviados, resultante);
   if (campo !== undefined) throw new ValorFueraDeCatalogoError(campo);
+}
+
+/** Valores del catálogo para los formularios de registro manual, para el tipo de cáncer dado (o todos los habilitados si `null`). */
+export function opcionesDeRegistroManual(
+  _fuente: FuenteDeOpciones,
+  _tipoDeCancer: string | null,
+): ManualEntryOptions {
+  throw new Error('no implementado');
 }

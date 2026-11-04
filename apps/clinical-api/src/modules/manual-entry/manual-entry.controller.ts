@@ -28,6 +28,7 @@ export interface DependenciasDelController {
 
 const EVENTO_BIOMARCADOR = 'manual_entry.biomarcador';
 const EVENTO_DIAGNOSTICO = 'manual_entry.diagnostico';
+const EVENTO_OPCIONES = 'manual_entry.opciones';
 
 /** Errores de dominio → respuesta HTTP; `undefined` si no es uno de ellos (sigue al 500 genérico). */
 function rechazoDe(error: unknown): Rechazo | undefined {
@@ -85,8 +86,27 @@ function crearRegistro<C, R>(dependencias: DependenciasDelController, operacion:
   };
 }
 
+function crearOpciones({ registrar, servicioPara }: DependenciasDelController) {
+  return async (request: Request, response: Response): Promise<void> => {
+    const patientId = idDePacienteSchema.safeParse(request.params['patientId']);
+    if (!patientId.success) {
+      rechazarNoEncontrado(response, registrar, EVENTO_OPCIONES);
+      return;
+    }
+    try {
+      const opciones = await servicioPara(traceIdDe(response)).opciones(patientId.data);
+      registrarResultado(registrar, EVENTO_OPCIONES, response, patientId.data, 'ok');
+      response.setHeader('Cache-Control', 'no-store');
+      response.status(200).json(opciones);
+    } catch (error) {
+      if (!(error instanceof PacienteNoEncontradoError)) throw error;
+      rechazarNoEncontrado(response, registrar, EVENTO_OPCIONES);
+    }
+  };
+}
+
 /**
- * `POST /platform/patients/{id}/biomarkers` y `…/diagnoses` (se montan bajo `/platform`, detrás del guard). Solo traducen
+ * `POST /platform/patients/{id}/biomarkers` y `…/diagnoses` y `GET …/manual-entry-options` (se montan bajo `/platform`, detrás del guard). Solo traducen
  * HTTP ↔ service: `authorize` corre antes de leer el cuerpo (403 sin efectos) y el log nunca lleva valores clínicos.
  */
 export function manualEntryController(dependencias: DependenciasDelController): Router {
@@ -96,6 +116,12 @@ export function manualEntryController(dependencias: DependenciasDelController): 
     authorize('clinical:write'), // x-permission de createManualBiomarker y createManualDiagnosis
     express.json(),
   ];
+  router.get(
+    '/patients/:patientId/manual-entry-options',
+    crearTraceIdMiddleware(dependencias.traceIds),
+    authorize('clinical:read'), // x-permission de getManualEntryOptions
+    crearOpciones(dependencias),
+  );
   router.post(
     '/patients/:patientId/biomarkers',
     ...alRegistrar,

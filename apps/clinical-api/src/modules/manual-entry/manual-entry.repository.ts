@@ -203,6 +203,7 @@ export function createManualEntryRepository(
   fuente: FuenteDeConexiones,
 ): RepositorioDeRegistroManual {
   return {
+    tipoDeCancerVigente: () => Promise.reject(new Error('no implementado')),
     enTransaccion: (trabajo) =>
       ejecutarEnTransaccion(fuente, (conexion) => trabajo(transaccionSobre(conexion))),
   };
