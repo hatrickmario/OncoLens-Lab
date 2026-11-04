@@ -167,7 +167,7 @@ describe('verify-g-demo (verificar.mjs)', () => {
         'Regresión del recorrido en verde (modo fingido); G-Demo se declara solo en modo real',
       );
       expect(r.registro).not.toContain('**Resultado:** G-Demo superado');
-      expect(r.registro).toContain('no medido');
+      expect(r.registro).toContain('no medida');
     },
   );
 

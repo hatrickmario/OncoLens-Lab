@@ -124,7 +124,7 @@
   {
     "id": "VM-2",
     "tipo": "se_mide_en_el_piloto",
-    "descripcion": "Tiempo para encontrar evidencia aplicable con el sistema (el baseline manual ya está registrado)",
+    "descripcion": "Tiempo para localizar evidencia citada con su aplicabilidad por criterio (el baseline manual ya está registrado)",
     "feature": "FEAT-T5d",
     "destino": "S6",
     "motivo": "Se mide en el piloto con el mismo protocolo congelado en DEC-02"

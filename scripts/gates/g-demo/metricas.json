@@ -1,5 +1,6 @@
 {
   "_comentario": "Métricas del gate G-Demo (US-142 AC-2). `claveMeta` apunta a apps/rag-orchestrator/eval/configs/metas-iniciales.yaml; `metaFija` solo para las dos invariantes del gate (G-2 = M-10.1, G-14 = M-10.2). `rutas` son los caminos posibles en el reporte de evaluate (suite `all` u `opciones`).",
+  "configuraciones": ["s5-opciones-local"],
   "definiciones": [
     {
       "id": "M-10.1",

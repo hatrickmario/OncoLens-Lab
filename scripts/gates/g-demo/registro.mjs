@@ -2,7 +2,7 @@
  * Registro del gate (US-142 AC-6): Markdown desde `docs/gates/plantilla-G-Demo.md`. Solo agregados, nombres de métrica y
  * de variable, identificadores públicos de versión y modelos: nunca filas, identidad, credenciales ni cadenas de conexión.
  */
-import { textoDeMeta } from './metricas.mjs';
+import { ESTADOS, textoDeMeta } from './metricas.mjs';
 
 export const NO_DISPONIBLE = 'No disponible';
 export const DUENO = 'usuario (PO)';
@@ -19,9 +19,9 @@ export function renderizarRegistro(plantilla, datos) {
 }
 
 const ESTADOS_DE_METRICA = {
-  en_meta: 'en meta',
-  fuera_de_meta: 'FUERA DE META',
-  no_medida: 'no medida',
+  [ESTADOS.EN_META]: 'en meta',
+  [ESTADOS.FUERA_DE_META]: 'FUERA DE META',
+  [ESTADOS.NO_MEDIDA]: 'no medida',
 };
 
 export function tablaDeMetricas(metricas) {
@@ -43,7 +43,7 @@ export function tablaDeMetricas(metricas) {
 }
 
 export function listaDeNoMedidas(metricas) {
-  const no = metricas.filter((m) => m.estado === 'no_medida');
+  const no = metricas.filter((m) => m.estado === ESTADOS.NO_MEDIDA);
   return no.length === 0 ? '- Ninguna.' : no.map((m) => `- ${m.id}: ${m.motivo}`).join('\n');
 }
 
@@ -61,13 +61,31 @@ export function listaDeValidacionClinica(validacion) {
     .join('\n');
 }
 
+const MARCA_DEL_P95 = {
+  [ESTADOS.EN_META]: 'dentro de la meta',
+  [ESTADOS.INSUMO_ADR42]: 'fuera de meta: insumo de ADR-42',
+};
+
+/** Lista blanca de lo que puede copiarse al registro versionado (RN-14): lo que no encaja se declara «No disponible». */
+export const PATRON_DE_COMMIT = /^[0-9a-f]{40}$/;
+export const PATRON_DE_VERSION_O_MODELO = /^[\w.:@+/-]{1,80}$/;
+
+export function valorSeguro(valor, patron) {
+  return typeof valor === 'string' && patron.test(valor) ? valor : null;
+}
+
+export function enteroSeguro(valor) {
+  return /^\d{1,6}$/.test(String(valor ?? '')) ? Number(valor) : null;
+}
+
 export function textoDelP95(p95, { fuente, consultas }) {
-  if (p95.estado === 'no_medido') {
-    return `no medido (${fuente}); meta ${p95.meta} s (clave \`${p95.clave}\`); no bloquea`;
+  const meta = `meta ${p95.meta.maximo} s (clave \`${p95.clave}\`)`;
+  if (p95.estado === ESTADOS.NO_MEDIDA) {
+    return `no medida (${p95.motivo}; ${fuente}); ${meta}; no bloquea`;
   }
-  const marca =
-    p95.estado === 'insumo_adr42' ? 'fuera de meta: insumo de ADR-42' : 'dentro de la meta';
-  return `${p95.valor} s, ${marca}; meta ${p95.meta} s (clave \`${p95.clave}\`); consultas: ${valorOTexto(consultas)}; fuente: ${fuente}`;
+  const marca = MARCA_DEL_P95[p95.estado];
+  if (!marca) throw new Error('estado de p95 desconocido');
+  return `${p95.valor} s, ${marca}; ${meta}; consultas: ${valorOTexto(consultas)}; fuente: ${fuente}`;
 }
 
 export function textoDelConteo(soloSintetico) {

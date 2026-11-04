@@ -13,7 +13,11 @@ export function cargarExcepciones(json) {
   const incompletas = json
     .filter((e) => !tieneTexto(e?.feature) || !tieneTexto(e?.destino))
     .map((e) => String(e?.id ?? '(sin id)'));
-  return { excepciones: json, incompletas };
+  return {
+    excepciones: json,
+    incompletas,
+    motivos: incompletas.map((id) => `excepción sin destino: ${id}`),
+  };
 }
 
 /** Lo que solo se mide en el piloto (US-139, DEC-14, VM-1, VM-2, VM-4, VM-5): se declara, no se cuenta como fallo. */

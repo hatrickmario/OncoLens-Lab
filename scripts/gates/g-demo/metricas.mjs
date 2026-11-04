@@ -3,21 +3,22 @@
  *
  * Ninguna meta vive aquí (RN-22): salen de `metas-iniciales.yaml` (`claveMeta`) o, para las dos invariantes del gate
  * (G-2 = M-10.1 y G-14 = M-10.2), de `metricas.json` (`metaFija`). Las metas se comparan, nunca se modifican.
+ * Todas las comprobaciones devuelven `{motivos: string[]}`: `decidirResultado` solo las concatena.
  */
 import { parse } from 'yaml';
 
 export const ORIGEN_METAS = 'metas-iniciales.yaml';
 export const ORIGEN_META_FIJA = 'metricas.json (invariante del gate)';
-/** La configuración de `evaluate` que el gate acepta (`eval/configs/s5*.yaml`). */
-export const PREFIJO_CONFIGURACION_DEL_GATE = 's5';
 
-/** Esqueleto (L1D-248): el commit feat los usa en todas las comprobaciones. */
+/** Un solo vocabulario de estados para las métricas y para el p95. */
 export const ESTADOS = {
   EN_META: 'en_meta',
   FUERA_DE_META: 'fuera_de_meta',
   NO_MEDIDA: 'no_medida',
   INSUMO_ADR42: 'insumo_adr42',
 };
+
+const MOTIVO_REPORTE = 'reporte de evaluate ausente o de otra configuración';
 
 /** Metas por clave, tal como las declara el YAML (`minimo` o `maximo`). */
 export function cargarMetas(textoYaml) {
@@ -28,15 +29,12 @@ export function cargarMetas(textoYaml) {
   return documento.metas;
 }
 
-/** El reporte de `evaluate` debe existir y ser de la configuración del S5; si no, el gate no puede medir. */
-export function validarReporte(reportes) {
+/** El reporte de `evaluate` debe existir y ser de una de las configuraciones aceptadas (lista explícita en metricas.json). */
+export function validarReporte(reportes, nombresAceptados) {
   const lista = Array.isArray(reportes) ? reportes.filter(Boolean) : [];
-  const motivo = 'reporte de evaluate ausente o de otra configuración';
-  if (lista.length === 0) return { ok: false, motivo };
-  const todosDelGate = lista.every((r) =>
-    String(r?.configuracion?.nombre ?? '').startsWith(PREFIJO_CONFIGURACION_DEL_GATE),
-  );
-  return todosDelGate ? { ok: true } : { ok: false, motivo };
+  const ok =
+    lista.length > 0 && lista.every((r) => nombresAceptados.includes(r?.configuracion?.nombre));
+  return { ok, motivos: ok ? [] : [MOTIVO_REPORTE] };
 }
 
 /** Cómo se muestra una meta (`≥ n` o `≤ n`): una sola definición para el motivo y la tabla. */
@@ -80,26 +78,42 @@ function buscarEnReportes(reportes, rutas) {
 }
 
 function metaDe(definicion, metas) {
-  if (definicion.metaFija) return { meta: definicion.metaFija, origen: ORIGEN_META_FIJA };
-  const declarada = metas[definicion.claveMeta];
-  if (!declarada) throw new Error(`la meta ${definicion.claveMeta} no está en ${ORIGEN_METAS}`);
+  const nombre = definicion.claveMeta ?? definicion.id;
+  const declarada = definicion.metaFija ?? metas[definicion.claveMeta];
+  if (!declarada) throw new Error(`la meta ${nombre} no está en ${ORIGEN_METAS}`);
   const { minimo, maximo } = declarada;
+  if (minimo === undefined && maximo === undefined) {
+    throw new Error(`la meta ${nombre} no declara minimo ni maximo`);
+  }
   return {
     meta: { ...(minimo !== undefined && { minimo }), ...(maximo !== undefined && { maximo }) },
-    origen: ORIGEN_METAS,
+    origen: definicion.metaFija ? ORIGEN_META_FIJA : ORIGEN_METAS,
   };
 }
 
 function estadoFrenteALaMeta(valor, meta) {
-  if (valor === null) return 'no_medida';
-  if (meta.minimo !== undefined && valor < meta.minimo) return 'fuera_de_meta';
-  if (meta.maximo !== undefined && valor > meta.maximo) return 'fuera_de_meta';
-  return 'en_meta';
+  if (valor === null) return ESTADOS.NO_MEDIDA;
+  if (meta.minimo !== undefined && valor < meta.minimo) return ESTADOS.FUERA_DE_META;
+  if (meta.maximo !== undefined && valor > meta.maximo) return ESTADOS.FUERA_DE_META;
+  return ESTADOS.EN_META;
 }
 
-/** Una medición por definición, con su valor, su meta, su origen y los casos validados y no validados. */
-export function evaluarMetricas(reportes, definiciones, metas) {
-  return definiciones.map((definicion) => {
+function motivosDeMediciones(mediciones) {
+  return mediciones.flatMap((m) => {
+    if (m.estado === ESTADOS.FUERA_DE_META) {
+      return [`${m.id} fuera de meta (valor ${m.valor}, meta ${textoDeMeta(m.meta)})`];
+    }
+    if (m.estado === ESTADOS.NO_MEDIDA && m.obligatoria) return [`${m.id} no medida`];
+    return [];
+  });
+}
+
+/**
+ * Una medición por definición, con su valor, su meta, su origen y los casos validados y no validados. Los motivos solo
+ * existen con un reporte válido: sin él, el motivo es el del reporte y no una lista de métricas «no medidas».
+ */
+export function evaluarMetricas(reportes, definiciones, metas, nombresAceptados) {
+  const mediciones = definiciones.map((definicion) => {
     const { meta, origen } = metaDe(definicion, metas);
     const { valor, validadas, noValidadas } = buscarEnReportes(reportes, definicion.rutas);
     const estado = estadoFrenteALaMeta(valor, meta);
@@ -114,7 +128,11 @@ export function evaluarMetricas(reportes, definiciones, metas) {
       validadas,
       noValidadas,
       motivo:
-        estado === 'no_medida' ? (definicion.motivoSiNoSeMide ?? 'el reporte no la trae') : null,
+        estado === ESTADOS.NO_MEDIDA
+          ? (definicion.motivoSiNoSeMide ?? 'el reporte no la trae')
+          : null,
     };
   });
+  const reporteValido = validarReporte(reportes, nombresAceptados).ok;
+  return { mediciones, motivos: reporteValido ? motivosDeMediciones(mediciones) : [] };
 }

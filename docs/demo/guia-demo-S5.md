@@ -234,10 +234,10 @@ VM-5; FEAT-T5c / FEAT-T5d, S6), sin simularla.
 
 1. `scripts/demo/levantar.sh`: stack con modelos reales de ADR-39 y seed sintético.
 2. Corrida de `evaluate` con `eval/configs/s5.yaml` (suite `all` y suite `opciones`) por `ai-eval-runner`, pasando
-   `--p95-e2e-s` con el p95 del baseline de `l1d-119` (mediana de 3 corridas). Sin reporte de `s5*.yaml` el gate no se supera.
-3. E2E `g-demo.spec.ts` en modo real (`LLM_PROVIDER=local`); su adjunto JSON (`pasos`, `catalogVersion`, `corpusRelease`) es la
+   `--p95-baseline-s` con el p95 del baseline de `l1d-119` (mediana de 3 corridas). Sin reporte de `s5*.yaml` el gate no se supera.
+3. E2E `g-demo.spec.ts` en modo real (`LLM_PROVIDER=local`); su adjunto JSON (`modoLlm`, `generadoEn`, `pasos`, `catalogVersion`) es la
    entrada `--e2e-resultado`.
-4. `scripts/verify-g-demo --modo real --e2e-resultado <json> --reporte-evaluate <json> [--reporte-evaluate <json>] --p95-e2e-s <s>`.
+4. `scripts/verify-g-demo --modo real --e2e-resultado <json> --reporte-evaluate <json> [--reporte-evaluate <json>] --p95-baseline-s <s>`.
    Cuenta pacientes por `data_origin` con el rol de `clinical-api` dentro de su contenedor, lee solo las dos banderas
    `REAL_*_ENABLED` y escribe el registro. Código de salida 1 = «G-Demo no superado», con la métrica, la variable o el paso
    nombrados.

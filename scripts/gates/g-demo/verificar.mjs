@@ -4,12 +4,13 @@
  * Es la única pieza con E/S de `scripts/gates/g-demo/`; el reloj, la lectura y la escritura se inyectan.
  *
  * Insumos (todos agregados): `--conteo-json` (salida de contar-en-proceso.js), `--banderas-json` (salida de banderas.mjs),
- * `--e2e-resultado` (JSON del E2E: pasos, catalogVersion, corpusRelease), `--reporte-evaluate` (repetible), `--p95-e2e-s`.
- * Sale con 0 si el resultado es «superado» o «regresión fingida»; con 1 si «no superado».
+ * `--e2e-resultado` (JSON del E2E: modoLlm, generadoEn, pasos, catalogVersion), `--reporte-evaluate` (repetible),
+ * `--p95-baseline-s`. El veredicto, el destino del registro y el código de salida son de `resultado.mjs`.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { comprobarE2e } from './e2e.mjs';
 import {
   cargarExcepciones,
   declararValidacionClinica,
@@ -19,6 +20,9 @@ import { cargarMetas, evaluarMetricas, validarReporte } from './metricas.mjs';
 import { evaluarP95 } from './p95.mjs';
 import {
   DUENO,
+  PATRON_DE_COMMIT,
+  PATRON_DE_VERSION_O_MODELO,
+  enteroSeguro,
   listaDeExcepciones,
   listaDeNoMedidas,
   listaDeValidacionClinica,
@@ -28,30 +32,50 @@ import {
   textoDelConteo,
   textoDelP95,
   valorOTexto,
+  valorSeguro,
 } from './registro.mjs';
-import { decidirResultado } from './resultado.mjs';
+import {
+  MODOS,
+  RESULTADOS,
+  codigoDeSalida,
+  decidirResultado,
+  rutaDelRegistro,
+} from './resultado.mjs';
 import { verificarSoloSintetico } from './solo-sintetico.mjs';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const RUTA_METAS = 'apps/rag-orchestrator/eval/configs/metas-iniciales.yaml';
+const RUTA_METRICAS = 'scripts/gates/g-demo/metricas.json';
+const RUTA_EXCEPCIONES = 'docs/gates/g-demo-excepciones.json';
+const RUTA_PLANTILLA = 'docs/gates/plantilla-G-Demo.md';
 const FUENTE_DEL_P95 =
   'baseline de l1d-119 AC-6 (mediana de 3 corridas), contra Compose con los modelos de ADR-39';
+/** Clave aditiva que escribe `contar-en-proceso` (apps/clinical-api/prisma/seed/contar.ts); un test la fija en ambos lados. */
+const CLAVE_CONTEO_POR_ORIGEN = 'clinical.patient.por_data_origin';
 
+const CLAVES_DE_ARGUMENTOS = {
+  '--modo': 'modo',
+  '--e2e-resultado': 'e2e',
+  '--p95-baseline-s': 'p95',
+  '--p95-consultas': 'p95Consultas',
+  '--conteo-json': 'conteo',
+  '--banderas-json': 'banderas',
+  '--commit': 'commit',
+};
+const ARGUMENTO_REPETIBLE = '--reporte-evaluate';
+
+/** Los mensajes de error son fijos: nunca repiten lo que llegó por la línea de comandos (RN-14). */
 export function leerArgumentos(argv) {
   const args = { reportes: [] };
-  const claves = {
-    '--modo': 'modo',
-    '--e2e-resultado': 'e2e',
-    '--p95-e2e-s': 'p95',
-    '--p95-consultas': 'p95Consultas',
-    '--conteo-json': 'conteo',
-    '--banderas-json': 'banderas',
-    '--commit': 'commit',
-  };
   for (let i = 0; i < argv.length; i += 2) {
-    if (argv[i] === '--reporte-evaluate') args.reportes.push(argv[i + 1]);
-    else if (claves[argv[i]]) args[claves[argv[i]]] = argv[i + 1];
-    else throw new Error(`argumento desconocido: ${argv[i]}`);
+    const nombre = argv[i];
+    if (argv[i + 1] === undefined) throw new Error('falta el valor de un argumento');
+    if (nombre === ARGUMENTO_REPETIBLE) args.reportes.push(argv[i + 1]);
+    else if (CLAVES_DE_ARGUMENTOS[nombre]) {
+      const clave = CLAVES_DE_ARGUMENTOS[nombre];
+      if (clave in args) throw new Error('argumento duplicado');
+      args[clave] = argv[i + 1];
+    } else throw new Error('argumento desconocido');
   }
   return args;
 }
@@ -65,124 +89,114 @@ const jsonONulo = (texto) => {
   }
 };
 
-function resultadoDelE2e(e2e) {
-  const pasos = Array.isArray(e2e?.pasos) ? e2e.pasos : [];
-  const fallido = pasos.find((p) => p.resultado !== 'ok');
-  if (pasos.length === 0) return { ok: false, pasoFallido: null };
-  return { ok: !fallido, pasoFallido: fallido?.paso ?? null };
-}
-
+/** corpusRelease solo sale del reporte de evaluate: el contrato que ve el navegador no lo expone (D5-47). */
 function procedenciaDe(e2e, reportes) {
-  const dePrimero = (clave) =>
-    e2e?.[clave] ?? reportes.map((r) => r?.configuracion?.[clave]).find(Boolean) ?? null;
+  const delReporte = (clave) => reportes.map((r) => r?.configuracion?.[clave]).find(Boolean);
   const valores = {
-    catalogVersion: dePrimero('catalogVersion'),
-    corpusRelease: dePrimero('corpusRelease'),
+    catalogVersion: valorSeguro(
+      e2e?.catalogVersion ?? delReporte('catalogVersion'),
+      PATRON_DE_VERSION_O_MODELO,
+    ),
+    corpusRelease: valorSeguro(delReporte('corpusRelease'), PATRON_DE_VERSION_O_MODELO),
   };
-  return { valores, faltantes: Object.keys(valores).filter((k) => !valores[k]) };
+  const faltantes = Object.keys(valores).filter((clave) => !valores[clave]);
+  return { valores, faltantes, motivos: faltantes.length > 0 ? ['procedencia incompleta'] : [] };
 }
 
 const modelosDe = (reportes) => reportes.map((r) => r?.configuracion?.modelos).find(Boolean) ?? {};
 
-function leerP95(args, modo) {
-  if (modo === 'fingido' || args.p95 === undefined) return null;
+function leerP95(args) {
   const valor = Number(args.p95);
-  return Number.isFinite(valor) ? valor : null;
+  return args.p95 !== undefined && Number.isFinite(valor) ? valor : null;
 }
-
-const CLAVE_CONTEO_POR_ORIGEN = 'clinical.patient.por_data_origin';
 
 /** Todas las comprobaciones del gate, cada una evaluada por su módulo; ninguna decide el veredicto. */
 function reunirComprobaciones({ args, modo, deps }) {
-  const leerJson = (ruta) => (ruta ? jsonONulo(deps.leerTexto(ruta)) : null);
+  const leerJson = (ruta) => (ruta ? jsonONulo(deps.leerTextoOpcional(ruta)) : null);
   const metas = cargarMetas(deps.leerTexto(RUTA_METAS));
-  const catalogo = JSON.parse(deps.leerTexto('scripts/gates/g-demo/metricas.json'));
+  const catalogo = JSON.parse(deps.leerTexto(RUTA_METRICAS));
   const reportes = args.reportes.map(leerJson).filter(Boolean);
   const e2e = leerJson(args.e2e);
-  const metaP95 = { clave: catalogo.p95.claveMeta, maximo: metas[catalogo.p95.claveMeta].maximo };
+  const metaP95 = { clave: catalogo.p95.claveMeta, maximo: metas[catalogo.p95.claveMeta]?.maximo };
   return {
     reportes,
     comprobaciones: {
-      e2e: resultadoDelE2e(e2e),
-      reporte: validarReporte(reportes),
-      metricas: evaluarMetricas(reportes, catalogo.definiciones, metas),
+      e2e: comprobarE2e(e2e, modo),
+      reporte: validarReporte(reportes, catalogo.configuraciones),
       soloSintetico: verificarSoloSintetico(
         jsonONulo(args.conteo)?.conteos?.[CLAVE_CONTEO_POR_ORIGEN] ?? null,
         jsonONulo(args.banderas),
       ),
-      excepciones: cargarExcepciones(
-        JSON.parse(deps.leerTexto('docs/gates/g-demo-excepciones.json')),
-      ),
+      excepciones: cargarExcepciones(JSON.parse(deps.leerTexto(RUTA_EXCEPCIONES))),
       procedencia: procedenciaDe(e2e, reportes),
-      p95: evaluarP95(leerP95(args, modo), metaP95),
+      metricas: evaluarMetricas(reportes, catalogo.definiciones, metas, catalogo.configuraciones),
+      p95: evaluarP95(leerP95(args), metaP95, modo),
     },
   };
 }
 
-/** Los datos que rellenan la plantilla: solo agregados, versiones y nombres (RN-14). */
+/** Los datos que rellenan la plantilla: solo agregados y valores de la lista blanca (RN-14). */
 function armarDatosDelRegistro({ veredicto, comprobaciones, reportes, args, modo, fecha }) {
   const modelos = modelosDe(reportes);
   const { procedencia, soloSintetico, metricas, excepciones, p95 } = comprobaciones;
+  const modelo = (nombre) => valorOTexto(valorSeguro(modelos[nombre], PATRON_DE_VERSION_O_MODELO));
   return {
     titulo: veredicto.titulo,
     resultado: veredicto.resultado,
     modo,
     fecha,
-    commit: valorOTexto(args.commit),
+    commit: valorOTexto(valorSeguro(args.commit, PATRON_DE_COMMIT)),
     catalogVersion: valorOTexto(procedencia.valores.catalogVersion),
     corpusRelease: valorOTexto(procedencia.valores.corpusRelease),
-    modeloGeneracion: valorOTexto(modelos.llm),
-    modeloEmbeddings: valorOTexto(modelos.embeddings),
-    modeloReranker: valorOTexto(modelos.reranker),
-    modeloNli: valorOTexto(modelos.nli),
+    modeloGeneracion: modelo('llm'),
+    modeloEmbeddings: modelo('embeddings'),
+    modeloReranker: modelo('reranker'),
+    modeloNli: modelo('nli'),
     soloSintetico: soloSintetico.ok ? 'sí' : 'no',
     conteoPorOrigen: textoDelConteo(soloSintetico),
     banderas: textoDeBanderas(soloSintetico),
-    tablaMetricas: tablaDeMetricas(metricas),
-    noMedidas: listaDeNoMedidas(metricas),
+    tablaMetricas: tablaDeMetricas(metricas.mediciones),
+    noMedidas: listaDeNoMedidas(metricas.mediciones),
     excepciones: listaDeExcepciones(excepcionesDeCapacidad(excepciones)),
     validacionClinica: listaDeValidacionClinica(declararValidacionClinica(excepciones)),
-    p95: textoDelP95(p95, { fuente: FUENTE_DEL_P95, consultas: args.p95Consultas }),
+    p95: textoDelP95(p95, { fuente: FUENTE_DEL_P95, consultas: enteroSeguro(args.p95Consultas) }),
     dueno: DUENO,
     firma: 'pendiente',
   };
 }
 
-/** El registro real se versiona en docs/gates; el fingido (regresión) va a reports/gates, ignorado por Git. */
-function rutaDelRegistro(modo, fecha) {
-  return modo === 'real'
-    ? `docs/gates/G-Demo-${fecha}.md`
-    : `reports/gates/G-Demo-fingido-${fecha}.md`;
-}
-
 export async function verificar(argv, deps) {
   const args = leerArgumentos(argv);
-  const modo = args.modo ?? 'fingido';
+  const modo = args.modo;
+  if (!MODOS.includes(modo)) throw new Error('falta --modo fingido|real');
   const { reportes, comprobaciones } = reunirComprobaciones({ args, modo, deps });
   const veredicto = decidirResultado(comprobaciones, modo);
   const fecha = deps.reloj().toISOString().slice(0, 10);
   const datos = armarDatosDelRegistro({ veredicto, comprobaciones, reportes, args, modo, fecha });
-  const destino = rutaDelRegistro(modo, fecha);
-  // Un registro real ya escrito puede estar firmado: nunca se pisa (se borra a mano para repetir la verificación).
-  if (modo === 'real' && deps.existe(destino)) {
+  const destino = rutaDelRegistro(veredicto.resultado, modo, fecha);
+  // Un registro real superado ya escrito puede estar firmado: nunca se pisa (se borra a mano para repetir la verificación).
+  if (veredicto.resultado === RESULTADOS.SUPERADO && deps.existe(destino)) {
     throw new Error(`ya existe ${destino}; no se sobrescribe un registro que puede estar firmado`);
   }
-  deps.escribirTexto(
-    destino,
-    renderizarRegistro(deps.leerTexto('docs/gates/plantilla-G-Demo.md'), datos),
-  );
+  deps.escribirTexto(destino, renderizarRegistro(deps.leerTexto(RUTA_PLANTILLA), datos));
   deps.salida(`${veredicto.titulo}\nRegistro: ${destino}`);
-  return veredicto.resultado === 'no_superado' ? 1 : 0;
+  return codigoDeSalida(veredicto.resultado);
 }
 
 export function depsDelSistema(raiz = RAIZ) {
+  const leerTextoOpcional = (ruta) => {
+    try {
+      return readFileSync(path.resolve(raiz, ruta), 'utf8');
+    } catch {
+      return null;
+    }
+  };
   return {
+    leerTextoOpcional,
     leerTexto: (ruta) => {
-      try {
-        return readFileSync(path.resolve(raiz, ruta), 'utf8');
-      } catch {
-        return null;
-      }
+      const texto = leerTextoOpcional(ruta);
+      if (texto === null) throw new Error(`no se pudo leer ${ruta}`);
+      return texto;
     },
     escribirTexto: (ruta, texto) => {
       const completa = path.resolve(raiz, ruta);

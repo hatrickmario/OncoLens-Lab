@@ -11,8 +11,16 @@ function conteoAgregado(conteoPorOrigen) {
   );
 }
 
+/** Un conteo vacío, sin pacientes o con un valor que no es un entero no negativo no verifica nada. */
+function conteoVerificable(conteoPorOrigen) {
+  if (!conteoPorOrigen || typeof conteoPorOrigen !== 'object') return false;
+  const valores = Object.values(conteoPorOrigen);
+  const sonCuentas = valores.every((n) => Number.isInteger(n) && n >= 0);
+  return sonCuentas && valores.reduce((total, n) => total + n, 0) > 0;
+}
+
 export function verificarSoloSintetico(conteoPorOrigen, banderas) {
-  if (!conteoPorOrigen || typeof conteoPorOrigen !== 'object') {
+  if (!conteoVerificable(conteoPorOrigen)) {
     return {
       ok: false,
       verificable: false,
