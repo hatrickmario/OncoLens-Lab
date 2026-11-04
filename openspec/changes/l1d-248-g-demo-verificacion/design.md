@@ -41,7 +41,7 @@ evento fechado en la vista de caso, (c) ≥ 1 dato crítico `faltante` cuya acci
 modo fingido con ≥ 1 opción y 2 turnos de seguimiento con citas. Paciente: **F-M2** (sin Ki-67, FX-03b-a; lo usan
 `l1d-91` y `l1d-96`; Decidido, usuario, 2026-11-03, `[S5 resp. 13]`). El identificador y la pregunta se leen de un bloque JSON
 de la guía de la Demo 5 (`<!-- g-demo:inicio -->…<!-- g-demo:fin -->`), como `demo-s4-pares.spec.ts`: una sola fuente
-para la demo y el test. *Descartadas:* recorrer varios pacientes (multiplica tiempo y fragilidad del E2E del cierre;
+para la demo y el test. _Descartadas:_ recorrer varios pacientes (multiplica tiempo y fragilidad del E2E del cierre;
 la variedad la cubre `l1d-310` AC-4) y pacientes distintos por paso (el recorrido dejaría de ser «un caso»).
 
 ### D2 · Aserciones estructurales, nunca de texto generado
@@ -50,6 +50,12 @@ El spec comprueba conteos, presencia de citas y de avisos, el orden RN-28 recalc
 UI (comparador puro en el soporte del E2E, mismo criterio que `applicability_order`; no duplica la regla: solo
 compara números visibles), y textos **fijos** de la UI (`messages/es.json`). Así el mismo spec corre con el LLM fingido
 en la CI y con el real en la demo. Cada paso va en `test.step('<paso>')` para que un fallo nombre el paso.
+
+El comparador de orden RN-28 del E2E (`apps/web/e2e/orden-rn28.ts`) es **a propósito una tercera implementación**, independiente
+de `applicability_order` (servidor) y de la de `l1d-246`: un oráculo que no comparte código con lo que verifica; M-10.x en
+`evaluate` sigue siendo el control del orden. Con menos de 2 opciones visibles el paso se registra `no_verificable` (no `ok`) y el
+gate no lo da por superado. El JSON del E2E lleva además `modoLlm` y `generadoEn`, y el spec depende del orden de ejecución
+(muta al paciente; corre tras `demo-s5-pacientes.spec.ts`, `workers: 1`, sin reintentos).
 
 ### D3 · `verify-g-demo`: entrada fina + módulos puros
 
@@ -66,7 +72,7 @@ módulos `.mjs` con funciones con nombre propio:
 - `decidirResultado(comprobaciones, modo)` → `superado | no_superado | regresion_fingida` con los motivos.
 - `renderizarRegistro(plantilla, datos)` → Markdown.
 
-Un único dueño de la decisión del gate (`decidirResultado`). *Descartada:* todo en bash (sin tests unitarios de la
+Un único dueño de la decisión del gate (`decidirResultado`). _Descartada:_ todo en bash (sin tests unitarios de la
 decisión; el S4 mostró que la lógica en shell se rompe en silencio).
 
 ### D4 · Conteo por `data_origin` con el patrón de `levantar.sh`
@@ -74,7 +80,7 @@ decisión; el S4 mostró que la lógica en shell se rompe en silencio).
 Se añade al contador del seed (`apps/clinical-api/prisma/seed/contar.ts`, que compila a `contar-en-proceso.js`) una
 clave aditiva `clinical.patient.por_data_origin` (`{sintetico: n, real_anonimizado: n, real_identificado: n}`),
 ejecutada con el rol de `clinical-api` **dentro** del contenedor. Las banderas se leen de `docker compose config` de
-los servicios `clinical-api` y `seed` (solo esas dos claves). Nunca filas ni conexión. *Descartadas:* `psql` desde el
+los servicios `clinical-api` y `seed` (solo esas dos claves). Nunca filas ni conexión. _Descartadas:_ `psql` desde el
 host (exige credenciales fuera del contenedor) y un endpoint nuevo en `clinical-api` (cambio de contrato para un gate).
 
 ### D5 · p95 desde el baseline del S5, no medición propia
