@@ -170,6 +170,61 @@ scripts/e2e/ejecutar.sh -- --grep "US-254"      # Compose de test, LLM_PROVIDER=
 
 Cada paciente de mama (g)–(k) con su pregunta devuelve los conteos del bloque y la marca de no comparable `[US-254 AC-4]`; (l) y (m) abren su ficha con el aviso de tipo no habilitado, y sus conteos se comprueban solo contra los ejemplos fijos. Es determinista: el modo fingido responde con los ejemplos de `contracts/examples/`.
 
+## Recorrido del gate G-Demo: paciente y preguntas (US-142)
+
+Un solo caso sintético recorre la hipótesis de punta a punta: **ficha con una corrección → vista de caso → registro a mano de
+un faltante → análisis con opciones citadas → Base del análisis → 2 preguntas de seguimiento con citas**. El paciente del gate
+es el caso **F-M2** del catálogo de fixtures (mama, sin Ki-67, con un biomarcador vigente corregible). F-M2 es una fixture de
+pruebas de integración y no está en el seed de la demo; el recorrido usa su equivalente sembrado, el paciente (g) «Prueba
+Sintética 7» (mama, diagnóstico inicial: RP positivo vigente, sin Ki-67), que cumple las mismas propiedades. Ningún dato
+identifica a una persona; las preguntas no llevan identificadores.
+
+Este bloque es la **fuente única** del recorrido: lo lee `apps/web/e2e/g-demo.spec.ts` (el mismo texto en la demo y en la
+prueba). La pregunta del análisis es la de (g) de la tabla anterior; en modo fingido, `LLM_PROVIDER=fake` solo responde a esa
+pregunta exacta. Las dos preguntas de seguimiento reciben, en modo fingido, la respuesta fija del contrato; con el LLM real
+la redacción varía y la prueba solo comprueba estructura (citas, avisos), nunca el texto generado.
+
+<!-- g-demo:inicio -->
+
+```json
+{
+  "paciente": "g-inicial",
+  "equivalente": "F-M2",
+  "correccion": {
+    "biomarcador": "RP",
+    "valorAnterior": "Positivo (70%)",
+    "valorNuevo": "Positivo (60%)"
+  },
+  "faltante": {
+    "nombre": "Ki-67",
+    "valor": "20",
+    "unidad": "%",
+    "tipoDeResultado": "cuantitativo",
+    "fecha": "2026-01-15"
+  },
+  "pregunta": "¿Qué opciones de terapia sistémica describe la evidencia del corpus de la demo para una paciente premenopáusica con cáncer de mama en estadio inicial, receptores hormonales positivos y HER2 2+ sin confirmar?",
+  "seguimientos": [
+    "¿La evidencia describe diferencias según el estado menopáusico?",
+    "¿Qué limitaciones señalan las fuentes citadas sobre la población de esos estudios?"
+  ]
+}
+```
+
+<!-- g-demo:fin -->
+
+Lo que la prueba comprueba (estructura, no texto generado): la corrección aparece con «Corrección manual» y el valor anterior
+en el histórico desplegable; la línea de tiempo tiene al menos un evento y la columna «Datos críticos» muestra el faltante;
+tras registrarlo a mano, la fila deja de ser «Faltante» también después de recargar; el análisis muestra entre 1 y el máximo
+de opciones bajo «Opciones descritas en la evidencia», cada una con al menos una cita, su resumen de aplicabilidad y el criterio
+de orden visible (nunca una opción con «Población no comparable» antes de una comparable); la Base del análisis lista los
+faltantes restantes, que el análisis trata como «Desconocido» sin bloquear; y cada turno de seguimiento muestra al menos una
+afirmación con al menos una cita y el aviso de IA con la etiqueta académica. Además, la consola no registra errores y el
+navegador solo pide al origen de `web`.
+
+```bash
+scripts/e2e/ejecutar.sh -- --grep "US-142"      # modo fingido; en modo real lo corre la sesión del gate (ver abajo)
+```
+
 ## G-Demo: verificación y registro (US-142)
 
 Uso académico/investigación; solo pacientes sintéticos (RN-13). Se corre en la máquina de referencia el día de la Demo 5
