@@ -91,6 +91,15 @@
   entran en `evaluate`). Anotarlo en el PR.
 
   Evidencia: no aplica run-ai-eval: no cambia modelo, prompt, umbral, catálogo ni corpus.
+## 3b. Hallazgos del Gate 2 (vuelta 1)
+
+- [x] G2-1 (language Mayor 1, RN-01) Texto de las opciones de (i) y (j) fiel al alcance del fragmento citado (y de los demás ejemplos); estadio No coincide en (j); conteos de la guía actualizados. Evidencia: contracts:check sin hallazgos, commit e2b1b155.
+- [x] G2-2 (language Mayor 2, design #3) Guía con la nota de alcance de (l) y (m), encabezado «Opciones descritas en la evidencia», spec y design con el alcance reducido de AC-4; cruce de `priorTreatments` de los 7 ejemplos contra el seed en `seed-pacientes-semilla.test.ts`.
+- [x] G2-3 (design #1) `resolverAtcDelRegimen` en `seed/catalogo.ts` (solo del seed); aserciones de (j) y (l) en `momentos-enfermedad.test.ts`.
+- [x] G2-4 (design #2) Oráculo de `codigos-del-catalogo.test.ts` desde `PACIENTES_SEMILLA[].farmacos ?? [regimen]`, con un caso donde difieren.
+- [x] G2-5 (design #4) `idDeTratamiento()` en `determinismo.ts`; test de `cierraLinea` y de la fecha de cierre.
+- Deuda (destino): D5-36 `farmacos` obligatorio y rename `diasDesdeElInicio` → `diasAntesDelInicio`; D5-37 lista explícita `PACIENTES_COHERENTES` y derivar `HISTORIA` de `contar.ts`; D5-38 `assumptions []` con criterios Desconocido y «No disponible» en web para metadatos null.
+
 ## 4. humano
 
 - [x] H-1 Comprobar que `l1d-80` ya añadió «sensible a la castración» (`sensible_castracion`) en `estado_castracion`

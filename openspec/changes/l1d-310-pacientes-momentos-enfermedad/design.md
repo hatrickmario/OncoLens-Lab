@@ -43,7 +43,8 @@ fingido son los del ejemplo (no dependen del paciente), y la guía de la demo es
   **Combinaciones (implementado):** `TratamientoPreviaSemilla.farmacos` lista los términos canónicos de cada fármaco;
   el catálogo resuelve cada uno, `atc_codes` lleva los que encuentra y el régimen solo es `mapeado` si resuelven todos
   (p. ej. «Leuprorelina + abiraterona» lleva `L02AE02` y queda `no_mapeado`). Sin `farmacos`, el régimen se resuelve
-  entero, como en (a)–(f).
+  entero, como en (a)–(f). Esta semántica es **solo del seed**: `ReconciliationService` (dueño de RN-27) devuelve
+  `no_mapeado` con `atcCodes` vacío ante cualquier mapeo parcial; el helper vive en `seed/catalogo.ts` y se documenta allí.
 - **D2 · Fin de un tratamiento (aditivo en `tipos.ts`).** `TratamientoPreviaSemilla` gana `fin?: { diasAntes;
   motivo: 'progresion' | 'toxicidad' | 'completado' }`; sin `fin` → `ongoing = true`, `ended_at = null`,
   `end_reason = desconocido` (como hoy, alineado con P-2 de `l1d-80`). `EventoSemilla.tipo` pasa a
@@ -88,7 +89,8 @@ fingido son los del ejemplo (no dependen del paciente), y la guía de la demo es
   del listado distingue a los pacientes por el final enmascarado del documento.
 - **E2E con `ENABLED_CANCER_TYPES=mama`** (`scripts/e2e/ejecutar.sh`, fuera de los paths del change): los análisis por
   paciente se prueban para los cinco de mama; para (l) y (m) el E2E abre la ficha y comprueba el aviso de tipo fuera de
-  alcance (US-043 AC-3), y sus conteos se comprueban contra los ejemplos fijos y la guía.
+  alcance (US-043 AC-3), y sus conteos se comprueban contra los ejemplos fijos y la guía. **AC-4 queda con alcance reducido para próstata**
+  (la guía lo dice; el humano debe confirmarlo, o abrir una historia para habilitar `prostata` en el stack del E2E).
 - **Oráculo de `codigos-del-catalogo.test.ts` ampliado** (US-039 AC-4): resuelve cada fármaco de un régimen combinado;
   los términos sin combinar se comprueban igual que antes.
 

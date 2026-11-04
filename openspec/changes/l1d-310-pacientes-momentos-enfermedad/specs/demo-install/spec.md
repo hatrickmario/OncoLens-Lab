@@ -41,9 +41,10 @@
 
 #### Scenario: El modo fingido devuelve los estados de la guía [US-254 AC-4] [US-247]
 - **GIVEN** Compose con el seed y `LLM_PROVIDER=fake`
-- **WHEN** la prueba de aceptación abre cada paciente (g)–(m) y envía su pregunta sugerida
+- **WHEN** la prueba de aceptación abre cada paciente de mama (g)–(k) y envía su pregunta sugerida
 - **THEN** el análisis devuelve `con_evidencia` con los conteos de `applicabilitySummary` del bloque `conteos-demo-s5`
 - **AND** la opción que la guía marca con criterio excluyente en No coincide trae `populationNotComparable = true` y `warnings` con `poblacion_no_comparable`
+- **AND** (alcance reducido, pendiente de confirmación humana) para (l) y (m), de próstata, el stack del E2E corre con `ENABLED_CANCER_TYPES=mama`: la prueba abre su ficha y comprueba el aviso de tipo no habilitado, y sus conteos se comprueban solo contra los ejemplos fijos y la guía
 
 #### Scenario: Un ejemplo que no cumple el contrato rompe la carga del modo fingido [US-254 AC-4] (Decidido, usuario, 2026-11-03)
 - **GIVEN** los ejemplos `rag-query-demo-s5-*.json`
