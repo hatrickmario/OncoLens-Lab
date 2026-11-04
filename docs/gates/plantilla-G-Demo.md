@@ -1,6 +1,8 @@
 # Registro del gate G-Demo ({{fecha}})
 
 > Generado por `scripts/verify-g-demo` (US-142, L1D-248). Uso académico/investigación. Solo datos sintéticos (RN-13).
+> Las métricas describen el comportamiento del sistema de IA; su uso clínico requiere validación clínica independiente por
+> el oncólogo tratante (RN-19).
 > Solo un registro en modo real con el resultado «G-Demo superado» y la firma del dueño declara G-Demo; el modo fingido es
 > regresión del recorrido.
 
