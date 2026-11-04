@@ -50,7 +50,7 @@
 
 ## 3. frontend
 
-- [ ] 3.1 (test del AC primero) Tests en rojo (Vitest + Testing Library + MSW desde `contracts/examples/`):
+- [x] 3.1 (test del AC primero) Tests en rojo (Vitest + Testing Library + MSW desde `contracts/examples/`):
   "registra Ki-67 elegido del autocompletado y avisa al guardar [US-111 AC-1]", "avisa no_mapeado tras el 201
   [US-111 AC-1]", "abre con Ki-67 seleccionado con ?item=ki67 y con el foco en la gradación con ?item=grado
   [US-111 AC-2]", "muestra los valores vigentes, el aviso de corrección y el grado de solo lectura, y envía solo la
@@ -58,11 +58,13 @@
   422 junto al campo de field, egresado arriba y 5xx sin perder lo escrito [US-111 AC-4]", "atrapa el foco, Esc
   devuelve el foco y anuncia errores en aria-live [US-111 AC-5]", "admin no ve las acciones [US-111 AC-5]". Commit
   `test(L1D-91)`.
-- [ ] 3.2 (test del AC primero) E2E Playwright en rojo contra Compose con seed sintético (F-M2): "registra Ki-67 desde
+  Evidencia: rojo 77d36f0c (18 de 19 fallan en la aserción), verde c45f7c50 (19/19; web 752/752).
+- [x] 3.2 (test del AC primero) E2E Playwright en rojo contra Compose con seed sintético (F-M2): "registra Ki-67 desde
   la vista de caso y aparece en la ficha y en la vista con origen Registro manual sin recargar [US-111 AC-1]" y
   "?item=ki67 abre el formulario con Ki-67 seleccionado [US-111 AC-2]", con aserción de que solo hay peticiones a
   `/api/*` del mismo origen. Commit `test(L1D-91)`.
-- [ ] 3.3 (test del AC primero) Implementar `DialogoRegistroBiomarcador`, `DialogoCompletarDiagnostico`,
+  Evidencia: rojo c49f8c15 (2 fallan: no existe el botón), verde en c45f7c50 y tras el refactor bb2ac557 (2/2 contra Compose con LLM fingido).
+- [x] 3.3 (test del AC primero) Implementar `DialogoRegistroBiomarcador`, `DialogoCompletarDiagnostico`,
   `CamposDeGradacion`, `CampoConError`, `AnuncioDeErrores` y la isla `AccionesDeRegistroManual` (S5-03 a y b,
   `docs/ux/S5/pantallas-s5.md`); hooks `useEnvioRegistroManual` y `useOpcionesDeRegistroManual`; funciones puras
   `cambiosDelDiagnostico()`, `erroresDelServidor()`, `resolverItem()` y `hrefDeRegistroManual()` en
@@ -70,17 +72,22 @@
   `recargar()`) y en `FichaDelDoctor` (diagnóstico y biomarcadores, con `router.refresh()`); textos en
   `messages/es.json` (`registroManual.*`). Añadir `Dialog` de shadcn/ui solo si no está en `main` (`npm audit` en el
   PR). Verificación: 3.1 y 3.2 en verde, `lint:lenguaje` limpio. Commit `feat(L1D-91)`.
-- [ ] 3.4 Comprobar una regla, un dueño: `grep -rn "Nottingham grado\|ISUP\|no_mapeado" apps/web/lib apps/web/components`
+  Evidencia: c45f7c50, 3.1 y 3.2 en verde, `lint:lenguaje` 0 hallazgos, `quality` 0 errores. Desviaciones: sin `CampoConError` propio (se reusan `CampoDeTexto` y `CampoDeSeleccion`); el envío reutiliza `useEnvioDeRegistro`; `?item=` llega como prop desde el RSC (no `useSearchParams`); sin validación de rango en el cliente (la decide el 422 con `field`: una regla, un dueño); en la vista de caso solo va el botón de biomarcador (el de diagnóstico vive en la ficha).
+- [x] 3.4 Comprobar una regla, un dueño: `grep -rn "Nottingham grado\|ISUP\|no_mapeado" apps/web/lib apps/web/components`
   sin derivación de `grade` ni decisión de mapeo en `web`; `hrefDeRegistroManual()` único constructor del enlace.
-- [ ] 3.5 Loop visual (visual-check): estados, consola sin errores ni violaciones de CSP, red solo /api/* sin PII en
+  Evidencia: el grep solo halla comentarios y la lectura de `mappingStatus` del servidor; ninguna derivación de `grade` ni decisión de mapeo en `web`.
+- [x] 3.5 Loop visual (visual-check): estados, consola sin errores ni violaciones de CSP, red solo /api/* sin PII en
   URLs, accesibilidad y teclado, rendimiento y capturas a 375 y 1280 px; cada fallo se convierte primero en un test en
   rojo.
-- [ ] 3.6 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde
+  Evidencia: visual-check PASS local con Compose y seed sintético; capturas a 375 y 1280 px en reports/visual/L1D-91.
+- [x] 3.6 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde
   antes y después, commit `refactor(L1D-91)`.
+  Evidencia: bb2ac557 (Extract CamposDeBiomarcador, CamposDeGleason y Opciones, SeriesConRegistroManual), tests en verde antes y después.
 
 ## 4. Verificación
 
-- [ ] 4.1 `openspec validate l1d-91-formularios-registro-manual --strict` en verde.
+- [x] 4.1 `openspec validate l1d-91-formularios-registro-manual --strict` en verde.
+  Evidencia: `openspec validate --strict` válido.
 - [ ] 4.2 Suites de `apps/clinical-api` y `apps/web` (unitarios, integración y E2E de AC-1/AC-2) en verde;
   `contracts:verify-provider` sobre `getManualEntryOptions`, `createManualBiomarker` y `createManualDiagnosis`
   (incluidos 401/403/404/422/500), `tsc --noEmit`, `eslint`, `lint:lenguaje` y `pii-scan` limpios. Sin `run-ai-eval`:
