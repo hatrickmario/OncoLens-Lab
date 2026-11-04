@@ -80,7 +80,9 @@ def test_m_10_1_no_se_viola_cuando_la_secundaria_sin_soporte_se_omitio_y_no_se_m
 
 
 def test_m_10_1_sigue_violada_cuando_se_muestra_una_afirmacion_sin_soporte() -> None:
-    juez = JuezPorTexto(PRINCIPAL)  # la secundaria no se implica, pero el servicio la dejó en details
+    juez = JuezPorTexto(
+        PRINCIPAL
+    )  # la secundaria no se implica, pero el servicio la dejó en details
 
     soporte = soporte_de(juez, MARCO_ES + PRINCIPAL, (MARCO_ES + SECUNDARIA,))
 
