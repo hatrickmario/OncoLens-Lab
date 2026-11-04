@@ -47,7 +47,7 @@ test.describe('Registro manual de tratamientos y atributos en la vista de caso (
     await expect(
       page
         .getByRole('region', { name: caso.secciones.atributos })
-        .getByRole('row', { name: /Posmenopáusica/ }),
+        .getByRole('row', { name: new RegExp(`Posmenopáusica.*${es.ficha.origen.manual}`) }),
     ).toBeVisible();
 
     expect(
