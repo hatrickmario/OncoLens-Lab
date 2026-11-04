@@ -1,7 +1,7 @@
 import { zPriorTreatmentManualCreate } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
 import { mensajes } from '../../lib/mensajes';
 import { Label } from '../ui/label';
-import { CampoDeCorreccion } from './campo-de-correccion';
+import { CampoDeTexto } from './campo-de-texto';
 import { CampoDeSeleccion } from './campo-de-seleccion';
 
 const CONTEXTOS = zPriorTreatmentManualCreate.shape.setting.options;
@@ -22,7 +22,7 @@ export function CamposDeTratamiento({
   const { contextos } = mensajes().caso;
   return (
     <>
-      <CampoDeCorreccion
+      <CampoDeTexto
         id="tp-linea"
         name="lineNumber"
         type="number"
@@ -43,13 +43,13 @@ export function CamposDeTratamiento({
           </option>
         ))}
       </CampoDeSeleccion>
-      <CampoDeCorreccion
+      <CampoDeTexto
         id="tp-esquema"
         name="regimenName"
         etiqueta={t.esquema}
         error={errorDe('regimenName')}
       />
-      <CampoDeCorreccion
+      <CampoDeTexto
         id="tp-inicio"
         name="startedAt"
         type="date"

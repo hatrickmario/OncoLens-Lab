@@ -1,6 +1,6 @@
 import { zPriorTreatmentManualCreate } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
 import { mensajes } from '../../lib/mensajes';
-import { CampoDeCorreccion } from './campo-de-correccion';
+import { CampoDeTexto } from './campo-de-texto';
 import { CampoDeSeleccion } from './campo-de-seleccion';
 
 const MOTIVOS = zPriorTreatmentManualCreate.shape.endReason.unwrap().options;
@@ -15,7 +15,7 @@ export function CamposDeFinDeTratamiento({
   const { motivosDeFin } = mensajes().caso;
   return (
     <>
-      <CampoDeCorreccion
+      <CampoDeTexto
         id="tp-fin"
         name="endedAt"
         type="date"
