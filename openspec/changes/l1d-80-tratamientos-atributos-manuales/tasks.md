@@ -125,6 +125,8 @@
 - [ ] D5-33 `CaseView.priorTreatments` no trae `mappingStatus` ni `id`: la tabla del caso muestra «Sin código ATC en el catálogo» cuando `atcCodes` está vacío. Añadir `mappingStatus` (aditivo) al contrato del proveedor para mostrar «No mapeado» con certeza (RN-27). DIFERIDA -> D5-33 (clinical-platform-dev; fuera del alcance de `frontend-dev`).
 - [ ] D5-34 `useEnvioDeRegistro` (L1D-80) y `useEnvioDeCorreccion` (L1D-309) son casi iguales, y `CampoDeSeleccion`/`PieDeFormularioDeRegistro`/`AccionDeRegistro` son nuevos: unificar cuando L1D-91 sea el tercer consumidor. DIFERIDA -> L1D-91.
 
+- [ ] D5-35 Menores del Gate 2 de L1D-80: design 4-7 y 11-14; contract 1 y 3 (versiones de `sinonimos.json`); language 1-2 (redacción de `caso.registro.tratamiento.descripcion` y `enCurso`). DIFERIDA -> D5-35.
+
 ## humano
 
 - [ ] H-1 Guardar el reporte de la corrida de `run-ai-eval` del cambio de catálogo (salida 0, adapters falsos, FX-T5a-a) en `reports/eval/`. DIFERIDA -> H-1. Bloque literal: ejecutar `EVAL_PYTHON=<venv con las dependencias de rag-orchestrator> npm run evaluate -- --suite all --report json --salida reports/eval/l1d-80` en la rama y versionar la salida.
