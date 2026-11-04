@@ -2,5 +2,5 @@
 # Se instala JUNTO con requirements-eval.txt en un venv local o en el contenedor de medición:
 #   pip install -r requirements-eval.txt -r requirements-export.txt
 # Versiones fijadas a las resueltas en el contenedor de medición del 2026-10-16. Licencia entre paréntesis.
-torch==2.14.1            # BSD-3-Clause (solo para exportar)
-transformers==5.20.2     # Apache-2.0 (solo para exportar; gte exporta con transformers 4.57.6 en /opt/tf4)
+torch==2.15.0            # BSD-3-Clause (solo para exportar)
+transformers==5.22.1     # Apache-2.0 (solo para exportar; gte exporta con transformers 4.57.6 en /opt/tf4)
