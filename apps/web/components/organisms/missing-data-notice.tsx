@@ -1,6 +1,6 @@
 import {
   debeContinuarConAviso,
-  enlaceDeRegistro,
+  hrefDeColumnaDatosCriticos,
   type LecturaDelChecklist,
 } from '../../lib/evidence/faltantes';
 import { mensajes, rellenar } from '../../lib/mensajes';
@@ -46,8 +46,11 @@ export function MissingDataNotice({
       <ul className="m-0 list-none p-0">
         {faltantes.map((item) => (
           <li key={item.item}>
-            {item.label} <span aria-hidden="true">→</span>{' '}
-            <EnlaceDeRegistro etiqueta={item.label} href={enlaceDeRegistro(patientId, item)} />
+            <EnlaceDeRegistro
+              destino="caso"
+              etiqueta={item.label}
+              href={hrefDeColumnaDatosCriticos(patientId)}
+            />
           </li>
         ))}
       </ul>

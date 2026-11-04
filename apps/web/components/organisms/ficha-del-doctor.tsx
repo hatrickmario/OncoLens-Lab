@@ -3,7 +3,7 @@ import type {
   ClinicalNote,
   PatientSummary,
 } from '../../../../packages/api-contracts/src/types/clinical-api';
-import { hrefDeVistaDeCaso } from '../../lib/ficha/anclas';
+import { ANCLAS_DE_FICHA, hrefDeVistaDeCaso } from '../../lib/ficha/anclas';
 import { contarSinVerificar } from '../../lib/ficha/contar-sin-verificar';
 import { mensajes } from '../../lib/mensajes';
 import { ChecklistNoDisponible } from '../molecules/checklist-no-disponible';
@@ -36,7 +36,7 @@ export function FichaDelDoctor({
   const registro = { pacienteId: ficha.id, egresado, pagina: 'ficha', item } as const;
   return (
     <>
-      <FocoPorAncla />
+      <FocoPorAncla anclas={ANCLAS_DE_FICHA} />
       <PatientHeaderBar ficha={ficha} />
       <PendingReviewNotice
         porRevisar={ficha.pendingReviewCount}

@@ -35,10 +35,11 @@ descartadas en una línea.
 - **D2 · Lectura con todos los ítems.** `LecturaDelChecklist` en `ok` gana `items: CompletenessItem[]` (todos, en el
   orden del servidor) y `catalogVersion`, además de `faltantes`; el panel sigue usando `faltantes`. Un solo hook y una
   sola lectura para panel y columna (≥2 consumidores). *Descartado:* un segundo hook calcado (conocimiento duplicado).
-- **D3 · Acción por entidad, regla con nombre.** `accionDeFaltante(item): AccionDeFaltante` en
+- **D3 · Acción por entidad, regla con nombre.** `accionManualDe(item): AccionManual` en
   `lib/evidence/faltantes.ts` → `{ tipo: 'biomarcador' | 'diagnostico' | 'atributo' | 'tratamiento', item }` según
   `destination.entity` (`Biomarker`, `Diagnosis`, `ClinicalAttribute`, `PriorTreatment`); ninguna devuelve
-  «Cargar documento». Una entidad desconocida → sin acción (la fila se muestra igual). **Apertura de los formularios de
+  «Cargar documento». Una entidad desconocida → sin acción (la fila se muestra igual). **Desviación: el diagnóstico abre en la ficha** (`?item=grado` sobre `/pacientes/{id}`, donde vive su diálogo; en la vista de
+  caso solo se abre el de biomarcador). **Apertura de los formularios de
   US-111 (contrato de coordinación con `l1d-91`):** la acción es un enlace a `?item=<clave>` sobre la vista de caso
   (`hrefDeRegistroManual(patientId, item)`), que los diálogos de `l1d-91` leen para abrirse y prellenar (US-111 AC-2:
   `?item=ki67` → «Ki-67» seleccionado; `?item=grado` → foco en la gradación). Si `l1d-91` fija otro mecanismo al cerrar
@@ -102,18 +103,22 @@ Pantalla de referencia S5-02. Desviaciones registradas: lectura por `/completene
 | Nivel | Componente | Concepto | Tipo |
 |---|---|---|---|
 | organism | `organisms/critical-data-checklist.tsx` | columna «Datos críticos»: cabecera, filas, nota, estados de lectura | sin estado (hijo de `VistaDeCaso`, cliente) |
-| molecule | `molecules/fila-de-dato-critico.tsx` | una fila: etiqueta, estado (D7), origen (D6) o acción (D3) | sin estado |
-| molecule | `molecules/accion-de-faltante.tsx` | enlace «Registrar a mano» / «Completar diagnóstico a mano» / «Agregar tratamiento previo» con la etiqueta en `sr-only` | sin estado |
+| organism | `organisms/fila-de-dato-critico.tsx` | una fila: etiqueta, estado (D7), origen (D6, «Origen no disponible» sin procedencia) o acción (D3) | sin estado |
+| organism | `organisms/accion-de-faltante.tsx` (`AccionDeFaltante`, prop `faltante`) | enlace «Registrar a mano» / «Completar diagnóstico a mano» o diálogo de US-094 con la etiqueta en `sr-only`; se movió de molécula a organismo porque importa `DialogoAtributoClinico` y `DialogoTratamientoPrevio` | sin estado |
 | molecule existente | `ChecklistNoDisponible` (prop `mensaje`), `ScopeNotice`, `EnlaceDeRegistro` (texto nuevo), `FocoPorAncla` (prop `anclas`) | reutilizados | — |
 
 - Cada componente con un concepto; alerta a 100 líneas, límite 150.
 - **Sin patrón nuevo:** se reutiliza `useChecklistDeFaltantes` (ya con 1 consumidor; ahora 2) y `useVistaDeCaso`. La
   vista (`VistaDeCaso`, único `'use client'` de `l1d-76`) monta el hook del checklist y pasa `lectura` a la columna; los
-  diálogos se montan donde los dejen `l1d-80`/`l1d-91`, controlados por `?item=` (D3). Sin provider ni compound
-  components (sin prop drilling ≥ 3).
-- Lógica pura en `lib/evidence/faltantes.ts`: `accionDeFaltante()` (D3), `presentarEstado()` (D7), `contarFaltantes()`
+  diálogos se montan donde los dejen `l1d-80`/`l1d-91`, controlados por `?item=` (D3). Sin compound components. **Excepción
+  documentada (Gate 2, vuelta 1):** `pacienteId`, `egresado` y `alGuardar` cruzan 4 niveles (`SeccionesDelCaso` →
+  `CriticalDataChecklist` → `FilaDeDatoCritico` → `AccionDeFaltante`); el prop drilling queda aceptado en este change y el
+  Provider de registro `ContextoDeRegistro` pasa a la deuda D5-44.
+- Lógica pura en `lib/evidence/faltantes.ts`: `accionManualDe()` (D3), `presentarEstado()` (D7), `contarFaltantes()`
   si no basta `faltantes.length`; en `lib/ficha/anclas.ts`: `ANCLAS_DE_CASO`, `hrefDeVistaDeCaso(id, ancla?)` (amplía la
-  firma que crea `l1d-76`) y `hrefDeRegistroManual(id, item)`.
+  firma que crea `l1d-76`); en `lib/registro-manual/destinos.ts`: `DESTINO_DE_REGISTRO` (catálogo único entidad →
+  `{ tipo, pagina }`: biomarcador → caso, diagnóstico → ficha) y `hrefDeAccionManual`, que arma el enlace con
+  `hrefDeRegistroManual(id, item, pagina)` (esta última vive en `lib/registro-manual/enlaces.ts`, no en `anclas.ts`).
 
 ## Contratos
 
@@ -132,7 +137,7 @@ Ejemplos (contract-first de los mocks, US-213):
 ## Dependencias y colaboradores
 
 - `lib/evidence/faltantes.ts` (modificado): `lecturaDeLaVista` conserva todos los ítems (D2); `enlaceDeRegistro` apunta
-  a la vista de caso (D9); nuevas `accionDeFaltante`, `presentarEstado`. Sin E/S.
+  a la vista de caso (D9); nuevas `accionManualDe` (tipo `AccionManual`), `presentarEstado`; `enlaceDeRegistro` pasa a `hrefDeColumnaDatosCriticos`. Sin E/S.
 - `lib/ficha/anclas.ts` (modificado): `ANCLAS_DE_CASO`, `hrefDeVistaDeCaso(id, ancla?)`, `hrefDeRegistroManual`.
 - `components/molecules/foco-por-ancla.tsx` (modificado): lista de anclas por prop; la ficha pasa `ANCLAS_DE_FICHA`.
 - `components/molecules/enlace-de-registro.tsx` (modificado): texto «en el caso clínico».
@@ -145,8 +150,8 @@ Ejemplos (contract-first de los mocks, US-213):
 
 ## Tests
 
-- Unitarios (Vitest): `accionDeFaltante` por cada entidad (ninguna «Cargar documento»), `presentarEstado`,
-  `hrefDeRegistroManual`/`hrefDeVistaDeCaso` (precondición UUID), `lecturaDeLaVista` con `items` completos, y el test de
+- Unitarios (Vitest): `accionManualDe` por cada entidad (ninguna «Cargar documento»), `presentarEstado`,
+  `hrefDeAccionManual`/`hrefDeVistaDeCaso` (precondición UUID), `lecturaDeLaVista` con `items` completos, y el test de
   catálogo de D4 (`datos-criticos.json` de mama, próstata y `test-1.0.0`).
 - UI (Testing Library + MSW): AC-1…AC-6 sobre `completeness-f-m2.json`, con la relectura de AC-3 sobre el ejemplo nuevo;
   panel: el enlace va a `/pacientes/{id}/caso#datos-criticos` (tests de US-005 actualizados al requisito nuevo).

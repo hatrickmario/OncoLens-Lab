@@ -162,7 +162,7 @@ test.describe('Panel de análisis (L1D-140)', () => {
     await campo.focus();
     await page.keyboard.type(preguntaHer2);
     const boton = page.getByRole('button', { name: 'Analizar evidencia' });
-    // Los enlaces «Registrar … en la ficha» del aviso de faltantes (US-005 AC-7) preceden al botón en el orden de Tab.
+    // Los enlaces «Ir a … en el caso clínico» del aviso de faltantes (US-005 AC-7) preceden al botón en el orden de Tab.
     for (let i = 0; i < 12 && !(await boton.evaluate((el) => el === document.activeElement)); i++)
       await page.keyboard.press('Tab');
     await expect(boton).toBeFocused();

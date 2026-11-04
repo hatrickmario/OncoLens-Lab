@@ -2,7 +2,8 @@ import type { ManualEntryOptions } from '../../../../packages/api-contracts/src/
 import { zManualEntryOptions } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
 import { leerJson } from './cliente';
 
-export type LecturaDelCatalogo = { tipo: 'ok'; opciones: ManualEntryOptions } | { tipo: 'error' };
+export type LecturaDelCatalogo =
+  { tipo: 'ok'; catalogoDeRegistro: ManualEntryOptions } | { tipo: 'error' };
 
 /** `GET …/manual-entry-options` del BFF: valores del catálogo para los formularios (RN-29), validados con el Zod del contrato. */
 export async function pedirValoresDelCatalogo(pacienteId: string): Promise<LecturaDelCatalogo> {
@@ -12,7 +13,7 @@ export async function pedirValoresDelCatalogo(pacienteId: string): Promise<Lectu
     });
     const leido = zManualEntryOptions.safeParse(leerJson(await respuesta.text()));
     return respuesta.status === 200 && leido.success
-      ? { tipo: 'ok', opciones: leido.data }
+      ? { tipo: 'ok', catalogoDeRegistro: leido.data }
       : { tipo: 'error' };
   } catch {
     return { tipo: 'error' };

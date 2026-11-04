@@ -3,22 +3,24 @@ import { mensajes } from '../mensajes';
 
 export type EventoDelCaso = CaseView['timeline'][number];
 
-/** Tipos de evento cuya procedencia es un texto generado por IA, nunca un dato del paciente (RN-24, D9). */
+/**
+ * Tipos de evento cuya procedencia es un texto generado por IA, nunca un dato del paciente (RN-24, D9). Misma lista que
+ * `TIPOS_DE_EVENTO_DE_IA` de `clinical-api` (`case-view/timeline.reglas.ts`); un test de paridad las compara.
+ */
 const TIPOS_DE_IA: readonly string[] = ['analisis_ia', 'resumen_caso'];
 
 export function esEventoDeIa(eventType: string): boolean {
   return TIPOS_DE_IA.includes(eventType);
 }
 
-/** Línea de tiempo (fechados) y «Sin fecha confiable» (`datePrecision = incierta`); el orden es el del servidor (D6). */
+/** Línea de tiempo (fechados) y «Sin fecha confiable» (`eventDate = null`, el predicado del contrato); el orden es el del servidor (D6). */
 export function separarSinFecha(timeline: EventoDelCaso[]): {
   fechados: EventoDelCaso[];
   sinFecha: EventoDelCaso[];
 } {
-  const esIncierto = (e: EventoDelCaso) => e.datePrecision === 'incierta' || e.eventDate === null;
   return {
-    fechados: timeline.filter((e) => !esIncierto(e)),
-    sinFecha: timeline.filter(esIncierto),
+    fechados: timeline.filter((e) => e.eventDate !== null),
+    sinFecha: timeline.filter((e) => e.eventDate === null),
   };
 }
 

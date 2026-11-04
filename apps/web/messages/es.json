@@ -26,7 +26,30 @@
     "nota": "El análisis puede hacerse igual; los criterios de aplicabilidad que dependan de esos datos saldrán como «Desconocido» y el orden por aplicabilidad puede cambiar al registrarlos.",
     "registrar": "Registrar",
     "enLaFicha": "en la ficha",
+    "enElCaso": "Ir a {etiqueta} en el caso clínico",
     "noVerificables": "No se pudieron verificar los datos críticos"
+  },
+  "datosCriticos": {
+    "titulo": "Datos críticos",
+    "catalogo": "catálogo {version}",
+    "contador": "{n} faltantes · no bloquean el análisis",
+    "contadorUno": "1 faltante · no bloquea el análisis",
+    "contadorSin": "sin faltantes entre los datos críticos del catálogo",
+    "origenNoDisponible": "Origen no disponible",
+    "nota": "Los faltantes no bloquean: si continúas, el análisis los trata como «Desconocido» y lo deja escrito en la Base del análisis.",
+    "noCalculable": "No se pudo calcular el checklist",
+    "cargando": "Cargando los datos críticos",
+    "estado": {
+      "presente_verificado": "Presente y verificado",
+      "presente_sin_verificar": "Presente sin verificar",
+      "faltante": "Faltante",
+      "no_aplica": "No aplica"
+    },
+    "acciones": {
+      "registrarAMano": "Registrar a mano",
+      "completarDiagnostico": "Completar diagnóstico a mano",
+      "agregarTratamiento": "Agregar tratamiento previo"
+    }
   },
   "evidence": {
     "titulo": "Análisis de evidencia",
