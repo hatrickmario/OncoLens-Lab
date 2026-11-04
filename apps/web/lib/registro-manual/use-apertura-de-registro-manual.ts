@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import { rutaDeLaPagina, type PaginaDeRegistro } from './enlaces';
 import { resolverItem, type ItemResuelto } from './resolver-item';
-import { useOpcionesDeRegistroManual } from './use-opciones-de-registro-manual';
+import { useValoresDelCatalogo } from './use-valores-del-catalogo';
 
 type Entidad = ItemResuelto['entidad'];
 
@@ -16,7 +16,7 @@ export interface AperturaDeRegistroManual {
   cerrar: () => void;
   /** Elemento que recibe el foco al cerrar (lo lee el `Dialog`). */
   retornoDeFoco: RefObject<HTMLElement | null>;
-  lectura: ReturnType<typeof useOpcionesDeRegistroManual>;
+  lectura: ReturnType<typeof useValoresDelCatalogo>;
   /** Qué pidió `?item=` para esta entidad; `null` si no aplica a ella. */
   deLaUrl: ItemResuelto | null;
   /** Tras un `201`: refresca la ficha y la barra del paciente (RSC) sin recargar la página. */
@@ -44,7 +44,7 @@ export function useAperturaDeRegistroManual(
   const [abierto, setAbierto] = useState(false);
   const retornoDeFoco = useRef<HTMLElement | null>(null);
   const claveAbierta = useRef<string | undefined>(undefined);
-  const lectura = useOpcionesDeRegistroManual(pacienteId, abierto || item !== undefined);
+  const lectura = useValoresDelCatalogo(pacienteId, abierto || item !== undefined);
 
   const resuelto =
     item !== undefined && lectura?.tipo === 'ok' ? resolverItem(lectura.opciones, item) : null;

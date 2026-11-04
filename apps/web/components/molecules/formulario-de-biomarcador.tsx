@@ -7,7 +7,7 @@ import {
   erroresDelBiomarcador,
 } from '../../lib/registro-manual/biomarcador';
 import { ID_DE_CAMPO, useFocoInicial } from '../../lib/registro-manual/foco';
-import type { LecturaDeOpciones } from '../../lib/registro-manual/opciones';
+import type { LecturaDelCatalogo } from '../../lib/registro-manual/valores-del-catalogo';
 import { useEnvioDeRegistro } from '../../lib/registro-manual/use-envio-de-registro';
 import { mensajes } from '../../lib/mensajes';
 import { Alert } from '../ui/alert';
@@ -19,7 +19,7 @@ import { PieDeFormularioDeRegistro } from './pie-de-formulario-de-registro';
 export interface FormularioDeBiomarcadorProps {
   pacienteId: string;
   /** Opciones del catálogo; `null` mientras se leen y `error` si no cargaron: el formulario sigue usable con texto libre. */
-  opciones: LecturaDeOpciones | null;
+  opciones: LecturaDelCatalogo | null;
   /** Término de `?item=`: llega seleccionado y el foco va al valor. */
   terminoInicial?: string;
   /** El registro se creó: el llamador refresca la ficha o la vista de caso. */

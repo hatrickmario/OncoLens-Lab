@@ -2,10 +2,10 @@ import type { ManualEntryOptions } from '../../../../packages/api-contracts/src/
 import { zManualEntryOptions } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
 import { leerJson } from './cliente';
 
-export type LecturaDeOpciones = { tipo: 'ok'; opciones: ManualEntryOptions } | { tipo: 'error' };
+export type LecturaDelCatalogo = { tipo: 'ok'; opciones: ManualEntryOptions } | { tipo: 'error' };
 
 /** `GET …/manual-entry-options` del BFF: valores del catálogo para los formularios (RN-29), validados con el Zod del contrato. */
-export async function pedirOpcionesDeRegistro(pacienteId: string): Promise<LecturaDeOpciones> {
+export async function pedirValoresDelCatalogo(pacienteId: string): Promise<LecturaDelCatalogo> {
   try {
     const respuesta = await fetch(`/api/patients/${pacienteId}/manual-entry-options`, {
       cache: 'no-store',

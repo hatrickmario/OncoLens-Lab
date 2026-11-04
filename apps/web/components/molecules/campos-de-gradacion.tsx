@@ -3,7 +3,7 @@ import { ID_DE_CAMPO } from '../../lib/registro-manual/foco';
 import { mensajes } from '../../lib/mensajes';
 import { CampoDeSeleccion } from './campo-de-seleccion';
 import { CamposDeGleason } from './campos-de-gleason';
-import { Opciones } from './opciones-de-seleccion';
+import { OpcionesDeSelect } from './opciones-de-select';
 
 export interface CamposDeGradacionProps {
   valor: FormularioDeGradacion;
@@ -55,7 +55,7 @@ export function CamposDeGradacion({ valor, alCambiar, sistemas, error }: CamposD
           etiqueta={g.nottingham}
           error={undefined}
         >
-          <Opciones valores={GRADOS_NOTTINGHAM} />
+          <OpcionesDeSelect valores={GRADOS_NOTTINGHAM} />
         </CampoDeSeleccion>
       )}
       {valor.sistema === 'gleason_isup' && <CamposDeGleason valor={valor} cambiar={cambiar} />}

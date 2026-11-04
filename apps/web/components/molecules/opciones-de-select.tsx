@@ -1,7 +1,7 @@
 import { mensajes } from '../../lib/mensajes';
 
 /** Lista de opciones de un valor del contrato con su rótulo de `messages`; `rotulos` vacío usa el valor mismo. */
-export function Opciones({
+export function OpcionesDeSelect({
   valores,
   rotulos = {},
 }: {

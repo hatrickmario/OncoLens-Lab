@@ -2,7 +2,7 @@ import type { FormularioDeGradacion } from '../../lib/registro-manual/diagnostic
 import { ID_DE_CAMPO } from '../../lib/registro-manual/foco';
 import { mensajes } from '../../lib/mensajes';
 import { CampoDeSeleccion } from './campo-de-seleccion';
-import { Opciones } from './opciones-de-seleccion';
+import { OpcionesDeSelect } from './opciones-de-select';
 
 const PATRONES = ['3', '4', '5'];
 
@@ -23,7 +23,7 @@ export function CamposDeGleason({ valor, cambiar }: CamposDeGleasonProps) {
         etiqueta={g.patronPrimario}
         error={undefined}
       >
-        <Opciones valores={PATRONES} />
+        <OpcionesDeSelect valores={PATRONES} />
       </CampoDeSeleccion>
       <CampoDeSeleccion
         id="rm-diagnostico-patron-secundario"
@@ -32,7 +32,7 @@ export function CamposDeGleason({ valor, cambiar }: CamposDeGleasonProps) {
         etiqueta={g.patronSecundario}
         error={undefined}
       >
-        <Opciones valores={PATRONES} />
+        <OpcionesDeSelect valores={PATRONES} />
       </CampoDeSeleccion>
       <CampoDeSeleccion
         id="rm-diagnostico-especimen"
@@ -41,7 +41,7 @@ export function CamposDeGleason({ valor, cambiar }: CamposDeGleasonProps) {
         etiqueta={g.especimen}
         error={undefined}
       >
-        <Opciones valores={['biopsia', 'prostatectomia']} rotulos={g.especimenes} />
+        <OpcionesDeSelect valores={['biopsia', 'prostatectomia']} rotulos={g.especimenes} />
       </CampoDeSeleccion>
       <CampoDeSeleccion
         id="rm-diagnostico-alcance"
@@ -50,7 +50,7 @@ export function CamposDeGleason({ valor, cambiar }: CamposDeGleasonProps) {
         etiqueta={g.alcance}
         error={undefined}
       >
-        <Opciones valores={['nucleo_sitio', 'peor', 'global']} rotulos={g.alcances} />
+        <OpcionesDeSelect valores={['nucleo_sitio', 'peor', 'global']} rotulos={g.alcances} />
       </CampoDeSeleccion>
     </>
   );
