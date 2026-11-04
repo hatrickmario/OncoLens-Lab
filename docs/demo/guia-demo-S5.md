@@ -22,13 +22,14 @@ Los **faltantes** los calcula el servicio de completitud con el catálogo real (
 
 Notas para la demo:
 
+- **Alcance de la demo en la UI.** Para (l) y (m) la demo muestra ficha, historial y el aviso de tipo no habilitado en este stack (`ENABLED_CANCER_TYPES=mama`); los conteos de (l) y (m) corresponden al ejemplo fijo y no se recorren en la UI. Los cinco pacientes de mama (g)–(k) sí recorren el análisis completo en modo fingido.
 - (g) no tiene «Tratamientos previos» sembrados a propósito: el checklist lo marca como faltante y la guía lo explica (no se siembra un «ninguno»).
 - Los regímenes sin código en el subconjunto ATC del catálogo (tamoxifeno, palbociclib, abiraterona, enzalutamida) quedan `no_mapeado` (RN-27); letrozol, trastuzumab, pertuzumab, trastuzumab emtansina, docetaxel y leuprorelina llevan su código del catálogo.
 - Cada pregunta es distinta de las demás y de las de la Demo 4; abrir la ficha del paciente antes de preguntar (la recuperación filtra por el tipo de cáncer del paciente).
 
-## Conteos esperados en modo fingido
+## Opciones descritas en la evidencia: conteos esperados en modo fingido
 
-Los conteos de `applicabilitySummary` por opción salen de **este bloque** (fuente única): lo leen la prueba de aceptación (`apps/web/e2e/demo-s5-pacientes.spec.ts`, `[US-254 AC-4]`) y los ejemplos fijos `contracts/examples/rag-query-demo-s5-*.json` que sirve `LLM_PROVIDER=fake`. Orden de las opciones: menos criterios excluyentes en No coincide, más Coincide y, como desempate, la relevancia (RN-28). `poblacionNoComparable = true` marca las opciones con un criterio excluyente en No coincide: se muestran igualmente (RN-26) y su respuesta trae `warnings` con `poblacion_no_comparable`.
+Los conteos de `applicabilitySummary` por opción salen de **este bloque** (fuente única): lo leen la prueba de aceptación (`apps/web/e2e/demo-s5-pacientes.spec.ts`, `[US-254 AC-4]`; en la UI solo para (g)–(k)) y los ejemplos fijos `contracts/examples/rag-query-demo-s5-*.json` que sirve `LLM_PROVIDER=fake`. Orden de las opciones: menos criterios excluyentes en No coincide, más Coincide y, como desempate, la relevancia (RN-28). `poblacionNoComparable = true` marca las opciones con un criterio excluyente en No coincide: se muestran igualmente (RN-26) y su respuesta trae `warnings` con `poblacion_no_comparable`.
 
 <!-- conteos-demo-s5:inicio -->
 
@@ -68,9 +69,9 @@ Los conteos de `applicabilitySummary` por opción salen de **este bloque** (fuen
       {
         "conteos": {
           "coincide": 2,
-          "parcial": 2,
+          "parcial": 1,
           "noCoincide": 0,
-          "desconocido": 2
+          "desconocido": 3
         },
         "poblacionNoComparable": false
       }
@@ -82,8 +83,8 @@ Los conteos de `applicabilitySummary` por opción salen de **este bloque** (fuen
       {
         "conteos": {
           "coincide": 2,
-          "parcial": 2,
-          "noCoincide": 0,
+          "parcial": 1,
+          "noCoincide": 1,
           "desconocido": 2
         },
         "poblacionNoComparable": false
@@ -157,7 +158,7 @@ Los conteos de `applicabilitySummary` por opción salen de **este bloque** (fuen
 
 Lectura por paciente:
 
-- (j): la segunda opción (terapia anti-HER2) no es comparable: HER2 0 frente a una población HER2 positivo (criterio excluyente, No coincide).
+- (j): la primera opción trae un No coincide no excluyente en estadio (paciente IV frente a una población de cáncer temprano); la segunda opción (terapia anti-HER2) no es comparable: HER2 0 frente a una población HER2 positivo (criterio excluyente, No coincide).
 - (m): la segunda opción (darolutamida en población sensible a la castración) no es comparable: `estado_castracion` del paciente es resistente (excluyente, No coincide); la primera opción trae un No coincide en genes HRR/BRCA que no es excluyente.
 - (k): `estado_her2`, línea de tratamiento y ECOG coinciden; es el caso con más Coincide.
 
@@ -167,7 +168,7 @@ Lectura por paciente:
 scripts/e2e/ejecutar.sh -- --grep "US-254"      # Compose de test, LLM_PROVIDER=fake, seed sintético, Playwright
 ```
 
-Cada paciente (g)–(m) con su pregunta devuelve los conteos del bloque y la marca de no comparable `[US-254 AC-4]`. Es determinista: el modo fingido responde con los ejemplos de `contracts/examples/`.
+Cada paciente de mama (g)–(k) con su pregunta devuelve los conteos del bloque y la marca de no comparable `[US-254 AC-4]`; (l) y (m) abren su ficha con el aviso de tipo no habilitado, y sus conteos se comprueban solo contra los ejemplos fijos. Es determinista: el modo fingido responde con los ejemplos de `contracts/examples/`.
 
 ## Si algo falla
 

@@ -71,7 +71,7 @@
         "value": "14.5",
         "resultType": "cuantitativo",
         "clinicalSignificance": "alterado",
-        "monthsAgo": 0,
+        "monthsAgo": 1,
         "provenance": {
           "entryMethod": "seed",
           "extractionConfidence": "n_a",

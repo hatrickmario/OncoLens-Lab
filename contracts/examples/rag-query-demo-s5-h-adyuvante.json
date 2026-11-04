@@ -3,7 +3,7 @@
   "synthesis": {
     "agreements": [
       {
-        "text": "La fuente recuperada describe, según su población, terapia endocrina adyuvante.",
+        "text": "El ensayo describe el beneficio del tamoxifeno adyuvante frente a ninguna terapia endocrina en mujeres con cáncer de mama con receptores de estrógeno positivos y HER2 negativo.",
         "citedSources": [
           {
             "title": "Tamoxifen therapy benefit in luminal A and B breast cancer with 20-year follow-up",
@@ -203,8 +203,8 @@
   ],
   "evidenceOptions": [
     {
-      "option": "Terapia endocrina adyuvante",
-      "rationale": "El ensayo describe el beneficio de la terapia endocrina adyuvante en cáncer de mama con receptores de estrógeno positivos y HER2 negativo.",
+      "option": "Terapia endocrina adyuvante con tamoxifeno",
+      "rationale": "El ensayo describe el beneficio del tamoxifeno adyuvante frente a ninguna terapia endocrina en mujeres con cáncer de mama con receptores de estrógeno positivos y HER2 negativo.",
       "details": [
         "Texto sintético de ejemplo: el detalle describe, según los fragmentos recuperados, el diseño del estudio y la población incluida.",
         "Texto sintético de ejemplo: el detalle describe los resultados que reporta la fuente para el grupo estudiado."

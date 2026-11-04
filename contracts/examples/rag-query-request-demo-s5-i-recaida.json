@@ -118,7 +118,7 @@
         "regimenName": "Tamoxifeno",
         "atcCodes": [],
         "monthsSinceStart": 60,
-        "monthsSinceEnd": 0,
+        "monthsSinceEnd": 1,
         "endReason": "progresion",
         "provenance": {
           "entryMethod": "seed",
@@ -144,7 +144,7 @@
       {
         "dataRef": "r9",
         "eventType": "recaida",
-        "monthsAgo": 0,
+        "monthsAgo": 1,
         "description": "Recaída local en pared torácica",
         "provenance": {
           "entryMethod": "seed",

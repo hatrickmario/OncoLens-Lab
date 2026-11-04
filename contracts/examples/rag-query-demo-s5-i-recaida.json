@@ -3,7 +3,7 @@
   "synthesis": {
     "agreements": [
       {
-        "text": "La fuente recuperada describe, según su población, inhibidores de CDK4/6 con terapia endocrina.",
+        "text": "La guía describe los inhibidores de CDK4/6 adyuvantes en cáncer de mama temprano con receptores hormonales positivos y HER2 negativo y alto riesgo de recaída.",
         "citedSources": [
           {
             "title": "Multidisciplinary Practical Guidance for Implementing Adjuvant CDK4/6 Inhibitors in Early Breast Cancer",
@@ -119,47 +119,12 @@
         {
           "criterion": "estadio",
           "patientValue": "IIB",
-          "studyPopulationValue": "II, III",
-          "status": "parcial",
-          "unknownReason": null,
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "no_reportado_por_fuente",
           "isExclusionary": false,
           "patientDataWarning": null,
-          "studyPopulationValues": [
-            {
-              "value": "II",
-              "chunkId": "pmc-mama-cdk46-guia@a3bb26468a32#0001",
-              "scope": "elegibilidad"
-            },
-            {
-              "value": "III",
-              "chunkId": "pmc-mama-cdk46-guia@a3bb26468a32#0001",
-              "scope": "elegibilidad"
-            }
-          ],
-          "partialReason": "mezclada",
-          "citedSources": [
-            {
-              "title": "Multidisciplinary Practical Guidance for Implementing Adjuvant CDK4/6 Inhibitors in Early Breast Cancer",
-              "sourceName": "PMC Open Access",
-              "externalId": "10.3390/curroncol32080444",
-              "language": "en",
-              "sourceType": "guideline",
-              "licenseClass": "cc_by",
-              "studyDesign": "guia",
-              "trialPhase": null,
-              "primaryEndpoint": null,
-              "sampleSize": null,
-              "publishedAt": "2025-08-07",
-              "lastUpdatedAt": "2025-08-07",
-              "guidelineVersion": null,
-              "authors": null,
-              "sourceUrl": "https://doi.org/10.3390/curroncol32080444",
-              "possiblyOutdated": false,
-              "newerVersionAvailable": false,
-              "chunkTextSnapshot": "Texto sintético de ejemplo del fragmento de elegibilidad: adjuvant CDK4/6 inhibitors are described for hormone receptor-positive, HER2-negative early breast cancer at high risk of recurrence, in premenopausal and postmenopausal patients.",
-              "chunkId": "pmc-mama-cdk46-guia@a3bb26468a32#0001"
-            }
-          ]
+          "citedSources": []
         },
         {
           "criterion": "linea_tratamiento",
@@ -229,26 +194,26 @@
       ],
       "summary": {
         "coincide": 2,
-        "parcial": 2,
+        "parcial": 1,
         "noCoincide": 0,
-        "desconocido": 2
+        "desconocido": 3
       },
       "populationNotComparable": false
     }
   ],
   "evidenceOptions": [
     {
-      "option": "Inhibidores de CDK4/6 con terapia endocrina",
-      "rationale": "La guía describe los inhibidores de CDK4/6 para cáncer de mama con receptores hormonales positivos y HER2 negativo.",
+      "option": "Inhibidores de CDK4/6 adyuvantes",
+      "rationale": "La guía describe los inhibidores de CDK4/6 adyuvantes en cáncer de mama temprano con receptores hormonales positivos y HER2 negativo y alto riesgo de recaída.",
       "details": [
         "Texto sintético de ejemplo: el detalle describe, según los fragmentos recuperados, el diseño del estudio y la población incluida.",
         "Texto sintético de ejemplo: el detalle describe los resultados que reporta la fuente para el grupo estudiado."
       ],
       "applicabilitySummary": {
         "coincide": 2,
-        "parcial": 2,
+        "parcial": 1,
         "noCoincide": 0,
-        "desconocido": 2
+        "desconocido": 3
       },
       "populationNotComparable": false,
       "perSource": [
@@ -256,9 +221,9 @@
           "externalId": "10.3390/curroncol32080444",
           "summary": {
             "coincide": 2,
-            "parcial": 2,
+            "parcial": 1,
             "noCoincide": 0,
-            "desconocido": 2
+            "desconocido": 3
           },
           "populationNotComparable": false
         }

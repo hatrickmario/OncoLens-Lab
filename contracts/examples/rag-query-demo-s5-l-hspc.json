@@ -3,7 +3,7 @@
   "synthesis": {
     "agreements": [
       {
-        "text": "La fuente recuperada describe, según su población, intensificación de la deprivación androgénica con darolutamida.",
+        "text": "La revisión describe darolutamida en terapia doble o triple con docetaxel en cáncer de próstata avanzado, incluidos el metastásico sensible a la castración y el no metastásico resistente.",
         "citedSources": [
           {
             "title": "The efficacy and safety of darolutamide combination therapy in advanced prostate cancer: a systematic review",
@@ -174,7 +174,7 @@
   "evidenceOptions": [
     {
       "option": "Intensificación de la deprivación androgénica con darolutamida",
-      "rationale": "La revisión describe darolutamida combinada con deprivación androgénica en cáncer de próstata avanzado, incluido el metastásico sensible a la castración.",
+      "rationale": "La revisión describe darolutamida en terapia doble o triple con docetaxel en cáncer de próstata avanzado, incluidos el metastásico sensible a la castración y el no metastásico resistente.",
       "details": [
         "Texto sintético de ejemplo: el detalle describe, según los fragmentos recuperados, el diseño del estudio y la población incluida.",
         "Texto sintético de ejemplo: el detalle describe los resultados que reporta la fuente para el grupo estudiado."
