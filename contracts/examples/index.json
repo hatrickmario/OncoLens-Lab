@@ -675,6 +675,11 @@
       "target": "#/components/schemas/Biomarker"
     },
     {
+      "file": "biomarker-manual-no-mapeado.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/Biomarker"
+    },
+    {
       "file": "clinical-note-correction-request.json",
       "spec": "clinical-api",
       "target": "#/paths/~1platform~1patients~1{patientId}~1clinical-notes~1{noteId}~1corrections/post/requestBody"
