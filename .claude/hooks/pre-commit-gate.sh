@@ -135,6 +135,30 @@ if [ -n "$REMOVED" ] && ! printf '%s' "$MSG" | grep -q 'Test-Removal:'; then
   echo "inestable, añade el trailer 'Test-Removal: <motivo>' al mensaje; el Gate 2 lo revisa. Eliminados:" >&2
   printf '%s\n' "$REMOVED" | head -10 >&2; FAIL=1
 fi
+# 3b) Un `Test-Removal:` fuera del último párrafo es invisible para `git interpret-trailers` (retro S5, L1D-306): se rechaza
+# al commitear, cuando aún se corrige con un simple `git commit`. Si el mensaje no se puede extraer (p. ej. editor), la CI lo cubre.
+if printf '%s' "$MSG" | grep -q 'Test-Removal:' && command -v node >/dev/null 2>&1 && [ -f scripts/ci/mensaje-test-removal.mjs ]; then
+  MENSAJE="$(printf '%s' "$CMD" | python3 -I -c '
+import re, shlex, sys
+cmd = sys.stdin.read()
+m = re.search(r"<<-?\s*[\x27\"]?(\w+)[\x27\"]?\n(.*?)\n\s*\1\b", cmd, re.S)
+if m:
+    print(m.group(2)); sys.exit(0)
+try: a = shlex.split(cmd)
+except ValueError: sys.exit(0)
+partes = []
+for i, t in enumerate(a):
+    if t in ("-m", "--message") and i + 1 < len(a): partes.append(a[i + 1])
+    elif t.startswith("--message="): partes.append(t.split("=", 1)[1])
+print("\n\n".join(partes))
+')"
+  [ -z "$MENSAJE" ] && [ -n "$MSGFILE" ] && [ -f "$MSGFILE" ] && MENSAJE="$(cat "$MSGFILE")"
+  TRAILER_ERR="$(mktemp)"
+  if [ -n "$MENSAJE" ] && ! printf '%s\n' "$MENSAJE" | node scripts/ci/mensaje-test-removal.mjs 2>"$TRAILER_ERR"; then
+    echo "OncoLens · $(cat "$TRAILER_ERR")" >&2; FAIL=1
+  fi
+  rm -f "$TRAILER_ERR"
+fi
 # 4) OpenSpec
 if git diff --cached --name-only | grep -q '^openspec/' && command -v openspec >/dev/null 2>&1; then
   TMP="$(mktemp)"

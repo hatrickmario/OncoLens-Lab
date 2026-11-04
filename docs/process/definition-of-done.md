@@ -62,7 +62,7 @@
 Una historia comprometida cuenta como **cerrada** solo si cumple todo esto:
 
 - [ ] AC verificados.
-- [ ] CI en verde: 0 fallos, 0 pendientes, 0 alertas.
+- [ ] CI en verde: 0 fallos, 0 pendientes, 0 alertas, **también en `main` tras el merge** (`.claude/hooks/vigilar-pr.sh --main <fecha>`; las alertas de CodeQL nacen allí, retro S5).
 - [ ] PR mergeado.
 - [ ] `tasks.md` conciliado: todo en `[x]` con evidencia, o con su ID destino.
 - [ ] Change archivado (`openspec archive`).
