@@ -88,7 +88,8 @@
 
 - [x] 4.1 `openspec validate l1d-91-formularios-registro-manual --strict` en verde.
   Evidencia: `openspec validate --strict` válido.
-- [ ] 4.2 Suites de `apps/clinical-api` y `apps/web` (unitarios, integración y E2E de AC-1/AC-2) en verde;
+- [x] 4.2 Suites de `apps/clinical-api` y `apps/web` (unitarios, integración y E2E de AC-1/AC-2) en verde;
   `contracts:verify-provider` sobre `getManualEntryOptions`, `createManualBiomarker` y `createManualDiagnosis`
   (incluidos 401/403/404/422/500), `tsc --noEmit`, `eslint`, `lint:lenguaje` y `pii-scan` limpios. Sin `run-ai-eval`:
   no cambia modelo, prompt, umbral, catálogo ni corpus.
+  Evidencia: cumplida por los jobs contracts (verify-provider) e integration de la CI del PR #318; pii-scan en el job de datos.
