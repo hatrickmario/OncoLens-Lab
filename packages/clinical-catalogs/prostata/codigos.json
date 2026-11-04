@@ -15,6 +15,30 @@
       "nombreOficial": "Prostate specific Ag [Mass/volume] in Serum or Plasma",
       "etiquetaEs": "Antígeno prostático específico (PSA)",
       "versionFuente": "LOINC 2.83 (data_version de NLM Clinical Tables loinc_items v3, consultada el 2026-11-03)"
+    },
+    {
+      "terminoCanonico": "leuprorelina",
+      "estandar": "atc",
+      "codigo": "L02AE02",
+      "nombreOficial": "leuprorelin",
+      "etiquetaEs": "Leuprorelina",
+      "versionFuente": "ATC/DDD Index 2026 (WHOCC, atcddd.fhi.no, consultado el 2026-11-03)"
+    },
+    {
+      "terminoCanonico": "bicalutamida",
+      "estandar": "atc",
+      "codigo": "L02BB03",
+      "nombreOficial": "bicalutamide",
+      "etiquetaEs": "Bicalutamida",
+      "versionFuente": "ATC/DDD Index 2026 (WHOCC, atcddd.fhi.no, consultado el 2026-11-03)"
+    },
+    {
+      "terminoCanonico": "docetaxel",
+      "estandar": "atc",
+      "codigo": "L01CD02",
+      "nombreOficial": "docetaxel",
+      "etiquetaEs": "Docetaxel",
+      "versionFuente": "ATC/DDD Index 2026 (WHOCC, atcddd.fhi.no, consultado el 2026-11-03)"
     }
   ]
 }

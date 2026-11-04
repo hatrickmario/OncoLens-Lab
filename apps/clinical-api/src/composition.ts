@@ -26,6 +26,10 @@ export interface RoutersProtegidos {
   caseView: Router;
   /** Corrección con histórico, notas clínicas e histórico (L1D-309). Obligatorio: olvidarlo en `server.ts` rompe el build. */
   corrections: Router;
+  /** Registro manual de tratamientos previos (L1D-80). Obligatorio: olvidarlo en `server.ts` rompe el build. */
+  priorTreatments: Router;
+  /** Registro y lectura de atributos clínicos (L1D-80). Obligatorio: olvidarlo en `server.ts` rompe el build. */
+  clinicalAttributes: Router;
 }
 
 /**
@@ -41,6 +45,8 @@ export function componerRutasProtegidas(routers: RoutersProtegidos): readonly Ro
     routers.manualEntry,
     routers.caseView,
     routers.corrections,
+    routers.priorTreatments,
+    routers.clinicalAttributes,
   ];
 }
 

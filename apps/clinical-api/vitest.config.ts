@@ -22,6 +22,7 @@ export default defineConfig({
       'tests/integration/registro-manual/**',
       'tests/integration/correcciones/**',
       'tests/integration/case-view/**',
+      'tests/integration/registro-clinico/**',
     ],
     // Sin reintentos: un test inestable es un bug (CLAUDE.md, Política TDD).
     retry: 0,

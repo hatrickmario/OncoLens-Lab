@@ -49,19 +49,21 @@ export function sesionDe(request: Request, modulo: string): SesionAutenticada {
   return request.sesion;
 }
 
-/** Línea de log: solo evento, resultado, `traceId` y `patientId` (UUID); nunca el cuerpo ni sus valores (RN-10). */
+/** Línea de log: evento, resultado, `traceId`, `patientId` (UUID) y las etiquetas no clínicas que declare quien llama (p. ej. `mappingStatus`); nunca el cuerpo ni sus valores (RN-10). */
 export function registrarResultado(
   registrar: Registrar,
   evento: string,
   response: Response,
   patientId: string | undefined,
   resultado: string,
+  etiquetas: Readonly<Record<string, string>> = {},
 ): void {
   registrar({
     event: evento,
     resultado,
     traceId: traceIdDe(response),
     ...(patientId !== undefined && { patientId }),
+    ...etiquetas,
   });
 }
 

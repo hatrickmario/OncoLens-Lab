@@ -31,6 +31,46 @@
       "nombreOficial": "Progesterone receptor Ag [Presence] in Tissue by Immune stain",
       "etiquetaEs": "Receptor de progesterona",
       "versionFuente": "LOINC 2.83 (data_version de NLM Clinical Tables loinc_items v3, consultada el 2026-11-03)"
+    },
+    {
+      "terminoCanonico": "trastuzumab",
+      "estandar": "atc",
+      "codigo": "L01FD01",
+      "nombreOficial": "trastuzumab",
+      "etiquetaEs": "Trastuzumab",
+      "versionFuente": "ATC/DDD Index 2026 (WHOCC, atcddd.fhi.no, consultado el 2026-11-03)"
+    },
+    {
+      "terminoCanonico": "pertuzumab",
+      "estandar": "atc",
+      "codigo": "L01FD02",
+      "nombreOficial": "pertuzumab",
+      "etiquetaEs": "Pertuzumab",
+      "versionFuente": "ATC/DDD Index 2026 (WHOCC, atcddd.fhi.no, consultado el 2026-11-03)"
+    },
+    {
+      "terminoCanonico": "trastuzumab emtansina",
+      "estandar": "atc",
+      "codigo": "L01FD03",
+      "nombreOficial": "trastuzumab emtansine",
+      "etiquetaEs": "Trastuzumab emtansina",
+      "versionFuente": "ATC/DDD Index 2026 (WHOCC, atcddd.fhi.no, consultado el 2026-11-03)"
+    },
+    {
+      "terminoCanonico": "letrozol",
+      "estandar": "atc",
+      "codigo": "L02BG04",
+      "nombreOficial": "letrozole",
+      "etiquetaEs": "Letrozol",
+      "versionFuente": "ATC/DDD Index 2026 (WHOCC, atcddd.fhi.no, consultado el 2026-11-03)"
+    },
+    {
+      "terminoCanonico": "docetaxel",
+      "estandar": "atc",
+      "codigo": "L01CD02",
+      "nombreOficial": "docetaxel",
+      "etiquetaEs": "Docetaxel",
+      "versionFuente": "ATC/DDD Index 2026 (WHOCC, atcddd.fhi.no, consultado el 2026-11-03)"
     }
   ]
 }

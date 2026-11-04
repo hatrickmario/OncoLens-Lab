@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — Platform API (Backend 1 / clinical-api)
-  version: 1.18.0
+  version: 1.19.0
   description: >-
     API pública, accesible solo a través de los Route Handlers de web (clinical-api no
     publica puerto al host). Autenticación por cookie de sesión HttpOnly + Secure +
@@ -523,6 +523,139 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorDiagnosticoInvalido'
+
+  /platform/patients/{patientId}/prior-treatments:
+    post:
+      operationId: createManualPriorTreatment
+      tags: [registro-manual]
+      summary: Registra a mano una línea de tratamiento previa
+      description: >-
+        Crea un PriorTreatment con entry_method = manual, extraction_confidence = n_a y
+        review_status = verificado. Backend 1 decide atcCodes y mappingStatus con el catálogo
+        versionado (ADR-33); sin mapeo queda no_mapeado y sin código, nunca inventado (RN-27).
+        regimenName se conserva tal como llegó. Exige un paciente activo (RN-17).
+      x-permission: clinical:write
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PriorTreatmentManualCreate'
+      responses:
+        "201":
+          description: Tratamiento previo registrado.
+          headers:
+            Cache-Control:
+              description: Siempre no-store.
+              required: true
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PriorTreatment'
+        "401":
+          $ref: '#/components/responses/NoAutenticado'
+        "403":
+          $ref: '#/components/responses/PermisoDenegado'
+        "404":
+          $ref: '#/components/responses/NoEncontrado'
+        "422":
+          description: Cuerpo inválido (fechas o motivo de fin incoherentes) o paciente egresado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegistroClinicoInvalido'
+        "500":
+          $ref: '#/components/responses/ErrorInterno'
+
+  /platform/patients/{patientId}/clinical-attributes:
+    get:
+      operationId: listClinicalAttributes
+      tags: [pacientes]
+      summary: Lista los atributos clínicos vigentes y los permitidos por el catálogo
+      description: >-
+        Devuelve solo atributos vigentes (sin rechazado ni reemplazado, RN-07), ordenados por
+        clave y fecha de observación (los de fecha nula al final), y los atributos que el
+        catálogo montado permite registrar para el tipo de cáncer del paciente (RN-29). Es una
+        lectura clínica: el administrador recibe 403.
+      x-permission: clinical:read
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+      responses:
+        "200":
+          description: Atributos vigentes y atributos permitidos.
+          headers:
+            Cache-Control:
+              description: Siempre no-store.
+              required: true
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClinicalAttributeList'
+        "401":
+          $ref: '#/components/responses/NoAutenticado'
+        "403":
+          $ref: '#/components/responses/PermisoDenegado'
+        "404":
+          $ref: '#/components/responses/NoEncontrado'
+        "500":
+          $ref: '#/components/responses/ErrorInterno'
+    post:
+      operationId: createManualClinicalAttribute
+      tags: [registro-manual]
+      summary: Registra a mano un atributo clínico validado contra el catálogo
+      description: >-
+        attributeKey debe estar declarada en el catálogo para el tipo de cáncer del diagnóstico
+        vigente y value en su lista de valores (RN-29). El dato queda entry_method = manual,
+        extraction_confidence = n_a y review_status = verificado. Sin diagnóstico vigente no se
+        puede validar (TIPO_CANCER_NO_REGISTRADO). Un segundo registro de la misma clave es una
+        fila nueva, no una corrección. Exige un paciente activo (RN-17).
+      x-permission: clinical:write
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClinicalAttributeManualCreate'
+      responses:
+        "201":
+          description: Atributo clínico registrado.
+          headers:
+            Cache-Control:
+              description: Siempre no-store.
+              required: true
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClinicalAttribute'
+        "401":
+          $ref: '#/components/responses/NoAutenticado'
+        "403":
+          $ref: '#/components/responses/PermisoDenegado'
+        "404":
+          $ref: '#/components/responses/NoEncontrado'
+        "422":
+          description: >-
+            Cuerpo inválido, clave o valor fuera del catálogo, paciente sin tipo de cáncer o
+            paciente egresado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegistroClinicoInvalido'
+        "500":
+          $ref: '#/components/responses/ErrorInterno'
 
   /platform/patients/{patientId}/biomarkers/{biomarkerId}/corrections:
     post:
@@ -1247,6 +1380,170 @@ components:
               status:
                 type: string
                 enum: [presente_verificado, presente_sin_verificar, faltante, no_aplica]
+        catalogVersion:
+          type: string
+          minLength: 1
+
+    PriorTreatmentManualCreate:
+      type: object
+      description: >-
+        Registro manual de una línea de tratamiento previa. Un tratamiento en curso (ongoing =
+        true) no lleva endedAt ni endReason; uno terminado (ongoing = false) exige endReason.
+        endedAt no puede ser anterior a startedAt.
+      additionalProperties: false
+      required: [setting, regimenName, ongoing]
+      properties:
+        lineNumber:
+          type: integer
+          minimum: 1
+        setting:
+          type: string
+          enum:
+            - neoadyuvante
+            - adyuvante
+            - primera_linea_metastasica
+            - segunda_linea_metastasica
+            - linea_posterior_metastasica
+            - otro
+            - desconocido
+        regimenName:
+          type: string
+          minLength: 1
+          maxLength: 200
+        startedAt:
+          type: string
+          format: date
+        endedAt:
+          type: string
+          format: date
+        ongoing:
+          type: boolean
+        endReason:
+          type: string
+          enum: [progresion, toxicidad, completado, otro, desconocido]
+
+    PriorTreatment:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - lineNumber
+        - setting
+        - regimenName
+        - atcCodes
+        - mappingStatus
+        - startedAt
+        - endedAt
+        - ongoing
+        - endReason
+        - provenance
+      properties:
+        id:
+          type: string
+          format: uuid
+        lineNumber:
+          type: [integer, "null"]
+        setting:
+          type: string
+        regimenName:
+          type: string
+          description: Tal como lo escribió quien registra.
+        atcCodes:
+          type: array
+          description: Solo códigos ATC del catálogo versionado; vacío si no hay mapeo (RN-27).
+          items:
+            type: string
+            pattern: '^[A-Z][0-9]{2}[A-Z]{2}[0-9]{2}$'
+        mappingStatus:
+          type: string
+          enum: [mapeado, no_mapeado]
+        startedAt:
+          type: [string, "null"]
+          format: date
+        endedAt:
+          type: [string, "null"]
+          format: date
+        ongoing:
+          type: boolean
+        endReason:
+          type: string
+          enum: [progresion, toxicidad, completado, otro, desconocido]
+        provenance:
+          $ref: '#/components/schemas/Provenance'
+
+    ClinicalAttributeManualCreate:
+      type: object
+      description: >-
+        Registro manual de un atributo clínico. La clave y el valor se validan contra el catálogo
+        montado para el tipo de cáncer del diagnóstico vigente (RN-29).
+      additionalProperties: false
+      required: [attributeKey, value]
+      properties:
+        attributeKey:
+          type: string
+          pattern: '^[a-z0-9_]+$'
+          maxLength: 100
+        value:
+          type: string
+          minLength: 1
+          maxLength: 100
+        observedAt:
+          type: string
+          format: date
+
+    ClinicalAttribute:
+      type: object
+      additionalProperties: false
+      required: [id, key, value, observedAt, datePrecision, provenance]
+      properties:
+        id:
+          type: string
+          format: uuid
+        key:
+          type: string
+        value:
+          type: string
+        observedAt:
+          type: [string, "null"]
+          format: date
+        datePrecision:
+          type: string
+          enum: [dia, mes, anio, incierta]
+        provenance:
+          $ref: '#/components/schemas/Provenance'
+
+    ClinicalAttributeList:
+      type: object
+      additionalProperties: false
+      required: [items, allowedAttributes, catalogVersion]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClinicalAttribute'
+        allowedAttributes:
+          type: array
+          description: Atributos que el catálogo permite registrar para el tipo de cáncer del paciente (RN-29).
+          items:
+            type: object
+            additionalProperties: false
+            required: [key, label, values]
+            properties:
+              key:
+                type: string
+              label:
+                type: string
+              values:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: false
+                  required: [value, label]
+                  properties:
+                    value:
+                      type: string
+                    label:
+                      type: string
         catalogVersion:
           type: string
           minLength: 1
@@ -2587,6 +2884,26 @@ components:
       required: [error, message, traceId]
       properties:
         error: { type: string, enum: [CUERPO_INVALIDO, PACIENTE_EGRESADO, VALOR_FUERA_DE_CATALOGO] }
+        field:
+          type: string
+          description: >-
+            Propiedad del cuerpo que causó el error, cuando el error es de un campo; ausente si no
+            lo es (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.
+        message: { type: string }
+        traceId: { type: string }
+    ErrorRegistroClinicoInvalido:
+      type: object
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error:
+          type: string
+          enum: [CUERPO_INVALIDO, PACIENTE_EGRESADO, VALOR_FUERA_DE_CATALOGO, TIPO_CANCER_NO_REGISTRADO]
+        field:
+          type: string
+          description: >-
+            Propiedad del cuerpo que causó el error, cuando el error es de un campo; ausente si no
+            lo es (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.
         message: { type: string }
         traceId: { type: string }
     ErrorDiagnosticoInvalido:
@@ -2597,6 +2914,11 @@ components:
         error:
           type: string
           enum: [CUERPO_INVALIDO, PACIENTE_EGRESADO, VALOR_FUERA_DE_CATALOGO, GRADACION_INCOHERENTE]
+        field:
+          type: string
+          description: >-
+            Propiedad del cuerpo que causó el error, cuando el error es de un campo; ausente si no
+            lo es (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.
         message: { type: string }
         traceId: { type: string }
     ErrorSeguimientoNoProcesable:

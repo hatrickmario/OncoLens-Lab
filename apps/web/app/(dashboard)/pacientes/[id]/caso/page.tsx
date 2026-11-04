@@ -33,7 +33,11 @@ export default async function CasoPage({ params }: { params: Promise<{ id: strin
     <main className="mx-auto max-w-6xl p-4 sm:p-6">
       <PatientHeaderBar ficha={resultado.ficha} />
       <CaseViewTemplate patientId={id}>
-        <VistaDeCaso patientId={id} hoy={hoyDelServidor()} />
+        <VistaDeCaso
+          patientId={id}
+          hoy={hoyDelServidor()}
+          egresado={resultado.ficha.lifecycleStatus === 'egresado'}
+        />
       </CaseViewTemplate>
     </main>
   );

@@ -102,6 +102,10 @@ describe('pendingReviewCount por fuente', () => {
       await cliente.query('BEGIN');
       try {
         await asegurarUnaFila(tabla);
+        // Precondición del test: todo verificado (el paciente (f) = FX-T3-a trae dos biomarcadores por revisar).
+        for (const otra of TABLAS_DEL_CATALOGO) {
+          await cliente.query(`UPDATE clinical.${otra} SET review_status = 'verificado'`);
+        }
         await cliente.query(`UPDATE clinical.${tabla} SET review_status = 'requiere_revision'`);
         const { rows } = await cliente.query<{ patient_id: string; n: number }>(
           PACIENTE_DE_LA_TABLA[tabla] ?? '',

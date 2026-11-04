@@ -58,7 +58,7 @@
   "attributes": [
     {
       "key": "estado_castracion",
-      "value": "sensible",
+      "value": "sensible_castracion",
       "observedAt": "2026-08-20",
       "provenance": {
         "entryMethod": "seed",
