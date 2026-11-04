@@ -44,12 +44,16 @@ export function crearCatalogoDeEscalas(
       motivo: 'catalogo_invalido',
     });
   }
+  const codigosDelTipo = (
+    sistemas: readonly { codigo: string; tiposDeCancer: string[] }[] | undefined,
+    tipoDeCancer: string,
+  ): string[] =>
+    (sistemas ?? []).filter((s) => s.tiposDeCancer.includes(tipoDeCancer)).map((s) => s.codigo);
   const sistemaValido = (
     sistemas: readonly { codigo: string; tiposDeCancer: string[] }[] | undefined,
     sistema: string,
     tipoDeCancer: string,
-  ): boolean =>
-    sistemas?.some((s) => s.codigo === sistema && s.tiposDeCancer.includes(tipoDeCancer)) ?? false;
+  ): boolean => codigosDelTipo(sistemas, tipoDeCancer).includes(sistema);
   return {
     version: () => proveedor.version(),
     sistemaDeEstadificacionValido: (sistema, tipo) =>
@@ -63,14 +67,8 @@ export function crearCatalogoDeEscalas(
           },
     sistemaDeGradacionValido: (sistema, tipo) =>
       sistemaValido(escalas?.sistemasDeGradacion, sistema, tipo),
-    sistemasDeEstadificacion: () => {
-      throw new Error('no implementado');
-    },
-    escalasFuncionales: () => {
-      throw new Error('no implementado');
-    },
-    sistemasDeGradacion: () => {
-      throw new Error('no implementado');
-    },
+    sistemasDeEstadificacion: (tipo) => codigosDelTipo(escalas?.sistemasDeEstadificacion, tipo),
+    escalasFuncionales: () => escalas?.escalasFuncionales ?? [],
+    sistemasDeGradacion: (tipo) => codigosDelTipo(escalas?.sistemasDeGradacion, tipo),
   };
 }

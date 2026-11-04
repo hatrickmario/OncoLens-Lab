@@ -198,12 +198,30 @@ function transaccionSobre(db: Consultador): TransaccionDeRegistro {
   };
 }
 
+/** Lectura sin transacción ni bloqueo: el paciente existe y, si lo hay, el tipo de cáncer de su diagnóstico vigente. */
+async function tipoDeCancerVigente(
+  fuente: FuenteDeConexiones,
+  patientId: string,
+): Promise<{ readonly tipoDeCancer: string | null } | undefined> {
+  const conexion = await fuente.connect();
+  try {
+    const { rows } = await conexion.query('SELECT 1 FROM clinical.patient WHERE id = $1', [
+      patientId,
+    ]);
+    if (rows.length === 0) return undefined;
+    const vigente = await diagnosticoVigente(conexion, patientId);
+    return { tipoDeCancer: vigente?.datos.cancerType ?? null };
+  } finally {
+    conexion.release();
+  }
+}
+
 /** Repository del registro manual: cada `enTransaccion` toma UNA conexión, abre `BEGIN` y confirma o revierte todo (D8). */
 export function createManualEntryRepository(
   fuente: FuenteDeConexiones,
 ): RepositorioDeRegistroManual {
   return {
-    tipoDeCancerVigente: () => Promise.reject(new Error('no implementado')),
+    tipoDeCancerVigente: (patientId) => tipoDeCancerVigente(fuente, patientId),
     enTransaccion: (trabajo) =>
       ejecutarEnTransaccion(fuente, (conexion) => trabajo(transaccionSobre(conexion))),
   };

@@ -5,11 +5,13 @@ import {
   GradacionIncoherenteError,
   ValorFueraDeCatalogoError,
 } from './manual-entry.errores.js';
+import type { ItemDeDatoCritico } from '../completeness/ports.js';
 import type {
   CatalogoDeEscalas,
   DatosDelDiagnostico,
   FuenteDeOpciones,
   GradacionGuardada,
+  SistemaDeGradacion,
 } from './ports.js';
 
 /** Campos de la corrección que el cuerpo del contrato puede traer (sin `grading`, que se trata aparte). */
@@ -196,12 +198,89 @@ export function validarValoresDeCatalogo(
   if (campo !== undefined) throw new ValorFueraDeCatalogoError(campo);
 }
 
-/** Valores del catálogo para los formularios de registro manual, para el tipo de cáncer dado (o todos los habilitados si `null`). */
+const SISTEMAS_DE_GRADACION: readonly SistemaDeGradacion[] = ['nottingham', 'gleason_isup'];
+
+const esSistemaDeGradacion = (sistema: string): sistema is SistemaDeGradacion =>
+  SISTEMAS_DE_GRADACION.some((conocido) => conocido === sistema);
+
+/** Primera aparición de cada clave, en el orden recibido. */
+function sinRepetidos<T>(elementos: readonly T[], claveDe: (elemento: T) => string): T[] {
+  const vistas = new Set<string>();
+  return elementos.filter((elemento) => {
+    const clave = claveDe(elemento);
+    if (vistas.has(clave)) return false;
+    vistas.add(clave);
+    return true;
+  });
+}
+
+/** El tipo del diagnóstico vigente; sin vigente, todos los tipos del catálogo que el despliegue habilita (RN-20). */
+function tiposEnAlcance(fuente: FuenteDeOpciones, tipoDeCancer: string | null): readonly string[] {
+  return tipoDeCancer === null
+    ? fuente.tiposDelCatalogo.filter((tipo) => fuente.tiposHabilitados.estaHabilitado(tipo))
+    : [tipoDeCancer];
+}
+
+/** Términos de los biomarcadores del checklist y, tras ellos, los LOINC del catálogo; el checklist manda en la etiqueta. */
+function terminosDeBiomarcador(
+  fuente: FuenteDeOpciones,
+  itemsCriticos: readonly ItemDeDatoCritico[],
+  tipos: readonly string[],
+): ManualEntryOptions['biomarkerTerms'] {
+  const delChecklist = itemsCriticos.flatMap(({ destination, label }) =>
+    destination.entity === 'Biomarker' && destination.match?.name !== undefined
+      ? [{ term: destination.match.name, label }]
+      : [],
+  );
+  const delCodigos = tipos
+    .flatMap((tipo) => fuente.terminologia.entradas(tipo, 'loinc'))
+    .map(({ terminoCanonico, etiquetaEs }) => ({ term: terminoCanonico, label: etiquetaEs }));
+  return sinRepetidos([...delChecklist, ...delCodigos], ({ term }) => term);
+}
+
+function destinoDelItem({
+  key,
+  destination,
+}: ItemDeDatoCritico): ManualEntryOptions['criticalItems'][number] {
+  const esBiomarcador = destination.entity === 'Biomarker';
+  return {
+    item: key,
+    entity: destination.entity as ManualEntryOptions['criticalItems'][number]['entity'],
+    field: destination.field ?? null,
+    term: esBiomarcador ? (destination.match?.name ?? null) : null,
+  };
+}
+
+/**
+ * Valores del catálogo para los formularios de registro manual (RN-29), para el tipo del diagnóstico vigente o, si no
+ * hay, para todos los tipos habilitados. Los ítems críticos salen del MISMO lector de `datos-criticos.json` que el
+ * checklist (D10): `criticalItems` y `CompletenessItem.destination` no pueden divergir.
+ */
 export function opcionesDeRegistroManual(
-  _fuente: FuenteDeOpciones,
-  _tipoDeCancer: string | null,
+  fuente: FuenteDeOpciones,
+  tipoDeCancer: string | null,
 ): ManualEntryOptions {
-  throw new Error('no implementado');
+  const tipos = tiposEnAlcance(fuente, tipoDeCancer);
+  const itemsCriticos = tipos.flatMap((tipo) => fuente.datosCriticos.deTipo(tipo)?.items ?? []);
+  const delTipo = (listar: (tipo: string) => readonly string[]): string[] => [
+    ...new Set(tipos.flatMap(listar)),
+  ];
+  return {
+    catalogVersion: fuente.escalas.version(),
+    cancerType: tipoDeCancer,
+    enabledCancerTypes: fuente.tiposDelCatalogo.filter((tipo) =>
+      fuente.tiposHabilitados.estaHabilitado(tipo),
+    ),
+    biomarkerTerms: terminosDeBiomarcador(fuente, itemsCriticos, tipos),
+    stagingSystems: delTipo((tipo) => fuente.escalas.sistemasDeEstadificacion(tipo)),
+    performanceScales: fuente.escalas
+      .escalasFuncionales()
+      .map(({ codigo, minimo, maximo }) => ({ code: codigo, minimum: minimo, maximum: maximo })),
+    gradingSystems: delTipo((tipo) => fuente.escalas.sistemasDeGradacion(tipo)).filter(
+      esSistemaDeGradacion,
+    ),
+    criticalItems: sinRepetidos(itemsCriticos.map(destinoDelItem), ({ item }) => item),
+  };
 }
 
 /** Propiedad del cuerpo (`field` del 422) que causó el error de dominio; `undefined` si no es de un campo (p. ej. paciente egresado). Nunca el valor (RN-10). */

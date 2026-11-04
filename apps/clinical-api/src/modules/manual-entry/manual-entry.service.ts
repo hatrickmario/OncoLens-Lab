@@ -27,7 +27,12 @@ import {
   gradacionDelCuerpo,
   gradacionesDelDiagnosticoNuevo,
 } from './manual-entry.diagnostico.js';
-import { fusionarCorreccion, validarValoresDeCatalogo } from './manual-entry.reglas.js';
+import { PacienteNoEncontradoError } from '../compartido/pacientes.errores.js';
+import {
+  fusionarCorreccion,
+  opcionesDeRegistroManual,
+  validarValoresDeCatalogo,
+} from './manual-entry.reglas.js';
 import type { CuerpoDeBiomarcador, CuerpoDeDiagnostico } from './manual-entry.schema.js';
 import type {
   CatalogoDeEscalas,
@@ -166,10 +171,20 @@ async function registrarDiagnostico(
   });
 }
 
+/** `GET …/manual-entry-options`: lectura sin bloqueo; el tipo de cáncer lo fija el diagnóstico vigente (RN-29). */
+async function opciones(
+  dependencias: DependenciasDelService,
+  patientId: string,
+): Promise<ManualEntryOptions> {
+  const contexto = await dependencias.repositorio.tipoDeCancerVigente(patientId);
+  if (contexto === undefined) throw new PacienteNoEncontradoError();
+  return opcionesDeRegistroManual(dependencias, contexto.tipoDeCancer);
+}
+
 export function createManualEntryService(dependencias: DependenciasDelService): ManualEntryService {
   return {
     registrarBiomarcador: (solicitud) => registrarBiomarcador(dependencias, solicitud),
     registrarDiagnostico: (solicitud) => registrarDiagnostico(dependencias, solicitud),
-    opciones: () => Promise.reject(new Error('no implementado')),
+    opciones: (patientId) => opciones(dependencias, patientId),
   };
 }
