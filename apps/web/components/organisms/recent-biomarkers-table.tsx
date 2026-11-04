@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { Biomarker } from '../../../../packages/api-contracts/src/types/clinical-api';
 import { textoDeConfianza } from '../../lib/ficha/presentacion';
 import { mensajes, rellenar } from '../../lib/mensajes';
@@ -49,6 +50,8 @@ export interface RecentBiomarkersTableProps {
   egresado: boolean;
   /** «Hoy» del servidor para las fechas relativas. */
   hoy: string;
+  /** Acción de la sección («Registrar biomarcador»), a la derecha del título. */
+  accion?: ReactNode;
 }
 
 /** Último valor por biomarcador (S2-04): significancia, origen y revisión en texto; cada dato se puede corregir (US-253). */
@@ -57,6 +60,7 @@ export function RecentBiomarkersTable({
   pacienteId,
   egresado,
   hoy,
+  accion,
 }: RecentBiomarkersTableProps) {
   const { biomarcadores: textos, noRegistrado, correccion } = mensajes().ficha;
   const columnas = [
@@ -68,7 +72,7 @@ export function RecentBiomarkersTable({
     textos.origen,
   ];
   return (
-    <SeccionDeFicha id="biomarcadores" titulo={textos.titulo}>
+    <SeccionDeFicha id="biomarcadores" titulo={textos.titulo} accion={accion}>
       {biomarcadores.length === 0 ? (
         <p className="m-0">{noRegistrado}</p>
       ) : (

@@ -10,6 +10,7 @@ import { VistaDeCasoNoDisponible } from '../molecules/vista-de-caso-no-disponibl
 import { BiomarkerSeriesTables } from './biomarker-series-tables';
 import { CaseTimeline } from './case-timeline';
 import { ClinicalAttributesTable } from './clinical-attributes-table';
+import { DialogoRegistroBiomarcador } from './dialogo-registro-biomarcador';
 import { DialogoAtributoClinico } from './dialogo-atributo-clinico';
 import { DialogoTratamientoPrevio } from './dialogo-tratamiento-previo';
 import { PriorTreatmentsTable } from './prior-treatments-table';
@@ -22,9 +23,18 @@ interface SeccionesDelCasoProps {
   egresado: boolean;
   /** Recarga la vista tras un registro manual (`201`). */
   alRegistrar: () => void;
+  /** Clave de `?item=` (US-111). */
+  item?: string;
 }
 
-function SeccionesDelCaso({ vista, hoy, patientId, egresado, alRegistrar }: SeccionesDelCasoProps) {
+function SeccionesDelCaso({
+  vista,
+  hoy,
+  patientId,
+  egresado,
+  alRegistrar,
+  item,
+}: SeccionesDelCasoProps) {
   const { fechados, sinFecha } = separarSinFecha(vista.timeline);
   const registro = { pacienteId: patientId, egresado, alGuardar: alRegistrar };
   return (
@@ -41,7 +51,18 @@ function SeccionesDelCaso({ vista, hoy, patientId, egresado, alRegistrar }: Secc
         hoy={hoy}
         accion={<DialogoAtributoClinico {...registro} />}
       />
-      <BiomarkerSeriesTables series={vista.biomarkerSeries} hoy={hoy} />
+      <BiomarkerSeriesTables
+        series={vista.biomarkerSeries}
+        hoy={hoy}
+        accion={
+          <DialogoRegistroBiomarcador
+            {...registro}
+            pagina="caso"
+            item={item}
+            idDelEncabezado="caso-series"
+          />
+        }
+      />
     </>
   );
 }
@@ -54,12 +75,13 @@ export function VistaDeCaso({
   patientId,
   hoy,
   egresado = false,
+  item,
 }: {
   patientId: string;
   hoy: string;
   /** Paciente egresado (RN-17): los registros manuales se deshabilitan. */
   egresado?: boolean;
-  /** Clave del catálogo de `?item=` (US-111): abre el formulario de su entidad; sin uso hasta el feat. */
+  /** Clave del catálogo de `?item=` (US-111): abre el formulario de su entidad. */
   item?: string;
 }) {
   const { lectura, recargar } = useVistaDeCaso(patientId);
@@ -90,6 +112,7 @@ export function VistaDeCaso({
       patientId={patientId}
       egresado={egresado}
       alRegistrar={() => void recargar()}
+      item={item}
     />
   );
 }

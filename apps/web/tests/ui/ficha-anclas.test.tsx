@@ -6,6 +6,9 @@ import type { PatientSummary } from '../../../../packages/api-contracts/src/type
 import { anclaPermitida } from '../../lib/ficha/anclas';
 import { fichaDelDoctor } from '../support/ficha-simulado';
 
+// Las islas de registro manual (US-111) usan el router de Next: es el borde de framework, no un módulo propio.
+vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }) }));
+
 function abrirFichaCon(fragmento: string) {
   window.history.replaceState(null, '', `/pacientes/${fichaDelDoctor.id}${fragmento}`);
   render(<FichaDelDoctor ficha={fichaDelDoctor as PatientSummary} notas={[]} hoy="2026-10-01" />);
