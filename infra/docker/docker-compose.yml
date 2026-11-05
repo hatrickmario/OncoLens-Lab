@@ -153,6 +153,10 @@ services:
       PORT: "3000"
       APP_ENV: ${APP_ENV:?APP_ENV obligatorio}
       CLINICAL_CATALOG_PATH: ${CLINICAL_CATALOG_PATH:-/catalogs}
+      # Gate de datos reales (RN-13): apagadas por defecto y declaradas aquí para que `verify-g-demo` las lea de la
+      # configuración efectiva de Compose (D5-53). clinical-api se niega a arrancar si están activas sin preflight.
+      REAL_ANONYMIZED_ENABLED: ${REAL_ANONYMIZED_ENABLED:-false}
+      REAL_IDENTIFIED_ENABLED: ${REAL_IDENTIFIED_ENABLED:-false}
       # Rol de aplicación clinical_api. Sin contraseña en la URL (RN-14): va por archivo de secreto. TLS con
       # verificación del certificado del servidor (SAN postgres) contra la CA propia (SEG-08).
       CLINICAL_DATABASE_URL: postgresql://clinical_api@postgres:5432/${POSTGRES_DB:-oncolens}
