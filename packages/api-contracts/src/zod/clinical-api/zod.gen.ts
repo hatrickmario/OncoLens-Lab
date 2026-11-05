@@ -575,7 +575,8 @@ export const zPatientListItem = z.strictObject({
     birthYear: z.int(),
     cancerTypeEnabled: z.boolean(),
     pendingReviewCount: z.int().gte(0),
-    missingCriticalCount: z.int().gte(0)
+    missingCriticalCount: z.int().gte(0),
+    completenessAvailable: z.boolean().optional()
 });
 
 /**

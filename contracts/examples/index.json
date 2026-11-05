@@ -503,6 +503,11 @@
       "target": "#/components/schemas/PatientSummary"
     },
     {
+      "file": "patient-list-checklist-no-disponible.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/PatientPage"
+    },
+    {
       "file": "error-no-autenticado.json",
       "spec": "clinical-api",
       "target": "#/paths/~1platform~1patients~1{patientId}~1completeness/get/responses/401"
