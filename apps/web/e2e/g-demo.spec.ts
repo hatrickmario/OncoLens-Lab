@@ -13,12 +13,7 @@ import {
   textos,
 } from './soporte';
 import { estadoDelOrden, violacionesDeOrdenRn28 } from './orden-rn28';
-import {
-  modoDelLlm,
-  plazosDelGate,
-  type ResultadoDelGate,
-  type ResultadoDePaso,
-} from './resultado-del-gate';
+import { modoDelLlm, type ResultadoDelGate, type ResultadoDePaso } from './resultado-del-gate';
 import es from '../messages/es.json' with { type: 'json' };
 
 /**
@@ -37,8 +32,12 @@ import es from '../messages/es.json' with { type: 'json' };
  * intento ya no encontraría el paciente sin modificar.
  */
 const RUTA_DEL_RESULTADO = new URL('../../../reports/gates/e2e-g-demo.json', import.meta.url);
-/** Plazos del modo de la corrida (D5-57): con el LLM real el análisis tarda ~30 s y el recorrido hasta ~55 s. */
-const PLAZOS = plazosDelGate(modoDelLlm(process.env.LLM_PROVIDER));
+/**
+ * Plazos únicos (D5-57): G-Demo siempre corre con LLM real, donde el análisis tarda ~30 s y el recorrido ~55 s. Un
+ * `expect` con plazo largo termina en cuanto se cumple, así que no vuelve lenta la corrida con el LLM fingido.
+ */
+const PLAZO_DE_GENERACION_MS = 120_000;
+const PLAZO_DEL_RECORRIDO_MS = 300_000;
 
 /** Un `test.step` que deja constancia de su resultado aunque falle: el fallo nombra el paso (US-142 AC-1). */
 function crearRegistroDePasos() {
@@ -118,7 +117,7 @@ async function comprobarBaseConFaltantes(page: Page, esperados: number) {
 }
 
 test.describe('Gate G-Demo: la hipótesis de punta a punta (L1D-248)', () => {
-  test.setTimeout(PLAZOS.recorrido);
+  test.setTimeout(PLAZO_DEL_RECORRIDO_MS);
   test.describe.configure({ retries: 0 });
 
   test('el doctor recorre login, ficha con corrección, vista de caso, registro del faltante, análisis, Base del análisis con los faltantes como desconocido y 2 seguimientos con citas [US-142 AC-1]', async ({
@@ -196,7 +195,7 @@ test.describe('Gate G-Demo: la hipótesis de punta a punta (L1D-248)', () => {
           await page.getByLabel(textos.formulario.pregunta).fill(datos.pregunta);
           await page.getByRole('button', { name: textos.formulario.analizar }).click();
           await expect(page.getByTestId('analysis-result')).toBeVisible({
-            timeout: PLAZOS.generacion,
+            timeout: PLAZO_DE_GENERACION_MS,
           });
           const analisis = await (await respuesta).json();
           expect(analisis.status).toBe('con_evidencia');
@@ -219,7 +218,7 @@ test.describe('Gate G-Demo: la hipótesis de punta a punta (L1D-248)', () => {
 
       for (const [i, pregunta] of datos.seguimientos.entries())
         await paso(`pregunta de seguimiento ${i + 1} con citas`, () =>
-          pasoSeguimiento(page, pregunta, i + 1, PLAZOS.generacion),
+          pasoSeguimiento(page, pregunta, i + 1, PLAZO_DE_GENERACION_MS),
         );
 
       await paso('consola sin errores y peticiones solo al origen de web', async () => {

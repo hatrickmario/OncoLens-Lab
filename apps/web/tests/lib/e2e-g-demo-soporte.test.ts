@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { estadoDelOrden, opcionDelRotulo, violacionesDeOrdenRn28 } from '../../e2e/orden-rn28';
-import { modoDelLlm, plazosDelGate } from '../../e2e/resultado-del-gate';
+import { modoDelLlm } from '../../e2e/resultado-del-gate';
 
 const comparable = (coincide: number) => ({ coincide, noComparable: false });
 const noComparable = (coincide: number) => ({ coincide, noComparable: true });
@@ -46,22 +46,5 @@ describe('Modo del LLM del resultado del gate', () => {
     ['openai', 'desconocido'],
   ])('mapea %s a %s', (proveedor, esperado) => {
     expect(modoDelLlm(proveedor)).toBe(esperado);
-  });
-});
-
-describe('Plazos del recorrido del gate por modo del LLM (D5-57)', () => {
-  it('mantiene los plazos del LLM fingido cuando el modo es fingido', () => {
-    expect(plazosDelGate('fingido')).toEqual({ recorrido: 180_000, generacion: 5_000 });
-  });
-
-  it('da a la generación un plazo mayor que el recorrido típico de 55 s cuando el modo es real', () => {
-    const real = plazosDelGate('real');
-
-    expect(real.generacion).toBeGreaterThan(55_000);
-    expect(real.recorrido).toBeGreaterThan(real.generacion * 2);
-  });
-
-  it('usa los plazos estrictos del fingido cuando el modo es desconocido', () => {
-    expect(plazosDelGate('desconocido')).toEqual(plazosDelGate('fingido'));
   });
 });

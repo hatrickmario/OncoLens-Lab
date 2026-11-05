@@ -54,8 +54,8 @@ aparece como «No disponible». Los modelos (generación, embeddings, reranker y
 `<modelo>@<revisión>#sha256:<64 hex>` que escribe `evaluate` en `configuracion.modelos` (D5-55); cada modelo se toma del
 primer reporte que lo declara (los reportes históricos solo traen el LLM).
 
-**Plazos del E2E y ruta de inicio:** `apps/web/e2e/g-demo.spec.ts` toma sus plazos de `plazosDelGate(modo)` según
-`LLM_PROVIDER` (fingido: 180 s el recorrido y 5 s por `expect`; real: 360 s y 120 s en las esperas de generación; D5-57).
+**Plazos del E2E y ruta de inicio:** `apps/web/e2e/g-demo.spec.ts` usa plazos únicos, sin ramas por modo (el G-Demo
+siempre corre con LLM real): 120 s en las esperas de generación y 300 s para todo el recorrido (D5-57).
 Para el E2E real, `scripts/demo/levantar.sh` respeta `WEB_HOME_PATH` si se exporta antes (p. ej.
 `/pacientes/<id>/analisis`, lo que espera `iniciarSesion`); sin él, la demo manual aterriza en `/pacientes` (D5-61).
 
