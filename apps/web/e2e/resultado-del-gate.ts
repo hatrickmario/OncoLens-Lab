@@ -24,6 +24,13 @@ export interface PlazosDelGate {
   generacion: number;
 }
 
-export function plazosDelGate(_modo: ModoDelLlm): PlazosDelGate {
-  return { recorrido: 0, generacion: 0 };
+/**
+ * Plazos por modo: con el LLM fingido la respuesta es inmediata y el `expect` conserva sus 5 s; con el real el análisis
+ * tarda ~30 s y el recorrido hasta ~55 s, así que la generación espera 120 s y el recorrido 360 s. Un modo desconocido
+ * usa los estrictos (el resultado ya sale como `desconocido` y el gate no lo da por superado).
+ */
+export function plazosDelGate(modo: ModoDelLlm): PlazosDelGate {
+  return modo === 'real'
+    ? { recorrido: 360_000, generacion: 120_000 }
+    : { recorrido: 180_000, generacion: 5_000 };
 }
