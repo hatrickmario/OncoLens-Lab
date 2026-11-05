@@ -50,6 +50,13 @@ contenedor en ejecución; el conteo por `data_origin` sí es en vivo. Leerlas ta
 **Qué se versiona:** solo el registro real «superado» va a `docs/gates/G-Demo-<fecha>.md`, y nunca se sobrescribe uno ya
 escrito (puede estar firmado). Un registro real «no superado» y los de modo fingido van a `reports/gates/` (ignorado).
 Los valores copiados al registro (commit, versiones, modelos, consultas) pasan por una lista blanca; lo que no encaja
-aparece como «No disponible».
+aparece como «No disponible». Los modelos (generación, embeddings, reranker y NLI) admiten la cadena
+`<modelo>@<revisión>#sha256:<64 hex>` que escribe `evaluate` en `configuracion.modelos` (D5-55); cada modelo se toma del
+primer reporte que lo declara (los reportes históricos solo traen el LLM).
+
+**Plazos del E2E y ruta de inicio:** `apps/web/e2e/g-demo.spec.ts` usa plazos únicos, sin ramas por modo (el G-Demo
+siempre corre con LLM real): 120 s en las esperas de generación y 300 s para todo el recorrido (D5-57).
+Para el E2E real, `scripts/demo/levantar.sh` respeta `WEB_HOME_PATH` si se exporta antes (p. ej.
+`/pacientes/<id>/analisis`, lo que espera `iniciarSesion`); sin él, la demo manual aterriza en `/pacientes` (D5-61).
 
 El bloqueo de arranque con datos reales sin `preflight` es de US-143 (G-Piloto), no de este gate.

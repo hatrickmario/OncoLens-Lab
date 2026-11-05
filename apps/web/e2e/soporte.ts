@@ -163,14 +163,20 @@ export async function pasoRegistroManual(page: Page, datos: DatosDelGate) {
 }
 
 /** Una pregunta de seguimiento: el turno `n` muestra ≥ 1 afirmación con ≥ 1 cita, el aviso de IA y la etiqueta académica. */
-export async function pasoSeguimiento(page: Page, pregunta: string, n: number) {
+export async function pasoSeguimiento(
+  page: Page,
+  pregunta: string,
+  n: number,
+  /** Espera de la generación (D5-57): sin valor, el `expect` conserva su plazo por defecto. */
+  plazoDeGeneracion?: number,
+) {
   await page.getByLabel(followUp.campo).fill(pregunta);
   await page.getByRole('button', { name: followUp.preguntar, exact: true }).click();
 
   const turno = page.getByRole('article', { name: new RegExp(`^Pregunta ${n} ·`) });
-  await expect(turno).toBeVisible();
+  await expect(turno).toBeVisible({ timeout: plazoDeGeneracion });
   const citasPorAfirmacion = turno.getByRole('list', { name: evidence.cita.lista });
-  await expect(citasPorAfirmacion.first()).toBeVisible();
+  await expect(citasPorAfirmacion.first()).toBeVisible({ timeout: plazoDeGeneracion });
   for (const citas of await citasPorAfirmacion.all())
     await expect(citas.getByRole('listitem').first()).toBeVisible();
   await expect(turno.getByRole('note')).not.toHaveCount(0);

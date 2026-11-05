@@ -118,6 +118,17 @@ _MODELOS = Objeto(
         "llm": Identificador(),
     }
 )
+# D5-55: la familia `opciones` también declara los modelos de recuperación que respondieron; son opcionales para que los
+# reportes históricos (solo `llm`) sigan validando.
+_MODELOS_DE_OPCIONES = Objeto(
+    {
+        "llm": Identificador(),
+        "embeddings": Identificador(),
+        "reranker": Identificador(),
+        "nli": Identificador(),
+    },
+    opcionales=frozenset({"embeddings", "reranker", "nli"}),
+)
 _UMBRALES = Objeto(
     {
         "relevanceThreshold": Numero(),
@@ -484,7 +495,7 @@ ESQUEMA_OPCIONES = Objeto(
                 "reloj": Enumerado(frozenset(RELOJES)),
                 "catalogVersion": Identificador(),
                 "maxOptions": Numero(),
-                "modelos": Objeto({"llm": Identificador()}),
+                "modelos": _MODELOS_DE_OPCIONES,
                 "umbrales": _UMBRALES,
                 "versionListaTerminos": Identificador(),
             }

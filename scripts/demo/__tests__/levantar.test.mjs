@@ -284,9 +284,24 @@ describe('ruta de inicio tras el login (feedback de la Demo 4, F1)', () => {
     const resultado = spawnSync('bash', ['-c', `${linea}; printf '%s' "$WEB_HOME_PATH"`], {
       encoding: 'utf8',
       timeout: PLAZO_MS,
+      env: { PATH: '/usr/bin:/bin' },
     });
 
     expect(linea).toBeDefined();
     expect(resultado.stdout).toBe('/pacientes');
+  });
+
+  it('respeta el WEB_HOME_PATH del entorno cuando el E2E real de G-Demo lo fija a /pacientes/<id>/analisis (D5-61)', () => {
+    const script = readFileSync(LEVANTAR, 'utf8');
+    const linea = script.split('\n').find((l) => l.startsWith('export WEB_HOME_PATH='));
+    const rutaDelAnalisis = '/pacientes/0fd028e2-f8b0-56c7-a748-2a4e473d879d/analisis';
+
+    const resultado = spawnSync('bash', ['-c', `${linea}; printf '%s' "$WEB_HOME_PATH"`], {
+      encoding: 'utf8',
+      timeout: PLAZO_MS,
+      env: { PATH: '/usr/bin:/bin', WEB_HOME_PATH: rutaDelAnalisis },
+    });
+
+    expect(resultado.stdout).toBe(rutaDelAnalisis);
   });
 });

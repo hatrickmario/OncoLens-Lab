@@ -80,6 +80,8 @@ const MARCA_DEL_P95 = {
 /** Lista blanca de lo que puede copiarse al registro versionado (RN-14): lo que no encaja se declara «No disponible». */
 export const PATRON_DE_COMMIT = /^[0-9a-f]{40}$/;
 export const PATRON_DE_VERSION_O_MODELO = /^[\w.:@+/-]{1,80}$/;
+/** Modelo del reporte: el nombre de siempre o la cadena `<modelo>@<revisión>#sha256:<64 hex>` que escribe `evaluate` (D5-55). */
+export const PATRON_DE_MODELO = /^[\w.:@+/-]{1,120}(?:#sha256:[0-9a-f]{64})?$/;
 
 export function valorSeguro(valor, patron) {
   return typeof valor === 'string' && patron.test(valor) ? valor : null;
