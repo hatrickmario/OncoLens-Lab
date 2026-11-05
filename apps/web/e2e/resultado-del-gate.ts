@@ -15,3 +15,15 @@ export function modoDelLlm(proveedor: string | undefined): ModoDelLlm {
   if (proveedor === 'local') return 'real';
   return 'desconocido';
 }
+
+/** Plazos del recorrido de G-Demo en ms (D5-57). */
+export interface PlazosDelGate {
+  /** Tiempo máximo de todo el test (`test.setTimeout`). */
+  recorrido: number;
+  /** Espera de un `expect` que depende de una generación del LLM (análisis y seguimientos). */
+  generacion: number;
+}
+
+export function plazosDelGate(_modo: ModoDelLlm): PlazosDelGate {
+  return { recorrido: 0, generacion: 0 };
+}
