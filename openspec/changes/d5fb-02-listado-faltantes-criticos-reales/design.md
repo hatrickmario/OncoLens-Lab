@@ -36,31 +36,22 @@ por paciente: lectura de `Diagnosis`, comprobación de existencia y una lectura 
 - **D3 Contrato aditivo.** `PatientListItem.completenessAvailable` es propiedad **opcional** (ausente = `true`), como en
   `PatientSummary`: volver `missingCriticalCount` nulable sería un ERR de oasdiff (ADR-26). Se envía siempre explícito
   `false` en degradación y se omite cuando es `true`, de modo que las respuestas sanas no cambian de forma. Es un cambio
-  menor: `info.version` pasa de `1.20.0` al siguiente menor libre (**tentativo `1.21.0`**). La cadena de versiones de
-  `clinical-api` la fija el orden real de merges: al aplicar, rebasar sobre `main` y tomar el siguiente menor; otros
-  changes abiertos que tocan `openapi.yaml` rebasan sobre este o viceversa (misma convención que `l1d-95`).
+  menor: `info.version` pasa de `1.20.0` al siguiente menor libre (**`1.21.0`**, aprobado 2026-11-05). d5fb-04 tomará `1.22.0` y d5fb-05 `1.23.0` al rebasar.
   `contracts:generate` regenera `packages/api-contracts`.
 - **D4 Tipo no habilitado o sin diagnóstico activo → 0 con `completenessAvailable = true`.** No es un fallo: `cancerTypeEnabled`
-  ya viaja en el ítem y el contador es 0 por definición (igual que la ficha). En el stack de demo
-  (`ENABLED_CANCER_TYPES=mama`) los pacientes de próstata (l)–(m) seguirán en 0 y es lo correcto; la UI ya los distingue
-  por `cancerTypeEnabled`.
+  ya viaja en el ítem y el contador es 0 por definición (igual que la ficha), sin cambio de contrato extra. La UI
+  (otro agente) muestra «—» cuando `cancerTypeEnabled = false`. El stack de la demo tiene
+  `ENABLED_CANCER_TYPES=mama,prostata`: los escenarios y tests cubren **ambas** configuraciones (con `mama,prostata`
+  los pacientes de próstata tienen contadores reales; con solo `mama` salen con `cancerTypeEnabled=false` y 0).
 - **D5 Administrador.** La vista `admin` (`conDatosClinicos = false`) **no invoca** `calcularVarios` ni lee tablas
   clínicas; `PatientAdminSummary` no cambia. La búsqueda comparte `paginar()` y por tanto hereda el cálculo en lote y la
   misma garantía; un test verifica que el fake de completitud no se invoca con sesión de `admin`.
-- **D6 ¿Hace falta añadir pacientes al seed? (pregunta abierta, previsiblemente no).** El seed de 13 pacientes
-  (`docs/demo/guia-demo-S5.md`) ya tiene faltantes calculados en (g) (4: HER2 por ISH, Ki-67, tratamientos previos,
-  BRCA), (h) y (i) (BRCA germinal) en **mama**, que es el tipo habilitado en la demo; (l) los tiene pero es próstata
-  (no habilitada, saldrá 0). El feedback del usuario («al menos 2 con faltantes») se cumple sin tocar el seed, siempre
-  que el cálculo sea real. **A confirmar al aplicar:** contar con el catálogo real corriendo el seed (la prueba
-  `pacientes-momentos.test.ts` ya imprime la lista) para los pacientes (a)–(f), que la guía no detalla. Si el conteo de
-  mama con faltantes fuera < 2, se añade un paciente sintético con `ALTA` en el seed (decisión del usuario; no se asume).
-  Para que no regrese la confusión, una prueba de integración fija el invariante: el listado del seed tiene ≥ 2
-  pacientes de mama con `missingCriticalCount > 0`.
-- **D7 Rendimiento.** Objetivo: el listado no degrada más allá de la suma de las consultas del lote; se **mide** antes y
-  después (p95 con la página por defecto, seed de 13) y se compara en la tarea de verificación. El presupuesto numérico
-  del listado no está en el PRD; se propone «sin regresión apreciable respecto de `main` y consultas por página acotadas
-  e independientes de `PATIENTS_PAGE_SIZE`» y se confirma con el usuario (pregunta abierta). La garantía automática es
-  el test que **cuenta consultas** (≤ K fija con página de 1 y de N pacientes), no un cronómetro.
+- **D6 Seed: no se añaden pacientes (decisión aprobada 2026-11-05).** 10 de los 13 pacientes ya tienen faltantes con
+  el catálogo real; el feedback («al menos 2») se cumple con solo calcular de verdad. La invariante de prueba es «≥ 2
+  pacientes con `missingCriticalCount > 0`» y «el contador de cada fila iguala al de su ficha», sin atarla a un tipo.
+- **D7 Rendimiento (decisión aprobada 2026-11-05).** Se usa el NFR existente del PRD: listado p95 ≤ 1 s. Se añade el
+  criterio estructural «el número de consultas no crece con el tamaño de página», verificado por un test que cuenta
+  consultas con página de 1 y de N. Sustituye a «sin regresión apreciable».
 - **D8 Web.** La celda muestra el número cuando `completenessAvailable !== false` y «No disponible» (texto, no icono
   solo) cuando es `false`; sin mensaje de bloqueo (RN-26). La cadena va en `messages/es.json`. Lenguaje no prescriptivo
   (RN-23): «Faltantes críticos», sin «debe/urgente».

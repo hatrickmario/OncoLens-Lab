@@ -3,7 +3,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: La ficha declara si el checklist está disponible
-`PatientSummary` y `PatientListItem` SHALL tener la propiedad opcional `completenessAvailable` (booleano; ausente equivale a `true`), sin volver nulable `missingCriticalCount` en ninguno. El cambio MUST ser aditivo (sin ERR de oasdiff), subir `info.version` de `clinical-api` al siguiente menor libre (tentativo `1.21.0`) y traer un ejemplo registrado en `contracts/examples/index.json` con una fila de `PatientPage` en `completenessAvailable = false`.
+`PatientSummary` y `PatientListItem` SHALL tener la propiedad opcional `completenessAvailable` (booleano; ausente equivale a `true`), sin volver nulable `missingCriticalCount` en ninguno. El cambio MUST ser aditivo (sin ERR de oasdiff), subir `info.version` de `clinical-api` a `1.21.0` y traer un ejemplo registrado en `contracts/examples/index.json` con una fila de `PatientPage` en `completenessAvailable = false`.
 
 #### Scenario: La propiedad nueva es opcional [US-003 AC-2] [RN-26]
 Ahora en la ficha y en el listado (feedback de la Demo 5, 2026-11-05).

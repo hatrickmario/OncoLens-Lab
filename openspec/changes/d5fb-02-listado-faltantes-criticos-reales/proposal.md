@@ -28,13 +28,15 @@ tienen varios: un valor inventado que desorienta al oncólogo (FR-23) y que cont
 - **Si el cálculo falla** (por paciente o del lote) el listado sigue en `200` (RN-26): esa fila trae
   `missingCriticalCount = 0` y `completenessAvailable = false`, y la UI muestra «No disponible», nunca un 0 como dato.
 - **Contrato aditivo:** `PatientListItem.completenessAvailable` (booleano opcional; ausente equivale a `true`), igual que
-  en `PatientSummary`. `info.version` de `clinical-api` sube un menor (hoy `1.20.0`; **tentativo `1.21.0`**, se fija
-  al aplicar según el orden real de merges).
+  en `PatientSummary`. `info.version` de `clinical-api` sube un menor (hoy `1.20.0`; este change toma **`1.21.0`**; d5fb-04 tomará `1.22.0` y d5fb-05 `1.23.0` al rebasar).
 - **Administrador:** sin cambios. `PatientAdminSummary` no tiene contadores clínicos y la vista `admin` no invoca el
   servicio de completitud (mínimo privilegio).
-- **Web:** la columna «Faltantes críticos» pinta «No disponible» cuando `completenessAvailable = false`.
-- **Seed:** a priori **no se añaden pacientes** (ver design D6); una prueba fija como invariante que el listado del seed
-  muestra ≥ 2 pacientes de mama con `missingCriticalCount > 0`.
+- **Web:** la columna «Faltantes críticos» pinta «No disponible» cuando `completenessAvailable = false` y «—» cuando `cancerTypeEnabled = false` (otro agente).
+- **Seed:** **no se añaden pacientes** (10 de 13 ya tienen faltantes con el catálogo real, design D6); una prueba fija
+  como invariante que el listado del seed muestra ≥ 2 pacientes con `missingCriticalCount > 0` y que el contador de
+  cada fila iguala al de su ficha.
+- **Presupuesto:** se usa el NFR del PRD (listado p95 ≤ 1 s) y el criterio estructural «el número de consultas no crece
+  con el tamaño de página».
 
 ## Capabilities
 
@@ -55,5 +57,5 @@ listado). Sin cambios de esquema, de modelo, de IA, de catálogo ni de corpus.
 ## Non-goals
 
 Persistir o cachear el contador (columna desnormalizada), ordenar o filtrar el listado por faltantes, exponer el contador
-al `admin`, cambiar la regla del checklist o el catálogo, habilitar `prostata` en `ENABLED_CANCER_TYPES`, bloquear nada
+al `admin`, cambiar la regla del checklist o el catálogo, bloquear nada
 por faltantes (RN-26), cambios en `apps/web` más allá del texto de la celda.
