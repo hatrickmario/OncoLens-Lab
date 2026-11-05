@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   cuerpoDeCorreccionDeBiomarcador,
   errorDelCuerpoDeBiomarcador,
+  soloElDia,
 } from '../../lib/correcciones/cuerpos';
 import { mensajes } from '../../lib/mensajes';
 
@@ -68,4 +69,13 @@ describe('errorDelCuerpoDeBiomarcador', () => {
   it('acepta una fecha igual a hoy', () => {
     expect(errorDelCuerpoDeBiomarcador({ value: '25', performedAt: HOY }, HOY)).toBeNull();
   });
+});
+
+describe('soloElDia', () => {
+  it.each(['2026-09-01', '2026-09-01T00:00:00Z', '2026-09-01T23:59:59-05:00'])(
+    'devuelve 2026-09-01 cuando la fecha es %s, sea cual sea la zona horaria',
+    (fecha) => {
+      expect(soloElDia(fecha)).toBe('2026-09-01');
+    },
+  );
 });

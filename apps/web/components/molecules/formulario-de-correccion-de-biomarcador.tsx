@@ -34,6 +34,7 @@ export function FormularioDeCorreccionDeBiomarcador({
 }: FormularioDeCorreccionDeBiomarcadorProps) {
   const { formulario } = mensajes().ficha.correccion;
   const { enviando, error, enviar, fallar } = useEnvioDeCorreccion(dato, alGuardar);
+  const sinUnidad = !biomarcador.unit;
   const idBase = `correccion-${biomarcador.id}`;
   const errorDe = (campo: string) => (error?.campo === campo ? error.mensaje : undefined);
 
@@ -64,8 +65,8 @@ export function FormularioDeCorreccionDeBiomarcador({
         name="unit"
         etiqueta={formulario.unidad}
         defaultValue={biomarcador.unit ?? ''}
-        placeholder={biomarcador.unit ? undefined : formulario.sinUnidad}
-        ayuda={biomarcador.unit ? undefined : formulario.ayudaUnidad}
+        placeholder={sinUnidad ? formulario.sinUnidad : undefined}
+        ayuda={sinUnidad ? formulario.ayudaUnidad : undefined}
         error={errorDe('unit')}
         autoComplete="off"
       />

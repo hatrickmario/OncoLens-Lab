@@ -33,3 +33,16 @@
 
 - [ ] 2.1 (local verificado; falta PR y CI) Verificación: `npm test` de `web`, lint y `contracts:check` sin diferencias (no se esperan cambios en
   `openapi.yaml`); registrar en el PR la evidencia ejecutada y esperar CI en verde antes de pedir el merge.
+
+## visual-check
+
+## visual-check · d5fb-03 · 2026-11-05
+Veredicto: PENDIENTE (no se pudo iniciar sesión)
+Stack: imagen web de esta rama construida y servida como contenedor temporal en 127.0.0.1:3100 (red `oncolens_clinical-net`, sin tocar el stack); `/login` respondió 200 y el contenedor y la imagen ya se eliminaron; `docker ps` del stack quedó idéntico.
+| Paso | Ruta / estado | Resultado | Evidencia |
+|---|---|---|---|
+| Estados | ficha del paciente (f): Ki-67, RE, fecha futura | no ejecutado | sin sesión: el clasificador de permisos denegó exponer la contraseña del seed al navegador |
+| Red | todas | no ejecutado | — |
+| Consola, teclado, capturas 375/1280 | — | no ejecutado | — |
+Fallos convertidos en tests: ninguno
+Para completarlo: sesión iniciada por el humano en el navegador, o autorización para leer la contraseña del seed.

@@ -13,7 +13,7 @@ export interface BiomarcadorCorregibleProps {
   idDeAyuda: string;
   /** Número de columnas de lectura de la tabla; la acción añade una. */
   columnas: number;
-  /** «Hoy» del servidor para las fechas relativas del histórico. */
+  /** «Hoy» del servidor: fechas relativas del histórico y tope de la fecha del examen. */
   hoy: string;
   /** Avisa a la tabla de que se guardó una corrección (el aviso de RN-26 vive allí, no en esta fila que se remonta). */
   alCorregir: () => void;

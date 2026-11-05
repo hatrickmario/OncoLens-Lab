@@ -18,7 +18,7 @@ const texto = (datos: FormData, campo: string): string => String(datos.get(campo
 export function cuerpoDeCorreccionDeBiomarcador(
   datos: FormData,
   unidadActual: string | null | undefined,
-  fechaActual?: string,
+  fechaActual: string | undefined,
 ): BiomarkerCorrection {
   const unidad = texto(datos, 'unit');
   const fecha = texto(datos, 'performedAt');
@@ -51,7 +51,11 @@ function primerErrorDe(
   };
 }
 
-/** Validación de UX con el Zod del contrato; clinical-api y el BFF vuelven a validar. `null` si el cuerpo es válido. */
+/**
+ * Validación de UX con el Zod del contrato y espejo de `exigirFechaNoFutura` (clinical-api): una fecha posterior al «hoy» del
+ * servidor se rechaza en `performedAt`; el servidor sigue siendo la autoridad.
+ * `null` si el cuerpo es válido.
+ */
 export function errorDelCuerpoDeBiomarcador(
   cuerpo: BiomarkerCorrection,
   hoy: string,

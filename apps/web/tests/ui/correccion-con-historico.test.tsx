@@ -114,6 +114,7 @@ describe('Corrección con histórico en la ficha', () => {
     expect(within(historico).getByText(/Carga inicial/)).toBeTruthy();
   });
 
+  // El cliente deja pasar hoy; el servidor es la autoridad ante desfase de reloj/zona.
   it('muestra el error junto al campo con aria-live assertive y deja el formulario abierto [US-253 AC-3]', async () => {
     bff.corregirBiomarcador(422, errorFechaFutura);
     const usuario = montarTabla();
@@ -455,8 +456,8 @@ describe('Corrección en línea: precarga de valor, unidad y fecha del examen', 
     expect(bff.peticiones[0]).toMatchObject({
       metodo: 'POST',
       url: expect.stringContaining(`/biomarkers/${her2.id}/corrections`),
-      cuerpo: { value: 'Positivo' },
     });
+    expect(bff.peticiones[0]?.cuerpo).toEqual({ value: 'Positivo' });
     expect(await screen.findByText(correccion.avisoAnalisisAnteriores)).toBeTruthy();
   });
 });
