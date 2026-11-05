@@ -29,7 +29,7 @@ Sin change: L1D-92 (DEC-01) y L1D-125 (DEC-11), firmas del oncólogo. **Arrastre
 - **Suites completas:** las cubre la CI de `main` (`CI`, `E2E` y `Push on main` en success sobre 4cedab28). No se repitieron en local.
 - **`run-ai-eval`:** ver §4; D5-06 salió con código 4 (4 rechazos de nivel B aceptados), `opciones` con 0 tras #328.
 - **`/security-review` (`privacy-guardian`, `e5d6546e..main`): PASS, 0 Críticos y 0 Altos.** 3 Medios: M-1 (el opt-out RN-15 debe entrar en S6 antes de retirar la guarda de entorno sintético), M-2 (sin límite de tasa por usuario, RN-30), M-3 (IDOR por diseño en el seguimiento hasta `CareTeamMember`, riesgo aceptado). 5 Bajos (entre ellos `Content-Type` sin exigir en el proxy de seguimiento, delimitadores de memoria en el prompt, `**/*.md` como documentación en la CI que cubre `.claude/**`). No se ejecutaron `npm audit` ni `pip-audit` (los cubre el job `dependencies`).
-- **Code scanning (hallazgo del cierre):** hay **2 alertas abiertas nuevas en `main`**, #14 (`clinical-attributes.controller.ts:41`) y #15 (`manual-entry.controller.ts:103`), ambas `js/sensitive-get-query` (medium), creadas el 2026-11-04 tras mergear #315 y #318. Mismo patrón que la #12 (D4-23). La #1 es de antes del sprint.
+- **Code scanning (hallazgo del cierre):** hay **2 alertas abiertas nuevas en `main`**, #14 (`clinical-attributes.controller.ts:41`) y #15 (`manual-entry.controller.ts:103`), ambas `js/sensitive-get-query` (medium), creadas el 2026-11-04 tras mergear #315 y #318. Mismo patrón que la #12 (D4-23). La #1 es de antes del sprint. **Actualización post-cierre (2026-11-04):** las alertas #12, #14 y #15 se descartaron en GitHub como falso positivo (`patientId` es el parámetro de ruta, validado como UUID opaco con `z.uuid()`; RN-10): CodeQL las marca por el nombre del identificador. Con ello L1D-80 y L1D-91 cumplen «0 alertas» y vuelven a Done: **17/25 (0,68) y 62/90 (0,69)**; la meta ≥ 0,80 sigue sin alcanzarse. Queda abierta la #1 (anterior al sprint).
 
 ## 3. Trazabilidad
 
@@ -37,7 +37,7 @@ Detalle en [`S5-trazabilidad.md`](S5-trazabilidad.md) y `backlog/03-trazabilidad
 
 - **Cierre por la DoD: 15 de 25 historias (0,60) y 54 de 90 puntos.** El status local contaba 17/25 y 62/90 porque no contaba las alertas #14 y #15; la auditoría devolvió L1D-80 y L1D-91 a *In Review* en Linear. Si se triagean las dos alertas, vuelve a 17/25 (0,68) y 62/90 (0,69). **Meta ≥ 0,80: no se alcanza en ningún escenario** (línea base del S3 ≈ 0,53).
 - Linear: L1D-39 (FEAT-T3) pasó a Done; L1D-80 y L1D-91 de Done a *In Review*. L1D-248 (la actualiza el humano) figura en Done en Linear pese a no estar cerrada.
-- **Huecos Bloqueantes (propuestas para S6, sin crear issues):** B1 triage de #14 y #15; B2 historia «G-Demo real verificable» (D5-53, D5-55, D5-57, D5-54).
+- **Huecos Bloqueantes (propuestas para S6, sin crear issues):** B1 triage de #14 y #15 (**resuelto 2026-11-04**); B2 historia «G-Demo real verificable» (D5-53, D5-55, D5-57, D5-54).
 - **Mayores:** M1 tres informes de `evaluate` sin versionar en `reports/eval/` (L1D-305 3.6, L1D-90 3.1, L1D-80 H-1); M2 D5-14; M3 D5-31; M4 commit `40d65f16` sin trailer `Test-Removal`; M5 ocho changes de arrastre; M6 US-242 AC-9 y US-233b AC-9 sin historia.
 - Corrección a la auditoría: «US-111 AC-6» **no es un hueco**; US-111 tiene AC-1 a AC-5 y el AC-6 citado es de US-110, con sus tests.
 
@@ -101,7 +101,7 @@ Detalle en [`S5-trazabilidad.md`](S5-trazabilidad.md) y `backlog/03-trazabilidad
 ## 8. Pendientes de decisión del humano
 
 - Aprobar o rechazar cada mejora del §7 (por número).
-- Triage de las alertas #14 y #15 (corregir o descartar con motivo) para recuperar L1D-80 y L1D-91 y llegar a 17/25.
+- ~~Triage de las alertas #14 y #15~~ **hecho (2026-11-04)**: descartadas como falso positivo junto con la #12; L1D-80 y L1D-91 recuperadas (17/25).
 - Estado de L1D-248 en Linear (figura en Done).
 - Hito de Linear: las 6 historias movidas siguen en «Sprint 5».
 - Firmas DEC-01 (L1D-92) y DEC-11 (L1D-125); revisión del dorado (L1D-299) y de los 4 casos de `opciones` (L1D-246); curaduría de L1D-119; H-1, H-2 y H-5 de L1D-268.
