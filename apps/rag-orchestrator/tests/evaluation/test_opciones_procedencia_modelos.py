@@ -56,6 +56,8 @@ def test_medir_opciones_conserva_los_modelos_del_meta_cuando_hay_respuesta() -> 
     config = cargar_config_opciones(CONFIG, cargar_config_suite(CONFIG, {}))
     dataset = cargar_dataset_opciones(config.suite.dataset)
 
-    medida = asyncio.run(medir_opciones(config, dataset, RelojFijo(), OrigenLocal({}, None, lambda: 0.0)))
+    medida = asyncio.run(
+        medir_opciones(config, dataset, RelojFijo(), OrigenLocal({}, None, lambda: 0.0))
+    )
 
     assert set(medida.modelos_respondidos) == {"embeddings", "reranker", "nli"}

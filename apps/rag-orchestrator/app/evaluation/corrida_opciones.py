@@ -84,6 +84,7 @@ from app.evaluation.rotulo import rotular_validada
 from app.evaluation.rutas import raiz_repo
 from app.schemas.generated.models import (
     EvidenceOption,
+    RagMeta,
     RagQueryInternalResponse,
     SourceApplicability,
 )
@@ -158,6 +159,7 @@ async def medir_opciones(
     servicio = servicio_de_la_familia(config, dataset, reloj, origen)
     analisis: list[AnalisisDeOpciones] = []
     resultados: list[ResultadoConsulta] = []
+    modelos_respondidos: dict[str, str] = {}
     for indice, pregunta in enumerate(dataset.base.preguntas):
         caso = dataset.caso_de(pregunta.id)
         base = solicitud_del_caso(dataset.contextos[caso.paciente])
@@ -168,9 +170,23 @@ async def medir_opciones(
             await _analisis_de(servicio, dataset, pregunta.id, pregunta.texto, resultado, respuesta)
         )
         resultados.append(resultado)
+        if respuesta is not None and not modelos_respondidos:
+            modelos_respondidos = _modelos_de_recuperacion(respuesta.meta)
     return MedicionDeOpciones(
-        tuple(analisis), tuple(resultados), servicio.verificador_produccion.version
+        tuple(analisis),
+        tuple(resultados),
+        servicio.verificador_produccion.version,
+        modelos_respondidos,
     )
+
+
+def _modelos_de_recuperacion(meta: RagMeta) -> dict[str, str]:
+    """Embeddings, reranker y NLI tal como los declaró el servicio (``<modelo>@<revisión>#sha256:<hash>``)."""
+    return {
+        "embeddings": meta.embeddingModel,
+        "reranker": meta.rerankerModel,
+        "nli": meta.nliModel,
+    }
 
 
 def servicio_de_la_familia(
@@ -464,7 +480,9 @@ def _reporte(
     return {
         "esquema": VERSION_ESQUEMA,
         "suite": SUITE_OPCIONES,
-        "configuracion": _configuracion(config, dataset, medido.version_de_la_lista),
+        "configuracion": _configuracion(
+            config, dataset, medido.version_de_la_lista, medido.modelos_respondidos
+        ),
         "metricas": _metricas(medido),
         "alcance_de_la_revision": ALCANCE_DE_LA_REVISION,
         "metricas_validadas": _metricas(revisadas),
@@ -476,7 +494,10 @@ def _reporte(
 
 
 def _configuracion(
-    config: ConfigOpciones, dataset: DatasetOpciones, version_de_la_lista: str
+    config: ConfigOpciones,
+    dataset: DatasetOpciones,
+    version_de_la_lista: str,
+    modelos_respondidos: Mapping[str, str],
 ) -> dict[str, Any]:
     suite = config.suite
     u = suite.umbrales
@@ -490,7 +511,7 @@ def _configuracion(
         "reloj": suite.reloj,
         "catalogVersion": suite.catalogo_version,
         "maxOptions": config.max_options,
-        "modelos": {"llm": suite.llm_modelo},
+        "modelos": {"llm": suite.llm_modelo, **modelos_respondidos},
         "umbrales": {
             "relevanceThreshold": u.relevance_threshold,
             "nliEntailmentThreshold": u.nli_entailment_threshold,
