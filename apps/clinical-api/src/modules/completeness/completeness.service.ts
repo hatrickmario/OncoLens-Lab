@@ -11,6 +11,7 @@ import {
 import type {
   CatalogoDeDatosCriticos,
   ChecklistDelPaciente,
+  CompletenessEnLote,
   CompletenessService,
   DatosCriticosDeUnTipo,
   ItemDeDatoCritico,
@@ -18,6 +19,7 @@ import type {
   RegistroDeDato,
   RegistrosDeCompletitud,
   RegistrosPorEntidad,
+  ResultadoDelChecklist,
 } from './ports.js';
 
 export interface DependenciasDelServicio {
@@ -94,9 +96,12 @@ async function itemsDelTipoDeCancer(
  */
 export function createCompletenessService(
   dependencias: DependenciasDelServicio,
-): CompletenessService {
+): CompletenessService & CompletenessEnLote {
   const { registros, catalogo, tiposHabilitados } = dependencias;
   return {
+    async calcularVarios(): Promise<ReadonlyMap<string, ResultadoDelChecklist>> {
+      throw new Error('no implementado');
+    },
     async calcular(patientId): Promise<ChecklistDelPaciente> {
       const catalogVersion = catalogo.version();
       const { Diagnosis: diagnosticos = [] } = await registros.registrosSinFiltrarPorRevision(

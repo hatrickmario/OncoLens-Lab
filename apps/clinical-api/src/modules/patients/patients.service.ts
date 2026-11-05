@@ -4,7 +4,7 @@ import type {
   PatientPage,
   PatientSummary,
 } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
-import type { CompletenessService } from '../completeness/ports.js';
+import type { CompletenessEnLote, CompletenessService } from '../completeness/ports.js';
 import type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
 import type { IdentidadParcial, IdentityService } from './identity.service.js';
 import type {
@@ -47,7 +47,7 @@ export interface DependenciasDelService {
   identidad: IdentityService;
   tiposHabilitados: TiposDeCancerHabilitados;
   /** Solo para la ficha: el listado y la búsqueda no lo invocan (Q2, D7b). */
-  completitud: CompletenessService;
+  completitud: CompletenessService & CompletenessEnLote;
   /** `PATIENTS_PAGE_SIZE` (RN-22). */
   pageSize: number;
 }

@@ -2,8 +2,12 @@ import { readFileSync } from 'node:fs';
 import type { Express } from 'express';
 import { componerCompletitud } from '../../src/modules/completeness/completeness.module.js';
 import { completenessController } from '../../src/modules/completeness/completeness.controller.js';
-import type { CompletenessService } from '../../src/modules/completeness/ports.js';
+import type {
+  CompletenessEnLote,
+  CompletenessService,
+} from '../../src/modules/completeness/ports.js';
 import { crearTiposHabilitados } from '../../src/modules/evidence-analysis/tipos-habilitados.js';
+import type { Consultador } from '../../src/modules/auth/auth.repository.js';
 import { appConAuth } from './app-auth.js';
 import { RUTA_CATALOGO_TEST_1_0_0, leerTexto } from './completitud.js';
 import { AHORA, TRACE_ID_GENERADO, type MundoDeGateway } from './gateway.js';
@@ -32,9 +36,9 @@ export interface AppDeCompletitud {
 }
 
 export function servicioDeCompletitud(
-  mundo: MundoDeGateway,
+  mundo: { readonly cliente: Consultador },
   opciones: OpcionesDeCompletitud = {},
-): CompletenessService {
+): CompletenessService & CompletenessEnLote {
   return componerCompletitud({
     db: mundo.cliente,
     rutaDelCatalogo: opciones.rutaDelCatalogo ?? RUTA_CATALOGO_TEST_1_0_0,

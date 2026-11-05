@@ -177,6 +177,14 @@ function aRegistro(
 
 export function createCompletenessRepository(db: Consultador): RegistrosDeCompletitud {
   return {
+    async existenPacientes(): Promise<ReadonlySet<string>> {
+      throw new Error('no implementado');
+    },
+    async registrosVariosSinFiltrarPorRevision(): Promise<
+      ReadonlyMap<string, RegistrosPorEntidad>
+    > {
+      throw new Error('no implementado');
+    },
     async existePaciente(patientId): Promise<boolean> {
       const { rows } = await db.query('SELECT 1 FROM clinical.patient WHERE id = $1 LIMIT 1', [
         patientId,

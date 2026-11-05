@@ -114,6 +114,9 @@ describe('CompletenessService', () => {
         return true;
       },
       registrosSinFiltrarPorRevision: async () => ({ Diagnosis: [diagnostico('mama')] }),
+      existenPacientes: async () => new Set(),
+      registrosVariosSinFiltrarPorRevision: async (ids) =>
+        new Map(ids.map((id) => [id, { Diagnosis: [diagnostico('mama')] }])),
     };
     const servicio = createCompletenessService({
       registros,

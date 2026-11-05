@@ -85,6 +85,16 @@ export interface RegistrosDeCompletitud {
     patientId: string,
     entidades: readonly string[],
   ): Promise<RegistrosPorEntidad>;
+  /** Los ids de `patientIds` que existen (una consulta para todos); no lee datos clínicos ni de `identity`. */
+  existenPacientes(patientIds: readonly string[]): Promise<ReadonlySet<string>>;
+  /**
+   * Como `registrosSinFiltrarPorRevision` para varios pacientes a la vez: una consulta por entidad pedida, agrupada por
+   * paciente. Todo id pedido aparece en el mapa (con `[]` en las entidades sin filas).
+   */
+  registrosVariosSinFiltrarPorRevision(
+    patientIds: readonly string[],
+    entidades: readonly string[],
+  ): Promise<ReadonlyMap<string, RegistrosPorEntidad>>;
 }
 
 /** Resultado del motor puro: el estado de cada ítem, sin procedencia. */
@@ -123,7 +133,23 @@ export interface ChecklistDelPaciente {
   readonly items: readonly ItemDelChecklist[];
 }
 
+/**
+ * Resultado del cálculo de un paciente dentro de un lote: el fallo de uno (`no_disponible`, con su error para quien
+ * deba relanzarlo o registrar su clase) nunca afecta a los demás (RN-26).
+ */
+export type ResultadoDelChecklist =
+  | { readonly estado: 'ok'; readonly checklist: ChecklistDelPaciente }
+  | { readonly estado: 'no_disponible'; readonly error: unknown };
+
 export interface CompletenessService {
   /** Lanza `PacienteNoEncontradoError` si el paciente no existe. */
   calcular(patientId: string): Promise<ChecklistDelPaciente>;
+}
+
+/** El cálculo por lotes (listado y búsqueda); aparte de `CompletenessService` para que quien solo calcula uno no lo implemente. */
+export interface CompletenessEnLote {
+  /** El checklist de cada paciente con la misma regla que `calcular`, con lecturas acotadas e independientes de su número. */
+  calcularVarios(
+    patientIds: readonly string[],
+  ): Promise<ReadonlyMap<string, ResultadoDelChecklist>>;
 }
