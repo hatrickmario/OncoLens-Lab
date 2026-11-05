@@ -16,9 +16,9 @@ function datos(campos: Record<string, string>): FormData {
 describe('cuerpoDeCorreccionDeBiomarcador', () => {
   it('omite performedAt cuando la fecha es la original', () => {
     const cuerpo = cuerpoDeCorreccionDeBiomarcador(
-      datos({ value: '25', unit: '%', performedAt: '2026-10-20' }),
+      datos({ value: '25', unit: '%', performedAt: '2026-09-10' }),
       '%',
-      '2026-10-20',
+      '2026-09-10',
     );
 
     expect(cuerpo).toEqual({ value: '25', unit: '%' });
@@ -26,19 +26,19 @@ describe('cuerpoDeCorreccionDeBiomarcador', () => {
 
   it('incluye performedAt cuando la fecha cambió', () => {
     const cuerpo = cuerpoDeCorreccionDeBiomarcador(
-      datos({ value: '25', unit: '%', performedAt: '2026-10-21' }),
+      datos({ value: '25', unit: '%', performedAt: '2026-09-11' }),
       '%',
-      '2026-10-20',
+      '2026-09-10',
     );
 
-    expect(cuerpo).toEqual({ value: '25', unit: '%', performedAt: '2026-10-21' });
+    expect(cuerpo).toEqual({ value: '25', unit: '%', performedAt: '2026-09-11' });
   });
 
   it('omite performedAt cuando la fecha original trae hora y el día es el mismo', () => {
     const cuerpo = cuerpoDeCorreccionDeBiomarcador(
-      datos({ value: '25', unit: '', performedAt: '2026-10-20' }),
+      datos({ value: '25', unit: '', performedAt: '2026-09-10' }),
       undefined,
-      '2026-10-20T00:00:00Z',
+      '2026-09-10T00:00:00Z',
     );
 
     expect(cuerpo).toEqual({ value: '25' });
@@ -48,7 +48,7 @@ describe('cuerpoDeCorreccionDeBiomarcador', () => {
     const cuerpo = cuerpoDeCorreccionDeBiomarcador(
       datos({ value: '25', unit: '', performedAt: '' }),
       null,
-      '2026-10-20',
+      '2026-09-10',
     );
 
     expect(cuerpo).toEqual({ value: '25' });

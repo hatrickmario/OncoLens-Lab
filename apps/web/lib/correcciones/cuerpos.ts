@@ -9,20 +9,24 @@ import {
 import { mensajes } from '../mensajes';
 import type { ErrorDeCorreccion } from './cliente';
 
+/** Día `YYYY-MM-DD` de una fecha del contrato, sin pasar por `Date` (evita el corrimiento por zona horaria). */
+export const soloElDia = (fecha: string): string => fecha.slice(0, 10);
+
 const texto = (datos: FormData, campo: string): string => String(datos.get(campo) ?? '').trim();
 
 /** Cuerpo de `correctBiomarker` desde el formulario: lo vacío no se envía; borrar una unidad existente envía `null`. */
 export function cuerpoDeCorreccionDeBiomarcador(
   datos: FormData,
   unidadActual: string | null | undefined,
-  _fechaActual?: string,
+  fechaActual?: string,
 ): BiomarkerCorrection {
   const unidad = texto(datos, 'unit');
   const fecha = texto(datos, 'performedAt');
+  const fechaCambio = fecha !== '' && fecha !== (fechaActual && soloElDia(fechaActual));
   return {
     value: texto(datos, 'value'),
     ...(unidad !== '' ? { unit: unidad } : unidadActual ? { unit: null } : {}),
-    ...(fecha !== '' && { performedAt: fecha }),
+    ...(fechaCambio && { performedAt: fecha }),
   };
 }
 
@@ -50,8 +54,11 @@ function primerErrorDe(
 /** Validación de UX con el Zod del contrato; clinical-api y el BFF vuelven a validar. `null` si el cuerpo es válido. */
 export function errorDelCuerpoDeBiomarcador(
   cuerpo: BiomarkerCorrection,
-  _hoy?: string,
+  hoy: string,
 ): ErrorDeCorreccion | null {
+  if (cuerpo.performedAt !== undefined && cuerpo.performedAt > soloElDia(hoy)) {
+    return { campo: 'performedAt', mensaje: mensajes().ficha.correccion.errores.fechaFutura };
+  }
   return primerErrorDe(zBiomarkerCorrection.safeParse(cuerpo), 'value');
 }
 

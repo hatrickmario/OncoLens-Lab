@@ -338,14 +338,14 @@ const ki67 = {
   ...biomarcadorCorregido,
   supersedesId: undefined,
   value: '20',
-  performedAt: '2026-10-20',
+  performedAt: '2026-09-10',
 };
 const reNegativo = {
   ...her2,
   name: 'RE',
   value: 'Negativo',
   unit: null,
-  performedAt: '2026-10-01',
+  performedAt: '2026-09-01',
   provenance: { ...her2.provenance, reviewStatus: 'requiere_revision', conflict: true },
 };
 
@@ -364,7 +364,7 @@ describe('Corrección en línea: precarga de valor, unidad y fecha del examen', 
 
     expect((screen.getByLabelText(formulario.valor) as HTMLInputElement).value).toBe('20');
     expect((screen.getByLabelText(formulario.unidad) as HTMLInputElement).value).toBe('%');
-    expect((screen.getByLabelText(formulario.fecha) as HTMLInputElement).value).toBe('2026-10-20');
+    expect((screen.getByLabelText(formulario.fecha) as HTMLInputElement).value).toBe('2026-09-10');
   });
 
   it('indica Unidad (opcional) con Sin unidad y ayuda en RE cualitativo sin unidad [D5 feedback 1]', async () => {
@@ -400,11 +400,15 @@ describe('Corrección en línea: precarga de valor, unidad y fecha del examen', 
     await abrirCorreccion(usuario);
     const fecha = screen.getByLabelText(formulario.fecha);
     await usuario.clear(fecha);
-    await usuario.type(fecha, '2026-10-21');
+    await usuario.type(fecha, '2026-09-11');
     await usuario.click(screen.getByRole('button', { name: formulario.guardar }));
 
     await waitFor(() => expect(bff.peticiones).toHaveLength(1));
-    expect(bff.peticiones[0]?.cuerpo).toEqual({ value: '20', unit: '%', performedAt: '2026-10-21' });
+    expect(bff.peticiones[0]?.cuerpo).toEqual({
+      value: '20',
+      unit: '%',
+      performedAt: '2026-09-11',
+    });
   });
 
   it('no desplaza la fecha por zona horaria cuando el reloj está en UTC-5 [D5 feedback 1]', async () => {
@@ -414,7 +418,9 @@ describe('Corrección en línea: precarga de valor, unidad y fecha del examen', 
       const usuario = montarTabla([reNegativo]);
       await abrirCorreccion(usuario);
 
-      expect((screen.getByLabelText(formulario.fecha) as HTMLInputElement).value).toBe('2026-10-01');
+      expect((screen.getByLabelText(formulario.fecha) as HTMLInputElement).value).toBe(
+        '2026-09-01',
+      );
     } finally {
       if (zona === undefined) delete process.env.TZ;
       else process.env.TZ = zona;

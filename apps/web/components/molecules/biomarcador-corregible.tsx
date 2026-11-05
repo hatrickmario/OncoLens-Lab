@@ -67,6 +67,7 @@ export function BiomarcadorCorregible({
         <FilaAncha columnas={columnas}>
           <FormularioDeCorreccionDeBiomarcador
             biomarcador={biomarcador}
+            hoy={hoy}
             dato={dato}
             alGuardar={() => {
               setCorrigiendo(false);
