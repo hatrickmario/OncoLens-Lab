@@ -1,0 +1,31 @@
+# Tasks — d5fb-03-corregir-dato-precarga-fecha-unidad
+
+> Origen: feedback de la Demo 5 (2026-11-05), sin L1D asignado (crear historia en Linear solo con aprobación del usuario).
+> Sin dependencias bloqueantes ni cambio de contrato. Matriz TDD (CLAUDE.md): componentes y helpers de `web` → test del AC
+> primero (commit `test` en rojo, luego `feat`); textos → test después. MSW solo en el HTTP saliente, handlers desde
+> `contracts/examples/`; nunca `vi.mock` de módulos propios; reloj inyectado; nunca `.skip`/`.only`/`it.todo`.
+
+## 1. frontend
+
+- [ ] 1.1 (test del AC primero) Tests en rojo, ampliando `apps/web/tests/ui/correccion-con-historico.test.tsx` y el
+  unitario de `lib/correcciones/cuerpos.ts`, según `design.md` §Pruebas: "precarga valor, unidad y fecha del examen de
+  Ki-67 [D5 feedback 1]", "indica Unidad (opcional) con Sin unidad y ayuda en RE cualitativo sin unidad", "conserva ng/mL
+  y envía null al borrarla", "envía performedAt solo si cambió", "no desplaza la fecha por zona horaria", "rechaza fecha
+  futura junto al campo sin enviar", "corregir un dato por revisar y en conflicto deja el anterior reemplazado [RN-08]",
+  y regresión de egresado/foco. Esqueleto sin implementación. Commit `test(...)`.
+- [ ] 1.2 (test del AC primero) Implementar: `FormularioDeCorreccionDeBiomarcador` recibe el `Biomarker` completo
+  (`performedAt`, `unit`) y el `hoy`; `BiomarcadorCorregible` se los pasa; `defaultValue` de fecha (10 primeros
+  caracteres, sin `Date`), `max={hoy}`; unidad con etiqueta opcional, `placeholder` y ayuda `aria-describedby`;
+  `cuerpoDeCorreccionDeBiomarcador(datos, unidadActual, fechaActual)` omite `performedAt` si no cambió;
+  `errorDelCuerpoDeBiomarcador` rechaza fecha futura con `errores.fechaFutura` (reloj inyectado). Commit `feat(...)`.
+- [ ] 1.3 Textos en `apps/web/messages/es.json` (`ficha.correccion.formulario`: `unidad` → «Unidad (opcional)»,
+  `sinUnidad`, `ayudaUnidad`, `fecha` → «Fecha del examen»), sin términos prohibidos (RN-23); correr el lint de textos.
+- [ ] 1.4 Refactor en verde (p. ej. extraer la normalización de la fecha a `lib/correcciones`), tests antes y después,
+  sin cambio de comportamiento; la cobertura del módulo no baja.
+- [ ] 1.5 `visual-check` en 375 y 1280 px contra el seed sintético, paciente (f): formulario de Ki-67 y de RE, consola
+  sin errores, solo `/api/*` del mismo origen, orden de foco y `Esc`.
+
+## 2. cierre
+
+- [ ] 2.1 Verificación: `npm test` de `web`, lint y `contracts:check` sin diferencias (no se esperan cambios en
+  `openapi.yaml`); registrar en el PR la evidencia ejecutada y esperar CI en verde antes de pedir el merge.
