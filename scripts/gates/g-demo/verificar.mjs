@@ -21,6 +21,7 @@ import { evaluarP95 } from './p95.mjs';
 import {
   DUENO,
   PATRON_DE_COMMIT,
+  PATRON_DE_MODELO,
   PATRON_DE_VERSION_O_MODELO,
   enteroSeguro,
   listaDeAvisos,
@@ -104,7 +105,12 @@ function procedenciaDe(e2e, reportes) {
   return { valores, faltantes, motivos: faltantes.length > 0 ? ['procedencia incompleta'] : [] };
 }
 
-const modelosDe = (reportes) => reportes.map((r) => r?.configuracion?.modelos).find(Boolean) ?? {};
+/** Cada modelo sale del primer reporte que lo declara: los reportes históricos solo traen el LLM (D5-55). */
+const modelosDe = (reportes) =>
+  reportes
+    .map((r) => r?.configuracion?.modelos)
+    .filter(Boolean)
+    .reduceRight((acumulado, modelos) => ({ ...acumulado, ...modelos }), {});
 
 function leerP95(args) {
   const valor = Number(args.p95);
@@ -140,7 +146,7 @@ function reunirComprobaciones({ args, modo, deps }) {
 function armarDatosDelRegistro({ veredicto, comprobaciones, reportes, args, modo, fecha }) {
   const modelos = modelosDe(reportes);
   const { procedencia, soloSintetico, metricas, excepciones, p95 } = comprobaciones;
-  const modelo = (nombre) => valorOTexto(valorSeguro(modelos[nombre], PATRON_DE_VERSION_O_MODELO));
+  const modelo = (nombre) => valorOTexto(valorSeguro(modelos[nombre], PATRON_DE_MODELO));
   return {
     titulo: veredicto.titulo,
     resultado: veredicto.resultado,
