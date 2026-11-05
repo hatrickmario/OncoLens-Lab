@@ -107,3 +107,13 @@ Detalle en [`S5-trazabilidad.md`](S5-trazabilidad.md) y `backlog/03-trazabilidad
 - Firmas DEC-01 (L1D-92) y DEC-11 (L1D-125); revisión del dorado (L1D-299) y de los 4 casos de `opciones` (L1D-246); curaduría de L1D-119; H-1, H-2 y H-5 de L1D-268.
 - Informes de `evaluate` a `reports/eval/` (M1).
 - ¿Un PR aparte para archivar los 8 changes de arrastre (M5)? Varios tienen tareas sin ID destino.
+
+## 9. Prioridades del S6 añadidas por el usuario (2026-11-05, tras la Demo 5)
+
+Insumo para `/sprint-refine S6`; no cambia el slicing por sí solo (cualquier ajuste de puntos requiere su aprobación).
+
+1. **Ampliar el corpus del RAG (L1D-119, US-120) es prioridad del S6 y no se recorta.** Encaja en el primer lugar del orden de E-15 (RAG de conocimiento → búsqueda por datos del paciente → OCR → usuarios). Punto de partida medido en la Demo 5 (Milvus, `is_current`): **10 documentos y 310 chunks**; mama 5 documentos (161 chunks) y próstata 5 (149), de 2 fuentes (NCI y PMC Open Access), 8 de 10 en inglés. Meta de US-120: ≥ 20 documentos por tipo de ≥ 3 fuentes distintas, solo las de ADR-36 y con licencia aceptada por documento (RN-21).
+   - Entra con sus deudas: **D5-09** (curaduría y descarga de ~40 documentos, con red) y **D5-08** (corrida nocturna: ingesta real, `reindex-sparse`, población en abanico, barridos de umbrales y baseline por tipo e idioma).
+   - Riesgo a decidir en el refinamiento: cada documento nuevo pasa por la extracción de población (ADR-47) con el LLM local, y los umbrales se calibraron con 10 documentos; `evaluate` (OL-06) es obligatoria en el PR.
+   - Solo hay 2 documentos en español (ambos «para pacientes»): conviene que la curaduría incluya fuentes en español.
+2. **Feedback de la Demo 5** (changes `d5fb-01` … `d5fb-05`, sin L1D asignado): ver `openspec/changes/d5fb-*`. Crear sus historias en Linear solo con aprobación del usuario.
