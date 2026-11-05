@@ -22,7 +22,7 @@
   `sinUnidad`, `ayudaUnidad`, `fecha` → «Fecha del examen»), sin términos prohibidos (RN-23); correr el lint de textos.
 - [x] 1.4 Refactor en verde (p. ej. extraer la normalización de la fecha a `lib/correcciones`), tests antes y después,
   sin cambio de comportamiento; la cobertura del módulo no baja. Resultado: refactor sin cambios (el helper `soloElDia` ya nació extraído en `lib/correcciones/cuerpos.ts`; formulario 86 líneas).
-- [ ] 1.5 PENDIENTE: el stack de la demo ejecuta la imagen de `main` y `clinical-api` no publica puerto al host, así que no se pudo servir esta rama contra él sin tocar el Compose. `visual-check` en 375 y 1280 px contra el seed sintético, paciente (f): formulario de Ki-67 y de RE, consola
+- [x] 1.5 `visual-check` (ver el bloque al final) en 375 y 1280 px contra el seed sintético, paciente (f): formulario de Ki-67 y de RE, consola
   sin errores, solo `/api/*` del mismo origen, orden de foco y `Esc`.
 
 ## Deuda
@@ -37,12 +37,17 @@
 ## visual-check
 
 ## visual-check · d5fb-03 · 2026-11-05
-Veredicto: PENDIENTE (no se pudo iniciar sesión)
-Stack: imagen web de esta rama construida y servida como contenedor temporal en 127.0.0.1:3100 (red `oncolens_clinical-net`, sin tocar el stack); `/login` respondió 200 y el contenedor y la imagen ya se eliminaron; `docker ps` del stack quedó idéntico.
+Veredicto: PASS (con una nota ⚠ de foco, preexistente)
+Stack: imagen web de esta rama como contenedor temporal en 127.0.0.1:3100 (red `oncolens_clinical-net`, origen permitido `http://localhost:3100`; se navega por `localhost` porque la cookie es `Secure`), seed sintético, paciente (f); no se guardó ninguna corrección.
 | Paso | Ruta / estado | Resultado | Evidencia |
 |---|---|---|---|
-| Estados | ficha del paciente (f): Ki-67, RE, fecha futura | no ejecutado | sin sesión: el clasificador de permisos denegó exponer la contraseña del seed al navegador |
-| Red | todas | no ejecutado | — |
-| Consola, teclado, capturas 375/1280 | — | no ejecutado | — |
+| Estados | Ki-67 «20 %» | ✓ | campos Valor `20 %`, «Unidad (opcional)» vacía con «Sin unidad» y ayuda «Déjala vacía si el resultado no lleva unidad.», «Fecha del examen» `2026-10-02`, `max` = `2026-11-05` (hoy del servidor) |
+| Estados | RE «Negativo» (en conflicto) | ✓ | mismos campos; fecha `2026-10-09`, unidad vacía con marcador y ayuda |
+| Estados | Fecha futura `2099-01-01` | ✓ | error «La fecha no puede ser posterior a hoy.» junto al campo, `aria-invalid=true`, 0 peticiones POST/PATCH/DELETE |
+| Teclado | Corregir dato → formulario | ✓ | Tab recorre Valor, Unidad, Fecha, sin trampas |
+| Teclado | Cancelar | ⚠ | el formulario se cierra pero el foco cae al inicio del documento (no vuelve a «Corregir dato»); comportamiento previo de l1d-309, fuera de este change |
+| Consola | ficha (f) | ✓ 0 errores, 0 advertencias, 0 violaciones CSP | — |
+| Red | todas | ✓ | único origen `http://localhost:3100`; ninguna petición a clinical-api ni a terceros; sin identidad en URLs (solo UUID) |
+| Rendimiento | ficha | ✓ | DOMContentLoaded 37 ms (laboratorio local) |
+| Capturas | 375 / 1280 | ✓ | sin scroll horizontal a 375 px; capturas fuera del repo |
 Fallos convertidos en tests: ninguno
-Para completarlo: sesión iniciada por el humano en el navegador, o autorización para leer la contraseña del seed.
