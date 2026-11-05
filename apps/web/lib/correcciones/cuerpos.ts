@@ -15,6 +15,7 @@ const texto = (datos: FormData, campo: string): string => String(datos.get(campo
 export function cuerpoDeCorreccionDeBiomarcador(
   datos: FormData,
   unidadActual: string | null | undefined,
+  _fechaActual?: string,
 ): BiomarkerCorrection {
   const unidad = texto(datos, 'unit');
   const fecha = texto(datos, 'performedAt');
@@ -47,7 +48,10 @@ function primerErrorDe(
 }
 
 /** Validación de UX con el Zod del contrato; clinical-api y el BFF vuelven a validar. `null` si el cuerpo es válido. */
-export function errorDelCuerpoDeBiomarcador(cuerpo: BiomarkerCorrection): ErrorDeCorreccion | null {
+export function errorDelCuerpoDeBiomarcador(
+  cuerpo: BiomarkerCorrection,
+  _hoy?: string,
+): ErrorDeCorreccion | null {
   return primerErrorDe(zBiomarkerCorrection.safeParse(cuerpo), 'value');
 }
 

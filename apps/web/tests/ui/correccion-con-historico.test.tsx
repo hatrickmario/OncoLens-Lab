@@ -119,7 +119,8 @@ describe('Corrección con histórico en la ficha', () => {
     const usuario = montarTabla();
     await abrirCorreccion(usuario);
 
-    await usuario.type(screen.getByLabelText(correccion.formulario.fecha), '2099-01-01');
+    await usuario.clear(screen.getByLabelText(correccion.formulario.fecha));
+    await usuario.type(screen.getByLabelText(correccion.formulario.fecha), HOY);
     await usuario.click(screen.getByRole('button', { name: correccion.formulario.guardar }));
 
     const mensaje = await screen.findByText('La fecha no puede ser posterior a hoy.');
@@ -128,7 +129,7 @@ describe('Corrección con histórico en la ficha', () => {
     expect(campo.getAttribute('aria-invalid')).toBe('true');
     expect(campo.getAttribute('aria-describedby')).toContain(mensaje.id);
     expect(screen.getByRole('button', { name: correccion.formulario.guardar })).toBeTruthy();
-    expect(bff.peticiones[0]?.cuerpo).toEqual({ value: '3+ (IHQ)', performedAt: '2099-01-01' });
+    expect(bff.peticiones[0]?.cuerpo).toEqual({ value: '3+ (IHQ)', performedAt: HOY });
     expect(refresh).not.toHaveBeenCalled();
   });
 
@@ -329,5 +330,127 @@ describe('Corrección con histórico en la ficha', () => {
     const fecha = within(historico).getAllByText('hace 12 días')[0]!.closest('time');
     expect(fecha?.getAttribute('datetime')).toBe('2026-09-10');
     expect(fecha?.getAttribute('title')).toBe('10/09/2026');
+  });
+});
+
+const { formulario } = correccion;
+const ki67 = {
+  ...biomarcadorCorregido,
+  supersedesId: undefined,
+  value: '20',
+  performedAt: '2026-10-20',
+};
+const reNegativo = {
+  ...her2,
+  name: 'RE',
+  value: 'Negativo',
+  unit: null,
+  performedAt: '2026-10-01',
+  provenance: { ...her2.provenance, reviewStatus: 'requiere_revision', conflict: true },
+};
+
+describe('Corrección en línea: precarga de valor, unidad y fecha del examen', () => {
+  beforeAll(bff.iniciar);
+  afterAll(bff.detener);
+  afterEach(() => {
+    cleanup();
+    bff.reiniciar();
+    refresh.mockReset();
+  });
+
+  it('precarga valor, unidad y fecha del examen de Ki-67 [D5 feedback 1]', async () => {
+    const usuario = montarTabla([ki67]);
+    await abrirCorreccion(usuario);
+
+    expect((screen.getByLabelText(formulario.valor) as HTMLInputElement).value).toBe('20');
+    expect((screen.getByLabelText(formulario.unidad) as HTMLInputElement).value).toBe('%');
+    expect((screen.getByLabelText(formulario.fecha) as HTMLInputElement).value).toBe('2026-10-20');
+  });
+
+  it('indica Unidad (opcional) con Sin unidad y ayuda en RE cualitativo sin unidad [D5 feedback 1]', async () => {
+    const usuario = montarTabla([reNegativo]);
+    await abrirCorreccion(usuario);
+
+    const unidad = screen.getByLabelText('Unidad (opcional)') as HTMLInputElement;
+    expect(unidad.value).toBe('');
+    expect(unidad.getAttribute('placeholder')).toBe('Sin unidad');
+    const ayuda = screen.getByText('Déjala vacía si el resultado no lleva unidad.');
+    expect(unidad.getAttribute('aria-describedby')).toContain(ayuda.id);
+    expect(screen.getByLabelText('Fecha del examen')).toBeTruthy();
+  });
+
+  it('conserva ng/mL precargada y envía null al borrar la unidad [D5 feedback 1]', async () => {
+    bff.corregirBiomarcador(201, biomarcadorCorregido);
+    const psa = { ...ki67, name: 'PSA', value: '4,2', unit: 'ng/mL' };
+    const usuario = montarTabla([psa]);
+    await abrirCorreccion(usuario);
+    const unidad = screen.getByLabelText(formulario.unidad) as HTMLInputElement;
+    expect(unidad.value).toBe('ng/mL');
+
+    await usuario.clear(unidad);
+    await usuario.click(screen.getByRole('button', { name: formulario.guardar }));
+
+    await waitFor(() => expect(bff.peticiones).toHaveLength(1));
+    expect(bff.peticiones[0]?.cuerpo).toEqual({ value: '4,2', unit: null });
+  });
+
+  it('envía performedAt solo si la fecha cambió [D5 feedback 1]', async () => {
+    bff.corregirBiomarcador(201, biomarcadorCorregido);
+    const usuario = montarTabla([ki67]);
+    await abrirCorreccion(usuario);
+    const fecha = screen.getByLabelText(formulario.fecha);
+    await usuario.clear(fecha);
+    await usuario.type(fecha, '2026-10-21');
+    await usuario.click(screen.getByRole('button', { name: formulario.guardar }));
+
+    await waitFor(() => expect(bff.peticiones).toHaveLength(1));
+    expect(bff.peticiones[0]?.cuerpo).toEqual({ value: '20', unit: '%', performedAt: '2026-10-21' });
+  });
+
+  it('no desplaza la fecha por zona horaria cuando el reloj está en UTC-5 [D5 feedback 1]', async () => {
+    const zona = process.env.TZ;
+    process.env.TZ = 'America/Bogota';
+    try {
+      const usuario = montarTabla([reNegativo]);
+      await abrirCorreccion(usuario);
+
+      expect((screen.getByLabelText(formulario.fecha) as HTMLInputElement).value).toBe('2026-10-01');
+    } finally {
+      if (zona === undefined) delete process.env.TZ;
+      else process.env.TZ = zona;
+    }
+  });
+
+  it('rechaza una fecha futura junto al campo sin enviar y limita max al hoy del servidor [D5 feedback 1]', async () => {
+    const usuario = montarTabla([ki67]);
+    await abrirCorreccion(usuario);
+    const fecha = screen.getByLabelText(formulario.fecha);
+    expect(fecha.getAttribute('max')).toBe(HOY);
+
+    await usuario.clear(fecha);
+    await usuario.type(fecha, '2099-01-01');
+    await usuario.click(screen.getByRole('button', { name: formulario.guardar }));
+
+    const mensaje = await screen.findByText(correccion.errores.fechaFutura);
+    expect(fecha.getAttribute('aria-describedby')).toContain(mensaje.id);
+    expect(bff.peticiones).toHaveLength(0);
+  });
+
+  it('corrige un dato por revisar y en conflicto con una corrección nueva, sin sobrescribir [RN-08, D5 feedback 1]', async () => {
+    bff.corregirBiomarcador(201, biomarcadorCorregido);
+    const usuario = montarTabla([reNegativo]);
+    await abrirCorreccion(usuario);
+    const valor = screen.getByLabelText(formulario.valor);
+    await usuario.clear(valor);
+    await usuario.type(valor, 'Positivo');
+    await usuario.click(screen.getByRole('button', { name: formulario.guardar }));
+
+    await waitFor(() => expect(bff.peticiones).toHaveLength(1));
+    expect(bff.peticiones[0]).toMatchObject({
+      metodo: 'POST',
+      url: expect.stringContaining(`/biomarkers/${her2.id}/corrections`),
+      cuerpo: { value: 'Positivo' },
+    });
+    expect(await screen.findByText(correccion.avisoAnalisisAnteriores)).toBeTruthy();
   });
 });
