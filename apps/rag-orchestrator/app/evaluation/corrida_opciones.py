@@ -18,7 +18,7 @@ import copy
 import sys
 import time
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -105,6 +105,8 @@ class MedicionDeOpciones:
     resultados: tuple[ResultadoConsulta, ...]
     version_de_la_lista: str
     """Versión de la lista de términos prohibidos con la que se midió M-10.2 (RN-23)."""
+    modelos_respondidos: Mapping[str, str] = field(default_factory=dict)
+    """Embeddings, reranker y NLI que respondieron (``meta`` de la respuesta); vacío si ninguna respondió (D5-55)."""
 
 
 Medidor = Callable[[ConfigOpciones, DatasetOpciones], MedicionDeOpciones]
