@@ -21,7 +21,9 @@ export LLM_MODEL="${LLM_MODEL:-gemma4:26b-a4b-it-q4_K_M}"
 puerto_ollama="${OLLAMA_PUERTO:-11434}"
 export OLLAMA_HOST="127.0.0.1:${puerto_ollama}" LLM_BASE_URL="http://host.docker.internal:${puerto_ollama}/v1"
 # Ruta de inicio tras el login, igual para médico y administrador: el listado de pacientes (feedback de la Demo 4).
-export WEB_HOME_PATH="/pacientes"
+# El E2E real de G-Demo (apps/web/e2e/g-demo.spec.ts) espera aterrizar en /pacientes/<id>/analisis: para esa corrida,
+# exporta WEB_HOME_PATH antes de levantar (D5-61); sin él, la demo manual conserva el listado.
+export WEB_HOME_PATH="${WEB_HOME_PATH:-/pacientes}"
 # Plazos del demo (RN-22): el p95 de 15 s del NFR no se cumple con consultas variadas (ADR-39 fase B) y una pregunta larga
 # vence a los 30 s con DEADLINE_VENCIDO. El del web debe ser mayor que el de clinical-api hacia rag-orchestrator.
 export RAG_TIMEOUT_MS="${RAG_TIMEOUT_MS:-90000}"
