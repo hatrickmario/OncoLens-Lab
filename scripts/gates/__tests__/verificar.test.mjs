@@ -496,6 +496,67 @@ describe('verify-g-demo: entradas hostiles', () => {
     },
   );
 
+  describe('modelos con la cadena «<modelo>@<revisión>#sha256:<hash>» (D5-55)', () => {
+    const HASH = 'a'.repeat(64);
+    const cadena = (modelo) => `${modelo}@rev-1#sha256:${HASH}`;
+    const reporteConModelos = (modelos) => ({
+      ...REPORTE_OPCIONES,
+      configuracion: { ...REPORTE_OPCIONES.configuracion, modelos },
+    });
+
+    it('copia al registro los modelos de embeddings, reranker y NLI cuando traen revisión y sha256', async () => {
+      const r = await correr({
+        reportes: [
+          reporteConModelos({
+            llm: 'gemma4:e4b',
+            embeddings: cadena('BAAI/bge-m3'),
+            reranker: cadena('BAAI/bge-reranker-v2-m3'),
+            nli: cadena('MoritzLaurer/mDeBERTa-v3-base-xnli'),
+          }),
+        ],
+      });
+
+      expect(r.registro).toContain(`| Modelo de embeddings | ${cadena('BAAI/bge-m3')} |`);
+      expect(r.registro).toContain(`| Modelo de reranker | ${cadena('BAAI/bge-reranker-v2-m3')} |`);
+      expect(r.registro).toMatch(/\| Modelo de NLI \| \S+#sha256:a{64} \|/);
+    });
+
+    it('sigue escribiendo No disponible cuando el sha256 no es hexadecimal de 64 caracteres', async () => {
+      const r = await correr({
+        reportes: [
+          reporteConModelos({ llm: 'gemma4:e4b', embeddings: 'BAAI/bge-m3@rev-1#sha256:xyz' }),
+        ],
+      });
+
+      expect(r.registro).toContain('| Modelo de embeddings | No disponible |');
+    });
+
+    it('sigue escribiendo No disponible cuando la cadena trae texto libre tras el sha256', async () => {
+      const r = await correr({
+        reportes: [
+          reporteConModelos({
+            llm: 'gemma4:e4b',
+            embeddings: `${cadena('BAAI/bge-m3')} texto libre`,
+          }),
+        ],
+      });
+
+      expect(r.registro).toContain('| Modelo de embeddings | No disponible |');
+    });
+
+    it('completa los modelos desde otro reporte cuando el primero solo trae el LLM (reportes históricos)', async () => {
+      const r = await correr({
+        reportes: [
+          reporteConModelos({ llm: 'gemma4:e4b' }),
+          reporteConModelos({ embeddings: cadena('BAAI/bge-m3') }),
+        ],
+      });
+
+      expect(r.registro).toContain('| Modelo de generación | gemma4:e4b |');
+      expect(r.registro).toContain(`| Modelo de embeddings | ${cadena('BAAI/bge-m3')} |`);
+    });
+  });
+
   it('cuenta como procedencia incompleta una versión con caracteres fuera de la lista blanca [US-142 AC-6]', async () => {
     const r = await correr({ e2e: { ...E2E_OK, catalogVersion: 'cat 1; texto libre' } });
 
