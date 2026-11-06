@@ -30,6 +30,10 @@ def _solicitud(
     return solicitud
 
 
+BLOQUES_DEL_EJEMPLO = _ejemplo("chat-turn-faltantes.json")["blocks"]
+"""La respuesta del contrato a la petición ``chat-turn-request-faltantes.json``: el oráculo de los bloques."""
+
+
 def _textos(respuesta) -> list[str]:
     return [b["text"] for b in respuesta.json()["blocks"]]
 
@@ -37,14 +41,13 @@ def _textos(respuesta) -> list[str]:
 @pytest.mark.ac("US-263", 4)
 def test_chat_turn_faltantes_repite_los_mismos_bloques_sin_llamar_al_llm_cuando_se_pregunta_dos_veces():
     entorno = crear_entorno_de_chat("CHAT-OK")
-    esperados = _ejemplo("chat-turn-faltantes.json")["blocks"]
 
     primera = entorno.turno(_solicitud())
     segunda = entorno.turno(_solicitud(hilo_vivo=True))
 
     assert primera.status_code == 200 and segunda.status_code == 200
     assert primera.json()["intent"] == segunda.json()["intent"] == "faltantes"
-    assert primera.json()["blocks"] == segunda.json()["blocks"] == esperados
+    assert primera.json()["blocks"] == segunda.json()["blocks"] == BLOQUES_DEL_EJEMPLO
     assert all(b["kind"] == "faltante" for b in primera.json()["blocks"])
     assert entorno.llm.invocaciones == 0
     assert entorno.contador.consultas == 0
@@ -56,17 +59,12 @@ def test_chat_turn_faltantes_repite_los_mismos_bloques_sin_llamar_al_llm_cuando_
 def test_chat_turn_faltantes_sigue_el_orden_del_catalogo_cuando_la_peticion_los_trae_desordenados():
     entorno = crear_entorno_de_chat("CHAT-OK")
     solicitud = _solicitud()
-    esperados = _textos_esperados()
     random.Random(7).shuffle(solicitud["completeness"])
 
     respuesta = entorno.turno(solicitud)
 
     assert respuesta.status_code == 200
-    assert _textos(respuesta) == esperados
-
-
-def _textos_esperados() -> list[str]:
-    return [b["text"] for b in _ejemplo("chat-turn-faltantes.json")["blocks"]]
+    assert _textos(respuesta) == [b["text"] for b in BLOQUES_DEL_EJEMPLO]
 
 
 def test_chat_turn_faltantes_nombra_los_tipos_de_documento_del_catalogo_cuando_no_se_halla_el_dato():

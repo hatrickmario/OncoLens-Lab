@@ -178,6 +178,14 @@ async function leerDelTipo(
   };
 }
 
+/** Lo que clasifica el vacío de UN paciente, tomado de las lecturas del tipo (sin conflictos ni documentos si no hay). */
+function lecturasDelVacioDe(leidas: LecturasDelTipo, patientId: string): LecturasDelVacio {
+  return {
+    conflictos: leidas.conflictos.get(patientId) ?? {},
+    documentosProcesados: leidas.documentosProcesados.get(patientId) ?? new Set(),
+  };
+}
+
 /** Lee una vez, para todos los pacientes del tipo, sus entidades de destino y calcula cada checklist aislado de los demás. */
 async function calcularDelTipo(
   dependencias: DependenciasDelServicio,
@@ -203,10 +211,7 @@ async function calcularDelTipo(
         paciente,
         datos,
         leidas.registros.get(paciente.patientId) ?? {},
-        {
-          conflictos: leidas.conflictos.get(paciente.patientId) ?? {},
-          documentosProcesados: leidas.documentosProcesados.get(paciente.patientId) ?? new Set(),
-        },
+        lecturasDelVacioDe(leidas, paciente.patientId),
       );
       resultados.set(paciente.patientId, {
         estado: 'ok',
