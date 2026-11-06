@@ -67,7 +67,13 @@ class NodoCaso:
     async def ejecutar(self, estado: EstadoDelGrafo) -> dict[str, Any]:
         trace_id = estado["trace_id"]
         dias_del_periodo = periodo_de_la_pregunta(estado["pregunta"])
-        hechos = self._hechos_del_periodo(estado["hechos"], dias_del_periodo)
+        todos = estado["hechos"]
+        # Con un periodo en la pregunta, solo los hechos de esos días; sin periodo, todos (US-261 AC-3).
+        hechos = (
+            todos
+            if dias_del_periodo is None
+            else filtrar_hechos_por_periodo(todos, dias_del_periodo)
+        )
 
         def armar(hilo: EstadoDelHilo, ventana: Sequence[TurnoPrevio]) -> PromptSeparado:
             return armar_prompt_del_caso(hilo, estado["pregunta"], hechos, ventana)
@@ -92,13 +98,6 @@ class NodoCaso:
             ),
             "omitidas_del_nodo": len(propuestas) - len(soportadas),
         }
-
-    @staticmethod
-    def _hechos_del_periodo(
-        hechos: tuple[HechoDelCaso, ...], dias: int | None
-    ) -> tuple[HechoDelCaso, ...]:
-        """Con un periodo reconocido en la pregunta, solo los hechos de esos días; sin periodo, todos (US-261 AC-3)."""
-        return hechos if dias is None else filtrar_hechos_por_periodo(hechos, dias)
 
     def _con_enlace_y_forma_de_afirmacion(
         self, propuestas: tuple[PropuestaDelTurno, ...], hechos: tuple[HechoDelCaso, ...]
@@ -145,12 +144,10 @@ class NodoCaso:
             logger.warning("event=chat_caso_sin_nli traceId=%s", trace_id)
             raise LlmLocalNoDisponibleError()
         interpretaciones = [p for p in enlazadas if p.tipo is TipoDeBloque.interpretacion]
-        sostenidas = await self._interpretaciones_sostenidas(
-            soporte, interpretaciones, hechos, trace_id
+        sostenidas = iter(
+            await self._interpretaciones_sostenidas(soporte, interpretaciones, hechos, trace_id)
         )
-        return tuple(
-            p for p in enlazadas if p.tipo is TipoDeBloque.documentado or id(p) in sostenidas
-        )
+        return tuple(p for p in enlazadas if p.tipo is TipoDeBloque.documentado or next(sostenidas))
 
     @staticmethod
     async def _interpretaciones_sostenidas(
@@ -158,29 +155,27 @@ class NodoCaso:
         interpretaciones: Sequence[PropuestaDelTurno],
         hechos: tuple[HechoDelCaso, ...],
         trace_id: str,
-    ) -> set[int]:
-        """Los ``id`` de las interpretaciones sostenidas por la descripción de sus hechos (ADR-34): sin cifras ajenas a ella
-        (chequeo numérico, antes del NLI) y idénticas a ella (soporte por identidad) o con el NLI a favor."""
-        premisas = {id(p): describir_hechos(p.fact_refs, hechos) for p in interpretaciones}
-        con_cifras_de_los_hechos = [
-            p
-            for p in interpretaciones
-            if cifras_sostenidas_por_la_descripcion(p.texto, premisas[id(p)])
+    ) -> list[bool]:
+        """Por interpretación, si la sostiene la descripción de sus hechos (ADR-34): sin cifras ajenas a ella (chequeo
+        numérico, antes del NLI) e idéntica a ella (soporte por identidad) o con el NLI a favor."""
+        premisas = [describir_hechos(p.fact_refs, hechos) for p in interpretaciones]
+        sin_cifras_ajenas = [
+            cifras_sostenidas_por_la_descripcion(p.texto, premisa)
+            for p, premisa in zip(interpretaciones, premisas, strict=True)
         ]
-        identicas = [
-            p
-            for p in con_cifras_de_los_hechos
-            if es_la_descripcion_de(p.texto, p.fact_refs, hechos)
+        sostenidas = [
+            ok and es_la_descripcion_de(p.texto, p.fact_refs, hechos)
+            for p, ok in zip(interpretaciones, sin_cifras_ajenas, strict=True)
         ]
-        pendientes = [p for p in con_cifras_de_los_hechos if p not in identicas]
-        pares = [ParNli(premisas[id(p)], p.texto) for p in pendientes]
+        a_clasificar = [i for i, ok in enumerate(sin_cifras_ajenas) if ok and not sostenidas[i]]
+        pares = [ParNli(premisas[i], interpretaciones[i].texto) for i in a_clasificar]
         try:
             veredictos = await soporte.pares_soportados(trace_id, pares)
         except NliNoDisponibleError:
             raise LlmLocalNoDisponibleError() from None
-        return {id(p) for p in identicas} | {
-            id(p) for p, soportada in zip(pendientes, veredictos, strict=True) if soportada
-        }
+        for i, soportada in zip(a_clasificar, veredictos, strict=True):
+            sostenidas[i] = soportada
+        return sostenidas
 
     @staticmethod
     def _con_un_bloque_por_hecho_documentado(
