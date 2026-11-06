@@ -513,3 +513,36 @@ Los pacientes (g)–(m) y todas sus filas MUST tener identificadores `idSembrado
 - **GIVEN** el entorno marcado como piloto
 - **WHEN** se ejecuta `clinical-seed`
 - **THEN** termina con error sin escribir ninguna fila de (a)–(m)
+
+### Requirement: El seed deja datos por revisar en al menos dos pacientes
+El seed MUST sembrar datos clínicos en `requiere_revision` en al menos dos pacientes semilla: los biomarcadores de (f) (FX-T3-a, US-071) y el Ki-67 `20 %` de (h) en un examen propio (feedback de la Demo 5). Todo otro dato sembrado MUST seguir `verificado` y los pacientes semilla MUST seguir siendo 13.
+
+#### Scenario: El Ki-67 de (h) queda por revisar sin cambiar su checklist [Origen: feedback de la Demo 5, 2026-11-05]
+- **GIVEN** el seed aplicado
+- **WHEN** se consultan los biomarcadores de (h)
+- **THEN** el `Ki-67` con valor `20 %` tiene `review_status = requiere_revision` en un examen propio, y `RE`, `RP` y `HER2` siguen `verificado`
+- **AND** el checklist de (h) no gana ni pierde faltantes respecto de antes del cambio
+
+#### Scenario: Solo (f) y el Ki-67 de (h) tienen biomarcadores sin verificar [Origen: feedback de la Demo 5, 2026-11-05] [US-039 AC-2] [US-071 FX-T3-a]
+- **WHEN** se consultan los biomarcadores con `review_status <> 'verificado'` de todos los pacientes semilla
+- **THEN** solo existen los de (f) (Ki-67 y el RE en conflicto) y el Ki-67 de (h), y `clinical.patient` sigue contando 13 pacientes semilla
+
+#### Scenario: El listado muestra al menos dos pacientes con datos por revisar [Origen: feedback de la Demo 5, 2026-11-05] [US-048 AC-1]
+- **GIVEN** el seed aplicado y `doc1@test.local` con sesión válida
+- **WHEN** pide `GET /platform/patients`
+- **THEN** `pendingReviewCount` es 2 para (f), 1 para (h) y 0 para los demás pacientes semilla, y al menos dos pacientes tienen un valor mayor que 0
+
+### Requirement: Tratamientos previos y atributos clínicos enlazan su versión anterior
+`clinical.prior_treatment` y `clinical.clinical_attribute` MUST tener `supersedes_id uuid NULL` con FK a la propia tabla (`ON DELETE RESTRICT`) e índice único parcial sobre `supersedes_id` no nulo, de modo que una fila solo pueda ser reemplazada una vez (ADR-50). La migración SHALL ser aditiva y `docs/architecture/data-model.md` SHALL describirla.
+
+#### Scenario: Las filas existentes quedan con supersedes_id nulo [ADR-50]
+- **WHEN** se aplica la migración sobre una base con tratamientos y atributos
+- **THEN** ninguna fila cambia y todas tienen `supersedes_id` nulo
+
+#### Scenario: No se reemplaza dos veces la misma fila [ADR-50]
+- **WHEN** se intenta insertar una segunda fila con el mismo `supersedes_id`
+- **THEN** la base lo rechaza por el índice único parcial
+
+#### Scenario: No se admite un supersedes_id inexistente
+- **WHEN** se inserta una fila con un `supersedes_id` que no existe
+- **THEN** la base lo rechaza por la FK

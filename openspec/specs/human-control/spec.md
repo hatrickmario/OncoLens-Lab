@@ -287,7 +287,7 @@ Tras una corrección, el contexto clínico vigente del paciente MUST reflejar el
 Regresión [RN-26] activa desde S6: la no reutilización de un análisis por huella la verifica US-251.
 
 ### Requirement: Corrección en línea con histórico desplegable en la ficha
-La ficha MUST ofrecer «Corregir dato» en cada biomarcador y nota clínica vigente (variante A de S5-01), con formulario en línea («Guardar mi corrección», «Cancelar»), origen «Corrección manual» tras guardar, histórico desplegable con las filas `reemplazado` y aviso no bloqueante sobre análisis anteriores. Las fechas se muestran relativas («hoy», «hace 12 días», `[S5 resp. 11]` (d)). Textos en `messages/es.json`.
+La ficha MUST ofrecer «Corregir dato» en cada biomarcador y nota clínica vigente (variante A de S5-01), con formulario en línea («Guardar mi corrección», «Cancelar»), origen «Corrección manual» tras guardar, histórico desplegable con las filas `reemplazado` y aviso no bloqueante sobre análisis anteriores. Las fechas se muestran relativas («hoy», «hace 12 días», `[S5 resp. 11]` (d)). Textos en `messages/es.json`. El formulario de un biomarcador SHALL precargar el valor, la unidad y la fecha del examen vigentes, indicar que la unidad es opcional y no admitir una fecha posterior a hoy; la corrección de un dato «Por revisar» o «En conflicto» SHALL conservar el anterior como `reemplazado` (RN-08).
 
 #### Scenario: El oncólogo corrige un biomarcador en la fila y ve el histórico [US-253 AC-1] [RN-08]
 - **GIVEN** la ficha de (a) con MSW sirviendo `biomarker-corrected.json` y `correction-history-biomarker.json`
@@ -318,6 +318,46 @@ La ficha MUST ofrecer «Corregir dato» en cada biomarcador y nota clínica vige
 #### Scenario: El formulario de nota libre muestra el aviso de nombres [US-253 AC-6] [ADR-40] [RN-11]
 - **WHEN** el doctor abre «Corregir dato» en una nota
 - **THEN** encima del campo de texto aparece fijo «No escribas nombres de personas (ni del paciente ni de terceros) en las notas. Las notas no se envían a la IA en esta versión; conviene no incluir nombres de personas en ellas.» (S5 resp. 12: el envío de notas, tras el detector de PII, se traslada a ADR-40)
+
+#### Scenario: El formulario precarga valor, unidad y fecha del examen de un biomarcador con unidad [D5 feedback 1] [US-253 AC-1] [RN-08]
+- **GIVEN** la ficha del paciente sintético (f) con Ki-67 `20` `%`, fecha del examen `2026-10-20` y origen «Carga inicial · Por revisar»
+- **WHEN** el doctor pulsa «Corregir dato» en Ki-67
+- **THEN** el formulario muestra «Valor» `20`, «Unidad (opcional)» `%` y «Fecha del examen» `2026-10-20`, todos editables
+- **AND** el campo de fecha lleva como máximo la fecha de hoy del servidor
+
+#### Scenario: Un biomarcador cualitativo sin unidad indica que la unidad es opcional [D5 feedback 1] [NFR-12]
+- **GIVEN** RE `Negativo` sin unidad, con origen «Carga inicial · Por revisar · En conflicto»
+- **WHEN** el doctor pulsa «Corregir dato» en RE
+- **THEN** «Valor» muestra `Negativo` y «Fecha del examen» muestra la fecha del examen
+- **AND** «Unidad (opcional)» está vacío, con «Sin unidad» como marcador y la ayuda «Déjala vacía si el resultado no lleva unidad.» asociada al campo con `aria-describedby`
+
+#### Scenario: La unidad de un cuantitativo se conserva y borrarla envía null [D5 feedback 1]
+- **GIVEN** PSA `4,2` `ng/mL` en la ficha
+- **WHEN** el doctor abre «Corregir dato», cambia solo el valor y guarda
+- **THEN** el cuerpo enviado incluye el valor nuevo y `unit = "ng/mL"` precargada
+- **AND** si en cambio borra la unidad y guarda, el cuerpo incluye `unit = null`
+
+#### Scenario: La fecha solo se envía si el oncólogo la cambió [D5 feedback 1] [ADR-50]
+- **GIVEN** Ki-67 con fecha del examen `2026-10-20` precargada
+- **WHEN** el doctor cambia solo el valor y guarda
+- **THEN** el cuerpo enviado es `{ value, unit }` sin `performedAt`
+- **AND** si cambia la fecha a `2026-10-22`, el cuerpo incluye `performedAt = "2026-10-22"`
+
+#### Scenario: La fecha precargada no se desplaza por zona horaria [D5 feedback 1]
+- **GIVEN** un biomarcador con `performedAt = "2026-10-01"` y el navegador en una zona horaria con desfase negativo
+- **WHEN** el doctor abre «Corregir dato»
+- **THEN** «Fecha del examen» muestra `2026-10-01`, no `2026-09-30`
+
+#### Scenario: Una fecha posterior a hoy se rechaza junto al campo antes de enviar [D5 feedback 1] [US-253 AC-3]
+- **GIVEN** el formulario de corrección abierto con «hoy» del servidor `2026-11-05`
+- **WHEN** el doctor escribe `2099-01-01` en «Fecha del examen» y pulsa «Guardar mi corrección»
+- **THEN** «La fecha no puede ser posterior a hoy.» aparece junto al campo, se anuncia en `aria-live="assertive"`, no se envía ninguna petición y lo escrito se conserva
+
+#### Scenario: Corregir un dato por revisar y en conflicto conserva el anterior como histórico [D5 feedback 1] [RN-08]
+- **GIVEN** RE `Negativo` con «Carga inicial · Por revisar · En conflicto» y MSW sirviendo `biomarker-corrected.json` y `correction-history-biomarker.json`
+- **WHEN** el doctor corrige el valor y guarda
+- **THEN** la fila muestra el valor nuevo con «Corrección manual» y el «Histórico» desplegado lista el dato de «Carga inicial» como «reemplazado»
+- **AND** ningún valor anterior se sobrescribe ni desaparece en silencio
 
 ### Requirement: Pedir un análisis nunca modifica datos clínicos
 Completar un análisis de evidencia MUST dejar intactas, en número de filas y en contenido, todas las tablas de los schemas `clinical` e `identity` salvo `clinical.ai_analysis_record`, que SHALL recibir exactamente una fila nueva (RN-06). Ningún `review_status` SHALL cambiar, tampoco en las filas registradas o corregidas a mano por el doctor (AC-T3.2).
@@ -438,3 +478,116 @@ El archivo compartido `packages/clinical-language/conformidad/casos.json` MUST i
 - **GIVEN** un caso de `casos.json` cuyo resultado esperado no coincide con el del verificador
 - **WHEN** corre la suite de conformidad
 - **THEN** el fallo nombra el `id` del caso y su grupo, sin depender del orden de los casos
+
+### Requirement: Corregir un tratamiento previo crea una fila nueva y conserva la anterior como histórico
+Al corregir un `PriorTreatment` vigente, `clinical-api` MUST crear en una transacción una fila `manual_correction` `verificado` con `supersedes_id` hacia la anterior, que pasa a `reemplazado` con sus valores intactos (RN-08, ADR-50), y MUST decidir de nuevo `atcCodes` y `mappingStatus` con el catálogo (ADR-33, RN-27).
+
+#### Scenario: Corregir el esquema deja el anterior como histórico enlazado [AC-04.1] [RN-08]
+- **GIVEN** un paciente activo con el tratamiento «AC-T» en `adyuvante` y un `doctor` con sesión válida
+- **WHEN** envía `POST /platform/patients/{p}/prior-treatments/{t}/corrections` con `regimenName = "FEC"` y el resto de campos válidos
+- **THEN** responde `201` con un `PriorTreatment` `regimenName = "FEC"`, `provenance.entryMethod = manual_correction` y `supersedesId = {t}`
+- **AND** la fila `{t}` conserva `regimenName = "AC-T"` con `review_status = reemplazado`, y la vista de caso lista solo la fila nueva
+
+#### Scenario: El código ATC se recalcula con el catálogo [ADR-33] [RN-27]
+- **GIVEN** un tratamiento con `atcCodes` del catálogo
+- **WHEN** el doctor corrige `regimenName` a un texto sin entrada en el catálogo
+- **THEN** la fila nueva queda `mappingStatus = no_mapeado`, `atcCodes = []` y conserva el texto tal como llegó, sin código inventado
+
+#### Scenario: Un cuerpo incoherente se rechaza con el campo señalado [AC-04.1]
+- **WHEN** el doctor corrige con `ongoing = false` sin `endReason`, o con `endedAt` anterior a `startedAt`
+- **THEN** responde `422 CUERPO_INVALIDO` con `field` igual a la propiedad en falta y no cambia ninguna fila
+
+#### Scenario: Una corrección sin cambios no crea fila [RN-08]
+- **WHEN** el doctor envía los mismos valores que tiene la fila vigente
+- **THEN** responde `422 CUERPO_INVALIDO` sin `field` y no se crea ninguna fila
+
+### Requirement: Corregir un atributo clínico conserva la clave y valida el valor contra el catálogo
+Al corregir un `ClinicalAttribute` vigente, `clinical-api` MUST mantener `attributeKey`, validar `value` contra la lista del catálogo para el tipo de cáncer del diagnóstico vigente (RN-29), crear una fila `manual_correction` `verificado` con `supersedes_id` y pasar la anterior a `reemplazado` con su valor intacto (RN-08).
+
+#### Scenario: Corregir el valor de un atributo deja el anterior como histórico [AC-04.1] [RN-08]
+- **GIVEN** un paciente de mama con un atributo del catálogo registrado con un valor equivocado
+- **WHEN** el doctor envía `POST …/clinical-attributes/{a}/corrections` con otro valor de la lista del catálogo
+- **THEN** responde `201` con la fila nueva (`manual_correction`, `supersedesId = {a}`) y la anterior queda `reemplazado` con su valor
+- **AND** `GET …/clinical-attributes` devuelve solo la fila nueva
+
+#### Scenario: Un valor fuera del catálogo se rechaza [RN-29]
+- **WHEN** el doctor corrige con un valor que no está en la lista del catálogo
+- **THEN** responde `422 VALOR_FUERA_DE_CATALOGO` con `field = value` sin repetir el valor y no cambia ninguna fila
+
+#### Scenario: La clave no se puede cambiar
+- **WHEN** el cuerpo incluye `attributeKey`
+- **THEN** responde `422 CUERPO_INVALIDO` porque el contrato no admite esa propiedad
+
+### Requirement: La corrección conserva la coherencia de la declaración de ausencia (d5fb-04, D4)
+Corregir un tratamiento NO SHALL crear ni borrar declaraciones `sin_tratamiento_previo`; corregir la declaración es una corrección de atributo normal en la que solo `observedAt` cambia (la clave y el valor `si` son inmutables). Tras cualquier corrección MUST seguir cumpliéndose que un `PriorTreatment` vigente y una declaración vigente no coexisten.
+
+#### Scenario: Corregir un tratamiento no toca las declaraciones [D4]
+- **GIVEN** un paciente con un tratamiento vigente y ninguna declaración vigente
+- **WHEN** el doctor corrige el esquema del tratamiento
+- **THEN** la fila nueva queda vigente, la anterior `reemplazado` y el paciente sigue sin declaración vigente
+
+#### Scenario: La declaración de ausencia se corrige como un atributo más [AC-04.1] [RN-08]
+- **GIVEN** un paciente con la declaración `sin_tratamiento_previo = si` vigente con `observedAt` equivocada
+- **WHEN** el doctor envía `POST …/clinical-attributes/{a}/corrections` con `value = si` y otra `observedAt`
+- **THEN** responde `201` con la fila nueva (`manual_correction`, `supersedesId = {a}`) y la anterior queda `reemplazado`
+- **AND** el ítem `tratamientos_previos` del checklist sigue cumplido por la declaración vigente
+
+#### Scenario: El valor de la declaración no se puede cambiar
+- **WHEN** el doctor corrige la declaración con un `value` distinto de `si`
+- **THEN** responde `422 VALOR_FUERA_DE_CATALOGO` con `field = value` y no cambia ninguna fila
+
+### Requirement: Reglas comunes de la corrección de tratamientos y atributos
+Las correcciones SHALL exigir `clinical:write`, un paciente activo (RN-17) y un dato vigente; el histórico SHALL exigir `clinical:read`. El administrador MUST recibir `403` en todas. Corregir un dato ya reemplazado MUST responder `409 DATO_NO_VIGENTE`.
+
+#### Scenario: El administrador no puede corregir ni leer el histórico [PRD §11]
+- **GIVEN** un `admin` con sesión válida
+- **WHEN** llama a cualquiera de las cuatro operaciones
+- **THEN** responde `403` y no cambia ninguna fila
+
+#### Scenario: Paciente egresado [RN-17]
+- **GIVEN** un paciente egresado con un tratamiento y un atributo
+- **WHEN** el doctor intenta corregir cualquiera de los dos
+- **THEN** responde `422 PACIENTE_EGRESADO` sin escribir
+
+#### Scenario: Un dato ya reemplazado no se corrige dos veces [RN-08]
+- **GIVEN** un tratamiento ya reemplazado por una corrección anterior
+- **WHEN** llega otra corrección sobre su id (doble envío)
+- **THEN** responde `409 DATO_NO_VIGENTE` y no se crea ninguna fila
+
+#### Scenario: El histórico se lee del más reciente al más antiguo [RN-08]
+- **GIVEN** un atributo corregido dos veces
+- **WHEN** el doctor pide `GET …/clinical-attributes/{vigente}/history`
+- **THEN** recibe dos entradas `reemplazado` ordenadas de la más reciente a la más antigua, sin superar `CORRECTION_HISTORY_MAX`
+
+#### Scenario: Los logs no registran valores [Política de logs]
+- **WHEN** se corrige un tratamiento o un atributo
+- **THEN** el log contiene `patientId` (UUID), ids de filas y `traceId`, y no `regimenName`, valores ni identidad
+
+### Requirement: La vista de caso permite corregir tratamientos previos y atributos clínicos
+Cada fila de «Tratamientos previos» y de «Atributos clínicos» SHALL mostrar «Corregir dato», que abre el formulario de alta precargado con «Guardar mi corrección», y la fila corregida SHALL mostrar origen «Corrección manual» y su histórico desplegable. Con paciente egresado la acción MUST estar deshabilitada.
+
+#### Scenario: El doctor corrige un tratamiento desde la vista de caso [AC-04.1]
+- **GIVEN** la vista de caso de un paciente activo con un tratamiento previo
+- **WHEN** el doctor pulsa «Corregir dato» en esa fila, cambia el esquema y pulsa «Guardar mi corrección»
+- **THEN** el diálogo se cierra, la fila muestra el esquema nuevo con origen «Corrección manual» sin recargar la página y el foco vuelve al botón
+- **AND** el histórico desplegable muestra el esquema anterior
+
+#### Scenario: Un error de validación aparece junto al campo [NFR-12]
+- **WHEN** `clinical-api` responde `422` con `field = endedAt`
+- **THEN** el formulario sigue abierto, el mensaje aparece junto a ese campo anunciado en `aria-live="assertive"`
+
+#### Scenario: Paciente egresado [RN-17]
+- **GIVEN** la vista de caso de un paciente egresado
+- **THEN** «Corregir dato» está deshabilitado y `aria-describedby` apunta al texto que explica que no admite registros
+
+#### Scenario: Estado vacío
+- **GIVEN** un paciente sin tratamientos previos ni atributos
+- **THEN** cada sección muestra «Sin datos registrados» y su acción de alta, sin botones de corrección
+
+#### Scenario: Aviso no bloqueante sobre análisis anteriores [RN-26]
+- **GIVEN** un paciente con un análisis guardado
+- **WHEN** se guarda una corrección
+- **THEN** se muestra el aviso de que los análisis anteriores usaron el dato previo, sin impedir generar uno nuevo
+
+#### Scenario: Sin términos prohibidos en los textos nuevos [RN-23]
+- **THEN** los textos nuevos de `messages/es.json` no contienen términos de la lista de términos prescriptivos prohibidos
