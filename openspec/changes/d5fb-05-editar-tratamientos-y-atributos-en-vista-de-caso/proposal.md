@@ -23,7 +23,7 @@ corrección a mano es la única vía de dejar el caso correcto antes del anális
 
 ## Qué cambia
 
-- **Contrato primero (aditivo, ADR-26; `clinical-api`, `info.version` minor):**
+- **Contrato primero (aditivo, ADR-26; `clinical-api`, `info.version` minor, 1.22.0 → **1.23.0**):**
   - `POST /platform/patients/{patientId}/prior-treatments/{treatmentId}/corrections` → `201 PriorTreatment`
     (`correctPriorTreatment`); cuerpo = el mismo `PriorTreatmentManualCreate` (reemplazo completo de los campos
     editables, así hereda cualquier campo que añada `d5fb-04`).
@@ -69,18 +69,27 @@ corrección a mano es la única vía de dejar el caso correcto antes del anális
 - ✅ `l1d-80` (alta manual de tratamiento/atributo y `field` en 422), `l1d-309` (`planDeCorreccion`, `CorrectionHistory`,
   `HistoricoDelDato`, `AccionCorregirDato`), `l1d-84` (normalización final), `l1d-91` (`Dialog` y hook de envío),
   `l1d-96`/`l1d-76` (vista de caso): archivados, en `main`.
-- 🔗 **`d5fb-04` (opción «sin tratamiento previo a la fecha»):** toca el mismo formulario
-  (`FormularioDeTratamientoPrevio`) y `openapi.yaml` (`PriorTreatmentManualCreate`/`PriorTreatment`). **Orden propuesto:
-  `d5fb-04` primero** (define el modelo de ese estado y el campo nuevo), luego este change, que reutiliza
-  `PriorTreatmentManualCreate` como cuerpo de la corrección y precarga el formulario con lo que ya sepa mostrar
-  `d5fb-04`. Cadena de versiones: `d5fb-04` 1.21.0 → **este 1.22.0**; quien rebase renumera y regenera
-  `packages/api-contracts`, nunca fusiona generados a mano. Si el orden se invierte, `d5fb-04` rebasa sobre este y
-  su campo nuevo se hereda sin tocar las operaciones de corrección. Ver design D8.
+- ✅ **`d5fb-04` (opción «sin tratamiento previo a la fecha»), ya implementado en la rama base de este change
+  (apilado sobre `feat/d5fb-04-sin-tratamiento-previo`):** `info.version` está en **1.22.0** → este change toma
+  **1.23.0** (aditivo, ADR-26). La declaración es un `ClinicalAttribute` con clave `sin_tratamiento_previo` y valor
+  `si` (no una fila `PriorTreatment`), con la regla de coherencia **D4** en
+  `src/modules/compartido/declaracion-de-ausencia.ts` (un `PriorTreatment` vigente y una declaración vigente nunca
+  coexisten; se aplica con el paciente bloqueado `FOR UPDATE` y en la misma transacción). La completitud usa
+  `satisfiedBy`/`resolvedBy`, el catálogo está en 1.5.0 y el diálogo de tratamiento previo recibe un `estado`
+  obligatorio (`{hayTratamientos, declaracion}`). Consecuencias para este change:
+  - Corregir un tratamiento **no crea ni borra declaraciones**: la fila nueva sustituye a la anterior dentro de la
+    misma transacción, de modo que sigue habiendo un tratamiento vigente y, por D4, ninguna declaración vigente.
+  - Corregir la declaración `sin_tratamiento_previo` es una **corrección de atributo normal** (fila nueva
+    `manual_correction`, anterior `reemplazado`): solo `observedAt` es corregible; la clave y el valor `si` son
+    inmutables (cambiar a otra cosa es registrar un tratamiento, que ya reemplaza la declaración).
+  - Invariante D4 conservada: tras cualquier corrección, si hay tratamiento vigente no hay declaración vigente, y
+    viceversa.
 - Coordinación con el resto de `d5fb-*` que tocan `openapi.yaml` (`d5fb-02`): misma regla de renumeración.
 
 ## Fuera de alcance
 
-- **Eliminar/rechazar** un tratamiento o atributo cargado por error (`rechazado`): requiere decisión de producto aparte.
+- **Eliminar/rechazar** un tratamiento o atributo cargado por error (`rechazado`): decisión del usuario (2026-11-05),
+  queda como deuda (tasks H.1).
 - Cambiar la **clave** de un atributo (se registra otro atributo) y cambiar el término de un biomarcador.
 - Corrección de lo extraído por OCR (Post-MVP); todo dato corregido aquí es manual.
 - Auditoría completa de accesos (US-150, S6): aquí solo el evento de log sin PHI.

@@ -39,6 +39,24 @@ Al corregir un `ClinicalAttribute` vigente, `clinical-api` MUST mantener `attrib
 - **WHEN** el cuerpo incluye `attributeKey`
 - **THEN** responde `422 CUERPO_INVALIDO` porque el contrato no admite esa propiedad
 
+### Requirement: La corrección conserva la coherencia de la declaración de ausencia (d5fb-04, D4)
+Corregir un tratamiento NO SHALL crear ni borrar declaraciones `sin_tratamiento_previo`; corregir la declaración es una corrección de atributo normal en la que solo `observedAt` cambia (la clave y el valor `si` son inmutables). Tras cualquier corrección MUST seguir cumpliéndose que un `PriorTreatment` vigente y una declaración vigente no coexisten.
+
+#### Scenario: Corregir un tratamiento no toca las declaraciones [D4]
+- **GIVEN** un paciente con un tratamiento vigente y ninguna declaración vigente
+- **WHEN** el doctor corrige el esquema del tratamiento
+- **THEN** la fila nueva queda vigente, la anterior `reemplazado` y el paciente sigue sin declaración vigente
+
+#### Scenario: La declaración de ausencia se corrige como un atributo más [AC-04.1] [RN-08]
+- **GIVEN** un paciente con la declaración `sin_tratamiento_previo = si` vigente con `observedAt` equivocada
+- **WHEN** el doctor envía `POST …/clinical-attributes/{a}/corrections` con `value = si` y otra `observedAt`
+- **THEN** responde `201` con la fila nueva (`manual_correction`, `supersedesId = {a}`) y la anterior queda `reemplazado`
+- **AND** el ítem `tratamientos_previos` del checklist sigue cumplido por la declaración vigente
+
+#### Scenario: El valor de la declaración no se puede cambiar
+- **WHEN** el doctor corrige la declaración con un `value` distinto de `si`
+- **THEN** responde `422 VALOR_FUERA_DE_CATALOGO` con `field = value` y no cambia ninguna fila
+
 ### Requirement: Reglas comunes de la corrección de tratamientos y atributos
 Las correcciones SHALL exigir `clinical:write`, un paciente activo (RN-17) y un dato vigente; el histórico SHALL exigir `clinical:read`. El administrador MUST recibir `403` en todas. Corregir un dato ya reemplazado MUST responder `409 DATO_NO_VIGENTE`.
 

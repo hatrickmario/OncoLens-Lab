@@ -1,7 +1,7 @@
 # Tasks — d5fb-05-editar-tratamientos-y-atributos-en-vista-de-caso
 
-> Origen: feedback de la Demo 5 (2026-11-05), sin L1D asignado. ⛔ Orden con `d5fb-04`: **`d5fb-04` antes** (formulario
-> de tratamientos y `PriorTreatmentManualCreate`); si no está en `main`, rebasar y renumerar `info.version`.
+> Origen: feedback de la Demo 5 (2026-11-05), sin L1D asignado. ✅ Apilado sobre `d5fb-04` (rama `feat/d5fb-04-sin-tratamiento-previo`):
+> `info.version` 1.22.0 → este change **1.23.0**; si `d5fb-04` cambia al rebasar, renumerar y regenerar.
 > Matriz TDD (CLAUDE.md): reglas, services y endpoints → TDD estricto, doble bucle; Route Handlers y UI → test del AC
 > primero; migración y cableado → test después. MSW solo en HTTP saliente, handlers desde `contracts/examples/`; nunca
 > `vi.mock` de módulos propios ni de Prisma; reloj e IDs inyectados; nunca `.skip`/`.only`/`it.todo`.
@@ -12,7 +12,7 @@
 - [ ] 1.1 (`sync-contracts`) Editar primero `apps/clinical-api/openapi.yaml` según `design.md` §Contratos:
   `correctPriorTreatment`, `getPriorTreatmentHistory`, `correctClinicalAttribute`, `getClinicalAttributeHistory`,
   `ClinicalAttributeCorrection`, `id`/`supersedesId` en `PriorTreatment`, `ClinicalAttribute` y los ítems de `CaseView`;
-  `x-permission`; `info.version` minor sobre la vigente al rebasar.
+  `x-permission`; `info.version` 1.23.0.
 - [ ] 1.2 Ejemplos sintéticos en `contracts/examples/` registrados en `index.json` (request/respuesta de cada corrección
   e histórico) y los de error existentes enlazados.
 - [ ] 1.3 `contracts:check`, `contracts:generate`, `contracts:generate:check`, `contracts:breaking` (0 incompatibles).
@@ -60,7 +60,7 @@
 
 ## humano
 
-- [ ] H.1 Decidir con el usuario: ¿eliminar/rechazar un dato cargado por error? (fuera de alcance aquí).
+- [ ] H.1 DEUDA (decisión del usuario, 2026-11-05): eliminar/rechazar (`rechazado`) un tratamiento o atributo cargado por error queda fuera de alcance; no se crea nada en Linear.
 - [ ] H.2 Crear la historia en Linear (equipo L1D, proyecto OncoLens-1) solo con aprobación explícita y sustituir
   «sin L1D asignado» en la trazabilidad.
 

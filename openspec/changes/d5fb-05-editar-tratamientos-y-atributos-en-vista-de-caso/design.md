@@ -4,7 +4,7 @@
 
 Estado verificado en el repo:
 
-- `openapi.yaml` (1.20.0) tiene `POST …/prior-treatments` y `POST …/clinical-attributes` (alta manual), `GET
+- `openapi.yaml` (1.22.0, tras `d5fb-04`) tiene `POST …/prior-treatments` y `POST …/clinical-attributes` (alta manual), `GET
   …/clinical-attributes`, y correcciones solo de `Biomarker` y `ClinicalNote` (`l1d-309`, ADR-50). No hay `PATCH`/`PUT`
   ni corrección de tratamiento o atributo.
 - `PriorTreatment` y `ClinicalAttribute` (Prisma) tienen `review_status` pero **no** `supersedes_id`; no tienen
@@ -54,13 +54,19 @@ Estado verificado en el repo:
   (S5-03 c/d), y un diálogo evita duplicar los dos formularios. El histórico se muestra con `HistoricoDelDato` (desplegable,
   fechas relativas); `key` de fila pasa a ser el `id` (corrige claves duplicables). Tras el `201`, `recargar()` /
   `router.refresh()`.
-- **D8 · Orden con `d5fb-04`.** Ambos tocan `FormularioDeTratamientoPrevio` y `openapi.yaml`. Orden: **`d5fb-04` →
-  `d5fb-05`**. Razones: 04 define el modelo de «sin tratamiento previo a la fecha» (qué fila o marca representa ese
-  estado y cómo se pinta); 05 debe decidir si ese estado es corregible (se asume que se corrige como cualquier fila: se
-  puede pasar a un tratamiento real) y reusa `PriorTreatmentManualCreate`, por lo que hereda el campo sin trabajo extra.
-  Si 04 llega después, rebasa: su campo entra en `PriorTreatmentManualCreate` y la corrección lo acepta. Quien rebase
-  renumera `info.version` (04: 1.21.0, 05: 1.22.0) y regenera `packages/api-contracts`. Conflicto previsto en
-  `formulario-de-tratamiento-previo.tsx`: resolver conservando ambas props (`inicial`/`corrigeId` y la opción nueva).
+- **D8 · Orden con `d5fb-04` (resuelto).** `d5fb-04` ya está en la rama base: versión 1.22.0 → este change 1.23.0.
+  La declaración «sin tratamiento previo a la fecha» es un `ClinicalAttribute` `sin_tratamiento_previo=si` y no una
+  fila de tratamiento; `PriorTreatmentManualCreate` no cambió. El diálogo de tratamiento recibe `estado`
+  (`{hayTratamientos, declaracion}`), que la UI de este change debe seguir pasando en modo corrección.
+- **D12 · Declaración de ausencia y coherencia D4.** (a) Corregir un tratamiento no toca declaraciones: dentro de la
+  misma transacción (paciente bloqueado `FOR UPDATE`) la fila vigente pasa a `reemplazado` y la nueva queda vigente, así
+  que nunca hay una ventana con cero tratamientos y declaración, ni con ambos. (b) La declaración es corregible como
+  un atributo más (misma operación `correctClinicalAttribute`): solo `observedAt` cambia; `value` debe seguir siendo
+  `si` y, como la clave es inmutable, una corrección sin cambio de fecha es «sin cambios» (`422`). No se vuelve a
+  evaluar D4 porque no se registra ningún tratamiento, pero la corrección se rechaza si en ese momento hay
+  tratamientos vigentes (estado imposible por D4; defensa en profundidad con `422` `field = attributeKey`).
+  (c) El checklist (`satisfiedBy`/`resolvedBy`) lee las filas vigentes: corregir la fecha de la declaración la
+  mantiene cumpliendo `tratamientos_previos`.
 - **D9 · Permisos y CSRF.** `x-permission: clinical:write` para las correcciones y `clinical:read` para el histórico;
   `admin` recibe `403` (no lee ni edita datos clínicos, PRD §11). En `web`, los `POST` verifican `Origin` y reenvían solo
   la cookie de sesión; `4xx` se retransmiten, `5xx` se sanean a `ERROR_INTERNO`; un `id` que no es UUID → `404` propio
@@ -103,7 +109,7 @@ components.schemas:
     + id (uuid, requerido en respuesta), + supersedesId (uuid|null)
 ```
 
-`info.version` minor sobre la vigente al rebasar (hoy 1.20.0; con `d5fb-04` primero, **1.22.0**). Ejemplos nuevos en
+`info.version` minor sobre la vigente (1.22.0 tras `d5fb-04`) → **1.23.0**. `PriorTreatment` y `ClinicalAttribute` ya traen `id`; este change añade `supersedesId` y, en `CaseView.priorTreatments[]` y `CaseView.attributes[]`, `id` y `supersedesId`. `CorrectionHistoryEntry` gana el campo opcional `regimenName` (esquema anterior del tratamiento; `value` ya cubre al atributo). Ejemplos nuevos en
 `contracts/examples/` (`prior-treatment-correction-request`, `prior-treatment-corregido`,
 `clinical-attribute-correction-request`, `clinical-attribute-corregido`, `correction-history-prior-treatment`,
 `correction-history-clinical-attribute`) registrados en `index.json`. `contracts:check`, `contracts:generate`,
@@ -146,6 +152,6 @@ No aplica `run-ai-eval`: ni modelo, prompt, umbral, catálogo ni corpus cambian.
 
 ## Preguntas abiertas (para el usuario)
 
-1. ¿Se quiere también **eliminar/rechazar** un tratamiento o atributo cargado por error? (hoy fuera de alcance).
-2. ¿El estado «sin tratamiento previo a la fecha» de `d5fb-04` debe ser corregible como una fila más? (se asume que sí).
-3. ¿Crear la historia en Linear (L1D) para este change? Requiere aprobación explícita.
+1. (Resuelta 2026-11-05) Eliminar/rechazar un dato cargado por error queda fuera de alcance; se anota como deuda.
+2. (Resuelta 2026-11-05) La declaración de ausencia es corregible como una fila más (D12).
+3. ¿Crear la historia en Linear (L1D)? Solo con aprobación explícita (H.2).
