@@ -62,8 +62,7 @@ export function SeccionesDelCaso({
             <DialogoTratamientoPrevio
               {...registro}
               hoy={hoy}
-              hayTratamientos={vista.priorTreatments.length > 0}
-              fechaDeDeclaracion={declaracion?.observedAt ?? null}
+              estado={{ hayTratamientos: vista.priorTreatments.length > 0, declaracion }}
             />
           }
         />

@@ -44,8 +44,10 @@ async function abrirDesdeLaSeccion(usuario: Usuario) {
 }
 
 /** La fila «Tratamientos previos» de la columna «Datos críticos». */
-const filaDeTratamientos = (datos: ReturnType<typeof within>) =>
-  datos.getAllByRole('listitem').find((li) => li.textContent?.includes(secciones.tratamientos))!;
+const filaDeTratamientos = (datos: ReturnType<typeof within>): HTMLElement =>
+  datos
+    .getAllByRole('listitem')
+    .find((li: HTMLElement) => li.textContent?.includes(secciones.tratamientos))!;
 
 const seccionDeTratamientos = () =>
   within(screen.getByRole('region', { name: secciones.tratamientos }));

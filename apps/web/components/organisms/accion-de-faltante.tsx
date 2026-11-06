@@ -3,7 +3,7 @@ import type { AccionManual } from '../../lib/evidence/faltantes';
 import { mensajes } from '../../lib/mensajes';
 import { hrefDeAccionManual } from '../../lib/registro-manual/destinos';
 import { DialogoAtributoClinico } from './dialogo-atributo-clinico';
-import { DialogoTratamientoPrevio } from './dialogo-tratamiento-previo';
+import { DialogoTratamientoPrevio, ESTADO_DE_FALTANTE } from './dialogo-tratamiento-previo';
 
 const ENLACE = 'text-primary inline-block py-1 font-semibold underline';
 
@@ -59,7 +59,12 @@ export function AccionDeFaltante({
       );
     case 'tratamiento':
       return (
-        <DialogoTratamientoPrevio {...registro} hoy={hoy} textoDeAccion={t.agregarTratamiento} />
+        <DialogoTratamientoPrevio
+          {...registro}
+          hoy={hoy}
+          estado={ESTADO_DE_FALTANTE}
+          textoDeAccion={t.agregarTratamiento}
+        />
       );
   }
 }

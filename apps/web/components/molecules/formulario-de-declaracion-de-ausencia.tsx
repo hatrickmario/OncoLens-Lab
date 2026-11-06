@@ -6,6 +6,7 @@ import { mensajes } from '../../lib/mensajes';
 import {
   cuerpoDeDeclaracion,
   errorDeLaDeclaracion,
+  esIncoherenciaDeDeclaracion,
 } from '../../lib/registro-manual/declaracion-de-ausencia';
 import { useEnvioDeRegistro } from '../../lib/registro-manual/use-envio-de-registro';
 import { CampoDeTexto } from './campo-de-texto';
@@ -33,7 +34,7 @@ export function FormularioDeDeclaracionDeAusencia({
     'clinical-attributes',
     alGuardar,
   );
-  const conTratamientos = error?.campo === 'attributeKey';
+  const conTratamientos = esIncoherenciaDeDeclaracion(error);
 
   function alEnviar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
@@ -61,7 +62,7 @@ export function FormularioDeDeclaracionDeAusencia({
         errorGeneral={
           conTratamientos
             ? d.conTratamientos
-            : error && error.campo === undefined
+            : error && error.campo !== 'observedAt'
               ? error.mensaje
               : undefined
         }

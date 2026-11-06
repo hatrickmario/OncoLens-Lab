@@ -8,6 +8,8 @@ import { mensajes } from '../mensajes';
 export interface ErrorDeRegistro {
   campo?: string;
   mensaje: string;
+  /** Código `error` del servidor (`CUERPO_INVALIDO`…), si el registro lo trae; no se muestra. */
+  codigo?: string;
 }
 
 /** Campo de escala funcional cuyo rango fija el catálogo por escala (mensaje propio, D2). */

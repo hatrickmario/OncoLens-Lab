@@ -18,34 +18,46 @@ export interface DialogoTratamientoPrevioProps {
   alGuardar: () => void;
   /** Texto del botón que abre el diálogo; por defecto «+ Agregar tratamiento previo». */
   textoDeAccion?: ReactNode;
-  /** Con tratamientos vigentes no se ofrece declarar su ausencia (una sola verdad). */
-  hayTratamientos?: boolean;
-  /** Fecha de la declaración «Sin tratamiento previo» vigente: registrar un tratamiento la reemplaza. */
-  fechaDeDeclaracion?: string | null;
+  /** Obligatorio: lo que ya hay registrado decide qué ofrece el diálogo (nunca «abierto» por omisión). */
+  estado: EstadoDeTratamientos;
 }
+
+/**
+ * Lo registrado del paciente que condiciona el diálogo: con tratamientos vigentes no se ofrece declarar su ausencia (una
+ * sola verdad); con una declaración vigente (con o sin fecha) registrar un tratamiento la reemplaza.
+ */
+export interface EstadoDeTratamientos {
+  hayTratamientos: boolean;
+  declaracion: { observedAt: string | null } | null;
+}
+
+/** Estado de un faltante «Tratamientos previos»: un faltante implica que no hay tratamientos ni declaración. */
+export const ESTADO_DE_FALTANTE: EstadoDeTratamientos = {
+  hayTratamientos: false,
+  declaracion: null,
+};
 
 /** Contenido del diálogo: se desmonta al cerrar, así que cada apertura empieza con el formulario del tratamiento. */
 function ContenidoDelDialogo({
   pacienteId,
   hoy,
-  hayTratamientos,
-  fechaDeDeclaracion,
+  estado,
   alGuardar,
   alCerrar,
-}: Pick<DialogoTratamientoPrevioProps, 'pacienteId' | 'hoy' | 'alGuardar'> & {
-  hayTratamientos: boolean;
-  fechaDeDeclaracion: string | null;
+}: Pick<DialogoTratamientoPrevioProps, 'pacienteId' | 'hoy' | 'alGuardar' | 'estado'> & {
   alCerrar: () => void;
 }) {
   const [sinTratamiento, setSinTratamiento] = useState(false);
-  const declarable = !hayTratamientos && fechaDeDeclaracion === null;
+  const declarable = !estado.hayTratamientos && estado.declaracion === null;
   const alTerminar = () => {
     alGuardar();
     alCerrar();
   };
   return (
     <>
-      {fechaDeDeclaracion !== null && <AvisoDeDeclaracionVigente fecha={fechaDeDeclaracion} />}
+      {estado.declaracion !== null && (
+        <AvisoDeDeclaracionVigente observedAt={estado.declaracion.observedAt} />
+      )}
       {declarable && <CasillaDeAusencia marcada={sinTratamiento} alCambiar={setSinTratamiento} />}
       {declarable && sinTratamiento ? (
         <FormularioDeDeclaracionDeAusencia
@@ -72,8 +84,7 @@ export function DialogoTratamientoPrevio({
   hoy,
   alGuardar,
   textoDeAccion,
-  hayTratamientos = false,
-  fechaDeDeclaracion = null,
+  estado,
 }: DialogoTratamientoPrevioProps) {
   const { accion, titulo, descripcion } = mensajes().caso.registro.tratamiento;
   const [abierto, setAbierto] = useState(false);
@@ -97,8 +108,7 @@ export function DialogoTratamientoPrevio({
         <ContenidoDelDialogo
           pacienteId={pacienteId}
           hoy={hoy}
-          hayTratamientos={hayTratamientos}
-          fechaDeDeclaracion={fechaDeDeclaracion}
+          estado={estado}
           alGuardar={alGuardar}
           alCerrar={() => setAbierto(false)}
         />

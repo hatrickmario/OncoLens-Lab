@@ -12,6 +12,14 @@ export const CLAVE_DE_DECLARACION = 'sin_tratamiento_previo';
 
 type Atributo = CaseView['attributes'][number];
 
+/**
+ * El 422 de declarar la ausencia con tratamientos vigentes llega como `CUERPO_INVALIDO` sobre `attributeKey`; la misma
+ * propiedad con `VALOR_FUERA_DE_CATALOGO` (clave no permitida para el tipo de cáncer) es otro error. Única regla del cliente.
+ */
+export function esIncoherenciaDeDeclaracion(error: ErrorDeRegistro | null): boolean {
+  return error?.campo === 'attributeKey' && error.codigo === 'CUERPO_INVALIDO';
+}
+
 /** La declaración vigente de ausencia de tratamiento previo entre los atributos de la vista de caso, si existe. */
 export function declaracionDeAusencia(atributos: Atributo[]): Atributo | null {
   return atributos.find((a) => a.key === CLAVE_DE_DECLARACION) ?? null;

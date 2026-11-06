@@ -483,6 +483,7 @@
           "declarado": "Sin tratamiento previo (declarado)",
           "sinTratamiento": "Sin tratamiento previo a la fecha",
           "declaradoEl": "Sin tratamiento previo declarado el {fecha}",
+          "declaradoSinFecha": "Sin tratamiento previo declarado (sin fecha registrada)",
           "reemplazo": "Esto reemplazará la declaración «Sin tratamiento previo».",
           "conTratamientos": "Hay tratamientos previos registrados; no se puede declarar su ausencia."
         }
