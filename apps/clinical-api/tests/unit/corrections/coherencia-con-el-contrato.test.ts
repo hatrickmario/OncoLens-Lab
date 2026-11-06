@@ -14,7 +14,7 @@ import { loggerEnMemoria } from '../../support/usuarios.js';
 
 const RUTA_DEL_SPEC = resolve(fileURLToPath(new URL('../../../openapi.yaml', import.meta.url)));
 const DESCRIPCION_DE_FIELD =
-  'Nombre lógico del dato que causó el error, no siempre una propiedad del cuerpo (p. ej. attributeKey al corregir la declaración de ausencia); ausente si el error no es de un campo (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.'; ausente si no lo es (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.';
+  'Nombre lógico del dato que causó el error, no siempre una propiedad del cuerpo (p. ej. attributeKey al corregir la declaración de ausencia); ausente si el error no es de un campo (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.';
 
 function montar() {
   return componerModuloDeCorrecciones({
