@@ -31,6 +31,7 @@ from app.application.consulta_no_componible import (
     ConsultaNoComponible,
     SeguimientoNoComponible,
 )
+from app.application.corpus_metadata.poblacion_puertos import LlmCompleto
 from app.application.ports import (
     CatalogoClinico,
     ChatTurnPort,
@@ -95,12 +96,14 @@ from app.infrastructure.clock.system_clock import RelojDelSistema
 from app.infrastructure.fake.fake_chat_turn import FakeChatTurn
 from app.infrastructure.fake.fake_evidence_query import FakeEvidenceQuery
 from app.infrastructure.fake.fake_follow_up import FakeFollowUp
+from app.application.selector_proveedor_llm import SelectorDeProveedorLlm
 from app.infrastructure.fake.fake_llm_health import FakeLlmHealth
 from app.infrastructure.lenguaje.terminos_prohibidos import (
     ListaDeTerminosNoDisponible,
     cargar_verificador_de_terminos,
 )
 from app.infrastructure.llm.fabrica_local import (
+    EnvolverCliente,
     crear_cliente_llm_del_chat,
     crear_generador_de_seguimiento_local,
     crear_generador_local,
@@ -259,6 +262,7 @@ def crear_app(
     catalogo_clinico: CatalogoClinico | None = None,
     criterios_de_aplicabilidad: CriteriosDeAplicabilidad | None = None,
     datos_criticos: EtiquetasDeDatosCriticos | None = None,
+    llm_nube: LlmCompleto | None = None,
 ) -> FastAPI:
     silenciar_urls_de_httpx_en_logs()
     exigir_telemetria_de_langchain_apagada(entorno_del_proceso())
@@ -284,7 +288,10 @@ def crear_app(
     )  # el más externo: fija el traceId de los logs
     verificador = _crear_verificador_jwt_de_servicio(settings, clock)
     autenticacion = crear_require_service_jwt(verificador)
-    _registrar_chat(app, settings, chat, autenticacion, clock, catalogo_clinico, recuperacion)
+    envolver = _selector_de_proveedor(settings, llm_nube)
+    _registrar_chat(
+        app, settings, chat, autenticacion, clock, catalogo_clinico, envolver, recuperacion
+    )
     _registrar_consulta_de_evidencia(
         app,
         settings,
@@ -297,6 +304,7 @@ def crear_app(
         catalogo_clinico=catalogo_clinico,
         criterios_de_aplicabilidad=app.state.criterios_de_aplicabilidad,
         datos_criticos=datos_criticos,
+        envolver=envolver,
     )
     app.include_router(
         crear_router_health(
@@ -403,6 +411,17 @@ def _crear_verificador_jwt_de_servicio(settings: Settings, clock: Clock) -> Serv
     )
 
 
+def _selector_de_proveedor(settings: Settings, llm_nube: LlmCompleto | None) -> EnvolverCliente:
+    """RN-12: todo cliente del LLM de las rutas de consulta pasa por el selector de proveedor de la petición.
+
+    En producción ``llm_nube`` es ``None`` (no existe adapter de nube); solo los tests inyectan uno falso."""
+
+    def envolver(local: LlmCompleto) -> LlmCompleto:
+        return SelectorDeProveedorLlm(local, llm_nube, nube_habilitada=settings.llm_cloud_enabled)
+
+    return envolver
+
+
 def _sonda_llm_segun(settings: Settings) -> LlmHealthPort:
     if settings.llm_provider == "fake":
         return FakeLlmHealth()
@@ -422,6 +441,7 @@ def _registrar_consulta_de_evidencia(
     catalogo_clinico: CatalogoClinico,
     criterios_de_aplicabilidad: CriteriosDeAplicabilidad,
     datos_criticos: EtiquetasDeDatosCriticos,
+    envolver: EnvolverCliente,
 ) -> None:
     seguimiento_propio = seguimiento
     if consulta is None and settings.llm_provider == "fake":
@@ -440,11 +460,17 @@ def _registrar_consulta_de_evidencia(
             seguimiento_propio = seguimiento or SeguimientoNoComponible()
         else:
             servicio = _crear_servicio_de_recuperacion(
-                settings, recuperacion, clock, generador, criterios_de_aplicabilidad, datos_criticos
+                settings,
+                recuperacion,
+                clock,
+                generador,
+                criterios_de_aplicabilidad,
+                datos_criticos,
+                envolver,
             )
             consulta = servicio
             seguimiento_propio = seguimiento or _crear_seguimiento(
-                settings, servicio, catalogo_clinico
+                settings, servicio, catalogo_clinico, envolver
             )
     if consulta is not None:
         app.include_router(crear_router_rag_query(consulta, autenticacion))
@@ -459,6 +485,7 @@ def _registrar_chat(
     autenticacion: DependenciaJwtServicio,
     clock: Clock,
     catalogo: CatalogoClinico,
+    envolver: EnvolverCliente,
     recuperacion: PuertosDeRecuperacion | None,
 ) -> None:
     """`POST /chat/turn`: con ``LLM_PROVIDER=fake`` el ejemplo del contrato; con ``local`` el servicio real (RN-12)."""
@@ -475,7 +502,7 @@ def _registrar_chat(
             catalogo,
         )
     elif chat is None:
-        chat = _crear_chat_turn(settings, clock, catalogo, recuperacion)
+        chat = _crear_chat_turn(settings, clock, catalogo, envolver, recuperacion)
     app.include_router(crear_router_chat_turn(chat, autenticacion))
 
 
@@ -483,6 +510,7 @@ def _crear_chat_turn(
     settings: Settings,
     clock: Clock,
     catalogo: CatalogoClinico,
+    envolver: EnvolverCliente,
     recuperacion: PuertosDeRecuperacion | None,
 ) -> ChatTurnPort:
     """El turno del chat sobre el LLM local; el estado del hilo vive solo en memoria de este proceso (ADR-51).
@@ -500,7 +528,7 @@ def _crear_chat_turn(
         return ChatNoComponible()
     return ChatTurnService(
         verificador_terminos=verificador,
-        llm=crear_cliente_llm_del_chat(settings),
+        llm=crear_cliente_llm_del_chat(settings, envolver),
         catalogo=catalogo,
         contador=_contador_de_tokens(settings),
         reloj=clock,
@@ -538,12 +566,15 @@ def _contador_de_tokens(settings: Settings) -> ContadorDeTokens:
 
 
 def _crear_seguimiento(
-    settings: Settings, servicio: RAGOrchestratorService, catalogo: CatalogoClinico
+    settings: Settings,
+    servicio: RAGOrchestratorService,
+    catalogo: CatalogoClinico,
+    envolver: EnvolverCliente,
 ) -> ResponderSeguimiento:
     """Seguimiento (US-218) sobre el mismo servicio de recuperación y el LLM local (RN-12); sin estado propio."""
     return ResponderSeguimiento(
         servicio=servicio,
-        generador=crear_generador_de_seguimiento_local(settings),
+        generador=crear_generador_de_seguimiento_local(settings, envolver),
         terminos_por_tipo=_terminos_del_catalogo_por_tipo(settings, catalogo),
     )
 
@@ -564,6 +595,7 @@ def _crear_servicio_de_recuperacion(
     generador: EvidenceGenerator | None,
     criterios_de_aplicabilidad: CriteriosDeAplicabilidad,
     datos_criticos: EtiquetasDeDatosCriticos,
+    envolver: EnvolverCliente,
 ) -> RAGOrchestratorService:
     _exigir_ramas_de_la_recuperacion_hibrida(settings, puertos)
     return RAGOrchestratorService(
@@ -577,18 +609,18 @@ def _crear_servicio_de_recuperacion(
         datos_criticos=datos_criticos,
         aplicabilidad=ApplicabilityService(criterios_de_aplicabilidad),
         # Producción: el mismo LLM local (RN-12); la validación de cita, lenguaje y NLI es del servicio, no del adapter.
-        proponente=crear_proponente_local(settings),
+        proponente=crear_proponente_local(settings, envolver),
         clasificador_nli=puertos.clasificador_nli,
         verificador_terminos=puertos.verificador_terminos,
         # Producción: el LLM local (RN-12). La rama con evidencia ya verifica el soporte NLI y el lenguaje antes de
         # responder (L1D-180, D9 de L1D-275): ninguna opción sin verificar sale de este servicio.
-        generador=generador or crear_generador_local(settings),
+        generador=generador or crear_generador_local(settings, envolver),
         reloj=clock,
         parametros=_parametros_de_recuperacion(settings),
         buscador_sparse=puertos.buscador_sparse,
         embedder_sparse=puertos.embedder_sparse,
         # Segundo loop (US-238): el mismo LLM local (RN-12) y solo términos del catálogo montado (RN-27).
-        reescritor=crear_reescritor_local(settings),
+        reescritor=crear_reescritor_local(settings, envolver),
         terminos_del_catalogo=_terminos_del_catalogo_montado(settings, puertos.catalogo_clinico),
     )
 
@@ -659,7 +691,9 @@ def _parametros_de_recuperacion(settings: Settings) -> ParametrosDeRecuperacion:
         retrieval_top_k=settings.retrieval_top_k,  # type: ignore[arg-type]
         rerank_top_n=settings.rerank_top_n,  # type: ignore[arg-type]
         longitud_maxima_codigo_tipo=settings.retrieval_cancer_type_max_length,
-        llm_provider=_proveedor_de_meta(settings),
+        llm_provider=_proveedor_de_meta(
+            settings
+        ),  # valor inicial: lo sobrescribe ContextoDeProveedor.declarar_en
         llm_model=settings.llm_model,
         nli_entailment_threshold=settings.nli_entailment_threshold,  # type: ignore[arg-type]
         tipos_habilitados=settings.enabled_cancer_types,

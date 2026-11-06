@@ -1,0 +1,12 @@
+{
+  "regla": "RN-12",
+  "descripcion": "Tabla común de la regla «datos reales solo con LLM local»: (clasificación de datos, proveedor declarado) → permitido. La implementan por separado rag-orchestrator (proveedores_permitidos con la nube habilitada) y clinical-api (proveedorPermitido); ambos tests leen esta tabla.",
+  "casos": [
+    { "clasificacion": "sintetico", "proveedor": "local", "permitido": true },
+    { "clasificacion": "sintetico", "proveedor": "nube", "permitido": true },
+    { "clasificacion": "real_anonimizado", "proveedor": "local", "permitido": true },
+    { "clasificacion": "real_anonimizado", "proveedor": "nube", "permitido": false },
+    { "clasificacion": "real_identificado", "proveedor": "local", "permitido": true },
+    { "clasificacion": "real_identificado", "proveedor": "nube", "permitido": false }
+  ]
+}

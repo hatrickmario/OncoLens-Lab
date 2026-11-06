@@ -36,7 +36,7 @@ from app.evaluation.config_suite import ConfigSuite
 from app.evaluation.guardas import SuiteAbortada
 from app.evaluation.llamadas import RegistroDeLlamadas
 from app.infrastructure.llm.fabrica_local import (
-    ClienteLlmLocal,
+    LlmCompleto,
     crear_generador_local,
     crear_proponente_local,
     parametros_del_respaldo,
@@ -163,7 +163,7 @@ class LlmRegistrado:
 
     def __init__(
         self,
-        interno: ClienteLlmLocal,
+        interno: LlmCompleto,
         registro: RegistroDeLlamadas,
         *,
         destino: str,
@@ -269,7 +269,7 @@ def cargar_puertos_locales(
     modelos = _cargar_modelos(settings, origen.cargador)
     embedder = modelos.embedder_consulta
 
-    def registrar_llm(interno: ClienteLlmLocal) -> ClienteLlmLocal:
+    def registrar_llm(interno: LlmCompleto) -> LlmCompleto:
         return LlmRegistrado(
             interno,
             registro,
