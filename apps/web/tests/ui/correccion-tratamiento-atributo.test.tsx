@@ -312,4 +312,30 @@ describe('Corrección de tratamientos previos y atributos en la vista de caso', 
     );
     expect(HOY).toBe('2026-10-01');
   });
+
+  it('cierra con Escape sin enviar nada y devuelve el foco al botón de la fila', async () => {
+    const usuario = userEvent.setup();
+    montarCasoParaCorregir();
+    const boton = await corregirTratamiento();
+    await usuario.click(boton);
+    await screen.findByRole('dialog', { name: c.tratamiento.titulo });
+
+    await usuario.keyboard('{Escape}');
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(document.activeElement).toBe(boton);
+    expect(bff.envios()).toHaveLength(0);
+  });
+
+  it('pide el motivo de fin junto a su campo cuando el servidor responde 422 con field endReason', async () => {
+    bff.corregirTratamiento(422, { ...errorCorreccionFechaFin, field: 'endReason' });
+    const usuario = userEvent.setup();
+    montarCasoParaCorregir();
+    const dialogo = await abrirTratamiento(usuario);
+
+    await usuario.click(within(dialogo).getByRole('button', { name: f.formulario.guardar }));
+
+    expect(await within(dialogo).findByText(f.errores.motivoDeFin)).toBeTruthy();
+    expect(within(dialogo).getByLabelText(t.motivoDeFin).getAttribute('aria-invalid')).toBe('true');
+  });
 });
