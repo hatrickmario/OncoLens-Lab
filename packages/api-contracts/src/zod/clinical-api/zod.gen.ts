@@ -502,6 +502,12 @@ export const zCompletenessItem = z.strictObject({
         'faltante',
         'no_aplica'
     ]),
+    gapType: z.union([
+        z.literal('no_encontrado'),
+        z.literal('incompleto'),
+        z.literal('por_conciliar'),
+        z.literal('no_buscado')
+    ]).nullable(),
     origin: z.enum([
         'documento',
         'manual',

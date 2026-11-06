@@ -66,6 +66,33 @@
       "request": "chat-turn-request-fuera-de-alcance.json"
     },
     {
+      "file": "chat-turn-request-faltantes.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnRequest"
+    },
+    {
+      "file": "chat-turn-request-faltantes-ninguno.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnRequest"
+    },
+    {
+      "file": "chat-turn-faltantes.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnResponse",
+      "request": "chat-turn-request-faltantes.json"
+    },
+    {
+      "file": "chat-turn-faltantes-ninguno.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnResponse",
+      "request": "chat-turn-request-faltantes-ninguno.json"
+    },
+    {
+      "file": "completeness-gap-type-p-chat.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1completeness/get/responses/200"
+    },
+    {
       "file": "chat-turn-hilo-desconocido.json",
       "spec": "rag-orchestrator",
       "target": "#/paths/~1chat~1turn/post/responses/404",

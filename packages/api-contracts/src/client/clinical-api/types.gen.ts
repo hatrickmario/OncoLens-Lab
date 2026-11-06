@@ -601,6 +601,10 @@ export type CompletenessItem = {
     label: string;
     status: 'presente_verificado' | 'presente_sin_verificar' | 'faltante' | 'no_aplica';
     /**
+     * Tipo de vacío (US-263), segundo eje sobre status: no cambia el status. null si el ítem no tiene vacío (presente_verificado sin conflicto pendiente, o no_aplica). por_conciliar: hay un registro vigente en requiere_revision con conflicts_with_id en el destino del ítem (también con un dato verificado). incompleto: presente_sin_verificar sin conflicto vigente, o faltante con menos registros vigentes que minValues (al menos uno). no_encontrado: sin registros y el paciente tiene un documento procesado (ocr_status = completado) de alguno de los tipos fuente del catálogo. no_buscado: sin registros y ningún documento procesado de esos tipos. Prioridad: por_conciliar > incompleto > no_buscado > no_encontrado.
+     */
+    gapType: 'no_encontrado' | 'incompleto' | 'por_conciliar' | 'no_buscado' | null;
+    /**
      * regla si status es faltante o no_aplica; si no, sale del entryMethod del registro que cuenta.
      */
     origin: 'documento' | 'manual' | 'correccion' | 'seed' | 'regla';

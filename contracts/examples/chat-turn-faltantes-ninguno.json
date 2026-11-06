@@ -1,0 +1,26 @@
+{
+  "intent": "faltantes",
+  "blocks": [
+    {
+      "kind": "faltante",
+      "text": "No faltan datos críticos según el catálogo 1.6.0."
+    }
+  ],
+  "omittedClaims": 0,
+  "structuredState": {
+    "intentsVistos": [
+      "faltantes"
+    ],
+    "preguntasPrevias": [
+      "¿Qué información falta?"
+    ],
+    "opcionesMostradas": [],
+    "citasMostradas": [],
+    "faltantesSenalados": []
+  },
+  "llmProvider": "local",
+  "notices": [
+    "Generado por IA; requiere validación clínica independiente por el oncólogo tratante",
+    "Uso académico/investigación"
+  ]
+}

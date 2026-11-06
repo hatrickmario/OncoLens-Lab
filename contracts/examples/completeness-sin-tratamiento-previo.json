@@ -6,6 +6,7 @@
       "item": "histologia",
       "label": "Histología",
       "status": "presente_verificado",
+      "gapType": null,
       "origin": "seed",
       "provenance": {
         "entryMethod": "seed",
@@ -22,6 +23,7 @@
       "item": "grado",
       "label": "Grado",
       "status": "faltante",
+      "gapType": "no_buscado",
       "origin": "regla",
       "provenance": null,
       "destination": {
@@ -34,6 +36,7 @@
       "item": "tnm",
       "label": "Estadificación TNM",
       "status": "presente_verificado",
+      "gapType": null,
       "origin": "seed",
       "provenance": {
         "entryMethod": "seed",
@@ -50,6 +53,7 @@
       "item": "ecog",
       "label": "ECOG",
       "status": "presente_verificado",
+      "gapType": null,
       "origin": "seed",
       "provenance": {
         "entryMethod": "seed",
@@ -66,6 +70,7 @@
       "item": "re",
       "label": "Receptor de estrógeno",
       "status": "presente_sin_verificar",
+      "gapType": "incompleto",
       "origin": "documento",
       "provenance": {
         "entryMethod": "ocr",
@@ -83,6 +88,7 @@
       "item": "rp",
       "label": "Receptor de progesterona",
       "status": "faltante",
+      "gapType": "no_buscado",
       "origin": "regla",
       "provenance": null,
       "destination": {
@@ -95,6 +101,7 @@
       "item": "her2_ihq",
       "label": "HER2 (IHQ)",
       "status": "presente_verificado",
+      "gapType": null,
       "origin": "correccion",
       "provenance": {
         "entryMethod": "manual_correction",
@@ -111,6 +118,7 @@
       "item": "her2_ish",
       "label": "HER2 (ISH)",
       "status": "faltante",
+      "gapType": "no_buscado",
       "origin": "regla",
       "provenance": null,
       "destination": {
@@ -123,6 +131,7 @@
       "item": "ki67",
       "label": "Ki-67",
       "status": "presente_verificado",
+      "gapType": null,
       "origin": "manual",
       "provenance": {
         "entryMethod": "manual",
@@ -139,6 +148,7 @@
       "item": "estado_menopausico",
       "label": "Estado menopáusico",
       "status": "faltante",
+      "gapType": "no_buscado",
       "origin": "regla",
       "provenance": null,
       "destination": {
@@ -151,6 +161,7 @@
       "item": "tratamientos_previos",
       "label": "Tratamientos previos",
       "status": "presente_verificado",
+      "gapType": null,
       "origin": "manual",
       "provenance": {
         "entryMethod": "manual",
@@ -168,6 +179,7 @@
       "item": "brca_germinal",
       "label": "BRCA germinal",
       "status": "faltante",
+      "gapType": "no_buscado",
       "origin": "regla",
       "provenance": null,
       "destination": {
