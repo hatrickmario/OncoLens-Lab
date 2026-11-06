@@ -15,8 +15,12 @@ import {
 import {
   zCorrectBiomarkerBody,
   zCorrectBiomarkerPath,
+  zCorrectClinicalAttributeBody,
+  zCorrectClinicalAttributePath,
   zCorrectClinicalNoteBody,
   zCorrectClinicalNotePath,
+  zCorrectPriorTreatmentBody,
+  zCorrectPriorTreatmentPath,
   zCreateManualBiomarkerBody,
   zCreateManualBiomarkerPath,
   zCreateManualClinicalAttributeBody,
@@ -27,7 +31,9 @@ import {
   zGetBiomarkerHistoryPath,
   zCreateManualClinicalAttributePath,
   zCreateManualPriorTreatmentPath,
+  zGetClinicalAttributeHistoryPath,
   zGetClinicalNoteHistoryPath,
+  zGetPriorTreatmentHistoryPath,
   zListClinicalAttributesPath,
   zListClinicalNotesPath,
 } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
@@ -45,6 +51,10 @@ export type OperacionDeRegistroManual =
   | 'listClinicalNotes'
   | 'correctClinicalNote'
   | 'getClinicalNoteHistory'
+  | 'correctPriorTreatment'
+  | 'getPriorTreatmentHistory'
+  | 'correctClinicalAttribute'
+  | 'getClinicalAttributeHistory'
   | 'createManualPriorTreatment'
   | 'listClinicalAttributes'
   | 'createManualClinicalAttribute'
@@ -56,6 +66,8 @@ export interface ParametrosDeRuta {
   id: string;
   biomarkerId?: string;
   noteId?: string;
+  treatmentId?: string;
+  attributeId?: string;
 }
 
 export type ManejadorDeRegistroManual = (
@@ -87,8 +99,8 @@ function definir<R, B = never>(definicion: {
   return {
     evento: definicion.evento,
     ...(definicion.cuerpo && { cuerpo: definicion.cuerpo }),
-    preparar: ({ id, biomarkerId, noteId }) => {
-      const ruta = definicion.ruta.safeParse({ patientId: id, biomarkerId, noteId });
+    preparar: ({ id, ...ids }) => {
+      const ruta = definicion.ruta.safeParse({ patientId: id, ...ids });
       return ruta.success ? (sdk, cuerpo) => definicion.llamar(sdk, ruta.data, cuerpo as B) : null;
     },
   };
@@ -121,6 +133,28 @@ const DEFINICIONES: Record<OperacionDeRegistroManual, Definicion> = {
     evento: 'correcciones.nota.historico',
     ruta: zGetClinicalNoteHistoryPath,
     llamar: (sdk, path) => getClinicalNoteHistory({ client: sdk.client, path, ...base }),
+  }),
+  correctPriorTreatment: definir({
+    evento: 'correcciones.tratamiento.corregir',
+    ruta: zCorrectPriorTreatmentPath,
+    cuerpo: zCorrectPriorTreatmentBody,
+    llamar: () => Promise.reject(new Error('no implementado')),
+  }),
+  getPriorTreatmentHistory: definir({
+    evento: 'correcciones.tratamiento.historico',
+    ruta: zGetPriorTreatmentHistoryPath,
+    llamar: () => Promise.reject(new Error('no implementado')),
+  }),
+  correctClinicalAttribute: definir({
+    evento: 'correcciones.atributo.corregir',
+    ruta: zCorrectClinicalAttributePath,
+    cuerpo: zCorrectClinicalAttributeBody,
+    llamar: () => Promise.reject(new Error('no implementado')),
+  }),
+  getClinicalAttributeHistory: definir({
+    evento: 'correcciones.atributo.historico',
+    ruta: zGetClinicalAttributeHistoryPath,
+    llamar: () => Promise.reject(new Error('no implementado')),
   }),
   createManualPriorTreatment: definir({
     evento: 'registro_clinico.tratamiento.crear',
