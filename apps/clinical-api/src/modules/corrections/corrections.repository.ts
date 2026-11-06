@@ -1,6 +1,7 @@
 import type { Consultador } from '../auth/auth.repository.js';
 import { tipoDeCancerVigente } from '../compartido/contexto-de-registro.js';
 import { guardarAtributo } from '../clinical-attributes/clinical-attributes.repository.js';
+import { hayTratamientosVigentes } from '../compartido/declaracion-de-ausencia.js';
 import { bloquearPaciente } from '../compartido/paciente-activo.js';
 import { guardarTratamiento } from '../prior-treatments/prior-treatments.repository.js';
 import { sqlDatoVigente } from '../compartido/estados-de-revision.js';
@@ -252,6 +253,7 @@ function transaccionSobre(db: Consultador): TransaccionDeCorreccion {
   return {
     bloquearPaciente: (patientId) => bloquearPaciente(db, patientId),
     biomarcador: (patientId, biomarkerId) => biomarcador(db, patientId, biomarkerId),
+    hayTratamientosVigentes: (patientId) => hayTratamientosVigentes(db, patientId),
     tratamiento: (patientId, treatmentId) => tratamiento(db, patientId, treatmentId),
     atributo: (patientId, attributeId) => atributo(db, patientId, attributeId),
     nota: (patientId, noteId) => nota(db, patientId, noteId),

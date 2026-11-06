@@ -5,10 +5,14 @@ import type { Registrar } from '../../infrastructure/logger.js';
 import type { TraceIdGenerator } from '../../infrastructure/trace-id-generator.js';
 import { authorize } from '../../middleware/authorize.js';
 import { crearTraceIdMiddleware, traceIdDe } from '../../middleware/trace-id.middleware.js';
-import { ValorFueraDeCatalogoError } from '../compartido/errores-de-registro.js';
+import {
+  DeclaracionIncoherenteError,
+  ValorFueraDeCatalogoError,
+} from '../compartido/errores-de-registro.js';
 import {
   CUERPO_INVALIDO,
   crearCuerpoIlegible,
+  cuerpoInvalidoDelCampo,
   rechazar,
   rechazoComunDe,
   registrarResultado,
@@ -59,6 +63,9 @@ function rechazoDe(error: unknown): Rechazo | undefined {
   if (error instanceof DatoNoVigenteError) return DATO_NO_VIGENTE;
   if (error instanceof CorreccionInvalidaError) {
     return { ...CUERPO_INVALIDO, ...(error.campo !== undefined && { campo: error.campo }) };
+  }
+  if (error instanceof DeclaracionIncoherenteError) {
+    return { ...cuerpoInvalidoDelCampo(error.campo), resultado: 'declaracion_incoherente' };
   }
   const comun = rechazoComunDe(error);
   if (comun !== undefined && error instanceof ValorFueraDeCatalogoError) {

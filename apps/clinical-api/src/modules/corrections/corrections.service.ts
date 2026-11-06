@@ -13,6 +13,10 @@ import {
   comoAtributoLeido,
 } from '../clinical-attributes/clinical-attributes.atributo.js';
 import { comoTratamientoDelContrato } from '../prior-treatments/prior-treatments.tratamiento.js';
+import {
+  esDeclaracionDeAusencia,
+  exigirSinTratamientosParaDeclarar,
+} from '../compartido/declaracion-de-ausencia.js';
 import { exigirPacienteQueAdmiteRegistros } from '../compartido/paciente-activo.js';
 import { PacienteNoEncontradoError } from '../compartido/pacientes.errores.js';
 import type { CatalogoDeAtributos } from '../clinical-attributes/ports.js';
@@ -191,6 +195,10 @@ async function corregirAtributo(
     const actual = await tx.atributo(patientId, datoId);
     if (actual === null) throw new DatoNoEncontradoError();
     exigirDatoVigente(actual.reviewStatus);
+    // D4 (d5fb-04): una declaración vigente no convive con un tratamiento vigente; si el dato lo contradice, no se toca.
+    if (esDeclaracionDeAusencia(actual.attributeKey)) {
+      await exigirSinTratamientosParaDeclarar(tx, patientId);
+    }
     const tipoDeCancer = await tx.tipoDeCancerVigente(patientId);
     const permitidos =
       tipoDeCancer === null ? [] : catalogoDeAtributos.atributosPermitidos(tipoDeCancer);

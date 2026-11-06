@@ -1,4 +1,5 @@
 import type { AtributoAGuardar, PrecisionDeFecha } from '../clinical-attributes/ports.js';
+import type { LecturaDeTratamientosVigentes } from '../compartido/declaracion-de-ausencia.js';
 import type { EstadoDeRevision } from '../compartido/estados-de-revision.js';
 import type { PacienteBloqueable } from '../compartido/paciente-activo.js';
 import type { MetodoDeEntrada } from '../manual-entry/ports.js';
@@ -172,7 +173,7 @@ export interface VersionReemplazada {
 }
 
 /** Operaciones de UNA transacción de corrección (una sola conexión, paciente bloqueado). */
-export interface TransaccionDeCorreccion extends PacienteBloqueable {
+export interface TransaccionDeCorreccion extends PacienteBloqueable, LecturaDeTratamientosVigentes {
   /** `null` si el biomarcador no existe o es de otro paciente (404). */
   biomarcador(patientId: string, biomarkerId: string): Promise<BiomarcadorActual | null>;
   /** `null` si el tratamiento no existe o es de otro paciente (404). */
