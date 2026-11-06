@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 import pytest
 
-from app.domain.pares_del_reranker import recortar_a_pares_del_reranker
+from app.domain.pares_del_reranker import cortados_con_puesto, recortar_a_pares_del_reranker
 
 
 @dataclass(frozen=True)
@@ -71,3 +71,52 @@ def test_una_lista_vacia_devuelve_vacia() -> None:
 def test_un_maximo_de_pares_no_positivo_se_rechaza(maximo: int) -> None:
     with pytest.raises(ValueError):
         recortar_a_pares_del_reranker([Candidato("a", 0.5)], maximo)
+
+
+def test_no_hay_cortados_cuando_hay_menos_candidatos_que_pares() -> None:
+    resultado = cortados_con_puesto([Candidato("a", 0.9), Candidato("b", 0.5)], 12, 50)
+
+    assert resultado.cortados == () and resultado.omitidos == 0
+
+
+def test_los_cortados_llevan_su_puesto_1_based_en_el_orden_denso() -> None:
+    candidatos = [Candidato(f"c{i}", 0.1 * i) for i in range(6)]
+
+    resultado = cortados_con_puesto(candidatos, 3, 50)
+
+    assert resultado.cortados == (("c2", 4), ("c1", 5), ("c0", 6))
+
+
+def test_un_empate_en_el_borde_se_desempata_por_chunk_id_igual_que_el_recorte() -> None:
+    candidatos = [
+        Candidato("z", 0.5),
+        Candidato("a", 0.5),
+        Candidato("m", 0.5),
+        Candidato("p", 0.9),
+    ]
+
+    resultado = cortados_con_puesto(candidatos, 2, 50)
+
+    assert resultado.cortados == (("m", 3), ("z", 4))
+
+
+def test_el_tope_de_ids_lista_los_primeros_y_cuenta_los_omitidos() -> None:
+    candidatos = [Candidato(f"c{i:02d}", 1.0 - 0.01 * i) for i in range(10)]
+
+    resultado = cortados_con_puesto(candidatos, 2, 3)
+
+    assert [c for c, _ in resultado.cortados] == ["c02", "c03", "c04"] and resultado.omitidos == 5
+
+
+@pytest.mark.parametrize("pares, ids", [(0, 5), (5, 0)])
+def test_rechaza_topes_no_positivos(pares: int, ids: int) -> None:
+    with pytest.raises(ValueError):
+        cortados_con_puesto([Candidato("a", 0.5)], pares, ids)
+
+
+def test_el_tope_de_ids_por_defecto_coincide_en_settings_y_en_el_servicio() -> None:
+    from app.application.rag_orchestrator_service import ParametrosDeRecuperacion
+    from app.config.settings import Settings
+
+    por_defecto = ParametrosDeRecuperacion.__dataclass_fields__["reranker_cut_log_max_ids"].default
+    assert Settings().reranker_cut_log_max_ids == por_defecto  # type: ignore[call-arg]

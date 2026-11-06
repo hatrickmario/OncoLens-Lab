@@ -70,11 +70,11 @@ class _LlmHer2:
     def __init__(self) -> None:
         self.prompts: list[str] = []
 
-    async def completar_json_acotado(self, prompt, esquema, *, max_tokens, semilla):
-        self.prompts.append(prompt)
+    async def completar_json_acotado(self, usuario, esquema, *, max_tokens, semilla, sistema=None):
+        self.prompts.append(usuario)
         valores = (
             [{"value": "HER2 negativo", "chunkId": "ch-a2-1", "scope": "elegibilidad"}]
-            if "Criterio: estado_her2" in prompt
+            if "Criterio: estado_her2" in usuario
             else []
         )
         return RespuestaDelLlm(json.dumps({"values": valores}), "stop")

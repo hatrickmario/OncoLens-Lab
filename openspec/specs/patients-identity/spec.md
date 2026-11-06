@@ -93,7 +93,7 @@ El seed sintético MUST escribir la identidad de los pacientes semilla (a)–(e)
 - **AND** el log no contiene valores clínicos ni la identidad del paciente
 
 ### Requirement: El listado y la búsqueda muestran los faltantes críticos reales
-El listado y la búsqueda de pacientes MUST calcular `missingCriticalCount` de cada `PatientListItem` con el mismo `CompletenessService` que la ficha (número de ítems en `faltante`), en lote para la página y sin consultas por fila (el número de consultas MUST NOT depender del tamaño de página). Con tipo de cáncer no habilitado o sin diagnóstico activo el contador SHALL ser `0` con `completenessAvailable` ausente o `true`. Si el checklist de un paciente no puede calcularse, su fila MUST llevar `missingCriticalCount = 0` y `completenessAvailable = false`, y la respuesta SHALL seguir siendo `200` (RN-26). La vista del `admin` MUST NOT invocar el servicio de completitud (PRD v1.4 §11).
+El listado y la búsqueda de pacientes MUST calcular `missingCriticalCount` de cada `PatientListItem` con el mismo `CompletenessService` que la ficha, en lote y sin consultas por fila. Si el checklist de un paciente no puede calcularse, su fila MUST llevar `missingCriticalCount = 0` y `completenessAvailable = false`, y la respuesta SHALL seguir siendo `200` (RN-26). La vista del `admin` MUST NOT invocar el servicio de completitud (PRD v1.4 §11).
 
 #### Scenario: El listado muestra faltantes reales de pacientes del seed [feedback Demo 5] [FR-23] [FR-02]
 - **GIVEN** el seed sintético, el catálogo real, `ENABLED_CANCER_TYPES` en `mama,prostata` y en solo `mama`, y un doctor con sesión `clinical:read`

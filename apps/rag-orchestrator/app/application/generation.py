@@ -218,7 +218,9 @@ class LlmEvidenceGenerator:
             claim_max_words=self._claim_max_words,
         )
         try:
-            crudo = await self._cliente.completar_json(prompt, self._esquema)
+            crudo = await self._cliente.completar_json(
+                prompt.usuario, self._esquema, sistema=prompt.sistema
+            )
         except FalloDelLlm:
             logger.warning("event=generacion_llm_fallo traceId=%s", trace_id)
             raise LlmLocalNoDisponibleError() from None
