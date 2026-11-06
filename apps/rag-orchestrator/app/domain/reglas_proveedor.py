@@ -3,6 +3,7 @@
 import ipaddress
 import re
 import unicodedata
+from enum import StrEnum
 from urllib.parse import urlsplit
 
 # Piso CERRADO EN CÓDIGO de la suite de evaluación (ADR-41 D4): `es_proveedor_local()` no lee configuración, así que
@@ -97,3 +98,17 @@ def es_modelo_de_nube(modelo: str) -> bool:
         unicodedata.normalize("NFKC", modelo).strip().casefold()
     )  # Ollama resuelve el nombre con ruido
     return _SUFIJO_DE_NUBE.search(normalizado) is not None
+
+
+class ProveedorLlm(StrEnum):
+    """Dónde corre el LLM de una petición (mismo vocabulario que ``RagMeta.llmProvider``, RN-12)."""
+
+    local = "local"
+    nube = "nube"
+
+
+def proveedores_permitidos(
+    data_classification: str, llm_cloud_enabled: bool
+) -> tuple[ProveedorLlm, ...]:
+    """RN-12: proveedores del LLM admitidos para una clasificación, en orden de preferencia."""
+    raise NotImplementedError

@@ -94,6 +94,7 @@ from app.infrastructure.clock.system_clock import RelojDelSistema
 from app.infrastructure.fake.fake_chat_turn import FakeChatTurn
 from app.infrastructure.fake.fake_evidence_query import FakeEvidenceQuery
 from app.infrastructure.fake.fake_follow_up import FakeFollowUp
+from app.application.selector_proveedor_llm import LlmCompleto
 from app.infrastructure.fake.fake_llm_health import FakeLlmHealth
 from app.infrastructure.lenguaje.terminos_prohibidos import (
     ListaDeTerminosNoDisponible,
@@ -258,6 +259,7 @@ def crear_app(
     catalogo_clinico: CatalogoClinico | None = None,
     criterios_de_aplicabilidad: CriteriosDeAplicabilidad | None = None,
     datos_criticos: EtiquetasDeDatosCriticos | None = None,
+    llm_nube: LlmCompleto | None = None,
 ) -> FastAPI:
     silenciar_urls_de_httpx_en_logs()
     exigir_telemetria_de_langchain_apagada(entorno_del_proceso())
