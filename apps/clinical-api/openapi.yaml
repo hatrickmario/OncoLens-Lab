@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — Platform API (Backend 1 / clinical-api)
-  version: 1.21.0
+  version: 1.22.0
   description: >-
     API pública, accesible solo a través de los Route Handlers de web (clinical-api no
     publica puerto al host). Autenticación por cookie de sesión HttpOnly + Secure +
@@ -655,6 +655,10 @@ paths:
         extraction_confidence = n_a y review_status = verificado. Sin diagnóstico vigente no se
         puede validar (TIPO_CANCER_NO_REGISTRADO). Un segundo registro de la misma clave es una
         fila nueva, no una corrección. Exige un paciente activo (RN-17).
+        La clave sin_tratamiento_previo (valor si) declara que el paciente no ha recibido
+        tratamiento a la fecha: cumple el ítem tratamientos_previos del checklist sin crear un
+        PriorTreatment; se rechaza con 422 (field = attributeKey) si ya hay tratamientos previos
+        vigentes, y registrar después un tratamiento la marca reemplazada.
       x-permission: clinical:write
       parameters:
         - $ref: '#/components/parameters/PatientId'
@@ -686,8 +690,9 @@ paths:
           $ref: '#/components/responses/NoEncontrado'
         "422":
           description: >-
-            Cuerpo inválido, clave o valor fuera del catálogo, paciente sin tipo de cáncer o
-            paciente egresado.
+            Cuerpo inválido, clave o valor fuera del catálogo, paciente sin tipo de cáncer,
+            paciente egresado, o declaración de ausencia de tratamiento (sin_tratamiento_previo) con
+            tratamientos previos vigentes (CUERPO_INVALIDO con field = attributeKey).
           content:
             application/json:
               schema:
@@ -2093,6 +2098,15 @@ components:
             - $ref: '#/components/schemas/CompletenessProvenance'
             - type: "null"
           description: null si y solo si status es faltante o no_aplica.
+        resolvedBy:
+          type: string
+          enum: [registro, declaracion_de_ausencia]
+          description: >-
+            Cómo se cumplió un ítem presente: registro (hay registros suficientes en su destino) o
+            declaracion_de_ausencia (el catálogo declara un satisfiedBy y hay una declaración vigente,
+            p. ej. sin_tratamiento_previo, sin fila en el destino). Ausente cuando status es faltante
+            o no_aplica, y en los ítems que no tienen satisfiedBy; en un ítem presente, ausente
+            equivale a registro. Hoy solo tratamientos_previos lo emite.
         destination:
           type: object
           additionalProperties: false

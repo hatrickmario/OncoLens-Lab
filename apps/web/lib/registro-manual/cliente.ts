@@ -41,7 +41,7 @@ function textoDelErrorDeRegistroClinico(error: string, campo: string | undefined
   if (mensajeSinCampo !== undefined) return { mensaje: mensajeSinCampo };
   const mensaje =
     error === 'VALOR_FUERA_DE_CATALOGO' ? errores.valorFueraDeCatalogo : errores.campoInvalido;
-  return campo ? { campo, mensaje } : { mensaje };
+  return campo ? { campo, mensaje, codigo: error } : { mensaje, codigo: error };
 }
 
 function traducirError(ruta: RutaDeRegistro, status: number, cuerpo: unknown): ErrorDeRegistro {

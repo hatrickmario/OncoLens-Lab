@@ -35,6 +35,8 @@ export interface TransaccionDeTratamiento extends PacienteBloqueable {
   episodioDelRegistro(patientId: string): Promise<string>;
   /** Tipo de cáncer del diagnóstico vigente; `null` si el paciente no tiene ninguno. */
   tipoDeCancerVigente(patientId: string): Promise<string | null>;
+  /** Las declaraciones de ausencia vigentes pasan a `reemplazado` (design D4): nunca coexisten con un tratamiento. */
+  reemplazarDeclaracionesDeAusencia(patientId: string): Promise<void>;
   guardarTratamiento(tratamiento: TratamientoAGuardar): Promise<void>;
 }
 

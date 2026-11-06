@@ -1,6 +1,10 @@
 import type { CaseView } from '../../../../packages/api-contracts/src/types/clinical-api';
 import { separarSinFecha } from '../../lib/caso/presentacion';
 import type { LecturaDelChecklist } from '../../lib/evidence/faltantes';
+import {
+  declaracionDeAusencia,
+  sinLaDeclaracion,
+} from '../../lib/registro-manual/declaracion-de-ausencia';
 import { CaseTimeline } from './case-timeline';
 import { ClinicalAttributesTable } from './clinical-attributes-table';
 import { CriticalDataChecklist } from './critical-data-checklist';
@@ -35,6 +39,7 @@ export function SeccionesDelCaso({
 }: SeccionesDelCasoProps) {
   const { fechados, sinFecha } = separarSinFecha(vista.timeline);
   const registro = { pacienteId: patientId, egresado, alGuardar };
+  const declaracion = declaracionDeAusencia(vista.attributes);
   return (
     <div className="grid gap-4 lg:grid-cols-[18rem_1fr]">
       <aside>
@@ -42,6 +47,7 @@ export function SeccionesDelCaso({
           lectura={checklist}
           pacienteId={patientId}
           egresado={egresado}
+          hoy={hoy}
           alGuardar={alGuardar}
         />
       </aside>
@@ -51,10 +57,17 @@ export function SeccionesDelCaso({
         <PriorTreatmentsTable
           tratamientos={vista.priorTreatments}
           hoy={hoy}
-          accion={<DialogoTratamientoPrevio {...registro} />}
+          declaracion={declaracion}
+          accion={
+            <DialogoTratamientoPrevio
+              {...registro}
+              hoy={hoy}
+              estado={{ hayTratamientos: vista.priorTreatments.length > 0, declaracion }}
+            />
+          }
         />
         <ClinicalAttributesTable
-          atributos={vista.attributes}
+          atributos={sinLaDeclaracion(vista.attributes)}
           hoy={hoy}
           accion={<DialogoAtributoClinico {...registro} />}
         />

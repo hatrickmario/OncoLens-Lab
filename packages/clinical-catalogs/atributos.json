@@ -1,5 +1,5 @@
 {
-  "version": "1.2.0",
+  "version": "1.3.0",
   "keys": [
     {
       "key": "estado_menopausico",
@@ -123,6 +123,25 @@
           "value": "desconocido",
           "label": {
             "es": "Desconocido"
+          }
+        }
+      ]
+    },
+    {
+      "key": "sin_tratamiento_previo",
+      "cancerTypes": [
+        "mama",
+        "prostata"
+      ],
+      "label": {
+        "es": "Sin tratamiento previo a la fecha",
+        "en": "No prior treatment to date"
+      },
+      "values": [
+        {
+          "value": "si",
+          "label": {
+            "es": "Sí"
           }
         }
       ]

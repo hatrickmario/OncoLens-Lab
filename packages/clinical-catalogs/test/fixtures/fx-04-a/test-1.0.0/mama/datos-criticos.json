@@ -187,6 +187,13 @@
       "destination": {
         "entity": "PriorTreatment"
       },
+      "satisfiedBy": [
+        {
+          "entity": "ClinicalAttribute",
+          "attribute_key": "sin_tratamiento_previo",
+          "value": "si"
+        }
+      ],
       "minValues": 1,
       "estado": "propuesta",
       "condition": {

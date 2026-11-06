@@ -6,9 +6,11 @@ import { authorize } from '../../middleware/authorize.js';
 import { crearTraceIdMiddleware } from '../../middleware/trace-id.middleware.js';
 import {
   crearCuerpoIlegible,
+  cuerpoInvalidoDelCampo,
   registrarResultado,
   type Rechazo,
 } from '../compartido/http-escritura.js';
+import { DeclaracionIncoherenteError } from '../compartido/errores-de-registro.js';
 import { PacienteNoEncontradoError } from '../compartido/pacientes.errores.js';
 import { crearRegistroHttp } from '../compartido/registro-http.js';
 import { idDePacienteSchema } from '../patients/patients.schema.js';
@@ -33,7 +35,11 @@ const TIPO_DE_CANCER_NO_REGISTRADO: Rechazo = {
 
 /** Errores de dominio propios del atributo → respuesta HTTP; `undefined` si no es uno de ellos. */
 function rechazoPropioDe(error: unknown): Rechazo | undefined {
-  return error instanceof TipoDeCancerNoRegistradoError ? TIPO_DE_CANCER_NO_REGISTRADO : undefined;
+  if (error instanceof TipoDeCancerNoRegistradoError) return TIPO_DE_CANCER_NO_REGISTRADO;
+  if (error instanceof DeclaracionIncoherenteError) {
+    return { ...cuerpoInvalidoDelCampo(error.campo), resultado: 'declaracion_incoherente' };
+  }
+  return undefined;
 }
 
 function crearLectura({ servicio, registrar }: DependenciasDelController) {

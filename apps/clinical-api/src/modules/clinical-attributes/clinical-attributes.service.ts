@@ -4,6 +4,10 @@ import type {
 } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
 import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
+import {
+  esDeclaracionDeAusencia,
+  exigirSinTratamientosParaDeclarar,
+} from '../compartido/declaracion-de-ausencia.js';
 import { exigirPacienteQueAdmiteRegistros } from '../compartido/paciente-activo.js';
 import { PacienteNoEncontradoError } from '../compartido/pacientes.errores.js';
 import {
@@ -46,6 +50,10 @@ export function createClinicalAttributesService(
         const tipoDeCancer = await tx.tipoDeCancerVigente(patientId);
         if (tipoDeCancer === null) throw new TipoDeCancerNoRegistradoError();
         exigirAtributoPermitido(catalogo.atributosPermitidos(tipoDeCancer), cuerpo);
+        // Una sola verdad (d5fb-04 D4): no se declara la ausencia de lo que ya está registrado.
+        if (esDeclaracionDeAusencia(cuerpo.attributeKey)) {
+          await exigirSinTratamientosParaDeclarar(tx, patientId);
+        }
         const atributo = armarAtributoManual({
           cuerpo,
           patientId,

@@ -1,6 +1,7 @@
 import type { Consultador } from '../auth/auth.repository.js';
 import { episodioDelRegistro, tipoDeCancerVigente } from '../compartido/contexto-de-registro.js';
 import { sqlDatoVigente } from '../compartido/estados-de-revision.js';
+import { hayTratamientosVigentes } from '../compartido/declaracion-de-ausencia.js';
 import { bloquearPaciente } from '../compartido/paciente-activo.js';
 import { ejecutarEnTransaccion, type FuenteDeConexiones } from '../compartido/transaccion.js';
 import type {
@@ -62,6 +63,7 @@ function transaccionSobre(db: Consultador): TransaccionDeAtributo {
     existePaciente: (patientId) => existePaciente(db, patientId),
     episodioDelRegistro: (patientId) => episodioDelRegistro(db, patientId),
     tipoDeCancerVigente: (patientId) => tipoDeCancerVigente(db, patientId),
+    hayTratamientosVigentes: (patientId) => hayTratamientosVigentes(db, patientId),
     guardarAtributo: (atributo) => guardarAtributo(db, atributo),
     atributosVigentes: (patientId) => atributosVigentes(db, patientId),
   };

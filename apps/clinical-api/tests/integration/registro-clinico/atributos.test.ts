@@ -218,12 +218,13 @@ describe('lectura de atributos clínicos', () => {
     }[];
     expect(permitidos.map((a) => a.key).sort()).toEqual([
       'estado_castracion',
+      'sin_tratamiento_previo',
       'sitios_metastasicos',
     ]);
     expect(
       permitidos.find((a) => a.key === 'estado_castracion')?.values.map((v) => v.value),
     ).toContain('sensible_castracion');
-    expect(respuesta.body.catalogVersion).toBe('1.4.0');
+    expect(respuesta.body.catalogVersion).toBe('1.5.0');
   });
 
   it('devuelve la lista vacía de permitidos cuando el paciente no tiene diagnóstico vigente [US-094 AC-6]', async () => {

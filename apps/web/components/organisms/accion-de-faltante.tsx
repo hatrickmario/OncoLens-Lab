@@ -3,7 +3,7 @@ import type { AccionManual } from '../../lib/evidence/faltantes';
 import { mensajes } from '../../lib/mensajes';
 import { hrefDeAccionManual } from '../../lib/registro-manual/destinos';
 import { DialogoAtributoClinico } from './dialogo-atributo-clinico';
-import { DialogoTratamientoPrevio } from './dialogo-tratamiento-previo';
+import { DialogoTratamientoPrevio, ESTADO_DE_FALTANTE } from './dialogo-tratamiento-previo';
 
 const ENLACE = 'text-primary inline-block py-1 font-semibold underline';
 
@@ -17,12 +17,15 @@ export function AccionDeFaltante({
   etiqueta,
   pacienteId,
   egresado,
+  hoy,
   alGuardar,
 }: {
   faltante: AccionManual;
   etiqueta: string;
   pacienteId: string;
   egresado: boolean;
+  /** «Hoy» del servidor: lo usa la declaración «Sin tratamiento previo» del diálogo de tratamiento. */
+  hoy: string;
   /** Tras el `201` de un diálogo: releer el checklist y recargar la vista (D5). */
   alGuardar: () => void;
 }) {
@@ -55,6 +58,13 @@ export function AccionDeFaltante({
         />
       );
     case 'tratamiento':
-      return <DialogoTratamientoPrevio {...registro} textoDeAccion={t.agregarTratamiento} />;
+      return (
+        <DialogoTratamientoPrevio
+          {...registro}
+          hoy={hoy}
+          estado={ESTADO_DE_FALTANTE}
+          textoDeAccion={t.agregarTratamiento}
+        />
+      );
   }
 }

@@ -495,6 +495,7 @@ export const zCompletenessItem = z.strictObject({
         'regla'
     ]),
     provenance: zCompletenessProvenance.nullable(),
+    resolvedBy: z.enum(['registro', 'declaracion_de_ausencia']).optional(),
     destination: z.strictObject({
         entity: z.enum([
             'Diagnosis',

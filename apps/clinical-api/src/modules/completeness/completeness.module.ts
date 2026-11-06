@@ -42,6 +42,9 @@ const esquemaDeDatosCriticos = z.object({
         })
         .optional(),
       whenConditionUnknown: z.enum(['faltante', 'no_aplica']).optional(),
+      satisfiedBy: z
+        .array(z.object({ entity: z.string(), attribute_key: z.string(), value: z.string() }))
+        .optional(),
       minValues: z.number().int().min(1),
     }),
   ),

@@ -1,5 +1,5 @@
 {
-  "version": "1.1.0",
+  "version": "1.2.0",
   "verifiedReviewStatuses": [
     "verificado",
     "corregido"
@@ -183,6 +183,13 @@
       "destination": {
         "entity": "PriorTreatment"
       },
+      "satisfiedBy": [
+        {
+          "entity": "ClinicalAttribute",
+          "attribute_key": "sin_tratamiento_previo",
+          "value": "si"
+        }
+      ],
       "minValues": 1,
       "estado": "propuesta"
     },

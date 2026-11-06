@@ -54,8 +54,8 @@ def test_plantilla_avisa_de_los_modales_normativos_y_pide_parafrasear_los_requis
     assert "indicativo" in texto
 
 
-def test_version_del_prompt_es_rag_query_0_8_0_porque_pide_la_afirmacion_central_aparte():
-    assert VERSION_DEL_PROMPT == "rag-query@0.8.0"
+def test_version_del_prompt_es_rag_query_0_9_0_porque_pide_la_afirmacion_central_aparte():
+    assert VERSION_DEL_PROMPT == "rag-query@0.9.0"
 
 
 def test_el_prompt_pide_la_afirmacion_central_aparte_y_no_pide_asignarle_papel():

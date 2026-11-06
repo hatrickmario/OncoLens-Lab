@@ -260,7 +260,7 @@ export const listClinicalAttributes = <ThrowOnError extends boolean = false>(opt
 /**
  * Registra a mano un atributo clínico validado contra el catálogo
  *
- * attributeKey debe estar declarada en el catálogo para el tipo de cáncer del diagnóstico vigente y value en su lista de valores (RN-29). El dato queda entry_method = manual, extraction_confidence = n_a y review_status = verificado. Sin diagnóstico vigente no se puede validar (TIPO_CANCER_NO_REGISTRADO). Un segundo registro de la misma clave es una fila nueva, no una corrección. Exige un paciente activo (RN-17).
+ * attributeKey debe estar declarada en el catálogo para el tipo de cáncer del diagnóstico vigente y value en su lista de valores (RN-29). El dato queda entry_method = manual, extraction_confidence = n_a y review_status = verificado. Sin diagnóstico vigente no se puede validar (TIPO_CANCER_NO_REGISTRADO). Un segundo registro de la misma clave es una fila nueva, no una corrección. Exige un paciente activo (RN-17). La clave sin_tratamiento_previo (valor si) declara que el paciente no ha recibido tratamiento a la fecha: cumple el ítem tratamientos_previos del checklist sin crear un PriorTreatment; se rechaza con 422 (field = attributeKey) si ya hay tratamientos previos vigentes, y registrar después un tratamiento la marca reemplazada.
  */
 export const createManualClinicalAttribute = <ThrowOnError extends boolean = false>(options: Options<CreateManualClinicalAttributeData, ThrowOnError>): RequestResult<CreateManualClinicalAttributeResponses, CreateManualClinicalAttributeErrors, ThrowOnError> => (options.client ?? client).post<CreateManualClinicalAttributeResponses, CreateManualClinicalAttributeErrors, ThrowOnError>({
     security: [{

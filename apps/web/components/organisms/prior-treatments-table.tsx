@@ -39,21 +39,42 @@ function FilaDeTratamiento({ t, hoy }: { t: Tratamiento; hoy: string }) {
   );
 }
 
+type Declaracion = CaseView['attributes'][number];
+
+/** «Sin tratamiento previo a la fecha» con su fecha relativa y su origen: un hecho declarado, distinto de «Sin datos». */
+function SinTratamientoDeclarado({ declaracion, hoy }: { declaracion: Declaracion; hoy: string }) {
+  const { declaracion: d } = mensajes().caso.registro.tratamiento;
+  return (
+    <p className="m-0">
+      <span className="font-semibold">{d.sinTratamiento}</span>{' '}
+      <span className="text-text-muted text-sm">
+        (<FechaRelativaOpcional fecha={declaracion.observedAt} hoy={hoy} />) ·{' '}
+        <ProcedenciaDelDato procedencia={declaracion.provenance} />
+      </span>
+    </p>
+  );
+}
+
 /** Tratamientos previos (línea, contexto, esquema, inicio, fin u «En curso», origen) en el orden del servidor. */
 export function PriorTreatmentsTable({
   tratamientos,
   hoy,
   accion,
+  declaracion = null,
 }: {
   tratamientos: Tratamiento[];
   hoy: string;
   accion?: ReactNode;
+  /** Declaración vigente «Sin tratamiento previo»: solo se muestra cuando no hay tratamientos. */
+  declaracion?: Declaracion | null;
 }) {
   const { caso } = mensajes();
   const c = caso.columnas;
   return (
     <SeccionDeFicha id="caso-tratamientos" titulo={caso.secciones.tratamientos} accion={accion}>
-      {tratamientos.length === 0 ? (
+      {tratamientos.length === 0 && declaracion !== null ? (
+        <SinTratamientoDeclarado declaracion={declaracion} hoy={hoy} />
+      ) : tratamientos.length === 0 ? (
         <p className="m-0">{caso.sinDatos}</p>
       ) : (
         <table className="w-full border-collapse">
