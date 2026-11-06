@@ -372,6 +372,7 @@ services:
       CHAT_NOTICE_AI: ${CHAT_NOTICE_AI:-Generado por IA; requiere validación clínica independiente por el oncólogo tratante}
       CHAT_NOTICE_ACADEMIC: ${CHAT_NOTICE_ACADEMIC:-Uso académico/investigación}
       CHAT_NOTICE_VERIFY: ${CHAT_NOTICE_VERIFY:-Verifique contra las fuentes}
+      CHAT_SIN_DATOS_TEXTO: ${CHAT_SIN_DATOS_TEXTO:-No se encontró información documentada sobre lo preguntado en el expediente}
       # Tokenizador del LLM para contar tokens de la memoria del chat; vacío = contador conservador por caracteres.
       LLM_TOKENIZER_PATH: ${LLM_TOKENIZER_PATH:-}
       SERVICE_JWT_PUBLIC_KEY_FILE: /run/secrets/jwt_service_public.pem

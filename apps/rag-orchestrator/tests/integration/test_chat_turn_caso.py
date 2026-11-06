@@ -19,6 +19,7 @@ ENLAZADA = "El diagnóstico documentado es un carcinoma ductal infiltrante de ma
 DIAGNOSTICO = "Carcinoma ductal infiltrante de mama, Nottingham grado 2, estadio IIA (TNM 8), ECOG 1, al momento del diagnóstico."
 DESCRIPCION_HER2 = "HER2: 3+ (IHQ), relevante, al momento del diagnóstico."
 Q_PSA = "¿Cómo ha evolucionado el PSA?"
+TEXTO_SIN_DATOS = "No se encontró información documentada sobre lo preguntado en el expediente"
 
 
 def _hecho(ref: str, verbalizacion: str, dia: int | None, serie: str | None = None) -> dict:
@@ -135,7 +136,7 @@ def test_chat_turn_caso_envia_la_parafrasis_al_nli_con_la_descripcion_como_premi
     respuesta = entorno.turno(solicitud_de_turno(Q_CASO))
 
     cuerpo = respuesta.json()
-    assert cuerpo["blocks"] == []
+    assert cuerpo["blocks"] == [{"kind": "limitacion", "text": TEXTO_SIN_DATOS}]
     assert cuerpo["omittedClaims"] == 1
     assert [(p.premisa, p.hipotesis) for p in nli.pares_recibidos] == [
         (DESCRIPCION_HER2, PARAFRASIS)
@@ -156,7 +157,7 @@ def test_chat_turn_caso_omite_la_afirmacion_demasiado_larga_sin_enviarla_al_nli_
 
     cuerpo = entorno.turno(solicitud_de_turno(Q_CASO)).json()
 
-    assert cuerpo["blocks"] == []
+    assert cuerpo["blocks"] == [{"kind": "limitacion", "text": TEXTO_SIN_DATOS}]
     assert cuerpo["omittedClaims"] == 1
     assert nli.invocaciones == 0
 

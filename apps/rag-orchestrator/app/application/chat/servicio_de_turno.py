@@ -62,6 +62,7 @@ class ChatTurnService:
         configuracion = ConfiguracionDelGrafo(
             presupuesto_de_memoria=settings.chat_memory_max_tokens,
             terminos_por_tipo=terminos_por_tipo,
+            texto_sin_datos=settings.chat_sin_datos_texto,
         )
         caso = NodoCaso(
             llm=llm,

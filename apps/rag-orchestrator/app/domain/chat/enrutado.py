@@ -38,14 +38,14 @@ _REGLAS: tuple[tuple[Intencion, re.Pattern[str]], ...] = (
         re.compile(
             r"\bevidencia\b|\bestudios?\b|\bensayos?\b|\bguias?\b|\bliteratura\b|\bpublicaci(?:on|ones)\b"
             # Preguntas prescriptivas: se responden como evidencia descrita, sin lenguaje prescriptivo (RN-23).
-            r"|\bque (?:tratamiento|terapia|esquema|opcion|opciones)\b|\bdeb(?:e|en|eria|erian)\b|\brecomend\w+"
+            r"|\bque (?:tratamiento|terapia|esquema|opcion|opciones)\b(?! (?:previo|anterior))|\bdeb(?:e|en|eria|erian)\b|\brecomend\w+"
         ),
     ),
     (
         Intencion.caso,
         re.compile(
             r"\bsituacion\b|\bresumen\b|\bestado actual\b|\bdiagnostic\w+|\bque sabemos\b|\bantecedentes\b"
-            r"|\btratamientos? previos?\b|\bbiomarcador\w*|\bestadio\b|\bhistoria\b|\bcuentame\b"
+            r"|\btratamientos? (?:previos?|anterior(?:es)?)\b|\bbiomarcador\w*|\bestadio\b|\bhistoria\b|\bcuentame\b"
         ),
     ),
 )
