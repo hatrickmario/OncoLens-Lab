@@ -8,6 +8,7 @@ MENSAJE_FUERA_DE_ALCANCE = (
     "Esta conversación solo responde sobre el paciente y el tipo de cáncer del caso abierto. "
     "Formula la pregunta sobre ese caso."
 )
+MENSAJE_EVIDENCIA_NO_CONSULTADA = "no implementado"
 MENSAJE_NO_CLASIFICADA = (
     "No pude clasificar la pregunta. Reformúlala indicando si se refiere a la situación del caso, "
     "a los datos que faltan o a la evidencia científica."

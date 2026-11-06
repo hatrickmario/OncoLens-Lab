@@ -21,7 +21,12 @@ from langgraph.graph import END, START, StateGraph
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from app.application.errores import LlmLocalNoDisponibleError, LlmSalidaInvalidaError
-from app.application.ports import ContadorDeTokens, FalloDelLlm, LlmClient
+from app.application.ports import (
+    ContadorDeTokens,
+    FalloDelLlm,
+    LlmClient,
+    ProhibitedTermsChecker,
+)
 from app.domain.chat.enrutado import clasificar_por_reglas, es_fuera_de_alcance
 from app.domain.chat.estado import (
     INTENCIONES_CLASIFICABLES,
@@ -104,6 +109,8 @@ def construir_grafo(
     contador: ContadorDeTokens,
     configuracion: ConfiguracionDelGrafo,
     guardado: BaseCheckpointSaver,
+    verificador_terminos: ProhibitedTermsChecker | None = None,
+    capacidades: Mapping[Intencion, Nodo] | None = None,
 ) -> Any:
     """El ``StateGraph`` compilado con el ``InMemorySaver`` que le entrega el registro de hilos."""
     nodos = _NodosDelTurno(llm, contador, configuracion)
@@ -119,6 +126,12 @@ def construir_grafo(
     grafo.add_edge("mensaje_del_sistema", END)
     grafo.add_edge("validar", END)
     return grafo.compile(checkpointer=guardado)
+
+
+def capacidades_por_defecto(
+    llm: LlmClient, contador: ContadorDeTokens, configuracion: ConfiguracionDelGrafo
+) -> Mapping[Intencion, Nodo]:
+    raise NotImplementedError("no implementado")
 
 
 def _siguiente_nodo(estado: EstadoDelGrafo) -> str:

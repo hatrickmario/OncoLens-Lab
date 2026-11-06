@@ -82,6 +82,9 @@ class RegistroDeHilos:
             mas_antiguo = next(iter(self._actividad))
             self.olvidar(mas_antiguo)
 
+    def admitir_turno(self, thread_id: str, *, con_rehidratacion: bool) -> bool:
+        raise NotImplementedError("no implementado")
+
     def olvidar(self, thread_id: str) -> None:
         """Descarta el hilo (p. ej. si su primer turno falló): el siguiente turno debe traer ``rehydration``."""
         self._actividad.pop(thread_id, None)

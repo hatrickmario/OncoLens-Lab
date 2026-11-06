@@ -15,6 +15,7 @@ from app.application.chat.registro_de_hilos import RegistroDeHilos
 from app.application.chat.servicio_de_turno import ChatTurnService
 from app.bootstrap import crear_app
 from app.infrastructure.catalogo_clinico.sinonimos import cargar_terminos_por_tipo
+from app.infrastructure.lenguaje.terminos_prohibidos import cargar_verificador_de_terminos
 from fastapi.testclient import TestClient
 from tests.support.contador_de_tokens_falso import ContadorPorPalabras
 from tests.support.contract import CATALOGOS
@@ -109,6 +110,7 @@ def crear_entorno_de_chat(
         reloj=reloj,
         settings=settings,
         terminos_por_tipo=cargar_terminos_por_tipo(CATALOGOS, settings.enabled_cancer_types),
+        verificador_terminos=cargar_verificador_de_terminos(CATALOGOS),
     )
     app = crear_app(
         settings_de_prueba(**cambios_de_settings),

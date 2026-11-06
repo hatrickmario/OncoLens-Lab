@@ -22,7 +22,13 @@ from app.application.chat.traduccion import (
     estado_estructurado_del_contrato,
     hechos_del_caso,
 )
-from app.application.ports import CatalogoClinico, Clock, ContadorDeTokens, LlmClient
+from app.application.ports import (
+    CatalogoClinico,
+    Clock,
+    ContadorDeTokens,
+    LlmClient,
+    ProhibitedTermsChecker,
+)
 from app.config.settings import Settings
 from app.domain.chat.estado import INTENCIONES_CLASIFICABLES, EstadoDelHilo
 from app.schemas.generated.models import ChatTurnRequest, ChatTurnResponse
@@ -44,6 +50,7 @@ class ChatTurnService:
         reloj: Clock,
         settings: Settings,
         terminos_por_tipo: Mapping[str, frozenset[str]],
+        verificador_terminos: ProhibitedTermsChecker,
     ) -> None:
         self._catalogo = catalogo
         self._settings = settings

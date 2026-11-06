@@ -7,6 +7,10 @@
     "ruta": "{\"intent\": \"caso\"}",
     "generacion": "{\"claims\": [{\"text\": \"Carcinoma ductal infiltrante de mama, Nottingham grado 2, estadio IIA (TNM 8), ECOG 1.\", \"factRefs\": [\"f1\"], \"citations\": []}, {\"text\": \"HER2: 3+ (IHQ), sin verificar.\", \"factRefs\": [\"f2\"], \"citations\": []}]}"
   },
+  "CHAT-PRESCRIPTIVO": {
+    "ruta": "{\"intent\": \"caso\"}",
+    "generacion": "{\"claims\": [{\"text\": \"El diagnóstico documentado es carcinoma ductal infiltrante de mama.\", \"factRefs\": [\"f1\"], \"citations\": []}, {\"text\": \"La paciente debe recibir quimioterapia adyuvante.\", \"factRefs\": [\"f1\"], \"citations\": []}]}"
+  },
   "CHAT-RUTA": {
     "ruta": "{\"intent\": \"faltantes\"}",
     "generacion": "{\"claims\": [{\"text\": \"El diagnóstico documentado es carcinoma ductal infiltrante de mama.\", \"factRefs\": [\"f1\"], \"citations\": []}]}"

@@ -4,6 +4,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
+from app.application.chat.registro_de_hilos import RegistroDeHilos
 from app.infrastructure.fake.fake_evidence_query import EjemploFixtureInvalido
 from app.schemas.generated.models import ChatTurnRequest, ChatTurnResponse
 
@@ -13,7 +14,7 @@ _ARCHIVO = "chat-turn-caso-ok.json"
 class FakeChatTurn:
     """Implementa `ChatTurnPort` sin grafo, hilos ni LLM; nunca inventa contenido: devuelve el ejemplo del contrato."""
 
-    def __init__(self, respuesta: ChatTurnResponse) -> None:
+    def __init__(self, respuesta: ChatTurnResponse, registro: RegistroDeHilos | None = None) -> None:
         self._respuesta = respuesta
 
     @classmethod

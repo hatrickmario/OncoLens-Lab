@@ -475,10 +475,12 @@ def _crear_chat_turn(settings: Settings, clock: Clock, catalogo: CatalogoClinico
     el chat falla cerrado (503) en lugar de responder con una regla recortada, como la consulta sin bordes reales."""
     try:
         terminos = _terminos_del_catalogo_por_tipo(settings, catalogo)
-    except CatalogoNoDisponible:
+        verificador = _cargar_lista_de_terminos(settings)
+    except (CatalogoNoDisponible, ConfiguracionDeRecuperacionIncompleta):
         logger.warning("event=chat_no_componible motivo=catalogo_sin_terminos")
         return ChatNoComponible()
     return ChatTurnService(
+        verificador_terminos=verificador,
         llm=crear_cliente_llm_del_chat(settings),
         catalogo=catalogo,
         contador=_contador_de_tokens(settings),
