@@ -78,6 +78,34 @@
       "request": "chat-turn-request.json"
     },
     {
+      "file": "chat-turn-request-evidencia.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnRequest"
+    },
+    {
+      "file": "chat-turn-evidencia.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnResponse",
+      "request": "chat-turn-request-evidencia.json"
+    },
+    {
+      "file": "chat-turn-request-seguimiento.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnRequest"
+    },
+    {
+      "file": "chat-turn-seguimiento-evidencia.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnResponse",
+      "request": "chat-turn-request-seguimiento.json"
+    },
+    {
+      "file": "chat-turn-seguimiento-sin-evidencia.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnResponse",
+      "request": "chat-turn-request-seguimiento.json"
+    },
+    {
       "file": "con-evidencia-reescritura.json",
       "spec": "clinical-api",
       "target": "#/components/schemas/EvidenceAnalysis"
@@ -1113,6 +1141,16 @@
     },
     {
       "file": "conversation-turn.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/ConversationTurn"
+    },
+    {
+      "file": "conversation-turn-seguimiento.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/ConversationTurn"
+    },
+    {
+      "file": "conversation-turn-evidencia.json",
       "spec": "clinical-api",
       "target": "#/components/schemas/ConversationTurn"
     },
