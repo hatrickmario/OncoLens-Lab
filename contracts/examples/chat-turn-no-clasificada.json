@@ -8,8 +8,12 @@
   ],
   "omittedClaims": 0,
   "structuredState": {
-    "intentsVistos": [],
-    "preguntasPrevias": [],
+    "intentsVistos": [
+      "no_clasificada"
+    ],
+    "preguntasPrevias": [
+      "Necesito ayuda con este caso"
+    ],
     "opcionesMostradas": [],
     "citasMostradas": [],
     "faltantesSenalados": []

@@ -879,7 +879,6 @@ export const zAnswerFollowUpResponse = zRagFollowUpResponse;
 export const zChatTurnBody = zChatTurnRequest;
 
 export const zChatTurnHeaders = z.object({
-    'X-Request-Deadline': z.iso.datetime().optional(),
     'X-Trace-Id': zTraceId.optional()
 });
 

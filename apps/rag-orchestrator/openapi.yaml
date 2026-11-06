@@ -211,7 +211,6 @@ paths:
         turnos con contenido generado (RN-19). Con datos reales solo se usan modelos locales, sin
         fallback a la nube (RN-12).
       parameters:
-        - $ref: '#/components/parameters/RequestDeadline'
         - $ref: '#/components/parameters/TraceIdHeader'
       requestBody:
         required: true
@@ -1485,8 +1484,9 @@ components:
           type: string
           pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
           description: >-
-            Identificador aleatorio de la conversación, emitido por clinical-api. Nunca el patientId ni el
-            pseudoPatientId. Es la única clave del estado efímero del hilo.
+            Identificador aleatorio de la conversación (UUID v4 generado con un generador criptográfico, no derivado
+            de ningún dato del paciente), emitido por clinical-api. Nunca el patientId ni el pseudoPatientId. Es la única
+            clave del estado efímero del hilo.
         pseudoPatientId:
           type: string
           pattern: ^psd_[A-Za-z0-9]+$
@@ -1592,6 +1592,9 @@ components:
           minimum: 0
           description: Afirmaciones sin soporte del turno (o respaldadas solo por la memoria) que se omitieron.
         evidenceAnalysis:
+          description: >-
+            Resultado del pipeline de evidencia de este turno (mismo tipo que la respuesta de /rag/query). clinical-api
+            lo persiste y construye con lo persistido el EvidenceAnalysis de su ConversationTurn.
           $ref: '#/components/schemas/RagQueryInternalResponse'
         structuredState:
           $ref: '#/components/schemas/StructuredState'

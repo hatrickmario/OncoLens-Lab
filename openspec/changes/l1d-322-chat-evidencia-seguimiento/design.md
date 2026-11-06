@@ -125,7 +125,7 @@ ChatTurnRequest:
   activeAnalysisId?: uuid        # último analysis_id de la conversación (Backend 1)
 ChatTurnResponse:
   subintent?: enum [seguimiento_evidencia]   # declarado en 1.12.0 por l1d-316; este change lo consume, no lo redefine
-  evidenceAnalysis?: EvidenceAnalysis   # ya existe (l1d-316); presente solo en el turno de análisis
+  evidenceAnalysis?: RagQueryInternalResponse   # ya existe (l1d-316); en rag el tipo es la respuesta de /rag/query; presente solo en el turno de análisis
 ```
 
 `ultimaEvidencia` no cambia el contrato: su esquema ya está en `StructuredState` de la 1.12.0 (`l1d-316`); este change

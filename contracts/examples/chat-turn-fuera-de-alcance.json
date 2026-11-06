@@ -8,8 +8,12 @@
   ],
   "omittedClaims": 0,
   "structuredState": {
-    "intentsVistos": [],
-    "preguntasPrevias": [],
+    "intentsVistos": [
+      "fuera_de_alcance"
+    ],
+    "preguntasPrevias": [
+      "¿Lo descrito aplica al tratamiento que recibió [NOMBRE]?"
+    ],
     "opcionesMostradas": [],
     "citasMostradas": [],
     "faltantesSenalados": []

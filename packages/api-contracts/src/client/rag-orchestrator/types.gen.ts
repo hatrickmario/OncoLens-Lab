@@ -610,7 +610,7 @@ export type ChatRehydration = {
 
 export type ChatTurnRequest = {
     /**
-     * Identificador aleatorio de la conversación, emitido por clinical-api. Nunca el patientId ni el pseudoPatientId. Es la única clave del estado efímero del hilo.
+     * Identificador aleatorio de la conversación (UUID v4 generado con un generador criptográfico, no derivado de ningún dato del paciente), emitido por clinical-api. Nunca el patientId ni el pseudoPatientId. Es la única clave del estado efímero del hilo.
      */
     threadId: string;
     /**
@@ -675,6 +675,9 @@ export type ChatTurnResponse = {
      * Afirmaciones sin soporte del turno (o respaldadas solo por la memoria) que se omitieron.
      */
     omittedClaims: number;
+    /**
+     * Resultado del pipeline de evidencia de este turno (mismo tipo que la respuesta de /rag/query). clinical-api lo persiste y construye con lo persistido el EvidenceAnalysis de su ConversationTurn.
+     */
     evidenceAnalysis?: RagQueryInternalResponse;
     structuredState: StructuredState;
     /**
@@ -1108,7 +1111,6 @@ export type AnswerFollowUpResponse = AnswerFollowUpResponses[keyof AnswerFollowU
 export type ChatTurnData = {
     body: ChatTurnRequest;
     headers?: {
-        'X-Request-Deadline'?: string;
         /**
          * Mismo valor que traceId del cuerpo (o uno nuevo si falta o no cumple el patrón); liga todas las líneas de log de la request (NFR-10).
          */

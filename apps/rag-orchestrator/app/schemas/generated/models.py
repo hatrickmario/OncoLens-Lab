@@ -816,7 +816,7 @@ class ChatTurnRequest(BaseModel):
     threadId: Annotated[
         str,
         Field(
-            description='Identificador aleatorio de la conversación, emitido por clinical-api. Nunca el patientId ni el pseudoPatientId. Es la única clave del estado efímero del hilo.',
+            description='Identificador aleatorio de la conversación (UUID v4 generado con un generador criptográfico, no derivado de ningún dato del paciente), emitido por clinical-api. Nunca el patientId ni el pseudoPatientId. Es la única clave del estado efímero del hilo.',
             pattern='^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
         ),
     ]
@@ -1582,7 +1582,12 @@ class ChatTurnResponse(BaseModel):
             ge=0,
         ),
     ]
-    evidenceAnalysis: RagQueryInternalResponse | None = None
+    evidenceAnalysis: Annotated[
+        RagQueryInternalResponse | None,
+        Field(
+            description='Resultado del pipeline de evidencia de este turno (mismo tipo que la respuesta de /rag/query). clinical-api lo persiste y construye con lo persistido el EvidenceAnalysis de su ConversationTurn.'
+        ),
+    ] = None
     structuredState: StructuredState
     llmProvider: Annotated[
         LlmProvider,

@@ -83,7 +83,17 @@ Cada llamada a `/chat/turn` MUST llevar el `threadId` de la conversación y un `
 Ante `404 ErrorHiloDesconocido`, `clinical-api` MUST reenviar el turno una sola vez con `rehydration` de
 `construirRehidratacion()`: los últimos `CHAT_REHYDRATE_TURNS` turnos (RN-22), cada uno solo con `question`
 enmascarada, `intent`, `blocksText[]` y `factRefs[]`, más el `structuredState`, sin UUID ni fechas absolutas (RN-11).
-Un segundo `HILO_DESCONOCIDO` MUST responder `502 ErrorServicioIa` sin reintentar ni persistir.
+Un segundo `HILO_DESCONOCIDO` MUST responder `502 ErrorServicioIa` sin reintentar ni persistir. El reenvío es solo para un
+hilo vivo que `rag-orchestrator` perdió (reinicio, TTL o desalojo): el **primer** turno de una conversación (`turnNumber = 1`,
+sin turnos persistidos) MUST llevar desde el primer envío `rehydration = { turns: [], structuredState: vacío }`, porque
+`rag-orchestrator` responde `404` a un `threadId` que no conoce sin `rehydration`; `construirRehidratacion([])` devuelve ese
+valor (glosario S6 §2).
+
+#### Scenario: El primer turno lleva la rehidratación vacía [US-258 AC-2] [ADR-51]
+- **GIVEN** una conversación recién creada, sin turnos persistidos, y MSW que registra las llamadas a `/chat/turn`
+- **WHEN** se envía el primer turno
+- **THEN** la primera y única llamada lleva `rehydration` con `turns = []` y el `structuredState` vacío del ejemplo `chat-turn-request.json`
+- **AND** MSW no registra ningún `404` ni reenvío
 
 #### Scenario: La rehidratación es transparente para el oncólogo [US-258 AC-6] [S6 resp. 9] [RN-22]
 - **GIVEN** una conversación con 3 turnos persistidos y MSW que responde la primera vez `404` con `error = "HILO_DESCONOCIDO"` y después el ejemplo de turno

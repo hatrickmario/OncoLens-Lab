@@ -105,5 +105,15 @@
       "gapType": "incompleto",
       "destination": "biomarker"
     }
-  ]
+  ],
+  "rehydration": {
+    "turns": [],
+    "structuredState": {
+      "intentsVistos": [],
+      "preguntasPrevias": [],
+      "opcionesMostradas": [],
+      "citasMostradas": [],
+      "faltantesSenalados": []
+    }
+  }
 }

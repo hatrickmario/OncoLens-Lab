@@ -22,13 +22,13 @@
 ## 2. Esquemas
 
 - **ChatTurnRequest** (rag): `threadId`, `pseudoPatientId`, `traceId`, `question` (enmascarada), `dataClassification`, `catalogVersion`, `clinicalContext`, `caseFacts[]`, `completeness[]` (`ChatCompletenessItem`), `activeAnalysisId?` (1.13.0) y `rehydration?`.
-- **Rehydration**: `{ turns: [{ question, intent, blocksText[], factRefs[] }], structuredState }`.
+- **Rehydration**: `{ turns: [{ question, intent, blocksText[], factRefs[] }], structuredState }`. El PRIMER turno de una conversación la lleva con `turns: []` y el `structuredState` vacío; `construirRehidratacion([])` lo devuelve (rag responde 404 a un hilo que no conoce y no distingue uno nuevo de uno perdido).
   - Solo esos campos. Nunca `resourceId`, UUID, fechas absolutas, `analysisId` ni `dataLinks`.
   - Lo construye `construirRehidratacion()` en clinical-api.
   - Lleva un escenario que siembra UUID y fechas en el turno persistido y comprueba que no viajan.
 - **CaseFact**: `factRef` (`^f[0-9]+$`), `kind`, `verbalization`, `relativeDay` (entero o `null`), `reviewStatus`, `seriesKey?`, `conflictWith?` (factRef) y `corrected?`.
 - **ChatCompletenessItem** (rag): `item`, `label`, `status` (`presente_verificado` · `presente_sin_verificar` · `faltante` · `no_aplica`), `gapType` (`no_encontrado` · `incompleto` · `por_conciliar` · `no_buscado`, o `null` si está presente) y `destination`. **Sin `provenance`**.
-- **ChatTurnResponse** (rag): `intent`, `subintent?` (`enum [seguimiento_evidencia]`, declarado en la 1.12.0), `blocks[]`, `omittedClaims`, `evidenceAnalysis?`, `structuredState` (**requerido**), `llmProvider` y `notices[]`.
+- **ChatTurnResponse** (rag): `intent`, `subintent?` (`enum [seguimiento_evidencia]`, declarado en la 1.12.0), `blocks[]`, `omittedClaims`, `evidenceAnalysis?` (tipo rag = `RagQueryInternalResponse`; clinical-api `ConversationTurn.evidenceAnalysis` = `EvidenceAnalysis`, que construye desde lo persistido), `structuredState` (**requerido**), `llmProvider` y `notices[]`.
 - **ChatBlock**:
   - `kind` es un enum **cerrado de 8 valores**: `documentado`, `interpretacion`, `catalogo`, `evidencia`, `conflicto`, `faltante`, `limitacion` y `fuente`.
   - Campos: `text`, `factRefs?` y `citations?` (`ChatCitation[]`).
@@ -91,7 +91,7 @@
 |---|---|---|
 | 401 | `ErrorTokenServicioInvalido` | sesión, sin cambios |
 | 403 | — | `PermisoDenegadoOOptOut` |
-| 404 | **`ErrorHiloDesconocido {error: HILO_DESCONOCIDO, message, traceId}`** (esquema nuevo). Backend 1 lo atrapa y rehidrata | — |
+| 404 | **`ErrorHiloDesconocido {error: HILO_DESCONOCIDO, message, traceId}`** (esquema nuevo). Backend 1 lo atrapa y reenvía con `rehydration` SOLO ante un hilo vivo que rag perdió (reinicio, TTL o desalojo); el primer turno ya la lleva | — |
 | 409 | `ErrorCatalogVersionMismatch` | `ErrorCatalogVersionMismatch` (no se guarda el turno) |
 | 422 | `ErrorValidacion` | `ErrorValidacion` |
 | 502 | — | `ErrorServicioIa` (fallo de red con rag, como hoy) |
