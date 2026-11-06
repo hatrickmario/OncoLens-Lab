@@ -23,6 +23,11 @@ ETIQUETA_EN_CONFLICTO = "(en conflicto)"
 VALOR_DESCONOCIDO = "desconocido"
 DESCRIPCION_DEL_FALTANTE = "sin dato registrado (desconocido)"
 
+# Declaración de ausencia de tratamientos previos (d5fb-04): clave y valor del atributo y frase que la verbaliza.
+CLAVE_SIN_TRATAMIENTO_PREVIO = "sin_tratamiento_previo"
+VALOR_DECLARADO = "si"
+FRASE_SIN_TRATAMIENTO_PREVIO = "Sin tratamiento previo a la fecha"
+
 _NOMBRE_DEL_IDIOMA = {"es": "español", "en": "inglés"}
 
 PLANTILLA_RAG_QUERY = """\
@@ -84,13 +89,16 @@ def construir_prompt_rag_query(
 def bloque_de_datos_del_paciente(contexto: ClinicalContext, faltantes: Sequence[str] = ()) -> str:
     """Datos del paciente del prompt, con la etiqueta de procedencia de cada dato (RN-07, L1D-181 D3).
 
-    Solo diagnóstico y biomarcadores: atributos, tratamientos previos y eventos quedan fuera (Non-Goal del S3). Tras
-    ellos, una línea ``- <etiqueta>: desconocido`` por cada dato crítico faltante (``faltantes`` son etiquetas del
+    Solo diagnóstico y biomarcadores: atributos, tratamientos previos y eventos quedan fuera (Non-Goal del S3), salvo
+    la declaración ``sin_tratamiento_previo`` (d5fb-04 D6), que se verbaliza con una frase fija. Tras ellos, una línea ``- <etiqueta>: desconocido`` por cada dato crítico faltante (``faltantes`` son etiquetas del
     catálogo, nunca claves ni texto libre, RN-11; US-116), sin etiqueta de procedencia porque no hay dato.
     """
     lineas = [
         _linea_etiquetada(texto, procedencia) for texto, procedencia in datos_del_contexto(contexto)
     ]
+    declaracion = declaracion_sin_tratamiento_previo(contexto)
+    if declaracion is not None:
+        lineas.append(_linea_etiquetada(*declaracion))
     lineas += [f"- {etiqueta}: {VALOR_DESCONOCIDO}" for etiqueta in faltantes]
     return "\n".join(lineas)
 
@@ -103,6 +111,36 @@ def datos_del_contexto(contexto: ClinicalContext) -> list[tuple[str, Provenance]
         datos.append((_texto_del_diagnostico(diagnostico), diagnostico.provenance))
     datos += [(f"{b.biomarkerName.root} {b.value.root}", b.provenance) for b in contexto.biomarkers]
     return datos
+
+
+def declaracion_sin_tratamiento_previo(contexto: ClinicalContext) -> tuple[str, Provenance] | None:
+    """Frase determinista de la declaración «sin tratamiento previo a la fecha» (d5fb-04 D6, ADR-34, RN-11), o ``None``.
+
+    Solo con la declaración vigente en ``si`` y sin tratamientos previos: sin declaración el hecho se omite (no se
+    afirma «sin tratamiento») y con tratamientos la declaración no aplica. La fecha va relativa (``monthsAgo``), nunca
+    absoluta; la frase no es citable ni soporte NLI (RN-24) y no sale en el resumen de la recuperación."""
+    if contexto.priorTreatments:
+        return None
+    declaracion = next(
+        (
+            a
+            for a in contexto.attributes
+            if a.key.root == CLAVE_SIN_TRATAMIENTO_PREVIO and a.value.root == VALOR_DECLARADO
+        ),
+        None,
+    )
+    if declaracion is None:
+        return None
+    return f"{FRASE_SIN_TRATAMIENTO_PREVIO} {_cuando_se_declaro(declaracion.monthsAgo)}", (
+        declaracion.provenance
+    )
+
+
+def _cuando_se_declaro(meses_atras: int | None) -> str:
+    if meses_atras is None:
+        return "(declarado)"
+    unidad = "mes" if meses_atras == 1 else "meses"
+    return f"(declarado hace {meses_atras} {unidad})"
 
 
 def etiqueta_de_procedencia(procedencia: Provenance) -> str | None:

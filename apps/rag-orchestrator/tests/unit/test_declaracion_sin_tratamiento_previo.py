@@ -26,11 +26,24 @@ def _procedencia(**cambios) -> dict:
     }
 
 
+def _tratamiento() -> dict:
+    return {
+        "dataRef": "r5",
+        "lineNumber": 1,
+        "setting": "adyuvante",
+        "regimenName": "Esquema previo de prueba",
+        "atcCodes": ["L01XC03"],
+        "monthsSinceStart": 6,
+        "monthsSinceEnd": 3,
+        "endReason": "completado",
+        "provenance": _procedencia(),
+    }
+
+
 def _contexto(*, declaracion: dict | None = None, con_tratamiento: bool = False) -> ClinicalContext:
     datos = solicitud_de()["clinicalContext"]
     datos["attributes"] = [] if declaracion is None else [declaracion]
-    if not con_tratamiento:
-        datos["priorTreatments"] = []
+    datos["priorTreatments"] = [_tratamiento()] if con_tratamiento else []
     return ClinicalContext.model_validate(datos)
 
 
