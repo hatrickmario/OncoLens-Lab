@@ -32,8 +32,8 @@ def test_rag_query_arma_el_prompt_con_la_pregunta_en_nfc_cuando_llega_en_nfd():
 
     assert respuesta.status_code == 200
     assert llm.invocaciones == 1
-    assert Q_HER2 in llm.prompts[0]
-    assert Q_HER2_NFD not in llm.prompts[0]
+    assert Q_HER2 in llm.usuarios[0]
+    assert Q_HER2_NFD not in llm.usuarios[0]
 
 
 @pytest.mark.ac("US-250", 5)
@@ -42,8 +42,8 @@ def test_rag_query_produce_el_mismo_hash_de_prompt_y_la_misma_consulta_cuando_ll
     entorno_nfd, llm_nfd, _ = _consultar_con(Q_HER2_NFD)
 
     assert llm_nfc.invocaciones == llm_nfd.invocaciones == 1
-    hash_nfc = hashlib.sha256(llm_nfc.prompts[0].encode("utf-8")).hexdigest()
-    hash_nfd = hashlib.sha256(llm_nfd.prompts[0].encode("utf-8")).hexdigest()
+    hash_nfc = hashlib.sha256(llm_nfc.usuarios[0].encode("utf-8")).hexdigest()
+    hash_nfd = hashlib.sha256(llm_nfd.usuarios[0].encode("utf-8")).hexdigest()
     assert hash_nfc == hash_nfd
     assert entorno_nfd.embedder.textos[0] == entorno_nfc.embedder.textos[0] == Q_HER2
     assert entorno_nfd.reranker.preguntas == entorno_nfc.reranker.preguntas == [Q_HER2]

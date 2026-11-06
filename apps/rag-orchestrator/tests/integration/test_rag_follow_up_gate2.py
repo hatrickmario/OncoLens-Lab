@@ -8,11 +8,7 @@ from fastapi.testclient import TestClient
 
 from app.bootstrap import crear_app
 from app.domain.lenguaje import ListaTerminos, check_prohibited_terms
-from app.prompts.seguimiento import (
-    FIN_DE_LA_MEMORIA,
-    INICIO_DE_LA_MEMORIA,
-    PLANTILLA_SEGUIMIENTO,
-)
+from app.prompts.seguimiento import PLANTILLA_SEGUIMIENTO
 from tests.support.fakes import GeneradorTraceFijo, RelojFijo, par_de_sesion, settings_de_prueba
 from tests.support.guiones_seguimiento import TEXTO_SEGUIMIENTO_OK, TEXTO_SOLO_EN_LA_MEMORIA
 from tests.support.recuperacion import EJEMPLOS
@@ -83,16 +79,17 @@ def test_prompt_de_seguimiento_delimita_la_memoria_con_apertura_y_cierre_explici
 
     entorno.seguir(solicitud_de_seguimiento())
 
-    (prompt,) = entorno.llm.prompts
-    abre, cierra = prompt.index(INICIO_DE_LA_MEMORIA), prompt.index(FIN_DE_LA_MEMORIA)
-    assert abre < prompt.index(TEXTO_SOLO_EN_LA_MEMORIA) < cierra < prompt.index("[fragmento C1]")
+    (prompt,) = entorno.llm.usuarios
+    abre, cierra = prompt.index('<memory citable="no">'), prompt.index("</memory>")
+    assert (
+        abre < prompt.index(TEXTO_SOLO_EN_LA_MEMORIA) < cierra < prompt.index('<document id="C1">')
+    )
 
 
 def test_prompt_de_seguimiento_no_trae_terminos_de_salida_generada_cuando_se_renderiza_con_el_ejemplo_del_contrato():
     entorno = crear_entorno_de_seguimiento("SEG-OK")
     entorno.seguir(solicitud_de_seguimiento())
-    (prompt,) = entorno.llm.prompts
-    parte_fija = prompt.split("Pregunta:")[0]
+    (parte_fija,) = entorno.llm.sistemas
 
     coincidencias = check_prohibited_terms(
         parte_fija, LISTA, niveles=("A", "B"), permitir_frases=False

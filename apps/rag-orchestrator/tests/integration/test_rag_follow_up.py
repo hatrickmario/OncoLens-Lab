@@ -82,13 +82,15 @@ def test_rag_follow_up_rotula_la_memoria_como_contexto_no_citable_en_un_bloque_s
 
     entorno.seguir(solicitud_de_seguimiento())
 
-    (prompt,) = entorno.llm.prompts
-    inicio_memoria = prompt.index(TEXTO_SOLO_EN_LA_MEMORIA)
-    inicio_fragmentos = prompt.index("[fragmento C1]")
-    rotulo = prompt.rindex("no es evidencia", 0, inicio_memoria)
-    assert "no lo cites" in prompt[rotulo:inicio_memoria].lower()
-    assert "C1" not in prompt[rotulo : inicio_memoria + len(TEXTO_SOLO_EN_LA_MEMORIA)]
+    (prompt,), (sistema,) = entorno.llm.usuarios, entorno.llm.sistemas
+    inicio_memoria = prompt.index('<memory citable="no">')
+    fin_memoria = prompt.index("</memory>")
+    inicio_fragmentos = prompt.index('<document id="C1">')
+    assert inicio_memoria < prompt.index(TEXTO_SOLO_EN_LA_MEMORIA) < fin_memoria
+    assert "C1" not in prompt[inicio_memoria:fin_memoria]
     assert TEXTO_SOLO_EN_LA_MEMORIA not in prompt[inicio_fragmentos:]
+    assert TEXTO_SOLO_EN_LA_MEMORIA not in sistema
+    assert "no es evidencia" in sistema and "no lo cites" in sistema.lower()
 
 
 @pytest.mark.ac("US-218", 3)

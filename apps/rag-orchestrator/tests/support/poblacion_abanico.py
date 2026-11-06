@@ -148,9 +148,15 @@ class FakePopulationLlm:
         return [c for c in self.llamadas if c.criterio == criterio]
 
     async def completar_json_acotado(
-        self, prompt: str, esquema: Mapping[str, Any], *, max_tokens: int, semilla: int
+        self,
+        usuario: str,
+        esquema: Mapping[str, Any],
+        *,
+        max_tokens: int,
+        semilla: int,
+        sistema: str | None = None,
     ) -> RespuestaDelLlm:
-        criterio = _CRITERIO_EN_PROMPT.search(prompt)
+        criterio = _CRITERIO_EN_PROMPT.search(usuario)
         assert criterio is not None, "el prompt debe declarar 'Criterio: <clave>'"
         self._activas += 1
         self.maximo_simultaneo = max(self.maximo_simultaneo, self._activas)
@@ -159,12 +165,12 @@ class FakePopulationLlm:
                 criterio.group(1),
                 semilla,
                 max_tokens,
-                tuple(_FRAGMENTO_EN_PROMPT.findall(prompt)),
+                tuple(_FRAGMENTO_EN_PROMPT.findall(usuario)),
                 self._activas,
-                len(prompt),
+                len(usuario),
             )
         )
-        self.prompts.append(prompt)
+        self.prompts.append(usuario)
         try:
             await asyncio.sleep(0)  # cede el turno: con el semáforo las demás tareas esperan
             if self.modo_caido:

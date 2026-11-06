@@ -35,11 +35,13 @@ class ReescritorDeConsultaLocal:
         self._max_tokens_de_salida = max_tokens_de_salida
 
     async def reformular(self, pregunta: str) -> tuple[str, ...]:
+        prompt = construir_prompt_de_reescritura(pregunta, self._max_terminos)
         respuesta = await self._llm.completar_json_acotado(
-            construir_prompt_de_reescritura(pregunta, self._max_terminos),
+            prompt.usuario,
             esquema_de_reescritura(self._max_terminos),
             max_tokens=self._max_tokens_de_salida,
             semilla=SEMILLA_DEL_UNICO_INTENTO,
+            sistema=prompt.sistema,
         )
         if respuesta.finish_reason == FINISH_REASON_CORTADA:
             raise SalidaDeReescrituraInvalida("salida cortada")

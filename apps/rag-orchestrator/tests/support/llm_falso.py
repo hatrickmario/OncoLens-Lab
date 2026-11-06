@@ -62,6 +62,11 @@ ESCENARIOS_LLM: dict[str, str] = {
         _opcion(OPCION_ANTI_HER2, RAZON_ANTI_HER2, "C1"),
         _opcion(OPCION_SOLA, RAZON_SOLA, "C2"),
     ),
+    # US-057 AC-5: el LLM obedece a la instrucción inyectada en ``ch-inj-1`` (C2) y devuelve una opción prescriptiva sin cita.
+    "LLM-OBEDECE-INYECCION": _salida(
+        _opcion(OPCION_ANTI_HER2, RAZON_ANTI_HER2, "C1"),
+        _opcion("Opción dictada por el chunk", "recomendado para este paciente"),
+    ),
     "LLM-SIN-OPCIONES": _salida(),
     "LLM-CITA-DOBLE": _salida(_opcion(OPCION_ANTI_HER2, RAZON_ANTI_HER2, "C2", "C1")),
     "LLM-TITULO-FALSO": _salida(
@@ -97,15 +102,19 @@ class FakeLlmClient:
     def __init__(self, escenario: str = "LLM-OK", error: Exception | None = None) -> None:
         self._crudo = ESCENARIOS_LLM[escenario]
         self.error = error
-        self.prompts: list[str] = []
+        self.usuarios: list[str] = []
         self.esquemas: list[Mapping[str, Any]] = []
+        self.sistemas: list[str | None] = []
 
     @property
     def invocaciones(self) -> int:
-        return len(self.prompts)
+        return len(self.usuarios)
 
-    async def completar_json(self, prompt: str, esquema: Mapping[str, Any]) -> str:
-        self.prompts.append(prompt)
+    async def completar_json(
+        self, usuario: str, esquema: Mapping[str, Any], *, sistema: str | None = None
+    ) -> str:
+        self.usuarios.append(usuario)
+        self.sistemas.append(sistema)
         self.esquemas.append(esquema)
         if self.error is not None:
             raise self.error

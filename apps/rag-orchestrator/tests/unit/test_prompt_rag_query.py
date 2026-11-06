@@ -20,6 +20,7 @@ from app.prompts.rag_query import (
     etiqueta_de_procedencia,
 )
 from app.schemas.generated.models import ClinicalContext, Provenance
+from tests.support.prompt_separado import texto_completo
 from tests.support.recuperacion import solicitud_de
 
 RAIZ = Path(__file__).resolve().parents[4]
@@ -54,8 +55,8 @@ def test_plantilla_avisa_de_los_modales_normativos_y_pide_parafrasear_los_requis
     assert "indicativo" in texto
 
 
-def test_version_del_prompt_es_rag_query_0_9_0_porque_pide_la_afirmacion_central_aparte():
-    assert VERSION_DEL_PROMPT == "rag-query@0.9.0"
+def test_version_del_prompt_es_rag_query_0_10_0_porque_separa_instrucciones_y_datos():
+    assert VERSION_DEL_PROMPT == "rag-query@0.10.0"
 
 
 def test_el_prompt_pide_la_afirmacion_central_aparte_y_no_pide_asignarle_papel():
@@ -66,10 +67,10 @@ def test_el_prompt_pide_la_afirmacion_central_aparte_y_no_pide_asignarle_papel()
         "p", "", fragmentos, "es", claims_min=1, claims_max=4, claim_max_words=20
     )
 
-    assert '"main_claim"' in prompt and '"other_claims"' in prompt
-    assert "de 0 a 3 afirmaciones adicionales" in prompt
-    assert '"principal"' not in prompt and "exactamente una" not in prompt
-    assert '"secundaria"' in prompt and '"salvedad"' in prompt
+    assert '"main_claim"' in prompt.sistema and '"other_claims"' in prompt.sistema
+    assert "de 0 a 3 afirmaciones adicionales" in prompt.sistema
+    assert '"principal"' not in prompt.sistema and "exactamente una" not in prompt.sistema
+    assert '"secundaria"' in prompt.sistema and '"salvedad"' in prompt.sistema
 
 
 def test_prompt_incluye_pregunta_contexto_y_alias_de_cada_fragmento():
@@ -87,12 +88,11 @@ def test_prompt_incluye_pregunta_contexto_y_alias_de_cada_fragmento():
         claim_max_words=20,
     )
 
-    assert "¿pregunta?" in prompt
-    assert "mama; HER2 positivo" in prompt
-    assert "[fragmento C1]" in prompt
-    assert "ch-1" not in prompt
-    assert "texto del fragmento" in prompt
-    assert "español" in prompt
+    assert "<question>\n¿pregunta?\n</question>" in prompt.usuario
+    assert "<patient_data>\nmama; HER2 positivo\n</patient_data>" in prompt.usuario
+    assert '<document id="C1">\ntexto del fragmento\n</document>' in prompt.usuario
+    assert "ch-1" not in texto_completo(prompt)
+    assert "español" in prompt.sistema
 
 
 def test_prompt_conserva_las_llaves_del_texto_de_un_fragmento_sin_interpretarlas():
@@ -104,8 +104,8 @@ def test_prompt_conserva_las_llaves_del_texto_de_un_fragmento_sin_interpretarlas
         "p", "", fragmentos, "en", claims_min=1, claims_max=4, claim_max_words=20
     )
 
-    assert "valor {idioma} y {0}" in prompt
-    assert "inglés" in prompt
+    assert "valor {idioma} y {0}" in prompt.usuario
+    assert "inglés" in prompt.sistema
 
 
 def _procedencia(**cambios) -> dict:
@@ -217,7 +217,7 @@ def test_plantilla_pide_describir_el_desconocido_como_sin_dato_registrado_y_no_c
         "p", "- dato", [], "es", claims_min=1, claims_max=4, claim_max_words=20
     )
 
-    texto = " ".join(prompt.split())
+    texto = " ".join(prompt.sistema.split())
     assert 'descríbelo como "sin dato registrado (desconocido)"' in texto
     assert "no les atribuyas un valor" in texto
     assert "ni lo deduzcas de otros datos del paciente ni de los fragmentos" in texto
@@ -283,7 +283,9 @@ def test_plantilla_explica_las_mismas_etiquetas_que_el_bloque_emite():
     )
 
     encabezado = next(
-        linea for linea in prompt.splitlines() if linea.startswith("Datos del paciente")
+        linea
+        for linea in prompt.sistema.splitlines()
+        if linea.startswith("- Los datos del paciente van en")
     )
     assert ETIQUETA_SIN_VERIFICAR in encabezado
     assert ETIQUETA_EN_CONFLICTO in encabezado
@@ -306,11 +308,12 @@ def test_prompt_con_datos_etiquetados_no_contiene_terminos_prohibidos_ni_identif
         claim_max_words=20,
     )
 
-    assert "(sin verificar)" in prompt
-    assert "(en conflicto)" in prompt
-    assert check_prohibited_terms(prompt, _lista(), niveles=("A", "B")) == []
-    assert contexto.pseudoPatientId not in prompt
+    assert "(sin verificar)" in prompt.usuario
+    assert "(en conflicto)" in prompt.usuario
+    completo = texto_completo(prompt)
+    assert check_prohibited_terms(completo, _lista(), niveles=("A", "B")) == []
+    assert contexto.pseudoPatientId not in completo
     assert contexto.diagnosis is not None
     referencias = [contexto.diagnosis.dataRef.root, *(b.dataRef.root for b in contexto.biomarkers)]
     for referencia in referencias:
-        assert re.search(rf"\b{re.escape(referencia)}\b", prompt) is None
+        assert re.search(rf"\b{re.escape(referencia)}\b", completo) is None
