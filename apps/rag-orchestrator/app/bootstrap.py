@@ -14,6 +14,7 @@ from app.api.contencion_de_errores import ContencionDeErroresInesperados
 from app.api.dependencies.service_jwt import DependenciaJwtServicio, crear_require_service_jwt
 from app.api.errors import registrar_manejadores_de_error
 from app.api.health import crear_router_health
+from app.api.chat_turn import crear_router_chat_turn
 from app.api.rag_follow_up import crear_router_rag_follow_up
 from app.api.rag_query import crear_router_rag_query
 from app.api.trace import ContextoDeTraceId
@@ -32,6 +33,7 @@ from app.application.ports import (
     EtiquetasDeDatosCriticos,
     EvidenceGenerator,
     EvidenceQueryPort,
+    ChatTurnPort,
     FollowUpPort,
     LanguageDetector,
     LlmHealthPort,
@@ -235,6 +237,7 @@ def crear_app(
     clock: Clock | None = None,
     consulta: EvidenceQueryPort | None = None,
     seguimiento: FollowUpPort | None = None,
+    chat: ChatTurnPort | None = None,
     recuperacion: PuertosDeRecuperacion | None = None,
     corpus: PuertosDelCorpus | None = None,
     cargador_de_modelos: CargadorDeModelos | None = None,
@@ -265,12 +268,15 @@ def crear_app(
         ContextoDeTraceId, trace_ids=trace_ids
     )  # el más externo: fija el traceId de los logs
     verificador = _crear_verificador_jwt_de_servicio(settings, clock)
+    autenticacion = crear_require_service_jwt(verificador)
+    if chat is not None:
+        app.include_router(crear_router_chat_turn(chat, autenticacion))
     _registrar_consulta_de_evidencia(
         app,
         settings,
         consulta=consulta,
         seguimiento=seguimiento,
-        autenticacion=crear_require_service_jwt(verificador),
+        autenticacion=autenticacion,
         recuperacion=recuperacion,
         clock=clock,
         generador=generador,

@@ -49,5 +49,12 @@ class FaltanteNoCatalogadoError(ErrorDeAplicacion):
         super().__init__(f"{len(posiciones)} datos críticos faltantes no son claves del catálogo")
 
 
+class HiloDesconocidoError(ErrorDeAplicacion):
+    """El hilo del chat no está en la memoria del proceso y el turno no trae ``rehydration`` (`404 HILO_DESCONOCIDO`).
+
+    Se lanza antes de entrar al grafo: ningún adapter (LLM, recuperación, NLI) se invoca. Clinical-api lo atrapa y reenvía
+    el turno con ``rehydration``. Sin eco del ``threadId``."""
+
+
 class NliNoDisponibleError(ErrorDeAplicacion):
     """El verificador de soporte (NLI) falló o no respondió (`503 NLI_UNAVAILABLE`): ninguna opción sale sin validar (RN-01)."""

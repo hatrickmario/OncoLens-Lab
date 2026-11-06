@@ -17,6 +17,7 @@ from fastapi.responses import JSONResponse
 from app.api.trace import resolver_trace_id
 from app.application.errores import (
     FaltanteNoCatalogadoError,
+    HiloDesconocidoError,
     LlmLocalNoDisponibleError,
     LlmSalidaInvalidaError,
     NliNoDisponibleError,
@@ -30,6 +31,7 @@ from app.domain.token_servicio import TokenServicioInvalido
 from app.schemas.generated.models import (
     DetailItem,
     ErrorCatalogVersionMismatch,
+    ErrorHiloDesconocido,
     ErrorLlmLocalNoDisponible,
     ErrorNliNoDisponible,
     ErrorRecuperacionNoDisponible,
@@ -134,6 +136,18 @@ def registrar_manejadores_de_error(app: FastAPI, trace_ids: TraceIdGenerator) ->
             traceId=trace_id,
         )
         return JSONResponse(status_code=503, content=cuerpo.model_dump())
+
+    @app.exception_handler(HiloDesconocidoError)
+    async def hilo_desconocido(request: Request, error: HiloDesconocidoError) -> JSONResponse:
+        """404 HILO_DESCONOCIDO: mensaje fijo, sin eco del ``threadId`` ni de la pregunta (RN-10)."""
+        trace_id = resolver_trace_id(request, trace_ids)
+        logger.info("event=hilo_desconocido traceId=%s", trace_id)
+        cuerpo = ErrorHiloDesconocido(
+            error="HILO_DESCONOCIDO",
+            message="El hilo de la conversación no existe en este servicio.",
+            traceId=trace_id,
+        )
+        return JSONResponse(status_code=404, content=cuerpo.model_dump())
 
     @app.exception_handler(NliNoDisponibleError)
     async def nli_no_disponible(request: Request, error: NliNoDisponibleError) -> JSONResponse:
