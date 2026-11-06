@@ -233,6 +233,8 @@ export interface RagSimulado {
   llamadas(): number;
   /** Cambia lo que responde `/rag/query` hasta el próximo `reiniciar()`. */
   responder(escenario: EscenarioDeRag): void;
+  /** Ejecuta `accion` cuando `/rag/query` recibe la petición y antes de responder (algo ocurre «durante» el análisis). */
+  alRecibirConsulta(accion: () => Promise<void>): void;
   reiniciar(): void;
   iniciar(): void;
   detener(): void;
@@ -244,6 +246,7 @@ export function ragSimulado(): RagSimulado {
   const capturadasDeSeguimiento: CapturaDeRag[] = [];
   let escenario: EscenarioDeRag = ESCENARIO_POR_DEFECTO;
   let escenarioDeSeguimiento: EscenarioDeRag = SEGUIMIENTO_POR_DEFECTO;
+  let accionAlRecibir: (() => Promise<void>) | undefined;
   const capturadasDeChat: CapturaDeRag[] = [];
   let secuenciaDeChat: EscenarioDeRag[] = [CHAT_POR_DEFECTO];
   const servidor = servidorMswConLoopback(
@@ -290,6 +293,7 @@ export function ragSimulado(): RagSimulado {
         texto,
         cuerpo: JSON.parse(texto) as Record<string, unknown>,
       });
+      await accionAlRecibir?.();
       if (escenario.tipo === 'red') return HttpResponse.error();
       if (escenario.tipo === 'tardia') {
         await delay(RESPUESTA_TARDIA_MS);
@@ -321,7 +325,11 @@ export function ragSimulado(): RagSimulado {
     responder: (nuevo) => {
       escenario = nuevo;
     },
+    alRecibirConsulta: (accion) => {
+      accionAlRecibir = accion;
+    },
     reiniciar: () => {
+      accionAlRecibir = undefined;
       capturadas.length = 0;
       capturadasDeSeguimiento.length = 0;
       capturadasDeChat.length = 0;

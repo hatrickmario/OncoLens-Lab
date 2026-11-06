@@ -108,6 +108,7 @@ async function fichaDelDoctor(
     diagnosis: diagnostico,
     recentBiomarkers: await biomarcadoresRecientes(dependencias, paciente.id),
     pendingReviewCount: pendientes.get(paciente.id) ?? 0,
+    aiAnalysisAvailable: true, // esqueleto: el cálculo con el guardia llega con el commit feat
     ...(await faltantesCriticos(completitud, paciente.id, alFallarElChecklist)),
   };
 }
