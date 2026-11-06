@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { construirContextoPermitido } from '../../../src/modules/evidence-analysis/clinical-context.builder.js';
+import {
+  construirContextoDelChat,
+  construirContextoPermitido,
+} from '../../../src/modules/evidence-analysis/clinical-context.builder.js';
 import { construirHechosDelCaso } from '../../../src/modules/evidence-analysis/conversation/hechos-del-caso.js';
 import {
   AHORA_DE_EJEMPLO,
@@ -148,7 +151,7 @@ describe('construirHechosDelCaso', () => {
     expect(resultado.caseFacts[1]?.verbalization).toBe('HER2: No disponible');
   });
 
-  it('omite el estadio «No disponible» de la verbalización del diagnóstico', () => {
+  it('escribe «estadio: No disponible» en la verbalización del diagnóstico cuando el estadio no está registrado [RN-25]', () => {
     const sinEstadio = casoDeEjemplo({
       diagnosticoActivo: diagnosticoDeEjemplo({ stagingSystem: null, stageValue: null }),
     });
@@ -159,8 +162,7 @@ describe('construirHechosDelCaso', () => {
       permitido.dataRefs,
     );
 
-    expect(resultado.caseFacts[0]?.verbalization).not.toContain('No disponible');
-    expect(resultado.caseFacts[0]?.verbalization).not.toContain('estadio');
+    expect(resultado.caseFacts[0]?.verbalization).toContain('estadio: No disponible');
   });
 
   it('devuelve cero hechos cuando el paciente no tiene datos clínicos', () => {

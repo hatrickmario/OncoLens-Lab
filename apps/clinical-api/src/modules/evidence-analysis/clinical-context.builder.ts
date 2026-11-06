@@ -111,6 +111,20 @@ function ultimoValorPorBiomarcador(filas: readonly FilaDeBiomarcador[]): FilaDeB
   return [...ultimos.values()];
 }
 
+/** Orden cronológico de dos biomarcadores: negativo si `a` es anterior a `b` (fecha del examen y, a igual fecha, creación). */
+export function compararBiomarcadores(_a: FilaDeBiomarcador, _b: FilaDeBiomarcador): number {
+  throw new Error('no implementado');
+}
+
+/** Contexto del chat (US-260): como el del análisis pero con toda la serie vigente de cada biomarcador. */
+export function construirContextoDelChat(
+  _caso: CasoClinico,
+  _ahora: Date,
+  _faltantes: readonly string[],
+): { contexto: ContextoPermitido; dataRefs: MapaDeDataRefs } {
+  throw new Error('no implementado');
+}
+
 /** Del más antiguo al más reciente por fecha del examen y, a igual fecha, por creación. */
 function enOrdenCronologico(filas: readonly FilaDeBiomarcador[]): FilaDeBiomarcador[] {
   return [...filas].sort((a, b) =>
