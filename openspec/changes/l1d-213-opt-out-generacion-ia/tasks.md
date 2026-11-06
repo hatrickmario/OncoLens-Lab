@@ -29,6 +29,6 @@
 
 ## Verificación
 
-- [x] 4.1 `openspec validate l1d-213-opt-out-generacion-ia --strict`, tests de `clinical-api` y `web` en verde, `contracts:verify-provider` en verde (sin `run-ai-eval`: no cambia modelo, prompt, umbral, catálogo ni corpus) Evidencia: `openspec validate --strict` válido; unitarios de clinical-api 1335+18 en verde; integración completa 841 en verde con PostgreSQL de test; `contracts:verify-provider` clinical-api 1009 respuestas verificadas; vitest de web (tests/lib y ficha) en verde. La UI queda en 3.x (DIFERIDA).
+- [x] 4.1 `openspec validate l1d-213-opt-out-generacion-ia --strict`, tests de `clinical-api` y `web` en verde, `contracts:verify-provider` en verde (sin `run-ai-eval`: no cambia modelo, prompt, umbral, catálogo ni corpus) Evidencia: `openspec validate --strict` válido; unitarios de clinical-api 1335 en verde; integración completa 841 en verde con PostgreSQL de test; `contracts:verify-provider` clinical-api 1009 respuestas verificadas; vitest de web (tests/lib y ficha) en verde. La UI queda en 3.x (DIFERIDA).
 
 Nota (no es tarea del PR): la prop `disabled` y el aviso de la UI los implementa `frontend-dev` tras el merge de L1D-324; `apps/web/app/api` no necesita mapear el 403 porque el BFF reenvía status y cuerpo de clinical-api tal cual.
