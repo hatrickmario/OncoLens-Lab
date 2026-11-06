@@ -1,7 +1,7 @@
-import { biomarcador, examen, ki67, nottingham, estadoMenopausico } from './auxiliares.js';
+import { biomarcador, examen, nottingham, estadoMenopausico } from './auxiliares.js';
 import type { PacienteSemilla } from './tipos.js';
 
-/** (h) US-254 · mama adyuvante tras cirugía: cuadrantectomía y letrozol en curso; HER2 1+, Ki-67 20 %, sin BRCA. */
+/** (h) US-254 · mama adyuvante tras cirugía: cuadrantectomía y letrozol en curso; HER2 1+, Ki-67 20 % por revisar, sin BRCA. */
 export const pacienteH: PacienteSemilla = {
   clave: 'paciente-h',
   anioDeNacimiento: 1966,
@@ -25,7 +25,13 @@ export const pacienteH: PacienteSemilla = {
       biomarcador('receptor-estrogeno', 'RE', 'Positivo (95%)'),
       biomarcador('receptor-progesterona', 'RP', 'Positivo (40%)'),
       biomarcador('her2', 'HER2', '1+ (IHQ)'),
-      ki67('20 %'),
+    ]),
+    // Ki-67 en un examen propio y sin verificar: con (f) deja dos pacientes en la columna «Por revisar» del listado.
+    examen('examen-ki67', 'IHQ', 130, [
+      biomarcador('ki67', 'Ki-67', '20 %', {
+        tipoResultado: 'cuantitativo',
+        estadoDeRevision: 'requiere_revision',
+      }),
     ]),
   ],
   tratamientosPrevios: [
