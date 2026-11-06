@@ -1,9 +1,15 @@
 """RN-12 (US-050): la regla pura de proveedores permitidos y el selector que la aplica por petición."""
 
+import asyncio
+
 import pytest
 
 from app.application.ports import FalloDelLlm
-from app.application.selector_proveedor_llm import SelectorDeProveedorLlm, con_clasificacion
+from app.application.selector_proveedor_llm import (
+    SelectorDeProveedorLlm,
+    _contexto,
+    con_clasificacion,
+)
 from app.domain.reglas_proveedor import ProveedorLlm, proveedores_permitidos
 from tests.support.llm_falso import FakeLlmClient
 from tests.support.llm_nube_falso import LlmNubeFalso
@@ -104,3 +110,42 @@ async def test_el_selector_aplica_la_misma_regla_a_la_tarea_acotada_cuando_el_lo
             await selector.completar_json_acotado("u", ESQUEMA, max_tokens=8, semilla=1)
 
     assert nube.invocaciones == 0
+
+
+async def test_el_selector_marca_nube_usada_en_el_contexto_externo_cuando_con_clasificacion_se_anida():
+    nube = LlmNubeFalso()
+    selector = SelectorDeProveedorLlm(
+        FakeLlmClient(error=FalloDelLlm()), nube, nube_habilitada=True
+    )
+
+    with con_clasificacion("sintetico") as externo:
+        with con_clasificacion("real_identificado"):  # el contexto activo manda: no se reabre
+            await selector.completar_json("u", ESQUEMA)
+
+    assert nube.invocaciones == 1
+    assert externo.proveedor_declarado is ProveedorLlm.nube
+
+
+async def test_el_selector_aisla_la_clasificacion_de_cada_peticion_cuando_dos_corren_concurrentes():
+    nube = LlmNubeFalso()
+    selector = SelectorDeProveedorLlm(
+        FakeLlmClient(error=FalloDelLlm()), nube, nube_habilitada=True
+    )
+
+    async def peticion(clasificacion: str):
+        with con_clasificacion(clasificacion) as contexto:
+            await asyncio.sleep(0)  # cede el turno para que las dos se intercalen
+            try:
+                await selector.completar_json("u", ESQUEMA)
+            except FalloDelLlm:
+                return clasificacion, contexto.proveedor_declarado, False
+            return clasificacion, contexto.proveedor_declarado, True
+
+    resultados = await asyncio.gather(peticion("real_identificado"), peticion("sintetico"))
+
+    assert resultados == [
+        ("real_identificado", ProveedorLlm.local, False),
+        ("sintetico", ProveedorLlm.nube, True),
+    ]
+    assert nube.invocaciones == 1
+    assert _contexto.get() is None
