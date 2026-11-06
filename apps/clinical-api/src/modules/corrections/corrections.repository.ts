@@ -142,40 +142,21 @@ async function contarOtrosBiomarcadoresVigentes(
   return (rows[0]?.['n'] as number | undefined) ?? 0;
 }
 
+/** Tablas con corrección por `supersedes_id` (ADR-50): literales del código, nunca texto del cliente. */
+type TablaCorregible = 'biomarker' | 'prior_treatment' | 'clinical_attribute' | 'clinical_note';
+
 /**
- * La fila anterior conserva su valor: solo cambia su estado y, en la nota, su vigencia (RN-08). El `WHERE` exige que
+ * La fila anterior conserva su valor: solo cambia su estado (y, en la nota, su vigencia) (RN-08). El `WHERE` exige que
  * siga vigente: si otra petición la reemplazó antes, no afecta ninguna fila y la corrección se revierte (D2).
  */
-async function reemplazarBiomarcador(db: Consultador, id: string): Promise<boolean> {
+async function reemplazarFilaVigente(
+  db: Consultador,
+  tabla: TablaCorregible,
+  id: string,
+): Promise<boolean> {
+  const inactiva = tabla === 'clinical_note' ? ', is_active = false' : '';
   const resultado = await db.query(
-    `UPDATE clinical.biomarker SET review_status = 'reemplazado'
-      WHERE id = $1 AND ${sqlDatoVigente('review_status')} RETURNING id`,
-    [id],
-  );
-  return resultado.rows.length === 1;
-}
-
-async function reemplazarNota(db: Consultador, id: string): Promise<boolean> {
-  const resultado = await db.query(
-    `UPDATE clinical.clinical_note SET review_status = 'reemplazado', is_active = false
-      WHERE id = $1 AND ${sqlDatoVigente('review_status')} RETURNING id`,
-    [id],
-  );
-  return resultado.rows.length === 1;
-}
-
-async function reemplazarTratamiento(db: Consultador, id: string): Promise<boolean> {
-  const resultado = await db.query(
-    `UPDATE clinical.prior_treatment SET review_status = 'reemplazado'
-      WHERE id = $1 AND ${sqlDatoVigente('review_status')} RETURNING id`,
-    [id],
-  );
-  return resultado.rows.length === 1;
-}
-
-async function reemplazarAtributo(db: Consultador, id: string): Promise<boolean> {
-  const resultado = await db.query(
-    `UPDATE clinical.clinical_attribute SET review_status = 'reemplazado'
+    `UPDATE clinical.${tabla} SET review_status = 'reemplazado'${inactiva}
       WHERE id = $1 AND ${sqlDatoVigente('review_status')} RETURNING id`,
     [id],
   );
@@ -186,7 +167,7 @@ async function guardarCorreccionDeTratamiento(
   db: Consultador,
   { tratamiento: nuevo, tratamientoAReemplazar }: PlanDeCorreccionDeTratamiento,
 ): Promise<boolean> {
-  if (!(await reemplazarTratamiento(db, tratamientoAReemplazar))) return false;
+  if (!(await reemplazarFilaVigente(db, 'prior_treatment', tratamientoAReemplazar))) return false;
   await guardarTratamiento(db, nuevo);
   return true;
 }
@@ -195,7 +176,7 @@ async function guardarCorreccionDeAtributo(
   db: Consultador,
   { atributo: nuevo, atributoAReemplazar }: PlanDeCorreccionDeAtributo,
 ): Promise<boolean> {
-  if (!(await reemplazarAtributo(db, atributoAReemplazar))) return false;
+  if (!(await reemplazarFilaVigente(db, 'clinical_attribute', atributoAReemplazar))) return false;
   await guardarAtributo(db, nuevo);
   return true;
 }
@@ -204,7 +185,7 @@ async function guardarCorreccionDeBiomarcador(
   db: Consultador,
   { examen, biomarcador: b, biomarcadorAReemplazar }: PlanDeCorreccionDeBiomarcador,
 ): Promise<boolean> {
-  if (!(await reemplazarBiomarcador(db, biomarcadorAReemplazar))) return false;
+  if (!(await reemplazarFilaVigente(db, 'biomarker', biomarcadorAReemplazar))) return false;
   await db.query(
     `INSERT INTO clinical.exam (id, patient_id, episode_id, source_document_id, exam_type, source_lab,
                                 entry_method, performed_at, supersedes_id, created_at)
@@ -234,7 +215,7 @@ async function guardarCorreccionDeNota(
   db: Consultador,
   { nota: n, notaAReemplazar }: PlanDeCorreccionDeNota,
 ): Promise<boolean> {
-  if (!(await reemplazarNota(db, notaAReemplazar))) return false;
+  if (!(await reemplazarFilaVigente(db, 'clinical_note', notaAReemplazar))) return false;
   await db.query(
     `INSERT INTO clinical.clinical_note (id, patient_id, episode_id, source_document_id, created_by, note_type,
                                          entry_method, content, recorded_at, is_active, extraction_confidence,
