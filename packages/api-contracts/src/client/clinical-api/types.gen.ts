@@ -573,7 +573,7 @@ export type CompletenessItem = {
      */
     provenance: CompletenessProvenance | null;
     /**
-     * Cómo se cumplió un ítem presente: registro (hay registros suficientes en su destino) o declaracion_de_ausencia (el catálogo declara un satisfiedBy y hay una declaración vigente, p. ej. sin_tratamiento_previo, sin fila en el destino). Ausente cuando status es faltante o no_aplica, y en los ítems que no tienen satisfiedBy.
+     * Cómo se cumplió un ítem presente: registro (hay registros suficientes en su destino) o declaracion_de_ausencia (el catálogo declara un satisfiedBy y hay una declaración vigente, p. ej. sin_tratamiento_previo, sin fila en el destino). Ausente cuando status es faltante o no_aplica, y en los ítems que no tienen satisfiedBy; en un ítem presente, ausente equivale a registro. Hoy solo tratamientos_previos lo emite.
      */
     resolvedBy?: 'registro' | 'declaracion_de_ausencia';
     destination: {
