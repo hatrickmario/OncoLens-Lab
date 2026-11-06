@@ -11,17 +11,20 @@ const filaDeTratamientos = (page: Page) =>
   page
     .getByRole('region', { name: datosCriticos.titulo })
     .getByRole('listitem')
-    .filter({ hasText: 'Tratamientos previos' });
+    .filter({ hasText: caso.secciones.tratamientos });
 const seccionDeTratamientos = (page: Page) =>
   page.getByRole('region', { name: caso.secciones.tratamientos });
 
 /**
- * Recorrido de «Sin tratamiento previo a la fecha» (d5fb-04): faltante → declarar → «Presente» → registrar un
- * tratamiento → la declaración queda reemplazada. Usa el paciente semilla (d) (mama sin tratamientos) y lo muta: solo corre
- * sobre un seed recién sembrado, como el gate (`scripts/e2e/ejecutar.sh` hace `down -v`). Lo ejerce el job `e2e` de la CI.
+ * Recorrido de «Sin tratamiento previo a la fecha» (d5fb-04) sobre el paciente semilla (d) (mama sin tratamientos), que
+ * muta: solo corre sobre un seed recién sembrado (`scripts/e2e/ejecutar.sh` hace `down -v`). Son dos pasos en serie: el
+ * segundo depende del primero (necesita la declaración ya creada), así que un fallo del primero no se reintenta en el
+ * segundo con un estado a medias (`retries: 1` en la CI). Lo ejerce el job `e2e` de la CI.
  */
+test.describe.configure({ mode: 'serial' });
+
 test.describe('Declaración «Sin tratamiento previo a la fecha» (d5fb-04)', () => {
-  test('declarar la ausencia deja de ser Faltante y registrar un tratamiento reemplaza la declaración [AC-04.1]', async ({
+  test('declarar la ausencia deja de ser Faltante y la sección lo muestra distinto de «Sin datos» [AC-04.1]', async ({
     page,
   }) => {
     await iniciarSesion(page);
@@ -40,6 +43,17 @@ test.describe('Declaración «Sin tratamiento previo a la fecha» (d5fb-04)', ()
     await expect(filaDeTratamientos(page)).toContainText(datosCriticos.estado.presente_verificado);
     await expect(filaDeTratamientos(page)).toContainText(declaracion.declarado);
     await expect(seccionDeTratamientos(page).getByText(declaracion.sinTratamiento)).toBeVisible();
+  });
+
+  test('registrar un tratamiento después reemplaza la declaración (depende del test anterior) [AC-04.1]', async ({
+    page,
+  }) => {
+    await iniciarSesion(page);
+    await page.goto(`/pacientes/${ID_SEMILLA_D}/caso`);
+    await expect(
+      seccionDeTratamientos(page).getByText(declaracion.sinTratamiento),
+      'la declaración del test anterior debe existir: este test depende de él',
+    ).toBeVisible();
 
     await page.getByRole('button', { name: tratamiento.accion }).click();
     const registrar = page.getByRole('dialog', { name: tratamiento.titulo });

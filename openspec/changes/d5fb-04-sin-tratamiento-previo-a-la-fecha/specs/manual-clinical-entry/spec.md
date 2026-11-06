@@ -19,6 +19,7 @@
 - **GIVEN** la casilla marcada
 - **WHEN** se desmarca y se pulsa «Guardar» vacío
 - **THEN** se exigen de nuevo régimen y contexto, y no se envía nada
+- **AND** al alternar entre la declaración y el tratamiento se descartan los valores del otro modo: un régimen escrito antes de marcar no reaparece al desmarcar
 
 #### Scenario: La fecha de la declaración no puede ser futura [AC-04.1]
 - **WHEN** se marca la opción y se escribe una fecha posterior a hoy

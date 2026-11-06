@@ -18,7 +18,12 @@ export const { evidence: textos, pacientes, ficha, alcance } = es;
 /** Paciente semilla (a), de mama (L1D-169): el mismo UUID determinista que `WEB_HOME_PATH` en `scripts/e2e/ejecutar.sh`. */
 export const ID_SEMILLA_A = '0fd028e2-f8b0-56c7-a748-2a4e473d879d';
 
-/** Paciente semilla (d): mama sin exámenes, tratamientos ni atributos (casi todo el checklist en «Faltante»); `idSembrado('paciente-d')`. */
+/**
+ * Paciente semilla (d): mama sin exámenes, tratamientos ni atributos (casi todo el checklist en «Faltante»); `idSembrado('paciente-d')`.
+ * Lo MUTAN dos specs, en este orden (un worker, orden alfabético; `ejecutar.sh` re-siembra con `down -v` al empezar la corrida):
+ * `datos-criticos-vista-caso.spec.ts` (registra Ki-67) y luego `declaracion-sin-tratamiento.spec.ts` (declara «Sin tratamiento
+ * previo» y después registra un tratamiento; sus dos tests van en serie). Un spec nuevo que lo use debe asumir ese estado.
+ */
 export const ID_SEMILLA_D = 'c257f30f-8341-5f51-a219-8e4bca373918';
 
 /** Paciente semilla (f) = FX-T3-a (L1D-196): mama con avisos clínicos acumulados; `idSembrado('paciente-f')`. */

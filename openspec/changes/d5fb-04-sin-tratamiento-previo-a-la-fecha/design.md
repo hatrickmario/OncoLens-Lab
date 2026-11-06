@@ -70,7 +70,7 @@ campos.
   los lectores de pantalla no los anuncien), **se excluyen de la validación** y del cuerpo; queda solo «Fecha de la
   declaración» (obligatoria, no futura, por defecto hoy). «Guardar» envía `POST /api/patients/{id}/clinical-attributes`
   con `{ attributeKey: "sin_tratamiento_previo", value: "si", observedAt, datePrecision: "dia" }`.
-- **Desmarcada:** el formulario actual intacto. Los valores escritos se conservan en memoria al alternar.
+- **Desmarcada:** el formulario actual intacto. Al alternar entre el tratamiento y la declaración se descartan los valores del otro modo (YAGNI: son dos formularios distintos y no hay evidencia de que alternar sea frecuente).
 - Si ya hay tratamientos registrados, la casilla no se ofrece (D4); si ya hay declaración, el diálogo muestra «Sin
   tratamiento previo declarado el ‹fecha›» y ofrece «Registrar un tratamiento» (que la reemplaza al guardar, con aviso
   previo «Esto reemplazará la declaración “Sin tratamiento previo”»).
