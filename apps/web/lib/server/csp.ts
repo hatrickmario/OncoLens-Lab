@@ -33,7 +33,8 @@ export function construirCsp({ nonce, modo, desarrollo }: OpcionesCsp): Cabecera
     "frame-ancestors 'none'",
   ];
   return {
-    nombre: modo === 'solo_informe' ? 'Content-Security-Policy-Report-Only' : 'Content-Security-Policy',
+    nombre:
+      modo === 'solo_informe' ? 'Content-Security-Policy-Report-Only' : 'Content-Security-Policy',
     valor: directivas.join('; '),
   };
 }

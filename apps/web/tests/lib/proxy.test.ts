@@ -46,7 +46,10 @@ describe('proxy (guard de páginas, design D8)', () => {
 });
 
 const NONCE = 'bm9uY2UtY29uZ2VsYWRv';
-const proxyConNonce = crearProxy({ generarNonce: () => NONCE, entorno: { NODE_ENV: 'production' } });
+const proxyConNonce = crearProxy({
+  generarNonce: () => NONCE,
+  entorno: { NODE_ENV: 'production' },
+});
 
 function pedir(ruta: string) {
   return new NextRequest(`http://localhost:3000${ruta}`);

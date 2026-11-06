@@ -66,6 +66,20 @@ Sin cambios de render: el panel ya muestra texto plano. Este change añade los t
 chat, la regla queda escrita para `l1d-324`/`l1d-325`: Markdown solo con `react-markdown` + `rehype-sanitize`, sin
 `rehype-raw`, con `urlTransform` que devuelve `''` si `esUrlHttpSegura()` es falso.
 
+### D7 · Desviaciones de la implementación (registradas en el cierre)
+
+- **Layout:** `app/layout.tsx` usa `await connection()` (API de Next 16 para optar por render dinámico) en lugar de leer
+  `headers().get('x-nonce')`: el nonce lo aplica Next a sus scripts desde la CSP de la request, el layout no lo
+  necesita; el efecto buscado (render por request) es el mismo.
+- **AC-3:** el panel no muestra `synthesis` (solo `agreements`/`discrepancies` vacíos en el ejemplo); el vector se
+  inyecta en la justificación de la opción y en `chunkTextSnapshot`, que sí se renderizan.
+- **AC-5:** el contrato (`sourceUrl` solo `https`) ya rechaza `javascript:`/`data:` en la validación del BFF, así que el
+  test de esos esquemas monta `CitationDetails` directamente (segunda defensa); `https:` va por el panel completo.
+- **AC-2:** el bloqueo por `frame-ancestors` no llega a la consola de la página; el E2E comprueba que la respuesta de
+  cada iframe lleva `frame-ancestors 'none'` y que el documento del frame no contiene el formulario de login.
+- **P-1 (`style-src-attr 'unsafe-inline'`)** aceptado por el PO [S6 resp. 19], sin ADR: solo atributos `style=""`; `script-src`
+  y `style-src` (elementos) siguen sin `unsafe-inline`.
+
 ## Componentes y patrones
 
 Sin componentes nuevos. `layout.tsx` sigue siendo RSC; no se añade ningún `'use client'` ni provider. Sin patrones nuevos.

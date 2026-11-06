@@ -17,7 +17,10 @@ const HTML_SCRIPT = '<script>window.__xss=1</script>';
 
 function conCita(campos: Partial<CitedSource>, opcionExtra: object = {}) {
   const cita: CitedSource = { ...citaDelEjemplo, ...campos };
-  return { ...conEvidencia, evidenceOptions: [{ ...opcion, ...opcionExtra, citedSources: [cita] }] };
+  return {
+    ...conEvidencia,
+    evidenceOptions: [{ ...opcion, ...opcionExtra, citedSources: [cita] }],
+  };
 }
 
 async function mostrar(cuerpo: object) {
@@ -38,9 +41,7 @@ describe('Texto generado o del corpus con HTML en el panel', () => {
 
   it('muestra literal la justificación y el fragmento citado, sin crear img ni script, cuando traen HTML malicioso [US-216 AC-3]', async () => {
     const texto = `${HTML_IMG} ${HTML_SCRIPT}`;
-    const usuario = await mostrar(
-      conCita({ chunkTextSnapshot: texto }, { rationale: texto }),
-    );
+    const usuario = await mostrar(conCita({ chunkTextSnapshot: texto }, { rationale: texto }));
     await usuario.click(screen.getByRole('button', { name: evidence.cita.verFragmento }));
 
     expect(screen.getAllByText(texto, { exact: false }).length).toBeGreaterThanOrEqual(2);
@@ -62,7 +63,11 @@ describe('Enlaces de cita', () => {
     'no crea un elemento a y muestra el título como texto cuando la url de la cita es %s [US-216 AC-5]',
     (url) => {
       render(
-        <CitationDetails cita={{ ...citaDelEjemplo, sourceUrl: url }} id="cita-x" onVerFragmento={() => {}} />,
+        <CitationDetails
+          cita={{ ...citaDelEjemplo, sourceUrl: url }}
+          id="cita-x"
+          onVerFragmento={() => {}}
+        />,
       );
 
       expect(document.body.querySelector('a')).toBeNull();

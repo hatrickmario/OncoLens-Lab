@@ -36,7 +36,8 @@ function exigirEndurecimiento(respuesta: APIResponse): void {
 function recogerViolacionesDeCsp(page: Page): string[] {
   const violaciones: string[] = [];
   page.on('console', (mensaje) => {
-    if (/Content Security Policy|Refused to/i.test(mensaje.text())) violaciones.push(mensaje.text());
+    if (/Content Security Policy|Refused to/i.test(mensaje.text()))
+      violaciones.push(mensaje.text());
   });
   return violaciones;
 }
@@ -104,10 +105,8 @@ test.describe('Cabeceras de seguridad de web (US-216)', () => {
     page,
     baseURL,
   }) => {
-    const bloqueos: string[] = [];
-    page.on('console', (m) => {
-      if (/frame-ancestors|X-Frame-Options/i.test(m.text())) bloqueos.push(m.text());
-    });
+    // El bloqueo por frame-ancestors no llega a la consola de la página: se comprueba que el frame quedó en la
+    // página de error del navegador y no en una URL de web.
     await page.route(`${ORIGEN_AJENO}/**`, (ruta) =>
       ruta.fulfill({
         contentType: 'text/html',
@@ -118,9 +117,11 @@ test.describe('Cabeceras de seguridad de web (US-216)', () => {
     await page.goto(`${ORIGEN_AJENO}/`);
     await page.waitForLoadState('networkidle');
 
-    for (const frame of page.frames().filter((f) => f !== page.mainFrame())) {
+    const frames = page.frames().filter((f) => f !== page.mainFrame());
+    expect(frames).toHaveLength(2);
+    for (const frame of frames) {
+      expect(frame.url()).not.toContain(baseURL ?? '');
       await expect(frame.getByLabel('Correo electrónico')).toHaveCount(0);
     }
-    expect(bloqueos.length).toBeGreaterThan(0);
   });
 });
