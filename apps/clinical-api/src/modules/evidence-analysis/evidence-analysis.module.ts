@@ -21,11 +21,13 @@ import { crearFollowUpRepository, type EjecutarEnTransaccion } from './follow-up
 import { crearFollowUpService, type FollowUpService } from './follow-up.service.js';
 import {
   createEvidenceAnalysisRepository,
+  type AnalisisRepository,
   type CasoRepository,
 } from './evidence-analysis.repository.js';
 import {
   crearEvidenceAnalysisService,
   type ConfiguracionDelAnalisis,
+  type EvidenceAnalysisService,
 } from './evidence-analysis.service.js';
 import {
   ChecklistNoDisponibleError,
@@ -166,10 +168,12 @@ function componerSeguimiento(dependencias: DependenciasDelGateway): FollowUpServ
   });
 }
 
-/** Composición del módulo `evidence-analysis`: devuelve el router que se monta detrás del guard de sesión. */
-export function componerGatewayDeAnalisis(dependencias: DependenciasDelGateway): Router {
-  const repositorio = createEvidenceAnalysisRepository(dependencias.db);
-  const service = crearEvidenceAnalysisService({
+/** Servicio del análisis de evidencia: el cierre persiste el `AIAnalysisRecord` antes de responder (RN-06). */
+function componerAnalisis(
+  dependencias: DependenciasDelGateway,
+  repositorio: CasoRepository & AnalisisRepository,
+): EvidenceAnalysisService {
+  return crearEvidenceAnalysisService({
     casos: repositorio,
     desidentificador: dependencias.desidentificador,
     rag: dependencias.rag,
@@ -190,6 +194,12 @@ export function componerGatewayDeAnalisis(dependencias: DependenciasDelGateway):
     reloj: dependencias.reloj,
     config: dependencias.config,
   });
+}
+
+/** Composición del módulo `evidence-analysis`: devuelve el router que se monta detrás del guard de sesión. */
+export function componerGatewayDeAnalisis(dependencias: DependenciasDelGateway): Router {
+  const repositorio = createEvidenceAnalysisRepository(dependencias.db);
+  const service = componerAnalisis(dependencias, repositorio);
   const router = evidenceAnalysisController({
     service,
     traceIds: dependencias.traceIds,

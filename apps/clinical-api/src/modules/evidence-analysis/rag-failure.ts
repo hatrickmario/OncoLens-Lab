@@ -44,6 +44,15 @@ function falloDe409(codigo: string | null | undefined): RespuestaDeFallo {
     : servicioIa('conflicto_de_rag');
 }
 
+/** Estados sin fila propia: un `404 HILO_DESCONOCIDO` (solo `/chat/turn`, ya tras la rehidratación, L1D-315) o un fallo interno. */
+function falloDeOtroEstado(fallo: FalloDeRag): RespuestaDeFallo {
+  return servicioIa(
+    fallo.status === 404 && fallo.codigo === 'HILO_DESCONOCIDO'
+      ? 'hilo_desconocido'
+      : 'error_de_rag',
+  );
+}
+
 /**
  * Tabla ÚNICA de fallos de rag-orchestrator (`[S1 resp. 12]`, `[S1 resp. 35]`): qué responde clinical-api ante cada uno.
  * Ninguna fila persiste un registro ni reenvía el cuerpo, el `message` o las cabeceras de rag-orchestrator.
@@ -63,9 +72,6 @@ export function mapearFalloRag(fallo: FalloDeRag): RespuestaDeFallo {
         : servicioIa('validacion_rechazada_por_rag');
     case 401:
       return servicioIa('token_de_servicio_rechazado');
-    case 404:
-      // Solo `/chat/turn` lo emite: un hilo que rag-orchestrator no conoce, ya tras la rehidratación (L1D-315).
-      return servicioIa(fallo.codigo === 'HILO_DESCONOCIDO' ? 'hilo_desconocido' : 'error_de_rag');
     case 409:
       return falloDe409(fallo.codigo);
     case 429:
@@ -73,7 +79,7 @@ export function mapearFalloRag(fallo: FalloDeRag): RespuestaDeFallo {
     case null:
       return servicioIa('sin_conexion_con_rag');
     default:
-      return servicioIa('error_de_rag');
+      return falloDeOtroEstado(fallo);
   }
 }
 

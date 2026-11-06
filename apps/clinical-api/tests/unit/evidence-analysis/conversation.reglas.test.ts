@@ -24,8 +24,8 @@ const ESTADO_VACIO = {
 
 function turno(numero: number, resto: Partial<TurnoDeConversacion> = {}): TurnoDeConversacion {
   return {
-    id: `00000000-0000-4000-8000-0000000000${String(numero).padStart(2, '0')}`,
-    conversationId: '00000000-0000-4000-8000-0000000000c1',
+    id: `aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeee${String(numero).padStart(4, 'a')}`,
+    conversationId: 'aaaaaaaa-bbbb-4ccc-8ddd-cccccccccccc',
     turnNumber: numero,
     questionMasked: `pregunta ${numero}`,
     intent: 'caso',
@@ -116,13 +116,13 @@ describe('construirRehidratacion', () => {
         {
           factRef: 'f1',
           resourceType: 'diagnosis',
-          resourceId: '00000000-0000-4000-8000-0000000000d1',
+          resourceId: 'aaaaaaaa-bbbb-4ccc-8ddd-ddddddddddd1',
           origin: 'seed',
           relativeDay: 0,
           recordedDate: '2025-01-15',
         },
       ],
-      analysisId: '00000000-0000-4000-8000-0000000000a1',
+      analysisId: 'aaaaaaaa-bbbb-4ccc-8ddd-aaaaaaaaaaa1',
     });
 
     const { turns } = construirRehidratacion([conDatos], 6);
@@ -160,12 +160,12 @@ describe('analisisActivo', () => {
 
   it('devuelve el analysisId del turno más reciente que lo tenga', () => {
     const turnos = [
-      turno(1, { analysisId: '00000000-0000-4000-8000-0000000000a1' }),
-      turno(2, { analysisId: '00000000-0000-4000-8000-0000000000a2' }),
+      turno(1, { analysisId: 'aaaaaaaa-bbbb-4ccc-8ddd-aaaaaaaaaaa1' }),
+      turno(2, { analysisId: 'aaaaaaaa-bbbb-4ccc-8ddd-aaaaaaaaaaa2' }),
       turno(3),
     ];
 
-    expect(analisisActivo(turnos)).toBe('00000000-0000-4000-8000-0000000000a2');
+    expect(analisisActivo(turnos)).toBe('aaaaaaaa-bbbb-4ccc-8ddd-aaaaaaaaaaa2');
   });
 });
 

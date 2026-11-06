@@ -85,25 +85,28 @@ function candidatosDelContexto(contexto: ClinicalContext): Candidato[] {
   ];
 }
 
+type BuscadorDeFecha = (caso: CasoClinico, id: string) => string | null;
+
+/** Cómo se halla la fecha confiable de cada clase de dato (`fechaConfiable()` donde la fila trae precisión). */
+const FECHA_POR_TABLA: Readonly<Record<EnlaceDeDato['tabla'], BuscadorDeFecha>> = {
+  diagnosis: (caso, id) =>
+    caso.diagnosticoActivo?.id === id ? caso.diagnosticoActivo.diagnosedAt : null,
+  biomarker: (caso, id) => caso.biomarcadores.find((fila) => fila.id === id)?.performedAt ?? null,
+  clinical_attribute: (caso, id) => {
+    const fila = caso.atributos.find((candidata) => candidata.id === id);
+    return fila === undefined ? null : fechaConfiable(fila.observedAt, fila.datePrecision);
+  },
+  prior_treatment: (caso, id) =>
+    caso.tratamientosPrevios.find((fila) => fila.id === id)?.startedAt ?? null,
+  clinical_event: (caso, id) => {
+    const fila = caso.eventos.find((candidata) => candidata.id === id);
+    return fila === undefined ? null : fechaConfiable(fila.eventDate, fila.datePrecision);
+  },
+};
+
 /** Fecha `AAAA-MM-DD` confiable del dato que respalda el hecho, o `null` si el dato no tiene fecha confiable. */
-function fechaDelDato(enlace: EnlaceDeDato, caso: CasoClinico): string | null {
-  switch (enlace.tabla) {
-    case 'diagnosis':
-      return caso.diagnosticoActivo?.id === enlace.id ? caso.diagnosticoActivo.diagnosedAt : null;
-    case 'biomarker':
-      return caso.biomarcadores.find((fila) => fila.id === enlace.id)?.performedAt ?? null;
-    case 'clinical_attribute': {
-      const fila = caso.atributos.find((candidata) => candidata.id === enlace.id);
-      return fila === undefined ? null : fechaConfiable(fila.observedAt, fila.datePrecision);
-    }
-    case 'prior_treatment':
-      return caso.tratamientosPrevios.find((fila) => fila.id === enlace.id)?.startedAt ?? null;
-    case 'clinical_event': {
-      const fila = caso.eventos.find((candidata) => candidata.id === enlace.id);
-      return fila === undefined ? null : fechaConfiable(fila.eventDate, fila.datePrecision);
-    }
-  }
-}
+const fechaDelDato = (enlace: EnlaceDeDato, caso: CasoClinico): string | null =>
+  FECHA_POR_TABLA[enlace.tabla](caso, enlace.id);
 
 const MS_POR_DIA = 86_400_000;
 

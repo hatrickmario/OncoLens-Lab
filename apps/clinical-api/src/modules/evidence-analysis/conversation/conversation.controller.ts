@@ -19,6 +19,7 @@ import {
   ConversacionNoEncontradaError,
   TurnoReferidoInexistenteError,
   type ConversationService,
+  type ResultadoDelTurno,
 } from './conversation.service.js';
 
 export interface DependenciasDelControllerDeConversacion {
@@ -102,6 +103,25 @@ function manejadorDeLectura(
   };
 }
 
+/** `201` con el turno persistido (sin caché: es dato clínico) o el fallo ya traducido de Backend 2. */
+function responderResultadoDelTurno(
+  emisor: EmisorDeConversacion,
+  response: Response,
+  conversationId: string,
+  resultado: ResultadoDelTurno,
+): void {
+  if (resultado.tipo === 'fallo') {
+    emisor.rechazar(response, resultado.respuesta, { conversationId });
+    return;
+  }
+  emisor.registrarResultado(response, 'ok', {
+    conversationId,
+    turnNumber: resultado.cuerpo.turnNumber,
+  });
+  response.setHeader('Cache-Control', 'no-store');
+  response.status(201).json(resultado.cuerpo);
+}
+
 function manejadorDeTurno(
   service: ConversationService,
   emisor: EmisorDeConversacion,
@@ -123,16 +143,7 @@ function manejadorDeTurno(
         conversationId,
         peticion: cuerpo.data,
       });
-      if (resultado.tipo === 'fallo') {
-        emisor.rechazar(response, resultado.respuesta, { conversationId });
-        return;
-      }
-      emisor.registrarResultado(response, 'ok', {
-        conversationId,
-        turnNumber: resultado.cuerpo.turnNumber,
-      });
-      response.setHeader('Cache-Control', 'no-store');
-      response.status(201).json(resultado.cuerpo);
+      responderResultadoDelTurno(emisor, response, conversationId, resultado);
     } catch (error) {
       if (error instanceof ConversacionNoEncontradaError) {
         emisor.noEncontrado(response);

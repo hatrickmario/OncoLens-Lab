@@ -64,13 +64,16 @@ async function upsertar(entradas: EntradasDeLaSiembraDelChat, tabla: string, fil
 
 const id = (clave: string): string => idSembrado(`${PACIENTE_CHAT}/${clave}`);
 
-async function sembrarDiagnosticos(
-  e: EntradasDeLaSiembraDelChat,
-  pacienteId: string,
-  episodioId: string,
-) {
+interface Contexto {
+  readonly e: EntradasDeLaSiembraDelChat;
+  readonly pacienteId: string;
+  readonly episodioId: string;
+}
+
+/** Columnas comunes de los dos registros de diagnóstico de `P-CHAT` (mama, TNM 8, ECOG 1). */
+function filaBaseDeDiagnostico({ e, pacienteId, episodioId }: Contexto): Fila {
   const cie10 = resolverCodigoDelCatalogo(e.catalogo, 'cie10', 'mama');
-  const base = {
+  return {
     patient_id: pacienteId,
     episode_id: episodioId,
     source_document_id: null,
@@ -88,10 +91,14 @@ async function sembrarDiagnosticos(
     reviewed_at: null,
     created_at: e.ahora,
   };
+}
+
+/** Estadio IIA verificado (día −200) con Nottingham grado 2 como gradación de referencia. */
+async function sembrarDiagnosticoVerificado(contexto: Contexto) {
+  const { e } = contexto;
   const gradacion = nottingham(2);
-  // Estadio IIA verificado (día −200) y, después, IIB sin revisar que choca con él (RN-08, día −190).
   await upsertar(e, 'clinical.diagnosis', {
-    ...base,
+    ...filaBaseDeDiagnostico(contexto),
     id: id('diagnostico-iia'),
     entry_method: 'manual',
     grade: derivarTextoGrade(gradacion),
@@ -114,13 +121,17 @@ async function sembrarDiagnosticos(
     reviewed_at: null,
     created_at: e.ahora,
   });
-  await upsertar(e, 'clinical.diagnosis', {
-    ...base,
+}
+
+/** Estadio IIB posterior (día −190), sin revisar, que choca con el IIA (RN-08). */
+async function sembrarDiagnosticoEnConflicto(contexto: Contexto) {
+  await upsertar(contexto.e, 'clinical.diagnosis', {
+    ...filaBaseDeDiagnostico(contexto),
     id: id('diagnostico-iib'),
     entry_method: 'seed',
     grade: null,
     stage_value: 'IIB',
-    diagnosed_at: fechaRelativa(e.ahora, 190),
+    diagnosed_at: fechaRelativa(contexto.e.ahora, 190),
     is_active: false,
     review_status: 'requiere_revision',
     conflicts_with_id: id('diagnostico-iia'),
@@ -128,27 +139,55 @@ async function sembrarDiagnosticos(
 }
 
 interface BiomarcadorDelChat {
-  clave: string;
-  examen: string;
-  nombre: string;
-  valor: string;
-  estado: string;
-  supersedes: string | null;
-  metodo: string;
-  confianza: string;
+  readonly clave: string;
+  readonly examen: string;
+  readonly nombre: string;
+  readonly valor: string;
+  readonly estado: string;
+  readonly supersedes: string | null;
+  readonly confianza: string;
 }
 
-async function sembrarBiomarcadores(
-  e: EntradasDeLaSiembraDelChat,
-  pacienteId: string,
-  episodioId: string,
-) {
-  const examenes = [
-    { clave: 'examen-her2-2mas', dias: 180 },
-    { clave: 'examen-her2-3mas', dias: 170 },
-    { clave: 'examen-re', dias: 175 },
-  ];
-  for (const examen of examenes) {
+const EXAMENES = [
+  { clave: 'examen-her2-2mas', dias: 180 },
+  { clave: 'examen-her2-3mas', dias: 170 },
+  { clave: 'examen-re', dias: 175 },
+] as const;
+
+const BIOMARCADORES: readonly BiomarcadorDelChat[] = [
+  // HER2 2+ reemplazado por la corrección 3+ (ADR-50): la corrección apunta a la fila anterior con `supersedes_id`.
+  {
+    clave: 'her2-2mas',
+    examen: 'examen-her2-2mas',
+    nombre: 'HER2',
+    valor: '2+',
+    estado: 'reemplazado',
+    supersedes: null,
+    confianza: 'n_a',
+  },
+  {
+    clave: 'her2-3mas',
+    examen: 'examen-her2-3mas',
+    nombre: 'HER2',
+    valor: '3+',
+    estado: 'corregido',
+    supersedes: 'her2-2mas',
+    confianza: 'n_a',
+  },
+  // RE positivo extraído sin revisar.
+  {
+    clave: 're',
+    examen: 'examen-re',
+    nombre: 'RE',
+    valor: 'positivo',
+    estado: 'auto_aceptado',
+    supersedes: null,
+    confianza: 'alta',
+  },
+];
+
+async function sembrarExamenes({ e, pacienteId, episodioId }: Contexto) {
+  for (const examen of EXAMENES) {
     await upsertar(e, 'clinical.exam', {
       id: id(examen.clave),
       patient_id: pacienteId,
@@ -162,79 +201,50 @@ async function sembrarBiomarcadores(
       created_at: e.ahora,
     });
   }
-  const biomarcadores: BiomarcadorDelChat[] = [
-    // HER2 2+ reemplazado por la corrección 3+ (ADR-50): la corrección apunta a la fila anterior con `supersedes_id`.
-    {
-      clave: 'her2-2mas',
-      examen: 'examen-her2-2mas',
-      nombre: 'HER2',
-      valor: '2+',
-      estado: 'reemplazado',
-      supersedes: null,
-      metodo: 'seed',
-      confianza: 'n_a',
-    },
-    {
-      clave: 'her2-3mas',
-      examen: 'examen-her2-3mas',
-      nombre: 'HER2',
-      valor: '3+',
-      estado: 'corregido',
-      supersedes: 'her2-2mas',
-      metodo: 'manual_correction',
-      confianza: 'n_a',
-    },
-    // RE positivo extraído sin revisar.
-    {
-      clave: 're',
-      examen: 'examen-re',
-      nombre: 'RE',
-      valor: 'positivo',
-      estado: 'auto_aceptado',
-      supersedes: null,
-      metodo: 'ocr',
-      confianza: 'alta',
-    },
-  ];
-  for (const b of biomarcadores) {
-    const loinc = resolverCodigoDelCatalogo(e.catalogo, 'loinc', b.nombre);
-    await upsertar(e, 'clinical.biomarker', {
-      id: id(b.clave),
-      exam_id: id(b.examen),
-      name: b.nombre,
-      original_name: b.nombre,
-      loinc_code: loinc.codigo,
-      mapping_status: loinc.mappingStatus,
-      value: b.valor,
-      unit: null,
-      normalized_unit: null,
-      reference_range: '',
-      result_type: 'cualitativo',
-      clinical_significance: 'relevante',
-      significance_source: 'documento',
-      extraction_score: null,
-      extraction_confidence: b.confianza,
-      review_status: b.estado,
-      conflicts_with_id: null,
-      supersedes_id: b.supersedes === null ? null : id(b.supersedes),
-      source_span: '{}',
-      reviewed_by: null,
-      reviewed_at: null,
-      created_at: e.ahora,
-    });
+}
+
+function filaDeBiomarcador(e: EntradasDeLaSiembraDelChat, b: BiomarcadorDelChat): Fila {
+  const loinc = resolverCodigoDelCatalogo(e.catalogo, 'loinc', b.nombre);
+  return {
+    id: id(b.clave),
+    exam_id: id(b.examen),
+    name: b.nombre,
+    original_name: b.nombre,
+    loinc_code: loinc.codigo,
+    mapping_status: loinc.mappingStatus,
+    value: b.valor,
+    unit: null,
+    normalized_unit: null,
+    reference_range: '',
+    result_type: 'cualitativo',
+    clinical_significance: 'relevante',
+    significance_source: 'documento',
+    extraction_score: null,
+    extraction_confidence: b.confianza,
+    review_status: b.estado,
+    conflicts_with_id: null,
+    supersedes_id: b.supersedes === null ? null : id(b.supersedes),
+    source_span: '{}',
+    reviewed_by: null,
+    reviewed_at: null,
+    created_at: e.ahora,
+  };
+}
+
+async function sembrarBiomarcadores(contexto: Contexto) {
+  await sembrarExamenes(contexto);
+  for (const biomarcador of BIOMARCADORES) {
+    await upsertar(contexto.e, 'clinical.biomarker', filaDeBiomarcador(contexto.e, biomarcador));
   }
 }
 
-async function sembrarDocumentos(
-  e: EntradasDeLaSiembraDelChat,
-  pacienteId: string,
-  episodioId: string,
-) {
-  const documentos = [
-    { clave: 'D-HC-1', tipo: 'historia_clinica', ocr: 'completado' },
-    { clave: 'D-EX-1', tipo: 'examen', ocr: 'error' },
-  ];
-  for (const documento of documentos) {
+const DOCUMENTOS = [
+  { clave: 'D-HC-1', tipo: 'historia_clinica', ocr: 'completado' },
+  { clave: 'D-EX-1', tipo: 'examen', ocr: 'error' },
+] as const;
+
+async function sembrarDocumentos({ e, pacienteId, episodioId }: Contexto) {
+  for (const documento of DOCUMENTOS) {
     await upsertar(e, 'clinical.document', {
       id: id(documento.clave),
       patient_id: pacienteId,
@@ -255,11 +265,7 @@ async function sembrarDocumentos(
   }
 }
 
-async function sembrarTratamientoEventoYNota(
-  e: EntradasDeLaSiembraDelChat,
-  pacienteId: string,
-  episodioId: string,
-) {
+async function sembrarTratamientoPrevio({ e, pacienteId, episodioId }: Contexto) {
   await upsertar(e, 'clinical.prior_treatment', {
     id: id('linea-1'),
     patient_id: pacienteId,
@@ -280,6 +286,9 @@ async function sembrarTratamientoEventoYNota(
     source_span: null,
     created_at: e.ahora,
   });
+}
+
+async function sembrarCirugia({ e, pacienteId, episodioId }: Contexto) {
   await upsertar(e, 'clinical.clinical_event', {
     id: id('cirugia-1'),
     patient_id: pacienteId,
@@ -301,7 +310,10 @@ async function sembrarTratamientoEventoYNota(
     recorded_by: null,
     created_at: e.ahora,
   });
-  // Texto libre con el nombre y el documento sintéticos: las pruebas de no fuga comprueban que no salen de clinical-api.
+}
+
+/** Texto libre con el nombre y el documento sintéticos: las pruebas de no fuga comprueban que no salen de clinical-api. */
+async function sembrarNotaConPii({ e, pacienteId, episodioId }: Contexto) {
   await upsertar(e, 'clinical.clinical_note', {
     id: id('nota-1'),
     patient_id: pacienteId,
@@ -318,12 +330,10 @@ async function sembrarTratamientoEventoYNota(
   });
 }
 
-export async function sembrarPacienteChat(e: EntradasDeLaSiembraDelChat): Promise<void> {
-  const pacienteId = idSembrado(PACIENTE_CHAT);
-  const episodioId = id('episodio');
+async function sembrarPacienteYEpisodio(e: EntradasDeLaSiembraDelChat, contexto: Contexto) {
   const inicio = fechaRelativa(e.ahora, 0);
   await upsertar(e, 'clinical.patient', {
-    id: pacienteId,
+    id: contexto.pacienteId,
     data_origin: 'sintetico',
     source_dataset: 'seed',
     agreement_reference: 'CONV-SEED-01',
@@ -338,8 +348,8 @@ export async function sembrarPacienteChat(e: EntradasDeLaSiembraDelChat): Promis
     created_at: e.ahora,
   });
   await upsertar(e, 'clinical.care_episode', {
-    id: episodioId,
-    patient_id: pacienteId,
+    id: contexto.episodioId,
+    patient_id: contexto.pacienteId,
     opened_at: e.ahora,
     closed_at: null,
     closure_reason: null,
@@ -347,15 +357,27 @@ export async function sembrarPacienteChat(e: EntradasDeLaSiembraDelChat): Promis
     closed_by: null,
   });
   const resultado = await e.identidad.guardar({
-    patientId: pacienteId,
+    patientId: contexto.pacienteId,
     idType: 'sintetico',
     issuingCountry: null,
     numeroDeDocumento: DOCUMENTO_SINTETICO_CHAT,
     nombreCompleto: NOMBRE_SINTETICO_CHAT,
   });
   if (resultado === 'creada') e.contar('identity.patient_identity');
-  await sembrarDiagnosticos(e, pacienteId, episodioId);
-  await sembrarBiomarcadores(e, pacienteId, episodioId);
-  await sembrarDocumentos(e, pacienteId, episodioId);
-  await sembrarTratamientoEventoYNota(e, pacienteId, episodioId);
+}
+
+export async function sembrarPacienteChat(e: EntradasDeLaSiembraDelChat): Promise<void> {
+  const contexto: Contexto = {
+    e,
+    pacienteId: idSembrado(PACIENTE_CHAT),
+    episodioId: id('episodio'),
+  };
+  await sembrarPacienteYEpisodio(e, contexto);
+  await sembrarDiagnosticoVerificado(contexto);
+  await sembrarDiagnosticoEnConflicto(contexto);
+  await sembrarBiomarcadores(contexto);
+  await sembrarDocumentos(contexto);
+  await sembrarTratamientoPrevio(contexto);
+  await sembrarCirugia(contexto);
+  await sembrarNotaConPii(contexto);
 }

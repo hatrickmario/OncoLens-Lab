@@ -397,6 +397,18 @@ function leerUrlHttpObligatoria(env: NodeJS.ProcessEnv, variable: string): strin
   throw new ConfiguracionInvalidaError(variable, 'debe ser una URL http(s) válida');
 }
 
+/** `CHAT_REHYDRATE_TURNS` (RN-22): positivo y sin superar el máximo de `ChatRehydration.turns` del contrato. */
+function leerTurnosDeRehidratacion(env: NodeJS.ProcessEnv): number {
+  const turnos = readPositiveInteger(env, 'CHAT_REHYDRATE_TURNS', DEFAULT_CHAT_REHYDRATE_TURNS);
+  if (turnos > CONTRACT_MAX_REHYDRATE_TURNS) {
+    throw new ConfiguracionInvalidaError(
+      'CHAT_REHYDRATE_TURNS',
+      `no puede superar ${CONTRACT_MAX_REHYDRATE_TURNS} (máximo del contrato)`,
+    );
+  }
+  return turnos;
+}
+
 /**
  * Configuración del gateway de análisis (RN-22: nada de esto es un literal del dominio). Los valores inválidos nombran
  * la variable y nunca su valor.
@@ -411,17 +423,6 @@ export function readEvidenceAnalysisConfig(env: NodeJS.ProcessEnv): EvidenceAnal
     throw new ConfiguracionInvalidaError(
       'ANALYSIS_MAX_OPTIONS',
       `no puede superar ${CONTRACT_MAX_OPTIONS} (máximo del contrato)`,
-    );
-  }
-  const chatRehydrateTurns = readPositiveInteger(
-    env,
-    'CHAT_REHYDRATE_TURNS',
-    DEFAULT_CHAT_REHYDRATE_TURNS,
-  );
-  if (chatRehydrateTurns > CONTRACT_MAX_REHYDRATE_TURNS) {
-    throw new ConfiguracionInvalidaError(
-      'CHAT_REHYDRATE_TURNS',
-      `no puede superar ${CONTRACT_MAX_REHYDRATE_TURNS} (máximo del contrato)`,
     );
   }
   return {
@@ -442,7 +443,7 @@ export function readEvidenceAnalysisConfig(env: NodeJS.ProcessEnv): EvidenceAnal
       'ANALYSIS_FOLLOWUP_MAX',
       DEFAULT_ANALYSIS_FOLLOWUP_MAX,
     ),
-    chatRehydrateTurns,
+    chatRehydrateTurns: leerTurnosDeRehidratacion(env),
     aiDisclaimerText: leerObligatoria(env, 'AI_DISCLAIMER_TEXT'),
   };
 }
