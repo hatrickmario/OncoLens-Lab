@@ -10,3 +10,4 @@
 - [principal_duplicada con gemma4 (D5-06/D5-28)](principal_duplicada_gemma4.md) — no era regresión de L1D-113; prefixItems no funciona en Ollama; main_claim + other_claims
 - [Selector RN-12 (L1D-204)](rn12_selector_l1d204.md) — ContextVar de clasificación, guarda sintética de clinical-api y trampas de ruff --fix
 - [Hallazgos de la demo del S4 (L1D-297)](demo_s4_l1d297_hallazgos.md) — ingest solo en corpus vacío, lista blanca de la imagen, estados en vivo y cómo probar levantar.sh
+- [Nodo caso del chat (L1D-317)](chat_caso_l1d317_trampas.md) — inyección en el grafo, NLI que falla cerrado, aviso extra y trampas del arnés

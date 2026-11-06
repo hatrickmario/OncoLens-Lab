@@ -29,6 +29,7 @@ def hechos_del_caso(hechos: list[CaseFact]) -> tuple[HechoDelCaso, ...]:
             dia_relativo=h.relativeDay,
             estado_de_revision=h.reviewStatus.value,
             conflicto_con=h.conflictWith.root if h.conflictWith else None,
+            serie=h.seriesKey,
         )
         for h in hechos
     )

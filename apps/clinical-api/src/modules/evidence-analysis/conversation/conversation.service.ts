@@ -11,7 +11,7 @@ import { zChatTurnResponseRefinado } from '../../../../../../packages/api-contra
 import type { Clock } from '../../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../../infrastructure/ids.js';
 import { FalloDePersistenciaError } from '../analysis-completion.js';
-import { construirContextoPermitido } from '../clinical-context.builder.js';
+import { construirContextoDelChat } from '../clinical-context.builder.js';
 import { clasificacionDelPaciente } from '../regla-proveedor.js';
 import type { CasoClinico, CasoRepository } from '../evidence-analysis.repository.js';
 import { calcularDeadline } from '../evidence-analysis.service.js';
@@ -230,7 +230,7 @@ async function prepararTurno(
   const { checklist, catalogo, reloj } = dependencias;
   const items = await checklist.items(conversacion.patientId);
   const claves = items.filter((item) => item.status === 'faltante').map((item) => item.item);
-  const { contexto, dataRefs } = construirContextoPermitido(caso, reloj.now(), claves);
+  const { contexto, dataRefs } = construirContextoDelChat(caso, reloj.now(), claves);
   const clasificacion = clasificacionDelPaciente(caso.paciente);
   const { clinicalContext, query } = await desidentificarContexto(dependencias, conversacion, {
     traceId: solicitud.traceId,

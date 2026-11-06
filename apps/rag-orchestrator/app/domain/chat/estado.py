@@ -20,6 +20,7 @@ ENTRADAS_DEL_TURNO_VACIAS: dict[str, object] = {
     "propuestas": (),
     "completitud": (),
     "bloques_deterministas": (),
+    "omitidas_del_nodo": 0,
 }
 """Lo que un turno deja en el estado del grafo y que no debe sobrevivirle: se vacía al cerrar y si el turno falla."""
 

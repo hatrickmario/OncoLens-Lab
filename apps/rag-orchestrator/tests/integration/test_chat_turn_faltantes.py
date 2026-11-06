@@ -50,6 +50,7 @@ def test_chat_turn_faltantes_repite_los_mismos_bloques_sin_llamar_al_llm_cuando_
     assert primera.json()["blocks"] == segunda.json()["blocks"] == BLOQUES_DEL_EJEMPLO
     assert all(b["kind"] == "faltante" for b in primera.json()["blocks"])
     assert entorno.llm.invocaciones == 0
+    assert entorno.nli.invocaciones == 0
     assert entorno.contador.consultas == 0
     # Deterministas y exentos de cita: ni citas ni factRefs, y el validador no los omite ni los cuenta (RN-01).
     assert all("citations" not in b and "factRefs" not in b for b in primera.json()["blocks"])
@@ -108,3 +109,4 @@ def test_chat_turn_responde_409_sin_invocar_adaptadores_cuando_rag_monta_el_cata
     assert respuesta.status_code == 409
     assert respuesta.json()["error"] == "CATALOG_VERSION_MISMATCH"
     assert entorno.llamadas_a_adapters() == {"llm": 0, "contador": 0}
+    assert entorno.nli.invocaciones == 0

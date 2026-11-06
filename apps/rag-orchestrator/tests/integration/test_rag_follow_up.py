@@ -15,8 +15,8 @@ from tests.support.guiones_seguimiento import (
     TEXTO_SOLO_EN_LA_MEMORIA,
 )
 from tests.support.nli_falso import IMPLICA, NEUTRAL, NliFalso
-from tests.support.reescritura import ReescritorFalso, parametros_de_reescritura
 from tests.support.recuperacion import CORPUS_FX06A
+from tests.support.reescritura import ReescritorFalso, parametros_de_reescritura
 from tests.support.seguimiento import (
     Q_COMPARATIVA,
     Q_OTRA_PERSONA,

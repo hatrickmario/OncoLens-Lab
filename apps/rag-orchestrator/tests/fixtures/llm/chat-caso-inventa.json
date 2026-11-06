@@ -1,0 +1,6 @@
+{
+  "CHAT-CASO-INVENTA": {
+    "ruta": "{\"intent\": \"caso\"}",
+    "generacion": "{\"claims\": [{\"text\": \"Carcinoma ductal infiltrante de mama, Nottingham grado 2, estadio IIA (TNM 8), ECOG 1, al momento del diagnóstico.\", \"factRefs\": [\"f1\"], \"citations\": []}, {\"text\": \"Recibió radioterapia adyuvante.\", \"factRefs\": [\"f2\"], \"citations\": []}]}"
+  }
+}

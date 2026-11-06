@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from app.evaluation.estadistica import mediana
 from collections.abc import Sequence
 from typing import Any
 
 from app.evaluation.config_medicion import ConfigMedicion, ModeloSpec
+from app.evaluation.estadistica import mediana
 from app.evaluation.model_selection import (
     Medicion,
     Seleccion,

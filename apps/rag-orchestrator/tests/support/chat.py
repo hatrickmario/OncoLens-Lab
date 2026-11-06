@@ -11,17 +11,20 @@ import json
 from dataclasses import dataclass
 from typing import Any
 
+from fastapi.testclient import TestClient
+
 from app.application.chat.registro_de_hilos import RegistroDeHilos
 from app.application.chat.servicio_de_turno import ChatTurnService
+from app.application.verificacion_de_soporte import VerificadorDeSoporte
 from app.bootstrap import crear_app
 from app.infrastructure.catalogo_clinico.datos_criticos import cargar_datos_criticos
 from app.infrastructure.catalogo_clinico.sinonimos import cargar_terminos_por_tipo
 from app.infrastructure.lenguaje.terminos_prohibidos import cargar_verificador_de_terminos
-from fastapi.testclient import TestClient
 from tests.support.contador_de_tokens_falso import ContadorPorPalabras
 from tests.support.contract import CATALOGOS
 from tests.support.fakes import GeneradorTraceFijo, RelojFijo, par_de_sesion, settings_de_prueba
 from tests.support.llm_chat_falso import FakeChatLlm
+from tests.support.nli_falso import IMPLICA, NliFalso
 from tests.support.recuperacion import EJEMPLOS, VERSION_DEL_CATALOGO_MONTADO, CatalogoClinicoFalso
 from tests.support.service_jwt import con_token_valido
 
@@ -53,6 +56,7 @@ REHIDRATACION_VACIA: dict[str, Any] = {"turns": [], "structuredState": ESTADO_VA
 class EntornoDeChat:
     cliente: TestClient
     llm: FakeChatLlm
+    nli: NliFalso
     contador: ContadorPorPalabras
     reloj: RelojFijo
     catalogo: CatalogoClinicoFalso
@@ -105,22 +109,33 @@ def crear_entorno_de_chat(
     escenario: str = "CHAT-OK",
     *,
     llm: FakeChatLlm | None = None,
+    nli: NliFalso | None = None,
     catalogo: CatalogoClinicoFalso | None = None,
     **cambios_de_settings: object,
 ) -> EntornoDeChat:
     llm = llm or FakeChatLlm(escenario)
+    nli = nli or NliFalso(por_defecto=IMPLICA)
     contador = ContadorPorPalabras()
     reloj = RelojFijo()
     catalogo = catalogo or CatalogoClinicoFalso()
     settings = settings_de_prueba(**cambios_de_settings)
+    verificador_terminos = cargar_verificador_de_terminos(CATALOGOS)
+    soporte = VerificadorDeSoporte(
+        clasificador=nli,
+        terminos=verificador_terminos,
+        umbral=settings.nli_entailment_threshold,  # type: ignore[arg-type]
+        reloj=reloj,
+        max_palabras_por_afirmacion=settings.claim_max_words,
+    )
     servicio = ChatTurnService(
         llm=llm,
+        soporte=soporte,
         catalogo=catalogo,
         contador=contador,
         reloj=reloj,
         settings=settings,
         terminos_por_tipo=cargar_terminos_por_tipo(CATALOGOS, settings.enabled_cancer_types),
-        verificador_terminos=cargar_verificador_de_terminos(CATALOGOS),
+        verificador_terminos=verificador_terminos,
         fuentes_documentales=cargar_datos_criticos(CATALOGOS, ("mama", "prostata")),
     )
     app = crear_app(
@@ -132,4 +147,4 @@ def crear_entorno_de_chat(
     cliente = TestClient(
         app, raise_server_exceptions=False, headers=con_token_valido(par_de_sesion())
     )
-    return EntornoDeChat(cliente, llm, contador, reloj, catalogo, servicio.registro)
+    return EntornoDeChat(cliente, llm, nli, contador, reloj, catalogo, servicio.registro)

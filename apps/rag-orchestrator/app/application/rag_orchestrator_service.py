@@ -86,6 +86,7 @@ from app.domain.fusion_de_candidatos import (
     EstrategiaDeFusion,
     fusionar_candidatos,
 )
+from app.domain.lenguaje import normalizar_texto
 from app.domain.normalizacion_puntaje import validar_puntaje_normalizado
 from app.domain.option_selection import (
     OpcionConRelevancia,
@@ -97,14 +98,6 @@ from app.domain.pares_del_reranker import (
     cortados_con_puesto,
     recortar_a_pares_del_reranker,
 )
-from app.domain.relevance import (
-    ChunkPuntuado,
-    filtrar_sobre_umbral,
-    ordenar_por_relevancia,
-    relevancia_de_opcion,
-    top_relevance_score,
-)
-from app.domain.lenguaje import normalizar_texto
 from app.domain.reescritura import (
     EstadoDeReescritura,
     MotivoDeReescritura,
@@ -112,6 +105,13 @@ from app.domain.reescritura import (
     conservar_pregunta_original,
     debe_reescribir,
     filtrar_terminos_del_catalogo,
+)
+from app.domain.relevance import (
+    ChunkPuntuado,
+    filtrar_sobre_umbral,
+    ordenar_por_relevancia,
+    relevancia_de_opcion,
+    top_relevance_score,
 )
 from app.domain.retrieval_filter import expresion_vigente_del_tipo
 from app.domain.tipos_habilitados import exigir_tipo_habilitado

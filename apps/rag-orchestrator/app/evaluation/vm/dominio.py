@@ -6,11 +6,12 @@ Todos los errores nombran fila y regla, nunca el valor rechazado (RN-14).
 from __future__ import annotations
 
 import re
-from app.evaluation.estadistica import mediana
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from datetime import date
 from typing import Any
+
+from app.evaluation.estadistica import mediana
 
 COLUMNAS = (
     "participante",
