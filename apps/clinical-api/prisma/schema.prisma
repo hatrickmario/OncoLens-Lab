@@ -36,6 +36,7 @@ model User {
   treatments               Treatment[]
   clinicalEvents           ClinicalEvent[]
   aiAnalysisRecords        AiAnalysisRecord[]
+  conversations            Conversation[]
   analysisFeedbacks        AnalysisFeedback[]
   diagnosisGradings        DiagnosisGrading[]
   auditLogs                AuditLog[]
@@ -155,6 +156,7 @@ model Patient {
   clinicalEvents       ClinicalEvent[]
   clinicalAttributes   ClinicalAttribute[]
   aiAnalysisRecords    AiAnalysisRecord[]
+  conversations        Conversation[]
   researchSubjectMap   ResearchSubjectMap?
 
   @@index([retentionUntil])
@@ -579,6 +581,7 @@ model AiAnalysisRecord {
   reejecuciones           AiAnalysisRecord[] @relation("AiAnalysisRecord_rerunOfAnalysisId")
   analysisFeedbacks       AnalysisFeedback[]
   analysisFollowUps       AnalysisFollowUp[]
+  conversationTurns       ConversationTurn[]
 
   @@index([patientId, createdAt])
   @@index([patientId, analysisType, createdAt])
@@ -665,6 +668,48 @@ model AnalysisFollowUp {
   @@unique([analysisId, turnNumber])
   @@index([analysisId, createdAt])
   @@map("analysis_follow_up")
+  @@schema("clinical")
+}
+
+model Conversation {
+  id        String             @id @db.Uuid
+  patientId String             @map("patient_id") @db.Uuid
+  threadId  String             @unique @map("thread_id") @db.Uuid
+  createdBy String             @map("created_by") @db.Uuid
+  createdAt DateTime           @map("created_at") @db.Timestamptz(6)
+  patient   Patient            @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  author    User               @relation(fields: [createdBy], references: [id], onDelete: Restrict)
+  turns     ConversationTurn[]
+
+  @@map("conversation")
+  @@schema("clinical")
+}
+
+model ConversationTurn {
+  id              String            @id @db.Uuid
+  conversationId  String            @map("conversation_id") @db.Uuid
+  turnNumber      Int               @map("turn_number")
+  questionMasked  String            @map("question_masked")
+  intent          String
+  aboutTurnId     String?           @map("about_turn_id") @db.Uuid
+  blocks          Json
+  dataLinks       Json              @map("data_links")
+  omittedClaims   Int               @default(0) @map("omitted_claims")
+  notices         Json
+  dataUsed        Json              @map("data_used")
+  dataMissing     Json              @map("data_missing")
+  analysisId      String?           @map("analysis_id") @db.Uuid
+  structuredState Json              @map("structured_state")
+  llmProvider     String            @map("llm_provider")
+  llmModel        String?           @map("llm_model")
+  promptVersion   String?           @map("prompt_version")
+  traceId         String            @map("trace_id")
+  createdAt       DateTime          @map("created_at") @db.Timestamptz(6)
+  conversation    Conversation      @relation(fields: [conversationId], references: [id], onDelete: Restrict)
+  analysis        AiAnalysisRecord? @relation(fields: [analysisId], references: [id], onDelete: Restrict)
+
+  @@unique([conversationId, turnNumber])
+  @@map("conversation_turn")
   @@schema("clinical")
 }
 
