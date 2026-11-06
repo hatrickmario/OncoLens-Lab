@@ -300,6 +300,141 @@ export const zRagFollowUpRequest = z.strictObject({
     filtersApplied: zRagFiltersApplied
 });
 
+/**
+ * Intención del turno. `no_clasificada` y `fuera_de_alcance` son mensajes del sistema (sin contenido generado, `notices` vacío). Una pregunta prescriptiva no es `fuera_de_alcance`: va a `evidencia`.
+ */
+export const zChatIntent = z.enum([
+    'caso',
+    'faltantes',
+    'evidencia',
+    'fuentes_limitaciones',
+    'no_clasificada',
+    'fuera_de_alcance'
+]);
+
+/**
+ * Referencia opaca a un hecho del caso, asignada por clinical-api por turno (f1, f2…); nunca un UUID ni un identificador enlazable.
+ */
+export const zFactRef = z.string().regex(/^f[0-9]+$/);
+
+/**
+ * Un hecho del caso ya verbalizado y desidentificado (fechas relativas, RN-11).
+ */
+export const zCaseFact = z.strictObject({
+    factRef: zFactRef,
+    kind: z.string().min(1),
+    verbalization: zTextoEnmascarado,
+    relativeDay: z.int().nullable(),
+    reviewStatus: z.enum([
+        'auto_aceptado',
+        'requiere_revision',
+        'verificado',
+        'corregido'
+    ]),
+    seriesKey: z.string().optional(),
+    conflictWith: zFactRef.optional(),
+    corrected: z.boolean().optional()
+});
+
+/**
+ * Un dato esperado del caso y su estado de completitud, sin procedencia.
+ */
+export const zChatCompletenessItem = z.strictObject({
+    item: z.string().min(1),
+    label: z.string().min(1),
+    status: z.enum([
+        'presente_verificado',
+        'presente_sin_verificar',
+        'faltante',
+        'no_aplica'
+    ]),
+    gapType: z.enum([
+        'no_encontrado',
+        'incompleto',
+        'por_conciliar',
+        'no_buscado'
+    ]).nullable(),
+    destination: z.string().min(1)
+});
+
+/**
+ * Estado estructurado del hilo que rag-orchestrator devuelve en cada turno y clinical-api guarda para rehidratar. Sin `analysisId`: Backend 2 nunca lo conoce.
+ */
+export const zStructuredState = z.strictObject({
+    intentsVistos: z.array(zChatIntent),
+    preguntasPrevias: z.array(zTextoEnmascarado),
+    opcionesMostradas: z.array(z.string()),
+    citasMostradas: z.array(z.string()),
+    faltantesSenalados: z.array(z.string()),
+    ultimaEvidencia: z.strictObject({
+        query: zTextoEnmascarado,
+        chunkIds: z.array(z.string()),
+        topRelevanceScore: z.number().gte(0).lte(1).nullable()
+    }).optional()
+});
+
+/**
+ * Turno previo ya enmascarado. Solo estos campos: nunca resourceId, UUID, fechas absolutas, analysisId ni enlaces a datos.
+ */
+export const zChatRehydrationTurn = z.strictObject({
+    question: zTextoEnmascarado,
+    intent: zChatIntent,
+    blocksText: z.array(zTextoEnmascarado),
+    factRefs: z.array(zFactRef)
+});
+
+/**
+ * Lo que clinical-api reenvía cuando rag-orchestrator no conoce el hilo: los últimos turnos enmascarados y el estado estructurado. Reconstruye un hilo equivalente al vivo.
+ */
+export const zChatRehydration = z.strictObject({
+    turns: z.array(zChatRehydrationTurn).max(50),
+    structuredState: zStructuredState
+});
+
+export const zChatTurnRequest = z.strictObject({
+    threadId: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/),
+    pseudoPatientId: z.string().regex(/^psd_[A-Za-z0-9]+$/),
+    traceId: zTraceId,
+    question: z.string().min(1).max(2000),
+    dataClassification: zDataClassification,
+    catalogVersion: z.string().min(1),
+    clinicalContext: zClinicalContext,
+    caseFacts: z.array(zCaseFact).max(200),
+    completeness: z.array(zChatCompletenessItem).max(100),
+    rehydration: zChatRehydration.optional()
+});
+
+/**
+ * Cita de un bloque `evidencia`. Todos los campos se copian del catálogo del corpus y del chunk recuperado en ese turno, nunca del texto generado (RN-04); si el catálogo no registra un dato, viaja "No disponible" (RN-25).
+ */
+export const zChatCitation = z.strictObject({
+    chunkId: z.string().min(1),
+    documentId: z.string().min(1),
+    sourceTitle: z.string().min(1),
+    chunkOrdinal: z.int().gte(1),
+    chunkCount: z.int().gte(1),
+    chunkTextSnapshot: z.string()
+});
+
+/**
+ * Un bloque de la respuesta. `documentado`, `interpretacion` y `conflicto` llevan al menos un `factRef`; `evidencia` lleva al menos una cita y pasa el chequeo NLI; `faltante`, `catalogo`, `limitacion` y `fuente` son deterministas (catálogo, configuración o metadatos) y están exentos. El bloque `fuente` describe un documento con metadatos del catálogo y no lleva `chunkId`.
+ */
+export const zChatBlock = z.strictObject({
+    kind: z.enum([
+        'documentado',
+        'interpretacion',
+        'catalogo',
+        'evidencia',
+        'conflicto',
+        'faltante',
+        'limitacion',
+        'fuente'
+    ]),
+    text: z.string(),
+    factRefs: z.array(zFactRef).optional(),
+    citations: z.array(zChatCitation).optional()
+});
+
 export const zCaseSummaryInternalRequest = z.strictObject({
     traceId: zTraceId,
     dataClassification: zDataClassification,
@@ -485,6 +620,15 @@ export const zErrorTipoCancerNoRegistrado = z.strictObject({
 
 export const zErrorDeadlineVencido = z.strictObject({
     error: z.literal('DEADLINE_VENCIDO'),
+    message: z.string(),
+    traceId: z.string()
+});
+
+/**
+ * El hilo del chat no existe en la memoria de rag-orchestrator (reinicio, TTL vencido o desalojo por antigüedad). clinical-api lo atrapa y reenvía el turno con `rehydration`. Mensaje fijo, sin eco (RN-10).
+ */
+export const zErrorHiloDesconocido = z.strictObject({
+    error: z.literal('HILO_DESCONOCIDO'),
     message: z.string(),
     traceId: z.string()
 });
@@ -685,6 +829,17 @@ export const zRagQueryInternalResponse = z.strictObject({
     meta: zRagMeta
 });
 
+export const zChatTurnResponse = z.strictObject({
+    intent: zChatIntent,
+    subintent: z.enum(['seguimiento_evidencia']).optional(),
+    blocks: z.array(zChatBlock),
+    omittedClaims: z.int().gte(0),
+    evidenceAnalysis: zRagQueryInternalResponse.optional(),
+    structuredState: zStructuredState,
+    llmProvider: z.enum(['local', 'nube']),
+    notices: z.array(z.string())
+});
+
 export const zRequestDeadline = z.iso.datetime();
 
 /**
@@ -720,6 +875,18 @@ export const zAnswerFollowUpHeaders = z.object({
  * Respuesta del turno.
  */
 export const zAnswerFollowUpResponse = zRagFollowUpResponse;
+
+export const zChatTurnBody = zChatTurnRequest;
+
+export const zChatTurnHeaders = z.object({
+    'X-Request-Deadline': z.iso.datetime().optional(),
+    'X-Trace-Id': zTraceId.optional()
+});
+
+/**
+ * Respuesta del turno.
+ */
+export const zChatTurnResponse2 = zChatTurnResponse;
 
 export const zExtractDocumentBody = z.strictObject({
     file: z.string(),

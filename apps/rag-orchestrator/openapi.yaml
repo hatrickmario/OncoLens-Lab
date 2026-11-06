@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — RAG & AI Services API (Backend 2 / rag-orchestrator)
-  version: 1.11.0
+  version: 1.12.0
   description: >-
     API interna, alcanzable solo desde la red ai-net y solo por clinical-api (JWT de servicio
     asimétrico; la cookie de sesión del doctor nunca llega aquí). No persiste PHI y procesa los
@@ -190,6 +190,75 @@ paths:
                   - $ref: '#/components/schemas/ErrorSalidaLlmInvalida'
         "504":
           $ref: '#/components/responses/DeadlineVencido'
+
+  /chat/turn:
+    post:
+      operationId: chatTurn
+      tags: [rag]
+      summary: Resuelve un turno de la conversación del oncólogo sobre un paciente
+      description: >-
+        Invocado solo por clinical-api (FEAT-12, ADR-51). Un grafo por turno enruta la pregunta
+        (reglas deterministas primero; si ninguna clasifica, una única clasificación JSON con el LLM
+        local; salida inválida → `no_clasificada`) y la resuelve con los puertos de recuperación,
+        reranker, NLI y LLM. El estado del hilo vive solo en memoria del proceso, con TTL y límite
+        de hilos vivos: un `threadId` desconocido sin `rehydration` responde 404 HILO_DESCONOCIDO y
+        clinical-api reenvía el turno con `rehydration` (últimos turnos enmascarados y estado
+        estructurado, solo los campos del esquema). rag-orchestrator no guarda nada del paciente: ni
+        en disco, ni en `corpus`, ni en Milvus, ni en los logs. `question` llega enmascarada (RN-11);
+        el `pseudoPatientId` es nuevo en cada turno y nunca va en el prompt. Toda afirmación mostrada
+        cita un dato del paciente o un chunk recuperado en ESE turno y pasa el chequeo NLI; la memoria
+        nunca es cita ni soporte (RN-01, RN-24). `notices` lo rellena siempre este servicio en los
+        turnos con contenido generado (RN-19). Con datos reales solo se usan modelos locales, sin
+        fallback a la nube (RN-12).
+      parameters:
+        - $ref: '#/components/parameters/RequestDeadline'
+        - $ref: '#/components/parameters/TraceIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatTurnRequest'
+      responses:
+        "200":
+          description: Respuesta del turno.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatTurnResponse'
+        "401":
+          $ref: '#/components/responses/TokenServicioInvalido'
+        "404":
+          description: >-
+            Hilo desconocido (HILO_DESCONOCIDO): rag-orchestrator no tiene el hilo y la petición no
+            trae `rehydration`. No se invoca ningún adapter.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorHiloDesconocido'
+        "409":
+          $ref: '#/components/responses/CatalogVersionMismatch'
+        "422":
+          description: >-
+            Cuerpo inválido (CUERPO_INVALIDO, sin eco del valor): incluye una `rehydration` con
+            campos fuera de la lista permitida.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorValidacion'
+        "500":
+          $ref: '#/components/responses/ErrorInterno'
+        "503":
+          description: >-
+            El modelo local no está disponible (LOCAL_LLM_UNAVAILABLE) o su salida de generación no
+            se pudo validar (LLM_OUTPUT_INVALID, sin bloques ni texto generado): falla cerrada, ninguna
+            afirmación se devuelve sin validar (RN-01). Con datos reales solo modelos locales (RN-12).
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ErrorLlmLocalNoDisponible'
+                  - $ref: '#/components/schemas/ErrorSalidaLlmInvalida'
 
   /documents/extract:
     post:
@@ -1252,6 +1321,290 @@ components:
             type: array
             minItems: 1
 
+    # ---- /chat/turn (FEAT-12, ADR-51; vocabulario cerrado de backlog/sprints/S6-glosario-chat.md)
+    ChatIntent:
+      type: string
+      enum: [caso, faltantes, evidencia, fuentes_limitaciones, no_clasificada, fuera_de_alcance]
+      description: >-
+        Intención del turno. `no_clasificada` y `fuera_de_alcance` son mensajes del sistema (sin contenido
+        generado, `notices` vacío). Una pregunta prescriptiva no es `fuera_de_alcance`: va a `evidencia`.
+    FactRef:
+      type: string
+      pattern: ^f[0-9]+$
+      description: >-
+        Referencia opaca a un hecho del caso, asignada por clinical-api por turno (f1, f2…); nunca un UUID
+        ni un identificador enlazable.
+    CaseFact:
+      type: object
+      description: Un hecho del caso ya verbalizado y desidentificado (fechas relativas, RN-11).
+      additionalProperties: false
+      required: [factRef, kind, verbalization, relativeDay, reviewStatus]
+      properties:
+        factRef:
+          $ref: '#/components/schemas/FactRef'
+        kind:
+          type: string
+          minLength: 1
+        verbalization:
+          $ref: '#/components/schemas/TextoEnmascarado'
+        relativeDay:
+          type: [integer, "null"]
+          description: Día relativo al diagnóstico; null si el dato no tiene fecha confiable.
+        reviewStatus:
+          title: CaseFactReviewStatus
+          type: string
+          enum: [auto_aceptado, requiere_revision, verificado, corregido]
+        seriesKey:
+          type: string
+        conflictWith:
+          $ref: '#/components/schemas/FactRef'
+        corrected:
+          type: boolean
+    ChatCompletenessItem:
+      type: object
+      description: Un dato esperado del caso y su estado de completitud, sin procedencia.
+      additionalProperties: false
+      required: [item, label, status, gapType, destination]
+      properties:
+        item:
+          type: string
+          minLength: 1
+        label:
+          type: string
+          minLength: 1
+        status:
+          title: ChatCompletenessStatus
+          type: string
+          enum: [presente_verificado, presente_sin_verificar, faltante, no_aplica]
+        gapType:
+          title: ChatGapType
+          type: [string, "null"]
+          enum: [no_encontrado, incompleto, por_conciliar, no_buscado, null]
+          description: Tipo de faltante; null si el dato está presente.
+        destination:
+          type: string
+          minLength: 1
+    StructuredState:
+      type: object
+      description: >-
+        Estado estructurado del hilo que rag-orchestrator devuelve en cada turno y clinical-api guarda para
+        rehidratar. Sin `analysisId`: Backend 2 nunca lo conoce.
+      additionalProperties: false
+      required: [intentsVistos, preguntasPrevias, opcionesMostradas, citasMostradas, faltantesSenalados]
+      properties:
+        intentsVistos:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatIntent'
+        preguntasPrevias:
+          type: array
+          items:
+            $ref: '#/components/schemas/TextoEnmascarado'
+        opcionesMostradas:
+          type: array
+          items:
+            type: string
+        citasMostradas:
+          type: array
+          description: chunkId de cada fuente ya mostrada.
+          items:
+            type: string
+        faltantesSenalados:
+          type: array
+          items:
+            type: string
+        ultimaEvidencia:
+          type: object
+          additionalProperties: false
+          required: [query, chunkIds, topRelevanceScore]
+          properties:
+            query:
+              $ref: '#/components/schemas/TextoEnmascarado'
+            chunkIds:
+              type: array
+              items:
+                type: string
+            topRelevanceScore:
+              type: [number, "null"]
+              minimum: 0
+              maximum: 1
+              description: >-
+                null si no hubo evidencia (RN-02); null no es 0.0.
+    ChatRehydrationTurn:
+      type: object
+      description: >-
+        Turno previo ya enmascarado. Solo estos campos: nunca resourceId, UUID, fechas absolutas, analysisId
+        ni enlaces a datos.
+      additionalProperties: false
+      required: [question, intent, blocksText, factRefs]
+      properties:
+        question:
+          $ref: '#/components/schemas/TextoEnmascarado'
+        intent:
+          $ref: '#/components/schemas/ChatIntent'
+        blocksText:
+          type: array
+          items:
+            $ref: '#/components/schemas/TextoEnmascarado'
+        factRefs:
+          type: array
+          items:
+            $ref: '#/components/schemas/FactRef'
+    ChatRehydration:
+      type: object
+      description: >-
+        Lo que clinical-api reenvía cuando rag-orchestrator no conoce el hilo: los últimos turnos enmascarados
+        y el estado estructurado. Reconstruye un hilo equivalente al vivo.
+      additionalProperties: false
+      required: [turns, structuredState]
+      properties:
+        turns:
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/ChatRehydrationTurn'
+        structuredState:
+          $ref: '#/components/schemas/StructuredState'
+    ChatTurnRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - threadId
+        - pseudoPatientId
+        - traceId
+        - question
+        - dataClassification
+        - catalogVersion
+        - clinicalContext
+        - caseFacts
+        - completeness
+      properties:
+        threadId:
+          type: string
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+          description: >-
+            Identificador aleatorio de la conversación, emitido por clinical-api. Nunca el patientId ni el
+            pseudoPatientId. Es la única clave del estado efímero del hilo.
+        pseudoPatientId:
+          type: string
+          pattern: ^psd_[A-Za-z0-9]+$
+          description: Aleatorio por turno; se usa solo dentro del turno y nunca entra al prompt ni al estado del hilo.
+        traceId:
+          $ref: '#/components/schemas/TraceId'
+        question:
+          type: string
+          minLength: 1
+          maxLength: 2000
+          description: >-
+            Pregunta ya enmascarada (RN-11) y normalizada por clinical-api (NFC, espacios colapsados).
+            rag-orchestrator vuelve a normalizarla; vacía tras normalizar → 422.
+        dataClassification:
+          $ref: '#/components/schemas/DataClassification'
+        catalogVersion:
+          type: string
+          minLength: 1
+        clinicalContext:
+          $ref: '#/components/schemas/ClinicalContext'
+        caseFacts:
+          type: array
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/CaseFact'
+        completeness:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/ChatCompletenessItem'
+        rehydration:
+          $ref: '#/components/schemas/ChatRehydration'
+    ChatCitation:
+      type: object
+      description: >-
+        Cita de un bloque `evidencia`. Todos los campos se copian del catálogo del corpus y del chunk
+        recuperado en ese turno, nunca del texto generado (RN-04); si el catálogo no registra un dato,
+        viaja "No disponible" (RN-25).
+      additionalProperties: false
+      required: [chunkId, documentId, sourceTitle, chunkOrdinal, chunkCount, chunkTextSnapshot]
+      properties:
+        chunkId:
+          type: string
+          minLength: 1
+        documentId:
+          type: string
+          minLength: 1
+          description: Identificador del documento en el catálogo del corpus (no un documento clínico).
+        sourceTitle:
+          type: string
+          minLength: 1
+        chunkOrdinal:
+          type: integer
+          minimum: 1
+          description: Posición del chunk dentro del documento (desde 1).
+        chunkCount:
+          type: integer
+          minimum: 1
+          description: Chunks vigentes del documento.
+        chunkTextSnapshot:
+          type: string
+          description: Texto original de la fuente, sin traducir.
+    ChatBlock:
+      type: object
+      description: >-
+        Un bloque de la respuesta. `documentado`, `interpretacion` y `conflicto` llevan al menos un `factRef`;
+        `evidencia` lleva al menos una cita y pasa el chequeo NLI; `faltante`, `catalogo`, `limitacion` y
+        `fuente` son deterministas (catálogo, configuración o metadatos) y están exentos. El bloque `fuente`
+        describe un documento con metadatos del catálogo y no lleva `chunkId`.
+      additionalProperties: false
+      required: [kind, text]
+      properties:
+        kind:
+          title: ChatBlockKind
+          type: string
+          enum: [documentado, interpretacion, catalogo, evidencia, conflicto, faltante, limitacion, fuente]
+        text:
+          type: string
+        factRefs:
+          type: array
+          items:
+            $ref: '#/components/schemas/FactRef'
+        citations:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatCitation'
+    ChatTurnResponse:
+      type: object
+      additionalProperties: false
+      required: [intent, blocks, omittedClaims, structuredState, llmProvider, notices]
+      properties:
+        intent:
+          $ref: '#/components/schemas/ChatIntent'
+        subintent:
+          type: string
+          enum: [seguimiento_evidencia]
+        blocks:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatBlock'
+        omittedClaims:
+          type: integer
+          minimum: 0
+          description: Afirmaciones sin soporte del turno (o respaldadas solo por la memoria) que se omitieron.
+        evidenceAnalysis:
+          $ref: '#/components/schemas/RagQueryInternalResponse'
+        structuredState:
+          $ref: '#/components/schemas/StructuredState'
+        llmProvider:
+          type: string
+          enum: [local, nube]
+          description: Dónde corrió el modelo (RN-12); mismo vocabulario que RagMeta.llmProvider.
+        notices:
+          type: array
+          description: >-
+            Avisos de IA (RN-19) tomados de la configuración de rag-orchestrator, sin punto final. Vacío en los
+            mensajes del sistema (`fuera_de_alcance`, `no_clasificada`).
+          items:
+            type: string
+
     # ---- /case/summary
     CaseSummaryInternalRequest:
       type: object
@@ -1584,5 +1937,16 @@ components:
       required: [error, message, traceId]
       properties:
         error: { type: string, const: DEADLINE_VENCIDO }
+        message: { type: string }
+        traceId: { type: string }
+    ErrorHiloDesconocido:
+      type: object
+      description: >-
+        El hilo del chat no existe en la memoria de rag-orchestrator (reinicio, TTL vencido o desalojo por
+        antigüedad). clinical-api lo atrapa y reenvía el turno con `rehydration`. Mensaje fijo, sin eco (RN-10).
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error: { type: string, const: HILO_DESCONOCIDO }
         message: { type: string }
         traceId: { type: string }

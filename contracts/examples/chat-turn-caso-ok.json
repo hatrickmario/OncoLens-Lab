@@ -1,0 +1,28 @@
+{
+  "intent": "caso",
+  "blocks": [
+    {
+      "kind": "documentado",
+      "text": "Carcinoma ductal infiltrante de mama, Nottingham grado 2, estadio IIA (TNM 8), ECOG 1.",
+      "factRefs": ["f1"]
+    },
+    {
+      "kind": "documentado",
+      "text": "HER2: 3+ (IHQ), sin verificar.",
+      "factRefs": ["f2"]
+    }
+  ],
+  "omittedClaims": 0,
+  "structuredState": {
+    "intentsVistos": ["caso"],
+    "preguntasPrevias": ["¿Cuál es la situación actual de la paciente?"],
+    "opcionesMostradas": [],
+    "citasMostradas": [],
+    "faltantesSenalados": []
+  },
+  "llmProvider": "local",
+  "notices": [
+    "Generado por IA; requiere validación clínica independiente por el oncólogo tratante",
+    "Uso académico/investigación"
+  ]
+}

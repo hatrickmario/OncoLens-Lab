@@ -23,6 +23,44 @@
       "target": "#/components/schemas/CaseView"
     },
     {
+      "file": "chat-turn-request.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnRequest"
+    },
+    {
+      "file": "chat-turn-request-rehidratacion.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnRequest"
+    },
+    {
+      "file": "chat-turn-caso-ok.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnResponse",
+      "request": "chat-turn-request.json"
+    },
+    {
+      "file": "chat-turn-no-clasificada.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnResponse",
+      "request": "chat-turn-request.json"
+    },
+    {
+      "file": "chat-turn-fuera-de-alcance.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnResponse",
+      "request": "chat-turn-request.json"
+    },
+    {
+      "file": "chat-turn-hilo-desconocido.json",
+      "spec": "rag-orchestrator",
+      "target": "#/paths/~1chat~1turn/post/responses/404"
+    },
+    {
+      "file": "chat-turn-llm-local-no-disponible.json",
+      "spec": "rag-orchestrator",
+      "target": "#/paths/~1chat~1turn/post/responses/503"
+    },
+    {
       "file": "con-evidencia-reescritura.json",
       "spec": "clinical-api",
       "target": "#/components/schemas/EvidenceAnalysis"
@@ -251,6 +289,11 @@
       "file": "rag-catalog-version-mismatch.json",
       "spec": "rag-orchestrator",
       "target": "#/paths/~1rag~1query/post/responses/409"
+    },
+    {
+      "file": "rag-catalog-version-mismatch.json",
+      "spec": "rag-orchestrator",
+      "target": "#/paths/~1chat~1turn/post/responses/409"
     },
     {
       "file": "rag-cola-inferencia-llena.json",
@@ -608,6 +651,11 @@
       "file": "rag-salida-llm-invalida.json",
       "spec": "rag-orchestrator",
       "target": "#/paths/~1rag~1query/post/responses/503"
+    },
+    {
+      "file": "rag-salida-llm-invalida.json",
+      "spec": "rag-orchestrator",
+      "target": "#/paths/~1chat~1turn/post/responses/503"
     },
     {
       "file": "error-salida-llm-invalida.json",

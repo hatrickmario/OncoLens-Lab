@@ -1,0 +1,19 @@
+{
+  "intent": "fuera_de_alcance",
+  "blocks": [
+    {
+      "kind": "limitacion",
+      "text": "Esta conversación solo responde sobre el paciente y el tipo de cáncer del caso abierto. Formula la pregunta sobre ese caso."
+    }
+  ],
+  "omittedClaims": 0,
+  "structuredState": {
+    "intentsVistos": [],
+    "preguntasPrevias": [],
+    "opcionesMostradas": [],
+    "citasMostradas": [],
+    "faltantesSenalados": []
+  },
+  "llmProvider": "local",
+  "notices": []
+}
