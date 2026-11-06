@@ -101,9 +101,10 @@ def test_chat_turn_no_repite_parte_de_la_pregunta_en_el_texto_fuera_de_alcance_c
 ):
     entorno = crear_entorno_de_chat("CHAT-OK")
 
-    cuerpo = entorno.turno(solicitud_de_turno(pregunta)).json()
+    respuesta = entorno.turno(solicitud_de_turno(pregunta))
 
-    texto = " ".join(b["text"] for b in cuerpo["blocks"])
+    assert respuesta.status_code == 200
+    texto = " ".join(b["text"] for b in respuesta.json()["blocks"])
     assert not (_trigramas(texto) & _trigramas(pregunta))
     assert not re.search(r"\[[A-Z]+\]", texto)
 

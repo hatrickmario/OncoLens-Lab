@@ -11,6 +11,7 @@ import json
 from dataclasses import dataclass
 from typing import Any
 
+from app.application.chat.registro_de_hilos import RegistroDeHilos
 from app.application.chat.servicio_de_turno import ChatTurnService
 from app.bootstrap import crear_app
 from app.infrastructure.catalogo_clinico.sinonimos import cargar_terminos_por_tipo
@@ -52,6 +53,7 @@ class EntornoDeChat:
     contador: ContadorPorPalabras
     reloj: RelojFijo
     catalogo: CatalogoClinicoFalso
+    registro: RegistroDeHilos
 
     def turno(self, solicitud: dict[str, Any]):
         return self.cliente.post("/chat/turn", json=solicitud)
@@ -106,4 +108,4 @@ def crear_entorno_de_chat(
     cliente = TestClient(
         app, raise_server_exceptions=False, headers=con_token_valido(par_de_sesion())
     )
-    return EntornoDeChat(cliente, llm, contador, reloj, catalogo)
+    return EntornoDeChat(cliente, llm, contador, reloj, catalogo, servicio.registro)
