@@ -22,6 +22,7 @@ from app.application.chat.traduccion import (
     estado_estructurado_del_contrato,
     hechos_del_caso,
 )
+from app.application.selector_proveedor_llm import con_clasificacion
 from app.application.ports import (
     CatalogoClinico,
     Clock,
@@ -34,10 +35,6 @@ from app.domain.chat.estado import INTENCIONES_CLASIFICABLES, EstadoDelHilo
 from app.schemas.generated.models import ChatTurnRequest, ChatTurnResponse
 
 logger = logging.getLogger(__name__)
-
-PROVEEDOR_DEL_LLM = "local"
-"""``llmProvider`` de la respuesta (RN-12): el único adapter en producción es el LLM local; el selector por petición
-lo implementa L1D-204 sobre el puerto existente, sin tocar el contrato."""
 
 
 class ChatTurnService:
@@ -78,9 +75,10 @@ class ChatTurnService:
             hilo, con_rehidratacion=solicitud.rehydration is not None
         )
         try:
-            final = await self._grafo.ainvoke(
-                self._entrada_del_turno(solicitud, es_nuevo), self.registro.configuracion(hilo)
-            )
+            with con_clasificacion(solicitud.dataClassification.value) as contexto:
+                final = await self._grafo.ainvoke(
+                    self._entrada_del_turno(solicitud, es_nuevo), self.registro.configuracion(hilo)
+                )
         except Exception:
             if (
                 es_nuevo
@@ -98,7 +96,7 @@ class ChatTurnService:
             len(final["bloques"]),
             final["omitidas"],
         )
-        return self._respuesta(final)
+        return self._respuesta(final, contexto.proveedor_declarado.value)
 
     def _entrada_del_turno(self, solicitud: ChatTurnRequest, es_nuevo: bool) -> EstadoDelGrafo:
         diagnostico = solicitud.clinicalContext.diagnosis
@@ -113,7 +111,7 @@ class ChatTurnService:
             entrada["hilo"] = estado_de_rehidratacion(solicitud.rehydration)
         return entrada
 
-    def _respuesta(self, final: dict[str, Any]) -> ChatTurnResponse:
+    def _respuesta(self, final: dict[str, Any], proveedor: str) -> ChatTurnResponse:
         intencion = final["intencion"]
         hilo: EstadoDelHilo = final["hilo"]
         return ChatTurnResponse.model_validate(
@@ -122,7 +120,7 @@ class ChatTurnService:
                 "blocks": [bloque_del_contrato(b) for b in final["bloques"]],
                 "omittedClaims": final["omitidas"],
                 "structuredState": estado_estructurado_del_contrato(hilo.estructurado),
-                "llmProvider": PROVEEDOR_DEL_LLM,
+                "llmProvider": proveedor,
                 "notices": avisos_del_turno(self._settings)
                 if intencion in INTENCIONES_CLASIFICABLES
                 else [],

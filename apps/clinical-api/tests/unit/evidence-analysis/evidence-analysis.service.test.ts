@@ -420,3 +420,25 @@ describe('plazo hacia rag-orchestrator', () => {
     expect(recibido.cierre?.respuesta).toEqual({ ok: false, status: null, tiempoAgotado: true });
   });
 });
+
+describe('crearEvidenceAnalysisService: clasificación del request interno (RN-12)', () => {
+  it.each(['real_identificado', 'real_anonimizado'] as const)(
+    'arma el request interno con %s aunque la entrada diga sintetico [US-050 AC-4]',
+    async (dataOrigin) => {
+      const { dependencias, recibido } = crearFakes({
+        caso: casoDeEjemplo({
+          paciente: { id: 'paciente-sintetico', dataOrigin, population: 'adulto' },
+        }),
+      });
+      const conClasificacionAjena = {
+        ...solicitud,
+        peticion: { ...solicitud.peticion, dataClassification: 'sintetico' },
+      };
+
+      await crearEvidenceAnalysisService(dependencias).solicitar(conClasificacionAjena);
+
+      expect(recibido.request?.dataClassification).toBe(dataOrigin);
+      expect(recibido.desidentificacion?.dataOrigin).toBe(dataOrigin);
+    },
+  );
+});

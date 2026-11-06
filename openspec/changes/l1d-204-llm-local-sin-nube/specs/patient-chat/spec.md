@@ -13,3 +13,8 @@
 - **GIVEN** el mismo request con una pregunta de evidencia, el LLM local falso disponible y `LLM_CLOUD_ENABLED=true`
 - **WHEN** se procesa el turno
 - **THEN** el adapter local registra al menos una invocación, el de nube cero y `llmProvider` es `local`
+
+#### Scenario: Con datos sintéticos, la nube habilitada y el LLM local caído, el turno usa el respaldo y declara nube [US-050] [RN-12] (asumido: complemento que fija la regla en el chat)
+- **GIVEN** un `ChatTurnRequest` con `dataClassification = sintetico`, `LLM_CLOUD_ENABLED=true`, el LLM local caído y un adapter de nube falso que cuenta invocaciones
+- **WHEN** se envía a `POST /chat/turn` una pregunta de caso
+- **THEN** el adapter de nube registra al menos una invocación y `llmProvider` es `nube`

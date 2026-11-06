@@ -41,7 +41,7 @@ Nota (sin checkbox): el job de retención (RN-18, post-MVP, L1D-311) debe inclui
 
 ## humano
 
-- [ ] H-1 Añadir a `apps/clinical-api/.env.example` el bloque literal siguiente (RN-22) DIFERIDA -> H-1
+- [ ] H-1 Añadir a `apps/clinical-api/.env.example` el bloque literal siguiente (RN-22) DIFERIDA -> H-1 (hecho en PR chore/s6-compose-env-vars)
 
 ```
 # Turnos previos enmascarados que se reenvían a rag-orchestrator al rehidratar un hilo desconocido (ADR-51 §4, RN-22)

@@ -12,7 +12,7 @@ from app.config.settings import Settings
 from app.evaluation.llamadas import RegistroDeLlamadas
 from app.evaluation.modelos_locales import LlmRegistrado
 from app.infrastructure.llm.fabrica_local import (
-    ClienteLlmLocal,
+    LlmCompleto,
     crear_proponente_local,
     parametros_del_respaldo,
 )
@@ -62,7 +62,7 @@ def test_parametros_del_respaldo_leen_la_version_del_prompt_de_la_configuracion(
     ids=["adapter", "registrado"],
 )
 def test_el_cliente_local_y_su_envoltorio_cumplen_los_dos_puertos_del_llm(construir) -> None:
-    assert isinstance(construir(), ClienteLlmLocal)
+    assert isinstance(construir(), LlmCompleto)
 
 
 def test_crear_proponente_local_rechaza_llm_y_envoltorio_a_la_vez() -> None:

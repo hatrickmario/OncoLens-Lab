@@ -185,3 +185,22 @@ def test_rag_follow_up_responde_503_nli_unavailable_sin_afirmaciones_cuando_el_n
     cuerpo = respuesta.json()
     assert cuerpo["error"] == "NLI_UNAVAILABLE"
     assert "answer" not in cuerpo and TEXTO_SEGUIMIENTO_OK not in respuesta.text
+
+
+def test_rag_follow_up_declara_nube_en_meta_cuando_es_sintetico_la_nube_esta_habilitada_y_el_local_cae():
+    from app.application.ports import FalloDelLlm
+    from app.application.selector_proveedor_llm import SelectorDeProveedorLlm
+    from tests.support.llm_falso import FakeLlmClient
+    from tests.support.llm_nube_falso import LlmNubeFalso
+
+    nube = LlmNubeFalso("SEG-OK")
+    selector = SelectorDeProveedorLlm(
+        FakeLlmClient(error=FalloDelLlm()), nube, nube_habilitada=True
+    )
+    entorno = crear_entorno_de_seguimiento(llm=selector)
+
+    respuesta = entorno.seguir(solicitud_de_seguimiento())
+
+    assert respuesta.status_code == 200
+    assert nube.invocaciones == 1
+    assert respuesta.json()["meta"]["llmProvider"] == "nube"
