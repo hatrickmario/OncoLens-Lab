@@ -7,7 +7,7 @@ import casoDelContrato from '../../../../contracts/examples/case-view.json';
 import errorCorreccionFechaFin from '../../../../contracts/examples/error-correccion-fecha-fin.json';
 import errorDatoNoVigente from '../../../../contracts/examples/error-dato-no-vigente.json';
 import errorDeclaracionIncoherente from '../../../../contracts/examples/error-declaracion-incoherente.json';
-import errorValorFueraDeCatalogo from '../../../../contracts/examples/error-valor-fuera-de-catalogo-campo.json';
+import errorValorFueraDeCatalogo from '../../../../contracts/examples/error-registro-clinico-campo.json';
 import historicoDeAtributo from '../../../../contracts/examples/correction-history-clinical-attribute.json';
 import historicoDeTratamiento from '../../../../contracts/examples/correction-history-prior-treatment.json';
 import tratamientoCorregido from '../../../../contracts/examples/prior-treatment-corregido.json';
@@ -76,16 +76,16 @@ export const casoConDeclaracion = {
 };
 export const casoSinDatos = { ...base, priorTreatments: [], attributes: [] };
 
-/** Fila nueva que deja la corrección del tratamiento: lo que devolvería el servidor, con la forma de la vista. */
-const filaDeTratamientoCorregido: Record<string, unknown> = { ...tratamientoCorregido };
-delete filaDeTratamientoCorregido.mappingStatus;
-export const tratamientoNuevo = { ...filaDeTratamientoCorregido, supersedesId: ID_TRATAMIENTO };
-export const atributoNuevo = {
-  ...atributoCorregido,
-  key: 'estado_castracion',
-  value: 'castrado',
-  supersedesId: ID_ATRIBUTO,
-};
+/** Los `201` de corrección son los ejemplos del contrato (el atributo, con la clave y el valor de este caso). */
+export const tratamientoNuevo = tratamientoCorregido;
+export const atributoNuevo = { ...atributoCorregido, key: 'estado_castracion', value: 'castrado' };
+
+/** La fila nueva tal como la proyecta la vista de caso: sin los campos que `CaseView` no trae. */
+function enLaVista(fila: object, sobrantes: string[]): Record<string, unknown> {
+  const proyectada: Record<string, unknown> = { ...fila };
+  for (const campo of sobrantes) delete proyectada[campo];
+  return proyectada;
+}
 
 export interface PeticionAlBff {
   metodo: string;
@@ -112,7 +112,10 @@ export function crearBffDeCorreccionDeCaso(inicial: object = casoConDatos) {
     });
   };
   const lecturas = () => [
-    http.get('*/api/patients/:id/case', () => HttpResponse.json(caso)),
+    http.get('*/api/patients/:id/case', async ({ request }) => {
+      await anotar(request);
+      return HttpResponse.json(caso);
+    }),
     checklistSinFaltantes(),
     http.get('*/api/patients/:id/clinical-attributes', () =>
       HttpResponse.json(atributosPermitidos),
@@ -146,11 +149,13 @@ export function crearBffDeCorreccionDeCaso(inicial: object = casoConDatos) {
     },
     corregirTratamiento: (status: number, cuerpo: JsonBodyType = tratamientoNuevo) =>
       responder('post', 'prior-treatments/:tratamiento/corrections', status, cuerpo, () => {
-        caso = { ...caso, priorTreatments: [tratamientoNuevo] } as unknown as Caso;
+        const fila = enLaVista(tratamientoNuevo, ['mappingStatus']);
+        caso = { ...caso, priorTreatments: [fila] } as unknown as Caso;
       }),
     corregirAtributo: (status: number, cuerpo: JsonBodyType = atributoNuevo) =>
       responder('post', 'clinical-attributes/:atributo/corrections', status, cuerpo, () => {
-        caso = { ...caso, attributes: [atributoNuevo] } as unknown as Caso;
+        const fila = enLaVista(atributoNuevo, ['datePrecision']);
+        caso = { ...caso, attributes: [fila] } as unknown as Caso;
       }),
     historicoDeTratamiento: (cuerpo: JsonBodyType = historicoDeTratamiento) =>
       responder('get', 'prior-treatments/:tratamiento/history', 200, cuerpo),

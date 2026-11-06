@@ -8,16 +8,22 @@ export interface PieDeFormularioDeRegistroProps {
   alCancelar: () => void;
   /** Texto de «no hay nada que guardar»: deshabilita «Guardar» y lo explica (diagnóstico sin cambios). */
   avisoDeSinCambios?: string;
+  /** Formulario de corrección: el botón dice «Guardar mi corrección» (ADR-50), no «Guardar». */
+  esCorreccion?: boolean;
 }
 
-/** Error general, «Guardar» y «Cancelar» de los formularios de registro manual (S5-03). */
+/** Error general, «Guardar» y «Cancelar» de los formularios de registro manual (S5-03) y de corrección. */
 export function PieDeFormularioDeRegistro({
   enviando,
   errorGeneral,
   alCancelar,
   avisoDeSinCambios,
+  esCorreccion = false,
 }: PieDeFormularioDeRegistroProps) {
-  const { guardar, guardando, cancelar } = mensajes().caso.registro;
+  const { caso, ficha } = mensajes();
+  const { guardar, guardando, cancelar } = esCorreccion
+    ? ficha.correccion.formulario
+    : caso.registro;
   return (
     <>
       <p aria-live="assertive" className="text-error m-0">

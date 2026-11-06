@@ -4,23 +4,36 @@ import { useId, useState } from 'react';
 import type { CorrectionHistoryEntry } from '../../../../packages/api-contracts/src/types/clinical-api';
 import {
   pedirHistorico,
+  type DatoCorregible,
   type RefDeDato,
   type ResultadoDeHistorico,
 } from '../../lib/correcciones/cliente';
+import { rotuloOValor } from '../../lib/caso/presentacion';
 import { nombreDeOrigen } from '../../lib/ficha/presentacion';
 import { mensajes } from '../../lib/mensajes';
 import { FechaRelativa } from '../atoms/fecha-relativa';
 
-function textoDeLaVersion(version: CorrectionHistoryEntry): string {
+function textoDeLaVersion(version: CorrectionHistoryEntry, dato: DatoCorregible): string {
   if (version.content !== undefined) return version.content;
+  if (version.regimenName !== undefined) return version.regimenName;
+  if (dato === 'clinical-attributes')
+    return rotuloOValor(mensajes().caso.valoresDeAtributo, version.value ?? '');
   return [version.value, version.unit].filter(Boolean).join(' ');
 }
 
-function VersionAnterior({ version, hoy }: { version: CorrectionHistoryEntry; hoy: string }) {
+function VersionAnterior({
+  version,
+  dato,
+  hoy,
+}: {
+  version: CorrectionHistoryEntry;
+  dato: DatoCorregible;
+  hoy: string;
+}) {
   const { ficha } = mensajes();
   return (
     <li className="border-border flex flex-wrap items-baseline gap-x-2 border-b py-1 last:border-b-0">
-      <span className="whitespace-pre-wrap">{textoDeLaVersion(version)}</span>
+      <span className="whitespace-pre-wrap">{textoDeLaVersion(version, dato)}</span>
       <FechaRelativa fecha={version.recordedAt} hoy={hoy} />
       <span>{nombreDeOrigen(version.entryMethod)}</span>
       <span className="text-text-muted">{ficha.correccion.historico.reemplazado}</span>
@@ -30,9 +43,11 @@ function VersionAnterior({ version, hoy }: { version: CorrectionHistoryEntry; ho
 
 function ContenidoDelHistorico({
   estado,
+  dato,
   hoy,
 }: {
   estado: ResultadoDeHistorico | 'cargando';
+  dato: DatoCorregible;
   hoy: string;
 }) {
   const { historico } = mensajes().ficha.correccion;
@@ -42,7 +57,7 @@ function ContenidoDelHistorico({
   return (
     <ul aria-label={historico.etiqueta} className="m-0 list-none p-0">
       {estado.versiones.map((version) => (
-        <VersionAnterior key={version.id} version={version} hoy={hoy} />
+        <VersionAnterior key={version.id} version={version} dato={dato} hoy={hoy} />
       ))}
     </ul>
   );
@@ -75,7 +90,9 @@ export function HistoricoDelDato({ dato, hoy }: { dato: RefDeDato; hoy: string }
         {mensajes().ficha.correccion.historico.abrir}
       </button>
       <div id={idDelPanel} hidden={!abierto}>
-        {abierto && estado !== null && <ContenidoDelHistorico estado={estado} hoy={hoy} />}
+        {abierto && estado !== null && (
+          <ContenidoDelHistorico estado={estado} dato={dato.dato} hoy={hoy} />
+        )}
       </div>
     </div>
   );

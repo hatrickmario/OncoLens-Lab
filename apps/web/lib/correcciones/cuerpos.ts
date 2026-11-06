@@ -1,9 +1,11 @@
 import type {
   BiomarkerCorrection,
+  ClinicalAttributeCorrection,
   ClinicalNoteCorrection,
 } from '../../../../packages/api-contracts/src/types/clinical-api';
 import {
   zBiomarkerCorrection,
+  zClinicalAttributeCorrection,
   zClinicalNoteCorrection,
 } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
 import { mensajes } from '../mensajes';
@@ -70,4 +72,28 @@ export function errorDelCuerpoDeNota(cuerpo: ClinicalNoteCorrection): ErrorDeCor
   const vacia = cuerpo.content === undefined || cuerpo.content.trim() === '';
   if (vacia) return { campo: 'content', mensaje: mensajes().ficha.correccion.errores.obligatorio };
   return primerErrorDe(zClinicalNoteCorrection.safeParse(cuerpo), 'content');
+}
+
+/**
+ * Cuerpo de `correctClinicalAttribute`: la clave no viaja (es inmutable); `valorFijo` es el de la declaración de ausencia,
+ * que solo admite `si`. Sin fecha no se envía `observedAt` y el servidor conserva la anterior.
+ */
+export function cuerpoDeCorreccionDeAtributo(
+  datos: FormData,
+  valorFijo?: string,
+): ClinicalAttributeCorrection {
+  const fecha = texto(datos, 'observedAt');
+  return {
+    value: valorFijo ?? texto(datos, 'value'),
+    ...(fecha !== '' && { observedAt: fecha }),
+  };
+}
+
+export function errorDelCuerpoDeAtributoCorregido(
+  cuerpo: ClinicalAttributeCorrection,
+): ErrorDeCorreccion | null {
+  if (cuerpo.value === '') {
+    return { campo: 'value', mensaje: mensajes().ficha.correccion.errores.obligatorio };
+  }
+  return primerErrorDe(zClinicalAttributeCorrection.safeParse(cuerpo), 'value');
 }

@@ -57,6 +57,7 @@ export function SeccionesDelCaso({
         <PriorTreatmentsTable
           tratamientos={vista.priorTreatments}
           hoy={hoy}
+          {...registro}
           declaracion={declaracion}
           accion={
             <DialogoTratamientoPrevio
@@ -69,6 +70,7 @@ export function SeccionesDelCaso({
         <ClinicalAttributesTable
           atributos={sinLaDeclaracion(vista.attributes)}
           hoy={hoy}
+          {...registro}
           accion={<DialogoAtributoClinico {...registro} />}
         />
         <SeriesConRegistroManual
