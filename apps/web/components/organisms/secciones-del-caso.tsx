@@ -41,7 +41,7 @@ export function SeccionesDelCaso({
   const registro = { pacienteId: patientId, egresado, alGuardar };
   const declaracion = declaracionDeAusencia(vista.attributes);
   return (
-    <div className="grid gap-4 lg:grid-cols-[18rem_1fr]">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[18rem_minmax(0,1fr)]">
       <aside>
         <CriticalDataChecklist
           lectura={checklist}
