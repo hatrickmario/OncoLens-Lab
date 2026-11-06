@@ -182,3 +182,67 @@ describe('construirHechosDelCaso', () => {
     expect(resultado.enlaces.size).toBe(0);
   });
 });
+
+describe('construirHechosDelCaso: series y correcciones', () => {
+  const casoConSerie = casoDeEjemplo({
+    diagnosticoActivo: diagnosticoDeEjemplo({ diagnosedAt: '2026-01-10' }),
+    biomarcadores: [
+      biomarcadorDeEjemplo({
+        id: 'b3',
+        name: 'CA 15-3',
+        value: '28',
+        performedAt: '2026-04-10',
+        createdAt: '2026-04-10T10:00:00.000Z',
+      }),
+      biomarcadorDeEjemplo({
+        id: 'b1',
+        name: 'CA 15-3',
+        value: '22',
+        performedAt: '2026-02-09',
+        createdAt: '2026-02-09T10:00:00.000Z',
+      }),
+      biomarcadorDeEjemplo({
+        id: 'b2',
+        name: 'HER2',
+        value: '3+',
+        entryMethod: 'manual_correction',
+        reviewStatus: 'corregido',
+        performedAt: '2026-03-01',
+      }),
+    ],
+  });
+
+  it('conserva todos los valores de una serie en orden cronológico con un seriesKey sin separadores cuando se pide la serie completa', () => {
+    const { contexto, dataRefs } = construirContextoPermitido(
+      casoConSerie,
+      AHORA_DE_EJEMPLO,
+      [],
+      true,
+    );
+    const { caseFacts } = construirHechosDelCaso(
+      { ...contexto, pseudoPatientId: 'psd_x' },
+      dataRefs,
+    );
+
+    const serie = caseFacts.filter((h) => h.seriesKey === 'ca153');
+    expect(serie.map((h) => h.relativeDay)).toEqual([30, 90]);
+  });
+
+  it('marca como corregido el hecho cuyo registro vigente es una corrección manual', () => {
+    const { contexto, dataRefs } = construirContextoPermitido(
+      casoConSerie,
+      AHORA_DE_EJEMPLO,
+      [],
+      true,
+    );
+    const { caseFacts } = construirHechosDelCaso(
+      { ...contexto, pseudoPatientId: 'psd_x' },
+      dataRefs,
+    );
+
+    expect(caseFacts.find((h) => h.verbalization.startsWith('HER2'))).toMatchObject({
+      corrected: true,
+    });
+    expect(caseFacts.filter((h) => h.corrected === true)).toHaveLength(1);
+  });
+});

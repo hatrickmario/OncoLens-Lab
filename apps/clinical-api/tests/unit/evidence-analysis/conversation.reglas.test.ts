@@ -10,6 +10,7 @@ import {
   enlacesDelTurno,
   etiquetasDeFaltantes,
   etiquetasDeHechosUsados,
+  ordenarPorDiaRelativo,
   rehidratacionVacia,
 } from '../../../src/modules/evidence-analysis/conversation/conversation.reglas.js';
 import { clasificacionDelPaciente } from '../../../src/modules/evidence-analysis/regla-proveedor.js';
@@ -300,5 +301,34 @@ describe('clasificacionDelPaciente', () => {
   it('devuelve el origen de los datos del paciente', () => {
     expect(clasificacionDelPaciente({ dataOrigin: 'sintetico' })).toBe('sintetico');
     expect(clasificacionDelPaciente({ dataOrigin: 'real_anonimizado' })).toBe('real_anonimizado');
+  });
+});
+
+describe('ordenarPorDiaRelativo', () => {
+  const enlace = (factRef: string, relativeDay: number | null) => ({
+    factRef,
+    resourceType: 'biomarker' as const,
+    resourceId: `id-${factRef}`,
+    origin: 'manual' as const,
+    relativeDay,
+    recordedDate: null,
+  });
+
+  it('ordena de menor a mayor día relativo cuando los enlaces llegan desordenados', () => {
+    const ordenados = ordenarPorDiaRelativo([enlace('f3', 180), enlace('f1', 0), enlace('f2', 90)]);
+
+    expect(ordenados.map((e) => e.factRef)).toEqual(['f1', 'f2', 'f3']);
+  });
+
+  it('pone al final el enlace sin fecha confiable y no lo trata como el día cero', () => {
+    const ordenados = ordenarPorDiaRelativo([enlace('f1', null), enlace('f2', 5), enlace('f3', 0)]);
+
+    expect(ordenados.map((e) => e.factRef)).toEqual(['f3', 'f2', 'f1']);
+  });
+
+  it('conserva el orden de llegada cuando dos enlaces tienen el mismo día', () => {
+    const ordenados = ordenarPorDiaRelativo([enlace('fb', 10), enlace('fa', 10)]);
+
+    expect(ordenados.map((e) => e.factRef)).toEqual(['fb', 'fa']);
   });
 });
