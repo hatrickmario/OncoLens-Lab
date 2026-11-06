@@ -19,6 +19,7 @@ import {
 } from '../compartido/declaracion-de-ausencia.js';
 import { exigirPacienteQueAdmiteRegistros } from '../compartido/paciente-activo.js';
 import { PacienteNoEncontradoError } from '../compartido/pacientes.errores.js';
+import { exigirValorPermitido } from '../clinical-attributes/clinical-attributes.reglas.js';
 import type { CatalogoDeAtributos } from '../clinical-attributes/ports.js';
 import type { ReconciliationService } from '../reconciliation/ports.js';
 import {
@@ -34,7 +35,6 @@ import {
   exigirCorreccionValidaDeNota,
   exigirCorreccionValidaDeTratamiento,
   exigirDatoVigente,
-  exigirValorDelCatalogo,
   fechaDeHoy,
   planDeCorreccionDeAtributo,
   planDeCorreccionDeBiomarcador,
@@ -202,7 +202,12 @@ async function corregirAtributo(
     const tipoDeCancer = await tx.tipoDeCancerVigente(patientId);
     const permitidos =
       tipoDeCancer === null ? [] : catalogoDeAtributos.atributosPermitidos(tipoDeCancer);
-    exigirValorDelCatalogo(permitidos, actual.attributeKey, cuerpo.value);
+    // Sin lista (clave no declarada o sin diagnóstico) no se puede validar: se señala `value`.
+    exigirValorPermitido(
+      permitidos.find((p) => p.key === actual.attributeKey),
+      cuerpo.value,
+      'value',
+    );
     exigirCorreccionValidaDeAtributo(actual, cuerpo);
     const plan = planDeCorreccionDeAtributo(actual, cuerpo, contextoDe(dependencias, solicitud));
     if (!(await tx.guardarCorreccionDeAtributo(plan))) throw new DatoNoVigenteError();

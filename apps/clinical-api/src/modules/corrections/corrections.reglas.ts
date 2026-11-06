@@ -1,6 +1,5 @@
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import { ESTADOS_DESCARTADOS, type EstadoDeRevision } from '../compartido/estados-de-revision.js';
-import type { AtributoPermitido } from '../clinical-attributes/ports.js';
 import { ValorFueraDeCatalogoError } from '../compartido/errores-de-registro.js';
 import { armarTratamientoManual } from '../prior-treatments/prior-treatments.tratamiento.js';
 import { motivoDeFinPersistido } from '../prior-treatments/prior-treatments.reglas.js';
@@ -276,21 +275,6 @@ export function exigirCorreccionValidaDeAtributo(
   cambios: CambiosDeAtributo,
 ): void {
   if (!hayCambioRealDeAtributo(actual, cambios)) throw new CorreccionInvalidaError();
-}
-
-/**
- * RN-29: el valor corregido debe estar en la lista del catálogo para la clave del atributo y el tipo de cáncer del
- * diagnóstico vigente. Sin lista (clave no declarada o sin diagnóstico) tampoco se puede validar: `field = value`.
- */
-export function exigirValorDelCatalogo(
-  permitidos: readonly AtributoPermitido[],
-  attributeKey: string,
-  valor: string,
-): void {
-  const declarado = permitidos.find((p) => p.key === attributeKey);
-  if (declarado === undefined || !declarado.values.some((v) => v.value === valor)) {
-    throw new ValorFueraDeCatalogoError('value');
-  }
 }
 
 /**
