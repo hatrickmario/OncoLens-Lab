@@ -23,8 +23,10 @@ import {
   DatoNoVigenteError,
 } from './corrections.errores.js';
 import {
+  leerCorreccionDeAtributo,
   leerCorreccionDeBiomarcador,
   leerCorreccionDeNota,
+  leerCorreccionDeTratamiento,
   type LecturaDeCuerpo,
 } from './corrections.schema.js';
 import type { CorrectionsService } from './corrections.service.js';
@@ -38,6 +40,8 @@ export interface DependenciasDelController {
 
 const EVENTO_BIOMARCADOR = 'corrections.biomarcador';
 const EVENTO_NOTA = 'corrections.nota';
+const EVENTO_TRATAMIENTO = 'corrections.tratamiento';
+const EVENTO_ATRIBUTO = 'corrections.atributo';
 const EVENTO_HISTORIAL = 'corrections.historial';
 const EVENTO_NOTAS = 'corrections.notas';
 
@@ -201,6 +205,36 @@ function montarCorrecciones(router: Router, dependencias: DependenciasDelControl
   );
 }
 
+/** Tratamientos previos y atributos (d5fb-05): la misma traducción HTTP ↔ service que biomarcadores y notas. */
+function montarCorreccionesDeTratamientoYAtributo(
+  router: Router,
+  dependencias: DependenciasDelController,
+): void {
+  const alCorregir = [...alTraer(dependencias, 'clinical:write'), express.json()];
+  router.post(
+    '/patients/:patientId/prior-treatments/:treatmentId/corrections',
+    ...alCorregir, // x-permission de correctPriorTreatment
+    crearCorreccion(dependencias, {
+      evento: EVENTO_TRATAMIENTO,
+      parametroDelDato: 'treatmentId',
+      leerCuerpo: leerCorreccionDeTratamiento,
+      ejecutar: (servicio, solicitud) => servicio.corregirTratamiento(solicitud),
+    }),
+    crearCuerpoIlegible(dependencias.registrar, EVENTO_TRATAMIENTO),
+  );
+  router.post(
+    '/patients/:patientId/clinical-attributes/:attributeId/corrections',
+    ...alCorregir, // x-permission de correctClinicalAttribute
+    crearCorreccion(dependencias, {
+      evento: EVENTO_ATRIBUTO,
+      parametroDelDato: 'attributeId',
+      leerCuerpo: leerCorreccionDeAtributo,
+      ejecutar: (servicio, solicitud) => servicio.corregirAtributo(solicitud),
+    }),
+    crearCuerpoIlegible(dependencias.registrar, EVENTO_ATRIBUTO),
+  );
+}
+
 function montarLecturas(router: Router, dependencias: DependenciasDelController): void {
   const alLeer = alTraer(dependencias, 'clinical:read');
   router.get(
@@ -234,6 +268,30 @@ function montarLecturas(router: Router, dependencias: DependenciasDelController)
   );
 }
 
+/** Históricos de tratamientos previos y atributos (d5fb-05). */
+function montarHistorialesDeTratamientoYAtributo(
+  router: Router,
+  dependencias: DependenciasDelController,
+): void {
+  const alLeer = alTraer(dependencias, 'clinical:read');
+  router.get(
+    '/patients/:patientId/prior-treatments/:treatmentId/history',
+    ...alLeer, // x-permission de getPriorTreatmentHistory
+    crearLectura(dependencias, {
+      ...delDato(EVENTO_HISTORIAL, 'treatmentId'),
+      leer: (servicio, ids) => servicio.historialDeTratamiento(ids),
+    }),
+  );
+  router.get(
+    '/patients/:patientId/clinical-attributes/:attributeId/history',
+    ...alLeer, // x-permission de getClinicalAttributeHistory
+    crearLectura(dependencias, {
+      ...delDato(EVENTO_HISTORIAL, 'attributeId'),
+      leer: (servicio, ids) => servicio.historialDeAtributo(ids),
+    }),
+  );
+}
+
 /**
  * `POST …/corrections` y `GET …/history|clinical-notes` (se montan bajo `/platform`, detrás del guard). Solo traducen
  * HTTP ↔ service: el log nunca lleva valores clínicos ni el texto de una nota (RN-10).
@@ -241,6 +299,8 @@ function montarLecturas(router: Router, dependencias: DependenciasDelController)
 export function correctionsController(dependencias: DependenciasDelController): Router {
   const router = Router();
   montarCorrecciones(router, dependencias);
+  montarCorreccionesDeTratamientoYAtributo(router, dependencias);
   montarLecturas(router, dependencias);
+  montarHistorialesDeTratamientoYAtributo(router, dependencias);
   return router;
 }

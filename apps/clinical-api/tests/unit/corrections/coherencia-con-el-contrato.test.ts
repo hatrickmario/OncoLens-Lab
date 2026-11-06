@@ -20,6 +20,7 @@ function montar() {
   return componerModuloDeCorrecciones({
     fuente: { connect: () => Promise.reject(new Error('no se usa: solo se recorren las rutas')) },
     reconciliacionPara: () => ({ decidir: () => Promise.reject(new Error('no se usa')) as never }),
+    catalogoDeAtributos: { version: () => 'no-se-usa', atributosPermitidos: () => [] },
     limites: { notaMaxChars: 200, historialMax: 50 },
     reloj: { now: () => new Date('2026-10-16T12:00:00.000Z') },
     generarId: () => 'no-se-usa',
@@ -29,7 +30,7 @@ function montar() {
 }
 
 describe('coherencia del módulo corrections con el contrato [US-045 AC-3]', () => {
-  it('monta las cinco operaciones con el permiso de su x-permission y sin incoherencias', () => {
+  it('monta las nueve operaciones con el permiso de su x-permission y sin incoherencias', () => {
     const router = montar();
 
     const montadas = rutasMontadas([router]);
@@ -40,9 +41,13 @@ describe('coherencia del módulo corrections con el contrato [US-045 AC-3]', () 
 
     expect(porOperacion).toEqual({
       correctBiomarker: ['clinical:write'],
+      correctClinicalAttribute: ['clinical:write'],
       correctClinicalNote: ['clinical:write'],
+      correctPriorTreatment: ['clinical:write'],
       getBiomarkerHistory: ['clinical:read'],
+      getClinicalAttributeHistory: ['clinical:read'],
       getClinicalNoteHistory: ['clinical:read'],
+      getPriorTreatmentHistory: ['clinical:read'],
       listClinicalNotes: ['clinical:read'],
     });
     expect(incoherencias([router])).toEqual([]);

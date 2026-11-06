@@ -25,6 +25,7 @@ export interface DependenciasDelServicio {
 }
 
 const comoTratamientoDelCaso = (t: TratamientoPrevioLeido): TratamientoPrevioDelCaso => ({
+  id: t.id,
   lineNumber: t.lineNumber,
   setting: t.setting,
   regimenName: t.regimenName,
@@ -37,6 +38,7 @@ const comoTratamientoDelCaso = (t: TratamientoPrevioLeido): TratamientoPrevioDel
 });
 
 const comoAtributoDelCaso = (a: AtributoLeido): AtributoDelCaso => ({
+  id: a.id,
   key: a.key,
   value: a.value,
   observedAt: a.observedAt,

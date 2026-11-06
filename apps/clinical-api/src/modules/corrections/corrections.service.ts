@@ -1,13 +1,16 @@
 import type {
   Biomarker,
+  ClinicalAttribute,
   ClinicalNote,
   ClinicalNoteList,
   CorrectionHistory,
+  PriorTreatment,
 } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
 import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import { exigirPacienteQueAdmiteRegistros } from '../compartido/paciente-activo.js';
 import { PacienteNoEncontradoError } from '../compartido/pacientes.errores.js';
+import type { CatalogoDeAtributos } from '../clinical-attributes/ports.js';
 import type { ReconciliationService } from '../reconciliation/ports.js';
 import {
   comoBiomarcadorCorregido,
@@ -26,8 +29,10 @@ import {
   type ContextoDeCorreccion,
 } from './corrections.reglas.js';
 import type {
+  CuerpoDeCorreccionDeAtributo,
   CuerpoDeCorreccionDeBiomarcador,
   CuerpoDeCorreccionDeNota,
+  CuerpoDeCorreccionDeTratamiento,
 } from './corrections.schema.js';
 import type { RepositorioDeCorrecciones, VersionReemplazada } from './ports.js';
 
@@ -50,8 +55,16 @@ export interface CorrectionsService {
     solicitud: SolicitudDeCorreccion<CuerpoDeCorreccionDeBiomarcador>,
   ): Promise<Biomarker>;
   corregirNota(solicitud: SolicitudDeCorreccion<CuerpoDeCorreccionDeNota>): Promise<ClinicalNote>;
+  corregirTratamiento(
+    solicitud: SolicitudDeCorreccion<CuerpoDeCorreccionDeTratamiento>,
+  ): Promise<PriorTreatment>;
+  corregirAtributo(
+    solicitud: SolicitudDeCorreccion<CuerpoDeCorreccionDeAtributo>,
+  ): Promise<ClinicalAttribute>;
   historialDeBiomarcador(solicitud: SolicitudDeLectura): Promise<CorrectionHistory>;
   historialDeNota(solicitud: SolicitudDeLectura): Promise<CorrectionHistory>;
+  historialDeTratamiento(solicitud: SolicitudDeLectura): Promise<CorrectionHistory>;
+  historialDeAtributo(solicitud: SolicitudDeLectura): Promise<CorrectionHistory>;
   notasVigentes(patientId: string): Promise<ClinicalNoteList>;
 }
 
@@ -66,6 +79,8 @@ export interface LimitesDeCorreccion {
 export interface DependenciasDelService {
   readonly repositorio: RepositorioDeCorrecciones;
   readonly reconciliacion: ReconciliationService;
+  /** `atributos.json` del catálogo montado (RN-29): el valor corregido se valida contra su lista. */
+  readonly catalogoDeAtributos: CatalogoDeAtributos;
   readonly limites: LimitesDeCorreccion;
   readonly reloj: Clock;
   readonly generarId: GeneradorDeIds;
@@ -150,6 +165,10 @@ export function createCorrectionsService(dependencias: DependenciasDelService): 
   return {
     corregirBiomarcador: (solicitud) => corregirBiomarcador(dependencias, solicitud),
     corregirNota: (solicitud) => corregirNota(dependencias, solicitud),
+    corregirTratamiento: () => Promise.reject(new Error('no implementado')),
+    corregirAtributo: () => Promise.reject(new Error('no implementado')),
+    historialDeTratamiento: () => Promise.reject(new Error('no implementado')),
+    historialDeAtributo: () => Promise.reject(new Error('no implementado')),
     historialDeBiomarcador: ({ patientId, datoId }) =>
       leerHistorial((tope) => repositorio.historialDeBiomarcador(patientId, datoId, tope), limites),
     historialDeNota: ({ patientId, datoId }) =>

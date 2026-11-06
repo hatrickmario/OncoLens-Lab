@@ -1,7 +1,9 @@
 import type { z } from 'zod';
 import {
   zCorrectBiomarkerBody,
+  zCorrectClinicalAttributeBody,
   zCorrectClinicalNoteBody,
+  zCorrectPriorTreatmentBody,
 } from '../../../../../packages/api-contracts/src/zod/clinical-api/zod.gen.js';
 
 /**
@@ -10,6 +12,8 @@ import {
  */
 export type CuerpoDeCorreccionDeBiomarcador = z.output<typeof zCorrectBiomarkerBody>;
 export type CuerpoDeCorreccionDeNota = z.output<typeof zCorrectClinicalNoteBody>;
+export type CuerpoDeCorreccionDeTratamiento = z.output<typeof zCorrectPriorTreatmentBody>;
+export type CuerpoDeCorreccionDeAtributo = z.output<typeof zCorrectClinicalAttributeBody>;
 
 export type LecturaDeCuerpo<C> =
   | { readonly valido: true; readonly cuerpo: C }
@@ -44,4 +48,16 @@ export function leerCorreccionDeBiomarcador(
 /** `minProperties: 1`: una corrección de nota sin `content` ni `noteType` no corrige nada. */
 export function leerCorreccionDeNota(cuerpo: unknown): LecturaDeCuerpo<CuerpoDeCorreccionDeNota> {
   return leer(zCorrectClinicalNoteBody, cuerpo, true);
+}
+
+export function leerCorreccionDeTratamiento(
+  _cuerpo: unknown,
+): LecturaDeCuerpo<CuerpoDeCorreccionDeTratamiento> {
+  throw new Error('no implementado');
+}
+
+export function leerCorreccionDeAtributo(
+  _cuerpo: unknown,
+): LecturaDeCuerpo<CuerpoDeCorreccionDeAtributo> {
+  throw new Error('no implementado');
 }

@@ -178,6 +178,7 @@ arrancar({
               catalogo: servicios.terminologia,
               registrar: (linea) => registrar({ ...linea, traceId }),
             }),
+          catalogoDeAtributos: servicios.atributos,
           limites: {
             notaMaxChars: configuracion.correcciones.clinicalNoteMaxChars,
             historialMax: configuracion.correcciones.correctionHistoryMax,

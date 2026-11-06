@@ -4,6 +4,7 @@ import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type { Registrar } from '../../infrastructure/logger.js';
 import type { TraceIdGenerator } from '../../infrastructure/trace-id-generator.js';
 import type { FuenteDeConexiones } from '../compartido/transaccion.js';
+import type { CatalogoDeAtributos } from '../clinical-attributes/ports.js';
 import type { ReconciliationService } from '../reconciliation/ports.js';
 import { correctionsController } from './corrections.controller.js';
 import { createCorrectionsRepository } from './corrections.repository.js';
@@ -14,6 +15,8 @@ export interface DependenciasDelModulo {
   readonly fuente: FuenteDeConexiones;
   /** `ReconciliationService` (l1d-84) cuyo log lleva el `traceId` de la petición; este módulo nunca asigna `mapping_status`. */
   readonly reconciliacionPara: (traceId: string) => ReconciliationService;
+  /** `atributos.json` del catálogo montado (RN-29): el MISMO que usa el registro manual de atributos. */
+  readonly catalogoDeAtributos: CatalogoDeAtributos;
   readonly limites: LimitesDeCorreccion;
   readonly reloj: Clock;
   /** UUID de las filas creadas: inyectado, nunca `randomUUID()` en el service. */
@@ -30,6 +33,7 @@ export function componerModuloDeCorrecciones(dependencias: DependenciasDelModulo
       createCorrectionsService({
         repositorio,
         reconciliacion: dependencias.reconciliacionPara(traceId),
+        catalogoDeAtributos: dependencias.catalogoDeAtributos,
         limites: dependencias.limites,
         reloj: dependencias.reloj,
         generarId: dependencias.generarId,
