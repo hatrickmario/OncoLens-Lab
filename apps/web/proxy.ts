@@ -1,8 +1,16 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { construirCsp, generarNonce, leerModoCsp } from './lib/server/csp';
 import { tieneCookieDeSesion } from './lib/server/sesion';
 
-/** Solo las páginas de pacientes; `/login` y `/api/*` quedan fuera (el BFF responde 401 JSON, no redirige). */
-export const config = { matcher: ['/pacientes/:path*'] };
+/** Toda la app salvo los estáticos de Next (llevan las cabeceras de `next.config.ts`) y el icono. */
+export const config = { matcher: ['/((?!_next/static|_next/image|icon.svg).*)'] };
+
+export interface DependenciasProxy {
+  generarNonce: () => string;
+  entorno: Record<string, string | undefined>;
+}
+
+const ES_RUTA_DE_PACIENTES = /^\/pacientes(\/|$)/;
 
 /** Las páginas de pacientes llevan identidad (aunque enmascarada): ni el navegador ni un intermediario las guardan (RN-10). */
 function sinCache(respuesta: NextResponse): NextResponse {
@@ -10,21 +18,31 @@ function sinCache(respuesta: NextResponse): NextResponse {
   return respuesta;
 }
 
-/** Sin cookie, redirige a `/login` sin renderizar nada y sin copiar la ruta del paciente a la URL de destino. */
-export function proxy(request: NextRequest) {
-  if (tieneCookieDeSesion(request)) {
-    return sinCache(NextResponse.next());
-  }
-  return NextResponse.redirect(new URL('/login', request.url));
-}
+/**
+ * Crea el proxy con el nonce inyectable (design D3): pone la CSP y `x-nonce` en la request (Next los aplica a sus
+ * scripts) y la CSP en la respuesta. En `/pacientes/*` conserva el guard de sesión y `no-store`; sin cookie, redirige
+ * a `/login` sin copiar la ruta del paciente a la URL de destino.
+ */
+export function crearProxy({ generarNonce: nuevoNonce, entorno }: DependenciasProxy) {
+  return function proxy(request: NextRequest): NextResponse {
+    const esPaciente = ES_RUTA_DE_PACIENTES.test(request.nextUrl.pathname);
+    const nonce = nuevoNonce();
+    const { nombre, valor } = construirCsp({
+      nonce,
+      modo: leerModoCsp(entorno),
+      desarrollo: entorno['NODE_ENV'] === 'development',
+    });
 
-export interface DependenciasProxy {
-  generarNonce: () => string;
-  entorno: Record<string, string | undefined>;
-}
-
-export function crearProxy(_dependencias: DependenciasProxy): (request: NextRequest) => NextResponse {
-  return () => {
-    throw new Error('no implementado');
+    if (esPaciente && !tieneCookieDeSesion(request)) {
+      return sinCache(NextResponse.redirect(new URL('/login', request.url)));
+    }
+    const cabecerasDeRequest = new Headers(request.headers);
+    cabecerasDeRequest.set('x-nonce', nonce);
+    cabecerasDeRequest.set(nombre, valor);
+    const respuesta = NextResponse.next({ request: { headers: cabecerasDeRequest } });
+    respuesta.headers.set(nombre, valor);
+    return esPaciente ? sinCache(respuesta) : respuesta;
   };
 }
+
+export const proxy = crearProxy({ generarNonce, entorno: process.env });
