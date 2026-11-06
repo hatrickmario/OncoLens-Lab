@@ -30,6 +30,8 @@ const TABLAS_DEL_MODELO = [
   'clinical.clinical_data_source',
   'clinical.ai_analysis_record',
   'clinical.analysis_follow_up',
+  'clinical.conversation',
+  'clinical.conversation_turn',
   'clinical.analysis_feedback',
   'clinical.research_subject_map',
   'audit.audit_log',
@@ -47,12 +49,12 @@ describe('Migración inicial init_full_schema', () => {
     await cliente.end();
   });
 
-  it('crea los cinco schemas con las 29 tablas del modelo cuando se aplica sobre una base vacía [US-038 AC-1]', async () => {
+  it('crea los cinco schemas con las 31 tablas del modelo cuando se aplica sobre una base vacía [US-038 AC-1]', async () => {
     const reales = await tablasDelCatalogo(cliente);
 
     expect(tablasAusentes(TABLAS_DEL_MODELO, reales)).toEqual([]);
     expect(reales).toEqual([...TABLAS_DEL_MODELO].sort());
-    expect(TABLAS_DEL_MODELO).toHaveLength(29);
+    expect(TABLAS_DEL_MODELO).toHaveLength(31);
   });
 
   it('crea el schema corpus vacío y sin tablas de Prisma cuando se aplica la migración [US-038 AC-1]', async () => {

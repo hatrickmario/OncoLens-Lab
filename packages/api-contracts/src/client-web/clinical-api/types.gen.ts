@@ -975,6 +975,103 @@ export type FollowUpTurn = {
     createdAt: string;
 };
 
+/**
+ * Conversación anclada a un paciente. No expone threadId: el hilo de Backend 2 no sale de clinical-api (ADR-51).
+ */
+export type Conversation = {
+    conversationId: string;
+    patientId: string;
+    createdAt: string;
+    /**
+     * En orden de turnNumber.
+     */
+    turns: Array<ConversationTurn>;
+};
+
+export type ConversationTurnCreate = {
+    /**
+     * Pregunta del oncólogo. clinical-api la normaliza (Unicode NFC, espacios colapsados) y la enmascara antes de validarla, persistirla y enviarla; minLength y maxLength se miden después de normalizar.
+     */
+    question: string;
+    /**
+     * Turno de esta conversación al que se refiere la pregunta, si es una aclaración sobre él.
+     */
+    aboutTurnId?: string;
+};
+
+/**
+ * Cita de un bloque `evidencia`. Los metadatos se copian del catálogo del corpus; si falta uno, viaja "No disponible" (RN-25).
+ */
+export type ChatCitation = {
+    chunkId: string;
+    documentId: string;
+    sourceTitle: string;
+    chunkOrdinal: number;
+    chunkCount: number;
+    chunkTextSnapshot: string;
+};
+
+/**
+ * Un bloque de la respuesta. `documentado`, `interpretacion` y `conflicto` llevan al menos un factRef; `evidencia` lleva al menos una cita; `faltante`, `catalogo`, `limitacion` y `fuente` son deterministas y están exentos. Las citas van solo dentro de su bloque.
+ */
+export type ChatBlock = {
+    kind: 'documentado' | 'interpretacion' | 'catalogo' | 'evidencia' | 'conflicto' | 'faltante' | 'limitacion' | 'fuente';
+    text: string;
+    factRefs?: Array<string>;
+    citations?: Array<ChatCitation>;
+};
+
+/**
+ * Enlace de un factRef a un dato del paciente. Solo viaja hacia el navegador, nunca a Backend 2. La ruta del histórico la deriva la UI (no hay historyPath).
+ */
+export type ConversationDataLink = {
+    factRef: string;
+    resourceType: 'diagnosis' | 'biomarker' | 'clinical_attribute' | 'prior_treatment' | 'clinical_event';
+    resourceId: string;
+    origin: 'ocr' | 'manual' | 'manual_correction' | 'seed';
+    /**
+     * Día relativo al diagnóstico; null si el dato no tiene fecha confiable.
+     */
+    relativeDay: number | null;
+    recordedDate: string | null;
+};
+
+export type ConversationTurn = {
+    id: string;
+    turnNumber: number;
+    createdAt: string;
+    /**
+     * Pregunta normalizada y enmascarada (RN-11).
+     */
+    question: string;
+    intent: 'caso' | 'faltantes' | 'evidencia' | 'fuentes_limitaciones' | 'no_clasificada' | 'fuera_de_alcance';
+    aboutTurnId?: string;
+    /**
+     * Lo deriva clinical-api; con evidenceAnalysis, del resultado del análisis.
+     */
+    status: 'respondido' | 'sin_evidencia' | 'no_clasificada';
+    /**
+     * Lo deriva clinical-api. null (sin evidencia) no es 0.0 (RN-02).
+     */
+    topRelevanceScore: number | null;
+    blocks: Array<ChatBlock>;
+    dataLinks: Array<ConversationDataLink>;
+    omittedClaims: number;
+    analysisId?: string;
+    /**
+     * Avisos de IA (RN-19) tal como los devolvió Backend 2; vacío en los mensajes del sistema.
+     */
+    notices: Array<string>;
+    /**
+     * Etiquetas de los hechos del caso enviados a Backend 2 en este turno.
+     */
+    dataUsed: Array<string>;
+    /**
+     * Etiquetas de los datos faltantes (con tipo de faltante) enviados en este turno.
+     */
+    dataMissing: Array<string>;
+};
+
 export type ErrorInterno = {
     error: 'ERROR_INTERNO';
     message: string;
@@ -1268,6 +1365,8 @@ export type PatientSummaryWritable = {
 export type PatientId = string;
 
 export type AnalysisId = string;
+
+export type ConversationId = string;
 
 export type BiomarkerId = string;
 
@@ -2366,3 +2465,140 @@ export type CreateFollowUpResponses = {
 };
 
 export type CreateFollowUpResponse = CreateFollowUpResponses[keyof CreateFollowUpResponses];
+
+export type CreateConversationData = {
+    body?: never;
+    path: {
+        patientId: string;
+    };
+    query?: never;
+    url: '/platform/patients/{patientId}/conversations';
+};
+
+export type CreateConversationErrors = {
+    /**
+     * Sesión ausente o expirada.
+     */
+    401: ErrorNoAutenticado;
+    /**
+     * Permiso denegado por RBAC u opt-out.
+     */
+    403: ErrorPermisoDenegado;
+    /**
+     * Recurso no encontrado.
+     */
+    404: ErrorNoEncontrado;
+    /**
+     * Fallo interno de clinical-api. Mensaje fijo, sin eco ni detalle interno.
+     */
+    500: ErrorInterno;
+};
+
+export type CreateConversationError = CreateConversationErrors[keyof CreateConversationErrors];
+
+export type CreateConversationResponses = {
+    /**
+     * Conversación abierta, sin turnos.
+     */
+    201: Conversation;
+};
+
+export type CreateConversationResponse = CreateConversationResponses[keyof CreateConversationResponses];
+
+export type GetConversationData = {
+    body?: never;
+    path: {
+        conversationId: string;
+    };
+    query?: never;
+    url: '/platform/conversations/{conversationId}';
+};
+
+export type GetConversationErrors = {
+    /**
+     * Sesión ausente o expirada.
+     */
+    401: ErrorNoAutenticado;
+    /**
+     * Permiso denegado por RBAC u opt-out.
+     */
+    403: ErrorPermisoDenegado;
+    /**
+     * Recurso no encontrado.
+     */
+    404: ErrorNoEncontrado;
+    /**
+     * Fallo interno de clinical-api. Mensaje fijo, sin eco ni detalle interno.
+     */
+    500: ErrorInterno;
+};
+
+export type GetConversationError = GetConversationErrors[keyof GetConversationErrors];
+
+export type GetConversationResponses = {
+    /**
+     * La conversación con sus turnos en orden de turnNumber.
+     */
+    200: Conversation;
+};
+
+export type GetConversationResponse = GetConversationResponses[keyof GetConversationResponses];
+
+export type CreateConversationTurnData = {
+    body: ConversationTurnCreate;
+    path: {
+        conversationId: string;
+    };
+    query?: never;
+    url: '/platform/conversations/{conversationId}/turns';
+};
+
+export type CreateConversationTurnErrors = {
+    /**
+     * Sesión ausente o expirada.
+     */
+    401: ErrorNoAutenticado;
+    /**
+     * Permiso denegado por RBAC (PERMISO_DENEGADO) u opt-out de analisis_ia del paciente (OPT_OUT_ANALISIS_IA, RN-15): bloquea toda generación con IA.
+     */
+    403: ErrorPermisoOOptOut;
+    /**
+     * Recurso no encontrado.
+     */
+    404: ErrorNoEncontrado;
+    /**
+     * CATALOG_VERSION_MISMATCH: la versión del catálogo clínico difiere entre los backends (NFR-14). No se guarda el turno.
+     */
+    409: ErrorCatalogVersionMismatch;
+    /**
+     * Cuerpo inválido.
+     */
+    422: ErrorCuerpoInvalido;
+    /**
+     * Fallo interno de clinical-api. Mensaje fijo, sin eco ni detalle interno.
+     */
+    500: ErrorInterno;
+    /**
+     * Error de comunicación con rag-orchestrator (sin detalles internos).
+     */
+    502: ErrorServicioIa;
+    /**
+     * La generación no está disponible: LLM local caído (los datos reales nunca se envían a la nube), salida del LLM local no validada (LLM_OUTPUT_INVALID: no parseable o fuera del esquema; no se persiste contenido generado, RN-06) o desidentificación no disponible (falla cerrada, RN-11; no se invoca a Backend 2).
+     */
+    503: ErrorLlmLocalNoDisponible | ErrorDesidentificacionNoDisponible | ErrorSalidaLlmInvalida;
+    /**
+     * rag-orchestrator no respondió dentro del deadline.
+     */
+    504: ErrorDeadlineVencido;
+};
+
+export type CreateConversationTurnError = CreateConversationTurnErrors[keyof CreateConversationTurnErrors];
+
+export type CreateConversationTurnResponses = {
+    /**
+     * Turno registrado.
+     */
+    201: ConversationTurn;
+};
+
+export type CreateConversationTurnResponse = CreateConversationTurnResponses[keyof CreateConversationTurnResponses];

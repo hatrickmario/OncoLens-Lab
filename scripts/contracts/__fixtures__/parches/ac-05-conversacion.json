@@ -1,0 +1,16 @@
+[
+  {
+    "ac": "AC-5",
+    "regla": "assertDataModelDocument",
+    "escenario": "un parche añade pseudo_patient_id a conversation_turn (RN-10, RN-11, L1D-315)",
+    "parches": [{ "destino": "doc:data-model", "operaciones": [{ "op": "text-replace", "buscar": "| `about_turn_id` | uuid |  | nullable; turno al que se refiere la pregunta |", "reemplazar": "| `about_turn_id` | uuid |  | nullable; turno al que se refiere la pregunta |\n| `pseudo_patient_id` | text |  | seudónimo del turno |" }] }],
+    "esperado": { "archivo": "docs/architecture/data-model.md", "rutaContiene": "clinical.conversation_turn", "mensajeContiene": "columna pseudo_patient_id" }
+  },
+  {
+    "ac": "AC-5",
+    "regla": "assertDataModelDocument",
+    "escenario": "un parche elimina trace_id de conversation_turn (RN-06, L1D-315)",
+    "parches": [{ "destino": "doc:data-model", "operaciones": [{ "op": "text-delete-line", "contiene": "| `trace_id` | text |  | nuevo por turno |" }] }],
+    "esperado": { "archivo": "docs/architecture/data-model.md", "rutaContiene": "clinical.conversation_turn", "mensajeContiene": "clinical.conversation_turn debe declarar trace_id" }
+  }
+]
