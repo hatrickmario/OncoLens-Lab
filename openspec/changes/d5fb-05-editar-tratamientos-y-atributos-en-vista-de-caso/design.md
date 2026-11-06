@@ -39,7 +39,7 @@ Estado verificado en el repo:
 - **D5 · Normalización (ADR-33, RN-27).** Si cambia `regimenName`, `ReconciliationService` de Backend 1 decide de nuevo
   `atcCodes` y `mappingStatus` con el catálogo versionado; sin mapeo queda `no_mapeado` sin código, nunca inventado ni
   descartado. `regimenName` se conserva tal como llegó. El cliente nunca envía códigos.
-- **D6 · Faltantes y vigencia sin código nuevo de detección.** `GET …/completeness` calcula el checklist en cada lectura
+- **D6 · Faltantes y vigencia sin código nuevo de detección.** (Ajuste de la fase 1, 2026-11-05: en la rama base `staleness` es neutro y no hay detector ni lectura del historial; el change demuestra checklist y huella distinta, y la marca `staleness.patientData` queda TRASLADADA a US-175 / L1D-148.) `GET …/completeness` calcula el checklist en cada lectura
   desde las filas vigentes: al reemplazarse la fila, el ítem cambia de estado solo. El detector de vigencia
   (`Staleness`) compara la huella del contexto (`huellaDelContexto`): la fila nueva cambia la huella, así que un
   análisis guardado pasa a `staleness.patientData = true` con `changedData` incluyendo `priorTreatments` o
