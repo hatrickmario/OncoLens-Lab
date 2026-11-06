@@ -82,5 +82,6 @@
   ],
   "pendingReviewCount": 1,
   "missingCriticalCount": 0,
-  "completenessAvailable": false
+  "completenessAvailable": false,
+  "aiAnalysisAvailable": true
 }

@@ -574,7 +574,8 @@ export const zPatientSummary = z.strictObject({
     recentBiomarkers: z.array(zBiomarker),
     pendingReviewCount: z.int().gte(0),
     missingCriticalCount: z.int().gte(0),
-    completenessAvailable: z.boolean().optional()
+    completenessAvailable: z.boolean().optional(),
+    aiAnalysisAvailable: z.boolean()
 });
 
 /**
@@ -1274,7 +1275,8 @@ export const zPatientSummaryWritable = z.strictObject({
     recentBiomarkers: z.array(zBiomarker),
     pendingReviewCount: z.int().gte(0),
     missingCriticalCount: z.int().gte(0),
-    completenessAvailable: z.boolean().optional()
+    completenessAvailable: z.boolean().optional(),
+    aiAnalysisAvailable: z.boolean()
 });
 
 export const zPatientId = z.uuid();
