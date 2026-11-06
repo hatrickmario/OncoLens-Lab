@@ -22,7 +22,14 @@ function CeldaDeFaltantes({
   paciente: PacienteDelMedico;
   textos: TextosDePacientes['tabla'];
 }) {
-  if (paciente.completenessAvailable === false) return <>{textos.faltantesNoDisponible}</>;
+  if (paciente.completenessAvailable === false) {
+    return (
+      <>
+        <span aria-hidden="true">{textos.faltantesNoDisponible}</span>
+        <span className="sr-only">{textos.faltantesNoDisponibleAccesible}</span>
+      </>
+    );
+  }
   if (!paciente.cancerTypeEnabled) {
     return (
       <>

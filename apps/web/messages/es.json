@@ -347,7 +347,8 @@
       "faltantesN": "{n} faltantes",
       "faltantesNoDisponible": "No disponible",
       "faltantesNoAplica": "—",
-      "faltantesNoAplicaAccesible": "No aplica: sin cálculo para este tipo de cáncer",
+      "faltantesNoAplicaAccesible": "Sin cálculo de faltantes para este tipo de cáncer",
+      "faltantesNoDisponibleAccesible": "Cálculo no disponible para este paciente; la ficha sigue accesible",
       "porRevisarN": "{n} por revisar",
       "sinDato": "No disponible en esta vista"
     },
