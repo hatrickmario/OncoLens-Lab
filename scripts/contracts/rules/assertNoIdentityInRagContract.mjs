@@ -18,6 +18,23 @@ const ALLOWED_ROOT = '#/paths/~1documents~1extract/post/responses/200/content/ap
 const ALLOWED_PROPERTY = 'identityFound';
 const EXAMPLE_ALLOWED_POINTER = '#/identityFound';
 
+/**
+ * Identificadores del chat (L1D-316, S6-glosario §2) permitidos SOLO en su puntero exacto del spec: no son una lista blanca
+ * de nombres, así que el mismo nombre en cualquier otro esquema sigue siendo hallazgo.
+ */
+const EXENTOS_POR_PUNTERO = new Set([
+  '#/components/schemas/ChatCitation/properties/documentId', // documento del catálogo del corpus, no clínico
+  '#/components/schemas/ChatTurnRequest/properties/threadId', // UUID aleatorio de la conversación (nunca patientId)
+  '#/components/schemas/StructuredState/properties/ultimaEvidencia/properties/chunkIds', // chunkId del corpus
+]);
+/** Mismas claves en los ejemplos `chat-turn-*`, por ruta exacta. */
+const EXENTOS_EN_EJEMPLOS = [
+  /^#\/threadId$/,
+  /^#\/(?:rehydration\/)?structuredState\/ultimaEvidencia\/chunkIds$/,
+  /^#\/structuredState\/ultimaEvidencia\/chunkIds$/,
+  /^#\/blocks\/\d+\/citations\/\d+\/documentId$/,
+];
+
 /** Cada schema de contenido de un cuerpo o de una respuesta, con su puntero físico. */
 function* contentSchemas(message, isRequest) {
   for (const [mediaType, media] of Object.entries(message?.node?.content ?? {})) {
@@ -43,6 +60,7 @@ function checkMessage(file, spec, { schema, pointer, isRequest }) {
   const found = [];
   walkResolved(spec, schema, pointer, ({ schema: node, pointer: where, chain, viaProperty }) => {
     if (viaProperty === ALLOWED_PROPERTY && pointer === ALLOWED_ROOT && chain.length === 1) return false;
+    if (EXENTOS_POR_PUNTERO.has(where)) return undefined;
     if (viaProperty !== null && (matchesIdentityB2(viaProperty) || viaProperty === ALLOWED_PROPERTY)) {
       found.push(report(file, where, `la propiedad ${viaProperty} es identidad o un identificador enlazable: no puede cruzar a Backend 2`));
     }
@@ -57,7 +75,7 @@ function checkExamples(examples) {
     .filter((entry) => entry.spec === RAG_ORCHESTRATOR)
     .flatMap((entry) =>
       [...walkJson(examples.files?.[entry.file] ?? {})]
-        .filter(({ key, pointer }) => key !== null && matchesIdentityB2(key) && !(entry.file === 'document-extract-response.json' && pointer.startsWith(`${EXAMPLE_ALLOWED_POINTER}/`)))
+        .filter(({ key, pointer }) => key !== null && matchesIdentityB2(key) && !(entry.file.startsWith('chat-turn-') && EXENTOS_EN_EJEMPLOS.some((r) => r.test(pointer))) && !(entry.file === 'document-extract-response.json' && pointer.startsWith(`${EXAMPLE_ALLOWED_POINTER}/`)))
         .map(({ pointer, key }) => report(`${examples.dir}/${entry.file}`, pointer, `la clave ${key} es identidad o un identificador enlazable`)),
     );
 }

@@ -74,7 +74,6 @@ export const NAME_ALLOWLIST = [
   // originalFilename y fileName NO están aquí: un nombre de archivo puede llevar identidad y no cruza a Backend 2 (RN-10);
   // en los ejemplos los cubre la regla SINT- de assertExamplesSynthetic (resp. 41, PG #1).
   'pseudoPatientId', // seudónimo aleatorio por consulta (RN-11), nunca en el prompt
-  'documentId', // documento del catálogo del corpus en ChatCitation (S6-glosario §2), nunca un documento clínico (L1D-316)
 ].map(normalizeName);
 
 /** Cada nombre que se prueba: el completo y cada tramo contiguo del nombre partido por separadores (`X-Patient-Email`) y por camelCase (`patientEmail`). */
@@ -95,9 +94,6 @@ function candidateNames(name) {
  */
 export const IDENTIFIER_ALLOWLIST = [
   'chunkId', // referencia best-effort a un chunk del corpus
-  'chunkIds', // lista de chunkId del corpus (StructuredState.ultimaEvidencia, S6-glosario §2)
-  'documentId', // documento del catálogo del corpus (no clínico); también en NAME_ALLOWLIST (L1D-316)
-  'threadId', // UUID aleatorio de la conversación, emitido por Backend 1; nunca patientId ni pseudoPatientId (ADR-51)
   'externalId', // identificador de la fuente del corpus (DOI, NCT, PMID)
   'traceId', // trazabilidad de la llamada, nuevo por turno
   'X-Trace-Id', // la misma trazabilidad como cabecera (NFR-10); solo este nombre exacto, no 'X-Patient-Trace-Id'
