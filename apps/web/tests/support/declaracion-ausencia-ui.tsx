@@ -3,11 +3,18 @@ import { http, HttpResponse, type JsonBodyType } from 'msw';
 import { setupServer } from 'msw/node';
 import atributoCreado from '../../../../contracts/examples/clinical-attribute-creado.json';
 import checklistDeclarado from '../../../../contracts/examples/completeness-sin-tratamiento-previo.json';
+import errorValorFueraDeCatalogo from '../../../../contracts/examples/error-valor-fuera-de-catalogo-campo.json';
 import errorIncoherente from '../../../../contracts/examples/error-declaracion-incoherente.json';
 import { VistaDeCaso } from '../../components/organisms/vista-de-caso';
 import { casoPCaso, casoVacio, HOY, ID_DEL_CASO } from './caso-ui';
 
 export { casoPCaso, casoVacio, checklistDeclarado, errorIncoherente, HOY, ID_DEL_CASO };
+
+/** 422 `VALOR_FUERA_DE_CATALOGO` sobre `attributeKey` (clave no permitida para el tipo de cáncer): mismo `field` que la incoherencia. */
+export const errorClaveFueraDeCatalogo = {
+  ...errorValorFueraDeCatalogo,
+  field: 'attributeKey',
+};
 
 /** El ítem del ejemplo del contrato, sin tratamientos ni declaración: el estado que ve el oncólogo antes de declarar. */
 export const checklistFaltante = {
@@ -38,6 +45,20 @@ export const declaracionVigente = {
 };
 
 export const casoConDeclaracion = { ...casoVacio, attributes: [declaracionVigente] };
+
+/** Declaración vigente sin fecha de observación: distinta de «sin declaración». */
+export const casoConDeclaracionSinFecha = {
+  ...casoVacio,
+  attributes: [{ ...declaracionVigente, observedAt: null }],
+};
+
+/** El ítem «Tratamientos previos» presente pero sin verificar: no es un faltante, así que no ofrece acción. */
+export const checklistSinVerificar = {
+  ...checklistDeclarado,
+  items: checklistDeclarado.items.map((i) =>
+    i.item === 'tratamientos_previos' ? { ...i, status: 'presente_sin_verificar' } : i,
+  ),
+};
 
 export interface PeticionAlBff {
   metodo: string;

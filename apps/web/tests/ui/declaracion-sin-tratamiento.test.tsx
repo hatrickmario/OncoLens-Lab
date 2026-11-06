@@ -6,12 +6,16 @@ import { zClinicalAttributeManualCreate } from '../../../../packages/api-contrac
 import { mensajes } from '../../lib/mensajes';
 import {
   casoConDeclaracion,
+  casoConDeclaracionSinFecha,
   casoPCaso,
   casoVacio,
   checklistDeclarado,
   checklistFaltante,
+  checklistSinVerificar,
   crearBffDeDeclaracionSimulado,
+  errorClaveFueraDeCatalogo,
   errorIncoherente,
+  HOY,
   montarCasoParaDeclarar,
 } from '../support/declaracion-ausencia-ui';
 
@@ -20,6 +24,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn(), refres
 const { registro, secciones, sinDatos } = mensajes().caso;
 const { tratamiento: t, errores } = registro;
 const d = t.declaracion;
+const { datosCriticos } = mensajes();
 const bff = crearBffDeDeclaracionSimulado({ caso: casoVacio, checklist: checklistFaltante });
 
 type Usuario = ReturnType<typeof userEvent.setup>;
@@ -37,6 +42,10 @@ async function abrirDesdeLaSeccion(usuario: Usuario) {
   await usuario.click(disparador);
   return { disparador, dialogo: await screen.findByRole('dialog', { name: t.titulo }) };
 }
+
+/** La fila «Tratamientos previos» de la columna «Datos críticos». */
+const filaDeTratamientos = (datos: ReturnType<typeof within>) =>
+  datos.getAllByRole('listitem').find((li) => li.textContent?.includes(secciones.tratamientos))!;
 
 const seccionDeTratamientos = () =>
   within(screen.getByRole('region', { name: secciones.tratamientos }));
@@ -65,17 +74,15 @@ describe('Declaración «Sin tratamiento previo a la fecha» en el diálogo de t
     expect(envios[0]?.cuerpo).toEqual({
       attributeKey: 'sin_tratamiento_previo',
       value: 'si',
-      observedAt: '2026-10-01',
+      observedAt: HOY,
     });
     expect(zClinicalAttributeManualCreate.safeParse(envios[0]?.cuerpo).success).toBe(true);
     expect(screen.queryByText(errores.obligatorio)).toBeNull();
-    const datos = within(screen.getByRole('region', { name: 'Datos críticos' }));
+    const datos = within(screen.getByRole('region', { name: datosCriticos.titulo }));
     await waitFor(() => {
-      const fila = datos
-        .getAllByRole('listitem')
-        .find((li) => li.textContent?.includes('Tratamientos previos'))!;
+      const fila = filaDeTratamientos(datos);
       expect(fila.textContent).not.toContain('Faltante');
-      expect(fila.textContent).toContain('Presente y verificado');
+      expect(fila.textContent).toContain(datosCriticos.estado.presente_verificado);
       expect(fila.textContent).toContain(d.declarado);
     });
     expect(seccionDeTratamientos().getByText(d.sinTratamiento)).toBeTruthy();
@@ -95,7 +102,7 @@ describe('Declaración «Sin tratamiento previo a la fecha» en el diálogo de t
     expect(within(dialogo).queryByLabelText(t.contexto)).toBeNull();
     expect(within(dialogo).queryByLabelText(t.inicio)).toBeNull();
     expect(within(dialogo).queryByText(errores.obligatorio)).toBeNull();
-    expect(within(dialogo).getByLabelText(d.fecha)).toHaveProperty('value', '2026-10-01');
+    expect(within(dialogo).getByLabelText(d.fecha)).toHaveProperty('value', HOY);
     await usuario.click(within(dialogo).getByRole('button', { name: registro.guardar }));
     await waitFor(() => expect(bff.envios()).toHaveLength(1));
     const cuerpo = bff.envios()[0]?.cuerpo as Record<string, unknown>;
@@ -160,7 +167,7 @@ describe('Declaración «Sin tratamiento previo a la fecha» en el diálogo de t
     montarCasoParaDeclarar();
     const { dialogo } = await abrirDesdeLaSeccion(usuario);
 
-    expect(within(dialogo).getByText(/Sin tratamiento previo declarado el/)).toBeTruthy();
+    expect(within(dialogo).getByText(new RegExp(d.declaradoEl.split('{')[0]!))).toBeTruthy();
     expect(within(dialogo).getByText(d.reemplazo)).toBeTruthy();
     expect(within(dialogo).queryByRole('checkbox', { name: d.casilla })).toBeNull();
     expect(within(dialogo).getByLabelText(t.esquema)).toBeTruthy();
@@ -189,13 +196,11 @@ describe('Declaración «Sin tratamiento previo a la fecha» en el diálogo de t
   it('marca la fila de «Tratamientos previos» como declarada cuando resolvedBy es declaracion_de_ausencia [AC-04.1]', async () => {
     bff.reiniciar({ caso: casoConDeclaracion, checklist: checklistDeclarado });
     montarCasoParaDeclarar();
-    const datos = within(await screen.findByRole('region', { name: 'Datos críticos' }));
+    const datos = within(await screen.findByRole('region', { name: datosCriticos.titulo }));
 
     await waitFor(() => {
-      const fila = datos
-        .getAllByRole('listitem')
-        .find((li) => li.textContent?.includes('Tratamientos previos'))!;
-      expect(fila.textContent).toContain('Presente y verificado');
+      const fila = filaDeTratamientos(datos);
+      expect(fila.textContent).toContain(datosCriticos.estado.presente_verificado);
       expect(fila.textContent).toContain(d.declarado);
     });
   });
@@ -213,5 +218,54 @@ describe('Declaración «Sin tratamiento previo a la fecha» en el diálogo de t
 
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(document.activeElement).toBe(disparador);
+  });
+
+  it('no muestra el texto de tratamientos cuando el 422 es VALOR_FUERA_DE_CATALOGO sobre attributeKey [AC-04.1]', async () => {
+    bff.rechazarDeclaracion(422, errorClaveFueraDeCatalogo);
+    const usuario = userEvent.setup();
+    montarCasoParaDeclarar();
+    const { dialogo } = await abrirDesdeLaSeccion(usuario);
+    await usuario.click(within(dialogo).getByRole('checkbox', { name: d.casilla }));
+    await usuario.click(within(dialogo).getByRole('button', { name: registro.guardar }));
+
+    expect(await within(dialogo).findByText(errores.valorFueraDeCatalogo)).toBeTruthy();
+    expect(within(dialogo).queryByText(d.conTratamientos)).toBeNull();
+  });
+
+  it('no ofrece la casilla y avisa del reemplazo cuando la declaración vigente no tiene fecha [AC-04.1]', async () => {
+    bff.reiniciar({ caso: casoConDeclaracionSinFecha, checklist: checklistDeclarado });
+    const usuario = userEvent.setup();
+    montarCasoParaDeclarar();
+    const { dialogo } = await abrirDesdeLaSeccion(usuario);
+
+    expect(within(dialogo).queryByRole('checkbox', { name: d.casilla })).toBeNull();
+    expect(within(dialogo).getByText(d.reemplazo)).toBeTruthy();
+  });
+
+  it('no ofrece registrar desde el checklist cuando «Tratamientos previos» ya está presente sin verificar [AC-04.1]', async () => {
+    bff.reiniciar({ caso: casoVacio, checklist: checklistSinVerificar });
+    montarCasoParaDeclarar();
+    const datos = within(await screen.findByRole('region', { name: datosCriticos.titulo }));
+
+    await waitFor(() => {
+      const fila = filaDeTratamientos(datos);
+      expect(fila.textContent).toContain(datosCriticos.estado.presente_sin_verificar);
+    });
+    expect(within(filaDeTratamientos(datos)).queryByRole('button')).toBeNull();
+  });
+
+  it('descarta lo escrito al alternar entre el tratamiento y la declaración y devuelve el formulario vacío y validado [AC-04.1]', async () => {
+    const usuario = userEvent.setup();
+    montarCasoParaDeclarar();
+    const { dialogo } = await abrirDesdeLaSeccion(usuario);
+    await usuario.type(within(dialogo).getByLabelText(t.esquema), 'Anastrozol');
+    const casilla = within(dialogo).getByRole('checkbox', { name: d.casilla });
+    await usuario.click(casilla);
+    await usuario.click(casilla);
+
+    expect(within(dialogo).getByLabelText(t.esquema)).toHaveProperty('value', '');
+    await usuario.click(within(dialogo).getByRole('button', { name: registro.guardar }));
+    expect(await within(dialogo).findByText(errores.obligatorio)).toBeTruthy();
+    expect(bff.envios()).toHaveLength(0);
   });
 });
