@@ -1,4 +1,6 @@
 import type { Client } from 'pg';
+import type { FuenteDeConexiones } from '../../src/modules/compartido/transaccion.js';
+import { conectar } from './db.js';
 import {
   nuevoPaciente,
   sembrarAtributo,
@@ -221,4 +223,17 @@ export async function estadosDeLasDeclaraciones(
     [patientId],
   );
   return rows.map((fila) => fila.review_status);
+}
+
+/** Cada transacción abre su PROPIA conexión (como el Pool de producción): para probar el bloqueo entre peticiones. */
+export function fuenteIndependiente(escenario: EscenarioDeCorrecciones): FuenteDeConexiones {
+  return {
+    connect: async () => {
+      const cliente = await conectar(escenario.mundo.base.url);
+      return {
+        query: (sql, valores) => cliente.query(sql, valores),
+        release: () => void cliente.end(),
+      };
+    },
+  };
 }

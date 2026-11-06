@@ -1,6 +1,4 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import type { FuenteDeConexiones } from '../../../src/modules/compartido/transaccion.js';
-import { conectar } from '../../support/db.js';
 import {
   iniciarEscenarioDeCorrecciones,
   montarCorrecciones,
@@ -10,6 +8,7 @@ import {
   LEUPRORELINA,
   TRATAMIENTO_AC_T,
   contarTratamientosYAtributos,
+  fuenteIndependiente,
   filaDeTratamiento,
   mamaSinRegistros,
   prostataSinRegistros,
@@ -33,19 +32,6 @@ const FARMACO_EXPERIMENTAL = {
   ongoing: false,
   endReason: 'desconocido',
 } as const;
-
-/** Cada transacción abre su PROPIA conexión (como el Pool de producción): para probar el bloqueo entre peticiones. */
-function fuenteIndependiente(): FuenteDeConexiones {
-  return {
-    connect: async () => {
-      const cliente = await conectar(escenario.mundo.base.url);
-      return {
-        query: (sql, valores) => cliente.query(sql, valores),
-        release: () => void cliente.end(),
-      };
-    },
-  };
-}
 
 function corregir(patientId: string, treatmentId: string, cuerpo: unknown) {
   return clienteVerificado(montarCorrecciones(escenario.mundo).app)
@@ -248,7 +234,7 @@ describe('validación de la corrección: nada cambia ante un 422 o un 409', () =
     const { patientId, cliente } = await mamaSinRegistros(escenario);
     const original = await registrarTratamiento(escenario, patientId);
 
-    const { app } = montarCorrecciones(escenario.mundo, { fuente: fuenteIndependiente() });
+    const { app } = montarCorrecciones(escenario.mundo, { fuente: fuenteIndependiente(escenario) });
     const enviar = (cuerpo: object) =>
       clienteVerificado(app)
         .post(`/platform/patients/${patientId}/prior-treatments/${original}/corrections`)

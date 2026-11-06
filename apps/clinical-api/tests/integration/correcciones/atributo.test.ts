@@ -10,6 +10,7 @@ import {
   TRATAMIENTO_AC_T,
   contarTratamientosYAtributos,
   estadosDeLasDeclaraciones,
+  fuenteIndependiente,
   filaDeAtributo,
   mamaSinRegistros,
   registrarAtributo,
@@ -206,6 +207,29 @@ describe('validación de la corrección del atributo: nada cambia ante un 422 o 
     expect(respuesta.status).toBe(409);
     expect(respuesta.body.error).toBe('DATO_NO_VIGENTE');
     expect(await contarTratamientosYAtributos(cliente, patientId)).toEqual(antes);
+  });
+
+  it('crea una sola corrección y responde 409 a la otra cuando llegan dos correcciones concurrentes del mismo atributo [d5fb-05 AC-5] [RN-08]', async () => {
+    const { patientId, cliente } = await mamaSinRegistros(escenario);
+    const original = await registrarAtributo(escenario, patientId);
+    const { app } = montarCorrecciones(escenario.mundo, { fuente: fuenteIndependiente(escenario) });
+    const enviar = (cuerpo: object) =>
+      clienteVerificado(app)
+        .post(`/platform/patients/${patientId}/clinical-attributes/${original}/corrections`)
+        .set('Cookie', escenario.cookieDoctor)
+        .send(cuerpo);
+
+    const [uno, otro] = await Promise.all([
+      enviar({ value: 'premenopausica' }),
+      enviar({ value: 'perimenopausica' }),
+    ]);
+
+    expect([uno.status, otro.status].sort()).toEqual([201, 409]);
+    const { rows } = await cliente.query<{ n: number }>(
+      'SELECT count(*)::int AS n FROM clinical.clinical_attribute WHERE supersedes_id = $1',
+      [original],
+    );
+    expect(rows[0]?.n).toBe(1);
   });
 
   it('responde 404 sin escribir cuando el atributo es de otro paciente [d5fb-05 AC-5]', async () => {
