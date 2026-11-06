@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   RESPUESTA_INTERNA_INVALIDA,
+  esHiloDesconocido,
   mapearFalloRag,
+  mapearFalloRagDeChat,
 } from '../../../src/modules/evidence-analysis/rag-failure.js';
 import type { FalloDeRag } from '../../../src/modules/evidence-analysis/ports.js';
 
@@ -110,5 +112,65 @@ describe('mapearFalloRag', () => {
 describe('RESPUESTA_INTERNA_INVALIDA', () => {
   it('es un 502 ERROR_SERVICIO_IA', () => {
     expect(RESPUESTA_INTERNA_INVALIDA).toMatchObject({ status: 502, codigo: 'ERROR_SERVICIO_IA' });
+  });
+});
+
+describe('mapearFalloRag con un hilo desconocido (L1D-315)', () => {
+  it('traduce el 404 HILO_DESCONOCIDO a 502 ERROR_SERVICIO_IA con su propia etiqueta de log', () => {
+    expect(mapearFalloRag(fallo({ status: 404, codigo: 'HILO_DESCONOCIDO' }))).toEqual({
+      status: 502,
+      codigo: 'ERROR_SERVICIO_IA',
+      resultado: 'hilo_desconocido',
+    });
+  });
+
+  it('traduce cualquier otro 404 a 502 ERROR_SERVICIO_IA', () => {
+    expect(mapearFalloRag(fallo({ status: 404 }))).toMatchObject({
+      status: 502,
+      codigo: 'ERROR_SERVICIO_IA',
+    });
+  });
+});
+
+describe('esHiloDesconocido', () => {
+  it.each([
+    [fallo({ status: 404, codigo: 'HILO_DESCONOCIDO' }), true],
+    [fallo({ status: 404, codigo: 'OTRO' }), false],
+    [fallo({ status: 404 }), false],
+    [fallo({ status: 409, codigo: 'HILO_DESCONOCIDO' }), false],
+    [fallo({ status: null }), false],
+  ])('comparte criterio con el mapeo: %j → %s', (entrada, esperado) => {
+    expect(esHiloDesconocido(entrada)).toBe(esperado);
+    expect(mapearFalloRag(entrada).resultado === 'hilo_desconocido').toBe(esperado);
+  });
+});
+
+describe('mapearFalloRagDeChat', () => {
+  it('conserva el 409 CATALOG_VERSION_MISMATCH', () => {
+    expect(
+      mapearFalloRagDeChat(fallo({ status: 409, codigo: 'CATALOG_VERSION_MISMATCH' })),
+    ).toMatchObject({ status: 409, codigo: 'CATALOG_VERSION_MISMATCH' });
+  });
+
+  it.each([
+    ['422 de validación', fallo({ status: 422, codigo: 'CUERPO_INVALIDO' })],
+    ['422 TIPO_CANCER_NO_REGISTRADO', fallo({ status: 422, codigo: 'TIPO_CANCER_NO_REGISTRADO' })],
+  ])('expone el %s de Backend 2 como 502 ERROR_SERVICIO_IA', (_caso, entrada) => {
+    expect(mapearFalloRagDeChat(entrada)).toMatchObject({
+      status: 502,
+      codigo: 'ERROR_SERVICIO_IA',
+    });
+  });
+
+  it('conserva los 503 del LLM local y de la salida inválida', () => {
+    expect(
+      mapearFalloRagDeChat(fallo({ status: 503, codigo: 'LOCAL_LLM_UNAVAILABLE' })),
+    ).toMatchObject({ status: 503, codigo: 'LOCAL_LLM_UNAVAILABLE' });
+    expect(
+      mapearFalloRagDeChat(fallo({ status: 503, codigo: 'LLM_OUTPUT_INVALID' })),
+    ).toMatchObject({
+      status: 503,
+      codigo: 'LLM_OUTPUT_INVALID',
+    });
   });
 });

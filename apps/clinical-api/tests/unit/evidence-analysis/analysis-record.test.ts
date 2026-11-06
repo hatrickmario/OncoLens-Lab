@@ -36,9 +36,9 @@ function entrada(resto: Partial<EntradaDelRegistro> = {}): EntradaDelRegistro {
     continueWithWarning: true,
     request,
     dataRefs: new Map([
-      ['r10', { tabla: 'biomarker', id: 'bm-10' }],
-      ['r2', { tabla: 'biomarker', id: 'bm-2' }],
-      ['r1', { tabla: 'diagnosis', id: 'dx-1' }],
+      ['r10', { tabla: 'biomarker', id: 'bm-10', fecha: null }],
+      ['r2', { tabla: 'biomarker', id: 'bm-2', fecha: null }],
+      ['r1', { tabla: 'diagnosis', id: 'dx-1', fecha: null }],
     ]),
     respuesta,
     base,

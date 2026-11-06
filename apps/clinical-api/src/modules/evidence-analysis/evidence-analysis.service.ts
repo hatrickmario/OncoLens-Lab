@@ -7,7 +7,8 @@ import type {
   SourcesSelected,
 } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import { PacienteNoEncontradoError } from '../compartido/pacientes.errores.js';
-import { exigirTipoCancer, alcanceDelTipo } from './case-guards.js';
+import { alcanceDelTipo, exigirTipoCancer } from './case-guards.js';
+import { clasificacionDelPaciente } from './regla-proveedor.js';
 import {
   construirContextoPermitido,
   construirContextoSinDatosClinicos,
@@ -169,7 +170,7 @@ export function crearEvidenceAnalysisService(
       patientId: peticion.patientId,
       contexto: contextoVacio,
       query: peticion.query,
-      dataOrigin: caso.paciente.dataOrigin,
+      dataOrigin: clasificacionDelPaciente(caso.paciente),
     });
     return cierre.completarTipoNoHabilitado({
       traceId,
@@ -185,7 +186,7 @@ export function crearEvidenceAnalysisService(
         ahora.getUTCFullYear(),
         config.evidenceDefaultYears,
       ),
-      dataClassification: caso.paciente.dataOrigin,
+      dataClassification: clasificacionDelPaciente(caso.paciente),
       catalogVersion: catalogo.version(),
       contextoVacio,
     });
@@ -207,13 +208,13 @@ export function crearEvidenceAnalysisService(
       patientId: peticion.patientId,
       contexto,
       query: peticion.query,
-      dataOrigin: caso.paciente.dataOrigin,
+      dataOrigin: clasificacionDelPaciente(caso.paciente),
     });
     const request = armarRagQueryRequest({
       traceId,
       query,
       sourcesSelected: peticion.sourcesSelected,
-      dataClassification: caso.paciente.dataOrigin,
+      dataClassification: clasificacionDelPaciente(caso.paciente),
       catalogVersion: catalogo.version(),
       maxOptions: config.analysisMaxOptions,
       filtros: peticion.filtersApplied,

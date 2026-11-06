@@ -4,6 +4,9 @@ import type {
   EvidenceAnalysis,
 } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
 import type {
+  ChatCompletenessItem,
+  ChatTurnRequest,
+  ChatTurnResponse,
   ClinicalContext,
   DataClassification,
   RagFollowUpRequest,
@@ -50,6 +53,14 @@ export interface ChecklistDeFaltantes {
   faltantes(patientId: string): Promise<readonly string[]>;
 }
 
+/**
+ * Ítems del checklist de datos críticos tal como los ve el chat (`ChatCompletenessItem`, sin procedencia): el adaptador
+ * lo cablea la raíz de composición sobre `CompletenessService`. Falla cerrado como `ChecklistDeFaltantes`.
+ */
+export interface ChecklistDelChat {
+  items(patientId: string): Promise<readonly ChatCompletenessItem[]>;
+}
+
 export type OrigenDeDatos = DataClassification;
 
 /** Contexto que arma `construirContextoPermitido()`: todo el `ClinicalContext` salvo el seudónimo. */
@@ -59,6 +70,11 @@ export type ContextoPermitido = Omit<ClinicalContext, 'pseudoPatientId'>;
 export interface EnlaceDeDato {
   tabla: 'diagnosis' | 'biomarker' | 'clinical_attribute' | 'prior_treatment' | 'clinical_event';
   id: string;
+  /**
+   * Fecha `AAAA-MM-DD` confiable del dato, la misma que el builder usó para los meses relativos (`null` si no tiene o es
+   * `incierta`). Solo vive en Backend 1: no viaja a Backend 2 ni a `patientDataLinks`.
+   */
+  fecha: string | null;
 }
 export type MapaDeDataRefs = ReadonlyMap<string, EnlaceDeDato>;
 
@@ -212,4 +228,14 @@ export interface RagFollowUpPort {
     request: RagFollowUpRequest,
     opciones?: OpcionesDeConsultaRag,
   ): Promise<RespuestaDeSeguimientoRag>;
+}
+
+export type RespuestaDeTurnoRag = { ok: true; cuerpo: ChatTurnResponse } | FalloDeRag;
+
+/** Cliente de `/chat/turn` (L1D-315, ADR-51): el SDK generado sobre el transporte con JWT de servicio. El hilo vive en Backend 2. */
+export interface ChatTurnPort {
+  responder(
+    request: ChatTurnRequest,
+    opciones?: OpcionesDeConsultaRag,
+  ): Promise<RespuestaDeTurnoRag>;
 }

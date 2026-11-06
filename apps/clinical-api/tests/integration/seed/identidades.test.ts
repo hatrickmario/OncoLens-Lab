@@ -2,6 +2,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Client } from 'pg';
 import { SeedBloqueadoError } from '../../../prisma/seed/guarda.js';
 import { ejecutarSeed } from '../../../prisma/seed/principal.js';
+import { PACIENTE_CHAT } from '../../../prisma/seed/pacientes/chat.js';
+import { idSembrado } from '../../../prisma/seed/determinismo.js';
 import { PACIENTES_SEMILLA } from '../../../prisma/seed/pacientes/indice.js';
 import { conectar, type BaseDeTest } from '../../support/db.js';
 import { crearIndiceCiego } from '../../../src/infrastructure/crypto/indice-ciego.js';
@@ -29,11 +31,13 @@ describe('Identidades cifradas del seed sintético', () => {
   let archivos: ArchivosDeContrasena;
 
   const leerFilas = async () =>
+    // `P-CHAT` lleva su propia identidad sintética (no `SINT-n`): se prueba aparte, en `paciente-chat.test.ts`.
     (
       await cliente.query<FilaCruda>(
         `SELECT patient_id, id_type::text AS id_type, national_id_ciphertext, national_id_hmac, full_name_ciphertext,
                 patient_identity::text AS fila_como_texto
-           FROM identity.patient_identity ORDER BY patient_id`,
+           FROM identity.patient_identity WHERE patient_id <> $1 ORDER BY patient_id`,
+        [idSembrado(PACIENTE_CHAT)],
       )
     ).rows;
 

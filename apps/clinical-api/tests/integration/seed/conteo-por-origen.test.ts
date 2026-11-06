@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Client } from 'pg';
 import { contarPacientesPorOrigen } from '../../../prisma/seed/contar.js';
+import { PACIENTES_ADICIONALES_DEL_SEED } from '../../../prisma/seed/pacientes/chat.js';
 import { PACIENTES_SEMILLA } from '../../../prisma/seed/pacientes/indice.js';
 import { conectar, type BaseDeTest } from '../../support/db.js';
 import {
@@ -31,7 +32,7 @@ describe('contarPacientesPorOrigen', () => {
 
   it('cuenta todos los pacientes del seed como sintéticos y los otros dos orígenes en cero [US-142 AC-3]', async () => {
     await expect(contarPacientesPorOrigen(cliente)).resolves.toEqual({
-      sintetico: PACIENTES_SEMILLA.length,
+      sintetico: PACIENTES_SEMILLA.length + PACIENTES_ADICIONALES_DEL_SEED,
       real_anonimizado: 0,
       real_identificado: 0,
     });
@@ -46,7 +47,7 @@ describe('contarPacientesPorOrigen', () => {
     const conteo = await contarPacientesPorOrigen(cliente);
 
     expect(conteo).toEqual({
-      sintetico: PACIENTES_SEMILLA.length - 1,
+      sintetico: PACIENTES_SEMILLA.length + PACIENTES_ADICIONALES_DEL_SEED - 1,
       real_anonimizado: 1,
       real_identificado: 0,
     });

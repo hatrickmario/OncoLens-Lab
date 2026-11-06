@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { PACIENTES_ADICIONALES_DEL_SEED } from '../../../prisma/seed/pacientes/chat.js';
 import { PACIENTES_SEMILLA } from '../../../prisma/seed/pacientes/indice.js';
 import { idDePaciente } from '../../support/gateway.js';
 import { servicioDeIdentidad } from '../../support/identidad.js';
@@ -10,6 +11,9 @@ import {
   type EscenarioDePacientes,
 } from '../../support/pacientes.js';
 import { clienteVerificado } from '../../support/verificarProveedor.js';
+
+/** Los pacientes del seed: (a)–(m) más `P-CHAT` (L1D-315). */
+const TOTAL_DE_PACIENTES = PACIENTES_SEMILLA.length + PACIENTES_ADICIONALES_DEL_SEED;
 
 const ESPACIO_DE_IDS = 2020;
 let escenario: EscenarioDePacientes;
@@ -30,7 +34,7 @@ describe('listado de pacientes', () => {
     expect(respuesta.status).toBe(200);
     expect(respuesta.body.page).toBe(1);
     expect(respuesta.body.pageSize).toBe(PAGE_SIZE_DE_TEST);
-    expect(respuesta.body.total).toBe(PACIENTES_SEMILLA.length);
+    expect(respuesta.body.total).toBe(TOTAL_DE_PACIENTES);
     expect(respuesta.body.items).toHaveLength(PAGE_SIZE_DE_TEST);
     for (const elemento of respuesta.body.items) {
       expect(elemento).toMatchObject({
@@ -56,7 +60,7 @@ describe('listado de pacientes', () => {
   });
 
   it('filtra a vacío con dataOrigin=real_identificado y a todos los pacientes semilla con status=activo [US-048 AC-4]', async () => {
-    const { app } = montarPacientes(escenario.mundo, { pageSize: PACIENTES_SEMILLA.length });
+    const { app } = montarPacientes(escenario.mundo, { pageSize: TOTAL_DE_PACIENTES });
 
     const reales = await clienteVerificado(app)
       .get('/platform/patients?dataOrigin=real_identificado')
@@ -68,8 +72,8 @@ describe('listado de pacientes', () => {
     expect(reales.status).toBe(200);
     expect(reales.body).toMatchObject({ items: [], total: 0 });
     expect(activos.status).toBe(200);
-    expect(activos.body.total).toBe(PACIENTES_SEMILLA.length);
-    expect(activos.body.items).toHaveLength(PACIENTES_SEMILLA.length);
+    expect(activos.body.total).toBe(TOTAL_DE_PACIENTES);
+    expect(activos.body.items).toHaveLength(TOTAL_DE_PACIENTES);
   });
 
   it('responde 422 sin eco del valor cuando status está fuera del enum [US-048 AC-4]', async () => {
@@ -135,10 +139,8 @@ describe('listado de pacientes', () => {
     const ids = (cuerpo: { items: { id: string }[] }) =>
       cuerpo.items.map((elemento) => elemento.id);
     expect(segunda.body.page).toBe(2);
-    expect(ids(segunda.body)).toHaveLength(PACIENTES_SEMILLA.length - PAGE_SIZE_DE_TEST);
-    expect(new Set([...ids(primera.body), ...ids(segunda.body)]).size).toBe(
-      PACIENTES_SEMILLA.length,
-    );
+    expect(ids(segunda.body)).toHaveLength(TOTAL_DE_PACIENTES - PAGE_SIZE_DE_TEST);
+    expect(new Set([...ids(primera.body), ...ids(segunda.body)]).size).toBe(TOTAL_DE_PACIENTES);
   });
 
   it('responde 422 cuando page es 0 [US-048 AC-4]', async () => {
@@ -166,7 +168,7 @@ describe('listado de pacientes', () => {
 
   it('cuenta en pendingReviewCount los datos clínicos en requiere_revision del paciente [US-048 AC-1]', async () => {
     const paciente = idDePaciente('a');
-    const { app } = montarPacientes(escenario.mundo, { pageSize: PACIENTES_SEMILLA.length });
+    const { app } = montarPacientes(escenario.mundo, { pageSize: TOTAL_DE_PACIENTES });
     const pendientesDe = async (): Promise<number> => {
       const respuesta = await clienteVerificado(app)
         .get('/platform/patients')
