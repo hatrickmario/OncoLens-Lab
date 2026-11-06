@@ -415,6 +415,8 @@ jobs:
         run: pip install -r apps/rag-orchestrator/requirements-dev.txt
       - name: Lint (ESLint, sin advertencias)
         run: npm run lint
+      - name: Variables NEXT_PUBLIC_ solo de la lista permitida (US-216)
+        run: node scripts/ci/public-env.mjs
       - name: Formato (Prettier y ruff format)
         run: npm run format:check
       - name: format no modifica lo generado ni los openapi.yaml

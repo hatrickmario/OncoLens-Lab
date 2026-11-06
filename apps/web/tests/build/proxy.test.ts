@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 const raizWeb = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
 describe('build de producción de web (guard de páginas)', () => {
-  it('registra el proxy con el matcher /pacientes/:path* cuando se compila [US-211 AC-4]', () => {
+  it('registra el proxy con el matcher de toda la app salvo estáticos cuando se compila [US-211 AC-4] [US-216 AC-1]', () => {
     execFileSync('npx', ['next', 'build'], {
       cwd: raizWeb,
       env: {
@@ -26,6 +26,6 @@ describe('build de producción de web (guard de páginas)', () => {
     ) as { functions: Record<string, { matchers?: { originalSource: string }[] }> };
 
     const matchers = manifiesto.functions['/_middleware']?.matchers?.map((m) => m.originalSource);
-    expect(matchers).toEqual(['/pacientes/:path*']);
+    expect(matchers).toEqual(['/((?!_next/static|_next/image|icon.svg).*)']);
   }, 300_000);
 });
