@@ -1,3 +1,4 @@
+import type { DataClassification } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import type { CasoClinico } from './evidence-analysis.repository.js';
 import type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
 
@@ -27,4 +28,11 @@ export function alcanceDelTipo(
 ): EstadoDeHabilitacion {
   const tipo = caso.diagnosticoActivo?.cancerType;
   return tipo !== undefined && tipos.estaHabilitado(tipo) ? 'habilitado' : 'tipo_no_habilitado';
+}
+
+/** Clasificación de los datos del paciente que acompaña toda llamada a Backend 2 (RN-12): ÚNICO origen, la del paciente. */
+export function clasificacionDelPaciente(
+  paciente: Pick<CasoClinico['paciente'], 'dataOrigin'>,
+): DataClassification {
+  return paciente.dataOrigin;
 }

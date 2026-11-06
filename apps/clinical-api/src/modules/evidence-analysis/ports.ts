@@ -4,6 +4,9 @@ import type {
   EvidenceAnalysis,
 } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
 import type {
+  ChatCompletenessItem,
+  ChatTurnRequest,
+  ChatTurnResponse,
   ClinicalContext,
   DataClassification,
   RagFollowUpRequest,
@@ -48,6 +51,14 @@ export class EtiquetaDeDatoCriticoNoDisponibleError extends Error {
 /** Claves del catálogo en estado `faltante`, en el orden del catálogo (US-002). Lanza ChecklistNoDisponibleError. */
 export interface ChecklistDeFaltantes {
   faltantes(patientId: string): Promise<readonly string[]>;
+}
+
+/**
+ * Ítems del checklist de datos críticos tal como los ve el chat (`ChatCompletenessItem`, sin procedencia): el adaptador
+ * lo cablea la raíz de composición sobre `CompletenessService`. Falla cerrado como `ChecklistDeFaltantes`.
+ */
+export interface ChecklistDelChat {
+  items(patientId: string): Promise<readonly ChatCompletenessItem[]>;
 }
 
 export type OrigenDeDatos = DataClassification;
@@ -212,4 +223,11 @@ export interface RagFollowUpPort {
     request: RagFollowUpRequest,
     opciones?: OpcionesDeConsultaRag,
   ): Promise<RespuestaDeSeguimientoRag>;
+}
+
+export type RespuestaDeTurnoRag = { ok: true; cuerpo: ChatTurnResponse } | FalloDeRag;
+
+/** Cliente de `/chat/turn` (L1D-315, ADR-51): el SDK generado sobre el transporte con JWT de servicio. El hilo vive en Backend 2. */
+export interface ChatTurnPort {
+  responder(request: ChatTurnRequest, opciones?: OpcionesDeConsultaRag): Promise<RespuestaDeTurnoRag>;
 }

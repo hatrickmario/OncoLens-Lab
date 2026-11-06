@@ -1,9 +1,11 @@
 import {
   answerFollowUp,
+  chatTurn,
   ragQuery,
 } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import type { Client } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/client/index.js';
 import type {
+  ChatTurnPort,
   FalloDeRag,
   OpcionesDeConsultaRag,
   RagFollowUpPort,
@@ -80,6 +82,18 @@ export function crearRagFollowUpClient(sdk: Client): RagFollowUpPort {
     responder: (request, opciones) =>
       llamarARag(
         (comunes) => answerFollowUp({ client: sdk, body: request, ...comunes }),
+        request,
+        opciones,
+      ),
+  };
+}
+
+/** Puerto `ChatTurnPort` sobre el mismo SDK y la misma traducción de fallos: el `404 HILO_DESCONOCIDO` llega como `status 404` y `codigo`. */
+export function crearRagChatClient(sdk: Client): ChatTurnPort {
+  return {
+    responder: (request, opciones) =>
+      llamarARag(
+        (comunes) => chatTurn({ client: sdk, body: request, ...comunes }),
         request,
         opciones,
       ),

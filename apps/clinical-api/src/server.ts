@@ -33,9 +33,11 @@ import { crearDetectorOpcionA } from './modules/evidence-analysis/deidentificati
 import {
   componerGatewayDeAnalisis,
   crearChecklistDeFaltantes,
+  crearChecklistDelChat,
 } from './modules/evidence-analysis/evidence-analysis.module.js';
 import { cargarEtiquetasDeDatosCriticos } from './modules/evidence-analysis/etiquetas-datos-criticos.js';
 import {
+  crearRagChatClient,
   crearRagFollowUpClient,
   crearRagQueryClient,
 } from './modules/evidence-analysis/rag-query.adapter.js';
@@ -92,6 +94,12 @@ arrancar({
           db: pool,
           rag: crearRagQueryClient(clienteRag),
           ragFollowUp: crearRagFollowUpClient(clienteRag),
+          ragChat: crearRagChatClient(clienteRag),
+          // Conversación del chat (L1D-315): ids aleatorios; el hilo de Backend 2 nunca se deriva de un dato del paciente.
+          idsDeConversaciones: randomUUID,
+          idsDeTurnosDeChat: randomUUID,
+          idsDeHilos: randomUUID,
+          checklistDelChat: crearChecklistDelChat(completitud),
           enTransaccion: crearEjecutorDeTransacciones(pool),
           idsDeTurnos: randomUUID,
           catalogo,
@@ -102,6 +110,7 @@ arrancar({
             ragTimeoutMs: configuracion.analisis.ragTimeoutMs,
             analysisFollowupMax: configuracion.analisis.analysisFollowupMax,
             aiDisclaimerText: configuracion.analisis.aiDisclaimerText,
+            chatRehydrateTurns: configuracion.analisis.chatRehydrateTurns,
           },
           etiquetaDe: cargarEtiquetasDeDatosCriticos(
             configuracion.analisis.catalogPath,

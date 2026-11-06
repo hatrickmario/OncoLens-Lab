@@ -10,10 +10,19 @@ import type { ChecklistDelPaciente, CompletenessService } from '../completeness/
 import { crearBaseDelAnalisis } from './analysis-basis.js';
 import { crearAnalysisCompletion } from './analysis-completion.js';
 import { evidenceAnalysisController } from './evidence-analysis.controller.js';
+import { conversationController } from './conversation/conversation.controller.js';
+import { crearConversationRepository } from './conversation/conversation.repository.js';
+import {
+  crearConversationService,
+  type ConversationService,
+} from './conversation/conversation.service.js';
 import { followUpController } from './follow-up.controller.js';
 import { crearFollowUpRepository, type EjecutarEnTransaccion } from './follow-up.repository.js';
 import { crearFollowUpService, type FollowUpService } from './follow-up.service.js';
-import { createEvidenceAnalysisRepository } from './evidence-analysis.repository.js';
+import {
+  createEvidenceAnalysisRepository,
+  type CasoRepository,
+} from './evidence-analysis.repository.js';
 import {
   crearEvidenceAnalysisService,
   type ConfiguracionDelAnalisis,
@@ -22,7 +31,9 @@ import {
   ChecklistNoDisponibleError,
   type EtiquetaDeDatoCritico,
   type CatalogVersionProvider,
+  type ChatTurnPort,
   type ChecklistDeFaltantes,
+  type ChecklistDelChat,
   type ContextDeidentifier,
   type TraceIdGenerator,
   type RagFollowUpPort,
@@ -32,6 +43,8 @@ import {
 export interface ConfiguracionDelGateway extends ConfiguracionDelAnalisis {
   /** `AI_DISCLAIMER_TEXT` (RN-19, RN-22). */
   aiDisclaimerText: string;
+  /** `CHAT_REHYDRATE_TURNS` (RN-22): turnos que se reenvían a rag-orchestrator al rehidratar un hilo desconocido. */
+  chatRehydrateTurns: number;
 }
 
 export interface DependenciasDelGateway {
@@ -39,6 +52,14 @@ export interface DependenciasDelGateway {
   rag: RagQueryClient;
   /** Cliente de `/rag/follow-up` (US-218). */
   ragFollowUp: RagFollowUpPort;
+  /** Cliente de `/chat/turn` (L1D-315, ADR-51). */
+  ragChat: ChatTurnPort;
+  /** UUID de las conversaciones del chat, de sus turnos y de su hilo (`thread_id`, aleatorio): tres generadores. */
+  idsDeConversaciones: GeneradorDeIds;
+  idsDeTurnosDeChat: GeneradorDeIds;
+  idsDeHilos: GeneradorDeIds;
+  /** Ítems del checklist para el chat (L1D-315): lo cablea la raíz de composición sobre `CompletenessService`. */
+  checklistDelChat: ChecklistDelChat;
   /** Transacción sobre una conexión: el turno de seguimiento se inserta bajo bloqueo del análisis. */
   enTransaccion: EjecutarEnTransaccion;
   /** UUID de los turnos de seguimiento; distinto de `idsDeAnalisis`. */
@@ -80,6 +101,55 @@ export function crearChecklistDeFaltantes(completitud: CompletenessService): Che
       }
     },
   };
+}
+
+/** Destino del ítem como texto: `entidad` o `entidad.campo` (nombres del catálogo, nunca valores del paciente). */
+const destinoDelItem = ({ entity, field }: { entity: string; field: string | null }): string =>
+  field === null ? entity : `${entity}.${field}`;
+
+/**
+ * Adaptador del puerto `ChecklistDelChat` sobre `CompletenessService` (L1D-315): `gapType` es `no_encontrado` solo en un
+ * faltante y `null` en un dato presente; los tipos finos de faltante llegan con L1D-320. Falla cerrado como
+ * `crearChecklistDeFaltantes`.
+ */
+export function crearChecklistDelChat(completitud: CompletenessService): ChecklistDelChat {
+  return {
+    async items(patientId) {
+      try {
+        const checklist = await completitud.calcular(patientId);
+        return checklist.items.map((item) => ({
+          item: item.key,
+          label: item.label,
+          status: item.status,
+          gapType: item.status === 'faltante' ? ('no_encontrado' as const) : null,
+          destination: destinoDelItem(item.destination),
+        }));
+      } catch {
+        throw new ChecklistNoDisponibleError();
+      }
+    },
+  };
+}
+
+/** Servicio de la conversación (L1D-315): comparte desidentificador, catálogo, reloj y configuración con el gateway. */
+function componerConversacion(
+  dependencias: DependenciasDelGateway,
+  casos: CasoRepository,
+): ConversationService {
+  const { ragTimeoutMs, chatRehydrateTurns } = dependencias.config;
+  return crearConversationService({
+    conversaciones: crearConversationRepository(dependencias.db, dependencias.enTransaccion),
+    casos,
+    checklist: dependencias.checklistDelChat,
+    desidentificador: dependencias.desidentificador,
+    rag: dependencias.ragChat,
+    catalogo: dependencias.catalogo,
+    reloj: dependencias.reloj,
+    idsDeConversaciones: dependencias.idsDeConversaciones,
+    idsDeTurnos: dependencias.idsDeTurnosDeChat,
+    idsDeHilos: dependencias.idsDeHilos,
+    config: { ragTimeoutMs, chatRehydrateTurns },
+  });
 }
 
 /** Servicio del seguimiento (US-218): comparte desidentificador, catálogo, reloj y configuración con el gateway. */
@@ -125,12 +195,20 @@ export function componerGatewayDeAnalisis(dependencias: DependenciasDelGateway):
     traceIds: dependencias.traceIds,
     registrar: dependencias.registrar,
   });
-  return followUpController(
+  const conSeguimiento = followUpController(
     {
       service: componerSeguimiento(dependencias),
       traceIds: dependencias.traceIds,
       registrar: dependencias.registrar,
     },
     router,
+  );
+  return conversationController(
+    {
+      service: componerConversacion(dependencias, repositorio),
+      traceIds: dependencias.traceIds,
+      registrar: dependencias.registrar,
+    },
+    conSeguimiento,
   );
 }
