@@ -12,6 +12,8 @@ export interface DescripcionDeProxyDeLectura {
   evento: string;
   /** Mensaje fijo del único 5xx que sale al navegador. */
   mensajeDeFallo: string;
+  /** Mensaje fijo del `404` propio por id inválido; por defecto el del paciente. */
+  mensajeNoEncontrado?: string;
   idValido: (patientId: string) => boolean;
   /** Llama a la operación del SDK generado con `parseAs: 'text'`. */
   pedir: (sdk: SdkClinicalApi, patientId: string) => Promise<{ response?: Response }>;
@@ -45,7 +47,11 @@ export function crearProxyDeLectura(
     const traceId = dependencias.nuevoTraceId();
     dependencias.registrar({ event: evento, status: 404, traceId });
     return respuestaPropia(
-      { error: 'NO_ENCONTRADO', message: 'Paciente no encontrado.', traceId },
+      {
+        error: 'NO_ENCONTRADO',
+        message: descripcion.mensajeNoEncontrado ?? 'Paciente no encontrado.',
+        traceId,
+      },
       404,
     );
   };

@@ -128,7 +128,11 @@ describe('POST /api/conversations/{conversationId}/turns', () => {
     );
 
     expect(respuesta.status).toBe(404);
-    assertMatchesSpec('clinical-api', '#/components/schemas/ErrorNoEncontrado', await respuesta.json());
+    assertMatchesSpec(
+      'clinical-api',
+      '#/components/schemas/ErrorNoEncontrado',
+      await respuesta.json(),
+    );
     expect(recibidas).toHaveLength(0);
   });
 });
