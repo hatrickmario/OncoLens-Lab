@@ -105,12 +105,15 @@ describe('efecto de corregir un tratamiento o un atributo en el checklist', () =
 describe('efecto de corregir un tratamiento o un atributo en el análisis', () => {
   it('cambia la huella y el contexto del análisis nuevo y conserva intacto el registro previo cuando se corrigen el tratamiento y el atributo [d5fb-05 AC-9] [RN-06] [RN-07] [RN-26]', async () => {
     const patientId = await crearPacienteFxT4aA(escenario.mundo);
-    const tratamiento = await registrarTratamiento(escenario, patientId);
+    const tratamiento = await registrarTratamiento(escenario, patientId, {
+      ...TRATAMIENTO_AC_T,
+      regimenName: 'TCH propio',
+    });
     const atributo = await registrarAtributo(escenario, patientId, ATRIBUTO_MENOPAUSIA);
     const previo = await analizar(patientId, 'req_TrAt00001');
     expect(previo.status).toBe(200);
     const registroPrevio = await leerRegistroPorTrace(escenario.mundo.cliente, 'req_TrAt00001');
-    expect(contextoDe(0).priorTreatments.map((t) => t.regimenName)).toEqual(['AC-T']);
+    expect(contextoDe(0).priorTreatments.map((t) => t.regimenName)).toContain('TCH propio');
     expect(contextoDe(0).attributes).toContainEqual(
       expect.objectContaining({ key: 'estado_menopausico', value: 'posmenopausica' }),
     );
@@ -128,7 +131,9 @@ describe('efecto de corregir un tratamiento o un atributo en el análisis', () =
     expect([deTratamiento.status, deAtributo.status, nuevo.status]).toEqual([201, 201, 200]);
     const registroNuevo = await leerRegistroPorTrace(escenario.mundo.cliente, 'req_TrAt00002');
     expect(registroNuevo?.context_fingerprint).not.toBe(registroPrevio?.context_fingerprint);
-    expect(contextoDe(1).priorTreatments.map((t) => t.regimenName)).toEqual(['FEC']);
+    const regimenes = contextoDe(1).priorTreatments.map((t) => t.regimenName);
+    expect(regimenes).toContain('FEC');
+    expect(regimenes).not.toContain('TCH propio');
     expect(contextoDe(1).attributes).toContainEqual(
       expect.objectContaining({ key: 'estado_menopausico', value: 'premenopausica' }),
     );

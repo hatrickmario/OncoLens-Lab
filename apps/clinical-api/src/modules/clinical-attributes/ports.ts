@@ -37,10 +37,12 @@ export interface AtributoAGuardar {
   readonly value: string;
   readonly observedAt: string | null;
   readonly datePrecision: PrecisionDeFecha;
-  readonly entryMethod: 'manual';
+  readonly entryMethod: 'manual' | 'manual_correction';
   readonly extractionConfidence: 'n_a';
   readonly reviewStatus: 'verificado';
   readonly createdAt: Date;
+  /** Fila a la que esta corrección reemplazó (ADR-50, d5fb-05); `null` en un registro nuevo. */
+  readonly supersedesId: string | null;
 }
 
 /** Atributo vigente tal como lo lee la lista (con su procedencia). */
@@ -54,6 +56,7 @@ export interface AtributoLeido {
   readonly extractionConfidence: 'alta' | 'media' | 'baja' | 'n_a';
   readonly reviewStatus: 'auto_aceptado' | 'requiere_revision' | 'verificado' | 'corregido';
   readonly sourceDocumentId: string | null;
+  readonly supersedesId: string | null;
 }
 
 /** Operaciones de UNA transacción (el repository las ejecuta sobre una sola conexión). */

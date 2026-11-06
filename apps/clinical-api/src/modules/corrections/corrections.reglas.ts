@@ -1,16 +1,24 @@
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import { ESTADOS_DESCARTADOS, type EstadoDeRevision } from '../compartido/estados-de-revision.js';
+import type { AtributoPermitido } from '../clinical-attributes/ports.js';
 import { ValorFueraDeCatalogoError } from '../compartido/errores-de-registro.js';
+import { armarTratamientoManual } from '../prior-treatments/prior-treatments.tratamiento.js';
+import { motivoDeFinPersistido } from '../prior-treatments/prior-treatments.reglas.js';
+import type { CuerpoDeTratamiento } from '../prior-treatments/prior-treatments.schema.js';
 import { estadoPersistible, type DecisionDeNormalizacion } from '../reconciliation/ports.js';
 import { CorreccionInvalidaError, DatoNoVigenteError } from './corrections.errores.js';
 import type {
+  AtributoActual,
   BiomarcadorActual,
   BiomarcadorCorregidoAGuardar,
   ExamenDeCorreccionAGuardar,
   NotaActual,
+  PlanDeCorreccionDeAtributo,
   PlanDeCorreccionDeBiomarcador,
   PlanDeCorreccionDeNota,
+  PlanDeCorreccionDeTratamiento,
   TipoDeNota,
+  TratamientoActual,
 } from './ports.js';
 
 /** Cambios que el cuerpo de la corrección de un biomarcador propone (ausente = no cambia). */
@@ -24,6 +32,15 @@ export interface CambiosDeBiomarcador {
 export interface CambiosDeNota {
   readonly content?: string | undefined;
   readonly noteType?: TipoDeNota | undefined;
+}
+
+/** Reemplazo completo de los campos editables del tratamiento (ausente = nulo): el mismo cuerpo que el alta. */
+export type CambiosDeTratamiento = CuerpoDeTratamiento;
+
+/** La clave del atributo no cambia: solo el valor y, si se envía, la fecha de observación. */
+export interface CambiosDeAtributo {
+  readonly value: string;
+  readonly observedAt?: string | undefined;
 }
 
 /** Quién, cuándo y con qué ids se crean las filas de la corrección (reloj e ids inyectados, sin `Date.now()`). */
@@ -217,6 +234,111 @@ export function planDeCorreccionDeNota(
       reviewStatus: 'verificado',
       supersedesId: actual.id,
       createdAt: contexto.ahora,
+    },
+  };
+}
+
+/** ¿La corrección cambia algún campo real del tratamiento? Una corrección idéntica no crea filas (RN-08). */
+export function hayCambioRealDeTratamiento(
+  actual: TratamientoActual,
+  cambios: CambiosDeTratamiento,
+): boolean {
+  return (
+    (cambios.lineNumber ?? null) !== actual.lineNumber ||
+    cambios.setting !== actual.setting ||
+    cambios.regimenName !== actual.regimenName ||
+    (cambios.startedAt ?? null) !== actual.startedAt ||
+    (cambios.endedAt ?? null) !== actual.endedAt ||
+    cambios.ongoing !== actual.ongoing ||
+    motivoDeFinPersistido(cambios) !== actual.endReason
+  );
+}
+
+export function exigirCorreccionValidaDeTratamiento(
+  actual: TratamientoActual,
+  cambios: CambiosDeTratamiento,
+): void {
+  if (!hayCambioRealDeTratamiento(actual, cambios)) throw new CorreccionInvalidaError();
+}
+
+export function hayCambioRealDeAtributo(
+  actual: AtributoActual,
+  cambios: CambiosDeAtributo,
+): boolean {
+  return (
+    cambios.value !== actual.value ||
+    (cambios.observedAt !== undefined && cambios.observedAt !== actual.observedAt)
+  );
+}
+
+export function exigirCorreccionValidaDeAtributo(
+  actual: AtributoActual,
+  cambios: CambiosDeAtributo,
+): void {
+  if (!hayCambioRealDeAtributo(actual, cambios)) throw new CorreccionInvalidaError();
+}
+
+/**
+ * RN-29: el valor corregido debe estar en la lista del catálogo para la clave del atributo y el tipo de cáncer del
+ * diagnóstico vigente. Sin lista (clave no declarada o sin diagnóstico) tampoco se puede validar: `field = value`.
+ */
+export function exigirValorDelCatalogo(
+  permitidos: readonly AtributoPermitido[],
+  attributeKey: string,
+  valor: string,
+): void {
+  const declarado = permitidos.find((p) => p.key === attributeKey);
+  if (declarado === undefined || !declarado.values.some((v) => v.value === valor)) {
+    throw new ValorFueraDeCatalogoError('value');
+  }
+}
+
+/**
+ * `planDeCorreccion()` del tratamiento (RN-08, ADR-50): fila nueva con el esquema normalizado por la decisión
+ * (RN-27, nunca por el cliente) y el mismo episodio; la anterior pasa a `reemplazado`.
+ */
+export function planDeCorreccionDeTratamiento(
+  actual: TratamientoActual,
+  cambios: CambiosDeTratamiento,
+  decision: DecisionDeNormalizacion,
+  contexto: ContextoDeCorreccion,
+): PlanDeCorreccionDeTratamiento {
+  const nuevo = armarTratamientoManual({
+    cuerpo: cambios,
+    decision,
+    patientId: contexto.patientId,
+    episodeId: actual.episodeId,
+    ahora: contexto.ahora,
+    generarId: contexto.generarId,
+  });
+  return {
+    tratamientoAReemplazar: actual.id,
+    tratamiento: { ...nuevo, entryMethod: 'manual_correction', supersedesId: actual.id },
+  };
+}
+
+/** `planDeCorreccion()` del atributo: misma clave y episodio; sin fecha nueva conserva la anterior y su precisión. */
+export function planDeCorreccionDeAtributo(
+  actual: AtributoActual,
+  cambios: CambiosDeAtributo,
+  contexto: ContextoDeCorreccion,
+): PlanDeCorreccionDeAtributo {
+  const conFechaNueva = cambios.observedAt !== undefined;
+  return {
+    atributoAReemplazar: actual.id,
+    atributo: {
+      id: contexto.generarId(),
+      patientId: contexto.patientId,
+      episodeId: actual.episodeId,
+      attributeKey: actual.attributeKey,
+      value: cambios.value,
+      observedAt: cambios.observedAt ?? actual.observedAt,
+      datePrecision: conFechaNueva ? 'dia' : actual.datePrecision,
+      entryMethod: 'manual_correction',
+      extractionConfidence: 'n_a',
+      reviewStatus: 'verificado',
+      createdAt: contexto.ahora,
+      supersedesId: actual.id,
     },
   };
 }

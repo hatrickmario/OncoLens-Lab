@@ -9,17 +9,18 @@ import type {
   TratamientoAGuardar,
 } from './ports.js';
 
-async function guardarTratamiento(db: Consultador, t: TratamientoAGuardar): Promise<void> {
+/** INSERT único del tratamiento previo: el alta manual y la corrección con histórico (ADR-50) lo comparten. */
+export async function guardarTratamiento(db: Consultador, t: TratamientoAGuardar): Promise<void> {
   await db.query(
     `INSERT INTO clinical.prior_treatment (id, patient_id, episode_id, source_document_id, line_number, setting,
                                            regimen_name, atc_codes, cups_code, mapping_status, started_at, ended_at,
                                            ongoing, end_reason, best_response, entry_method, extraction_confidence,
-                                           review_status, source_span, created_at)
-     VALUES ($1, $2, $3, NULL, $4, $5, $6, $7, NULL, $8, $9, $10, $11, $12, NULL, $13, $14, $15, NULL, $16)`,
+                                           review_status, source_span, created_at, supersedes_id)
+     VALUES ($1, $2, $3, NULL, $4, $5, $6, $7, NULL, $8, $9, $10, $11, $12, NULL, $13, $14, $15, NULL, $16, $17)`,
     [
       ...[t.id, t.patientId, t.episodeId, t.lineNumber, t.setting, t.regimenName],
       ...[[...t.atcCodes], t.mappingStatus, t.startedAt, t.endedAt, t.ongoing, t.endReason],
-      ...[t.entryMethod, t.extractionConfidence, t.reviewStatus, t.createdAt],
+      ...[t.entryMethod, t.extractionConfidence, t.reviewStatus, t.createdAt, t.supersedesId],
     ],
   );
 }

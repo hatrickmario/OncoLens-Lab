@@ -53,6 +53,7 @@ const tratamiento = (resto: Partial<TratamientoPrevioLeido> = {}): TratamientoPr
   endReason: 'desconocido',
   createdAt: '2026-10-01T12:00:00.000000Z',
   procedencia: MANUAL,
+  supersedesId: null,
   ...resto,
 });
 

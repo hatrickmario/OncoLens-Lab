@@ -71,6 +71,7 @@ export interface TratamientoPrevioLeido {
   readonly endReason: string;
   readonly createdAt: InstanteIso;
   readonly procedencia: ProcedenciaDeFila;
+  readonly supersedesId: string | null;
 }
 
 export interface EventoClinicoLeido {
@@ -91,6 +92,7 @@ export interface AtributoLeido {
   readonly value: string;
   readonly observedAt: FechaIso | null;
   readonly procedencia: ProcedenciaDeFila;
+  readonly supersedesId: string | null;
 }
 
 export type TipoDeRegistroDeIa = 'analisis_evidencia' | 'resumen_caso';

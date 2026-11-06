@@ -1,6 +1,8 @@
+import type { AtributoAGuardar, PrecisionDeFecha } from '../clinical-attributes/ports.js';
 import type { EstadoDeRevision } from '../compartido/estados-de-revision.js';
 import type { PacienteBloqueable } from '../compartido/paciente-activo.js';
 import type { MetodoDeEntrada } from '../manual-entry/ports.js';
+import type { MotivoDeFin, TratamientoAGuardar } from '../prior-treatments/ports.js';
 
 /*
  * Glosario: «corrección» es una fila nueva `manual_correction` verificada que apunta con `supersedes_id` a la vigente,
@@ -37,6 +39,34 @@ export interface NotaActual {
   readonly content: string;
   /** `YYYY-MM-DD` (`recorded_at`): la nota corregida conserva la fecha de la anterior (D6). */
   readonly recordedAt: string;
+  readonly reviewStatus: EstadoDeRevision;
+}
+
+/** Tratamiento previo tal como está guardado: los campos editables y lo que la corrección conserva (episodio). */
+export interface TratamientoActual {
+  readonly id: string;
+  readonly episodeId: string;
+  readonly lineNumber: number | null;
+  readonly setting: string;
+  /** Tal como lo escribió quien registró (dato clínico: nunca va a logs). */
+  readonly regimenName: string;
+  /** `YYYY-MM-DD` o `null`. */
+  readonly startedAt: string | null;
+  readonly endedAt: string | null;
+  readonly ongoing: boolean;
+  readonly endReason: MotivoDeFin;
+  readonly reviewStatus: EstadoDeRevision;
+}
+
+/** Atributo clínico tal como está guardado: la clave es inmutable, el valor y la fecha se corrigen. */
+export interface AtributoActual {
+  readonly id: string;
+  readonly episodeId: string;
+  readonly attributeKey: string;
+  readonly value: string;
+  /** `YYYY-MM-DD` o `null`. */
+  readonly observedAt: string | null;
+  readonly datePrecision: PrecisionDeFecha;
   readonly reviewStatus: EstadoDeRevision;
 }
 
@@ -98,6 +128,17 @@ export interface PlanDeCorreccionDeBiomarcador {
   readonly biomarcadorAReemplazar: string;
 }
 
+export interface PlanDeCorreccionDeTratamiento {
+  /** La fila nueva: `manual_correction`, verificada, con `supersedesId` hacia la anterior. */
+  readonly tratamiento: TratamientoAGuardar;
+  readonly tratamientoAReemplazar: string;
+}
+
+export interface PlanDeCorreccionDeAtributo {
+  readonly atributo: AtributoAGuardar;
+  readonly atributoAReemplazar: string;
+}
+
 export interface PlanDeCorreccionDeNota {
   readonly nota: NotaCorregidaAGuardar;
   readonly notaAReemplazar: string;
@@ -126,12 +167,18 @@ export interface VersionReemplazada {
   readonly unit?: string | null;
   readonly content?: string;
   readonly noteType?: TipoDeNota;
+  /** Esquema de la versión reemplazada; solo en tratamientos previos. */
+  readonly regimenName?: string;
 }
 
 /** Operaciones de UNA transacción de corrección (una sola conexión, paciente bloqueado). */
 export interface TransaccionDeCorreccion extends PacienteBloqueable {
   /** `null` si el biomarcador no existe o es de otro paciente (404). */
   biomarcador(patientId: string, biomarkerId: string): Promise<BiomarcadorActual | null>;
+  /** `null` si el tratamiento no existe o es de otro paciente (404). */
+  tratamiento(patientId: string, treatmentId: string): Promise<TratamientoActual | null>;
+  /** `null` si el atributo no existe o es de otro paciente (404). */
+  atributo(patientId: string, attributeId: string): Promise<AtributoActual | null>;
   /** `null` si la nota no existe o es de otro paciente (404). */
   nota(patientId: string, noteId: string): Promise<NotaActual | null>;
   /** Biomarcadores vigentes del examen distintos de `exceptoId` (D3). */
@@ -140,6 +187,10 @@ export interface TransaccionDeCorreccion extends PacienteBloqueable {
   tipoDeCancerVigente(patientId: string): Promise<string | null>;
   /** Inserta las filas nuevas y reemplaza las anteriores; `false` si el biomarcador ya no estaba vigente (D2). */
   guardarCorreccionDeBiomarcador(plan: PlanDeCorreccionDeBiomarcador): Promise<boolean>;
+  /** Inserta el tratamiento nuevo y reemplaza el anterior; `false` si ya no estaba vigente (D2). */
+  guardarCorreccionDeTratamiento(plan: PlanDeCorreccionDeTratamiento): Promise<boolean>;
+  /** Inserta el atributo nuevo y reemplaza el anterior; `false` si ya no estaba vigente (D2). */
+  guardarCorreccionDeAtributo(plan: PlanDeCorreccionDeAtributo): Promise<boolean>;
   /** Inserta la nota nueva y reemplaza la anterior; `false` si ya no estaba vigente (D2). */
   guardarCorreccionDeNota(plan: PlanDeCorreccionDeNota): Promise<boolean>;
 }
@@ -158,6 +209,16 @@ export interface RepositorioDeCorrecciones {
   historialDeNota(
     patientId: string,
     noteId: string,
+    limite: number,
+  ): Promise<readonly VersionReemplazada[] | null>;
+  historialDeTratamiento(
+    patientId: string,
+    treatmentId: string,
+    limite: number,
+  ): Promise<readonly VersionReemplazada[] | null>;
+  historialDeAtributo(
+    patientId: string,
+    attributeId: string,
     limite: number,
   ): Promise<readonly VersionReemplazada[] | null>;
 }

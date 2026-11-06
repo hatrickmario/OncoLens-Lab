@@ -56,7 +56,7 @@ const SQL_TRATAMIENTOS = `SELECT t.id, t.line_number, t.setting, t.regimen_name,
          ${FECHA('t.started_at')} AS started_at, ${FECHA('t.ended_at')} AS ended_at, t.ongoing,
          t.end_reason::text AS end_reason, ${INSTANTE('t.created_at')} AS created_at,
          t.entry_method::text AS entry_method, t.extraction_confidence::text AS extraction_confidence,
-         t.review_status::text AS review_status, false AS conflict, t.source_document_id
+         t.review_status::text AS review_status, false AS conflict, t.source_document_id, t.supersedes_id
     FROM clinical.prior_treatment t
    WHERE t.patient_id = $1 AND ${sqlDatoVigente('t.review_status')}
    ORDER BY t.line_number NULLS LAST, t.started_at NULLS LAST, t.id`;
@@ -72,7 +72,7 @@ const SQL_EVENTOS = `SELECT t.id, t.event_type::text AS event_type, ${FECHA('t.e
 
 const SQL_ATRIBUTOS = `SELECT t.id, t.attribute_key, t.value, ${FECHA('t.observed_at')} AS observed_at,
          t.entry_method::text AS entry_method, t.extraction_confidence::text AS extraction_confidence,
-         t.review_status::text AS review_status, false AS conflict, t.source_document_id
+         t.review_status::text AS review_status, false AS conflict, t.source_document_id, t.supersedes_id
     FROM clinical.clinical_attribute t
    WHERE t.patient_id = $1 AND ${sqlDatoVigente('t.review_status')}
    ORDER BY t.attribute_key, t.observed_at NULLS LAST, t.id`;
@@ -136,6 +136,7 @@ const comoTratamiento = (fila: Fila): TratamientoPrevioLeido => ({
   endReason: texto(fila['end_reason']),
   createdAt: texto(fila['created_at']),
   procedencia: procedenciaDeLaFila(fila),
+  supersedesId: textoONulo(fila['supersedes_id']),
 });
 
 const comoEventoClinico = (fila: Fila): EventoClinicoLeido => ({
@@ -156,6 +157,7 @@ const comoAtributo = (fila: Fila): AtributoLeido => ({
   value: texto(fila['value']),
   observedAt: textoONulo(fila['observed_at']),
   procedencia: procedenciaDeLaFila(fila),
+  supersedesId: textoONulo(fila['supersedes_id']),
 });
 
 const comoRegistroDeIa = (fila: Fila): RegistroDeIaLeido => ({

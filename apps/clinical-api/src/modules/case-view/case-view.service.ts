@@ -24,6 +24,10 @@ export interface DependenciasDelServicio {
   readonly completitud: CompletenessService;
 }
 
+/** `supersedesId` solo en una corrección (ADR-50): le dice a la UI si la fila tiene histórico. */
+const conEnlaceDeCorreccion = (supersedesId: string | null): { supersedesId?: string } =>
+  supersedesId === null ? {} : { supersedesId };
+
 const comoTratamientoDelCaso = (t: TratamientoPrevioLeido): TratamientoPrevioDelCaso => ({
   id: t.id,
   lineNumber: t.lineNumber,
@@ -35,6 +39,7 @@ const comoTratamientoDelCaso = (t: TratamientoPrevioLeido): TratamientoPrevioDel
   ongoing: t.ongoing,
   endReason: t.endReason,
   provenance: procedenciaDelContrato(t.procedencia),
+  ...conEnlaceDeCorreccion(t.supersedesId),
 });
 
 const comoAtributoDelCaso = (a: AtributoLeido): AtributoDelCaso => ({
@@ -43,6 +48,7 @@ const comoAtributoDelCaso = (a: AtributoLeido): AtributoDelCaso => ({
   value: a.value,
   observedAt: a.observedAt,
   provenance: procedenciaDelContrato(a.procedencia),
+  ...conEnlaceDeCorreccion(a.supersedesId),
 });
 
 /** Del checklist de `/completeness` a la forma reducida de `CaseView` (`key` pasa a `item`); sin diagnóstico habilitado, `[]`. */

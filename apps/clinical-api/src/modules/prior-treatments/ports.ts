@@ -23,10 +23,12 @@ export interface TratamientoAGuardar {
   readonly endedAt: string | null;
   readonly ongoing: boolean;
   readonly endReason: MotivoDeFin;
-  readonly entryMethod: 'manual';
+  readonly entryMethod: 'manual' | 'manual_correction';
   readonly extractionConfidence: 'n_a';
   readonly reviewStatus: 'verificado';
   readonly createdAt: Date;
+  /** Fila a la que esta corrección reemplazó (ADR-50, d5fb-05); `null` en un registro nuevo. */
+  readonly supersedesId: string | null;
 }
 
 /** Operaciones de UNA transacción de registro (el repository las ejecuta sobre una sola conexión). */

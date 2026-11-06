@@ -1,16 +1,22 @@
 import type { Consultador } from '../auth/auth.repository.js';
 import { tipoDeCancerVigente } from '../compartido/contexto-de-registro.js';
+import { guardarAtributo } from '../clinical-attributes/clinical-attributes.repository.js';
 import { bloquearPaciente } from '../compartido/paciente-activo.js';
+import { guardarTratamiento } from '../prior-treatments/prior-treatments.repository.js';
 import { sqlDatoVigente } from '../compartido/estados-de-revision.js';
 import { ejecutarEnTransaccion, type FuenteDeConexiones } from '../compartido/transaccion.js';
 import type {
+  AtributoActual,
   BiomarcadorActual,
   NotaActual,
   NotaVigente,
+  PlanDeCorreccionDeAtributo,
   PlanDeCorreccionDeBiomarcador,
   PlanDeCorreccionDeNota,
+  PlanDeCorreccionDeTratamiento,
   RepositorioDeCorrecciones,
   TransaccionDeCorreccion,
+  TratamientoActual,
   VersionReemplazada,
 } from './ports.js';
 
@@ -70,6 +76,58 @@ async function nota(
   };
 }
 
+async function tratamiento(
+  db: Consultador,
+  patientId: string,
+  treatmentId: string,
+): Promise<TratamientoActual | null> {
+  const { rows } = await db.query(
+    `SELECT id, episode_id, line_number, setting, regimen_name, to_char(started_at, 'YYYY-MM-DD') AS started_at,
+            to_char(ended_at, 'YYYY-MM-DD') AS ended_at, ongoing, end_reason::text AS end_reason,
+            review_status::text AS review_status
+       FROM clinical.prior_treatment WHERE id = $1 AND patient_id = $2`,
+    [treatmentId, patientId],
+  );
+  const f = rows[0];
+  if (f === undefined) return null;
+  return {
+    id: f['id'] as string,
+    episodeId: f['episode_id'] as string,
+    lineNumber: f['line_number'] as number | null,
+    setting: f['setting'] as string,
+    regimenName: f['regimen_name'] as string,
+    startedAt: f['started_at'] as string | null,
+    endedAt: f['ended_at'] as string | null,
+    ongoing: f['ongoing'] as boolean,
+    endReason: f['end_reason'] as TratamientoActual['endReason'],
+    reviewStatus: f['review_status'] as TratamientoActual['reviewStatus'],
+  };
+}
+
+async function atributo(
+  db: Consultador,
+  patientId: string,
+  attributeId: string,
+): Promise<AtributoActual | null> {
+  const { rows } = await db.query(
+    `SELECT id, episode_id, attribute_key, value, to_char(observed_at, 'YYYY-MM-DD') AS observed_at,
+            date_precision::text AS date_precision, review_status::text AS review_status
+       FROM clinical.clinical_attribute WHERE id = $1 AND patient_id = $2`,
+    [attributeId, patientId],
+  );
+  const f = rows[0];
+  if (f === undefined) return null;
+  return {
+    id: f['id'] as string,
+    episodeId: f['episode_id'] as string,
+    attributeKey: f['attribute_key'] as string,
+    value: f['value'] as string,
+    observedAt: f['observed_at'] as string | null,
+    datePrecision: f['date_precision'] as AtributoActual['datePrecision'],
+    reviewStatus: f['review_status'] as AtributoActual['reviewStatus'],
+  };
+}
+
 async function contarOtrosBiomarcadoresVigentes(
   db: Consultador,
   examId: string,
@@ -103,6 +161,42 @@ async function reemplazarNota(db: Consultador, id: string): Promise<boolean> {
     [id],
   );
   return resultado.rows.length === 1;
+}
+
+async function reemplazarTratamiento(db: Consultador, id: string): Promise<boolean> {
+  const resultado = await db.query(
+    `UPDATE clinical.prior_treatment SET review_status = 'reemplazado'
+      WHERE id = $1 AND ${sqlDatoVigente('review_status')} RETURNING id`,
+    [id],
+  );
+  return resultado.rows.length === 1;
+}
+
+async function reemplazarAtributo(db: Consultador, id: string): Promise<boolean> {
+  const resultado = await db.query(
+    `UPDATE clinical.clinical_attribute SET review_status = 'reemplazado'
+      WHERE id = $1 AND ${sqlDatoVigente('review_status')} RETURNING id`,
+    [id],
+  );
+  return resultado.rows.length === 1;
+}
+
+async function guardarCorreccionDeTratamiento(
+  db: Consultador,
+  { tratamiento: nuevo, tratamientoAReemplazar }: PlanDeCorreccionDeTratamiento,
+): Promise<boolean> {
+  if (!(await reemplazarTratamiento(db, tratamientoAReemplazar))) return false;
+  await guardarTratamiento(db, nuevo);
+  return true;
+}
+
+async function guardarCorreccionDeAtributo(
+  db: Consultador,
+  { atributo: nuevo, atributoAReemplazar }: PlanDeCorreccionDeAtributo,
+): Promise<boolean> {
+  if (!(await reemplazarAtributo(db, atributoAReemplazar))) return false;
+  await guardarAtributo(db, nuevo);
+  return true;
 }
 
 async function guardarCorreccionDeBiomarcador(
@@ -158,11 +252,15 @@ function transaccionSobre(db: Consultador): TransaccionDeCorreccion {
   return {
     bloquearPaciente: (patientId) => bloquearPaciente(db, patientId),
     biomarcador: (patientId, biomarkerId) => biomarcador(db, patientId, biomarkerId),
+    tratamiento: (patientId, treatmentId) => tratamiento(db, patientId, treatmentId),
+    atributo: (patientId, attributeId) => atributo(db, patientId, attributeId),
     nota: (patientId, noteId) => nota(db, patientId, noteId),
     contarOtrosBiomarcadoresVigentes: (examId, exceptoId) =>
       contarOtrosBiomarcadoresVigentes(db, examId, exceptoId),
     tipoDeCancerVigente: (patientId) => tipoDeCancerVigente(db, patientId),
     guardarCorreccionDeBiomarcador: (plan) => guardarCorreccionDeBiomarcador(db, plan),
+    guardarCorreccionDeTratamiento: (plan) => guardarCorreccionDeTratamiento(db, plan),
+    guardarCorreccionDeAtributo: (plan) => guardarCorreccionDeAtributo(db, plan),
     guardarCorreccionDeNota: (plan) => guardarCorreccionDeNota(db, plan),
   };
 }
@@ -232,6 +330,34 @@ const CADENA_DE_NOTAS = `
     FROM cadena c JOIN clinical.clinical_note n ON n.id = c.id
    WHERE c.nivel > 1 ORDER BY c.nivel LIMIT $3`;
 
+const CADENA_DE_TRATAMIENTOS = `
+  WITH RECURSIVE cadena AS (
+    SELECT t.id, t.supersedes_id, 1 AS nivel FROM clinical.prior_treatment t WHERE t.id = $1 AND t.patient_id = $2
+    UNION ALL
+    SELECT p.id, p.supersedes_id, c.nivel + 1
+      FROM clinical.prior_treatment p JOIN cadena c ON p.id = c.supersedes_id
+     WHERE c.nivel <= $3
+  )
+  SELECT t.id, t.entry_method::text AS entry_method,
+         to_char(COALESCE(t.started_at, (t.created_at AT TIME ZONE 'UTC')::date), 'YYYY-MM-DD') AS recorded_at,
+         t.created_at, t.regimen_name
+    FROM cadena c JOIN clinical.prior_treatment t ON t.id = c.id
+   WHERE c.nivel > 1 ORDER BY c.nivel LIMIT $3`;
+
+const CADENA_DE_ATRIBUTOS = `
+  WITH RECURSIVE cadena AS (
+    SELECT a.id, a.supersedes_id, 1 AS nivel FROM clinical.clinical_attribute a WHERE a.id = $1 AND a.patient_id = $2
+    UNION ALL
+    SELECT p.id, p.supersedes_id, c.nivel + 1
+      FROM clinical.clinical_attribute p JOIN cadena c ON p.id = c.supersedes_id
+     WHERE c.nivel <= $3
+  )
+  SELECT a.id, a.entry_method::text AS entry_method,
+         to_char(COALESCE(a.observed_at, (a.created_at AT TIME ZONE 'UTC')::date), 'YYYY-MM-DD') AS recorded_at,
+         a.created_at, a.value
+    FROM cadena c JOIN clinical.clinical_attribute a ON a.id = c.id
+   WHERE c.nivel > 1 ORDER BY c.nivel LIMIT $3`;
+
 /** Un historial de una tabla: su consulta de cadena, cómo saber si el dato existe y cómo leer cada versión. */
 interface FuenteDeHistorial {
   readonly cadena: string;
@@ -265,13 +391,22 @@ async function existeElBiomarcador(
   return rows.length > 0;
 }
 
-async function existeLaNota(db: Consultador, patientId: string, datoId: string): Promise<boolean> {
+/** ¿Existe el dato de ese paciente? `tabla` es siempre un literal del código, nunca texto del cliente. */
+async function existeEnLaTabla(
+  db: Consultador,
+  tabla: 'clinical_note' | 'prior_treatment' | 'clinical_attribute',
+  patientId: string,
+  datoId: string,
+): Promise<boolean> {
   const { rows } = await db.query(
-    'SELECT 1 FROM clinical.clinical_note WHERE id = $1 AND patient_id = $2',
+    `SELECT 1 FROM clinical.${tabla} WHERE id = $1 AND patient_id = $2`,
     [datoId, patientId],
   );
   return rows.length > 0;
 }
+
+const existeLaNota = (db: Consultador, patientId: string, datoId: string) =>
+  existeEnLaTabla(db, 'clinical_note', patientId, datoId);
 
 const versionDeBiomarcador = (f: FilaSql): VersionReemplazada => ({
   id: f['id'] as string,
@@ -280,6 +415,28 @@ const versionDeBiomarcador = (f: FilaSql): VersionReemplazada => ({
   createdAt: f['created_at'] as Date,
   value: f['value'] as string,
   unit: f['unit'] as string | null,
+});
+
+const existeElTratamiento = (db: Consultador, patientId: string, datoId: string) =>
+  existeEnLaTabla(db, 'prior_treatment', patientId, datoId);
+
+const existeElAtributo = (db: Consultador, patientId: string, datoId: string) =>
+  existeEnLaTabla(db, 'clinical_attribute', patientId, datoId);
+
+const versionDeTratamiento = (f: FilaSql): VersionReemplazada => ({
+  id: f['id'] as string,
+  entryMethod: f['entry_method'] as VersionReemplazada['entryMethod'],
+  recordedAt: f['recorded_at'] as string,
+  createdAt: f['created_at'] as Date,
+  regimenName: f['regimen_name'] as string,
+});
+
+const versionDeAtributo = (f: FilaSql): VersionReemplazada => ({
+  id: f['id'] as string,
+  entryMethod: f['entry_method'] as VersionReemplazada['entryMethod'],
+  recordedAt: f['recorded_at'] as string,
+  createdAt: f['created_at'] as Date,
+  value: f['value'] as string,
 });
 
 const versionDeNota = (f: FilaSql): VersionReemplazada => ({
@@ -295,6 +452,18 @@ const HISTORIAL_DE_BIOMARCADORES: FuenteDeHistorial = {
   cadena: CADENA_DE_BIOMARCADORES,
   existe: existeElBiomarcador,
   versionDe: versionDeBiomarcador,
+};
+
+const HISTORIAL_DE_TRATAMIENTOS: FuenteDeHistorial = {
+  cadena: CADENA_DE_TRATAMIENTOS,
+  existe: existeElTratamiento,
+  versionDe: versionDeTratamiento,
+};
+
+const HISTORIAL_DE_ATRIBUTOS: FuenteDeHistorial = {
+  cadena: CADENA_DE_ATRIBUTOS,
+  existe: existeElAtributo,
+  versionDe: versionDeAtributo,
 };
 
 const HISTORIAL_DE_NOTAS: FuenteDeHistorial = {
@@ -321,5 +490,9 @@ export function createCorrectionsRepository(fuente: FuenteDeConexiones): Reposit
       lectura((db) => historial(db, HISTORIAL_DE_BIOMARCADORES, patientId, biomarkerId, limite)),
     historialDeNota: (patientId, noteId, limite) =>
       lectura((db) => historial(db, HISTORIAL_DE_NOTAS, patientId, noteId, limite)),
+    historialDeTratamiento: (patientId, treatmentId, limite) =>
+      lectura((db) => historial(db, HISTORIAL_DE_TRATAMIENTOS, patientId, treatmentId, limite)),
+    historialDeAtributo: (patientId, attributeId, limite) =>
+      lectura((db) => historial(db, HISTORIAL_DE_ATRIBUTOS, patientId, attributeId, limite)),
   };
 }

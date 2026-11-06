@@ -8,6 +8,11 @@ import type {
 } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
 import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
+import {
+  comoAtributoDelContrato,
+  comoAtributoLeido,
+} from '../clinical-attributes/clinical-attributes.atributo.js';
+import { comoTratamientoDelContrato } from '../prior-treatments/prior-treatments.tratamiento.js';
 import { exigirPacienteQueAdmiteRegistros } from '../compartido/paciente-activo.js';
 import { PacienteNoEncontradoError } from '../compartido/pacientes.errores.js';
 import type { CatalogoDeAtributos } from '../clinical-attributes/ports.js';
@@ -20,12 +25,17 @@ import {
 } from './corrections.contrato.js';
 import { DatoNoEncontradoError, DatoNoVigenteError } from './corrections.errores.js';
 import {
+  exigirCorreccionValidaDeAtributo,
   exigirCorreccionValidaDeBiomarcador,
   exigirCorreccionValidaDeNota,
+  exigirCorreccionValidaDeTratamiento,
   exigirDatoVigente,
+  exigirValorDelCatalogo,
   fechaDeHoy,
+  planDeCorreccionDeAtributo,
   planDeCorreccionDeBiomarcador,
   planDeCorreccionDeNota,
+  planDeCorreccionDeTratamiento,
   type ContextoDeCorreccion,
 } from './corrections.reglas.js';
 import type {
@@ -141,6 +151,57 @@ async function corregirNota(
   });
 }
 
+async function corregirTratamiento(
+  dependencias: DependenciasDelService,
+  solicitud: SolicitudDeCorreccion<CuerpoDeCorreccionDeTratamiento>,
+): Promise<PriorTreatment> {
+  const { repositorio, reconciliacion } = dependencias;
+  const { patientId, datoId, cuerpo } = solicitud;
+  return repositorio.enTransaccion(async (tx) => {
+    await exigirPacienteQueAdmiteRegistros(tx, patientId);
+    const actual = await tx.tratamiento(patientId, datoId);
+    if (actual === null) throw new DatoNoEncontradoError();
+    exigirDatoVigente(actual.reviewStatus);
+    exigirCorreccionValidaDeTratamiento(actual, cuerpo);
+    // RN-27 / ADR-33: la normalización final es de `ReconciliationService`; el cliente nunca envía códigos.
+    const decision = reconciliacion.decidir({
+      entidad: 'PriorTreatment',
+      tipoDeCancer: await tx.tipoDeCancerVigente(patientId),
+      textoOriginal: cuerpo.regimenName,
+    });
+    const plan = planDeCorreccionDeTratamiento(
+      actual,
+      cuerpo,
+      decision,
+      contextoDe(dependencias, solicitud),
+    );
+    if (!(await tx.guardarCorreccionDeTratamiento(plan))) throw new DatoNoVigenteError();
+    return comoTratamientoDelContrato(plan.tratamiento);
+  });
+}
+
+async function corregirAtributo(
+  dependencias: DependenciasDelService,
+  solicitud: SolicitudDeCorreccion<CuerpoDeCorreccionDeAtributo>,
+): Promise<ClinicalAttribute> {
+  const { repositorio, catalogoDeAtributos } = dependencias;
+  const { patientId, datoId, cuerpo } = solicitud;
+  return repositorio.enTransaccion(async (tx) => {
+    await exigirPacienteQueAdmiteRegistros(tx, patientId);
+    const actual = await tx.atributo(patientId, datoId);
+    if (actual === null) throw new DatoNoEncontradoError();
+    exigirDatoVigente(actual.reviewStatus);
+    const tipoDeCancer = await tx.tipoDeCancerVigente(patientId);
+    const permitidos =
+      tipoDeCancer === null ? [] : catalogoDeAtributos.atributosPermitidos(tipoDeCancer);
+    exigirValorDelCatalogo(permitidos, actual.attributeKey, cuerpo.value);
+    exigirCorreccionValidaDeAtributo(actual, cuerpo);
+    const plan = planDeCorreccionDeAtributo(actual, cuerpo, contextoDe(dependencias, solicitud));
+    if (!(await tx.guardarCorreccionDeAtributo(plan))) throw new DatoNoVigenteError();
+    return comoAtributoDelContrato(comoAtributoLeido(plan.atributo));
+  });
+}
+
 /** El histórico de un dato (404 si no existe o es de otro paciente) con el tope de configuración. */
 async function leerHistorial(
   leer: (limite: number) => Promise<readonly VersionReemplazada[] | null>,
@@ -165,14 +226,16 @@ export function createCorrectionsService(dependencias: DependenciasDelService): 
   return {
     corregirBiomarcador: (solicitud) => corregirBiomarcador(dependencias, solicitud),
     corregirNota: (solicitud) => corregirNota(dependencias, solicitud),
-    corregirTratamiento: () => Promise.reject(new Error('no implementado')),
-    corregirAtributo: () => Promise.reject(new Error('no implementado')),
-    historialDeTratamiento: () => Promise.reject(new Error('no implementado')),
-    historialDeAtributo: () => Promise.reject(new Error('no implementado')),
+    corregirTratamiento: (solicitud) => corregirTratamiento(dependencias, solicitud),
+    corregirAtributo: (solicitud) => corregirAtributo(dependencias, solicitud),
     historialDeBiomarcador: ({ patientId, datoId }) =>
       leerHistorial((tope) => repositorio.historialDeBiomarcador(patientId, datoId, tope), limites),
     historialDeNota: ({ patientId, datoId }) =>
       leerHistorial((tope) => repositorio.historialDeNota(patientId, datoId, tope), limites),
+    historialDeTratamiento: ({ patientId, datoId }) =>
+      leerHistorial((tope) => repositorio.historialDeTratamiento(patientId, datoId, tope), limites),
+    historialDeAtributo: ({ patientId, datoId }) =>
+      leerHistorial((tope) => repositorio.historialDeAtributo(patientId, datoId, tope), limites),
     notasVigentes: (patientId) => notasVigentes(dependencias, patientId),
   };
 }

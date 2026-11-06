@@ -37,6 +37,7 @@ export function armarTratamientoManual(entrada: EntradaDelTratamiento): Tratamie
     extractionConfidence: 'n_a',
     reviewStatus: 'verificado',
     createdAt: entrada.ahora,
+    supersedesId: null,
   };
 }
 
@@ -63,5 +64,7 @@ export function comoTratamientoDelContrato(t: TratamientoAGuardar): PriorTreatme
       },
       [],
     ),
+    // Opcional en el contrato: solo una corrección lo trae, así la UI sabe si hay histórico (ADR-50).
+    ...(t.supersedesId !== null && { supersedesId: t.supersedesId }),
   };
 }
