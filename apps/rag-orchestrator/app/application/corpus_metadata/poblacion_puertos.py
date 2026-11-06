@@ -61,7 +61,13 @@ class LlmDePoblacion(Protocol):
     """LLM local de la tarea corta. Un fallo (conexión, plazo, cuerpo inválido) es ``FalloDelLlm``, sin detalle."""
 
     async def completar_json_acotado(
-        self, prompt: str, esquema: Mapping[str, Any], *, max_tokens: int, semilla: int
+        self,
+        usuario: str,
+        esquema: Mapping[str, Any],
+        *,
+        max_tokens: int,
+        semilla: int,
+        sistema: str | None = None,
     ) -> RespuestaDelLlm: ...
 
 

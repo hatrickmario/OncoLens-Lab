@@ -80,7 +80,7 @@ def test_prompts_del_dataset_repite_las_preguntas_con_evidencia_hasta_completar_
     prompts = runtime_llm.prompts_del_dataset(dataset, 200)
 
     assert len(prompts) == 200
-    assert all("[fragmento C" in p and "Pregunta:" in p for p in prompts)
+    assert all('<document id="C' in p and "<question>" in p for p in prompts)
     sin_evidencia = [p for p in dataset.preguntas if p.modo_acierto == "sin_evidencia"]
     assert sin_evidencia and all(q.texto not in "".join(prompts) for q in sin_evidencia)  # RN-02
 

@@ -65,8 +65,10 @@ class FakeMetadataLlm:
     def invocaciones_de(self, marcador: str) -> int:
         return sum(1 for prompt in self.prompts if marcador in prompt)
 
-    async def completar_json(self, prompt: str, esquema: Mapping[str, Any]) -> str:
-        self.prompts.append(prompt)
+    async def completar_json(
+        self, usuario: str, esquema: Mapping[str, Any], *, sistema: str | None = None
+    ) -> str:
+        self.prompts.append(usuario)
         self.esquemas.append(esquema)
         if self.modo == "error":
             raise FalloDelLlm("llm falso: sin respuesta")
@@ -74,7 +76,7 @@ class FakeMetadataLlm:
             return '{"trial_phase": '
         if self.modo == "fuera_de_esquema":
             return json.dumps({"fase": 3, "tamano": "quinientos"})
-        return json.dumps(self._propuesta_para(prompt), ensure_ascii=False)
+        return json.dumps(self._propuesta_para(usuario), ensure_ascii=False)
 
     def _propuesta_para(self, prompt: str) -> Mapping[str, Any]:
         for marcador, propuesta in self._propuestas.items():

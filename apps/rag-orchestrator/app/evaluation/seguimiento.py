@@ -23,6 +23,7 @@ import yaml
 
 from app.application.generacion_de_seguimiento import LlmSeguimientoGenerator
 from app.application.ports import FalloDelLlm
+from app.application.prompt_builder import escapar_delimitadores
 from app.application.seguimiento import ResponderSeguimiento
 from app.domain.atribucion import marco_de_atribucion
 from app.domain.nli import ParNli
@@ -61,10 +62,12 @@ class ClienteGuionado:
         self._guiones = dict(guiones)
         self.invocaciones = 0
 
-    async def completar_json(self, prompt: str, esquema: Mapping[str, Any]) -> str:
+    async def completar_json(
+        self, usuario: str, esquema: Mapping[str, Any], *, sistema: str | None = None
+    ) -> str:
         self.invocaciones += 1
         for pregunta, guion in self._guiones.items():
-            if f"Pregunta: {pregunta}\n" in prompt:
+            if f"<question>\n{escapar_delimitadores(pregunta)}\n</question>" in usuario:
                 return guion
         raise FalloDelLlm("sin guion para la pregunta")
 
