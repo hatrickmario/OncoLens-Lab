@@ -19,6 +19,7 @@ from app.application.ports import (
 )
 from app.application.rag_orchestrator_service import RAGOrchestratorService
 from app.application.respuesta_con_evidencia import cita_del_contrato
+from app.application.selector_proveedor_llm import con_clasificacion
 from app.domain.atribucion import componer_con_marco
 from app.domain.citations import OpcionAceptada, OpcionGenerada, validar_citas
 from app.domain.claims import AfirmacionAtomica
@@ -74,6 +75,13 @@ class ResponderSeguimiento:
         self._terminos_por_tipo = terminos_por_tipo
 
     async def responder(self, solicitud: RagFollowUpRequest) -> RagFollowUpResponse:
+        with con_clasificacion(solicitud.dataClassification.value) as contexto:
+            respuesta = await self._responder_con_proveedor_acotado(solicitud)
+        return respuesta.model_copy(update={"meta": contexto.declarar_en(respuesta.meta)})
+
+    async def _responder_con_proveedor_acotado(
+        self, solicitud: RagFollowUpRequest
+    ) -> RagFollowUpResponse:
         consulta = consulta_equivalente(solicitud)
         if self._es_ajena_al_analisis(solicitud):
             meta = await self._servicio.meta_sin_recuperacion(

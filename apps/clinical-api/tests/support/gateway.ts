@@ -24,6 +24,7 @@ import {
 } from '../../src/modules/evidence-analysis/rag-query.adapter.js';
 import { crearContextDeidentifier } from '../../src/modules/evidence-analysis/deidentification/context-deidentifier.js';
 import type {
+  ContextDeidentifier,
   ChecklistDeFaltantes,
   EtiquetaDeDatoCritico,
   PatientIdentityReader,
@@ -282,7 +283,24 @@ export function ragSimulado(): RagSimulado {
   };
 }
 
+/**
+ * Con `omitir`, el desidentificador real recibe siempre `dataOrigin = sintetico`: simula el gateway DESPUÉS de retirar la
+ * guarda de entorno sintético (`[S1 resp. 14d]`, la retira US-143), para ejercitar la verificación del proveedor (RN-12)
+ * con un paciente cuyo `data_origin` es real. El contenido del paciente sigue siendo sintético (RN-13).
+ */
+function desidentificadorDeTest(real: ContextDeidentifier, omitir: boolean): ContextDeidentifier {
+  if (!omitir) return real;
+  return {
+    desidentificar: (entrada) => real.desidentificar({ ...entrada, dataOrigin: 'sintetico' }),
+  };
+}
+
 export interface OpcionesDeGateway {
+  /**
+   * Retira la guarda de entorno sintético del desidentificador (post G-Piloto): ver `desidentificadorDeTest`.
+   * TODO(US-143): al retirar la guarda del código de producción, esta opción deja de hacer falta.
+   */
+  omitirGuardaDeEntornoSintetico?: boolean;
   /** Por defecto `test`; `undefined` explícito simula `APP_ENV` ausente. */
   appEnv?: string | undefined;
   /** Sustituye al generador de token de sesión (por defecto, valores fijos). */
@@ -385,14 +403,17 @@ export async function montarGateway(
     reloj,
     traceIds: opciones.traceIds ?? { traceId: () => TRACE_ID_GENERADO },
     idsDeAnalisis: mundo.idsDeAnalisis,
-    desidentificador: crearContextDeidentifier({
-      identidades: opciones.identidades ?? lectorDeIdentidadFalso({}),
-      detectores: opciones.detectores ?? detectoresReales(),
-      pseudonimos,
-      appEnv,
-      registrar: logger.registrar,
-      expresionesDeFecha: configuracionDePiiDeTest().fechas.expresiones,
-    }),
+    desidentificador: desidentificadorDeTest(
+      crearContextDeidentifier({
+        identidades: opciones.identidades ?? lectorDeIdentidadFalso({}),
+        detectores: opciones.detectores ?? detectoresReales(),
+        pseudonimos,
+        appEnv,
+        registrar: logger.registrar,
+        expresionesDeFecha: configuracionDePiiDeTest().fechas.expresiones,
+      }),
+      opciones.omitirGuardaDeEntornoSintetico === true,
+    ),
     registrar: logger.registrar,
   });
   const rutas = componerRutasProtegidas({
@@ -440,7 +461,10 @@ export async function abrirSesion(
 /** Paciente sintético extra (la tabla del seed no se toca): con o sin diagnóstico activo y con el origen indicado. */
 export async function crearPacienteSintetico(
   mundo: MundoDeGateway,
-  opciones: { dataOrigin?: 'sintetico' | 'real_anonimizado'; conDiagnostico: boolean },
+  opciones: {
+    dataOrigin?: 'sintetico' | 'real_anonimizado' | 'real_identificado';
+    conDiagnostico: boolean;
+  },
 ): Promise<string> {
   const { cliente, ids } = mundo;
   const { rows } = await cliente.query<{ id: string }>(

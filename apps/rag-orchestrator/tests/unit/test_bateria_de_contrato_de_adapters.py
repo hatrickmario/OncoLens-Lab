@@ -6,10 +6,12 @@ import pytest
 
 from app.application.ports import FalloDelLlm
 from app.evaluation.adaptadores_poblacion import LlmGuionadoDePoblacion
+from app.application.selector_proveedor_llm import SelectorDeProveedorLlm
 from app.infrastructure.llm.openai_compatible import OpenAICompatibleLlmClient
 from tests.integration.test_rag_query_aplicabilidad_textual_bordes import _LlmHer2
 from tests.support.llm_chat_falso import FakeChatLlm
 from tests.support.llm_falso import FakeLlmClient
+from tests.support.llm_nube_falso import LlmNubeFalso
 from tests.support.metadatos import FakeMetadataLlm
 from tests.support.poblacion_abanico import FakePopulationLlm
 from tests.support.respaldo_poblacion import RespaldoLlmFalso
@@ -46,6 +48,10 @@ async def test_el_fake_registra_sistema_none_cuando_se_invoca_sin_sistema():
         (FakePopulationLlm, "completar_json_acotado"),
         (LlmGuionadoDePoblacion, "completar_json_acotado"),
         (_LlmHer2, "completar_json_acotado"),
+        (LlmNubeFalso, "completar_json"),
+        (LlmNubeFalso, "completar_json_acotado"),
+        (SelectorDeProveedorLlm, "completar_json"),
+        (SelectorDeProveedorLlm, "completar_json_acotado"),
     ],
 )
 def test_el_adaptador_y_sus_fakes_comparten_la_firma_del_puerto_con_usuario_y_sistema_opcional(
@@ -67,3 +73,15 @@ async def test_el_fake_del_chat_devuelve_texto_crudo_o_falla_con_el_error_del_pu
     with pytest.raises(FalloDelLlm):
         await caido.completar_json("u", {"properties": {"claims": {}}}, sistema="s")
     assert caido.llamadas_de_generacion == 1 and ok.llamadas_de_clasificacion == 1
+
+
+async def test_el_fake_de_nube_cuenta_cada_invocacion_y_falla_con_el_error_del_puerto():
+    nube = LlmNubeFalso()
+    caida = LlmNubeFalso(error=FalloDelLlm())
+
+    await nube.completar_json("u", {})
+    await nube.completar_json_acotado("u", {}, max_tokens=8, semilla=1)
+
+    assert nube.invocaciones == 2
+    with pytest.raises(FalloDelLlm):
+        await caida.completar_json_acotado("u", {}, max_tokens=8, semilla=1)

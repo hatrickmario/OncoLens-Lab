@@ -241,3 +241,51 @@ describe('crearAnalysisCompletion: tipo_no_habilitado', () => {
     expect(persistidos).toEqual([]);
   });
 });
+
+describe('crearAnalysisCompletion: proveedor del LLM (RN-12)', () => {
+  const conProveedor = (llmProvider: 'local' | 'nube') => ({
+    ...copia(conEvidencia),
+    meta: { ...copia(conEvidencia).meta, llmProvider },
+  });
+  const paraClasificacion = (
+    cuerpo: unknown,
+    dataClassification: 'sintetico' | 'real_anonimizado',
+  ) => ({
+    ...entradaDeCierre(cuerpo),
+    request: { ...(peticion as RagQueryInternalRequest), dataClassification },
+  });
+
+  it('no persiste y devuelve 502 ERROR_SERVICIO_IA cuando la respuesta declara nube para un dato real [US-050 AC-5]', async () => {
+    const { cierre, persistidos } = cierreConFake(async (registro) => registro);
+
+    const resultado = await cierre.completar(
+      paraClasificacion(conProveedor('nube'), 'real_anonimizado'),
+    );
+
+    expect(resultado).toEqual({
+      tipo: 'fallo',
+      respuesta: { status: 502, codigo: 'ERROR_SERVICIO_IA', resultado: 'proveedor_no_permitido' },
+    });
+    expect(persistidos).toEqual([]);
+  });
+
+  it('persiste cuando la respuesta declara local para un dato real', async () => {
+    const { cierre, persistidos } = cierreConFake(async (registro) => registro);
+
+    const resultado = await cierre.completar(
+      paraClasificacion(conProveedor('local'), 'real_anonimizado'),
+    );
+
+    expect(resultado.tipo).toBe('completado');
+    expect(persistidos).toHaveLength(1);
+  });
+
+  it('persiste cuando la respuesta declara nube para un dato sintético', async () => {
+    const { cierre, persistidos } = cierreConFake(async (registro) => registro);
+
+    const resultado = await cierre.completar(paraClasificacion(conProveedor('nube'), 'sintetico'));
+
+    expect(resultado.tipo).toBe('completado');
+    expect(persistidos).toHaveLength(1);
+  });
+});

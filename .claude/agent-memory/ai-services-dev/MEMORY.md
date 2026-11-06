@@ -8,4 +8,5 @@
 - [Corpus ampliado L1D-119](corpus_ampliado_l1d119_trampas.md) — fuentes Europe PMC/CT.gov, falsos positivos del escáner de PII y .env.example denegado
 - [Familia opciones de evaluate (L1D-246)](familia_opciones_l1d246.md) — cómo se compone una familia nueva de evaluate y trampas de tasks-destino/vitest
 - [principal_duplicada con gemma4 (D5-06/D5-28)](principal_duplicada_gemma4.md) — no era regresión de L1D-113; prefixItems no funciona en Ollama; main_claim + other_claims
+- [Selector RN-12 (L1D-204)](rn12_selector_l1d204.md) — ContextVar de clasificación, guarda sintética de clinical-api y trampas de ruff --fix
 - [Hallazgos de la demo del S4 (L1D-297)](demo_s4_l1d297_hallazgos.md) — ingest solo en corpus vacío, lista blanca de la imagen, estados en vivo y cómo probar levantar.sh

@@ -3,6 +3,7 @@
 import ipaddress
 import re
 import unicodedata
+from enum import StrEnum
 from urllib.parse import urlsplit
 
 # Piso CERRADO EN CÓDIGO de la suite de evaluación (ADR-41 D4): `es_proveedor_local()` no lee configuración, así que
@@ -97,3 +98,24 @@ def es_modelo_de_nube(modelo: str) -> bool:
         unicodedata.normalize("NFKC", modelo).strip().casefold()
     )  # Ollama resuelve el nombre con ruido
     return _SUFIJO_DE_NUBE.search(normalizado) is not None
+
+
+# RN-12 tiene una implementación independiente en clinical-api (src/modules/evidence-analysis/regla-proveedor.ts): se
+# verifican contra la misma tabla (contracts/reglas/proveedor-llm.json), no se comparten.
+class ProveedorLlm(StrEnum):
+    """Dónde corre el LLM de una petición (mismo vocabulario que ``RagMeta.llmProvider``, RN-12)."""
+
+    local = "local"
+    nube = "nube"
+
+
+def proveedores_permitidos(
+    data_classification: str, llm_cloud_enabled: bool
+) -> tuple[ProveedorLlm, ...]:
+    """RN-12: proveedores del LLM admitidos para una clasificación, en orden de preferencia.
+
+    Solo ``sintetico`` con ``LLM_CLOUD_ENABLED`` admite la nube, y siempre después del local. Cualquier otro valor
+    (``real_anonimizado``, ``real_identificado`` o una clasificación desconocida) falla cerrado: solo local."""
+    if data_classification == "sintetico" and llm_cloud_enabled:
+        return (ProveedorLlm.local, ProveedorLlm.nube)
+    return (ProveedorLlm.local,)

@@ -11,16 +11,21 @@
 #### Scenario: El body público con dataClassification se rechaza en el borde sin invocar a la IA [US-050 AC-4] [OL-03] (asumido: `EvidenceAnalysisRequest` tiene `additionalProperties: false`)
 - **GIVEN** `doc1@test.local` con sesión válida y un cliente de `rag-orchestrator` que cuenta llamadas
 - **WHEN** envía `POST /platform/evidence-analyses` con `Q-HER2` sobre el paciente semilla (a) y `dataClassification = sintetico` en el body
-- **THEN** la respuesta es `400` válida contra el spec de `clinical-api`, el cliente registra cero llamadas y no se persiste ningún registro
+- **THEN** la respuesta es `422` con `error = CUERPO_INVALIDO` (el código de validación del borde del gateway), válida contra el spec de `clinical-api`, el cliente registra cero llamadas y no se persiste ningún registro
 
 ### Requirement: Un proveedor de nube con datos reales nunca se acepta ni se persiste
 Si la respuesta de `rag-orchestrator` declara `meta.llmProvider = nube` para un request con `dataClassification` real, `clinical-api` MUST responder `502 ERROR_SERVICIO_IA` sin persistir ningún `AIAnalysisRecord` y registrar el evento `proveedor_no_permitido` sin contenido clínico (RN-12, defensa en profundidad).
 
 #### Scenario: Una respuesta con llmProvider nube para un paciente real se descarta [US-050 AC-5] [RN-12] (asumido: verificación de `RagMeta.llmProvider` contra `dataClassification` declarada en el contrato)
-- **GIVEN** un paciente sintético de test con `data_origin = real_anonimizado` y `rag-orchestrator` simulado respondiendo `200` con `meta.llmProvider = nube`
+- **GIVEN** un paciente de contenido sintético con `data_origin = real_anonimizado` (el arnés de test omite la guarda de entorno sintético `[S1 resp. 14d]`, que retira US-143) y `rag-orchestrator` simulado respondiendo `200` con `meta.llmProvider = nube`
 - **WHEN** `doc1@test.local` solicita el análisis
 - **THEN** la respuesta es `502` con `error = ERROR_SERVICIO_IA`, sin cuerpo de `rag-orchestrator`
 - **AND** no existe fila en `clinical.ai_analysis_record` con ese `trace_id`
+
+#### Scenario: Un turno de seguimiento servido por la nube para un análisis real se descarta [US-050 AC-5] [RN-12] (asumido: el seguimiento es otro turno con LLM del mismo gateway)
+- **GIVEN** un análisis de un paciente cuyo `data_classification` es real y `rag-orchestrator` simulado respondiendo `200` en `/rag/follow-up` con `meta.llmProvider = nube`
+- **WHEN** `doc1@test.local` envía una pregunta de seguimiento
+- **THEN** la respuesta es `502` con `error = ERROR_SERVICIO_IA` y no se persiste ningún turno de seguimiento
 
 #### Scenario: El 503 de LLM local caído con dato real se propaga sin detalles ni registro [US-050 AC-5] [FR-09] [AC-06.1] [readme §4.1]
 - **GIVEN** un paciente de test con `data_origin = real_identificado` y `rag-orchestrator` simulado respondiendo `503` desde `contracts/examples/rag-llm-local-no-disponible.json`
