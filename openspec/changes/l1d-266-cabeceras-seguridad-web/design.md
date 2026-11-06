@@ -46,8 +46,8 @@ todas las páginas (ya lo eran las de `/pacientes` por la cookie; `/login` deja 
 
 ### D4 · Configuración (RN-22)
 
-`WEB_CSP_MODO` ∈ {`aplicar`, `solo_informe`}, por defecto `aplicar`; se valida con Zod al arrancar junto al resto de la
-configuración de `web` (`instrumentation.ts`) y `solo_informe` con `NODE_ENV=production` aborta nombrando la variable.
+`WEB_CSP_MODO` ∈ {`aplicar`, `solo_informe`}, por defecto `aplicar`; se valida con comprobación manual (como `config.ts`, sin Zod) al arrancar
+(`register()` de `instrumentation.ts`) y `solo_informe` con `NODE_ENV=production` aborta nombrando la variable.
 Compose, CI y E2E usan la build de producción, así que siempre `aplicar`.
 
 ### D5 · Variables públicas y bundle
@@ -68,15 +68,19 @@ chat, la regla queda escrita para `l1d-324`/`l1d-325`: Markdown solo con `react-
 
 ### D7 · Desviaciones de la implementación (registradas en el cierre)
 
-- **Layout:** `app/layout.tsx` usa `await connection()` (API de Next 16 para optar por render dinámico) en lugar de leer
-  `headers().get('x-nonce')`: el nonce lo aplica Next a sus scripts desde la CSP de la request, el layout no lo
-  necesita; el efecto buscado (render por request) es el mismo.
+- **Layout y nonce en el DOM:** `app/layout.tsx` lee `headers().get('x-nonce')` (hace dinámico el render) y, solo si hay
+  nonce, publica `<meta name="csp-nonce">`; `NonceDeEstilos` (`'use client'`) lo lee y llama a `setNonce()` de
+  `get-nonce` para que el `<style>` que inyecta Radix Dialog (react-style-singleton) lleve el nonce. Exponer el nonce en
+  un meta es aceptable: un meta no ejecuta nada, el nonce es por request, y `img-src`/`connect-src 'self'` impiden
+  exfiltrarlo a otro origen. Los nombres (`x-nonce`, `csp-nonce`) viven en `lib/csp-nonce.ts`.
+- **Dependencia nueva:** `get-nonce@1.0.1`, directa en `apps/web` (ya estaba como transitiva de Radix; sin vulnerabilidades
+  nuevas). Corrige "sin dependencias npm nuevas" de la propuesta.
 - **AC-3:** el panel no muestra `synthesis` (solo `agreements`/`discrepancies` vacíos en el ejemplo); el vector se
   inyecta en la justificación de la opción y en `chunkTextSnapshot`, que sí se renderizan.
 - **AC-5:** el contrato (`sourceUrl` solo `https`) ya rechaza `javascript:`/`data:` en la validación del BFF, así que el
   test de esos esquemas monta `CitationDetails` directamente (segunda defensa); `https:` va por el panel completo.
-- **AC-2:** el bloqueo por `frame-ancestors` no llega a la consola de la página; el E2E comprueba que la respuesta de
-  cada iframe lleva `frame-ancestors 'none'` y que el documento del frame no contiene el formulario de login.
+- **AC-2:** el bloqueo por `frame-ancestors` no llega a la consola de la página; el E2E comprueba que ambos frames
+  quedan fuera de la URL de `web` y sin formulario de login (las cabeceras ya se verifican en AC-1).
 - **P-1 (`style-src-attr 'unsafe-inline'`)** aceptado por el PO [S6 resp. 19], sin ADR: solo atributos `style=""`; `script-src`
   y `style-src` (elementos) siguen sin `unsafe-inline`.
 

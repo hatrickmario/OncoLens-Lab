@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
+import { META_NONCE } from '../../lib/csp-nonce';
 import { Dialog } from '../../components/ui/dialog';
 import { NonceDeEstilos } from '../../components/atoms/nonce-de-estilos';
 
@@ -13,7 +14,7 @@ describe('Dialog bajo la CSP con nonce', () => {
   });
 
   it('crea el style del bloqueo de scroll con el nonce de la request cuando se abre [US-216 AC-1]', () => {
-    document.head.innerHTML = `<meta name="csp-nonce" content="${NONCE}">`;
+    document.head.innerHTML = `<meta name="${META_NONCE}" content="${NONCE}">`;
     const retornoDeFoco = { current: null };
 
     render(

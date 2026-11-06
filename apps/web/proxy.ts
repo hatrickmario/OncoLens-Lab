@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { CABECERA_NONCE } from './lib/csp-nonce';
 import { construirCsp, generarNonce, leerModoCsp } from './lib/server/csp';
 import { tieneCookieDeSesion } from './lib/server/sesion';
 
@@ -37,7 +38,7 @@ export function crearProxy({ generarNonce: nuevoNonce, entorno }: DependenciasPr
       return sinCache(NextResponse.redirect(new URL('/login', request.url)));
     }
     const cabecerasDeRequest = new Headers(request.headers);
-    cabecerasDeRequest.set('x-nonce', nonce);
+    cabecerasDeRequest.set(CABECERA_NONCE, nonce);
     cabecerasDeRequest.set(nombre, valor);
     const respuesta = NextResponse.next({ request: { headers: cabecerasDeRequest } });
     respuesta.headers.set(nombre, valor);

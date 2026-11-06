@@ -85,5 +85,5 @@ HSTS y TLS (US-144). Rate limiting (RN-30). Auditoría de dependencias (US-217, 
   `apps/web/lib/server/` (constructor puro de la CSP y lector de `WEB_CSP_MODO`), componente de enlace de cita.
 - `config/public-env.allowlist.json`, `scripts/ci/public-env.mjs`, job `quality`; `apps/web/tests/build/` (escaneo del
   bundle); `apps/web/e2e/` (E2E de clickjacking y de cabeceras).
-- Sin dependencias npm nuevas, sin `NEXT_PUBLIC_` nuevas, sin cambios de contrato. `.env.example` gana `WEB_CSP_MODO`
+- Una dependencia npm directa (`get-nonce`, ya transitiva de Radix; nonce de los estilos de los diálogos), sin `NEXT_PUBLIC_` nuevas, sin cambios de contrato. `.env.example` gana `WEB_CSP_MODO`
   (tarea humana H-1).

@@ -2,6 +2,7 @@
 
 import { setNonce } from 'get-nonce';
 import { useEffect } from 'react';
+import { META_NONCE } from '../../lib/csp-nonce';
 
 /**
  * Los diálogos de Radix inyectan un `<style>` (react-style-singleton) que la CSP solo admite con nonce (US-216).
@@ -9,7 +10,7 @@ import { useEffect } from 'react';
  */
 export function NonceDeEstilos() {
   useEffect(() => {
-    const nonce = document.querySelector('meta[name="csp-nonce"]')?.getAttribute('content');
+    const nonce = document.querySelector(`meta[name="${META_NONCE}"]`)?.getAttribute('content');
     if (nonce) setNonce(nonce);
   }, []);
   return null;
