@@ -12,6 +12,8 @@ export interface CriticalDataChecklistProps {
   pacienteId: string;
   /** Paciente egresado (RN-17): se muestran los estados sin acciones de registro. */
   egresado: boolean;
+  /** «Hoy» del servidor: fecha por defecto de la declaración «Sin tratamiento previo». */
+  hoy: string;
   alGuardar: () => void;
 }
 
@@ -26,6 +28,7 @@ function CuerpoDelChecklist({
   lectura,
   pacienteId,
   egresado,
+  hoy,
   alGuardar,
 }: CriticalDataChecklistProps) {
   const t = mensajes().datosCriticos;
@@ -52,6 +55,7 @@ function CuerpoDelChecklist({
             item={item}
             pacienteId={pacienteId}
             egresado={egresado}
+            hoy={hoy}
             alGuardar={alGuardar}
           />
         ))}

@@ -17,12 +17,15 @@ export function AccionDeFaltante({
   etiqueta,
   pacienteId,
   egresado,
+  hoy,
   alGuardar,
 }: {
   faltante: AccionManual;
   etiqueta: string;
   pacienteId: string;
   egresado: boolean;
+  /** «Hoy» del servidor: lo usa la declaración «Sin tratamiento previo» del diálogo de tratamiento. */
+  hoy: string;
   /** Tras el `201` de un diálogo: releer el checklist y recargar la vista (D5). */
   alGuardar: () => void;
 }) {
@@ -55,6 +58,8 @@ export function AccionDeFaltante({
         />
       );
     case 'tratamiento':
-      return <DialogoTratamientoPrevio {...registro} textoDeAccion={t.agregarTratamiento} />;
+      return (
+        <DialogoTratamientoPrevio {...registro} hoy={hoy} textoDeAccion={t.agregarTratamiento} />
+      );
   }
 }

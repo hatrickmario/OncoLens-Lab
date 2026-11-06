@@ -12,12 +12,14 @@ export function FilaDeDatoCritico({
   item,
   pacienteId,
   egresado,
+  hoy,
   alGuardar,
 }: {
   item: CompletenessItem;
   pacienteId: string;
   /** Paciente egresado (RN-17): no se ofrece ninguna acción de registro. */
   egresado: boolean;
+  hoy: string;
   alGuardar: () => void;
 }) {
   const { simbolo, texto } = presentarEstado(item.status);
@@ -36,12 +38,18 @@ export function FilaDeDatoCritico({
             : mensajes().datosCriticos.origenNoDisponible}
         </span>
       )}
+      {item.resolvedBy === 'declaracion_de_ausencia' && (
+        <span className="text-text-muted text-sm">
+          {mensajes().caso.registro.tratamiento.declaracion.declarado}
+        </span>
+      )}
       {faltante && (
         <AccionDeFaltante
           faltante={faltante}
           etiqueta={item.label}
           pacienteId={pacienteId}
           egresado={egresado}
+          hoy={hoy}
           alGuardar={alGuardar}
         />
       )}
