@@ -20,8 +20,10 @@ export interface FormularioDeCorreccionDeAtributoProps {
   pacienteId: string;
   /** Fila vigente que se corrige; su clave se muestra, no se edita (cambiar de clave es otro atributo). */
   atributo: CaseView['attributes'][number];
-  /** Valores del catálogo para la clave; `null` cuando el valor es fijo (la declaración de ausencia solo admite «sí»). */
-  valores: { value: string; label: string }[] | null;
+  /** Valores del catálogo para la clave; no se pasan cuando el valor es fijo. */
+  valores?: { value: string; label: string }[];
+  /** Valor que no se edita (la declaración de ausencia solo admite «sí»): solo cambia la fecha. */
+  valorFijo?: string;
   /** La corrección se guardó: el llamador recarga la vista de caso y cierra el diálogo. */
   alGuardar: () => void;
   alCerrar: () => void;
@@ -31,14 +33,15 @@ export interface FormularioDeCorreccionDeAtributoProps {
 export function FormularioDeCorreccionDeAtributo({
   pacienteId,
   atributo,
-  valores,
+  valores = [],
+  valorFijo,
   alGuardar,
   alCerrar,
 }: FormularioDeCorreccionDeAtributoProps) {
   const { caso } = mensajes();
   const { atributo: t, correccion, tratamiento } = caso.registro;
   const nombre =
-    valores === null
+    valorFijo !== undefined
       ? tratamiento.declaracion.sinTratamiento
       : rotuloOValor(caso.atributosClave, atributo.key);
   const dato = { pacienteId, dato: 'clinical-attributes', id: atributo.id } as const;
@@ -48,10 +51,7 @@ export function FormularioDeCorreccionDeAtributo({
 
   function alEnviar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
-    const cuerpo = cuerpoDeCorreccionDeAtributo(
-      new FormData(evento.currentTarget),
-      valores === null ? atributo.value : undefined,
-    );
+    const cuerpo = cuerpoDeCorreccionDeAtributo(new FormData(evento.currentTarget), valorFijo);
     const invalido = errorDelCuerpoDeAtributoCorregido(cuerpo);
     if (invalido) fallar(invalido);
     else void enviar(cuerpo);
@@ -63,10 +63,12 @@ export function FormularioDeCorreccionDeAtributo({
         <p className="m-0 font-semibold">{t.atributo}</p>
         <p className="m-0">{nombre}</p>
         <p className="text-text-muted m-0 text-sm">
-          {valores === null ? correccion.declaracion.valorFijo : correccion.atributo.claveFija}
+          {valorFijo !== undefined
+            ? correccion.declaracion.valorFijo
+            : correccion.atributo.claveFija}
         </p>
       </div>
-      {valores !== null && (
+      {valorFijo === undefined && (
         <CampoDeSeleccion
           id="ac-valor"
           name="value"

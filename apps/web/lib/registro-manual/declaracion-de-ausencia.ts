@@ -16,7 +16,9 @@ type Atributo = CaseView['attributes'][number];
  * El 422 de declarar la ausencia con tratamientos vigentes llega como `CUERPO_INVALIDO` sobre `attributeKey`; la misma
  * propiedad con `VALOR_FUERA_DE_CATALOGO` (clave no permitida para el tipo de cáncer) es otro error. Única regla del cliente.
  */
-export function esIncoherenciaDeDeclaracion(error: ErrorDeRegistro | null): boolean {
+export function esIncoherenciaDeDeclaracion(
+  error: { campo?: string | undefined; codigo?: string | undefined } | null,
+): boolean {
   return error?.campo === 'attributeKey' && error.codigo === 'CUERPO_INVALIDO';
 }
 

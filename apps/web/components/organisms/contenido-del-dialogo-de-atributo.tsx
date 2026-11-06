@@ -79,7 +79,7 @@ export function ContenidoDelDialogoDeAtributo({
       <FormularioDeCorreccionDeAtributo
         pacienteId={resto.pacienteId}
         atributo={corrige}
-        valores={null}
+        valorFijo={corrige.value}
         alGuardar={alTerminar}
         alCerrar={alCerrar}
       />

@@ -43,7 +43,7 @@ function textoDelError422(cuerpo: { error: string; field?: string | undefined })
   const { errores, egresado } = mensajes().ficha.correccion;
   if (cuerpo.error === 'PACIENTE_EGRESADO') return egresado;
   if (cuerpo.error === 'VALOR_FUERA_DE_CATALOGO') return errores.valorFormato;
-  if (esIncoherenciaDeDeclaracion({ campo: cuerpo.field, codigo: cuerpo.error, mensaje: '' })) {
+  if (esIncoherenciaDeDeclaracion({ campo: cuerpo.field, codigo: cuerpo.error })) {
     return errores.declaracionConTratamientos;
   }
   const porCampo: Record<string, string> = {

@@ -13,13 +13,16 @@ import { nombreDeOrigen } from '../../lib/ficha/presentacion';
 import { mensajes } from '../../lib/mensajes';
 import { FechaRelativa } from '../atoms/fecha-relativa';
 
-function textoDeLaVersion(version: CorrectionHistoryEntry, dato: DatoCorregible): string {
-  if (version.content !== undefined) return version.content;
-  if (version.regimenName !== undefined) return version.regimenName;
-  if (dato === 'clinical-attributes')
-    return rotuloOValor(mensajes().caso.valoresDeAtributo, version.value ?? '');
-  return [version.value, version.unit].filter(Boolean).join(' ');
-}
+/** Qué campo de la versión anterior se muestra según el tipo de dato: un solo criterio, por tipo. */
+const TEXTO_DE_LA_VERSION: Record<DatoCorregible, (version: CorrectionHistoryEntry) => string> = {
+  biomarkers: (v) => [v.value, v.unit].filter(Boolean).join(' '),
+  'clinical-notes': (v) => v.content ?? '',
+  'prior-treatments': (v) => v.regimenName ?? '',
+  'clinical-attributes': (v) => rotuloOValor(mensajes().caso.valoresDeAtributo, v.value ?? ''),
+};
+
+const textoDeLaVersion = (version: CorrectionHistoryEntry, dato: DatoCorregible): string =>
+  TEXTO_DE_LA_VERSION[dato](version);
 
 function VersionAnterior({
   version,
