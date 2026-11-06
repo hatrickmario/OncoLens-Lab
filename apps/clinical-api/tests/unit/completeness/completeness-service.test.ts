@@ -46,7 +46,7 @@ const servicioCon = (
   existe = true,
 ) =>
   createCompletenessService({
-    registros: registrosDeCompletitudFalsos({ diagnosticos, existe }),
+    registros: registrosDeCompletitudFalsos({ diagnosticos, existentes: existe ? undefined : [] }),
     catalogo,
     tiposHabilitados: habilitados(...tipos),
   });
@@ -113,7 +113,6 @@ describe('CompletenessService', () => {
         consultas += 1;
         return new Set(ids);
       },
-      registrosSinFiltrarPorRevision: async () => ({ Diagnosis: [diagnostico('mama')] }),
       registrosVariosSinFiltrarPorRevision: async (ids) =>
         new Map(ids.map((id) => [id, { Diagnosis: [diagnostico('mama')] }])),
     };

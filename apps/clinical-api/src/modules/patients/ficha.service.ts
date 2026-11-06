@@ -17,7 +17,13 @@ import {
   ultimoValorPorBiomarcador,
 } from './ficha.reglas.js';
 import type { IdentityService } from './identity.service.js';
-import { cancerTypeHabilitado, comoResumenAdmin, exigirIdentidad } from './patients.reglas.js';
+import {
+  cancerTypeHabilitado,
+  comoResumenAdmin,
+  exigirIdentidad,
+  FALTANTES_NO_DISPONIBLES,
+  type AlFallarElChecklist,
+} from './patients.reglas.js';
 import type { PatientsRepository } from './patients.repository.js';
 import type { VistaPorPermiso } from './vistas.js';
 
@@ -43,9 +49,6 @@ async function cargarDiagnosticoVigenteDeLaFicha(
   return comoDiagnostico(vigente, gradaciones, adicionales.get(vigente.id) ?? []);
 }
 
-/** Aviso al llamador de que el checklist falló: solo la clase del error, nunca mensaje, pila ni datos (RN-10). */
-type AlFallarElChecklist = (errorClase: string) => void;
-
 /** Lo que la ficha muestra del checklist: el contador y, si el cálculo falló, la marca de que no está disponible. */
 type FaltantesDeLaFicha = Pick<PatientSummary, 'missingCriticalCount' | 'completenessAvailable'>;
 
@@ -62,7 +65,7 @@ async function faltantesCriticos(
     return { missingCriticalCount: faltantesDe(await completitud.calcular(patientId)).length };
   } catch (error) {
     alFallar?.(claseDeError(error));
-    return { missingCriticalCount: 0, completenessAvailable: false };
+    return { ...FALTANTES_NO_DISPONIBLES };
   }
 }
 

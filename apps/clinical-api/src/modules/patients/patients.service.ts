@@ -27,15 +27,14 @@ import {
   comoResumenAdmin,
   enmascararDocumento,
   enmascararNombre,
+  FALTANTES_NO_DISPONIBLES,
+  type AlFallarElChecklist,
 } from './patients.reglas.js';
 import type {
   FilaDePaciente,
   FiltroDePacientes,
   PatientsRepository,
 } from './patients.repository.js';
-
-/** Aviso al llamador de que el checklist de un paciente falló: solo la clase del error, nunca su mensaje (RN-10). */
-export type AlFallarElChecklist = (errorClase: string) => void;
 
 export interface PatientsService {
   listar(entrada: {
@@ -80,11 +79,6 @@ interface ContextoDeElemento {
 /** Lo que el listado muestra del checklist de un paciente; `completenessAvailable` solo viaja cuando es `false`. */
 type FaltantesDelListado = Pick<PatientListItem, 'missingCriticalCount' | 'completenessAvailable'>;
 
-const CHECKLIST_NO_DISPONIBLE: FaltantesDelListado = {
-  missingCriticalCount: 0,
-  completenessAvailable: false,
-};
-
 function elementoDoctor(
   fila: FilaDePaciente,
   identificacion: IdentidadParcial,
@@ -101,7 +95,7 @@ function elementoDoctor(
     birthYear: fila.birthYear,
     cancerTypeEnabled: cancerTypeHabilitado(fila.cancerType, contexto.tiposHabilitados),
     pendingReviewCount: contexto.pendientes.get(fila.id) ?? 0,
-    ...(contexto.faltantes.get(fila.id) ?? CHECKLIST_NO_DISPONIBLE),
+    ...(contexto.faltantes.get(fila.id) ?? FALTANTES_NO_DISPONIBLES),
   };
 }
 
@@ -146,20 +140,38 @@ async function identidadesDe(
   return new Map(descifradas.map((fila) => [fila.patientId, fila]));
 }
 
-function comoFaltantes(
-  resultado: ResultadoDelChecklist | undefined,
-  alFallar: AlFallarElChecklist | undefined,
-): FaltantesDelListado {
-  if (resultado?.estado === 'ok') {
-    return { missingCriticalCount: faltantesDe(resultado.checklist).length };
+/** Los faltantes de un paciente del lote; cualquier resultado que no sea `ok` es la forma degradada (RN-26). Pura. */
+function comoFaltantes(resultado: ResultadoDelChecklist | undefined): FaltantesDelListado {
+  return resultado?.estado === 'ok'
+    ? { missingCriticalCount: faltantesDe(resultado.checklist).length }
+    : { ...FALTANTES_NO_DISPONIBLES };
+}
+
+/** El aviso es de cortesía: si el llamador lanza, la página no falla y no se repite el aviso (RN-26). */
+function avisarFallo(alFallar: AlFallarElChecklist | undefined, error: unknown): void {
+  try {
+    alFallar?.(claseDeError(error));
+  } catch {
+    // Un aviso que falla nunca tumba el listado.
   }
-  alFallar?.(claseDeError(resultado?.error));
-  return CHECKLIST_NO_DISPONIBLE;
+}
+
+/** El lote o, si el cálculo entero falla, el error que afecta a todas las filas. */
+async function calcularLote(
+  completitud: CompletenessEnLote,
+  patientIds: readonly string[],
+): Promise<ReadonlyMap<string, ResultadoDelChecklist> | { readonly fallo: unknown }> {
+  try {
+    return await completitud.calcularVarios(patientIds);
+  } catch (error) {
+    return { fallo: error };
+  }
 }
 
 /**
  * Los faltantes críticos de la página (FR-23) con el mismo servicio que la ficha, en lote. Si falla un paciente o el
- * lote entero, la página NO falla (RN-26): esas filas salen en 0 con `completenessAvailable = false`.
+ * lote entero, la página NO falla (RN-26): esas filas salen en 0 con `completenessAvailable = false` y se avisa una
+ * vez por paciente.
  */
 async function faltantesDeLaPagina(
   completitud: CompletenessEnLote,
@@ -167,14 +179,18 @@ async function faltantesDeLaPagina(
   alFallar: AlFallarElChecklist | undefined,
 ): Promise<Map<string, FaltantesDelListado>> {
   if (patientIds.length === 0) return new Map();
-  try {
-    const lote = await completitud.calcularVarios(patientIds);
-    return new Map(patientIds.map((id) => [id, comoFaltantes(lote.get(id), alFallar)]));
-  } catch (error) {
-    const errorClase = claseDeError(error);
-    patientIds.forEach(() => alFallar?.(errorClase));
-    return new Map(patientIds.map((id) => [id, CHECKLIST_NO_DISPONIBLE]));
+  const lote = await calcularLote(completitud, patientIds);
+  const faltantes = new Map<string, FaltantesDelListado>();
+  for (const id of patientIds) {
+    const resultado = lote instanceof Map ? lote.get(id) : undefined;
+    faltantes.set(id, comoFaltantes(resultado));
+    if (resultado?.estado === 'ok') continue;
+    avisarFallo(
+      alFallar,
+      resultado?.estado === 'no_disponible' ? resultado.error : (lote as { fallo?: unknown }).fallo,
+    );
   }
+  return faltantes;
 }
 
 /** Una página de pacientes (con los filtros o solo los `ids` de una búsqueda) en la vista del permiso. */

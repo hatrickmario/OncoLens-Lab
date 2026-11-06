@@ -74,20 +74,12 @@ export interface RegistroDeDato {
 export type RegistrosPorEntidad = Readonly<Record<string, readonly RegistroDeDato[]>>;
 
 export interface RegistrosDeCompletitud {
-  /**
-   * Registros del paciente de cada entidad pedida SIN filtrar por estado de revisión: incluye `rechazado` y
-   * `reemplazado`. Quien los use debe aplicar `registrosVigentes()` (RN-07) antes de contarlos. Del `Diagnosis`,
-   * solo el activo.
-   */
-  registrosSinFiltrarPorRevision(
-    patientId: string,
-    entidades: readonly string[],
-  ): Promise<RegistrosPorEntidad>;
   /** Los ids de `patientIds` que existen (una consulta para todos); no lee datos clínicos ni de `identity`. */
   existenPacientes(patientIds: readonly string[]): Promise<ReadonlySet<string>>;
   /**
-   * Como `registrosSinFiltrarPorRevision` para varios pacientes a la vez: una consulta por entidad pedida, agrupada por
-   * paciente. Todo id pedido aparece en el mapa (con `[]` en las entidades sin filas).
+   * Registros de los pacientes de cada entidad pedida SIN filtrar por estado de revisión: incluye `rechazado` y
+   * `reemplazado`; quien los use debe aplicar `registrosVigentes()` (RN-07). Del `Diagnosis`, solo el activo. Una
+   * consulta por entidad, agrupada por paciente. Todo id pedido aparece en el mapa (con `[]` en las entidades sin filas).
    */
   registrosVariosSinFiltrarPorRevision(
     patientIds: readonly string[],

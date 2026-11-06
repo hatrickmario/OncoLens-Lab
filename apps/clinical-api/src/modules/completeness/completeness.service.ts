@@ -177,6 +177,7 @@ function repartirPorDiagnostico(
   return { sinDiagnostico, porTipo };
 }
 
+/** Lecturas acotadas: consultas = 1 + nº de tipos de cáncer presentes (más una si algún paciente no tiene diagnóstico). */
 async function calcularVarios(
   dependencias: DependenciasDelServicio,
   patientIds: readonly string[],

@@ -214,9 +214,6 @@ export function createCompletenessRepository(db: Consultador): RegistrosDeComple
       );
       return new Set(rows.map((fila) => fila['id'] as string));
     },
-    async registrosSinFiltrarPorRevision(patientId, entidades): Promise<RegistrosPorEntidad> {
-      return (await leerVarios(db, [patientId], entidades)).get(patientId) ?? {};
-    },
     registrosVariosSinFiltrarPorRevision: (patientIds, entidades) =>
       leerVarios(db, patientIds, entidades),
   };

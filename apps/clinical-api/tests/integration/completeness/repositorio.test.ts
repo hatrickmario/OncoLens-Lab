@@ -22,9 +22,11 @@ describe('repositorio de completitud', () => {
   it('devuelve el biomarcador rechazado sin filtrarlo cuando lee los registros sin filtrar por revisión', async () => {
     const fm2 = await sembrarFM2(await prepararSiembra(cliente, generadorDeIds(ESPACIO_DE_IDS)));
 
-    const { Biomarker: biomarcadores = [] } = await createCompletenessRepository(
-      cliente,
-    ).registrosSinFiltrarPorRevision(fm2.patientId, ['Biomarker']);
+    const leidos = await createCompletenessRepository(cliente).registrosVariosSinFiltrarPorRevision(
+      [fm2.patientId],
+      ['Biomarker'],
+    );
+    const biomarcadores = leidos.get(fm2.patientId)?.['Biomarker'] ?? [];
 
     const rechazados = biomarcadores.filter((registro) => registro.reviewStatus === 'rechazado');
     expect(rechazados.map((registro) => registro.columnas['name'])).toEqual([
@@ -37,8 +39,8 @@ describe('repositorio de completitud', () => {
       await prepararSiembra(cliente, generadorDeIds(ESPACIO_DE_IDS + 1)),
     );
 
-    const lectura = createCompletenessRepository(cliente).registrosSinFiltrarPorRevision(
-      fm2.patientId,
+    const lectura = createCompletenessRepository(cliente).registrosVariosSinFiltrarPorRevision(
+      [fm2.patientId],
       ['Exam'],
     );
 
@@ -53,7 +55,7 @@ describe('repositorio de completitud', () => {
 
     for (const heredada of ['constructor', 'toString']) {
       await expect(
-        repositorio.registrosSinFiltrarPorRevision(fm2.patientId, [heredada]),
+        repositorio.registrosVariosSinFiltrarPorRevision([fm2.patientId], [heredada]),
       ).rejects.toThrow(`entidad_de_destino_no_soportada ${heredada}`);
     }
   });
@@ -78,9 +80,11 @@ describe('repositorio de completitud', () => {
       created_at: INSTANTE_FIJO,
     });
 
-    const { ClinicalEvent: eventos = [] } = await createCompletenessRepository(
-      cliente,
-    ).registrosSinFiltrarPorRevision(fm2.patientId, ['ClinicalEvent']);
+    const leidos = await createCompletenessRepository(cliente).registrosVariosSinFiltrarPorRevision(
+      [fm2.patientId],
+      ['ClinicalEvent'],
+    );
+    const eventos = leidos.get(fm2.patientId)?.['ClinicalEvent'] ?? [];
 
     expect(eventos).toHaveLength(1);
     expect(JSON.stringify(eventos)).not.toContain(marcador);

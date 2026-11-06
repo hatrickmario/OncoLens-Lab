@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PacienteNoEncontradoError } from '../../../src/modules/compartido/pacientes.errores.js';
+import { registrosDeCompletitudFalsos } from '../../support/registros-de-completitud-falsos.js';
 import { createCompletenessService } from '../../../src/modules/completeness/completeness.service.js';
 import type {
   CatalogoDeDatosCriticos,
@@ -55,7 +56,6 @@ function registrosDe(
 ) {
   const pedidos: Pedido[] = [];
   const registros: RegistrosDeCompletitud = {
-    registrosSinFiltrarPorRevision: async () => ({}),
     existenPacientes: async (ids) => new Set(ids.filter((id) => opciones.existen?.includes(id))),
     registrosVariosSinFiltrarPorRevision: async (ids, entidades) => {
       pedidos.push({ ids, entidades });
@@ -170,6 +170,23 @@ describe('CompletenessService.calcularVarios', () => {
     const { registros } = registrosDe({}, { fallanEntidades: 'Diagnosis' });
 
     await expect(servicioCon(registros).calcularVarios(['p-1'])).rejects.toThrow('lectura rota');
+  });
+});
+
+describe('CompletenessService.calcularVarios con el fake del puerto', () => {
+  it('devuelve checklists distintos cuando dos pacientes tienen diagnósticos de distinto tipo', async () => {
+    const registros = registrosDeCompletitudFalsos({
+      diagnosticos: { 'p-1': [diagnostico('mama')], 'p-2': [diagnostico('prostata')] },
+    });
+
+    const lote = await servicioCon(registros).calcularVarios(['p-1', 'p-2']);
+
+    const clavesDe = (id: string) => {
+      const resultado = lote.get(id);
+      return resultado?.estado === 'ok' ? resultado.checklist.items.map((i) => i.key) : [];
+    };
+    expect(clavesDe('p-1')).toEqual(['histologia', 're']);
+    expect(clavesDe('p-2')).toEqual(['histologia', 'psa']);
   });
 });
 

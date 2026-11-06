@@ -6,6 +6,10 @@ import type {
   CompletenessEnLote,
   CompletenessService,
 } from '../../../src/modules/completeness/ports.js';
+import { crearTiposHabilitados } from '../../../src/modules/evidence-analysis/tipos-habilitados.js';
+import { createFichaRepository } from '../../../src/modules/patients/ficha.repository.js';
+import { createPatientsRepository } from '../../../src/modules/patients/patients.repository.js';
+import { crearPatientsService } from '../../../src/modules/patients/patients.service.js';
 import { servicioDeCompletitud } from '../../support/completitud-http.js';
 import { FX_T4A_A, servicioDeIdentidad } from '../../support/identidad.js';
 import {
@@ -211,6 +215,56 @@ describe('degradación del cálculo (RN-26)', () => {
       busqueda.logger.lineas.some((l) => l.event === 'patients.busqueda.checklist_no_disponible'),
     ).toBe(true);
     expect(listado.logger.texto()).not.toContain('SINT-error-de-pg');
+  });
+});
+
+describe('forma degradada y avisos (RN-26)', () => {
+  it('da a la fila del listado la misma forma degradada que a la ficha cuando el cálculo falla [RN-26]', async () => {
+    const [paciente] = idsDeSemilla('mama');
+    const fallido = {
+      calcular: () => Promise.reject(new Error(ERROR_DE_PG)),
+      calcularVarios: () => Promise.reject(new Error(ERROR_DE_PG)),
+    };
+    const { app } = montarPacientes(escenario.mundo, { pageSize: TODOS, completitud: fallido });
+
+    const fila = ((await listar(app)).body.items as Fila[]).find((f) => f.id === paciente);
+    const ficha = await clienteVerificado(app)
+      .get(`/platform/patients/${paciente}`)
+      .set('Cookie', escenario.cookieDoctor);
+
+    expect({
+      missingCriticalCount: fila?.missingCriticalCount,
+      completenessAvailable: fila?.completenessAvailable,
+    }).toEqual({
+      missingCriticalCount: ficha.body.missingCriticalCount,
+      completenessAvailable: ficha.body.completenessAvailable,
+    });
+    expect(ficha.body.completenessAvailable).toBe(false);
+  });
+
+  it('devuelve la página completa y avisa una sola vez por paciente cuando el callback de aviso lanza [RN-26]', async () => {
+    const cliente = escenario.mundo.cliente;
+    const servicio = crearPatientsService({
+      repo: createPatientsRepository(cliente),
+      ficha: createFichaRepository(cliente),
+      identidad: servicioDeIdentidad(cliente),
+      tiposHabilitados: crearTiposHabilitados(['mama', 'prostata'], ['mama', 'prostata']),
+      completitud: conLote(() => Promise.reject(new Error(ERROR_DE_PG))),
+      pageSize: TODOS,
+    });
+    let avisos = 0;
+
+    const pagina = await servicio.listar({
+      filtros: { page: 1 },
+      vista: 'doctor_listado',
+      alFallarElChecklist: () => {
+        avisos += 1;
+        throw new Error('aviso roto');
+      },
+    });
+
+    expect(pagina.items).toHaveLength(TODOS);
+    expect(avisos).toBe(TODOS);
   });
 });
 
