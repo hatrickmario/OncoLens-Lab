@@ -22,4 +22,4 @@
 ## cierre
 
 - [x] 4.1 `openspec validate l1d-108-prompt-instrucciones-datos --strict` en verde.
-- [ ] 4.2 PENDIENTE del orquestador (merge y aviso; no es de la rama): Mergear antes que `l1d-316`, `l1d-317`, `l1d-321` y `l1d-322` (glosario §1) y avisar a `l1d-316` y `l1d-322` de que la memoria va con `PromptBuilder.memoria(...)` (ya no con `INICIO_DE_LA_MEMORIA` / `FIN_DE_LA_MEMORIA`) y a `l1d-317` / `l1d-322` de que usan `afirmar_separacion` sobre los nodos `caso` y `evidencia`.
+Nota para el orquestador (acción de merge y aviso, no tarea del PR): Mergear antes que `l1d-316`, `l1d-317`, `l1d-321` y `l1d-322` (glosario §1) y avisar a `l1d-316` y `l1d-322` de que la memoria va con `PromptBuilder.memoria(...)` (ya no con `INICIO_DE_LA_MEMORIA` / `FIN_DE_LA_MEMORIA`) y a `l1d-317` / `l1d-322` de que usan `afirmar_separacion` sobre los nodos `caso` y `evidencia`.
