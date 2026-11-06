@@ -317,6 +317,11 @@ services:
       - /tmp:size=${RAG_TMPFS_SIZE:-256m}
     environment:
       TMPDIR: /tmp
+      # langgraph arrastra langsmith: la telemetría de LangChain queda apagada y sin endpoint, sin que el anfitrión pueda
+      # encenderla (L1D-316; RN-10, RN-12). Valores fijos, no `${VAR:-}`.
+      LANGSMITH_TRACING: "false"
+      LANGCHAIN_TRACING_V2: "false"
+      LANGSMITH_ENDPOINT: ""
       APP_ENV: ${APP_ENV:-local}
       LLM_PROVIDER: ${LLM_PROVIDER:-local}
       LLM_BASE_URL: ${LLM_BASE_URL:-http://host.docker.internal:11434/v1}

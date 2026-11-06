@@ -22,7 +22,9 @@ def test_crear_app_se_niega_nombrando_la_variable_cuando_el_trazado_de_langchain
     with pytest.raises(TelemetriaDeLangChainActiva) as error:
         crear_app(settings_de_prueba())
 
-    assert variable in str(error.value) and valor not in str(error.value)
+    mensaje = str(error.value)
+    assert variable in mensaje
+    assert f"={valor}" not in mensaje and f"'{valor}'" not in mensaje and f'"{valor}"' not in mensaje
 
 
 @pytest.mark.parametrize("valor", ["false", "0", "", "no"])

@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 VARIABLES_DE_TELEMETRIA = ("LANGSMITH_TRACING", "LANGCHAIN_TRACING_V2", "LANGCHAIN_TRACING")
+_VALORES_VERDADEROS = frozenset({"true", "1", "yes", "on"})
 
 
 class TelemetriaDeLangChainActiva(RuntimeError):
@@ -12,4 +13,8 @@ class TelemetriaDeLangChainActiva(RuntimeError):
 
 
 def exigir_telemetria_de_langchain_apagada(entorno: Mapping[str, str]) -> None:
-    raise NotImplementedError("no implementado")
+    for variable in VARIABLES_DE_TELEMETRIA:
+        if entorno.get(variable, "").strip().lower() in _VALORES_VERDADEROS:
+            raise TelemetriaDeLangChainActiva(
+                f"{variable}: el trazado de LangChain debe estar apagado (RN-10, RN-12)"
+            )

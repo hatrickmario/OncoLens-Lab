@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, NoReturn
@@ -66,6 +67,7 @@ from app.config.errores_de_configuracion import (
 )
 from app.config.logging import registrar_evento, silenciar_urls_de_httpx_en_logs
 from app.config.settings import Settings, claves_de_recuperacion_ausentes, nombres_de_claves
+from app.config.telemetria import exigir_telemetria_de_langchain_apagada
 from app.config.version import VERSION_DEL_SERVICIO
 from app.domain.criterios_aplicabilidad import CriteriosDeAplicabilidad
 from app.domain.fusion_de_candidatos import EstrategiaDeFusion
@@ -257,7 +259,8 @@ def crear_app(
     datos_criticos: EtiquetasDeDatosCriticos | None = None,
 ) -> FastAPI:
     silenciar_urls_de_httpx_en_logs()
-    modelos = _cargar_modelos_segun(settings, cargador_de_modelos)
+    exigir_telemetria_de_langchain_apagada(os.environ)
+    modelos =_cargar_modelos_segun(settings, cargador_de_modelos)
     catalogo_clinico = catalogo_clinico or _montar_catalogo_clinico(settings)
     recuperacion = recuperacion or _componer_recuperacion(
         settings, modelos, corpus, catalogo_clinico
