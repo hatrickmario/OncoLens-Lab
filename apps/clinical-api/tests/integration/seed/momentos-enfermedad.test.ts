@@ -5,6 +5,7 @@ import { leerCatalogo } from '../../../prisma/seed/catalogo.js';
 import { idDeTratamiento, idSembrado } from '../../../prisma/seed/determinismo.js';
 import { ejecutarSeed } from '../../../prisma/seed/principal.js';
 import { SeedBloqueadoError } from '../../../prisma/seed/guarda.js';
+import { PACIENTES_ADICIONALES_DEL_SEED } from '../../../prisma/seed/pacientes/chat.js';
 import { PACIENTES_SEMILLA } from '../../../prisma/seed/pacientes/indice.js';
 import { conectar, type BaseDeTest } from '../../support/db.js';
 import { servicioDesdeEntorno, entornoDeClaves } from '../../support/identidad.js';
@@ -74,7 +75,7 @@ describe('Pacientes semilla por momento de la enfermedad', () => {
       tipos.filter((t) => t.patient_id === idDe(letra)).map((t) => t.cancer_type);
     const [total] = await filas<{ n: number }>('SELECT count(*)::int AS n FROM clinical.patient');
 
-    expect(total?.n).toBe(TOTAL_PACIENTES_SEMILLA);
+    expect(total?.n).toBe(TOTAL_PACIENTES_SEMILLA + PACIENTES_ADICIONALES_DEL_SEED);
     expect(PACIENTES_SEMILLA).toHaveLength(TOTAL_PACIENTES_SEMILLA);
     for (const letra of ['g', 'h', 'i', 'j', 'k']) expect(tipoDe(letra)).toEqual(['mama']);
     for (const letra of ['l', 'm']) expect(tipoDe(letra)).toEqual(['prostata']);
