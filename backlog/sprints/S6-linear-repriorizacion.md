@@ -237,3 +237,39 @@ Nota: no se probó ninguna de estas herramientas.
 - Los contenedores Feature (FEAT-*) no tienen estimación; las sumas de puntos son solo de historias.
 - Las clasificaciones se basan en los títulos de Linear y en el índice/documentos del repo; no se abrió cada FEAT-*.md ni los AC de cada historia. Las asignaciones REVISAR son opinión mía y requieren decisión del usuario.
 - Referencia de L1D-?? en el riesgo 8 se refiere a FEAT-T4e (equipo tratante), que está archivada y no aparece en la lista activa.
+
+## 8. Decisiones del usuario sobre los 14 `REVISAR` (2026-11-06) y su ejecución
+
+> El usuario aprobó la tabla propuesta. Lo ejecutado en Linear es **solo** el cambio de hito de los cinco que pasan a Post-MVP y el cierre de `L1D-32`; cada movimiento se verificó con una lectura posterior. El hito `Post-MVP` queda con **87** issues (82 + 5), todos en `Backlog`, listos para que el usuario los archive desde la interfaz.
+
+| ID | Decisión | Estado tras ejecutar |
+|---|---|---|
+| L1D-108 (US-057, prompt injection) | **Se queda en el S6** (KEEP-CHATBOT): el chat recibe texto libre | Sin cambios (Sprint 6) |
+| L1D-204 (US-050, RN-12) | **Se queda**: la ruta nueva del LLM sobre datos del paciente debe cumplirla por código | Sin cambios (Sprint 6) |
+| L1D-266 (US-216, cabeceras de seguridad) | **Se queda**: `assistant-ui` amplía la superficie XSS | Sin cambios (Sprint 6) |
+| L1D-241 (US-105, fidelidad del caso reconstruido) | **Se queda**: mide AC01 | Sin cambios |
+| L1D-213 (US-148, `403` por opt-out) | **Se queda** (5 pts). Hoy el `403` **no está implementado** en `clinical-api` (el paciente (d) tiene la marca sembrada y genera análisis igual); el chat es una generación nueva | Sin cambios (Sprint 6) |
+| L1D-75 (US-089), L1D-78 (US-092), L1D-118 (US-119), L1D-143 (US-136), L1D-233 (DEC-06) | **A Post-MVP** (el chat lee el JSON del caso; la revisión clínica se hace fuera de Linear) | **Movidos al hito `Post-MVP`**; hito de origen: Sprint 6, sin hito, Sprint 5, sin hito y Sprint 6, respectivamente; estado `Backlog` sin cambios |
+| L1D-32 (FEAT-PL3) | **Cerrar**: todos sus hijos están `Done` salvo L1D-172 y L1D-174, ya en Post-MVP | **`Done`** |
+| L1D-30 (FEAT-PL1) | **Cerrar cuando termine L1D-266**, que es hijo suyo y se mantiene en el S6 | Sin cambios (`In Progress`, Sprint 5) |
+| L1D-285 (US-213b) | **Cerrar**, pero su código ya está mergeado (#199, #204, #211) y quedan dos tareas de deuda sin destino en su change (5.1 menores del `design-principles-reviewer`; 5.3 `fullName`, ya trasladada a US-222): darles destino y cerrar | Sin cambios (`In Review`, Sprint 5) |
+| L1D-286 (braces, 2026-11-20) | **Decidir en el refinamiento**, sin puntos | Sin cambios |
+
+### Resueltas después por el usuario (2026-11-06)
+
+- **L1D-268 (US-218, las 10 preguntas de seguimiento):** cerrada (**`Done`**), por decisión del usuario, al quedar sustituida por el chatbot. Sus tareas humanas (H-1, H-2, H-5) y la corrida nocturna D5-13 **no se ejecutaron**. Aviso: su AC-6 (`403` por opt-out) **nunca se implementó**; ese hueco lo cubre L1D-213, que se mantiene en el S6.
+- **Carryover al Sprint 6 de lo alineado con RAG y chatbot** (los no alineados ya estaban en Post-MVP). Se movieron 26 issues cambiando **solo** el hito; el estado no cambió. Para revertir: los 23 con origen Sprint 5 vuelven a `Sprint 5` y L1D-11, 241 y 304 a «sin hito» (puede exigir pasar un hito nulo; no se ha probado).
+
+| Hito de origen · estado | Issues |
+|---|---|
+| Sprint 5 · In Progress | L1D-9, 14, 16, 18, 20, 25, 30, 40, 46, 47 |
+| Sprint 5 · In Review | L1D-113, 116, 119, 126, 205, 246, 285, 299 |
+| Sprint 5 · Backlog | L1D-10, 17, 92, 125, 286 |
+| Sin hito · Backlog | L1D-11, 241, 304 |
+
+**Estado de Linear tras estos cambios** (verificado con una lectura posterior): 119 issues no terminados = **32 en Sprint 6** + **87 en Post-MVP**; 0 en Sprint 5 y 0 sin hito. (121 abiertos − L1D-32 − L1D-268.)
+
+### Pendiente de decisión del usuario
+
+- La **descripción del hito Sprint 6** en Linear aún dice «G-Piloto … piloto mixto … G-Éxito» y debe reescribirse al definir el sprint (`/sprint-refine S6`). No se ha tocado.
+- **Archivar** los 87 issues del hito Post-MVP: lo hace el usuario desde la interfaz de Linear (el MCP no archiva).
