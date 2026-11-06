@@ -475,7 +475,17 @@
         "enCurso": "Aún en curso (según lo informado)",
         "fin": "Fin (opcional)",
         "motivoDeFin": "Motivo de fin",
-        "noMapeado": "Sin código en el catálogo versionado: queda como no mapeado; nunca se inventa un código."
+        "noMapeado": "Sin código en el catálogo versionado: queda como no mapeado; nunca se inventa un código.",
+        "declaracion": {
+          "casilla": "Sin tratamiento previo a la fecha",
+          "ayuda": "Declara que, a la fecha indicada, el paciente no tiene tratamiento previo según lo informado. No se crea ningún tratamiento.",
+          "fecha": "Fecha de la declaración",
+          "declarado": "Sin tratamiento previo (declarado)",
+          "sinTratamiento": "Sin tratamiento previo a la fecha",
+          "declaradoEl": "Sin tratamiento previo declarado el {fecha}",
+          "reemplazo": "Esto reemplazará la declaración «Sin tratamiento previo».",
+          "conTratamientos": "Hay tratamientos previos registrados; no se puede declarar su ausencia."
+        }
       },
       "atributo": {
         "accion": "+ Registrar atributo",
@@ -491,6 +501,7 @@
       },
       "errores": {
         "obligatorio": "Este campo es obligatorio.",
+        "fechaFutura": "La fecha no puede ser posterior a hoy.",
         "campoInvalido": "Revisa este campo: no cumple el formato esperado.",
         "valorFueraDeCatalogo": "Este valor no está en el catálogo vigente.",
         "sinTipoDeCancer": "Registra primero el diagnóstico del paciente: sin tipo de cáncer no se puede validar el atributo.",
