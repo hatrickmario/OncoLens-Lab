@@ -1008,3 +1008,261 @@ En cada campo de `CAMPOS_GENERADOS` el filtro MUST aplicar, además del Nivel A,
 - **GIVEN** una afirmación «Consider starting T-DM1» y otra «The authors considered starting T-DM1 in the trial»
 - **WHEN** se valida la opción
 - **THEN** la primera se rechaza con `lenguaje_no_permitido` y la segunda no
+
+### Requirement: Clasificación NLI real por lotes con mDeBERTa
+`rag-orchestrator` MUST disponer de un puerto `NliClassifier` (`clasificar(pares: list[ParNli]) -> list[ResultadoNli]`, por lotes) y de un adapter local de mDeBERTa-v3-base-xnli-multilingual-nli-2mil7 (fp32, ONNX Runtime/CPU) que devuelva, por par, `label` ∈ {`entailment`, `neutral`, `contradiction`} y `p_entailment` ∈ [0,1] a partir de probabilidades que suman 1 (ADR-39, FR-10). El NLI MUST recibir solo premisa (texto del corpus) e hipótesis (RN-11).
+
+#### Scenario: Los tres pares de FX-06a-c se clasifican en un lote con su clase esperada [US-231b AC-1] [ADR-39] [FR-10]
+- **GIVEN** los tres pares NLI de FX-06a-c y el `NliClassifier` real con los pesos de `MODEL_CACHE_DIR`
+- **WHEN** los clasifica en un único lote
+- **THEN** el primer par devuelve `entailment`, el segundo `contradiction` y el tercero `neutral`
+- **AND** las probabilidades de cada par suman 1
+
+#### Scenario: El adapter normaliza los logits con softmax y mapea las clases con los índices de configuración [US-231b AC-1] [RN-01] [RN-22]
+- **GIVEN** el adapter NLI con una sesión de inferencia falsa que devuelve logits fijos y los índices `NLI_LABEL_INDEX_ENTAILMENT`, `NLI_LABEL_INDEX_NEUTRAL` y `NLI_LABEL_INDEX_CONTRADICTION` de configuración
+- **WHEN** clasifica un lote de pares
+- **THEN** cada par recibe el `label` de su probabilidad máxima y `p_entailment` es la probabilidad de `entailment`
+- **AND** un lote vacío devuelve una lista vacía sin invocar la sesión
+
+#### Scenario: Un mapeo de clases inválido impide el arranque y nunca se lee de un config.json sin verificar [US-231b AC-4] [RN-01] [RN-22]
+- **GIVEN** índices de clase repetidos o fuera de [0, 2], o un modelo cuya salida no tiene 3 clases
+- **WHEN** arranca `rag-orchestrator` con `MODEL_PROVIDER=local` como subproceso
+- **THEN** el proceso termina con código distinto de 0 nombrando la variable de índice, sin su valor
+- **AND** ningún módulo del paquete `nli` lee `config.json` ni `id2label`
+
+### Requirement: Procedencia del NLI en meta.nliModel
+La metainformación del `NliClassifier` real MUST contener modelo, versión y SHA-256 iguales a los de la configuración, construidos a partir de ella y no del texto generado (FR-25).
+
+#### Scenario: La metainformación del NLI coincide con la configuración [US-231b AC-2] [FR-25]
+- **GIVEN** el `NliClassifier` real cableado con `NLI_MODEL`, `NLI_MODEL_REVISION` y `NLI_MODEL_SHA256` definidos
+- **WHEN** se lee la metainformación que alimenta `meta.nliModel`
+- **THEN** contiene el modelo, la versión y el SHA-256 de la configuración
+
+### Requirement: El NLI real cumple el mismo contrato que su fake
+El `NliClassifier` real y su fake MUST superar la misma batería de contrato: misma firma, nunca `None`, `label` dentro del conjunto permitido y el mismo tipo de error del puerto ante un fallo del modelo (el que L1D-180 traduce en `NLI_UNAVAILABLE`) (`[S1 resp. 3]`).
+
+#### Scenario: La misma batería pasa sobre el adapter real y sobre el fake [US-231b AC-3] [S1 resp. 3]
+- **GIVEN** el `NliClassifier` real (sesión falsa en la ruta rápida, modelo real con `models`) y su fake
+- **WHEN** se ejecuta sobre ambos la misma batería de contrato
+- **THEN** cumplen la firma `clasificar(pares) -> list[ResultadoNli]` y nunca devuelven `None`
+- **AND** cada `label` pertenece a {`entailment`, `neutral`, `contradiction`}
+- **AND** un fallo del modelo lanza `FalloDeInferencia` en ambos, sin texto de premisa ni hipótesis en el mensaje
+
+### Requirement: NLI ausente o alterado impide el arranque
+Con `MODEL_PROVIDER=local`, `rag-orchestrator` MUST verificar al arrancar la ruta y el SHA-256 del modelo NLI y de su tokenizer con el mecanismo común de US-231a; si el archivo falta o el *hash* no coincide, el proceso MUST terminar con código distinto de 0 y el error SHALL nombrar la variable de configuración, nunca su contenido (RN-22).
+
+#### Scenario: Un hash alterado del NLI termina el proceso nombrando la variable [US-231b AC-4] [RN-22]
+- **GIVEN** un archivo del NLI cuyo SHA-256 no coincide con `NLI_MODEL_SHA256` y `MODEL_PROVIDER=local`
+- **WHEN** arranca `rag-orchestrator` como subproceso
+- **THEN** el proceso termina con código distinto de 0
+- **AND** stdout y stderr completos contienen `NLI_MODEL_SHA256` y no contienen la ruta, el hash esperado ni el calculado
+
+#### Scenario: Un archivo del NLI ausente termina el proceso nombrando la variable de ruta [US-231b AC-4] [RN-22]
+- **GIVEN** `NLI_MODEL_PATH` apuntando a un archivo que no existe y `MODEL_PROVIDER=local`
+- **WHEN** arranca `rag-orchestrator` como subproceso
+- **THEN** el proceso termina con código distinto de 0
+- **AND** stdout y stderr completos contienen `NLI_MODEL_PATH` y no contienen la ruta
+
+### Requirement: Los datos externos del ONNX se verifican o el arranque falla
+Un modelo ONNX con datos externos (`*.onnx.data` o `*.onnx_data`) MUST tener su par `*_MODEL_DATA_PATH` / `*_MODEL_DATA_SHA256` verificado; sin él, `rag-orchestrator` SHALL fallar cerrado al arrancar nombrando la variable, y la sesión MUST crearse desde los bytes ya hasheados para cargar exactamente lo verificado (RN-22, RN-12, RN-14).
+
+#### Scenario: Un modelo con datos externos sin su par verificado impide el arranque [US-231b AC-4] [RN-22]
+- **GIVEN** un `.onnx` del NLI que referencia un archivo de datos externos y `MODEL_PROVIDER=local` sin `NLI_MODEL_DATA_PATH` / `NLI_MODEL_DATA_SHA256`
+- **WHEN** arranca `rag-orchestrator` como subproceso con `cwd` igual al directorio que contiene el `.data` (peor caso: una ruta relativa de la referencia externa sí resolvería)
+- **THEN** el proceso termina con código distinto de 0, porque la sesión se crea desde bytes y cualquier initializer externo no declarado se rechaza
+- **AND** stdout y stderr completos contienen `NLI_MODEL_DATA_PATH` y no contienen la ruta, el hash esperado ni el calculado
+
+#### Scenario: Los patrones de pesos excluyen también los datos externos [US-231b AC-4] [RN-14]
+- **GIVEN** `.gitignore`, el `.dockerignore` raíz y `apps/rag-orchestrator/Dockerfile.dockerignore`
+- **WHEN** se analizan sus patrones
+- **THEN** cada uno excluye `**/*.onnx.data` además de `**/*.onnx_data`
+
+### Requirement: NLI local sin red
+El adapter NLI real MUST funcionar sin conexiones salientes y no SHALL importar un cliente de nube o HTTP ni descargar pesos en ejecución (RN-12, NFR-05).
+
+#### Scenario: Con la red bloqueada clasifica y no registra conexiones salientes [US-231b AC-5] [RN-12] [NFR-05]
+- **GIVEN** el `NliClassifier` real y la red bloqueada en el test, con registro de conexiones salientes
+- **WHEN** clasifica los pares de FX-06a-c
+- **THEN** responde sin error
+- **AND** el registro de conexiones salientes queda vacío
+
+#### Scenario: Ningún módulo del paquete nli importa un cliente de nube o HTTP [US-231b AC-5] [RN-12]
+- **GIVEN** los módulos de `app/infrastructure/nli`
+- **WHEN** se inspeccionan sus importaciones
+- **THEN** ninguno importa ni usa `huggingface_hub`, `transformers`, `requests`, `httpx`, `urllib.request`, `socket`, un SDK de nube, `from_pretrained` ni `hf_hub_download`
+- **AND** la carga usa `Tokenizer.from_file(<ruta local>)` y `onnxruntime.InferenceSession(<bytes leídos de la ruta ya verificada>)`, nunca una ruta sin verificar
+
+### Requirement: Latencia de la etapa NLI medida y reportada
+La latencia de la etapa NLI con el modelo real MUST medirse (3 corridas, mediana) contra su presupuesto de 1500 ms; un valor fuera de presupuesto SHALL reportarse y no ocultarse (NFR-01, ADR-39).
+
+#### Scenario: La mediana de la etapa NLI se compara con 1500 ms y el exceso se reporta [US-231b AC-6] [NFR-01] [ADR-39]
+- **GIVEN** FX-06a-c en la VM de Docker de ≥ 10 GB del ADR-39 y el `NliClassifier` real
+- **WHEN** se mide la etapa NLI en 3 corridas y se toma la mediana
+- **THEN** la mediana es ≤ 1500 ms
+- **AND** un valor fuera de presupuesto queda en el reporte de la medición para el refinamiento
+
+### Requirement: Memoria conjunta de los tres modelos medida y reportada
+La memoria residente de `rag-orchestrator` con BGE-M3, bge-reranker-v2-m3 y mDeBERTa cargados a la vez MUST medirse contra la cifra del ADR-39 (4489 MiB); un valor fuera de presupuesto SHALL reportarse (NFR-01, ADR-39).
+
+#### Scenario: El RSS conjunto no excede 4489 MiB y el exceso se reporta [US-231b AC-7] [NFR-01] [ADR-39]
+- **GIVEN** los tres modelos cargados a la vez en la VM de Docker de ≥ 10 GB y una inferencia ejecutada con cada uno
+- **WHEN** se mide la memoria residente máxima del proceso de `rag-orchestrator`
+- **THEN** no excede 4489 MiB
+- **AND** un valor fuera de presupuesto queda en el reporte de la medición para el refinamiento
+
+### Requirement: Chunking de la semilla en tokens de BGE-M3
+Con `MODEL_PROVIDER` real, `load_seed_corpus` MUST obtener el *embedder* de pasajes real de US-231a y trocear contando tokens con el tokenizer de BGE-M3, de modo que ningún chunk exceda `CORPUS_CHUNK_SIZE` tokens (`[S1 resp. 38]`).
+
+#### Scenario: ch-largo-1 se trocea en al menos dos chunks de ≤ 1024 tokens [US-231b AC-8] [S1 resp. 38]
+- **GIVEN** `load_seed_corpus` con `MODEL_PROVIDER=local`, `CORPUS_CHUNK_SIZE = 1024` y `ch-largo-1` de FX-06a-c (1500 tokens de BGE-M3)
+- **WHEN** se trocea
+- **THEN** cada chunk tiene ≤ 1024 tokens contados con el tokenizer de BGE-M3
+- **AND** se producen al menos 2 chunks (el número exacto depende de `CORPUS_CHUNK_OVERLAP`, asumido)
+
+#### Scenario: La fábrica de embeddings devuelve el adapter real y no sale con código 1 [US-231b AC-8]
+- **GIVEN** `MODEL_PROVIDER=local` con los pesos de embeddings verificados
+- **WHEN** `fabricar_embedder_real` construye el *embedder* de pasajes
+- **THEN** devuelve el adapter de `PassageEmbedder` de US-231a
+- **AND** con `MODEL_PROVIDER=fake` falla nombrando la variable, sin devolver un *embedder* falso
+
+#### Scenario: El cargador de la semilla verifica todos los archivos que abre y no revela rutas ni hashes [US-231b AC-8] [RN-22]
+- **GIVEN** `MODEL_PROVIDER=local` y un tokenizer de BGE-M3 cuyo SHA-256 no coincide con `EMBEDDING_TOKENIZER_SHA256`
+- **WHEN** corre `python -m app.scripts.load_seed_corpus` como subproceso
+- **THEN** termina con código distinto de 0
+- **AND** stdout y stderr completos contienen `EMBEDDING_TOKENIZER_SHA256` y no contienen la ruta, el hash esperado ni el calculado
+
+### Requirement: Smoke de la semilla con embeddings reales y recuperación compuesta
+El cargador de la semilla MUST dejar la semilla `embebido` y vigente con los metadatos del catálogo y su `CorpusRelease`, y `app/main.py` MUST componer los bordes reales del corpus de modo que `/rag/query` deje de responder `503 RETRIEVAL_UNAVAILABLE` por composición (RN-05, AC-06.1, `[S1 resp. 82]`).
+
+#### Scenario: Todos los documentos de la semilla quedan embebidos y la release publicada [US-231b AC-9] [US-059 AC-1] [AC-06.1] [RN-05]
+- **GIVEN** el manifiesto real `data/raw/seed/manifest.yaml`, los *embeddings* reales y el Compose de L1D-164
+- **WHEN** corre `python -m app.scripts.load_seed_corpus`
+- **THEN** todos los documentos quedan `embebido` con `is_current = true`
+- **AND** sus chunks vigentes llevan copiados del catálogo `source_type`, `language` y `cancer_type_tags`
+- **AND** existe la `CorpusRelease` con `excluded_sources = ["NCCN", "ESMO"]`
+
+#### Scenario: Con modelos locales, main.py compone el corpus y /rag/query recupera [US-231b AC-9] [S1 resp. 82]
+- **GIVEN** `LLM_PROVIDER=local`, `MODEL_PROVIDER=local`, el corpus compuesto por `main.py`, la semilla cargada y `RETRIEVAL_TOP_K=30` con `RERANKER_MAX_PAIRS=12`, sin ningún generador falso inyectado por entorno
+- **WHEN** se envía `Q-HER2` a `/rag/query` con un JWT de servicio válido
+- **THEN** la respuesta es `200` con `sin_evidencia` o `503 LOCAL_LLM_UNAVAILABLE`, y nunca `503 RETRIEVAL_UNAVAILABLE`
+- **AND** una respuesta `200` se valida contra `RagQueryInternalResponse` del `openapi.yaml`
+
+#### Scenario: La etapa de corte envía como máximo 12 pares al reranker y registra solo recuentos [US-231b AC-9] [S1 resp. 82]
+- **GIVEN** la integración de la tarea 1.9 (Milvus fingido en su puerto, *reranker* espía) con 30 candidatos y `RERANKER_MAX_PAIRS=12`
+- **WHEN** corre la recuperación
+- **THEN** el *reranker* recibe como máximo 12 pares, recortados por puntaje de recuperación con desempate determinista por `chunk_id`
+- **AND** el log de la etapa contiene solo recuentos (recibidos, descartados, enviados), sin ids ni texto
+
+#### Scenario: Milvus o el catálogo inaccesibles impiden el arranque sin revelar su dirección [US-231b AC-9] [RN-12] [RN-22]
+- **GIVEN** `MODEL_PROVIDER=local` y un Milvus (`MILVUS_URI`) o un catálogo (`CORPUS_DATABASE_URL`, rol `rag_corpus`) inaccesible
+- **WHEN** arranca `rag-orchestrator` como subproceso y ejecuta la sonda de arranque (`has_collection`; `SELECT 1`)
+- **THEN** el proceso termina con código distinto de 0 y stdout y stderr completos contienen `MILVUS_URI` o `CORPUS_DATABASE_URL`
+- **AND** no contienen la URI, el host, el puerto ni el DSN, y no se recurre a un corpus falso
+
+#### Scenario: Con modelos fake main.py no compone el corpus ni importa runtimes [US-231b AC-9]
+- **GIVEN** `MODEL_PROVIDER=fake`
+- **WHEN** arranca `rag-orchestrator`
+- **THEN** arranca sin construir Milvus ni los lectores del schema `corpus` y sin importar ningún runtime de modelos
+
+### Requirement: Endpoint de seguimiento sin estado sobre el pipeline del análisis
+`rag-orchestrator` MUST atender `POST /rag/follow-up` reutilizando los pasos de `/rag/query` (recuperación, *reranker*, umbral, generación, validación de citas, soporte NLI y filtro RN-23), con una plantilla de prompt propia versionada en `meta.promptVersion`, y responder `RagFollowUpResponse` válido contra su spec. Toda afirmación devuelta SHALL citar chunks recuperados **en este turno** o un `patientDataRef` (RN-01, RN-04, ADR-34).
+
+#### Scenario: Respuesta con evidencia citada y validada [US-218 AC-1] [RN-01] [RN-04]
+- **GIVEN** el perfil `RAG_ADAPTERS=fake`, `rag-follow-up-request.json`, chunks sobre el umbral y el LLM falso con guion de seguimiento que cita `C1` con una afirmación que el NLI falso marca `entailment`
+- **WHEN** `clinical-api` (JWT de servicio de test) envía `POST /rag/follow-up`
+- **THEN** responde `200` con `status = con_evidencia`, válido contra el spec de `rag-orchestrator`, cada afirmación con ≥ 1 cita cuyo `chunkId` está entre los recuperados en esta llamada y los campos de la cita copiados del corpus
+- **AND** `meta.retrievalParams.queryRewrite = {applied: false, reason: "no_aplica"}` y `meta.promptVersion` es la versión de la plantilla de seguimiento
+
+#### Scenario: La pregunta llega en NFD y el prompt la recibe en NFC [US-218 AC-1] [US-250 AC-4] [OUT-05]
+- **GIVEN** el mismo contexto y el LLM falso que registra el prompt
+- **WHEN** la `question` llega en NFD con espacios repetidos y, en otra llamada, en NFC
+- **THEN** los dos prompts registrados tienen el mismo SHA-256 y la consulta que reciben recuperación y *reranker* es la misma
+- **AND** una `question` formada solo por espacios responde `422` sin invocar ningún adapter
+
+#### Scenario: El NLI caído falla cerrado sin respuesta parcial [US-218 AC-1] [RN-01]
+- **GIVEN** el mismo contexto y el NLI falso configurado para fallar
+- **WHEN** se procesa el seguimiento
+- **THEN** responde `503` con `error = NLI_UNAVAILABLE`, válido contra el spec, sin afirmaciones ni texto generado
+
+### Requirement: La memoria del análisis nunca es cita ni soporte en el seguimiento
+`rag-orchestrator` MUST incluir `analysisMemory` en el prompt solo como bloque rotulado de contexto, separado de los fragmentos citables, y SHALL NOT usar su texto como premisa del NLI ni como cita. Una afirmación cuyo único sostén sea la memoria MUST omitirse y contarse en `omittedClaims` (RN-24).
+
+#### Scenario: Una afirmación sostenida solo en la memoria se omite [US-218 AC-2] [RN-24]
+- **GIVEN** el mismo contexto y un guion del LLM falso con dos afirmaciones: una que cita `C1` con `entailment`, y otra que copia la síntesis de `analysisMemory` y cita `C1`, que el NLI falso marca `neutral` frente a `C1`
+- **WHEN** se procesa el seguimiento
+- **THEN** `answer` contiene solo la primera afirmación y `omittedClaims = 1`
+- **AND** las premisas registradas por el NLI falso son solo textos de chunks recuperados (y verbalizaciones de datos del paciente), nunca el texto de `analysisMemory`
+
+#### Scenario: El prompt rotula la memoria como contexto no citable [US-218 AC-2] [RN-24]
+- **GIVEN** el LLM falso que registra el prompt
+- **WHEN** se procesa el seguimiento
+- **THEN** el texto de `analysisMemory` aparece en el prompt dentro del bloque rotulado como contexto no citable y sin alias `C<n>`, y los fragmentos recuperados aparecen con sus alias en un bloque distinto
+
+### Requirement: Seguimiento sin evidencia sin invocar al LLM
+Si ningún chunk supera `RELEVANCE_THRESHOLD`, `/rag/follow-up` MUST responder `status = sin_evidencia` con `answer` y `citedSources` vacíos y `topRelevanceScore = null` (no `0.0`), sin invocar al LLM de generación ni la reescritura de la consulta (RN-02).
+
+#### Scenario: Ningún chunk supera el umbral [US-218 AC-3] [RN-02]
+- **GIVEN** el *reranker* falso con todos los puntajes bajo `RELEVANCE_THRESHOLD` y contadores en el LLM falso y en el `QueryRewriter` falso
+- **WHEN** se procesa el seguimiento
+- **THEN** responde `200` con `status = sin_evidencia`, `topRelevanceScore = null`, `answer` y `citedSources` vacíos, válido contra el spec
+- **AND** el LLM falso y el `QueryRewriter` falso registran cero llamadas
+
+### Requirement: Preguntas fuera del contexto del análisis
+`/rag/follow-up` MUST clasificar `fuera_de_contexto` la pregunta ajena al análisis con una regla determinista previa a recuperar (identidad de otra persona u otro cáncer sin el del contexto; design D7) y con la regla del prompt; una comparativa que nombra ambos cánceres MUST NOT quedar fuera. La respuesta SHALL tener `answer` y `citedSources` vacíos y `topRelevanceScore = null` `[S5 resp. 13]`.
+
+#### Scenario: Pregunta sobre otro paciente o de otro tipo de cáncer [US-218 AC-5] [Pre-S1 resp. 14] (señales del clasificador: Decidido, usuario, 2026-11-03, [S5 resp. 13])
+- **GIVEN** un contexto de mama y contadores en todos los adapters falsos
+- **WHEN** la `question` contiene un marcador de identidad de otra persona (enmascarado por ADR-40) o nombra, por un sinónimo del catálogo, el cáncer de próstata sin nombrar el de mama
+- **THEN** responde `200` con `status = fuera_de_contexto`, `answer` y `citedSources` vacíos y `topRelevanceScore = null`, válido contra el spec
+- **AND** los adapters de embeddings, recuperación, *reranker*, LLM y NLI registran cero llamadas
+
+#### Scenario: Una pregunta comparativa legítima que menciona otro cáncer no queda fuera de contexto [US-218 AC-5] [S5 resp. 13]
+- **GIVEN** un contexto de mama, chunks de mama sobre el umbral y el LLM falso con un guion que cita `C1` con `entailment`
+- **WHEN** la `question` es «¿La evidencia de este análisis compara el resultado en cáncer de mama con lo descrito en cáncer de próstata?»
+- **THEN** el clasificador determinista no la marca `fuera_de_contexto` y la respuesta es `200` con `status = con_evidencia`, válida contra el spec
+- **AND** la recuperación recibió el filtro `cancerType` del contexto (mama) y cada afirmación cita un chunk recuperado en esta llamada
+
+#### Scenario: El LLM marca la pregunta como ajena según la regla del prompt [US-218 AC-5] [Pre-S1 resp. 14]
+- **GIVEN** una pregunta que pasa el clasificador determinista y el LLM falso que devuelve el marcador estructurado `fuera_de_contexto`
+- **WHEN** se procesa el seguimiento
+- **THEN** responde `status = fuera_de_contexto` sin afirmaciones ni citas y `topRelevanceScore = null`
+
+#### Scenario: Una salida del LLM que no parsea no se convierte en fuera de contexto [US-218 AC-5] (Decidido, usuario, 2026-11-03, [S5 resp. 13])
+- **GIVEN** el LLM falso que devuelve una salida inválida
+- **WHEN** se procesa el seguimiento
+- **THEN** responde el error de salida inválida existente (`ErrorSalidaLlmInvalida`), nunca `fuera_de_contexto`
+
+### Requirement: Lenguaje prohibido omitido en el seguimiento
+`/rag/follow-up` MUST aplicar a cada afirmación el verificador común de términos prescriptivos de RN-23 (el mismo de `/rag/query`); una afirmación con un término de la lista MUST omitirse, contarse en `omittedClaims` y no aparecer en la respuesta.
+
+#### Scenario: Una afirmación con un término prohibido nunca se muestra [US-218 AC-7] [RN-23] [§15 resp. 2]
+- **GIVEN** un guion del LLM falso con una afirmación válida y otra que contiene «debe recibir», ambas citando `C1` con `entailment`
+- **WHEN** se procesa el seguimiento
+- **THEN** `answer` contiene solo la afirmación válida, `omittedClaims = 1` y ningún campo de la respuesta contiene el término
+
+### Requirement: Backend 2 no guarda estado del seguimiento
+`rag-orchestrator` MUST NOT escribir turnos, preguntas, memoria ni contexto del seguimiento en disco, caché, Milvus, el schema `corpus` ni los logs; cada llamada se resuelve solo con su cuerpo (FR-31, `[Pre-S1 resp. 29]`).
+
+#### Scenario: Dos turnos no dejan rastro en Backend 2 [US-218 AC-8] [RN-11] [Pre-S1 resp. 29]
+- **GIVEN** un directorio temporal vigilado como directorio de trabajo, el fake de Milvus que registra escrituras, la sesión de `corpus` sin permisos de escritura y los logs capturados
+- **WHEN** se procesan dos seguimientos con `pseudoPatientId`, `traceId` y una frase sintética marcada distintos
+- **THEN** el directorio no tiene ficheros nuevos, Milvus registra cero escrituras, no hay escrituras en `corpus`, y ninguna línea de log contiene la pregunta, la memoria, la frase marcada ni el `pseudoPatientId`
+- **AND** el segundo turno no recibe ningún dato del primero (respuesta idéntica a procesarlo solo)
+
+### Requirement: Corregir un tratamiento o atributo recalcula el checklist y deja intacto el análisis previo
+Tras corregir un `PriorTreatment` o un `ClinicalAttribute`, el checklist MUST reflejar la fila vigente nueva sin acción adicional y un `AIAnalysisRecord` anterior MUST seguir intacto, con una huella de contexto distinta de la del análisis nuevo (RN-06, FR-12). Un aviso de datos cambiados NO SHALL bloquear un análisis nuevo (RN-26). La marca `staleness.patientData` la calculará el detector de US-175 (L1D-148, S6); hoy `staleness` es neutro.
+
+#### Scenario: El checklist cambia de estado tras corregir [RN-26] [AC-04.1]
+- **GIVEN** un ítem crítico con destino `ClinicalAttribute` en estado «Presente sin verificar» por un valor equivocado
+- **WHEN** el doctor corrige el atributo
+- **THEN** `GET …/completeness` lo devuelve «Presente y verificado» y el conteo de faltantes se actualiza
+
+#### Scenario: El análisis previo queda intacto y su huella difiere de la del análisis nuevo [RN-06] [FR-12]
+- **GIVEN** un análisis guardado que usó el tratamiento «TCH propio» y el atributo `posmenopausica`
+- **WHEN** el doctor los corrige a «FEC» y `premenopausica` y se genera un análisis nuevo
+- **THEN** el registro del análisis previo conserva su huella y su instantánea, y el nuevo tiene otra huella
+- **AND** (TRASLADADA a US-175 / L1D-148) `staleness.patientData = true` con la sección en `changedData` cuando exista el detector
+
+#### Scenario: Un análisis nuevo usa el dato vigente [RN-07]
+- **WHEN** el doctor genera un análisis después de la corrección
+- **THEN** el contexto enviado contiene solo la fila vigente, nunca la `reemplazado`

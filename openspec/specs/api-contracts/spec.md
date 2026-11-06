@@ -466,11 +466,26 @@ Cada operación de `clinical-api` MUST declarar `x-permission` con uno o varios 
 - **THEN** el comando termina con código distinto de 0 y nombra la ruta
 
 ### Requirement: Ejemplos sintéticos y no normativos
-Los ejemplos de `contracts/examples/` MUST ser no normativos y sintéticos según la convención de design.md D3 (`dataClassification = sintetico`, prefijo `SINT-`, "Prueba Sintética", NCCN y ESMO solo en `sourcesNotIncluded`), y los de Backend 2 SHALL NOT tener identidad ni fechas absolutas en `clinicalContext`, `analysisMemory`, `query` o `question`; `assertExamplesSynthetic()` SHALL verificarlo (RN-14, `[Pre-S1 resp. 12]`).
+Los ejemplos de `contracts/examples/` MUST ser no normativos y sintéticos según la convención de design.md D3 (`dataClassification = sintetico`, prefijo `SINT-`, "Prueba Sintética", NCCN y ESMO solo en `sourcesNotIncluded`), y los de Backend 2 SHALL NOT tener identidad ni fechas absolutas en `clinicalContext`, `analysisMemory`, `query` o `question`; `assertExamplesSynthetic()` SHALL verificarlo (RN-14, `[Pre-S1 resp. 12]`). Solo las claves de máscara cerrada del listado MAY apartarse de la convención, y solo cuando su valor cumple exactamente la máscara: `nationalIdMasked` con cuatro `•`, un espacio y dos caracteres alfanuméricos, y `fullNameMasked` solo con la máscara sintética `^P\. S\.( \d\.)?$` (la que produce `enmascararNombre()` para «Prueba Sintética [n]», `[S3 resp. 16]`), más estrecha que el `pattern` general de `PatientListItem`; cualquier otro valor en esas claves MUST seguir exigiendo la convención sintética, y el nombre o el documento en claro (`fullName`, `nationalId`…) SHALL NOT tener exención (Q-1, US-213b).
 
 #### Scenario: Un ejemplo no sintético rompe la verificación [US-033 AC-17] [RN-14] [Pre-S1 resp. 12]
-- **WHEN** un parche pone `dataClassification = real_anonimizado` en `rag-query-request.json`, `sourceName = "NCCN"` en una cita, `nationalId = "12345678"` en `patient-search.json`, `name = "María Pérez"` en ese ejemplo, o la fecha `01/03/2026` dentro de `clinicalContext`
+- **WHEN** un parche pone `dataClassification = real_anonimizado` en `rag-query-request.json`, `sourceName = "NCCN"` en una cita, en `patient-search.json` un `nationalId` numérico sin la marca sintética, en ese ejemplo un `name` con nombre y apellido de forma real, o la fecha `01/03/2026` dentro de `clinicalContext`
 - **THEN** el comando termina con código distinto de 0 y nombra el ejemplo y la ruta
+
+#### Scenario: La máscara sintética en fullNameMasked se acepta como máscara cerrada [US-213 AC-12] [RN-14] (Q-1) [S3 resp. 16]
+- **GIVEN** `patient-page-doctor.json` con `fullNameMasked = "P. S. 1."`
+- **WHEN** se ejecuta `contracts:check`
+- **THEN** `assertExamplesSynthetic()` no informa hallazgos para esa ruta
+
+#### Scenario: Un nombre en claro en fullNameMasked sigue rompiendo la verificación [US-213 AC-12] [RN-14] (Q-1)
+- **GIVEN** un parche que pone `fullNameMasked = "María Pérez"`, `"M. Pérez"`, `"Ma. P."` o unas iniciales no sintéticas como `"M. P."` en `patient-page-doctor.json`
+- **WHEN** se ejecuta `contracts:check`
+- **THEN** termina con código distinto de 0 nombrando el ejemplo, la ruta y que todo nombre de persona debe ser "Prueba Sintética"
+
+#### Scenario: La exención no se extiende a otras claves de nombre [US-213 AC-12] [RN-14] (asumido)
+- **GIVEN** un parche que pone el valor `"P. S."` en una clave `fullName` de un ejemplo
+- **WHEN** se ejecuta `contracts:check`
+- **THEN** termina con código distinto de 0 nombrando la ruta
 
 ### Requirement: Clientes HTTP generados con fetch inyectable
 `contracts:generate` MUST generar con hey-api (plugins `@hey-api/client-fetch` + `@hey-api/sdk`, incluidos en `@hey-api/openapi-ts` con versión exacta fijada) un SDK por spec en `packages/api-contracts/src/client/clinical-api/` (para `web`) y `packages/api-contracts/src/client/rag-orchestrator/` (para `clinical-api`), con `baseUrl` y `fetch` inyectables; lo generado MUST NOT editarse a mano y `contracts:generate:check` SHALL detectarlo `[S1 resp. 13]`.
@@ -643,13 +658,14 @@ El spec de `clinical-api` MUST declarar `GET /platform/patients/{patientId}/comp
 - **AND** la respuesta real de `/completeness` valida contra el spec en `contracts:verify-provider`
 
 ### Requirement: La ficha declara si el checklist está disponible
-`PatientSummary` SHALL ganar la propiedad opcional `completenessAvailable` (booleano; ausente equivale a `true`), sin volver nulable `missingCriticalCount`. `PatientListItem` SHALL NOT cambiar en el S4 (decisión Q2, usuario, 2026-10-30).
+`PatientSummary` y `PatientListItem` SHALL tener la propiedad opcional `completenessAvailable` (booleano; ausente equivale a `true`), sin volver nulable `missingCriticalCount` en ninguno. El cambio MUST ser aditivo (sin ERR de oasdiff), subir `info.version` de `clinical-api` a `1.21.0` y traer un ejemplo registrado en `contracts/examples/index.json` con una fila de `PatientPage` en `completenessAvailable = false`.
 
 #### Scenario: La propiedad nueva es opcional [US-003 AC-2] [RN-26]
+Ahora en la ficha y en el listado (feedback de la Demo 5, 2026-11-05).
 - **WHEN** `contracts:breaking` compara el spec con `main`
-- **THEN** `completenessAvailable` aparece como propiedad opcional de `PatientSummary` y `missingCriticalCount` sigue siendo un entero requerido
-- **AND** `PatientListItem` no tiene cambios respecto de `main`
-- **AND** `patient-summary-checklist-no-disponible.json` (con `completenessAvailable = false`) valida contra `PatientSummary` y está registrado en `index.json`
+- **THEN** `completenessAvailable` aparece como propiedad opcional de `PatientSummary` y de `PatientListItem` y `missingCriticalCount` sigue siendo un entero requerido en ambos
+- **AND** `patient-summary-checklist-no-disponible.json` y `patient-list-checklist-no-disponible.json` validan contra su schema y están registrados en `index.json`
+- **AND** `PatientAdminSummary` no tiene cambios respecto de `main`
 
 ### Requirement: Ejemplos de /completeness para los consumidores
 `contracts/examples/` MUST incluir respuestas `200` de F-M2 (6 faltantes), de F-M1 (0 faltantes) y de tipo no habilitado (`items = []`), y los errores `401`, `403`, `404` y `500` de la operación, todos registrados en `index.json`.
@@ -749,3 +765,65 @@ El spec de `clinical-api` MUST declarar `correctBiomarker`, `correctClinicalNote
 #### Scenario: Los ejemplos previos del registro manual siguen válidos [US-111 AC-4] [ADR-26] [S5 resp. 13]
 - **WHEN** se validan `error-valor-fuera-de-catalogo.json` y `error-gradacion-incoherente.json` (sin `field`) contra el spec nuevo
 - **THEN** siguen siendo válidos
+
+### Requirement: Ejemplo sintético enmascarado del listado de pacientes
+`contracts/examples/` MUST contener un ejemplo `SINT-` de `PatientListItem` con `nationalIdMasked` y `fullNameMasked` en el formato de US-048 (L1D-202 D2), y `PatientListItem` MUST declarar un `pattern` en ambos campos (`fullNameMasked`: iniciales de un carácter con punto, separadas por un espacio). El ejemplo MUST validar contra el schema y las respuestas reales MUST cumplir el `pattern` en la verificación del proveedor (US-214).
+
+#### Scenario: El ejemplo del listado lleva las dos máscaras y valida contra el schema [US-213 AC-12] [Pre-S1 resp. 42] [Pre-S1 trazabilidad M-1]
+- **GIVEN** `contracts/examples/patient-page-doctor.json` con un ítem `idType = sintetico`, `nationalIdMasked = "•••• 01"` y `fullNameMasked = "P. S. 1."`
+- **WHEN** se ejecuta `contracts:check`
+- **THEN** el ejemplo valida contra `PatientPage` y `PatientListItem`, incluido el `pattern` de ambos campos, y el comando termina con código 0
+
+#### Scenario: Un fullNameMasked fuera del formato no valida contra el schema [US-213 AC-12]
+- **GIVEN** un parche que pone `fullNameMasked = "PS1"` en el ejemplo
+- **WHEN** se ejecuta `contracts:check`
+- **THEN** `assertExamplesValid()` termina con código distinto de 0 nombrando el ejemplo, la ruta y el `pattern`
+
+#### Scenario: La respuesta real del listado cumple el pattern de fullNameMasked [US-213 AC-12] (asumido)
+- **GIVEN** el seed sintético con pacientes "Prueba Sintética <n>"
+- **WHEN** un test de integración de `clinical-api` llama `GET /platform/patients` con `clinical:read` y valida la respuesta contra el spec
+- **THEN** cada `fullNameMasked` cumple el `pattern` (p. ej., `"P. S. 1."`) y la verificación del proveedor pasa
+
+### Requirement: Campo aditivo del tope de seguimiento en la Base
+`AnalysisBasis` de `apps/clinical-api/openapi.yaml` MUST declarar `maxFollowUps` (integer >= 1), opcional solo por los análisis históricos. El cambio SHALL ser aditivo (ADR-26): `oasdiff` contra `main` sin incompatibles, ejemplos `EvidenceAnalysis` actualizados en `index.json` y tipos generados con `contracts:generate`, nunca a mano `[S5 resp. 10]`.
+
+#### Scenario: El campo nuevo es aditivo y los ejemplos validan [US-219 AC-1] [ADR-26] [S5 resp. 10]
+- **GIVEN** `apps/clinical-api/openapi.yaml` con `AnalysisBasis.maxFollowUps` y `con-evidencia-s4-tres-opciones.json` con `"maxFollowUps": 10`
+- **WHEN** se ejecutan `contracts:check` y `contracts:breaking` contra `main`
+- **THEN** no hay cambio incompatible ni hallazgo de `oasdiff` por el campo
+- **AND** `con-evidencia-s4-tres-opciones.json` y los ejemplos `EvidenceAnalysis` sin el campo siguen validando contra `EvidenceAnalysis`
+- **AND** el tipo generado `AnalysisBasis` de `packages/api-contracts` expone `maxFollowUps?: number`
+
+### Requirement: El 503 del seguimiento admite los mismos fallos cerrados que el del análisis
+El `503` de `POST /rag/follow-up` MUST ser un `oneOf` de `ErrorLlmLocalNoDisponible`, `ErrorRecuperacionNoDisponible`, `ErrorNliNoDisponible` y `ErrorSalidaLlmInvalida`, y el de `POST /platform/evidence-analyses/{analysisId}/follow-ups` MUST referenciar `GeneracionNoDisponible`. La decisión SHALL constar como E-18/E-19 en la tabla de ADR-26 `[S5 resp. 10]`.
+
+#### Scenario: oasdiff no da incompatibles y el aviso se declara [ADR-26] [S5 resp. 10]
+- **GIVEN** los dos `openapi.yaml` con el `503` del seguimiento ampliado y `scripts/ci/contracts-breaking-excepciones.json` sin entradas nuevas
+- **WHEN** se ejecuta `contracts:breaking` contra `main`
+- **THEN** termina con éxito con 0 ERR y un WARN `response-body-wrapped-in-one-of-original-preserved` por proveedor en las dos rutas del seguimiento
+- **AND** `info.version` es `1.11.0` en `rag-orchestrator` y `1.17.0` en `clinical-api` (L1D-74 tomó 1.16.0; quien entra segundo en `main` toma la siguiente versión libre al rebasar, con `packages/api-contracts` regenerado)
+- **AND** los ejemplos `rag-nli-no-disponible.json` y `error-desidentificacion-no-disponible.json` validan contra los `503` del seguimiento
+
+### Requirement: Cambio aditivo del contrato para la declaración de ausencia
+`apps/clinical-api/openapi.yaml` MUST añadir `resolvedBy` opcional (`registro` | `declaracion_de_ausencia`) a `CompletenessItem` y el `422` de incoherencia a `createManualClinicalAttribute`, con ejemplos en `contracts/examples/`, `info.version` con un minor más y sin tocar `PriorTreatmentManualCreate`. Los tipos y schemas Zod de `packages/api-contracts` SHALL regenerarse desde el spec y no editarse a mano (ADR-26).
+
+#### Scenario: El cambio es aditivo [ADR-26]
+- **WHEN** corren `contracts:breaking` contra `main` y `contracts:check`
+- **THEN** reportan 0 cambios incompatibles y los ejemplos nuevos validan, y los ejemplos previos de `completeness` siguen válidos
+
+#### Scenario: El cuerpo del tratamiento no se relaja [US-094]
+- **WHEN** se valida `{}` contra `PriorTreatmentManualCreate`
+- **THEN** sigue siendo inválido por `setting`, `regimenName` y `ongoing`
+
+### Requirement: El contrato de clinical-api declara la corrección y el histórico de tratamientos y atributos
+`apps/clinical-api/openapi.yaml` MUST declarar, de forma aditiva (ADR-26) y antes del código, cuatro operaciones (`correctPriorTreatment`, `getPriorTreatmentHistory`, `correctClinicalAttribute`, `getClinicalAttributeHistory`), el schema `ClinicalAttributeCorrection` y `id`/`supersedesId` en las respuestas de tratamiento, atributo y `CaseView`, con ejemplos y `info.version` *minor*.
+
+#### Scenario: Cambio aditivo sin incompatibilidades [ADR-26]
+- **WHEN** corren `contracts:check`, `contracts:generate:check` y `contracts:breaking`
+- **THEN** los tres pasan con 0 cambios incompatibles y la verificación del proveedor cubre los endpoints nuevos
+
+#### Scenario: Cada respuesta tiene ejemplo y errores declarados
+- **THEN** cada operación nueva enlaza un ejemplo en `200`/`201` y declara `401`, `403`, `404`; las correcciones declaran además `409` y `422`, con `x-permission` `clinical:write` o `clinical:read`
+
+#### Scenario: Los cuerpos reutilizan los schemas de alta
+- **THEN** el cuerpo de `correctPriorTreatment` es `PriorTreatmentManualCreate`, de modo que cualquier campo añadido a ese schema (p. ej. por `d5fb-04`) lo hereda
