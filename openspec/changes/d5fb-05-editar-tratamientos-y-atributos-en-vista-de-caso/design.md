@@ -39,17 +39,19 @@ Estado verificado en el repo:
 - **D5 · Normalización (ADR-33, RN-27).** Si cambia `regimenName`, `ReconciliationService` de Backend 1 decide de nuevo
   `atcCodes` y `mappingStatus` con el catálogo versionado; sin mapeo queda `no_mapeado` sin código, nunca inventado ni
   descartado. `regimenName` se conserva tal como llegó. El cliente nunca envía códigos.
-- **D6 · Faltantes y vigencia sin código nuevo de detección.** (Ajuste de la fase 1, 2026-11-05: en la rama base `staleness` es neutro y no hay detector ni lectura del historial; el change demuestra checklist y huella distinta, y la marca `staleness.patientData` queda TRASLADADA a US-175 / L1D-148.) `GET …/completeness` calcula el checklist en cada lectura
-  desde las filas vigentes: al reemplazarse la fila, el ítem cambia de estado solo. El detector de vigencia
-  (`Staleness`) compara la huella del contexto (`huellaDelContexto`): la fila nueva cambia la huella, así que un
-  análisis guardado pasa a `staleness.patientData = true` con `changedData` incluyendo `priorTreatments` o
-  `clinicalAttributes`. El análisis previo **no se toca** (RN-06); la UI muestra el aviso **no bloqueante** de
-  `AvisoAnalisisAnteriores` (RN-26). El change lo demuestra con tests de integración; si algún `changedData` no nombra la
-  sección, se ajusta el mapeo en `evidence-analysis` (único código de detección permitido aquí).
+- **D6 · Faltantes y vigencia sin código nuevo de detección.** `GET …/completeness` y `CaseView.completeness` calculan el
+  checklist en cada lectura desde las filas vigentes: al reemplazarse la fila, el ítem cambia de estado solo. El análisis
+  previo **no se toca** (RN-06): la fila nueva cambia la huella del contexto (`huellaDelContexto`) del análisis que se
+  genere después, y el contexto enviado solo trae la fila vigente. El change lo demuestra con tests de integración. La
+  marca `staleness.patientData = true` con `changedData` y el aviso de «análisis desactualizado» **no se entregan aquí**:
+  en la rama `staleness` es neutro y no hay detector ni lectura del historial; quedan TRASLADADOS a US-175 (L1D-148), que
+  usará `supersedes_id` de las dos tablas como entrada. No se inventa un detector (ver tasks 2.4).
 - **D7 · UI: reutilizar, no inventar.** «Corregir dato» (`AccionCorregirDato`, por fila, nombre accesible propio, deshabilitada
-  con el texto de egresado, RN-17) abre el **diálogo de alta ya existente** en *modo corrección*: el formulario recibe
-  `inicial` (valores de la fila) y `corrigeId`; el título y el botón cambian a «Corregir tratamiento previo» / «Guardar
-  mi corrección». *Descartado:* corrección en línea como en biomarcadores (variante A de S5-01): el tratamiento tiene 6
+  con el texto de egresado, RN-17) abre el diálogo con un formulario **hermano** del de alta
+  (`FormularioDeCorreccionDeTratamiento` / `…DeAtributo`) que comparte con él `CamposDelTratamientoPrevio` y
+  `cuerpoDeTratamiento`; llega precargado con los valores de la fila y el título y el botón dicen «Corregir tratamiento
+  previo» / «Guardar mi corrección». (Se descartó un único formulario con `inicial`/`corrigeId`: el alta y la corrección
+  usan hooks de envío distintos.) *Descartado:* corrección en línea como en biomarcadores (variante A de S5-01): el tratamiento tiene 6
   campos y un atributo tiene un selector de catálogo; el formulario de alta ya resuelve esa validación y accesibilidad
   (S5-03 c/d), y un diálogo evita duplicar los dos formularios. El histórico se muestra con `HistoricoDelDato` (desplegable,
   fechas relativas); `key` de fila pasa a ser el `id` (corrige claves duplicables). Tras el `201`, `recargar()` /
@@ -123,7 +125,7 @@ verificación del proveedor. Skill `sync-contracts`: primero el spec.
   `ReconciliationService` inyectados; sin `vi.mock` de módulos propios. Lecturas de tratamientos y atributos de
   `case-view`, `completeness` y contexto del análisis siguen filtrando vigentes (`sqlDatoVigente()`).
 - **Web:** `PriorTreatmentsTable` y `ClinicalAttributesTable` aceptan `alCorregir`/`egresado` y pintan `AccionCorregirDato`
-  + `HistoricoDelDato` por fila; `DialogoTratamientoPrevio` y `DialogoAtributoClinico` admiten `inicial`/`corrigeId`;
+  + `HistoricoDelDato` por fila; los diálogos montan los formularios hermanos de corrección;
   hook `useEnvioDeCorreccion` existente. Patrón: composición sobre los componentes de `l1d-309`/`l1d-80`.
 
 ## Tests
@@ -131,7 +133,7 @@ verificación del proveedor. Skill `sync-contracts`: primero el spec.
 - **Aceptación (Supertest + PostgreSQL real, verificación del proveedor):** corrección crea fila nueva y deja la
   anterior `reemplazado` intacta; histórico ordenado; `409` en reenvío; `422` con `field` (fechas incoherentes, valor
   fuera de catálogo, sin cambios); `422 PACIENTE_EGRESADO`; `403` admin; ATC recalculado o `no_mapeado`; checklist
-  cambia tras corregir; el análisis guardado queda `staleness.patientData = true`; log sin valores.
+  cambia tras corregir; el análisis previo queda intacto y el nuevo tiene otra huella; log sin valores (`staleness`: US-175).
 - **Web (Testing Library + MSW desde `contracts/examples/`):** botón por fila, diálogo precargado, error junto al campo
   con `aria-live`, egresado deshabilitado, aviso no bloqueante, histórico con fechas relativas, estado vacío; Route
   Handlers (Origin ajeno → `403` sin llamar a `clinical-api`, retransmisión de `422/409`, `5xx` saneado).

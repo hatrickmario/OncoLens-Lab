@@ -32,7 +32,7 @@
   y anterior `reemplazado` intacta (tratamiento y atributo), histórico ordenado, ATC recalculado o `no_mapeado`, `409`,
   `422` con `field` (incoherencia de fechas, valor fuera de catálogo, sin cambios, clave en el cuerpo), `422
   PACIENTE_EGRESADO`, `403` admin, `401`/`404`. Esqueletos con `throw new Error('no implementado')`. Commit `test(...)`.
-  Evidencia: commits `e1a9c35f` (rojo: 500 no declarado rechazado por el verificador del proveedor, 31 fallos y 1 acierto) y `313dafa0` (verde); `tests/integration/correcciones/{tratamiento,atributo,tratamiento-atributo-permisos}.test.ts`.
+  Evidencia: commits `e1a9c35f` (rojo: 500 no declarado rechazado por el verificador del proveedor, 31 fallos y 1 acierto; nota: ese rojo falló por el 500 no declarado que rechaza el verificador del proveedor, no en la aserción; el rojo `19e265dd` sí falló en la aserción) y `313dafa0` (verde); `tests/integration/correcciones/{tratamiento,atributo,tratamiento-atributo-permisos}.test.ts`.
 - [x] 2.2 (TDD estricto) Tests de aceptación en rojo: checklist cambia tras corregir; el `AIAnalysisRecord` previo queda
   intacto con una huella distinta de la del análisis nuevo; el análisis nuevo usa solo la fila vigente; el log no
   contiene valores. Commit `test(...)`.
@@ -96,8 +96,8 @@
   «Corrección manual», aviso tras guardar, egresado y declaración de ausencia (el seed no tiene ninguna) contra un
   `clinical-api` con los endpoints; los cubren los tests de 3.1 y el E2E de 3.4 en la CI. Capturas en
   `reports/visual/d5fb-05/` (ignorado por git).
-- [ ] 3.4 E2E (Playwright contra Compose, seed sintético): corregir un tratamiento y un atributo, ver faltantes y aviso de
-  análisis desactualizado.
+- [ ] 3.4 E2E (Playwright contra Compose, seed sintético): corregir un tratamiento y un atributo y ver la fila corregida
+  con su histórico (los faltantes están en los tests de integración; el aviso de «análisis desactualizado» es de US-175).
   Escrito y SIN ejecutar en local (Compose completo; memoria de la VM justa): `e2e/vista-de-caso-correccion.spec.ts`, dos tests
   serializados sobre el paciente (h), que va después de `demo-s5-pacientes.spec.ts`; el orden de mutaciones está en
   `e2e/soporte.ts`. Lo ejerce el job `e2e` de la CI. No verifica «faltantes» ni «análisis desactualizado»: el checklist lo

@@ -54,7 +54,7 @@ corrección a mano es la única vía de dejar el caso correcto antes del anális
 - `api-contracts` (ADDED): las cuatro operaciones y los campos `id`/`supersedesId`.
 - `data-model` (ADDED): `supersedes_id` en las dos tablas.
 - `web-bff` (ADDED): Route Handlers con verificación de `Origin`.
-- `evidence-analysis` (ADDED): un análisis previo queda marcado desactualizado tras corregir un tratamiento o atributo.
+- `evidence-analysis` (ADDED): corregir un tratamiento o atributo recalcula el checklist y deja intacto el análisis previo (huella distinta en el nuevo); la marca `staleness.patientData` queda TRASLADADA a US-175 (L1D-148), que no existe aún en la rama.
 
 ## Bounded contexts
 
