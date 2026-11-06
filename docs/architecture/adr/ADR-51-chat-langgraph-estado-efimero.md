@@ -3,7 +3,7 @@
 > Linear: [L1D-313](https://linear.app/l1der-lab-mjbc/issue/L1D-313) · Historia: US-256 · Feature: FEAT-12
 > Plantilla: MADR 4 (variante mínima, en español).
 
-- **Estado:** aceptado (la parte de UI queda abierta hasta el spike US-257)
+- **Estado:** aceptado (la parte de UI está **decidida** desde el spike US-257, 2026-11-06: assistant-ui)
 - **Fecha:** 2026-11-06
 - **Decisores:** usuario (PO), refinamiento del S6 `[S6 resp. 1]` `[S6 resp. 5]` `[S6 resp. 6]` `[S6 resp. 9]`
 - **Consultados / informados:** sesión principal; subagentes de exploración del repo y de investigación externa (2026-11-06)
@@ -77,6 +77,7 @@ Opción elegida: **3b — LangGraph en Backend 2 con estado efímero (`InMemoryS
    - Si assistant-ui los cumple, se adopta: `ExternalStoreRuntime` o `LocalRuntime`, solo APIs estables, CSP sin `unsafe-eval` (L1D-266) y Markdown sin HTML crudo con `urlTransform` restringido.
    - Si no, la UI se hace a mano con shadcn sobre los componentes existentes del panel.
    - El código del spike no se mergea; el resultado se anota en este ADR.
+   - **Decidido (spike US-257 / L1D-314, 2026-11-06): assistant-ui.** `@assistant-ui/react` 0.15.32 (MIT) con `ExternalStoreRuntime`. Los cinco escenarios `[S6 resp. 2]`, la CSP sin `unsafe-eval`/`unsafe-inline` en `script-src`, el Markdown sin HTML crudo y los avisos RN-19 cumplen. Peso gzip medido: ≈ 145 KB de diferencia en la ruta del chat (363,9 KB frente a 219,0 KB sin la librería), no los ~267 KB de la documentación. Condiciones: componente de `data` estable, nonce de estilos para el `Dialog` de Radix (L1D-266) y evitar las APIs experimentales (`threadId`, `onSwitchToNewThread`). Reporte: [`docs/evidence/S6-spike-assistant-ui/README.md`](../../evidence/S6-spike-assistant-ui/README.md). Prototipo en `spike/l1d-314-assistant-ui`, cerrado sin merge.
 
 ### Consecuencias
 
