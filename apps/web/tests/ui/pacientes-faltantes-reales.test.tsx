@@ -69,10 +69,17 @@ describe('Listado de pacientes · columna Faltantes críticos real (feedback de 
     expect(within(filaDe('P. S. 3.')).getByText('0 faltantes')).toBeTruthy();
     const filaSinCalculo = filaDe('P. S. 4.');
     expect(within(filaSinCalculo).getByText('—')).toBeTruthy();
-    expect(within(filaSinCalculo).getByText(/sin cálculo para este tipo de cáncer/i)).toBeTruthy();
+    expect(
+      within(filaSinCalculo).getByText(/^Sin cálculo de faltantes para este tipo de cáncer$/),
+    ).toBeTruthy();
     expect(within(filaSinCalculo).queryByText('0 faltantes')).toBeNull();
     const filaDegradada = filaDe('P. S. 2.');
     expect(within(filaDegradada).getByText('No disponible')).toBeTruthy();
+    expect(
+      within(filaDegradada).getByText(
+        'Cálculo no disponible para este paciente; la ficha sigue accesible',
+      ),
+    ).toBeTruthy();
     expect(within(filaDegradada).queryByText('0 faltantes')).toBeNull();
     expect(screen.getByRole('link', { name: /P\. S\. 2\./ }).getAttribute('href')).toBe(
       `/pacientes/${noDisponible?.id}`,
