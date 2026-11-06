@@ -94,44 +94,24 @@ function diagnosticoPermitido(
   };
 }
 
-/** Más reciente primero por fecha del examen y, a igual fecha, por creación. */
-function esMasReciente(candidato: FilaDeBiomarcador, actual: FilaDeBiomarcador): boolean {
-  if (candidato.performedAt !== actual.performedAt) {
-    return candidato.performedAt > actual.performedAt;
-  }
-  return candidato.createdAt > actual.createdAt;
+/** Orden cronológico de dos biomarcadores: negativo si `a` es anterior a `b` (fecha del examen y, a igual fecha, creación). */
+export function compararBiomarcadores(a: FilaDeBiomarcador, b: FilaDeBiomarcador): number {
+  return a.performedAt.localeCompare(b.performedAt) || a.createdAt.localeCompare(b.createdAt);
 }
 
 function ultimoValorPorBiomarcador(filas: readonly FilaDeBiomarcador[]): FilaDeBiomarcador[] {
   const ultimos = new Map<string, FilaDeBiomarcador>();
   for (const fila of filas) {
     const actual = ultimos.get(fila.name);
-    if (actual === undefined || esMasReciente(fila, actual)) ultimos.set(fila.name, fila);
+    if (actual === undefined || compararBiomarcadores(fila, actual) > 0)
+      ultimos.set(fila.name, fila);
   }
   return [...ultimos.values()];
 }
 
-/** Orden cronológico de dos biomarcadores: negativo si `a` es anterior a `b` (fecha del examen y, a igual fecha, creación). */
-export function compararBiomarcadores(_a: FilaDeBiomarcador, _b: FilaDeBiomarcador): number {
-  throw new Error('no implementado');
-}
-
-/** Contexto del chat (US-260): como el del análisis pero con toda la serie vigente de cada biomarcador. */
-export function construirContextoDelChat(
-  _caso: CasoClinico,
-  _ahora: Date,
-  _faltantes: readonly string[],
-): { contexto: ContextoPermitido; dataRefs: MapaDeDataRefs } {
-  throw new Error('no implementado');
-}
-
-/** Del más antiguo al más reciente por fecha del examen y, a igual fecha, por creación. */
+/** Del más antiguo al más reciente. */
 function enOrdenCronologico(filas: readonly FilaDeBiomarcador[]): FilaDeBiomarcador[] {
-  return [...filas].sort((a, b) =>
-    a.performedAt === b.performedAt
-      ? a.createdAt.localeCompare(b.createdAt)
-      : a.performedAt.localeCompare(b.performedAt),
-  );
+  return [...filas].sort(compararBiomarcadores);
 }
 
 function biomarcadorPermitido(
@@ -235,20 +215,39 @@ export function construirContextoSinDatosClinicos(
  * Allowlist del contexto clínico (RN-10): arma cada objeto campo a campo desde las filas leídas, nunca copiando
  * entidades completas. `faltantes` son claves del catálogo (US-006), nunca texto del paciente. Devuelve además qué dato respalda cada `dataRef`.
  *
- * `conservarSerieDeBiomarcadores` (chat, US-260): conserva todos los valores vigentes de cada biomarcador en orden
- * cronológico, para que la evolución de una serie sea citable; el análisis de evidencia envía solo el último valor.
+ * Contexto del análisis de evidencia: de cada biomarcador envía solo el último valor. El chat usa `construirContextoDelChat`.
  */
 export function construirContextoPermitido(
   caso: CasoClinico,
   ahora: Date,
   faltantes: readonly string[],
-  conservarSerieDeBiomarcadores = false,
+): { contexto: ContextoPermitido; dataRefs: MapaDeDataRefs } {
+  return armarContexto(caso, ahora, faltantes, false);
+}
+
+/**
+ * Contexto del chat (US-260): igual que el del análisis pero con toda la serie vigente de cada biomarcador en orden
+ * cronológico, para que la evolución de una serie sea citable.
+ */
+export function construirContextoDelChat(
+  caso: CasoClinico,
+  ahora: Date,
+  faltantes: readonly string[],
+): { contexto: ContextoPermitido; dataRefs: MapaDeDataRefs } {
+  return armarContexto(caso, ahora, faltantes, true);
+}
+
+function armarContexto(
+  caso: CasoClinico,
+  ahora: Date,
+  faltantes: readonly string[],
+  serieCompletaDeBiomarcadores: boolean,
 ): { contexto: ContextoPermitido; dataRefs: MapaDeDataRefs } {
   const asignador = asignarDataRefs();
   const contexto: ContextoPermitido = {
     population: caso.paciente.population,
     diagnosis: diagnosticoPermitido(caso.diagnosticoActivo, ahora, asignador),
-    biomarkers: (conservarSerieDeBiomarcadores
+    biomarkers: (serieCompletaDeBiomarcadores
       ? enOrdenCronologico(caso.biomarcadores)
       : ultimoValorPorBiomarcador(caso.biomarcadores)
     ).map((fila) => biomarcadorPermitido(fila, ahora, asignador)),

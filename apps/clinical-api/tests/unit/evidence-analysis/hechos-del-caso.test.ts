@@ -215,12 +215,7 @@ describe('construirHechosDelCaso: series y correcciones', () => {
   });
 
   it('conserva todos los valores de una serie en orden cronológico con un seriesKey sin separadores cuando se pide la serie completa', () => {
-    const { contexto, dataRefs } = construirContextoPermitido(
-      casoConSerie,
-      AHORA_DE_EJEMPLO,
-      [],
-      true,
-    );
+    const { contexto, dataRefs } = construirContextoDelChat(casoConSerie, AHORA_DE_EJEMPLO, []);
     const { caseFacts } = construirHechosDelCaso(
       { ...contexto, pseudoPatientId: 'psd_x' },
       dataRefs,
@@ -231,12 +226,7 @@ describe('construirHechosDelCaso: series y correcciones', () => {
   });
 
   it('marca como corregido el hecho cuyo registro vigente es una corrección manual', () => {
-    const { contexto, dataRefs } = construirContextoPermitido(
-      casoConSerie,
-      AHORA_DE_EJEMPLO,
-      [],
-      true,
-    );
+    const { contexto, dataRefs } = construirContextoDelChat(casoConSerie, AHORA_DE_EJEMPLO, []);
     const { caseFacts } = construirHechosDelCaso(
       { ...contexto, pseudoPatientId: 'psd_x' },
       dataRefs,

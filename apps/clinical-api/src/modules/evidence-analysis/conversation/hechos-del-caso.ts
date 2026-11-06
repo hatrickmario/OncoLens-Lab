@@ -42,7 +42,7 @@ function candidatoDeDiagnostico(diagnostico: NonNullable<ClinicalContext['diagno
         diagnostico.histology ?? '',
         diagnostico.grade ?? '',
         estaAusente(diagnostico.stageValue)
-          ? ''
+          ? `estadio: ${NO_DISPONIBLE}` // RN-25: el dato ausente se dice, no se calla
           : `estadio ${diagnostico.stageValue} (${diagnostico.stagingSystem})`,
         diagnostico.performanceScale === null || diagnostico.performanceValue === null
           ? ''
