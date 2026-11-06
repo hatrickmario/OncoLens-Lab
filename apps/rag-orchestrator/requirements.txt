@@ -86,6 +86,6 @@ typing-inspection==0.4.4
 urllib3==2.8.0
 uuid-utils==0.19.0
 uvicorn==0.54.0
-websockets==17.4
+websockets==16.1.1
 xxhash==4.0.2
 zstandard==0.25.0
