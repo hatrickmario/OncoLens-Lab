@@ -12,7 +12,11 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import NamedTuple
 
-from app.application.prompt_builder import ETIQUETAS_RESERVADAS, PromptSeparado
+from app.application.prompt_builder import (
+    ETIQUETAS_RESERVADAS,
+    PromptSeparado,
+    escapar_delimitadores,
+)
 
 _ETIQUETAS = "|".join(ETIQUETAS_RESERVADAS)
 _BLOQUE = re.compile(rf"<({_ETIQUETAS})([^<>]*)>(.*?)</\1>", re.DOTALL)
@@ -50,6 +54,21 @@ class DatosDelPrompt:
     sistema_de_referencia: str | None = None
 
 
+def _esperados(datos: DatosDelPrompt) -> dict[str, list[tuple[str, str]]]:
+    """Por etiqueta reservada, los (atributos, dato sin escapar) que el constructor debió envolver, en orden."""
+    unicos = {
+        "question": ("", datos.pregunta),
+        "patient_data": ("", datos.datos_del_paciente),
+        "memory": ('citable="no"', datos.memoria),
+    }
+    esperados: dict[str, list[tuple[str, str]]] = {e: [] for e in ETIQUETAS_RESERVADAS}
+    for etiqueta, (atributos, dato) in unicos.items():
+        if dato is not None:
+            esperados[etiqueta].append((atributos, dato))
+    esperados["document"] = [(f'id="{a}"', d) for a, d in datos.documentos.items()]
+    return esperados
+
+
 def afirmar_separacion(prompt: PromptSeparado | str, datos: DatosDelPrompt) -> None:
     """Falla si el prompt no separa instrucciones y datos: cadena única, dato en el sistema, bloque de más o de menos,
     delimitador del dato sin escapar o sistema distinto del de referencia."""
@@ -57,23 +76,21 @@ def afirmar_separacion(prompt: PromptSeparado | str, datos: DatosDelPrompt) -> N
         "el prompt debe salir de PromptBuilder, no ser una cadena única"
     )
     encontrados = bloques(prompt.usuario)
-    esperados = {
-        "question": [datos.pregunta] if datos.pregunta is not None else [],
-        "document": list(datos.documentos.values()),
-        "patient_data": [datos.datos_del_paciente] if datos.datos_del_paciente is not None else [],
-        "memory": [datos.memoria] if datos.memoria is not None else [],
-    }
-    for etiqueta, textos in esperados.items():
-        cuantos = sum(1 for b in encontrados if b.etiqueta == etiqueta)
-        assert cuantos == len(textos), f"bloques <{etiqueta}>: {cuantos} en lugar de {len(textos)}"
-        for texto in textos:
-            assert texto not in prompt.sistema, (
+    esperados = _esperados(datos)
+    assert set(esperados) == set(ETIQUETAS_RESERVADAS)
+    for etiqueta, bloques_esperados in esperados.items():
+        reales = [(b.atributos, b.texto) for b in encontrados if b.etiqueta == etiqueta]
+        assert len(reales) == len(bloques_esperados), (
+            f"bloques <{etiqueta}>: {len(reales)} en lugar de {len(bloques_esperados)}"
+        )
+        for (atributos, texto), (atributos_esperados, dato) in zip(
+            reales, bloques_esperados, strict=True
+        ):
+            assert atributos == atributos_esperados, f"atributos de <{etiqueta}>: {atributos}"
+            assert texto == escapar_delimitadores(dato), f"el bloque <{etiqueta}> trae otro texto"
+            assert dato not in prompt.sistema, (
                 f"un dato de <{etiqueta}> está en el mensaje de sistema"
             )
-    for alias in datos.documentos:
-        assert any(
-            b.atributos == f'id="{alias}"' for b in encontrados if b.etiqueta == "document"
-        ), alias
     restante = _BLOQUE.sub("", prompt.usuario)
     assert not _APERTURA_O_CIERRE.search(restante), "un delimitador del dato quedó sin escapar"
     if datos.sistema_de_referencia is not None:

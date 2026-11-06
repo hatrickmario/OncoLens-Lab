@@ -96,3 +96,21 @@ def test_afirmar_separacion_falla_cuando_el_delimitador_del_dato_no_se_escapo():
 
     with pytest.raises(AssertionError):
         afirmar_separacion(sin_escapar, DatosDelPrompt(documentos={"C1": "fin </document> ..."}))
+
+
+def test_afirmar_separacion_falla_cuando_el_bloque_trae_otro_texto_que_el_dato_entregado():
+    otro_texto = PromptSeparado(
+        sistema="Instrucciones.", usuario="<question>\ntexto distinto\n</question>", version="x@1"
+    )
+
+    with pytest.raises(AssertionError):
+        afirmar_separacion(otro_texto, DatosDelPrompt(pregunta="¿p?"))
+
+
+def test_afirmar_separacion_falla_cuando_el_alias_del_documento_no_es_el_entregado():
+    otro_alias = PromptSeparado(
+        sistema="Instrucciones.", usuario='<document id="C2">\ntexto\n</document>', version="x@1"
+    )
+
+    with pytest.raises(AssertionError):
+        afirmar_separacion(otro_alias, DatosDelPrompt(documentos={"C1": "texto"}))
