@@ -76,6 +76,8 @@ class Settings(BaseSettings):
     claims_min_per_option: int = Field(default=CLAIMS_MIN_INICIAL, ge=1)
     claims_max_per_option: int = Field(default=CLAIMS_MAX_INICIAL, ge=1)
     claim_max_words: int = Field(default=CLAIM_MAX_WORDS_INICIAL, gt=0)
+    # US-270 (RN-22): máximo de `chunkId` cortados que lista el evento `rag_query_corte` (solo ids y puesto, nunca texto).
+    reranker_cut_log_max_ids: int = Field(default=50, ge=1)
     # Presupuesto de caracteres de fragmentos que entran al prompt (RN-22): la ventana de LLM_NUM_CTX se reparte con la salida.
     llm_fragments_max_chars: int = Field(default=12000, gt=0)
     # Motor y idiomas del OCR (los consume FEAT-01b, S2): un motor desconocido falla al arrancar.

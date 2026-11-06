@@ -115,7 +115,10 @@ def _candidatos_numerados(cuantos: int) -> list[ChunkFx]:
 
 def _consultar(candidatos: list[ChunkFx], **cambios: int):
     parametros = replace(
-        PARAMETROS_DE_PRUEBA, retrieval_top_k=len(candidatos), reranker_max_pairs=MAX_PARES, **cambios
+        PARAMETROS_DE_PRUEBA,
+        retrieval_top_k=len(candidatos),
+        reranker_max_pairs=MAX_PARES,
+        **cambios,
     )
     entorno = crear_entorno(
         parametros=parametros,
@@ -162,7 +165,12 @@ def test_ningun_registro_lleva_texto_de_chunk_pregunta_ni_pseudo_paciente_cuando
 
     volcado = "\n".join(r.getMessage() for r in caplog.records)
     assert "rag_query_corte" in volcado
-    for marcador in ("MARCA_CHUNK_7731", "MARCA_PREGUNTA_5519", "MARCAPACIENTE8842", "texto sintético"):
+    for marcador in (
+        "MARCA_CHUNK_7731",
+        "MARCA_PREGUNTA_5519",
+        "MARCAPACIENTE8842",
+        "texto sintético",
+    ):
         assert marcador not in volcado
 
 
