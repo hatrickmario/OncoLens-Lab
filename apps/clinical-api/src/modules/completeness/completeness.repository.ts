@@ -18,6 +18,9 @@ import type {
 interface ConsultaDeEntidad {
   /** `FROM` con alias `t` para la entidad y, si hay relación, `e` para su examen. */
   readonly desde: string;
+  /** Columna con el id del paciente (la del examen en los biomarcadores). */
+  readonly paciente: string;
+  /** Condición adicional que sigue a `paciente = ANY(...)` (el diagnóstico activo); vacía si no hay. */
   readonly filtro: string;
   /** Expresión SQL de la fecha de observación o de examen, como `YYYY-MM-DD`; `NULL` si la entidad no tiene. */
   readonly fecha: string;
@@ -40,13 +43,15 @@ const CONSULTAS: Readonly<Record<string, ConsultaDeEntidad>> = {
   // único): llegan todos, con `diagnosed_at` como fecha, y `diagnosticoVigente()` elige el mismo que la ficha.
   Diagnosis: {
     desde: 'clinical.diagnosis t',
-    filtro: 't.patient_id = $1 AND t.is_active',
+    paciente: 't.patient_id',
+    filtro: ' AND t.is_active',
     fecha: FECHA('t.diagnosed_at'),
     origen: 't',
   },
   Biomarker: {
     desde: 'clinical.biomarker t JOIN clinical.exam e ON e.id = t.exam_id',
-    filtro: 'e.patient_id = $1',
+    paciente: 'e.patient_id',
+    filtro: '',
     fecha: FECHA('e.performed_at'),
     origen: 'e',
     aliasDelFragmento: 't',
@@ -54,21 +59,24 @@ const CONSULTAS: Readonly<Record<string, ConsultaDeEntidad>> = {
   },
   ClinicalAttribute: {
     desde: 'clinical.clinical_attribute t',
-    filtro: 't.patient_id = $1',
+    paciente: 't.patient_id',
+    filtro: '',
     fecha: FECHA('t.observed_at'),
     origen: 't',
     aliasDelFragmento: 't',
   },
   PriorTreatment: {
     desde: 'clinical.prior_treatment t',
-    filtro: 't.patient_id = $1',
+    paciente: 't.patient_id',
+    filtro: '',
     fecha: FECHA('t.started_at'),
     origen: 't',
     aliasDelFragmento: 't',
   },
   ClinicalEvent: {
     desde: 'clinical.clinical_event t',
-    filtro: 't.patient_id = $1',
+    paciente: 't.patient_id',
+    filtro: '',
     fecha: FECHA('t.event_date'),
     origen: 't',
     aliasDelFragmento: 't',
@@ -116,13 +124,13 @@ function sqlDeLaEntidad(entidad: string, consulta: ConsultaDeEntidad): string {
     consulta.aliasDelFragmento === undefined
       ? 'NULL'
       : paginaDelFragmento(consulta.aliasDelFragmento);
-  return `SELECT t.id, t.review_status, ${consulta.fecha} AS fecha, ${INSTANTE_ISO} AS creado_en,
+  return `SELECT t.id, ${consulta.paciente} AS paciente_id, t.review_status, ${consulta.fecha} AS fecha, ${INSTANTE_ISO} AS creado_en,
                  ${consulta.origen}.entry_method AS entry_method,
                  ${consulta.origen}.source_document_id AS source_document_id,
                  ${pagina} AS pagina,
                  ${proyeccionPermitida('t', entidad)} AS fila${relacion}
             FROM ${consulta.desde}
-           WHERE ${consulta.filtro}`;
+           WHERE ${consulta.paciente} = ANY($1::uuid[])${consulta.filtro}`;
 }
 
 function soloPermitidas(
@@ -175,31 +183,41 @@ function aRegistro(
   };
 }
 
+/** Los registros agrupados por paciente: todo id pedido aparece, con `[]` en las entidades sin filas. */
+async function leerVarios(
+  db: Consultador,
+  patientIds: readonly string[],
+  entidades: readonly string[],
+): Promise<Map<string, RegistrosPorEntidad>> {
+  const porPaciente = new Map<string, Record<string, RegistroDeDato[]>>(
+    patientIds.map((patientId) => [patientId, {}]),
+  );
+  for (const entidad of new Set(entidades)) {
+    const consulta = Object.hasOwn(CONSULTAS, entidad) ? CONSULTAS[entidad] : undefined;
+    if (consulta === undefined) throw new Error(`entidad_de_destino_no_soportada ${entidad}`);
+    for (const registros of porPaciente.values()) registros[entidad] = [];
+    const { rows } = await db.query(sqlDeLaEntidad(entidad, consulta), [patientIds]);
+    for (const fila of rows) {
+      const registro = aRegistro(fila, entidad, consulta);
+      porPaciente.get(fila['paciente_id'] as string)?.[entidad]?.push(registro);
+    }
+  }
+  return porPaciente;
+}
+
 export function createCompletenessRepository(db: Consultador): RegistrosDeCompletitud {
   return {
-    async existenPacientes(): Promise<ReadonlySet<string>> {
-      throw new Error('no implementado');
-    },
-    async registrosVariosSinFiltrarPorRevision(): Promise<
-      ReadonlyMap<string, RegistrosPorEntidad>
-    > {
-      throw new Error('no implementado');
-    },
-    async existePaciente(patientId): Promise<boolean> {
-      const { rows } = await db.query('SELECT 1 FROM clinical.patient WHERE id = $1 LIMIT 1', [
-        patientId,
-      ]);
-      return rows.length > 0;
+    async existenPacientes(patientIds): Promise<ReadonlySet<string>> {
+      const { rows } = await db.query(
+        'SELECT id FROM clinical.patient WHERE id = ANY($1::uuid[])',
+        [patientIds],
+      );
+      return new Set(rows.map((fila) => fila['id'] as string));
     },
     async registrosSinFiltrarPorRevision(patientId, entidades): Promise<RegistrosPorEntidad> {
-      const resultado: Record<string, RegistroDeDato[]> = {};
-      for (const entidad of new Set(entidades)) {
-        const consulta = Object.hasOwn(CONSULTAS, entidad) ? CONSULTAS[entidad] : undefined;
-        if (consulta === undefined) throw new Error(`entidad_de_destino_no_soportada ${entidad}`);
-        const { rows } = await db.query(sqlDeLaEntidad(entidad, consulta), [patientId]);
-        resultado[entidad] = rows.map((fila) => aRegistro(fila, entidad, consulta));
-      }
-      return resultado;
+      return (await leerVarios(db, [patientId], entidades)).get(patientId) ?? {};
     },
+    registrosVariosSinFiltrarPorRevision: (patientIds, entidades) =>
+      leerVarios(db, patientIds, entidades),
   };
 }

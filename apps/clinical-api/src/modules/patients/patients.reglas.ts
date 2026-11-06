@@ -2,13 +2,6 @@ import type { PatientAdminSummary } from '../../../../../packages/api-contracts/
 import { IdentityIntegrityError } from '../../infrastructure/crypto/identity-integrity-error.js';
 import type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
 
-/**
- * Contador de faltantes SOLO del listado y la búsqueda: no calculan el checklist por fila (decisión Q2, L1D-95 D7b), así
- * que muestran 0 y no un valor inventado. La ficha NO lo usa: su contador sale de `CompletenessService` (US-003). Se
- * retira cuando una historia posterior calcule el checklist por fila.
- */
-export const FALTANTES_CRITICOS_POR_AHORA = 0;
-
 /** Marcador de la máscara del documento: cuatro U+2022 (el formato lo fija el contrato, `nationalIdMasked`). */
 const MARCADOR_DE_DOCUMENTO = '••••';
 const CARACTERES_VISIBLES = 2;

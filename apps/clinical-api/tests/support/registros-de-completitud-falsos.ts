@@ -15,7 +15,7 @@ const ENTIDADES_SOPORTADAS: readonly string[] = [
 
 export interface OpcionesDeRegistrosFalsos {
   readonly diagnosticos: readonly RegistroDeDato[];
-  /** `existePaciente`; por defecto `true`. */
+  /** `existenPacientes` devuelve todos (true) o ninguno (false); por defecto `true`. */
   readonly existe?: boolean;
   /** Cada llamada a `registrosSinFiltrarPorRevision` anota aquí las entidades pedidas. */
   readonly pedidos?: (readonly string[])[];
@@ -40,7 +40,6 @@ export function registrosDeCompletitudFalsos(
     return resultado;
   };
   return {
-    existePaciente: async () => opciones.existe ?? true,
     existenPacientes: async (patientIds) => new Set((opciones.existe ?? true) ? patientIds : []),
     registrosSinFiltrarPorRevision: async (_patientId, entidades) => registrosDe(entidades),
     // Una sola anotación por llamada (como una sola consulta por entidad en el real); mismos registros para todos.

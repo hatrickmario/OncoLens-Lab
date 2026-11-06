@@ -74,8 +74,6 @@ export interface RegistroDeDato {
 export type RegistrosPorEntidad = Readonly<Record<string, readonly RegistroDeDato[]>>;
 
 export interface RegistrosDeCompletitud {
-  /** `true` si el paciente existe; no lee ningún dato clínico ni de `identity`. */
-  existePaciente(patientId: string): Promise<boolean>;
   /**
    * Registros del paciente de cada entidad pedida SIN filtrar por estado de revisión: incluye `rechazado` y
    * `reemplazado`. Quien los use debe aplicar `registrosVigentes()` (RN-07) antes de contarlos. Del `Diagnosis`,
