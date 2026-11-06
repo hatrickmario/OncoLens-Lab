@@ -4,11 +4,7 @@ import type { Registrar } from '../../infrastructure/logger.js';
 import { traceIdDe } from '../../middleware/trace-id.middleware.js';
 import type { UbicadorDePaciente } from './opt-outs.repository.js';
 import type { OptOutService } from './opt-outs.service.js';
-import {
-  RUTAS_GENERA_IA,
-  type FuenteDelPaciente,
-  type GuardiaDeOptOut,
-} from './rutas-genera-ia.js';
+import { rutaGeneraIA, type FuenteDelPaciente, type GuardiaDeOptOut } from './rutas-genera-ia.js';
 
 export interface DependenciasDelGuardia {
   optOuts: OptOutService;
@@ -56,9 +52,7 @@ function resolverPacienteDe(
 export function crearGuardiaDeOptOut(dependencias: DependenciasDelGuardia): GuardiaDeOptOut {
   const { optOuts, ubicador, registrar } = dependencias;
   return (operationId) => {
-    const ruta = RUTAS_GENERA_IA.find((candidata) => candidata.operationId === operationId);
-    if (ruta === undefined)
-      throw new Error(`la operación ${operationId} no está en RUTAS_GENERA_IA`);
+    const ruta = rutaGeneraIA(operationId);
     const resolverPaciente = resolverPacienteDe(ruta.origenDelPaciente, ubicador);
     const guardia: RequestHandler = async (request, response, siguiente) => {
       try {

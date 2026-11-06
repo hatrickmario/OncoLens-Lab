@@ -41,6 +41,13 @@ export type OperacionGeneraIA = (typeof RUTAS_GENERA_IA)[number]['operationId'];
 /** Construye el guardia de una operación `generaIA`; lo compone el módulo `opt-outs`, los controllers solo lo reciben. */
 export type GuardiaDeOptOut = (operationId: OperacionGeneraIA) => RequestHandler;
 
+/** La entrada de la lista cerrada de una operación; una operación fuera de la lista es un error de programación. */
+export function rutaGeneraIA(operationId: OperacionGeneraIA): (typeof RUTAS_GENERA_IA)[number] {
+  const ruta = RUTAS_GENERA_IA.find((candidata) => candidata.operationId === operationId);
+  if (ruta === undefined) throw new Error(`la operación ${operationId} no está en RUTAS_GENERA_IA`);
+  return ruta;
+}
+
 /** Propiedad con la que el módulo marca los manejadores que montó como guardia; guarda el `operationId` de su ruta. */
 const OPERACION_GUARDADA = 'operacionGuardadaPorOptOut';
 
@@ -58,8 +65,7 @@ export function registrarRutaGeneraIA(
   previos: readonly RequestHandler[],
   ...posteriores: (RequestHandler | ErrorRequestHandler)[]
 ): void {
-  const ruta = RUTAS_GENERA_IA.find((candidata) => candidata.operationId === operationId);
-  if (ruta === undefined) throw new Error(`la operación ${operationId} no está en RUTAS_GENERA_IA`);
+  const ruta = rutaGeneraIA(operationId);
   const guardiaMarcado: ManejadorMarcado = Object.assign(guardia(operationId), {
     [OPERACION_GUARDADA]: operationId,
   });
