@@ -5,7 +5,11 @@ NLI, el reranker, Milvus y las posiciones de los chunks son falsos. Cada respues
 (hook de `verificacion_proveedor.py`, US-214). Solo datos sintéticos.
 """
 
+import json
+
 import pytest
+
+from app.application.errores import LlmLocalNoDisponibleError
 
 from tests.support.aplicabilidad import (
     OPCION_O_A,
@@ -16,8 +20,10 @@ from tests.support.aplicabilidad import (
     solicitud_a_m1,
 )
 from tests.support.chat_evidencia import crear_entorno_de_chat_con_evidencia, solicitud_de_evidencia
-from tests.support.generador_falso import FakeEvidenceGenerator
-from tests.support.recuperacion import CORPUS_FX06A, Q_HER2, crear_entorno
+from tests.support.generador_falso import RAZON_SIN_SOPORTE, FakeEvidenceGenerator
+from tests.support.llm_nube_falso import LlmNubeFalso
+from tests.support.nli_falso import IMPLICA, NEUTRAL, NliFalso
+from tests.support.recuperacion import CORPUS_FX06A, EJEMPLOS, Q_HER2, crear_entorno
 
 TEXTO_DE_CH_M1_1 = next(c.texto for c in CORPUS_FX06A if c.chunk_id == "ch-m1-1")
 
@@ -115,3 +121,65 @@ def test_chat_turn_marca_menopausia_desconocido_por_falta_en_el_paciente_y_orden
     )
     texto = respuesta.json()["blocks"][0]["text"]
     assert texto.index(OPCION_O_B) < texto.index(OPCION_O_C) < texto.index(OPCION_O_A)
+
+
+class _GeneradorCaido:
+    """``EvidenceGenerator`` con el LLM local caído: el error tipado del puerto (``LOCAL_LLM_UNAVAILABLE``)."""
+
+    async def generar(self, solicitud, recuperacion):
+        raise LlmLocalNoDisponibleError()
+
+
+@pytest.mark.ac("US-265", 5)
+def test_chat_turn_encabeza_con_opciones_descritas_sin_terminos_prohibidos_y_con_los_avisos_cuando_la_pregunta_es_prescriptiva():
+    pregunta = "¿Qué tratamiento debe recibir esta paciente?"
+    base = crear_entorno(generador=FakeEvidenceGenerator("LLM-OK"))
+    base.reranker._puntajes[pregunta] = {"ch-m1-1": 0.87}  # type: ignore[attr-defined]
+    entorno = crear_entorno_de_chat_con_evidencia(base)
+
+    respuesta = entorno.turno(solicitud_de_evidencia(pregunta))
+
+    assert respuesta.status_code == 200
+    cuerpo = respuesta.json()
+    assert cuerpo["intent"] == "evidencia"
+    assert cuerpo["blocks"][0]["text"].startswith("Opciones descritas en la evidencia:")
+    textos = " ".join(b["text"] for b in cuerpo["blocks"]).lower()
+    assert not any(t in textos for t in ("recomendado", "debe recibir", "se recomienda"))
+    assert cuerpo["notices"] == [
+        "Generado por IA; requiere validación clínica independiente por el oncólogo tratante",
+        "Uso académico/investigación",
+    ]
+
+
+@pytest.mark.ac("US-265", 6)
+def test_chat_turn_responde_503_local_llm_unavailable_sin_evidence_analysis_cuando_el_llm_local_esta_caido():
+    entorno = crear_entorno_de_chat_con_evidencia(crear_entorno(generador=_GeneradorCaido()))
+    nube = LlmNubeFalso()
+
+    respuesta = entorno.turno(solicitud_de_evidencia(Q_HER2))
+
+    assert respuesta.status_code == 503
+    cuerpo = respuesta.json()
+    assert cuerpo["error"] == "LOCAL_LLM_UNAVAILABLE" and "evidenceAnalysis" not in cuerpo
+    esperado = json.loads(
+        (EJEMPLOS / "chat-turn-llm-local-no-disponible.json").read_text(encoding="utf-8")
+    )
+    assert {k: v for k, v in cuerpo.items() if k != "traceId"} == {
+        k: v for k, v in esperado.items() if k != "traceId"
+    }
+    assert nube.invocaciones == 0
+
+
+@pytest.mark.ac("US-265", 7)
+def test_chat_turn_lleva_la_opcion_sin_soporte_a_discarded_options_y_no_la_muestra_en_ningun_bloque():
+    nli = NliFalso(resultados={RAZON_SIN_SOPORTE: NEUTRAL}, por_defecto=IMPLICA)
+    entorno = crear_entorno_de_chat_con_evidencia(
+        crear_entorno(generador=FakeEvidenceGenerator("LLM-SIN-SOPORTE"), clasificador_nli=nli)
+    )
+
+    cuerpo = entorno.turno(solicitud_de_evidencia(Q_HER2)).json()
+
+    analisis = cuerpo["evidenceAnalysis"]
+    assert analisis["evidenceOptions"] == [] and len(analisis["discardedOptions"]) == 1
+    assert RAZON_SIN_SOPORTE not in str(cuerpo["blocks"])
+    assert [b["kind"] for b in cuerpo["blocks"]] == ["limitacion"]
