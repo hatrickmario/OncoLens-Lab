@@ -88,11 +88,13 @@ function comoEntradaDeHistorial(version: VersionReemplazada): CorrectionHistoryE
     reviewStatus: 'reemplazado',
     recordedAt: comoInstante(version.recordedAt),
     createdAt: version.createdAt.toISOString(),
-    // `value`/`unit` solo en biomarcadores; `content`/`noteType` solo en notas (CorrectionHistoryEntry).
+    // `value`/`unit` en biomarcadores (`value` también en atributos); `content`/`noteType` solo en notas;
+    // `regimenName` solo en tratamientos previos (CorrectionHistoryEntry).
     ...(version.value !== undefined && { value: version.value }),
     ...(version.unit !== undefined && { unit: version.unit }),
     ...(version.content !== undefined && { content: version.content }),
     ...(version.noteType !== undefined && { noteType: version.noteType }),
+    ...(version.regimenName !== undefined && { regimenName: version.regimenName }),
   };
 }
 

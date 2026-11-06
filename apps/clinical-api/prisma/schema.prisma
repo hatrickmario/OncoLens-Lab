@@ -436,9 +436,12 @@ model PriorTreatment {
   reviewStatus         ReviewStatus         @map("review_status")
   sourceSpan           Json?                @map("source_span")
   createdAt            DateTime             @map("created_at") @db.Timestamptz(6)
+  supersedesId         String?              @map("supersedes_id") @db.Uuid
   patient              Patient              @relation(fields: [patientId], references: [id], onDelete: Restrict)
   episode              CareEpisode          @relation(fields: [episodeId], references: [id], onDelete: Restrict)
   sourceDocument       Document?            @relation(fields: [sourceDocumentId], references: [id], onDelete: Restrict)
+  supersedes           PriorTreatment?      @relation("CorreccionDeTratamiento", fields: [supersedesId], references: [id], onDelete: Restrict)
+  correcciones         PriorTreatment[]     @relation("CorreccionDeTratamiento")
   clinicalEvents       ClinicalEvent[]
 
   @@index([patientId, lineNumber])
@@ -499,9 +502,12 @@ model ClinicalAttribute {
   reviewStatus         ReviewStatus         @map("review_status")
   sourceSpan           Json?                @map("source_span")
   createdAt            DateTime             @map("created_at") @db.Timestamptz(6)
+  supersedesId         String?              @map("supersedes_id") @db.Uuid
   patient              Patient              @relation(fields: [patientId], references: [id], onDelete: Restrict)
   episode              CareEpisode          @relation(fields: [episodeId], references: [id], onDelete: Restrict)
   sourceDocument       Document?            @relation(fields: [sourceDocumentId], references: [id], onDelete: Restrict)
+  supersedes           ClinicalAttribute?   @relation("CorreccionDeAtributo", fields: [supersedesId], references: [id], onDelete: Restrict)
+  correcciones         ClinicalAttribute[]  @relation("CorreccionDeAtributo")
 
   @@index([patientId, attributeKey, observedAt])
   @@index([reviewStatus])

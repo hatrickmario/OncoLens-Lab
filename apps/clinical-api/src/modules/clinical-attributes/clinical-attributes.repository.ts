@@ -16,15 +16,17 @@ async function existePaciente(db: Consultador, patientId: string): Promise<boole
   return rows.length > 0;
 }
 
-async function guardarAtributo(db: Consultador, a: AtributoAGuardar): Promise<void> {
+/** INSERT único del atributo clínico: el alta manual y la corrección con histórico (ADR-50) lo comparten. */
+export async function guardarAtributo(db: Consultador, a: AtributoAGuardar): Promise<void> {
   await db.query(
     `INSERT INTO clinical.clinical_attribute (id, patient_id, episode_id, source_document_id, attribute_key, value,
                                               observed_at, date_precision, entry_method, extraction_confidence,
-                                              review_status, source_span, created_at)
-     VALUES ($1, $2, $3, NULL, $4, $5, $6, $7, $8, $9, $10, NULL, $11)`,
+                                              review_status, source_span, created_at, supersedes_id)
+     VALUES ($1, $2, $3, NULL, $4, $5, $6, $7, $8, $9, $10, NULL, $11, $12)`,
     [
       ...[a.id, a.patientId, a.episodeId, a.attributeKey, a.value, a.observedAt],
       ...[a.datePrecision, a.entryMethod, a.extractionConfidence, a.reviewStatus, a.createdAt],
+      a.supersedesId,
     ],
   );
 }
@@ -40,6 +42,7 @@ function atributoLeido(f: Record<string, unknown>): AtributoLeido {
     extractionConfidence: f['extraction_confidence'] as AtributoLeido['extractionConfidence'],
     reviewStatus: f['review_status'] as AtributoLeido['reviewStatus'],
     sourceDocumentId: f['source_document_id'] as string | null,
+    supersedesId: f['supersedes_id'] as string | null,
   };
 }
 
@@ -48,7 +51,7 @@ async function atributosVigentes(db: Consultador, patientId: string): Promise<At
     `SELECT id, attribute_key, value, to_char(observed_at, 'YYYY-MM-DD') AS observed_at,
             date_precision::text AS date_precision, entry_method::text AS entry_method,
             extraction_confidence::text AS extraction_confidence, review_status::text AS review_status,
-            source_document_id
+            source_document_id, supersedes_id
        FROM clinical.clinical_attribute
       WHERE patient_id = $1 AND ${sqlDatoVigente('review_status')}
       ORDER BY attribute_key, observed_at NULLS LAST, id`,

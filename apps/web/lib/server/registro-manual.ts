@@ -1,13 +1,17 @@
 import 'server-only';
 import {
   correctBiomarker,
+  correctClinicalAttribute,
   correctClinicalNote,
+  correctPriorTreatment,
   createManualBiomarker,
   createManualClinicalAttribute,
   createManualDiagnosis,
   createManualPriorTreatment,
   getBiomarkerHistory,
+  getClinicalAttributeHistory,
   getClinicalNoteHistory,
+  getPriorTreatmentHistory,
   getManualEntryOptions,
   listClinicalAttributes,
   listClinicalNotes,
@@ -15,8 +19,12 @@ import {
 import {
   zCorrectBiomarkerBody,
   zCorrectBiomarkerPath,
+  zCorrectClinicalAttributeBody,
+  zCorrectClinicalAttributePath,
   zCorrectClinicalNoteBody,
   zCorrectClinicalNotePath,
+  zCorrectPriorTreatmentBody,
+  zCorrectPriorTreatmentPath,
   zCreateManualBiomarkerBody,
   zCreateManualBiomarkerPath,
   zCreateManualClinicalAttributeBody,
@@ -27,7 +35,9 @@ import {
   zGetBiomarkerHistoryPath,
   zCreateManualClinicalAttributePath,
   zCreateManualPriorTreatmentPath,
+  zGetClinicalAttributeHistoryPath,
   zGetClinicalNoteHistoryPath,
+  zGetPriorTreatmentHistoryPath,
   zListClinicalAttributesPath,
   zListClinicalNotesPath,
 } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
@@ -45,6 +55,10 @@ export type OperacionDeRegistroManual =
   | 'listClinicalNotes'
   | 'correctClinicalNote'
   | 'getClinicalNoteHistory'
+  | 'correctPriorTreatment'
+  | 'getPriorTreatmentHistory'
+  | 'correctClinicalAttribute'
+  | 'getClinicalAttributeHistory'
   | 'createManualPriorTreatment'
   | 'listClinicalAttributes'
   | 'createManualClinicalAttribute'
@@ -56,6 +70,8 @@ export interface ParametrosDeRuta {
   id: string;
   biomarkerId?: string;
   noteId?: string;
+  treatmentId?: string;
+  attributeId?: string;
 }
 
 export type ManejadorDeRegistroManual = (
@@ -87,8 +103,8 @@ function definir<R, B = never>(definicion: {
   return {
     evento: definicion.evento,
     ...(definicion.cuerpo && { cuerpo: definicion.cuerpo }),
-    preparar: ({ id, biomarkerId, noteId }) => {
-      const ruta = definicion.ruta.safeParse({ patientId: id, biomarkerId, noteId });
+    preparar: ({ id, ...ids }) => {
+      const ruta = definicion.ruta.safeParse({ patientId: id, ...ids });
       return ruta.success ? (sdk, cuerpo) => definicion.llamar(sdk, ruta.data, cuerpo as B) : null;
     },
   };
@@ -121,6 +137,29 @@ const DEFINICIONES: Record<OperacionDeRegistroManual, Definicion> = {
     evento: 'correcciones.nota.historico',
     ruta: zGetClinicalNoteHistoryPath,
     llamar: (sdk, path) => getClinicalNoteHistory({ client: sdk.client, path, ...base }),
+  }),
+  correctPriorTreatment: definir({
+    evento: 'correcciones.tratamiento.corregir',
+    ruta: zCorrectPriorTreatmentPath,
+    cuerpo: zCorrectPriorTreatmentBody,
+    llamar: (sdk, path, body) => correctPriorTreatment({ client: sdk.client, path, body, ...base }),
+  }),
+  getPriorTreatmentHistory: definir({
+    evento: 'correcciones.tratamiento.historico',
+    ruta: zGetPriorTreatmentHistoryPath,
+    llamar: (sdk, path) => getPriorTreatmentHistory({ client: sdk.client, path, ...base }),
+  }),
+  correctClinicalAttribute: definir({
+    evento: 'correcciones.atributo.corregir',
+    ruta: zCorrectClinicalAttributePath,
+    cuerpo: zCorrectClinicalAttributeBody,
+    llamar: (sdk, path, body) =>
+      correctClinicalAttribute({ client: sdk.client, path, body, ...base }),
+  }),
+  getClinicalAttributeHistory: definir({
+    evento: 'correcciones.atributo.historico',
+    ruta: zGetClinicalAttributeHistoryPath,
+    llamar: (sdk, path) => getClinicalAttributeHistory({ client: sdk.client, path, ...base }),
   }),
   createManualPriorTreatment: definir({
     evento: 'registro_clinico.tratamiento.crear',
@@ -243,7 +282,7 @@ async function pedir(llamada: () => Promise<Respuesta>): Promise<Response | unde
 }
 
 /**
- * Proxy de las cinco operaciones de corrección con histórico (US-253), de las tres del tratamiento previo y el atributo manuales (US-094) y de las tres de los formularios de biomarcador y diagnóstico (US-111). Las lecturas van sin `Origin` (cookie
+ * Proxy de las nueve operaciones de corrección con histórico (US-253, d5fb-05), de las tres del tratamiento previo y el atributo manuales (US-094) y de las tres de los formularios de biomarcador y diagnóstico (US-111). Las lecturas van sin `Origin` (cookie
  * `SameSite=Strict`); las mutaciones verifican `Origin` y validan el cuerpo con el Zod generado antes de reenviarlo.
  * Solo la cookie de sesión sale hacia clinical-api; 2xx y 4xx se retransmiten sin reinterpretar y un 5xx o un fallo
  * de red responde `ERROR_INTERNO` propio. El log lleva el evento de la operación, status y traceId: nunca ids,

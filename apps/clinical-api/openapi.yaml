@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — Platform API (Backend 1 / clinical-api)
-  version: 1.22.0
+  version: 1.23.0
   description: >-
     API pública, accesible solo a través de los Route Handlers de web (clinical-api no
     publica puerto al host). Autenticación por cookie de sesión HttpOnly + Secure +
@@ -700,6 +700,194 @@ paths:
         "500":
           $ref: '#/components/responses/ErrorInterno'
 
+  /platform/patients/{patientId}/prior-treatments/{treatmentId}/corrections:
+    post:
+      operationId: correctPriorTreatment
+      tags: [registro-manual]
+      summary: Corrige un tratamiento previo vigente conservando el anterior como histórico
+      description: >-
+        Reemplazo completo de los campos editables (mismo cuerpo que el alta). Crea un
+        PriorTreatment nuevo (entry_method = manual_correction, verificado) con supersedesId hacia
+        el anterior, que pasa a reemplazado con su contenido intacto (RN-08, ADR-50), en una
+        transacción. Backend 1 vuelve a decidir atcCodes y mappingStatus con el catálogo
+        versionado (ADR-33); sin mapeo queda no_mapeado y sin código, nunca inventado (RN-27).
+        Corregir un tratamiento no crea ni borra declaraciones sin_tratamiento_previo (el
+        invariante de coherencia se conserva). Una corrección sin cambios reales es 422 sin field.
+        Solo se corrige un dato vigente (409 si ya fue reemplazado) y un paciente activo (RN-17).
+      x-permission: clinical:write
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+        - $ref: '#/components/parameters/TreatmentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PriorTreatmentManualCreate'
+      responses:
+        "201":
+          description: Tratamiento corregido (la fila nueva, vigente).
+          headers:
+            Cache-Control:
+              description: Siempre no-store.
+              required: true
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PriorTreatment'
+        "401":
+          $ref: '#/components/responses/NoAutenticado'
+        "403":
+          $ref: '#/components/responses/PermisoDenegado'
+        "404":
+          $ref: '#/components/responses/NoEncontrado'
+        "409":
+          description: El dato ya no está vigente (fue reemplazado o rechazado).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDatoNoVigente'
+        "422":
+          description: >-
+            Cuerpo inválido (fechas o motivo de fin incoherentes, corrección sin cambios) o
+            paciente egresado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCorreccionInvalida'
+
+  /platform/patients/{patientId}/prior-treatments/{treatmentId}/history:
+    get:
+      operationId: getPriorTreatmentHistory
+      tags: [registro-manual]
+      summary: Histórico de correcciones de un tratamiento previo
+      description: >-
+        Sigue supersedesId hacia atrás desde la fila vigente: las versiones reemplazadas, de la
+        más reciente a la más antigua, acotadas por CORRECTION_HISTORY_MAX. Es una lectura
+        clínica: el administrador recibe 403.
+      x-permission: clinical:read
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+        - $ref: '#/components/parameters/TreatmentId'
+      responses:
+        "200":
+          description: Versiones reemplazadas (vacía si el dato nunca se corrigió).
+          headers:
+            Cache-Control:
+              description: Siempre no-store.
+              required: true
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorrectionHistory'
+        "401":
+          $ref: '#/components/responses/NoAutenticado'
+        "403":
+          $ref: '#/components/responses/PermisoDenegado'
+        "404":
+          $ref: '#/components/responses/NoEncontrado'
+
+  /platform/patients/{patientId}/clinical-attributes/{attributeId}/corrections:
+    post:
+      operationId: correctClinicalAttribute
+      tags: [registro-manual]
+      summary: Corrige el valor o la fecha de un atributo clínico vigente conservando el anterior
+      description: >-
+        La clave no cambia (otra clave es otro atributo). Crea un ClinicalAttribute nuevo
+        (entry_method = manual_correction, verificado) con supersedesId hacia el anterior, que
+        pasa a reemplazado con su valor intacto (RN-08, ADR-50). El valor se valida de nuevo
+        contra la lista del catálogo para el tipo de cáncer del diagnóstico vigente (RN-29). La
+        declaración sin_tratamiento_previo se corrige como cualquier atributo, pero su único
+        valor admitido es si: solo observedAt puede cambiar. Si observedAt se omite, la fila
+        nueva conserva la fecha anterior. Una corrección sin cambios reales es 422 sin field.
+        Solo se corrige un dato vigente (409) y un paciente activo (RN-17).
+      x-permission: clinical:write
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+        - $ref: '#/components/parameters/AttributeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClinicalAttributeCorrection'
+      responses:
+        "201":
+          description: Atributo corregido (la fila nueva, vigente).
+          headers:
+            Cache-Control:
+              description: Siempre no-store.
+              required: true
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClinicalAttribute'
+        "401":
+          $ref: '#/components/responses/NoAutenticado'
+        "403":
+          $ref: '#/components/responses/PermisoDenegado'
+        "404":
+          $ref: '#/components/responses/NoEncontrado'
+        "409":
+          description: El dato ya no está vigente (fue reemplazado o rechazado).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDatoNoVigente'
+        "422":
+          description: >-
+            Cuerpo inválido (propiedad ajena como attributeKey, corrección sin cambios), valor
+            fuera del catálogo (field = value), paciente egresado, o corrección de la declaración
+            sin_tratamiento_previo con tratamientos previos vigentes (CUERPO_INVALIDO con
+            field = attributeKey; defensa de la coherencia D4, estado que no debería darse).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCorreccionInvalida'
+
+  /platform/patients/{patientId}/clinical-attributes/{attributeId}/history:
+    get:
+      operationId: getClinicalAttributeHistory
+      tags: [registro-manual]
+      summary: Histórico de correcciones de un atributo clínico
+      description: >-
+        Sigue supersedesId hacia atrás desde la fila vigente: las versiones reemplazadas, de la
+        más reciente a la más antigua, acotadas por CORRECTION_HISTORY_MAX. Es una lectura
+        clínica: el administrador recibe 403.
+      x-permission: clinical:read
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+        - $ref: '#/components/parameters/AttributeId'
+      responses:
+        "200":
+          description: Versiones reemplazadas (vacía si el dato nunca se corrigió).
+          headers:
+            Cache-Control:
+              description: Siempre no-store.
+              required: true
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorrectionHistory'
+        "401":
+          $ref: '#/components/responses/NoAutenticado'
+        "403":
+          $ref: '#/components/responses/PermisoDenegado'
+        "404":
+          $ref: '#/components/responses/NoEncontrado'
+
   /platform/patients/{patientId}/biomarkers/{biomarkerId}/corrections:
     post:
       operationId: correctBiomarker
@@ -1026,6 +1214,20 @@ components:
       schema:
         type: string
         format: uuid
+    TreatmentId:
+      name: treatmentId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    AttributeId:
+      name: attributeId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
 
   responses:
     ErrorInterno:
@@ -1339,8 +1541,16 @@ components:
           items:
             type: object
             additionalProperties: false
-            required: [lineNumber, setting, regimenName, atcCodes, startedAt, endedAt, ongoing, endReason, provenance]
+            required: [id, lineNumber, setting, regimenName, atcCodes, startedAt, endedAt, ongoing, endReason, provenance]
             properties:
+              id:
+                type: string
+                format: uuid
+                description: Fila vigente; es la que se corrige (POST …/prior-treatments/{treatmentId}/corrections).
+              supersedesId:
+                type: [string, "null"]
+                format: uuid
+                description: Fila a la que esta corrección reemplazó (ADR-50); ausente si nunca se corrigió.
               lineNumber:
                 type: [integer, "null"]
               setting:
@@ -1369,8 +1579,16 @@ components:
           items:
             type: object
             additionalProperties: false
-            required: [key, value, observedAt, provenance]
+            required: [id, key, value, observedAt, provenance]
             properties:
+              id:
+                type: string
+                format: uuid
+                description: Fila vigente; es la que se corrige (POST …/clinical-attributes/{attributeId}/corrections).
+              supersedesId:
+                type: [string, "null"]
+                format: uuid
+                description: Fila a la que esta corrección reemplazó (ADR-50); ausente si nunca se corrigió.
               key:
                 type: string
                 examples: [estado_menopausico]
@@ -1513,6 +1731,12 @@ components:
           enum: [progresion, toxicidad, completado, otro, desconocido]
         provenance:
           $ref: '#/components/schemas/Provenance'
+        supersedesId:
+          type: [string, "null"]
+          format: uuid
+          description: >-
+            Fila a la que esta corrección reemplazó (ADR-50); ausente en un dato que nunca se
+            corrigió. Le dice a la UI si hay histórico.
 
     ClinicalAttributeManualCreate:
       type: object
@@ -1554,6 +1778,28 @@ components:
           enum: [dia, mes, anio, incierta]
         provenance:
           $ref: '#/components/schemas/Provenance'
+        supersedesId:
+          type: [string, "null"]
+          format: uuid
+          description: >-
+            Fila a la que esta corrección reemplazó (ADR-50); ausente en un dato que nunca se
+            corrigió. Le dice a la UI si hay histórico.
+
+    ClinicalAttributeCorrection:
+      type: object
+      description: >-
+        Corrección de un atributo clínico. La clave es inmutable (no se admite attributeKey).
+        value se valida contra el catálogo (RN-29); observedAt omitido conserva la fecha anterior.
+      additionalProperties: false
+      required: [value]
+      properties:
+        value:
+          type: string
+          minLength: 1
+          maxLength: 100
+        observedAt:
+          type: string
+          format: date
 
     ClinicalAttributeList:
       type: object
@@ -1764,8 +2010,8 @@ components:
     CorrectionHistoryEntry:
       type: object
       description: >-
-        Una versión reemplazada. value y unit solo en biomarcadores; content y noteType solo en
-        notas.
+        Una versión reemplazada. value y unit en biomarcadores (value también en atributos); content y
+        noteType solo en notas; regimenName solo en tratamientos previos.
       additionalProperties: false
       required: [id, entryMethod, reviewStatus, recordedAt, createdAt]
       properties:
@@ -1792,6 +2038,9 @@ components:
           type: string
         noteType:
           $ref: '#/components/schemas/NoteType'
+        regimenName:
+          type: string
+          description: Esquema de la versión reemplazada; solo en tratamientos previos.
 
     CorrectionHistory:
       type: object
@@ -1815,8 +2064,9 @@ components:
         field:
           type: string
           description: >-
-            Propiedad del cuerpo que causó el error, cuando el error es de un campo; ausente si no
-            lo es (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.
+            Nombre lógico del dato que causó el error, no siempre una propiedad del cuerpo (p. ej.
+            attributeKey al corregir la declaración de ausencia); ausente si el error no es de un
+            campo (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.
         message: { type: string }
         traceId: { type: string }
 
@@ -3017,8 +3267,9 @@ components:
         field:
           type: string
           description: >-
-            Propiedad del cuerpo que causó el error, cuando el error es de un campo; ausente si no
-            lo es (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.
+            Nombre lógico del dato que causó el error, no siempre una propiedad del cuerpo (p. ej.
+            attributeKey al corregir la declaración de ausencia); ausente si el error no es de un
+            campo (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.
         message: { type: string }
         traceId: { type: string }
     ErrorRegistroClinicoInvalido:
@@ -3032,8 +3283,9 @@ components:
         field:
           type: string
           description: >-
-            Propiedad del cuerpo que causó el error, cuando el error es de un campo; ausente si no
-            lo es (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.
+            Nombre lógico del dato que causó el error, no siempre una propiedad del cuerpo (p. ej.
+            attributeKey al corregir la declaración de ausencia); ausente si el error no es de un
+            campo (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.
         message: { type: string }
         traceId: { type: string }
     ErrorDiagnosticoInvalido:
@@ -3047,8 +3299,9 @@ components:
         field:
           type: string
           description: >-
-            Propiedad del cuerpo que causó el error, cuando el error es de un campo; ausente si no
-            lo es (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.
+            Nombre lógico del dato que causó el error, no siempre una propiedad del cuerpo (p. ej.
+            attributeKey al corregir la declaración de ausencia); ausente si el error no es de un
+            campo (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.
         message: { type: string }
         traceId: { type: string }
     ErrorSeguimientoNoProcesable:

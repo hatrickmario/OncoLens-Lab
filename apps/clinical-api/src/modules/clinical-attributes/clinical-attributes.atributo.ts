@@ -31,6 +31,7 @@ export function armarAtributoManual(entrada: EntradaDelAtributo): AtributoAGuard
     extractionConfidence: 'n_a',
     reviewStatus: 'verificado',
     createdAt: entrada.ahora,
+    supersedesId: null,
   };
 }
 
@@ -46,6 +47,7 @@ export function comoAtributoLeido(a: AtributoAGuardar): AtributoLeido {
     extractionConfidence: a.extractionConfidence,
     reviewStatus: a.reviewStatus,
     sourceDocumentId: null,
+    supersedesId: a.supersedesId,
   };
 }
 
@@ -67,6 +69,8 @@ export function comoAtributoDelContrato(a: AtributoLeido): ClinicalAttribute {
       },
       [],
     ),
+    // Opcional en el contrato: solo una corrección lo trae, así la UI sabe si hay histórico (ADR-50).
+    ...(a.supersedesId !== null && { supersedesId: a.supersedesId }),
   };
 }
 

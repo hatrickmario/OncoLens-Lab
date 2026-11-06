@@ -1,12 +1,14 @@
 import type { Express } from 'express';
 import type { Client } from 'pg';
 import { crearProveedorDeCatalogo } from '../../src/infrastructure/catalogo/catalog-version.provider.js';
+import { crearCatalogoDeAtributos } from '../../src/infrastructure/catalogo/catalogo-de-atributos.js';
 import { crearCatalogoTerminologico } from '../../src/infrastructure/catalogo/catalogo-terminologico.js';
+import type { FuenteDeConexiones } from '../../src/modules/compartido/transaccion.js';
 import { componerModuloDeCorrecciones } from '../../src/modules/corrections/corrections.module.js';
 import type { LimitesDeCorreccion } from '../../src/modules/corrections/corrections.service.js';
 import { createReconciliationService } from '../../src/modules/reconciliation/reconciliation.service.js';
 import { appConAuth } from './app-auth.js';
-import { RUTA_CATALOGO_FX01BB } from './catalogo-terminologico.js';
+import { RUTA_CATALOGO_FX01BB, RUTA_CATALOGO_REAL } from './catalogo-terminologico.js';
 import { leerTexto, type PacienteSembrado } from './completitud.js';
 import { INSTANTE_FIJO, FECHA_FIJA, insertar } from './filas-sinteticas.js';
 import { AHORA, TRACE_ID_GENERADO, type MundoDeGateway } from './gateway.js';
@@ -41,6 +43,8 @@ export interface AppDeCorrecciones {
 export interface OpcionesDeCorrecciones {
   limites?: Partial<LimitesDeCorreccion>;
   rutaDelCatalogo?: string;
+  /** Fuente de conexiones; por defecto la conexión única del mundo. Las pruebas de concurrencia pasan una por transacción. */
+  fuente?: FuenteDeConexiones;
 }
 
 export function montarCorrecciones(
@@ -57,7 +61,7 @@ export function montarCorrecciones(
   const reloj = relojFijo(AHORA);
   const router = componerModuloDeCorrecciones({
     // La conexión única del arnés: BEGIN/COMMIT caen en la misma sesión que las lecturas del test.
-    fuente: {
+    fuente: opciones.fuente ?? {
       connect: () =>
         Promise.resolve({
           query: (sql, valores) => mundo.cliente.query(sql, valores),
@@ -66,6 +70,12 @@ export function montarCorrecciones(
     },
     reconciliacionPara: () =>
       createReconciliationService({ catalogo: terminologia, registrar: logger.registrar }),
+    // Los atributos del catálogo REAL declaran sus valores (RN-29), como en `montarRegistroClinico`.
+    catalogoDeAtributos: crearCatalogoDeAtributos(
+      RUTA_CATALOGO_REAL,
+      leerTexto,
+      crearProveedorDeCatalogo(RUTA_CATALOGO_REAL, leerTexto),
+    ),
     limites: { ...LIMITES_DE_TEST, ...opciones.limites },
     reloj,
     generarId: mundo.ids,

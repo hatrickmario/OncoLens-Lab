@@ -34,7 +34,10 @@
         "review_status",
         "value"
       ],
-      "relaciones": {}
+      "relaciones": {
+        "correcciones": "ClinicalAttribute",
+        "supersedes": "ClinicalAttribute"
+      }
     },
     "ClinicalEvent": {
       "campos": [
@@ -109,7 +112,9 @@
         "started_at"
       ],
       "relaciones": {
-        "clinicalEvents": "ClinicalEvent"
+        "clinicalEvents": "ClinicalEvent",
+        "correcciones": "PriorTreatment",
+        "supersedes": "PriorTreatment"
       }
     }
   }

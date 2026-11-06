@@ -59,3 +59,7 @@ Opción elegida: **1**, porque es el mismo patrón que `Diagnosis`, no altera la
 
 - A favor: sin cambio de esquema.
 - En contra: pondría PHI en la auditoría; la auditoría es del S6; el histórico no sería consultable desde la ficha.
+
+## Nota de alcance (d5fb-05, 2026-11-05)
+
+El patrón se extiende, sin cambiar la decisión, a `clinical.prior_treatment` y `clinical.clinical_attribute`: columna `supersedes_id uuid NULL` con FK restrictiva a la propia tabla e índice único parcial, la fila nueva `manual_correction` `verificado` y la anterior `reemplazado` con su contenido intacto. Eliminar o rechazar un dato cargado por error sigue fuera de este patrón (deuda anotada en `d5fb-05`, tasks H.1).

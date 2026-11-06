@@ -223,6 +223,7 @@
   ],
   "priorTreatments": [
     {
+      "id": "00001cf2-0000-4000-8000-000000000006",
       "lineNumber": 1,
       "setting": "primera_linea_metastasica",
       "regimenName": "Leuprorelina",
@@ -243,6 +244,7 @@
       }
     },
     {
+      "id": "00001cf2-0000-4000-8000-000000000005",
       "lineNumber": null,
       "setting": "primera_linea_metastasica",
       "regimenName": "Bicalutamida",
@@ -265,6 +267,7 @@
   ],
   "attributes": [
     {
+      "id": "00001cf2-0000-4000-8000-000000000018",
       "key": "estado_castracion",
       "value": "castrado",
       "observedAt": "2026-07-15",
@@ -278,6 +281,7 @@
       }
     },
     {
+      "id": "00001cf2-0000-4000-8000-000000000019",
       "key": "sitios_metastasicos",
       "value": "oseo",
       "observedAt": "2025-10-05",

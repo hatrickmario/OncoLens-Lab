@@ -4,11 +4,14 @@ import {
   zErrorCorreccionInvalida,
 } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
 import { mensajes } from '../mensajes';
+import { esIncoherenciaDeDeclaracion } from '../registro-manual/declaracion-de-ausencia';
 
 /** Error de una corrección ya traducido al texto que ve el oncólogo; `campo` es la propiedad del cuerpo, si la hay. */
 export interface ErrorDeCorreccion {
   campo?: string;
   mensaje: string;
+  /** Código `error` del servidor (`CUERPO_INVALIDO`…), si lo trae; no se muestra. */
+  codigo?: string;
 }
 
 export type ResultadoDeCorreccion = { tipo: 'ok' } | { tipo: 'error'; error: ErrorDeCorreccion };
@@ -16,7 +19,8 @@ export type ResultadoDeCorreccion = { tipo: 'ok' } | { tipo: 'error'; error: Err
 export type ResultadoDeHistorico =
   { tipo: 'ok'; versiones: CorrectionHistoryEntry[] } | { tipo: 'error' };
 
-export type DatoCorregible = 'biomarkers' | 'clinical-notes';
+export type DatoCorregible =
+  'biomarkers' | 'clinical-notes' | 'prior-treatments' | 'clinical-attributes';
 
 /** Un dato corregible del BFF (nunca clinical-api): solo ids opacos, sin identidad del paciente (RN-10). */
 export interface RefDeDato {
@@ -39,10 +43,15 @@ function textoDelError422(cuerpo: { error: string; field?: string | undefined })
   const { errores, egresado } = mensajes().ficha.correccion;
   if (cuerpo.error === 'PACIENTE_EGRESADO') return egresado;
   if (cuerpo.error === 'VALOR_FUERA_DE_CATALOGO') return errores.valorFormato;
+  if (esIncoherenciaDeDeclaracion({ campo: cuerpo.field, codigo: cuerpo.error })) {
+    return errores.declaracionConTratamientos;
+  }
   const porCampo: Record<string, string> = {
     performedAt: errores.fechaFutura,
     value: errores.valorFormato,
     content: errores.textoDeNota,
+    endedAt: errores.finAnteriorAlInicio,
+    endReason: errores.motivoDeFin,
   };
   if (cuerpo.field === undefined) return errores.sinCambios;
   return porCampo[cuerpo.field] ?? errores.campoInvalido;
@@ -58,6 +67,7 @@ function traducirError(status: number, cuerpo: Record<string, unknown>): ErrorDe
   const { error, field } = invalido.data;
   return {
     ...(field !== undefined && { campo: field }),
+    codigo: error,
     mensaje: textoDelError422({ error, field }),
   };
 }

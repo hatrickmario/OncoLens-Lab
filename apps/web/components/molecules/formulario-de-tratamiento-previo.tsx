@@ -9,8 +9,7 @@ import {
 import { useEnvioDeRegistro } from '../../lib/registro-manual/use-envio-de-registro';
 import { mensajes } from '../../lib/mensajes';
 import { Button } from '../ui/button';
-import { CamposDeTratamiento } from './campos-de-tratamiento';
-import { CamposDeFinDeTratamiento } from './campos-de-fin-de-tratamiento';
+import { CamposDelTratamientoPrevio } from './campos-del-tratamiento-previo';
 import { PieDeFormularioDeRegistro } from './pie-de-formulario-de-registro';
 
 export interface FormularioDeTratamientoPrevioProps {
@@ -27,7 +26,6 @@ export function FormularioDeTratamientoPrevio({
   alCerrar,
 }: FormularioDeTratamientoPrevioProps) {
   const { tratamiento: t, cerrar } = mensajes().caso.registro;
-  const [enCurso, setEnCurso] = useState(false);
   const [sinCodigo, setSinCodigo] = useState(false);
   const { enviando, error, enviar, fallar } = useEnvioDeRegistro(
     pacienteId,
@@ -60,8 +58,7 @@ export function FormularioDeTratamientoPrevio({
   }
   return (
     <form onSubmit={alEnviar} noValidate className="flex flex-col gap-3">
-      <CamposDeTratamiento errorDe={de} enCurso={enCurso} alCambiarEnCurso={setEnCurso} />
-      {!enCurso && <CamposDeFinDeTratamiento errorDe={de} />}
+      <CamposDelTratamientoPrevio errorDe={de} />
       <PieDeFormularioDeRegistro
         enviando={enviando}
         errorGeneral={error && error.campo === undefined ? error.mensaje : undefined}

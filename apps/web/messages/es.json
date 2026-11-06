@@ -509,6 +509,20 @@
         "permiso": "Tu cuenta no puede registrar datos clínicos.",
         "noEncontrado": "El paciente ya no está disponible.",
         "generico": "No se pudo guardar el registro. Intenta de nuevo."
+      },
+      "correccion": {
+        "descripcion": "Tu corrección crea una versión nueva; la anterior queda en el histórico.",
+        "tratamiento": {
+          "titulo": "Corregir tratamiento previo"
+        },
+        "atributo": {
+          "titulo": "Corregir atributo clínico",
+          "claveFija": "El atributo no se puede cambiar. Para registrar otro, usa «Registrar atributo»."
+        },
+        "declaracion": {
+          "titulo": "Corregir la declaración «Sin tratamiento previo a la fecha»",
+          "valorFijo": "Solo se puede cambiar la fecha de la declaración."
+        }
       }
     }
   },
@@ -593,7 +607,7 @@
       "accionDe": "Corregir dato · {nombre}",
       "egresado": "El paciente está egresado: no admite registros hasta su reactivación",
       "avisoNombres": "Las notas no se envían a la IA en esta versión; conviene no incluir nombres de personas en ellas.",
-      "avisoAnalisisAnteriores": "Los análisis anteriores se hicieron con el valor previo. Un análisis nuevo usará el valor corregido.",
+      "avisoAnalisisAnteriores": "Si ya hay análisis guardados, se hicieron con el valor previo. Un análisis nuevo usará el valor corregido.",
       "formulario": {
         "valor": "Valor",
         "unidad": "Unidad (opcional)",
@@ -618,7 +632,10 @@
         "textoDeNota": "El texto de la nota no puede estar vacío ni superar el máximo permitido.",
         "sinCambios": "No hay cambios respecto de la versión vigente.",
         "campoInvalido": "Revisa este campo: no cumple el formato esperado.",
-        "generico": "No se pudo guardar la corrección. Intenta de nuevo."
+        "generico": "No se pudo guardar la corrección. Intenta de nuevo.",
+        "finAnteriorAlInicio": "La fecha de fin no puede ser anterior al inicio.",
+        "motivoDeFin": "Indica el motivo de fin del tratamiento.",
+        "declaracionConTratamientos": "Hay tratamientos previos registrados, así que la declaración «Sin tratamiento previo a la fecha» ya no aplica; consulta la lista de tratamientos."
       },
       "historico": {
         "etiqueta": "Versiones anteriores",

@@ -19,9 +19,10 @@ const seccionDeTratamientos = (page: Page) =>
  * Recorrido de «Sin tratamiento previo a la fecha» (d5fb-04) sobre el paciente semilla (d) (mama sin tratamientos), que
  * muta: solo corre sobre un seed recién sembrado (`scripts/e2e/ejecutar.sh` hace `down -v`). Son dos pasos en serie: el
  * segundo depende del primero (necesita la declaración ya creada), así que un fallo del primero no se reintenta en el
- * segundo con un estado a medias (`retries: 1` en la CI). Lo ejerce el job `e2e` de la CI.
+ * segundo con un estado a medias. `serial` no basta: con `retries: 1` Playwright reintentaría el grupo entero sobre un
+ * paciente ya mutado, así que va con `retries: 0`. Lo ejerce el job `e2e` de la CI.
  */
-test.describe.configure({ mode: 'serial' });
+test.describe.configure({ mode: 'serial', retries: 0 });
 
 test.describe('Declaración «Sin tratamiento previo a la fecha» (d5fb-04)', () => {
   test('declarar la ausencia deja de ser Faltante y la sección lo muestra distinto de «Sin datos» [AC-04.1]', async ({

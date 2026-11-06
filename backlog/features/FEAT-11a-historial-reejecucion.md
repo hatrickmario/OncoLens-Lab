@@ -62,7 +62,8 @@ razonamiento sin repetir el trabajo.
 ## Contexto técnico
 Módulo `evidence-analysis` (submódulo historial) de `clinical-api`: lectura de
 `AIAnalysisRecord` (tabla inmutable) paginada por `(patient_id, created_at)` (índice de
-readme §3.1); `staleness` lo calcula US-175/US-176 al leer. Tests: Supertest con
+readme §3.1); `staleness` lo calcula US-175/US-176 al leer.
+Nota (d5fb-05): d5fb-05 aporta `supersedes_id` en `PriorTreatment` y `ClinicalAttribute` como entrada del detector de datos desactualizados. Tests: Supertest con
 FX-11a-a (AC-1…AC-6).
 
 ## INVEST

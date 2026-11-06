@@ -37,6 +37,7 @@
   ],
   "priorTreatments": [
     {
+      "id": "d193be51-5016-5f78-834e-2d15e689175a",
       "lineNumber": 1,
       "setting": "primera_linea_metastasica",
       "regimenName": "Deprivación androgénica",
@@ -57,6 +58,7 @@
   ],
   "attributes": [
     {
+      "id": "180534be-5eee-506f-b928-9a29b3e2a53e",
       "key": "estado_castracion",
       "value": "sensible_castracion",
       "observedAt": "2026-08-20",
