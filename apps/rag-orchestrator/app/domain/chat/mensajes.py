@@ -18,3 +18,9 @@ MENSAJE_EVIDENCIA_NO_CONSULTADA = (
     "Esta respuesta describe los datos registrados del paciente; "
     "la evidencia científica no se consultó en este turno"
 )
+
+ENCABEZADO_DE_OPCIONES = "Opciones descritas en la evidencia"
+"""Encabezado del bloque `evidencia` (RN-23): describe lo que reporta la fuente; no recomienda."""
+MENSAJE_SIN_OPCIONES_CON_SOPORTE = (
+    "Los fragmentos recuperados no sostienen ninguna opción con soporte suficiente."
+)

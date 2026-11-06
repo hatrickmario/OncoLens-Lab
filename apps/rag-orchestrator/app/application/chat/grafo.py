@@ -41,6 +41,8 @@ from app.domain.chat.estado import (
     INTENCIONES_CLASIFICABLES,
     EstadoDelHilo,
     Intencion,
+    Subintencion,
+    UltimaEvidencia,
     estado_tras_el_turno,
 )
 from app.domain.chat.memoria import ventana_de_memoria
@@ -72,12 +74,21 @@ class EstadoDelGrafo(TypedDict, total=False):
     tipo_del_contexto: str
     clasificacion_de_datos: str
     trace_id: str
+    # Solo si hay un análisis activo en la conversación; el id nunca entra al grafo (lo conoce solo Backend 1).
+    hay_analisis_activo: bool
     # Lo único que sobrevive entre turnos, junto con el resultado del último.
     hilo: EstadoDelHilo
     intencion: Intencion
+    subintencion: Subintencion | None
     propuestas: tuple[PropuestaDelTurno, ...]
     bloques: tuple[BloqueDelTurno, ...]
     omitidas: int
+    # Lo que un nodo de capacidad que ya valida por sí mismo entrega a ``validar`` (se vacía al cerrar).
+    bloques_del_nodo: tuple[BloqueDelTurno, ...]
+    omitidas_del_nodo: int
+    ultima_evidencia: UltimaEvidencia | None
+    opciones_mostradas: tuple[str, ...]
+    evidencia_consultada: bool
 
 
 class _Clasificacion(BaseModel):
@@ -176,11 +187,11 @@ class _NodosDelTurno:
         if es_fuera_de_alcance(
             pregunta, estado["tipo_del_contexto"], self._configuracion.terminos_por_tipo
         ):
-            return {"intencion": Intencion.fuera_de_alcance}
+            return {"intencion": Intencion.fuera_de_alcance, "subintencion": None}
         intencion = clasificar_por_reglas(pregunta) or await self._clasificar_con_el_llm(
             pregunta, estado["trace_id"]
         )
-        return {"intencion": intencion}
+        return {"intencion": intencion, "subintencion": None}
 
     async def _clasificar_con_el_llm(self, pregunta: str, trace_id: str) -> Intencion:
         """Una única clasificación JSON con el LLM local, sin reintento; cualquier salida inválida es ``no_clasificada``."""
@@ -206,14 +217,18 @@ class _NodosDelTurno:
         (RN-24, RN-04) y respeta el lenguaje no prescriptivo (RN-23); el resto suma en ``omittedClaims``.
 
         No ejecuta el NLI (ADR-34): llega con L1D-317 y L1D-322 (ver el docstring del módulo)."""
-        bloques = self._bloques_permitidos(estado)
-        if estado["intencion"] is Intencion.evidencia:
-            # El nodo ``evidencia`` aún no consulta el corpus (L1D-322): se dice, sin eco de la pregunta.
+        bloques = (*estado.get("bloques_del_nodo", ()), *self._bloques_permitidos(estado))
+        if estado["intencion"] is Intencion.evidencia and not estado.get("evidencia_consultada"):
+            # Sin el nodo real de evidencia (sin corpus detrás) no se consultó la evidencia: se dice, sin eco de la pregunta.
             bloques = (
                 *bloques,
                 BloqueDelTurno(TipoDeBloque.limitacion, MENSAJE_EVIDENCIA_NO_CONSULTADA),
             )
-        omitidas = len(estado["propuestas"]) - self._cantidad_de_afirmaciones(bloques)
+        omitidas = (
+            len(estado["propuestas"])
+            - self._cantidad_de_afirmaciones(bloques)
+            + estado.get("omitidas_del_nodo", 0)
+        )
         logger.info(
             "event=chat_validacion traceId=%s intencion=%s afirmaciones=%d omittedClaims=%d",
             estado["trace_id"],
@@ -257,8 +272,15 @@ def _cerrar(
     """Guarda el turno en el estado del hilo y vacía las entradas del turno: del paciente no queda nada más."""
     hilo = estado.get("hilo") or EstadoDelHilo()
     turno = turno_previo_de(estado["pregunta"], estado["intencion"], bloques)
+    citas = tuple(c.chunk_id for b in bloques for c in b.citas)
     return {
-        "hilo": estado_tras_el_turno(hilo, turno),
+        "hilo": estado_tras_el_turno(
+            hilo,
+            turno,
+            ultima_evidencia=estado.get("ultima_evidencia"),
+            opciones_mostradas=estado.get("opciones_mostradas", ()),
+            citas_mostradas=citas,
+        ),
         "bloques": bloques,
         "omitidas": omitidas,
         **ENTRADAS_DEL_TURNO_VACIAS,

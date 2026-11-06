@@ -37,7 +37,11 @@ from app.application.ports import (
 from app.application.rag_orchestrator_service import RAGOrchestratorService
 from app.config.settings import Settings
 from app.domain.chat.estado import INTENCIONES_CLASIFICABLES, EstadoDelHilo, Intencion
-from app.schemas.generated.models import ChatTurnRequest, ChatTurnResponse
+from app.schemas.generated.models import (
+    ChatTurnRequest,
+    ChatTurnResponse,
+    RagQueryInternalResponse,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +91,7 @@ class ChatTurnService:
         try:
             with (
                 con_clasificacion(solicitud.dataClassification.value) as contexto,
-                con_evidencia_del_turno(consulta),
+                con_evidencia_del_turno(consulta) as evidencia,
             ):
                 final = await self._grafo.ainvoke(
                     self._entrada_del_turno(solicitud, es_nuevo), self.registro.configuracion(hilo)
@@ -109,7 +113,7 @@ class ChatTurnService:
             len(final["bloques"]),
             final["omitidas"],
         )
-        return self._respuesta(final, contexto.proveedor_declarado.value)
+        return self._respuesta(final, contexto.proveedor_declarado.value, evidencia.resultado)
 
     def _entrada_del_turno(self, solicitud: ChatTurnRequest, es_nuevo: bool) -> EstadoDelGrafo:
         diagnostico = solicitud.clinicalContext.diagnosis
@@ -124,12 +128,20 @@ class ChatTurnService:
             entrada["hilo"] = estado_de_rehidratacion(solicitud.rehydration)
         return entrada
 
-    def _respuesta(self, final: dict[str, Any], proveedor: str) -> ChatTurnResponse:
+    def _respuesta(
+        self,
+        final: dict[str, Any],
+        proveedor: str,
+        evidencia: RagQueryInternalResponse | None,
+    ) -> ChatTurnResponse:
         intencion = final["intencion"]
         hilo: EstadoDelHilo = final["hilo"]
+        subintencion = final.get("subintencion")
         return ChatTurnResponse.model_validate(
             {
                 "intent": intencion.value,
+                **({"subintent": subintencion.value} if subintencion is not None else {}),
+                **({"evidenceAnalysis": evidencia} if evidencia is not None else {}),
                 "blocks": [bloque_del_contrato(b) for b in final["bloques"]],
                 "omittedClaims": final["omitidas"],
                 "structuredState": estado_estructurado_del_contrato(hilo.estructurado),

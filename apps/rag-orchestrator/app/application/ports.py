@@ -397,6 +397,8 @@ class PuertosDelCorpus:
     catalogo: CorpusCatalogReader
     buscador_sparse: SparseChunkSearch | None = None
     """La rama *sparse* de la recuperación híbrida (US-112); ``None`` = el adapter del corpus no la ofrece."""
+    posiciones: PosicionDeChunks | None = None
+    """Posición de los chunks vigentes en su documento (L1D-322); ``None`` = el adapter del corpus no la ofrece."""
 
 
 # --- Generación de /rag/query (US-225, L1D-275) ----------------------------------------------------------------------

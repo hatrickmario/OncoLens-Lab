@@ -348,7 +348,7 @@ class RAGOrchestratorService:
     async def _idioma_y_release(
         self, trace_id: str, pregunta: str
     ) -> tuple[Idioma, ReleaseDelCorpus]:
-        borde = self._invocar_borde_fallando_cerrado
+        borde = self.invocar_borde_fallando_cerrado
         idioma = await borde(trace_id, "idioma", self._detector_idioma.detectar, pregunta)
         release = await borde(trace_id, "catalogo", self._lector_release.release_vigente)
         return idioma, release
@@ -515,7 +515,7 @@ class RAGOrchestratorService:
             return AplicabilidadCompleta(())
         inicio = self._reloj.ahora()
         mejores = mejor_chunk_por_documento(citables)
-        poblaciones = await self._invocar_borde_fallando_cerrado(
+        poblaciones = await self.invocar_borde_fallando_cerrado(
             trace_id, "poblacion", self._catalogo.poblacion_por_documento, set(mejores)
         )
         self._registrar_formas_invalidas(trace_id, poblaciones)
@@ -625,7 +625,7 @@ class RAGOrchestratorService:
     ) -> dict[str, ChunkCitable]:
         """Los chunks sobre el umbral entregados a la generación cuyo documento tiene ficha en el catálogo."""
         chunks = recuperacion.chunks_sobre_umbral
-        fichas = await self._invocar_borde_fallando_cerrado(
+        fichas = await self.invocar_borde_fallando_cerrado(
             trace_id,
             "catalogo",
             self._catalogo.fichas_por_documento,
@@ -737,7 +737,7 @@ class RAGOrchestratorService:
             raise RuntimeError(
                 "la rama sparse se pidió sin codificador ni búsqueda (el constructor lo impide)"
             )
-        borde = self._invocar_borde_fallando_cerrado
+        borde = self.invocar_borde_fallando_cerrado
         vector = await borde(trace_id, "embeddings", codificador.embeber_sparse, pregunta)
         return await borde(
             trace_id,
@@ -777,7 +777,7 @@ class RAGOrchestratorService:
     async def _buscar_cercanos_a(
         self, trace_id: str, texto: str, filtro: str
     ) -> list[ChunkEncontrado]:
-        borde = self._invocar_borde_fallando_cerrado
+        borde = self.invocar_borde_fallando_cerrado
         vector = await borde(trace_id, "embeddings", self._embedder.embeber, texto)
         return await borde(
             trace_id,
@@ -820,7 +820,7 @@ class RAGOrchestratorService:
         """Puntúa todos los candidatos y conserva los ``RERANK_TOP_N`` de mayor `relevance_score` (orden estable)."""
         if not candidatos:
             return []
-        crudos = await self._invocar_borde_fallando_cerrado(
+        crudos = await self.invocar_borde_fallando_cerrado(
             trace_id, "reranker", self._reranker.puntuar, pregunta, candidatos
         )
         puntajes = self._exigir_un_puntaje_normalizado_por_candidato(
@@ -918,7 +918,7 @@ class RAGOrchestratorService:
         )
 
     @staticmethod
-    async def _invocar_borde_fallando_cerrado(
+    async def invocar_borde_fallando_cerrado(
         trace_id: str, etapa: str, funcion: Callable[..., _Resultado], *argumentos: object
     ) -> _Resultado:
         """Ejecuta un puerto bloqueante fuera del bucle; cualquier fallo es `RecuperacionNoDisponibleError` sin detalle.

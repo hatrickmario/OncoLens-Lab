@@ -20,6 +20,7 @@ ENTRADAS_DEL_TURNO_VACIAS: dict[str, object] = {
     "propuestas": (),
     "hay_analisis_activo": False,
     "bloques_del_nodo": (),
+    "omitidas_del_nodo": 0,
     "ultima_evidencia": None,
     "opciones_mostradas": (),
     "evidencia_consultada": False,
