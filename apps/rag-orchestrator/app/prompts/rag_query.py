@@ -85,9 +85,16 @@ def construir_prompt_rag_query(
         .pregunta(pregunta)
         .datos_del_paciente(datos_del_paciente or "No disponible")
     )
+    return agregar_documentos_con_alias(constructor, fragmentos).construir()
+
+
+def agregar_documentos_con_alias(
+    constructor: PromptBuilder, fragmentos: Sequence[FragmentoConAlias]
+) -> PromptBuilder:
+    """Un bloque ``<document id="Cn">`` por fragmento, con el alias y nunca el ``chunkId`` real (RN-04)."""
     for fragmento in fragmentos:
         constructor.documento(fragmento.alias, fragmento.chunk.chunk_text)
-    return constructor.construir()
+    return constructor
 
 
 def bloque_de_datos_del_paciente(contexto: ClinicalContext, faltantes: Sequence[str] = ()) -> str:

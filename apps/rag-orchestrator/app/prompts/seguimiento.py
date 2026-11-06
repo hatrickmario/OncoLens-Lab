@@ -15,6 +15,7 @@ from app.domain.alias_de_chunks import FragmentoConAlias
 from app.prompts.rag_query import (
     ETIQUETA_EN_CONFLICTO,
     ETIQUETA_SIN_VERIFICAR,
+    agregar_documentos_con_alias,
     bloque_de_datos_del_paciente,
 )
 from app.schemas.generated.models import PriorAnalysisMemory, RagFollowUpRequest
@@ -79,9 +80,7 @@ def construir_prompt_de_seguimiento(
             bloque_de_datos_del_paciente(solicitud.clinicalContext) or "No disponible"
         )
     )
-    for fragmento in fragmentos:
-        constructor.documento(fragmento.alias, fragmento.chunk.chunk_text)
-    return constructor.construir()
+    return agregar_documentos_con_alias(constructor, fragmentos).construir()
 
 
 def _bloque_de_memoria(memoria: PriorAnalysisMemory) -> str:
