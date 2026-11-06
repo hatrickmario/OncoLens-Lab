@@ -49,6 +49,22 @@ def test_toda_funcion_de_prompt_devuelve_prompt_separado_cuando_se_recorre_app_p
     assert retorno is PromptSeparado, f"{nombre} devuelve {retorno}, no PromptSeparado"
 
 
+def test_el_sistema_de_cada_prompt_nombra_todas_las_etiquetas_reservadas_cuando_se_construye():
+    from app.application.prompt_builder import ETIQUETAS_RESERVADAS, linea_de_datos_no_instrucciones
+    from app.prompts.reescritura_consulta import construir_prompt_de_reescritura
+
+    linea = linea_de_datos_no_instrucciones()
+    assert all(f"<{e}>" in linea for e in ETIQUETAS_RESERVADAS)
+    from app.prompts.rag_query import construir_prompt_rag_query
+
+    assert linea in construir_prompt_de_reescritura("p", 3).sistema
+    consulta = construir_prompt_rag_query(
+        "p", "", [], "es", claims_min=1, claims_max=4, claim_max_words=20
+    )
+    assert linea in consulta.sistema
+    assert all(f"<{e}>" in consulta.sistema for e in ETIQUETAS_RESERVADAS)
+
+
 def test_afirmar_separacion_pasa_con_prompt_builder_cuando_el_dato_va_en_su_bloque():
     prompt = (
         PromptBuilder("Instrucciones.", "x@1").pregunta("¿p?").documento("C1", "texto").construir()
