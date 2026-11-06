@@ -280,66 +280,65 @@ async function notasVigentes(
   }));
 }
 
+/** Lo único que cambia de una cadena de versiones a otra: la unión con el paciente y las columnas que se leen. */
+interface DetalleDeCadena {
+  /** `JOIN` necesario para llegar al paciente (el biomarcador lo tiene en su examen); vacío si la fila lo trae. */
+  readonly union: string;
+  /** Expresión SQL del `patient_id` del dato de partida. */
+  readonly paciente: string;
+  /** Columnas de la versión reemplazada (alias `x` la fila, `e` el examen si hay `union`). */
+  readonly columnas: string;
+}
+
 /**
  * Cadena de versiones reemplazadas: recorre `supersedes_id` hacia atrás desde `id` (CTE recursiva acotada por `limite`,
  * RN-22) y devuelve de la más reciente a la más antigua, sin la fila de partida. Los `$` de la consulta son los mismos
- * en biomarcadores y notas; solo cambian las tablas y las columnas.
+ * en todas las tablas (`$1` dato, `$2` paciente, `$3` tope); `tabla` es siempre un literal del código.
  */
-const CADENA_DE_BIOMARCADORES = `
+function cadenaDe(tabla: TablaCorregible, { union, paciente, columnas }: DetalleDeCadena): string {
+  return `
   WITH RECURSIVE cadena AS (
-    SELECT b.id, b.supersedes_id, 1 AS nivel
-      FROM clinical.biomarker b JOIN clinical.exam e ON e.id = b.exam_id
-     WHERE b.id = $1 AND e.patient_id = $2
+    SELECT x.id, x.supersedes_id, 1 AS nivel FROM clinical.${tabla} x ${union}
+     WHERE x.id = $1 AND ${paciente} = $2
     UNION ALL
     SELECT p.id, p.supersedes_id, c.nivel + 1
-      FROM clinical.biomarker p JOIN cadena c ON p.id = c.supersedes_id
+      FROM clinical.${tabla} p JOIN cadena c ON p.id = c.supersedes_id
      WHERE c.nivel <= $3
   )
-  SELECT b.id, e.entry_method::text AS entry_method, to_char(e.performed_at, 'YYYY-MM-DD') AS recorded_at,
-         b.created_at, b.value, b.unit
-    FROM cadena c JOIN clinical.biomarker b ON b.id = c.id JOIN clinical.exam e ON e.id = b.exam_id
+  SELECT ${columnas}
+    FROM cadena c JOIN clinical.${tabla} x ON x.id = c.id ${union}
    WHERE c.nivel > 1 ORDER BY c.nivel LIMIT $3`;
+}
 
-const CADENA_DE_NOTAS = `
-  WITH RECURSIVE cadena AS (
-    SELECT n.id, n.supersedes_id, 1 AS nivel FROM clinical.clinical_note n WHERE n.id = $1 AND n.patient_id = $2
-    UNION ALL
-    SELECT p.id, p.supersedes_id, c.nivel + 1
-      FROM clinical.clinical_note p JOIN cadena c ON p.id = c.supersedes_id
-     WHERE c.nivel <= $3
-  )
-  SELECT n.id, n.entry_method::text AS entry_method, to_char(n.recorded_at, 'YYYY-MM-DD') AS recorded_at,
-         n.created_at, n.content, n.note_type::text AS note_type
-    FROM cadena c JOIN clinical.clinical_note n ON n.id = c.id
-   WHERE c.nivel > 1 ORDER BY c.nivel LIMIT $3`;
+const CADENA_DE_BIOMARCADORES = cadenaDe('biomarker', {
+  union: 'JOIN clinical.exam e ON e.id = x.exam_id',
+  paciente: 'e.patient_id',
+  columnas: `x.id, e.entry_method::text AS entry_method, to_char(e.performed_at, 'YYYY-MM-DD') AS recorded_at,
+         x.created_at, x.value, x.unit`,
+});
 
-const CADENA_DE_TRATAMIENTOS = `
-  WITH RECURSIVE cadena AS (
-    SELECT t.id, t.supersedes_id, 1 AS nivel FROM clinical.prior_treatment t WHERE t.id = $1 AND t.patient_id = $2
-    UNION ALL
-    SELECT p.id, p.supersedes_id, c.nivel + 1
-      FROM clinical.prior_treatment p JOIN cadena c ON p.id = c.supersedes_id
-     WHERE c.nivel <= $3
-  )
-  SELECT t.id, t.entry_method::text AS entry_method,
-         to_char(COALESCE(t.started_at, (t.created_at AT TIME ZONE 'UTC')::date), 'YYYY-MM-DD') AS recorded_at,
-         t.created_at, t.regimen_name
-    FROM cadena c JOIN clinical.prior_treatment t ON t.id = c.id
-   WHERE c.nivel > 1 ORDER BY c.nivel LIMIT $3`;
+const CADENA_DE_NOTAS = cadenaDe('clinical_note', {
+  union: '',
+  paciente: 'x.patient_id',
+  columnas: `x.id, x.entry_method::text AS entry_method, to_char(x.recorded_at, 'YYYY-MM-DD') AS recorded_at,
+         x.created_at, x.content, x.note_type::text AS note_type`,
+});
 
-const CADENA_DE_ATRIBUTOS = `
-  WITH RECURSIVE cadena AS (
-    SELECT a.id, a.supersedes_id, 1 AS nivel FROM clinical.clinical_attribute a WHERE a.id = $1 AND a.patient_id = $2
-    UNION ALL
-    SELECT p.id, p.supersedes_id, c.nivel + 1
-      FROM clinical.clinical_attribute p JOIN cadena c ON p.id = c.supersedes_id
-     WHERE c.nivel <= $3
-  )
-  SELECT a.id, a.entry_method::text AS entry_method,
-         to_char(COALESCE(a.observed_at, (a.created_at AT TIME ZONE 'UTC')::date), 'YYYY-MM-DD') AS recorded_at,
-         a.created_at, a.value
-    FROM cadena c JOIN clinical.clinical_attribute a ON a.id = c.id
-   WHERE c.nivel > 1 ORDER BY c.nivel LIMIT $3`;
+const CADENA_DE_TRATAMIENTOS = cadenaDe('prior_treatment', {
+  union: '',
+  paciente: 'x.patient_id',
+  columnas: `x.id, x.entry_method::text AS entry_method,
+         to_char(COALESCE(x.started_at, (x.created_at AT TIME ZONE 'UTC')::date), 'YYYY-MM-DD') AS recorded_at,
+         x.created_at, x.regimen_name`,
+});
+
+const CADENA_DE_ATRIBUTOS = cadenaDe('clinical_attribute', {
+  union: '',
+  paciente: 'x.patient_id',
+  columnas: `x.id, x.entry_method::text AS entry_method,
+         to_char(COALESCE(x.observed_at, (x.created_at AT TIME ZONE 'UTC')::date), 'YYYY-MM-DD') AS recorded_at,
+         x.created_at, x.value`,
+});
 
 /** Un historial de una tabla: su consulta de cadena, cómo saber si el dato existe y cómo leer cada versión. */
 interface FuenteDeHistorial {
