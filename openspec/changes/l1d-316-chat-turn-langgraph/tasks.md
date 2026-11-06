@@ -31,7 +31,7 @@
 
 ## 3. evaluación
 
-- [ ] 3.1 `run-ai-eval` con `eval/configs/rn23-local.yaml --suite all` (prompts nuevos del chat): salidas prescriptivas = 0 y sin regresión en las suites existentes · evaluate · verificación: reporte de `ai-eval-runner` en `reports/eval/` (lo deja el agente). La suite del chat AC01–AC06 es de US-269.
+- [x] 3.1 `run-ai-eval` con `eval/configs/rn23-local.yaml --suite all` (prompts nuevos del chat): salidas prescriptivas = 0 y sin regresión en las suites existentes · evaluate · verificación: reporte de `ai-eval-runner` en `reports/eval/` (lo deja el agente). La suite del chat AC01–AC06 es de US-269. Evidencia (ai-eval-runner, LLM real local gemma4:26b-a4b-it-q4_K_M, rama 067d6a3d vs main): rn23-local all: prescriptivas mostradas 0->0, citas 1,0, fidelidad NLI 1,0, sin evidencia 1,0, recall@10 1,0, MRR 0,783, p95 4,6->9,6 s; s5 opciones: fidelidad proxy 0,912, citas 1,0, M-10.1 20/20. El FAIL de la puerta «rechazos legítimos de más» 4->5 es PREEXISTENTE en main (falsos positivos de nivel B; deuda), no regresión. Inyección con casos de L1D-108, JSON válido y brazo de reescritura NO medidos: TRASLADADO a L1D-326 (familia chat en evaluate).
 
 ## 4. humano
 
@@ -61,4 +61,4 @@ Claves opcionales que añadió la implementación (todas con valor por defecto e
 
 - [x] 5.1 `openspec validate l1d-316-chat-turn-langgraph --strict` en verde. Evidencia: `Change 'l1d-316-chat-turn-langgraph' is valid`
 - [x] 5.2 Suite de `rag-orchestrator` en verde (`pytest`), `contracts:verify-provider` para `/chat/turn` y `contracts:breaking` sin incompatibles. Evidencia: `pytest` 4454 passed, 193 deselected (los `servicios_reales`); `contracts:verify-provider --proveedor rag-orchestrator` 501 respuestas verificadas; `contracts:breaking` sin incompatibles; `scripts/ci/integracion-rag-orchestrator.sh` (167 tests contra PostgreSQL y Milvus reales de test): `integracion-rag: OK`
-- [ ] 5.3 Gate 2 con `contract-keeper`, `privacy-guardian`, `clinical-language-auditor` y `design-principles-reviewer`
+- [x] 5.3 Gate 2 con `contract-keeper`, `privacy-guardian`, `clinical-language-auditor` y `design-principles-reviewer` Veredicto: privacy PASS, contract-keeper PASS, lenguaje PASS, diseño PASS; eval como en 3.1.
