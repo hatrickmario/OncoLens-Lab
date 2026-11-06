@@ -19,6 +19,7 @@ import type {
   FiltrosDelListado,
 } from './patients.schema.js';
 import { obtenerFicha } from './ficha.service.js';
+import type { OptOutService } from '../opt-outs/opt-outs.service.js';
 import type { FichaRepository } from './ficha.repository.js';
 import type { VistaPorPermiso } from './vistas.js';
 import {
@@ -65,6 +66,8 @@ export interface DependenciasDelService {
   completitud: CompletenessService & CompletenessEnLote;
   /** `PATIENTS_PAGE_SIZE` (RN-22). */
   pageSize: number;
+  /** Disponibilidad de la IA en la ficha (RN-15): el mismo servicio del guardia. */
+  optOuts: OptOutService;
 }
 
 type Elemento = PatientListItem | PatientAdminSummary;

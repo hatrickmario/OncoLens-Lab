@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — Platform API (Backend 1 / clinical-api)
-  version: 1.25.0
+  version: 1.27.0
   description: >-
     API pública, accesible solo a través de los Route Handlers de web (clinical-api no
     publica puerto al host). Autenticación por cookie de sesión HttpOnly + Secure +
@@ -392,6 +392,7 @@ paths:
         bloquean (continueWithWarning). Si la petición no trae filtersApplied.publishedFromYear,
         clinical-api aplica año actual menos EVIDENCE_DEFAULT_YEARS.
       x-permission: ai_analysis:create
+      x-genera-ia: true
       parameters:
         - name: Idempotency-Key
           in: header
@@ -1111,6 +1112,7 @@ paths:
         El análisis admite hasta ANALYSIS_FOLLOWUP_MAX preguntas (409 al superarlo). Backend 2
         no guarda estado entre turnos; isNewSource lo calcula clinical-api.
       x-permission: follow_ups:create
+      x-genera-ia: true
       parameters:
         - $ref: '#/components/parameters/AnalysisId'
       requestBody:
@@ -2558,6 +2560,7 @@ components:
         - recentBiomarkers
         - pendingReviewCount
         - missingCriticalCount
+        - aiAnalysisAvailable
       properties:
         view:
           type: string
@@ -2609,6 +2612,12 @@ components:
           description: >-
             false si el checklist no pudo calcularse; entonces missingCriticalCount = 0 y no debe
             mostrarse como contador (RN-26). Ausente equivale a true.
+        aiAnalysisAvailable:
+          type: boolean
+          description: >-
+            false si el paciente tiene opt-out vigente de analisis_ia o es real sin convenio
+            (RN-15); toda generación con IA responde 403. No expone la referencia, el motivo ni
+            la causa (RN-10).
 
     PatientListItem:
       type: object

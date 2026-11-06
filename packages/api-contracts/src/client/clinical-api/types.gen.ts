@@ -682,6 +682,10 @@ export type PatientSummary = {
      * false si el checklist no pudo calcularse; entonces missingCriticalCount = 0 y no debe mostrarse como contador (RN-26). Ausente equivale a true.
      */
     completenessAvailable?: boolean;
+    /**
+     * false si el paciente tiene opt-out vigente de analisis_ia o es real sin convenio (RN-15); toda generación con IA responde 403. No expone la referencia, el motivo ni la causa (RN-10).
+     */
+    aiAnalysisAvailable: boolean;
 };
 
 /**
@@ -1364,6 +1368,10 @@ export type PatientSummaryWritable = {
      * false si el checklist no pudo calcularse; entonces missingCriticalCount = 0 y no debe mostrarse como contador (RN-26). Ausente equivale a true.
      */
     completenessAvailable?: boolean;
+    /**
+     * false si el paciente tiene opt-out vigente de analisis_ia o es real sin convenio (RN-15); toda generación con IA responde 403. No expone la referencia, el motivo ni la causa (RN-10).
+     */
+    aiAnalysisAvailable: boolean;
 };
 
 export type PatientId = string;

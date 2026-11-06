@@ -48,6 +48,12 @@ se registre durante la llamada a Backend 2; el siguiente responde `403`. No se r
 tipo de causa (opt-out o sin convenio) en el cuerpo ni en los *logs* (RN-10). El *log* registra solo `traceId`, UUID del
 paciente, `operationId` y `motivo = opt_out | sin_convenio`.
 
+### D5b · Registro del motivo y falla cerrada
+El *log* distingue `motivo = opt_out` de `sin_convenio` (solo log: la respuesta es idéntica y no lleva referencia ni motivo
+de la marca). Un empate de instante entre `registrado` y `revocado` se resuelve a favor de bloquear. Si la lectura de la
+marca falla, el guardia falla cerrado (`500`, sin llamar a la IA). La re-ejecución va por `createEvidenceAnalysis`
+(`rerunOfAnalysisId`); resumen del caso y búsqueda complementaria no tienen endpoint y entrarán en `RUTAS_GENERA_IA` cuando existan.
+
 ### D6 · UI
 `ficha-del-doctor.tsx` recibe `aiAnalysisAvailable`; con `false` muestra el aviso «El análisis con IA no está disponible
 para este paciente» (texto en `lib/textos`), pasa `disabled` al panel conversacional (campo de pregunta y envío; el formulario «Analizar evidencia» lo retira L1D-324)
