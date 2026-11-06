@@ -44,7 +44,7 @@ CHAT_MAX_THREADS=50
 CHAT_MEMORY_MAX_TOKENS=1500
 ```
 
-- [ ] H-1 Añadir las tres claves anteriores a `.env.example` (PR chore de la oleada) DIFERIDA -> H-1
+- [ ] H-1 Añadir las tres claves anteriores a `.env.example` (PR chore de la oleada) DIFERIDA -> H-1 (hecho en PR chore/s6-h1-env-example)
 
 ## 5. cierre
 

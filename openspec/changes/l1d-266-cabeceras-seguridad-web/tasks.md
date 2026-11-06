@@ -23,7 +23,7 @@
 
 ## humano
 
-- [ ] H-1 Añadir a `.env.example` (bloque de `web`) · DIFERIDA -> H-1
+- [ ] H-1 Añadir a `.env.example` (bloque de `web`) · DIFERIDA -> H-1 (hecho en PR chore/s6-h1-env-example)
 
 ```
 # Modo de la CSP de web: aplicar | solo_informe (solo_informe solo en `next dev`; en producción aborta el arranque).
