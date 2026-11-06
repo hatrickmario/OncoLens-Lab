@@ -30,6 +30,11 @@ def bloques(usuario: str) -> list[Bloque]:
     return [Bloque(m[1], m[2].strip(), m[3].strip("\n")) for m in _BLOQUE.finditer(usuario)]
 
 
+def texto_completo(prompt: PromptSeparado) -> str:
+    """Sistema y usuario juntos: para aserciones de contenido que no dependen de en qué mensaje va cada parte."""
+    return f"{prompt.sistema}\n\n{prompt.usuario}"
+
+
 def hash_del_sistema(sistema: str) -> str:
     return hashlib.sha256(sistema.encode("utf-8")).hexdigest()
 
@@ -62,9 +67,13 @@ def afirmar_separacion(prompt: PromptSeparado | str, datos: DatosDelPrompt) -> N
         cuantos = sum(1 for b in encontrados if b.etiqueta == etiqueta)
         assert cuantos == len(textos), f"bloques <{etiqueta}>: {cuantos} en lugar de {len(textos)}"
         for texto in textos:
-            assert texto not in prompt.sistema, f"un dato de <{etiqueta}> está en el mensaje de sistema"
+            assert texto not in prompt.sistema, (
+                f"un dato de <{etiqueta}> está en el mensaje de sistema"
+            )
     for alias in datos.documentos:
-        assert any(b.atributos == f'id="{alias}"' for b in encontrados if b.etiqueta == "document"), alias
+        assert any(
+            b.atributos == f'id="{alias}"' for b in encontrados if b.etiqueta == "document"
+        ), alias
     restante = _BLOQUE.sub("", prompt.usuario)
     assert not _APERTURA_O_CIERRE.search(restante), "un delimitador del dato quedó sin escapar"
     if datos.sistema_de_referencia is not None:

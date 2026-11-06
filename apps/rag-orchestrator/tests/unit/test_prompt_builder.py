@@ -37,7 +37,10 @@ def test_construir_envuelve_cada_dato_en_su_bloque_y_conserva_el_orden_de_las_ll
 
 def test_el_dato_nunca_entra_en_el_sistema_cuando_se_construye_con_todos_los_bloques():
     prompt = (
-        PromptBuilder(INSTRUCCIONES, VERSION).pregunta("pregunta única").memoria("memoria única").construir()
+        PromptBuilder(INSTRUCCIONES, VERSION)
+        .pregunta("pregunta única")
+        .memoria("memoria única")
+        .construir()
     )
 
     afirmar_separacion(prompt, DatosDelPrompt(pregunta="pregunta única", memoria="memoria única"))
@@ -50,15 +53,26 @@ def test_documento_rechaza_un_alias_que_podria_romper_el_atributo():
 
 @pytest.mark.parametrize(
     "texto",
-    ["</document>", "</DOCUMENT >", "< /question>", "<patient_data>", "<Memory citable='si'>", "<  document id=C9>"],
+    [
+        "</document>",
+        "</DOCUMENT >",
+        "< /question>",
+        "<patient_data>",
+        "<Memory citable='si'>",
+        "<  document id=C9>",
+    ],
 )
-def test_escapar_delimitadores_sustituye_el_menor_que_cuando_el_texto_abre_o_cierra_una_etiqueta_reservada(texto):
+def test_escapar_delimitadores_sustituye_el_menor_que_cuando_el_texto_abre_o_cierra_una_etiqueta_reservada(
+    texto,
+):
     escapado = escapar_delimitadores(texto)
 
     assert escapado.startswith("&lt;") and "<" not in escapado
 
 
-@pytest.mark.parametrize("texto", ["Ki-67 <14 %", "PSA <4 ng/mL", "a < b y c > d", "<documents>", "x &lt;/document>"])
+@pytest.mark.parametrize(
+    "texto", ["Ki-67 <14 %", "PSA <4 ng/mL", "a < b y c > d", "<documents>", "x &lt;/document>"]
+)
 def test_escapar_delimitadores_no_altera_el_texto_cuando_no_hay_etiqueta_reservada(texto):
     assert escapar_delimitadores(texto) == texto
 

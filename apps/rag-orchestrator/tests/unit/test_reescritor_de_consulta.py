@@ -25,7 +25,7 @@ class LlmFalso:
         self.prompts: list[str] = []
         self.esquemas: list[dict] = []
 
-    async def completar_json_acotado(self, prompt, esquema, *, max_tokens, semilla):
+    async def completar_json_acotado(self, prompt, esquema, *, max_tokens, semilla, sistema=None):
         self.prompts.append(prompt)
         self.esquemas.append(dict(esquema))
         if self._error is not None:

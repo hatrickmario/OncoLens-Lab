@@ -50,15 +50,22 @@ def test_toda_funcion_de_prompt_devuelve_prompt_separado_cuando_se_recorre_app_p
 
 
 def test_afirmar_separacion_pasa_con_prompt_builder_cuando_el_dato_va_en_su_bloque():
-    prompt = PromptBuilder("Instrucciones.", "x@1").pregunta("¿p?").documento("C1", "texto").construir()
+    prompt = (
+        PromptBuilder("Instrucciones.", "x@1").pregunta("¿p?").documento("C1", "texto").construir()
+    )
 
     afirmar_separacion(
-        prompt, DatosDelPrompt(pregunta="¿p?", documentos={"C1": "texto"}, sistema_de_referencia="Instrucciones.")
+        prompt,
+        DatosDelPrompt(
+            pregunta="¿p?", documentos={"C1": "texto"}, sistema_de_referencia="Instrucciones."
+        ),
     )
 
 
 def test_afirmar_separacion_falla_cuando_el_dato_esta_en_el_mensaje_de_sistema():
-    mezclado = PromptSeparado(sistema="Instrucciones. ¿p?", usuario="<question>\n¿p?\n</question>", version="x@1")
+    mezclado = PromptSeparado(
+        sistema="Instrucciones. ¿p?", usuario="<question>\n¿p?\n</question>", version="x@1"
+    )
 
     with pytest.raises(AssertionError):
         afirmar_separacion(mezclado, DatosDelPrompt(pregunta="¿p?"))

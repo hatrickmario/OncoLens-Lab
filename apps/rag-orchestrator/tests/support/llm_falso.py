@@ -109,6 +109,7 @@ class FakeLlmClient:
         self, prompt: str, esquema: Mapping[str, Any], *, sistema: str | None = None
     ) -> str:
         self.prompts.append(prompt)
+        self.sistemas.append(sistema)
         self.esquemas.append(esquema)
         if self.error is not None:
             raise self.error

@@ -8,6 +8,7 @@ from app.prompts.rag_query import bloque_de_datos_del_paciente, construir_prompt
 from app.schemas.generated.models import RagQueryInternalRequest
 from tests.support.generador_llm import generador_con_llm
 from tests.support.llm_falso import FakeLlmClient
+from tests.support.prompt_separado import texto_completo
 from tests.support.recuperacion import Q_HER2, crear_entorno, solicitud_de
 
 PSEUDONIMO = "psd_p7f3a"
@@ -41,6 +42,6 @@ def test_prompt_rag_query_con_pseudo_patient_id_no_lo_incluye():
 
     assert respuesta.status_code == 200
     assert llm.invocaciones == 1
-    for prompt in [prompt_directo, *llm.prompts]:
+    for prompt in [texto_completo(prompt_directo), *llm.prompts, *llm.sistemas]:
         assert PSEUDONIMO not in prompt
         assert FRAGMENTO_DEL_SEUDONIMO not in prompt

@@ -6,7 +6,12 @@ from app.application.prompt_builder import PromptSeparado
 from app.domain.alias_de_chunks import FragmentoConAlias, asignar_alias
 from app.domain.relevance import ChunkPuntuado
 from app.prompts.rag_query import VERSION_DEL_PROMPT, construir_prompt_rag_query
-from tests.support.prompt_separado import DatosDelPrompt, afirmar_separacion, bloques, hash_del_sistema
+from tests.support.prompt_separado import (
+    DatosDelPrompt,
+    afirmar_separacion,
+    bloques,
+    hash_del_sistema,
+)
 from tests.support.recuperacion import CORPUS_FX06A, Q_HER2
 
 TEXTO = {c.chunk_id: c.texto for c in CORPUS_FX06A}
@@ -16,7 +21,9 @@ DATOS_DEL_PACIENTE = "- mama; HER2 positivo"
 
 
 def _fragmentos(*chunk_ids: str) -> tuple[FragmentoConAlias, ...]:
-    puntuados = [ChunkPuntuado(c, f"doc-{c}", TEXTO[c], 0.9 - i / 10) for i, c in enumerate(chunk_ids)]
+    puntuados = [
+        ChunkPuntuado(c, f"doc-{c}", TEXTO[c], 0.9 - i / 10) for i, c in enumerate(chunk_ids)
+    ]
     return asignar_alias(puntuados).fragmentos
 
 
@@ -30,7 +37,9 @@ def _prompt(pregunta: str, *chunk_ids: str) -> PromptSeparado:
         claims_max=4,
         claim_max_words=20,
     )
-    assert isinstance(prompt, PromptSeparado), "construir_prompt_rag_query debe devolver PromptSeparado"
+    assert isinstance(prompt, PromptSeparado), (
+        "construir_prompt_rag_query debe devolver PromptSeparado"
+    )
     return prompt
 
 

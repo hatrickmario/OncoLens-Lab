@@ -78,7 +78,12 @@ class OpenAICompatibleLlmClient:
         self, prompt: str, esquema: Mapping[str, Any], *, sistema: str | None = None
     ) -> str:
         cuerpo = cuerpo_de_peticion(
-            self._model, prompt, esquema, self._temperature, self._max_output_tokens
+            self._model,
+            prompt,
+            esquema,
+            self._temperature,
+            self._max_output_tokens,
+            sistema=sistema,
         )
         return (await self._pedir(cuerpo)).texto
 
@@ -94,7 +99,13 @@ class OpenAICompatibleLlmClient:
         """Implementa ``LlmDePoblacion``: tope de tokens y semilla propios de la tarea corta, y el ``finish_reason``
         (``length`` = salida cortada) que ``completar_json`` descarta (US-242 D5)."""
         cuerpo = cuerpo_de_peticion(
-            self._model, prompt, esquema, self._temperature, max_tokens, semilla=semilla
+            self._model,
+            prompt,
+            esquema,
+            self._temperature,
+            max_tokens,
+            semilla=semilla,
+            sistema=sistema,
         )
         return await self._pedir(cuerpo)
 

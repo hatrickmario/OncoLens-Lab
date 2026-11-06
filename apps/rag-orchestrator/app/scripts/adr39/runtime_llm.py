@@ -80,7 +80,7 @@ def _prompt_de(pregunta: Pregunta) -> str:
         for n, e in enumerate(pregunta.evidencia, start=1)
     ]
     tabla = asignar_alias(fragmentos)
-    return construir_prompt_rag_query(
+    prompt = construir_prompt_rag_query(
         pregunta.texto,
         "",
         tabla.fragmentos,
@@ -89,6 +89,8 @@ def _prompt_de(pregunta: Pregunta) -> str:
         claims_max=CLAIMS_MAX_INICIAL,
         claim_max_words=CLAIM_MAX_WORDS_INICIAL,
     )
+    # La medición de latencia y *prefill* usa un único texto: el reparto en mensajes no cambia los tokens procesados.
+    return f"{prompt.sistema}\n\n{prompt.usuario}"
 
 
 class ClienteRuntime:
@@ -108,36 +110,54 @@ class ClienteRuntime:
         self._reloj = reloj
         self._params = params
 
-    def chat(self, tag: str, prompt: str, esquema: Mapping[str, Any] | None) -> Llamada:
-        """Llamada por la ruta de producción (``/v1/chat/completions``, sin ``think`` ni ``num_ctx`` por petición)."""
-        return self._llamar(self._chat_openai, tag, prompt, esquema)
-
-    def chat_nativo(self, tag: str, prompt: str, esquema: Mapping[str, Any] | None) -> Llamada:
-        """Llamada por ``/api/chat`` de Ollama: solo para tok/s y *prefill*; con otro runtime no hay ruta nativa."""
-        if self._api != "ollama":
-            return Llamada(0.0, None, None, None, None, None)
-        return self._llamar(self._chat_ollama, tag, prompt, esquema)
-
-    def _llamar(
+    def chat(
         self,
-        ruta: Callable[[str, str, Mapping[str, Any] | None], dict[str, Any]],
         tag: str,
         prompt: str,
         esquema: Mapping[str, Any] | None,
+        *,
+        sistema: str | None = None,
+    ) -> Llamada:
+        """Llamada por la ruta de producción (``/v1/chat/completions``, sin ``think`` ni ``num_ctx`` por petición)."""
+        return self._llamar(self._chat_openai, tag, prompt, esquema, sistema)
+
+    def chat_nativo(
+        self,
+        tag: str,
+        prompt: str,
+        esquema: Mapping[str, Any] | None,
+        *,
+        sistema: str | None = None,
+    ) -> Llamada:
+        """Llamada por ``/api/chat`` de Ollama: solo para tok/s y *prefill*; con otro runtime no hay ruta nativa."""
+        if self._api != "ollama":
+            return Llamada(0.0, None, None, None, None, None)
+        return self._llamar(self._chat_ollama, tag, prompt, esquema, sistema)
+
+    def _llamar(
+        self,
+        ruta: Callable[[str, str, Mapping[str, Any] | None, str | None], dict[str, Any]],
+        tag: str,
+        prompt: str,
+        esquema: Mapping[str, Any] | None,
+        sistema: str | None,
     ) -> Llamada:
         inicio = self._reloj()
         try:
-            crudo = ruta(tag, prompt, esquema)
+            crudo = ruta(tag, prompt, esquema, sistema)
         except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError):
             return Llamada(self._reloj() - inicio, None, None, None, None, None)
         return Llamada(self._reloj() - inicio, **crudo)
 
     def _chat_ollama(
-        self, tag: str, prompt: str, esquema: Mapping[str, Any] | None
+        self, tag: str, prompt: str, esquema: Mapping[str, Any] | None, sistema: str | None
     ) -> dict[str, Any]:
+        mensajes = [{"role": "user", "content": prompt}]
+        if sistema is not None:
+            mensajes.insert(0, {"role": "system", "content": sistema})
         cuerpo: dict[str, Any] = {
             "model": tag,
-            "messages": [{"role": "user", "content": prompt}],
+            "messages": mensajes,
             "stream": False,
             "think": bool(self._params.get("thinking", False)),
             "options": {
@@ -160,7 +180,7 @@ class ClienteRuntime:
         }
 
     def _chat_openai(
-        self, tag: str, prompt: str, esquema: Mapping[str, Any] | None
+        self, tag: str, prompt: str, esquema: Mapping[str, Any] | None, sistema: str | None
     ) -> dict[str, Any]:
         cuerpo = cuerpo_de_peticion(
             tag,
@@ -169,6 +189,7 @@ class ClienteRuntime:
             self._params["temperature"],
             self._params["max_output_tokens"],
             razonar=bool(self._params.get("thinking", False)),
+            sistema=sistema,
         )
         r = self._http.post(f"{self._base}/v1/chat/completions", json=cuerpo)
         r.raise_for_status()

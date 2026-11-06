@@ -52,7 +52,7 @@ def test_el_llm_recibe_system_y_user_y_prompt_version_empieza_por_rag_query_0_10
     mensajes = json.loads(llm.calls[0].request.content)["messages"]
     assert [m["role"] for m in mensajes] == ["system", "user"]
     sistema, usuario = mensajes[0]["content"], mensajes[1]["content"]
-    assert Q_HER2 not in sistema and "<question>" not in sistema
+    assert Q_HER2 not in sistema and bloques(sistema) == []
     etiquetas = [b.etiqueta for b in bloques(usuario)]
     assert etiquetas.count("question") == 1 and etiquetas.count("document") >= 1
     assert respuesta.json()["meta"]["promptVersion"].startswith("rag-query@0.10.0")
