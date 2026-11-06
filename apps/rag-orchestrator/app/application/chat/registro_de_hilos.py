@@ -21,10 +21,17 @@ from app.domain.chat.estado import (
     EstadoDelHilo,
     EstadoEstructurado,
     Intencion,
+    Subintencion,
     TurnoPrevio,
     UltimaEvidencia,
 )
-from app.domain.chat.turno import BloqueDelTurno, HechoDelCaso, PropuestaDelTurno, TipoDeBloque
+from app.domain.chat.turno import (
+    BloqueDelTurno,
+    CitaDelBloque,
+    HechoDelCaso,
+    PropuestaDelTurno,
+    TipoDeBloque,
+)
 from app.domain.chat.vigencia import hilo_vencido
 
 
@@ -34,9 +41,11 @@ TIPOS_DEL_ESTADO = (
     UltimaEvidencia,
     TurnoPrevio,
     Intencion,
+    Subintencion,
     HechoDelCaso,
     PropuestaDelTurno,
     BloqueDelTurno,
+    CitaDelBloque,
     TipoDeBloque,
 )
 """Los únicos tipos que viajan en el estado del grafo: el serializador de LangGraph solo reconstruye estos (lista cerrada)."""

@@ -12,7 +12,15 @@ from app.domain.chat.estado import (
     UltimaEvidencia,
 )
 from app.domain.chat.turno import BloqueDelTurno, HechoDelCaso
-from app.schemas.generated.models import CaseFact, ChatRehydration, StructuredState
+from app.schemas.generated.models import (
+    CaseFact,
+    ChatRehydration,
+    ChatTurnRequest,
+    RagFiltersApplied,
+    RagQueryInternalRequest,
+    SourcesSelected,
+    StructuredState,
+)
 
 
 def hechos_del_caso(hechos: list[CaseFact]) -> tuple[HechoDelCaso, ...]:
@@ -83,3 +91,25 @@ def bloque_del_contrato(bloque: BloqueDelTurno) -> dict[str, Any]:
     if bloque.fact_refs:
         cuerpo["factRefs"] = list(bloque.fact_refs)
     return cuerpo
+
+
+def consulta_de_evidencia(solicitud: ChatTurnRequest, max_options: int) -> RagQueryInternalRequest:
+    """La petición de ``/rag/query`` equivalente al turno de evidencia: misma pregunta enmascarada, contexto desidentificado
+    y clasificación de datos. El chat no tiene filtros ni fuentes elegidas: todas las fuentes y sin filtro de antigüedad
+    (``publishedFromYear = null``, toda la evidencia del corpus vigente)."""
+    return RagQueryInternalRequest(
+        traceId=solicitud.traceId,
+        query=solicitud.question,
+        sourcesSelected=SourcesSelected(guias=True, ensayos=True, publicaciones=True),
+        dataClassification=solicitud.dataClassification,
+        catalogVersion=solicitud.catalogVersion,
+        maxOptions=max_options,
+        filtersApplied=RagFiltersApplied(
+            historiaCompleta=False,
+            soloBiomarcadoresRelevantes=False,
+            ultimosSeisMeses=False,
+            antecedentesFamiliares=False,
+            publishedFromYear=None,
+        ),
+        clinicalContext=solicitud.clinicalContext,
+    )

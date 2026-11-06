@@ -23,6 +23,7 @@ from app.domain.chat.valores_iniciales import (
     AVISO_ACADEMICO_INICIAL,
     AVISO_DE_IA_INICIAL,
     CHAT_MAX_HILOS_INICIAL,
+    CHAT_EVIDENCE_MAX_OPTIONS_INICIAL,
     CHAT_MEMORY_MAX_TOKENS_INICIAL,
     CHAT_THREAD_TTL_SEGUNDOS_INICIAL,
 )
@@ -126,6 +127,8 @@ class Settings(BaseSettings):
     chat_thread_ttl_seconds: int = Field(default=CHAT_THREAD_TTL_SEGUNDOS_INICIAL, gt=0)
     chat_max_threads: int = Field(default=CHAT_MAX_HILOS_INICIAL, gt=0)
     chat_memory_max_tokens: int = Field(default=CHAT_MEMORY_MAX_TOKENS_INICIAL, gt=0)
+    # `CHAT_EVIDENCE_MAX_OPTIONS` (L1D-322): opciones del turno de evidencia; el contrato admite de 1 a 3 (`maxOptions`).
+    chat_evidence_max_options: int = Field(default=CHAT_EVIDENCE_MAX_OPTIONS_INICIAL, ge=1, le=3)
     # Avisos de RN-19 que Backend 2 emite en todo turno con contenido generado (sin punto final).
     chat_notice_ai: str = Field(default=AVISO_DE_IA_INICIAL, min_length=1)
     chat_notice_academic: str = Field(default=AVISO_ACADEMICO_INICIAL, min_length=1)

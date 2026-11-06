@@ -30,7 +30,11 @@ def _ejemplo(nombre: str) -> dict:
 
 @pytest.mark.ac("US-259", 1)
 def test_el_spec_publica_chat_turn_en_la_1_12_0_con_sus_esquemas_y_errores_cuando_se_lee_el_openapi():
-    assert tuple(int(p) for p in SPEC["info"]["version"].split(".")) >= (1, 12, 0)  # sube aditivamente (1.13.0: L1D-322)
+    assert tuple(int(p) for p in SPEC["info"]["version"].split(".")) >= (
+        1,
+        12,
+        0,
+    )  # sube aditivamente (1.13.0: L1D-322)
     assert OPERACION["operationId"] == "chatTurn"
     assert set(OPERACION["responses"]) == {"200", "401", "404", "409", "422", "500", "503"}
     assert set(ESQUEMAS["ChatTurnRequest"]["required"]) == {

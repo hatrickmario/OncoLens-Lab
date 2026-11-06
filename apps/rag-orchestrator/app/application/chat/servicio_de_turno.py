@@ -14,11 +14,14 @@ from typing import Any
 
 from app.application.catalogo_exigido import exigir_catalogo_de_la_solicitud
 from app.application.chat.avisos import avisos_del_turno
-from app.application.chat.grafo import ConfiguracionDelGrafo, EstadoDelGrafo, construir_grafo
+from app.application.chat.capacidades.evidencia import NodoEvidencia
+from app.application.chat.contexto_del_turno import con_evidencia_del_turno
+from app.application.chat.grafo import ConfiguracionDelGrafo, EstadoDelGrafo, Nodo, construir_grafo
 from app.application.chat.registro_de_hilos import RegistroDeHilos
 from app.application.chat.traduccion import (
     bloque_del_contrato,
     estado_de_rehidratacion,
+    consulta_de_evidencia,
     estado_estructurado_del_contrato,
     hechos_del_caso,
 )
@@ -28,10 +31,12 @@ from app.application.ports import (
     Clock,
     ContadorDeTokens,
     LlmClient,
+    PosicionDeChunks,
     ProhibitedTermsChecker,
 )
+from app.application.rag_orchestrator_service import RAGOrchestratorService
 from app.config.settings import Settings
-from app.domain.chat.estado import INTENCIONES_CLASIFICABLES, EstadoDelHilo
+from app.domain.chat.estado import INTENCIONES_CLASIFICABLES, EstadoDelHilo, Intencion
 from app.schemas.generated.models import ChatTurnRequest, ChatTurnResponse
 
 logger = logging.getLogger(__name__)
@@ -48,6 +53,8 @@ class ChatTurnService:
         settings: Settings,
         terminos_por_tipo: Mapping[str, frozenset[str]],
         verificador_terminos: ProhibitedTermsChecker,
+        servicio_de_evidencia: RAGOrchestratorService | None = None,
+        posiciones: PosicionDeChunks | None = None,
     ) -> None:
         self._catalogo = catalogo
         self._settings = settings
@@ -56,13 +63,15 @@ class ChatTurnService:
             ttl_segundos=settings.chat_thread_ttl_seconds,
             max_hilos=settings.chat_max_threads,
         )
+        configuracion = ConfiguracionDelGrafo(
+            presupuesto_de_memoria=settings.chat_memory_max_tokens,
+            terminos_por_tipo=terminos_por_tipo,
+        )
         self._grafo = construir_grafo(
             llm=llm,
             contador=contador,
-            configuracion=ConfiguracionDelGrafo(
-                presupuesto_de_memoria=settings.chat_memory_max_tokens,
-                terminos_por_tipo=terminos_por_tipo,
-            ),
+            configuracion=configuracion,
+            capacidades=_capacidades_de_evidencia(servicio_de_evidencia, posiciones),
             guardado=self.registro.guardado,
             verificador_terminos=verificador_terminos,
         )
@@ -74,8 +83,12 @@ class ChatTurnService:
         es_nuevo = self.registro.admitir_turno(
             hilo, con_rehidratacion=solicitud.rehydration is not None
         )
+        consulta = consulta_de_evidencia(solicitud, self._settings.chat_evidence_max_options)
         try:
-            with con_clasificacion(solicitud.dataClassification.value) as contexto:
+            with (
+                con_clasificacion(solicitud.dataClassification.value) as contexto,
+                con_evidencia_del_turno(consulta),
+            ):
                 final = await self._grafo.ainvoke(
                     self._entrada_del_turno(solicitud, es_nuevo), self.registro.configuracion(hilo)
                 )
@@ -126,3 +139,12 @@ class ChatTurnService:
                 else [],
             }
         )
+
+
+def _capacidades_de_evidencia(
+    servicio: RAGOrchestratorService | None, posiciones: PosicionDeChunks | None
+) -> dict[Intencion, Nodo]:
+    """El nodo ``evidencia`` real si hay corpus detrás; si no, rige el esqueleto de ``construir_grafo``."""
+    if servicio is None or posiciones is None:
+        return {}
+    return {Intencion.evidencia: NodoEvidencia(consulta=servicio, posiciones=posiciones).ejecutar}
