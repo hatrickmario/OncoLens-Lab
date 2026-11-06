@@ -33,6 +33,11 @@ export const ID_SEMILLA_F = '380dd24c-0458-55f7-bd22-23b87d965c86';
  * Pacientes semilla (g)–(m) de US-254 por su momento de la enfermedad: `idSembrado('paciente-<letra>')`, el mismo UUID
  * determinista del seed. `web` no importa código de `clinical-api`: el test unitario `seed-pacientes-semilla` compara estos
  * ids con `idSembrado` y detecta una deriva.
+ *
+ * Mutan estos pacientes, en este orden de corrida (un worker, orden alfabético; `ejecutar.sh` re-siembra con `down -v`):
+ * (g) `g-demo.spec.ts` (corrige un biomarcador y registra el faltante; pide el seed sin tocar) y (h)
+ * `vista-de-caso-correccion.spec.ts` (corrige el esquema del tratamiento y el valor del atributo; dos tests en serie, va
+ * después de `demo-s5-pacientes.spec.ts`, que solo lee). Un spec nuevo que use (g) o (h) debe asumir ese estado.
  */
 export const IDS_SEMILLA_S5 = {
   'g-inicial': 'eae9ce34-3ec2-5e5d-ae96-be3f767f7467',
@@ -43,6 +48,9 @@ export const IDS_SEMILLA_S5 = {
   'l-hspc': '5fc9c4ac-4c78-581e-ad25-10c185627932',
   'm-crpc': 'd8fc5ac0-4cbe-522c-9220-db949d7c2085',
 } as const;
+
+/** Paciente semilla (h): mama adyuvante con letrozol en curso y estado menopáusico; lo muta `vista-de-caso-correccion.spec.ts`. */
+export const ID_SEMILLA_H = IDS_SEMILLA_S5['h-adyuvante'];
 
 /**
  * Cuántos pacientes siembra el seed: un archivo `<letra>.ts` por paciente en `prisma/seed/pacientes/`. Se lee del
