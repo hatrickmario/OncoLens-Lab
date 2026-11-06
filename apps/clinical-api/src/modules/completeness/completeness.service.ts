@@ -11,6 +11,7 @@ import {
 import type {
   CatalogoDeDatosCriticos,
   ChecklistDelPaciente,
+  CompletenessEnLote,
   CompletenessService,
   DatosCriticosDeUnTipo,
   ItemDeDatoCritico,
@@ -18,6 +19,7 @@ import type {
   RegistroDeDato,
   RegistrosDeCompletitud,
   RegistrosPorEntidad,
+  ResultadoDelChecklist,
 } from './ports.js';
 
 export interface DependenciasDelServicio {
@@ -51,73 +53,173 @@ function sinChecklist(catalogVersion: string): ChecklistDelPaciente {
   return { catalogVersion, cancerTypeEnabled: false, items: [] };
 }
 
-/** Falla cerrado con 404 si el paciente no existe; con un diagnóstico leído ya se sabe que existe (sin consulta extra). */
-async function exigirPacienteExistente(
-  registros: RegistrosDeCompletitud,
-  patientId: string,
-  diagnosticos: readonly RegistroDeDato[],
-): Promise<void> {
-  if (diagnosticos.length > 0 || (await registros.existePaciente(patientId))) return;
-  throw new PacienteNoEncontradoError();
-}
-
-/** Los ítems del tipo activo con su estado y procedencia; reutiliza el diagnóstico ya leído (tipo y condiciones salen del mismo registro). */
-async function itemsDelTipoDeCancer(
-  registros: RegistrosDeCompletitud,
-  entrada: {
-    patientId: string;
-    cancerType: string;
-    datos: DatosCriticosDeUnTipo;
-    diagnosticos: readonly RegistroDeDato[];
-  },
-): Promise<ItemDelChecklist[]> {
-  const { patientId, cancerType, datos, diagnosticos } = entrada;
+/** Las entidades de destino que se leen aparte del diagnóstico (el `Diagnosis` vigente ya está leído). */
+function entidadesDeDestinoSinDiagnostico(datos: DatosCriticosDeUnTipo): string[] {
   const entidades = new Set(datos.items.map((item) => item.destination.entity));
   entidades.delete('Diagnosis');
-  const delPaciente = await registros.registrosSinFiltrarPorRevision(patientId, [...entidades]);
+  return [...entidades];
+}
+
+/** Un paciente cuyo tipo de cáncer se evalúa: su diagnóstico vigente es la única fuente de tipo y condiciones. */
+interface PacienteAEvaluar {
+  readonly patientId: string;
+  readonly cancerType: string;
+  readonly vigente: RegistroDeDato | undefined;
+}
+
+/** Los ítems del tipo activo con su estado y procedencia, a partir de los registros ya leídos del paciente. */
+function itemsDelPaciente(
+  paciente: PacienteAEvaluar,
+  datos: DatosCriticosDeUnTipo,
+  delPaciente: RegistrosPorEntidad,
+): ItemDelChecklist[] {
   // Solo el Diagnosis vigente: tipo, condiciones e ítems de destino Diagnosis salen del mismo registro.
-  const completos = { ...delPaciente, Diagnosis: diagnosticos };
+  const completos = {
+    ...delPaciente,
+    Diagnosis: paciente.vigente === undefined ? [] : [paciente.vigente],
+  };
   const estados = calcularChecklist({
-    cancerType,
+    cancerType: paciente.cancerType,
     items: datos.items,
     verifiedReviewStatuses: datos.verifiedReviewStatuses,
     registros: completos,
   });
-  const delTipo = itemsDelTipoActivo(datos.items, cancerType);
+  const delTipo = itemsDelTipoActivo(datos.items, paciente.cancerType);
   return estados.map((estado) => conProcedencia(estado, delTipo, completos));
+}
+
+const noDisponible = (error: unknown): ResultadoDelChecklist => ({
+  estado: 'no_disponible',
+  error,
+});
+
+type Resultados = Map<string, ResultadoDelChecklist>;
+
+/** Falla cerrado con 404: sin diagnóstico leído, el paciente solo existe si lo confirma la base (una consulta para todos). */
+async function clasificarSinDiagnostico(
+  { registros }: DependenciasDelServicio,
+  patientIds: readonly string[],
+  resultados: Resultados,
+  catalogVersion: string,
+): Promise<void> {
+  if (patientIds.length === 0) return;
+  const existentes = await registros.existenPacientes(patientIds);
+  for (const patientId of patientIds) {
+    resultados.set(
+      patientId,
+      existentes.has(patientId)
+        ? { estado: 'ok', checklist: sinChecklist(catalogVersion) }
+        : noDisponible(new PacienteNoEncontradoError()),
+    );
+  }
+}
+
+/** Lee una vez, para todos los pacientes del tipo, sus entidades de destino y calcula cada checklist aislado de los demás. */
+async function calcularDelTipo(
+  { registros }: DependenciasDelServicio,
+  entrada: { datos: DatosCriticosDeUnTipo; pacientes: readonly PacienteAEvaluar[] },
+  resultados: Resultados,
+  catalogVersion: string,
+): Promise<void> {
+  const { datos, pacientes } = entrada;
+  const entidades = entidadesDeDestinoSinDiagnostico(datos);
+  let leidos: ReadonlyMap<string, RegistrosPorEntidad>;
+  try {
+    leidos =
+      entidades.length === 0
+        ? new Map()
+        : await registros.registrosVariosSinFiltrarPorRevision(
+            pacientes.map((paciente) => paciente.patientId),
+            entidades,
+          );
+  } catch (error) {
+    for (const paciente of pacientes) resultados.set(paciente.patientId, noDisponible(error));
+    return;
+  }
+  for (const paciente of pacientes) {
+    try {
+      const items = itemsDelPaciente(paciente, datos, leidos.get(paciente.patientId) ?? {});
+      resultados.set(paciente.patientId, {
+        estado: 'ok',
+        checklist: { catalogVersion, cancerTypeEnabled: true, items },
+      });
+    } catch (error) {
+      resultados.set(paciente.patientId, noDisponible(error));
+    }
+  }
+}
+
+/** Reparte a los pacientes: sin diagnóstico activo, sin tipo evaluable (checklist vacío) o por tipo de cáncer a calcular. */
+function repartirPorDiagnostico(
+  { catalogo, tiposHabilitados }: DependenciasDelServicio,
+  diagnosticos: ReadonlyMap<string, RegistrosPorEntidad>,
+  patientIds: readonly string[],
+  resultados: Resultados,
+): { sinDiagnostico: string[]; porTipo: Map<string, PacienteAEvaluar[]> } {
+  const sinDiagnostico: string[] = [];
+  const porTipo = new Map<string, PacienteAEvaluar[]>();
+  for (const patientId of patientIds) {
+    const activos = diagnosticos.get(patientId)?.['Diagnosis'] ?? [];
+    const cancerType = tipoDeCancerActivo(activos);
+    if (activos.length === 0) {
+      sinDiagnostico.push(patientId);
+    } else if (
+      cancerType === null ||
+      !tiposHabilitados.estaHabilitado(cancerType) ||
+      catalogo.deTipo(cancerType) === undefined
+    ) {
+      resultados.set(patientId, { estado: 'ok', checklist: sinChecklist(catalogo.version()) });
+    } else {
+      const paciente = { patientId, cancerType, vigente: diagnosticoVigente(activos) };
+      porTipo.set(cancerType, [...(porTipo.get(cancerType) ?? []), paciente]);
+    }
+  }
+  return { sinDiagnostico, porTipo };
+}
+
+/** Lecturas acotadas: consultas = 1 + nº de tipos de cáncer presentes (más una si algún paciente no tiene diagnóstico). */
+async function calcularVarios(
+  dependencias: DependenciasDelServicio,
+  patientIds: readonly string[],
+): Promise<ReadonlyMap<string, ResultadoDelChecklist>> {
+  const { registros, catalogo } = dependencias;
+  const unicos = [...new Set(patientIds)];
+  const resultados: Resultados = new Map();
+  if (unicos.length === 0) return resultados;
+  const catalogVersion = catalogo.version();
+  const diagnosticos = await registros.registrosVariosSinFiltrarPorRevision(unicos, ['Diagnosis']);
+  const { sinDiagnostico, porTipo } = repartirPorDiagnostico(
+    dependencias,
+    diagnosticos,
+    unicos,
+    resultados,
+  );
+  await clasificarSinDiagnostico(dependencias, sinDiagnostico, resultados, catalogVersion);
+  for (const [cancerType, pacientes] of porTipo) {
+    const datos = catalogo.deTipo(cancerType) as DatosCriticosDeUnTipo;
+    await calcularDelTipo(dependencias, { datos, pacientes }, resultados, catalogVersion);
+  }
+  // El orden del resultado es el de la petición, sea cual sea el orden en que se agruparon los tipos.
+  return new Map(
+    unicos.map((patientId) => [patientId, resultados.get(patientId) as ResultadoDelChecklist]),
+  );
 }
 
 /**
  * Checklist determinista de datos críticos (US-002, US-003, FR-23): carga el catálogo montado y los registros del
  * paciente y delega la regla de cinco pasos en el motor puro. Es la ÚNICA implementación: la usan el endpoint
- * `/completeness`, el contador de la ficha y los faltantes del análisis. Sin LLM, sin `rag-orchestrator`, sin azar.
+ * `/completeness`, el contador de la ficha, el del listado y la búsqueda (en lote) y los faltantes del análisis;
+ * `calcular` se apoya en `calcularVarios`, así que no pueden divergir. Sin LLM, sin `rag-orchestrator`, sin azar.
  */
 export function createCompletenessService(
   dependencias: DependenciasDelServicio,
-): CompletenessService {
-  const { registros, catalogo, tiposHabilitados } = dependencias;
+): CompletenessService & CompletenessEnLote {
   return {
+    calcularVarios: (patientIds) => calcularVarios(dependencias, patientIds),
     async calcular(patientId): Promise<ChecklistDelPaciente> {
-      const catalogVersion = catalogo.version();
-      const { Diagnosis: diagnosticos = [] } = await registros.registrosSinFiltrarPorRevision(
-        patientId,
-        ['Diagnosis'],
-      );
-      await exigirPacienteExistente(registros, patientId, diagnosticos);
-      const cancerType = tipoDeCancerActivo(diagnosticos);
-      const datos =
-        cancerType !== null && tiposHabilitados.estaHabilitado(cancerType)
-          ? catalogo.deTipo(cancerType)
-          : undefined;
-      if (cancerType === null || datos === undefined) return sinChecklist(catalogVersion);
-      const vigente = diagnosticoVigente(diagnosticos);
-      const items = await itemsDelTipoDeCancer(registros, {
-        patientId,
-        cancerType,
-        datos,
-        diagnosticos: vigente === undefined ? [] : [vigente],
-      });
-      return { catalogVersion, cancerTypeEnabled: true, items };
+      const resultado = (await calcularVarios(dependencias, [patientId])).get(patientId);
+      if (resultado?.estado !== 'ok') throw resultado?.error ?? new PacienteNoEncontradoError();
+      return resultado.checklist;
     },
   };
 }

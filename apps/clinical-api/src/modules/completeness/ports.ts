@@ -74,17 +74,17 @@ export interface RegistroDeDato {
 export type RegistrosPorEntidad = Readonly<Record<string, readonly RegistroDeDato[]>>;
 
 export interface RegistrosDeCompletitud {
-  /** `true` si el paciente existe; no lee ningún dato clínico ni de `identity`. */
-  existePaciente(patientId: string): Promise<boolean>;
+  /** Los ids de `patientIds` que existen (una consulta para todos); no lee datos clínicos ni de `identity`. */
+  existenPacientes(patientIds: readonly string[]): Promise<ReadonlySet<string>>;
   /**
-   * Registros del paciente de cada entidad pedida SIN filtrar por estado de revisión: incluye `rechazado` y
-   * `reemplazado`. Quien los use debe aplicar `registrosVigentes()` (RN-07) antes de contarlos. Del `Diagnosis`,
-   * solo el activo.
+   * Registros de los pacientes de cada entidad pedida SIN filtrar por estado de revisión: incluye `rechazado` y
+   * `reemplazado`; quien los use debe aplicar `registrosVigentes()` (RN-07). Del `Diagnosis`, solo el activo. Una
+   * consulta por entidad, agrupada por paciente. Todo id pedido aparece en el mapa (con `[]` en las entidades sin filas).
    */
-  registrosSinFiltrarPorRevision(
-    patientId: string,
+  registrosVariosSinFiltrarPorRevision(
+    patientIds: readonly string[],
     entidades: readonly string[],
-  ): Promise<RegistrosPorEntidad>;
+  ): Promise<ReadonlyMap<string, RegistrosPorEntidad>>;
 }
 
 /** Resultado del motor puro: el estado de cada ítem, sin procedencia. */
@@ -123,7 +123,23 @@ export interface ChecklistDelPaciente {
   readonly items: readonly ItemDelChecklist[];
 }
 
+/**
+ * Resultado del cálculo de un paciente dentro de un lote: el fallo de uno (`no_disponible`, con su error para quien
+ * deba relanzarlo o registrar su clase) nunca afecta a los demás (RN-26).
+ */
+export type ResultadoDelChecklist =
+  | { readonly estado: 'ok'; readonly checklist: ChecklistDelPaciente }
+  | { readonly estado: 'no_disponible'; readonly error: unknown };
+
 export interface CompletenessService {
   /** Lanza `PacienteNoEncontradoError` si el paciente no existe. */
   calcular(patientId: string): Promise<ChecklistDelPaciente>;
+}
+
+/** El cálculo por lotes (listado y búsqueda); aparte de `CompletenessService` para que quien solo calcula uno no lo implemente. */
+export interface CompletenessEnLote {
+  /** El checklist de cada paciente con la misma regla que `calcular`, con lecturas acotadas e independientes de su número. */
+  calcularVarios(
+    patientIds: readonly string[],
+  ): Promise<ReadonlyMap<string, ResultadoDelChecklist>>;
 }

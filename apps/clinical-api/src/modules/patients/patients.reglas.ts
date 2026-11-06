@@ -2,12 +2,17 @@ import type { PatientAdminSummary } from '../../../../../packages/api-contracts/
 import { IdentityIntegrityError } from '../../infrastructure/crypto/identity-integrity-error.js';
 import type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
 
+/** Aviso al llamador de que el checklist de un paciente falló: solo la clase del error, nunca su mensaje (RN-10). */
+export type AlFallarElChecklist = (errorClase: string) => void;
+
 /**
- * Contador de faltantes SOLO del listado y la búsqueda: no calculan el checklist por fila (decisión Q2, L1D-95 D7b), así
- * que muestran 0 y no un valor inventado. La ficha NO lo usa: su contador sale de `CompletenessService` (US-003). Se
- * retira cuando una historia posterior calcule el checklist por fila.
+ * Forma degradada del contador cuando el checklist no pudo calcularse (RN-26: un aviso clínico no bloquea): la usan la
+ * ficha y las filas del listado y la búsqueda, para que no diverjan.
  */
-export const FALTANTES_CRITICOS_POR_AHORA = 0;
+export const FALTANTES_NO_DISPONIBLES = {
+  missingCriticalCount: 0,
+  completenessAvailable: false,
+} as const;
 
 /** Marcador de la máscara del documento: cuatro U+2022 (el formato lo fija el contrato, `nationalIdMasked`). */
 const MARCADOR_DE_DOCUMENTO = '••••';

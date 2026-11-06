@@ -1,7 +1,7 @@
 import type { Router } from 'express';
 import type { Registrar } from '../../infrastructure/logger.js';
 import type { Consultador } from '../auth/auth.repository.js';
-import type { CompletenessService } from '../completeness/ports.js';
+import type { CompletenessEnLote, CompletenessService } from '../completeness/ports.js';
 import type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
 import type { TraceIdGenerator } from '../../infrastructure/trace-id-generator.js';
 import type { IdentityService } from './identity.service.js';
@@ -20,7 +20,7 @@ export interface DependenciasDelModulo {
   identidad: IdentityService;
   tiposHabilitados: TiposDeCancerHabilitados;
   /** Checklist de datos críticos para el contador de la ficha: la misma instancia del endpoint y del análisis. */
-  completitud: CompletenessService;
+  completitud: CompletenessService & CompletenessEnLote;
   traceIds: TraceIdGenerator;
   registrar: Registrar;
   config: ConfiguracionDePacientes;
