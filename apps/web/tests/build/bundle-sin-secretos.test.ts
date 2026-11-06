@@ -8,7 +8,8 @@ import { archivos } from '../support/recorrer-archivos';
 const raizWeb = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const gitleaksToml = path.resolve(raizWeb, '../../.gitleaks.toml');
 
-const URL_CENTINELA = 'http://clinical-api-centinela-l1d266.internal:3998';
+const TOKEN_CENTINELA = 'centinela-l1d266';
+const URL_CENTINELA = `http://clinical-api-${TOKEN_CENTINELA}.internal:3998`;
 const CUERPO_PEM = 'MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCcentinelaL1D266sintetico';
 const PEM_CENTINELA = `-----BEGIN PRIVATE KEY-----\n${CUERPO_PEM}\n-----END PRIVATE KEY-----`;
 
@@ -43,7 +44,7 @@ describe('build de producción de web', () => {
     const conCoincidencia = estaticos
       .filter((ruta) => {
         const contenido = readFileSync(ruta, 'utf8');
-        const esCentinela = contenido.includes(URL_CENTINELA) || contenido.includes(CUERPO_PEM);
+        const esCentinela = contenido.includes(TOKEN_CENTINELA) || contenido.includes(CUERPO_PEM);
         return esCentinela || patrones.some((patron) => patron.test(contenido));
       })
       .map((ruta) => path.relative(raizWeb, ruta));

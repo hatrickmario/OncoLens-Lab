@@ -84,7 +84,7 @@ test.describe('Cabeceras de seguridad de web (US-216)', () => {
     const respuesta = await page.goto('/login');
     const nonce = nonceDe(csp(respuesta!));
     const html = await respuesta!.text();
-    const etiquetas = html.match(/<script\b[^>]*>/g) ?? [];
+    const etiquetas = html.match(/<script\b[^>]*>/gi) ?? [];
     expect(etiquetas.length).toBeGreaterThan(0);
     for (const etiqueta of etiquetas) expect(etiqueta).toContain(`nonce="${nonce}"`);
     await page.waitForLoadState('networkidle');
