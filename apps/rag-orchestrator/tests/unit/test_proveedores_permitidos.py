@@ -1,9 +1,13 @@
 """RN-12 (US-050): la regla pura de proveedores permitidos y el selector que la aplica por petición."""
 
 import asyncio
+import json
 
 import pytest
 
+from pathlib import Path
+
+from app.application.corpus_metadata.poblacion_puertos import LlmCompleto
 from app.application.ports import FalloDelLlm
 from app.application.selector_proveedor_llm import (
     SelectorDeProveedorLlm,
@@ -11,6 +15,7 @@ from app.application.selector_proveedor_llm import (
     con_clasificacion,
 )
 from app.domain.reglas_proveedor import ProveedorLlm, proveedores_permitidos
+from app.schemas.generated.models import LlmProvider
 from tests.support.llm_falso import FakeLlmClient
 from tests.support.llm_nube_falso import LlmNubeFalso
 
@@ -149,3 +154,38 @@ async def test_el_selector_aisla_la_clasificacion_de_cada_peticion_cuando_dos_co
     ]
     assert nube.invocaciones == 1
     assert _contexto.get() is None
+
+
+def test_el_selector_cumple_el_puerto_completo_del_llm_cuando_se_compone_con_el_adapter_local():
+    assert isinstance(
+        SelectorDeProveedorLlm(LlmNubeFalso(), None, nube_habilitada=False), LlmCompleto
+    )
+
+
+def test_los_proveedores_del_dominio_coinciden_con_los_del_contrato_cuando_se_comparan_sus_valores():
+    assert {p.value for p in ProveedorLlm} == {p.value for p in LlmProvider}
+
+
+def test_ningun_modulo_de_produccion_inyecta_un_adapter_de_nube_cuando_se_compone_la_app():
+    app = Path(__file__).resolve().parents[2] / "app"
+    ofensores = [
+        str(ruta.relative_to(app))
+        for ruta in app.rglob("*.py")
+        if "llm_nube=" in ruta.read_text(encoding="utf-8")
+    ]
+
+    assert ofensores == []
+
+
+_TABLA = json.loads(
+    (Path(__file__).resolve().parents[4] / "contracts" / "reglas" / "proveedor-llm.json").read_text(
+        encoding="utf-8"
+    )
+)["casos"]
+
+
+@pytest.mark.parametrize("caso", _TABLA, ids=lambda c: f"{c['clasificacion']}-{c['proveedor']}")
+def test_la_regla_coincide_con_la_tabla_comun_con_clinical_api_cuando_la_nube_esta_habilitada(caso):
+    permitidos = proveedores_permitidos(caso["clasificacion"], True)
+
+    assert (ProveedorLlm(caso["proveedor"]) in permitidos) is caso["permitido"]

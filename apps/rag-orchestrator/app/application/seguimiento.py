@@ -75,9 +75,9 @@ class ResponderSeguimiento:
         self._terminos_por_tipo = terminos_por_tipo
 
     async def responder(self, solicitud: RagFollowUpRequest) -> RagFollowUpResponse:
-        with con_clasificacion(solicitud.dataClassification.value) as proveedor:
+        with con_clasificacion(solicitud.dataClassification.value) as contexto:
             respuesta = await self._responder_con_proveedor_acotado(solicitud)
-        return respuesta.model_copy(update={"meta": proveedor.declarar_en(respuesta.meta)})
+        return respuesta.model_copy(update={"meta": contexto.declarar_en(respuesta.meta)})
 
     async def _responder_con_proveedor_acotado(
         self, solicitud: RagFollowUpRequest

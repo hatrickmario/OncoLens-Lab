@@ -7,11 +7,10 @@ fragmentos). ``envolver_cliente`` deja que quien mide anote cada llamada sin cam
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Protocol, runtime_checkable
 
 from app.application.aplicabilidad_textual import ParametrosDelRespaldo
 from app.application.corpus_metadata.esquema_poblacion import cargar_plantilla
-from app.application.corpus_metadata.poblacion_puertos import LlmDePoblacion
+from app.application.corpus_metadata.poblacion_puertos import LlmCompleto, LlmDePoblacion
 from app.application.generacion_de_seguimiento import LlmSeguimientoGenerator
 from app.application.generation import LlmEvidenceGenerator
 from app.application.ports import LlmClient
@@ -25,11 +24,6 @@ from app.infrastructure.llm.tarea_de_poblacion import (
 )
 
 
-@runtime_checkable
-class ClienteLlmLocal(LlmClient, LlmDePoblacion, Protocol):
-    """El cliente del LLM local completo: la generación (``LlmClient``) y la tarea corta de población (``LlmDePoblacion``)."""
-
-
 def parametros_del_respaldo(settings: Settings) -> ParametrosDelRespaldo:
     """Plazo, concurrencia y versión del prompt del respaldo de población, de la configuración (RN-22)."""
     return ParametrosDelRespaldo(
@@ -39,12 +33,10 @@ def parametros_del_respaldo(settings: Settings) -> ParametrosDelRespaldo:
     )
 
 
-EnvolverCliente = Callable[[ClienteLlmLocal], ClienteLlmLocal]
+EnvolverCliente = Callable[[LlmCompleto], LlmCompleto]
 
 
-def _cliente_llm_local(
-    settings: Settings, envolver_cliente: EnvolverCliente | None
-) -> ClienteLlmLocal:
+def _cliente_llm_local(settings: Settings, envolver_cliente: EnvolverCliente | None) -> LlmCompleto:
     cliente = OpenAICompatibleLlmClient(
         settings.llm_base_url,
         settings.llm_model,

@@ -8,8 +8,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Protocol
+from typing import Any, Protocol, runtime_checkable
 
+from app.application.ports import LlmClient
 from app.domain.corpus_metadata.poblacion_contadores import ContadoresDePoblacion
 from app.domain.criterios_aplicabilidad import CriterioDeAplicabilidad
 
@@ -69,6 +70,11 @@ class LlmDePoblacion(Protocol):
         semilla: int,
         sistema: str | None = None,
     ) -> RespuestaDelLlm: ...
+
+
+@runtime_checkable
+class LlmCompleto(LlmClient, LlmDePoblacion, Protocol):
+    """El cliente del LLM completo: la generación (``LlmClient``) y la tarea corta de población (``LlmDePoblacion``)."""
 
 
 @dataclass(frozen=True)

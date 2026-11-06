@@ -31,6 +31,7 @@ from app.application.consulta_no_componible import (
     ConsultaNoComponible,
     SeguimientoNoComponible,
 )
+from app.application.corpus_metadata.poblacion_puertos import LlmCompleto
 from app.application.ports import (
     CatalogoClinico,
     ChunkSearch,
@@ -94,7 +95,7 @@ from app.infrastructure.clock.system_clock import RelojDelSistema
 from app.infrastructure.fake.fake_chat_turn import FakeChatTurn
 from app.infrastructure.fake.fake_evidence_query import FakeEvidenceQuery
 from app.infrastructure.fake.fake_follow_up import FakeFollowUp
-from app.application.selector_proveedor_llm import LlmCompleto, SelectorDeProveedorLlm
+from app.application.selector_proveedor_llm import SelectorDeProveedorLlm
 from app.infrastructure.fake.fake_llm_health import FakeLlmHealth
 from app.infrastructure.lenguaje.terminos_prohibidos import (
     ListaDeTerminosNoDisponible,
@@ -102,7 +103,6 @@ from app.infrastructure.lenguaje.terminos_prohibidos import (
 )
 from app.infrastructure.tokenizer.contador_conservador import ContadorConservador
 from app.infrastructure.llm.fabrica_local import (
-    ClienteLlmLocal,
     EnvolverCliente,
     crear_cliente_llm_del_chat,
     crear_generador_de_seguimiento_local,
@@ -413,10 +413,8 @@ def _selector_de_proveedor(settings: Settings, llm_nube: LlmCompleto | None) -> 
 
     En producción ``llm_nube`` es ``None`` (no existe adapter de nube); solo los tests inyectan uno falso."""
 
-    def envolver(local: ClienteLlmLocal) -> ClienteLlmLocal:
-        return SelectorDeProveedorLlm(  # type: ignore[return-value]
-            local, llm_nube, nube_habilitada=settings.llm_cloud_enabled
-        )
+    def envolver(local: LlmCompleto) -> LlmCompleto:
+        return SelectorDeProveedorLlm(local, llm_nube, nube_habilitada=settings.llm_cloud_enabled)
 
     return envolver
 
@@ -663,7 +661,9 @@ def _parametros_de_recuperacion(settings: Settings) -> ParametrosDeRecuperacion:
         retrieval_top_k=settings.retrieval_top_k,  # type: ignore[arg-type]
         rerank_top_n=settings.rerank_top_n,  # type: ignore[arg-type]
         longitud_maxima_codigo_tipo=settings.retrieval_cancer_type_max_length,
-        llm_provider=_proveedor_de_meta(settings),
+        llm_provider=_proveedor_de_meta(
+            settings
+        ),  # valor inicial: lo sobrescribe ContextoDeProveedor.declarar_en
         llm_model=settings.llm_model,
         nli_entailment_threshold=settings.nli_entailment_threshold,  # type: ignore[arg-type]
         tipos_habilitados=settings.enabled_cancer_types,

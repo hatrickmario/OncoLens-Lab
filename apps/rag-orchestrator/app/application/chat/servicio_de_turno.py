@@ -75,7 +75,7 @@ class ChatTurnService:
             hilo, con_rehidratacion=solicitud.rehydration is not None
         )
         try:
-            with con_clasificacion(solicitud.dataClassification.value) as proveedor:
+            with con_clasificacion(solicitud.dataClassification.value) as contexto:
                 final = await self._grafo.ainvoke(
                     self._entrada_del_turno(solicitud, es_nuevo), self.registro.configuracion(hilo)
                 )
@@ -96,7 +96,7 @@ class ChatTurnService:
             len(final["bloques"]),
             final["omitidas"],
         )
-        return self._respuesta(final, proveedor.proveedor_declarado.value)
+        return self._respuesta(final, contexto.proveedor_declarado.value)
 
     def _entrada_del_turno(self, solicitud: ChatTurnRequest, es_nuevo: bool) -> EstadoDelGrafo:
         diagnostico = solicitud.clinicalContext.diagnosis

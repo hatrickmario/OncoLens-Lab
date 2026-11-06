@@ -247,9 +247,9 @@ class RAGOrchestratorService:
         )
 
     async def consultar(self, solicitud: RagQueryInternalRequest) -> RagQueryInternalResponse:
-        with con_clasificacion(solicitud.dataClassification.value) as proveedor:
+        with con_clasificacion(solicitud.dataClassification.value) as contexto:
             respuesta = await self._consultar_con_proveedor_acotado(solicitud)
-        return respuesta.model_copy(update={"meta": proveedor.declarar_en(respuesta.meta)})
+        return respuesta.model_copy(update={"meta": contexto.declarar_en(respuesta.meta)})
 
     async def _consultar_con_proveedor_acotado(
         self, solicitud: RagQueryInternalRequest

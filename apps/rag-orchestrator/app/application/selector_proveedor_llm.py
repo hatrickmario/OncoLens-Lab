@@ -14,10 +14,10 @@ from collections.abc import Awaitable, Callable, Iterator, Mapping
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
-from typing import Any, Protocol, TypeVar
+from typing import Any, TypeVar
 
-from app.application.corpus_metadata.poblacion_puertos import LlmDePoblacion, RespuestaDelLlm
-from app.application.ports import FalloDelLlm, LlmClient
+from app.application.corpus_metadata.poblacion_puertos import LlmCompleto, RespuestaDelLlm
+from app.application.ports import FalloDelLlm
 from app.domain.reglas_proveedor import ProveedorLlm, proveedores_permitidos
 from app.schemas.generated.models import LlmProvider, RagMeta
 
@@ -25,10 +25,6 @@ CLASIFICACION_DESCONOCIDA = ""
 """Sin ``con_clasificacion()`` activo: ``proveedores_permitidos`` la trata como no sintética (solo local)."""
 
 T = TypeVar("T")
-
-
-class LlmCompleto(LlmClient, LlmDePoblacion, Protocol):
-    """Un adapter del LLM con la generación (``LlmClient``) y la tarea corta de población (``LlmDePoblacion``)."""
 
 
 @dataclass

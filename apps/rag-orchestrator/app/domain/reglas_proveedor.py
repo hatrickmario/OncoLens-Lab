@@ -100,6 +100,8 @@ def es_modelo_de_nube(modelo: str) -> bool:
     return _SUFIJO_DE_NUBE.search(normalizado) is not None
 
 
+# RN-12 tiene una implementación independiente en clinical-api (src/modules/evidence-analysis/regla-proveedor.ts): se
+# verifican contra la misma tabla (contracts/reglas/proveedor-llm.json), no se comparten.
 class ProveedorLlm(StrEnum):
     """Dónde corre el LLM de una petición (mismo vocabulario que ``RagMeta.llmProvider``, RN-12)."""
 
