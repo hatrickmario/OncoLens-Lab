@@ -20,7 +20,21 @@ export interface EstadoDelTurno {
 
 /** `rehydration` del PRIMER turno y de todo hilo sin turnos: sin turnos y con el estado estructurado vacío. */
 export function rehidratacionVacia(): ChatRehydration {
-  throw new Error('no implementado');
+  return {
+    turns: [],
+    structuredState: {
+      intentsVistos: [],
+      preguntasPrevias: [],
+      opcionesMostradas: [],
+      citasMostradas: [],
+      faltantesSenalados: [],
+    },
+  };
+}
+
+/** `factRef` de los bloques de un turno, sin repetir y en orden de aparición. */
+function factRefsDe(bloques: readonly ChatBlock[]): string[] {
+  return [...new Set(bloques.flatMap((bloque) => bloque.factRefs ?? []))];
 }
 
 /**
@@ -32,9 +46,17 @@ export function construirRehidratacion(
   turnos: readonly TurnoDeConversacion[],
   limite: number,
 ): ChatRehydration {
-  void turnos;
-  void limite;
-  throw new Error('no implementado');
+  const ultimo = turnos.at(-1);
+  if (ultimo === undefined) return rehidratacionVacia();
+  return {
+    turns: turnos.slice(-limite).map((turno) => ({
+      question: turno.questionMasked,
+      intent: turno.intent,
+      blocksText: turno.blocks.map((bloque) => bloque.text),
+      factRefs: factRefsDe(turno.blocks),
+    })),
+    structuredState: ultimo.structuredState,
+  };
 }
 
 /** `status` y `topRelevanceScore` del turno: con `evidenceAnalysis` los suyos (`null` no es `0.0`, RN-02). */
@@ -42,27 +64,39 @@ export function derivarEstadoDelTurno(
   intent: ChatIntent,
   evidencia: RagQueryInternalResponse | undefined,
 ): EstadoDelTurno {
-  void intent;
-  void evidencia;
-  throw new Error('no implementado');
+  if (evidencia !== undefined) {
+    return {
+      status: evidencia.status === 'sin_evidencia' ? 'sin_evidencia' : 'respondido',
+      topRelevanceScore: evidencia.topRelevanceScore,
+    };
+  }
+  return {
+    status: intent === 'no_clasificada' ? 'no_clasificada' : 'respondido',
+    topRelevanceScore: null,
+  };
 }
 
 /** `activeAnalysisId`: el `analysisId` del turno más reciente que lo tenga; `null` si ninguno. */
 export function analisisActivo(turnos: readonly TurnoDeConversacion[]): string | null {
-  void turnos;
-  throw new Error('no implementado');
+  return turnos.findLast((turno) => turno.analysisId !== null)?.analysisId ?? null;
 }
 
-/** Etiquetas de los hechos del caso enviados en el turno (`dataUsed`). */
+const ETIQUETA_POR_CLASE: Readonly<Record<string, string>> = {
+  diagnostico: 'Diagnóstico',
+  biomarcador: 'Biomarcador',
+  atributo: 'Atributo clínico',
+  tratamiento: 'Tratamiento previo',
+  evento: 'Evento clínico',
+};
+
+/** Etiquetas de los hechos del caso enviados en el turno (`dataUsed`): la clase del hecho, en español. */
 export function etiquetasDeHechosUsados(hechos: readonly CaseFact[]): string[] {
-  void hechos;
-  throw new Error('no implementado');
+  return hechos.map((hecho) => ETIQUETA_POR_CLASE[hecho.kind] ?? hecho.kind);
 }
 
 /** Etiquetas de los ítems enviados con un tipo de faltante (`dataMissing`). */
 export function etiquetasDeFaltantes(items: readonly ChatCompletenessItem[]): string[] {
-  void items;
-  throw new Error('no implementado');
+  return items.filter((item) => item.gapType !== null).map((item) => item.label);
 }
 
 export type ResolucionDeEnlaces =
@@ -73,7 +107,11 @@ export function enlacesDelTurno(
   bloques: readonly ChatBlock[],
   hechos: ReadonlyMap<string, EnlaceDelHecho>,
 ): ResolucionDeEnlaces {
-  void bloques;
-  void hechos;
-  throw new Error('no implementado');
+  const enlaces: ConversationDataLink[] = [];
+  for (const factRef of factRefsDe(bloques)) {
+    const hecho = hechos.get(factRef);
+    if (hecho === undefined) return { ok: false, factRefSinResolver: factRef };
+    enlaces.push({ factRef, ...hecho });
+  }
+  return { ok: true, enlaces };
 }

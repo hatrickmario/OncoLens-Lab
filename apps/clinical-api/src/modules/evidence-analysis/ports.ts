@@ -229,5 +229,8 @@ export type RespuestaDeTurnoRag = { ok: true; cuerpo: ChatTurnResponse } | Fallo
 
 /** Cliente de `/chat/turn` (L1D-315, ADR-51): el SDK generado sobre el transporte con JWT de servicio. El hilo vive en Backend 2. */
 export interface ChatTurnPort {
-  responder(request: ChatTurnRequest, opciones?: OpcionesDeConsultaRag): Promise<RespuestaDeTurnoRag>;
+  responder(
+    request: ChatTurnRequest,
+    opciones?: OpcionesDeConsultaRag,
+  ): Promise<RespuestaDeTurnoRag>;
 }

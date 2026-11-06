@@ -40,8 +40,11 @@ export async function abrirConversacion(
   cookie: string,
   patientId: string,
 ): Promise<string> {
-  const respuesta = await clienteVerificado(app).post(rutaDeApertura(patientId)).set('Cookie', cookie);
-  if (respuesta.status !== 201) throw new Error(`abrir la conversación respondió ${respuesta.status}`);
+  const respuesta = await clienteVerificado(app)
+    .post(rutaDeApertura(patientId))
+    .set('Cookie', cookie);
+  if (respuesta.status !== 201)
+    throw new Error(`abrir la conversación respondió ${respuesta.status}`);
   return (respuesta.body as { conversationId: string }).conversationId;
 }
 

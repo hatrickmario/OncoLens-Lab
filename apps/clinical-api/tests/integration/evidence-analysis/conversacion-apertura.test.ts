@@ -48,15 +48,20 @@ describe('Conversación anclada al paciente', () => {
   it('responde 201 sin threadId y guarda un thread_id UUID v4 distinto cuando el doctor abre una conversación; el GET devuelve turns vacío [US-258 AC-1]', async () => {
     const { app } = await montar();
 
-    const creada = await clienteVerificado(app).post(rutaDeApertura(patientId)).set('Cookie', cookie);
+    const creada = await clienteVerificado(app)
+      .post(rutaDeApertura(patientId))
+      .set('Cookie', cookie);
 
     expect(creada.status).toBe(201);
     expect(creada.body).not.toHaveProperty('threadId');
     expect(creada.body.patientId).toBe(patientId);
-    const { rows } = await mundo.cliente.query<{ id: string; patient_id: string; thread_id: string }>(
-      'SELECT id, patient_id, thread_id FROM clinical.conversation WHERE id = $1',
-      [creada.body.conversationId],
-    );
+    const { rows } = await mundo.cliente.query<{
+      id: string;
+      patient_id: string;
+      thread_id: string;
+    }>('SELECT id, patient_id, thread_id FROM clinical.conversation WHERE id = $1', [
+      creada.body.conversationId,
+    ]);
     expect(rows[0]!.thread_id).toMatch(UUID_V4);
     expect(rows[0]!.thread_id).not.toBe(rows[0]!.patient_id);
     expect(rows[0]!.thread_id).not.toBe(rows[0]!.id);
