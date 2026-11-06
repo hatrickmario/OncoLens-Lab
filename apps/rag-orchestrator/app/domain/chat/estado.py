@@ -68,4 +68,15 @@ class EstadoDelHilo:
 
 def estado_tras_el_turno(estado: EstadoDelHilo, turno: TurnoPrevio) -> EstadoDelHilo:
     """El estado con el turno añadido: su intención y su pregunta pasan al estado estructurado y los turnos se acotan."""
-    raise NotImplementedError("no implementado")
+    vistos = estado.estructurado.intents_vistos
+    estructurado = EstadoEstructurado(
+        intents_vistos=vistos if turno.intencion in vistos else (*vistos, turno.intencion),
+        preguntas_previas=(*estado.estructurado.preguntas_previas, turno.pregunta),
+        opciones_mostradas=estado.estructurado.opciones_mostradas,
+        citas_mostradas=estado.estructurado.citas_mostradas,
+        faltantes_senalados=estado.estructurado.faltantes_senalados,
+        ultima_evidencia=estado.estructurado.ultima_evidencia,
+    )
+    return EstadoDelHilo(
+        turnos=(*estado.turnos, turno)[-MAX_TURNOS_EN_MEMORIA:], estructurado=estructurado
+    )

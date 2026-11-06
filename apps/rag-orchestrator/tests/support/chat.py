@@ -102,7 +102,7 @@ def crear_entorno_de_chat(
     app = crear_app(
         settings_de_prueba(**cambios_de_settings),
         trace_ids=GeneradorTraceFijo(),
-        clock=reloj,
+        clock=RelojFijo(),  # el verificador del JWT de servicio no avanza con el reloj del hilo
         chat=servicio,
     )
     cliente = TestClient(

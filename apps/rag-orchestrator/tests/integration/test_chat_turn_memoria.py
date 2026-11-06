@@ -56,7 +56,9 @@ def test_chat_turn_incluye_el_estado_estructurado_completo_y_solo_los_ultimos_tu
     memoria = _bloque_de_memoria(usuario)
     for elemento in ("opcion-descrita-7", "chunk-citado-3", "ki67", "faltantes"):
         assert elemento in memoria
-    for numero in range(1, TURNOS_PREVIOS + 1):  # el estado estructurado trae todas las preguntas previas
+    for numero in range(
+        1, TURNOS_PREVIOS + 1
+    ):  # el estado estructurado trae todas las preguntas previas
         assert f"Pregunta previa número {numero:02d}" in memoria
     # ... pero la ventana de turnos recortada por tokens solo conserva los últimos que caben (cada turno cuesta ~35 palabras).
     assert memoria.count(TEXTO_LARGO) == 2
