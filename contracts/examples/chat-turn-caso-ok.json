@@ -3,12 +3,12 @@
   "blocks": [
     {
       "kind": "documentado",
-      "text": "Carcinoma ductal infiltrante de mama, Nottingham grado 2, estadio IIA (TNM 8), ECOG 1.",
+      "text": "Carcinoma ductal infiltrante de mama, Nottingham grado 2, estadio IIA (TNM 8), ECOG 1, al momento del diagnóstico.",
       "factRefs": ["f1"]
     },
     {
       "kind": "documentado",
-      "text": "HER2: 3+ (IHQ), sin verificar.",
+      "text": "HER2: 3+ (IHQ), relevante, al momento del diagnóstico.",
       "factRefs": ["f2"]
     }
   ],

@@ -70,7 +70,7 @@
     {
       "factRef": "f1",
       "kind": "diagnostico",
-      "verbalization": "Carcinoma ductal infiltrante de mama, Nottingham grado 2, estadio IIA (TNM 8), ECOG 1",
+      "verbalization": "carcinoma ductal infiltrante, Nottingham grado 2, estadio IIA (TNM_8), ECOG 1",
       "relativeDay": 0,
       "reviewStatus": "verificado"
     },
@@ -85,24 +85,24 @@
     {
       "factRef": "f3",
       "kind": "biomarcador",
-      "verbalization": "CA 15-3: 28 U/mL",
-      "relativeDay": 90,
+      "verbalization": "CA 15-3: 22 U/mL, normal",
+      "relativeDay": 30,
       "reviewStatus": "verificado",
       "seriesKey": "ca153"
     },
     {
       "factRef": "f4",
       "kind": "biomarcador",
-      "verbalization": "CA 15-3: 22 U/mL",
-      "relativeDay": 30,
+      "verbalization": "CA 15-3: 25 U/mL, normal",
+      "relativeDay": 60,
       "reviewStatus": "verificado",
       "seriesKey": "ca153"
     },
     {
       "factRef": "f5",
       "kind": "biomarcador",
-      "verbalization": "CA 15-3: 25 U/mL",
-      "relativeDay": 60,
+      "verbalization": "CA 15-3: 28 U/mL, normal",
+      "relativeDay": 90,
       "reviewStatus": "verificado",
       "seriesKey": "ca153"
     }
