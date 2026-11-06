@@ -105,6 +105,19 @@
 - [x] 3.5 Refactor en verde.
   Evidencia: commit `6ad34452` `refactor(d5fb-05)`: Extract Method · `organisms/dialogo-atributo-clinico.tsx:ContenidoDelDialogoDeAtributo`
   (mezclaba disparador, títulos y tres contenidos; 142 → 75 líneas); 888/888 antes y después.
+  Ajustes del Gate 2 (PASS en los 4 guardianes), en tests `6f74dfb7`, refactor `ed0ea2d1`, feat `5bdcccd2` y E2E `509fb05a`:
+  design #3 Replace Conditional with Catalog Lookup · `historico-del-dato.tsx:textoDeLaVersion` (`Record<DatoCorregible, …>`),
+  con `tests/ui/historico-del-dato.test.tsx` por cada `DatoCorregible` (verde antes y después); P3 #6 `valorFijo` en el
+  formulario de atributo, #7 `useFocoAlMontar` sin `eslint-disable`, #8 `esIncoherenciaDeDeclaracion({campo, codigo})`;
+  design #2 `retries: 0` junto a `serial` en `vista-de-caso-correccion.spec.ts` y `declaracion-sin-tratamiento.spec.ts`, con
+  la precondición `exigirPacienteSinCorregir` (#11) y el desborde a 375 px (`scrollWidth ≤ 375`, sin ejecutar en local); el test
+  de layout de clase CSS se rotula como guardia. Textos visibles cambiados (lenguaje): aviso tras guardar («Si ya hay análisis
+  guardados, se hicieron con el valor previo…»), error 422 de la declaración y título del diálogo de la declaración.
+  `apps/web` 893/893 (120 archivos), `tsc --noEmit -p apps/web`, `eslint --max-warnings 0`, `prettier --check`,
+  `lint:lenguaje` y `contracts:check` en verde.
+  DEUDA anotada (Gate 2): #5 extraer `contenido-del-dialogo-de-tratamiento.tsx` de `dialogo-tratamiento-previo.tsx` (126
+  líneas, bajo el límite; no se hizo para no ampliar el cambio); #9 y #10 de `design-principles-reviewer` sin abordar en
+  este change (quedan como deuda del Gate 2).
 
 ## humano
 
