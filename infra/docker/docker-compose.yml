@@ -167,6 +167,8 @@ services:
       LOGIN_MAX_FAILED_ATTEMPTS: ${LOGIN_MAX_FAILED_ATTEMPTS:-}
       LOGIN_LOCKOUT_MINUTES: ${LOGIN_LOCKOUT_MINUTES:-}
       TRUST_PROXY_HOPS: ${TRUST_PROXY_HOPS:-}
+      # Turnos previos enmascarados al rehidratar un hilo del chat (L1D-315, ADR-51 §4, RN-22); mismo valor que .env.example.
+      CHAT_REHYDRATE_TURNS: ${CHAT_REHYDRATE_TURNS:-6}
       ARGON2_MEMORY_COST_KIB: ${ARGON2_MEMORY_COST_KIB:-}
       ARGON2_TIME_COST: ${ARGON2_TIME_COST:-}
       ARGON2_PARALLELISM: ${ARGON2_PARALLELISM:-}
@@ -357,6 +359,20 @@ services:
       POPULATION_EXTRACTION_CONCURRENCY: ${POPULATION_EXTRACTION_CONCURRENCY:-1}
       POPULATION_EXTRACTION_RETRIES: ${POPULATION_EXTRACTION_RETRIES:-1}
       POPULATION_PROMPT_VERSION: ${POPULATION_PROMPT_VERSION:-poblacion_v1}
+      # Segundo loop de reescritura (L1D-300, RN-02, RN-22): mismos valores que .env.example y que el código.
+      QUERY_REWRITE_ENABLED: ${QUERY_REWRITE_ENABLED:-false}
+      QUERY_REWRITE_MAX_ITERATIONS: ${QUERY_REWRITE_MAX_ITERATIONS:-1}
+      QUERY_REWRITE_DEADLINE_MS: ${QUERY_REWRITE_DEADLINE_MS:-3000}
+      QUERY_REWRITE_MAX_OUTPUT_TOKENS: ${QUERY_REWRITE_MAX_OUTPUT_TOKENS:-128}
+      QUERY_REWRITE_MAX_TERMS: ${QUERY_REWRITE_MAX_TERMS:-5}
+      # Chat (L1D-316, ADR-51, RN-22, RN-19): estado efímero del hilo y avisos sin punto final.
+      CHAT_THREAD_TTL_SECONDS: ${CHAT_THREAD_TTL_SECONDS:-1800}
+      CHAT_MAX_THREADS: ${CHAT_MAX_THREADS:-50}
+      CHAT_MEMORY_MAX_TOKENS: ${CHAT_MEMORY_MAX_TOKENS:-1500}
+      CHAT_NOTICE_AI: ${CHAT_NOTICE_AI:-Generado por IA; requiere validación clínica independiente por el oncólogo tratante}
+      CHAT_NOTICE_ACADEMIC: ${CHAT_NOTICE_ACADEMIC:-Uso académico/investigación}
+      # Tokenizador del LLM para contar tokens de la memoria del chat; vacío = contador conservador por caracteres.
+      LLM_TOKENIZER_PATH: ${LLM_TOKENIZER_PATH:-}
       SERVICE_JWT_PUBLIC_KEY_FILE: /run/secrets/jwt_service_public.pem
       SERVICE_JWT_TTL_SECONDS: *service-jwt-ttl
       PG_RAG_CORPUS_PASSWORD_FILE: /run/secrets/pg_rag_corpus_password
@@ -403,6 +419,8 @@ services:
       RERANKER_MODEL: ${RERANKER_MODEL:-}
       RERANKER_MODEL_REVISION: ${RERANKER_MODEL_REVISION:-}
       RERANKER_MAX_PAIRS: ${RERANKER_MAX_PAIRS:-}
+      # Máximo de chunkId cortados que lista el evento rag_query_corte (L1D-327, RN-22); mismo valor que .env.example.
+      RERANKER_CUT_LOG_MAX_IDS: ${RERANKER_CUT_LOG_MAX_IDS:-50}
       RERANKER_MAX_LENGTH: ${RERANKER_MAX_LENGTH:-}
       NLI_MODEL: ${NLI_MODEL:-}
       NLI_MODEL_REVISION: ${NLI_MODEL_REVISION:-}
@@ -468,6 +486,8 @@ services:
       WEB_MAX_BODY_BYTES: ${WEB_MAX_BODY_BYTES:-32768}
       # Ruta de inicio tras el login (solo servidor). Sin valor por defecto: el web se niega a servir /login sin ella.
       WEB_HOME_PATH: ${WEB_HOME_PATH:-}
+      # Modo de la CSP (L1D-266, RN-22): aplicar | solo_informe; en producción solo_informe aborta el arranque.
+      WEB_CSP_MODO: ${WEB_CSP_MODO:-aplicar}
     # Único puerto publicado del stack (SEG-09); en el S1 solo en la máquina local.
     ports:
       - "${WEB_BIND_ADDRESS:-127.0.0.1}:${WEB_PORT:-3000}:3000"
