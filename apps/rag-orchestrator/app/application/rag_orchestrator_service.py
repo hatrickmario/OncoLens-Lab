@@ -69,6 +69,7 @@ from app.application.ports import (
 )
 from app.application.respuesta_con_evidencia import ensamblar_respuesta_con_evidencia
 from app.application.resumen_contexto import resumen_del_contexto_clinico
+from app.application.selector_proveedor_llm import con_clasificacion
 from app.application.verificacion_de_soporte import VerificadorDeSoporte
 from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
 from app.domain.citations import (
@@ -246,6 +247,13 @@ class RAGOrchestratorService:
         )
 
     async def consultar(self, solicitud: RagQueryInternalRequest) -> RagQueryInternalResponse:
+        with con_clasificacion(solicitud.dataClassification.value) as proveedor:
+            respuesta = await self._consultar_con_proveedor_acotado(solicitud)
+        return respuesta.model_copy(update={"meta": proveedor.declarar_en(respuesta.meta)})
+
+    async def _consultar_con_proveedor_acotado(
+        self, solicitud: RagQueryInternalRequest
+    ) -> RagQueryInternalResponse:
         recuperacion = await self.recuperar(solicitud)
         if not recuperacion.chunks_sobre_umbral:
             return self._responder_sin_evidencia(recuperacion.recuperados, recuperacion.meta)

@@ -110,5 +110,10 @@ class ProveedorLlm(StrEnum):
 def proveedores_permitidos(
     data_classification: str, llm_cloud_enabled: bool
 ) -> tuple[ProveedorLlm, ...]:
-    """RN-12: proveedores del LLM admitidos para una clasificación, en orden de preferencia."""
-    raise NotImplementedError
+    """RN-12: proveedores del LLM admitidos para una clasificación, en orden de preferencia.
+
+    Solo ``sintetico`` con ``LLM_CLOUD_ENABLED`` admite la nube, y siempre después del local. Cualquier otro valor
+    (``real_anonimizado``, ``real_identificado`` o una clasificación desconocida) falla cerrado: solo local."""
+    if data_classification == "sintetico" and llm_cloud_enabled:
+        return (ProveedorLlm.local, ProveedorLlm.nube)
+    return (ProveedorLlm.local,)
