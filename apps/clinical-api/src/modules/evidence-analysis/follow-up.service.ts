@@ -8,7 +8,12 @@ import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type { RegistroDeAnalisis } from './analysis-record.js';
 import { FalloDePersistenciaError } from './analysis-completion.js';
 import { calcularDeadline } from './evidence-analysis.service.js';
-import { RESPUESTA_INTERNA_INVALIDA, mapearFalloRagDeSeguimiento } from './rag-failure.js';
+import {
+  PROVEEDOR_NO_PERMITIDO,
+  RESPUESTA_INTERNA_INVALIDA,
+  mapearFalloRagDeSeguimiento,
+} from './rag-failure.js';
+import { proveedorPermitido, type ProveedorDelLlm } from './regla-proveedor.js';
 import type { FollowUpRepository, TurnoDeSeguimiento, TurnoNuevo } from './follow-up.repository.js';
 import {
   armarRagFollowUpRequest,
@@ -267,6 +272,9 @@ async function crearTurno(
   if (!respuesta.ok) return { tipo: 'fallo', respuesta: mapearFalloRagDeSeguimiento(respuesta) };
   const nuevo = armarTurno(dependencias, solicitud, registro, respuesta.cuerpo, request.question);
   if (nuevo === null) return { tipo: 'fallo', respuesta: RESPUESTA_INTERNA_INVALIDA };
+  if (!proveedorPermitido(nuevo.dataClassification, nuevo.llmProvider as ProveedorDelLlm)) {
+    return { tipo: 'fallo', respuesta: PROVEEDOR_NO_PERMITIDO };
+  }
   const turno = await persistirTurnoAntesDeResponder(dependencias, nuevo);
   return { tipo: 'creado', cuerpo: aFollowUpTurn(turno, dependencias.config.aiDisclaimerText) };
 }
