@@ -1,6 +1,6 @@
 {
   "error": "CUERPO_INVALIDO",
   "field": "attributeKey",
-  "message": "Hay tratamientos previos registrados; no se puede declarar su ausencia.",
+  "message": "El cuerpo de la petición no cumple el contrato.",
   "traceId": "req_c4d5e6f7"
 }
