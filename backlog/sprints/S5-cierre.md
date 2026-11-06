@@ -107,3 +107,31 @@ Detalle en [`S5-trazabilidad.md`](S5-trazabilidad.md) y `backlog/03-trazabilidad
 - Firmas DEC-01 (L1D-92) y DEC-11 (L1D-125); revisión del dorado (L1D-299) y de los 4 casos de `opciones` (L1D-246); curaduría de L1D-119; H-1, H-2 y H-5 de L1D-268.
 - Informes de `evaluate` a `reports/eval/` (M1).
 - ¿Un PR aparte para archivar los 8 changes de arrastre (M5)? Varios tienen tareas sin ID destino.
+
+## 9. Prioridades del S6 añadidas por el usuario (2026-11-05, tras la Demo 5)
+
+Insumo para `/sprint-refine S6`; no cambia el slicing por sí solo (cualquier ajuste de puntos requiere su aprobación).
+
+1. **Ampliar el corpus del RAG (L1D-119, US-120) es prioridad del S6 y no se recorta.** Encaja en el primer lugar del orden de E-15 (RAG de conocimiento → búsqueda por datos del paciente → OCR → usuarios). Punto de partida medido en la Demo 5 (Milvus, `is_current`): **10 documentos y 310 chunks**; mama 5 documentos (161 chunks) y próstata 5 (149), de 2 fuentes (NCI y PMC Open Access), 8 de 10 en inglés. Meta de US-120: ≥ 20 documentos por tipo de ≥ 3 fuentes distintas, solo las de ADR-36 y con licencia aceptada por documento (RN-21).
+   - Entra con sus deudas: **D5-09** (curaduría y descarga de ~40 documentos, con red) y **D5-08** (corrida nocturna: ingesta real, `reindex-sparse`, población en abanico, barridos de umbrales y baseline por tipo e idioma).
+   - Riesgo a decidir en el refinamiento: cada documento nuevo pasa por la extracción de población (ADR-47) con el LLM local, y los umbrales se calibraron con 10 documentos; `evaluate` (OL-06) es obligatoria en el PR.
+   - Solo hay 2 documentos en español (ambos «para pacientes»): conviene que la curaduría incluya fuentes en español.
+2. **Feedback de la Demo 5** (changes `d5fb-01` … `d5fb-05`, sin L1D asignado): ver `openspec/changes/d5fb-*`. Crear sus historias en Linear solo con aprobación del usuario.
+3. **Primer ítem del RAG en el S6, junto con la ampliación del corpus: recall de la recuperación antes del reranker (hallazgo de la Demo 5, 2026-11-05; aprobado por el usuario).** Afecta a **todas** las preguntas, no solo a la que lo reveló, y la consistencia entre idiomas (ES/EN) depende de él. **Decisión del usuario:** al inicio del S6 se evalúan las 4 recomendaciones y se hacen las 4 si es posible, o las que mayor impacto generen; el orden y el alcance se fijan en `/sprint-refine S6` con las mediciones de la tabla.
+   - **Caso que lo reveló:** paciente 1 (`0fd028e2-f8b0-56c7-a748-2a4e473d879d`), pregunta «targeted therapy for HER2-positive metastatic breast cancer in patients who previously received trastuzumab, pertuzumab and trastuzumab emtansine»: EN dio «0 opciones descritas» (1 opción generada, T-DM1 adyuvante, descartada por NLI como `afirmacion_sin_soporte`) y ES dio 3 opciones. Registros `req_a73a4eda` (EN) y `req_bd991673` (ES) en `clinical.ai_analysis_record`.
+   - **Medición (reproducción offline con los adaptadores reales; sin LLM ni escrituras; con y sin el resumen del contexto clínico el resultado es idéntico, así que el contexto no influye):** el reranker, al puntuar los 30 candidatos, pone en primer y segundo lugar `nci-mama-hp-en[93]` y `[92]` (margetuximab: pacientes con trastuzumab, pertuzumab y T-DM1 previos) con 0,996/0,993 (EN) y 0,985/0,980 (ES). Esos chunks quedan en el puesto 13–15 por similitud densa y **nunca se puntúan** porque solo los 12 mejores por similitud densa (`RERANKER_MAX_PAIRS = 12`, ADR-39) llegan al reranker. En EN, 7 de los 10 mejores según el reranker quedan fuera del corte; en ES, 5 de 10. Entre los puestos 6 y 15 la similitud densa varía solo entre 0,67 y 0,71: el corte es casi azar.
+   - **Ruido en los cupos:** 5 de los 12 cupos en EN (3 en ES) son listas de referencias bibliográficas (p. ej. `nci-mama-hp-en[104]`, `[105]`, `[69]`, `[70]`, `[103]`); `[104]` puntúa 0,924 y se entrega al generador como evidencia.
+   - **Por qué ES «funciona» y EN no:** `nci-mama-pac-es[6]` (lista de opciones del texto para pacientes) queda en el puesto 3 denso con la pregunta en ES y en el 23 con la de EN; el 83 % de los 12 chunks coincide entre idiomas y ese cambio en el margen decide el resultado.
+   - **Las 4 recomendaciones a evaluar al inicio del S6** (cada una pasa por `evaluate`, OL-06, porque cambia corpus, umbral o recuperación):
+
+     | # | Recomendación | Efecto esperado | Costo / riesgo |
+     |---|---|---|---|
+     | R1 | **Excluir las listas de referencias en la ingesta** (reingesta del corpus) | Libera de 3 a 5 cupos de los 12. Simulado: con solo esto `[93]` sube al puesto 8 (EN) y 12 (ES, al borde) | Reingesta; sin costo de latencia |
+     | R2 | **Subir `RERANKER_MAX_PAIRS` a 16** | Margen adicional para `[93]` en ES | ADR-39 midió +1,3 s: p95 estimado de 14,6 a 15,9 s, fuera del NFR de 15 s. Solo si se recalibra el NFR (DEC-03) |
+     | R3 | **Evaluar la recuperación híbrida** (`RETRIEVAL_MODE=hibrida`) para mejorar el preorden | Mejor selección de los 12 sin más pares | Ya existe y se midió frente a la densa en el S4 (US-245); falta medirla sobre este caso y el corpus ampliado |
+     | R4 | **Registrar en el log los ids de chunk cortados y su orden** (nunca el texto; RN-10) en `rag_query_corte` | Hace observable este fallo | Mínimo |
+
+   - **Alternativas descartadas (no reabrir sin motivo):** puntuar los 30 candidatos (~0,35 s por par, ~6 s más por consulta, p95 > 20 s); bajar `RELEVANCE_THRESHOLD` (el umbral no es el problema, `[93]` ni se puntúa); traducir las preguntas al español (esconde el fallo y favorece textos para pacientes); fijar a mano el chunk (no escala).
+   - **Límite de lo medido:** no se ejecutó el LLM. Que con `[93]` incluido el generador produzca opciones correctas y el NLI las acepte se confirma en `evaluate`.
+   - **Métrica nueva sugerida para OL-06:** «recall previo al reranker» (qué parte de los 10 mejores según el reranker sobre los 30 entra en el corte de 12), medida por tipo de cáncer e idioma.
+   - **Otros dos hallazgos del mismo caso, para el refinamiento del S6 (sin decidir):** (a) un análisis con estado `con_evidencia` y 0 opciones muestra «Análisis listo: 0 opciones descritas» sin explicar que hubo una opción descartada y por qué; (b) nada impide proponer un fármaco que la paciente ya recibió (el modelo sugirió T-DM1 a quien ya lo recibió). Ambos cambian prompt o reglas y exigen `evaluate`.
