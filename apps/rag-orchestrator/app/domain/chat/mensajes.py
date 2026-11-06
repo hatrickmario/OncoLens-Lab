@@ -24,3 +24,6 @@ ENCABEZADO_DE_OPCIONES = "Opciones descritas en la evidencia"
 MENSAJE_SIN_OPCIONES_CON_SOPORTE = (
     "Los fragmentos recuperados no sostienen ninguna opción con soporte suficiente."
 )
+MENSAJE_SEGUIMIENTO_SIN_AFIRMACIONES = (
+    "Los fragmentos recuperados no permiten responder la pregunta con soporte suficiente."
+)

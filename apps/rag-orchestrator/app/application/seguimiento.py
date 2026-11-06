@@ -119,7 +119,7 @@ class ResponderSeguimiento:
         trace_id = solicitud.traceId.root
         idioma = recuperacion.meta.responseLanguage.value
         citables = await self._servicio.chunks_citables(trace_id, recuperacion)
-        candidatas = tuple(_como_opcion(a, idioma) for a in generado.afirmaciones)
+        candidatas = tuple(como_opcion(a, idioma) for a in generado.afirmaciones)
         citas = validar_citas(candidatas, citables.keys())
         soporte = await self._servicio.verificador_de_soporte.verificar(
             trace_id,
@@ -141,7 +141,7 @@ class ResponderSeguimiento:
         return respuesta
 
 
-def _como_opcion(afirmacion: AfirmacionAtomica, idioma: str) -> OpcionGenerada:
+def como_opcion(afirmacion: AfirmacionAtomica, idioma: str) -> OpcionGenerada:
     """La afirmación como una opción de una sola afirmación principal: así reutiliza, sin copiarlas, la validación de
     citas, el soporte NLI y el verificador de lenguaje del análisis. La atribución la compone el código (ADR-34)."""
     composicion = componer_con_marco((afirmacion,), idioma)

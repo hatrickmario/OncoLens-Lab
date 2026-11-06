@@ -15,6 +15,10 @@ from typing import Any
 from app.application.catalogo_exigido import exigir_catalogo_de_la_solicitud
 from app.application.chat.avisos import avisos_del_turno
 from app.application.chat.capacidades.evidencia import NodoEvidencia
+from app.application.chat.capacidades.seguimiento_evidencia import (
+    NodoSeguimientoDeEvidencia,
+    ParametrosDelSeguimiento,
+)
 from app.application.chat.contexto_del_turno import con_evidencia_del_turno
 from app.application.chat.grafo import ConfiguracionDelGrafo, EstadoDelGrafo, Nodo, construir_grafo
 from app.application.chat.registro_de_hilos import RegistroDeHilos
@@ -75,7 +79,9 @@ class ChatTurnService:
             llm=llm,
             contador=contador,
             configuracion=configuracion,
-            capacidades=_capacidades_de_evidencia(servicio_de_evidencia, posiciones),
+            capacidades=_capacidades_de_evidencia(
+                servicio_de_evidencia, posiciones, llm, contador, configuracion, settings
+            ),
             guardado=self.registro.guardado,
             verificador_terminos=verificador_terminos,
         )
@@ -123,6 +129,8 @@ class ChatTurnService:
             "tipo_del_contexto": diagnostico.cancerType.root if diagnostico is not None else "",
             "clasificacion_de_datos": solicitud.dataClassification.value,
             "trace_id": solicitud.traceId.root,
+            # Solo si hay análisis activo: el id lo conoce únicamente Backend 1 y nunca entra al grafo (ni al prompt ni a logs).
+            "hay_analisis_activo": solicitud.activeAnalysisId is not None,
         }
         if es_nuevo and solicitud.rehydration is not None:
             entrada["hilo"] = estado_de_rehidratacion(solicitud.rehydration)
@@ -154,9 +162,35 @@ class ChatTurnService:
 
 
 def _capacidades_de_evidencia(
-    servicio: RAGOrchestratorService | None, posiciones: PosicionDeChunks | None
+    servicio: RAGOrchestratorService | None,
+    posiciones: PosicionDeChunks | None,
+    llm: LlmClient,
+    contador: ContadorDeTokens,
+    configuracion: ConfiguracionDelGrafo,
+    settings: Settings,
 ) -> dict[Intencion, Nodo]:
-    """El nodo ``evidencia`` real si hay corpus detrás; si no, rige el esqueleto de ``construir_grafo``."""
+    """El nodo ``evidencia`` real si hay corpus detrás; si no, rige el esqueleto de ``construir_grafo``.
+
+    Un solo nodo por intención: el análisis nuevo o el seguimiento del análisis activo según la subintención."""
     if servicio is None or posiciones is None:
         return {}
-    return {Intencion.evidencia: NodoEvidencia(consulta=servicio, posiciones=posiciones).ejecutar}
+    analisis = NodoEvidencia(consulta=servicio, posiciones=posiciones)
+    seguimiento = NodoSeguimientoDeEvidencia(
+        servicio=servicio,
+        posiciones=posiciones,
+        llm=llm,
+        contador=contador,
+        configuracion=configuracion,
+        parametros=ParametrosDelSeguimiento(
+            claims_min=settings.claims_min_per_option,
+            claims_max=settings.claims_max_per_option,
+            claim_max_words=settings.claim_max_words,
+            max_chars_fragmentos=settings.llm_fragments_max_chars,
+        ),
+    )
+
+    async def evidencia(estado: EstadoDelGrafo) -> dict[str, Any]:
+        nodo = seguimiento if estado.get("subintencion") is not None else analisis
+        return await nodo.ejecutar(estado)
+
+    return {Intencion.evidencia: evidencia}

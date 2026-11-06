@@ -35,7 +35,11 @@ from app.application.ports import (
     LlmClient,
     ProhibitedTermsChecker,
 )
-from app.domain.chat.enrutado import clasificar_por_reglas, es_fuera_de_alcance
+from app.domain.chat.enrutado import (
+    clasificar_por_reglas,
+    es_fuera_de_alcance,
+    es_seguimiento_de_evidencia,
+)
 from app.domain.chat.estado import (
     ENTRADAS_DEL_TURNO_VACIAS,
     INTENCIONES_CLASIFICABLES,
@@ -117,7 +121,8 @@ class _SalidaDelTurno(BaseModel):
 
 ESQUEMA_DE_CLASIFICACION: dict[str, Any] = _Clasificacion.model_json_schema()
 ESQUEMA_DE_CLASIFICACION["properties"]["intent"]["enum"] = [
-    i.value for i in INTENCIONES_CLASIFICABLES
+    *(i.value for i in INTENCIONES_CLASIFICABLES),
+    Subintencion.seguimiento_evidencia.value,
 ]
 ESQUEMA_DEL_TURNO: dict[str, Any] = _SalidaDelTurno.model_json_schema()
 
@@ -164,6 +169,14 @@ def construir_grafo(
     return grafo.compile(checkpointer=guardado)
 
 
+def _evidencia_de_seguimiento() -> dict[str, Any]:
+    return {"intencion": Intencion.evidencia, "subintencion": Subintencion.seguimiento_evidencia}
+
+
+def _evidencia_nueva() -> dict[str, Any]:
+    return {"intencion": Intencion.evidencia, "subintencion": None}
+
+
 def _siguiente_nodo(estado: EstadoDelGrafo) -> str:
     intencion = estado["intencion"]
     return intencion.value if intencion in INTENCIONES_CLASIFICABLES else "mensaje_del_sistema"
@@ -188,14 +201,23 @@ class _NodosDelTurno:
             pregunta, estado["tipo_del_contexto"], self._configuracion.terminos_por_tipo
         ):
             return {"intencion": Intencion.fuera_de_alcance, "subintencion": None}
-        intencion = clasificar_por_reglas(pregunta) or await self._clasificar_con_el_llm(
-            pregunta, estado["trace_id"]
-        )
-        return {"intencion": intencion, "subintencion": None}
+        hay_analisis = estado.get("hay_analisis_activo", False)
+        por_reglas = clasificar_por_reglas(pregunta)
+        if por_reglas in (None, Intencion.evidencia) and es_seguimiento_de_evidencia(
+            pregunta, hay_analisis
+        ):
+            return _evidencia_de_seguimiento()
+        if por_reglas is not None:
+            return {"intencion": por_reglas, "subintencion": None}
+        return await self._clasificar_con_el_llm(pregunta, estado["trace_id"], hay_analisis)
 
-    async def _clasificar_con_el_llm(self, pregunta: str, trace_id: str) -> Intencion:
-        """Una única clasificación JSON con el LLM local, sin reintento; cualquier salida inválida es ``no_clasificada``."""
-        prompt = armar_prompt_de_clasificacion(pregunta)
+    async def _clasificar_con_el_llm(
+        self, pregunta: str, trace_id: str, hay_analisis_activo: bool
+    ) -> dict[str, Any]:
+        """Una única clasificación JSON con el LLM local, sin reintento; cualquier salida inválida es ``no_clasificada``.
+
+        ``seguimiento_evidencia`` solo cuenta con un análisis activo; sin él, es una pregunta de evidencia nueva."""
+        prompt = armar_prompt_de_clasificacion(pregunta, con_analisis_activo=hay_analisis_activo)
         try:
             crudo = await self._llm.completar_json(
                 prompt.usuario, ESQUEMA_DE_CLASIFICACION, sistema=prompt.sistema
@@ -204,13 +226,16 @@ class _NodosDelTurno:
             logger.warning("event=chat_clasificacion_llm_fallo traceId=%s", trace_id)
             raise LlmLocalNoDisponibleError() from None
         try:
-            intencion = Intencion(_Clasificacion.model_validate_json(crudo).intent)
+            dicha = _Clasificacion.model_validate_json(crudo).intent
+            if dicha == Subintencion.seguimiento_evidencia.value:
+                return _evidencia_de_seguimiento() if hay_analisis_activo else _evidencia_nueva()
+            intencion = Intencion(dicha)
         except (ValidationError, ValueError):
             intencion = Intencion.no_clasificada
         if intencion not in INTENCIONES_CLASIFICABLES:
             logger.info("event=chat_clasificacion_invalida traceId=%s", trace_id)
-            return Intencion.no_clasificada
-        return intencion
+            return {"intencion": Intencion.no_clasificada, "subintencion": None}
+        return {"intencion": intencion, "subintencion": None}
 
     async def validar(self, estado: EstadoDelGrafo) -> dict[str, Any]:
         """Filtra las afirmaciones del nodo de capacidad: solo se muestra lo que cita un hecho o un chunk de ESTE turno
