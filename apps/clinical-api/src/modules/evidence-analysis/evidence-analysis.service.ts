@@ -25,6 +25,7 @@ import type {
   ResultadoDelAnalisis,
 } from './ports.js';
 import { llamarConPlazo } from './rag-plazo.js';
+import { clasificacionDelPaciente } from './regla-proveedor.js';
 
 /** El `patientId` de la petición no corresponde a ningún paciente. */
 export { PacienteNoEncontradoError };
@@ -185,7 +186,7 @@ export function crearEvidenceAnalysisService(
         ahora.getUTCFullYear(),
         config.evidenceDefaultYears,
       ),
-      dataClassification: caso.paciente.dataOrigin,
+      dataClassification: clasificacionDelPaciente(caso.paciente),
       catalogVersion: catalogo.version(),
       contextoVacio,
     });
@@ -213,7 +214,7 @@ export function crearEvidenceAnalysisService(
       traceId,
       query,
       sourcesSelected: peticion.sourcesSelected,
-      dataClassification: caso.paciente.dataOrigin,
+      dataClassification: clasificacionDelPaciente(caso.paciente),
       catalogVersion: catalogo.version(),
       maxOptions: config.analysisMaxOptions,
       filtros: peticion.filtersApplied,

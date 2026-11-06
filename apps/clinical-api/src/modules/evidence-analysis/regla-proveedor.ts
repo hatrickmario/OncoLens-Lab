@@ -3,15 +3,24 @@ import type { DataClassification } from '../../../../../packages/api-contracts/s
 /** Proveedor del LLM que declara Backend 2 (`meta.llmProvider`, `llmProvider` del chat). */
 export type ProveedorDelLlm = 'local' | 'nube';
 
-export function clasificacionDelPaciente(_paciente: {
+/**
+ * RN-12, OL-03: la clasificación de todo request interno hacia `rag-orchestrator` (`/rag/query`, `/chat/turn`) sale de
+ * `Patient.data_origin`; nunca del body público ni de la sesión. Único dueño de esta decisión en `clinical-api`.
+ */
+export function clasificacionDelPaciente(paciente: {
   dataOrigin: DataClassification;
 }): DataClassification {
-  throw new Error('no implementado');
+  return paciente.dataOrigin;
 }
 
+/**
+ * RN-12: con datos reales solo `local`; la nube solo con datos sintéticos. Falla cerrado: un proveedor que no sea
+ * `local` ni `nube` nunca se acepta.
+ */
 export function proveedorPermitido(
-  _clasificacion: DataClassification,
-  _proveedor: ProveedorDelLlm,
+  clasificacion: DataClassification,
+  proveedor: ProveedorDelLlm,
 ): boolean {
-  throw new Error('no implementado');
+  if (proveedor === 'local') return true;
+  return proveedor === 'nube' && clasificacion === 'sintetico';
 }

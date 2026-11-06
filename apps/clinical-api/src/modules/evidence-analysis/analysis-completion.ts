@@ -18,7 +18,12 @@ import type {
   EntradaDeCierreSinIA,
   ResultadoDelAnalisis,
 } from './ports.js';
-import { RESPUESTA_INTERNA_INVALIDA, mapearFalloRag } from './rag-failure.js';
+import {
+  PROVEEDOR_NO_PERMITIDO,
+  RESPUESTA_INTERNA_INVALIDA,
+  mapearFalloRag,
+} from './rag-failure.js';
+import { proveedorPermitido } from './regla-proveedor.js';
 
 /** La respuesta de rag-orchestrator no cumple el contrato (o es incoherente): no se persiste ni se muestra. */
 export class RespuestaInternaInvalidaError extends Error {
@@ -117,6 +122,9 @@ async function completarConRespuestaInterna(
   const interpretada = interpretarRespuestaInterna(entrada.respuesta.cuerpo);
   if (interpretada === null) return { tipo: 'fallo', respuesta: RESPUESTA_INTERNA_INVALIDA };
   const { respuesta, topRelevanceScore } = interpretada;
+  if (!proveedorPermitido(entrada.request.dataClassification, respuesta.meta.llmProvider)) {
+    return { tipo: 'fallo', respuesta: PROVEEDOR_NO_PERMITIDO };
+  }
   if (entrada.episodeId === null) throw new FalloDePersistenciaError();
   const registro = armarRegistro({
     id: idsDeAnalisis(),

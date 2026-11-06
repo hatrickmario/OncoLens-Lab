@@ -18,6 +18,9 @@ const TIPO_CANCER_NO_REGISTRADO = respuesta(
 const CATALOGO_EN_CONFLICTO = respuesta(409, 'CATALOG_VERSION_MISMATCH', 'catalogo_en_conflicto');
 const servicioIa = (resultado: string) => respuesta(502, 'ERROR_SERVICIO_IA', resultado);
 
+/** `200` con `llmProvider = nube` para un dato real (RN-12): se descarta sin persistir; el evento lleva solo el resultado. */
+export const PROVEEDOR_NO_PERMITIDO = servicioIa('proveedor_no_permitido');
+
 /** `200` de rag-orchestrator que no cumple `RagQueryInternalResponse` o es incoherente. */
 export const RESPUESTA_INTERNA_INVALIDA = servicioIa('respuesta_interna_invalida');
 
