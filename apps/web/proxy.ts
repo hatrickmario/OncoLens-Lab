@@ -17,3 +17,14 @@ export function proxy(request: NextRequest) {
   }
   return NextResponse.redirect(new URL('/login', request.url));
 }
+
+export interface DependenciasProxy {
+  generarNonce: () => string;
+  entorno: Record<string, string | undefined>;
+}
+
+export function crearProxy(_dependencias: DependenciasProxy): (request: NextRequest) => NextResponse {
+  return () => {
+    throw new Error('no implementado');
+  };
+}
