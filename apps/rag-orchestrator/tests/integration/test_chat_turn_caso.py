@@ -101,12 +101,14 @@ def test_chat_turn_caso_devuelve_bloques_documentados_con_factrefs_y_los_tres_av
     assert all(b["kind"] == "documentado" and b["factRefs"] for b in cuerpo["blocks"])
     assert cuerpo["omittedClaims"] == 0
     assert "Verifique contra las fuentes" in cuerpo["notices"]
-    assert nli.invocaciones == 0  # la frase canónica es idéntica a la descripción de sus hechos: no hay qué inferir
+    assert (
+        nli.invocaciones == 0
+    )  # la frase canónica es idéntica a la descripción de sus hechos: no hay qué inferir
 
 
 def test_chat_turn_caso_responde_503_sin_afirmaciones_cuando_el_nli_falla():
     nli = NliFalso(error=RuntimeError("sin modelo"))
-    entorno = crear_entorno_de_chat("CHAT-CASO-OK", nli=nli)
+    entorno = crear_entorno_de_chat("CHAT-CASO-PARAFRASIS", nli=nli)
 
     respuesta = entorno.turno(solicitud_de_turno(Q_CASO))
 

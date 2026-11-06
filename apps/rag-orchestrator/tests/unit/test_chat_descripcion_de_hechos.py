@@ -19,10 +19,7 @@ def _hecho(
 
 
 def test_describir_hecho_escribe_una_frase_completa_con_el_dia_relativo_cuando_el_dato_es_posterior_al_diagnostico():
-    assert (
-        describir_hecho(_hecho())
-        == "CA 15-3: 22 U/mL, normal, 30 días después del diagnóstico."
-    )
+    assert describir_hecho(_hecho()) == "CA 15-3: 22 U/mL, normal, 30 días después del diagnóstico."
 
 
 def test_describir_hecho_usa_singular_cuando_el_dato_es_del_dia_siguiente():

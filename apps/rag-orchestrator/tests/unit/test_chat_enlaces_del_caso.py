@@ -1,10 +1,8 @@
 """Reglas puras de los enlaces del turno ``caso`` (US-260, RN-01, ADR-34): sin adapters."""
 
 from app.domain.chat.enlaces_del_caso import (
-    cabe_en_el_nli,
     filtrar_afirmaciones_sin_enlace,
     ordenar_series_por_dia_relativo,
-    premisa_de_los_hechos,
 )
 from app.domain.chat.turno import HechoDelCaso, PropuestaDelTurno
 
@@ -31,17 +29,6 @@ def test_filtrar_separa_la_afirmacion_cuando_alguno_de_sus_factrefs_no_es_del_tu
     con_enlace, sin_enlace = filtrar_afirmaciones_sin_enlace([ajena], {"f1"})
 
     assert (con_enlace, sin_enlace) == ((), (ajena,))
-
-
-def test_cabe_en_el_nli_solo_cuando_la_afirmacion_no_supera_el_tope_de_palabras():
-    assert cabe_en_el_nli("uno dos tres", 3)
-    assert not cabe_en_el_nli("uno dos tres cuatro", 3)
-
-
-def test_premisa_une_las_verbalizaciones_citadas_en_orden_y_sin_repetir_cuando_cita_dos_hechos():
-    hechos = [_hecho("f1", 0, texto="Dx"), _hecho("f2", 0, texto="HER2: 3+")]
-
-    assert premisa_de_los_hechos(["f2", "f1", "f2"], hechos) == "HER2: 3+; Dx"
 
 
 def test_ordenar_deja_la_serie_en_orden_ascendente_cuando_el_llm_la_devuelve_desordenada():

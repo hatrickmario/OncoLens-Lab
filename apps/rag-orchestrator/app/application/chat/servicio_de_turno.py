@@ -23,7 +23,6 @@ from app.application.chat.traduccion import (
     estado_estructurado_del_contrato,
     hechos_del_caso,
 )
-from app.application.selector_proveedor_llm import con_clasificacion
 from app.application.ports import (
     CatalogoClinico,
     Clock,
@@ -31,6 +30,7 @@ from app.application.ports import (
     LlmClient,
     ProhibitedTermsChecker,
 )
+from app.application.selector_proveedor_llm import con_clasificacion
 from app.application.verificacion_de_soporte import VerificadorDeSoporte
 from app.config.settings import Settings
 from app.domain.chat.estado import INTENCIONES_CLASIFICABLES, EstadoDelHilo, Intencion
@@ -52,9 +52,6 @@ class ChatTurnService:
         verificador_terminos: ProhibitedTermsChecker,
         soporte: VerificadorDeSoporte | None = None,
     ) -> None:
-        self._soporte = (
-            soporte  # esqueleto (L1D-317): el nodo ``caso`` lo usa en el commit de comportamiento
-        )
         self._catalogo = catalogo
         self._settings = settings
         self.registro = RegistroDeHilos(
@@ -136,7 +133,7 @@ class ChatTurnService:
                 "omittedClaims": final["omitidas"],
                 "structuredState": estado_estructurado_del_contrato(hilo.estructurado),
                 "llmProvider": proveedor,
-                "notices": avisos_del_turno(self._settings)
+                "notices": avisos_del_turno(self._settings, intencion)
                 if intencion in INTENCIONES_CLASIFICABLES
                 else [],
             }

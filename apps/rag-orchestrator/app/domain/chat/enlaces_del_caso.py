@@ -1,7 +1,7 @@
 """Enlaces de una afirmación del turno ``caso`` con los hechos del paciente (US-260, RN-01, ADR-34): reglas puras, sin E/S.
 
 Una afirmación sobre el caso solo se muestra si enlaza al menos un hecho enviado en ESTE turno y todos los que enlaza son de
-este turno; su premisa de NLI es la verbalización determinista de esos hechos, nunca el texto generado. El orden de una
+este turno; su premisa de NLI es la descripción determinista de esos hechos (``descripcion_de_hechos``), nunca el texto generado. El orden de una
 serie (la evolución de un valor) lo decide el día relativo del dato, no el orden en que el LLM la escribió.
 """
 
@@ -11,7 +11,6 @@ from collections.abc import Collection, Mapping, Sequence
 
 from app.domain.chat.turno import HechoDelCaso, PropuestaDelTurno
 
-SEPARADOR_DE_PREMISAS = "; "
 _SIN_FECHA = (1, 0)
 """Clave de orden de un dato sin fecha confiable: después de cualquier día conocido."""
 
@@ -26,18 +25,6 @@ def filtrar_afirmaciones_sin_enlace(
         enlaza = bool(propuesta.fact_refs) and all(r in refs_del_turno for r in propuesta.fact_refs)
         (con_enlace if enlaza else sin_enlace).append(propuesta)
     return tuple(con_enlace), tuple(sin_enlace)
-
-
-def cabe_en_el_nli(texto: str, max_palabras: int) -> bool:
-    """Una hipótesis más larga que el tope de palabras de la configuración haría fallar cerrado al NLI: se omite antes."""
-    return len(texto.split()) <= max_palabras
-
-
-def premisa_de_los_hechos(fact_refs: Sequence[str], hechos: Sequence[HechoDelCaso]) -> str:
-    """La verbalización determinista de los hechos citados, en el orden de la cita y sin repetir (ADR-34)."""
-    verbalizacion = {h.ref: h.verbalizacion for h in hechos}
-    unicos = dict.fromkeys(fact_refs)
-    return SEPARADOR_DE_PREMISAS.join(verbalizacion[r] for r in unicos)
 
 
 def ordenar_series_por_dia_relativo(

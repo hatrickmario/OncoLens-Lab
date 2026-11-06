@@ -42,7 +42,7 @@ def test_prompt_del_caso_separa_instrucciones_y_datos_cuando_se_arma_con_memoria
 
     prompt = armar_prompt_del_caso(estado, "¿Cuál es el cuadro?", HECHOS, (TURNO,))
 
-    assert prompt.version == VERSION_DEL_PROMPT_DE_CASO == "chat-caso@0.1.0"
+    assert prompt.version == VERSION_DEL_PROMPT_DE_CASO == "chat-caso@0.2.0"
     afirmar_separacion(
         prompt,
         DatosDelPrompt(
