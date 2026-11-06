@@ -1,0 +1,27 @@
+{
+  "intent": "caso",
+  "blocks": [
+    {
+      "kind": "limitacion",
+      "text": "No se encontró información documentada sobre lo preguntado en el expediente"
+    }
+  ],
+  "omittedClaims": 1,
+  "structuredState": {
+    "intentsVistos": [
+      "caso"
+    ],
+    "preguntasPrevias": [
+      "¿Cuál fue el resultado de la gammagrafía ósea?"
+    ],
+    "opcionesMostradas": [],
+    "citasMostradas": [],
+    "faltantesSenalados": []
+  },
+  "llmProvider": "local",
+  "notices": [
+    "Generado por IA; requiere validación clínica independiente por el oncólogo tratante",
+    "Uso académico/investigación",
+    "Verifique contra las fuentes"
+  ]
+}
