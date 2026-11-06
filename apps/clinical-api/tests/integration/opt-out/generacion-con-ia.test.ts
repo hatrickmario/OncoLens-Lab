@@ -92,15 +92,56 @@ describe('guardia de opt-out de analisis_ia sobre toda generación con IA (RN-15
     expect(gateway.logger.texto()).not.toContain(MOTIVO_DE_LA_MARCA);
   });
 
-  it('responde PERMISO_DENEGADO a admin antes de leer la marca y no llama a rag-orchestrator [US-148 AC-1] [E-04]', async () => {
+  it('responde PERMISO_DENEGADO antes de leer la marca y sin llamar a rag-orchestrator cuando el rol es admin, en análisis, seguimiento y turno [US-148 AC-1] [E-04]', async () => {
     const caso = await crearCasoConIA(mundo, gateway.app, cookieDoctor, rag);
     await registrarMarca(mundo, caso.patientId, { accion: 'registrado' });
 
-    const respuesta = await solicitarAnalisis(cookieAdmin, caso.patientId);
+    const analisis = await solicitarAnalisis(cookieAdmin, caso.patientId);
+    const seguimiento = await clienteVerificado(gateway.app)
+      .post(rutaDeSeguimiento(caso.analysisId))
+      .set('Cookie', cookieAdmin)
+      .send({ question: PREGUNTA_DE_SEGUIMIENTO });
+    const turno = await clienteVerificado(gateway.app)
+      .post(rutaDeTurnos(caso.conversationId))
+      .set('Cookie', cookieAdmin)
+      .send({ question: PREGUNTA_DE_CASO });
 
-    expect(respuesta.status).toBe(403);
-    expect(respuesta.body.error).toBe('PERMISO_DENEGADO');
+    for (const respuesta of [analisis, seguimiento, turno]) {
+      expect(respuesta.status).toBe(403);
+      expect(respuesta.body.error).toBe('PERMISO_DENEGADO');
+    }
     expect(llamadasAIA()).toBe(0);
+  });
+
+  it('responde 500 sin llamar a la IA ni crear registros cuando falla la lectura de patient_opt_out [US-148 AC-1] (falla cerrada)', async () => {
+    const caso = await crearCasoConIA(mundo, gateway.app, cookieDoctor, rag);
+    const antes = await contarRegistrosDeIA(mundo.cliente);
+    await mundo.cliente.query(
+      'ALTER TABLE clinical.patient_opt_out RENAME TO patient_opt_out_caida',
+    );
+    let analisis, seguimiento, turno;
+    try {
+      analisis = await solicitarAnalisis(cookieDoctor, caso.patientId);
+      seguimiento = await clienteVerificado(gateway.app)
+        .post(rutaDeSeguimiento(caso.analysisId))
+        .set('Cookie', cookieDoctor)
+        .send({ question: PREGUNTA_DE_SEGUIMIENTO });
+      turno = await clienteVerificado(gateway.app)
+        .post(rutaDeTurnos(caso.conversationId))
+        .set('Cookie', cookieDoctor)
+        .send({ question: PREGUNTA_DE_CASO });
+    } finally {
+      await mundo.cliente.query(
+        'ALTER TABLE clinical.patient_opt_out_caida RENAME TO patient_opt_out',
+      );
+    }
+
+    for (const respuesta of [analisis, seguimiento, turno]) {
+      expect(respuesta?.status).toBe(500);
+      expect(respuesta?.body.error).toBe('ERROR_INTERNO');
+    }
+    expect(llamadasAIA()).toBe(0);
+    expect(await contarRegistrosDeIA(mundo.cliente)).toEqual(antes);
   });
 
   it('responde 404 y no 403 cuando el paciente, el análisis o la conversación no existen [US-148 AC-1]', async () => {

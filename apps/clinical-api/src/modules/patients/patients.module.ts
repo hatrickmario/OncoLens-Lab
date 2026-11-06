@@ -4,7 +4,7 @@ import type { Consultador } from '../auth/auth.repository.js';
 import type { CompletenessEnLote, CompletenessService } from '../completeness/ports.js';
 import type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
 import type { TraceIdGenerator } from '../../infrastructure/trace-id-generator.js';
-import { componerModuloDeOptOuts } from '../opt-outs/opt-outs.module.js';
+import type { OptOutService } from '../opt-outs/opt-outs.service.js';
 import type { IdentityService } from './identity.service.js';
 import { patientsController } from './patients.controller.js';
 import { createFichaRepository } from './ficha.repository.js';
@@ -22,6 +22,8 @@ export interface DependenciasDelModulo {
   tiposHabilitados: TiposDeCancerHabilitados;
   /** Checklist de datos críticos para el contador de la ficha: la misma instancia del endpoint y del análisis. */
   completitud: CompletenessService & CompletenessEnLote;
+  /** La misma instancia del guardia de las rutas `generaIA` (RN-15). */
+  optOuts: OptOutService;
   traceIds: TraceIdGenerator;
   registrar: Registrar;
   config: ConfiguracionDePacientes;
@@ -36,8 +38,7 @@ export function componerModuloDePacientes(dependencias: DependenciasDelModulo): 
     tiposHabilitados: dependencias.tiposHabilitados,
     completitud: dependencias.completitud,
     pageSize: dependencias.config.pageSize,
-    optOuts: componerModuloDeOptOuts({ db: dependencias.db, registrar: dependencias.registrar })
-      .optOuts,
+    optOuts: dependencias.optOuts,
   });
   return patientsController({
     service,

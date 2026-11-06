@@ -16,7 +16,7 @@ import {
   crearConversationService,
   type ConversationService,
 } from './conversation/conversation.service.js';
-import { componerModuloDeOptOuts } from '../opt-outs/opt-outs.module.js';
+import type { ModuloDeOptOuts } from '../opt-outs/opt-outs.module.js';
 import { followUpController } from './follow-up.controller.js';
 import { crearFollowUpRepository, type EjecutarEnTransaccion } from './follow-up.repository.js';
 import { crearFollowUpService, type FollowUpService } from './follow-up.service.js';
@@ -52,6 +52,8 @@ export interface ConfiguracionDelGateway extends ConfiguracionDelAnalisis {
 
 export interface DependenciasDelGateway {
   db: Consultador;
+  /** Módulo de opt-outs compuesto una sola vez en la raíz: el mismo que usa la ficha (regla única de RN-15). */
+  optOuts: ModuloDeOptOuts;
   rag: RagQueryClient;
   /** Cliente de `/rag/follow-up` (US-218). */
   ragFollowUp: RagFollowUpPort;
@@ -201,22 +203,19 @@ function componerAnalisis(
 export function componerGatewayDeAnalisis(dependencias: DependenciasDelGateway): Router {
   const repositorio = createEvidenceAnalysisRepository(dependencias.db);
   const service = componerAnalisis(dependencias, repositorio);
-  const { guardia: guardiaDeOptOut } = componerModuloDeOptOuts({
-    db: dependencias.db,
-    registrar: dependencias.registrar,
-  });
+  const { fabricaDeGuardia } = dependencias.optOuts;
   const router = evidenceAnalysisController({
     service,
     traceIds: dependencias.traceIds,
     registrar: dependencias.registrar,
-    guardiaDeOptOut,
+    fabricaDeGuardia,
   });
   const conSeguimiento = followUpController(
     {
       service: componerSeguimiento(dependencias),
       traceIds: dependencias.traceIds,
       registrar: dependencias.registrar,
-      guardiaDeOptOut,
+      fabricaDeGuardia,
     },
     router,
   );
@@ -225,7 +224,7 @@ export function componerGatewayDeAnalisis(dependencias: DependenciasDelGateway):
       service: componerConversacion(dependencias, repositorio),
       traceIds: dependencias.traceIds,
       registrar: dependencias.registrar,
-      guardiaDeOptOut,
+      fabricaDeGuardia,
     },
     conSeguimiento,
   );

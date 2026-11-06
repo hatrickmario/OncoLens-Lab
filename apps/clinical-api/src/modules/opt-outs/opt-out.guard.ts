@@ -1,10 +1,15 @@
 import type { Request, RequestHandler } from 'express';
+import { z } from 'zod';
 import { enviarError } from '../../infrastructure/http-errores.js';
 import type { Registrar } from '../../infrastructure/logger.js';
 import { traceIdDe } from '../../middleware/trace-id.middleware.js';
 import type { UbicadorDePaciente } from './opt-outs.repository.js';
 import type { OptOutService } from './opt-outs.service.js';
-import { rutaGeneraIA, type FuenteDelPaciente, type GuardiaDeOptOut } from './rutas-genera-ia.js';
+import {
+  rutaGeneraIA,
+  type FabricaDeGuardiaDeOptOut,
+  type OrigenDelPacienteDeLaRuta,
+} from './rutas-genera-ia.js';
 
 export interface DependenciasDelGuardia {
   optOuts: OptOutService;
@@ -13,30 +18,34 @@ export interface DependenciasDelGuardia {
 }
 
 const EVENTO = 'opt_out.guardia';
-const PATRON_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Un identificador que no es UUID no puede existir: el guardia deja pasar para que el handler responda su 400/404. */
-const comoUuid = (valor: unknown): string | null =>
-  typeof valor === 'string' && PATRON_UUID.test(valor) ? valor : null;
+export const comoUuid = (valor: unknown): string | null => {
+  const resultado = z.uuid().safeParse(valor);
+  return resultado.success ? resultado.data : null;
+};
 
 type ResolverPaciente = (request: Request) => Promise<string | null>;
 
 function resolverPacienteDe(
-  fuente: FuenteDelPaciente,
+  origen: OrigenDelPacienteDeLaRuta,
   ubicador: UbicadorDePaciente,
 ): ResolverPaciente {
+  const { fuente, parametro } = origen;
+  const idDelParametro = (request: Request): string | null =>
+    parametro === null ? null : comoUuid(request.params[parametro]);
   switch (fuente) {
     case 'cuerpo':
       return (request) =>
         Promise.resolve(comoUuid((request.body as { patientId?: unknown } | undefined)?.patientId));
     case 'analisis':
       return async (request) => {
-        const analysisId = comoUuid(request.params['analysisId']);
+        const analysisId = idDelParametro(request);
         return analysisId === null ? null : ubicador.pacienteDelAnalisis(analysisId);
       };
     case 'conversacion':
       return async (request) => {
-        const conversationId = comoUuid(request.params['conversationId']);
+        const conversationId = idDelParametro(request);
         return conversationId === null ? null : ubicador.pacienteDeLaConversacion(conversationId);
       };
   }
@@ -49,11 +58,13 @@ function resolverPacienteDe(
  * `traceId`, UUID del paciente, `operationId` y `motivo` (nunca la referencia ni el motivo de la marca, RN-10). Falla
  * cerrado: un error al leer la marca llega al manejador final y responde 500 sin llamar a la IA.
  */
-export function crearGuardiaDeOptOut(dependencias: DependenciasDelGuardia): GuardiaDeOptOut {
+export function crearFabricaDeGuardiaDeOptOut(
+  dependencias: DependenciasDelGuardia,
+): FabricaDeGuardiaDeOptOut {
   const { optOuts, ubicador, registrar } = dependencias;
   return (operationId) => {
-    const ruta = rutaGeneraIA(operationId);
-    const resolverPaciente = resolverPacienteDe(ruta.origenDelPaciente, ubicador);
+    const entrada = rutaGeneraIA(operationId);
+    const resolverPaciente = resolverPacienteDe(entrada.origenDelPaciente, ubicador);
     const guardia: RequestHandler = async (request, response, siguiente) => {
       try {
         const patientId = await resolverPaciente(request);

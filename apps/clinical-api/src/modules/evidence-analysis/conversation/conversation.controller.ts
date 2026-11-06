@@ -4,7 +4,10 @@ import { rechazarNoEncontrado } from '../../../infrastructure/http-errores.js';
 import type { Registrar } from '../../../infrastructure/logger.js';
 import { authorize } from '../../../middleware/authorize.js';
 import { crearTraceIdMiddleware, traceIdDe } from '../../../middleware/trace-id.middleware.js';
-import { registrarRutaGeneraIA, type GuardiaDeOptOut } from '../../opt-outs/rutas-genera-ia.js';
+import {
+  registrarRutaGeneraIA,
+  type FabricaDeGuardiaDeOptOut,
+} from '../../opt-outs/rutas-genera-ia.js';
 import { FalloDePersistenciaError } from '../analysis-completion.js';
 import { ChecklistNoDisponibleError, type TraceIdGenerator } from '../ports.js';
 import {
@@ -28,7 +31,7 @@ export interface DependenciasDelControllerDeConversacion {
   traceIds: TraceIdGenerator;
   registrar: Registrar;
   /** Guardia de opt-out de `analisis_ia` de las rutas `generaIA` (RN-15, US-148). */
-  guardiaDeOptOut: GuardiaDeOptOut;
+  fabricaDeGuardia: FabricaDeGuardiaDeOptOut;
 }
 
 const EVENTO = 'conversation.solicitud';
@@ -170,7 +173,7 @@ export function conversationController(
   dependencias: DependenciasDelControllerDeConversacion,
   router: Router = Router(),
 ): Router {
-  const { service, traceIds, registrar, guardiaDeOptOut } = dependencias;
+  const { service, traceIds, registrar, fabricaDeGuardia } = dependencias;
   const emisor = crearEmisorDeConversacion(registrar);
   router.post(
     '/patients/:patientId/conversations',
@@ -187,7 +190,7 @@ export function conversationController(
   registrarRutaGeneraIA(
     router,
     'createConversationTurn',
-    guardiaDeOptOut,
+    fabricaDeGuardia,
     [
       crearTraceIdMiddleware(traceIds),
       authorize('clinical:read'), // x-permission de createConversationTurn

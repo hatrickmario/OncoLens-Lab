@@ -1,3 +1,4 @@
+import { componerModuloDeOptOuts } from '../../src/modules/opt-outs/opt-outs.module.js';
 import { createHash } from 'node:crypto';
 import { delay, http, HttpResponse } from 'msw';
 import type { Client, Pool } from 'pg';
@@ -438,6 +439,7 @@ export async function montarGateway(
   });
   const ruta = componerGatewayDeAnalisis({
     db: mundo.cliente,
+    optOuts: componerModuloDeOptOuts({ db: mundo.cliente, registrar: logger.registrar }),
     rag,
     ragFollowUp: crearRagFollowUpClient(clienteRag),
     ragChat: crearRagChatClient(clienteRag),
@@ -523,14 +525,24 @@ export async function abrirSesion(
   return `oncolens_session=${token}`;
 }
 
+/** Un paciente real sin convenio no admite IA (RN-15, US-148): por defecto los reales de test lo llevan; el sintético no. */
+function convenioPorDefecto(
+  dataOrigin: 'sintetico' | 'real_anonimizado' | 'real_identificado',
+): string | null {
+  return dataOrigin === 'sintetico' ? null : PII_FX_T4A_A.convenio;
+}
+
 /** Paciente sintético extra (la tabla del seed no se toca): con o sin diagnóstico activo y con el origen indicado. */
 export async function crearPacienteSintetico(
   mundo: MundoDeGateway,
   opciones: {
     dataOrigin?: 'sintetico' | 'real_anonimizado' | 'real_identificado';
     conDiagnostico: boolean;
+    /** `agreement_reference`: explícito, o `null`/convenio de test según el origen (ver `convenioPorDefecto`). */
+    convenio?: string | null;
   },
 ): Promise<string> {
+  const dataOrigin = opciones.dataOrigin ?? 'sintetico';
   const { cliente, ids } = mundo;
   const { rows } = await cliente.query<{ id: string }>(
     `SELECT id FROM auth."user" WHERE email = 'doc1@test.local'`,
@@ -540,10 +552,9 @@ export async function crearPacienteSintetico(
     cliente,
     'clinical.patient',
     filaDePaciente(ids, {
-      data_origin: opciones.dataOrigin ?? 'sintetico',
-      // Un paciente real sin convenio no admite IA (RN-15, US-148): los tests de RN-12/RN-13 lo necesitan con convenio.
-      ...(opciones.dataOrigin !== undefined &&
-        opciones.dataOrigin !== 'sintetico' && { agreement_reference: PII_FX_T4A_A.convenio }),
+      data_origin: dataOrigin,
+      agreement_reference:
+        opciones.convenio === undefined ? convenioPorDefecto(dataOrigin) : opciones.convenio,
     }),
   );
   const episodio = await insertar(
