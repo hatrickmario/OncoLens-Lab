@@ -20,8 +20,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from app.application.corpus_metadata.poblacion_puertos import DocumentoParaExtraer, Fragmento
 from app.application.corpus_metadata.esquema_poblacion import cargar_plantilla
+from app.application.corpus_metadata.poblacion_puertos import DocumentoParaExtraer, Fragmento
 from app.application.corpus_metadata.population_fanout import (
     ConfiguracionDePoblacion,
     PopulationFanoutExtractor,

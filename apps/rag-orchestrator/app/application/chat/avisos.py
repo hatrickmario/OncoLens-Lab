@@ -10,4 +10,4 @@ def avisos_del_turno(settings: Settings) -> list[str]:
 
     Los mensajes del sistema (``fuera_de_alcance``, ``no_clasificada``) no son contenido generado y no llaman a esta
     función: llevan ``notices = []``."""
-    return [settings.chat_notice_ai, settings.chat_notice_academic]
+    return [settings.chat_notice_ai, settings.chat_notice_academic, settings.chat_notice_verify]

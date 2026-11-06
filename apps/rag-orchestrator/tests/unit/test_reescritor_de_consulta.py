@@ -12,7 +12,7 @@ from app.infrastructure.llm.fabrica_local import parametros_de_reescritura
 from app.infrastructure.llm.reescritor_de_consulta import ReescritorDeConsultaLocal
 from app.schemas.generated.models import RagQueryInternalRequest
 from tests.support.fakes import RelojFijo, settings_de_prueba
-from tests.support.recuperacion import RELEASE_DE_TEST, Q_HER2, crear_entorno, solicitud_de
+from tests.support.recuperacion import Q_HER2, RELEASE_DE_TEST, crear_entorno, solicitud_de
 from tests.support.reescritura import ReescritorFalso
 
 

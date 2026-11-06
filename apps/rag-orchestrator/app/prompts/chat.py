@@ -78,13 +78,13 @@ def armar_prompt_del_turno(
     return (
         PromptBuilder(instrucciones, VERSION_DEL_PROMPT_DE_CHAT)
         .pregunta(pregunta)
-        .memoria(_texto_de_la_memoria(estado, ventana))
-        .datos_del_paciente(_texto_de_los_hechos(hechos))
+        .memoria(texto_de_la_memoria(estado, ventana))
+        .datos_del_paciente(texto_de_los_hechos(hechos))
         .construir()
     )
 
 
-def _texto_de_los_hechos(hechos: Sequence[HechoDelCaso]) -> str:
+def texto_de_los_hechos(hechos: Sequence[HechoDelCaso]) -> str:
     return "\n".join(_linea_de_hecho(h) for h in hechos) or SIN_DATOS
 
 
@@ -98,7 +98,7 @@ def _linea_de_hecho(hecho: HechoDelCaso) -> str:
     return f"[{hecho.ref}] {hecho.verbalizacion} ({dia}; revisión: {hecho.estado_de_revision}{conflicto})"
 
 
-def _texto_de_la_memoria(estado: EstadoDelHilo, ventana: Sequence[TurnoPrevio]) -> str:
+def texto_de_la_memoria(estado: EstadoDelHilo, ventana: Sequence[TurnoPrevio]) -> str:
     estructurado = estado.estructurado
     evidencia = estructurado.ultima_evidencia
     ultima = (

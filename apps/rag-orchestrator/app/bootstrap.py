@@ -10,11 +10,11 @@ from typing import TYPE_CHECKING, NoReturn
 from fastapi import FastAPI
 from pydantic import ValidationError
 
+from app.api.chat_turn import crear_router_chat_turn
 from app.api.contencion_de_errores import ContencionDeErroresInesperados
 from app.api.dependencies.service_jwt import DependenciaJwtServicio, crear_require_service_jwt
 from app.api.errors import registrar_manejadores_de_error
 from app.api.health import crear_router_health
-from app.api.chat_turn import crear_router_chat_turn
 from app.api.rag_follow_up import crear_router_rag_follow_up
 from app.api.rag_query import crear_router_rag_query
 from app.api.trace import ContextoDeTraceId
@@ -33,8 +33,8 @@ from app.application.consulta_no_componible import (
 )
 from app.application.ports import (
     CatalogoClinico,
-    ChunkSearch,
     ChatTurnPort,
+    ChunkSearch,
     Clock,
     ContadorDeTokens,
     CorpusCatalogReader,
@@ -54,11 +54,13 @@ from app.application.ports import (
     SparseChunkSearch,
     TraceIdGenerator,
 )
-from app.application.seguimiento import ResponderSeguimiento
 from app.application.rag_orchestrator_service import (
     ParametrosDeRecuperacion,
     RAGOrchestratorService,
 )
+from app.application.seguimiento import ResponderSeguimiento
+from app.application.verificacion_de_soporte import VerificadorDeSoporte
+from app.config.entorno import entorno_del_proceso
 from app.config.errores_de_configuracion import (
     MOTIVO_CATALOGO_NO_DISPONIBLE,
     MOTIVO_TIPO_NO_EN_CATALOGO,
@@ -67,16 +69,11 @@ from app.config.errores_de_configuracion import (
 )
 from app.config.logging import registrar_evento, silenciar_urls_de_httpx_en_logs
 from app.config.settings import Settings, claves_de_recuperacion_ausentes, nombres_de_claves
-from app.config.entorno import entorno_del_proceso
 from app.config.telemetria import exigir_telemetria_de_langchain_apagada
 from app.config.version import VERSION_DEL_SERVICIO
 from app.domain.criterios_aplicabilidad import CriteriosDeAplicabilidad
 from app.domain.fusion_de_candidatos import EstrategiaDeFusion
 from app.domain.tipos_habilitados import tipos_ausentes_del_catalogo
-from app.infrastructure.catalogo_clinico.sinonimos import (
-    cargar_terminos_del_catalogo,
-    cargar_terminos_por_tipo,
-)
 from app.infrastructure.catalogo_clinico.aplicabilidad import (
     CriteriosDelCatalogo,
     cargar_criterios_de_aplicabilidad,
@@ -90,6 +87,10 @@ from app.infrastructure.catalogo_clinico.manifiesto import (
     CatalogoNoDisponible,
     cargar_catalogo_del_manifiesto,
 )
+from app.infrastructure.catalogo_clinico.sinonimos import (
+    cargar_terminos_del_catalogo,
+    cargar_terminos_por_tipo,
+)
 from app.infrastructure.clock.system_clock import RelojDelSistema
 from app.infrastructure.fake.fake_chat_turn import FakeChatTurn
 from app.infrastructure.fake.fake_evidence_query import FakeEvidenceQuery
@@ -99,7 +100,6 @@ from app.infrastructure.lenguaje.terminos_prohibidos import (
     ListaDeTerminosNoDisponible,
     cargar_verificador_de_terminos,
 )
-from app.infrastructure.tokenizer.contador_conservador import ContadorConservador
 from app.infrastructure.llm.fabrica_local import (
     crear_cliente_llm_del_chat,
     crear_generador_de_seguimiento_local,
@@ -112,6 +112,7 @@ from app.infrastructure.llm.fabrica_local import (
 from app.infrastructure.llm.openai_compatible_health import OpenAICompatibleLlmHealth
 from app.infrastructure.security.clave_publica import cargar_clave_publica_es256
 from app.infrastructure.security.service_jwt_verifier import ServiceJwtVerifier
+from app.infrastructure.tokenizer.contador_conservador import ContadorConservador
 from app.infrastructure.trace.uuid_trace_id import UuidTraceIdGenerator
 from app.schemas.generated.models import LlmProvider, RetrievalMode
 
@@ -283,7 +284,7 @@ def crear_app(
     )  # el más externo: fija el traceId de los logs
     verificador = _crear_verificador_jwt_de_servicio(settings, clock)
     autenticacion = crear_require_service_jwt(verificador)
-    _registrar_chat(app, settings, chat, autenticacion, clock, catalogo_clinico)
+    _registrar_chat(app, settings, chat, autenticacion, clock, catalogo_clinico, recuperacion)
     _registrar_consulta_de_evidencia(
         app,
         settings,
@@ -458,6 +459,7 @@ def _registrar_chat(
     autenticacion: DependenciaJwtServicio,
     clock: Clock,
     catalogo: CatalogoClinico,
+    recuperacion: PuertosDeRecuperacion | None,
 ) -> None:
     """`POST /chat/turn`: con ``LLM_PROVIDER=fake`` el ejemplo del contrato; con ``local`` el servicio real (RN-12)."""
     if chat is None and settings.llm_provider == "fake":
@@ -473,15 +475,23 @@ def _registrar_chat(
             catalogo,
         )
     elif chat is None:
-        chat = _crear_chat_turn(settings, clock, catalogo)
+        chat = _crear_chat_turn(settings, clock, catalogo, recuperacion)
     app.include_router(crear_router_chat_turn(chat, autenticacion))
 
 
-def _crear_chat_turn(settings: Settings, clock: Clock, catalogo: CatalogoClinico) -> ChatTurnPort:
+def _crear_chat_turn(
+    settings: Settings,
+    clock: Clock,
+    catalogo: CatalogoClinico,
+    recuperacion: PuertosDeRecuperacion | None,
+) -> ChatTurnPort:
     """El turno del chat sobre el LLM local; el estado del hilo vive solo en memoria de este proceso (ADR-51).
 
     Sin los términos del catálogo (``sinonimos.json``) no se puede decidir ``fuera_de_alcance`` por otro tipo de cáncer:
-    el chat falla cerrado (503) en lugar de responder con una regla recortada, como la consulta sin bordes reales."""
+    el chat falla cerrado (503) en lugar de responder con una regla recortada, como la consulta sin bordes reales.
+
+    El NLI del nodo ``caso`` (ADR-34) es el de la recuperación: sin los modelos cargados no hay verificador de soporte y
+    ese nodo falla cerrado (RN-01); las demás intenciones no lo necesitan."""
     try:
         terminos = _terminos_del_catalogo_por_tipo(settings, catalogo)
         verificador = _cargar_lista_de_terminos(settings)
@@ -496,6 +506,25 @@ def _crear_chat_turn(settings: Settings, clock: Clock, catalogo: CatalogoClinico
         reloj=clock,
         settings=settings,
         terminos_por_tipo=terminos,
+        soporte=_crear_soporte_del_chat(settings, clock, verificador, recuperacion),
+    )
+
+
+def _crear_soporte_del_chat(
+    settings: Settings,
+    clock: Clock,
+    verificador_terminos: ProhibitedTermsChecker,
+    recuperacion: PuertosDeRecuperacion | None,
+) -> VerificadorDeSoporte | None:
+    """El verificador de soporte (NLI) del chat sobre el clasificador de la recuperación; ``None`` si falta él o el umbral."""
+    if recuperacion is None or settings.nli_entailment_threshold is None:
+        return None
+    return VerificadorDeSoporte(
+        clasificador=recuperacion.clasificador_nli,
+        terminos=verificador_terminos,
+        umbral=settings.nli_entailment_threshold,
+        reloj=clock,
+        max_palabras_por_afirmacion=settings.claim_max_words,
     )
 
 

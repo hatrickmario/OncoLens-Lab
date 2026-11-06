@@ -13,10 +13,10 @@ import unicodedata
 from collections import defaultdict
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from app.evaluation.estadistica import mediana
 from statistics import mean
 
 from app.evaluation.dataset_loader import Pregunta
+from app.evaluation.estadistica import mediana
 
 ESCALA_COSENO = "coseno_denso"
 ESCALA_SIGMOIDE = "relevance_score_sigmoide"

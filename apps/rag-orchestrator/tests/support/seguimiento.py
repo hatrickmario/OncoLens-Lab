@@ -11,11 +11,12 @@ import json
 from dataclasses import dataclass
 from typing import Any
 
+from fastapi.testclient import TestClient
+
 from app.application.seguimiento import ResponderSeguimiento
 from app.bootstrap import crear_app
 from app.infrastructure.catalogo_clinico.sinonimos import cargar_terminos_por_tipo
 from app.infrastructure.llm.fabrica_local import crear_generador_de_seguimiento_local
-from fastapi.testclient import TestClient
 from tests.support.contract import CATALOGOS
 from tests.support.fakes import GeneradorTraceFijo, RelojFijo, par_de_sesion, settings_de_prueba
 from tests.support.llm_falso import FakeLlmClient

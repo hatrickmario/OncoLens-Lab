@@ -78,6 +78,8 @@ class EstadoDelGrafo(TypedDict, total=False):
     propuestas: tuple[PropuestaDelTurno, ...]
     bloques: tuple[BloqueDelTurno, ...]
     omitidas: int
+    # Las afirmaciones que un nodo de capacidad descartó antes de entregar sus ``propuestas``; ``validar`` las suma.
+    omitidas_del_nodo: int
 
 
 class _Clasificacion(BaseModel):
@@ -213,7 +215,11 @@ class _NodosDelTurno:
                 *bloques,
                 BloqueDelTurno(TipoDeBloque.limitacion, MENSAJE_EVIDENCIA_NO_CONSULTADA),
             )
-        omitidas = len(estado["propuestas"]) - self._cantidad_de_afirmaciones(bloques)
+        omitidas = (
+            len(estado["propuestas"])
+            - self._cantidad_de_afirmaciones(bloques)
+            + estado.get("omitidas_del_nodo", 0)
+        )
         logger.info(
             "event=chat_validacion traceId=%s intencion=%s afirmaciones=%d omittedClaims=%d",
             estado["trace_id"],
@@ -278,7 +284,7 @@ class _EsqueletoDeCapacidad:
     def nodo(self, intencion: Intencion) -> Nodo:
         async def nodo(estado: EstadoDelGrafo) -> dict[str, Any]:
             crudo = await self._pedir_afirmaciones_al_llm(estado, intencion)
-            return {"propuestas": self._propuestas_de_la_salida(crudo, estado["trace_id"])}
+            return {"propuestas": propuestas_de_la_salida(crudo, estado["trace_id"])}
 
         return nodo
 
@@ -298,17 +304,16 @@ class _EsqueletoDeCapacidad:
             logger.warning("event=chat_generacion_llm_fallo traceId=%s", estado["trace_id"])
             raise LlmLocalNoDisponibleError() from None
 
-    @staticmethod
-    def _propuestas_de_la_salida(crudo: str, trace_id: str) -> tuple[PropuestaDelTurno, ...]:
-        try:
-            salida = _SalidaDelTurno.model_validate_json(crudo)
-        except ValidationError:
-            # Sin eco del texto generado: solo el hecho y su tamaño (RN-10, RN-14).
-            logger.warning(
-                "event=chat_salida_invalida traceId=%s caracteres=%d", trace_id, len(crudo)
-            )
-            raise LlmSalidaInvalidaError() from None
-        return tuple(
-            PropuestaDelTurno(a.texto.strip(), tuple(a.fact_refs), tuple(a.citas))
-            for a in salida.afirmaciones
-        )
+
+def propuestas_de_la_salida(crudo: str, trace_id: str) -> tuple[PropuestaDelTurno, ...]:
+    """Las afirmaciones que propone el LLM en el esquema de ``ESQUEMA_DEL_TURNO``; salida inválida → ``LLM_OUTPUT_INVALID``."""
+    try:
+        salida = _SalidaDelTurno.model_validate_json(crudo)
+    except ValidationError:
+        # Sin eco del texto generado: solo el hecho y su tamaño (RN-10, RN-14).
+        logger.warning("event=chat_salida_invalida traceId=%s caracteres=%d", trace_id, len(crudo))
+        raise LlmSalidaInvalidaError() from None
+    return tuple(
+        PropuestaDelTurno(a.texto.strip(), tuple(a.fact_refs), tuple(a.citas))
+        for a in salida.afirmaciones
+    )

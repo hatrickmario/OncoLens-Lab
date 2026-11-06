@@ -7,7 +7,6 @@ extremo, palancas viables) se fijan en ``eval/configs/adr39-fase-a3.yaml`` antes
 
 from __future__ import annotations
 
-from app.evaluation.estadistica import mediana
 import json
 import math
 from collections.abc import Callable, Sequence
@@ -27,6 +26,7 @@ from app.evaluation.chunking_variants import (
 from app.evaluation.config_medicion import ModeloSpec, spec_desde_yaml
 from app.evaluation.dataset_loader import Dataset, Pregunta
 from app.evaluation.envoltorios import MonitorRss, pico_rss_mib
+from app.evaluation.estadistica import mediana
 from app.evaluation.medicion_modelos import (
     construir_corpus,
     cronometrar,

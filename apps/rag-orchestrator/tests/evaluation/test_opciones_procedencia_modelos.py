@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 
+from app.evaluation.config_opciones import cargar_config_opciones
 from app.evaluation.config_suite import cargar_config_suite
 from app.evaluation.corrida import evaluar_pregunta_en_servicio
 from app.evaluation.corrida_opciones import (
@@ -15,7 +16,6 @@ from app.evaluation.corrida_opciones import (
     servicio_de_la_familia,
     solicitud_del_caso,
 )
-from app.evaluation.config_opciones import cargar_config_opciones
 from app.evaluation.dataset_opciones import cargar_dataset_opciones
 from app.evaluation.modelos_locales import OrigenLocal
 from tests.evaluation.test_opciones_aceptacion import CONFIG, correr

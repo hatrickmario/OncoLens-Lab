@@ -104,11 +104,11 @@ def test_chat_turn_caso_devuelve_bloques_documentados_con_factrefs_y_los_tres_av
     assert len(nli.pares_recibidos) == len(cuerpo["blocks"])
 
 
-def test_chat_turn_caso_responde_503_y_no_invoca_la_nube_cuando_el_nli_falla():
+def test_chat_turn_caso_responde_503_sin_afirmaciones_cuando_el_nli_falla():
     nli = NliFalso(error=RuntimeError("sin modelo"))
     entorno = crear_entorno_de_chat("CHAT-CASO-OK", nli=nli)
 
     respuesta = entorno.turno(solicitud_de_turno(Q_CASO))
 
     assert respuesta.status_code == 503
-    assert respuesta.json()["error"]["code"] == "LOCAL_LLM_UNAVAILABLE"
+    assert respuesta.json()["error"] == "LOCAL_LLM_UNAVAILABLE"

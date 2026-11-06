@@ -14,6 +14,7 @@ from typing import Any
 
 from app.application.catalogo_exigido import exigir_catalogo_de_la_solicitud
 from app.application.chat.avisos import avisos_del_turno
+from app.application.chat.capacidades.caso import NodoCaso
 from app.application.chat.grafo import ConfiguracionDelGrafo, EstadoDelGrafo, construir_grafo
 from app.application.chat.registro_de_hilos import RegistroDeHilos
 from app.application.chat.traduccion import (
@@ -31,7 +32,7 @@ from app.application.ports import (
 )
 from app.application.verificacion_de_soporte import VerificadorDeSoporte
 from app.config.settings import Settings
-from app.domain.chat.estado import INTENCIONES_CLASIFICABLES, EstadoDelHilo
+from app.domain.chat.estado import INTENCIONES_CLASIFICABLES, EstadoDelHilo, Intencion
 from app.schemas.generated.models import ChatTurnRequest, ChatTurnResponse
 
 logger = logging.getLogger(__name__)
@@ -64,13 +65,22 @@ class ChatTurnService:
             ttl_segundos=settings.chat_thread_ttl_seconds,
             max_hilos=settings.chat_max_threads,
         )
+        configuracion = ConfiguracionDelGrafo(
+            presupuesto_de_memoria=settings.chat_memory_max_tokens,
+            terminos_por_tipo=terminos_por_tipo,
+        )
+        caso = NodoCaso(
+            llm=llm,
+            contador=contador,
+            configuracion=configuracion,
+            soporte=soporte,
+            max_palabras_por_afirmacion=settings.claim_max_words,
+        )
         self._grafo = construir_grafo(
             llm=llm,
             contador=contador,
-            configuracion=ConfiguracionDelGrafo(
-                presupuesto_de_memoria=settings.chat_memory_max_tokens,
-                terminos_por_tipo=terminos_por_tipo,
-            ),
+            configuracion=configuracion,
+            capacidades={Intencion.caso: caso.ejecutar},
             guardado=self.registro.guardado,
             verificador_terminos=verificador_terminos,
         )

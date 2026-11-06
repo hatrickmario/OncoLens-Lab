@@ -49,7 +49,6 @@ from app.evaluation.config_opciones import (
 )
 from app.evaluation.config_suite import ConfigSuite, cargar_config_suite
 from app.evaluation.corrida import evaluar_pregunta_tolerante, solicitud_base
-from app.evaluation.juez_fidelidad import JuezFidelidad
 from app.evaluation.cronometro import Cronometro, RelojSimulado
 from app.evaluation.dataset_opciones import (
     DatasetOpciones,
@@ -58,6 +57,7 @@ from app.evaluation.dataset_opciones import (
 )
 from app.evaluation.esquema_suite import ESQUEMA_OPCIONES, VERSION_ESQUEMA
 from app.evaluation.guardas import exigir_adapters_locales, exigir_proveedor_local
+from app.evaluation.juez_fidelidad import JuezFidelidad
 from app.evaluation.llamadas import RegistroDeLlamadas
 from app.evaluation.metas import cargar_metas, marcar_frente_a_meta
 from app.evaluation.metricas import opciones_mostradas as medidas
