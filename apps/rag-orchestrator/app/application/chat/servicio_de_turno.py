@@ -199,6 +199,7 @@ def _capacidades_de_evidencia(
             claims_max=settings.claims_max_per_option,
             claim_max_words=settings.claim_max_words,
             max_chars_fragmentos=settings.llm_fragments_max_chars,
+            num_ctx=settings.llm_num_ctx,
         ),
     )
 

@@ -642,7 +642,8 @@ def _crear_servicio_de_recuperacion(
         verificador_terminos=puertos.verificador_terminos,
         # Producción: el LLM local (RN-12). La rama con evidencia ya verifica el soporte NLI y el lenguaje antes de
         # responder (L1D-180, D9 de L1D-275): ninguna opción sin verificar sale de este servicio.
-        generador=generador or crear_generador_local(settings, envolver),
+        generador=generador
+        or crear_generador_local(settings, envolver, _contador_de_tokens(settings)),
         reloj=clock,
         parametros=_parametros_de_recuperacion(settings),
         buscador_sparse=puertos.buscador_sparse,

@@ -185,3 +185,16 @@ def test_chat_turn_omite_y_cuenta_la_afirmacion_citada_con_nli_neutral_en_el_seg
     assert [b["text"] for b in cuerpo["blocks"]] == [f"{MARCO_ES}{TEXTO_DEL_SEGUIMIENTO}"]
     assert cuerpo["omittedClaims"] == 1
     assert TEXTO_SIN_SOPORTE_NLI not in segundo.text
+
+
+def test_chat_turn_registra_el_tamano_del_prompt_del_seguimiento_sin_texto_ni_ids_cuando_genera(
+    caplog,
+):
+    caplog.set_level("INFO")
+    entorno, _ = _entorno("SEG-OK")
+
+    _analisis_y_seguimiento(entorno)
+
+    eventos = [r.getMessage() for r in caplog.records if "chat_evidencia_prompt" in r.getMessage()]
+    assert len(eventos) == 1 and "fase=seguimiento" in eventos[0] and "fragmentos=" in eventos[0]
+    assert Q_SEGUIMIENTO not in caplog.text and ANALISIS_ACTIVO not in caplog.text

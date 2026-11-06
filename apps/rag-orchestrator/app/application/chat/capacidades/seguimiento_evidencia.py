@@ -30,6 +30,7 @@ from app.application.ports import (
     PosicionDeChunks,
     ResultadoDeRecuperacion,
 )
+from app.application.medicion_de_prompt import registrar_tamano_del_prompt
 from app.application.rag_orchestrator_service import (
     LIMITACION_SIN_EVIDENCIA,
     RAGOrchestratorService,
@@ -61,6 +62,8 @@ class ParametrosDelSeguimiento:
     claims_max: int
     claim_max_words: int
     max_chars_fragmentos: int
+    num_ctx: int = 0
+    """``LLM_NUM_CTX``: solo para medir el tamaño del prompt (no cambia ningún comportamiento)."""
 
 
 class _AfirmacionCruda(BaseModel):
@@ -167,6 +170,14 @@ class NodoSeguimientoDeEvidencia:
             claims_min=self._parametros.claims_min,
             claims_max=self._parametros.claims_max,
             claim_max_words=self._parametros.claim_max_words,
+        )
+        registrar_tamano_del_prompt(
+            "seguimiento",
+            trace_id,
+            prompt,
+            len(tabla.fragmentos),
+            self._contador,
+            self._parametros.num_ctx,
         )
         try:
             crudo = await self._llm.completar_json(
