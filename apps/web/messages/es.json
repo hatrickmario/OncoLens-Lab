@@ -580,8 +580,10 @@
       "avisoAnalisisAnteriores": "Los análisis anteriores se hicieron con el valor previo. Un análisis nuevo usará el valor corregido.",
       "formulario": {
         "valor": "Valor",
-        "unidad": "Unidad",
-        "fecha": "Fecha del examen (opcional)",
+        "unidad": "Unidad (opcional)",
+        "sinUnidad": "Sin unidad",
+        "ayudaUnidad": "Déjala vacía si el resultado no lleva unidad.",
+        "fecha": "Fecha del examen",
         "tipoDeNota": "Tipo de nota",
         "nota": "Texto de la nota",
         "guardar": "Guardar mi corrección",

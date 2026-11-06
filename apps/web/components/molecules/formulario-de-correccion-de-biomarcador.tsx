@@ -5,6 +5,7 @@ import type { Biomarker } from '../../../../packages/api-contracts/src/types/cli
 import {
   cuerpoDeCorreccionDeBiomarcador,
   errorDelCuerpoDeBiomarcador,
+  soloElDia,
 } from '../../lib/correcciones/cuerpos';
 import type { RefDeDato } from '../../lib/correcciones/cliente';
 import { useEnvioDeCorreccion } from '../../lib/correcciones/use-envio-de-correccion';
@@ -15,21 +16,25 @@ import { CampoDeTexto } from './campo-de-texto';
 const CAMPOS = ['value', 'unit', 'performedAt'];
 
 export interface FormularioDeCorreccionDeBiomarcadorProps {
-  biomarcador: Pick<Biomarker, 'id' | 'value' | 'unit'>;
+  biomarcador: Pick<Biomarker, 'id' | 'value' | 'unit' | 'performedAt'>;
+  /** «Hoy» del servidor: tope de la fecha del examen. */
+  hoy: string;
   dato: RefDeDato;
   alGuardar: () => void;
   alCancelar: () => void;
 }
 
-/** Corrección en línea (variante A, S5-01): valor, unidad y fecha opcional; el error sale junto al campo y no se cierra. */
+/** Corrección en línea (variante A, S5-01): valor, unidad opcional y fecha del examen, todos precargados; el error sale junto al campo y no se cierra. */
 export function FormularioDeCorreccionDeBiomarcador({
   biomarcador,
+  hoy,
   dato,
   alGuardar,
   alCancelar,
 }: FormularioDeCorreccionDeBiomarcadorProps) {
   const { formulario } = mensajes().ficha.correccion;
   const { enviando, error, enviar, fallar } = useEnvioDeCorreccion(dato, alGuardar);
+  const sinUnidad = !biomarcador.unit;
   const idBase = `correccion-${biomarcador.id}`;
   const errorDe = (campo: string) => (error?.campo === campo ? error.mensaje : undefined);
 
@@ -38,8 +43,9 @@ export function FormularioDeCorreccionDeBiomarcador({
     const cuerpo = cuerpoDeCorreccionDeBiomarcador(
       new FormData(evento.currentTarget),
       biomarcador.unit,
+      biomarcador.performedAt,
     );
-    const invalido = errorDelCuerpoDeBiomarcador(cuerpo);
+    const invalido = errorDelCuerpoDeBiomarcador(cuerpo, hoy);
     if (invalido) fallar(invalido);
     else void enviar(cuerpo);
   }
@@ -59,6 +65,8 @@ export function FormularioDeCorreccionDeBiomarcador({
         name="unit"
         etiqueta={formulario.unidad}
         defaultValue={biomarcador.unit ?? ''}
+        placeholder={sinUnidad ? formulario.sinUnidad : undefined}
+        ayuda={sinUnidad ? formulario.ayudaUnidad : undefined}
         error={errorDe('unit')}
         autoComplete="off"
       />
@@ -67,6 +75,8 @@ export function FormularioDeCorreccionDeBiomarcador({
         name="performedAt"
         type="date"
         etiqueta={formulario.fecha}
+        defaultValue={soloElDia(biomarcador.performedAt)}
+        max={soloElDia(hoy)}
         error={errorDe('performedAt')}
       />
       <div className="flex flex-wrap items-center gap-2 self-center">
