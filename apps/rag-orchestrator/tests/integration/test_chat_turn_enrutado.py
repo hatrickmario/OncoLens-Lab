@@ -9,7 +9,9 @@ import re
 
 import pytest
 
+from app.application.ports import FalloDelLlm
 from app.domain.lenguaje import normalizar_texto
+from tests.support.llm_chat_falso import FakeChatLlm
 from tests.support.chat import (
     Q_CASO,
     Q_EVIDENCIA,
@@ -117,6 +119,39 @@ def test_chat_turn_enruta_a_evidencia_y_no_a_fuera_de_alcance_cuando_la_pregunta
     assert respuesta.status_code == 200
     assert respuesta.json()["intent"] == "evidencia"
     assert entorno.llm.llamadas_de_clasificacion == 0
+
+
+def test_chat_turn_responde_401_sin_llamar_a_ningun_adapter_cuando_falta_el_jwt_de_servicio():
+    entorno = crear_entorno_de_chat("CHAT-OK")
+    solicitud = solicitud_de_turno(Q_CASO)
+
+    respuesta = entorno.cliente.post("/chat/turn", json=solicitud, headers={"Authorization": ""})
+
+    assert respuesta.status_code == 401
+    assert respuesta.json()["error"] == "TOKEN_SERVICIO_INVALIDO"
+    assert entorno.llamadas_a_adapters() == {"llm": 0, "contador": 0}
+
+
+def test_chat_turn_responde_500_error_interno_sin_eco_cuando_un_adapter_falla_de_forma_inesperada():
+    entorno = crear_entorno_de_chat(
+        "CHAT-OK", llm=FakeChatLlm("CHAT-OK", error=RuntimeError("SENTINELA"))
+    )
+
+    respuesta = entorno.turno(solicitud_de_turno(Q_CASO))
+
+    assert respuesta.status_code == 500
+    assert respuesta.json()["error"] == "ERROR_INTERNO"
+    assert "SENTINELA" not in respuesta.text and Q_CASO not in respuesta.text
+
+
+def test_chat_turn_responde_503_local_llm_unavailable_sin_bloques_cuando_el_llm_falla_con_el_error_del_puerto():
+    entorno = crear_entorno_de_chat("CHAT-OK", llm=FakeChatLlm("CHAT-OK", error=FalloDelLlm()))
+
+    respuesta = entorno.turno(solicitud_de_turno(Q_CASO))
+
+    assert respuesta.status_code == 503
+    assert respuesta.json()["error"] == "LOCAL_LLM_UNAVAILABLE"
+    assert "blocks" not in respuesta.json()
 
 
 def test_chat_turn_responde_409_sin_llamar_a_ningun_adapter_cuando_catalog_version_difiere():

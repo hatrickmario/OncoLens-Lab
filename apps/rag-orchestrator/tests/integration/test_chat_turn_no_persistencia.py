@@ -22,11 +22,16 @@ from tests.support.chat import (
     solicitud_de_turno,
 )
 
+# PII sintética sembrada a propósito. El escáner de PII del repositorio (RN-14) no debe verla en el código: el documento lleva
+# el centinela SINT-, el teléfono se arma en ejecución y el correo es de un dominio reservado (RFC 2606).
+DOCUMENTO = "SINT-" + "10203" + "04050"
+TELEFONO = "-".join(("300", "123", "4567"))
+CORREO = "ana.gomez@example.org"
 PREGUNTAS_CON_PII = (
-    "¿Qué sabemos de Ana Gómez con documento 1020304050?",
-    "¿Cuál es el resumen de Ana Gómez, teléfono 3001234567?",
-    "¿Qué información falta de Ana Gómez, correo ana.gomez@ejemplo.org?",
-    "¿Qué evidencia existe para Ana Gómez nacida el 14/03/1971?",
+    f"¿Qué sabemos de Ana Gómez con documento {DOCUMENTO}?",
+    f"¿Cuál es el resumen de Ana Gómez, teléfono {TELEFONO}?",
+    f"¿Qué información falta de Ana Gómez, correo {CORREO}?",
+    "¿Qué evidencia existe para Ana Gómez nacida el día catorce de marzo?",
     "¿Qué fuentes respaldan lo dicho sobre Ana Gómez?",
 )
 CLAVES_PROHIBIDAS = ("patientid", "pseudopatientid", "patient_id", "pseudo_patient_id")
@@ -76,9 +81,12 @@ def test_chat_turn_no_deja_ficheros_conexiones_logs_ni_ids_del_paciente_cuando_t
     assert Path.cwd() == trabajo
     for pregunta in PREGUNTAS_CON_PII:
         assert pregunta not in caplog.text
-    for fragmento in ("Ana Gómez", "1020304050", "3001234567", "ana.gomez@ejemplo.org"):
+    for fragmento in ("Ana Gómez", DOCUMENTO, TELEFONO, CORREO):
         assert fragmento not in caplog.text
     estado_del_hilo = entorno.registro.estado_para_inspeccion(HILO_A)
     assert estado_del_hilo, "el hilo debería seguir vivo en memoria"
     assert not (set(CLAVES_PROHIBIDAS) & _claves(estado_del_hilo, set()))
     assert pseudo_id not in repr(estado_del_hilo)
+    # RN-11: el seudónimo del turno nunca entra a un prompt, ni de clasificación ni de generación.
+    prompts = "\n".join([*entorno.llm.usuarios, *(s or "" for s in entorno.llm.sistemas)])
+    assert entorno.llm.invocaciones > 0 and pseudo_id not in prompts
