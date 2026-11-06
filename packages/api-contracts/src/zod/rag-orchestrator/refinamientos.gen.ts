@@ -1,7 +1,7 @@
 // GENERADO desde apps/rag-orchestrator/openapi.yaml — no editar a mano (npm run contracts:generate)
 
 import * as z from 'zod';
-import { zApplicabilityCriterion, zCitedSource, zEvidenceOption, zRagFollowUpResponse, zRagMeta, zRagQueryInternalResponse, zSourceApplicability, zSupportedClaim, zSynthesis } from './zod.gen.js';
+import { zApplicabilityCriterion, zChatTurnResponse, zCitedSource, zEvidenceOption, zRagFollowUpResponse, zRagMeta, zRagQueryInternalResponse, zSourceApplicability, zSupportedClaim, zSynthesis } from './zod.gen.js';
 
 type Ruta = readonly PropertyKey[];
 type Contexto = { addIssue(incidencia: { code: 'custom'; message: string; path?: PropertyKey[] }): void };
@@ -29,6 +29,15 @@ function verificarApplicabilityCriterion(valor: unknown, ctx: Contexto, ruta: Ru
           verificarCitedSource(elemento1, ctx, [...[...ruta, "citedSources"], indice1]);
         });
       }
+    }
+  }
+}
+function verificarChatTurnResponse(valor: unknown, ctx: Contexto, ruta: Ruta): void {
+  if (esObjeto(valor)) {
+    const objeto0 = valor;
+    if (tiene(objeto0, "evidenceAnalysis")) {
+      const hijo0 = objeto0["evidenceAnalysis"];
+      verificarRagQueryInternalResponse(hijo0, ctx, [...ruta, "evidenceAnalysis"]);
     }
   }
 }
@@ -205,6 +214,7 @@ function verificarSynthesis(valor: unknown, ctx: Contexto, ruta: Ruta): void {
   }
 }
 export const zApplicabilityCriterionRefinado = z.unknown().superRefine((valor, ctx) => verificarApplicabilityCriterion(valor, ctx, [])).pipe(zApplicabilityCriterion);
+export const zChatTurnResponseRefinado = z.unknown().superRefine((valor, ctx) => verificarChatTurnResponse(valor, ctx, [])).pipe(zChatTurnResponse);
 export const zCitedSourceRefinado = z.unknown().superRefine((valor, ctx) => verificarCitedSource(valor, ctx, [])).pipe(zCitedSource);
 export const zEvidenceOptionRefinado = z.unknown().superRefine((valor, ctx) => verificarEvidenceOption(valor, ctx, [])).pipe(zEvidenceOption);
 export const zRagFollowUpResponseRefinado = z.unknown().superRefine((valor, ctx) => verificarRagFollowUpResponse(valor, ctx, [])).pipe(zRagFollowUpResponse);

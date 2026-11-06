@@ -519,6 +519,177 @@ export type RagFollowUpResponse = {
     meta: RagMeta;
 };
 
+/**
+ * Intención del turno. `no_clasificada` y `fuera_de_alcance` son mensajes del sistema (sin contenido generado, `notices` vacío). Una pregunta prescriptiva no es `fuera_de_alcance`: va a `evidencia`.
+ */
+export type ChatIntent = 'caso' | 'faltantes' | 'evidencia' | 'fuentes_limitaciones' | 'no_clasificada' | 'fuera_de_alcance';
+
+/**
+ * Referencia opaca a un hecho del caso, asignada por clinical-api por turno (f1, f2…); nunca un UUID ni un identificador enlazable.
+ */
+export type FactRef = string;
+
+/**
+ * Un hecho del caso ya verbalizado y desidentificado (fechas relativas, RN-11).
+ */
+export type CaseFact = {
+    factRef: FactRef;
+    kind: string;
+    verbalization: TextoEnmascarado;
+    /**
+     * Día relativo al diagnóstico; null si el dato no tiene fecha confiable.
+     */
+    relativeDay: number | null;
+    /**
+     * CaseFactReviewStatus
+     */
+    reviewStatus: 'auto_aceptado' | 'requiere_revision' | 'verificado' | 'corregido';
+    seriesKey?: string;
+    conflictWith?: FactRef;
+    corrected?: boolean;
+};
+
+/**
+ * Un dato esperado del caso y su estado de completitud, sin procedencia.
+ */
+export type ChatCompletenessItem = {
+    item: string;
+    label: string;
+    /**
+     * ChatCompletenessStatus
+     */
+    status: 'presente_verificado' | 'presente_sin_verificar' | 'faltante' | 'no_aplica';
+    /**
+     * ChatGapType
+     *
+     * Tipo de faltante; null si el dato está presente.
+     */
+    gapType: 'no_encontrado' | 'incompleto' | 'por_conciliar' | 'no_buscado' | null;
+    destination: string;
+};
+
+/**
+ * Estado estructurado del hilo que rag-orchestrator devuelve en cada turno y clinical-api guarda para rehidratar. Sin `analysisId`: Backend 2 nunca lo conoce.
+ */
+export type StructuredState = {
+    intentsVistos: Array<ChatIntent>;
+    preguntasPrevias: Array<TextoEnmascarado>;
+    opcionesMostradas: Array<string>;
+    /**
+     * chunkId de cada fuente ya mostrada.
+     */
+    citasMostradas: Array<string>;
+    faltantesSenalados: Array<string>;
+    ultimaEvidencia?: {
+        query: TextoEnmascarado;
+        chunkIds: Array<string>;
+        /**
+         * null si no hubo evidencia (RN-02); null no es 0.0.
+         */
+        topRelevanceScore: number | null;
+    };
+};
+
+/**
+ * Turno previo ya enmascarado. Solo estos campos: nunca resourceId, UUID, fechas absolutas, analysisId ni enlaces a datos.
+ */
+export type ChatRehydrationTurn = {
+    question: TextoEnmascarado;
+    intent: ChatIntent;
+    blocksText: Array<TextoEnmascarado>;
+    factRefs: Array<FactRef>;
+};
+
+/**
+ * Lo que clinical-api reenvía cuando rag-orchestrator no conoce el hilo: los últimos turnos enmascarados y el estado estructurado. Reconstruye un hilo equivalente al vivo. El primer turno de una conversación también la lleva, con `turns` vacío y un estado estructurado vacío: sin ella, un `threadId` que el servicio no conoce responde 404 HILO_DESCONOCIDO.
+ */
+export type ChatRehydration = {
+    turns: Array<ChatRehydrationTurn>;
+    structuredState: StructuredState;
+};
+
+export type ChatTurnRequest = {
+    /**
+     * Identificador aleatorio de la conversación (UUID v4 generado con un generador criptográfico, no derivado de ningún dato del paciente), emitido por clinical-api. Nunca el patientId ni el pseudoPatientId. Es la única clave del estado efímero del hilo.
+     */
+    threadId: string;
+    /**
+     * Aleatorio por turno; se usa solo dentro del turno y nunca entra al prompt ni al estado del hilo.
+     */
+    pseudoPatientId: string;
+    traceId: TraceId;
+    /**
+     * Pregunta ya enmascarada (RN-11) y normalizada por clinical-api (NFC, espacios colapsados). rag-orchestrator vuelve a normalizarla; vacía tras normalizar → 422.
+     */
+    question: string;
+    dataClassification: DataClassification;
+    catalogVersion: string;
+    clinicalContext: ClinicalContext;
+    caseFacts: Array<CaseFact>;
+    completeness: Array<ChatCompletenessItem>;
+    rehydration?: ChatRehydration;
+};
+
+/**
+ * Cita de un bloque `evidencia`. Todos los campos se copian del catálogo del corpus y del chunk recuperado en ese turno, nunca del texto generado (RN-04); si el catálogo no registra un dato, viaja "No disponible" (RN-25).
+ */
+export type ChatCitation = {
+    chunkId: string;
+    /**
+     * Identificador del documento en el catálogo del corpus (no un documento clínico).
+     */
+    documentId: string;
+    sourceTitle: string;
+    /**
+     * Posición del chunk dentro del documento (desde 1).
+     */
+    chunkOrdinal: number;
+    /**
+     * Chunks vigentes del documento.
+     */
+    chunkCount: number;
+    /**
+     * Texto original de la fuente, sin traducir.
+     */
+    chunkTextSnapshot: string;
+};
+
+/**
+ * Un bloque de la respuesta. `documentado`, `interpretacion` y `conflicto` llevan al menos un `factRef`; `evidencia` lleva al menos una cita y pasa el chequeo NLI; `faltante`, `catalogo`, `limitacion` y `fuente` son deterministas (catálogo, configuración o metadatos) y están exentos. El bloque `fuente` describe un documento con metadatos del catálogo y no lleva `chunkId`.
+ */
+export type ChatBlock = {
+    /**
+     * ChatBlockKind
+     */
+    kind: 'documentado' | 'interpretacion' | 'catalogo' | 'evidencia' | 'conflicto' | 'faltante' | 'limitacion' | 'fuente';
+    text: string;
+    factRefs?: Array<FactRef>;
+    citations?: Array<ChatCitation>;
+};
+
+export type ChatTurnResponse = {
+    intent: ChatIntent;
+    subintent?: 'seguimiento_evidencia';
+    blocks: Array<ChatBlock>;
+    /**
+     * Afirmaciones sin soporte del turno (o respaldadas solo por la memoria) que se omitieron.
+     */
+    omittedClaims: number;
+    /**
+     * Resultado del pipeline de evidencia de este turno (mismo tipo que la respuesta de /rag/query). clinical-api lo persiste y construye con lo persistido el EvidenceAnalysis de su ConversationTurn.
+     */
+    evidenceAnalysis?: RagQueryInternalResponse;
+    structuredState: StructuredState;
+    /**
+     * Dónde corrió el modelo (RN-12); mismo vocabulario que RagMeta.llmProvider.
+     */
+    llmProvider: 'local' | 'nube';
+    /**
+     * Avisos de IA (RN-19) tomados de la configuración de rag-orchestrator, sin punto final. Vacío en los mensajes del sistema (`fuera_de_alcance`, `no_clasificada`).
+     */
+    notices: Array<string>;
+};
+
 export type CaseSummaryInternalRequest = {
     traceId: TraceId;
     dataClassification: DataClassification;
@@ -712,6 +883,15 @@ export type ErrorTipoCancerNoRegistrado = {
 
 export type ErrorDeadlineVencido = {
     error: 'DEADLINE_VENCIDO';
+    message: string;
+    traceId: string;
+};
+
+/**
+ * El hilo del chat no existe en la memoria de rag-orchestrator (reinicio, TTL vencido o desalojo por antigüedad). clinical-api lo atrapa y reenvía el turno con `rehydration`. Mensaje fijo, sin eco (RN-10).
+ */
+export type ErrorHiloDesconocido = {
+    error: 'HILO_DESCONOCIDO';
     message: string;
     traceId: string;
 };
@@ -927,6 +1107,57 @@ export type AnswerFollowUpResponses = {
 };
 
 export type AnswerFollowUpResponse = AnswerFollowUpResponses[keyof AnswerFollowUpResponses];
+
+export type ChatTurnData = {
+    body: ChatTurnRequest;
+    headers?: {
+        /**
+         * Mismo valor que traceId del cuerpo (o uno nuevo si falta o no cumple el patrón); liga todas las líneas de log de la request (NFR-10).
+         */
+        'X-Trace-Id'?: TraceId;
+    };
+    path?: never;
+    query?: never;
+    url: '/chat/turn';
+};
+
+export type ChatTurnErrors = {
+    /**
+     * JWT de servicio ausente o inválido.
+     */
+    401: ErrorTokenServicioInvalido;
+    /**
+     * Hilo desconocido (HILO_DESCONOCIDO): rag-orchestrator no tiene el hilo y la petición no trae `rehydration`. No se invoca ningún adapter.
+     */
+    404: ErrorHiloDesconocido;
+    /**
+     * catalogVersion distinto del catálogo cargado (ADR-38).
+     */
+    409: ErrorCatalogVersionMismatch;
+    /**
+     * Cuerpo inválido (CUERPO_INVALIDO, sin eco del valor): incluye una `rehydration` con campos fuera de la lista permitida.
+     */
+    422: ErrorValidacion;
+    /**
+     * Fallo inesperado que ningún borde tradujo. Cuerpo fijo, sin detalle ni eco de la petición (RN-10); no es un camino de negocio: nada se reintenta ni se completa con una respuesta parcial.
+     */
+    500: ErrorInterno;
+    /**
+     * El modelo local no está disponible (LOCAL_LLM_UNAVAILABLE) o su salida de generación no se pudo validar (LLM_OUTPUT_INVALID, sin bloques ni texto generado): falla cerrada, ninguna afirmación se devuelve sin validar (RN-01). Con datos reales solo modelos locales (RN-12).
+     */
+    503: ErrorLlmLocalNoDisponible | ErrorSalidaLlmInvalida;
+};
+
+export type ChatTurnError = ChatTurnErrors[keyof ChatTurnErrors];
+
+export type ChatTurnResponses = {
+    /**
+     * Respuesta del turno.
+     */
+    200: ChatTurnResponse;
+};
+
+export type ChatTurnResponse2 = ChatTurnResponses[keyof ChatTurnResponses];
 
 export type ExtractDocumentData = {
     body: {

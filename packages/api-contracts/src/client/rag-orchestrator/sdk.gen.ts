@@ -2,7 +2,7 @@
 
 import { client } from './client.gen.js';
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client/index.js';
-import type { AnswerFollowUpData, AnswerFollowUpErrors, AnswerFollowUpResponses, CaseSummaryData, CaseSummaryErrors, CaseSummaryResponses, ExtractDocumentData, ExtractDocumentErrors, ExtractDocumentResponses, GetHealthData, GetHealthErrors, GetHealthResponses, RagQueryData, RagQueryErrors, RagQueryResponses } from './types.gen.js';
+import type { AnswerFollowUpData, AnswerFollowUpErrors, AnswerFollowUpResponses, CaseSummaryData, CaseSummaryErrors, CaseSummaryResponses, ChatTurnData, ChatTurnErrors, ChatTurnResponses, ExtractDocumentData, ExtractDocumentErrors, ExtractDocumentResponses, GetHealthData, GetHealthErrors, GetHealthResponses, RagQueryData, RagQueryErrors, RagQueryResponses } from './types.gen.js';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -48,6 +48,21 @@ export const ragQuery = <ThrowOnError extends boolean = false>(options: Options<
 export const answerFollowUp = <ThrowOnError extends boolean = false>(options: Options<AnswerFollowUpData, ThrowOnError>): RequestResult<AnswerFollowUpResponses, AnswerFollowUpErrors, ThrowOnError> => (options.client ?? client).post<AnswerFollowUpResponses, AnswerFollowUpErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/rag/follow-up',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Resuelve un turno de la conversación del oncólogo sobre un paciente
+ *
+ * Invocado solo por clinical-api (FEAT-12, ADR-51). Un grafo por turno enruta la pregunta (reglas deterministas primero; si ninguna clasifica, una única clasificación JSON con el LLM local; salida inválida → `no_clasificada`) y la resuelve con los puertos de recuperación, reranker, NLI y LLM. El estado del hilo vive solo en memoria del proceso, con TTL y límite de hilos vivos: un `threadId` desconocido sin `rehydration` responde 404 HILO_DESCONOCIDO y clinical-api reenvía el turno con `rehydration` (últimos turnos enmascarados y estado estructurado, solo los campos del esquema). rag-orchestrator no guarda nada del paciente: ni en disco, ni en `corpus`, ni en Milvus, ni en los logs. `question` llega enmascarada (RN-11); el `pseudoPatientId` es nuevo en cada turno y nunca va en el prompt. Toda afirmación mostrada cita un dato del paciente o un chunk recuperado en ESE turno y pasa el chequeo NLI; la memoria nunca es cita ni soporte (RN-01, RN-24). `notices` lo rellena siempre este servicio en los turnos con contenido generado (RN-19). Con datos reales solo se usan modelos locales, sin fallback a la nube (RN-12).
+ */
+export const chatTurn = <ThrowOnError extends boolean = false>(options: Options<ChatTurnData, ThrowOnError>): RequestResult<ChatTurnResponses, ChatTurnErrors, ThrowOnError> => (options.client ?? client).post<ChatTurnResponses, ChatTurnErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/chat/turn',
     ...options,
     headers: {
         'Content-Type': 'application/json',

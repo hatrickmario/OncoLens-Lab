@@ -14,19 +14,29 @@ from app.api.contencion_de_errores import ContencionDeErroresInesperados
 from app.api.dependencies.service_jwt import DependenciaJwtServicio, crear_require_service_jwt
 from app.api.errors import registrar_manejadores_de_error
 from app.api.health import crear_router_health
+from app.api.chat_turn import crear_router_chat_turn
 from app.api.rag_follow_up import crear_router_rag_follow_up
 from app.api.rag_query import crear_router_rag_query
 from app.api.trace import ContextoDeTraceId
 from app.application.aplicabilidad import ApplicabilityService
 from app.application.catalogo_exigido import (
+    ChatConCatalogoExigido,
     ConsultaConCatalogoExigido,
     SeguimientoConCatalogoExigido,
 )
-from app.application.consulta_no_componible import ConsultaNoComponible, SeguimientoNoComponible
+from app.application.chat.registro_de_hilos import RegistroDeHilos
+from app.application.chat.servicio_de_turno import ChatTurnService
+from app.application.consulta_no_componible import (
+    ChatNoComponible,
+    ConsultaNoComponible,
+    SeguimientoNoComponible,
+)
 from app.application.ports import (
     CatalogoClinico,
     ChunkSearch,
+    ChatTurnPort,
     Clock,
+    ContadorDeTokens,
     CorpusCatalogReader,
     CorpusReleaseReader,
     EtiquetasDeDatosCriticos,
@@ -57,6 +67,8 @@ from app.config.errores_de_configuracion import (
 )
 from app.config.logging import registrar_evento, silenciar_urls_de_httpx_en_logs
 from app.config.settings import Settings, claves_de_recuperacion_ausentes, nombres_de_claves
+from app.config.entorno import entorno_del_proceso
+from app.config.telemetria import exigir_telemetria_de_langchain_apagada
 from app.config.version import VERSION_DEL_SERVICIO
 from app.domain.criterios_aplicabilidad import CriteriosDeAplicabilidad
 from app.domain.fusion_de_candidatos import EstrategiaDeFusion
@@ -79,6 +91,7 @@ from app.infrastructure.catalogo_clinico.manifiesto import (
     cargar_catalogo_del_manifiesto,
 )
 from app.infrastructure.clock.system_clock import RelojDelSistema
+from app.infrastructure.fake.fake_chat_turn import FakeChatTurn
 from app.infrastructure.fake.fake_evidence_query import FakeEvidenceQuery
 from app.infrastructure.fake.fake_follow_up import FakeFollowUp
 from app.infrastructure.fake.fake_llm_health import FakeLlmHealth
@@ -86,7 +99,9 @@ from app.infrastructure.lenguaje.terminos_prohibidos import (
     ListaDeTerminosNoDisponible,
     cargar_verificador_de_terminos,
 )
+from app.infrastructure.tokenizer.contador_conservador import ContadorConservador
 from app.infrastructure.llm.fabrica_local import (
+    crear_cliente_llm_del_chat,
     crear_generador_de_seguimiento_local,
     crear_generador_local,
     crear_proponente_local,
@@ -235,6 +250,7 @@ def crear_app(
     clock: Clock | None = None,
     consulta: EvidenceQueryPort | None = None,
     seguimiento: FollowUpPort | None = None,
+    chat: ChatTurnPort | None = None,
     recuperacion: PuertosDeRecuperacion | None = None,
     corpus: PuertosDelCorpus | None = None,
     cargador_de_modelos: CargadorDeModelos | None = None,
@@ -244,6 +260,7 @@ def crear_app(
     datos_criticos: EtiquetasDeDatosCriticos | None = None,
 ) -> FastAPI:
     silenciar_urls_de_httpx_en_logs()
+    exigir_telemetria_de_langchain_apagada(entorno_del_proceso())
     modelos = _cargar_modelos_segun(settings, cargador_de_modelos)
     catalogo_clinico = catalogo_clinico or _montar_catalogo_clinico(settings)
     recuperacion = recuperacion or _componer_recuperacion(
@@ -265,12 +282,14 @@ def crear_app(
         ContextoDeTraceId, trace_ids=trace_ids
     )  # el más externo: fija el traceId de los logs
     verificador = _crear_verificador_jwt_de_servicio(settings, clock)
+    autenticacion = crear_require_service_jwt(verificador)
+    _registrar_chat(app, settings, chat, autenticacion, clock, catalogo_clinico)
     _registrar_consulta_de_evidencia(
         app,
         settings,
         consulta=consulta,
         seguimiento=seguimiento,
-        autenticacion=crear_require_service_jwt(verificador),
+        autenticacion=autenticacion,
         recuperacion=recuperacion,
         clock=clock,
         generador=generador,
@@ -430,6 +449,63 @@ def _registrar_consulta_de_evidencia(
         app.include_router(crear_router_rag_query(consulta, autenticacion))
     if seguimiento_propio is not None:
         app.include_router(crear_router_rag_follow_up(seguimiento_propio, autenticacion))
+
+
+def _registrar_chat(
+    app: FastAPI,
+    settings: Settings,
+    chat: ChatTurnPort | None,
+    autenticacion: DependenciaJwtServicio,
+    clock: Clock,
+    catalogo: CatalogoClinico,
+) -> None:
+    """`POST /chat/turn`: con ``LLM_PROVIDER=fake`` el ejemplo del contrato; con ``local`` el servicio real (RN-12)."""
+    if chat is None and settings.llm_provider == "fake":
+        chat = ChatConCatalogoExigido(
+            FakeChatTurn.desde_directorio(
+                settings.fake_responses_path,
+                RegistroDeHilos(
+                    reloj=clock,
+                    ttl_segundos=settings.chat_thread_ttl_seconds,
+                    max_hilos=settings.chat_max_threads,
+                ),
+            ),
+            catalogo,
+        )
+    elif chat is None:
+        chat = _crear_chat_turn(settings, clock, catalogo)
+    app.include_router(crear_router_chat_turn(chat, autenticacion))
+
+
+def _crear_chat_turn(settings: Settings, clock: Clock, catalogo: CatalogoClinico) -> ChatTurnPort:
+    """El turno del chat sobre el LLM local; el estado del hilo vive solo en memoria de este proceso (ADR-51).
+
+    Sin los términos del catálogo (``sinonimos.json``) no se puede decidir ``fuera_de_alcance`` por otro tipo de cáncer:
+    el chat falla cerrado (503) en lugar de responder con una regla recortada, como la consulta sin bordes reales."""
+    try:
+        terminos = _terminos_del_catalogo_por_tipo(settings, catalogo)
+        verificador = _cargar_lista_de_terminos(settings)
+    except (CatalogoNoDisponible, ConfiguracionDeRecuperacionIncompleta):
+        logger.warning("event=chat_no_componible motivo=catalogo_sin_terminos")
+        return ChatNoComponible()
+    return ChatTurnService(
+        verificador_terminos=verificador,
+        llm=crear_cliente_llm_del_chat(settings),
+        catalogo=catalogo,
+        contador=_contador_de_tokens(settings),
+        reloj=clock,
+        settings=settings,
+        terminos_por_tipo=terminos,
+    )
+
+
+def _contador_de_tokens(settings: Settings) -> ContadorDeTokens:
+    """El tokenizer local del LLM si está montado; si no, el contador conservador (sobreestima, nunca excede el presupuesto)."""
+    if settings.llm_tokenizer_path is None:
+        return ContadorConservador()
+    from app.infrastructure.tokenizer.contador_de_tokens import ContadorDeTokensLocal
+
+    return ContadorDeTokensLocal(settings.llm_tokenizer_path)
 
 
 def _crear_seguimiento(

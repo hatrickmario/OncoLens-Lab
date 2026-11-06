@@ -49,7 +49,11 @@ si ya existe con nombre, se reutiliza (una regla, un dueño).
 turnos persistidos en orden y emite **solo** `{ turns: [{ question (enmascarada), intent, blocksText[], factRefs[] }],
 structuredState }` (el `structured_state` del último turno). Es una lista blanca: nunca `resourceId`, UUID, fechas
 absolutas, `analysisId`, `dataLinks`, `createdAt` ni `id` (RN-11). `blocksText` son los `text` de los bloques, que ya
-llevan días relativos. El `404 ErrorHiloDesconocido` (`{error: HILO_DESCONOCIDO, message, traceId}`) se atrapa en el
+llevan días relativos. **El primer turno** de la conversación (sin turnos persistidos) ya lleva `rehydration = { turns: [],
+structuredState: vacío }` (`construirRehidratacion([])`): `rag-orchestrator` responde `404` a un hilo que no conoce y no distingue
+uno nuevo de uno perdido. El reenvío tras `404` queda para el hilo vivo que rag perdió (reinicio, TTL o desalojo). El
+`threadId` se genera con `randomUUID()` (test en L1D-315: dos conversaciones distintas tienen `threadId` distintos y con forma
+UUID v4, nunca derivado de `patientId`). El `404 ErrorHiloDesconocido` (`{error: HILO_DESCONOCIDO, message, traceId}`) se atrapa en el
 adapter de `ChatTurnPort` y dispara un único reenvío; el segundo `HILO_DESCONOCIDO` → `502 ErrorServicioIa`
 (`servicioIa('hilo_desconocido')` añadido a la tabla de `rag-failure.ts`, sin tabla paralela). `structured_state` se
 guarda tal como lo devuelve `/chat/turn` (JSON desidentificado, ver Privacidad).

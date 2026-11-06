@@ -1,0 +1,5 @@
+{
+  "error": "HILO_DESCONOCIDO",
+  "message": "El hilo de la conversación no existe en este servicio.",
+  "traceId": "req_c4a1d2e3"
+}

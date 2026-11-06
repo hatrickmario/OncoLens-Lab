@@ -14,6 +14,8 @@ from app.domain.nli import ParNli, ResultadoNli
 from app.domain.relevance import ChunkPuntuado
 from app.domain.support import CampoGenerado
 from app.schemas.generated.models import (
+    ChatTurnRequest,
+    ChatTurnResponse,
     RagFollowUpRequest,
     RagFollowUpResponse,
     RagMeta,
@@ -38,6 +40,20 @@ class FollowUpPort(Protocol):
     """Seguimiento de `/rag/follow-up` (US-218): sin estado, una llamada se resuelve solo con su cuerpo."""
 
     async def responder(self, solicitud: RagFollowUpRequest) -> RagFollowUpResponse: ...
+
+
+class ChatTurnPort(Protocol):
+    """Turno del chat de `/chat/turn` (US-259, ADR-51): el estado del hilo vive solo en memoria del proceso."""
+
+    async def turno(self, solicitud: ChatTurnRequest) -> ChatTurnResponse: ...
+
+
+class ContadorDeTokens(Protocol):
+    """Cuenta los tokens de un texto con el tokenizer del LLM, para acotar la memoria del chat (``CHAT_MEMORY_MAX_TOKENS``).
+
+    Un texto vacío cuenta ``0`` (nunca ``None``); el resultado es un entero y no cambia entre llamadas con el mismo texto."""
+
+    def contar(self, texto: str) -> int: ...
 
 
 class TraceIdGenerator(Protocol):

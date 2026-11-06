@@ -19,6 +19,13 @@ from app.domain.atribucion import (
     CLAIMS_MAX_INICIAL,
     CLAIMS_MIN_INICIAL,
 )
+from app.domain.chat.valores_iniciales import (
+    AVISO_ACADEMICO_INICIAL,
+    AVISO_DE_IA_INICIAL,
+    CHAT_MAX_HILOS_INICIAL,
+    CHAT_MEMORY_MAX_TOKENS_INICIAL,
+    CHAT_THREAD_TTL_SEGUNDOS_INICIAL,
+)
 from app.domain.corpus_seed.admisibilidad import (
     ClaseDeLicencia,
     clase_contradice_el_texto,
@@ -114,6 +121,16 @@ class Settings(BaseSettings):
         default=REESCRITURA_MAX_TOKENS_DE_SALIDA_INICIAL, gt=0
     )
     query_rewrite_max_terms: int = Field(default=REESCRITURA_MAX_TERMINOS_INICIAL, gt=0)
+    # Chat (US-259, ADR-51, RN-22): estado efímero del hilo en memoria del proceso. `CHAT_THREAD_TTL_SECONDS` vence el hilo
+    # inactivo, `CHAT_MAX_THREADS` desaloja el más antiguo y `CHAT_MEMORY_MAX_TOKENS` acota la ventana de turnos previos.
+    chat_thread_ttl_seconds: int = Field(default=CHAT_THREAD_TTL_SEGUNDOS_INICIAL, gt=0)
+    chat_max_threads: int = Field(default=CHAT_MAX_HILOS_INICIAL, gt=0)
+    chat_memory_max_tokens: int = Field(default=CHAT_MEMORY_MAX_TOKENS_INICIAL, gt=0)
+    # Avisos de RN-19 que Backend 2 emite en todo turno con contenido generado (sin punto final).
+    chat_notice_ai: str = Field(default=AVISO_DE_IA_INICIAL, min_length=1)
+    chat_notice_academic: str = Field(default=AVISO_ACADEMICO_INICIAL, min_length=1)
+    # tokenizer.json local del LLM para contar la memoria del chat; sin él se usa un contador conservador por caracteres.
+    llm_tokenizer_path: Path | None = None
     # Longitud máxima del código de tipo de cáncer que entra al filtro de Milvus (RN-22).
     retrieval_cancer_type_max_length: int = Field(default=64, gt=0)
     # Probabilidad mínima de `entailment` que cuenta como soporte (RN-01, RN-22, L1D-180); la calibra la evaluación (US-072).

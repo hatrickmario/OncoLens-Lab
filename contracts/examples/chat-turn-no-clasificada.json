@@ -1,0 +1,23 @@
+{
+  "intent": "no_clasificada",
+  "blocks": [
+    {
+      "kind": "limitacion",
+      "text": "No se pudo clasificar la pregunta. Puede reformularse indicando si se refiere a la situación del caso, a los datos que faltan o a la evidencia científica."
+    }
+  ],
+  "omittedClaims": 0,
+  "structuredState": {
+    "intentsVistos": [
+      "no_clasificada"
+    ],
+    "preguntasPrevias": [
+      "Necesito ayuda con este caso"
+    ],
+    "opcionesMostradas": [],
+    "citasMostradas": [],
+    "faltantesSenalados": []
+  },
+  "llmProvider": "local",
+  "notices": []
+}

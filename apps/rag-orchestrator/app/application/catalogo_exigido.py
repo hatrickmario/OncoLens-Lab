@@ -2,9 +2,11 @@
 
 import logging
 
-from app.application.ports import CatalogoClinico, EvidenceQueryPort, FollowUpPort
+from app.application.ports import CatalogoClinico, ChatTurnPort, EvidenceQueryPort, FollowUpPort
 from app.domain.catalogo import CatalogVersionMismatchError, exigir_misma_version_de_catalogo
 from app.schemas.generated.models import (
+    ChatTurnRequest,
+    ChatTurnResponse,
     RagFollowUpRequest,
     RagFollowUpResponse,
     RagQueryInternalRequest,
@@ -37,6 +39,20 @@ class ConsultaConCatalogoExigido:
             self._catalogo, solicitud.traceId.root, solicitud.catalogVersion
         )
         return await self._interna.consultar(solicitud)
+
+
+class ChatConCatalogoExigido:
+    """Decorador de ``ChatTurnPort``: comprueba el catálogo antes de delegar (lo usa el modo ``fake``, como el análisis)."""
+
+    def __init__(self, interna: ChatTurnPort, catalogo: CatalogoClinico) -> None:
+        self._interna = interna
+        self._catalogo = catalogo
+
+    async def turno(self, solicitud: ChatTurnRequest) -> ChatTurnResponse:
+        exigir_catalogo_de_la_solicitud(
+            self._catalogo, solicitud.traceId.root, solicitud.catalogVersion
+        )
+        return await self._interna.turno(solicitud)
 
 
 class SeguimientoConCatalogoExigido:

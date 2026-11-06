@@ -55,6 +55,11 @@ def _cliente_llm_local(
     return envolver_cliente(cliente) if envolver_cliente else cliente
 
 
+def crear_cliente_llm_del_chat(settings: Settings) -> LlmClient:
+    """El cliente del LLM nativo local para el chat (clasificación y nodos de capacidad); sin nube ni *fallback* (RN-12)."""
+    return _cliente_llm_local(settings, None)
+
+
 def crear_generador_local(
     settings: Settings, envolver_cliente: EnvolverCliente | None = None
 ) -> LlmEvidenceGenerator:

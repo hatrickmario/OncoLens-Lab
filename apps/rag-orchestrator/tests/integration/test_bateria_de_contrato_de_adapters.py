@@ -9,11 +9,13 @@ from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+from pathlib import Path
 
 import pytest
 
 from app.application.ports import (
     ChunkEncontrado,
+    ContadorDeTokens,
     FalloDeInferencia,
     LanguageDetector,
     QueryEmbedder,
@@ -27,12 +29,16 @@ from app.infrastructure.embeddings.bge_m3 import (
 )
 from app.infrastructure.language.detector_local import DetectorDeIdiomaLocal
 from app.infrastructure.reranker.bge_reranker import BgeReranker
+from app.infrastructure.tokenizer.contador_conservador import ContadorConservador
+from app.infrastructure.tokenizer.contador_de_tokens import ContadorDeTokensLocal
+from tests.support.contador_de_tokens_falso import ContadorPorPalabras
 from tests.support.inferencia_falsa import (
     PASAJES_FX06AC,
     SesionDeEmbeddingsFalsa,
     SesionDeLogitsFalsa,
     TokenizadorFalso,
 )
+from tests.support.onnx_minimo import tokenizer_json
 from tests.support.recuperacion import (
     Q_HER2,
     Q_SIN,
@@ -238,3 +244,42 @@ def test_el_fallo_de_un_modelo_llega_a_rag_query_como_503_retrieval_unavailable_
     assert respuesta.json()["error"] == "RETRIEVAL_UNAVAILABLE"
     assert entorno.generador.invocaciones == 0
     assert "fallo" not in respuesta.text and Q_HER2 not in respuesta.text
+
+
+# --- ContadorDeTokens del chat (US-259): la misma batería sobre el adapter real, el conservador y el fake -------------
+
+
+def _contador_local(tmp_path: Path) -> ContadorDeTokens:
+    ruta = tmp_path / "tokenizer.json"
+    ruta.write_bytes(tokenizer_json())
+    return ContadorDeTokensLocal(ruta)
+
+
+CONTADORES = {
+    "real-con-tokenizer": _contador_local,
+    "conservador": lambda _tmp: ContadorConservador(),
+    "fake": lambda _tmp: ContadorPorPalabras(),
+}
+
+
+@pytest.mark.parametrize("fabrica", list(CONTADORES.values()), ids=list(CONTADORES))
+def test_el_contador_cuenta_un_entero_y_cero_para_el_texto_vacio_nunca_none(fabrica, tmp_path):
+    contador = fabrica(tmp_path)
+
+    assert contador.contar("") == 0 and type(contador.contar("")) is int
+    assert type(contador.contar("hola mundo")) is int and contador.contar("hola mundo") > 0
+
+
+@pytest.mark.parametrize("fabrica", list(CONTADORES.values()), ids=list(CONTADORES))
+def test_el_contador_es_determinista_y_no_decrece_cuando_el_texto_crece(fabrica, tmp_path):
+    contador = fabrica(tmp_path)
+    corto, largo = "hola mundo", "hola mundo hola mundo hola"
+
+    assert contador.contar(corto) == contador.contar(corto)
+    assert contador.contar(largo) >= contador.contar(corto)
+
+
+def test_el_contador_conservador_nunca_cuenta_menos_que_las_palabras_del_texto():
+    texto = "Carcinoma ductal infiltrante de mama con receptor hormonal positivo"
+
+    assert ContadorConservador().contar(texto) >= ContadorPorPalabras().contar(texto)

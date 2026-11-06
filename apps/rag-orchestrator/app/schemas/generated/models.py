@@ -684,6 +684,216 @@ class RagFollowUpStatus(StrEnum):
     fuera_de_contexto = 'fuera_de_contexto'
 
 
+class ChatIntent(StrEnum):
+    caso = 'caso'
+    faltantes = 'faltantes'
+    evidencia = 'evidencia'
+    fuentes_limitaciones = 'fuentes_limitaciones'
+    no_clasificada = 'no_clasificada'
+    fuera_de_alcance = 'fuera_de_alcance'
+
+
+class FactRef(RootModel[str]):
+    root: Annotated[
+        str,
+        Field(
+            description='Referencia opaca a un hecho del caso, asignada por clinical-api por turno (f1, f2…); nunca un UUID ni un identificador enlazable.',
+            pattern='^f[0-9]+$',
+        ),
+    ]
+
+
+class CaseFactReviewStatus(StrEnum):
+    auto_aceptado = 'auto_aceptado'
+    requiere_revision = 'requiere_revision'
+    verificado = 'verificado'
+    corregido = 'corregido'
+
+
+class CaseFact(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    factRef: FactRef
+    kind: Annotated[str, Field(min_length=1)]
+    verbalization: TextoEnmascarado
+    relativeDay: Annotated[
+        int | None,
+        Field(
+            description='Día relativo al diagnóstico; null si el dato no tiene fecha confiable.'
+        ),
+    ]
+    reviewStatus: Annotated[CaseFactReviewStatus, Field(title='CaseFactReviewStatus')]
+    seriesKey: str | None = None
+    conflictWith: FactRef | None = None
+    corrected: bool | None = None
+
+
+class ChatCompletenessStatus(StrEnum):
+    presente_verificado = 'presente_verificado'
+    presente_sin_verificar = 'presente_sin_verificar'
+    faltante = 'faltante'
+    no_aplica = 'no_aplica'
+
+
+class ChatGapType(Enum):
+    no_encontrado = 'no_encontrado'
+    incompleto = 'incompleto'
+    por_conciliar = 'por_conciliar'
+    no_buscado = 'no_buscado'
+    NoneType_None = None
+
+
+class ChatCompletenessItem(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    item: Annotated[str, Field(min_length=1)]
+    label: Annotated[str, Field(min_length=1)]
+    status: Annotated[ChatCompletenessStatus, Field(title='ChatCompletenessStatus')]
+    gapType: Annotated[
+        ChatGapType | None,
+        Field(
+            description='Tipo de faltante; null si el dato está presente.',
+            title='ChatGapType',
+        ),
+    ]
+    destination: Annotated[str, Field(min_length=1)]
+
+
+class UltimaEvidencia(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    query: TextoEnmascarado
+    chunkIds: list[str]
+    topRelevanceScore: Annotated[
+        float | None,
+        Field(
+            description='null si no hubo evidencia (RN-02); null no es 0.0.',
+            ge=0.0,
+            le=1.0,
+        ),
+    ]
+
+
+class StructuredState(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    intentsVistos: list[ChatIntent]
+    preguntasPrevias: list[TextoEnmascarado]
+    opcionesMostradas: list[str]
+    citasMostradas: Annotated[
+        list[str], Field(description='chunkId de cada fuente ya mostrada.')
+    ]
+    faltantesSenalados: list[str]
+    ultimaEvidencia: UltimaEvidencia | None = None
+
+
+class ChatRehydrationTurn(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    question: TextoEnmascarado
+    intent: ChatIntent
+    blocksText: list[TextoEnmascarado]
+    factRefs: list[FactRef]
+
+
+class ChatRehydration(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    turns: Annotated[list[ChatRehydrationTurn], Field(max_length=50)]
+    structuredState: StructuredState
+
+
+class ChatTurnRequest(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    threadId: Annotated[
+        str,
+        Field(
+            description='Identificador aleatorio de la conversación (UUID v4 generado con un generador criptográfico, no derivado de ningún dato del paciente), emitido por clinical-api. Nunca el patientId ni el pseudoPatientId. Es la única clave del estado efímero del hilo.',
+            pattern='^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+        ),
+    ]
+    pseudoPatientId: Annotated[
+        str,
+        Field(
+            description='Aleatorio por turno; se usa solo dentro del turno y nunca entra al prompt ni al estado del hilo.',
+            pattern='^psd_[A-Za-z0-9]+$',
+        ),
+    ]
+    traceId: TraceId
+    question: Annotated[
+        str,
+        Field(
+            description='Pregunta ya enmascarada (RN-11) y normalizada por clinical-api (NFC, espacios colapsados). rag-orchestrator vuelve a normalizarla; vacía tras normalizar → 422.',
+            max_length=2000,
+            min_length=1,
+        ),
+    ]
+    dataClassification: DataClassification
+    catalogVersion: Annotated[str, Field(min_length=1)]
+    clinicalContext: ClinicalContext
+    caseFacts: Annotated[list[CaseFact], Field(max_length=200)]
+    completeness: Annotated[list[ChatCompletenessItem], Field(max_length=100)]
+    rehydration: ChatRehydration | None = None
+
+
+class ChatCitation(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    chunkId: Annotated[str, Field(min_length=1)]
+    documentId: Annotated[
+        str,
+        Field(
+            description='Identificador del documento en el catálogo del corpus (no un documento clínico).',
+            min_length=1,
+        ),
+    ]
+    sourceTitle: Annotated[str, Field(min_length=1)]
+    chunkOrdinal: Annotated[
+        int,
+        Field(description='Posición del chunk dentro del documento (desde 1).', ge=1),
+    ]
+    chunkCount: Annotated[
+        int, Field(description='Chunks vigentes del documento.', ge=1)
+    ]
+    chunkTextSnapshot: Annotated[
+        str, Field(description='Texto original de la fuente, sin traducir.')
+    ]
+
+
+class ChatBlockKind(StrEnum):
+    documentado = 'documentado'
+    interpretacion = 'interpretacion'
+    catalogo = 'catalogo'
+    evidencia = 'evidencia'
+    conflicto = 'conflicto'
+    faltante = 'faltante'
+    limitacion = 'limitacion'
+    fuente = 'fuente'
+
+
+class ChatBlock(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    kind: Annotated[ChatBlockKind, Field(title='ChatBlockKind')]
+    text: str
+    factRefs: list[FactRef] | None = None
+    citations: list[ChatCitation] | None = None
+
+
+class Subintent(StrEnum):
+    seguimiento_evidencia = 'seguimiento_evidencia'
+
+
 class CaseSummaryInternalRequest(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
@@ -991,6 +1201,15 @@ class ErrorDeadlineVencido(BaseModel):
         extra='forbid',
     )
     error: Literal['DEADLINE_VENCIDO']
+    message: str
+    traceId: str
+
+
+class ErrorHiloDesconocido(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    error: Literal['HILO_DESCONOCIDO']
     message: str
     traceId: str
 
@@ -1347,3 +1566,38 @@ class RagQueryInternalResponse(BaseModel):
         ),
     ]
     meta: RagMeta
+
+
+class ChatTurnResponse(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    intent: ChatIntent
+    subintent: Subintent | None = None
+    blocks: list[ChatBlock]
+    omittedClaims: Annotated[
+        int,
+        Field(
+            description='Afirmaciones sin soporte del turno (o respaldadas solo por la memoria) que se omitieron.',
+            ge=0,
+        ),
+    ]
+    evidenceAnalysis: Annotated[
+        RagQueryInternalResponse | None,
+        Field(
+            description='Resultado del pipeline de evidencia de este turno (mismo tipo que la respuesta de /rag/query). clinical-api lo persiste y construye con lo persistido el EvidenceAnalysis de su ConversationTurn.'
+        ),
+    ] = None
+    structuredState: StructuredState
+    llmProvider: Annotated[
+        LlmProvider,
+        Field(
+            description='Dónde corrió el modelo (RN-12); mismo vocabulario que RagMeta.llmProvider.'
+        ),
+    ]
+    notices: Annotated[
+        list[str],
+        Field(
+            description='Avisos de IA (RN-19) tomados de la configuración de rag-orchestrator, sin punto final. Vacío en los mensajes del sistema (`fuera_de_alcance`, `no_clasificada`).'
+        ),
+    ]

@@ -79,6 +79,15 @@ Cada llamada a `/chat/turn` MUST llevar el `threadId` de la conversación y un `
 - **THEN** los dos cuerpos hacia `/chat/turn` llevan el mismo `threadId` y `pseudoPatientId` y `traceId` distintos
 - **AND** ninguna columna de `clinical.conversation` ni de `clinical.conversation_turn` contiene alguno de los dos `pseudoPatientId`
 
+### Requirement: El primer turno lleva la rehidratación vacía
+El primer turno de una conversación (sin turnos persistidos) MUST llevar desde el primer envío `rehydration = { turns: [], structuredState: vacío }`, porque `rag-orchestrator` responde `404` a un `threadId` que no conoce y no distingue uno nuevo de uno perdido; `construirRehidratacion([])` devuelve ese valor (glosario S6 §2).
+
+#### Scenario: El primer turno lleva la rehidratación vacía [US-258 AC-2] [ADR-51]
+- **GIVEN** una conversación recién creada, sin turnos persistidos, y MSW que registra las llamadas a `/chat/turn`
+- **WHEN** se envía el primer turno
+- **THEN** la primera y única llamada lleva `rehydration` con `turns = []` y el `structuredState` vacío del ejemplo `chat-turn-request.json`
+- **AND** MSW no registra ningún `404` ni reenvío
+
 ### Requirement: Rehidratación única ante un hilo desconocido
 Ante `404 ErrorHiloDesconocido`, `clinical-api` MUST reenviar el turno una sola vez con `rehydration` de
 `construirRehidratacion()`: los últimos `CHAT_REHYDRATE_TURNS` turnos (RN-22), cada uno solo con `question`

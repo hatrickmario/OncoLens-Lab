@@ -41,6 +41,14 @@ Ver proposal.md (Why). Estado en `main` relevante:
 
 El nodo `validar` construye el conjunto de soportes admitidos solo con los chunks recuperados en el turno y los `caseFacts` del turno; cualquier afirmación cuyo único respaldo esté fuera de ese conjunto se omite y suma a `omittedClaims`. Se extrae `afirmacion_tiene_soporte_del_turno()` (RN-24/RN-04) en `app/domain/chat/soporte.py`, reutilizando `app/domain/citations.py`.
 
+### D5b — Filtro de lenguaje y deuda del NLI (Gate 2, lenguaje M-1; diseño P1-3)
+
+Mientras los nodos de capacidad sean esqueletos, `validar` filtra cada afirmación por (1) soporte del turno (D5) y (2) lenguaje no prescriptivo (RN-23, política de salida generada de `domain.support` vía `ProhibitedTermsChecker`, campo `rationale`): lo que falla se omite y suma en `omittedClaims`. **`validar` no es el NLI.** El chequeo de soporte NLI de las afirmaciones sobre hechos del paciente (ADR-34, verbalización determinista + NLI) llega con **L1D-317** (nodo `caso`) y el de las afirmaciones de evidencia con **L1D-322** (nodo `evidencia`); hasta entonces, una afirmación con un `factRef` del turno y sin términos prohibidos se muestra sin NLI. Mientras `evidencia` sea un esqueleto, el turno añade un bloque `limitacion` fijo («Esta respuesta describe los datos registrados del paciente; la evidencia científica no se consultó en este turno»).
+
+### D5c — Admisión de turnos y puntos de extensión
+
+`RegistroDeHilos.admitir_turno()` es la única puerta (servicio real y fake): purga vencidos, rechaza con 404 sin desalojar, desaloja al crear y renueva el TTL. `construir_grafo(capacidades=...)` permite que US-260…US-266 sustituyan un nodo por intención; lo no sustituido sigue siendo el esqueleto. `MAX_TURNOS_EN_MEMORIA` lo fija el contrato (`maxItems: 50` de `ChatRehydration.turns`), que es su dueño; Backend 1 lo consume de ahí. `/chat/turn` no declara `X-Request-Deadline`: el motor no lo aplica.
+
 ### D6 — Rehidratación determinista y acotada
 
 El prompt se arma con una función pura del estado (`armar_prompt_del_turno(estado, pregunta)`); el hilo vivo y el reconstruido llegan al mismo estado, por lo que el hash del prompt coincide (AC-5). Orden estable de claves y de turnos; sin marcas de tiempo absolutas en el prompt. `ChatRehydration` solo admite `turns[{question, intent, blocksText[], factRefs[]}]` y `structuredState` (`additionalProperties: false` en cada nivel): un `resourceId`, UUID, fecha absoluta, `analysisId` o `dataLinks` en la petición → `422 ErrorValidacion` sin eco. Backend 1 lo construye con `construirRehidratacion()` (L1D-315).
@@ -142,7 +150,7 @@ components:
       subintent?: enum [seguimiento_evidencia]   # cerrado aquí; L1D-322 lo consume, no lo redefine
       blocks: ChatBlock[]
       omittedClaims: integer >= 0
-      evidenceAnalysis?: EvidenceAnalysis (existente)
+      evidenceAnalysis?: RagQueryInternalResponse   # en rag el tipo es la respuesta de /rag/query; clinical-api construye su EvidenceAnalysis desde lo persistido
       structuredState: StructuredState  # REQUERIDO; Backend 1 lo guarda para rehidratar
       llmProvider: enum [local, nube]   # de L1D-204; mismo enum que RagMeta.llmProvider
       notices: string[]                 # literal RN-19 de configuración, sin punto final
