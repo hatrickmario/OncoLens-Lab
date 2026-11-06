@@ -1,9 +1,9 @@
 # S6 · Plan de ejecución
 
 > `/sprint-start S6`, sesión principal, 2026-11-06, rama `sprint/S6-planning` desde `main` 40e669a4 (#352 mergeado). Refinamiento: [`S6-refinamiento.md`](S6-refinamiento.md). Vocabulario del contrato del chat: [`S6-glosario-chat.md`](S6-glosario-chat.md). Diseño: [`docs/ux/S6/pantallas-s6.md`](../../docs/ux/S6/pantallas-s6.md) (variante B).
-> **Plazo:** 3–4 días `[S6 resp. 11]`. **Compromiso: ≈ 71 pts** (meta ≥ 80 % ≈ 57 pts cerrados).
+> **Plazo:** **3 días con la Demo 6 dentro** y con el **50 % restante del presupuesto semanal de tokens** `[S6 resp. 22]`. **Compromiso: 70 pts de desarrollo** (meta ≥ 80 % = 56 pts cerrados); DEC-07 (1 pt) y la corrida nocturna pasan a **opcionales al final**.
 > **Changes:** 18 nuevos más los 7 `movido-S6` (L1D-113, 116, 119, 126, 205, 246 y 299), que se cierran con la corrida nocturna `[S6 resp. 12]`. Los 12 changes heredados se archivan en el PR #353 (conciliación), con su deuda en [`S6-deuda.md`](S6-deuda.md).
-> **Sin change:** US-256 · ADR-51 (L1D-313; AC-1…AC-3 ya cumplidos, AC-4 se cierra con L1D-314), DEC-07 (L1D-234, tras la corrida nocturna) y las firmas DEC-01 (L1D-92) y DEC-11 (L1D-125).
+> **Sin change:** US-256 · ADR-51 (L1D-313; AC-1…AC-3 ya cumplidos, AC-4 se cierra con L1D-314), DEC-07 (L1D-234, opcional: solo si se ejecuta la corrida nocturna) y las firmas DEC-01 (L1D-92) y DEC-11 (L1D-125).
 
 ## 1. Historias, changes y oleadas
 
@@ -27,22 +27,35 @@
 | L1D-319 | US-262 | `l1d-319-chat-contradicciones` | clinical-platform · ai-services | O5 | ⛔ 317 · secuencial tras 318 (mismo nodo `caso`) | R1 | 3 |
 | L1D-325 | US-268 | `l1d-325-chat-fuentes-sin-perder-contexto` | frontend | **O6** | ⛔ 324 | R3 | 3 |
 | L1D-326 | US-269 | `l1d-326-chat-e2e-evaluate` | evaluación · E2E | **O7** | ⛔ 315…325 | — | 5 |
-| L1D-234 | DEC-07 | sin change | decisión | tras la corrida nocturna | corrida N | — | 1 |
-| L1D-113, 116, 119, 126, 205, 246, 299 | — | changes `movido-S6` | evaluación | **N** (corrida nocturna) | `main` con O1 (L1D-327 da la métrica del corte) | — | 0 |
-| | | | | | | **Total** | **71** |
+| L1D-234 | DEC-07 | sin change | decisión | **opcional, al final** | corrida N | — | (1) |
+| L1D-113, 116, 119, 126, 205, 246, 299 | — | changes `movido-S6` | evaluación | **N, opcional, al final** (tras O7, si quedan tokens y tiempo) | `main` con O7 | — | 0 |
+| | | | | | | **Total comprometido** | **70** |
 
 **Paralelismo:** como máximo 4 a la vez, y nunca dos sobre el mismo módulo.
 - En O3, 315 (módulo `conversation`) y 204 (gateway y selector de proveedor) tocan `clinical-api`, pero en módulos distintos. 317 trabaja en rag (nodo `caso`).
 - En O4, 320 (`completeness`), 322 (`conversation` y `evidence-analysis`) y 213 (guard de opt-out) también son módulos distintos.
 - 318 y 319 tocan el mismo nodo, por eso 318 va en O4 y 319 en O5.
 
-**Corrida nocturna N (máquina de referencia, modelos locales):** reúne D5-08, D5-24, D5-26, D5-28, D4-21 y D4-30, y las tareas 1.0, 1.11, 1.12 y 4.2 de us-231b (D6). Se lanza desde `main` cuando O1 esté mergeado, preferiblemente la noche del día 1. Cierra las 7 historias `movido-S6`, y con sus números se decide DEC-07.
+**Corrida nocturna N: opcional, al final** `[S6 resp. 22]`. Corre en la máquina de referencia con modelos locales y reúne D5-08, D5-24, D5-26, D5-28, D4-21, D4-30 y las tareas 1.0, 1.11, 1.12 y 4.2 de us-231b (D6). Se lanza desde `main` **solo después de O7** y solo si quedan presupuesto de tokens y tiempo antes de la demo.
+- No bloquea ningún change del sprint: todos los tests del chat usan el LLM falso.
+- **Si no se ejecuta:**
+  - las 7 historias `movido-S6` siguen *In Review* y pasan al cierre del S6 como deuda;
+  - DEC-07 no se decide;
+  - el chat se demuestra con el corpus actual (10 documentos) y los umbrales vigentes;
+  - el `evaluate` con LLM real de L1D-326 se limita a lo que quepa en la demo.
+- Mientras corre, la máquina queda ocupada: nada de Compose ni `visual-check` en paralelo (riesgo de swap, D5-59).
 
-**Ritmo previsto:**
-- Día 1: O1 y O2, y la corrida N por la noche.
-- Día 2: O3 y O4.
-- Día 3: O5 y O6.
-- Día 4: O7, `evaluate` del chat y la demo.
+**Ritmo previsto (3 días, demo el día 3):**
+- Día 1: O1, O2 y O3.
+- Día 2: O4 y O5.
+- Día 3: O6, O7 y la demo. Después, si sobra, la corrida N y DEC-07.
+
+**Presupuesto de tokens** `[S6 resp. 22]`: la prioridad es terminar el desarrollo con el 50 % restante. El orquestador:
+- aplica el Gate 2 acotado (una vuelta, como máximo dos);
+- no relanza guardianes que dieron PASS;
+- agrupa la revisión SOLID por lotes.
+
+Si el presupuesto se agota antes de O7, se pide al usuario el recorte en lugar de seguir.
 
 ## 2. Grafo
 
@@ -64,7 +77,7 @@ flowchart LR
   321 --> 326
   323 --> 326
   325 --> 326
-  327 --> N[corrida nocturna] --> D07[DEC-07]
+  326 -.opcional.-> N[corrida nocturna] -.-> D07[DEC-07]
 ```
 
 ## 3. Lotes de revisión SOLID/CUPID
@@ -115,9 +128,10 @@ Lo principal:
 
 **Aprobado por el usuario (PO), 2026-11-06,** en la sesión principal de `/sprint-start S6`:
 
-- `[S6 resp. 18]` Orden por oleadas O1…O7, más la corrida nocturna N tras O1. **Como máximo 4 en paralelo**, nunca dos en el mismo módulo. **Merge por oleada.**
+- `[S6 resp. 18]` Orden por oleadas O1…O7 (la corrida nocturna se movió al final, ver resp. 22). **Como máximo 4 en paralelo**, nunca dos en el mismo módulo. **Merge por oleada.**
 - `[S6 resp. 19]` Se aceptan `style-src-attr 'unsafe-inline'` en L1D-266 (sin tocar `script-src`, documentado en su design, sin ADR) y los días relativos en los textos persistidos y rehidratados.
 - `[S6 resp. 20]` El chat **sustituye** al formulario de una pregunta en `/analisis`. L1D-324 retira sus 13 requisitos; los de errores y presentación del resultado siguen vigentes.
 - `[S6 resp. 21]` Orden de versiones del glosario §1. Si dos chocan, se renumera el segundo en mergear.
+- `[S6 resp. 22]` (usuario, 2026-11-06): queda el 50 % del límite semanal de tokens y la próxima demo es en 3 días. La prioridad es terminar el desarrollo. **La corrida nocturna pasa al final, opcional**, solo si quedan tokens y tiempo. El compromiso queda en 70 pts y DEC-07 pasa a opcional.
 
 Precondición de `/sprint-run S6`: este PR (planificación) y el #353 (conciliación) mergeados en `main`.
