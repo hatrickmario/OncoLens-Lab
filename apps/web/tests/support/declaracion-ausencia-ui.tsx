@@ -38,6 +38,7 @@ export const checklistFaltante = {
 const procedenciaManual = atributoCreado.provenance;
 
 export const declaracionVigente = {
+  id: atributoCreado.id,
   key: 'sin_tratamiento_previo',
   value: 'si',
   observedAt: HOY,
