@@ -287,7 +287,7 @@ Tras una corrección, el contexto clínico vigente del paciente MUST reflejar el
 Regresión [RN-26] activa desde S6: la no reutilización de un análisis por huella la verifica US-251.
 
 ### Requirement: Corrección en línea con histórico desplegable en la ficha
-La ficha MUST ofrecer «Corregir dato» en cada biomarcador y nota clínica vigente (variante A de S5-01), con formulario en línea («Guardar mi corrección», «Cancelar»), origen «Corrección manual» tras guardar, histórico desplegable con las filas `reemplazado` y aviso no bloqueante sobre análisis anteriores. Las fechas se muestran relativas («hoy», «hace 12 días», `[S5 resp. 11]` (d)). Textos en `messages/es.json`. El formulario de un biomarcador SHALL precargar el valor, la unidad y la fecha del examen vigentes, indicar que la unidad es opcional y no admitir una fecha posterior a hoy; la corrección de un dato «Por revisar» o «En conflicto» SHALL conservar el anterior como `reemplazado` (RN-08).
+La ficha MUST ofrecer «Corregir dato» en cada biomarcador y nota clínica vigente (variante A de S5-01), con formulario en línea, origen «Corrección manual» tras guardar, histórico desplegable con las filas `reemplazado` y aviso no bloqueante sobre análisis anteriores. La corrección de un dato «Por revisar» o «En conflicto» SHALL conservar el anterior como `reemplazado` (RN-08). Fechas relativas y textos en `messages/es.json` (`[S5 resp. 11]` (d)).
 
 #### Scenario: El oncólogo corrige un biomarcador en la fila y ve el histórico [US-253 AC-1] [RN-08]
 - **GIVEN** la ficha de (a) con MSW sirviendo `biomarker-corrected.json` y `correction-history-biomarker.json`
