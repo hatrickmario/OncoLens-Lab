@@ -96,6 +96,7 @@ describe('contenido de datos críticos del catálogo del S3', () => {
     expect(declaradas.sort()).toEqual([
       'estado_castracion',
       'estado_menopausico',
+      'sin_tratamiento_previo',
       'sitios_metastasicos',
     ]);
   });

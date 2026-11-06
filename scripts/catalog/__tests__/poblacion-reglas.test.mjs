@@ -22,12 +22,12 @@ function copiarElCatalogoReal() {
 
 describe('catalog:validate · poblacion-reglas.json declarado en el manifiesto (D4-03)', () => {
   it(
-    'acepta el catálogo real 1.4.0 con las reglas de población de mama y próstata',
+    'acepta el catálogo real 1.5.0 con las reglas de población de mama y próstata',
     () => {
       const resultado = ejecutarValidador(CATALOGO);
 
       expect(resultado.codigo).toBe(0);
-      expect(resultado.salida).toContain('catalogVersion=1.4.0');
+      expect(resultado.salida).toContain('catalogVersion=1.5.0');
     },
     PLAZO_PROCESO_MS,
   );

@@ -1,5 +1,6 @@
 import {
   exigirAtributoDeclarado,
+  exigirCumplimientoAlternativoDeclarado,
   exigirCondicionBienFormada,
   exigirDestino,
   exigirDestinoExistente,
@@ -35,6 +36,8 @@ export const ARCHIVOS_DEL_CATALOGO = {
       ...REGLAS_DE_DESTINO,
       (item, { clavesDelTipo, vocabulario }) =>
         exigirCondicionBienFormada(item, clavesDelTipo, vocabulario),
+      (item, { tipoDeCancer, atributos, allowlist }) =>
+        exigirCumplimientoAlternativoDeclarado(item, tipoDeCancer, atributos, allowlist),
       (item, { vocabulario }) => exigirEstadoValido(item, vocabulario),
     ],
   },

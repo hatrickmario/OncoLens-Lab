@@ -68,6 +68,32 @@ export function exigirAtributoDeclarado(item, tipo, atributos) {
   return claves.every(declarada) ? null : 'atributo_no_declarado';
 }
 
+/**
+ * RN-29 (d5fb-04): un `satisfiedBy` apunta a un atributo clínico declarado en `atributos.json` para el tipo de cáncer y a
+ * uno de sus valores permitidos; una referencia colgante falla nombrando la clave (nunca valores del paciente).
+ */
+export function exigirCumplimientoAlternativoDeclarado(item, tipo, atributos, allowlist) {
+  const cumplimientos = Array.isArray(item.satisfiedBy) ? item.satisfiedBy.filter(esObjeto) : [];
+  for (const { entity, attribute_key: clave, value } of cumplimientos) {
+    if (entity !== 'ClinicalAttribute' || !Object.hasOwn(allowlist.entidades, entity)) {
+      return { codigo: 'cumplimiento_alternativo_invalido', campo: String(clave) };
+    }
+    const declarado = atributos.keys.find(
+      (atributo) =>
+        esObjeto(atributo) &&
+        atributo.key === clave &&
+        Array.isArray(atributo.cancerTypes) &&
+        atributo.cancerTypes.includes(tipo),
+    );
+    if (declarado === undefined) return { codigo: 'atributo_no_declarado', campo: String(clave) };
+    const valores = Array.isArray(declarado.values) ? declarado.values.map((v) => v?.value) : null;
+    if (valores !== null && !valores.includes(value)) {
+      return { codigo: 'valor_no_declarado', campo: String(clave) };
+    }
+  }
+  return null;
+}
+
 /** AC-04.4: la condición es declarativa, apunta a un ítem del mismo tipo y declara qué pasa si su valor se desconoce. */
 export function exigirCondicionBienFormada(item, clavesDelTipo, vocabulario) {
   const { condition } = item;
