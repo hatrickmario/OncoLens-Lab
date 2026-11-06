@@ -14,6 +14,7 @@ from typing import Any
 
 from app.application.catalogo_exigido import exigir_catalogo_de_la_solicitud
 from app.application.chat.avisos import avisos_del_turno
+from app.application.chat.capacidades.caso import NodoCaso
 from app.application.chat.grafo import ConfiguracionDelGrafo, EstadoDelGrafo, construir_grafo
 from app.application.chat.registro_de_hilos import RegistroDeHilos
 from app.application.chat.traduccion import (
@@ -22,7 +23,6 @@ from app.application.chat.traduccion import (
     estado_estructurado_del_contrato,
     hechos_del_caso,
 )
-from app.application.selector_proveedor_llm import con_clasificacion
 from app.application.ports import (
     CatalogoClinico,
     Clock,
@@ -30,8 +30,10 @@ from app.application.ports import (
     LlmClient,
     ProhibitedTermsChecker,
 )
+from app.application.selector_proveedor_llm import con_clasificacion
+from app.application.verificacion_de_soporte import VerificadorDeSoporte
 from app.config.settings import Settings
-from app.domain.chat.estado import INTENCIONES_CLASIFICABLES, EstadoDelHilo
+from app.domain.chat.estado import INTENCIONES_CLASIFICABLES, EstadoDelHilo, Intencion
 from app.schemas.generated.models import ChatTurnRequest, ChatTurnResponse
 
 logger = logging.getLogger(__name__)
@@ -48,6 +50,7 @@ class ChatTurnService:
         settings: Settings,
         terminos_por_tipo: Mapping[str, frozenset[str]],
         verificador_terminos: ProhibitedTermsChecker,
+        soporte: VerificadorDeSoporte | None = None,
     ) -> None:
         self._catalogo = catalogo
         self._settings = settings
@@ -56,13 +59,22 @@ class ChatTurnService:
             ttl_segundos=settings.chat_thread_ttl_seconds,
             max_hilos=settings.chat_max_threads,
         )
+        configuracion = ConfiguracionDelGrafo(
+            presupuesto_de_memoria=settings.chat_memory_max_tokens,
+            terminos_por_tipo=terminos_por_tipo,
+        )
+        caso = NodoCaso(
+            llm=llm,
+            contador=contador,
+            configuracion=configuracion,
+            soporte=soporte,
+            max_palabras_por_afirmacion=settings.claim_max_words,
+        )
         self._grafo = construir_grafo(
             llm=llm,
             contador=contador,
-            configuracion=ConfiguracionDelGrafo(
-                presupuesto_de_memoria=settings.chat_memory_max_tokens,
-                terminos_por_tipo=terminos_por_tipo,
-            ),
+            configuracion=configuracion,
+            capacidades={Intencion.caso: caso.ejecutar},
             guardado=self.registro.guardado,
             verificador_terminos=verificador_terminos,
         )
@@ -121,7 +133,7 @@ class ChatTurnService:
                 "omittedClaims": final["omitidas"],
                 "structuredState": estado_estructurado_del_contrato(hilo.estructurado),
                 "llmProvider": proveedor,
-                "notices": avisos_del_turno(self._settings)
+                "notices": avisos_del_turno(self._settings, intencion)
                 if intencion in INTENCIONES_CLASIFICABLES
                 else [],
             }

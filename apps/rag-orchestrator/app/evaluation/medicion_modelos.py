@@ -21,10 +21,10 @@ from app.evaluation.chunking_variants import (
     Variante,
     fragmentar,
 )
-from app.evaluation.estadistica import mediana, percentil_interpolado
 from app.evaluation.cronometro import resumen_de_latencia
 from app.evaluation.dataset_loader import ParNli, Pregunta
 from app.evaluation.envoltorios import ClasificadorNli, Embedder, Reranker
+from app.evaluation.estadistica import mediana, percentil_interpolado
 from app.evaluation.retrieval_metrics import ChunkRecuperado, ResultadoPregunta, evaluar_pregunta
 
 Reloj = Callable[[], float]

@@ -27,7 +27,6 @@ from app.domain.chat.estado import (
 from app.domain.chat.turno import BloqueDelTurno, HechoDelCaso, PropuestaDelTurno, TipoDeBloque
 from app.domain.chat.vigencia import hilo_vencido
 
-
 TIPOS_DEL_ESTADO = (
     EstadoDelHilo,
     EstadoEstructurado,

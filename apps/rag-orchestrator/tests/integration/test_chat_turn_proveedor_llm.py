@@ -17,7 +17,7 @@ from tests.support.chat import Q_CASO, Q_SIN_REGLA, solicitud_de_turno
 from tests.support.fakes import GeneradorTraceFijo, RelojFijo, par_de_sesion, settings_de_prueba
 from tests.support.llm_chat_falso import ESCENARIOS
 from tests.support.llm_nube_falso import LlmNubeFalso
-from tests.support.recuperacion import EJEMPLOS
+from tests.support.recuperacion import EJEMPLOS, puertos_de_recuperacion
 from tests.support.service_jwt import con_token_valido
 
 URL_DEL_LLM = "http://host.docker.internal:11434/v1/chat/completions"
@@ -35,7 +35,13 @@ class _NubeDelChat(LlmNubeFalso):
 
 def _cliente(nube: LlmNubeFalso, *, nube_habilitada: bool) -> TestClient:
     settings = settings_de_prueba(llm_cloud_enabled=nube_habilitada)
-    app = crear_app(settings, trace_ids=GeneradorTraceFijo(), clock=RelojFijo(), llm_nube=nube)
+    app = crear_app(
+        settings,
+        trace_ids=GeneradorTraceFijo(),
+        clock=RelojFijo(),
+        llm_nube=nube,
+        recuperacion=puertos_de_recuperacion(),  # el NLI que verifica el nodo ``caso`` (ADR-34)
+    )
     return TestClient(app, raise_server_exceptions=False, headers=con_token_valido(par_de_sesion()))
 
 

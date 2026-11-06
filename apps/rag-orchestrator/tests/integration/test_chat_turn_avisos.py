@@ -19,19 +19,20 @@ from tests.support.chat import (
 Q_FUENTES = "¿Qué fuentes respaldan esta respuesta?"
 AVISO_IA = "Generado por IA; requiere validación clínica independiente por el oncólogo tratante"
 AVISO_ACADEMICO = "Uso académico/investigación"
+AVISO_FUENTES = "Verifique contra las fuentes"
 
 
 @pytest.mark.parametrize(
-    ("pregunta", "intencion"),
+    ("pregunta", "intencion", "avisos"),
     [
-        (Q_CASO, "caso"),
-        (Q_FALTANTES, "faltantes"),
-        (Q_EVIDENCIA, "evidencia"),
-        (Q_FUENTES, "fuentes_limitaciones"),
+        (Q_CASO, "caso", [AVISO_IA, AVISO_ACADEMICO, AVISO_FUENTES]),
+        (Q_FALTANTES, "faltantes", [AVISO_IA, AVISO_ACADEMICO]),
+        (Q_EVIDENCIA, "evidencia", [AVISO_IA, AVISO_ACADEMICO]),
+        (Q_FUENTES, "fuentes_limitaciones", [AVISO_IA, AVISO_ACADEMICO]),
     ],
 )
 def test_chat_turn_devuelve_los_avisos_de_configuracion_y_el_proveedor_local_cuando_el_turno_tiene_contenido_generado(
-    pregunta, intencion
+    pregunta, intencion, avisos
 ):
     entorno = crear_entorno_de_chat("CHAT-OK")
 
@@ -40,20 +41,27 @@ def test_chat_turn_devuelve_los_avisos_de_configuracion_y_el_proveedor_local_cua
     assert respuesta.status_code == 200
     cuerpo = respuesta.json()
     assert cuerpo["intent"] == intencion
-    assert cuerpo["notices"] == [AVISO_IA, AVISO_ACADEMICO]
+    assert cuerpo["notices"] == avisos
     assert not any(aviso.endswith(".") for aviso in cuerpo["notices"])
     assert cuerpo["llmProvider"] == "local"
 
 
 def test_chat_turn_toma_los_avisos_de_la_configuracion_y_no_de_un_literal_cuando_se_cambian_las_claves():
     entorno = crear_entorno_de_chat(
-        "CHAT-OK", chat_notice_ai="Aviso de prueba uno", chat_notice_academic="Aviso de prueba dos"
+        "CHAT-OK",
+        chat_notice_ai="Aviso de prueba uno",
+        chat_notice_academic="Aviso de prueba dos",
+        chat_notice_verify="Aviso de prueba tres",
     )
 
     respuesta = entorno.turno(solicitud_de_turno(Q_CASO))
 
     assert respuesta.status_code == 200
-    assert respuesta.json()["notices"] == ["Aviso de prueba uno", "Aviso de prueba dos"]
+    assert respuesta.json()["notices"] == [
+        "Aviso de prueba uno",
+        "Aviso de prueba dos",
+        "Aviso de prueba tres",
+    ]
 
 
 @pytest.mark.parametrize(

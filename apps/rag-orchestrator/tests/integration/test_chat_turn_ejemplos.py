@@ -27,6 +27,11 @@ def _sin_traza(cuerpo: dict) -> dict:
     [
         ("CHAT-CASO-OK", "chat-turn-request.json", "chat-turn-caso-ok.json"),
         (
+            "CHAT-CASO-SITUACION",
+            "chat-turn-request-caso-situacion.json",
+            "chat-turn-caso-situacion.json",
+        ),
+        (
             "CHAT-RUTA-INVALIDA",
             "chat-turn-request-no-clasificada.json",
             "chat-turn-no-clasificada.json",

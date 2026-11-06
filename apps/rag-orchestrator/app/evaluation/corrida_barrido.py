@@ -30,10 +30,10 @@ from app.evaluation.informe_baseline import (
     renderizar_informe,
 )
 from app.evaluation.metas import cargar_metas
-from app.evaluation.modelos_locales import PuertosLocales
 from app.evaluation.metricas.familias import calcular_familias
 from app.evaluation.metricas.resultado import ResultadoConsulta
 from app.evaluation.metricas.sin_evidencia import exactitud_sin_evidencia
+from app.evaluation.modelos_locales import PuertosLocales
 from app.evaluation.reporte import escribir_reporte_cerrado
 from app.evaluation.retrieval_metrics import ChunkRecuperado, evaluar_pregunta, metrica
 from app.evaluation.rutas import raiz_repo

@@ -1,0 +1,6 @@
+{
+  "CHAT-CASO-SIN-ENLACE": {
+    "ruta": "{\"intent\": \"caso\"}",
+    "generacion": "{\"claims\": [{\"text\": \"El diagnóstico documentado es un carcinoma ductal infiltrante de mama.\", \"factRefs\": [\"f1\"], \"citations\": []}, {\"text\": \"La paciente tiene antecedentes familiares de cáncer de mama.\", \"factRefs\": [], \"citations\": []}]}"
+  }
+}

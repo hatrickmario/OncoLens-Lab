@@ -10,8 +10,8 @@ from typing import Any
 
 import pytest
 
-from app.domain.criterios_aplicabilidad import CriterioDeAplicabilidad
 from app.application.corpus_ingestion.resumen_poblacion import resumir_poblacion_por_tipo_e_idioma
+from app.domain.criterios_aplicabilidad import CriterioDeAplicabilidad
 from app.infrastructure.catalogo_clinico.aplicabilidad import cargar_criterios_de_aplicabilidad
 from tests.integration.corpus_ingestion.conftest import Montaje
 from tests.support.contract import CATALOGOS

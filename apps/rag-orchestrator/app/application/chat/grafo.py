@@ -10,9 +10,12 @@ Puntos de extensión (US-260…US-266). Cada historia de capacidad sustituye UN 
   ``evidencia``, ``fuentes_limitaciones``). Un nodo recibe el ``EstadoDelGrafo`` y devuelve ``{"propuestas": (...)}``.
   Lo que no se sustituye rige ``capacidades_por_defecto()``: el esqueleto, que pide al LLM afirmaciones sobre los hechos
   del caso. Toda intención clasificable tiene siempre un nodo.
-- ``validar`` es el único filtro de lo que se muestra: soporte del turno (RN-24, RN-04) y lenguaje (RN-23). **No es el
-  NLI**: el chequeo de soporte NLI de las afirmaciones sobre hechos (ADR-34) llega con L1D-317 (nodo ``caso``) y L1D-322
-  (nodo ``evidencia``); hasta entonces una afirmación con ``factRef`` del turno y sin términos prohibidos se muestra.
+- ``validar`` es el único filtro final de lo que se muestra: soporte del turno (RN-24, RN-04) y lenguaje (RN-23). **No es
+  el NLI**: el chequeo de soporte NLI de las afirmaciones sobre hechos (ADR-34) lo hace cada nodo de capacidad que lo
+  necesita (``caso``, L1D-317; ``evidencia``, L1D-322) y descarta lo no soportado en ``omitidas_del_nodo``; un nodo que
+  aún es el esqueleto entrega afirmaciones sin NLI y ``validar`` solo exige un ``factRef`` del turno y lenguaje no prescriptivo.
+- ``pedir_afirmaciones`` es la etapa de generación común (memoria → prompt → LLM local → afirmaciones) que usan el esqueleto
+  y los nodos reales; cada nodo solo aporta su ``armar_prompt``.
 
 El estado del hilo (``hilo``) es lo único que sobrevive entre turnos; los campos del turno (pregunta, hechos) se vacían al
 cerrar. Nunca hay ``patientId`` ni ``pseudoPatientId`` en el estado (RN-10, RN-11).
@@ -21,7 +24,7 @@ cerrar. Nunca hay ``patientId`` ni ``pseudoPatientId`` en el estado (RN-10, RN-1
 from __future__ import annotations
 
 import logging
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Awaitable, Callable, Mapping, Sequence
 from typing import Any, NamedTuple, TypedDict
 
 from langgraph.checkpoint.base import BaseCheckpointSaver
@@ -35,12 +38,14 @@ from app.application.ports import (
     LlmClient,
     ProhibitedTermsChecker,
 )
+from app.application.prompt_builder import PromptSeparado
 from app.domain.chat.enrutado import clasificar_por_reglas, es_fuera_de_alcance
 from app.domain.chat.estado import (
     ENTRADAS_DEL_TURNO_VACIAS,
     INTENCIONES_CLASIFICABLES,
     EstadoDelHilo,
     Intencion,
+    TurnoPrevio,
     estado_tras_el_turno,
 )
 from app.domain.chat.memoria import ventana_de_memoria
@@ -78,6 +83,8 @@ class EstadoDelGrafo(TypedDict, total=False):
     propuestas: tuple[PropuestaDelTurno, ...]
     bloques: tuple[BloqueDelTurno, ...]
     omitidas: int
+    # Las afirmaciones que un nodo de capacidad descartó antes de entregar sus ``propuestas``; ``validar`` las suma.
+    omitidas_del_nodo: int
 
 
 class _Clasificacion(BaseModel):
@@ -205,7 +212,8 @@ class _NodosDelTurno:
         """Filtra las afirmaciones del nodo de capacidad: solo se muestra lo que cita un hecho o un chunk de ESTE turno
         (RN-24, RN-04) y respeta el lenguaje no prescriptivo (RN-23); el resto suma en ``omittedClaims``.
 
-        No ejecuta el NLI (ADR-34): llega con L1D-317 y L1D-322 (ver el docstring del módulo)."""
+        No ejecuta el NLI (ADR-34): lo ejecuta cada nodo de capacidad que lo necesita (``caso`` desde L1D-317;
+        ``evidencia`` con L1D-322) antes de entregar sus ``propuestas``; ver el docstring del módulo."""
         bloques = self._bloques_permitidos(estado)
         if estado["intencion"] is Intencion.evidencia:
             # El nodo ``evidencia`` aún no consulta el corpus (L1D-322): se dice, sin eco de la pregunta.
@@ -213,7 +221,11 @@ class _NodosDelTurno:
                 *bloques,
                 BloqueDelTurno(TipoDeBloque.limitacion, MENSAJE_EVIDENCIA_NO_CONSULTADA),
             )
-        omitidas = len(estado["propuestas"]) - self._cantidad_de_afirmaciones(bloques)
+        omitidas = (
+            len(estado["propuestas"])
+            - self._cantidad_de_afirmaciones(bloques)
+            + estado.get("omitidas_del_nodo", 0)
+        )
         logger.info(
             "event=chat_validacion traceId=%s intencion=%s afirmaciones=%d omittedClaims=%d",
             estado["trace_id"],
@@ -277,38 +289,49 @@ class _EsqueletoDeCapacidad:
 
     def nodo(self, intencion: Intencion) -> Nodo:
         async def nodo(estado: EstadoDelGrafo) -> dict[str, Any]:
-            crudo = await self._pedir_afirmaciones_al_llm(estado, intencion)
-            return {"propuestas": self._propuestas_de_la_salida(crudo, estado["trace_id"])}
+            def armar(hilo: EstadoDelHilo, ventana: Sequence[TurnoPrevio]) -> PromptSeparado:
+                return armar_prompt_del_turno(
+                    hilo, estado["pregunta"], estado["hechos"], intencion, ventana
+                )
+
+            propuestas = await pedir_afirmaciones(
+                self._llm, self._contador, self._configuracion, estado, armar
+            )
+            return {"propuestas": propuestas}
 
         return nodo
 
-    async def _pedir_afirmaciones_al_llm(self, estado: EstadoDelGrafo, intencion: Intencion) -> str:
-        hilo = estado.get("hilo") or EstadoDelHilo()
-        ventana = ventana_de_memoria(
-            hilo.turnos, self._configuracion.presupuesto_de_memoria, self._contador.contar
-        )
-        prompt = armar_prompt_del_turno(
-            hilo, estado["pregunta"], estado["hechos"], intencion, ventana
-        )
-        try:
-            return await self._llm.completar_json(
-                prompt.usuario, ESQUEMA_DEL_TURNO, sistema=prompt.sistema
-            )
-        except FalloDelLlm:
-            logger.warning("event=chat_generacion_llm_fallo traceId=%s", estado["trace_id"])
-            raise LlmLocalNoDisponibleError() from None
 
-    @staticmethod
-    def _propuestas_de_la_salida(crudo: str, trace_id: str) -> tuple[PropuestaDelTurno, ...]:
-        try:
-            salida = _SalidaDelTurno.model_validate_json(crudo)
-        except ValidationError:
-            # Sin eco del texto generado: solo el hecho y su tamaño (RN-10, RN-14).
-            logger.warning(
-                "event=chat_salida_invalida traceId=%s caracteres=%d", trace_id, len(crudo)
-            )
-            raise LlmSalidaInvalidaError() from None
-        return tuple(
-            PropuestaDelTurno(a.texto.strip(), tuple(a.fact_refs), tuple(a.citas))
-            for a in salida.afirmaciones
-        )
+async def pedir_afirmaciones(
+    llm: LlmClient,
+    contador: ContadorDeTokens,
+    configuracion: ConfiguracionDelGrafo,
+    estado: EstadoDelGrafo,
+    armar_prompt: Callable[[EstadoDelHilo, Sequence[TurnoPrevio]], PromptSeparado],
+) -> tuple[PropuestaDelTurno, ...]:
+    """Etapa común de generación de un nodo de capacidad: ventana de memoria → prompt → LLM local → afirmaciones.
+
+    Un fallo del LLM es ``LOCAL_LLM_UNAVAILABLE`` y una salida que no cumple el esquema, ``LLM_OUTPUT_INVALID``."""
+    hilo = estado.get("hilo") or EstadoDelHilo()
+    ventana = ventana_de_memoria(hilo.turnos, configuracion.presupuesto_de_memoria, contador.contar)
+    prompt = armar_prompt(hilo, ventana)
+    try:
+        crudo = await llm.completar_json(prompt.usuario, ESQUEMA_DEL_TURNO, sistema=prompt.sistema)
+    except FalloDelLlm:
+        logger.warning("event=chat_generacion_llm_fallo traceId=%s", estado["trace_id"])
+        raise LlmLocalNoDisponibleError() from None
+    return propuestas_de_la_salida(crudo, estado["trace_id"])
+
+
+def propuestas_de_la_salida(crudo: str, trace_id: str) -> tuple[PropuestaDelTurno, ...]:
+    """Las afirmaciones que propone el LLM en el esquema de ``ESQUEMA_DEL_TURNO``; salida inválida → ``LLM_OUTPUT_INVALID``."""
+    try:
+        salida = _SalidaDelTurno.model_validate_json(crudo)
+    except ValidationError:
+        # Sin eco del texto generado: solo el hecho y su tamaño (RN-10, RN-14).
+        logger.warning("event=chat_salida_invalida traceId=%s caracteres=%d", trace_id, len(crudo))
+        raise LlmSalidaInvalidaError() from None
+    return tuple(
+        PropuestaDelTurno(a.texto.strip(), tuple(a.fact_refs), tuple(a.citas))
+        for a in salida.afirmaciones
+    )
