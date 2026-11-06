@@ -1,6 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Client } from 'pg';
 import { idSembrado } from '../../../prisma/seed/determinismo.js';
+import {
+  PACIENTES_ADICIONALES_DEL_SEED,
+  PACIENTE_CHAT,
+} from '../../../prisma/seed/pacientes/chat.js';
 import { PACIENTES_SEMILLA } from '../../../prisma/seed/pacientes/indice.js';
 import { conectar, type BaseDeTest } from '../../support/db.js';
 import {
@@ -49,36 +53,46 @@ describe('Contenido del seed sintético', () => {
     const pacientes = await filas<{ id: string; data_origin: string; agreement_reference: string }>(
       'SELECT id, data_origin, agreement_reference FROM clinical.patient ORDER BY id',
     );
-    expect(pacientes.map((p) => p.id).sort()).toEqual(PACIENTES.map(idDe).sort());
+    expect(pacientes.map((p) => p.id).sort()).toEqual(
+      [...PACIENTES.map(idDe), idSembrado(PACIENTE_CHAT)].sort(),
+    );
     expect(pacientes.every((p) => p.data_origin === 'sintetico')).toBe(true);
     expect(pacientes.every((p) => p.agreement_reference !== null)).toBe(true);
 
     const abiertos = await filas<{ patient_id: string; n: number }>(
       'SELECT patient_id, count(*)::int AS n FROM clinical.care_episode WHERE closed_at IS NULL GROUP BY patient_id',
     );
-    expect(abiertos).toHaveLength(PACIENTES_SEMILLA.length);
+    expect(abiertos).toHaveLength(PACIENTES_SEMILLA.length + PACIENTES_ADICIONALES_DEL_SEED);
     expect(abiertos.every((e) => e.n === 1)).toBe(true);
 
-    for (const tabla of [
-      'diagnosis',
-      'diagnosis_grading',
-      'prior_treatment',
-      'clinical_event',
-      'clinical_attribute',
-    ]) {
+    // `P-CHAT` (L1D-315) tiene a propósito datos manuales, en conflicto o sin revisar: se prueba en `paciente-chat.test.ts`.
+    const chat = idSembrado(PACIENTE_CHAT);
+    for (const tabla of ['diagnosis', 'prior_treatment', 'clinical_event', 'clinical_attribute']) {
       const ajenas = await filas(
-        `SELECT 1 FROM clinical.${tabla} WHERE entry_method <> 'seed' OR review_status <> 'verificado'`,
+        `SELECT 1 FROM clinical.${tabla} WHERE patient_id <> $1 AND (entry_method <> 'seed' OR review_status <> 'verificado')`,
+        [chat],
       );
       expect(ajenas, tabla).toEqual([]);
     }
-    expect(await filas(`SELECT 1 FROM clinical.exam WHERE entry_method <> 'seed'`)).toEqual([]);
+    expect(
+      await filas(
+        `SELECT 1 FROM clinical.diagnosis_grading g JOIN clinical.diagnosis d ON d.id = g.diagnosis_id
+          WHERE d.patient_id <> $1 AND (g.entry_method <> 'seed' OR g.review_status <> 'verificado')`,
+        [chat],
+      ),
+    ).toEqual([]);
+    expect(
+      await filas(`SELECT 1 FROM clinical.exam WHERE patient_id <> $1 AND entry_method <> 'seed'`, [
+        chat,
+      ]),
+    ).toEqual([]);
     // Todo biomarcador está verificado salvo los de (f) = FX-T3-a (US-071) y el Ki-67 de (h) (d5fb-01).
     expect(
       await filas(
         `SELECT 1 FROM clinical.biomarker b JOIN clinical.exam e ON e.id = b.exam_id
-          WHERE b.review_status <> 'verificado' AND e.patient_id <> $1
+          WHERE b.review_status <> 'verificado' AND e.patient_id NOT IN ($1, $3)
             AND NOT (e.patient_id = $2 AND b.name = 'Ki-67')`,
-        [idDe('f'), idDe('h')],
+        [idDe('f'), idDe('h'), chat],
       ),
     ).toEqual([]);
   });

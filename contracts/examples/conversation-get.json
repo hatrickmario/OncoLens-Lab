@@ -1,0 +1,40 @@
+{
+  "conversationId": "d2a1b3c5-4e6f-4b7a-9d8c-0f1e2d3c4b5a",
+  "patientId": "3f6d2c1a-8b4e-4a7c-9e5d-6c1b2a3f4e5d",
+  "createdAt": "2026-11-06T14:59:00.000Z",
+  "turns": [
+    {
+      "id": "c1f0a2b4-3d5e-4a6b-8c7d-9e0f1a2b3c4d",
+      "turnNumber": 1,
+      "createdAt": "2026-11-06T15:00:00.000Z",
+      "question": "¿Cuál es la situación actual de la paciente?",
+      "intent": "caso",
+      "status": "respondido",
+      "topRelevanceScore": null,
+      "blocks": [
+        {
+          "kind": "documentado",
+          "text": "Carcinoma ductal infiltrante de mama, Nottingham grado 2, estadio IIA (TNM 8), ECOG 1.",
+          "factRefs": ["f1"]
+        }
+      ],
+      "dataLinks": [
+        {
+          "factRef": "f1",
+          "resourceType": "diagnosis",
+          "resourceId": "7b2e4c6a-1d3f-4b5a-9c8e-0a1b2c3d4e5f",
+          "origin": "seed",
+          "relativeDay": 0,
+          "recordedDate": "2026-10-06"
+        }
+      ],
+      "omittedClaims": 0,
+      "notices": [
+        "Generado por IA; requiere validación clínica independiente por el oncólogo tratante",
+        "Uso académico/investigación"
+      ],
+      "dataUsed": ["Diagnóstico"],
+      "dataMissing": ["Estado menopáusico", "Ki-67"]
+    }
+  ]
+}

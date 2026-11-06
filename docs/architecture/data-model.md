@@ -15,7 +15,7 @@
 |---|---|---|
 | `auth` | `user`, `role`, `permission`, `role_permission`, `session` | Backend 1 |
 | `identity` | `patient_identity`, `legal_representative` (cifradas) | Backend 1 |
-| `clinical` | `patient`, `care_episode`, `care_team_member`, `patient_opt_out`, `intake_draft`, `diagnosis`, `diagnosis_grading`, `clinical_note`, `exam`, `biomarker`, `document`, `treatment`, `prior_treatment`, `clinical_event`, `clinical_attribute`, `clinical_data_source`, `ai_analysis_record`, `analysis_follow_up`, `analysis_feedback`, `research_subject_map` | Backend 1 |
+| `clinical` | `patient`, `care_episode`, `care_team_member`, `patient_opt_out`, `intake_draft`, `diagnosis`, `diagnosis_grading`, `clinical_note`, `exam`, `biomarker`, `document`, `treatment`, `prior_treatment`, `clinical_event`, `clinical_attribute`, `clinical_data_source`, `ai_analysis_record`, `analysis_follow_up`, `conversation`, `conversation_turn`, `analysis_feedback`, `research_subject_map` | Backend 1 |
 | `audit` | `audit_log` | Backend 1 |
 | `research` | `episode_snapshot` (rol de solo inserción) | Backend 1 |
 | `corpus` | `corpus_document`, `corpus_release`, `corpus_release_document` y el estado de ingesta; Prisma lo excluye | Backend 2 (rol `rag_corpus`) |
@@ -1056,6 +1056,40 @@ Las columnas de metadatos del modelo se anulan según el estado o el tipo del an
 | `trace_id` | text |  | nuevo por turno |
 | `created_at` | timestamptz |  |  |
 
+#### `clinical.conversation`
+
+| Columna | Tipo | Clave | Nota |
+|---|---|---|---|
+| `id` | uuid | PK | L1D-315 (S6) |
+| `patient_id` | uuid | FK | la conversación se ancla al paciente |
+| `thread_id` | uuid |  | único; UUID v4 aleatorio, nunca derivado de `patient_id`; solo va a rag-orchestrator, nunca al navegador (ADR-51) |
+| `created_by` | uuid | FK | usuario doctor que la abrió |
+| `created_at` | timestamptz |  |  |
+
+#### `clinical.conversation_turn`
+
+| Columna | Tipo | Clave | Nota |
+|---|---|---|---|
+| `id` | uuid | PK |  |
+| `conversation_id` | uuid | FK |  |
+| `turn_number` | integer |  | único por conversación |
+| `question_masked` | text |  | enmascarada con el detector de ADR-40; sin pseudoPatientId ni identidad |
+| `intent` | text |  | caso\|faltantes\|evidencia\|fuentes_limitaciones\|no_clasificada\|fuera_de_alcance |
+| `about_turn_id` | uuid |  | nullable; turno al que se refiere la pregunta |
+| `blocks` | jsonb |  | bloques validados (ChatBlock[]); las citas van dentro de cada bloque |
+| `data_links` | jsonb |  | factRef → recurso del paciente; solo hacia el navegador |
+| `omitted_claims` | integer |  |  |
+| `notices` | jsonb |  | avisos de RN-19 tal como los devolvió Backend 2 |
+| `data_used` | jsonb |  | etiquetas de los hechos enviados |
+| `data_missing` | jsonb |  | etiquetas de los faltantes enviados |
+| `analysis_id` | uuid | FK | nullable; `ai_analysis_record` del turno de evidencia |
+| `structured_state` | jsonb |  | estado estructurado del hilo, desidentificado |
+| `llm_provider` | text |  | local\|nube (RN-12) |
+| `llm_model` | text |  | nullable (turnos sin generación) |
+| `prompt_version` | text |  | nullable |
+| `trace_id` | text |  | nuevo por turno |
+| `created_at` | timestamptz |  |  |
+
 ### 4.4 Schema `audit`
 
 #### `audit.audit_log`
@@ -1281,6 +1315,47 @@ CREATE TABLE clinical.analysis_follow_up (
 - Las columnas de `meta` (`llm_provider`, `llm_model`, `embedding_model`, `reranker_model`, `nli_model`, `prompt_version`, `catalog_version`), `data_classification` y `trace_id` hacen el turno reproducible (RN-06) y auditable frente a RN-12: `llm_provider` es `local | nube` (el contrato lo declara como enum) y Backend 1 lo verifica contra `data_classification` (con datos reales siempre `local`, sin *fallback* a la nube). `is_new_source` (dentro de `cited_sources`) lo calcula Backend 1 al comparar los `chunkId` del turno con los del análisis persistido.
 - `rag-orchestrator` no guarda turnos ni memoria entre llamadas: toda la persistencia es de Backend 1.
 - Vacío anotado para US-218: si los turnos previos del mismo análisis viajan como elementos de `analysisMemory` y si un turno `fuera_de_contexto` cuenta para el límite.
+
+### 7.1 Conversación del chat: `clinical.conversation` y `clinical.conversation_turn`
+
+L1D-315, ADR-51 §3, `[S6 resp. 5, 6]`. La conversación se ancla al paciente; cada turno se persiste **antes** de responder (RN-06). Ambas tablas quedan **sin pseudoPatientId ni identidad** (RN-10, RN-11): el seudónimo de cada turno es efímero y nunca se guarda. El historial se guarda pero no se muestra ni se reutiliza en el MVP (retención como `ai_analysis_record`, RN-18).
+
+```sql
+CREATE TABLE clinical.conversation (
+  id         uuid PRIMARY KEY,
+  patient_id uuid NOT NULL REFERENCES clinical.patient (id) ON DELETE RESTRICT,
+  thread_id  uuid NOT NULL UNIQUE,            -- aleatorio; nunca patient_id ni pseudoPatientId
+  created_by uuid NOT NULL REFERENCES auth."user" (id) ON DELETE RESTRICT,
+  created_at timestamptz NOT NULL
+);
+
+CREATE TABLE clinical.conversation_turn (
+  id               uuid PRIMARY KEY,
+  conversation_id  uuid NOT NULL REFERENCES clinical.conversation (id) ON DELETE RESTRICT,
+  turn_number      integer NOT NULL CHECK (turn_number >= 1),
+  question_masked  text NOT NULL,             -- enmascarada, la misma cadena que viaja a /chat/turn
+  intent           text NOT NULL CHECK (intent IN ('caso', 'faltantes', 'evidencia', 'fuentes_limitaciones', 'no_clasificada', 'fuera_de_alcance')),
+  about_turn_id    uuid,
+  blocks           jsonb NOT NULL,            -- ChatBlock[] con sus citas
+  data_links       jsonb NOT NULL,            -- factRef -> recurso del paciente
+  omitted_claims   integer NOT NULL DEFAULT 0,
+  notices          jsonb NOT NULL,
+  data_used        jsonb NOT NULL,
+  data_missing     jsonb NOT NULL,
+  analysis_id      uuid REFERENCES clinical.ai_analysis_record (id) ON DELETE RESTRICT,
+  structured_state jsonb NOT NULL,
+  llm_provider     text NOT NULL CHECK (llm_provider IN ('local', 'nube')),  -- RN-12
+  llm_model        text,
+  prompt_version   text,
+  trace_id         text NOT NULL,             -- nuevo por turno
+  created_at       timestamptz NOT NULL,
+  UNIQUE (conversation_id, turn_number)
+);
+```
+
+- `thread_id` y `turn_number` son únicos; `turn_number` lo calcula la sentencia de inserción (`max + 1`) dentro de la transacción.
+- Ninguna columna guarda `pseudoPatientId`, nombre, documento ni fecha de nacimiento; `trace_id` hace el turno auditable.
+- `conversation_turn` es inmutable (el trigger `conversation_turn_inmutable` rechaza todo `UPDATE`, RN-06); sus `CHECK` acotan `turn_number >= 1`, `intent` y `llm_provider` (RN-12).
 
 ## 8. Matriz de permisos (RBAC)
 

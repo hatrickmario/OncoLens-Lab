@@ -60,6 +60,12 @@ export const TOTAL_PACIENTES_SEMILLA = readdirSync(
   new URL('../../clinical-api/prisma/seed/pacientes/', import.meta.url),
 ).filter((archivo) => /^[a-z]\.ts$/.test(archivo)).length;
 
+/**
+ * Filas del listado: los pacientes (a)–(m) más `P-CHAT` (L1D-315), que el seed crea aparte (`chat.ts`) y cuya identidad
+ * sintética no sigue el patrón `Prueba Sintética n` / `SINT-n`.
+ */
+export const TOTAL_PACIENTES_DEL_LISTADO = TOTAL_PACIENTES_SEMILLA + 1;
+
 /** Usuario sintético sembrado (L1D-197); la contraseña de la fixture llega por entorno, nunca versionada. */
 export const CORREO_DOC1 = process.env.E2E_DOC_CORREO ?? 'doc1@test.local';
 

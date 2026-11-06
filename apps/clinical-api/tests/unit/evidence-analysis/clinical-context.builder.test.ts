@@ -93,13 +93,13 @@ describe('asignarDataRefs', () => {
   it('asigna r1, r2… en orden de llamada y recuerda qué dato respalda cada referencia', () => {
     const asignador = asignarDataRefs();
 
-    const primero = asignador.asignar({ tabla: 'diagnosis', id: 'dx-1' });
-    const segundo = asignador.asignar({ tabla: 'biomarker', id: 'bm-1' });
+    const primero = asignador.asignar({ tabla: 'diagnosis', id: 'dx-1', fecha: null });
+    const segundo = asignador.asignar({ tabla: 'biomarker', id: 'bm-1', fecha: null });
 
     expect([primero, segundo]).toEqual(['r1', 'r2']);
     expect([...asignador.mapa]).toEqual([
-      ['r1', { tabla: 'diagnosis', id: 'dx-1' }],
-      ['r2', { tabla: 'biomarker', id: 'bm-1' }],
+      ['r1', { tabla: 'diagnosis', id: 'dx-1', fecha: null }],
+      ['r2', { tabla: 'biomarker', id: 'bm-1', fecha: null }],
     ]);
   });
 });
@@ -311,12 +311,26 @@ describe('construirContextoPermitido', () => {
     expect(contexto.priorTreatments[0]?.dataRef).toBe('r4');
     expect(contexto.events[0]?.dataRef).toBe('r5');
     expect([...dataRefs]).toEqual([
-      ['r1', { tabla: 'diagnosis', id: 'dx-1' }],
-      ['r2', { tabla: 'biomarker', id: 'bm-1' }],
-      ['r3', { tabla: 'clinical_attribute', id: 'at-1' }],
-      ['r4', { tabla: 'prior_treatment', id: 'tp-1' }],
-      ['r5', { tabla: 'clinical_event', id: 'ev-1' }],
+      ['r1', { tabla: 'diagnosis', id: 'dx-1', fecha: '2026-08-20' }],
+      ['r2', { tabla: 'biomarker', id: 'bm-1', fecha: '2026-09-26' }],
+      ['r3', { tabla: 'clinical_attribute', id: 'at-1', fecha: '2026-08-20' }],
+      ['r4', { tabla: 'prior_treatment', id: 'tp-1', fecha: '2026-03-01' }],
+      ['r5', { tabla: 'clinical_event', id: 'ev-1', fecha: '2026-09-26' }],
     ]);
+  });
+
+  it('registra la fecha en null para el atributo y el evento de precisión incierta, igual que los meses relativos', () => {
+    const { dataRefs } = construirContextoPermitido(
+      casoDeEjemplo({
+        atributos: [atributoDeEjemplo({ datePrecision: 'incierta' })],
+        eventos: [eventoDeEjemplo({ datePrecision: 'incierta' })],
+      }),
+      AHORA_DE_EJEMPLO,
+      [],
+    );
+
+    expect(dataRefs.get('r2')?.fecha).toBeNull();
+    expect(dataRefs.get('r3')?.fecha).toBeNull();
   });
 
   it('envía vacías las listas que el S1 no puebla: notas, tendencias, faltantes y análisis previos', () => {

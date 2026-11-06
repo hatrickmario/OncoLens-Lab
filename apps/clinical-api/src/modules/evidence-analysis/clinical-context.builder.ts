@@ -81,7 +81,7 @@ function diagnosticoPermitido(
 ): ContextoPermitido['diagnosis'] {
   if (fila === null) return null;
   return {
-    dataRef: asignador.asignar({ tabla: 'diagnosis', id: fila.id }),
+    dataRef: asignador.asignar({ tabla: 'diagnosis', id: fila.id, fecha: fila.diagnosedAt }),
     cancerType: fila.cancerType,
     histology: fila.histology,
     grade: fila.grade,
@@ -117,7 +117,7 @@ function biomarcadorPermitido(
   asignador: Asignador,
 ): ContextoPermitido['biomarkers'][number] {
   return {
-    dataRef: asignador.asignar({ tabla: 'biomarker', id: fila.id }),
+    dataRef: asignador.asignar({ tabla: 'biomarker', id: fila.id, fecha: fila.performedAt }),
     biomarkerName: fila.name,
     value: fila.value,
     resultType: fila.resultType,
@@ -133,7 +133,11 @@ function atributoPermitido(
   asignador: Asignador,
 ): ContextoPermitido['attributes'][number] {
   return {
-    dataRef: asignador.asignar({ tabla: 'clinical_attribute', id: fila.id }),
+    dataRef: asignador.asignar({
+      tabla: 'clinical_attribute',
+      id: fila.id,
+      fecha: fechaConfiable(fila.observedAt, fila.datePrecision),
+    }),
     key: fila.attributeKey,
     value: fila.value,
     monthsAgo: mesesDeFechaConfiable(fila.observedAt, fila.datePrecision, ahora),
@@ -147,7 +151,7 @@ function tratamientoPermitido(
   asignador: Asignador,
 ): ContextoPermitido['priorTreatments'][number] {
   return {
-    dataRef: asignador.asignar({ tabla: 'prior_treatment', id: fila.id }),
+    dataRef: asignador.asignar({ tabla: 'prior_treatment', id: fila.id, fecha: fila.startedAt }),
     lineNumber: fila.lineNumber,
     setting: fila.setting,
     regimenName: fila.regimenName,
@@ -165,7 +169,11 @@ function eventoPermitido(
   asignador: Asignador,
 ): ContextoPermitido['events'][number] {
   return {
-    dataRef: asignador.asignar({ tabla: 'clinical_event', id: fila.id }),
+    dataRef: asignador.asignar({
+      tabla: 'clinical_event',
+      id: fila.id,
+      fecha: fechaConfiable(fila.eventDate, fila.datePrecision),
+    }),
     eventType: fila.eventType,
     monthsAgo: mesesDeFechaConfiable(fila.eventDate, fila.datePrecision, ahora),
     description: fila.description,

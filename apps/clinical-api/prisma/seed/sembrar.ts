@@ -21,6 +21,7 @@ import type { ClavesDeIdentidad } from '../../src/infrastructure/crypto/claves-d
 import type { RolDeUsuario } from '../../src/modules/auth/auth.repository.js';
 import { crearServicioDeIdentidad } from '../../src/modules/patients/identity.module.js';
 import type { IdentityService } from '../../src/modules/patients/identity.service.js';
+import { sembrarPacienteChat } from './sembrar-chat.js';
 import { DESCRIPCION_DE_ROL, MATRIZ_DE_PERMISOS } from './roles.js';
 
 /** Lo mínimo que el seed necesita de PostgreSQL: `pg.Client`/`PoolClient` cumplen, y el test pasa el cliente real. */
@@ -532,6 +533,16 @@ async function sembrarTodo(siembra: Siembra): Promise<void> {
   for (const [indice, paciente] of PACIENTES_SEMILLA.entries()) {
     await sembrarPaciente(siembra, paciente, indice + 1, { doctorId, adminId });
   }
+  // P-CHAT (L1D-315) va aparte: no cambia el conteo ni los ordinales de (a)–(m).
+  await sembrarPacienteChat({
+    db: siembra.db,
+    catalogo: siembra.entradas.catalogo,
+    ahora: siembra.ahora,
+    identidad: siembra.identidad,
+    doctorId,
+    retencion: siembra.entradas.retencion,
+    contar: (tabla) => contarFilaEscrita(siembra, tabla),
+  });
 }
 
 /** Siembra roles, usuarios de demo y los pacientes (a)–(m), de forma idempotente, dentro de la sesión recibida. */

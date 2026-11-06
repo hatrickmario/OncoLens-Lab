@@ -23,7 +23,8 @@ export const EXPECTED_TABLES = [
   'clinical.intake_draft', 'clinical.diagnosis', 'clinical.diagnosis_grading', 'clinical.clinical_note',
   'clinical.exam', 'clinical.biomarker', 'clinical.document', 'clinical.treatment', 'clinical.prior_treatment',
   'clinical.clinical_event', 'clinical.clinical_attribute', 'clinical.clinical_data_source',
-  'clinical.ai_analysis_record', 'clinical.analysis_follow_up', 'clinical.analysis_feedback',
+  'clinical.ai_analysis_record', 'clinical.analysis_follow_up', 'clinical.conversation', 'clinical.conversation_turn',
+  'clinical.analysis_feedback',
   'clinical.research_subject_map', 'audit.audit_log', 'research.episode_snapshot',
   'corpus.corpus_document', 'corpus.corpus_release', 'corpus.corpus_release_document', 'milvus.corpus_chunk',
 ];
@@ -40,6 +41,14 @@ const FOLLOW_UP_COLUMNS = [
   'patient_data_links', 'data_classification', 'llm_provider', 'llm_model', 'embedding_model', 'reranker_model', 'nli_model', 'prompt_version',
   'catalog_version', 'trace_id', 'created_at',
 ];
+/** Conversación del chat (L1D-315, ADR-51 §3): columnas obligatorias por tabla. */
+const CONVERSATION_COLUMNS = {
+  'clinical.conversation': ['patient_id', 'thread_id', 'created_by', 'created_at'],
+  'clinical.conversation_turn': [
+    'conversation_id', 'turn_number', 'question_masked', 'intent', 'blocks', 'data_links', 'omitted_claims', 'analysis_id',
+    'structured_state', 'llm_provider', 'llm_model', 'prompt_version', 'trace_id', 'created_at',
+  ],
+};
 const MILVUS_COLUMNS = ['dense_vector', 'sparse_vector', 'source_type', 'language', 'cancer_type_tags', 'population', 'study_design', 'published_year', 'is_current'];
 const ACCOUNT_STATUSES = ['pendiente', 'activo', 'desactivado', 'rechazado'];
 const CLINICAL_SCHEMAS = ['auth', 'identity', 'clinical', 'audit', 'research'];
@@ -149,6 +158,19 @@ function checkFollowUp(model) {
   return [...found, ...requireText(report, `${detail}\n${section}`, phrases, '## 7', 'la tabla de seguimiento')];
 }
 
+/** Ninguna tabla de la conversación guarda el seudónimo ni la identidad (RN-10, RN-11); `trace_id` hace el turno auditable. */
+function checkConversation(model) {
+  const report = reporter(RULE, 'AC-5');
+  const found = [];
+  for (const [table, columns] of Object.entries(CONVERSATION_COLUMNS)) {
+    found.push(...requireColumns(report, model, table, columns));
+    const identity = columnsOf(tableSection(model, table)).filter((name) => /pseudo_?patient_?id|full_name|document_number|birth/i.test(name));
+    for (const name of identity) found.push(report(MODEL_FILE, `#### ${table}`, `${table} no guarda pseudoPatientId ni identidad (RN-10, RN-11): columna ${name}`));
+  }
+  const detail = sectionOf(model, /^###\s+7\.1\s/) ?? '';
+  return [...found, ...requireText(report, detail, ['sin pseudoPatientId ni identidad', 'UNIQUE (conversation_id, turn_number)', 'thread_id  uuid NOT NULL UNIQUE'], '### 7.1', 'la sección de la conversación')];
+}
+
 function checkAccountStatus(model) {
   const report = reporter(RULE, 'AC-15');
   const user = tableSection(model, 'auth.user');
@@ -217,6 +239,7 @@ export function assertDataModelDocument(specs, examples, docs) {
     ...checkMilvus(model),
     ...checkLicense(model),
     ...checkFollowUp(model),
+    ...checkConversation(model),
     ...checkAccountStatus(model),
     ...checkMatrix(model),
     ...checkIsolation(model),

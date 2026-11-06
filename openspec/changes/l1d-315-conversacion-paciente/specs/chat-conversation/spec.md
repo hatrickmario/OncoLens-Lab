@@ -127,16 +127,14 @@ ningún caso MUST persistir un `conversation_turn` ni recurrir a otro proveedor 
 #### Scenario: LLM local no disponible o salida inválida [US-258 AC-7] [RN-06] [RN-12]
 - **GIVEN** MSW que responde `503` en `/chat/turn` desde `contracts/examples/chat-turn-llm-local-no-disponible.json` y, en otro caso, desde `contracts/examples/rag-salida-llm-invalida.json` (`error = "LLM_OUTPUT_INVALID"`)
 - **WHEN** se envía un turno
-- **THEN** responde `503` con `error = "LOCAL_LLM_UNAVAILABLE"` y `error = "LLM_OUTPUT_INVALID"` respectivamente, validados contra el `oneOf [ErrorLlmLocalNoDisponible, ErrorSalidaLlmInvalida]` del spec
+- **THEN** responde `503` con `error = "LOCAL_LLM_UNAVAILABLE"` y `error = "LLM_OUTPUT_INVALID"` respectivamente, validados contra el `503 GeneracionNoDisponible` del spec (`oneOf` que incluye `ErrorLlmLocalNoDisponible` y `ErrorSalidaLlmInvalida`)
 - **AND** `clinical.conversation_turn` no tiene filas nuevas y no se llama a ningún otro proveedor
 
 ### Requirement: Solo el rol doctor conversa y la conversación debe existir
-Las tres operaciones MUST exigir sesión y el rol `doctor`; `admin` recibe `403` sin ninguna llamada a `rag-orchestrator`
-(mínimo privilegio, E-04). Un `conversationId` o `patientId` inexistente MUST responder `404`. La ruta de turnos SHALL
-registrarse con la marca `generaIA` y declararse en el spec con `x-genera-ia: true` y `403 PermisoDenegadoOOptOut`.
-
-Regresión [RN-15] activa desde S6 con US-148 (L1D-213): `POST …/turns` con opt-out → `403 OPT_OUT_ANALISIS_IA` sin llamar
-a `/chat/turn`.
+Las tres operaciones MUST exigir sesión y el rol `doctor`; `admin` recibe `403` sin llamar a `rag-orchestrator` (E-04).
+Un `conversationId` o `patientId` inexistente MUST responder `404`. La operación de turnos SHALL declararse con
+`x-genera-ia: true` y `403 PermisoDenegadoOOptOut`; la marca en código y el guardia de opt-out (`403 OPT_OUT_ANALISIS_IA`
+sin llamar a `/chat/turn`, RN-15) son de L1D-213.
 
 #### Scenario: El administrador no conversa ni lee conversaciones [US-258 AC-8] [E-04]
 - **GIVEN** `admin@test.local` con rol `admin` y un cliente de `rag-orchestrator` que cuenta llamadas

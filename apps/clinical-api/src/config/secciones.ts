@@ -370,6 +370,8 @@ export interface EvidenceAnalysisConfig {
   ragTimeoutMs: number;
   /** Máximo de preguntas de seguimiento por análisis (`ANALYSIS_FOLLOWUP_MAX`, RN-22, US-218): el `409 LIMITE_SEGUIMIENTO`. */
   analysisFollowupMax: number;
+  /** `CHAT_REHYDRATE_TURNS` (RN-22, L1D-315): turnos enmascarados que se reenvían a rag-orchestrator al rehidratar un hilo desconocido. */
+  chatRehydrateTurns: number;
   /** `AI_DISCLAIMER_TEXT`: aviso de IA de la respuesta (literal de US-069 y PRD E-11, sin la etiqueta de uso académico); obligatorio y no vacío, nunca un literal del código. */
   aiDisclaimerText: string;
 }
@@ -380,6 +382,9 @@ const CONTRACT_MAX_OPTIONS = 3;
 const DEFAULT_EVIDENCE_YEARS = 10;
 const DEFAULT_RAG_TIMEOUT_MS = 30_000;
 const DEFAULT_ANALYSIS_FOLLOWUP_MAX = 10;
+const DEFAULT_CHAT_REHYDRATE_TURNS = 6;
+/** `maxItems` de `ChatRehydration.turns` en el contrato de rag-orchestrator. */
+const CONTRACT_MAX_REHYDRATE_TURNS = 50;
 
 function leerUrlHttpObligatoria(env: NodeJS.ProcessEnv, variable: string): string {
   const valor = leerObligatoria(env, variable);
@@ -390,6 +395,18 @@ function leerUrlHttpObligatoria(env: NodeJS.ProcessEnv, variable: string): strin
     // Se descarta el error del parser: puede citar el valor.
   }
   throw new ConfiguracionInvalidaError(variable, 'debe ser una URL http(s) válida');
+}
+
+/** `CHAT_REHYDRATE_TURNS` (RN-22): positivo y sin superar el máximo de `ChatRehydration.turns` del contrato. */
+function leerTurnosDeRehidratacion(env: NodeJS.ProcessEnv): number {
+  const turnos = readPositiveInteger(env, 'CHAT_REHYDRATE_TURNS', DEFAULT_CHAT_REHYDRATE_TURNS);
+  if (turnos > CONTRACT_MAX_REHYDRATE_TURNS) {
+    throw new ConfiguracionInvalidaError(
+      'CHAT_REHYDRATE_TURNS',
+      `no puede superar ${CONTRACT_MAX_REHYDRATE_TURNS} (máximo del contrato)`,
+    );
+  }
+  return turnos;
 }
 
 /**
@@ -426,6 +443,7 @@ export function readEvidenceAnalysisConfig(env: NodeJS.ProcessEnv): EvidenceAnal
       'ANALYSIS_FOLLOWUP_MAX',
       DEFAULT_ANALYSIS_FOLLOWUP_MAX,
     ),
+    chatRehydrateTurns: leerTurnosDeRehidratacion(env),
     aiDisclaimerText: leerObligatoria(env, 'AI_DISCLAIMER_TEXT'),
   };
 }

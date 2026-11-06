@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — Platform API (Backend 1 / clinical-api)
-  version: 1.23.0
+  version: 1.24.0
   description: >-
     API pública, accesible solo a través de los Route Handlers de web (clinical-api no
     publica puerto al host). Autenticación por cookie de sesión HttpOnly + Secure +
@@ -25,6 +25,7 @@ tags:
   - name: pacientes
   - name: documentos
   - name: analisis-evidencia
+  - name: conversacion
   - name: registro-manual
   - name: operacion
 
@@ -1178,6 +1179,114 @@ paths:
         "404":
           $ref: '#/components/responses/NoEncontrado'
 
+  /platform/patients/{patientId}/conversations:
+    post:
+      operationId: createConversation
+      tags: [conversacion]
+      summary: Abre una conversación del oncólogo sobre un paciente
+      description: >-
+        La conversación se ancla al paciente (ADR-51, S6 resp. 6). El identificador del hilo de
+        Backend 2 (threadId) es un UUID aleatorio que clinical-api genera y guarda; nunca se
+        expone al navegador. No hay endpoint que liste las conversaciones de un paciente: el
+        historial se guarda pero no se muestra en el MVP (S6 resp. 5).
+      x-permission: clinical:read
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+      responses:
+        "201":
+          description: Conversación abierta, sin turnos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+        "401":
+          $ref: '#/components/responses/NoAutenticado'
+        "403":
+          $ref: '#/components/responses/PermisoDenegado'
+        "404":
+          $ref: '#/components/responses/NoEncontrado'
+        "500":
+          $ref: '#/components/responses/ErrorInterno'
+
+  /platform/conversations/{conversationId}:
+    get:
+      operationId: getConversation
+      tags: [conversacion]
+      summary: Lee una conversación con sus turnos
+      x-permission: clinical:read
+      parameters:
+        - $ref: '#/components/parameters/ConversationId'
+      responses:
+        "200":
+          description: La conversación con sus turnos en orden de turnNumber.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+        "401":
+          $ref: '#/components/responses/NoAutenticado'
+        "403":
+          $ref: '#/components/responses/PermisoDenegado'
+        "404":
+          $ref: '#/components/responses/NoEncontrado'
+        "500":
+          $ref: '#/components/responses/ErrorInterno'
+
+  /platform/conversations/{conversationId}/turns:
+    post:
+      operationId: createConversationTurn
+      tags: [conversacion]
+      summary: Formula una pregunta en la conversación
+      description: >-
+        La pregunta se enmascara (ADR-40, RN-11) antes de enviarse a Backend 2, de persistirse y
+        de responderse. El turno se persiste ANTES de responder (RN-06). Ningún fallo de Backend 2
+        guarda un turno. Genera contenido con IA: opt-out de analisis_ia responde 403 (RN-15).
+      x-permission: clinical:read
+      x-genera-ia: true
+      parameters:
+        - $ref: '#/components/parameters/ConversationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConversationTurnCreate'
+      responses:
+        "201":
+          description: Turno registrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationTurn'
+        "401":
+          $ref: '#/components/responses/NoAutenticado'
+        "403":
+          $ref: '#/components/responses/PermisoDenegadoOOptOut'
+        "404":
+          $ref: '#/components/responses/NoEncontrado'
+        "409":
+          description: >-
+            CATALOG_VERSION_MISMATCH: la versión del catálogo clínico difiere entre los backends
+            (NFR-14). No se guarda el turno.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCatalogVersionMismatch'
+        "422":
+          description: Cuerpo inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCuerpoInvalido'
+        "500":
+          $ref: '#/components/responses/ErrorInterno'
+        "502":
+          $ref: '#/components/responses/ErrorServicioIa'
+        "503":
+          $ref: '#/components/responses/GeneracionNoDisponible'
+        "504":
+          $ref: '#/components/responses/DeadlineVencido'
+
 components:
   securitySchemes:
     sessionCookie:
@@ -1195,6 +1304,13 @@ components:
         format: uuid
     AnalysisId:
       name: analysisId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ConversationId:
+      name: conversationId
       in: path
       required: true
       schema:
@@ -3150,6 +3266,189 @@ components:
           answer:
             type: array
             minItems: 1
+
+    # ---- Conversación del oncólogo (S6, glosario del chat §2)
+    Conversation:
+      type: object
+      description: >-
+        Conversación anclada a un paciente. No expone threadId: el hilo de Backend 2 no sale de
+        clinical-api (ADR-51).
+      additionalProperties: false
+      required: [conversationId, patientId, createdAt, turns]
+      properties:
+        conversationId:
+          type: string
+          format: uuid
+        patientId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        turns:
+          type: array
+          description: En orden de turnNumber.
+          items:
+            $ref: '#/components/schemas/ConversationTurn'
+
+    ConversationTurnCreate:
+      type: object
+      additionalProperties: false
+      required: [question]
+      properties:
+        question:
+          type: string
+          minLength: 1
+          maxLength: 2000
+          description: >-
+            Pregunta del oncólogo. clinical-api la normaliza (Unicode NFC, espacios colapsados) y
+            la enmascara antes de validarla, persistirla y enviarla; minLength y maxLength se
+            miden después de normalizar.
+        aboutTurnId:
+          type: string
+          format: uuid
+          description: Turno de esta conversación al que se refiere la pregunta, si es una aclaración sobre él.
+
+    ChatCitation:
+      type: object
+      description: >-
+        Cita de un bloque `evidencia`. Los metadatos se copian del catálogo del corpus; si falta
+        uno, viaja "No disponible" (RN-25).
+      additionalProperties: false
+      required: [chunkId, documentId, sourceTitle, chunkOrdinal, chunkCount, chunkTextSnapshot]
+      properties:
+        chunkId: { type: string, minLength: 1 }
+        documentId: { type: string, minLength: 1 }
+        sourceTitle: { type: string, minLength: 1 }
+        chunkOrdinal: { type: integer, minimum: 1 }
+        chunkCount: { type: integer, minimum: 1 }
+        chunkTextSnapshot: { type: string }
+
+    ChatBlock:
+      type: object
+      description: >-
+        Un bloque de la respuesta. `documentado`, `interpretacion` y `conflicto` llevan al menos
+        un factRef; `evidencia` lleva al menos una cita; `faltante`, `catalogo`, `limitacion` y
+        `fuente` son deterministas y están exentos. Las citas van solo dentro de su bloque.
+      additionalProperties: false
+      required: [kind, text]
+      properties:
+        kind:
+          type: string
+          enum:
+            - documentado
+            - interpretacion
+            - catalogo
+            - evidencia
+            - conflicto
+            - faltante
+            - limitacion
+            - fuente
+        text: { type: string }
+        factRefs:
+          type: array
+          items: { type: string, pattern: '^f[0-9]+$' }
+        citations:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatCitation'
+
+    ConversationDataLink:
+      type: object
+      description: >-
+        Enlace de un factRef a un dato del paciente. Solo viaja hacia el navegador, nunca a
+        Backend 2. La ruta del histórico la deriva la UI (no hay historyPath).
+      additionalProperties: false
+      required: [factRef, resourceType, resourceId, origin, relativeDay, recordedDate]
+      properties:
+        factRef: { type: string, pattern: '^f[0-9]+$' }
+        resourceType:
+          type: string
+          enum: [diagnosis, biomarker, clinical_attribute, prior_treatment, clinical_event]
+        resourceId:
+          type: string
+          format: uuid
+        origin:
+          type: string
+          enum: [ocr, manual, manual_correction, seed]
+        relativeDay:
+          type: [integer, "null"]
+          description: Día relativo al diagnóstico; null si el dato no tiene fecha confiable.
+        recordedDate:
+          type: [string, "null"]
+          format: date
+
+    ConversationTurn:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - turnNumber
+        - createdAt
+        - question
+        - intent
+        - status
+        - topRelevanceScore
+        - blocks
+        - dataLinks
+        - omittedClaims
+        - notices
+        - dataUsed
+        - dataMissing
+      properties:
+        id:
+          type: string
+          format: uuid
+        turnNumber:
+          type: integer
+          minimum: 1
+        createdAt:
+          type: string
+          format: date-time
+        question:
+          type: string
+          description: Pregunta normalizada y enmascarada (RN-11).
+        intent:
+          type: string
+          enum: [caso, faltantes, evidencia, fuentes_limitaciones, no_clasificada, fuera_de_alcance]
+        aboutTurnId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [respondido, sin_evidencia, no_clasificada]
+          description: Lo deriva clinical-api; con evidenceAnalysis, del resultado del análisis.
+        topRelevanceScore:
+          type: [number, "null"]
+          minimum: 0
+          maximum: 1
+          description: Lo deriva clinical-api. null (sin evidencia) no es 0.0 (RN-02).
+        blocks:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatBlock'
+        dataLinks:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConversationDataLink'
+        omittedClaims:
+          type: integer
+          minimum: 0
+        analysisId:
+          type: string
+          format: uuid
+        notices:
+          type: array
+          description: Avisos de IA (RN-19) tal como los devolvió Backend 2; vacío en los mensajes del sistema.
+          items: { type: string }
+        dataUsed:
+          type: array
+          description: Etiquetas de los hechos del caso enviados a Backend 2 en este turno.
+          items: { type: string }
+        dataMissing:
+          type: array
+          description: Etiquetas de los datos faltantes (con tipo de faltante) enviados en este turno.
+          items: { type: string }
 
     # ---- Errores: código cerrado por respuesta; sin eco del valor recibido (RN-10)
     ErrorInterno:

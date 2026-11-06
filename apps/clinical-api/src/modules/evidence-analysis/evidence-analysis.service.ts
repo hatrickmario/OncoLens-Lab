@@ -7,7 +7,8 @@ import type {
   SourcesSelected,
 } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import { PacienteNoEncontradoError } from '../compartido/pacientes.errores.js';
-import { exigirTipoCancer, alcanceDelTipo } from './case-guards.js';
+import { alcanceDelTipo, exigirTipoCancer } from './case-guards.js';
+import { clasificacionDelPaciente } from './regla-proveedor.js';
 import {
   construirContextoPermitido,
   construirContextoSinDatosClinicos,
@@ -25,7 +26,6 @@ import type {
   ResultadoDelAnalisis,
 } from './ports.js';
 import { llamarConPlazo } from './rag-plazo.js';
-import { clasificacionDelPaciente } from './regla-proveedor.js';
 
 /** El `patientId` de la petición no corresponde a ningún paciente. */
 export { PacienteNoEncontradoError };
@@ -170,7 +170,7 @@ export function crearEvidenceAnalysisService(
       patientId: peticion.patientId,
       contexto: contextoVacio,
       query: peticion.query,
-      dataOrigin: caso.paciente.dataOrigin,
+      dataOrigin: clasificacionDelPaciente(caso.paciente),
     });
     return cierre.completarTipoNoHabilitado({
       traceId,
@@ -208,7 +208,7 @@ export function crearEvidenceAnalysisService(
       patientId: peticion.patientId,
       contexto,
       query: peticion.query,
-      dataOrigin: caso.paciente.dataOrigin,
+      dataOrigin: clasificacionDelPaciente(caso.paciente),
     });
     const request = armarRagQueryRequest({
       traceId,

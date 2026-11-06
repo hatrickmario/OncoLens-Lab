@@ -5,6 +5,7 @@ import { Router, type Express } from 'express';
 import type { CryptoKey } from 'jose';
 import respuestaEjemplo from '../../../../contracts/examples/rag-query-con-evidencia.json' with { type: 'json' };
 import respuestaSeguimientoEjemplo from '../../../../contracts/examples/rag-follow-up-response.json' with { type: 'json' };
+import respuestaChatCasoOk from '../../../../contracts/examples/chat-turn-caso-ok.json' with { type: 'json' };
 import respuestaSinEvidencia from '../../../../contracts/examples/rag-query-sin-evidencia.json' with { type: 'json' };
 import { idSembrado } from '../../prisma/seed/determinismo.js';
 import { crearEjecutorDeTransacciones } from '../../src/infrastructure/database.js';
@@ -15,10 +16,12 @@ import { componerCompletitud } from '../../src/modules/completeness/completeness
 import {
   componerGatewayDeAnalisis,
   crearChecklistDeFaltantes,
+  crearChecklistDelChat,
 } from '../../src/modules/evidence-analysis/evidence-analysis.module.js';
 import { crearTiposHabilitados } from '../../src/modules/evidence-analysis/tipos-habilitados.js';
 import { cargarEtiquetasDeDatosCriticos } from '../../src/modules/evidence-analysis/etiquetas-datos-criticos.js';
 import {
+  crearRagChatClient,
   crearRagFollowUpClient,
   crearRagQueryClient,
 } from '../../src/modules/evidence-analysis/rag-query.adapter.js';
@@ -116,6 +119,10 @@ export interface MundoDeGateway {
   readonly idsDeAnalisis: GeneradorDeIds;
   /** UUID de los turnos de seguimiento (`analysis_follow_up`): un solo generador por base. */
   readonly idsDeTurnos: GeneradorDeIds;
+  /** UUID de las conversaciones del chat (L1D-315), de los turnos del chat y de sus hilos (`thread_id`). */
+  readonly idsDeConversaciones: GeneradorDeIds;
+  readonly idsDeTurnosDeChat: GeneradorDeIds;
+  readonly idsDeHilos: GeneradorDeIds;
   readonly espacio: number;
   readonly cerrar: () => Promise<void>;
 }
@@ -141,6 +148,9 @@ export async function prepararMundoConSeed(
     ids: generadorDeIds(espacio),
     idsDeAnalisis: generadorDeIds(espacio + 2000),
     idsDeTurnos: generadorDeIds(espacio + 4000),
+    idsDeConversaciones: generadorDeIds(espacio + 5000),
+    idsDeTurnosDeChat: generadorDeIds(espacio + 6000),
+    idsDeHilos: generadorDeIds(espacio + 7000),
     espacio,
     cerrar: async () => {
       await pool.end();
@@ -167,6 +177,8 @@ const SEGUIMIENTO_POR_DEFECTO: EscenarioDeRag = {
   status: 200,
   cuerpo: respuestaSeguimientoEjemplo,
 };
+
+const CHAT_POR_DEFECTO: EscenarioDeRag = { tipo: 'json', status: 200, cuerpo: respuestaChatCasoOk };
 
 const ESCENARIO_POR_DEFECTO: EscenarioDeRag = {
   tipo: 'json',
@@ -202,8 +214,20 @@ export interface SeguimientoSimulado {
   responder(escenario: EscenarioDeRag): void;
 }
 
+/**
+ * `/chat/turn` simulado (L1D-315): captura cada request y cuenta las llamadas. `responder(...secuencia)` fija la respuesta
+ * de cada llamada, en orden; la última se repite. Por defecto, `chat-turn-caso-ok.json`.
+ */
+export interface ChatSimulado {
+  readonly capturadas: CapturaDeRag[];
+  llamadas(): number;
+  responder(...secuencia: EscenarioDeRag[]): void;
+}
+
 export interface RagSimulado {
   readonly capturadas: CapturaDeRag[];
+  /** El borde `/chat/turn` de la misma instancia de MSW. */
+  readonly chat: ChatSimulado;
   /** El borde `/rag/follow-up` de la misma instancia de MSW. */
   readonly seguimiento: SeguimientoSimulado;
   llamadas(): number;
@@ -220,7 +244,26 @@ export function ragSimulado(): RagSimulado {
   const capturadasDeSeguimiento: CapturaDeRag[] = [];
   let escenario: EscenarioDeRag = ESCENARIO_POR_DEFECTO;
   let escenarioDeSeguimiento: EscenarioDeRag = SEGUIMIENTO_POR_DEFECTO;
+  const capturadasDeChat: CapturaDeRag[] = [];
+  let secuenciaDeChat: EscenarioDeRag[] = [CHAT_POR_DEFECTO];
   const servidor = servidorMswConLoopback(
+    http.post(`${RAG_BASE_URL}/chat/turn`, async ({ request }) => {
+      const texto = await request.text();
+      const escenarioDeChat =
+        secuenciaDeChat[Math.min(capturadasDeChat.length, secuenciaDeChat.length - 1)] ??
+        CHAT_POR_DEFECTO;
+      capturadasDeChat.push({
+        headers: request.headers,
+        texto,
+        cuerpo: JSON.parse(texto) as Record<string, unknown>,
+      });
+      if (escenarioDeChat.tipo === 'red') return HttpResponse.error();
+      if (escenarioDeChat.tipo === 'tardia') {
+        await delay(RESPUESTA_TARDIA_MS);
+        return HttpResponse.json(respuestaChatCasoOk);
+      }
+      return HttpResponse.json(escenarioDeChat.cuerpo, { status: escenarioDeChat.status });
+    }),
     http.post(`${RAG_BASE_URL}/rag/follow-up`, async ({ request }) => {
       const texto = await request.text();
       capturadasDeSeguimiento.push({
@@ -260,6 +303,13 @@ export function ragSimulado(): RagSimulado {
   );
   return {
     capturadas,
+    chat: {
+      capturadas: capturadasDeChat,
+      llamadas: () => capturadasDeChat.length,
+      responder: (...secuencia) => {
+        secuenciaDeChat = secuencia;
+      },
+    },
     seguimiento: {
       capturadas: capturadasDeSeguimiento,
       llamadas: () => capturadasDeSeguimiento.length,
@@ -274,6 +324,8 @@ export function ragSimulado(): RagSimulado {
     reiniciar: () => {
       capturadas.length = 0;
       capturadasDeSeguimiento.length = 0;
+      capturadasDeChat.length = 0;
+      secuenciaDeChat = [CHAT_POR_DEFECTO];
       escenario = ESCENARIO_POR_DEFECTO;
       escenarioDeSeguimiento = SEGUIMIENTO_POR_DEFECTO;
       servidor.servidor.resetHandlers();
@@ -318,6 +370,8 @@ export interface OpcionesDeGateway {
   analysisFollowupMax?: number;
   /** `RAG_TIMEOUT_MS` (por defecto, el plazo corto de test). */
   ragTimeoutMs?: number;
+  /** `CHAT_REHYDRATE_TURNS` (por defecto 6, el inicial de RN-22). */
+  chatRehydrateTurns?: number;
   /** `AI_DISCLAIMER_TEXT` (por defecto, `DISCLAIMER_DE_TEST`). */
   aiDisclaimerText?: string;
   /** `ENABLED_CANCER_TYPES` (por defecto, mama y próstata: los dos tipos del manifiesto). */
@@ -368,32 +422,35 @@ export async function montarGateway(
     opciones.tiposHabilitados ?? ['mama', 'prostata'],
     ['mama', 'prostata'],
   );
+  const completitud = componerCompletitud({
+    db: mundo.cliente,
+    rutaDelCatalogo,
+    leerArchivo: (archivo) => readFileSync(archivo, 'utf8'),
+    tiposHabilitados,
+  });
   const ruta = componerGatewayDeAnalisis({
     db: mundo.cliente,
     rag,
     ragFollowUp: crearRagFollowUpClient(clienteRag),
+    ragChat: crearRagChatClient(clienteRag),
+    idsDeConversaciones: mundo.idsDeConversaciones,
+    idsDeTurnosDeChat: mundo.idsDeTurnosDeChat,
+    idsDeHilos: mundo.idsDeHilos,
     enTransaccion: crearEjecutorDeTransacciones(mundo.pool),
     idsDeTurnos: mundo.idsDeTurnos,
     catalogo: crearProveedorDeCatalogo(rutaDelCatalogo, (archivo) => readFileSync(archivo, 'utf8')),
     etiquetaDe:
       opciones.etiquetaDe ??
       cargarEtiquetasDeDatosCriticos(rutaDelCatalogo, (archivo) => readFileSync(archivo, 'utf8')),
-    checklist:
-      opciones.checklist ??
-      crearChecklistDeFaltantes(
-        componerCompletitud({
-          db: mundo.cliente,
-          rutaDelCatalogo,
-          leerArchivo: (archivo) => readFileSync(archivo, 'utf8'),
-          tiposHabilitados,
-        }),
-      ),
+    checklist: opciones.checklist ?? crearChecklistDeFaltantes(completitud),
+    checklistDelChat: crearChecklistDelChat(completitud),
     config: {
       analysisMaxOptions: opciones.analysisMaxOptions ?? 1,
       evidenceDefaultYears: opciones.evidenceDefaultYears ?? 10,
       analysisFollowupMax: opciones.analysisFollowupMax ?? 10,
       ragTimeoutMs: opciones.ragTimeoutMs ?? RAG_TIMEOUT_MS_DE_TEST,
       aiDisclaimerText: opciones.aiDisclaimerText ?? DISCLAIMER_DE_TEST,
+      chatRehydrateTurns: opciones.chatRehydrateTurns ?? 6,
     },
     tiposHabilitados,
     alcanceDelCorpus: {

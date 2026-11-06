@@ -1,5 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Client } from 'pg';
+import { PACIENTE_CHAT } from '../../../prisma/seed/pacientes/chat.js';
+import { idSembrado } from '../../../prisma/seed/determinismo.js';
 import { PACIENTES_SEMILLA } from '../../../prisma/seed/pacientes/indice.js';
 import { crearIndiceCiego } from '../../../src/infrastructure/crypto/indice-ciego.js';
 import { conectar, type BaseDeTest } from '../../support/db.js';
@@ -28,9 +30,11 @@ describe('Índice ciego del nombre (full_name_hmac)', () => {
   const indice = crearIndiceCiego(claveDeTest('hmac'));
 
   const indicesDelNombre = async () =>
+    // `P-CHAT` se prueba aparte (`paciente-chat.test.ts`): aquí solo los (a)–(m), con su nombre ordinal.
     (
       await cliente.query<{ patient_id: string; full_name_hmac: string | null }>(
-        'SELECT patient_id, full_name_hmac FROM identity.patient_identity ORDER BY patient_id',
+        'SELECT patient_id, full_name_hmac FROM identity.patient_identity WHERE patient_id <> $1 ORDER BY patient_id',
+        [idSembrado(PACIENTE_CHAT)],
       )
     ).rows;
 

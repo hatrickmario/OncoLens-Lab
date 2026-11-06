@@ -23,7 +23,7 @@ function registroDe(cuerpo: unknown, topRelevanceScore: number | null) {
     questionTemplateId: null,
     continueWithWarning: false,
     request,
-    dataRefs: new Map([['r1', { tabla: 'diagnosis', id: 'dx-1' }]]),
+    dataRefs: new Map([['r1', { tabla: 'diagnosis', id: 'dx-1', fecha: null }]]),
     respuesta,
     base: crearBaseDelAnalisis({ etiquetaDe: (clave) => clave, maxFollowUps: 10 }).construir(
       request,

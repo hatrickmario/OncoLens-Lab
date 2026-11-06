@@ -26,6 +26,7 @@ describe('readEvidenceAnalysisConfig', () => {
       evidenceDefaultYears: 10,
       ragTimeoutMs: 30_000,
       analysisFollowupMax: 10,
+      chatRehydrateTurns: 6,
       aiDisclaimerText: 'Texto de aviso sintético de test.',
     });
   });
@@ -41,6 +42,16 @@ describe('readEvidenceAnalysisConfig', () => {
       readEvidenceAnalysisConfig({ ...ENV_VALIDO, ANALYSIS_FOLLOWUP_MAX: '4' }).analysisFollowupMax,
     ).toBe(4);
     expect(readEvidenceAnalysisConfig(ENV_VALIDO).analysisFollowupMax).toBe(10);
+  });
+
+  it('lee CHAT_REHYDRATE_TURNS del entorno, usa 6 por defecto y no admite más que el máximo del contrato [L1D-315]', () => {
+    expect(
+      readEvidenceAnalysisConfig({ ...ENV_VALIDO, CHAT_REHYDRATE_TURNS: '3' }).chatRehydrateTurns,
+    ).toBe(3);
+    expect(readEvidenceAnalysisConfig(ENV_VALIDO).chatRehydrateTurns).toBe(6);
+    expect(() => readEvidenceAnalysisConfig({ ...ENV_VALIDO, CHAT_REHYDRATE_TURNS: '51' })).toThrow(
+      /CHAT_REHYDRATE_TURNS/,
+    );
   });
 
   it('lee ANALYSIS_MAX_OPTIONS y EVIDENCE_DEFAULT_YEARS del entorno', () => {
