@@ -384,7 +384,7 @@ export const zChatRehydrationTurn = z.strictObject({
 });
 
 /**
- * Lo que clinical-api reenvía cuando rag-orchestrator no conoce el hilo: los últimos turnos enmascarados y el estado estructurado. Reconstruye un hilo equivalente al vivo.
+ * Lo que clinical-api reenvía cuando rag-orchestrator no conoce el hilo: los últimos turnos enmascarados y el estado estructurado. Reconstruye un hilo equivalente al vivo. El primer turno de una conversación también la lleva, con `turns` vacío y un estado estructurado vacío: sin ella, un `threadId` que el servicio no conoce responde 404 HILO_DESCONOCIDO.
  */
 export const zChatRehydration = z.strictObject({
     turns: z.array(zChatRehydrationTurn).max(50),
