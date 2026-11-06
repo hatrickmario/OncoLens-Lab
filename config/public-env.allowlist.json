@@ -1,0 +1,4 @@
+{
+  "$comment": "Variables NEXT_PUBLIC_* que pueden llegar al navegador (US-216 AC-4). Cada entrada futura lleva { nombre, justificacion } y se revisa en el Gate 2 (privacy-guardian).",
+  "variables": []
+}
