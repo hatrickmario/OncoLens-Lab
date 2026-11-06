@@ -53,6 +53,7 @@ from app.application.ports import (
     CorpusReleaseReader,
     EtiquetasDeDatosCriticos,
     EvidenceGenerator,
+    EvidenciaConsultada,
     EvidenciaGenerada,
     Idioma,
     LanguageDetector,
@@ -141,10 +142,11 @@ _Resultado = TypeVar("_Resultado")
 
 
 class ResultadoDelLoop(NamedTuple):
-    """Lo que deja un loop de recuperación: los candidatos que vio el reranker y los que superan el umbral."""
+    """Lo que deja un loop de recuperación: los candidatos, los que superan el umbral y los ids que puntuó el reranker."""
 
     candidatos: list[CandidatoDeRecuperacion]
     sobre_umbral: list[ChunkPuntuado]
+    evaluados: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -247,18 +249,31 @@ class RAGOrchestratorService:
         )
 
     async def consultar(self, solicitud: RagQueryInternalRequest) -> RagQueryInternalResponse:
+        return (await self.consultar_con_detalle(solicitud)).respuesta
+
+    async def consultar_con_detalle(
+        self, solicitud: RagQueryInternalRequest
+    ) -> EvidenciaConsultada:
+        """``/rag/query`` más los ``chunkId`` que evaluó el *reranker*: el chat los guarda en ``ultimaEvidencia``."""
         with con_clasificacion(solicitud.dataClassification.value) as contexto:
-            respuesta = await self._consultar_con_proveedor_acotado(solicitud)
-        return respuesta.model_copy(update={"meta": contexto.declarar_en(respuesta.meta)})
+            consultada = await self._consultar_con_proveedor_acotado(solicitud)
+        respuesta = consultada.respuesta
+        return EvidenciaConsultada(
+            respuesta.model_copy(update={"meta": contexto.declarar_en(respuesta.meta)}),
+            consultada.chunk_ids_evaluados,
+        )
 
     async def _consultar_con_proveedor_acotado(
         self, solicitud: RagQueryInternalRequest
-    ) -> RagQueryInternalResponse:
+    ) -> EvidenciaConsultada:
         recuperacion = await self.recuperar(solicitud)
+        evaluados = recuperacion.chunk_ids_evaluados
         if not recuperacion.chunks_sobre_umbral:
-            return self._responder_sin_evidencia(recuperacion.recuperados, recuperacion.meta)
+            sin = self._responder_sin_evidencia(recuperacion.recuperados, recuperacion.meta)
+            return EvidenciaConsultada(sin, evaluados)
         evidencia = await self._generador.generar(solicitud, recuperacion)
-        return await self._validar_citas_y_ensamblar(solicitud, evidencia, recuperacion)
+        respuesta = await self._validar_citas_y_ensamblar(solicitud, evidencia, recuperacion)
+        return EvidenciaConsultada(respuesta, evaluados)
 
     async def recuperar(
         self,
@@ -293,12 +308,15 @@ class RAGOrchestratorService:
             )
         else:
             reescritura = EstadoDeReescritura(MotivoDeReescritura.no_aplica)
-        candidatos, sobre_umbral = loop
         meta = self._armar_meta_de_recuperacion(
             solicitud, idioma, release, inicio, reescritura, version_del_prompt
         )
         return ResultadoDeRecuperacion(
-            tuple(sobre_umbral), len(candidatos), meta, etiquetas_de_faltantes
+            tuple(loop.sobre_umbral),
+            len(loop.candidatos),
+            meta,
+            etiquetas_de_faltantes,
+            loop.evaluados,
         )
 
     async def meta_sin_recuperacion(
@@ -356,7 +374,8 @@ class RAGOrchestratorService:
             len(candidatos),
             len(sobre_umbral),
         )
-        return ResultadoDelLoop(candidatos, sobre_umbral)
+        evaluados = tuple(c.chunk_id for c in sorted(puntuados, key=lambda c: -c.relevance_score))
+        return ResultadoDelLoop(candidatos, sobre_umbral, evaluados)
 
     async def _segundo_loop_si_corresponde(
         self,
