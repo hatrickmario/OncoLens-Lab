@@ -26,7 +26,6 @@ import type {
   ResultadoDelAnalisis,
 } from './ports.js';
 import { llamarConPlazo } from './rag-plazo.js';
-import { clasificacionDelPaciente } from './regla-proveedor.js';
 
 /** El `patientId` de la petición no corresponde a ningún paciente. */
 export { PacienteNoEncontradoError };
