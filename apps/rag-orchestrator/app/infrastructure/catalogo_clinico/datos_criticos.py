@@ -65,6 +65,9 @@ class DatosCriticosDelCatalogo:
     def etiquetas(self, tipo_de_cancer: str) -> Mapping[str, str]:
         return self._etiquetas_por_tipo.get(tipo_de_cancer, _SIN_DATOS)
 
+    def tipos_de_documento(self, tipo_de_cancer: str) -> Mapping[str, tuple[str, ...]]:
+        raise NotImplementedError("no implementado")
+
 
 def cargar_datos_criticos(
     catalogos: Path, tipos_de_cancer: Sequence[str]

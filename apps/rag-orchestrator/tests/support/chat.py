@@ -14,6 +14,7 @@ from typing import Any
 from app.application.chat.registro_de_hilos import RegistroDeHilos
 from app.application.chat.servicio_de_turno import ChatTurnService
 from app.bootstrap import crear_app
+from app.infrastructure.catalogo_clinico.datos_criticos import cargar_datos_criticos
 from app.infrastructure.catalogo_clinico.sinonimos import cargar_terminos_por_tipo
 from app.infrastructure.lenguaje.terminos_prohibidos import cargar_verificador_de_terminos
 from fastapi.testclient import TestClient
@@ -101,12 +102,16 @@ def solicitud_desde_ejemplo(nombre: str) -> dict[str, Any]:
 
 
 def crear_entorno_de_chat(
-    escenario: str = "CHAT-OK", *, llm: FakeChatLlm | None = None, **cambios_de_settings: object
+    escenario: str = "CHAT-OK",
+    *,
+    llm: FakeChatLlm | None = None,
+    catalogo: CatalogoClinicoFalso | None = None,
+    **cambios_de_settings: object,
 ) -> EntornoDeChat:
     llm = llm or FakeChatLlm(escenario)
     contador = ContadorPorPalabras()
     reloj = RelojFijo()
-    catalogo = CatalogoClinicoFalso()
+    catalogo = catalogo or CatalogoClinicoFalso()
     settings = settings_de_prueba(**cambios_de_settings)
     servicio = ChatTurnService(
         llm=llm,
@@ -116,6 +121,7 @@ def crear_entorno_de_chat(
         settings=settings,
         terminos_por_tipo=cargar_terminos_por_tipo(CATALOGOS, settings.enabled_cancer_types),
         verificador_terminos=cargar_verificador_de_terminos(CATALOGOS),
+        fuentes_documentales=cargar_datos_criticos(CATALOGOS, ("mama", "prostata")),
     )
     app = crear_app(
         settings_de_prueba(**cambios_de_settings),

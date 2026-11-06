@@ -331,6 +331,15 @@ class EtiquetasDeDatosCriticos(Protocol):
         ...
 
 
+class FuentesDeDatosCriticos(Protocol):
+    """Dónde espera el catálogo clínico montado encontrar cada dato crítico (``sourceDocumentTypes``, RN-29, US-263)."""
+
+    def tipos_de_documento(self, tipo_de_cancer: str) -> Mapping[str, tuple[str, ...]]:
+        """Clave del dato crítico → ``document_type`` en que debería estar, en el orden del catálogo; vacío si el tipo de
+        cáncer no está en el catálogo. Solo vocabulario del catálogo, nunca valores del paciente."""
+        ...
+
+
 class CorpusCatalogReader(Protocol):
     """Fichas de fuente del catálogo (schema ``corpus``, rol ``rag_corpus``) para copiar los metadatos de las citas (RN-04)."""
 

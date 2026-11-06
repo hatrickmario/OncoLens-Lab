@@ -27,6 +27,7 @@ from app.application.ports import (
     CatalogoClinico,
     Clock,
     ContadorDeTokens,
+    FuentesDeDatosCriticos,
     LlmClient,
     ProhibitedTermsChecker,
 )
@@ -48,8 +49,10 @@ class ChatTurnService:
         settings: Settings,
         terminos_por_tipo: Mapping[str, frozenset[str]],
         verificador_terminos: ProhibitedTermsChecker,
+        fuentes_documentales: FuentesDeDatosCriticos,
     ) -> None:
         self._catalogo = catalogo
+        self._fuentes_documentales = fuentes_documentales
         self._settings = settings
         self.registro = RegistroDeHilos(
             reloj=reloj,
