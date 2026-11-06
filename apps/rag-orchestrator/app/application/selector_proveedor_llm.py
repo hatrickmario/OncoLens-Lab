@@ -55,7 +55,14 @@ _contexto: ContextVar[ContextoDeProveedor | None] = ContextVar(
 
 @contextmanager
 def con_clasificacion(clasificacion: str) -> Iterator[ContextoDeProveedor]:
-    """Fija la clasificación de datos de la petición para los selectores que corran dentro del bloque."""
+    """Fija la clasificación de datos de la petición para los selectores que corran dentro del bloque.
+
+    Si ya hay un contexto activo (bloque anidado) lo reutiliza: manda la clasificación del bloque más externo y el proveedor
+    que responda queda registrado en él, nunca en un contexto interno que se descarta."""
+    activo = _contexto.get()
+    if activo is not None:
+        yield activo
+        return
     contexto = ContextoDeProveedor(clasificacion)
     marca = _contexto.set(contexto)
     try:
