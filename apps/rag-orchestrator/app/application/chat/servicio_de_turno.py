@@ -29,6 +29,7 @@ from app.application.ports import (
     LlmClient,
     ProhibitedTermsChecker,
 )
+from app.application.verificacion_de_soporte import VerificadorDeSoporte
 from app.config.settings import Settings
 from app.domain.chat.estado import INTENCIONES_CLASIFICABLES, EstadoDelHilo
 from app.schemas.generated.models import ChatTurnRequest, ChatTurnResponse
@@ -51,7 +52,11 @@ class ChatTurnService:
         settings: Settings,
         terminos_por_tipo: Mapping[str, frozenset[str]],
         verificador_terminos: ProhibitedTermsChecker,
+        soporte: VerificadorDeSoporte | None = None,
     ) -> None:
+        self._soporte = (
+            soporte  # esqueleto (L1D-317): el nodo ``caso`` lo usa en el commit de comportamiento
+        )
         self._catalogo = catalogo
         self._settings = settings
         self.registro = RegistroDeHilos(

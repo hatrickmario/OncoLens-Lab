@@ -22,6 +22,7 @@ from app.domain.atribucion import (
 from app.domain.chat.valores_iniciales import (
     AVISO_ACADEMICO_INICIAL,
     AVISO_DE_IA_INICIAL,
+    AVISO_VERIFICAR_FUENTES_INICIAL,
     CHAT_MAX_HILOS_INICIAL,
     CHAT_MEMORY_MAX_TOKENS_INICIAL,
     CHAT_THREAD_TTL_SEGUNDOS_INICIAL,
@@ -129,6 +130,7 @@ class Settings(BaseSettings):
     # Avisos de RN-19 que Backend 2 emite en todo turno con contenido generado (sin punto final).
     chat_notice_ai: str = Field(default=AVISO_DE_IA_INICIAL, min_length=1)
     chat_notice_academic: str = Field(default=AVISO_ACADEMICO_INICIAL, min_length=1)
+    chat_notice_verify: str = Field(default=AVISO_VERIFICAR_FUENTES_INICIAL, min_length=1)
     # tokenizer.json local del LLM para contar la memoria del chat; sin él se usa un contador conservador por caracteres.
     llm_tokenizer_path: Path | None = None
     # Longitud máxima del código de tipo de cáncer que entra al filtro de Milvus (RN-22).

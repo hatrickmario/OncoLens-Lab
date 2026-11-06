@@ -1,0 +1,6 @@
+{
+  "CHAT-CASO-SIN-ENLACE": {
+    "ruta": "{\"intent\": \"caso\"}",
+    "generacion": "{\"claims\": [{\"text\": \"Carcinoma ductal infiltrante de mama, Nottingham grado 2, estadio IIA (TNM 8), ECOG 1.\", \"factRefs\": [\"f1\"], \"citations\": []}, {\"text\": \"La paciente tiene antecedentes familiares de cáncer de mama.\", \"factRefs\": [], \"citations\": []}]}"
+  }
+}
