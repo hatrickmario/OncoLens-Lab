@@ -260,7 +260,7 @@ describe('enlacesDelTurno', () => {
     ],
   ]);
 
-  it('devuelve un enlace por factRef distinto en orden de aparición', () => {
+  it('devuelve un enlace por factRef distinto en orden ascendente de día relativo', () => {
     const resultado = enlacesDelTurno(
       [
         { kind: 'documentado', text: 'a', factRefs: ['f2', 'f1'] },
@@ -273,8 +273,8 @@ describe('enlacesDelTurno', () => {
     expect(resultado).toEqual({
       ok: true,
       enlaces: [
-        { factRef: 'f2', ...mapa.get('f2') },
         { factRef: 'f1', ...mapa.get('f1') },
+        { factRef: 'f2', ...mapa.get('f2') },
       ],
     });
   });
