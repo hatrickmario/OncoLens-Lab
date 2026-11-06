@@ -63,5 +63,9 @@ export function crearBffDeCorreccionSimulado() {
       publicar('post', 'clinical-notes/:id/corrections', status, cuerpo),
     historicoDeNota: (cuerpo: JsonBodyType, status = 200) =>
       publicar('get', 'clinical-notes/:id/history', status, cuerpo),
+    historicoDeTratamiento: (cuerpo: JsonBodyType, status = 200) =>
+      publicar('get', 'prior-treatments/:id/history', status, cuerpo),
+    historicoDeAtributo: (cuerpo: JsonBodyType, status = 200) =>
+      publicar('get', 'clinical-attributes/:id/history', status, cuerpo),
   };
 }
