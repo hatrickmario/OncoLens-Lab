@@ -260,3 +260,64 @@ Cada acción de fila SHALL alcanzarse y activarse solo con teclado, con un nombr
 - **THEN** ninguna coincide (Regresión [RN-23] → US-068)
 
 Regresión [RN-17] activa desde Post-MVP: un paciente egresado no ofrece acciones de registro (US-198); hoy el `422` lo devuelve el servidor al guardar.
+
+### Requirement: Checklist en lote con la misma regla que el individual
+`CompletenessService` MUST ofrecer `calcularVarios(patientIds)` que, para cada paciente, devuelve el mismo `ChecklistDelPaciente` que `calcular(patientId)` o `no_disponible`, usando una consulta por entidad de destino para todos los pacientes (no una por paciente). `calcular(id)` MUST implementarse sobre `calcularVarios([id])` y SHALL conservar el error `PacienteNoEncontradoError` de la ficha y del endpoint. El fallo al calcular un paciente MUST NOT afectar al resultado de los demás.
+
+#### Scenario: El lote es idéntico al cálculo individual para todo el seed [feedback Demo 5] [FR-23]
+- **GIVEN** el seed sintético completo y el catálogo real
+- **WHEN** se calcula `calcularVarios` con todos los pacientes y `calcular` con cada uno
+- **THEN** el checklist de cada paciente es igual en ambos caminos (ítems, estados, origen, procedencia, destino y condición)
+
+#### Scenario: Un paciente que falla no afecta a los demás [RN-26]
+- **GIVEN** un lote con un paciente cuyo cálculo lanza
+- **WHEN** se llama a `calcularVarios`
+- **THEN** ese paciente es `no_disponible` y los demás traen su checklist
+
+#### Scenario: El número de consultas no depende del número de pacientes [feedback Demo 5]
+- **GIVEN** un contador de consultas sobre la BD de test
+- **WHEN** se calcula el lote para 1 y para N pacientes
+- **THEN** el número de consultas es el mismo
+
+### Requirement: Una declaración de ausencia del catálogo cumple el ítem sin inventar un registro
+`clinical-api` MUST tratar como cumplido un ítem cuyo `satisfiedBy` del catálogo coincide con un registro vigente (RN-07), con estado, `origin` y `provenance` de esa declaración y `resolvedBy = declaracion_de_ausencia`; con registros suficientes en el destino, `resolvedBy = registro`. La regla SHALL salir del catálogo y no SHALL crear filas de `PriorTreatment`.
+
+#### Scenario: «Tratamientos previos» declarado como ninguno deja de ser faltante [AC-04.1] [FR-23] [RN-29]
+- **GIVEN** el catálogo con `satisfiedBy` en `tratamientos_previos` y el paciente (g) sin tratamientos, con `sin_tratamiento_previo = si` `verificado` de fecha de hoy
+- **WHEN** se calcula el checklist
+- **THEN** `tratamientos_previos` está en `presente_verificado` con `origin = manual` y `resolvedBy = declaracion_de_ausencia`
+- **AND** no existe ninguna fila `PriorTreatment` del paciente
+
+#### Scenario: Sin declaración ni tratamientos el ítem sigue faltante [AC-04.1] [RN-26]
+- **GIVEN** el paciente (g) sin tratamientos ni declaración
+- **WHEN** se calcula el checklist
+- **THEN** `tratamientos_previos` está en `faltante` con `resolvedBy` ausente
+
+#### Scenario: Una declaración reemplazada o rechazada no cuenta [RN-07]
+- **GIVEN** una declaración `sin_tratamiento_previo` en `reemplazado`
+- **WHEN** se calcula el checklist
+- **THEN** `tratamientos_previos` está en `faltante`
+
+#### Scenario: Con tratamientos registrados gana el registro [AC-04.1]
+- **GIVEN** un paciente con un `PriorTreatment` vigente y sin declaración vigente
+- **WHEN** se calcula el checklist
+- **THEN** `tratamientos_previos` está presente con `resolvedBy = registro`
+
+### Requirement: Declaración de ausencia y tratamientos registrados nunca coexisten como vigentes
+`clinical-api` MUST, al registrar un `PriorTreatment` manual con una declaración `sin_tratamiento_previo` vigente, marcar la declaración `reemplazado` en la misma transacción, conservando su historia. MUST rechazar con `422` (`ErrorRegistroManualInvalido`, `field = attributeKey`) declarar la ausencia si hay algún `PriorTreatment` vigente, sin efectos laterales. Un tratamiento extraído posterior NO SHALL reemplazar en silencio la declaración (RN-08; Post-MVP).
+
+#### Scenario: Registrar un tratamiento reemplaza la declaración [RN-07] [RN-08]
+- **GIVEN** el paciente (g) con la declaración vigente
+- **WHEN** el oncólogo registra un tratamiento previo válido
+- **THEN** responde `201` y la declaración queda `reemplazado` con su fila conservada
+- **AND** el checklist muestra `resolvedBy = registro`
+
+#### Scenario: Declarar ausencia con tratamientos vigentes se rechaza [RN-08]
+- **GIVEN** un paciente con un `PriorTreatment` vigente
+- **WHEN** se envía `POST …/clinical-attributes` con `sin_tratamiento_previo = si`
+- **THEN** responde `422` con `field = attributeKey` y no cambia ninguna fila
+
+#### Scenario: Paciente egresado o rol sin permiso [RN-17]
+- **GIVEN** un paciente egresado, o un usuario `admin`
+- **WHEN** se intenta declarar la ausencia
+- **THEN** responde `422` (egresado) o `403` (admin) sin escribir
