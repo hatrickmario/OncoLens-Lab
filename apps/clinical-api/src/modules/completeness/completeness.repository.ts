@@ -188,13 +188,15 @@ async function leerVarios(
   db: Consultador,
   patientIds: readonly string[],
   entidades: readonly string[],
+  variante: (consulta: ConsultaDeEntidad) => ConsultaDeEntidad = (consulta) => consulta,
 ): Promise<Map<string, RegistrosPorEntidad>> {
   const porPaciente = new Map<string, Record<string, RegistroDeDato[]>>(
     patientIds.map((patientId) => [patientId, {}]),
   );
   for (const entidad of new Set(entidades)) {
-    const consulta = Object.hasOwn(CONSULTAS, entidad) ? CONSULTAS[entidad] : undefined;
-    if (consulta === undefined) throw new Error(`entidad_de_destino_no_soportada ${entidad}`);
+    const base = Object.hasOwn(CONSULTAS, entidad) ? CONSULTAS[entidad] : undefined;
+    if (base === undefined) throw new Error(`entidad_de_destino_no_soportada ${entidad}`);
+    const consulta = variante(base);
     for (const registros of porPaciente.values()) registros[entidad] = [];
     const { rows } = await db.query(sqlDeLaEntidad(entidad, consulta), [patientIds]);
     for (const fila of rows) {
@@ -202,6 +204,38 @@ async function leerVarios(
       porPaciente.get(fila['paciente_id'] as string)?.[entidad]?.push(registro);
     }
   }
+  return porPaciente;
+}
+
+/** Solo estas tablas guardan `conflicts_with_id` (RN-08): las demás entidades nunca tienen un conflicto pendiente. */
+const ENTIDADES_CON_CONFLICTO: readonly string[] = ['Diagnosis', 'Biomarker'];
+
+/**
+ * Un conflicto pendiente (RN-08): `requiere_revision` con `conflicts_with_id`. Sustituye el filtro de la entidad: un
+ * diagnóstico en conflicto no es el activo, y es justo el que hay que ver.
+ */
+const comoConflictoPendiente = (consulta: ConsultaDeEntidad): ConsultaDeEntidad => ({
+  ...consulta,
+  filtro: " AND t.conflicts_with_id IS NOT NULL AND t.review_status = 'requiere_revision'",
+});
+
+/**
+ * Tipos de documento ya procesados por paciente (`ocr_status = completado`, `[S6 resp. 10]`): solo el tipo, nunca ids,
+ * nombres ni la clave de almacenamiento (RN-10). Todo id pedido aparece, con un conjunto vacío si no hay documentos.
+ */
+async function leerTiposDeDocumentoProcesados(
+  db: Consultador,
+  patientIds: readonly string[],
+): Promise<Map<string, ReadonlySet<string>>> {
+  const porPaciente = new Map<string, Set<string>>(patientIds.map((id) => [id, new Set<string>()]));
+  const { rows } = await db.query(
+    `SELECT DISTINCT document_type::text AS tipo, patient_id AS paciente_id
+       FROM clinical.document
+      WHERE patient_id = ANY($1::uuid[]) AND ocr_status = 'completado'`,
+    [patientIds],
+  );
+  for (const fila of rows)
+    porPaciente.get(fila['paciente_id'] as string)?.add(fila['tipo'] as string);
   return porPaciente;
 }
 
@@ -216,11 +250,13 @@ export function createCompletenessRepository(db: Consultador): RegistrosDeComple
     },
     registrosVariosSinFiltrarPorRevision: (patientIds, entidades) =>
       leerVarios(db, patientIds, entidades),
-    conflictosPendientes: () => {
-      throw new Error('no implementado');
-    },
-    tiposDeDocumentoProcesados: () => {
-      throw new Error('no implementado');
-    },
+    conflictosPendientes: (patientIds, entidades) =>
+      leerVarios(
+        db,
+        patientIds,
+        entidades.filter((entidad) => ENTIDADES_CON_CONFLICTO.includes(entidad)),
+        comoConflictoPendiente,
+      ),
+    tiposDeDocumentoProcesados: (patientIds) => leerTiposDeDocumentoProcesados(db, patientIds),
   };
 }

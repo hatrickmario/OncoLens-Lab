@@ -3,7 +3,10 @@ import { PacienteNoEncontradoError } from '../compartido/pacientes.errores.js';
 import { procedenciaDeItem } from './completeness.procedencia.js';
 import {
   calcularChecklist,
+  cantidadDeRegistrosVigentes,
+  clasificarVacio,
   diagnosticoVigente,
+  hayConflictoPendiente,
   itemsDelTipoActivo,
   cumplimientoDelItem,
   tipoDeCancerActivo,
@@ -20,6 +23,7 @@ import type {
   RegistrosDeCompletitud,
   RegistrosPorEntidad,
   ResultadoDelChecklist,
+  TipoDeVacio,
 } from './ports.js';
 
 export interface DependenciasDelServicio {
@@ -29,11 +33,32 @@ export interface DependenciasDelServicio {
   readonly tiposHabilitados: TiposDeCancerHabilitados;
 }
 
-/** Un ítem con su etiqueta del catálogo y la procedencia del registro que lo hizo presente (US-003, D1). */
+/** Lo que se lee del paciente además de sus registros para clasificar el vacío de cada ítem (US-263). */
+interface LecturasDelVacio {
+  readonly conflictos: RegistrosPorEntidad;
+  readonly documentosProcesados: ReadonlySet<string>;
+}
+
+/** Tipo de vacío del ítem: la regla pura con lo leído del paciente (no cambia el `status`). */
+function tipoDeVacioDelItem(
+  item: ItemDeDatoCritico,
+  status: ItemDelChecklist['status'],
+  registros: RegistrosPorEntidad,
+  lecturas: LecturasDelVacio,
+): TipoDeVacio | null {
+  return clasificarVacio(item, status, {
+    registrosVigentes: cantidadDeRegistrosVigentes(item, registros),
+    conflictoPendiente: hayConflictoPendiente(item, registros, lecturas.conflictos),
+    documentosProcesados: lecturas.documentosProcesados,
+  });
+}
+
+/** Un ítem con su etiqueta del catálogo, su tipo de vacío y la procedencia del registro que lo hizo presente (US-003, D1). */
 function conProcedencia(
   estado: { key: string; status: ItemDelChecklist['status'] },
   delTipo: readonly ItemDeDatoCritico[],
   registros: RegistrosPorEntidad,
+  lecturas: LecturasDelVacio,
 ): ItemDelChecklist {
   const item = delTipo.find((candidato) => candidato.key === estado.key);
   if (item === undefined) throw new Error('item_del_catalogo_inexistente');
@@ -44,7 +69,7 @@ function conProcedencia(
     key: item.key,
     label: item.label,
     status: estado.status,
-    gapType: null,
+    gapType: tipoDeVacioDelItem(item, estado.status, registros, lecturas),
     ...procedenciaDeItem(item, estado.status, cumplimiento?.registro),
     // Solo los ítems que el catálogo puede cumplir por declaración exponen la vía (aditivo, ADR-26).
     ...(cumplimiento !== undefined &&
@@ -81,6 +106,7 @@ function itemsDelPaciente(
   paciente: PacienteAEvaluar,
   datos: DatosCriticosDeUnTipo,
   delPaciente: RegistrosPorEntidad,
+  lecturas: LecturasDelVacio,
 ): ItemDelChecklist[] {
   // Solo el Diagnosis vigente: tipo, condiciones e ítems de destino Diagnosis salen del mismo registro.
   const completos = {
@@ -94,7 +120,7 @@ function itemsDelPaciente(
     registros: completos,
   });
   const delTipo = itemsDelTipoActivo(datos.items, paciente.cancerType);
-  return estados.map((estado) => conProcedencia(estado, delTipo, completos));
+  return estados.map((estado) => conProcedencia(estado, delTipo, completos, lecturas));
 }
 
 const noDisponible = (error: unknown): ResultadoDelChecklist => ({
@@ -123,31 +149,65 @@ async function clasificarSinDiagnostico(
   }
 }
 
+/** Todo lo leído de la base para los pacientes de un tipo: registros de destino, conflictos pendientes y documentos procesados. */
+interface LecturasDelTipo {
+  readonly registros: ReadonlyMap<string, RegistrosPorEntidad>;
+  readonly conflictos: ReadonlyMap<string, RegistrosPorEntidad>;
+  readonly documentosProcesados: ReadonlyMap<string, ReadonlySet<string>>;
+}
+
+/** Entidades de destino de los ítems (con `Diagnosis`): las únicas donde puede haber un conflicto que los afecte. */
+function entidadesDeDestino(datos: DatosCriticosDeUnTipo): string[] {
+  return [...new Set(datos.items.map((item) => item.destination.entity))];
+}
+
+/** Tres lecturas acotadas por tipo, independientes del número de pacientes; un fallo de cualquiera aísla al lote del tipo. */
+async function leerDelTipo(
+  { registros }: DependenciasDelServicio,
+  datos: DatosCriticosDeUnTipo,
+  patientIds: readonly string[],
+): Promise<LecturasDelTipo> {
+  const entidades = entidadesDeDestinoSinDiagnostico(datos);
+  return {
+    registros:
+      entidades.length === 0
+        ? new Map()
+        : await registros.registrosVariosSinFiltrarPorRevision(patientIds, entidades),
+    conflictos: await registros.conflictosPendientes(patientIds, entidadesDeDestino(datos)),
+    documentosProcesados: await registros.tiposDeDocumentoProcesados(patientIds),
+  };
+}
+
 /** Lee una vez, para todos los pacientes del tipo, sus entidades de destino y calcula cada checklist aislado de los demás. */
 async function calcularDelTipo(
-  { registros }: DependenciasDelServicio,
+  dependencias: DependenciasDelServicio,
   entrada: { datos: DatosCriticosDeUnTipo; pacientes: readonly PacienteAEvaluar[] },
   resultados: Resultados,
   catalogVersion: string,
 ): Promise<void> {
   const { datos, pacientes } = entrada;
-  const entidades = entidadesDeDestinoSinDiagnostico(datos);
-  let leidos: ReadonlyMap<string, RegistrosPorEntidad>;
+  let leidas: LecturasDelTipo;
   try {
-    leidos =
-      entidades.length === 0
-        ? new Map()
-        : await registros.registrosVariosSinFiltrarPorRevision(
-            pacientes.map((paciente) => paciente.patientId),
-            entidades,
-          );
+    leidas = await leerDelTipo(
+      dependencias,
+      datos,
+      pacientes.map((paciente) => paciente.patientId),
+    );
   } catch (error) {
     for (const paciente of pacientes) resultados.set(paciente.patientId, noDisponible(error));
     return;
   }
   for (const paciente of pacientes) {
     try {
-      const items = itemsDelPaciente(paciente, datos, leidos.get(paciente.patientId) ?? {});
+      const items = itemsDelPaciente(
+        paciente,
+        datos,
+        leidas.registros.get(paciente.patientId) ?? {},
+        {
+          conflictos: leidas.conflictos.get(paciente.patientId) ?? {},
+          documentosProcesados: leidas.documentosProcesados.get(paciente.patientId) ?? new Set(),
+        },
+      );
       resultados.set(paciente.patientId, {
         estado: 'ok',
         checklist: { catalogVersion, cancerTypeEnabled: true, items },

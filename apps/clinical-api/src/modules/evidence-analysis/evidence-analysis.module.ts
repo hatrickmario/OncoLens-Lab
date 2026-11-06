@@ -110,8 +110,8 @@ const destinoDelItem = ({ entity, field }: { entity: string; field: string | nul
   field === null ? entity : `${entity}.${field}`;
 
 /**
- * Adaptador del puerto `ChecklistDelChat` sobre `CompletenessService` (L1D-315): `gapType` es `no_encontrado` solo en un
- * faltante y `null` en un dato presente; los tipos finos de faltante llegan con L1D-320. Falla cerrado como
+ * Adaptador del puerto `ChecklistDelChat` sobre `CompletenessService` (L1D-315): `gapType` es el mismo que sirve
+ * `GET /completeness` (L1D-320, una regla y un dueño: `clasificarVacio`). Falla cerrado como
  * `crearChecklistDeFaltantes`.
  */
 export function crearChecklistDelChat(completitud: CompletenessService): ChecklistDelChat {
@@ -123,7 +123,7 @@ export function crearChecklistDelChat(completitud: CompletenessService): Checkli
           item: item.key,
           label: item.label,
           status: item.status,
-          gapType: item.status === 'faltante' ? ('no_encontrado' as const) : null,
+          gapType: item.gapType,
           destination: destinoDelItem(item.destination),
         }));
       } catch {
