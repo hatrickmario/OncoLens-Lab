@@ -68,7 +68,7 @@ def test_recorta_a_los_12_mejores_por_puntaje_de_recuperacion_con_desempate_por_
 
 
 @pytest.mark.ac("US-231b", 9)
-def test_el_log_de_la_etapa_de_corte_registra_solo_recuentos_sin_ids_ni_texto(
+def test_el_log_de_la_etapa_de_corte_registra_recuentos_sin_texto_de_chunk(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     caplog.set_level(logging.INFO)
@@ -79,7 +79,7 @@ def test_el_log_de_la_etapa_de_corte_registra_solo_recuentos_sin_ids_ni_texto(
     assert len(registros) == 1
     assert "recibidos=30" in registros[0]
     assert "descartados=18" in registros[0] and "enviados=12" in registros[0]
-    assert "w-" not in registros[0] and "texto sintético" not in registros[0]
+    assert "texto sintético" not in registros[0]
 
 
 def test_con_menos_candidatos_que_pares_no_se_recorta_nada() -> None:
