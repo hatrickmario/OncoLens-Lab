@@ -12,7 +12,7 @@ import {
   etiquetasDeHechosUsados,
   rehidratacionVacia,
 } from '../../../src/modules/evidence-analysis/conversation/conversation.reglas.js';
-import { clasificacionDelPaciente } from '../../../src/modules/evidence-analysis/case-guards.js';
+import { clasificacionDelPaciente } from '../../../src/modules/evidence-analysis/regla-proveedor.js';
 
 const ESTADO_VACIO = {
   intentsVistos: [],

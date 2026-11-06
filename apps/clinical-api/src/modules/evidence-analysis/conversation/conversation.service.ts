@@ -11,7 +11,7 @@ import type { Clock } from '../../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../../infrastructure/ids.js';
 import { FalloDePersistenciaError } from '../analysis-completion.js';
 import { construirContextoPermitido } from '../clinical-context.builder.js';
-import { clasificacionDelPaciente } from '../case-guards.js';
+import { clasificacionDelPaciente } from '../regla-proveedor.js';
 import type { CasoClinico, CasoRepository } from '../evidence-analysis.repository.js';
 import { calcularDeadline } from '../evidence-analysis.service.js';
 import { RESPUESTA_INTERNA_INVALIDA, mapearFalloRagDeChat } from '../rag-failure.js';

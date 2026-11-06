@@ -10,10 +10,13 @@ import {
   contarTurnosDeChat,
   enviarTurno,
   instalarFalloDeEscrituraDelTurnoDeChat,
+  rutaDeTurnos,
 } from '../../support/conversacion.js';
+import { clienteVerificado } from '../../support/verificarProveedor.js';
 import {
   abrirSesion,
   crearPacienteFxT4aA,
+  crearPacienteSintetico,
   montarGateway,
   prepararMundoConSeed,
   ragSimulado,
@@ -124,5 +127,36 @@ describe('Backend 2 caído no persiste ni inventa el turno (RN-06, RN-12)', () =
     expect(respuesta.status).toBe(502);
     expect(respuesta.body.error).toBe('ERROR_SERVICIO_IA');
     expect(await contarTurnosDeChat(mundo.cliente, conversationId)).toBe(0);
+  });
+});
+
+describe('RN-12 y RN-13: los datos reales no salen hacia Backend 2 antes del gate G-piloto', () => {
+  it('responde 502 sin llamar a Backend 2 ni guardar el turno cuando el paciente es real_anonimizado [L1D-204] [RN-12] [RN-13]', async () => {
+    const { app } = await montarGateway(mundo);
+    const realId = await crearPacienteSintetico(mundo, {
+      dataOrigin: 'real_anonimizado',
+      conDiagnostico: true,
+    });
+    const conversationId = await abrirConversacion(app, cookie, realId);
+
+    const respuesta = await enviarTurno(app, cookie, conversationId, PREGUNTA_DE_CASO);
+
+    expect(respuesta.status).toBe(502);
+    expect(respuesta.body.error).toBe('ERROR_SERVICIO_IA');
+    expect(rag.chat.llamadas()).toBe(0);
+    expect(await contarTurnosDeChat(mundo.cliente, conversationId)).toBe(0);
+  });
+
+  it('rechaza una clasificación enviada por el cliente: el cuerpo público es cerrado y la decide el paciente [L1D-204] [RN-12]', async () => {
+    const { app } = await montarGateway(mundo);
+    const conversationId = await abrirConversacion(app, cookie, patientId);
+
+    const respuesta = await clienteVerificado(app)
+      .post(rutaDeTurnos(conversationId))
+      .set('Cookie', cookie)
+      .send({ question: PREGUNTA_DE_CASO, dataClassification: 'real_anonimizado' });
+
+    expect(respuesta.status).toBe(422);
+    expect(rag.chat.llamadas()).toBe(0);
   });
 });
