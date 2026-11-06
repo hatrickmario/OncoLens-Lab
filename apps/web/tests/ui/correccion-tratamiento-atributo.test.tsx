@@ -338,4 +338,15 @@ describe('Corrección de tratamientos previos y atributos en la vista de caso', 
     expect(await within(dialogo).findByText(f.errores.motivoDeFin)).toBeTruthy();
     expect(within(dialogo).getByLabelText(t.motivoDeFin).getAttribute('aria-invalid')).toBe('true');
   });
+
+  // Hallazgo del visual-check a 375 px: la columna única del grid medía lo que sus tablas (653 px) y la página
+  // desbordaba. jsdom no calcula layout: se comprueba la clase que deja encoger la columna (`minmax(0, 1fr)`).
+  it('deja encoger la columna del caso por debajo del ancho de sus tablas para que la página no desborde a 375 px', async () => {
+    montarCasoParaCorregir();
+
+    const tratamientos = await screen.findByRole('region', { name: secciones.tratamientos });
+    const rejilla = tratamientos.parentElement?.parentElement;
+    expect(rejilla?.className).toContain('grid-cols-[minmax(0,1fr)]');
+    expect(rejilla?.className).toContain('lg:grid-cols-[18rem_minmax(0,1fr)]');
+  });
 });
