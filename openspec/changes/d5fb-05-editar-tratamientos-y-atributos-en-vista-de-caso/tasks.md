@@ -55,19 +55,56 @@
 
 ## 3. frontend
 
-- [ ] 3.1 (test del AC primero) Tests en rojo (Testing Library + MSW desde `contracts/examples/`): botón «Corregir dato»
+- [x] 3.1 (test del AC primero) Tests en rojo (Testing Library + MSW desde `contracts/examples/`): botón «Corregir dato»
   por fila con nombre accesible, diálogo precargado, «Guardar mi corrección», fila nueva con «Corrección manual» e
   histórico, error junto al campo con `aria-live`, egresado deshabilitado, estado vacío sin botones, aviso no
   bloqueante, fechas relativas (reloj congelado), lista de términos prohibidos (RN-23). Commit `test(...)`.
-- [ ] 3.2 Implementar: `PriorTreatmentsTable`/`ClinicalAttributesTable` con `AccionCorregirDato` + `HistoricoDelDato`
+  Evidencia: commit `ad5a3751` (rojo: 14 de 16 fallan en la aserción, `findByRole` del botón «Corregir dato»; los 2
+  restantes caracterizan estado vacío y fecha relativa, que ya existían); `tests/ui/correccion-tratamiento-atributo.test.tsx`
+  + `tests/support/correccion-caso-ui.tsx` (handlers MSW desde `contracts/examples/`). RN-23: `tests/lib/caso-lenguaje.test.ts`
+  y `lint:lenguaje` (0 hallazgos en 580 mensajes) cubren los textos nuevos de `es.json`.
+- [x] 3.2 Implementar: `PriorTreatmentsTable`/`ClinicalAttributesTable` con `AccionCorregirDato` + `HistoricoDelDato`
   por fila (clave = `id`); `DialogoTratamientoPrevio`/`DialogoAtributoClinico` y sus formularios con `inicial`/`corrigeId`;
   hook `useEnvioDeCorreccion`; `router.refresh()`; textos en `messages/es.json`. Commit `feat(...)`.
   🔗 Resolver con `d5fb-04` los cambios en `formulario-de-tratamiento-previo.tsx`.
+  Evidencia: commits `ab56ae8d` (feat; verde 16/16 de los AC; los fixtures del test —proyección a `CaseView` y error con `field: value`—
+  se corrigieron en ese commit sin tocar aserciones), `2a7664f9` (teclado y `endReason`); `apps/web`
+  889/889 (119 archivos), `tsc --noEmit`, `eslint --max-warnings 0`, `prettier --check`, `lint:lenguaje` y `contracts:check` en verde.
+  Desviaciones de diseño: (a) el formulario de corrección de tratamiento es un hermano del de alta
+  (`FormularioDeCorreccionDeTratamiento`) y no el mismo con `inicial`/`corrigeId`: el alta usa `useEnvioDeRegistro` y la
+  corrección `useEnvioDeCorreccion` (los hooks no son condicionales); ambos comparten `CamposDelTratamientoPrevio`, y el
+  diálogo sí es el mismo (`corrige`). (b) El diálogo de tratamiento sigue recibiendo `estado` obligatorio también al
+  corregir; no ofrece la casilla de ausencia. (c) La declaración «Sin tratamiento previo» se corrige desde la sección de
+  tratamientos con `DialogoAtributoClinico corrige` (solo cambia la fecha, valor fijo `si`; el 422 `attributeKey` se traduce
+  con `esIncoherenciaDeDeclaracion`). (d) La fila nueva recoge el foco (`useFocoAlMontar`) porque la corrección la remonta
+  con otro `id`. (e) **DESVIACIÓN: el aviso de «análisis desactualizado» no existe en esta rama** (detector de US-175, ver
+  2.4); la UI solo reutiliza `AvisoAnalisisAnteriores` como ya funciona (aviso no bloqueante de RN-26 tras guardar) y no
+  simula ni promete el marcado de vigencia. (f) Hallazgo del loop visual: a 375 px la columna única del grid de la vista de
+  caso medía el ancho de sus tablas (653 px) y la página desbordaba (543 px ya sin la columna nueva: pre-existente, agravado
+  por la columna «Acciones»); `grid-cols-[minmax(0,1fr)]` en `SeccionesDelCaso`, con test en rojo `74aeeae9` y
+  corrección `edb5f927` (jsdom no calcula layout: el test comprueba la clase, no el ancho; lo mide el loop visual).
 - [ ] 3.3 Loop visual (`visual-check`): estados, consola sin CSP/hidratación, red solo `/api/*` sin PII en URLs,
   accesibilidad y teclado, capturas a 375 y 1280 px; cada fallo se convierte primero en test en rojo.
+  Evidencia parcial (PASS en lo verificable; el resto PENDIENTE): imagen web temporal de la rama en `127.0.0.1:3100`
+  contra el Compose de la demo (seed sintético, paciente (h) y (d)); el `clinical-api` de la demo es anterior (la vista de
+  caso no trae `id`), así que el script añade ids sintéticos y el histórico en el navegador (`page.route`) y aborta
+  cualquier `POST …/corrections`: no se envió ninguna corrección válida. Verificado: botón por fila con nombre propio,
+  histórico de ambos datos, precarga del tratamiento y del atributo, sin casilla de ausencia al corregir, clave fija,
+  validación local junto al campo (`aria-live`, `aria-invalid`) sin envío, Escape/Cancelar devuelven el foco, Tab+Enter,
+  estado vacío, 375 y 1280 px sin scroll horizontal, consola 0 errores/advertencias, red solo mismo origen sin identidad en
+  URLs, `Origin` en el login, LCP 328 ms y CLS 0. PENDIENTE: guardado real, errores `409/422` del servidor, fila nueva con
+  «Corrección manual», aviso tras guardar, egresado y declaración de ausencia (el seed no tiene ninguna) contra un
+  `clinical-api` con los endpoints; los cubren los tests de 3.1 y el E2E de 3.4 en la CI. Capturas en
+  `reports/visual/d5fb-05/` (ignorado por git).
 - [ ] 3.4 E2E (Playwright contra Compose, seed sintético): corregir un tratamiento y un atributo, ver faltantes y aviso de
   análisis desactualizado.
-- [ ] 3.5 Refactor en verde.
+  Escrito y SIN ejecutar en local (Compose completo; memoria de la VM justa): `e2e/vista-de-caso-correccion.spec.ts`, dos tests
+  serializados sobre el paciente (h), que va después de `demo-s5-pacientes.spec.ts`; el orden de mutaciones está en
+  `e2e/soporte.ts`. Lo ejerce el job `e2e` de la CI. No verifica «faltantes» ni «análisis desactualizado»: el checklist lo
+  cubren los tests de integración de la fase 1 y el marcado de vigencia está trasladado a US-175 (2.4).
+- [x] 3.5 Refactor en verde.
+  Evidencia: commit `6ad34452` `refactor(d5fb-05)`: Extract Method · `organisms/dialogo-atributo-clinico.tsx:ContenidoDelDialogoDeAtributo`
+  (mezclaba disparador, títulos y tres contenidos; 142 → 75 líneas); 888/888 antes y después.
 
 ## humano
 
