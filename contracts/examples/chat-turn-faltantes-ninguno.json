@@ -2,7 +2,7 @@
   "intent": "faltantes",
   "blocks": [
     {
-      "kind": "faltante",
+      "kind": "limitacion",
       "text": "No faltan datos críticos según el catálogo 1.6.0."
     }
   ],
