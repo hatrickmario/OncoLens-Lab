@@ -255,7 +255,21 @@ Nota: no se probó ninguna de estas herramientas.
 | L1D-285 (US-213b) | **Cerrar**, pero su código ya está mergeado (#199, #204, #211) y quedan dos tareas de deuda sin destino en su change (5.1 menores del `design-principles-reviewer`; 5.3 `fullName`, ya trasladada a US-222): darles destino y cerrar | Sin cambios (`In Review`, Sprint 5) |
 | L1D-286 (braces, 2026-11-20) | **Decidir en el refinamiento**, sin puntos | Sin cambios |
 
-### Pendiente de confirmar por el usuario
+### Resueltas después por el usuario (2026-11-06)
 
-- **L1D-268 (US-218, las 10 preguntas de seguimiento):** con el chatbot pasa a «sustituida» (ver [`S6-prompt-chatbot.md`](S6-prompt-chatbot.md), «Aclaraciones del usuario»). Propuesta: cerrarla sin sus tareas humanas (H-1, H-2, H-5) ni la corrida nocturna D5-13 pendientes. **No se ha tocado.**
-- **Sprint 5 sigue con hijos abiertos que se mantienen** (L1D-113, 116, 119, 126, 205, 243, 246, 268, 299, 304…): conviene pasarlos al hito Sprint 6 o cerrar el Sprint 5 al planificar. La descripción del hito Sprint 6 en Linear aún dice «G-Piloto … piloto mixto … G-Éxito» y debe reescribirse. **No se ha tocado.**
+- **L1D-268 (US-218, las 10 preguntas de seguimiento):** cerrada (**`Done`**), por decisión del usuario, al quedar sustituida por el chatbot. Sus tareas humanas (H-1, H-2, H-5) y la corrida nocturna D5-13 **no se ejecutaron**. Aviso: su AC-6 (`403` por opt-out) **nunca se implementó**; ese hueco lo cubre L1D-213, que se mantiene en el S6.
+- **Carryover al Sprint 6 de lo alineado con RAG y chatbot** (los no alineados ya estaban en Post-MVP). Se movieron 26 issues cambiando **solo** el hito; el estado no cambió. Para revertir: los 23 con origen Sprint 5 vuelven a `Sprint 5` y L1D-11, 241 y 304 a «sin hito» (puede exigir pasar un hito nulo; no se ha probado).
+
+| Hito de origen · estado | Issues |
+|---|---|
+| Sprint 5 · In Progress | L1D-9, 14, 16, 18, 20, 25, 30, 40, 46, 47 |
+| Sprint 5 · In Review | L1D-113, 116, 119, 126, 205, 246, 285, 299 |
+| Sprint 5 · Backlog | L1D-10, 17, 92, 125, 286 |
+| Sin hito · Backlog | L1D-11, 241, 304 |
+
+**Estado de Linear tras estos cambios** (verificado con una lectura posterior): 119 issues no terminados = **32 en Sprint 6** + **87 en Post-MVP**; 0 en Sprint 5 y 0 sin hito. (121 abiertos − L1D-32 − L1D-268.)
+
+### Pendiente de decisión del usuario
+
+- La **descripción del hito Sprint 6** en Linear aún dice «G-Piloto … piloto mixto … G-Éxito» y debe reescribirse al definir el sprint (`/sprint-refine S6`). No se ha tocado.
+- **Archivar** los 87 issues del hito Post-MVP: lo hace el usuario desde la interfaz de Linear (el MCP no archiva).
