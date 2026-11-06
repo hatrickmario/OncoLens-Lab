@@ -101,6 +101,17 @@ def test_chat_turn_desaloja_al_menos_reciente_y_no_al_mas_antiguo_creado_cuando_
     assert entorno.turno(_sin_hilo(Q_FALTANTES, HILO_A)).status_code == 200
 
 
+def test_chat_turn_conserva_un_solo_punto_de_control_por_hilo_cuando_el_hilo_tiene_varios_turnos():
+    entorno = crear_entorno_de_chat("CHAT-OK")
+    entorno.turno(solicitud_de_turno(Q_CASO))
+    for _ in range(4):
+        assert entorno.turno(_sin_hilo(Q_FALTANTES, HILO_A)).status_code == 200
+
+    puntos = list(entorno.registro.guardado.list(entorno.registro.configuracion(HILO_A)))
+
+    assert len(puntos) == 1
+
+
 @pytest.mark.parametrize(
     "extra",
     [

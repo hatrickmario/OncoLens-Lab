@@ -24,6 +24,7 @@ from app.domain.chat.estado import (
     UltimaEvidencia,
 )
 from app.domain.chat.turno import BloqueDelTurno, HechoDelCaso, PropuestaDelTurno
+from app.domain.chat.vigencia import hilo_vencido
 
 
 TIPOS_DEL_ESTADO = (
@@ -55,12 +56,31 @@ class RegistroDeHilos:
         """Registra actividad en el hilo. ``True`` si el hilo se crea ahora (hay que sembrarlo con la ``rehydration``).
 
         Un hilo ausente sin ``rehydration`` lanza ``HiloDesconocidoError`` antes de entrar al grafo."""
+        ahora = self._reloj.ahora()
+        self._purgar_vencidos(ahora)
         es_nuevo = thread_id not in self._actividad
         if es_nuevo and not con_rehidratacion:
             raise HiloDesconocidoError()
-        self._actividad[thread_id] = self._reloj.ahora()
+        if es_nuevo:
+            self._desalojar_hasta_dejar_lugar()
+        self._actividad[thread_id] = ahora
         self._actividad.move_to_end(thread_id)
         return es_nuevo
+
+    def _purgar_vencidos(self, ahora: datetime) -> None:
+        """Purga perezosa (sin tarea en segundo plano): en cada turno se descartan los hilos sin actividad dentro del TTL."""
+        for hilo in [
+            h
+            for h, ultima in self._actividad.items()
+            if hilo_vencido(ultima, ahora, self._ttl_segundos)
+        ]:
+            self.olvidar(hilo)
+
+    def _desalojar_hasta_dejar_lugar(self) -> None:
+        """Al crear un hilo con el registro lleno se desaloja el de actividad más antigua, con su estado."""
+        while len(self._actividad) >= self._max_hilos:
+            mas_antiguo = next(iter(self._actividad))
+            self.olvidar(mas_antiguo)
 
     def olvidar(self, thread_id: str) -> None:
         """Descarta el hilo (p. ej. si su primer turno falló): el siguiente turno debe traer ``rehydration``."""
