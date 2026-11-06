@@ -23,10 +23,12 @@ class LlmFalso:
         self._respuesta = RespuestaDelLlm(texto, finish_reason)
         self._error = error
         self.prompts: list[str] = []
+        self.sistemas: list[str | None] = []
         self.esquemas: list[dict] = []
 
-    async def completar_json_acotado(self, prompt, esquema, *, max_tokens, semilla):
-        self.prompts.append(prompt)
+    async def completar_json_acotado(self, usuario, esquema, *, max_tokens, semilla, sistema=None):
+        self.prompts.append(usuario)
+        self.sistemas.append(sistema)
         self.esquemas.append(dict(esquema))
         if self._error is not None:
             raise self._error
@@ -47,6 +49,7 @@ def test_reformular_devuelve_los_terminos_y_pone_solo_la_pregunta_en_el_prompt()
     assert llm.esquemas[0]["properties"]["terminos"]["maxItems"] == 3
     for ajeno in ("clinicalContext", "pseudoPatientId", "analysisMemory"):
         assert ajeno not in llm.prompts[0]
+        assert ajeno not in (llm.sistemas[0] or "")
 
 
 @pytest.mark.parametrize(

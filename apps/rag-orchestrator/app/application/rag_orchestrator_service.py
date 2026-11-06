@@ -91,7 +91,11 @@ from app.domain.option_selection import (
     RecorteDeOpciones,
     recortar_contando_excedente,
 )
-from app.domain.pares_del_reranker import recortar_a_pares_del_reranker
+from app.domain.pares_del_reranker import (
+    RERANKER_CUT_LOG_MAX_IDS_INICIAL,
+    cortados_con_puesto,
+    recortar_a_pares_del_reranker,
+)
 from app.domain.relevance import (
     ChunkPuntuado,
     filtrar_sobre_umbral,
@@ -161,6 +165,8 @@ class ParametrosDeRecuperacion:
     """Plazo, concurrencia y versión del prompt del respaldo de la población (US-244, RN-22)."""
     reranker_max_pairs: int | None = None
     """Tope de pares que admite el reranker (``RERANKER_MAX_PAIRS``); ``None`` = el reranker no limita y no se recorta."""
+    reranker_cut_log_max_ids: int = RERANKER_CUT_LOG_MAX_IDS_INICIAL
+    """``RERANKER_CUT_LOG_MAX_IDS`` (US-270, RN-22): máximo de ``chunkId`` cortados que lista ``rag_query_corte``."""
     retrieval_mode: RetrievalMode = RetrievalMode.dense
     """``RETRIEVAL_MODE`` (US-112, RN-22): ``dense`` por defecto; ``hibrida`` suma la rama *sparse* antes del reranker."""
     retrieval_fusion: EstrategiaDeFusion = EstrategiaDeFusion.rrf
@@ -760,18 +766,24 @@ class RAGOrchestratorService:
     ) -> list[CandidatoDeRecuperacion]:
         """Decisión 82: al reranker solo van los ``RERANKER_MAX_PAIRS`` mejores por puntaje de recuperación.
 
-        Se registran solo recuentos (recibidos, descartados, enviados): nunca ids ni texto de chunk.
+        Se registran recuentos (recibidos, descartados, enviados) y, de lo cortado, ``chunkId:puesto`` denso acotado a
+        ``RERANKER_CUT_LOG_MAX_IDS`` (US-270, decisión 82 cambiada por [S6 resp. 4]): ids y puesto, nunca texto de
+        chunk, pregunta ni identificadores del paciente.
         """
         maximo = self._parametros.reranker_max_pairs
         if maximo is None:
             return list(candidatos)
         enviados = recortar_a_pares_del_reranker(candidatos, maximo)
+        fuera = cortados_con_puesto(candidatos, maximo, self._parametros.reranker_cut_log_max_ids)
+        omitidos = f" cortados_omitidos={fuera.omitidos}" if fuera.omitidos else ""
         logger.info(
-            "event=rag_query_corte traceId=%s recibidos=%d descartados=%d enviados=%d",
+            "event=rag_query_corte traceId=%s recibidos=%d descartados=%d enviados=%d%s cortados=%s",
             trace_id,
             len(candidatos),
             len(candidatos) - len(enviados),
             len(enviados),
+            omitidos,
+            ",".join(f"{chunk_id}:{puesto}" for chunk_id, puesto in fuera.cortados),
         )
         return enviados
 

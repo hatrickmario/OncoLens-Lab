@@ -91,19 +91,19 @@ def _prompts_enviados(**generador) -> list[str]:
         clasificador_nli=NliFalso(por_defecto=IMPLICA),
     )
     assert entorno.consultar(solicitud_de(Q_HER2)).status_code == 200
-    return llm.prompts
+    return llm.usuarios
 
 
 def test_el_prompt_entrega_todos_los_fragmentos_sobre_el_umbral_cuando_caben_en_el_presupuesto():
     (prompt,) = _prompts_enviados()
 
-    assert prompt.count("[fragmento C") >= 2
+    assert prompt.count("<document id=") >= 2
 
 
 def test_el_prompt_recorta_los_fragmentos_al_presupuesto_dejando_siempre_el_mas_relevante():
     (prompt,) = _prompts_enviados(max_chars_fragmentos=1)
 
-    assert prompt.count("[fragmento C") == 1
+    assert prompt.count("<document id=") == 1
 
 
 def test_rag_query_omite_la_secundaria_con_artefactos_de_generacion_aunque_el_nli_lo_implique():

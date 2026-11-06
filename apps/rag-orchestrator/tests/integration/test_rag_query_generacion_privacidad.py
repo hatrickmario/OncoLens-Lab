@@ -32,7 +32,8 @@ def test_prompt_no_contiene_el_pseudo_patient_id_cuando_el_contexto_trae_pii_sem
 
     assert respuesta.status_code == 200
     assert llm.invocaciones == 1
-    assert solicitud["clinicalContext"]["pseudoPatientId"] not in llm.prompts[0]
+    assert solicitud["clinicalContext"]["pseudoPatientId"] not in llm.usuarios[0]
+    assert solicitud["clinicalContext"]["pseudoPatientId"] not in llm.sistemas[0]
 
 
 @pytest.mark.parametrize(
@@ -58,7 +59,8 @@ def test_logs_no_contienen_prompt_pregunta_contexto_ni_texto_generado_cuando_se_
         SENTINELA_FALLO_LLM,
         OPCION_ANTI_HER2,
         RAZON_ANTI_HER2,
-        *llm.prompts,
+        *llm.usuarios,
+        *(s for s in llm.sistemas if s),
         *(chunk.texto for chunk in CORPUS_FX06A),
     ]
     formateador = logging.Formatter()

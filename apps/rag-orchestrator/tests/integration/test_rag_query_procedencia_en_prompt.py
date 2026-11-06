@@ -11,7 +11,7 @@ from tests.support.llm_falso import FakeLlmClient
 from tests.support.recuperacion import Q_HER2, solicitud_de
 from tests.support.recuperacion_alias import entorno_con_alias
 
-VERSION_DEL_PROMPT = re.compile(r"^rag-query@0\.9\.0(\+aplicabilidad-texto@0\.1\.0)?$")
+VERSION_DEL_PROMPT = re.compile(r"^rag-query@0\.10\.0(\+aplicabilidad-texto@0\.1\.0)?$")
 LINEA_HER2 = "- HER2 3+ (IHQ)"
 LINEA_RE = "- RE Positivo (80%)"
 
@@ -26,7 +26,7 @@ def _consultar(*, conflicto: bool = False):
     llm = FakeLlmClient("LLM-OK")
     respuesta = entorno_con_alias(llm).consultar(solicitud)
     assert respuesta.status_code == 200
-    (prompt,) = llm.prompts
+    (prompt,) = llm.usuarios
     return respuesta.json(), prompt.splitlines(), solicitud
 
 

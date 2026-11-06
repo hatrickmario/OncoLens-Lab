@@ -67,16 +67,22 @@ class RespaldoLlmFalso:
         return len(self.llamadas)
 
     async def completar_json_acotado(
-        self, prompt: str, esquema: Mapping[str, Any], *, max_tokens: int, semilla: int
+        self,
+        usuario: str,
+        esquema: Mapping[str, Any],
+        *,
+        max_tokens: int,
+        semilla: int,
+        sistema: str | None = None,
     ) -> RespuestaDelLlm:
-        criterio = _CRITERIO_EN_PROMPT.search(prompt)
+        criterio = _CRITERIO_EN_PROMPT.search(usuario)
         assert criterio is not None, "el prompt debe declarar 'Criterio: <clave>'"
         self.esquemas.append(esquema)
         self.llamadas.append(
             LlamadaDeRespaldo(
-                prompt,
+                usuario,
                 criterio.group(1),
-                tuple(_FRAGMENTO_EN_PROMPT.findall(prompt)),
+                tuple(_FRAGMENTO_EN_PROMPT.findall(usuario)),
                 max_tokens,
                 semilla,
             )
