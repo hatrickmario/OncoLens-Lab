@@ -91,7 +91,11 @@ from app.domain.option_selection import (
     RecorteDeOpciones,
     recortar_contando_excedente,
 )
-from app.domain.pares_del_reranker import cortados_con_puesto, recortar_a_pares_del_reranker
+from app.domain.pares_del_reranker import (
+    RERANKER_CUT_LOG_MAX_IDS_INICIAL,
+    cortados_con_puesto,
+    recortar_a_pares_del_reranker,
+)
 from app.domain.relevance import (
     ChunkPuntuado,
     filtrar_sobre_umbral,
@@ -161,7 +165,7 @@ class ParametrosDeRecuperacion:
     """Plazo, concurrencia y versión del prompt del respaldo de la población (US-244, RN-22)."""
     reranker_max_pairs: int | None = None
     """Tope de pares que admite el reranker (``RERANKER_MAX_PAIRS``); ``None`` = el reranker no limita y no se recorta."""
-    reranker_cut_log_max_ids: int = 50
+    reranker_cut_log_max_ids: int = RERANKER_CUT_LOG_MAX_IDS_INICIAL
     """``RERANKER_CUT_LOG_MAX_IDS`` (US-270, RN-22): máximo de ``chunkId`` cortados que lista ``rag_query_corte``."""
     retrieval_mode: RetrievalMode = RetrievalMode.dense
     """``RETRIEVAL_MODE`` (US-112, RN-22): ``dense`` por defecto; ``hibrida`` suma la rama *sparse* antes del reranker."""

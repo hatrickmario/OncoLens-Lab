@@ -15,6 +15,15 @@ class CandidatoRecuperado(Protocol):
     def puntaje_de_recuperacion(self) -> float: ...
 
 
+RERANKER_CUT_LOG_MAX_IDS_INICIAL = 50
+"""Valor inicial de ``RERANKER_CUT_LOG_MAX_IDS`` (US-270, RN-22): una sola definición para Settings y el servicio."""
+
+
+def _validar_tope(max_pares: int) -> None:
+    if max_pares <= 0:
+        raise ValueError("max_pares debe ser positivo")
+
+
 @dataclass(frozen=True)
 class CortadosDelReranker:
     """Los candidatos que el corte dejó fuera, con su puesto 1-based en el orden denso, y cuántos no caben en el log."""
@@ -35,8 +44,7 @@ def recortar_a_pares_del_reranker[T: CandidatoRecuperado](
     Con menos candidatos que pares no hay nada que recortar. La similitud solo elige candidatos: no es
     ``relevance_score`` (RN-03) ni se compara con el umbral.
     """
-    if max_pares <= 0:
-        raise ValueError("max_pares debe ser positivo")
+    _validar_tope(max_pares)
     return _orden_denso(candidatos)[:max_pares]
 
 
@@ -49,8 +57,7 @@ def cortados_con_puesto(
     """
     if max_ids <= 0:
         raise ValueError("max_ids debe ser positivo")
-    if max_pares <= 0:
-        raise ValueError("max_pares debe ser positivo")
+    _validar_tope(max_pares)
     fuera = [
         (c.chunk_id, max_pares + i + 1) for i, c in enumerate(_orden_denso(candidatos)[max_pares:])
     ]

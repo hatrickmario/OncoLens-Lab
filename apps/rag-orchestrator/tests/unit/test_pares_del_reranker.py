@@ -112,3 +112,11 @@ def test_el_tope_de_ids_lista_los_primeros_y_cuenta_los_omitidos() -> None:
 def test_rechaza_topes_no_positivos(pares: int, ids: int) -> None:
     with pytest.raises(ValueError):
         cortados_con_puesto([Candidato("a", 0.5)], pares, ids)
+
+
+def test_el_tope_de_ids_por_defecto_coincide_en_settings_y_en_el_servicio() -> None:
+    from app.application.rag_orchestrator_service import ParametrosDeRecuperacion
+    from app.config.settings import Settings
+
+    por_defecto = ParametrosDeRecuperacion.__dataclass_fields__["reranker_cut_log_max_ids"].default
+    assert Settings().reranker_cut_log_max_ids == por_defecto  # type: ignore[call-arg]
