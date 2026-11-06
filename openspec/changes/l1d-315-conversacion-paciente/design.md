@@ -105,7 +105,7 @@ antes). Consumidores: `web` (Route Handlers, SDK generado) y, en US-267, la UI. 
 paths:
   /platform/patients/{patientId}/conversations:
     post: { operationId: createConversation, x-permission: clinical:read,
-            requestBody: ConversationCreate (objeto vacío, additionalProperties: false, opcional),
+            sin requestBody (un objeto vacío no pasa la regla de schemas cerrados de contracts:check),
             responses: { 201: Conversation, 401, 403: PermisoDenegado, 404: ErrorNoEncontrado } }
   /platform/conversations/{conversationId}:
     get:  { operationId: getConversation, x-permission: clinical:read,
@@ -117,10 +117,11 @@ paths:
                          403: PermisoDenegadoOOptOut,                # PERMISO_DENEGADO u OPT_OUT_ANALISIS_IA
                          404: ErrorNoEncontrado,
                          409: ErrorCatalogVersionMismatch,           # no se guarda el turno
-                         422: ErrorValidacion,
+                         422: ErrorCuerpoInvalido,                   # incluye aboutTurnId que no es de la conversación
                          500: ErrorInterno,
                          502: ErrorServicioIa,                       # fallo de red con rag o 2.º HILO_DESCONOCIDO
-                         503: oneOf [ErrorLlmLocalNoDisponible, ErrorSalidaLlmInvalida] } }   # sin persistir
+                         503: GeneracionNoDisponible,                # oneOf [LLM local caído, desidentificación no disponible, salida inválida]; sin persistir
+                         504: DeadlineVencido } }
 components/schemas:
   Conversation: { conversationId: uuid, patientId: uuid, createdAt: date-time, turns: ConversationTurn[] }   # sin threadId
   ConversationTurnCreate: { question: string (1..QUESTION_MAX, NFC), aboutTurnId?: uuid }
@@ -179,6 +180,20 @@ en lugar de `index` del documento de UX. Las capacidades (US-260…US-266) relle
 - **RN-12:** sin *fallback* a otro proveedor cuando Backend 2 falla.
 - **Seguridad web:** los Route Handlers validan ids con el schema Zod generado; sin variables `NEXT_PUBLIC_` nuevas;
   módulos `server-only`; no renderizan texto (la UI es de US-267); sin cambios de CSP ni cabeceras; sin dependencias nuevas.
+
+## Desviaciones registradas durante la implementación
+
+- **Hechos del caso (`caseFacts`) mínimos:** este change los construye desde el contexto YA desidentificado
+  (`hechos-del-caso.ts`: diagnóstico, biomarcadores, atributos, tratamientos y eventos, con `factRef` `f1…fN`, día relativo
+  al diagnóstico y el mapa `factRef → recurso`), porque `dataLinks` y `dataUsed` los necesitan. `l1d-317` los refina
+  (conflictos, series, corregidos) sin cambiar su forma.
+- **`dataUsed`** lleva la clase de cada hecho enviado («Diagnóstico», «Biomarcador», …); **`dataMissing`** las etiquetas de
+  los ítems de `completeness` con tipo de faltante (`no_encontrado` solo en un faltante; los tipos finos son de `l1d-320`).
+- **Estado del turno al leer:** el resultado de evidencia no se persiste hasta `l1d-322`; `status` y `topRelevanceScore`
+  de un `GET` salen de la intención de la fila, y el `201` los deriva de `evidenceAnalysis` si llega.
+- **`activeAnalysisId`** no se envía todavía (ver `tasks.md`); `analisisActivo()` ya existe y está probada.
+- **`aboutTurnId`** que no es de la conversación responde `422 CUERPO_INVALIDO`.
+- **Seed `P-CHAT`** va aparte de `PACIENTES_SEMILLA` (`sembrar-chat.ts`) para no cambiar los ordinales de (a)–(m).
 
 ## Dependencias y colaboradores
 

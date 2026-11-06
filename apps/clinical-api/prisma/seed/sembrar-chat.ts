@@ -8,7 +8,6 @@ import {
   PACIENTE_CHAT,
 } from './pacientes/chat.js';
 import { nottingham } from './pacientes/auxiliares.js';
-import type { ClienteSql } from './sembrar.js';
 import type { IdentityService } from '../../src/modules/patients/identity.service.js';
 
 /**
@@ -17,8 +16,13 @@ import type { IdentityService } from '../../src/modules/patients/identity.servic
  * `PacienteSemilla`, y así no cambia el conteo ni los ordinales de los pacientes (a)–(m). Todo es sintético (RN-13).
  */
 
+/** Lo mínimo que esta siembra necesita de PostgreSQL (el mismo contrato que `ClienteSql` de `sembrar.ts`, sin importarlo). */
+export interface ClienteSqlDelChat {
+  query(sql: string, valores?: unknown[]): Promise<{ rows: unknown[]; rowCount: number | null }>;
+}
+
 export interface EntradasDeLaSiembraDelChat {
-  readonly db: ClienteSql;
+  readonly db: ClienteSqlDelChat;
   /** RN-27: todo código sale del catálogo versionado. */
   readonly catalogo: CatalogoClinico;
   readonly ahora: Date;
