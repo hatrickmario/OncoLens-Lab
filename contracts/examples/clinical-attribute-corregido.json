@@ -1,0 +1,16 @@
+{
+  "id": "9f5b1e84-7a6c-4dae-b1fc-4c5d6e7f8091",
+  "key": "estado_menopausico",
+  "value": "premenopausica",
+  "observedAt": "2026-09-02",
+  "datePrecision": "dia",
+  "provenance": {
+    "entryMethod": "manual_correction",
+    "extractionConfidence": "n_a",
+    "reviewStatus": "verificado",
+    "conflict": false,
+    "sourceDocumentId": null,
+    "additionalSourceDocumentIds": []
+  },
+  "supersedesId": "7d3f9c62-5e4a-4b8c-9dae-2a3b4c5d6e7f"
+}

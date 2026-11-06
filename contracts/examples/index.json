@@ -837,6 +837,56 @@
       "target": "#/components/schemas/ClinicalAttributeList"
     },
     {
+      "file": "prior-treatment-correction-request.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1prior-treatments~1{treatmentId}~1corrections/post/requestBody"
+    },
+    {
+      "file": "prior-treatment-corregido.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/PriorTreatment"
+    },
+    {
+      "file": "clinical-attribute-correction-request.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1clinical-attributes~1{attributeId}~1corrections/post/requestBody"
+    },
+    {
+      "file": "clinical-attribute-corregido.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/ClinicalAttribute"
+    },
+    {
+      "file": "correction-history-prior-treatment.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/CorrectionHistory"
+    },
+    {
+      "file": "correction-history-clinical-attribute.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/CorrectionHistory"
+    },
+    {
+      "file": "error-correccion-fecha-fin.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1prior-treatments~1{treatmentId}~1corrections/post/responses/422"
+    },
+    {
+      "file": "error-dato-no-vigente.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1prior-treatments~1{treatmentId}~1corrections/post/responses/409"
+    },
+    {
+      "file": "error-valor-fuera-de-catalogo-campo.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1clinical-attributes~1{attributeId}~1corrections/post/responses/422"
+    },
+    {
+      "file": "error-dato-no-vigente.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1clinical-attributes~1{attributeId}~1corrections/post/responses/409"
+    },
+    {
       "file": "error-no-autenticado.json",
       "spec": "clinical-api",
       "target": "#/paths/~1platform~1patients~1{patientId}~1prior-treatments/post/responses/401"

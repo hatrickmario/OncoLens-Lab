@@ -2,7 +2,7 @@
 
 import { client } from './client.gen.js';
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client/index.js';
-import type { CorrectBiomarkerData, CorrectBiomarkerErrors, CorrectBiomarkerResponses, CorrectClinicalNoteData, CorrectClinicalNoteErrors, CorrectClinicalNoteResponses, CreateEvidenceAnalysisData, CreateEvidenceAnalysisErrors, CreateEvidenceAnalysisResponses, CreateFollowUpData, CreateFollowUpErrors, CreateFollowUpResponses, CreateManualBiomarkerData, CreateManualBiomarkerErrors, CreateManualBiomarkerResponses, CreateManualClinicalAttributeData, CreateManualClinicalAttributeErrors, CreateManualClinicalAttributeResponses, CreateManualDiagnosisData, CreateManualDiagnosisErrors, CreateManualDiagnosisResponses, CreateManualPriorTreatmentData, CreateManualPriorTreatmentErrors, CreateManualPriorTreatmentResponses, GetBiomarkerHistoryData, GetBiomarkerHistoryErrors, GetBiomarkerHistoryResponses, GetClinicalNoteHistoryData, GetClinicalNoteHistoryErrors, GetClinicalNoteHistoryResponses, GetCompletenessData, GetCompletenessErrors, GetCompletenessResponses, GetHealthData, GetHealthResponses, GetManualEntryOptionsData, GetManualEntryOptionsErrors, GetManualEntryOptionsResponses, GetPatientCaseData, GetPatientCaseErrors, GetPatientCaseResponses, GetPatientData, GetPatientErrors, GetPatientResponses, ListClinicalAttributesData, ListClinicalAttributesErrors, ListClinicalAttributesResponses, ListClinicalNotesData, ListClinicalNotesErrors, ListClinicalNotesResponses, ListFollowUpsData, ListFollowUpsErrors, ListFollowUpsResponses, ListPatientsData, ListPatientsErrors, ListPatientsResponses, LoginData, LoginErrors, LoginResponses, LogoutData, LogoutErrors, LogoutResponses, SearchPatientsData, SearchPatientsErrors, SearchPatientsResponses, UploadDocumentData, UploadDocumentErrors, UploadDocumentResponses } from './types.gen.js';
+import type { CorrectBiomarkerData, CorrectBiomarkerErrors, CorrectBiomarkerResponses, CorrectClinicalAttributeData, CorrectClinicalAttributeErrors, CorrectClinicalAttributeResponses, CorrectClinicalNoteData, CorrectClinicalNoteErrors, CorrectClinicalNoteResponses, CorrectPriorTreatmentData, CorrectPriorTreatmentErrors, CorrectPriorTreatmentResponses, CreateEvidenceAnalysisData, CreateEvidenceAnalysisErrors, CreateEvidenceAnalysisResponses, CreateFollowUpData, CreateFollowUpErrors, CreateFollowUpResponses, CreateManualBiomarkerData, CreateManualBiomarkerErrors, CreateManualBiomarkerResponses, CreateManualClinicalAttributeData, CreateManualClinicalAttributeErrors, CreateManualClinicalAttributeResponses, CreateManualDiagnosisData, CreateManualDiagnosisErrors, CreateManualDiagnosisResponses, CreateManualPriorTreatmentData, CreateManualPriorTreatmentErrors, CreateManualPriorTreatmentResponses, GetBiomarkerHistoryData, GetBiomarkerHistoryErrors, GetBiomarkerHistoryResponses, GetClinicalAttributeHistoryData, GetClinicalAttributeHistoryErrors, GetClinicalAttributeHistoryResponses, GetClinicalNoteHistoryData, GetClinicalNoteHistoryErrors, GetClinicalNoteHistoryResponses, GetCompletenessData, GetCompletenessErrors, GetCompletenessResponses, GetHealthData, GetHealthResponses, GetManualEntryOptionsData, GetManualEntryOptionsErrors, GetManualEntryOptionsResponses, GetPatientCaseData, GetPatientCaseErrors, GetPatientCaseResponses, GetPatientData, GetPatientErrors, GetPatientResponses, GetPriorTreatmentHistoryData, GetPriorTreatmentHistoryErrors, GetPriorTreatmentHistoryResponses, ListClinicalAttributesData, ListClinicalAttributesErrors, ListClinicalAttributesResponses, ListClinicalNotesData, ListClinicalNotesErrors, ListClinicalNotesResponses, ListFollowUpsData, ListFollowUpsErrors, ListFollowUpsResponses, ListPatientsData, ListPatientsErrors, ListPatientsResponses, LoginData, LoginErrors, LoginResponses, LogoutData, LogoutErrors, LogoutResponses, SearchPatientsData, SearchPatientsErrors, SearchPatientsResponses, UploadDocumentData, UploadDocumentErrors, UploadDocumentResponses } from './types.gen.js';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -274,6 +274,74 @@ export const createManualClinicalAttribute = <ThrowOnError extends boolean = fal
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+/**
+ * Corrige un tratamiento previo vigente conservando el anterior como histórico
+ *
+ * Reemplazo completo de los campos editables (mismo cuerpo que el alta). Crea un PriorTreatment nuevo (entry_method = manual_correction, verificado) con supersedesId hacia el anterior, que pasa a reemplazado con su contenido intacto (RN-08, ADR-50), en una transacción. Backend 1 vuelve a decidir atcCodes y mappingStatus con el catálogo versionado (ADR-33); sin mapeo queda no_mapeado y sin código, nunca inventado (RN-27). Corregir un tratamiento no crea ni borra declaraciones sin_tratamiento_previo (el invariante de coherencia se conserva). Una corrección sin cambios reales es 422 sin field. Solo se corrige un dato vigente (409 si ya fue reemplazado) y un paciente activo (RN-17).
+ */
+export const correctPriorTreatment = <ThrowOnError extends boolean = false>(options: Options<CorrectPriorTreatmentData, ThrowOnError>): RequestResult<CorrectPriorTreatmentResponses, CorrectPriorTreatmentErrors, ThrowOnError> => (options.client ?? client).post<CorrectPriorTreatmentResponses, CorrectPriorTreatmentErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'oncolens_session',
+            type: 'apiKey'
+        }],
+    url: '/platform/patients/{patientId}/prior-treatments/{treatmentId}/corrections',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Histórico de correcciones de un tratamiento previo
+ *
+ * Sigue supersedesId hacia atrás desde la fila vigente: las versiones reemplazadas, de la más reciente a la más antigua, acotadas por CORRECTION_HISTORY_MAX. Es una lectura clínica: el administrador recibe 403.
+ */
+export const getPriorTreatmentHistory = <ThrowOnError extends boolean = false>(options: Options<GetPriorTreatmentHistoryData, ThrowOnError>): RequestResult<GetPriorTreatmentHistoryResponses, GetPriorTreatmentHistoryErrors, ThrowOnError> => (options.client ?? client).get<GetPriorTreatmentHistoryResponses, GetPriorTreatmentHistoryErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'oncolens_session',
+            type: 'apiKey'
+        }],
+    url: '/platform/patients/{patientId}/prior-treatments/{treatmentId}/history',
+    ...options
+});
+
+/**
+ * Corrige el valor o la fecha de un atributo clínico vigente conservando el anterior
+ *
+ * La clave no cambia (otra clave es otro atributo). Crea un ClinicalAttribute nuevo (entry_method = manual_correction, verificado) con supersedesId hacia el anterior, que pasa a reemplazado con su valor intacto (RN-08, ADR-50). El valor se valida de nuevo contra la lista del catálogo para el tipo de cáncer del diagnóstico vigente (RN-29). La declaración sin_tratamiento_previo se corrige como cualquier atributo, pero su único valor admitido es si: solo observedAt puede cambiar. Si observedAt se omite, la fila nueva conserva la fecha anterior. Una corrección sin cambios reales es 422 sin field. Solo se corrige un dato vigente (409) y un paciente activo (RN-17).
+ */
+export const correctClinicalAttribute = <ThrowOnError extends boolean = false>(options: Options<CorrectClinicalAttributeData, ThrowOnError>): RequestResult<CorrectClinicalAttributeResponses, CorrectClinicalAttributeErrors, ThrowOnError> => (options.client ?? client).post<CorrectClinicalAttributeResponses, CorrectClinicalAttributeErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'oncolens_session',
+            type: 'apiKey'
+        }],
+    url: '/platform/patients/{patientId}/clinical-attributes/{attributeId}/corrections',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Histórico de correcciones de un atributo clínico
+ *
+ * Sigue supersedesId hacia atrás desde la fila vigente: las versiones reemplazadas, de la más reciente a la más antigua, acotadas por CORRECTION_HISTORY_MAX. Es una lectura clínica: el administrador recibe 403.
+ */
+export const getClinicalAttributeHistory = <ThrowOnError extends boolean = false>(options: Options<GetClinicalAttributeHistoryData, ThrowOnError>): RequestResult<GetClinicalAttributeHistoryResponses, GetClinicalAttributeHistoryErrors, ThrowOnError> => (options.client ?? client).get<GetClinicalAttributeHistoryResponses, GetClinicalAttributeHistoryErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'oncolens_session',
+            type: 'apiKey'
+        }],
+    url: '/platform/patients/{patientId}/clinical-attributes/{attributeId}/history',
+    ...options
 });
 
 /**

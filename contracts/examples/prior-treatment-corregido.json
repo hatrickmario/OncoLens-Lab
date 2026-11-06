@@ -1,0 +1,21 @@
+{
+  "id": "8e4a0d73-6f5b-4c9d-a0eb-3b4c5d6e7f80",
+  "lineNumber": 1,
+  "setting": "adyuvante",
+  "regimenName": "FEC",
+  "atcCodes": [],
+  "mappingStatus": "no_mapeado",
+  "startedAt": "2026-03-10",
+  "endedAt": "2026-07-14",
+  "ongoing": false,
+  "endReason": "completado",
+  "provenance": {
+    "entryMethod": "manual_correction",
+    "extractionConfidence": "n_a",
+    "reviewStatus": "verificado",
+    "conflict": false,
+    "sourceDocumentId": null,
+    "additionalSourceDocumentIds": []
+  },
+  "supersedesId": "5b1d7a40-3c2e-4f6a-9b8d-0e1f2a3b4c5d"
+}

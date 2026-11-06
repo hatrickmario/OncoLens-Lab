@@ -238,6 +238,14 @@ export type CaseView = {
         provenance: Provenance;
     }>;
     priorTreatments: Array<{
+        /**
+         * Fila vigente; es la que se corrige (POST …/prior-treatments/{treatmentId}/corrections).
+         */
+        id: string;
+        /**
+         * Fila a la que esta corrección reemplazó (ADR-50); ausente si nunca se corrigió.
+         */
+        supersedesId?: string | null;
         lineNumber: number | null;
         setting: string;
         regimenName: string;
@@ -252,6 +260,14 @@ export type CaseView = {
      * ClinicalAttribute (estado menopáusico, estado de castración, sitios metastásicos…).
      */
     attributes: Array<{
+        /**
+         * Fila vigente; es la que se corrige (POST …/clinical-attributes/{attributeId}/corrections).
+         */
+        id: string;
+        /**
+         * Fila a la que esta corrección reemplazó (ADR-50); ausente si nunca se corrigió.
+         */
+        supersedesId?: string | null;
         key: string;
         value: string;
         observedAt: string | null;
@@ -308,6 +324,10 @@ export type PriorTreatment = {
     ongoing: boolean;
     endReason: 'progresion' | 'toxicidad' | 'completado' | 'otro' | 'desconocido';
     provenance: Provenance;
+    /**
+     * Fila a la que esta corrección reemplazó (ADR-50); ausente en un dato que nunca se corrigió. Le dice a la UI si hay histórico.
+     */
+    supersedesId?: string | null;
 };
 
 /**
@@ -326,6 +346,18 @@ export type ClinicalAttribute = {
     observedAt: string | null;
     datePrecision: 'dia' | 'mes' | 'anio' | 'incierta';
     provenance: Provenance;
+    /**
+     * Fila a la que esta corrección reemplazó (ADR-50); ausente en un dato que nunca se corrigió. Le dice a la UI si hay histórico.
+     */
+    supersedesId?: string | null;
+};
+
+/**
+ * Corrección de un atributo clínico. La clave es inmutable (no se admite attributeKey). value se valida contra el catálogo (RN-29); observedAt omitido conserva la fecha anterior.
+ */
+export type ClinicalAttributeCorrection = {
+    value: string;
+    observedAt?: string;
 };
 
 export type ClinicalAttributeList = {
@@ -427,7 +459,7 @@ export type ClinicalNoteCorrection = {
 };
 
 /**
- * Una versión reemplazada. value y unit solo en biomarcadores; content y noteType solo en notas.
+ * Una versión reemplazada. value y unit en biomarcadores (value también en atributos); content y noteType solo en notas; regimenName solo en tratamientos previos.
  */
 export type CorrectionHistoryEntry = {
     id: string;
@@ -439,6 +471,10 @@ export type CorrectionHistoryEntry = {
     unit?: string | null;
     content?: string;
     noteType?: NoteType;
+    /**
+     * Esquema de la versión reemplazada; solo en tratamientos previos.
+     */
+    regimenName?: string;
 };
 
 /**
@@ -1237,6 +1273,10 @@ export type BiomarkerId = string;
 
 export type NoteId = string;
 
+export type TreatmentId = string;
+
+export type AttributeId = string;
+
 export type GetHealthData = {
     body?: never;
     path?: never;
@@ -1873,6 +1913,166 @@ export type CreateManualClinicalAttributeResponses = {
 };
 
 export type CreateManualClinicalAttributeResponse = CreateManualClinicalAttributeResponses[keyof CreateManualClinicalAttributeResponses];
+
+export type CorrectPriorTreatmentData = {
+    body: PriorTreatmentManualCreate;
+    path: {
+        patientId: string;
+        treatmentId: string;
+    };
+    query?: never;
+    url: '/platform/patients/{patientId}/prior-treatments/{treatmentId}/corrections';
+};
+
+export type CorrectPriorTreatmentErrors = {
+    /**
+     * Sesión ausente o expirada.
+     */
+    401: ErrorNoAutenticado;
+    /**
+     * Permiso denegado por RBAC u opt-out.
+     */
+    403: ErrorPermisoDenegado;
+    /**
+     * Recurso no encontrado.
+     */
+    404: ErrorNoEncontrado;
+    /**
+     * El dato ya no está vigente (fue reemplazado o rechazado).
+     */
+    409: ErrorDatoNoVigente;
+    /**
+     * Cuerpo inválido (fechas o motivo de fin incoherentes, corrección sin cambios) o paciente egresado.
+     */
+    422: ErrorCorreccionInvalida;
+};
+
+export type CorrectPriorTreatmentError = CorrectPriorTreatmentErrors[keyof CorrectPriorTreatmentErrors];
+
+export type CorrectPriorTreatmentResponses = {
+    /**
+     * Tratamiento corregido (la fila nueva, vigente).
+     */
+    201: PriorTreatment;
+};
+
+export type CorrectPriorTreatmentResponse = CorrectPriorTreatmentResponses[keyof CorrectPriorTreatmentResponses];
+
+export type GetPriorTreatmentHistoryData = {
+    body?: never;
+    path: {
+        patientId: string;
+        treatmentId: string;
+    };
+    query?: never;
+    url: '/platform/patients/{patientId}/prior-treatments/{treatmentId}/history';
+};
+
+export type GetPriorTreatmentHistoryErrors = {
+    /**
+     * Sesión ausente o expirada.
+     */
+    401: ErrorNoAutenticado;
+    /**
+     * Permiso denegado por RBAC u opt-out.
+     */
+    403: ErrorPermisoDenegado;
+    /**
+     * Recurso no encontrado.
+     */
+    404: ErrorNoEncontrado;
+};
+
+export type GetPriorTreatmentHistoryError = GetPriorTreatmentHistoryErrors[keyof GetPriorTreatmentHistoryErrors];
+
+export type GetPriorTreatmentHistoryResponses = {
+    /**
+     * Versiones reemplazadas (vacía si el dato nunca se corrigió).
+     */
+    200: CorrectionHistory;
+};
+
+export type GetPriorTreatmentHistoryResponse = GetPriorTreatmentHistoryResponses[keyof GetPriorTreatmentHistoryResponses];
+
+export type CorrectClinicalAttributeData = {
+    body: ClinicalAttributeCorrection;
+    path: {
+        patientId: string;
+        attributeId: string;
+    };
+    query?: never;
+    url: '/platform/patients/{patientId}/clinical-attributes/{attributeId}/corrections';
+};
+
+export type CorrectClinicalAttributeErrors = {
+    /**
+     * Sesión ausente o expirada.
+     */
+    401: ErrorNoAutenticado;
+    /**
+     * Permiso denegado por RBAC u opt-out.
+     */
+    403: ErrorPermisoDenegado;
+    /**
+     * Recurso no encontrado.
+     */
+    404: ErrorNoEncontrado;
+    /**
+     * El dato ya no está vigente (fue reemplazado o rechazado).
+     */
+    409: ErrorDatoNoVigente;
+    /**
+     * Cuerpo inválido (propiedad ajena como attributeKey, corrección sin cambios), valor fuera del catálogo (field = value) o paciente egresado.
+     */
+    422: ErrorCorreccionInvalida;
+};
+
+export type CorrectClinicalAttributeError = CorrectClinicalAttributeErrors[keyof CorrectClinicalAttributeErrors];
+
+export type CorrectClinicalAttributeResponses = {
+    /**
+     * Atributo corregido (la fila nueva, vigente).
+     */
+    201: ClinicalAttribute;
+};
+
+export type CorrectClinicalAttributeResponse = CorrectClinicalAttributeResponses[keyof CorrectClinicalAttributeResponses];
+
+export type GetClinicalAttributeHistoryData = {
+    body?: never;
+    path: {
+        patientId: string;
+        attributeId: string;
+    };
+    query?: never;
+    url: '/platform/patients/{patientId}/clinical-attributes/{attributeId}/history';
+};
+
+export type GetClinicalAttributeHistoryErrors = {
+    /**
+     * Sesión ausente o expirada.
+     */
+    401: ErrorNoAutenticado;
+    /**
+     * Permiso denegado por RBAC u opt-out.
+     */
+    403: ErrorPermisoDenegado;
+    /**
+     * Recurso no encontrado.
+     */
+    404: ErrorNoEncontrado;
+};
+
+export type GetClinicalAttributeHistoryError = GetClinicalAttributeHistoryErrors[keyof GetClinicalAttributeHistoryErrors];
+
+export type GetClinicalAttributeHistoryResponses = {
+    /**
+     * Versiones reemplazadas (vacía si el dato nunca se corrigió).
+     */
+    200: CorrectionHistory;
+};
+
+export type GetClinicalAttributeHistoryResponse = GetClinicalAttributeHistoryResponses[keyof GetClinicalAttributeHistoryResponses];
 
 export type CorrectBiomarkerData = {
     body: BiomarkerCorrection;

@@ -133,6 +133,8 @@ export const zCaseView = z.strictObject({
         provenance: zProvenance
     })),
     priorTreatments: z.array(z.strictObject({
+        id: z.uuid(),
+        supersedesId: z.uuid().nullish(),
         lineNumber: z.int().nullable(),
         setting: z.string(),
         regimenName: z.string(),
@@ -144,6 +146,8 @@ export const zCaseView = z.strictObject({
         provenance: zProvenance
     })),
     attributes: z.array(z.strictObject({
+        id: z.uuid(),
+        supersedesId: z.uuid().nullish(),
         key: z.string(),
         value: z.string(),
         observedAt: z.iso.date().nullable(),
@@ -215,7 +219,8 @@ export const zPriorTreatment = z.strictObject({
         'otro',
         'desconocido'
     ]),
-    provenance: zProvenance
+    provenance: zProvenance,
+    supersedesId: z.uuid().nullish()
 });
 
 /**
@@ -238,7 +243,16 @@ export const zClinicalAttribute = z.strictObject({
         'anio',
         'incierta'
     ]),
-    provenance: zProvenance
+    provenance: zProvenance,
+    supersedesId: z.uuid().nullish()
+});
+
+/**
+ * Corrección de un atributo clínico. La clave es inmutable (no se admite attributeKey). value se valida contra el catálogo (RN-29); observedAt omitido conserva la fecha anterior.
+ */
+export const zClinicalAttributeCorrection = z.strictObject({
+    value: z.string().min(1).max(100),
+    observedAt: z.iso.date().optional()
 });
 
 export const zClinicalAttributeList = z.strictObject({
@@ -333,7 +347,7 @@ export const zClinicalNoteCorrection = z.strictObject({
 });
 
 /**
- * Una versión reemplazada. value y unit solo en biomarcadores; content y noteType solo en notas.
+ * Una versión reemplazada. value y unit en biomarcadores (value también en atributos); content y noteType solo en notas; regimenName solo en tratamientos previos.
  */
 export const zCorrectionHistoryEntry = z.strictObject({
     id: z.uuid(),
@@ -349,7 +363,8 @@ export const zCorrectionHistoryEntry = z.strictObject({
     value: z.string().optional(),
     unit: z.string().nullish(),
     content: z.string().optional(),
-    noteType: zNoteType.optional()
+    noteType: zNoteType.optional(),
+    regimenName: z.string().optional()
 });
 
 /**
@@ -1172,6 +1187,10 @@ export const zBiomarkerId = z.uuid();
 
 export const zNoteId = z.uuid();
 
+export const zTreatmentId = z.uuid();
+
+export const zAttributeId = z.uuid();
+
 /**
  * El proceso está listo.
  */
@@ -1327,6 +1346,50 @@ export const zCreateManualClinicalAttributePath = z.object({
  * Atributo clínico registrado.
  */
 export const zCreateManualClinicalAttributeResponse = zClinicalAttribute;
+
+export const zCorrectPriorTreatmentBody = zPriorTreatmentManualCreate;
+
+export const zCorrectPriorTreatmentPath = z.object({
+    patientId: z.uuid(),
+    treatmentId: z.uuid()
+});
+
+/**
+ * Tratamiento corregido (la fila nueva, vigente).
+ */
+export const zCorrectPriorTreatmentResponse = zPriorTreatment;
+
+export const zGetPriorTreatmentHistoryPath = z.object({
+    patientId: z.uuid(),
+    treatmentId: z.uuid()
+});
+
+/**
+ * Versiones reemplazadas (vacía si el dato nunca se corrigió).
+ */
+export const zGetPriorTreatmentHistoryResponse = zCorrectionHistory;
+
+export const zCorrectClinicalAttributeBody = zClinicalAttributeCorrection;
+
+export const zCorrectClinicalAttributePath = z.object({
+    patientId: z.uuid(),
+    attributeId: z.uuid()
+});
+
+/**
+ * Atributo corregido (la fila nueva, vigente).
+ */
+export const zCorrectClinicalAttributeResponse = zClinicalAttribute;
+
+export const zGetClinicalAttributeHistoryPath = z.object({
+    patientId: z.uuid(),
+    attributeId: z.uuid()
+});
+
+/**
+ * Versiones reemplazadas (vacía si el dato nunca se corrigió).
+ */
+export const zGetClinicalAttributeHistoryResponse = zCorrectionHistory;
 
 export const zCorrectBiomarkerBody = zBiomarkerCorrection;
 
