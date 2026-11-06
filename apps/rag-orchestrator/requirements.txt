@@ -39,10 +39,10 @@ jsonschema==4.26.0
 jsonschema-specifications==2025.9.1
 langchain-core==1.7.6
 langchain-protocol==0.0.21
-langgraph==1.1.10
+langgraph==1.2.10
 langgraph-checkpoint==4.3.1
-langgraph-prebuilt==1.0.13
-langgraph-sdk==0.3.15
+langgraph-prebuilt==1.1.1
+langgraph-sdk==0.4.6
 langsmith==0.14.17
 mako==1.4.3
 markupsafe==3.0.4
