@@ -612,9 +612,9 @@
 | US-075 | L1D-238 | FEAT-T5a | 1 | 3 | `2026-10-24-l1d-238-baseline-manual-vm` | El baseline manual de VM-1 y VM-2 se mide con los oncólogos antes de cerrar el S1 |
 | US-103 | L1D-239 | FEAT-T5b | 5 | 5 | — | La suite mide la exactitud de la extracción, su p95, la calidad de `auto_aceptado` y el gate de PII en documentos |
 | US-104 | L1D-240 | FEAT-T5b | si-hay-capacidad | 3 | — | Los umbrales de confianza del OCR se calibran con el set de referencia y quedan en configuración |
-| US-105 | L1D-241 | FEAT-T5b | 5 | 5 | — | La suite mide la fidelidad del caso reconstruido, el origen de cada dato, el soporte del resumen y el p95 de la vista de caso |
+| US-105 | L1D-241 | FEAT-T5b | Post-MVP | 5 | — | La suite mide la fidelidad del caso reconstruido, el origen de cada dato, el soporte del resumen y el p95 de la vista de caso |
 | US-106 | L1D-242 | FEAT-T5b | si-hay-capacidad | 5 | — | La suite mide duplicados fusionados, conflictos detectados, fusiones incorrectas y mapeo terminológico |
-| US-131 | L1D-243 | FEAT-T5b | 4 | 3 | — | La suite mide la sensibilidad y la especificidad del checklist de faltantes con faltantes sembrados |
+| US-131 | L1D-243 | FEAT-T5b | Post-MVP | 3 | — | La suite mide la sensibilidad y la especificidad del checklist de faltantes con faltantes sembrados |
 | US-132 | L1D-244 | FEAT-T5b | 3 | 5 | `2026-11-02-l1d-244-eval-aplicabilidad-metadatos` | La suite verifica que la aplicabilidad no inventa valores ni coincidencias y mide los metadatos del corpus |
 | US-133 | L1D-245 | FEAT-T5b | 4 | 3 | `2026-11-02-l1d-245-hibrida-vs-dense-misma-corrida` | La recuperación híbrida no retrocede respecto del baseline del S1 |
 | US-140 | L1D-246 | FEAT-T5b | 5 → 6 (movida) | 5 | — (movida al S6, abierto: `l1d-246-suite-hasta-3-opciones`) | La suite mide que hasta 3 opciones siguen citadas, con soporte, no prescriptivas y en el orden de RN-28 |
@@ -647,11 +647,11 @@
 | US-223 | L1D-273 | FEAT-PL1 | 2 | 2 | `2026-10-22-l1d-273-bundle-redocly` | `scripts/contracts` empaqueta los specs con `bundleDocument` de Redocly en lugar del empaquetador propio |
 | US-224 | L1D-274 | FEAT-06a | 1 | 5 | `2026-10-20-l1d-274-adr39-runtime-llm-ocr` | ADR-39 — Fase B: runtime, LLM local, OCR y p95 extremo a extremo |
 | US-225 | L1D-275 | FEAT-06a | 1 | 3 | `2026-10-24-l1d-275-generacion-opcion-max-options` | Con evidencia sobre el umbral, `/rag/query` genera la opción descrita, la recorta a `maxOptions` y responde con el contrato final |
-| US-226 | pendiente | FEAT-T5e | propuesto 2 | 5 | — | La suite `evaluate` compara variantes de recuperación con la partición congelada, IC pareado por grupo y control de acceso a la prueba |
-| US-227 | pendiente | FEAT-T5e | propuesto 2 | 3 | — | Un diagnóstico sin modelo y una auditoría ciega del oncólogo dicen cuántos fallos son del golden y cuántos del recuperador |
-| US-228 | pendiente | FEAT-T5e | propuesto 2 | 5 | — | El lote A del dataset nuevo (≥ 60 preguntas con respuesta y ≥ 10 sin respuesta, independientes del actual) queda revisado por el oncólogo |
-| US-229 | pendiente | FEAT-T5e | propuesto 2 o 3 | 5 | — | El lote B (≥ 100 preguntas con respuesta y ≥ 35 sin respuesta) queda sellado como la prueba ciega nueva |
-| US-230 | pendiente | FEAT-T5e | propuesto 3 | 5 | — | Las ablaciones preinscritas de recuperación se ejecutan en desarrollo, se confirman en validación y se deciden una sola vez sobre la prueba nueva |
+| US-226 | pendiente | FEAT-T5e | Post-MVP | 5 | — | La suite `evaluate` compara variantes de recuperación con la partición congelada, IC pareado por grupo y control de acceso a la prueba |
+| US-227 | pendiente | FEAT-T5e | Post-MVP | 3 | — | Un diagnóstico sin modelo y una auditoría ciega del oncólogo dicen cuántos fallos son del golden y cuántos del recuperador |
+| US-228 | pendiente | FEAT-T5e | Post-MVP | 5 | — | El lote A del dataset nuevo (≥ 60 preguntas con respuesta y ≥ 10 sin respuesta, independientes del actual) queda revisado por el oncólogo |
+| US-229 | pendiente | FEAT-T5e | Post-MVP | 5 | — | El lote B (≥ 100 preguntas con respuesta y ≥ 35 sin respuesta) queda sellado como la prueba ciega nueva |
+| US-230 | pendiente | FEAT-T5e | Post-MVP | 5 | — | Las ablaciones preinscritas de recuperación se ejecutan en desarrollo, se confirman en validación y se deciden una sola vez sobre la prueba nueva |
 | US-231 | pendiente | FEAT-06a | — | ? | — | ADR-39 — Adapters reales de embeddings, reranker, detector de idioma y NLI (dividida) |
 | US-231a | pendiente | FEAT-06a | 1 | 5 | `2026-10-24-us-231a-adapters-reales-recuperacion` | ADR-39 — Adapters reales de *embeddings*, *reranker* y detector de idioma detrás de los puertos de recuperación |
 | US-231b | pendiente | FEAT-06a | 1 | 3 | — (abierto: `us-231b-adapter-nli-smoke-semilla`) | ADR-39 — Adapter real de NLI y *smoke* del corpus semilla con *embeddings* reales |
@@ -673,7 +673,7 @@
 | US-245 | L1D-295 | FEAT-T1a | 4 | 5 | `2026-11-02-l1d-295-afirmaciones-atomicas-por-papel` | El generador escribe afirmaciones atómicas, el código añade el marco de atribución y cada afirmación se verifica según su papel |
 | US-246 | L1D-296 | FEAT-10a | 4 | 2 | `2026-11-02-l1d-296-motivo-descarte-separado` | El panel dice si una opción se descartó por falta de soporte o por lenguaje no permitido, sin mezclar los dos motivos |
 | US-247 | L1D-297 | FEAT-06c | 4 | 7 | `2026-11-02-l1d-297-demo-datos-levantar-verificacion` | La demo y la instalación traen metadatos de población verificados, pacientes que producen Coincide, Parcial y No coincide, y un `levantar.sh` que verifica el seed |
-| US-248 | L1D-304 | FEAT-06b | si-hay-capacidad | 2 | — | ADR-48 — Cuando una rama de la recuperación híbrida no devuelve candidatos, la fusión conserva la calidad de la otra o la degrada |
+| US-248 | L1D-304 | FEAT-06b | Post-MVP | 2 | — | ADR-48 — Cuando una rama de la recuperación híbrida no devuelve candidatos, la fusión conserva la calidad de la otra o la degrada |
 | US-249 | L1D-305 | FEAT-T3 | 5 | 3 | `2026-11-04-l1d-305-rn23-voz-propia-nivel-b` | La salida generada rechaza el lenguaje de recomendación en la voz propia del modelo y el nivel B atribuido, con casos de conformidad |
 | US-250 | L1D-306 | FEAT-06a | 5 | 2 | `2026-11-04-l1d-306-pregunta-nfc` | La pregunta del análisis se normaliza a Unicode NFC antes de guardarse y de llegar al LLM, para que la misma pregunta dé el mismo resultado |
 | US-251 | L1D-307 | FEAT-11a | 6 | 5 | — | La misma entrada devuelve el análisis ya guardado, rotulado como reutilizado, y «Re-ejecutar» genera uno nuevo |
@@ -681,3 +681,18 @@
 | US-253 | L1D-309 | FEAT-03b | 5 | 5 | `2026-11-04-l1d-309-correccion-con-historico` | Edito en la ficha los exámenes, biomarcadores y notas clínicas ya registrados, y cada cambio queda como corrección trazable |
 | US-254 | L1D-310 | FEAT-06c | 5 | 5 | `2026-11-04-l1d-310-pacientes-momentos-enfermedad` | La demo incluye pacientes sintéticos en distintos momentos de la enfermedad, con su historia de tratamientos y eventos |
 | US-255 | L1D-311 | FEAT-11c | 6 | 5 | — | Las conversaciones de seguimiento quedan como historial, las 3 últimas se ven al abrir el análisis y entran como memoria rotulada del análisis nuevo |
+| US-256 | [L1D-313](https://linear.app/l1der-lab-mjbc/issue/L1D-313) | FEAT-12 | 6 | 2 | — | ADR-51 — El chat se orquesta con LangGraph en Backend 2 con estado efímero y Backend 1 guarda el registro y rehidrata |
+| US-257 | [L1D-314](https://linear.app/l1der-lab-mjbc/issue/L1D-314) | FEAT-12 | 6 | 3 | — | Spike: assistant-ui cumple los cinco escenarios del oncólogo con CSP estricta y solo APIs estables, o la UI se hace con shadcn |
+| US-258 | [L1D-315](https://linear.app/l1der-lab-mjbc/issue/L1D-315) | FEAT-12 | 6 | 5 | — | `clinical-api` abre una conversación sobre el paciente y persiste cada turno, con la pregunta enmascarada, antes de responder |
+| US-259 | [L1D-316](https://linear.app/l1der-lab-mjbc/issue/L1D-316) | FEAT-12 | 6 | 5 | — | El turno del chat se resuelve en un grafo LangGraph de `rag-orchestrator` con estado efímero, TTL y rehidratación |
+| US-260 | [L1D-317](https://linear.app/l1der-lab-mjbc/issue/L1D-317) | FEAT-12 | 6 | 5 | — | AC01: el chat reconstruye la situación, el resumen y la evolución del paciente con cada afirmación enlazada a sus datos y verificada |
+| US-261 | [L1D-318](https://linear.app/l1der-lab-mjbc/issue/L1D-318) | FEAT-12 | 6 | 3 | — | AC02: el chat responde sobre un examen, un tratamiento o un periodo concreto, con fechas y secuencia, y distingue lo documentado de la interpretación |
+| US-262 | [L1D-319](https://linear.app/l1der-lab-mjbc/issue/L1D-319) | FEAT-12 | 6 | 3 | — | El chat señala las contradicciones y las correcciones del expediente sin resolverlas |
+| US-263 | [L1D-320](https://linear.app/l1der-lab-mjbc/issue/L1D-320) | FEAT-12 | 6 | 5 | — | AC03: el chat clasifica cada dato crítico faltante como no encontrado, incompleto, por conciliar o no buscado |
+| US-264 | [L1D-321](https://linear.app/l1der-lab-mjbc/issue/L1D-321) | FEAT-12 | 6 | 3 | — | AC04: el chat explica por qué importa un dato faltante solo con el catálogo y la evidencia citada |
+| US-265 | [L1D-322](https://linear.app/l1der-lab-mjbc/issue/L1D-322) | FEAT-12 | 6 | 5 | — | AC05: el turno de evidencia crea su análisis con aplicabilidad y las preguntas siguientes sobre ese resultado son seguimiento con memoria no citable |
+| US-266 | [L1D-323](https://linear.app/l1der-lab-mjbc/issue/L1D-323) | FEAT-12 | 6 | 3 | — | AC06: el chat presenta las fuentes y las limitaciones de la evidencia y de la recuperación, y dice «sin evidencia» sin invocar al LLM de generación |
+| US-267 | [L1D-324](https://linear.app/l1der-lab-mjbc/issue/L1D-324) | FEAT-12 | 6 | 5 | — | El panel conversacional sustituye a las 10 preguntas de seguimiento y muestra cada turno con sus enlaces, citas y avisos |
+| US-268 | [L1D-325](https://linear.app/l1der-lab-mjbc/issue/L1D-325) | FEAT-12 | 6 | 3 | — | El oncólogo abre fuentes, expande bloques y consulta referencias sin perder el contexto de la conversación |
+| US-269 | [L1D-326](https://linear.app/l1der-lab-mjbc/issue/L1D-326) | FEAT-12 | 6 | 5 | — | E2E y `evaluate` del chat: AC01–AC06 con casos sintéticos de mama y próstata |
+| US-270 | [L1D-327](https://linear.app/l1der-lab-mjbc/issue/L1D-327) | FEAT-06a | 6 | 1 | — | El log del corte previo al *reranker* registra qué fragmentos quedaron fuera y su orden denso, nunca su texto |

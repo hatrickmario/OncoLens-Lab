@@ -24,7 +24,9 @@
 
 > Linear: [L1D-213](https://linear.app/l1der-lab-mjbc/issue/L1D-213)
 
-`FEAT-T4c` · Sprint 6 · Estimación **5** · HU-14 (opt-out) · RN-15 (dueña), FR-16 (S5), FR-09, FR-21 · AC-T4.6 (`403`), AC-T3.3 (bloqueo por opt-out), AC-06.1 (`403`), AC-02.5 (`403`), AC-T4.1 (parte) · G-9 (opt-out) · ↪ US-149, US-052 · 🔗 Relacionada: US-096 (resumen, `si-hay-capacidad`: AC-2 condicional) · ⛔ DEC-16 (US-026) · escenario más probable · 🔗 Regresión [RN-26] → US-071
+`FEAT-T4c` · Sprint 6 · Estimación **5** · HU-14 (opt-out) · RN-15 (dueña), FR-16 (S5), FR-09, FR-21 · AC-T4.6 (`403`), AC-T3.3 (bloqueo por opt-out), AC-06.1 (`403`), AC-02.5 (`403`), AC-T4.1 (parte) · G-9 (opt-out) · ↪ US-149, US-052 · 🔗 Relacionada: US-096 (resumen, `si-hay-capacidad`: AC-2 condicional) · ⛔ DEC-16 (US-026) · escenario más probable · 🔗 Regresión [RN-26] → US-071 · 🔗 Cubre: FEAT-12 (US-258…US-266)
+
+> **Decidido (usuario, 2026-11-06):** entra al S6 con sus **9 AC** como excepción a la DoR por tamaño `[S6 resp. 8]`. «Generación con IA» (DEC-22) incluye **todo turno del chat con LLM** (US-258…US-266): `POST /platform/conversations/{conversationId}/turns` lleva la marca `generaIA`, así que el test de cobertura de rutas del AC-3 la exige, y con P-OPT-IA responde `403` con `error = "opt_out_analisis_ia"` y cero llamadas a `/chat/turn`. Crear la conversación (`POST …/conversations`) y leerla (`GET /platform/conversations/{id}`) no son generación: se verifican en positivo en el AC-7. El mensaje del panel del AC-8 se aplica también al panel conversacional (US-267).
 
 ## Story
 Como paciente que se opuso al análisis con IA (representado por el administrador que
