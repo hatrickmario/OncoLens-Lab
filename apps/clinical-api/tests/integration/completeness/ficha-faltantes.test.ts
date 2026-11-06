@@ -1,5 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import type { CompletenessService } from '../../../src/modules/completeness/ports.js';
+import type {
+  CompletenessEnLote,
+  CompletenessService,
+} from '../../../src/modules/completeness/ports.js';
 import {
   RUTA_CATALOGO_TEST_1_0_0,
   nuevoPaciente,
@@ -43,8 +46,14 @@ async function conIdentidad(patientId: string, indice: number): Promise<string> 
   return patientId;
 }
 
-const pedirFicha = (id: string, completitud: CompletenessService) => {
-  const { app, logger } = montarPacientes(escenario.mundo, { completitud });
+const pedirFicha = (id: string, completitud: CompletenessService & Partial<CompletenessEnLote>) => {
+  // La ficha solo usa `calcular`; el lote del listado no se invoca aquí.
+  const { app, logger } = montarPacientes(escenario.mundo, {
+    completitud: {
+      calcularVarios: () => Promise.reject(new Error('no se invoca en la ficha')),
+      ...completitud,
+    },
+  });
   return {
     logger,
     respuesta: clienteVerificado(app)

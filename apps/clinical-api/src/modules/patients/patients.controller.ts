@@ -71,27 +71,71 @@ function crearRespuestas(registrar: Registrar) {
 
 type Respuestas = ReturnType<typeof crearRespuestas>;
 
-function crearListar(service: PatientsService, respuestas: Respuestas): RequestHandler {
+/**
+ * Recoge la clase del error de cada checklist que falla en la página y las registra como aviso no bloqueante (RN-26):
+ * una línea por clase con el número de pacientes, `traceId` y nada más (ni mensaje, ni pila, ni identidad: RN-10).
+ */
+function crearAvisoDeChecklist(registrar: Registrar, evento: string) {
+  const clases: string[] = [];
+  return {
+    alFallarElChecklist: (errorClase: string): void => {
+      clases.push(errorClase);
+    },
+    registrarAvisos(response: Response): void {
+      for (const errorClase of new Set(clases)) {
+        registrar({
+          event: `${evento}.checklist_no_disponible`,
+          resultado: 'no_disponible',
+          errorClase,
+          pacientes: clases.filter((clase) => clase === errorClase).length,
+          traceId: traceIdDe(response),
+        });
+      }
+    },
+  };
+}
+
+function crearListar(
+  service: PatientsService,
+  respuestas: Respuestas,
+  registrar: Registrar,
+): RequestHandler {
   return async (request, response) => {
     const filtros = leerFiltrosDelListado(request.query);
     if (!filtros.success) {
       respuestas.rechazarCuerpoInvalido(response, EVENTO_LISTADO);
       return;
     }
-    const pagina = await service.listar({ filtros: filtros.data, vista: vistaDe(request) });
+    const avisos = crearAvisoDeChecklist(registrar, EVENTO_LISTADO);
+    const pagina = await service.listar({
+      filtros: filtros.data,
+      vista: vistaDe(request),
+      alFallarElChecklist: avisos.alFallarElChecklist,
+    });
     respuestas.responderPagina(response, EVENTO_LISTADO, pagina);
+    avisos.registrarAvisos(response);
   };
 }
 
-function crearBuscar(service: PatientsService, respuestas: Respuestas): RequestHandler {
+function crearBuscar(
+  service: PatientsService,
+  respuestas: Respuestas,
+  registrar: Registrar,
+): RequestHandler {
   return async (request, response) => {
     const busqueda = leerBusqueda(request.body);
     if (busqueda === undefined) {
       respuestas.rechazarCuerpoInvalido(response, EVENTO_BUSQUEDA);
       return;
     }
-    const pagina = await service.buscar({ busqueda, vista: vistaDe(request) });
+    const avisos = crearAvisoDeChecklist(registrar, EVENTO_BUSQUEDA);
+    const pagina = await service.buscar({
+      busqueda,
+      vista: vistaDe(request),
+      alFallarElChecklist: avisos.alFallarElChecklist,
+    });
     respuestas.responderPagina(response, EVENTO_BUSQUEDA, pagina, busqueda.criterio.tipo);
+    avisos.registrarAvisos(response);
   };
 }
 
@@ -159,7 +203,7 @@ export function patientsController(dependencias: DependenciasDelController): Rou
     '/patients',
     crearTraceIdMiddleware(traceIds),
     authorize('patients:lookup'),
-    crearListar(service, respuestas),
+    crearListar(service, respuestas, registrar),
   );
   router.get(
     '/patients/:patientId',
@@ -172,7 +216,7 @@ export function patientsController(dependencias: DependenciasDelController): Rou
     crearTraceIdMiddleware(traceIds),
     authorize('patients:lookup'), // x-permission de searchPatients; el rol no se mira
     express.json(),
-    crearBuscar(service, respuestas),
+    crearBuscar(service, respuestas, registrar),
     crearCuerpoIlegible(respuestas),
   );
   return router;

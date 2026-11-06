@@ -160,7 +160,6 @@ describe('listado de pacientes', () => {
 
     expect(respuesta.headers['cache-control']).toBe('no-store');
     for (const elemento of respuesta.body.items) {
-      expect(elemento.missingCriticalCount).toBe(0);
       expect(elemento.cancerTypeEnabled).toBe(true);
     }
   });

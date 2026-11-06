@@ -660,7 +660,14 @@ export type PatientListItem = {
     birthYear: number;
     cancerTypeEnabled: boolean;
     pendingReviewCount: number;
+    /**
+     * Datos críticos faltantes (FR-23), calculados con el mismo servicio que la ficha.
+     */
     missingCriticalCount: number;
+    /**
+     * false si el checklist no pudo calcularse para este paciente; entonces missingCriticalCount = 0 y no debe mostrarse como contador (RN-26). Ausente equivale a true.
+     */
+    completenessAvailable?: boolean;
 };
 
 /**

@@ -4,7 +4,13 @@ import type {
   PatientPage,
   PatientSummary,
 } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
-import type { CompletenessService } from '../completeness/ports.js';
+import { faltantesDe } from '../completeness/completeness.rules.js';
+import type {
+  CompletenessEnLote,
+  CompletenessService,
+  ResultadoDelChecklist,
+} from '../completeness/ports.js';
+import { claseDeError } from '../../infrastructure/logger.js';
 import type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
 import type { IdentidadParcial, IdentityService } from './identity.service.js';
 import type {
@@ -21,7 +27,8 @@ import {
   comoResumenAdmin,
   enmascararDocumento,
   enmascararNombre,
-  FALTANTES_CRITICOS_POR_AHORA,
+  FALTANTES_NO_DISPONIBLES,
+  type AlFallarElChecklist,
 } from './patients.reglas.js';
 import type {
   FilaDePaciente,
@@ -30,8 +37,16 @@ import type {
 } from './patients.repository.js';
 
 export interface PatientsService {
-  listar(entrada: { filtros: FiltrosDelListado; vista: VistaPorPermiso }): Promise<PatientPage>;
-  buscar(entrada: { busqueda: BusquedaDePacientes; vista: VistaPorPermiso }): Promise<PatientPage>;
+  listar(entrada: {
+    filtros: FiltrosDelListado;
+    vista: VistaPorPermiso;
+    alFallarElChecklist?: AlFallarElChecklist;
+  }): Promise<PatientPage>;
+  buscar(entrada: {
+    busqueda: BusquedaDePacientes;
+    vista: VistaPorPermiso;
+    alFallarElChecklist?: AlFallarElChecklist;
+  }): Promise<PatientPage>;
   /** Ficha de un paciente: `PatientSummary` para quien lee datos clínicos, `PatientAdminSummary` para el resto. */
   obtenerFicha(entrada: {
     patientId: string;
@@ -46,8 +61,8 @@ export interface DependenciasDelService {
   ficha: FichaRepository;
   identidad: IdentityService;
   tiposHabilitados: TiposDeCancerHabilitados;
-  /** Solo para la ficha: el listado y la búsqueda no lo invocan (Q2, D7b). */
-  completitud: CompletenessService;
+  /** Ficha (`calcular`) y listado y búsqueda del doctor (`calcularVarios`): una sola regla, en lote por página. */
+  completitud: CompletenessService & CompletenessEnLote;
   /** `PATIENTS_PAGE_SIZE` (RN-22). */
   pageSize: number;
 }
@@ -58,7 +73,11 @@ type Elemento = PatientListItem | PatientAdminSummary;
 interface ContextoDeElemento {
   readonly tiposHabilitados: TiposDeCancerHabilitados;
   readonly pendientes: Map<string, number>;
+  readonly faltantes: Map<string, FaltantesDelListado>;
 }
+
+/** Lo que el listado muestra del checklist de un paciente; `completenessAvailable` solo viaja cuando es `false`. */
+type FaltantesDelListado = Pick<PatientListItem, 'missingCriticalCount' | 'completenessAvailable'>;
 
 function elementoDoctor(
   fila: FilaDePaciente,
@@ -76,7 +95,7 @@ function elementoDoctor(
     birthYear: fila.birthYear,
     cancerTypeEnabled: cancerTypeHabilitado(fila.cancerType, contexto.tiposHabilitados),
     pendingReviewCount: contexto.pendientes.get(fila.id) ?? 0,
-    missingCriticalCount: FALTANTES_CRITICOS_POR_AHORA,
+    ...(contexto.faltantes.get(fila.id) ?? FALTANTES_NO_DISPONIBLES),
   };
 }
 
@@ -121,6 +140,59 @@ async function identidadesDe(
   return new Map(descifradas.map((fila) => [fila.patientId, fila]));
 }
 
+/** Los faltantes de un paciente del lote; cualquier resultado que no sea `ok` es la forma degradada (RN-26). Pura. */
+function comoFaltantes(resultado: ResultadoDelChecklist | undefined): FaltantesDelListado {
+  return resultado?.estado === 'ok'
+    ? { missingCriticalCount: faltantesDe(resultado.checklist).length }
+    : { ...FALTANTES_NO_DISPONIBLES };
+}
+
+/** El aviso es de cortesía: si el llamador lanza, la página no falla y no se repite el aviso (RN-26). */
+function avisarFallo(alFallar: AlFallarElChecklist | undefined, error: unknown): void {
+  try {
+    alFallar?.(claseDeError(error));
+  } catch {
+    // Un aviso que falla nunca tumba el listado.
+  }
+}
+
+/** El lote o, si el cálculo entero falla, el error que afecta a todas las filas. */
+async function calcularLote(
+  completitud: CompletenessEnLote,
+  patientIds: readonly string[],
+): Promise<ReadonlyMap<string, ResultadoDelChecklist> | { readonly fallo: unknown }> {
+  try {
+    return await completitud.calcularVarios(patientIds);
+  } catch (error) {
+    return { fallo: error };
+  }
+}
+
+/**
+ * Los faltantes críticos de la página (FR-23) con el mismo servicio que la ficha, en lote. Si falla un paciente o el
+ * lote entero, la página NO falla (RN-26): esas filas salen en 0 con `completenessAvailable = false` y se avisa una
+ * vez por paciente.
+ */
+async function faltantesDeLaPagina(
+  completitud: CompletenessEnLote,
+  patientIds: readonly string[],
+  alFallar: AlFallarElChecklist | undefined,
+): Promise<Map<string, FaltantesDelListado>> {
+  if (patientIds.length === 0) return new Map();
+  const lote = await calcularLote(completitud, patientIds);
+  const faltantes = new Map<string, FaltantesDelListado>();
+  for (const id of patientIds) {
+    const resultado = lote instanceof Map ? lote.get(id) : undefined;
+    faltantes.set(id, comoFaltantes(resultado));
+    if (resultado?.estado === 'ok') continue;
+    avisarFallo(
+      alFallar,
+      resultado?.estado === 'no_disponible' ? resultado.error : (lote as { fallo?: unknown }).fallo,
+    );
+  }
+  return faltantes;
+}
+
 /** Una página de pacientes (con los filtros o solo los `ids` de una búsqueda) en la vista del permiso. */
 async function paginar(
   dependencias: DependenciasDelService,
@@ -128,10 +200,11 @@ async function paginar(
     filtro: Omit<FiltroDePacientes, 'limit' | 'offset' | 'conDatosClinicos'>;
     page: number;
     vista: VistaPorPermiso;
+    alFallarElChecklist: AlFallarElChecklist | undefined;
   },
 ): Promise<PatientPage> {
-  const { repo, identidad, tiposHabilitados, pageSize } = dependencias;
-  const { filtro, page, vista } = entrada;
+  const { repo, identidad, tiposHabilitados, completitud, pageSize } = dependencias;
+  const { filtro, page, vista, alFallarElChecklist } = entrada;
   const presentador = VISTAS[vista];
   const { filas, total } = await repo.listar({
     ...filtro,
@@ -143,10 +216,18 @@ async function paginar(
   const pendientes = presentador.conDatosClinicos
     ? await repo.contarPendientesDeRevision(filas.map((fila) => fila.id))
     : new Map<string, number>();
+  const faltantes = presentador.conDatosClinicos
+    ? await faltantesDeLaPagina(
+        completitud,
+        filas.map((fila) => fila.id),
+        alFallarElChecklist,
+      )
+    : new Map<string, FaltantesDelListado>();
   const items = filas.map((fila) =>
     presentador.elemento(fila, exigirIdentidad(identidades.get(fila.id)), {
       tiposHabilitados,
       pendientes,
+      faltantes,
     }),
   );
   return { items, page, pageSize, total };
@@ -165,16 +246,22 @@ function pacientesQueCoinciden(
 export function crearPatientsService(dependencias: DependenciasDelService): PatientsService {
   return {
     // El `status` del query se queda en el borde: aquí es el ciclo de vida del paciente.
-    listar: ({ filtros, vista }) =>
+    listar: ({ filtros, vista, alFallarElChecklist }) =>
       paginar(dependencias, {
         filtro: { lifecycleStatus: filtros.status, dataOrigin: filtros.dataOrigin },
         page: filtros.page,
         vista,
+        alFallarElChecklist,
       }),
     obtenerFicha: (entrada) => obtenerFicha(dependencias, entrada),
-    async buscar({ busqueda, vista }) {
+    async buscar({ busqueda, vista, alFallarElChecklist }) {
       const ids = await pacientesQueCoinciden(dependencias.identidad, busqueda.criterio);
-      return paginar(dependencias, { filtro: { ids }, page: busqueda.page, vista });
+      return paginar(dependencias, {
+        filtro: { ids },
+        page: busqueda.page,
+        vista,
+        alFallarElChecklist,
+      });
     },
   };
 }

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — Platform API (Backend 1 / clinical-api)
-  version: 1.20.0
+  version: 1.21.0
   description: >-
     API pública, accesible solo a través de los Route Handlers de web (clinical-api no
     publica puerto al host). Autenticación por cookie de sesión HttpOnly + Secure +
@@ -2270,6 +2270,12 @@ components:
         missingCriticalCount:
           type: integer
           minimum: 0
+          description: Datos críticos faltantes (FR-23), calculados con el mismo servicio que la ficha.
+        completenessAvailable:
+          type: boolean
+          description: >-
+            false si el checklist no pudo calcularse para este paciente; entonces missingCriticalCount = 0
+            y no debe mostrarse como contador (RN-26). Ausente equivale a true.
 
     PatientAdminSummary:
       type: object
