@@ -14,6 +14,7 @@ import {
   type ArchivosDeContrasena,
   type SeedEnProceso,
 } from '../../support/seed.js';
+import { createPatientsRepository } from '../../../src/modules/patients/patients.repository.js';
 import { createPasswordHasher } from '../../../src/modules/auth/password-hasher.js';
 import { ARGON2_DE_PRUEBA } from '../../support/usuarios.js';
 
@@ -71,14 +72,42 @@ describe('Contenido del seed sintético', () => {
       expect(ajenas, tabla).toEqual([]);
     }
     expect(await filas(`SELECT 1 FROM clinical.exam WHERE entry_method <> 'seed'`)).toEqual([]);
-    // Todo biomarcador está verificado salvo los de (f) = FX-T3-a, que acumula avisos a propósito (US-071).
+    // Todo biomarcador está verificado salvo los de (f) = FX-T3-a (US-071) y el Ki-67 de (h) (d5fb-01).
     expect(
       await filas(
         `SELECT 1 FROM clinical.biomarker b JOIN clinical.exam e ON e.id = b.exam_id
-          WHERE b.review_status <> 'verificado' AND e.patient_id <> $1`,
-        [idDe('f')],
+          WHERE b.review_status <> 'verificado' AND e.patient_id <> $1
+            AND NOT (e.patient_id = $2 AND b.name = 'Ki-67')`,
+        [idDe('f'), idDe('h')],
       ),
     ).toEqual([]);
+  });
+
+  it('(h) tiene el Ki-67 en requiere_revision en un examen propio y RE, RP y HER2 verificados [d5fb-01]', async () => {
+    const filasDeH = await filas<{ name: string; review_status: string; exam_id: string }>(
+      `SELECT b.name, b.review_status, b.exam_id FROM clinical.biomarker b JOIN clinical.exam e ON e.id = b.exam_id
+        WHERE e.patient_id = $1 ORDER BY b.name`,
+      [idDe('h')],
+    );
+    const ki67 = filasDeH.filter((b) => b.name === 'Ki-67');
+    expect(ki67.map((b) => b.review_status)).toEqual(['requiere_revision']);
+    const otros = filasDeH.filter((b) => b.name !== 'Ki-67');
+    expect(otros.map((b) => b.name)).toEqual(['HER2', 'RE', 'RP']);
+    expect(otros.every((b) => b.review_status === 'verificado')).toBe(true);
+    expect(otros.some((b) => b.exam_id === ki67[0]!.exam_id)).toBe(false);
+  });
+
+  it('pendingReviewCount del seed es 2 para (f), 1 para (h) y 0 para el resto, con al menos dos pacientes por revisar [US-048 AC-1]', async () => {
+    const pendientes = await createPatientsRepository(cliente).contarPendientesDeRevision(
+      PACIENTES.map(idDe),
+    );
+    const cuenta = (letra: string): number => pendientes.get(idDe(letra)) ?? 0;
+    expect(cuenta('f')).toBe(2);
+    expect(cuenta('h')).toBe(1);
+    for (const letra of PACIENTES.filter((l) => l !== 'f' && l !== 'h')) {
+      expect(cuenta(letra), letra).toBe(0);
+    }
+    expect([...pendientes.values()].filter((n) => n > 0)).toHaveLength(2);
   });
 
   it('los usuarios de demo tienen hash Argon2id y ninguna contraseña en claro [US-039 AC-1]', async () => {
