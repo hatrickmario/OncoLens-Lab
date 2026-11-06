@@ -7,7 +7,9 @@ import pytest
 from app.config.settings import Settings
 
 
-@pytest.mark.parametrize("clave", ["NLI_ENTAILMENT_THRESHOLD", "CLINICAL_CATALOG_PATH"])
+@pytest.mark.parametrize(
+    "clave", ["NLI_ENTAILMENT_THRESHOLD", "CLINICAL_CATALOG_PATH", "LLM_TOKENIZER_PATH"]
+)
 def test_una_clave_de_la_etapa_de_soporte_vacia_cuenta_como_ausente(
     monkeypatch: pytest.MonkeyPatch, clave: str
 ) -> None:

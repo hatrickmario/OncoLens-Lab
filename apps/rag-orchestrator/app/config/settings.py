@@ -258,6 +258,7 @@ class Settings(BaseSettings):
         "nli_label_index_contradiction",
         "nli_entailment_threshold",
         "clinical_catalog_path",
+        "llm_tokenizer_path",
         mode="before",
     )
     @classmethod
