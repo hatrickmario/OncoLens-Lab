@@ -11,7 +11,6 @@ import pytest
 
 from app.application.ports import FalloDelLlm
 from app.domain.lenguaje import normalizar_texto
-from tests.support.llm_chat_falso import FakeChatLlm
 from tests.support.chat import (
     Q_CASO,
     Q_EVIDENCIA,
@@ -24,6 +23,7 @@ from tests.support.chat import (
     crear_entorno_de_chat,
     solicitud_de_turno,
 )
+from tests.support.llm_chat_falso import FakeChatLlm
 from tests.support.recuperacion import EJEMPLOS
 
 

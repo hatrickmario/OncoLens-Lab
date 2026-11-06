@@ -14,6 +14,7 @@ from typing import Any
 
 from app.application.catalogo_exigido import exigir_catalogo_de_la_solicitud
 from app.application.chat.avisos import avisos_del_turno
+from app.application.chat.capacidades.caso import NodoCaso
 from app.application.chat.capacidades.evidencia import NodoEvidencia
 from app.application.chat.capacidades.seguimiento_evidencia import (
     NodoSeguimientoDeEvidencia,
@@ -29,7 +30,6 @@ from app.application.chat.traduccion import (
     estado_estructurado_del_contrato,
     hechos_del_caso,
 )
-from app.application.selector_proveedor_llm import con_clasificacion
 from app.application.ports import (
     CatalogoClinico,
     Clock,
@@ -39,6 +39,8 @@ from app.application.ports import (
     ProhibitedTermsChecker,
 )
 from app.application.rag_orchestrator_service import RAGOrchestratorService
+from app.application.selector_proveedor_llm import con_clasificacion
+from app.application.verificacion_de_soporte import VerificadorDeSoporte
 from app.config.settings import Settings
 from app.domain.chat.estado import INTENCIONES_CLASIFICABLES, EstadoDelHilo, Intencion
 from app.schemas.generated.models import (
@@ -63,6 +65,7 @@ class ChatTurnService:
         verificador_terminos: ProhibitedTermsChecker,
         servicio_de_evidencia: RAGOrchestratorService | None = None,
         posiciones: PosicionDeChunks | None = None,
+        soporte: VerificadorDeSoporte | None = None,
     ) -> None:
         self._catalogo = catalogo
         self._settings = settings
@@ -75,13 +78,23 @@ class ChatTurnService:
             presupuesto_de_memoria=settings.chat_memory_max_tokens,
             terminos_por_tipo=terminos_por_tipo,
         )
+        caso = NodoCaso(
+            llm=llm,
+            contador=contador,
+            configuracion=configuracion,
+            soporte=soporte,
+            max_palabras_por_afirmacion=settings.claim_max_words,
+        )
         self._grafo = construir_grafo(
             llm=llm,
             contador=contador,
             configuracion=configuracion,
-            capacidades=_capacidades_de_evidencia(
-                servicio_de_evidencia, posiciones, llm, contador, configuracion, settings
-            ),
+            capacidades={
+                **_capacidades_de_evidencia(
+                    servicio_de_evidencia, posiciones, llm, contador, configuracion, settings
+                ),
+                Intencion.caso: caso.ejecutar,
+            },
             guardado=self.registro.guardado,
             verificador_terminos=verificador_terminos,
         )
@@ -154,7 +167,7 @@ class ChatTurnService:
                 "omittedClaims": final["omitidas"],
                 "structuredState": estado_estructurado_del_contrato(hilo.estructurado),
                 "llmProvider": proveedor,
-                "notices": avisos_del_turno(self._settings)
+                "notices": avisos_del_turno(self._settings, intencion)
                 if intencion in INTENCIONES_CLASIFICABLES
                 else [],
             }

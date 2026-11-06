@@ -101,7 +101,27 @@ export function etiquetasDeFaltantes(items: readonly ChatCompletenessItem[]): st
 export type ResolucionDeEnlaces =
   { ok: true; enlaces: ConversationDataLink[] } | { ok: false; factRefSinResolver: string };
 
-/** Un enlace por `factRef` distinto de los bloques, en orden de aparición; un `factRef` que el turno no envió no se resuelve. */
+/** Un dato sin fecha confiable (`null`) va al final y nunca se trata como el día `0`. */
+const claveDeDia = (dia: number | null): number => (dia === null ? Number.POSITIVE_INFINITY : dia);
+
+/**
+ * Orden de presentación de los enlaces (US-260, AC-02.4): día relativo ascendente, sin fecha al final y, a igual día,
+ * el orden de aparición en los bloques. Regla pura: nunca se confía en el orden que devuelve el LLM.
+ */
+export function ordenarPorDiaRelativo(
+  enlaces: readonly ConversationDataLink[],
+): ConversationDataLink[] {
+  return enlaces
+    .map((enlace, posicion) => ({ enlace, posicion }))
+    .sort(
+      (a, b) =>
+        claveDeDia(a.enlace.relativeDay) - claveDeDia(b.enlace.relativeDay) ||
+        a.posicion - b.posicion,
+    )
+    .map(({ enlace }) => enlace);
+}
+
+/** Un enlace por `factRef` distinto de los bloques, ordenados por día relativo; un `factRef` que el turno no envió no se resuelve. */
 export function enlacesDelTurno(
   bloques: readonly ChatBlock[],
   hechos: ReadonlyMap<string, EnlaceDelHecho>,
@@ -112,5 +132,5 @@ export function enlacesDelTurno(
     if (hecho === undefined) return { ok: false, factRefSinResolver: factRef };
     enlaces.push({ factRef, ...hecho });
   }
-  return { ok: true, enlaces };
+  return { ok: true, enlaces: ordenarPorDiaRelativo(enlaces) };
 }

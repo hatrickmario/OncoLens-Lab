@@ -1,0 +1,18 @@
+{
+  "CHAT-CASO-SITUACION": {
+    "ruta": "{\"intent\": \"caso\"}",
+    "generacion": "{\"claims\": [{\"text\": \"Carcinoma ductal infiltrante, Nottingham grado 2, estadio IIA (TNM_8), ECOG 1, al momento del diagnóstico.\", \"factRefs\": [\"f1\"], \"citations\": []}, {\"text\": \"HER2: 3+ (IHQ), relevante, al momento del diagnóstico.\", \"factRefs\": [\"f2\"], \"citations\": []}, {\"text\": \"CA 15-3: 28 U/mL, normal, 90 días después del diagnóstico.\", \"factRefs\": [\"f5\"], \"citations\": []}, {\"text\": \"CA 15-3: 22 U/mL, normal, 30 días después del diagnóstico.\", \"factRefs\": [\"f3\"], \"citations\": []}, {\"text\": \"CA 15-3: 25 U/mL, normal, 60 días después del diagnóstico.\", \"factRefs\": [\"f4\"], \"citations\": []}]}"
+  },
+  "CHAT-CASO-PSA": {
+    "ruta": "{\"intent\": \"caso\"}",
+    "generacion": "{\"claims\": [{\"text\": \"PSA: 4,2 ng/mL, 180 días después del diagnóstico.\", \"factRefs\": [\"f3\"], \"citations\": []}, {\"text\": \"PSA: 8,5 ng/mL, al momento del diagnóstico.\", \"factRefs\": [\"f1\"], \"citations\": []}, {\"text\": \"PSA: 6,1 ng/mL, 90 días después del diagnóstico.\", \"factRefs\": [\"f2\"], \"citations\": []}]}"
+  },
+  "CHAT-CASO-PARAFRASIS": {
+    "ruta": "{\"intent\": \"caso\"}",
+    "generacion": "{\"claims\": [{\"text\": \"La paciente tiene HER2 positivo por inmunohistoquímica.\", \"factRefs\": [\"f2\"], \"citations\": []}]}"
+  },
+  "CHAT-CASO-LARGA": {
+    "ruta": "{\"intent\": \"caso\"}",
+    "generacion": "{\"claims\": [{\"text\": \"El diagnóstico documentado describe un carcinoma ductal infiltrante con varios hallazgos El diagnóstico documentado describe un carcinoma ductal infiltrante con varios hallazgos\", \"factRefs\": [\"f1\"], \"citations\": []}]}"
+  }
+}

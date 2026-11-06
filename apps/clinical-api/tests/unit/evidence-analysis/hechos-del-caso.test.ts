@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { construirContextoPermitido } from '../../../src/modules/evidence-analysis/clinical-context.builder.js';
+import {
+  construirContextoDelChat,
+  construirContextoPermitido,
+} from '../../../src/modules/evidence-analysis/clinical-context.builder.js';
 import { construirHechosDelCaso } from '../../../src/modules/evidence-analysis/conversation/hechos-del-caso.js';
 import {
   AHORA_DE_EJEMPLO,
@@ -148,7 +151,7 @@ describe('construirHechosDelCaso', () => {
     expect(resultado.caseFacts[1]?.verbalization).toBe('HER2: No disponible');
   });
 
-  it('omite el estadio «No disponible» de la verbalización del diagnóstico', () => {
+  it('escribe «estadio: No disponible» en la verbalización del diagnóstico cuando el estadio no está registrado [RN-25]', () => {
     const sinEstadio = casoDeEjemplo({
       diagnosticoActivo: diagnosticoDeEjemplo({ stagingSystem: null, stageValue: null }),
     });
@@ -159,8 +162,7 @@ describe('construirHechosDelCaso', () => {
       permitido.dataRefs,
     );
 
-    expect(resultado.caseFacts[0]?.verbalization).not.toContain('No disponible');
-    expect(resultado.caseFacts[0]?.verbalization).not.toContain('estadio');
+    expect(resultado.caseFacts[0]?.verbalization).toContain('estadio: No disponible');
   });
 
   it('devuelve cero hechos cuando el paciente no tiene datos clínicos', () => {
@@ -180,5 +182,59 @@ describe('construirHechosDelCaso', () => {
 
     expect(resultado.caseFacts).toEqual([]);
     expect(resultado.enlaces.size).toBe(0);
+  });
+});
+
+describe('construirHechosDelCaso: series y correcciones', () => {
+  const casoConSerie = casoDeEjemplo({
+    diagnosticoActivo: diagnosticoDeEjemplo({ diagnosedAt: '2026-01-10' }),
+    biomarcadores: [
+      biomarcadorDeEjemplo({
+        id: 'b3',
+        name: 'CA 15-3',
+        value: '28',
+        performedAt: '2026-04-10',
+        createdAt: '2026-04-10T10:00:00.000Z',
+      }),
+      biomarcadorDeEjemplo({
+        id: 'b1',
+        name: 'CA 15-3',
+        value: '22',
+        performedAt: '2026-02-09',
+        createdAt: '2026-02-09T10:00:00.000Z',
+      }),
+      biomarcadorDeEjemplo({
+        id: 'b2',
+        name: 'HER2',
+        value: '3+',
+        entryMethod: 'manual_correction',
+        reviewStatus: 'corregido',
+        performedAt: '2026-03-01',
+      }),
+    ],
+  });
+
+  it('conserva todos los valores de una serie en orden cronológico con un seriesKey sin separadores cuando se pide la serie completa', () => {
+    const { contexto, dataRefs } = construirContextoDelChat(casoConSerie, AHORA_DE_EJEMPLO, []);
+    const { caseFacts } = construirHechosDelCaso(
+      { ...contexto, pseudoPatientId: 'psd_x' },
+      dataRefs,
+    );
+
+    const serie = caseFacts.filter((h) => h.seriesKey === 'ca153');
+    expect(serie.map((h) => h.relativeDay)).toEqual([30, 90]);
+  });
+
+  it('marca como corregido el hecho cuyo registro vigente es una corrección manual', () => {
+    const { contexto, dataRefs } = construirContextoDelChat(casoConSerie, AHORA_DE_EJEMPLO, []);
+    const { caseFacts } = construirHechosDelCaso(
+      { ...contexto, pseudoPatientId: 'psd_x' },
+      dataRefs,
+    );
+
+    expect(caseFacts.find((h) => h.verbalization.startsWith('HER2'))).toMatchObject({
+      corrected: true,
+    });
+    expect(caseFacts.filter((h) => h.corrected === true)).toHaveLength(1);
   });
 });

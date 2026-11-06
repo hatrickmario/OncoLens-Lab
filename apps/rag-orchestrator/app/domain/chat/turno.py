@@ -25,6 +25,8 @@ class HechoDelCaso:
     dia_relativo: int | None
     estado_de_revision: str
     conflicto_con: str | None = None
+    serie: str | None = None
+    """``seriesKey`` del dato (p. ej. los valores de un mismo biomarcador); ``None`` si no es parte de una serie."""
 
 
 @dataclass(frozen=True)

@@ -5,12 +5,12 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from app.application.seed_corpus.ports import RegistroDeDocumento
-from app.domain.criterios_aplicabilidad import CriterioDeAplicabilidad
 from app.application.corpus_ingestion.resumen_poblacion import (
     como_diccionario,
     resumir_poblacion_por_tipo_e_idioma,
 )
+from app.application.seed_corpus.ports import RegistroDeDocumento
+from app.domain.criterios_aplicabilidad import CriterioDeAplicabilidad
 from app.infrastructure.catalogo_clinico.aplicabilidad import cargar_criterios_de_aplicabilidad
 from tests.support.contract import CATALOGOS
 from tests.support.registros import registro_de_prueba

@@ -34,7 +34,6 @@ from app.domain.chat.turno import (
 )
 from app.domain.chat.vigencia import hilo_vencido
 
-
 TIPOS_DEL_ESTADO = (
     EstadoDelHilo,
     EstadoEstructurado,

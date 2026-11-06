@@ -10,4 +10,5 @@ AVISO_DE_IA_INICIAL = (
     "Generado por IA; requiere validación clínica independiente por el oncólogo tratante"
 )
 AVISO_ACADEMICO_INICIAL = "Uso académico/investigación"
+AVISO_VERIFICAR_FUENTES_INICIAL = "Verifique contra las fuentes"
 """Los avisos de RN-19 sin punto final, como en la configuración de Backend 1 (glosario S6 §3)."""

@@ -102,5 +102,13 @@ def crear_entorno_de_chat_con_evidencia(
         app, raise_server_exceptions=False, headers=con_token_valido(par_de_sesion())
     )
     return EntornoDeChatConEvidencia(
-        cliente, llm, contador, reloj, base.catalogo_clinico, servicio.registro, base, posiciones
+        cliente,
+        llm,
+        base.clasificador_nli,  # type: ignore[arg-type]
+        contador,
+        reloj,
+        base.catalogo_clinico,  # type: ignore[arg-type]
+        servicio.registro,
+        base,
+        posiciones,
     )

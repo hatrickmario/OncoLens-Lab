@@ -42,7 +42,7 @@ function candidatoDeDiagnostico(diagnostico: NonNullable<ClinicalContext['diagno
         diagnostico.histology ?? '',
         diagnostico.grade ?? '',
         estaAusente(diagnostico.stageValue)
-          ? ''
+          ? `estadio: ${NO_DISPONIBLE}` // RN-25: el dato ausente se dice, no se calla
           : `estadio ${diagnostico.stageValue} (${diagnostico.stagingSystem})`,
         diagnostico.performanceScale === null || diagnostico.performanceValue === null
           ? ''
@@ -60,6 +60,18 @@ function verbalizarBiomarcador(biomarcador: ClinicalContext['biomarkers'][number
     : `${biomarcador.biomarkerName}: ${biomarcador.value}, ${biomarcador.clinicalSignificance}`;
 }
 
+/** Clave de la serie de un biomarcador: su nombre en minúsculas y sin separadores (`CA 15-3` → `ca153`). */
+function claveDeSerie(nombre: string): string {
+  return nombre.toLowerCase().replaceAll(/[^a-z0-9]/g, '');
+}
+
+/** Una corrección vigente (ADR-50) se marca para que la UI y el LLM la distingan de un dato extraído. */
+function esCorreccion(procedencia: Procedencia): boolean {
+  return (
+    procedencia.entryMethod === 'manual_correction' || procedencia.reviewStatus === 'corregido'
+  );
+}
+
 /** Los candidatos en el orden del contexto: diagnóstico, biomarcadores, atributos, tratamientos y eventos. */
 function candidatosDelContexto(contexto: ClinicalContext): Candidato[] {
   return [
@@ -68,7 +80,7 @@ function candidatosDelContexto(contexto: ClinicalContext): Candidato[] {
       dataRef: biomarcador.dataRef,
       kind: 'biomarcador' as const,
       provenance: biomarcador.provenance,
-      seriesKey: biomarcador.biomarkerName.toLowerCase(),
+      seriesKey: claveDeSerie(biomarcador.biomarkerName),
       verbalization: verbalizarBiomarcador(biomarcador),
     })),
     ...contexto.attributes.map((atributo) => ({
@@ -142,6 +154,7 @@ export function construirHechosDelCaso(
       relativeDay,
       reviewStatus: candidato.provenance.reviewStatus,
       ...(candidato.seriesKey !== undefined && { seriesKey: candidato.seriesKey }),
+      ...(esCorreccion(candidato.provenance) && { corrected: true }),
     });
     enlaces.set(factRef, {
       resourceType: TIPO_DE_RECURSO[dato.tabla],

@@ -36,16 +36,16 @@ dato; lo que el LLM inventa o no enlaza se omite y se cuenta (AC-02.5, AC-T1.2).
 - **Backend 2 (`rag-orchestrator`)**: nodo `caso` del grafo de `l1d-316-chat-turn-langgraph`. El LLM local devuelve
   afirmaciones atómicas con `factRefs` (formato de US-245); el validador exige ≥ 1 `factRef` válido del turno y NLI
   `entailment` contra la verbalización de esos hechos. Sin enlace → se omite sin invocar NLI; sin soporte → se omite. Cada
-  omisión suma a `omittedClaims` (RN-01, AC-T1.2). Prompt nuevo `chat-caso@0.1.0`.
+  omisión suma a `omittedClaims` (RN-01, AC-T1.2). Prompt nuevo `chat-caso@0.2.0`.
 - **Contrato**: **no sube versión** (glosario S6 §1). Consume el contrato de `l1d-316-chat-turn-langgraph` (rag
   1.12.0: `CaseFact` con `factRef`/`verbalization`/`relativeDay|null`, `ChatBlock` con el enum cerrado de 8 `kind` y
   `factRefs?`, `notices[]`) y el de `l1d-315-conversacion-paciente` (clinical-api 1.24.0: `ConversationTurn.dataLinks[]`
   de tipo `ConversationDataLink`). No añade ni redefine campos. Añade el ejemplo `contracts/examples/chat-turn-caso-situacion.json`
   (un fichero por caso; respuesta de `CHAT-CASO-OK`). `CHAT-CASO-INVENTA` y `CHAT-CASO-SIN-ENLACE` son salidas del LLM
   antes del filtro: van como fixtures del LLM falso en `apps/rag-orchestrator/tests/fixtures/llm/`, no como ejemplos del contrato.
-- **Prompt** `chat-caso@0.1.0` construido con el `PromptBuilder` de `l1d-108-prompt-instrucciones-datos` (instrucciones
+- **Prompt** `chat-caso@0.2.0` construido con el `PromptBuilder` de `l1d-108-prompt-instrucciones-datos` (instrucciones
   en sistema, hechos y pregunta en bloques delimitados).
-- **Avisos**: Backend 2 rellena `notices[]` en el turno (RN-19, glosario §3); Backend 1 los persiste y la UI solo los pinta.
+- **Avisos**: Backend 2 rellena `notices[]` en el turno (RN-19, glosario §3) y «Verifique contra las fuentes» solo en la intención `caso`; Backend 1 los persiste y la UI solo los pinta.
 - **Fixture** FX-12-b `P-CHAT`: lo crea `l1d-315-conversacion-paciente` (glosario §3); este change lo consume.
 
 ## Capabilities
@@ -67,7 +67,7 @@ dato; lo que el LLM inventa o no enlaza se omite y se cuenta (AC-02.5, AC-T1.2).
 ## Bounded contexts
 
 `clinical-platform` (construcción de `caseFacts`, tabla de `factRef` y `dataLinks`) · `ai-services` (nodo `caso`,
-validador de enlaces + NLI, prompt `chat-caso@0.1.0`, `notices[]`) · `contratos` (solo añade el ejemplo
+validador de enlaces + NLI, prompt `chat-caso@0.2.0`, `notices[]`) · `contratos` (solo añade el ejemplo
 `chat-turn-caso-situacion.json`; sin cambios de esquema ni de versión). Sin
 `frontend`: la UI del chat es US-267.
 

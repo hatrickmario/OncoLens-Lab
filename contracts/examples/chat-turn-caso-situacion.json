@@ -1,0 +1,58 @@
+{
+  "intent": "caso",
+  "blocks": [
+    {
+      "kind": "documentado",
+      "text": "Carcinoma ductal infiltrante, Nottingham grado 2, estadio IIA (TNM_8), ECOG 1, al momento del diagnóstico.",
+      "factRefs": [
+        "f1"
+      ]
+    },
+    {
+      "kind": "documentado",
+      "text": "HER2: 3+ (IHQ), relevante, al momento del diagnóstico.",
+      "factRefs": [
+        "f2"
+      ]
+    },
+    {
+      "kind": "documentado",
+      "text": "CA 15-3: 22 U/mL, normal, 30 días después del diagnóstico.",
+      "factRefs": [
+        "f3"
+      ]
+    },
+    {
+      "kind": "documentado",
+      "text": "CA 15-3: 25 U/mL, normal, 60 días después del diagnóstico.",
+      "factRefs": [
+        "f4"
+      ]
+    },
+    {
+      "kind": "documentado",
+      "text": "CA 15-3: 28 U/mL, normal, 90 días después del diagnóstico.",
+      "factRefs": [
+        "f5"
+      ]
+    }
+  ],
+  "omittedClaims": 0,
+  "structuredState": {
+    "intentsVistos": [
+      "caso"
+    ],
+    "preguntasPrevias": [
+      "¿Cuál es la situación actual y cómo ha evolucionado el CA 15-3?"
+    ],
+    "opcionesMostradas": [],
+    "citasMostradas": [],
+    "faltantesSenalados": []
+  },
+  "llmProvider": "local",
+  "notices": [
+    "Generado por IA; requiere validación clínica independiente por el oncólogo tratante",
+    "Uso académico/investigación",
+    "Verifique contra las fuentes"
+  ]
+}

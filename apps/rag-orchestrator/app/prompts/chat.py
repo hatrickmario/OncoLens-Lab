@@ -17,6 +17,7 @@ from app.application.prompt_builder import (
     PromptSeparado,
     linea_de_datos_no_instrucciones,
 )
+from app.domain.chat.descripcion_de_hechos import describir_hecho
 from app.domain.chat.estado import EstadoDelHilo, Intencion, TurnoPrevio
 from app.domain.chat.memoria import texto_de_turno
 from app.domain.chat.turno import HechoDelCaso
@@ -87,27 +88,22 @@ def armar_prompt_del_turno(
     return (
         PromptBuilder(instrucciones, VERSION_DEL_PROMPT_DE_CHAT)
         .pregunta(pregunta)
-        .memoria(_texto_de_la_memoria(estado, ventana))
-        .datos_del_paciente(_texto_de_los_hechos(hechos))
+        .memoria(texto_de_la_memoria(estado, ventana))
+        .datos_del_paciente(texto_de_los_hechos(hechos))
         .construir()
     )
 
 
-def _texto_de_los_hechos(hechos: Sequence[HechoDelCaso]) -> str:
+def texto_de_los_hechos(hechos: Sequence[HechoDelCaso]) -> str:
     return "\n".join(_linea_de_hecho(h) for h in hechos) or SIN_DATOS
 
 
 def _linea_de_hecho(hecho: HechoDelCaso) -> str:
-    dia = (
-        "sin fecha confiable"
-        if hecho.dia_relativo is None
-        else f"día relativo {hecho.dia_relativo}"
-    )
-    conflicto = f"; en conflicto con {hecho.conflicto_con}" if hecho.conflicto_con else ""
-    return f"[{hecho.ref}] {hecho.verbalizacion} ({dia}; revisión: {hecho.estado_de_revision}{conflicto})"
+    """``[fN] <frase>``: la descripción determinista del hecho, la misma que es la premisa del NLI (ADR-34)."""
+    return f"[{hecho.ref}] {describir_hecho(hecho)}"
 
 
-def _texto_de_la_memoria(estado: EstadoDelHilo, ventana: Sequence[TurnoPrevio]) -> str:
+def texto_de_la_memoria(estado: EstadoDelHilo, ventana: Sequence[TurnoPrevio]) -> str:
     estructurado = estado.estructurado
     evidencia = estructurado.ultima_evidencia
     ultima = (
