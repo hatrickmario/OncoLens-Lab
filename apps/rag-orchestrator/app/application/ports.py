@@ -371,8 +371,12 @@ class QueryRewriter(Protocol):
 class LlmClient(Protocol):
     """LLM local con salida JSON restringida por un esquema (RN-12: nunca un proveedor de nube con datos reales)."""
 
-    async def completar_json(self, prompt: str, esquema: Mapping[str, Any]) -> str:
-        """Texto crudo del modelo, que debe ser un JSON conforme a ``esquema``; sin reintento. Fallo: ``FalloDelLlm``."""
+    async def completar_json(
+        self, prompt: str, esquema: Mapping[str, Any], *, sistema: str | None = None
+    ) -> str:
+        """Texto crudo del modelo, que debe ser un JSON conforme a ``esquema``; sin reintento. Fallo: ``FalloDelLlm``.
+
+        ``sistema`` son las instrucciones (mensaje ``system``) y ``prompt`` los datos delimitados (mensaje ``user``, US-057)."""
         ...
 
 

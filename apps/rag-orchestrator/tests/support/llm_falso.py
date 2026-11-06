@@ -99,12 +99,15 @@ class FakeLlmClient:
         self.error = error
         self.prompts: list[str] = []
         self.esquemas: list[Mapping[str, Any]] = []
+        self.sistemas: list[str | None] = []
 
     @property
     def invocaciones(self) -> int:
         return len(self.prompts)
 
-    async def completar_json(self, prompt: str, esquema: Mapping[str, Any]) -> str:
+    async def completar_json(
+        self, prompt: str, esquema: Mapping[str, Any], *, sistema: str | None = None
+    ) -> str:
         self.prompts.append(prompt)
         self.esquemas.append(esquema)
         if self.error is not None:
