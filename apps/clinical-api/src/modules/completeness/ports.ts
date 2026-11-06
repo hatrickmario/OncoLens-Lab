@@ -25,6 +25,20 @@ export interface DestinoDeItem {
   readonly match?: Readonly<Record<string, string>>;
 }
 
+/**
+ * Declaración que el catálogo acepta como cumplimiento alternativo de un ítem (`satisfiedBy`, d5fb-04, RN-29): un
+ * registro vigente de `entity` con esa clave y ese valor cumple el ítem aunque su destino no tenga filas (p. ej.
+ * `sin_tratamiento_previo = si` cumple «Tratamientos previos»). Los nombres son los del catálogo.
+ */
+export interface DeclaracionQueCumple {
+  readonly entity: string;
+  readonly attribute_key: string;
+  readonly value: string;
+}
+
+/** Cómo se cumplió un ítem presente: con registros en su destino o con una declaración de ausencia del catálogo. */
+export type ResueltoPor = 'registro' | 'declaracion_de_ausencia';
+
 /** Ítem de `datos-criticos.json` (forma de L1D-93; el validador del arranque ya la comprobó). */
 export interface ItemDeDatoCritico {
   readonly key: string;
@@ -34,6 +48,8 @@ export interface ItemDeDatoCritico {
   readonly destination: DestinoDeItem;
   readonly condition?: CondicionDeItem;
   readonly whenConditionUnknown?: 'faltante' | 'no_aplica';
+  /** Cumplimientos alternativos al destino; ausente en los ítems que solo se cumplen con registros. */
+  readonly satisfiedBy?: readonly DeclaracionQueCumple[];
   readonly minValues: number;
 }
 
@@ -114,6 +130,8 @@ export interface ItemDelChecklist {
   readonly destination: { readonly entity: string; readonly field: string | null };
   /** La condición del catálogo que no se cumplió; no nula solo si el estado es `no_aplica`. */
   readonly condition: CondicionDeItem | null;
+  /** Solo en un ítem presente con `satisfiedBy` en el catálogo; ausente en el resto (aditivo, ADR-26). */
+  readonly resolvedBy?: ResueltoPor;
 }
 
 export interface ChecklistDelPaciente {

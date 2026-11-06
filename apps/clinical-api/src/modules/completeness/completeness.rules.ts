@@ -10,6 +10,7 @@ import type {
   ItemDelChecklist,
   RegistroDeDato,
   RegistrosPorEntidad,
+  ResueltoPor,
 } from './ports.js';
 
 /**
@@ -146,12 +147,45 @@ function registrosQueCuentanDelItem(
   return registrosDelDestino(destino, vigentes);
 }
 
-/** El registro que hizo presente a un ítem (paso 4): de él sale su procedencia; `undefined` si no tiene ninguno. */
-export function registroQueCuentaDelItem(
+/**
+ * La declaración vigente (RN-07) que el catálogo acepta como cumplimiento alternativo del ítem (`satisfiedBy`, RN-29),
+ * la más reciente si hay varias; `undefined` si el ítem no declara `satisfiedBy` o no hay una que coincida en entidad,
+ * clave y valor. No crea ni lee filas del destino: es la «ausencia declarada», no un registro inventado.
+ */
+export function cumplePorDeclaracion(
   item: ItemDeDatoCritico,
   registros: RegistrosPorEntidad,
 ): RegistroDeDato | undefined {
-  return registroQueCuenta(registrosQueCuentanDelItem(item, registros));
+  const coincidentes = (item.satisfiedBy ?? []).flatMap((declaracion) =>
+    registrosVigentes(registros[declaracion.entity] ?? []).filter(
+      (registro) =>
+        registro.columnas['attribute_key'] === declaracion.attribute_key &&
+        registro.columnas['value'] === declaracion.value,
+    ),
+  );
+  return registroQueCuenta(coincidentes);
+}
+
+/** El registro que cumple un ítem y por qué vía: el destino con `minValues` registros, o la declaración del catálogo. */
+export interface CumplimientoDelItem {
+  readonly registro: RegistroDeDato;
+  readonly resolvedBy: ResueltoPor;
+}
+
+/** Paso 4: gana el destino si alcanza `minValues`; si no, una declaración vigente del catálogo; si no, `undefined`. */
+export function cumplimientoDelItem(
+  item: ItemDeDatoCritico,
+  registros: RegistrosPorEntidad,
+): CumplimientoDelItem | undefined {
+  const propios = registrosQueCuentanDelItem(item, registros);
+  const cuenta = registroQueCuenta(propios);
+  if (cuenta !== undefined && propios.length >= item.minValues) {
+    return { registro: cuenta, resolvedBy: 'registro' };
+  }
+  const declaracion = cumplePorDeclaracion(item, registros);
+  return declaracion === undefined
+    ? undefined
+    : { registro: declaracion, resolvedBy: 'declaracion_de_ausencia' };
 }
 
 function valorDelRegistro(item: ItemDeDatoCritico, registro: RegistroDeDato): string | null {
@@ -190,10 +224,10 @@ function estadoDelItem(
 ): EstadoDelChecklist {
   const porCondicion = estadoPorCondicion(item, delTipo, registros);
   if (porCondicion !== 'aplica') return porCondicion;
-  const propios = registrosQueCuentanDelItem(item, registros);
-  const cuenta = registroQueCuenta(propios);
-  if (cuenta === undefined || propios.length < item.minValues) return 'faltante';
-  return estadoDeVerificacion(cuenta, verifiedReviewStatuses);
+  const cumplimiento = cumplimientoDelItem(item, registros);
+  return cumplimiento === undefined
+    ? 'faltante'
+    : estadoDeVerificacion(cumplimiento.registro, verifiedReviewStatuses);
 }
 
 export interface EntradaDelChecklist {

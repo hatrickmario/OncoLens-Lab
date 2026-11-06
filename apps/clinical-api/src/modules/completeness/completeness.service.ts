@@ -5,7 +5,7 @@ import {
   calcularChecklist,
   diagnosticoVigente,
   itemsDelTipoActivo,
-  registroQueCuentaDelItem,
+  cumplimientoDelItem,
   tipoDeCancerActivo,
 } from './completeness.rules.js';
 import type {
@@ -39,12 +39,15 @@ function conProcedencia(
   if (item === undefined) throw new Error('item_del_catalogo_inexistente');
   const presente =
     estado.status === 'presente_verificado' || estado.status === 'presente_sin_verificar';
-  const registro = presente ? registroQueCuentaDelItem(item, registros) : undefined;
+  const cumplimiento = presente ? cumplimientoDelItem(item, registros) : undefined;
   return {
     key: item.key,
     label: item.label,
     status: estado.status,
-    ...procedenciaDeItem(item, estado.status, registro),
+    ...procedenciaDeItem(item, estado.status, cumplimiento?.registro),
+    // Solo los ítems que el catálogo puede cumplir por declaración exponen la vía (aditivo, ADR-26).
+    ...(cumplimiento !== undefined &&
+      item.satisfiedBy !== undefined && { resolvedBy: cumplimiento.resolvedBy }),
   };
 }
 
@@ -53,9 +56,14 @@ function sinChecklist(catalogVersion: string): ChecklistDelPaciente {
   return { catalogVersion, cancerTypeEnabled: false, items: [] };
 }
 
-/** Las entidades de destino que se leen aparte del diagnóstico (el `Diagnosis` vigente ya está leído). */
+/** Las entidades de destino y de declaración que se leen aparte del diagnóstico (el `Diagnosis` vigente ya está leído). */
 function entidadesDeDestinoSinDiagnostico(datos: DatosCriticosDeUnTipo): string[] {
-  const entidades = new Set(datos.items.map((item) => item.destination.entity));
+  const entidades = new Set(
+    datos.items.flatMap((item) => [
+      item.destination.entity,
+      ...(item.satisfiedBy ?? []).map((declaracion) => declaracion.entity),
+    ]),
+  );
   entidades.delete('Diagnosis');
   return [...entidades];
 }

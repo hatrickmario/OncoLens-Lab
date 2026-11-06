@@ -9,6 +9,7 @@ import {
   type PacienteSembrado,
 } from '../../support/completitud.js';
 import { montarCompletitud } from '../../support/completitud-http.js';
+import { RUTA_CATALOGO_REAL } from '../../support/catalogo-terminologico.js';
 import { generadorDeIds } from '../../support/filas-sinteticas.js';
 import { abrirSesion, prepararMundoConSeed, type MundoDeGateway } from '../../support/gateway.js';
 import { clienteVerificado } from '../../support/verificarProveedor.js';
@@ -49,8 +50,11 @@ async function mamaIVSinTratamientos(): Promise<PacienteSembrado> {
   return paciente;
 }
 
-async function itemTratamientosPrevios(patientId: string): Promise<ItemDeLaVista> {
-  const { app } = montarCompletitud(mundo);
+async function itemTratamientosPrevios(
+  patientId: string,
+  opciones: Parameters<typeof montarCompletitud>[1] = {},
+): Promise<ItemDeLaVista> {
+  const { app } = montarCompletitud(mundo, opciones);
   const respuesta = await clienteVerificado(app)
     .get(`/platform/patients/${patientId}/completeness`)
     .set('Cookie', cookieDoctor);
@@ -159,4 +163,29 @@ describe('declaración de ausencia de tratamiento previo en el checklist', () =>
     const conResolvedBy = items.filter((item) => item.resolvedBy !== undefined);
     expect(conResolvedBy.map((item) => item.item)).toEqual(['tratamientos_previos']);
   });
+
+  it.each(['mama', 'prostata'] as const)(
+    'marca tratamientos_previos presente con resolvedBy declaracion_de_ausencia en %s con el catálogo real [AC-04.1] [RN-29]',
+    async (cancerType) => {
+      const paciente = await nuevoPaciente(siembra);
+      await sembrarDiagnostico(paciente, {
+        cancerType,
+        histology: 'carcinoma sintético',
+        grade: null,
+        stagingSystem: 'TNM_8',
+        stageValue: 'IV',
+        performanceValue: 1,
+      });
+      await declarar(paciente);
+
+      const item = await itemTratamientosPrevios(paciente.patientId, {
+        rutaDelCatalogo: RUTA_CATALOGO_REAL,
+      });
+
+      expect(item).toMatchObject({
+        status: 'presente_verificado',
+        resolvedBy: 'declaracion_de_ausencia',
+      });
+    },
+  );
 });

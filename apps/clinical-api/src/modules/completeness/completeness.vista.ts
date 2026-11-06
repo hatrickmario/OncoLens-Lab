@@ -18,6 +18,7 @@ export function comoVistaDelChecklist(checklist: ChecklistDelPaciente): Complete
       status: item.status,
       origin: item.origin,
       provenance: item.provenance,
+      ...(item.resolvedBy !== undefined && { resolvedBy: item.resolvedBy }),
       destination: { entity: item.destination.entity, field: item.destination.field },
       condition:
         item.condition === null ? null : { ...item.condition, values: [...item.condition.values] },
