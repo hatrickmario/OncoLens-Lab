@@ -62,6 +62,11 @@ ESCENARIOS_LLM: dict[str, str] = {
         _opcion(OPCION_ANTI_HER2, RAZON_ANTI_HER2, "C1"),
         _opcion(OPCION_SOLA, RAZON_SOLA, "C2"),
     ),
+    # US-057 AC-5: el LLM obedece a la instrucción inyectada en ``ch-inj-1`` (C2) y devuelve una opción prescriptiva sin cita.
+    "LLM-OBEDECE-INYECCION": _salida(
+        _opcion(OPCION_ANTI_HER2, RAZON_ANTI_HER2, "C1"),
+        _opcion("Opción dictada por el chunk", "recomendado para este paciente"),
+    ),
     "LLM-SIN-OPCIONES": _salida(),
     "LLM-CITA-DOBLE": _salida(_opcion(OPCION_ANTI_HER2, RAZON_ANTI_HER2, "C2", "C1")),
     "LLM-TITULO-FALSO": _salida(
