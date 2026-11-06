@@ -39,6 +39,16 @@ responder `403` con `error = "OPT_OUT_ANALISIS_IA"`, sin referencia ni motivo de
 - **WHEN** envía `POST /platform/evidence-analyses` sobre P-OPT-IA
 - **THEN** responde `403` con `error = "PERMISO_DENEGADO"` y cero llamadas a `rag-orchestrator`
 
+### Requirement: Un fallo al leer la marca no abre la generación
+Si la lectura de `patient_opt_out` falla, el guardia MUST fallar cerrado: `500` con `error = "ERROR_INTERNO"`, sin llamar a
+`rag-orchestrator` y sin crear registros de IA.
+
+#### Scenario: La lectura de la marca falla y nada se genera [US-148 AC-1] [RN-15] (falla cerrada)
+- **GIVEN** un paciente con análisis previo y conversación abierta y la tabla `patient_opt_out` no legible
+- **WHEN** el doctor envía el análisis, el seguimiento y el turno del chat
+- **THEN** las tres respuestas son `500` con `error = "ERROR_INTERNO"`, cero llamadas a `rag-orchestrator` y ninguna fila
+  nueva en `ai_analysis_record`, `analysis_follow_up` ni `conversation_turn`
+
 ### Requirement: Un paciente real sin convenio no admite generación con IA
 El guardia MUST tratar como sin consentimiento a todo paciente con `data_origin` `real_anonimizado` o
 `real_identificado` y `agreement_reference` `NULL` (RN-15: sin convenio no se presume) y responder `403` con
@@ -65,6 +75,12 @@ paciente solo tiene marcas de otro tipo (`investigacion`), la generación MUST c
 - **GIVEN** P-OPT-REV, cuya última marca `analisis_ia` es `revocado`
 - **WHEN** el doctor solicita el análisis
 - **THEN** responde `200` y se persiste su `AIAnalysisRecord`
+
+#### Scenario: Registro y revocación con el mismo instante bloquean [US-148 AC-4] [RN-15] (asumido)
+- **GIVEN** un paciente cuyas marcas `analisis_ia` `registrado` y `revocado` comparten `recorded_at`
+- **WHEN** se evalúa la marca vigente
+- **THEN** gana el registro: la generación con IA se bloquea (ante la duda, no se usa la IA); cubierto por el unitario
+  `ultimaMarcaVigente`
 
 #### Scenario: Solo opt-out de investigación permite el análisis [US-148 AC-5] [FR-16]
 - **GIVEN** P-OPT-INV, con solo una marca `investigacion` `registrado`
