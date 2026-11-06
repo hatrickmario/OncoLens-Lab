@@ -16,6 +16,7 @@ import {
   registrarTratamiento,
   vistaDeCaso,
 } from '../../support/correcciones-tratamiento-atributo.js';
+import { sembrarTratamientoPrevio } from '../../support/completitud.js';
 import { montarRegistroClinico } from '../../support/registro-clinico.js';
 import { clienteVerificado } from '../../support/verificarProveedor.js';
 
@@ -275,6 +276,24 @@ describe('la declaración de ausencia y la coherencia D4 (d5fb-04)', () => {
     expect(respuesta.body.error).toBe('CUERPO_INVALIDO');
     expect(respuesta.body).not.toHaveProperty('field');
     expect(await contarTratamientosYAtributos(cliente, patientId)).toEqual(antes);
+  });
+
+  it('responde 422 con field attributeKey y no escribe cuando la declaración convive con un tratamiento vigente, estado que D4 impide [d5fb-05 AC-6] [D4]', async () => {
+    const paciente = await mamaSinRegistros(escenario);
+    const { patientId, cliente } = paciente;
+    const declaracion = await registrarAtributo(escenario, patientId, DECLARACION_DE_AUSENCIA);
+    await sembrarTratamientoPrevio(paciente, { regimen: 'AC-T', reviewStatus: 'verificado' });
+    const antes = await contarTratamientosYAtributos(cliente, patientId);
+
+    const respuesta = await corregir(patientId, declaracion, {
+      value: 'si',
+      observedAt: '2026-11-04',
+    });
+
+    expect(respuesta.status).toBe(422);
+    expect(respuesta.body).toMatchObject({ error: 'CUERPO_INVALIDO', field: 'attributeKey' });
+    expect(await contarTratamientosYAtributos(cliente, patientId)).toEqual(antes);
+    expect((await filaDeAtributo(cliente, declaracion)).review_status).toBe('verificado');
   });
 
   it('no crea ni reemplaza declaraciones cuando se corrige un tratamiento vigente [d5fb-05 AC-6] [D4]', async () => {
