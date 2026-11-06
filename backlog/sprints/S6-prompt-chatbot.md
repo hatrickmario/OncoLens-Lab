@@ -272,6 +272,18 @@ Doctor → Navegador / React 19 → **Frontend — Next.js 16** (React · Route 
 
 ---
 
+# Aclaraciones del usuario posteriores al prompt (2026-11-06)
+
+> Son decisiones del usuario, no notas del asistente. Donde contradicen al prompt, prevalecen.
+
+## Memoria conversacional (resuelve la tensión 1 de las notas)
+
+- **Ya no existirán las preguntas de seguimiento limitadas a 10** (US-218 · L1D-268, `analysis_follow_up`, `POST …/follow-ups`, `POST /rag/follow-up`): las sustituye el chatbot.
+- **Memoria a largo plazo:** el historial de cada conversación **se guarda** como registro de conversaciones, pero **por ahora NO se utiliza** (ni se muestra al oncólogo ni alimenta análisis o conversaciones nuevas). Su uso queda para Post-MVP. Esto matiza la fila «Historial conversacional persistente: Out of Scope» del §4: *se almacena; no se usa ni se muestra*.
+- **Memoria a corto plazo:** durante una conversación debe persistir todo lo que se hable: datos del paciente, comentarios y preguntas del oncólogo, evidencia encontrada, etc.
+
+---
+
 # Notas del asistente para el refinamiento
 
 > No forman parte del prompt del usuario. Son verificaciones contra el código de `main` (7f803747, 2026-11-06) y tensiones con decisiones vigentes, para resolver en `/sprint-refine S6`. Nada de esto está decidido.
@@ -287,7 +299,12 @@ Doctor → Navegador / React 19 → **Frontend — Next.js 16** (React · Route 
 
 ## Tensiones con decisiones vigentes
 
-1. **«Historial conversacional persistente: Out of Scope»** frente a lo ya construido: `AIAnalysisRecord`, el seguimiento de hasta 10 preguntas (`analysis_follow_up`) y la memoria de análisis previos (FR-29). Decidir si el chatbot los reutiliza como continuidad *dentro de la sesión*, los ignora o los oculta; no se pueden quitar sin tocar RN-06 (persistir el análisis antes de responder).
+1. **«Historial conversacional persistente: Out of Scope»** frente a lo ya construido (`AIAnalysisRecord`, el seguimiento de hasta 10 preguntas, la memoria de análisis previos FR-29). **Resuelta por el usuario** (ver «Aclaraciones del usuario»): el historial se guarda y no se usa en el MVP; la memoria a corto plazo cubre todo lo de la conversación. Lo que esa decisión implica, para el refinamiento:
+   - **Contexto del LLM local:** `OLLAMA_CONTEXT_LENGTH=8192` (ADR-39). «Persistir todo lo que se hable» en la memoria a corto plazo no cabe indefinidamente en 8192 tokens: hace falta una estrategia (ventana deslizante, resumen o estado estructurado de la conversación) y decidirla en el ADR. Es el riesgo técnico mayor de esta decisión.
+   - **Citas (RN-04) y soporte (RN-24):** hoy cada afirmación cita un chunk *recuperado en esa consulta*. Si la «evidencia encontrada» de turnos anteriores forma parte de la memoria a corto plazo, hay que decidir si puede citarse sin recuperar de nuevo (cambio de regla) o se recupera otra vez; y las respuestas previas del propio asistente nunca cuentan como soporte NLI.
+   - **Almacenamiento:** es trabajo nuevo de Backend 1 (dueño de PostgreSQL): conversación y mensajes, persistidos antes de responder (RN-06). El texto libre del oncólogo puede traer identidad: enmascararlo (ADR-40) antes de guardarlo o enviarlo a IA (RN-10/RN-11), con retención (RN-18) y sin contenido en los logs.
+   - **«Se guarda, no se usa»:** la memoria de análisis previos (FR-29: L1D-157 a 160) y las conversaciones como historial visible (L1D-311) siguen en Post-MVP; lo que entra al MVP es la **escritura** del registro, no su lectura.
+   - **Código existente de seguimiento** (`analysis_follow_up`, `/rag/follow-up`, `…/follow-ups` y la interfaz de 10 preguntas): decidir si se reutiliza como base del turno del chat o se retira. En Linear, L1D-268 (US-218) figura `KEEP-CHATBOT` en la propuesta de repriorización; con esta decisión pasa a «sustituida por el chatbot» (propuesta: cerrarla sin sus tareas humanas y la corrida nocturna pendientes, a confirmar por el usuario).
 2. **«No necesita streaming de tokens»** coincide con la regla vigente (TBD-08, `CLAUDE.md`): nunca se emiten tokens del LLM sin validar; si hay streaming, es de progreso y no de contenido.
 3. **Las respuestas científicas siguen sujetas a RN-01, RN-04, RN-24, RN-23 y RN-19**: cada afirmación con cita del corpus y soporte NLI, citas copiadas del corpus (no del texto generado), análisis previos no citables, lenguaje no prescriptivo y avisos «Generado por IA…». El prompt dice «no emitir diagnósticos ni prescribir» pero no menciona citas ni NLI: decidir si cada turno científico pasa por el mismo pipeline de validación (recomendado, para no abrir una vía sin validar).
 4. **Responder sobre el caso (capacidad A) es un camino nuevo:** hoy el RAG recupera del corpus científico; las preguntas sobre los datos del paciente no pasan por Backend 2 (`/case/summary` es una capacidad «si hay capacidad»). Si esas respuestas las genera un LLM, aplican RN-10 y RN-11 (desidentificar siempre, sin identidad hacia IA), RN-12 (solo modelos locales con datos reales) y la verificación determinista de afirmaciones sobre datos del paciente (ADR-34).
