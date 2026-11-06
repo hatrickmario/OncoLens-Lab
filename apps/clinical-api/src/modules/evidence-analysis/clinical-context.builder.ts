@@ -111,6 +111,15 @@ function ultimoValorPorBiomarcador(filas: readonly FilaDeBiomarcador[]): FilaDeB
   return [...ultimos.values()];
 }
 
+/** Del más antiguo al más reciente por fecha del examen y, a igual fecha, por creación. */
+function enOrdenCronologico(filas: readonly FilaDeBiomarcador[]): FilaDeBiomarcador[] {
+  return [...filas].sort((a, b) =>
+    a.performedAt === b.performedAt
+      ? a.createdAt.localeCompare(b.createdAt)
+      : a.performedAt.localeCompare(b.performedAt),
+  );
+}
+
 function biomarcadorPermitido(
   fila: FilaDeBiomarcador,
   ahora: Date,
@@ -203,19 +212,24 @@ export function construirContextoSinDatosClinicos(
 /**
  * Allowlist del contexto clínico (RN-10): arma cada objeto campo a campo desde las filas leídas, nunca copiando
  * entidades completas. `faltantes` son claves del catálogo (US-006), nunca texto del paciente. Devuelve además qué dato respalda cada `dataRef`.
+ *
+ * `conservarSerieDeBiomarcadores` (chat, US-260): conserva todos los valores vigentes de cada biomarcador en orden
+ * cronológico, para que la evolución de una serie sea citable; el análisis de evidencia envía solo el último valor.
  */
 export function construirContextoPermitido(
   caso: CasoClinico,
   ahora: Date,
   faltantes: readonly string[],
+  conservarSerieDeBiomarcadores = false,
 ): { contexto: ContextoPermitido; dataRefs: MapaDeDataRefs } {
   const asignador = asignarDataRefs();
   const contexto: ContextoPermitido = {
     population: caso.paciente.population,
     diagnosis: diagnosticoPermitido(caso.diagnosticoActivo, ahora, asignador),
-    biomarkers: ultimoValorPorBiomarcador(caso.biomarcadores).map((fila) =>
-      biomarcadorPermitido(fila, ahora, asignador),
-    ),
+    biomarkers: (conservarSerieDeBiomarcadores
+      ? enOrdenCronologico(caso.biomarcadores)
+      : ultimoValorPorBiomarcador(caso.biomarcadores)
+    ).map((fila) => biomarcadorPermitido(fila, ahora, asignador)),
     clinicalNotes: [],
     currentLine: lineaActual(caso.tratamientosPrevios),
     attributes: caso.atributos.map((fila) => atributoPermitido(fila, ahora, asignador)),
