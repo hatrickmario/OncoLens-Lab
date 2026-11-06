@@ -539,7 +539,12 @@ export async function crearPacienteSintetico(
   const paciente = await insertar(
     cliente,
     'clinical.patient',
-    filaDePaciente(ids, { data_origin: opciones.dataOrigin ?? 'sintetico' }),
+    filaDePaciente(ids, {
+      data_origin: opciones.dataOrigin ?? 'sintetico',
+      // Un paciente real sin convenio no admite IA (RN-15, US-148): los tests de RN-12/RN-13 lo necesitan con convenio.
+      ...(opciones.dataOrigin !== undefined &&
+        opciones.dataOrigin !== 'sintetico' && { agreement_reference: PII_FX_T4A_A.convenio }),
+    }),
   );
   const episodio = await insertar(
     cliente,

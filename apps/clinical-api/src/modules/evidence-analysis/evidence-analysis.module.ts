@@ -16,6 +16,7 @@ import {
   crearConversationService,
   type ConversationService,
 } from './conversation/conversation.service.js';
+import { componerModuloDeOptOuts } from '../opt-outs/opt-outs.module.js';
 import { followUpController } from './follow-up.controller.js';
 import { crearFollowUpRepository, type EjecutarEnTransaccion } from './follow-up.repository.js';
 import { crearFollowUpService, type FollowUpService } from './follow-up.service.js';
@@ -200,16 +201,22 @@ function componerAnalisis(
 export function componerGatewayDeAnalisis(dependencias: DependenciasDelGateway): Router {
   const repositorio = createEvidenceAnalysisRepository(dependencias.db);
   const service = componerAnalisis(dependencias, repositorio);
+  const { guardia: guardiaDeOptOut } = componerModuloDeOptOuts({
+    db: dependencias.db,
+    registrar: dependencias.registrar,
+  });
   const router = evidenceAnalysisController({
     service,
     traceIds: dependencias.traceIds,
     registrar: dependencias.registrar,
+    guardiaDeOptOut,
   });
   const conSeguimiento = followUpController(
     {
       service: componerSeguimiento(dependencias),
       traceIds: dependencias.traceIds,
       registrar: dependencias.registrar,
+      guardiaDeOptOut,
     },
     router,
   );
@@ -218,6 +225,7 @@ export function componerGatewayDeAnalisis(dependencias: DependenciasDelGateway):
       service: componerConversacion(dependencias, repositorio),
       traceIds: dependencias.traceIds,
       registrar: dependencias.registrar,
+      guardiaDeOptOut,
     },
     conSeguimiento,
   );

@@ -4,6 +4,7 @@ import type { Consultador } from '../auth/auth.repository.js';
 import type { CompletenessEnLote, CompletenessService } from '../completeness/ports.js';
 import type { TiposDeCancerHabilitados } from '../../infrastructure/tipos-de-cancer-habilitados.js';
 import type { TraceIdGenerator } from '../../infrastructure/trace-id-generator.js';
+import { componerModuloDeOptOuts } from '../opt-outs/opt-outs.module.js';
 import type { IdentityService } from './identity.service.js';
 import { patientsController } from './patients.controller.js';
 import { createFichaRepository } from './ficha.repository.js';
@@ -35,6 +36,8 @@ export function componerModuloDePacientes(dependencias: DependenciasDelModulo): 
     tiposHabilitados: dependencias.tiposHabilitados,
     completitud: dependencias.completitud,
     pageSize: dependencias.config.pageSize,
+    optOuts: componerModuloDeOptOuts({ db: dependencias.db, registrar: dependencias.registrar })
+      .optOuts,
   });
   return patientsController({
     service,

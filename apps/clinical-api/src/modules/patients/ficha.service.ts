@@ -16,6 +16,7 @@ import {
   elegirDiagnosticoVigenteDeLaFicha,
   ultimoValorPorBiomarcador,
 } from './ficha.reglas.js';
+import type { OptOutService } from '../opt-outs/opt-outs.service.js';
 import type { IdentityService } from './identity.service.js';
 import {
   cancerTypeHabilitado,
@@ -35,6 +36,8 @@ export interface DependenciasDeLaFicha {
   tiposHabilitados: TiposDeCancerHabilitados;
   /** El mismo servicio del endpoint `/completeness` y del análisis (US-003, D2): una sola implementación. */
   completitud: CompletenessService;
+  /** La misma regla del guardia de las rutas `generaIA` (RN-15): una sola implementación. */
+  optOuts: OptOutService;
 }
 
 async function cargarDiagnosticoVigenteDeLaFicha(
@@ -88,7 +91,7 @@ async function fichaDelDoctor(
   paciente: FilaDePacienteDeLaFicha,
   alFallarElChecklist: AlFallarElChecklist | undefined,
 ): Promise<PatientSummary> {
-  const { identidad, repo, tiposHabilitados, completitud } = dependencias;
+  const { identidad, repo, tiposHabilitados, completitud, optOuts } = dependencias;
   const descifrada = exigirIdentidad((await identidad.descifrar(paciente.id)) ?? undefined);
   const diagnostico = await cargarDiagnosticoVigenteDeLaFicha(dependencias, paciente.id);
   const pendientes = await repo.contarPendientesDeRevision([paciente.id]);
@@ -108,7 +111,7 @@ async function fichaDelDoctor(
     diagnosis: diagnostico,
     recentBiomarkers: await biomarcadoresRecientes(dependencias, paciente.id),
     pendingReviewCount: pendientes.get(paciente.id) ?? 0,
-    aiAnalysisAvailable: true, // esqueleto: el cálculo con el guardia llega con el commit feat
+    aiAnalysisAvailable: (await optOuts.consentimientoIA(paciente.id)) === 'disponible',
     ...(await faltantesCriticos(completitud, paciente.id, alFallarElChecklist)),
   };
 }

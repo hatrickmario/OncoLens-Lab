@@ -22,11 +22,14 @@ import {
   type Rechazo,
 } from './rechazos-http.js';
 import { crearTraceIdMiddleware, traceIdDe } from '../../middleware/trace-id.middleware.js';
+import { registrarRutaGeneraIA, type GuardiaDeOptOut } from '../opt-outs/rutas-genera-ia.js';
 
 export interface DependenciasDelController {
   service: EvidenceAnalysisService;
   traceIds: TraceIdGenerator;
   registrar: Registrar;
+  /** Guardia de opt-out de `analisis_ia` de las rutas `generaIA` (RN-15, US-148). */
+  guardiaDeOptOut: GuardiaDeOptOut;
 }
 
 const EVENTO = 'evidence_analysis.solicitud';
@@ -65,7 +68,7 @@ function rechazoDe(error: unknown): Rechazo | undefined {
  * códigos: nunca la pregunta, el contexto ni identidad (RN-10).
  */
 export function evidenceAnalysisController(dependencias: DependenciasDelController): Router {
-  const { service, traceIds, registrar } = dependencias;
+  const { service, traceIds, registrar, guardiaDeOptOut } = dependencias;
   const router = Router();
 
   const emisor = crearEmisor(registrar, EVENTO);
@@ -103,11 +106,15 @@ export function evidenceAnalysisController(dependencias: DependenciasDelControll
     }
   };
 
-  router.post(
-    '/evidence-analyses',
-    crearTraceIdMiddleware(traceIds),
-    authorize('ai_analysis:create'), // x-permission de createEvidenceAnalysis; el rol no se mira
-    express.json(),
+  registrarRutaGeneraIA(
+    router,
+    'createEvidenceAnalysis',
+    guardiaDeOptOut,
+    [
+      crearTraceIdMiddleware(traceIds),
+      authorize('ai_analysis:create'), // x-permission de createEvidenceAnalysis; el rol no se mira
+      express.json(),
+    ],
     solicitar,
     manejadorDeCuerpoIlegible(emisor),
   );

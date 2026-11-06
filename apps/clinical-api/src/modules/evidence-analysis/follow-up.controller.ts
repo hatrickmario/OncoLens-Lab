@@ -4,6 +4,7 @@ import { rechazarNoEncontrado } from '../../infrastructure/http-errores.js';
 import type { Registrar } from '../../infrastructure/logger.js';
 import { authorize } from '../../middleware/authorize.js';
 import { crearTraceIdMiddleware, traceIdDe } from '../../middleware/trace-id.middleware.js';
+import { registrarRutaGeneraIA, type GuardiaDeOptOut } from '../opt-outs/rutas-genera-ia.js';
 import { FalloDePersistenciaError } from './analysis-completion.js';
 import { followUpCreateSchema } from './follow-up.schema.js';
 import {
@@ -26,6 +27,8 @@ export interface DependenciasDelControllerDeSeguimiento {
   service: FollowUpService;
   traceIds: TraceIdGenerator;
   registrar: Registrar;
+  /** Guardia de opt-out de `analisis_ia` de las rutas `generaIA` (RN-15, US-148). */
+  guardiaDeOptOut: GuardiaDeOptOut;
 }
 
 const EVENTO = 'follow_up.solicitud';
@@ -133,13 +136,17 @@ export function followUpController(
   dependencias: DependenciasDelControllerDeSeguimiento,
   router: Router = Router(),
 ): Router {
-  const { service, traceIds, registrar } = dependencias;
+  const { service, traceIds, registrar, guardiaDeOptOut } = dependencias;
   const emisor = crearEmisorDeSeguimiento(registrar);
-  router.post(
-    '/evidence-analyses/:analysisId/follow-ups',
-    crearTraceIdMiddleware(traceIds),
-    authorize('follow_ups:create'), // x-permission de createFollowUp; el rol no se mira
-    express.json(),
+  registrarRutaGeneraIA(
+    router,
+    'createFollowUp',
+    guardiaDeOptOut,
+    [
+      crearTraceIdMiddleware(traceIds),
+      authorize('follow_ups:create'), // x-permission de createFollowUp; el rol no se mira
+      express.json(),
+    ],
     manejadorDeCreacion(service, emisor),
     manejadorDeCuerpoIlegible(emisor),
   );
