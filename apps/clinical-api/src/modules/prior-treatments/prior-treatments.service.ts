@@ -48,6 +48,8 @@ export function createPriorTreatmentsService(
           ahora: reloj.now(),
           generarId,
         });
+        // Una sola verdad (d5fb-04 D4): en esta misma transacción, el tratamiento reemplaza la declaración de ausencia.
+        await tx.reemplazarDeclaracionesDeAusencia(patientId);
         await tx.guardarTratamiento(tratamiento);
         return comoTratamientoDelContrato(tratamiento);
       }),

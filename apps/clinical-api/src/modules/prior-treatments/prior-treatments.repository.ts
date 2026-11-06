@@ -1,5 +1,6 @@
 import type { Consultador } from '../auth/auth.repository.js';
 import { episodioDelRegistro, tipoDeCancerVigente } from '../compartido/contexto-de-registro.js';
+import { reemplazarDeclaracionesDeAusencia } from '../compartido/declaracion-de-ausencia.js';
 import { bloquearPaciente } from '../compartido/paciente-activo.js';
 import { ejecutarEnTransaccion, type FuenteDeConexiones } from '../compartido/transaccion.js';
 import type {
@@ -28,6 +29,8 @@ function transaccionSobre(db: Consultador): TransaccionDeTratamiento {
     bloquearPaciente: (patientId) => bloquearPaciente(db, patientId),
     episodioDelRegistro: (patientId) => episodioDelRegistro(db, patientId),
     tipoDeCancerVigente: (patientId) => tipoDeCancerVigente(db, patientId),
+    reemplazarDeclaracionesDeAusencia: (patientId) =>
+      reemplazarDeclaracionesDeAusencia(db, patientId),
     guardarTratamiento: (tratamiento) => guardarTratamiento(db, tratamiento),
   };
 }

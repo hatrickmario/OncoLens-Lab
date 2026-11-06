@@ -269,4 +269,20 @@ describe('declaración de ausencia de tratamiento previo', () => {
     expect(lineasDeLog).not.toContain(CLAVE);
     expect(lineasDeLog).not.toContain('2026-11-05');
   });
+
+  it('devuelve la declaración en attributes y el ítem como presente en la vista de caso cuando está vigente [AC-04.1]', async () => {
+    const paciente = await mamaSinTratamientos();
+    await declarar(paciente.patientId);
+    const { app } = montarRegistroClinico(escenario.mundo);
+
+    const caso = await clienteVerificado(app)
+      .get(`/platform/patients/${paciente.patientId}/case`)
+      .set('Cookie', escenario.cookieDoctor);
+
+    expect(caso.status).toBe(200);
+    expect(caso.body.priorTreatments).toEqual([]);
+    expect(caso.body.attributes).toContainEqual(
+      expect.objectContaining({ key: CLAVE, value: 'si' }),
+    );
+  });
 });

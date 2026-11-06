@@ -1,3 +1,4 @@
+import type { LecturaDeTratamientosVigentes } from '../compartido/declaracion-de-ausencia.js';
 import type { PacienteBloqueable } from '../compartido/paciente-activo.js';
 
 /*
@@ -56,7 +57,7 @@ export interface AtributoLeido {
 }
 
 /** Operaciones de UNA transacción (el repository las ejecuta sobre una sola conexión). */
-export interface TransaccionDeAtributo extends PacienteBloqueable {
+export interface TransaccionDeAtributo extends PacienteBloqueable, LecturaDeTratamientosVigentes {
   existePaciente(patientId: string): Promise<boolean>;
   episodioDelRegistro(patientId: string): Promise<string>;
   /** Tipo de cáncer del diagnóstico vigente; `null` si el paciente no tiene ninguno. */

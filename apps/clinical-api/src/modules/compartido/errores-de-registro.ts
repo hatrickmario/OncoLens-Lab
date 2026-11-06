@@ -17,3 +17,11 @@ export class ValorFueraDeCatalogoError extends Error {
     this.name = 'ValorFueraDeCatalogoError';
   }
 }
+
+/** La declaración de ausencia de tratamiento contradice los tratamientos vigentes (design D4): una sola verdad. */
+export class DeclaracionIncoherenteError extends Error {
+  constructor(readonly campo: string) {
+    super('Declaración incoherente con los tratamientos registrados');
+    this.name = 'DeclaracionIncoherenteError';
+  }
+}
