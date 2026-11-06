@@ -1,0 +1,5 @@
+{
+  "error": "LOCAL_LLM_UNAVAILABLE",
+  "message": "El modelo local no está disponible.",
+  "traceId": "req_e1f2a3b4"
+}

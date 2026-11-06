@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { CorrectBiomarkerData, CorrectBiomarkerErrors, CorrectBiomarkerResponses, CorrectClinicalAttributeData, CorrectClinicalAttributeErrors, CorrectClinicalAttributeResponses, CorrectClinicalNoteData, CorrectClinicalNoteErrors, CorrectClinicalNoteResponses, CorrectPriorTreatmentData, CorrectPriorTreatmentErrors, CorrectPriorTreatmentResponses, CreateEvidenceAnalysisData, CreateEvidenceAnalysisErrors, CreateEvidenceAnalysisResponses, CreateFollowUpData, CreateFollowUpErrors, CreateFollowUpResponses, CreateManualBiomarkerData, CreateManualBiomarkerErrors, CreateManualBiomarkerResponses, CreateManualClinicalAttributeData, CreateManualClinicalAttributeErrors, CreateManualClinicalAttributeResponses, CreateManualDiagnosisData, CreateManualDiagnosisErrors, CreateManualDiagnosisResponses, CreateManualPriorTreatmentData, CreateManualPriorTreatmentErrors, CreateManualPriorTreatmentResponses, GetBiomarkerHistoryData, GetBiomarkerHistoryErrors, GetBiomarkerHistoryResponses, GetClinicalAttributeHistoryData, GetClinicalAttributeHistoryErrors, GetClinicalAttributeHistoryResponses, GetClinicalNoteHistoryData, GetClinicalNoteHistoryErrors, GetClinicalNoteHistoryResponses, GetCompletenessData, GetCompletenessErrors, GetCompletenessResponses, GetHealthData, GetHealthResponses, GetManualEntryOptionsData, GetManualEntryOptionsErrors, GetManualEntryOptionsResponses, GetPatientCaseData, GetPatientCaseErrors, GetPatientCaseResponses, GetPatientData, GetPatientErrors, GetPatientResponses, GetPriorTreatmentHistoryData, GetPriorTreatmentHistoryErrors, GetPriorTreatmentHistoryResponses, ListClinicalAttributesData, ListClinicalAttributesErrors, ListClinicalAttributesResponses, ListClinicalNotesData, ListClinicalNotesErrors, ListClinicalNotesResponses, ListFollowUpsData, ListFollowUpsErrors, ListFollowUpsResponses, ListPatientsData, ListPatientsErrors, ListPatientsResponses, LoginData, LoginErrors, LoginResponses, LogoutData, LogoutErrors, LogoutResponses, SearchPatientsData, SearchPatientsErrors, SearchPatientsResponses, UploadDocumentData, UploadDocumentErrors, UploadDocumentResponses } from './types.gen';
+import type { CorrectBiomarkerData, CorrectBiomarkerErrors, CorrectBiomarkerResponses, CorrectClinicalAttributeData, CorrectClinicalAttributeErrors, CorrectClinicalAttributeResponses, CorrectClinicalNoteData, CorrectClinicalNoteErrors, CorrectClinicalNoteResponses, CorrectPriorTreatmentData, CorrectPriorTreatmentErrors, CorrectPriorTreatmentResponses, CreateConversationData, CreateConversationErrors, CreateConversationResponses, CreateConversationTurnData, CreateConversationTurnErrors, CreateConversationTurnResponses, CreateEvidenceAnalysisData, CreateEvidenceAnalysisErrors, CreateEvidenceAnalysisResponses, CreateFollowUpData, CreateFollowUpErrors, CreateFollowUpResponses, CreateManualBiomarkerData, CreateManualBiomarkerErrors, CreateManualBiomarkerResponses, CreateManualClinicalAttributeData, CreateManualClinicalAttributeErrors, CreateManualClinicalAttributeResponses, CreateManualDiagnosisData, CreateManualDiagnosisErrors, CreateManualDiagnosisResponses, CreateManualPriorTreatmentData, CreateManualPriorTreatmentErrors, CreateManualPriorTreatmentResponses, GetBiomarkerHistoryData, GetBiomarkerHistoryErrors, GetBiomarkerHistoryResponses, GetClinicalAttributeHistoryData, GetClinicalAttributeHistoryErrors, GetClinicalAttributeHistoryResponses, GetClinicalNoteHistoryData, GetClinicalNoteHistoryErrors, GetClinicalNoteHistoryResponses, GetCompletenessData, GetCompletenessErrors, GetCompletenessResponses, GetConversationData, GetConversationErrors, GetConversationResponses, GetHealthData, GetHealthResponses, GetManualEntryOptionsData, GetManualEntryOptionsErrors, GetManualEntryOptionsResponses, GetPatientCaseData, GetPatientCaseErrors, GetPatientCaseResponses, GetPatientData, GetPatientErrors, GetPatientResponses, GetPriorTreatmentHistoryData, GetPriorTreatmentHistoryErrors, GetPriorTreatmentHistoryResponses, ListClinicalAttributesData, ListClinicalAttributesErrors, ListClinicalAttributesResponses, ListClinicalNotesData, ListClinicalNotesErrors, ListClinicalNotesResponses, ListFollowUpsData, ListFollowUpsErrors, ListFollowUpsResponses, ListPatientsData, ListPatientsErrors, ListPatientsResponses, LoginData, LoginErrors, LoginResponses, LogoutData, LogoutErrors, LogoutResponses, SearchPatientsData, SearchPatientsErrors, SearchPatientsResponses, UploadDocumentData, UploadDocumentErrors, UploadDocumentResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -452,6 +452,53 @@ export const createFollowUp = <ThrowOnError extends boolean = false>(options: Op
             type: 'apiKey'
         }],
     url: '/platform/evidence-analyses/{analysisId}/follow-ups',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Abre una conversación del oncólogo sobre un paciente
+ *
+ * La conversación se ancla al paciente (ADR-51, S6 resp. 6). El identificador del hilo de Backend 2 (threadId) es un UUID aleatorio que clinical-api genera y guarda; nunca se expone al navegador. No hay endpoint que liste las conversaciones de un paciente: el historial se guarda pero no se muestra en el MVP (S6 resp. 5).
+ */
+export const createConversation = <ThrowOnError extends boolean = false>(options: Options<CreateConversationData, ThrowOnError>): RequestResult<CreateConversationResponses, CreateConversationErrors, ThrowOnError> => (options.client ?? client).post<CreateConversationResponses, CreateConversationErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'oncolens_session',
+            type: 'apiKey'
+        }],
+    url: '/platform/patients/{patientId}/conversations',
+    ...options
+});
+
+/**
+ * Lee una conversación con sus turnos
+ */
+export const getConversation = <ThrowOnError extends boolean = false>(options: Options<GetConversationData, ThrowOnError>): RequestResult<GetConversationResponses, GetConversationErrors, ThrowOnError> => (options.client ?? client).get<GetConversationResponses, GetConversationErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'oncolens_session',
+            type: 'apiKey'
+        }],
+    url: '/platform/conversations/{conversationId}',
+    ...options
+});
+
+/**
+ * Formula una pregunta en la conversación
+ *
+ * La pregunta se enmascara (ADR-40, RN-11) antes de enviarse a Backend 2, de persistirse y de responderse. El turno se persiste ANTES de responder (RN-06). Ningún fallo de Backend 2 guarda un turno. Genera contenido con IA: opt-out de analisis_ia responde 403 (RN-15).
+ */
+export const createConversationTurn = <ThrowOnError extends boolean = false>(options: Options<CreateConversationTurnData, ThrowOnError>): RequestResult<CreateConversationTurnResponses, CreateConversationTurnErrors, ThrowOnError> => (options.client ?? client).post<CreateConversationTurnResponses, CreateConversationTurnErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'oncolens_session',
+            type: 'apiKey'
+        }],
+    url: '/platform/conversations/{conversationId}/turns',
     ...options,
     headers: {
         'Content-Type': 'application/json',

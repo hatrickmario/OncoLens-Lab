@@ -1095,6 +1095,91 @@
       "file": "error-interno.json",
       "spec": "clinical-api",
       "target": "#/paths/~1platform~1patients~1{patientId}~1manual-entry-options/get/responses/500"
+    },
+    {
+      "file": "conversation-create-response.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/Conversation"
+    },
+    {
+      "file": "conversation-get.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/Conversation"
+    },
+    {
+      "file": "conversation-turn-create.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1conversations~1{conversationId}~1turns/post/requestBody"
+    },
+    {
+      "file": "conversation-turn.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/ConversationTurn"
+    },
+    {
+      "file": "error-conversation-turn-409.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1conversations~1{conversationId}~1turns/post/responses/409"
+    },
+    {
+      "file": "error-conversation-turn-503.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1conversations~1{conversationId}~1turns/post/responses/503"
+    },
+    {
+      "file": "error-hilo-desconocido-502.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1conversations~1{conversationId}~1turns/post/responses/502"
+    },
+    {
+      "file": "error-opt-out.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1conversations~1{conversationId}~1turns/post/responses/403"
+    },
+    {
+      "file": "error-no-encontrado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1conversations~1{conversationId}~1turns/post/responses/404"
+    },
+    {
+      "file": "error-cuerpo-invalido.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1conversations~1{conversationId}~1turns/post/responses/422"
+    },
+    {
+      "file": "error-interno.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1conversations~1{conversationId}~1turns/post/responses/500"
+    },
+    {
+      "file": "error-permiso-denegado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1conversations/post/responses/403"
+    },
+    {
+      "file": "error-no-encontrado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1conversations/post/responses/404"
+    },
+    {
+      "file": "error-interno.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1conversations/post/responses/500"
+    },
+    {
+      "file": "error-permiso-denegado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1conversations~1{conversationId}/get/responses/403"
+    },
+    {
+      "file": "error-no-encontrado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1conversations~1{conversationId}/get/responses/404"
+    },
+    {
+      "file": "error-interno.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1conversations~1{conversationId}/get/responses/500"
     }
   ],
   "pendingExamples": [

@@ -749,6 +749,104 @@ export const zFollowUpCreate = z.strictObject({
     question: z.string().min(1).max(2000)
 });
 
+export const zConversationTurnCreate = z.strictObject({
+    question: z.string().min(1).max(2000),
+    aboutTurnId: z.uuid().optional()
+});
+
+/**
+ * Cita de un bloque `evidencia`. Los metadatos se copian del catálogo del corpus; si falta uno, viaja "No disponible" (RN-25).
+ */
+export const zChatCitation = z.strictObject({
+    chunkId: z.string().min(1),
+    documentId: z.string().min(1),
+    sourceTitle: z.string().min(1),
+    chunkOrdinal: z.int().gte(1),
+    chunkCount: z.int().gte(1),
+    chunkTextSnapshot: z.string()
+});
+
+/**
+ * Un bloque de la respuesta. `documentado`, `interpretacion` y `conflicto` llevan al menos un factRef; `evidencia` lleva al menos una cita; `faltante`, `catalogo`, `limitacion` y `fuente` son deterministas y están exentos. Las citas van solo dentro de su bloque.
+ */
+export const zChatBlock = z.strictObject({
+    kind: z.enum([
+        'documentado',
+        'interpretacion',
+        'catalogo',
+        'evidencia',
+        'conflicto',
+        'faltante',
+        'limitacion',
+        'fuente'
+    ]),
+    text: z.string(),
+    factRefs: z.array(z.string().regex(/^f[0-9]+$/)).optional(),
+    citations: z.array(zChatCitation).optional()
+});
+
+/**
+ * Enlace de un factRef a un dato del paciente. Solo viaja hacia el navegador, nunca a Backend 2. La ruta del histórico la deriva la UI (no hay historyPath).
+ */
+export const zConversationDataLink = z.strictObject({
+    factRef: z.string().regex(/^f[0-9]+$/),
+    resourceType: z.enum([
+        'diagnosis',
+        'biomarker',
+        'clinical_attribute',
+        'prior_treatment',
+        'clinical_event'
+    ]),
+    resourceId: z.uuid(),
+    origin: z.enum([
+        'ocr',
+        'manual',
+        'manual_correction',
+        'seed'
+    ]),
+    relativeDay: z.int().nullable(),
+    recordedDate: z.iso.date().nullable()
+});
+
+export const zConversationTurn = z.strictObject({
+    id: z.uuid(),
+    turnNumber: z.int().gte(1),
+    createdAt: z.iso.datetime(),
+    question: z.string(),
+    intent: z.enum([
+        'caso',
+        'faltantes',
+        'evidencia',
+        'fuentes_limitaciones',
+        'no_clasificada',
+        'fuera_de_alcance'
+    ]),
+    aboutTurnId: z.uuid().optional(),
+    status: z.enum([
+        'respondido',
+        'sin_evidencia',
+        'no_clasificada'
+    ]),
+    topRelevanceScore: z.number().gte(0).lte(1).nullable(),
+    blocks: z.array(zChatBlock),
+    dataLinks: z.array(zConversationDataLink),
+    omittedClaims: z.int().gte(0),
+    analysisId: z.uuid().optional(),
+    notices: z.array(z.string()),
+    dataUsed: z.array(z.string()),
+    dataMissing: z.array(z.string())
+});
+
+/**
+ * Conversación anclada a un paciente. No expone threadId: el hilo de Backend 2 no sale de clinical-api (ADR-51).
+ */
+export const zConversation = z.strictObject({
+    conversationId: z.uuid(),
+    patientId: z.uuid(),
+    createdAt: z.iso.datetime(),
+    turns: z.array(zConversationTurn)
+});
+
 export const zErrorInterno = z.strictObject({
     error: z.literal('ERROR_INTERNO'),
     message: z.string(),
@@ -1183,6 +1281,8 @@ export const zPatientId = z.uuid();
 
 export const zAnalysisId = z.uuid();
 
+export const zConversationId = z.uuid();
+
 export const zBiomarkerId = z.uuid();
 
 export const zNoteId = z.uuid();
@@ -1463,3 +1563,32 @@ export const zCreateFollowUpPath = z.object({
  * Turno de seguimiento registrado.
  */
 export const zCreateFollowUpResponse = zFollowUpTurn;
+
+export const zCreateConversationPath = z.object({
+    patientId: z.uuid()
+});
+
+/**
+ * Conversación abierta, sin turnos.
+ */
+export const zCreateConversationResponse = zConversation;
+
+export const zGetConversationPath = z.object({
+    conversationId: z.uuid()
+});
+
+/**
+ * La conversación con sus turnos en orden de turnNumber.
+ */
+export const zGetConversationResponse = zConversation;
+
+export const zCreateConversationTurnBody = zConversationTurnCreate;
+
+export const zCreateConversationTurnPath = z.object({
+    conversationId: z.uuid()
+});
+
+/**
+ * Turno registrado.
+ */
+export const zCreateConversationTurnResponse = zConversationTurn;
