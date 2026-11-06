@@ -10,3 +10,8 @@ AVISO_DE_IA_INICIAL = (
 AVISO_ACADEMICO_INICIAL = "Uso académico/investigación"
 AVISO_VERIFICAR_FUENTES_INICIAL = "Verifique contra las fuentes"
 """Los avisos de RN-19 sin punto final, como en la configuración de Backend 1 (glosario S6 §3)."""
+
+CHAT_SIN_DATOS_TEXTO_INICIAL = (
+    "No se encontró información documentada sobre lo preguntado en el expediente"
+)
+"""Texto fijo del bloque ``limitacion`` de un turno de caso sin ningún dato documentado (US-261 AC-4, RN-01)."""

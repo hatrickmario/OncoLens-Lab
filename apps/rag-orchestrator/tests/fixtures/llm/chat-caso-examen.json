@@ -1,0 +1,34 @@
+{
+  "CHAT-CASO-ADT": {
+    "ruta": "{\"intent\": \"caso\"}",
+    "generacion": "{\"claims\": [{\"kind\": \"documentado\", \"text\": \"\", \"factRefs\": [\"f6\"], \"citations\": []}]}"
+  },
+  "CHAT-CASO-SIN-DATOS": {
+    "ruta": "{\"intent\": \"caso\"}",
+    "generacion": "{\"claims\": [{\"text\": \"La gammagrafía ósea no mostró metástasis.\", \"factRefs\": [], \"citations\": []}]}"
+  },
+  "CHAT-CASO-PERIODO": {
+    "ruta": "{\"intent\": \"caso\"}",
+    "generacion": "{\"claims\": [{\"kind\": \"documentado\", \"text\": \"\", \"factRefs\": [\"f1\", \"f4\"], \"citations\": []}]}"
+  },
+  "CHAT-CASO-PERIODO-CITA-FUERA": {
+    "ruta": "{\"intent\": \"caso\"}",
+    "generacion": "{\"claims\": [{\"kind\": \"documentado\", \"text\": \"\", \"factRefs\": [\"f4\"], \"citations\": []}, {\"kind\": \"documentado\", \"text\": \"\", \"factRefs\": [\"f3\"], \"citations\": []}]}"
+  },
+  "CHAT-CASO-DOCUMENTADO-TEXTO-PROPIO": {
+    "ruta": "{\"intent\": \"caso\"}",
+    "generacion": "{\"claims\": [{\"kind\": \"documentado\", \"text\": \"Texto propio del LLM que el código debe descartar.\", \"factRefs\": [\"f1\"], \"citations\": []}]}"
+  },
+  "CHAT-CASO-DOCUMENTADO-VARIOS": {
+    "ruta": "{\"intent\": \"caso\"}",
+    "generacion": "{\"claims\": [{\"kind\": \"documentado\", \"text\": \"\", \"factRefs\": [\"f4\", \"f2\"], \"citations\": []}]}"
+  },
+  "CHAT-CASO-INTERPRETACION": {
+    "ruta": "{\"intent\": \"caso\"}",
+    "generacion": "{\"claims\": [{\"kind\": \"interpretacion\", \"text\": \"La paciente tiene un carcinoma ductal infiltrante de mama con HER2 positivo 3+ desde el diagnóstico.\", \"factRefs\": [\"f2\", \"f1\"], \"citations\": []}]}"
+  },
+  "CHAT-CASO-INTERPRETACION-CIFRA-INVENTADA": {
+    "ruta": "{\"intent\": \"caso\"}",
+    "generacion": "{\"claims\": [{\"kind\": \"interpretacion\", \"text\": \"El PSA subió de 4.2 a 15.8 entre ambos controles.\", \"factRefs\": [\"f2\", \"f4\"], \"citations\": []}]}"
+  }
+}
