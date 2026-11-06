@@ -15,9 +15,11 @@ from typing import Any
 from app.application.catalogo_exigido import exigir_catalogo_de_la_solicitud
 from app.application.chat.avisos import avisos_del_turno
 from app.application.chat.grafo import ConfiguracionDelGrafo, EstadoDelGrafo, construir_grafo
+from app.application.chat.nodo_faltantes import crear_nodo_faltantes
 from app.application.chat.registro_de_hilos import RegistroDeHilos
 from app.application.chat.traduccion import (
     bloque_del_contrato,
+    completitud_del_caso,
     estado_de_rehidratacion,
     estado_estructurado_del_contrato,
     hechos_del_caso,
@@ -32,7 +34,7 @@ from app.application.ports import (
     ProhibitedTermsChecker,
 )
 from app.config.settings import Settings
-from app.domain.chat.estado import INTENCIONES_CLASIFICABLES, EstadoDelHilo
+from app.domain.chat.estado import INTENCIONES_CLASIFICABLES, EstadoDelHilo, Intencion
 from app.schemas.generated.models import ChatTurnRequest, ChatTurnResponse
 
 logger = logging.getLogger(__name__)
@@ -52,7 +54,6 @@ class ChatTurnService:
         fuentes_documentales: FuentesDeDatosCriticos,
     ) -> None:
         self._catalogo = catalogo
-        self._fuentes_documentales = fuentes_documentales
         self._settings = settings
         self.registro = RegistroDeHilos(
             reloj=reloj,
@@ -68,6 +69,7 @@ class ChatTurnService:
             ),
             guardado=self.registro.guardado,
             verificador_terminos=verificador_terminos,
+            capacidades={Intencion.faltantes: crear_nodo_faltantes(fuentes_documentales)},
         )
 
     async def turno(self, solicitud: ChatTurnRequest) -> ChatTurnResponse:
@@ -106,6 +108,8 @@ class ChatTurnService:
         entrada: EstadoDelGrafo = {
             "pregunta": solicitud.question,
             "hechos": hechos_del_caso(solicitud.caseFacts),
+            "completitud": completitud_del_caso(solicitud.completeness),
+            "version_del_catalogo": solicitud.catalogVersion,
             "tipo_del_contexto": diagnostico.cancerType.root if diagnostico is not None else "",
             "clasificacion_de_datos": solicitud.dataClassification.value,
             "trace_id": solicitud.traceId.root,

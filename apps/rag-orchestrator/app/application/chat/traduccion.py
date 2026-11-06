@@ -11,8 +11,14 @@ from app.domain.chat.estado import (
     TurnoPrevio,
     UltimaEvidencia,
 )
+from app.domain.chat.faltantes import ItemDeCompletitud
 from app.domain.chat.turno import BloqueDelTurno, HechoDelCaso
-from app.schemas.generated.models import CaseFact, ChatRehydration, StructuredState
+from app.schemas.generated.models import (
+    CaseFact,
+    ChatCompletenessItem,
+    ChatRehydration,
+    StructuredState,
+)
 
 
 def hechos_del_caso(hechos: list[CaseFact]) -> tuple[HechoDelCaso, ...]:
@@ -25,6 +31,19 @@ def hechos_del_caso(hechos: list[CaseFact]) -> tuple[HechoDelCaso, ...]:
             conflicto_con=h.conflictWith.root if h.conflictWith else None,
         )
         for h in hechos
+    )
+
+
+def completitud_del_caso(items: list[ChatCompletenessItem]) -> tuple[ItemDeCompletitud, ...]:
+    """``completeness[]`` del contrato como datos del dominio: el ``gapType`` nulo del contrato es ``None``."""
+    return tuple(
+        ItemDeCompletitud(
+            clave=i.item,
+            etiqueta=i.label,
+            estado=i.status.value,
+            tipo_de_vacio=getattr(i.gapType, "value", None),
+        )
+        for i in items
     )
 
 

@@ -1,7 +1,7 @@
 """Adapter de ``EtiquetasDeDatosCriticos`` sobre ``datos-criticos.json`` del catálogo montado (US-116 / L1D-113).
 
-Solo lectura y una vez al arrancar (``CLINICAL_CATALOG_PATH``): de cada tipo del manifiesto se toman la clave y la
-etiqueta en español de cada dato crítico. El resto del archivo (destino, ``minValues``, revisión) lo hace cumplir el
+Solo lectura y una vez al arrancar (``CLINICAL_CATALOG_PATH``): de cada tipo del manifiesto se toman la clave, la
+etiqueta en español y los tipos de documento fuente (``sourceDocumentTypes``, US-263) de cada dato crítico. El resto del archivo (destino, ``minValues``, revisión) lo hace cumplir el
 validador del catálogo en la CI. Un archivo ausente, ilegible o fuera de esquema deja el catálogo no disponible
 (falla cerrado); los mensajes nunca llevan la ruta ni el contenido del archivo.
 """
@@ -11,7 +11,7 @@ import re
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from types import MappingProxyType
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
@@ -22,6 +22,10 @@ NOMBRE_DEL_ARCHIVO = "datos-criticos.json"
 # Patrones idénticos a ``comun.schema.json``: la clave es ``^[a-z0-9_]+$`` y el tipo ``^[a-z]+$``.
 _CLAVE = r"^[a-z0-9_]+$"
 _TIPO_DE_CANCER = r"^[a-z]+$"
+
+
+_TipoDeDocumento = Literal["historia_clinica", "examen"]
+"""El enum ``document_type`` del modelo: el mismo vocabulario cerrado que declara el esquema del catálogo."""
 
 
 class _Etiqueta(BaseModel):
@@ -36,6 +40,7 @@ class _DatoCritico(BaseModel):
     key: str = Field(pattern=_CLAVE)
     cancerType: str = Field(pattern=_TIPO_DE_CANCER)
     label: _Etiqueta
+    sourceDocumentTypes: Annotated[list[_TipoDeDocumento], Field(min_length=1)]
 
 
 class _Archivo(BaseModel):
@@ -52,21 +57,29 @@ class _Archivo(BaseModel):
 
 
 _SIN_DATOS: Mapping[str, str] = MappingProxyType({})
+_SIN_FUENTES: Mapping[str, tuple[str, ...]] = MappingProxyType({})
 
 
 class DatosCriticosDelCatalogo:
     """Implementa ``EtiquetasDeDatosCriticos`` sobre las etiquetas ya leídas."""
 
-    def __init__(self, etiquetas_por_tipo: dict[str, dict[str, str]]) -> None:
+    def __init__(
+        self,
+        etiquetas_por_tipo: dict[str, dict[str, str]],
+        fuentes_por_tipo: dict[str, dict[str, tuple[str, ...]]] | None = None,
+    ) -> None:
         self._etiquetas_por_tipo = {
             tipo: MappingProxyType(dict(datos)) for tipo, datos in etiquetas_por_tipo.items()
+        }
+        self._fuentes_por_tipo = {
+            tipo: MappingProxyType(dict(datos)) for tipo, datos in (fuentes_por_tipo or {}).items()
         }
 
     def etiquetas(self, tipo_de_cancer: str) -> Mapping[str, str]:
         return self._etiquetas_por_tipo.get(tipo_de_cancer, _SIN_DATOS)
 
     def tipos_de_documento(self, tipo_de_cancer: str) -> Mapping[str, tuple[str, ...]]:
-        raise NotImplementedError("no implementado")
+        return self._fuentes_por_tipo.get(tipo_de_cancer, _SIN_FUENTES)
 
 
 def cargar_datos_criticos(
@@ -77,15 +90,23 @@ def cargar_datos_criticos(
     Un tipo que no sea ``^[a-z]+$`` (p. ej. ``..``) no es un directorio del catálogo: ``CatalogoNoDisponible``."""
     if not all(re.fullmatch(_TIPO_DE_CANCER, tipo) for tipo in tipos_de_cancer):
         raise CatalogoNoDisponible("el manifiesto declara un tipo de cáncer inválido")
+    items_por_tipo = {
+        tipo: _leer_items_del_tipo(catalogos / tipo / NOMBRE_DEL_ARCHIVO, tipo)
+        for tipo in tipos_de_cancer
+    }
     return DatosCriticosDelCatalogo(
         {
-            tipo: _leer_etiquetas_del_tipo(catalogos / tipo / NOMBRE_DEL_ARCHIVO, tipo)
-            for tipo in tipos_de_cancer
-        }
+            tipo: {item.key: item.label.es for item in items}
+            for tipo, items in items_por_tipo.items()
+        },
+        {
+            tipo: {item.key: tuple(item.sourceDocumentTypes) for item in items}
+            for tipo, items in items_por_tipo.items()
+        },
     )
 
 
-def _leer_etiquetas_del_tipo(archivo: Path, tipo: str) -> dict[str, str]:
+def _leer_items_del_tipo(archivo: Path, tipo: str) -> list[_DatoCritico]:
     try:
         contenido = _Archivo.model_validate(json.loads(archivo.read_text(encoding="utf-8")))
     except (OSError, ValueError, ValidationError):  # JSON ilegible o fuera de esquema
@@ -94,4 +115,4 @@ def _leer_etiquetas_del_tipo(archivo: Path, tipo: str) -> dict[str, str]:
         ) from None
     if any(item.cancerType != tipo for item in contenido.items):
         raise CatalogoNoDisponible("datos-criticos.json declara un dato de otro tipo de cáncer")
-    return {item.key: item.label.es for item in contenido.items}
+    return contenido.items
