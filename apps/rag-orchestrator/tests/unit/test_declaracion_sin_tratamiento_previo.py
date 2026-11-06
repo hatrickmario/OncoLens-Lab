@@ -3,13 +3,21 @@
 Dominio puro: sin adapters ni LLM. La frase sale de la declaración del contexto, nunca del texto generado.
 """
 
+import json
+from pathlib import Path
+
 import pytest
 
 from app.application.contexto_del_paciente import contexto_del_paciente
 from app.application.resumen_contexto import resumen_del_contexto_clinico
 from app.domain.applicability_rules import valor_del_paciente
 from app.domain.criterios_aplicabilidad import DestinoDelCriterio
-from app.prompts.rag_query import bloque_de_datos_del_paciente
+from app.prompts.rag_query import (
+    CLAVE_SIN_TRATAMIENTO_PREVIO,
+    PLANTILLA_RAG_QUERY,
+    VALOR_DECLARADO,
+    bloque_de_datos_del_paciente,
+)
 from app.schemas.generated.models import ClinicalContext
 from tests.support.recuperacion import solicitud_de
 
@@ -124,3 +132,23 @@ def test_linea_tratamiento_sigue_sin_valor_cuando_el_paciente_solo_declara_sin_t
     destino = DestinoDelCriterio("PriorTreatment", "line_number", {})
 
     assert valor_del_paciente(paciente, destino) is None
+
+
+def test_plantilla_declara_la_ausencia_como_dato_del_paciente_no_citable_ni_base_de_la_linea():
+    regla = next(
+        linea
+        for linea in PLANTILLA_RAG_QUERY.splitlines()
+        if FRASE in linea and "no se cita" in linea
+    )
+
+    assert "no es un fragmento" in regla
+    assert "línea de tratamiento" in regla and "elegibilidad" in regla
+    assert "Base del análisis" in regla
+
+
+def test_clave_y_valor_de_la_declaracion_coinciden_con_el_catalogo_de_atributos():
+    raiz = Path(__file__).resolve().parents[4]
+    catalogo = json.loads((raiz / "packages/clinical-catalogs/atributos.json").read_text("utf-8"))
+    atributo = next(a for a in catalogo["keys"] if a["key"] == CLAVE_SIN_TRATAMIENTO_PREVIO)
+
+    assert [v["value"] for v in atributo["values"]] == [VALOR_DECLARADO]
