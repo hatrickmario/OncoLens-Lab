@@ -1,7 +1,9 @@
 """`EvidenceQueryPort` de `LLM_PROVIDER=local` cuando faltan los bordes reales de la recuperación (US-055)."""
 
-from app.application.errores import RecuperacionNoDisponibleError
+from app.application.errores import LlmLocalNoDisponibleError, RecuperacionNoDisponibleError
 from app.schemas.generated.models import (
+    ChatTurnRequest,
+    ChatTurnResponse,
     RagFollowUpRequest,
     RagFollowUpResponse,
     RagQueryInternalRequest,
@@ -17,6 +19,16 @@ class ConsultaNoComponible:
 
     async def consultar(self, solicitud: RagQueryInternalRequest) -> RagQueryInternalResponse:
         raise RecuperacionNoDisponibleError("composicion")
+
+
+class ChatNoComponible:
+    """`ChatTurnPort` análogo: sin los términos del catálogo, `/chat/turn` falla cerrado.
+
+    El contrato de `/chat/turn` solo admite 503 ``LOCAL_LLM_UNAVAILABLE`` o ``LLM_OUTPUT_INVALID``: el chat sin componer es,
+    para Backend 1, un chat sin modelo disponible."""
+
+    async def turno(self, solicitud: ChatTurnRequest) -> ChatTurnResponse:
+        raise LlmLocalNoDisponibleError()
 
 
 class SeguimientoNoComponible:
