@@ -62,7 +62,7 @@ class LlmDePoblacion(Protocol):
 
     async def completar_json_acotado(
         self,
-        prompt: str,
+        usuario: str,
         esquema: Mapping[str, Any],
         *,
         max_tokens: int,

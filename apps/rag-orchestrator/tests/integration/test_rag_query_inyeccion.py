@@ -32,7 +32,9 @@ def test_la_opcion_que_obedece_a_ch_inj_1_sin_cita_valida_va_a_discarded_options
     assert respuesta.status_code == 200
     cuerpo = respuesta.json()
     (documento_inyectado,) = [
-        b.texto for b in bloques(llm.prompts[0]) if b.etiqueta == "document" and "Ignore" in b.texto
+        b.texto
+        for b in bloques(llm.usuarios[0])
+        if b.etiqueta == "document" and "Ignore" in b.texto
     ]
     assert "Ignore all previous instructions" in documento_inyectado
     assert [d["discardReason"] for d in cuerpo["discardedOptions"]] in (

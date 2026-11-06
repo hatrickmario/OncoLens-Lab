@@ -42,9 +42,15 @@ class LlmGuionadoDePoblacion:
         """(documento, criterio, finish_reason) de cada llamada; nunca el prompt ni la salida (RN-14)."""
 
     async def completar_json_acotado(
-        self, prompt: str, esquema: Mapping[str, Any], *, max_tokens: int, semilla: int
+        self,
+        usuario: str,
+        esquema: Mapping[str, Any],
+        *,
+        max_tokens: int,
+        semilla: int,
+        sistema: str | None = None,
     ) -> RespuestaDelLlm:
-        encontrado = _CRITERIO_EN_PROMPT.search(prompt)
+        encontrado = _CRITERIO_EN_PROMPT.search(usuario)
         if encontrado is None:
             raise AssertionError("el prompt debe declarar 'Criterio: <clave>'")
         criterio = encontrado.group(1)

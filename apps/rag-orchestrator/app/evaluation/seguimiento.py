@@ -63,11 +63,11 @@ class ClienteGuionado:
         self.invocaciones = 0
 
     async def completar_json(
-        self, prompt: str, esquema: Mapping[str, Any], *, sistema: str | None = None
+        self, usuario: str, esquema: Mapping[str, Any], *, sistema: str | None = None
     ) -> str:
         self.invocaciones += 1
         for pregunta, guion in self._guiones.items():
-            if f"<question>\n{escapar_delimitadores(pregunta)}\n</question>" in prompt:
+            if f"<question>\n{escapar_delimitadores(pregunta)}\n</question>" in usuario:
                 return guion
         raise FalloDelLlm("sin guion para la pregunta")
 

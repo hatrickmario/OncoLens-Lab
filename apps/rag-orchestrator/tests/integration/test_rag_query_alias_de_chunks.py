@@ -38,7 +38,7 @@ def _texto_de(chunk_id: str) -> str:
 def test_rag_query_asigna_c1_a_c4_por_relevancia_y_el_prompt_no_contiene_ningun_chunk_id_real():
     _, llm, _ = _consultar("LLM-OK")
 
-    (prompt,) = llm.prompts
+    (prompt,) = llm.usuarios
     for alias, chunk_id in zip(("C1", "C2", "C3", "C4"), ORDEN_ESPERADO):
         assert f'<document id="{alias}">\n{_texto_de(chunk_id)}\n</document>' in prompt
         assert (
@@ -90,8 +90,8 @@ def test_rag_query_asigna_alias_identicos_a_la_misma_entrada_y_ni_respuesta_ni_l
     cuerpo, llm1, texto = _consultar("LLM-ALIAS-C1-C2")
     _, llm2, _ = _consultar("LLM-ALIAS-C1-C2")
 
-    assert llm1.prompts[0].count("<document id=") == 4
-    assert llm1.prompts == llm2.prompts and llm1.sistemas == llm2.sistemas
+    assert llm1.usuarios[0].count("<document id=") == 4
+    assert llm1.usuarios == llm2.usuarios and llm1.sistemas == llm2.sistemas
     assert [c["chunkId"] for c in cuerpo["evidenceOptions"][0]["citedSources"]] == [
         "ch-m2-1",
         "ch-m1-1",
@@ -105,7 +105,7 @@ def test_rag_query_asigna_alias_identicos_a_la_misma_entrada_y_ni_respuesta_ni_l
 def test_rag_query_descarta_con_cita_invalida_cuando_el_alias_corresponde_a_un_chunk_bajo_el_umbral():
     cuerpo, llm, texto = _consultar("LLM-ALIAS-C4", con_cuarto_bajo_el_umbral=True)
 
-    (prompt,) = llm.prompts
+    (prompt,) = llm.usuarios
     assert '<document id="C3">' in prompt and '<document id="C4">' not in prompt
     assert [d["discardReason"] for d in cuerpo["discardedOptions"]] == ["cita_invalida"]
     assert "ch-m3-2" not in texto

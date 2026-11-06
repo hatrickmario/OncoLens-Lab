@@ -39,6 +39,6 @@ def test_prompt_de_seguimiento_rotula_la_memoria_y_omite_el_seudonimo_cuando_se_
 
     entorno.seguir(solicitud)
 
-    (prompt,), (sistema,) = entorno.llm.prompts, entorno.llm.sistemas
+    (prompt,), (sistema,) = entorno.llm.usuarios, entorno.llm.sistemas
     assert ROTULO_DE_LA_MEMORIA in sistema
     assert solicitud["clinicalContext"]["pseudoPatientId"] not in prompt + sistema

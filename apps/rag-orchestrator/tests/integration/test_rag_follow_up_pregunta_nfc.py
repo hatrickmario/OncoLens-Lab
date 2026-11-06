@@ -16,7 +16,7 @@ def _huella_del_prompt_de(pregunta_recibida: str) -> tuple[str, list[str]]:
     assert entorno.llm.invocaciones == 1
     reranker = entorno.base.reranker
     return (
-        hashlib.sha256(entorno.llm.prompts[0].encode()).hexdigest(),
+        hashlib.sha256(entorno.llm.usuarios[0].encode()).hexdigest(),
         reranker.preguntas,  # type: ignore[attr-defined]
     )
 

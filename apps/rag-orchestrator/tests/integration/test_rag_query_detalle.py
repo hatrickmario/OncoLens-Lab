@@ -91,7 +91,7 @@ def _prompts_enviados(**generador) -> list[str]:
         clasificador_nli=NliFalso(por_defecto=IMPLICA),
     )
     assert entorno.consultar(solicitud_de(Q_HER2)).status_code == 200
-    return llm.prompts
+    return llm.usuarios
 
 
 def test_el_prompt_entrega_todos_los_fragmentos_sobre_el_umbral_cuando_caben_en_el_presupuesto():

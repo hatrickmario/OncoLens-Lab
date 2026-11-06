@@ -26,7 +26,7 @@ def _consultar(*, conflicto: bool = False):
     llm = FakeLlmClient("LLM-OK")
     respuesta = entorno_con_alias(llm).consultar(solicitud)
     assert respuesta.status_code == 200
-    (prompt,) = llm.prompts
+    (prompt,) = llm.usuarios
     return respuesta.json(), prompt.splitlines(), solicitud
 
 

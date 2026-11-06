@@ -35,7 +35,7 @@ def _consultar(faltantes: list[str]):
     llm = FakeLlmClient("LLM-OK")
     respuesta = entorno_con_alias(llm).consultar(solicitud)
     assert respuesta.status_code == 200
-    (usuario,), (sistema,) = llm.prompts, llm.sistemas
+    (usuario,), (sistema,) = llm.usuarios, llm.sistemas
     return respuesta.json(), PromptSeparado(sistema or "", usuario, ""), solicitud
 
 

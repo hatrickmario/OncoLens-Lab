@@ -79,7 +79,7 @@ def test_prompt_de_seguimiento_delimita_la_memoria_con_apertura_y_cierre_explici
 
     entorno.seguir(solicitud_de_seguimiento())
 
-    (prompt,) = entorno.llm.prompts
+    (prompt,) = entorno.llm.usuarios
     abre, cierra = prompt.index('<memory citable="no">'), prompt.index("</memory>")
     assert (
         abre < prompt.index(TEXTO_SOLO_EN_LA_MEMORIA) < cierra < prompt.index('<document id="C1">')

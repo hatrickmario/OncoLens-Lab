@@ -42,6 +42,6 @@ def test_prompt_rag_query_con_pseudo_patient_id_no_lo_incluye():
 
     assert respuesta.status_code == 200
     assert llm.invocaciones == 1
-    for prompt in [texto_completo(prompt_directo), *llm.prompts, *llm.sistemas]:
+    for prompt in [texto_completo(prompt_directo), *llm.usuarios, *llm.sistemas]:
         assert PSEUDONIMO not in prompt
         assert FRAGMENTO_DEL_SEUDONIMO not in prompt

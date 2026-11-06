@@ -82,7 +82,7 @@ def test_rag_follow_up_rotula_la_memoria_como_contexto_no_citable_en_un_bloque_s
 
     entorno.seguir(solicitud_de_seguimiento())
 
-    (prompt,), (sistema,) = entorno.llm.prompts, entorno.llm.sistemas
+    (prompt,), (sistema,) = entorno.llm.usuarios, entorno.llm.sistemas
     inicio_memoria = prompt.index('<memory citable="no">')
     fin_memoria = prompt.index("</memory>")
     inicio_fragmentos = prompt.index('<document id="C1">')

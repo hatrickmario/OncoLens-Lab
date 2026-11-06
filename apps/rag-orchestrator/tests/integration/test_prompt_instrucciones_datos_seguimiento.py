@@ -25,7 +25,7 @@ def test_la_memoria_del_seguimiento_va_en_memory_citable_no_y_no_en_el_sistema_c
     entorno.seguir(solicitud_de_seguimiento())
 
     assert entorno.llm.sistemas and entorno.llm.sistemas[0] is not None
-    sistema, (usuario,) = entorno.llm.sistemas[0], entorno.llm.prompts
+    sistema, (usuario,) = entorno.llm.sistemas[0], entorno.llm.usuarios
     encontrados = bloques(usuario)
     memoria = [b for b in encontrados if b.etiqueta == "memory"]
     assert len(memoria) >= 1 and all(b.atributos == 'citable="no"' for b in memoria)
@@ -37,10 +37,10 @@ def test_la_memoria_del_seguimiento_va_en_memory_citable_no_y_no_en_el_sistema_c
 class _LlmDeReescritura:
     def __init__(self) -> None:
         self.sistemas: list[str | None] = []
-        self.prompts: list[str] = []
+        self.usuarios: list[str] = []
 
-    async def completar_json_acotado(self, prompt, esquema, *, max_tokens, semilla, sistema=None):
-        self.prompts.append(prompt)
+    async def completar_json_acotado(self, usuario, esquema, *, max_tokens, semilla, sistema=None):
+        self.usuarios.append(usuario)
         self.sistemas.append(sistema)
         return RespuestaDelLlm(json.dumps({"terminos": ["ribociclib"]}), "stop")
 
@@ -54,5 +54,5 @@ async def test_la_reescritura_lleva_la_pregunta_en_question_y_no_en_el_sistema_c
 
     assert llm.sistemas and llm.sistemas[0] is not None
     assert Q_HER2 not in llm.sistemas[0]
-    (pregunta,) = [b for b in bloques(llm.prompts[0]) if b.etiqueta == "question"]
+    (pregunta,) = [b for b in bloques(llm.usuarios[0]) if b.etiqueta == "question"]
     assert pregunta.texto == Q_HER2

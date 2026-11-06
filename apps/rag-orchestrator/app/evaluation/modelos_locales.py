@@ -174,14 +174,14 @@ class LlmRegistrado:
         self._destino, self._clase, self._modelo = destino, clase, modelo
 
     async def completar_json(
-        self, prompt: str, esquema: Mapping[str, object], *, sistema: str | None = None
+        self, usuario: str, esquema: Mapping[str, object], *, sistema: str | None = None
     ) -> str:
         self._registro.registrar(self._destino, self._clase, self._modelo, "llm")
-        return await self._interno.completar_json(prompt, esquema, sistema=sistema)
+        return await self._interno.completar_json(usuario, esquema, sistema=sistema)
 
     async def completar_json_acotado(
         self,
-        prompt: str,
+        usuario: str,
         esquema: Mapping[str, object],
         *,
         max_tokens: int,
@@ -191,7 +191,7 @@ class LlmRegistrado:
         """La tarea corta del respaldo de población (US-244): se anota igual que cualquier otra llamada al LLM."""
         self._registro.registrar(self._destino, self._clase, self._modelo, "llm")
         return await self._interno.completar_json_acotado(
-            prompt, esquema, max_tokens=max_tokens, semilla=semilla, sistema=sistema
+            usuario, esquema, max_tokens=max_tokens, semilla=semilla, sistema=sistema
         )
 
 

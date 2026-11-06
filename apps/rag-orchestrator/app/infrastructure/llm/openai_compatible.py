@@ -75,11 +75,11 @@ class OpenAICompatibleLlmClient:
         self._temperature = temperature
 
     async def completar_json(
-        self, prompt: str, esquema: Mapping[str, Any], *, sistema: str | None = None
+        self, usuario: str, esquema: Mapping[str, Any], *, sistema: str | None = None
     ) -> str:
         cuerpo = cuerpo_de_peticion(
             self._model,
-            prompt,
+            usuario,
             esquema,
             self._temperature,
             self._max_output_tokens,
@@ -89,7 +89,7 @@ class OpenAICompatibleLlmClient:
 
     async def completar_json_acotado(
         self,
-        prompt: str,
+        usuario: str,
         esquema: Mapping[str, Any],
         *,
         max_tokens: int,
@@ -100,7 +100,7 @@ class OpenAICompatibleLlmClient:
         (``length`` = salida cortada) que ``completar_json`` descarta (US-242 D5)."""
         cuerpo = cuerpo_de_peticion(
             self._model,
-            prompt,
+            usuario,
             esquema,
             self._temperature,
             max_tokens,

@@ -102,18 +102,18 @@ class FakeLlmClient:
     def __init__(self, escenario: str = "LLM-OK", error: Exception | None = None) -> None:
         self._crudo = ESCENARIOS_LLM[escenario]
         self.error = error
-        self.prompts: list[str] = []
+        self.usuarios: list[str] = []
         self.esquemas: list[Mapping[str, Any]] = []
         self.sistemas: list[str | None] = []
 
     @property
     def invocaciones(self) -> int:
-        return len(self.prompts)
+        return len(self.usuarios)
 
     async def completar_json(
-        self, prompt: str, esquema: Mapping[str, Any], *, sistema: str | None = None
+        self, usuario: str, esquema: Mapping[str, Any], *, sistema: str | None = None
     ) -> str:
-        self.prompts.append(prompt)
+        self.usuarios.append(usuario)
         self.sistemas.append(sistema)
         self.esquemas.append(esquema)
         if self.error is not None:
