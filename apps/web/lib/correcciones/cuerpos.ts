@@ -10,9 +10,9 @@ import {
 } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
 import { mensajes } from '../mensajes';
 import type { ErrorDeCorreccion } from './cliente';
+import { soloElDia } from './solo-el-dia';
 
-/** Día `YYYY-MM-DD` de una fecha del contrato, sin pasar por `Date` (evita el corrimiento por zona horaria). */
-export const soloElDia = (fecha: string): string => fecha.slice(0, 10);
+export { soloElDia };
 
 const texto = (datos: FormData, campo: string): string => String(datos.get(campo) ?? '').trim();
 

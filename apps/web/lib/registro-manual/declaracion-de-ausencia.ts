@@ -3,7 +3,7 @@ import type {
   ClinicalAttributeManualCreate,
 } from '../../../../packages/api-contracts/src/types/clinical-api';
 import { zClinicalAttributeManualCreate } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
-import { soloElDia } from '../correcciones/cuerpos';
+import { soloElDia } from '../correcciones/solo-el-dia';
 import { mensajes } from '../mensajes';
 import type { ErrorDeRegistro } from './errores-del-servidor';
 
