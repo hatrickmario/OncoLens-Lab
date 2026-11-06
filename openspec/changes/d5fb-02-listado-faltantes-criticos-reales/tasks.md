@@ -23,12 +23,12 @@
 
 ## 3. frontend
 
-- [ ] 3.1 (test del AC primero) Test en rojo · Testing Library + MSW (`patient-list-checklist-no-disponible.json`): la celda muestra «3», «0», «—» (`cancerTypeEnabled=false`) y «No disponible» como texto y no bloquea el enlace a la ficha. Commit `test(<id>)`; luego `feat(<id>)` mínimo (celda + cadena en `messages/es.json`, sin términos prohibidos, RN-23). `visual-check` del listado a 375 y 1280 px.
+- [x] 3.1 (test del AC primero) Test en rojo · Testing Library + MSW (`patient-list-checklist-no-disponible.json`): la celda muestra «3», «0», «—» (`cancerTypeEnabled=false`) y «No disponible» como texto y no bloquea el enlace a la ficha. Commit `test(<id>)`; luego `feat(<id>)` mínimo (celda + cadena en `messages/es.json`, sin términos prohibidos, RN-23). `visual-check` del listado a 375 y 1280 px. Evidencia: rojo `d9a2d116`, verde `pacientes-faltantes-reales.test.tsx`, suite web 815/815; visual-check PARCIAL (contenedor web temporal de la rama contra el `clinical-api` en marcha, que es de `main` y devuelve 0: 0 errores de consola, solo `/api/*`/assets del mismo origen, sin desborde a 375 px, capturas en `reports/visual/d5fb-02/`); los números reales los cubre el AC de integración 2.1, y «—»/«No disponible» el test de web.
 
 ## 4. seed y documentación
 
-- [ ] 4.1 (test después) Seed sin cambios (decisión aprobada: 10 de 13 ya tienen faltantes); la invariante la fija el test 2.1.
-- [ ] 4.2 Actualizar `docs/demo/guia-demo-S5.md`: la columna «Faltantes críticos» del listado refleja el cálculo real y qué pacientes muestran qué número (con `mama,prostata` ambos tipos tienen contadores reales; con solo `mama`, próstata sale en «—»).
+- [x] 4.1 (test después) Seed sin cambios (decisión aprobada: 10 de 13 ya tienen faltantes); la invariante la fija el test 2.1.
+- [x] 4.2 Actualizar `docs/demo/guia-demo-S5.md`: la columna «Faltantes críticos» del listado refleja el cálculo real y qué pacientes muestran qué número (con `mama,prostata` ambos tipos tienen contadores reales; con solo `mama`, próstata sale en «—»).
 
 ## 5. evaluación
 
@@ -36,7 +36,7 @@
 
 ## 6. Verificación
 
-- [ ] 6.1 `openspec validate d5fb-02-listado-faltantes-criticos-reales --strict` en verde.
+- [x] 6.1 `openspec validate d5fb-02-listado-faltantes-criticos-reales --strict` en verde.
 - [ ] 6.2 Suite de `apps/clinical-api` y de `apps/web` en verde, `contracts:verify-provider`, `tsc --noEmit`, `eslint`, `lint:lenguaje` y `pii-scan` limpios; p95 del listado (seed de 13) ≤ 1 s (NFR del PRD) anotado en el PR (design D7).
 
 ## Preguntas abiertas
