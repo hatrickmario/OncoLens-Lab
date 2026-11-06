@@ -37,9 +37,9 @@ efímero de `rag-orchestrator` (ADR-51 §4), y sin enmascarar la pregunta la ide
   `GET /platform/conversations/{conversationId}` (`200 Conversation` con `turns[]`); schemas `Conversation`,
   `ConversationCreate`, `ConversationTurnCreate`, `ConversationTurn`, `ChatBlock`, `ChatCitation` y `ConversationDataLink`
   según el glosario §2 (sin `citationIds` ni `memoryUsed`; sin `historyPath`); errores del turno según el glosario §4:
-  `403 PermisoDenegadoOOptOut`, `404`, `409 ErrorCatalogVersionMismatch` (no se guarda el turno), `422 ErrorValidacion`,
-  `500`, `502 ErrorServicioIa` (fallo de red con `rag-orchestrator`) y `503 oneOf [ErrorLlmLocalNoDisponible,
-  ErrorSalidaLlmInvalida]` (sin persistir); ejemplos `conversation-*.json` en `contracts/examples/`. No hay endpoint que
+  `403 PermisoDenegadoOOptOut`, `404`, `409 ErrorCatalogVersionMismatch` (no se guarda el turno), `422 ErrorCuerpoInvalido`,
+  `500`, `502 ErrorServicioIa` (fallo de red con `rag-orchestrator`), `503 GeneracionNoDisponible` (`oneOf` del LLM local caído,
+  la desidentificación no disponible y la salida inválida; sin persistir) y `504 DeadlineVencido`; ejemplos `conversation-*.json` en `contracts/examples/`. No hay endpoint que
   liste conversaciones de un paciente.
 - **Modelo de datos:** `clinical.conversation` y `clinical.conversation_turn` en `docs/architecture/data-model.md` (fuente
   única) y migración Prisma; pregunta enmascarada, sin `pseudo_patient_id` ni identidad; `analysis_id` opcional a
@@ -51,7 +51,7 @@ efímero de `rag-orchestrator` (ADR-51 §4), y sin enmascarar la pregunta la ide
   con el cliente generado; ante `404 ErrorHiloDesconocido` rehidrata una vez con `construirRehidratacion()`
   (`CHAT_REHYDRATE_TURNS`), que emite solo `{question, intent, blocksText, factRefs}` por turno y el `structuredState`;
   **persiste el turno antes de responder**, deriva `status`, `topRelevanceScore`, `dataUsed` y `dataMissing`, y mapea los
-  fallos con la tabla única de `rag-failure.ts`. Solo el rol `doctor`; la ruta de turnos lleva la marca `generaIA`.
+  fallos con la tabla única de `rag-failure.ts`. Solo el rol `doctor`; la ruta de turnos se declara `x-genera-ia: true` (el registro en código de la marca `generaIA` y el guardia son de L1D-213).
 - **Seed `P-CHAT` (FX-12-b):** lo crea este change (`prisma/seed/pacientes/chat.ts`, solo sintético, con su entrada en
   `config/pii-allowlist.json`); lo consumen L1D-317, L1D-320 y L1D-326 (glosario §3).
 - **BFF `web`:** Route Handlers `app/api/patients/[patientId]/conversations`, `app/api/conversations/[conversationId]` y

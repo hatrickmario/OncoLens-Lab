@@ -53,6 +53,7 @@ describe('Conversación anclada al paciente', () => {
       .set('Cookie', cookie);
 
     expect(creada.status).toBe(201);
+    expect(creada.headers['cache-control']).toBe('no-store');
     expect(creada.body).not.toHaveProperty('threadId');
     expect(creada.body.patientId).toBe(patientId);
     const { rows } = await mundo.cliente.query<{

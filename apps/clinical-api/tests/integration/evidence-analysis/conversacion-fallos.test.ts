@@ -107,6 +107,17 @@ describe('Backend 2 caído no persiste ni inventa el turno (RN-06, RN-12)', () =
     },
   );
 
+  it('responde 504 DEADLINE_VENCIDO sin guardar el turno cuando rag-orchestrator no responde dentro de RAG_TIMEOUT_MS [US-258 AC-7] [RN-22]', async () => {
+    const { app, conversationId } = await conversacionNueva();
+    rag.chat.responder({ tipo: 'tardia' });
+
+    const respuesta = await enviarTurno(app, cookie, conversationId, PREGUNTA_DE_CASO);
+
+    expect(respuesta.status).toBe(504);
+    expect(respuesta.body.error).toBe('DEADLINE_VENCIDO');
+    expect(await contarTurnosDeChat(mundo.cliente, conversationId)).toBe(0);
+  });
+
   it('responde 409 CATALOG_VERSION_MISMATCH sin guardar el turno cuando el catálogo difiere entre los backends [US-258 AC-7] [RN-29]', async () => {
     const { app, conversationId } = await conversacionNueva();
     rag.chat.responder({ tipo: 'json', status: 409, cuerpo: ragCatalogoDistinto });

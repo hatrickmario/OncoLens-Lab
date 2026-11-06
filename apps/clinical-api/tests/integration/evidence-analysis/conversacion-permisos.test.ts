@@ -71,6 +71,24 @@ describe('Solo el rol doctor conversa y la conversación debe existir (E-04)', (
     expect(rag.chat.llamadas()).toBe(0);
   });
 
+  it('responde 401 NO_AUTENTICADO en las tres operaciones cuando no hay sesión [US-258 AC-8]', async () => {
+    const { app } = await montar();
+    const conversationId = await abrirConversacion(app, cookieDoctor, patientId);
+    const cliente = clienteVerificado(app);
+
+    const apertura = await cliente.post(rutaDeApertura(patientId));
+    const turno = await cliente
+      .post(rutaDeTurnos(conversationId))
+      .send({ question: PREGUNTA_DE_CASO });
+    const lectura = await cliente.get(rutaDeConversacion(conversationId));
+
+    for (const respuesta of [apertura, turno, lectura]) {
+      expect(respuesta.status).toBe(401);
+      expect(respuesta.body.error).toBe('NO_AUTENTICADO');
+    }
+    expect(rag.chat.llamadas()).toBe(0);
+  });
+
   it('responde 404 sin llamar a Backend 2 cuando la conversación o el paciente no existen [US-258 AC-8]', async () => {
     const { app } = await montar();
     const cliente = clienteVerificado(app);

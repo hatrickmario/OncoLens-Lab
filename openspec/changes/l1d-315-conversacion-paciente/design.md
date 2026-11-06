@@ -64,8 +64,7 @@ pública (solo hacia `/chat/turn`). `pseudoPatientId` y `traceId` nuevos por tur
 gateway; el `pseudoPatientId` no se persiste.
 
 ### D6 · Autorización
-`requireRole('doctor')` en las tres rutas (mínimo privilegio, E-04); la ruta de turnos se declara con la marca `generaIA`
-y, en el spec, con `x-genera-ia: true` y `403 PermisoDenegadoOOptOut` desde este change (glosario §1), para que la
+`requireRole('doctor')` en las tres rutas (mínimo privilegio, E-04); la operación de turnos se declara en el spec con `x-genera-ia: true` y `403 PermisoDenegadoOOptOut` desde este change (glosario §1), para que la
 guardia de US-148 (L1D-213) la cubra sin tocar esta operación del contrato. El `admin` no lee conversaciones porque contienen respuestas clínicas.
 
 ### D7 · Persistencia del turno de evidencia y campos derivados
@@ -193,6 +192,9 @@ en lugar de `index` del documento de UX. Las capacidades (US-260…US-266) relle
   de un `GET` salen de la intención de la fila, y el `201` los deriva de `evidenceAnalysis` si llega.
 - **`activeAnalysisId`** no se envía todavía (ver `tasks.md`); `analisisActivo()` ya existe y está probada.
 - **`aboutTurnId`** que no es de la conversación responde `422 CUERPO_INVALIDO`.
+- **Respuestas con datos clínicos:** el `201` de apertura, el `GET` y el turno responden `Cache-Control: no-store`.
+- **Retención (RN-18):** el job de retención post-MVP (deuda ya existente en el backlog, L1D-311 «historial») debe incluir
+  `conversation` y `conversation_turn`; este change no lo implementa.
 - **Seed `P-CHAT`** va aparte de `PACIENTES_SEMILLA` (`sembrar-chat.ts`) para no cambiar los ordinales de (a)–(m).
 
 ## Dependencias y colaboradores

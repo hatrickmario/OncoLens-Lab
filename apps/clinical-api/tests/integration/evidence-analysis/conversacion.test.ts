@@ -1,12 +1,15 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import chatTurnRequest from '../../../../../contracts/examples/chat-turn-request.json' with { type: 'json' };
 import chatTurnCasoOk from '../../../../../contracts/examples/chat-turn-caso-ok.json' with { type: 'json' };
+import { clienteVerificado } from '../../support/verificarProveedor.js';
 import { lectorDeIdentidadFalso } from '../../support/desidentificacion.js';
 import {
   IDENTIDAD_CHAT,
   PREGUNTA_DE_CASO,
   abrirConversacion,
   enviarTurno,
+  rutaDeConversacion,
+  sembrarTurnoDeChat,
   leerTurnosDeChat,
 } from '../../support/conversacion.js';
 import {
@@ -80,6 +83,32 @@ describe('Turno persistido antes de responder', () => {
       analysis_id: null,
     });
     expect(filas[0]!.structured_state).toEqual(chatTurnCasoOk.structuredState);
+  });
+
+  it('devuelve en el GET el estado de la intención de cada turno (respondido o no_clasificada) y topRelevanceScore null mientras no se persista la evidencia [US-258 AC-2] [L1D-322]', async () => {
+    const { app } = await montar();
+    const conversationId = await abrirConversacion(app, cookie, patientId);
+    await sembrarTurnoDeChat(mundo, conversationId, { turnNumber: 1, question: 'pregunta uno' });
+    await sembrarTurnoDeChat(mundo, conversationId, {
+      turnNumber: 2,
+      question: 'pregunta dos',
+      intent: 'no_clasificada',
+    });
+
+    const leida = await clienteVerificado(app)
+      .get(rutaDeConversacion(conversationId))
+      .set('Cookie', cookie);
+
+    expect(leida.status).toBe(200);
+    expect(
+      leida.body.turns.map((t: { status: string; topRelevanceScore: number | null }) => [
+        t.status,
+        t.topRelevanceScore,
+      ]),
+    ).toEqual([
+      ['respondido', null],
+      ['no_clasificada', null],
+    ]);
   });
 
   it('deriva dataUsed, dataMissing y dataLinks de lo enviado a Backend 2 cuando el turno responde con bloques sobre los hechos [US-258 AC-2]', async () => {

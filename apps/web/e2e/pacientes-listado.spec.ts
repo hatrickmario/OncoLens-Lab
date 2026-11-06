@@ -1,5 +1,10 @@
 import { expect, test } from '@playwright/test';
-import { TOTAL_PACIENTES_SEMILLA, iniciarSesion, pacientes } from './soporte';
+import {
+  TOTAL_PACIENTES_DEL_LISTADO,
+  TOTAL_PACIENTES_SEMILLA,
+  iniciarSesion,
+  pacientes,
+} from './soporte';
 
 test.describe('Listado y búsqueda de pacientes (L1D-202, ARR-09)', () => {
   test('muestra los pacientes semilla, cada uno con SINTÉTICO [US-048 AC-1]', async ({ page }) => {
@@ -8,7 +13,7 @@ test.describe('Listado y búsqueda de pacientes (L1D-202, ARR-09)', () => {
 
     await expect(page.getByRole('heading', { level: 1, name: pacientes.titulo })).toBeVisible();
     const filas = page.getByRole('row').filter({ has: page.getByRole('rowheader') });
-    await expect(filas).toHaveCount(TOTAL_PACIENTES_SEMILLA);
+    await expect(filas).toHaveCount(TOTAL_PACIENTES_DEL_LISTADO);
     // Las iniciales toman el primer carácter de cada palabra («Prueba Sintética 10» → «P. S. 1.»): el número se distingue
     // por el final enmascarado del documento («•••• 10»).
     for (let n = 1; n <= TOTAL_PACIENTES_SEMILLA; n += 1) {
@@ -19,7 +24,7 @@ test.describe('Listado y búsqueda de pacientes (L1D-202, ARR-09)', () => {
         }),
       ).toBeVisible();
     }
-    await expect(filas.filter({ hasText: 'SINTÉTICO' })).toHaveCount(TOTAL_PACIENTES_SEMILLA);
+    await expect(filas.filter({ hasText: 'SINTÉTICO' })).toHaveCount(TOTAL_PACIENTES_DEL_LISTADO);
   });
 
   test('no muestra JSON crudo ni mueve la identidad a la URL si la búsqueda se envía antes de hidratar [ARR-09 AC-3]', async ({

@@ -28,6 +28,11 @@ Nota (sin checkbox): la comprobación `proveedorPermitido()` de `regla-proveedor
 
 Nota (sin checkbox): `activeAnalysisId` no se envía todavía porque el cliente de `rag-orchestrator` 1.12.0 no lo declara (su esquema cerrado lo rechazaría); `analisisActivo()` queda implementada y probada, y la envía `l1d-322` al regenerar el cliente con 1.13.0.
 
+- [x] 3.8 Gate 2 vuelta 1: `esHiloDesconocido()` único en `rag-failure.ts` (reenvío y mapeo); `hechos-del-caso.ts` reutiliza `estaAusente`/`unirLoPresente` y lee la fecha confiable de `dataRefs` (`EnlaceDeDato.fecha`, registrada por el builder); `ClaseDeHecho` tipada; `construirRehidratacion` con límite ≤ 0; reintento condicionado por «había turnos previos»; clasificación calculada una vez; `no-store` también en la apertura; el GET pasa el estado explícito (test que fija el contrato) · evidencia: unitarios 1296+, integración 822 de 822 (504, 401 en las tres operaciones, GET con estado)
+- [x] 3.9 E2E del listado: `TOTAL_PACIENTES_DEL_LISTADO` (= semilla + `P-CHAT`) en `apps/web/e2e/soporte.ts` y `pacientes-listado.spec.ts`; ningún otro e2e cuenta pacientes
+
+Nota (sin checkbox): el job de retención (RN-18, post-MVP, L1D-311) debe incluir `conversation` y `conversation_turn`.
+
 ## 4. clinical-platform — BFF de web (test del AC primero)
 
 - [x] 4.1 Tests en rojo de los Route Handlers (`apps/web/tests/api/conversaciones.test.ts`: reenvío idéntico con solo `oncolens_session`, Origin ajeno → 403, id no UUID → 404, 502/503/409 retransmitidos, GET con `no-store`) · commit `test(L1D-315)` · rojo: `Error: no implementado`
