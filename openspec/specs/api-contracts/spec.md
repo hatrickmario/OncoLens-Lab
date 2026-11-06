@@ -466,7 +466,7 @@ Cada operación de `clinical-api` MUST declarar `x-permission` con uno o varios 
 - **THEN** el comando termina con código distinto de 0 y nombra la ruta
 
 ### Requirement: Ejemplos sintéticos y no normativos
-Los ejemplos de `contracts/examples/` MUST ser no normativos y sintéticos según la convención de design.md D3 (`dataClassification = sintetico`, prefijo `SINT-`, "Prueba Sintética", NCCN y ESMO solo en `sourcesNotIncluded`), y los de Backend 2 SHALL NOT tener identidad ni fechas absolutas en `clinicalContext`, `analysisMemory`, `query` o `question`; `assertExamplesSynthetic()` SHALL verificarlo (RN-14, `[Pre-S1 resp. 12]`). Solo las claves de máscara cerrada del listado MAY apartarse de la convención, y solo cuando su valor cumple exactamente la máscara: `nationalIdMasked` con cuatro `•`, un espacio y dos caracteres alfanuméricos, y `fullNameMasked` solo con la máscara sintética `^P\. S\.( \d\.)?$` (la que produce `enmascararNombre()` para «Prueba Sintética [n]», `[S3 resp. 16]`), más estrecha que el `pattern` general de `PatientListItem`; cualquier otro valor en esas claves MUST seguir exigiendo la convención sintética, y el nombre o el documento en claro (`fullName`, `nationalId`…) SHALL NOT tener exención (Q-1, US-213b).
+Los ejemplos de `contracts/examples/` MUST ser no normativos y sintéticos según design.md D3 (`dataClassification = sintetico`, prefijo `SINT-`, "Prueba Sintética", NCCN y ESMO solo en `sourcesNotIncluded`); los de Backend 2 SHALL NOT tener identidad ni fechas absolutas en `clinicalContext`, `analysisMemory`, `query` o `question`. `assertExamplesSynthetic()` SHALL verificarlo (RN-14). Solo las claves de máscara cerrada MAY apartarse, con su máscara exacta (Q-1, US-213b).
 
 #### Scenario: Un ejemplo no sintético rompe la verificación [US-033 AC-17] [RN-14] [Pre-S1 resp. 12]
 - **WHEN** un parche pone `dataClassification = real_anonimizado` en `rag-query-request.json`, `sourceName = "NCCN"` en una cita, en `patient-search.json` un `nationalId` numérico sin la marca sintética, en ese ejemplo un `name` con nombre y apellido de forma real, o la fecha `01/03/2026` dentro de `clinicalContext`
@@ -486,6 +486,12 @@ Los ejemplos de `contracts/examples/` MUST ser no normativos y sintéticos segú
 - **GIVEN** un parche que pone el valor `"P. S."` en una clave `fullName` de un ejemplo
 - **WHEN** se ejecuta `contracts:check`
 - **THEN** termina con código distinto de 0 nombrando la ruta
+
+#### Scenario: Las claves de máscara cerrada solo admiten su máscara exacta [US-213 AC-12] [RN-14] (Q-1) [S3 resp. 16]
+- **GIVEN** `nationalIdMasked` con cuatro `•`, un espacio y dos caracteres alfanuméricos, y `fullNameMasked` con la máscara sintética `^P\. S\.( \d\.)?$` (la que produce `enmascararNombre()` para «Prueba Sintética [n]»), más estrecha que el `pattern` general de `PatientListItem`
+- **WHEN** se ejecuta `contracts:check`
+- **THEN** `assertExamplesSynthetic()` no informa hallazgos
+- **AND** cualquier otro valor en esas claves sigue exigiendo la convención sintética
 
 ### Requirement: Clientes HTTP generados con fetch inyectable
 `contracts:generate` MUST generar con hey-api (plugins `@hey-api/client-fetch` + `@hey-api/sdk`, incluidos en `@hey-api/openapi-ts` con versión exacta fijada) un SDK por spec en `packages/api-contracts/src/client/clinical-api/` (para `web`) y `packages/api-contracts/src/client/rag-orchestrator/` (para `clinical-api`), con `baseUrl` y `fetch` inyectables; lo generado MUST NOT editarse a mano y `contracts:generate:check` SHALL detectarlo `[S1 resp. 13]`.
