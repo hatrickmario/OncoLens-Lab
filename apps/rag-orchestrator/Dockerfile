@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Contexto de construcción: la raíz del repositorio (infra/docker/docker-compose.yml usa context ../..).
-FROM python:3.13.16-slim@sha256:cf50a4f6ac4f026458b08d5222023d700ac806410dff5e9ca8728fa44f2b850f AS dependencias
+FROM python:3.13.17-slim@sha256:d98cc29d3266e535dd9da1099688d9cb3ca4753813571e071763d17725460962 AS dependencias
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \

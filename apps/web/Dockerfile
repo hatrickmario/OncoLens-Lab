@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Contexto de construcción: la raíz del repositorio (npm workspaces).
-FROM node:24.22.0-alpine3.24 AS build
+FROM node:24.22.1-alpine3.24 AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY apps/clinical-api/package.json apps/clinical-api/package.json
@@ -20,7 +20,7 @@ COPY packages/clinical-catalogs/lenguaje/terminos-prohibidos.json packages/clini
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build --workspace apps/web
 
-FROM node:24.22.0-alpine3.24 AS runtime
+FROM node:24.22.1-alpine3.24 AS runtime
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     HOSTNAME=0.0.0.0 \
