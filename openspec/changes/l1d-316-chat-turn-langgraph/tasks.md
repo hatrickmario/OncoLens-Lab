@@ -46,6 +46,8 @@ CHAT_MEMORY_MAX_TOKENS=1500
 
 Claves opcionales que añadió la implementación (todas con valor por defecto en `Settings`, no bloquean): `CHAT_NOTICE_AI` y `CHAT_NOTICE_ACADEMIC` (los literales de RN-19 sin punto final) y `LLM_TOKENIZER_PATH` (ruta local del `tokenizer.json` del LLM; sin ella se usa un contador conservador por caracteres).
 
+- [ ] H-1 Añadir las tres claves anteriores a `.env.example` (PR chore de la oleada) DIFERIDA -> H-1 (hecho en PR chore/s6-h1-env-example)
+
 ## 5b. correcciones del Gate 2 (vuelta 1)
 
 - [x] 6.1 Privacy/contract #1: `threadId`, `chunkIds` y `documentId` salen de las listas blancas de nombres de `identity.mjs`; la regla AC-17 los exime solo por puntero exacto (`ChatCitation/documentId`, `ChatTurnRequest/threadId`, `StructuredState/ultimaEvidencia/chunkIds`) y en los ejemplos `chat-turn-*`. Tres parches de prueba (`ac-17-identidad-camel.json`) fallan si aparecen en otro esquema. Evidencia: commit `3536de66`; `vitest run scripts/contracts` 462 verdes

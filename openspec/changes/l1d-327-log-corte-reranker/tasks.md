@@ -5,7 +5,7 @@
 
 ## humano
 
-- [ ] H-1 Añadir a `.env.example`, junto a `RERANKER_MAX_PAIRS=12`, el bloque literal siguiente. DIFERIDA -> H-1
+- [ ] H-1 Añadir a `.env.example`, junto a `RERANKER_MAX_PAIRS=12`, el bloque literal siguiente. DIFERIDA -> H-1 (hecho en PR chore/s6-h1-env-example)
 
 ```
 # Máximo de chunkId cortados que lista el evento rag_query_corte (US-270, RN-22)
