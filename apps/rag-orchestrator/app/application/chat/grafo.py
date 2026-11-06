@@ -174,8 +174,11 @@ class _NodosDelTurno:
         self, estado: EstadoDelGrafo, intencion: Intencion
     ) -> tuple[PropuestaDelTurno, ...]:
         """El esqueleto de un nodo de capacidad: el LLM propone afirmaciones sobre los hechos; ``validar`` decide."""
+        crudo = await self._pedir_afirmaciones_al_llm(estado, intencion)
+        return self._propuestas_de_la_salida(crudo, estado["trace_id"])
+
+    async def _pedir_afirmaciones_al_llm(self, estado: EstadoDelGrafo, intencion: Intencion) -> str:
         hilo = estado.get("hilo") or EstadoDelHilo()
-        trace_id = estado["trace_id"]
         ventana = ventana_de_memoria(
             hilo.turnos, self._configuracion.presupuesto_de_memoria, self._contador.contar
         )
@@ -183,12 +186,15 @@ class _NodosDelTurno:
             hilo, estado["pregunta"], estado["hechos"], intencion, ventana
         )
         try:
-            crudo = await self._llm.completar_json(
+            return await self._llm.completar_json(
                 prompt.usuario, ESQUEMA_DEL_TURNO, sistema=prompt.sistema
             )
         except FalloDelLlm:
-            logger.warning("event=chat_generacion_llm_fallo traceId=%s", trace_id)
+            logger.warning("event=chat_generacion_llm_fallo traceId=%s", estado["trace_id"])
             raise LlmLocalNoDisponibleError() from None
+
+    @staticmethod
+    def _propuestas_de_la_salida(crudo: str, trace_id: str) -> tuple[PropuestaDelTurno, ...]:
         try:
             salida = _SalidaDelTurno.model_validate_json(crudo)
         except ValidationError:
@@ -204,16 +210,7 @@ class _NodosDelTurno:
 
     async def validar(self, estado: EstadoDelGrafo) -> dict[str, Any]:
         """RN-24, RN-04: solo se muestra lo que cita un hecho o un chunk de ESTE turno; el resto suma en ``omittedClaims``."""
-        refs_del_turno = {h.ref for h in estado["hechos"]}
-        # Los nodos de capacidad aún no recuperan chunks (US-260…US-266): ningún chunk es soporte del turno.
-        chunks_del_turno: frozenset[str] = frozenset()
-        bloques = tuple(
-            BloqueDelTurno(BLOQUE_DOCUMENTADO, p.texto, p.fact_refs)
-            for p in estado["propuestas"]
-            if afirmacion_tiene_soporte_del_turno(
-                p.fact_refs, p.citas, refs_del_turno, chunks_del_turno
-            )
-        )
+        bloques = self._bloques_con_soporte(estado)
         omitidas = len(estado["propuestas"]) - len(bloques)
         logger.info(
             "event=chat_validacion traceId=%s intencion=%s afirmaciones=%d mostradas=%d omittedClaims=%d",
@@ -224,6 +221,19 @@ class _NodosDelTurno:
             omitidas,
         )
         return self._cerrar(estado, bloques, omitidas)
+
+    @staticmethod
+    def _bloques_con_soporte(estado: EstadoDelGrafo) -> tuple[BloqueDelTurno, ...]:
+        refs_del_turno = {h.ref for h in estado["hechos"]}
+        # Los nodos de capacidad aún no recuperan chunks (US-260…US-266): ningún chunk es soporte del turno.
+        chunks_del_turno: frozenset[str] = frozenset()
+        return tuple(
+            BloqueDelTurno(BLOQUE_DOCUMENTADO, p.texto, p.fact_refs)
+            for p in estado["propuestas"]
+            if afirmacion_tiene_soporte_del_turno(
+                p.fact_refs, p.citas, refs_del_turno, chunks_del_turno
+            )
+        )
 
     async def mensaje_del_sistema(self, estado: EstadoDelGrafo) -> dict[str, Any]:
         texto = (
