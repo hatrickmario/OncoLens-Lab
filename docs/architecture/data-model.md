@@ -866,6 +866,7 @@ Documento y nombres se cifran en la aplicación (AES-256-GCM); `national_id_hmac
 | `review_status` | text |  |  |
 | `source_span` | jsonb |  | nullable |
 | `created_at` | timestamptz |  |  |
+| `supersedes_id` | uuid | FK | nullable; autorreferencia restrictiva al tratamiento que esta corrección reemplaza (ADR-50, d5fb-05); índice único parcial: una fila se reemplaza una sola vez |
 
 #### `clinical.clinical_event`
 
@@ -910,6 +911,7 @@ Documento y nombres se cifran en la aplicación (AES-256-GCM); `national_id_hmac
 | `review_status` | text |  |  |
 | `source_span` | jsonb |  | nullable |
 | `created_at` | timestamptz |  |  |
+| `supersedes_id` | uuid | FK | nullable; autorreferencia restrictiva al atributo que esta corrección reemplaza (ADR-50, d5fb-05); índice único parcial: una fila se reemplaza una sola vez |
 
 #### `clinical.clinical_data_source`
 
@@ -1175,7 +1177,7 @@ Vacío resuelto (US-033), `[Pre-S1 resp. 3]`: se congela la **estructura** de la
 - `document (patient_id, checksum)`: único; `document (ocr_status, uploaded_at)`.
 - `diagnosis (patient_id, is_active)`; `clinical_note (patient_id, note_type, recorded_at)`; `exam (patient_id, performed_at)`.
 - Índices por `review_status` para el contador de pendientes.
-- `biomarker (supersedes_id)`, `exam (supersedes_id)`, `clinical_note (supersedes_id)` `WHERE supersedes_id IS NOT NULL`: únicos (ADR-50: una fila se reemplaza una sola vez).
+- `biomarker (supersedes_id)`, `exam (supersedes_id)`, `clinical_note (supersedes_id)`, `prior_treatment (supersedes_id)`, `clinical_attribute (supersedes_id)` `WHERE supersedes_id IS NOT NULL`: únicos (ADR-50: una fila se reemplaza una sola vez).
 - `patient_opt_out (patient_id, opt_out_type, recorded_at DESC)`; `ai_analysis_record (patient_id, created_at)`; `patient (retention_until)`.
 - v1.1: `clinical_event (patient_id, event_date)`; `prior_treatment (patient_id, line_number)`; `clinical_data_source (data_type, data_id)`; `biomarker (exam_id, loinc_code)`; índices por `mapping_status` para la revisión de términos no mapeados; `clinical_attribute (patient_id, attribute_key, observed_at)`; `ai_analysis_record (patient_id, analysis_type, created_at)`.
 - FKs del schema `clinical` con `onDelete: Restrict`. El borrado solo lo ejecuta el proceso de retención o de baja total, que borra la identidad y seudonimiza.
