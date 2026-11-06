@@ -5,6 +5,7 @@
 > **Fuentes:** [`S6-prompt-chatbot.md`](../../../backlog/sprints/S6-prompt-chatbot.md) §2–§3, [`S6-refinamiento.md`](../../../backlog/sprints/S6-refinamiento.md) §2 (`[S6 resp. 2]`, resp. 3, 6, 7 y 10) y [ADR-51](../../architecture/adr/ADR-51-chat-langgraph-estado-efimero.md).
 > **Datos:** todos son sintéticos. La paciente es «Paciente sintética A», con documento `CC ••• 0101`, mama izquierda, HER2+ y RE+. Las fuentes E1–E3 son **fuentes de ejemplo** con metadatos inventados. NCCN y ESMO solo aparecen como «no incluidas».
 > **Decisión:** **variante B «Hilo con tarjetas», elegida (usuario, 2026-11-06) `[S6 resp. 16]`**. A y C quedan descartadas (§2). Los hallazgos de `clinical-language-auditor` (modo Diseño) y de la revisión de accesibilidad (WCAG 2.1 AA) se aplicaron **solo a `variante-b.html`** (§7); `variante-a.html` y `variante-c.html` se conservan sin cambios como registro de las alternativas.
+> **Vocabulario:** ver [`backlog/sprints/S6-glosario-chat.md`](../../../backlog/sprints/S6-glosario-chat.md). Si un nombre de campo de este documento discrepa, manda el glosario (Gate 1, vuelta 1: `index` → `turnNumber`, `gapKind` → `gapType`, `claims[]` → `blocks[kind]`).
 
 ## 1. Lo común a las tres variantes
 
@@ -47,8 +48,8 @@ Las tres variantes muestran el mismo contenido; cambian el lugar y la forma.
 
 | Elemento | Texto o ejemplo | Fuente del dato |
 |---|---|---|
-| Afirmaciones en orden temporal, con fecha relativa | «Hace 16 meses: carcinoma ductal infiltrante…» | `CaseView.timeline[].eventDate` + `datePrecision` (existe). El texto de la afirmación es **NUEVO**: `turn.claims[].text` (por definir en el contrato de US-258) |
-| Tipo de afirmación: «Documentado» frente a «Interpretación» | rótulo por afirmación | **NUEVO**: `turn.claims[].kind = documentado \| interpretacion` (por definir en el contrato de US-258; US-261) |
+| Afirmaciones en orden temporal, con fecha relativa | «Hace 16 meses: carcinoma ductal infiltrante…» | `CaseView.timeline[].eventDate` + `datePrecision` (existe). El texto de la afirmación es **NUEVO**: `turn.blocks[].text` (`ChatBlock`, contrato de US-258) |
+| Tipo de afirmación: «Documentado» frente a «Interpretación» | rótulo por afirmación | **NUEVO**: `turn.blocks[kind]` con `kind = documentado \| interpretacion` (enum cerrado de 8 valores del contrato de US-258; US-261). `interpretacion` se pinta con su propio rótulo «Interpretación generada por IA» |
 | Chip ◆ con su procedencia (documento, fecha, método y verificación) y «Ver en el caso» | «◆ HER2 3+ (IHQ) · Informe de patología · ✓ Verificado» | `SupportedClaim.patientDataRefs` + `PatientDataLink` (existe en `EvidenceAnalysis`; en el turno, **NUEVO**: `turn.patientDataLinks`, por definir en el contrato de US-258). La procedencia sale de `Provenance` (`entryMethod`, `reviewStatus`, `sourceDocumentId`, existe). **NUEVO**: el **tipo de documento** («Informe de patología»), porque `Provenance` solo trae `sourceDocumentId` y el tipo está en `Document` (por definir en el contrato de US-258) |
 | ⚑ Contradicción entre documentos, con los dos valores | «cT2 N1 (nota de consulta) frente a cT3 N1 (informe de imagen)» | `Provenance.conflict` + `requiere_revision` (existe). **NUEVO**: `turn.contradictions[]` con los dos `dataRef` enfrentados (por definir en el contrato de US-258; US-262) |
 | «1 afirmación sin soporte… se omitió» | — | **NUEVO**: `turn.omittedClaims` (análogo a `analysisBasis.omittedClaims`; por definir en el contrato de US-258) |
@@ -58,8 +59,8 @@ Las tres variantes muestran el mismo contenido; cambian el lugar y la forma.
 
 | Elemento | Texto o ejemplo | Fuente del dato |
 |---|---|---|
-| Indicador por dato: ◌ No encontrado · ◐ Incompleto · ⚑ Por conciliar · ◇ No buscado | Ki-67 «◌ No encontrado» · Estado menopáusico «◇ No buscado» | **NUEVO**: `CompletenessItem.gapKind = no_encontrado \| incompleto \| por_conciliar \| no_buscado` (por definir en el contrato de US-258 y en el catálogo de US-263, `[S6 resp. 10]`). Hoy `status` solo tiene `presente_verificado`, `presente_sin_verificar`, `faltante` y `no_aplica` |
-| Motivo: qué documento se procesó o cuál falta | «Se procesó el informe de patología… y no reporta Ki-67» | **NUEVO**: tipos de documento fuente por dato crítico en el catálogo (US-263) + `Document` procesados del paciente |
+| Indicador por dato: ◌ No encontrado · ◐ Incompleto · ⚑ Por conciliar · ◇ No buscado | Ki-67 «◇ No buscado» · Estado menopáusico «◌ No encontrado» | **NUEVO**: `CompletenessItem.gapType = no_encontrado \| incompleto \| por_conciliar \| no_buscado` (por definir en el contrato de US-258 y en el catálogo de US-263, `[S6 resp. 10]`). Hoy `status` solo tiene `presente_verificado`, `presente_sin_verificar`, `faltante` y `no_aplica` |
+| Motivo: qué documento se procesó o cuál falta | «Ki-67 se reporta en un examen y no se ha procesado ninguno» (`no_buscado`, L1D-320) | **NUEVO**: tipos de documento fuente por dato crítico en el catálogo (US-263) + `Document` procesados del paciente |
 | Estado de verificación | «Verificación: ◐ Presente sin verificar» | `CompletenessItem.status` + `CompletenessProvenance.reviewStatus` (existe) |
 | «¿Por qué importa?» con su cita, o «Sin explicación: no se encontró soporte en el corpus para este dato» | plegable | **NUEVO**: `turn.gaps[].whyItMatters` (`SupportedClaim` con `citedSources`, o `null` si se omitió; por definir en el contrato de US-258; US-264, `[S6 resp. 7]`) |
 | Leyenda de los cuatro indicadores y aviso «no bloquean» | — | Texto fijo |
@@ -79,7 +80,7 @@ Las tres variantes muestran el mismo contenido; cambian el lugar y la forma.
 | Fuentes: título, fuente, autores («No disponible»), diseño, n, fecha, idioma, licencia, «⚑ Posiblemente desactualizada», fragmento original sin traducir y «Fuente original» | `CitedSource` (`title`, `sourceName`, `authors`, `studyDesign`, `sampleSize`, `publishedAt`, `language`, `licenseClass`, `possiblyOutdated`, `chunkTextSnapshot`, `sourceUrl`) — existe |
 | Limitaciones (de la evidencia y de la recuperación; NCCN y ESMO no incluidas) | `analysisBasis.limitations`, `sourcesNotIncluded`, `corpusCutoffDate` — existe. El conteo «5 de 10 fragmentos superaron el umbral» es **NUEVO** (por definir en el contrato de US-258; US-266) |
 | Base del análisis | `AnalysisBasisPanel` sobre `analysisBasis` — existe |
-| Seguimiento (turno 4): «↪ Sobre el turno 3», afirmaciones con citas recuperadas de nuevo y «Memoria del hilo: el turno 3 se usó como contexto y no se cita (RN-24)» | **NUEVO**: `turn.aboutTurnId` y `turn.memoryUsed` (por definir en el contrato de US-258). Las afirmaciones son `SupportedClaim` (existe). Sustituye a `FollowUpTurn`, sin límite de 10 |
+| Seguimiento (turno 4): «↪ Sobre el turno 3», afirmaciones con citas recuperadas de nuevo y «Memoria del hilo: el turno 3 se usó como contexto y no se cita (RN-24)» | **NUEVO**: `turn.aboutTurnId` (contrato de US-258; `memoryUsed` se retira, glosario §2: la nota de memoria es texto fijo). Las afirmaciones son `SupportedClaim` (existe). Sustituye a `FollowUpTurn`, sin límite de 10 |
 
 **Escenario 5 · Interactuar sin perder el contexto**
 
@@ -93,7 +94,7 @@ Las tres variantes muestran el mismo contenido; cambian el lugar y la forma.
 
 | Elemento | Fuente |
 |---|---|
-| Número de turno, hora e intención (Caso / Faltantes / Evidencia) | **NUEVO**: `ConversationTurn.id`, `index`, `createdAt` e `intent` (por definir en el contrato de US-258; ADR-51 §3) |
+| Número de turno, hora e intención (Caso / Faltantes / Evidencia) | **NUEVO**: `ConversationTurn.id`, `turnNumber`, `createdAt` e `intent` (por definir en el contrato de US-258; ADR-51 §3) |
 | «Nueva conversación» | **NUEVO**: `POST …/patients/{id}/conversations` (por definir en el contrato de US-258) |
 | Enviar una pregunta | **NUEVO**: `POST …/conversations/{conversationId}/turns` (por definir en el contrato de US-258; la orquesta US-259) |
 | Turno de evidencia → `AIAnalysisRecord` | **NUEVO**: `turn.analysisId` para leer `GET …/evidence-analyses/{id}` (`[S6 resp. 6]`) |
@@ -114,7 +115,7 @@ La vista de caso queda **a la izquierda** como columna fija («Contexto del caso
 │ ◆ HER2 3+ ✓  RE 90 %     ││ ┌◆ Caso · Situación actual ───────── Turno 1┐       │
 │ ◆ Línea 1 neoadyuvante   ││ │ ⚑ Contradicción … ◆cT2 ◆cT3               │       │
 │ ◐ Cirugía (sin verificar)││ │ DOCUMENTADO … ◆HER2  INTERPRETACIÓN …     │       │
-│ ◌ Ki-67 · Faltante       ││ │ [Generado por IA…] [Uso académico]        │       │
+│ ◇ Ki-67 · No buscado     ││ │ [Generado por IA…] [Uso académico]        │       │
 │ (resaltado al pulsar ◆)  ││ └───────────────────────────────────────────┘       │
 └──────────────────────────┘│ [Pregunta sobre esta paciente……] (Preguntar)      │
                             └───────────────────────────────────────────────────┘
@@ -149,7 +150,7 @@ Asistente conversacional                                         [Nueva conversa
 - **A 375 px:** las tarjetas ocupan todo el ancho; la tabla se desplaza dentro de su contenedor; el panel lateral ocupa toda la pantalla; el campo de pregunta deja de ser fijo por debajo de 480 px (no tapa el contenido ni el foco) y oculta los chips de preguntas frecuentes.
 - **A favor:** la tabla de aplicabilidad y las fuentes tienen todo el ancho. **Reutiliza casi tal cual `AnalysisResult`** (síntesis, `OrderingCriterion`, `ApplicabilityTable`, `EvidenceOptionsList`, `DiscardedOptions`, `AnalysisBasisPanel`) como cuerpo de tarjeta. El chip de intención hace visible el enrutado de LangGraph y permite al evaluador comprobar AC01–AC06. Es la más barata de implementar.
 - **En contra:** sin el caso a la vista, para consultar el origen de un dato hay que desplegar el chip ◆ o abrir otra pestaña. Con 3–4 turnos de evidencia, el hilo se vuelve muy largo y obliga a desplazarse para comparar turnos.
-- **Encaje con assistant-ui:** **el mejor.** Es el modelo nativo de assistant-ui: `Thread` + `MessagePrimitive.Parts` con un componente por *data part* (`intent`, `claims`, `gaps`, `evidence`), `ActionBar` para las acciones del turno y `ComposerPrimitive` con un adjunto de contexto (`aboutTurnId`). `ExternalStoreRuntime` adapta `ConversationTurn` → `ThreadMessage` sin *streaming*. A mano: `FollowUpThread` + `AnalysisResult` como cuerpo; también es sencillo.
+- **Encaje con assistant-ui:** **el mejor.** Es el modelo nativo de assistant-ui: `Thread` + `MessagePrimitive.Parts` con un componente por *data part* alineado con `blocks[kind]` (los 8 `kind` del contrato) más `evidenceAnalysis`, `ActionBar` para las acciones del turno y `ComposerPrimitive` con un adjunto de contexto (`aboutTurnId`). `ExternalStoreRuntime` adapta `ConversationTurn` → `ThreadMessage` sin *streaming*. A mano: `FollowUpThread` + `AnalysisResult` como cuerpo; también es sencillo.
 
 ### Variante C · «Lienzo + conversación» — **descartada para el MVP** `[S6 resp. 16]`
 
@@ -207,10 +208,10 @@ C es la mejor experiencia a medio plazo (escenario 5, hilos largos) y conviene d
 
 Todos están marcados **NUEVO** arriba. Se definen en el contrato de US-258 (`Conversation` y `ConversationTurn`), salvo donde se indica otra historia:
 
-- `ConversationTurn`: `id`, `index`, `createdAt`, `intent` (`caso`, `faltantes`, `evidencia`), `aboutTurnId`, `analysisId`, `status` (incluye `sin_evidencia`), `topRelevanceScore`, `omittedClaims`, `memoryUsed`.
-- `turn.claims[]` con `kind` (`documentado` o `interpretacion`) sobre `SupportedClaim`, y `turn.patientDataLinks` (US-260, US-261).
+- `ConversationTurn`: `id`, `turnNumber`, `createdAt`, `intent` (`caso`, `faltantes`, `evidencia`, `fuentes_limitaciones`, `no_clasificada`, `fuera_de_alcance`), `aboutTurnId`, `analysisId`, `status` (incluye `sin_evidencia`), `topRelevanceScore`, `omittedClaims`, `notices[]`, `dataUsed[]` y `dataMissing[]` (`memoryUsed` se retira, glosario §2).
+- `turn.blocks[]` (`ChatBlock`) con `kind` del enum cerrado de 8 valores (`documentado`, `interpretacion`, `catalogo`, `evidencia`, `conflicto`, `faltante`, `limitacion`, `fuente`), y `turn.dataLinks[]` (`ConversationDataLink`) (US-260, US-261).
 - `turn.contradictions[]` con los dos `dataRef` (US-262).
-- `CompletenessItem.gapKind` (`no_encontrado`, `incompleto`, `por_conciliar`, `no_buscado`) y los tipos de documento fuente por dato crítico en el catálogo (US-263, `[S6 resp. 10]`).
+- `CompletenessItem.gapType` (`no_encontrado`, `incompleto`, `por_conciliar`, `no_buscado`) y los tipos de documento fuente por dato crítico en el catálogo (US-263, `[S6 resp. 10]`).
 - `turn.gaps[].whyItMatters` (`SupportedClaim` o `null`) (US-264).
 - El tipo de documento de la procedencia («Informe de patología»): hoy solo viaja `sourceDocumentId`.
 - `turn.patientRelation[]` (resumen ✓ ◐ ? en lenguaje natural) y el conteo de fragmentos sobre el umbral (US-265, US-266).

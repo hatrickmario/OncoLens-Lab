@@ -1,0 +1,25 @@
+## contratos
+
+- [ ] 1.1 Sin cambios de API (exento): comprobar que `apps/rag-orchestrator/openapi.yaml`, `apps/clinical-api/openapi.yaml` y `contracts/examples/` no tienen diff; `contracts:check` y `contracts:breaking` en verde.
+
+## ai-services
+
+- [ ] 2.1 [TDD estricto] Esqueleto de `app/application/prompt_builder.py` (`PromptSeparado`, `PromptBuilder` con `pregunta()`, `documento()`, `datos_del_paciente()`, `memoria()` y `construir()` públicos, `escapar_delimitadores()` con `raise NotImplementedError`) y `tests/support/prompt_separado.py` (`bloques()`, `afirmar_separacion()`); test de aceptación en rojo «separa instrucciones en sistema y Q-HER2 y ch-m1-1 en bloques delimitados con alias [US-057 AC-1]» · unitario sobre el constructor · commit `test(L1D-108)`.
+- [ ] 2.2 [TDD estricto] Tests de aceptación en rojo: «ch-inj-1 queda en su bloque y el hash del sistema no cambia [US-057 AC-2]», «escapa `</document>` y hay tantos bloques document como chunks [US-057 AC-3]», «la pregunta inyectada queda en question y el sistema no cambia [US-057 AC-4]» · unitarios · commit `test(L1D-108)`.
+- [ ] 2.3 [TDD estricto] Implementar `PromptBuilder` y extraer `escapar_delimitadores()` (SEG-13), con unitarios uno a la vez (etiqueta de cierre, mayúsculas y espacios, `Ki-67 <14 %` intacto, idempotencia); AC-1…AC-4 en verde · commit `feat(L1D-108)`.
+- [ ] 2.4 [TDD estricto] Test en rojo del puerto: `LlmClient.completar_json(..., sistema=)` envía `system` + `user` en `POST /chat/completions` (`test_openai_compatible_llm.py`, `respx`) y el `FakeLlmClient` registra ambos mensajes (`test_bateria_de_contrato_de_adapters.py`) · commit `test(L1D-108)`; implementar en `ports.py`, `openai_compatible.py`, `tests/support/llm_falso.py`, `app/evaluation/modelos_locales.py` y `app/scripts/adr39/runtime_llm.py` · commit `feat(L1D-108)`.
+- [ ] 2.5 [TDD estricto] Test de integración en rojo «el LLM recibe system y user y meta.promptVersion empieza por rag-query@0.10.0 [US-057 AC-1]» (`TestClient`, `respx` hacia el LLM, respuesta validada contra el `openapi.yaml` del proveedor) · commit `test(L1D-108)`; migrar `app/prompts/rag_query.py` a `PromptBuilder` (`rag-query@0.10.0`, línea de instrucciones sobre las etiquetas, sin términos de RN-23) y `generation.py` · commit `feat(L1D-108)`; ajustar `test_prompt_rag_query.py` sin debilitar aserciones (si una aserción sobre `[fragmento C1]` cambia de forma, `Test-Removal:` con motivo «formato del bloque cambiado por US-057»).
+- [ ] 2.6 [TDD estricto] Tests en rojo «la memoria del seguimiento va en `<memory citable="no">` [US-057 AC-1] (asumido)» y «la reescritura lleva la pregunta en question [US-057 AC-4] (asumido)»; migrar `seguimiento.py` (`rag-follow-up@0.2.0`), `generacion_de_seguimiento.py`, `reescritura_consulta.py` (`reescritura-consulta@0.2.0`) y `reescritor_de_consulta.py` · commits `test(L1D-108)` → `feat(L1D-108)`.
+- [ ] 2.7 [TDD estricto] Test de arquitectura en rojo `tests/unit/test_prompts_por_constructor.py` «toda función construir_prompt_* / armar_prompt_* de app/prompts devuelve PromptSeparado [US-057 AC-1] [S6 resp. 8]», más el test de `afirmar_separacion` (pasa con `PromptBuilder`, falla con cadena única) · commit `test(L1D-108)`; queda en verde tras 2.5–2.6 · commit `feat(L1D-108)`. Si a esta altura ya está mergeado algún prompt de `l1d-316`/`l1d-317`/`l1d-321`/`l1d-322`, migrarlo aquí.
+- [ ] 2.8 [TDD estricto, regresión] Test de integración `tests/integration/test_rag_query_inyeccion.py` «la opción que obedece a ch-inj-1 sin cita válida va a discardedOptions [US-057 AC-5]» (LLM falso, NLI falso, respuesta validada contra el spec); el mecanismo ya existe (US-063/US-064): si pasa en verde al primer intento, se registra la salida y el commit es `test(L1D-108)` de regresión.
+- [ ] 2.9 Suite del contexto en verde: `pytest` de `apps/rag-orchestrator` completo, `ruff` y `mypy`.
+- [ ] 2.10 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-108)`.
+
+## evaluación
+
+- [ ] 3.1 [evaluate] `run-ai-eval` (OL-06) con el LLM local: `eval/configs/rn23-local.yaml --suite all` y `eval/configs/s5.yaml --suite opciones`. Métricas: inyección efectiva = 0, salidas prescriptivas = 0, precisión de citas ≥ 0,90, fidelidad ≥ 0,90, JSON válido ≥ 99 %, "sin evidencia" ≥ 0,90 y brazo de reescritura sin regresión frente al baseline de `main`. Reporte de `ai-eval-runner` en el PR.
+
+## cierre
+
+- [ ] 4.1 `openspec validate l1d-108-prompt-instrucciones-datos --strict` en verde.
+- [ ] 4.2 Mergear antes que `l1d-316`, `l1d-317`, `l1d-321` y `l1d-322` (glosario §1) y avisar a `l1d-316` y `l1d-322` de que la memoria va con `PromptBuilder.memoria(...)` (ya no con `INICIO_DE_LA_MEMORIA` / `FIN_DE_LA_MEMORIA`) y a `l1d-317` / `l1d-322` de que usan `afirmar_separacion` sobre los nodos `caso` y `evidencia`.
