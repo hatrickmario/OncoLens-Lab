@@ -64,7 +64,7 @@ const { contexto, dataRefs } = construirContextoPermitido(caso, AHORA_DE_EJEMPLO
 const clinicalContext = { ...contexto, pseudoPatientId: 'psd_TestPseudonimo0001' };
 
 describe('construirHechosDelCaso', () => {
-  const hechos = construirHechosDelCaso(clinicalContext, dataRefs, caso);
+  const hechos = construirHechosDelCaso(clinicalContext, dataRefs);
 
   it('numera los hechos f1, f2… en el orden del contexto: diagnóstico, biomarcadores, atributos, tratamientos y eventos', () => {
     expect(hechos.caseFacts.map(({ factRef, kind }) => [factRef, kind])).toEqual([
@@ -107,6 +107,62 @@ describe('construirHechosDelCaso', () => {
     });
   });
 
+  it('deja recordedDate y relativeDay en null para un atributo y un evento de precisión incierta', () => {
+    const incierto = casoDeEjemplo({
+      ...caso,
+      atributos: [atributoDeEjemplo({ id: 'at-9', datePrecision: 'incierta' })],
+      eventos: [eventoDeEjemplo({ id: 'ev-9', datePrecision: 'incierta' })],
+      biomarcadores: [],
+      tratamientosPrevios: [],
+    });
+    const permitido = construirContextoPermitido(incierto, AHORA_DE_EJEMPLO, []);
+
+    const resultado = construirHechosDelCaso(
+      { ...permitido.contexto, pseudoPatientId: 'psd_TestPseudonimo0003' },
+      permitido.dataRefs,
+    );
+
+    for (const factRef of ['f2', 'f3']) {
+      expect(resultado.enlaces.get(factRef)).toMatchObject({
+        relativeDay: null,
+        recordedDate: null,
+      });
+    }
+  });
+
+  it('no verbaliza «No disponible, relevante» cuando el biomarcador no trae valor', () => {
+    const sinValor = casoDeEjemplo({
+      ...caso,
+      biomarcadores: [biomarcadorDeEjemplo({ id: 'bm-9', name: 'HER2', value: 'No disponible' })],
+      atributos: [],
+      tratamientosPrevios: [],
+      eventos: [],
+    });
+    const permitido = construirContextoPermitido(sinValor, AHORA_DE_EJEMPLO, []);
+
+    const resultado = construirHechosDelCaso(
+      { ...permitido.contexto, pseudoPatientId: 'psd_TestPseudonimo0004' },
+      permitido.dataRefs,
+    );
+
+    expect(resultado.caseFacts[1]?.verbalization).toBe('HER2: No disponible');
+  });
+
+  it('omite el estadio «No disponible» de la verbalización del diagnóstico', () => {
+    const sinEstadio = casoDeEjemplo({
+      diagnosticoActivo: diagnosticoDeEjemplo({ stagingSystem: null, stageValue: null }),
+    });
+    const permitido = construirContextoPermitido(sinEstadio, AHORA_DE_EJEMPLO, []);
+
+    const resultado = construirHechosDelCaso(
+      { ...permitido.contexto, pseudoPatientId: 'psd_TestPseudonimo0005' },
+      permitido.dataRefs,
+    );
+
+    expect(resultado.caseFacts[0]?.verbalization).not.toContain('No disponible');
+    expect(resultado.caseFacts[0]?.verbalization).not.toContain('estadio');
+  });
+
   it('devuelve cero hechos cuando el paciente no tiene datos clínicos', () => {
     const vacio = casoDeEjemplo({
       diagnosticoActivo: null,
@@ -120,7 +176,6 @@ describe('construirHechosDelCaso', () => {
     const resultado = construirHechosDelCaso(
       { ...permitido.contexto, pseudoPatientId: 'psd_TestPseudonimo0002' },
       permitido.dataRefs,
-      vacio,
     );
 
     expect(resultado.caseFacts).toEqual([]);

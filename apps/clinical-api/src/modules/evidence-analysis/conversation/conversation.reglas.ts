@@ -3,14 +3,13 @@ import type {
   ConversationDataLink,
 } from '../../../../../../packages/api-contracts/src/client/clinical-api/index.js';
 import type {
-  CaseFact,
   ChatCompletenessItem,
   ChatIntent,
   ChatRehydration,
   RagQueryInternalResponse,
 } from '../../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import type { TurnoDeConversacion } from './conversation.repository.js';
-import type { EnlaceDelHecho } from './hechos-del-caso.js';
+import type { ClaseDeHecho, EnlaceDelHecho } from './hechos-del-caso.js';
 
 /** Lo que Backend 1 deriva del resultado de evidencia del turno (glosario S6 §2): nunca lo recibe de Backend 2. */
 export interface EstadoDelTurno {
@@ -49,7 +48,7 @@ export function construirRehidratacion(
   const ultimo = turnos.at(-1);
   if (ultimo === undefined) return rehidratacionVacia();
   return {
-    turns: turnos.slice(-limite).map((turno) => ({
+    turns: (limite <= 0 ? [] : turnos.slice(-limite)).map((turno) => ({
       question: turno.questionMasked,
       intent: turno.intent,
       blocksText: turno.blocks.map((bloque) => bloque.text),
@@ -81,7 +80,7 @@ export function analisisActivo(turnos: readonly TurnoDeConversacion[]): string |
   return turnos.findLast((turno) => turno.analysisId !== null)?.analysisId ?? null;
 }
 
-const ETIQUETA_POR_CLASE: Readonly<Record<string, string>> = {
+const ETIQUETA_POR_CLASE: Readonly<Record<ClaseDeHecho, string>> = {
   diagnostico: 'Diagnóstico',
   biomarcador: 'Biomarcador',
   atributo: 'Atributo clínico',
@@ -90,8 +89,8 @@ const ETIQUETA_POR_CLASE: Readonly<Record<string, string>> = {
 };
 
 /** Etiquetas de los hechos del caso enviados en el turno (`dataUsed`): la clase del hecho, en español. */
-export function etiquetasDeHechosUsados(hechos: readonly CaseFact[]): string[] {
-  return hechos.map((hecho) => ETIQUETA_POR_CLASE[hecho.kind] ?? hecho.kind);
+export function etiquetasDeHechosUsados(hechos: readonly { kind: ClaseDeHecho }[]): string[] {
+  return hechos.map((hecho) => ETIQUETA_POR_CLASE[hecho.kind]);
 }
 
 /** Etiquetas de los ítems enviados con un tipo de faltante (`dataMissing`). */

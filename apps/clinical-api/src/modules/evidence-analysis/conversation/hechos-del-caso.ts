@@ -3,51 +3,61 @@ import type {
   CaseFact,
   ClinicalContext,
 } from '../../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
-import { NO_DISPONIBLE, fechaConfiable } from '../clinical-context.builder.js';
-import type { CasoClinico } from '../evidence-analysis.repository.js';
+import { estaAusente, unirLoPresente } from '../analysis-basis.verbalizacion.js';
+import { NO_DISPONIBLE } from '../clinical-context.builder.js';
 import type { EnlaceDeDato, MapaDeDataRefs } from '../ports.js';
 
 /** Qué dato del paciente respalda un `factRef`: solo vive en Backend 1 durante el turno (nunca viaja a Backend 2). */
 export type EnlaceDelHecho = Omit<ConversationDataLink, 'factRef'>;
 
 export interface HechosDelCaso {
-  caseFacts: CaseFact[];
+  caseFacts: HechoDelCaso[];
   enlaces: ReadonlyMap<string, EnlaceDelHecho>;
 }
 
 type Procedencia = ClinicalContext['biomarkers'][number]['provenance'];
 
+/** Clases de hecho que el chat verbaliza; `ETIQUETA_POR_CLASE` (reglas) tiene una etiqueta para cada una. */
+export type ClaseDeHecho = 'diagnostico' | 'biomarcador' | 'atributo' | 'tratamiento' | 'evento';
+
+/** Un `CaseFact` con su clase tipada: así `dataUsed` no necesita un valor por defecto. */
+export type HechoDelCaso = CaseFact & { kind: ClaseDeHecho };
+
 /** Un hecho antes de numerarlo: su clase, su texto y el dato del paciente que lo respalda. */
 interface Candidato {
   dataRef: string;
-  kind: string;
+  kind: ClaseDeHecho;
   verbalization: string;
   provenance: Procedencia;
   seriesKey?: string;
 }
 
-const sinNoDisponible = (valor: string | null): string | null =>
-  valor === null || valor === NO_DISPONIBLE ? null : valor;
-
-const unir = (partes: readonly (string | null)[]): string =>
-  partes.filter((parte): parte is string => parte !== null && parte !== '').join(', ');
-
 function candidatoDeDiagnostico(diagnostico: NonNullable<ClinicalContext['diagnosis']>): Candidato {
-  const estadio = sinNoDisponible(diagnostico.stageValue);
-  const sistema = sinNoDisponible(diagnostico.stagingSystem);
   return {
     dataRef: diagnostico.dataRef,
     kind: 'diagnostico',
     provenance: diagnostico.provenance,
-    verbalization: unir([
-      diagnostico.histology,
-      diagnostico.grade,
-      estadio === null ? null : `estadio ${estadio}${sistema === null ? '' : ` (${sistema})`}`,
-      diagnostico.performanceScale === null || diagnostico.performanceValue === null
-        ? null
-        : `${diagnostico.performanceScale} ${diagnostico.performanceValue}`,
-    ]),
+    verbalization: unirLoPresente(
+      [
+        diagnostico.histology ?? '',
+        diagnostico.grade ?? '',
+        estaAusente(diagnostico.stageValue)
+          ? ''
+          : `estadio ${diagnostico.stageValue} (${diagnostico.stagingSystem})`,
+        diagnostico.performanceScale === null || diagnostico.performanceValue === null
+          ? ''
+          : `${diagnostico.performanceScale} ${diagnostico.performanceValue}`,
+      ],
+      ', ',
+    ),
   };
+}
+
+/** `Nombre: valor, significado`; un valor ausente se escribe «No disponible» sin el significado (RN-25). */
+function verbalizarBiomarcador(biomarcador: ClinicalContext['biomarkers'][number]): string {
+  return estaAusente(biomarcador.value)
+    ? `${biomarcador.biomarkerName}: ${NO_DISPONIBLE}`
+    : `${biomarcador.biomarkerName}: ${biomarcador.value}, ${biomarcador.clinicalSignificance}`;
 }
 
 /** Los candidatos en el orden del contexto: diagnóstico, biomarcadores, atributos, tratamientos y eventos. */
@@ -56,57 +66,37 @@ function candidatosDelContexto(contexto: ClinicalContext): Candidato[] {
     ...(contexto.diagnosis === null ? [] : [candidatoDeDiagnostico(contexto.diagnosis)]),
     ...contexto.biomarkers.map((biomarcador) => ({
       dataRef: biomarcador.dataRef,
-      kind: 'biomarcador',
+      kind: 'biomarcador' as const,
       provenance: biomarcador.provenance,
       seriesKey: biomarcador.biomarkerName.toLowerCase(),
-      verbalization: `${biomarcador.biomarkerName}: ${biomarcador.value}, ${biomarcador.clinicalSignificance}`,
+      verbalization: verbalizarBiomarcador(biomarcador),
     })),
     ...contexto.attributes.map((atributo) => ({
       dataRef: atributo.dataRef,
-      kind: 'atributo',
+      kind: 'atributo' as const,
       provenance: atributo.provenance,
       verbalization: `${atributo.key.replaceAll('_', ' ')}: ${atributo.value}`,
     })),
     ...contexto.priorTreatments.map((tratamiento) => ({
       dataRef: tratamiento.dataRef,
-      kind: 'tratamiento',
+      kind: 'tratamiento' as const,
       provenance: tratamiento.provenance,
-      verbalization: unir([
-        tratamiento.regimenName,
-        tratamiento.lineNumber === null ? null : `línea ${tratamiento.lineNumber}`,
-      ]),
+      verbalization: unirLoPresente(
+        [
+          tratamiento.regimenName,
+          tratamiento.lineNumber === null ? '' : `línea ${tratamiento.lineNumber}`,
+        ],
+        ', ',
+      ),
     })),
     ...contexto.events.map((evento) => ({
       dataRef: evento.dataRef,
-      kind: 'evento',
+      kind: 'evento' as const,
       provenance: evento.provenance,
       verbalization: `${evento.eventType}: ${evento.description}`,
     })),
   ];
 }
-
-type BuscadorDeFecha = (caso: CasoClinico, id: string) => string | null;
-
-/** Cómo se halla la fecha confiable de cada clase de dato (`fechaConfiable()` donde la fila trae precisión). */
-const FECHA_POR_TABLA: Readonly<Record<EnlaceDeDato['tabla'], BuscadorDeFecha>> = {
-  diagnosis: (caso, id) =>
-    caso.diagnosticoActivo?.id === id ? caso.diagnosticoActivo.diagnosedAt : null,
-  biomarker: (caso, id) => caso.biomarcadores.find((fila) => fila.id === id)?.performedAt ?? null,
-  clinical_attribute: (caso, id) => {
-    const fila = caso.atributos.find((candidata) => candidata.id === id);
-    return fila === undefined ? null : fechaConfiable(fila.observedAt, fila.datePrecision);
-  },
-  prior_treatment: (caso, id) =>
-    caso.tratamientosPrevios.find((fila) => fila.id === id)?.startedAt ?? null,
-  clinical_event: (caso, id) => {
-    const fila = caso.eventos.find((candidata) => candidata.id === id);
-    return fila === undefined ? null : fechaConfiable(fila.eventDate, fila.datePrecision);
-  },
-};
-
-/** Fecha `AAAA-MM-DD` confiable del dato que respalda el hecho, o `null` si el dato no tiene fecha confiable. */
-const fechaDelDato = (enlace: EnlaceDeDato, caso: CasoClinico): string | null =>
-  FECHA_POR_TABLA[enlace.tabla](caso, enlace.id);
 
 const MS_POR_DIA = 86_400_000;
 
@@ -135,18 +125,16 @@ const TIPO_DE_RECURSO: Readonly<
 export function construirHechosDelCaso(
   contexto: ClinicalContext,
   dataRefs: MapaDeDataRefs,
-  caso: CasoClinico,
 ): HechosDelCaso {
-  const caseFacts: CaseFact[] = [];
+  const caseFacts: HechoDelCaso[] = [];
   const enlaces = new Map<string, EnlaceDelHecho>();
   const fechaDelDiagnostico =
-    caso.diagnosticoActivo === null ? null : caso.diagnosticoActivo.diagnosedAt;
+    contexto.diagnosis === null ? null : (dataRefs.get(contexto.diagnosis.dataRef)?.fecha ?? null);
   for (const candidato of candidatosDelContexto(contexto)) {
     const dato = dataRefs.get(candidato.dataRef);
     if (dato === undefined) continue;
     const factRef = `f${caseFacts.length + 1}`;
-    const fecha = fechaDelDato(dato, caso);
-    const relativeDay = diasEntre(fechaDelDiagnostico, fecha);
+    const relativeDay = diasEntre(fechaDelDiagnostico, dato.fecha);
     caseFacts.push({
       factRef,
       kind: candidato.kind,
@@ -160,7 +148,7 @@ export function construirHechosDelCaso(
       resourceId: dato.id,
       origin: candidato.provenance.entryMethod,
       relativeDay,
-      recordedDate: fecha,
+      recordedDate: dato.fecha,
     });
   }
   return { caseFacts, enlaces };

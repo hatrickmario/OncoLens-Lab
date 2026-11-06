@@ -70,6 +70,11 @@ export type ContextoPermitido = Omit<ClinicalContext, 'pseudoPatientId'>;
 export interface EnlaceDeDato {
   tabla: 'diagnosis' | 'biomarker' | 'clinical_attribute' | 'prior_treatment' | 'clinical_event';
   id: string;
+  /**
+   * Fecha `AAAA-MM-DD` confiable del dato, la misma que el builder usó para los meses relativos (`null` si no tiene o es
+   * `incierta`). Solo vive en Backend 1: no viaja a Backend 2 ni a `patientDataLinks`.
+   */
+  fecha: string | null;
 }
 export type MapaDeDataRefs = ReadonlyMap<string, EnlaceDeDato>;
 

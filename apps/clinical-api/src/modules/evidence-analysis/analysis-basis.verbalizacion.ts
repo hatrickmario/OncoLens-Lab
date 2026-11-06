@@ -12,10 +12,10 @@ export type DatoDelContexto =
 /** Un campo ausente (vacío o "No disponible", RN-25) se escribe como ausente, nunca como texto vacío. */
 const datoPresente = (valor: string): string => (valor === '' ? NO_DISPONIBLE : valor);
 
-const estaAusente = (valor: string): boolean => valor === '' || valor === NO_DISPONIBLE;
+export const estaAusente = (valor: string): boolean => valor === '' || valor === NO_DISPONIBLE;
 
 /** Une las partes que el dato sí trae (el estadio y la línea de tratamiento son opcionales y se omiten si faltan). */
-function unirLoPresente(partes: readonly string[], separador: string): string {
+export function unirLoPresente(partes: readonly string[], separador: string): string {
   return partes.filter((parte) => !estaAusente(parte)).join(separador);
 }
 

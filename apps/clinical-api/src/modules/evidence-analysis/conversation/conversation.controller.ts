@@ -72,6 +72,7 @@ function manejadorDeApertura(
     try {
       const conversacion = await service.abrir({ patientId, userId: sesion.userId });
       emisor.registrarResultado(response, 'ok', { conversationId: conversacion.conversationId });
+      response.setHeader('Cache-Control', 'no-store');
       response.status(201).json(conversacion);
     } catch (error) {
       if (!(error instanceof ConversacionNoEncontradaError)) throw error;

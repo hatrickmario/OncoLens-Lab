@@ -44,13 +44,13 @@ function falloDe409(codigo: string | null | undefined): RespuestaDeFallo {
     : servicioIa('conflicto_de_rag');
 }
 
+/** `404 HILO_DESCONOCIDO` de `/chat/turn`: Backend 2 no conoce el hilo. Un solo criterio para reenviar y para mapear. */
+export const esHiloDesconocido = (fallo: FalloDeRag): boolean =>
+  fallo.status === 404 && fallo.codigo === 'HILO_DESCONOCIDO';
+
 /** Estados sin fila propia: un `404 HILO_DESCONOCIDO` (solo `/chat/turn`, ya tras la rehidratación, L1D-315) o un fallo interno. */
 function falloDeOtroEstado(fallo: FalloDeRag): RespuestaDeFallo {
-  return servicioIa(
-    fallo.status === 404 && fallo.codigo === 'HILO_DESCONOCIDO'
-      ? 'hilo_desconocido'
-      : 'error_de_rag',
-  );
+  return servicioIa(esHiloDesconocido(fallo) ? 'hilo_desconocido' : 'error_de_rag');
 }
 
 /**

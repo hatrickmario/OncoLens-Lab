@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   RESPUESTA_INTERNA_INVALIDA,
+  esHiloDesconocido,
   mapearFalloRag,
   mapearFalloRagDeChat,
 } from '../../../src/modules/evidence-analysis/rag-failure.js';
@@ -128,6 +129,19 @@ describe('mapearFalloRag con un hilo desconocido (L1D-315)', () => {
       status: 502,
       codigo: 'ERROR_SERVICIO_IA',
     });
+  });
+});
+
+describe('esHiloDesconocido', () => {
+  it.each([
+    [fallo({ status: 404, codigo: 'HILO_DESCONOCIDO' }), true],
+    [fallo({ status: 404, codigo: 'OTRO' }), false],
+    [fallo({ status: 404 }), false],
+    [fallo({ status: 409, codigo: 'HILO_DESCONOCIDO' }), false],
+    [fallo({ status: null }), false],
+  ])('comparte criterio con el mapeo: %j → %s', (entrada, esperado) => {
+    expect(esHiloDesconocido(entrada)).toBe(esperado);
+    expect(mapearFalloRag(entrada).resultado === 'hilo_desconocido').toBe(esperado);
   });
 });
 

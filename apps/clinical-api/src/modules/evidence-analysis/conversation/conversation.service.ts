@@ -5,6 +5,7 @@ import type {
 import type {
   ChatCompletenessItem,
   ChatTurnRequest,
+  DataClassification,
 } from '../../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import { zChatTurnResponseRefinado } from '../../../../../../packages/api-contracts/src/zod/rag-orchestrator/refinamientos.gen.js';
 import type { Clock } from '../../../infrastructure/clock.js';
@@ -14,7 +15,11 @@ import { construirContextoPermitido } from '../clinical-context.builder.js';
 import { clasificacionDelPaciente } from '../regla-proveedor.js';
 import type { CasoClinico, CasoRepository } from '../evidence-analysis.repository.js';
 import { calcularDeadline } from '../evidence-analysis.service.js';
-import { RESPUESTA_INTERNA_INVALIDA, mapearFalloRagDeChat } from '../rag-failure.js';
+import {
+  RESPUESTA_INTERNA_INVALIDA,
+  esHiloDesconocido,
+  mapearFalloRagDeChat,
+} from '../rag-failure.js';
 import { llamarConPlazo } from '../rag-plazo.js';
 import type {
   CatalogVersionProvider,
@@ -98,14 +103,18 @@ export interface ConversationService {
 }
 
 /**
+ * Estado de un turno ya persistido al leer la conversación: el resultado de evidencia no se persiste hasta L1D-322, así
+ * que `status` y `topRelevanceScore` salen de la intención de la fila (contrato actual, fijado por un test).
+ */
+const estadoAlLeer = (turno: TurnoDeConversacion): EstadoDelTurno =>
+  derivarEstadoDelTurno(turno.intent, undefined);
+
+/**
  * `ConversationTurn` de la respuesta, construido desde lo persistido: lo que el oncólogo ve es lo que quedó registrado
  * (RN-06). `status` y `topRelevanceScore` los deriva Backend 1 (nunca los recibe); al leer una conversación salen de la
  * intención de la fila, porque el resultado de evidencia del turno no se persiste hasta L1D-322.
  */
-function aConversationTurn(
-  turno: TurnoDeConversacion,
-  estado: EstadoDelTurno = derivarEstadoDelTurno(turno.intent, undefined),
-): ConversationTurn {
+function aConversationTurn(turno: TurnoDeConversacion, estado: EstadoDelTurno): ConversationTurn {
   return {
     id: turno.id,
     turnNumber: turno.turnNumber,
@@ -133,7 +142,7 @@ function aConversation(
     conversationId: conversacion.id,
     patientId: conversacion.patientId,
     createdAt: conversacion.createdAt.toISOString(),
-    turns: turnos.map((turno) => aConversationTurn(turno)),
+    turns: turnos.map((turno) => aConversationTurn(turno, estadoAlLeer(turno))),
   };
 }
 
@@ -188,15 +197,19 @@ interface TurnoPreparado {
 function desidentificarContexto(
   { desidentificador }: Dependencias,
   conversacion: Conversacion,
-  caso: CasoClinico,
-  entrada: { traceId: string; question: string; contexto: ContextoPermitido },
+  entrada: {
+    traceId: string;
+    question: string;
+    contexto: ContextoPermitido;
+    dataOrigin: DataClassification;
+  },
 ): Promise<SalidaDeDesidentificacion> {
   return desidentificador.desidentificar({
     traceId: entrada.traceId,
     patientId: conversacion.patientId,
     contexto: entrada.contexto,
     query: entrada.question,
-    dataOrigin: clasificacionDelPaciente(caso.paciente),
+    dataOrigin: entrada.dataOrigin,
   });
 }
 
@@ -218,17 +231,14 @@ async function prepararTurno(
   const items = await checklist.items(conversacion.patientId);
   const claves = items.filter((item) => item.status === 'faltante').map((item) => item.item);
   const { contexto, dataRefs } = construirContextoPermitido(caso, reloj.now(), claves);
-  const { clinicalContext, query } = await desidentificarContexto(
-    dependencias,
-    conversacion,
-    caso,
-    {
-      traceId: solicitud.traceId,
-      question: solicitud.peticion.question,
-      contexto,
-    },
-  );
-  const hechos = construirHechosDelCaso(clinicalContext, dataRefs, caso);
+  const clasificacion = clasificacionDelPaciente(caso.paciente);
+  const { clinicalContext, query } = await desidentificarContexto(dependencias, conversacion, {
+    traceId: solicitud.traceId,
+    question: solicitud.peticion.question,
+    contexto,
+    dataOrigin: clasificacion,
+  });
+  const hechos = construirHechosDelCaso(clinicalContext, dataRefs);
   return {
     hechos,
     faltantes: items,
@@ -237,7 +247,7 @@ async function prepararTurno(
       pseudoPatientId: clinicalContext.pseudoPatientId,
       traceId: solicitud.traceId,
       question: query,
-      dataClassification: clasificacionDelPaciente(caso.paciente),
+      dataClassification: clasificacion,
       catalogVersion: catalogo.version(),
       clinicalContext,
       caseFacts: hechos.caseFacts,
@@ -257,9 +267,6 @@ function consultar(
   );
 }
 
-const esHiloDesconocido = (respuesta: RespuestaDeTurnoRag): boolean =>
-  !respuesta.ok && respuesta.status === 404 && respuesta.codigo === 'HILO_DESCONOCIDO';
-
 /**
  * ADR-51 §4, `[S6 resp. 9]`: ante un hilo que Backend 2 perdió (reinicio, TTL o desalojo) se reenvía el turno UNA vez con
  * la rehidratación de los últimos turnos. Si el primer envío ya la llevaba (primer turno) o el reenvío vuelve a recibir
@@ -271,7 +278,7 @@ async function consultarRehidratandoSiHaceFalta(
   previos: readonly TurnoDeConversacion[],
 ): Promise<RespuestaDeTurnoRag> {
   const primera = await consultar(dependencias, request);
-  if (!esHiloDesconocido(primera) || request.rehydration !== undefined) return primera;
+  if (primera.ok || !esHiloDesconocido(primera) || previos.length === 0) return primera;
   return consultar(dependencias, {
     ...request,
     rehydration: construirRehidratacion(previos, dependencias.config.chatRehydrateTurns),

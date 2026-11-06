@@ -137,6 +137,16 @@ describe('construirRehidratacion', () => {
     ]);
   });
 
+  it('devuelve cero turnos y conserva el estado del último cuando el límite es cero o negativo', () => {
+    const turnos = [turno(1), turno(2)];
+
+    expect(construirRehidratacion(turnos, 0).turns).toEqual([]);
+    expect(construirRehidratacion(turnos, -1).turns).toEqual([]);
+    expect(construirRehidratacion(turnos, 0).structuredState.preguntasPrevias).toEqual([
+      'pregunta 2',
+    ]);
+  });
+
   it('lleva el estado estructurado del último turno persistido', () => {
     const ultimo = turno(3, { structuredState: { ...ESTADO_VACIO, faltantesSenalados: ['ki67'] } });
 
