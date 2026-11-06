@@ -18,16 +18,28 @@ async function abrirElCaso(page: Page) {
  * Corrección de un tratamiento y de un atributo desde la vista de caso (d5fb-05) sobre el paciente semilla (h) (mama
  * adyuvante: letrozol en curso y estado menopáusico), que muta: solo corre sobre un seed recién sembrado
  * (`scripts/e2e/ejecutar.sh` hace `down -v`). Va después de `demo-s5-pacientes.spec.ts` (orden alfabético, un worker) y
- * en serie: los dos tests no comparten estado, pero un fallo del primero no debe reintentarse sobre un paciente ya
- * corregido (`retries: 1` en la CI). Lo ejerce el job `e2e` de la CI; no se corre en local (Compose completo).
+ * en serie. `serial` no basta: con `retries: 1` Playwright reintentaría el grupo entero sobre un paciente ya corregido
+ * (el selector «Corregir dato · Letrozol» ya no existiría), así que va con `retries: 0`, como `g-demo.spec.ts`. Lo ejerce
+ * el job `e2e` de la CI; no se corre en local (Compose completo).
  */
-test.describe.configure({ mode: 'serial' });
+test.describe.configure({ mode: 'serial', retries: 0 });
+
+/** Precondición explícita (como `exigirPacienteSinModificar` de g-demo): el paciente (h) debe estar sin corregir. */
+async function exigirPacienteSinCorregir(page: Page) {
+  await expect(
+    seccion(page, caso.secciones.tratamientos).getByRole('button', {
+      name: 'Corregir dato · Letrozol',
+    }),
+    '(h) ya no tiene el letrozol original: el recorrido necesita el seed intacto; reiniciar el seed (scripts/e2e/ejecutar.sh hace down -v)',
+  ).toBeVisible();
+}
 
 test.describe('Corrección de tratamientos y atributos en la vista de caso (d5fb-05)', () => {
   test('corregir el esquema de un tratamiento deja la fila nueva con Corrección manual, el anterior en el histórico y el aviso de análisis anteriores [AC-04.1]', async ({
     page,
   }) => {
     await abrirElCaso(page);
+    await exigirPacienteSinCorregir(page);
     const tratamientos = seccion(page, caso.secciones.tratamientos);
 
     await tratamientos.getByRole('button', { name: 'Corregir dato · Letrozol' }).click();
@@ -74,5 +86,16 @@ test.describe('Corrección de tratamientos y atributos en la vista de caso (d5fb
     await expect(
       atributos.getByRole('list', { name: correccion.historico.etiqueta }),
     ).toContainText('Posmenopáusica');
+  });
+
+  test('la vista de caso no desborda horizontalmente a 375 px, con las acciones por fila', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 375, height: 800 });
+    await abrirElCaso(page);
+
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      375,
+    );
   });
 });
