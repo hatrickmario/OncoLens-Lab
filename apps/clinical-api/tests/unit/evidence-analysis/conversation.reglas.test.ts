@@ -6,9 +6,11 @@ import type { TurnoDeConversacion } from '../../../src/modules/evidence-analysis
 import {
   analisisActivo,
   construirRehidratacion,
+  creoElAnalisis,
   derivarEstadoDelTurno,
   enlacesDelTurno,
   etiquetasDeFaltantes,
+  estadoDelSeguimiento,
   etiquetasDeHechosUsados,
   ordenarPorDiaRelativo,
   rehidratacionVacia,
@@ -330,5 +332,36 @@ describe('ordenarPorDiaRelativo', () => {
     const ordenados = ordenarPorDiaRelativo([enlace('fb', 10), enlace('fa', 10)]);
 
     expect(ordenados.map((e) => e.factRef)).toEqual(['fb', 'fa']);
+  });
+});
+
+describe('Seguimiento del análisis activo (L1D-322)', () => {
+  const evidencia = (puntaje: number | null) => ({
+    ...ESTADO_VACIO,
+    ultimaEvidencia: { query: 'p', chunkIds: ['c1'], topRelevanceScore: puntaje },
+  });
+
+  it('toma el puntaje de ultimaEvidencia y responde respondido cuando hubo evidencia', () => {
+    expect(estadoDelSeguimiento(evidencia(0.84))).toEqual({
+      status: 'respondido',
+      topRelevanceScore: 0.84,
+    });
+  });
+
+  it('responde sin_evidencia con puntaje null y no 0.0 cuando ningún chunk superó el umbral', () => {
+    const estado = estadoDelSeguimiento(evidencia(null));
+
+    expect(estado).toEqual({ status: 'sin_evidencia', topRelevanceScore: null });
+  });
+
+  it('trata como sin_evidencia un estado sin ultimaEvidencia', () => {
+    expect(estadoDelSeguimiento(ESTADO_VACIO).topRelevanceScore).toBeNull();
+  });
+
+  it('considera creador del análisis solo al primer turno que lo referencia', () => {
+    const id = 'dddddddd-bbbb-4ccc-8ddd-eeeeeeeeeeee';
+    const turnos = [turno(1), turno(2, { analysisId: id }), turno(3, { analysisId: id })];
+
+    expect(turnos.map((t) => creoElAnalisis(turnos, t))).toEqual([false, true, false]);
   });
 });

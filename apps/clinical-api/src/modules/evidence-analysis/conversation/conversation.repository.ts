@@ -8,7 +8,13 @@ import type {
 } from '../../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import type { Consultador } from '../../auth/auth.repository.js';
 import type { EjecutarEnTransaccion } from '../follow-up.repository.js';
-import type { Fila } from '../evidence-analysis.repository.js';
+import {
+  INSERTAR_REGISTRO,
+  parametrosDelRegistro,
+  registroDeFila,
+  type Fila,
+} from '../evidence-analysis.repository.js';
+import type { RegistroDeAnalisis } from '../analysis-record.js';
 
 /** Fila de `clinical.conversation` (data-model §7.1), en camelCase. `threadId` solo sale hacia rag-orchestrator. */
 export interface Conversacion {
@@ -56,6 +62,16 @@ export interface ConversationRepository {
   listarTurnos(conversationId: string): Promise<TurnoDeConversacion[]>;
   /** Inserta bajo bloqueo de la conversación con `turn_number = max + 1` y devuelve la fila leída. */
   insertarTurno(turno: TurnoNuevo): Promise<TurnoDeConversacion>;
+  /**
+   * Inserta el `AIAnalysisRecord` y el turno que lo referencia (`turno.analysisId = registro.id`) en UNA transacción
+   * (RN-06): si cualquiera falla no queda ninguno. Devuelve las filas leídas.
+   */
+  insertarTurnoDeEvidencia(
+    registro: RegistroDeAnalisis,
+    turno: TurnoNuevo,
+  ): Promise<{ registro: RegistroDeAnalisis; turno: TurnoDeConversacion }>;
+  /** Los registros de análisis pedidos por id (los que no existen no figuran). */
+  leerRegistros(ids: readonly string[]): Promise<Map<string, RegistroDeAnalisis>>;
 }
 
 const aJson = (valor: unknown): string => JSON.stringify(valor);
@@ -130,17 +146,68 @@ function parametrosDelTurno(t: TurnoNuevo): unknown[] {
 }
 
 /** Dos turnos simultáneos de una conversación se serializan bloqueando su fila (no se actualiza: solo se bloquea). */
-function insertarTurnoBajoBloqueo(
+function insertarBajoBloqueo(
   enTransaccion: EjecutarEnTransaccion,
   turno: TurnoNuevo,
-): Promise<TurnoDeConversacion> {
+  registro?: RegistroDeAnalisis,
+): Promise<{ registro: RegistroDeAnalisis | undefined; turno: TurnoDeConversacion }> {
   return enTransaccion(async (tx: Consultador) => {
     await tx.query('SELECT id FROM clinical.conversation WHERE id = $1 FOR UPDATE', [
       turno.conversationId,
     ]);
+    const persistido =
+      registro === undefined
+        ? undefined
+        : registroDeFila(
+            (await tx.query(INSERTAR_REGISTRO, parametrosDelRegistro(registro))).rows[0] ?? {},
+          );
     const { rows } = await tx.query(INSERTAR_TURNO, parametrosDelTurno(turno));
-    return turnoDeFila(rows[0] ?? {});
+    return { registro: persistido, turno: turnoDeFila(rows[0] ?? {}) };
   });
+}
+
+async function insertarTurnoDeEvidencia(
+  enTransaccion: EjecutarEnTransaccion,
+  registro: RegistroDeAnalisis,
+  turno: TurnoNuevo,
+): Promise<{ registro: RegistroDeAnalisis; turno: TurnoDeConversacion }> {
+  const { registro: persistido, turno: fila } = await insertarBajoBloqueo(
+    enTransaccion,
+    turno,
+    registro,
+  );
+  if (persistido === undefined) throw new Error('el registro no se insertó');
+  return { registro: persistido, turno: fila };
+}
+
+async function insertarConversacion(
+  db: Consultador,
+  conversacion: Conversacion,
+): Promise<Conversacion> {
+  const { rows } = await db.query(
+    `INSERT INTO clinical.conversation (id, patient_id, thread_id, created_by, created_at)
+     VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+    [
+      conversacion.id,
+      conversacion.patientId,
+      conversacion.threadId,
+      conversacion.createdBy,
+      conversacion.createdAt,
+    ],
+  );
+  return conversacionDeFila(rows[0] ?? {});
+}
+
+async function leerRegistros(
+  db: Consultador,
+  ids: readonly string[],
+): Promise<Map<string, RegistroDeAnalisis>> {
+  if (ids.length === 0) return new Map();
+  const { rows } = await db.query(
+    'SELECT * FROM clinical.ai_analysis_record WHERE id = ANY($1::uuid[])',
+    [ids],
+  );
+  return new Map(rows.map((fila) => [fila['id'] as string, registroDeFila(fila)]));
 }
 
 /** Lectura y escritura de `clinical.conversation` y `clinical.conversation_turn` con `pg` sobre el pool inyectado. */
@@ -153,20 +220,7 @@ export function crearConversationRepository(
       const { rows } = await db.query('SELECT 1 FROM clinical.patient WHERE id = $1', [patientId]);
       return rows.length > 0;
     },
-    async insertarConversacion(conversacion) {
-      const { rows } = await db.query(
-        `INSERT INTO clinical.conversation (id, patient_id, thread_id, created_by, created_at)
-         VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-        [
-          conversacion.id,
-          conversacion.patientId,
-          conversacion.threadId,
-          conversacion.createdBy,
-          conversacion.createdAt,
-        ],
-      );
-      return conversacionDeFila(rows[0] ?? {});
-    },
+    insertarConversacion: (conversacion) => insertarConversacion(db, conversacion),
     async leerConversacion(conversationId) {
       const { rows } = await db.query('SELECT * FROM clinical.conversation WHERE id = $1', [
         conversationId,
@@ -181,6 +235,9 @@ export function crearConversationRepository(
       );
       return rows.map(turnoDeFila);
     },
-    insertarTurno: (turno) => insertarTurnoBajoBloqueo(enTransaccion, turno),
+    insertarTurno: async (turno) => (await insertarBajoBloqueo(enTransaccion, turno)).turno,
+    insertarTurnoDeEvidencia: (registro, turno) =>
+      insertarTurnoDeEvidencia(enTransaccion, registro, turno),
+    leerRegistros: (ids) => leerRegistros(db, ids),
   };
 }

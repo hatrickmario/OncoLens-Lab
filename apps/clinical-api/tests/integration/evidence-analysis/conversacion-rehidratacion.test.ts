@@ -156,12 +156,15 @@ describe('Rehidratación única ante un hilo desconocido (S6 resp. 9)', () => {
     expect(respuesta.status).toBe(201);
     const reenviado = rag.chat.capturadas[1]!;
     const uuids = reenviado.texto.match(UUID_CUALQUIERA) ?? [];
-    // Solo el threadId tiene forma de UUID (pseudoPatientId y traceId llevan su prefijo, no la forma de UUID).
-    expect(uuids).toEqual([reenviado.cuerpo['threadId']]);
+    // Solo el threadId y el activeAnalysisId (L1D-322: enruta el turno, nunca va en la rehidratación) tienen forma de UUID.
+    expect(uuids).toEqual([reenviado.cuerpo['threadId'], analisis.id]);
+    expect(reenviado.cuerpo['activeAnalysisId']).toBe(analisis.id);
     expect(reenviado.texto).not.toMatch(FECHA_ABSOLUTA);
+    const rehidratacion = JSON.stringify(reenviado.cuerpo['rehydration']);
     for (const prohibido of [analisis.id, diagnostico.rows[0]!.id, FECHA_SEMBRADA]) {
-      expect(reenviado.texto, prohibido).not.toContain(prohibido);
+      expect(rehidratacion, prohibido).not.toContain(prohibido);
     }
+    expect(reenviado.texto).not.toContain(diagnostico.rows[0]!.id);
     for (const clave of ['analysisId', 'dataLinks', 'resourceId', 'recordedDate', 'createdAt']) {
       expect(reenviado.texto, clave).not.toContain(`"${clave}"`);
     }

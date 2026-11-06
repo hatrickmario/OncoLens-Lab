@@ -1,32 +1,45 @@
 import type {
   Conversation,
+  ConversationDataLink,
   ConversationTurn,
+  EvidenceAnalysis,
 } from '../../../../../../packages/api-contracts/src/client/clinical-api/index.js';
 import type {
   ChatCompletenessItem,
   ChatTurnRequest,
   DataClassification,
+  RagQueryInternalRequest,
+  RagQueryInternalResponse,
 } from '../../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import { zChatTurnResponseRefinado } from '../../../../../../packages/api-contracts/src/zod/rag-orchestrator/refinamientos.gen.js';
 import type { Clock } from '../../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../../infrastructure/ids.js';
-import { FalloDePersistenciaError } from '../analysis-completion.js';
+import {
+  FalloDePersistenciaError,
+  RespuestaInternaInvalidaError,
+  topRelevanceScorePersistible,
+} from '../analysis-completion.js';
+import { armarRegistro, type RegistroDeAnalisis } from '../analysis-record.js';
+import { aEvidenceAnalysis } from '../evidence-analysis.mapper.js';
 import { construirContextoDelChat } from '../clinical-context.builder.js';
-import { clasificacionDelPaciente } from '../regla-proveedor.js';
+import { clasificacionDelPaciente, proveedorPermitido } from '../regla-proveedor.js';
 import type { CasoClinico, CasoRepository } from '../evidence-analysis.repository.js';
 import { calcularDeadline } from '../evidence-analysis.service.js';
 import {
+  PROVEEDOR_NO_PERMITIDO,
   RESPUESTA_INTERNA_INVALIDA,
   esHiloDesconocido,
   mapearFalloRagDeChat,
 } from '../rag-failure.js';
 import { llamarConPlazo } from '../rag-plazo.js';
 import type {
+  AnalysisBasisBuilder,
   CatalogVersionProvider,
   ChatTurnPort,
   ChecklistDelChat,
   ContextDeidentifier,
   ContextoPermitido,
+  MapaDeDataRefs,
   RespuestaDeFallo,
   RespuestaDeTurnoRag,
   SalidaDeDesidentificacion,
@@ -39,8 +52,11 @@ import type {
 } from './conversation.repository.js';
 import { construirHechosDelCaso, type HechosDelCaso } from './hechos-del-caso.js';
 import {
+  analisisActivo,
   construirRehidratacion,
+  creoElAnalisis,
   derivarEstadoDelTurno,
+  estadoDelSeguimiento,
   enlacesDelTurno,
   etiquetasDeFaltantes,
   etiquetasDeHechosUsados,
@@ -70,6 +86,10 @@ export interface ConfiguracionDeLaConversacion {
   ragTimeoutMs: number;
   /** `CHAT_REHYDRATE_TURNS` (RN-22): turnos que se reenvían al rehidratar un hilo desconocido. */
   chatRehydrateTurns: number;
+  /** `ANALYSIS_MAX_OPTIONS` (RN-22): tope de opciones que declara la Base del análisis del turno de evidencia. */
+  maxOpciones: number;
+  /** `AI_DISCLAIMER_TEXT` (RN-19): aviso del `EvidenceAnalysis` que se responde. */
+  aiDisclaimerText: string;
 }
 
 export interface DependenciasDeLaConversacion {
@@ -78,6 +98,10 @@ export interface DependenciasDeLaConversacion {
   checklist: ChecklistDelChat;
   desidentificador: ContextDeidentifier;
   rag: ChatTurnPort;
+  /** Base del análisis (FR-27) del turno de evidencia: la misma del gateway. */
+  base: AnalysisBasisBuilder;
+  /** UUID de los `AIAnalysisRecord` del chat; el mismo generador del gateway. */
+  idsDeAnalisis: GeneradorDeIds;
   catalogo: CatalogVersionProvider;
   reloj: Clock;
   /** UUID de las conversaciones, de sus turnos y de su hilo (`thread_id`): tres generadores distintos. */
@@ -89,6 +113,7 @@ export interface DependenciasDeLaConversacion {
 
 export interface SolicitudDeTurno {
   traceId: string;
+  userId: string;
   conversationId: string;
   peticion: PeticionDeTurno;
 }
@@ -103,18 +128,15 @@ export interface ConversationService {
 }
 
 /**
- * Estado de un turno ya persistido al leer la conversación: el resultado de evidencia no se persiste hasta L1D-322, así
- * que `status` y `topRelevanceScore` salen de la intención de la fila (contrato actual, fijado por un test).
- */
-const estadoAlLeer = (turno: TurnoDeConversacion): EstadoDelTurno =>
-  derivarEstadoDelTurno(turno.intent, undefined);
-
-/**
  * `ConversationTurn` de la respuesta, construido desde lo persistido: lo que el oncólogo ve es lo que quedó registrado
- * (RN-06). `status` y `topRelevanceScore` los deriva Backend 1 (nunca los recibe); al leer una conversación salen de la
- * intención de la fila, porque el resultado de evidencia del turno no se persiste hasta L1D-322.
+ * (RN-06). `status` y `topRelevanceScore` los deriva Backend 1 (nunca los recibe): el turno de evidencia los toma del
+ * registro del análisis; el de seguimiento, de `ultimaEvidencia`; el resto, de su intención.
  */
-function aConversationTurn(turno: TurnoDeConversacion, estado: EstadoDelTurno): ConversationTurn {
+function aConversationTurn(
+  turno: TurnoDeConversacion,
+  estado: EstadoDelTurno,
+  evidenceAnalysis?: EvidenceAnalysis,
+): ConversationTurn {
   return {
     id: turno.id,
     turnNumber: turno.turnNumber,
@@ -128,21 +150,46 @@ function aConversationTurn(turno: TurnoDeConversacion, estado: EstadoDelTurno): 
     dataLinks: turno.dataLinks,
     omittedClaims: turno.omittedClaims,
     ...(turno.analysisId !== null && { analysisId: turno.analysisId }),
+    ...(evidenceAnalysis !== undefined && { evidenceAnalysis }),
     notices: turno.notices,
     dataUsed: turno.dataUsed,
     dataMissing: turno.dataMissing,
   };
 }
 
+/** Un turno ya persistido al leer la conversación: el que creó el análisis trae el suyo; el de seguimiento, no. */
+function leerTurno(
+  turno: TurnoDeConversacion,
+  turnos: readonly TurnoDeConversacion[],
+  registros: ReadonlyMap<string, RegistroDeAnalisis>,
+  disclaimer: string,
+): ConversationTurn {
+  const registro = turno.analysisId === null ? undefined : registros.get(turno.analysisId);
+  if (registro !== undefined && creoElAnalisis(turnos, turno)) {
+    const estado: EstadoDelTurno = {
+      status: registro.status === 'sin_evidencia' ? 'sin_evidencia' : 'respondido',
+      topRelevanceScore: registro.topRelevanceScore,
+    };
+    return aConversationTurn(turno, estado, aEvidenceAnalysis(registro, disclaimer));
+  }
+  const estado =
+    turno.analysisId === null
+      ? derivarEstadoDelTurno(turno.intent, undefined)
+      : estadoDelSeguimiento(turno.structuredState);
+  return aConversationTurn(turno, estado);
+}
+
 function aConversation(
   conversacion: Conversacion,
   turnos: readonly TurnoDeConversacion[],
+  registros: ReadonlyMap<string, RegistroDeAnalisis>,
+  disclaimer: string,
 ): Conversation {
   return {
     conversationId: conversacion.id,
     patientId: conversacion.patientId,
     createdAt: conversacion.createdAt.toISOString(),
-    turns: turnos.map((turno) => aConversationTurn(turno, estadoAlLeer(turno))),
+    turns: turnos.map((turno) => leerTurno(turno, turnos, registros, disclaimer)),
   };
 }
 
@@ -171,7 +218,7 @@ async function abrirConversacion(
     createdBy: userId,
     createdAt: reloj.now(),
   });
-  return aConversation(conversacion, []);
+  return aConversation(conversacion, [], new Map(), dependencias.config.aiDisclaimerText);
 }
 
 async function leerConversacionConTurnos(
@@ -180,7 +227,9 @@ async function leerConversacionConTurnos(
 ): Promise<Conversation> {
   const conversacion = await leerConversacionExistente(dependencias, conversationId);
   const turnos = await dependencias.conversaciones.listarTurnos(conversationId);
-  return aConversation(conversacion, turnos);
+  const ids = [...new Set(turnos.flatMap((t) => (t.analysisId === null ? [] : [t.analysisId])))];
+  const registros = await dependencias.conversaciones.leerRegistros(ids);
+  return aConversation(conversacion, turnos, registros, dependencias.config.aiDisclaimerText);
 }
 
 /** Lo que el turno envía a Backend 2 y lo que Backend 1 conserva de ello para derivar `dataUsed` y `dataMissing`. */
@@ -188,6 +237,8 @@ interface TurnoPreparado {
   request: ChatTurnRequest;
   hechos: HechosDelCaso;
   faltantes: readonly ChatCompletenessItem[];
+  dataRefs: MapaDeDataRefs;
+  clasificacion: DataClassification;
 }
 
 /**
@@ -239,9 +290,12 @@ async function prepararTurno(
     dataOrigin: clasificacion,
   });
   const hechos = construirHechosDelCaso(clinicalContext, dataRefs);
+  const activo = analisisActivo(previos);
   return {
     hechos,
     faltantes: items,
+    dataRefs,
+    clasificacion,
     request: {
       threadId: conversacion.threadId,
       pseudoPatientId: clinicalContext.pseudoPatientId,
@@ -252,6 +306,8 @@ async function prepararTurno(
       clinicalContext,
       caseFacts: hechos.caseFacts,
       completeness: [...items],
+      // Solo enruta el turno en Backend 2: el id es de Backend 1, que es su único dueño (RN-10).
+      ...(activo !== null && { activeAnalysisId: activo }),
       ...rehidratacionInicial(previos),
     },
   };
@@ -285,51 +341,190 @@ async function consultarRehidratandoSiHaceFalta(
   });
 }
 
-/** El turno a persistir desde la respuesta validada; `null` si no cumple el contrato o cita un `factRef` que no se envió. */
-function armarTurno(
-  { idsDeTurnos, reloj }: Dependencias,
+/** Lo que se persiste de un turno: la fila, su estado derivado y, si el turno es de evidencia, el registro del análisis. */
+interface TurnoArmado {
+  turno: TurnoNuevo;
+  estado: EstadoDelTurno;
+  registro?: RegistroDeAnalisis;
+}
+
+/** `RagQueryInternalRequest` equivalente al turno de evidencia: lo que la Base y el registro dicen que se consultó. */
+function consultaEquivalente(
+  preparado: TurnoPreparado,
+  maxOpciones: number,
+  traceId: string,
+): RagQueryInternalRequest {
+  return {
+    traceId,
+    query: preparado.request.question,
+    sourcesSelected: { guias: true, ensayos: true, publicaciones: true },
+    dataClassification: preparado.clasificacion,
+    catalogVersion: preparado.request.catalogVersion,
+    maxOptions: maxOpciones,
+    // El chat no tiene filtros ni año mínimo: toda la evidencia vigente del corpus (igual que en Backend 2).
+    filtersApplied: {
+      historiaCompleta: false,
+      soloBiomarcadoresRelevantes: false,
+      ultimosSeisMeses: false,
+      antecedentesFamiliares: false,
+      publishedFromYear: null,
+    },
+    clinicalContext: preparado.request.clinicalContext,
+  };
+}
+
+/** El `AIAnalysisRecord` del turno de evidencia, con el contenido trazable del gateway (AC-T1.4). */
+function armarRegistroDelTurno(
+  { base, idsDeAnalisis, reloj, config }: Dependencias,
   solicitud: SolicitudDeTurno,
   preparado: TurnoPreparado,
+  caso: CasoClinico,
+  evidencia: RagQueryInternalResponse,
+): RegistroDeAnalisis {
+  if (caso.episodioId === null) throw new FalloDePersistenciaError();
+  const request = consultaEquivalente(preparado, config.maxOpciones, solicitud.traceId);
+  return armarRegistro({
+    id: idsDeAnalisis(),
+    creadoEn: reloj.now(),
+    traceId: solicitud.traceId,
+    patientId: caso.paciente.id,
+    episodeId: caso.episodioId,
+    userId: solicitud.userId,
+    questionTemplateId: null,
+    continueWithWarning: false,
+    request,
+    dataRefs: preparado.dataRefs,
+    respuesta: evidencia,
+    base: base.construir(request, evidencia, false),
+    topRelevanceScore: topRelevanceScorePersistible(evidencia),
+  });
+}
+
+type CuerpoDelChat = NonNullable<ReturnType<typeof validarCuerpoDelChat>>;
+
+/** La respuesta de Backend 2 validada y coherente con el estado de la conversación; `null` si no lo es. */
+function validarCuerpoDelChat(
   cuerpoDeRag: unknown,
-): { turno: TurnoNuevo; estado: EstadoDelTurno } | null {
+  preparado: TurnoPreparado,
+  activo: string | null,
+) {
   const validada = zChatTurnResponseRefinado.safeParse(cuerpoDeRag);
   if (!validada.success) return null;
   const cuerpo = validada.data;
   const enlaces = enlacesDelTurno(cuerpo.blocks, preparado.hechos.enlaces);
   if (!enlaces.ok) return null;
+  // Un seguimiento exige un análisis activo y no crea otro: ante lo contrario, Backend 2 respondió algo incoherente.
+  const incoherente =
+    cuerpo.subintent === 'seguimiento_evidencia' &&
+    (activo === null || cuerpo.evidenceAnalysis !== undefined);
+  return incoherente ? null : { cuerpo, enlaces: enlaces.enlaces };
+}
+
+/** El registro del análisis si el turno trae `evidenceAnalysis`; `null` si el análisis es incoherente (RN-02). */
+function registroDelTurno(
+  dependencias: Dependencias,
+  solicitud: SolicitudDeTurno,
+  preparado: TurnoPreparado,
+  caso: CasoClinico,
+  evidencia: RagQueryInternalResponse | undefined,
+): RegistroDeAnalisis | undefined | null {
+  if (evidencia === undefined) return undefined;
+  try {
+    return armarRegistroDelTurno(dependencias, solicitud, preparado, caso, evidencia);
+  } catch (error) {
+    if (error instanceof RespuestaInternaInvalidaError) return null;
+    throw error;
+  }
+}
+
+function filaDelTurno(
+  dependencias: Dependencias,
+  solicitud: SolicitudDeTurno,
+  preparado: TurnoPreparado,
+  { cuerpo, enlaces }: Pick<CuerpoDelChat, 'cuerpo'> & { enlaces: ConversationDataLink[] },
+  analysisId: string | null,
+): TurnoNuevo {
   const meta = cuerpo.evidenceAnalysis?.meta;
   return {
-    estado: derivarEstadoDelTurno(cuerpo.intent, cuerpo.evidenceAnalysis),
-    turno: {
-      id: idsDeTurnos(),
-      conversationId: solicitud.conversationId,
-      questionMasked: preparado.request.question,
-      intent: cuerpo.intent,
-      aboutTurnId: solicitud.peticion.aboutTurnId ?? null,
-      blocks: cuerpo.blocks,
-      dataLinks: enlaces.enlaces,
-      omittedClaims: cuerpo.omittedClaims,
-      notices: cuerpo.notices,
-      dataUsed: etiquetasDeHechosUsados(preparado.hechos.caseFacts),
-      dataMissing: etiquetasDeFaltantes(preparado.faltantes),
-      analysisId: null,
-      structuredState: cuerpo.structuredState,
-      llmProvider: cuerpo.llmProvider,
-      llmModel: meta?.llmModel ?? null,
-      promptVersion: meta?.promptVersion ?? null,
-      traceId: solicitud.traceId,
-      createdAt: reloj.now(),
-    },
+    id: dependencias.idsDeTurnos(),
+    conversationId: solicitud.conversationId,
+    questionMasked: preparado.request.question,
+    intent: cuerpo.intent,
+    aboutTurnId: solicitud.peticion.aboutTurnId ?? null,
+    blocks: cuerpo.blocks,
+    dataLinks: enlaces,
+    omittedClaims: cuerpo.omittedClaims,
+    notices: cuerpo.notices,
+    dataUsed: etiquetasDeHechosUsados(preparado.hechos.caseFacts),
+    dataMissing: etiquetasDeFaltantes(preparado.faltantes),
+    analysisId,
+    structuredState: cuerpo.structuredState,
+    llmProvider: cuerpo.llmProvider,
+    llmModel: meta?.llmModel ?? null,
+    promptVersion: meta?.promptVersion ?? null,
+    traceId: solicitud.traceId,
+    createdAt: dependencias.reloj.now(),
   };
 }
 
-/** RN-06: el turno se persiste ANTES de responder y la respuesta sale de la fila leída, nunca de lo armado en memoria. */
+/**
+ * El turno a persistir desde la respuesta de Backend 2; `null` si no cumple el contrato, cita un `factRef` que no se envió
+ * o es incoherente, o el fallo ya traducido (proveedor no permitido, RN-12).
+ */
+function armarTurno(
+  dependencias: Dependencias,
+  solicitud: SolicitudDeTurno,
+  preparado: TurnoPreparado,
+  caso: CasoClinico,
+  previos: readonly TurnoDeConversacion[],
+  cuerpoDeRag: unknown,
+): TurnoArmado | RespuestaDeFallo | null {
+  const activo = analisisActivo(previos);
+  const validado = validarCuerpoDelChat(cuerpoDeRag, preparado, activo);
+  if (validado === null) return null;
+  const evidencia = validado.cuerpo.evidenceAnalysis;
+  if (
+    evidencia !== undefined &&
+    !proveedorPermitido(preparado.clasificacion, evidencia.meta.llmProvider)
+  ) {
+    return PROVEEDOR_NO_PERMITIDO;
+  }
+  const registro = registroDelTurno(dependencias, solicitud, preparado, caso, evidencia);
+  if (registro === null) return null;
+  const esSeguimiento = validado.cuerpo.subintent === 'seguimiento_evidencia';
+  const estado = esSeguimiento
+    ? estadoDelSeguimiento(validado.cuerpo.structuredState)
+    : derivarEstadoDelTurno(validado.cuerpo.intent, evidencia);
+  const analysisId = registro?.id ?? (esSeguimiento ? activo : null);
+  return {
+    estado,
+    ...(registro !== undefined && { registro }),
+    turno: filaDelTurno(dependencias, solicitud, preparado, validado, analysisId),
+  };
+}
+
+/**
+ * RN-06: el turno (y, si es de evidencia, su `AIAnalysisRecord`) se persiste ANTES de responder, en una sola
+ * transacción, y la respuesta sale de las filas leídas, nunca de lo armado en memoria.
+ */
 async function persistirTurnoAntesDeResponder(
-  { conversaciones }: Dependencias,
-  turno: TurnoNuevo,
-): Promise<TurnoDeConversacion> {
+  { conversaciones, config }: Dependencias,
+  armado: TurnoArmado,
+): Promise<ConversationTurn> {
   try {
-    return await conversaciones.insertarTurno(turno);
+    if (armado.registro === undefined) {
+      const turno = await conversaciones.insertarTurno(armado.turno);
+      return aConversationTurn(turno, armado.estado);
+    }
+    const { registro, turno } = await conversaciones.insertarTurnoDeEvidencia(
+      armado.registro,
+      armado.turno,
+    );
+    return aConversationTurn(
+      turno,
+      armado.estado,
+      aEvidenceAnalysis(registro, config.aiDisclaimerText),
+    );
   } catch {
     // Sin eco del error de PostgreSQL: puede traer texto de la pregunta o de la respuesta (RN-10).
     throw new FalloDePersistenciaError();
@@ -361,10 +556,10 @@ async function crearTurno(
     previos,
   );
   if (!respuesta.ok) return { tipo: 'fallo', respuesta: mapearFalloRagDeChat(respuesta) };
-  const armado = armarTurno(dependencias, solicitud, preparado, respuesta.cuerpo);
+  const armado = armarTurno(dependencias, solicitud, preparado, caso, previos, respuesta.cuerpo);
   if (armado === null) return { tipo: 'fallo', respuesta: RESPUESTA_INTERNA_INVALIDA };
-  const turno = await persistirTurnoAntesDeResponder(dependencias, armado.turno);
-  return { tipo: 'creado', cuerpo: aConversationTurn(turno, armado.estado) };
+  if ('codigo' in armado) return { tipo: 'fallo', respuesta: armado };
+  return { tipo: 'creado', cuerpo: await persistirTurnoAntesDeResponder(dependencias, armado) };
 }
 
 /**

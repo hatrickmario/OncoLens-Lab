@@ -262,7 +262,7 @@ async function leerEpisodioVigente(leer: Leer): Promise<string | null> {
  * Columnas de `clinical.ai_analysis_record` en el orden de `parametrosDelRegistro()`. Una sola sentencia: es atómica y
  * su `COMMIT` ocurre antes de que la promesa resuelva (RN-06). `RETURNING` devuelve lo realmente persistido.
  */
-const INSERTAR_REGISTRO = `
+export const INSERTAR_REGISTRO = `
   INSERT INTO clinical.ai_analysis_record (
     id, patient_id, episode_id, requested_by, analysis_type, trace_id, query_text, question_template_id,
     query_language, response_language, sources_selected, filters_applied, synthesis, applicability,
@@ -281,7 +281,7 @@ const INSERTAR_REGISTRO = `
 const aJson = (valor: unknown): string | null => (valor === null ? null : JSON.stringify(valor));
 
 /** `node-pg` convertiría un arreglo JS en un arreglo de PostgreSQL: los jsonb viajan siempre como texto JSON. */
-function parametrosDelRegistro(r: RegistroDeAnalisis): unknown[] {
+export function parametrosDelRegistro(r: RegistroDeAnalisis): unknown[] {
   return [
     r.id,
     r.patientId,

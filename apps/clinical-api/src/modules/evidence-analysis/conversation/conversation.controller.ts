@@ -133,6 +133,11 @@ function manejadorDeTurno(
       emisor.noEncontrado(response);
       return;
     }
+    const sesion = request.sesion;
+    if (sesion === undefined) {
+      emisor.noEncontrado(response);
+      return;
+    }
     const cuerpo = conversationTurnCreateSchema.safeParse(request.body);
     if (!cuerpo.success) {
       emisor.rechazar(response, CUERPO_INVALIDO, { conversationId });
@@ -141,6 +146,7 @@ function manejadorDeTurno(
     try {
       const resultado = await service.crearTurno({
         traceId: traceIdDe(response),
+        userId: sesion.userId,
         conversationId,
         peticion: cuerpo.data,
       });

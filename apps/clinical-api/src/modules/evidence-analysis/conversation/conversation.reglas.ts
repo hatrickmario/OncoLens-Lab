@@ -7,6 +7,7 @@ import type {
   ChatIntent,
   ChatRehydration,
   RagQueryInternalResponse,
+  StructuredState,
 } from '../../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import type { TurnoDeConversacion } from './conversation.repository.js';
 import type { ClaseDeHecho, EnlaceDelHecho } from './hechos-del-caso.js';
@@ -73,6 +74,25 @@ export function derivarEstadoDelTurno(
     status: intent === 'no_clasificada' ? 'no_clasificada' : 'respondido',
     topRelevanceScore: null,
   };
+}
+
+/**
+ * Estado de un turno de seguimiento (sin `evidenceAnalysis`): el puntaje es el de `ultimaEvidencia` del estado estructurado
+ * que devolvió Backend 2; `null` (nada sobre el umbral) es `sin_evidencia`, nunca `0.0` (RN-02).
+ */
+export function estadoDelSeguimiento(estructurado: StructuredState): EstadoDelTurno {
+  const puntaje = estructurado.ultimaEvidencia?.topRelevanceScore ?? null;
+  return { status: puntaje === null ? 'sin_evidencia' : 'respondido', topRelevanceScore: puntaje };
+}
+
+/** El turno que creó el análisis es el primero de la conversación que lo referencia; los demás son seguimientos. */
+export function creoElAnalisis(
+  turnos: readonly TurnoDeConversacion[],
+  turno: TurnoDeConversacion,
+): boolean {
+  return (
+    turno.analysisId !== null && turnos.find((t) => t.analysisId === turno.analysisId) === turno
+  );
 }
 
 /** `activeAnalysisId`: el `analysisId` del turno más reciente que lo tenga; `null` si ninguno. */

@@ -138,19 +138,30 @@ function componerConversacion(
   dependencias: DependenciasDelGateway,
   casos: CasoRepository,
 ): ConversationService {
-  const { ragTimeoutMs, chatRehydrateTurns } = dependencias.config;
+  const { ragTimeoutMs, chatRehydrateTurns, analysisMaxOptions, aiDisclaimerText } =
+    dependencias.config;
   return crearConversationService({
     conversaciones: crearConversationRepository(dependencias.db, dependencias.enTransaccion),
     casos,
     checklist: dependencias.checklistDelChat,
     desidentificador: dependencias.desidentificador,
     rag: dependencias.ragChat,
+    base: crearBaseDelAnalisis({
+      etiquetaDe: dependencias.etiquetaDe,
+      maxFollowUps: dependencias.config.analysisFollowupMax,
+    }),
+    idsDeAnalisis: dependencias.idsDeAnalisis,
     catalogo: dependencias.catalogo,
     reloj: dependencias.reloj,
     idsDeConversaciones: dependencias.idsDeConversaciones,
     idsDeTurnos: dependencias.idsDeTurnosDeChat,
     idsDeHilos: dependencias.idsDeHilos,
-    config: { ragTimeoutMs, chatRehydrateTurns },
+    config: {
+      ragTimeoutMs,
+      chatRehydrateTurns,
+      maxOpciones: analysisMaxOptions,
+      aiDisclaimerText,
+    },
   });
 }
 
