@@ -572,6 +572,10 @@ export type CompletenessItem = {
      * null si y solo si status es faltante o no_aplica.
      */
     provenance: CompletenessProvenance | null;
+    /**
+     * Cómo se cumplió un ítem presente: registro (hay registros suficientes en su destino) o declaracion_de_ausencia (el catálogo declara un satisfiedBy y hay una declaración vigente, p. ej. sin_tratamiento_previo, sin fila en el destino). Ausente cuando status es faltante o no_aplica, y en los ítems que no tienen satisfiedBy.
+     */
+    resolvedBy?: 'registro' | 'declaracion_de_ausencia';
     destination: {
         entity: 'Diagnosis' | 'Biomarker' | 'ClinicalAttribute' | 'PriorTreatment';
         /**
@@ -1850,7 +1854,7 @@ export type CreateManualClinicalAttributeErrors = {
      */
     404: ErrorNoEncontrado;
     /**
-     * Cuerpo inválido, clave o valor fuera del catálogo, paciente sin tipo de cáncer o paciente egresado.
+     * Cuerpo inválido, clave o valor fuera del catálogo, paciente sin tipo de cáncer, paciente egresado, o declaración de ausencia de tratamiento (sin_tratamiento_previo) con tratamientos previos vigentes (CUERPO_INVALIDO con field = attributeKey).
      */
     422: ErrorRegistroClinicoInvalido;
     /**

@@ -1,0 +1,6 @@
+{
+  "error": "CUERPO_INVALIDO",
+  "field": "attributeKey",
+  "message": "Hay tratamientos previos registrados; no se puede declarar su ausencia.",
+  "traceId": "req_c4d5e6f7"
+}
