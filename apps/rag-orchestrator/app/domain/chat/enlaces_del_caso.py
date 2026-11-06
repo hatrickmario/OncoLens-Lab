@@ -12,6 +12,8 @@ from collections.abc import Collection, Mapping, Sequence
 from app.domain.chat.turno import HechoDelCaso, PropuestaDelTurno
 
 SEPARADOR_DE_PREMISAS = "; "
+_SIN_FECHA = (1, 0)
+"""Clave de orden de un dato sin fecha confiable: después de cualquier día conocido."""
 
 
 def filtrar_afirmaciones_sin_enlace(
@@ -64,9 +66,6 @@ def _con_refs_ordenados(
 
 def _dia_de(propuesta: PropuestaDelTurno, dias: Mapping[str, int | None]) -> tuple[int, int]:
     return min((_clave_de_dia(dias.get(r)) for r in propuesta.fact_refs), default=_SIN_FECHA)
-
-
-_SIN_FECHA = (1, 0)
 
 
 def _clave_de_dia(dia: int | None) -> tuple[int, int]:
