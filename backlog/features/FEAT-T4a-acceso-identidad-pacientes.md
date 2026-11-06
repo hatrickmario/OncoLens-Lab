@@ -463,6 +463,8 @@ que captura el payload (AC-1 a AC-4, AC-6, AC-7) y Pytest del constructor de pro
 
 `FEAT-T4a` · Sprint 6 · Estimación **3** · HU-03 · RN-12 (dueña), SEG-05 · AC-06.1 (`503`) · ↪ US-052, US-055 · 🔗 Medido en: US-072 (G-8: 0 datos reales en la nube)
 
+> **Decidido (usuario, 2026-11-06):** se mantiene en el S6 tal cual `[S6 resp. 8]` y aplica también a la ruta del chat: `POST /platform/conversations/{id}/turns` y `POST /chat/turn` (US-258, US-259) entran en la verificación por código de ambos backends; con datos reales y el LLM local caído, el turno responde `503` y ningún adapter de nube registra llamadas. Quitar la etiqueta `needs-refinement` en Linear (obsoleta).
+
 ## Story
 Como responsable de la privacidad del piloto, quiero que la regla "datos reales solo
 con modelos locales" esté aplicada en el código de ambos backends y probada, para que

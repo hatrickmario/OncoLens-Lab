@@ -377,7 +377,9 @@ ampliados. El contrato OpenAPI cambia de forma compatible (`meta.retrievalParams
 
 > Linear: [L1D-304](https://linear.app/l1der-lab-mjbc/issue/L1D-304)
 
-`FEAT-06b` · `si-hay-capacidad` *(nueva, usuario, 2026-10-30, desde la Q-1 de L1D-109)* · Estimación **2** · — (ADR, investigación) · FR-09 (S3: *sparse*), IA-03, RN-03, RN-05, RN-22 · ADR-45 (brazos A2 y A2b, P1 preinscripción) · Dueño: Ingeniería · ↪ US-112 (fusión implementada), US-133 (datos de la medición) · 🔗 Bloquea: poner `RETRIEVAL_MODE = hibrida` por defecto (no bloquea el MVP ni el G-Demo) · **Recorrido principal:** no
+`FEAT-06b` · Post-MVP *(usuario, 2026-11-06, `[S6 resp. 4]`; antes `si-hay-capacidad`, nueva, usuario, 2026-10-30, desde la Q-1 de L1D-109)* · Estimación **2** · — (ADR, investigación) · FR-09 (S3: *sparse*), IA-03, RN-03, RN-05, RN-22 · ADR-45 (brazos A2 y A2b, P1 preinscripción) · Dueño: Ingeniería · ↪ US-112 (fusión implementada), US-133 (datos de la medición) · 🔗 Bloquea: poner `RETRIEVAL_MODE = hibrida` por defecto (no bloquea el MVP ni el G-Demo) · **Recorrido principal:** no
+
+> **Decidido (usuario, 2026-11-06):** pasa a **Post-MVP**: del bloque de recuperación del S6 solo entran la corrida nocturna de L1D-119 y R4 (US-270); R1, R2, R3 y L1D-304 salen del sprint `[S6 resp. 4]`.
 
 > **Decidido (usuario, 2026-10-30, Q-1 de L1D-109):** en el S4 se mantiene el **fallo cerrado** (`503 RETRIEVAL_UNAVAILABLE`) cuando la pregunta no produce ningún término con peso, sin degradar en silencio a `dense`; el modo `hibrida` no es el predeterminado y solo lo usa la medición de US-133. Esta historia investiga la pregunta de fondo antes de cambiar ese comportamiento. **Linear: L1D-304.**
 

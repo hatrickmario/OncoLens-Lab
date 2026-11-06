@@ -2,7 +2,9 @@
 
 > Linear: pendiente (borrador del 2026-10-16; **no publicado** en Linear ni en ningún sistema externo; el humano decide si se aprueba, se ajusta o se descarta). Los IDs de este archivo (`FEAT-T5e`, `US-226`…`US-230`) son provisionales hasta esa aprobación y **no reutilizan** ningún ID publicado (el último publicado es US-225 / L1D-275).
 
-**Talla:** L · **Sprint:** propuesta 2 (junto a US-072/US-073; US-229 puede cerrar en S3 según la agenda del oncólogo, SUP-4) · **Capacidad:** T-5 (AC-T5.3, AC-T5.4) · **Recorrido principal:** sí (la hipótesis 3, "opciones más aplicables", depende de recuperar la evidencia correcta)
+> **Decidido (usuario, 2026-11-06):** pasa a **Post-MVP**, con las recomendaciones **R1** (excluir las listas de referencias en la ingesta), **R2** (subir `RERANKER_MAX_PAIRS` a 16) y **R3** (evaluar la recuperación híbrida sobre el caso de la Demo 5) de [`S5-cierre.md`](../sprints/S5-cierre.md) §9, que se apoyarían en este protocolo. Del bloque de recuperación del S6 solo entran la corrida nocturna de L1D-119 y **R4** (US-270, FEAT-06a) `[S6 resp. 4]`. El borrador sigue sin publicar; sus IDs no cambian.
+
+**Talla:** L · **Sprint:** Post-MVP *(usuario, 2026-11-06, `[S6 resp. 4]`; antes propuesta 2, junto a US-072/US-073; US-229 podía cerrar en S3 según la agenda del oncólogo, SUP-4)* · **Capacidad:** T-5 (AC-T5.3, AC-T5.4) · **Recorrido principal:** sí (la hipótesis 3, "opciones más aplicables", depende de recuperar la evidencia correcta)
 **Requisitos:** FR-20 (OL-06) · FR-09 · IA-02 · G-3 y M-06.1 (recall@10 y MRR contra metas iniciales) · TBD-02 (DEC-07) · RN-02, RN-12, RN-13, RN-14, RN-21, RN-22, RN-27
 **Evidencia:** [→ docs/architecture/adr/ADR-45-mejora-recuperacion-ol06.md], [→ docs/architecture/adr/ADR-39-modelos-locales.md (rama `feat/l1d-102-adr39-embeddings-reranker-nli`)], [→ PRD §2.1 G-3], [→ PRD §18.3.6 M-06.1], [→ PRD §16 TBD-02], [→ readme §6 OL-06]
 **Dependencias:** ↪ US-072 (*runner* y reporte), US-073 (baseline y umbral), US-012 (ADR-39 fase A: dataset `adr39-mini`) · 🔗 Informa a: US-017 · DEC-07 (metas), US-112 y US-113 (híbrida y expansión: se re-estiman con el resultado), US-133 (recuperación híbrida sin retroceso), ADR-41 · ⛔ Tiempo del oncólogo asesor (SUP-4) para US-227, US-228 y US-229
@@ -26,7 +28,7 @@
 
 > Linear: pendiente
 
-`FEAT-T5e` · Sprint propuesto 2 · Estimación **5** · — (técnica; OL-06) · FR-20, IA-10 · AC-T5.3, AC-T5.4 · M-06.1 · ↪ US-072, FX-T5e-a · ⛔ ADR-45 aceptado (protocolo P1–P12) · 🔗 Mide a: FEAT-06a, FEAT-06b · **Recorrido principal:** sí
+`FEAT-T5e` · Post-MVP *(`[S6 resp. 4]`; antes propuesto 2)* · Estimación **5** · — (técnica; OL-06) · FR-20, IA-10 · AC-T5.3, AC-T5.4 · M-06.1 · ↪ US-072, FX-T5e-a · ⛔ ADR-45 aceptado (protocolo P1–P12) · 🔗 Mide a: FEAT-06a, FEAT-06b · **Recorrido principal:** sí
 
 ## Story
 Como responsable técnico, quiero comparar variantes de recuperación contra una referencia con intervalos de confianza pareados y una partición que no se puede tocar a escondidas, para no adoptar mejoras que son ruido ni ajustar sobre la prueba.
@@ -55,7 +57,7 @@ Decidir qué variante gana (US-230); ampliar el dataset (US-228, US-229); recali
 
 > Linear: pendiente
 
-`FEAT-T5e` · Sprint propuesto 2 · Estimación **3** · — (técnica y clínica) · FR-20 · AC-T5.3 · ↪ US-012, FX-T5e-a · 🔗 Produce para: US-230 y US-017 · **Recorrido principal:** sí · Dueño clínico: oncólogo asesor (SUP-4)
+`FEAT-T5e` · Post-MVP *(`[S6 resp. 4]`; antes propuesto 2)* · Estimación **3** · — (técnica y clínica) · FR-20 · AC-T5.3 · ↪ US-012, FX-T5e-a · 🔗 Produce para: US-230 y US-017 · **Recorrido principal:** sí · Dueño clínico: oncólogo asesor (SUP-4)
 
 ## Story
 Como responsable técnico, quiero saber qué parte de los fallos de recuperación se debe a la etiqueta del golden y no al recuperador, para no ajustar el sistema a un error de medición.
@@ -84,7 +86,7 @@ Corregir el golden; cambiar el sistema.
 
 > Linear: pendiente
 
-`FEAT-T5e` · Sprint propuesto 2 · Estimación **5** · — (datos; OL-06) · FR-20 · AC-T5.3 · ↪ US-072, ADR-36 (fuentes) · 🔗 Alimenta: US-230 como desarrollo ampliado · **Recorrido principal:** sí · Dueño clínico: oncólogo asesor (SUP-4)
+`FEAT-T5e` · Post-MVP *(`[S6 resp. 4]`; antes propuesto 2)* · Estimación **5** · — (datos; OL-06) · FR-20 · AC-T5.3 · ↪ US-072, ADR-36 (fuentes) · 🔗 Alimenta: US-230 como desarrollo ampliado · **Recorrido principal:** sí · Dueño clínico: oncólogo asesor (SUP-4)
 
 ## Story
 Como responsable técnico, quiero un lote nuevo de preguntas independientes, con documentos que no están en el corpus actual y revisado por el oncólogo, para tener potencia estadística y comprobar que lo aprendido en desarrollo generaliza.
@@ -115,7 +117,7 @@ Preguntas de otros tipos de cáncer; datos de pacientes reales.
 
 > Linear: pendiente
 
-`FEAT-T5e` · Sprint propuesto 2 o 3 · Estimación **5** · — (datos; OL-06) · FR-20 · AC-T5.3 · ↪ US-228, US-226 · 🔗 Alimenta: US-230 (prueba) y US-017 · DEC-07 · **Recorrido principal:** sí · Dueño clínico: oncólogo asesor (SUP-4)
+`FEAT-T5e` · Post-MVP *(`[S6 resp. 4]`; antes propuesto 2 o 3)* · Estimación **5** · — (datos; OL-06) · FR-20 · AC-T5.3 · ↪ US-228, US-226 · 🔗 Alimenta: US-230 (prueba) y US-017 · DEC-07 · **Recorrido principal:** sí · Dueño clínico: oncólogo asesor (SUP-4)
 
 ## Story
 Como responsable técnico, quiero un conjunto de prueba que nadie que ajuste el sistema haya visto, con suficientes preguntas para afirmar una mejora o una meta con un intervalo útil, para cerrar la decisión de ADR-45 sin sobreajuste.
@@ -142,7 +144,7 @@ Usar el lote B para elegir hiperparámetros.
 
 > Linear: pendiente
 
-`FEAT-T5e` · Sprint propuesto 3 (tras US-228 y US-229) · Estimación **5** · — (técnica; OL-06) · FR-20, FR-09, IA-02 · AC-T5.3, AC-T5.4 · M-06.1 · ↪ US-226, US-227, US-228, US-229, US-055, US-058, US-117 (*sparse* poblado) · ⛔ ADR-45 aceptado · 🔗 Produce para: US-112, US-113, US-133, US-017 · DEC-07 · **Recorrido principal:** sí
+`FEAT-T5e` · Post-MVP *(`[S6 resp. 4]`; antes propuesto 3, tras US-228 y US-229)* · Estimación **5** · — (técnica; OL-06) · FR-20, FR-09, IA-02 · AC-T5.3, AC-T5.4 · M-06.1 · ↪ US-226, US-227, US-228, US-229, US-055, US-058, US-117 (*sparse* poblado) · ⛔ ADR-45 aceptado · 🔗 Produce para: US-112, US-113, US-133, US-017 · DEC-07 · **Recorrido principal:** sí
 
 ## Story
 Como responsable técnico, quiero probar de forma preinscrita las mejoras candidatas de recuperación y adoptar solo las que superan el ruido en datos que nadie ajustó, para subir el acierto sin sobreajustar.

@@ -255,6 +255,8 @@ Nota: no se probó ninguna de estas herramientas.
 | L1D-285 (US-213b) | **Cerrar**, pero su código ya está mergeado (#199, #204, #211) y quedan dos tareas de deuda sin destino en su change (5.1 menores del `design-principles-reviewer`; 5.3 `fullName`, ya trasladada a US-222): darles destino y cerrar | Sin cambios (`In Review`, Sprint 5) |
 | L1D-286 (braces, 2026-11-20) | **Decidir en el refinamiento**, sin puntos | Sin cambios |
 
+> **Decidido (usuario, 2026-11-06):** L1D-286 pasa a **Post-MVP** sin cambios; se mantiene la excepción de *braces* vigente (L1D-267) `[S6 resp. 14]`. Mover su hito en Linear lo hace la sesión principal, con confirmación.
+
 ### Resueltas después por el usuario (2026-11-06)
 
 - **L1D-268 (US-218, las 10 preguntas de seguimiento):** cerrada (**`Done`**), por decisión del usuario, al quedar sustituida por el chatbot. Sus tareas humanas (H-1, H-2, H-5) y la corrida nocturna D5-13 **no se ejecutaron**. Aviso: su AC-6 (`403` por opt-out) **nunca se implementó**; ese hueco lo cubre L1D-213, que se mantiene en el S6.

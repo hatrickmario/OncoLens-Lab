@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hilo con tarjetas</title><meta name="description" content="Variante B (elegida) del asistente conversacional: hilo a ancho completo con tarjetas estructuradas y un chip de intención por turno.">
+<style>
+/* Tokens del sistema de diseño (docs/ux/sistema-de-diseno.md §1) + 2 propuestos en S6 (clinical, evidence) */
+:root{
+  --color-chrome:#13233A; --color-chrome-muted:#C9D4E5;
+  --color-bg:#EDF0F4; --color-surface:#FFFFFF; --color-surface-alt:#F3F5F8;
+  --color-text:#172133; --color-text-muted:#44506A;
+  --color-primary:#1F4FB8; --color-border:#C4CDDB; --color-control-border:#7C8696;
+  --co-fg:#17592F; --co-bg:#E4F1E8; --pa-fg:#774500; --pa-bg:#FBEFD6;
+  --nc-fg:#8E1F18; --nc-bg:#F9E3E1; --de-fg:#3A4553; --de-bg:#ECEEF1;
+  --warn-fg:#5E3A00; --warn-bg:#FFF4E0; --warn-border:#E8C77A;
+  /* Propuestos S6 (a validar por accesibilidad): información clínica vs evidencia científica */
+  --color-clinical:#0E5A5F; --color-clinical-bg:#E1F1F1; --color-clinical-border:#7FB9BC; /* 6,8:1 */
+  --color-evidence:#1F4FB8; --color-evidence-bg:#E8EEFA; --color-evidence-border:#9DB3E3; /* 6,3:1 */
+  --r-tag:4px; --r-ctl:6px; --r-card:8px;
+  --font: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--color-bg);color:var(--color-text);font:400 15px/1.5 var(--font)}
+h1,h2,h3,h4{line-height:1.3;margin:0}
+p{margin:0 0 8px}
+a{color:var(--color-primary)}
+:focus-visible{outline:3px solid var(--color-primary);outline-offset:2px}
+.on-chrome :focus-visible, .ai :focus-visible{outline-color:#FFFFFF}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.skip{position:absolute;left:-999px;top:0;background:#fff;padding:10px;z-index:10}
+.skip:focus{left:8px}
+button,.btn{font:600 14px/1.2 var(--font);min-height:44px;padding:10px 16px;border-radius:var(--r-ctl);cursor:pointer;border:1px solid var(--color-control-border);background:var(--color-surface);color:var(--color-text);display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+.btn-primary{background:var(--color-primary);border-color:var(--color-primary);color:#fff}
+.btn-ghost{border-color:transparent;background:transparent;color:var(--color-primary)}
+button[disabled]{opacity:.55;cursor:not-allowed}
+
+/* Banda de la maqueta (no es parte del producto) */
+.mock-nav{background:#FFFBEA;border-bottom:2px dashed #B98A00;padding:6px 16px;font-size:13px;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
+.mock-nav strong{font-weight:700}
+.mock-nav a{min-height:32px;display:inline-flex;align-items:center}
+
+/* Cabecera navy */
+.app-header{background:var(--color-chrome);color:#fff;min-height:56px;display:flex;align-items:center;gap:16px;padding:0 16px;flex-wrap:wrap}
+.app-header .brand{font-weight:700;font-size:18px;color:#fff;text-decoration:none}
+.app-header nav a{color:#fff;text-decoration:none;font-weight:500;padding:12px 4px;display:inline-block}
+.app-header .academic{margin-left:auto;font-size:12px;border:1px solid var(--color-chrome-muted);color:var(--color-chrome-muted);border-radius:var(--r-tag);padding:2px 8px}
+.app-header .logout{background:transparent;color:#fff;border-color:var(--color-chrome-muted)}
+
+/* Barra del paciente */
+.patient-bar{background:var(--color-surface);border-bottom:1px solid var(--color-border);padding:10px 16px 0}
+.patient-bar .row{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px}
+.patient-bar h1{font-size:20px;font-weight:700}
+.patient-bar .meta{color:var(--color-text-muted);font-size:14px}
+.tag{display:inline-block;font-size:12px;font-weight:600;border-radius:var(--r-tag);padding:2px 8px;border:1px solid var(--color-border);background:var(--color-surface-alt)}
+.tabs{display:flex;gap:4px;margin-top:8px;overflow-x:auto}
+.tabs a{padding:10px 12px;min-height:44px;display:inline-flex;align-items:center;text-decoration:none;color:var(--color-text-muted);border-bottom:3px solid transparent;white-space:nowrap;font-weight:500}
+.tabs a[aria-current="page"]{color:var(--color-text);border-bottom-color:var(--color-primary);font-weight:700}
+
+/* Estados por criterio (símbolo + texto + color) */
+.st{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:600;border-radius:var(--r-tag);padding:2px 8px;white-space:nowrap}
+.st.co{color:var(--co-fg);background:var(--co-bg)}
+.st.pa{color:var(--pa-fg);background:var(--pa-bg)}
+.st.nc{color:var(--nc-fg);background:var(--nc-bg)}
+.st.de{color:var(--de-fg);background:var(--de-bg)}
+.st.wa{color:var(--warn-fg);background:var(--warn-bg);border:1px solid var(--warn-border)}
+
+/* Origen de la información: clínica vs evidencia */
+.src-label{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:var(--r-tag);padding:2px 8px}
+.src-label.clin{color:var(--color-clinical);background:var(--color-clinical-bg)}
+.src-label.evid{color:var(--color-evidence);background:var(--color-evidence-bg)}
+.block-clin{border-left:4px solid var(--color-clinical-border);padding-left:12px}
+.block-evid{border-left:4px solid var(--color-evidence-border);padding-left:12px}
+
+/* Enlace a dato del paciente (◆) — details en línea con su procedencia */
+details.pd{display:inline;position:relative}
+details.pd>summary{display:inline-flex;align-items:center;gap:4px;list-style:none;cursor:pointer;font-size:13px;font-weight:600;color:var(--color-clinical);background:var(--color-clinical-bg);border:1px solid var(--color-clinical-border);border-radius:var(--r-tag);padding:1px 6px;margin:0 2px;min-height:24px}
+details.pd>summary::-webkit-details-marker{display:none}
+details.pd[open]>summary{background:var(--color-clinical);color:#fff}
+.pd-pop{display:block;margin:6px 0;padding:8px 10px;background:var(--color-surface);border:1px solid var(--color-clinical-border);border-radius:var(--r-ctl);font-size:13px;color:var(--color-text)}
+.pd-pop .prov{color:var(--color-text-muted)}
+
+/* Cita a evidencia [E1] */
+.cite{display:inline-flex;align-items:center;font-size:12px;font-weight:700;color:var(--color-evidence);background:var(--color-evidence-bg);border:1px solid var(--color-evidence-border);border-radius:var(--r-tag);padding:0 6px;margin:0 2px;text-decoration:none;min-height:22px}
+a.cite:hover{text-decoration:underline}
+
+/* Turnos */
+.turn{margin:0 0 16px}
+.turn-user{display:flex;justify-content:flex-end}
+.bubble-user{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--r-card) var(--r-card) 2px var(--r-card);padding:10px 14px;max-width:min(560px,92%)}
+.bubble-user .who{font-size:12px;color:var(--color-text-muted);font-weight:600;display:block}
+.turn-ai{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--r-card);overflow:hidden}
+.turn-ai .hd{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--color-border);background:var(--color-surface-alt)}
+.turn-ai .hd h3{font-size:15px;font-weight:700}
+.turn-ai .hd .when{font-size:12px;color:var(--color-text-muted);margin-left:auto}
+.turn-ai .bd{padding:12px 14px}
+.turn-ai h4{font-size:14px;font-weight:700;margin:12px 0 6px}
+.turn-ai h4:first-child{margin-top:0}
+.ai{background:var(--color-chrome);color:#fff;font-size:12.5px;padding:8px 14px;display:flex;flex-wrap:wrap;gap:4px 12px}
+.ai strong{font-weight:600}
+.ai .acad{color:var(--color-chrome-muted)}
+.intent{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;border-radius:999px;padding:2px 10px;border:1px solid}
+.intent.caso{color:var(--color-clinical);background:var(--color-clinical-bg);border-color:var(--color-clinical-border)}
+.intent.falt{color:var(--de-fg);background:var(--de-bg);border-color:var(--color-control-border)}
+.intent.evid{color:var(--color-evidence);background:var(--color-evidence-bg);border-color:var(--color-evidence-border)}
+
+/* Afirmaciones */
+ul.claims{list-style:none;margin:0;padding:0}
+ul.claims>li{padding:6px 0;border-bottom:1px dashed var(--color-border)}
+ul.claims>li:last-child{border-bottom:0}
+.kind{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-right:6px;border-radius:var(--r-tag);padding:1px 6px}
+.kind.doc{color:var(--color-clinical);background:var(--color-clinical-bg)}
+.kind.int{color:var(--de-fg);background:var(--de-bg);border:1px dashed var(--color-control-border)}
+.muted{color:var(--color-text-muted)}
+.small{font-size:13px}
+.xs{font-size:12px}
+
+/* Avisos que no bloquean (RN-26) y bloqueos legales */
+.notice{border:1px solid var(--warn-border);background:var(--warn-bg);color:var(--warn-fg);border-radius:var(--r-ctl);padding:10px 12px;font-size:14px;margin:8px 0}
+.notice a{color:var(--warn-fg);font-weight:700}
+.notice.neutral{border-color:var(--color-border);background:var(--color-surface-alt);color:var(--color-text)}
+.notice.neutral a{color:var(--color-primary)}
+.notice.flag{border-left:4px solid var(--pa-fg)}
+.blocked{border:1px solid var(--color-control-border);background:var(--de-bg);color:var(--de-fg);border-radius:var(--r-ctl);padding:12px}
+.error{border:1px solid #D9A19C;background:var(--nc-bg);color:var(--nc-fg);border-radius:var(--r-ctl);padding:12px}
+
+/* Progreso, nunca texto parcial (TBD-08) */
+ol.steps{list-style:none;margin:6px 0 0;padding:0;font-size:14px}
+ol.steps li{padding:3px 0;display:flex;gap:8px;align-items:center}
+ol.steps .done{color:var(--co-fg)}
+ol.steps .now{font-weight:700}
+ol.steps .todo{color:var(--color-text-muted)}
+
+/* Tabla de aplicabilidad */
+.table-wrap{overflow-x:auto;border:1px solid var(--color-border);border-radius:var(--r-ctl);margin:8px 0}
+table.app{border-collapse:collapse;width:100%;min-width:520px;font-size:14px}
+table.app caption{text-align:left;padding:8px 10px;font-size:13px;color:var(--color-text-muted);caption-side:top}
+table.app th,table.app td{border-top:1px solid var(--color-border);padding:8px 10px;text-align:left;vertical-align:top}
+table.app thead th{background:var(--color-surface-alt);font-size:13px}
+table.app tbody th{font-weight:600}
+table.app tbody th .pv{display:block;font-weight:400;font-size:12.5px;color:var(--color-clinical)}
+table.app tr.sum th,table.app tr.sum td{background:var(--color-surface-alt);font-weight:700}
+
+/* Opciones y fuentes */
+.order{font-size:13px;background:var(--color-surface-alt);border:1px solid var(--color-border);border-radius:var(--r-ctl);padding:8px 10px;margin:8px 0}
+.opt{border:1px solid var(--color-border);border-radius:var(--r-card);padding:10px 12px;margin:8px 0}
+.opt h5{font-size:15px;margin:0 0 4px}
+.opt .counts{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}
+.rel{font-size:12px;color:var(--color-text-muted);margin-top:6px}
+details.ref{border:1px solid var(--color-evidence-border);border-radius:var(--r-ctl);margin:6px 0;background:var(--color-surface)}
+details.ref>summary{cursor:pointer;padding:8px 10px;min-height:44px;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;font-size:14px}
+details.ref>summary .tit{font-weight:600}
+details.ref .ref-body{padding:0 10px 10px;font-size:13px}
+details.ref:target{outline:3px solid var(--color-primary)}
+dl.meta{display:grid;grid-template-columns:max-content 1fr;gap:2px 10px;margin:6px 0}
+dl.meta dt{color:var(--color-text-muted)}
+dl.meta dd{margin:0}
+blockquote.frag{margin:8px 0;padding:8px 10px;background:var(--color-surface-alt);border-left:3px solid var(--color-evidence);font-size:13px}
+blockquote.frag footer{font-size:12px;color:var(--color-text-muted);margin-top:4px}
+details.fold{border:1px solid var(--color-border);border-radius:var(--r-ctl);margin:8px 0}
+details.fold>summary{cursor:pointer;padding:8px 10px;min-height:44px;display:flex;align-items:center;font-weight:600;font-size:14px}
+details.fold>div{padding:0 10px 10px;font-size:14px}
+
+/* Lista de faltantes */
+ul.missing{list-style:none;margin:0;padding:0}
+ul.missing>li{border:1px solid var(--color-border);border-radius:var(--r-ctl);padding:10px 12px;margin:8px 0}
+ul.missing .mhd{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+ul.missing .mhd strong{font-size:15px}
+.why{margin-top:6px;font-size:13.5px}
+.why.omit{color:var(--color-text-muted);font-style:italic}
+
+/* Composer */
+.composer{background:var(--color-surface);border-top:1px solid var(--color-border);padding:10px 14px}
+.composer label{font-weight:600;font-size:14px;display:block;margin-bottom:4px}
+.composer .row{display:flex;gap:8px;align-items:flex-end}
+.composer textarea{flex:1;min-height:44px;font:15px/1.4 var(--font);padding:10px;border:1px solid var(--color-control-border);border-radius:var(--r-ctl);resize:vertical;width:100%}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.chips button{min-height:36px;padding:6px 10px;font-weight:500;font-size:13px;border-radius:999px}
+.hint{font-size:12.5px;color:var(--color-text-muted);margin-top:4px}
+
+.section-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-text-muted);margin:16px 0 8px}
+.state-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.state-grid .turn-ai{margin:0}
+:target{scroll-margin-top:16px}
+@media (prefers-reduced-motion: no-preference){ .hl:target{animation:hl 2s ease-out} @keyframes hl{from{background:#FFF1B8}to{background:transparent}} }
+
+/* ---- Específico de la variante ---- */
+.vb{max-width:1040px;margin:0 auto;padding:16px 20px 0}
+.ctx-strip{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--r-card);padding:10px 14px;display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center}
+.ctx-strip h2{font-size:14px;font-weight:700;margin-right:6px}
+.conv-hd{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:16px 0 8px}
+.conv-hd h2{font-size:20px}
+.conv-hd .btn{margin-left:auto}
+.thread{padding:4px 0 16px}
+.turn-ai{border-left:4px solid var(--color-border)}
+.turn-ai.k-caso,.turn-ai.k-falt{border-left-color:var(--color-clinical-border)}
+.turn-ai.k-evid{border-left-color:var(--color-evidence-border)}
+.turn-ai .bd{padding:14px 18px}
+.turn-actions{display:flex;flex-wrap:wrap;gap:4px;padding:4px 12px;border-top:1px solid var(--color-border);background:var(--color-surface-alt)}
+.scen{font-size:11px;font-weight:700;color:#7A5A00;background:#FFFBEA;border:1px dashed #B98A00;border-radius:var(--r-tag);padding:1px 6px}
+.sticky-composer{position:sticky;bottom:0;max-width:1040px;margin:0 auto;padding:0 20px 8px}
+.sticky-composer .composer{border:1px solid var(--color-border);border-radius:var(--r-card)}
+.about{display:inline-flex;gap:6px;align-items:center;font-size:13px;background:var(--color-evidence-bg);color:var(--color-evidence);border:1px solid var(--color-evidence-border);border-radius:999px;padding:2px 4px 2px 10px;margin-bottom:6px}
+.about button{min-height:32px;padding:2px 8px;border-radius:999px}
+.detected{font-size:12px;color:var(--color-text-muted)}
+@media (max-width:600px){.vb,.sticky-composer{padding-left:16px;padding-right:16px}.turn-ai .bd{padding:12px}}
+/* Revisión de accesibilidad y lenguaje (S6, 2026-11-06) */
+.block-clin{border-left-color:var(--color-clinical)}
+.block-evid{border-left-color:var(--color-evidence)}
+.turn-ai.k-caso,.turn-ai.k-falt{border-left-color:var(--color-clinical)}
+.turn-ai.k-evid{border-left-color:var(--color-evidence)}
+details.pd>summary{border-color:var(--color-clinical)}
+.cite{border-color:var(--color-evidence);min-height:24px}
+details.ref{border-color:var(--color-control-border)}
+blockquote.frag:target,blockquote.frag:focus{outline:3px solid var(--color-primary)}
+.used{font-size:12.5px;color:var(--color-text-muted);margin:0;padding:6px 14px;border-top:1px solid var(--color-border)}
+.used strong{color:var(--color-text);font-weight:600}
+.sheet{margin:0 0 0 auto;padding:0;border:0;border-left:1px solid var(--color-control-border);width:min(440px,100%);max-width:100%;height:100vh;max-height:100vh;background:var(--color-surface);color:var(--color-text)}
+.sheet::backdrop{background:rgba(19,35,58,.45)}
+.sheet-hd{display:flex;gap:8px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--color-border);background:var(--color-surface-alt);position:sticky;top:0}
+.sheet-hd h2{font-size:17px}
+.sheet-hd button{margin-left:auto}
+.sheet-bd{padding:12px 14px}
+ul.case-list{list-style:none;margin:0;padding:0}
+ul.case-list li{padding:6px 4px;border-bottom:1px solid var(--color-border);font-size:14px}
+.flash{background:#FFF1B8 !important}
+@media (max-width:480px){.sticky-composer{position:static;padding:0 16px 16px}.sticky-composer .chips{display:none}}
+</style></head><body>
+<a class="skip" href="#main">Saltar al contenido</a><nav class="mock-nav" aria-label="Navegación de la maqueta"><strong>Maqueta S6 · Variante B «Hilo con tarjetas · elegida [S6 resp. 16]»</strong> <span class="tag">Solo maqueta · datos sintéticos</span>
+<a href="variante-a.html">A</a><a href="variante-b.html">B</a><a href="variante-c.html">C</a> <span class="muted">|</span> <a href="#a1">1 Caso</a><a href="#a2">2 Faltantes</a><a href="#a3">3–4 Evidencia</a><a href="#a4">3 Seguimiento</a><a href="#estados">Estados</a><span class="muted">· 5: ◆ «Ver en el caso» abre el panel lateral; [E1 · frag. n] abre el fragmento</span></nav><header class="app-header on-chrome"><a class="brand" href="#main">OncoLens</a><nav aria-label="Principal"><a href="#main">Pacientes</a></nav><span class="academic">Uso académico/investigación</span><button class="logout" type="button">Cerrar sesión</button></header>
+<div class="patient-bar"><div class="row"><p style="margin:0"><strong style="font-size:20px">Paciente sintética A</strong></p><span class="meta">CC ••• 0101 · nac. 1973 · mama izquierda · HER2+ · RE+</span><span class="tag">Sintético</span><span class="tag">Activo</span></div>
+<nav class="tabs" aria-label="Secciones del paciente"><a href="#main">Caso clínico</a><a href="#main">Resumen y faltantes</a><a href="#main" aria-current="page">Análisis</a></nav></div><main id="main" class="vb"><h1 class="sr-only">Asistente conversacional · Paciente sintética A</h1><section class="ctx-strip" aria-labelledby="ctx-h"><h2 id="ctx-h">Contexto de la paciente</h2>
+<span class="src-label clin"><span aria-hidden="true">◆</span> CDI mama izq.</span><span class="src-label clin"><span aria-hidden="true">◆</span> HER2 3+</span><span class="src-label clin"><span aria-hidden="true">◆</span> RE 90 %</span><span class="st wa">⚑ Estadio por conciliar</span><span class="st de">◌ 5 vacíos</span><span class="st pa">◐ 1 sin verificar</span>
+<button type="button" class="btn-ghost" data-sheet aria-haspopup="dialog">Ver caso clínico</button></section><div class="conv-hd"><h2>Asistente conversacional</h2><button class="btn" type="button">Nueva conversación</button></div><p class="xs muted" style="margin:0">Esta conversación recuerda lo hablado mientras está abierta. Se guarda un registro, que no se muestra como historial en esta versión.</p><div class="thread" role="log" aria-live="polite" aria-label="Conversación"><div class="turn turn-user " id="u1"><p class="bubble-user"><span class="who">Oncólogo · turno 1</span>¿Cuál es la situación actual de esta paciente?</p></div>
+<article class="turn turn-ai k-caso" id="a1" aria-labelledby="h1"><div class="hd"><span class="intent caso"><span aria-hidden="true">◆</span> Caso</span><span class="detected">Intención detectada</span><h3 id="h1">Situación actual · resumen del caso</h3><span class="scen">Escenario 1</span><span class="when">Turno 1</span></div>
+<div class="bd" id="b1"><p><span class="src-label clin"><span aria-hidden="true">◆</span> Información clínica del paciente</span> <span class="xs muted">Respondido solo con los datos del expediente; sin evidencia científica en este turno.</span></p>
+<div class="notice flag" role="note"><strong>⚑ Contradicción entre documentos:</strong> el estadio clínico figura como <strong>cT2 N1</strong> en la nota de consulta y como <strong>cT3 N1</strong> en el informe de imagen (ambos de hace 15 meses). No se eligió ninguno.
+ <details class="pd"><summary><span aria-hidden="true">◆</span><span class="sr-only">Dato del paciente: </span>cT2 N1</summary><span class="pd-pop">Nota de consulta · hace 15 meses · Documento · <span class="st wa">⚑ Requiere revisión</span> · <a href="#caso-estadio">Ver en el caso</a></span></details>
+ <details class="pd"><summary><span aria-hidden="true">◆</span><span class="sr-only">Dato del paciente: </span>cT3 N1</summary><span class="pd-pop">Informe de imagen · hace 15 meses · Documento · <span class="st wa">⚑ Requiere revisión</span> · <a href="#caso-estadio">Ver en el caso</a></span></details>
+ <a href="#caso-estadio">Revisar en el caso</a> · no bloquea la conversación.</div>
+<h4>Situación documentada, en orden temporal</h4>
+<ul class="claims">
+ <li><span class="kind doc">Documentado</span>Hace 16 meses: carcinoma ductal infiltrante de mama izquierda.
+  <details class="pd"><summary><span aria-hidden="true">◆</span><span class="sr-only">Dato del paciente: </span>Diagnóstico</summary><span class="pd-pop">Informe de patología · hace 16 meses · Documento · <span class="st co">✓ Verificado</span> · <a href="#caso-diagnostico">Ver en el caso</a></span></details></li>
+ <li><span class="kind doc">Documentado</span>HER2 3+ por IHQ; RE 90 %; RP 20 %.
+  <details class="pd"><summary><span aria-hidden="true">◆</span><span class="sr-only">Dato del paciente: </span>HER2 3+ (IHQ)</summary><span class="pd-pop">Informe de patología · examen de hace 16 meses · Documento · <span class="st co">✓ Verificado</span> · <a href="#caso-her2">Ver en el caso</a></span></details>
+  <details class="pd"><summary><span aria-hidden="true">◆</span><span class="sr-only">Dato del paciente: </span>RE 90 % · RP 20 %</summary><span class="pd-pop">Informe de patología · hace 16 meses · Carga inicial · <span class="st co">✓ Verificado</span> · <a href="#caso-rh">Ver en el caso</a></span></details></li>
+ <li><span class="kind doc">Documentado</span>Entre hace 15 y hace 10 meses: tratamiento neoadyuvante con docetaxel, carboplatino, trastuzumab y pertuzumab (6 ciclos).
+  <details class="pd"><summary><span aria-hidden="true">◆</span><span class="sr-only">Dato del paciente: </span>Tratamiento previo · línea 1</summary><span class="pd-pop">Registro manual · inicio hace 15 meses · fin hace 10 meses · motivo: completado · <span class="st co">✓ Verificado</span> · <a href="#caso-tratamiento">Ver en el caso</a></span></details></li>
+ <li><span class="kind doc">Documentado</span>Hace 9 meses: cirugía; el informe describe enfermedad residual invasora (ypT1c N0).
+  <details class="pd"><summary><span aria-hidden="true">◆</span><span class="sr-only">Dato del paciente: </span>Informe quirúrgico</summary><span class="pd-pop">Documento · hace 9 meses · <span class="st pa">◐ Presente sin verificar</span> · <a href="#caso-cirugia">Ver en el caso</a></span></details></li>
+ <li><span class="kind int">Interpretación</span>La secuencia registrada es neoadyuvancia → cirugía con enfermedad residual. No hay registros de tratamientos posteriores a la cirugía en el expediente.
+  <details class="pd"><summary><span aria-hidden="true">◆</span><span class="sr-only">Dato del paciente: </span>Línea de tiempo</summary><span class="pd-pop">Derivado de 3 registros (tratamiento previo, cirugía y ausencia de eventos posteriores) · verbalización determinista + comprobación de soporte · <a href="#caso-tratamiento">Ver en el caso</a></span></details></li>
+</ul>
+<p class="xs muted" style="margin-top:8px">«Documentado» repite un dato del expediente con su fuente. «Interpretación» relaciona varios datos; también se comprueba contra ellos. 1 afirmación sin soporte en los datos se omitió.</p>
+<div class="notice neutral" role="note">◐ 1 dato usado está <strong>sin verificar</strong> (informe quirúrgico). <a href="#caso-cirugia">Revisar</a> — no bloquea.</div>
+</div><p class="used"><span aria-hidden="true">◆</span> <strong>Datos usados:</strong> diagnóstico, estadio (2 registros), HER2, RE/RP, tratamiento previo, cirugía · <strong>Ausentes:</strong> Ki-67, estado menopáusico, estudio de extensión</p><div class="turn-actions"><button type="button" class="btn-ghost" data-expand="b1" aria-pressed="false">Expandir todo</button><button type="button" class="btn-ghost">Preguntar sobre este turno</button><button type="button" class="btn-ghost">Copiar referencias</button></div><div class="ai" role="note"><strong>Generado por IA; requiere validación clínica independiente por el oncólogo tratante</strong><span class="acad">Uso académico/investigación</span></div></article><div class="turn turn-user " id="u2"><p class="bubble-user"><span class="who">Oncólogo · turno 2</span>¿Qué información importante falta?</p></div>
+<article class="turn turn-ai k-falt" id="a2" aria-labelledby="h2"><div class="hd"><span class="intent falt">◌ Faltantes</span><span class="detected">Intención detectada</span><h3 id="h2">Información faltante</h3><span class="scen">Escenario 2</span><span class="when">Turno 2</span></div>
+<div class="bd" id="b2"><p><span class="src-label clin"><span aria-hidden="true">◆</span> Información clínica del paciente</span> <span class="xs muted">Datos críticos del catálogo 1.5.0 para mama; «¿por qué importa?» se apoya en evidencia citada o se omite.</span></p>
+<p class="small"><strong>5 vacíos</strong> en el expediente · 1 no encontrado · 1 incompleto · 1 por conciliar · 2 no buscados</p>
+<ul class="missing">
+ <li>
+  <div class="mhd"><span class="st de">◌ No encontrado</span><strong>Ki-67</strong><span class="xs muted">Verificación: — (faltante)</span></div>
+  <div class="small">Se procesó el informe de patología de hace 16 meses y no reporta Ki-67. <details class="pd"><summary><span aria-hidden="true">◆</span><span class="sr-only">Dato del paciente: </span>Informe de patología</summary><span class="pd-pop">Documento procesado · hace 16 meses · <a href="#caso-her2">Ver en el caso</a></span></details></div>
+  <details class="fold"><summary>¿Por qué importa?</summary><div><p class="why"><span class="src-label evid">Evidencia</span> E3 reporta Ki-67 como variable de estratificación en 9 de los 12 ensayos incluidos <a class="cite" href="#t2-e3-f4">[E3 · frag. 4]</a>.</p></div></details>
+ </li>
+ <li>
+  <div class="mhd"><span class="st pa">◐ Incompleto</span><strong>Respuesta patológica tras neoadyuvancia</strong><span class="xs muted">Verificación: ◐ Presente sin verificar</span></div>
+  <div class="small">El informe quirúrgico reporta ypT1c N0, sin la carga tumoral residual. <details class="pd"><summary><span aria-hidden="true">◆</span><span class="sr-only">Dato del paciente: </span>Informe quirúrgico</summary><span class="pd-pop">Documento · hace 9 meses · sin verificar · <a href="#caso-cirugia">Ver en el caso</a></span></details></div>
+  <details class="fold"><summary>¿Por qué importa?</summary><div><p class="why"><span class="src-label evid">Evidencia</span> La población de E1 se define por la presencia de enfermedad residual invasora tras la neoadyuvancia <a class="cite" href="#t2-e1-f2">[E1 · frag. 2]</a>.</p></div></details>
+ </li>
+ <li>
+  <div class="mhd"><span class="st wa">⚑ Por conciliar</span><strong>Estadio clínico</strong><span class="xs muted">Verificación: ⚑ Requiere revisión</span></div>
+  <div class="small">cT2 N1 en la nota de consulta y cT3 N1 en el informe de imagen. <a href="#caso-estadio">Ver ambos en el caso</a></div>
+  <p class="why omit">¿Por qué importa? — Sin explicación: no se encontró soporte en el corpus para este dato.</p>
+ </li>
+ <li>
+  <div class="mhd"><span class="st de">◇ No buscado</span><strong>Estado menopáusico</strong><span class="xs muted">Verificación: no aplica</span></div>
+  <div class="small">No se ha procesado ningún documento del tipo que lo contendría (nota de consulta ginecológica o historia clínica de ingreso). <a href="#caso-menopausia">Ver en el caso</a></div>
+  <p class="why omit">¿Por qué importa? — Sin explicación: no se encontró soporte en el corpus para este dato.</p>
+ </li>
+ <li>
+  <div class="mhd"><span class="st de">◇ No buscado</span><strong>Estudio de extensión</strong><span class="xs muted">Verificación: no aplica</span></div>
+  <div class="small">No hay ningún informe de imagen de extensión procesado.</div>
+  <details class="fold"><summary>¿Por qué importa?</summary><div><p class="why"><span class="src-label evid">Evidencia</span> E1 excluyó a pacientes con enfermedad metastásica clínicamente evidente <a class="cite" href="#t2-e1-f11">[E1 · frag. 11]</a>.</p></div></details>
+ </li>
+</ul>
+<p class="xs muted">◌ No encontrado: el documento que lo contendría se procesó y el dato falta. ◇ No buscado: aún no se procesó ningún documento de ese tipo. ◐ Incompleto: el dato está, sin todos sus componentes. ⚑ Por conciliar: dos fuentes discrepan.</p>
+<h4>Fuentes de «¿por qué importa?» (2)</h4>
+<details class="ref" id="t2-e1"><summary><span class="cite">[E1]</span><span class="tit">Conjugado anticuerpo-fármaco frente a trastuzumab en enfermedad residual HER2+ (fuente de ejemplo)</span><span class="xs muted">· Ensayo fase III · 2019 · CC BY 4.0</span></summary>
+<div class="ref-body"><dl class="meta"><dt>Fuente</dt><dd>Repositorio de acceso abierto (ejemplo)</dd><dt>Autores</dt><dd>No disponible</dd><dt>Diseño</dt><dd>Ensayo aleatorizado fase III</dd><dt>n</dt><dd>1 486</dd><dt>Publicación</dt><dd>2019</dd><dt>Idioma</dt><dd>inglés</dd><dt>Licencia</dt><dd>CC BY 4.0</dd></dl>
+<p class="xs muted" style="margin:6px 0 0">Fragmentos citados en este turno (metadatos del catálogo del corpus):</p><blockquote class="frag" id="t2-e1-f2" lang="en" tabindex="-1">«Eligible participants had HER2-positive early breast cancer with residual invasive disease in the breast or axillary nodes after neoadjuvant taxane plus trastuzumab.»<footer>Fragmento 2 de 41 · original, sin traducir · CC BY 4.0</footer></blockquote><blockquote class="frag" id="t2-e1-f11" lang="en" tabindex="-1">«Patients with clinically evident metastatic disease were excluded.»<footer>Fragmento 11 de 41 · original, sin traducir · CC BY 4.0</footer></blockquote>
+<a href="#t2-e1" class="small">Fuente original ↗</a></div></details>
+<details class="ref" id="t2-e3"><summary><span class="cite">[E3]</span><span class="tit">Ki-67 como variable de estratificación en ensayos RE+ (fuente de ejemplo)</span><span class="xs muted">· Revisión sistemática · 2021 · CC BY 4.0</span></summary>
+<div class="ref-body"><dl class="meta"><dt>Fuente</dt><dd>Repositorio de acceso abierto (ejemplo)</dd><dt>Autores</dt><dd>No disponible</dd><dt>Diseño</dt><dd>Revisión sistemática</dd><dt>n</dt><dd>No disponible</dd><dt>Publicación</dt><dd>2021</dd><dt>Idioma</dt><dd>español</dd><dt>Licencia</dt><dd>CC BY 4.0</dd></dl>
+<p class="xs muted" style="margin:6px 0 0">Fragmentos citados en este turno (metadatos del catálogo del corpus):</p><blockquote class="frag" id="t2-e3-f4" lang="es" tabindex="-1">«Ki-67 se reportó como variable de estratificación en 9 de los 12 ensayos incluidos.»<footer>Fragmento 4 de 19 · original, sin traducir · CC BY 4.0</footer></blockquote>
+<a href="#t2-e3" class="small">Fuente original ↗</a></div></details>
+<div class="notice neutral" role="note">Los vacíos <strong>no bloquean</strong>: la conversación y la consulta de evidencia continúan y los tratan como «Desconocido». <a href="#caso-ki67">Registrar a mano en el caso</a></div>
+<p class="small" style="margin-top:8px"><strong>Preguntas que podrían profundizar:</strong></p>
+<div class="chips"><button type="button">¿Qué dice el informe quirúrgico sobre los ganglios?</button><button type="button">¿Qué documentos se han procesado?</button></div>
+</div><p class="used"><span aria-hidden="true">◆</span> <strong>Datos usados:</strong> checklist de datos críticos (catálogo 1.5.0) y documentos procesados · <strong>Ausentes:</strong> Ki-67, estado menopáusico, estudio de extensión</p><div class="turn-actions"><button type="button" class="btn-ghost" data-expand="b2" aria-pressed="false">Expandir todo</button><button type="button" class="btn-ghost">Preguntar sobre este turno</button><button type="button" class="btn-ghost">Copiar referencias</button></div><div class="ai" role="note"><strong>Generado por IA; requiere validación clínica independiente por el oncólogo tratante</strong><span class="acad">Uso académico/investigación</span></div></article><div class="turn turn-user " id="u3"><p class="bubble-user"><span class="who">Oncólogo · turno 3</span>¿Qué evidencia existe para pacientes con las características de esta paciente?</p></div>
+<article class="turn turn-ai k-evid" id="a3" aria-labelledby="h3"><div class="hd"><span class="intent evid">▤ Evidencia</span><span class="detected">Intención detectada</span><h3 id="h3">Evidencia para esta paciente</h3><span class="scen">Escenarios 3 y 4</span><span class="when">Turno 3</span></div>
+<div class="bd" id="b3"><p><span class="src-label evid">▤ Evidencia científica (corpus)</span> <span class="src-label clin"><span aria-hidden="true">◆</span> Contexto del paciente</span> <span class="xs muted">Análisis registrado · cada afirmación cita el fragmento recuperado en este turno que la sustenta.</span></p>
+<h4>Síntesis</h4>
+<div class="block-evid">
+<p>Las fuentes recuperadas describen dos enfoques estudiados en poblaciones con cáncer de mama HER2 positivo operable <a class="cite" href="#t3-e1-f2">[E1 · frag. 2]</a> <a class="cite" href="#t3-e2-f3">[E2 · frag. 3]</a>.</p>
+<p class="small"><strong>Difieren</strong> en la población: E1 incluyó solo enfermedad residual invasora tras neoadyuvancia <a class="cite" href="#t3-e1-f2">[E1 · frag. 2]</a>; E2 incluyó pacientes con y sin neoadyuvancia previa <a class="cite" href="#t3-e2-f3">[E2 · frag. 3]</a>.</p>
+</div>
+<h4>Relación con la paciente</h4>
+<ul class="claims small">
+ <li><span class="st co">✓ Coincide</span> HER2 3+ y enfermedad residual invasora <details class="pd"><summary><span aria-hidden="true">◆</span><span class="sr-only">Dato del paciente: </span>HER2 3+</summary><span class="pd-pop">Informe de patología · hace 16 meses · ✓ Verificado · <a href="#caso-her2">Ver en el caso</a></span></details><details class="pd"><summary><span aria-hidden="true">◆</span><span class="sr-only">Dato del paciente: </span>ypT1c N0</summary><span class="pd-pop">Informe quirúrgico · hace 9 meses · ◐ sin verificar · <a href="#caso-cirugia">Ver en el caso</a></span></details></li>
+ <li><span class="st pa">◐ Parcial</span> Tratamiento previo: la paciente recibió dos agentes anti-HER2; en la población de E1, una minoría había recibido un segundo agente anti-HER2 <a class="cite" href="#t3-e1-f9">[E1 · frag. 9]</a>.</li>
+ <li><span class="st de">? Desconocido</span> Estado menopáusico: no buscado en el expediente.</li>
+</ul>
+<h4 id="t3-hop">Opciones descritas en la evidencia</h4>
+<div class="order"><strong>Ordenadas por coincidencia con la población estudiada, no por eficacia.</strong> 1) menos criterios excluyentes en ✕ No coincide · 2) más ✓ Coincide · 3) la relevancia de recuperación solo desempata.</div>
+<div class="table-wrap" tabindex="0" role="region" aria-labelledby="t3-cap">
+<table class="app">
+ <caption id="t3-cap">Aplicabilidad por criterio: valor de la paciente frente a la población de cada fuente</caption>
+ <thead><tr><th scope="col">Criterio (valor de la paciente)</th><th scope="col">1 · Conjugado anticuerpo-fármaco anti-HER2 <span class="xs muted">[E1]</span></th><th scope="col">2 · Doble bloqueo anti-HER2 continuado <span class="xs muted">[E2]</span></th></tr></thead>
+ <tbody>
+  <tr><th scope="row">Estado HER2<span class="pv"><span aria-hidden="true">◆</span> 3+ (IHQ)</span></th><td><span class="st co">✓ Coincide</span></td><td><span class="st co">✓ Coincide</span></td></tr>
+  <tr><th scope="row">Enfermedad residual tras neoadyuvancia<span class="pv"><span aria-hidden="true">◆</span> ypT1c N0 · sin verificar</span></th><td><span class="st co">✓ Coincide</span></td><td><span class="st pa">◐ Parcial</span> <span class="xs muted">con y sin neoadyuvancia</span></td></tr>
+  <tr><th scope="row">Neoadyuvancia previa<span class="pv"><span aria-hidden="true">◆</span> taxano + trastuzumab + pertuzumab</span></th><td><span class="st pa">◐ Parcial</span> <span class="xs muted">minoría con segundo anti-HER2</span></td><td><span class="st co">✓ Coincide</span></td></tr>
+  <tr><th scope="row">Receptores hormonales<span class="pv"><span aria-hidden="true">◆</span> RE 90 % · RP 20 %</span></th><td><span class="st co">✓ Coincide</span></td><td><span class="st co">✓ Coincide</span></td></tr>
+  <tr><th scope="row">Estado ganglionar<span class="pv"><span aria-hidden="true">◆</span> cN1 → ypN0</span></th><td><span class="st co">✓ Coincide</span></td><td><span class="st pa">◐ Parcial</span> <span class="xs muted">subgrupo N+ aparte</span></td></tr>
+  <tr><th scope="row">Estado menopáusico<span class="pv"><span aria-hidden="true">◆</span> no buscado</span></th><td><span class="st de">? Desconocido</span></td><td><span class="st de">? Desconocido</span></td></tr>
+  <tr class="sum"><th scope="row">Resumen</th><td>✓ 4 · ◐ 1 · ✕ 0 · ? 1</td><td>✓ 3 · ◐ 2 · ✕ 0 · ? 1</td></tr>
+ </tbody>
+</table>
+</div>
+<div class="opt">
+ <h5>1 · Conjugado anticuerpo-fármaco anti-HER2 tras enfermedad residual</h5>
+ <p class="small">La fuente E1 describe un ensayo en población con enfermedad residual invasora tras neoadyuvancia con taxano y trastuzumab <a class="cite" href="#t3-e1-f2">[E1 · frag. 2]</a>.</p>
+ <details class="fold"><summary>Ver detalle de la opción</summary><div><p>En E1, la población estudiada recibió el conjugado durante 14 ciclos o continuó con trastuzumab; el desenlace primario fue la supervivencia libre de enfermedad invasora <a class="cite" href="#t3-e1-f5">[E1 · frag. 5]</a>.</p><p class="xs muted">Aviso: el dato de enfermedad residual de la paciente está sin verificar.</p></div></details>
+ <p class="rel">Relevancia de recuperación de evidencia: 0,82 — no mide eficacia ni solidez clínica.</p>
+</div>
+<div class="opt">
+ <h5>2 · Doble bloqueo anti-HER2 continuado en el contexto adyuvante</h5>
+ <p class="small">La fuente E2 incluyó pacientes con y sin neoadyuvancia previa <a class="cite" href="#t3-e2-f3">[E2 · frag. 3]</a>.</p>
+ <details class="fold"><summary>Ver detalle de la opción</summary><div><p>E2 reporta por separado el subgrupo con ganglios positivos <a class="cite" href="#t3-e2-f7">[E2 · frag. 7]</a>.</p></div></details>
+ <p class="rel">Relevancia de recuperación de evidencia: 0,74 — no mide eficacia ni solidez clínica.</p>
+</div>
+<details class="fold"><summary>1 opción descartada (para revisión; no son opciones)</summary><div><p class="small">«Bloqueo hormonal ampliado» — descartada: sus afirmaciones no pasaron la comprobación de soporte en los fragmentos recuperados.</p></div></details>
+<h4>Fuentes (2)</h4>
+<details class="ref" id="t3-e1"><summary><span class="cite">[E1]</span><span class="tit">Conjugado anticuerpo-fármaco frente a trastuzumab en enfermedad residual HER2+ (fuente de ejemplo)</span><span class="xs muted">· Ensayo fase III · 2019 · CC BY 4.0</span></summary>
+<div class="ref-body"><dl class="meta"><dt>Fuente</dt><dd>Repositorio de acceso abierto (ejemplo)</dd><dt>Autores</dt><dd>No disponible</dd><dt>Diseño</dt><dd>Ensayo aleatorizado fase III</dd><dt>n</dt><dd>1 486</dd><dt>Publicación</dt><dd>2019</dd><dt>Idioma</dt><dd>inglés</dd><dt>Licencia</dt><dd>CC BY 4.0</dd></dl>
+<p class="xs muted" style="margin:6px 0 0">Fragmentos citados en este turno (metadatos del catálogo del corpus):</p><blockquote class="frag" id="t3-e1-f2" lang="en" tabindex="-1">«Eligible participants had HER2-positive early breast cancer with residual invasive disease in the breast or axillary nodes after neoadjuvant taxane plus trastuzumab.»<footer>Fragmento 2 de 41 · original, sin traducir · CC BY 4.0</footer></blockquote><blockquote class="frag" id="t3-e1-f5" lang="en" tabindex="-1">«Participants were randomly assigned to receive the antibody-drug conjugate for 14 cycles or to continue trastuzumab; the primary end point was invasive disease-free survival.»<footer>Fragmento 5 de 41 · original, sin traducir · CC BY 4.0</footer></blockquote><blockquote class="frag" id="t3-e1-f9" lang="en" tabindex="-1">«A minority of participants had received a second anti-HER2 agent as part of neoadjuvant therapy.»<footer>Fragmento 9 de 41 · original, sin traducir · CC BY 4.0</footer></blockquote>
+<a href="#t3-e1" class="small">Fuente original ↗</a></div></details>
+<details class="ref" id="t3-e2"><summary><span class="cite">[E2]</span><span class="tit">Doble bloqueo anti-HER2 adyuvante: análisis por subgrupos (fuente de ejemplo)</span><span class="xs muted">· Ensayo fase III · 2017 · CC BY-NC 4.0</span></summary>
+<div class="ref-body"><dl class="meta"><dt>Fuente</dt><dd>Revista de acceso abierto (ejemplo)</dd><dt>Autores</dt><dd>Grupo cooperativo de ejemplo</dd><dt>Diseño</dt><dd>Ensayo aleatorizado fase III</dd><dt>n</dt><dd>4 805</dd><dt>Publicación</dt><dd>2017</dd><dt>Idioma</dt><dd>inglés</dd><dt>Licencia</dt><dd>CC BY-NC 4.0 (solo MVP académico)</dd></dl><p class="xs"><span class="st wa">⚑ Posiblemente desactualizada</span> existe una actualización más reciente en el catálogo.</p>
+<p class="xs muted" style="margin:6px 0 0">Fragmentos citados en este turno (metadatos del catálogo del corpus):</p><blockquote class="frag" id="t3-e2-f3" lang="en" tabindex="-1">«Patients with operable HER2-positive early breast cancer were enrolled after surgery, with or without prior neoadjuvant therapy.»<footer>Fragmento 3 de 58 · original, sin traducir · CC BY-NC 4.0 (solo MVP académico)</footer></blockquote><blockquote class="frag" id="t3-e2-f7" lang="en" tabindex="-1">«The node-positive cohort was analysed separately as a pre-specified subgroup.»<footer>Fragmento 7 de 58 · original, sin traducir · CC BY-NC 4.0 (solo MVP académico)</footer></blockquote>
+<a href="#t3-e2" class="small">Fuente original ↗</a></div></details>
+<h4>Limitaciones</h4>
+<ul class="small">
+ <li>La evidencia recuperada no permite establecer por sí sola la aplicabilidad de un tratamiento a esta paciente.</li>
+ <li>El estado menopáusico no está en el expediente: los criterios que dependen de él figuran como «Desconocido».</li>
+ <li>Recuperación: 5 de 10 fragmentos superaron el umbral. Corpus con corte hace 3 meses. NCCN y ESMO no están incluidas.</li>
+</ul>
+<details class="fold"><summary>Base del análisis</summary><div><p class="small">Afirmaciones omitidas por falta de soporte: 1. Memoria de turnos anteriores: no citable.</p></div></details>
+<div class="notice neutral" role="note">◐ Se usaron datos sin verificar (informe quirúrgico). <a href="#caso-cirugia">Revisar</a> — no bloquea.</div>
+</div><p class="used"><span aria-hidden="true">◆</span> <strong>Datos usados:</strong> diagnóstico, HER2, RE/RP, estado ganglionar, tratamiento previo, cirugía · <strong>Ausentes:</strong> Ki-67, estado menopáusico, estudio de extensión</p><div class="turn-actions"><button type="button" class="btn-ghost" data-expand="b3" aria-pressed="false">Expandir todo</button><button type="button" class="btn-ghost">Preguntar sobre este turno</button><button type="button" class="btn-ghost">Copiar referencias</button></div><div class="ai" role="note"><strong>Generado por IA; requiere validación clínica independiente por el oncólogo tratante</strong><span class="acad">Uso académico/investigación</span></div></article><div class="turn turn-user " id="u4"><p class="bubble-user"><span class="who">Oncólogo · turno 4</span><span class="xs muted" style="display:block">↪ Sobre el turno 3 · Evidencia</span>¿Qué población estudió la fuente de la opción 1 y en qué se diferencia de esta paciente?</p></div>
+<article class="turn turn-ai k-evid" id="a4" aria-labelledby="h4"><div class="hd"><span class="intent evid">▤ Evidencia</span><span class="detected">Intención detectada</span><h3 id="h4">Seguimiento sobre la opción 1</h3><span class="scen">Escenario 3 · seguimiento</span><span class="when">Turno 4</span></div>
+<div class="bd" id="b4"><p><span class="src-label evid">▤ Evidencia científica (corpus)</span> <span class="xs muted">Seguimiento del turno 3 · se volvió a recuperar del corpus para esta pregunta.</span></p>
+<ul class="claims">
+ <li class="block-evid">La población de E1 fueron pacientes con cáncer de mama HER2 positivo con enfermedad residual invasora en mama o ganglios tras neoadyuvancia con taxano y trastuzumab <a class="cite" href="#t4-e1-f2">[E1 · frag. 2]</a>.</li>
+ <li class="block-evid">En la población de E1, una minoría había recibido un segundo agente anti-HER2 en la neoadyuvancia <a class="cite" href="#t4-e1-f9">[E1 · frag. 9]</a>; esta paciente recibió trastuzumab y pertuzumab <details class="pd"><summary><span aria-hidden="true">◆</span><span class="sr-only">Dato del paciente: </span>Tratamiento previo</summary><span class="pd-pop">Registro manual · hace 15–10 meses · ✓ Verificado · <a href="#caso-tratamiento">Ver en el caso</a></span></details>. <span class="st pa">◐ Parcial</span></li>
+ <li class="block-evid">E1 excluyó a pacientes con enfermedad metastásica clínicamente evidente <a class="cite" href="#t4-e1-f11">[E1 · frag. 11]</a>; en el expediente no se ha procesado un estudio de extensión <details class="pd"><summary><span aria-hidden="true">◆</span><span class="sr-only">Dato del paciente: </span>No buscado</summary><span class="pd-pop">Sin documento de ese tipo procesado · <a href="#caso-menopausia">Ver datos críticos</a></span></details>. <span class="st de">? Desconocido</span></li>
+</ul>
+<p class="xs muted">Memoria del hilo: el turno 3 se usó como contexto y no se cita (RN-24). 1 afirmación sin soporte se omitió.</p>
+<h4>Fuentes (1)</h4>
+<details class="ref" id="t4-e1"><summary><span class="cite">[E1]</span><span class="tit">Conjugado anticuerpo-fármaco frente a trastuzumab en enfermedad residual HER2+ (fuente de ejemplo)</span><span class="xs muted">· Ensayo fase III · 2019 · CC BY 4.0</span></summary>
+<div class="ref-body"><dl class="meta"><dt>Fuente</dt><dd>Repositorio de acceso abierto (ejemplo)</dd><dt>Autores</dt><dd>No disponible</dd><dt>Diseño</dt><dd>Ensayo aleatorizado fase III</dd><dt>n</dt><dd>1 486</dd><dt>Publicación</dt><dd>2019</dd><dt>Idioma</dt><dd>inglés</dd><dt>Licencia</dt><dd>CC BY 4.0</dd></dl>
+<p class="xs muted" style="margin:6px 0 0">Fragmentos citados en este turno (metadatos del catálogo del corpus):</p><blockquote class="frag" id="t4-e1-f2" lang="en" tabindex="-1">«Eligible participants had HER2-positive early breast cancer with residual invasive disease in the breast or axillary nodes after neoadjuvant taxane plus trastuzumab.»<footer>Fragmento 2 de 41 · original, sin traducir · CC BY 4.0</footer></blockquote><blockquote class="frag" id="t4-e1-f9" lang="en" tabindex="-1">«A minority of participants had received a second anti-HER2 agent as part of neoadjuvant therapy.»<footer>Fragmento 9 de 41 · original, sin traducir · CC BY 4.0</footer></blockquote><blockquote class="frag" id="t4-e1-f11" lang="en" tabindex="-1">«Patients with clinically evident metastatic disease were excluded.»<footer>Fragmento 11 de 41 · original, sin traducir · CC BY 4.0</footer></blockquote>
+<a href="#t4-e1" class="small">Fuente original ↗</a></div></details>
+</div><p class="used"><span aria-hidden="true">◆</span> <strong>Datos usados:</strong> tratamiento previo, cirugía · <strong>Ausentes:</strong> estado menopáusico, estudio de extensión</p><div class="turn-actions"><button type="button" class="btn-ghost" data-expand="b4" aria-pressed="false">Expandir todo</button><button type="button" class="btn-ghost">Preguntar sobre este turno</button><button type="button" class="btn-ghost">Copiar referencias</button></div><div class="ai" role="note"><strong>Generado por IA; requiere validación clínica independiente por el oncólogo tratante</strong><span class="acad">Uso académico/investigación</span></div></article><h2 class="section-title" id="estados">Estados del turno (referencia de la maqueta)</h2><div class="state-grid">
+ <article class="turn-ai" aria-labelledby="st-load">
+  <div class="hd"><h3 id="st-load">Cargando · progreso, no contenido</h3></div>
+  <div class="bd">
+   <p class="small">Preparando la respuesta. No se muestra texto parcial: aparece completa cuando sus citas están verificadas.</p>
+   <div role="status"><ol class="steps">
+    <li class="done">✓ Contexto de la paciente desidentificado</li>
+    <li class="now">⟳ Buscando evidencia…</li>
+    <li class="todo">○ Verificando citas…</li>
+    <li class="todo">○ Comprobando soporte de cada afirmación…</li>
+   </ol>
+   <p class="xs muted">Paso 2 de 4</p></div>
+  </div>
+ </article>
+ <article class="turn-ai" aria-labelledby="st-sin">
+  <div class="hd"><span class="intent evid">▤ Evidencia</span><h3 id="st-sin">Sin evidencia</h3></div>
+  <div class="bd">
+   <p class="small">No se encontró evidencia suficientemente relacionada con esta pregunta en el corpus.</p>
+   <p class="xs muted">Se buscó: «inmunoterapia en enfermedad residual HER2+» y una reformulación con términos del catálogo. Relevancia máxima: no aplica.</p>
+   <button type="button">Reformular la pregunta</button>
+  </div><p class="used"><span aria-hidden="true">◆</span> <strong>Datos usados:</strong> diagnóstico, HER2, RE/RP, tratamiento previo · <strong>Ausentes:</strong> Ki-67, estado menopáusico</p>
+  <div class="ai" role="note"><strong>Generado por IA; requiere validación clínica independiente por el oncólogo tratante</strong><span class="acad">Uso académico/investigación</span></div>
+ </article>
+ <article class="turn-ai" aria-labelledby="st-err">
+  <div class="hd"><h3 id="st-err">Error</h3><span class="xs muted">Mensaje del sistema · no generado por IA</span></div>
+  <div class="bd"><div class="error" role="alert">✕ No se pudo completar la respuesta. Tu pregunta queda en la conversación. <span class="xs">Traza: 7f3a-…-c21</span></div><p></p><button type="button">Reintentar</button></div>
+ </article>
+ <article class="turn-ai" aria-labelledby="st-llm">
+  <div class="hd"><h3 id="st-llm">LLM no disponible</h3><span class="xs muted">Mensaje del sistema · no generado por IA</span></div>
+  <div class="bd"><div class="blocked" role="alert">⏸ El modelo local no está disponible en este momento. No se usa ningún modelo en la nube con datos de pacientes. La vista de caso sigue disponible.</div><p></p><button type="button">Reintentar</button></div>
+ </article>
+ <article class="turn-ai" aria-labelledby="st-403">
+  <div class="hd"><h3 id="st-403">403 · Exclusión del análisis con IA</h3><span class="xs muted">Mensaje del sistema · no generado por IA</span></div>
+  <div class="bd"><div class="blocked" role="alert">⊘ Esta paciente tiene registrada la exclusión del análisis con IA (opt-out). No se generan respuestas con IA. La ficha y la vista de caso siguen disponibles.</div>
+  <p class="xs muted">Es el único estado que deshabilita el campo de pregunta (regla legal); los avisos clínicos nunca lo hacen.</p></div>
+ </article>
+ <article class="turn-ai" aria-labelledby="st-warn">
+  <div class="hd"><h3 id="st-warn">Aviso que no bloquea</h3><span class="xs muted">Mensaje del sistema · no generado por IA</span></div>
+  <div class="bd"><div class="notice" role="status">◌ 5 vacíos en el expediente y ◐ 1 dato sin verificar. Puedes preguntar igual: se tratan como «Desconocido». <a href="#caso-ki67">Ver datos críticos</a></div></div>
+ </article>
+</div>
+</div></main><div class="sticky-composer"><form class="composer" onsubmit="return false" aria-label="Nueva pregunta"><div class="about">↪ Preguntando sobre el turno 3 · Evidencia <button type="button" aria-label="Quitar el turno 3 como contexto">✕</button></div>
+<label for="q">Pregunta sobre esta paciente</label>
+<div class="chips" aria-label="Preguntas frecuentes"><button type="button">Situación actual</button><button type="button">¿Qué falta?</button><button type="button">Evidencia para este caso</button></div>
+<div class="row"><textarea id="q" rows="2" aria-describedby="q-hint" placeholder="Pregunta por el caso, los faltantes o la evidencia…"></textarea><button class="btn-primary" type="submit">Preguntar</button></div>
+<p class="hint" id="q-hint">La pregunta se enmascara antes de enviarse; conviene no escribir nombres ni documentos. La respuesta aparece completa cuando sus citas están verificadas.</p></form></div><dialog class="sheet" id="sheet" aria-labelledby="sheet-h"><div class="sheet-hd"><h2 id="sheet-h">Caso clínico · Paciente sintética A</h2><button type="button" data-close>Cerrar</button></div><div class="sheet-bd"><p><span class="src-label clin"><span aria-hidden="true">◆</span> Información clínica del paciente</span></p>
+<p class="xs muted">Solo lectura: el asistente no modifica la historia clínica. Fechas relativas.</p>
+<h3 class="section-title">Diagnóstico</h3>
+<ul class="case-list">
+ <li id="caso-diagnostico" class="hl"><strong>Carcinoma ductal infiltrante, mama izquierda</strong><br><span class="xs muted">hace 16 meses · Documento · Informe de patología · <span class="st co">✓ Verificado</span></span></li>
+ <li id="caso-estadio" class="hl"><strong>Estadio clínico</strong> <span class="st wa">⚑ Por conciliar</span><br><span class="small">cT2 N1 · Nota de consulta · hace 15 meses</span><br><span class="small">cT3 N1 · Informe de imagen · hace 15 meses</span></li>
+</ul>
+<h3 class="section-title">Biomarcadores</h3>
+<ul class="case-list">
+ <li id="caso-her2" class="hl"><strong>HER2</strong> 3+ (IHQ)<br><span class="xs muted">examen hace 16 meses · Documento · <span class="st co">✓ Verificado</span></span></li>
+ <li id="caso-rh" class="hl"><strong>RE</strong> 90 % · <strong>RP</strong> 20 %<br><span class="xs muted">examen hace 16 meses · Carga inicial · <span class="st co">✓ Verificado</span></span></li>
+</ul>
+<h3 class="section-title">Tratamientos y eventos</h3>
+<ul class="case-list">
+ <li id="caso-tratamiento" class="hl"><strong>Línea 1 · neoadyuvante</strong><br><span class="small">docetaxel, carboplatino, trastuzumab, pertuzumab</span><br><span class="xs muted">hace 15 → hace 10 meses · Registro manual · <span class="st co">✓ Verificado</span></span></li>
+ <li id="caso-cirugia" class="hl"><strong>Cirugía</strong> · enfermedad residual ypT1c N0<br><span class="xs muted">hace 9 meses · Documento · Informe quirúrgico · <span class="st pa">◐ Sin verificar</span></span></li>
+</ul>
+<h3 class="section-title">Datos críticos</h3>
+<ul class="case-list">
+ <li id="caso-ki67" class="hl"><span class="st de">◌ Ki-67 · Faltante</span> <a href="#caso-ki67" class="xs">Registrar a mano</a></li>
+ <li id="caso-menopausia" class="hl"><span class="st de">◌ Estado menopáusico · Faltante</span> <a href="#caso-menopausia" class="xs">Registrar a mano</a></li>
+</ul>
+<p class="small"><a href="variante-b.html?vista=caso" target="_blank" rel="noopener">Abrir la vista de caso completa ↗<span class="sr-only"> (abre en nueva pestaña)</span></a></p>
+</div></dialog><script>
+(function(){var dlg=document.getElementById('sheet');
+function flash(t){t.scrollIntoView({block:'center'});t.classList.add('flash');setTimeout(function(){t.classList.remove('flash')},1800);}
+document.addEventListener('click',function(e){
+ var c=e.target.closest('[data-close]');if(c){dlg.close();return;}
+ var o=e.target.closest('[data-sheet]');if(o){if(!dlg.open)dlg.showModal();return;}
+ var a=e.target.closest('a[href^="#"]');if(!a)return;var id=a.getAttribute('href').slice(1);var t=id&&document.getElementById(id);if(!t)return;
+ if(id.indexOf('caso-')===0){e.preventDefault();if(!dlg.open)dlg.showModal();flash(t);return;}
+ var d=t.tagName==='DETAILS'?t:t.closest('details');if(d)d.open=true;
+ if(t.tagName==='BLOCKQUOTE'){e.preventDefault();t.scrollIntoView({block:'center'});t.focus({preventScroll:true});}
+});
+document.addEventListener('click',function(e){var b=e.target.closest('[data-expand]');if(!b)return;var s=document.getElementById(b.getAttribute('data-expand'));var open=b.getAttribute('aria-pressed')!=='true';s.querySelectorAll('details.fold,details.ref').forEach(function(d){d.open=open});b.setAttribute('aria-pressed',open);b.textContent=open?'Plegar todo':'Expandir todo';});
+})();
+</script></body></html>

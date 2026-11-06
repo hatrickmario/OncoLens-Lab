@@ -9,7 +9,7 @@
 **Evidencia:** [→ PRD §5 FR-09, FR-25], [→ PRD §6 RN-02, RN-03, RN-05, RN-06, RN-28, RN-30], [→ PRD §7 NFR (rendimiento, capacidad, fiabilidad)], [→ PRD §10], [→ PRD §11 #7, #13], [→ PRD §12], [→ PRD §18.3.5 AC-05.1, AC-05.3], [→ PRD §18.3.6 AC-06.1, AC-06.2, M-06.1, M-06.2], [→ PRD §18.3.10 AC-10.1, AC-10.4, M-10.1], [→ PRD §18.4 AC-T1.4], [→ readme §5 HU-03], [→ readme §6 OL-02, OL-03], [→ readme §4.1 `POST /platform/evidence-analyses`], [→ readme §4.2 `/rag/query`, `ClinicalContext`, `RagQueryInternalRequest/Response`], [→ readme §2.5 Rate limiting, credencial de servicio], [→ readme §3.3 #5, #8, #26], [→ readme §6.1 #1, #4, #6, #7, #8], [→ backlog/02-adrs.md ADR-39], [→ backlog/01-requisitos.md §14 Q-06]
 **Dependencias:** ↪ US-033 (contrato), US-038 (esquema), US-041 (catálogo), US-211 (sesión mínima, S1), US-049 (desidentificación), US-058/US-059 (corpus), US-063/US-064 (citas y soporte), US-065 (etiquetas), US-066 (Base del análisis) · ⛔ ADR-39 (adapters reales: `llm/`, `embeddings/`, `reranker/`, `nli/`; los de recuperación y NLI los construyen US-231a y US-231b) · 🔗 Medido en: US-072 (M-10.1, fidelidad y precisión de citas M-07.2), US-073 (M-06.1, M-06.2) · 🔗 Regresión [RN-15] → US-148 (activa desde S6) · 🔗 Regresión [RN-17] → US-198 (Post-MVP) · 🔗 Regresión [FR-15] → US-204 (Post-MVP)
 **Valor:** hoy el oncólogo busca evidencia a mano y no sabe si lo que encuentra se apoya de verdad en una fuente (P5, P12). Con esta Feature, desde el primer sprint puede hacer una pregunta en lenguaje natural sobre su paciente y recibir, de punta a punta, un análisis citado, verificado y persistido, o un "sin evidencia" honesto, sin que la IA toque datos clínicos ni le prescriba nada. Es la demostración de que la hipótesis (3) es técnicamente viable.
-**Stories:** US-012 · ADR-39 (fase A), US-224 · ADR-39 (fase B), US-052, US-053, US-054, US-055, US-225, US-231a, US-231b (31 puntos, S1, más 8 de US-231a y US-231b, decisión 75 de `S1-plan.md`) · US-056, US-057, US-239 (11 puntos, S6, `[S4 resp. 1]`) · US-231 dividida en US-231a y US-231b (no suma)
+**Stories:** US-012 · ADR-39 (fase A), US-224 · ADR-39 (fase B), US-052, US-053, US-054, US-055, US-225, US-231a, US-231b (31 puntos, S1, más 8 de US-231a y US-231b, decisión 75 de `S1-plan.md`) · US-056, US-057, US-239 (11 puntos, S6, `[S4 resp. 1]`) · US-270 (1 punto, S6, R4, `[S6 resp. 4]`) · US-231 dividida en US-231a y US-231b (no suma)
 
 > **Propuesta de división (talla XL: atraviesa los tres servicios y suma 7 historias).** Publicar como dos Features hermanas sin cambiar los IDs: **06a-B2 Pipeline de evidencia** (`rag-orchestrator`: US-012, US-224, US-055, US-225, US-231a, US-231b, US-057 y la parte de semáforo y *deadline* de US-056) y **06a-B1 Gateway** (`clinical-api`: US-052, US-053, US-054 y la parte de *rate limit* de US-056). El panel es FEAT-10a.
 
@@ -643,6 +643,8 @@ integración (propagación de `429`/`504`).
 
 > **Decidido (usuario, 2026-10-29):** pasa del S4 al **S6**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca `[S4 resp. 1]`.
 
+> **Decidido (usuario, 2026-11-06):** se mantiene en el S6 tal cual `[S6 resp. 8]` y aplica también a la ruta del chat: los prompts de los nodos de `POST /chat/turn` (US-259…US-266) usan el mismo `PromptBuilder`, con la pregunta, los hechos del paciente, los fragmentos y la memoria de la conversación como bloques de datos delimitados; los AC-1…AC-4 se verifican también sobre el prompt del nodo `caso` y del nodo `evidencia`. Quitar la etiqueta `needs-refinement` en Linear (obsoleta).
+
 ## Story
 Como responsable de seguridad, quiero que el texto de los chunks y la pregunta del
 doctor viajen al LLM como datos delimitados y nunca como instrucciones, para que una
@@ -750,6 +752,35 @@ Función pura de normalización (NFC + espacios) en `clinical-api` (autoridad, t
 ## INVEST
 **Small** ✓ una función pura aplicada en tres bordes.
 **Testable** ✓ cinco chequeos automatizados con texto NFD fijo.
+
+---
+
+## US-270 — El log del corte previo al *reranker* registra qué fragmentos quedaron fuera y su orden denso, nunca su texto
+
+> Linear: [L1D-327](https://linear.app/l1der-lab-mjbc/issue/L1D-327)
+
+`FEAT-06a` · Sprint 6 · Estimación **1** · HU-03 · RN-10, RN-14, RN-22 · ADR-39 (`RERANKER_MAX_PAIRS`) · ↪ US-231a (corte de pares, decisión 82) · 🔗 Lo usa: la corrida nocturna de L1D-119 (métrica sugerida «recall previo al *reranker*», `S5-cierre.md` §9)
+
+> **Decidido (usuario, 2026-11-06):** del bloque de recuperación del S6 solo entran la corrida nocturna de L1D-119 y **R4**; R1, R2 y R3 pasan a Post-MVP `[S6 resp. 4]`.
+
+> **Origen:** [`S5-cierre.md`](../sprints/S5-cierre.md) §9, ítem 3, recomendación **R4**: en la Demo 5 los dos fragmentos que el *reranker* ponía primero (`nci-mama-hp-en[93]` y `[92]`) quedaron en los puestos 13–15 por similitud densa y nunca se puntuaron por el corte `RERANKER_MAX_PAIRS = 12`; hoy el log solo registra recuentos y el fallo no es observable.
+
+## Story
+Como equipo de IA, queremos ver en el log qué fragmentos dejó fuera el corte previo al
+*reranker* y en qué puesto denso estaban, para diagnosticar un análisis con 0 opciones sin
+reproducirlo a mano.
+
+## AC (Given/When/Then)
+- **AC-1 (happy path)** · Dados 15 candidatos falsos con ids `ch-01`…`ch-15` ordenados por puntaje denso y `RERANKER_MAX_PAIRS = 12`, cuando corre la consulta, entonces el evento `event=rag_query_corte` registra `recibidos=15 descartados=3 enviados=12` y `cortados=ch-13:13,ch-14:14,ch-15:15` (id y puesto denso, en ese orden). `[S5-cierre §9 R4]` `[RN-22]`
+- **AC-2 (invariante · nunca texto)** · Dado el mismo caso con chunks cuyo texto y pregunta contienen marcadores únicos, cuando se captura el log (`caplog`), entonces ningún registro contiene el texto de un chunk, la pregunta ni identificadores del paciente. `[RN-10]` `[RN-14]`
+- **AC-3 (borde · sin corte)** · Dados 10 candidatos y `RERANKER_MAX_PAIRS = 12`, cuando corre la consulta, entonces el evento registra `descartados=0` y `cortados=` vacío. `[RN-22]`
+- **AC-4 (borde · límite de la línea)** · Dados 200 candidatos y `RERANKER_MAX_PAIRS = 12`, cuando corre la consulta, entonces `cortados` lista como máximo los primeros 50 cortados en orden denso y añade `cortados_omitidos=138`. (asumido en el tope de 50)
+
+## Contexto técnico
+`RAGOrchestratorService._cortar_a_pares_del_reranker` (`apps/rag-orchestrator/app/application/rag_orchestrator_service.py`): hoy registra solo recuentos y su *docstring* dice «nunca ids» (decisión 82); el usuario lo cambia `[S6 resp. 4]`: los ids de chunk son del corpus público, no datos del paciente. Actualizar el *docstring*. Tests: Pytest de integración existente `tests/integration/test_corte_previo_a_pares_del_reranker.py` ampliado (TDD estricto: AC en rojo antes del `feat`).
+
+## INVEST
+**Small** ✓ una línea de log y su test. **Testable** ✓ cuatro tests con `caplog`.
 
 ---
 

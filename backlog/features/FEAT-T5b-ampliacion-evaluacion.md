@@ -118,7 +118,9 @@ calibrador con un set falso de resultados conocidos.
 
 > Linear: [L1D-241](https://linear.app/l1der-lab-mjbc/issue/L1D-241)
 
-`FEAT-T5b` · Post-MVP *(usuario, 2026-11-02, PRD E-17)* · Estimación **5** · — (técnica, PRD §17; OL-06) · FR-20 · AC-T5.1 (eventos y timeline) · M-02.1, M-02.2, M-02.3, M-02.4, G-11 · ↪ US-072, US-085, US-088 · 🔗 Relacionada: US-095 (resumen, `si-hay-capacidad`: AC-3 condicional) · 🔗 Mide a: FEAT-01b (eventos), FEAT-02b, FEAT-02c
+`FEAT-T5b` · Post-MVP *(usuario, 2026-11-02, PRD E-17; ratificado el 2026-11-06, `[S6 resp. 13]`)* · Estimación **5** · — (técnica, PRD §17; OL-06) · FR-20 · AC-T5.1 (eventos y timeline) · M-02.1, M-02.2, M-02.3, M-02.4, G-11 · ↪ US-072, US-085, US-088 · 🔗 Relacionada: US-095 (resumen, `si-hay-capacidad`: AC-3 condicional) · 🔗 Mide a: FEAT-01b (eventos), FEAT-02b, FEAT-02c
+
+> **Decidido (usuario, 2026-11-06):** pasa a **Post-MVP** (en Linear había vuelto al hito Sprint 6 con el carryover del 2026-11-06): su alcance en el MVP (fidelidad del caso reconstruido, M-02.1 y M-02.3) lo **absorbe US-269** (FEAT-12, AC-3) sobre las respuestas del chat; lo que mide de la extracción, el resumen y el p95 de la vista de caso queda para Post-MVP con el OCR `[S6 resp. 13]`.
 
 > **Decidido (usuario, 2026-11-02, PRD E-17):** pasa a **Post-MVP**: el OCR no se prioriza en el MVP (feedback de oncólogos y producto).
 
@@ -205,7 +207,9 @@ Pytest del *runner* y Vitest del comando.
 
 > Linear: [L1D-243](https://linear.app/l1der-lab-mjbc/issue/L1D-243)
 
-`FEAT-T5b` · Sprint 6 *(S5 → S6, `[S5 resp. 3]`)* · Estimación **3** · — (técnica, PRD §17; OL-06) · FR-20 · AC-T5.1 (faltantes) · M-04.1, M-04.2, G-12 · ↪ US-072, FEAT-04 US-002 · 🔗 Regresión [AC-T5.4] → US-074 (cambio de catálogo) · 🔗 Mide a: FEAT-04
+`FEAT-T5b` · Post-MVP *(S6 → Post-MVP, `[S6 resp. 13]`; antes S5 → S6, `[S5 resp. 3]`)* · Estimación **3** · — (técnica, PRD §17; OL-06) · FR-20 · AC-T5.1 (faltantes) · M-04.1, M-04.2, G-12 · ↪ US-072, FEAT-04 US-002 · 🔗 Regresión [AC-T5.4] → US-074 (cambio de catálogo) · 🔗 Mide a: FEAT-04
+
+> **Decidido (usuario, 2026-11-06):** pasa a **Post-MVP**: la sensibilidad y la especificidad de los faltantes con faltantes sembrados (M-04.1, M-04.2) las **absorbe US-269** (FEAT-12, AC-4), medidas sobre las respuestas del chat y la clasificación `gapType` `[S6 resp. 13]`.
 
 > **Decidido (usuario, 2026-11-03, refinamiento del S5):** D-3: pasa del S5 al **S6** para que el S5 (3 días) quepa con G-Demo. Ver [`S5-refinamiento.md`](../sprints/S5-refinamiento.md).
 
