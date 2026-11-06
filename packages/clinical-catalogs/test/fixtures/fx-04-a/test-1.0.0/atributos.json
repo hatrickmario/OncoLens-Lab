@@ -8,6 +8,15 @@
         "es": "Estado menopausico",
         "en": "Menopausal status"
       }
+    },
+    {
+      "key": "sin_tratamiento_previo",
+      "cancerTypes": ["mama"],
+      "label": {
+        "es": "Sin tratamiento previo a la fecha",
+        "en": "No prior treatment to date"
+      },
+      "values": [{ "value": "si", "label": { "es": "Sí" } }]
     }
   ]
 }
