@@ -487,7 +487,7 @@ export type CorrectionHistory = {
 export type ErrorCorreccionInvalida = {
     error: 'CUERPO_INVALIDO' | 'PACIENTE_EGRESADO' | 'VALOR_FUERA_DE_CATALOGO';
     /**
-     * Propiedad del cuerpo que causó el error, cuando el error es de un campo; ausente si no lo es (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.
+     * Nombre lógico del dato que causó el error, no siempre una propiedad del cuerpo (p. ej. attributeKey al corregir la declaración de ausencia); ausente si el error no es de un campo (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.
      */
     field?: string;
     message: string;
@@ -1059,7 +1059,7 @@ export type ErrorAnalisisNoProcesable = {
 export type ErrorRegistroManualInvalido = {
     error: 'CUERPO_INVALIDO' | 'PACIENTE_EGRESADO' | 'VALOR_FUERA_DE_CATALOGO';
     /**
-     * Propiedad del cuerpo que causó el error, cuando el error es de un campo; ausente si no lo es (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.
+     * Nombre lógico del dato que causó el error, no siempre una propiedad del cuerpo (p. ej. attributeKey al corregir la declaración de ausencia); ausente si el error no es de un campo (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.
      */
     field?: string;
     message: string;
@@ -1069,7 +1069,7 @@ export type ErrorRegistroManualInvalido = {
 export type ErrorRegistroClinicoInvalido = {
     error: 'CUERPO_INVALIDO' | 'PACIENTE_EGRESADO' | 'VALOR_FUERA_DE_CATALOGO' | 'TIPO_CANCER_NO_REGISTRADO';
     /**
-     * Propiedad del cuerpo que causó el error, cuando el error es de un campo; ausente si no lo es (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.
+     * Nombre lógico del dato que causó el error, no siempre una propiedad del cuerpo (p. ej. attributeKey al corregir la declaración de ausencia); ausente si el error no es de un campo (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.
      */
     field?: string;
     message: string;
@@ -1079,7 +1079,7 @@ export type ErrorRegistroClinicoInvalido = {
 export type ErrorDiagnosticoInvalido = {
     error: 'CUERPO_INVALIDO' | 'PACIENTE_EGRESADO' | 'VALOR_FUERA_DE_CATALOGO' | 'GRADACION_INCOHERENTE';
     /**
-     * Propiedad del cuerpo que causó el error, cuando el error es de un campo; ausente si no lo es (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.
+     * Nombre lógico del dato que causó el error, no siempre una propiedad del cuerpo (p. ej. attributeKey al corregir la declaración de ausencia); ausente si el error no es de un campo (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.
      */
     field?: string;
     message: string;
@@ -2022,7 +2022,7 @@ export type CorrectClinicalAttributeErrors = {
      */
     409: ErrorDatoNoVigente;
     /**
-     * Cuerpo inválido (propiedad ajena como attributeKey, corrección sin cambios), valor fuera del catálogo (field = value) o paciente egresado.
+     * Cuerpo inválido (propiedad ajena como attributeKey, corrección sin cambios), valor fuera del catálogo (field = value), paciente egresado, o corrección de la declaración sin_tratamiento_previo con tratamientos previos vigentes (CUERPO_INVALIDO con field = attributeKey; defensa de la coherencia D4, estado que no debería darse).
      */
     422: ErrorCorreccionInvalida;
 };

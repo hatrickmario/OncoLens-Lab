@@ -846,7 +846,9 @@ paths:
         "422":
           description: >-
             Cuerpo inválido (propiedad ajena como attributeKey, corrección sin cambios), valor
-            fuera del catálogo (field = value) o paciente egresado.
+            fuera del catálogo (field = value), paciente egresado, o corrección de la declaración
+            sin_tratamiento_previo con tratamientos previos vigentes (CUERPO_INVALIDO con
+            field = attributeKey; defensa de la coherencia D4, estado que no debería darse).
           content:
             application/json:
               schema:
@@ -2062,8 +2064,9 @@ components:
         field:
           type: string
           description: >-
-            Propiedad del cuerpo que causó el error, cuando el error es de un campo; ausente si no
-            lo es (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.
+            Nombre lógico del dato que causó el error, no siempre una propiedad del cuerpo (p. ej.
+            attributeKey al corregir la declaración de ausencia); ausente si el error no es de un
+            campo (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.
         message: { type: string }
         traceId: { type: string }
 
@@ -3264,8 +3267,9 @@ components:
         field:
           type: string
           description: >-
-            Propiedad del cuerpo que causó el error, cuando el error es de un campo; ausente si no
-            lo es (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.
+            Nombre lógico del dato que causó el error, no siempre una propiedad del cuerpo (p. ej.
+            attributeKey al corregir la declaración de ausencia); ausente si el error no es de un
+            campo (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.
         message: { type: string }
         traceId: { type: string }
     ErrorRegistroClinicoInvalido:
@@ -3279,8 +3283,9 @@ components:
         field:
           type: string
           description: >-
-            Propiedad del cuerpo que causó el error, cuando el error es de un campo; ausente si no
-            lo es (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.
+            Nombre lógico del dato que causó el error, no siempre una propiedad del cuerpo (p. ej.
+            attributeKey al corregir la declaración de ausencia); ausente si el error no es de un
+            campo (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.
         message: { type: string }
         traceId: { type: string }
     ErrorDiagnosticoInvalido:
@@ -3294,8 +3299,9 @@ components:
         field:
           type: string
           description: >-
-            Propiedad del cuerpo que causó el error, cuando el error es de un campo; ausente si no
-            lo es (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.
+            Nombre lógico del dato que causó el error, no siempre una propiedad del cuerpo (p. ej.
+            attributeKey al corregir la declaración de ausencia); ausente si el error no es de un
+            campo (p. ej. PACIENTE_EGRESADO). Nunca repite el valor enviado.
         message: { type: string }
         traceId: { type: string }
     ErrorSeguimientoNoProcesable:
