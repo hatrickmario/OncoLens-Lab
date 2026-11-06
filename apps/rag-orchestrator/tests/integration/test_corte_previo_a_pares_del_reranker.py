@@ -106,3 +106,92 @@ def test_sin_tope_de_pares_configurado_el_servicio_no_recorta() -> None:
     entorno.consultar(solicitud_de(Q_HER2))
 
     assert len(entorno.reranker.candidatos_recibidos[0]) == 30
+
+
+def _candidatos_numerados(cuantos: int) -> list[ChunkFx]:
+    """``ch-01``…``ch-NN`` con similitud estrictamente decreciente: el puesto denso de ``ch-NN`` es NN."""
+    return [_chunk(f"ch-{i:03d}", 0.99 - 0.004 * i) for i in range(1, cuantos + 1)]
+
+
+def _consultar(candidatos: list[ChunkFx], **cambios: int):
+    parametros = replace(
+        PARAMETROS_DE_PRUEBA, retrieval_top_k=len(candidatos), reranker_max_pairs=MAX_PARES, **cambios
+    )
+    entorno = crear_entorno(
+        parametros=parametros,
+        buscador=BuscadorFalso(candidatos),
+        reranker=RerankerFalso(max_pairs=MAX_PARES),
+    )
+    return entorno, entorno.consultar
+
+
+def _registro_de_corte(caplog: pytest.LogCaptureFixture) -> str:
+    registros = [r.getMessage() for r in caplog.records if "rag_query_corte" in r.getMessage()]
+    assert len(registros) == 1
+    return registros[0]
+
+
+@pytest.mark.ac("US-270", 1)
+def test_el_log_de_corte_lista_los_ids_cortados_con_su_puesto_denso_cuando_hay_15_candidatos_y_12_pares(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level(logging.INFO)
+    _, consultar = _consultar(_candidatos_numerados(15))
+
+    consultar(solicitud_de(Q_HER2))
+
+    registro = _registro_de_corte(caplog)
+    assert "recibidos=15 descartados=3 enviados=12" in registro
+    assert "cortados=ch-013:13,ch-014:14,ch-015:15" in registro
+    assert "cortados_omitidos" not in registro
+
+
+@pytest.mark.ac("US-270", 2)
+def test_ningun_registro_lleva_texto_de_chunk_pregunta_ni_pseudo_paciente_cuando_llevan_marcadores_unicos(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level(logging.DEBUG)
+    candidatos = [
+        replace(c, texto=f"{c.texto} MARCA_CHUNK_7731") for c in _candidatos_numerados(15)
+    ]
+    _, consultar = _consultar(candidatos)
+    solicitud = solicitud_de(f"{Q_HER2} MARCA_PREGUNTA_5519")
+    solicitud["clinicalContext"]["pseudoPatientId"] = "psd_MARCAPACIENTE8842"
+
+    consultar(solicitud)
+
+    volcado = "\n".join(r.getMessage() for r in caplog.records)
+    assert "rag_query_corte" in volcado
+    for marcador in ("MARCA_CHUNK_7731", "MARCA_PREGUNTA_5519", "MARCAPACIENTE8842", "texto sintético"):
+        assert marcador not in volcado
+
+
+@pytest.mark.ac("US-270", 3)
+def test_el_log_de_corte_no_lista_cortados_cuando_hay_10_candidatos(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level(logging.INFO)
+    _, consultar = _consultar(_candidatos_numerados(10))
+
+    consultar(solicitud_de(Q_HER2))
+
+    registro = _registro_de_corte(caplog)
+    assert "recibidos=10 descartados=0 enviados=10" in registro
+    assert registro.rstrip().endswith("cortados=")
+    assert "cortados_omitidos" not in registro
+
+
+@pytest.mark.ac("US-270", 4)
+def test_el_log_de_corte_acota_los_ids_y_cuenta_los_omitidos_cuando_hay_200_candidatos(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level(logging.INFO)
+    _, consultar = _consultar(_candidatos_numerados(200), reranker_cut_log_max_ids=50)
+
+    consultar(solicitud_de(Q_HER2))
+
+    registro = _registro_de_corte(caplog)
+    assert "cortados=ch-013:13," in registro
+    cortados = registro.split("cortados=")[1].split(" ")[0].split(",")
+    assert cortados[0] == "ch-013:13" and cortados[-1] == "ch-062:62" and len(cortados) == 50
+    assert "cortados_omitidos=138" in registro
