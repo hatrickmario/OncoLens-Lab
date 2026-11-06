@@ -53,7 +53,6 @@ from app.evaluation.guardas import SuiteAbortada
 from app.evaluation.juez_fidelidad import JuezFidelidad, JuezNli, JuezSecundario
 from app.evaluation.lenguaje_estricto import VerificadorEstricto
 from app.evaluation.lenguaje_linea_base import verificador_de_la_linea_base
-from app.evaluation.metricas.rechazos_legitimos import ids_de_preguntas_de_control_legitimo
 from app.evaluation.medidores import (
     BuscadorMedido,
     BuscadorSparseMedido,
@@ -68,6 +67,7 @@ from app.evaluation.medidores import (
     Observaciones,
     RerankerObservado,
 )
+from app.evaluation.metricas.rechazos_legitimos import ids_de_preguntas_de_control_legitimo
 from app.evaluation.modelos_locales import PuertosLocales
 from app.infrastructure.catalogo_clinico.aplicabilidad import CriteriosDelCatalogo
 from app.infrastructure.catalogo_clinico.datos_criticos import cargar_datos_criticos

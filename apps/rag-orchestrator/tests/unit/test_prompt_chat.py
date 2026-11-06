@@ -44,7 +44,7 @@ def test_prompt_del_turno_separa_instrucciones_y_datos_cuando_se_arma_con_memori
         prompt,
         DatosDelPrompt(
             pregunta="¿Cuál es el cuadro?",
-            datos_del_paciente="[f1] Carcinoma ductal infiltrante de mama (día relativo 0; revisión: verificado)",
+            datos_del_paciente="[f1] Carcinoma ductal infiltrante de mama, al momento del diagnóstico.",
             memoria=_memoria_esperada(),
         ),
     )

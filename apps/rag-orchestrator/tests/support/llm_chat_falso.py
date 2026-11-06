@@ -13,11 +13,14 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
-ESCENARIOS = json.loads(
-    (Path(__file__).resolve().parents[1] / "fixtures" / "llm" / "chat.json").read_text(
-        encoding="utf-8"
-    )
-)
+_FIXTURES = Path(__file__).resolve().parents[1] / "fixtures" / "llm"
+
+# ``chat.json`` y un fichero por familia de escenarios (``chat-caso-*.json``, L1D-317): salidas CRUDAS del LLM.
+ESCENARIOS: dict[str, Any] = {
+    nombre: guion
+    for fichero in sorted(_FIXTURES.glob("chat*.json"))
+    for nombre, guion in json.loads(fichero.read_text(encoding="utf-8")).items()
+}
 
 
 class FakeChatLlm:

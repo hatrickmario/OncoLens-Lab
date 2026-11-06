@@ -25,6 +25,7 @@ from app.application.generacion_de_seguimiento import LlmSeguimientoGenerator
 from app.application.ports import FalloDelLlm
 from app.application.prompt_builder import escapar_delimitadores
 from app.application.seguimiento import ResponderSeguimiento
+from app.config.settings import Settings
 from app.domain.atribucion import marco_de_atribucion
 from app.domain.nli import ParNli
 from app.evaluation.adaptadores_falsos import NliLexico
@@ -34,11 +35,10 @@ from app.evaluation.cronometro import Cronometro, RelojSimulado
 from app.evaluation.dataset_loader import CLASE_SINTETICA, DatasetInvalido
 from app.evaluation.fuente_dataset import DatasetSuite, FuenteDatasetEnDirectorio
 from app.evaluation.rutas import raiz_repo
-from app.config.settings import Settings
 from app.infrastructure.catalogo_clinico.manifiesto import cargar_catalogo_del_manifiesto
 from app.infrastructure.catalogo_clinico.sinonimos import cargar_terminos_por_tipo
-from app.infrastructure.llm.fabrica_local import crear_generador_de_seguimiento_local
 from app.infrastructure.clock.system_clock import RelojDelSistema
+from app.infrastructure.llm.fabrica_local import crear_generador_de_seguimiento_local
 from app.schemas.generated.models import RagFollowUpRequest, RagFollowUpResponse
 
 DATASET_POR_DEFECTO = Path("data/eval/fx-seguimiento")
