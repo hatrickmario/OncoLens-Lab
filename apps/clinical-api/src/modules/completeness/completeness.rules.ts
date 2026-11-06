@@ -152,7 +152,7 @@ function registrosQueCuentanDelItem(
  * la más reciente si hay varias; `undefined` si el ítem no declara `satisfiedBy` o no hay una que coincida en entidad,
  * clave y valor. No crea ni lee filas del destino: es la «ausencia declarada», no un registro inventado.
  */
-export function cumplePorDeclaracion(
+export function declaracionQueCumple(
   item: ItemDeDatoCritico,
   registros: RegistrosPorEntidad,
 ): RegistroDeDato | undefined {
@@ -182,7 +182,7 @@ export function cumplimientoDelItem(
   if (cuenta !== undefined && propios.length >= item.minValues) {
     return { registro: cuenta, resolvedBy: 'registro' };
   }
-  const declaracion = cumplePorDeclaracion(item, registros);
+  const declaracion = declaracionQueCumple(item, registros);
   return declaracion === undefined
     ? undefined
     : { registro: declaracion, resolvedBy: 'declaracion_de_ausencia' };

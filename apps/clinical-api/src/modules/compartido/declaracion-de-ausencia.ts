@@ -10,6 +10,9 @@ import { DeclaracionIncoherenteError } from './errores-de-registro.js';
  * INVARIANTE ÚNICO (design D4): una declaración vigente y un `PriorTreatment` vigente nunca coexisten. Esta regla vive
  * aquí, en un solo lugar, para que `prior-treatments` y `clinical-attributes` (que no dependen entre sí) la apliquen
  * igual, siempre dentro de una transacción con la fila del paciente bloqueada.
+ *
+ * Toda vía que deje vigente un `PriorTreatment` (p. ej. la aprobación de una extracción OCR, Post-MVP) debe llamar a
+ * esta regla.
  */
 
 /** Clave de la declaración en `atributos.json`; el `satisfiedBy` del catálogo la referencia (RN-29). */

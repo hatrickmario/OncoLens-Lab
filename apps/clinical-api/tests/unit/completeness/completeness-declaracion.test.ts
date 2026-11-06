@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   calcularChecklist,
-  cumplePorDeclaracion,
+  declaracionQueCumple,
   cumplimientoDelItem,
 } from '../../../src/modules/completeness/completeness.rules.js';
 import { createCompletenessService } from '../../../src/modules/completeness/completeness.service.js';
@@ -50,17 +50,17 @@ const conDeclaraciones = (...declaraciones: RegistroDeDato[]): RegistrosPorEntid
   PriorTreatment: [],
 });
 
-describe('cumplePorDeclaracion', () => {
+describe('declaracionQueCumple', () => {
   it('devuelve undefined cuando el ítem no declara satisfiedBy', () => {
     const sinCatalogo = { ...tratamientosPrevios, satisfiedBy: undefined };
 
-    expect(cumplePorDeclaracion(sinCatalogo, conDeclaraciones(declaracion('d-1')))).toBeUndefined();
+    expect(declaracionQueCumple(sinCatalogo, conDeclaraciones(declaracion('d-1')))).toBeUndefined();
   });
 
   it('devuelve la declaración vigente cuando coinciden la entidad, la clave y el valor', () => {
     const vigente = declaracion('d-1');
 
-    expect(cumplePorDeclaracion(tratamientosPrevios, conDeclaraciones(vigente))).toBe(vigente);
+    expect(declaracionQueCumple(tratamientosPrevios, conDeclaraciones(vigente))).toBe(vigente);
   });
 
   it.each(['reemplazado', 'rechazado'])(
@@ -69,7 +69,7 @@ describe('cumplePorDeclaracion', () => {
       const descartada = declaracion('d-1', { reviewStatus });
 
       expect(
-        cumplePorDeclaracion(tratamientosPrevios, conDeclaraciones(descartada)),
+        declaracionQueCumple(tratamientosPrevios, conDeclaraciones(descartada)),
       ).toBeUndefined();
     },
   );
@@ -79,19 +79,19 @@ describe('cumplePorDeclaracion', () => {
     ['otro valor', { attribute_key: 'sin_tratamiento_previo', value: 'no' }],
   ])('devuelve undefined cuando el registro tiene %s', (_caso, columnas) => {
     expect(
-      cumplePorDeclaracion(tratamientosPrevios, conDeclaraciones(registro('d-1', columnas))),
+      declaracionQueCumple(tratamientosPrevios, conDeclaraciones(registro('d-1', columnas))),
     ).toBeUndefined();
   });
 
   it('devuelve undefined cuando la entidad de la declaración no se leyó', () => {
-    expect(cumplePorDeclaracion(tratamientosPrevios, { PriorTreatment: [] })).toBeUndefined();
+    expect(declaracionQueCumple(tratamientosPrevios, { PriorTreatment: [] })).toBeUndefined();
   });
 
   it('devuelve la declaración más reciente cuando hay varias vigentes', () => {
     const antigua = declaracion('d-1', { fecha: '2026-10-01' });
     const reciente = declaracion('d-2', { fecha: '2026-11-05' });
 
-    expect(cumplePorDeclaracion(tratamientosPrevios, conDeclaraciones(antigua, reciente))).toBe(
+    expect(declaracionQueCumple(tratamientosPrevios, conDeclaraciones(antigua, reciente))).toBe(
       reciente,
     );
   });
