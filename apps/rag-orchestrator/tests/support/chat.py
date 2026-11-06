@@ -43,6 +43,7 @@ ESTADO_VACIO: dict[str, Any] = {
     "citasMostradas": [],
     "faltantesSenalados": [],
 }
+DEL_EJEMPLO = object()
 REHIDRATACION_VACIA: dict[str, Any] = {"turns": [], "structuredState": ESTADO_VACIO}
 
 
@@ -67,19 +68,29 @@ def solicitud_de_turno(
     pregunta: str = Q_CASO,
     *,
     hilo: str = HILO_A,
-    rehidratacion: dict[str, Any] | None = REHIDRATACION_VACIA,
+    rehidratacion: dict[str, Any] | None | object = DEL_EJEMPLO,
     version_del_catalogo: str = VERSION_DEL_CATALOGO_MONTADO,
 ) -> dict[str, Any]:
     """El ejemplo ``chat-turn-request.json`` del contrato con otra pregunta, hilo, catálogo y rehidratación.
 
-    Por defecto es el PRIMER turno de un hilo: lleva la rehidratación vacía que el contrato exige para crearlo."""
+    Por defecto conserva TAL CUAL la ``rehydration`` del ejemplo (el PRIMER turno de un hilo: vacía, como exige el
+    contrato); ``None`` la quita (turno de un hilo vivo) y un dict la reemplaza."""
     ejemplo = json.loads((EJEMPLOS / "chat-turn-request.json").read_text(encoding="utf-8"))
     solicitud = copy.deepcopy(ejemplo)
     solicitud["threadId"] = hilo
     solicitud["question"] = pregunta
     solicitud["catalogVersion"] = version_del_catalogo
-    if rehidratacion is not None:
+    if rehidratacion is None:
+        solicitud.pop("rehydration", None)
+    elif rehidratacion is not DEL_EJEMPLO:
         solicitud["rehydration"] = copy.deepcopy(rehidratacion)
+    return solicitud
+
+
+def solicitud_desde_ejemplo(nombre: str) -> dict[str, Any]:
+    """Un ejemplo ``chat-turn-request*.json`` TAL CUAL; solo se cambia ``catalogVersion`` por el del catálogo montado."""
+    solicitud = json.loads((EJEMPLOS / nombre).read_text(encoding="utf-8"))
+    solicitud["catalogVersion"] = VERSION_DEL_CATALOGO_MONTADO
     return solicitud
 
 
