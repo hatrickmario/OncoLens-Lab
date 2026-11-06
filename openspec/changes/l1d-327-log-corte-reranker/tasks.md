@@ -30,4 +30,4 @@ RERANKER_CUT_LOG_MAX_IDS=50
 
 - [x] 3.1 `openspec validate l1d-327-log-corte-reranker --strict`
 - [x] 3.2 Suite de `rag-orchestrator` en verde (Pytest 3169 passed, ruff; mypy no instalado en el entorno de pruebas, no ejecutado)
-- [ ] 3.3 TRASLADADA a archivo del S6: Al archivar en el S6, reconciliar el escenario «La etapa de corte envía como máximo 12 pares al reranker y registra solo recuentos» de `us-231b-adapter-nli-smoke-semilla` («sin ids ni texto» → «sin texto», citando `l1d-327`)
+Nota (acción del archivado en /sprint-close, no tarea de este PR): al archivar, reconciliar el escenario «La etapa de corte envía como máximo 12 pares al reranker y registra solo recuentos» de `us-231b-adapter-nli-smoke-semilla` («sin ids ni texto» → «sin texto», citando `l1d-327`)
