@@ -83,7 +83,7 @@ def test_chat_turn_no_deja_ficheros_conexiones_logs_ni_ids_del_paciente_cuando_t
         assert pregunta not in caplog.text
     for fragmento in ("Ana Gómez", DOCUMENTO, TELEFONO, CORREO):
         assert fragmento not in caplog.text
-    estado_del_hilo = entorno.registro.estado_para_inspeccion(HILO_A)
+    estado_del_hilo = entorno.estado_del_hilo(HILO_A)
     assert estado_del_hilo, "el hilo debería seguir vivo en memoria"
     assert not (set(CLAVES_PROHIBIDAS) & _claves(estado_del_hilo, set()))
     assert pseudo_id not in repr(estado_del_hilo)

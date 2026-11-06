@@ -60,6 +60,11 @@ class EntornoDeChat:
     def turno(self, solicitud: dict[str, Any]):
         return self.cliente.post("/chat/turn", json=solicitud)
 
+    def estado_del_hilo(self, thread_id: str) -> dict[str, Any] | None:
+        """Los valores del último punto de control del hilo en memoria; solo para pruebas (AC-8, limpieza del turno)."""
+        ultimo = self.registro.guardado.get_tuple(self.registro.configuracion(thread_id))
+        return None if ultimo is None else dict(ultimo.checkpoint["channel_values"])
+
     def llamadas_a_adapters(self) -> dict[str, int]:
         """Las invocaciones de los bordes que el turno no debe tocar antes de entrar al grafo."""
         return {"llm": self.llm.invocaciones, "contador": self.contador.consultas}

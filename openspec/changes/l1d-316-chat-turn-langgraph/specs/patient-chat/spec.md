@@ -138,3 +138,16 @@ Procesar turnos SHALL NOT crear ficheros, escribir en el schema `corpus` ni en M
 - **AND** los *logs* no contienen el texto de ninguna pregunta
 - **AND** el estado del hilo no tiene claves `patientId` ni `pseudoPatientId`
 - **AND** los tests de *permission denied* del rol `rag_corpus` siguen en verde
+
+### Requirement: Lenguaje no prescriptivo y límite de la evidencia en el turno
+Toda afirmación del turno SHALL pasar el filtro de lenguaje no prescriptivo de la salida generada (RN-23); la que lo incumple MUST omitirse y sumar a `omittedClaims`. Mientras el nodo `evidencia` no consulte el corpus, el turno de intención `evidencia` MUST añadir un bloque `limitacion` fijo que dice que la evidencia científica no se consultó. La memoria enviada al LLM SHALL NOT incluir el puntaje crudo de relevancia (RN-03), solo si hubo evidencia.
+
+#### Scenario: Una afirmación prescriptiva se omite (asumido: Gate 2 de lenguaje M-1)
+- **GIVEN** un LLM falso que propone una afirmación con un término prohibido y otra limpia, ambas con un `factRef` del turno
+- **WHEN** se procesa un turno de caso
+- **THEN** solo aparece la limpia y `omittedClaims` suma 1
+
+#### Scenario: La intención evidencia declara que no consultó el corpus (asumido: Gate 2 de lenguaje M-2)
+- **GIVEN** una pregunta que se enruta a `evidencia`
+- **WHEN** se procesa el turno
+- **THEN** el último bloque es `limitacion` con el texto fijo de configuración y sin eco de la pregunta

@@ -56,9 +56,9 @@ def test_un_turno_fallido_no_deja_la_pregunta_ni_los_hechos_en_un_hilo_existente
     fallido = entorno.turno(_sin_hilo("¿Cuál es el resumen del paciente en este momento?", HILO_A))
 
     assert fallido.status_code == 503
-    estado = entorno.registro.estado_para_inspeccion(HILO_A)
+    estado = entorno.estado_del_hilo(HILO_A)
     assert estado is not None
-    assert estado["pregunta"] == "" and estado["hechos"] == ()
+    assert not estado["pregunta"] and not estado["hechos"] and not estado.get("propuestas")
     assert "resumen del paciente en este momento" not in repr(estado)
     entorno.llm.error = None
     assert entorno.turno(_sin_hilo(Q_FALTANTES, HILO_A)).status_code == 200
@@ -69,7 +69,7 @@ def test_un_hilo_nuevo_cuyo_primer_turno_falla_se_olvida_cuando_el_llm_cae():
 
     assert entorno.turno(solicitud_de_turno(Q_CASO)).status_code == 503
 
-    assert entorno.registro.estado_para_inspeccion(HILO_A) is None
+    assert entorno.estado_del_hilo(HILO_A) is None
     assert entorno.turno(_sin_hilo(Q_FALTANTES, HILO_A)).status_code == 404
 
 
@@ -159,7 +159,9 @@ def test_el_registro_vence_los_hilos_del_fake_con_el_mismo_reloj_inyectado():
 
 
 def test_el_contrato_es_el_dueno_del_tope_de_turnos_de_la_rehidratacion_cuando_se_lee_el_openapi():
-    spec = yaml.safe_load((Path(__file__).resolve().parents[2] / "openapi.yaml").read_text(encoding="utf-8"))
+    spec = yaml.safe_load(
+        (Path(__file__).resolve().parents[2] / "openapi.yaml").read_text(encoding="utf-8")
+    )
 
     tope = spec["components"]["schemas"]["ChatRehydration"]["properties"]["turns"]["maxItems"]
 

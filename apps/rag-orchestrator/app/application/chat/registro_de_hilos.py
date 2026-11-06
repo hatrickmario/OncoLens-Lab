@@ -17,13 +17,14 @@ from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
 from app.application.errores import HiloDesconocidoError
 from app.application.ports import Clock
 from app.domain.chat.estado import (
+    ENTRADAS_DEL_TURNO_VACIAS,
     EstadoDelHilo,
     EstadoEstructurado,
     Intencion,
     TurnoPrevio,
     UltimaEvidencia,
 )
-from app.domain.chat.turno import BloqueDelTurno, HechoDelCaso, PropuestaDelTurno
+from app.domain.chat.turno import BloqueDelTurno, HechoDelCaso, PropuestaDelTurno, TipoDeBloque
 from app.domain.chat.vigencia import hilo_vencido
 
 
@@ -36,6 +37,7 @@ TIPOS_DEL_ESTADO = (
     HechoDelCaso,
     PropuestaDelTurno,
     BloqueDelTurno,
+    TipoDeBloque,
 )
 """Los únicos tipos que viajan en el estado del grafo: el serializador de LangGraph solo reconstruye estos (lista cerrada)."""
 
@@ -52,10 +54,19 @@ class RegistroDeHilos:
         self._max_hilos = max_hilos
         self._actividad: OrderedDict[str, datetime] = OrderedDict()
 
-    def abrir(self, thread_id: str, *, con_rehidratacion: bool) -> bool:
-        """Registra actividad en el hilo. ``True`` si el hilo se crea ahora (hay que sembrarlo con la ``rehydration``).
+    def admitir_turno(self, thread_id: str, *, con_rehidratacion: bool) -> bool:
+        """Decide si un turno entra y deja el registro listo para él. Es la ÚNICA puerta de entrada de los turnos (el
+        servicio real y el fake de ``LLM_PROVIDER=fake`` pasan por aquí) y hace, en este orden:
 
-        Un hilo ausente sin ``rehydration`` lanza ``HiloDesconocidoError`` antes de entrar al grafo."""
+        1. **Purga** los hilos cuya última actividad superó el TTL (perezosa, con el reloj inyectado).
+        2. Rechaza con ``HiloDesconocidoError`` un hilo ausente sin ``rehydration``: no cambia nada más, en particular
+           **no desaloja** ningún hilo vivo.
+        3. Si el hilo es nuevo (hay ``rehydration``), **desaloja** los de actividad más antigua hasta dejarle lugar
+           (``CHAT_MAX_THREADS``).
+        4. **Renueva** la actividad del hilo (el TTL es deslizante) y lo pone como el más reciente.
+
+        Devuelve ``True`` si el hilo se crea ahora y hay que sembrarlo con la ``rehydration``; ``False`` si ya estaba vivo
+        (su estado manda y la ``rehydration`` se ignora)."""
         ahora = self._reloj.ahora()
         self._purgar_vencidos(ahora)
         es_nuevo = thread_id not in self._actividad
@@ -68,7 +79,6 @@ class RegistroDeHilos:
         return es_nuevo
 
     def _purgar_vencidos(self, ahora: datetime) -> None:
-        """Purga perezosa (sin tarea en segundo plano): en cada turno se descartan los hilos sin actividad dentro del TTL."""
         for hilo in [
             h
             for h, ultima in self._actividad.items()
@@ -77,13 +87,9 @@ class RegistroDeHilos:
             self.olvidar(hilo)
 
     def _desalojar_hasta_dejar_lugar(self) -> None:
-        """Al crear un hilo con el registro lleno se desaloja el de actividad más antigua, con su estado."""
         while len(self._actividad) >= self._max_hilos:
             mas_antiguo = next(iter(self._actividad))
             self.olvidar(mas_antiguo)
-
-    def admitir_turno(self, thread_id: str, *, con_rehidratacion: bool) -> bool:
-        raise NotImplementedError("no implementado")
 
     def olvidar(self, thread_id: str) -> None:
         """Descarta el hilo (p. ej. si su primer turno falló): el siguiente turno debe traer ``rehydration``."""
@@ -95,19 +101,21 @@ class RegistroDeHilos:
         return {"configurable": {"thread_id": thread_id}}
 
     def compactar(self, thread_id: str) -> None:
-        """Deja solo el último punto de control del hilo: ``InMemorySaver`` guarda uno por paso y crecería sin límite."""
+        """Deja solo el último punto de control del hilo y le vacía las entradas del turno.
+
+        ``InMemorySaver`` guarda un punto por paso y crecería sin límite; y si el turno falló, el punto de control de
+        entrada conserva la pregunta y los hechos del turno, que no deben sobrevivirle (RN-10, RN-11)."""
         ultimo = self.guardado.get_tuple(self.configuracion(thread_id))
         if ultimo is None:
             return
+        checkpoint = {
+            **ultimo.checkpoint,
+            "channel_values": {**ultimo.checkpoint["channel_values"], **ENTRADAS_DEL_TURNO_VACIAS},
+        }
         self.guardado.delete_thread(thread_id)
         self.guardado.put(
             {"configurable": {"thread_id": thread_id, "checkpoint_ns": ""}},
-            ultimo.checkpoint,
+            checkpoint,
             ultimo.metadata,
-            ultimo.checkpoint["channel_versions"],
+            checkpoint["channel_versions"],
         )
-
-    def estado_para_inspeccion(self, thread_id: str) -> dict[str, Any] | None:
-        """Los valores del último punto de control del hilo; solo para las pruebas de no persistencia (AC-8)."""
-        ultimo = self.guardado.get_tuple(self.configuracion(thread_id))
-        return None if ultimo is None else dict(ultimo.checkpoint["channel_values"])

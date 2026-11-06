@@ -67,13 +67,16 @@ class ChatTurnService:
                 terminos_por_tipo=terminos_por_tipo,
             ),
             guardado=self.registro.guardado,
+            verificador_terminos=verificador_terminos,
         )
 
     async def turno(self, solicitud: ChatTurnRequest) -> ChatTurnResponse:
         trace_id = solicitud.traceId.root
         exigir_catalogo_de_la_solicitud(self._catalogo, trace_id, solicitud.catalogVersion)
         hilo = solicitud.threadId
-        es_nuevo = self.registro.abrir(hilo, con_rehidratacion=solicitud.rehydration is not None)
+        es_nuevo = self.registro.admitir_turno(
+            hilo, con_rehidratacion=solicitud.rehydration is not None
+        )
         try:
             final = await self._grafo.ainvoke(
                 self._entrada_del_turno(solicitud, es_nuevo), self.registro.configuracion(hilo)
@@ -83,6 +86,8 @@ class ChatTurnService:
                 es_nuevo
             ):  # un hilo sin su primer turno no tiene estado: que Backend 1 vuelva a rehidratarlo
                 self.registro.olvidar(hilo)
+            else:  # el turno fallido no deja su pregunta ni sus hechos en el hilo que sigue vivo
+                self.registro.compactar(hilo)
             raise
         self.registro.compactar(hilo)
         logger.info(

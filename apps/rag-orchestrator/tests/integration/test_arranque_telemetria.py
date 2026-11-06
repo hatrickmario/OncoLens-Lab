@@ -24,7 +24,9 @@ def test_crear_app_se_niega_nombrando_la_variable_cuando_el_trazado_de_langchain
 
     mensaje = str(error.value)
     assert variable in mensaje
-    assert f"={valor}" not in mensaje and f"'{valor}'" not in mensaje and f'"{valor}"' not in mensaje
+    assert (
+        f"={valor}" not in mensaje and f"'{valor}'" not in mensaje and f'"{valor}"' not in mensaje
+    )
 
 
 @pytest.mark.parametrize("valor", ["false", "0", "", "no"])

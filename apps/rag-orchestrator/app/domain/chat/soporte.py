@@ -16,7 +16,12 @@ def afirmacion_tiene_soporte_del_turno(
     fact_refs_del_turno: Collection[str],
     chunk_ids_del_turno: Collection[str],
 ) -> bool:
-    """``True`` si la afirmación cita al menos algo y TODO lo que cita es de este turno."""
+    """``True`` si la afirmación cita al menos algo y TODO lo que cita es de este turno (semántica «todo o nada»).
+
+    No delega en ``domain.citations.validar_citas``: esa regla opera sobre una opción del análisis y conserva las citas
+    válidas de una opción que además trae alguna inválida. En el chat una afirmación que cita algo ajeno al turno (memoria,
+    un hecho o chunk de otro turno) se omite entera: no hay una afirmación «parcialmente» soportada. Cuando los nodos de
+    evidencia recuperen chunks (L1D-322), la verificación de la cita contra el corpus seguirá siendo ``validar_citas``."""
     if not fact_refs and not chunk_ids:
         return False
     return all(r in fact_refs_del_turno for r in fact_refs) and all(

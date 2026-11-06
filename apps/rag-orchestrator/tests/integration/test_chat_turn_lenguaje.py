@@ -24,7 +24,11 @@ def _rehidratacion_con_ultima_evidencia(chunks: list[str], puntaje: float | None
             "opcionesMostradas": [],
             "citasMostradas": [],
             "faltantesSenalados": [],
-            "ultimaEvidencia": {"query": "terapia", "chunkIds": chunks, "topRelevanceScore": puntaje},
+            "ultimaEvidencia": {
+                "query": "terapia",
+                "chunkIds": chunks,
+                "topRelevanceScore": puntaje,
+            },
         },
     }
 
@@ -70,7 +74,9 @@ def test_chat_turn_no_envia_el_puntaje_crudo_al_prompt_y_dice_con_evidencia_cuan
     entorno = crear_entorno_de_chat("CHAT-OK")
 
     entorno.turno(
-        solicitud_de_turno(Q_CASO, rehidratacion=_rehidratacion_con_ultima_evidencia(["c1"], 0.8731))
+        solicitud_de_turno(
+            Q_CASO, rehidratacion=_rehidratacion_con_ultima_evidencia(["c1"], 0.8731)
+        )
     )
 
     memoria = _memoria_del_ultimo_prompt(entorno)
@@ -81,7 +87,9 @@ def test_chat_turn_no_envia_el_puntaje_crudo_al_prompt_y_dice_con_evidencia_cuan
 def test_chat_turn_dice_sin_evidencia_en_la_memoria_cuando_el_puntaje_es_null():
     entorno = crear_entorno_de_chat("CHAT-OK")
 
-    entorno.turno(solicitud_de_turno(Q_CASO, rehidratacion=_rehidratacion_con_ultima_evidencia([], None)))
+    entorno.turno(
+        solicitud_de_turno(Q_CASO, rehidratacion=_rehidratacion_con_ultima_evidencia([], None))
+    )
 
     memoria = _memoria_del_ultimo_prompt(entorno)
     assert "sin evidencia" in memoria and "null" not in memoria
@@ -94,4 +102,4 @@ def test_chat_turn_usa_voz_impersonal_en_los_mensajes_del_sistema_cuando_respond
     )
 
     assert "puede formularse sobre ese caso" in fuera["blocks"][0]["text"]
-    assert "puede reformularse" in sin_clasificar["blocks"][0]["text"]
+    assert "puede reformularse" in sin_clasificar["blocks"][0]["text"].lower()

@@ -3,7 +3,7 @@
   "blocks": [
     {
       "kind": "limitacion",
-      "text": "No pude clasificar la pregunta. Reformúlala indicando si se refiere a la situación del caso, a los datos que faltan o a la evidencia científica."
+      "text": "No se pudo clasificar la pregunta. Puede reformularse indicando si se refiere a la situación del caso, a los datos que faltan o a la evidencia científica."
     }
   ],
   "omittedClaims": 0,

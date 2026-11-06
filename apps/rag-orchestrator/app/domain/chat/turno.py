@@ -3,9 +3,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import StrEnum
 
-BLOQUE_DOCUMENTADO = "documentado"
-BLOQUE_LIMITACION = "limitacion"
+from app.domain.chat.estado import Intencion, TurnoPrevio
+
+
+class TipoDeBloque(StrEnum):
+    """Los tipos de ``ChatBlock.kind`` que este change emite; el enum cerrado de 8 valores es del contrato."""
+
+    documentado = "documentado"
+    limitacion = "limitacion"
 
 
 @dataclass(frozen=True)
@@ -30,6 +37,22 @@ class PropuestaDelTurno:
 
 @dataclass(frozen=True)
 class BloqueDelTurno:
-    tipo: str
+    tipo: TipoDeBloque
     texto: str
     fact_refs: tuple[str, ...] = ()
+
+
+def turno_previo_de(
+    pregunta: str, intencion: Intencion, bloques: tuple[BloqueDelTurno, ...]
+) -> TurnoPrevio:
+    """El turno tal como Backend 1 lo guarda y reenvía al rehidratar: textos de los bloques y la unión ordenada de sus
+    ``factRef`` (sin repetidos). Una sola regla para el hilo vivo y el reconstruido (AC-5)."""
+    fact_refs: list[str] = []
+    for bloque in bloques:
+        fact_refs += [r for r in bloque.fact_refs if r not in fact_refs]
+    return TurnoPrevio(
+        pregunta=pregunta,
+        intencion=intencion.value,
+        textos_de_bloques=tuple(b.texto for b in bloques),
+        fact_refs=tuple(fact_refs),
+    )

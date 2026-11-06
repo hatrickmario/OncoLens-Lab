@@ -104,8 +104,9 @@ def _texto_de_la_memoria(estado: EstadoDelHilo, ventana: Sequence[TurnoPrevio]) 
     ultima = (
         SIN_DATOS
         if evidencia is None
-        else f"{evidencia.query} | chunks: {', '.join(evidencia.chunk_ids)} | puntaje: "
-        f"{'null' if evidencia.top_relevance_score is None else evidencia.top_relevance_score}"
+        # Solo si hubo o no evidencia: el puntaje crudo es metadato secundario y no entra al prompt (RN-03).
+        else f"{evidencia.query} | chunks: {', '.join(evidencia.chunk_ids)} | "
+        f"{'sin evidencia' if evidencia.top_relevance_score is None else 'con evidencia'}"
     )
     lineas = [
         "Estado de la conversación:",

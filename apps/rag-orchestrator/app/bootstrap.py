@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import os
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, NoReturn
@@ -25,6 +24,7 @@ from app.application.catalogo_exigido import (
     ConsultaConCatalogoExigido,
     SeguimientoConCatalogoExigido,
 )
+from app.application.chat.registro_de_hilos import RegistroDeHilos
 from app.application.chat.servicio_de_turno import ChatTurnService
 from app.application.consulta_no_componible import (
     ChatNoComponible,
@@ -67,6 +67,7 @@ from app.config.errores_de_configuracion import (
 )
 from app.config.logging import registrar_evento, silenciar_urls_de_httpx_en_logs
 from app.config.settings import Settings, claves_de_recuperacion_ausentes, nombres_de_claves
+from app.config.entorno import entorno_del_proceso
 from app.config.telemetria import exigir_telemetria_de_langchain_apagada
 from app.config.version import VERSION_DEL_SERVICIO
 from app.domain.criterios_aplicabilidad import CriteriosDeAplicabilidad
@@ -259,8 +260,8 @@ def crear_app(
     datos_criticos: EtiquetasDeDatosCriticos | None = None,
 ) -> FastAPI:
     silenciar_urls_de_httpx_en_logs()
-    exigir_telemetria_de_langchain_apagada(os.environ)
-    modelos =_cargar_modelos_segun(settings, cargador_de_modelos)
+    exigir_telemetria_de_langchain_apagada(entorno_del_proceso())
+    modelos = _cargar_modelos_segun(settings, cargador_de_modelos)
     catalogo_clinico = catalogo_clinico or _montar_catalogo_clinico(settings)
     recuperacion = recuperacion or _componer_recuperacion(
         settings, modelos, corpus, catalogo_clinico
@@ -461,7 +462,15 @@ def _registrar_chat(
     """`POST /chat/turn`: con ``LLM_PROVIDER=fake`` el ejemplo del contrato; con ``local`` el servicio real (RN-12)."""
     if chat is None and settings.llm_provider == "fake":
         chat = ChatConCatalogoExigido(
-            FakeChatTurn.desde_directorio(settings.fake_responses_path), catalogo
+            FakeChatTurn.desde_directorio(
+                settings.fake_responses_path,
+                RegistroDeHilos(
+                    reloj=clock,
+                    ttl_segundos=settings.chat_thread_ttl_seconds,
+                    max_hilos=settings.chat_max_threads,
+                ),
+            ),
+            catalogo,
         )
     elif chat is None:
         chat = _crear_chat_turn(settings, clock, catalogo)

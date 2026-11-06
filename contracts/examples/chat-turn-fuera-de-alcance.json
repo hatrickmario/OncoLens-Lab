@@ -3,7 +3,7 @@
   "blocks": [
     {
       "kind": "limitacion",
-      "text": "Esta conversación solo responde sobre el paciente y el tipo de cáncer del caso abierto. Formula la pregunta sobre ese caso."
+      "text": "Esta conversación solo trata del paciente y del tipo de cáncer del caso abierto. La pregunta puede formularse sobre ese caso."
     }
   ],
   "omittedClaims": 0,

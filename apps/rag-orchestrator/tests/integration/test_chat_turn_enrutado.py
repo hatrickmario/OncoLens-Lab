@@ -74,7 +74,7 @@ def test_chat_turn_devuelve_no_clasificada_sin_nodos_de_generacion_cuando_la_cla
     cuerpo = respuesta.json()
     assert cuerpo["intent"] == "no_clasificada"
     assert [b["kind"] for b in cuerpo["blocks"]] == ["limitacion"]
-    assert "reformúl" in cuerpo["blocks"][0]["text"].lower()
+    assert "reformularse" in cuerpo["blocks"][0]["text"].lower()
     assert cuerpo["notices"] == []
     assert entorno.llm.llamadas_de_clasificacion == 1
     assert entorno.llm.llamadas_de_generacion == 0

@@ -79,7 +79,7 @@ def estado_estructurado_del_contrato(estado: EstadoEstructurado) -> dict[str, An
 
 
 def bloque_del_contrato(bloque: BloqueDelTurno) -> dict[str, Any]:
-    cuerpo: dict[str, Any] = {"kind": bloque.tipo, "text": bloque.texto}
+    cuerpo: dict[str, Any] = {"kind": bloque.tipo.value, "text": bloque.texto}
     if bloque.fact_refs:
         cuerpo["factRefs"] = list(bloque.fact_refs)
     return cuerpo

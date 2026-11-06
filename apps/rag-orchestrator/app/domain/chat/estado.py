@@ -11,7 +11,11 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 
 MAX_TURNOS_EN_MEMORIA = 50
-"""Tope de turnos que un hilo conserva (el de ``ChatRehydration.turns`` del contrato): acota la memoria del proceso."""
+"""Tope de turnos que un hilo conserva: lo fija el contrato (``ChatRehydration.turns`` ``maxItems: 50``), que es su dueño;
+Backend 1 lo consume de ahí. Un test compara ambos. Acota la memoria del proceso."""
+
+ENTRADAS_DEL_TURNO_VACIAS: dict[str, object] = {"pregunta": "", "hechos": (), "propuestas": ()}
+"""Lo que un turno deja en el estado del grafo y que no debe sobrevivirle: se vacía al cerrar y si el turno falla."""
 
 
 class Intencion(StrEnum):
