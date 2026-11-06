@@ -106,4 +106,18 @@ describe('Solo el rol doctor conversa y la conversación debe existir (E-04)', (
     expect(respuesta.body.error).toBe('CUERPO_INVALIDO');
     expect(rag.chat.llamadas()).toBe(0);
   });
+
+  it('responde 422 CUERPO_INVALIDO sin llamar a Backend 2 cuando aboutTurnId no es un turno de la conversación [US-258 AC-8]', async () => {
+    const { app } = await montar();
+    const conversationId = await abrirConversacion(app, cookieDoctor, patientId);
+
+    const respuesta = await clienteVerificado(app)
+      .post(rutaDeTurnos(conversationId))
+      .set('Cookie', cookieDoctor)
+      .send({ question: PREGUNTA_DE_CASO, aboutTurnId: UUID_INEXISTENTE });
+
+    expect(respuesta.status).toBe(422);
+    expect(respuesta.body.error).toBe('CUERPO_INVALIDO');
+    expect(rag.chat.llamadas()).toBe(0);
+  });
 });

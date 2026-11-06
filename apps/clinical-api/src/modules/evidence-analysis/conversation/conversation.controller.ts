@@ -15,7 +15,11 @@ import {
   type Rechazo,
 } from '../rechazos-http.js';
 import { conversationTurnCreateSchema } from './conversation.schema.js';
-import { ConversacionNoEncontradaError, type ConversationService } from './conversation.service.js';
+import {
+  ConversacionNoEncontradaError,
+  TurnoReferidoInexistenteError,
+  type ConversationService,
+} from './conversation.service.js';
 
 export interface DependenciasDelControllerDeConversacion {
   service: ConversationService;
@@ -28,6 +32,7 @@ const EVENTO = 'conversation.solicitud';
 /** Errores del dominio → respuesta HTTP; `undefined` si no es uno de ellos (sigue al 500 genérico). */
 function rechazoDe(error: unknown): Rechazo | undefined {
   if (error instanceof FalloDePersistenciaError) return ERROR_INTERNO;
+  if (error instanceof TurnoReferidoInexistenteError) return CUERPO_INVALIDO;
   if (error instanceof ChecklistNoDisponibleError) {
     return { ...ERROR_INTERNO, resultado: 'checklist_no_disponible' };
   }

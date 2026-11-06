@@ -63,6 +63,9 @@ export function mapearFalloRag(fallo: FalloDeRag): RespuestaDeFallo {
         : servicioIa('validacion_rechazada_por_rag');
     case 401:
       return servicioIa('token_de_servicio_rechazado');
+    case 404:
+      // Solo `/chat/turn` lo emite: un hilo que rag-orchestrator no conoce, ya tras la rehidratación (L1D-315).
+      return servicioIa(fallo.codigo === 'HILO_DESCONOCIDO' ? 'hilo_desconocido' : 'error_de_rag');
     case 409:
       return falloDe409(fallo.codigo);
     case 429:
@@ -84,4 +87,14 @@ export function mapearFalloRagDeSeguimiento(fallo: FalloDeRag): RespuestaDeFallo
   return respuesta.status === 409 || respuesta.status === 422
     ? servicioIa(respuesta.resultado)
     : respuesta;
+}
+
+/**
+ * Fallo de `/chat/turn` (L1D-315): el `409` de catálogo se conserva (`409 ErrorCatalogVersionMismatch`, no se guarda el
+ * turno) y los `422` de Backend 2 se exponen como `502`, porque la pregunta del oncólogo ya se validó en clinical-api y
+ * el rechazo es un fallo interno entre servicios. Misma tabla única, sin tabla paralela.
+ */
+export function mapearFalloRagDeChat(fallo: FalloDeRag): RespuestaDeFallo {
+  const respuesta = mapearFalloRag(fallo);
+  return respuesta.status === 422 ? servicioIa(respuesta.resultado) : respuesta;
 }
