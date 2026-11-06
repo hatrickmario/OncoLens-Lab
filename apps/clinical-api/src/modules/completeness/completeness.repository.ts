@@ -216,5 +216,11 @@ export function createCompletenessRepository(db: Consultador): RegistrosDeComple
     },
     registrosVariosSinFiltrarPorRevision: (patientIds, entidades) =>
       leerVarios(db, patientIds, entidades),
+    conflictosPendientes: () => {
+      throw new Error('no implementado');
+    },
+    tiposDeDocumentoProcesados: () => {
+      throw new Error('no implementado');
+    },
   };
 }

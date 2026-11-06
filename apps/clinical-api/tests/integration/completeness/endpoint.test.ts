@@ -245,6 +245,7 @@ describe('cabeceras y fallo cerrado', () => {
           key: 'x',
           label: 'SINT-etiqueta-fuera-de-contrato',
           status: 'faltante' as const,
+          gapType: 'no_buscado' as const,
           origin: 'regla' as const,
           provenance: null,
           destination: { entity: 'EntidadInexistente', field: null },

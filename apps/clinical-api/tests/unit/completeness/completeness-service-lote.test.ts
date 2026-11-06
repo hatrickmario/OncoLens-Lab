@@ -22,6 +22,7 @@ const catalogo: CatalogoDeDatosCriticos = {
               cancerType: tipo,
               destination: { entity: 'Diagnosis', field: 'histology' },
               minValues: 1,
+              sourceDocumentTypes: ['examen'],
             },
             {
               key: tipo === 'mama' ? 're' : 'psa',
@@ -29,6 +30,7 @@ const catalogo: CatalogoDeDatosCriticos = {
               cancerType: tipo,
               destination: { entity: tipo === 'mama' ? 'Biomarker' : 'ClinicalAttribute' },
               minValues: 1,
+              sourceDocumentTypes: ['examen'],
             },
           ],
         }
@@ -57,6 +59,8 @@ function registrosDe(
   const pedidos: Pedido[] = [];
   const registros: RegistrosDeCompletitud = {
     existenPacientes: async (ids) => new Set(ids.filter((id) => opciones.existen?.includes(id))),
+    conflictosPendientes: async (ids) => new Map(ids.map((id) => [id, {}])),
+    tiposDeDocumentoProcesados: async (ids) => new Map(ids.map((id) => [id, new Set<string>()])),
     registrosVariosSinFiltrarPorRevision: async (ids, entidades) => {
       pedidos.push({ ids, entidades });
       if (opciones.fallanEntidades !== undefined && entidades.includes(opciones.fallanEntidades)) {

@@ -11,6 +11,7 @@ import type {
   RegistroDeDato,
   RegistrosPorEntidad,
   ResueltoPor,
+  TipoDeVacio,
 } from './ports.js';
 
 /**
@@ -244,6 +245,28 @@ export function calcularChecklist(entrada: EntradaDelChecklist): EstadoDeItem[] 
     key: item.key,
     status: estadoDelItem(item, delTipo, entrada.verifiedReviewStatuses, entrada.registros),
   }));
+}
+
+/** Lo que `clasificarVacio` necesita saber del paciente, además del estado del ítem (todo calculado fuera, sin E/S). */
+export interface EvidenciaDelVacio {
+  /** Registros vigentes (RN-07) que cuentan en el destino del ítem. */
+  readonly registrosVigentes: number;
+  /** Hay un registro vigente en `requiere_revision` con `conflicts_with_id` que contradice el dato del ítem (RN-08). */
+  readonly conflictoPendiente: boolean;
+  /** `document_type` de los documentos del paciente con `ocr_status = completado`. */
+  readonly documentosProcesados: ReadonlySet<string>;
+}
+
+/**
+ * Tipo de vacío del ítem (US-263, `[S6 resp. 10]`, `[S6 resp. 17]`). Prioridad: `por_conciliar` > `incompleto` >
+ * `no_buscado` > `no_encontrado`; `null` si verificado y sin conflicto, o `no_aplica`. No cambia el `status`.
+ */
+export function clasificarVacio(
+  _item: ItemDeDatoCritico,
+  _estado: EstadoDelChecklist,
+  _evidencia: EvidenciaDelVacio,
+): TipoDeVacio | null {
+  throw new Error('no implementado');
 }
 
 /** Los ítems en estado `faltante`, en el orden del catálogo: ÚNICA definición de «faltante» (contador, endpoint y análisis). */

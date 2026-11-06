@@ -46,6 +46,7 @@ const esquemaDeDatosCriticos = z.object({
         .array(z.object({ entity: z.string(), attribute_key: z.string(), value: z.string() }))
         .optional(),
       minValues: z.number().int().min(1),
+      sourceDocumentTypes: z.array(z.enum(['historia_clinica', 'examen'])).min(1),
     }),
   ),
 });

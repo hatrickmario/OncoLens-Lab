@@ -44,6 +44,7 @@ function conProcedencia(
     key: item.key,
     label: item.label,
     status: estado.status,
+    gapType: null,
     ...procedenciaDeItem(item, estado.status, cumplimiento?.registro),
     // Solo los ítems que el catálogo puede cumplir por declaración exponen la vía (aditivo, ADR-26).
     ...(cumplimiento !== undefined &&

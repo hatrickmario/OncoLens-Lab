@@ -13,6 +13,7 @@ const item = (key: string, entity: string): ItemDeDatoCritico => ({
   cancerType: 'mama',
   destination: { entity, field: 'value' },
   minValues: 1,
+  sourceDocumentTypes: ['examen'],
 });
 
 const catalogo: CatalogoDeDatosCriticos = {

@@ -16,6 +16,7 @@ const checklistCon = (...items: [string, EstadoDelChecklist][]): ChecklistDelPac
       key,
       label: key,
       status,
+      gapType: null,
       origin: presente ? 'seed' : 'regla',
       provenance: presente
         ? { entryMethod: 'seed', reviewStatus: 'verificado', sourceDocumentId: null }

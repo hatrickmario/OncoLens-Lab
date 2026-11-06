@@ -54,5 +54,9 @@ export function registrosDeCompletitudFalsos(
       opciones.pedidos?.push(entidades);
       return new Map(patientIds.map((id) => [id, registrosDe(id, entidades)]));
     },
+    // Sin conflictos ni documentos por defecto: cada clave pedida aparece (contrato del puerto real).
+    conflictosPendientes: async (patientIds) => new Map(patientIds.map((id) => [id, {}])),
+    tiposDeDocumentoProcesados: async (patientIds) =>
+      new Map(patientIds.map((id) => [id, new Set<string>()])),
   };
 }
