@@ -345,6 +345,9 @@
       "anioNacimiento": "Nacimiento: {anio}",
       "faltanteUno": "1 faltante",
       "faltantesN": "{n} faltantes",
+      "faltantesNoDisponible": "No disponible",
+      "faltantesNoAplica": "—",
+      "faltantesNoAplicaAccesible": "No aplica: sin cálculo para este tipo de cáncer",
       "porRevisarN": "{n} por revisar",
       "sinDato": "No disponible en esta vista"
     },

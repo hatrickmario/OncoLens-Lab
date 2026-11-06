@@ -12,6 +12,28 @@ function textoDeFaltantes(n: number, textos: TextosDePacientes['tabla']): string
   return n === 1 ? textos.faltanteUno : rellenar(textos.faltantesN, { n });
 }
 
+type PacienteDelMedico = Exclude<Paciente, { view: 'admin' }>;
+
+/** Faltantes críticos: número real, «—» si el tipo no tiene cálculo, «No disponible» si falló; nunca un 0 inventado (RN-26). */
+function CeldaDeFaltantes({
+  paciente,
+  textos,
+}: {
+  paciente: PacienteDelMedico;
+  textos: TextosDePacientes['tabla'];
+}) {
+  if (paciente.completenessAvailable === false) return <>{textos.faltantesNoDisponible}</>;
+  if (!paciente.cancerTypeEnabled) {
+    return (
+      <>
+        <span aria-hidden="true">{textos.faltantesNoAplica}</span>
+        <span className="sr-only">{textos.faltantesNoAplicaAccesible}</span>
+      </>
+    );
+  }
+  return <>{textoDeFaltantes(paciente.missingCriticalCount, textos)}</>;
+}
+
 /** Identificación enmascarada: el nombre enlaza a la ficha; la máscara y el año distinguen a los homónimos. */
 function CeldaDelPaciente({ paciente, textos }: { paciente: Paciente; textos: TextosDePacientes }) {
   if (paciente.view === 'admin') {
@@ -41,7 +63,9 @@ function CeldasClinicas({ paciente, textos }: { paciente: Paciente; textos: Text
   }
   return (
     <>
-      <td className={CELDA}>{textoDeFaltantes(paciente.missingCriticalCount, textos.tabla)}</td>
+      <td className={CELDA}>
+        <CeldaDeFaltantes paciente={paciente} textos={textos.tabla} />
+      </td>
       <td className={CELDA}>
         {rellenar(textos.tabla.porRevisarN, { n: paciente.pendingReviewCount })}
       </td>

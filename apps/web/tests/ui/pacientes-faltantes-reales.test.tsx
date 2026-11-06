@@ -75,7 +75,7 @@ describe('Listado de pacientes · columna Faltantes críticos real (feedback de 
     expect(within(filaDegradada).getByText('No disponible')).toBeTruthy();
     expect(within(filaDegradada).queryByText('0 faltantes')).toBeNull();
     expect(screen.getByRole('link', { name: /P\. S\. 2\./ }).getAttribute('href')).toBe(
-      `/pacientes/${noDisponible.id}`,
+      `/pacientes/${noDisponible?.id}`,
     );
   });
 });
