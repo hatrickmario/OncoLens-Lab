@@ -12,7 +12,7 @@
     "status": "propuesta_revisada",
     "reviewerRole": "oncologo_asesor",
     "date": "2026-10-24",
-    "catalogHash": "4f15cc21a0b7284e0f80f11cb4c6c483e1e92757640f4c350164f6739cc24180"
+    "catalogHash": "3b7fb93560a6f53e54d2f33dd57a1732d78127b032d5f910f5401603dfadd417"
   },
   "items": [
     {
@@ -27,6 +27,10 @@
         "field": "histology"
       },
       "minValues": 1,
+      "sourceDocumentTypes": [
+        "historia_clinica",
+        "examen"
+      ],
       "estado": "propuesta"
     },
     {
@@ -41,6 +45,10 @@
         "field": "stage_value"
       },
       "minValues": 1,
+      "sourceDocumentTypes": [
+        "historia_clinica",
+        "examen"
+      ],
       "estado": "propuesta"
     },
     {
@@ -59,6 +67,9 @@
         }
       },
       "minValues": 1,
+      "sourceDocumentTypes": [
+        "examen"
+      ],
       "estado": "propuesta"
     },
     {
@@ -77,6 +88,9 @@
         }
       },
       "minValues": 1,
+      "sourceDocumentTypes": [
+        "examen"
+      ],
       "estado": "propuesta",
       "condition": {
         "item": "her2_ihq",
@@ -102,6 +116,9 @@
         }
       },
       "minValues": 1,
+      "sourceDocumentTypes": [
+        "examen"
+      ],
       "estado": "propuesta"
     },
     {
@@ -116,6 +133,9 @@
         "field": "performance_value"
       },
       "minValues": 1,
+      "sourceDocumentTypes": [
+        "historia_clinica"
+      ],
       "estado": "propuesta"
     },
     {
@@ -133,6 +153,9 @@
         }
       },
       "minValues": 1,
+      "sourceDocumentTypes": [
+        "historia_clinica"
+      ],
       "estado": "propuesta"
     }
   ]

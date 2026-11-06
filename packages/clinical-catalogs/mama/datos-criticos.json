@@ -1,5 +1,5 @@
 {
-  "version": "1.2.0",
+  "version": "1.3.0",
   "verifiedReviewStatuses": [
     "verificado",
     "corregido"
@@ -17,6 +17,10 @@
         "field": "histology"
       },
       "minValues": 1,
+      "sourceDocumentTypes": [
+        "historia_clinica",
+        "examen"
+      ],
       "estado": "propuesta"
     },
     {
@@ -31,6 +35,10 @@
         "field": "grade"
       },
       "minValues": 1,
+      "sourceDocumentTypes": [
+        "historia_clinica",
+        "examen"
+      ],
       "estado": "propuesta"
     },
     {
@@ -45,6 +53,10 @@
         "field": "stage_value"
       },
       "minValues": 1,
+      "sourceDocumentTypes": [
+        "historia_clinica",
+        "examen"
+      ],
       "estado": "propuesta"
     },
     {
@@ -62,6 +74,9 @@
         }
       },
       "minValues": 1,
+      "sourceDocumentTypes": [
+        "examen"
+      ],
       "estado": "propuesta"
     },
     {
@@ -79,6 +94,9 @@
         }
       },
       "minValues": 1,
+      "sourceDocumentTypes": [
+        "examen"
+      ],
       "estado": "propuesta"
     },
     {
@@ -97,6 +115,9 @@
         }
       },
       "minValues": 1,
+      "sourceDocumentTypes": [
+        "examen"
+      ],
       "estado": "propuesta"
     },
     {
@@ -115,6 +136,9 @@
         }
       },
       "minValues": 1,
+      "sourceDocumentTypes": [
+        "examen"
+      ],
       "estado": "propuesta",
       "condition": {
         "item": "her2_ihq",
@@ -140,6 +164,9 @@
         }
       },
       "minValues": 1,
+      "sourceDocumentTypes": [
+        "examen"
+      ],
       "estado": "propuesta"
     },
     {
@@ -157,6 +184,9 @@
         }
       },
       "minValues": 1,
+      "sourceDocumentTypes": [
+        "historia_clinica"
+      ],
       "estado": "propuesta"
     },
     {
@@ -171,6 +201,9 @@
         "field": "performance_value"
       },
       "minValues": 1,
+      "sourceDocumentTypes": [
+        "historia_clinica"
+      ],
       "estado": "propuesta"
     },
     {
@@ -191,6 +224,9 @@
         }
       ],
       "minValues": 1,
+      "sourceDocumentTypes": [
+        "historia_clinica"
+      ],
       "estado": "propuesta"
     },
     {
@@ -208,6 +244,9 @@
         }
       },
       "minValues": 1,
+      "sourceDocumentTypes": [
+        "examen"
+      ],
       "estado": "propuesta"
     }
   ]
