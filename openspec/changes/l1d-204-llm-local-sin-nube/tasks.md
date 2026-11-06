@@ -26,6 +26,7 @@
 
 ## 4. cierre
 
+- [x] 4.0 Gate 2 vuelta 1 (P1-1…P2-5): contexto anidado y concurrencia, `LlmCompleto` único, tabla común `contracts/reglas/proveedor-llm.json`, paridad de enums, proveedor desconocido en el seguimiento y prueba de que producción no inyecta `llm_nube` · commits `test`, `feat` y `refactor(L1D-204)` · evidencia: pytest 4490 passed, integración de `evidence-analysis` 188 passed
 - [x] 4.1 `openspec validate l1d-204-llm-local-sin-nube --strict`, `pytest` y `vitest` del contexto en verde, `contracts:verify-provider` para `/rag/query` y `/chat/turn` (sin cambio de API; el comportamiento nuevo se valida contra el spec); sin `run-ai-eval` (no cambia modelo, prompt, umbral, catálogo ni corpus) · evidencia: ver el reporte de la entrega (comandos y resultados)
 
 Nota (no es una tarea del PR): al mergear `l1d-315`, reabrir 3.5 y 3.6 en este change o plegarlas en el suyo; la conversación debe usar `clasificacionDelPaciente()` y `proveedorPermitido()`.

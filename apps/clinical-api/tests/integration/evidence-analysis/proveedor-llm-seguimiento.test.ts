@@ -99,3 +99,31 @@ describe('proveedor del LLM del seguimiento', () => {
     expect(await leerTurnos(mundo.cliente, analisis.id)).toHaveLength(1);
   });
 });
+
+describe('proveedor desconocido en el seguimiento', () => {
+  it('responde 502 sin turno persistido cuando el seguimiento declara un proveedor desconocido [US-050 AC-5]', async () => {
+    const { app } = await montarGateway(mundo, {
+      analysisMaxOptions: 3,
+      omitirGuardaDeEntornoSintetico: true,
+    });
+    const analisis = await crearAnalisisConEvidencia(app, cookie, rag, idDePaciente('c'));
+    await reclasificarComoReal(analisis.id);
+    rag.reiniciar();
+    rag.seguimiento.responder({
+      tipo: 'json',
+      status: 200,
+      cuerpo: {
+        ...structuredClone(ragSeguimiento),
+        meta: { ...ragSeguimiento.meta, llmProvider: 'otro' },
+      },
+    });
+
+    const respuesta = await clienteVerificado(app)
+      .post(rutaDeSeguimiento(analisis.id))
+      .set('Cookie', cookie)
+      .send({ question: PREGUNTA_DE_SEGUIMIENTO });
+
+    expect(respuesta.status).toBe(502);
+    expect(await leerTurnos(mundo.cliente, analisis.id)).toEqual([]);
+  });
+});

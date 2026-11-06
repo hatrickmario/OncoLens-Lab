@@ -1,7 +1,15 @@
-import type { DataClassification } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
+import type {
+  DataClassification,
+  RagQueryInternalResponse,
+} from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 
-/** Proveedor del LLM que declara Backend 2 (`meta.llmProvider`, `llmProvider` del chat). */
-export type ProveedorDelLlm = 'local' | 'nube';
+/**
+ * Proveedor del LLM que declara Backend 2 (`meta.llmProvider`), derivado del cliente generado.
+ *
+ * RN-12 tiene una implementación independiente en rag-orchestrator (`reglas_proveedor.py`): se verifican contra la misma
+ * tabla (`contracts/reglas/proveedor-llm.json`), no se comparten.
+ */
+export type ProveedorDelLlm = RagQueryInternalResponse['meta']['llmProvider'];
 
 /**
  * RN-12, OL-03: la clasificación de todo request interno hacia `rag-orchestrator` (`/rag/query`, `/chat/turn`) sale de
@@ -17,10 +25,7 @@ export function clasificacionDelPaciente(paciente: {
  * RN-12: con datos reales solo `local`; la nube solo con datos sintéticos. Falla cerrado: un proveedor que no sea
  * `local` ni `nube` nunca se acepta.
  */
-export function proveedorPermitido(
-  clasificacion: DataClassification,
-  proveedor: ProveedorDelLlm,
-): boolean {
+export function proveedorPermitido(clasificacion: DataClassification, proveedor: string): boolean {
   if (proveedor === 'local') return true;
   return proveedor === 'nube' && clasificacion === 'sintetico';
 }

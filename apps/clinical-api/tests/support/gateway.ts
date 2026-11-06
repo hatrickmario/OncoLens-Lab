@@ -296,7 +296,10 @@ function desidentificadorDeTest(real: ContextDeidentifier, omitir: boolean): Con
 }
 
 export interface OpcionesDeGateway {
-  /** Retira la guarda de entorno sintético del desidentificador (post G-Piloto): ver `desidentificadorDeTest`. */
+  /**
+   * Retira la guarda de entorno sintético del desidentificador (post G-Piloto): ver `desidentificadorDeTest`.
+   * TODO(US-143): al retirar la guarda del código de producción, esta opción deja de hacer falta.
+   */
   omitirGuardaDeEntornoSintetico?: boolean;
   /** Por defecto `test`; `undefined` explícito simula `APP_ENV` ausente. */
   appEnv?: string | undefined;

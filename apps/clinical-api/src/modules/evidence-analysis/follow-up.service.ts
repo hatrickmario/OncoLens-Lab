@@ -13,7 +13,7 @@ import {
   RESPUESTA_INTERNA_INVALIDA,
   mapearFalloRagDeSeguimiento,
 } from './rag-failure.js';
-import { proveedorPermitido, type ProveedorDelLlm } from './regla-proveedor.js';
+import { proveedorPermitido } from './regla-proveedor.js';
 import type { FollowUpRepository, TurnoDeSeguimiento, TurnoNuevo } from './follow-up.repository.js';
 import {
   armarRagFollowUpRequest,
@@ -272,7 +272,7 @@ async function crearTurno(
   if (!respuesta.ok) return { tipo: 'fallo', respuesta: mapearFalloRagDeSeguimiento(respuesta) };
   const nuevo = armarTurno(dependencias, solicitud, registro, respuesta.cuerpo, request.question);
   if (nuevo === null) return { tipo: 'fallo', respuesta: RESPUESTA_INTERNA_INVALIDA };
-  if (!proveedorPermitido(nuevo.dataClassification, nuevo.llmProvider as ProveedorDelLlm)) {
+  if (!proveedorPermitido(nuevo.dataClassification, nuevo.llmProvider)) {
     return { tipo: 'fallo', respuesta: PROVEEDOR_NO_PERMITIDO };
   }
   const turno = await persistirTurnoAntesDeResponder(dependencias, nuevo);

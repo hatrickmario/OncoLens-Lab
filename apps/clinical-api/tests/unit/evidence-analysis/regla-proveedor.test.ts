@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   clasificacionDelPaciente,
@@ -26,6 +27,22 @@ describe('clasificacionDelPaciente (RN-12)', () => {
     'devuelve el data_origin %s del paciente',
     (dataOrigin) => {
       expect(clasificacionDelPaciente({ dataOrigin })).toBe(dataOrigin);
+    },
+  );
+});
+
+describe('tabla común de RN-12 con rag-orchestrator', () => {
+  const { casos } = JSON.parse(
+    readFileSync(
+      new URL('../../../../../contracts/reglas/proveedor-llm.json', import.meta.url),
+      'utf8',
+    ),
+  ) as { casos: { clasificacion: string; proveedor: string; permitido: boolean }[] };
+
+  it.each(casos)(
+    'coincide con la tabla para $clasificacion y $proveedor',
+    ({ clasificacion, proveedor, permitido }) => {
+      expect(proveedorPermitido(clasificacion as never, proveedor)).toBe(permitido);
     },
   );
 });
