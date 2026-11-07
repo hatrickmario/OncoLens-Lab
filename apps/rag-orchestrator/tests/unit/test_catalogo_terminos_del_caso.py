@@ -18,6 +18,8 @@ from tests.support.fakes import settings_de_prueba
 
 
 def test_cargador_lee_el_lexico_del_catalogo_normalizado_cuando_el_archivo_existe():
+    # El léxico tiene versión PROPIA (no la del manifest); que no se desfase del catálogo lo fija
+    # `catalog:version-guard` (CON_VERSION_PROPIA incluye lenguaje/marcos-de-pregunta.json), no este test.
     lexico = cargar_marcos_de_pregunta(CATALOGOS)
 
     assert (
