@@ -31,9 +31,9 @@ y sus fuentes; respuesta fija sin contradicciones; regla «la IA no resuelve»; 
 2. **Pregunta de contradicciones por regla pura** (`es_pregunta_de_contradicciones()` en `domain/chat/`): términos fijos
    («contradicción», «contradice», «inconsistencia», «discrepancia», «corregido», «corrección»), sin LLM. Si coincide:
    un bloque `conflicto` por par, con `factRefs = [a, b]` en orden ascendente de día relativo y texto
-   `«<etiqueta>: <verbalización a> (día <da>) frente a <verbalización b> (día <db>)»`, con la etiqueta «Por conciliar»
+   `«<etiqueta>: <A>. Frente a: <B>.»` (A y B: descripciones deterministas de cada hecho con su momento relativo y su estado de revisión, sin la marca «en conflicto»), con la etiqueta «Por conciliar»
    de `Settings` (`chat_conflicto_etiqueta`, RN-22); no hay campo `conflictLabel` en el contrato. Sin pares → texto fijo
-   `chat_sin_contradicciones_texto` de `Settings` (RN-22) y cero llamadas al LLM de generación. Alternativa descartada:
+   `chat_sin_contradicciones_texto` de `Settings` (RN-22) más una segunda frase de alcance (`chat_contradicciones_alcance_texto`: «Se revisaron los diagnósticos y biomarcadores del expediente»); si hay marcas sin contraparte en el turno no se afirma «sin contradicciones»: se declara `chat_conflicto_sin_contraparte_texto`. Cero llamadas al LLM de generación. Alternativa descartada:
    que el LLM redacte el conflicto (podría resolverlo o inclinarse por un valor).
 3. **Regla del validador `afirmaciones_que_resuelven_conflicto()`**: en todo turno de caso, una afirmación cuyos
    `factRefs` incluyen un hecho con `conflictWith` pero no a su contraparte se omite **antes** del NLI y suma a

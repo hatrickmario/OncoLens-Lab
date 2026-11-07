@@ -36,4 +36,5 @@
 ## 4. cierre
 
 - [x] 4.1 `openspec validate --all --strict`, tests de `apps/clinical-api` y `apps/rag-orchestrator` y `contracts:verify-provider` en verde
+- [x] 4.2 Hallazgos del Gate 2 (language Mayor, design P2#1 y P2#2): alcance revisado y aviso de marca sin contraparte (`CHAT_CONTRADICCIONES_ALCANCE_TEXTO`, `CHAT_CONFLICTO_SIN_CONTRAPARTE_TEXTO`); la contraparte se desidentifica con `question` vacía y un guard ante diagnóstico nulo, con test de una sola máscara de la pregunta, de seudónimo y de no fuga de UUID/fechas; design.md y spec alineados al formato real y a los días relativos 0 y +10; commits test 3e662252, feat ca452514 y aa06dcd0
 - Nota para el orquestador: este change no cambia prompt, modelo, umbral, catálogo ni corpus; sin `evaluate` obligatorio. No se ejecutó el job `integration-rag` (el change no toca el schema `corpus`).
