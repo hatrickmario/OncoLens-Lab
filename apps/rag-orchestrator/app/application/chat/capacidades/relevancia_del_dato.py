@@ -15,8 +15,8 @@ import logging
 from dataclasses import dataclass
 from typing import Any
 
-from app.application.chat.capacidades.seguimiento_evidencia import (
-    ParametrosDelSeguimiento,
+from app.application.chat.capacidades.afirmaciones_citadas import (
+    ParametrosDeGeneracionCitada,
     SalidaCruda,
     esquema_de_la_salida,
 )
@@ -89,7 +89,7 @@ class NodoRelevancia:
         posiciones: PosicionDeChunks,
         llm: LlmClient,
         contador: ContadorDeTokens,
-        parametros: ParametrosDelSeguimiento,
+        parametros: ParametrosDeGeneracionCitada,
         textos: TextosDeLaRelevancia,
     ) -> None:
         self._datos = datos
@@ -223,4 +223,3 @@ def _consulta_de(dato: DatoCritico, tipo_de_cancer: str) -> RagQueryInternalRequ
             ),
         }
     )
-

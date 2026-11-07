@@ -22,10 +22,8 @@ from app.application.chat.capacidades.relevancia_del_dato import (
     NodoRelevancia,
     TextosDeLaRelevancia,
 )
-from app.application.chat.capacidades.seguimiento_evidencia import (
-    NodoSeguimientoDeEvidencia,
-    ParametrosDelSeguimiento,
-)
+from app.application.chat.capacidades.afirmaciones_citadas import ParametrosDeGeneracionCitada
+from app.application.chat.capacidades.seguimiento_evidencia import NodoSeguimientoDeEvidencia
 from app.application.chat.contexto_del_turno import con_evidencia_del_turno
 from app.application.chat.grafo import ConfiguracionDelGrafo, EstadoDelGrafo, Nodo, construir_grafo
 from app.application.chat.nodo_faltantes import crear_nodo_faltantes
@@ -252,17 +250,22 @@ def _capacidades_de_evidencia(
         llm=llm,
         contador=contador,
         configuracion=configuracion,
-        parametros=ParametrosDelSeguimiento(
-            claims_min=settings.claims_min_per_option,
-            claims_max=settings.claims_max_per_option,
-            claim_max_words=settings.claim_max_words,
-            max_chars_fragmentos=settings.llm_fragments_max_chars,
-            num_ctx=settings.llm_num_ctx,
-        ),
+        parametros=_parametros_de_generacion(settings),
     )
     return (
         {Intencion.evidencia: analisis.ejecutar},
         {Subintencion.seguimiento_evidencia: seguimiento.ejecutar},
+    )
+
+
+def _parametros_de_generacion(settings: Settings) -> ParametrosDeGeneracionCitada:
+    """El único mapeo de ``Settings`` a los parámetros de la generación citada del seguimiento y de la relevancia (RN-22)."""
+    return ParametrosDeGeneracionCitada(
+        claims_min=settings.claims_min_per_option,
+        claims_max=settings.claims_max_per_option,
+        claim_max_words=settings.claim_max_words,
+        max_chars_fragmentos=settings.llm_fragments_max_chars,
+        num_ctx=settings.llm_num_ctx,
     )
 
 
@@ -283,13 +286,7 @@ def _capacidad_de_relevancia(
         posiciones=posiciones,
         llm=llm,
         contador=contador,
-        parametros=ParametrosDelSeguimiento(
-            claims_min=settings.claims_min_per_option,
-            claims_max=settings.claims_max_per_option,
-            claim_max_words=settings.claim_max_words,
-            max_chars_fragmentos=settings.llm_fragments_max_chars,
-            num_ctx=settings.llm_num_ctx,
-        ),
+        parametros=_parametros_de_generacion(settings),
         textos=TextosDeLaRelevancia(
             catalogo=TextosDelCatalogo(
                 dato_critico=settings.chat_relevancia_catalogo_texto,

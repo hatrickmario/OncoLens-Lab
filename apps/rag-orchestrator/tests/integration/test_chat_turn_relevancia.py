@@ -22,7 +22,9 @@ from tests.support.chat_relevancia import (
 )
 from tests.support.contract import CATALOGOS
 from tests.support.llm_chat_falso import FakeChatLlm
-from tests.unit.test_contexto_solo_con_el_tipo_de_cancer import contexto_con_todos_los_campos_poblados
+from tests.unit.test_contexto_solo_con_el_tipo_de_cancer import (
+    contexto_con_todos_los_campos_poblados,
+)
 from tests.support.nli_falso import IMPLICA, NEUTRAL, NliFalso
 from tests.support.recuperacion import EJEMPLOS
 from tests.support.reescritura import ReescritorFalso, parametros_de_reescritura

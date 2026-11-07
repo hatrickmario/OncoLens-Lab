@@ -9,7 +9,7 @@ import json
 
 import pytest
 
-from app.application.chat.capacidades.seguimiento_evidencia import SalidaCruda, esquema_de_la_salida
+from app.application.chat.capacidades.afirmaciones_citadas import SalidaCruda, esquema_de_la_salida
 from app.application.ports import FalloDelLlm
 from pydantic import ValidationError
 from tests.support.llm_chat_falso import ESCENARIOS, FakeChatLlm
