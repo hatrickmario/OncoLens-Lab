@@ -1,4 +1,5 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import chatTurnCasoAdt from '../../../../../contracts/examples/chat-turn-caso-adt.json' with { type: 'json' };
 import chatTurnCasoOk from '../../../../../contracts/examples/chat-turn-caso-ok.json' with { type: 'json' };
 import chatTurnLlmNoDisponible from '../../../../../contracts/examples/chat-turn-llm-local-no-disponible.json' with { type: 'json' };
 import { idSembrado } from '../../../prisma/seed/determinismo.js';
@@ -14,6 +15,7 @@ import {
   abrirConversacion,
   contarTurnosDeChat,
   enviarTurno,
+  leerTurnosDeChat,
 } from '../../support/conversacion.js';
 import {
   abrirSesion,
@@ -30,6 +32,7 @@ import {
 const ESPACIO_DE_IDS = 9830;
 const TOKEN_DE_SESION = 'SINT-cookie-sesion-conversacion-caso-0001';
 const PREGUNTA_PSA = '¿Cómo ha evolucionado el PSA?';
+const PREGUNTA_ADT = '¿Qué tratamiento previo ha recibido y cuándo?';
 
 interface HechoEnviado {
   factRef: string;
@@ -140,6 +143,40 @@ describe('Evolución de una serie', () => {
     const dias = respuesta.body.dataLinks.map((e: { relativeDay: number }) => e.relativeDay);
     expect(dias).toEqual([...dias].sort((a: number, b: number) => a - b));
     expect(dias).toHaveLength(3);
+  });
+});
+
+describe('Tratamiento previo documentado', () => {
+  it('persiste el bloque documentado tal cual y su dataLink trae el recordedDate del registro cuando el doctor pregunta por el tratamiento previo [US-261 AC-1] [AC-02.3] [ADR-34]', async () => {
+    const { app } = await montarGateway(mundo, {
+      identidades: lectorDeIdentidadFalso({ [pacienteB]: IDENTIDAD_CHAT }),
+    });
+    const conversationId = await abrirConversacion(app, cookie, pacienteB);
+    rag.chat.responder({ tipo: 'json', status: 200, cuerpo: chatTurnCasoAdt });
+
+    const respuesta = await enviarTurno(app, cookie, conversationId, PREGUNTA_ADT);
+
+    expect(respuesta.status).toBe(201);
+    const enviados = (rag.chat.capturadas.at(-1)?.cuerpo as { caseFacts: HechoEnviado[] })
+      .caseFacts;
+    const adt = enviados.find((h) => h.kind === 'tratamiento');
+    expect(adt).toMatchObject({ factRef: 'f6', verbalization: 'Deprivación androgénica, línea 1' });
+    expect(respuesta.body.blocks).toEqual(chatTurnCasoAdt.blocks);
+    expect(respuesta.body.blocks[0].text.startsWith(adt?.verbalization ?? '')).toBe(true);
+    const { rows } = await mundo.cliente.query<{ registrada: string }>(
+      `SELECT to_char(started_at, 'YYYY-MM-DD') AS registrada FROM clinical.prior_treatment WHERE patient_id = $1`,
+      [pacienteB],
+    );
+    expect(respuesta.body.dataLinks).toEqual([
+      expect.objectContaining({
+        factRef: 'f6',
+        resourceType: 'prior_treatment',
+        recordedDate: rows[0]?.registrada,
+        relativeDay: adt?.relativeDay,
+      }),
+    ]);
+    const [turno] = await leerTurnosDeChat(mundo.cliente, conversationId);
+    expect(turno?.blocks).toEqual(chatTurnCasoAdt.blocks);
   });
 });
 

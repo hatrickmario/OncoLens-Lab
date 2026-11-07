@@ -12,6 +12,7 @@ class TipoDeBloque(StrEnum):
     """Los tipos de ``ChatBlock.kind`` que este change emite; el enum cerrado de 8 valores es del contrato."""
 
     documentado = "documentado"
+    interpretacion = "interpretacion"
     catalogo = "catalogo"
     evidencia = "evidencia"
     faltante = "faltante"
@@ -29,6 +30,9 @@ class HechoDelCaso:
     conflicto_con: str | None = None
     serie: str | None = None
     """``seriesKey`` del dato (p. ej. los valores de un mismo biomarcador); ``None`` si no es parte de una serie."""
+    dia_relativo_fin: int | None = None
+    """Día relativo en que termina un hecho con intervalo; ``None`` si es puntual o aún no se informa (``CaseFact`` solo
+    trae ``relativeDay``, el de inicio)."""
 
 
 @dataclass(frozen=True)
@@ -38,6 +42,9 @@ class PropuestaDelTurno:
     texto: str
     fact_refs: tuple[str, ...] = ()
     citas: tuple[str, ...] = ()
+    tipo: TipoDeBloque | None = None
+    """El ``kind`` que eligió el LLM; ``None`` si no eligió ninguno. Solo el nodo ``caso`` lo resuelve (idéntica a la
+    descripción de sus hechos = documentado, paráfrasis = interpretación); los demás nodos entregan ``documentado``."""
 
 
 @dataclass(frozen=True)

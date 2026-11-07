@@ -31,6 +31,22 @@ def _sin_traza(cuerpo: dict) -> dict:
             "chat-turn-request-caso-situacion.json",
             "chat-turn-caso-situacion.json",
         ),
+        ("CHAT-CASO-ADT", "chat-turn-request-caso-adt.json", "chat-turn-caso-adt.json"),
+        (
+            "CHAT-CASO-INTERPRETACION-EJEMPLO",
+            "chat-turn-request-caso-interpretacion.json",
+            "chat-turn-caso-interpretacion.json",
+        ),
+        (
+            "CHAT-CASO-SIN-DATOS",
+            "chat-turn-request-caso-sin-datos.json",
+            "chat-turn-caso-sin-datos.json",
+        ),
+        (
+            "CHAT-CASO-PERIODO",
+            "chat-turn-request-caso-periodo.json",
+            "chat-turn-caso-periodo.json",
+        ),
         (
             "CHAT-RUTA-INVALIDA",
             "chat-turn-request-no-clasificada.json",

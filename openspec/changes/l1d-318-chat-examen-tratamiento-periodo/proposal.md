@@ -37,11 +37,13 @@ AC-02.3, `S6-prompt` §2.A). El nodo `caso` de US-260 resume el caso, pero no di
   días/semanas/meses/años», «último mes/año») y filtra `caseFacts` por día relativo antes de armar el prompt. Un hecho
   con intervalo que empieza antes del periodo y termina dentro se conserva con la marca «iniciado antes del periodo» en
   su verbalización (asumido, AC-3). Sin periodo reconocido no se filtra.
-- **Sin datos documentados**: si todas las afirmaciones se omiten, el turno no tiene bloques y responde el texto fijo «No
+- **Sin datos documentados**: si todas las afirmaciones se omiten, el turno responde un único bloque `limitacion` con el texto fijo «No
   se encontró información documentada sobre lo preguntado en el expediente» (RN-01, `S6-prompt` §3).
+- **Enrutado**: «¿Qué tratamiento previo ha recibido…?» iba a `evidencia` por la regla prescriptiva; `enrutado.py` la manda a `caso`
+  (la pregunta que pide una opción, «qué tratamiento debe recibir», sigue siendo `evidencia`, RN-23).
 - **Verbalización**: la misma de `l1d-317`, en código (`verbalizarDatoDelContexto()` de Backend 1, ADR-34), que llega
   en `CaseFact.verbalization`; no se usan plantillas del catálogo.
-- **Prompt**: `chat-caso@0.1.0` (US-260) → `chat-caso@0.2.0` con el modo `documentado` y solo días relativos (RN-11),
+- **Prompt**: `chat-caso@0.2.0` (US-260) → `chat-caso@0.3.0` con el modo `documentado` y solo días relativos (RN-11),
   construido con el `PromptBuilder` de `l1d-108-prompt-instrucciones-datos`.
 - **Avisos**: Backend 2 rellena `notices[]` en el turno (RN-19, glosario §3).
 - **Contrato**: **no sube versión ni redefine esquemas** (glosario S6 §1). Consume el contrato de `l1d-316` 1.12.0:
@@ -62,7 +64,7 @@ AC-02.3, `S6-prompt` §2.A). El nodo `caso` de US-260 resume el caso, pero no di
 
 ## Bounded contexts
 
-`ai-services` (modo `documentado`, filtro por periodo, respuesta «sin datos documentados», prompt `chat-caso@0.2.0`,
+`ai-services` (modo `documentado`, filtro por periodo, respuesta «sin datos documentados», prompt `chat-caso@0.3.0`,
 `notices[]`) · `clinical-platform` (persistencia de los `ChatBlock` tal cual y test Supertest de AC-1 con el
 `recordedDate` del registro) · `contratos` (solo añade los ejemplos `chat-turn-caso-adt.json`, `chat-turn-caso-sin-datos.json` y `chat-turn-caso-periodo.json`). Sin `frontend`: el rótulo
 visible es requisito de `l1d-324`.
@@ -70,8 +72,8 @@ visible es requisito de `l1d-324`.
 ## Dependencias
 
 - ↪ `l1d-317-chat-caso-situacion` (US-260): nodo `caso`, `caseFacts[]` con `factRef` y día relativo, tabla
-  `factRef → recurso` en Backend 1, validador de enlaces + NLI, `omittedClaims`, prompt `chat-caso@0.1.0`.
-- ↪ `l1d-108-prompt-instrucciones-datos` (L1D-108): `PromptBuilder` del prompt `chat-caso@0.2.0`.
+  `factRef → recurso` en Backend 1, validador de enlaces + NLI, `omittedClaims`, prompt `chat-caso@0.2.0`.
+- ↪ `l1d-108-prompt-instrucciones-datos` (L1D-108): `PromptBuilder` del prompt `chat-caso@0.3.0`.
 - ↪ (transitivas) `l1d-316-chat-turn-langgraph` (US-259: grafo, `/chat/turn`, contrato rag 1.12.0, ejemplo
   `chat-turn-caso-ok.json`) y `l1d-315-conversacion-paciente` (US-258: conversación, persistencia del turno, contrato
   clinical-api 1.24.0 con `ConversationTurn` y `ConversationDataLink`).
@@ -93,4 +95,4 @@ visible es requisito de `l1d-324`.
 - `apps/clinical-api/src/modules/evidence-analysis/` (submódulo `conversation`: persiste los bloques y resuelve
   `ConversationDataLink`, sin lógica nueva).
 - `contracts/examples/chat-turn-caso-adt.json`, `chat-turn-caso-sin-datos.json` y `chat-turn-caso-periodo.json` (nuevos). Sin cambios en `apps/*/openapi.yaml` ni en `packages/api-contracts/`.
-- Cambia un prompt: suite `evaluate` en el PR.
+- Cambia un prompt (`chat-caso@0.3.0`): suite `evaluate` en el PR.

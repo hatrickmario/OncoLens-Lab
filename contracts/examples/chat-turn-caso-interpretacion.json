@@ -1,0 +1,31 @@
+{
+  "intent": "caso",
+  "blocks": [
+    {
+      "kind": "interpretacion",
+      "text": "El CA 15-3 registró 22 U/mL a los 30 días y 28 U/mL a los 90 días después del diagnóstico.",
+      "factRefs": [
+        "f3",
+        "f5"
+      ]
+    }
+  ],
+  "omittedClaims": 0,
+  "structuredState": {
+    "intentsVistos": [
+      "caso"
+    ],
+    "preguntasPrevias": [
+      "¿Cómo se compara el CA 15-3 entre el día 30 y el día 90?"
+    ],
+    "opcionesMostradas": [],
+    "citasMostradas": [],
+    "faltantesSenalados": []
+  },
+  "llmProvider": "local",
+  "notices": [
+    "Generado por IA; requiere validación clínica independiente por el oncólogo tratante",
+    "Uso académico/investigación",
+    "Verifique contra las fuentes"
+  ]
+}

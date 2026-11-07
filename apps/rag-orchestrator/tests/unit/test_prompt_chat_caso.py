@@ -1,4 +1,4 @@
-"""Prompt `chat-caso@0.1.0` (US-260, US-057, RN-23, RN-24): separación instrucciones/datos, memoria solo por ``memoria()``."""
+"""Prompt `chat-caso` (US-260, US-261, US-057, RN-23, RN-24): separación instrucciones/datos, memoria solo por ``memoria()``."""
 
 from pathlib import Path
 
@@ -42,7 +42,7 @@ def test_prompt_del_caso_separa_instrucciones_y_datos_cuando_se_arma_con_memoria
 
     prompt = armar_prompt_del_caso(estado, "¿Cuál es el cuadro?", HECHOS, (TURNO,))
 
-    assert prompt.version == VERSION_DEL_PROMPT_DE_CASO == "chat-caso@0.2.0"
+    assert prompt.version == VERSION_DEL_PROMPT_DE_CASO == "chat-caso@0.3.0"
     afirmar_separacion(
         prompt,
         DatosDelPrompt(
@@ -76,3 +76,12 @@ def test_prompt_del_caso_no_pide_citas_ni_deja_la_memoria_como_soporte_cuando_se
 
     assert 'Deja "citations" vacío' in sistema
     assert "no sustenta ninguna afirmación" in sistema
+
+
+def test_prompt_del_caso_pide_elegir_el_tipo_de_cada_afirmacion_y_conservar_cifras_y_dias_relativos_cuando_se_lee_su_sistema():
+    sistema = armar_prompt_del_caso(EstadoDelHilo(), "¿p?", HECHOS, ()).sistema
+
+    assert '"kind"' in sistema and "documentado" in sistema and "interpretacion" in sistema
+    assert 'deja "text" vacío' in sistema
+    assert "cifras y unidades tal cual" in sistema
+    assert "fechas de calendario" in sistema

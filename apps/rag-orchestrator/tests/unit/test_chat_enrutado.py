@@ -17,6 +17,11 @@ TERMINOS = {"mama": frozenset({"mama", "mamario"}), "prostata": frozenset({"pros
         ("¿Qué datos faltan para completar el caso?", Intencion.faltantes),
         ("¿Qué evidencia existe…?", Intencion.evidencia),
         ("¿Qué estudios describen terapia endocrina?", Intencion.evidencia),
+        ("¿Qué tratamiento previo ha recibido y cuándo?", Intencion.caso),
+        ("¿Qué tratamientos previos ha recibido?", Intencion.caso),
+        ("¿Qué tratamiento anterior debe recibir?", Intencion.evidencia),
+        ("¿Qué tratamiento previo debe recibir?", Intencion.evidencia),
+        ("¿Qué tratamiento anterior recibió?", Intencion.caso),
         ("¿Qué fuentes respaldan la respuesta?", Intencion.fuentes_limitaciones),
         ("¿Qué limitaciones tiene esto?", Intencion.fuentes_limitaciones),
     ],
@@ -56,3 +61,46 @@ def test_es_fuera_de_alcance_aplica_la_regla_del_seguimiento_cuando_el_contexto_
     pregunta, fuera
 ):
     assert es_fuera_de_alcance(pregunta, "mama", TERMINOS) is fuera
+
+
+CATALOGO = frozenset({"psa", "ki 67", "ca 15 3", "antigeno prostatico especifico"})
+
+
+@pytest.mark.parametrize(
+    "pregunta",
+    [
+        "¿Cuál fue el resultado de la gammagrafía ósea?",
+        "¿Cuál fue el resultado del PSA?",
+        "¿Qué ocurrió en los últimos 10 días?",
+        "¿Qué pasó en el último mes?",
+        "¿Qué tratamientos recibió en los últimos 3 meses?",
+        "¿Qué sucedió con la biopsia?",
+        "¿Cuándo se realizó la cirugía?",
+        "¿El PSA mejoró o empeoró?",
+        "¿Cómo está el Ki-67?",
+        "¿Qué valor tiene el antígeno prostático específico?",
+    ],
+)
+def test_clasifica_como_caso_las_preguntas_de_examen_o_periodo_sin_palabra_clave(pregunta):
+    assert clasificar_por_reglas(pregunta, CATALOGO) is Intencion.caso
+
+
+@pytest.mark.parametrize(
+    ("pregunta", "intencion"),
+    [
+        ("¿Qué información falta en los últimos 100 días?", Intencion.faltantes),
+        ("¿Qué evidencia hay del PSA en los últimos 5 años?", Intencion.evidencia),
+        ("¿Qué fuentes respaldan el resultado del PSA?", Intencion.fuentes_limitaciones),
+        ("¿Qué recomienda para el PSA?", Intencion.evidencia),
+        ("¿Qué tratamiento debe recibir según el PSA?", Intencion.evidencia),
+        ("¿Qué falta registrar del resultado de la biopsia?", Intencion.faltantes),
+    ],
+)
+def test_conserva_faltantes_fuentes_y_evidencia_cuando_la_pregunta_trae_tambien_examen_o_periodo(
+    pregunta, intencion
+):
+    assert clasificar_por_reglas(pregunta, CATALOGO) is intencion
+
+
+def test_no_clasifica_por_el_catalogo_cuando_la_palabra_solo_esta_dentro_de_otra():
+    assert clasificar_por_reglas("Necesito ayuda con el psalmo", CATALOGO) is None

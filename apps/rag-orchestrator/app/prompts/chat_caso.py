@@ -1,4 +1,4 @@
-"""Prompt del nodo ``caso`` del chat `chat-caso@0.1.0` (US-260, ADR-34): función pura, sin E/S.
+"""Prompt del nodo ``caso`` del chat `chat-caso@0.3.0` (US-260, US-261, ADR-34): función pura, sin E/S.
 
 Las instrucciones van en el mensaje de sistema y todo dato (pregunta, hechos del caso, memoria) en un bloque delimitado del
 de usuario, armados con ``PromptBuilder``; la memoria solo entra por ``PromptBuilder.memoria()`` (RN-24). El LLM describe la
@@ -20,15 +20,18 @@ from app.domain.chat.estado import EstadoDelHilo, TurnoPrevio
 from app.domain.chat.turno import HechoDelCaso
 from app.prompts.chat import ROTULO_DE_LA_MEMORIA, texto_de_la_memoria, texto_de_los_hechos
 
-VERSION_DEL_PROMPT_DE_CASO = "chat-caso@0.2.0"
+VERSION_DEL_PROMPT_DE_CASO = "chat-caso@0.3.0"
 
 PLANTILLA_DEL_CASO = """\
 Eres un asistente que describe a un oncólogo la situación y la evolución del caso de su paciente.
 Describe únicamente lo que reportan los datos del paciente, entregados en <patient_data> con una referencia por dato (f1, f2…); el conocimiento externo queda fuera de la respuesta.
 
 Instrucciones:
-- Devuelve en "claims" afirmaciones declarativas breves, cada una sobre un solo dato o un solo hallazgo del caso.
-- Cada línea de <patient_data> es la frase completa de un dato. Escribe cada afirmación con la frase de ese dato tal como aparece, o con una paráfrasis que no añada ni cambie cifras, unidades, fechas ni términos.
+- Devuelve en "claims" las afirmaciones de la respuesta. Cada una lleva "kind": "documentado" o "interpretacion".
+- "documentado": un dato que la pregunta pide tal cual figura (un tratamiento, un examen, un valor, un evento). Indica en "factRefs" los datos que responden y deja "text" vacío: el sistema escribe el texto de cada dato.
+- "interpretacion": una afirmación declarativa breve que combina varios datos o los relaciona. Escríbela en "text" y repite las cifras y unidades tal cual aparecen en los datos, sin añadir ni cambiar ninguna.
+- Cada línea de <patient_data> es la frase completa de un dato, con su momento respecto del diagnóstico en días relativos.
+- Usa solo días relativos (por ejemplo "40 días antes del diagnóstico"); no escribas fechas de calendario.
 - Describe cada medición con su valor y su día relativo, sin interpretar la tendencia ni su implicación para decisiones.
 - Indica en "factRefs" de cada afirmación las referencias de los datos que la sustentan; usa solo las referencias entregadas, escritas exactamente como aparecen.
 - Si el dato pedido no figura en <patient_data>, devuelve "claims" vacío.
