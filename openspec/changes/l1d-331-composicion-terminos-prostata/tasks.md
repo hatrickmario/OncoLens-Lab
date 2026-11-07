@@ -6,14 +6,14 @@ después; la medición con modelos reales es la corrida final única del S6 (D6-
 
 ## 1. catálogo
 
-- [ ] 1.1 `lenguaje/marcos-de-pregunta.json` (1.7.0 -> 1.8.0): sección `expansion.biomarcadoresNoAnclables` con `prostata: ["psa"]`; su esquema, la regla del validador (`validator/marcos.mjs`) y sus tests en `scripts/catalog/__tests__/marcos-de-pregunta.test.mjs`; `manifest.json` 1.8.0 -> 1.9.0 y barrido coherente de `1.8.0` en `contracts/examples`, `clinical-api`, `rag-orchestrator` y `scripts/catalog/__tests__` · `catalog:validate` y `catalog:version-guard` en verde · commit `feat(L1D-331)`
-- [ ] 1.2 Fixture `packages/clinical-catalogs/test/fixtures/temas-del-caso.json`: salida de `prostata-con-grado` sin el PSA y un caso de próstata con otro biomarcador del catálogo (HRR); lo consumen `test_terminos_del_caso.py` y el panel (`preguntas-guiadas.test.ts`, sin cambio) · commit `test(L1D-331)`
+- [x] 1.1 `lenguaje/marcos-de-pregunta.json` (1.7.0 -> 1.8.0): sección `expansion.biomarcadoresNoAnclables` con `prostata: ["psa"]`; su esquema, la regla del validador (`validator/marcos.mjs`) y sus tests en `scripts/catalog/__tests__/marcos-de-pregunta.test.mjs`; `manifest.json` 1.8.0 -> 1.9.0 y barrido coherente de `1.8.0` en `contracts/examples`, `clinical-api`, `rag-orchestrator` y `scripts/catalog/__tests__` · `catalog:validate` y `catalog:version-guard` en verde · commit `feat(L1D-331)` · EVIDENCIA: validate y version-guard OK (1.9.0); vitest `scripts/catalog` 211 passed; `clinical-api` unit 1309 passed; web guiadas 12 passed; las plantillas (mama y próstata) suben su versión a la del manifest porque `catalogo-guiadas-version.test.ts` la exige
+- [x] 1.2 Fixture `packages/clinical-catalogs/test/fixtures/temas-del-caso.json`: salida de `prostata-con-grado` sin el PSA y un caso de próstata con otro biomarcador del catálogo (HRR); lo consumen `test_terminos_del_caso.py` y el panel (`preguntas-guiadas.test.ts`, sin cambio) · commit `test(L1D-331)`
 
 ## 2. ai-services
 
-- [ ] 2.1 Test de aceptación en rojo [US-273 AC-1] [US-273 AC-3] [US-273 AC-5]: próstata sin PSA en los términos y en la consulta contextual al *reranker*; mama idéntica · `tests/integration/test_rag_query_contextual.py` y `tests/unit/test_terminos_del_caso.py` · commit `test(L1D-331)`
-- [ ] 2.2 Bucle interno: `CatalogoDeTerminos.biomarcadores_no_anclables`, `_del_biomarcador_principal` y el cargador (`infrastructure/catalogo_clinico/terminos_del_caso.py`) · commit `feat(L1D-331)`
-- [ ] 2.3 Refactor sin cambio de comportamiento si procede · commit `refactor(L1D-331)`
+- [x] 2.1 Test de aceptación en rojo [US-273 AC-1] [US-273 AC-5]: próstata sin PSA en los términos y en la consulta contextual al *reranker*; mama idéntica; AC-3 sigue cubierto por el test de privacidad existente de US-271 AC-6 (consulta y *logs* solo con términos del catálogo) · `tests/integration/test_rag_query_contextual.py`, `tests/unit/test_terminos_del_caso.py` y `tests/unit/test_catalogo_terminos_del_caso.py` · commit `test(L1D-331)` 36a44e8c · EVIDENCIA: rojo, 7 failed por aserción (`TerminosDelCaso` con el PSA, cargador sin la lista, consulta del reranker con el PSA)
+- [x] 2.2 Bucle interno: `CatalogoDeTerminos.biomarcadores_no_anclables`, `_del_biomarcador_principal` y el cargador (`infrastructure/catalogo_clinico/terminos_del_caso.py`) · commit `feat(L1D-331)` 075ca15c · EVIDENCIA: los 7 en verde; `pytest` de `rag-orchestrator` 5106 passed (193 deseleccionados por requerir PostgreSQL)
+- [x] 2.3 Refactor sin cambio de comportamiento si procede · EVIDENCIA: refactor: sin cambios (una función pura de 4 líneas y un cargador de 8; sin duplicación)
 
 ## 3. evaluación
 
@@ -25,4 +25,4 @@ después; la medición con modelos reales es la corrida final única del S6 (D6-
 
 ## 5. cierre
 
-- [ ] 5.1 `openspec validate l1d-331-composicion-terminos-prostata --strict`, `pytest` de `rag-orchestrator`, `contracts:check`, `catalog:validate`, `catalog:version-guard`, `ruff`, `lint-imports` en verde
+- [x] 5.1 `openspec validate l1d-331-composicion-terminos-prostata --strict`, `pytest` de `rag-orchestrator`, `contracts:check`, `catalog:validate`, `catalog:version-guard`, `ruff`, `lint-imports` en verde
