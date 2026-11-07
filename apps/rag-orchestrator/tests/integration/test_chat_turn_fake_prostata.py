@@ -70,9 +70,21 @@ def test_chat_turn_fake_sirve_la_evidencia_de_prostata_con_su_analisis_cuando_la
 @pytest.mark.parametrize(
     ("base", "pregunta", "ejemplo"),
     [
-        ("chat-turn-request.json", "¿Por qué importa el Ki-67?", "chat-turn-relevancia-sin-criterio.json"),
-        ("chat-turn-request.json", "¿Por qué importa el estado menopáusico?", "chat-turn-relevancia-ok.json"),
-        ("chat-turn-request.json", "¿Por qué importa el CA 15-3?", "chat-turn-relevancia-fuera-de-catalogo.json"),
+        (
+            "chat-turn-request.json",
+            "¿Por qué importa el Ki-67?",
+            "chat-turn-relevancia-sin-criterio.json",
+        ),
+        (
+            "chat-turn-request.json",
+            "¿Por qué importa el estado menopáusico?",
+            "chat-turn-relevancia-ok.json",
+        ),
+        (
+            "chat-turn-request.json",
+            "¿Por qué importa el CA 15-3?",
+            "chat-turn-relevancia-fuera-de-catalogo.json",
+        ),
         (
             "chat-turn-request-caso-adt.json",
             "¿Por qué importa conocer los genes HRR / BRCA?",

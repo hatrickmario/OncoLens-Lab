@@ -7,6 +7,7 @@ por el chat y por el endpoint de análisis, incluidos «sin evidencia» (``topRe
 """
 
 import logging
+import re
 from collections.abc import Collection, Mapping
 from pathlib import Path
 from typing import Any
@@ -25,9 +26,11 @@ from app.domain.chat.ampliacion_de_busqueda import aviso_de_busqueda_ampliada
 from app.domain.chat.enrutado import (
     clasificar_por_reglas,
     es_fuera_de_alcance,
+    es_pregunta_de_relevancia,
     es_seguimiento_de_evidencia,
 )
 from app.domain.chat.estado import Intencion, Subintencion
+from app.domain.lenguaje import normalizar_texto
 from app.infrastructure.fake.fake_evidence_query import FakeEvidenceQuery, leer_ejemplo
 from app.schemas.generated.models import (
     ChatTurnRequest,
@@ -46,6 +49,21 @@ _ARCHIVOS: Mapping[Intencion | Subintencion, str] = {
     Subintencion.seguimiento_evidencia: "chat-turn-seguimiento-evidencia.json",
 }
 
+_ARCHIVOS_DE_PROSTATA: Mapping[Intencion, str] = {
+    Intencion.caso: "chat-turn-caso-situacion-prostata.json",
+    Intencion.faltantes: "chat-turn-faltantes-prostata.json",
+    Intencion.fuentes_limitaciones: "chat-turn-fuentes-prostata.json",
+}
+"""La variante de próstata de cada intención con ejemplo propio; el resto sirve el ejemplo único (la evidencia sale del análisis)."""
+
+_RELEVANCIA_POR_DATO: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"\bki 67\b"), "chat-turn-relevancia-sin-criterio.json"),
+    (re.compile(r"\bmenopaus"), "chat-turn-relevancia-ok.json"),
+    (re.compile(r"\bhrr\b|\bbrca\b"), "chat-turn-relevancia-prostata.json"),
+)
+_RELEVANCIA_DE_UN_DATO_FUERA_DEL_CATALOGO = "chat-turn-relevancia-fuera-de-catalogo.json"
+"""«¿Por qué importa …?» sirve el ejemplo del dato que nombra la pregunta; un dato sin ejemplo propio, el de fuera del catálogo."""
+
 
 class FakeChatTurn:
     """Implementa `ChatTurnPort` sin grafo ni LLM; nunca inventa contenido: sirve el ejemplo del contrato o el análisis
@@ -58,12 +76,18 @@ class FakeChatTurn:
         self,
         *,
         ejemplos: Mapping[Intencion | Subintencion, ChatTurnResponse],
+        ejemplos_de_prostata: Mapping[Intencion, ChatTurnResponse],
+        relevancia_por_dato: tuple[tuple[re.Pattern[str], ChatTurnResponse], ...],
+        relevancia_fuera_del_catalogo: ChatTurnResponse,
         registro: RegistroDeHilos,
         evidencia: FakeEvidenceQuery,
         settings: Settings,
         terminos_por_tipo: Mapping[str, frozenset[str]],
     ) -> None:
         self._ejemplos = ejemplos
+        self._ejemplos_de_prostata = ejemplos_de_prostata
+        self._relevancia_por_dato = relevancia_por_dato
+        self._relevancia_fuera_del_catalogo = relevancia_fuera_del_catalogo
         self._registro = registro
         self._evidencia = evidencia
         self._settings = settings
@@ -89,6 +113,17 @@ class FakeChatTurn:
         }
         return cls(
             ejemplos=ejemplos,
+            ejemplos_de_prostata={
+                intencion: leer_ejemplo(directorio / archivo, ChatTurnResponse)
+                for intencion, archivo in _ARCHIVOS_DE_PROSTATA.items()
+            },
+            relevancia_por_dato=tuple(
+                (patron, leer_ejemplo(directorio / archivo, ChatTurnResponse))
+                for patron, archivo in _RELEVANCIA_POR_DATO
+            ),
+            relevancia_fuera_del_catalogo=leer_ejemplo(
+                directorio / _RELEVANCIA_DE_UN_DATO_FUERA_DEL_CATALOGO, ChatTurnResponse
+            ),
             registro=registro,
             evidencia=evidencia or FakeEvidenceQuery.desde_directorio(directorio),
             settings=settings,
@@ -114,7 +149,19 @@ class FakeChatTurn:
             return self._ejemplos[Subintencion.seguimiento_evidencia]
         if por_reglas is Intencion.evidencia:
             return await self._turno_de_evidencia(pregunta, solicitud.traceId.root)
-        return self._ejemplos[por_reglas or Intencion.no_clasificada]
+        intencion = por_reglas or Intencion.no_clasificada
+        if intencion is Intencion.faltantes and es_pregunta_de_relevancia(pregunta):
+            return self._relevancia_del_dato(pregunta)
+        if tipo == "prostata" and intencion in self._ejemplos_de_prostata:
+            return self._ejemplos_de_prostata[intencion]
+        return self._ejemplos[intencion]
+
+    def _relevancia_del_dato(self, pregunta: str) -> ChatTurnResponse:
+        texto = normalizar_texto(pregunta)
+        return next(
+            (ejemplo for patron, ejemplo in self._relevancia_por_dato if patron.search(texto)),
+            self._relevancia_fuera_del_catalogo,
+        )
 
     def _intencion_por_reglas(self, pregunta: str) -> Intencion | None:
         """La pregunta de un ejemplo de ``/rag/query`` es de evidencia aunque nombre «fuentes» o un «faltante» (el LLM
