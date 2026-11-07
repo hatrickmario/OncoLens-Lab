@@ -69,6 +69,7 @@ class FakeChatTurn:
         registro: RegistroDeHilos,
         settings: Settings,
         terminos_por_tipo: Mapping[str, frozenset[str]] | None = None,
+        evidencia: FakeEvidenceQuery | None = None,
     ) -> "FakeChatTurn":
         ejemplos = {
             clave: leer_ejemplo(directorio / archivo, ChatTurnResponse)
@@ -77,7 +78,7 @@ class FakeChatTurn:
         return cls(
             ejemplos,
             registro,
-            FakeEvidenceQuery.desde_directorio(directorio),
+            evidencia or FakeEvidenceQuery.desde_directorio(directorio),
             settings,
             terminos_por_tipo or {},
         )
