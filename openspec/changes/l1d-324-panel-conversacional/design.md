@@ -206,3 +206,37 @@ Gate 2.
 - **Turno con bloques generados y `notices = []`** → no se pinta como válido (D3); un bug de Backend 2 no deja pasar contenido sin aviso de IA.
 - **P-1 decidido [S6 resp. 20]** → si el humano no confirma en el plan, se quita el bloque `REMOVED` del formulario de pregunta única
   del delta y el panel se monta debajo del formulario sin cambiar los demás AC.
+
+## Notas de implementación (frontend-dev)
+
+Desviaciones y decisiones tomadas al implementar; ninguna cambia un AC.
+
+- **Patrones con su evidencia.** `useConversacion` (custom hook): tapa el render del panel (fase, apertura perezosa, guarda
+  síncrona de una petición, reintento) y es el único sitio que habla con `solicitar-turno.ts`; un solo consumidor, pero con
+  más de un `useRef` y tres efectos de red encadenados, así que no es un envoltorio de `useState`. Contexto del hilo
+  (`ContextoDelHilo` en `conversation-thread.tsx`): assistant-ui monta las partes con un componente sin props propias, de modo
+  que `patientId` y el manejador del fragmento solo pueden llegar por contexto; está acotado al hilo y nunca lleva el paciente
+  ni el análisis. Sin compound components ni render props.
+- **Tarjeta del turno = `div role="group"` con nombre «Turno n»**, no `article`: las tarjetas de opción del análisis
+  (`EvidenceOptionCard`) ya son `article` y se anidan dentro. La cabecera es un `div`, no `header`, para no duplicar el
+  landmark `banner`.
+- **Turno de evidencia.** Con `evidenceAnalysis` el cuerpo es `AnalysisResult` (sin `FollowUpThread`); los bloques
+  `evidencia`/`fuente` no se repiten, solo sus citas `[E<n>]` en una sección ▤ aparte. El `evidenceAnalysis` sí se valida con
+  `zEvidenceAnalysis` del contrato antes de pintarse (un valor fuera de enum es un error sin resultado parcial, RN-06); el
+  resto del turno se lee con tolerancia (`kind` y campos desconocidos no rompen la tarjeta).
+- **«Ver en el caso»** abre la ficha en otra pestaña (`target="_blank"`, `rel="noopener noreferrer"`) para no perder la
+  conversación; el panel lateral de la variante A queda para US-268.
+- **`armarPreguntasGuiadas(resumen, catalogos)`** recibe un objeto de catálogos y lee estadios, grados y valores de
+  biomarcador de `escalas.json` (la misma fuente que el fixture y `terminos_del_caso`), no de `atributos.json`. Cada ítem de
+  `plantillas.json` tiene `variantes` (la UI ofrece la primera cuyas ranuras se resuelven); en próstata la primera variante del
+  cuarto ítem une estadio y grado (AC-9).
+- **Catálogo 1.8.0.** `manifest.plantillasDePregunta` declara los tipos con `plantillas.json` (los fixtures anteriores siguen
+  válidos); `clinical-api` suma el esquema de plantillas a `ESQUEMAS` de su validador de arranque (sin él, `leerEsquemas` no
+  compila y el servicio no arranca).
+- **Dependencias.** `@assistant-ui/react` 0.15.32, `react-markdown` 10.1.0 y `rehype-sanitize` 6.0.0 (exactas, ADR-51 §8) y
+  `axe-core` 4.14.0 como `devDependency` (ya estaba hoisted por `eslint-plugin-jsx-a11y`; se inyecta con `page.evaluate` y no
+  con `addScriptTag` porque la CSP no admite scripts en línea). `npm audit --omit=dev`: 0.
+- **Tests.** jsdom necesita `ResizeObserver` (`tests/support/jsdom-apis.ts`). «Analizando…» se prueba con una compuerta de MSW
+  (promesa) y no con temporizadores falsos: la aserción es la misma (nada del asistente antes de la respuesta completa).
+- **Fuera de este change** (deuda anotada en tasks.md 3.5b): los E2E heredados del formulario y las claves de `es.json` que
+  quedan sin uso.

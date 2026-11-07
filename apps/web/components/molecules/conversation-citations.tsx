@@ -1,12 +1,7 @@
-import type { ChatCitation } from '../../../../packages/api-contracts/src/types/clinical-api';
-
-export interface CitaNumerada {
-  numero: number;
-  cita: ChatCitation;
-}
+import type { CitaNumeradaDelBloque } from '../../lib/conversacion/numerar-citas';
 
 /** Citas de un bloque `evidencia` (RN-01): `[E<n>]`, fuente y fragmento del corpus como texto (nunca HTML). */
-export function ConversationCitations({ citas }: { citas: readonly CitaNumerada[] }) {
+export function ConversationCitations({ citas }: { citas: readonly CitaNumeradaDelBloque[] }) {
   if (citas.length === 0) return null;
   return (
     <ul className="m-0 mt-2 list-none p-0">

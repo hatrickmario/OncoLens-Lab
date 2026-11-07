@@ -33,21 +33,17 @@ function esTurno(valor: unknown): valor is ConversationTurn {
   );
 }
 
-async function publicar(ruta: string, cuerpo?: object): Promise<Response | null> {
-  try {
-    return await fetch(ruta, {
-      method: 'POST',
-      credentials: 'same-origin',
-      ...(cuerpo && { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo) }),
-    });
-  } catch {
-    return null;
-  }
-}
+/** `fetch` al BFF de `web` (mismo origen, cookie de sesión); un fallo de red es `null`, nunca una excepción. */
+const alBff = (llamada: Promise<Response>): Promise<Response | null> => llamada.catch(() => null);
 
 /** `POST /api/patients/{id}/conversations` al mismo origen, sin cuerpo: abre una conversación nueva (apertura perezosa). */
 export async function abrirConversacion(patientId: string): Promise<ResultadoDeApertura> {
-  const respuesta = await publicar(`/api/patients/${encodeURIComponent(patientId)}/conversations`);
+  const respuesta = await alBff(
+    fetch(`/api/patients/${encodeURIComponent(patientId)}/conversations`, {
+      method: 'POST',
+      credentials: 'same-origin',
+    }),
+  );
   if (respuesta?.status === 401) return { tipo: 'sin_sesion' };
   if (!respuesta?.ok) return { tipo: 'error' };
   const cuerpo: unknown = await respuesta.json().catch(() => null);
@@ -65,9 +61,13 @@ export async function enviarTurno(
 ): Promise<ResultadoDeTurno> {
   const cuerpo = zConversationTurnCreate.safeParse({ question });
   if (!cuerpo.success) return { tipo: 'error' };
-  const respuesta = await publicar(
-    `/api/conversations/${encodeURIComponent(conversationId)}/turns`,
-    cuerpo.data,
+  const respuesta = await alBff(
+    fetch(`/api/conversations/${encodeURIComponent(conversationId)}/turns`, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(cuerpo.data),
+    }),
   );
   if (respuesta?.status === 401) return { tipo: 'sin_sesion' };
   if (respuesta?.status === 403) return { tipo: 'opt_out' };
