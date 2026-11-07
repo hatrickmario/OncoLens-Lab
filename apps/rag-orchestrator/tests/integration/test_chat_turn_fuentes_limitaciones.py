@@ -59,7 +59,7 @@ FUENTE_M1 = (
 )
 RECUPERACION_FX06A = (
     "Alcance de la recuperación: el corpus tiene fecha de corte 2026-09-30; fuentes no incluidas: NCCN, ESMO; "
-    "fragmentos evaluados por el reranker en la última consulta de evidencia: 2."
+    "fragmentos de evidencia evaluados en la última consulta: 2."
 )
 LIMITACIONES_SIN_CRITERIOS = (
     "Limitaciones de la evidencia: ningún criterio de aplicabilidad quedó en estado Desconocido; "
@@ -155,7 +155,7 @@ def test_chat_turn_declara_el_corte_las_fuentes_no_incluidas_y_los_fragmentos_ev
     limitaciones = [b["text"] for b in cuerpo["blocks"] if b["kind"] == "limitacion"]
     assert limitaciones[0] == (
         "Alcance de la recuperación: el corpus tiene fecha de corte 2026-09-30; fuentes no incluidas: NCCN, ESMO; "
-        "fragmentos evaluados por el reranker en la última consulta de evidencia: 41."
+        "fragmentos de evidencia evaluados en la última consulta: 41."
     )
     # Solo el nombre de las fuentes excluidas: ningún otro bloque las menciona.
     assert all("NCCN" not in b["text"] for b in cuerpo["blocks"] if b["text"] != limitaciones[0])
@@ -280,7 +280,7 @@ def test_chat_turn_dice_sin_evidencia_con_las_limitaciones_de_la_recuperacion_y_
         (
             "limitacion",
             "Alcance de la recuperación: el corpus tiene fecha de corte 2026-09-30; fuentes no incluidas: NCCN, ESMO; "
-            f"fragmentos evaluados por el reranker en la última consulta de evidencia: {evaluados}.",
+            f"fragmentos de evidencia evaluados en la última consulta: {evaluados}.",
         ),
     ]
     assert cuerpo["notices"] == AVISOS
@@ -401,3 +401,19 @@ def test_chat_turn_no_pasa_un_analisis_previo_como_cita_ni_como_soporte_cuando_s
     assert cuerpo["omittedClaims"] == 0
     # El turno no recupera: su estado conserva la última evidencia del análisis y no suma citas nuevas.
     assert cuerpo["structuredState"]["citasMostradas"] == ["ch-m1-1"]
+
+
+def test_chat_turn_dice_que_el_ultimo_analisis_no_produjo_opciones_sin_arrastrar_el_anterior_cuando_un_turno_sin_evidencia_precede_a_las_limitaciones():
+    entorno, _ = entorno_de_seguimiento("SEG-OK")
+    assert entorno.turno(solicitud_de_evidencia(Q_HER2)).status_code == 200
+    sin_evidencia = entorno.turno(solicitud_de_evidencia(Q_SIN, rehidratacion=None))
+    assert sin_evidencia.json()["evidenceAnalysis"]["status"] == "sin_evidencia"
+
+    cuerpo = _cuerpo_200(entorno.turno(solicitud_de_evidencia(Q_FUENTES, rehidratacion=None)))
+
+    texto = next(
+        b["text"] for b in cuerpo["blocks"] if b["text"].startswith("Limitaciones de la evidencia")
+    )
+    assert "el último análisis no produjo opciones" in texto
+    assert "ningún criterio" not in texto
+    assert FRASE_FR10 in texto

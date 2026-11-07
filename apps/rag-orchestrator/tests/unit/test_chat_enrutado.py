@@ -108,3 +108,17 @@ def test_conserva_faltantes_fuentes_y_evidencia_cuando_la_pregunta_trae_tambien_
 
 def test_no_clasifica_por_el_catalogo_cuando_la_palabra_solo_esta_dentro_de_otra():
     assert clasificar_por_reglas("Necesito ayuda con el psalmo", CATALOGO) is None
+
+
+@pytest.mark.parametrize(
+    "pregunta",
+    [
+        "¿Qué evidencia hay en el corpus sobre melanoma uveal?",
+        "¿Qué opciones describe el corpus para este caso?",
+        "¿Qué debe recibir según el corpus?",
+    ],
+)
+def test_enruta_a_evidencia_cuando_la_pregunta_menciona_el_corpus_sin_marcador_de_metadato(
+    pregunta,
+):
+    assert clasificar_por_reglas(pregunta) is Intencion.evidencia

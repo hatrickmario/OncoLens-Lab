@@ -56,14 +56,14 @@ def test_limitaciones_de_la_recuperacion_lista_las_fuentes_no_incluidas_por_su_n
 
     assert texto == (
         "Alcance de la recuperación: el corpus tiene fecha de corte 2026-09-30; fuentes no incluidas: NCCN, ESMO; "
-        "fragmentos evaluados por el reranker en la última consulta de evidencia: 41."
+        "fragmentos de evidencia evaluados en la última consulta: 41."
     )
 
 
 def test_limitaciones_de_la_recuperacion_dice_ninguna_registrada_cuando_no_hay_fuentes_no_incluidas():
     texto = texto_de_limitaciones_de_la_recuperacion(date(2026, 9, 30), (), 0)
 
-    assert "fuentes no incluidas: ninguna registrada;" in texto
+    assert "fuentes no incluidas: ninguna declarada en la release vigente;" in texto
     assert texto.endswith("última consulta de evidencia: 0.")
 
 
@@ -124,3 +124,35 @@ def test_estado_tras_el_turno_conserva_las_limitaciones_del_analisis_cuando_el_t
     despues = estado_tras_el_turno(con_analisis, TurnoPrevio("q", "fuentes_limitaciones"))
 
     assert despues.limitaciones_del_analisis == limitaciones
+
+
+def test_texto_de_la_fuente_repite_no_disponible_cinco_veces_cuando_no_hay_ficha():
+    assert texto_de_la_fuente(None).count("No disponible") == 5
+
+
+def test_limitaciones_del_analisis_recuerda_que_no_hubo_opciones_cuando_el_analisis_no_las_produjo():
+    resultado = limitaciones_del_analisis([], 0, hubo_opciones=False)
+
+    assert resultado == LimitacionesDelAnalisis((), 0, False)
+
+
+def test_limitaciones_de_la_evidencia_dice_que_no_produjo_opciones_sin_afirmar_criterios_cuando_no_hubo_opciones():
+    texto = texto_de_limitaciones_de_la_evidencia(LimitacionesDelAnalisis((), 0, False))
+
+    assert "el último análisis no produjo opciones" in texto
+    assert "ningún criterio" not in texto
+    assert texto.endswith(f"{FRASE_DE_APLICABILIDAD}.")
+
+
+def test_estado_tras_el_turno_reemplaza_las_limitaciones_cuando_un_analisis_nuevo_no_produjo_opciones():
+    viejo = LimitacionesDelAnalisis(("a",), 2)
+    nuevo = LimitacionesDelAnalisis((), 0, False)
+    con_viejo = estado_tras_el_turno(
+        EstadoDelHilo(), TurnoPrevio("p", "evidencia"), limitaciones_del_analisis=viejo
+    )
+
+    despues = estado_tras_el_turno(
+        con_viejo, TurnoPrevio("q", "evidencia"), limitaciones_del_analisis=nuevo
+    )
+
+    assert despues.limitaciones_del_analisis == nuevo

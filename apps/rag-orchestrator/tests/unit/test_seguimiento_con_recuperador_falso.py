@@ -25,9 +25,11 @@ CHUNK = ChunkPuntuado("ch-m1-1", "doc-m1", "Texto sintético del fragmento.", 0.
 
 
 class RecuperadorFalso:
-    """``RecuperadorDeEvidencia`` en memoria: un único chunk citable y un soporte que acepta todo lo que se cita."""
+    """``RecuperadorDeEvidencia`` en memoria con el contrato del real: los chunks citables salen de los chunks sobre el
+    umbral del turno cuyo documento tiene ficha, y el soporte solo acepta lo que cita un chunk de ese conjunto."""
 
-    def __init__(self) -> None:
+    def __init__(self, fichas=FICHAS_FX06A) -> None:
+        self._fichas = fichas
         self.verificaciones: list[tuple[str, tuple[str, ...]]] = []
 
     async def recuperar(self, solicitud, *, con_reescritura: bool, version_del_prompt: str):
@@ -36,7 +38,11 @@ class RecuperadorFalso:
     async def chunks_citables(
         self, trace_id: str, recuperacion: ResultadoDeRecuperacion
     ) -> dict[str, ChunkCitable]:
-        return {CHUNK.chunk_id: ChunkCitable(CHUNK, FICHAS_FX06A["doc-m1"])}
+        return {
+            c.chunk_id: ChunkCitable(c, self._fichas[c.document_id])
+            for c in recuperacion.chunks_sobre_umbral
+            if c.document_id in self._fichas
+        }
 
     async def verificar(
         self,
@@ -48,15 +54,22 @@ class RecuperadorFalso:
         titulos_de_chunks: Mapping[str, str],
     ) -> ResultadoSoporte:
         self.verificaciones.append((idioma, tuple(textos_de_chunks)))
-        return ResultadoSoporte(tuple(aceptadas), (), (), 0)
+        soportadas = tuple(
+            a
+            for a in aceptadas
+            if a.chunk_ids_validos and set(a.chunk_ids_validos) <= textos_de_chunks.keys()
+        )
+        return ResultadoSoporte(soportadas, (), (), len(aceptadas) - len(soportadas))
 
 
-def _recuperacion() -> ResultadoDeRecuperacion:
+def _recuperacion(chunks=(CHUNK,)) -> ResultadoDeRecuperacion:
     meta = json.loads((EJEMPLOS / "rag-query-con-evidencia.json").read_text(encoding="utf-8"))[
         "meta"
     ]
     return ResultadoDeRecuperacion(
-        chunks_sobre_umbral=(CHUNK,), recuperados=1, meta=RagMeta.model_validate(meta)
+        chunks_sobre_umbral=tuple(chunks),
+        recuperados=len(chunks),
+        meta=RagMeta.model_validate(meta),
     )
 
 
@@ -78,3 +91,19 @@ async def test_validar_afirmaciones_citadas_acepta_la_cita_del_turno_cuando_el_r
     assert [a.chunk_ids_validos for a in validadas.soportadas] == [("ch-m1-1",)]
     assert validadas.omitidas == 1  # la cita ajena al turno no pasa (RN-24)
     assert recuperador.verificaciones == [("es", ("ch-m1-1",))]
+
+
+async def test_validar_afirmaciones_citadas_no_soporta_nada_cuando_ningun_chunk_supera_el_umbral():
+    recuperador = RecuperadorFalso()
+    afirmaciones = (
+        AfirmacionAtomica(
+            "El estudio describe el esquema.", PapelDeAfirmacion.principal, ("ch-m1-1",)
+        ),
+    )
+    recuperacion = _recuperacion(chunks=())
+
+    assert await recuperador.chunks_citables("req_x", recuperacion) == {}
+    validadas = await validar_afirmaciones_citadas(recuperador, "req_x", recuperacion, afirmaciones)
+
+    assert list(validadas.soportadas) == []
+    assert validadas.omitidas == 1
