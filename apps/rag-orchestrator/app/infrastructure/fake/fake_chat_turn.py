@@ -18,6 +18,7 @@ from app.application.chat.bloques_de_la_respuesta import (
     fuentes_citadas_por_las_opciones,
 )
 from app.application.chat.citas import ConstructorDeCitas
+from app.application.chat.posiciones import posiciones_por_documento
 from app.application.chat.registro_de_hilos import RegistroDeHilos
 from app.application.chat.traduccion import bloque_del_contrato
 from app.application.ports import PosicionDeChunk
@@ -232,11 +233,7 @@ class _PosicionesDelAnalisis:
                 chunks = por_documento.setdefault(fuente.externalId, [])
                 if fuente.chunkId not in chunks:
                     chunks.append(fuente.chunkId)
-        self._posiciones = {
-            chunk: PosicionDeChunk(documento, ordinal, len(chunks))
-            for documento, chunks in por_documento.items()
-            for ordinal, chunk in enumerate(chunks, start=1)
-        }
+        self._posiciones = posiciones_por_documento(por_documento)
 
     def posiciones(self, chunk_ids: Collection[str]) -> dict[str, PosicionDeChunk]:
         return {c: self._posiciones[c] for c in chunk_ids if c in self._posiciones}

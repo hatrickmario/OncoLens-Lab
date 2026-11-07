@@ -14,13 +14,14 @@ from pathlib import Path
 
 import yaml
 
+from app.application.chat.posiciones import posiciones_por_documento
 from app.application.ports import (
     CandidatoParaReranker,
     ChunkEncontrado,
     ChunkEncontradoSparse,
     CoberturaDePoblacion,
-    PosicionDeChunk,
     EvidenciaGenerada,
+    PosicionDeChunk,
     ReleaseDelCorpus,
     ResultadoDeRecuperacion,
     SinTerminosLexicos,
@@ -278,11 +279,7 @@ class PosicionesDelDataset:
         por_documento: dict[str, list[str]] = {}
         for chunk in dataset.chunks:
             por_documento.setdefault(chunk.documento, []).append(chunk.id)
-        self._posiciones = {
-            chunk: PosicionDeChunk(documento, ordinal, len(chunks))
-            for documento, chunks in por_documento.items()
-            for ordinal, chunk in enumerate(chunks, start=1)
-        }
+        self._posiciones = posiciones_por_documento(por_documento)
 
     def posiciones(self, chunk_ids: Collection[str]) -> dict[str, PosicionDeChunk]:
         return {c: self._posiciones[c] for c in chunk_ids if c in self._posiciones}

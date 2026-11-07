@@ -47,6 +47,7 @@ from app.evaluation.composicion_suite import ServicioDeSuite, componer_servicio
 from app.evaluation.config_suite import ConfigSuite, cargar_config_suite
 from app.evaluation.cronometro import Cronometro, RelojSimulado, resumen_de_latencia
 from app.evaluation.dataset_chat import (
+    INTENCIONES,
     CasoDeChat,
     ControlDeChat,
     DatasetDeChat,
@@ -55,11 +56,11 @@ from app.evaluation.dataset_chat import (
 )
 from app.evaluation.dataset_loader import CLASE_SINTETICA, DatasetInvalido
 from app.evaluation.envoltorios import pico_rss_mib
-from app.evaluation.llamadas import RegistroDeLlamadas
-from app.evaluation.modelos_locales import OrigenLocal, PuertosLocales, cargar_puertos_locales
 from app.evaluation.fuente_dataset import FuenteDatasetEnDirectorio
 from app.evaluation.guardas import SuiteAbortada, exigir_adapters_locales, exigir_proveedor_local
 from app.evaluation.juez_fidelidad import JuezNli
+from app.evaluation.llamadas import RegistroDeLlamadas
+from app.evaluation.modelos_locales import OrigenLocal, PuertosLocales, cargar_puertos_locales
 from app.evaluation.rotulo import rotular_validada
 from app.evaluation.rutas import raiz_repo
 from app.evaluation.seguimiento import ajustes_de_la_suite
@@ -82,7 +83,6 @@ ACS_DEL_CASO = ("AC01", "AC02")
 MARCADOR_DE_IDENTIDAD = re.compile(r"\{identidad_sintetica:[^}]+\}")
 MASCARA_DE_LA_DESIDENTIFICACION = "[REDACTADO]"
 ESPACIO_DE_HILOS = uuid.UUID("5b0e7a3c-2f64-4d8a-9c1e-7a4f3b2d1e90")
-INTENCIONES = ("caso", "faltantes", "evidencia", "fuentes_limitaciones")
 CODIGO_DE_FUGA_O_PRESCRIPTIVO = 1
 TURNO_COMPLETO = "turno"
 """La serie de latencia de todos los turnos, además de la de cada intención."""

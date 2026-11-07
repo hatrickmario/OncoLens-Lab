@@ -9,9 +9,11 @@ from typing import Any
 
 import yaml
 
+from app.domain.chat.estado import INTENCIONES_CLASIFICABLES
 from app.evaluation.dataset_loader import CLASE_SINTETICA, DatasetInvalido
 
-INTENCIONES = ("caso", "faltantes", "evidencia", "fuentes_limitaciones")
+INTENCIONES = tuple(i.value for i in INTENCIONES_CLASIFICABLES)
+"""Las intenciones que el chat mide: las que enrutan a un nodo de capacidad (una sola definición, la del dominio)."""
 TIPOS_DE_CANCER = ("mama", "prostata")
 ACS = ("AC01", "AC02", "AC03", "AC04", "AC05", "AC06")
 REVISIONES = ("pendiente", "aprobado")
