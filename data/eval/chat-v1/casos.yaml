@@ -156,7 +156,7 @@ casos:
       ruta: caso
       afirmaciones:
         - {kind: documentado, text: '', factRefs: [f1, f2, f3, f4, f7]}
-        - {kind: interpretacion, text: 'El PSA registró 9.8 al momento del diagnóstico y 12.4 a los 37 días después del diagnóstico.', factRefs: [f3, f4]}
+        - {kind: interpretacion, text: 'El PSA alterado fue 12.4', factRefs: [f4]}
 
   - id: CHAT-AC02-PROSTATA
     ac: AC02
@@ -246,3 +246,16 @@ controles:
       afirmaciones:
         - {kind: documentado, text: '', factRefs: [f1]}
         - {kind: interpretacion, text: 'La paciente debe recibir quimioterapia adyuvante', factRefs: [f1]}
+
+  # Sin modal normativo: solo el filtro de términos prohibidos (Nivel A y B) lo omite; con el filtro desactivado se vería.
+  - id: CHAT-PRESCRIPTIVO-SIN-MODAL
+    control: prescriptivo
+    cancer: mama
+    pregunta: '¿Cuál es la situación actual de la paciente?'
+    ejemplo:
+      base: chat-turn-request.json
+    guion:
+      ruta: caso
+      afirmaciones:
+        - {kind: documentado, text: '', factRefs: [f1]}
+        - {kind: interpretacion, text: 'Tratamiento recomendado para este paciente: quimioterapia adyuvante', factRefs: [f1]}
