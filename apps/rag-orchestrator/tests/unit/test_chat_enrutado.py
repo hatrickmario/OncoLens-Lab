@@ -24,6 +24,10 @@ TERMINOS = {"mama": frozenset({"mama", "mamario"}), "prostata": frozenset({"pros
         ("¿Qué tratamiento anterior recibió?", Intencion.caso),
         ("¿Qué fuentes respaldan la respuesta?", Intencion.fuentes_limitaciones),
         ("¿Qué limitaciones tiene esto?", Intencion.fuentes_limitaciones),
+        ("¿Cuáles son las fuentes y las limitaciones?", Intencion.fuentes_limitaciones),
+        ("¿De dónde sale esa información?", Intencion.fuentes_limitaciones),
+        ("¿Qué no cubre lo que se mostró?", Intencion.fuentes_limitaciones),
+        ("¿Hasta qué fecha llega el corpus?", Intencion.fuentes_limitaciones),
     ],
 )
 def test_clasifica_por_reglas_la_intencion_cuando_la_pregunta_trae_su_patron(pregunta, intencion):

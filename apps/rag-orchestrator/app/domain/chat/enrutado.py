@@ -36,6 +36,7 @@ _REGLAS: tuple[tuple[Intencion, re.Pattern[str]], ...] = (
         Intencion.fuentes_limitaciones,
         re.compile(
             r"\bfuentes?\b|\blimitaci(?:on|ones)\b|\bde donde (?:sale|salen|viene|vienen)\b|\ben que se basa\b"
+            r"|\bno cubre\b|\bfecha de corte\b|\bcorpus\b"
         ),
     ),
     (
