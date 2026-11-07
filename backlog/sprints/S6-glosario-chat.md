@@ -9,13 +9,17 @@
 |---|---|---|---|
 | rag-orchestrator | **1.12.0** | `l1d-316-chat-turn-langgraph` | `POST /chat/turn` completo. Incluye `dataClassification` y `llmProvider` (L1D-204 se pliega aquí y ya no toca el spec), el vocabulario cerrado de §2, los errores de §4 y `ChatCompletenessItem` |
 | rag-orchestrator | 1.13.0 | `l1d-322-chat-evidencia-seguimiento` | `activeAnalysisId?` en la petición. `subintent?` (`enum [seguimiento_evidencia]`) y `evidenceAnalysis?` ya vienen en la 1.12.0 y aquí solo se consumen |
-| rag-orchestrator | 1.14.0 | `l1d-320-faltantes-tipo-vacio` | Solo si queda algo propio. `gapType` ya está en `ChatCompletenessItem` de la 1.12.0 |
+| rag-orchestrator | 1.14.0 | `l1d-323-chat-fuentes-limitaciones` | Su rama ya tiene el commit `contract`. (`l1d-320` no sube: `gapType` ya está en `ChatCompletenessItem` de la 1.12.0) |
+| rag-orchestrator | siguiente menor libre (esperada 1.15.0) | `l1d-330-relative-end-day` | `CaseFact.relativeEndDay?` (opcional, `nullable`); clinical-api no sube |
+| rag-orchestrator | siguiente menor libre (esperada 1.16.0) | `l1d-329-segundo-loop-contextual` | `retrievalParams.contextExpansion?` (opcional); 0 ERR, sin excepciones ADR-26 |
+| catálogo | 1.7.0 / 1.8.0 | `l1d-329` / `l1d-324` | 1.7.0: `lenguaje/marcos-de-pregunta.json` y sinónimos de mama; 1.8.0: `plantillas.json` de mama y próstata |
 | clinical-api | **1.24.0** | `l1d-315-conversacion-paciente` | Endpoints de conversación y turno, `ConversationTurn`, `ConversationDataLink`, errores de §4 y `403 PermisoDenegadoOOptOut` desde el inicio |
 | clinical-api | 1.25.0 | `l1d-320` | `gapType` en `CompletenessItem` de `GET …/completeness` |
 | clinical-api | 1.29.0 | `l1d-322` | `ConversationTurn.evidenceAnalysis?` |
 | clinical-api | 1.27.0 | `l1d-213-opt-out-generacion-ia` | `x-genera-ia` en las **otras** operaciones de generación. La de turnos ya la declara L1D-315 |
 
-- L1D-317, 318, 319, 321 y 323 **no suben versión**: solo rellenan campos ya definidos.
+- L1D-317, 318, 319, 321 **no suben versión**: solo rellenan campos ya definidos. L1D-323 sube rag a 1.14.0 (ya tiene su commit `contract`).
+- **Orden de merge esperado: 323 → 330 → 329** (y 330 → 319 en O5); cada uno toma «la siguiente menor libre» tras `git fetch`; el segundo en mergear rebasa y regenera `packages/api-contracts/`, nunca resuelve los generados a mano.
 - Si una versión colisiona, se renumera el segundo en mergear.
 - L1D-108 va **antes** que todo el chat: los prompts del chat usan `PromptBuilder` y `PromptBuilder.memoria()`, nunca los rótulos `INICIO_DE_LA_MEMORIA` / `FIN_DE_LA_MEMORIA`.
 
@@ -26,7 +30,7 @@
   - Solo esos campos. Nunca `resourceId`, UUID, fechas absolutas, `analysisId` ni `dataLinks`.
   - Lo construye `construirRehidratacion()` en clinical-api.
   - Lleva un escenario que siembra UUID y fechas en el turno persistido y comprueba que no viajan.
-- **CaseFact**: `factRef` (`^f[0-9]+$`), `kind`, `verbalization`, `relativeDay` (entero o `null`), `reviewStatus`, `seriesKey?`, `conflictWith?` (factRef) y `corrected?`.
+- **CaseFact**: `factRef` (`^f[0-9]+$`), `kind`, `verbalization`, `relativeDay` (entero o `null`), `relativeEndDay?` (L1D-330: entero = fin, `null` explícito = en curso (`ongoing = true` sin `endedAt`), ausente = puntual o fin desconocido; con `endedAt` gana la fecha; sin booleano `ongoing`), `reviewStatus`, `seriesKey?`, `conflictWith?` (factRef) y `corrected?`.
 - **ChatCompletenessItem** (rag): `item`, `label`, `status` (`presente_verificado` · `presente_sin_verificar` · `faltante` · `no_aplica`), `gapType` (`no_encontrado` · `incompleto` · `por_conciliar` · `no_buscado`, o `null` si el ítem no tiene vacío; `por_conciliar` puede acompañar a `presente_verificado` cuando hay conflicto pendiente) y `destination`. **Sin `provenance`**.
 - **ChatTurnResponse** (rag): `intent`, `subintent?` (`enum [seguimiento_evidencia]`, declarado en la 1.12.0), `blocks[]`, `omittedClaims`, `evidenceAnalysis?` (tipo rag = `RagQueryInternalResponse`; clinical-api `ConversationTurn.evidenceAnalysis` = `EvidenceAnalysis`, que construye desde lo persistido), `structuredState` (**requerido**), `llmProvider` y `notices[]`.
 - **ChatBlock**:
@@ -76,7 +80,7 @@
 - **Markdown (XSS):** sin `rehype-raw`, **con `rehype-sanitize`**, `urlTransform` restringido mediante `esUrlHttpSegura()` (definida en L1D-266 y reutilizada por L1D-325) y un escenario con `<img onerror>`. Aplica a L1D-314, 324 y 325.
 - **Seed `P-CHAT`:** lo crea **L1D-315**. L1D-317, 320 y 326 lo consumen.
 - **Ejemplos de `contracts/examples/`:** uno por caso.
-  - Cada caso de turno tiene su fichero `chat-turn-caso-<caso>.json`: `chat-turn-caso-ok.json` es de L1D-316; L1D-317 añade `chat-turn-caso-situacion.json`; L1D-318, `chat-turn-caso-adt.json`, `chat-turn-caso-sin-datos.json` y `chat-turn-caso-periodo.json`; L1D-319, `chat-turn-caso-conflicto.json` y `chat-turn-caso-sin-contradicciones.json`. Ningún change amplía el fichero de otro.
+  - Cada caso de turno tiene su fichero `chat-turn-caso-<caso>.json`: `chat-turn-caso-ok.json` es de L1D-316; L1D-317 añade `chat-turn-caso-situacion.json`; L1D-318, `chat-turn-caso-adt.json`, `chat-turn-caso-sin-datos.json` y `chat-turn-caso-periodo.json`; L1D-330, `chat-turn-caso-intervalo.json` y `chat-turn-caso-en-curso.json` (con sus peticiones); L1D-329, `chat-turn-evidencia-contextual.json` y `chat-turn-evidencia-sin-opciones.json` (con sus peticiones y `rag-query-contextual*.json`); L1D-319, `chat-turn-caso-conflicto.json` y `chat-turn-caso-sin-contradicciones.json`. Ningún change amplía el fichero de otro.
   - Las salidas del LLM previas al filtro (`CHAT-CASO-INVENTA`, `CHAT-CASO-SIN-ENLACE`, `CHAT-CONFLICTO-RESUELVE`) **no** son ejemplos del contrato: son fixtures del LLM falso en `apps/rag-orchestrator/tests/fixtures/llm/`.
   - El `409` y el `503 LLM_OUTPUT_INVALID` de `/chat/turn` los implementa y prueba L1D-316, y L1D-315, L1D-316 y L1D-320 reutilizan los ejemplos existentes `rag-catalog-version-mismatch.json` y `rag-salida-llm-invalida.json`, sin duplicarlos.
   - El `503` del LLM caído es `chat-turn-llm-local-no-disponible.json`, de L1D-316; L1D-204 y L1D-322 lo reutilizan.

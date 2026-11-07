@@ -30,26 +30,50 @@ entrar; uno sin el campo conserva la regla de `l1d-318`. La descripción del hec
 - **AND** el bloque de la quimioterapia lleva «(iniciado antes del periodo)» y no lleva «(en curso)»
 - **AND** la descripción del hecho que ve el LLM y el NLI incluye su fin como «hasta 60 días antes del diagnóstico»
 
-#### Scenario: El tratamiento sin fecha de fin y en curso entra en el periodo y se rotula en curso [US-272 AC-2] [AC-02.1] (asumido: null = en curso solo con tratamiento activo)
-- **GIVEN** un tratamiento con `relativeDay = -172` y `relativeEndDay = null` explícito (en curso)
+#### Scenario: El tratamiento en curso (relativeEndDay null explícito) entra en el periodo y se rotula en curso [US-272 AC-2] [AC-02.1]
+- **GIVEN** el JSON crudo de la petición (por `TestClient` y `respx`, sin modelo ya construido) con un tratamiento con `relativeDay = -172` y `relativeEndDay = null` explícito (en curso)
 - **WHEN** el oncólogo pregunta «¿Qué ocurrió en los últimos 100 días?»
 - **THEN** el hecho entra y su bloque lleva «(iniciado antes del periodo)» y «(en curso)»
 
 #### Scenario: El hecho sin relativeEndDay conserva la regla de l1d-318 [US-272 AC-2] [AC-02.1]
-- **GIVEN** un tratamiento con `relativeDay = -172` y el campo `relativeEndDay` ausente (fin no informado)
+- **GIVEN** el JSON crudo de la petición (por `TestClient` y `respx`) con un tratamiento con `relativeDay = -172` y el campo `relativeEndDay` ausente (fin no informado)
 - **WHEN** se pregunta por los últimos 100 días
 - **THEN** el hecho no entra y no se marca como en curso (un `null` implícito no es «en curso»)
 
 #### Scenario: Un tratamiento que terminó antes del periodo no entra [US-272 AC-1] [AC-02.1]
 - **GIVEN** un tratamiento con `relativeDay = -300` y `relativeEndDay = -200`
 - **WHEN** se pregunta por los últimos 100 días
-- **THEN** no llega al prompt ni a ningún `factRef` de los bloques y no lleva marca alguna
+- **THEN** se excluye: no llega al prompt ni a ningún `factRef` de los bloques y no lleva marca alguna
 
-### Requirement: Un periodo sin hechos responde con un texto fijo sin intervención del LLM
-Cuando ningún hecho entra en el periodo preguntado aunque el expediente tenga datos, el turno MUST responder con un único
-bloque `kind = limitacion` de texto fijo desde configuración, sin texto del LLM y sin cita (RN-01, glosario §3).
+### Requirement: El periodo declara su ancla y el dato en curso sin verificar se avisa sin bloquear
+Cuando el turno aplica un periodo y entra algún hecho, la respuesta MUST incluir un bloque `limitacion` de texto fijo
+«Periodo medido desde la fecha del diagnóstico», escrito por el código y exento de cita. Si un hecho en curso tiene
+`reviewStatus = requiere_revision`, `notices[]` MUST incluir un aviso fijo de «sin verificar» sin bloquear la respuesta
+(RN-26).
 
-#### Scenario: Periodo sin hechos con expediente con datos [US-272 AC-4] [RN-01] (asumido: se conserva el texto de l1d-318)
+#### Scenario: El bloque de periodo declara el ancla del día 0 [US-272 AC-1] [AC-02.1] (asumido)
+- **GIVEN** `P-CHAT` con quimioterapia de −160 a −60 y cirugía en −40
+- **WHEN** el oncólogo pregunta «¿Qué ocurrió en los últimos 100 días?»
+- **THEN** la respuesta incluye el bloque `limitacion` «Periodo medido desde la fecha del diagnóstico», sin texto ni cita del LLM, y coincide con `contracts/examples/chat-turn-caso-intervalo.json`
+
+#### Scenario: Un dato en curso sin verificar se avisa y no bloquea [US-272 AC-2] [RN-26]
+- **GIVEN** un tratamiento en curso (`relativeEndDay = null`) con `reviewStatus = requiere_revision`
+- **WHEN** se pregunta por los últimos 100 días
+- **THEN** el hecho entra y su bloque se muestra, y `notices[]` contiene el aviso fijo de «sin verificar» sin impedir la respuesta
+
+### Requirement: Sin hechos del periodo o sin datos el turno responde con un texto fijo sin intervención del LLM
+Cuando el expediente no tiene datos que responder, el turno MUST responder con un único bloque `kind = limitacion` de
+texto fijo desde configuración, sin texto del LLM y sin cita (RN-01, glosario §3): sin datos en absoluto, «No se encontró
+información documentada sobre lo preguntado en el expediente»; sin datos en el periodo pero con datos fuera de él, el
+texto de `l1d-318` (`CHAT_SIN_DATOS_PERIODO_TEXTO`).
+
+#### Scenario: Sin datos en absoluto [US-272 AC-4] [RN-01]
+- **GIVEN** un expediente sin hechos del tipo preguntado y el LLM falso con contador
+- **WHEN** se procesa el turno de caso
+- **THEN** la respuesta es un único bloque `limitacion` con exactamente «No se encontró información documentada sobre lo preguntado en el expediente» (`CHAT_SIN_DATOS_TEXTO`)
+- **AND** el LLM de generación registra cero invocaciones y el bloque no lleva texto ni citas del LLM
+
+#### Scenario: Periodo sin hechos con expediente con datos fuera de él [US-272 AC-4] [RN-01] (decidido: se conserva el texto de l1d-318)
 - **GIVEN** `P-CHAT` y un periodo («el último mes») en el que ningún hecho entra, con datos fuera del periodo
 - **WHEN** se procesa el turno de caso
 - **THEN** la respuesta es un único bloque `limitacion` cuyo texto es `CHAT_SIN_DATOS_PERIODO_TEXTO` y comienza por «No se encontró información documentada»

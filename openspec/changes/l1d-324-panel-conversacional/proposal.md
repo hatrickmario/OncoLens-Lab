@@ -35,10 +35,15 @@ romper RN-19/RN-23, sin *streaming* y sin que el navegador hable con otro origen
   `/pacientes/[id]/analisis`, según la variante B: hilo a ancho completo (máx. 1040 px), «Nueva conversación», campo de
   pregunta fijo abajo (no fijo bajo 480 px), una tarjeta por turno del asistente con chip de intención
   (◆ Caso / ◌ Faltantes / ▤ Evidencia), bloques pintados por `blocks[].kind` (enum cerrado de 8 valores del contrato:
-  ◆ información clínica, ▤ evidencia científica y, aparte, «Interpretación generada por IA» para `interpretacion`),
+  ◆ información clínica, ▤ evidencia científica y, aparte, «Interpretación generada por IA» para `interpretacion` y el
+  rótulo neutro «Alcance de la respuesta» —sin ◆ ni ▤— para `limitacion`; un `kind` desconocido se pinta con el rótulo
+  genérico «Información adicional del turno» sin ocultar su texto),
   enlaces ◆ a datos (`dataLinks`, `ConversationDataLink`), citas `[En]` (`blocks[].citations`), línea «Datos usados ·
   Ausentes» (`ConversationTurn.dataUsed`/`dataMissing`) y los avisos de RN-19 tal como llegan en `turn.notices[]` (la UI
-  no los toma de su configuración).
+  no los toma de su configuración). Un turno con bloques generados y `notices = []` **no se pinta como válido** (se
+  muestra un estado de aviso faltante, ver `design.md` D3). Si el turno trae el aviso «La búsqueda se amplió con datos del
+  caso: tipo, estadio y biomarcador» (determinista, lo escribe Backend 2 desde `notices[]`, no el LLM; ver `l1d-329`), se
+  pinta tal cual como el supuesto de la búsqueda.
 - **Turno de evidencia** reutiliza `AnalysisResult` (síntesis, `OrderingCriterion`, `ApplicabilityTable`,
   `EvidenceOptionsList`, `DiscardedOptions`, `AnalysisBasisPanel`) sobre `turn.evidenceAnalysis`, con el encabezado
   «Opciones descritas en la evidencia».
@@ -58,11 +63,13 @@ romper RN-19/RN-23, sin *streaming* y sin que el navegador hable con otro origen
   componentes propios sobre shadcn/ui, sin dependencias nuevas. En ambos casos, el texto con Markdown se pinta sin
   `rehype-raw`, con `rehype-sanitize` y `urlTransform` vía `esUrlHttpSegura()` (definida en L1D-266).
 - **Preguntas guiadas (AC-8…AC-11, ADR-52):** una conversación sin turnos muestra de 3 a 4 botones («Preguntas
-  sugeridas») compuestos por código con el tema del caso; al pulsar uno se envía como pregunta normal del oncólogo por el
+  de partida sobre este caso») compuestos por código con el tema del caso; al pulsar uno se envía como pregunta normal del oncólogo por el
   mismo Route Handler de turnos, sin marca de origen. El tema (etiqueta CIE-10 del tipo, estadio o biomarcador
-  principal; en próstata, el grado) sale **del `GET /api/patients/{id}/case` que el panel ya consume**
-  (`leerVistaDeCaso`) y del catálogo versionado, nunca de texto libre ni del LLM (ver `design.md` D7). Plantillas con
+  principal; en próstata, el grado) sale de **`PatientSummary.diagnosis` y `PatientSummary.recentBiomarkers`** (el resumen que
+  el RSC de la página lee en servidor con `obtenerFicha`; **nunca `identification`**) y del catálogo versionado, nunca de
+  texto libre ni del LLM; sin cambio de `CaseView` (ver `design.md` D7). Plantillas con
   ranura de tema en `packages/clinical-catalogs/{mama,prostata}/plantillas.json` (hoy vacíos; RN-29).
+- **Sistema de diseño de rótulos:** `limitacion` usa «Alcance de la respuesta» y un `kind` desconocido «Información adicional del turno» (ver D3).
 - **Sustitución del formulario de pregunta única `(decidido, P-1 [S6 resp. 20])`:** el campo del chat sustituye a `EvidenceQueryForm` en
   `/analisis`; se retiran sus requisitos de `evidence-panel` (envío único, aviso de faltantes antes de analizar,
   `continueWithWarning`, validación de longitud y normalización del formulario).
@@ -88,7 +95,7 @@ Relacionadas, sin delta: `web-bff` (los Route Handlers de conversación los aña
 `frontend` (`apps/web/components`, `apps/web/lib/conversacion`, `apps/web/app/(dashboard)/pacientes/[id]/analisis`,
 `apps/web/app/globals.css`) · catálogo (`packages/clinical-catalogs`: plantillas de preguntas guiadas) · documentación
 (`docs/ux/sistema-de-diseno.md`). Sin `contratos`, sin `clinical-platform` (salvo consumir los Route Handlers de
-`l1d-315` y `GET …/case`), sin `ai-services`.
+`l1d-315` y leer `PatientSummary` en servidor con `obtenerFicha`), sin `ai-services`.
 
 ## Dependencias
 
@@ -107,8 +114,12 @@ Relacionadas, sin delta: `web-bff` (los Route Handlers de conversación los aña
 - 🔗 Complementa `l1d-329-segundo-loop-contextual` (US-271, ADR-52): las preguntas guiadas **no** lo sustituyen; una
   pregunta guiada o escrita sin tema propio pasa por el mismo gate G1 y segundo loop (no es dependencia de orden: las
   preguntas guiadas funcionan con o sin el indicador).
-- 🔗 Consume `GET /api/patients/{patientId}/case` (la vista de caso, ya en `main`: `apps/web/lib/caso/leer-vista-de-caso.ts`) para el tema; la versión de
-  catálogo de las plantillas es la siguiente menor libre tras `l1d-329` (esperada 1.8.0; se renumera el segundo en mergear).
+- ⛔ `l1d-329-segundo-loop-contextual`: crea el fixture compartido caso → tema
+  (`packages/clinical-catalogs/test/fixtures/temas-del-caso.json`) que este change consume, y su validador de catálogo/
+  guardián de versiones. Va antes en O5 (orden de merge esperado: 323 → 330 → 329 → 324).
+- 🔗 Consume `PatientSummary` (`diagnosis`, `recentBiomarkers`) con el lector de servidor `obtenerFicha`
+  (`apps/web/lib/server/pacientes.ts`) para el tema; la versión del catálogo es la siguiente menor libre tras `l1d-329`
+  (esperada 1.8.0; se renumera el segundo en mergear).
 - 🔗 Lo extiende: US-268 (L1D-325) — abrir fuentes, panel lateral de cita, «Ver referencias», expandir.
 
 ## Pendientes de definir (para /sprint-start)
@@ -139,7 +150,7 @@ Relacionadas, sin delta: `web-bff` (los Route Handlers de conversación los aña
   `FollowUpThread`; borrado de `follow-up-*`.
 - `apps/web/app/(dashboard)/pacientes/[id]/analisis/page.tsx`, `apps/web/lib/mensajes` (textos nuevos),
   `apps/web/app/globals.css`, `docs/ux/sistema-de-diseno.md`.
-- Preguntas guiadas: `apps/web/lib/conversacion/preguntas-guiadas.ts` (función pura), molécula `guided-questions`,
+- Preguntas guiadas: `apps/web/lib/conversacion/preguntas-guiadas.ts` (función pura) y `lib/server/catalogo-guiadas.ts` (`import 'server-only'`), molécula `guided-questions`,
   `packages/clinical-catalogs/{mama,prostata}/plantillas.json`, su esquema y validador, y `manifest.json` (versión
   menor siguiente libre).
 - `apps/web/package.json` solo si gana assistant-ui. Tests: `apps/web/tests/` (Testing Library + MSW) y `e2e/`
