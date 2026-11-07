@@ -80,6 +80,11 @@ def ensamblar(destino: Path) -> None:
         for archivo, variable in (("model.onnx", "MODEL"), ("tokenizer.json", "TOKENIZER")):
             sha = hashlib.sha256((carpeta / archivo).read_bytes()).hexdigest()
             lineas += [f"{prefijo}_{variable}_PATH=/models/{componente}/{archivo}", f"{prefijo}_{variable}_SHA256={sha}"]
+        if componente == "embeddings":
+            # Pesos del sparse léxico de BGE-M3: la búsqueda híbrida (RETRIEVAL_MODE=hibrida), `ingest reindex-sparse` y la suite
+            # `evaluate` los exigen y fallan en cerrado nombrando la variable si faltan (RN-12).
+            sha = hashlib.sha256((carpeta / "sparse_linear.npz").read_bytes()).hexdigest()
+            lineas += [f"EMBEDDING_SPARSE_WEIGHTS_PATH=/models/{componente}/sparse_linear.npz", f"EMBEDDING_SPARSE_WEIGHTS_SHA256={sha}"]
         print(f"{componente}: {cuantizacion}, {(carpeta / 'model.onnx').stat().st_size / 1e6:.0f} MB")
     ruta = destino / "modelos.env"
     ruta.write_text("\n".join(lineas) + "\n", encoding="utf-8")
