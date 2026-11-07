@@ -30,14 +30,29 @@
 
 ## 4. evaluación
 
-Nota 4.1 (sin checkbox: no es una acción de este PR): `run-ai-eval` con `eval/configs/rn23-local.yaml --suite all` y `eval/configs/s5.yaml --suite opciones` (prompt nuevo `chat-seguimiento-evidencia` y nuevo camino al generador) · evaluate · lo lanza `ai-eval-runner` en el Gate 2 (el orquestador); la suite del chat AC05 es de US-269
+- [x] 4.1 `run-ai-eval` con `eval/configs/rn23-local.yaml --suite all` y `eval/configs/s5.yaml --suite opciones` (prompt nuevo `chat-seguimiento-evidencia` y nuevo camino al generador) · evidence del `ai-eval-runner` real (Gate 2, 2026-11-06): sin regresión. rn23 all: citas 1,0, fidelidad 1,0, «sin evidencia» 1,0, recall@10 1,0, MRR 0,783, salidas prescriptivas 0, p95 6,4 s. s5 opciones: fidelidad proxy 0,875, citas 1,0, M-10.1 100 %, RN-28 100 %. Long context medido: prompt de análisis 911-924 tokens reales (11 % de 8192) y seguimiento 700 (8,5 %). Prototipo con el tema en la pregunta: opción con 4 citas, NLI mínimo 0,995; las preguntas genéricas sin tema devuelven `sin_evidencia` por el *reranker* (comportamiento de `/rag/query`). La suite del chat AC05 es de US-269
 
 ## 5. cierre
 
 - [x] 5.1 `openspec validate l1d-322-chat-evidencia-seguimiento --strict` en verde
-- [x] 5.2 `pytest` de `rag-orchestrator`, `vitest` e integración de `clinical-api` en verde, `contracts:verify-provider`, `contracts:breaking` sin incompatibles
-Nota 5.3 (sin checkbox: no es una acción de este PR): Gate 2 con `contract-keeper`, `privacy-guardian`, `clinical-language-auditor` y `design-principles-reviewer` · lo lanza el orquestador
+- [x] 5.2 `pytest` de `rag-orchestrator`, `vitest` e integración de `clinical-api` en verde, `contracts:verify-provider` de ambos, `contracts:breaking` sin incompatibles
+- [x] 5.3 Gate 2 vuelta 1 con `contract-keeper` (FAIL, 2 Mayores: versión y ejemplos del motor), `privacy-guardian` (PASS), `clinical-language-auditor` (PASS, 2 Mayores: un bloque por opción y criterio de orden / aplicabilidad / faltantes / limitaciones) y `design-principles-reviewer` (PASS con refactor: 5 Mayores P1 y 6 P2) · respondidos en esta vuelta (secciones 6 y 7)
+
+## 6. Gate 2 vuelta 1: respuesta
+
+- [x] 6.1 `contract(L1D-322)`: clinical-api 1.29.0 (L1D-320 toma la 1.28.0), `getConversation` documenta que `evidenceAnalysis` solo va en el turno creador, glosario §1/§2, plan y design alineados; `activeAnalysisId` es un string con patrón UUID (sin `format: uuid`, AC-17)
+- [x] 6.2 Los ejemplos de rag de evidencia y seguimiento son la salida del motor (`test_chat_turn_ejemplos.py`, rojo antes del verde)
+- [x] 6.3 Lenguaje: un bloque `evidencia` por opción con SUS citas, bloque `catalogo` con el criterio de orden de RN-28, aplicabilidad por criterio con «falta en el paciente», bloque `faltante` y bloques `limitacion` (textos fijos en `domain/chat/mensajes.py`); AC-5 usa `check_prohibited_terms` sobre todos los bloques; nivel A y B sobre la plantilla del seguimiento; escenarios SEG-PRESCRIPTIVO y SEG-SALIDA-INVALIDA con tests. *Orden TDD*: el cambio de comportamiento se implementó antes de actualizar sus tests (no hubo commit en rojo para M1/M2)
+- [x] 6.4 Privacy: parche AC-17 `ac-17-exencion-chat.json` (la exención de `activeAnalysisId` y `threadId` falla fuera de su puntero), `llmProvider` validado también en el turno de seguimiento (RN-12), 403 de opt-out en el turno de evidencia
+- [x] 6.5 Diseño P1: `validar_afirmaciones_citadas` compartido por `/rag/follow-up` y el chat con test de paridad; filtros del chat por `armarRagQueryRequest` (`publishedFromYear: null`) y Base con `maxOptions` igual al de Backend 2 (test de igualdad de defaults y de la Base persistida); `construirRegistroValidado` único para gateway y chat; `creoElAnalisis` por `trace_id`
+- [x] 6.6 Diseño P2: `invocar_borde_fallando_cerrado` en `bordes.py`; catálogo de nodos por (intención, subintención) con falla en voz alta; `PosicionesFalsas` con el orden y el rechazo de comillas del adaptador real; tests de proveedor no permitido, registro incoherente, seguimiento con `evidenceAnalysis`, `sin_evidencia` en el turno de análisis, fallo de posiciones y chunk sin posición
+
+## deuda
+
+- TRASLADADA a L1D-323: `RETRIEVAL_UNAVAILABLE` y `NLI_UNAVAILABLE` no están en el 503 de `/chat/turn` del contrato rag (deuda previa de L1D-317 y de este change: el fallo de posiciones lo produce). Declararlos requiere una excepción ADR-26 (`response-body-one-of-added`); por eso `ConstructorDeCitas` se prueba como unidad y no por HTTP
+- TRASLADADA a L1D-323: Extract Interface `RecuperadorDeEvidencia` (recuperar, chunks_citables, verificar) para `NodoSeguimientoDeEvidencia`; plantilla y parseo duplicados con `LlmSeguimientoGenerator`
+- TRASLADADA a L1D-323: P2-11 (repositorio de conversación) y las P3: flag `con_analisis_activo`, Parameter Object de `_registrar_chat`, defaults de `chunk_ids_evaluados`, prueba de mutación para confirmar los tests que nacieron verdes (AC-5/6/7), test de `episodioId` nulo en el turno de evidencia
 
 ## humano
 
-Nota (sin checkbox): `CHAT_EVIDENCE_MAX_OPTIONS=3` ya está en `apps/rag-orchestrator/.env.example`, `infra/docker/docker-compose.yml` y su test (autorizado por el PO). La Base del análisis del chat usa `ANALYSIS_MAX_OPTIONS` de Backend 1; conviene mantener ambos valores iguales.
+Nota (sin checkbox): `CHAT_EVIDENCE_MAX_OPTIONS=3` ya está en `apps/rag-orchestrator/.env.example`, `infra/docker/docker-compose.yml` y su test (autorizado por el PO). La Base del análisis del chat usa `ANALYSIS_MAX_OPTIONS` de Backend 1; un test compara sus valores por defecto.
