@@ -1,0 +1,26 @@
+{
+  "intent": "fuentes_limitaciones",
+  "blocks": [
+    {
+      "kind": "limitacion",
+      "text": "Aún no se ha consultado evidencia en esta conversación"
+    }
+  ],
+  "omittedClaims": 0,
+  "structuredState": {
+    "intentsVistos": [
+      "fuentes_limitaciones"
+    ],
+    "preguntasPrevias": [
+      "¿Cuáles son las fuentes y las limitaciones de la evidencia?"
+    ],
+    "opcionesMostradas": [],
+    "citasMostradas": [],
+    "faltantesSenalados": []
+  },
+  "llmProvider": "local",
+  "notices": [
+    "Generado por IA; requiere validación clínica independiente por el oncólogo tratante",
+    "Uso académico/investigación"
+  ]
+}

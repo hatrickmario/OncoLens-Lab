@@ -1,0 +1,93 @@
+{
+  "intent": "evidencia",
+  "blocks": [
+    {
+      "kind": "limitacion",
+      "text": "Ningún fragmento recuperado supera el umbral de relevancia."
+    },
+    {
+      "kind": "limitacion",
+      "text": "Alcance de la recuperación: el corpus tiene fecha de corte 2026-09-30; fuentes no incluidas: FUENTE-EXCLUIDA-1, FUENTE-EXCLUIDA-2; fragmentos evaluados por el reranker en esta consulta: 2."
+    }
+  ],
+  "omittedClaims": 0,
+  "structuredState": {
+    "intentsVistos": [
+      "evidencia"
+    ],
+    "preguntasPrevias": [
+      "¿Qué describe la evidencia sobre melanoma uveal?"
+    ],
+    "opcionesMostradas": [],
+    "citasMostradas": [],
+    "faltantesSenalados": [],
+    "ultimaEvidencia": {
+      "query": "¿Qué describe la evidencia sobre melanoma uveal?",
+      "chunkIds": [
+        "ch-m1-1",
+        "ch-inj-1"
+      ],
+      "topRelevanceScore": null
+    }
+  },
+  "llmProvider": "local",
+  "notices": [
+    "Generado por IA; requiere validación clínica independiente por el oncólogo tratante",
+    "Uso académico/investigación"
+  ],
+  "evidenceAnalysis": {
+    "status": "sin_evidencia",
+    "synthesis": {
+      "agreements": [],
+      "discrepancies": []
+    },
+    "applicability": [],
+    "evidenceOptions": [],
+    "discardedOptions": [],
+    "limitations": [
+      {
+        "text": "Ningún fragmento recuperado supera el umbral de relevancia.",
+        "origin": "estructural"
+      }
+    ],
+    "assumptions": [],
+    "retrievalStats": {
+      "retrieved": 40,
+      "aboveThreshold": 0
+    },
+    "omittedClaims": 0,
+    "optionsNotShown": 0,
+    "agentSteps": [],
+    "topRelevanceScore": null,
+    "meta": {
+      "queryLanguage": "es",
+      "responseLanguage": "es",
+      "llmProvider": "local",
+      "llmModel": "llm-local-ejemplo",
+      "embeddingModel": "embedding-local-ejemplo",
+      "rerankerModel": "reranker-local-ejemplo",
+      "nliModel": "nli-local-ejemplo",
+      "promptVersion": "rag-query@0.1.0",
+      "catalogVersion": "2026.10.0",
+      "corpusRelease": "2026-09-30",
+      "corpusCutoffDate": "2026-09-30",
+      "excludedSources": [
+        "NCCN",
+        "ESMO"
+      ],
+      "retrievalParams": {
+        "topK": 40,
+        "rerankTopN": 10,
+        "relevanceThreshold": 0.5,
+        "retrievalMode": "dense",
+        "fusion": "ninguna",
+        "fusionParam": 0,
+        "queryRewrite": {
+          "applied": true,
+          "reason": "disparado"
+        }
+      },
+      "latencyMs": 8200
+    }
+  }
+}

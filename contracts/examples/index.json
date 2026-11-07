@@ -1305,6 +1305,55 @@
       "file": "error-interno.json",
       "spec": "clinical-api",
       "target": "#/paths/~1platform~1conversations~1{conversationId}/get/responses/500"
+    },
+    {
+      "file": "chat-turn-request-fuentes.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnRequest"
+    },
+    {
+      "file": "chat-turn-fuentes-ok.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnResponse",
+      "request": "chat-turn-request-fuentes.json"
+    },
+    {
+      "file": "chat-turn-fuentes-sin-anio.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnResponse",
+      "request": "chat-turn-request-fuentes.json"
+    },
+    {
+      "file": "chat-turn-request-fuentes-sin-consulta.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnRequest"
+    },
+    {
+      "file": "chat-turn-fuentes-sin-consulta.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnResponse",
+      "request": "chat-turn-request-fuentes-sin-consulta.json"
+    },
+    {
+      "file": "chat-turn-request-fuentes-sin-evidencia.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnRequest"
+    },
+    {
+      "file": "chat-turn-fuentes-sin-evidencia.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnResponse",
+      "request": "chat-turn-request-fuentes-sin-evidencia.json"
+    },
+    {
+      "file": "rag-recuperacion-no-disponible.json",
+      "spec": "rag-orchestrator",
+      "target": "#/paths/~1chat~1turn/post/responses/503"
+    },
+    {
+      "file": "rag-nli-no-disponible.json",
+      "spec": "rag-orchestrator",
+      "target": "#/paths/~1chat~1turn/post/responses/503"
     }
   ],
   "pendingExamples": [
