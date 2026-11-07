@@ -3,6 +3,7 @@
 Recorrido local de punta a punta: login → paciente semilla → pregunta clínica → **una opción descrita en la evidencia, citada y validada** (walking skeleton). Todo corre en tu Mac: Compose (clinical-api, rag-orchestrator, Milvus, PostgreSQL, web) + modelos de CPU (BGE-M3, bge-reranker-v2-m3, mDeBERTa) + el LLM de ADR-39 en Ollama (`gemma4:26b-a4b-it-q4_K_M`). **Datos 100 % sintéticos** (RN-13/14). Uso académico/investigación.
 
 ## 1. Preparar (una vez)
+> **`levantar.sh` valida y descarga lo que falte (D6-31).** Los pasos 2 y 3 se pueden saltar: si faltan los pesos ONNX (`model.onnx` de embeddings, reranker y nli), `embeddings/sparse_linear.npz`, `modelos.env` o sus variables `EMBEDDING_SPARSE_WEIGHTS_*`, el script ejecuta `exportar-modelos.py` en un venv aparte (`~/.venvs/oncolens-export`, o `ONCOLENS_VENV_EXPORT`; nunca el entorno de la app); si el LLM no aparece en `ollama list`, hace `ollama pull`. Como son ~24 GB (~7 GB de pesos + ~17 GB del LLM), **pide confirmación**: pasa `--descargar-modelos` (o `ONCOLENS_DESCARGAR_MODELOS=si`) o responde `si` en la terminal. Sin confirmar, sale con código 1, dice qué falta y nombra el comando (`scripts/demo/levantar.sh --descargar-modelos` o el manual). Lo que ya existe no se vuelve a descargar.
 1. **Docker Desktop**: VM con ≥ 12 GB (Settings → Resources). Equipo con ≥ 32 GB; el stack suma ~29 GB con el LLM (ADR-39: margen de 0,7 GB, cierra apps pesadas).
 2. **Ollama** y el modelo: `ollama pull gemma4:26b-a4b-it-q4_K_M` (17 GB).
 3. **Pesos ONNX** (fuera del repo, ~7 GB de descarga, ~10 min): con un venv que tenga `apps/rag-orchestrator/requirements-eval.txt` y `requirements-export.txt` (torch y transformers, D-11),
@@ -20,7 +21,7 @@ scripts/demo/apagar.sh --borrar-datos   # cierra attu, baja el stack y BORRA los
 ```
 `levantar.sh` **no borra nada por su cuenta**: si encuentra volúmenes o contenedores `oncolens_*`/`oncolens-*` de una instalación anterior, imprime la lista y pide confirmación; sin confirmar sale con código 1 y te indica la orden de arriba. Para seguir sobre ese estado a propósito: `scripts/demo/levantar.sh --continuar` (o `ONCOLENS_CONFIRMAR_ESTADO_PREVIO=si`).
 ```bash
-scripts/demo/levantar.sh     # ~15-25 min la primera vez (construye imágenes, migra, siembra, carga el corpus y sus metadatos de población, pesos sparse); verifica el seed
+scripts/demo/levantar.sh     # (con --descargar-modelos si faltan modelos) ~15-25 min la primera vez (construye imágenes, migra, siembra, carga el corpus y sus metadatos de población, pesos sparse); verifica el seed
 scripts/demo/apagar.sh       # cierra attu, detiene el stack y el Ollama que arrancó el script (--borrar-datos: empezar de cero)
 ```
 Antes de «Listo», `levantar.sh` ejecuta la **Verificación del seed**: compara pacientes, identidades, usuarios y documentos del corpus (con y sin población verificada) con los conteos que publica el propio seed. Solo `count(*)`, con el rol de `clinical-api` y el de `rag_corpus` dentro de su contenedor; nunca superusuario ni contraseñas en la salida. Si un conteo falla, termina con código 1 y nombra cuál (p. ej. `FALLA identity.patient_identity: esperado 5, obtenido 0`).
@@ -44,6 +45,8 @@ Antes de «Listo», `levantar.sh` ejecuta la **Verificación del seed**: compara
 - El LLM puede dar justificaciones demasiado literales o, en raros casos, añadir un matiz no respaldado (fidelidad 0,95 en la revisión de ADR-39): la validación de citas y NLI es la red de seguridad, no la fluidez.
 
 ## 5. Si algo falla
+- `levantar.sh` sale con código 1 diciendo «falta … y la descarga no se confirmó» → es la confirmación de las descargas grandes: repite con `scripts/demo/levantar.sh --descargar-modelos`, o ejecuta a mano el comando que nombra.
+- `levantar.sh` falla al migrar con credenciales de otro stack → elige la red `<proyecto>_clinical-net` por el nombre exacto del proyecto Compose (`COMPOSE_PROJECT_NAME`, por defecto `oncolens`); si usas otro proyecto, expórtalo antes de ejecutarlo.
 - `/login` da 500 → falta `WEB_HOME_PATH` (lo fija `levantar.sh`; sin él el web se niega a servir).
 - `rag-orchestrator` sale al arrancar nombrando una variable → ejecuta de nuevo `scripts/demo/levantar.sh` (crea la colección de Milvus antes del arranque final).
 - Análisis lento o error 5xx → `ollama ps` (¿está G cargado al 100 % GPU?) y `docker logs oncolens-rag-orchestrator-1`.

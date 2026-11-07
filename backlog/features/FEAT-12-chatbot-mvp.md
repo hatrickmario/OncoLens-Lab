@@ -384,6 +384,8 @@ Nodo `fuentes_limitaciones` determinista: lee del estado del hilo los ids de cit
 
 > **Decidido (usuario, 2026-11-06):** referencia de diseño = **variante B · Hilo con tarjetas** (`docs/ux/S6/variante-b.html`, `docs/ux/S6/pantallas-s6.md`) `[S6 resp. 16]`.
 
+> **Decidido (usuario, 2026-11-07):** `traceId` en el error del turno: se mantiene el AC-5 (error genérico); el `traceId` sigue solo por `X-Trace-Id` y logs; no se modifica L1D-324 `[S1 resp. 31]`.
+
 ## Story
 Como oncólogo, quiero un panel de conversación junto a los datos del paciente donde pregunto
 por el caso, los faltantes o la evidencia y veo cada respuesta con sus fuentes, para trabajar
@@ -420,6 +422,8 @@ Interacción con fuentes y referencias (US-268). Lista de conversaciones anterio
 `FEAT-12` · Sprint 6 · Estimación **3** · HU-03 · RN-04, RN-25, SEG-12 · AC-T1.1, AC-T1.3 · ↪ US-267 · 🔗 Consume: `docs/ux/S6/` (variante elegida)
 
 > **Decidido (usuario, 2026-11-06):** escenario (5) del spike: abrir fuentes, expandir información, consultar referencias e interactuar con controles sin perder el contexto del análisis `[S6 resp. 2]`.
+
+> **Decidido (usuario, 2026-11-07):** D6-32 (hueco de `CaseView`: sin `id` en `biomarkerSeries.points` ni diagnóstico) pasa a Post-MVP; el panel lateral muestra el valor del turno rotulado «generada por IA» (no el registro). Deuda en [`S6-deuda.md`](../sprints/S6-deuda.md).
 
 ## Story
 Como oncólogo, quiero abrir la fuente de una cita o el dato de un enlace y volver a la
