@@ -93,7 +93,7 @@ casos:
     paciente: paciente-a
     intent: evidencia
     pregunta: '¿Qué opciones describe la evidencia sobre adjuvant anti-HER2 therapy after surgery en cáncer de mama?'
-    respuesta_esperada: 'Describe las opciones de la evidencia con su cita al corpus, ordenadas por aplicabilidad, sin recomendar.'
+    respuesta_esperada: 'Describe las opciones de la evidencia con su cita al corpus, ordenadas por aplicabilidad, sin indicar una conducta para el paciente.'
     criterios_esperados: [opcion_con_cita]
     revision_oncologo: pendiente
     ejemplo:
@@ -209,7 +209,7 @@ casos:
     paciente: paciente-b
     intent: evidencia
     pregunta: '¿Qué opciones describe la evidencia sobre androgen deprivation therapy and androgen receptor inhibitor en cáncer de próstata?'
-    respuesta_esperada: 'Describe las opciones de la evidencia con su cita al corpus, ordenadas por aplicabilidad, sin recomendar.'
+    respuesta_esperada: 'Describe las opciones de la evidencia con su cita al corpus, ordenadas por aplicabilidad, sin indicar una conducta para el paciente.'
     criterios_esperados: [opcion_con_cita]
     revision_oncologo: pendiente
     ejemplo:

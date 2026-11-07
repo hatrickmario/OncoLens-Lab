@@ -5,13 +5,13 @@
 - [x] 1.1 Añadir `contracts/examples/chat-turn-*-prostata.json` (caso, faltantes, relevancia, evidencia, fuentes) donde
   las historias hermanas solo dejaron ejemplos de mama; sintéticos, aviso RN-19 literal sin punto final, sin vocabulario de
   recomendación · test después · verificación: validan contra `ChatTurnResponse` y `contracts:check` en verde; commit
-  `contract(L1D-326)`
- · evidencia: commit `contract(L1D-326)` 4c343099: 10 ejemplos `chat-turn-*-prostata.json` (caso, faltantes, relevancia, evidencia, fuentes y sus peticiones) con entradas en `index.json`; `node scripts/contracts/check.mjs` sin hallazgos (33 reglas); el de evidencia deja `synthesis` vacío como el de mama (`assertClaimsAnchored`); el de fuentes usa `FUENTE-EXCLUIDA-1/2`.
+  `contract(L1D-326)` · evidencia: commit `contract(L1D-326)` 4c343099: 10 ejemplos `chat-turn-*-prostata.json` (caso, faltantes, relevancia, evidencia, fuentes y sus peticiones) con entradas en `index.json`; `node scripts/contracts/check.mjs` sin hallazgos (33 reglas); el de evidencia deja `synthesis` vacío como el de mama (`assertClaimsAnchored`); el de fuentes usa `FUENTE-EXCLUIDA-1/2`.
+
 ## 2. ai-services
 
 - [x] 2.1 Crear `data/eval/chat-v1/manifest.yaml` y `casos.yaml` (≥ 12 casos AC01…AC06 × mama/próstata, `clase:
   sintetico`, hechos por clave del seed, faltantes sembrados con `gapType`, `revision_oncologo: pendiente`, marcador
-  `{identidad_sintetica:P-CHAT}`) · test después · verificación: escaneo de PII local sin hallazgos · evidencia: `data/eval/chat-v1/` con 13 casos (12 AC01…AC06 x mama/próstata + `CHAT-AC01-MAMA-PII`), 2 controles prescriptivos y `faltantes_sembrados` de `paciente-chat`, `paciente-b` y `paciente-e`; escaneo de PII: ver el cierre de verificación de este PR.
+  `{identidad_sintetica:P-CHAT}`) · test después · verificación: escaneo de PII local sin hallazgos · evidencia: `data/eval/chat-v1/` con 13 casos (12 AC01…AC06 x mama/próstata + `CHAT-AC01-MAMA-PII`), 2 controles prescriptivos y `faltantes_sembrados` de `paciente-chat`, `paciente-b` y `paciente-e`; `node scripts/ci/pii-scan.mjs`: «sin PII en los archivos versionados» (2026-11-07, incluye `data/eval/chat-v1/`).
 - [x] 2.2 Test en rojo: «rechaza chat-v1 sin cobertura AC01…AC06 por tipo de cáncer [US-269 AC-2]» y «rechaza un caso sin
   revision_oncologo [US-269 AC-8]» (Pytest sobre `dataset_chat.py` con esqueleto `NotImplementedError`) · TDD estricto ·
   commit `test(L1D-326)` · evidencia: commit a7a6f9b4 (rojo: 3 failed con `NotImplementedError`).
@@ -55,7 +55,7 @@
 
 ## 4. frontend
 
-- [x] 4.1 (alcance mínimo, decisión del usuario 2026-11-07) Cubierto y ejecutado en verde en local (Compose `LLM_PROVIDER=fake`, 2/2): AC01…AC06 de mama con la paciente (a) y «0 apariciones de la identidad sintética en los logs de Compose tras FX-12-d [US-269 AC-6]»; nacen en verde (caracterización de lo de las historias hermanas). AC02 usa «¿Qué resultado tuvo el receptor de estrógeno?» porque el chat falso solo enruta por reglas y «HER2» no está en `sinonimos.json`. La parte de próstata (paciente b): TRASLADADA -> D6-49 (E2E de próstata de US-269 AC-1; riesgo: el chat de próstata queda sin prueba de punta a punta hasta el próximo periodo). Texto original: Test E2E `apps/web/e2e/chat-ac01-ac06.spec.ts`: «recorre AC01…AC06 con el paciente (a) con intent, ≥ 1 `factRef` en los bloques `documentado`, `interpretacion` y `conflicto` y ≥ 1 cita en los `evidencia` (los `faltante`, `catalogo`, `limitacion` y `fuente` son deterministas y exentos, glosario §3)
+- [x] 4.1 (alcance mínimo, decisión del usuario 2026-11-07) Cubierto y ejecutado en verde en local 2/2 en Compose (`LLM_PROVIDER=fake`); la CI lo confirma en el PR: AC01…AC06 de mama con la paciente (a) y «0 apariciones de la identidad sintética en los logs de Compose tras FX-12-d [US-269 AC-6]»; nacen en verde (caracterización de lo de las historias hermanas). AC02 usa «¿Qué resultado tuvo el receptor de estrógeno?» porque el chat falso solo enruta por reglas y «HER2» no está en `sinonimos.json`. La parte de próstata (paciente b): TRASLADADA -> D6-49 (E2E de próstata de US-269 AC-1; riesgo: el chat de próstata queda sin prueba de punta a punta hasta el próximo periodo). Texto original: Test E2E `apps/web/e2e/chat-ac01-ac06.spec.ts`: «recorre AC01…AC06 con el paciente (a) con intent, ≥ 1 `factRef` en los bloques `documentado`, `interpretacion` y `conflicto` y ≥ 1 cita en los `evidencia` (los `faltante`, `catalogo`, `limitacion` y `fuente` son deterministas y exentos, glosario §3)
   y avisos RN-19 sin punto final [US-269 AC-1]», ídem con el paciente (b), y «0 apariciones de la identidad sintética en
   los logs de Compose tras FX-12-d [US-269 AC-6]» (reusa `buscar-secretos.ts`) · Playwright contra Compose,
   `LLM_PROVIDER=fake` · verificación: verde en la CI (`retries: 1` solo en CI, con *trace*)
@@ -71,6 +71,5 @@
 - [ ] 6.1 TRASLADADA -> D6-53: Registrar en el cierre del S6 la deuda de los casos `revision_oncologo: pendiente` `[S6 resp. 12]` y la
   latencia medida para la revisión de ADR-51
 - [x] 6.2 `openspec validate l1d-326-chat-e2e-evaluate --strict` en verde · evidencia: `openspec validate l1d-326-chat-e2e-evaluate --strict` válido (2026-11-07).
-- [x] 6.3 (parcial) Suites de `rag-orchestrator` (`pytest`), `clinical-api` (`vitest`) y E2E en verde; `contracts:check` sin · evidencia ejecutada: `pytest` rag completo 5094 passed; `contracts:check` sin hallazgos; `contracts:verify-provider` rag 761 respuestas; `vitest run` de clinical-api 148 archivos / 1390 tests; E2E de mama verde en local y en CI al abrir el PR. No ejecutado: E2E de próstata (D6-49), medición real de AC-3/AC-7 (D6-50) y AC-4 (D6-51).
-  incompatibles
+- [ ] 6.3 (hasta que la CI del PR esté en verde; lo ejecutado ya consta abajo) Suites de `rag-orchestrator` (`pytest`), `clinical-api` (`vitest`) y E2E en verde; `contracts:check` sin incompatibles · evidencia ejecutada: `pytest` rag completo 5094 passed; `contracts:check` sin hallazgos; `contracts:verify-provider` rag 761 respuestas; `vitest run` de clinical-api 148 archivos / 1390 tests; E2E de mama verde en local y en CI al abrir el PR. No ejecutado: E2E de próstata (D6-49), medición real de AC-3/AC-7 (D6-50) y AC-4 (D6-51).
 - [ ] 6.4 (lo ejecuta el orquestador) Gate 2 con `privacy-guardian`, `clinical-language-auditor`, `contract-keeper` y `design-principles-reviewer`

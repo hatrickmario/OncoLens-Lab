@@ -83,6 +83,14 @@ de mama y la no fuga en los cuerpos hacia Backend 2. AC-3 y AC-7 con modelos loc
 D6-50; AC-4 (sensibilidad, especificidad y `gapType`, tareas 3.2 y 3.3) en D6-51; `evaluate:chat`, el `.gitignore` y el refactor de
 clinical-platform (3.4 a 3.6) en D6-52; el E2E de próstata en D6-49; la revisión clínica de los casos pendientes en D6-53.
 
+## Notas del Gate 2
+
+- **Ejemplos de próstata solo-fake, no == motor:** `chat-turn-*-prostata.json` validan contra `ChatTurnResponse` y `contracts:verify-provider`, pero no se comparan con el motor real (la de fuentes se compuso a mano). Las cuatro peticiones de próstata son copias deliberadas de `chat-turn-request-caso-adt.json` salvo `question`. Riesgo: si cambia la plantilla de `/chat/turn`, el fake de próstata sirve texto viejo sin fallar (D6-54).
+- **Caso borde solo en modo fake:** la relevancia del fake se enruta por el patrón del dato sin mirar el tipo de cáncer.
+- **Allowlist:** la entrada `FX-12-doi-prostata` de `config/pii-allowlist.json` exime el prefijo del DOI normalizado a dígitos, por valor y ruta exacta; el commit `fef2b3b9` (solo la allowlist) no se reescribe.
+- **`exigir_adapters_locales(CLASE_SINTETICA, …)` es un no-op por diseño** en la CLI de `chat`: la negativa con datos no sintéticos la da `dataset_chat.py`, que rechaza todo dataset sin `clase: sintetico`.
+- **Menores de diseño diferidos a D6-54:** regex sin tipo y `if tipo == 'prostata'` en el fake de relevancia, `ClienteDelChat` por clave `intent`, `ID_PACIENTE_CHAT` y `PREGUNTA_FX_12_D` duplicados en el E2E, reloj simulado construido en tres sitios.
+
 ## Privacidad y ownership
 
 - **web → clinical-api**: solo en el E2E, con sesión opaca de un usuario sintético; sin cambios de código en `web`.
