@@ -3,6 +3,8 @@ import chatTurnEvidencia from '../../../../../contracts/examples/chat-turn-evide
 import chatTurnFuentes from '../../../../../contracts/examples/chat-turn-fuentes-ok.json' with { type: 'json' };
 import chatTurnFuentesSinConsulta from '../../../../../contracts/examples/chat-turn-fuentes-sin-consulta.json' with { type: 'json' };
 import chatTurnFuentesSinEvidencia from '../../../../../contracts/examples/chat-turn-fuentes-sin-evidencia.json' with { type: 'json' };
+import ragNliNoDisponible from '../../../../../contracts/examples/rag-nli-no-disponible.json' with { type: 'json' };
+import ragRecuperacionNoDisponible from '../../../../../contracts/examples/rag-recuperacion-no-disponible.json' with { type: 'json' };
 import chatTurnHiloDesconocido from '../../../../../contracts/examples/chat-turn-hilo-desconocido.json' with { type: 'json' };
 import { idSembrado } from '../../../prisma/seed/determinismo.js';
 import { PACIENTE_CHAT } from '../../../prisma/seed/pacientes/chat.js';
@@ -169,6 +171,24 @@ describe('Turno de fuentes y limitaciones', () => {
     expect(respuesta.body.blocks).toEqual(chatTurnFuentesSinConsulta.blocks);
     expect(respuesta.body.blocks.map((b: { kind: string }) => b.kind)).toEqual(['limitacion']);
   });
+});
+
+describe('Fallo cerrado del corpus en el turno de fuentes', () => {
+  it.each([
+    ['RETRIEVAL_UNAVAILABLE', ragRecuperacionNoDisponible],
+    ['NLI_UNAVAILABLE', ragNliNoDisponible],
+  ])(
+    'responde 502 sin persistir el turno cuando rag-orchestrator responde 503 %s [US-266 AC-1] [RN-01] [RN-06]',
+    async (_codigo, cuerpo) => {
+      const { app, conversationId } = await conversacionSobre(pacienteChat);
+      rag.chat.responder(respuestaDeRag(cuerpo, 503));
+
+      const respuesta = await enviarTurno(app, cookie, conversationId, PREGUNTA_DE_FUENTES);
+
+      expect(respuesta.status).toBe(502);
+      expect(await contarTurnosDeChat(mundo.cliente, conversationId)).toBe(0);
+    },
+  );
 });
 
 describe('Turno de evidencia de un paciente sin episodio de atención', () => {

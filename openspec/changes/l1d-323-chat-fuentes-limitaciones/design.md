@@ -82,13 +82,34 @@ rellenos en esos turnos.
 ## Contratos
 
 Proveedores: `rag-orchestrator` (`/chat/turn`, de `l1d-316`; `activeAnalysisId?`/`subintent?` de `l1d-322`) y
-`clinical-api` (`ConversationTurn`, de `l1d-315`). **Sin cambios de esquema ni de versión** (glosario §1): `fuente` y
-`limitacion` ya están en el enum cerrado de `ChatBlock.kind` (1.12.0) y `ultimaEvidencia` en `StructuredState` (1.12.0).
-`ConversationTurn.blocks[]` usa el mismo `ChatBlock`.
+`clinical-api` (`ConversationTurn`, de `l1d-315`). **Sin esquemas nuevos**: `fuente` y `limitacion` ya están en el enum
+cerrado de `ChatBlock.kind` (1.12.0) y `ultimaEvidencia` en `StructuredState` (1.12.0). `ConversationTurn.blocks[]` usa el
+mismo `ChatBlock`. **rag sube a 1.14.0** porque el 503 de `/chat/turn` pasa a declarar `RETRIEVAL_UNAVAILABLE` y
+`NLI_UNAVAILABLE` (los esquemas ya existían en `/rag/query`): el nodo de fuentes falla cerrado si el catálogo, las
+posiciones o la release no responden, y el seguimiento de `l1d-322` ya lo hacía sin declararlo. Decisión tomada aquí y no
+diferida: el costo es una excepción ADR-26 (E-20, tarea H-1) y el contrato no tiene que volver a abrirse en `l1d-326`.
+`clinical-api` no cambia de contrato: traduce esos 503 a `502 ErrorServicioIa`.
 
-Ejemplos nuevos (uno por caso, validan contra `ChatTurnResponse` 1.13.0): `contracts/examples/chat-turn-fuentes-ok.json`,
+Ejemplos nuevos (uno por caso, validan contra `ChatTurnResponse`; los de texto con fuentes excluidas usan nombres sintéticos porque `assertExamplesSynthetic` prohíbe NCCN y ESMO fuera de `excludedSources`): `contracts/examples/chat-turn-fuentes-ok.json`,
 `chat-turn-fuentes-sin-anio.json`, `chat-turn-fuentes-sin-evidencia.json`, `chat-turn-fuentes-sin-consulta.json`. Con
 `notices[]` rellenos, bloques `fuente` sin `chunkId` y `structuredState.ultimaEvidencia` sin `analysisId`.
+
+## Desviaciones y decisiones de la implementación
+
+- **La release sale del puerto `CorpusReleaseReader`**, no de `Settings`: la fecha de corte y las fuentes no incluidas que
+  publica `/rag/query` en `meta` salen de la release vigente del catálogo (`corpus_release`), así que el nodo lee la misma
+  fuente (un solo dueño). En el turno `sin_evidencia` el nodo `evidencia` las toma de `respuesta.meta`.
+- **`limitaciones_del_analisis` vive en `EstadoDelHilo`** (estado efímero, ADR-51), junto a `estructurado`, no dentro de él:
+  `EstadoEstructurado` es lo que viaja en `structuredState` y no debe crecer. Un hilo rehidratado lo trae en `None`.
+- **Chunks no vigentes**: `PosicionDeChunks` solo resuelve chunks vigentes, así que un chunk citado que ya no lo es no
+  produce un bloque `fuente` (se cuenta en el log). Si ninguno resuelve, el turno dice que la última consulta no citó
+  ninguna fuente. Listar documentos históricos (RN-05) exigiría un puerto nuevo; queda fuera de este change.
+- **Precedencia de enrutado**: se conserva el orden de `l1d-316` (faltantes → fuentes → evidencia): «fuentes» y
+  «limitaciones» ganan sobre la palabra «evidencia» (la pregunta del AC-1 la menciona en su variante natural). Se añaden
+  «no cubre», «fecha de corte» y «corpus». Una mezcla explícita («qué opciones hay y de qué fuentes») sigue en `evidencia`
+  solo si no menciona «fuentes»: ambigüedad aceptada y medida en `evaluate`.
+- **Extract Interface `RecuperadorDeEvidencia`** (recuperar, chunks citables, verificar) y `validar_salida_cruda`: deuda de
+  `l1d-322` pagada como refactor sin cambio de comportamiento.
 
 ## Dependencias y colaboradores
 

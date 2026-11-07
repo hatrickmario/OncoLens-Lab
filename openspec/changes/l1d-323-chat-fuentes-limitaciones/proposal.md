@@ -48,9 +48,12 @@ descartadas). Responder con ellas evita inventar metadatos y hace visible la inc
   añade el bloque `limitacion` de la recuperación; Backend 1 persiste el análisis `sin_evidencia` con
   `topRelevanceScore = null` y el turno (L1D-322). El LLM de generación no se invoca (RN-02, regla existente de
   `/rag/query`).
-- **Contrato**: **sin cambios ni subida de versión** (glosario §1). `fuente` y `limitacion` ya están en el enum cerrado
-  de `ChatBlock.kind` y `ultimaEvidencia` en `StructuredState` (1.12.0, `l1d-316`). Solo ejemplos nuevos en
-  `contracts/examples/`.
+- **Contrato**: `fuente` y `limitacion` ya están en el enum cerrado de `ChatBlock.kind` y `ultimaEvidencia` en
+  `StructuredState` (1.12.0, `l1d-316`): ningún esquema nuevo. Sí sube **rag a 1.14.0** (el número que el glosario §1
+  reservaba a `l1d-320`, que no lo usó): el 503 de `/chat/turn` declara `RETRIEVAL_UNAVAILABLE` y `NLI_UNAVAILABLE`
+  (deuda heredada de `l1d-322`; el turno de fuentes lee el catálogo y las posiciones de los chunks y falla cerrado). Es un
+  cambio ERR de oasdiff (`response-body-one-of-added`) que exige la excepción ADR-26 E-20 (tarea H-1, archivo protegido).
+  `clinical-api` no cambia: traduce esos 503 a `502` (`rag-failure.ts`). Ejemplos nuevos en `contracts/examples/`.
 
 ## Capabilities
 
