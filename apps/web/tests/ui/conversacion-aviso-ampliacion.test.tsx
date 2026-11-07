@@ -52,11 +52,13 @@ describe('Avisos del turno de evidencia visibles', () => {
       turnoCon(turnoSinOpciones, { evidenceAnalysis: analisisSinOpciones }),
     );
 
-    const rotulo = within(tarjeta).getByText(textos.rotulos.alcance);
-    const bloque = rotulo.closest('section')!;
-    expect(within(bloque).getAllByText(SIN_OPCIONES).length).toBeGreaterThan(0);
-    expect(within(bloque).getByText(/^Alcance de la recuperación:/)).toBeTruthy();
-    expect(bloque.closest('details')).toBeNull();
+    const bloques = within(tarjeta)
+      .getAllByText(textos.rotulos.alcance)
+      .map((rotulo) => rotulo.closest('section')!);
+    const texto = bloques.map((bloque) => bloque.textContent).join(' ');
+    expect(texto).toContain(SIN_OPCIONES);
+    expect(texto).toMatch(/Alcance de la recuperación:/);
+    for (const bloque of bloques) expect(bloque.closest('details')).toBeNull();
     expect(within(tarjeta).queryByRole('heading', { name: ENCABEZADO })).toBeNull();
     expect(within(tarjeta).queryAllByRole('article')).toHaveLength(0);
   });

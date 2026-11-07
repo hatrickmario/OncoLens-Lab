@@ -33,6 +33,9 @@ export const ConversationTurnCard = memo(function ConversationTurnCard({
   const { turno: titulo, sinAvisosTitulo } = mensajes().conversacion;
   const [expandido, setExpandido] = useState(false);
   const fuentes = fuentesDelTurno(turn);
+  // En un turno de evidencia los avisos van junto al encabezado de las opciones; en los demás, al final de la tarjeta.
+  const avisos = <ConversationNotices avisos={turn.notices} />;
+  const avisosEnElCuerpo = turn.evidenceAnalysis !== undefined;
   return (
     // Grupo y no `article`: las tarjetas de opción del análisis ya son `article` y se anidan en la del turno.
     <div
@@ -52,6 +55,7 @@ export const ConversationTurnCard = memo(function ConversationTurnCard({
             fuentes={fuentes}
             patientId={patientId}
             onAbrirPanel={onAbrirPanel}
+            avisos={avisosEnElCuerpo ? avisos : undefined}
           />
           <ConversationDataLine usados={turn.dataUsed ?? []} ausentes={turn.dataMissing ?? []} />
           <AccionesDelTurno
@@ -60,7 +64,7 @@ export const ConversationTurnCard = memo(function ConversationTurnCard({
             afirmacionesOmitidas={turn.omittedClaims}
             fuentes={fuentes}
           />
-          <ConversationNotices avisos={turn.notices} />
+          {!avisosEnElCuerpo && avisos}
         </ExpansionDelTurno.Provider>
       )}
     </div>
