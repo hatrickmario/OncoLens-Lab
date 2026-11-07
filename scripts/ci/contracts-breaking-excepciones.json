@@ -185,5 +185,16 @@
     "operacion": "POST",
     "ruta": "/platform/evidence-analyses",
     "texto": "added the new `lenguaje_no_permitido` enum value to the `discardedOptions/items/discardReason` response property for the response status `200`"
+  },
+  {
+    "id": "E-20",
+    "adr": "ADR-26",
+    "documento": "ADR-26-contrato-congelado-y-excepciones-declaradas.md",
+    "change": "l1d-323-chat-fuentes-limitaciones",
+    "proveedor": "rag-orchestrator",
+    "regla": "response-body-one-of-added",
+    "operacion": "POST",
+    "ruta": "/chat/turn",
+    "texto": "added `#/components/schemas/ErrorRecuperacionNoDisponible, #/components/schemas/ErrorNliNoDisponible` to the response body `oneOf` list for the response status `503`"
   }
 ]
