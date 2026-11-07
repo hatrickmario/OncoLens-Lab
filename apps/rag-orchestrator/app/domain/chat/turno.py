@@ -17,6 +17,7 @@ class TipoDeBloque(StrEnum):
     evidencia = "evidencia"
     faltante = "faltante"
     limitacion = "limitacion"
+    fuente = "fuente"
 
 
 @dataclass(frozen=True)

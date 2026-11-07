@@ -565,6 +565,8 @@ def _crear_chat_turn(
         posiciones=posiciones,
         fuentes_documentales=datos_criticos,
         soporte=_crear_soporte_del_chat(settings, clock, verificador, recuperacion),
+        catalogo_del_corpus=recuperacion.catalogo if recuperacion is not None else None,
+        lector_release=recuperacion.lector_release if recuperacion is not None else None,
     )
 
 

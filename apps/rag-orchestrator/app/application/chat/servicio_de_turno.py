@@ -16,6 +16,7 @@ from app.application.catalogo_exigido import exigir_catalogo_de_la_solicitud
 from app.application.chat.avisos import avisos_del_turno
 from app.application.chat.capacidades.caso import NodoCaso
 from app.application.chat.capacidades.evidencia import NodoEvidencia
+from app.application.chat.capacidades.fuentes_limitaciones import NodoFuentesLimitaciones
 from app.application.chat.capacidades.seguimiento_evidencia import (
     NodoSeguimientoDeEvidencia,
     ParametrosDelSeguimiento,
@@ -36,6 +37,8 @@ from app.application.ports import (
     CatalogoClinico,
     Clock,
     ContadorDeTokens,
+    CorpusCatalogReader,
+    CorpusReleaseReader,
     DatosCriticosDelCatalogoMontado,
     LlmClient,
     PosicionDeChunks,
@@ -75,6 +78,8 @@ class ChatTurnService:
         posiciones: PosicionDeChunks | None = None,
         fuentes_documentales: DatosCriticosDelCatalogoMontado,
         soporte: VerificadorDeSoporte | None = None,
+        catalogo_del_corpus: CorpusCatalogReader | None = None,
+        lector_release: CorpusReleaseReader | None = None,
     ) -> None:
         self._catalogo = catalogo
         self._settings = settings
@@ -104,6 +109,7 @@ class ChatTurnService:
         evidencia, seguimiento = _capacidades_de_evidencia(
             servicio_de_evidencia, posiciones, llm, contador, configuracion, settings
         )
+        fuentes = _capacidad_de_fuentes(posiciones, catalogo_del_corpus, lector_release)
         # Sin el nodo de seguimiento (sin corpus detrás) ninguna pregunta se enruta como seguimiento.
         self._con_seguimiento = bool(seguimiento)
         self._grafo = construir_grafo(
@@ -112,6 +118,7 @@ class ChatTurnService:
             configuracion=configuracion,
             capacidades={
                 **evidencia,
+                **fuentes,
                 Intencion.caso: caso.ejecutar,
                 Intencion.faltantes: crear_nodo_faltantes(fuentes_documentales),
             },
@@ -234,3 +241,17 @@ def _capacidades_de_evidencia(
         {Intencion.evidencia: analisis.ejecutar},
         {Subintencion.seguimiento_evidencia: seguimiento.ejecutar},
     )
+
+
+def _capacidad_de_fuentes(
+    posiciones: PosicionDeChunks | None,
+    catalogo: CorpusCatalogReader | None,
+    lector_release: CorpusReleaseReader | None,
+) -> dict[Intencion, Nodo]:
+    """El nodo real de fuentes y limitaciones si hay corpus detrás (posiciones, catálogo y release); si no, el esqueleto."""
+    if posiciones is None or catalogo is None or lector_release is None:
+        return {}
+    nodo = NodoFuentesLimitaciones(
+        posiciones=posiciones, catalogo=catalogo, lector_release=lector_release
+    )
+    return {Intencion.fuentes_limitaciones: nodo.ejecutar}
