@@ -278,14 +278,13 @@ async function desidentificarContrapartes(
     contextosDeContrapartes(caso, dependencias.reloj.now()).map(async ({ contexto, enlace }) => {
       const { clinicalContext } = await desidentificarContexto(dependencias, conversacion, {
         traceId: solicitud.traceId,
-        question: solicitud.peticion.question,
+        question: '', // solo se enmascara el contexto: la pregunta ya salió enmascarada en la llamada del turno
         contexto,
         dataOrigin,
       });
-      return {
-        diagnostico: clinicalContext.diagnosis as ContraparteDeConflicto['diagnostico'],
-        enlace,
-      };
+      const { diagnosis } = clinicalContext;
+      if (diagnosis === null) throw new Error('contraparte sin diagnóstico tras desidentificar');
+      return { diagnostico: diagnosis, enlace };
     }),
   );
 }
