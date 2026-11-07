@@ -32,7 +32,7 @@ from typing import Any
 from pydantic import ValidationError
 
 from app.application.chat.servicio_de_turno import ChatTurnService
-from app.application.ports import LlmClient, NliClassifier, ProhibitedTermsChecker
+from app.application.ports import FalloDelLlm, LlmClient, NliClassifier, ProhibitedTermsChecker
 from app.application.verificacion_de_soporte import VerificadorDeSoporte
 from app.config.settings import Settings
 from app.domain.nli import ParNli, ResultadoNli
@@ -40,6 +40,7 @@ from app.evaluation.adaptadores_falsos import (
     CatalogoClinicoDeConfig,
     CatalogoEnMemoria,
     LectorReleaseFijo,
+    NliLexico,
     PosicionesDelDataset,
 )
 from app.evaluation.composicion_suite import ServicioDeSuite, componer_servicio
@@ -55,7 +56,7 @@ from app.evaluation.dataset_chat import (
 from app.evaluation.dataset_loader import CLASE_SINTETICA, DatasetInvalido
 from app.evaluation.envoltorios import pico_rss_mib
 from app.evaluation.llamadas import RegistroDeLlamadas
-from app.evaluation.modelos_locales import OrigenLocal, cargar_puertos_locales
+from app.evaluation.modelos_locales import OrigenLocal, PuertosLocales, cargar_puertos_locales
 from app.evaluation.fuente_dataset import FuenteDatasetEnDirectorio
 from app.evaluation.guardas import SuiteAbortada, exigir_adapters_locales, exigir_proveedor_local
 from app.evaluation.juez_fidelidad import JuezNli
@@ -83,6 +84,8 @@ MASCARA_DE_LA_DESIDENTIFICACION = "[REDACTADO]"
 ESPACIO_DE_HILOS = uuid.UUID("5b0e7a3c-2f64-4d8a-9c1e-7a4f3b2d1e90")
 INTENCIONES = ("caso", "faltantes", "evidencia", "fuentes_limitaciones")
 CODIGO_DE_FUGA_O_PRESCRIPTIVO = 1
+TURNO_COMPLETO = "turno"
+"""La serie de latencia de todos los turnos, además de la de cada intención."""
 
 
 @dataclass(frozen=True)
@@ -102,13 +105,13 @@ class PuertosDeChat:
 
     verificador_terminos: ProhibitedTermsChecker | None = None
     llm: LlmClient | None = None
-    locales: Any | None = None
+    locales: PuertosLocales | None = None
 
 
 def identidad_de_prueba() -> tuple[str, ...]:
     """Una identidad sintética compuesta en ejecución (nombre, documento y fecha de nacimiento): nunca un literal del
     repositorio (RN-14). Con adapters falsos es lo que se busca en el estado del hilo y en los *logs*."""
-    anio, mes, dia = 1970 + 1, 4, 3
+    anio, mes, dia = 1971, 4, 3
     return (
         "Paciente Sintetica Evaluacion",
         "SINT-EVAL-" + "ABC",
@@ -178,8 +181,6 @@ class ClienteDelChat:
     async def completar_json(
         self, usuario: str, esquema: Mapping[str, Any], *, sistema: str | None = None
     ) -> str:
-        from app.application.ports import FalloDelLlm
-
         self.invocaciones += 1
         if self._guion is None:
             raise FalloDelLlm("sin guion activo")
@@ -256,8 +257,6 @@ def _componer_el_chat(
     )
     ajustes = ajustes_de_la_suite(config)
     tipos = ajustes.enabled_cancer_types
-    from app.evaluation.adaptadores_falsos import NliLexico
-
     nli = NliDelChat(puertos.locales.clasificador_nli if puertos.locales else NliLexico())
     verificador = puertos.verificador_terminos or suite.verificador_produccion
     cliente = ClienteDelChat() if puertos.llm is None else None
@@ -452,14 +451,32 @@ async def _registrar(
     prescriptivas = 0 if respuesta is None else _salidas_prescriptivas(corrida, respuesta)
     medidas.prescriptivas += prescriptivas
     if isinstance(caso, ControlDeChat):
-        medidas.control["afirmaciones_omitidas"] += (
-            0 if respuesta is None else respuesta["omittedClaims"]
-        )
-        medidas.control["salidas_prescriptivas_mostradas"] += prescriptivas
+        _registrar_control(respuesta, prescriptivas, medidas)
         return
+    _registrar_turno_del_caso(caso, respuesta, milisegundos, medidas)
+    if respuesta is not None and caso.intent == "caso" and caso.ac in ACS_DEL_CASO:
+        await _medir_soporte_y_enlaces(
+            corrida, caso, entrada, respuesta, medidas.por_tipo[caso.cancer]
+        )
+
+
+def _registrar_control(
+    respuesta: dict[str, Any] | None, prescriptivas: int, medidas: _Medidas
+) -> None:
+    """Un control no entra en la cobertura ni en las métricas por tipo: solo en lo omitido y lo prescriptivo mostrado."""
+    medidas.control["afirmaciones_omitidas"] += (
+        0 if respuesta is None else respuesta["omittedClaims"]
+    )
+    medidas.control["salidas_prescriptivas_mostradas"] += prescriptivas
+
+
+def _registrar_turno_del_caso(
+    caso: CasoDeChat, respuesta: dict[str, Any] | None, milisegundos: float, medidas: _Medidas
+) -> None:
+    """La intención que clasificó el grafo y la latencia del turno, por intención esperada y en total."""
     intent = None if respuesta is None else respuesta["intent"]
     medidas.latencias[caso.intent].append(milisegundos)
-    medidas.latencias["__turno__"].append(milisegundos)
+    medidas.latencias[TURNO_COMPLETO].append(milisegundos)
     medidas.por_caso.append(
         {
             "id": caso.id,
@@ -469,10 +486,6 @@ async def _registrar(
             "intent_correcto": intent == caso.intent,
         }
     )
-    if respuesta is not None and caso.intent == "caso" and caso.ac in ACS_DEL_CASO:
-        await _medir_soporte_y_enlaces(
-            corrida, caso, entrada, respuesta, medidas.por_tipo[caso.cancer]
-        )
 
 
 def _razon(parte: int, total: int) -> float | None:
@@ -501,7 +514,7 @@ def _resumen(milisegundos: Sequence[float]) -> dict[str, float | None]:
 def _latencia(medidas: _Medidas) -> dict[str, Any]:
     return {
         "informativa": True,
-        "turno": _resumen(medidas.latencias["__turno__"]),
+        "turno": _resumen(medidas.latencias[TURNO_COMPLETO]),
         "por_intencion": {
             intencion: _resumen(medidas.latencias[intencion])
             for intencion in INTENCIONES
