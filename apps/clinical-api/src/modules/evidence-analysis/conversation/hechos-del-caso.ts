@@ -149,33 +149,11 @@ export function construirHechosDelCaso(
   const datosParaConflicto: DatoParaConflicto[] = [];
   const fechaDelDiagnostico =
     contexto.diagnosis === null ? null : (dataRefs.get(contexto.diagnosis.dataRef)?.fecha ?? null);
-  // Las contrapartes de un conflicto van al final: no renumeran los `factRef` del resto del caso.
-  const entradas = [
-    ...candidatosDelContexto(contexto).map((candidato) => ({
-      candidato,
-      dato: dataRefs.get(candidato.dataRef),
-    })),
-    ...contrapartes.map(({ diagnostico, enlace }) => ({
-      candidato: candidatoDeDiagnostico(diagnostico),
-      dato: enlace,
-    })),
-  ];
-  for (const { candidato, dato } of entradas) {
+  for (const { candidato, dato } of entradasDelTurno(contexto, dataRefs, contrapartes)) {
     if (dato === undefined) continue;
     const factRef = `f${caseFacts.length + 1}`;
     const relativeDay = diasEntre(fechaDelDiagnostico, dato.fecha);
-    const corregido = esCorreccion(candidato.provenance);
-    caseFacts.push({
-      factRef,
-      kind: candidato.kind,
-      verbalization: corregido
-        ? conMarcaDeCorreccion(candidato.verbalization)
-        : candidato.verbalization,
-      relativeDay,
-      reviewStatus: candidato.provenance.reviewStatus,
-      ...(candidato.seriesKey !== undefined && { seriesKey: candidato.seriesKey }),
-      ...(corregido && { corrected: true }),
-    });
+    caseFacts.push(hechoDelCandidato(factRef, candidato, relativeDay));
     datosParaConflicto.push({
       factRef,
       id: dato.id,
@@ -190,6 +168,44 @@ export function construirHechosDelCaso(
     });
   }
   return { caseFacts: conContrapartes(caseFacts, datosParaConflicto), enlaces };
+}
+
+/** Candidatos del contexto y, al final, las contrapartes de un conflicto: no renumeran los `factRef` del resto. */
+function entradasDelTurno(
+  contexto: ClinicalContext,
+  dataRefs: MapaDeDataRefs,
+  contrapartes: readonly ContraparteDeConflicto[],
+): { candidato: Candidato; dato: EnlaceDeDato | undefined }[] {
+  return [
+    ...candidatosDelContexto(contexto).map((candidato) => ({
+      candidato,
+      dato: dataRefs.get(candidato.dataRef),
+    })),
+    ...contrapartes.map(({ diagnostico, enlace }) => ({
+      candidato: candidatoDeDiagnostico(diagnostico),
+      dato: enlace,
+    })),
+  ];
+}
+
+/** El `CaseFact` de un candidato; un dato corregido lo dice en su verbalización (ADR-50). */
+function hechoDelCandidato(
+  factRef: string,
+  candidato: Candidato,
+  relativeDay: number | null,
+): HechoDelCaso {
+  const corregido = esCorreccion(candidato.provenance);
+  return {
+    factRef,
+    kind: candidato.kind,
+    verbalization: corregido
+      ? conMarcaDeCorreccion(candidato.verbalization)
+      : candidato.verbalization,
+    relativeDay,
+    reviewStatus: candidato.provenance.reviewStatus,
+    ...(candidato.seriesKey !== undefined && { seriesKey: candidato.seriesKey }),
+    ...(corregido && { corrected: true }),
+  };
 }
 
 /** Un diagnóstico en conflicto con el activo, ya desidentificado, con el enlace a su registro (solo vive en Backend 1). */

@@ -270,20 +270,17 @@ function desidentificarContexto(
 async function desidentificarContrapartes(
   dependencias: Dependencias,
   conversacion: Conversacion,
-  entrada: {
-    traceId: string;
-    question: string;
-    caso: CasoClinico;
-    ahora: Date;
-    dataOrigin: DataClassification;
-  },
+  solicitud: SolicitudDeTurno,
+  caso: CasoClinico,
+  dataOrigin: DataClassification,
 ): Promise<ContraparteDeConflicto[]> {
-  const { caso, ahora, ...resto } = entrada;
   return Promise.all(
-    contextosDeContrapartes(caso, ahora).map(async ({ contexto, enlace }) => {
+    contextosDeContrapartes(caso, dependencias.reloj.now()).map(async ({ contexto, enlace }) => {
       const { clinicalContext } = await desidentificarContexto(dependencias, conversacion, {
-        ...resto,
+        traceId: solicitud.traceId,
+        question: solicitud.peticion.question,
         contexto,
+        dataOrigin,
       });
       return {
         diagnostico: clinicalContext.diagnosis as ContraparteDeConflicto['diagnostico'],
@@ -300,6 +297,35 @@ function rehidratacionInicial(
   return previos.length === 0 ? { rehydration: rehidratacionVacia() } : {};
 }
 
+/** El contexto del caso, la pregunta y la contraparte de cada conflicto, ya desidentificados, y los hechos que de ellos salen. */
+async function desidentificarElCaso(
+  dependencias: Dependencias,
+  turno: {
+    solicitud: SolicitudDeTurno;
+    conversacion: Conversacion;
+    caso: CasoClinico;
+    clasificacion: DataClassification;
+  },
+  armado: { contexto: ContextoPermitido; dataRefs: MapaDeDataRefs },
+): Promise<SalidaDeDesidentificacion & { hechos: HechosDelCaso }> {
+  const { solicitud, conversacion, caso, clasificacion } = turno;
+  const salida = await desidentificarContexto(dependencias, conversacion, {
+    traceId: solicitud.traceId,
+    question: solicitud.peticion.question,
+    contexto: armado.contexto,
+    dataOrigin: clasificacion,
+  });
+  const contrapartes = await desidentificarContrapartes(
+    dependencias,
+    conversacion,
+    solicitud,
+    caso,
+    clasificacion,
+  );
+  const hechos = construirHechosDelCaso(salida.clinicalContext, armado.dataRefs, contrapartes);
+  return { ...salida, hechos };
+}
+
 async function prepararTurno(
   dependencias: Dependencias,
   solicitud: SolicitudDeTurno,
@@ -312,20 +338,11 @@ async function prepararTurno(
   const claves = items.filter((item) => item.status === 'faltante').map((item) => item.item);
   const { contexto, dataRefs } = construirContextoDelChat(caso, reloj.now(), claves);
   const clasificacion = clasificacionDelPaciente(caso.paciente);
-  const { clinicalContext, query } = await desidentificarContexto(dependencias, conversacion, {
-    traceId: solicitud.traceId,
-    question: solicitud.peticion.question,
-    contexto,
-    dataOrigin: clasificacion,
-  });
-  const contrapartes = await desidentificarContrapartes(dependencias, conversacion, {
-    traceId: solicitud.traceId,
-    question: solicitud.peticion.question,
-    caso,
-    ahora: reloj.now(),
-    dataOrigin: clasificacion,
-  });
-  const hechos = construirHechosDelCaso(clinicalContext, dataRefs, contrapartes);
+  const { clinicalContext, query, hechos } = await desidentificarElCaso(
+    dependencias,
+    { solicitud, conversacion, caso, clasificacion },
+    { contexto, dataRefs },
+  );
   const activo = analisisActivo(previos);
   return {
     hechos,
