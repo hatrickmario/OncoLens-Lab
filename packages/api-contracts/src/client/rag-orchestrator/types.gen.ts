@@ -562,7 +562,7 @@ export type ChatCompletenessItem = {
     /**
      * ChatGapType
      *
-     * Tipo de faltante; null si el dato está presente.
+     * Tipo de vacío (US-263); null si el ítem no tiene vacío. Puede acompañar a presente_verificado cuando hay un conflicto por conciliar.
      */
     gapType: 'no_encontrado' | 'incompleto' | 'por_conciliar' | 'no_buscado' | null;
     destination: string;

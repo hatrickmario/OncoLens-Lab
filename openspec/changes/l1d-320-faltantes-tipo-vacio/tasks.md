@@ -6,7 +6,7 @@
 
 ## 1. contratos
 
-- [x] 1.1 (exento · contract-first, skill `sync-contracts`) `apps/clinical-api/openapi.yaml` 1.24.0 → 1.25.0 (glosario §1): `gapType` (nullable, enum `no_encontrado|incompleto|por_conciliar|no_buscado`) en `CompletenessItem`; actualizar los ejemplos existentes de `/completeness`
+- [x] 1.1 (exento · contract-first, skill `sync-contracts`) `apps/clinical-api/openapi.yaml` 1.27.0 → 1.28.0 (glosario §1): `gapType` (nullable, enum `no_encontrado|incompleto|por_conciliar|no_buscado`) en `CompletenessItem`; actualizar los ejemplos existentes de `/completeness`
 - [x] 1.2 `apps/rag-orchestrator/openapi.yaml` sin cambios: `gapType`, `catalogVersion` y el `409` ya están en la 1.12.0 de `l1d-316`; `sourceDocumentTypes` no viaja
 - [x] 1.3 Ejemplos `contracts/examples/completeness-gap-type-p-chat.json`, `chat-turn-faltantes.json`, `chat-turn-faltantes-ninguno.json`; el `409` de `/chat/turn` reutiliza el existente `rag-catalog-version-mismatch.json` (lo usa también l1d-316), sin crear `chat-turn-catalog-version-mismatch.json`
 - [x] 1.4 `contracts:check`, `contracts:breaking` (0 incompatibles), `contracts:generate`; commit `contract(L1D-320)`

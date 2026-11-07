@@ -12,7 +12,7 @@ la trae `l1d-315` (con `catalogVersion`, el `409` sin persistir y el seed `P-CHA
 
 ## Goals / Non-Goals
 
-**Goals:** `sourceDocumentTypes` en el catálogo 1.6.0; `gapType` determinista en Backend 1 (`clinical-api` 1.25.0);
+**Goals:** `sourceDocumentTypes` en el catálogo 1.6.0; `gapType` determinista en Backend 1 (`clinical-api` 1.28.0);
 nodo `faltantes` sin LLM y exento de cita; verificar el `409` de catálogo con 1.6.0.
 
 **Non-Goals:** por qué importa un faltante (US-264); UI (US-267); subtipos de documento; cambiar `status`.
@@ -77,10 +77,10 @@ nodo `faltantes` sin LLM y exento de cita; verificar el `409` de catálogo con 1
 ## Contratos
 
 Proveedor: `clinical-api` (`/completeness`). Consumidores: `web` (generado) y los tests de verificación del proveedor.
-Cambio aditivo (ADR-26), **1.24.0 → 1.25.0** (glosario §1; si colisiona, renumera el segundo en mergear):
+Cambio aditivo (ADR-26), **1.27.0 → 1.28.0** (glosario §1; si colisiona, renumera el segundo en mergear):
 
 ```yaml
-# apps/clinical-api/openapi.yaml 1.25.0
+# apps/clinical-api/openapi.yaml 1.28.0
 CompletenessItem.properties:
   gapType:
     oneOf: [ { type: string, enum: [no_encontrado, incompleto, por_conciliar, no_buscado] }, { type: "null" } ]

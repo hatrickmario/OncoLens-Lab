@@ -754,7 +754,7 @@ class ChatCompletenessItem(BaseModel):
     gapType: Annotated[
         ChatGapType | None,
         Field(
-            description='Tipo de faltante; null si el dato está presente.',
+            description='Tipo de vacío (US-263); null si el ítem no tiene vacío. Puede acompañar a presente_verificado cuando hay un conflicto por conciliar.',
             title='ChatGapType',
         ),
     ]
