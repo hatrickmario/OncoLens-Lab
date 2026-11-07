@@ -76,6 +76,17 @@
       "request": "chat-turn-request-caso-adt.json"
     },
     {
+      "file": "chat-turn-request-caso-interpretacion.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnRequest"
+    },
+    {
+      "file": "chat-turn-caso-interpretacion.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnResponse",
+      "request": "chat-turn-request-caso-interpretacion.json"
+    },
+    {
       "file": "chat-turn-request-caso-sin-datos.json",
       "spec": "rag-orchestrator",
       "target": "#/components/schemas/ChatTurnRequest"
