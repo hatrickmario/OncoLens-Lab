@@ -24,8 +24,21 @@ function violacionesDeLaLista(entradas, campo) {
   ];
 }
 
+/** `expansion.biomarcadoresNoAnclables` (L1D-331): cada tipo con su lista bien formada; el campo es `expansion_<tipo>`. */
+function violacionesDeLaExpansion(expansion) {
+  const porTipo = expansion?.biomarcadoresNoAnclables;
+  if (!esObjeto(porTipo)) return [];
+  return Object.entries(porTipo).flatMap(([tipo, entradas]) =>
+    violacionesDeLaLista(entradas, `expansion_${/^[a-z]+$/.test(tipo) ? tipo : '?'}`),
+  );
+}
+
 /** @returns {{ codigo: string, archivo: string, campo: string }[]} */
 export function violacionesDeMarcos(marcos) {
+  return [...violacionesDeLosIdiomas(marcos), ...violacionesDeLaExpansion(marcos?.expansion)];
+}
+
+function violacionesDeLosIdiomas(marcos) {
   return IDIOMAS.flatMap((idioma) => {
     const delIdioma = marcos?.[idioma];
     if (!esObjeto(delIdioma)) {

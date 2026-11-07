@@ -28,7 +28,7 @@ def _criterio_menopausia():
 
 
 def test_catalogo_real_declara_la_version_1_2_0():
-    assert cargar_catalogo_del_manifiesto(CATALOGO_REAL).version() == "1.8.0"
+    assert cargar_catalogo_del_manifiesto(CATALOGO_REAL).version() == "1.9.0"
 
 
 @pytest.mark.parametrize(

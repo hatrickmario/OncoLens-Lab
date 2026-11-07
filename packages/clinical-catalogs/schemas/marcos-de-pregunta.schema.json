@@ -7,7 +7,25 @@
   "properties": {
     "version": { "$ref": "comun.schema.json#/$defs/version" },
     "es": { "$ref": "#/$defs/idioma" },
-    "en": { "$ref": "#/$defs/idioma" }
+    "en": { "$ref": "#/$defs/idioma" },
+    "expansion": {
+      "description": "Sección opcional de la composición de términos del segundo loop contextual (L1D-331, ADR-52).",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "biomarcadoresNoAnclables": {
+          "description": "Tipo de cáncer -> nombres normalizados de biomarcador de datos-criticos que no anclan la consulta contextual.",
+          "type": "object",
+          "propertyNames": { "pattern": "^[a-z]+$" },
+          "additionalProperties": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "$ref": "#/$defs/entrada" }
+          }
+        }
+      }
+    }
   },
   "$defs": {
     "entrada": {

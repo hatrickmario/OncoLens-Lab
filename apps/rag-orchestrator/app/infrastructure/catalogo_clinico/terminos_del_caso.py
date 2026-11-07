@@ -82,9 +82,19 @@ def cargar_catalogo_de_terminos(
             estadios=_estadios_por_tipo(escalas, tipos_de_cancer),
             grados=_grados_por_tipo(escalas, tipos_de_cancer),
             biomarcadores=biomarcadores,
+            biomarcadores_no_anclables=_no_anclables_del_lexico(catalogos, tipos_de_cancer),
         )
     except (KeyError, TypeError, AttributeError):
         raise CatalogoNoDisponible("el catálogo de términos del caso no está disponible") from None
+
+
+def _no_anclables_del_lexico(catalogos: Path, tipos: Sequence[str]) -> dict[str, frozenset[str]]:
+    """``expansion.biomarcadoresNoAnclables`` del léxico (sección opcional): tipo -> nombres normalizados."""
+    archivo = catalogos / ARCHIVO_DE_MARCOS
+    if not archivo.exists():
+        return {}
+    declarados = _leer(archivo).get("expansion", {}).get("biomarcadoresNoAnclables", {})
+    return {tipo: frozenset(declarados[tipo]) for tipo in tipos if declarados.get(tipo)}
 
 
 def _valores_de_biomarcador(escalas: dict[str, Any]) -> dict[tuple[str, str], dict[str, str]]:

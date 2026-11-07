@@ -107,10 +107,13 @@ def _del_grado(caso: CasoParaTerminos, catalogo: CatalogoDeTerminos) -> tuple[st
 def _del_biomarcador_principal(
     caso: CasoParaTerminos, catalogo: CatalogoDeTerminos
 ) -> tuple[str, ...]:
-    """El primero del catálogo, por su orden, que el caso trae: su término y, solo si es del catálogo, su valor."""
+    """El primero del catálogo, por su orden, que el caso trae y que el catálogo no declara no anclable.
+
+    Devuelve su término y, solo si es del catálogo, su valor (US-273: en próstata el PSA no ancla la consulta)."""
     del_caso = {normalizar_texto(nombre): valor for nombre, valor in reversed(caso.biomarcadores)}
+    no_anclables = catalogo.biomarcadores_no_anclables.get(caso.tipo_de_cancer, frozenset())
     for biomarcador in catalogo.biomarcadores.get(caso.tipo_de_cancer, ()):
-        if biomarcador.nombre in del_caso:
+        if biomarcador.nombre in del_caso and biomarcador.nombre not in no_anclables:
             valor = biomarcador.valores.get(normalizar_texto(del_caso[biomarcador.nombre]))
             return (biomarcador.termino, valor) if valor else (biomarcador.termino,)
     return ()
