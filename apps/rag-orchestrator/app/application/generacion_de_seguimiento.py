@@ -12,10 +12,10 @@ import copy
 import logging
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field
 
-from app.application.errores import LlmLocalNoDisponibleError, LlmSalidaInvalidaError
-from app.application.generation import fragmentos_dentro_del_presupuesto, tipos_de_error
+from app.application.errores import LlmLocalNoDisponibleError
+from app.application.generation import fragmentos_dentro_del_presupuesto, validar_salida_cruda
 from app.application.ports import (
     FalloDelLlm,
     LlmClient,
@@ -98,7 +98,9 @@ class LlmSeguimientoGenerator:
         except FalloDelLlm:
             logger.warning("event=seguimiento_llm_fallo traceId=%s", trace_id)
             raise LlmLocalNoDisponibleError() from None
-        salida = self._parsear(crudo, trace_id)
+        salida = validar_salida_cruda(
+            SeguimientoCrudo, crudo, trace_id, "seguimiento_salida_invalida"
+        )
         if salida.outcome == MARCADOR_FUERA_DE_CONTEXTO:
             return SeguimientoGenerado(fuera_de_contexto=True)
         afirmaciones = tuple(
@@ -112,16 +114,3 @@ class LlmSeguimientoGenerator:
             "event=rag_follow_up_generacion traceId=%s afirmaciones=%d", trace_id, len(afirmaciones)
         )
         return SeguimientoGenerado(fuera_de_contexto=False, afirmaciones=afirmaciones)
-
-    def _parsear(self, crudo: str, trace_id: str) -> SeguimientoCrudo:
-        """JSON inválido o fuera de esquema = salida del LLM no validada; solo se registra el tipo de cada error."""
-        try:
-            return SeguimientoCrudo.model_validate_json(crudo)
-        except ValidationError as error:
-            logger.warning(
-                "event=seguimiento_salida_invalida traceId=%s caracteres=%d errores=%s",
-                trace_id,
-                len(crudo),
-                ",".join(tipos_de_error(error)),
-            )
-            raise LlmSalidaInvalidaError() from None

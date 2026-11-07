@@ -15,26 +15,24 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.application.chat.citas import ConstructorDeCitas, FuenteDeCita
 from app.application.chat.contexto_del_turno import evidencia_del_turno
 from app.application.chat.grafo import ConfiguracionDelGrafo, EstadoDelGrafo
 from app.application.chunk_citable import ChunkCitable
-from app.application.errores import LlmLocalNoDisponibleError, LlmSalidaInvalidaError
-from app.application.generation import fragmentos_dentro_del_presupuesto, tipos_de_error
+from app.application.errores import LlmLocalNoDisponibleError
+from app.application.generation import fragmentos_dentro_del_presupuesto, validar_salida_cruda
 from app.application.ports import (
     ContadorDeTokens,
     FalloDelLlm,
     LlmClient,
     PosicionDeChunks,
+    RecuperadorDeEvidencia,
     ResultadoDeRecuperacion,
 )
 from app.application.medicion_de_prompt import registrar_tamano_del_prompt
-from app.application.rag_orchestrator_service import (
-    LIMITACION_SIN_EVIDENCIA,
-    RAGOrchestratorService,
-)
+from app.application.rag_orchestrator_service import LIMITACION_SIN_EVIDENCIA
 from app.application.seguimiento import validar_afirmaciones_citadas
 from app.domain.alias_de_chunks import PATRON_DE_ALIAS, asignar_alias, traducir_citas
 from app.domain.chat.estado import EstadoDelHilo
@@ -96,7 +94,7 @@ class NodoSeguimientoDeEvidencia:
     def __init__(
         self,
         *,
-        servicio: RAGOrchestratorService,
+        servicio: RecuperadorDeEvidencia,
         posiciones: PosicionDeChunks,
         llm: LlmClient,
         contador: ContadorDeTokens,
@@ -186,27 +184,15 @@ class NodoSeguimientoDeEvidencia:
         except FalloDelLlm:
             logger.warning("event=chat_seguimiento_llm_fallo traceId=%s", trace_id)
             raise LlmLocalNoDisponibleError() from None
-        salida = self._parsear(crudo, trace_id)
+        salida = validar_salida_cruda(
+            _SalidaCruda, crudo, trace_id, "chat_seguimiento_salida_invalida"
+        )
         return tuple(
             AfirmacionAtomica(
                 a.texto.strip(), PapelDeAfirmacion.principal, traducir_citas(tabla, a.citas)
             )
             for a in salida.afirmaciones
         )
-
-    @staticmethod
-    def _parsear(crudo: str, trace_id: str) -> _SalidaCruda:
-        """JSON inválido o fuera de esquema = salida del LLM no validada (``503 LLM_OUTPUT_INVALID``); solo el tipo de error."""
-        try:
-            return _SalidaCruda.model_validate_json(crudo)
-        except ValidationError as error:
-            logger.warning(
-                "event=chat_seguimiento_salida_invalida traceId=%s caracteres=%d errores=%s",
-                trace_id,
-                len(crudo),
-                ",".join(tipos_de_error(error)),
-            )
-            raise LlmSalidaInvalidaError() from None
 
     async def _validar(
         self,

@@ -7,11 +7,13 @@ from typing import Any, Literal, Protocol
 
 from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
 from app.domain.applicability_text import FuenteParaProponer, PropuestaDePoblacion
-from app.domain.citations import FichaDeFuente, OpcionGenerada
+from app.application.chunk_citable import ChunkCitable
+from app.domain.citations import FichaDeFuente, OpcionAceptada, OpcionGenerada
 from app.domain.claims import AfirmacionAtomica
 from app.domain.lenguaje import FuenteCitada
 from app.domain.nli import ParNli, ResultadoNli
 from app.domain.relevance import ChunkPuntuado
+from app.domain.resolucion_de_soporte import ResultadoSoporte
 from app.domain.support import CampoGenerado
 from app.schemas.generated.models import (
     ChatTurnRequest,
@@ -299,6 +301,40 @@ class ResultadoDeRecuperacion:
     """Etiqueta del catálogo de cada dato crítico faltante, en el orden recibido (US-116): ya validadas, nunca claves ni texto libre."""
     chunk_ids_evaluados: tuple[str, ...] = ()
     """``chunkId`` que el *reranker* puntuó en el último loop, por puntaje descendente (L1D-322)."""
+
+
+class RecuperadorDeEvidencia(Protocol):
+    """Las tres etapas de recuperación y validación que comparten el seguimiento de ``/rag/follow-up`` y el del chat
+    (recuperar → chunks citables → soporte NLI): quien responde un seguimiento depende de este puerto y no del servicio
+    completo de ``/rag/query``, así un fake lo reemplaza sin tocar el análisis."""
+
+    async def recuperar(
+        self,
+        solicitud: RagQueryInternalRequest,
+        *,
+        con_reescritura: bool,
+        version_del_prompt: str,
+    ) -> ResultadoDeRecuperacion:
+        """Solo entrega los chunks sobre el umbral (RN-02); sin ninguno, quien llama responde sin evidencia."""
+        ...
+
+    async def chunks_citables(
+        self, trace_id: str, recuperacion: ResultadoDeRecuperacion
+    ) -> dict[str, ChunkCitable]:
+        """Los chunks sobre el umbral del turno cuyo documento tiene ficha en el catálogo: lo único que puede citarse."""
+        ...
+
+    async def verificar(
+        self,
+        trace_id: str,
+        idioma: str,
+        aceptadas: Sequence[OpcionAceptada],
+        limitaciones_propuestas: Sequence[str],
+        textos_de_chunks: Mapping[str, str],
+        titulos_de_chunks: Mapping[str, str],
+    ) -> ResultadoSoporte:
+        """Soporte NLI y lenguaje frente a los chunks del turno (RN-01, RN-23, RN-24)."""
+        ...
 
 
 @dataclass(frozen=True)
