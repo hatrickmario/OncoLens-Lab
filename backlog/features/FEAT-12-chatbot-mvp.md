@@ -539,7 +539,7 @@ Cambiar el ancla del periodo (revisión en la Demo 6); periodos con fechas absol
 
 ## US-273 — En próstata, el segundo loop contextual deja de recuperar sobre todo cribado porque la composición de términos no se ancla en «Antígeno prostático específico (PSA)»
 
-> Linear: pendiente
+> Linear: [L1D-331](https://linear.app/l1der-lab-mjbc/issue/L1D-331)
 
 `FEAT-12` · Sprint 6 · Estimación **2** · HU-03 · FR-09, RN-02, RN-22, RN-27, RN-29, RN-11 · ADR-52 · ↪ US-271 (L1D-329, mergeado) · 🔗 Medido en: US-269 · D6-42, D6-43
 

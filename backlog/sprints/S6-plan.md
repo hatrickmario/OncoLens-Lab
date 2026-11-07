@@ -27,7 +27,7 @@
 | L1D-323 | US-266 | `l1d-323-chat-fuentes-limitaciones` | ai-services · clinical-platform | O5 | ⛔ 322 | R2 | 3 |
 | L1D-324 | US-267 | `l1d-324-panel-conversacional` (11 AC; +3 por las preguntas guiadas) | frontend · docs (tokens) | O5 | ⛔ 314 (ADR-51 §8), 315, **329 (fixture compartido)** · ↪ 322 (AC-3), 266 | R3 | 8 |
 | L1D-319 | US-262 | `l1d-319-chat-contradicciones` | clinical-platform · ai-services | O5 | ⛔ 317 · secuencial tras 318 (mismo nodo `caso`) | R1 | 3 |
-| l1d-<A> (pendiente de Linear) | US-273 | `l1d-<A>-composicion-terminos-prostata` | ai-services · catálogo (`lenguaje/marcos-de-pregunta.json`) · evaluate | **O5** (tras 329, mergeado) | ↪ 329 (mergeado) · ADR-52 | R2 | 2 |
+| L1D-331 | US-273 | `l1d-331-composicion-terminos-prostata` | ai-services · catálogo (`lenguaje/marcos-de-pregunta.json`) · evaluate | **O5** (tras 329, mergeado) | ↪ 329 (mergeado) · ADR-52 | R2 | 2 |
 | L1D-325 | US-268 | `l1d-325-chat-fuentes-sin-perder-contexto` | frontend | **O6** | ⛔ 324 | R3 | 3 |
 | L1D-326 | US-269 | `l1d-326-chat-e2e-evaluate` | evaluación · E2E | **O7** | ⛔ 315…325 | — | 5 |
 | L1D-234 | DEC-07 | sin change | decisión | **opcional, al final** | corrida N | — | (1) |
