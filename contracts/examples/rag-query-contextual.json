@@ -1,124 +1,29 @@
 {
   "status": "con_evidencia",
   "synthesis": {
-    "agreements": [
-      {
-        "text": "Las fuentes recuperadas describen la adición de terapia anti-HER2 a la quimioterapia adyuvante en tumores HER2 positivos.",
-        "citedSources": [
-          {
-            "title": "Breast Cancer Treatment (PDQ®)–Health Professional Version",
-            "sourceName": "NCI PDQ",
-            "externalId": "CDR0000062787",
-            "language": "en",
-            "sourceType": "guideline",
-            "licenseClass": "dominio_publico",
-            "studyDesign": "guia",
-            "trialPhase": null,
-            "primaryEndpoint": null,
-            "sampleSize": null,
-            "publishedAt": "2024-03-15",
-            "lastUpdatedAt": "2026-05-01",
-            "guidelineVersion": "2026-05",
-            "authors": null,
-            "sourceUrl": "https://corpus.oncolens.test/documentos/CDR0000062787",
-            "possiblyOutdated": false,
-            "newerVersionAvailable": false,
-            "chunkTextSnapshot": "Texto sintético de ejemplo: the addition of anti-HER2 therapy to adjuvant chemotherapy is described for HER2-positive tumors in a study population with stage I–III disease, including both premenopausal and postmenopausal patients.",
-            "chunkId": "chunk_88231"
-          }
-        ],
-        "patientDataRefs": []
-      },
-      {
-        "text": "El paciente tiene registrado un resultado de HER2 3+ por inmunohistoquímica.",
-        "citedSources": [],
-        "patientDataRefs": [
-          "r2"
-        ]
-      }
-    ],
+    "agreements": [],
     "discrepancies": []
   },
-  "applicability": [
-    {
-      "externalId": "CDR0000062787",
-      "criteria": [
-        {
-          "criterion": "estado_her2",
-          "patientValue": "3+ (IHQ)",
-          "studyPopulationValue": "HER2 positivo",
-          "status": "coincide",
-          "unknownReason": null,
-          "isExclusionary": true,
-          "patientDataWarning": null,
-          "citedSources": []
-        },
-        {
-          "criterion": "estadio",
-          "patientValue": "IIA",
-          "studyPopulationValue": "I–III",
-          "status": "coincide",
-          "unknownReason": null,
-          "isExclusionary": false,
-          "patientDataWarning": null,
-          "citedSources": []
-        },
-        {
-          "criterion": "estado_menopausico",
-          "patientValue": null,
-          "studyPopulationValue": "ambos",
-          "status": "desconocido",
-          "unknownReason": "falta_en_paciente",
-          "isExclusionary": false,
-          "patientDataWarning": "faltante",
-          "citedSources": []
-        }
-      ],
-      "summary": {
-        "coincide": 2,
-        "parcial": 0,
-        "noCoincide": 0,
-        "desconocido": 1
-      },
-      "populationNotComparable": false
-    }
-  ],
+  "applicability": [],
   "evidenceOptions": [
     {
-      "option": "Quimioterapia combinada con terapia dirigida anti-HER2",
-      "rationale": "La evidencia recuperada describe la adición de terapia anti-HER2 a la quimioterapia adyuvante en tumores HER2 positivos.",
-      "details": [
-        "Texto sintético de ejemplo: el detalle describe, según los fragmentos recuperados, el diseño del estudio y la población incluida.",
-        "Texto sintético de ejemplo: el detalle describe los resultados que reporta la fuente para el grupo estudiado."
-      ],
+      "option": "Quimioterapia adyuvante combinada con terapia dirigida anti-HER2",
+      "rationale": "La fuente reporta que La evidencia recuperada describe la adición de terapia anti-HER2 a la quimioterapia adyuvante.",
       "applicabilitySummary": {
-        "coincide": 2,
+        "coincide": 0,
         "parcial": 0,
         "noCoincide": 0,
-        "desconocido": 1
+        "desconocido": 0
       },
       "populationNotComparable": false,
-      "perSource": [
-        {
-          "externalId": "CDR0000062787",
-          "summary": {
-            "coincide": 2,
-            "parcial": 0,
-            "noCoincide": 0,
-            "desconocido": 1
-          },
-          "populationNotComparable": false
-        }
-      ],
+      "perSource": [],
       "relevanceScore": 0.87,
-      "warnings": [
-        "datos_faltantes"
-      ],
+      "warnings": [],
       "citedSources": [
         {
-          "title": "Breast Cancer Treatment (PDQ®)–Health Professional Version",
+          "title": "Breast Cancer Treatment (test)",
           "sourceName": "NCI PDQ",
-          "externalId": "CDR0000062787",
+          "externalId": "CDR-TEST-001",
           "language": "en",
           "sourceType": "guideline",
           "licenseClass": "dominio_publico",
@@ -126,30 +31,25 @@
           "trialPhase": null,
           "primaryEndpoint": null,
           "sampleSize": null,
-          "publishedAt": "2024-03-15",
+          "publishedAt": "2025-03-01",
           "lastUpdatedAt": "2026-05-01",
           "guidelineVersion": "2026-05",
           "authors": null,
-          "sourceUrl": "https://corpus.oncolens.test/documentos/CDR0000062787",
+          "sourceUrl": null,
           "possiblyOutdated": false,
           "newerVersionAvailable": false,
-          "chunkTextSnapshot": "Texto sintético de ejemplo: the addition of anti-HER2 therapy to adjuvant chemotherapy is described for HER2-positive tumors in a study population with stage I–III disease, including both premenopausal and postmenopausal patients.",
-          "chunkId": "chunk_88231"
+          "chunkTextSnapshot": "Adding anti-HER2 therapy to adjuvant chemotherapy improved disease-free survival in HER2-positive early breast cancer.",
+          "chunkId": "ch-m1-1"
         }
       ]
     }
   ],
   "discardedOptions": [],
-  "limitations": [
-    {
-      "text": "Síntesis basada en una sola fuente.",
-      "origin": "estructural"
-    }
-  ],
+  "limitations": [],
   "assumptions": [],
   "retrievalStats": {
-    "retrieved": 40,
-    "aboveThreshold": 1
+    "retrieved": 2,
+    "aboveThreshold": 2
   },
   "omittedClaims": 0,
   "optionsNotShown": 0,
@@ -159,13 +59,13 @@
     "queryLanguage": "es",
     "responseLanguage": "es",
     "llmProvider": "local",
-    "llmModel": "llm-local-ejemplo",
-    "embeddingModel": "embedding-local-ejemplo",
-    "rerankerModel": "reranker-local-ejemplo",
-    "nliModel": "nli-local-ejemplo",
-    "promptVersion": "rag-query@0.1.0",
-    "catalogVersion": "2026.10.0",
-    "corpusRelease": "2026-09-30",
+    "llmModel": "llm-test@1",
+    "embeddingModel": "embedder-test@1",
+    "rerankerModel": "reranker-test@1",
+    "nliModel": "nli-test@1",
+    "promptVersion": "rag-query@0.10.0",
+    "catalogVersion": "1.7.0",
+    "corpusRelease": "rel-test-1",
     "corpusCutoffDate": "2026-09-30",
     "excludedSources": [
       "NCCN",
@@ -174,10 +74,10 @@
     "retrievalParams": {
       "topK": 40,
       "rerankTopN": 10,
-      "relevanceThreshold": 0.5,
+      "relevanceThreshold": 0.3,
       "retrievalMode": "dense",
       "fusion": "ninguna",
-      "fusionParam": 0,
+      "fusionParam": 0.0,
       "queryRewrite": {
         "applied": false,
         "reason": "no_disparado"
@@ -191,6 +91,6 @@
         ]
       }
     },
-    "latencyMs": 8200
+    "latencyMs": 0
   }
 }

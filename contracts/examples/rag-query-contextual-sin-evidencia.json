@@ -15,7 +15,7 @@
   ],
   "assumptions": [],
   "retrievalStats": {
-    "retrieved": 40,
+    "retrieved": 2,
     "aboveThreshold": 0
   },
   "omittedClaims": 0,
@@ -26,13 +26,13 @@
     "queryLanguage": "es",
     "responseLanguage": "es",
     "llmProvider": "local",
-    "llmModel": "llm-local-ejemplo",
-    "embeddingModel": "embedding-local-ejemplo",
-    "rerankerModel": "reranker-local-ejemplo",
-    "nliModel": "nli-local-ejemplo",
-    "promptVersion": "rag-query@0.1.0",
-    "catalogVersion": "2026.10.0",
-    "corpusRelease": "2026-09-30",
+    "llmModel": "llm-test@1",
+    "embeddingModel": "embedder-test@1",
+    "rerankerModel": "reranker-test@1",
+    "nliModel": "nli-test@1",
+    "promptVersion": "rag-query@0.10.0",
+    "catalogVersion": "1.7.0",
+    "corpusRelease": "rel-test-1",
     "corpusCutoffDate": "2026-09-30",
     "excludedSources": [
       "NCCN",
@@ -41,13 +41,13 @@
     "retrievalParams": {
       "topK": 40,
       "rerankTopN": 10,
-      "relevanceThreshold": 0.5,
+      "relevanceThreshold": 0.3,
       "retrievalMode": "dense",
       "fusion": "ninguna",
-      "fusionParam": 0,
+      "fusionParam": 0.0,
       "queryRewrite": {
-        "applied": true,
-        "reason": "disparado"
+        "applied": false,
+        "reason": "no_disparado"
       },
       "contextExpansion": {
         "applied": true,
@@ -58,6 +58,6 @@
         ]
       }
     },
-    "latencyMs": 8200
+    "latencyMs": 0
   }
 }
