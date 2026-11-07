@@ -122,6 +122,7 @@ describe('Columna «Datos críticos» · acciones de los faltantes', () => {
           item: 'tratamientos_previos',
           label: 'Tratamientos previos',
           status: 'faltante',
+          gapType: 'no_buscado',
           origin: 'regla',
           provenance: null,
           destination: { entity: 'PriorTreatment', field: null },

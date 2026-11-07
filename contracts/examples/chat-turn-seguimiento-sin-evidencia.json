@@ -1,0 +1,40 @@
+{
+  "intent": "evidencia",
+  "subintent": "seguimiento_evidencia",
+  "blocks": [
+    {
+      "kind": "limitacion",
+      "text": "Ningún fragmento recuperado supera el umbral de relevancia."
+    }
+  ],
+  "omittedClaims": 0,
+  "structuredState": {
+    "intentsVistos": [
+      "evidencia"
+    ],
+    "preguntasPrevias": [
+      "¿Qué opciones adyuvantes describe la evidencia para cáncer de mama HER2 positivo en estadio IIA?",
+      "¿En qué se diferencia la población del estudio de mi paciente?"
+    ],
+    "opcionesMostradas": [
+      "Quimioterapia adyuvante combinada con terapia dirigida anti-HER2"
+    ],
+    "citasMostradas": [
+      "ch-m1-1"
+    ],
+    "faltantesSenalados": [],
+    "ultimaEvidencia": {
+      "query": "¿En qué se diferencia la población del estudio de mi paciente?",
+      "chunkIds": [
+        "ch-inj-1",
+        "ch-m1-1"
+      ],
+      "topRelevanceScore": null
+    }
+  },
+  "llmProvider": "local",
+  "notices": [
+    "Generado por IA; requiere validación clínica independiente por el oncólogo tratante",
+    "Uso académico/investigación"
+  ]
+}

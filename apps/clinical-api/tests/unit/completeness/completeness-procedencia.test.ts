@@ -11,6 +11,7 @@ function item(resto: Partial<ItemDeDatoCritico> = {}): ItemDeDatoCritico {
     cancerType: 'mama',
     destination: { entity: 'Biomarker', field: 'value' },
     minValues: 1,
+    sourceDocumentTypes: ['examen'],
     ...resto,
   };
 }

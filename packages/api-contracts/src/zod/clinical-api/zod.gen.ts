@@ -502,6 +502,12 @@ export const zCompletenessItem = z.strictObject({
         'faltante',
         'no_aplica'
     ]),
+    gapType: z.union([
+        z.literal('no_encontrado'),
+        z.literal('incompleto'),
+        z.literal('por_conciliar'),
+        z.literal('no_buscado')
+    ]).nullable(),
     origin: z.enum([
         'documento',
         'manual',
@@ -807,45 +813,6 @@ export const zConversationDataLink = z.strictObject({
     ]),
     relativeDay: z.int().nullable(),
     recordedDate: z.iso.date().nullable()
-});
-
-export const zConversationTurn = z.strictObject({
-    id: z.uuid(),
-    turnNumber: z.int().gte(1),
-    createdAt: z.iso.datetime(),
-    question: z.string(),
-    intent: z.enum([
-        'caso',
-        'faltantes',
-        'evidencia',
-        'fuentes_limitaciones',
-        'no_clasificada',
-        'fuera_de_alcance'
-    ]),
-    aboutTurnId: z.uuid().optional(),
-    status: z.enum([
-        'respondido',
-        'sin_evidencia',
-        'no_clasificada'
-    ]),
-    topRelevanceScore: z.number().gte(0).lte(1).nullable(),
-    blocks: z.array(zChatBlock),
-    dataLinks: z.array(zConversationDataLink),
-    omittedClaims: z.int().gte(0),
-    analysisId: z.uuid().optional(),
-    notices: z.array(z.string()),
-    dataUsed: z.array(z.string()),
-    dataMissing: z.array(z.string())
-});
-
-/**
- * Conversación anclada a un paciente. No expone threadId: el hilo de Backend 2 no sale de clinical-api (ADR-51).
- */
-export const zConversation = z.strictObject({
-    conversationId: z.uuid(),
-    patientId: z.uuid(),
-    createdAt: z.iso.datetime(),
-    turns: z.array(zConversationTurn)
 });
 
 export const zErrorInterno = z.strictObject({
@@ -1235,6 +1202,46 @@ export const zEvidenceAnalysis = z.strictObject({
     createdAt: z.iso.datetime()
 });
 
+export const zConversationTurn = z.strictObject({
+    id: z.uuid(),
+    turnNumber: z.int().gte(1),
+    createdAt: z.iso.datetime(),
+    question: z.string(),
+    intent: z.enum([
+        'caso',
+        'faltantes',
+        'evidencia',
+        'fuentes_limitaciones',
+        'no_clasificada',
+        'fuera_de_alcance'
+    ]),
+    aboutTurnId: z.uuid().optional(),
+    status: z.enum([
+        'respondido',
+        'sin_evidencia',
+        'no_clasificada'
+    ]),
+    topRelevanceScore: z.number().gte(0).lte(1).nullable(),
+    blocks: z.array(zChatBlock),
+    dataLinks: z.array(zConversationDataLink),
+    omittedClaims: z.int().gte(0),
+    analysisId: z.uuid().optional(),
+    evidenceAnalysis: zEvidenceAnalysis.optional(),
+    notices: z.array(z.string()),
+    dataUsed: z.array(z.string()),
+    dataMissing: z.array(z.string())
+});
+
+/**
+ * Conversación anclada a un paciente. No expone threadId: el hilo de Backend 2 no sale de clinical-api (ADR-51).
+ */
+export const zConversation = z.strictObject({
+    conversationId: z.uuid(),
+    patientId: z.uuid(),
+    createdAt: z.iso.datetime(),
+    turns: z.array(zConversationTurn)
+});
+
 export const zLoginRequestWritable = z.strictObject({
     email: z.email().max(254),
     password: z.string().min(1).max(1024)
@@ -1580,7 +1587,7 @@ export const zGetConversationPath = z.object({
 });
 
 /**
- * La conversación con sus turnos en orden de turnNumber.
+ * La conversación con sus turnos en orden de turnNumber. `evidenceAnalysis` solo va en el turno que creó el análisis; los turnos de seguimiento lo referencian por `analysisId` sin repetirlo.
  */
 export const zGetConversationResponse = zConversation;
 

@@ -562,7 +562,7 @@ export type ChatCompletenessItem = {
     /**
      * ChatGapType
      *
-     * Tipo de faltante; null si el dato está presente.
+     * Tipo de vacío (US-263); null si el ítem no tiene vacío. Puede acompañar a presente_verificado cuando hay un conflicto por conciliar.
      */
     gapType: 'no_encontrado' | 'incompleto' | 'por_conciliar' | 'no_buscado' | null;
     destination: string;
@@ -627,6 +627,10 @@ export type ChatTurnRequest = {
     clinicalContext: ClinicalContext;
     caseFacts: Array<CaseFact>;
     completeness: Array<ChatCompletenessItem>;
+    /**
+     * `analysis_id` del último turno de evidencia de la conversación (UUID de un registro de clinical-api, que es su único dueño). rag-orchestrator lo usa SOLO para enrutar el turno: con él y una pregunta que se refiere a ese resultado el turno es un `seguimiento_evidencia`; sin él nunca lo es. No se guarda en el estado del hilo, en `structuredState`, en los bloques, en el prompt ni en los logs.
+     */
+    activeAnalysisId?: string;
     rehydration?: ChatRehydration;
 };
 
@@ -669,6 +673,9 @@ export type ChatBlock = {
 
 export type ChatTurnResponse = {
     intent: ChatIntent;
+    /**
+     * `seguimiento_evidencia`: pregunta sobre el resultado de un análisis ya registrado (la petición trae `activeAnalysisId`). El turno vuelve a recuperar, cita solo lo recuperado en ese turno y NO trae `evidenceAnalysis`.
+     */
     subintent?: 'seguimiento_evidencia';
     blocks: Array<ChatBlock>;
     /**
@@ -676,7 +683,7 @@ export type ChatTurnResponse = {
      */
     omittedClaims: number;
     /**
-     * Resultado del pipeline de evidencia de este turno (mismo tipo que la respuesta de /rag/query). clinical-api lo persiste y construye con lo persistido el EvidenceAnalysis de su ConversationTurn.
+     * Resultado del pipeline de evidencia de este turno (mismo tipo que la respuesta de /rag/query). Solo lo trae el turno de análisis (`intent = evidencia` sin `subintent`); el seguimiento no lo trae. clinical-api lo persiste y construye con lo persistido el EvidenceAnalysis de su ConversationTurn.
      */
     evidenceAnalysis?: RagQueryInternalResponse;
     structuredState: StructuredState;

@@ -45,7 +45,7 @@ que el chat sustituye. Con este change pregunta en la conversación «¿qué evi
   de `analysisId` y de `activeAnalysisId`.
 - **Contratos (aditivos, ADR-26)**: `rag-orchestrator` 1.12.0 → **1.13.0** (`ChatTurnRequest.activeAnalysisId?`,
   `subintent?` ya viene en la 1.12.0 de `l1d-316` como `enum [seguimiento_evidencia]` y aquí solo se consume, igual que `evidenceAnalysis?`); `clinical-api` 1.25.0 →
-  **1.26.0** (`ConversationTurn.evidenceAnalysis?`). Ejemplos `contracts/examples/chat-turn-evidencia*.json` y
+  **1.29.0** (`ConversationTurn.evidenceAnalysis?`). Ejemplos `contracts/examples/chat-turn-evidencia*.json` y
   `conversation-turn-evidencia*.json`; el `503` del LLM caído reutiliza `chat-turn-llm-local-no-disponible.json` de
   `l1d-316` (glosario §3).
 
@@ -82,12 +82,12 @@ que el chat sustituye. Con este change pregunta en la conversación «¿qué evi
   `StructuredState.ultimaEvidencia?` y el ejemplo `503` `chat-turn-llm-local-no-disponible.json`), memoria no citable y
   `omittedClaims`.
 - ↪ `l1d-315-conversacion-paciente` (US-258): `conversation_turn.analysis_id`, persistencia del turno, tabla de fallos.
-- ↪ `l1d-320-faltantes-tipo-vacio`: publica `clinical-api` 1.25.0; este change toma la 1.26.0.
+- ↪ `l1d-320-faltantes-tipo-vacio`: publica `clinical-api` 1.25.0; este change toma la 1.29.0.
 - ↪ Lo consume `l1d-323-chat-fuentes-limitaciones` (lee `ultimaEvidencia`).
 - 🔗 Consume: US-055/US-225 (pipeline), US-125/US-134 (aplicabilidad y orden), US-245 (afirmaciones atómicas).
 - 🔗 Regresión [RN-15] activa desde S6 con US-148 (L1D-213): opt-out → `403` sin llamar a `/chat/turn`.
 - 🔗 Regresión [RN-12] activa desde S6 con US-050 (L1D-204). 🔗 Medido en: US-269.
-- Cadena de versiones (glosario §1): `rag-orchestrator` 1.13.0 y `clinical-api` 1.26.0; si una versión colisiona, se
+- Cadena de versiones (glosario §1): `rag-orchestrator` 1.13.0 y `clinical-api` 1.29.0; si una versión colisiona, se
   renumera el segundo en mergear y se regenera `packages/api-contracts`.
 
 ## Fuera de alcance

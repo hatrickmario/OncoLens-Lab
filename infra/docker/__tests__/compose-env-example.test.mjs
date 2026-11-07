@@ -65,7 +65,7 @@ describe('docker-compose.yml · las claves de .env.example llegan al contenedor 
     const ejemplo = leerEjemplo('apps/rag-orchestrator/.env.example');
     const rag = resuelto.services['rag-orchestrator'].environment;
     expect(resuelto.services.web.environment.WEB_CSP_MODO).toBe('aplicar');
-    for (const k of ['CHAT_THREAD_TTL_SECONDS', 'CHAT_MAX_THREADS', 'CHAT_MEMORY_MAX_TOKENS', 'CHAT_NOTICE_AI', 'CHAT_NOTICE_ACADEMIC', 'CHAT_NOTICE_VERIFY', 'CHAT_SIN_DATOS_TEXTO', 'CHAT_SIN_DATOS_PERIODO_TEXTO', 'CHAT_SIN_FECHA_TEXTO', 'RERANKER_CUT_LOG_MAX_IDS']) {
+    for (const k of ['CHAT_THREAD_TTL_SECONDS', 'CHAT_MAX_THREADS', 'CHAT_MEMORY_MAX_TOKENS', 'CHAT_EVIDENCE_MAX_OPTIONS', 'CHAT_NOTICE_AI', 'CHAT_NOTICE_ACADEMIC', 'CHAT_NOTICE_VERIFY', 'CHAT_SIN_DATOS_TEXTO', 'CHAT_SIN_DATOS_PERIODO_TEXTO', 'CHAT_SIN_FECHA_TEXTO', 'RERANKER_CUT_LOG_MAX_IDS']) {
       expect(String(rag[k]), k).toBe(ejemplo[k]);
     }
     expect(rag.LLM_TOKENIZER_PATH ?? '').toBe('');

@@ -1,0 +1,38 @@
+{
+  "intent": "faltantes",
+  "blocks": [
+    {
+      "kind": "faltante",
+      "text": "Estadificación TNM: hay registros en conflicto por conciliar."
+    },
+    {
+      "kind": "faltante",
+      "text": "Receptor de estrógeno: el dato está incompleto o sin verificar."
+    },
+    {
+      "kind": "faltante",
+      "text": "Ki-67: aún no se ha procesado ningún documento de tipo examen."
+    },
+    {
+      "kind": "faltante",
+      "text": "Estado menopáusico: no se halló en los documentos procesados (historia clínica)."
+    }
+  ],
+  "omittedClaims": 0,
+  "structuredState": {
+    "intentsVistos": [
+      "faltantes"
+    ],
+    "preguntasPrevias": [
+      "¿Qué información falta?"
+    ],
+    "opcionesMostradas": [],
+    "citasMostradas": [],
+    "faltantesSenalados": []
+  },
+  "llmProvider": "local",
+  "notices": [
+    "Generado por IA; requiere validación clínica independiente por el oncólogo tratante",
+    "Uso académico/investigación"
+  ]
+}

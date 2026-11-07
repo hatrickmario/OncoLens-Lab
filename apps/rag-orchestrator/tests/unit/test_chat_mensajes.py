@@ -4,7 +4,18 @@ from pathlib import Path
 
 import pytest
 
-from app.domain.chat.mensajes import MENSAJE_FUERA_DE_ALCANCE, MENSAJE_NO_CLASIFICADA
+from app.domain.chat.mensajes import (
+    CAUSA_FALTA_EN_PACIENTE,
+    ENCABEZADO_DE_OPCIONES,
+    MENSAJE_FUERA_DE_ALCANCE,
+    MENSAJE_NO_CLASIFICADA,
+    MENSAJE_SEGUIMIENTO_SIN_AFIRMACIONES,
+    MENSAJE_SIN_OPCIONES_CON_SOPORTE,
+    ORDEN_POR_APLICABILIDAD,
+    TITULO_DE_APLICABILIDAD,
+    TITULO_DE_FALTANTES,
+)
+from app.prompts.chat_seguimiento_evidencia import PLANTILLA_SEGUIMIENTO_DEL_CHAT
 from app.domain.chat.valores_iniciales import AVISO_ACADEMICO_INICIAL, AVISO_DE_IA_INICIAL
 from app.domain.lenguaje import ListaTerminos, check_prohibited_terms
 
@@ -22,6 +33,14 @@ LISTA = (
     [
         MENSAJE_FUERA_DE_ALCANCE,
         MENSAJE_NO_CLASIFICADA,
+        ENCABEZADO_DE_OPCIONES,
+        ORDEN_POR_APLICABILIDAD,
+        TITULO_DE_APLICABILIDAD,
+        TITULO_DE_FALTANTES,
+        CAUSA_FALTA_EN_PACIENTE,
+        MENSAJE_SIN_OPCIONES_CON_SOPORTE,
+        MENSAJE_SEGUIMIENTO_SIN_AFIRMACIONES,
+        PLANTILLA_SEGUIMIENTO_DEL_CHAT,
         AVISO_DE_IA_INICIAL,
         AVISO_ACADEMICO_INICIAL,
     ],

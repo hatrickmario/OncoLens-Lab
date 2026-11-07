@@ -11,6 +11,7 @@ import type {
   RegistroDeDato,
   RegistrosPorEntidad,
   ResueltoPor,
+  TipoDeVacio,
 } from './ports.js';
 
 /**
@@ -244,6 +245,75 @@ export function calcularChecklist(entrada: EntradaDelChecklist): EstadoDeItem[] 
     key: item.key,
     status: estadoDelItem(item, delTipo, entrada.verifiedReviewStatuses, entrada.registros),
   }));
+}
+
+/** Cuántos registros vigentes (RN-07) tiene el destino del ítem: lo que se compara con `minValues`. */
+export function cantidadDeRegistrosVigentes(
+  item: ItemDeDatoCritico,
+  registros: RegistrosPorEntidad,
+): number {
+  return registrosQueCuentanDelItem(item, registros).length;
+}
+
+const valorDelCampo = (item: ItemDeDatoCritico, registro: RegistroDeDato): string | null =>
+  item.destination.field === undefined ? null : valorDelRegistro(item, registro);
+
+/**
+ * RN-08: ¿contradice algún registro con conflicto pendiente (`requiere_revision` y `conflicts_with_id`) al dato del
+ * ítem? Solo cuenta el que cae en su destino con valor en el campo y, si hay dato que cuente, el que es ese mismo
+ * registro o trae un valor distinto: un diagnóstico en conflicto por el estadio no pone en conflicto la histología
+ * si la repite igual. El `status` del ítem no cambia; esto solo alimenta el tipo de vacío.
+ */
+export function hayConflictoPendiente(
+  item: ItemDeDatoCritico,
+  registros: RegistrosPorEntidad,
+  conflictos: RegistrosPorEntidad,
+): boolean {
+  const enElDestino = registrosDelDestino(
+    item.destination,
+    conflictos[item.destination.entity] ?? [],
+  );
+  const cuenta = registroQueCuenta(registrosQueCuentanDelItem(item, registros));
+  if (enElDestino.length === 0) return false;
+  if (cuenta === undefined || item.destination.field === undefined) return true;
+  return enElDestino.some(
+    (conflicto) =>
+      conflicto.id === cuenta.id || valorDelCampo(item, conflicto) !== valorDelCampo(item, cuenta),
+  );
+}
+
+/** Lo que `clasificarVacio` necesita saber del paciente, además del estado del ítem (todo calculado fuera, sin E/S). */
+export interface EvidenciaDelVacio {
+  /** Registros vigentes (RN-07) que cuentan en el destino del ítem. */
+  readonly registrosVigentes: number;
+  /** Hay un registro vigente en `requiere_revision` con `conflicts_with_id` que contradice el dato del ítem (RN-08). */
+  readonly conflictoPendiente: boolean;
+  /** `document_type` de los documentos del paciente con `ocr_status = completado`. */
+  readonly documentosProcesados: ReadonlySet<string>;
+}
+
+/**
+ * Tipo de vacío del ítem (US-263, `[S6 resp. 10]`, `[S6 resp. 17]`). Prioridad: `por_conciliar` > `incompleto` >
+ * `no_buscado` > `no_encontrado`; `null` si verificado y sin conflicto, o `no_aplica`. No cambia el `status`.
+ * Un dato `presente_verificado` con un conflicto pendiente (RN-08) es `por_conciliar`: sigue necesitando conciliación.
+ * Un `gapType` no nulo sobre un dato verificado es siempre `por_conciliar`.
+ */
+export function clasificarVacio(
+  item: ItemDeDatoCritico,
+  estado: EstadoDelChecklist,
+  evidencia: EvidenciaDelVacio,
+): TipoDeVacio | null {
+  if (estado === 'no_aplica') return null;
+  if (evidencia.conflictoPendiente) return 'por_conciliar';
+  if (estado === 'presente_sin_verificar') return 'incompleto';
+  return estado === 'faltante' ? vacioDeUnFaltante(item, evidencia) : null;
+}
+
+/** Sin conflicto: con registros pero menos que `minValues` es `incompleto`; sin ninguno, depende de si se procesó un documento fuente. */
+function vacioDeUnFaltante(item: ItemDeDatoCritico, evidencia: EvidenciaDelVacio): TipoDeVacio {
+  if (evidencia.registrosVigentes > 0) return 'incompleto';
+  const seBusco = item.sourceDocumentTypes.some((tipo) => evidencia.documentosProcesados.has(tipo));
+  return seBusco ? 'no_encontrado' : 'no_buscado';
 }
 
 /** Los ítems en estado `faltante`, en el orden del catálogo: ÚNICA definición de «faltante» (contador, endpoint y análisis). */

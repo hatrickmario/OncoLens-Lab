@@ -20,6 +20,9 @@
         }
       },
       "minValues": 3,
+      "sourceDocumentTypes": [
+        "examen"
+      ],
       "estado": "propuesta"
     },
     {
@@ -34,6 +37,10 @@
         "field": "grade"
       },
       "minValues": 1,
+      "sourceDocumentTypes": [
+        "historia_clinica",
+        "examen"
+      ],
       "estado": "propuesta"
     }
   ]

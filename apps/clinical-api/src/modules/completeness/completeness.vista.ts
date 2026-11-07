@@ -16,6 +16,7 @@ export function comoVistaDelChecklist(checklist: ChecklistDelPaciente): Complete
       item: item.key,
       label: item.label,
       status: item.status,
+      gapType: item.gapType,
       origin: item.origin,
       provenance: item.provenance,
       ...(item.resolvedBy !== undefined && { resolvedBy: item.resolvedBy }),

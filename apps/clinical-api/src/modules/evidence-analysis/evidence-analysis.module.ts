@@ -6,7 +6,11 @@ import type { Registrar } from '../../infrastructure/logger.js';
 import type { AlcanceDelCorpus } from '../../config/index.js';
 import type { Consultador } from '../auth/auth.repository.js';
 import { faltantesDe } from '../completeness/completeness.rules.js';
-import type { ChecklistDelPaciente, CompletenessService } from '../completeness/ports.js';
+import type {
+  ChecklistDelPaciente,
+  CompletenessConTiposDeVacio,
+  CompletenessService,
+} from '../completeness/ports.js';
 import { crearBaseDelAnalisis } from './analysis-basis.js';
 import { crearAnalysisCompletion } from './analysis-completion.js';
 import { evidenceAnalysisController } from './evidence-analysis.controller.js';
@@ -113,20 +117,20 @@ const destinoDelItem = ({ entity, field }: { entity: string; field: string | nul
   field === null ? entity : `${entity}.${field}`;
 
 /**
- * Adaptador del puerto `ChecklistDelChat` sobre `CompletenessService` (L1D-315): `gapType` es `no_encontrado` solo en un
- * faltante y `null` en un dato presente; los tipos finos de faltante llegan con L1D-320. Falla cerrado como
+ * Adaptador del puerto `ChecklistDelChat` sobre `CompletenessService` (L1D-315): `gapType` es el mismo que sirve
+ * `GET /completeness` (L1D-320, una regla y un dueño: `clasificarVacio`). Falla cerrado como
  * `crearChecklistDeFaltantes`.
  */
-export function crearChecklistDelChat(completitud: CompletenessService): ChecklistDelChat {
+export function crearChecklistDelChat(completitud: CompletenessConTiposDeVacio): ChecklistDelChat {
   return {
     async items(patientId) {
       try {
-        const checklist = await completitud.calcular(patientId);
+        const checklist = await completitud.calcularConTiposDeVacio(patientId);
         return checklist.items.map((item) => ({
           item: item.key,
           label: item.label,
           status: item.status,
-          gapType: item.status === 'faltante' ? ('no_encontrado' as const) : null,
+          gapType: item.gapType,
           destination: destinoDelItem(item.destination),
         }));
       } catch {
@@ -141,19 +145,30 @@ function componerConversacion(
   dependencias: DependenciasDelGateway,
   casos: CasoRepository,
 ): ConversationService {
-  const { ragTimeoutMs, chatRehydrateTurns } = dependencias.config;
+  const { ragTimeoutMs, chatRehydrateTurns, analysisMaxOptions, aiDisclaimerText } =
+    dependencias.config;
   return crearConversationService({
     conversaciones: crearConversationRepository(dependencias.db, dependencias.enTransaccion),
     casos,
     checklist: dependencias.checklistDelChat,
     desidentificador: dependencias.desidentificador,
     rag: dependencias.ragChat,
+    base: crearBaseDelAnalisis({
+      etiquetaDe: dependencias.etiquetaDe,
+      maxFollowUps: dependencias.config.analysisFollowupMax,
+    }),
+    idsDeAnalisis: dependencias.idsDeAnalisis,
     catalogo: dependencias.catalogo,
     reloj: dependencias.reloj,
     idsDeConversaciones: dependencias.idsDeConversaciones,
     idsDeTurnos: dependencias.idsDeTurnosDeChat,
     idsDeHilos: dependencias.idsDeHilos,
-    config: { ragTimeoutMs, chatRehydrateTurns },
+    config: {
+      ragTimeoutMs,
+      chatRehydrateTurns,
+      maxOpciones: analysisMaxOptions,
+      aiDisclaimerText,
+    },
   });
 }
 

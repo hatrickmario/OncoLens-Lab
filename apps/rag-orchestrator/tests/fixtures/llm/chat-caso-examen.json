@@ -39,14 +39,6 @@
     "ruta": "{\"intent\": \"caso\"}",
     "generacion": "{\"claims\": [{\"kind\": \"interpretacion\", \"text\": \"El CA 15-3 registró 22 U/mL a los 30 días y 28 U/mL a los 90 días después del diagnóstico.\", \"factRefs\": [\"f5\", \"f3\"], \"citations\": []}]}"
   },
-  "CHAT-FALTANTES-INTERPRETACION": {
-    "ruta": "{\"intent\": \"faltantes\"}",
-    "generacion": "{\"claims\": [{\"kind\": \"interpretacion\", \"text\": \"El diagnóstico documentado es carcinoma ductal infiltrante de mama.\", \"factRefs\": [\"f1\"], \"citations\": []}]}"
-  },
-  "CHAT-FALTANTES-SIN-ENLACE": {
-    "ruta": "{\"intent\": \"faltantes\"}",
-    "generacion": "{\"claims\": [{\"text\": \"Falta el estado menopáusico.\", \"factRefs\": [], \"citations\": []}]}"
-  },
   "CHAT-RUTA-FALTANTES-SIN-DATOS": {
     "ruta": "{\"intent\": \"faltantes\"}",
     "generacion": "{\"claims\": [{\"text\": \"La gammagrafía ósea no mostró metástasis.\", \"factRefs\": [], \"citations\": []}]}"
@@ -54,5 +46,13 @@
   "CHAT-RUTA-FALTANTES-PERIODO": {
     "ruta": "{\"intent\": \"faltantes\"}",
     "generacion": "{\"claims\": [{\"kind\": \"documentado\", \"text\": \"\", \"factRefs\": [\"f1\", \"f4\"], \"citations\": []}]}"
+  },
+  "CHAT-FUENTES-INTERPRETACION": {
+    "ruta": "{\"intent\": \"fuentes_limitaciones\"}",
+    "generacion": "{\"claims\": [{\"kind\": \"interpretacion\", \"text\": \"El diagnóstico documentado es carcinoma ductal infiltrante de mama.\", \"factRefs\": [\"f1\"], \"citations\": []}]}"
+  },
+  "CHAT-FUENTES-SIN-ENLACE": {
+    "ruta": "{\"intent\": \"fuentes_limitaciones\"}",
+    "generacion": "{\"claims\": [{\"text\": \"Falta el estado menopáusico.\", \"factRefs\": [], \"citations\": []}]}"
   }
 }

@@ -85,3 +85,60 @@ async def test_el_fake_de_nube_cuenta_cada_invocacion_y_falla_con_el_error_del_p
     assert nube.invocaciones == 2
     with pytest.raises(FalloDelLlm):
         await caida.completar_json_acotado("u", {}, max_tokens=8, semilla=1)
+
+
+async def test_el_fake_del_seguimiento_devuelve_texto_crudo_o_falla_con_el_error_del_puerto():
+    from tests.support.llm_chat_evidencia_falso import FakeChatLlmEvidencia
+
+    ok = FakeChatLlmEvidencia("SEG-OK")
+    caido = FakeChatLlmEvidencia("SEG-OK", error=FalloDelLlm())
+    esquema = {"properties": {"claims": {}}}
+
+    assert isinstance(await ok.completar_json("u", esquema, sistema="s"), str)
+    with pytest.raises(FalloDelLlm):
+        await caido.completar_json("u", esquema, sistema="s")
+    assert ok.llamadas_de_generacion == 1 and caido.llamadas_de_generacion == 1
+
+
+def test_el_adaptador_de_milvus_y_su_fake_comparten_la_firma_y_el_contrato_de_las_posiciones():
+    from app.application.ports import PosicionDeChunk
+    from app.infrastructure.milvus.repository import MilvusRepository
+    from tests.support.posiciones_falsas import PosicionesFalsas
+    from tests.support.recuperacion import CORPUS_FX06A
+
+    for clase in (MilvusRepository, PosicionesFalsas):
+        assert list(inspect.signature(clase.posiciones).parameters) == ["self", "chunk_ids"]
+    posiciones = PosicionesFalsas(CORPUS_FX06A).posiciones({"ch-m1-1", "ch-m1v0-1", "no-existe"})
+    # Como Milvus: solo los chunks vigentes y existentes; el no vigente y el inexistente no figuran.
+    assert posiciones == {"ch-m1-1": PosicionDeChunk("doc-m1", 1, 1)}
+
+
+def test_el_fake_y_el_adaptador_de_milvus_ordenan_por_chunk_index_y_rechazan_un_id_con_comillas():
+    from app.infrastructure.milvus.repository import MilvusRepository
+    from tests.support.milvus import ajustes_de_milvus
+    from tests.support.posiciones_falsas import PosicionesFalsas
+    from tests.support.recuperacion import ChunkFx
+
+    corpus = [
+        ChunkFx("c-b", "d", "t", [], True, "mama", chunk_index=2),
+        ChunkFx("c-a", "d", "t", [], True, "mama", chunk_index=0),
+        ChunkFx("c-c", "d", "t", [], True, "mama", chunk_index=1),
+    ]
+    filas = [
+        {"chunk_id": c.chunk_id, "document_id": c.document_id, "chunk_index": c.chunk_index}
+        for c in corpus
+    ]
+
+    class Cliente:
+        def query(self, _coleccion, *, filter, **__):  # noqa: A002
+            return [dict(f, is_current=True) for f in filas]
+
+    real = MilvusRepository(Cliente(), ajustes_de_milvus("http://x", "corpus_test_bateria"))  # type: ignore[arg-type]
+    fake = PosicionesFalsas(corpus)
+
+    pedido = {"c-a", "c-b", "c-c"}
+    assert fake.posiciones(pedido) == real.posiciones(pedido)
+    assert [fake.posiciones(pedido)[i].ordinal for i in ("c-a", "c-c", "c-b")] == [1, 2, 3]
+    for adaptador in (fake, real):
+        with pytest.raises(ValueError):
+            adaptador.posiciones({'x" or "1" == "1'})

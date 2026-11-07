@@ -13,6 +13,9 @@ class TipoDeBloque(StrEnum):
 
     documentado = "documentado"
     interpretacion = "interpretacion"
+    catalogo = "catalogo"
+    evidencia = "evidencia"
+    faltante = "faltante"
     limitacion = "limitacion"
 
 
@@ -45,10 +48,23 @@ class PropuestaDelTurno:
 
 
 @dataclass(frozen=True)
+class CitaDelBloque:
+    """Una ``ChatCitation``: copiada del catálogo y del chunk recuperado en el turno, nunca del texto generado (RN-04)."""
+
+    chunk_id: str
+    document_id: str
+    titulo_de_la_fuente: str
+    ordinal: int
+    cantidad: int
+    texto_del_chunk: str
+
+
+@dataclass(frozen=True)
 class BloqueDelTurno:
     tipo: TipoDeBloque
     texto: str
     fact_refs: tuple[str, ...] = ()
+    citas: tuple[CitaDelBloque, ...] = ()
 
 
 def turno_previo_de(

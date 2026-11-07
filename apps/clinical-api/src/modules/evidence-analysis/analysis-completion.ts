@@ -16,6 +16,7 @@ import type {
   AnalysisCompletion,
   EntradaDeCierre,
   EntradaDeCierreSinIA,
+  RespuestaDeFallo,
   ResultadoDelAnalisis,
 } from './ports.js';
 import {
@@ -113,20 +114,37 @@ async function persistirAnalisisAntesDeResponder(
   return { tipo: 'completado', cuerpo: aEvidenceAnalysis(persistido, disclaimer) };
 }
 
-async function completarConRespuestaInterna(
-  dependencias: DependenciasDelCierre,
-  entrada: EntradaDeCierre,
-): Promise<ResultadoDelAnalisis> {
-  const { analisis, base, reloj, idsDeAnalisis, disclaimer } = dependencias;
-  if (!entrada.respuesta.ok) return { tipo: 'fallo', respuesta: mapearFalloRag(entrada.respuesta) };
-  const interpretada = interpretarRespuestaInterna(entrada.respuesta.cuerpo);
-  if (interpretada === null) return { tipo: 'fallo', respuesta: RESPUESTA_INTERNA_INVALIDA };
+/** Lo que hace falta para armar el registro de un análisis desde la respuesta de Backend 2 (gateway y chat). */
+export interface EntradaDelRegistroValidado {
+  traceId: string;
+  patientId: string;
+  episodeId: string | null;
+  userId: string;
+  questionTemplateId: string | null;
+  continueWithWarning: boolean;
+  request: EntradaDeCierre['request'];
+  dataRefs: EntradaDeCierre['dataRefs'];
+  /** El cuerpo de Backend 2, aún sin validar. */
+  cuerpo: unknown;
+}
+
+/**
+ * Valida la respuesta interna (contrato y coherencia de RN-02), exige el proveedor permitido por la clasificación de
+ * datos (RN-12) y arma el `AIAnalysisRecord`. Una sola regla para el gateway y para el turno de evidencia del chat:
+ * devuelve el registro o el fallo ya traducido, sin estados intermedios.
+ */
+export function construirRegistroValidado(
+  { base, reloj, idsDeAnalisis }: Pick<DependenciasDelCierre, 'base' | 'reloj' | 'idsDeAnalisis'>,
+  entrada: EntradaDelRegistroValidado,
+): RegistroDeAnalisis | RespuestaDeFallo {
+  const interpretada = interpretarRespuestaInterna(entrada.cuerpo);
+  if (interpretada === null) return RESPUESTA_INTERNA_INVALIDA;
   const { respuesta, topRelevanceScore } = interpretada;
   if (!proveedorPermitido(entrada.request.dataClassification, respuesta.meta.llmProvider)) {
-    return { tipo: 'fallo', respuesta: PROVEEDOR_NO_PERMITIDO };
+    return PROVEEDOR_NO_PERMITIDO;
   }
   if (entrada.episodeId === null) throw new FalloDePersistenciaError();
-  const registro = armarRegistro({
+  return armarRegistro({
     id: idsDeAnalisis(),
     creadoEn: reloj.now(),
     traceId: entrada.traceId,
@@ -141,7 +159,23 @@ async function completarConRespuestaInterna(
     base: base.construir(entrada.request, respuesta, entrada.continueWithWarning),
     topRelevanceScore,
   });
-  return persistirAnalisisAntesDeResponder(analisis, registro, disclaimer);
+}
+
+async function completarConRespuestaInterna(
+  dependencias: DependenciasDelCierre,
+  entrada: EntradaDeCierre,
+): Promise<ResultadoDelAnalisis> {
+  if (!entrada.respuesta.ok) return { tipo: 'fallo', respuesta: mapearFalloRag(entrada.respuesta) };
+  const registro = construirRegistroValidado(dependencias, {
+    ...entrada,
+    cuerpo: entrada.respuesta.cuerpo,
+  });
+  if ('codigo' in registro) return { tipo: 'fallo', respuesta: registro };
+  return persistirAnalisisAntesDeResponder(
+    dependencias.analisis,
+    registro,
+    dependencias.disclaimer,
+  );
 }
 
 async function completarTipoNoHabilitado(

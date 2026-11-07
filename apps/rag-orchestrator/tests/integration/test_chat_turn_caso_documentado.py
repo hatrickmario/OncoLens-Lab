@@ -190,19 +190,19 @@ def test_chat_turn_caso_omite_la_interpretacion_sin_invocar_al_nli_cuando_usa_un
     assert nli.invocaciones == 0
 
 
-def test_chat_turn_faltantes_no_emite_interpretacion_cuando_el_llm_la_elige_en_un_nodo_distinto_de_caso():
-    entorno = crear_entorno_de_chat("CHAT-FALTANTES-INTERPRETACION")
+def test_chat_turn_fuentes_no_emite_interpretacion_cuando_el_llm_la_elige_en_un_nodo_distinto_de_caso():
+    entorno = crear_entorno_de_chat("CHAT-FUENTES-INTERPRETACION")
 
-    cuerpo = entorno.turno(solicitud_de_turno("¿Qué información falta del caso?")).json()
+    cuerpo = entorno.turno(solicitud_de_turno("¿Qué fuentes respaldan esto?")).json()
 
-    assert cuerpo["intent"] == "faltantes"
+    assert cuerpo["intent"] == "fuentes_limitaciones"
     assert [b["kind"] for b in cuerpo["blocks"]] == ["documentado"]
 
 
-def test_chat_turn_faltantes_dice_que_no_hay_datos_cuando_no_queda_ningun_bloque():
-    entorno = crear_entorno_de_chat("CHAT-FALTANTES-SIN-ENLACE")
+def test_chat_turn_fuentes_dice_que_no_hay_datos_cuando_no_queda_ningun_bloque():
+    entorno = crear_entorno_de_chat("CHAT-FUENTES-SIN-ENLACE")
 
-    cuerpo = entorno.turno(solicitud_de_turno("¿Qué información falta del caso?")).json()
+    cuerpo = entorno.turno(solicitud_de_turno("¿Qué fuentes respaldan esto?")).json()
 
     assert cuerpo["blocks"] == [{"kind": "limitacion", "text": TEXTO_SIN_DATOS}]
     assert cuerpo["omittedClaims"] == 1
@@ -287,13 +287,13 @@ def test_chat_turn_enruta_a_caso_sin_consultar_al_llm_cuando_la_pregunta_nombra_
     assert [b["factRefs"] for b in cuerpo["blocks"]] == [["f4"], ["f1"]]
 
 
-@pytest.mark.parametrize("intencion", ["faltantes", "fuentes_limitaciones"])
+@pytest.mark.parametrize("intencion", ["fuentes_limitaciones"])
 def test_chat_turn_dice_que_no_hay_datos_cuando_el_nodo_de_la_intencion_no_deja_ningun_bloque(
     intencion,
 ):
-    entorno = crear_entorno_de_chat("CHAT-FALTANTES-SIN-ENLACE")
+    entorno = crear_entorno_de_chat("CHAT-FUENTES-SIN-ENLACE")
     pregunta = {
-        "faltantes": "¿Qué información falta del caso?",
+        "faltantes": "¿Qué fuentes respaldan esto?",
         "fuentes_limitaciones": "¿Qué fuentes respaldan esto?",
     }[intencion]
 

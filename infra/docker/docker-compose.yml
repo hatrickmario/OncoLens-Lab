@@ -369,6 +369,7 @@ services:
       CHAT_THREAD_TTL_SECONDS: ${CHAT_THREAD_TTL_SECONDS:-1800}
       CHAT_MAX_THREADS: ${CHAT_MAX_THREADS:-50}
       CHAT_MEMORY_MAX_TOKENS: ${CHAT_MEMORY_MAX_TOKENS:-1500}
+      CHAT_EVIDENCE_MAX_OPTIONS: ${CHAT_EVIDENCE_MAX_OPTIONS:-3}
       CHAT_NOTICE_AI: ${CHAT_NOTICE_AI:-Generado por IA; requiere validación clínica independiente por el oncólogo tratante}
       CHAT_NOTICE_ACADEMIC: ${CHAT_NOTICE_ACADEMIC:-Uso académico/investigación}
       CHAT_NOTICE_VERIFY: ${CHAT_NOTICE_VERIFY:-Verifique contra las fuentes}

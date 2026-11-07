@@ -10,7 +10,7 @@ import {
 } from '../../support/rutas-y-contrato.js';
 
 const router = completenessController({
-  service: { calcular: () => Promise.reject(new Error('no se invoca')) },
+  service: { calcularConTiposDeVacio: () => Promise.reject(new Error('no se invoca')) },
   traceIds: { traceId: () => 'req_TestCoherencia' },
   registrar: () => undefined,
 });

@@ -11,8 +11,19 @@ from app.domain.chat.estado import (
     TurnoPrevio,
     UltimaEvidencia,
 )
-from app.domain.chat.turno import BloqueDelTurno, HechoDelCaso
-from app.schemas.generated.models import CaseFact, ChatRehydration, StructuredState
+from app.domain.chat.faltantes import ItemDeCompletitud, TipoDeVacio
+from app.domain.chat.turno import BloqueDelTurno, CitaDelBloque, HechoDelCaso
+from app.schemas.generated.models import (
+    CaseFact,
+    ChatCompletenessItem,
+    ChatGapType,
+    ChatRehydration,
+    ChatTurnRequest,
+    RagFiltersApplied,
+    RagQueryInternalRequest,
+    SourcesSelected,
+    StructuredState,
+)
 
 
 def hechos_del_caso(hechos: list[CaseFact]) -> tuple[HechoDelCaso, ...]:
@@ -26,6 +37,24 @@ def hechos_del_caso(hechos: list[CaseFact]) -> tuple[HechoDelCaso, ...]:
             serie=h.seriesKey,
         )
         for h in hechos
+    )
+
+
+def _tipo_de_vacio(gap: ChatGapType | None) -> TipoDeVacio | None:
+    """El ``gapType`` del contrato (el miembro nulo del enum generado es ``None``) como dato del dominio; uno desconocido falla."""
+    return None if gap is None or gap.value is None else TipoDeVacio(gap.value)
+
+
+def completitud_del_caso(items: list[ChatCompletenessItem]) -> tuple[ItemDeCompletitud, ...]:
+    """``completeness[]`` del contrato como datos del dominio: el ``gapType`` nulo del contrato es ``None``."""
+    return tuple(
+        ItemDeCompletitud(
+            clave=i.item,
+            etiqueta=i.label,
+            estado=i.status.value,
+            tipo_de_vacio=_tipo_de_vacio(i.gapType),
+        )
+        for i in items
     )
 
 
@@ -83,4 +112,39 @@ def bloque_del_contrato(bloque: BloqueDelTurno) -> dict[str, Any]:
     cuerpo: dict[str, Any] = {"kind": bloque.tipo.value, "text": bloque.texto}
     if bloque.fact_refs:
         cuerpo["factRefs"] = list(bloque.fact_refs)
+    if bloque.citas:
+        cuerpo["citations"] = [_cita_del_contrato(c) for c in bloque.citas]
     return cuerpo
+
+
+def _cita_del_contrato(cita: CitaDelBloque) -> dict[str, Any]:
+    return {
+        "chunkId": cita.chunk_id,
+        "documentId": cita.document_id,
+        "sourceTitle": cita.titulo_de_la_fuente,
+        "chunkOrdinal": cita.ordinal,
+        "chunkCount": cita.cantidad,
+        "chunkTextSnapshot": cita.texto_del_chunk,
+    }
+
+
+def consulta_de_evidencia(solicitud: ChatTurnRequest, max_options: int) -> RagQueryInternalRequest:
+    """La petición de ``/rag/query`` equivalente al turno de evidencia: misma pregunta enmascarada, contexto desidentificado
+    y clasificación de datos. El chat no tiene filtros ni fuentes elegidas: todas las fuentes y sin filtro de antigüedad
+    (``publishedFromYear = null``, toda la evidencia del corpus vigente)."""
+    return RagQueryInternalRequest(
+        traceId=solicitud.traceId,
+        query=solicitud.question,
+        sourcesSelected=SourcesSelected(guias=True, ensayos=True, publicaciones=True),
+        dataClassification=solicitud.dataClassification,
+        catalogVersion=solicitud.catalogVersion,
+        maxOptions=max_options,
+        filtersApplied=RagFiltersApplied(
+            historiaCompleta=False,
+            soloBiomarcadoresRelevantes=False,
+            ultimosSeisMeses=False,
+            antecedentesFamiliares=False,
+            publishedFromYear=None,
+        ),
+        clinicalContext=solicitud.clinicalContext,
+    )

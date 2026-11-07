@@ -1,0 +1,41 @@
+{
+  "id": "e3b2c4d5-6f7a-4b8c-8d9e-1f2a3b4c5d6e",
+  "turnNumber": 2,
+  "createdAt": "2026-11-06T15:06:30.000Z",
+  "question": "¿En qué se diferencia la población del estudio de mi paciente?",
+  "intent": "evidencia",
+  "status": "respondido",
+  "topRelevanceScore": 0.8,
+  "blocks": [
+    {
+      "kind": "evidencia",
+      "text": "La fuente reporta que El estudio describe terapia endocrina adyuvante en tumores con receptor de estrógeno positivo.",
+      "citations": [
+        {
+          "chunkId": "ch-m1-1",
+          "documentId": "doc-m1",
+          "sourceTitle": "Breast Cancer Treatment (test)",
+          "chunkOrdinal": 1,
+          "chunkCount": 1,
+          "chunkTextSnapshot": "Adding anti-HER2 therapy to adjuvant chemotherapy improved disease-free survival in HER2-positive early breast cancer."
+        }
+      ]
+    }
+  ],
+  "dataLinks": [],
+  "omittedClaims": 0,
+  "analysisId": "b3d9f2a0-1c3e-4f9a-8b1a-9e2f0c3d9f2a",
+  "notices": [
+    "Generado por IA; requiere validación clínica independiente por el oncólogo tratante",
+    "Uso académico/investigación"
+  ],
+  "dataUsed": [
+    "Diagnóstico",
+    "Biomarcador"
+  ],
+  "dataMissing": [
+    "Estado menopáusico",
+    "Ki-67",
+    "HER2"
+  ]
+}

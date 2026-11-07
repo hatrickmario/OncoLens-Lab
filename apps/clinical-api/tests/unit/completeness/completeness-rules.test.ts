@@ -42,6 +42,7 @@ function item(clave: string, resto: Partial<ItemDeDatoCritico> = {}): ItemDeDato
     cancerType: 'mama',
     destination: { entity: 'PriorTreatment' },
     minValues: 1,
+    sourceDocumentTypes: ['examen'],
     ...resto,
   };
 }

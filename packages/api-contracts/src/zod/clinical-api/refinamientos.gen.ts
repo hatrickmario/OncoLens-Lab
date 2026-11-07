@@ -1,7 +1,7 @@
 // GENERADO desde apps/clinical-api/openapi.yaml — no editar a mano (npm run contracts:generate)
 
 import * as z from 'zod';
-import { zApplicabilityCriterion, zCitedSource, zEvidenceAnalysis, zEvidenceAnalysisRequest, zEvidenceOption, zFollowUpCitedSource, zFollowUpTurn, zPatientSearchRequest, zSourceApplicability, zSupportedClaim, zSynthesis } from './zod.gen.js';
+import { zApplicabilityCriterion, zCitedSource, zConversation, zConversationTurn, zEvidenceAnalysis, zEvidenceAnalysisRequest, zEvidenceOption, zFollowUpCitedSource, zFollowUpTurn, zPatientSearchRequest, zSourceApplicability, zSupportedClaim, zSynthesis } from './zod.gen.js';
 
 type Ruta = readonly PropertyKey[];
 type Contexto = { addIssue(incidencia: { code: 'custom'; message: string; path?: PropertyKey[] }): void };
@@ -37,6 +37,28 @@ function verificarCitedSource(valor: unknown, ctx: Contexto, ruta: Ruta): void {
     const objeto0 = valor;
     const permitidas = new Set<string>(["authors","chunkId","chunkTextSnapshot","externalId","guidelineVersion","language","lastUpdatedAt","licenseClass","newerVersionAvailable","possiblyOutdated","primaryEndpoint","publishedAt","sampleSize","sourceName","sourceType","sourceUrl","studyDesign","title","trialPhase"]);
     for (const clave of Object.keys(objeto0)) if (!permitidas.has(clave)) ctx.addIssue({ code: 'custom', path: [...ruta, nombreDeCampo(clave)], message: "CitedSource: propiedad no evaluada por el schema" });
+  }
+}
+function verificarConversation(valor: unknown, ctx: Contexto, ruta: Ruta): void {
+  if (esObjeto(valor)) {
+    const objeto0 = valor;
+    if (tiene(objeto0, "turns")) {
+      const hijo0 = objeto0["turns"];
+      if (Array.isArray(hijo0)) {
+        hijo0.forEach((elemento1: unknown, indice1: number) => {
+          verificarConversationTurn(elemento1, ctx, [...[...ruta, "turns"], indice1]);
+        });
+      }
+    }
+  }
+}
+function verificarConversationTurn(valor: unknown, ctx: Contexto, ruta: Ruta): void {
+  if (esObjeto(valor)) {
+    const objeto0 = valor;
+    if (tiene(objeto0, "evidenceAnalysis")) {
+      const hijo0 = objeto0["evidenceAnalysis"];
+      verificarEvidenceAnalysis(hijo0, ctx, [...ruta, "evidenceAnalysis"]);
+    }
   }
 }
 function verificarEvidenceAnalysis(valor: unknown, ctx: Contexto, ruta: Ruta): void {
@@ -191,6 +213,8 @@ function verificarSynthesis(valor: unknown, ctx: Contexto, ruta: Ruta): void {
 }
 export const zApplicabilityCriterionRefinado = z.unknown().superRefine((valor, ctx) => verificarApplicabilityCriterion(valor, ctx, [])).pipe(zApplicabilityCriterion);
 export const zCitedSourceRefinado = z.unknown().superRefine((valor, ctx) => verificarCitedSource(valor, ctx, [])).pipe(zCitedSource);
+export const zConversationRefinado = z.unknown().superRefine((valor, ctx) => verificarConversation(valor, ctx, [])).pipe(zConversation);
+export const zConversationTurnRefinado = z.unknown().superRefine((valor, ctx) => verificarConversationTurn(valor, ctx, [])).pipe(zConversationTurn);
 export const zEvidenceAnalysisRefinado = z.unknown().superRefine((valor, ctx) => verificarEvidenceAnalysis(valor, ctx, [])).pipe(zEvidenceAnalysis);
 export const zEvidenceAnalysisRequestRefinado = z.unknown().superRefine((valor, ctx) => verificarEvidenceAnalysisRequest(valor, ctx, [])).pipe(zEvidenceAnalysisRequest);
 export const zEvidenceOptionRefinado = z.unknown().superRefine((valor, ctx) => verificarEvidenceOption(valor, ctx, [])).pipe(zEvidenceOption);

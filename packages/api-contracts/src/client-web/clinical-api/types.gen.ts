@@ -601,6 +601,10 @@ export type CompletenessItem = {
     label: string;
     status: 'presente_verificado' | 'presente_sin_verificar' | 'faltante' | 'no_aplica';
     /**
+     * Tipo de vacío (US-263), segundo eje sobre status: no cambia el status. null si el ítem no tiene vacío (presente_verificado sin conflicto pendiente, o no_aplica). por_conciliar puede acompañar a presente_verificado cuando hay un conflicto pendiente (RN-08). por_conciliar: hay un registro vigente en requiere_revision con conflicts_with_id en el destino del ítem (también con un dato verificado). incompleto: presente_sin_verificar sin conflicto vigente, o faltante con menos registros vigentes que minValues (al menos uno). no_encontrado: sin registros y el paciente tiene un documento procesado (ocr_status = completado) de alguno de los tipos fuente del catálogo. no_buscado: sin registros y ningún documento procesado de esos tipos. Prioridad: por_conciliar > incompleto > no_buscado > no_encontrado.
+     */
+    gapType: 'no_encontrado' | 'incompleto' | 'por_conciliar' | 'no_buscado' | null;
+    /**
      * regla si status es faltante o no_aplica; si no, sale del entryMethod del registro que cuenta.
      */
     origin: 'documento' | 'manual' | 'correccion' | 'seed' | 'regla';
@@ -1061,7 +1065,14 @@ export type ConversationTurn = {
     blocks: Array<ChatBlock>;
     dataLinks: Array<ConversationDataLink>;
     omittedClaims: number;
+    /**
+     * Análisis registrado de la conversación. El turno de evidencia lo crea; el turno de seguimiento referencia el activo sin crear otro registro.
+     */
     analysisId?: string;
+    /**
+     * Análisis de evidencia que creó este turno, construido desde lo persistido (RN-06). Solo el turno de evidencia lo trae; el de seguimiento, no.
+     */
+    evidenceAnalysis?: EvidenceAnalysis;
     /**
      * Avisos de IA (RN-19) tal como los devolvió Backend 2; vacío en los mensajes del sistema.
      */
@@ -2545,7 +2556,7 @@ export type GetConversationError = GetConversationErrors[keyof GetConversationEr
 
 export type GetConversationResponses = {
     /**
-     * La conversación con sus turnos en orden de turnNumber.
+     * La conversación con sus turnos en orden de turnNumber. `evidenceAnalysis` solo va en el turno que creó el análisis; los turnos de seguimiento lo referencian por `analysisId` sin repetirlo.
      */
     200: Conversation;
 };

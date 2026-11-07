@@ -8,6 +8,7 @@ import {
   OPERADORES_DE_CONDICION,
   type CatalogoDeDatosCriticos,
   type CompletenessEnLote,
+  type CompletenessConTiposDeVacio,
   type CompletenessService,
   type DatosCriticosDeUnTipo,
 } from './ports.js';
@@ -46,6 +47,7 @@ const esquemaDeDatosCriticos = z.object({
         .array(z.object({ entity: z.string(), attribute_key: z.string(), value: z.string() }))
         .optional(),
       minValues: z.number().int().min(1),
+      sourceDocumentTypes: z.array(z.enum(['historia_clinica', 'examen'])).min(1),
     }),
   ),
 });
@@ -71,7 +73,7 @@ export function cargarCatalogoDeDatosCriticos(
 
 export function componerCompletitud(
   dependencias: DependenciasDelModulo,
-): CompletenessService & CompletenessEnLote {
+): CompletenessService & CompletenessEnLote & CompletenessConTiposDeVacio {
   return createCompletenessService({
     registros: createCompletenessRepository(dependencias.db),
     catalogo: cargarCatalogoDeDatosCriticos(dependencias.rutaDelCatalogo, dependencias.leerArchivo),
