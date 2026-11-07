@@ -7,9 +7,7 @@ import {
 import { normalizarPregunta } from '../../../../packages/clinical-language/src/normalizar-pregunta';
 
 export type ResultadoDeApertura =
-  | { tipo: 'ok'; conversationId: string }
-  | { tipo: 'sin_sesion' }
-  | { tipo: 'error' };
+  { tipo: 'ok'; conversationId: string } | { tipo: 'sin_sesion' } | { tipo: 'error' };
 
 export type ResultadoDeTurno =
   | { tipo: 'ok'; turno: ConversationTurn }
@@ -77,13 +75,17 @@ export async function enviarTurno(
     }),
   );
   if (respuesta?.status === 401) return { tipo: 'sin_sesion' };
-  if (respuesta?.status === 403) return (await esOptOut(respuesta)) ? { tipo: 'opt_out' } : { tipo: 'error' };
+  if (respuesta?.status === 403)
+    return (await esOptOut(respuesta)) ? { tipo: 'opt_out' } : { tipo: 'error' };
   if (!respuesta?.ok) return { tipo: 'error' };
   const turno: unknown = await respuesta.json().catch(() => null);
   if (!esTurno(turno)) return { tipo: 'error' };
   // El análisis de un turno de evidencia sí se valida con el schema del contrato: un valor fuera del enum no se pinta
   // a medias (sin resultado parcial, RN-06); el resto del turno se lee con tolerancia.
-  if (turno.evidenceAnalysis !== undefined && !zEvidenceAnalysis.safeParse(turno.evidenceAnalysis).success) {
+  if (
+    turno.evidenceAnalysis !== undefined &&
+    !zEvidenceAnalysis.safeParse(turno.evidenceAnalysis).success
+  ) {
     return { tipo: 'error' };
   }
   return { tipo: 'ok', turno };

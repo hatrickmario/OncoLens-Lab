@@ -11,7 +11,8 @@ const PREGUNTAS = [
   '¿Qué opciones adyuvantes describe la evidencia para cáncer de mama HER2 positivo en estadio IIA?',
 ];
 
-const esPostDeTurno = (r: Request) => r.method() === 'POST' && /\/api\/conversations\/[^/]+\/turns$/.test(r.url());
+const esPostDeTurno = (r: Request) =>
+  r.method() === 'POST' && /\/api\/conversations\/[^/]+\/turns$/.test(r.url());
 
 async function preguntar(page: Page, texto: string) {
   const respuesta = page.waitForResponse((r) => esPostDeTurno(r.request()));
@@ -35,7 +36,12 @@ test.describe('Panel conversacional (L1D-324)', () => {
     await expect(tarjetas.nth(0)).toContainText(conversacion.intenciones.caso);
     await expect(tarjetas.nth(1)).toContainText(conversacion.intenciones.faltantes);
     await expect(tarjetas.nth(2)).toContainText(conversacion.intenciones.evidencia);
-    await expect(tarjetas.nth(0).getByRole('link', { name: /Ver en el caso/ }).first()).toBeVisible();
+    await expect(
+      tarjetas
+        .nth(0)
+        .getByRole('link', { name: /Ver en el caso/ })
+        .first(),
+    ).toBeVisible();
     await expect(tarjetas.nth(2)).toContainText('[E1]');
     expect(new Set(turnos.map((r) => new URL(r.url()).pathname)).size).toBe(1);
   });
@@ -54,7 +60,9 @@ test.describe('Panel conversacional (L1D-324)', () => {
     const deConversacion = urls.filter((u) => /\/conversations/.test(u));
     expect(deConversacion.length).toBeGreaterThan(0);
     expect(
-      deConversacion.every((u) => /^\/api\/(patients\/[^/]+\/conversations|conversations\/)/.test(new URL(u).pathname)),
+      deConversacion.every((u) =>
+        /^\/api\/(patients\/[^/]+\/conversations|conversations\/)/.test(new URL(u).pathname),
+      ),
     ).toBe(true);
     for (const pregunta of PREGUNTAS) {
       expect(urls.some((u) => decodeURIComponent(u).includes(pregunta.slice(0, 20)))).toBe(false);

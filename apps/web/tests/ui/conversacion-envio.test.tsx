@@ -42,7 +42,9 @@ describe('Envío de una pregunta', () => {
 
     const estado = await screen.findByRole('status');
     expect(estado.textContent).toContain(textos.analizando);
-    expect((screen.getByRole('button', { name: textos.preguntar }) as HTMLButtonElement).disabled).toBe(true);
+    expect(
+      (screen.getByRole('button', { name: textos.preguntar }) as HTMLButtonElement).disabled,
+    ).toBe(true);
     expect(screen.queryByText(TEXTO_DEL_ASISTENTE, { exact: false })).toBeNull();
     expect(screen.getByText('¿Cuál es la situación actual de la paciente?')).toBeTruthy();
 
@@ -127,7 +129,9 @@ describe('Envío de una pregunta', () => {
     await usuario.click(screen.getByRole('button', { name: textos.preguntar }));
 
     expect((screen.getByLabelText(textos.campo) as HTMLTextAreaElement).disabled).toBe(true);
-    expect((screen.getByRole('button', { name: textos.preguntar }) as HTMLButtonElement).disabled).toBe(true);
+    expect(
+      (screen.getByRole('button', { name: textos.preguntar }) as HTMLButtonElement).disabled,
+    ).toBe(true);
     expect(bff.aperturas).toHaveLength(0);
     expect(bff.turnos).toHaveLength(0);
   });
@@ -144,7 +148,9 @@ describe('Envío de una pregunta', () => {
     await waitFor(() =>
       expect((screen.getByLabelText(textos.campo) as HTMLTextAreaElement).disabled).toBe(true),
     );
-    expect((screen.getByRole('button', { name: textos.preguntar }) as HTMLButtonElement).disabled).toBe(true);
+    expect(
+      (screen.getByRole('button', { name: textos.preguntar }) as HTMLButtonElement).disabled,
+    ).toBe(true);
     expect(tarjetas()).toHaveLength(1);
     expect(document.body.textContent).not.toMatch(/403|OPT_OUT/);
   });

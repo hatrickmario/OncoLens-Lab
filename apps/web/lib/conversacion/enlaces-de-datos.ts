@@ -34,7 +34,9 @@ export function enlacesDelBloque(
   });
   return [...new Map(resueltos.map((e) => [e.factRef, e])).values()].map((e) => ({
     clave: e.factRef,
-    etiqueta: e.recordedDate ? `${datos[e.resourceType]} · ${e.recordedDate}` : datos[e.resourceType],
+    etiqueta: e.recordedDate
+      ? `${datos[e.resourceType]} · ${e.recordedDate}`
+      : datos[e.resourceType],
     href: rutaDelDato(patientId, e.resourceType),
   }));
 }

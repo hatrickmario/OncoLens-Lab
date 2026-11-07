@@ -65,8 +65,12 @@ describe('Bloques del turno', () => {
       'Turno 2',
       'Turno 3',
     ]);
-    expect(within(lista[0]!).getAllByRole('link', { name: /Ver en el caso/ }).length).toBeGreaterThan(0);
-    expect(within(lista[1]!).getAllByRole('link', { name: /Ver en el caso/ }).length).toBeGreaterThan(0);
+    expect(
+      within(lista[0]!).getAllByRole('link', { name: /Ver en el caso/ }).length,
+    ).toBeGreaterThan(0);
+    expect(
+      within(lista[1]!).getAllByRole('link', { name: /Ver en el caso/ }).length,
+    ).toBeGreaterThan(0);
     expect(within(lista[2]!).getAllByText(/\[E1\]/).length).toBeGreaterThan(0);
     const conversaciones = new Set(bff.turnos.map((t) => new URL(t.url).pathname));
     expect(conversaciones.size).toBe(1);
@@ -146,7 +150,9 @@ describe('Bloques del turno', () => {
 
     expect(screen.queryByText('Preguntas de seguimiento sobre este análisis')).toBeNull();
     expect(screen.queryByText(/de 10 preguntas usadas/)).toBeNull();
-    expect(screen.getByRole('heading', { name: 'Opciones descritas en la evidencia' })).toBeTruthy();
+    expect(
+      screen.getByRole('heading', { name: 'Opciones descritas en la evidencia' }),
+    ).toBeTruthy();
     expect(bff.seguimientos).toEqual([]);
   });
 });

@@ -8,8 +8,7 @@ import { abrirConversacion, enviarTurno, type ResultadoDeTurno } from './solicit
 export type FaseDeLaConversacion = 'inactivo' | 'enviando' | 'error' | 'bloqueado';
 
 export type ElementoDelHilo =
-  | { tipo: 'pregunta'; id: string; texto: string }
-  | { tipo: 'turno'; turno: ConversationTurn };
+  { tipo: 'pregunta'; id: string; texto: string } | { tipo: 'turno'; turno: ConversationTurn };
 
 export interface ConversacionEnCurso {
   elementos: readonly ElementoDelHilo[];
@@ -60,7 +59,9 @@ export function useConversacion(
     if (resultado.tipo === 'ok') {
       setElementos((previos) => [...previos, { tipo: 'turno', turno: resultado.turno }]);
     }
-    setFase(resultado.tipo === 'ok' ? 'inactivo' : resultado.tipo === 'opt_out' ? 'bloqueado' : 'error');
+    setFase(
+      resultado.tipo === 'ok' ? 'inactivo' : resultado.tipo === 'opt_out' ? 'bloqueado' : 'error',
+    );
   }
 
   return {

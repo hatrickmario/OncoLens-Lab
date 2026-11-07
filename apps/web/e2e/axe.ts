@@ -2,7 +2,10 @@ import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import type { Page } from '@playwright/test';
 
-const fuenteDeAxe = readFileSync(createRequire(import.meta.url).resolve('axe-core/axe.min.js'), 'utf8');
+const fuenteDeAxe = readFileSync(
+  createRequire(import.meta.url).resolve('axe-core/axe.min.js'),
+  'utf8',
+);
 
 interface ResultadoDeAxe {
   violations: { id: string; impact: string | null }[];
@@ -15,7 +18,9 @@ interface ResultadoDeAxe {
 export async function violacionesGraves(page: Page): Promise<string[]> {
   await page.evaluate(fuenteDeAxe);
   const resultado = await page.evaluate(async (): Promise<ResultadoDeAxe> => {
-    const axe = (window as unknown as { axe: { run: (c: Document, o: object) => Promise<ResultadoDeAxe> } }).axe;
+    const axe = (
+      window as unknown as { axe: { run: (c: Document, o: object) => Promise<ResultadoDeAxe> } }
+    ).axe;
     return axe.run(document, {
       runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] },
     });

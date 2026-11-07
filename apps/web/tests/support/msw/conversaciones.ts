@@ -89,7 +89,10 @@ export function crearBffConversacionSimulado() {
       let siguiente = 0;
       servidor.use(
         http.post('*/api/conversations/:id/turns', async ({ request }) => {
-          turnos.push({ url: request.url, cuerpo: (await request.json()) as Record<string, unknown> });
+          turnos.push({
+            url: request.url,
+            cuerpo: (await request.json()) as Record<string, unknown>,
+          });
           const { status, cuerpo, compuerta, red } =
             respuestas[Math.min(siguiente++, respuestas.length - 1)]!;
           await compuerta;

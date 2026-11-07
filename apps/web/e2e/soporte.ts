@@ -223,7 +223,12 @@ export async function pasoSeguimiento(
     timeout: plazoDeGeneracion,
   });
   // Cada cita es un elemento de lista con su fuente y fragmento; el gate no pasa con un turno sin avisos de IA (RN-19).
-  await expect(turno.getByRole('listitem').filter({ has: page.locator('summary') }).first()).toBeVisible();
+  await expect(
+    turno
+      .getByRole('listitem')
+      .filter({ has: page.locator('summary') })
+      .first(),
+  ).toBeVisible();
   const avisos = turno.getByRole('region', { name: es.conversacion.avisosTitulo });
   await expect(avisos.getByRole('listitem')).not.toHaveCount(0);
   await expect(page.getByRole('banner').getByText(es.app.academicUseLabel)).toBeVisible();

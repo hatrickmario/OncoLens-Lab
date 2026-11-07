@@ -18,7 +18,9 @@ const menorOIgual = (a: string, b: string) => compararVersiones(a, b) <= 0;
 
 describe('catálogo importado por las preguntas guiadas [US-267 AC-8]', () => {
   it('declara la versión del manifest de packages/clinical-catalogs', () => {
-    const manifest = JSON.parse(leer('packages/clinical-catalogs/manifest.json')) as { version: string };
+    const manifest = JSON.parse(leer('packages/clinical-catalogs/manifest.json')) as {
+      version: string;
+    };
 
     expect(VERSION_DEL_CATALOGO_GUIADAS).toBe(manifest.version);
   });

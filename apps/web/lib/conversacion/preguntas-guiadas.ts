@@ -45,16 +45,25 @@ const textoDe = (valor: unknown): string | undefined =>
 const listaDe = (valor: unknown): readonly string[] =>
   Array.isArray(valor) ? valor.filter((v): v is string => typeof v === 'string') : [];
 
-const delTipo = (sistema: Entrada, tipo: string): boolean => listaDe(sistema.tiposDeCancer).includes(tipo);
+const delTipo = (sistema: Entrada, tipo: string): boolean =>
+  listaDe(sistema.tiposDeCancer).includes(tipo);
 
-function etiquetaDe(catalogos: CatalogosDeLasPreguntas, tipo: string, canonico: string): string | undefined {
+function etiquetaDe(
+  catalogos: CatalogosDeLasPreguntas,
+  tipo: string,
+  canonico: string,
+): string | undefined {
   const entrada = catalogos.codigos[tipo]?.entradas.find(
     (e) => normalizar(String(e.terminoCanonico ?? '')) === normalizar(canonico),
   );
   return textoDe(entrada?.etiquetaEs);
 }
 
-function estadioDe(resumen: ResumenParaPreguntas, tipo: string, catalogos: CatalogosDeLasPreguntas) {
+function estadioDe(
+  resumen: ResumenParaPreguntas,
+  tipo: string,
+  catalogos: CatalogosDeLasPreguntas,
+) {
   const { stagingSystem, stageValue } = resumen.diagnosis ?? {};
   const sistema = catalogos.escalas.sistemasDeEstadificacion.find(
     (s) => delTipo(s, tipo) && normalizar(String(s.codigo)) === normalizar(stagingSystem ?? ''),
@@ -73,22 +82,34 @@ function gradoDe(resumen: ResumenParaPreguntas, tipo: string, catalogos: Catalog
 }
 
 /** El primer biomarcador de `datos-criticos` (en su orden) que el caso trae: su etiqueta y, solo si es del catálogo, su valor. */
-function biomarcadorDe(resumen: ResumenParaPreguntas, tipo: string, catalogos: CatalogosDeLasPreguntas) {
+function biomarcadorDe(
+  resumen: ResumenParaPreguntas,
+  tipo: string,
+  catalogos: CatalogosDeLasPreguntas,
+) {
   const delCaso = new Map(resumen.recentBiomarkers.map((b) => [normalizar(b.name), b.value]));
   for (const item of catalogos.datosCriticos[tipo]?.items ?? []) {
-    const nombre = textoDe(((item.destination as Entrada | undefined)?.match as Entrada | undefined)?.name);
+    const nombre = textoDe(
+      ((item.destination as Entrada | undefined)?.match as Entrada | undefined)?.name,
+    );
     if (nombre === undefined || !delCaso.has(normalizar(nombre))) continue;
     const valores = catalogos.escalas.valoresDeBiomarcador.find(
       (b) => delTipo(b, tipo) && normalizar(String(b.nombre)) === normalizar(nombre),
     );
-    const valor = listaDe(valores?.valores).find((v) => normalizar(v) === normalizar(String(delCaso.get(normalizar(nombre)))));
+    const valor = listaDe(valores?.valores).find(
+      (v) => normalizar(v) === normalizar(String(delCaso.get(normalizar(nombre)))),
+    );
     const etiqueta = etiquetaDe(catalogos, tipo, nombre) ?? nombre;
     return valor === undefined ? etiqueta : `${etiqueta} ${valor}`;
   }
   return undefined;
 }
 
-function ranurasDelCaso(resumen: ResumenParaPreguntas, tipo: string, catalogos: CatalogosDeLasPreguntas): Ranuras {
+function ranurasDelCaso(
+  resumen: ResumenParaPreguntas,
+  tipo: string,
+  catalogos: CatalogosDeLasPreguntas,
+): Ranuras {
   return {
     tipo: etiquetaDe(catalogos, tipo, tipo),
     estadio: estadioDe(resumen, tipo, catalogos),
@@ -114,10 +135,8 @@ export function armarPreguntasGuiadas(
   if (!tipo || !Object.hasOwn(catalogos.plantillas, tipo)) return [];
   const ranuras = ranurasDelCaso(resumen, tipo, catalogos);
   if (ranuras.tipo === undefined) return [];
-  return catalogos.plantillas[tipo]!.items
-    .flatMap((item) => {
-      const variante = item.variantes.find((v) => v.ranuras.every((r) => ranuras[r] !== undefined));
-      return variante ? [rellenar(variante.texto, ranuras)] : [];
-    })
-    .slice(0, MAXIMO_DE_PREGUNTAS);
+  return catalogos.plantillas[tipo]!.items.flatMap((item) => {
+    const variante = item.variantes.find((v) => v.ranuras.every((r) => ranuras[r] !== undefined));
+    return variante ? [rellenar(variante.texto, ranuras)] : [];
+  }).slice(0, MAXIMO_DE_PREGUNTAS);
 }

@@ -9,7 +9,8 @@ export interface ConversationDataLineProps {
 export function ConversationDataLine({ usados, ausentes }: ConversationDataLineProps) {
   if (usados.length === 0 && ausentes.length === 0) return null;
   const { datosUsados, datosAusentes, ninguno } = mensajes().conversacion;
-  const lista = (etiquetas: readonly string[]) => (etiquetas.length > 0 ? etiquetas.join(', ') : ninguno);
+  const lista = (etiquetas: readonly string[]) =>
+    etiquetas.length > 0 ? etiquetas.join(', ') : ninguno;
   return (
     <p className="text-text-muted m-0 mt-2 text-sm">
       ◆ {datosUsados}: {lista(usados)} · {datosAusentes}: {lista(ausentes)}

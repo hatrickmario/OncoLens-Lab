@@ -91,7 +91,13 @@ export function leerCatalogo(directorio, leerArchivo) {
     ({ clave }) => Array.isArray(manifest?.[clave]),
   );
   const terminos = declaraPlantillas
-    ? { 'terminos-prohibidos': leerJson(directorio, `${ARCHIVO_DE_TERMINOS_PROHIBIDOS}.json`, leerArchivo) }
+    ? {
+        'terminos-prohibidos': leerJson(
+          directorio,
+          `${ARCHIVO_DE_TERMINOS_PROHIBIDOS}.json`,
+          leerArchivo,
+        ),
+      }
     : {};
   return { manifest, ...deLaRaiz, ...declaradosDeLaRaiz, ...terminos, tipos };
 }

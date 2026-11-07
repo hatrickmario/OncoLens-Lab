@@ -62,7 +62,9 @@ describe('Preguntas guiadas', () => {
     const botones = botonesGuiados();
     expect(botones.length).toBeGreaterThanOrEqual(3);
     expect(botones.length).toBeLessThanOrEqual(4);
-    const deEvidencia = botones.find((b) => /^¿Qué evidencia hay para Cáncer de mama\?$/.test(b.textContent!));
+    const deEvidencia = botones.find((b) =>
+      /^¿Qué evidencia hay para Cáncer de mama\?$/.test(b.textContent!),
+    );
     expect(deEvidencia).toBeTruthy();
 
     await usuario.click(deEvidencia!);
@@ -81,7 +83,7 @@ describe('Preguntas guiadas', () => {
     bff.responderTurnos(respuestaDeTurno(turnoDeCaso), respuestaDeTurno(turnoCon({}, {}, 2)));
     const usuario = userEvent.setup();
     await abrirPagina();
-    await preguntar(usuario, "Primera");
+    await preguntar(usuario, 'Primera');
     await buscarTarjetas();
     await preguntar(usuario, 'Segunda');
     await waitFor(() => expect(cuantasTarjetas()).toBe(2));
@@ -98,7 +100,10 @@ describe('Preguntas guiadas', () => {
     const pagina = await abrirPagina();
 
     const serializada = JSON.stringify(pagina);
-    for (const ajeno of [fichaDelDoctor.identification.fullName, fichaDelDoctor.identification.nationalId]) {
+    for (const ajeno of [
+      fichaDelDoctor.identification.fullName,
+      fichaDelDoctor.identification.nationalId,
+    ]) {
       expect(serializada).not.toContain(ajeno);
     }
     expect(serializada).not.toContain('recentBiomarkers');
@@ -117,9 +122,11 @@ describe('Preguntas guiadas', () => {
       await abrirPagina();
 
       expect(screen.queryByRole('group', { name: textos.guiadasTitulo })).toBeNull();
-      await userEvent.setup().type(screen.getByLabelText(textos.campo), "Una pregunta");
+      await userEvent.setup().type(screen.getByLabelText(textos.campo), 'Una pregunta');
       expect((screen.getByLabelText(textos.campo) as HTMLTextAreaElement).disabled).toBe(false);
-      expect((screen.getByRole("button", { name: textos.preguntar }) as HTMLButtonElement).disabled).toBe(false);
+      expect(
+        (screen.getByRole('button', { name: textos.preguntar }) as HTMLButtonElement).disabled,
+      ).toBe(false);
       cleanup();
     }
   });
@@ -139,7 +146,9 @@ describe('Preguntas guiadas', () => {
   it('deshabilita los botones cuando el turno responde opt-out [US-267 RN-15]', async () => {
     bff.responderTurnos({ status: 403, cuerpo: errorOptOut });
     const usuario = userEvent.setup();
-    montarPanel({ preguntasGuiadas: ['Pregunta guiada A', 'Pregunta guiada B', 'Pregunta guiada C'] });
+    montarPanel({
+      preguntasGuiadas: ['Pregunta guiada A', 'Pregunta guiada B', 'Pregunta guiada C'],
+    });
 
     await usuario.click(screen.getByRole('button', { name: 'Pregunta guiada A' }));
 

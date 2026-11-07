@@ -40,7 +40,11 @@ export interface ConversationThreadProps extends ContextoDelTurno {
 }
 
 /** Hilo del chat: `role="log"` con `aria-live="polite"`, la pregunta del oncólogo y la tarjeta de cada turno en orden. */
-export function ConversationThread({ patientId, onVerFragmento, children }: ConversationThreadProps) {
+export function ConversationThread({
+  patientId,
+  onVerFragmento,
+  children,
+}: ConversationThreadProps) {
   const { hilo, preguntaDelOncologo } = mensajes().conversacion;
   return (
     <ContextoDelHilo.Provider value={{ patientId, onVerFragmento }}>
@@ -52,7 +56,9 @@ export function ConversationThread({ patientId, onVerFragmento, children }: Conv
                 {message.role === 'user' ? (
                   <p className="bg-surface-alt rounded-tarjeta mt-3 mb-0 ml-auto max-w-[85%] p-2">
                     <span className="sr-only">{preguntaDelOncologo}: </span>
-                    {message.content.map((parte) => (parte.type === 'text' ? parte.text : '')).join('')}
+                    {message.content
+                      .map((parte) => (parte.type === 'text' ? parte.text : ''))
+                      .join('')}
                   </p>
                 ) : (
                   <MessagePrimitive.Parts components={COMPONENTES} />

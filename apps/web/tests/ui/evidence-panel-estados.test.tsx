@@ -64,5 +64,4 @@ describe('EvidencePanel · estados mínimos del S1', () => {
     await waitFor(() => expect(replace).toHaveBeenCalledWith('/login?motivo=expirada'));
     esperarSinResultadoParcial();
   });
-
 });

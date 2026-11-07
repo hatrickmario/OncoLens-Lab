@@ -46,7 +46,9 @@ describe('armarPreguntasGuiadas', () => {
     const preguntas = armar(casoDelFixture('prostata-con-grado'));
 
     expect(preguntas).toHaveLength(4);
-    expect(preguntas[0]).toBe('¿Cuál es la situación actual de este paciente con Cáncer de próstata?');
+    expect(preguntas[0]).toBe(
+      '¿Cuál es la situación actual de este paciente con Cáncer de próstata?',
+    );
     expect(preguntas[3]).toBe(
       '¿Qué evidencia hay para Cáncer de próstata en estadio IIB con grado ISUP 3?',
     );

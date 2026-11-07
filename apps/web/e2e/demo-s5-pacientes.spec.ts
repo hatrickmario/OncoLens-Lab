@@ -105,9 +105,7 @@ test.describe('Pacientes de la demo del S5 (L1D-310)', () => {
     test(`devuelve los conteos de applicabilitySummary de la guía y la marca de no comparable para ${nombre} [US-254 AC-4]`, async ({
       page,
     }) => {
-      const respuesta = page.waitForResponse(
-        esRespuestaDeTurno,
-      );
+      const respuesta = page.waitForResponse(esRespuestaDeTurno);
       await iniciarSesion(page);
       await page.goto(`/pacientes/${IDS_SEMILLA_S5[paciente.ejemplo]}/analisis`);
       await preguntarEnElChat(page, preguntaDe(paciente.ejemplo));

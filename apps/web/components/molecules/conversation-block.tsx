@@ -34,10 +34,7 @@ export function ConversationBlock({ bloque, children }: ConversationBlockProps) 
   const grupo = grupoDelBloque(bloque.kind);
   const rotulo = mensajes().conversacion.rotulos[grupo];
   return (
-    <section
-      data-grupo={grupo}
-      className={`rounded-tarjeta mt-2 border-l-4 p-3 ${ESTILOS[grupo]}`}
-    >
+    <section data-grupo={grupo} className={`rounded-tarjeta mt-2 border-l-4 p-3 ${ESTILOS[grupo]}`}>
       <p className={`m-0 text-sm font-semibold ${COLOR_DEL_ROTULO[grupo]}`}>{rotulo}</p>
       <MarkdownSeguro texto={bloque.text} />
       {children}

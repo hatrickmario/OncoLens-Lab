@@ -8,12 +8,7 @@ import {
   conEvidenciaSoloDescartadas,
   crearBffAnalisisSimulado,
 } from '../support/msw/evidence-analyses';
-import {
-  analizar,
-  evidence,
-  PREGUNTA_DE_PRUEBA,
-  SIN_BASE,
-} from '../support/panel-ui';
+import { analizar, evidence, PREGUNTA_DE_PRUEBA, SIN_BASE } from '../support/panel-ui';
 
 const { replace } = vi.hoisted(() => ({ replace: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace }) }));
@@ -242,5 +237,4 @@ describe('EvidencePanel', () => {
     expect(screen.queryByRole('heading', { name: evidence.resultado.encabezado })).toBeNull();
     expect(screen.queryByText(evidence.discarded.titulo)).toBeNull();
   });
-
 });

@@ -20,7 +20,11 @@ export interface ConversationTurnCardProps {
  * Tarjeta de un turno del asistente. Los avisos de IA son solo los de `turn.notices[]` (RN-19). Un turno con contenido
  * generado y sin avisos no se pinta como válido: muestra un `role="alert"` sin detalle técnico y ningún bloque.
  */
-export function ConversationTurnCard({ turn, patientId, onVerFragmento }: ConversationTurnCardProps) {
+export function ConversationTurnCard({
+  turn,
+  patientId,
+  onVerFragmento,
+}: ConversationTurnCardProps) {
   const { turno: titulo, sinAvisosTitulo } = mensajes().conversacion;
   return (
     // Grupo y no `article`: las tarjetas de opción del análisis ya son `article` y se anidan en la del turno.
