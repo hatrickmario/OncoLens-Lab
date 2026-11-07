@@ -73,7 +73,7 @@ export const ARCHIVOS_DECLARADOS_POR_EL_MANIFIESTO = {
 /**
  * Archivos que existen solo si el manifiesto lo declara (`escalas: true`, L1D-90; `marcosDePregunta: true`, L1D-329):
  * `clave` es la del manifiesto y el nombre es la ruta relativa al catálogo sin `.json`. `reglas(archivo, manifiesto)`
- * son las propias del archivo (el esquema se comprueba antes). Un catálogo sin la declaración no lo tiene (los
+ * son las propias del archivo: van antes y el esquema entra si ellas callan. Un catálogo sin la declaración no lo tiene (los
  * fixtures anteriores siguen válidos).
  */
 export const ARCHIVOS_DE_RAIZ_DECLARADOS_POR_EL_MANIFIESTO = {
