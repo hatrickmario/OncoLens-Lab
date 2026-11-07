@@ -1,0 +1,25 @@
+# Configuración de la familia `chat` de `evaluate` con adapters FALSOS (US-269 / L1D-326; FX-12-e): la de la CI. No carga
+# modelos, no abre sockets y es reproducible (reloj simulado: misma configuración, mismo reporte, misma huella). El LLM del chat
+# es el guion de cada caso del dataset y el NLI es el léxico de la suite; el grafo, los nodos y los filtros son los de producción.
+#   python -m app.evaluation.chat --config apps/rag-orchestrator/eval/configs/chat-fake.yaml
+# `chat-local.yaml` es su par con los modelos locales (corrida con modelos locales, junto con la nocturna del S6).
+nombre: chat-fake
+fixture: FX-12-e
+dataset:
+  ruta: data/eval/chat-v1
+semilla_bootstrap: 20261021
+bootstrap_repeticiones: 200
+medicion:
+  reloj: simulado # simulado: 1 ms por lectura (reproducible); real: time.perf_counter
+adaptadores:
+  proveedor: fake
+modelos:
+  llm: fake-guion@1
+umbrales:
+  relevance_threshold: 0.30
+  nli_entailment_threshold: 0.7
+  retrieval_top_k: 40
+  rerank_top_n: 10
+catalogo:
+  version: '2026.10.0'
+  ruta_terminos: packages/clinical-catalogs
