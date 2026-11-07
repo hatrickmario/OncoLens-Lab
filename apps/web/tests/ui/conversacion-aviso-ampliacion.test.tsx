@@ -33,7 +33,8 @@ describe('Avisos del turno de evidencia visibles', () => {
     const { tarjeta } = await mostrarTurno(bff, turnoCon(turnoContextual, conOpciones));
 
     const encabezado = within(tarjeta).getByRole('heading', { name: ENCABEZADO });
-    const aviso = within(tarjeta).getByText(AMPLIACION);
+    const regionDeAvisos = within(tarjeta).getByRole('region', { name: textos.avisosTitulo });
+    const aviso = within(regionDeAvisos).getByText(AMPLIACION);
     const primeraOpcion = within(tarjeta).getAllByRole('article')[0]!;
     expect(sigue(encabezado, aviso)).toBe(true);
     expect(sigue(aviso, primeraOpcion)).toBe(true);
@@ -42,7 +43,7 @@ describe('Avisos del turno de evidencia visibles', () => {
       'false',
     );
     for (const recibido of turnoContextual.notices) {
-      expect(within(tarjeta).getAllByText(recibido)).toHaveLength(1);
+      expect(within(regionDeAvisos).getAllByText(recibido)).toHaveLength(1);
     }
   });
 
@@ -55,9 +56,9 @@ describe('Avisos del turno de evidencia visibles', () => {
     const bloques = within(tarjeta)
       .getAllByText(textos.rotulos.alcance)
       .map((rotulo) => rotulo.closest('section')!);
-    const texto = bloques.map((bloque) => bloque.textContent).join(' ');
-    expect(texto).toContain(SIN_OPCIONES);
-    expect(texto).toMatch(/Alcance de la recuperación:/);
+    expect(bloques).toHaveLength(2);
+    expect(within(bloques[0]!).getByText(SIN_OPCIONES, { exact: true })).toBeTruthy();
+    expect(within(bloques[1]!).getByText(/^Alcance de la recuperación:/)).toBeTruthy();
     for (const bloque of bloques) expect(bloque.closest('details')).toBeNull();
     expect(within(tarjeta).queryByRole('heading', { name: ENCABEZADO })).toBeNull();
     expect(within(tarjeta).queryAllByRole('article')).toHaveLength(0);
@@ -87,6 +88,17 @@ describe('Avisos del turno de evidencia visibles', () => {
     expect(within(tarjeta).getByRole('alert').textContent).toContain(textos.sinAvisosTitulo);
     expect(within(tarjeta).queryByRole('heading', { name: ENCABEZADO })).toBeNull();
     expect(within(tarjeta).queryByText(SIN_OPCIONES)).toBeNull();
+  });
+
+  it('no pinta un turno con opciones en el análisis cuando blocks y notices vienen vacíos [US-274 AC-3]', async () => {
+    const { tarjeta } = await mostrarTurno(
+      bff,
+      turnoCon(turnoContextual, { ...conOpciones, blocks: [], notices: [] }),
+    );
+
+    expect(within(tarjeta).getByRole('alert').textContent).toContain(textos.sinAvisosTitulo);
+    expect(within(tarjeta).queryByRole('heading', { name: ENCABEZADO })).toBeNull();
+    expect(within(tarjeta).queryAllByRole('article')).toHaveLength(0);
   });
 
   it('no pinta aviso de ampliación ni recuadro vacío cuando el turno no se amplió [US-274 AC-4]', async () => {
