@@ -22,12 +22,12 @@ const sobreKi67 = (catalogo, cambio) =>
 
 describe('catalog:validate · sourceDocumentTypes de datos-criticos.json (US-263, RN-29)', () => {
   it(
-    'acepta el catálogo real 1.6.0 con sourceDocumentTypes no vacío en todos los ítems de mama y próstata [US-263 AC-1]',
+    'acepta el catálogo real 1.7.0 con sourceDocumentTypes no vacío en todos los ítems de mama y próstata [US-263 AC-1]',
     () => {
       const resultado = ejecutarValidador(CATALOGO);
 
       expect(resultado.codigo).toBe(0);
-      expect(leer('manifest.json').version).toBe('1.6.0');
+      expect(leer('manifest.json').version).toBe('1.7.0');
       for (const tipo of ['mama', 'prostata']) {
         for (const item of leer(tipo, 'datos-criticos.json').items) {
           expect(item.sourceDocumentTypes.length, `${tipo}/${item.key}`).toBeGreaterThan(0);

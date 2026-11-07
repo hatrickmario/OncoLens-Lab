@@ -41,7 +41,7 @@ UN_ITEM_DE_CADA_TIPO = (
 )
 
 
-def _verbalizar(items=UN_ITEM_DE_CADA_TIPO, version="1.6.0"):
+def _verbalizar(items=UN_ITEM_DE_CADA_TIPO, version="1.7.0"):
     return verbalizar_faltantes(items, FUENTES, version)
 
 
@@ -117,10 +117,10 @@ def test_verbalizar_faltantes_omite_los_tipos_de_documento_cuando_el_item_no_est
 def test_verbalizar_faltantes_dice_que_no_faltan_datos_y_nombra_la_version_cuando_ningun_item_tiene_vacio():
     items = (_item("tnm", "Estadificación TNM", "presente_verificado", None),)
 
-    (bloque,) = _verbalizar(items, version="1.6.0")
+    (bloque,) = _verbalizar(items, version="1.7.0")
 
     assert bloque.tipo is TipoDeBloque.limitacion
-    assert bloque.texto == "No faltan datos críticos según el catálogo 1.6.0."
+    assert bloque.texto == "No faltan datos críticos según el catálogo 1.7.0."
 
 
 @pytest.mark.parametrize("indice", range(len(UN_ITEM_DE_CADA_TIPO)))

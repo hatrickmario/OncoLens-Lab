@@ -44,7 +44,7 @@
       "rerankerModel": "reranker-test@1",
       "nliModel": "nli-test@1",
       "promptVersion": "rag-query@0.10.0",
-      "catalogVersion": "1.6.0",
+      "catalogVersion": "1.7.0",
       "corpusRelease": "rel-test-1",
       "corpusCutoffDate": "2026-09-30",
       "excludedSources": [

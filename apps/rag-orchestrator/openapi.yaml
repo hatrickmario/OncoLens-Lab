@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — RAG & AI Services API (Backend 2 / rag-orchestrator)
-  version: 1.14.0
+  version: 1.16.0
   description: >-
     API interna, alcanzable solo desde la red ai-net y solo por clinical-api (JWT de servicio
     asimétrico; la cookie de sesión del doctor nunca llega aquí). No persiste PHI y procesa los
@@ -674,7 +674,8 @@ components:
                 `no_disparado`: el primer loop tuvo chunks sobre el umbral o la reescritura está desactivada;
                 `no_disponible`: primer loop vacío sin reformulación utilizable (LLM caído, deadline vencido, salida
                 inválida o cero términos del catálogo); `no_aplica`: /rag/follow-up, donde el segundo loop nunca corre.
-                La consulta reformulada nunca sale de rag-orchestrator.
+                `no_disparado` incluye además el caso en que el segundo loop fue el contextual sin LLM (ver
+                `contextExpansion`). La consulta reformulada nunca sale de rag-orchestrator.
               properties:
                 applied:
                   type: boolean
@@ -691,6 +692,25 @@ components:
               else:
                 properties:
                   reason: {enum: [no_disparado, no_disponible, no_aplica]}
+            contextExpansion:
+              type: object
+              additionalProperties: false
+              required: [applied, fields]
+              description: >-
+                Segundo loop contextual sin LLM (US-271, ADR-52, RN-02 enmendada). Opcional: ausente equivale a que no
+                corrió (nunca null). `fields` nombra los campos del caso usados (nunca valores). No sustituye a
+                `queryRewrite`, que describe solo la reescritura con LLM.
+              properties:
+                applied:
+                  type: boolean
+                  const: true
+                fields:
+                  type: array
+                  minItems: 1
+                  uniqueItems: true
+                  items:
+                    type: string
+                    enum: [tipo, estadio, biomarcador_principal]
         latencyMs:
           type: integer
           minimum: 0

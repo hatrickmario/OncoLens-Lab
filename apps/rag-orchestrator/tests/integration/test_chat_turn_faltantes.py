@@ -1,7 +1,7 @@
 """`POST /chat/turn` con la intención ``faltantes`` (US-263 / L1D-320): verbalización determinista, sin LLM.
 
 El servicio del turno es el de producción; el LLM, el contador de tokens y el reloj son falsos y cuentan sus
-invocaciones. El catálogo montado es el real 1.6.0 (``sourceDocumentTypes`` por dato crítico). Cada respuesta se valida
+invocaciones. El catálogo montado es el real 1.7.0 (``sourceDocumentTypes`` por dato crítico). Cada respuesta se valida
 contra el spec del proveedor (US-214). Solo datos sintéticos.
 """
 
@@ -93,7 +93,7 @@ def test_chat_turn_faltantes_dice_que_no_faltan_datos_y_nombra_la_version_cuando
     assert [b["kind"] for b in bloques] == ["limitacion"]
     assert "No faltan datos críticos según el catálogo" in bloques[0]["text"]
     assert VERSION_DEL_CATALOGO_MONTADO in bloques[0]["text"]
-    assert "1.6.0" in bloques[0]["text"]
+    assert "1.7.0" in bloques[0]["text"]
     assert bloques == _ejemplo("chat-turn-faltantes-ninguno.json")["blocks"]
     assert entorno.llm.invocaciones == 0
 
@@ -102,7 +102,7 @@ def test_chat_turn_faltantes_dice_que_no_faltan_datos_y_nombra_la_version_cuando
 def test_chat_turn_responde_409_sin_invocar_adaptadores_cuando_rag_monta_el_catalogo_1_5_0_y_el_turno_trae_1_6_0():
     entorno = crear_entorno_de_chat("CHAT-OK", catalogo=CatalogoClinicoFalso(version="1.5.0"))
     solicitud = _solicitud()
-    solicitud["catalogVersion"] = "1.6.0"
+    solicitud["catalogVersion"] = "1.7.0"
 
     respuesta = entorno.turno(solicitud)
 
