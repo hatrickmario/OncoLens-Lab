@@ -13,24 +13,20 @@ import logging
 from collections.abc import Sequence
 from typing import Any
 
-from app.application.chat.citas import ConstructorDeCitas, FuenteDeCita
+from app.application.chat.bloques_de_la_respuesta import (
+    armar_bloques_de_evidencia,
+    criterios_de_las_opciones,
+    fuentes_citadas_por_las_opciones,
+)
+from app.application.chat.citas import ConstructorDeCitas
 from app.application.chat.contexto_del_turno import evidencia_del_turno
 from app.application.chat.grafo import EstadoDelGrafo
 from app.application.ports import ConsultaDeEvidencia, PosicionDeChunks
 from app.domain.chat.ampliacion_de_busqueda import aviso_de_busqueda_ampliada
-from app.domain.chat.bloques_de_evidencia import (
-    CriterioParaMostrar,
-    texto_de_la_opcion,
-    texto_de_los_faltantes,
-)
-from app.domain.chat.fuentes_limitaciones import (
-    limitaciones_del_analisis,
-    texto_de_limitaciones_de_la_recuperacion,
-)
-from app.domain.chat.mensajes import MENSAJE_SIN_OPCIONES_CON_SOPORTE, ORDEN_POR_APLICABILIDAD
-from app.domain.chat.turno import BloqueDelTurno, TipoDeBloque
+from app.domain.chat.fuentes_limitaciones import limitaciones_del_analisis
+from app.domain.chat.turno import BloqueDelTurno
 from app.domain.chat.ultima_evidencia import resumir_ultima_evidencia
-from app.schemas.generated.models import EvidenceOption, RagQueryInternalResponse, RagQueryStatus
+from app.schemas.generated.models import RagQueryInternalResponse
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +70,7 @@ class NodoEvidencia:
                 estado["pregunta"], consultada.chunk_ids_evaluados, respuesta.topRelevanceScore
             ),
             "limitaciones_del_analisis": limitaciones_del_analisis(
-                _criterios_de_las_opciones(respuesta),
+                criterios_de_las_opciones(respuesta),
                 len(respuesta.discardedOptions),
                 bool(respuesta.evidenceOptions),
             ),
@@ -94,94 +90,6 @@ class NodoEvidencia:
         respuesta: RagQueryInternalResponse,
         chunk_ids_evaluados: Sequence[str],
     ) -> tuple[BloqueDelTurno, ...]:
-        """Un bloque `evidencia` con las opciones en el orden de RN-28 y sus citas del corpus; sin opciones, la limitación
-        determinista de ``/rag/query`` (RN-02) con el alcance de la recuperación, o el aviso de que ninguna opción tuvo
-        soporte."""
-        if respuesta.status is RagQueryStatus.sin_evidencia:
-            return (
-                *(
-                    BloqueDelTurno(TipoDeBloque.limitacion, lim.text)
-                    for lim in respuesta.limitations
-                ),
-                _limitacion_del_alcance(respuesta, chunk_ids_evaluados),
-            )
-        if not respuesta.evidenceOptions:
-            return (
-                BloqueDelTurno(TipoDeBloque.limitacion, MENSAJE_SIN_OPCIONES_CON_SOPORTE),
-                _limitacion_del_alcance(respuesta, chunk_ids_evaluados),
-            )
-        fuentes = [
-            FuenteDeCita(c.chunkId, c.title, c.chunkTextSnapshot)
-            for opcion in respuesta.evidenceOptions
-            for c in opcion.citedSources
-        ]
-        citas = await self._citas.construir(trace_id, fuentes)
-        por_fuente = _criterios_por_fuente(respuesta)
-        total = len(respuesta.evidenceOptions)
-        mostrados: list[CriterioParaMostrar] = []
-        bloques: list[BloqueDelTurno] = []
-        for numero, opcion in enumerate(respuesta.evidenceOptions, start=1):
-            criterios = _criterios_de_la_opcion(opcion, por_fuente)
-            mostrados += criterios
-            ids = dict.fromkeys(c.chunkId for c in opcion.citedSources)
-            texto = texto_de_la_opcion(numero, total, opcion.option, opcion.rationale, criterios)
-            bloques.append(
-                BloqueDelTurno(TipoDeBloque.evidencia, texto, citas=tuple(citas[i] for i in ids))
-            )
-        bloques.append(BloqueDelTurno(TipoDeBloque.catalogo, ORDEN_POR_APLICABILIDAD))
-        faltantes = texto_de_los_faltantes(mostrados)
-        if faltantes is not None:
-            bloques.append(BloqueDelTurno(TipoDeBloque.faltante, faltantes))
-        bloques += [
-            BloqueDelTurno(TipoDeBloque.limitacion, lim.text) for lim in respuesta.limitations
-        ]
-        return tuple(bloques)
-
-
-def _limitacion_del_alcance(
-    respuesta: RagQueryInternalResponse, chunk_ids_evaluados: Sequence[str]
-) -> BloqueDelTurno:
-    """El bloque con el alcance de la recuperación (US-266): fecha de corte, fuentes no incluidas y fragmentos evaluados."""
-    return BloqueDelTurno(
-        TipoDeBloque.limitacion,
-        texto_de_limitaciones_de_la_recuperacion(
-            respuesta.meta.corpusCutoffDate,
-            respuesta.meta.excludedSources,
-            len(chunk_ids_evaluados),
-        ),
-    )
-
-
-def _criterios_de_la_opcion(
-    opcion: EvidenceOption, por_fuente: dict[str, tuple[CriterioParaMostrar, ...]]
-) -> tuple[CriterioParaMostrar, ...]:
-    """Los criterios de las fuentes que cita la opción, en el orden de sus fuentes y sin repetir la fuente."""
-    externos = dict.fromkeys(c.externalId for c in opcion.citedSources)
-    return tuple(c for e in externos for c in por_fuente.get(e, ()))
-
-
-def _criterios_de_las_opciones(
-    respuesta: RagQueryInternalResponse,
-) -> tuple[CriterioParaMostrar, ...]:
-    """Los criterios de aplicabilidad de las opciones MOSTRADAS del análisis (no las de las descartadas)."""
-    por_fuente = _criterios_por_fuente(respuesta)
-    return tuple(
-        c for o in respuesta.evidenceOptions for c in _criterios_de_la_opcion(o, por_fuente)
-    )
-
-
-def _criterios_por_fuente(
-    respuesta: RagQueryInternalResponse,
-) -> dict[str, tuple[CriterioParaMostrar, ...]]:
-    """Los criterios de aplicabilidad de cada fuente (``externalId``), tal como los calculó ``/rag/query``."""
-    return {
-        fuente.externalId: tuple(
-            CriterioParaMostrar(
-                c.criterion,
-                c.status.value,
-                c.unknownReason.value if c.unknownReason is not None else None,
-            )
-            for c in fuente.criteria
-        )
-        for fuente in respuesta.applicability
-    }
+        """Las citas del corpus y los bloques del análisis (la regla es la misma que usa el modo falso del chat)."""
+        citas = await self._citas.construir(trace_id, fuentes_citadas_por_las_opciones(respuesta))
+        return armar_bloques_de_evidencia(respuesta, citas, len(chunk_ids_evaluados))

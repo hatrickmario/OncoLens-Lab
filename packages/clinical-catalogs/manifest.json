@@ -1,6 +1,7 @@
 {
-  "version": "1.7.0",
+  "version": "1.8.0",
   "cancerTypes": ["mama", "prostata"],
+  "plantillasDePregunta": ["mama", "prostata"],
   "standards": ["cie10", "loinc", "atc"],
   "escalas": true,
   "marcosDePregunta": true,

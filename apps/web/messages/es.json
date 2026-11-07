@@ -54,22 +54,7 @@
   "evidence": {
     "titulo": "Análisis de evidencia",
     "paciente": "Paciente · ID",
-    "formulario": {
-      "pregunta": "Pregunta clínica",
-      "ayuda": "No escribas nombres ni documentos: el contexto que sale hacia la IA se desidentifica siempre.",
-      "contador": "{n} / {max}",
-      "analizar": "Analizar evidencia",
-      "analizando": "Analizando…",
-      "espera": "El contenido aparece completo cuando está validado.",
-      "maximo": "La pregunta admite como máximo {max} caracteres."
-    },
     "estado": {
-      "analizando": "Analizando…",
-      "listoUna": "Análisis listo: 1 opción descrita",
-      "listoVarias": "Análisis listo: {n} opciones descritas",
-      "sinEvidencia": "Sin evidencia sobre el umbral",
-      "error": "No se pudo completar el análisis. Código de traza {traceId}",
-      "noRealizado": "Análisis no realizado: falta el tipo de cáncer",
       "noMostradas": "{n} más con soporte no mostrada"
     },
     "resultado": {
@@ -216,19 +201,6 @@
       "sin_citas": "La opción no incluye citas a fragmentos recuperados",
       "solo_soportada_por_analisis_previo": "Solo la respalda un análisis previo, que no es evidencia",
       "lenguaje_no_permitido": "Contenía lenguaje prescriptivo, que no se muestra"
-    },
-    "error": {
-      "modeloNoDisponible": "El modelo local no está disponible. No se muestra ningún resultado parcial.",
-      "salidaNoValidada": "El modelo local devolvió una respuesta que no se pudo validar. Reintenta el análisis.",
-      "tiempoAgotado": "El análisis superó el tiempo máximo de espera. No se muestra ningún resultado parcial.",
-      "generico": "No se pudo completar el análisis. No se muestra ningún resultado parcial.",
-      "limite": "Se alcanzó el límite de análisis. Puedes reintentar en {s} segundos.",
-      "red": "No hay conexión con el servidor. No se muestra ningún resultado parcial.",
-      "codigoTraza": "Código de traza: {traceId}",
-      "reintentar": "Reintentar"
-    },
-    "noRealizado": {
-      "sinTipoCancer": "Análisis no realizado: falta el tipo de cáncer; no fue posible filtrar la evidencia."
     },
     "base": {
       "titulo": "Base del análisis",
@@ -742,29 +714,47 @@
       "generico": "No se pudo guardar. Inténtalo de nuevo."
     }
   },
-  "followUp": {
-    "titulo": "Preguntas de seguimiento sobre este análisis",
-    "contadorConTotal": "{n} de {max} preguntas usadas",
-    "contadorSinTotal": "{n} preguntas usadas",
-    "contextoTitulo": "Contexto fijo de esta conversación",
-    "contextoTexto": "Paciente desidentificado · datos usados por el análisis · su pregunta y hallazgos · evidencia del mismo corpus. Los hallazgos del análisis son contexto, no evidencia.",
-    "historial": "Historial de preguntas de seguimiento",
-    "campo": "Pregunta sobre los hallazgos de este análisis",
+  "conversacion": {
+    "hilo": "Conversación",
+    "campo": "Pregunta sobre este paciente",
+    "marcador": "Escribe tu pregunta",
     "preguntar": "Preguntar",
-    "preguntando": "Preguntando…",
-    "progresoBuscando": "Buscando evidencia…",
-    "progresoValidando": "Validando citas…",
-    "turno": "Pregunta {n}",
-    "nuevaFuente": "nueva en el seguimiento",
-    "notaCitas": "Cada afirmación cita un fragmento del corpus recuperado para esta pregunta o enlaza a un dato del paciente. Fuente, año y población: del catálogo, o «No disponible».",
-    "omitidas": "Afirmaciones omitidas: {n}",
-    "baseDeLaRespuesta": "Base de esta respuesta: datos del paciente usados: {usados} · ausentes: {ausentes}",
+    "nuevaConversacion": "Nueva conversación",
+    "preguntaDelOncologo": "Pregunta del oncólogo",
+    "analizando": "Analizando…",
+    "reintentar": "Reintentar",
+    "errorTitulo": "No se pudo completar la respuesta",
+    "guiadasTitulo": "Preguntas de partida sobre este caso",
+    "intencionDetectada": "Intención detectada",
+    "turno": "Turno {n}",
+    "verEnCaso": "Ver en el caso (se abre en otra pestaña)",
+    "datosUsados": "Datos usados",
+    "datosAusentes": "Ausentes",
     "ninguno": "ninguno",
-    "nuevoAnalisis": "Nuevo análisis",
-    "sinEvidencia": "No se encontró evidencia suficientemente relacionada con esta pregunta en el corpus. La pregunta puede replantearse o formularse en un análisis nuevo.",
-    "fueraDeContexto": "La pregunta no se refiere a los hallazgos de este análisis; no se generó respuesta. Otro tema o paciente corresponde a un análisis nuevo.",
-    "limiteConTotal": "Se alcanzó el límite de {max} preguntas de este análisis. Una pregunta distinta puede formularse en un análisis nuevo.",
-    "limiteSinTotal": "Se alcanzó el límite de preguntas de este análisis. Una pregunta distinta puede formularse en un análisis nuevo.",
-    "noProcesable": "La pregunta no pudo procesarse con este análisis; no se generó respuesta."
+    "avisosTitulo": "Avisos de la respuesta",
+    "optOut": "Este paciente no tiene habilitado el análisis con IA; el resto de la ficha sigue disponible.",
+    "sinAvisosTitulo": "Respuesta sin los avisos de IA requeridos",
+    "intenciones": {
+      "caso": "◆ Caso",
+      "faltantes": "◌ Faltantes",
+      "evidencia": "▤ Evidencia",
+      "fuentes_limitaciones": "▤ Fuentes y límites",
+      "no_clasificada": "Sin clasificar",
+      "fuera_de_alcance": "Fuera de alcance"
+    },
+    "rotulos": {
+      "clinico": "◆ Información clínica del paciente",
+      "evidencia": "▤ Evidencia científica (corpus)",
+      "interpretacion": "Interpretación generada por IA",
+      "alcance": "Alcance de la respuesta",
+      "adicional": "Información adicional del turno"
+    },
+    "datos": {
+      "diagnosis": "Diagnóstico",
+      "biomarker": "Biomarcador",
+      "clinical_attribute": "Atributo clínico",
+      "prior_treatment": "Tratamiento previo",
+      "clinical_event": "Evento clínico"
+    }
   }
 }

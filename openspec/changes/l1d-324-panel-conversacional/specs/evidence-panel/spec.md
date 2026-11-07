@@ -247,6 +247,48 @@ panel MUST pasar 0 preguntas guiadas y MUST mantener operable el campo de pregun
 - **WHEN** se abre el panel
 - **THEN** no hay botones de preguntas guiadas y el campo de pregunta y «Preguntar» siguen operables
 
+## MODIFIED Requirements
+
+### Requirement: Estados mínimos del resultado en el S1
+El panel MUST despachar los estados del diseño S1-08/09 y S3-01 sobre el `turn.evidenceAnalysis` del turno de evidencia. Con `status = sin_evidencia` MUST mostrar el aviso de IA y la Base del análisis, sin tarjeta ni texto con forma de opción; con solo descartadas MUST mostrar el aviso de IA y la frase de que no hay opciones con soporte verificable. El fallo del servicio lo cubre «Un fallo del servicio conserva la conversación y ofrece reintentar».
+
+#### Scenario: Sin evidencia muestra "Relevancia máxima: no aplica" [pantallas-s1 S1-08/09] [US-069 AC-4] [RN-02]
+- **GIVEN** la respuesta de `contracts/examples/sin-evidencia.json` (`status = sin_evidencia`, `topRelevanceScore = null`)
+- **WHEN** se renderiza el resultado
+- **THEN** se lee "Ningún fragmento del corpus superó el umbral de relevancia. No se generaron opciones." y "Relevancia máxima: no aplica"
+- **AND** no aparece "0" ni "0,00" como relevancia, ni el encabezado "Opciones descritas en la evidencia"
+- **AND** se muestra el aviso de IA en la región `role="note"` con el `disclaimer` de la respuesta
+
+#### Scenario: Sin evidencia dice su alcance, qué se buscó y la Base, sin nada con forma de opción [US-062 AC-2] [HU-03] [AC-10.4] [OL-04] [RN-02] [S3 resp. 6]
+- **GIVEN** la respuesta de `contracts/examples/sin-evidencia.json` (`Q-SIN`, `status = sin_evidencia`, `topRelevanceScore = null`)
+- **WHEN** se renderiza el resultado
+- **THEN** se lee exactamente "Ningún fragmento del corpus superó el umbral de relevancia. No se generaron opciones.", "La búsqueda se limita a las fuentes consultadas; no implica que no exista evidencia." y "Relevancia máxima: no aplica"
+- **AND** bajo "Qué se buscó" se leen la pregunta (`queryText`), su idioma y las fuentes consultadas de `analysisBasis.sourcesConsulted`
+- **AND** se muestra la Base del análisis
+- **AND** no hay tarjeta de opción, ni encabezado "Opciones descritas en la evidencia", ni criterio de orden, ni relevancia de opción, ni "0" o "0,00" como relevancia
+- **AND** no aparece "No se encontró evidencia suficiente en las fuentes consultadas"
+
+#### Scenario: Solo descartadas muestra el aviso y la frase sin opciones [pantallas-s1 S1-08/09] [US-069 AC-4] [RN-02] [RN-06]
+- **GIVEN** la respuesta de `contracts/examples/con-evidencia-solo-descartadas.json`
+- **WHEN** se renderiza el resultado
+- **THEN** se muestra el aviso de IA en la región `role="note"` y la frase "No hay opciones descritas con soporte verificable en la evidencia recuperada."
+- **AND** la sección de descartadas aparece plegada y sin tarjeta de opción
+
+#### Scenario: Contenido del estado sin_evidencia [pantallas-s1 S1-08/09] [RN-02]
+- **GIVEN** una respuesta con `status = sin_evidencia`
+- **WHEN** se renderiza el resultado
+- **THEN** se muestra que ningún fragmento superó el umbral, el alcance de la búsqueda y "Relevancia máxima: no aplica", nunca 0 (RN-02)
+- **AND** se muestra el bloque "Qué se buscó"
+
+### Requirement: Sesión expirada redirige al login sin datos del paciente
+Si `POST /api/patients/{id}/conversations` o `POST /api/conversations/{id}/turns` responde `401`, el panel MUST redirigir a `/login?motivo=expirada` sin mostrar ningún dato del paciente, de la pregunta ni del resultado.
+
+#### Scenario: Con la sesión expirada, enviar la pregunta lleva al login sin datos del paciente [US-062 AC-3] [OL-04] [FR-01]
+- **GIVEN** el panel conversacional del paciente semilla abierto y la sesión del doctor expirada en `clinical-api`
+- **WHEN** el doctor envía una pregunta (`POST …/conversations` o `POST …/turns` responde `401`)
+- **THEN** el navegador termina en `/login?motivo=expirada` con "Tu sesión expiró. Vuelve a iniciar sesión."
+- **AND** la página de login no contiene el ID del paciente, la pregunta ni ningún texto del resultado
+
 ## REMOVED Requirements
 
 ### Requirement: Hilo de seguimiento bajo un análisis con evidencia
@@ -326,3 +368,15 @@ crudo lo mantiene el panel (design D1).
 ### Requirement: El panel valida y envía la pregunta normalizada
 **Reason**: el formulario se retira (P-1 asumido, US-267).
 **Migration**: la normalización de la pregunta del turno la hace `clinical-api` (OUT-05), que sigue siendo la validación de autoridad.
+
+### Requirement: Errores de transporte sin resultado parcial
+**Reason**: el formulario y su `POST /api/evidence-analyses` dejan de tener consumidor en la UI (US-267 AC-5).
+**Migration**: «Un fallo del servicio conserva la conversación y ofrece reintentar».
+
+### Requirement: Fallos de servicio y de red sin detalles internos
+**Reason**: el formulario y su `POST /api/evidence-analyses` dejan de tener consumidor en la UI (US-267 AC-5).
+**Migration**: «Un fallo del servicio conserva la conversación y ofrece reintentar» (el mensaje es genérico y sin código HTTP).
+
+### Requirement: Análisis no realizado por falta de tipo de cáncer
+**Reason**: el formulario y su `POST /api/evidence-analyses` dejan de tener consumidor en la UI (US-267 AC-5).
+**Migration**: un paciente sin tipo de cáncer se resuelve en el turno (`fuera_de_alcance`, glosario §3) y las preguntas guiadas no se ofrecen sin tipo (US-267 AC-10).

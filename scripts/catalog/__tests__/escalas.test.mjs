@@ -17,7 +17,7 @@ describe('catalog:validate · escalas.json (L1D-90, [US-110 AC-5])', () => {
       const resultado = ejecutarValidador(CATALOGO);
 
       expect(resultado.codigo).toBe(0);
-      expect(resultado.salida).toContain('catalogVersion=1.7.0');
+      expect(resultado.salida).toContain('catalogVersion=1.8.0');
     },
     PLAZO_PROCESO_MS,
   );

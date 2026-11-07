@@ -25,9 +25,12 @@
 | `--color-status-desconocido` | `#3A4553` sobre `#ECEEF1` | ? Desconocido | 8,4:1 |
 | `--color-warn` | `#5E3A00` / `#774500` sobre `#FFF4E0`, borde `#E8C77A` | Avisos que no bloquean | ≥ 7:1 |
 | `--color-postmvp` | `#4A2F86` sobre `#E9E4F5` | Etiqueta "Post-MVP" en diseños | ≥ 7:1 |
+| `--color-clinical` | `#0E5A5F` sobre `#E1F1F1`, borde `#7FB9BC` | ◆ Información clínica del paciente | 6,8:1 |
+| `--color-evidence` | `#1F4FB8` sobre `#E8EEFA`, borde `#9DB3E3` | ▤ Evidencia científica (corpus) | 6,3:1 |
 
 **Reglas de color:**
 - **El color nunca es la única señal.** Todo estado lleva símbolo y texto (✓ ◐ ✕ ? ◌ ⚑ ⟳).
+- `--color-clinical` y `--color-evidence` rotulan el origen de cada bloque del chat; **el color nunca es la única señal**: cada uno lleva su símbolo (◆ / ▤) y su rótulo en texto. Los bordes que delimitan componentes usan el tono base (≥ 3:1, 1.4.11), no el `-border` decorativo.
 - El rojo se reserva para "No coincide", error y valores alterados. **Un dato faltante usa ◌ en gris neutro, no rojo**, porque no es un error del paciente (auditoría C4).
 - Solo modo claro en el MVP. Los tokens se definen en `:root` para poder añadir el oscuro sin tocar los componentes.
 
@@ -78,7 +81,9 @@
 | Organismo | `OrderingCriterion` | — | Texto del criterio y explicación del desempate |
 | Organismo | `DiscardedOptions` | `collapsible` | Plegado; "para revisión, no son opciones" |
 | Organismo | `AnalysisBasisPanel` | `collapsible` | Incisos (a)–(i) y `omittedClaims` |
-| Organismo | `FollowUpThread` | — | Seguimiento: contexto fijo, contador n/10, turnos con citas y la marca "nueva en el seguimiento", estados `sin_evidencia`, `fuera_de_contexto` y límite; `aria-live="polite"` |
+| Organismo | `ConversationPanel` | `@assistant-ui/react` (`ExternalStoreRuntime`) | Conversación sobre el paciente: hilo `role="log"` con `aria-live="polite"`, preguntas guiadas («Preguntas de partida sobre este caso»), «Nueva conversación», «Analizando…» en `role="status"` y error con «Reintentar» (L1D-324) |
+| Organismo | `ConversationTurnCard` | `card` | Un turno del asistente: chip de intención, bloques rotulados ◆ / ▤ / «Interpretación generada por IA» / «Alcance de la respuesta», enlaces a datos, citas, «Datos usados · Ausentes» y los avisos literales de `notices[]` (L1D-324) |
+| Organismo | `FollowUpThread` | — | **Retirado en L1D-324**: el chat sustituye al seguimiento de 10 preguntas (US-219) |
 | Organismo | `AdminHeader` | `navigation-menu` | Menú Administración: Solicitudes, Configuración y Auditoría; rol visible |
 | Organismo | `AnalysisFeedback` | `toggle-group` + `checkbox` | 1–5 y dos casillas; sin texto libre |
 | Organismo | `CaseRail` | — | Resumen del caso, checklist y fragmento citado |

@@ -14,7 +14,7 @@ import {
   fx08ba,
   textoSinSimbolos,
 } from '../support/aplicabilidad-ui';
-import { analizar, ID_PACIENTE } from '../support/panel-ui';
+import { analizar, esperarComposerOperable, ID_PACIENTE } from '../support/panel-ui';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn() }) }));
 
@@ -189,8 +189,6 @@ describe('Tabla de aplicabilidad · criterios y causas', () => {
     expect(paciente).toBe('1 Dato del paciente sin verificar');
     expect(estudio).toBe('0-1 · Fragmento [1] · según NCI PDQ · CDR0000062787');
     expect(within(tabla).getAllByText('Dato del paciente sin verificar')).toHaveLength(1);
-    expect(
-      (screen.getByRole('button', { name: 'Analizar evidencia' }) as HTMLButtonElement).disabled,
-    ).toBe(false);
+    await esperarComposerOperable(usuario);
   });
 });

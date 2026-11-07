@@ -1,19 +1,39 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "plantillas.json (lo llena FEAT-05)",
+  "title": "plantillas.json: preguntas guiadas del panel conversacional (L1D-324, ADR-52)",
+  "description": "Cada ítem ofrece la primera de sus variantes cuyas ranuras se resuelven con el catálogo. Ranuras: {tipo}, {estadio}, {biomarcador}, {grado}.",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "version",
-    "items"
-  ],
+  "required": ["version", "items"],
   "properties": {
-    "version": {
-      "type": "string",
-      "pattern": "^\\d+\\.\\d+\\.\\d+$"
-    },
+    "version": { "$ref": "comun.schema.json#/$defs/version" },
     "items": {
-      "type": "array"
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "variantes"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+          "variantes": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["texto", "ranuras"],
+              "properties": {
+                "texto": { "type": "string", "minLength": 1 },
+                "ranuras": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": { "enum": ["tipo", "estadio", "biomarcador", "grado"] }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
