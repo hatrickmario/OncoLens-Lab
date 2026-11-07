@@ -13,7 +13,22 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
 
-from app.schemas.generated.models import RagQueryInternalRequest, RagQueryInternalResponse
+from app.schemas.generated.models import (
+    ClinicalContext,
+    DataRef,
+    Diagnosis,
+    EntryMethod,
+    ExtractionConfidence,
+    Population,
+    Provenance,
+    RagQueryInternalRequest,
+    RagQueryInternalResponse,
+    ReviewStatus,
+    TextoEnmascarado,
+)
+
+PSEUDONIMO_SIN_PACIENTE = "psd_sinpaciente"
+"""Seudónimo neutro del contexto sin paciente: el esquema lo exige, pero ningún texto de búsqueda lo lleva (RN-11)."""
 
 
 @dataclass
@@ -46,3 +61,45 @@ def evidencia_del_turno() -> EvidenciaDelTurno:
     if evidencia is None:
         raise RuntimeError("el nodo de evidencia corrió fuera de un turno del chat")
     return evidencia
+
+
+def contexto_solo_con_el_tipo_de_cancer(tipo_de_cancer: TextoEnmascarado | None) -> ClinicalContext:
+    """Un contexto clínico construido desde cero (lista blanca): del caso solo entra el tipo de cáncer del diagnóstico; todo lo
+    demás es vacío o neutro. Un campo nuevo de ``ClinicalContext`` nace vacío aquí, nunca copia datos del paciente (RN-11):
+    el resumen del contexto se embebe y puntúa junto con la consulta."""
+    vacio = TextoEnmascarado(root="")
+    diagnostico = (
+        None
+        if tipo_de_cancer is None
+        else Diagnosis(
+            dataRef=DataRef(root="r0"),
+            cancerType=tipo_de_cancer,
+            histology=None,
+            grade=None,
+            stagingSystem=vacio,
+            stageValue=vacio,
+            performanceScale=None,
+            performanceValue=None,
+            monthsSinceDiagnosis=0,
+            provenance=Provenance(
+                entryMethod=EntryMethod.seed,
+                extractionConfidence=ExtractionConfidence.n_a,
+                reviewStatus=ReviewStatus.verificado,
+                conflict=False,
+            ),
+        )
+    )
+    return ClinicalContext(
+        pseudoPatientId=PSEUDONIMO_SIN_PACIENTE,
+        population=Population.adulto,
+        diagnosis=diagnostico,
+        biomarkers=[],
+        clinicalNotes=[],
+        currentLine=None,
+        attributes=[],
+        priorTreatments=[],
+        events=[],
+        biomarkerTrends=[],
+        missingCriticalData=[],
+        priorAnalyses=[],
+    )

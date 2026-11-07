@@ -7,6 +7,8 @@ Dos reglas, ambas sobre la pregunta ya enmascarada y en NFC:
 - ``clasificar_por_reglas()`` clasifica en ``caso``, ``faltantes``, ``evidencia`` o ``fuentes_limitaciones`` por patrones
   léxicos del español, en un orden fijo (de lo más específico a lo más general). Los patrones viven aquí y en ningún otro
   módulo. Una pregunta prescriptiva va a ``evidencia``: nunca es ``fuera_de_alcance`` (glosario S6 §3).
+- ``es_pregunta_de_relevancia()`` reconoce «¿por qué importa…?» (US-264): va a ``faltantes`` y su nodo la atiende con la
+  subintención de relevancia; pierde ante fuentes y evidencia y gana a ``caso``.
 """
 
 from __future__ import annotations
@@ -27,12 +29,18 @@ _PREVIO = r"(?:previos?|anterior(?:es)?)\b"
 """«previo/anterior» tras «tratamiento»: describe lo ya recibido (caso), no pide una opción (evidencia, RN-23). Una sola
 definición para la regla de ``evidencia`` (que lo excluye) y la de ``caso`` (que lo reclama)."""
 
+_FALTANTES = re.compile(r"\bfalt(?:a|an|ante|antes|ar)\b|\bincomplet\w+|\bsin registrar\b")
+
+# «¿Por qué importa el Ki-67?» (US-264): la relevancia de un dato crítico, que atiende el nodo ``faltantes``.
+_RELEVANCIA = re.compile(
+    r"\bpor que (?:importa|importan|es importante|son importantes|es relevante|son relevantes)\b"
+    r"|\bpara que (?:sirve|sirven)\b|\b(?:que|cual es la) (?:relevancia|importancia)\b"
+    r"|\bque tan (?:importante|relevante)s?\b"
+)
+
 # Sobre el texto normalizado (minúsculas, sin acentos ni signos). "caso" a secas no clasifica: aparece en todas.
 _REGLAS: tuple[tuple[Intencion, re.Pattern[str]], ...] = (
-    (
-        Intencion.faltantes,
-        re.compile(r"\bfalt(?:a|an|ante|antes|ar)\b|\bincomplet\w+|\bsin registrar\b"),
-    ),
+    (Intencion.faltantes, _FALTANTES),
     (
         Intencion.fuentes_limitaciones,
         re.compile(
@@ -52,6 +60,9 @@ _REGLAS: tuple[tuple[Intencion, re.Pattern[str]], ...] = (
             r"|\bdeb(?:e|en|eria|erian)\b|\brecomi?end\w+"
         ),
     ),
+    # Después de fuentes y evidencia (una pregunta de relevancia que nombra la evidencia o las fuentes es de ellas) y antes
+    # de caso, que reclama cualquier biomarcador o término del catálogo.
+    (Intencion.faltantes, _RELEVANCIA),
     (
         Intencion.caso,
         re.compile(
@@ -85,6 +96,12 @@ def es_seguimiento_de_evidencia(pregunta: str, hay_analisis_activo: bool) -> boo
         hay_analisis_activo
         and _REFERENCIA_AL_RESULTADO.search(normalizar_texto(pregunta)) is not None
     )
+
+
+def es_pregunta_de_relevancia(pregunta: str) -> bool:
+    """La pregunta pide por qué importa un dato (US-264); una pregunta de faltantes («qué falta», «lo que falta») no lo es."""
+    texto = normalizar_texto(pregunta)
+    return _RELEVANCIA.search(texto) is not None and _FALTANTES.search(texto) is None
 
 
 def es_fuera_de_alcance(

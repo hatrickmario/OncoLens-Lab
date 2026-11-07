@@ -32,10 +32,16 @@ pipeline existente; validación cita-del-turno + términos prohibidos + NLI; `om
 1. **Identificación del dato por regla pura** `identificar_dato_critico(pregunta, items, sinonimos) -> ItemCritico | None`
    en `app/domain/chat/relevancia.py` (NFC + `normalizar_texto` de `lenguaje.py`, etiquetas `es`/`en` y sinónimos del
    catálogo del tipo de cáncer). Nunca el LLM: el catálogo manda (RN-29, RN-27). `None` → AC-5.
-2. **Criterios del bloque `catalogo` por igualdad de `destination`** (`entity`, `field`, `match`) entre el ítem de
+2. **Criterios del bloque `catalogo` por cobertura de `destination`** (`entity`, `field`, `match`) entre el ítem de
    `datos-criticos.json` y los de `aplicabilidad.json`: `criterios_que_usan(item, aplicabilidad)`. Es la única relación
    explícita entre los dos ficheros; no se añade un campo nuevo al catálogo (no sube `CLINICAL_CATALOG_VERSION`). Se
    descarta comparar por `key` (las claves difieren: `re` frente a `receptores_hormonales`).
+   **Desviación en la implementación (igualdad estricta → cobertura):** con igualdad estricta, `re`/`rp` (criterio
+   `receptores_hormonales` con `name: [RE, RP]`), `her2_ihq`/`her2_ish` (criterio `estado_her2` sin la prueba en `match`) y
+   `ecog` (criterio con `performance_scale` que el ítem no repite) saldrían «sin criterio», una afirmación falsa frente al
+   catálogo. La regla es: misma entidad; mismo campo (un ítem sin campo cubre cualquiera); y en las claves de `match` que
+   ambos nombran, los valores del ítem están entre los del criterio. Ki-67 y menopausia dan el mismo resultado que con
+   igualdad (sin criterio y `estado_menopausico`).
 3. **Consulta al corpus**: `"{label.es} {cancerType}"` por la recuperación existente con el mismo umbral y el único bucle
    de reescritura (US-238); sin chunks → respuesta sin LLM de generación (RN-02), `top_relevance_score = null`.
 4. **Validación por el camino existente, sin copia**: el nodo arma afirmaciones atómicas y las pasa, en este orden, por
@@ -45,7 +51,10 @@ pipeline existente; validación cita-del-turno + términos prohibidos + NLI; `om
 5. **Textos fijos** («La evidencia recuperada no explica la relevancia de este dato», «no es un dato crítico del catálogo
    vigente», «ningún criterio de aplicabilidad del catálogo vigente usa este dato», aviso «sin evidencia») en `Settings`
    como literales de configuración, igual que el aviso RN-19.
-6. **Tipos de bloque (glosario §3)**: lo que sale del catálogo es `kind = "catalogo"` (determinista, exento de cita); la
+6. **Aviso de «sin evidencia» (AC-3)**: viaja en `notices[]` (texto fijo de `Settings`, sin punto final), no como bloque
+   `limitacion`, para que el turno quede «solo con el bloque `catalogo` y el aviso» como dice el spec. P-3: si la UI
+   prefiere un bloque `limitacion`, es un cambio de una línea en el nodo.
+7. **Tipos de bloque (glosario §3)**: lo que sale del catálogo es `kind = "catalogo"` (determinista, exento de cita); la
    explicación de «por qué importa» generada por el LLM es `kind = "evidencia"`, con ≥ 1 `ChatCitation` y NLI, y sin
    soporte se omite; los textos fijos de ausencia son `kind = "limitacion"` (deterministas, exentos). Backend 2 rellena
    `notices[]`.
@@ -65,7 +74,7 @@ Alternativa de fondo (LLM libre frente a limitado al catálogo y evidencia) ya d
 
 Proveedor: `rag-orchestrator` (`POST /chat/turn`, de `l1d-316`); consumidor: `clinical-api`. **Sin diff** del
 `openapi.yaml`: se usan `ChatBlock.kind ∈ {catalogo, evidencia, limitacion}`, `ChatBlock.citations[]`, `omittedClaims`
-y `notices[]` del contrato **1.12.0** de `l1d-316`. **No sube versión** (glosario S6 §1): consume el contrato de
+y `notices[]` del contrato de `l1d-316` (1.12.0 al proponerse; el vigente al implementar es **1.16.0** y esos campos no cambiaron). **No sube versión** (glosario S6 §1): consume el contrato de
 `l1d-316` 1.12.0; no comprueba ni añade campos.
 
 Ejemplos nuevos (FX-12-e), base de MSW/`respx`:
@@ -78,8 +87,13 @@ spec. oasdiff: sin cambios.
 
 - `app/domain/chat/relevancia.py` (nuevo, puro): `identificar_dato_critico()`, `criterios_que_usan()`,
   `bloque_de_catalogo()`.
-- `app/application/chat/nodo_faltantes.py` (modificado, de `l1d-320`): rama `relevancia`; recibe por constructor
-  los puertos de recuperación, LLM, NLI y el catálogo (nunca adapters concretos).
+- `app/application/chat/nodo_faltantes.py` (modificado, de `l1d-320`): rama `relevancia`, que delega en
+  `app/application/chat/capacidades/relevancia_del_dato.py` (`NodoRelevancia`, nuevo); recibe por constructor los puertos de
+  recuperación, LLM, NLI (vía `RecuperadorDeEvidencia`) y `DatosDeRelevancia` (catálogo), nunca adapters concretos. Sin
+  corpus detrás no se inyecta y `faltantes` verbaliza como antes. `DatosCriticosDelCatalogo` expone el `destination` de cada
+  ítem y `DatosDeRelevanciaDelCatalogo` compone los tres lectores del catálogo.
+- La consulta al corpus usa un contexto clínico sin ningún dato del paciente (solo el tipo de cáncer): el resumen del
+  contexto también se embebe (RN-11).
 - `app/domain/chat/enrutado.py` (de `l1d-316`): patrones «por qué importa / para qué sirve / qué relevancia tiene» →
   `faltantes` con subintención `relevancia` (un solo dueño de los patrones).
 - `app/prompts/chat_relevancia.py` (nuevo): `chat-relevancia@0.1.0`, instrucciones en sistema y chunks delimitados con
@@ -102,3 +116,22 @@ y `eval/configs/s5.yaml --suite opciones`. Métricas: fidelidad ≥ 0,90, precis
 - [Sinónimos insuficientes] → una pregunta con otra grafía cae en AC-5; visible y se amplía en el catálogo.
 - [Depende de `l1d-320`] → rebasar tras su merge; el nodo `faltantes` lo define ese change.
 - [NLI estricto omite explicaciones correctas] → visible en `omittedClaims`; se calibra en US-269.
+
+## Decisiones de implementación (Gate 2, vuelta 1)
+
+- **Dónde vive el enrutado de la relevancia**: los patrones y `es_pregunta_de_relevancia()` están en `app/domain/chat/enrutado.py`
+  (único dueño de los patrones); la rama «relevancia» vive en `nodo_faltantes.py`, que delega en `NodoRelevancia`. No hay
+  `Subintencion.relevancia`: el enum de `subintent` del contrato solo admite `seguimiento_evidencia` y añadir un valor sería un
+  cambio de contrato. Decisión consciente, no deuda.
+- **`ultima_evidencia.query`** guarda la pregunta del oncólogo tal como llega de `clinical-api`, que ya la enmascaró (RN-11, ADR-40);
+  Backend 2 nunca ve la pregunta sin enmascarar ni la registra en logs. La consulta al corpus, en cambio, es solo la etiqueta del
+  catálogo y el tipo de cáncer, con un contexto construido desde cero con lista blanca
+  (`contexto_del_turno.contexto_solo_con_el_tipo_de_cancer`).
+- **Renombre de esquemas**: al mover `_SalidaCruda`/`_AfirmacionCruda` a `SalidaCruda`/`AfirmacionCruda`
+  (`capacidades/afirmaciones_citadas.py`) cambian `title`, `$defs` y `$ref` del JSON schema que recibe el LLM del seguimiento; la
+  estructura, `required`, `maxItems` y `pattern` son los mismos, sin efecto en OL-06 del seguimiento.
+- **Minúscula inicial** tras «La fuente reporta que»: se aplica en la relevancia (`con_minuscula_inicial`, antes del NLI, así la
+  hipótesis es la que se muestra). Una primera palabra con siglas, dígitos o guiones (`Ki-67`, `HER2`) se conserva. El seguimiento
+  conserva la mayúscula (TRASLADADA -> L1D-322); cambiar `componer_con_marco` afectaría a `/rag/query`, a su evaluación y a sus ejemplos.
+- **Corpus de los tests**: los ejemplos citan fragmentos sintéticos que sí hablan del dato (`ch-mp-1` menopausia, `ch-ki-1` Ki-67),
+  añadidos al corpus FX-06a solo en `tests/support/chat_relevancia.py`.
