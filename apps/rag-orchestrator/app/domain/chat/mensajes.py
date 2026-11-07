@@ -27,3 +27,17 @@ MENSAJE_SIN_OPCIONES_CON_SOPORTE = (
 MENSAJE_SEGUIMIENTO_SIN_AFIRMACIONES = (
     "Los fragmentos recuperados no permiten responder la pregunta con soporte suficiente."
 )
+ORDEN_POR_APLICABILIDAD = (
+    "Orden según aplicabilidad: primero las opciones con menos criterios en No coincide y más en Coincide; "
+    "la relevancia solo desempata."
+)
+"""Criterio de orden de RN-28 que el turno de evidencia dice en voz alta (la UI muestra el mismo)."""
+TITULO_DE_APLICABILIDAD = "Aplicabilidad al paciente por criterio"
+ESTADOS_DE_APLICABILIDAD = {
+    "coincide": "Coincide",
+    "parcial": "Parcial",
+    "no_coincide": "No coincide",
+    "desconocido": "Desconocido",
+}
+CAUSA_FALTA_EN_PACIENTE = "falta en el paciente"
+TITULO_DE_FALTANTES = "Datos que faltan del paciente para comparar"

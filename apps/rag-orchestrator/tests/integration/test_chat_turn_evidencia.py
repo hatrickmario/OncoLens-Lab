@@ -11,6 +11,9 @@ import pytest
 
 from app.application.errores import LlmLocalNoDisponibleError
 
+from pathlib import Path
+
+from app.domain.lenguaje import ListaTerminos, check_prohibited_terms
 from tests.support.aplicabilidad import (
     OPCION_O_A,
     OPCION_O_B,
@@ -25,6 +28,13 @@ from tests.support.llm_nube_falso import LlmNubeFalso
 from tests.support.nli_falso import IMPLICA, NEUTRAL, NliFalso
 from tests.support.recuperacion import CORPUS_FX06A, EJEMPLOS, Q_HER2, crear_entorno
 
+LISTA_RN23 = (
+    Path(__file__).resolve().parents[4]
+    / "packages"
+    / "clinical-catalogs"
+    / "lenguaje"
+    / "terminos-prohibidos.json"
+)
 TEXTO_DE_CH_M1_1 = next(c.texto for c in CORPUS_FX06A if c.chunk_id == "ch-m1-1")
 
 
@@ -47,6 +57,11 @@ def test_chat_turn_devuelve_evidence_analysis_con_opciones_citadas_solo_con_chun
         c["chunkId"] for o in analisis["evidenceOptions"] for c in o["citedSources"]
     }
     bloques = [b for b in cuerpo["blocks"] if b["kind"] == "evidencia"]
+    assert len(bloques) == len(analisis["evidenceOptions"])  # un bloque por opción, con SUS citas
+    for bloque, opcion in zip(bloques, analisis["evidenceOptions"], strict=True):
+        assert [c["chunkId"] for c in bloque["citations"]] == [
+            c["chunkId"] for c in opcion["citedSources"]
+        ]
     citas_de_los_bloques = {c["chunkId"] for b in bloques for c in b["citations"]}
     assert citas_del_analisis == citas_de_los_bloques == {"ch-m1-1"}
     assert citas_de_los_bloques <= entorno.chunks_recuperados()
@@ -119,8 +134,20 @@ def test_chat_turn_marca_menopausia_desconocido_por_falta_en_el_paciente_y_orden
         == ("desconocido", "falta_en_paciente", None)
         for c in menopausia
     )
-    texto = respuesta.json()["blocks"][0]["text"]
-    assert texto.index(OPCION_O_B) < texto.index(OPCION_O_C) < texto.index(OPCION_O_A)
+    cuerpo = respuesta.json()
+    bloques = [b for b in cuerpo["blocks"] if b["kind"] == "evidencia"]
+    assert [OPCION_O_B in b["text"] for b in bloques[:1]] == [True]
+    assert [
+        o in b["text"] for o, b in zip((OPCION_O_B, OPCION_O_C, OPCION_O_A), bloques, strict=True)
+    ] == [True] * 3
+    assert all("falta en el paciente" in b["text"] for b in bloques)
+    textos = {
+        b["kind"]: b["text"] for b in cuerpo["blocks"] if b["kind"] in ("catalogo", "faltante")
+    }
+    assert textos["catalogo"].startswith(
+        "Orden según aplicabilidad: primero las opciones con menos criterios en No coincide"
+    )
+    assert "estado menopausico" in textos["faltante"]
 
 
 class _GeneradorCaido:
@@ -143,8 +170,12 @@ def test_chat_turn_encabeza_con_opciones_descritas_sin_terminos_prohibidos_y_con
     cuerpo = respuesta.json()
     assert cuerpo["intent"] == "evidencia"
     assert cuerpo["blocks"][0]["text"].startswith("Opciones descritas en la evidencia:")
-    textos = " ".join(b["text"] for b in cuerpo["blocks"]).lower()
-    assert not any(t in textos for t in ("recomendado", "debe recibir", "se recomienda"))
+    lista = ListaTerminos.model_validate_json(LISTA_RN23.read_text(encoding="utf-8"))
+    for bloque in cuerpo["blocks"]:
+        assert (
+            check_prohibited_terms(bloque["text"], lista, niveles=("A", "B"), permitir_frases=False)
+            == []
+        )
     assert cuerpo["notices"] == [
         "Generado por IA; requiere validación clínica independiente por el oncólogo tratante",
         "Uso académico/investigación",

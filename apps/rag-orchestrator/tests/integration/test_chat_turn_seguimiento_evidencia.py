@@ -198,3 +198,24 @@ def test_chat_turn_registra_el_tamano_del_prompt_del_seguimiento_sin_texto_ni_id
     eventos = [r.getMessage() for r in caplog.records if "chat_evidencia_prompt" in r.getMessage()]
     assert len(eventos) == 1 and "fase=seguimiento" in eventos[0] and "fragmentos=" in eventos[0]
     assert Q_SEGUIMIENTO not in caplog.text and ANALISIS_ACTIVO not in caplog.text
+
+
+def test_chat_turn_omite_y_cuenta_la_afirmacion_prescriptiva_en_el_seguimiento_cuando_el_llm_la_cita():
+    entorno, _ = _entorno("SEG-PRESCRIPTIVO")
+
+    _, segundo = _analisis_y_seguimiento(entorno)
+
+    cuerpo = segundo.json()
+    assert [b["text"] for b in cuerpo["blocks"]] == [f"{MARCO_ES}{TEXTO_DEL_SEGUIMIENTO}"]
+    assert cuerpo["omittedClaims"] == 1
+    assert "debe recibir" not in segundo.text
+
+
+def test_chat_turn_responde_503_llm_output_invalid_sin_bloques_cuando_la_salida_del_seguimiento_no_parsea():
+    entorno, _ = _entorno("SEG-SALIDA-INVALIDA")
+
+    _, segundo = _analisis_y_seguimiento(entorno)
+
+    assert segundo.status_code == 503
+    assert segundo.json()["error"] == "LLM_OUTPUT_INVALID"
+    assert "blocks" not in segundo.json()

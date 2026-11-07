@@ -16,8 +16,12 @@ from app.application.chat.citas import ConstructorDeCitas, FuenteDeCita
 from app.application.chat.contexto_del_turno import evidencia_del_turno
 from app.application.chat.grafo import EstadoDelGrafo
 from app.application.ports import ConsultaDeEvidencia, PosicionDeChunks
-from app.domain.chat.bloques_de_evidencia import texto_de_las_opciones
-from app.domain.chat.mensajes import MENSAJE_SIN_OPCIONES_CON_SOPORTE
+from app.domain.chat.bloques_de_evidencia import (
+    CriterioParaMostrar,
+    texto_de_la_opcion,
+    texto_de_los_faltantes,
+)
+from app.domain.chat.mensajes import MENSAJE_SIN_OPCIONES_CON_SOPORTE, ORDEN_POR_APLICABILIDAD
 from app.domain.chat.turno import BloqueDelTurno, TipoDeBloque
 from app.domain.chat.ultima_evidencia import resumir_ultima_evidencia
 from app.schemas.generated.models import RagQueryInternalResponse, RagQueryStatus
@@ -72,5 +76,41 @@ class NodoEvidencia:
             for c in opcion.citedSources
         ]
         citas = await self._citas.construir(trace_id, fuentes)
-        texto = texto_de_las_opciones([(o.option, o.rationale) for o in respuesta.evidenceOptions])
-        return (BloqueDelTurno(TipoDeBloque.evidencia, texto, citas=tuple(citas.values())),)
+        por_fuente = _criterios_por_fuente(respuesta)
+        total = len(respuesta.evidenceOptions)
+        mostrados: list[CriterioParaMostrar] = []
+        bloques: list[BloqueDelTurno] = []
+        for numero, opcion in enumerate(respuesta.evidenceOptions, start=1):
+            externos = dict.fromkeys(c.externalId for c in opcion.citedSources)
+            criterios = tuple(c for e in externos for c in por_fuente.get(e, ()))
+            mostrados += criterios
+            ids = dict.fromkeys(c.chunkId for c in opcion.citedSources)
+            texto = texto_de_la_opcion(numero, total, opcion.option, opcion.rationale, criterios)
+            bloques.append(
+                BloqueDelTurno(TipoDeBloque.evidencia, texto, citas=tuple(citas[i] for i in ids))
+            )
+        bloques.append(BloqueDelTurno(TipoDeBloque.catalogo, ORDEN_POR_APLICABILIDAD))
+        faltantes = texto_de_los_faltantes(mostrados)
+        if faltantes is not None:
+            bloques.append(BloqueDelTurno(TipoDeBloque.faltante, faltantes))
+        bloques += [
+            BloqueDelTurno(TipoDeBloque.limitacion, lim.text) for lim in respuesta.limitations
+        ]
+        return tuple(bloques)
+
+
+def _criterios_por_fuente(
+    respuesta: RagQueryInternalResponse,
+) -> dict[str, tuple[CriterioParaMostrar, ...]]:
+    """Los criterios de aplicabilidad de cada fuente (``externalId``), tal como los calculó ``/rag/query``."""
+    return {
+        fuente.externalId: tuple(
+            CriterioParaMostrar(
+                c.criterion,
+                c.status.value,
+                c.unknownReason.value if c.unknownReason is not None else None,
+            )
+            for c in fuente.criteria
+        )
+        for fuente in respuesta.applicability
+    }

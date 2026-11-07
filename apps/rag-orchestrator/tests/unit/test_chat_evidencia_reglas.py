@@ -1,6 +1,10 @@
 """Reglas puras del turno de evidencia del chat (US-265 / L1D-322): sin adapters."""
 
-from app.domain.chat.bloques_de_evidencia import texto_de_las_opciones
+from app.domain.chat.bloques_de_evidencia import (
+    CriterioParaMostrar,
+    texto_de_la_opcion,
+    texto_de_los_faltantes,
+)
 from app.domain.chat.estado import (
     EstadoDelHilo,
     TurnoPrevio,
@@ -31,14 +35,42 @@ def test_resumen_no_tiene_ningun_campo_de_identificador_de_analisis():
     assert campos == {"query", "chunk_ids", "top_relevance_score"}
 
 
-def test_texto_de_las_opciones_encabeza_y_numera_en_el_orden_recibido():
-    texto = texto_de_las_opciones([("Opción B", "Razón B."), ("Opción A", "Razón A.")])
+def test_texto_de_la_opcion_encabeza_y_dice_el_estado_por_criterio_con_la_causa_del_dato_ausente():
+    criterios = [
+        CriterioParaMostrar("estado_her2", "coincide"),
+        CriterioParaMostrar("estado_menopausico", "desconocido", "falta_en_paciente"),
+        CriterioParaMostrar("estadio", "desconocido", "sin_regla_de_comparacion"),
+        CriterioParaMostrar("ecog", "no_coincide"),
+    ]
+
+    texto = texto_de_la_opcion(2, 3, "Opción B", "Razón B.", criterios)
 
     assert texto.splitlines() == [
-        "Opciones descritas en la evidencia:",
-        "1. Opción B. Razón B.",
-        "2. Opción A. Razón A.",
+        "Opciones descritas en la evidencia: opción 2 de 3.",
+        "Opción B. Razón B.",
+        "Aplicabilidad al paciente por criterio: estado her2: Coincide; "
+        "estado menopausico: Desconocido (falta en el paciente); estadio: Desconocido; ecog: No coincide.",
     ]
+
+
+def test_texto_de_la_opcion_omite_la_aplicabilidad_cuando_no_hay_criterios():
+    assert texto_de_la_opcion(1, 1, "A", "R.", []).splitlines() == [
+        "Opciones descritas en la evidencia: opción 1 de 1.",
+        "A. R.",
+    ]
+
+
+def test_texto_de_los_faltantes_lista_sin_repetir_los_criterios_por_dato_ausente():
+    criterios = [
+        CriterioParaMostrar("estado_menopausico", "desconocido", "falta_en_paciente"),
+        CriterioParaMostrar("estado_menopausico", "desconocido", "falta_en_paciente"),
+        CriterioParaMostrar("estadio", "desconocido", "sin_regla_de_comparacion"),
+    ]
+
+    assert texto_de_los_faltantes(criterios) == (
+        "Datos que faltan del paciente para comparar: estado menopausico."
+    )
+    assert texto_de_los_faltantes([CriterioParaMostrar("ecog", "coincide")]) is None
 
 
 def test_estado_sobrescribe_la_ultima_evidencia_y_suma_opciones_y_citas_sin_repetir_cuando_el_turno_recupera():
