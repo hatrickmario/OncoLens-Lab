@@ -93,6 +93,31 @@ describe('armarPreguntasGuiadas', () => {
     }
   });
 
+  it('no nombra ningún término del catálogo que el fixture compartido no espere para el caso [US-273 AC-1]', () => {
+    const etiquetas = Object.values(catalogosGuiadas.codigos)
+      .flatMap((c) => c.entradas.map((e) => e.etiquetaEs))
+      .filter((e): e is string => typeof e === 'string');
+
+    for (const caso of fixture.casos) {
+      const junto = armar(caso.patientSummary as unknown as ResumenParaPreguntas).join(' ');
+      const esperados = caso.salida.terminos;
+      const ajenos = etiquetas.filter(
+        (e) => !esperados.some((t) => t.includes(e)) && junto.includes(e),
+      );
+
+      expect(ajenos, caso.id).toEqual([]);
+    }
+  });
+
+  it('no ancla el tema en el PSA de próstata y usa el siguiente biomarcador del catálogo [US-273 AC-1]', () => {
+    const solo = armar(casoDelFixture('prostata-solo-psa-sin-estadio-ni-grado')).join(' ');
+    const conHrr = armar(casoDelFixture('prostata-con-psa-y-hrr')).join(' ');
+
+    expect(solo).not.toMatch(/PSA|prostático/);
+    expect(conHrr).toContain('HRR positivo');
+    expect(conHrr).not.toMatch(/PSA|prostático/);
+  });
+
   it('no usa términos prescriptivos en ninguna plantilla del catálogo [US-267 AC-9]', () => {
     const lista = loadProhibitedTerms();
     const plantillas = Object.values(catalogosGuiadas.plantillas).flatMap((p) =>

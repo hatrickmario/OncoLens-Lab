@@ -60,6 +60,18 @@ def test_cargador_ofrece_los_biomarcadores_no_anclables_del_catalogo_solo_para_p
     assert catalogo.biomarcadores_no_anclables == {"prostata": frozenset({"psa"})}
 
 
+def test_cargador_de_terminos_falla_sin_ruta_cuando_el_lexico_no_esta_en_el_catalogo(tmp_path):
+    for archivo in ("escalas.json", "mama/codigos.json", "mama/datos-criticos.json"):
+        destino = tmp_path / archivo
+        destino.parent.mkdir(parents=True, exist_ok=True)
+        destino.write_text((CATALOGOS / archivo).read_text("utf-8"), encoding="utf-8")
+
+    with pytest.raises(CatalogoNoDisponible) as error:
+        cargar_catalogo_de_terminos(tmp_path, ("mama",))
+
+    assert str(tmp_path) not in str(error.value)
+
+
 def test_cargador_falla_sin_ruta_ni_contenido_cuando_el_lexico_no_esta_en_el_catalogo(tmp_path):
     with pytest.raises(CatalogoNoDisponible) as error:
         cargar_marcos_de_pregunta(tmp_path)

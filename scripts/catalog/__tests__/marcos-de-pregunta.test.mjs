@@ -158,6 +158,25 @@ describe('catalog:validate · expansion.biomarcadoresNoAnclables (L1D-331, [US-2
   );
 
   it(
+    'rechaza un biomarcador no anclable que no está en datos-criticos del tipo [US-273 AC-4]',
+    () => {
+      const catalogo = catalogoConMarcos();
+      modificarJson(catalogo, MARCOS, (c) => {
+        c.expansion.biomarcadoresNoAnclables.prostata = ['psa', 'xyz'];
+      });
+
+      const resultado = ejecutarValidador(catalogo);
+
+      expect(resultado.codigo).not.toBe(0);
+      expect(resultado.salida).toContain(
+        'biomarcador_no_anclable_desconocido catalogo/marcos-de-pregunta campo=expansion_prostata',
+      );
+      expect(resultado.salida).not.toContain('xyz');
+    },
+    PLAZO_PROCESO_MS,
+  );
+
+  it(
     'rechaza una entrada duplicada y una sin normalizar [US-273 AC-4]',
     () => {
       const catalogo = catalogoConMarcos();
