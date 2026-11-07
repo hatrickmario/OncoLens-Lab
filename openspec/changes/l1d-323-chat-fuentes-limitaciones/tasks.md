@@ -26,6 +26,10 @@
 - [ ] 2.12 TRASLADADA a L1D-326: P2-11 (repositorio de conversación) y las P3 de diseño de `l1d-322` que no caben aquí: flag `con_analisis_activo`, Parameter Object de `_registrar_chat`, defaults de `chunk_ids_evaluados` (cierra el lote de FEAT-12; confirmar o reasignar al ID de deuda que el orquestador cree)
 - [ ] 2.13 TRASLADADA a US-185 (L1D-177): prueba de mutación para confirmar los tests que nacieron verdes de `l1d-322` (AC-5/6/7) y los de la sección 3 (StrykerJS, US-185)
 
+- [x] 2.14 (Gate 2) `LimitacionesDelAnalisis.hubo_opciones` y `is not None` en `estado_tras_el_turno`: un turno sin opciones dice «el último análisis no produjo opciones» y no arrastra el análisis viejo · test de integración (turno con opciones, `sin_evidencia`, limitaciones) y 4 unitarios, rojo en el commit `test(L1D-323)` de la vuelta
+- [x] 2.15 (Gate 2) `corpus` solo enruta a fuentes junto a fecha/corte/cubre/incluye (3 negativos → `evidencia`); `NO_DISPONIBLE` → `TEXTO_NO_DISPONIBLE_RN25`; recuperador falso con el contrato real; textos «fragmentos de evidencia evaluados en la última consulta» y «ninguna declarada en la release vigente» (ejemplos regenerados y comparados por el test). Las etiquetas legibles de licencia e idioma no se hicieron: TRASLADADA a L1D-326
+- [x] 2.16 (Gate 2, contract-keeper) Test de integración de `POST /chat/turn` 503 `NLI_UNAVAILABLE` (turno de evidencia con `NliFalso(error=…)`, cuerpo válido contra `ErrorNliNoDisponible`, sin detalle del borde, cero LLM) · nace verde (declarado): el handler ya existía
+
 ## 3. clinical-platform
 
 - [x] 3.1 (TDD estricto) Test de aceptación: `Q-SIN` como turno → `AIAnalysisRecord` `sin_evidencia` con `topRelevanceScore = null` y `evidenceOptions = []` enlazado al turno, cero llamadas de generación y bloque `limitacion` [US-266 AC-5] · integración (Supertest + PostgreSQL real + MSW desde `chat-turn-fuentes-sin-evidencia.json`) en `conversacion-fuentes-limitaciones.test.ts` · **nace verde** (declarado): L1D-315 y L1D-322 ya cubren lo que pide, por lo que no hay rojo ni `feat`; verde: `7 passed`
@@ -35,12 +39,11 @@
 
 ## 4. evaluación
 
-- [ ] 4.1 (evaluate) `run-ai-eval` de regresión (`eval/configs/rn23-local.yaml --suite all`) por el cambio de reglas de enrutado y del texto fijo de limitación: salidas prescriptivas = 0 y «sin evidencia» sin regresión; AC06 del chat se mide en US-269 · DIFERIDA -> H-2 (lo lanza el orquestador con `ai-eval-runner` en el Gate 2); evidencia local: `eval-required.mjs --base origin/main` con adapters falsos, sin regresión; el texto fijo cumple RN-23 (`check_prohibited_terms` niveles A y B sobre cada bloque en AC-4)
+- [ ] 4.1 (evaluate) `run-ai-eval` de regresión (`eval/configs/rn23-local.yaml --suite all`) por el cambio de reglas de enrutado y del texto fijo de limitación · DIFERIDA -> L1D-326 (decisión del usuario, 2026-11-06: la evaluación real solo corre en las historias que cambian prompt o modelo; este change no cambia ninguno). Evidencia local: `eval-required.mjs --base origin/main` con adapters falsos, sin regresión; el texto fijo cumple RN-23 (`check_prohibited_terms` niveles A y B sobre cada bloque en AC-4)
 
 ## 5. cierre
 
 - [x] 5.1 `openspec validate l1d-323-chat-fuentes-limitaciones --strict` (y `--all`: 54 passed), `pytest` de `apps/rag-orchestrator` (3725 passed + `tests/evaluation` 4787 con `verify-provider`), `ruff format/check`, `lint-imports` (2 kept), `npm run quality` (0 errores), `tsc -p tsconfig.build.json`, `eslint`/`prettier` del test nuevo, `pii-scan`, `tasks-destino`
-- [ ] 5.2 DIFERIDA -> H-2. Gate 2 con los guardianes, CI verde y merge
 
 ## humano
 
@@ -60,9 +63,9 @@
   }
   ```
 
-  y la fila en `docs/architecture/adr/ADR-26-contrato-congelado-y-excepciones-declaradas.md` (tabla de excepciones, tras E-18 y E-19; actualizar «E-1…E-13» de la línea de `excepcionesDeContrato.test.mjs` si la cuenta se verifica):
-  `| E-20 | rag-orchestrator | `response-body-one-of-added` en `POST /chat/turn`: `ErrorRecuperacionNoDisponible` (`RETRIEVAL_UNAVAILABLE`) y `ErrorNliNoDisponible` (`NLI_UNAVAILABLE`) añadidos al `oneOf` del `503` | l1d-323-chat-fuentes-limitaciones | Aditivo: `clinical-api` clasifica por código HTTP y de error y los traduce a `502` (`rag-failure.ts`); los dos esquemas ya existían en `/rag/query` y `/rag/follow-up`. Pendiente de decisión del PO |`
-- [ ] H-2 Informe de `ai-eval-runner` (regresión de enrutado y texto fijo, `rn23-local.yaml --suite all`) en `reports/eval/`, Gate 2 y CI verde antes del merge (tareas 4.1 y 5.2). DIFERIDA -> H-2.
+  En el MISMO commit: (1) en `scripts/ci/__tests__/excepcionesDeContrato.test.mjs`, el `it` (línea 129) y su aserción (línea 130) deben esperar «E-1…E-17 y E-20» (hoy `Array.from({ length: 17 }…)`); (2) en `docs/architecture/adr/ADR-26-contrato-congelado-y-excepciones-declaradas.md`, la fila de la tabla de excepciones (tras E-18 y E-19) con «Decidido (usuario, <fecha>)» en lugar de «Pendiente de decisión del PO», y la sección «Confirmación» (que hoy dice «E-1…E-13») pasa a «E-1…E-17 y E-20». Fila:
+  `| E-20 | rag-orchestrator | `response-body-one-of-added` en `POST /chat/turn`: `ErrorRecuperacionNoDisponible` (`RETRIEVAL_UNAVAILABLE`) y `ErrorNliNoDisponible` (`NLI_UNAVAILABLE`) añadidos al `oneOf` del `503` | l1d-323-chat-fuentes-limitaciones | Aditivo: `clinical-api` clasifica por código HTTP y de error y los traduce a `502` (`rag-failure.ts`); los dos esquemas ya existían en `/rag/query` y `/rag/follow-up`. Decidido (usuario, <fecha>) |`
 
+Nota (sin checkbox): Gate 2, CI verde y merge los gestiona el orquestador; la evaluación real de `ai-eval-runner` no es de este change (tarea 4.1).
 Nota (sin checkbox): no se añadieron claves de configuración ni cambios en `.env.example`, Compose ni su test de paridad.
 Nota (sin checkbox): rag `1.14.0` y clinical-api `1.29.0` (sin cambio); si otro change mergea antes con `1.14.0`, se renumera el segundo (glosario §1).

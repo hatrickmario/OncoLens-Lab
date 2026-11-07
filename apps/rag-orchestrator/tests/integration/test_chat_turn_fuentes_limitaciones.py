@@ -417,3 +417,21 @@ def test_chat_turn_dice_que_el_ultimo_analisis_no_produjo_opciones_sin_arrastrar
     assert "el último análisis no produjo opciones" in texto
     assert "ningún criterio" not in texto
     assert FRASE_FR10 in texto
+
+
+def test_chat_turn_responde_503_nli_unavailable_sin_detalle_cuando_el_verificador_de_soporte_no_esta_disponible():
+    from app.application.errores import NliNoDisponibleError
+    from app.schemas.generated.models import ErrorNliNoDisponible
+
+    nli = NliFalso(error=NliNoDisponibleError())
+    base = crear_entorno(generador=FakeEvidenceGenerator("LLM-OK"), clasificador_nli=nli)
+    entorno = crear_entorno_de_chat_con_evidencia(base)
+
+    respuesta = entorno.turno(solicitud_de_evidencia(Q_HER2))
+
+    assert respuesta.status_code == 503
+    cuerpo = respuesta.json()
+    assert cuerpo["error"] == "NLI_UNAVAILABLE"
+    assert ErrorNliNoDisponible.model_validate(cuerpo) is not None
+    assert "evidenceAnalysis" not in cuerpo and "blocks" not in cuerpo
+    assert entorno.llm.invocaciones == 0

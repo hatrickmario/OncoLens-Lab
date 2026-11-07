@@ -7,7 +7,7 @@
     },
     {
       "kind": "limitacion",
-      "text": "Alcance de la recuperación: el corpus tiene fecha de corte 2026-09-30; fuentes no incluidas: FUENTE-EXCLUIDA-1, FUENTE-EXCLUIDA-2; fragmentos evaluados por el reranker en la última consulta de evidencia: 2."
+      "text": "Alcance de la recuperación: el corpus tiene fecha de corte 2026-09-30; fuentes no incluidas: FUENTE-EXCLUIDA-1, FUENTE-EXCLUIDA-2; fragmentos de evidencia evaluados en la última consulta: 2."
     },
     {
       "kind": "limitacion",

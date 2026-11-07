@@ -64,7 +64,7 @@ def test_limitaciones_de_la_recuperacion_dice_ninguna_registrada_cuando_no_hay_f
     texto = texto_de_limitaciones_de_la_recuperacion(date(2026, 9, 30), (), 0)
 
     assert "fuentes no incluidas: ninguna declarada en la release vigente;" in texto
-    assert texto.endswith("última consulta de evidencia: 0.")
+    assert texto.endswith("evaluados en la última consulta: 0.")
 
 
 def test_limitaciones_del_analisis_cuenta_solo_los_criterios_desconocidos_sin_repetirlos():

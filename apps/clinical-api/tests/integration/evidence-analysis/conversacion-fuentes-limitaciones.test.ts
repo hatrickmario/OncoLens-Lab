@@ -106,7 +106,7 @@ describe('Turno de evidencia sin evidencia en el chat', () => {
     expect(bloques.map((b) => b.kind)).toEqual(['limitacion', 'limitacion']);
     expect(bloques[1]?.text).toMatch(/fecha de corte/);
     expect(bloques[1]?.text).toMatch(/fuentes no incluidas/);
-    expect(bloques[1]?.text).toMatch(/fragmentos evaluados/);
+    expect(bloques[1]?.text).toMatch(/fragmentos de evidencia evaluados/);
     expect(respuesta.body.notices).toEqual(chatTurnFuentesSinEvidencia.notices);
     const estado = JSON.stringify(turno?.structured_state);
     expect(estado).not.toContain('analysisId');

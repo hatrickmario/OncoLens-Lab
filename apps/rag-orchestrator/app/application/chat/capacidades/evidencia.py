@@ -65,7 +65,9 @@ class NodoEvidencia:
                 estado["pregunta"], consultada.chunk_ids_evaluados, respuesta.topRelevanceScore
             ),
             "limitaciones_del_analisis": limitaciones_del_analisis(
-                _criterios_de_las_opciones(respuesta), len(respuesta.discardedOptions)
+                _criterios_de_las_opciones(respuesta),
+                len(respuesta.discardedOptions),
+                bool(respuesta.evidenceOptions),
             ),
         }
 

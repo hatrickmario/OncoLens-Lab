@@ -83,6 +83,9 @@ class LimitacionesDelAnalisis:
 
     criterios_desconocidos: tuple[str, ...]
     opciones_descartadas: int
+    hubo_opciones: bool = True
+    """``False`` si el análisis no produjo opciones (``sin_evidencia`` o ninguna con soporte): su aplicabilidad nunca se evaluó,
+    así que «ningún criterio Desconocido» sería una afirmación sin base."""
 
 
 @dataclass(frozen=True)
@@ -129,7 +132,11 @@ def estado_tras_el_turno(
     return EstadoDelHilo(
         turnos=(*estado.turnos, turno)[-MAX_TURNOS_EN_MEMORIA:],
         estructurado=estructurado,
-        limitaciones_del_analisis=limitaciones_del_analisis or estado.limitaciones_del_analisis,
+        limitaciones_del_analisis=(
+            estado.limitaciones_del_analisis
+            if limitaciones_del_analisis is None
+            else limitaciones_del_analisis
+        ),
     )
 
 
