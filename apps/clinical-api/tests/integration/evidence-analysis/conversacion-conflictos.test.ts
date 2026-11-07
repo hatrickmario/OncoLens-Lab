@@ -3,7 +3,7 @@ import chatTurnCasoConflicto from '../../../../../contracts/examples/chat-turn-c
 import chatTurnCasoOk from '../../../../../contracts/examples/chat-turn-caso-ok.json' with { type: 'json' };
 import { idSembrado } from '../../../prisma/seed/determinismo.js';
 import { PACIENTE_CHAT } from '../../../prisma/seed/pacientes/chat.js';
-import { lectorDeIdentidadFalso } from '../../support/desidentificacion.js';
+import { detectoresReales, lectorDeIdentidadFalso } from '../../support/desidentificacion.js';
 import { IDENTIDAD_CHAT, abrirConversacion, enviarTurno } from '../../support/conversacion.js';
 import {
   abrirSesion,
@@ -154,6 +154,51 @@ describe('Contradicciones de P-CHAT en el chat', () => {
     expect(iia).toMatchObject({ reviewStatus: 'verificado', conflictWith: iib?.factRef });
     expect(iib).toMatchObject({ reviewStatus: 'requiere_revision', conflictWith: iia?.factRef });
     expect(hechos.filter((h) => h.conflictWith !== undefined)).toHaveLength(2);
+  });
+});
+
+describe('Desidentificación de la contraparte del conflicto', () => {
+  it('enmascara la pregunta una sola vez y usa el seudónimo de la primera llamada cuando el par IIA/IIB tiene contraparte [US-262 AC-1] [RN-11]', async () => {
+    const textosEnmascarados: string[] = [];
+    const real = detectoresReales();
+    let n = 0;
+    const { app } = await montarGateway(mundo, {
+      identidades: lectorDeIdentidadFalso({ [pacienteChat]: IDENTIDAD_CHAT }),
+      pseudonimos: { nuevo: () => `psd_Conflicto${++n}` },
+      detectores: {
+        para: (identidad) => {
+          const detector = real.para(identidad);
+          return {
+            enmascarar: (texto) => {
+              textosEnmascarados.push(texto);
+              return detector.enmascarar(texto);
+            },
+          };
+        },
+      },
+    });
+    const conversationId = await abrirConversacion(app, cookie, pacienteChat);
+    rag.chat.responder({ tipo: 'json', status: 200, cuerpo: chatTurnCasoConflicto });
+
+    await enviarTurno(app, cookie, conversationId, PREGUNTA_CONTRADICCIONES);
+
+    expect(textosEnmascarados.filter((t) => t === PREGUNTA_CONTRADICCIONES)).toHaveLength(1);
+    expect(rag.chat.capturadas.at(-1)?.cuerpo).toMatchObject({ pseudoPatientId: 'psd_Conflicto1' });
+  });
+
+  it('no envía UUID de diagnóstico ni fechas ISO y conflictWith solo contiene factRef opacos cuando el par IIA/IIB viaja a Backend 2 [RN-10] [RN-11]', async () => {
+    const { app, conversationId } = await abrirChatDelPacienteChat();
+    rag.chat.responder({ tipo: 'json', status: 200, cuerpo: chatTurnCasoConflicto });
+
+    await enviarTurno(app, cookie, conversationId, PREGUNTA_CONTRADICCIONES);
+
+    const cuerpo = JSON.stringify(rag.chat.capturadas.at(-1)?.cuerpo);
+    expect(cuerpo).not.toContain(idDelPaciente('diagnostico-iia'));
+    expect(cuerpo).not.toContain(idDelPaciente('diagnostico-iib'));
+    expect(cuerpo).not.toMatch(/\d{4}-\d{2}-\d{2}/);
+    const enConflicto = hechosEnviados().filter((h) => h.conflictWith !== undefined);
+    expect(enConflicto).toHaveLength(2);
+    for (const hecho of enConflicto) expect(hecho.conflictWith).toMatch(/^f[0-9]+$/);
   });
 });
 
