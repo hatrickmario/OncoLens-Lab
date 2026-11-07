@@ -7,6 +7,11 @@ Recorrido local de punta a punta: login → paciente semilla → pregunta clíni
 2. **Ollama** y el modelo: `ollama pull gemma4:26b-a4b-it-q4_K_M` (17 GB).
 3. **Pesos ONNX** (fuera del repo, ~7 GB de descarga, ~10 min): con un venv que tenga `apps/rag-orchestrator/requirements-eval.txt` y `requirements-export.txt` (torch y transformers, D-11),
    `python scripts/demo/exportar-modelos.py ~/adr39-modelos`. Genera `~/adr39-modelos/` con `model.onnx` + `tokenizer.json` por modelo y `modelos.env` (rutas y SHA-256).
+   Incluye `embeddings/sparse_linear.npz` (pesos del sparse léxico de BGE-M3) y sus variables `EMBEDDING_SPARSE_WEIGHTS_PATH` / `EMBEDDING_SPARSE_WEIGHTS_SHA256` en `modelos.env`: sin ellas fallan en cerrado la búsqueda híbrida (`RETRIEVAL_MODE=hibrida`), `ingest reindex-sparse` y la suite `evaluate`.
+   Verificación (instalación desde cero o equipo nuevo): `python3 -c "import numpy as np; d=np.load('$HOME/adr39-modelos/embeddings/sparse_linear.npz', allow_pickle=False); print(d.files, d['weight'].shape)"` debe imprimir `['weight', 'bias'] (1, 1024)`, y `grep SPARSE ~/adr39-modelos/modelos.env` las dos variables; el hash debe coincidir con `shasum -a 256 ~/adr39-modelos/embeddings/sparse_linear.npz`.
+   Si tu `modelos.env` es anterior a este cambio y ya tienes `sparse_linear.npz`, añade las dos variables a mano (ruta `/models/embeddings/sparse_linear.npz` y el SHA-256 de ese archivo) o vuelve a ejecutar `exportar-modelos.py` (es idempotente y regenera `modelos.env`).
+   Si falta el archivo: se regenera con ese mismo script (fase `fp32` de `app.evaluation.exportar_onnx`, que escribe `sparse_linear.npz` desde `sparse_linear.pt` de BAAI/bge-m3). Los pesos no se versionan (RN-14).
+   Medir la híbrida: `RETRIEVAL_MODE=hibrida RETRIEVAL_FUSION=rrf python -m app.evaluation.evaluate --config eval/configs/rn23-local.yaml --suite all --salida reports/eval` frente a `dense` (con `source ~/adr39-modelos/modelos.env` y Ollama nativo). Compose aún no pasa las claves `EMBEDDING_SPARSE_WEIGHTS_*` ni `RETRIEVAL_*` al contenedor `rag-orchestrator` (deuda L1D-328): la híbrida en runtime Compose requiere ese cambio.
 
 ## 2. Levantar y apagar
 **Limpieza inicial (OUT-03, F-07):** antes de la primera instalación, o si hubo otra anterior, empieza de cero:
