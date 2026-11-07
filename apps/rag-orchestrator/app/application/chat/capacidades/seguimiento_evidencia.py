@@ -64,26 +64,26 @@ class ParametrosDelSeguimiento:
     """``LLM_NUM_CTX``: solo para medir el tamaño del prompt (no cambia ningún comportamiento)."""
 
 
-class _AfirmacionCruda(BaseModel):
+class AfirmacionCruda(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     texto: str = Field(alias="text", min_length=1)
     citas: list[str] = Field(alias="citations")
 
 
-class _SalidaCruda(BaseModel):
+class SalidaCruda(BaseModel):
     """Esquema interno de la salida del LLM del seguimiento (no es contrato entre servicios)."""
 
     model_config = ConfigDict(extra="ignore")
 
-    afirmaciones: list[_AfirmacionCruda] = Field(alias="claims")
+    afirmaciones: list[AfirmacionCruda] = Field(alias="claims")
 
 
 def esquema_de_la_salida(claims_max: int) -> dict[str, Any]:
     """Esquema entregado al LLM: hasta ``claims_max`` afirmaciones y alias con el formato de la consulta."""
-    esquema = _SalidaCruda.model_json_schema()
+    esquema = SalidaCruda.model_json_schema()
     esquema["properties"]["claims"]["maxItems"] = claims_max
-    esquema["$defs"]["_AfirmacionCruda"]["properties"]["citations"]["items"] = {
+    esquema["$defs"]["AfirmacionCruda"]["properties"]["citations"]["items"] = {
         "type": "string",
         "pattern": PATRON_DE_ALIAS,
     }
@@ -185,7 +185,7 @@ class NodoSeguimientoDeEvidencia:
             logger.warning("event=chat_seguimiento_llm_fallo traceId=%s", trace_id)
             raise LlmLocalNoDisponibleError() from None
         salida = validar_salida_cruda(
-            _SalidaCruda, crudo, trace_id, "chat_seguimiento_salida_invalida"
+            SalidaCruda, crudo, trace_id, "chat_seguimiento_salida_invalida"
         )
         return tuple(
             AfirmacionAtomica(
