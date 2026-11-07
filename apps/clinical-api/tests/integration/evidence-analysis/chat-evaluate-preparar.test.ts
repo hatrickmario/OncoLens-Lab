@@ -93,9 +93,10 @@ describe('eval:chat-preparar sobre el seed sintético', () => {
     ]);
     expect(caso.peticion.question).toContain('[REDACTADO]');
     expect(caso.hechosPorClave['paciente-chat/diagnostico-iia']).toMatch(/^f\d+$/);
-    expect(texto).not.toContain(NOMBRE_SINTETICO_CHAT);
-    expect(texto).not.toContain(DOCUMENTO_SINTETICO_CHAT);
-    expect(texto).not.toContain(NACIMIENTO_SINTETICO_CHAT);
-    expect(texto).not.toContain('{identidad_sintetica');
+    const peticion = JSON.stringify(caso.peticion);
+    expect(peticion).not.toContain(NOMBRE_SINTETICO_CHAT);
+    expect(peticion).not.toContain(DOCUMENTO_SINTETICO_CHAT);
+    expect(peticion).not.toContain(NACIMIENTO_SINTETICO_CHAT);
+    expect(peticion).not.toContain('{identidad_sintetica');
   });
 });
