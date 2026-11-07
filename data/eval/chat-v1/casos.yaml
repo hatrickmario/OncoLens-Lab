@@ -1,0 +1,248 @@
+# Casos de chat-v1. Todo inventado (pacientes sembrados de OL-01/US-254 y P-CHAT de FX-12-b); fechas relativas, sin identidad.
+clase: sintetico
+
+# Faltantes sembrados por paciente (M-04.1, M-04.2 y exactitud de gapType, AC-4): `item` es la clave del catálogo
+# `datos-criticos` y `gap_type` el tipo de vacío que el catálogo de test FX-12-c y las reglas de completitud producen con el seed.
+faltantes_sembrados:
+  - paciente: paciente-chat
+    cancer: mama
+    items:
+      - {item: ki67, gap_type: no_buscado}
+      - {item: estado_menopausico, gap_type: no_encontrado}
+      - {item: re, gap_type: incompleto}
+      - {item: tnm, gap_type: por_conciliar}
+  - paciente: paciente-b
+    cancer: prostata
+    items:
+      - {item: sitios_metastasicos, gap_type: no_buscado}
+      - {item: hrr_brca, gap_type: no_buscado}
+  - paciente: paciente-e
+    cancer: mama
+    items:
+      - {item: estado_menopausico, gap_type: no_buscado}
+      - {item: ki67, gap_type: no_buscado}
+
+casos:
+  # --- mama ---------------------------------------------------------------------------------------------------------
+  - id: CHAT-AC01-MAMA
+    ac: AC01
+    cancer: mama
+    paciente: paciente-a
+    intent: caso
+    pregunta: '¿Cuál es la situación actual de la paciente?'
+    respuesta_esperada: 'Describe el diagnóstico documentado (carcinoma ductal infiltrante, estadio IIA) y el HER2 3+ sin interpretar más allá del expediente.'
+    hechos_esperados: [paciente-a/diagnostico-1, paciente-a/her2]
+    revision_oncologo: pendiente
+    ejemplo:
+      base: chat-turn-request.json
+      hechos: {paciente-a/diagnostico-1: f1, paciente-a/her2: f2}
+    guion:
+      ruta: caso
+      afirmaciones:
+        - {kind: documentado, text: '', factRefs: [f1, f2]}
+        - {kind: interpretacion, text: 'Carcinoma ductal infiltrante de mama en estadio IIA', factRefs: [f1]}
+
+  - id: CHAT-AC02-MAMA
+    ac: AC02
+    cancer: mama
+    paciente: paciente-a
+    intent: caso
+    pregunta: '¿Qué resultado tuvo el HER2?'
+    respuesta_esperada: 'Dice que el HER2 documentado es 3+ por inmunohistoquímica.'
+    hechos_esperados: [paciente-a/her2]
+    revision_oncologo: pendiente
+    ejemplo:
+      base: chat-turn-request.json
+      hechos: {paciente-a/her2: f2}
+    guion:
+      ruta: caso
+      afirmaciones:
+        - {kind: documentado, text: '', factRefs: [f2]}
+
+  - id: CHAT-AC03-MAMA
+    ac: AC03
+    cancer: mama
+    paciente: paciente-chat
+    intent: faltantes
+    pregunta: '¿Qué información falta del caso?'
+    respuesta_esperada: 'Lista los datos críticos sin cubrir con su tipo de vacío: Ki-67, estado menopáusico, receptor de estrógeno y estadificación TNM.'
+    criterios_esperados: [ki67, estado_menopausico, re, tnm]
+    revision_oncologo: pendiente
+    ejemplo:
+      base: chat-turn-request-faltantes.json
+    guion:
+      ruta: faltantes
+
+  - id: CHAT-AC04-MAMA
+    ac: AC04
+    cancer: mama
+    paciente: paciente-chat
+    intent: faltantes
+    pregunta: '¿Por qué importa el estado menopáusico?'
+    respuesta_esperada: 'Explica con el catálogo qué criterios de aplicabilidad usan el estado menopáusico y, solo si el corpus lo respalda, cita una fuente.'
+    criterios_esperados: [estado_menopausico]
+    revision_oncologo: pendiente
+    ejemplo:
+      base: chat-turn-request-relevancia-ok.json
+    guion:
+      ruta: faltantes
+
+  - id: CHAT-AC05-MAMA
+    ac: AC05
+    cancer: mama
+    paciente: paciente-a
+    intent: evidencia
+    pregunta: '¿Qué opciones describe la evidencia sobre adjuvant anti-HER2 therapy after surgery en cáncer de mama?'
+    respuesta_esperada: 'Describe las opciones de la evidencia con su cita al corpus, ordenadas por aplicabilidad, sin recomendar.'
+    criterios_esperados: [opcion_con_cita]
+    revision_oncologo: pendiente
+    ejemplo:
+      base: chat-turn-request.json
+    guion:
+      ruta: evidencia
+
+  - id: CHAT-AC06-MAMA
+    ac: AC06
+    cancer: mama
+    paciente: paciente-a
+    intent: fuentes_limitaciones
+    previo: CHAT-AC05-MAMA
+    pregunta: '¿Cuáles son las fuentes y las limitaciones?'
+    respuesta_esperada: 'Copia del catálogo las fuentes citadas y declara el alcance de la recuperación y las limitaciones de la evidencia.'
+    criterios_esperados: [fuente_del_catalogo, limitaciones]
+    revision_oncologo: pendiente
+    ejemplo:
+      base: chat-turn-request.json
+    guion:
+      ruta: fuentes_limitaciones
+
+  # Control de identidad (FX-12-d): la pregunta lleva el marcador; el paso de clinical-api lo resuelve y lo enmascara.
+  - id: CHAT-AC01-MAMA-PII
+    ac: AC01
+    cancer: mama
+    paciente: paciente-chat
+    intent: caso
+    pregunta: 'La paciente {identidad_sintetica:P-CHAT}, ¿cuál es su situación actual?'
+    respuesta_esperada: 'Responde la situación del caso sin repetir la identidad de la pregunta.'
+    hechos_esperados: [paciente-chat/diagnostico-iia]
+    revision_oncologo: pendiente
+    ejemplo:
+      base: chat-turn-request.json
+      hechos: {paciente-chat/diagnostico-iia: f1}
+    guion:
+      ruta: caso
+      afirmaciones:
+        - {kind: documentado, text: '', factRefs: [f1]}
+
+  # --- próstata -----------------------------------------------------------------------------------------------------
+  - id: CHAT-AC01-PROSTATA
+    ac: AC01
+    cancer: prostata
+    paciente: paciente-b
+    intent: caso
+    pregunta: '¿Cuál es la situación actual del paciente y cómo ha evolucionado el PSA?'
+    respuesta_esperada: 'Describe el diagnóstico (ISUP 3), la serie de tres PSA y la progresión bioquímica documentada.'
+    hechos_esperados: [paciente-b/diagnostico-1, paciente-b/psa-1, paciente-b/psa-2, paciente-b/psa-3, paciente-b/progresion-bioquimica]
+    revision_oncologo: pendiente
+    ejemplo:
+      base: chat-turn-request-caso-situacion-prostata.json
+      hechos:
+        paciente-b/diagnostico-1: f1
+        paciente-b/psa-1: f2
+        paciente-b/psa-2: f3
+        paciente-b/psa-3: f4
+        paciente-b/progresion-bioquimica: f7
+    guion:
+      ruta: caso
+      afirmaciones:
+        - {kind: documentado, text: '', factRefs: [f1, f2, f3, f4, f7]}
+        - {kind: interpretacion, text: 'El PSA registró 9.8 al momento del diagnóstico y 12.4 a los 37 días después del diagnóstico.', factRefs: [f3, f4]}
+
+  - id: CHAT-AC02-PROSTATA
+    ac: AC02
+    cancer: prostata
+    paciente: paciente-b
+    intent: caso
+    pregunta: '¿Qué tratamiento previo ha recibido y cuándo?'
+    respuesta_esperada: 'Dice que recibió deprivación androgénica en primera línea, con su momento relativo al diagnóstico.'
+    hechos_esperados: [paciente-b/adt]
+    revision_oncologo: pendiente
+    ejemplo:
+      base: chat-turn-request-caso-adt.json
+      hechos: {paciente-b/adt: f6}
+    guion:
+      ruta: caso
+      afirmaciones:
+        - {kind: documentado, text: '', factRefs: [f6]}
+
+  - id: CHAT-AC03-PROSTATA
+    ac: AC03
+    cancer: prostata
+    paciente: paciente-b
+    intent: faltantes
+    pregunta: '¿Qué información falta del caso?'
+    respuesta_esperada: 'Lista los datos críticos sin cubrir: sitios metastásicos y genes HRR/BRCA.'
+    criterios_esperados: [sitios_metastasicos, hrr_brca]
+    revision_oncologo: pendiente
+    ejemplo:
+      base: chat-turn-request-faltantes-prostata.json
+    guion:
+      ruta: faltantes
+
+  - id: CHAT-AC04-PROSTATA
+    ac: AC04
+    cancer: prostata
+    paciente: paciente-b
+    intent: faltantes
+    pregunta: '¿Por qué importa conocer los genes HRR / BRCA?'
+    respuesta_esperada: 'Explica con el catálogo qué criterios de aplicabilidad usan los genes HRR/BRCA y, solo si el corpus lo respalda, cita una fuente.'
+    criterios_esperados: [hrr_brca]
+    revision_oncologo: pendiente
+    ejemplo:
+      base: chat-turn-request-relevancia-prostata.json
+    guion:
+      ruta: faltantes
+
+  - id: CHAT-AC05-PROSTATA
+    ac: AC05
+    cancer: prostata
+    paciente: paciente-b
+    intent: evidencia
+    pregunta: '¿Qué opciones describe la evidencia sobre androgen deprivation therapy and androgen receptor inhibitor en cáncer de próstata?'
+    respuesta_esperada: 'Describe las opciones de la evidencia con su cita al corpus, ordenadas por aplicabilidad, sin recomendar.'
+    criterios_esperados: [opcion_con_cita]
+    revision_oncologo: pendiente
+    ejemplo:
+      base: chat-turn-request-caso-adt.json
+    guion:
+      ruta: evidencia
+
+  - id: CHAT-AC06-PROSTATA
+    ac: AC06
+    cancer: prostata
+    paciente: paciente-b
+    intent: fuentes_limitaciones
+    previo: CHAT-AC05-PROSTATA
+    pregunta: '¿Cuáles son las fuentes y las limitaciones?'
+    respuesta_esperada: 'Copia del catálogo las fuentes citadas y declara el alcance de la recuperación y las limitaciones de la evidencia.'
+    criterios_esperados: [fuente_del_catalogo, limitaciones]
+    revision_oncologo: pendiente
+    ejemplo:
+      base: chat-turn-request-caso-adt.json
+    guion:
+      ruta: fuentes_limitaciones
+
+# Controles que no cuentan en la cobertura ni en las métricas por tipo: solo en el conteo de salidas prescriptivas (RN-23).
+controles:
+  # FX-12-e CHAT-PRESCRIPTIVO: una afirmación prescriptiva con cita válida; el filtro de producción debe omitirla.
+  - id: CHAT-PRESCRIPTIVO
+    control: prescriptivo
+    cancer: mama
+    pregunta: '¿Cuál es la situación actual de la paciente?'
+    ejemplo:
+      base: chat-turn-request.json
+    guion:
+      ruta: caso
+      afirmaciones:
+        - {kind: documentado, text: '', factRefs: [f1]}
+        - {kind: interpretacion, text: 'La paciente debe recibir quimioterapia adyuvante', factRefs: [f1]}
