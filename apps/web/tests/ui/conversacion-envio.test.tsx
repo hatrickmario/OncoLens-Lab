@@ -9,7 +9,15 @@ import {
   errorTurno503,
   turnoDeCaso,
 } from '../support/msw/conversaciones';
-import { montarPanel, preguntar, respuestaDeTurno, textos } from '../support/conversacion-ui';
+import {
+  buscarTarjetas,
+  cuantasTarjetas,
+  montarPanel,
+  preguntar,
+  respuestaDeTurno,
+  tarjetas,
+  textos,
+} from '../support/conversacion-ui';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn() }) }));
 
@@ -53,7 +61,7 @@ describe('Envío de una pregunta', () => {
 
     await usuario.dblClick(boton);
     retenida.abrir();
-    await screen.findByRole('article');
+    await buscarTarjetas();
 
     expect(bff.turnos).toHaveLength(1);
   });
@@ -63,7 +71,7 @@ describe('Envío de una pregunta', () => {
     const usuario = userEvent.setup();
     montarPanel();
     await preguntar(usuario, 'Primera pregunta');
-    await screen.findByRole('article');
+    await buscarTarjetas();
 
     await preguntar(usuario, '¿Qué información importante falta?');
 
@@ -72,7 +80,7 @@ describe('Envío de una pregunta', () => {
     expect(within(alerta).getByRole('button', { name: textos.reintentar })).toBeTruthy();
     expect(document.body.textContent).not.toMatch(/503|sin_conexion_con_rag|LOCAL_LLM_UNAVAILABLE/);
     expect(screen.getByText('¿Qué información importante falta?')).toBeTruthy();
-    expect(screen.getAllByRole('article')).toHaveLength(1);
+    expect(tarjetas()).toHaveLength(1);
     expect(within(alerta).queryByText(/Generado por IA|Uso académico/)).toBeNull();
   });
 
@@ -83,7 +91,7 @@ describe('Envío de una pregunta', () => {
     await preguntar(usuario, '¿Qué información importante falta?');
     await usuario.click(await screen.findByRole('button', { name: textos.reintentar }));
 
-    await screen.findByRole('article');
+    await buscarTarjetas();
     expect(bff.turnos.map((t) => t.cuerpo)).toEqual([
       { question: '¿Qué información importante falta?' },
       { question: '¿Qué información importante falta?' },
@@ -99,7 +107,7 @@ describe('Envío de una pregunta', () => {
     await preguntar(usuario, 'Una pregunta');
 
     expect((await screen.findByRole('alert')).textContent).toContain(textos.errorTitulo);
-    expect(screen.queryByRole('article')).toBeNull();
+    expect(cuantasTarjetas()).toBe(0);
   });
 
   it('pone el hilo en un role log con aria-live polite y el campo con label visible [US-267 AC-7]', () => {
@@ -129,7 +137,7 @@ describe('Envío de una pregunta', () => {
     const usuario = userEvent.setup();
     montarPanel();
     await preguntar(usuario, 'Primera');
-    await screen.findByRole('article');
+    await buscarTarjetas();
 
     await preguntar(usuario, 'Segunda');
 
@@ -137,7 +145,7 @@ describe('Envío de una pregunta', () => {
       expect((screen.getByLabelText(textos.campo) as HTMLTextAreaElement).disabled).toBe(true),
     );
     expect((screen.getByRole('button', { name: textos.preguntar }) as HTMLButtonElement).disabled).toBe(true);
-    expect(screen.getAllByRole('article')).toHaveLength(1);
+    expect(tarjetas()).toHaveLength(1);
     expect(document.body.textContent).not.toMatch(/403|OPT_OUT/);
   });
 });

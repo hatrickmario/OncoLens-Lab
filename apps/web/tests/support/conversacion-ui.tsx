@@ -8,6 +8,12 @@ import { mensajes } from '../../lib/mensajes';
 import { apertura, turnoDeCaso, type RespuestaDeTurno } from './msw/conversaciones';
 
 export const textos = mensajes().conversacion;
+
+/** La tarjeta de un turno es un grupo con nombre «Turno n»: `article` ya lo usan las tarjetas de opción del análisis. */
+const TARJETA_DE_TURNO = { name: /^Turno \d+$/ };
+export const tarjetas = () => screen.getAllByRole('group', TARJETA_DE_TURNO);
+export const buscarTarjetas = () => screen.findAllByRole('group', TARJETA_DE_TURNO);
+export const cuantasTarjetas = () => screen.queryAllByRole('group', TARJETA_DE_TURNO).length;
 export const ID_PACIENTE = apertura.patientId;
 
 export function montarPanel(props: Partial<ConversationPanelProps> = {}) {
@@ -28,7 +34,9 @@ export async function preguntar(
  * ejemplo `chat-turn-*.json` de Backend 2: así el test no inventa campos fuera de `contracts/examples/`.
  */
 export function turnoCon(carga: object, cambios: Record<string, unknown> = {}, numero = 1) {
-  return { ...turnoDeCaso, turnNumber: numero, dataLinks: [], ...carga, ...cambios };
+  // El id es único por turno: assistant-ui descarta mensajes con el mismo id.
+  const id = `00000000-0000-4000-8000-${String(numero).padStart(12, '0')}`;
+  return { ...turnoDeCaso, id, turnNumber: numero, dataLinks: [], ...carga, ...cambios };
 }
 
 export const respuestaDeTurno = (cuerpo: object, status = 201): RespuestaDeTurno => ({
@@ -45,5 +53,5 @@ export async function mostrarTurno(
   const usuario = userEvent.setup();
   montarPanel();
   await preguntar(usuario, '¿Cuál es la situación actual de la paciente?');
-  return { usuario, tarjeta: (await screen.findAllByRole('article'))[0]! };
+  return { usuario, tarjeta: (await buscarTarjetas())[0]! };
 }

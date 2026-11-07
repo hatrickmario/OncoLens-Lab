@@ -12,10 +12,13 @@ import {
   turnoInterpretacion,
 } from '../support/msw/conversaciones';
 import {
+  buscarTarjetas,
+  cuantasTarjetas,
   montarPanel,
   mostrarTurno,
   preguntar,
   respuestaDeTurno,
+  tarjetas,
   textos,
   turnoCon,
 } from '../support/conversacion-ui';
@@ -46,21 +49,21 @@ describe('Avisos de IA del turno', () => {
     const usuario = userEvent.setup();
     montarPanel();
     await preguntar(usuario, 'Primera');
-    await screen.findAllByRole('article');
+    await buscarTarjetas();
     await preguntar(usuario, 'Segunda');
     await screen.findByText(/Faltantes/);
     await preguntar(usuario, 'Tercera');
     await screen.findByRole('heading', { name: ENCABEZADO });
 
-    const tarjetas = screen.getAllByRole('article');
-    expect(tarjetas).toHaveLength(3);
-    for (const tarjeta of tarjetas) {
+    const lista = tarjetas();
+    expect(lista).toHaveLength(3);
+    for (const tarjeta of lista) {
       for (const aviso of AVISOS_RN19) {
         expect(within(tarjeta).getAllByText(aviso).length).toBeGreaterThan(0);
       }
     }
     expect(screen.getAllByText(ENCABEZADO)).toHaveLength(1);
-    expect(within(tarjetas[2]!).getByText(ENCABEZADO)).toBeTruthy();
+    expect(within(lista[2]!).getByText(ENCABEZADO)).toBeTruthy();
   });
 
   it('muestra el texto de notices y ningún aviso de la configuración cuando el turno trae otro texto', async () => {

@@ -1,0 +1,76 @@
+import type { ConversationTurn } from '../../../../packages/api-contracts/src/types/clinical-api';
+import {
+  zConversationId,
+  zConversationTurnCreate,
+} from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
+
+export type ResultadoDeApertura =
+  | { tipo: 'ok'; conversationId: string }
+  | { tipo: 'sin_sesion' }
+  | { tipo: 'error' };
+
+export type ResultadoDeTurno =
+  | { tipo: 'ok'; turno: ConversationTurn }
+  | { tipo: 'sin_sesion' }
+  | { tipo: 'opt_out' }
+  | { tipo: 'error' };
+
+const esObjeto = (valor: unknown): valor is Record<string, unknown> =>
+  valor !== null && typeof valor === 'object' && !Array.isArray(valor);
+
+/**
+ * Lectura tolerante (design D3): un campo o un `kind` desconocido no rompe la tarjeta, así que la respuesta no se
+ * valida con el schema estricto del contrato; solo se exige lo que la tarjeta necesita para pintarse.
+ */
+function esTurno(valor: unknown): valor is ConversationTurn {
+  return (
+    esObjeto(valor) &&
+    typeof valor.id === 'string' &&
+    typeof valor.intent === 'string' &&
+    Array.isArray(valor.blocks) &&
+    Array.isArray(valor.notices)
+  );
+}
+
+async function publicar(ruta: string, cuerpo?: object): Promise<Response | null> {
+  try {
+    return await fetch(ruta, {
+      method: 'POST',
+      credentials: 'same-origin',
+      ...(cuerpo && { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo) }),
+    });
+  } catch {
+    return null;
+  }
+}
+
+/** `POST /api/patients/{id}/conversations` al mismo origen, sin cuerpo: abre una conversación nueva (apertura perezosa). */
+export async function abrirConversacion(patientId: string): Promise<ResultadoDeApertura> {
+  const respuesta = await publicar(`/api/patients/${encodeURIComponent(patientId)}/conversations`);
+  if (respuesta?.status === 401) return { tipo: 'sin_sesion' };
+  if (!respuesta?.ok) return { tipo: 'error' };
+  const cuerpo: unknown = await respuesta.json().catch(() => null);
+  const id = zConversationId.safeParse(esObjeto(cuerpo) ? cuerpo.conversationId : null);
+  return id.success ? { tipo: 'ok', conversationId: id.data } : { tipo: 'error' };
+}
+
+/**
+ * `POST /api/conversations/{id}/turns`: la pregunta va solo en el cuerpo, validado con el schema Zod del contrato; la
+ * respuesta es siempre el turno completo y ya persistido (nunca tokens parciales, TBD-08). Un `403` es opt-out (RN-15).
+ */
+export async function enviarTurno(
+  conversationId: string,
+  question: string,
+): Promise<ResultadoDeTurno> {
+  const cuerpo = zConversationTurnCreate.safeParse({ question });
+  if (!cuerpo.success) return { tipo: 'error' };
+  const respuesta = await publicar(
+    `/api/conversations/${encodeURIComponent(conversationId)}/turns`,
+    cuerpo.data,
+  );
+  if (respuesta?.status === 401) return { tipo: 'sin_sesion' };
+  if (respuesta?.status === 403) return { tipo: 'opt_out' };
+  if (!respuesta?.ok) return { tipo: 'error' };
+  const turno: unknown = await respuesta.json().catch(() => null);
+  return esTurno(turno) ? { tipo: 'ok', turno } : { tipo: 'error' };
+}

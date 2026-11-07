@@ -10,7 +10,14 @@ import {
   errorOptOut,
   turnoDeCaso,
 } from '../support/msw/conversaciones';
-import { montarPanel, preguntar, respuestaDeTurno, textos } from '../support/conversacion-ui';
+import {
+  buscarTarjetas,
+  cuantasTarjetas,
+  montarPanel,
+  preguntar,
+  respuestaDeTurno,
+  textos,
+} from '../support/conversacion-ui';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn() }) }));
 vi.mock('next/headers', () => ({
@@ -59,7 +66,7 @@ describe('Preguntas guiadas', () => {
 
     await usuario.click(deEvidencia!);
 
-    await screen.findByRole('article');
+    await buscarTarjetas();
     expect(bff.turnos.map((t) => t.cuerpo)).toEqual([
       { question: '¿Qué evidencia hay para Cáncer de mama?' },
     ]);
@@ -74,13 +81,13 @@ describe('Preguntas guiadas', () => {
     const usuario = userEvent.setup();
     await abrirPagina();
     await preguntar(usuario, 'Primera');
-    await screen.findByRole('article');
+    await buscarTarjetas();
     await preguntar(usuario, 'Segunda');
-    await screen.findAllByRole('article').then((a) => expect(a).toHaveLength(2));
+    await buscarTarjetas().then((a) => expect(a).toHaveLength(2));
 
     await usuario.click(screen.getByRole('button', { name: textos.nuevaConversacion }));
 
-    expect(screen.queryByRole('article')).toBeNull();
+    expect(cuantasTarjetas()).toBe(0);
     expect(botonesGuiados().length).toBeGreaterThanOrEqual(3);
   });
 

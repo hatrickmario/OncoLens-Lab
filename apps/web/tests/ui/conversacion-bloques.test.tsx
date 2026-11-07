@@ -11,10 +11,13 @@ import {
   turnoSinDatos,
 } from '../support/msw/conversaciones';
 import {
+  buscarTarjetas,
+  cuantasTarjetas,
   montarPanel,
   mostrarTurno,
   preguntar,
   respuestaDeTurno,
+  tarjetas,
   textos,
   turnoCon,
 } from '../support/conversacion-ui';
@@ -39,9 +42,14 @@ describe('Bloques del turno', () => {
   });
 
   it('muestra tres tarjetas en orden con chip de intención, enlaces a datos y cita [E1] cuando se hacen tres preguntas [US-267 AC-1]', async () => {
+    // El faltante enlaza al dato del caso que lo origina (`f1` del ejemplo `conversation-turn.json`).
+    const conEnlace = {
+      dataLinks: turnoDeCaso.dataLinks.slice(0, 1),
+      blocks: turnoFaltantes.blocks.map((b) => ({ ...b, factRefs: ['f1'] })),
+    };
     bff.responderTurnos(
       respuestaDeTurno(turnoDeCaso),
-      respuestaDeTurno(turnoCon(turnoFaltantes, { dataLinks: turnoDeCaso.dataLinks.slice(0, 1) }, 2)),
+      respuestaDeTurno(turnoCon(turnoFaltantes, conEnlace, 2)),
       respuestaDeTurno({ ...turnoDeEvidencia, turnNumber: 3 }),
     );
     const usuario = userEvent.setup();
@@ -53,15 +61,15 @@ describe('Bloques del turno', () => {
     await preguntar(usuario, '¿Qué evidencia existe para pacientes como esta paciente?');
     await screen.findByText('▤ Evidencia');
 
-    const tarjetas = screen.getAllByRole('article');
-    expect(tarjetas.map((t) => within(t).getByText(/^Turno \d$/).textContent)).toEqual([
+    const lista = tarjetas();
+    expect(lista.map((t) => within(t).getByText(/^Turno \d$/).textContent)).toEqual([
       'Turno 1',
       'Turno 2',
       'Turno 3',
     ]);
-    expect(within(tarjetas[0]!).getAllByRole('link', { name: /Ver en el caso/ }).length).toBeGreaterThan(0);
-    expect(within(tarjetas[1]!).getAllByRole('link', { name: /Ver en el caso/ }).length).toBeGreaterThan(0);
-    expect(within(tarjetas[2]!).getByText(/\[E1\]/)).toBeTruthy();
+    expect(within(lista[0]!).getAllByRole('link', { name: /Ver en el caso/ }).length).toBeGreaterThan(0);
+    expect(within(lista[1]!).getAllByRole('link', { name: /Ver en el caso/ }).length).toBeGreaterThan(0);
+    expect(within(lista[2]!).getAllByText(/\[E1\]/).length).toBeGreaterThan(0);
     const conversaciones = new Set(bff.turnos.map((t) => new URL(t.url).pathname));
     expect(conversaciones.size).toBe(1);
     expect(bff.aperturas).toHaveLength(1);
@@ -73,7 +81,9 @@ describe('Bloques del turno', () => {
       blocks: [turnoDeCaso.blocks[0]!, ...turnoDeEvidencia.blocks.slice(0, 1)],
     });
 
-    const rotulos = within(tarjeta).getAllByText(/^[◆▤] /).map((e) => e.textContent);
+    const rotulos = [...tarjeta.querySelectorAll('section[data-grupo] > p:first-child')].map(
+      (e) => e.textContent,
+    );
     expect(rotulos).toEqual([CLINICO, CORPUS]);
   });
 
@@ -116,7 +126,7 @@ describe('Bloques del turno', () => {
     const hostil = 'Texto <img src=x onerror="window.__xss=1"> y [enlace](javascript:alert(1))';
     const { tarjeta } = await mostrarTurno(bff, {
       ...turnoDeCaso,
-      blocks: [{ kind: 'documentado', text: hostil, factRefs: ['f1'] }],
+      blocks: [{ kind: 'documentado', text: hostil }],
     });
 
     expect(tarjeta.querySelector('img')).toBeNull();
