@@ -41,6 +41,7 @@ from app.domain.chat.periodo_de_la_pregunta import (
     filtrar_hechos_por_periodo,
     periodo_de_la_pregunta,
 )
+from app.domain.chat.tendencia import tiene_verbo_de_tendencia
 from app.domain.chat.turno import HechoDelCaso, PropuestaDelTurno, TipoDeBloque
 from app.domain.nli import ParNli
 from app.prompts.chat_caso import armar_prompt_del_caso
@@ -57,12 +58,16 @@ class NodoCaso:
         configuracion: ConfiguracionDelGrafo,
         soporte: VerificadorDeSoporte | None,
         max_palabras_por_afirmacion: int,
+        texto_sin_datos_en_periodo: str,
+        texto_sin_fecha: str,
     ) -> None:
         self._llm = llm
         self._contador = contador
         self._configuracion = configuracion
         self._soporte = soporte
         self._max_palabras = max_palabras_por_afirmacion
+        self._texto_sin_datos_en_periodo = texto_sin_datos_en_periodo
+        self._texto_sin_fecha = texto_sin_fecha
 
     async def ejecutar(self, estado: EstadoDelGrafo) -> dict[str, Any]:
         trace_id = estado["trace_id"]
@@ -97,14 +102,34 @@ class NodoCaso:
                 self._con_un_bloque_por_hecho_documentado(soportadas, hechos), hechos
             ),
             "omitidas_del_nodo": len(propuestas) - len(soportadas),
+            **self._ajustes_del_periodo(todos, hechos, dias_del_periodo),
         }
+
+    def _ajustes_del_periodo(
+        self,
+        todos: tuple[HechoDelCaso, ...],
+        del_periodo: tuple[HechoDelCaso, ...],
+        dias: int | None,
+    ) -> dict[str, Any]:
+        """Lo que el periodo le dice al usuario además de las afirmaciones (texto fijo, sin datos del paciente): un aviso no
+        bloqueante si dejó fuera hechos sin fecha confiable (no pudieron ubicarse) y, si no quedó ningún hecho en el
+        periodo pero el expediente sí tiene datos, la limitación que lo distingue de un expediente sin datos."""
+        if dias is None:
+            return {}
+        sin_fecha = sum(1 for h in todos if h.dia_relativo is None)
+        ajustes: dict[str, Any] = {}
+        if sin_fecha:
+            ajustes["avisos_del_nodo"] = (self._texto_sin_fecha.replace("<n>", str(sin_fecha)),)
+        if todos and not del_periodo:
+            ajustes["limitacion_del_nodo"] = self._texto_sin_datos_en_periodo
+        return ajustes
 
     def _con_enlace_y_forma_de_afirmacion(
         self, propuestas: tuple[PropuestaDelTurno, ...], hechos: tuple[HechoDelCaso, ...]
     ) -> tuple[PropuestaDelTurno, ...]:
         """Solo sigue lo que enlaza a un hecho del turno y tiene forma de afirmación (no excede ``claim_max_words``, sin
         modal normativo ni artefactos): lo demás se omite sin llegar al NLI, que fallaría cerrado con una hipótesis larga.
-        Un ``documentado`` declarado no pasa por la forma: su texto se descarta."""
+        Un ``documentado`` que eligió el LLM no pasa por la forma: su texto se descarta."""
         con_enlace, _ = filtrar_afirmaciones_sin_enlace(propuestas, {h.ref for h in hechos})
         return tuple(
             p
@@ -121,7 +146,7 @@ class NodoCaso:
         a la descripción de sus hechos = documentado; toda paráfrasis = interpretación)."""
         return tuple(
             p
-            if p.declarado
+            if p.tipo is not None
             else replace(
                 p,
                 tipo=TipoDeBloque.documentado
@@ -144,10 +169,13 @@ class NodoCaso:
             logger.warning("event=chat_caso_sin_nli traceId=%s", trace_id)
             raise LlmLocalNoDisponibleError()
         interpretaciones = [p for p in enlazadas if p.tipo is TipoDeBloque.interpretacion]
-        sostenidas = iter(
-            await self._interpretaciones_sostenidas(soporte, interpretaciones, hechos, trace_id)
+        veredictos = await self._interpretaciones_sostenidas(
+            soporte, interpretaciones, hechos, trace_id
         )
-        return tuple(p for p in enlazadas if p.tipo is TipoDeBloque.documentado or next(sostenidas))
+        sostenidas = {id(p) for p, ok in zip(interpretaciones, veredictos, strict=True) if ok}
+        return tuple(
+            p for p in enlazadas if p.tipo is TipoDeBloque.documentado or id(p) in sostenidas
+        )
 
     @staticmethod
     async def _interpretaciones_sostenidas(
@@ -157,10 +185,11 @@ class NodoCaso:
         trace_id: str,
     ) -> list[bool]:
         """Por interpretación, si la sostiene la descripción de sus hechos (ADR-34): sin cifras ajenas a ella (chequeo
-        numérico, antes del NLI) e idéntica a ella (soporte por identidad) o con el NLI a favor."""
+        numérico) ni verbos de tendencia, antes del NLI, e idéntica a ella (soporte por identidad) o con el NLI a favor."""
         premisas = [describir_hechos(p.fact_refs, hechos) for p in interpretaciones]
         sin_cifras_ajenas = [
             cifras_sostenidas_por_la_descripcion(p.texto, premisa)
+            and not tiene_verbo_de_tendencia(p.texto)
             for p, premisa in zip(interpretaciones, premisas, strict=True)
         ]
         sostenidas = [
@@ -189,7 +218,7 @@ class NodoCaso:
                 continue
             resultado.extend(
                 PropuestaDelTurno(
-                    b.texto, b.fact_refs, (), TipoDeBloque.documentado, declarado=True
+                    texto=b.texto, fact_refs=b.fact_refs, tipo=TipoDeBloque.documentado
                 )
                 for b in bloques_documentados(propuesta.fact_refs, hechos)
             )
@@ -197,4 +226,4 @@ class NodoCaso:
 
 
 def _es_documentado_declarado(propuesta: PropuestaDelTurno) -> bool:
-    return propuesta.declarado and propuesta.tipo is TipoDeBloque.documentado
+    return propuesta.tipo is TipoDeBloque.documentado

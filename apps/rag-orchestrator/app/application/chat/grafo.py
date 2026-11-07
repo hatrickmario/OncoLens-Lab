@@ -86,6 +86,11 @@ class EstadoDelGrafo(TypedDict, total=False):
     omitidas: int
     # Las afirmaciones que un nodo de capacidad descartó antes de entregar sus ``propuestas``; ``validar`` las suma.
     omitidas_del_nodo: int
+    # Del nodo de capacidad a ``validar`` y a la respuesta: el texto de limitación que prefiere si no queda ningún bloque y
+    # los avisos no bloqueantes del turno (texto fijo de configuración, sin datos del paciente).
+    limitacion_del_nodo: str
+    avisos_del_nodo: tuple[str, ...]
+    avisos: tuple[str, ...]
 
 
 class _Clasificacion(BaseModel):
@@ -130,12 +135,18 @@ ESQUEMA_DEL_TURNO: dict[str, Any] = _SalidaDelTurno.model_json_schema()
 
 Nodo = Callable[[EstadoDelGrafo], Awaitable[dict[str, Any]]]
 
+LIMITACION_SIEMPRE: Mapping[Intencion, str] = {
+    # El nodo ``evidencia`` aún no consulta el corpus (L1D-322): se dice, sin eco de la pregunta.
+    Intencion.evidencia: MENSAJE_EVIDENCIA_NO_CONSULTADA
+}
+
 
 class ConfiguracionDelGrafo(NamedTuple):
     presupuesto_de_memoria: int
     terminos_por_tipo: Mapping[str, frozenset[str]]
-    texto_sin_datos: str
-    """Texto fijo del bloque ``limitacion`` de un turno de caso sin ningún dato documentado (RN-01, RN-22)."""
+    limitacion_cuando_vacio: Mapping[Intencion, str]
+    """Por intención, el texto fijo del bloque ``limitacion`` que ``validar`` añade cuando no queda ningún bloque (RN-01,
+    RN-22): en ``caso``, que no hay datos documentados. Las demás intenciones no añaden nada."""
 
 
 def capacidades_por_defecto(
@@ -228,17 +239,7 @@ class _NodosDelTurno:
         No ejecuta el NLI (ADR-34): lo ejecuta cada nodo de capacidad que lo necesita (``caso`` desde L1D-317;
         ``evidencia`` con L1D-322) antes de entregar sus ``propuestas``; ver el docstring del módulo."""
         bloques = self._bloques_permitidos(estado)
-        if estado["intencion"] is Intencion.evidencia:
-            # El nodo ``evidencia`` aún no consulta el corpus (L1D-322): se dice, sin eco de la pregunta.
-            bloques = (
-                *bloques,
-                BloqueDelTurno(TipoDeBloque.limitacion, MENSAJE_EVIDENCIA_NO_CONSULTADA),
-            )
-        elif estado["intencion"] is Intencion.caso and not bloques:
-            # Ninguna afirmación sobrevivió: el turno dice que no hay datos documentados, no calla (US-261 AC-4, RN-01).
-            bloques = (
-                BloqueDelTurno(TipoDeBloque.limitacion, self._configuracion.texto_sin_datos),
-            )
+        bloques = (*bloques, *self._limitaciones_del_turno(estado, bloques))
         omitidas = (
             len(estado["propuestas"])
             - self._cantidad_de_afirmaciones(bloques)
@@ -253,6 +254,20 @@ class _NodosDelTurno:
         )
         return _cerrar(estado, bloques, omitidas)
 
+    def _limitaciones_del_turno(
+        self, estado: EstadoDelGrafo, bloques: tuple[BloqueDelTurno, ...]
+    ) -> tuple[BloqueDelTurno, ...]:
+        """Los bloques ``limitacion`` que el turno debe decir: el fijo de su intención (``LIMITACION_SIEMPRE``) o, si no
+        quedó ningún bloque, el que prefirió el nodo de capacidad o el fijo de ``limitacion_cuando_vacio`` (US-261 AC-4,
+        RN-01): el turno dice que no hay datos, no calla."""
+        intencion = estado["intencion"]
+        if intencion in LIMITACION_SIEMPRE:
+            return (BloqueDelTurno(TipoDeBloque.limitacion, LIMITACION_SIEMPRE[intencion]),)
+        texto = estado.get(
+            "limitacion_del_nodo"
+        ) or self._configuracion.limitacion_cuando_vacio.get(intencion)
+        return (BloqueDelTurno(TipoDeBloque.limitacion, texto),) if texto and not bloques else ()
+
     @staticmethod
     def _cantidad_de_afirmaciones(bloques: tuple[BloqueDelTurno, ...]) -> int:
         return sum(1 for b in bloques if b.tipo is not TipoDeBloque.limitacion)
@@ -262,7 +277,7 @@ class _NodosDelTurno:
         # Los nodos de capacidad aún no recuperan chunks (US-260…US-266): ningún chunk es soporte del turno.
         chunks_del_turno: frozenset[str] = frozenset()
         return tuple(
-            BloqueDelTurno(p.tipo, p.texto, p.fact_refs)
+            BloqueDelTurno(p.tipo or TipoDeBloque.documentado, p.texto, p.fact_refs)
             for p in estado["propuestas"]
             if p.texto
             and afirmacion_tiene_soporte_del_turno(
@@ -292,6 +307,7 @@ def _cerrar(
         "hilo": estado_tras_el_turno(hilo, turno),
         "bloques": bloques,
         "omitidas": omitidas,
+        "avisos": estado.get("avisos_del_nodo", ()),
         **ENTRADAS_DEL_TURNO_VACIAS,
     }
 
@@ -358,8 +374,7 @@ def propuestas_de_la_salida(crudo: str, trace_id: str) -> tuple[PropuestaDelTurn
             a.texto.strip(),
             tuple(a.fact_refs),
             tuple(a.citas),
-            TipoDeBloque(a.kind or TipoDeBloque.documentado),
-            declarado=a.kind is not None,
+            None if a.kind is None else TipoDeBloque(a.kind),
         )
         for a in salida.afirmaciones
     )

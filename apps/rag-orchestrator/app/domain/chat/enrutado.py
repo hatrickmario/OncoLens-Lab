@@ -21,6 +21,10 @@ from app.domain.contexto_del_seguimiento import (
 )
 from app.domain.lenguaje import normalizar_texto
 
+_PREVIO = r"(?:previos?|anterior(?:es)?)\b"
+"""«previo/anterior» tras «tratamiento»: describe lo ya recibido (caso), no pide una opción (evidencia, RN-23). Una sola
+definición para la regla de ``evidencia`` (que lo excluye) y la de ``caso`` (que lo reclama)."""
+
 # Sobre el texto normalizado (minúsculas, sin acentos ni signos). "caso" a secas no clasifica: aparece en todas.
 _REGLAS: tuple[tuple[Intencion, re.Pattern[str]], ...] = (
     (
@@ -38,14 +42,17 @@ _REGLAS: tuple[tuple[Intencion, re.Pattern[str]], ...] = (
         re.compile(
             r"\bevidencia\b|\bestudios?\b|\bensayos?\b|\bguias?\b|\bliteratura\b|\bpublicaci(?:on|ones)\b"
             # Preguntas prescriptivas: se responden como evidencia descrita, sin lenguaje prescriptivo (RN-23).
-            r"|\bque (?:tratamiento|terapia|esquema|opcion|opciones)\b(?! (?:previo|anterior))|\bdeb(?:e|en|eria|erian)\b|\brecomend\w+"
+            r"|\bque (?:tratamiento|terapia|esquema|opcion|opciones)\b(?! " + _PREVIO + r")"
+            r"|\bdeb(?:e|en|eria|erian)\b|\brecomend\w+"
         ),
     ),
     (
         Intencion.caso,
         re.compile(
             r"\bsituacion\b|\bresumen\b|\bestado actual\b|\bdiagnostic\w+|\bque sabemos\b|\bantecedentes\b"
-            r"|\btratamientos? (?:previos?|anterior(?:es)?)\b|\bbiomarcador\w*|\bestadio\b|\bhistoria\b|\bcuentame\b"
+            r"|\btratamientos? "
+            + _PREVIO
+            + r"|\bbiomarcador\w*|\bestadio\b|\bhistoria\b|\bcuentame\b"
         ),
     ),
 )

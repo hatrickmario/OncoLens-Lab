@@ -93,7 +93,7 @@ async def test_el_grafo_usa_la_capacidad_inyectada_en_lugar_del_esqueleto_cuando
     grafo = construir_grafo(
         llm=llm,
         contador=ContadorPorPalabras(),
-        configuracion=ConfiguracionDelGrafo(1500, {}, "Sin datos"),
+        configuracion=ConfiguracionDelGrafo(1500, {}, {}),
         verificador_terminos=_verificador(),
         guardado=InMemorySaver(),
         capacidades={Intencion.caso: caso},
@@ -118,7 +118,7 @@ def test_el_esqueleto_por_defecto_cubre_toda_intencion_clasificable_cuando_no_se
     from app.application.chat.grafo import capacidades_por_defecto
 
     capacidades = capacidades_por_defecto(
-        FakeChatLlm("CHAT-OK"), ContadorPorPalabras(), ConfiguracionDelGrafo(1500, {}, "Sin datos")
+        FakeChatLlm("CHAT-OK"), ContadorPorPalabras(), ConfiguracionDelGrafo(1500, {}, {})
     )
 
     assert set(capacidades) == set(INTENCIONES_CLASIFICABLES)

@@ -39,10 +39,9 @@ class PropuestaDelTurno:
     texto: str
     fact_refs: tuple[str, ...] = ()
     citas: tuple[str, ...] = ()
-    tipo: TipoDeBloque = TipoDeBloque.documentado
-    declarado: bool = False
-    """``True`` si el LLM eligió el tipo (``kind``); si no, el nodo ``caso`` lo infiere (idéntica a la descripción de sus
-    hechos = documentado, paráfrasis = interpretación) para aceptar salidas sin ``kind``."""
+    tipo: TipoDeBloque | None = None
+    """El ``kind`` que eligió el LLM; ``None`` si no eligió ninguno. Solo el nodo ``caso`` lo resuelve (idéntica a la
+    descripción de sus hechos = documentado, paráfrasis = interpretación); los demás nodos entregan ``documentado``."""
 
 
 @dataclass(frozen=True)

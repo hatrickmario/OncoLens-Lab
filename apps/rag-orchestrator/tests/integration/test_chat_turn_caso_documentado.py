@@ -223,7 +223,7 @@ def test_chat_turn_caso_avisa_sin_bloquear_cuando_el_periodo_deja_fuera_hechos_s
 
     cuerpo = entorno.turno(solicitud).json()
 
-    assert CHAT_SIN_FECHA_TEXTO_INICIAL.format(n=1) in cuerpo["notices"]
+    assert CHAT_SIN_FECHA_TEXTO_INICIAL.replace("<n>", "1") in cuerpo["notices"]
     assert [b["factRefs"] for b in cuerpo["blocks"]] == [["f4"], ["f1"]]
     assert "[f5]" not in entorno.llm.usuarios[-1]
 

@@ -3,7 +3,7 @@
 ``periodo_de_la_pregunta`` reconoce «últimos N días, semanas, meses o años» (N en cifras o en palabras, del 1 al 12), «último
 mes», «último año», «última semana» y «último día». Backend 2 nunca ve fechas absolutas: un periodo con fecha («desde marzo de
 2025») no se reconoce y la pregunta no se filtra. ``filtrar_hechos_por_periodo`` acota los hechos por día relativo al
-diagnóstico (negativo = antes): entra el hecho con ``día >= -N``; un hecho sin fecha confiable (``None``) queda fuera.
+diagnóstico, día 0 = el diagnóstico, no hoy (negativo = antes): entra el hecho con ``día >= -N``; un hecho sin fecha confiable (``None``) queda fuera.
 
 Un hecho con intervalo (``dia_relativo_fin``) entra si su fin cae dentro del periodo y, si empezó antes, lleva la marca
 «(iniciado antes del periodo)» en su verbalización, de modo que el prompt, el NLI y el bloque usan el mismo texto. Hoy
@@ -13,11 +13,11 @@ Un hecho con intervalo (``dia_relativo_fin``) entra si su fin cae dentro del per
 from __future__ import annotations
 
 import re
-import unicodedata
 from collections.abc import Sequence
 from dataclasses import replace
 
 from app.domain.chat.turno import HechoDelCaso
+from app.domain.lenguaje import sin_tildes
 
 MARCA_INICIADO_ANTES_DEL_PERIODO = "(iniciado antes del periodo)"
 DIAS_POR_UNIDAD = {"dia": 1, "semana": 7, "mes": 30, "ano": 365}
@@ -52,7 +52,7 @@ _PERIODO = re.compile(
 
 def periodo_de_la_pregunta(pregunta: str) -> int | None:
     """Los días del periodo que nombra la pregunta, o ``None`` si no nombra ninguno reconocido."""
-    coincidencia = _PERIODO.search(_sin_tildes(pregunta))
+    coincidencia = _PERIODO.search(sin_tildes(pregunta))
     if coincidencia is None:
         return None
     cantidad = coincidencia["cantidad"]
@@ -80,8 +80,3 @@ def filtrar_hechos_por_periodo(
 
 def _marcado(hecho: HechoDelCaso) -> HechoDelCaso:
     return replace(hecho, verbalizacion=f"{hecho.verbalizacion} {MARCA_INICIADO_ANTES_DEL_PERIODO}")
-
-
-def _sin_tildes(texto: str) -> str:
-    descompuesto = unicodedata.normalize("NFD", texto.casefold())
-    return "".join(c for c in descompuesto if not unicodedata.combining(c))

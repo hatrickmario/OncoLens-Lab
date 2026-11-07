@@ -9,9 +9,14 @@ Qué compara:
 - Cada cifra «libre» de la afirmación (no pegada a letras ni a ``_``: ``HER2``, ``TNM_8``, ``T2cN0M0`` no son cifras) debe
   estar en la descripción. Si va seguida de una unidad de la lista cerrada (``UNIDADES``), el par (valor, unidad) debe estar
   en la descripción; sin unidad, basta que el valor aparezca en ella (también como parte de ``HER2`` o ``TNM_8``).
-- Cada «N días antes» / «N días después» de la afirmación debe estar igual en la descripción: no se invierte el sentido.
+- Cada «N días antes» / «N días después» de la afirmación debe estar igual en la descripción: no se invierte el sentido
+  (el formato lo define y lee ``descripcion_de_hechos.sentidos_del_momento``, su único escritor).
 - La coma decimal vale como el punto (``0,5`` = ``0.5``), los ceros a la derecha no cuentan (``4,20`` = ``4.2``) y el signo
   se ignora.
+
+Política: punto y coma siempre son decimales (``1.200`` es 1,2: las verbalizaciones no usan separador de miles); las
+cifras en palabras («tres») y las unidades fuera de ``UNIDADES`` no se comparan; la premisa es la concatenación de las
+descripciones de TODOS los hechos citados, de modo que una cifra de un hecho sostiene la afirmación aunque la escriba junto a otro.
 
 Límite: una cifra inventada que coincide con otra cifra de la descripción (sin unidad) no se detecta; el NLI sigue siendo
 la barrera semántica.
@@ -20,8 +25,10 @@ la barrera semántica.
 from __future__ import annotations
 
 import re
-import unicodedata
 from decimal import Decimal
+
+from app.domain.chat.descripcion_de_hechos import sentidos_del_momento
+from app.domain.lenguaje import sin_tildes
 
 UNIDADES = (
     "mmol/l",
@@ -63,16 +70,15 @@ _EQUIVALENTE = {
     "ciclos": "ciclo",
 }
 _NUMERO = r"\d+(?:[.,]\d+)?"
-_UNIDAD = r"%|(?:" + "|".join(UNIDADES) + r")(?![\w/])"
+_UNIDAD = r"%|(?:" + "|".join(re.escape(sin_tildes(u)) for u in UNIDADES) + r")(?![\w/])"
 _CIFRA_LIBRE = re.compile(rf"(?<![\w])(?P<valor>{_NUMERO})(?:\s*(?P<unidad>{_UNIDAD}))?")
 _CUALQUIER_CIFRA = re.compile(_NUMERO)
-_DIAS_Y_SENTIDO = re.compile(r"(?<![\w])(\d+)\s*dias?\s+(antes|despues)\b")
 
 
 def cifras_sostenidas_por_la_descripcion(afirmacion: str, descripcion: str) -> bool:
     """``True`` si toda cifra, unidad y sentido temporal de la afirmación está en la descripción de sus hechos."""
-    escrita = _normalizado(afirmacion)
-    fuente = _normalizado(descripcion)
+    escrita = sin_tildes(afirmacion)
+    fuente = sin_tildes(descripcion)
     cifras_de_la_fuente = {_valor(c) for c in _CUALQUIER_CIFRA.findall(fuente)}
     pares_de_la_fuente = set(_cifras_libres(fuente))
     for valor, unidad in _cifras_libres(escrita):
@@ -81,7 +87,7 @@ def cifras_sostenidas_por_la_descripcion(afirmacion: str, descripcion: str) -> b
                 return False
         elif (valor, unidad) not in pares_de_la_fuente:
             return False
-    return _sentidos(escrita) <= _sentidos(fuente)
+    return sentidos_del_momento(escrita) <= sentidos_del_momento(fuente)
 
 
 def _cifras_libres(texto: str) -> list[tuple[str, str | None]]:
@@ -94,15 +100,6 @@ def _cifras_libres(texto: str) -> list[tuple[str, str | None]]:
     return cifras
 
 
-def _sentidos(texto: str) -> set[tuple[str, str]]:
-    return {(_valor(dias), sentido) for dias, sentido in _DIAS_Y_SENTIDO.findall(texto)}
-
-
 def _valor(cifra: str) -> str:
     """El valor canónico: coma decimal como punto y sin ceros a la derecha (``0,50`` → ``0.5``)."""
     return format(Decimal(cifra.replace(",", ".")).normalize(), "f")
-
-
-def _normalizado(texto: str) -> str:
-    sin_tildes = unicodedata.normalize("NFD", texto.casefold())
-    return "".join(c for c in sin_tildes if not unicodedata.combining(c))

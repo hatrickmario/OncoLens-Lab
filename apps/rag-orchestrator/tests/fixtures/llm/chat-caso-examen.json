@@ -37,7 +37,7 @@
   },
   "CHAT-CASO-INTERPRETACION-EJEMPLO": {
     "ruta": "{\"intent\": \"caso\"}",
-    "generacion": "{\"claims\": [{\"kind\": \"interpretacion\", \"text\": \"El CA 15-3 registró 22 U/mL a los 30 días y 28 U/mL a los 90 días después del diagnóstico, ambos normales.\", \"factRefs\": [\"f5\", \"f3\"], \"citations\": []}]}"
+    "generacion": "{\"claims\": [{\"kind\": \"interpretacion\", \"text\": \"El CA 15-3 registró 22 U/mL a los 30 días y 28 U/mL a los 90 días después del diagnóstico.\", \"factRefs\": [\"f5\", \"f3\"], \"citations\": []}]}"
   },
   "CHAT-FALTANTES-INTERPRETACION": {
     "ruta": "{\"intent\": \"faltantes\"}",
