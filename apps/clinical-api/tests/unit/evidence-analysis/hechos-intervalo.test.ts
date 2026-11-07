@@ -23,7 +23,10 @@ function hechosConTratamiento(tratamiento: Partial<FilaDeTratamientoPrevio>) {
     eventos: [eventoDeEjemplo({ id: 'ev-1', eventDate: '2026-05-01', datePrecision: 'dia' })],
   });
   const { contexto, dataRefs } = construirContextoDelChat(caso, AHORA_DE_EJEMPLO, []);
-  return construirHechosDelCaso({ ...contexto, pseudoPatientId: 'psd_TestPseudonimo0001' }, dataRefs);
+  return construirHechosDelCaso(
+    { ...contexto, pseudoPatientId: 'psd_TestPseudonimo0001' },
+    dataRefs,
+  );
 }
 
 const tratamientoDe = (hechos: ReturnType<typeof hechosConTratamiento>) => {
@@ -36,7 +39,7 @@ describe('construirHechosDelCaso: relativeEndDay', () => {
   it('envía el día de inicio y el de fin como enteros y ninguna fecha absoluta cuando el tratamiento terminó [US-272 AC-1]', () => {
     const hechos = hechosConTratamiento({
       startedAt: '2025-08-03',
-      endedAt: '2025-11-10',
+      endedAt: '2025-11-11',
       ongoing: false,
     });
 
@@ -61,7 +64,7 @@ describe('construirHechosDelCaso: relativeEndDay', () => {
   it('usa el entero de endedAt aunque el tratamiento figure en curso [US-272 AC-2]', () => {
     const hechos = hechosConTratamiento({
       startedAt: '2025-08-03',
-      endedAt: '2025-11-10',
+      endedAt: '2025-11-11',
       ongoing: true,
     });
 
@@ -78,12 +81,12 @@ describe('construirHechosDelCaso: relativeEndDay', () => {
   it('no deja la fecha de fin ni relativeEndDay en los enlaces hacia el navegador [US-272 AC-3]', () => {
     const hechos = hechosConTratamiento({
       startedAt: '2025-08-03',
-      endedAt: '2025-11-10',
+      endedAt: '2025-11-11',
       ongoing: false,
     });
 
     const texto = JSON.stringify([...hechos.enlaces.values()]);
-    expect(texto).not.toContain('2025-11-10');
+    expect(texto).not.toContain('2025-11-11');
     expect(texto).not.toContain('relativeEndDay');
   });
 });

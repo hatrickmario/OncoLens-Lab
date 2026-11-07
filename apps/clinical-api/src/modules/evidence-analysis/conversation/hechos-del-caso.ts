@@ -153,7 +153,14 @@ export function construirHechosDelCaso(
     if (dato === undefined) continue;
     const factRef = `f${caseFacts.length + 1}`;
     const relativeDay = diasEntre(fechaDelDiagnostico, dato.fecha);
-    caseFacts.push(hechoDelCandidato(factRef, candidato, relativeDay));
+    caseFacts.push(
+      hechoDelCandidato(
+        factRef,
+        candidato,
+        relativeDay,
+        diaRelativoDeFin(fechaDelDiagnostico, dato),
+      ),
+    );
     datosParaConflicto.push({
       factRef,
       id: dato.id,
@@ -188,11 +195,28 @@ function entradasDelTurno(
   ];
 }
 
+/**
+ * `relativeEndDay` de un tratamiento previo (US-272): entero si hay fecha de fin (gana la fecha aunque figure en curso),
+ * `null` explícito si está en curso sin fecha de fin y `undefined` (la propiedad se omite) en cualquier otro caso: hecho
+ * puntual, fin desconocido o sin fecha de diagnóstico.
+ */
+function diaRelativoDeFin(
+  fechaDelDiagnostico: string | null,
+  dato: EnlaceDeDato,
+): number | null | undefined {
+  if (dato.tabla !== 'prior_treatment') return undefined;
+  if (dato.fechaFin !== undefined && dato.fechaFin !== null) {
+    return diasEntre(fechaDelDiagnostico, dato.fechaFin) ?? undefined;
+  }
+  return dato.enCurso === true && fechaDelDiagnostico !== null ? null : undefined;
+}
+
 /** El `CaseFact` de un candidato; un dato corregido lo dice en su verbalización (ADR-50). */
 function hechoDelCandidato(
   factRef: string,
   candidato: Candidato,
   relativeDay: number | null,
+  relativeEndDay: number | null | undefined,
 ): HechoDelCaso {
   const corregido = esCorreccion(candidato.provenance);
   return {
@@ -202,6 +226,7 @@ function hechoDelCandidato(
       ? conMarcaDeCorreccion(candidato.verbalization)
       : candidato.verbalization,
     relativeDay,
+    ...(relativeEndDay !== undefined && { relativeEndDay }),
     reviewStatus: candidato.provenance.reviewStatus,
     ...(candidato.seriesKey !== undefined && { seriesKey: candidato.seriesKey }),
     ...(corregido && { corrected: true }),
