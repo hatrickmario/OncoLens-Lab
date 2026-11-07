@@ -113,7 +113,7 @@ describe('Turno de caso sobre P-CHAT', () => {
     const { caseFacts } = await turnoDeCaso(pacienteChat, PREGUNTA_DE_CASO);
 
     const her2 = caseFacts.filter((h) => h.verbalization.startsWith('HER2'));
-    expect(her2.map((h) => h.verbalization)).toEqual(['HER2: 3+, relevante']);
+    expect(her2.map((h) => h.verbalization)).toEqual(['HER2: 3+, relevante (corregido)']);
     expect(her2[0]).toMatchObject({ reviewStatus: 'corregido', corrected: true });
   });
 });
