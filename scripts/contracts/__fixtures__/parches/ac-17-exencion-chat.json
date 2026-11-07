@@ -1,0 +1,38 @@
+[
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un parche agrega activeAnalysisId a RagQueryInternalRequest: la exención del chat es solo por puntero exacto de ChatTurnRequest (RN-10)",
+    "parches": [
+      { "destino": "rag-orchestrator", "operaciones": [{ "op": "add", "path": "/components/schemas/RagQueryInternalRequest/properties/activeAnalysisId", "value": { "type": "string" } }] }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "RagQueryInternalRequest/properties/activeAnalysisId" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un parche agrega activeAnalysisId a ClinicalContext: el contexto clínico no lleva el análisis activo (RN-10)",
+    "parches": [
+      { "destino": "rag-orchestrator", "operaciones": [{ "op": "add", "path": "/components/schemas/ClinicalContext/properties/activeAnalysisId", "value": { "type": "string" } }] }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "ClinicalContext/properties/activeAnalysisId" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un parche agrega analysisId a ChatTurnRequest: solo activeAnalysisId está exento, no el resto de ids de análisis (RN-10)",
+    "parches": [
+      { "destino": "rag-orchestrator", "operaciones": [{ "op": "add", "path": "/components/schemas/ChatTurnRequest/properties/analysisId", "value": { "type": "string" } }] }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "ChatTurnRequest/properties/analysisId" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un parche agrega threadId a RagFollowUpRequest: la exención de threadId es solo del puntero de ChatTurnRequest (RN-10)",
+    "parches": [
+      { "destino": "rag-orchestrator", "operaciones": [{ "op": "add", "path": "/components/schemas/RagFollowUpRequest/properties/threadId", "value": { "type": "string" } }] }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "RagFollowUpRequest/properties/threadId" }
+  }
+]

@@ -64,6 +64,7 @@ def crear_puertos_del_corpus(
     return PuertosDelCorpus(
         buscador=repositorio,
         buscador_sparse=repositorio,
+        posiciones=repositorio,
         lector_release=LectorReleasePostgres(motor),
         catalogo=LectorCatalogoPostgres(motor, max_valores_de_poblacion),
     )

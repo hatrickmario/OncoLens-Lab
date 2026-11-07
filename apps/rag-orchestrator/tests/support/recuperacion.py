@@ -105,6 +105,8 @@ class ChunkFx:
     cancer_type_tags: str
     terminos_sparse: Mapping[int, float] | None = None
     """Vector *sparse* del chunk (``{id_de_token: peso}``); ``None`` = sin poblar (corpus del S1)."""
+    chunk_index: int = 0
+    """Posición del chunk en su documento (``chunk_index`` de Milvus); ordena las posiciones de las citas (L1D-322)."""
 
 
 # Cada vector queda más cerca de la consulta de Q-HER2 (e0) cuanto más alta es su similitud: ch-m1v0-1 es el más

@@ -8,7 +8,7 @@ El cliente ``pymilvus`` se inyecta (real en integración y E2E).
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterator, Mapping, Sequence
 from typing import Any
 
 from pymilvus import MilvusClient
@@ -20,6 +20,7 @@ from app.application.ports import (
     ChunkEncontrado,
     ChunkEncontradoSparse,
     DimensionDeVectorInvalida,
+    PosicionDeChunk,
 )
 from app.config.settings import MilvusSettings
 from app.domain.corpus_seed.reindexacion import con_sparse_sustituido
@@ -54,6 +55,14 @@ def _filtro_por_documento(document_id: str) -> str:
     if '"' in document_id or "\\" in document_id:
         raise ValueError("document_id no puede llevar comillas ni barras invertidas")
     return f'document_id == "{document_id}"'
+
+
+def _filtro_en(campo: str, valores: Sequence[str]) -> str:
+    """``campo in ["a", "b"]``; los ids los genera el cargador y una comilla o barra se rechaza igualmente."""
+    if any('"' in v or "\\" in v for v in valores):
+        raise ValueError(f"{campo} no puede llevar comillas ni barras invertidas")
+    elementos = ", ".join('"' + v + '"' for v in valores)
+    return f"{campo} in [{elementos}]"
 
 
 class ConsultaTruncada(RuntimeError):
@@ -212,6 +221,44 @@ class MilvusRepository:
             )
             for hit in resultados[0]
         ]
+
+    def posiciones(self, chunk_ids: Collection[str]) -> dict[str, PosicionDeChunk]:
+        """Posición de cada chunk vigente pedido dentro de su documento (``ChatCitation.chunkOrdinal`` y ``chunkCount``).
+
+        ``ordinal`` es el lugar (desde 1) por ``chunk_index`` entre los chunks vigentes del documento y ``cantidad`` cuántos
+        hay; un chunk inexistente o no vigente no figura en el resultado. Solo lectura, en dos consultas acotadas: los
+        documentos de los chunks pedidos y todos sus chunks vigentes."""
+        if not chunk_ids:
+            return {}
+        pedidos = self._cliente.query(
+            self._coleccion,
+            filter=f"{_filtro_en('chunk_id', sorted(chunk_ids))} and is_current == true",
+            output_fields=["chunk_id", "document_id"],
+            limit=LIMITE_DE_CONSULTA,
+            consistency_level="Strong",
+        )
+        _exigir_completo(pedidos)
+        documentos = sorted({fila["document_id"] for fila in pedidos})
+        if not documentos:
+            return {}
+        vigentes = self._cliente.query(
+            self._coleccion,
+            filter=f"{_filtro_en('document_id', documentos)} and is_current == true",
+            output_fields=["chunk_id", "document_id", "chunk_index"],
+            limit=LIMITE_DE_CONSULTA,
+            consistency_level="Strong",
+        )
+        _exigir_completo(vigentes)
+        por_documento: dict[str, list[Mapping[str, Any]]] = {}
+        for fila in sorted(vigentes, key=lambda f: (f["chunk_index"], f["chunk_id"])):
+            por_documento.setdefault(fila["document_id"], []).append(fila)
+        pedidos_ids = set(chunk_ids)
+        return {
+            fila["chunk_id"]: PosicionDeChunk(documento, ordinal, len(hermanos))
+            for documento, hermanos in por_documento.items()
+            for ordinal, fila in enumerate(hermanos, start=1)
+            if fila["chunk_id"] in pedidos_ids
+        }
 
     def marcar_no_vigentes(self, document_id: str) -> int:
         """``is_current = false`` en los chunks vigentes del documento, sin borrar ninguno (RN-05).

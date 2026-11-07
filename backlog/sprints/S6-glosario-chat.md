@@ -12,7 +12,7 @@
 | rag-orchestrator | 1.14.0 | `l1d-320-faltantes-tipo-vacio` | Solo si queda algo propio. `gapType` ya está en `ChatCompletenessItem` de la 1.12.0 |
 | clinical-api | **1.24.0** | `l1d-315-conversacion-paciente` | Endpoints de conversación y turno, `ConversationTurn`, `ConversationDataLink`, errores de §4 y `403 PermisoDenegadoOOptOut` desde el inicio |
 | clinical-api | 1.25.0 | `l1d-320` | `gapType` en `CompletenessItem` de `GET …/completeness` |
-| clinical-api | 1.26.0 | `l1d-322` | `ConversationTurn.evidenceAnalysis?` |
+| clinical-api | 1.29.0 | `l1d-322` | `ConversationTurn.evidenceAnalysis?` |
 | clinical-api | 1.27.0 | `l1d-213-opt-out-generacion-ia` | `x-genera-ia` en las **otras** operaciones de generación. La de turnos ya la declara L1D-315 |
 
 - L1D-317, 318, 319, 321 y 323 **no suben versión**: solo rellenan campos ya definidos.
@@ -39,9 +39,9 @@
   - El bloque `fuente` describe un documento y lleva solo los metadatos del catálogo, sin `chunkId`.
 - **StructuredState**:
   - `{ intentsVistos[], preguntasPrevias[], opcionesMostradas[], citasMostradas[] (chunkId), faltantesSenalados[], ultimaEvidencia? }`.
-  - `ultimaEvidencia` = `{ query, chunkIds[], topRelevanceScore|null }`, **sin `analysisId`**: Backend 2 nunca lo conoce. Lo rellena L1D-322.
+  - `ultimaEvidencia` = `{ query, chunkIds[], topRelevanceScore|null }`, **sin `analysisId`**: Backend 2 nunca conoce `analysisId` salvo `activeAnalysisId`, solo para enrutar el turno. Lo rellena L1D-322.
 - **ConversationTurn** (clinical-api):
-  - `id`, `turnNumber`, `createdAt`, `question` (enmascarada), `intent`, `aboutTurnId?`, `status`, `topRelevanceScore|null`, `blocks[]` (`ChatBlock`), `dataLinks[]` (`ConversationDataLink`), `omittedClaims`, `analysisId?`, `evidenceAnalysis?` (1.26.0), `notices[]`, `dataUsed[]` y `dataMissing[]`.
+  - `id`, `turnNumber`, `createdAt`, `question` (enmascarada), `intent`, `aboutTurnId?`, `status`, `topRelevanceScore|null`, `blocks[]` (`ChatBlock`), `dataLinks[]` (`ConversationDataLink`), `omittedClaims`, `analysisId?`, `evidenceAnalysis?` (1.29.0), `notices[]`, `dataUsed[]` y `dataMissing[]`.
   - `status` y `topRelevanceScore` los deriva Backend 1 de `evidenceAnalysis`.
   - `dataUsed[]` (etiquetas de los hechos enviados) y `dataMissing[]` (los faltantes de `completeness`) también los deriva Backend 1.
   - **`memoryUsed` se retira.**

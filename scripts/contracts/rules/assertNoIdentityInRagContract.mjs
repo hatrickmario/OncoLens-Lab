@@ -25,11 +25,13 @@ const EXAMPLE_ALLOWED_POINTER = '#/identityFound';
 const EXENTOS_POR_PUNTERO = new Set([
   '#/components/schemas/ChatCitation/properties/documentId', // documento del catálogo del corpus, no clínico
   '#/components/schemas/ChatTurnRequest/properties/threadId', // UUID aleatorio de la conversación (nunca patientId)
+  '#/components/schemas/ChatTurnRequest/properties/activeAnalysisId', // análisis activo de la conversación (L1D-322): solo enruta el turno
   '#/components/schemas/StructuredState/properties/ultimaEvidencia/properties/chunkIds', // chunkId del corpus
 ]);
 /** Mismas claves en los ejemplos `chat-turn-*`, por ruta exacta. */
 const EXENTOS_EN_EJEMPLOS = [
   /^#\/threadId$/,
+  /^#\/activeAnalysisId$/,
   /^#\/(?:rehydration\/)?structuredState\/ultimaEvidencia\/chunkIds$/,
   /^#\/structuredState\/ultimaEvidencia\/chunkIds$/,
   /^#\/blocks\/\d+\/citations\/\d+\/documentId$/,

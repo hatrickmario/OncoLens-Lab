@@ -36,6 +36,44 @@ class EvidenceQueryPort(Protocol):
     async def consultar(self, solicitud: RagQueryInternalRequest) -> RagQueryInternalResponse: ...
 
 
+@dataclass(frozen=True)
+class EvidenciaConsultada:
+    """El resultado de ``/rag/query`` y los ``chunkId`` que el *reranker* evaluó para obtenerlo, por puntaje descendente.
+
+    Los ids evaluados no viajan en ``RagQueryInternalResponse`` (solo sus conteos): los necesita el chat para
+    ``structuredState.ultimaEvidencia`` (L1D-322)."""
+
+    respuesta: RagQueryInternalResponse
+    chunk_ids_evaluados: tuple[str, ...]
+
+
+class ConsultaDeEvidencia(Protocol):
+    """El caso de uso de ``/rag/query`` visto desde el chat (L1D-322): mismas reglas RN-01, RN-02, RN-04, RN-23 y RN-28,
+    con el detalle de recuperación que el chat guarda en su estado. Lo implementa ``RAGOrchestratorService``."""
+
+    async def consultar_con_detalle(
+        self, solicitud: RagQueryInternalRequest
+    ) -> EvidenciaConsultada: ...
+
+
+@dataclass(frozen=True)
+class PosicionDeChunk:
+    """Dónde está un chunk dentro de su documento: ``ordinal`` desde 1 y ``cantidad`` de chunks vigentes del documento."""
+
+    document_id: str
+    ordinal: int
+    cantidad: int
+
+
+class PosicionDeChunks(Protocol):
+    """Posición de chunks vigentes en su documento (Milvus), para ``ChatCitation.chunkOrdinal`` y ``chunkCount``.
+
+    Solo devuelve los chunks que existen y están vigentes; un fallo se propaga (el orquestador lo traduce en
+    ``503 RETRIEVAL_UNAVAILABLE``)."""
+
+    def posiciones(self, chunk_ids: Collection[str]) -> dict[str, PosicionDeChunk]: ...
+
+
 class FollowUpPort(Protocol):
     """Seguimiento de `/rag/follow-up` (US-218): sin estado, una llamada se resuelve solo con su cuerpo."""
 
@@ -259,6 +297,8 @@ class ResultadoDeRecuperacion:
     meta: RagMeta
     etiquetas_de_faltantes: tuple[str, ...] = ()
     """Etiqueta del catálogo de cada dato crítico faltante, en el orden recibido (US-116): ya validadas, nunca claves ni texto libre."""
+    chunk_ids_evaluados: tuple[str, ...] = ()
+    """``chunkId`` que el *reranker* puntuó en el último loop, por puntaje descendente (L1D-322)."""
 
 
 @dataclass(frozen=True)
@@ -370,6 +410,8 @@ class PuertosDelCorpus:
     catalogo: CorpusCatalogReader
     buscador_sparse: SparseChunkSearch | None = None
     """La rama *sparse* de la recuperación híbrida (US-112); ``None`` = el adapter del corpus no la ofrece."""
+    posiciones: PosicionDeChunks | None = None
+    """Posición de los chunks vigentes en su documento (L1D-322); ``None`` = el adapter del corpus no la ofrece."""
 
 
 # --- Generación de /rag/query (US-225, L1D-275) ----------------------------------------------------------------------

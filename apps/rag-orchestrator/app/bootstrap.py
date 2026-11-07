@@ -46,6 +46,7 @@ from app.application.ports import (
     FollowUpPort,
     LanguageDetector,
     LlmHealthPort,
+    PosicionDeChunks,
     NliClassifier,
     ProhibitedTermsChecker,
     PuertosDelCorpus,
@@ -148,6 +149,8 @@ class PuertosDeRecuperacion:
     buscador_sparse: SparseChunkSearch | None = None
     """Rama *sparse* del corpus (US-112); solo se exige con ``RETRIEVAL_MODE=hibrida``."""
     embedder_sparse: QuerySparseEncoder | None = None
+    posiciones: PosicionDeChunks | None = None
+    """Posición de los chunks en su documento (L1D-322): sin ella el chat no puede citar y su nodo `evidencia` no se activa."""
 
 
 CargadorDeModelos = Callable[[Settings], "ModelosDeRecuperacion"]
@@ -289,10 +292,7 @@ def crear_app(
     verificador = _crear_verificador_jwt_de_servicio(settings, clock)
     autenticacion = crear_require_service_jwt(verificador)
     envolver = _selector_de_proveedor(settings, llm_nube)
-    _registrar_chat(
-        app, settings, chat, autenticacion, clock, catalogo_clinico, envolver, recuperacion
-    )
-    _registrar_consulta_de_evidencia(
+    servicio_de_evidencia = _registrar_consulta_de_evidencia(
         app,
         settings,
         consulta=consulta,
@@ -305,6 +305,18 @@ def crear_app(
         criterios_de_aplicabilidad=app.state.criterios_de_aplicabilidad,
         datos_criticos=datos_criticos,
         envolver=envolver,
+    )
+    _registrar_chat(
+        app,
+        settings,
+        chat,
+        autenticacion,
+        clock,
+        catalogo_clinico,
+        envolver,
+        servicio_de_evidencia,
+        recuperacion.posiciones if recuperacion is not None else None,
+        recuperacion,
     )
     app.include_router(
         crear_router_health(
@@ -355,6 +367,7 @@ def _componer_recuperacion(
         verificador_terminos=_cargar_lista_de_terminos(settings),
         buscador_sparse=corpus.buscador_sparse,
         embedder_sparse=modelos.embedder_sparse_consulta,
+        posiciones=corpus.posiciones,
     )
 
 
@@ -442,8 +455,10 @@ def _registrar_consulta_de_evidencia(
     criterios_de_aplicabilidad: CriteriosDeAplicabilidad,
     datos_criticos: EtiquetasDeDatosCriticos,
     envolver: EnvolverCliente,
-) -> None:
+) -> RAGOrchestratorService | None:
+    """Registra `/rag/query` y `/rag/follow-up`; devuelve el servicio real de recuperación (si se compuso) para el chat."""
     seguimiento_propio = seguimiento
+    servicio_real: RAGOrchestratorService | None = None
     if consulta is None and settings.llm_provider == "fake":
         consulta = ConsultaConCatalogoExigido(
             FakeEvidenceQuery.desde_directorio(settings.fake_responses_path), catalogo_clinico
@@ -469,6 +484,7 @@ def _registrar_consulta_de_evidencia(
                 envolver,
             )
             consulta = servicio
+            servicio_real = servicio
             seguimiento_propio = seguimiento or _crear_seguimiento(
                 settings, servicio, catalogo_clinico, envolver
             )
@@ -476,6 +492,7 @@ def _registrar_consulta_de_evidencia(
         app.include_router(crear_router_rag_query(consulta, autenticacion))
     if seguimiento_propio is not None:
         app.include_router(crear_router_rag_follow_up(seguimiento_propio, autenticacion))
+    return servicio_real
 
 
 def _registrar_chat(
@@ -486,9 +503,14 @@ def _registrar_chat(
     clock: Clock,
     catalogo: CatalogoClinico,
     envolver: EnvolverCliente,
-    recuperacion: PuertosDeRecuperacion | None,
+    servicio_de_evidencia: RAGOrchestratorService | None = None,
+    posiciones: PosicionDeChunks | None = None,
+    recuperacion: PuertosDeRecuperacion | None = None,
 ) -> None:
-    """`POST /chat/turn`: con ``LLM_PROVIDER=fake`` el ejemplo del contrato; con ``local`` el servicio real (RN-12)."""
+    """`POST /chat/turn`: con ``LLM_PROVIDER=fake`` el ejemplo del contrato; con ``local`` el servicio real (RN-12).
+
+    Con el servicio de recuperación y las posiciones de los chunks, el nodo ``evidencia`` consulta el corpus; sin ellos
+    rige el esqueleto, que dice que la evidencia no se consultó."""
     if chat is None and settings.llm_provider == "fake":
         chat = ChatConCatalogoExigido(
             FakeChatTurn.desde_directorio(
@@ -502,7 +524,9 @@ def _registrar_chat(
             catalogo,
         )
     elif chat is None:
-        chat = _crear_chat_turn(settings, clock, catalogo, envolver, recuperacion)
+        chat = _crear_chat_turn(
+            settings, clock, catalogo, envolver, recuperacion, servicio_de_evidencia, posiciones
+        )
     app.include_router(crear_router_chat_turn(chat, autenticacion))
 
 
@@ -512,6 +536,8 @@ def _crear_chat_turn(
     catalogo: CatalogoClinico,
     envolver: EnvolverCliente,
     recuperacion: PuertosDeRecuperacion | None,
+    servicio_de_evidencia: RAGOrchestratorService | None,
+    posiciones: PosicionDeChunks | None,
 ) -> ChatTurnPort:
     """El turno del chat sobre el LLM local; el estado del hilo vive solo en memoria de este proceso (ADR-51).
 
@@ -535,6 +561,8 @@ def _crear_chat_turn(
         reloj=clock,
         settings=settings,
         terminos_por_tipo=terminos,
+        servicio_de_evidencia=servicio_de_evidencia,
+        posiciones=posiciones,
         fuentes_documentales=datos_criticos,
         soporte=_crear_soporte_del_chat(settings, clock, verificador, recuperacion),
     )
@@ -616,7 +644,8 @@ def _crear_servicio_de_recuperacion(
         verificador_terminos=puertos.verificador_terminos,
         # Producción: el LLM local (RN-12). La rama con evidencia ya verifica el soporte NLI y el lenguaje antes de
         # responder (L1D-180, D9 de L1D-275): ninguna opción sin verificar sale de este servicio.
-        generador=generador or crear_generador_local(settings, envolver),
+        generador=generador
+        or crear_generador_local(settings, envolver, _contador_de_tokens(settings)),
         reloj=clock,
         parametros=_parametros_de_recuperacion(settings),
         buscador_sparse=puertos.buscador_sparse,

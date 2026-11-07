@@ -841,6 +841,13 @@ class ChatTurnRequest(BaseModel):
     clinicalContext: ClinicalContext
     caseFacts: Annotated[list[CaseFact], Field(max_length=200)]
     completeness: Annotated[list[ChatCompletenessItem], Field(max_length=100)]
+    activeAnalysisId: Annotated[
+        str | None,
+        Field(
+            description='`analysis_id` del último turno de evidencia de la conversación (UUID de un registro de clinical-api, que es su único dueño). rag-orchestrator lo usa SOLO para enrutar el turno: con él y una pregunta que se refiere a ese resultado el turno es un `seguimiento_evidencia`; sin él nunca lo es. No se guarda en el estado del hilo, en `structuredState`, en los bloques, en el prompt ni en los logs.',
+            pattern='^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+        ),
+    ] = None
     rehydration: ChatRehydration | None = None
 
 
@@ -1573,7 +1580,12 @@ class ChatTurnResponse(BaseModel):
         extra='forbid',
     )
     intent: ChatIntent
-    subintent: Subintent | None = None
+    subintent: Annotated[
+        Subintent | None,
+        Field(
+            description='`seguimiento_evidencia`: pregunta sobre el resultado de un análisis ya registrado (la petición trae `activeAnalysisId`). El turno vuelve a recuperar, cita solo lo recuperado en ese turno y NO trae `evidenceAnalysis`.'
+        ),
+    ] = None
     blocks: list[ChatBlock]
     omittedClaims: Annotated[
         int,
@@ -1585,7 +1597,7 @@ class ChatTurnResponse(BaseModel):
     evidenceAnalysis: Annotated[
         RagQueryInternalResponse | None,
         Field(
-            description='Resultado del pipeline de evidencia de este turno (mismo tipo que la respuesta de /rag/query). clinical-api lo persiste y construye con lo persistido el EvidenceAnalysis de su ConversationTurn.'
+            description='Resultado del pipeline de evidencia de este turno (mismo tipo que la respuesta de /rag/query). Solo lo trae el turno de análisis (`intent = evidencia` sin `subintent`); el seguimiento no lo trae. clinical-api lo persiste y construye con lo persistido el EvidenceAnalysis de su ConversationTurn.'
         ),
     ] = None
     structuredState: StructuredState

@@ -39,13 +39,19 @@ from app.application.ports import (
     ProhibitedTermsChecker,
 )
 from app.application.prompt_builder import PromptSeparado
-from app.domain.chat.enrutado import clasificar_por_reglas, es_fuera_de_alcance
+from app.domain.chat.enrutado import (
+    clasificar_por_reglas,
+    es_fuera_de_alcance,
+    es_seguimiento_de_evidencia,
+)
 from app.domain.chat.estado import (
     ENTRADAS_DEL_TURNO_VACIAS,
     INTENCIONES_CLASIFICABLES,
     EstadoDelHilo,
     Intencion,
+    Subintencion,
     TurnoPrevio,
+    UltimaEvidencia,
     estado_tras_el_turno,
 )
 from app.domain.chat.faltantes import ItemDeCompletitud
@@ -80,15 +86,22 @@ class EstadoDelGrafo(TypedDict, total=False):
     tipo_del_contexto: str
     clasificacion_de_datos: str
     trace_id: str
+    # Solo si hay un análisis activo en la conversación; el id nunca entra al grafo (lo conoce solo Backend 1).
+    hay_analisis_activo: bool
     # Lo único que sobrevive entre turnos, junto con el resultado del último.
     hilo: EstadoDelHilo
     intencion: Intencion
+    subintencion: Subintencion | None
     propuestas: tuple[PropuestaDelTurno, ...]
     bloques_deterministas: tuple[BloqueDelTurno, ...]
     bloques: tuple[BloqueDelTurno, ...]
     omitidas: int
-    # Las afirmaciones que un nodo de capacidad descartó antes de entregar sus ``propuestas``; ``validar`` las suma.
+    # Lo que un nodo de capacidad que ya valida por sí mismo entrega a ``validar`` (se vacía al cerrar).
+    bloques_del_nodo: tuple[BloqueDelTurno, ...]
     omitidas_del_nodo: int
+    ultima_evidencia: UltimaEvidencia | None
+    opciones_mostradas: tuple[str, ...]
+    evidencia_consultada: bool
 
 
 class _Clasificacion(BaseModel):
@@ -117,7 +130,8 @@ class _SalidaDelTurno(BaseModel):
 
 ESQUEMA_DE_CLASIFICACION: dict[str, Any] = _Clasificacion.model_json_schema()
 ESQUEMA_DE_CLASIFICACION["properties"]["intent"]["enum"] = [
-    i.value for i in INTENCIONES_CLASIFICABLES
+    *(i.value for i in INTENCIONES_CLASIFICABLES),
+    Subintencion.seguimiento_evidencia.value,
 ]
 ESQUEMA_DEL_TURNO: dict[str, Any] = _SalidaDelTurno.model_json_schema()
 
@@ -145,6 +159,7 @@ def construir_grafo(
     guardado: BaseCheckpointSaver,
     verificador_terminos: ProhibitedTermsChecker,
     capacidades: Mapping[Intencion, Nodo] | None = None,
+    subcapacidades: Mapping[Subintencion, Nodo] | None = None,
 ) -> Any:
     """El ``StateGraph`` compilado con el ``InMemorySaver`` que le entrega el registro de hilos."""
     # Lo que no se sustituye sigue siendo el esqueleto: toda intención clasificable tiene siempre un nodo.
@@ -157,16 +172,44 @@ def construir_grafo(
     for intencion in INTENCIONES_CLASIFICABLES:
         grafo.add_node(intencion.value, capacidades[intencion])
         grafo.add_edge(intencion.value, "validar")
+    # Un nodo por subintención: la subintención refina una intención y tiene su propia capacidad (L1D-322).
+    nodos_de_subintencion = dict(subcapacidades or {})
+    for subintencion, nodo in nodos_de_subintencion.items():
+        grafo.add_node(subintencion.value, nodo)
+        grafo.add_edge(subintencion.value, "validar")
     grafo.add_edge(START, "enrutar")
-    grafo.add_conditional_edges("enrutar", _siguiente_nodo)
+    grafo.add_conditional_edges("enrutar", _selector_de_nodo(nodos_de_subintencion))
     grafo.add_edge("mensaje_del_sistema", END)
     grafo.add_edge("validar", END)
     return grafo.compile(checkpointer=guardado)
 
 
-def _siguiente_nodo(estado: EstadoDelGrafo) -> str:
-    intencion = estado["intencion"]
-    return intencion.value if intencion in INTENCIONES_CLASIFICABLES else "mensaje_del_sistema"
+def _evidencia_de_seguimiento() -> dict[str, Any]:
+    return {"intencion": Intencion.evidencia, "subintencion": Subintencion.seguimiento_evidencia}
+
+
+def _evidencia_nueva() -> dict[str, Any]:
+    return {"intencion": Intencion.evidencia, "subintencion": None}
+
+
+def _selector_de_nodo(
+    subcapacidades: Mapping[Subintencion, Nodo],
+) -> Callable[[EstadoDelGrafo], str]:
+    """Catálogo de nodos por (intención, subintención): una subintención sin nodo registrado falla en voz alta, nunca cae
+    en silencio al nodo de la intención."""
+
+    def siguiente(estado: EstadoDelGrafo) -> str:
+        intencion = estado["intencion"]
+        if intencion not in INTENCIONES_CLASIFICABLES:
+            return "mensaje_del_sistema"
+        subintencion = estado.get("subintencion")
+        if subintencion is None:
+            return intencion.value
+        if subintencion not in subcapacidades:
+            raise ValueError(f"subintención sin nodo registrado: {subintencion}")
+        return subintencion.value
+
+    return siguiente
 
 
 class _NodosDelTurno:
@@ -187,15 +230,24 @@ class _NodosDelTurno:
         if es_fuera_de_alcance(
             pregunta, estado["tipo_del_contexto"], self._configuracion.terminos_por_tipo
         ):
-            return {"intencion": Intencion.fuera_de_alcance}
-        intencion = clasificar_por_reglas(pregunta) or await self._clasificar_con_el_llm(
-            pregunta, estado["trace_id"]
-        )
-        return {"intencion": intencion}
+            return {"intencion": Intencion.fuera_de_alcance, "subintencion": None}
+        hay_analisis = estado.get("hay_analisis_activo", False)
+        por_reglas = clasificar_por_reglas(pregunta)
+        if por_reglas in (None, Intencion.evidencia) and es_seguimiento_de_evidencia(
+            pregunta, hay_analisis
+        ):
+            return _evidencia_de_seguimiento()
+        if por_reglas is not None:
+            return {"intencion": por_reglas, "subintencion": None}
+        return await self._clasificar_con_el_llm(pregunta, estado["trace_id"], hay_analisis)
 
-    async def _clasificar_con_el_llm(self, pregunta: str, trace_id: str) -> Intencion:
-        """Una única clasificación JSON con el LLM local, sin reintento; cualquier salida inválida es ``no_clasificada``."""
-        prompt = armar_prompt_de_clasificacion(pregunta)
+    async def _clasificar_con_el_llm(
+        self, pregunta: str, trace_id: str, hay_analisis_activo: bool
+    ) -> dict[str, Any]:
+        """Una única clasificación JSON con el LLM local, sin reintento; cualquier salida inválida es ``no_clasificada``.
+
+        ``seguimiento_evidencia`` solo cuenta con un análisis activo; sin él, es una pregunta de evidencia nueva."""
+        prompt = armar_prompt_de_clasificacion(pregunta, con_analisis_activo=hay_analisis_activo)
         try:
             crudo = await self._llm.completar_json(
                 prompt.usuario, ESQUEMA_DE_CLASIFICACION, sistema=prompt.sistema
@@ -204,13 +256,16 @@ class _NodosDelTurno:
             logger.warning("event=chat_clasificacion_llm_fallo traceId=%s", trace_id)
             raise LlmLocalNoDisponibleError() from None
         try:
-            intencion = Intencion(_Clasificacion.model_validate_json(crudo).intent)
+            dicha = _Clasificacion.model_validate_json(crudo).intent
+            if dicha == Subintencion.seguimiento_evidencia.value:
+                return _evidencia_de_seguimiento() if hay_analisis_activo else _evidencia_nueva()
+            intencion = Intencion(dicha)
         except (ValidationError, ValueError):
             intencion = Intencion.no_clasificada
         if intencion not in INTENCIONES_CLASIFICABLES:
             logger.info("event=chat_clasificacion_invalida traceId=%s", trace_id)
-            return Intencion.no_clasificada
-        return intencion
+            return {"intencion": Intencion.no_clasificada, "subintencion": None}
+        return {"intencion": intencion, "subintencion": None}
 
     async def validar(self, estado: EstadoDelGrafo) -> dict[str, Any]:
         """Filtra las afirmaciones del nodo de capacidad: solo se muestra lo que cita un hecho o un chunk de ESTE turno
@@ -219,9 +274,13 @@ class _NodosDelTurno:
         No ejecuta el NLI (ADR-34): lo ejecuta cada nodo de capacidad que lo necesita (``caso`` desde L1D-317;
         ``evidencia`` con L1D-322) antes de entregar sus ``propuestas``; ver el docstring del módulo."""
         # Los bloques deterministas (catálogo, configuración) no pasan por el filtro de soporte: están exentos de cita.
-        bloques = (*estado.get("bloques_deterministas", ()), *self._bloques_permitidos(estado))
-        if estado["intencion"] is Intencion.evidencia:
-            # El nodo ``evidencia`` aún no consulta el corpus (L1D-322): se dice, sin eco de la pregunta.
+        bloques = (
+            *estado.get("bloques_deterministas", ()),
+            *estado.get("bloques_del_nodo", ()),
+            *self._bloques_permitidos(estado),
+        )
+        if estado["intencion"] is Intencion.evidencia and not estado.get("evidencia_consultada"):
+            # Sin el nodo real de evidencia (sin corpus detrás) no se consultó la evidencia: se dice, sin eco de la pregunta.
             bloques = (
                 *bloques,
                 BloqueDelTurno(TipoDeBloque.limitacion, MENSAJE_EVIDENCIA_NO_CONSULTADA),
@@ -274,8 +333,15 @@ def _cerrar(
     """Guarda el turno en el estado del hilo y vacía las entradas del turno: del paciente no queda nada más."""
     hilo = estado.get("hilo") or EstadoDelHilo()
     turno = turno_previo_de(estado["pregunta"], estado["intencion"], bloques)
+    citas = tuple(c.chunk_id for b in bloques for c in b.citas)
     return {
-        "hilo": estado_tras_el_turno(hilo, turno),
+        "hilo": estado_tras_el_turno(
+            hilo,
+            turno,
+            ultima_evidencia=estado.get("ultima_evidencia"),
+            opciones_mostradas=estado.get("opciones_mostradas", ()),
+            citas_mostradas=citas,
+        ),
         "bloques": bloques,
         "omitidas": omitidas,
         **ENTRADAS_DEL_TURNO_VACIAS,

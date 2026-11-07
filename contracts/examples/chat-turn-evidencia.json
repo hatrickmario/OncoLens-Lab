@@ -1,0 +1,140 @@
+{
+  "intent": "evidencia",
+  "blocks": [
+    {
+      "kind": "evidencia",
+      "text": "Opciones descritas en la evidencia: opción 1 de 1.\nQuimioterapia adyuvante combinada con terapia dirigida anti-HER2. La fuente reporta que La evidencia recuperada describe la adición de terapia anti-HER2 a la quimioterapia adyuvante.",
+      "citations": [
+        {
+          "chunkId": "ch-m1-1",
+          "documentId": "doc-m1",
+          "sourceTitle": "Breast Cancer Treatment (test)",
+          "chunkOrdinal": 1,
+          "chunkCount": 1,
+          "chunkTextSnapshot": "Adding anti-HER2 therapy to adjuvant chemotherapy improved disease-free survival in HER2-positive early breast cancer."
+        }
+      ]
+    },
+    {
+      "kind": "catalogo",
+      "text": "Orden según aplicabilidad: primero las opciones con menos criterios en No coincide y más en Coincide; la relevancia solo desempata."
+    }
+  ],
+  "omittedClaims": 0,
+  "evidenceAnalysis": {
+    "status": "con_evidencia",
+    "synthesis": {
+      "agreements": [],
+      "discrepancies": []
+    },
+    "applicability": [],
+    "evidenceOptions": [
+      {
+        "option": "Quimioterapia adyuvante combinada con terapia dirigida anti-HER2",
+        "rationale": "La fuente reporta que La evidencia recuperada describe la adición de terapia anti-HER2 a la quimioterapia adyuvante.",
+        "applicabilitySummary": {
+          "coincide": 0,
+          "parcial": 0,
+          "noCoincide": 0,
+          "desconocido": 0
+        },
+        "populationNotComparable": false,
+        "perSource": [],
+        "relevanceScore": 0.87,
+        "warnings": [],
+        "citedSources": [
+          {
+            "title": "Breast Cancer Treatment (test)",
+            "sourceName": "NCI PDQ",
+            "externalId": "CDR-TEST-001",
+            "language": "en",
+            "sourceType": "guideline",
+            "licenseClass": "dominio_publico",
+            "studyDesign": "guia",
+            "trialPhase": null,
+            "primaryEndpoint": null,
+            "sampleSize": null,
+            "publishedAt": "2025-03-01",
+            "lastUpdatedAt": "2026-05-01",
+            "guidelineVersion": "2026-05",
+            "authors": null,
+            "sourceUrl": null,
+            "possiblyOutdated": false,
+            "newerVersionAvailable": false,
+            "chunkTextSnapshot": "Adding anti-HER2 therapy to adjuvant chemotherapy improved disease-free survival in HER2-positive early breast cancer.",
+            "chunkId": "ch-m1-1"
+          }
+        ]
+      }
+    ],
+    "discardedOptions": [],
+    "limitations": [],
+    "assumptions": [],
+    "retrievalStats": {
+      "retrieved": 2,
+      "aboveThreshold": 2
+    },
+    "omittedClaims": 0,
+    "optionsNotShown": 0,
+    "agentSteps": [],
+    "topRelevanceScore": 0.87,
+    "meta": {
+      "queryLanguage": "es",
+      "responseLanguage": "es",
+      "llmProvider": "local",
+      "llmModel": "llm-test@1",
+      "embeddingModel": "embedder-test@1",
+      "rerankerModel": "reranker-test@1",
+      "nliModel": "nli-test@1",
+      "promptVersion": "rag-query@0.10.0",
+      "catalogVersion": "1.6.0",
+      "corpusRelease": "rel-test-1",
+      "corpusCutoffDate": "2026-09-30",
+      "excludedSources": [
+        "NCCN",
+        "ESMO"
+      ],
+      "retrievalParams": {
+        "topK": 40,
+        "rerankTopN": 10,
+        "relevanceThreshold": 0.3,
+        "retrievalMode": "dense",
+        "fusion": "ninguna",
+        "fusionParam": 0.0,
+        "queryRewrite": {
+          "applied": false,
+          "reason": "no_disparado"
+        }
+      },
+      "latencyMs": 0
+    }
+  },
+  "structuredState": {
+    "intentsVistos": [
+      "evidencia"
+    ],
+    "preguntasPrevias": [
+      "¿Qué opciones adyuvantes describe la evidencia para cáncer de mama HER2 positivo en estadio IIA?"
+    ],
+    "opcionesMostradas": [
+      "Quimioterapia adyuvante combinada con terapia dirigida anti-HER2"
+    ],
+    "citasMostradas": [
+      "ch-m1-1"
+    ],
+    "faltantesSenalados": [],
+    "ultimaEvidencia": {
+      "query": "¿Qué opciones adyuvantes describe la evidencia para cáncer de mama HER2 positivo en estadio IIA?",
+      "chunkIds": [
+        "ch-m1-1",
+        "ch-inj-1"
+      ],
+      "topRelevanceScore": 0.87
+    }
+  },
+  "llmProvider": "local",
+  "notices": [
+    "Generado por IA; requiere validación clínica independiente por el oncólogo tratante",
+    "Uso académico/investigación"
+  ]
+}

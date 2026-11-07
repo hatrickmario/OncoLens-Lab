@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — Platform API (Backend 1 / clinical-api)
-  version: 1.28.0
+  version: 1.29.0
   description: >-
     API pública, accesible solo a través de los Route Handlers de web (clinical-api no
     publica puerto al host). Autenticación por cookie de sesión HttpOnly + Secure +
@@ -1220,7 +1220,9 @@ paths:
         - $ref: '#/components/parameters/ConversationId'
       responses:
         "200":
-          description: La conversación con sus turnos en orden de turnNumber.
+          description: >-
+            La conversación con sus turnos en orden de turnNumber. `evidenceAnalysis` solo va en el turno que creó el
+            análisis; los turnos de seguimiento lo referencian por `analysisId` sin repetirlo.
           content:
             application/json:
               schema:
@@ -3462,6 +3464,14 @@ components:
         analysisId:
           type: string
           format: uuid
+          description: >-
+            Análisis registrado de la conversación. El turno de evidencia lo crea; el turno de seguimiento referencia el
+            activo sin crear otro registro.
+        evidenceAnalysis:
+          $ref: '#/components/schemas/EvidenceAnalysis'
+          description: >-
+            Análisis de evidencia que creó este turno, construido desde lo persistido (RN-06). Solo el turno de evidencia lo
+            trae; el de seguimiento, no.
         notices:
           type: array
           description: Avisos de IA (RN-19) tal como los devolvió Backend 2; vacío en los mensajes del sistema.

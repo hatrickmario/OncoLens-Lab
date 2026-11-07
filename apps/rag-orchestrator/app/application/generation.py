@@ -21,7 +21,9 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_valida
 from pydantic_core import PydanticCustomError
 
 from app.application.errores import LlmLocalNoDisponibleError, LlmSalidaInvalidaError
+from app.application.medicion_de_prompt import registrar_tamano_del_prompt
 from app.application.ports import (
+    ContadorDeTokens,
     EvidenciaGenerada,
     FalloDelLlm,
     LlmClient,
@@ -188,12 +190,16 @@ class LlmEvidenceGenerator:
         claims_max: int,
         claim_max_words: int,
         max_chars_fragmentos: int = 12000,
+        contador: ContadorDeTokens | None = None,
+        num_ctx: int = 0,
     ) -> None:
         self._cliente = cliente
         self._claims_min = claims_min
         self._claims_max = claims_max
         self._claim_max_words = claim_max_words
         self._max_chars_fragmentos = max_chars_fragmentos
+        self._contador = contador  # solo para medir el tamaño del prompt (L1D-322)
+        self._num_ctx = num_ctx
         self._esquema = esquema_de_generacion(claims_min, claims_max)
 
     async def generar(
@@ -217,6 +223,15 @@ class LlmEvidenceGenerator:
             claims_max=self._claims_max,
             claim_max_words=self._claim_max_words,
         )
+        if self._contador is not None:
+            registrar_tamano_del_prompt(
+                "analisis",
+                trace_id,
+                prompt,
+                len(tabla.fragmentos),
+                self._contador,
+                self._num_ctx,
+            )
         try:
             crudo = await self._cliente.completar_json(
                 prompt.usuario, self._esquema, sistema=prompt.sistema

@@ -55,11 +55,20 @@ Instrucciones:
 """
 
 
-def armar_prompt_de_clasificacion(pregunta: str) -> PromptSeparado:
-    """La clasificación de la pregunta cuando ninguna regla la resolvió: solo la pregunta, en su bloque."""
+LINEA_DE_SEGUIMIENTO = (
+    "- Si la pregunta se refiere al resultado de un análisis de evidencia ya mostrado en la conversación "
+    '(por ejemplo, a un estudio o a una opción descritos), devuelve "seguimiento_evidencia".\n'
+)
+
+
+def armar_prompt_de_clasificacion(
+    pregunta: str, *, con_analisis_activo: bool = False
+) -> PromptSeparado:
+    """La clasificación de la pregunta cuando ninguna regla la resolvió: solo la pregunta, en su bloque. Con un análisis
+    activo en la conversación, la intención ``seguimiento_evidencia`` también es una respuesta posible."""
     instrucciones = PLANTILLA_DE_CLASIFICACION.format(
         linea_de_datos=linea_de_datos_no_instrucciones()
-    )
+    ) + (LINEA_DE_SEGUIMIENTO if con_analisis_activo else "")
     return PromptBuilder(instrucciones, VERSION_DEL_PROMPT_DE_CHAT).pregunta(pregunta).construir()
 
 

@@ -1065,7 +1065,14 @@ export type ConversationTurn = {
     blocks: Array<ChatBlock>;
     dataLinks: Array<ConversationDataLink>;
     omittedClaims: number;
+    /**
+     * Análisis registrado de la conversación. El turno de evidencia lo crea; el turno de seguimiento referencia el activo sin crear otro registro.
+     */
     analysisId?: string;
+    /**
+     * Análisis de evidencia que creó este turno, construido desde lo persistido (RN-06). Solo el turno de evidencia lo trae; el de seguimiento, no.
+     */
+    evidenceAnalysis?: EvidenceAnalysis;
     /**
      * Avisos de IA (RN-19) tal como los devolvió Backend 2; vacío en los mensajes del sistema.
      */
@@ -2549,7 +2556,7 @@ export type GetConversationError = GetConversationErrors[keyof GetConversationEr
 
 export type GetConversationResponses = {
     /**
-     * La conversación con sus turnos en orden de turnNumber.
+     * La conversación con sus turnos en orden de turnNumber. `evidenceAnalysis` solo va en el turno que creó el análisis; los turnos de seguimiento lo referencian por `analysisId` sin repetirlo.
      */
     200: Conversation;
 };

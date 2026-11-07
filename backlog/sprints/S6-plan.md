@@ -18,7 +18,7 @@
 | L1D-204 | US-050 | `l1d-204-llm-local-sin-nube` | ai-services · clinical-platform | O3 | ⛔ 316 · ↪ 315 (tareas del chat) | — | 3 |
 | L1D-317 | US-260 | `l1d-317-chat-caso-situacion` | ai-services · clinical-platform | O3 | ⛔ 316 · ↪ 315 (seed) | R1 | 5 |
 | L1D-320 | US-263 | `l1d-320-faltantes-tipo-vacio` | contratos (clinical 1.25.0) · catálogo 1.6.0 · clinical-platform · ai-services | **O4** | ⛔ 315, 316 | R5 | 5 |
-| L1D-322 | US-265 | `l1d-322-chat-evidencia-seguimiento` | contratos (rag 1.13.0, clinical 1.26.0) · ai-services · clinical-platform | O4 | ⛔ 315, 316, 108 | R2 | 5 |
+| L1D-322 | US-265 | `l1d-322-chat-evidencia-seguimiento` | contratos (rag 1.13.0, clinical 1.29.0) · ai-services · clinical-platform | O4 | ⛔ 315, 316, 108 | R2 | 5 |
 | L1D-213 | US-148 | `l1d-213-opt-out-generacion-ia` (9 AC, excepción) | contratos (clinical 1.27.0) · clinical-platform · frontend | O4 | ⛔ 315 · ↪ 324 (prop `disabled`; su parte de UI va tras 324) | R4 | 5 |
 | L1D-318 | US-261 | `l1d-318-chat-examen-tratamiento-periodo` | ai-services | O4 | ⛔ 317 | R1 | 3 |
 | L1D-321 | US-264 | `l1d-321-chat-relevancia-faltante` | ai-services · evaluate | **O5** | ⛔ 320 · ↪ 108, 316 | R5 | 3 |

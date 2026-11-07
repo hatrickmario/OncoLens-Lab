@@ -401,6 +401,7 @@ export const zChatTurnRequest = z.strictObject({
     clinicalContext: zClinicalContext,
     caseFacts: z.array(zCaseFact).max(200),
     completeness: z.array(zChatCompletenessItem).max(100),
+    activeAnalysisId: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/).optional(),
     rehydration: zChatRehydration.optional()
 });
 

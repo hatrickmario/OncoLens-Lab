@@ -13,7 +13,7 @@ from app.application.corpus_metadata.esquema_poblacion import cargar_plantilla
 from app.application.corpus_metadata.poblacion_puertos import LlmCompleto, LlmDePoblacion
 from app.application.generacion_de_seguimiento import LlmSeguimientoGenerator
 from app.application.generation import LlmEvidenceGenerator
-from app.application.ports import LlmClient
+from app.application.ports import ContadorDeTokens, LlmClient
 from app.config.settings import Settings
 from app.domain.reescritura import ParametrosDeReescritura
 from app.infrastructure.llm.openai_compatible import OpenAICompatibleLlmClient
@@ -56,7 +56,9 @@ def crear_cliente_llm_del_chat(
 
 
 def crear_generador_local(
-    settings: Settings, envolver_cliente: EnvolverCliente | None = None
+    settings: Settings,
+    envolver_cliente: EnvolverCliente | None = None,
+    contador: ContadorDeTokens | None = None,
 ) -> LlmEvidenceGenerator:
     """Generación con el LLM nativo local (``LLM_BASE_URL``); sin adapter de nube ni *fallback* (RN-12)."""
     return LlmEvidenceGenerator(
@@ -65,6 +67,8 @@ def crear_generador_local(
         claims_max=settings.claims_max_per_option,
         claim_max_words=settings.claim_max_words,
         max_chars_fragmentos=settings.llm_fragments_max_chars,
+        contador=contador,
+        num_ctx=settings.llm_num_ctx,
     )
 
 

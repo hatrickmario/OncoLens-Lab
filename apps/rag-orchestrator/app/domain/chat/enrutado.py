@@ -51,6 +51,26 @@ _REGLAS: tuple[tuple[Intencion, re.Pattern[str]], ...] = (
 )
 
 
+# Referencias léxicas al resultado de un análisis ya mostrado («ese estudio», «la población del estudio», «la segunda
+# opción»…). Sobre el texto normalizado. Solo cuentan con un análisis activo (``es_seguimiento_de_evidencia``).
+_REFERENCIA_AL_RESULTADO = re.compile(
+    r"\b(?:ese|esa|esos|esas|dicho|dicha|dichos|dichas|mencionad[oa]s?|citad[oa]s?|anterior(?:es)?)\s+"
+    r"(?:estudios?|ensayos?|opcion(?:es)?|guias?|fuentes?|resultados?|analisis|publicaci(?:on|ones))\b"
+    r"|\bpoblacion(?:es)? (?:del|de los|de las) (?:estudios?|ensayos?)\b"
+    r"|\b(?:primera|segunda|tercera|ultima)\s+opcion\b|\bopcion\s+[123]\b"
+    r"|\b(?:del|en el|de este) analisis\b"
+)
+
+
+def es_seguimiento_de_evidencia(pregunta: str, hay_analisis_activo: bool) -> bool:
+    """La pregunta se refiere al resultado del análisis activo de la conversación. Sin análisis activo nunca es
+    seguimiento (ante la duda se crea un análisis nuevo: más registro, nunca menos trazabilidad)."""
+    return (
+        hay_analisis_activo
+        and _REFERENCIA_AL_RESULTADO.search(normalizar_texto(pregunta)) is not None
+    )
+
+
 def es_fuera_de_alcance(
     pregunta: str, tipo_del_contexto: str, terminos_por_tipo: Mapping[str, frozenset[str]]
 ) -> bool:

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import Callable, Collection, Mapping, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass, replace
 from datetime import datetime
 from typing import NamedTuple, TypeVar
@@ -33,6 +33,7 @@ from app.application.aplicabilidad_textual import (
     AplicabilidadTextual,
     ParametrosDelRespaldo,
 )
+from app.application.bordes import invocar_borde_fallando_cerrado
 from app.application.catalogo_exigido import exigir_catalogo_de_la_solicitud
 from app.application.chunk_citable import ChunkCitable
 from app.application.contexto_del_paciente import contexto_del_paciente
@@ -53,6 +54,7 @@ from app.application.ports import (
     CorpusReleaseReader,
     EtiquetasDeDatosCriticos,
     EvidenceGenerator,
+    EvidenciaConsultada,
     EvidenciaGenerada,
     Idioma,
     LanguageDetector,
@@ -141,10 +143,11 @@ _Resultado = TypeVar("_Resultado")
 
 
 class ResultadoDelLoop(NamedTuple):
-    """Lo que deja un loop de recuperación: los candidatos que vio el reranker y los que superan el umbral."""
+    """Lo que deja un loop de recuperación: los candidatos, los que superan el umbral y los ids que puntuó el reranker."""
 
     candidatos: list[CandidatoDeRecuperacion]
     sobre_umbral: list[ChunkPuntuado]
+    evaluados: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -247,18 +250,31 @@ class RAGOrchestratorService:
         )
 
     async def consultar(self, solicitud: RagQueryInternalRequest) -> RagQueryInternalResponse:
+        return (await self.consultar_con_detalle(solicitud)).respuesta
+
+    async def consultar_con_detalle(
+        self, solicitud: RagQueryInternalRequest
+    ) -> EvidenciaConsultada:
+        """``/rag/query`` más los ``chunkId`` que evaluó el *reranker*: el chat los guarda en ``ultimaEvidencia``."""
         with con_clasificacion(solicitud.dataClassification.value) as contexto:
-            respuesta = await self._consultar_con_proveedor_acotado(solicitud)
-        return respuesta.model_copy(update={"meta": contexto.declarar_en(respuesta.meta)})
+            consultada = await self._consultar_con_proveedor_acotado(solicitud)
+        respuesta = consultada.respuesta
+        return EvidenciaConsultada(
+            respuesta.model_copy(update={"meta": contexto.declarar_en(respuesta.meta)}),
+            consultada.chunk_ids_evaluados,
+        )
 
     async def _consultar_con_proveedor_acotado(
         self, solicitud: RagQueryInternalRequest
-    ) -> RagQueryInternalResponse:
+    ) -> EvidenciaConsultada:
         recuperacion = await self.recuperar(solicitud)
+        evaluados = recuperacion.chunk_ids_evaluados
         if not recuperacion.chunks_sobre_umbral:
-            return self._responder_sin_evidencia(recuperacion.recuperados, recuperacion.meta)
+            sin = self._responder_sin_evidencia(recuperacion.recuperados, recuperacion.meta)
+            return EvidenciaConsultada(sin, evaluados)
         evidencia = await self._generador.generar(solicitud, recuperacion)
-        return await self._validar_citas_y_ensamblar(solicitud, evidencia, recuperacion)
+        respuesta = await self._validar_citas_y_ensamblar(solicitud, evidencia, recuperacion)
+        return EvidenciaConsultada(respuesta, evaluados)
 
     async def recuperar(
         self,
@@ -293,12 +309,15 @@ class RAGOrchestratorService:
             )
         else:
             reescritura = EstadoDeReescritura(MotivoDeReescritura.no_aplica)
-        candidatos, sobre_umbral = loop
         meta = self._armar_meta_de_recuperacion(
             solicitud, idioma, release, inicio, reescritura, version_del_prompt
         )
         return ResultadoDeRecuperacion(
-            tuple(sobre_umbral), len(candidatos), meta, etiquetas_de_faltantes
+            tuple(loop.sobre_umbral),
+            len(loop.candidatos),
+            meta,
+            etiquetas_de_faltantes,
+            loop.evaluados,
         )
 
     async def meta_sin_recuperacion(
@@ -330,7 +349,7 @@ class RAGOrchestratorService:
     async def _idioma_y_release(
         self, trace_id: str, pregunta: str
     ) -> tuple[Idioma, ReleaseDelCorpus]:
-        borde = self._invocar_borde_fallando_cerrado
+        borde = invocar_borde_fallando_cerrado
         idioma = await borde(trace_id, "idioma", self._detector_idioma.detectar, pregunta)
         release = await borde(trace_id, "catalogo", self._lector_release.release_vigente)
         return idioma, release
@@ -356,7 +375,8 @@ class RAGOrchestratorService:
             len(candidatos),
             len(sobre_umbral),
         )
-        return ResultadoDelLoop(candidatos, sobre_umbral)
+        evaluados = tuple(c.chunk_id for c in sorted(puntuados, key=lambda c: -c.relevance_score))
+        return ResultadoDelLoop(candidatos, sobre_umbral, evaluados)
 
     async def _segundo_loop_si_corresponde(
         self,
@@ -496,7 +516,7 @@ class RAGOrchestratorService:
             return AplicabilidadCompleta(())
         inicio = self._reloj.ahora()
         mejores = mejor_chunk_por_documento(citables)
-        poblaciones = await self._invocar_borde_fallando_cerrado(
+        poblaciones = await invocar_borde_fallando_cerrado(
             trace_id, "poblacion", self._catalogo.poblacion_por_documento, set(mejores)
         )
         self._registrar_formas_invalidas(trace_id, poblaciones)
@@ -606,7 +626,7 @@ class RAGOrchestratorService:
     ) -> dict[str, ChunkCitable]:
         """Los chunks sobre el umbral entregados a la generación cuyo documento tiene ficha en el catálogo."""
         chunks = recuperacion.chunks_sobre_umbral
-        fichas = await self._invocar_borde_fallando_cerrado(
+        fichas = await invocar_borde_fallando_cerrado(
             trace_id,
             "catalogo",
             self._catalogo.fichas_por_documento,
@@ -718,7 +738,7 @@ class RAGOrchestratorService:
             raise RuntimeError(
                 "la rama sparse se pidió sin codificador ni búsqueda (el constructor lo impide)"
             )
-        borde = self._invocar_borde_fallando_cerrado
+        borde = invocar_borde_fallando_cerrado
         vector = await borde(trace_id, "embeddings", codificador.embeber_sparse, pregunta)
         return await borde(
             trace_id,
@@ -758,7 +778,7 @@ class RAGOrchestratorService:
     async def _buscar_cercanos_a(
         self, trace_id: str, texto: str, filtro: str
     ) -> list[ChunkEncontrado]:
-        borde = self._invocar_borde_fallando_cerrado
+        borde = invocar_borde_fallando_cerrado
         vector = await borde(trace_id, "embeddings", self._embedder.embeber, texto)
         return await borde(
             trace_id,
@@ -801,7 +821,7 @@ class RAGOrchestratorService:
         """Puntúa todos los candidatos y conserva los ``RERANK_TOP_N`` de mayor `relevance_score` (orden estable)."""
         if not candidatos:
             return []
-        crudos = await self._invocar_borde_fallando_cerrado(
+        crudos = await invocar_borde_fallando_cerrado(
             trace_id, "reranker", self._reranker.puntuar, pregunta, candidatos
         )
         puntajes = self._exigir_un_puntaje_normalizado_por_candidato(
@@ -897,23 +917,3 @@ class RAGOrchestratorService:
             topRelevanceScore=top_relevance_score([]),
             meta=meta,
         )
-
-    @staticmethod
-    async def _invocar_borde_fallando_cerrado(
-        trace_id: str, etapa: str, funcion: Callable[..., _Resultado], *argumentos: object
-    ) -> _Resultado:
-        """Ejecuta un puerto bloqueante fuera del bucle; cualquier fallo es `RecuperacionNoDisponibleError` sin detalle.
-
-        Solo se registran la clase del error y el ``traceId``: el mensaje y el traceback pueden traer el host del
-        motor o el texto de la pregunta, y ``from None`` evita que lleguen al log de uvicorn.
-        """
-        try:
-            return await asyncio.to_thread(funcion, *argumentos)
-        except Exception as error:  # noqa: BLE001 - todo fallo de un borde es "recuperación no disponible"
-            logger.warning(
-                "event=recuperacion_fallo etapa=%s error=%s traceId=%s",
-                etapa,
-                type(error).__name__,
-                trace_id,
-            )
-            raise RecuperacionNoDisponibleError(etapa) from None
