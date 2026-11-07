@@ -30,23 +30,36 @@ reconocer el examen por nombre en el código (lo decide el LLM eligiendo `factRe
    y «último mes/año» (español; N en cifras o palabras del 1 al 12). Conversión fija: semana = 7, mes = 30, año = 365 días
    (definición, no calibrable; constante única en `domain/`). Sin coincidencia → `None` y no se filtra. Alternativa
    descartada: que el LLM extraiga el periodo (no determinista y gasta una llamada).
-4. **Filtro `filtrar_hechos_por_periodo()`**: un hecho puntual entra si `dia ≥ inicio`; uno con intervalo entra si
+4. **Filtro `filtrar_hechos_por_periodo()`** (`HechoDelCaso.dia_relativo_fin`, opcional): un hecho puntual entra si `dia ≥ inicio`; uno con intervalo entra si
    `fin ≥ inicio`; si además `comienzo < inicio`, su verbalización recibe el sufijo fijo «(iniciado antes del periodo)»
    antes de armar el prompt, de modo que el NLI y el bloque `documentado` usan el mismo texto. (asumido, AC-3)
-5. **«Sin datos documentados»**: texto fijo en `Settings` (`chat_sin_datos_documentados_texto`), leído una sola vez,
-   igual que el aviso RN-19. Se emite cuando, tras validar, no queda ningún bloque.
-6. **Prompt `chat-caso@0.2.0`**: añade al esquema de salida del LLM la elección `documentado | interpretacion` y la
+5. **«Sin datos documentados»**: texto fijo en `Settings` (`chat_sin_datos_texto`, variable `CHAT_SIN_DATOS_TEXTO`; por
+   defecto «No se encontró información documentada sobre lo preguntado en el expediente»), leído una sola vez, igual que el
+   aviso RN-19. `validar` añade el bloque `limitacion` cuando la intención es `caso` y no queda ningún bloque (también
+   cuando el LLM devuelve `claims` vacío, p. ej. un Ki-67 que no figura). `ConfiguracionDelGrafo` gana el campo.
+6. **Prompt `chat-caso@0.3.0`** (`0.2.0` es el de `l1d-317`): añade al esquema de salida del LLM la elección `documentado | interpretacion` y la
    instrucción de no redactar los `documentado`. Se construye con el `PromptBuilder` de
    `l1d-108-prompt-instrucciones-datos` (instrucciones en sistema, datos delimitados).
 7. **Solo dos `kind`**: el `kind` de `ChatBlock` es el enum cerrado de 8 valores de `l1d-316`; este change no lo
    redefine ni crea otro esquema de bloque, y solo emite `documentado` e `interpretacion`.
 8. **Avisos**: el nodo `caso` rellena `notices[]` (RN-19, literal sin punto final); la UI solo los pinta.
+9. **Chequeo numérico antes del NLI** (decisión del PO, segunda barrera sin LLM): una `interpretacion` se omite si alguna
+   cifra, unidad (lista cerrada) o «N días antes/después» no está en la descripción de los hechos que cita. Compara pares
+   (valor, unidad) con `Decimal` (coma decimal = punto, sin ceros a la derecha, sin signo) e ignora dígitos pegados a
+   letras o `_` (`HER2`, `TNM_8`). Límite conocido: una cifra inventada sin unidad que coincide con otra de la descripción
+   pasa; el NLI sigue siendo la barrera semántica.
+10. **`kind` en la salida del LLM**: `_AfirmacionCruda` gana `kind` opcional (`documentado | interpretacion`); `text` puede
+    ir vacío solo con `documentado`. Compatibilidad con salidas sin `kind`: texto idéntico a la descripción de sus hechos =
+    documentado; paráfrasis = interpretación (`PropuestaDelTurno.declarado`). `documentado` declarado no pasa por la forma
+    de afirmación (su texto se descarta); el esqueleto de las demás intenciones siempre entrega `documentado`.
+11. **Enrutado**: «¿Qué tratamiento previo ha recibido…?» iba a `evidencia` por la regla prescriptiva `que tratamiento`;
+    `enrutado.py` ya no la aplica cuando sigue «previo/anterior» y clasifica `tratamiento previo|anterior` como `caso`.
 
 ## Dependencias y colaboradores
 
-- **Nuevos (dominio, puros):** `app/domain/periodo_de_la_pregunta.py` (`periodo_de_la_pregunta`,
-  `filtrar_hechos_por_periodo`), `app/domain/bloques_documentados.py` (`bloques_documentados` — un bloque por hecho,
-  orden por día).
+- **Nuevos (dominio, puros):** `app/domain/chat/periodo_de_la_pregunta.py` (`periodo_de_la_pregunta`,
+  `filtrar_hechos_por_periodo`), `app/domain/chat/bloques_documentados.py` (`bloques_documentados` — un bloque por hecho,
+  orden por (día, índice)) y `app/domain/chat/chequeo_numerico.py` (`cifras_sostenidas_por_la_descripcion`).
 - **Modificados:** nodo `caso` en `app/application/chat/` (usa los dos anteriores y el validador de US-260 vía sus
   puertos `NliClassifier` y LLM; nunca adapters concretos); `app/prompts/chat_caso.py`; `app/config` (texto fijo).
 - **Backend 1:** `src/modules/evidence-analysis/` submódulo `conversation` persiste los `ChatBlock` tal cual y resuelve
@@ -77,7 +90,7 @@ Ejemplos, un fichero por caso: `contracts/examples/chat-turn-caso-adt.json` (ADT
 
 ## Evaluación
 
-Cambia un prompt (`chat-caso@0.1.0 → 0.2.0`): suite `evaluate` en el PR con `eval/configs/rn23-local.yaml --suite all`
+Cambia un prompt (`chat-caso@0.2.0 → 0.3.0`): suite `evaluate` en el PR con `eval/configs/rn23-local.yaml --suite all`
 (regla del S5 para `app/prompts/`). Métricas OL-06 afectadas: fidelidad (≥ 0,90), salidas prescriptivas (= 0) y JSON
 válido (≥ 99 %). Las métricas del chat por capacidad llegan con US-269 (`l1d-326`).
 
@@ -90,3 +103,11 @@ válido (≥ 99 %). Las métricas del chat por capacidad llegan con US-269 (`l1d
   se mide con US-269.
 - Regresiones que no son escenario aquí: [RN-15] opt-out → `403` activa desde S6 con US-148; [RN-12] LLM local caído →
   `503` (US-260 AC-7); [RN-23] términos prescriptivos (US-068).
+
+## Notas (sin tarea)
+
+- `relativeEndDay` opcional en `CaseFact` (bump menor del contrato) = change aparte, pendiente de decisión del PO. Mientras
+  tanto `CaseFact` solo trae el día de inicio: la rama de intervalos de `filtrar_hechos_por_periodo` está probada en
+  unitario y no se activa en integración; la quimioterapia que empezó antes del periodo queda fuera (no se marca).
+- La tarea 3.1 nació en verde: Backend 1 ya persistía los `ChatBlock` tal cual y resolvía `ConversationDataLink` desde
+  `l1d-315`/`l1d-317` (caracterización, no hay commit `feat` de `clinical-api`).
