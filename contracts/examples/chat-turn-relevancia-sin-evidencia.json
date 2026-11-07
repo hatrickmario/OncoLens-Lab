@@ -20,7 +20,6 @@
     "ultimaEvidencia": {
       "query": "¿Por qué importa el estado menopáusico?",
       "chunkIds": [
-        "ch-m1-1",
         "ch-inj-1"
       ],
       "topRelevanceScore": null
