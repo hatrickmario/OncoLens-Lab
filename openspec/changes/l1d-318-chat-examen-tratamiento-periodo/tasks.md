@@ -20,6 +20,8 @@ Requiere en `main` (o en la rama base de la oleada): `l1d-108-prompt-instruccion
 - [x] 2.8 Prompt `chat-caso@0.3.0` en `app/prompts/chat_caso.py` con el `PromptBuilder` (elección `documentado | interpretacion`, no redactar los `documentado`, cifras y unidades tal cual, solo días relativos); test de prompt en verde · evaluate · verificación: tarea 4.1
 - [x] 2.9 Refactor: Extract Method `_interpretaciones_sostenidas` (índices en lugar de `id()`) e Inline Method `_hechos_del_periodo` en `caso.py`, tests en verde antes y después, commit `refactor(L1D-318)` (8a906e85)
 
+- [x] 2.10 Hallazgos del Gate 2 (diseño, lenguaje, contrato, privacidad): chequeo numérico con unidades normalizadas (`µg` ≠ `mg`) y `sentidos_del_momento` compartido, política de tendencia (`domain/chat/tendencia.py`), aviso de hechos sin fecha y limitación de periodo vacío (`CHAT_SIN_FECHA_TEXTO`, `CHAT_SIN_DATOS_PERIODO_TEXTO`), `limitacion_cuando_vacio` por intención, `PropuestaDelTurno.tipo` opcional, `sin_tildes` único, ejemplo `chat-turn-caso-interpretacion.json` · commits `test(L1D-318)` (rojo), `fix(L1D-318)` y `docs(L1D-318)`
+
 ## 3. clinical-platform
 
 - [x] 3.1 Test de aceptación: «el bloque documentado es byte a byte la verbalización del ADT y su ConversationDataLink trae el recordedDate del registro cuando se pregunta por el tratamiento previo [US-261 AC-1]» · integración Supertest + PostgreSQL de test + MSW hacia `/chat/turn` desde `contracts/examples/chat-turn-caso-adt.json`, paciente semilla (b); respuesta validada contra el spec de `clinical-api` (US-214) · nació en verde (caracterización: ya cumplido por `l1d-315`/`l1d-317`) · commit `test(L1D-318)` (673d8919)
@@ -31,7 +33,11 @@ Requiere en `main` (o en la rama base de la oleada): `l1d-108-prompt-instruccion
 - [ ] 4.1 `run-ai-eval` con `eval/configs/rn23-local.yaml --suite all` (cambia `app/prompts/`): fidelidad ≥ 0,90, salidas prescriptivas = 0, JSON válido ≥ 99 %; reporte de `ai-eval-runner` en el PR (lo corre `ai-eval-runner` real en el Gate 2)
 - [x] 4.2 `openspec validate l1d-318-chat-examen-tratamiento-periodo --strict`, tests de `rag-orchestrator` y `clinical-api` en verde, `contracts:verify-provider` en verde
 
+
 Notas (sin checkbox):
 
 - `relativeEndDay` opcional en `CaseFact` (bump menor del contrato) = change aparte, pendiente de decisión del PO. Hasta entonces `HechoDelCaso.dia_relativo_fin` llega a `None` y la marca «(iniciado antes del periodo)» solo se prueba en unitario.
+- Rótulo «Interpretación generada por IA» de `kind = "interpretacion"`: dependencia de L1D-324 (UI); este change solo emite el `kind`.
+- Preguntas para el PO (sin checkbox): (a) `relativeEndDay` en `CaseFact`: una quimioterapia activa iniciada hace 172 días desaparece de «últimos 100 días»; (b) «últimos N días» se mide desde el diagnóstico (día 0), no desde hoy; (c) una fecha absoluta de la pregunta que Backend 1 no relativice llega al prompt como parte de la pregunta (preexistente de 316/317).
+- Pendiente fuera de mis paths: `backlog/features/FEAT-12-chatbot-mvp.md` línea 220 todavía dice «No se halló información sobre lo preguntado en los documentos procesados»; la decisión del orquestador es alinearla a «No se encontró información documentada sobre lo preguntado en el expediente».
 - Cierre de la historia: la suite `evaluate` del chat por capacidad llega con US-269 (`l1d-326`).

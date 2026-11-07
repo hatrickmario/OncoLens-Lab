@@ -41,7 +41,7 @@ reconocer el examen por nombre en el código (lo decide el LLM eligiendo `factRe
    instrucción de no redactar los `documentado`. Se construye con el `PromptBuilder` de
    `l1d-108-prompt-instrucciones-datos` (instrucciones en sistema, datos delimitados).
 7. **Solo dos `kind`**: el `kind` de `ChatBlock` es el enum cerrado de 8 valores de `l1d-316`; este change no lo
-   redefine ni crea otro esquema de bloque, y solo emite `documentado` e `interpretacion`.
+   redefine ni crea otro esquema de bloque, y solo emite `documentado` e `interpretacion` más el bloque `limitacion` de texto fijo de AC-4.
 8. **Avisos**: el nodo `caso` rellena `notices[]` (RN-19, literal sin punto final); la UI solo los pinta.
 9. **Chequeo numérico antes del NLI** (decisión del PO, segunda barrera sin LLM): una `interpretacion` se omite si alguna
    cifra, unidad (lista cerrada) o «N días antes/después» no está en la descripción de los hechos que cita. Compara pares
@@ -54,6 +54,16 @@ reconocer el examen por nombre en el código (lo decide el LLM eligiendo `factRe
     de afirmación (su texto se descarta); el esqueleto de las demás intenciones siempre entrega `documentado`.
 11. **Enrutado**: «¿Qué tratamiento previo ha recibido…?» iba a `evidencia` por la regla prescriptiva `que tratamiento`;
     `enrutado.py` ya no la aplica cuando sigue «previo/anterior» y clasifica `tratamiento previo|anterior` como `caso`.
+
+12. **Tendencia y valoración**: una `interpretacion` con un verbo de la lista cerrada de `domain/chat/tendencia.py` («subió»,
+    «empeoró», «mejoró», «favorable»…) se omite antes del NLI y cuenta en `omittedClaims` (RN-23; el prompt ya pide no
+    interpretar la tendencia). `omittedClaims` cuenta afirmaciones descartadas, no ausencias del expediente.
+13. **Avisos y limitaciones del periodo**: `NodoCaso` devuelve `avisos_del_nodo` (aviso no bloqueante de hechos sin fecha
+    confiable, `CHAT_SIN_FECHA_TEXTO`, con `<n>`) y `limitacion_del_nodo` (`CHAT_SIN_DATOS_PERIODO_TEXTO`, cuando el periodo
+    dejó sin hechos pero el expediente tiene datos). `validar` añade la limitación por intención desde
+    `ConfiguracionDelGrafo.limitacion_cuando_vacio` y `LIMITACION_SIEMPRE`, sin ramificar por intención.
+14. **`PropuestaDelTurno.tipo`** es `None` mientras el LLM no eligió `kind`; solo `caso` lo resuelve y el esqueleto de las
+    demás intenciones fuerza `documentado` (sustituye al flag `declarado`).
 
 ## Dependencias y colaboradores
 
@@ -72,7 +82,7 @@ reconocer el examen por nombre en el código (lo decide el LLM eligiendo `factRe
 Proveedores: `rag-orchestrator` (`/chat/turn`, contrato **1.12.0** de `l1d-316`) y `clinical-api` (`ConversationTurn`,
 contrato **1.24.0** de `l1d-315`); consumidores: `clinical-api` y `web`. Este change **no edita `openapi.yaml`, no sube
 versión ni redefine `ChatBlock.kind`** (glosario S6 §1–§2): consume el contrato de `l1d-316` 1.12.0. Usa `ChatBlock`
-(`kind` ∈ enum cerrado de 8; aquí solo `documentado` e `interpretacion`; `text`; `factRefs?`), `CaseFact`
+(`kind` ∈ enum cerrado de 8; aquí solo `documentado`, `interpretacion` y la `limitacion` de AC-4; `text`; `factRefs?`), `CaseFact`
 (`factRef`, `verbalization`, `relativeDay|null`) y `ConversationDataLink` (`recordedDate|null` del registro).
 
 Ejemplos, un fichero por caso: `contracts/examples/chat-turn-caso-adt.json` (ADT `documentado`),
@@ -109,5 +119,14 @@ válido (≥ 99 %). Las métricas del chat por capacidad llegan con US-269 (`l1d
 - `relativeEndDay` opcional en `CaseFact` (bump menor del contrato) = change aparte, pendiente de decisión del PO. Mientras
   tanto `CaseFact` solo trae el día de inicio: la rama de intervalos de `filtrar_hechos_por_periodo` está probada en
   unitario y no se activa en integración; la quimioterapia que empezó antes del periodo queda fuera (no se marca).
+- Rótulo «Interpretación generada por IA» para `kind = "interpretacion"`: dependencia de L1D-324 (UI), que lo pinta; este
+  change solo emite el `kind` (ejemplo `chat-turn-caso-interpretacion.json`).
+- Pregunta de producto para el PO: «últimos N días» se mide desde el diagnóstico (día 0), no desde hoy, porque Backend 2
+  solo ve días relativos al diagnóstico.
+- Riesgo (PO): una quimioterapia iniciada hace 172 días y todavía activa desaparece de «últimos 100 días» mientras
+  `CaseFact` no informe el fin; cuando el periodo deja la lista vacía se usa el texto «en el periodo consultado», pero un
+  hecho activo que empezó antes sigue sin aparecer. Se resuelve con `relativeEndDay` (change aparte).
+- Riesgo (PO): si Backend 1 no relativiza una fecha absoluta de la pregunta («desde el 2025-03-14»), el texto de la
+  pregunta llega al prompt tal cual (preexistente de `l1d-316`/`l1d-317`); el periodo no la usa y los hechos no la llevan.
 - La tarea 3.1 nació en verde: Backend 1 ya persistía los `ChatBlock` tal cual y resolvía `ConversationDataLink` desde
   `l1d-315`/`l1d-317` (caracterización, no hay commit `feat` de `clinical-api`).
