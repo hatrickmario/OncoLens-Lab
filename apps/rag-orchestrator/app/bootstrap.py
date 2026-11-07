@@ -527,6 +527,8 @@ def _registrar_chat(
                     ttl_segundos=settings.chat_thread_ttl_seconds,
                     max_hilos=settings.chat_max_threads,
                 ),
+                settings,
+                _terminos_del_modo_falso(settings, catalogo),
             ),
             catalogo,
         )
@@ -625,6 +627,17 @@ def _terminos_del_catalogo_por_tipo(
     if settings.clinical_catalog_path is None:
         return {}
     return cargar_terminos_por_tipo(settings.clinical_catalog_path, catalogo.tipos_de_cancer())
+
+
+def _terminos_del_modo_falso(
+    settings: Settings, catalogo: CatalogoClinico
+) -> dict[str, frozenset[str]]:
+    """Como ``_terminos_del_catalogo_por_tipo``, pero un catálogo sin sinónimos no impide arrancar con
+    ``LLM_PROVIDER=fake``: sin términos el chat falso solo pierde la detección de «otro tipo de cáncer»."""
+    try:
+        return _terminos_del_catalogo_por_tipo(settings, catalogo)
+    except CatalogoNoDisponible:
+        return {}
 
 
 def _crear_servicio_de_recuperacion(

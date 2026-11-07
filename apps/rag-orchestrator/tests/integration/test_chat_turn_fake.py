@@ -69,9 +69,6 @@ def test_chat_turn_fake_sirve_caso_faltantes_y_evidencia_segun_la_pregunta_cuand
     [
         ("chat-turn-request.json", "chat-turn-caso-ok.json"),
         ("chat-turn-request-faltantes.json", "chat-turn-faltantes.json"),
-        ("chat-turn-request-evidencia.json", "chat-turn-evidencia.json"),
-        ("chat-turn-request-evidencia-contextual.json", "chat-turn-evidencia-contextual.json"),
-        ("chat-turn-request-fuentes.json", "chat-turn-fuentes-ok.json"),
         ("chat-turn-request-no-clasificada.json", "chat-turn-no-clasificada.json"),
         ("chat-turn-request-fuera-de-alcance.json", "chat-turn-fuera-de-alcance.json"),
     ],
@@ -83,6 +80,40 @@ def test_chat_turn_fake_sirve_el_ejemplo_emparejado_cuando_recibe_su_peticion_de
 
     assert resultado.status_code == 200
     assert resultado.json() == _ejemplo(respuesta)
+
+
+def test_chat_turn_fake_sirve_el_ejemplo_de_fuentes_cuando_la_pregunta_es_de_fuentes_y_limitaciones():
+    pregunta = _ejemplo("chat-turn-request-fuentes.json")["question"]
+
+    resultado = _turno_falso(solicitud_de_turno(pregunta)).json()
+
+    assert resultado == _ejemplo("chat-turn-fuentes-ok.json")
+
+
+def test_chat_turn_fake_arma_bloques_citas_y_estado_desde_el_analisis_cuando_la_pregunta_es_de_evidencia():
+    analisis = _ejemplo("rag-query-con-evidencia.json")
+    pregunta = _pregunta("rag-query-request.json")
+
+    resultado = _turno_falso(solicitud_de_turno(pregunta)).json()
+
+    opciones = [o["option"] for o in analisis["evidenceOptions"]]
+    citados = [c["chunkId"] for o in analisis["evidenceOptions"] for c in o["citedSources"]]
+    evidencia = [b for b in resultado["blocks"] if b["kind"] == "evidencia"]
+    assert len(evidencia) == len(opciones)
+    assert all(opcion in b["text"] for opcion, b in zip(opciones, evidencia, strict=True))
+    assert [c["chunkId"] for b in evidencia for c in b["citations"]] == citados
+    assert resultado["structuredState"]["opcionesMostradas"] == opciones
+    assert resultado["structuredState"]["citasMostradas"] == citados
+    assert resultado["structuredState"]["preguntasPrevias"] == [pregunta]
+    assert resultado["notices"] == _ejemplo("chat-turn-evidencia.json")["notices"]
+
+
+def test_chat_turn_fake_avisa_la_busqueda_ampliada_cuando_el_analisis_uso_la_expansion_contextual():
+    pregunta = _pregunta("rag-query-request-contextual.json")
+
+    resultado = _turno_falso(solicitud_de_turno(pregunta)).json()
+
+    assert resultado["notices"] == _ejemplo("chat-turn-evidencia-contextual.json")["notices"]
 
 
 @pytest.mark.parametrize(
