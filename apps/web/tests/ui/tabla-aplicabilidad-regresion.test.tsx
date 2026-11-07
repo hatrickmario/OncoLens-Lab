@@ -7,7 +7,7 @@ import { aplanarMensajes } from '../../../../packages/clinical-language/src/apla
 import { checkProhibitedTerms } from '../../../../packages/clinical-language/src/check-prohibited-terms';
 import { loadProhibitedTerms } from '../../../../packages/clinical-language/src/load-prohibited-terms';
 import DashboardLayout from '../../app/(dashboard)/layout';
-import { EvidencePanel } from '../../components/organisms/evidence-panel';
+import { ConversationPanel } from '../../components/organisms/conversation-panel';
 import { mensajes } from '../../lib/mensajes';
 import { abrirTabla, fx08ba } from '../support/aplicabilidad-ui';
 import {
@@ -15,7 +15,13 @@ import {
   conEvidenciaPoblacionA_M2B,
   crearBffAnalisisSimulado,
 } from '../support/msw/evidence-analyses';
-import { analizar, evidence, ID_PACIENTE, PREGUNTA_DE_PRUEBA } from '../support/panel-ui';
+import {
+  analizar,
+  esperarComposerOperable,
+  evidence,
+  ID_PACIENTE,
+  PREGUNTA_DE_PRUEBA,
+} from '../support/panel-ui';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn() }) }));
 
@@ -70,26 +76,20 @@ describe('Tabla de aplicabilidad · regresión RN-23, RN-26 y RN-19', () => {
     }
   });
 
-  it('mantiene habilitados el formulario y Ver fragmento cuando la tabla muestra avisos [RN-26]', async () => {
+  it('mantiene habilitados el campo de pregunta y Ver fragmento cuando la tabla muestra avisos [RN-26]', async () => {
     bff.responder({ status: 200, cuerpo: fx08ba() });
     const usuario = await analizar();
     const tabla = await abrirTabla(usuario);
 
     expect(within(tabla).getAllByText(/Desconocido ·/).length).toBeGreaterThan(0);
     expect(within(tabla).getByText('Dato del paciente sin verificar')).toBeTruthy();
-    expect(
-      (screen.getByRole('button', { name: evidence.formulario.analizar }) as HTMLButtonElement)
-        .disabled,
-    ).toBe(false);
-    expect(
-      (screen.getByLabelText(evidence.formulario.pregunta) as HTMLTextAreaElement).disabled,
-    ).toBe(false);
     await usuario.click(screen.getByRole('button', { name: /NCI PDQ/ }));
     expect(
       (screen.getByRole('button', { name: evidence.cita.verFragmento }) as HTMLButtonElement)
         .disabled,
     ).toBe(false);
     expect(tabla.querySelector('[disabled], [aria-disabled="true"]')).toBeNull();
+    await esperarComposerOperable(usuario);
   });
 
   it('conserva el aviso de IA en la región note y la etiqueta académica en la cabecera cuando la tabla de doc-a1 está desplegada [RN-19]', async () => {
@@ -97,11 +97,11 @@ describe('Tabla de aplicabilidad · regresión RN-23, RN-26 y RN-19', () => {
     const usuario = userEvent.setup();
     render(
       <DashboardLayout>
-        <EvidencePanel patientId={ID_PACIENTE} />
+        <ConversationPanel patientId={ID_PACIENTE} />
       </DashboardLayout>,
     );
-    await usuario.type(screen.getByLabelText(evidence.formulario.pregunta), PREGUNTA_DE_PRUEBA);
-    await usuario.click(screen.getByRole('button', { name: evidence.formulario.analizar }));
+    await usuario.type(screen.getByLabelText(mensajes().conversacion.campo), PREGUNTA_DE_PRUEBA);
+    await usuario.click(screen.getByRole('button', { name: mensajes().conversacion.preguntar }));
     await abrirTabla(usuario);
 
     const avisos = screen.getAllByRole('note');

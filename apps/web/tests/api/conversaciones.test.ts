@@ -85,6 +85,8 @@ describe('POST /api/conversations/{conversationId}/turns', () => {
     [502, 'error-servicio-ia.json'],
     [503, 'error-conversation-turn-503.json'],
     [409, 'error-conversation-turn-409.json'],
+    // RN-15: el panel solo bloquea con `OPT_OUT_ANALISIS_IA`, así que el BFF debe retransmitirlo intacto.
+    [403, 'error-opt-out.json'],
   ])(
     'retransmite el %s de clinical-api sin reinterpretarlo [US-258 AC-7]',
     async (status, archivo) => {

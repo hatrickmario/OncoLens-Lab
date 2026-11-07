@@ -66,10 +66,20 @@ describe('apps/web/Dockerfile · etapa build', () => {
     expect(sinCopiar).toEqual([]);
   });
 
-  it('no copia a la imagen más de packages/ que lo que web importa del verificador RN-23 [US-246 AC-1]', () => {
+  it('no copia a la imagen más de packages/ que lo que web importa: el verificador RN-23 y el catálogo de las preguntas guiadas [US-246 AC-1] [US-267 AC-8]', () => {
+    // US-267: el RSC de /analisis importa del catálogo versionado (`lib/server/catalogo-guiadas.ts`, `server-only`) solo estos
+    // JSON. Esta lista es exacta a propósito: copiar algo más, o quitar un JSON que web importa, falla.
     const origenes = origenesCopiados().filter((o) => o.startsWith('packages/clinical-'));
     expect(origenes.sort()).toEqual([
+      'packages/clinical-catalogs/escalas.json',
       'packages/clinical-catalogs/lenguaje/terminos-prohibidos.json',
+      'packages/clinical-catalogs/mama/codigos.json',
+      'packages/clinical-catalogs/mama/datos-criticos.json',
+      'packages/clinical-catalogs/mama/plantillas.json',
+      'packages/clinical-catalogs/manifest.json',
+      'packages/clinical-catalogs/prostata/codigos.json',
+      'packages/clinical-catalogs/prostata/datos-criticos.json',
+      'packages/clinical-catalogs/prostata/plantillas.json',
       'packages/clinical-language/src',
     ]);
   });

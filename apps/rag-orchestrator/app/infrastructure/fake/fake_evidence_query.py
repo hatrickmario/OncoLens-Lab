@@ -38,8 +38,8 @@ class FakeEvidenceQuery:
         for entrada in indice["examples"]:
             if entrada["target"] != _TARGET_RESPUESTA:
                 continue
-            solicitud = _leer_modelo(directorio / entrada["request"], RagQueryInternalRequest)
-            respuestas[solicitud.query.strip()] = _leer_modelo(
+            solicitud = leer_ejemplo(directorio / entrada["request"], RagQueryInternalRequest)
+            respuestas[solicitud.query.strip()] = leer_ejemplo(
                 directorio / entrada["file"], RagQueryInternalResponse
             )
         sin_evidencia = next(
@@ -55,6 +55,10 @@ class FakeEvidenceQuery:
         """Selección por `query` exacta (sin espacios en los extremos); sin coincidencia, sin evidencia."""
         return self._respuestas_por_pregunta.get(query.strip(), self._sin_evidencia)
 
+    def es_pregunta_de_fixture(self, query: str) -> bool:
+        """``True`` si la `query` es la de algún ejemplo de ``index.json`` (el chat la trata como pregunta de evidencia)."""
+        return query.strip() in self._respuestas_por_pregunta
+
     async def consultar(self, solicitud: RagQueryInternalRequest) -> RagQueryInternalResponse:
         return self.select_fixture_response(solicitud.query)
 
@@ -66,7 +70,7 @@ def _leer_json(archivo: Path) -> dict:
         raise EjemploFixtureInvalido(f"{archivo.name} falta o no es JSON válido") from None
 
 
-def _leer_modelo(archivo: Path, modelo: type[_Modelo]) -> _Modelo:
+def leer_ejemplo(archivo: Path, modelo: type[_Modelo]) -> _Modelo:
     try:
         return modelo.model_validate_json(archivo.read_text(encoding="utf-8"))
     except (OSError, ValidationError):

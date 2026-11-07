@@ -1,10 +1,15 @@
 import { expect, test } from '@playwright/test';
+import es from '../messages/es.json' with { type: 'json' };
 import {
   analizar,
   ejemplo,
+  analisisDelTurno,
   esperarResultado,
+  esperarTarjeta,
+  esRespuestaDeTurno,
   ID_SEMILLA_A,
   iniciarSesion,
+  preguntarEnElChat,
   SIN_BASE,
   textos,
 } from './soporte';
@@ -25,8 +30,7 @@ test.describe('Panel de análisis (L1D-140)', () => {
     page.on('request', (r) => r.method() === 'POST' && peticiones.push(r.url()));
     await iniciarSesion(page);
     const url = page.url();
-    await page.getByLabel('Pregunta clínica').fill(preguntaHer2);
-    await page.getByRole('button', { name: 'Analizar evidencia' }).click();
+    await preguntarEnElChat(page, preguntaHer2);
 
     await expect(
       page.getByRole('heading', { level: 2, name: textos.resultado.encabezado }),
@@ -40,10 +44,13 @@ test.describe('Panel de análisis (L1D-140)', () => {
     await expect(chip).toBeVisible();
     await chip.click();
     await page.getByRole('button', { name: textos.cita.verFragmento }).click();
-    const fragmento = page.getByText(cita.chunkTextSnapshot);
+    // El texto también sale en la cita de la tarjeta y en el turno: el `lang` solo lo lleva el panel lateral.
+    const fragmento = page
+      .getByRole('complementary', { name: textos.fragmento.titulo })
+      .getByText(cita.chunkTextSnapshot);
     await expect(fragmento).toHaveAttribute('lang', cita.language);
     expect(page.url()).toBe(url);
-    expect(peticiones.filter((u) => u.endsWith('/api/evidence-analyses'))).toHaveLength(1);
+    expect(peticiones.filter((u) => /\/api\/conversations\/[^/]+\/turns$/.test(u))).toHaveLength(1);
   });
 
   test('muestra al final del Fragmento citado el enlace a la fuente original cuando la cita trae su URL [ARR-07 AC-4]', async ({
@@ -154,27 +161,6 @@ test.describe('Panel de análisis (L1D-140)', () => {
     await expect(page.getByText(textos.discarded.titulo)).toHaveCount(0);
   });
 
-  test('se opera solo con teclado y el resultado se anuncia en role=status sin mover el foco [US-061 AC-6]', async ({
-    page,
-  }) => {
-    await iniciarSesion(page);
-    const campo = page.getByLabel('Pregunta clínica');
-    await campo.focus();
-    await page.keyboard.type(preguntaHer2);
-    const boton = page.getByRole('button', { name: 'Analizar evidencia' });
-    // Los enlaces «Ir a … en el caso clínico» del aviso de faltantes (US-005 AC-7) preceden al botón en el orden de Tab.
-    for (let i = 0; i < 12 && !(await boton.evaluate((el) => el === document.activeElement)); i++)
-      await page.keyboard.press('Tab');
-    await expect(boton).toBeFocused();
-    await page.keyboard.press('Enter');
-
-    // El aviso de faltantes también es role=status (US-005): se acota al anuncio del resultado.
-    const anuncio = page.getByRole('status').filter({ hasText: textos.estado.listoUna });
-    await expect(anuncio).toHaveText(textos.estado.listoUna);
-    await expect(anuncio).toHaveAttribute('aria-live', 'polite');
-    await expect(boton).toBeFocused();
-  });
-
   test('muestra No disponible en endpoint y tamaño de muestra de la cita cuando el catálogo no los registra [US-127 AC-3]', async ({
     page,
   }) => {
@@ -197,29 +183,31 @@ test.describe('Panel de análisis (L1D-140)', () => {
 });
 
 test.describe('Estados del panel (L1D-141)', () => {
-  test('llega un solo POST y un solo AIAnalysisRecord cuando el doctor hace doble clic en Analizar evidencia [US-062 AC-1]', async ({
+  test('llega un solo POST de turno y una sola tarjeta cuando el doctor hace doble clic en Preguntar [US-062 AC-1]', async ({
     page,
   }) => {
     test.setTimeout(60_000);
-    const respuestas: string[] = [];
     const peticiones: string[] = [];
+    const idsDeAnalisis: string[] = [];
     page.on('request', (r) => {
-      if (r.method() === 'POST' && r.url().endsWith('/api/evidence-analyses'))
-        peticiones.push(r.url());
+      if (esRespuestaDeTurno({ url: () => r.url(), request: () => r })) peticiones.push(r.url());
     });
     page.on('response', async (r) => {
-      if (r.request().method() === 'POST' && r.url().endsWith('/api/evidence-analyses'))
-        respuestas.push(((await r.json()) as { id: string }).id);
+      if (esRespuestaDeTurno(r)) idsDeAnalisis.push((await analisisDelTurno(r)).id);
     });
     await iniciarSesion(page);
-    await page.getByLabel('Pregunta clínica').fill(preguntaHer2);
+    await page.getByLabel(es.conversacion.campo).fill(preguntaHer2);
 
-    await page.getByRole('button', { name: 'Analizar evidencia' }).dblclick();
+    await page.getByRole('button', { name: es.conversacion.preguntar }).dblclick();
 
     await esperarResultado(page);
+    await esperarTarjeta(page);
     expect(peticiones).toHaveLength(1);
-    expect(new Set(respuestas).size).toBe(1);
-    await expect(page.getByRole('button', { name: 'Analizar evidencia' })).toBeEnabled();
+    // El `id` se añade tras un `await` del manejador de la respuesta: se espera en vez de leerlo de inmediato.
+    await expect.poll(() => new Set(idsDeAnalisis).size).toBe(1);
+    // Con el campo vacío «Preguntar» queda deshabilitado; con otra pregunta escrita vuelve a estar habilitado.
+    await page.getByLabel(es.conversacion.campo).fill('Otra pregunta');
+    await expect(page.getByRole('button', { name: es.conversacion.preguntar })).toBeEnabled();
   });
 
   test('muestra el estado sin evidencia con su alcance y Relevancia máxima: no aplica para Q-SIN [US-062 AC-2]', async ({
@@ -242,17 +230,14 @@ test.describe('Estados del panel (L1D-141)', () => {
     context,
   }) => {
     await iniciarSesion(page);
-    // Espera la lectura inicial del checklist: así la sesión vence después de ella y el 401 llega al pulsar el botón.
-    await expect(page.getByRole('button', { name: 'Analizar evidencia' })).toBeVisible();
-    await expect(page.getByRole('status').filter({ hasText: /datos críticos/ })).toBeVisible();
+    await expect(page.getByLabel(es.conversacion.campo)).toBeVisible();
     const cookies = await context.cookies();
     const origen = new URL(page.url()).origin;
     await page.request.post('/api/auth/logout', { headers: { Origin: origen } });
     await context.clearCookies();
     await context.addCookies(cookies);
 
-    await page.getByLabel('Pregunta clínica').fill(preguntaHer2);
-    await page.getByRole('button', { name: 'Analizar evidencia' }).click();
+    await preguntarEnElChat(page, preguntaHer2);
 
     await expect(page).toHaveURL(/\/login\?motivo=expirada$/);
     await expect(page.getByRole('status')).toHaveText('Tu sesión expiró. Vuelve a iniciar sesión.');

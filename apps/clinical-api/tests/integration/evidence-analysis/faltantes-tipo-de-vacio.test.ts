@@ -34,7 +34,7 @@ import { clienteVerificado } from '../../support/verificarProveedor.js';
 
 /**
  * US-263 (L1D-320): el `completeness[]` que `clinical-api` envía a `/chat/turn` trae el mismo `gapType` que
- * `GET /completeness` (una regla, un dueño) y la versión 1.7.0 del catálogo se verifica con el `409` sin persistir.
+ * `GET /completeness` (una regla, un dueño) y la versión 1.8.0 del catálogo se verifica con el `409` sin persistir.
  */
 const ESPACIO_DE_IDS = 9516;
 const PREGUNTA_DE_FALTANTES = '¿Qué información falta?';
@@ -206,8 +206,8 @@ describe('completeness[] del turno de faltantes · coherencia con /completeness 
   });
 });
 
-describe('versión del catálogo 1.7.0 en el turno (US-263 AC-7)', () => {
-  it('envía catalogVersion 1.7.0 y responde 409 CATALOG_VERSION_MISMATCH sin guardar el turno cuando Backend 2 monta otro catálogo [US-263 AC-7] [RN-22]', async () => {
+describe('versión del catálogo 1.8.0 en el turno (US-263 AC-7)', () => {
+  it('envía catalogVersion 1.8.0 y responde 409 CATALOG_VERSION_MISMATCH sin guardar el turno cuando Backend 2 monta otro catálogo [US-263 AC-7] [RN-22]', async () => {
     const patientId = idSembrado(PACIENTE_CHAT);
     const { app } = await montarGateway(mundo, {
       identidades: lectorDeIdentidadFalso({ [patientId]: IDENTIDAD_CHAT }),
@@ -217,8 +217,8 @@ describe('versión del catálogo 1.7.0 en el turno (US-263 AC-7)', () => {
 
     const respuesta = await enviarTurno(app, cookie, conversationId, PREGUNTA_DE_FALTANTES);
 
-    expect(versionDelCatalogo()).toBe('1.7.0');
-    expect(rag.chat.capturadas[0]?.cuerpo['catalogVersion']).toBe('1.7.0');
+    expect(versionDelCatalogo()).toBe('1.8.0');
+    expect(rag.chat.capturadas[0]?.cuerpo['catalogVersion']).toBe('1.8.0');
     expect(respuesta.status).toBe(409);
     expect(respuesta.body.error).toBe('CATALOG_VERSION_MISMATCH');
     expect(await contarTurnosDeChat(mundo.cliente, conversationId)).toBe(0);

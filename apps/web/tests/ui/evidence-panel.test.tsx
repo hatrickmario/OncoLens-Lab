@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, screen, waitFor, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { cleanup, screen, within } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import origen from '../../../../packages/clinical-language/origen-de-campos.json';
 import {
@@ -8,16 +7,8 @@ import {
   conEvidenciaSinOpciones,
   conEvidenciaSoloDescartadas,
   crearBffAnalisisSimulado,
-  peticion,
 } from '../support/msw/evidence-analyses';
-import {
-  analizar,
-  evidence,
-  ID_PACIENTE,
-  montarPanel,
-  PREGUNTA_DE_PRUEBA,
-  SIN_BASE,
-} from '../support/panel-ui';
+import { analizar, evidence, PREGUNTA_DE_PRUEBA, SIN_BASE } from '../support/panel-ui';
 
 const { replace } = vi.hoisted(() => ({ replace: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace }) }));
@@ -45,14 +36,7 @@ describe('EvidencePanel', () => {
     expect(
       await screen.findByRole('heading', { level: 2, name: evidence.resultado.encabezado }),
     ).toBeTruthy();
-    expect(bff.cuerpos).toEqual([
-      {
-        patientId: ID_PACIENTE,
-        query: PREGUNTA_DE_PRUEBA,
-        continueWithWarning: false,
-        sourcesSelected: { guias: true, ensayos: true, publicaciones: true },
-      },
-    ]);
+    expect(bff.cuerpos).toEqual([{ question: PREGUNTA_DE_PRUEBA }]);
     expect(screen.getByRole('heading', { level: 3, name: opcion.option })).toBeTruthy();
     expect(screen.getByText(opcion.rationale)).toBeTruthy();
     const chip = screen.getByRole('button', {
@@ -252,26 +236,5 @@ describe('EvidencePanel', () => {
     expect(await screen.findByText(evidence.resultado.sinOpciones)).toBeTruthy();
     expect(screen.queryByRole('heading', { name: evidence.resultado.encabezado })).toBeNull();
     expect(screen.queryByText(evidence.discarded.titulo)).toBeNull();
-  });
-
-  it('el textarea tiene label, el botón se activa con Enter y el resultado se anuncia en role=status sin mover el foco [US-061 AC-6]', async () => {
-    bff.responder({ status: 200, cuerpo: conEvidencia });
-    const usuario = userEvent.setup();
-    montarPanel();
-
-    await usuario.tab();
-    const campo = screen.getByLabelText('Pregunta clínica');
-    expect(document.activeElement).toBe(campo);
-    await usuario.keyboard(peticion.query);
-    await usuario.tab();
-    const boton = screen.getByRole('button', { name: 'Analizar evidencia' });
-    expect(document.activeElement).toBe(boton);
-    await usuario.keyboard('{Enter}');
-
-    const estado = await screen.findByRole('status');
-    await waitFor(() => expect(estado.textContent).toBe(evidence.estado.listoUna));
-    expect(estado.getAttribute('aria-live')).toBe('polite');
-    expect(document.activeElement).toBe(boton);
-    expect(estado.closest('[data-testid="analysis-result"]')).toBeNull();
   });
 });

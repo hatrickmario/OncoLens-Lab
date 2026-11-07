@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { analizar, ejemplo, esperarResultado, iniciarSesion } from './soporte';
+import { analizar, esperarTarjeta, iniciarSesion } from './soporte';
 
-const preguntaHer2 = ejemplo('rag-query-request.json').query as string;
+const pregunta = '¿Cuál es la situación actual de esta paciente?';
 const RUTA_PACIENTE =
   process.env.WEB_HOME_PATH ?? '/pacientes/0fd028e2-f8b0-56c7-a748-2a4e473d879d/analisis';
 
@@ -39,8 +39,8 @@ test.describe('Sesión y origen único en el navegador (ARR-02)', () => {
       if (url.protocol === 'http:' || url.protocol === 'https:') origenes.add(url.origin);
     });
 
-    await analizar(page, preguntaHer2);
-    await esperarResultado(page);
+    await analizar(page, pregunta);
+    await esperarTarjeta(page);
 
     expect([...origenes]).toEqual([origenWeb]);
   });

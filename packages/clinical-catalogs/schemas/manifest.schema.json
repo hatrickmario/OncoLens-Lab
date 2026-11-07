@@ -27,6 +27,12 @@
       "description": "true = el catálogo trae lenguaje/marcos-de-pregunta.json (L1D-329, ADR-52).",
       "const": true
     },
+    "plantillasDePregunta": {
+      "description": "Tipos de cáncer cuyo `<tipo>/plantillas.json` es el de las preguntas guiadas (L1D-324, ADR-52).",
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[a-z]+$" }
+    },
     "poblacionReglas": {
       "type": "object",
       "propertyNames": { "pattern": "^[a-z]+$" },

@@ -1,4 +1,48 @@
 {
-  "version": "1.1.0",
-  "items": []
+  "version": "1.8.0",
+  "items": [
+    {
+      "id": "situacion-actual",
+      "variantes": [
+        {
+          "texto": "¿Cuál es la situación actual de este paciente con {tipo}?",
+          "ranuras": ["tipo"]
+        }
+      ]
+    },
+    {
+      "id": "informacion-faltante",
+      "variantes": [
+        {
+          "texto": "¿Qué información importante falta en el caso de {tipo}?",
+          "ranuras": ["tipo"]
+        }
+      ]
+    },
+    {
+      "id": "evidencia-del-tipo",
+      "variantes": [{ "texto": "¿Qué evidencia hay para {tipo}?", "ranuras": ["tipo"] }]
+    },
+    {
+      "id": "evidencia-del-tema",
+      "variantes": [
+        {
+          "texto": "¿Qué evidencia hay para {tipo} en estadio {estadio} con grado {grado}?",
+          "ranuras": ["tipo", "estadio", "grado"]
+        },
+        {
+          "texto": "¿Qué evidencia hay para {tipo} con grado {grado}?",
+          "ranuras": ["tipo", "grado"]
+        },
+        {
+          "texto": "¿Qué evidencia hay para {tipo} en estadio {estadio}?",
+          "ranuras": ["tipo", "estadio"]
+        },
+        {
+          "texto": "¿Qué evidencia hay para {tipo} con {biomarcador}?",
+          "ranuras": ["tipo", "biomarcador"]
+        }
+      ]
+    }
+  ]
 }

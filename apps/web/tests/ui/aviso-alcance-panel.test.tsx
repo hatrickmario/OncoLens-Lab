@@ -2,7 +2,8 @@
 import { cleanup, screen } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { crearBffAnalisisSimulado, tipoNoHabilitado } from '../support/msw/evidence-analyses';
-import { analizar, evidence, SIN_BASE } from '../support/panel-ui';
+import { mensajes } from '../../lib/mensajes';
+import { analizar, esperarComposerOperable, evidence, SIN_BASE } from '../support/panel-ui';
 
 const { replace } = vi.hoisted(() => ({ replace: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace }) }));
@@ -26,7 +27,7 @@ describe('EvidencePanel · aviso de alcance (tipo_no_habilitado)', () => {
     const aviso = await screen.findByText(AVISO);
     expect(aviso.closest('[role="alert"]')).toBeNull();
     expect(aviso.closest('[role="status"]')).toBeTruthy();
-    expect(screen.queryByText(evidence.error.generico)).toBeNull();
+    expect(screen.queryByText(mensajes().conversacion.errorTitulo)).toBeNull();
     for (const nota of screen.getAllByRole('note')) {
       expect(nota.textContent).toBe(tipoNoHabilitado.disclaimer);
     }
@@ -57,12 +58,11 @@ describe('EvidencePanel · aviso de alcance (tipo_no_habilitado)', () => {
     expect(screen.queryByText(/Análisis listo/)).toBeNull();
   });
 
-  it('mantiene el formulario habilitado para seguir consultando cuando el tipo no está habilitado [US-043 AC-2] [RN-26]', async () => {
+  it('mantiene el campo de pregunta habilitado para seguir consultando cuando el tipo no está habilitado [US-043 AC-2] [RN-26]', async () => {
     bff.responder({ status: 200, cuerpo: tipoNoHabilitado });
-    await analizar();
+    const usuario = await analizar();
     await screen.findByText(AVISO);
 
-    const boton = screen.getByRole('button', { name: evidence.formulario.analizar });
-    expect((boton as HTMLButtonElement).disabled).toBe(false);
+    await esperarComposerOperable(usuario);
   });
 });
