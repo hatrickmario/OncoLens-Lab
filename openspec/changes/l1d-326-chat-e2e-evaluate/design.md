@@ -109,3 +109,9 @@ métricas de AC-3…AC-7; rótulo de revisión clínica (AC-8); no fuga verifica
   documentado en el reporte, no se oculta.
 - **Selectores del E2E** dependen del panel de US-267: se usan atributos de datos acordados en su change.
 - **Corrida con modelos locales lenta**: se agrupa con la corrida nocturna `[S6 resp. 12]`.
+- **E2E mínimo de `web` (decisión del usuario, 2026-11-07, por presupuesto):** `chat-ac01-ac06.spec.ts` cubre solo mama
+  (AC01…AC06 con la paciente semilla (a), `LLM_PROVIDER=fake`) y la comprobación de logs de FX-12-d con P-CHAT; las preguntas
+  salen de `data/eval/chat-v1/casos.yaml`. El spec lee la identidad sintética de `prisma/seed/pacientes/chat.ts` (sin literales
+  nuevos) y vuelca `docker logs` del proyecto de Compose para pasarlo por `buscarSecretos`. El E2E de próstata queda
+  trasladado a D6-49 (ID asignado por el orquestador de S6). Desviación: AC02 pregunta por el receptor de estrógeno (término
+  del catálogo) y no por «HER2», porque el chat falso solo enruta por reglas y `sinonimos.json` no trae «HER2» solo.

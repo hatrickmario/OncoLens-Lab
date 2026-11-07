@@ -55,7 +55,7 @@
 
 ## 4. frontend
 
-- [ ] 4.1 Test E2E `apps/web/e2e/chat-ac01-ac06.spec.ts`: «recorre AC01…AC06 con el paciente (a) con intent, ≥ 1 `factRef` en los bloques `documentado`, `interpretacion` y `conflicto` y ≥ 1 cita en los `evidencia` (los `faltante`, `catalogo`, `limitacion` y `fuente` son deterministas y exentos, glosario §3)
+- [x] 4.1 (alcance mínimo, decisión del usuario 2026-11-07) Cubierto y ejecutado en verde en local (Compose `LLM_PROVIDER=fake`, 2/2): AC01…AC06 de mama con la paciente (a) y «0 apariciones de la identidad sintética en los logs de Compose tras FX-12-d [US-269 AC-6]»; nacen en verde (caracterización de lo de las historias hermanas). AC02 usa «¿Qué resultado tuvo el receptor de estrógeno?» porque el chat falso solo enruta por reglas y «HER2» no está en `sinonimos.json`. La parte de próstata (paciente b): TRASLADADA -> D6-49 (E2E de próstata de US-269 AC-1; riesgo: el chat de próstata queda sin prueba de punta a punta hasta el próximo periodo). Texto original: Test E2E `apps/web/e2e/chat-ac01-ac06.spec.ts`: «recorre AC01…AC06 con el paciente (a) con intent, ≥ 1 `factRef` en los bloques `documentado`, `interpretacion` y `conflicto` y ≥ 1 cita en los `evidencia` (los `faltante`, `catalogo`, `limitacion` y `fuente` son deterministas y exentos, glosario §3)
   y avisos RN-19 sin punto final [US-269 AC-1]», ídem con el paciente (b), y «0 apariciones de la identidad sintética en
   los logs de Compose tras FX-12-d [US-269 AC-6]» (reusa `buscar-secretos.ts`) · Playwright contra Compose,
   `LLM_PROVIDER=fake` · verificación: verde en la CI (`retries: 1` solo en CI, con *trace*)
