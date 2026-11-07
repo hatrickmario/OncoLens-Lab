@@ -76,6 +76,13 @@ métricas de AC-3…AC-7; rótulo de revisión clínica (AC-8); no fuga verifica
     dato que nombra la pregunta (el E2E de próstata lo necesita); `parametros_de_recuperacion` fija `reranker_max_pairs` como el
     *bootstrap* (RN-22) para que `evaluate` no falle con un corpus de más pares que el tope. Sin cambio de contrato ni de defaults.
 
+## Alcance mínimo (decisión del usuario, 2026-11-07)
+
+US-269 baja de 5 a 3 puntos: quedan el dataset `chat-v1`, la familia `chat` con adapters falsos (AC-2, AC-5, AC-6, AC-8), el E2E
+de mama y la no fuga en los cuerpos hacia Backend 2. AC-3 y AC-7 con modelos locales y la corrida real de `chat-local.yaml` quedan en
+D6-50; AC-4 (sensibilidad, especificidad y `gapType`, tareas 3.2 y 3.3) en D6-51; `evaluate:chat`, el `.gitignore` y el refactor de
+clinical-platform (3.4 a 3.6) en D6-52; el E2E de próstata en D6-49; la revisión clínica de los casos pendientes en D6-53.
+
 ## Privacidad y ownership
 
 - **web → clinical-api**: solo en el E2E, con sesión opaca de un usuario sintético; sin cambios de código en `web`.

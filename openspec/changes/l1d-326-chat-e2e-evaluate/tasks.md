@@ -40,18 +40,18 @@
 - [x] 3.1 Test de aceptación en rojo: «la pregunta FX-12-d no deja nombre, documento ni fecha de nacimiento en los
   cuerpos hacia /chat/turn [US-269 AC-6]» (Supertest + PostgreSQL real + MSW que captura) · TDD estricto · commit
   `test(L1D-326)` · si ya pasa con lo de las hermanas, se registra como regresión y no requiere `feat` · evidencia: `tests/integration/evidence-analysis/chat-evaluate-no-fuga.test.ts` (P-CHAT del seed; cuerpos hacia `/chat/turn` y logs sin nombre, documento ni fecha); ya pasaba con US-258: regresión, sin `feat`; `scripts/test-integration.sh` 1 passed
-- [ ] 3.2 Test de aceptación en rojo: «publica sensibilidad, especificidad y exactitud de gapType 4/4 para P-CHAT con
+- [ ] 3.2 TRASLADADA -> D6-51: Test de aceptación en rojo: «publica sensibilidad, especificidad y exactitud de gapType 4/4 para P-CHAT con
   FX-12-c [US-269 AC-4]» y «resuelve el marcador de identidad y escribe peticiones desidentificadas [US-269 AC-6]»
   (integración con BD de test y seed) · TDD estricto · commit `test(L1D-326)`
-- [ ] 3.3 Implementar `scripts/eval-chat-preparar.ts` (`npm run eval:chat-preparar`): seed en BD de test, se niega con
+- [ ] 3.3 TRASLADADA -> D6-51: Implementar `scripts/eval-chat-preparar.ts` (`npm run eval:chat-preparar`): seed en BD de test, se niega con
   `REAL_*_ENABLED` o entorno `piloto`, arma `ChatTurnRequest` con el pipeline de producción, traduce claves del seed a
   `factRefs`, calcula M-04.1/M-04.2/`gapType`, escribe en `apps/clinical-api/eval/results/tmp/` · commit `feat(L1D-326)` · verificación:
   3.2 en verde
-- [ ] 3.4 Script raíz `npm run evaluate:chat` que encadena 3.3 y 2.5 y combina los agregados en
+- [ ] 3.4 TRASLADADA -> D6-52: Script raíz `npm run evaluate:chat` que encadena 3.3 y 2.5 y combina los agregados en
   `reports/eval/l1d-326-chat-v1.json`; añadir `data/eval/chat-v1/`, prompts y nodos del chat a las rutas de
   `eval-required` de la CI · test después · verificación: fixture de PR que dispara `eval-required`
-- [ ] 3.5 Añadir `apps/clinical-api/eval/results/tmp/` al `.gitignore` raíz (hoy solo está `apps/rag-orchestrator/eval/results/`) · test después · verificación: tras `npm run eval:chat-preparar`, `git status --porcelain` no lista nada bajo `apps/clinical-api/eval/results/tmp/`; mismo commit que 3.3
-- [ ] 3.6 Refactor en los archivos tocados, tests en verde antes y después, commit `refactor(L1D-326)`
+- [ ] 3.5 TRASLADADA -> D6-52: Añadir `apps/clinical-api/eval/results/tmp/` al `.gitignore` raíz (hoy solo está `apps/rag-orchestrator/eval/results/`) · test después · verificación: tras `npm run eval:chat-preparar`, `git status --porcelain` no lista nada bajo `apps/clinical-api/eval/results/tmp/`; mismo commit que 3.3
+- [ ] 3.6 TRASLADADA -> D6-52: Refactor en los archivos tocados, tests en verde antes y después, commit `refactor(L1D-326)`
 
 ## 4. frontend
 
@@ -62,15 +62,15 @@
 
 ## 5. evaluación
 
-- [ ] 5.1 `run-ai-eval` con `chat-fake.yaml` (CI) y `chat-local.yaml` (modelos locales, junto con la corrida nocturna
+- [ ] 5.1 DIFERIDA -> D6-50: `run-ai-eval` con `chat-fake.yaml` (CI) y `chat-local.yaml` (modelos locales, junto con la corrida nocturna
   `[S6 resp. 12]`): reporte de `ai-eval-runner` en `reports/eval/l1d-326-chat-v1.md` con M-02.x, M-04.x, RN-23 = 0, no
   fuga = 0, p95 por intención y casos pendientes de revisión
 
 ## 6. cierre
 
-- [ ] 6.1 Registrar en el cierre del S6 la deuda de los casos `revision_oncologo: pendiente` `[S6 resp. 12]` y la
+- [ ] 6.1 TRASLADADA -> D6-53: Registrar en el cierre del S6 la deuda de los casos `revision_oncologo: pendiente` `[S6 resp. 12]` y la
   latencia medida para la revisión de ADR-51
-- [ ] 6.2 `openspec validate l1d-326-chat-e2e-evaluate --strict` en verde
-- [ ] 6.3 Suites de `rag-orchestrator` (`pytest`), `clinical-api` (`vitest`) y E2E en verde; `contracts:check` sin
+- [x] 6.2 `openspec validate l1d-326-chat-e2e-evaluate --strict` en verde · evidencia: `openspec validate l1d-326-chat-e2e-evaluate --strict` válido (2026-11-07).
+- [x] 6.3 (parcial) Suites de `rag-orchestrator` (`pytest`), `clinical-api` (`vitest`) y E2E en verde; `contracts:check` sin · evidencia ejecutada: `pytest` rag completo 5094 passed; `contracts:check` sin hallazgos; `contracts:verify-provider` rag 761 respuestas; `vitest run` de clinical-api 148 archivos / 1390 tests; E2E de mama verde en local y en CI al abrir el PR. No ejecutado: E2E de próstata (D6-49), medición real de AC-3/AC-7 (D6-50) y AC-4 (D6-51).
   incompatibles
-- [ ] 6.4 Gate 2 con `privacy-guardian`, `clinical-language-auditor`, `contract-keeper` y `design-principles-reviewer`
+- [ ] 6.4 (lo ejecuta el orquestador) Gate 2 con `privacy-guardian`, `clinical-language-auditor`, `contract-keeper` y `design-principles-reviewer`
