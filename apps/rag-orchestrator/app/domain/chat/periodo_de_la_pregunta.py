@@ -5,9 +5,9 @@ mes», «último año», «última semana» y «último día». Backend 2 nunca 
 2025») no se reconoce y la pregunta no se filtra. ``filtrar_hechos_por_periodo`` acota los hechos por día relativo al
 diagnóstico, día 0 = el diagnóstico, no hoy (negativo = antes): entra el hecho con ``día >= -N``; un hecho sin fecha confiable (``None``) queda fuera.
 
-Un hecho con intervalo (``dia_relativo_fin``) entra si su fin cae dentro del periodo y, si empezó antes, lleva la marca
-«(iniciado antes del periodo)» en su verbalización, de modo que el prompt, el NLI y el bloque usan el mismo texto. Hoy
-``CaseFact`` solo trae el día de inicio (``relativeDay``): el fin llega a ``None`` y esta rama no se activa en integración.
+Un hecho con intervalo (``dia_relativo_fin``) entra si su fin cae dentro del periodo y uno en curso (``en_curso``) siempre;
+si empezó antes, lleva la marca «(iniciado antes del periodo)» y si está en curso, «(en curso)» en su verbalización, de modo
+que el prompt, el NLI y el bloque usan el mismo texto. El que terminó antes del periodo se excluye sin marca (US-272).
 """
 
 from __future__ import annotations
@@ -20,6 +20,7 @@ from app.domain.chat.turno import HechoDelCaso
 from app.domain.lenguaje import sin_tildes
 
 MARCA_INICIADO_ANTES_DEL_PERIODO = "(iniciado antes del periodo)"
+MARCA_EN_CURSO = "(en curso)"
 DIAS_POR_UNIDAD = {"dia": 1, "semana": 7, "mes": 30, "ano": 365}
 """Conversión fija (definición, no calibrable): semana = 7, mes = 30, año = 365 días."""
 _NUMEROS_EN_PALABRAS = {
@@ -63,20 +64,36 @@ def periodo_de_la_pregunta(pregunta: str) -> int | None:
     return n * DIAS_POR_UNIDAD[coincidencia["unidad"]] if n > 0 else None
 
 
+def tiene_intervalo(hecho: HechoDelCaso) -> bool:
+    """``True`` si el hecho trae ``relativeEndDay`` (entero o ``null`` explícito): lo decide la rama de intervalo."""
+    return hecho.en_curso or hecho.dia_relativo_fin is not None
+
+
 def filtrar_hechos_por_periodo(
     hechos: Sequence[HechoDelCaso], dias: int
 ) -> tuple[HechoDelCaso, ...]:
-    """Los hechos dentro del periodo, en su orden; los que empezaron antes y terminan dentro llevan la marca."""
+    """Los hechos dentro del periodo, en su orden, con las marcas de inicio anterior y de en curso cuando corresponden."""
     conservados: list[HechoDelCaso] = []
     for hecho in hechos:
-        if hecho.dia_relativo is None:
+        if hecho.dia_relativo is None or _termino_antes_del_periodo(hecho, dias):
             continue
-        fin = hecho.dia_relativo if hecho.dia_relativo_fin is None else hecho.dia_relativo_fin
-        if fin < -dias:
-            continue
-        conservados.append(hecho if hecho.dia_relativo >= -dias else _marcado(hecho))
+        conservados.append(_marcado(hecho, dias))
     return tuple(conservados)
 
 
-def _marcado(hecho: HechoDelCaso) -> HechoDelCaso:
-    return replace(hecho, verbalizacion=f"{hecho.verbalizacion} {MARCA_INICIADO_ANTES_DEL_PERIODO}")
+def _termino_antes_del_periodo(hecho: HechoDelCaso, dias: int) -> bool:
+    if hecho.en_curso:
+        return False
+    fin = hecho.dia_relativo if hecho.dia_relativo_fin is None else hecho.dia_relativo_fin
+    return fin is not None and fin < -dias
+
+
+def _marcado(hecho: HechoDelCaso, dias: int) -> HechoDelCaso:
+    marcas = []
+    if hecho.dia_relativo is not None and hecho.dia_relativo < -dias:
+        marcas.append(MARCA_INICIADO_ANTES_DEL_PERIODO)
+    if hecho.en_curso:
+        marcas.append(MARCA_EN_CURSO)
+    if not marcas:
+        return hecho
+    return replace(hecho, verbalizacion=" ".join((hecho.verbalizacion, *marcas)))

@@ -32,6 +32,8 @@ _MOMENTO_RELATIVO = re.compile(r"(?<!\w)(\d+)\s*dias?\s+(antes|despues)\b")
 def describir_hecho(hecho: HechoDelCaso) -> str:
     """La frase completa del hecho: su verbalización, su momento y, solo si exige cautela, su estado de revisión."""
     partes = [_con_mayuscula_inicial(hecho.verbalizacion.strip().rstrip(".")), _momento_de(hecho)]
+    if hecho.dia_relativo_fin is not None:
+        partes.append(_fin_de(hecho.dia_relativo_fin))
     if hecho.estado_de_revision == ESTADO_REQUIERE_REVISION:
         partes.append(TEXTO_REQUIERE_REVISION)
     if hecho.conflicto_con is not None:
@@ -69,6 +71,15 @@ def _momento_de(hecho: HechoDelCaso) -> str:
     unidad = "día" if abs(dia) == 1 else "días"
     sentido = "después" if dia > 0 else "antes"
     return f"{abs(dia)} {unidad} {sentido} del diagnóstico"
+
+
+def _fin_de(dia: int) -> str:
+    """El fin de un hecho con intervalo, con la misma forma que ``_momento_de``: «hasta N días antes del diagnóstico»."""
+    if dia == 0:
+        return "hasta el momento del diagnóstico"
+    unidad = "día" if abs(dia) == 1 else "días"
+    sentido = "después" if dia > 0 else "antes"
+    return f"hasta {abs(dia)} {unidad} {sentido} del diagnóstico"
 
 
 def _con_mayuscula_inicial(texto: str) -> str:

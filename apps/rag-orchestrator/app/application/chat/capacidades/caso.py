@@ -43,18 +43,24 @@ from app.domain.chat.contradicciones import (
     afirmaciones_que_resuelven_conflicto,
     es_pregunta_de_contradicciones,
 )
-from app.domain.chat.descripcion_de_hechos import describir_hechos, es_la_descripcion_de
+from app.domain.chat.descripcion_de_hechos import (
+    ESTADO_REQUIERE_REVISION,
+    describir_hechos,
+    es_la_descripcion_de,
+)
 from app.domain.chat.enlaces_del_caso import (
     filtrar_afirmaciones_sin_enlace,
     ordenar_series_por_dia_relativo,
 )
 from app.domain.chat.estado import EstadoDelHilo, TurnoPrevio
+from app.domain.chat.mensajes import ANCLA_DEL_PERIODO, AVISO_EN_CURSO_SIN_VERIFICAR
 from app.domain.chat.periodo_de_la_pregunta import (
     filtrar_hechos_por_periodo,
     periodo_de_la_pregunta,
+    tiene_intervalo,
 )
 from app.domain.chat.tendencia import tiene_verbo_de_tendencia
-from app.domain.chat.turno import HechoDelCaso, PropuestaDelTurno, TipoDeBloque
+from app.domain.chat.turno import BloqueDelTurno, HechoDelCaso, PropuestaDelTurno, TipoDeBloque
 from app.domain.nli import ParNli
 from app.prompts.chat_caso import armar_prompt_del_caso
 
@@ -95,6 +101,12 @@ class NodoCaso:
             if dias_del_periodo is None
             else filtrar_hechos_por_periodo(todos, dias_del_periodo)
         )
+        if not hechos:
+            # Sin hechos que describir no hay qué pedirle al LLM: el texto fijo del turno lo dice (US-272 AC-4).
+            return {
+                "propuestas": (),
+                **self._ajustes_del_periodo(todos, hechos, dias_del_periodo),
+            }
 
         def armar(hilo: EstadoDelHilo, ventana: Sequence[TurnoPrevio]) -> PromptSeparado:
             return armar_prompt_del_caso(hilo, estado["pregunta"], hechos, ventana)
@@ -133,13 +145,36 @@ class NodoCaso:
         periodo pero el expediente sí tiene datos, la limitación que lo distingue de un expediente sin datos."""
         if dias is None:
             return {}
-        sin_fecha = sum(1 for h in todos if h.dia_relativo is None)
         ajustes: dict[str, Any] = {}
-        if sin_fecha:
-            ajustes["avisos_del_nodo"] = (self._texto_sin_fecha.replace("<n>", str(sin_fecha)),)
-        if todos and not del_periodo:
+        avisos = self._avisos_del_periodo(todos, del_periodo)
+        if avisos:
+            ajustes["avisos_del_nodo"] = avisos
+        sin_datos_en_periodo = bool(todos) and not del_periodo
+        if any(tiene_intervalo(h) for h in todos):
+            bloques = [BloqueDelTurno(TipoDeBloque.limitacion, ANCLA_DEL_PERIODO)]
+            if sin_datos_en_periodo:
+                bloques.append(
+                    BloqueDelTurno(TipoDeBloque.limitacion, self._texto_sin_datos_en_periodo)
+                )
+            ajustes["bloques_deterministas"] = tuple(bloques)
+        elif sin_datos_en_periodo:
             ajustes["limitacion_del_nodo"] = self._texto_sin_datos_en_periodo
         return ajustes
+
+    def _avisos_del_periodo(
+        self, todos: tuple[HechoDelCaso, ...], del_periodo: tuple[HechoDelCaso, ...]
+    ) -> tuple[str, ...]:
+        """Avisos fijos no bloqueantes (RN-26): hechos sin fecha confiable que el periodo no pudo ubicar y datos en curso
+        sin verificar que sí entraron."""
+        avisos: list[str] = []
+        sin_fecha = sum(1 for h in todos if h.dia_relativo is None)
+        if sin_fecha:
+            avisos.append(self._texto_sin_fecha.replace("<n>", str(sin_fecha)))
+        if any(
+            h.en_curso and h.estado_de_revision == ESTADO_REQUIERE_REVISION for h in del_periodo
+        ):
+            avisos.append(AVISO_EN_CURSO_SIN_VERIFICAR)
+        return tuple(avisos)
 
     def _con_enlace_y_forma_de_afirmacion(
         self, propuestas: tuple[PropuestaDelTurno, ...], hechos: tuple[HechoDelCaso, ...]
