@@ -224,7 +224,7 @@ describe('lectura de atributos clínicos', () => {
     expect(
       permitidos.find((a) => a.key === 'estado_castracion')?.values.map((v) => v.value),
     ).toContain('sensible_castracion');
-    expect(respuesta.body.catalogVersion).toBe('1.5.0');
+    expect(respuesta.body.catalogVersion).toBe('1.6.0');
   });
 
   it('devuelve la lista vacía de permitidos cuando el paciente no tiene diagnóstico vigente [US-094 AC-6]', async () => {

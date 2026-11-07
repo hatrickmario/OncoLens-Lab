@@ -12,7 +12,7 @@
     "status": "propuesta_revisada",
     "reviewerRole": "oncologo_asesor",
     "date": "2026-10-24",
-    "catalogHash": "7e9b2d13d942fffbfc25bd8ff802a1c65000e03bcbbde16bd39a04f8f9db7fb4"
+    "catalogHash": "a5d301065efd28621e0f54e48cf016d8ba5f25b9dcc7b8993bccf35197f13576"
   },
   "items": [
     {
@@ -30,6 +30,9 @@
         }
       },
       "minValues": 3,
+      "sourceDocumentTypes": [
+        "examen"
+      ],
       "estado": "propuesta"
     },
     {
@@ -44,6 +47,10 @@
         "field": "grade"
       },
       "minValues": 1,
+      "sourceDocumentTypes": [
+        "historia_clinica",
+        "examen"
+      ],
       "estado": "propuesta"
     }
   ]

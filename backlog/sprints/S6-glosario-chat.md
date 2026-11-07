@@ -27,7 +27,7 @@
   - Lo construye `construirRehidratacion()` en clinical-api.
   - Lleva un escenario que siembra UUID y fechas en el turno persistido y comprueba que no viajan.
 - **CaseFact**: `factRef` (`^f[0-9]+$`), `kind`, `verbalization`, `relativeDay` (entero o `null`), `reviewStatus`, `seriesKey?`, `conflictWith?` (factRef) y `corrected?`.
-- **ChatCompletenessItem** (rag): `item`, `label`, `status` (`presente_verificado` · `presente_sin_verificar` · `faltante` · `no_aplica`), `gapType` (`no_encontrado` · `incompleto` · `por_conciliar` · `no_buscado`, o `null` si está presente) y `destination`. **Sin `provenance`**.
+- **ChatCompletenessItem** (rag): `item`, `label`, `status` (`presente_verificado` · `presente_sin_verificar` · `faltante` · `no_aplica`), `gapType` (`no_encontrado` · `incompleto` · `por_conciliar` · `no_buscado`, o `null` si el ítem no tiene vacío; `por_conciliar` puede acompañar a `presente_verificado` cuando hay conflicto pendiente) y `destination`. **Sin `provenance`**.
 - **ChatTurnResponse** (rag): `intent`, `subintent?` (`enum [seguimiento_evidencia]`, declarado en la 1.12.0), `blocks[]`, `omittedClaims`, `evidenceAnalysis?` (tipo rag = `RagQueryInternalResponse`; clinical-api `ConversationTurn.evidenceAnalysis` = `EvidenceAnalysis`, que construye desde lo persistido), `structuredState` (**requerido**), `llmProvider` y `notices[]`.
 - **ChatBlock**:
   - `kind` es un enum **cerrado de 8 valores**: `documentado`, `interpretacion`, `catalogo`, `evidencia`, `conflicto`, `faltante`, `limitacion` y `fuente`.

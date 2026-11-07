@@ -12,7 +12,14 @@ function item(
   destination: ItemDeDatoCritico['destination'],
   label = key,
 ): ItemDeDatoCritico {
-  return { key, label, cancerType: 'x', destination, minValues: 1 };
+  return {
+    key,
+    label,
+    cancerType: 'x',
+    destination,
+    minValues: 1,
+    sourceDocumentTypes: ['examen'],
+  };
 }
 
 const ITEMS: Record<string, readonly ItemDeDatoCritico[]> = {

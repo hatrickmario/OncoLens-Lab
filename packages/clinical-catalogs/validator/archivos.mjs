@@ -7,6 +7,7 @@ import {
   clavesRepetidasEn,
   exigirClaveUnica,
   exigirEstadoValido,
+  exigirFuentesDeDocumento,
   exigirStudyKey,
   rechazarCamposDePuntaje,
 } from './reglas.mjs';
@@ -38,6 +39,7 @@ export const ARCHIVOS_DEL_CATALOGO = {
         exigirCondicionBienFormada(item, clavesDelTipo, vocabulario),
       (item, { tipoDeCancer, atributos, allowlist }) =>
         exigirCumplimientoAlternativoDeclarado(item, tipoDeCancer, atributos, allowlist),
+      (item, { vocabulario }) => exigirFuentesDeDocumento(item, vocabulario),
       (item, { vocabulario }) => exigirEstadoValido(item, vocabulario),
     ],
   },

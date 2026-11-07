@@ -9,6 +9,7 @@ const itemDe = (key: string, status: ItemDelChecklist['status']): ItemDelCheckli
   key,
   label: key,
   status,
+  gapType: null,
   origin: 'regla',
   provenance: null,
   destination: { entity: 'Diagnosis', field: null },

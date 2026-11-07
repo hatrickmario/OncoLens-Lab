@@ -12,6 +12,7 @@ class TipoDeBloque(StrEnum):
     """Los tipos de ``ChatBlock.kind`` que este change emite; el enum cerrado de 8 valores es del contrato."""
 
     documentado = "documentado"
+    faltante = "faltante"
     limitacion = "limitacion"
 
 

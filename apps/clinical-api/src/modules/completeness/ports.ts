@@ -8,6 +8,19 @@
 export type EstadoDelChecklist =
   'presente_verificado' | 'presente_sin_verificar' | 'faltante' | 'no_aplica';
 
+/**
+ * Tipo de vacío de un dato crítico (US-263, `[S6 resp. 10]`): segundo eje sobre `EstadoDelChecklist`, que no cambia.
+ * Mismo vocabulario que `gapType` de `CompletenessItem` y de `ChatCompletenessItem`.
+ */
+export const TIPOS_DE_VACIO = [
+  'no_encontrado',
+  'incompleto',
+  'por_conciliar',
+  'no_buscado',
+] as const;
+
+export type TipoDeVacio = (typeof TIPOS_DE_VACIO)[number];
+
 /** Vocabulario de operadores de condición del catálogo (L1D-93): ÚNICO sitio; el esquema Zod y el tipo salen de aquí. */
 export const OPERADORES_DE_CONDICION = ['igualdad', 'pertenencia', 'prefijo'] as const;
 
@@ -51,6 +64,8 @@ export interface ItemDeDatoCritico {
   /** Cumplimientos alternativos al destino; ausente en los ítems que solo se cumplen con registros. */
   readonly satisfiedBy?: readonly DeclaracionQueCumple[];
   readonly minValues: number;
+  /** `document_type` en los que el catálogo espera encontrar el dato (`sourceDocumentTypes`, RN-29, US-263). */
+  readonly sourceDocumentTypes: readonly string[];
 }
 
 /** Los ítems de un tipo de cáncer y los estados de revisión que cuentan como verificados (RN-22). */
@@ -101,6 +116,22 @@ export interface RegistrosDeCompletitud {
     patientIds: readonly string[],
     entidades: readonly string[],
   ): Promise<ReadonlyMap<string, RegistrosPorEntidad>>;
+  /**
+   * Registros con un conflicto pendiente (`review_status = requiere_revision` y `conflicts_with_id`, RN-08) de las
+   * entidades pedidas que pueden tenerlo (`Diagnosis`, `Biomarker`), incluido un diagnóstico que no es el activo.
+   * Todo id pedido aparece en el mapa (con `[]` en las entidades sin conflictos).
+   */
+  conflictosPendientes(
+    patientIds: readonly string[],
+    entidades: readonly string[],
+  ): Promise<ReadonlyMap<string, RegistrosPorEntidad>>;
+  /**
+   * Los `document_type` de los documentos del paciente ya procesados (`ocr_status = completado`): solo estos cuentan como
+   * «se buscó» (`[S6 resp. 10]`). Nunca ids ni nombres de documento (RN-10). Todo id pedido aparece en el mapa.
+   */
+  tiposDeDocumentoProcesados(
+    patientIds: readonly string[],
+  ): Promise<ReadonlyMap<string, ReadonlySet<string>>>;
 }
 
 /** Resultado del motor puro: el estado de cada ítem, sin procedencia. */
@@ -132,6 +163,8 @@ export interface ItemDelChecklist {
   readonly condition: CondicionDeItem | null;
   /** Solo en un ítem presente con `satisfiedBy` en el catálogo; ausente en el resto (aditivo, ADR-26). */
   readonly resolvedBy?: ResueltoPor;
+  /** Tipo de vacío (US-263); `null` si el ítem no tiene vacío. No cambia `status`. */
+  readonly gapType: TipoDeVacio | null;
 }
 
 export interface ChecklistDelPaciente {
@@ -150,8 +183,14 @@ export type ResultadoDelChecklist =
   | { readonly estado: 'no_disponible'; readonly error: unknown };
 
 export interface CompletenessService {
-  /** Lanza `PacienteNoEncontradoError` si el paciente no existe. */
+  /** Lanza `PacienteNoEncontradoError` si el paciente no existe. Sin tipo de vacío: `gapType` es `null` en todo ítem. */
   calcular(patientId: string): Promise<ChecklistDelPaciente>;
+}
+
+/** El cálculo con el tipo de vacío de cada ítem (US-263): solo `/completeness` y el turno del chat lo piden. */
+export interface CompletenessConTiposDeVacio {
+  /** Lanza `PacienteNoEncontradoError` si el paciente no existe. Cada ítem trae su `gapType`. */
+  calcularConTiposDeVacio(patientId: string): Promise<ChecklistDelPaciente>;
 }
 
 /** El cálculo por lotes (listado y búsqueda); aparte de `CompletenessService` para que quien solo calcula uno no lo implemente. */

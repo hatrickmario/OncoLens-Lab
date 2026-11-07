@@ -39,7 +39,7 @@
     "item": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["key", "cancerType", "label", "destination", "minValues", "estado"],
+      "required": ["key", "cancerType", "label", "destination", "minValues", "sourceDocumentTypes", "estado"],
       "properties": {
         "key": { "type": "string", "pattern": "^[a-z0-9_]+$" },
         "cancerType": { "type": "string", "pattern": "^[a-z]+$" },
@@ -53,6 +53,12 @@
           "items": { "$ref": "#/$defs/cumplimientoAlternativo" }
         },
         "minValues": { "type": "integer", "minimum": 1 },
+        "sourceDocumentTypes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["historia_clinica", "examen"] }
+        },
         "estado": { "$ref": "comun.schema.json#/$defs/estado" }
       },
       "if": { "properties": { "condition": true }, "required": ["condition"] },

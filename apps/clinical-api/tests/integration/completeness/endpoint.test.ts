@@ -245,6 +245,7 @@ describe('cabeceras y fallo cerrado', () => {
           key: 'x',
           label: 'SINT-etiqueta-fuera-de-contrato',
           status: 'faltante' as const,
+          gapType: 'no_buscado' as const,
           origin: 'regla' as const,
           provenance: null,
           destination: { entity: 'EntidadInexistente', field: null },
@@ -254,7 +255,7 @@ describe('cabeceras y fallo cerrado', () => {
     };
 
     const { respuesta } = pedir(fm1.patientId, cookieDoctor, {
-      envolver: () => ({ calcular: () => Promise.resolve(fueraDeContrato) }),
+      envolver: () => ({ calcularConTiposDeVacio: () => Promise.resolve(fueraDeContrato) }),
     });
     const resultado = await respuesta;
 
@@ -269,9 +270,9 @@ describe('sesión y permiso', () => {
     const invocaciones: string[] = [];
     const { respuesta } = pedir(PACIENTE_INEXISTENTE, null, {
       envolver: (real) => ({
-        calcular: (id) => {
+        calcularConTiposDeVacio: (id) => {
           invocaciones.push(id);
-          return real.calcular(id);
+          return real.calcularConTiposDeVacio(id);
         },
       }),
     });
@@ -288,9 +289,9 @@ describe('sesión y permiso', () => {
 
     const { respuesta } = pedir(fm1.patientId, cookieAdmin, {
       envolver: (real) => ({
-        calcular: (id) => {
+        calcularConTiposDeVacio: (id) => {
           invocaciones.push(id);
-          return real.calcular(id);
+          return real.calcularConTiposDeVacio(id);
         },
       }),
     });

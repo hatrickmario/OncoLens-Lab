@@ -3,6 +3,7 @@ import type { Express } from 'express';
 import { componerCompletitud } from '../../src/modules/completeness/completeness.module.js';
 import { completenessController } from '../../src/modules/completeness/completeness.controller.js';
 import type {
+  CompletenessConTiposDeVacio,
   CompletenessEnLote,
   CompletenessService,
 } from '../../src/modules/completeness/ports.js';
@@ -26,19 +27,19 @@ export interface OpcionesDeCompletitud {
   /** `ENABLED_CANCER_TYPES` de la prueba; por defecto los dos tipos del catálogo. */
   habilitados?: readonly string[];
   /** Envuelve al servicio real (p. ej. para contar invocaciones): es un puerto, no un módulo propio. */
-  envolver?: (real: CompletenessService) => CompletenessService;
+  envolver?: (real: CompletenessConTiposDeVacio) => CompletenessConTiposDeVacio;
 }
 
 export interface AppDeCompletitud {
   readonly app: Express;
   readonly logger: LoggerEnMemoria;
-  readonly servicio: CompletenessService;
+  readonly servicio: CompletenessConTiposDeVacio;
 }
 
 export function servicioDeCompletitud(
   mundo: { readonly cliente: Consultador },
   opciones: OpcionesDeCompletitud = {},
-): CompletenessService & CompletenessEnLote {
+): CompletenessService & CompletenessEnLote & CompletenessConTiposDeVacio {
   return componerCompletitud({
     db: mundo.cliente,
     rutaDelCatalogo: opciones.rutaDelCatalogo ?? RUTA_CATALOGO_TEST_1_0_0,

@@ -21,6 +21,7 @@ const catalogo: CatalogoDeDatosCriticos = {
               cancerType: tipo,
               destination: { entity: 'Diagnosis', field: 'histology' },
               minValues: 1,
+              sourceDocumentTypes: ['examen'],
             },
           ],
         }
@@ -87,6 +88,7 @@ describe('CompletenessService', () => {
           key: 'histologia',
           label: 'Histología',
           status: 'presente_verificado',
+          gapType: null,
           origin: 'seed',
           provenance: {
             entryMethod: 'seed',
@@ -115,6 +117,8 @@ describe('CompletenessService', () => {
       },
       registrosVariosSinFiltrarPorRevision: async (ids) =>
         new Map(ids.map((id) => [id, { Diagnosis: [diagnostico('mama')] }])),
+      conflictosPendientes: async (ids) => new Map(ids.map((id) => [id, {}])),
+      tiposDeDocumentoProcesados: async (ids) => new Map(ids.map((id) => [id, new Set<string>()])),
     };
     const servicio = createCompletenessService({
       registros,

@@ -11,8 +11,15 @@ from app.domain.chat.estado import (
     TurnoPrevio,
     UltimaEvidencia,
 )
+from app.domain.chat.faltantes import ItemDeCompletitud, TipoDeVacio
 from app.domain.chat.turno import BloqueDelTurno, HechoDelCaso
-from app.schemas.generated.models import CaseFact, ChatRehydration, StructuredState
+from app.schemas.generated.models import (
+    CaseFact,
+    ChatCompletenessItem,
+    ChatGapType,
+    ChatRehydration,
+    StructuredState,
+)
 
 
 def hechos_del_caso(hechos: list[CaseFact]) -> tuple[HechoDelCaso, ...]:
@@ -26,6 +33,24 @@ def hechos_del_caso(hechos: list[CaseFact]) -> tuple[HechoDelCaso, ...]:
             serie=h.seriesKey,
         )
         for h in hechos
+    )
+
+
+def _tipo_de_vacio(gap: ChatGapType | None) -> TipoDeVacio | None:
+    """El ``gapType`` del contrato (el miembro nulo del enum generado es ``None``) como dato del dominio; uno desconocido falla."""
+    return None if gap is None or gap.value is None else TipoDeVacio(gap.value)
+
+
+def completitud_del_caso(items: list[ChatCompletenessItem]) -> tuple[ItemDeCompletitud, ...]:
+    """``completeness[]`` del contrato como datos del dominio: el ``gapType`` nulo del contrato es ``None``."""
+    return tuple(
+        ItemDeCompletitud(
+            clave=i.item,
+            etiqueta=i.label,
+            estado=i.status.value,
+            tipo_de_vacio=_tipo_de_vacio(i.gapType),
+        )
+        for i in items
     )
 
 

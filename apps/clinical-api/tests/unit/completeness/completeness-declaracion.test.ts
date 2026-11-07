@@ -26,6 +26,7 @@ const tratamientosPrevios: ItemDeDatoCritico = {
   destination: { entity: 'PriorTreatment' },
   satisfiedBy: [SIN_TRATAMIENTO],
   minValues: 1,
+  sourceDocumentTypes: ['examen'],
 };
 
 const registro = (
@@ -165,6 +166,8 @@ describe('CompletenessService.calcularVarios con satisfiedBy', () => {
     const pedidos: { ids: readonly string[]; entidades: readonly string[] }[] = [];
     const registros: RegistrosDeCompletitud = {
       existenPacientes: async (ids) => new Set(ids),
+      conflictosPendientes: async (ids) => new Map(ids.map((id) => [id, {}])),
+      tiposDeDocumentoProcesados: async (ids) => new Map(ids.map((id) => [id, new Set<string>()])),
       registrosVariosSinFiltrarPorRevision: async (ids, entidades) => {
         pedidos.push({ ids, entidades });
         return new Map(
