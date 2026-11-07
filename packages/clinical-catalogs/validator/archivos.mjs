@@ -11,6 +11,8 @@ import {
   exigirStudyKey,
   rechazarCamposDePuntaje,
 } from './reglas.mjs';
+import { violacionesDeEscalas } from './escalas.mjs';
+import { violacionesDeMarcos } from './marcos.mjs';
 
 /**
  * Registro ÚNICO de los archivos por tipo que tienen ítems con destino (L1D-93, RN-29). Cada entrada nombra su
@@ -69,11 +71,22 @@ export const ARCHIVOS_DECLARADOS_POR_EL_MANIFIESTO = {
 };
 
 /**
- * Archivos de la raíz que existen solo si el manifiesto lo declara (`escalas: true`, L1D-90): `clave` es la del
- * manifiesto. Un catálogo sin la declaración no lo tiene (los fixtures anteriores siguen válidos).
+ * Archivos que existen solo si el manifiesto lo declara (`escalas: true`, L1D-90; `marcosDePregunta: true`, L1D-329):
+ * `clave` es la del manifiesto y el nombre es la ruta relativa al catálogo sin `.json`. `reglas(archivo, manifiesto)`
+ * son las propias del archivo (el esquema se comprueba antes). Un catálogo sin la declaración no lo tiene (los
+ * fixtures anteriores siguen válidos).
  */
 export const ARCHIVOS_DE_RAIZ_DECLARADOS_POR_EL_MANIFIESTO = {
-  escalas: { esquema: 'escalas', clave: 'escalas' },
+  escalas: {
+    esquema: 'escalas',
+    clave: 'escalas',
+    reglas: (archivo, manifiesto) => violacionesDeEscalas(archivo, manifiesto?.cancerTypes),
+  },
+  'lenguaje/marcos-de-pregunta': {
+    esquema: 'marcos-de-pregunta',
+    clave: 'marcosDePregunta',
+    reglas: (archivo) => violacionesDeMarcos(archivo),
+  },
 };
 
 /** Archivos de la raíz del catálogo (no por tipo): cada entrada nombra su esquema. */

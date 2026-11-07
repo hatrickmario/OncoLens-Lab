@@ -1,0 +1,162 @@
+{
+  "version": "1.7.0",
+  "descripcion": "Fixture compartido caso -> tema (L1D-329, ADR-52): cada caso trae la entrada en las dos formas (patientSummary, que consume la UI del panel conversacional L1D-324, y clinicalContext desidentificado, que consume terminos_del_caso de rag-orchestrator) y la salida esperada. Los términos son cadenas del catálogo versionado; solo datos sintéticos.",
+  "casos": [
+    {
+      "id": "mama-completo",
+      "patientSummary": {
+        "diagnosis": {
+          "cancerType": "mama",
+          "stagingSystem": "TNM_8",
+          "stageValue": "IIA",
+          "grade": "Nottingham grado 2"
+        },
+        "recentBiomarkers": [
+          { "name": "HER2", "value": "3+" },
+          { "name": "RE", "value": "positivo" }
+        ]
+      },
+      "clinicalContext": {
+        "diagnosis": {
+          "cancerType": "mama",
+          "stagingSystem": "TNM_8",
+          "stageValue": "IIA",
+          "grade": "Nottingham grado 2"
+        },
+        "biomarkers": [
+          { "biomarkerName": "HER2", "value": "3+" },
+          { "biomarkerName": "RE", "value": "positivo" }
+        ]
+      },
+      "salida": {
+        "campos": ["tipo", "estadio", "biomarcador_principal"],
+        "terminos": ["Cáncer de mama", "IIA", "Receptor de estrógeno", "positivo"]
+      }
+    },
+    {
+      "id": "mama-solo-her2",
+      "patientSummary": {
+        "diagnosis": {
+          "cancerType": "mama",
+          "stagingSystem": "TNM_8",
+          "stageValue": "IIB",
+          "grade": null
+        },
+        "recentBiomarkers": [{ "name": "HER2", "value": "2+" }]
+      },
+      "clinicalContext": {
+        "diagnosis": {
+          "cancerType": "mama",
+          "stagingSystem": "TNM_8",
+          "stageValue": "IIB",
+          "grade": null
+        },
+        "biomarkers": [{ "biomarkerName": "HER2", "value": "2+" }]
+      },
+      "salida": {
+        "campos": ["tipo", "estadio", "biomarcador_principal"],
+        "terminos": ["Cáncer de mama", "IIB", "HER2", "2+"]
+      }
+    },
+    {
+      "id": "prostata-con-grado",
+      "patientSummary": {
+        "diagnosis": {
+          "cancerType": "prostata",
+          "stagingSystem": "TNM_8",
+          "stageValue": "IIB",
+          "grade": "Gleason 4+3=7 · ISUP 3"
+        },
+        "recentBiomarkers": [{ "name": "PSA", "value": "7.2" }]
+      },
+      "clinicalContext": {
+        "diagnosis": {
+          "cancerType": "prostata",
+          "stagingSystem": "TNM_8",
+          "stageValue": "IIB",
+          "grade": "Gleason 4+3=7 · ISUP 3"
+        },
+        "biomarkers": [{ "biomarkerName": "PSA", "value": "7.2" }]
+      },
+      "salida": {
+        "campos": ["tipo", "estadio", "biomarcador_principal"],
+        "terminos": ["Cáncer de próstata", "IIB", "ISUP 3", "Antígeno prostático específico (PSA)"]
+      }
+    },
+    {
+      "id": "mama-sin-estadio-ni-biomarcador",
+      "patientSummary": {
+        "diagnosis": {
+          "cancerType": "mama",
+          "stagingSystem": "TNM_8",
+          "stageValue": "Sin estadificar",
+          "grade": null
+        },
+        "recentBiomarkers": []
+      },
+      "clinicalContext": {
+        "diagnosis": {
+          "cancerType": "mama",
+          "stagingSystem": "TNM_8",
+          "stageValue": "Sin estadificar",
+          "grade": null
+        },
+        "biomarkers": []
+      },
+      "salida": {
+        "campos": ["tipo"],
+        "terminos": ["Cáncer de mama"]
+      }
+    },
+    {
+      "id": "mama-valor-fuera-del-catalogo",
+      "patientSummary": {
+        "diagnosis": {
+          "cancerType": "mama",
+          "stagingSystem": "TNM_8",
+          "stageValue": "IIA",
+          "grade": null
+        },
+        "recentBiomarkers": [{ "name": "HER2", "value": "3+ (IHQ)" }]
+      },
+      "clinicalContext": {
+        "diagnosis": {
+          "cancerType": "mama",
+          "stagingSystem": "TNM_8",
+          "stageValue": "IIA",
+          "grade": null
+        },
+        "biomarkers": [{ "biomarkerName": "HER2", "value": "3+ (IHQ)" }]
+      },
+      "salida": {
+        "campos": ["tipo", "estadio", "biomarcador_principal"],
+        "terminos": ["Cáncer de mama", "IIA", "HER2"]
+      }
+    },
+    {
+      "id": "tipo-sin-etiqueta",
+      "patientSummary": {
+        "diagnosis": {
+          "cancerType": "leucemia",
+          "stagingSystem": "TNM_8",
+          "stageValue": "IV",
+          "grade": null
+        },
+        "recentBiomarkers": [{ "name": "BCR-ABL", "value": "positivo" }]
+      },
+      "clinicalContext": {
+        "diagnosis": {
+          "cancerType": "leucemia",
+          "stagingSystem": "TNM_8",
+          "stageValue": "IV",
+          "grade": null
+        },
+        "biomarkers": [{ "biomarkerName": "BCR-ABL", "value": "positivo" }]
+      },
+      "salida": {
+        "campos": [],
+        "terminos": []
+      }
+    }
+  ]
+}

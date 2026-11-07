@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "lenguaje/marcos-de-pregunta.json: palabras vacías y marcos de pregunta del gate G1 (L1D-329, ADR-52, RN-29)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "es", "en"],
+  "properties": {
+    "version": { "$ref": "comun.schema.json#/$defs/version" },
+    "es": { "$ref": "#/$defs/idioma" },
+    "en": { "$ref": "#/$defs/idioma" }
+  },
+  "$defs": {
+    "entrada": {
+      "description": "Normalizada como el resto del dominio: minúsculas, sin tildes ni puntuación y con espacios simples.",
+      "type": "string",
+      "pattern": "^[a-z0-9]+( [a-z0-9]+)*$"
+    },
+    "idioma": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["marcos", "vacias"],
+      "properties": {
+        "marcos": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/entrada" }
+        },
+        "vacias": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/entrada" }
+        }
+      }
+    }
+  }
+}

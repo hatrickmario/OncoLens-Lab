@@ -13,3 +13,4 @@ export {
 } from './canonico.mjs';
 export { ArchivoIlegibleError, leerCatalogo, leerEsquemas } from './cargar.mjs';
 export { mensajeDe, validarCatalogo } from './validar-catalogo.mjs';
+export { terminosDelCatalogo, violacionesDeTemasDelCaso } from './temas-del-caso.mjs';
