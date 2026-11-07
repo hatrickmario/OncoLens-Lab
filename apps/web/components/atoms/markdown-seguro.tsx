@@ -26,6 +26,8 @@ export function MarkdownSeguro({ texto }: { texto: string }) {
   return (
     <Markdown
       rehypePlugins={[rehypeSanitize]}
+      disallowedElements={['img']}
+      unwrapDisallowed
       urlTransform={soloUrlSegura}
       components={{ a: Enlace }}
     >

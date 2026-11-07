@@ -2,6 +2,7 @@ import type {
   Biomarker,
   Diagnosis,
 } from '../../../../packages/api-contracts/src/types/clinical-api';
+import { normalizarTexto as normalizar } from '../../../../packages/clinical-language/src/normalizar';
 
 /** Lo único de `PatientSummary` que consulta la función: nunca `identification` ni texto libre. */
 export interface ResumenParaPreguntas {
@@ -37,15 +38,6 @@ export interface CatalogosDeLasPreguntas {
 const MAXIMO_DE_PREGUNTAS = 4;
 
 type Ranuras = Partial<Record<string, string>>;
-
-/** Misma comparación que `terminos_del_caso` de rag: sin diacríticos, en minúsculas y con espacios colapsados. */
-const normalizar = (texto: string): string =>
-  texto
-    .normalize('NFKD')
-    .replace(/\p{Mn}/gu, '')
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}]+/gu, ' ')
-    .trim();
 
 const textoDe = (valor: unknown): string | undefined =>
   typeof valor === 'string' && valor.trim() !== '' ? valor : undefined;

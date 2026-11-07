@@ -48,7 +48,7 @@ describe('alias de Turbopack para el verificador RN-23 en el navegador', () => {
     }
   });
 
-  it('solo el filtro textoSiPermitido importa el código fuente de clinical-language en apps/web [US-246 AC-1]', () => {
+  it('solo el filtro textoSiPermitido y la normalización de texto y pregunta importan el código fuente de clinical-language en apps/web [US-246 AC-1]', () => {
     const importadores = ['app', 'components', 'lib']
       .flatMap((carpeta) => archivosFuente(resolve(WEB, carpeta)))
       .filter((ruta) => /clinical-language\/src/.test(readFileSync(ruta, 'utf8')))
@@ -56,6 +56,12 @@ describe('alias de Turbopack para el verificador RN-23 en el navegador', () => {
 
     // `normalizar-pregunta.ts` solo importa `zod` (sin importaciones relativas `.js`): no necesita alias de Turbopack.
     expect(importacionesJs('normalizar-pregunta.ts')).toEqual([]);
-    expect(importadores.sort()).toEqual(['lib/evidence/texto-si-permitido.ts']);
+    // `normalizar.ts` tampoco importa nada relativo: tampoco necesita alias.
+    expect(importacionesJs('normalizar.ts')).toEqual([]);
+    expect(importadores.sort()).toEqual([
+      'lib/conversacion/preguntas-guiadas.ts',
+      'lib/conversacion/solicitar-turno.ts',
+      'lib/evidence/texto-si-permitido.ts',
+    ]);
   });
 });

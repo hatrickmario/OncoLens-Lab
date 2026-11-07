@@ -11,11 +11,19 @@ export interface ConversationProgressProps {
  * un `role="alert"` montado al llegar, sin código HTTP ni mensaje técnico. El mensaje del sistema no lleva avisos de IA.
  */
 export function ConversationProgress({ fase, onReintentar }: ConversationProgressProps) {
-  const { analizando, errorTitulo, reintentar } = mensajes().conversacion;
+  const { analizando, errorTitulo, reintentar, optOut } = mensajes().conversacion;
   if (fase === 'enviando') {
     return (
       <p role="status" className="text-text-muted mt-3">
         {analizando}
+      </p>
+    );
+  }
+  if (fase === 'bloqueado') {
+    // RN-15: el 403 de opt-out deja el panel sin preguntas; el motivo no se muestra, solo un estado neutro.
+    return (
+      <p role="status" className="text-text-muted mt-3">
+        {optOut}
       </p>
     );
   }

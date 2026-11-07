@@ -2,7 +2,7 @@ import type {
   CitedSource,
   ConversationTurn,
 } from '../../../../packages/api-contracts/src/types/clinical-api';
-import { faltanAvisosDeIA } from '../../lib/conversacion/rotulo-de-bloque';
+import { faltanAvisosDeIA } from '../../lib/conversacion/avisos-de-ia';
 import { mensajes, rellenar } from '../../lib/mensajes';
 import { ConversationDataLine } from '../molecules/conversation-data-line';
 import { ConversationNotices } from '../molecules/conversation-notices';

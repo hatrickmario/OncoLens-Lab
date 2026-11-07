@@ -4,6 +4,7 @@ import {
   zConversationTurnCreate,
   zEvidenceAnalysis,
 } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
+import { normalizarPregunta } from '../../../../packages/clinical-language/src/normalizar-pregunta';
 
 export type ResultadoDeApertura =
   | { tipo: 'ok'; conversationId: string }
@@ -19,8 +20,14 @@ export type ResultadoDeTurno =
 const esObjeto = (valor: unknown): valor is Record<string, unknown> =>
   valor !== null && typeof valor === 'object' && !Array.isArray(valor);
 
+/** Solo el error `OPT_OUT_ANALISIS_IA` (RN-15) bloquea el panel; cualquier otro 403 es un fallo con «Reintentar». */
+async function esOptOut(respuesta: Response): Promise<boolean> {
+  const cuerpo: unknown = await respuesta.json().catch(() => null);
+  return esObjeto(cuerpo) && cuerpo.error === 'OPT_OUT_ANALISIS_IA';
+}
+
 /**
- * Lectura tolerante (design D3): un campo o un `kind` desconocido no rompe la tarjeta, así que la respuesta no se
+ * Lectura tolerante (design D3: un campo o un `kind` desconocido no rompe la tarjeta), así que la respuesta no se
  * valida con el schema estricto del contrato; solo se exige lo que la tarjeta necesita para pintarse.
  */
 function esTurno(valor: unknown): valor is ConversationTurn {
@@ -59,7 +66,7 @@ export async function enviarTurno(
   conversationId: string,
   question: string,
 ): Promise<ResultadoDeTurno> {
-  const cuerpo = zConversationTurnCreate.safeParse({ question });
+  const cuerpo = zConversationTurnCreate.safeParse({ question: normalizarPregunta(question) });
   if (!cuerpo.success) return { tipo: 'error' };
   const respuesta = await alBff(
     fetch(`/api/conversations/${encodeURIComponent(conversationId)}/turns`, {
@@ -70,7 +77,7 @@ export async function enviarTurno(
     }),
   );
   if (respuesta?.status === 401) return { tipo: 'sin_sesion' };
-  if (respuesta?.status === 403) return { tipo: 'opt_out' };
+  if (respuesta?.status === 403) return (await esOptOut(respuesta)) ? { tipo: 'opt_out' } : { tipo: 'error' };
   if (!respuesta?.ok) return { tipo: 'error' };
   const turno: unknown = await respuesta.json().catch(() => null);
   if (!esTurno(turno)) return { tipo: 'error' };
