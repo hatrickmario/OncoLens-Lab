@@ -29,6 +29,16 @@ describe('armarPreguntasGuiadas', () => {
       diagnosis: { ...resumen.diagnosis!, stageValue: 'Sin estadificar' },
     };
 
+    expect(armar(sinEstadio).at(3)).toBe('¿Qué evidencia hay para Cáncer de mama con HER2 2+?');
+  });
+
+  it('usa solo el nombre del biomarcador cuando su valor no está en el catálogo [RN-27]', () => {
+    const resumen = casoDelFixture('mama-valor-fuera-del-catalogo');
+    const sinEstadio = {
+      ...resumen,
+      diagnosis: { ...resumen.diagnosis!, stageValue: 'Sin estadificar' },
+    };
+
     expect(armar(sinEstadio).at(3)).toBe('¿Qué evidencia hay para Cáncer de mama con HER2?');
   });
 

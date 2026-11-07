@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import AnalisisPage from '../../app/(dashboard)/pacientes/[id]/analisis/page';
@@ -17,6 +17,7 @@ import {
   preguntar,
   respuestaDeTurno,
   textos,
+  turnoCon,
 } from '../support/conversacion-ui';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn() }) }));
@@ -77,13 +78,13 @@ describe('Preguntas guiadas', () => {
 
   it('vuelve a ofrecerlas con el hilo vacío cuando se pulsa Nueva conversación [US-267 AC-8]', async () => {
     bff.responderFicha({ status: 200, cuerpo: fichaDelDoctor });
-    bff.responderTurnos(respuestaDeTurno(turnoDeCaso));
+    bff.responderTurnos(respuestaDeTurno(turnoDeCaso), respuestaDeTurno(turnoCon({}, {}, 2)));
     const usuario = userEvent.setup();
     await abrirPagina();
-    await preguntar(usuario, 'Primera');
+    await preguntar(usuario, "Primera");
     await buscarTarjetas();
     await preguntar(usuario, 'Segunda');
-    await buscarTarjetas().then((a) => expect(a).toHaveLength(2));
+    await waitFor(() => expect(cuantasTarjetas()).toBe(2));
 
     await usuario.click(screen.getByRole('button', { name: textos.nuevaConversacion }));
 
@@ -116,8 +117,9 @@ describe('Preguntas guiadas', () => {
       await abrirPagina();
 
       expect(screen.queryByRole('group', { name: textos.guiadasTitulo })).toBeNull();
+      await userEvent.setup().type(screen.getByLabelText(textos.campo), "Una pregunta");
       expect((screen.getByLabelText(textos.campo) as HTMLTextAreaElement).disabled).toBe(false);
-      expect((screen.getByRole('button', { name: textos.preguntar }) as HTMLButtonElement).disabled).toBe(false);
+      expect((screen.getByRole("button", { name: textos.preguntar }) as HTMLButtonElement).disabled).toBe(false);
       cleanup();
     }
   });
