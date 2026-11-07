@@ -189,5 +189,19 @@
       }
     ],
     "motivo": "Señuelos sintéticos del test del hook pre-commit-gate (#46): una línea con forma de correo (falso positivo de '@pytest.mark' tras un salto de línea) y un número con forma de documento de identidad, para comprobar que el hook bloquea PII. Solo esos dos valores, en ese archivo."
+  },
+  {
+    "fixture": "FX-12-doi-prostata",
+    "clase": "sintetico",
+    "rutas": [
+      "contracts/examples/chat-turn-evidencia-prostata.json"
+    ],
+    "valores": [
+      {
+        "formato": "documento_identidad",
+        "sha256": "8882767ce24767521dd80c5759b0238c44c2b86361113ef755db50049797bcbe"
+      }
+    ],
+    "motivo": "Falso positivo (L1D-326): el documentId de la cita del ejemplo de evidencia de próstata es el DOI público del documento del corpus de la demo, con forma de número de documento; no es una persona. Exención por valor y ruta exacta."
   }
 ]
