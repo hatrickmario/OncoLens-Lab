@@ -1,0 +1,73 @@
+# Copia para los tests de apps/rag-orchestrator (US-271, L1D-329): el contenedor del job integration-rag solo ve
+# apps/rag-orchestrator y las rutas de scripts/ci/integracion-rag-orchestrator.sh, no data/eval. La fuente de verdad es
+# data/eval/s5-corpus-ampliado; tests/unit/test_fixtures_de_expansion_contextual.py comprueba que la copia coincide.
+clase: sintetico
+# Las 60 preguntas SINTÉTICAS (inventadas por el equipo; ningún dato de pacientes) de la medición de ADR-52 (US-271, L1D-329):
+# 22 genéricas (sin tema propio: el gate G1 debe darlas por genéricas), 24 con tema fuera del corpus o cruzadas
+# (adversarias: siguen en `sin_evidencia`, el gate debe darlas por NO genéricas) y 14 controles con tema propio dentro del
+# corpus (3 de ellas son las de sinónimos del AC-9: antraciclinas, pertuzumab y TILs).
+# `genericas: true` solo en las 22 primeras. Las preguntas de `preguntas.yaml` (69) son el control adicional de AC-8.
+preguntas:
+  # --- 22 genéricas
+  - {id: CTX-G01, clase: generica, idioma: es, genericas: true, pregunta: '¿Qué evidencia hay para este caso?'}
+  - {id: CTX-G02, clase: generica, idioma: es, genericas: true, pregunta: '¿Qué dice la evidencia sobre este caso?'}
+  - {id: CTX-G03, clase: generica, idioma: es, genericas: true, pregunta: '¿Qué opciones describe la evidencia para este paciente?'}
+  - {id: CTX-G04, clase: generica, idioma: es, genericas: true, pregunta: '¿Qué hay publicado sobre este caso?'}
+  - {id: CTX-G05, clase: generica, idioma: es, genericas: true, pregunta: '¿Qué estudios existen para este paciente?'}
+  - {id: CTX-G06, clase: generica, idioma: es, genericas: true, pregunta: '¿Qué literatura científica aplica a este caso?'}
+  - {id: CTX-G07, clase: generica, idioma: es, genericas: true, pregunta: '¿Qué evidencia científica hay disponible?'}
+  - {id: CTX-G08, clase: generica, idioma: es, genericas: true, pregunta: 'Resume la evidencia disponible para este paciente.'}
+  - {id: CTX-G09, clase: generica, idioma: es, genericas: true, pregunta: '¿Qué se sabe en la literatura sobre el caso?'}
+  - {id: CTX-G10, clase: generica, idioma: es, genericas: true, pregunta: '¿Qué tratamientos describe la evidencia para este paciente?'}
+  - {id: CTX-G11, clase: generica, idioma: es, genericas: true, pregunta: '¿Hay evidencia relevante para este caso?'}
+  - {id: CTX-G12, clase: generica, idioma: es, genericas: true, pregunta: '¿Qué ensayos clínicos hay para este paciente?'}
+  - {id: CTX-G13, clase: generica, idioma: es, genericas: true, pregunta: '¿Qué guías describen opciones para este caso?'}
+  - {id: CTX-G14, clase: generica, idioma: en, genericas: true, pregunta: 'What evidence is there for this case?'}
+  - {id: CTX-G15, clase: generica, idioma: en, genericas: true, pregunta: 'What does the evidence say about this patient?'}
+  - {id: CTX-G16, clase: generica, idioma: en, genericas: true, pregunta: 'What studies are available for this case?'}
+  - {id: CTX-G17, clase: generica, idioma: en, genericas: true, pregunta: 'What options does the evidence describe for this patient?'}
+  - {id: CTX-G18, clase: generica, idioma: en, genericas: true, pregunta: 'Is there relevant evidence for this case?'}
+  - {id: CTX-G19, clase: generica, idioma: es, genericas: true, pregunta: '¿Qué dicen las fuentes sobre este paciente?'}
+  - {id: CTX-G20, clase: generica, idioma: es, genericas: true, pregunta: '¿Qué información científica existe para este caso clínico?'}
+  - {id: CTX-G21, clase: generica, idioma: en, genericas: true, pregunta: 'Show me the available literature for this patient.'}
+  - {id: CTX-G22, clase: generica, idioma: es, genericas: true, pregunta: '¿Cuál es la evidencia más reciente para este caso?'}
+  # --- 24 con tema fuera del corpus o cruzadas (adversarias)
+  - {id: CTX-A01, clase: con_tema, idioma: es, genericas: false, pregunta: '¿Qué evidencia hay sobre melanoma uveal metastásico?'}
+  - {id: CTX-A02, clase: con_tema, idioma: es, genericas: false, pregunta: '¿Qué dice la evidencia sobre tebentafusp en melanoma uveal?'}
+  - {id: CTX-A03, clase: con_tema, idioma: en, genericas: false, pregunta: 'What evidence is there for adjuvant therapy in cutaneous melanoma?'}
+  - {id: CTX-A04, clase: con_tema, idioma: es, genericas: false, pregunta: '¿Qué estudios hay sobre cáncer de tiroides papilar y yodo radiactivo?'}
+  - {id: CTX-A05, clase: con_tema, idioma: en, genericas: false, pregunta: 'What does the evidence say about lenvatinib in thyroid cancer?'}
+  - {id: CTX-A06, clase: con_tema, idioma: es, genericas: false, pregunta: '¿Qué opciones describe la evidencia para el carcinoma medular de tiroides?'}
+  - {id: CTX-A07, clase: con_tema, idioma: es, genericas: false, pregunta: '¿Qué evidencia hay de abiraterona en cáncer de mama?'}
+  - {id: CTX-A08, clase: con_tema, idioma: es, genericas: false, pregunta: '¿Qué evidencia hay de trastuzumab en cáncer de próstata?'}
+  - {id: CTX-A09, clase: con_tema, idioma: en, genericas: false, pregunta: 'What does the evidence say about enzalutamide in breast cancer?'}
+  - {id: CTX-A10, clase: con_tema, idioma: en, genericas: false, pregunta: 'What studies exist on palbociclib in prostate cancer?'}
+  - {id: CTX-A11, clase: con_tema, idioma: es, genericas: false, pregunta: '¿Qué dice la literatura sobre temozolomida en glioblastoma?'}
+  - {id: CTX-A12, clase: con_tema, idioma: en, genericas: false, pregunta: 'What evidence is there for tumor treating fields in glioblastoma?'}
+  - {id: CTX-A13, clase: con_tema, idioma: es, genericas: false, pregunta: '¿Qué estudios hay sobre bevacizumab en glioma de alto grado?'}
+  - {id: CTX-A14, clase: con_tema, idioma: es, genericas: false, pregunta: '¿Qué evidencia hay sobre edición genética con CRISPR en tumores sólidos?'}
+  - {id: CTX-A15, clase: con_tema, idioma: en, genericas: false, pregunta: 'What does the literature say about CRISPR screens for drug resistance?'}
+  - {id: CTX-A16, clase: con_tema, idioma: es, genericas: false, pregunta: '¿Qué evidencia hay sobre metformina y diabetes tipo 2?'}
+  - {id: CTX-A17, clase: con_tema, idioma: en, genericas: false, pregunta: 'What evidence is there for insulin therapy in type 1 diabetes?'}
+  - {id: CTX-A18, clase: con_tema, idioma: es, genericas: false, pregunta: '¿Qué estudios hay sobre diabetes gestacional y dieta?'}
+  - {id: CTX-A19, clase: con_tema, idioma: es, genericas: false, pregunta: '¿Qué evidencia hay sobre terapia CAR-T en linfoma difuso de células B grandes?'}
+  - {id: CTX-A20, clase: con_tema, idioma: en, genericas: false, pregunta: 'What does the evidence say about CAR-T cells in multiple myeloma?'}
+  - {id: CTX-A21, clase: con_tema, idioma: es, genericas: false, pregunta: '¿Qué estudios hay sobre CAR-T en leucemia linfoblástica aguda?'}
+  - {id: CTX-A22, clase: con_tema, idioma: es, genericas: false, pregunta: '¿Qué evidencia hay sobre cáncer de vejiga músculo-invasivo y cistectomía?'}
+  - {id: CTX-A23, clase: con_tema, idioma: en, genericas: false, pregunta: 'What does the evidence say about BCG in non-muscle-invasive bladder cancer?'}
+  - {id: CTX-A24, clase: con_tema, idioma: es, genericas: false, pregunta: '¿Qué dice la evidencia sobre enfortumab vedotina en carcinoma urotelial?'}
+  # --- 14 controles con tema propio dentro del corpus (CTX-C12 a CTX-C14 son las tres de sinónimos del AC-9)
+  - {id: CTX-C01, clase: control, idioma: es, genericas: false, pregunta: '¿Qué describe la evidencia sobre añadir pembrolizumab a la quimioterapia neoadyuvante en cáncer de mama ER positivo HER2 negativo?'}
+  - {id: CTX-C02, clase: control, idioma: es, genericas: false, pregunta: '¿Qué compara la evidencia entre trastuzumab deruxtecán y trastuzumab emtansina en cáncer de mama HER2 positivo metastásico?'}
+  - {id: CTX-C03, clase: control, idioma: es, genericas: false, pregunta: '¿Qué describe la evidencia sobre elacestrant en tumores con mutación ESR1 de cáncer de mama metastásico?'}
+  - {id: CTX-C04, clase: control, idioma: en, genericas: false, pregunta: 'What does the evidence describe about elacestrant in ESR1-mutated metastatic breast cancer?'}
+  - {id: CTX-C05, clase: control, idioma: es, genericas: false, pregunta: '¿Qué evidencia hay sobre inhibidores de CDK4/6 en cáncer de mama avanzado?'}
+  - {id: CTX-C06, clase: control, idioma: es, genericas: false, pregunta: '¿Qué dice la evidencia sobre olaparib en cáncer de mama con mutación BRCA?'}
+  - {id: CTX-C07, clase: control, idioma: es, genericas: false, pregunta: '¿Qué describe la evidencia sobre enzalutamida en cáncer de próstata resistente a la castración?'}
+  - {id: CTX-C08, clase: control, idioma: en, genericas: false, pregunta: 'What does the evidence say about abiraterone in metastatic hormone-sensitive prostate cancer?'}
+  - {id: CTX-C09, clase: control, idioma: es, genericas: false, pregunta: '¿Qué evidencia hay sobre lutecio PSMA en cáncer de próstata metastásico?'}
+  - {id: CTX-C10, clase: control, idioma: es, genericas: false, pregunta: '¿Qué estudios hay sobre radioterapia con terapia de privación androgénica en próstata localizado?'}
+  - {id: CTX-C11, clase: control, idioma: en, genericas: false, pregunta: 'What does the evidence say about PARP inhibitors in prostate cancer with BRCA mutations?'}
+  - {id: CTX-C12, clase: control, idioma: es, genericas: false, pregunta: '¿Qué evidencia hay sobre antraciclinas en el tratamiento adyuvante del cáncer de mama?'}
+  - {id: CTX-C13, clase: control, idioma: es, genericas: false, pregunta: '¿Qué describe la evidencia sobre pertuzumab en cáncer de mama HER2 positivo?'}
+  - {id: CTX-C14, clase: control, idioma: es, genericas: false, pregunta: '¿Qué dice la evidencia sobre los TILs en cáncer de mama triple negativo?'}

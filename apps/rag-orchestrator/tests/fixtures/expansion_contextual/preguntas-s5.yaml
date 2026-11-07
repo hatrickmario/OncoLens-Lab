@@ -1,0 +1,74 @@
+clase: sintetico
+# Copia para los tests de apps/rag-orchestrator (US-271, L1D-329): el contenedor del job integration-rag solo ve
+# apps/rag-orchestrator y las rutas de scripts/ci/integracion-rag-orchestrator.sh, no data/eval. La fuente de verdad es
+# data/eval/s5-corpus-ampliado; tests/unit/test_fixtures_de_expansion_contextual.py comprueba que la copia coincide.
+preguntas:
+  - ¿Qué describe la evidencia sobre añadir pembrolizumab a la quimioterapia neoadyuvante en cáncer de mama ER positivo HER2 negativo?
+  - What does the evidence describe about adding pembrolizumab to neoadjuvant chemotherapy in ER-positive HER2-negative breast cancer?
+  - ¿Qué compara la evidencia entre trastuzumab deruxtecán y trastuzumab emtansina en cáncer de mama HER2 positivo metastásico?
+  - What does the evidence compare between trastuzumab deruxtecan and trastuzumab emtansine in metastatic HER2-positive breast cancer?
+  - ¿Qué describe la evidencia sobre elacestrant en tumores con mutación ESR1 de cáncer de mama metastásico?
+  - What does the evidence describe about elacestrant in ESR1-mutated metastatic breast cancer?
+  - ¿Qué describe la evidencia sobre capivasertib con fulvestrant en cáncer de mama avanzado con receptores hormonales positivos y HER2 negativo?
+  - What does the evidence describe about capivasertib plus fulvestrant in hormone receptor-positive HER2-negative advanced breast cancer?
+  - ¿Qué relación describe la evidencia entre el ADN tumoral circulante y la supervivencia en cáncer de mama metastásico?
+  - What association does the evidence describe between circulating tumor DNA and survival in metastatic breast cancer?
+  - ¿Qué describe la evidencia sobre omitir la irradiación de la pared torácica tras la mastectomía en cáncer de mama de riesgo intermedio?
+  - ¿Qué describe la evidencia sobre los inhibidores de PARP neoadyuvantes en cáncer de mama con variantes patogénicas germinales de BRCA?
+  - What does the evidence describe about neoadjuvant PARP inhibitors in breast cancer with germline BRCA pathogenic variants?
+  - ¿Qué describe la evidencia sobre el tratamiento del cáncer de mama en hombres?
+  - ¿Qué dice la información para pacientes sobre el tamoxifeno para reducir el riesgo de cáncer de mama con receptor de estrógeno positivo?
+  - What does the patient information say about tamoxifen to reduce the risk of estrogen receptor-positive breast cancer?
+  - ¿Qué describe la evidencia sobre los resultados falsos positivos de la mamografía de detección?
+  - What does the evidence describe about mammography as a screening modality for breast cancer?
+  - ¿Qué compara el ensayo de fase III de ARX788 frente a lapatinib con capecitabina en cáncer de mama HER2 positivo?
+  - What does the phase III trial of ARX788 compare against lapatinib plus capecitabine in HER2-positive breast cancer?
+  - ¿Qué describe el seguimiento a 10 años del ensayo ShortHER sobre los linfocitos infiltrantes de tumor en cáncer de mama ERBB2 positivo?
+  - What does the 10-year follow-up of the ShortHER trial describe about tumor-infiltrating lymphocytes in ERBB2-positive breast cancer?
+  - ¿Qué criterio de elegibilidad de receptores hormonales y HER2 declara el registro del ensayo de abemaciclib adyuvante?
+  - What hormone receptor and HER2 eligibility criterion does the registry record of the adjuvant abemaciclib trial declare?
+  - ¿Qué estudia el registro del ensayo con pertuzumab añadido a quimioterapia y trastuzumab como tratamiento adyuvante?
+  - What does the trial registry record study about pertuzumab added to chemotherapy and trastuzumab as adjuvant therapy?
+  - ¿Qué describe la revisión sistemática sobre el papel de las antraciclinas en el cáncer de mama HER2 positivo temprano?
+  - What does the practical guidance describe about adjuvant CDK4/6 inhibitors in HR-positive HER2-negative early breast cancer?
+  - What does the 20-year follow-up describe about the late risk of distant recurrence and tamoxifen benefit?
+  - ¿Qué describe la evidencia sobre el tratamiento del melanoma uveal?
+  - What does the evidence describe about glioblastoma radiotherapy dose escalation?
+  - ¿Qué describe la evidencia sobre añadir quimioterapia a la deprivación androgénica en cáncer de próstata metastásico?
+  - What does the evidence describe about adding chemotherapy to androgen deprivation in metastatic prostate cancer?
+  - ¿Qué tipos de tratamiento describe la información para pacientes sobre el cáncer de próstata?
+  - What types of treatment does the patient information describe for prostate cancer?
+  - ¿Qué describe la evidencia sobre niraparib con abiraterona en cáncer de próstata metastásico sensible a la castración con deficiencia de reparación homóloga?
+  - What does the evidence describe about niraparib plus abiraterone in HRR-deficient metastatic castration-sensitive prostate cancer?
+  - ¿Qué describe el ensayo adaptativo ProBio sobre inhibidores de la vía del receptor de andrógenos frente a taxanos?
+  - What does the ProBio adaptive trial describe about androgen receptor pathway inhibitors versus taxanes?
+  - ¿Qué describe la evidencia sobre darolutamida en el subgrupo japonés del estudio ARASENS?
+  - What does the evidence describe about darolutamide in the Japanese subgroup of the ARASENS study?
+  - ¿Qué describe el metanálisis sobre añadir hormonoterapia a la radioterapia posoperatoria en cáncer de próstata recurrente?
+  - What does the meta-analysis describe about adding hormone therapy to postoperative radiotherapy in recurrent prostate cancer?
+  - What does the network meta-analysis describe about talazoparib plus enzalutamide compared with other first-line treatments?
+  - ¿Qué describe el metanálisis en red sobre talazoparib con enzalutamida frente a otros tratamientos de primera línea?
+  - What does the evidence describe about abiraterone compared with enzalutamide in metastatic castration-resistant prostate cancer?
+  - ¿Qué describe la evidencia sobre abiraterona frente a enzalutamida en cáncer de próstata metastásico resistente a la castración?
+  - ¿Qué describe la revisión sobre la braquiterapia focal guiada por imagen en cáncer de próstata?
+  - ¿Qué riesgo cardiovascular describe la evidencia para los inhibidores de la vía del receptor de andrógenos con deprivación androgénica?
+  - What cardiovascular risk does the evidence describe for androgen receptor pathway inhibitors combined with androgen deprivation?
+  - ¿Qué dilemas clínicos describe la evidencia sobre el manejo del cáncer de próstata oligometastásico?
+  - What does the evidence say about whether PSA or digital rectal exam screening reduces prostate cancer mortality?
+  - ¿Qué dice la evidencia sobre si el cribado con PSA o el tacto rectal reduce la mortalidad por cáncer de próstata?
+  - ¿Qué estudió el ensayo de prevención del cáncer de próstata con finasterida?
+  - What did the prostate cancer prevention trial of finasteride study?
+  - What does the registry record of the abiraterone trial in newly diagnosed metastatic prostate cancer set out to determine?
+  - ¿Qué se propone determinar el registro del ensayo de abiraterona en cáncer de próstata metastásico recién diagnosticado?
+  - ¿Cómo define el registro del ensayo con apalutamida la supervivencia libre de metástasis?
+  - How does the registry record of the apalutamide trial define metastasis-free survival?
+  - What does the comparative effectiveness study describe about Lu-177 PSMA in the TheraP and VISION trials?
+  - ¿Qué controversia describe la revisión sobre el cribado del cáncer de próstata con PSA?
+  - What does the network meta-analysis describe about the therapeutic landscape of metastatic hormone-sensitive prostate cancer?
+  - ¿Qué describe la evidencia sobre el tratamiento del cáncer papilar de tiroides?
+  - What does the evidence describe about pediatric leukemia maintenance therapy?
+  - ¿Qué describe la evidencia sobre añadir pembrolizumab a la quimioterapia neoadyuvante en cáncer de mama ER positivo HER2 negativo?
+  - ¿Qué compara la evidencia entre trastuzumab deruxtecán y trastuzumab emtansina en cáncer de mama HER2 positivo metastásico?
+  - ¿Qué describe la evidencia sobre añadir quimioterapia a la deprivación androgénica en cáncer de próstata metastásico?
+  - ¿Qué describe la evidencia sobre niraparib con abiraterona en cáncer de próstata metastásico sensible a la castración con deficiencia de reparación homóloga?
+  - ¿Qué describe la evidencia sobre el tratamiento del cáncer papilar de tiroides?

@@ -21,6 +21,8 @@ from app.infrastructure.catalogo_clinico.terminos_del_caso import (
 from tests.support.contract import CATALOGOS, RAIZ_REPOSITORIO
 
 DATASET = RAIZ_REPOSITORIO / "data" / "eval" / "s5-corpus-ampliado"
+"""La fuente de verdad de las preguntas. El contenedor de ``integration-rag`` no la ve: los tests leen ``FIXTURES``."""
+FIXTURES = Path(__file__).resolve().parents[1] / "fixtures" / "expansion_contextual"
 FIXTURE_DE_TEMAS = CATALOGOS / "test" / "fixtures" / "temas-del-caso.json"
 TIPOS = ("mama", "prostata")
 
@@ -30,14 +32,13 @@ CATALOGO_DE_TERMINOS = cargar_catalogo_de_terminos(CATALOGOS, TIPOS)
 
 def preguntas_de_la_medicion() -> list[dict[str, Any]]:
     """Las 60 preguntas sintéticas de la medición de ADR-52 (22 genéricas, 24 con tema y 14 controles)."""
-    contenido = yaml.safe_load((DATASET / "preguntas-contextuales.yaml").read_text("utf-8"))
+    contenido = yaml.safe_load((FIXTURES / "preguntas-contextuales.yaml").read_text("utf-8"))
     return contenido["preguntas"]
 
 
 def preguntas_de_s5() -> list[str]:
     """Las 69 preguntas sintéticas de ``s5-corpus-ampliado``: todas con tema propio."""
-    contenido = yaml.safe_load((DATASET / "preguntas.yaml").read_text("utf-8"))
-    return [p["pregunta"] for p in contenido["preguntas"]]
+    return yaml.safe_load((FIXTURES / "preguntas-s5.yaml").read_text("utf-8"))["preguntas"]
 
 
 def casos_del_fixture() -> list[dict[str, Any]]:
