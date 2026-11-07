@@ -60,7 +60,7 @@ def test_chat_turn_relevancia_devuelve_el_criterio_del_catalogo_y_la_cita_del_tu
     criterio = _criterio_del_catalogo("estado_menopausico")
     assert criterio["label"]["es"] in cuerpo["blocks"][0]["text"]
     citas = cuerpo["blocks"][1]["citations"]
-    assert [c["chunkId"] for c in citas] == ["ch-m1-1"]
+    assert [c["chunkId"] for c in citas] == ["ch-mp-1"]
     assert {c["chunkId"] for c in citas} <= entorno.chunks_recuperados()
     assert cuerpo["omittedClaims"] == 0
     assert cuerpo == _ejemplo("chat-turn-relevancia-ok.json")
@@ -152,7 +152,7 @@ def test_chat_turn_relevancia_dice_que_no_es_un_dato_critico_sin_bloque_catalogo
     assert respuesta.status_code == 200
     cuerpo = respuesta.json()
     assert _tipos(cuerpo) == ["limitacion"]
-    assert "no es un dato crítico del catálogo vigente" in cuerpo["blocks"][0]["text"]
+    assert cuerpo["blocks"][0]["text"] == TEXTOS.chat_relevancia_fuera_del_catalogo_texto
     assert entorno.llm.invocaciones == 0
     assert entorno.base.buscador.invocaciones == 0  # type: ignore[attr-defined]
     assert cuerpo == _ejemplo("chat-turn-relevancia-fuera-de-catalogo.json")
@@ -160,11 +160,11 @@ def test_chat_turn_relevancia_dice_que_no_es_un_dato_critico_sin_bloque_catalogo
 
 @pytest.mark.ac("US-264", 6)
 def test_chat_turn_relevancia_omite_la_afirmacion_que_cita_un_chunk_de_un_turno_anterior():
-    puntajes = {"ch-m1-1": 0.05, "ch-inj-1": 0.50}
+    puntajes = {"ch-inj-1": 0.50}
     entorno = entorno_de_relevancia("CHAT-RELEVANCIA-TURNO-ANTERIOR", puntajes=puntajes)
     solicitud = con_estado_rehidratado(
         solicitud_desde_ejemplo("chat-turn-request-relevancia-sin-criterio.json"),
-        citas_mostradas=["ch-m1-1"],
+        citas_mostradas=["ch-mp-1"],
     )
 
     respuesta = entorno.turno(solicitud)
@@ -172,7 +172,7 @@ def test_chat_turn_relevancia_omite_la_afirmacion_que_cita_un_chunk_de_un_turno_
     assert respuesta.status_code == 200
     cuerpo = respuesta.json()
     assert cuerpo["omittedClaims"] == 1
-    assert "ch-m1-1" not in {c["chunkId"] for b in cuerpo["blocks"] for c in b.get("citations", [])}
+    assert "ch-mp-1" not in {c["chunkId"] for b in cuerpo["blocks"] for c in b.get("citations", [])}
     assert _tipos(cuerpo) == ["catalogo", "limitacion"]
     assert CONSULTA_KI67 in entorno.base.reranker.preguntas  # type: ignore[attr-defined]
 

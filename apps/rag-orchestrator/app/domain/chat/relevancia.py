@@ -104,3 +104,12 @@ def texto_del_bloque_de_catalogo(
         else textos.sin_criterio
     )
     return f"{primera} {segunda}"
+
+
+def con_minuscula_inicial(texto: str) -> str:
+    """La afirmación con minúscula inicial para seguir a la atribución («La fuente reporta que los estudios…»); una primera
+    palabra con siglas, dígitos o guiones (``Ki-67``, ``HER2``, ``ECOG``) se deja tal cual."""
+    primera = texto.split(maxsplit=1)[0] if texto.strip() else ""
+    if primera.isalpha() and primera[1:].islower():
+        return texto[:1].lower() + texto[1:]
+    return texto

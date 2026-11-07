@@ -44,6 +44,7 @@ from app.domain.alias_de_chunks import asignar_alias, traducir_citas
 from app.domain.chat.relevancia import (
     DatoCritico,
     TextosDelCatalogo,
+    con_minuscula_inicial,
     criterios_que_usan,
     identificar_dato_critico,
     texto_del_bloque_de_catalogo,
@@ -204,7 +205,9 @@ class NodoRelevancia:
         )
         return tuple(
             AfirmacionAtomica(
-                a.texto.strip(), PapelDeAfirmacion.principal, traducir_citas(tabla, a.citas)
+                con_minuscula_inicial(a.texto.strip()),
+                PapelDeAfirmacion.principal,
+                traducir_citas(tabla, a.citas),
             )
             for a in salida.afirmaciones
         )

@@ -6,6 +6,7 @@ from app.config.settings import Settings
 from app.domain.lenguaje import ListaTerminos, check_prohibited_terms
 from app.domain.chat.relevancia import (
     TextosDelCatalogo,
+    con_minuscula_inicial,
     criterios_que_usan,
     identificar_dato_critico,
     texto_del_bloque_de_catalogo,
@@ -159,3 +160,18 @@ def test_los_textos_fijos_de_configuracion_no_contienen_terminos_prohibidos_ni_l
         assert (
             "{" not in texto and "}" not in texto
         )  # la llave rompe el valor por defecto de Compose
+
+
+@pytest.mark.parametrize(
+    ("texto", "esperado"),
+    [
+        ("Los estudios reportan el dato.", "los estudios reportan el dato."),
+        ("Estado menopáusico se registra.", "estado menopáusico se registra."),
+        ("Ki-67 se reporta junto con el grado.", "Ki-67 se reporta junto con el grado."),
+        ("HER2 se midió por IHQ.", "HER2 se midió por IHQ."),
+        ("ECOG se usó como criterio.", "ECOG se usó como criterio."),
+        ("", ""),
+    ],
+)
+def test_pone_minuscula_inicial_solo_cuando_la_primera_palabra_es_comun(texto, esperado):
+    assert con_minuscula_inicial(texto) == esperado

@@ -56,9 +56,7 @@ CHAT_RELEVANCIA_SIN_SOPORTE_TEXTO_INICIAL = (
     "La evidencia recuperada no explica la relevancia de este dato."
 )
 """Bloque ``limitacion`` cuando ninguna explicación del LLM tiene soporte (US-264 AC-2, RN-01)."""
-CHAT_RELEVANCIA_FUERA_DEL_CATALOGO_TEXTO_INICIAL = (
-    "Lo consultado no es un dato crítico del catálogo vigente; no se explica su relevancia."
-)
+CHAT_RELEVANCIA_FUERA_DEL_CATALOGO_TEXTO_INICIAL = "Lo consultado no figura entre los datos críticos del catálogo vigente; este turno no describe su relevancia en la evidencia."
 """Respuesta cuando la pregunta no corresponde a ningún dato de ``datos-criticos`` (US-264 AC-5, RN-29)."""
 CHAT_RELEVANCIA_SIN_EVIDENCIA_AVISO_INICIAL = (
     "Sin evidencia: ningún fragmento recuperado supera el umbral de relevancia para este dato"

@@ -13,7 +13,7 @@
   },
   "CHAT-RELEVANCIA-TURNO-ANTERIOR": {
     "ruta": "{\"intent\": \"faltantes\"}",
-    "generacion": "{\"claims\": [{\"text\": \"Los estudios reportan el índice de proliferación Ki-67 junto con la caracterización del tumor.\", \"citations\": [\"ch-m1-1\"]}]}"
+    "generacion": "{\"claims\": [{\"text\": \"Los estudios reportan el índice de proliferación Ki-67 junto con la caracterización del tumor.\", \"citations\": [\"ch-mp-1\"]}]}"
   },
   "CHAT-RELEVANCIA-SALIDA-INVALIDA": {
     "ruta": "{\"intent\": \"faltantes\"}",

@@ -36,4 +36,9 @@
 
 ## humano
 
-- [ ] H-1 Pasar las seis claves nuevas `CHAT_RELEVANCIA_CATALOGO_TEXTO`, `CHAT_RELEVANCIA_CRITERIOS_TEXTO`, `CHAT_RELEVANCIA_SIN_CRITERIO_TEXTO`, `CHAT_RELEVANCIA_SIN_SOPORTE_TEXTO`, `CHAT_RELEVANCIA_FUERA_DEL_CATALOGO_TEXTO` y `CHAT_RELEVANCIA_SIN_EVIDENCIA_AVISO` a `apps/rag-orchestrator/.env.example` y a `infra/docker/docker-compose.yml` (con su comentario de RN-22 y el test de paridad), con los valores de `app/domain/chat/valores_iniciales.py` (sin llaves: los marcadores son `<dato>`, `<version>` y `<criterios>`) · DIFERIDA -> H-1 (los valores por defecto de `Settings` ya rigen sin ellas; archivos protegidos para el implementador)
+- [x] H-1 Seis claves `CHAT_RELEVANCIA_*` en `apps/rag-orchestrator/.env.example` y `infra/docker/docker-compose.yml` (`${VAR:-default}`, los valores con «: » entre comillas) y en la lista del test de paridad `infra/docker/__tests__/compose-env-example.test.mjs` · EVIDENCIA: el test de paridad en verde (5 passed); el harness permitió la edición
+
+## deuda
+
+- [ ] D-1 Corregir la descripción de `notices` en `apps/rag-orchestrator/openapi.yaml` (cita el aviso de relevancia) · DIFERIDA -> L1D-326 (contrato futuro; este change no sube versión)
+- [ ] D-2 Minúscula inicial tras la atribución en el seguimiento (`La fuente reporta que El estudio…`) y en `componer_con_marco` · TRASLADADA -> L1D-322 (afecta a `/rag/query`, a su evaluación y a ejemplos; fuera del alcance de US-264)

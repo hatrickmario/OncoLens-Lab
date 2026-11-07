@@ -16,7 +16,36 @@ from tests.support.chat_evidencia import (
 from tests.support.contract import CATALOGOS
 from tests.support.llm_chat_falso import FakeChatLlm
 from tests.support.nli_falso import IMPLICA, NliFalso
-from tests.support.recuperacion import PUNTAJES_FX06A, RerankerFalso, crear_entorno
+from tests.support.recuperacion import (
+    CORPUS_FX06A,
+    PUNTAJES_FX06A,
+    BuscadorFalso,
+    ChunkFx,
+    RerankerFalso,
+    _vector,
+    crear_entorno,
+)
+
+CHUNK_MENOPAUSIA = ChunkFx(
+    "ch-mp-1",
+    "doc-m1",
+    "Menopausal status was used to stratify patients in adjuvant endocrine therapy trials for hormone receptor-positive breast cancer.",
+    _vector(e3=0.6),
+    True,
+    "mama",
+    chunk_index=1,
+)
+CHUNK_KI67 = ChunkFx(
+    "ch-ki-1",
+    "doc-m1",
+    "The Ki-67 proliferation index was reported alongside histologic grade to characterize tumor biology in early breast cancer.",
+    _vector(e3=0.55),
+    True,
+    "mama",
+    chunk_index=2,
+)
+CORPUS_RELEVANCIA = (*CORPUS_FX06A, CHUNK_MENOPAUSIA, CHUNK_KI67)
+"""El corpus FX-06a más un fragmento sintético que sí habla de cada dato (mismo documento ``doc-m1``, vigente)."""
 
 Q_MENOPAUSIA = "¿Por qué importa el estado menopáusico?"
 Q_KI67 = "¿Por qué importa el Ki-67?"
@@ -26,14 +55,16 @@ CONSULTA_MENOPAUSIA = "Estado menopáusico mama"
 CONSULTA_KI67 = "Ki-67 mama"
 """Lo que el nodo manda al corpus: la etiqueta del catálogo y el tipo de cáncer, nunca un dato del paciente (design D3)."""
 
-PUNTAJES_CON_EVIDENCIA = {"ch-m1-1": 0.80, "ch-inj-1": 0.05}
-PUNTAJES_SIN_EVIDENCIA = {"ch-m1-1": 0.05, "ch-inj-1": 0.05}
+PUNTAJES_MENOPAUSIA = {"ch-mp-1": 0.80}
+PUNTAJES_KI67 = {"ch-ki-1": 0.80}
+PUNTAJES_SIN_EVIDENCIA: dict[str, float] = {}
+"""Lo no listado puntúa 0.05, bajo el umbral de los tests."""
 
 
 def entorno_de_relevancia(
     escenario: str = "CHAT-RELEVANCIA-OK",
     *,
-    puntajes: dict[str, float] = PUNTAJES_CON_EVIDENCIA,
+    puntajes: dict[str, float] | None = None,
     nli: NliFalso | None = None,
     llm: FakeChatLlm | None = None,
     **base: Any,
@@ -43,15 +74,19 @@ def entorno_de_relevancia(
     reranker = RerankerFalso(
         puntajes={
             **PUNTAJES_FX06A,
-            CONSULTA_MENOPAUSIA: puntajes,
-            CONSULTA_KI67: puntajes,
+            CONSULTA_MENOPAUSIA: PUNTAJES_MENOPAUSIA if puntajes is None else puntajes,
+            CONSULTA_KI67: PUNTAJES_KI67 if puntajes is None else puntajes,
         }
     )
     entorno_base = crear_entorno(
-        reranker=reranker, clasificador_nli=nli or NliFalso(por_defecto=IMPLICA), **base
+        reranker=reranker,
+        clasificador_nli=nli or NliFalso(por_defecto=IMPLICA),
+        buscador=BuscadorFalso(CORPUS_RELEVANCIA),
+        **base,
     )
     return crear_entorno_de_chat_con_evidencia(
         entorno_base,
+        corpus=CORPUS_RELEVANCIA,
         llm=llm or FakeChatLlm(escenario),
         relevancia=cargar_datos_de_relevancia(CATALOGOS, ("mama", "prostata")),
     )

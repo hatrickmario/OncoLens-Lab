@@ -74,7 +74,7 @@ Alternativa de fondo (LLM libre frente a limitado al catálogo y evidencia) ya d
 
 Proveedor: `rag-orchestrator` (`POST /chat/turn`, de `l1d-316`); consumidor: `clinical-api`. **Sin diff** del
 `openapi.yaml`: se usan `ChatBlock.kind ∈ {catalogo, evidencia, limitacion}`, `ChatBlock.citations[]`, `omittedClaims`
-y `notices[]` del contrato **1.12.0** de `l1d-316`. **No sube versión** (glosario S6 §1): consume el contrato de
+y `notices[]` del contrato de `l1d-316` (1.12.0 al proponerse; el vigente al implementar es **1.16.0** y esos campos no cambiaron). **No sube versión** (glosario S6 §1): consume el contrato de
 `l1d-316` 1.12.0; no comprueba ni añade campos.
 
 Ejemplos nuevos (FX-12-e), base de MSW/`respx`:
@@ -116,3 +116,22 @@ y `eval/configs/s5.yaml --suite opciones`. Métricas: fidelidad ≥ 0,90, precis
 - [Sinónimos insuficientes] → una pregunta con otra grafía cae en AC-5; visible y se amplía en el catálogo.
 - [Depende de `l1d-320`] → rebasar tras su merge; el nodo `faltantes` lo define ese change.
 - [NLI estricto omite explicaciones correctas] → visible en `omittedClaims`; se calibra en US-269.
+
+## Decisiones de implementación (Gate 2, vuelta 1)
+
+- **Dónde vive el enrutado de la relevancia**: los patrones y `es_pregunta_de_relevancia()` están en `app/domain/chat/enrutado.py`
+  (único dueño de los patrones); la rama «relevancia» vive en `nodo_faltantes.py`, que delega en `NodoRelevancia`. No hay
+  `Subintencion.relevancia`: el enum de `subintent` del contrato solo admite `seguimiento_evidencia` y añadir un valor sería un
+  cambio de contrato. Decisión consciente, no deuda.
+- **`ultima_evidencia.query`** guarda la pregunta del oncólogo tal como llega de `clinical-api`, que ya la enmascaró (RN-11, ADR-40);
+  Backend 2 nunca ve la pregunta sin enmascarar ni la registra en logs. La consulta al corpus, en cambio, es solo la etiqueta del
+  catálogo y el tipo de cáncer, con un contexto construido desde cero con lista blanca
+  (`contexto_del_turno.contexto_solo_con_el_tipo_de_cancer`).
+- **Renombre de esquemas**: al mover `_SalidaCruda`/`_AfirmacionCruda` a `SalidaCruda`/`AfirmacionCruda`
+  (`capacidades/afirmaciones_citadas.py`) cambian `title`, `$defs` y `$ref` del JSON schema que recibe el LLM del seguimiento; la
+  estructura, `required`, `maxItems` y `pattern` son los mismos, sin efecto en OL-06 del seguimiento.
+- **Minúscula inicial** tras «La fuente reporta que»: se aplica en la relevancia (`con_minuscula_inicial`, antes del NLI, así la
+  hipótesis es la que se muestra). Una primera palabra con siglas, dígitos o guiones (`Ki-67`, `HER2`) se conserva. El seguimiento
+  conserva la mayúscula (TRASLADADA -> L1D-322); cambiar `componer_con_marco` afectaría a `/rag/query`, a su evaluación y a sus ejemplos.
+- **Corpus de los tests**: los ejemplos citan fragmentos sintéticos que sí hablan del dato (`ch-mp-1` menopausia, `ch-ki-1` Ki-67),
+  añadidos al corpus FX-06a solo en `tests/support/chat_relevancia.py`.
