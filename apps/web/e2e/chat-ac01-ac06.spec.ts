@@ -4,16 +4,12 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { expect, test } from '@playwright/test';
 import type { ConversationTurn } from '../../../packages/api-contracts/src/types/clinical-api';
-import {
-  DOCUMENTO_SINTETICO_CHAT,
-  NACIMIENTO_SINTETICO_CHAT,
-  NOMBRE_SINTETICO_CHAT,
-} from '../../clinical-api/prisma/seed/pacientes/chat';
 import es from '../messages/es.json' with { type: 'json' };
 import { buscarSecretos } from './buscar-secretos';
 import {
   esRespuestaDeTurno,
   esperarTarjeta,
+  IDENTIDAD_SINTETICA_CHAT,
   iniciarSesion,
   preguntarEnElChat,
   tarjetasDelChat,
@@ -48,6 +44,11 @@ const PASOS_DE_MAMA = [
 /** `idSembrado('paciente-chat')` (P-CHAT, FX-12-b): el mismo UUID determinista del seed de clinical-api. */
 const ID_PACIENTE_CHAT = '71ca1471-4002-541a-a9e1-06e6f7ff026d';
 /** FX-12-d: nombre, documento y fecha de nacimiento sintéticos de P-CHAT en la pregunta. */
+const {
+  nombre: NOMBRE_SINTETICO_CHAT,
+  documento: DOCUMENTO_SINTETICO_CHAT,
+  nacimiento: NACIMIENTO_SINTETICO_CHAT,
+} = IDENTIDAD_SINTETICA_CHAT;
 const PREGUNTA_FX_12_D = `La paciente ${NOMBRE_SINTETICO_CHAT}, ${DOCUMENTO_SINTETICO_CHAT}, nacida el ${NACIMIENTO_SINTETICO_CHAT}, ¿cuál es su situación actual?`;
 
 /** Vuelca los logs de los contenedores del proyecto de Compose del E2E a `carpeta`, uno por contenedor. */
