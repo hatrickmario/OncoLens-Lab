@@ -20,7 +20,12 @@ from tests.support.fakes import settings_de_prueba
 def test_cargador_lee_el_lexico_del_catalogo_normalizado_cuando_el_archivo_existe():
     lexico = cargar_marcos_de_pregunta(CATALOGOS)
 
-    assert lexico.version == json.loads((CATALOGOS / "manifest.json").read_text("utf-8"))["version"]
+    assert (
+        lexico.version
+        == json.loads((CATALOGOS / "lenguaje" / "marcos-de-pregunta.json").read_text("utf-8"))[
+            "version"
+        ]
+    )
     assert "evidencia" in lexico.por_idioma["es"].vacias
     assert "evidence" in lexico.por_idioma["en"].vacias
     assert "evidencia cientifica" in lexico.por_idioma["es"].marcos
