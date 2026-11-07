@@ -1,9 +1,13 @@
-import type {
-  CitedSource,
-  ConversationTurn,
-} from '../../../../packages/api-contracts/src/types/clinical-api';
+'use client';
+
+import { memo, useState } from 'react';
+import type { ConversationTurn } from '../../../../packages/api-contracts/src/types/clinical-api';
 import { faltanAvisosDeIA } from '../../lib/conversacion/avisos-de-ia';
+import { ExpansionDelTurno } from '../../lib/conversacion/expansion-del-turno';
+import { fuentesDelTurno } from '../../lib/conversacion/fuentes-del-turno';
+import type { AlAbrirPanel } from '../../lib/conversacion/panel-lateral';
 import { mensajes, rellenar } from '../../lib/mensajes';
+import { AccionesDelTurno } from '../molecules/acciones-del-turno';
 import { ConversationDataLine } from '../molecules/conversation-data-line';
 import { ConversationNotices } from '../molecules/conversation-notices';
 import { ConversationTurnHeader } from '../molecules/conversation-turn-header';
@@ -12,20 +16,22 @@ import { ConversationTurnBody } from './conversation-turn-body';
 export interface ConversationTurnCardProps {
   turn: ConversationTurn;
   patientId: string;
-  /** Abre el fragmento citado de un análisis de evidencia; sin él, el turno no ofrece «ver fragmento». */
-  onVerFragmento?: (cita: CitedSource, idChip: string) => void;
+  /** Abre una cita o un dato en el panel lateral; el padre lo mantiene estable para que la tarjeta no se repinte. */
+  onAbrirPanel: AlAbrirPanel;
 }
 
 /**
  * Tarjeta de un turno del asistente. Los avisos de IA son solo los de `turn.notices[]` (RN-19). Un turno con contenido
  * generado y sin avisos no se pinta como válido: muestra un `role="alert"` sin detalle técnico y ningún bloque.
+ * «Expandir todo» es estado de esta tarjeta (`memo`: abrir el panel o expandir otro turno no la repinta).
  */
-export function ConversationTurnCard({
+export const ConversationTurnCard = memo(function ConversationTurnCard({
   turn,
   patientId,
-  onVerFragmento,
+  onAbrirPanel,
 }: ConversationTurnCardProps) {
   const { turno: titulo, sinAvisosTitulo } = mensajes().conversacion;
+  const [expandido, setExpandido] = useState(false);
   return (
     // Grupo y no `article`: las tarjetas de opción del análisis ya son `article` y se anidan en la del turno.
     <div
@@ -39,16 +45,18 @@ export function ConversationTurnCard({
           {sinAvisosTitulo}
         </p>
       ) : (
-        <>
-          <ConversationTurnBody
-            turno={turn}
-            patientId={patientId}
-            onVerFragmento={onVerFragmento ?? (() => {})}
-          />
+        <ExpansionDelTurno.Provider value={expandido}>
+          <ConversationTurnBody turno={turn} patientId={patientId} onAbrirPanel={onAbrirPanel} />
           <ConversationDataLine usados={turn.dataUsed ?? []} ausentes={turn.dataMissing ?? []} />
+          <AccionesDelTurno
+            expandido={expandido}
+            onAlternar={() => setExpandido(!expandido)}
+            afirmacionesOmitidas={turn.omittedClaims}
+            fuentes={fuentesDelTurno(turn)}
+          />
           <ConversationNotices avisos={turn.notices} />
-        </>
+        </ExpansionDelTurno.Provider>
       )}
     </div>
   );
-}
+});

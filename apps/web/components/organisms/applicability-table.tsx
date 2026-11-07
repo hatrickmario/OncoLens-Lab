@@ -1,10 +1,11 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useContext, useId, useState } from 'react';
 import type {
   EvidenceOption,
   SourceApplicability,
 } from '../../../../packages/api-contracts/src/types/clinical-api';
+import { ExpansionDelTurno } from '../../lib/conversacion/expansion-del-turno';
 import { mensajes } from '../../lib/mensajes';
 import estilos from '../evidence.module.css';
 import { ApplicabilitySource } from '../molecules/applicability-source';
@@ -16,10 +17,19 @@ export interface ApplicabilityTableProps {
   patientId: string;
 }
 
-/** Aplicabilidad de una opción por fuente y criterio, plegada por defecto (D1). Solo muestra lo calculado. */
+/**
+ * Aplicabilidad de una opción por fuente y criterio, plegada por defecto (D1). Solo muestra lo calculado. Dentro de un
+ * turno del chat, «Expandir todo» / «Plegar todo» la abre y la cierra; después el oncólogo puede alternarla sola.
+ */
 export function ApplicabilityTable({ opcion, fuentes, patientId }: ApplicabilityTableProps) {
   const idPanel = useId();
-  const [abierta, setAbierta] = useState(false);
+  const expansionDelTurno = useContext(ExpansionDelTurno);
+  const [abierta, setAbierta] = useState(expansionDelTurno);
+  const [expansionVista, setExpansionVista] = useState(expansionDelTurno);
+  if (expansionVista !== expansionDelTurno) {
+    setExpansionVista(expansionDelTurno);
+    setAbierta(expansionDelTurno);
+  }
   return (
     <div className={estilos.aplicabilidadPorCriterio}>
       <button

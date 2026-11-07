@@ -46,7 +46,7 @@ test.describe('Panel de análisis (L1D-140)', () => {
     await page.getByRole('button', { name: textos.cita.verFragmento }).click();
     // El texto también sale en la cita de la tarjeta y en el turno: el `lang` solo lo lleva el panel lateral.
     const fragmento = page
-      .getByRole('complementary', { name: textos.fragmento.titulo })
+      .getByRole('dialog', { name: textos.fragmento.titulo })
       .getByText(cita.chunkTextSnapshot);
     await expect(fragmento).toHaveAttribute('lang', cita.language);
     expect(page.url()).toBe(url);
@@ -63,12 +63,12 @@ test.describe('Panel de análisis (L1D-140)', () => {
       .click();
     await page.getByRole('button', { name: textos.cita.verFragmento }).click();
 
-    const panel = page.getByRole('complementary', { name: textos.fragmento.titulo });
+    const panel = page.getByRole('dialog', { name: textos.fragmento.titulo });
     const enlace = panel.getByRole('link', { name: cita.sourceUrl });
     await expect(enlace).toHaveAttribute('href', cita.sourceUrl);
     await expect(enlace).toHaveAttribute('target', '_blank');
     await expect(enlace).toHaveAttribute('rel', 'noopener noreferrer');
-    await expect(panel.getByRole('button', { name: textos.fragmento.volver })).toBeVisible();
+    await expect(panel.getByRole('button', { name: 'Cerrar' })).toBeVisible();
   });
 
   test('despliega el detalle de la opción con el teclado y muestra sus párrafos cuando la opción trae details [ARR-08 AC-5]', async ({

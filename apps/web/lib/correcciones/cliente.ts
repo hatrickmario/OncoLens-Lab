@@ -94,16 +94,13 @@ export async function enviarCorreccion(
   }
 }
 
-/** `GET …/history` del BFF, validado con el Zod del contrato; cualquier otra cosa es un error sin detalle. */
-export async function pedirHistorico({
-  pacienteId,
-  dato,
-  id,
-}: RefDeDato): Promise<ResultadoDeHistorico> {
+/** `GET /api/patients/{pacienteId}/{tramo}` del histórico, validado con el Zod del contrato; otra cosa es un error sin detalle. */
+export async function pedirHistoricoDeTramo(
+  pacienteId: string,
+  tramo: string,
+): Promise<ResultadoDeHistorico> {
   try {
-    const respuesta = await fetch(`/api/patients/${pacienteId}/${dato}/${id}/history`, {
-      cache: 'no-store',
-    });
+    const respuesta = await fetch(`/api/patients/${pacienteId}/${tramo}`, { cache: 'no-store' });
     const leido = zCorrectionHistory.safeParse(leerJson(await respuesta.text()));
     return respuesta.status === 200 && leido.success
       ? { tipo: 'ok', versiones: leido.data.items }
@@ -111,4 +108,9 @@ export async function pedirHistorico({
   } catch {
     return { tipo: 'error' };
   }
+}
+
+/** `GET …/history` de un dato corregible (la ficha y la vista de caso). */
+export function pedirHistorico({ pacienteId, dato, id }: RefDeDato): Promise<ResultadoDeHistorico> {
+  return pedirHistoricoDeTramo(pacienteId, `${dato}/${id}/history`);
 }

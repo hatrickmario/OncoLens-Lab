@@ -48,9 +48,7 @@ describe('EvidencePanel', () => {
     const autores = screen.getByText(evidence.cita.autores).nextElementSibling;
     expect(autores?.textContent).toBe(evidence.cita.noDisponible);
     await usuario.click(screen.getByRole('button', { name: evidence.cita.verFragmento }));
-    const fragmento = within(
-      screen.getByRole('complementary', { name: evidence.fragmento.titulo }),
-    );
+    const fragmento = within(screen.getByRole('dialog', { name: evidence.fragmento.titulo }));
     expect(fragmento.getByText(cita.chunkTextSnapshot).getAttribute('lang')).toBe(cita.language);
   });
 
@@ -60,15 +58,16 @@ describe('EvidencePanel', () => {
     await usuario.click(await screen.findByRole('button', { name: new RegExp(cita.externalId) }));
     await usuario.click(screen.getByRole('button', { name: evidence.cita.verFragmento }));
 
-    const panel = screen.getByRole('complementary', { name: evidence.fragmento.titulo });
+    const panel = screen.getByRole('dialog', { name: evidence.fragmento.titulo });
     const enlace = within(panel).getByRole('link', { name: cita.sourceUrl! });
     expect(enlace.getAttribute('href')).toBe(cita.sourceUrl);
     expect(enlace.getAttribute('target')).toBe('_blank');
     expect(enlace.getAttribute('rel')).toBe('noopener noreferrer');
     expect(within(panel).getByText(evidence.cita.fuenteOriginal)).toBeTruthy();
-    const botonVolver = within(panel).getByRole('button', { name: evidence.fragmento.volver });
-    const orden = enlace.compareDocumentPosition(botonVolver);
-    expect(orden & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // El panel lateral (US-268) cierra desde su encabezado: el enlace va después del texto del fragmento.
+    const texto = within(panel).getByText(cita.chunkTextSnapshot);
+    expect(texto.compareDocumentPosition(enlace) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(within(panel).getByRole('button', { name: 'Cerrar' })).toBeTruthy();
   });
 
   it.each([null])(
@@ -82,7 +81,7 @@ describe('EvidencePanel', () => {
       await usuario.click(await screen.findByRole('button', { name: new RegExp(cita.externalId) }));
       await usuario.click(screen.getByRole('button', { name: evidence.cita.verFragmento }));
 
-      const panel = within(screen.getByRole('complementary', { name: evidence.fragmento.titulo }));
+      const panel = within(screen.getByRole('dialog', { name: evidence.fragmento.titulo }));
       expect(panel.queryByRole('link')).toBeNull();
       expect(panel.getByText(evidence.cita.fuenteOriginal).nextElementSibling?.textContent).toBe(
         evidence.cita.noDisponible,

@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
-import { cleanup, screen, within } from '@testing-library/react';
+import { cleanup, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import {
   crearBffConversacionSimulado,
   turnoDeCaso,
+  turnoDeEvidencia,
   turnoFaltantes,
 } from '../support/msw/conversaciones';
 import {
@@ -104,8 +105,7 @@ describe('Expandir y plegar un turno', () => {
     await usuario.click(within(tarjeta).getByRole('button', { name: 'Expandir todo' }));
     await usuario.click(within(tarjeta).getByRole('button', { name: 'Plegar todo' }));
 
-    expect((await buscarTarjetas())[0]!.textContent).toContain(
-      'Generado por IA; requiere validación clínica independiente por el oncólogo tratante',
-    );
+    const [aviso] = turnoDeEvidencia.notices;
+    expect((await buscarTarjetas())[0]!.textContent).toContain(aviso);
   });
 });

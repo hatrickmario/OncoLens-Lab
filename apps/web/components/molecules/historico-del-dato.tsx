@@ -21,7 +21,8 @@ const TEXTO_DE_LA_VERSION: Record<DatoCorregible, (version: CorrectionHistoryEnt
   'clinical-attributes': (v) => rotuloOValor(mensajes().caso.valoresDeAtributo, v.value ?? ''),
 };
 
-const textoDeLaVersion = (version: CorrectionHistoryEntry, dato: DatoCorregible): string =>
+/** Valor de una versión reemplazada según el tipo de dato; lo comparte el panel lateral del chat. */
+export const textoDeLaVersion = (version: CorrectionHistoryEntry, dato: DatoCorregible): string =>
   TEXTO_DE_LA_VERSION[dato](version);
 
 function VersionAnterior({

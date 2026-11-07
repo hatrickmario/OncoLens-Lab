@@ -1,9 +1,16 @@
 import type {
+  ChatCitation,
   CitedSource,
   ConversationTurn,
 } from '../../../../packages/api-contracts/src/types/clinical-api';
 import { enlacesDelBloque } from '../../lib/conversacion/enlaces-de-datos';
+import {
+  fragmentoDeCitaDelChat,
+  fragmentoDeFuente,
+} from '../../lib/conversacion/fragmento-abierto';
+import { fuentesDelTurno } from '../../lib/conversacion/fuentes-del-turno';
 import { numerarCitas } from '../../lib/conversacion/numerar-citas';
+import type { AlAbrirPanel } from '../../lib/conversacion/panel-lateral';
 import { mensajes } from '../../lib/mensajes';
 import { ConversationBlock } from '../molecules/conversation-block';
 import { ConversationCitations } from '../molecules/conversation-citations';
@@ -13,27 +20,33 @@ import { AnalysisResult } from './analysis-result';
 export interface ConversationTurnBodyProps {
   turno: ConversationTurn;
   patientId: string;
-  onVerFragmento: (cita: CitedSource, idChip: string) => void;
+  onAbrirPanel: AlAbrirPanel;
 }
 
 /**
  * Cuerpo del turno. Con `evidenceAnalysis` el análisis ya persistido y validado se pinta con `AnalysisResult` (sin hilo
- * de seguimiento) y las citas de sus bloques `[E<n>]` van aparte; sin él, un bloque por `blocks[]` en su orden.
+ * de seguimiento) y las citas de sus bloques `[E<n>]` van aparte; sin él, un bloque por `blocks[]` en su orden. Citas y
+ * datos ◆ abren su contenido en el panel lateral (`onAbrirPanel`), nunca en otra página.
  */
 export function ConversationTurnBody({
   turno,
   patientId,
-  onVerFragmento,
+  onAbrirPanel,
 }: ConversationTurnBodyProps) {
   const citas = numerarCitas(turno.blocks);
+  const fuentes = fuentesDelTurno(turno);
+  const verCita = (cita: ChatCitation, id: string) =>
+    onAbrirPanel({ tipo: 'cita', fragmento: fragmentoDeCitaDelChat(cita, fuentes) }, id);
   if (turno.evidenceAnalysis) {
     const deEvidencia = citas.flat();
+    const verFuente = (cita: CitedSource, idChip: string) =>
+      onAbrirPanel({ tipo: 'cita', fragmento: fragmentoDeFuente(cita) }, idChip);
     return (
       <>
         <AnalysisResult
           analisis={turno.evidenceAnalysis}
           patientId={patientId}
-          onVerFragmento={onVerFragmento}
+          onVerFragmento={verFuente}
         />
         {deEvidencia.length > 0 && (
           <section
@@ -43,7 +56,7 @@ export function ConversationTurnBody({
             <p className="text-evidence m-0 text-sm font-semibold">
               {mensajes().conversacion.rotulos.evidencia}
             </p>
-            <ConversationCitations citas={deEvidencia} />
+            <ConversationCitations citas={deEvidencia} idDelTurno={turno.id} onVerCita={verCita} />
           </section>
         )}
       </>
@@ -51,8 +64,18 @@ export function ConversationTurnBody({
   }
   return turno.blocks.map((bloque, indice) => (
     <ConversationBlock key={`${indice}-${bloque.kind}`} bloque={bloque}>
-      <ConversationDataLinks enlaces={enlacesDelBloque(bloque, turno.dataLinks ?? [], patientId)} />
-      <ConversationCitations citas={citas[indice] ?? []} />
+      <ConversationDataLinks
+        enlaces={enlacesDelBloque(bloque, turno.dataLinks ?? [], patientId)}
+        idBase={`dato-${turno.id}-${indice}`}
+        onVerEnCaso={(enlace, id) =>
+          onAbrirPanel({ tipo: 'dato', enlace, textosDelTurno: [bloque.text] }, id)
+        }
+      />
+      <ConversationCitations
+        citas={citas[indice] ?? []}
+        idDelTurno={turno.id}
+        onVerCita={verCita}
+      />
     </ConversationBlock>
   ));
 }

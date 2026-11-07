@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { esUrlHttpSegura } from '../../lib/evidence/procedencia';
 import { crearBffConversacionSimulado } from '../support/msw/conversaciones';
@@ -46,7 +47,7 @@ describe('Referencias del turno y fragmento en el panel lateral', () => {
     }
   });
 
-  it('no crea enlace con href para una referencia con sourceUrl javascript: en Ver referencias ni en el panel lateral de la cita [US-268 AC-5]', () => {
+  it('no crea enlace con href para una referencia con sourceUrl javascript: en Ver referencias ni en el panel lateral de la cita [US-268 AC-5]', async () => {
     // El contrato ya rechaza un `sourceUrl` que no sea https (zEvidenceAnalysis): este es el cinturón de la propia UI.
     const hostil = {
       ...turnoDeEvidenciaConFuentes().evidenceAnalysis.evidenceOptions[0].citedSources[0],
@@ -58,6 +59,8 @@ describe('Referencias del turno y fragmento en el panel lateral', () => {
         <FragmentoCitadoEnPanel fuente={{ ...fragmentoDeFuente(hostil), fuente: hostil }} />
       </>,
     );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Ver referencias' }));
 
     expect(enlacesConHref(document.body)).toHaveLength(0);
     expect(screen.getAllByText(/Breast Cancer Treatment/).length).toBeGreaterThanOrEqual(2);
