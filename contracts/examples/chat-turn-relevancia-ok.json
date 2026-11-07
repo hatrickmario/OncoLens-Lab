@@ -1,0 +1,50 @@
+{
+  "intent": "faltantes",
+  "blocks": [
+    {
+      "kind": "catalogo",
+      "text": "Estado menopáusico es un dato crítico del catálogo vigente (versión 1.7.0). Criterios de aplicabilidad del catálogo que lo usan: Estado menopáusico."
+    },
+    {
+      "kind": "evidencia",
+      "text": "La fuente reporta que Los estudios de terapia endocrina adyuvante estratifican a las pacientes según su estado menopáusico.",
+      "citations": [
+        {
+          "chunkId": "ch-m1-1",
+          "documentId": "doc-m1",
+          "sourceTitle": "Breast Cancer Treatment (test)",
+          "chunkOrdinal": 1,
+          "chunkCount": 1,
+          "chunkTextSnapshot": "Adding anti-HER2 therapy to adjuvant chemotherapy improved disease-free survival in HER2-positive early breast cancer."
+        }
+      ]
+    }
+  ],
+  "omittedClaims": 0,
+  "structuredState": {
+    "intentsVistos": [
+      "faltantes"
+    ],
+    "preguntasPrevias": [
+      "¿Por qué importa el estado menopáusico?"
+    ],
+    "opcionesMostradas": [],
+    "citasMostradas": [
+      "ch-m1-1"
+    ],
+    "faltantesSenalados": [],
+    "ultimaEvidencia": {
+      "query": "¿Por qué importa el estado menopáusico?",
+      "chunkIds": [
+        "ch-m1-1",
+        "ch-inj-1"
+      ],
+      "topRelevanceScore": 0.8
+    }
+  },
+  "llmProvider": "local",
+  "notices": [
+    "Generado por IA; requiere validación clínica independiente por el oncólogo tratante",
+    "Uso académico/investigación"
+  ]
+}

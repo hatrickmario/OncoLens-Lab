@@ -1,0 +1,35 @@
+{
+  "intent": "faltantes",
+  "blocks": [
+    {
+      "kind": "catalogo",
+      "text": "Estado menopáusico es un dato crítico del catálogo vigente (versión 1.7.0). Criterios de aplicabilidad del catálogo que lo usan: Estado menopáusico."
+    }
+  ],
+  "omittedClaims": 0,
+  "structuredState": {
+    "intentsVistos": [
+      "faltantes"
+    ],
+    "preguntasPrevias": [
+      "¿Por qué importa el estado menopáusico?"
+    ],
+    "opcionesMostradas": [],
+    "citasMostradas": [],
+    "faltantesSenalados": [],
+    "ultimaEvidencia": {
+      "query": "¿Por qué importa el estado menopáusico?",
+      "chunkIds": [
+        "ch-m1-1",
+        "ch-inj-1"
+      ],
+      "topRelevanceScore": null
+    }
+  },
+  "llmProvider": "local",
+  "notices": [
+    "Generado por IA; requiere validación clínica independiente por el oncólogo tratante",
+    "Uso académico/investigación",
+    "Sin evidencia: ningún fragmento recuperado supera el umbral de relevancia para este dato"
+  ]
+}
