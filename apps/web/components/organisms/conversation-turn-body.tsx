@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type {
   ChatCitation,
   CitedSource,
@@ -22,6 +23,8 @@ export interface ConversationTurnBodyProps {
   fuentes: readonly CitedSource[];
   patientId: string;
   onAbrirPanel: AlAbrirPanel;
+  /** Avisos del turno ya pintados por la tarjeta: en un turno de evidencia van junto al encabezado de las opciones. */
+  avisos?: ReactNode;
 }
 
 /**
@@ -34,6 +37,7 @@ export function ConversationTurnBody({
   fuentes,
   patientId,
   onAbrirPanel,
+  avisos,
 }: ConversationTurnBodyProps) {
   const citas = numerarCitas(turno.blocks);
   const verCita = (cita: ChatCitation, id: string) =>
@@ -48,7 +52,13 @@ export function ConversationTurnBody({
           analisis={turno.evidenceAnalysis}
           patientId={patientId}
           onVerFragmento={verFuente}
+          avisos={avisos}
         />
+        {turno.blocks
+          .filter((bloque) => bloque.kind === 'limitacion')
+          .map((bloque, indice) => (
+            <ConversationBlock key={`${indice}-${bloque.text}`} bloque={bloque} />
+          ))}
         {deEvidencia.length > 0 && (
           <section
             data-grupo="evidencia"

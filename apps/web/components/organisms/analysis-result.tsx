@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import type {
   CitedSource,
   EvidenceAnalysis,
@@ -22,10 +23,17 @@ export interface AnalysisResultProps {
   /** UUID del paciente: solo arma los enlaces a su ficha. */
   patientId: string;
   onVerFragmento: (cita: CitedSource, idChip: string) => void;
+  /** Avisos del turno del chat (RN-19): se pintan junto al encabezado, antes de las opciones. */
+  avisos?: ReactNode;
 }
 
 /** Despacha el resultado ya validado y persistido por su clase (design D2); nunca se emite contenido sin validar. */
-export function AnalysisResult({ analisis, patientId, onVerFragmento }: AnalysisResultProps) {
+export function AnalysisResult({
+  analisis,
+  patientId,
+  onVerFragmento,
+  avisos,
+}: AnalysisResultProps) {
   const { resultado } = mensajes().evidence;
   const clase = clasificarResultado(analisis);
   const descartadas = analisis.discardedOptions;
@@ -36,9 +44,11 @@ export function AnalysisResult({ analisis, patientId, onVerFragmento }: Analysis
         {analisis.queryText} · {resultado.idioma} {analisis.queryLanguage}
       </p>
       <AiDisclaimer text={analisis.disclaimer} />
+      {clase !== 'con_opciones' && avisos}
       {clase === 'con_opciones' && (
         <>
           <h2 id={ID_ENCABEZADO_OPCIONES}>{resultado.encabezado}</h2>
+          {avisos}
           <OrderingCriterion analisis={analisis} />
           <EvidenceOptionsList
             analisis={analisis}

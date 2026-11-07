@@ -12,8 +12,10 @@ const INTENCIONES_DEL_SISTEMA = new Set(['fuera_de_alcance', 'no_clasificada']);
 
 /** RN-19: un turno con contenido generado y sin avisos del backend no se pinta como válido. */
 export function faltanAvisosDeIA(
-  turno: Pick<ConversationTurn, 'intent' | 'blocks' | 'notices'>,
+  turno: Pick<ConversationTurn, 'intent' | 'blocks' | 'notices' | 'evidenceAnalysis'>,
 ): boolean {
   if (turno.notices.length > 0 || INTENCIONES_DEL_SISTEMA.has(turno.intent)) return false;
-  return turno.blocks.some((bloque) => !DETERMINISTAS.has(bloque.kind));
+  // Las opciones del análisis son contenido generado aunque `blocks[]` venga vacío.
+  const conOpciones = (turno.evidenceAnalysis?.evidenceOptions.length ?? 0) > 0;
+  return conOpciones || turno.blocks.some((bloque) => !DETERMINISTAS.has(bloque.kind));
 }

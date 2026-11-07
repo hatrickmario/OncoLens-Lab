@@ -142,9 +142,10 @@ export function crearBffAnalisisSimulado() {
  * y con un id único: aísla la presentación del análisis. El turno completo es `turnoDeEvidencia` de `conversaciones.ts`.
  */
 function turnoSoloAnalisis(
-  analisis: { status: string; topRelevanceScore: number | null },
+  analisis: { status: string; topRelevanceScore: number | null; evidenceOptions?: unknown[] },
   numero: number,
 ) {
+  const tieneOpciones = (analisis.evidenceOptions?.length ?? 0) > 0;
   return {
     ...turnoDeEvidenciaBase,
     id: idDeTurnoDePrueba(numero),
@@ -152,8 +153,8 @@ function turnoSoloAnalisis(
     status: analisis.status === 'con_evidencia' ? 'respondido' : 'sin_evidencia',
     topRelevanceScore: analisis.topRelevanceScore,
     blocks: [],
-    // Aísla la presentación del análisis: los avisos del turno los cubren los tests de la tarjeta (conversacion-avisos).
-    notices: [],
+    // Un análisis con opciones sin avisos de IA no se pinta (RN-19, falla cerrado): solo ese turno lleva los del ejemplo.
+    notices: tieneOpciones ? turnoDeEvidenciaBase.notices : [],
     evidenceAnalysis: analisis,
   };
 }

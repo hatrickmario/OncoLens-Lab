@@ -10,11 +10,14 @@ import historicoDeBiomarcador from '../../../../../contracts/examples/correction
 import turnoFaltantes from '../../../../../contracts/examples/chat-turn-faltantes.json';
 import turnoSinDatos from '../../../../../contracts/examples/chat-turn-caso-sin-datos.json';
 import turnoContextual from '../../../../../contracts/examples/chat-turn-evidencia-contextual.json';
+import analisisSinOpciones from '../../../../../contracts/examples/con-evidencia-sin-opciones.json';
+import turnoSinOpciones from '../../../../../contracts/examples/chat-turn-evidencia-sin-opciones.json';
 import turnoFueraDeAlcance from '../../../../../contracts/examples/chat-turn-fuera-de-alcance.json';
 import turnoInterpretacion from '../../../../../contracts/examples/chat-turn-caso-interpretacion.json';
 import { URL_CLINICAL_API } from '../clinical-api-simulado';
 
 export {
+  analisisSinOpciones,
   apertura,
   casoDelPaciente,
   historicoDeBiomarcador,
@@ -27,6 +30,7 @@ export {
   turnoFueraDeAlcance,
   turnoInterpretacion,
   turnoSinDatos,
+  turnoSinOpciones,
 };
 
 export interface RespuestaDeTurno {
