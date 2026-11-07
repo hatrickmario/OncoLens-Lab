@@ -104,26 +104,12 @@ class NodoEvidencia:
                     BloqueDelTurno(TipoDeBloque.limitacion, lim.text)
                     for lim in respuesta.limitations
                 ),
-                BloqueDelTurno(
-                    TipoDeBloque.limitacion,
-                    texto_de_limitaciones_de_la_recuperacion(
-                        respuesta.meta.corpusCutoffDate,
-                        respuesta.meta.excludedSources,
-                        len(chunk_ids_evaluados),
-                    ),
-                ),
+                _limitacion_del_alcance(respuesta, chunk_ids_evaluados),
             )
         if not respuesta.evidenceOptions:
             return (
                 BloqueDelTurno(TipoDeBloque.limitacion, MENSAJE_SIN_OPCIONES_CON_SOPORTE),
-                BloqueDelTurno(
-                    TipoDeBloque.limitacion,
-                    texto_de_limitaciones_de_la_recuperacion(
-                        respuesta.meta.corpusCutoffDate,
-                        respuesta.meta.excludedSources,
-                        len(chunk_ids_evaluados),
-                    ),
-                ),
+                _limitacion_del_alcance(respuesta, chunk_ids_evaluados),
             )
         fuentes = [
             FuenteDeCita(c.chunkId, c.title, c.chunkTextSnapshot)
@@ -151,6 +137,20 @@ class NodoEvidencia:
             BloqueDelTurno(TipoDeBloque.limitacion, lim.text) for lim in respuesta.limitations
         ]
         return tuple(bloques)
+
+
+def _limitacion_del_alcance(
+    respuesta: RagQueryInternalResponse, chunk_ids_evaluados: Sequence[str]
+) -> BloqueDelTurno:
+    """El bloque con el alcance de la recuperación (US-266): fecha de corte, fuentes no incluidas y fragmentos evaluados."""
+    return BloqueDelTurno(
+        TipoDeBloque.limitacion,
+        texto_de_limitaciones_de_la_recuperacion(
+            respuesta.meta.corpusCutoffDate,
+            respuesta.meta.excludedSources,
+            len(chunk_ids_evaluados),
+        ),
+    )
 
 
 def _criterios_de_la_opcion(

@@ -98,7 +98,12 @@ from app.domain.option_selection import (
 )
 from app.domain.pregunta_sin_tema_propio import MarcosDePregunta, pregunta_sin_tema_propio
 from app.domain.resolucion_de_soporte import ResultadoSoporte
-from app.domain.terminos_del_caso import CasoParaTerminos, CatalogoDeTerminos, terminos_del_caso
+from app.domain.terminos_del_caso import (
+    CasoParaTerminos,
+    CatalogoDeTerminos,
+    TerminosDelCaso,
+    terminos_del_caso,
+)
 from app.domain.pares_del_reranker import (
     RERANKER_CUT_LOG_MAX_IDS_INICIAL,
     cortados_con_puesto,
@@ -440,21 +445,15 @@ class RAGOrchestratorService:
         filtro: str,
         idioma: Idioma,
     ) -> tuple[ResultadoDelLoop, tuple[str, ...]] | None:
-        """ADR-52: con el indicador activo, la pregunta sin tema propio (gate G1) y al menos un término del caso en el
-        catálogo, UNA recuperación más con la pregunta y esos términos, sin LLM; el *reranker* puntúa la misma consulta.
-        ``None`` si no corresponde. Se registran solo los campos usados y el número de términos (RN-10, RN-11)."""
-        parametros = self._parametros.expansion_contextual
-        if not parametros.habilitada or self._marcos_de_pregunta is None:
+        """ADR-52: UNA recuperación más con la pregunta y los términos del caso del catálogo, sin LLM; el *reranker*
+        puntúa la misma consulta. ``None`` si no corresponde. Se registran solo los campos usados y el número de
+        términos (RN-10, RN-11)."""
+        encontrados = self._terminos_del_loop_contextual(solicitud, idioma)
+        if encontrados is None:
             return None
-        if self._catalogo_de_terminos is None or not pregunta_sin_tema_propio(
-            solicitud.query, self._marcos_de_pregunta, (idioma,)
-        ):
-            return None
-        caso = _caso_para_terminos(solicitud)
-        encontrados = terminos_del_caso(caso, self._catalogo_de_terminos, parametros.campos)
-        if caso is None or not encontrados.terminos:
-            return None
-        consulta = consulta_contextual(solicitud.query, encontrados.terminos, parametros.formato)
+        consulta = consulta_contextual(
+            solicitud.query, encontrados.terminos, self._parametros.expansion_contextual.formato
+        )
         logger.info(
             "event=rag_query_expansion_contextual traceId=%s fields=%s terms=%d",
             trace_id,
@@ -463,6 +462,24 @@ class RAGOrchestratorService:
         )
         loop = await self._recuperar_y_puntuar(trace_id, solicitud, filtro, consulta, 2, consulta)
         return loop, encontrados.campos
+
+    def _terminos_del_loop_contextual(
+        self, solicitud: RagQueryInternalRequest, idioma: Idioma
+    ) -> TerminosDelCaso | None:
+        """La decisión de ADR-52: indicador activo, pregunta sin tema propio (gate G1) y al menos un término del caso
+        en el catálogo; si falta cualquiera, ``None`` y no hay loop contextual."""
+        parametros = self._parametros.expansion_contextual
+        if not parametros.habilitada:
+            return None
+        if self._marcos_de_pregunta is None or self._catalogo_de_terminos is None:
+            return None
+        if not pregunta_sin_tema_propio(solicitud.query, self._marcos_de_pregunta, (idioma,)):
+            return None
+        caso = _caso_para_terminos(solicitud)
+        if caso is None:
+            return None
+        encontrados = terminos_del_caso(caso, self._catalogo_de_terminos, parametros.campos)
+        return encontrados if encontrados.terminos else None
 
     async def _segundo_loop_de_reescritura(
         self,
