@@ -39,9 +39,9 @@ Requiere en `main` (o en la rama base de la oleada): `l1d-108-prompt-instruccion
 
 Notas (sin checkbox):
 
-- `relativeEndDay` opcional en `CaseFact` (bump menor del contrato) = change aparte, pendiente de decisión del PO. Hasta entonces `HechoDelCaso.dia_relativo_fin` llega a `None` y la marca «(iniciado antes del periodo)» solo se prueba en unitario.
+- `relativeEndDay` opcional en `CaseFact` (bump menor del contrato) = change aparte pendiente de ID (el PO decidió que sí, dentro del S6; la sesión principal da de alta la historia). Hasta entonces `HechoDelCaso.dia_relativo_fin` llega a `None` y la marca «(iniciado antes del periodo)» solo se prueba en unitario.
 - Rótulo «Interpretación generada por IA» de `kind = "interpretacion"`: dependencia de L1D-324 (UI); este change solo emite el `kind`.
-- Preguntas para el PO (sin checkbox): (a) `relativeEndDay` en `CaseFact`: una quimioterapia activa iniciada hace 172 días desaparece de «últimos 100 días»; (b) «últimos N días» se mide desde el diagnóstico (día 0), no desde hoy; (c) una fecha absoluta de la pregunta que Backend 1 no relativice llega al prompt como parte de la pregunta (preexistente de 316/317).
+- Decisiones del PO (sin checkbox): (a) `relativeEndDay`: sí, change aparte pendiente de ID. (b) El ancla del periodo en el día 0 del diagnóstico basta para el MVP y queda pendiente de revisar en la Demo 6. (c) La fecha absoluta no relativizada sigue siendo riesgo abierto. Contexto: (a) `relativeEndDay` en `CaseFact`: una quimioterapia activa iniciada hace 172 días desaparece de «últimos 100 días»; (b) «últimos N días» se mide desde el diagnóstico (día 0), no desde hoy; (c) una fecha absoluta de la pregunta que Backend 1 no relativice llega al prompt como parte de la pregunta (preexistente de 316/317).
 - `backlog/features/FEAT-12-chatbot-mvp.md` línea 220 (AC-4 de US-261) alineado al literal «No se encontró información documentada sobre lo preguntado en el expediente» (Decidido (usuario, 2026-11-06)).
 - Deuda (RN-22, a calibrar): `claim_max_words = 20` descarta interpretaciones útiles que combinan dos hechos (21 palabras). No se cambió. Propuesta: pedir en el prompt frases de ≤ 20 palabras, o calibrar el límite por tipo de afirmación (`interpretacion` frente a `documentado`).
 - Cierre de la historia: la suite `evaluate` del chat por capacidad llega con US-269 (`l1d-326`).

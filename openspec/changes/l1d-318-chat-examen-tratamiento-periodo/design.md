@@ -121,16 +121,16 @@ válido (≥ 99 %). Las métricas del chat por capacidad llegan con US-269 (`l1d
 
 ## Notas (sin tarea)
 
-- `relativeEndDay` opcional en `CaseFact` (bump menor del contrato) = change aparte, pendiente de decisión del PO. Mientras
+- `relativeEndDay` opcional en `CaseFact` (bump menor del contrato) = change aparte pendiente de ID (decidido por el PO, dentro del S6). Mientras
   tanto `CaseFact` solo trae el día de inicio: la rama de intervalos de `filtrar_hechos_por_periodo` está probada en
   unitario y no se activa en integración; la quimioterapia que empezó antes del periodo queda fuera (no se marca).
 - Rótulo «Interpretación generada por IA» para `kind = "interpretacion"`: dependencia de L1D-324 (UI), que lo pinta; este
   change solo emite el `kind` (ejemplo `chat-turn-caso-interpretacion.json`).
-- Pregunta de producto para el PO: «últimos N días» se mide desde el diagnóstico (día 0), no desde hoy, porque Backend 2
-  solo ve días relativos al diagnóstico.
+- Decisión del PO: «últimos N días» se mide desde el diagnóstico (día 0), no desde hoy, porque Backend 2 solo ve días
+  relativos al diagnóstico; basta para el MVP y queda pendiente de revisar en la Demo 6.
 - Riesgo (PO): una quimioterapia iniciada hace 172 días y todavía activa desaparece de «últimos 100 días» mientras
   `CaseFact` no informe el fin; cuando el periodo deja la lista vacía se usa el texto «en el periodo consultado», pero un
-  hecho activo que empezó antes sigue sin aparecer. Se resuelve con `relativeEndDay` (change aparte).
+  hecho activo que empezó antes sigue sin aparecer. Se resuelve con `relativeEndDay` (change aparte pendiente de ID).
 - Riesgo (PO): si Backend 1 no relativiza una fecha absoluta de la pregunta («desde el 2025-03-14»), el texto de la
   pregunta llega al prompt tal cual (preexistente de `l1d-316`/`l1d-317`); el periodo no la usa y los hechos no la llevan.
 - La tarea 3.1 nació en verde: Backend 1 ya persistía los `ChatBlock` tal cual y resolvía `ConversationDataLink` desde

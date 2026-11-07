@@ -61,7 +61,7 @@ Cuando la pregunta nombra un periodo relativo reconocido por reglas determinista
 #### Scenario: El periodo se mide desde el diagnóstico
 - **GIVEN** que el día relativo 0 es el diagnóstico y no la fecha de hoy
 - **WHEN** la pregunta nombra «los últimos N días»
-- **THEN** el filtro conserva los hechos con día relativo ≥ −N [US-261 AC-3] (el ancla en el diagnóstico es una pregunta de producto abierta para el PO)
+- **THEN** el filtro conserva los hechos con día relativo ≥ −N [US-261 AC-3] (decisión del PO, 2026-11-06: el ancla en el día 0 del diagnóstico basta para el MVP y queda pendiente de revisar en la Demo 6)
 
 #### Scenario: Hecho que terminó antes del periodo
 - **GIVEN** un hecho con intervalo de días −300 a −200
