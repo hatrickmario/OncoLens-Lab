@@ -1,7 +1,7 @@
 """``ConstructorDeCitas`` (L1D-322, RN-04): las citas del chat salen del corpus o el turno falla cerrado, sin respuesta parcial.
 
-El contrato de `/chat/turn` aún no declara `RETRIEVAL_UNAVAILABLE` en su 503 (deuda de contrato, ver tasks.md): por eso se
-prueba la unidad y no la respuesta HTTP.
+El 503 `RETRIEVAL_UNAVAILABLE` de `/chat/turn` lo declara el contrato desde la 1.14.0 (L1D-323); la respuesta HTTP de un
+fallo del corpus se prueba en `test_chat_turn_fuentes_limitaciones.py`.
 """
 
 import pytest

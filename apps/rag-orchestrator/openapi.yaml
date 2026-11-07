@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — RAG & AI Services API (Backend 2 / rag-orchestrator)
-  version: 1.13.0
+  version: 1.14.0
   description: >-
     API interna, alcanzable solo desde la red ai-net y solo por clinical-api (JWT de servicio
     asimétrico; la cookie de sesión del doctor nunca llega aquí). No persiste PHI y procesa los
@@ -249,14 +249,19 @@ paths:
           $ref: '#/components/responses/ErrorInterno'
         "503":
           description: >-
-            El modelo local no está disponible (LOCAL_LLM_UNAVAILABLE) o su salida de generación no
-            se pudo validar (LLM_OUTPUT_INVALID, sin bloques ni texto generado): falla cerrada, ninguna
-            afirmación se devuelve sin validar (RN-01). Con datos reales solo modelos locales (RN-12).
+            El modelo local no está disponible (LOCAL_LLM_UNAVAILABLE), su salida de generación no
+            se pudo validar (LLM_OUTPUT_INVALID, sin bloques ni texto generado), la lectura del corpus
+            falló (RETRIEVAL_UNAVAILABLE: Milvus, catálogo o posiciones de los chunks citados) o el
+            verificador de soporte no está disponible (NLI_UNAVAILABLE): falla cerrada, ninguna
+            afirmación se devuelve sin validar (RN-01), sin respuesta parcial. Con datos reales solo
+            modelos locales (RN-12).
           content:
             application/json:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/ErrorLlmLocalNoDisponible'
+                  - $ref: '#/components/schemas/ErrorRecuperacionNoDisponible'
+                  - $ref: '#/components/schemas/ErrorNliNoDisponible'
                   - $ref: '#/components/schemas/ErrorSalidaLlmInvalida'
 
   /documents/extract:

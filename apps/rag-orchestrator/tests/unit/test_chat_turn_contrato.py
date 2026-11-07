@@ -88,6 +88,8 @@ def test_el_spec_publica_chat_turn_en_la_1_12_0_con_sus_esquemas_y_errores_cuand
         for r in OPERACION["responses"]["503"]["content"]["application/json"]["schema"]["oneOf"]
     } == {
         "#/components/schemas/ErrorLlmLocalNoDisponible",
+        "#/components/schemas/ErrorRecuperacionNoDisponible",
+        "#/components/schemas/ErrorNliNoDisponible",
         "#/components/schemas/ErrorSalidaLlmInvalida",
     }
 

@@ -37,6 +37,10 @@ _REGLAS: tuple[tuple[Intencion, re.Pattern[str]], ...] = (
         Intencion.fuentes_limitaciones,
         re.compile(
             r"\bfuentes?\b|\blimitaci(?:on|ones)\b|\bde donde (?:sale|salen|viene|vienen)\b|\ben que se basa\b"
+            # «corpus» solo cuenta junto a un marcador de metadato: «qué evidencia hay en el corpus» es evidencia.
+            r"|\bno cubre\b|\bfecha de corte\b"
+            r"|\bcorpus\b(?=.*\b(?:fecha|corte|cubre|incluye)\b)"
+            r"|\b(?:fecha|corte|cubre|incluye)\b.*\bcorpus\b"
         ),
     ),
     (

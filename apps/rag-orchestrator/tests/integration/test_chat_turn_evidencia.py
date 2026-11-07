@@ -233,6 +233,7 @@ def test_chat_turn_devuelve_la_limitacion_de_sin_evidencia_con_puntaje_null_cuan
 
     assert cuerpo["evidenceAnalysis"]["status"] == "sin_evidencia"
     assert cuerpo["evidenceAnalysis"]["topRelevanceScore"] is None
-    assert [b["kind"] for b in cuerpo["blocks"]] == ["limitacion"]
+    # La limitación de /rag/query y, desde L1D-323, el alcance de la recuperación (US-266 AC-5).
+    assert [b["kind"] for b in cuerpo["blocks"]] == ["limitacion", "limitacion"]
     assert cuerpo["structuredState"]["ultimaEvidencia"]["topRelevanceScore"] is None
     assert base.generador.invocaciones == 0  # type: ignore[attr-defined]

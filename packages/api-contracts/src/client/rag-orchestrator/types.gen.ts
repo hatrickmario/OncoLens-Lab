@@ -1150,9 +1150,9 @@ export type ChatTurnErrors = {
      */
     500: ErrorInterno;
     /**
-     * El modelo local no está disponible (LOCAL_LLM_UNAVAILABLE) o su salida de generación no se pudo validar (LLM_OUTPUT_INVALID, sin bloques ni texto generado): falla cerrada, ninguna afirmación se devuelve sin validar (RN-01). Con datos reales solo modelos locales (RN-12).
+     * El modelo local no está disponible (LOCAL_LLM_UNAVAILABLE), su salida de generación no se pudo validar (LLM_OUTPUT_INVALID, sin bloques ni texto generado), la lectura del corpus falló (RETRIEVAL_UNAVAILABLE: Milvus, catálogo o posiciones de los chunks citados) o el verificador de soporte no está disponible (NLI_UNAVAILABLE): falla cerrada, ninguna afirmación se devuelve sin validar (RN-01), sin respuesta parcial. Con datos reales solo modelos locales (RN-12).
      */
-    503: ErrorLlmLocalNoDisponible | ErrorSalidaLlmInvalida;
+    503: ErrorLlmLocalNoDisponible | ErrorRecuperacionNoDisponible | ErrorNliNoDisponible | ErrorSalidaLlmInvalida;
 };
 
 export type ChatTurnError = ChatTurnErrors[keyof ChatTurnErrors];

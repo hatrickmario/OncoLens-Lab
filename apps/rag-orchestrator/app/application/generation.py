@@ -15,7 +15,7 @@ from __future__ import annotations
 import copy
 import logging
 from collections.abc import Sequence
-from typing import Any, Literal
+from typing import Any, Literal, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 from pydantic_core import PydanticCustomError
@@ -42,6 +42,8 @@ from app.domain.claims import AfirmacionAtomica, PapelDeAfirmacion
 from app.domain.relevance import ChunkPuntuado
 from app.prompts.rag_query import bloque_de_datos_del_paciente, construir_prompt_rag_query
 from app.schemas.generated.models import RagQueryInternalRequest
+
+_Salida = TypeVar("_Salida", bound=BaseModel)
 
 logger = logging.getLogger(__name__)
 
@@ -158,6 +160,23 @@ def tipos_de_error(error: ValidationError | PydanticCustomError) -> list[str]:
     if isinstance(error, ValidationError):
         return sorted({e["type"] for e in error.errors()})
     return [error.type]
+
+
+def validar_salida_cruda(modelo: type[_Salida], crudo: str, trace_id: str, evento: str) -> _Salida:
+    """JSON inválido o fuera del esquema interno = salida del LLM no validada (``503 LLM_OUTPUT_INVALID``).
+
+    Solo se registran el ``evento``, el tamaño y el tipo de cada error: nunca el texto generado (RN-10, RN-14)."""
+    try:
+        return modelo.model_validate_json(crudo)
+    except ValidationError as error:
+        logger.warning(
+            "event=%s traceId=%s caracteres=%d errores=%s",
+            evento,
+            trace_id,
+            len(crudo),
+            ",".join(tipos_de_error(error)),
+        )
+        raise LlmSalidaInvalidaError() from None
 
 
 def fragmentos_dentro_del_presupuesto(

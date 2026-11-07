@@ -24,6 +24,10 @@ TERMINOS = {"mama": frozenset({"mama", "mamario"}), "prostata": frozenset({"pros
         ("¿Qué tratamiento anterior recibió?", Intencion.caso),
         ("¿Qué fuentes respaldan la respuesta?", Intencion.fuentes_limitaciones),
         ("¿Qué limitaciones tiene esto?", Intencion.fuentes_limitaciones),
+        ("¿Cuáles son las fuentes y las limitaciones?", Intencion.fuentes_limitaciones),
+        ("¿De dónde sale esa información?", Intencion.fuentes_limitaciones),
+        ("¿Qué no cubre lo que se mostró?", Intencion.fuentes_limitaciones),
+        ("¿Hasta qué fecha llega el corpus?", Intencion.fuentes_limitaciones),
     ],
 )
 def test_clasifica_por_reglas_la_intencion_cuando_la_pregunta_trae_su_patron(pregunta, intencion):
@@ -117,3 +121,17 @@ def test_clasifica_como_caso_las_preguntas_de_contradicciones_sin_invocar_al_llm
 
 def test_no_clasifica_por_el_catalogo_cuando_la_palabra_solo_esta_dentro_de_otra():
     assert clasificar_por_reglas("Necesito ayuda con el psalmo", CATALOGO) is None
+
+
+@pytest.mark.parametrize(
+    "pregunta",
+    [
+        "¿Qué evidencia hay en el corpus sobre melanoma uveal?",
+        "¿Qué opciones describe el corpus para este caso?",
+        "¿Qué debe recibir según el corpus?",
+    ],
+)
+def test_enruta_a_evidencia_cuando_la_pregunta_menciona_el_corpus_sin_marcador_de_metadato(
+    pregunta,
+):
+    assert clasificar_por_reglas(pregunta) is Intencion.evidencia

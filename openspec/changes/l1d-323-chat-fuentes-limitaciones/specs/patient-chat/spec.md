@@ -88,3 +88,16 @@ evidencia en esta conversación, sin bloques `fuente`, sin `citations[]` y sin l
 - **THEN** la respuesta dice que aún no se ha consultado evidencia en esta conversación
 - **AND** no hay bloques `fuente` y `citations` está vacío
 - **AND** el LLM falso registra cero llamadas
+
+### Requirement: Un fallo del corpus en el turno de fuentes falla cerrado
+
+Si el catálogo del corpus, las posiciones de los chunks o la release no responden, el turno de fuentes y limitaciones MUST
+responder `503` con `RETRIEVAL_UNAVAILABLE`, sin detalle del borde y sin respuesta parcial, y el contrato de `/chat/turn`
+MUST declarar ese código y `NLI_UNAVAILABLE` en su `503`. Backend 1 MUST traducirlo a `502` sin persistir el turno.
+
+#### Scenario: Catálogo caído durante el turno de fuentes [US-266 AC-1] [RN-01] [RN-06]
+- **GIVEN** un hilo con un turno de evidencia previo y el catálogo del corpus sin respuesta
+- **WHEN** el oncólogo pregunta por las fuentes
+- **THEN** `rag-orchestrator` responde `503` con `error = "RETRIEVAL_UNAVAILABLE"` sin el mensaje del borde
+- **AND** el LLM registra cero llamadas
+- **AND** `clinical-api` responde `502` y no persiste el turno

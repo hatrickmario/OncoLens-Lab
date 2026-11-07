@@ -11,3 +11,4 @@
 - [Selector RN-12 (L1D-204)](rn12_selector_l1d204.md) — ContextVar de clasificación, guarda sintética de clinical-api y trampas de ruff --fix
 - [Hallazgos de la demo del S4 (L1D-297)](demo_s4_l1d297_hallazgos.md) — ingest solo en corpus vacío, lista blanca de la imagen, estados en vivo y cómo probar levantar.sh
 - [Nodo caso del chat (L1D-317)](chat_caso_l1d317_trampas.md) — inyección en el grafo, NLI que falla cerrado, aviso extra y trampas del arnés
+- [Nodo fuentes del chat (L1D-323)](chat_fuentes_l1d323_trampas.md) — release desde el catálogo, límites en el hilo efímero, E-20 de ADR-26 y NCCN en ejemplos

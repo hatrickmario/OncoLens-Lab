@@ -28,7 +28,8 @@ class CriterioParaMostrar:
     causa: str | None = None
 
 
-def _legible(criterio: str) -> str:
+def criterio_legible(criterio: str) -> str:
+    """La clave del criterio como se dice en voz alta (``estado_menopausico`` → ``estado menopausico``)."""
     return criterio.replace("_", " ")
 
 
@@ -49,7 +50,9 @@ def texto_de_la_opcion(
     Desconocido, con «falta en el paciente» cuando la causa es el dato ausente)."""
     lineas = [f"{ENCABEZADO_DE_OPCIONES}: opción {numero} de {total}.", f"{nombre}. {razon}"]
     if criterios:
-        detalle = "; ".join(f"{_legible(c.criterio)}: {_estado_legible(c)}" for c in criterios)
+        detalle = "; ".join(
+            f"{criterio_legible(c.criterio)}: {_estado_legible(c)}" for c in criterios
+        )
         lineas.append(f"{TITULO_DE_APLICABILIDAD}: {detalle}.")
     return "\n".join(lineas)
 
@@ -57,7 +60,7 @@ def texto_de_la_opcion(
 def texto_de_los_faltantes(criterios: Sequence[CriterioParaMostrar]) -> str | None:
     """Los criterios que quedaron Desconocidos por un dato que falta en el paciente, sin repetir; ``None`` si no hay."""
     faltantes = dict.fromkeys(
-        _legible(c.criterio)
+        criterio_legible(c.criterio)
         for c in criterios
         if c.estado == "desconocido" and c.causa == "falta_en_paciente"
     )

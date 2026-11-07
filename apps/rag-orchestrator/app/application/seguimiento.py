@@ -14,6 +14,7 @@ from dataclasses import dataclass
 
 from app.application.chunk_citable import ChunkCitable
 from app.application.ports import (
+    RecuperadorDeEvidencia,
     ResultadoDeRecuperacion,
     SeguimientoGenerado,
     SeguimientoGenerator,
@@ -144,7 +145,7 @@ class AfirmacionesValidadas:
 
 
 async def validar_afirmaciones_citadas(
-    servicio: RAGOrchestratorService,
+    servicio: RecuperadorDeEvidencia,
     trace_id: str,
     recuperacion: ResultadoDeRecuperacion,
     afirmaciones: Sequence[AfirmacionAtomica],
@@ -154,7 +155,7 @@ async def validar_afirmaciones_citadas(
     idioma = recuperacion.meta.responseLanguage.value
     citables = await servicio.chunks_citables(trace_id, recuperacion)
     citas = validar_citas(tuple(como_opcion(a, idioma) for a in afirmaciones), citables.keys())
-    soporte = await servicio.verificador_de_soporte.verificar(
+    soporte = await servicio.verificar(
         trace_id,
         idioma,
         citas.aceptadas,

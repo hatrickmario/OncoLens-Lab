@@ -95,6 +95,7 @@ from app.domain.option_selection import (
     RecorteDeOpciones,
     recortar_contando_excedente,
 )
+from app.domain.resolucion_de_soporte import ResultadoSoporte
 from app.domain.pares_del_reranker import (
     RERANKER_CUT_LOG_MAX_IDS_INICIAL,
     cortados_con_puesto,
@@ -341,10 +342,24 @@ class RAGOrchestratorService:
             version_del_prompt,
         )
 
-    @property
-    def verificador_de_soporte(self) -> VerificadorDeSoporte:
-        """El verificador NLI y de lenguaje (RN-01, RN-23) que comparten el análisis y el seguimiento."""
-        return self._soporte
+    async def verificar(
+        self,
+        trace_id: str,
+        idioma: str,
+        aceptadas: Sequence[OpcionAceptada],
+        limitaciones_propuestas: Sequence[str],
+        textos_de_chunks: Mapping[str, str],
+        titulos_de_chunks: Mapping[str, str],
+    ) -> ResultadoSoporte:
+        """Soporte NLI y lenguaje (RN-01, RN-23): la misma verificación del análisis, que comparte el seguimiento."""
+        return await self._soporte.verificar(
+            trace_id,
+            idioma,
+            aceptadas,
+            limitaciones_propuestas,
+            textos_de_chunks,
+            titulos_de_chunks,
+        )
 
     async def _idioma_y_release(
         self, trace_id: str, pregunta: str

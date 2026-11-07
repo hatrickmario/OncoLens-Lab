@@ -93,6 +93,8 @@ def crear_entorno_de_chat_con_evidencia(
         servicio_de_evidencia=base.servicio,
         posiciones=posiciones,
         fuentes_documentales=cargar_datos_criticos(CATALOGOS, ("mama", "prostata")),
+        catalogo_del_corpus=base.catalogo,
+        lector_release=base.lector_release,
     )
     app = crear_app(
         settings_de_prueba(**cambios_de_settings),

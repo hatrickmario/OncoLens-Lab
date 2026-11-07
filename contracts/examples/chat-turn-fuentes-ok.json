@@ -1,0 +1,48 @@
+{
+  "intent": "fuentes_limitaciones",
+  "blocks": [
+    {
+      "kind": "fuente",
+      "text": "Fuente: Breast Cancer Treatment (test). Nombre de la fuente: NCI PDQ. Año de publicación: 2025. Idioma: en. Licencia: dominio_publico."
+    },
+    {
+      "kind": "limitacion",
+      "text": "Alcance de la recuperación: el corpus tiene fecha de corte 2026-09-30; fuentes no incluidas: FUENTE-EXCLUIDA-1, FUENTE-EXCLUIDA-2; fragmentos de evidencia evaluados en la última consulta: 2."
+    },
+    {
+      "kind": "limitacion",
+      "text": "Limitaciones de la evidencia: ningún criterio de aplicabilidad quedó en estado Desconocido; opciones descartadas por falta de soporte: 0. La evidencia encontrada no permite establecer por sí sola la aplicabilidad de un tratamiento a este paciente."
+    }
+  ],
+  "omittedClaims": 0,
+  "structuredState": {
+    "intentsVistos": [
+      "evidencia",
+      "fuentes_limitaciones"
+    ],
+    "preguntasPrevias": [
+      "¿Qué opciones adyuvantes describe la evidencia para cáncer de mama HER2 positivo en estadio IIA?",
+      "¿Cuáles son las fuentes y las limitaciones?"
+    ],
+    "opcionesMostradas": [
+      "Quimioterapia adyuvante combinada con terapia dirigida anti-HER2"
+    ],
+    "citasMostradas": [
+      "ch-m1-1"
+    ],
+    "faltantesSenalados": [],
+    "ultimaEvidencia": {
+      "query": "¿Qué opciones adyuvantes describe la evidencia para cáncer de mama HER2 positivo en estadio IIA?",
+      "chunkIds": [
+        "ch-m1-1",
+        "ch-inj-1"
+      ],
+      "topRelevanceScore": 0.87
+    }
+  },
+  "llmProvider": "local",
+  "notices": [
+    "Generado por IA; requiere validación clínica independiente por el oncólogo tratante",
+    "Uso académico/investigación"
+  ]
+}

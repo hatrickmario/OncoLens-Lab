@@ -1,0 +1,93 @@
+{
+  "intent": "evidencia",
+  "blocks": [
+    {
+      "kind": "limitacion",
+      "text": "Ningún fragmento recuperado supera el umbral de relevancia."
+    },
+    {
+      "kind": "limitacion",
+      "text": "Alcance de la recuperación: el corpus tiene fecha de corte 2026-09-30; fuentes no incluidas: FUENTE-EXCLUIDA-1, FUENTE-EXCLUIDA-2; fragmentos de evidencia evaluados en la última consulta: 2."
+    }
+  ],
+  "omittedClaims": 0,
+  "evidenceAnalysis": {
+    "status": "sin_evidencia",
+    "synthesis": {
+      "agreements": [],
+      "discrepancies": []
+    },
+    "applicability": [],
+    "evidenceOptions": [],
+    "discardedOptions": [],
+    "limitations": [
+      {
+        "text": "Ningún fragmento recuperado supera el umbral de relevancia.",
+        "origin": "estructural"
+      }
+    ],
+    "assumptions": [],
+    "retrievalStats": {
+      "retrieved": 2,
+      "aboveThreshold": 0
+    },
+    "omittedClaims": 0,
+    "optionsNotShown": 0,
+    "agentSteps": [],
+    "topRelevanceScore": null,
+    "meta": {
+      "queryLanguage": "es",
+      "responseLanguage": "es",
+      "llmProvider": "local",
+      "llmModel": "llm-test@1",
+      "embeddingModel": "embedder-test@1",
+      "rerankerModel": "reranker-test@1",
+      "nliModel": "nli-test@1",
+      "promptVersion": "rag-query@0.10.0",
+      "catalogVersion": "1.6.0",
+      "corpusRelease": "rel-test-1",
+      "corpusCutoffDate": "2026-09-30",
+      "excludedSources": [
+        "FUENTE-EXCLUIDA-1",
+        "FUENTE-EXCLUIDA-2"
+      ],
+      "retrievalParams": {
+        "topK": 40,
+        "rerankTopN": 10,
+        "relevanceThreshold": 0.3,
+        "retrievalMode": "dense",
+        "fusion": "ninguna",
+        "fusionParam": 0.0,
+        "queryRewrite": {
+          "applied": false,
+          "reason": "no_disparado"
+        }
+      },
+      "latencyMs": 0
+    }
+  },
+  "structuredState": {
+    "intentsVistos": [
+      "evidencia"
+    ],
+    "preguntasPrevias": [
+      "¿Qué describe la evidencia sobre melanoma uveal?"
+    ],
+    "opcionesMostradas": [],
+    "citasMostradas": [],
+    "faltantesSenalados": [],
+    "ultimaEvidencia": {
+      "query": "¿Qué describe la evidencia sobre melanoma uveal?",
+      "chunkIds": [
+        "ch-m1-1",
+        "ch-inj-1"
+      ],
+      "topRelevanceScore": null
+    }
+  },
+  "llmProvider": "local",
+  "notices": [
+    "Generado por IA; requiere validación clínica independiente por el oncólogo tratante",
+    "Uso académico/investigación"
+  ]
+}
