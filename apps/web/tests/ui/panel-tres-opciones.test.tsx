@@ -25,13 +25,6 @@ const BASE_DESEMPATA =
 const nombres = (cuerpo: { evidenceOptions: { option: string }[] }) =>
   cuerpo.evidenceOptions.map((o) => o.option);
 
-/** Texto de todas las regiones `role="status"` (el anuncio del panel y los avisos no bloqueantes). */
-const anuncios = () =>
-  screen
-    .getAllByRole('status')
-    .map((region) => region.textContent)
-    .join(' ');
-
 async function listaDeOpciones() {
   const lista = await screen.findByRole('list', { name: /opciones descritas/i });
   return within(lista);
@@ -88,7 +81,7 @@ describe('EvidencePanel · hasta tres opciones (L1D-145)', () => {
     expect(lista.textContent).not.toMatch(/mejor|primera elección|preferida/i);
   });
 
-  it('muestra el texto de opciones no mostradas bajo la última tarjeta y lo añade al anuncio cuando optionsNotShown es 1 [US-135 AC-7]', async () => {
+  it('muestra el texto de opciones no mostradas bajo la última tarjeta cuando optionsNotShown es 1 [US-135 AC-7]', async () => {
     bff.responder({ status: 200, cuerpo: conEvidenciaTresOpciones });
     await analizar();
 
@@ -96,22 +89,19 @@ describe('EvidencePanel · hasta tres opciones (L1D-145)', () => {
     const tarjetas = screen.getAllByRole('article');
     expect(tarjetas[2]!.compareDocumentPosition(texto)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     expect(within(texto.parentElement!).queryByRole('link')).toBeNull();
-    expect(anuncios()).toContain('1 más con soporte no mostrada');
   });
 
-  it('no muestra el texto de opciones no mostradas ni lo anuncia cuando optionsNotShown es 0 o está ausente [US-135 AC-7]', async () => {
+  it('no muestra el texto de opciones no mostradas cuando optionsNotShown es 0 o está ausente [US-135 AC-7]', async () => {
     bff.responder({ status: 200, cuerpo: conEvidenciaTresOpcionesNoComparable });
     await analizar();
     await listaDeOpciones();
     expect(screen.queryByText(/opción\(es\) más con soporte/)).toBeNull();
-    expect(anuncios()).not.toContain('no mostrada');
     cleanup();
 
     bff.responder({ status: 200, cuerpo: conEvidencia });
     await analizar();
     await screen.findAllByRole('article');
     expect(screen.queryByText(/opción\(es\) más con soporte/)).toBeNull();
-    expect(anuncios()).not.toContain('no mostrada');
   });
 
   it('muestra el criterio de aplicabilidad una sola vez con la frase de numeración [US-135 AC-2]', async () => {

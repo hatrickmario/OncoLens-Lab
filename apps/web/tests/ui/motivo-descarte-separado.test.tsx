@@ -186,8 +186,10 @@ describe('EvidencePanel · motivo de descarte separado', () => {
     });
     await analizar();
 
-    expect(await screen.findByText(evidence.error.generico)).toBeTruthy();
-    expect(screen.getByRole('button', { name: evidence.error.reintentar })).toBeTruthy();
+    expect(await screen.findByText(mensajes().conversacion.errorTitulo)).toBeTruthy();
+    expect(
+      screen.getByRole('button', { name: mensajes().conversacion.reintentar }),
+    ).toBeTruthy();
     expect(screen.queryByRole('button', { name: TITULO })).toBeNull();
     expect(document.body.textContent).not.toContain('motivo_de_un_backend_mas_nuevo');
   });

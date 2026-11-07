@@ -13,7 +13,6 @@ import {
 } from '../support/msw/conversaciones';
 import {
   buscarTarjetas,
-  cuantasTarjetas,
   montarPanel,
   mostrarTurno,
   preguntar,
@@ -26,10 +25,8 @@ import {
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn() }) }));
 
 const bff = crearBffConversacionSimulado();
-const AVISOS_RN19 = [
-  'Generado por IA; requiere validación clínica independiente por el oncólogo tratante',
-  'Uso académico/investigación',
-];
+// Los avisos de RN-19 salen del ejemplo del contrato: `web` no los lleva como literal (US-069).
+const AVISOS_RN19 = turnoDeCaso.notices;
 const ENCABEZADO = 'Opciones descritas en la evidencia';
 
 describe('Avisos de IA del turno', () => {

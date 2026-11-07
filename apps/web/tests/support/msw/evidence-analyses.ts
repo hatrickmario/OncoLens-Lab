@@ -28,16 +28,10 @@ import errorTipoCancer from '../../../../../contracts/examples/error-tipo-cancer
 import peticion from '../../../../../contracts/examples/evidence-analysis-request.json';
 import sinEvidencia from '../../../../../contracts/examples/sin-evidencia.json';
 import tipoNoHabilitado from '../../../../../contracts/examples/tipo-no-habilitado.json';
-import errorLimiteSeguimiento from '../../../../../contracts/examples/error-limite-seguimiento.json';
-import seguimientoFueraDeContexto from '../../../../../contracts/examples/follow-up-fuera-de-contexto.json';
-import seguimientoSinEvidencia from '../../../../../contracts/examples/follow-up-sin-evidencia.json';
-import seguimientoTurno from '../../../../../contracts/examples/follow-up-turn.json';
+import aperturaDeConversacion from '../../../../../contracts/examples/conversation-create-response.json';
+import turnoDeEvidenciaBase from '../../../../../contracts/examples/conversation-turn-evidencia.json';
 
 export {
-  errorLimiteSeguimiento,
-  seguimientoFueraDeContexto,
-  seguimientoSinEvidencia,
-  seguimientoTurno,
   checklistF_M1,
   checklistF_M2,
   checklistTipoNoHabilitado,
@@ -88,27 +82,27 @@ export function crearBffAnalisisSimulado() {
   const servidor = setupServer();
   const cuerpos: unknown[] = [];
   const lecturasDelChecklist: string[] = [];
-  const peticionesDeSeguimiento: { url: string; cuerpo: unknown }[] = [];
   const checklistPorDefecto = () =>
     http.get('*/api/patients/:id/completeness', ({ request }) => {
       lecturasDelChecklist.push(request.url);
       return HttpResponse.json(checklistF_M1);
     });
+  const aperturaPorDefecto = () =>
+    http.post('*/api/patients/:id/conversations', () =>
+      HttpResponse.json(aperturaDeConversacion, { status: 201 }),
+    );
   return {
     cuerpos,
-    /** `POST …/follow-ups` recibidos: la URL y el cuerpo de cada uno. */
-    peticionesDeSeguimiento,
     /** URLs de cada `GET /api/patients/{id}/completeness` recibido. */
     lecturasDelChecklist,
     iniciar: () => {
-      servidor.use(checklistPorDefecto());
+      servidor.use(checklistPorDefecto(), aperturaPorDefecto());
       servidor.listen({ onUnhandledFrame: 'error' });
     },
     detener: () => servidor.close(),
     reiniciar: () => {
-      servidor.resetHandlers(checklistPorDefecto());
+      servidor.resetHandlers(checklistPorDefecto(), aperturaPorDefecto());
       cuerpos.length = 0;
-      peticionesDeSeguimiento.length = 0;
       lecturasDelChecklist.length = 0;
     },
     /** `GET /api/patients/{id}/completeness` del BFF; sin llamarla responde F-M1 (sin faltantes). */
@@ -119,32 +113,43 @@ export function crearBffAnalisisSimulado() {
           return red ? HttpResponse.error() : HttpResponse.json(cuerpo, { status });
         }),
       ),
-    /** `POST /api/evidence-analyses/{id}/follow-ups` (misma semántica de secuencia que `responder`). */
-    responderSeguimiento: (...respuestas: Respuesta[]) => {
-      let siguiente = 0;
-      servidor.use(
-        http.post('*/api/evidence-analyses/:id/follow-ups', async ({ request }) => {
-          peticionesDeSeguimiento.push({ url: request.url, cuerpo: await request.json() });
-          const { status, cuerpo, cabeceras, compuerta, red } =
-            respuestas[Math.min(siguiente++, respuestas.length - 1)]!;
-          await compuerta;
-          if (red) return HttpResponse.error();
-          return HttpResponse.json(cuerpo, { status, headers: cabeceras });
-        }),
-      );
-    },
+    /**
+     * El resultado del análisis llega ahora como turno de evidencia de la conversación (US-267): `cuerpo` de un `200`
+     * es el `EvidenceAnalysis` que viaja en `turn.evidenceAnalysis`; cualquier otro `status` se responde tal cual.
+     */
     responder: (...respuestas: Respuesta[]) => {
       let siguiente = 0;
       servidor.use(
-        http.post('*/api/evidence-analyses', async ({ request }) => {
+        http.post('*/api/conversations/:id/turns', async ({ request }) => {
           cuerpos.push(await request.json());
           const { status, cuerpo, cabeceras, compuerta, red } =
-            respuestas[Math.min(siguiente++, respuestas.length - 1)]!;
+            respuestas[Math.min(siguiente, respuestas.length - 1)]!;
+          siguiente += 1;
           await compuerta;
           if (red) return HttpResponse.error();
-          return HttpResponse.json(cuerpo, { status, headers: cabeceras });
+          if (status !== 200) return HttpResponse.json(cuerpo, { status, headers: cabeceras });
+          const analisis = cuerpo as { status: string; topRelevanceScore: number | null };
+          return HttpResponse.json(
+            turnoDeEvidencia(analisis, siguiente),
+            { status: 201 },
+          );
         }),
       );
     },
+  };
+}
+
+/** Turno de evidencia del contrato (`conversation-turn-evidencia.json`) con el análisis dado y un id único por turno. */
+function turnoDeEvidencia(analisis: { status: string; topRelevanceScore: number | null }, numero: number) {
+  return {
+    ...turnoDeEvidenciaBase,
+    id: `00000000-0000-4000-8000-${String(numero).padStart(12, '0')}`,
+    turnNumber: numero,
+    status: analisis.status === 'con_evidencia' ? 'respondido' : 'sin_evidencia',
+    topRelevanceScore: analisis.topRelevanceScore,
+    blocks: [],
+    // Aísla la presentación del análisis: los avisos del turno los cubren los tests de la tarjeta (conversacion-avisos).
+    notices: [],
+    evidenceAnalysis: analisis,
   };
 }

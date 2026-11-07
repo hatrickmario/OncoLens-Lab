@@ -2,6 +2,7 @@ import type { ConversationTurn } from '../../../../packages/api-contracts/src/ty
 import {
   zConversationId,
   zConversationTurnCreate,
+  zEvidenceAnalysis,
 } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
 
 export type ResultadoDeApertura =
@@ -72,5 +73,11 @@ export async function enviarTurno(
   if (respuesta?.status === 403) return { tipo: 'opt_out' };
   if (!respuesta?.ok) return { tipo: 'error' };
   const turno: unknown = await respuesta.json().catch(() => null);
-  return esTurno(turno) ? { tipo: 'ok', turno } : { tipo: 'error' };
+  if (!esTurno(turno)) return { tipo: 'error' };
+  // El análisis de un turno de evidencia sí se valida con el schema del contrato: un valor fuera del enum no se pinta
+  // a medias (sin resultado parcial, RN-06); el resto del turno se lee con tolerancia.
+  if (turno.evidenceAnalysis !== undefined && !zEvidenceAnalysis.safeParse(turno.evidenceAnalysis).success) {
+    return { tipo: 'error' };
+  }
+  return { tipo: 'ok', turno };
 }

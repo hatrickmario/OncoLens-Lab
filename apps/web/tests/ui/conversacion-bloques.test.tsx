@@ -11,8 +11,6 @@ import {
   turnoSinDatos,
 } from '../support/msw/conversaciones';
 import {
-  buscarTarjetas,
-  cuantasTarjetas,
   montarPanel,
   mostrarTurno,
   preguntar,

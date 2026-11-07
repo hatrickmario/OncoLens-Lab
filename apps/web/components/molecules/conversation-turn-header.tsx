@@ -13,7 +13,7 @@ export function ConversationTurnHeader({
     ? intenciones[turno.intent]
     : intenciones.no_clasificada;
   return (
-    <header className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       <strong>{rellenar(textoTurno, { n: turno.turnNumber })}</strong>
       <time dateTime={turno.createdAt} className="text-text-muted text-sm">
         {formatearFechaIso(turno.createdAt)}
@@ -25,6 +25,6 @@ export function ConversationTurnHeader({
         <span className="sr-only">{intencionDetectada}: </span>
         {intencion}
       </span>
-    </header>
+    </div>
   );
 }
