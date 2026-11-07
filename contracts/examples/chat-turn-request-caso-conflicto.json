@@ -1,0 +1,182 @@
+{
+  "threadId": "5b0e7a3c-2f64-4d8a-9c1e-7a4f3b2d1e90",
+  "pseudoPatientId": "psd_Lm4nB8sT2yQp",
+  "traceId": "req_c4a1d2e3",
+  "question": "¿Hay contradicciones en el expediente?",
+  "dataClassification": "sintetico",
+  "catalogVersion": "2026.10.0",
+  "clinicalContext": {
+    "pseudoPatientId": "psd_Lm4nB8sT2yQp",
+    "population": "adulto",
+    "diagnosis": {
+      "dataRef": "r1",
+      "cancerType": "mama",
+      "histology": "carcinoma ductal infiltrante",
+      "grade": "Nottingham grado 2",
+      "stagingSystem": "TNM_8",
+      "stageValue": "IIA",
+      "performanceScale": null,
+      "performanceValue": null,
+      "monthsSinceDiagnosis": 1,
+      "provenance": {
+        "entryMethod": "seed",
+        "extractionConfidence": "n_a",
+        "reviewStatus": "verificado",
+        "conflict": false
+      }
+    },
+    "biomarkers": [
+      {
+        "dataRef": "r2",
+        "biomarkerName": "RE",
+        "value": "positivo",
+        "resultType": "cualitativo",
+        "clinicalSignificance": "relevante",
+        "monthsAgo": 5,
+        "provenance": {
+          "entryMethod": "ocr",
+          "extractionConfidence": "alta",
+          "reviewStatus": "auto_aceptado",
+          "conflict": false
+        }
+      },
+      {
+        "dataRef": "r3",
+        "biomarkerName": "HER2",
+        "value": "3+",
+        "resultType": "cualitativo",
+        "clinicalSignificance": "relevante",
+        "monthsAgo": 5,
+        "provenance": {
+          "entryMethod": "manual_correction",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "corregido",
+          "conflict": false
+        }
+      }
+    ],
+    "clinicalNotes": [],
+    "currentLine": null,
+    "attributes": [],
+    "priorTreatments": [
+      {
+        "dataRef": "r4",
+        "lineNumber": 1,
+        "setting": "neoadyuvante",
+        "regimenName": "quimioterapia neoadyuvante",
+        "atcCodes": [],
+        "monthsSinceStart": 5,
+        "monthsSinceEnd": 2,
+        "endReason": "completado",
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      }
+    ],
+    "events": [
+      {
+        "dataRef": "r5",
+        "eventType": "cirugia",
+        "monthsAgo": 1,
+        "description": "cirugía conservadora",
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      }
+    ],
+    "biomarkerTrends": [],
+    "missingCriticalData": [
+      "estado_menopausico",
+      "ki67"
+    ],
+    "priorAnalyses": []
+  },
+  "caseFacts": [
+    {
+      "factRef": "f1",
+      "kind": "diagnostico",
+      "verbalization": "carcinoma ductal infiltrante, Nottingham grado 2, estadio IIA (TNM_8)",
+      "relativeDay": 0,
+      "reviewStatus": "verificado",
+      "conflictWith": "f6"
+    },
+    {
+      "factRef": "f2",
+      "kind": "biomarcador",
+      "verbalization": "RE: positivo, relevante",
+      "relativeDay": 25,
+      "reviewStatus": "auto_aceptado",
+      "seriesKey": "re"
+    },
+    {
+      "factRef": "f3",
+      "kind": "biomarcador",
+      "verbalization": "HER2: 3+, relevante (corregido)",
+      "relativeDay": 30,
+      "reviewStatus": "corregido",
+      "seriesKey": "her2",
+      "corrected": true
+    },
+    {
+      "factRef": "f4",
+      "kind": "tratamiento",
+      "verbalization": "quimioterapia neoadyuvante, línea 1",
+      "relativeDay": 40,
+      "reviewStatus": "verificado"
+    },
+    {
+      "factRef": "f5",
+      "kind": "evento",
+      "verbalization": "cirugia: cirugía conservadora",
+      "relativeDay": 160,
+      "reviewStatus": "verificado"
+    },
+    {
+      "factRef": "f6",
+      "kind": "diagnostico",
+      "verbalization": "carcinoma ductal infiltrante, estadio IIB (TNM_8)",
+      "relativeDay": 10,
+      "reviewStatus": "requiere_revision",
+      "conflictWith": "f1"
+    }
+  ],
+  "completeness": [
+    {
+      "item": "estado_menopausico",
+      "label": "Estado menopáusico",
+      "status": "faltante",
+      "gapType": "no_encontrado",
+      "destination": "clinicalAttribute"
+    },
+    {
+      "item": "ki67",
+      "label": "Ki-67",
+      "status": "faltante",
+      "gapType": "no_encontrado",
+      "destination": "biomarker"
+    },
+    {
+      "item": "her2",
+      "label": "HER2",
+      "status": "presente_sin_verificar",
+      "gapType": "incompleto",
+      "destination": "biomarker"
+    }
+  ],
+  "rehydration": {
+    "turns": [],
+    "structuredState": {
+      "intentsVistos": [],
+      "preguntasPrevias": [],
+      "opcionesMostradas": [],
+      "citasMostradas": [],
+      "faltantesSenalados": []
+    }
+  }
+}
