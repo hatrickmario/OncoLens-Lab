@@ -141,7 +141,15 @@ export const zRagMeta = z.strictObject({
                 'no_disponible',
                 'no_aplica'
             ])
-        })
+        }),
+        contextExpansion: z.strictObject({
+            applied: z.literal(true),
+            fields: z.array(z.enum([
+                'tipo',
+                'estadio',
+                'biomarcador_principal'
+            ])).min(1)
+        }).optional()
     }),
     latencyMs: z.int().gte(0)
 });
