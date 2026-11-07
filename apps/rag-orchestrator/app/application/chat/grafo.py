@@ -54,6 +54,7 @@ from app.domain.chat.estado import (
     UltimaEvidencia,
     estado_tras_el_turno,
 )
+from app.domain.chat.faltantes import ItemDeCompletitud
 from app.domain.chat.memoria import ventana_de_memoria
 from app.domain.chat.mensajes import (
     MENSAJE_EVIDENCIA_NO_CONSULTADA,
@@ -80,6 +81,8 @@ class EstadoDelGrafo(TypedDict, total=False):
     # Entradas del turno (se vacían al cerrar).
     pregunta: str
     hechos: tuple[HechoDelCaso, ...]
+    completitud: tuple[ItemDeCompletitud, ...]
+    version_del_catalogo: str
     tipo_del_contexto: str
     clasificacion_de_datos: str
     trace_id: str
@@ -90,6 +93,7 @@ class EstadoDelGrafo(TypedDict, total=False):
     intencion: Intencion
     subintencion: Subintencion | None
     propuestas: tuple[PropuestaDelTurno, ...]
+    bloques_deterministas: tuple[BloqueDelTurno, ...]
     bloques: tuple[BloqueDelTurno, ...]
     omitidas: int
     # Lo que un nodo de capacidad que ya valida por sí mismo entrega a ``validar`` (se vacía al cerrar).
@@ -269,7 +273,12 @@ class _NodosDelTurno:
 
         No ejecuta el NLI (ADR-34): lo ejecuta cada nodo de capacidad que lo necesita (``caso`` desde L1D-317;
         ``evidencia`` con L1D-322) antes de entregar sus ``propuestas``; ver el docstring del módulo."""
-        bloques = (*estado.get("bloques_del_nodo", ()), *self._bloques_permitidos(estado))
+        # Los bloques deterministas (catálogo, configuración) no pasan por el filtro de soporte: están exentos de cita.
+        bloques = (
+            *estado.get("bloques_deterministas", ()),
+            *estado.get("bloques_del_nodo", ()),
+            *self._bloques_permitidos(estado),
+        )
         if estado["intencion"] is Intencion.evidencia and not estado.get("evidencia_consultada"):
             # Sin el nodo real de evidencia (sin corpus detrás) no se consultó la evidencia: se dice, sin eco de la pregunta.
             bloques = (

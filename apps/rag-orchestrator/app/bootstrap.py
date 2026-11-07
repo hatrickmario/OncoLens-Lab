@@ -393,7 +393,7 @@ def _montar_criterios_de_aplicabilidad(
 
 def _montar_datos_criticos(
     settings: Settings, catalogo: CatalogoClinico
-) -> EtiquetasDeDatosCriticos:
+) -> DatosCriticosDelCatalogo:
     """Las etiquetas de ``<tipo>/datos-criticos.json`` de cada tipo del manifiesto; sin ruta de catálogo (solo con un
     catálogo inyectado) no hay datos que leer y ninguna clave de ``missingCriticalData`` es válida (falla cerrado). Un
     archivo ilegible o fuera de esquema lanza ``CatalogoNoDisponible``."""
@@ -549,6 +549,7 @@ def _crear_chat_turn(
     try:
         terminos = _terminos_del_catalogo_por_tipo(settings, catalogo)
         verificador = _cargar_lista_de_terminos(settings)
+        datos_criticos = _montar_datos_criticos(settings, catalogo)
     except (CatalogoNoDisponible, ConfiguracionDeRecuperacionIncompleta):
         logger.warning("event=chat_no_componible motivo=catalogo_sin_terminos")
         return ChatNoComponible()
@@ -562,6 +563,7 @@ def _crear_chat_turn(
         terminos_por_tipo=terminos,
         servicio_de_evidencia=servicio_de_evidencia,
         posiciones=posiciones,
+        fuentes_documentales=datos_criticos,
         soporte=_crear_soporte_del_chat(settings, clock, verificador, recuperacion),
     )
 

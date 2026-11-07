@@ -39,7 +39,7 @@ debería estar (tipo de documento fuente), de forma determinista y coherente con
   `completeness`, con prioridad `por_conciliar` > `incompleto` > `no_buscado` > `no_encontrado` (glosario del chat §3);
   «incompleto» = `presente_sin_verificar` **sin conflicto vigente** o menos valores vigentes que `minValues`
   `[S6 resp. 17]`; solo cuenta un documento del paciente con `ocr_status = completado`. Campo **aditivo** `gapType`
-  (nullable) en `CompletenessItem` de `GET /platform/patients/{id}/completeness`: **`clinical-api` 1.24.0 → 1.25.0**
+  (nullable) en `CompletenessItem` de `GET /platform/patients/{id}/completeness`: **`clinical-api` 1.27.0 → 1.28.0**
   (glosario §1; ADR-26). El turno del chat rellena `gapType` en cada `ChatCompletenessItem` del `completeness[]` que ya
   arma l1d-315 (el `catalogVersion` y el `409` sin persistir ya los trae l1d-315).
 - **Backend 2 (`rag-orchestrator`)**: nodo `faltantes` del grafo de `l1d-316-chat-turn-langgraph`: verbaliza de forma
@@ -49,7 +49,7 @@ debería estar (tipo de documento fuente), de forma determinista y coherente con
   `faltante` son deterministas y están **exentos de cita** (glosario §3). Sin faltantes, un bloque que dice que no faltan
   datos críticos según el catálogo y nombra su versión. El `409 CATALOG_VERSION_MISMATCH` de `/chat/turn` lo declara
   l1d-316; aquí se verifica con el catálogo 1.6.0.
-- **Contratos**: solo `clinical-api` 1.25.0 (`gapType` en `CompletenessItem`). **`rag-orchestrator` sin versión propia**:
+- **Contratos**: solo `clinical-api` 1.28.0 (`gapType` en `CompletenessItem`). **`rag-orchestrator` sin versión propia**:
   `gapType` ya está en `ChatCompletenessItem` de la 1.12.0 (l1d-316) y `sourceDocumentTypes` no se añade al contrato.
   Ejemplos nuevos `contracts/examples/completeness-gap-type-p-chat.json`, `chat-turn-faltantes.json`,
   `chat-turn-faltantes-ninguno.json` (los de `/chat/turn` validan contra la 1.12.0); el `409` reutiliza el existente
@@ -76,15 +76,15 @@ debería estar (tipo de documento fuente), de forma determinista y coherente con
 
 `clinical-platform` (catálogo, regla `clasificarVacio`, `/completeness`, `gapType` en el `completeness[]` del turno) ·
 `ai-services` (nodo `faltantes`, lectura de `sourceDocumentTypes` del catálogo montado) · `contratos` (`clinical-api`
-1.25.0). Sin
+1.28.0). Sin
 `frontend`: la UI del chat es US-267 (y la columna «Datos críticos» de la vista de caso no cambia en este change).
 
 ## Dependencias
 
 - ↪ `l1d-316-chat-turn-langgraph` (US-259): grafo, `/chat/turn`, `completeness[]` en la petición, enrutado determinista.
 - ↪ `l1d-315-conversacion-paciente` (US-258): `POST …/conversations/{id}/turns`, persistencia del turno antes de
-  responder, `catalogVersion` y el `409` sin persistir. **Cadena de versiones** (glosario §1): l1d-315 1.24.0 → este
-  change 1.25.0; si colisiona, renumera el segundo en mergear.
+  responder, `catalogVersion` y el `409` sin persistir. **Cadena de versiones** (glosario §1): l1d-315 1.24.0 (luego 1.27.0 con L1D-213) → este
+  change 1.28.0; si colisiona, renumera el segundo en mergear.
 - ↪ ya en `main`: FEAT-04 (`/completeness`, catálogo `datos-criticos`, `CompletenessService`), US-041 (409 de catálogo).
 - Fixture `P-CHAT` (FX-12-b): lo crea `l1d-315` (glosario §3); este lo consume.
 - 🔗 Medido en: US-269. Regresión [RN-15] activa desde S6 → US-148 (no aplica a un turno sin LLM, pero el control vive en
@@ -104,6 +104,6 @@ debería estar (tipo de documento fuente), de forma determinista y coherente con
 - `apps/clinical-api/src/modules/completeness/` (`completeness.rules.ts`, `.service.ts`, `.repository.ts`, `.vista.ts`)
   y el armado del turno en `evidence-analysis/conversation`.
 - `apps/rag-orchestrator/app/application/chat/` (nodo `faltantes`), `app/domain/chat/faltantes.py`, `app/api/chat_turn.py`.
-- `apps/clinical-api/openapi.yaml` (1.25.0), `contracts/examples/`, generados. `apps/rag-orchestrator/openapi.yaml` no
+- `apps/clinical-api/openapi.yaml` (1.28.0), `contracts/examples/`, generados. `apps/rag-orchestrator/openapi.yaml` no
   cambia.
 - Cambia el catálogo: suite `evaluate` en el PR (OL-06).

@@ -53,6 +53,26 @@ def test_expone_las_claves_del_tipo_con_su_etiqueta() -> None:
     assert all(etiqueta for etiqueta in datos.etiquetas("mama").values())
 
 
+def test_devuelve_los_tipos_de_documento_fuente_en_el_orden_del_catalogo_cuando_el_tipo_esta() -> (
+    None
+):
+    datos = cargar_datos_criticos(CATALOGOS, ("mama", "prostata"))
+
+    fuentes = datos.tipos_de_documento("mama")
+
+    assert list(fuentes)[:3] == ["histologia", "grado", "tnm"]
+    assert fuentes["ki67"] == ("examen",)
+    assert fuentes["estado_menopausico"] == ("historia_clinica",)
+    assert fuentes["tnm"] == ("historia_clinica", "examen")
+    assert set(datos.tipos_de_documento("prostata")) == set(datos.etiquetas("prostata"))
+
+
+def test_devuelve_sin_fuentes_cuando_el_tipo_no_esta_en_el_catalogo() -> None:
+    datos = cargar_datos_criticos(CATALOGOS, ("mama",))
+
+    assert dict(datos.tipos_de_documento("leucemia")) == {}
+
+
 def test_falla_cerrado_sin_ruta_cuando_el_archivo_falta(tmp_path: Path) -> None:
     with pytest.raises(CatalogoNoDisponible) as error:
         cargar_datos_criticos(_catalogo_con(tmp_path, None), ("mama",))
@@ -70,6 +90,9 @@ def test_falla_cerrado_sin_ruta_cuando_el_archivo_falta(tmp_path: Path) -> None:
         lambda a: a["items"][1].update(key=a["items"][0]["key"]),
         lambda a: a["items"][0].update(cancerType="prostata"),
         lambda a: a.pop("items"),
+        lambda a: a["items"][0].pop("sourceDocumentTypes"),
+        lambda a: a["items"][0].update(sourceDocumentTypes=[]),
+        lambda a: a["items"][0].update(sourceDocumentTypes=["patologia"]),
     ],
     ids=[
         "clave_con_mayusculas",
@@ -79,6 +102,9 @@ def test_falla_cerrado_sin_ruta_cuando_el_archivo_falta(tmp_path: Path) -> None:
         "clave_repetida",
         "tipo_ajeno",
         "sin_items",
+        "sin_tipos_de_documento_fuente",
+        "tipos_de_documento_fuente_vacios",
+        "tipo_de_documento_fuera_del_enum",
     ],
 )
 def test_falla_cerrado_sin_ruta_cuando_el_archivo_no_cumple_el_esquema(

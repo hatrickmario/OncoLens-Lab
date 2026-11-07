@@ -1,0 +1,100 @@
+{
+  "catalogVersion": "1.6.0",
+  "cancerTypeEnabled": true,
+  "items": [
+    {
+      "item": "histologia",
+      "label": "Histología",
+      "status": "presente_verificado",
+      "gapType": null,
+      "origin": "manual",
+      "provenance": {
+        "entryMethod": "manual",
+        "reviewStatus": "verificado",
+        "sourceDocumentId": null
+      },
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "histology"
+      },
+      "condition": null
+    },
+    {
+      "item": "grado",
+      "label": "Grado histológico",
+      "status": "presente_verificado",
+      "gapType": null,
+      "origin": "manual",
+      "provenance": {
+        "entryMethod": "manual",
+        "reviewStatus": "verificado",
+        "sourceDocumentId": null
+      },
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "grade"
+      },
+      "condition": null
+    },
+    {
+      "item": "tnm",
+      "label": "Estadificación TNM",
+      "status": "presente_verificado",
+      "gapType": "por_conciliar",
+      "origin": "manual",
+      "provenance": {
+        "entryMethod": "manual",
+        "reviewStatus": "verificado",
+        "sourceDocumentId": null
+      },
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "stage_value"
+      },
+      "condition": null
+    },
+    {
+      "item": "re",
+      "label": "Receptor de estrógeno",
+      "status": "presente_sin_verificar",
+      "gapType": "incompleto",
+      "origin": "seed",
+      "provenance": {
+        "entryMethod": "seed",
+        "reviewStatus": "auto_aceptado",
+        "sourceDocumentId": null
+      },
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value"
+      },
+      "condition": null
+    },
+    {
+      "item": "ki67",
+      "label": "Ki-67",
+      "status": "faltante",
+      "gapType": "no_buscado",
+      "origin": "regla",
+      "provenance": null,
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value"
+      },
+      "condition": null
+    },
+    {
+      "item": "estado_menopausico",
+      "label": "Estado menopáusico",
+      "status": "faltante",
+      "gapType": "no_encontrado",
+      "origin": "regla",
+      "provenance": null,
+      "destination": {
+        "entity": "ClinicalAttribute",
+        "field": "value"
+      },
+      "condition": null
+    }
+  ]
+}

@@ -25,6 +25,7 @@ export const checklistFaltante = {
           item: i.item,
           label: i.label,
           status: 'faltante',
+          gapType: 'no_buscado',
           origin: 'regla',
           provenance: null,
           destination: i.destination,

@@ -15,6 +15,7 @@ from typing import Any
 
 from app.application.chat.servicio_de_turno import ChatTurnService
 from app.bootstrap import crear_app
+from app.infrastructure.catalogo_clinico.datos_criticos import cargar_datos_criticos
 from app.infrastructure.catalogo_clinico.sinonimos import cargar_terminos_por_tipo
 from app.infrastructure.lenguaje.terminos_prohibidos import cargar_verificador_de_terminos
 from fastapi.testclient import TestClient
@@ -91,6 +92,7 @@ def crear_entorno_de_chat_con_evidencia(
         verificador_terminos=cargar_verificador_de_terminos(CATALOGOS),
         servicio_de_evidencia=base.servicio,
         posiciones=posiciones,
+        fuentes_documentales=cargar_datos_criticos(CATALOGOS, ("mama", "prostata")),
     )
     app = crear_app(
         settings_de_prueba(**cambios_de_settings),

@@ -15,6 +15,7 @@ export function vocabularioDe(esquemas) {
     estados: esquemas.comun.$defs.estado.enum,
     operadores: condicion.operator.enum,
     respuestasSiDesconocida: item.whenConditionUnknown.enum,
+    tiposDeDocumento: item.sourceDocumentTypes.items.enum,
   };
 }
 
@@ -121,6 +122,21 @@ export function clavesRepetidasEn(items, campo = 'key') {
 /** RN-29: la clave de un ítem es única por tipo de cáncer y archivo (una clave repetida haría ambigua una referencia). */
 export function exigirClaveUnica(item, clavesRepetidas) {
   return clavesRepetidas.has(item.key) ? 'clave_duplicada' : null;
+}
+
+/**
+ * US-263 (RN-29): todo dato crítico declara en qué tipos de documento (`document_type`) debería estar: array no vacío,
+ * sin repetidos y dentro del vocabulario cerrado del esquema. Con él, `clinical-api` distingue «no buscado» de «no
+ * encontrado». Es una propuesta (`estado`) hasta DEC-01.
+ */
+export function exigirFuentesDeDocumento(item, vocabulario) {
+  const tipos = item.sourceDocumentTypes;
+  const validos =
+    Array.isArray(tipos) &&
+    tipos.length > 0 &&
+    new Set(tipos).size === tipos.length &&
+    tipos.every((tipo) => vocabulario.tiposDeDocumento.includes(tipo));
+  return validos ? null : 'fuente_documental_invalida';
 }
 
 /** AC-04.4, P-03: `estado` dentro del vocabulario cerrado. */

@@ -22,9 +22,11 @@ from app.application.chat.capacidades.seguimiento_evidencia import (
 )
 from app.application.chat.contexto_del_turno import con_evidencia_del_turno
 from app.application.chat.grafo import ConfiguracionDelGrafo, EstadoDelGrafo, Nodo, construir_grafo
+from app.application.chat.nodo_faltantes import crear_nodo_faltantes
 from app.application.chat.registro_de_hilos import RegistroDeHilos
 from app.application.chat.traduccion import (
     bloque_del_contrato,
+    completitud_del_caso,
     estado_de_rehidratacion,
     consulta_de_evidencia,
     estado_estructurado_del_contrato,
@@ -34,6 +36,7 @@ from app.application.ports import (
     CatalogoClinico,
     Clock,
     ContadorDeTokens,
+    DatosCriticosDelCatalogoMontado,
     LlmClient,
     PosicionDeChunks,
     ProhibitedTermsChecker,
@@ -70,6 +73,7 @@ class ChatTurnService:
         verificador_terminos: ProhibitedTermsChecker,
         servicio_de_evidencia: RAGOrchestratorService | None = None,
         posiciones: PosicionDeChunks | None = None,
+        fuentes_documentales: DatosCriticosDelCatalogoMontado,
         soporte: VerificadorDeSoporte | None = None,
     ) -> None:
         self._catalogo = catalogo
@@ -99,7 +103,11 @@ class ChatTurnService:
             llm=llm,
             contador=contador,
             configuracion=configuracion,
-            capacidades={**evidencia, Intencion.caso: caso.ejecutar},
+            capacidades={
+                **evidencia,
+                Intencion.caso: caso.ejecutar,
+                Intencion.faltantes: crear_nodo_faltantes(fuentes_documentales),
+            },
             subcapacidades=seguimiento,
             guardado=self.registro.guardado,
             verificador_terminos=verificador_terminos,
@@ -145,6 +153,8 @@ class ChatTurnService:
         entrada: EstadoDelGrafo = {
             "pregunta": solicitud.question,
             "hechos": hechos_del_caso(solicitud.caseFacts),
+            "completitud": completitud_del_caso(solicitud.completeness),
+            "version_del_catalogo": solicitud.catalogVersion,
             "tipo_del_contexto": diagnostico.cancerType.root if diagnostico is not None else "",
             "clasificacion_de_datos": solicitud.dataClassification.value,
             "trace_id": solicitud.traceId.root,
