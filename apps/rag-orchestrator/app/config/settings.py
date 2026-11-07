@@ -23,6 +23,7 @@ from app.domain.chat.valores_iniciales import (
     AVISO_ACADEMICO_INICIAL,
     AVISO_DE_IA_INICIAL,
     AVISO_VERIFICAR_FUENTES_INICIAL,
+    CHAT_AVISO_BUSQUEDA_AMPLIADA_INICIAL,
     CHAT_MAX_HILOS_INICIAL,
     CHAT_EVIDENCE_MAX_OPTIONS_INICIAL,
     CHAT_CONFLICTO_ETIQUETA_INICIAL,
@@ -153,6 +154,10 @@ class Settings(BaseSettings):
     chat_notice_ai: str = Field(default=AVISO_DE_IA_INICIAL, min_length=1)
     chat_notice_academic: str = Field(default=AVISO_ACADEMICO_INICIAL, min_length=1)
     chat_notice_verify: str = Field(default=AVISO_VERIFICAR_FUENTES_INICIAL, min_length=1)
+    # Prefijo del aviso del turno que amplió la búsqueda con datos del caso (US-271, ADR-52, RN-19, RN-22).
+    chat_aviso_busqueda_ampliada: str = Field(
+        default=CHAT_AVISO_BUSQUEDA_AMPLIADA_INICIAL, min_length=1
+    )
     # Texto fijo del turno de caso sin ningún dato documentado (US-261, RN-01, RN-22).
     chat_sin_datos_texto: str = Field(default=CHAT_SIN_DATOS_TEXTO_INICIAL, min_length=1)
     chat_sin_datos_periodo_texto: str = Field(

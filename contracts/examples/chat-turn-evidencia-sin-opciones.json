@@ -19,7 +19,16 @@
     },
     "applicability": [],
     "evidenceOptions": [],
-    "discardedOptions": [],
+    "discardedOptions": [
+      {
+        "option": "Quimioterapia adyuvante combinada con terapia dirigida anti-HER2",
+        "rationale": "La fuente reporta que La evidencia recuperada describe la adición de terapia anti-HER2 a la quimioterapia adyuvante.",
+        "discardReason": "afirmacion_sin_soporte",
+        "unsupportedClaims": [
+          "La evidencia recuperada describe la adición de terapia anti-HER2 a la quimioterapia adyuvante."
+        ]
+      }
+    ],
     "limitations": [],
     "assumptions": [],
     "retrievalStats": {

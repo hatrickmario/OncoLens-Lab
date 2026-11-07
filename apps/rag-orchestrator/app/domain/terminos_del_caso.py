@@ -7,8 +7,17 @@ libre del expediente, el ``pseudoPatientId``, las fechas y la identidad nunca en
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+
+from app.domain.expansion_contextual import (
+    CAMPO_BIOMARCADOR_PRINCIPAL,
+    CAMPO_ESTADIO,
+    CAMPO_TIPO,
+    CAMPOS_DE_EXPANSION,
+)
+from app.domain.lenguaje import normalizar_texto
 
 
 @dataclass(frozen=True)
@@ -28,6 +37,7 @@ class BiomarcadorDelCatalogo:
     """Un biomarcador de ``datos-criticos`` del tipo: cómo se llama en el contexto, el término de consulta y sus valores."""
 
     nombre: str
+    """Nombre normalizado (``normalizar_texto``) con que el catálogo lo reconoce en el contexto."""
     termino: str
     valores: Mapping[str, str]
     """Valor normalizado -> valor canónico; vacío si el catálogo no declara valores del biomarcador."""
@@ -50,9 +60,55 @@ class CatalogoDeTerminos:
 class TerminosDelCaso:
     terminos: tuple[str, ...]
     campos: tuple[str, ...]
+    """Los campos del conjunto cerrado que aportaron al menos un término (el grado cuenta bajo ``estadio``)."""
 
 
 def terminos_del_caso(
     caso: CasoParaTerminos, catalogo: CatalogoDeTerminos, campos: Sequence[str]
 ) -> TerminosDelCaso:
-    raise NotImplementedError("no implementado")
+    """Los términos canónicos del catálogo para ``campos``, en el orden tipo, estadio (y grado), biomarcador principal.
+
+    Sin ningún término devuelve tuplas vacías: no hay segunda recuperación. Los campos usados salen en orden canónico."""
+    por_campo = {
+        CAMPO_TIPO: _del_tipo(caso, catalogo),
+        CAMPO_ESTADIO: (*_del_estadio(caso, catalogo), *_del_grado(caso, catalogo)),
+        CAMPO_BIOMARCADOR_PRINCIPAL: _del_biomarcador_principal(caso, catalogo),
+    }
+    usados = tuple(c for c in CAMPOS_DE_EXPANSION if c in campos and por_campo[c])
+    return TerminosDelCaso(tuple(t for c in usados for t in por_campo[c]), usados)
+
+
+def _del_tipo(caso: CasoParaTerminos, catalogo: CatalogoDeTerminos) -> tuple[str, ...]:
+    etiqueta = catalogo.etiqueta_de_tipo.get(caso.tipo_de_cancer)
+    return (etiqueta,) if etiqueta else ()
+
+
+def _del_estadio(caso: CasoParaTerminos, catalogo: CatalogoDeTerminos) -> tuple[str, ...]:
+    sistemas = catalogo.estadios.get(caso.tipo_de_cancer, {})
+    canonico = sistemas.get(normalizar_texto(caso.sistema_de_estadificacion), {}).get(
+        normalizar_texto(caso.estadio)
+    )
+    return (canonico,) if canonico else ()
+
+
+def _del_grado(caso: CasoParaTerminos, catalogo: CatalogoDeTerminos) -> tuple[str, ...]:
+    """El valor del catálogo que aparece como palabras completas dentro del texto del grado (``ISUP 3`` no es ``ISUP 35``)."""
+    if not caso.grado:
+        return ()
+    texto = normalizar_texto(caso.grado)
+    for valor in catalogo.grados.get(caso.tipo_de_cancer, ()):
+        if re.search(rf"(?<!\S){re.escape(normalizar_texto(valor))}(?!\S)", texto):
+            return (valor,)
+    return ()
+
+
+def _del_biomarcador_principal(
+    caso: CasoParaTerminos, catalogo: CatalogoDeTerminos
+) -> tuple[str, ...]:
+    """El primero del catálogo, por su orden, que el caso trae: su término y, solo si es del catálogo, su valor."""
+    del_caso = {normalizar_texto(nombre): valor for nombre, valor in reversed(caso.biomarcadores)}
+    for biomarcador in catalogo.biomarcadores.get(caso.tipo_de_cancer, ()):
+        if biomarcador.nombre in del_caso:
+            valor = biomarcador.valores.get(normalizar_texto(del_caso[biomarcador.nombre]))
+            return (biomarcador.termino, valor) if valor else (biomarcador.termino,)
+    return ()

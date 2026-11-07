@@ -6,8 +6,11 @@ versionado (``lenguaje/marcos-de-pregunta.json``), no queda ninguna palabra de c
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+
+from app.domain.lenguaje import normalizar_texto
 
 
 @dataclass(frozen=True)
@@ -29,4 +32,19 @@ class MarcosDePregunta:
 def pregunta_sin_tema_propio(
     pregunta: str, lexico: MarcosDePregunta, idiomas: Sequence[str]
 ) -> bool:
-    raise NotImplementedError("no implementado")
+    """Verdadera si no queda palabra de contenido. Con varios ``idiomas`` rige la unión de sus listas; un idioma que el
+    léxico no trae no aporta nada. Una pregunta vacía tras normalizar NO es genérica: la rechaza la validación previa."""
+    texto = normalizar_texto(pregunta)
+    if not texto:
+        return False
+    listas = [lexico.por_idioma[i] for i in idiomas if i in lexico.por_idioma]
+    sin_marcos = _sin_frases_de_marco(texto, {m for lista in listas for m in lista.marcos})
+    vacias = frozenset().union(*(lista.vacias for lista in listas))
+    return all(palabra in vacias for palabra in sin_marcos.split())
+
+
+def _sin_frases_de_marco(texto: str, marcos: set[str]) -> str:
+    """Quita cada frase de marco como palabras completas, la más larga primero."""
+    for marco in sorted(marcos, key=len, reverse=True):
+        texto = re.sub(rf"(?<!\S){re.escape(marco)}(?!\S)", " ", texto)
+    return texto

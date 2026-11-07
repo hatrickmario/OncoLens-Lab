@@ -77,6 +77,9 @@ def test_rag_query_añade_tipo_estadio_grado_y_biomarcador_del_catalogo_cuando_e
     solicitud = solicitud_contextual(estadio="IIB", biomarcadores=(("PSA", "7.2"),))
     contexto = solicitud["clinicalContext"]
     contexto["diagnosis"]["cancerType"] = "prostata"
+    contexto[
+        "missingCriticalData"
+    ] = []  # las claves de mama no son del catálogo de próstata (RN-11)
     contexto["diagnosis"]["grade"] = "Gleason 4+3=7 · ISUP 3"
 
     respuesta = entorno.consultar(solicitud)
@@ -195,7 +198,14 @@ def test_rag_query_envia_solo_terminos_del_catalogo_y_no_registra_valores_cuando
     respuesta = entorno.consultar(solicitud)
 
     assert respuesta.status_code == 200
-    enviado = " ".join([*entorno.reranker.preguntas, *entorno.embedder.textos])
+    # Lo que añade el loop contextual: la consulta que se embebe y la que puntúa el reranker (el resumen del contexto que
+    # ya se embebía en el primer loop es anterior a este cambio y no lleva la pregunta).
+    enviado = " ".join(
+        [
+            *entorno.reranker.preguntas,
+            *(t for t in entorno.embedder.textos if t.startswith(Q_GENERICA)),
+        ]
+    )
     assert entorno.reranker.preguntas[-1] == f"{Q_GENERICA} Cáncer de mama IIA HER2"
     for ajeno in ("SENTINELA", "seudónimo", "2026-01-02", "Nombre Sintético", pseudo):
         assert ajeno not in enviado

@@ -21,9 +21,9 @@ MENSAJE_EVIDENCIA_NO_CONSULTADA = (
 
 ENCABEZADO_DE_OPCIONES = "Opciones descritas en la evidencia"
 """Encabezado del bloque `evidencia` (RN-23): describe lo que reporta la fuente; no recomienda."""
-MENSAJE_SIN_OPCIONES_CON_SOPORTE = (
-    "Los fragmentos recuperados no sostienen ninguna opción con soporte suficiente."
-)
+MENSAJE_SIN_OPCIONES_CON_SOPORTE = "Evidencia recuperada sin opciones soportadas"
+"""Texto fijo del turno de evidencia con fragmentos sobre el umbral y 0 opciones con soporte tras citas y NLI (US-271 AC-10):
+no es ``sin_evidencia`` y no lo escribe el LLM."""
 MENSAJE_SEGUIMIENTO_SIN_AFIRMACIONES = (
     "Los fragmentos recuperados no permiten responder la pregunta con soporte suficiente."
 )
