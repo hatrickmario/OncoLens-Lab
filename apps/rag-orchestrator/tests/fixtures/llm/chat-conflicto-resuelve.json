@@ -1,0 +1,10 @@
+{
+  "CHAT-CONFLICTO-RESUELVE": {
+    "ruta": "{\"intent\": \"caso\"}",
+    "generacion": "{\"claims\": [{\"text\": \"El estadio correcto es IIB\", \"factRefs\": [\"f6\"], \"citations\": []}]}"
+  },
+  "CHAT-CONFLICTO-AMBOS": {
+    "ruta": "{\"intent\": \"caso\"}",
+    "generacion": "{\"claims\": [{\"text\": \"El estadio figura como IIA y como IIB, y está pendiente de conciliar\", \"kind\": \"interpretacion\", \"factRefs\": [\"f1\", \"f6\"], \"citations\": []}]}"
+  }
+}
