@@ -11,44 +11,27 @@ import re
 import pytest
 
 from app.domain.atribucion import MARCO_ES
-from tests.support.chat_evidencia import crear_entorno_de_chat_con_evidencia, solicitud_de_evidencia
-from tests.support.generador_falso import OPCION_ANTI_HER2, FakeEvidenceGenerator
+from tests.support.chat_evidencia import (
+    ANALISIS_ACTIVO,
+    Q_SEGUIMIENTO,
+    Q_SIN_REGLA,
+    entorno_de_seguimiento,
+    solicitud_de_evidencia,
+)
+from tests.support.generador_falso import OPCION_ANTI_HER2
 from tests.support.llm_chat_evidencia_falso import (
     TEXTO_DEL_SEGUIMIENTO,
     TEXTO_SIN_SOPORTE_NLI,
     TEXTO_SOLO_EN_LA_MEMORIA,
-    FakeChatLlmEvidencia,
 )
 from tests.support.nli_falso import IMPLICA, NEUTRAL, NliFalso
 from tests.support.recuperacion import (
     CORPUS_FX06A,
-    PUNTAJES_FX06A,
     Q_HER2,
-    RerankerFalso,
-    crear_entorno,
 )
 from tests.support.reescritura import ReescritorFalso, parametros_de_reescritura
 
-Q_SEGUIMIENTO = "¿En qué se diferencia la población del estudio de mi paciente?"
-Q_SIN_REGLA = "¿Eso aplica a mi paciente?"
-ANALISIS_ACTIVO = "b3d9f2a0-1c3e-4f9a-8b1a-9e2f0c3d9f2a"
 LIMITACION_SIN_EVIDENCIA = "Ningún fragmento recuperado supera el umbral de relevancia."
-PUNTAJES_DEL_SEGUIMIENTO = {"ch-m1-1": 0.80, "ch-inj-1": 0.05}
-
-
-def _entorno(escenario: str = "SEG-OK", *, puntajes=PUNTAJES_DEL_SEGUIMIENTO, nli=None, **base):
-    reranker = RerankerFalso(
-        puntajes={**PUNTAJES_FX06A, Q_SEGUIMIENTO: puntajes, Q_SIN_REGLA: puntajes}
-    )
-    generador = FakeEvidenceGenerator("LLM-OK")
-    entorno_base = crear_entorno(
-        generador=generador,
-        reranker=reranker,
-        clasificador_nli=nli or NliFalso(por_defecto=IMPLICA),
-        **base,
-    )
-    llm = FakeChatLlmEvidencia(escenario)
-    return crear_entorno_de_chat_con_evidencia(entorno_base, llm=llm), generador
 
 
 def _analisis_y_seguimiento(
@@ -64,7 +47,7 @@ def _analisis_y_seguimiento(
 
 @pytest.mark.ac("US-265", 3)
 def test_chat_turn_re_recupera_cita_solo_lo_del_turno_y_no_devuelve_evidence_analysis_en_el_seguimiento_cuando_hay_analisis_activo():
-    entorno, generador = _entorno("SEG-OK")
+    entorno, generador = entorno_de_seguimiento("SEG-OK")
 
     entorno.turno(solicitud_de_evidencia(Q_HER2))
     busquedas_del_analisis = entorno.base.buscador.invocaciones  # type: ignore[attr-defined]
@@ -90,7 +73,7 @@ def test_chat_turn_re_recupera_cita_solo_lo_del_turno_y_no_devuelve_evidence_ana
 
 @pytest.mark.ac("US-265", 1)
 def test_chat_turn_rellena_ultima_evidencia_del_seguimiento_sin_ningun_identificador_de_analisis():
-    entorno, _ = _entorno("SEG-OK")
+    entorno, _ = entorno_de_seguimiento("SEG-OK")
 
     _, segundo = _analisis_y_seguimiento(entorno)
 
@@ -105,7 +88,7 @@ def test_chat_turn_rellena_ultima_evidencia_del_seguimiento_sin_ningun_identific
 
 
 def test_chat_turn_no_es_seguimiento_y_devuelve_un_analisis_nuevo_cuando_no_hay_analisis_activo():
-    entorno, generador = _entorno("SEG-OK")
+    entorno, generador = entorno_de_seguimiento("SEG-OK")
 
     _, segundo = _analisis_y_seguimiento(entorno, activo=None)
 
@@ -116,7 +99,7 @@ def test_chat_turn_no_es_seguimiento_y_devuelve_un_analisis_nuevo_cuando_no_hay_
 
 
 def test_chat_turn_clasifica_seguimiento_con_el_llm_cuando_hay_analisis_activo_y_ninguna_regla_decide():
-    entorno, _ = _entorno("SEG-OK")
+    entorno, _ = entorno_de_seguimiento("SEG-OK")
 
     _, segundo = _analisis_y_seguimiento(entorno, Q_SIN_REGLA)
 
@@ -128,7 +111,7 @@ def test_chat_turn_clasifica_seguimiento_con_el_llm_cuando_hay_analisis_activo_y
 @pytest.mark.ac("US-265", 3)
 def test_chat_turn_responde_sin_evidencia_con_cero_llamadas_al_llm_y_top_relevance_score_null_cuando_ningun_chunk_supera_el_umbral_en_el_seguimiento():
     reescritor = ReescritorFalso()
-    entorno, generador = _entorno(
+    entorno, generador = entorno_de_seguimiento(
         "SEG-OK",
         puntajes={"ch-m1-1": 0.05, "ch-inj-1": 0.05},
         reescritor=reescritor,
@@ -153,7 +136,7 @@ def test_chat_turn_responde_sin_evidencia_con_cero_llamadas_al_llm_y_top_relevan
 @pytest.mark.ac("US-265", 4)
 def test_chat_turn_omite_y_cuenta_la_afirmacion_respaldada_solo_por_el_turno_anterior_con_chat_memoria():
     nli = NliFalso(por_defecto=IMPLICA)
-    entorno, _ = _entorno("CHAT-MEMORIA", nli=nli)
+    entorno, _ = entorno_de_seguimiento("CHAT-MEMORIA", nli=nli)
 
     primero, segundo = _analisis_y_seguimiento(entorno)
 
@@ -177,7 +160,7 @@ def test_chat_turn_omite_y_cuenta_la_afirmacion_respaldada_solo_por_el_turno_ant
 @pytest.mark.ac("US-265", 7)
 def test_chat_turn_omite_y_cuenta_la_afirmacion_citada_con_nli_neutral_en_el_seguimiento():
     nli = NliFalso(resultados={TEXTO_SIN_SOPORTE_NLI: NEUTRAL}, por_defecto=IMPLICA)
-    entorno, _ = _entorno("SEG-NLI-NEUTRAL", nli=nli)
+    entorno, _ = entorno_de_seguimiento("SEG-NLI-NEUTRAL", nli=nli)
 
     _, segundo = _analisis_y_seguimiento(entorno)
 
@@ -191,7 +174,7 @@ def test_chat_turn_registra_el_tamano_del_prompt_del_seguimiento_sin_texto_ni_id
     caplog,
 ):
     caplog.set_level("INFO")
-    entorno, _ = _entorno("SEG-OK")
+    entorno, _ = entorno_de_seguimiento("SEG-OK")
 
     _analisis_y_seguimiento(entorno)
 
@@ -201,7 +184,7 @@ def test_chat_turn_registra_el_tamano_del_prompt_del_seguimiento_sin_texto_ni_id
 
 
 def test_chat_turn_omite_y_cuenta_la_afirmacion_prescriptiva_en_el_seguimiento_cuando_el_llm_la_cita():
-    entorno, _ = _entorno("SEG-PRESCRIPTIVO")
+    entorno, _ = entorno_de_seguimiento("SEG-PRESCRIPTIVO")
 
     _, segundo = _analisis_y_seguimiento(entorno)
 
@@ -212,7 +195,7 @@ def test_chat_turn_omite_y_cuenta_la_afirmacion_prescriptiva_en_el_seguimiento_c
 
 
 def test_chat_turn_responde_503_llm_output_invalid_sin_bloques_cuando_la_salida_del_seguimiento_no_parsea():
-    entorno, _ = _entorno("SEG-SALIDA-INVALIDA")
+    entorno, _ = entorno_de_seguimiento("SEG-SALIDA-INVALIDA")
 
     _, segundo = _analisis_y_seguimiento(entorno)
 

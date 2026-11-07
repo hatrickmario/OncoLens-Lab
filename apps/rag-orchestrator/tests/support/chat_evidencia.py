@@ -112,3 +112,34 @@ def crear_entorno_de_chat_con_evidencia(
         base,
         posiciones,
     )
+
+
+Q_SEGUIMIENTO = "¿En qué se diferencia la población del estudio de mi paciente?"
+Q_SIN_REGLA = "¿Eso aplica a mi paciente?"
+ANALISIS_ACTIVO = "b3d9f2a0-1c3e-4f9a-8b1a-9e2f0c3d9f2a"
+PUNTAJES_DEL_SEGUIMIENTO = {"ch-m1-1": 0.80, "ch-inj-1": 0.05}
+
+
+def entorno_de_seguimiento(
+    escenario: str = "SEG-OK", *, puntajes=PUNTAJES_DEL_SEGUIMIENTO, nli=None, **base
+):
+    """El chat con evidencia y el LLM del seguimiento en ``escenario``; devuelve el entorno y el generador de opciones.
+
+    El primer turno es el análisis (``LLM-OK``); el segundo, el seguimiento con los ``puntajes`` dados."""
+    from tests.support.generador_falso import FakeEvidenceGenerator
+    from tests.support.llm_chat_evidencia_falso import FakeChatLlmEvidencia
+    from tests.support.nli_falso import IMPLICA, NliFalso
+    from tests.support.recuperacion import PUNTAJES_FX06A, RerankerFalso, crear_entorno
+
+    reranker = RerankerFalso(
+        puntajes={**PUNTAJES_FX06A, Q_SEGUIMIENTO: puntajes, Q_SIN_REGLA: puntajes}
+    )
+    generador = FakeEvidenceGenerator("LLM-OK")
+    entorno_base = crear_entorno(
+        generador=generador,
+        reranker=reranker,
+        clasificador_nli=nli or NliFalso(por_defecto=IMPLICA),
+        **base,
+    )
+    llm = FakeChatLlmEvidencia(escenario)
+    return crear_entorno_de_chat_con_evidencia(entorno_base, llm=llm), generador

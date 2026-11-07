@@ -79,3 +79,28 @@ def test_chat_turn_acepta_la_peticion_de_ejemplo_con_turnos_previos_cuando_trae_
     estado = resultado.json()["structuredState"]
     assert estado["intentsVistos"] == ["caso", "faltantes"]
     assert estado["preguntasPrevias"][0] == "¿Cuál es la situación actual de la paciente?"
+
+
+@pytest.mark.parametrize(
+    ("sin_evidencia", "respuesta_del_seguimiento"),
+    [
+        (False, "chat-turn-seguimiento-evidencia.json"),
+        (True, "chat-turn-seguimiento-sin-evidencia.json"),
+    ],
+)
+def test_chat_turn_produce_los_ejemplos_de_evidencia_y_seguimiento_cuando_recibe_sus_peticiones_de_ejemplo(
+    sin_evidencia, respuesta_del_seguimiento
+):
+    from tests.support.chat_evidencia import entorno_de_seguimiento
+
+    puntajes = {"ch-m1-1": 0.05, "ch-inj-1": 0.05}
+    entorno, _ = entorno_de_seguimiento(
+        "SEG-OK", **({"puntajes": puntajes} if sin_evidencia else {})
+    )
+
+    primero = entorno.turno(solicitud_desde_ejemplo("chat-turn-request-evidencia.json"))
+    segundo = entorno.turno(solicitud_desde_ejemplo("chat-turn-request-seguimiento.json"))
+
+    assert primero.status_code == segundo.status_code == 200
+    assert primero.json() == _ejemplo("chat-turn-evidencia.json")
+    assert segundo.json() == _ejemplo(respuesta_del_seguimiento)
