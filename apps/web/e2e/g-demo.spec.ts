@@ -197,7 +197,8 @@ test.describe('Gate G-Demo: la hipótesis de punta a punta (L1D-248)', () => {
           });
           const analisis = await analisisDelTurno(await respuesta);
           expect(analisis.status).toBe('con_evidencia');
-          maxOpciones = analisis.analysisBasis.maxOptions;
+          expect(analisis.analysisBasis.maxOptions).toBeDefined();
+          maxOpciones = analisis.analysisBasis.maxOptions!;
           aviso = analisis.disclaimer;
           await comprobarOpcionesDescritas(page, maxOpciones, aviso);
         },

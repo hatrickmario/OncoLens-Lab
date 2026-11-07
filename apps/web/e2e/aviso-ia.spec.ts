@@ -60,6 +60,9 @@ test.describe('Aviso de IA y etiqueta académica (L1D-194, US-267)', () => {
     await expect(page.getByText('Relevancia máxima: no aplica')).toBeVisible();
     const avisos = regionDeAvisos(tarjetasDelChat(page).first());
     await expect(avisos.getByRole('listitem').first()).toBeVisible();
+    for (const aviso of avisosDeEvidencia) {
+      await expect(avisos.getByText(aviso, { exact: true })).toBeVisible();
+    }
     await preguntarEnElChat(page, pregunta);
     await esperarTarjeta(page, 2);
   });
@@ -76,6 +79,7 @@ test.describe('Aviso de IA y etiqueta académica (L1D-194, US-267)', () => {
     await expect(cabecera.getByText(ETIQUETA)).toBeVisible();
     // Se lee del DOM de la tarjeta, no del fixture: la etiqueta académica es de la cabecera, no de `notices[]`.
     const avisosPintados = await regionDeAvisos(tarjetasDelChat(page).first()).allInnerTexts();
+    expect(avisosPintados.length).toBeGreaterThan(0);
     for (const texto of avisosPintados) expect(texto).not.toContain(ETIQUETA);
 
     await page.route('**/api/conversations/*/turns', (ruta) =>

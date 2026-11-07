@@ -200,7 +200,8 @@ test.describe('Estados del panel (L1D-141)', () => {
     await esperarResultado(page);
     await esperarTarjeta(page);
     expect(peticiones).toHaveLength(1);
-    expect(new Set(idsDeAnalisis).size).toBe(1);
+    // El `id` se añade tras un `await` del manejador de la respuesta: se espera en vez de leerlo de inmediato.
+    await expect.poll(() => new Set(idsDeAnalisis).size).toBe(1);
     // Con el campo vacío «Preguntar» queda deshabilitado; con otra pregunta escrita vuelve a estar habilitado.
     await page.getByLabel(es.conversacion.campo).fill('Otra pregunta');
     await expect(page.getByRole('button', { name: es.conversacion.preguntar })).toBeEnabled();
