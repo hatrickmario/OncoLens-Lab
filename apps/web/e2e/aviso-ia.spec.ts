@@ -67,7 +67,7 @@ test.describe('Aviso de IA y etiqueta académica (L1D-194, US-267)', () => {
     await esperarTarjeta(page, 2);
   });
 
-  test(`muestra ${ETIQUETA} en la cabecera de la página y no la añade a los avisos del turno [US-069 AC-3]`, async ({
+  test(`muestra ${ETIQUETA} en la cabecera de la página y pinta como avisos exactamente los notices del turno [US-069 AC-3]`, async ({
     page,
   }) => {
     await iniciarSesion(page);
@@ -77,10 +77,13 @@ test.describe('Aviso de IA y etiqueta académica (L1D-194, US-267)', () => {
     await preguntarEnElChat(page, pregunta);
     await esperarTarjeta(page);
     await expect(cabecera.getByText(ETIQUETA)).toBeVisible();
-    // Se lee del DOM de la tarjeta, no del fixture: la etiqueta académica es de la cabecera, no de `notices[]`.
-    const avisosPintados = await regionDeAvisos(tarjetasDelChat(page).first()).allInnerTexts();
+    // Se lee del DOM de la tarjeta, no del fixture: los avisos pintados son exactamente los `notices[]` del turno, sin
+    // añadidos del cliente (la etiqueta académica de la cabecera es otra cosa: el turno de caso también la trae).
+    const avisosPintados = await regionDeAvisos(tarjetasDelChat(page).first())
+      .getByRole('listitem')
+      .allInnerTexts();
     expect(avisosPintados.length).toBeGreaterThan(0);
-    for (const texto of avisosPintados) expect(texto).not.toContain(ETIQUETA);
+    expect(avisosPintados).toEqual(avisosDelTurno);
 
     await page.route('**/api/conversations/*/turns', (ruta) =>
       ruta.fulfill({ status: 502, json: ejemplo('error-servicio-ia.json') }),

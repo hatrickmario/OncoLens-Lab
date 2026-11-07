@@ -44,7 +44,10 @@ test.describe('Panel de análisis (L1D-140)', () => {
     await expect(chip).toBeVisible();
     await chip.click();
     await page.getByRole('button', { name: textos.cita.verFragmento }).click();
-    const fragmento = page.getByText(cita.chunkTextSnapshot);
+    // El texto también sale en la cita de la tarjeta y en el turno: el `lang` solo lo lleva el panel lateral.
+    const fragmento = page
+      .getByRole('complementary', { name: textos.fragmento.titulo })
+      .getByText(cita.chunkTextSnapshot);
     await expect(fragmento).toHaveAttribute('lang', cita.language);
     expect(page.url()).toBe(url);
     expect(peticiones.filter((u) => /\/api\/conversations\/[^/]+\/turns$/.test(u))).toHaveLength(1);

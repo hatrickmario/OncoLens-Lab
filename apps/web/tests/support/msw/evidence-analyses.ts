@@ -28,6 +28,7 @@ import errorTipoCancer from '../../../../../contracts/examples/error-tipo-cancer
 import peticion from '../../../../../contracts/examples/evidence-analysis-request.json';
 import sinEvidencia from '../../../../../contracts/examples/sin-evidencia.json';
 import tipoNoHabilitado from '../../../../../contracts/examples/tipo-no-habilitado.json';
+import { idDeTurnoDePrueba } from '../id-de-turno';
 import aperturaDeConversacion from '../../../../../contracts/examples/conversation-create-response.json';
 import turnoDeEvidenciaBase from '../../../../../contracts/examples/conversation-turn-evidencia.json';
 
@@ -129,10 +130,7 @@ export function crearBffAnalisisSimulado() {
           if (red) return HttpResponse.error();
           if (status !== 200) return HttpResponse.json(cuerpo, { status, headers: cabeceras });
           const analisis = cuerpo as { status: string; topRelevanceScore: number | null };
-          return HttpResponse.json(
-            turnoSoloAnalisis(analisis, siguiente),
-            { status: 201 },
-          );
+          return HttpResponse.json(turnoSoloAnalisis(analisis, siguiente), { status: 201 });
         }),
       );
     },
@@ -143,10 +141,13 @@ export function crearBffAnalisisSimulado() {
  * Turno de evidencia del contrato (`conversation-turn-evidencia.json`) reducido al análisis dado (sin bloques ni avisos)
  * y con un id único: aísla la presentación del análisis. El turno completo es `turnoDeEvidencia` de `conversaciones.ts`.
  */
-function turnoSoloAnalisis(analisis: { status: string; topRelevanceScore: number | null }, numero: number) {
+function turnoSoloAnalisis(
+  analisis: { status: string; topRelevanceScore: number | null },
+  numero: number,
+) {
   return {
     ...turnoDeEvidenciaBase,
-    id: `00000000-0000-4000-8000-${String(numero).padStart(12, '0')}`,
+    id: idDeTurnoDePrueba(numero),
     turnNumber: numero,
     status: analisis.status === 'con_evidencia' ? 'respondido' : 'sin_evidencia',
     topRelevanceScore: analisis.topRelevanceScore,

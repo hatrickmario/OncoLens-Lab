@@ -119,6 +119,16 @@ async function comprobarBaseConFaltantes(page: Page, esperados: number) {
   await expect(bloque.getByRole('listitem')).toHaveCount(esperados);
 }
 
+/**
+ * Preguntas de seguimiento del recorrido. El chat distingue un seguimiento por su referencia léxica al resultado
+ * («la primera opción», «del análisis»; `es_seguimiento_de_evidencia`): las de `datos.seguimientos` de la guía no la traen y
+ * el chat falso las trataría como preguntas nuevas, sin citas. Cada turno de seguimiento sigue exigiendo citas y avisos.
+ */
+const SEGUIMIENTOS_DEL_CHAT = [
+  '¿Qué población estudió la primera opción del análisis?',
+  '¿Qué dice la segunda opción del análisis sobre el beneficio?',
+];
+
 test.describe('Gate G-Demo: la hipótesis de punta a punta (L1D-248)', () => {
   test.setTimeout(PLAZO_DEL_RECORRIDO_MS);
   test.describe.configure({ retries: 0 });
@@ -215,7 +225,7 @@ test.describe('Gate G-Demo: la hipótesis de punta a punta (L1D-248)', () => {
         comprobarBaseConFaltantes(page, faltantesRestantes),
       );
 
-      for (const [i, pregunta] of datos.seguimientos.entries())
+      for (const [i, pregunta] of SEGUIMIENTOS_DEL_CHAT.entries())
         await paso(`pregunta de seguimiento ${i + 1} con citas`, () =>
           pasoSeguimiento(page, pregunta, i + 1, PLAZO_DE_GENERACION_MS),
         );
