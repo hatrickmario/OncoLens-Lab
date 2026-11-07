@@ -385,6 +385,13 @@ services:
       CHAT_CONTRADICCIONES_ALCANCE_TEXTO: ${CHAT_CONTRADICCIONES_ALCANCE_TEXTO:-Se revisaron los diagnósticos y biomarcadores del expediente}
       CHAT_CONFLICTO_SIN_CONTRAPARTE_TEXTO: ${CHAT_CONFLICTO_SIN_CONTRAPARTE_TEXTO:-Hay datos marcados en conflicto cuya contraparte no está entre los datos consultados}
       CHAT_AVISO_BUSQUEDA_AMPLIADA: ${CHAT_AVISO_BUSQUEDA_AMPLIADA:-La búsqueda se amplió con datos del caso}
+      # Relevancia de un dato faltante en el chat (L1D-321, US-264, RN-22).
+      CHAT_RELEVANCIA_CATALOGO_TEXTO: ${CHAT_RELEVANCIA_CATALOGO_TEXTO:-<dato> es un dato crítico del catálogo vigente (versión <version>).}
+      CHAT_RELEVANCIA_CRITERIOS_TEXTO: "${CHAT_RELEVANCIA_CRITERIOS_TEXTO:-Criterios de aplicabilidad del catálogo que lo usan: <criterios>.}"
+      CHAT_RELEVANCIA_SIN_CRITERIO_TEXTO: ${CHAT_RELEVANCIA_SIN_CRITERIO_TEXTO:-Ningún criterio de aplicabilidad del catálogo vigente usa este dato.}
+      CHAT_RELEVANCIA_SIN_SOPORTE_TEXTO: ${CHAT_RELEVANCIA_SIN_SOPORTE_TEXTO:-La evidencia recuperada no explica la relevancia de este dato.}
+      CHAT_RELEVANCIA_FUERA_DEL_CATALOGO_TEXTO: ${CHAT_RELEVANCIA_FUERA_DEL_CATALOGO_TEXTO:-Lo consultado no figura entre los datos críticos del catálogo vigente; este turno no describe su relevancia en la evidencia.}
+      CHAT_RELEVANCIA_SIN_EVIDENCIA_AVISO: "${CHAT_RELEVANCIA_SIN_EVIDENCIA_AVISO:-Sin evidencia: ningún fragmento recuperado supera el umbral de relevancia para este dato}"
       # Tokenizador del LLM para contar tokens de la memoria del chat; vacío = contador conservador por caracteres.
       LLM_TOKENIZER_PATH: ${LLM_TOKENIZER_PATH:-}
       SERVICE_JWT_PUBLIC_KEY_FILE: /run/secrets/jwt_service_public.pem

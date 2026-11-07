@@ -2,7 +2,11 @@
 
 import pytest
 
-from app.domain.chat.enrutado import clasificar_por_reglas, es_fuera_de_alcance
+from app.domain.chat.enrutado import (
+    clasificar_por_reglas,
+    es_fuera_de_alcance,
+    es_pregunta_de_relevancia,
+)
 from app.domain.chat.estado import Intencion
 
 TERMINOS = {"mama": frozenset({"mama", "mamario"}), "prostata": frozenset({"prostata"})}
@@ -135,3 +139,47 @@ def test_enruta_a_evidencia_cuando_la_pregunta_menciona_el_corpus_sin_marcador_d
     pregunta,
 ):
     assert clasificar_por_reglas(pregunta) is Intencion.evidencia
+
+
+@pytest.mark.parametrize(
+    "pregunta",
+    [
+        "¿Por qué importa el estado menopáusico?",
+        "¿Por qué importa el Ki-67?",
+        "¿Por qué es importante el HER2?",
+        "¿Para qué sirve el Ki67?",
+        "¿Qué relevancia tiene el estado menopáusico?",
+        "¿Cuál es la importancia del ECOG?",
+    ],
+)
+def test_clasifica_como_faltantes_y_relevancia_cuando_la_pregunta_pide_por_que_importa_un_dato(
+    pregunta,
+):
+    assert clasificar_por_reglas(pregunta, CATALOGO) is Intencion.faltantes
+    assert es_pregunta_de_relevancia(pregunta) is True
+
+
+@pytest.mark.parametrize(
+    ("pregunta", "intencion"),
+    [
+        ("¿Por qué importa la evidencia sobre el Ki-67?", Intencion.evidencia),
+        ("¿Por qué importan las fuentes del corpus?", Intencion.fuentes_limitaciones),
+    ],
+)
+def test_conserva_evidencia_y_fuentes_cuando_la_pregunta_de_por_que_importa_trae_su_palabra_clave(
+    pregunta, intencion
+):
+    assert clasificar_por_reglas(pregunta, CATALOGO) is intencion
+
+
+@pytest.mark.parametrize(
+    "pregunta",
+    [
+        "¿Qué información falta?",
+        "¿Por qué importa lo que falta?",
+        "¿Cuál es la situación actual?",
+        "¿Qué importa registrar?",
+    ],
+)
+def test_no_es_pregunta_de_relevancia_cuando_la_pregunta_no_pide_por_que_importa_un_dato(pregunta):
+    assert es_pregunta_de_relevancia(pregunta) is False

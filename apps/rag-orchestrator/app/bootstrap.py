@@ -40,6 +40,7 @@ from app.application.ports import (
     ContadorDeTokens,
     CorpusCatalogReader,
     CorpusReleaseReader,
+    DatosDeRelevancia,
     EtiquetasDeDatosCriticos,
     EvidenceGenerator,
     EvidenceQueryPort,
@@ -87,6 +88,7 @@ from app.infrastructure.catalogo_clinico.datos_criticos import (
     DatosCriticosDelCatalogo,
     cargar_datos_criticos,
 )
+from app.infrastructure.catalogo_clinico.relevancia import cargar_datos_de_relevancia
 from app.infrastructure.catalogo_clinico.manifiesto import (
     CatalogoNoConfigurado,
     CatalogoNoDisponible,
@@ -409,6 +411,16 @@ def _montar_datos_criticos(
     return cargar_datos_criticos(settings.clinical_catalog_path, catalogo.tipos_de_cancer())
 
 
+def _montar_datos_de_relevancia(
+    settings: Settings, catalogo: CatalogoClinico
+) -> DatosDeRelevancia | None:
+    """Datos críticos con su destino, criterios y sinónimos de cada tipo del manifiesto, para explicar por qué importa un
+    dato en el chat (US-264); sin ruta de catálogo no hay qué leer. Un archivo ilegible lanza ``CatalogoNoDisponible``."""
+    if settings.clinical_catalog_path is None:
+        return None
+    return cargar_datos_de_relevancia(settings.clinical_catalog_path, catalogo.tipos_de_cancer())
+
+
 def _cargar_lista_de_terminos(settings: Settings) -> ProhibitedTermsChecker:
     """La lista versionada de términos prohibidos del catálogo montado (RN-23); sin ella no hay respuesta con evidencia."""
     _exigir_claves({"CLINICAL_CATALOG_PATH": settings.clinical_catalog_path})
@@ -559,6 +571,7 @@ def _crear_chat_turn(
         terminos = _terminos_del_catalogo_por_tipo(settings, catalogo)
         verificador = _cargar_lista_de_terminos(settings)
         datos_criticos = _montar_datos_criticos(settings, catalogo)
+        relevancia = _montar_datos_de_relevancia(settings, catalogo)
     except (CatalogoNoDisponible, ConfiguracionDeRecuperacionIncompleta):
         logger.warning("event=chat_no_componible motivo=catalogo_sin_terminos")
         return ChatNoComponible()
@@ -576,6 +589,7 @@ def _crear_chat_turn(
         soporte=_crear_soporte_del_chat(settings, clock, verificador, recuperacion),
         catalogo_del_corpus=recuperacion.catalogo if recuperacion is not None else None,
         lector_release=recuperacion.lector_release if recuperacion is not None else None,
+        relevancia=relevancia,
     )
 
 

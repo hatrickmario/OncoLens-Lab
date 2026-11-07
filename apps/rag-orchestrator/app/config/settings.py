@@ -30,6 +30,12 @@ from app.domain.chat.valores_iniciales import (
     CHAT_CONFLICTO_SIN_CONTRAPARTE_TEXTO_INICIAL,
     CHAT_CONTRADICCIONES_ALCANCE_TEXTO_INICIAL,
     CHAT_MEMORY_MAX_TOKENS_INICIAL,
+    CHAT_RELEVANCIA_CATALOGO_TEXTO_INICIAL,
+    CHAT_RELEVANCIA_CRITERIOS_TEXTO_INICIAL,
+    CHAT_RELEVANCIA_FUERA_DEL_CATALOGO_TEXTO_INICIAL,
+    CHAT_RELEVANCIA_SIN_CRITERIO_TEXTO_INICIAL,
+    CHAT_RELEVANCIA_SIN_EVIDENCIA_AVISO_INICIAL,
+    CHAT_RELEVANCIA_SIN_SOPORTE_TEXTO_INICIAL,
     CHAT_SIN_CONTRADICCIONES_TEXTO_INICIAL,
     CHAT_SIN_DATOS_PERIODO_TEXTO_INICIAL,
     CHAT_SIN_DATOS_TEXTO_INICIAL,
@@ -174,6 +180,26 @@ class Settings(BaseSettings):
     )
     chat_conflicto_sin_contraparte_texto: str = Field(
         default=CHAT_CONFLICTO_SIN_CONTRAPARTE_TEXTO_INICIAL, min_length=1
+    )
+    # Relevancia de un dato faltante en el chat (US-264, RN-29, RN-22): textos fijos del bloque `catalogo`, de la limitación,
+    # de la pregunta fuera del catálogo y del aviso de «sin evidencia».
+    chat_relevancia_catalogo_texto: str = Field(
+        default=CHAT_RELEVANCIA_CATALOGO_TEXTO_INICIAL, min_length=1
+    )
+    chat_relevancia_criterios_texto: str = Field(
+        default=CHAT_RELEVANCIA_CRITERIOS_TEXTO_INICIAL, min_length=1
+    )
+    chat_relevancia_sin_criterio_texto: str = Field(
+        default=CHAT_RELEVANCIA_SIN_CRITERIO_TEXTO_INICIAL, min_length=1
+    )
+    chat_relevancia_sin_soporte_texto: str = Field(
+        default=CHAT_RELEVANCIA_SIN_SOPORTE_TEXTO_INICIAL, min_length=1
+    )
+    chat_relevancia_fuera_del_catalogo_texto: str = Field(
+        default=CHAT_RELEVANCIA_FUERA_DEL_CATALOGO_TEXTO_INICIAL, min_length=1
+    )
+    chat_relevancia_sin_evidencia_aviso: str = Field(
+        default=CHAT_RELEVANCIA_SIN_EVIDENCIA_AVISO_INICIAL, min_length=1
     )
     # tokenizer.json local del LLM para contar la memoria del chat; sin él se usa un contador conservador por caracteres.
     llm_tokenizer_path: Path | None = None

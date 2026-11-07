@@ -187,6 +187,61 @@
       "request": "chat-turn-request-faltantes-ninguno.json"
     },
     {
+      "file": "chat-turn-request-relevancia-ok.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnRequest"
+    },
+    {
+      "file": "chat-turn-relevancia-ok.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnResponse",
+      "request": "chat-turn-request-relevancia-ok.json"
+    },
+    {
+      "file": "chat-turn-request-relevancia-sin-criterio.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnRequest"
+    },
+    {
+      "file": "chat-turn-relevancia-sin-criterio.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnResponse",
+      "request": "chat-turn-request-relevancia-sin-criterio.json"
+    },
+    {
+      "file": "chat-turn-request-relevancia-sin-soporte.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnRequest"
+    },
+    {
+      "file": "chat-turn-relevancia-sin-soporte.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnResponse",
+      "request": "chat-turn-request-relevancia-sin-soporte.json"
+    },
+    {
+      "file": "chat-turn-request-relevancia-sin-evidencia.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnRequest"
+    },
+    {
+      "file": "chat-turn-relevancia-sin-evidencia.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnResponse",
+      "request": "chat-turn-request-relevancia-sin-evidencia.json"
+    },
+    {
+      "file": "chat-turn-request-relevancia-fuera-de-catalogo.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnRequest"
+    },
+    {
+      "file": "chat-turn-relevancia-fuera-de-catalogo.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnResponse",
+      "request": "chat-turn-request-relevancia-fuera-de-catalogo.json"
+    },
+    {
       "file": "completeness-gap-type-p-chat.json",
       "spec": "clinical-api",
       "target": "#/paths/~1platform~1patients~1{patientId}~1completeness/get/responses/200"

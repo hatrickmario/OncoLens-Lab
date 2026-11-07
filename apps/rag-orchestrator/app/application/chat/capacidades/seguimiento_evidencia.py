@@ -11,16 +11,17 @@ Logs: solo conteos y ``traceId``, jamás la pregunta, la memoria ni el texto de 
 from __future__ import annotations
 
 import logging
-from collections.abc import Mapping
-from dataclasses import dataclass
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
-
-from app.application.chat.citas import ConstructorDeCitas, FuenteDeCita
+from app.application.chat.capacidades.afirmaciones_citadas import (
+    ParametrosDeGeneracionCitada,
+    SalidaCruda,
+    esquema_de_la_salida,
+)
+from app.application.chat.capacidades.bloques_citados import bloques_de_afirmaciones_con_soporte
+from app.application.chat.citas import ConstructorDeCitas
 from app.application.chat.contexto_del_turno import evidencia_del_turno
 from app.application.chat.grafo import ConfiguracionDelGrafo, EstadoDelGrafo
-from app.application.chunk_citable import ChunkCitable
 from app.application.errores import LlmLocalNoDisponibleError
 from app.application.generation import fragmentos_dentro_del_presupuesto, validar_salida_cruda
 from app.application.ports import (
@@ -34,13 +35,12 @@ from app.application.ports import (
 from app.application.medicion_de_prompt import registrar_tamano_del_prompt
 from app.application.rag_orchestrator_service import LIMITACION_SIN_EVIDENCIA
 from app.application.seguimiento import validar_afirmaciones_citadas
-from app.domain.alias_de_chunks import PATRON_DE_ALIAS, asignar_alias, traducir_citas
+from app.domain.alias_de_chunks import asignar_alias, traducir_citas
 from app.domain.chat.estado import EstadoDelHilo
 from app.domain.chat.mensajes import MENSAJE_SEGUIMIENTO_SIN_AFIRMACIONES
 from app.domain.chat.memoria import texto_de_turno, ventana_de_memoria
 from app.domain.chat.turno import BloqueDelTurno, TipoDeBloque
 from app.domain.chat.ultima_evidencia import resumir_ultima_evidencia
-from app.domain.citations import OpcionAceptada
 from app.domain.claims import AfirmacionAtomica, PapelDeAfirmacion
 from app.domain.relevance import top_relevance_score
 from app.prompts.chat_seguimiento_evidencia import (
@@ -52,44 +52,6 @@ from app.prompts.rag_query import bloque_de_datos_del_paciente
 logger = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class ParametrosDelSeguimiento:
-    """Valores de configuración de la generación (RN-22), los mismos que usa el análisis."""
-
-    claims_min: int
-    claims_max: int
-    claim_max_words: int
-    max_chars_fragmentos: int
-    num_ctx: int = 0
-    """``LLM_NUM_CTX``: solo para medir el tamaño del prompt (no cambia ningún comportamiento)."""
-
-
-class _AfirmacionCruda(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-
-    texto: str = Field(alias="text", min_length=1)
-    citas: list[str] = Field(alias="citations")
-
-
-class _SalidaCruda(BaseModel):
-    """Esquema interno de la salida del LLM del seguimiento (no es contrato entre servicios)."""
-
-    model_config = ConfigDict(extra="ignore")
-
-    afirmaciones: list[_AfirmacionCruda] = Field(alias="claims")
-
-
-def esquema_de_la_salida(claims_max: int) -> dict[str, Any]:
-    """Esquema entregado al LLM: hasta ``claims_max`` afirmaciones y alias con el formato de la consulta."""
-    esquema = _SalidaCruda.model_json_schema()
-    esquema["properties"]["claims"]["maxItems"] = claims_max
-    esquema["$defs"]["_AfirmacionCruda"]["properties"]["citations"]["items"] = {
-        "type": "string",
-        "pattern": PATRON_DE_ALIAS,
-    }
-    return esquema
-
-
 class NodoSeguimientoDeEvidencia:
     def __init__(
         self,
@@ -99,7 +61,7 @@ class NodoSeguimientoDeEvidencia:
         llm: LlmClient,
         contador: ContadorDeTokens,
         configuracion: ConfiguracionDelGrafo,
-        parametros: ParametrosDelSeguimiento,
+        parametros: ParametrosDeGeneracionCitada,
     ) -> None:
         self._servicio = servicio
         self._citas = ConstructorDeCitas(posiciones)
@@ -185,7 +147,7 @@ class NodoSeguimientoDeEvidencia:
             logger.warning("event=chat_seguimiento_llm_fallo traceId=%s", trace_id)
             raise LlmLocalNoDisponibleError() from None
         salida = validar_salida_cruda(
-            _SalidaCruda, crudo, trace_id, "chat_seguimiento_salida_invalida"
+            SalidaCruda, crudo, trace_id, "chat_seguimiento_salida_invalida"
         )
         return tuple(
             AfirmacionAtomica(
@@ -210,27 +172,6 @@ class NodoSeguimientoDeEvidencia:
             return (
                 BloqueDelTurno(TipoDeBloque.limitacion, MENSAJE_SEGUIMIENTO_SIN_AFIRMACIONES),
             ), omitidas
-        return await self._bloques_con_citas(
-            trace_id, validadas.soportadas, validadas.citables
+        return await bloques_de_afirmaciones_con_soporte(
+            self._citas, trace_id, validadas.soportadas, validadas.citables
         ), omitidas
-
-    async def _bloques_con_citas(
-        self,
-        trace_id: str,
-        soportadas: tuple[OpcionAceptada, ...],
-        citables: Mapping[str, ChunkCitable],
-    ) -> tuple[BloqueDelTurno, ...]:
-        fuentes = [
-            FuenteDeCita(i, citables[i].ficha.title, citables[i].chunk.chunk_text)
-            for aceptada in soportadas
-            for i in aceptada.chunk_ids_validos
-        ]
-        citas = await self._citas.construir(trace_id, fuentes)
-        return tuple(
-            BloqueDelTurno(
-                TipoDeBloque.evidencia,
-                aceptada.opcion.rationale,
-                citas=tuple(citas[i] for i in aceptada.chunk_ids_validos),
-            )
-            for aceptada in soportadas
-        )
