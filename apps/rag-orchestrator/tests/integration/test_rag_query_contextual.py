@@ -16,6 +16,8 @@ from app.config.errores_de_configuracion import describir_errores
 from app.domain.reescritura import ParametrosDeReescritura
 from app.domain.terminos_del_caso import CatalogoDeTerminos
 from tests.support.arnes_contextual import (
+    PUNTAJES_ALTOS,
+    PUNTAJES_BAJOS,
     CON_REESCRITURA_DE_PRUEBA,
     CAMPOS_USADOS,
     CONSULTA_CONTEXTUAL,
@@ -29,7 +31,12 @@ from tests.support.arnes_contextual import (
 from tests.support.expansion_contextual import preguntas_de_la_medicion
 from tests.support.fakes import settings_de_prueba
 from tests.support.generador_falso import FakeEvidenceGenerator
-from tests.support.recuperacion import EJEMPLOS, Q_HER2, RerankerFalso
+from tests.support.recuperacion import (
+    EJEMPLOS,
+    Q_HER2,
+    RerankerFalso,
+    ejemplo_con_catalogo_montado,
+)
 from tests.support.reescritura import (
     CATALOGO_DE_PRUEBA,
     PUNTAJES_DE_REESCRITURA,
@@ -283,3 +290,38 @@ def test_arranque_falla_nombrando_la_variable_y_no_el_valor_cuando_la_configurac
     assert "SENTINELA" not in json.dumps(eventos) and "nombre_del_paciente" not in json.dumps(
         eventos
     )
+
+
+def _sin_latencia(cuerpo: dict) -> dict:
+    copia = json.loads(json.dumps(cuerpo))
+    copia["meta"]["latencyMs"] = 0
+    return copia
+
+
+def test_rag_query_produce_el_ejemplo_contextual_con_evidencia_cuando_recibe_su_peticion():
+    peticion = ejemplo_con_catalogo_montado("rag-query-request-contextual.json")
+    consulta = f"{peticion['query']} Cáncer de mama IIA Receptor de estrógeno"
+    entorno = crear_entorno_contextual(
+        puntajes={
+            **puntajes_contextuales(),
+            peticion["query"]: PUNTAJES_BAJOS,
+            consulta: PUNTAJES_ALTOS,
+        }
+    )
+    ejemplo = json.loads((EJEMPLOS / "rag-query-contextual.json").read_text("utf-8"))
+
+    respuesta = entorno.consultar(peticion)
+
+    assert respuesta.status_code == 200
+    assert _sin_latencia(respuesta.json()) == _sin_latencia(ejemplo)
+
+
+def test_rag_query_produce_el_ejemplo_contextual_sin_evidencia_cuando_recibe_su_peticion():
+    peticion = ejemplo_con_catalogo_montado("rag-query-request-contextual-sin-evidencia.json")
+    entorno = crear_entorno_contextual()
+    ejemplo = json.loads((EJEMPLOS / "rag-query-contextual-sin-evidencia.json").read_text("utf-8"))
+
+    respuesta = entorno.consultar(peticion)
+
+    assert respuesta.status_code == 200
+    assert _sin_latencia(respuesta.json()) == _sin_latencia(ejemplo)
