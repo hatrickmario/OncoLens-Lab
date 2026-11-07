@@ -15,6 +15,8 @@ después; la medición con modelos reales es la corrida final única del S6 (D6-
 - [x] 2.2 Bucle interno: `CatalogoDeTerminos.biomarcadores_no_anclables`, `_del_biomarcador_principal` y el cargador (`infrastructure/catalogo_clinico/terminos_del_caso.py`) · commit `feat(L1D-331)` 075ca15c · EVIDENCIA: los 7 en verde; `pytest` de `rag-orchestrator` 5106 passed (193 deseleccionados por requerir PostgreSQL)
 - [x] 2.3 Refactor sin cambio de comportamiento si procede · EVIDENCIA: refactor: sin cambios (una función pura de 4 líneas y un cargador de 8; sin duplicación)
 
+- [x] 2.4 Gate 2 (diseño P1/P2 y menores): el panel de `web` (`preguntas-guiadas.ts`, `biomarcadorDe`) recibe `biomarcadoresNoAnclables` del mismo léxico (`catalogo-guiadas.ts`, con su COPY en `apps/web/Dockerfile`) y lo salta; caso nuevo `prostata-solo-psa-sin-estadio-ni-grado` en el fixture y test de igualdad (ningún término del catálogo ajeno a `salida.terminos` aparece en las preguntas); regla cruzada `biomarcador_no_anclable_desconocido` en `validator/marcos.mjs`; el cargador de rag falla con `CatalogoNoDisponible` si falta el léxico y lo lee una sola vez; fixture `temas-del-caso.json` en 1.9.0 · commits `test(L1D-331)` 4f37c85a y `feat(L1D-331)` · EVIDENCIA: rojo (2 de web, 1 del validador, 1 del cargador); verde: web guiadas 14 passed, `scripts/catalog` 212 passed, pytest rag 5108 passed
+
 ## 3. evaluación
 
 - [ ] 3.1 DIFERIDA -> D6-50 (corrida final única del S6 con modelos reales: AC-1 sobre las 22 genéricas con el caso de próstata, meta de top-3 de cribado ≤ 33/66 frente a 54/66, y AC-2 sobre las 60 preguntas; sin modelos reales durante el desarrollo)

@@ -102,7 +102,7 @@ export const ARCHIVOS_DE_RAIZ_DECLARADOS_POR_EL_MANIFIESTO = {
   'lenguaje/marcos-de-pregunta': {
     esquema: 'marcos-de-pregunta',
     clave: 'marcosDePregunta',
-    reglas: (archivo) => violacionesDeMarcos(archivo),
+    reglas: (archivo, _manifiesto, catalogo) => violacionesDeMarcos(archivo, catalogo),
   },
 };
 

@@ -111,7 +111,11 @@ describe('armarPreguntasGuiadas', () => {
 
   it('no ancla el tema en el PSA de próstata y usa el siguiente biomarcador del catálogo [US-273 AC-1]', () => {
     const solo = armar(casoDelFixture('prostata-solo-psa-sin-estadio-ni-grado')).join(' ');
-    const conHrr = armar(casoDelFixture('prostata-con-psa-y-hrr')).join(' ');
+    const resumen = casoDelFixture('prostata-con-psa-y-hrr');
+    const conHrr = armar({
+      ...resumen,
+      diagnosis: { ...resumen.diagnosis!, stageValue: 'Sin estadificar', grade: null },
+    }).join(' ');
 
     expect(solo).not.toMatch(/PSA|prostático/);
     expect(conHrr).toContain('HRR positivo');

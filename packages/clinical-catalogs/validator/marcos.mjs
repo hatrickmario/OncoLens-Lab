@@ -25,17 +25,51 @@ function violacionesDeLaLista(entradas, campo) {
 }
 
 /** `expansion.biomarcadoresNoAnclables` (L1D-331): cada tipo con su lista bien formada; el campo es `expansion_<tipo>`. */
-function violacionesDeLaExpansion(expansion) {
+function violacionesDeLaExpansion(expansion, tipos) {
   const porTipo = expansion?.biomarcadoresNoAnclables;
   if (!esObjeto(porTipo)) return [];
-  return Object.entries(porTipo).flatMap(([tipo, entradas]) =>
-    violacionesDeLaLista(entradas, `expansion_${/^[a-z]+$/.test(tipo) ? tipo : '?'}`),
-  );
+  return Object.entries(porTipo).flatMap(([tipo, entradas]) => {
+    const campo = `expansion_${/^[a-z]+$/.test(tipo) ? tipo : '?'}`;
+    const delaLista = violacionesDeLaLista(entradas, campo);
+    return delaLista.length > 0
+      ? delaLista
+      : violacionesDeNombresDesconocidos(entradas, tipos?.[tipo], campo);
+  });
 }
 
-/** @returns {{ codigo: string, archivo: string, campo: string }[]} */
-export function violacionesDeMarcos(marcos) {
-  return [...violacionesDeLosIdiomas(marcos), ...violacionesDeLaExpansion(marcos?.expansion)];
+const normalizar = (texto) =>
+  texto
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+
+/** Regla cruzada: cada nombre no anclable es un biomarcador de `datos-criticos` del tipo (si el tipo está en el catálogo). */
+function violacionesDeNombresDesconocidos(entradas, archivosDelTipo, campo) {
+  const items = archivosDelTipo?.['datos-criticos']?.items;
+  if (!Array.isArray(items)) return [];
+  const conocidos = new Set(
+    items
+      .map((item) => item?.destination?.match?.name)
+      .filter((nombre) => typeof nombre === 'string')
+      .map(normalizar),
+  );
+  return entradas.some((entrada) => !conocidos.has(entrada))
+    ? [{ codigo: 'biomarcador_no_anclable_desconocido', archivo: 'marcos-de-pregunta', campo }]
+    : [];
+}
+
+/**
+ * @param {object} marcos
+ * @param {{ tipos?: Record<string, object> }} [catalogo] los archivos ya cargados, para la regla cruzada de `expansion`
+ * @returns {{ codigo: string, archivo: string, campo: string }[]}
+ */
+export function violacionesDeMarcos(marcos, catalogo) {
+  return [
+    ...violacionesDeLosIdiomas(marcos),
+    ...violacionesDeLaExpansion(marcos?.expansion, catalogo?.tipos),
+  ];
 }
 
 function violacionesDeLosIdiomas(marcos) {
