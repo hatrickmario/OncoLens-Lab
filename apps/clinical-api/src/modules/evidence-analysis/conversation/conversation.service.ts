@@ -14,17 +14,13 @@ import type {
 import { zChatTurnResponseRefinado } from '../../../../../../packages/api-contracts/src/zod/rag-orchestrator/refinamientos.gen.js';
 import type { Clock } from '../../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../../infrastructure/ids.js';
-import {
-  FalloDePersistenciaError,
-  RespuestaInternaInvalidaError,
-  topRelevanceScorePersistible,
-} from '../analysis-completion.js';
-import { armarRegistro, type RegistroDeAnalisis } from '../analysis-record.js';
+import { FalloDePersistenciaError, construirRegistroValidado } from '../analysis-completion.js';
+import type { RegistroDeAnalisis } from '../analysis-record.js';
 import { aEvidenceAnalysis } from '../evidence-analysis.mapper.js';
 import { construirContextoDelChat } from '../clinical-context.builder.js';
 import { clasificacionDelPaciente, proveedorPermitido } from '../regla-proveedor.js';
 import type { CasoClinico, CasoRepository } from '../evidence-analysis.repository.js';
-import { calcularDeadline } from '../evidence-analysis.service.js';
+import { armarRagQueryRequest, calcularDeadline } from '../evidence-analysis.service.js';
 import {
   PROVEEDOR_NO_PERMITIDO,
   RESPUESTA_INTERNA_INVALIDA,
@@ -160,12 +156,11 @@ function aConversationTurn(
 /** Un turno ya persistido al leer la conversación: el que creó el análisis trae el suyo; el de seguimiento, no. */
 function leerTurno(
   turno: TurnoDeConversacion,
-  turnos: readonly TurnoDeConversacion[],
   registros: ReadonlyMap<string, RegistroDeAnalisis>,
   disclaimer: string,
 ): ConversationTurn {
   const registro = turno.analysisId === null ? undefined : registros.get(turno.analysisId);
-  if (registro !== undefined && creoElAnalisis(turnos, turno)) {
+  if (registro !== undefined && creoElAnalisis(registro, turno)) {
     const estado: EstadoDelTurno = {
       status: registro.status === 'sin_evidencia' ? 'sin_evidencia' : 'respondido',
       topRelevanceScore: registro.topRelevanceScore,
@@ -189,7 +184,7 @@ function aConversation(
     conversationId: conversacion.id,
     patientId: conversacion.patientId,
     createdAt: conversacion.createdAt.toISOString(),
-    turns: turnos.map((turno) => leerTurno(turno, turnos, registros, disclaimer)),
+    turns: turnos.map((turno) => leerTurno(turno, registros, disclaimer)),
   };
 }
 
@@ -341,63 +336,59 @@ async function consultarRehidratandoSiHaceFalta(
   });
 }
 
-/** Lo que se persiste de un turno: la fila, su estado derivado y, si el turno es de evidencia, el registro del análisis. */
-interface TurnoArmado {
-  turno: TurnoNuevo;
-  estado: EstadoDelTurno;
-  registro?: RegistroDeAnalisis;
-}
-
-/** `RagQueryInternalRequest` equivalente al turno de evidencia: lo que la Base y el registro dicen que se consultó. */
+/**
+ * `RagQueryInternalRequest` equivalente al turno de evidencia: lo que la Base y el registro dicen que se consultó. El chat
+ * no tiene filtros ni año mínimo (toda la evidencia vigente, igual que en Backend 2): `publishedFromYear = null`.
+ */
 function consultaEquivalente(
   preparado: TurnoPreparado,
   maxOpciones: number,
   traceId: string,
+  ahora: Date,
 ): RagQueryInternalRequest {
-  return {
+  return armarRagQueryRequest({
     traceId,
     query: preparado.request.question,
     sourcesSelected: { guias: true, ensayos: true, publicaciones: true },
     dataClassification: preparado.clasificacion,
     catalogVersion: preparado.request.catalogVersion,
     maxOptions: maxOpciones,
-    // El chat no tiene filtros ni año mínimo: toda la evidencia vigente del corpus (igual que en Backend 2).
-    filtersApplied: {
-      historiaCompleta: false,
-      soloBiomarcadoresRelevantes: false,
-      ultimosSeisMeses: false,
-      antecedentesFamiliares: false,
-      publishedFromYear: null,
-    },
+    filtros: { publishedFromYear: null },
     clinicalContext: preparado.request.clinicalContext,
-  };
+    anioActual: ahora.getUTCFullYear(),
+    aniosPorDefecto: 0,
+  });
 }
 
-/** El `AIAnalysisRecord` del turno de evidencia, con el contenido trazable del gateway (AC-T1.4). */
-function armarRegistroDelTurno(
+/** El `AIAnalysisRecord` del turno de evidencia (contenido trazable del gateway, AC-T1.4) o el fallo ya traducido. */
+function registroDelTurno(
   { base, idsDeAnalisis, reloj, config }: Dependencias,
   solicitud: SolicitudDeTurno,
   preparado: TurnoPreparado,
   caso: CasoClinico,
   evidencia: RagQueryInternalResponse,
-): RegistroDeAnalisis {
-  if (caso.episodioId === null) throw new FalloDePersistenciaError();
-  const request = consultaEquivalente(preparado, config.maxOpciones, solicitud.traceId);
-  return armarRegistro({
-    id: idsDeAnalisis(),
-    creadoEn: reloj.now(),
-    traceId: solicitud.traceId,
-    patientId: caso.paciente.id,
-    episodeId: caso.episodioId,
-    userId: solicitud.userId,
-    questionTemplateId: null,
-    continueWithWarning: false,
-    request,
-    dataRefs: preparado.dataRefs,
-    respuesta: evidencia,
-    base: base.construir(request, evidencia, false),
-    topRelevanceScore: topRelevanceScorePersistible(evidencia),
-  });
+): RegistroDeAnalisis | RespuestaDeFallo {
+  return construirRegistroValidado(
+    { base, idsDeAnalisis, reloj },
+    {
+      traceId: solicitud.traceId,
+      patientId: caso.paciente.id,
+      episodeId: caso.episodioId,
+      userId: solicitud.userId,
+      questionTemplateId: null,
+      continueWithWarning: false,
+      request: consultaEquivalente(preparado, config.maxOpciones, solicitud.traceId, reloj.now()),
+      dataRefs: preparado.dataRefs,
+      cuerpo: evidencia,
+    },
+  );
+}
+
+/** Lo que se persiste de un turno: la fila, su estado derivado y, si el turno es de evidencia, el registro del análisis. */
+interface TurnoArmado {
+  turno: TurnoNuevo;
+  estado: EstadoDelTurno;
+  registro?: RegistroDeAnalisis;
 }
 
 type CuerpoDelChat = NonNullable<ReturnType<typeof validarCuerpoDelChat>>;
@@ -418,23 +409,6 @@ function validarCuerpoDelChat(
     cuerpo.subintent === 'seguimiento_evidencia' &&
     (activo === null || cuerpo.evidenceAnalysis !== undefined);
   return incoherente ? null : { cuerpo, enlaces: enlaces.enlaces };
-}
-
-/** El registro del análisis si el turno trae `evidenceAnalysis`; `null` si el análisis es incoherente (RN-02). */
-function registroDelTurno(
-  dependencias: Dependencias,
-  solicitud: SolicitudDeTurno,
-  preparado: TurnoPreparado,
-  caso: CasoClinico,
-  evidencia: RagQueryInternalResponse | undefined,
-): RegistroDeAnalisis | undefined | null {
-  if (evidencia === undefined) return undefined;
-  try {
-    return armarRegistroDelTurno(dependencias, solicitud, preparado, caso, evidencia);
-  } catch (error) {
-    if (error instanceof RespuestaInternaInvalidaError) return null;
-    throw error;
-  }
 }
 
 function filaDelTurno(
@@ -482,24 +456,36 @@ function armarTurno(
   const activo = analisisActivo(previos);
   const validado = validarCuerpoDelChat(cuerpoDeRag, preparado, activo);
   if (validado === null) return null;
-  const evidencia = validado.cuerpo.evidenceAnalysis;
-  if (
-    evidencia !== undefined &&
-    !proveedorPermitido(preparado.clasificacion, evidencia.meta.llmProvider)
-  ) {
+  // RN-12: el proveedor que respondió el turno (también el de seguimiento) debe estar permitido por la clasificación.
+  if (!proveedorPermitido(preparado.clasificacion, validado.cuerpo.llmProvider)) {
     return PROVEEDOR_NO_PERMITIDO;
   }
-  const registro = registroDelTurno(dependencias, solicitud, preparado, caso, evidencia);
-  if (registro === null) return null;
-  const esSeguimiento = validado.cuerpo.subintent === 'seguimiento_evidencia';
-  const estado = esSeguimiento
-    ? estadoDelSeguimiento(validado.cuerpo.structuredState)
-    : derivarEstadoDelTurno(validado.cuerpo.intent, evidencia);
-  const analysisId = registro?.id ?? (esSeguimiento ? activo : null);
+  const evidencia = validado.cuerpo.evidenceAnalysis;
+  const registro =
+    evidencia === undefined
+      ? undefined
+      : registroDelTurno(dependencias, solicitud, preparado, caso, evidencia);
+  if (registro !== undefined && 'codigo' in registro) return registro;
+  const { estado, analysisId } = estadoYAnalisisDelTurno(validado.cuerpo, registro, activo);
   return {
     estado,
     ...(registro !== undefined && { registro }),
     turno: filaDelTurno(dependencias, solicitud, preparado, validado, analysisId),
+  };
+}
+
+/** `status`/`topRelevanceScore` y el `analysis_id` del turno: el de evidencia crea el suyo; el de seguimiento, el activo. */
+function estadoYAnalisisDelTurno(
+  cuerpo: CuerpoDelChat['cuerpo'],
+  registro: RegistroDeAnalisis | undefined,
+  activo: string | null,
+): { estado: EstadoDelTurno; analysisId: string | null } {
+  if (cuerpo.subintent === 'seguimiento_evidencia') {
+    return { estado: estadoDelSeguimiento(cuerpo.structuredState), analysisId: activo };
+  }
+  return {
+    estado: derivarEstadoDelTurno(cuerpo.intent, cuerpo.evidenceAnalysis),
+    analysisId: registro?.id ?? null,
   };
 }
 

@@ -358,10 +358,14 @@ describe('Seguimiento del análisis activo (L1D-322)', () => {
     expect(estadoDelSeguimiento(ESTADO_VACIO).topRelevanceScore).toBeNull();
   });
 
-  it('considera creador del análisis solo al primer turno que lo referencia', () => {
+  it('considera creador del análisis solo al turno que comparte trace_id con su registro, aunque sean copias', () => {
     const id = 'dddddddd-bbbb-4ccc-8ddd-eeeeeeeeeeee';
-    const turnos = [turno(1), turno(2, { analysisId: id }), turno(3, { analysisId: id })];
+    const creador = turno(2, { analysisId: id, traceId: 'req_creador' });
+    const seguimiento = turno(3, { analysisId: id, traceId: 'req_seguimiento' });
+    const registro = { traceId: 'req_creador' };
 
-    expect(turnos.map((t) => creoElAnalisis(turnos, t))).toEqual([false, true, false]);
+    expect(creoElAnalisis(registro, { ...creador })).toBe(true);
+    expect(creoElAnalisis(registro, { ...seguimiento })).toBe(false);
+    expect(creoElAnalisis(undefined, creador)).toBe(false);
   });
 });

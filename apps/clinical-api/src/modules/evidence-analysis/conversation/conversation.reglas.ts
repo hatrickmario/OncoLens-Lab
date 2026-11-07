@@ -9,6 +9,7 @@ import type {
   RagQueryInternalResponse,
   StructuredState,
 } from '../../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
+import type { RegistroDeAnalisis } from '../analysis-record.js';
 import type { TurnoDeConversacion } from './conversation.repository.js';
 import type { ClaseDeHecho, EnlaceDelHecho } from './hechos-del-caso.js';
 
@@ -85,14 +86,15 @@ export function estadoDelSeguimiento(estructurado: StructuredState): EstadoDelTu
   return { status: puntaje === null ? 'sin_evidencia' : 'respondido', topRelevanceScore: puntaje };
 }
 
-/** El turno que creó el análisis es el primero de la conversación que lo referencia; los demás son seguimientos. */
+/**
+ * El turno que creó el análisis es el que comparte `trace_id` con su registro (el registro se arma con el `traceId` del
+ * turno); los demás turnos que lo referencian son seguimientos. No depende de la identidad del objeto ni del orden.
+ */
 export function creoElAnalisis(
-  turnos: readonly TurnoDeConversacion[],
-  turno: TurnoDeConversacion,
+  registro: Pick<RegistroDeAnalisis, 'traceId'> | undefined,
+  turno: Pick<TurnoDeConversacion, 'traceId'>,
 ): boolean {
-  return (
-    turno.analysisId !== null && turnos.find((t) => t.analysisId === turno.analysisId) === turno
-  );
+  return registro !== undefined && registro.traceId === turno.traceId;
 }
 
 /** `activeAnalysisId`: el `analysisId` del turno más reciente que lo tenga; `null` si ninguno. */

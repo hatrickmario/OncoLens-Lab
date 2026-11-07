@@ -5,19 +5,19 @@
   "question": "¿En qué se diferencia la población del estudio de mi paciente?",
   "intent": "evidencia",
   "status": "respondido",
-  "topRelevanceScore": 0.84,
+  "topRelevanceScore": 0.8,
   "blocks": [
     {
       "kind": "evidencia",
-      "text": "Según la fuente citada, la población del estudio incluye pacientes con enfermedad en estadio I–III, tanto premenopáusicas como posmenopáusicas.",
+      "text": "La fuente reporta que El estudio describe terapia endocrina adyuvante en tumores con receptor de estrógeno positivo.",
       "citations": [
         {
-          "chunkId": "chunk_88231",
-          "documentId": "doc_pdq_mama_hp",
-          "sourceTitle": "Breast Cancer Treatment (PDQ®)–Health Professional Version",
-          "chunkOrdinal": 3,
-          "chunkCount": 41,
-          "chunkTextSnapshot": "Texto sintético de ejemplo: the addition of anti-HER2 therapy to adjuvant chemotherapy is described for HER2-positive tumors in a study population with stage I–III disease, including both premenopausal and postmenopausal patients."
+          "chunkId": "ch-m1-1",
+          "documentId": "doc-m1",
+          "sourceTitle": "Breast Cancer Treatment (test)",
+          "chunkOrdinal": 1,
+          "chunkCount": 1,
+          "chunkTextSnapshot": "Adding anti-HER2 therapy to adjuvant chemotherapy improved disease-free survival in HER2-positive early breast cancer."
         }
       ]
     }

@@ -2,24 +2,28 @@
   "id": "d2a1b3c4-5e6f-4a7b-9c8d-0e1f2a3b4c5d",
   "turnNumber": 1,
   "createdAt": "2026-11-06T15:05:00.000Z",
-  "question": "¿Qué evidencia existe para pacientes con las características de este paciente?",
+  "question": "¿Qué opciones adyuvantes describe la evidencia para cáncer de mama HER2 positivo en estadio IIA?",
   "intent": "evidencia",
   "status": "respondido",
   "topRelevanceScore": 0.87,
   "blocks": [
     {
       "kind": "evidencia",
-      "text": "Opciones descritas en la evidencia:\n1. Quimioterapia combinada con terapia dirigida anti-HER2. La evidencia recuperada describe la adición de terapia anti-HER2 a la quimioterapia adyuvante en tumores HER2 positivos.",
+      "text": "Opciones descritas en la evidencia: opción 1 de 1.\nQuimioterapia adyuvante combinada con terapia dirigida anti-HER2. La fuente reporta que La evidencia recuperada describe la adición de terapia anti-HER2 a la quimioterapia adyuvante.",
       "citations": [
         {
-          "chunkId": "chunk_88231",
-          "documentId": "doc_pdq_mama_hp",
-          "sourceTitle": "Breast Cancer Treatment (PDQ®)–Health Professional Version",
-          "chunkOrdinal": 3,
-          "chunkCount": 41,
-          "chunkTextSnapshot": "Texto sintético de ejemplo: the addition of anti-HER2 therapy to adjuvant chemotherapy is described for HER2-positive tumors in a study population with stage I–III disease, including both premenopausal and postmenopausal patients."
+          "chunkId": "ch-m1-1",
+          "documentId": "doc-m1",
+          "sourceTitle": "Breast Cancer Treatment (test)",
+          "chunkOrdinal": 1,
+          "chunkCount": 1,
+          "chunkTextSnapshot": "Adding anti-HER2 therapy to adjuvant chemotherapy improved disease-free survival in HER2-positive early breast cancer."
         }
       ]
+    },
+    {
+      "kind": "catalogo",
+      "text": "Orden según aplicabilidad: primero las opciones con menos criterios en No coincide y más en Coincide; la relevancia solo desempata."
     }
   ],
   "dataLinks": [],

@@ -13,22 +13,21 @@
       "evidencia"
     ],
     "preguntasPrevias": [
-      "¿Qué evidencia existe para pacientes con las características de este paciente?",
+      "¿Qué opciones adyuvantes describe la evidencia para cáncer de mama HER2 positivo en estadio IIA?",
       "¿En qué se diferencia la población del estudio de mi paciente?"
     ],
     "opcionesMostradas": [
-      "Quimioterapia combinada con terapia dirigida anti-HER2"
+      "Quimioterapia adyuvante combinada con terapia dirigida anti-HER2"
     ],
     "citasMostradas": [
-      "chunk_88231"
+      "ch-m1-1"
     ],
     "faltantesSenalados": [],
     "ultimaEvidencia": {
       "query": "¿En qué se diferencia la población del estudio de mi paciente?",
       "chunkIds": [
-        "chunk_88231",
-        "chunk_88240",
-        "chunk_91002"
+        "ch-inj-1",
+        "ch-m1-1"
       ],
       "topRelevanceScore": null
     }

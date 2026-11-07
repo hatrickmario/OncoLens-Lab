@@ -2,6 +2,8 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import chatTurnEvidencia from '../../../../../contracts/examples/chat-turn-evidencia.json' with { type: 'json' };
 import chatTurnLlmNoDisponible from '../../../../../contracts/examples/chat-turn-llm-local-no-disponible.json' with { type: 'json' };
 import chatTurnSeguimiento from '../../../../../contracts/examples/chat-turn-seguimiento-evidencia.json' with { type: 'json' };
+import ragAplicabilidad from '../../../../../contracts/examples/rag-query-aplicabilidad-a-m1.json' with { type: 'json' };
+import ragSinEvidencia from '../../../../../contracts/examples/rag-query-sin-evidencia.json' with { type: 'json' };
 import { idSembrado } from '../../../prisma/seed/determinismo.js';
 import { PACIENTE_CHAT } from '../../../prisma/seed/pacientes/chat.js';
 import { lectorDeIdentidadFalso } from '../../support/desidentificacion.js';
@@ -12,10 +14,14 @@ import {
   enviarTurno,
   leerTurnosDeChat,
   rutaDeConversacion,
+  sembrarTurnoDeChat,
 } from '../../support/conversacion.js';
+import { registrarMarca } from '../../support/opt-out.js';
+import { crearAnalisisConEvidencia } from '../../support/seguimiento.js';
 import {
   abrirSesion,
   contarAnalisisDelPaciente,
+  crearPacienteSintetico,
   instalarFalloDeEscrituraDelRegistro,
   leerRegistroPorTrace,
   montarGateway,
@@ -58,6 +64,7 @@ const traceDelTurno = (): string => `req_Evid${String(++contadorDeTrace).padStar
 
 async function conversacionSobre(patientId: string) {
   const { app } = await montarGateway(mundo, {
+    analysisMaxOptions: 3,
     identidades: lectorDeIdentidadFalso({ [patientId]: IDENTIDAD_CHAT }),
     traceIds: { traceId: traceDelTurno },
   });
@@ -123,7 +130,9 @@ describe('Turno de evidencia registrado como análisis', () => {
 
   it('persiste la aplicabilidad igual a la respondida y no envía estado menopáusico con el paciente (e) [US-265 AC-2] [AC-04.3] [RN-28]', async () => {
     const { app, conversationId } = await conversacionSobre(pacienteE);
-    rag.chat.responder(respuestaDeRag(chatTurnEvidencia));
+    // FX-T3-a: el análisis del paciente (e) trae el criterio de menopausia Desconocido por falta en el paciente.
+    const cuerpo = { ...chatTurnEvidencia, evidenceAnalysis: ragAplicabilidad };
+    rag.chat.responder(respuestaDeRag(cuerpo));
 
     const respuesta = await enviarTurno(app, cookie, conversationId, PREGUNTA_DE_EVIDENCIA);
 
@@ -138,7 +147,7 @@ describe('Turno de evidencia registrado como análisis', () => {
     expect(registro?.applicability).toEqual(respuesta.body.evidenceAnalysis.applicability);
     expect(
       respuesta.body.evidenceAnalysis.evidenceOptions.map((o: { option: string }) => o.option),
-    ).toEqual(chatTurnEvidencia.evidenceAnalysis.evidenceOptions.map((o) => o.option));
+    ).toEqual(cuerpo.evidenceAnalysis.evidenceOptions.map((o) => o.option));
     const menopausia = respuesta.body.evidenceAnalysis.applicability
       .flatMap((f: { criteria: { criterion: string }[] }) => f.criteria)
       .find((c: { criterion: string }) => c.criterion === 'estado_menopausico');
@@ -212,6 +221,143 @@ describe('Lectura de la conversación', () => {
     });
     expect(seguimiento.evidenceAnalysis).toBeUndefined();
     expect(seguimiento.analysisId).toBe(analisis.analysisId);
-    expect(seguimiento.topRelevanceScore).toBe(0.84);
+    expect(seguimiento.topRelevanceScore).toBe(
+      chatTurnSeguimiento.structuredState.ultimaEvidencia.topRelevanceScore,
+    );
+  });
+});
+
+describe('Respuestas incoherentes o de proveedor no permitido de Backend 2', () => {
+  it('responde 502 sin persistir cuando el análisis es incoherente: sin_evidencia con opciones y puntaje [US-265 AC-1] [RN-02] [RN-06]', async () => {
+    const { app, conversationId } = await conversacionSobre(pacienteChat);
+    const incoherente = structuredClone(chatTurnEvidencia);
+    incoherente.evidenceAnalysis.status = 'sin_evidencia';
+    rag.chat.responder(respuestaDeRag(incoherente));
+
+    const respuesta = await enviarTurno(app, cookie, conversationId, PREGUNTA_DE_EVIDENCIA);
+
+    expect(respuesta.status).toBe(502);
+    expect(await contarTurnosDeChat(mundo.cliente, conversationId)).toBe(0);
+  });
+
+  it('responde 502 sin persistir cuando un seguimiento trae evidenceAnalysis: el seguimiento no crea análisis [US-265 AC-3]', async () => {
+    const { app, conversationId } = await conversacionSobre(pacienteChat);
+    rag.chat.responder(respuestaDeRag(chatTurnEvidencia), {
+      ...respuestaDeRag({
+        ...chatTurnSeguimiento,
+        evidenceAnalysis: chatTurnEvidencia.evidenceAnalysis,
+      }),
+    });
+    await enviarTurno(app, cookie, conversationId, PREGUNTA_DE_EVIDENCIA);
+    const registros = await contarAnalisisDelPaciente(mundo.cliente, pacienteChat);
+
+    const respuesta = await enviarTurno(app, cookie, conversationId, PREGUNTA_DE_SEGUIMIENTO);
+
+    expect(respuesta.status).toBe(502);
+    expect(await contarTurnosDeChat(mundo.cliente, conversationId)).toBe(1);
+    expect(await contarAnalisisDelPaciente(mundo.cliente, pacienteChat)).toBe(registros);
+  });
+
+  it('responde 502 sin persistir cuando el turno de evidencia declara nube con datos reales [RN-12] [US-265 AC-6]', async () => {
+    const { app, conversationId, patientId } = await conversacionReal();
+    const nube = structuredClone(chatTurnEvidencia);
+    nube.llmProvider = 'nube';
+    rag.chat.responder(respuestaDeRag(nube));
+
+    const respuesta = await enviarTurno(app, cookie, conversationId, PREGUNTA_DE_EVIDENCIA);
+
+    expect(respuesta.status).toBe(502);
+    expect(await contarTurnosDeChat(mundo.cliente, conversationId)).toBe(0);
+    expect(await contarAnalisisDelPaciente(mundo.cliente, patientId)).toBe(0);
+  });
+
+  it('responde 502 sin persistir cuando el turno de SEGUIMIENTO declara nube con datos reales [RN-12] [US-265 AC-3]', async () => {
+    const { app, conversationId, patientId } = await conversacionReal();
+    const analisis = await crearAnalisisConEvidencia(app, cookie, rag, patientId);
+    await sembrarTurnoDeChat(mundo, conversationId, {
+      turnNumber: 1,
+      question: PREGUNTA_DE_EVIDENCIA,
+      intent: 'evidencia',
+      analysisId: analisis.id,
+    });
+    rag.reiniciar();
+    const registros = await contarAnalisisDelPaciente(mundo.cliente, patientId);
+    rag.chat.responder(respuestaDeRag({ ...chatTurnSeguimiento, llmProvider: 'nube' }));
+
+    const respuesta = await enviarTurno(app, cookie, conversationId, PREGUNTA_DE_SEGUIMIENTO);
+
+    expect(respuesta.status).toBe(502);
+    expect(await contarTurnosDeChat(mundo.cliente, conversationId)).toBe(1);
+    expect(await contarAnalisisDelPaciente(mundo.cliente, patientId)).toBe(registros);
+  });
+});
+
+async function conversacionReal() {
+  const patientId = await crearPacienteSintetico(mundo, {
+    dataOrigin: 'real_anonimizado',
+    conDiagnostico: true,
+  });
+  const { app } = await montarGateway(mundo, {
+    omitirGuardaDeEntornoSintetico: true,
+    analysisMaxOptions: 3,
+    identidades: lectorDeIdentidadFalso({ [patientId]: IDENTIDAD_CHAT }),
+    traceIds: { traceId: traceDelTurno },
+  });
+  const conversationId = await abrirConversacion(app, cookie, patientId);
+  return { app, conversationId, patientId };
+}
+
+describe('Turno de evidencia sin evidencia, Base y opt-out', () => {
+  it('registra sin_evidencia con puntaje null y responde status sin_evidencia cuando Backend 2 no encuentra evidencia [US-265 AC-1] [RN-02]', async () => {
+    const { app, conversationId } = await conversacionSobre(pacienteChat);
+    rag.chat.responder(
+      respuestaDeRag({
+        ...chatTurnEvidencia,
+        evidenceAnalysis: ragSinEvidencia,
+        blocks: [{ kind: 'limitacion', text: ragSinEvidencia.limitations[0]?.text }],
+      }),
+    );
+
+    const respuesta = await enviarTurno(app, cookie, conversationId, PREGUNTA_DE_EVIDENCIA);
+
+    expect(respuesta.status).toBe(201);
+    expect(respuesta.body).toMatchObject({ status: 'sin_evidencia', topRelevanceScore: null });
+    expect(respuesta.body.evidenceAnalysis).toMatchObject({
+      status: 'sin_evidencia',
+      topRelevanceScore: null,
+    });
+    const [turno] = await leerTurnosDeChat(mundo.cliente, conversationId);
+    const registro = await leerRegistroPorTrace(mundo.cliente, turno?.trace_id ?? '');
+    expect(registro).toMatchObject({ status: 'sin_evidencia', top_relevance_score: null });
+  });
+
+  it('declara en la Base los filtros y el maxOptions con los que consultó Backend 2: sin año mínimo y 3 opciones [US-265 AC-1] [AC-T1.4]', async () => {
+    const { app, conversationId } = await conversacionSobre(pacienteChat);
+    rag.chat.responder(respuestaDeRag(chatTurnEvidencia));
+
+    await enviarTurno(app, cookie, conversationId, PREGUNTA_DE_EVIDENCIA);
+
+    const [turno] = await leerTurnosDeChat(mundo.cliente, conversationId);
+    const registro = await leerRegistroPorTrace(mundo.cliente, turno?.trace_id ?? '');
+    expect(registro?.filters_applied).toMatchObject({ publishedFromYear: null });
+    expect(registro?.analysis_basis).toMatchObject({
+      maxOptions: 3,
+      sourcesConsulted: { filters: { publishedFromYear: null } },
+    });
+  });
+
+  it('responde 403 OPT_OUT_ANALISIS_IA sin llamar a rag-orchestrator ni crear análisis cuando el paciente tiene opt-out en el turno de evidencia [US-148 AC-1] [RN-15]', async () => {
+    const { app, conversationId } = await conversacionSobre(pacienteChat);
+    await registrarMarca(mundo, pacienteChat, { accion: 'registrado' });
+    const antes = await contarAnalisisDelPaciente(mundo.cliente, pacienteChat);
+    rag.chat.responder(respuestaDeRag(chatTurnEvidencia));
+
+    const respuesta = await enviarTurno(app, cookie, conversationId, PREGUNTA_DE_EVIDENCIA);
+
+    expect(respuesta.status).toBe(403);
+    expect(respuesta.body.error).toBe('OPT_OUT_ANALISIS_IA');
+    expect(rag.chat.llamadas()).toBe(0);
+    expect(await contarAnalisisDelPaciente(mundo.cliente, pacienteChat)).toBe(antes);
+    expect(await contarTurnosDeChat(mundo.cliente, conversationId)).toBe(0);
   });
 });
