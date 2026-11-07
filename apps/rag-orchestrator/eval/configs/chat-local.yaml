@@ -1,0 +1,31 @@
+# Configuración de la familia `chat` de `evaluate` con los MODELOS LOCALES REALES (US-269 / L1D-326; ADR-39, ADR-51, RN-12).
+# Corre a mano en el MacBook de referencia, junto con la corrida nocturna del S6 (nunca en la CI): `proveedor: local`, Ollama
+# nativo y los pesos de ADR-39. Los pesos (rutas y SHA-256) y las claves de ADR-39 llegan por el entorno (`~/adr39-modelos/
+# modelos.env` y `adr39-config.sh`); sin ellos la suite termina con código ≠ 0 nombrando la variable y no escribe cifras.
+# Con modelos locales rigen las peticiones de `clinical-api` (`npm run eval:chat-preparar`), no los ejemplos del contrato.
+#   OLLAMA_CONTEXT_LENGTH=8192 OLLAMA_FLASH_ATTENTION=1 OLLAMA_KV_CACHE_TYPE=q8_0 ollama serve   # LLM fuera de Docker
+#   python -m app.evaluation.chat --config eval/configs/chat-local.yaml --peticiones <dir> --salida reports/eval
+# Cambiar cualquier valor cambia la huella SHA-256 del reporte. El p95 por intención sale de esta corrida (reloj real).
+nombre: chat-local
+fixture: FX-12-e
+dataset:
+  ruta: data/eval/chat-v1
+semilla_bootstrap: 20261021
+bootstrap_repeticiones: 200
+medicion:
+  reloj: real # time.perf_counter: la latencia por turno e intención es de verdad (ADR-51)
+  rss_limite_mib: 4489 # mismo límite que local.yaml (RSS conjunto de ADR-39 / US-231b AC-7)
+adaptadores:
+  proveedor: local
+  urls:
+    llm: http://127.0.0.1:11434/v1 # Ollama nativo; ninguna ruta hacia la nube (lista local cerrada en código)
+modelos:
+  llm: gemma4:26b-a4b-it-q4_K_M # G, LLM decidido en ADR-39
+umbrales:
+  relevance_threshold: 0.30
+  nli_entailment_threshold: 0.7
+  retrieval_top_k: 40
+  rerank_top_n: 10
+catalogo:
+  version: '2026.10.0'
+  ruta_terminos: packages/clinical-catalogs

@@ -34,6 +34,7 @@ from pydantic import ValidationError
 from app.application.chat.servicio_de_turno import ChatTurnService
 from app.application.ports import LlmClient, NliClassifier, ProhibitedTermsChecker
 from app.application.verificacion_de_soporte import VerificadorDeSoporte
+from app.config.settings import Settings
 from app.domain.nli import ParNli, ResultadoNli
 from app.evaluation.adaptadores_falsos import (
     CatalogoClinicoDeConfig,
@@ -51,9 +52,12 @@ from app.evaluation.dataset_chat import (
     GuionDelLlm,
     cargar_dataset_de_chat,
 )
-from app.evaluation.dataset_loader import DatasetInvalido
+from app.evaluation.dataset_loader import CLASE_SINTETICA, DatasetInvalido
+from app.evaluation.envoltorios import pico_rss_mib
+from app.evaluation.llamadas import RegistroDeLlamadas
+from app.evaluation.modelos_locales import OrigenLocal, cargar_puertos_locales
 from app.evaluation.fuente_dataset import FuenteDatasetEnDirectorio
-from app.evaluation.guardas import SuiteAbortada
+from app.evaluation.guardas import SuiteAbortada, exigir_adapters_locales, exigir_proveedor_local
 from app.evaluation.juez_fidelidad import JuezNli
 from app.evaluation.rotulo import rotular_validada
 from app.evaluation.rutas import raiz_repo
@@ -62,6 +66,7 @@ from app.infrastructure.catalogo_clinico.datos_criticos import cargar_datos_crit
 from app.infrastructure.catalogo_clinico.relevancia import cargar_datos_de_relevancia
 from app.infrastructure.catalogo_clinico.sinonimos import cargar_terminos_por_tipo
 from app.infrastructure.clock.system_clock import RelojDelSistema
+from app.infrastructure.llm.fabrica_local import crear_cliente_llm_del_chat
 from app.infrastructure.tokenizer.contador_conservador import ContadorConservador
 from app.prompts.chat import VERSION_DEL_PROMPT_DE_CHAT
 from app.prompts.chat_caso import VERSION_DEL_PROMPT_DE_CASO
@@ -415,6 +420,9 @@ async def evaluar(
     *,
     puertos: PuertosDeChat | None = None,
 ) -> dict[str, Any]:
+    faltan = [c.id for c in (*dataset.casos, *dataset.controles) if c.id not in peticiones]
+    if faltan:
+        raise DatasetInvalido(f"faltan las peticiones de: {', '.join(faltan)}")
     puertos = puertos or PuertosDeChat()
     corrida = _componer_el_chat(config, dataset, puertos)
     reloj = RelojSimulado() if config.reloj == "simulado" else time.perf_counter
@@ -585,10 +593,29 @@ def main(argv: Sequence[str], *, entorno: Mapping[str, str] | None = None) -> in
 
 
 def _puertos_de(config: ConfigSuite, entorno: Mapping[str, str] | None) -> PuertosDeChat:
-    """Con ``proveedor: fake`` los bordes de la suite; con ``local``, los pesos y el LLM nativo de ADR-39 (RN-12)."""
+    """Con ``proveedor: fake`` los bordes de la suite; con ``local``, los pesos y el LLM nativo de ADR-39 (RN-12).
+
+    Las guardas de RN-12 corren antes de cargar pesos y de crear el cliente: con una URL de nube no sale ningún request."""
     if config.proveedor != "local":
         return PuertosDeChat()
-    raise SuiteAbortada("con modelos locales hacen falta los puertos locales")
+    exigir_adapters_locales(CLASE_SINTETICA, config.urls)
+    exigir_proveedor_local(config)
+    locales = cargar_puertos_locales(
+        config,
+        OrigenLocal(entorno or {}, None, pico_rss_mib),
+        RegistroDeLlamadas(),
+        CLASE_SINTETICA,
+    )
+    base = ajustes_de_la_suite(config)
+    ajustes = Settings(
+        _env_file=None,  # type: ignore[call-arg]
+        claim_max_words=base.claim_max_words,
+        enabled_cancer_types=base.enabled_cancer_types,
+        llm_provider="local",  # type: ignore[arg-type]
+        llm_base_url=config.urls["llm"],
+        llm_model=config.llm_modelo,
+    )
+    return PuertosDeChat(llm=crear_cliente_llm_del_chat(ajustes), locales=locales)
 
 
 if __name__ == "__main__":
