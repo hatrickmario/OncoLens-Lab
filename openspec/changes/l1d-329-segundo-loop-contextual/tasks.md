@@ -50,4 +50,4 @@ con `evaluate`. Vocabulario: `backlog/sprints/S6-glosario-chat.md`. Orden de las
 ## 7. cierre
 
 - [x] 7.1 `openspec validate l1d-329-segundo-loop-contextual --strict` en verde; `pytest` de `rag-orchestrator`, `vitest` de `clinical-api`, `contracts:verify-provider`, `contracts:breaking` (0 ERR, 0 WARN) y `catalog:validate` en verde · EVIDENCIA: todos en verde; `verify-provider` de `clinical-api` no corre en local (falta `pg_test_admin_password`; sin cambio de contrato) y 6 tests de `scripts/quality` no corren por falta de `@vitest/eslint-plugin` en el `node_modules` compartido (entorno)
-- [ ] 7.2 Gate 2: `privacy-guardian`, `contract-keeper`, `clinical-language-auditor`, `design-principles-reviewer` y `ai-eval-runner` real (la tarea 5.1)
+- [x] 7.2 Gate 2 PASS tras vuelta 1 (privacy, contract, lenguaje y diseño; ai-eval real aparte): `privacy-guardian`, `contract-keeper`, `clinical-language-auditor`, `design-principles-reviewer` y `ai-eval-runner` real (la tarea 5.1)
