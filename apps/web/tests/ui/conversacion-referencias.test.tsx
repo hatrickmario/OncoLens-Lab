@@ -66,6 +66,22 @@ describe('Referencias del turno y fragmento en el panel lateral', () => {
     expect(screen.getAllByText(/Breast Cancer Treatment/).length).toBeGreaterThanOrEqual(2);
   });
 
+  it.each(['javascript:alert(1)', 'http://inseguro.example/doc', 'ftp://servidor.test/doc'])(
+    'no enlaza la fuente y muestra No disponible en el panel lateral cuando la URL no es https segura (%s) [ARR-07 AC-4]',
+    (sourceUrl) => {
+      const fuente = {
+        ...turnoDeEvidenciaConFuentes().evidenceAnalysis.evidenceOptions[0].citedSources[0],
+        sourceUrl,
+      };
+      render(<FragmentoCitadoEnPanel fuente={fragmentoDeFuente(fuente)} />);
+
+      expect(screen.queryByRole('link')).toBeNull();
+      expect(screen.getByText('Fuente original').nextElementSibling?.textContent).toBe(
+        'No disponible',
+      );
+    },
+  );
+
   it('muestra el error del turno y ningún enlace cuando el contrato rechaza un sourceUrl javascript:', async () => {
     const turno = turnoCon(
       turnoDeEvidenciaConFuentes({ cambiosPorFuente: [{ sourceUrl: 'javascript:alert(1)' }] }),

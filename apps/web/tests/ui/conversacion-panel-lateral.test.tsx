@@ -61,6 +61,9 @@ describe('Panel lateral del chat', () => {
     );
 
     const panel = await screen.findByRole('dialog', { name: 'Dato del paciente' });
+    expect(
+      within(panel).getByText('En la respuesta (generada por IA; ver los avisos del turno)'),
+    ).toBeTruthy();
     expect(within(panel).getByText(/HER2: 3\+/)).toBeTruthy();
     expect(within(panel).getByText(/Documento/)).toBeTruthy();
     const historico = await within(panel).findByRole('list', { name: 'Versiones anteriores' });
