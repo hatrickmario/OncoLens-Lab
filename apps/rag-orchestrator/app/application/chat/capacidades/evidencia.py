@@ -29,7 +29,6 @@ from app.domain.chat.fuentes_limitaciones import (
 )
 from app.domain.chat.mensajes import MENSAJE_SIN_OPCIONES_CON_SOPORTE, ORDEN_POR_APLICABILIDAD
 from app.domain.chat.turno import BloqueDelTurno, TipoDeBloque
-from app.domain.chat.valores_iniciales import CHAT_AVISO_BUSQUEDA_AMPLIADA_INICIAL
 from app.domain.chat.ultima_evidencia import resumir_ultima_evidencia
 from app.schemas.generated.models import EvidenceOption, RagQueryInternalResponse, RagQueryStatus
 
@@ -42,7 +41,7 @@ class NodoEvidencia:
         *,
         consulta: ConsultaDeEvidencia,
         posiciones: PosicionDeChunks,
-        aviso_de_ampliacion: str = CHAT_AVISO_BUSQUEDA_AMPLIADA_INICIAL,
+        aviso_de_ampliacion: str,
     ) -> None:
         self._consulta = consulta
         self._citas = ConstructorDeCitas(posiciones)
