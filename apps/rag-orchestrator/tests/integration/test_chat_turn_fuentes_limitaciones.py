@@ -32,6 +32,7 @@ from tests.support.fakes import settings_de_prueba
 from tests.support.generador_falso import FakeEvidenceGenerator
 from tests.support.nli_falso import IMPLICA, NEUTRAL, NliFalso
 from tests.support.recuperacion import (
+    CORPUS_FX06A,
     EJEMPLOS,
     FICHAS_FX06A,
     Q_HER2,
@@ -40,6 +41,7 @@ from tests.support.recuperacion import (
     LectorReleaseFalso,
     crear_entorno,
 )
+from tests.support.posiciones_falsas import PosicionesFalsas
 
 Q_FUENTES = "¿Cuáles son las fuentes y las limitaciones?"
 LISTA_RN23 = (
@@ -325,7 +327,9 @@ def test_chat_turn_produce_el_ejemplo_sin_consulta_cuando_el_hilo_no_tiene_evide
         "SEG-OK", lector_release=LectorReleaseFalso(RELEASE_SINTETICO)
     )
 
-    respuesta = entorno.turno(solicitud_desde_ejemplo("chat-turn-request-fuentes-sin-consulta.json"))
+    respuesta = entorno.turno(
+        solicitud_desde_ejemplo("chat-turn-request-fuentes-sin-consulta.json")
+    )
 
     assert respuesta.status_code == 200
     assert respuesta.json() == _ejemplo("chat-turn-fuentes-sin-consulta.json")
@@ -345,3 +349,55 @@ def test_chat_turn_produce_el_ejemplo_sin_evidencia_cuando_la_pregunta_no_supera
 
     assert respuesta.status_code == 200
     assert respuesta.json() == _ejemplo("chat-turn-fuentes-sin-evidencia.json")
+
+
+def _hilo_rehidratado_con_una_cita() -> dict:
+    return _rehidratacion(chunk_ids=["ch-m1-1", "ch-inj-1"], citas=["ch-m1-1"])
+
+
+@pytest.mark.parametrize(
+    "falla",
+    ["catalogo", "release", "posiciones"],
+)
+def test_chat_turn_responde_503_retrieval_unavailable_sin_detalle_cuando_falla_un_borde_del_corpus(
+    falla,
+):
+    error = RuntimeError("SINT-detalle-interno-del-borde")
+    base = crear_entorno(
+        catalogo=CatalogoFalso(error=error if falla == "catalogo" else None),
+        lector_release=LectorReleaseFalso(error=error if falla == "release" else None),
+    )
+    posiciones = PosicionesFalsas(CORPUS_FX06A, error=error if falla == "posiciones" else None)
+    entorno = crear_entorno_de_chat_con_evidencia(base, posiciones=posiciones)
+
+    respuesta = entorno.turno(
+        solicitud_de_evidencia(Q_FUENTES, rehidratacion=_hilo_rehidratado_con_una_cita())
+    )
+
+    assert respuesta.status_code == 503
+    assert respuesta.json()["error"] == "RETRIEVAL_UNAVAILABLE"
+    assert "SINT-detalle" not in respuesta.text
+    assert entorno.llm.invocaciones == 0
+
+
+def test_chat_turn_no_lista_un_documento_ni_lo_inventa_cuando_el_chunk_citado_ya_no_esta_vigente():
+    entorno = crear_entorno_de_chat_con_evidencia(crear_entorno())
+    rehidratacion = _rehidratacion(chunk_ids=["ch-m1v0-1"], citas=["ch-m1v0-1"])
+
+    cuerpo = _cuerpo_200(
+        entorno.turno(solicitud_de_evidencia(Q_FUENTES, rehidratacion=rehidratacion))
+    )
+
+    assert not [b for b in cuerpo["blocks"] if b["kind"] == "fuente"]
+    assert "no citó ninguna fuente" in cuerpo["blocks"][0]["text"]
+
+
+def test_chat_turn_no_pasa_un_analisis_previo_como_cita_ni_como_soporte_cuando_se_pregunta_por_las_fuentes():
+    entorno, _ = entorno_de_seguimiento("SEG-OK")
+
+    cuerpo = _cuerpo_200(_analisis_y_fuentes(entorno))
+
+    assert all("citations" not in b and "factRefs" not in b for b in cuerpo["blocks"])
+    assert cuerpo["omittedClaims"] == 0
+    # El turno no recupera: su estado conserva la última evidencia del análisis y no suma citas nuevas.
+    assert cuerpo["structuredState"]["citasMostradas"] == ["ch-m1-1"]

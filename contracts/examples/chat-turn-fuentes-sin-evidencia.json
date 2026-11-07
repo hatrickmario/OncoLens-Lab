@@ -7,10 +7,65 @@
     },
     {
       "kind": "limitacion",
-      "text": "Alcance de la recuperación: el corpus tiene fecha de corte 2026-09-30; fuentes no incluidas: FUENTE-EXCLUIDA-1, FUENTE-EXCLUIDA-2; fragmentos evaluados por el reranker en esta consulta: 2."
+      "text": "Alcance de la recuperación: el corpus tiene fecha de corte 2026-09-30; fuentes no incluidas: FUENTE-EXCLUIDA-1, FUENTE-EXCLUIDA-2; fragmentos evaluados por el reranker en la última consulta de evidencia: 2."
     }
   ],
   "omittedClaims": 0,
+  "evidenceAnalysis": {
+    "status": "sin_evidencia",
+    "synthesis": {
+      "agreements": [],
+      "discrepancies": []
+    },
+    "applicability": [],
+    "evidenceOptions": [],
+    "discardedOptions": [],
+    "limitations": [
+      {
+        "text": "Ningún fragmento recuperado supera el umbral de relevancia.",
+        "origin": "estructural"
+      }
+    ],
+    "assumptions": [],
+    "retrievalStats": {
+      "retrieved": 2,
+      "aboveThreshold": 0
+    },
+    "omittedClaims": 0,
+    "optionsNotShown": 0,
+    "agentSteps": [],
+    "topRelevanceScore": null,
+    "meta": {
+      "queryLanguage": "es",
+      "responseLanguage": "es",
+      "llmProvider": "local",
+      "llmModel": "llm-test@1",
+      "embeddingModel": "embedder-test@1",
+      "rerankerModel": "reranker-test@1",
+      "nliModel": "nli-test@1",
+      "promptVersion": "rag-query@0.10.0",
+      "catalogVersion": "1.6.0",
+      "corpusRelease": "rel-test-1",
+      "corpusCutoffDate": "2026-09-30",
+      "excludedSources": [
+        "FUENTE-EXCLUIDA-1",
+        "FUENTE-EXCLUIDA-2"
+      ],
+      "retrievalParams": {
+        "topK": 40,
+        "rerankTopN": 10,
+        "relevanceThreshold": 0.3,
+        "retrievalMode": "dense",
+        "fusion": "ninguna",
+        "fusionParam": 0.0,
+        "queryRewrite": {
+          "applied": false,
+          "reason": "no_disparado"
+        }
+      },
+      "latencyMs": 0
+    }
+  },
   "structuredState": {
     "intentsVistos": [
       "evidencia"
@@ -34,60 +89,5 @@
   "notices": [
     "Generado por IA; requiere validación clínica independiente por el oncólogo tratante",
     "Uso académico/investigación"
-  ],
-  "evidenceAnalysis": {
-    "status": "sin_evidencia",
-    "synthesis": {
-      "agreements": [],
-      "discrepancies": []
-    },
-    "applicability": [],
-    "evidenceOptions": [],
-    "discardedOptions": [],
-    "limitations": [
-      {
-        "text": "Ningún fragmento recuperado supera el umbral de relevancia.",
-        "origin": "estructural"
-      }
-    ],
-    "assumptions": [],
-    "retrievalStats": {
-      "retrieved": 40,
-      "aboveThreshold": 0
-    },
-    "omittedClaims": 0,
-    "optionsNotShown": 0,
-    "agentSteps": [],
-    "topRelevanceScore": null,
-    "meta": {
-      "queryLanguage": "es",
-      "responseLanguage": "es",
-      "llmProvider": "local",
-      "llmModel": "llm-local-ejemplo",
-      "embeddingModel": "embedding-local-ejemplo",
-      "rerankerModel": "reranker-local-ejemplo",
-      "nliModel": "nli-local-ejemplo",
-      "promptVersion": "rag-query@0.1.0",
-      "catalogVersion": "2026.10.0",
-      "corpusRelease": "2026-09-30",
-      "corpusCutoffDate": "2026-09-30",
-      "excludedSources": [
-        "NCCN",
-        "ESMO"
-      ],
-      "retrievalParams": {
-        "topK": 40,
-        "rerankTopN": 10,
-        "relevanceThreshold": 0.5,
-        "retrievalMode": "dense",
-        "fusion": "ninguna",
-        "fusionParam": 0,
-        "queryRewrite": {
-          "applied": true,
-          "reason": "disparado"
-        }
-      },
-      "latencyMs": 8200
-    }
-  }
+  ]
 }

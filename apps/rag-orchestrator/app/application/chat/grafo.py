@@ -50,6 +50,7 @@ from app.domain.chat.estado import (
     INTENCIONES_CLASIFICABLES,
     EstadoDelHilo,
     Intencion,
+    LimitacionesDelAnalisis,
     Subintencion,
     TurnoPrevio,
     UltimaEvidencia,
@@ -106,6 +107,7 @@ class EstadoDelGrafo(TypedDict, total=False):
     avisos_del_nodo: tuple[str, ...]
     avisos: tuple[str, ...]
     ultima_evidencia: UltimaEvidencia | None
+    limitaciones_del_analisis: LimitacionesDelAnalisis | None
     opciones_mostradas: tuple[str, ...]
     evidencia_consultada: bool
 
@@ -372,6 +374,7 @@ def _cerrar(
             hilo,
             turno,
             ultima_evidencia=estado.get("ultima_evidencia"),
+            limitaciones_del_analisis=estado.get("limitaciones_del_analisis"),
             opciones_mostradas=estado.get("opciones_mostradas", ()),
             citas_mostradas=citas,
         ),

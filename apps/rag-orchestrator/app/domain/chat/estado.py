@@ -26,6 +26,7 @@ ENTRADAS_DEL_TURNO_VACIAS: dict[str, object] = {
     "limitacion_del_nodo": "",
     "avisos_del_nodo": (),
     "ultima_evidencia": None,
+    "limitaciones_del_analisis": None,
     "opciones_mostradas": (),
     "evidencia_consultada": False,
 }
@@ -75,6 +76,16 @@ class UltimaEvidencia:
 
 
 @dataclass(frozen=True)
+class LimitacionesDelAnalisis:
+    """Lo que el último análisis del hilo no pudo determinar: los criterios de aplicabilidad en «Desconocido» y cuántas
+    opciones quedaron en ``discardedOptions``. Vive solo en el estado EFÍMERO del hilo (ADR-51): no es parte de
+    ``structuredState`` y un hilo rehidratado no lo tiene."""
+
+    criterios_desconocidos: tuple[str, ...]
+    opciones_descartadas: int
+
+
+@dataclass(frozen=True)
 class EstadoEstructurado:
     intents_vistos: tuple[str, ...] = ()
     preguntas_previas: tuple[str, ...] = ()
@@ -88,6 +99,7 @@ class EstadoEstructurado:
 class EstadoDelHilo:
     turnos: tuple[TurnoPrevio, ...] = ()
     estructurado: EstadoEstructurado = field(default_factory=EstadoEstructurado)
+    limitaciones_del_analisis: LimitacionesDelAnalisis | None = None
 
 
 def estado_tras_el_turno(
@@ -95,13 +107,15 @@ def estado_tras_el_turno(
     turno: TurnoPrevio,
     *,
     ultima_evidencia: UltimaEvidencia | None = None,
+    limitaciones_del_analisis: LimitacionesDelAnalisis | None = None,
     opciones_mostradas: tuple[str, ...] = (),
     citas_mostradas: tuple[str, ...] = (),
 ) -> EstadoDelHilo:
     """El estado con el turno añadido: su intención y su pregunta pasan al estado estructurado y los turnos se acotan.
 
     Un turno que recupera evidencia sobrescribe ``ultima_evidencia`` y suma sus opciones y citas mostradas (sin repetir);
-    uno que no recupera conserva lo anterior."""
+    uno que no recupera conserva lo anterior. Con ``limitaciones_del_analisis`` pasa igual: solo un turno de análisis nuevo
+    las reemplaza."""
     anterior = estado.estructurado
     vistos = anterior.intents_vistos
     estructurado = EstadoEstructurado(
@@ -113,7 +127,9 @@ def estado_tras_el_turno(
         ultima_evidencia=ultima_evidencia or anterior.ultima_evidencia,
     )
     return EstadoDelHilo(
-        turnos=(*estado.turnos, turno)[-MAX_TURNOS_EN_MEMORIA:], estructurado=estructurado
+        turnos=(*estado.turnos, turno)[-MAX_TURNOS_EN_MEMORIA:],
+        estructurado=estructurado,
+        limitaciones_del_analisis=limitaciones_del_analisis or estado.limitaciones_del_analisis,
     )
 
 
