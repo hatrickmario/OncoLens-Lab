@@ -54,6 +54,11 @@ reconocer el examen por nombre en el código (lo decide el LLM eligiendo `factRe
     de afirmación (su texto se descarta); el esqueleto de las demás intenciones siempre entrega `documentado`.
 11. **Enrutado**: «¿Qué tratamiento previo ha recibido…?» iba a `evidencia` por la regla prescriptiva `que tratamiento`;
     `enrutado.py` ya no la aplica cuando sigue «previo/anterior» y clasifica `tratamiento previo|anterior` como `caso`.
+    Además, sin palabra clave de faltantes, fuentes o evidencia, una pregunta es de `caso` si nombra un periodo
+    (`periodo_de_la_pregunta`), «resultado de/del», «qué ocurrió/pasó», «cuándo se hizo…» o un término del catálogo
+    versionado (`terminos_por_tipo`, RN-27): el LLM las mandaba a `faltantes`, donde el turno salía vacío. «recomienda»
+    (`recomi?end`) ahora también va a `evidencia` (RN-23). `validar` cubre toda intención clasificable con
+    `limitacion_cuando_vacio`: nunca hay respuesta vacía.
 
 12. **Tendencia y valoración**: una `interpretacion` con un verbo de la lista cerrada de `domain/chat/tendencia.py` («subió»,
     «empeoró», «mejoró», «favorable»…) se omite antes del NLI y cuenta en `omittedClaims` (RN-23; el prompt ya pide no
