@@ -11,7 +11,11 @@ import pytest
 import respx
 from fastapi.testclient import TestClient
 
+from app.application.chat.registro_de_hilos import RegistroDeHilos
 from app.bootstrap import crear_app
+from app.infrastructure.fake.fake_chat_turn import FakeChatTurn
+from app.infrastructure.fake.fake_evidence_query import FakeEvidenceQuery
+from app.schemas.generated.models import ChatTurnRequest, RagQueryInternalResponse
 from tests.support.chat import solicitud_de_turno, solicitud_desde_ejemplo
 from tests.support.fakes import GeneradorTraceFijo, RelojFijo, par_de_sesion, settings_de_prueba
 from tests.support.recuperacion import EJEMPLOS
@@ -164,3 +168,48 @@ def test_chat_turn_fake_sirve_sin_evidencia_cuando_la_pregunta_de_evidencia_no_e
     assert resultado["intent"] == "evidencia"
     assert resultado["evidenceAnalysis"]["status"] == "sin_evidencia"
     assert resultado["evidenceAnalysis"]["topRelevanceScore"] is None
+
+
+@pytest.mark.anyio
+async def test_chat_turn_fake_numera_los_fragmentos_por_documento_cuando_dos_chunks_citados_son_del_mismo_documento():
+    base = RagQueryInternalResponse.model_validate(_ejemplo("rag-query-con-evidencia.json"))
+    opcion = base.evidenceOptions[0]
+    primera = opcion.citedSources[0]
+    segunda = primera.model_copy(
+        update={"chunkId": "chunk_88232", "chunkTextSnapshot": "Otro fragmento."}
+    )
+    analisis = base.model_copy(
+        update={
+            "evidenceOptions": [
+                opcion.model_copy(update={"citedSources": [primera, segunda]}),
+                *base.evidenceOptions[1:],
+            ]
+        }
+    )
+    pregunta = "Pregunta de prueba de dos fragmentos"
+    fake = FakeChatTurn.desde_directorio(
+        EJEMPLOS,
+        RegistroDeHilos(reloj=RelojFijo(), ttl_segundos=60, max_hilos=2),
+        settings_de_prueba(),
+        evidencia=FakeEvidenceQuery({pregunta: analisis}, analisis),
+    )
+    solicitud = ChatTurnRequest.model_validate(solicitud_de_turno(pregunta))
+
+    respuesta = await fake.turno(solicitud)
+
+    citas = [c for b in respuesta.blocks if b.citations for c in b.citations]
+    assert [(c.chunkId, c.chunkOrdinal, c.chunkCount) for c in citas][:2] == [
+        (primera.chunkId, 1, 2),
+        ("chunk_88232", 2, 2),
+    ]
+
+
+def test_chat_turn_fake_dice_en_el_alcance_los_mismos_fragmentos_que_retrieval_stats_cuando_no_hay_evidencia():
+    analisis = _ejemplo("rag-query-sin-evidencia.json")
+
+    resultado = _turno_falso(
+        solicitud_de_turno(_pregunta("rag-query-request-sin-evidencia.json"))
+    ).json()
+
+    alcance = resultado["blocks"][-1]["text"]
+    assert f"evaluados en la última consulta: {analisis['retrievalStats']['retrieved']}" in alcance
