@@ -16,7 +16,11 @@ from app.domain.chat.mensajes import (
     TITULO_DE_FALTANTES,
 )
 from app.prompts.chat_seguimiento_evidencia import PLANTILLA_SEGUIMIENTO_DEL_CHAT
-from app.domain.chat.valores_iniciales import AVISO_ACADEMICO_INICIAL, AVISO_DE_IA_INICIAL
+from app.domain.chat.valores_iniciales import (
+    AVISO_ACADEMICO_INICIAL,
+    AVISO_DE_IA_INICIAL,
+    CHAT_AVISO_BUSQUEDA_AMPLIADA_INICIAL,
+)
 from app.domain.lenguaje import ListaTerminos, check_prohibited_terms
 
 LISTA = (
@@ -43,6 +47,7 @@ LISTA = (
         PLANTILLA_SEGUIMIENTO_DEL_CHAT,
         AVISO_DE_IA_INICIAL,
         AVISO_ACADEMICO_INICIAL,
+        CHAT_AVISO_BUSQUEDA_AMPLIADA_INICIAL,
     ],
 )
 def test_los_textos_fijos_del_chat_no_contienen_terminos_prohibidos_cuando_se_verifican(texto):
