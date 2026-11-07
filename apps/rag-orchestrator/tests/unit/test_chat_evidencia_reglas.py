@@ -103,3 +103,22 @@ def test_estado_conserva_la_ultima_evidencia_cuando_el_turno_no_recupera():
     estado = estado_tras_el_turno(previo, TurnoPrevio("p2", "caso", ("x",), ("f1",)))
 
     assert estado.estructurado.ultima_evidencia == UltimaEvidencia("p0", ("c9",), 0.5)
+
+
+def test_el_selector_de_nodos_falla_en_voz_alta_cuando_la_subintencion_no_tiene_nodo():
+    import pytest
+
+    from app.application.chat.grafo import _selector_de_nodo
+    from app.domain.chat.estado import Intencion, Subintencion
+
+    estado = {
+        "intencion": Intencion.evidencia,
+        "subintencion": Subintencion.seguimiento_evidencia,
+    }
+
+    assert _selector_de_nodo({})({"intencion": Intencion.evidencia}) == "evidencia"  # type: ignore[typeddict-item]
+    with pytest.raises(ValueError, match="subintención sin nodo"):
+        _selector_de_nodo({})(estado)  # type: ignore[arg-type]
+    assert _selector_de_nodo({Subintencion.seguimiento_evidencia: object()})(estado) == (  # type: ignore[dict-item,arg-type]
+        "seguimiento_evidencia"
+    )

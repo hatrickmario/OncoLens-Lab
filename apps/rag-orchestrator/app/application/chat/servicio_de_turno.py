@@ -42,7 +42,12 @@ from app.application.rag_orchestrator_service import RAGOrchestratorService
 from app.application.selector_proveedor_llm import con_clasificacion
 from app.application.verificacion_de_soporte import VerificadorDeSoporte
 from app.config.settings import Settings
-from app.domain.chat.estado import INTENCIONES_CLASIFICABLES, EstadoDelHilo, Intencion
+from app.domain.chat.estado import (
+    INTENCIONES_CLASIFICABLES,
+    EstadoDelHilo,
+    Intencion,
+    Subintencion,
+)
 from app.schemas.generated.models import (
     ChatTurnRequest,
     ChatTurnResponse,
@@ -85,16 +90,17 @@ class ChatTurnService:
             soporte=soporte,
             max_palabras_por_afirmacion=settings.claim_max_words,
         )
+        evidencia, seguimiento = _capacidades_de_evidencia(
+            servicio_de_evidencia, posiciones, llm, contador, configuracion, settings
+        )
+        # Sin el nodo de seguimiento (sin corpus detrás) ninguna pregunta se enruta como seguimiento.
+        self._con_seguimiento = bool(seguimiento)
         self._grafo = construir_grafo(
             llm=llm,
             contador=contador,
             configuracion=configuracion,
-            capacidades={
-                **_capacidades_de_evidencia(
-                    servicio_de_evidencia, posiciones, llm, contador, configuracion, settings
-                ),
-                Intencion.caso: caso.ejecutar,
-            },
+            capacidades={**evidencia, Intencion.caso: caso.ejecutar},
+            subcapacidades=seguimiento,
             guardado=self.registro.guardado,
             verificador_terminos=verificador_terminos,
         )
@@ -143,7 +149,7 @@ class ChatTurnService:
             "clasificacion_de_datos": solicitud.dataClassification.value,
             "trace_id": solicitud.traceId.root,
             # Solo si hay análisis activo: el id lo conoce únicamente Backend 1 y nunca entra al grafo (ni al prompt ni a logs).
-            "hay_analisis_activo": solicitud.activeAnalysisId is not None,
+            "hay_analisis_activo": self._con_seguimiento and solicitud.activeAnalysisId is not None,
         }
         if es_nuevo and solicitud.rehydration is not None:
             entrada["hilo"] = estado_de_rehidratacion(solicitud.rehydration)
@@ -181,12 +187,12 @@ def _capacidades_de_evidencia(
     contador: ContadorDeTokens,
     configuracion: ConfiguracionDelGrafo,
     settings: Settings,
-) -> dict[Intencion, Nodo]:
-    """El nodo ``evidencia`` real si hay corpus detrás; si no, rige el esqueleto de ``construir_grafo``.
+) -> tuple[dict[Intencion, Nodo], dict[Subintencion, Nodo]]:
+    """Los nodos reales de evidencia si hay corpus detrás; si no, rige el esqueleto de ``construir_grafo``.
 
-    Un solo nodo por intención: el análisis nuevo o el seguimiento del análisis activo según la subintención."""
+    El análisis nuevo es el nodo de la intención ``evidencia``; el seguimiento del análisis activo es el de la subintención."""
     if servicio is None or posiciones is None:
-        return {}
+        return {}, {}
     analisis = NodoEvidencia(consulta=servicio, posiciones=posiciones)
     seguimiento = NodoSeguimientoDeEvidencia(
         servicio=servicio,
@@ -202,9 +208,7 @@ def _capacidades_de_evidencia(
             num_ctx=settings.llm_num_ctx,
         ),
     )
-
-    async def evidencia(estado: EstadoDelGrafo) -> dict[str, Any]:
-        nodo = seguimiento if estado.get("subintencion") is not None else analisis
-        return await nodo.ejecutar(estado)
-
-    return {Intencion.evidencia: evidencia}
+    return (
+        {Intencion.evidencia: analisis.ejecutar},
+        {Subintencion.seguimiento_evidencia: seguimiento.ejecutar},
+    )

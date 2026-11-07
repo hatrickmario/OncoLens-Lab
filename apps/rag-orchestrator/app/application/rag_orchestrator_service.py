@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import Callable, Collection, Mapping, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass, replace
 from datetime import datetime
 from typing import NamedTuple, TypeVar
@@ -33,6 +33,7 @@ from app.application.aplicabilidad_textual import (
     AplicabilidadTextual,
     ParametrosDelRespaldo,
 )
+from app.application.bordes import invocar_borde_fallando_cerrado
 from app.application.catalogo_exigido import exigir_catalogo_de_la_solicitud
 from app.application.chunk_citable import ChunkCitable
 from app.application.contexto_del_paciente import contexto_del_paciente
@@ -348,7 +349,7 @@ class RAGOrchestratorService:
     async def _idioma_y_release(
         self, trace_id: str, pregunta: str
     ) -> tuple[Idioma, ReleaseDelCorpus]:
-        borde = self.invocar_borde_fallando_cerrado
+        borde = invocar_borde_fallando_cerrado
         idioma = await borde(trace_id, "idioma", self._detector_idioma.detectar, pregunta)
         release = await borde(trace_id, "catalogo", self._lector_release.release_vigente)
         return idioma, release
@@ -515,7 +516,7 @@ class RAGOrchestratorService:
             return AplicabilidadCompleta(())
         inicio = self._reloj.ahora()
         mejores = mejor_chunk_por_documento(citables)
-        poblaciones = await self.invocar_borde_fallando_cerrado(
+        poblaciones = await invocar_borde_fallando_cerrado(
             trace_id, "poblacion", self._catalogo.poblacion_por_documento, set(mejores)
         )
         self._registrar_formas_invalidas(trace_id, poblaciones)
@@ -625,7 +626,7 @@ class RAGOrchestratorService:
     ) -> dict[str, ChunkCitable]:
         """Los chunks sobre el umbral entregados a la generación cuyo documento tiene ficha en el catálogo."""
         chunks = recuperacion.chunks_sobre_umbral
-        fichas = await self.invocar_borde_fallando_cerrado(
+        fichas = await invocar_borde_fallando_cerrado(
             trace_id,
             "catalogo",
             self._catalogo.fichas_por_documento,
@@ -737,7 +738,7 @@ class RAGOrchestratorService:
             raise RuntimeError(
                 "la rama sparse se pidió sin codificador ni búsqueda (el constructor lo impide)"
             )
-        borde = self.invocar_borde_fallando_cerrado
+        borde = invocar_borde_fallando_cerrado
         vector = await borde(trace_id, "embeddings", codificador.embeber_sparse, pregunta)
         return await borde(
             trace_id,
@@ -777,7 +778,7 @@ class RAGOrchestratorService:
     async def _buscar_cercanos_a(
         self, trace_id: str, texto: str, filtro: str
     ) -> list[ChunkEncontrado]:
-        borde = self.invocar_borde_fallando_cerrado
+        borde = invocar_borde_fallando_cerrado
         vector = await borde(trace_id, "embeddings", self._embedder.embeber, texto)
         return await borde(
             trace_id,
@@ -820,7 +821,7 @@ class RAGOrchestratorService:
         """Puntúa todos los candidatos y conserva los ``RERANK_TOP_N`` de mayor `relevance_score` (orden estable)."""
         if not candidatos:
             return []
-        crudos = await self.invocar_borde_fallando_cerrado(
+        crudos = await invocar_borde_fallando_cerrado(
             trace_id, "reranker", self._reranker.puntuar, pregunta, candidatos
         )
         puntajes = self._exigir_un_puntaje_normalizado_por_candidato(
@@ -916,23 +917,3 @@ class RAGOrchestratorService:
             topRelevanceScore=top_relevance_score([]),
             meta=meta,
         )
-
-    @staticmethod
-    async def invocar_borde_fallando_cerrado(
-        trace_id: str, etapa: str, funcion: Callable[..., _Resultado], *argumentos: object
-    ) -> _Resultado:
-        """Ejecuta un puerto bloqueante fuera del bucle; cualquier fallo es `RecuperacionNoDisponibleError` sin detalle.
-
-        Solo se registran la clase del error y el ``traceId``: el mensaje y el traceback pueden traer el host del
-        motor o el texto de la pregunta, y ``from None`` evita que lleguen al log de uvicorn.
-        """
-        try:
-            return await asyncio.to_thread(funcion, *argumentos)
-        except Exception as error:  # noqa: BLE001 - todo fallo de un borde es "recuperación no disponible"
-            logger.warning(
-                "event=recuperacion_fallo etapa=%s error=%s traceId=%s",
-                etapa,
-                type(error).__name__,
-                trace_id,
-            )
-            raise RecuperacionNoDisponibleError(etapa) from None

@@ -26,7 +26,13 @@ from tests.support.chat_evidencia import crear_entorno_de_chat_con_evidencia, so
 from tests.support.generador_falso import RAZON_SIN_SOPORTE, FakeEvidenceGenerator
 from tests.support.llm_nube_falso import LlmNubeFalso
 from tests.support.nli_falso import IMPLICA, NEUTRAL, NliFalso
-from tests.support.recuperacion import CORPUS_FX06A, EJEMPLOS, Q_HER2, crear_entorno
+from tests.support.recuperacion import (
+    CORPUS_FX06A,
+    EJEMPLOS,
+    Q_HER2,
+    RerankerFalso,
+    crear_entorno,
+)
 
 LISTA_RN23 = (
     Path(__file__).resolve().parents[4]
@@ -214,3 +220,19 @@ def test_chat_turn_lleva_la_opcion_sin_soporte_a_discarded_options_y_no_la_muest
     assert analisis["evidenceOptions"] == [] and len(analisis["discardedOptions"]) == 1
     assert RAZON_SIN_SOPORTE not in str(cuerpo["blocks"])
     assert [b["kind"] for b in cuerpo["blocks"]] == ["limitacion"]
+
+
+def test_chat_turn_devuelve_la_limitacion_de_sin_evidencia_con_puntaje_null_cuando_ningun_chunk_supera_el_umbral():
+    base = crear_entorno(
+        generador=FakeEvidenceGenerator("LLM-OK"),
+        reranker=RerankerFalso(puntajes={Q_HER2: {"ch-m1-1": 0.05, "ch-inj-1": 0.05}}),
+    )
+    entorno = crear_entorno_de_chat_con_evidencia(base)
+
+    cuerpo = entorno.turno(solicitud_de_evidencia(Q_HER2)).json()
+
+    assert cuerpo["evidenceAnalysis"]["status"] == "sin_evidencia"
+    assert cuerpo["evidenceAnalysis"]["topRelevanceScore"] is None
+    assert [b["kind"] for b in cuerpo["blocks"]] == ["limitacion"]
+    assert cuerpo["structuredState"]["ultimaEvidencia"]["topRelevanceScore"] is None
+    assert base.generador.invocaciones == 0  # type: ignore[attr-defined]

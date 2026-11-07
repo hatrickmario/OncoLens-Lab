@@ -15,7 +15,10 @@ from tests.support.recuperacion import ChunkFx
 
 class PosicionesFalsas:
     def __init__(self, corpus: Sequence[ChunkFx], error: Exception | None = None) -> None:
-        self._vigentes = [c for c in corpus if c.es_vigente]
+        # Como el adapter real: el orden dentro del documento es por (chunk_index, chunk_id), no el de llegada.
+        self._vigentes = sorted(
+            (c for c in corpus if c.es_vigente), key=lambda c: (c.chunk_index, c.chunk_id)
+        )
         self.error = error
         self.consultas: list[frozenset[str]] = []
 
@@ -24,6 +27,8 @@ class PosicionesFalsas:
         return len(self.consultas)
 
     def posiciones(self, chunk_ids: Collection[str]) -> dict[str, PosicionDeChunk]:
+        if any('"' in i or "\\" in i for i in chunk_ids):
+            raise ValueError("chunk_id no puede llevar comillas ni barras invertidas")
         self.consultas.append(frozenset(chunk_ids))
         if self.error is not None:
             raise self.error

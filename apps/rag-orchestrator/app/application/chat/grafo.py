@@ -155,6 +155,7 @@ def construir_grafo(
     guardado: BaseCheckpointSaver,
     verificador_terminos: ProhibitedTermsChecker,
     capacidades: Mapping[Intencion, Nodo] | None = None,
+    subcapacidades: Mapping[Subintencion, Nodo] | None = None,
 ) -> Any:
     """El ``StateGraph`` compilado con el ``InMemorySaver`` que le entrega el registro de hilos."""
     # Lo que no se sustituye sigue siendo el esqueleto: toda intención clasificable tiene siempre un nodo.
@@ -167,8 +168,13 @@ def construir_grafo(
     for intencion in INTENCIONES_CLASIFICABLES:
         grafo.add_node(intencion.value, capacidades[intencion])
         grafo.add_edge(intencion.value, "validar")
+    # Un nodo por subintención: la subintención refina una intención y tiene su propia capacidad (L1D-322).
+    nodos_de_subintencion = dict(subcapacidades or {})
+    for subintencion, nodo in nodos_de_subintencion.items():
+        grafo.add_node(subintencion.value, nodo)
+        grafo.add_edge(subintencion.value, "validar")
     grafo.add_edge(START, "enrutar")
-    grafo.add_conditional_edges("enrutar", _siguiente_nodo)
+    grafo.add_conditional_edges("enrutar", _selector_de_nodo(nodos_de_subintencion))
     grafo.add_edge("mensaje_del_sistema", END)
     grafo.add_edge("validar", END)
     return grafo.compile(checkpointer=guardado)
@@ -182,9 +188,24 @@ def _evidencia_nueva() -> dict[str, Any]:
     return {"intencion": Intencion.evidencia, "subintencion": None}
 
 
-def _siguiente_nodo(estado: EstadoDelGrafo) -> str:
-    intencion = estado["intencion"]
-    return intencion.value if intencion in INTENCIONES_CLASIFICABLES else "mensaje_del_sistema"
+def _selector_de_nodo(
+    subcapacidades: Mapping[Subintencion, Nodo],
+) -> Callable[[EstadoDelGrafo], str]:
+    """Catálogo de nodos por (intención, subintención): una subintención sin nodo registrado falla en voz alta, nunca cae
+    en silencio al nodo de la intención."""
+
+    def siguiente(estado: EstadoDelGrafo) -> str:
+        intencion = estado["intencion"]
+        if intencion not in INTENCIONES_CLASIFICABLES:
+            return "mensaje_del_sistema"
+        subintencion = estado.get("subintencion")
+        if subintencion is None:
+            return intencion.value
+        if subintencion not in subcapacidades:
+            raise ValueError(f"subintención sin nodo registrado: {subintencion}")
+        return subintencion.value
+
+    return siguiente
 
 
 class _NodosDelTurno:

@@ -10,9 +10,9 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import NamedTuple
 
+from app.application.bordes import invocar_borde_fallando_cerrado
 from app.application.errores import RecuperacionNoDisponibleError
 from app.application.ports import PosicionDeChunks
-from app.application.rag_orchestrator_service import RAGOrchestratorService
 from app.domain.chat.turno import CitaDelBloque
 
 
@@ -35,7 +35,7 @@ class ConstructorDeCitas:
         ids = {f.chunk_id for f in fuentes}
         if not ids:
             return {}
-        posiciones = await RAGOrchestratorService.invocar_borde_fallando_cerrado(
+        posiciones = await invocar_borde_fallando_cerrado(
             trace_id, "posiciones", self._posiciones.posiciones, ids
         )
         if not ids <= posiciones.keys():
