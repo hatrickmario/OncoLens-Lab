@@ -7,15 +7,15 @@
     },
     {
       "kind": "evidencia",
-      "text": "La fuente reporta que Los estudios de terapia endocrina adyuvante estratifican a las pacientes según su estado menopáusico.",
+      "text": "La fuente reporta que los estudios de terapia endocrina adyuvante estratifican a las pacientes según su estado menopáusico.",
       "citations": [
         {
-          "chunkId": "ch-m1-1",
+          "chunkId": "ch-mp-1",
           "documentId": "doc-m1",
           "sourceTitle": "Breast Cancer Treatment (test)",
-          "chunkOrdinal": 1,
-          "chunkCount": 1,
-          "chunkTextSnapshot": "Adding anti-HER2 therapy to adjuvant chemotherapy improved disease-free survival in HER2-positive early breast cancer."
+          "chunkOrdinal": 2,
+          "chunkCount": 3,
+          "chunkTextSnapshot": "Menopausal status was used to stratify patients in adjuvant endocrine therapy trials for hormone receptor-positive breast cancer."
         }
       ]
     }
@@ -30,14 +30,16 @@
     ],
     "opcionesMostradas": [],
     "citasMostradas": [
-      "ch-m1-1"
+      "ch-mp-1"
     ],
     "faltantesSenalados": [],
     "ultimaEvidencia": {
       "query": "¿Por qué importa el estado menopáusico?",
       "chunkIds": [
-        "ch-m1-1",
-        "ch-inj-1"
+        "ch-mp-1",
+        "ch-inj-1",
+        "ch-ki-1",
+        "ch-m1-1"
       ],
       "topRelevanceScore": 0.8
     }

@@ -7,15 +7,15 @@
     },
     {
       "kind": "evidencia",
-      "text": "La fuente reporta que Los estudios reportan el índice de proliferación Ki-67 junto con la caracterización del tumor.",
+      "text": "La fuente reporta que los estudios reportan el índice de proliferación Ki-67 junto con la caracterización del tumor.",
       "citations": [
         {
-          "chunkId": "ch-m1-1",
+          "chunkId": "ch-ki-1",
           "documentId": "doc-m1",
           "sourceTitle": "Breast Cancer Treatment (test)",
-          "chunkOrdinal": 1,
-          "chunkCount": 1,
-          "chunkTextSnapshot": "Adding anti-HER2 therapy to adjuvant chemotherapy improved disease-free survival in HER2-positive early breast cancer."
+          "chunkOrdinal": 3,
+          "chunkCount": 3,
+          "chunkTextSnapshot": "The Ki-67 proliferation index was reported alongside histologic grade to characterize tumor biology in early breast cancer."
         }
       ]
     }
@@ -30,14 +30,16 @@
     ],
     "opcionesMostradas": [],
     "citasMostradas": [
-      "ch-m1-1"
+      "ch-ki-1"
     ],
     "faltantesSenalados": [],
     "ultimaEvidencia": {
       "query": "¿Por qué importa el Ki-67?",
       "chunkIds": [
+        "ch-ki-1",
+        "ch-inj-1",
         "ch-m1-1",
-        "ch-inj-1"
+        "ch-mp-1"
       ],
       "topRelevanceScore": 0.8
     }
