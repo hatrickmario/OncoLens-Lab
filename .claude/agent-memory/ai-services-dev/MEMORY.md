@@ -14,3 +14,4 @@
 - [Nodo fuentes del chat (L1D-323)](chat_fuentes_l1d323_trampas.md) — release desde el catálogo, límites en el hilo efímero, E-20 de ADR-26 y NCCN en ejemplos
 - [Loop contextual (L1D-329)](loop_contextual_l1d329_trampas.md) — valores canónicos añadidos a escalas.json, NoDecode, esquema en clinical-api y trampas del arnés
 - [Relevancia del dato faltante (L1D-321)](chat_relevancia_l1d321_trampas.md) — nodo dentro de faltantes, aviso en notices, cobertura de destinos y trampas de normalización
+- [Familia chat de evaluate (L1D-326)](chat_evaluate_l1d326_trampas.md) — composición en proceso, controles RN-23, NLI léxico y pii-scan con DOI
