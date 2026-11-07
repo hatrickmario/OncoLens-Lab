@@ -3,7 +3,7 @@
   "blocks": [
     {
       "kind": "interpretacion",
-      "text": "El CA 15-3 registró 22 U/mL a los 30 días y 28 U/mL a los 90 días después del diagnóstico, ambos normales.",
+      "text": "El CA 15-3 registró 22 U/mL a los 30 días y 28 U/mL a los 90 días después del diagnóstico.",
       "factRefs": [
         "f3",
         "f5"

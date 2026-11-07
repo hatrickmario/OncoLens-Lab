@@ -62,7 +62,9 @@ class ChatTurnService:
         configuracion = ConfiguracionDelGrafo(
             presupuesto_de_memoria=settings.chat_memory_max_tokens,
             terminos_por_tipo=terminos_por_tipo,
-            limitacion_cuando_vacio={Intencion.caso: settings.chat_sin_datos_texto},
+            limitacion_cuando_vacio={
+                intencion: settings.chat_sin_datos_texto for intencion in INTENCIONES_CLASIFICABLES
+            },
         )
         caso = NodoCaso(
             llm=llm,

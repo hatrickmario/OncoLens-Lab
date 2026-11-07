@@ -146,7 +146,7 @@ class ConfiguracionDelGrafo(NamedTuple):
     terminos_por_tipo: Mapping[str, frozenset[str]]
     limitacion_cuando_vacio: Mapping[Intencion, str]
     """Por intención, el texto fijo del bloque ``limitacion`` que ``validar`` añade cuando no queda ningún bloque (RN-01,
-    RN-22): en ``caso``, que no hay datos documentados. Las demás intenciones no añaden nada."""
+    RN-22): que no hay datos documentados. Ninguna intención clasificable sale sin respuesta."""
 
 
 def capacidades_por_defecto(
@@ -201,6 +201,7 @@ class _NodosDelTurno:
         self._llm = llm
         self._configuracion = configuracion
         self._verificador_terminos = verificador_terminos
+        self._terminos_del_catalogo = frozenset().union(*configuracion.terminos_por_tipo.values())
 
     async def enrutar(self, estado: EstadoDelGrafo) -> dict[str, Any]:
         pregunta = estado["pregunta"]
@@ -208,9 +209,9 @@ class _NodosDelTurno:
             pregunta, estado["tipo_del_contexto"], self._configuracion.terminos_por_tipo
         ):
             return {"intencion": Intencion.fuera_de_alcance}
-        intencion = clasificar_por_reglas(pregunta) or await self._clasificar_con_el_llm(
-            pregunta, estado["trace_id"]
-        )
+        intencion = clasificar_por_reglas(
+            pregunta, self._terminos_del_catalogo
+        ) or await self._clasificar_con_el_llm(pregunta, estado["trace_id"])
         return {"intencion": intencion}
 
     async def _clasificar_con_el_llm(self, pregunta: str, trace_id: str) -> Intencion:
