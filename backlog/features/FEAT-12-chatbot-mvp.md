@@ -2,14 +2,14 @@
 
 > Linear: [L1D-312](https://linear.app/l1der-lab-mjbc/issue/L1D-312)
 
-**Talla:** XL (17 historias, atraviesa los tres servicios; propone división abajo) · **Sprint:** 6 (`[S6 resp. 11]`, `[S6 resp. 13]`) · **Capacidad:** A · comprensión del caso (CAP-02: AC-02.1, AC-02.4, AC-02.5, AC-02.6) · B · información faltante (CAP-04: AC-04.1, AC-04.3, AC-04.4) · C · evidencia contextualizada (CAP-06, CAP-08, CAP-10) · T-1 (AC-T1.2, AC-T1.3, AC-T1.4) · T-3 (AC-T3.1, AC-T3.2) · T-4 · T-5 · **Recorrido principal:** sí (sustituye a la «Ficha de análisis» como foco del S6)
+**Talla:** XL (19 historias, atraviesa los tres servicios; propone división abajo) · **Sprint:** 6 (`[S6 resp. 11]`, `[S6 resp. 13]`) · **Capacidad:** A · comprensión del caso (CAP-02: AC-02.1, AC-02.4, AC-02.5, AC-02.6) · B · información faltante (CAP-04: AC-04.1, AC-04.3, AC-04.4) · C · evidencia contextualizada (CAP-06, CAP-08, CAP-10) · T-1 (AC-T1.2, AC-T1.3, AC-T1.4) · T-3 (AC-T3.1, AC-T3.2) · T-4 · T-5 · **Recorrido principal:** sí (sustituye a la «Ficha de análisis» como foco del S6)
 **Requisitos:** FR-09 (el turno de evidencia reutiliza el análisis) · FR-10 · FR-21 (caso conversacional, ADR-34) · FR-23 (faltantes, clasificación nueva) · FR-25 (aplicabilidad) · FR-31 (sustituido por el chat: 10 preguntas retiradas, ver Conflictos) · RN-01, RN-02, RN-04, RN-06, RN-07, RN-10, RN-11, RN-12, RN-15, RN-19, RN-22, RN-23, RN-24, RN-25, RN-28, RN-29 · TBD-08 (sin streaming de contenido) · ADR-26 (contratos aditivos), ADR-34, ADR-40, ADR-50, **ADR-51**
 **Evidencia:** [→ backlog/sprints/S6-prompt-chatbot.md §1–§6 (AC01…AC06) y «Aclaraciones del usuario»], [→ backlog/sprints/S6-refinamiento.md §1–§3, `[S6 resp. 1]`…`[S6 resp. 15]`], [→ docs/architecture/adr/ADR-51-chat-langgraph-estado-efimero.md], [→ PRD §6 RN-01, RN-02, RN-04, RN-06, RN-07, RN-10, RN-11, RN-12, RN-15, RN-19, RN-23, RN-24, RN-25, RN-28], [→ PRD §18.3.2 AC-02.1…AC-02.6], [→ PRD §18.3.4 AC-04.1…AC-04.4], [→ PRD §18.4 AC-T1.2, AC-T1.3, AC-T3.1, AC-T3.2], [→ readme §4.1 `ClinicalContext`, `EvidenceAnalysis`], [→ readme §6 OL-06]
 **Dependencias:** ↪ US-088/US-090 (vista de caso `GET …/case`), FEAT-04 (`GET …/completeness`, catálogo `datos-criticos`), US-049 (desidentificación), US-055/US-225 (pipeline de recuperación y generación), US-063/US-064 (citas y NLI), US-125/US-134 (aplicabilidad y orden), US-245 (afirmaciones atómicas), US-253 (correcciones con `supersedes_id`, ADR-50), US-254 (pacientes sintéticos) · 🔗 Regresión [RN-15] → US-148 (S6, todos los turnos con LLM del chat) · 🔗 Regresión [RN-12] → US-050 (S6) · 🔗 Regresión [SEG-13] → US-057 (S6) · 🔗 Regresión [RN-23] → US-068 · 🔗 Regresión [RN-19] → US-069 · 🔗 Regresión [RN-11] → US-049 · 🔗 Consume: US-216 (CSP sin `unsafe-eval`, S6) · 🔗 Medido en: US-269 · ADR-52 (US-271)
 **Valor:** hoy el oncólogo tiene que recorrer la ficha, la vista de caso y el panel de análisis por separado, y cada análisis empieza de cero (AS-IS P1, P4, P5). Con el chat pregunta en lenguaje natural sobre su paciente, en una sola conversación, y recibe el caso reconstruido con enlaces a los datos, los vacíos clasificados (no encontrado, incompleto, por conciliar, no buscado) y la evidencia científica contextualizada con citas verificadas y sus limitaciones, sin que el sistema prescriba nada ni modifique la historia clínica.
-**Stories:** US-256 · ADR-51 (2), US-257 (3), US-258 (5), US-259 (5), US-260 (5), US-261 (3), US-262 (3), US-263 (5), US-264 (3), US-265 (5), US-266 (3), US-267 (8), US-268 (3), US-269 (5), US-271 (4), US-272 (2), US-273 (2) = **66 puntos** (S6; US-267 de 5 a 8 y altas de US-271 y US-272, aprobadas por el usuario el 2026-11-06; alta de US-273, `[S6 resp. 24]`, 2026-11-07)
+**Stories:** US-256 · ADR-51 (2), US-257 (3), US-258 (5), US-259 (5), US-260 (5), US-261 (3), US-262 (3), US-263 (5), US-264 (3), US-265 (5), US-266 (3), US-267 (8), US-268 (3), US-269 (5), US-271 (4), US-272 (2), US-273 (2), US-274 (2), US-275 (2) = **70 puntos** (S6; US-267 de 5 a 8 y altas de US-271 y US-272, aprobadas por el usuario el 2026-11-06; altas de US-273, US-274 y US-275, `[S6 resp. 24]`, 2026-11-07)
 
-> **Propuesta de división (talla XL).** Publicar como una Feature con tres bloques que se pueden cerrar por separado, sin cambiar IDs: **12-A Plataforma del chat** (US-256, US-258, US-259), **12-B Capacidades** (US-260…US-266: A = US-260…US-262, B = US-263, US-264, C = US-265, US-266) y **12-C Interfaz y evaluación** (US-257, US-267, US-268, US-269); US-271 (segundo loop contextual) y US-273 (composición de términos en próstata) se suman a 12-B-C y US-272 (`relativeEndDay`) a 12-B-A. Orden: US-256 → {US-257, US-258, US-259} → {US-260…US-266, US-271, US-272} → {US-267, US-268} → US-269.
+> **Propuesta de división (talla XL).** Publicar como una Feature con tres bloques que se pueden cerrar por separado, sin cambiar IDs: **12-A Plataforma del chat** (US-256, US-258, US-259), **12-B Capacidades** (US-260…US-266: A = US-260…US-262, B = US-263, US-264, C = US-265, US-266) y **12-C Interfaz y evaluación** (US-257, US-267, US-268, US-269); US-271 (segundo loop contextual) y US-273 (composición de términos en próstata) y US-275 (valores por defecto) se suman a 12-B-C, US-274 (avisos visibles) a 12-C y US-272 (`relativeEndDay`) a 12-B-A. Orden: US-256 → {US-257, US-258, US-259} → {US-260…US-266, US-271, US-272} → {US-267, US-268} → US-269.
 
 > **Encuadre (D-01) y alcance del usuario.** Análisis de evidencia, nunca recomendación. Fuera de alcance (prompt §4): historial conversacional visible, escritura en la historia clínica, recomendaciones terapéuticas autónomas. El historial **se guarda pero no se usa ni se muestra** en el MVP (aclaración del usuario, 2026-11-06). Las preguntas de seguimiento limitadas a 10 (US-218 · L1D-268) quedan sustituidas por este chat.
 
@@ -543,7 +543,7 @@ Cambiar el ancla del periodo (revisión en la Demo 6); periodos con fechas absol
 
 `FEAT-12` · Sprint 6 · Estimación **2** · HU-03 · FR-09, RN-02, RN-22, RN-27, RN-29, RN-11 · ADR-52 · ↪ US-271 (L1D-329, mergeado) · 🔗 Medido en: US-269 · D6-42, D6-43
 
-> **Decidido (usuario, 2026-11-07, `[S6 resp. 24]`):** alta mínima dentro del Sprint 6: solo esta pieza. Las otras dos propuestas (visibilidad del aviso de ampliación y del AC-10 en el chat; `RERANKER_MAX_PAIRS` 12→20 con expansión activa por defecto, D6-44) **no se dan de alta**: quedan condicionadas (la segunda solo si tras esta queda presupuesto; la primera solo si se activa el indicador de expansión).
+> **Decidido (usuario, 2026-11-07, `[S6 resp. 24]`):** alta dentro del Sprint 6, junto con US-274 y US-275 (orden A, B, C); cierra la parte de composición de términos de H-2 de L1D-329 (D6-42). Sin corridas reales durante el desarrollo: la medición con `ai-eval-runner` real de los AC-1 y AC-2 se hace en la corrida final combinada solo si alcanza el presupuesto; antes, suites con adapters o fake.
 
 ## Story
 Como oncólogo con un paciente de próstata, quiero que una pregunta general como «¿qué evidencia hay para este caso?» recupere evidencia sobre el tratamiento y no solo sobre cribado, para que el segundo loop contextual sea útil en próstata.
@@ -563,6 +563,66 @@ Activar la expansión por defecto; cambiar el gate G1, el umbral o la recuperaci
 
 ## INVEST
 **Small** ✓ una regla de composición y su entrada de catálogo; 2 puntos. **Testable** ✓ cinco comprobaciones, dos con la medición de 60 preguntas.
+
+---
+
+## US-274 — El aviso de ampliación de la búsqueda y el mensaje «Evidencia recuperada sin opciones soportadas» se ven claramente en el panel conversacional
+
+> Linear: pendiente
+
+`FEAT-12` · Sprint 6 · Estimación **2** · HU-03, HU-15 · RN-19, RN-23, RN-01 · AC-T3.1 · ADR-52 · ↪ US-267 (L1D-324), US-271 (L1D-329, mergeado) · 🔗 Antes de: US-275 · 🔗 Regresión [RN-19] → US-069 · 🔗 Medido en: US-269 · D6-42
+
+> **Decidido (usuario, 2026-11-07, `[S6 resp. 24]`):** alta dentro del Sprint 6; cierra la parte de visibilidad de H-2 de L1D-329 (US-271 AC-10). Sin avisos de IA propios en `web` (RN-19: solo `turn.notices[]`). Orden A, B, C; puede ir en paralelo con US-273 (contextos distintos). Sin corridas reales durante el desarrollo.
+
+## Story
+Como oncólogo, quiero ver sin buscarlo que la búsqueda se amplió con datos del caso y que se recuperó evidencia pero ninguna opción quedó soportada, para no leer una respuesta general como si respondiera exactamente mi pregunta.
+
+## AC (Given/When/Then)
+- **AC-1 (happy path · ampliación visible)** · Dado un turno de evidencia con `contextExpansion` y el aviso «La búsqueda se amplió con datos del caso: …» en `turn.notices[]` (`contracts/examples/chat-turn-evidencia-contextual.json`), cuando se renderiza, entonces el aviso aparece junto al encabezado «Opciones descritas en la evidencia», antes de las tarjetas de opción y sin expandir nada, tal como llegó (sin reescribirlo ni añadir valores). `[RN-19]` `[AC-T3.1]`
+- **AC-2 (borde · recuperado sin opciones)** · Dado un turno con el mensaje determinista «Evidencia recuperada sin opciones soportadas» y bloque `limitacion` (`contracts/examples/chat-turn-evidencia-sin-opciones.json`), cuando se renderiza, entonces el mensaje y las limitaciones están visibles sin plegar, bajo el rótulo «Alcance de la respuesta», y el turno no se pinta como respuesta con opciones. `[RN-01]` `[RN-23]`
+- **AC-3 (invariante · avisos de IA solo del turno)** · Dado cualquier turno, cuando se renderiza, entonces `web` no añade ni traduce avisos de IA: los dos avisos de RN-19 y el de ampliación salen solo de `turn.notices[]`, y un turno con bloques generados y `notices = []` sigue sin pintarse como válido. `[RN-19]`
+- **AC-4 (borde · sin ampliación)** · Dado un turno de evidencia sin `contextExpansion`, cuando se renderiza, entonces no aparece el aviso de ampliación ni espacio vacío. `[RN-19]`
+- **AC-5 (E2E sobre el fake)** · Dado Playwright contra Compose con el LLM fingido (FakeChatTurn) y las preguntas literales que el fake sirve para esos dos ejemplos, cuando se envían, entonces el aviso de ampliación y el mensaje del AC-10 son visibles sin interacción, en 375 y 1280 px. `[AC-T3.1]`
+
+## Contexto técnico
+Hoy `ConversationNotices` (`apps/web/components/molecules/conversation-notices.tsx`) ya pinta `turn.notices[]` en un recuadro de advertencia al final de la tarjeta (`conversation-turn-card.tsx`, tras las acciones del turno) y el bloque `limitacion` ya se rotula «Alcance de la respuesta» (US-267 AC-2). La brecha real es la prominencia (el aviso de ampliación queda bajo las opciones y «Ver detalle») y que ningún E2E verifica estos dos casos; el `design.md` confirma qué existe y qué cambia, sin duplicar lo hecho. Tokens de `docs/ux/sistema-de-diseno.md`. Tests: Testing Library + MSW con los ejemplos de `contracts/examples/` (AC-1…AC-4, test del AC primero); Playwright con `FakeChatTurn` (AC-5; verificar las preguntas literales); `visual-check` (Docker, 127.0.0.1; sin corridas reales de modelos). Gate 2: `clinical-language-auditor`, `privacy-guardian` (web), `design-principles-reviewer`.
+
+## Non-goals
+Cambiar los textos de los avisos (los escribe Backend 2); avisos de IA propios de `web`; mostrar valores de los campos usados en la ampliación.
+
+## INVEST
+**Small** ✓ un reordenamiento de un componente y dos E2E; 2 puntos. **Testable** ✓ cinco comprobaciones sobre ejemplos fijos.
+
+---
+
+## US-275 — La expansión contextual se activa por defecto y el tope de pares del *reranker* pasa de 12 a 20, con el p95 de consulta completa medido en máquina limpia
+
+> Linear: pendiente
+
+`FEAT-12` · Sprint 6 · Estimación **2** · HU-03 · FR-09, RN-02, RN-22 · ADR-39 (enmienda), ADR-52 · ↪ US-273, US-274 · 🔗 Antes de: US-269 (solo por orden) · 🔗 Medido en: US-269 · D6-42, D6-44 (relacionadas D6-43…D6-48)
+
+> **Decidido (usuario, 2026-11-07, `[S6 resp. 24]`; D6-44):** `RERANKER_MAX_PAIRS` pasa de 12 a 20 por defecto; `RETRIEVAL_MODE=dense` y `RERANK_TOP_N=10` no cambian. Sin corridas reales durante el desarrollo (el `evaluate` con adapters o fake en CI sí corre). Una sola corrida real final combinada (L1D-326 chat-local + US-273 + esta, p95 en máquina limpia, reporte H-3) solo si alcanza el presupuesto. **Se entrega como PR separado:** el cambio de defaults (`RERANKER_MAX_PAIRS` y activación del indicador) se pide a merge solo después de la corrida final; si no hay corrida, ese PR se cierra sin merge y queda como deuda con la decisión en D6-44. Recorte si falta presupuesto: corrida final, esta historia, US-274, US-273 (en ese orden).
+
+## Story
+Como equipo del MVP, quiero activar por defecto la expansión contextual y subir el tope de pares del *reranker* con el costo de latencia medido, para que la demo recupere más evidencia sin superar el tope de `/platform/evidence-analyses`.
+
+## AC (Given/When/Then)
+- **AC-1 (happy path · valores por defecto)** · Dada la configuración por defecto, cuando arranca `rag-orchestrator`, entonces `Settings` trae `RERANKER_MAX_PAIRS=20` y `QUERY_CONTEXT_EXPANSION_ENABLED=true`, con `RETRIEVAL_MODE=dense` y `RERANK_TOP_N=10` sin cambio, y los valores coinciden en los defaults iniciales, `.env.example` y Compose. `[RN-22]` `[ADR-39]`
+- **AC-2 (medición · p95 en máquina limpia)** · Dada una máquina sin otras cargas (nada más corriendo, sin Docker en paralelo), cuando se mide en la corrida final combinada el p95 de consulta completa con `RERANKER_MAX_PAIRS=20`, entonces el valor, la muestra y las condiciones quedan en el reporte H-3 de `reports/eval/` junto a la línea base (densa 14,7 s). `[RN-22]`
+- **AC-3 (REGLA DE PARADA)** · Dado que el p95 de consulta completa con `RERANKER_MAX_PAIRS=20` supera 15 s (la medición previa dio ~15,4 s), cuando se obtiene la medición, entonces el implementador **se detiene y pregunta** al orquestador y al usuario las opciones (recalibrar el tope, 20 solo en análisis o reducir el costo de generación) y no decide ni mergea el cambio de defaults. `[RN-22]` `[ADR-39]`
+- **AC-4 (evaluate obligatorio)** · Dado el cambio de comportamiento de recuperación, cuando se evalúa (OL-06), entonces en CI con adapters o fake las suites corren sin regresión, y en la corrida real final el reporte H-3 muestra recall@10 y MRR no menores, 0 falsos positivos en adversarias y controles intactos frente a la línea base. `[OL-06]` `[RN-02]`
+- **AC-5 (ADR)** · Dado el valor de ADR-39, cuando se aprueba el cambio, entonces la enmienda de `RERANKER_MAX_PAIRS` (12 → 20) queda registrada en `docs/architecture/adr/ADR-39-modelos-locales.md` con la medición como evidencia. `[ADR-39]`
+- **AC-6 (invariante · sigue apagable)** · Dado `QUERY_CONTEXT_EXPANSION_ENABLED=false`, cuando se procesa una pregunta sin tema propio con primer loop vacío, entonces el comportamiento es el de antes de US-271 (sin segundo loop contextual). `[RN-22]`
+- **AC-7 (entrega · PR separado)** · Dado el cambio de defaults, cuando se entrega, entonces va en un PR aparte de cualquier otro trabajo y su merge se pide solo tras la corrida final; sin corrida, el PR se cierra sin merge y la decisión queda en D6-44. `[RN-22]`
+
+## Contexto técnico
+`apps/rag-orchestrator/app/config/settings.py` y los defaults de valores iniciales; `.env.example` y Compose son cambios protegidos para los agentes: van como tareas `## humano` (H-1 variables, H-2 Compose, H-3 reporte en `reports/eval/`). Medición de partida: 12→20 da +3,1 puntos de recall y 1 falso «sin evidencia» menos por +0,66 s de p95 de recuperación (D6-44); p95 de consulta completa ~15,4 s estimado, densa hoy 14,7 s (D6-45, medido con la máquina cargada). Una corrida real a la vez. Tests: Pytest de configuración (AC-1, AC-6); `ai-eval-runner` real solo en la corrida final (AC-2…AC-4). Gate 2: `ai-eval-runner` (con adapters o fake), `design-principles-reviewer`, `privacy-guardian`.
+
+## Non-goals
+Cambiar `RETRIEVAL_MODE` o `RERANK_TOP_N`; activar `QUERY_REWRITE_ENABLED`; resolver D6-46 (fidelidad NLI), D6-47 o D6-48.
+
+## INVEST
+**Small** ✓ dos valores de configuración, una medición y una enmienda; 2 puntos. **Testable** ✓ siete comprobaciones, con parada explícita.
 
 ---
 
