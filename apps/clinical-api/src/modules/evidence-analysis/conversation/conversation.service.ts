@@ -17,7 +17,7 @@ import type { GeneradorDeIds } from '../../../infrastructure/ids.js';
 import { FalloDePersistenciaError, construirRegistroValidado } from '../analysis-completion.js';
 import type { RegistroDeAnalisis } from '../analysis-record.js';
 import { aEvidenceAnalysis } from '../evidence-analysis.mapper.js';
-import { construirContextoDelChat } from '../clinical-context.builder.js';
+import { construirContextoDelChat, contextosDeContrapartes } from '../clinical-context.builder.js';
 import { clasificacionDelPaciente, proveedorPermitido } from '../regla-proveedor.js';
 import type { CasoClinico, CasoRepository } from '../evidence-analysis.repository.js';
 import { armarRagQueryRequest, calcularDeadline } from '../evidence-analysis.service.js';
@@ -46,7 +46,11 @@ import type {
   TurnoDeConversacion,
   TurnoNuevo,
 } from './conversation.repository.js';
-import { construirHechosDelCaso, type HechosDelCaso } from './hechos-del-caso.js';
+import {
+  construirHechosDelCaso,
+  type ContraparteDeConflicto,
+  type HechosDelCaso,
+} from './hechos-del-caso.js';
 import {
   analisisActivo,
   construirRehidratacion,
@@ -259,11 +263,66 @@ function desidentificarContexto(
   });
 }
 
+/**
+ * RN-08, RN-11: el diagnóstico en conflicto con el activo (L1D-319) pasa por el mismo desidentificador antes de ser un
+ * hecho del turno; el seudónimo de estas llamadas se descarta (el del turno es el de la primera).
+ */
+async function desidentificarContrapartes(
+  dependencias: Dependencias,
+  conversacion: Conversacion,
+  solicitud: SolicitudDeTurno,
+  caso: CasoClinico,
+  dataOrigin: DataClassification,
+): Promise<ContraparteDeConflicto[]> {
+  return Promise.all(
+    contextosDeContrapartes(caso, dependencias.reloj.now()).map(async ({ contexto, enlace }) => {
+      const { clinicalContext } = await desidentificarContexto(dependencias, conversacion, {
+        traceId: solicitud.traceId,
+        question: '', // solo se enmascara el contexto: la pregunta ya salió enmascarada en la llamada del turno
+        contexto,
+        dataOrigin,
+      });
+      const { diagnosis } = clinicalContext;
+      if (diagnosis === null) throw new Error('contraparte sin diagnóstico tras desidentificar');
+      return { diagnostico: diagnosis, enlace };
+    }),
+  );
+}
+
 /** El primer turno (y todo hilo sin turnos) ya lleva la rehidratación vacía: rag responde 404 a un hilo que no conoce. */
 function rehidratacionInicial(
   previos: readonly TurnoDeConversacion[],
 ): Pick<ChatTurnRequest, 'rehydration'> {
   return previos.length === 0 ? { rehydration: rehidratacionVacia() } : {};
+}
+
+/** El contexto del caso, la pregunta y la contraparte de cada conflicto, ya desidentificados, y los hechos que de ellos salen. */
+async function desidentificarElCaso(
+  dependencias: Dependencias,
+  turno: {
+    solicitud: SolicitudDeTurno;
+    conversacion: Conversacion;
+    caso: CasoClinico;
+    clasificacion: DataClassification;
+  },
+  armado: { contexto: ContextoPermitido; dataRefs: MapaDeDataRefs },
+): Promise<SalidaDeDesidentificacion & { hechos: HechosDelCaso }> {
+  const { solicitud, conversacion, caso, clasificacion } = turno;
+  const salida = await desidentificarContexto(dependencias, conversacion, {
+    traceId: solicitud.traceId,
+    question: solicitud.peticion.question,
+    contexto: armado.contexto,
+    dataOrigin: clasificacion,
+  });
+  const contrapartes = await desidentificarContrapartes(
+    dependencias,
+    conversacion,
+    solicitud,
+    caso,
+    clasificacion,
+  );
+  const hechos = construirHechosDelCaso(salida.clinicalContext, armado.dataRefs, contrapartes);
+  return { ...salida, hechos };
 }
 
 async function prepararTurno(
@@ -278,13 +337,11 @@ async function prepararTurno(
   const claves = items.filter((item) => item.status === 'faltante').map((item) => item.item);
   const { contexto, dataRefs } = construirContextoDelChat(caso, reloj.now(), claves);
   const clasificacion = clasificacionDelPaciente(caso.paciente);
-  const { clinicalContext, query } = await desidentificarContexto(dependencias, conversacion, {
-    traceId: solicitud.traceId,
-    question: solicitud.peticion.question,
-    contexto,
-    dataOrigin: clasificacion,
-  });
-  const hechos = construirHechosDelCaso(clinicalContext, dataRefs);
+  const { clinicalContext, query, hechos } = await desidentificarElCaso(
+    dependencias,
+    { solicitud, conversacion, caso, clasificacion },
+    { contexto, dataRefs },
+  );
   const activo = analisisActivo(previos);
   return {
     hechos,

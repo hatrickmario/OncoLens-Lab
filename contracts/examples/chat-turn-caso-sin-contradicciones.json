@@ -1,0 +1,27 @@
+{
+  "intent": "caso",
+  "blocks": [
+    {
+      "kind": "limitacion",
+      "text": "No hay contradicciones registradas en el expediente. Se revisaron los diagnósticos y biomarcadores del expediente."
+    }
+  ],
+  "omittedClaims": 0,
+  "structuredState": {
+    "intentsVistos": [
+      "caso"
+    ],
+    "preguntasPrevias": [
+      "¿Hay contradicciones?"
+    ],
+    "opcionesMostradas": [],
+    "citasMostradas": [],
+    "faltantesSenalados": []
+  },
+  "llmProvider": "local",
+  "notices": [
+    "Generado por IA; requiere validación clínica independiente por el oncólogo tratante",
+    "Uso académico/investigación",
+    "Verifique contra las fuentes"
+  ]
+}

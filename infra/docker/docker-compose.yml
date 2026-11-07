@@ -376,6 +376,10 @@ services:
       CHAT_SIN_DATOS_TEXTO: ${CHAT_SIN_DATOS_TEXTO:-No se encontró información documentada sobre lo preguntado en el expediente}
       CHAT_SIN_DATOS_PERIODO_TEXTO: ${CHAT_SIN_DATOS_PERIODO_TEXTO:-No se encontró información documentada en el periodo consultado; el expediente tiene datos fuera de ese periodo}
       CHAT_SIN_FECHA_TEXTO: ${CHAT_SIN_FECHA_TEXTO:-Se omitieron <n> dato(s) del expediente sin fecha confiable; no se pudieron ubicar en el periodo consultado}
+      CHAT_CONFLICTO_ETIQUETA: ${CHAT_CONFLICTO_ETIQUETA:-Por conciliar}
+      CHAT_SIN_CONTRADICCIONES_TEXTO: ${CHAT_SIN_CONTRADICCIONES_TEXTO:-No hay contradicciones registradas en el expediente}
+      CHAT_CONTRADICCIONES_ALCANCE_TEXTO: ${CHAT_CONTRADICCIONES_ALCANCE_TEXTO:-Se revisaron los diagnósticos y biomarcadores del expediente}
+      CHAT_CONFLICTO_SIN_CONTRAPARTE_TEXTO: ${CHAT_CONFLICTO_SIN_CONTRAPARTE_TEXTO:-Hay datos marcados en conflicto cuya contraparte no está entre los datos consultados}
       # Tokenizador del LLM para contar tokens de la memoria del chat; vacío = contador conservador por caracteres.
       LLM_TOKENIZER_PATH: ${LLM_TOKENIZER_PATH:-}
       SERVICE_JWT_PUBLIC_KEY_FILE: /run/secrets/jwt_service_public.pem

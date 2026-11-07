@@ -14,6 +14,7 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping
 
+from app.domain.chat.contradicciones import es_pregunta_de_contradicciones
 from app.domain.chat.estado import Intencion
 from app.domain.contexto_del_seguimiento import (
     ContextoDelSeguimiento,
@@ -100,15 +101,18 @@ def clasificar_por_reglas(
     """La primera intención cuyo patrón aparece en la pregunta; ``None`` si ninguna clasifica (decide el LLM).
 
     Después de las reglas léxicas, y solo si ninguna clasificó (así faltantes, fuentes y evidencia —incluida la
-    prescriptiva, RN-23— siguen ganando), una pregunta es de ``caso`` si nombra un periodo reconocido
+    prescriptiva, RN-23— siguen ganando), una pregunta es de ``caso`` si pide las contradicciones del expediente
+    (``es_pregunta_de_contradicciones``, US-262: sin LLM), si nombra un periodo reconocido
     (``periodo_de_la_pregunta``) o un término del catálogo clínico versionado (``terminos_del_catalogo``, ya normalizado:
     biomarcadores, fármacos, RN-27); sin esto el LLM la mandaba a ``faltantes`` y el turno salía sin respuesta."""
     texto = normalizar_texto(pregunta)
     por_regla = next((intencion for intencion, patron in _REGLAS if patron.search(texto)), None)
     if por_regla is not None:
         return por_regla
-    if periodo_de_la_pregunta(pregunta) is not None or _nombra_un_termino(
-        texto, terminos_del_catalogo
+    if (
+        es_pregunta_de_contradicciones(pregunta)
+        or periodo_de_la_pregunta(pregunta) is not None
+        or _nombra_un_termino(texto, terminos_del_catalogo)
     ):
         return Intencion.caso
     return None

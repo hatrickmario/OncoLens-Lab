@@ -35,8 +35,18 @@ contener términos de `terminos-prohibidos.json`.
 - **WHEN** se renderiza la tarjeta
 - **THEN** la tarjeta muestra ese texto y no añade ningún aviso de la configuración de `web`
 
+#### Scenario: El supuesto de la búsqueda ampliada se pinta tal como llega en notices [US-267 AC-2] [RN-19] (asumido) [US-271]
+- **GIVEN** un turno de evidencia servido por MSW (`contracts/examples/chat-turn-evidencia-contextual.json`) con `notices[]` que incluye «La búsqueda se amplió con datos del caso: tipo, estadio y biomarcador»
+- **WHEN** se renderiza la tarjeta
+- **THEN** la tarjeta muestra ese texto literal junto a los dos avisos de RN-19 y la UI no lo compone ni lo toma de su configuración
+
+#### Scenario: Un turno con bloques generados y notices vacío no se pinta como válido [US-267 AC-2] [RN-19] (asumido)
+- **GIVEN** un turno de intención `caso` servido por MSW con un bloque `interpretacion` y `notices = []`
+- **WHEN** se renderiza
+- **THEN** la tarjeta no muestra el contenido generado, muestra «Respuesta sin los avisos de IA requeridos» en un `role="alert"` sin detalle técnico y no se anuncia como respuesta válida
+
 #### Scenario: Un mensaje del sistema no lleva avisos de IA [US-267 AC-2] [RN-19] (asumido) [glosario §3]
-- **GIVEN** el panel con un turno previo y MSW respondiendo `503` al siguiente `POST …/turns`
+- **GIVEN** el panel con un turno previo (o un turno `fuera_de_alcance` con `notices = []`) y MSW respondiendo `503` al siguiente `POST …/turns`
 - **WHEN** se muestra el mensaje «No se pudo completar la respuesta»
 - **THEN** ese mensaje no contiene «Generado por IA» ni «Uso académico/investigación»
 
@@ -49,16 +59,26 @@ Regresión [RN-19] activa desde S2 (US-069) y [RN-23] activa desde S2 (US-068): 
 produce el backend; la UI no añade texto prescriptivo propio.
 
 ### Requirement: La interpretación generada por IA se rotula aparte de la información clínica
-Un bloque con `kind = interpretacion` MUST pintarse con su propio rótulo «Interpretación generada por IA», distinto de
-«◆ Información clínica del paciente», y MUST NOT agruparse ni rotularse como información clínica aunque lleve `factRefs`
-(RN-19, RN-01). Los bloques `documentado`, `catalogo`, `conflicto` y `faltante` SHALL llevar «◆ Información clínica del
-paciente»; `evidencia`, `limitacion` y `fuente`, «▤ Evidencia científica (corpus)».
+Un bloque `interpretacion` MUST pintarse con su propio rótulo «Interpretación generada por IA», distinto de «◆ Información
+clínica del paciente», aunque lleve `factRefs` (RN-19, RN-01). `limitacion` SHALL llevar «Alcance de la respuesta» y un
+`kind` desconocido «Información adicional del turno» con su texto visible; `evidencia` y `fuente`, «▤ Evidencia científica
+(corpus)»; `documentado`, `catalogo`, `conflicto` y `faltante`, «◆ Información clínica del paciente».
 
 #### Scenario: Un bloque de interpretación no aparece como información clínica [US-267 AC-1] [RN-19] [RN-01] (asumido) [glosario §3]
 - **GIVEN** un turno de caso servido por MSW con un bloque `documentado` y un bloque `interpretacion`, ambos con `factRefs`
 - **WHEN** se renderiza la tarjeta
 - **THEN** el bloque `documentado` lleva «◆ Información clínica del paciente» y el bloque `interpretacion` lleva «Interpretación generada por IA»
 - **AND** el bloque `interpretacion` no contiene «◆ Información clínica del paciente» ni está dentro del grupo de información clínica
+
+#### Scenario: Un bloque limitacion de un turno de caso se rotula como alcance, no como evidencia [US-267 AC-1] [RN-19] (asumido) [glosario §3]
+- **GIVEN** un turno de caso servido por MSW (`contracts/examples/chat-turn-caso-sin-datos.json`) con un único bloque `limitacion`
+- **WHEN** se renderiza la tarjeta
+- **THEN** el bloque lleva «Alcance de la respuesta» y no contiene ni «▤ Evidencia científica (corpus)» ni «◆ Información clínica del paciente»
+
+#### Scenario: Un kind desconocido se pinta con rótulo genérico sin ocultar su texto [US-267 AC-1] (asumido)
+- **GIVEN** un turno servido por MSW con un bloque de `kind` no reconocido y `text` «Dato adicional validado»
+- **WHEN** se renderiza la tarjeta
+- **THEN** el bloque lleva «Información adicional del turno», su texto «Dato adicional validado» es visible y la tarjeta no se rompe
 
 ### Requirement: El texto del turno se pinta sin HTML crudo y con enlaces seguros
 Si el texto de un bloque se renderiza como Markdown, el panel MUST usar `react-markdown` sin `rehype-raw`, con
@@ -158,13 +178,13 @@ ni `critical`. El panel MUST pasar `visual-check` a 375 y 1280 px sin *scroll* h
 - **THEN** el hilo está dentro de un elemento `role="log"` con `aria-live="polite"` y `getByLabelText` encuentra el campo de pregunta por su `<label>` visible
 
 ### Requirement: Una conversación nueva ofrece de 3 a 4 preguntas guiadas con el tema del caso
-Una conversación sin turnos MUST mostrar de 3 a 4 preguntas guiadas como botones, compuestas por código desde las
-plantillas del catálogo versionado con el tema del caso ya cargado, y al pulsar una MUST enviarse como la pregunta del
+Una conversación sin turnos MUST mostrar de 3 a 4 preguntas guiadas como botones bajo «Preguntas de partida sobre este
+caso», compuestas por código desde las plantillas del catálogo versionado con el tema de `PatientSummary` leído en servidor, y al pulsar una MUST enviarse como la pregunta del
 oncólogo en un turno normal. El panel SHALL volver a ofrecerlas con «Nueva conversación» y MUST NOT enviar nada al LLM
 salvo la pregunta ya compuesta (RN-27, ADR-52).
 
 #### Scenario: El paciente semilla (a) muestra sus preguntas guiadas y una se envía como turno normal [US-267 AC-8] [ADR-52] [RN-27]
-- **GIVEN** el paciente semilla (a) (mama) con `GET /api/patients/{id}/case` servido por MSW desde `contracts/examples/` y una conversación sin turnos
+- **GIVEN** el paciente semilla (a) (mama) con su `PatientSummary` (`diagnosis` y `recentBiomarkers`) simulado en `obtenerFicha` desde `contracts/examples/` y una conversación sin turnos
 - **WHEN** se abre el panel
 - **THEN** hay entre 3 y 4 botones de pregunta guiada, uno con la forma «¿Qué evidencia hay para <tema del caso>?»
 - **AND** al pulsar uno, MSW registra un `POST …/turns` cuya `question` es exactamente el texto del botón y aparece el turno del asistente como cualquier otro
@@ -175,21 +195,21 @@ salvo la pregunta ya compuesta (RN-27, ADR-52).
 - **THEN** el hilo queda vacío y vuelven a verse las preguntas guiadas
 
 ### Requirement: El tema de las preguntas guiadas sale del catálogo y nunca de texto libre
-El tema insertado MUST copiarse por código del catálogo versionado a partir de los datos estructurados del caso (etiqueta
-CIE-10 del tipo, estadio o biomarcador principal; en próstata, el grado), nunca lo escribe el LLM, y MUST NOT incluir texto
-libre del expediente, `pseudoPatientId` ni identidad. Sin estadio ni biomarcador principal solo SHALL ofrecerse las
-plantillas que usan el tipo de cáncer, y sin tipo de cáncer no se ofrece ninguna (RN-10, RN-11, RN-27).
+El tema MUST copiarse por código del catálogo versionado desde `PatientSummary.diagnosis` y `recentBiomarkers` (nunca de
+`identification`), sin texto libre del expediente, `pseudoPatientId` ni identidad (RN-10, RN-11, RN-27). Sin estadio ni
+biomarcador solo SHALL ofrecerse plantillas de tipo; sin tipo de cáncer, ninguna.
 
 #### Scenario: El tema es la etiqueta del catálogo y en próstata incluye el grado [US-267 AC-9] [RN-27]
-- **GIVEN** el paciente semilla (a) y el semilla de próstata con grado, ambos con su caso servido por MSW
+- **GIVEN** el paciente semilla (a) y el semilla de próstata con grado, ambos con su `PatientSummary` simulado en `obtenerFicha` y el fixture compartido `temas-del-caso.json`
 - **WHEN** se arman las preguntas guiadas
 - **THEN** el tema de mama es la etiqueta del catálogo versionado de su tipo, estadio o biomarcador principal, copiada por código sin texto del LLM
 - **AND** el de próstata incluye además el grado, y la petición del turno no trae el tema en la URL
 
 #### Scenario: Un paciente sin biomarcador ni estadio recibe solo preguntas del tipo y sin datos del expediente [US-267 AC-10] [RN-10] [RN-11]
-- **GIVEN** un caso servido por MSW con tipo de cáncer, sin estadio ni biomarcador principal, y con un texto libre sintético sembrado en un atributo
+- **GIVEN** un `PatientSummary` con tipo de cáncer, sin estadio ni biomarcador principal, con un texto libre sintético sembrado y con `identification` (nombre y documento sintéticos)
 - **WHEN** se arman las preguntas guiadas
 - **THEN** solo hay plantillas que usan el tipo de cáncer, y ningún botón contiene el texto sembrado, un UUID, `pseudoPatientId` ni nombre alguno
+- **AND** el cliente no recibe `identification` ni el resumen, solo la lista de textos
 
 #### Scenario: Las plantillas no usan términos prescriptivos [US-267 AC-9] [RN-23] (asumido)
 - **GIVEN** las plantillas de preguntas guiadas del catálogo
@@ -217,6 +237,15 @@ un grupo con nombre accesible (`axe` sin violaciones `serious` ni `critical`).
 - **GIVEN** el panel con las preguntas guiadas visibles en Playwright
 - **WHEN** corre axe y luego el oncólogo usa Tab hasta el primer botón y pulsa Enter
 - **THEN** axe no reporta violaciones `serious` ni `critical`, el grupo tiene un nombre accesible y se envía el turno
+
+### Requirement: Un fallo de la lectura del resumen no bloquea la conversación
+Si el RSC no puede leer `PatientSummary` (`error`, `sin_permiso`, `no_encontrado`) o el paciente no tiene tipo de cáncer, el
+panel MUST pasar 0 preguntas guiadas y MUST mantener operable el campo de pregunta.
+
+#### Scenario: Sin resumen no hay preguntas guiadas pero sí campo de pregunta [US-267 AC-10] [RN-15] (asumido)
+- **GIVEN** `obtenerFicha` simulado con `sin_permiso` o `error`
+- **WHEN** se abre el panel
+- **THEN** no hay botones de preguntas guiadas y el campo de pregunta y «Preguntar» siguen operables
 
 ## REMOVED Requirements
 
