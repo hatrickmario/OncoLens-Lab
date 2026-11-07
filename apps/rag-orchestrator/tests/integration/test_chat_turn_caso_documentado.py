@@ -199,12 +199,12 @@ def test_chat_turn_faltantes_no_emite_interpretacion_cuando_el_llm_la_elige_en_u
     assert [b["kind"] for b in cuerpo["blocks"]] == ["documentado"]
 
 
-def test_chat_turn_faltantes_no_añade_limitacion_cuando_no_queda_ningun_bloque():
+def test_chat_turn_faltantes_dice_que_no_hay_datos_cuando_no_queda_ningun_bloque():
     entorno = crear_entorno_de_chat("CHAT-FALTANTES-SIN-ENLACE")
 
     cuerpo = entorno.turno(solicitud_de_turno("¿Qué información falta del caso?")).json()
 
-    assert cuerpo["blocks"] == []
+    assert cuerpo["blocks"] == [{"kind": "limitacion", "text": TEXTO_SIN_DATOS}]
     assert cuerpo["omittedClaims"] == 1
 
 
@@ -265,3 +265,38 @@ def test_chat_turn_caso_no_usa_la_fecha_absoluta_de_la_pregunta_como_periodo_ni_
     assert all(f"[f{n}]" in prompt for n in range(1, 5))
     datos = prompt.split("<patient_data>")[1].split("</patient_data>")[0]
     assert not FECHA_ABSOLUTA.search(datos)
+
+
+def test_chat_turn_enruta_a_caso_sin_consultar_al_llm_y_dice_que_no_hay_datos_cuando_se_pregunta_por_un_examen_inexistente():  # noqa: E501
+    entorno = crear_entorno_de_chat("CHAT-RUTA-FALTANTES-SIN-DATOS")
+
+    cuerpo = entorno.turno(solicitud_desde_ejemplo("chat-turn-request-caso-sin-datos.json")).json()
+
+    assert cuerpo["intent"] == "caso"
+    assert entorno.llm.llamadas_de_clasificacion == 0
+    assert cuerpo["blocks"] == [{"kind": "limitacion", "text": TEXTO_SIN_DATOS}]
+
+
+def test_chat_turn_enruta_a_caso_sin_consultar_al_llm_cuando_la_pregunta_nombra_un_periodo():
+    entorno = crear_entorno_de_chat("CHAT-RUTA-FALTANTES-PERIODO")
+
+    cuerpo = entorno.turno(solicitud_desde_ejemplo("chat-turn-request-caso-periodo.json")).json()
+
+    assert cuerpo["intent"] == "caso"
+    assert entorno.llm.llamadas_de_clasificacion == 0
+    assert [b["factRefs"] for b in cuerpo["blocks"]] == [["f4"], ["f1"]]
+
+
+@pytest.mark.parametrize("intencion", ["faltantes", "fuentes_limitaciones"])
+def test_chat_turn_dice_que_no_hay_datos_cuando_el_nodo_de_la_intencion_no_deja_ningun_bloque(
+    intencion,
+):
+    entorno = crear_entorno_de_chat("CHAT-FALTANTES-SIN-ENLACE")
+    pregunta = {
+        "faltantes": "¿Qué información falta del caso?",
+        "fuentes_limitaciones": "¿Qué fuentes respaldan esto?",
+    }[intencion]
+
+    cuerpo = entorno.turno(solicitud_de_turno(pregunta)).json()
+
+    assert cuerpo["blocks"] == [{"kind": "limitacion", "text": TEXTO_SIN_DATOS}]

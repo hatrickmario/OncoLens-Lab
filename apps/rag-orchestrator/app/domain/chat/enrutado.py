@@ -66,7 +66,9 @@ def es_fuera_de_alcance(
     return contexto is ContextoDelSeguimiento.fuera_de_contexto
 
 
-def clasificar_por_reglas(pregunta: str) -> Intencion | None:
+def clasificar_por_reglas(
+    pregunta: str, terminos_del_catalogo: frozenset[str] = frozenset()
+) -> Intencion | None:
     """La primera intención cuyo patrón aparece en la pregunta; ``None`` si ninguna clasifica (decide el LLM)."""
     texto = normalizar_texto(pregunta)
     return next((intencion for intencion, patron in _REGLAS if patron.search(texto)), None)

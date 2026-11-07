@@ -46,5 +46,13 @@
   "CHAT-FALTANTES-SIN-ENLACE": {
     "ruta": "{\"intent\": \"faltantes\"}",
     "generacion": "{\"claims\": [{\"text\": \"Falta el estado menopáusico.\", \"factRefs\": [], \"citations\": []}]}"
+  },
+  "CHAT-RUTA-FALTANTES-SIN-DATOS": {
+    "ruta": "{\"intent\": \"faltantes\"}",
+    "generacion": "{\"claims\": [{\"text\": \"La gammagrafía ósea no mostró metástasis.\", \"factRefs\": [], \"citations\": []}]}"
+  },
+  "CHAT-RUTA-FALTANTES-PERIODO": {
+    "ruta": "{\"intent\": \"faltantes\"}",
+    "generacion": "{\"claims\": [{\"kind\": \"documentado\", \"text\": \"\", \"factRefs\": [\"f1\", \"f4\"], \"citations\": []}]}"
   }
 }
