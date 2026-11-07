@@ -207,7 +207,7 @@ export async function pasoRegistroManual(page: Page, datos: DatosDelGate) {
     .count();
 }
 
-/** Una pregunta de seguimiento en el chat: el turno `n + 1` (el 1 es el análisis) trae ≥ 1 cita `[E<n>]`, los avisos del turno y la etiqueta académica en la página. */
+/** Una pregunta de seguimiento en el chat: el turno `n + 1` (el 1 es el análisis) trae ≥ 1 cita `[E<n> · frag. <m>]`, los avisos del turno y la etiqueta académica en la página. */
 export async function pasoSeguimiento(
   page: Page,
   pregunta: string,
@@ -219,14 +219,15 @@ export async function pasoSeguimiento(
 
   const turno = tarjetasDelChat(page).nth(n);
   await expect(turno).toBeVisible({ timeout: plazoDeGeneracion });
-  await expect(turno.locator('summary', { hasText: /\[E\d+\]/ }).first()).toBeVisible({
+  const etiquetaDeCita = { name: /^\[E\d+ · frag\. \d+\]/ };
+  await expect(turno.getByRole('button', etiquetaDeCita).first()).toBeVisible({
     timeout: plazoDeGeneracion,
   });
   // Cada cita es un elemento de lista con su fuente y fragmento; el gate no pasa con un turno sin avisos de IA (RN-19).
   await expect(
     turno
       .getByRole('listitem')
-      .filter({ has: page.locator('summary') })
+      .filter({ has: page.getByRole('button', etiquetaDeCita) })
       .first(),
   ).toBeVisible();
   const avisos = turno.getByRole('region', { name: es.conversacion.avisosTitulo });

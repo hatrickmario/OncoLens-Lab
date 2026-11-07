@@ -29,6 +29,7 @@
 ## 3. Hallazgos de la implementación (sin tarea propia)
 
 - [ ] 3.1 `CaseView` no lleva `id` en `biomarkerSeries.points` ni trae el diagnóstico, así que `GET /api/patients/{id}/case` no permite localizar el valor de un biomarcador ni de un diagnóstico por `resourceId`: el panel muestra el origen del `ConversationDataLink` y lo que el turno dice del dato (el bloque que lo cita), y el histórico sí sale por `…/{id}/history`. Añadir `id` a los puntos de la serie y el diagnóstico a `CaseView` es un cambio de contrato del proveedor (`clinical-api`) · TRASLADADA -> D6-32 (deuda de contrato nueva: change propio contract-first en clinical-api; alternativa barata GET …/biomarkers/{id})
+- [ ] 3.2 El E2E de AC-2 depende de un `page.route` que apunta el `dataLink` de `f2` a la fila HER2 3+ real de P-CHAT: el fake sirve `chat-turn-caso-ok.json` y Backend 1 resuelve `f2` al segundo hecho del caso (RE, sin histórico). Hace falta un ejemplo de turno de caso con un `factRef` en HER2 o que Backend 1 resuelva `f2` por nombre de biomarcador, y entonces se quita el `page.route` · TRASLADADA a L1D-326
 
 ## visual-check
 

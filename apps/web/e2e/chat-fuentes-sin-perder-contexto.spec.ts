@@ -16,6 +16,11 @@ const PREGUNTA_EVIDENCIA =
 const BORRADOR = '¿Qué población estudió la fuente de la opción 1?';
 /** `idSembrado('paciente-chat')` (P-CHAT, FX-12-b): el mismo UUID determinista del seed de clinical-api. */
 const ID_PACIENTE_CHAT = '71ca1471-4002-541a-a9e1-06e6f7ff026d';
+/**
+ * `idSembrado('paciente-chat/her2-3mas')`: la fila HER2 `3+` que corrige al `2+` (ADR-50). El chat falso sirve
+ * `chat-turn-caso-ok.json`, cuyo `f2` Backend 1 resuelve al segundo hecho del caso (RE, sin histórico), no al HER2.
+ */
+const ID_HER2_3MAS = '3d833f05-b6a1-574a-a646-8235c738a647';
 const ESPERA = { timeout: 5_000 };
 
 const esPostDeTurno = (r: Request) =>
@@ -33,6 +38,20 @@ async function preguntar(page: Page, texto: string): Promise<ConversationTurn> {
 const hilo = (page: Page) => page.getByRole('log', { name: conversacion.hilo }).locator('..');
 const scrollDelHilo = (page: Page) => hilo(page).evaluate((el) => el.scrollTop);
 
+/** Espera a que el desplazamiento y la altura del hilo no cambien entre dos lecturas separadas. */
+async function esperarHiloAsentado(page: Page) {
+  const medida = () => hilo(page).evaluate((el) => `${el.scrollTop}/${el.scrollHeight}`);
+  let anterior = await medida();
+  await expect
+    .poll(async () => {
+      const actual = await medida();
+      const estable = actual === anterior;
+      anterior = actual;
+      return estable;
+    }, ESPERA)
+    .toBe(true);
+}
+
 test.describe('Fuentes y datos sin perder la conversación (L1D-325)', () => {
   test('abre el fragmento en un panel lateral y al cerrarlo con Esc conserva el scroll del hilo, el borrador y el foco [US-268 AC-1]', async ({
     page,
@@ -42,20 +61,22 @@ test.describe('Fuentes y datos sin perder la conversación (L1D-325)', () => {
     await preguntar(page, PREGUNTA_FALTANTES);
     const turno = await preguntar(page, PREGUNTA_EVIDENCIA);
     await expect(tarjetasDelChat(page)).toHaveCount(3);
-    await hilo(page).evaluate((el) => {
-      el.scrollTop = 40;
-    });
+    const cita = tarjetasDelChat(page)
+      .nth(2)
+      .getByRole('button', { name: /^\[E1 · frag\. \d+\]/ });
+    await expect(cita).toBeVisible(ESPERA);
     await page.getByLabel(conversacion.campo).fill(BORRADOR);
+    // La posición se mide con el hilo asentado y la cita a la vista (un clic desplazaría el hilo hasta ella).
+    await cita.scrollIntoViewIfNeeded();
+    await esperarHiloAsentado(page);
     const scrollAntes = await scrollDelHilo(page);
+    expect(scrollAntes).toBeGreaterThan(0);
     const urlAntes = page.url();
     const citaDelTurno = turno.blocks.flatMap((b) => b.citations ?? [])[0]!;
     const fuente = (turno.evidenceAnalysis as EvidenceAnalysis).evidenceOptions
       .flatMap((o) => o.citedSources)
       .find((f) => f.chunkId === citaDelTurno.chunkId);
 
-    const cita = tarjetasDelChat(page)
-      .nth(2)
-      .getByRole('button', { name: /^\[E1 · frag\. \d+\]/ });
     await cita.click();
 
     const panel = page.getByRole('dialog', { name: es.conversacion.panel.tituloCita });
@@ -79,6 +100,15 @@ test.describe('Fuentes y datos sin perder la conversación (L1D-325)', () => {
   }) => {
     await iniciarSesion(page);
     await page.goto(`/pacientes/${ID_PACIENTE_CHAT}/analisis`);
+    // Solo se apunta el `dataLink` de `f2` a la fila HER2 real del seed; el BFF, el histórico y el panel son los reales.
+    await page.route('**/api/conversations/*/turns', async (route) => {
+      const respuesta = await route.fetch();
+      const turno = (await respuesta.json()) as ConversationTurn;
+      for (const enlace of turno.dataLinks) {
+        if (enlace.factRef === 'f2') enlace.resourceId = ID_HER2_3MAS;
+      }
+      await route.fulfill({ response: respuesta, json: turno });
+    });
     await preguntar(page, PREGUNTA_CASO);
     await expect(tarjetasDelChat(page)).toHaveCount(1);
     const urlAntes = page.url();
