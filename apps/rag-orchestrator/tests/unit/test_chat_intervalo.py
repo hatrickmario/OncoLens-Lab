@@ -1,7 +1,7 @@
 """Hechos con intervalo (US-272): filtro de periodo, descripción y borde ``CaseFact`` → ``HechoDelCaso``. Reglas puras."""
 
 from app.application.chat.traduccion import hechos_del_caso
-from app.domain.chat.descripcion_de_hechos import describir_hecho
+from app.domain.chat.descripcion_de_hechos import describir_hecho, sentidos_del_momento
 from app.domain.chat.periodo_de_la_pregunta import (
     MARCA_EN_CURSO,
     MARCA_INICIADO_ANTES_DEL_PERIODO,
@@ -52,6 +52,21 @@ def test_describir_hecho_no_añade_fin_cuando_el_hecho_esta_en_curso():
     assert describir_hecho(_hecho(-160, en_curso=True)) == (
         "Quimioterapia, 160 días antes del diagnóstico."
     )
+
+
+def test_sentidos_del_momento_lee_el_inicio_y_el_fin_que_escribe_describir_hecho():
+    descripcion = describir_hecho(_hecho(-160, -60))
+
+    assert sentidos_del_momento(descripcion) == {(160, "antes"), (60, "antes")}
+
+
+def test_sentidos_del_momento_no_distingue_el_inicio_del_fin_de_un_intervalo():
+    # Decisión documentada (US-272): «empezó 60 días antes» queda sostenido por el FIN (-60); el chequeo numérico
+    # compara cifras y sentido, no su papel. Una afirmación que confunde inicio y fin la frena el NLI, no esta regla.
+    descripcion = describir_hecho(_hecho(-160, -60))
+
+    assert (60, "antes") in sentidos_del_momento("Empezó 60 días antes del diagnóstico")
+    assert (60, "antes") in sentidos_del_momento(descripcion)
 
 
 def _cf(**extra) -> CaseFact:
