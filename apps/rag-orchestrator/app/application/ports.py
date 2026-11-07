@@ -9,7 +9,9 @@ from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
 from app.domain.applicability_text import FuenteParaProponer, PropuestaDePoblacion
 from app.application.chunk_citable import ChunkCitable
 from app.domain.citations import FichaDeFuente, OpcionAceptada, OpcionGenerada
+from app.domain.chat.relevancia import DatoCritico
 from app.domain.claims import AfirmacionAtomica
+from app.domain.criterios_aplicabilidad import CriterioDeAplicabilidad
 from app.domain.lenguaje import FuenteCitada
 from app.domain.nli import ParNli, ResultadoNli
 from app.domain.relevance import ChunkPuntuado
@@ -418,6 +420,24 @@ class FuentesDeDatosCriticos(Protocol):
 
 class DatosCriticosDelCatalogoMontado(EtiquetasDeDatosCriticos, FuentesDeDatosCriticos, Protocol):
     """Etiquetas y tipos de documento fuente de los datos críticos del mismo catálogo montado."""
+
+
+class DatosDeRelevancia(Protocol):
+    """Lo que el catálogo clínico montado dice de cada dato crítico, para explicar por qué importa (US-264, RN-29): los
+    ítems de ``datos-criticos.json`` con su destino, los criterios de ``aplicabilidad.json`` y los sinónimos
+    (``sinonimos.json``) del tipo de cáncer. Solo lectura; un tipo desconocido devuelve vacío."""
+
+    def datos_criticos(self, tipo_de_cancer: str) -> tuple[DatoCritico, ...]:
+        """Los datos críticos del tipo en el orden del catálogo."""
+        ...
+
+    def criterios(self, tipo_de_cancer: str) -> tuple[CriterioDeAplicabilidad, ...]:
+        """Los criterios de aplicabilidad del tipo en el orden del archivo."""
+        ...
+
+    def sinonimos(self, tipo_de_cancer: str) -> Mapping[str, str]:
+        """Texto normalizado (minúsculas, sin acentos) → término canónico normalizado; el canónico se mapea a sí mismo."""
+        ...
 
 
 class CorpusCatalogReader(Protocol):

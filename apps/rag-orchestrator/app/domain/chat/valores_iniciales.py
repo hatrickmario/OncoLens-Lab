@@ -38,3 +38,29 @@ CHAT_SIN_FECHA_TEXTO_INICIAL = "Se omitieron <n> dato(s) del expediente sin fech
 CHAT_AVISO_BUSQUEDA_AMPLIADA_INICIAL = "La búsqueda se amplió con datos del caso"
 """Prefijo del aviso de ``notices[]`` cuando el turno usó el segundo loop contextual (US-271, ADR-52, RN-22); sigue «: » y los
 nombres de los campos usados, nunca valores."""
+
+CHAT_RELEVANCIA_CATALOGO_TEXTO_INICIAL = (
+    "<dato> es un dato crítico del catálogo vigente (versión <version>)."
+)
+"""Primera frase del bloque ``catalogo`` de la relevancia de un dato (US-264, RN-29); ``<dato>`` y ``<version>`` los rellena
+el código (no ``{}``: la llave rompe el valor por defecto de Compose)."""
+CHAT_RELEVANCIA_CRITERIOS_TEXTO_INICIAL = (
+    "Criterios de aplicabilidad del catálogo que lo usan: <criterios>."
+)
+"""Segunda frase cuando algún criterio de ``aplicabilidad.json`` usa el dato; ``<criterios>`` son sus etiquetas."""
+CHAT_RELEVANCIA_SIN_CRITERIO_TEXTO_INICIAL = (
+    "Ningún criterio de aplicabilidad del catálogo vigente usa este dato."
+)
+"""Segunda frase cuando ningún criterio usa el dato (p. ej. Ki-67 en mama): texto fijo, sin contenido clínico inventado."""
+CHAT_RELEVANCIA_SIN_SOPORTE_TEXTO_INICIAL = (
+    "La evidencia recuperada no explica la relevancia de este dato."
+)
+"""Bloque ``limitacion`` cuando ninguna explicación del LLM tiene soporte (US-264 AC-2, RN-01)."""
+CHAT_RELEVANCIA_FUERA_DEL_CATALOGO_TEXTO_INICIAL = (
+    "Lo consultado no es un dato crítico del catálogo vigente; no se explica su relevancia."
+)
+"""Respuesta cuando la pregunta no corresponde a ningún dato de ``datos-criticos`` (US-264 AC-5, RN-29)."""
+CHAT_RELEVANCIA_SIN_EVIDENCIA_AVISO_INICIAL = (
+    "Sin evidencia: ningún fragmento recuperado supera el umbral de relevancia para este dato"
+)
+"""Aviso de ``notices[]`` del turno de relevancia sin chunks sobre el umbral (US-264 AC-3, RN-02), sin punto final."""
