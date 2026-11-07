@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import reescrituraAplicada from '../../../../../contracts/examples/rag-query-reescritura-aplicada.json' with { type: 'json' };
 import conEvidencia from '../../../../../contracts/examples/rag-query-con-evidencia.json' with { type: 'json' };
+import contextual from '../../../../../contracts/examples/rag-query-contextual.json' with { type: 'json' };
 import sinEvidencia from '../../../../../contracts/examples/rag-query-sin-evidencia.json' with { type: 'json' };
 import peticion from '../../../../../contracts/examples/rag-query-request.json' with { type: 'json' };
 import {
@@ -32,11 +33,24 @@ describe('declararReescrituraEnLaBase (US-238, D-d)', () => {
     expect(declararReescrituraEnLaBase(validarRespuestaInterna(reescrituraAplicada))).toBe(true);
   });
 
+  it('no declara reescritura cuando el segundo loop fue el contextual sin LLM [US-271 AC-7]', () => {
+    // Caracterización (nace en verde): `contextExpansion` aplicado con `queryRewrite = no_disparado` no es una reescritura.
+    const respuesta = validarRespuestaInterna(contextual);
+
+    expect(respuesta.meta.retrievalParams.contextExpansion).toEqual({
+      applied: true,
+      fields: ['tipo', 'estadio', 'biomarcador_principal'],
+    });
+    expect(respuesta.status).toBe('con_evidencia');
+    expect(declararReescrituraEnLaBase(respuesta)).toBe(false);
+  });
+
   it.each([
     ['con_evidencia', { applied: false, reason: 'no_disparado' }],
     ['con_evidencia', { applied: false, reason: 'no_disponible' }],
     ['sin_evidencia', { applied: true, reason: 'disparado' }],
     ['sin_evidencia', { applied: false, reason: 'no_disponible' }],
+    ['con_evidencia', { applied: true, reason: 'no_disparado' }],
   ] as const)('es falso con %s y %j', (status, queryRewrite) => {
     expect(declararReescrituraEnLaBase(conQueryRewrite(status, queryRewrite))).toBe(false);
   });
