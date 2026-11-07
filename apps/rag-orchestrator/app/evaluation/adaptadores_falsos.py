@@ -14,12 +14,14 @@ from pathlib import Path
 
 import yaml
 
+from app.application.chat.posiciones import posiciones_por_documento
 from app.application.ports import (
     CandidatoParaReranker,
     ChunkEncontrado,
     ChunkEncontradoSparse,
     CoberturaDePoblacion,
     EvidenciaGenerada,
+    PosicionDeChunk,
     ReleaseDelCorpus,
     ResultadoDeRecuperacion,
     SinTerminosLexicos,
@@ -267,6 +269,20 @@ def ficha_sintetica(documento: str, titulo: str, corte: date) -> FichaDeFuente:
         authors=None,
         source_url=None,
     )
+
+
+class PosicionesDelDataset:
+    """``PosicionDeChunks`` sobre el corpus sintético: el ordinal cuenta desde 1 en el orden del corpus dentro de su documento
+    y ``cantidad`` son los chunks de ese documento. Como el adapter de Milvus, solo devuelve los chunks que existen."""
+
+    def __init__(self, dataset: DatasetSuite) -> None:
+        por_documento: dict[str, list[str]] = {}
+        for chunk in dataset.chunks:
+            por_documento.setdefault(chunk.documento, []).append(chunk.id)
+        self._posiciones = posiciones_por_documento(por_documento)
+
+    def posiciones(self, chunk_ids: Collection[str]) -> dict[str, PosicionDeChunk]:
+        return {c: self._posiciones[c] for c in chunk_ids if c in self._posiciones}
 
 
 class CatalogoClinicoDeConfig:

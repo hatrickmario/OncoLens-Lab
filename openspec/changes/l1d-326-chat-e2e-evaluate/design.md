@@ -66,6 +66,30 @@ métricas de AC-3…AC-7; rótulo de revisión clínica (AC-8); no fuga verifica
    dato del paciente) en `documentado`, `interpretacion` y `conflicto`, y ≥ 1 cita al corpus en `evidencia`. Los bloques
    `faltante`, `catalogo`, `limitacion` y `fuente` son deterministas y exentos: el E2E no les exige enlace ni cita (si lo
    hiciera, AC03 y AC06 fallarían por diseño).
+10. **Casos con ejemplo del contrato como petición (adapters falsos).** `chat-fake.yaml` usa como petición el ejemplo de
+    `contracts/examples/` que cada caso nombra (`ejemplo.base`) con la pregunta del caso, y el guion del LLM falso (FX-12-e) del
+    propio caso; con modelos locales rigen las peticiones de `clinical-api`. Los hechos esperados se traducen clave del seed →
+    `factRef` (por `clinical-api` o por `ejemplo.hechos`). Un caso con `previo` continúa el hilo del turno anterior (AC06 sigue a
+    AC05). Los controles `CHAT-PRESCRIPTIVO` (FX-12-e, con NLI falso `entailment`) y `CHAT-PRESCRIPTIVO-SIN-MODAL` solo cuentan en
+    RN-23: el primero lo detiene además la forma de afirmación (modal normativo), el segundo solo el filtro de términos prohibidos.
+11. **D6-34 y D6-37 (deuda destinada a este change).** `FakeChatTurn` sirve la variante de próstata y el ejemplo de relevancia del
+    dato que nombra la pregunta (el E2E de próstata lo necesita); `parametros_de_recuperacion` fija `reranker_max_pairs` como el
+    *bootstrap* (RN-22) para que `evaluate` no falle con un corpus de más pares que el tope. Sin cambio de contrato ni de defaults.
+
+## Alcance mínimo (decisión del usuario, 2026-11-07)
+
+US-269 baja de 5 a 3 puntos: quedan el dataset `chat-v1`, la familia `chat` con adapters falsos (AC-2, AC-5, AC-6, AC-8), el E2E
+de mama y la no fuga en los cuerpos hacia Backend 2. AC-3 y AC-7 con modelos locales y la corrida real de `chat-local.yaml` quedan en
+D6-50; AC-4 (sensibilidad, especificidad y `gapType`, tareas 3.2 y 3.3) en D6-51; `evaluate:chat`, el `.gitignore` y el refactor de
+clinical-platform (3.4 a 3.6) en D6-52; el E2E de próstata en D6-49; la revisión clínica de los casos pendientes en D6-53.
+
+## Notas del Gate 2
+
+- **Ejemplos de próstata solo-fake, no == motor:** `chat-turn-*-prostata.json` validan contra `ChatTurnResponse` y `contracts:verify-provider`, pero no se comparan con el motor real (la de fuentes se compuso a mano). Las cuatro peticiones de próstata son copias deliberadas de `chat-turn-request-caso-adt.json` salvo `question`. Riesgo: si cambia la plantilla de `/chat/turn`, el fake de próstata sirve texto viejo sin fallar (D6-54).
+- **Caso borde solo en modo fake:** la relevancia del fake se enruta por el patrón del dato sin mirar el tipo de cáncer.
+- **Allowlist:** la entrada `FX-12-doi-prostata` de `config/pii-allowlist.json` exime el prefijo del DOI normalizado a dígitos, por valor y ruta exacta; el commit `fef2b3b9` (solo la allowlist) no se reescribe.
+- **`exigir_adapters_locales(CLASE_SINTETICA, …)` es un no-op por diseño** en la CLI de `chat`: la negativa con datos no sintéticos la da `dataset_chat.py`, que rechaza todo dataset sin `clase: sintetico`.
+- **Menores de diseño diferidos a D6-54:** regex sin tipo y `if tipo == 'prostata'` en el fake de relevancia, `ClienteDelChat` por clave `intent`, `ID_PACIENTE_CHAT` y `PREGUNTA_FX_12_D` duplicados en el E2E, reloj simulado construido en tres sitios.
 
 ## Privacidad y ownership
 
@@ -100,3 +124,9 @@ métricas de AC-3…AC-7; rótulo de revisión clínica (AC-8); no fuga verifica
   documentado en el reporte, no se oculta.
 - **Selectores del E2E** dependen del panel de US-267: se usan atributos de datos acordados en su change.
 - **Corrida con modelos locales lenta**: se agrupa con la corrida nocturna `[S6 resp. 12]`.
+- **E2E mínimo de `web` (decisión del usuario, 2026-11-07, por presupuesto):** `chat-ac01-ac06.spec.ts` cubre solo mama
+  (AC01…AC06 con la paciente semilla (a), `LLM_PROVIDER=fake`) y la comprobación de logs de FX-12-d con P-CHAT; las preguntas
+  salen de `data/eval/chat-v1/casos.yaml`. El spec lee la identidad sintética de `prisma/seed/pacientes/chat.ts` (sin literales
+  nuevos) y vuelca `docker logs` del proyecto de Compose para pasarlo por `buscarSecretos`. El E2E de próstata queda
+  trasladado a D6-49 (ID asignado por el orquestador de S6). Desviación: AC02 pregunta por el receptor de estrógeno (término
+  del catálogo) y no por «HER2», porque el chat falso solo enruta por reglas y `sinonimos.json` no trae «HER2» solo.

@@ -123,7 +123,9 @@ def parametros_de_recuperacion(
     tipos_habilitados: tuple[str, ...],
     brazo: Brazo | None = None,
     respaldo: ParametrosDelRespaldo = PARAMETROS_DEL_RESPALDO_DE_LA_SUITE,
+    reranker_max_pairs: int | None = None,
 ) -> ParametrosDeRecuperacion:
+    """Los parámetros del servicio de la suite; ``reranker_max_pairs`` solo lo fija un reranker local (``None`` = sin tope)."""
     u = config.umbrales
     base = ParametrosDeRecuperacion(
         relevance_threshold=u.relevance_threshold,
@@ -136,6 +138,7 @@ def parametros_de_recuperacion(
         tipos_habilitados=tipos_habilitados,
         claim_max_words=u.claim_max_words,
         respaldo=respaldo,
+        reranker_max_pairs=reranker_max_pairs,
     )
     return base if brazo is None else _con_recuperacion_del_brazo(base, brazo)
 
@@ -302,6 +305,7 @@ def componer_servicio(
             tipos_habilitados,
             brazo,
             puertos_locales.respaldo if puertos_locales else PARAMETROS_DEL_RESPALDO_DE_LA_SUITE,
+            puertos_locales.reranker_max_pairs if puertos_locales else None,
         ),
         embedder_sparse=embedder_sparse,
         buscador_sparse=buscador_sparse,

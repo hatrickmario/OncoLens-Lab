@@ -1,0 +1,17 @@
+# chat-v1 (US-269 / L1D-326): dataset sintético de la familia `chat` de la suite `evaluate` (OL-06). 13 casos: AC01…AC06 del
+# prompt del chatbot × {mama, próstata} más un control de identidad (FX-12-d). Ningún dato real ni de paciente (RN-13, RN-14).
+#
+# - Los hechos esperados se referencian por CLAVE DEL SEED (`<paciente>/<recurso>`, p. ej. `paciente-b/psa-3`), nunca por UUID:
+#   `clinical-api` (`npm run eval:chat-preparar`) los traduce a los `factRef` de cada petición.
+# - La pregunta con PII lleva el marcador `{identidad_sintetica:P-CHAT}`; el paso de `clinical-api` lo resuelve desde el seed y
+#   enmascara la pregunta antes de escribir la petición: este dataset no contiene literales de identidad.
+# - `ejemplo` y `guion` solo los usa la configuración con adapters falsos (`chat-fake.yaml`): el ejemplo del contrato que hace
+#   de petición y la salida cruda del LLM falso (FX-12-e). Con modelos locales rigen las peticiones de `clinical-api`.
+# - `revision_oncologo: pendiente` hasta que un oncólogo revise el caso; los pendientes son deuda registrada (S6 resp. 12).
+clase: sintetico
+nombre: chat-v1
+version: '1'
+descripcion: '13 casos del chat (AC01…AC06 × mama y próstata, más un control de identidad) sobre el corpus sintético de la familia opciones; 0 revisados por el oncólogo.'
+corpus: data/evaluation/opciones
+archivos:
+  casos: casos.yaml

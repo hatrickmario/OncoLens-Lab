@@ -57,6 +57,16 @@ export const IDS_SEMILLA_S5 = {
 export const ID_SEMILLA_H = IDS_SEMILLA_S5['h-adyuvante'];
 
 /**
+ * Identidad sintética de P-CHAT (FX-12-b/d): la que la pregunta FX-12-d siembra y los logs no deben contener. `web` no importa
+ * código de `clinical-api`: el test unitario `seed-pacientes-semilla` compara estos valores con `prisma/seed/pacientes/chat.ts`.
+ */
+export const IDENTIDAD_SINTETICA_CHAT = {
+  nombre: 'Lucía Prueba Chat',
+  documento: 'SINT-CHAT-0001',
+  nacimiento: '1970-03-02',
+} as const;
+
+/**
  * Cuántos pacientes siembra el seed: un archivo `<letra>.ts` por paciente en `prisma/seed/pacientes/`. Se lee del
  * sistema de archivos, como `ejemplo()`: `web` no importa código de `clinical-api` (`web-solo-por-bff`).
  */

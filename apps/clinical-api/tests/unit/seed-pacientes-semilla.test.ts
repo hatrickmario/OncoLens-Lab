@@ -3,6 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { mesesTranscurridos } from '../../src/modules/evidence-analysis/clinical-context.builder.js';
 import { leerCatalogo, resolverAtcDelRegimen } from '../../prisma/seed/catalogo.js';
 import { idSembrado } from '../../prisma/seed/determinismo.js';
+import {
+  DOCUMENTO_SINTETICO_CHAT,
+  NACIMIENTO_SINTETICO_CHAT,
+  NOMBRE_SINTETICO_CHAT,
+} from '../../prisma/seed/pacientes/chat.js';
 import { PACIENTES_SEMILLA } from '../../prisma/seed/pacientes/indice.js';
 
 const DIRECTORIO = new URL('../../prisma/seed/pacientes/', import.meta.url);
@@ -25,6 +30,23 @@ describe('PACIENTES_SEMILLA', () => {
 
     expect(ids).toHaveLength(7);
     for (const [, letra, id] of ids) expect(id).toBe(idSembrado(`paciente-${letra}`));
+  });
+
+  it('coincide con la identidad sintética de P-CHAT que usa el E2E del chat cuando se lee soporte.ts [US-269 AC-6]', () => {
+    // `web` no importa código de clinical-api: el E2E repite la identidad y este test detecta una deriva.
+    const soporte = readFileSync(new URL('../../../web/e2e/soporte.ts', import.meta.url), 'utf8');
+    const bloque = /IDENTIDAD_SINTETICA_CHAT = \{([^}]*)\}/.exec(soporte)?.[1] ?? '';
+    const campo = (nombre: string) => new RegExp(`${nombre}: '([^']*)'`).exec(bloque)?.[1];
+
+    expect({
+      nombre: campo('nombre'),
+      documento: campo('documento'),
+      nacimiento: campo('nacimiento'),
+    }).toEqual({
+      nombre: NOMBRE_SINTETICO_CHAT,
+      documento: DOCUMENTO_SINTETICO_CHAT,
+      nacimiento: NACIMIENTO_SINTETICO_CHAT,
+    });
   });
 
   it('los tratamientos del contexto de cada ejemplo demo-s5 son los del paciente semilla resuelto con el catálogo [US-254 AC-4]', () => {

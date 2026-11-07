@@ -1,0 +1,66 @@
+{
+  "intent": "caso",
+  "blocks": [
+    {
+      "kind": "documentado",
+      "text": "PSA: 4.2, alterado, 172 días antes del diagnóstico.",
+      "factRefs": [
+        "f2"
+      ]
+    },
+    {
+      "kind": "documentado",
+      "text": "Adenocarcinoma acinar, Gleason 4+3=7 · ISUP 3, estadio T2cN0M0 (TNM_8), ECOG 0, al momento del diagnóstico.",
+      "factRefs": [
+        "f1"
+      ]
+    },
+    {
+      "kind": "documentado",
+      "text": "PSA: 9.8, alterado, al momento del diagnóstico.",
+      "factRefs": [
+        "f3"
+      ]
+    },
+    {
+      "kind": "interpretacion",
+      "text": "El PSA registró 9.8 al momento del diagnóstico y 12.4 a los 37 días después del diagnóstico.",
+      "factRefs": [
+        "f3",
+        "f4"
+      ]
+    },
+    {
+      "kind": "documentado",
+      "text": "Progresion: Progresión bioquímica, 37 días después del diagnóstico.",
+      "factRefs": [
+        "f7"
+      ]
+    },
+    {
+      "kind": "documentado",
+      "text": "PSA: 12.4, alterado, 37 días después del diagnóstico.",
+      "factRefs": [
+        "f4"
+      ]
+    }
+  ],
+  "omittedClaims": 0,
+  "structuredState": {
+    "intentsVistos": [
+      "caso"
+    ],
+    "preguntasPrevias": [
+      "¿Cuál es la situación actual del paciente y cómo ha evolucionado el PSA?"
+    ],
+    "opcionesMostradas": [],
+    "citasMostradas": [],
+    "faltantesSenalados": []
+  },
+  "llmProvider": "local",
+  "notices": [
+    "Generado por IA; requiere validación clínica independiente por el oncólogo tratante",
+    "Uso académico/investigación",
+    "Verifique contra las fuentes"
+  ]
+}

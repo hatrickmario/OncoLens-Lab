@@ -93,6 +93,8 @@ class PuertosLocales:
     respaldo: ParametrosDelRespaldo
     embedder_sparse: QuerySparseEncoder | None = None
     """Solo si la configuración trae un brazo híbrido (US-133): el codificador *sparse* de BGE-M3 de la ingesta."""
+    reranker_max_pairs: int | None = None
+    """``RERANKER_MAX_PAIRS`` de ADR-39: el tope de pares que admite el reranker cargado, como en el *bootstrap* de producción."""
 
 
 class EmbedderRegistrado:
@@ -289,6 +291,7 @@ def cargar_puertos_locales(
         generador=crear_generador_local(settings, registrar_llm),
         proponente=crear_proponente_local(settings, registrar_llm),
         respaldo=parametros_del_respaldo(settings),
+        reranker_max_pairs=settings.modelos.reranker_max_pairs if settings.modelos else None,
         embedder_sparse=(
             None
             if modelos.embedder_sparse_consulta is None
