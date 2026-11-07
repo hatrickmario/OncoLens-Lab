@@ -40,3 +40,22 @@ Una línea por tarea `- [ ]` del `tasks.md` de cada change archivado (el texto c
 | D6-30 | `l1d-248-g-demo-verificacion` | H-1 | Revisar y firmar `docs/gates/G-Demo-<fecha>.md` como PO | Post-MVP (G-Demo real, D5-28) |
 
 `d5fb-01-seed-pacientes-por-revisar` no tenía tareas sin marcar.
+
+## Deuda generada en el S6 (2026-11-07)
+
+Deuda surgida durante la ejecución del S6 (Gate 2 y verificaciones de los PR #379…#384). Cada fila nombra la limitación visible mientras no se cierre. La numeración respeta la de los `tasks.md` de los changes (`l1d-325-chat-fuentes-sin-perder-contexto` ya usa D6-32).
+
+| ID | Change | Tarea | Resumen | Destino |
+|---|---|---|---|---|
+| D6-31 | `scripts/demo/levantar.sh` (chore) | — | `levantar.sh` valida y descarga lo que falte: pesos ONNX, `sparse_linear.npz`, `modelos.env` (vía `exportar-modelos.py`) y el LLM (`ollama pull`), con confirmación antes de la descarga grande o `--descargar-modelos`; fija la red por `<proyecto>_clinical-net`. Limitación visible hasta entonces: el script se detenía con «faltan los pesos…» | S6 (este PR) |
+| D6-32 | `l1d-325-chat-fuentes-sin-perder-contexto` | 3.1 | Hueco de `CaseView`: sin `id` en `biomarkerSeries.points` ni diagnóstico, no se muestra el valor vigente del registro en el panel lateral. **Limitación visible:** el panel muestra el texto del turno rotulado «generada por IA», no el registro. Alternativa barata: `GET …/biomarkers/{id}` (decisión del usuario, 2026-11-07) | Post-MVP |
+| D6-33 | `l1d-329` · `l1d-330` | — | Suite `evaluate` propia del loop contextual (ADR-52) y del nodo de relevancia, con dataset de etiquetas de pertinencia y script de medición versionado. **Limitación visible:** la medición del Gate 2 vivió en el scratchpad y no es reproducible desde el repo | L1D-326 |
+| D6-34 | `l1d-325-chat-fuentes-sin-perder-contexto` | — | `FakeChatTurn`: mapear «¿Por qué importa el Ki-67?» a los ejemplos de relevancia y añadir el ejemplo de turno de caso con `factRef` en HER2. **Limitación visible:** el E2E del AC-2 de L1D-325 usa `page.route` en lugar del LLM fingido | L1D-326 |
+| D6-35 | `fx-rn23` | — | RN-23 nivel B: 5 rechazos legítimos de más (RN23-09, 11, 12, 13, 14) frente a la línea base 1.5.0; sale con código 4 igual en `main`. **Limitación visible:** el nivel B no pasa en verde | Historia propia / Post-MVP |
+| D6-36 | `integration-rag` (CI) | — | Flakes: `permission denied to terminate process` al cierre de `test_catalogo_metadata_pendiente.py` y un 504 en `conversacion-fallos`. **Limitación visible:** pueden aparecer fallos intermitentes en el job | Post-MVP |
+| D6-37 | `app/evaluation` (rag-orchestrator) | — | `parametros_de_recuperacion` no fija `reranker_max_pairs`: falla con un corpus de 53 documentos (`s5-calibracion.yaml` probablemente igual). **Limitación visible:** `evaluate` con el corpus ampliado falla | L1D-326 |
+| D6-38 | `l1d-321` · `l1d-324` | — | Los patrones de enrutado del chat solo cubren español: «Why does menopausal status matter?» cae en `evidencia`. **Limitación visible:** preguntas en inglés se enrutan mal | Post-MVP |
+| D6-39 | `l1d-321` · `l1d-324` · `l1d-325` · `l1d-329` · `l1d-330` | — | Menores de diseño listados en los cuerpos de #379…#384: P2-2 `RAGOrchestratorService` (1051 líneas) y P3 (`_recuperar_y_puntuar` con flag, `_armar_meta_de_recuperacion` con 7 parámetros, frase por palabras completas duplicada, `_generar` duplicado con `seguimiento_evidencia`, constantes `"name"` y parseo de `destination`, `hoy?` opcional en `ContenidoDelHistorico`, tramo como string libre, límite de 4 guiadas en código, `ParteDelTurno` con `as`, `AnalysisResult` conserva su disclaimer). **Limitación visible:** deuda de diseño sin efecto funcional | Post-MVP |
+| D6-40 | `l1d-325-chat-fuentes-sin-perder-contexto` | — | El 503 del histórico en el panel lateral no ofrece «Reintentar» y el panel mide 376 px a 375 px. **Limitación visible:** sin reintento y 1 px de desborde horizontal | Post-MVP |
+| D6-41 | `l1d-324` · `l1d-325` | — | Contraste de las pantallas del chat con `docs/ux/S6/` (variante B) no hecho en los `visual-check`. **Limitación visible:** diferencias visuales con la variante B sin revisar | L1D-326 / Demo 6 |
+| D6-42 | `l1d-329` | H-2, H-3 | Activar `QUERY_CONTEXT_EXPANSION_ENABLED` por defecto solo tras decisiones del PO: próstata recupera cribado por el término PSA; p95 de turno completo de 15,7 s medido con la máquina cargada; aviso de ampliación y AC-10 visibles. H-3: el reporte en `reports/eval/`. **Limitación visible:** la expansión queda apagada por defecto | PO / Post-MVP |
