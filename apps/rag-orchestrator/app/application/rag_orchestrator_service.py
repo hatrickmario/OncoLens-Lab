@@ -80,6 +80,7 @@ from app.domain.citations import (
     contar_por_motivo,
     validar_citas,
 )
+from app.domain.expansion_contextual import ParametrosDeExpansionContextual
 from app.domain.faltantes import claves_de_faltantes_invalidas
 from app.domain.fusion_de_candidatos import (
     HYBRID_SPARSE_WEIGHT_INICIAL,
@@ -95,7 +96,9 @@ from app.domain.option_selection import (
     RecorteDeOpciones,
     recortar_contando_excedente,
 )
+from app.domain.pregunta_sin_tema_propio import MarcosDePregunta
 from app.domain.resolucion_de_soporte import ResultadoSoporte
+from app.domain.terminos_del_caso import CatalogoDeTerminos
 from app.domain.pares_del_reranker import (
     RERANKER_CUT_LOG_MAX_IDS_INICIAL,
     cortados_con_puesto,
@@ -182,6 +185,8 @@ class ParametrosDeRecuperacion:
     """``HYBRID_SPARSE_WEIGHT``: peso de la rama *sparse* (0 < w < 1); solo con ``retrieval_fusion = ponderada``."""
     reescritura: ParametrosDeReescritura = ParametrosDeReescritura()
     """``QUERY_REWRITE_*`` (US-238, RN-22): segundo loop de reescritura; desactivado por defecto."""
+    expansion_contextual: ParametrosDeExpansionContextual = ParametrosDeExpansionContextual()
+    """``QUERY_CONTEXT_EXPANSION_*`` (US-271, ADR-52, RN-22): segundo loop contextual sin LLM; desactivado por defecto."""
 
 
 def _con_relevancia(aceptada: OpcionAceptada, puntajes: Mapping[str, float]) -> OpcionConRelevancia:
@@ -213,7 +218,11 @@ class RAGOrchestratorService:
         embedder_sparse: QuerySparseEncoder | None = None,
         reescritor: QueryRewriter | None = None,
         terminos_del_catalogo: Collection[str] = (),
+        marcos_de_pregunta: MarcosDePregunta | None = None,
+        catalogo_de_terminos: CatalogoDeTerminos | None = None,
     ) -> None:
+        self._marcos_de_pregunta = marcos_de_pregunta
+        self._catalogo_de_terminos = catalogo_de_terminos
         self._reescritor = reescritor
         self._terminos_del_catalogo = frozenset(normalizar_texto(t) for t in terminos_del_catalogo)
         self._detector_idioma = detector_idioma

@@ -47,6 +47,8 @@ from app.bootstrap import PuertosDeRecuperacion, crear_app
 from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
 from app.domain.citations import FichaDeFuente
 from app.domain.criterios_aplicabilidad import CriteriosDeAplicabilidad
+from app.domain.pregunta_sin_tema_propio import MarcosDePregunta
+from app.domain.terminos_del_caso import CatalogoDeTerminos
 from app.domain.retrieval_filter import (
     coincide_etiqueta,
     exigir_filtro_vigente,
@@ -550,6 +552,8 @@ def crear_entorno(
     embedder_sparse: QuerySparseEncoder | None = None,
     reescritor: QueryRewriter | None = None,
     terminos_del_catalogo: Collection[str] = (),
+    marcos_de_pregunta: MarcosDePregunta | None = None,
+    catalogo_de_terminos: CatalogoDeTerminos | None = None,
 ) -> EntornoDeRecuperacion:
     embedder = embedder or EmbedderFalso()
     buscador = buscador or BuscadorFalso()
@@ -586,6 +590,8 @@ def crear_entorno(
         embedder_sparse=embedder_sparse,
         reescritor=reescritor,
         terminos_del_catalogo=terminos_del_catalogo,
+        marcos_de_pregunta=marcos_de_pregunta,
+        catalogo_de_terminos=catalogo_de_terminos,
     )
     app = crear_app(
         settings_de_prueba(), trace_ids=GeneradorTraceFijo(), clock=RelojFijo(), consulta=servicio
