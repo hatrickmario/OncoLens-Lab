@@ -35,14 +35,14 @@ from app.application.rag_orchestrator_service import (
     LIMITACION_SIN_EVIDENCIA,
     RAGOrchestratorService,
 )
-from app.application.seguimiento import como_opcion
+from app.application.seguimiento import validar_afirmaciones_citadas
 from app.domain.alias_de_chunks import PATRON_DE_ALIAS, asignar_alias, traducir_citas
 from app.domain.chat.estado import EstadoDelHilo
 from app.domain.chat.mensajes import MENSAJE_SEGUIMIENTO_SIN_AFIRMACIONES
 from app.domain.chat.memoria import texto_de_turno, ventana_de_memoria
 from app.domain.chat.turno import BloqueDelTurno, TipoDeBloque
 from app.domain.chat.ultima_evidencia import resumir_ultima_evidencia
-from app.domain.citations import OpcionAceptada, validar_citas
+from app.domain.citations import OpcionAceptada
 from app.domain.claims import AfirmacionAtomica, PapelDeAfirmacion
 from app.domain.relevance import top_relevance_score
 from app.prompts.chat_seguimiento_evidencia import (
@@ -216,23 +216,17 @@ class NodoSeguimientoDeEvidencia:
     ) -> tuple[tuple[BloqueDelTurno, ...], int]:
         """RN-01, RN-04, RN-23, RN-24: solo se muestra lo que cita un chunk de ESTE turno, lo implica el NLI frente a esos
         chunks y respeta el lenguaje; el resto se omite y suma en ``omittedClaims``."""
-        idioma = recuperacion.meta.responseLanguage.value
-        citables = await self._servicio.chunks_citables(trace_id, recuperacion)
-        citas = validar_citas(tuple(como_opcion(a, idioma) for a in afirmaciones), citables.keys())
-        soporte = await self._servicio.verificador_de_soporte.verificar(
-            trace_id,
-            idioma,
-            citas.aceptadas,
-            (),
-            {i: c.chunk.chunk_text for i, c in citables.items()},
-            {i: c.ficha.title for i, c in citables.items()},
+        validadas = await validar_afirmaciones_citadas(
+            self._servicio, trace_id, recuperacion, afirmaciones
         )
-        omitidas = len(citas.descartadas) + len(soporte.descartadas) + soporte.omitidas
-        if not soporte.soportadas:
+        omitidas = validadas.omitidas
+        if not validadas.soportadas:
             return (
                 BloqueDelTurno(TipoDeBloque.limitacion, MENSAJE_SEGUIMIENTO_SIN_AFIRMACIONES),
             ), omitidas
-        return await self._bloques_con_citas(trace_id, soporte.soportadas, citables), omitidas
+        return await self._bloques_con_citas(
+            trace_id, validadas.soportadas, validadas.citables
+        ), omitidas
 
     async def _bloques_con_citas(
         self,

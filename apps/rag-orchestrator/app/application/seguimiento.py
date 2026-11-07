@@ -9,7 +9,8 @@ invocar al LLM ni a la reescritura) → generar con el prompt de seguimiento →
 from __future__ import annotations
 
 import logging
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 
 from app.application.chunk_citable import ChunkCitable
 from app.application.ports import (
@@ -117,20 +118,11 @@ class ResponderSeguimiento:
         """RN-01, RN-04, RN-23, RN-24: solo se muestra lo que cita un chunk de ESTE turno, lo implica el NLI frente a
         esos chunks y respeta el lenguaje; el resto se omite y suma en ``omittedClaims``."""
         trace_id = solicitud.traceId.root
-        idioma = recuperacion.meta.responseLanguage.value
-        citables = await self._servicio.chunks_citables(trace_id, recuperacion)
-        candidatas = tuple(como_opcion(a, idioma) for a in generado.afirmaciones)
-        citas = validar_citas(candidatas, citables.keys())
-        soporte = await self._servicio.verificador_de_soporte.verificar(
-            trace_id,
-            idioma,
-            citas.aceptadas,
-            (),
-            {i: c.chunk.chunk_text for i, c in citables.items()},
-            {i: c.ficha.title for i, c in citables.items()},
+        validadas = await validar_afirmaciones_citadas(
+            self._servicio, trace_id, recuperacion, generado.afirmaciones
         )
-        omitidas = len(citas.descartadas) + len(soporte.descartadas) + soporte.omitidas
-        respuesta = _ensamblar(soporte.soportadas, citables, recuperacion, omitidas)
+        omitidas = validadas.omitidas
+        respuesta = _ensamblar(validadas.soportadas, validadas.citables, recuperacion, omitidas)
         logger.info(
             "event=rag_follow_up_validacion traceId=%s afirmaciones=%d mostradas=%d omittedClaims=%d",
             trace_id,
@@ -139,6 +131,39 @@ class ResponderSeguimiento:
             omitidas,
         )
         return respuesta
+
+
+@dataclass(frozen=True)
+class AfirmacionesValidadas:
+    """Lo que sobrevive a la validación de un seguimiento: las afirmaciones con soporte, los chunks citables del turno y
+    cuántas se omitieron (sin cita del turno, cita inválida, NLI sin ``entailment`` o lenguaje prohibido)."""
+
+    soportadas: tuple[OpcionAceptada, ...]
+    citables: Mapping[str, ChunkCitable]
+    omitidas: int
+
+
+async def validar_afirmaciones_citadas(
+    servicio: RAGOrchestratorService,
+    trace_id: str,
+    recuperacion: ResultadoDeRecuperacion,
+    afirmaciones: Sequence[AfirmacionAtomica],
+) -> AfirmacionesValidadas:
+    """RN-01, RN-04, RN-23, RN-24: chunks citables → citas del turno → soporte NLI y lenguaje. Una sola regla para
+    ``/rag/follow-up`` y para el seguimiento del chat: las mismas afirmaciones dan el mismo ``omittedClaims``."""
+    idioma = recuperacion.meta.responseLanguage.value
+    citables = await servicio.chunks_citables(trace_id, recuperacion)
+    citas = validar_citas(tuple(como_opcion(a, idioma) for a in afirmaciones), citables.keys())
+    soporte = await servicio.verificador_de_soporte.verificar(
+        trace_id,
+        idioma,
+        citas.aceptadas,
+        (),
+        {i: c.chunk.chunk_text for i, c in citables.items()},
+        {i: c.ficha.title for i, c in citables.items()},
+    )
+    omitidas = len(citas.descartadas) + len(soporte.descartadas) + soporte.omitidas
+    return AfirmacionesValidadas(soporte.soportadas, citables, omitidas)
 
 
 def como_opcion(afirmacion: AfirmacionAtomica, idioma: str) -> OpcionGenerada:
