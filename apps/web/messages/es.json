@@ -785,6 +785,7 @@
     "datosAusentes": "Ausentes",
     "ninguno": "ninguno",
     "avisosTitulo": "Avisos de la respuesta",
+    "optOut": "Este paciente no tiene habilitado el análisis con IA; el resto de la ficha sigue disponible.",
     "sinAvisosTitulo": "Respuesta sin los avisos de IA requeridos",
     "intenciones": {
       "caso": "◆ Caso",

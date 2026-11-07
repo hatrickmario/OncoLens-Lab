@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { VERSION_DEL_CATALOGO_GUIADAS } from '../../lib/server/catalogo-guiadas';
+import { catalogosGuiadas, VERSION_DEL_CATALOGO_GUIADAS } from '../../lib/server/catalogo-guiadas';
 
 const raiz = resolve(import.meta.dirname, '../../../..');
 const leer = (ruta: string) => readFileSync(resolve(raiz, ruta), 'utf8');
@@ -23,14 +23,27 @@ describe('catálogo importado por las preguntas guiadas [US-267 AC-8]', () => {
     expect(VERSION_DEL_CATALOGO_GUIADAS).toBe(manifest.version);
   });
 
-  it('importa solo archivos cuya versión no supera la del manifest y plantillas con la del manifest', () => {
+  it('tiene plantillas, códigos y datos críticos de cada tipo del manifest y los declara en plantillasDePregunta', () => {
+    const manifest = JSON.parse(leer('packages/clinical-catalogs/manifest.json')) as {
+      cancerTypes: string[];
+      plantillasDePregunta: string[];
+    };
+
+    expect(manifest.plantillasDePregunta).toEqual(manifest.cancerTypes);
+    for (const clave of ['plantillas', 'codigos', 'datosCriticos'] as const) {
+      expect(Object.keys(catalogosGuiadas[clave]).sort(), clave).toEqual(
+        [...manifest.cancerTypes].sort(),
+      );
+    }
+  });
+
+  it('importa solo archivos cuya versión no supera la del manifest', () => {
     expect(importados.length).toBeGreaterThanOrEqual(8);
     for (const ruta of importados) {
       const { version } = JSON.parse(leer(ruta)) as { version?: string };
       // `codigos.json` no declara versión propia: la gobierna el manifest.
       if (version === undefined) continue;
       expect(menorOIgual(version, VERSION_DEL_CATALOGO_GUIADAS), `${ruta} ${version}`).toBe(true);
-      if (ruta.endsWith('/plantillas.json')) expect(version).toBe(VERSION_DEL_CATALOGO_GUIADAS);
     }
   });
 

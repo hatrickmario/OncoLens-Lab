@@ -72,4 +72,22 @@ describe('catalog:validate · <tipo>/plantillas.json (L1D-324, ADR-52)', () => {
       [{ codigo: 'plantillas_de_tipo_insuficientes', archivo: 'plantillas' }],
     );
   });
+
+  it('detecta como termino_prohibido cada término de nivel A y B y cada prefijo de terminos-prohibidos.json dentro de una plantilla [RN-23]', () => {
+    const terminos = [
+      ...PROHIBIDOS.nivelA.terminos.flatMap((t) => [t.texto, ...(t.formas ?? [])]),
+      ...PROHIBIDOS.nivelB.terminos.map((t) => t.texto),
+      ...PROHIBIDOS.nivelB.prefijos.map((p) => `${p.prefijo}ar`),
+    ];
+    expect(terminos.length).toBeGreaterThan(50);
+
+    const sinDetectar = terminos.filter((termino) => {
+      const plantilla = item('p', { texto: `Sobre {tipo}: ${termino}`, ranuras: ['tipo'] });
+      return !violacionesDePlantillas(archivo(...BASE, plantilla), PROHIBIDOS).some(
+        (v) => v.codigo === 'termino_prohibido',
+      );
+    });
+
+    expect(sinDetectar).toEqual([]);
+  });
 });

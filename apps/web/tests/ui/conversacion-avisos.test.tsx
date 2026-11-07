@@ -95,6 +95,17 @@ describe('Avisos de IA del turno', () => {
     expect(within(tarjeta).queryByText(textos.rotulos.interpretacion)).toBeNull();
   });
 
+  it('no pinta el bloque y avisa con role alert cuando el kind es desconocido y notices está vacío (RN-19 falla cerrado)', async () => {
+    const { tarjeta } = await mostrarTurno(bff, {
+      ...turnoDeCaso,
+      notices: [],
+      blocks: [{ kind: 'desconocido', text: 'Texto generado de un kind nuevo' }],
+    });
+
+    expect(within(tarjeta).getByRole('alert').textContent).toContain(textos.sinAvisosTitulo);
+    expect(within(tarjeta).queryByText('Texto generado de un kind nuevo')).toBeNull();
+  });
+
   it('no añade avisos de IA a un mensaje del sistema con notices vacío', async () => {
     const { tarjeta } = await mostrarTurno(bff, turnoCon(turnoFueraDeAlcance));
 
