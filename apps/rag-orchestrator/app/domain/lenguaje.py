@@ -38,6 +38,12 @@ def normalizar_texto(texto: str) -> str:
     return " ".join("".join(c if _es_letra_o_digito(c) else " " for c in minusculas).split())
 
 
+def sin_tildes(texto: str) -> str:
+    """``casefold()`` y sin marcas diacríticas (NFD), conservando signos y espacios: para comparar frases sin acentos."""
+    descompuesto = unicodedata.normalize("NFD", texto.casefold())
+    return "".join(c for c in descompuesto if not unicodedata.combining(c))
+
+
 def clave_flexiva(palabra: str) -> str:
     """Enclítico, plural nominal, plural verbal y género, en ese orden; cada paso con >= 4 letras."""
     clave = palabra

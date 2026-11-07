@@ -12,10 +12,12 @@ nunca llega al texto.
 
 from __future__ import annotations
 
+import re
 import unicodedata
 from collections.abc import Sequence
 
 from app.domain.chat.turno import HechoDelCaso
+from app.domain.lenguaje import sin_tildes
 
 SEPARADOR_DE_FRASES = " "
 ESTADO_REQUIERE_REVISION = "requiere_revision"
@@ -23,6 +25,8 @@ TEXTO_REQUIERE_REVISION = "requiere revisión"
 TEXTO_EN_CONFLICTO = "en conflicto con otro dato"
 TEXTO_SIN_FECHA = "sin fecha confiable"
 TEXTO_AL_DIAGNOSTICO = "al momento del diagnóstico"
+_MOMENTO_RELATIVO = re.compile(r"(?<!\w)(\d+)\s*dias?\s+(antes|despues)\b")
+"""Forma de ``_momento_de`` sobre el texto sin tildes: «N día(s) antes|después del diagnóstico»."""
 
 
 def describir_hecho(hecho: HechoDelCaso) -> str:
@@ -48,6 +52,12 @@ def es_la_descripcion_de(
 
     Identidad implica entailment: es el único atajo lógico sobre el NLI (ADR-34); una paráfrasis no lo cumple."""
     return _normalizado(texto) == _normalizado(describir_hechos(fact_refs, hechos))
+
+
+def sentidos_del_momento(texto: str) -> set[tuple[int, str]]:
+    """Los «N días antes/después» que escribe un texto como (N, ``antes`` | ``despues``): lee el formato de ``_momento_de``,
+    su único escritor, y no distingue tildes ni mayúsculas."""
+    return {(int(dias), sentido) for dias, sentido in _MOMENTO_RELATIVO.findall(sin_tildes(texto))}
 
 
 def _momento_de(hecho: HechoDelCaso) -> str:

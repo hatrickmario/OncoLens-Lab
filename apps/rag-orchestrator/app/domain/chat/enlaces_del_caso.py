@@ -8,6 +8,7 @@ serie (la evolución de un valor) lo decide el día relativo del dato, no el ord
 from __future__ import annotations
 
 from collections.abc import Collection, Mapping, Sequence
+from dataclasses import replace
 
 from app.domain.chat.turno import HechoDelCaso, PropuestaDelTurno
 
@@ -47,15 +48,15 @@ def ordenar_series_por_dia_relativo(
 def _con_refs_ordenados(
     propuesta: PropuestaDelTurno, dias: Mapping[str, int | None]
 ) -> PropuestaDelTurno:
-    refs = tuple(sorted(propuesta.fact_refs, key=lambda r: _clave_de_dia(dias.get(r))))
-    return PropuestaDelTurno(propuesta.texto, refs, propuesta.citas)
+    refs = tuple(sorted(propuesta.fact_refs, key=lambda r: clave_de_dia(dias.get(r))))
+    return replace(propuesta, fact_refs=refs)
 
 
 def _dia_de(propuesta: PropuestaDelTurno, dias: Mapping[str, int | None]) -> tuple[int, int]:
-    return min((_clave_de_dia(dias.get(r)) for r in propuesta.fact_refs), default=_SIN_FECHA)
+    return min((clave_de_dia(dias.get(r)) for r in propuesta.fact_refs), default=_SIN_FECHA)
 
 
-def _clave_de_dia(dia: int | None) -> tuple[int, int]:
+def clave_de_dia(dia: int | None) -> tuple[int, int]:
     """(0, día) para un día conocido; (1, 0) para ``None``, que ordena después de cualquier día."""
     return _SIN_FECHA if dia is None else (0, dia)
 

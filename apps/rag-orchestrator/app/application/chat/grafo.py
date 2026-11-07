@@ -25,11 +25,12 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Awaitable, Callable, Mapping, Sequence
-from typing import Any, NamedTuple, TypedDict
+from dataclasses import replace
+from typing import Any, Literal, NamedTuple, TypedDict
 
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, START, StateGraph
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 from app.application.errores import LlmLocalNoDisponibleError, LlmSalidaInvalidaError
 from app.application.ports import (
@@ -99,6 +100,11 @@ class EstadoDelGrafo(TypedDict, total=False):
     # Lo que un nodo de capacidad que ya valida por sí mismo entrega a ``validar`` (se vacía al cerrar).
     bloques_del_nodo: tuple[BloqueDelTurno, ...]
     omitidas_del_nodo: int
+    # Del nodo de capacidad a ``validar`` y a la respuesta: el texto de limitación que prefiere si no queda ningún bloque y
+    # los avisos no bloqueantes del turno (texto fijo de configuración, sin datos del paciente).
+    limitacion_del_nodo: str
+    avisos_del_nodo: tuple[str, ...]
+    avisos: tuple[str, ...]
     ultima_evidencia: UltimaEvidencia | None
     opciones_mostradas: tuple[str, ...]
     evidencia_consultada: bool
@@ -113,11 +119,21 @@ class _Clasificacion(BaseModel):
 
 
 class _AfirmacionCruda(BaseModel):
+    """Una afirmación del LLM. ``kind`` (``documentado`` | ``interpretacion``) lo eligen los nodos que lo piden; un
+    ``documentado`` solo elige ``factRefs`` y su ``text`` puede ir vacío (lo escribe el código, US-261)."""
+
     model_config = ConfigDict(extra="ignore")
 
-    texto: str = Field(alias="text", min_length=1)
+    texto: str = Field(alias="text")
+    kind: Literal["documentado", "interpretacion"] | None = None
     fact_refs: list[str] = Field(alias="factRefs")
     citas: list[str] = Field(alias="citations")
+
+    @model_validator(mode="after")
+    def _el_texto_solo_puede_ir_vacio_si_es_documentado(self) -> _AfirmacionCruda:
+        if not self.texto.strip() and self.kind != "documentado":
+            raise ValueError("text vacío sin kind documentado")
+        return self
 
 
 class _SalidaDelTurno(BaseModel):
@@ -141,6 +157,10 @@ Nodo = Callable[[EstadoDelGrafo], Awaitable[dict[str, Any]]]
 class ConfiguracionDelGrafo(NamedTuple):
     presupuesto_de_memoria: int
     terminos_por_tipo: Mapping[str, frozenset[str]]
+    limitacion_cuando_vacio: Mapping[Intencion, str]
+    """Por intención, el texto fijo del bloque ``limitacion`` que ``validar`` añade cuando no queda ningún bloque (RN-01,
+    RN-22): que no hay datos documentados. ``evidencia`` no está: su nodo real dice lo suyo (L1D-322) y, sin él, ``validar``
+    añade «evidencia no consultada»."""
 
 
 def capacidades_por_defecto(
@@ -224,6 +244,7 @@ class _NodosDelTurno:
         self._llm = llm
         self._configuracion = configuracion
         self._verificador_terminos = verificador_terminos
+        self._terminos_del_catalogo = frozenset().union(*configuracion.terminos_por_tipo.values())
 
     async def enrutar(self, estado: EstadoDelGrafo) -> dict[str, Any]:
         pregunta = estado["pregunta"]
@@ -232,7 +253,7 @@ class _NodosDelTurno:
         ):
             return {"intencion": Intencion.fuera_de_alcance, "subintencion": None}
         hay_analisis = estado.get("hay_analisis_activo", False)
-        por_reglas = clasificar_por_reglas(pregunta)
+        por_reglas = clasificar_por_reglas(pregunta, self._terminos_del_catalogo)
         if por_reglas in (None, Intencion.evidencia) and es_seguimiento_de_evidencia(
             pregunta, hay_analisis
         ):
@@ -279,12 +300,7 @@ class _NodosDelTurno:
             *estado.get("bloques_del_nodo", ()),
             *self._bloques_permitidos(estado),
         )
-        if estado["intencion"] is Intencion.evidencia and not estado.get("evidencia_consultada"):
-            # Sin el nodo real de evidencia (sin corpus detrás) no se consultó la evidencia: se dice, sin eco de la pregunta.
-            bloques = (
-                *bloques,
-                BloqueDelTurno(TipoDeBloque.limitacion, MENSAJE_EVIDENCIA_NO_CONSULTADA),
-            )
+        bloques = (*bloques, *self._limitaciones_del_turno(estado, bloques))
         omitidas = (
             len(estado["propuestas"])
             - self._cantidad_de_afirmaciones(bloques)
@@ -299,18 +315,35 @@ class _NodosDelTurno:
         )
         return _cerrar(estado, bloques, omitidas)
 
+    def _limitaciones_del_turno(
+        self, estado: EstadoDelGrafo, bloques: tuple[BloqueDelTurno, ...]
+    ) -> tuple[BloqueDelTurno, ...]:
+        """Los bloques ``limitacion`` que el turno debe decir: sin el nodo real de evidencia (sin corpus detrás) no se
+        consultó la evidencia y se dice, sin eco de la pregunta; si no quedó ningún bloque, el que prefirió el nodo de
+        capacidad o el fijo de ``limitacion_cuando_vacio`` (US-261 AC-4, RN-01): el turno dice que no hay datos, no calla."""
+        intencion = estado["intencion"]
+        if intencion is Intencion.evidencia and not estado.get("evidencia_consultada"):
+            return (BloqueDelTurno(TipoDeBloque.limitacion, MENSAJE_EVIDENCIA_NO_CONSULTADA),)
+        texto = estado.get(
+            "limitacion_del_nodo"
+        ) or self._configuracion.limitacion_cuando_vacio.get(intencion)
+        return (BloqueDelTurno(TipoDeBloque.limitacion, texto),) if texto and not bloques else ()
+
     @staticmethod
     def _cantidad_de_afirmaciones(bloques: tuple[BloqueDelTurno, ...]) -> int:
-        return sum(1 for b in bloques if b.tipo is TipoDeBloque.documentado)
+        return sum(
+            1 for b in bloques if b.tipo in (TipoDeBloque.documentado, TipoDeBloque.interpretacion)
+        )
 
     def _bloques_permitidos(self, estado: EstadoDelGrafo) -> tuple[BloqueDelTurno, ...]:
         refs_del_turno = {h.ref for h in estado["hechos"]}
         # Los nodos de capacidad aún no recuperan chunks (US-260…US-266): ningún chunk es soporte del turno.
         chunks_del_turno: frozenset[str] = frozenset()
         return tuple(
-            BloqueDelTurno(TipoDeBloque.documentado, p.texto, p.fact_refs)
+            BloqueDelTurno(p.tipo or TipoDeBloque.documentado, p.texto, p.fact_refs)
             for p in estado["propuestas"]
-            if afirmacion_tiene_soporte_del_turno(
+            if p.texto
+            and afirmacion_tiene_soporte_del_turno(
                 p.fact_refs, p.citas, refs_del_turno, chunks_del_turno
             )
             and not self._verificador_terminos.reglas_coincidentes(
@@ -344,6 +377,7 @@ def _cerrar(
         ),
         "bloques": bloques,
         "omitidas": omitidas,
+        "avisos": estado.get("avisos_del_nodo", ()),
         **ENTRADAS_DEL_TURNO_VACIAS,
     }
 
@@ -368,7 +402,10 @@ class _EsqueletoDeCapacidad:
             propuestas = await pedir_afirmaciones(
                 self._llm, self._contador, self._configuracion, estado, armar
             )
-            return {"propuestas": propuestas}
+            # Solo el nodo ``caso`` verifica y rotula una interpretación: el esqueleto entrega siempre ``documentado``.
+            return {
+                "propuestas": tuple(replace(p, tipo=TipoDeBloque.documentado) for p in propuestas)
+            }
 
         return nodo
 
@@ -403,6 +440,11 @@ def propuestas_de_la_salida(crudo: str, trace_id: str) -> tuple[PropuestaDelTurn
         logger.warning("event=chat_salida_invalida traceId=%s caracteres=%d", trace_id, len(crudo))
         raise LlmSalidaInvalidaError() from None
     return tuple(
-        PropuestaDelTurno(a.texto.strip(), tuple(a.fact_refs), tuple(a.citas))
+        PropuestaDelTurno(
+            a.texto.strip(),
+            tuple(a.fact_refs),
+            tuple(a.citas),
+            None if a.kind is None else TipoDeBloque(a.kind),
+        )
         for a in salida.afirmaciones
     )

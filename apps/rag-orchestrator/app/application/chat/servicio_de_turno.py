@@ -86,6 +86,11 @@ class ChatTurnService:
         configuracion = ConfiguracionDelGrafo(
             presupuesto_de_memoria=settings.chat_memory_max_tokens,
             terminos_por_tipo=terminos_por_tipo,
+            limitacion_cuando_vacio={
+                intencion: settings.chat_sin_datos_texto
+                for intencion in INTENCIONES_CLASIFICABLES
+                if intencion is not Intencion.evidencia
+            },
         )
         caso = NodoCaso(
             llm=llm,
@@ -93,6 +98,8 @@ class ChatTurnService:
             configuracion=configuracion,
             soporte=soporte,
             max_palabras_por_afirmacion=settings.claim_max_words,
+            texto_sin_datos_en_periodo=settings.chat_sin_datos_periodo_texto,
+            texto_sin_fecha=settings.chat_sin_fecha_texto,
         )
         evidencia, seguimiento = _capacidades_de_evidencia(
             servicio_de_evidencia, posiciones, llm, contador, configuracion, settings
@@ -183,9 +190,14 @@ class ChatTurnService:
                 "omittedClaims": final["omitidas"],
                 "structuredState": estado_estructurado_del_contrato(hilo.estructurado),
                 "llmProvider": proveedor,
-                "notices": avisos_del_turno(self._settings, intencion)
-                if intencion in INTENCIONES_CLASIFICABLES
-                else [],
+                "notices": [
+                    *(
+                        avisos_del_turno(self._settings, intencion)
+                        if intencion in INTENCIONES_CLASIFICABLES
+                        else []
+                    ),
+                    *final.get("avisos", ()),
+                ],
             }
         )
 
