@@ -33,8 +33,9 @@ class HechoDelCaso:
     serie: str | None = None
     """``seriesKey`` del dato (p. ej. los valores de un mismo biomarcador); ``None`` si no es parte de una serie."""
     dia_relativo_fin: int | None = None
-    """Día relativo en que termina un hecho con intervalo; ``None`` si es puntual o aún no se informa (``CaseFact`` solo
-    trae ``relativeDay``, el de inicio)."""
+    """Día relativo en que termina un hecho con intervalo; ``None`` si es puntual, está en curso o no se informa."""
+    en_curso: bool = False
+    """``CaseFact.relativeEndDay`` vino como ``null`` explícito (tratamiento en curso); ausente es ``False`` (US-272)."""
 
 
 @dataclass(frozen=True)

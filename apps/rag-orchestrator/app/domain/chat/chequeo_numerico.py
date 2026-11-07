@@ -10,7 +10,8 @@ Qué compara:
   estar en la descripción. Si va seguida de una unidad de la lista cerrada (``UNIDADES``), el par (valor, unidad) debe estar
   en la descripción; sin unidad, basta que el valor aparezca en ella (también como parte de ``HER2`` o ``TNM_8``).
 - Cada «N días antes» / «N días después» de la afirmación debe estar igual en la descripción: no se invierte el sentido
-  (el formato lo define y lee ``descripcion_de_hechos.sentidos_del_momento``, su único escritor).
+  (el formato lo define ``descripcion_de_hechos._dias_antes_o_despues`` y lo lee ``sentidos_del_momento``; no
+  distingue el inicio del fin de un intervalo: «60 días antes» sostiene ambos).
 - La coma decimal vale como el punto (``0,5`` = ``0.5``), los ceros a la derecha no cuentan (``4,20`` = ``4.2``) y el signo
   se ignora.
 

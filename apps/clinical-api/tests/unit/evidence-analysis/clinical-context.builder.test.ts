@@ -314,7 +314,16 @@ describe('construirContextoPermitido', () => {
       ['r1', { tabla: 'diagnosis', id: 'dx-1', fecha: '2026-08-20' }],
       ['r2', { tabla: 'biomarker', id: 'bm-1', fecha: '2026-09-26' }],
       ['r3', { tabla: 'clinical_attribute', id: 'at-1', fecha: '2026-08-20' }],
-      ['r4', { tabla: 'prior_treatment', id: 'tp-1', fecha: '2026-03-01' }],
+      [
+        'r4',
+        {
+          tabla: 'prior_treatment',
+          id: 'tp-1',
+          fecha: '2026-03-01',
+          fechaFin: null,
+          enCurso: true,
+        },
+      ],
       ['r5', { tabla: 'clinical_event', id: 'ev-1', fecha: '2026-09-26' }],
     ]);
   });

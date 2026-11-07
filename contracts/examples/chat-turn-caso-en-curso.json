@@ -1,0 +1,49 @@
+{
+  "intent": "caso",
+  "blocks": [
+    {
+      "kind": "limitacion",
+      "text": "Periodo medido desde la fecha del diagnóstico"
+    },
+    {
+      "kind": "documentado",
+      "text": "Quimioterapia neoadyuvante, línea 1 (iniciado antes del periodo) (en curso), 172 días antes del diagnóstico, requiere revisión.",
+      "factRefs": [
+        "f3"
+      ]
+    },
+    {
+      "kind": "documentado",
+      "text": "Cirugía: cirugía conservadora, 40 días antes del diagnóstico.",
+      "factRefs": [
+        "f4"
+      ]
+    },
+    {
+      "kind": "documentado",
+      "text": "Carcinoma ductal infiltrante, Nottingham grado 2, estadio IIA (TNM_8), ECOG 1, al momento del diagnóstico.",
+      "factRefs": [
+        "f1"
+      ]
+    }
+  ],
+  "omittedClaims": 0,
+  "structuredState": {
+    "intentsVistos": [
+      "caso"
+    ],
+    "preguntasPrevias": [
+      "¿Qué ocurrió en los últimos 100 días?"
+    ],
+    "opcionesMostradas": [],
+    "citasMostradas": [],
+    "faltantesSenalados": []
+  },
+  "llmProvider": "local",
+  "notices": [
+    "Generado por IA; requiere validación clínica independiente por el oncólogo tratante",
+    "Uso académico/investigación",
+    "Verifique contra las fuentes",
+    "Un dato en curso del periodo consultado está sin verificar"
+  ]
+}

@@ -541,6 +541,10 @@ export type CaseFact = {
      */
     relativeDay: number | null;
     /**
+     * Día relativo al diagnóstico en que termina un hecho con intervalo; null = en curso; ausente = puntual o fin no informado.
+     */
+    relativeEndDay?: number | null;
+    /**
      * CaseFactReviewStatus
      */
     reviewStatus: 'auto_aceptado' | 'requiere_revision' | 'verificado' | 'corregido';
