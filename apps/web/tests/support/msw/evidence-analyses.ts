@@ -130,7 +130,7 @@ export function crearBffAnalisisSimulado() {
           if (status !== 200) return HttpResponse.json(cuerpo, { status, headers: cabeceras });
           const analisis = cuerpo as { status: string; topRelevanceScore: number | null };
           return HttpResponse.json(
-            turnoDeEvidencia(analisis, siguiente),
+            turnoSoloAnalisis(analisis, siguiente),
             { status: 201 },
           );
         }),
@@ -139,8 +139,11 @@ export function crearBffAnalisisSimulado() {
   };
 }
 
-/** Turno de evidencia del contrato (`conversation-turn-evidencia.json`) con el análisis dado y un id único por turno. */
-function turnoDeEvidencia(analisis: { status: string; topRelevanceScore: number | null }, numero: number) {
+/**
+ * Turno de evidencia del contrato (`conversation-turn-evidencia.json`) reducido al análisis dado (sin bloques ni avisos)
+ * y con un id único: aísla la presentación del análisis. El turno completo es `turnoDeEvidencia` de `conversaciones.ts`.
+ */
+function turnoSoloAnalisis(analisis: { status: string; topRelevanceScore: number | null }, numero: number) {
   return {
     ...turnoDeEvidenciaBase,
     id: `00000000-0000-4000-8000-${String(numero).padStart(12, '0')}`,

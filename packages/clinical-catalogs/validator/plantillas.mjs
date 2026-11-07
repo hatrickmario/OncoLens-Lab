@@ -32,11 +32,12 @@ const ranurasDelTexto = (texto) => [
 ];
 
 /**
- * Cobertura simplificada de RN-23 sobre el texto ya normalizado: frases de Nivel A (con sus formas) y de Nivel B por
- * palabra completa y los prefijos de Nivel B. El detector completo vive en `packages/clinical-language`; esta regla
- * impide que el catálogo publique una plantilla evidentemente prescriptiva.
+ * Cobertura BÁSICA de RN-23 sobre el texto ya normalizado: frases de Nivel A (con sus formas) y de Nivel B por palabra
+ * completa y los prefijos de Nivel B. El detector real es `checkProhibitedTerms` de `packages/clinical-language` (flexión,
+ * excepciones y tramo más largo): esta regla no lo sustituye, solo impide que el catálogo publique una plantilla
+ * evidentemente prescriptiva; `plantillas.test.mjs` fija su paridad con cada término de `terminos-prohibidos.json`.
  */
-export function contieneTerminoProhibido(texto, terminosProhibidos) {
+export function contieneTerminoProhibidoBasico(texto, terminosProhibidos) {
   const normalizado = ` ${normalizar(texto)} `;
   const frases = [
     ...lista(terminosProhibidos?.nivelA?.terminos).flatMap((t) => [t.texto, ...textos(t.formas)]),
@@ -63,7 +64,7 @@ function violacionesDelItem(item, terminosProhibidos) {
     } else if ([...declaradas].sort().join() !== [...usadas].sort().join()) {
       codigos.add('ranuras_inconsistentes');
     }
-    if (contieneTerminoProhibido(texto, terminosProhibidos)) codigos.add('termino_prohibido');
+    if (contieneTerminoProhibidoBasico(texto, terminosProhibidos)) codigos.add('termino_prohibido');
   }
   return [...codigos].map(violacion);
 }
