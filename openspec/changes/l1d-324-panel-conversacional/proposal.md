@@ -2,10 +2,10 @@
 
 ## Trazabilidad
 
-L1D-324 · US-267 · FEAT-12 (L1D-312, bloque 12-C «Interfaz y evaluación») · Sprint 6 · Estimación **5** · HU-03, HU-15,
-HU-18 · RN-19, RN-23, RN-15 (regresión), RN-12, TBD-08, NFR-12 · AC-T3.1, AC-10.3 · ADR-51 §7–§8 · US-267 AC-1…AC-7 ·
+L1D-324 · US-267 · FEAT-12 (L1D-312, bloque 12-C «Interfaz y evaluación») · Sprint 6 · Estimación **8** (re-estimada de 5 a 8, 2026-11-06, por las preguntas guiadas) · HU-03, HU-15,
+HU-18 · RN-19, RN-23, RN-15 (regresión), RN-12, TBD-08, NFR-12 · AC-T3.1, AC-10.3 · ADR-51 §7–§8 · US-267 AC-1…AC-11 · ADR-52 · RN-27 ·
 `[S6 resp. 15]`, `[S6 resp. 16]` (referencia: variante B «Hilo con tarjetas») · Fuente:
-`backlog/features/FEAT-12-chatbot-mvp.md` §US-267; sprint: `backlog/sprints/S6-refinamiento.md` §4 (DoR ✓, 7 AC, 5 pts) y
+`backlog/features/FEAT-12-chatbot-mvp.md` §US-267; sprint: `backlog/sprints/S6-refinamiento.md` §4 (DoR ✓, 7 AC, 5 pts; ampliada a 11 AC y 8 pts el 2026-11-06) y
 §5 (tokens nuevos «se incorporan a `docs/ux/sistema-de-diseno.md` con US-267»); diseño: `docs/ux/S6/variante-b.html` y
 `docs/ux/S6/pantallas-s6.md` §1, §2 (variante B), §4–§7. Vocabulario: `backlog/sprints/S6-glosario-chat.md` (Gate 1,
 vuelta 1; si discrepa, manda el glosario).
@@ -57,6 +57,12 @@ romper RN-19/RN-23, sin *streaming* y sin que el navegador hable con otro origen
   APIs estables (`ExternalStoreRuntime`, primitivas `Thread`/`Message`/`Composer`/`ActionBar`). Si anota shadcn:
   componentes propios sobre shadcn/ui, sin dependencias nuevas. En ambos casos, el texto con Markdown se pinta sin
   `rehype-raw`, con `rehype-sanitize` y `urlTransform` vía `esUrlHttpSegura()` (definida en L1D-266).
+- **Preguntas guiadas (AC-8…AC-11, ADR-52):** una conversación sin turnos muestra de 3 a 4 botones («Preguntas
+  sugeridas») compuestos por código con el tema del caso; al pulsar uno se envía como pregunta normal del oncólogo por el
+  mismo Route Handler de turnos, sin marca de origen. El tema (etiqueta CIE-10 del tipo, estadio o biomarcador
+  principal; en próstata, el grado) sale **del `GET /api/patients/{id}/case` que el panel ya consume**
+  (`leerVistaDeCaso`) y del catálogo versionado, nunca de texto libre ni del LLM (ver `design.md` D7). Plantillas con
+  ranura de tema en `packages/clinical-catalogs/{mama,prostata}/plantillas.json` (hoy vacíos; RN-29).
 - **Sustitución del formulario de pregunta única `(decidido, P-1 [S6 resp. 20])`:** el campo del chat sustituye a `EvidenceQueryForm` en
   `/analisis`; se retiran sus requisitos de `evidence-panel` (envío único, aviso de faltantes antes de analizar,
   `continueWithWarning`, validación de longitud y normalización del formulario).
@@ -71,7 +77,7 @@ otra capacidad partiría en dos el comportamiento de la misma pantalla.
 ### Modified Capabilities
 
 - `evidence-panel`: requisitos nuevos del panel conversacional (turnos, avisos, sustitución, progreso, error, red,
-  accesibilidad, interpretación, Markdown seguro, opt-out), **retiro** de los cinco requisitos del hilo de seguimiento de
+  accesibilidad, interpretación, Markdown seguro, opt-out, preguntas guiadas), **retiro** de los cinco requisitos del hilo de seguimiento de
   10 preguntas (US-219) y, `(decidido, P-1 [S6 resp. 20])`, **retiro** de los requisitos del formulario de pregunta única.
 
 Relacionadas, sin delta: `web-bff` (los Route Handlers de conversación los añade `l1d-315`), `chat-conversation` y
@@ -79,9 +85,10 @@ Relacionadas, sin delta: `web-bff` (los Route Handlers de conversación los aña
 
 ## Bounded contexts
 
-`frontend` (`apps/web/components`, `apps/web/app/(dashboard)/pacientes/[id]/analisis`, `apps/web/app/globals.css`) ·
-documentación (`docs/ux/sistema-de-diseno.md`). Sin `contratos`, sin `clinical-platform` (salvo consumir los Route
-Handlers de `l1d-315`), sin `ai-services`.
+`frontend` (`apps/web/components`, `apps/web/lib/conversacion`, `apps/web/app/(dashboard)/pacientes/[id]/analisis`,
+`apps/web/app/globals.css`) · catálogo (`packages/clinical-catalogs`: plantillas de preguntas guiadas) · documentación
+(`docs/ux/sistema-de-diseno.md`). Sin `contratos`, sin `clinical-platform` (salvo consumir los Route Handlers de
+`l1d-315` y `GET …/case`), sin `ai-services`.
 
 ## Dependencias
 
@@ -91,12 +98,17 @@ Handlers de `l1d-315`), sin `ai-services`.
   `packages/api-contracts/` y `contracts/examples/conversation-*.json`.
 - ↪ `l1d-316`…`l1d-323` (US-259…US-266): rellenan los campos ya definidos del turno (glosario §2): `blocks[]` con
   `kind` del enum cerrado de 8 valores (`documentado`, `interpretacion`, `catalogo`, `evidencia`, `conflicto`,
-  `faltante`, `limitacion`, `fuente`), `notices[]` y `evidenceAnalysis?` (1.26.0, `l1d-322`). Contradicciones,
+  `faltante`, `limitacion`, `fuente`), `notices[]` y `evidenceAnalysis?` (clinical-api 1.29.0, `l1d-322`). Contradicciones,
   faltantes, limitaciones y fuentes llegan como bloques de su `kind`, no como listas aparte. Un campo aún ausente no rompe
   el render (lectura tolerante).
 - 🔗 Regresión [RN-15] activa desde S6 con el change de L1D-213 (US-148, AC-8): mensaje de opt-out y campo deshabilitado
   en el panel. Este change aporta la prop `disabled` que L1D-213 consume. Regresión [RN-19] activa desde S2 (US-069). Regresión [RN-23] activa desde S2 (US-068).
 - 🔗 Consume US-216 (L1D-266): CSP sin `unsafe-eval` y `esUrlHttpSegura()` para `urlTransform`.
+- 🔗 Complementa `l1d-329-segundo-loop-contextual` (US-271, ADR-52): las preguntas guiadas **no** lo sustituyen; una
+  pregunta guiada o escrita sin tema propio pasa por el mismo gate G1 y segundo loop (no es dependencia de orden: las
+  preguntas guiadas funcionan con o sin el indicador).
+- 🔗 Consume `GET /api/patients/{patientId}/case` (la vista de caso, ya en `main`: `apps/web/lib/caso/leer-vista-de-caso.ts`) para el tema; la versión de
+  catálogo de las plantillas es la siguiente menor libre tras `l1d-329` (esperada 1.8.0; se renumera el segundo en mergear).
 - 🔗 Lo extiende: US-268 (L1D-325) — abrir fuentes, panel lateral de cita, «Ver referencias», expandir.
 
 ## Pendientes de definir (para /sprint-start)
@@ -127,5 +139,8 @@ Handlers de `l1d-315`), sin `ai-services`.
   `FollowUpThread`; borrado de `follow-up-*`.
 - `apps/web/app/(dashboard)/pacientes/[id]/analisis/page.tsx`, `apps/web/lib/mensajes` (textos nuevos),
   `apps/web/app/globals.css`, `docs/ux/sistema-de-diseno.md`.
+- Preguntas guiadas: `apps/web/lib/conversacion/preguntas-guiadas.ts` (función pura), molécula `guided-questions`,
+  `packages/clinical-catalogs/{mama,prostata}/plantillas.json`, su esquema y validador, y `manifest.json` (versión
+  menor siguiente libre).
 - `apps/web/package.json` solo si gana assistant-ui. Tests: `apps/web/tests/` (Testing Library + MSW) y `e2e/`
   (Playwright contra Compose con `LLM_PROVIDER=fake`).

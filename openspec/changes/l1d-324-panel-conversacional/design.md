@@ -92,10 +92,36 @@ L1D-213 (no se muestra motivo ni código).
 `--color-evidence: #1F4FB8` / `--color-evidence-bg: #E8EEFA` / `--color-evidence-border: #9DB3E3` (6,3:1), copiados de
 `variante-b.html`. Los bordes que delimitan componentes usan el tono base (≥ 3:1, 1.4.11, `pantallas-s6.md` §7).
 
+### D7 · Preguntas guiadas (AC-8…AC-11, ADR-52)
+- **De dónde sale el tema (decidido):** del **GET del caso ya disponible en el panel** —`leerVistaDeCaso(patientId)`
+  (`GET /api/patients/{id}/case`, el mismo Route Handler de la vista de caso, validado con `zCaseView`)— y no de la
+  conversación (una conversación nueva no tiene turnos) ni del LLM. El panel lo pide al montar, en paralelo con nada más;
+  un fallo del GET (`error`, `sin_permiso`) solo oculta las preguntas guiadas, no bloquea el campo de pregunta.
+- **Quién compone la pregunta:** una función pura `armarPreguntasGuiadas(vista, plantillas, codigos)` en
+  `apps/web/lib/conversacion/preguntas-guiadas.ts`. Plantillas con ranuras `{tipo}`, `{estadio}`, `{biomarcador}`,
+  `{grado}` en `packages/clinical-catalogs/{mama,prostata}/plantillas.json` (RN-29; hoy `items: []`, FEAT-05); el valor de
+  cada ranura sale del catálogo (etiqueta CIE-10 de `codigos.json`; estadio y grado solo si están en los valores
+  permitidos de `atributos.json`; biomarcador principal por el orden de los datos críticos del tipo, la misma regla de
+  `terminos_del_caso` de `l1d-329`: el riesgo de que las dos reglas se separen se mitiga con un fixture de casos esperados
+  compartido en `packages/clinical-catalogs/test/fixtures/`). Una plantilla solo se ofrece si todas sus ranuras se
+  resuelven; se ofrecen hasta 4 en el orden del catálogo, y el catálogo garantiza ≥ 3 que solo usan `{tipo}` (validador),
+  de modo que el caso de AC-10 sigue dando 3. Sin tipo de cáncer no se ofrece ninguna.
+- **Sin LLM y sin marca de origen:** pulsar un botón llama al mismo `enviar(pregunta)` del composer con el texto ya
+  compuesto; no hay petición extra al backend de IA, ni campo `origen`, ni etiqueta en el turno (AC-11). El gate G1 y el
+  segundo loop de US-271 viven en rag y no se enteran.
+- **Cuándo se ven:** con la conversación sin turnos y tras «Nueva conversación»; se ocultan con el primer envío. Con
+  `disabled` u opt-out los botones se deshabilitan (RN-15).
+- **Accesibilidad:** `<div role="group" aria-labelledby>` con «Preguntas sugeridas»; botones nativos, foco visible, Tab y
+  Enter; los textos pasan por la lista `terminos-prohibidos.json` (RN-23) en un test.
+- **Catálogo:** `plantillas.json` es de datos, no código; sube la versión del catálogo (la siguiente menor libre, esperada
+  1.8.0 tras `l1d-329` = 1.7.0; si este change mergea antes toma 1.7.0 y `l1d-329` se renumera) con su validador que
+  rechaza plantillas con ranura desconocida, términos prohibidos o menos de 3 plantillas solo de tipo.
+
 ## Privacidad y ownership
 
 - El navegador solo llama a `/api/patients/{id}/conversations`, `/api/conversations/{id}` y `/api/conversations/{id}/turns`
   (Route Handlers de `l1d-315`, cookie opaca). Nunca a `clinical-api`, `rag-orchestrator` ni `…/follow-ups`.
+- Las preguntas guiadas se componen en el cliente solo con datos estructurados del caso y etiquetas del catálogo: nunca texto libre del expediente, `pseudoPatientId` ni identidad (RN-10, RN-11); la pregunta compuesta viaja como cualquier otra.
 - La pregunta va en el cuerpo, nunca en la URL ni en `localStorage`/`sessionStorage`; el estado vive en memoria del
   componente. Los ids en la URL son UUID.
 - La identidad de la paciente se muestra solo donde ya la muestra la cabecera existente; el turno trae la pregunta
@@ -106,14 +132,16 @@ L1D-213 (no se muestra motivo ni código).
 
 ## Contratos
 
-Sin cambios de contrato: consume `ConversationTurn`, `Conversation` y `ConversationTurnCreate` de `clinical-api`
+Sin cambios de contrato OpenAPI (el catálogo de plantillas no es contrato HTTP): consume `ConversationTurn`, `Conversation` y `ConversationTurnCreate` de `clinical-api`
 (≥ 1.24.0, `l1d-315`) desde `packages/api-contracts/` (generado; nunca a mano). Handlers MSW y respuestas del LLM fingido
 desde `contracts/examples/conversation-*.json` y `chat-turn-*.json`. Si falta un ejemplo para un estado (p. ej. turno de
 faltantes), se pide al dueño del contrato; no se inventa en el test.
 
 ## Evaluación
 
-No toca modelo, prompt, umbral, catálogo ni corpus: sin `run-ai-eval`. La UI no añade texto prescriptivo: los textos
+No toca modelo, prompt, umbral ni corpus. Sí toca el catálogo (`plantillas.json`), que no entra a la recuperación ni al
+prompt; pero `scripts/ci/eval-trigger-paths.yaml` dispara `eval-required` con `packages/clinical-catalogs/**/*.json`, así
+que el PR corre `run-ai-eval` (`ai-eval-runner`) y el reporte debe mostrar **sin cambio** frente a `main`. La UI no añade texto prescriptivo: los textos
 fijos nuevos pasan por la lista `terminos-prohibidos.json` en un test (regresión RN-23) y `clinical-language-auditor` en
 Gate 2.
 
@@ -122,5 +150,7 @@ Gate 2.
 - **Contratos de capacidad aún no mergeados** → lectura tolerante y tests contra los ejemplos que existan; los campos que
   falten se pintan cuando lleguen sin cambiar el panel.
 - **Peso de assistant-ui (~267 KB gzip)** → solo si el spike lo midió y lo aceptó; carga en el Client Component del panel.
+- **Divergencia de la regla del tema con `terminos_del_caso` (rag)** → fixture compartido de casos esperados.
+- **Catálogo con versión contendida con `l1d-329`** → se renumera el segundo en mergear (glosario §1).
 - **P-1 decidido [S6 resp. 20]** → si el humano no confirma en el plan, se quita el bloque `REMOVED` del formulario de pregunta única
   del delta y el panel se monta debajo del formulario sin cambiar los demás AC.

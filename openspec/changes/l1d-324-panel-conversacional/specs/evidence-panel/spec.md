@@ -157,6 +157,67 @@ ni `critical`. El panel MUST pasar `visual-check` a 375 y 1280 px sin *scroll* h
 - **WHEN** se inspecciona
 - **THEN** el hilo está dentro de un elemento `role="log"` con `aria-live="polite"` y `getByLabelText` encuentra el campo de pregunta por su `<label>` visible
 
+### Requirement: Una conversación nueva ofrece de 3 a 4 preguntas guiadas con el tema del caso
+Una conversación sin turnos MUST mostrar de 3 a 4 preguntas guiadas como botones, compuestas por código desde las
+plantillas del catálogo versionado con el tema del caso ya cargado, y al pulsar una MUST enviarse como la pregunta del
+oncólogo en un turno normal. El panel SHALL volver a ofrecerlas con «Nueva conversación» y MUST NOT enviar nada al LLM
+salvo la pregunta ya compuesta (RN-27, ADR-52).
+
+#### Scenario: El paciente semilla (a) muestra sus preguntas guiadas y una se envía como turno normal [US-267 AC-8] [ADR-52] [RN-27]
+- **GIVEN** el paciente semilla (a) (mama) con `GET /api/patients/{id}/case` servido por MSW desde `contracts/examples/` y una conversación sin turnos
+- **WHEN** se abre el panel
+- **THEN** hay entre 3 y 4 botones de pregunta guiada, uno con la forma «¿Qué evidencia hay para <tema del caso>?»
+- **AND** al pulsar uno, MSW registra un `POST …/turns` cuya `question` es exactamente el texto del botón y aparece el turno del asistente como cualquier otro
+
+#### Scenario: «Nueva conversación» vuelve a ofrecerlas [US-267 AC-8] (asumido)
+- **GIVEN** el panel con dos turnos
+- **WHEN** el oncólogo pulsa «Nueva conversación»
+- **THEN** el hilo queda vacío y vuelven a verse las preguntas guiadas
+
+### Requirement: El tema de las preguntas guiadas sale del catálogo y nunca de texto libre
+El tema insertado MUST copiarse por código del catálogo versionado a partir de los datos estructurados del caso (etiqueta
+CIE-10 del tipo, estadio o biomarcador principal; en próstata, el grado), nunca lo escribe el LLM, y MUST NOT incluir texto
+libre del expediente, `pseudoPatientId` ni identidad. Sin estadio ni biomarcador principal solo SHALL ofrecerse las
+plantillas que usan el tipo de cáncer, y sin tipo de cáncer no se ofrece ninguna (RN-10, RN-11, RN-27).
+
+#### Scenario: El tema es la etiqueta del catálogo y en próstata incluye el grado [US-267 AC-9] [RN-27]
+- **GIVEN** el paciente semilla (a) y el semilla de próstata con grado, ambos con su caso servido por MSW
+- **WHEN** se arman las preguntas guiadas
+- **THEN** el tema de mama es la etiqueta del catálogo versionado de su tipo, estadio o biomarcador principal, copiada por código sin texto del LLM
+- **AND** el de próstata incluye además el grado, y la petición del turno no trae el tema en la URL
+
+#### Scenario: Un paciente sin biomarcador ni estadio recibe solo preguntas del tipo y sin datos del expediente [US-267 AC-10] [RN-10] [RN-11]
+- **GIVEN** un caso servido por MSW con tipo de cáncer, sin estadio ni biomarcador principal, y con un texto libre sintético sembrado en un atributo
+- **WHEN** se arman las preguntas guiadas
+- **THEN** solo hay plantillas que usan el tipo de cáncer, y ningún botón contiene el texto sembrado, un UUID, `pseudoPatientId` ni nombre alguno
+
+#### Scenario: Las plantillas no usan términos prescriptivos [US-267 AC-9] [RN-23] (asumido)
+- **GIVEN** las plantillas de preguntas guiadas del catálogo
+- **WHEN** se normalizan y se comparan con `nivelA` y `nivelB` de `terminos-prohibidos.json`
+- **THEN** no hay ninguna coincidencia
+
+### Requirement: Una pregunta guiada es indistinguible de una escrita y respeta opt-out, accesibilidad y el gate G1
+Una pregunta guiada MUST generar el mismo turno que una escrita, sin marca de origen en el turno, y por tanto pasar por
+el mismo gate G1 y el segundo loop contextual de US-271 (las preguntas guiadas no los desactivan). Con `disabled` u opt-out
+los botones MUST estar deshabilitados y no salir ningún `POST`; los botones SHALL ser operables solo con teclado, dentro de
+un grupo con nombre accesible (`axe` sin violaciones `serious` ni `critical`).
+
+#### Scenario: El turno de una pregunta guiada no distingue su origen y conserva el flujo normal [US-267 AC-11] [ADR-52]
+- **GIVEN** el recorrido de Playwright contra Compose con `LLM_PROVIDER=fake`, una pregunta guiada y la misma pregunta escrita a mano
+- **WHEN** ambas se envían
+- **THEN** los dos `POST …/turns` tienen el mismo cuerpo salvo el texto igual y las dos tarjetas son idénticas, sin etiqueta «guiada» ni marca de origen
+- **AND** el cuerpo no lleva ningún campo adicional que desactive el gate G1 ni el segundo loop
+
+#### Scenario: Con opt-out las preguntas guiadas no se pueden pulsar [US-267 AC-8] [RN-15] (asumido)
+- **GIVEN** el panel con la prop `disabled` (o un `403 PermisoDenegadoOOptOut` previo)
+- **WHEN** el oncólogo intenta pulsar una pregunta guiada
+- **THEN** los botones están deshabilitados y MSW no registra ningún `POST …/turns`
+
+#### Scenario: Las preguntas guiadas se operan con teclado y no tienen violaciones graves [US-267 AC-8] [NFR-12] (asumido)
+- **GIVEN** el panel con las preguntas guiadas visibles en Playwright
+- **WHEN** corre axe y luego el oncólogo usa Tab hasta el primer botón y pulsa Enter
+- **THEN** axe no reporta violaciones `serious` ni `critical`, el grupo tiene un nombre accesible y se envía el turno
+
 ## REMOVED Requirements
 
 ### Requirement: Hilo de seguimiento bajo un análisis con evidencia

@@ -1,0 +1,36 @@
+# Tasks — l1d-330-relative-end-day
+
+Requiere en `main` (o en la rama base de la oleada): `l1d-317-chat-caso-situacion` y `l1d-318-chat-examen-tratamiento-periodo`
+(regla `filtrar_hechos_por_periodo` y `dia_relativo_fin`). Va **antes** de `l1d-319-chat-contradicciones` (mismo
+`hechos-del-caso.ts` y `traduccion.py`). Solo sube la versión menor de rag (clinical-api no cambia de contrato).
+Política: TDD estricto en el servicio de Backend 1 y en el dominio de Backend 2; el contrato, con su check.
+
+## 1. contratos
+
+- [ ] 1.1 Editar `apps/rag-orchestrator/openapi.yaml` a la **siguiente versión menor libre** (esperada 1.14.0; si `l1d-329` mergea antes, 1.15.0; comprobar con `git fetch`): `CaseFact.relativeEndDay` (`type: [integer, "null"]`, fuera de `required`, descripción: «`null` = en curso; ausente = puntual o fin no informado») · verificación: `contracts:check` en verde; commit `contract(L1D-330)`
+- [ ] 1.2 Verificar y anotar que `apps/clinical-api/openapi.yaml` no define `CaseFact` ni cambia `ConversationDataLink` (no sube versión; la 1.30.0 reservada queda libre) · verificación: `git grep CaseFact apps/clinical-api/openapi.yaml` vacío
+- [ ] 1.3 Ejemplos (uno por caso): ajustar `contracts/examples/chat-turn-request-caso-periodo.json` (quimioterapia `relativeDay -160`, `relativeEndDay -60`) y `chat-turn-caso-periodo.json` (con la quimioterapia rotulada «(iniciado antes del periodo)»), y crear `chat-turn-request-caso-en-curso.json` y `chat-turn-caso-en-curso.json` (`relativeEndDay: null`, «(iniciado antes del periodo)» y «(en curso)»), con sus peticiones en `index.json`; solo datos sintéticos · verificación: `contracts:check` valida los ejemplos
+- [ ] 1.4 `contracts:generate` (Pydantic y cliente TS), `contracts:breaking` sin incompatibles ni excepciones nuevas y `contracts:verify-provider` en verde · commit `contract(L1D-330)`
+
+## 2. clinical-platform
+
+- [ ] 2.1 Test de aceptación en rojo: «envía la quimioterapia con relativeDay −160 y relativeEndDay −60 y ninguna fecha absoluta cuando se pregunta por los últimos 100 días [US-272 AC-1]» · Supertest + PostgreSQL de test + MSW sobre `/chat/turn` desde `contracts/examples/chat-turn-request-caso-periodo.json`, `P-CHAT`; respuesta validada contra el spec de `clinical-api`; esqueleto sin cálculo; commit `test(L1D-330)`
+- [ ] 2.2 Test de aceptación en rojo: «serializa "relativeEndDay":null cuando el tratamiento está en curso y omite la propiedad cuando no hay fin ni estado activo [US-272 AC-2]» (tratamiento `ongoing` sin `endedAt`; `ongoing = false` sin `endedAt`; `ongoing` con `endedAt` → entero) · mismo archivo, mismo commit
+- [ ] 2.3 Test: la fecha de fin y `relativeEndDay` no se persisten en `patient_data_links` ni salen en el `ConversationDataLink` ni en la rehidratación [US-272 AC-3] · caracterización, puede nacer en verde (se anota)
+- [ ] 2.4 Bucle interno, uno a la vez: `EnlaceDeDato` gana `fechaFin?` y `enCurso?` (`ports.ts`), `clinical-context.builder.ts` los rellena para `prior_treatment`, y `construirHechosDelCaso` calcula `relativeEndDay` con `diasEntre(fechaDelDiagnostico, fechaFin)` (entero, `null` explícito, ausente) con unitarios de la función pura · AC-1…AC-3 en verde · commit `feat(L1D-330)`
+- [ ] 2.5 Refactor: Extract Method del cálculo del intervalo, sin cambio de comportamiento, tests en verde antes y después · commit `refactor(L1D-330)`
+
+## 3. ai-services
+
+- [ ] 3.1 Test de aceptación en rojo: «incluye la quimioterapia con la marca (iniciado antes del periodo) cuando relativeEndDay −60 cae dentro de los últimos 100 días [US-272 AC-1]» (el escenario de `l1d-318`, antes «inactiva en integración», pasa a activo) · `tests/integration/test_chat_turn_caso_periodo.py` con `respx` desde `contracts/examples/chat-turn-request-caso-periodo.json`; `@pytest.mark.ac("US-272", 1)`; commit `test(L1D-330)`
+- [ ] 3.2 Tests de aceptación en rojo del mismo archivo: AC-2 («entra con (iniciado antes del periodo) y (en curso) cuando relativeEndDay es null explícito», más el caso del campo ausente que **no** entra), terminó antes del periodo (no entra y sin marca), AC-3 (prompt y `caplog` sin `AAAA-MM-DD`) y AC-4 (periodo sin hechos con expediente con datos: único bloque `limitacion` con `CHAT_SIN_DATOS_PERIODO_TEXTO`, 0 llamadas al LLM de generación) · commit `test(L1D-330)`
+- [ ] 3.3 Ajustar el test de integración de `l1d-318` que afirma que la quimioterapia con inicio −160 queda fuera (tarea 2.2 de `l1d-318`) para que refleje el AC-1 de US-272, con el trailer `Test-Removal: la quimioterapia con inicio −160 y fin −60 ahora entra al periodo (US-272 AC-1 cambió el criterio)` en el último párrafo junto a `Co-Authored-By` · mismo commit `test(L1D-330)`
+- [ ] 3.4 Bucle interno, un test unitario a la vez: `HechoDelCaso.en_curso` (por defecto `False`) en `domain/chat/turno.py`; `filtrar_hechos_por_periodo` con `en_curso` (entra siempre, marcas «(iniciado antes del periodo)» y «(en curso)» como constantes únicas) y `describir_hecho` con «hasta N días antes del diagnóstico» para `dia_relativo_fin` entero · unitarios en `tests/unit/test_chat_periodo_de_la_pregunta.py` y `test_chat_descripcion_de_hechos.py` · commit `feat(L1D-330)`
+- [ ] 3.5 Borde `traduccion.hechos_del_caso`: pasar `relativeEndDay` a `dia_relativo_fin` y fijar `en_curso` cuando el campo viene presente y es `null` (`model_fields_set`); unitario del borde con campo ausente, entero y `null` · AC-1…AC-4 en verde, suite de `rag-orchestrator` en verde · commit `feat(L1D-330)`
+- [ ] 3.6 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después · commit `refactor(L1D-330)`
+
+## 4. cierre
+
+- [ ] 4.1 `openspec validate l1d-330-relative-end-day --strict` en verde; `pytest` de `rag-orchestrator`, `vitest` e integración de `clinical-api`, `contracts:verify-provider` y `contracts:breaking` en verde
+- [ ] 4.2 Gate 2: `contract-keeper` y `privacy-guardian` (CLAUDE.md del change); sin `run-ai-eval` (no cambia prompt, modelo, umbral, catálogo ni corpus)
+- [ ] 4.3 Anotar en el PR la revisión del ancla del día 0 para la Demo 6 (decisión del PO, 2026-11-06) y el resultado de los pendientes P-1 y P-2 · DIFERIDA -> L1D-326 (medida en la suite del chat) y Demo 6
