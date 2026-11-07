@@ -3,7 +3,7 @@
 ## 1. contratos
 
 - [x] 1.1 Editar `apps/rag-orchestrator/openapi.yaml` 1.12.0 → 1.13.0: `ChatTurnRequest.activeAnalysisId?` (patrón UUID, como `threadId`; `ChatTurnResponse.subintent?` ya existía) · verificación: `contracts:check` en verde (commit `contract(L1D-322)` 3fc55d21). El puntero `ChatTurnRequest/properties/activeAnalysisId` se exime en `assertNoIdentityInRagContract.mjs` (solo enruta el turno)
-- [x] 1.2 Editar `apps/clinical-api/openapi.yaml` 1.25.0 → 1.26.0: `ConversationTurn.evidenceAnalysis?` · verificación: `contracts:check` en verde
+- [x] 1.2 Editar `apps/clinical-api/openapi.yaml` 1.25.0 → 1.26.0 (en el merge con L1D-213 quedó en 1.27.0): `ConversationTurn.evidenceAnalysis?` · verificación: `contracts:check` en verde
 - [x] 1.3 Ejemplos `chat-turn-request-evidencia.json`, `chat-turn-evidencia.json`, `chat-turn-request-seguimiento.json`, `chat-turn-seguimiento-evidencia.json`, `chat-turn-seguimiento-sin-evidencia.json`, `conversation-turn-evidencia.json`, `conversation-turn-seguimiento.json`; el `503` reutiliza `chat-turn-llm-local-no-disponible.json` · verificación: `contracts:check` valida los ejemplos contra su esquema. La síntesis del `evidenceAnalysis` de los ejemplos va vacía porque `assertClaimsAnchored` solo casa las citas de la raíz de la respuesta
 - [x] 1.4 `contracts:breaking` sin incompatibles, `contracts:generate` y commit `contract(L1D-322)` · verificación: tres comandos en verde
 
