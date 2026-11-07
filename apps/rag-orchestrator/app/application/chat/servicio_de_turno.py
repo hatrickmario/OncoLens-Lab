@@ -15,6 +15,7 @@ from typing import Any
 from app.application.catalogo_exigido import exigir_catalogo_de_la_solicitud
 from app.application.chat.avisos import avisos_del_turno
 from app.application.chat.capacidades.caso import NodoCaso
+from app.application.chat.capacidades.contradicciones_del_caso import TextosDeContradicciones
 from app.application.chat.capacidades.evidencia import NodoEvidencia
 from app.application.chat.capacidades.seguimiento_evidencia import (
     NodoSeguimientoDeEvidencia,
@@ -100,8 +101,12 @@ class ChatTurnService:
             max_palabras_por_afirmacion=settings.claim_max_words,
             texto_sin_datos_en_periodo=settings.chat_sin_datos_periodo_texto,
             texto_sin_fecha=settings.chat_sin_fecha_texto,
-            etiqueta_de_conflicto=settings.chat_conflicto_etiqueta,
-            texto_sin_contradicciones=settings.chat_sin_contradicciones_texto,
+            textos_de_contradicciones=TextosDeContradicciones(
+                etiqueta_de_conflicto=settings.chat_conflicto_etiqueta,
+                sin_contradicciones=settings.chat_sin_contradicciones_texto,
+                alcance_revisado=settings.chat_contradicciones_alcance_texto,
+                contraparte_ausente=settings.chat_conflicto_sin_contraparte_texto,
+            ),
         )
         evidencia, seguimiento = _capacidades_de_evidencia(
             servicio_de_evidencia, posiciones, llm, contador, configuracion, settings

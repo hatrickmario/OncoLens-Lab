@@ -26,6 +26,8 @@ from app.domain.chat.valores_iniciales import (
     CHAT_MAX_HILOS_INICIAL,
     CHAT_EVIDENCE_MAX_OPTIONS_INICIAL,
     CHAT_CONFLICTO_ETIQUETA_INICIAL,
+    CHAT_CONFLICTO_SIN_CONTRAPARTE_TEXTO_INICIAL,
+    CHAT_CONTRADICCIONES_ALCANCE_TEXTO_INICIAL,
     CHAT_MEMORY_MAX_TOKENS_INICIAL,
     CHAT_SIN_CONTRADICCIONES_TEXTO_INICIAL,
     CHAT_SIN_DATOS_PERIODO_TEXTO_INICIAL,
@@ -149,6 +151,12 @@ class Settings(BaseSettings):
     chat_conflicto_etiqueta: str = Field(default=CHAT_CONFLICTO_ETIQUETA_INICIAL, min_length=1)
     chat_sin_contradicciones_texto: str = Field(
         default=CHAT_SIN_CONTRADICCIONES_TEXTO_INICIAL, min_length=1
+    )
+    chat_contradicciones_alcance_texto: str = Field(
+        default=CHAT_CONTRADICCIONES_ALCANCE_TEXTO_INICIAL, min_length=1
+    )
+    chat_conflicto_sin_contraparte_texto: str = Field(
+        default=CHAT_CONFLICTO_SIN_CONTRAPARTE_TEXTO_INICIAL, min_length=1
     )
     # tokenizer.json local del LLM para contar la memoria del chat; sin él se usa un contador conservador por caracteres.
     llm_tokenizer_path: Path | None = None

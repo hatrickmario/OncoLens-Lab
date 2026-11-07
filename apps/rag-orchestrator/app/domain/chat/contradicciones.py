@@ -70,7 +70,10 @@ def bloques_de_conflicto(
 
 
 def hechos_con_marca_sin_contraparte(hechos: Sequence[HechoDelCaso]) -> tuple[HechoDelCaso, ...]:
-    raise NotImplementedError
+    """Los hechos marcados en conflicto cuya contraparte no está entre los del turno: no forman par, pero tampoco se
+    puede decir que no hay contradicciones (RN-08): el turno lo declara."""
+    refs = {h.ref for h in hechos}
+    return tuple(h for h in hechos if h.conflicto_con is not None and h.conflicto_con not in refs)
 
 
 def afirmaciones_que_resuelven_conflicto(

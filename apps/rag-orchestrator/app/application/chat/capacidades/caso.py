@@ -27,7 +27,10 @@ from collections.abc import Sequence
 from dataclasses import replace
 from typing import Any
 
-from app.application.chat.capacidades.contradicciones_del_caso import turno_de_contradicciones
+from app.application.chat.capacidades.contradicciones_del_caso import (
+    TextosDeContradicciones,
+    turno_de_contradicciones,
+)
 from app.application.chat.grafo import ConfiguracionDelGrafo, EstadoDelGrafo, pedir_afirmaciones
 from app.application.errores import LlmLocalNoDisponibleError, NliNoDisponibleError
 from app.application.ports import ContadorDeTokens, LlmClient
@@ -69,8 +72,7 @@ class NodoCaso:
         max_palabras_por_afirmacion: int,
         texto_sin_datos_en_periodo: str,
         texto_sin_fecha: str,
-        etiqueta_de_conflicto: str,
-        texto_sin_contradicciones: str,
+        textos_de_contradicciones: TextosDeContradicciones,
     ) -> None:
         self._llm = llm
         self._contador = contador
@@ -79,19 +81,13 @@ class NodoCaso:
         self._max_palabras = max_palabras_por_afirmacion
         self._texto_sin_datos_en_periodo = texto_sin_datos_en_periodo
         self._texto_sin_fecha = texto_sin_fecha
-        self._etiqueta_de_conflicto = etiqueta_de_conflicto
-        self._texto_sin_contradicciones = texto_sin_contradicciones
+        self._textos_de_contradicciones = textos_de_contradicciones
 
     async def ejecutar(self, estado: EstadoDelGrafo) -> dict[str, Any]:
         trace_id = estado["trace_id"]
         todos = estado["hechos"]
         if es_pregunta_de_contradicciones(estado["pregunta"]):
-            return turno_de_contradicciones(
-                todos,
-                etiqueta_de_conflicto=self._etiqueta_de_conflicto,
-                texto_sin_contradicciones=self._texto_sin_contradicciones,
-                trace_id=trace_id,
-            )
+            return turno_de_contradicciones(todos, self._textos_de_contradicciones, trace_id)
         dias_del_periodo = periodo_de_la_pregunta(estado["pregunta"])
         # Con un periodo en la pregunta, solo los hechos de esos días; sin periodo, todos (US-261 AC-3).
         hechos = (

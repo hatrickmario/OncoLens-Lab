@@ -24,5 +24,13 @@ CHAT_CONFLICTO_ETIQUETA_INICIAL = "Por conciliar"
 """Etiqueta con que el bloque ``conflicto`` del chat nombra un par de datos en conflicto (US-262, RN-08, RN-22)."""
 CHAT_SIN_CONTRADICCIONES_TEXTO_INICIAL = "No hay contradicciones registradas en el expediente"
 """Texto fijo del bloque ``limitacion`` cuando se pregunta por contradicciones y ningún dato está en conflicto (US-262)."""
+CHAT_CONTRADICCIONES_ALCANCE_TEXTO_INICIAL = (
+    "Se revisaron los diagnósticos y biomarcadores del expediente"
+)
+"""Segunda frase de la respuesta sin contradicciones: la revisión solo cubre los datos con vínculo de conflicto (RN-08)."""
+CHAT_CONFLICTO_SIN_CONTRAPARTE_TEXTO_INICIAL = (
+    "Hay datos marcados en conflicto cuya contraparte no está entre los datos consultados"
+)
+"""Aviso cuando un hecho marcado en conflicto llega sin su contraparte: no se afirma que no hay contradicciones."""
 CHAT_SIN_FECHA_TEXTO_INICIAL = "Se omitieron <n> dato(s) del expediente sin fecha confiable; no se pudieron ubicar en el periodo consultado"
 """Aviso no bloqueante cuando el filtro por periodo deja fuera hechos sin fecha confiable; ``<n>`` es su cantidad (no ``{n}``: la llave rompe el valor por defecto de Compose)."""
