@@ -15,6 +15,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
+from app.domain.criterios_aplicabilidad import DestinoDelCriterio
 from app.infrastructure.catalogo_clinico.manifiesto import CatalogoNoDisponible
 
 NOMBRE_DEL_ARCHIVO = "datos-criticos.json"
@@ -34,12 +35,21 @@ class _Etiqueta(BaseModel):
     es: Annotated[str, Field(min_length=1)]
 
 
+class _Destino(BaseModel):
+    model_config = ConfigDict(extra="ignore", frozen=True, strict=True)
+
+    entity: Annotated[str, Field(min_length=1)]
+    field: str | None = None
+    match: dict[str, str | list[str]] = Field(default_factory=dict)
+
+
 class _DatoCritico(BaseModel):
     model_config = ConfigDict(extra="ignore", frozen=True, strict=True)
 
     key: str = Field(pattern=_CLAVE)
     cancerType: str = Field(pattern=_TIPO_DE_CANCER)
     label: _Etiqueta
+    destination: _Destino
     sourceDocumentTypes: Annotated[list[_TipoDeDocumento], Field(min_length=1)]
 
 
@@ -58,6 +68,7 @@ class _Archivo(BaseModel):
 
 _SIN_DATOS: Mapping[str, str] = MappingProxyType({})
 _SIN_FUENTES: Mapping[str, tuple[str, ...]] = MappingProxyType({})
+_SIN_DESTINOS: Mapping[str, DestinoDelCriterio] = MappingProxyType({})
 
 
 class DatosCriticosDelCatalogo:
@@ -67,6 +78,7 @@ class DatosCriticosDelCatalogo:
         self,
         etiquetas_por_tipo: dict[str, dict[str, str]],
         fuentes_por_tipo: dict[str, dict[str, tuple[str, ...]]] | None = None,
+        destinos_por_tipo: dict[str, dict[str, DestinoDelCriterio]] | None = None,
     ) -> None:
         self._etiquetas_por_tipo = {
             tipo: MappingProxyType(dict(datos)) for tipo, datos in etiquetas_por_tipo.items()
@@ -74,12 +86,19 @@ class DatosCriticosDelCatalogo:
         self._fuentes_por_tipo = {
             tipo: MappingProxyType(dict(datos)) for tipo, datos in (fuentes_por_tipo or {}).items()
         }
+        self._destinos_por_tipo = {
+            tipo: MappingProxyType(dict(datos)) for tipo, datos in (destinos_por_tipo or {}).items()
+        }
 
     def etiquetas(self, tipo_de_cancer: str) -> Mapping[str, str]:
         return self._etiquetas_por_tipo.get(tipo_de_cancer, _SIN_DATOS)
 
     def tipos_de_documento(self, tipo_de_cancer: str) -> Mapping[str, tuple[str, ...]]:
         return self._fuentes_por_tipo.get(tipo_de_cancer, _SIN_FUENTES)
+
+    def destinos(self, tipo_de_cancer: str) -> Mapping[str, DestinoDelCriterio]:
+        """Clave del dato crítico → su ``destination`` del catálogo (RN-29); vacío si el tipo no está en el catálogo."""
+        return self._destinos_por_tipo.get(tipo_de_cancer, _SIN_DESTINOS)
 
 
 def cargar_datos_criticos(
@@ -103,6 +122,23 @@ def cargar_datos_criticos(
             tipo: {item.key: tuple(item.sourceDocumentTypes) for item in items}
             for tipo, items in items_por_tipo.items()
         },
+        {
+            tipo: {item.key: _destino_del_dominio(item.destination) for item in items}
+            for tipo, items in items_por_tipo.items()
+        },
+    )
+
+
+def _destino_del_dominio(destino: _Destino) -> DestinoDelCriterio:
+    return DestinoDelCriterio(
+        entidad=destino.entity,
+        campo=destino.field,
+        coincidencia=MappingProxyType(
+            {
+                nombre: (valor,) if isinstance(valor, str) else tuple(valor)
+                for nombre, valor in destino.match.items()
+            }
+        ),
     )
 
 

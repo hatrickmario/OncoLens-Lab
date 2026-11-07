@@ -1,0 +1,26 @@
+{
+  "intent": "faltantes",
+  "blocks": [
+    {
+      "kind": "limitacion",
+      "text": "Lo consultado no figura entre los datos críticos del catálogo vigente; este turno no describe su relevancia en la evidencia."
+    }
+  ],
+  "omittedClaims": 0,
+  "structuredState": {
+    "intentsVistos": [
+      "faltantes"
+    ],
+    "preguntasPrevias": [
+      "¿Por qué importa el CA 15-3?"
+    ],
+    "opcionesMostradas": [],
+    "citasMostradas": [],
+    "faltantesSenalados": []
+  },
+  "llmProvider": "local",
+  "notices": [
+    "Generado por IA; requiere validación clínica independiente por el oncólogo tratante",
+    "Uso académico/investigación"
+  ]
+}

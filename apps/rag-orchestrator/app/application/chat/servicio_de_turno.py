@@ -18,10 +18,12 @@ from app.application.chat.capacidades.caso import NodoCaso
 from app.application.chat.capacidades.contradicciones_del_caso import TextosDeContradicciones
 from app.application.chat.capacidades.evidencia import NodoEvidencia
 from app.application.chat.capacidades.fuentes_limitaciones import NodoFuentesLimitaciones
-from app.application.chat.capacidades.seguimiento_evidencia import (
-    NodoSeguimientoDeEvidencia,
-    ParametrosDelSeguimiento,
+from app.application.chat.capacidades.relevancia_del_dato import (
+    NodoRelevancia,
+    TextosDeLaRelevancia,
 )
+from app.application.chat.capacidades.afirmaciones_citadas import ParametrosDeGeneracionCitada
+from app.application.chat.capacidades.seguimiento_evidencia import NodoSeguimientoDeEvidencia
 from app.application.chat.contexto_del_turno import con_evidencia_del_turno
 from app.application.chat.grafo import ConfiguracionDelGrafo, EstadoDelGrafo, Nodo, construir_grafo
 from app.application.chat.nodo_faltantes import crear_nodo_faltantes
@@ -41,6 +43,7 @@ from app.application.ports import (
     CorpusCatalogReader,
     CorpusReleaseReader,
     DatosCriticosDelCatalogoMontado,
+    DatosDeRelevancia,
     LlmClient,
     PosicionDeChunks,
     ProhibitedTermsChecker,
@@ -49,6 +52,7 @@ from app.application.rag_orchestrator_service import RAGOrchestratorService
 from app.application.selector_proveedor_llm import con_clasificacion
 from app.application.verificacion_de_soporte import VerificadorDeSoporte
 from app.config.settings import Settings
+from app.domain.chat.relevancia import TextosDelCatalogo
 from app.domain.chat.estado import (
     INTENCIONES_CLASIFICABLES,
     EstadoDelHilo,
@@ -81,6 +85,7 @@ class ChatTurnService:
         soporte: VerificadorDeSoporte | None = None,
         catalogo_del_corpus: CorpusCatalogReader | None = None,
         lector_release: CorpusReleaseReader | None = None,
+        relevancia: DatosDeRelevancia | None = None,
     ) -> None:
         self._catalogo = catalogo
         self._settings = settings
@@ -127,7 +132,12 @@ class ChatTurnService:
                 **evidencia,
                 **fuentes,
                 Intencion.caso: caso.ejecutar,
-                Intencion.faltantes: crear_nodo_faltantes(fuentes_documentales),
+                Intencion.faltantes: crear_nodo_faltantes(
+                    fuentes_documentales,
+                    _capacidad_de_relevancia(
+                        relevancia, servicio_de_evidencia, posiciones, llm, contador, settings
+                    ),
+                ),
             },
             subcapacidades=seguimiento,
             guardado=self.registro.guardado,
@@ -240,18 +250,55 @@ def _capacidades_de_evidencia(
         llm=llm,
         contador=contador,
         configuracion=configuracion,
-        parametros=ParametrosDelSeguimiento(
-            claims_min=settings.claims_min_per_option,
-            claims_max=settings.claims_max_per_option,
-            claim_max_words=settings.claim_max_words,
-            max_chars_fragmentos=settings.llm_fragments_max_chars,
-            num_ctx=settings.llm_num_ctx,
-        ),
+        parametros=_parametros_de_generacion(settings),
     )
     return (
         {Intencion.evidencia: analisis.ejecutar},
         {Subintencion.seguimiento_evidencia: seguimiento.ejecutar},
     )
+
+
+def _parametros_de_generacion(settings: Settings) -> ParametrosDeGeneracionCitada:
+    """El único mapeo de ``Settings`` a los parámetros de la generación citada del seguimiento y de la relevancia (RN-22)."""
+    return ParametrosDeGeneracionCitada(
+        claims_min=settings.claims_min_per_option,
+        claims_max=settings.claims_max_per_option,
+        claim_max_words=settings.claim_max_words,
+        max_chars_fragmentos=settings.llm_fragments_max_chars,
+        num_ctx=settings.llm_num_ctx,
+    )
+
+
+def _capacidad_de_relevancia(
+    relevancia: DatosDeRelevancia | None,
+    servicio: RAGOrchestratorService | None,
+    posiciones: PosicionDeChunks | None,
+    llm: LlmClient,
+    contador: ContadorDeTokens,
+    settings: Settings,
+) -> Nodo | None:
+    """El nodo de relevancia de un dato faltante si hay catálogo y corpus detrás; si no, ``faltantes`` solo verbaliza."""
+    if relevancia is None or servicio is None or posiciones is None:
+        return None
+    nodo = NodoRelevancia(
+        datos=relevancia,
+        servicio=servicio,
+        posiciones=posiciones,
+        llm=llm,
+        contador=contador,
+        parametros=_parametros_de_generacion(settings),
+        textos=TextosDeLaRelevancia(
+            catalogo=TextosDelCatalogo(
+                dato_critico=settings.chat_relevancia_catalogo_texto,
+                criterios=settings.chat_relevancia_criterios_texto,
+                sin_criterio=settings.chat_relevancia_sin_criterio_texto,
+            ),
+            sin_soporte=settings.chat_relevancia_sin_soporte_texto,
+            fuera_del_catalogo=settings.chat_relevancia_fuera_del_catalogo_texto,
+            aviso_sin_evidencia=settings.chat_relevancia_sin_evidencia_aviso,
+        ),
+    )
+    return nodo.ejecutar
 
 
 def _capacidad_de_fuentes(
