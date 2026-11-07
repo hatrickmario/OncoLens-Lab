@@ -192,7 +192,13 @@ function tratamientoPermitido(
   asignador: Asignador,
 ): ContextoPermitido['priorTreatments'][number] {
   return {
-    dataRef: asignador.asignar({ tabla: 'prior_treatment', id: fila.id, fecha: fila.startedAt }),
+    dataRef: asignador.asignar({
+      tabla: 'prior_treatment',
+      id: fila.id,
+      fecha: fila.startedAt,
+      fechaFin: fila.endedAt,
+      enCurso: fila.ongoing,
+    }),
     lineNumber: fila.lineNumber,
     setting: fila.setting,
     regimenName: fila.regimenName,

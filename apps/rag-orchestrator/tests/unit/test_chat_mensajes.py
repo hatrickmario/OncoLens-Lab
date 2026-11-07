@@ -5,6 +5,8 @@ from pathlib import Path
 import pytest
 
 from app.domain.chat.mensajes import (
+    ANCLA_DEL_PERIODO,
+    AVISO_EN_CURSO_SIN_VERIFICAR,
     CAUSA_FALTA_EN_PACIENTE,
     ENCABEZADO_DE_OPCIONES,
     MENSAJE_FUERA_DE_ALCANCE,
@@ -14,6 +16,10 @@ from app.domain.chat.mensajes import (
     ORDEN_POR_APLICABILIDAD,
     TITULO_DE_APLICABILIDAD,
     TITULO_DE_FALTANTES,
+)
+from app.domain.chat.periodo_de_la_pregunta import (
+    MARCA_EN_CURSO,
+    MARCA_INICIADO_ANTES_DEL_PERIODO,
 )
 from app.prompts.chat_seguimiento_evidencia import PLANTILLA_SEGUIMIENTO_DEL_CHAT
 from app.domain.chat.valores_iniciales import (
@@ -48,6 +54,10 @@ LISTA = (
         AVISO_DE_IA_INICIAL,
         AVISO_ACADEMICO_INICIAL,
         CHAT_AVISO_BUSQUEDA_AMPLIADA_INICIAL,
+        ANCLA_DEL_PERIODO,
+        AVISO_EN_CURSO_SIN_VERIFICAR,
+        MARCA_EN_CURSO,
+        MARCA_INICIADO_ANTES_DEL_PERIODO,
     ],
 )
 def test_los_textos_fijos_del_chat_no_contienen_terminos_prohibidos_cuando_se_verifican(texto):

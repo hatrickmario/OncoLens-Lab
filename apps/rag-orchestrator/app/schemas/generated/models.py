@@ -743,6 +743,12 @@ class CaseFact(BaseModel):
             description='Día relativo al diagnóstico; null si el dato no tiene fecha confiable.'
         ),
     ]
+    relativeEndDay: Annotated[
+        int | None,
+        Field(
+            description='Día relativo al diagnóstico en que termina un hecho con intervalo; null = en curso; ausente = puntual o fin no informado.'
+        ),
+    ] = None
     reviewStatus: Annotated[CaseFactReviewStatus, Field(title='CaseFactReviewStatus')]
     seriesKey: str | None = None
     conflictWith: FactRef | None = None

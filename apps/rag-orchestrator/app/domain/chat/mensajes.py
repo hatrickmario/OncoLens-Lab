@@ -41,3 +41,7 @@ ESTADOS_DE_APLICABILIDAD = {
 }
 CAUSA_FALTA_EN_PACIENTE = "falta en el paciente"
 TITULO_DE_FALTANTES = "Datos que faltan del paciente para comparar"
+ANCLA_DEL_PERIODO = "Periodo medido desde la fecha del diagnóstico"
+"""Bloque ``limitacion`` fijo del turno de periodo con hechos de intervalo (US-272): el día 0 es el diagnóstico, no hoy."""
+AVISO_EN_CURSO_SIN_VERIFICAR = "Un dato en curso del periodo consultado está sin verificar"
+"""Aviso fijo (RN-26): informa, no bloquea."""

@@ -35,6 +35,9 @@ def hechos_del_caso(hechos: list[CaseFact]) -> tuple[HechoDelCaso, ...]:
             estado_de_revision=h.reviewStatus.value,
             conflicto_con=h.conflictWith.root if h.conflictWith else None,
             serie=h.seriesKey,
+            dia_relativo_fin=h.relativeEndDay,
+            # ``null`` explícito = en curso; ausente = puntual o fin no informado (un modelo sin el campo no lo declara).
+            en_curso="relativeEndDay" in h.model_fields_set and h.relativeEndDay is None,
         )
         for h in hechos
     )

@@ -333,6 +333,7 @@ export const zCaseFact = z.strictObject({
     kind: z.string().min(1),
     verbalization: zTextoEnmascarado,
     relativeDay: z.int().nullable(),
+    relativeEndDay: z.int().nullish(),
     reviewStatus: z.enum([
         'auto_aceptado',
         'requiere_revision',

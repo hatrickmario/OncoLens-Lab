@@ -109,6 +109,28 @@
       "request": "chat-turn-request-caso-periodo.json"
     },
     {
+      "file": "chat-turn-request-caso-intervalo.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnRequest"
+    },
+    {
+      "file": "chat-turn-caso-intervalo.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnResponse",
+      "request": "chat-turn-request-caso-intervalo.json"
+    },
+    {
+      "file": "chat-turn-request-caso-en-curso.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnRequest"
+    },
+    {
+      "file": "chat-turn-caso-en-curso.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnResponse",
+      "request": "chat-turn-request-caso-en-curso.json"
+    },
+    {
       "file": "chat-turn-request-caso-conflicto.json",
       "spec": "rag-orchestrator",
       "target": "#/components/schemas/ChatTurnRequest"

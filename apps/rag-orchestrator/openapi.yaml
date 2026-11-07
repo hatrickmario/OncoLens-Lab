@@ -1374,6 +1374,11 @@ components:
         relativeDay:
           type: [integer, "null"]
           description: Día relativo al diagnóstico; null si el dato no tiene fecha confiable.
+        relativeEndDay:
+          type: [integer, "null"]
+          description: >-
+            Día relativo al diagnóstico en que termina un hecho con intervalo; null = en curso;
+            ausente = puntual o fin no informado.
         reviewStatus:
           title: CaseFactReviewStatus
           type: string
