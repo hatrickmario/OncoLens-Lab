@@ -1,7 +1,7 @@
 import { expect, test, type Page, type Request } from '@playwright/test';
 import es from '../messages/es.json' with { type: 'json' };
 import { violacionesGraves } from './axe';
-import { iniciarSesion } from './soporte';
+import { iniciarSesion, tarjetasDelChat } from './soporte';
 
 const { conversacion } = es;
 const PREGUNTAS = [
@@ -29,14 +29,15 @@ test.describe('Panel conversacional (L1D-324)', () => {
 
     for (const pregunta of PREGUNTAS) await preguntar(page, pregunta);
 
-    const tarjetas = page.getByRole('article');
+    // Con `LLM_PROVIDER=fake` el chat de rag responde siempre `chat-turn-caso-ok.json` (`fake_chat_turn.py`): los chips de
+    // faltantes y evidencia y la cita [E1] se comprueban en Testing Library (`conversacion-bloques.test.tsx`).
+    const tarjetas = tarjetasDelChat(page);
     await expect(tarjetas).toHaveCount(3);
-    await expect(tarjetas.nth(0)).toContainText(conversacion.intenciones.caso);
-    await expect(tarjetas.nth(1)).toContainText(conversacion.intenciones.faltantes);
-    await expect(tarjetas.nth(2)).toContainText(conversacion.intenciones.evidencia);
-    await expect(tarjetas.nth(0).getByRole('link', { name: /Ver en el caso/ }).first()).toBeVisible();
-    await expect(tarjetas.nth(1).getByRole('link', { name: /Ver en el caso/ }).first()).toBeVisible();
-    await expect(tarjetas.nth(2)).toContainText('[E1]');
+    for (const [n, orden] of [0, 1, 2].entries()) {
+      await expect(tarjetas.nth(orden)).toContainText(`Turno ${n + 1}`);
+      await expect(tarjetas.nth(orden)).toContainText(conversacion.intenciones.caso);
+      await expect(tarjetas.nth(orden).getByRole('link', { name: /Ver en el caso/ }).first()).toBeVisible();
+    }
     expect(new Set(turnos.map((r) => new URL(r.url()).pathname)).size).toBe(1);
   });
 
@@ -74,6 +75,6 @@ test.describe('Panel conversacional (L1D-324)', () => {
     await page.keyboard.type('¿Qué información importante falta?');
     await page.keyboard.press('Enter');
     await envio;
-    await expect(page.getByRole('article')).toHaveCount(4);
+    await expect(tarjetasDelChat(page)).toHaveCount(4);
   });
 });

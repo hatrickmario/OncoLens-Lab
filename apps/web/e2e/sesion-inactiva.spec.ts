@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { iniciarSesion } from './soporte';
+import { iniciarSesion, preguntarEnElChat } from './soporte';
 
 /** Mismo valor con el que `scripts/e2e/ejecutar.sh` arranca clinical-api (RN-22: el plazo vive en configuración). */
 const SESSION_IDLE_MINUTES = Number(process.env.SESSION_IDLE_MINUTES ?? '1');
@@ -14,8 +14,7 @@ test.describe('Sesión inactiva (US-044)', () => {
     await expect(page.getByText(/Paciente · ID/)).toBeVisible();
 
     await page.waitForTimeout((SESSION_IDLE_MINUTES * 60 + MARGEN_SEGUNDOS) * 1000);
-    await page.getByLabel('Pregunta clínica').fill('Pregunta de prueba');
-    await page.getByRole('button', { name: 'Analizar evidencia' }).click();
+    await preguntarEnElChat(page, 'Pregunta de prueba');
 
     await expect(page).toHaveURL(/\/login\?motivo=expirada$/);
     await expect(page.getByRole('status')).toHaveText('Tu sesión expiró. Vuelve a iniciar sesión.');

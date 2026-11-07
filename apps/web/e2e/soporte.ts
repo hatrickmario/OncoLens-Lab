@@ -80,11 +80,24 @@ export async function iniciarSesion(page: Page) {
   await page.waitForURL(/\/pacientes\/[^/]+\/analisis$/);
 }
 
-/** Abre el panel del paciente semilla (a), escribe la pregunta y presiona "Analizar evidencia". */
+/** Escribe la pregunta en el chat del paciente y pulsa «Preguntar» (US-267: sustituye al formulario de una pregunta). */
+export async function preguntarEnElChat(page: Page, pregunta: string) {
+  await page.getByLabel(es.conversacion.campo).fill(pregunta);
+  await page.getByRole('button', { name: es.conversacion.preguntar }).click();
+}
+
+/** Tarjetas de los turnos del asistente: grupos «Turno n» (las tarjetas de opción del análisis son `article`). */
+export const tarjetasDelChat = (page: Page) => page.getByRole('group', { name: /^Turno \d+$/ });
+
+/** Abre el chat del paciente semilla (a) y le hace la pregunta. */
 export async function analizar(page: Page, pregunta: string) {
   await iniciarSesion(page);
-  await page.getByLabel('Pregunta clínica').fill(pregunta);
-  await page.getByRole('button', { name: 'Analizar evidencia' }).click();
+  await preguntarEnElChat(page, pregunta);
+}
+
+/** Espera `n` tarjetas de turno (por defecto, una). */
+export async function esperarTarjeta(page: Page, n = 1) {
+  await expect(tarjetasDelChat(page)).toHaveCount(n);
 }
 
 export async function esperarResultado(page: Page) {

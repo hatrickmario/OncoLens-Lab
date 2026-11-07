@@ -1,7 +1,7 @@
 import { expect, test, type Request } from '@playwright/test';
 import es from '../messages/es.json' with { type: 'json' };
 import { violacionesGraves } from './axe';
-import { iniciarSesion } from './soporte';
+import { iniciarSesion, tarjetasDelChat } from './soporte';
 
 const { conversacion } = es;
 const esPostDeTurno = (r: Request) => r.method() === 'POST' && /\/api\/conversations\/[^/]+\/turns$/.test(r.url());
@@ -17,18 +17,18 @@ test.describe('Preguntas guiadas (L1D-324)', () => {
     const texto = (await guiada.textContent())!;
 
     await guiada.click();
-    await expect(page.getByRole('article')).toHaveCount(1);
+    await expect(tarjetasDelChat(page)).toHaveCount(1);
     await page.getByLabel(conversacion.campo).fill(texto);
     await page.getByRole('button', { name: conversacion.preguntar }).click();
-    await expect(page.getByRole('article')).toHaveCount(2);
+    await expect(tarjetasDelChat(page)).toHaveCount(2);
 
     expect(cuerpos).toHaveLength(2);
     expect(cuerpos[0]).toBe(cuerpos[1]);
     expect(Object.keys(JSON.parse(cuerpos[0]!) as object)).toEqual(['question']);
     // La cabecera lleva número y hora del turno; lo comparable son los bloques y los avisos.
-    const bloques = (n: number) => page.getByRole('article').nth(n).locator('section').allTextContents();
+    const bloques = (n: number) => tarjetasDelChat(page).nth(n).locator('section').allTextContents();
     expect(await bloques(0)).toEqual(await bloques(1));
-    await expect(page.getByRole('article').first()).not.toContainText(/guiada/i);
+    await expect(tarjetasDelChat(page).first()).not.toContainText(/guiada/i);
   });
 
   test('no tiene violaciones graves de axe con las guiadas visibles y las envía con Tab y Enter [US-267 AC-8]', async ({
@@ -42,6 +42,6 @@ test.describe('Preguntas guiadas (L1D-324)', () => {
 
     await grupo.getByRole('button').first().focus();
     await page.keyboard.press('Enter');
-    await expect(page.getByRole('article')).toHaveCount(1);
+    await expect(tarjetasDelChat(page)).toHaveCount(1);
   });
 });
