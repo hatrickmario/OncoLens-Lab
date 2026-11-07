@@ -62,3 +62,65 @@ def test_cargar_dataset_de_chat_rechaza_un_caso_sin_revision_oncologo_cuando_fal
 
     with pytest.raises(DatasetInvalido, match="revision_oncologo"):
         cargar_dataset_de_chat(copia)
+
+
+def test_cargar_dataset_de_chat_rechaza_un_dataset_que_no_es_sintetico_cuando_el_manifiesto_dice_otra_clase(
+    copia: Path,
+):
+    manifiesto = copia / "manifest.yaml"
+    manifiesto.write_text(
+        manifiesto.read_text(encoding="utf-8").replace(
+            "clase: sintetico", "clase: real_anonimizado"
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(DatasetInvalido, match="sintetico"):
+        cargar_dataset_de_chat(copia)
+
+
+def test_cargar_dataset_de_chat_rechaza_un_valor_de_revision_desconocido_cuando_no_es_pendiente_ni_aprobado(
+    copia: Path,
+):
+    _editar_casos(copia, lambda crudo: crudo["casos"][0].update(revision_oncologo="firmado"))
+
+    with pytest.raises(DatasetInvalido, match="revision_oncologo"):
+        cargar_dataset_de_chat(copia)
+
+
+def test_cargar_dataset_de_chat_rechaza_un_caso_previo_que_no_va_antes_cuando_el_orden_se_invierte(
+    copia: Path,
+):
+    def invertir(crudo):
+        casos = crudo["casos"]
+        i05 = next(i for i, c in enumerate(casos) if c["id"] == "CHAT-AC05-MAMA")
+        i06 = next(i for i, c in enumerate(casos) if c["id"] == "CHAT-AC06-MAMA")
+        casos[i05], casos[i06] = casos[i06], casos[i05]
+
+    _editar_casos(copia, invertir)
+
+    with pytest.raises(DatasetInvalido, match="previo"):
+        cargar_dataset_de_chat(copia)
+
+
+def test_cargar_dataset_de_chat_rechaza_un_caso_sin_hechos_ni_criterios_esperados_cuando_ambos_estan_vacios(
+    copia: Path,
+):
+    def vaciar(crudo):
+        caso = crudo["casos"][0]
+        caso["hechos_esperados"] = []
+        caso["criterios_esperados"] = []
+
+    _editar_casos(copia, vaciar)
+
+    with pytest.raises(DatasetInvalido, match="esperados"):
+        cargar_dataset_de_chat(copia)
+
+
+def test_cargar_dataset_de_chat_rechaza_una_intencion_desconocida_cuando_no_es_de_las_cuatro_del_chat(
+    copia: Path,
+):
+    _editar_casos(copia, lambda crudo: crudo["casos"][0].update(intent="recomendar"))
+
+    with pytest.raises(DatasetInvalido, match="intent"):
+        cargar_dataset_de_chat(copia)
