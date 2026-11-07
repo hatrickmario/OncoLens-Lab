@@ -22,6 +22,7 @@ from tests.support.chat_relevancia import (
 )
 from tests.support.contract import CATALOGOS
 from tests.support.llm_chat_falso import FakeChatLlm
+from tests.unit.test_contexto_solo_con_el_tipo_de_cancer import contexto_con_todos_los_campos_poblados
 from tests.support.nli_falso import IMPLICA, NEUTRAL, NliFalso
 from tests.support.recuperacion import EJEMPLOS
 from tests.support.reescritura import ReescritorFalso, parametros_de_reescritura
@@ -248,3 +249,16 @@ def test_chat_turn_relevancia_dice_que_nadie_usa_el_dato_y_nombra_el_criterio_ag
     texto = respuesta.json()["blocks"][0]["text"]
     assert "Receptor de estrógeno es un dato crítico del catálogo vigente" in texto
     assert _criterio_del_catalogo("receptores_hormonales")["label"]["es"] in texto
+
+
+def test_chat_turn_relevancia_solo_embebe_y_puntua_la_consulta_del_catalogo_cuando_el_caso_trae_todos_los_campos_poblados():
+    entorno = entorno_de_relevancia("CHAT-RELEVANCIA-OK")
+    solicitud = solicitud_desde_ejemplo("chat-turn-request-relevancia-ok.json")
+    solicitud["clinicalContext"] = contexto_con_todos_los_campos_poblados().model_dump(mode="json")
+
+    respuesta = entorno.turno(solicitud)
+
+    assert respuesta.status_code == 200
+    assert entorno.base.embedder.textos == [CONSULTA_MENOPAUSIA, "mama"]  # type: ignore[attr-defined]
+    assert entorno.base.reranker.preguntas == [CONSULTA_MENOPAUSIA]  # type: ignore[attr-defined]
+    assert "SENTINELA" not in entorno.llm.usuarios[-1] + entorno.llm.sistemas[-1]  # type: ignore[operator]

@@ -22,7 +22,10 @@ from app.application.chat.capacidades.seguimiento_evidencia import (
 )
 from app.application.chat.capacidades.bloques_citados import bloques_de_afirmaciones_con_soporte
 from app.application.chat.citas import ConstructorDeCitas
-from app.application.chat.contexto_del_turno import evidencia_del_turno
+from app.application.chat.contexto_del_turno import (
+    contexto_solo_con_el_tipo_de_cancer,
+    evidencia_del_turno,
+)
 from app.application.chat.grafo import EstadoDelGrafo
 from app.application.errores import LlmLocalNoDisponibleError
 from app.application.generation import fragmentos_dentro_del_presupuesto, validar_salida_cruda
@@ -53,11 +56,7 @@ from app.prompts.chat_relevancia import (
     VERSION_DEL_PROMPT_DE_RELEVANCIA_DEL_CHAT,
     armar_prompt_de_relevancia_del_chat,
 )
-from app.schemas.generated.models import (
-    ClinicalContext,
-    RagQueryInternalRequest,
-    TextoEnmascarado,
-)
+from app.schemas.generated.models import RagQueryInternalRequest
 
 logger = logging.getLogger(__name__)
 
@@ -215,40 +214,13 @@ def _consulta_de(dato: DatoCritico, tipo_de_cancer: str) -> RagQueryInternalRequ
     """La consulta al corpus: la etiqueta del catálogo y el tipo de cáncer, y un contexto sin ningún dato del paciente
     (el resumen del contexto también se embebe, RN-11)."""
     base = evidencia_del_turno().consulta
+    diagnostico = base.clinicalContext.diagnosis
     return base.model_copy(
         update={
             "query": f"{dato.etiqueta} {tipo_de_cancer}",
-            "clinicalContext": _contexto_solo_con_el_tipo_de_cancer(base.clinicalContext),
-        }
-    )
-
-
-def _contexto_solo_con_el_tipo_de_cancer(contexto: ClinicalContext) -> ClinicalContext:
-    diagnostico = contexto.diagnosis
-    vacio = TextoEnmascarado(root="")
-    return contexto.model_copy(
-        update={
-            "diagnosis": None
-            if diagnostico is None
-            else diagnostico.model_copy(
-                update={
-                    "histology": None,
-                    "grade": None,
-                    "stagingSystem": vacio,
-                    "stageValue": vacio,
-                    "performanceScale": None,
-                    "performanceValue": None,
-                    "monthsSinceDiagnosis": 0,
-                }
+            "clinicalContext": contexto_solo_con_el_tipo_de_cancer(
+                None if diagnostico is None else diagnostico.cancerType
             ),
-            "biomarkers": [],
-            "clinicalNotes": [],
-            "currentLine": None,
-            "attributes": [],
-            "priorTreatments": [],
-            "events": [],
-            "biomarkerTrends": [],
-            "missingCriticalData": [],
-            "priorAnalyses": [],
         }
     )
+
