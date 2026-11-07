@@ -84,10 +84,17 @@ export function etiquetarFaltantes(
   });
 }
 
-/** D-d (US-238): la Base declara el rescate de la reescritura de la consulta; la reformulación nunca sale de Backend 2. */
+/**
+ * D-d (US-238): la Base declara el rescate de la reescritura de la consulta; la reformulación nunca sale de Backend 2.
+ * Solo cuenta la reescritura con LLM (`reason === 'disparado'`): el segundo loop contextual sin LLM (`contextExpansion`,
+ * ADR-52, US-271) no se declara en la Base y el doctor no lo ve en `/platform/evidence-analyses`.
+ */
 export function declararReescrituraEnLaBase(respuesta: RagQueryInternalResponse): boolean {
+  const { queryRewrite } = respuesta.meta.retrievalParams;
   return (
-    respuesta.meta.retrievalParams.queryRewrite.applied && respuesta.status === 'con_evidencia'
+    queryRewrite.applied &&
+    queryRewrite.reason === 'disparado' &&
+    respuesta.status === 'con_evidencia'
   );
 }
 
