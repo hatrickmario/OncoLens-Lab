@@ -164,7 +164,8 @@ print(json.dumps(json.loads(t[i:t.rfind('}')+1]).get('resumen')) if i >= 0 else 
 paso "Metadatos de población verificados (data/raw/seed/poblacion-verificada.json, US-242) y pesos sparse (US-117b)"
 "${compose[@]}" run --rm -v "$raiz/data/raw/seed:/data/raw/seed:ro" rag-orchestrator \
   python -m app.scripts.poblacion_seed cargar --archivo /data/raw/seed/poblacion-verificada.json 2>&1 | tail -1
-sha_sparse=$(shasum -a 256 "$MODEL_HOST_DIR/embeddings/sparse_linear.npz" | cut -d' ' -f1)
+# modelos.env ya trae EMBEDDING_SPARSE_WEIGHTS_* (exportar-modelos.py); si es de una versión anterior, se calculan aquí.
+sha_sparse=${EMBEDDING_SPARSE_WEIGHTS_SHA256:-$(shasum -a 256 "$MODEL_HOST_DIR/embeddings/sparse_linear.npz" | cut -d' ' -f1)}
 "${compose[@]}" run --rm -e EMBEDDING_SPARSE_WEIGHTS_PATH=/models/embeddings/sparse_linear.npz -e EMBEDDING_SPARSE_WEIGHTS_SHA256="$sha_sparse" \
   rag-orchestrator python -m app.scripts.ingest reindex-sparse 2>&1 | tail -1
 
