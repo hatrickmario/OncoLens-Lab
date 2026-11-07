@@ -1,5 +1,9 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { expect, type Page } from '@playwright/test';
+import type {
+  ConversationTurn,
+  EvidenceAnalysis,
+} from '../../../packages/api-contracts/src/types/clinical-api';
 import es from '../messages/es.json' with { type: 'json' };
 import { opcionDelRotulo, type OpcionVisible } from './orden-rn28';
 
@@ -101,8 +105,7 @@ export const esRespuestaDeTurno = (r: { url(): string; request(): { method(): st
 
 /** El `evidenceAnalysis` del turno de evidencia (el mismo `EvidenceAnalysis` que antes devolvía `/api/evidence-analyses`). */
 export async function analisisDelTurno(respuesta: { json(): Promise<unknown> }) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON del contrato sin tipo: el E2E lee campos concretos
-  return ((await respuesta.json()) as { evidenceAnalysis: any }).evidenceAnalysis;
+  return ((await respuesta.json()) as ConversationTurn).evidenceAnalysis as EvidenceAnalysis;
 }
 
 /** Espera `n` tarjetas de turno (por defecto, una). */
@@ -219,7 +222,10 @@ export async function pasoSeguimiento(
   await expect(turno.locator('summary', { hasText: /\[E\d+\]/ }).first()).toBeVisible({
     timeout: plazoDeGeneracion,
   });
-  await expect(turno.getByRole('listitem').first()).toBeVisible();
+  // Cada cita es un elemento de lista con su fuente y fragmento; el gate no pasa con un turno sin avisos de IA (RN-19).
+  await expect(turno.getByRole('listitem').filter({ has: page.locator('summary') }).first()).toBeVisible();
+  const avisos = turno.getByRole('region', { name: es.conversacion.avisosTitulo });
+  await expect(avisos.getByRole('listitem')).not.toHaveCount(0);
   await expect(page.getByRole('banner').getByText(es.app.academicUseLabel)).toBeVisible();
 }
 

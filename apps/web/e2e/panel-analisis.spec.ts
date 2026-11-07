@@ -3,6 +3,7 @@ import es from '../messages/es.json' with { type: 'json' };
 import {
   analizar,
   ejemplo,
+  analisisDelTurno,
   esperarResultado,
   esperarTarjeta,
   esRespuestaDeTurno,
@@ -184,8 +185,12 @@ test.describe('Estados del panel (L1D-141)', () => {
   }) => {
     test.setTimeout(60_000);
     const peticiones: string[] = [];
+    const idsDeAnalisis: string[] = [];
     page.on('request', (r) => {
       if (esRespuestaDeTurno({ url: () => r.url(), request: () => r })) peticiones.push(r.url());
+    });
+    page.on('response', async (r) => {
+      if (esRespuestaDeTurno(r)) idsDeAnalisis.push((await analisisDelTurno(r)).id);
     });
     await iniciarSesion(page);
     await page.getByLabel(es.conversacion.campo).fill(preguntaHer2);
@@ -195,6 +200,10 @@ test.describe('Estados del panel (L1D-141)', () => {
     await esperarResultado(page);
     await esperarTarjeta(page);
     expect(peticiones).toHaveLength(1);
+    expect(new Set(idsDeAnalisis).size).toBe(1);
+    // Con el campo vacío «Preguntar» queda deshabilitado; con otra pregunta escrita vuelve a estar habilitado.
+    await page.getByLabel(es.conversacion.campo).fill('Otra pregunta');
+    await expect(page.getByRole('button', { name: es.conversacion.preguntar })).toBeEnabled();
   });
 
   test('muestra el estado sin evidencia con su alcance y Relevancia máxima: no aplica para Q-SIN [US-062 AC-2]', async ({

@@ -240,3 +240,7 @@ Desviaciones y decisiones tomadas al implementar; ninguna cambia un AC.
   (promesa) y no con temporizadores falsos: la aserción es la misma (nada del asistente antes de la respuesta completa).
 - **Fuera de este change** (deuda anotada en tasks.md 3.5b): los E2E heredados del formulario y las claves de `es.json` que
   quedan sin uso.
+- **Aviso de IA del análisis frente a `turn.notices[]`.** `AnalysisResult` sigue pintando el `disclaimer` del propio
+  `EvidenceAnalysis` además de los `notices[]` del turno. Decisión: el aviso vinculante (RN-19) es `turn.notices[]`; el del
+  análisis es redundante, viene del mismo backend y no es una segunda fuente de texto de la UI ni de su configuración. No se
+  cambia el código.

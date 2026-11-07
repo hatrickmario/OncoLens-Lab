@@ -36,7 +36,7 @@ test.describe('Panel conversacional (L1D-324)', () => {
     await expect(tarjetas.nth(1)).toContainText(conversacion.intenciones.faltantes);
     await expect(tarjetas.nth(2)).toContainText(conversacion.intenciones.evidencia);
     await expect(tarjetas.nth(0).getByRole('link', { name: /Ver en el caso/ }).first()).toBeVisible();
-    await expect(tarjetas.nth(2).getByText(/\[E1\]/).first()).toBeVisible();
+    await expect(tarjetas.nth(2)).toContainText('[E1]');
     expect(new Set(turnos.map((r) => new URL(r.url()).pathname)).size).toBe(1);
   });
 

@@ -37,13 +37,15 @@ describe('catálogo importado por las preguntas guiadas [US-267 AC-8]', () => {
     }
   });
 
-  it('importa solo archivos cuya versión no supera la del manifest', () => {
+  it('importa solo archivos cuya versión no supera la del manifest y plantillas con la del manifest', () => {
     expect(importados.length).toBeGreaterThanOrEqual(8);
     for (const ruta of importados) {
       const { version } = JSON.parse(leer(ruta)) as { version?: string };
       // `codigos.json` no declara versión propia: la gobierna el manifest.
       if (version === undefined) continue;
       expect(menorOIgual(version, VERSION_DEL_CATALOGO_GUIADAS), `${ruta} ${version}`).toBe(true);
+      // Las plantillas son el contenido nuevo del manifest: su versión es la del manifest.
+      if (ruta.endsWith('/plantillas.json')) expect(version).toBe(VERSION_DEL_CATALOGO_GUIADAS);
     }
   });
 
