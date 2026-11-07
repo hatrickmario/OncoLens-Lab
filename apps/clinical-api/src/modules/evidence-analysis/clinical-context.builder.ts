@@ -74,6 +74,39 @@ export function asignarDataRefs(): {
 
 type Asignador = ReturnType<typeof asignarDataRefs>;
 
+/** El vínculo de conflicto solo viaja en el enlace cuando existe (los demás enlaces no cambian de forma). */
+function conVinculoDeConflicto(fila: ProcedenciaDeFila): Pick<EnlaceDeDato, 'conflictsWithId'> {
+  return fila.conflictsWithId === null ? {} : { conflictsWithId: fila.conflictsWithId };
+}
+
+function enlaceDeDiagnostico(fila: FilaDeDiagnostico): EnlaceDeDato {
+  return {
+    tabla: 'diagnosis',
+    id: fila.id,
+    fecha: fila.diagnosedAt,
+    ...conVinculoDeConflicto(fila),
+  };
+}
+
+/**
+ * Diagnósticos vigentes en conflicto con el activo (L1D-319): no entran al `ClinicalContext` (un solo diagnóstico), pero
+ * el chat debe mostrar AMBOS valores. Cada uno sale como contexto de un solo diagnóstico, para pasar por el mismo
+ * desidentificador, y con su enlace al registro.
+ */
+export function contextosDeContrapartes(
+  caso: CasoClinico,
+  ahora: Date,
+): { contexto: ContextoPermitido; enlace: EnlaceDeDato }[] {
+  return caso.diagnosticosEnConflicto.map((fila) => {
+    const asignador = asignarDataRefs();
+    const diagnosis = diagnosticoPermitido(fila, ahora, asignador);
+    return {
+      contexto: { ...construirContextoSinDatosClinicos(caso.paciente.population), diagnosis },
+      enlace: enlaceDeDiagnostico(fila),
+    };
+  });
+}
+
 function diagnosticoPermitido(
   fila: FilaDeDiagnostico | null,
   ahora: Date,
@@ -81,7 +114,7 @@ function diagnosticoPermitido(
 ): ContextoPermitido['diagnosis'] {
   if (fila === null) return null;
   return {
-    dataRef: asignador.asignar({ tabla: 'diagnosis', id: fila.id, fecha: fila.diagnosedAt }),
+    dataRef: asignador.asignar(enlaceDeDiagnostico(fila)),
     cancerType: fila.cancerType,
     histology: fila.histology,
     grade: fila.grade,
@@ -120,7 +153,12 @@ function biomarcadorPermitido(
   asignador: Asignador,
 ): ContextoPermitido['biomarkers'][number] {
   return {
-    dataRef: asignador.asignar({ tabla: 'biomarker', id: fila.id, fecha: fila.performedAt }),
+    dataRef: asignador.asignar({
+      tabla: 'biomarker',
+      id: fila.id,
+      fecha: fila.performedAt,
+      ...conVinculoDeConflicto(fila),
+    }),
     biomarkerName: fila.name,
     value: fila.value,
     resultType: fila.resultType,

@@ -1,0 +1,31 @@
+{
+  "intent": "caso",
+  "blocks": [
+    {
+      "kind": "conflicto",
+      "text": "Por conciliar: Carcinoma ductal infiltrante, Nottingham grado 2, estadio IIA (TNM_8), al momento del diagnóstico. Frente a: Carcinoma ductal infiltrante, estadio IIB (TNM_8), 10 días después del diagnóstico, requiere revisión.",
+      "factRefs": [
+        "f1",
+        "f6"
+      ]
+    }
+  ],
+  "omittedClaims": 0,
+  "structuredState": {
+    "intentsVistos": [
+      "caso"
+    ],
+    "preguntasPrevias": [
+      "¿Hay contradicciones en el expediente?"
+    ],
+    "opcionesMostradas": [],
+    "citasMostradas": [],
+    "faltantesSenalados": []
+  },
+  "llmProvider": "local",
+  "notices": [
+    "Generado por IA; requiere validación clínica independiente por el oncólogo tratante",
+    "Uso académico/investigación",
+    "Verifique contra las fuentes"
+  ]
+}

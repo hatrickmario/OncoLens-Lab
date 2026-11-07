@@ -6,6 +6,11 @@ import type {
 import { estaAusente, unirLoPresente } from '../analysis-basis.verbalizacion.js';
 import { NO_DISPONIBLE } from '../clinical-context.builder.js';
 import type { EnlaceDeDato, MapaDeDataRefs } from '../ports.js';
+import {
+  conMarcaDeCorreccion,
+  contrapartesDeConflicto,
+  type DatoParaConflicto,
+} from './conflictos.js';
 
 /** Qué dato del paciente respalda un `factRef`: solo vive en Backend 1 durante el turno (nunca viaja a Backend 2). */
 export type EnlaceDelHecho = Omit<ConversationDataLink, 'factRef'>;
@@ -137,24 +142,22 @@ const TIPO_DE_RECURSO: Readonly<
 export function construirHechosDelCaso(
   contexto: ClinicalContext,
   dataRefs: MapaDeDataRefs,
+  contrapartes: readonly ContraparteDeConflicto[] = [],
 ): HechosDelCaso {
   const caseFacts: HechoDelCaso[] = [];
   const enlaces = new Map<string, EnlaceDelHecho>();
+  const datosParaConflicto: DatoParaConflicto[] = [];
   const fechaDelDiagnostico =
     contexto.diagnosis === null ? null : (dataRefs.get(contexto.diagnosis.dataRef)?.fecha ?? null);
-  for (const candidato of candidatosDelContexto(contexto)) {
-    const dato = dataRefs.get(candidato.dataRef);
+  for (const { candidato, dato } of entradasDelTurno(contexto, dataRefs, contrapartes)) {
     if (dato === undefined) continue;
     const factRef = `f${caseFacts.length + 1}`;
     const relativeDay = diasEntre(fechaDelDiagnostico, dato.fecha);
-    caseFacts.push({
+    caseFacts.push(hechoDelCandidato(factRef, candidato, relativeDay));
+    datosParaConflicto.push({
       factRef,
-      kind: candidato.kind,
-      verbalization: candidato.verbalization,
-      relativeDay,
-      reviewStatus: candidato.provenance.reviewStatus,
-      ...(candidato.seriesKey !== undefined && { seriesKey: candidato.seriesKey }),
-      ...(esCorreccion(candidato.provenance) && { corrected: true }),
+      id: dato.id,
+      conflictsWithId: dato.conflictsWithId ?? null,
     });
     enlaces.set(factRef, {
       resourceType: TIPO_DE_RECURSO[dato.tabla],
@@ -164,5 +167,61 @@ export function construirHechosDelCaso(
       recordedDate: dato.fecha,
     });
   }
-  return { caseFacts, enlaces };
+  return { caseFacts: conContrapartes(caseFacts, datosParaConflicto), enlaces };
+}
+
+/** Candidatos del contexto y, al final, las contrapartes de un conflicto: no renumeran los `factRef` del resto. */
+function entradasDelTurno(
+  contexto: ClinicalContext,
+  dataRefs: MapaDeDataRefs,
+  contrapartes: readonly ContraparteDeConflicto[],
+): { candidato: Candidato; dato: EnlaceDeDato | undefined }[] {
+  return [
+    ...candidatosDelContexto(contexto).map((candidato) => ({
+      candidato,
+      dato: dataRefs.get(candidato.dataRef),
+    })),
+    ...contrapartes.map(({ diagnostico, enlace }) => ({
+      candidato: candidatoDeDiagnostico(diagnostico),
+      dato: enlace,
+    })),
+  ];
+}
+
+/** El `CaseFact` de un candidato; un dato corregido lo dice en su verbalización (ADR-50). */
+function hechoDelCandidato(
+  factRef: string,
+  candidato: Candidato,
+  relativeDay: number | null,
+): HechoDelCaso {
+  const corregido = esCorreccion(candidato.provenance);
+  return {
+    factRef,
+    kind: candidato.kind,
+    verbalization: corregido
+      ? conMarcaDeCorreccion(candidato.verbalization)
+      : candidato.verbalization,
+    relativeDay,
+    reviewStatus: candidato.provenance.reviewStatus,
+    ...(candidato.seriesKey !== undefined && { seriesKey: candidato.seriesKey }),
+    ...(corregido && { corrected: true }),
+  };
+}
+
+/** Un diagnóstico en conflicto con el activo, ya desidentificado, con el enlace a su registro (solo vive en Backend 1). */
+export interface ContraparteDeConflicto {
+  diagnostico: NonNullable<ClinicalContext['diagnosis']>;
+  enlace: EnlaceDeDato;
+}
+
+/** Añade `conflictWith` (el `factRef` de la contraparte) a los dos hechos de cada par en conflicto (RN-08). */
+function conContrapartes(
+  caseFacts: HechoDelCaso[],
+  datos: readonly DatoParaConflicto[],
+): HechoDelCaso[] {
+  const pares = contrapartesDeConflicto(datos);
+  return caseFacts.map((hecho) => {
+    const contraparte = pares.get(hecho.factRef);
+    return contraparte === undefined ? hecho : { ...hecho, conflictWith: contraparte };
+  });
 }

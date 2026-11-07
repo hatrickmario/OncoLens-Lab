@@ -10,9 +10,9 @@ resuelto a un `ConversationDataLink`. Backend 2 MUST componer el bloque con una 
 un valor (RN-08).
 
 #### Scenario: Estadios IIA y IIB en conflicto
-- **GIVEN** el paciente sintético `P-CHAT` (FX-12-b) con `stage_value = IIA` (día −200) y `stage_value = IIB` (día −190) `requiere_revision` con `conflicts_with_id` al primero, y `doc1@test.local` con rol `doctor`
+- **GIVEN** el paciente sintético `P-CHAT` (FX-12-b) con `stage_value = IIA` (día relativo 0) y `stage_value = IIB` (día relativo +10) `requiere_revision` con `conflicts_with_id` al primero, y `doc1@test.local` con rol `doctor`
 - **WHEN** pregunta «¿Hay contradicciones en el expediente?»
-- **THEN** la respuesta tiene un bloque `kind = "conflicto"` cuyo texto contiene «Por conciliar», los valores IIA e IIB y los días relativos −200 y −190
+- **THEN** la respuesta tiene un bloque `kind = "conflicto"` cuyo texto contiene «Por conciliar», los valores IIA e IIB y sus momentos relativos («al momento del diagnóstico» y «10 días después del diagnóstico»)
 - **AND** el bloque tiene los `factRefs` de los dos registros de estadio y cada uno tiene su `ConversationDataLink` en `dataLinks`
 - **AND** el LLM falso de generación no registra llamadas para componer el bloque [US-262 AC-1] [RN-08] [S6-prompt §2.A]
 
@@ -42,13 +42,18 @@ del registro vigente, de los que la UI deriva la ruta del histórico. La respues
 
 ### Requirement: Sin contradicciones el chat lo dice sin invocar al LLM
 Si la pregunta es de contradicciones y ningún hecho de `caseFacts` está marcado en conflicto, el turno SHALL responder el
-texto de configuración «No hay contradicciones registradas en el expediente» y MUST NOT invocar al LLM de generación.
+texto de configuración «No hay contradicciones registradas en el expediente», seguido de su alcance «Se revisaron los diagnósticos y biomarcadores del expediente», y MUST NOT invocar al LLM de generación.
 
 #### Scenario: Paciente sin conflictos
 - **GIVEN** el paciente semilla (a) (FX-12-a), sin registros en conflicto, y el LLM falso que cuenta invocaciones
 - **WHEN** pregunta «¿Hay contradicciones?»
-- **THEN** la respuesta es «No hay contradicciones registradas en el expediente»
+- **THEN** la respuesta empieza por «No hay contradicciones registradas en el expediente» y añade «Se revisaron los diagnósticos y biomarcadores del expediente»
 - **AND** el LLM falso de generación registra cero llamadas [US-262 AC-4] [RN-08]
+
+#### Scenario: Marca de conflicto sin contraparte
+- **GIVEN** un hecho marcado en conflicto cuya contraparte no está entre los hechos del turno
+- **WHEN** el oncólogo pregunta por contradicciones
+- **THEN** el turno no responde «No hay contradicciones»: declara que hay datos marcados en conflicto cuya contraparte no está entre los datos consultados [RN-08]
 
 ### Requirement: Un turno del chat nunca modifica el expediente
 El turno de chat SHALL ser de solo lectura sobre los datos clínicos: MUST NOT cambiar `review_status`,
