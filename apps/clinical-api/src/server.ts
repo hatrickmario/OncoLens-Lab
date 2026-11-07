@@ -25,6 +25,7 @@ import { componerModuloDeTratamientos } from './modules/prior-treatments/prior-t
 import { componerModuloDeCorrecciones } from './modules/corrections/corrections.module.js';
 import { componerModuloDeRegistroManual } from './modules/manual-entry/manual-entry.module.js';
 import { componerModuloDeDocumentos } from './modules/documents/documents.module.js';
+import { componerModuloDeOptOuts } from './modules/opt-outs/opt-outs.module.js';
 import { componerModuloDePacientes } from './modules/patients/patients.module.js';
 import { crearServicioDeIdentidad } from './modules/patients/identity.module.js';
 import { crearContextDeidentifier } from './modules/evidence-analysis/deidentification/context-deidentifier.js';
@@ -90,8 +91,10 @@ arrancar({
           baseUrl: configuracion.analisis.ragOrchestratorUrl,
           signer,
         });
+        const optOuts = componerModuloDeOptOuts({ db: pool, registrar });
         const gateway = componerGatewayDeAnalisis({
           db: pool,
+          optOuts,
           rag: crearRagQueryClient(clienteRag),
           ragFollowUp: crearRagFollowUpClient(clienteRag),
           ragChat: crearRagChatClient(clienteRag),
@@ -149,6 +152,7 @@ arrancar({
         });
         const patients = componerModuloDePacientes({
           db: pool,
+          optOuts: optOuts.optOuts,
           identidad,
           tiposHabilitados: servicios.tiposHabilitados,
           completitud,

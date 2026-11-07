@@ -1,3 +1,4 @@
+import { componerModuloDeOptOuts } from '../../src/modules/opt-outs/opt-outs.module.js';
 import { createHash } from 'node:crypto';
 import { delay, http, HttpResponse } from 'msw';
 import type { Client, Pool } from 'pg';
@@ -233,6 +234,8 @@ export interface RagSimulado {
   llamadas(): number;
   /** Cambia lo que responde `/rag/query` hasta el próximo `reiniciar()`. */
   responder(escenario: EscenarioDeRag): void;
+  /** Ejecuta `accion` cuando `/rag/query` recibe la petición y antes de responder (algo ocurre «durante» el análisis). */
+  alRecibirConsulta(accion: () => Promise<void>): void;
   reiniciar(): void;
   iniciar(): void;
   detener(): void;
@@ -244,6 +247,7 @@ export function ragSimulado(): RagSimulado {
   const capturadasDeSeguimiento: CapturaDeRag[] = [];
   let escenario: EscenarioDeRag = ESCENARIO_POR_DEFECTO;
   let escenarioDeSeguimiento: EscenarioDeRag = SEGUIMIENTO_POR_DEFECTO;
+  let accionAlRecibir: (() => Promise<void>) | undefined;
   const capturadasDeChat: CapturaDeRag[] = [];
   let secuenciaDeChat: EscenarioDeRag[] = [CHAT_POR_DEFECTO];
   const servidor = servidorMswConLoopback(
@@ -290,6 +294,7 @@ export function ragSimulado(): RagSimulado {
         texto,
         cuerpo: JSON.parse(texto) as Record<string, unknown>,
       });
+      await accionAlRecibir?.();
       if (escenario.tipo === 'red') return HttpResponse.error();
       if (escenario.tipo === 'tardia') {
         await delay(RESPUESTA_TARDIA_MS);
@@ -321,7 +326,11 @@ export function ragSimulado(): RagSimulado {
     responder: (nuevo) => {
       escenario = nuevo;
     },
+    alRecibirConsulta: (accion) => {
+      accionAlRecibir = accion;
+    },
     reiniciar: () => {
+      accionAlRecibir = undefined;
       capturadas.length = 0;
       capturadasDeSeguimiento.length = 0;
       capturadasDeChat.length = 0;
@@ -430,6 +439,7 @@ export async function montarGateway(
   });
   const ruta = componerGatewayDeAnalisis({
     db: mundo.cliente,
+    optOuts: componerModuloDeOptOuts({ db: mundo.cliente, registrar: logger.registrar }),
     rag,
     ragFollowUp: crearRagFollowUpClient(clienteRag),
     ragChat: crearRagChatClient(clienteRag),
@@ -515,14 +525,24 @@ export async function abrirSesion(
   return `oncolens_session=${token}`;
 }
 
+/** Un paciente real sin convenio no admite IA (RN-15, US-148): por defecto los reales de test lo llevan; el sintético no. */
+function convenioPorDefecto(
+  dataOrigin: 'sintetico' | 'real_anonimizado' | 'real_identificado',
+): string | null {
+  return dataOrigin === 'sintetico' ? null : PII_FX_T4A_A.convenio;
+}
+
 /** Paciente sintético extra (la tabla del seed no se toca): con o sin diagnóstico activo y con el origen indicado. */
 export async function crearPacienteSintetico(
   mundo: MundoDeGateway,
   opciones: {
     dataOrigin?: 'sintetico' | 'real_anonimizado' | 'real_identificado';
     conDiagnostico: boolean;
+    /** `agreement_reference`: explícito, o `null`/convenio de test según el origen (ver `convenioPorDefecto`). */
+    convenio?: string | null;
   },
 ): Promise<string> {
+  const dataOrigin = opciones.dataOrigin ?? 'sintetico';
   const { cliente, ids } = mundo;
   const { rows } = await cliente.query<{ id: string }>(
     `SELECT id FROM auth."user" WHERE email = 'doc1@test.local'`,
@@ -531,7 +551,11 @@ export async function crearPacienteSintetico(
   const paciente = await insertar(
     cliente,
     'clinical.patient',
-    filaDePaciente(ids, { data_origin: opciones.dataOrigin ?? 'sintetico' }),
+    filaDePaciente(ids, {
+      data_origin: dataOrigin,
+      agreement_reference:
+        opciones.convenio === undefined ? convenioPorDefecto(dataOrigin) : opciones.convenio,
+    }),
   );
   const episodio = await insertar(
     cliente,

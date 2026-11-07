@@ -4,6 +4,10 @@ import { rechazarNoEncontrado } from '../../../infrastructure/http-errores.js';
 import type { Registrar } from '../../../infrastructure/logger.js';
 import { authorize } from '../../../middleware/authorize.js';
 import { crearTraceIdMiddleware, traceIdDe } from '../../../middleware/trace-id.middleware.js';
+import {
+  registrarRutaGeneraIA,
+  type FabricaDeGuardiaDeOptOut,
+} from '../../opt-outs/rutas-genera-ia.js';
 import { FalloDePersistenciaError } from '../analysis-completion.js';
 import { ChecklistNoDisponibleError, type TraceIdGenerator } from '../ports.js';
 import {
@@ -26,6 +30,8 @@ export interface DependenciasDelControllerDeConversacion {
   service: ConversationService;
   traceIds: TraceIdGenerator;
   registrar: Registrar;
+  /** Guardia de opt-out de `analisis_ia` de las rutas `generaIA` (RN-15, US-148). */
+  fabricaDeGuardia: FabricaDeGuardiaDeOptOut;
 }
 
 const EVENTO = 'conversation.solicitud';
@@ -173,7 +179,7 @@ export function conversationController(
   dependencias: DependenciasDelControllerDeConversacion,
   router: Router = Router(),
 ): Router {
-  const { service, traceIds, registrar } = dependencias;
+  const { service, traceIds, registrar, fabricaDeGuardia } = dependencias;
   const emisor = crearEmisorDeConversacion(registrar);
   router.post(
     '/patients/:patientId/conversations',
@@ -187,11 +193,15 @@ export function conversationController(
     authorize('clinical:read'), // x-permission de getConversation
     manejadorDeLectura(service, emisor),
   );
-  router.post(
-    '/conversations/:conversationId/turns',
-    crearTraceIdMiddleware(traceIds),
-    authorize('clinical:read'), // x-permission de createConversationTurn
-    express.json(),
+  registrarRutaGeneraIA(
+    router,
+    'createConversationTurn',
+    fabricaDeGuardia,
+    [
+      crearTraceIdMiddleware(traceIds),
+      authorize('clinical:read'), // x-permission de createConversationTurn
+      express.json(),
+    ],
     manejadorDeTurno(service, emisor),
     manejadorDeCuerpoIlegible(emisor),
   );

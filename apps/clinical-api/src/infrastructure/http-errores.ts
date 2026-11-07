@@ -17,6 +17,7 @@ export type CodigoDeError =
   | 'CUERPO_INVALIDO'
   | 'NO_AUTENTICADO'
   | 'PERMISO_DENEGADO'
+  | 'OPT_OUT_ANALISIS_IA'
   | 'NO_ENCONTRADO'
   | 'ARCHIVO_NO_PDF'
   | 'ARCHIVO_DEMASIADO_GRANDE'
@@ -42,6 +43,7 @@ const MENSAJES: Record<CodigoDeError, string> = {
   CUERPO_INVALIDO: 'El cuerpo de la petición no cumple el contrato.',
   NO_AUTENTICADO: 'La sesión no existe o expiró.',
   PERMISO_DENEGADO: 'El rol de la sesión no tiene permiso para esta acción.',
+  OPT_OUT_ANALISIS_IA: 'La generación con IA no está disponible para este paciente.',
   NO_ENCONTRADO: 'No existe el recurso solicitado.',
   ARCHIVO_NO_PDF: 'El archivo no es un PDF.',
   ARCHIVO_DEMASIADO_GRANDE: 'El archivo supera el tamaño máximo permitido.',

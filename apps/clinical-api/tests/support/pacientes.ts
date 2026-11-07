@@ -1,6 +1,7 @@
 import type { Express, Router } from 'express';
 import { PACIENTES_SEMILLA } from '../../prisma/seed/pacientes/indice.js';
 import type { IdentityService } from '../../src/modules/patients/identity.service.js';
+import { componerModuloDeOptOuts } from '../../src/modules/opt-outs/opt-outs.module.js';
 import { componerModuloDePacientes } from '../../src/modules/patients/patients.module.js';
 import { crearTiposHabilitados } from '../../src/modules/evidence-analysis/tipos-habilitados.js';
 import type { Consultador } from '../../src/modules/auth/auth.repository.js';
@@ -58,6 +59,10 @@ export function montarPacientes(
   const habilitados = opciones.habilitados ?? ['mama', 'prostata'];
   const router = componerModuloDePacientes({
     db: opciones.db ?? mundo.cliente,
+    optOuts: componerModuloDeOptOuts({
+      db: opciones.db ?? mundo.cliente,
+      registrar: logger.registrar,
+    }).optOuts,
     identidad: opciones.identidad ?? servicioDeIdentidad(mundo.cliente),
     tiposHabilitados: crearTiposHabilitados(habilitados, ['mama', 'prostata']),
     completitud:
