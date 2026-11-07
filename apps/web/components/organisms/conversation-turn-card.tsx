@@ -32,6 +32,7 @@ export const ConversationTurnCard = memo(function ConversationTurnCard({
 }: ConversationTurnCardProps) {
   const { turno: titulo, sinAvisosTitulo } = mensajes().conversacion;
   const [expandido, setExpandido] = useState(false);
+  const fuentes = fuentesDelTurno(turn);
   return (
     // Grupo y no `article`: las tarjetas de opción del análisis ya son `article` y se anidan en la del turno.
     <div
@@ -46,13 +47,18 @@ export const ConversationTurnCard = memo(function ConversationTurnCard({
         </p>
       ) : (
         <ExpansionDelTurno.Provider value={expandido}>
-          <ConversationTurnBody turno={turn} patientId={patientId} onAbrirPanel={onAbrirPanel} />
+          <ConversationTurnBody
+            turno={turn}
+            fuentes={fuentes}
+            patientId={patientId}
+            onAbrirPanel={onAbrirPanel}
+          />
           <ConversationDataLine usados={turn.dataUsed ?? []} ausentes={turn.dataMissing ?? []} />
           <AccionesDelTurno
             expandido={expandido}
             onAlternar={() => setExpandido(!expandido)}
             afirmacionesOmitidas={turn.omittedClaims}
-            fuentes={fuentesDelTurno(turn)}
+            fuentes={fuentes}
           />
           <ConversationNotices avisos={turn.notices} />
         </ExpansionDelTurno.Provider>

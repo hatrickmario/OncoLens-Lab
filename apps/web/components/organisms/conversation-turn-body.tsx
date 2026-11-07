@@ -8,7 +8,6 @@ import {
   fragmentoDeCitaDelChat,
   fragmentoDeFuente,
 } from '../../lib/conversacion/fragmento-abierto';
-import { fuentesDelTurno } from '../../lib/conversacion/fuentes-del-turno';
 import { numerarCitas } from '../../lib/conversacion/numerar-citas';
 import type { AlAbrirPanel } from '../../lib/conversacion/panel-lateral';
 import { mensajes } from '../../lib/mensajes';
@@ -19,6 +18,8 @@ import { AnalysisResult } from './analysis-result';
 
 export interface ConversationTurnBodyProps {
   turno: ConversationTurn;
+  /** `fuentesDelTurno(turno)`, calculadas una vez por la tarjeta. */
+  fuentes: readonly CitedSource[];
   patientId: string;
   onAbrirPanel: AlAbrirPanel;
 }
@@ -30,11 +31,11 @@ export interface ConversationTurnBodyProps {
  */
 export function ConversationTurnBody({
   turno,
+  fuentes,
   patientId,
   onAbrirPanel,
 }: ConversationTurnBodyProps) {
   const citas = numerarCitas(turno.blocks);
-  const fuentes = fuentesDelTurno(turno);
   const verCita = (cita: ChatCitation, id: string) =>
     onAbrirPanel({ tipo: 'cita', fragmento: fragmentoDeCitaDelChat(cita, fuentes) }, id);
   if (turno.evidenceAnalysis) {

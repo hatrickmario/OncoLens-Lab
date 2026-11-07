@@ -179,11 +179,6 @@
     "detalle": {
       "resumen": "Ver más detalle"
     },
-    "fragmento": {
-      "titulo": "Fragmento citado",
-      "ayuda": "Abre «Ver fragmento» en una cita para leer el texto original recuperado en esta consulta",
-      "volver": "Volver a la cita"
-    },
     "discarded": {
       "titulo": "Descartadas en la verificación — solo para revisión",
       "linea": "No son opciones descritas: se muestran solo para revisión.",
@@ -744,7 +739,7 @@
       "cargando": "Cargando el dato…",
       "errorDato": "No se pudo cargar el dato",
       "abrirCasoCompleto": "Abrir la vista de caso completa (abre en nueva pestaña)",
-      "enLaRespuesta": "En la respuesta",
+      "enLaRespuesta": "En la respuesta (generada por IA; ver los avisos del turno)",
       "origen": "Origen",
       "fragmentoDe": "Fragmento {n} de {total}",
       "sinMetadatos": "Metadatos de la fuente: No disponible"
