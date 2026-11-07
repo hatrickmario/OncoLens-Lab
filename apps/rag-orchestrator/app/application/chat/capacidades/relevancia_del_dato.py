@@ -109,18 +109,8 @@ class NodoRelevancia:
             estado["pregunta"], self._datos.datos_criticos(tipo), self._datos.sinonimos(tipo)
         )
         if dato is None:
-            logger.info("event=chat_relevancia traceId=%s dato=ninguno", trace_id)
-            fuera = BloqueDelTurno(TipoDeBloque.limitacion, self._textos.fuera_del_catalogo)
-            return {"propuestas": (), "bloques_del_nodo": (fuera,), "omitidas_del_nodo": 0}
-        catalogo = BloqueDelTurno(
-            TipoDeBloque.catalogo,
-            texto_del_bloque_de_catalogo(
-                dato,
-                criterios_que_usan(dato, self._datos.criterios(tipo)),
-                estado["version_del_catalogo"],
-                self._textos.catalogo,
-            ),
-        )
+            return self._respuesta_de_dato_fuera_del_catalogo(trace_id)
+        catalogo = self._bloque_de_catalogo(dato, tipo, estado["version_del_catalogo"])
         recuperacion = await self._servicio.recuperar(
             _consulta_de(dato, tipo),
             con_reescritura=True,
@@ -146,6 +136,18 @@ class NodoRelevancia:
                 top_relevance_score(recuperacion.chunks_sobre_umbral),
             ),
         }
+
+    def _respuesta_de_dato_fuera_del_catalogo(self, trace_id: str) -> dict[str, Any]:
+        """AC-5: la pregunta no nombra un dato de ``datos-criticos``; sin bloque ``catalogo``, sin recuperar ni generar."""
+        logger.info("event=chat_relevancia traceId=%s dato=ninguno", trace_id)
+        fuera = BloqueDelTurno(TipoDeBloque.limitacion, self._textos.fuera_del_catalogo)
+        return {"propuestas": (), "bloques_del_nodo": (fuera,), "omitidas_del_nodo": 0}
+
+    def _bloque_de_catalogo(self, dato: DatoCritico, tipo: str, version: str) -> BloqueDelTurno:
+        """Lo que el catálogo vigente dice del dato: determinista, exento de cita (glosario S6 §3)."""
+        criterios = criterios_que_usan(dato, self._datos.criterios(tipo))
+        texto = texto_del_bloque_de_catalogo(dato, criterios, version, self._textos.catalogo)
+        return BloqueDelTurno(TipoDeBloque.catalogo, texto)
 
     async def _explicar(
         self, trace_id: str, dato: DatoCritico, tipo: str, recuperacion: ResultadoDeRecuperacion

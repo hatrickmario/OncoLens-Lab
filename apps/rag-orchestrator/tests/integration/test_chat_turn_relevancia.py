@@ -67,14 +67,18 @@ def test_chat_turn_relevancia_devuelve_el_criterio_del_catalogo_y_la_cita_del_tu
 def test_chat_turn_relevancia_dice_con_el_texto_fijo_que_ningun_criterio_usa_el_dato_cuando_se_pregunta_por_el_ki_67():
     entorno = entorno_de_relevancia("CHAT-RELEVANCIA-KI67")
 
-    respuesta = entorno.turno(solicitud_desde_ejemplo("chat-turn-request-relevancia-sin-criterio.json"))
+    respuesta = entorno.turno(
+        solicitud_desde_ejemplo("chat-turn-request-relevancia-sin-criterio.json")
+    )
 
     assert respuesta.status_code == 200
     cuerpo = respuesta.json()
     assert _tipos(cuerpo) == ["catalogo", "evidencia"]
     assert TEXTOS.chat_relevancia_sin_criterio_texto in cuerpo["blocks"][0]["text"]
     assert "citations" not in cuerpo["blocks"][0]
-    assert all(c["chunkId"] in entorno.chunks_recuperados() for c in cuerpo["blocks"][1]["citations"])
+    assert all(
+        c["chunkId"] in entorno.chunks_recuperados() for c in cuerpo["blocks"][1]["citations"]
+    )
     assert cuerpo == _ejemplo("chat-turn-relevancia-sin-criterio.json")
 
 
@@ -82,7 +86,9 @@ def test_chat_turn_relevancia_dice_con_el_texto_fijo_que_ningun_criterio_usa_el_
 def test_chat_turn_relevancia_omite_la_afirmacion_y_dice_que_la_evidencia_no_explica_cuando_el_nli_es_neutral():
     entorno = entorno_de_relevancia("CHAT-RELEVANCIA-OK", nli=NliFalso(por_defecto=NEUTRAL))
 
-    respuesta = entorno.turno(solicitud_desde_ejemplo("chat-turn-request-relevancia-sin-soporte.json"))
+    respuesta = entorno.turno(
+        solicitud_desde_ejemplo("chat-turn-request-relevancia-sin-soporte.json")
+    )
 
     assert respuesta.status_code == 200
     cuerpo = respuesta.json()
@@ -102,7 +108,9 @@ def test_chat_turn_relevancia_responde_solo_el_catalogo_y_el_aviso_sin_llamar_al
         parametros=parametros_de_reescritura(),
     )
 
-    respuesta = entorno.turno(solicitud_desde_ejemplo("chat-turn-request-relevancia-sin-evidencia.json"))
+    respuesta = entorno.turno(
+        solicitud_desde_ejemplo("chat-turn-request-relevancia-sin-evidencia.json")
+    )
 
     assert respuesta.status_code == 200
     cuerpo = respuesta.json()
@@ -119,7 +127,9 @@ def test_chat_turn_relevancia_omite_la_afirmacion_prescriptiva_aunque_tenga_cita
     nli = NliFalso(por_defecto=IMPLICA)
     entorno = entorno_de_relevancia("CHAT-RELEVANCIA-PRESCRIPTIVO", nli=nli)
 
-    respuesta = entorno.turno(solicitud_desde_ejemplo("chat-turn-request-relevancia-sin-criterio.json"))
+    respuesta = entorno.turno(
+        solicitud_desde_ejemplo("chat-turn-request-relevancia-sin-criterio.json")
+    )
 
     assert respuesta.status_code == 200
     cuerpo = respuesta.json()
@@ -132,7 +142,9 @@ def test_chat_turn_relevancia_omite_la_afirmacion_prescriptiva_aunque_tenga_cita
 def test_chat_turn_relevancia_dice_que_no_es_un_dato_critico_sin_bloque_catalogo_ni_llm_cuando_se_pregunta_por_el_ca_15_3():
     entorno = entorno_de_relevancia("CHAT-RELEVANCIA-OK")
 
-    respuesta = entorno.turno(solicitud_desde_ejemplo("chat-turn-request-relevancia-fuera-de-catalogo.json"))
+    respuesta = entorno.turno(
+        solicitud_desde_ejemplo("chat-turn-request-relevancia-fuera-de-catalogo.json")
+    )
 
     assert respuesta.status_code == 200
     cuerpo = respuesta.json()
@@ -173,7 +185,10 @@ def test_chat_turn_relevancia_no_manda_datos_del_paciente_al_corpus_ni_al_llm_cu
     enviado = entorno.llm.sistemas[-1] + entorno.llm.usuarios[-1]  # type: ignore[operator]
     for dato_del_paciente in ("psd_", "carcinoma", "3+ (IHQ)", "Nottingham"):
         assert dato_del_paciente not in enviado
-    assert "<patient_data>" not in entorno.llm.usuarios[-1] and "<memory" not in entorno.llm.usuarios[-1]
+    assert (
+        "<patient_data>" not in entorno.llm.usuarios[-1]
+        and "<memory" not in entorno.llm.usuarios[-1]
+    )
     assert entorno.llm.llamadas_de_clasificacion == 0 and entorno.llm.llamadas_de_generacion == 1
 
 
@@ -211,7 +226,9 @@ def test_chat_turn_relevancia_responde_503_sin_bloques_cuando_el_llm_falla_o_su_
 def test_chat_turn_relevancia_verbaliza_como_faltantes_sin_llm_cuando_no_hay_corpus_detras():
     entorno = crear_entorno_de_chat("CHAT-RELEVANCIA-OK")
 
-    respuesta = entorno.turno(solicitud_desde_ejemplo("chat-turn-request-relevancia-sin-criterio.json"))
+    respuesta = entorno.turno(
+        solicitud_desde_ejemplo("chat-turn-request-relevancia-sin-criterio.json")
+    )
 
     assert respuesta.status_code == 200
     cuerpo = respuesta.json()

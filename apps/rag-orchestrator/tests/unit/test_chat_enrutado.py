@@ -152,7 +152,9 @@ def test_enruta_a_evidencia_cuando_la_pregunta_menciona_el_corpus_sin_marcador_d
         "¿Cuál es la importancia del ECOG?",
     ],
 )
-def test_clasifica_como_faltantes_y_relevancia_cuando_la_pregunta_pide_por_que_importa_un_dato(pregunta):
+def test_clasifica_como_faltantes_y_relevancia_cuando_la_pregunta_pide_por_que_importa_un_dato(
+    pregunta,
+):
     assert clasificar_por_reglas(pregunta, CATALOGO) is Intencion.faltantes
     assert es_pregunta_de_relevancia(pregunta) is True
 
@@ -164,7 +166,9 @@ def test_clasifica_como_faltantes_y_relevancia_cuando_la_pregunta_pide_por_que_i
         ("¿Por qué importan las fuentes del corpus?", Intencion.fuentes_limitaciones),
     ],
 )
-def test_conserva_evidencia_y_fuentes_cuando_la_pregunta_de_por_que_importa_trae_su_palabra_clave(pregunta, intencion):
+def test_conserva_evidencia_y_fuentes_cuando_la_pregunta_de_por_que_importa_trae_su_palabra_clave(
+    pregunta, intencion
+):
     assert clasificar_por_reglas(pregunta, CATALOGO) is intencion
 
 

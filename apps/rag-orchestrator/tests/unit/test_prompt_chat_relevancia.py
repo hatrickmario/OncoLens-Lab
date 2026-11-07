@@ -30,7 +30,13 @@ def _fragmentos():
 
 def _prompt():
     return armar_prompt_de_relevancia_del_chat(
-        "Estado menopáusico", "mama", _fragmentos(), "es", claims_min=1, claims_max=3, claim_max_words=20
+        "Estado menopáusico",
+        "mama",
+        _fragmentos(),
+        "es",
+        claims_min=1,
+        claims_max=3,
+        claim_max_words=20,
     )
 
 

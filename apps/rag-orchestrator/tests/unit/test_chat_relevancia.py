@@ -1,6 +1,5 @@
 """Reglas puras de la relevancia de un dato faltante en el chat (US-264, RN-29, RN-27): sin adapters, sobre el catálogo real."""
 
-
 import pytest
 
 from app.config.settings import Settings
@@ -79,7 +78,9 @@ def test_devuelve_none_cuando_la_pregunta_no_nombra_ningun_dato_del_catalogo(pre
 
 
 def test_no_toma_un_termino_dentro_de_otra_palabra_cuando_busca_por_sigla():
-    assert identificar_dato_critico("¿Por qué importa el reconocimiento?", CRITICOS, SINONIMOS) is None
+    assert (
+        identificar_dato_critico("¿Por qué importa el reconocimiento?", CRITICOS, SINONIMOS) is None
+    )
 
 
 def _dato(clave: str):
@@ -155,4 +156,6 @@ def test_los_textos_fijos_de_configuracion_no_contienen_terminos_prohibidos_ni_l
 
     for texto in textos:
         assert check_prohibited_terms(texto, lista, niveles=("A", "B"), permitir_frases=False) == []
-        assert "{" not in texto and "}" not in texto  # la llave rompe el valor por defecto de Compose
+        assert (
+            "{" not in texto and "}" not in texto
+        )  # la llave rompe el valor por defecto de Compose

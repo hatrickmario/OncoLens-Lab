@@ -7,6 +7,8 @@ Dos reglas, ambas sobre la pregunta ya enmascarada y en NFC:
 - ``clasificar_por_reglas()`` clasifica en ``caso``, ``faltantes``, ``evidencia`` o ``fuentes_limitaciones`` por patrones
   léxicos del español, en un orden fijo (de lo más específico a lo más general). Los patrones viven aquí y en ningún otro
   módulo. Una pregunta prescriptiva va a ``evidencia``: nunca es ``fuera_de_alcance`` (glosario S6 §3).
+- ``es_pregunta_de_relevancia()`` reconoce «¿por qué importa…?» (US-264): va a ``faltantes`` y su nodo la atiende con la
+  subintención de relevancia; pierde ante fuentes y evidencia y gana a ``caso``.
 """
 
 from __future__ import annotations
