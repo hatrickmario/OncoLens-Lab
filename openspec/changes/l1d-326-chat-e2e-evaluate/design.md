@@ -66,6 +66,15 @@ métricas de AC-3…AC-7; rótulo de revisión clínica (AC-8); no fuga verifica
    dato del paciente) en `documentado`, `interpretacion` y `conflicto`, y ≥ 1 cita al corpus en `evidencia`. Los bloques
    `faltante`, `catalogo`, `limitacion` y `fuente` son deterministas y exentos: el E2E no les exige enlace ni cita (si lo
    hiciera, AC03 y AC06 fallarían por diseño).
+10. **Casos con ejemplo del contrato como petición (adapters falsos).** `chat-fake.yaml` usa como petición el ejemplo de
+    `contracts/examples/` que cada caso nombra (`ejemplo.base`) con la pregunta del caso, y el guion del LLM falso (FX-12-e) del
+    propio caso; con modelos locales rigen las peticiones de `clinical-api`. Los hechos esperados se traducen clave del seed →
+    `factRef` (por `clinical-api` o por `ejemplo.hechos`). Un caso con `previo` continúa el hilo del turno anterior (AC06 sigue a
+    AC05). Los controles `CHAT-PRESCRIPTIVO` (FX-12-e, con NLI falso `entailment`) y `CHAT-PRESCRIPTIVO-SIN-MODAL` solo cuentan en
+    RN-23: el primero lo detiene además la forma de afirmación (modal normativo), el segundo solo el filtro de términos prohibidos.
+11. **D6-34 y D6-37 (deuda destinada a este change).** `FakeChatTurn` sirve la variante de próstata y el ejemplo de relevancia del
+    dato que nombra la pregunta (el E2E de próstata lo necesita); `parametros_de_recuperacion` fija `reranker_max_pairs` como el
+    *bootstrap* (RN-22) para que `evaluate` no falle con un corpus de más pares que el tope. Sin cambio de contrato ni de defaults.
 
 ## Privacidad y ownership
 
