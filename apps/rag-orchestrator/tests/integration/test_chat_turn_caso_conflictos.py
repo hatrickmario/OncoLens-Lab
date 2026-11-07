@@ -11,7 +11,7 @@ import json
 import pytest
 
 from tests.support.chat import crear_entorno_de_chat, solicitud_desde_ejemplo
-from tests.support.nli_falso import IMPLICA, NliFalso
+from tests.support.nli_falso import IMPLICA, NEUTRAL, NliFalso
 from tests.support.recuperacion import EJEMPLOS
 
 PETICION_CON_CONFLICTO = "chat-turn-request-caso-conflicto.json"
@@ -62,6 +62,50 @@ def test_chat_turn_caso_omite_el_estadio_correcto_es_iib_y_no_lo_envia_al_nli_cu
     assert [b["kind"] for b in cuerpo["blocks"]] == ["limitacion"]
     assert cuerpo["omittedClaims"] == 1
     assert nli.invocaciones == 0
+
+
+def test_chat_turn_caso_envia_al_nli_la_interpretacion_que_cita_ambos_valores_del_par_cuando_el_llm_la_propone():  # noqa: E501
+    nli = NliFalso(por_defecto=IMPLICA)
+    entorno = crear_entorno_de_chat("CHAT-CONFLICTO-AMBOS", nli=nli)
+    solicitud = solicitud_desde_ejemplo(PETICION_CON_CONFLICTO)
+    solicitud["question"] = Q_ESTADIO_CORRECTO
+
+    cuerpo = entorno.turno(solicitud).json()
+
+    assert [b["kind"] for b in cuerpo["blocks"]] == ["interpretacion"]
+    assert sorted(cuerpo["blocks"][0]["factRefs"]) == ["f1", "f6"]
+    assert cuerpo["omittedClaims"] == 0
+    assert len(nli.pares_recibidos) == 1
+
+
+def test_chat_turn_caso_omite_la_interpretacion_que_cita_ambos_valores_cuando_el_nli_no_la_sostiene():  # noqa: E501
+    entorno = crear_entorno_de_chat("CHAT-CONFLICTO-AMBOS", nli=NliFalso(por_defecto=NEUTRAL))
+    solicitud = solicitud_desde_ejemplo(PETICION_CON_CONFLICTO)
+    solicitud["question"] = Q_ESTADIO_CORRECTO
+
+    cuerpo = entorno.turno(solicitud).json()
+
+    assert [b["kind"] for b in cuerpo["blocks"]] == ["limitacion"]
+    assert cuerpo["omittedClaims"] == 1
+
+
+def test_chat_turn_caso_no_llama_al_nli_ni_al_llm_cuando_se_pregunta_por_contradicciones():
+    nli = NliFalso(por_defecto=IMPLICA)
+    entorno = crear_entorno_de_chat("CHAT-OK", nli=nli)
+
+    entorno.turno(solicitud_desde_ejemplo(PETICION_CON_CONFLICTO))
+
+    assert nli.invocaciones == 0
+
+
+def test_chat_turn_caso_no_pasa_por_el_periodo_cuando_se_pregunta_por_contradicciones_de_un_periodo():
+    entorno = crear_entorno_de_chat("CHAT-OK")
+    solicitud = solicitud_desde_ejemplo(PETICION_CON_CONFLICTO)
+    solicitud["question"] = "¿Hay contradicciones en los últimos 5 días?"
+
+    cuerpo = entorno.turno(solicitud).json()
+
+    assert [b["kind"] for b in cuerpo["blocks"]] == ["conflicto"]
 
 
 @pytest.mark.ac("US-262", 4)

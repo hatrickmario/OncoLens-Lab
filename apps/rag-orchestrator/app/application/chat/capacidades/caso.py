@@ -10,6 +10,10 @@ un hecho del turno (sin invocar el NLI) → resolver cada una según su tipo:
   contra esa descripción. Una salida sin ``kind`` es documentado si su texto es la descripción de sus hechos (atajo por
   identidad) e interpretación si es una paráfrasis.
 
+Una interpretación que cita un valor de un par en conflicto (``CaseFact.conflictWith``) sin su contraparte se omite antes
+del NLI: la IA no resuelve (US-262, AC-T3.2). Una pregunta de contradicciones no llega al LLM: el turno compone los bloques
+``conflicto`` con código (``contradicciones_del_caso``).
+
 Lo que no enlaza, no pasa el chequeo numérico o no pasa el NLI se omite y se suma en ``omitidas_del_nodo``; ``validar`` lo
 cuenta en ``omittedClaims`` (RN-01). Sin NLI configurado o sin LLM local el turno falla cerrado (``LOCAL_LLM_UNAVAILABLE``):
 nunca una afirmación sin verificar y nunca la nube (RN-12). Logs: solo conteos, el periodo en días y ``traceId``, jamás el
@@ -23,6 +27,7 @@ from collections.abc import Sequence
 from dataclasses import replace
 from typing import Any
 
+from app.application.chat.capacidades.contradicciones_del_caso import turno_de_contradicciones
 from app.application.chat.grafo import ConfiguracionDelGrafo, EstadoDelGrafo, pedir_afirmaciones
 from app.application.errores import LlmLocalNoDisponibleError, NliNoDisponibleError
 from app.application.ports import ContadorDeTokens, LlmClient
@@ -31,6 +36,10 @@ from app.application.verificacion_de_soporte import VerificadorDeSoporte
 from app.domain.atribucion import FormaDeAfirmacion, validar_forma_de_afirmacion
 from app.domain.chat.bloques_documentados import bloques_documentados
 from app.domain.chat.chequeo_numerico import cifras_sostenidas_por_la_descripcion
+from app.domain.chat.contradicciones import (
+    afirmaciones_que_resuelven_conflicto,
+    es_pregunta_de_contradicciones,
+)
 from app.domain.chat.descripcion_de_hechos import describir_hechos, es_la_descripcion_de
 from app.domain.chat.enlaces_del_caso import (
     filtrar_afirmaciones_sin_enlace,
@@ -60,6 +69,8 @@ class NodoCaso:
         max_palabras_por_afirmacion: int,
         texto_sin_datos_en_periodo: str,
         texto_sin_fecha: str,
+        etiqueta_de_conflicto: str,
+        texto_sin_contradicciones: str,
     ) -> None:
         self._llm = llm
         self._contador = contador
@@ -68,11 +79,20 @@ class NodoCaso:
         self._max_palabras = max_palabras_por_afirmacion
         self._texto_sin_datos_en_periodo = texto_sin_datos_en_periodo
         self._texto_sin_fecha = texto_sin_fecha
+        self._etiqueta_de_conflicto = etiqueta_de_conflicto
+        self._texto_sin_contradicciones = texto_sin_contradicciones
 
     async def ejecutar(self, estado: EstadoDelGrafo) -> dict[str, Any]:
         trace_id = estado["trace_id"]
-        dias_del_periodo = periodo_de_la_pregunta(estado["pregunta"])
         todos = estado["hechos"]
+        if es_pregunta_de_contradicciones(estado["pregunta"]):
+            return turno_de_contradicciones(
+                todos,
+                etiqueta_de_conflicto=self._etiqueta_de_conflicto,
+                texto_sin_contradicciones=self._texto_sin_contradicciones,
+                trace_id=trace_id,
+            )
+        dias_del_periodo = periodo_de_la_pregunta(estado["pregunta"])
         # Con un periodo en la pregunta, solo los hechos de esos días; sin periodo, todos (US-261 AC-3).
         hechos = (
             todos
@@ -86,8 +106,9 @@ class NodoCaso:
         propuestas = await pedir_afirmaciones(
             self._llm, self._contador, self._configuracion, estado, armar
         )
-        enlazadas = self._clasificadas(
-            self._con_enlace_y_forma_de_afirmacion(propuestas, hechos), hechos
+        enlazadas = self._sin_las_que_resuelven_un_conflicto(
+            self._clasificadas(self._con_enlace_y_forma_de_afirmacion(propuestas, hechos), hechos),
+            todos,
         )
         soportadas = await self._soportadas(enlazadas, hechos, trace_id)
         logger.info(
@@ -155,6 +176,21 @@ class NodoCaso:
             )
             for p in enlazadas
         )
+
+    @staticmethod
+    def _sin_las_que_resuelven_un_conflicto(
+        enlazadas: tuple[PropuestaDelTurno, ...], todos: tuple[HechoDelCaso, ...]
+    ) -> tuple[PropuestaDelTurno, ...]:
+        """Antes del NLI, fuera la interpretación que cita un valor de un par en conflicto sin su contraparte: la IA no
+        resuelve (AC-T3.2). Un ``documentado`` no cuenta: su texto lo escribe el código y ya dice «en conflicto con otro
+        dato». Se mira contra TODOS los hechos del turno: el periodo de la pregunta no deshace un conflicto."""
+        resuelven = {
+            id(p)
+            for p in afirmaciones_que_resuelven_conflicto(
+                [p for p in enlazadas if p.tipo is TipoDeBloque.interpretacion], todos
+            )
+        }
+        return tuple(p for p in enlazadas if id(p) not in resuelven)
 
     async def _soportadas(
         self,

@@ -14,11 +14,17 @@ from tests.support.llm_chat_falso import ESCENARIOS, FakeChatLlm
 
 pytestmark = pytest.mark.anyio
 
-ESCENARIOS_DE_CASO = sorted(n for n in ESCENARIOS if n.startswith("CHAT-CASO-"))
+ESCENARIOS_DE_CASO = sorted(
+    n for n in ESCENARIOS if n.startswith(("CHAT-CASO-", "CHAT-CONFLICTO-"))
+)
 
 
 def test_los_escenarios_de_caso_incluyen_los_tres_de_la_historia():
     assert {"CHAT-CASO-OK", "CHAT-CASO-INVENTA", "CHAT-CASO-SIN-ENLACE"} <= set(ESCENARIOS_DE_CASO)
+
+
+def test_los_escenarios_de_caso_incluyen_los_de_conflicto_de_la_historia_us_262():
+    assert {"CHAT-CONFLICTO-RESUELVE", "CHAT-CONFLICTO-AMBOS"} <= set(ESCENARIOS_DE_CASO)
 
 
 @pytest.mark.parametrize("escenario", ESCENARIOS_DE_CASO)

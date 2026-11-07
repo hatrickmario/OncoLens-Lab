@@ -102,5 +102,18 @@ def test_conserva_faltantes_fuentes_y_evidencia_cuando_la_pregunta_trae_tambien_
     assert clasificar_por_reglas(pregunta, CATALOGO) is intencion
 
 
+@pytest.mark.parametrize(
+    "pregunta",
+    [
+        "¿Hay contradicciones en el expediente?",
+        "¿Hay contradicciones?",
+        "¿Algún dato fue corregido?",
+        "¿Existe alguna discrepancia entre documentos?",
+    ],
+)
+def test_clasifica_como_caso_las_preguntas_de_contradicciones_sin_invocar_al_llm(pregunta):
+    assert clasificar_por_reglas(pregunta) is Intencion.caso
+
+
 def test_no_clasifica_por_el_catalogo_cuando_la_palabra_solo_esta_dentro_de_otra():
     assert clasificar_por_reglas("Necesito ayuda con el psalmo", CATALOGO) is None
