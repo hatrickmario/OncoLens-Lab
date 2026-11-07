@@ -9,6 +9,7 @@ import type {
 import { crearTiposHabilitados } from '../../../src/modules/evidence-analysis/tipos-habilitados.js';
 import { createFichaRepository } from '../../../src/modules/patients/ficha.repository.js';
 import { createPatientsRepository } from '../../../src/modules/patients/patients.repository.js';
+import { componerModuloDeOptOuts } from '../../../src/modules/opt-outs/opt-outs.module.js';
 import { crearPatientsService } from '../../../src/modules/patients/patients.service.js';
 import { servicioDeCompletitud } from '../../support/completitud-http.js';
 import { FX_T4A_A, servicioDeIdentidad } from '../../support/identidad.js';
@@ -251,6 +252,7 @@ describe('forma degradada y avisos (RN-26)', () => {
       tiposHabilitados: crearTiposHabilitados(['mama', 'prostata'], ['mama', 'prostata']),
       completitud: conLote(() => Promise.reject(new Error(ERROR_DE_PG))),
       pageSize: TODOS,
+      optOuts: componerModuloDeOptOuts({ db: cliente, registrar: () => undefined }).optOuts,
     });
     let avisos = 0;
 

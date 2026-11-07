@@ -834,6 +834,7 @@ paths:
       summary: Ejecuta un análisis de evidencia sobre un paciente
       description: "Construye el contexto del caso (timeline, línea de tratamiento, trayectorias, faltantes y memoria de análisis previos rotulada), etiquetado y desidentificado, y lo reenvía a Backend 2. Agrega la Base del análisis y persiste el AIAnalysisRecord antes de responder (JSON completo, nunca tokens sin validar). El análisis aparece en el timeline como evento derivado del AIAnalysisRecord: no se escribe ningún ClinicalEvent. Sin evidencia suficiente responde 200 con status sin_evidencia, evidenceOptions vacío, topRelevanceScore null y la Base del análisis. Para un tipo de cáncer no habilitado responde 200 con status tipo_no_habilitado, sin invocar al LLM. Los datos faltantes no bloquean (continueWithWarning). Si la petición no trae filtersApplied.publishedFromYear, clinical-api aplica año actual menos EVIDENCE_DEFAULT_YEARS."
       x-permission: ai_analysis:create
+      x-genera-ia: true
       parameters:
         - name: Idempotency-Key
           in: header

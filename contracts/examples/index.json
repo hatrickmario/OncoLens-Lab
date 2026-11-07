@@ -347,6 +347,11 @@
       "target": "#/components/schemas/PatientSummary"
     },
     {
+      "file": "patient-summary-opt-out.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/PatientSummary"
+    },
+    {
       "file": "rag-catalog-version-mismatch.json",
       "spec": "rag-orchestrator",
       "target": "#/paths/~1rag~1query/post/responses/409"

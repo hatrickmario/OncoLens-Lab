@@ -1,0 +1,95 @@
+import type { ErrorRequestHandler, RequestHandler, Router } from 'express';
+
+/** De dónde sale el paciente de una ruta `generaIA`: del cuerpo, del análisis de la ruta o de la conversación de la ruta. */
+export type FuenteDelPaciente = 'cuerpo' | 'analisis' | 'conversacion';
+
+/** Dónde está el paciente: `cuerpo` lee `patientId` del cuerpo; las otras dos lo ubican por el parámetro de la ruta. */
+export interface OrigenDelPacienteDeLaRuta {
+  readonly fuente: FuenteDelPaciente;
+  /** Nombre del parámetro `:x` de la ruta del que sale el id; `null` si la fuente es el cuerpo. */
+  readonly parametro: string | null;
+}
+
+export interface RutaGeneraIA {
+  readonly operationId: string;
+  readonly metodo: 'post';
+  /** Ruta relativa al router que se monta bajo `/platform`, con parámetros `:x` como en Express. */
+  readonly ruta: string;
+  readonly origenDelPaciente: OrigenDelPacienteDeLaRuta;
+}
+
+/**
+ * Lista cerrada de las operaciones que generan con IA (DEC-22). Es legal, no calibrable (RN-22 no aplica): añadir una
+ * ruta con `x-genera-ia` al contrato sin añadirla aquí y sin guardia hace fallar el test de cobertura.
+ */
+export const RUTAS_GENERA_IA = [
+  {
+    operationId: 'createEvidenceAnalysis',
+    metodo: 'post',
+    ruta: '/evidence-analyses',
+    origenDelPaciente: { fuente: 'cuerpo', parametro: null },
+  },
+  {
+    operationId: 'createFollowUp',
+    metodo: 'post',
+    ruta: '/evidence-analyses/:analysisId/follow-ups',
+    origenDelPaciente: { fuente: 'analisis', parametro: 'analysisId' },
+  },
+  {
+    operationId: 'createConversationTurn',
+    metodo: 'post',
+    ruta: '/conversations/:conversationId/turns',
+    origenDelPaciente: { fuente: 'conversacion', parametro: 'conversationId' },
+  },
+] as const satisfies readonly RutaGeneraIA[];
+
+export type OperacionGeneraIA = (typeof RUTAS_GENERA_IA)[number]['operationId'];
+
+/** Fábrica del guardia de una operación `generaIA`; la compone el módulo `opt-outs`, los controllers solo la reciben. */
+export type FabricaDeGuardiaDeOptOut = (operationId: OperacionGeneraIA) => RequestHandler;
+
+/** La entrada de la lista cerrada de una operación; una operación fuera de la lista es un error de programación. */
+export function rutaGeneraIA(operationId: OperacionGeneraIA): (typeof RUTAS_GENERA_IA)[number] {
+  const entrada = RUTAS_GENERA_IA.find((candidata) => candidata.operationId === operationId);
+  if (entrada === undefined)
+    throw new Error(`la operación ${operationId} no está en RUTAS_GENERA_IA`);
+  return entrada;
+}
+
+/** Propiedad con la que el módulo marca los manejadores que montó como guardia; guarda el `operationId` de su ruta. */
+const OPERACION_GUARDADA = 'operacionGuardadaPorOptOut';
+
+type ManejadorMarcado = RequestHandler & { readonly [OPERACION_GUARDADA]: OperacionGeneraIA };
+
+/** Devuelve un manejador NUEVO que delega en `guardia` y lleva la marca; nunca muta el que recibe (puede estar montado en otra ruta). */
+function marcarComoGuardia(
+  guardia: RequestHandler,
+  operationId: OperacionGeneraIA,
+): ManejadorMarcado {
+  const marcado: RequestHandler = (peticion, respuesta, siguiente) => {
+    guardia(peticion, respuesta, siguiente);
+  };
+  return Object.assign(marcado, { [OPERACION_GUARDADA]: operationId });
+}
+
+/**
+ * Único camino para montar una ruta `generaIA`: toma método y ruta de `RUTAS_GENERA_IA` y monta siempre el guardia
+ * entre `previos` (trace, `authorize`, parser del cuerpo) y `posteriores` (handler y manejador de errores): orden
+ * sesión → `authorize` → guardia → handler (design D2).
+ */
+export function registrarRutaGeneraIA(
+  router: Router,
+  operationId: OperacionGeneraIA,
+  fabricaDeGuardia: FabricaDeGuardiaDeOptOut,
+  previos: readonly RequestHandler[],
+  ...posteriores: (RequestHandler | ErrorRequestHandler)[]
+): void {
+  const entrada = rutaGeneraIA(operationId);
+  const guardia = marcarComoGuardia(fabricaDeGuardia(operationId), operationId);
+  router[entrada.metodo](entrada.ruta, ...previos, guardia, ...posteriores);
+}
+
+/** `true` si el manejador es un guardia montado por `registrarRutaGeneraIA` (lo lee el test de cobertura de rutas). */
+export function esGuardiaDeOptOut(manejador: unknown): boolean {
+  return typeof manejador === 'function' && OPERACION_GUARDADA in manejador;
+}
