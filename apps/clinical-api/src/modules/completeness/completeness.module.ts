@@ -8,6 +8,7 @@ import {
   OPERADORES_DE_CONDICION,
   type CatalogoDeDatosCriticos,
   type CompletenessEnLote,
+  type CompletenessConTiposDeVacio,
   type CompletenessService,
   type DatosCriticosDeUnTipo,
 } from './ports.js';
@@ -72,7 +73,7 @@ export function cargarCatalogoDeDatosCriticos(
 
 export function componerCompletitud(
   dependencias: DependenciasDelModulo,
-): CompletenessService & CompletenessEnLote {
+): CompletenessService & CompletenessEnLote & CompletenessConTiposDeVacio {
   return createCompletenessService({
     registros: createCompletenessRepository(dependencias.db),
     catalogo: cargarCatalogoDeDatosCriticos(dependencias.rutaDelCatalogo, dependencias.leerArchivo),

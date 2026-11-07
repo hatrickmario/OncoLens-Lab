@@ -56,6 +56,27 @@ describe('GET /completeness · tipo de vacío de P-CHAT (US-263)', () => {
     });
   });
 
+  it('coincide el ejemplo completeness-gap-type-p-chat.json con la respuesta real de P-CHAT en item, etiqueta, status, gapType y destino', async () => {
+    const ejemplo = JSON.parse(
+      readFileSync(
+        new URL(
+          '../../../../../contracts/examples/completeness-gap-type-p-chat.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ) as { catalogVersion: string; items: Record<string, unknown>[] };
+    const { items } = await checklistDelChat();
+    const clavesComparadas = ['item', 'label', 'status', 'gapType', 'destination'];
+
+    const reales = ejemplo.items.map((i) => items.find((r) => r.item === i['item']));
+    expect(reales.every((r) => r !== undefined)).toBe(true);
+    expect(
+      reales.map((r) => Object.fromEntries(clavesComparadas.map((k) => [k, (r as never)[k]]))),
+    ).toEqual(ejemplo.items.map((i) => Object.fromEntries(clavesComparadas.map((k) => [k, i[k]]))));
+    expect(ejemplo.catalogVersion).toBe('1.6.0');
+  });
+
   it('clasifica Ki-67 no_buscado, menopausia no_encontrado, RE incompleto y TNM por_conciliar, y deja null los verificados sin conflicto cuando el doctor consulta el checklist [US-263 AC-2] [AC-04.1] [S6 resp. 10]', async () => {
     const { status, items } = await checklistDelChat();
 

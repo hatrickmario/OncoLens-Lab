@@ -39,6 +39,22 @@ describe('clasificarVacio (US-263, regla pura)', () => {
     expect(clasificarVacio(ki67, 'presente_verificado', conflicto)).toBe('por_conciliar');
   });
 
+  it('devuelve solo por_conciliar o null cuando el dato está verificado, nunca otro tipo de vacío', () => {
+    const combinaciones = [false, true].flatMap((conflictoPendiente) =>
+      [0, 1, 3].flatMap((registrosVigentes) =>
+        [new Set<string>(), new Set(['examen'])].map((documentosProcesados) =>
+          clasificarVacio(
+            ki67,
+            'presente_verificado',
+            evidencia({ conflictoPendiente, registrosVigentes, documentosProcesados }),
+          ),
+        ),
+      ),
+    );
+
+    expect(new Set(combinaciones)).toEqual(new Set([null, 'por_conciliar']));
+  });
+
   it('devuelve incompleto cuando el dato está presente sin verificar y sin conflicto', () => {
     expect(
       clasificarVacio(ki67, 'presente_sin_verificar', evidencia({ registrosVigentes: 1 })),

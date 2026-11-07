@@ -14,6 +14,7 @@ import {
 import type {
   CatalogoDeDatosCriticos,
   ChecklistDelPaciente,
+  CompletenessConTiposDeVacio,
   CompletenessEnLote,
   CompletenessService,
   DatosCriticosDeUnTipo,
@@ -39,13 +40,14 @@ interface LecturasDelVacio {
   readonly documentosProcesados: ReadonlySet<string>;
 }
 
-/** Tipo de vacío del ítem: la regla pura con lo leído del paciente (no cambia el `status`). */
+/** Tipo de vacío del ítem: la regla pura con lo leído del paciente (no cambia el `status`); `null` si no se clasifica. */
 function tipoDeVacioDelItem(
   item: ItemDeDatoCritico,
   status: ItemDelChecklist['status'],
   registros: RegistrosPorEntidad,
-  lecturas: LecturasDelVacio,
+  lecturas: LecturasDelVacio | null,
 ): TipoDeVacio | null {
+  if (lecturas === null) return null;
   return clasificarVacio(item, status, {
     registrosVigentes: cantidadDeRegistrosVigentes(item, registros),
     conflictoPendiente: hayConflictoPendiente(item, registros, lecturas.conflictos),
@@ -58,7 +60,7 @@ function conProcedencia(
   estado: { key: string; status: ItemDelChecklist['status'] },
   delTipo: readonly ItemDeDatoCritico[],
   registros: RegistrosPorEntidad,
-  lecturas: LecturasDelVacio,
+  lecturas: LecturasDelVacio | null,
 ): ItemDelChecklist {
   const item = delTipo.find((candidato) => candidato.key === estado.key);
   if (item === undefined) throw new Error('item_del_catalogo_inexistente');
@@ -106,7 +108,7 @@ function itemsDelPaciente(
   paciente: PacienteAEvaluar,
   datos: DatosCriticosDeUnTipo,
   delPaciente: RegistrosPorEntidad,
-  lecturas: LecturasDelVacio,
+  lecturas: LecturasDelVacio | null,
 ): ItemDelChecklist[] {
   // Solo el Diagnosis vigente: tipo, condiciones e ítems de destino Diagnosis salen del mismo registro.
   const completos = {
@@ -149,11 +151,13 @@ async function clasificarSinDiagnostico(
   }
 }
 
-/** Todo lo leído de la base para los pacientes de un tipo: registros de destino, conflictos pendientes y documentos procesados. */
+/** Lo leído de la base para los pacientes de un tipo: registros de destino y, solo si se clasifica el vacío, conflictos y documentos. */
 interface LecturasDelTipo {
   readonly registros: ReadonlyMap<string, RegistrosPorEntidad>;
-  readonly conflictos: ReadonlyMap<string, RegistrosPorEntidad>;
-  readonly documentosProcesados: ReadonlyMap<string, ReadonlySet<string>>;
+  readonly vacios: {
+    readonly conflictos: ReadonlyMap<string, RegistrosPorEntidad>;
+    readonly documentosProcesados: ReadonlyMap<string, ReadonlySet<string>>;
+  } | null;
 }
 
 /** Entidades de destino de los ítems (con `Diagnosis`): las únicas donde puede haber un conflicto que los afecte. */
@@ -161,11 +165,15 @@ function entidadesDeDestino(datos: DatosCriticosDeUnTipo): string[] {
   return [...new Set(datos.items.map((item) => item.destination.entity))];
 }
 
-/** Tres lecturas acotadas por tipo, independientes del número de pacientes; un fallo de cualquiera aísla al lote del tipo. */
+/**
+ * Una lectura de registros por tipo y, solo si `conVacios`, dos más (conflictos y documentos procesados), independientes
+ * del número de pacientes. El lote del listado y el contador de la ficha NO las hacen: solo cuentan faltantes.
+ */
 async function leerDelTipo(
   { registros }: DependenciasDelServicio,
   datos: DatosCriticosDeUnTipo,
   patientIds: readonly string[],
+  conVacios: boolean,
 ): Promise<LecturasDelTipo> {
   const entidades = entidadesDeDestinoSinDiagnostico(datos);
   return {
@@ -173,16 +181,21 @@ async function leerDelTipo(
       entidades.length === 0
         ? new Map()
         : await registros.registrosVariosSinFiltrarPorRevision(patientIds, entidades),
-    conflictos: await registros.conflictosPendientes(patientIds, entidadesDeDestino(datos)),
-    documentosProcesados: await registros.tiposDeDocumentoProcesados(patientIds),
+    vacios: conVacios
+      ? {
+          conflictos: await registros.conflictosPendientes(patientIds, entidadesDeDestino(datos)),
+          documentosProcesados: await registros.tiposDeDocumentoProcesados(patientIds),
+        }
+      : null,
   };
 }
 
 /** Lo que clasifica el vacío de UN paciente, tomado de las lecturas del tipo (sin conflictos ni documentos si no hay). */
-function lecturasDelVacioDe(leidas: LecturasDelTipo, patientId: string): LecturasDelVacio {
+function lecturasDelVacioDe(leidas: LecturasDelTipo, patientId: string): LecturasDelVacio | null {
+  if (leidas.vacios === null) return null;
   return {
-    conflictos: leidas.conflictos.get(patientId) ?? {},
-    documentosProcesados: leidas.documentosProcesados.get(patientId) ?? new Set(),
+    conflictos: leidas.vacios.conflictos.get(patientId) ?? {},
+    documentosProcesados: leidas.vacios.documentosProcesados.get(patientId) ?? new Set(),
   };
 }
 
@@ -192,6 +205,7 @@ async function calcularDelTipo(
   entrada: { datos: DatosCriticosDeUnTipo; pacientes: readonly PacienteAEvaluar[] },
   resultados: Resultados,
   catalogVersion: string,
+  conVacios: boolean,
 ): Promise<void> {
   const { datos, pacientes } = entrada;
   let leidas: LecturasDelTipo;
@@ -200,6 +214,7 @@ async function calcularDelTipo(
       dependencias,
       datos,
       pacientes.map((paciente) => paciente.patientId),
+      conVacios,
     );
   } catch (error) {
     for (const paciente of pacientes) resultados.set(paciente.patientId, noDisponible(error));
@@ -251,10 +266,14 @@ function repartirPorDiagnostico(
   return { sinDiagnostico, porTipo };
 }
 
-/** Lecturas acotadas: consultas = 1 + nº de tipos de cáncer presentes (más una si algún paciente no tiene diagnóstico). */
+/**
+ * Lecturas acotadas: consultas = 1 + nº de tipos de cáncer presentes (más una si algún paciente no tiene diagnóstico);
+ * con `conVacios`, dos más por tipo.
+ */
 async function calcularVarios(
   dependencias: DependenciasDelServicio,
   patientIds: readonly string[],
+  conVacios: boolean,
 ): Promise<ReadonlyMap<string, ResultadoDelChecklist>> {
   const { registros, catalogo } = dependencias;
   const unicos = [...new Set(patientIds)];
@@ -271,7 +290,13 @@ async function calcularVarios(
   await clasificarSinDiagnostico(dependencias, sinDiagnostico, resultados, catalogVersion);
   for (const [cancerType, pacientes] of porTipo) {
     const datos = catalogo.deTipo(cancerType) as DatosCriticosDeUnTipo;
-    await calcularDelTipo(dependencias, { datos, pacientes }, resultados, catalogVersion);
+    await calcularDelTipo(
+      dependencias,
+      { datos, pacientes },
+      resultados,
+      catalogVersion,
+      conVacios,
+    );
   }
   // El orden del resultado es el de la petición, sea cual sea el orden en que se agruparon los tipos.
   return new Map(
@@ -279,21 +304,29 @@ async function calcularVarios(
   );
 }
 
+async function calcularUno(
+  dependencias: DependenciasDelServicio,
+  patientId: string,
+  conVacios: boolean,
+): Promise<ChecklistDelPaciente> {
+  const resultado = (await calcularVarios(dependencias, [patientId], conVacios)).get(patientId);
+  if (resultado?.estado !== 'ok') throw resultado?.error ?? new PacienteNoEncontradoError();
+  return resultado.checklist;
+}
+
 /**
  * Checklist determinista de datos críticos (US-002, US-003, FR-23): carga el catálogo montado y los registros del
  * paciente y delega la regla de cinco pasos en el motor puro. Es la ÚNICA implementación: la usan el endpoint
  * `/completeness`, el contador de la ficha, el del listado y la búsqueda (en lote) y los faltantes del análisis;
- * `calcular` se apoya en `calcularVarios`, así que no pueden divergir. Sin LLM, sin `rag-orchestrator`, sin azar.
+ * `calcular` y `calcularConTiposDeVacio` se apoyan en el mismo cálculo, así que no pueden divergir (el segundo añade
+ * `gapType`; el lote, `calcular` y el contador no lo calculan y lo dejan `null`). Sin LLM, sin `rag-orchestrator`, sin azar.
  */
 export function createCompletenessService(
   dependencias: DependenciasDelServicio,
-): CompletenessService & CompletenessEnLote {
+): CompletenessService & CompletenessEnLote & CompletenessConTiposDeVacio {
   return {
-    calcularVarios: (patientIds) => calcularVarios(dependencias, patientIds),
-    async calcular(patientId): Promise<ChecklistDelPaciente> {
-      const resultado = (await calcularVarios(dependencias, [patientId])).get(patientId);
-      if (resultado?.estado !== 'ok') throw resultado?.error ?? new PacienteNoEncontradoError();
-      return resultado.checklist;
-    },
+    calcularVarios: (patientIds) => calcularVarios(dependencias, patientIds, false),
+    calcular: (patientId) => calcularUno(dependencias, patientId, false),
+    calcularConTiposDeVacio: (patientId) => calcularUno(dependencias, patientId, true),
   };
 }

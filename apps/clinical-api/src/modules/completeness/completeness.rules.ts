@@ -295,6 +295,8 @@ export interface EvidenciaDelVacio {
 /**
  * Tipo de vacío del ítem (US-263, `[S6 resp. 10]`, `[S6 resp. 17]`). Prioridad: `por_conciliar` > `incompleto` >
  * `no_buscado` > `no_encontrado`; `null` si verificado y sin conflicto, o `no_aplica`. No cambia el `status`.
+ * Un dato `presente_verificado` con un conflicto pendiente (RN-08) es `por_conciliar`: sigue necesitando conciliación.
+ * Un `gapType` no nulo sobre un dato verificado es siempre `por_conciliar`.
  */
 export function clasificarVacio(
   item: ItemDeDatoCritico,

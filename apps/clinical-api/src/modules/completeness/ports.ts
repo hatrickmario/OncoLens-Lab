@@ -183,8 +183,14 @@ export type ResultadoDelChecklist =
   | { readonly estado: 'no_disponible'; readonly error: unknown };
 
 export interface CompletenessService {
-  /** Lanza `PacienteNoEncontradoError` si el paciente no existe. */
+  /** Lanza `PacienteNoEncontradoError` si el paciente no existe. Sin tipo de vacío: `gapType` es `null` en todo ítem. */
   calcular(patientId: string): Promise<ChecklistDelPaciente>;
+}
+
+/** El cálculo con el tipo de vacío de cada ítem (US-263): solo `/completeness` y el turno del chat lo piden. */
+export interface CompletenessConTiposDeVacio {
+  /** Lanza `PacienteNoEncontradoError` si el paciente no existe. Cada ítem trae su `gapType`. */
+  calcularConTiposDeVacio(patientId: string): Promise<ChecklistDelPaciente>;
 }
 
 /** El cálculo por lotes (listado y búsqueda); aparte de `CompletenessService` para que quien solo calcula uno no lo implemente. */

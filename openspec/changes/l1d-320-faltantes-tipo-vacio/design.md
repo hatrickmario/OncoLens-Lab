@@ -24,7 +24,9 @@ nodo `faltantes` sin LLM y exento de cita; verificar el `409` de catálogo con 1
 
    | `status` | condición | `gapType` |
    |---|---|---|
-   | `presente_verificado`, `no_aplica` | — | `null` |
+   | `no_aplica` | — | `null` |
+   | `presente_verificado` | sin conflicto pendiente | `null` |
+   | `presente_verificado` | algún registro en `requiere_revision` con `conflicts_with_id` que contradice el dato (RN-08) | `por_conciliar` |
    | `presente_sin_verificar` | algún registro vigente del destino en `requiere_revision` con `conflicts_with_id` | `por_conciliar` |
    | `presente_sin_verificar` | sin conflicto vigente | `incompleto` |
    | `faltante` | 0 < registros vigentes < `minValues` | `incompleto` |
@@ -84,7 +86,9 @@ Cambio aditivo (ADR-26), **1.27.0 → 1.28.0** (glosario §1; si colisiona, renu
 CompletenessItem.properties:
   gapType:
     oneOf: [ { type: string, enum: [no_encontrado, incompleto, por_conciliar, no_buscado] }, { type: "null" } ]
-    description: null si status es presente_verificado o no_aplica.
+    description: >-
+      null si el ítem no tiene vacío. por_conciliar puede acompañar a presente_verificado cuando hay un
+      conflicto pendiente (RN-08). Texto final igual al del spec.
 ```
 
 `gapType` entra en `required` de la **respuesta** de `/completeness` (añadir un campo requerido a una respuesta no rompe a
@@ -120,3 +124,11 @@ Pytest (AC-4) y se mide en US-269.
   examen»).
 - [Supuestos del oncólogo] → `[S6 resp. 17]` y el mapeo `sourceDocumentTypes` (`estado = "propuesta"`) se revisan con
   DEC-01; la regla vive en una sola función pura.
+
+## Decisiones del Gate 2
+
+- `por_conciliar` sobre `presente_verificado` es deliberado (RN-08): un dato verificado con un conflicto pendiente sigue
+  necesitando conciliación; el `status` no cambia. P-CHAT (TNM: IIA verificado frente al IIB en conflicto) lo fija.
+- Renumerado: `clinical-api` pasa a **1.28.0** (main trae 1.27.0 de L1D-213; L1D-322 pasará a 1.29.0).
+- `faltantesSenalados` del estado estructurado queda `[]` por decisión; lo cubren L1D-321/323 si lo necesitan.
+- El listado y el contador de la ficha no clasifican el vacío: solo `calcular` (endpoint y chat).

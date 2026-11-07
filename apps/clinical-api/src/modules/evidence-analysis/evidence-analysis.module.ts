@@ -6,7 +6,11 @@ import type { Registrar } from '../../infrastructure/logger.js';
 import type { AlcanceDelCorpus } from '../../config/index.js';
 import type { Consultador } from '../auth/auth.repository.js';
 import { faltantesDe } from '../completeness/completeness.rules.js';
-import type { ChecklistDelPaciente, CompletenessService } from '../completeness/ports.js';
+import type {
+  ChecklistDelPaciente,
+  CompletenessConTiposDeVacio,
+  CompletenessService,
+} from '../completeness/ports.js';
 import { crearBaseDelAnalisis } from './analysis-basis.js';
 import { crearAnalysisCompletion } from './analysis-completion.js';
 import { evidenceAnalysisController } from './evidence-analysis.controller.js';
@@ -117,11 +121,11 @@ const destinoDelItem = ({ entity, field }: { entity: string; field: string | nul
  * `GET /completeness` (L1D-320, una regla y un dueño: `clasificarVacio`). Falla cerrado como
  * `crearChecklistDeFaltantes`.
  */
-export function crearChecklistDelChat(completitud: CompletenessService): ChecklistDelChat {
+export function crearChecklistDelChat(completitud: CompletenessConTiposDeVacio): ChecklistDelChat {
   return {
     async items(patientId) {
       try {
-        const checklist = await completitud.calcular(patientId);
+        const checklist = await completitud.calcularConTiposDeVacio(patientId);
         return checklist.items.map((item) => ({
           item: item.key,
           label: item.label,

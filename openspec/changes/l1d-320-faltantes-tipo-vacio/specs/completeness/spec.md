@@ -1,13 +1,13 @@
 ## ADDED Requirements
 
 ### Requirement: Cada ítem del checklist clasifica su vacío con un gapType determinista
-`clinical-api` SHALL calcular un `gapType` por ítem con la regla pura `clasificarVacio`: `null` si está verificado o no aplica; `por_conciliar` con un registro vigente en conflicto; `incompleto` si está `presente_sin_verificar` sin conflicto vigente o tiene menos registros que `minValues`; si no, `no_buscado` o `no_encontrado`. Prioridad MUST: `por_conciliar` > `incompleto` > `no_buscado` > `no_encontrado`; el `status` MUST NOT cambiar.
+`clinical-api` SHALL calcular un `gapType` por ítem con la regla pura `clasificarVacio`: `null` si está verificado sin conflicto pendiente o no aplica; `por_conciliar` con un registro vigente en conflicto (también si el dato está `presente_verificado`, RN-08); `incompleto` si está `presente_sin_verificar` sin conflicto vigente o tiene menos registros que `minValues`; si no, `no_buscado` o `no_encontrado`. Prioridad MUST: `por_conciliar` > `incompleto` > `no_buscado` > `no_encontrado`; el `status` MUST NOT cambiar.
 
 #### Scenario: P-CHAT recibe un tipo de vacío por ítem
 - **GIVEN** el paciente sintético `P-CHAT` (FX-12-b) y el catálogo de test `datos-criticos` 1.6.0 (FX-12-c)
 - **WHEN** un doctor con sesión válida consulta `GET /platform/patients/{id}/completeness`
 - **THEN** Ki-67 tiene `gapType = "no_buscado"`, estado menopáusico `"no_encontrado"`, RE `"incompleto"` y TNM `"por_conciliar"`
-- **AND** cada ítem `presente_verificado` tiene `gapType = null`
+- **AND** cada ítem `presente_verificado` sin conflicto pendiente tiene `gapType = null`; TNM sigue `presente_verificado` y su `gapType` es `por_conciliar` (RN-08)
 - **AND** la respuesta es válida contra `apps/clinical-api/openapi.yaml` [US-263 AC-2] [AC-04.1] [S6 resp. 10]
 
 ### Requirement: Solo un documento procesado cuenta como búsqueda

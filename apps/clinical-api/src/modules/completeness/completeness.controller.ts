@@ -8,17 +8,20 @@ import { PacienteNoEncontradoError } from '../compartido/pacientes.errores.js';
 import { faltantesDe } from './completeness.rules.js';
 import { leerIdDePaciente } from './completeness.schema.js';
 import { comoVistaDelChecklist } from './completeness.vista.js';
-import type { CompletenessService } from './ports.js';
+import type { CompletenessConTiposDeVacio } from './ports.js';
 
 export interface DependenciasDelController {
-  service: CompletenessService;
+  service: CompletenessConTiposDeVacio;
   traceIds: TraceIdGenerator;
   registrar: Registrar;
 }
 
 const EVENTO_COMPLETITUD = 'completeness.consulta';
 
-function crearConsultar(service: CompletenessService, registrar: Registrar): RequestHandler {
+function crearConsultar(
+  service: CompletenessConTiposDeVacio,
+  registrar: Registrar,
+): RequestHandler {
   return async (request, response) => {
     const paciente = leerIdDePaciente(request.params);
     if (paciente === undefined) {
@@ -26,7 +29,7 @@ function crearConsultar(service: CompletenessService, registrar: Registrar): Req
       return;
     }
     try {
-      const checklist = await service.calcular(paciente);
+      const checklist = await service.calcularConTiposDeVacio(paciente);
       const vista = comoVistaDelChecklist(checklist);
       // Solo UUID, traceId, versión del catálogo y conteos: nunca etiquetas, valores ni el error de la base (RN-10).
       registrar({
