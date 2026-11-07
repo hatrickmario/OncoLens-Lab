@@ -1,0 +1,5 @@
+     × pinta el aviso de ampliación tras el encabezado y antes de la primera opción, sin expandir nada [US-274 AC-1] 224ms
+     × pinta el mensaje de sin opciones soportadas y el alcance sin plegar bajo «Alcance de la respuesta» [US-274 AC-2] 116ms
+AssertionError: expected false to be true // Object.is equality
+TestingLibraryElementError: Unable to find an element with the text: Alcance de la respuesta. This could be because the text is broken up by multiple elements. In this case, you can provide a function
+      Tests  2 failed | 3 passed (5)
