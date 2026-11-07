@@ -3,7 +3,7 @@
   "blocks": [
     {
       "kind": "limitacion",
-      "text": "No hay contradicciones registradas en el expediente"
+      "text": "No hay contradicciones registradas en el expediente. Se revisaron los diagnósticos y biomarcadores del expediente."
     }
   ],
   "omittedClaims": 0,
