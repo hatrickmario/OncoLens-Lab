@@ -79,21 +79,49 @@ def test_rag_query_responde_con_evidencia_y_citas_del_turno_cuando_una_pregunta_
     assert _reescritura(cuerpo) == {"applied": False, "reason": "no_disparado"}
 
 
-def test_rag_query_añade_tipo_estadio_grado_y_biomarcador_del_catalogo_cuando_el_caso_es_de_prostata():
-    entorno = crear_entorno_contextual()
-    solicitud = solicitud_contextual(estadio="IIB", biomarcadores=(("PSA", "7.2"),))
+def _solicitud_de_prostata(biomarcadores: tuple[tuple[str, str], ...]) -> dict:
+    solicitud = solicitud_contextual(estadio="IIB", biomarcadores=biomarcadores)
     contexto = solicitud["clinicalContext"]
     contexto["diagnosis"]["cancerType"] = "prostata"
     contexto[
         "missingCriticalData"
     ] = []  # las claves de mama no son del catálogo de próstata (RN-11)
     contexto["diagnosis"]["grade"] = "Gleason 4+3=7 · ISUP 3"
+    return solicitud
 
-    respuesta = entorno.consultar(solicitud)
+
+@pytest.mark.ac("US-273", 1)
+def test_rag_query_contextual_no_incluye_el_psa_y_conserva_tipo_estadio_y_grado_cuando_el_caso_es_de_prostata():
+    entorno = crear_entorno_contextual()
+
+    respuesta = entorno.consultar(_solicitud_de_prostata((("PSA", "7.2"),)))
 
     assert respuesta.status_code == 200
-    esperada = f"{Q_GENERICA} Cáncer de próstata IIB ISUP 3 Antígeno prostático específico (PSA)"
+    esperada = f"{Q_GENERICA} Cáncer de próstata IIB ISUP 3"
     assert entorno.reranker.preguntas == [Q_GENERICA, esperada]
+    assert "PSA" not in esperada and "prostático" not in esperada
+    assert expansion_de(respuesta.json()) == {"applied": True, "fields": ["tipo", "estadio"]}
+
+
+def test_rag_query_contextual_ancla_en_el_siguiente_biomarcador_del_catalogo_cuando_el_caso_de_prostata_trae_psa_y_hrr():
+    entorno = crear_entorno_contextual()
+
+    respuesta = entorno.consultar(_solicitud_de_prostata((("PSA", "7.2"), ("HRR", "positivo"))))
+
+    assert respuesta.status_code == 200
+    assert (
+        entorno.reranker.preguntas[-1] == f"{Q_GENERICA} Cáncer de próstata IIB ISUP 3 HRR positivo"
+    )
+    assert expansion_de(respuesta.json()) == {"applied": True, "fields": CAMPOS_USADOS}
+
+
+@pytest.mark.ac("US-273", 5)
+def test_rag_query_contextual_de_mama_queda_igual_cuando_el_catalogo_declara_no_anclables_solo_para_prostata():
+    entorno = crear_entorno_contextual()
+
+    respuesta = entorno.consultar(solicitud_contextual())
+
+    assert entorno.reranker.preguntas[-1] == CONSULTA_CONTEXTUAL
     assert expansion_de(respuesta.json()) == {"applied": True, "fields": CAMPOS_USADOS}
 
 

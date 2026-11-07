@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from app.domain.expansion_contextual import (
     CAMPO_BIOMARCADOR_PRINCIPAL,
@@ -54,6 +54,8 @@ class CatalogoDeTerminos:
     """Tipo -> valores canónicos de Gleason/ISUP que pueden aparecer dentro del texto del grado."""
     biomarcadores: Mapping[str, tuple[BiomarcadorDelCatalogo, ...]]
     """Tipo -> biomarcadores en el orden de ``datos-criticos`` (el primero presente es el principal)."""
+    biomarcadores_no_anclables: Mapping[str, frozenset[str]] = field(default_factory=dict)
+    """Tipo -> nombres normalizados que el catálogo declara no anclables en la consulta contextual (US-273)."""
 
 
 @dataclass(frozen=True)

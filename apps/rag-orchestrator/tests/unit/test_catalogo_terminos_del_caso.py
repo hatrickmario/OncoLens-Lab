@@ -54,6 +54,12 @@ def test_cargador_ofrece_etiquetas_estadios_grados_y_biomarcadores_en_el_orden_d
     assert catalogo.biomarcadores["prostata"][0].termino == "Antígeno prostático específico (PSA)"
 
 
+def test_cargador_ofrece_los_biomarcadores_no_anclables_del_catalogo_solo_para_prostata():
+    catalogo = cargar_catalogo_de_terminos(CATALOGOS, ("mama", "prostata"))
+
+    assert catalogo.biomarcadores_no_anclables == {"prostata": frozenset({"psa"})}
+
+
 def test_cargador_falla_sin_ruta_ni_contenido_cuando_el_lexico_no_esta_en_el_catalogo(tmp_path):
     with pytest.raises(CatalogoNoDisponible) as error:
         cargar_marcos_de_pregunta(tmp_path)

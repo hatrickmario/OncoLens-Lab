@@ -79,8 +79,39 @@
         "biomarkers": [{ "biomarkerName": "PSA", "value": "7.2" }]
       },
       "salida": {
+        "campos": ["tipo", "estadio"],
+        "terminos": ["Cáncer de próstata", "IIB", "ISUP 3"]
+      }
+    },
+    {
+      "id": "prostata-con-psa-y-hrr",
+      "patientSummary": {
+        "diagnosis": {
+          "cancerType": "prostata",
+          "stagingSystem": "TNM_8",
+          "stageValue": "IIB",
+          "grade": "Gleason 4+3=7 · ISUP 3"
+        },
+        "recentBiomarkers": [
+          { "name": "PSA", "value": "7.2" },
+          { "name": "HRR", "value": "positivo" }
+        ]
+      },
+      "clinicalContext": {
+        "diagnosis": {
+          "cancerType": "prostata",
+          "stagingSystem": "TNM_8",
+          "stageValue": "IIB",
+          "grade": "Gleason 4+3=7 · ISUP 3"
+        },
+        "biomarkers": [
+          { "biomarkerName": "PSA", "value": "7.2" },
+          { "biomarkerName": "HRR", "value": "positivo" }
+        ]
+      },
+      "salida": {
         "campos": ["tipo", "estadio", "biomarcador_principal"],
-        "terminos": ["Cáncer de próstata", "IIB", "ISUP 3", "Antígeno prostático específico (PSA)"]
+        "terminos": ["Cáncer de próstata", "IIB", "ISUP 3", "HRR", "positivo"]
       }
     },
     {
