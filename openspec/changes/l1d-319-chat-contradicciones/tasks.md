@@ -4,29 +4,36 @@
 > `main` (o en la rama base de la oleada): `l1d-316-chat-turn-langgraph`, `l1d-315-conversacion-paciente` y
 > `l1d-317-chat-caso-situacion`; rebasa sobre `l1d-318-chat-examen-tratamiento-periodo` si entra antes. Sin subida de
 > versión de contrato (glosario S6 §1).
+>
+> Evidencia de la implementación: commits `contract` bbe9cf8e → `test` rag 2838ed4e → `feat` rag 788d6cad → `test` clinical
+> 94c3d148 → `feat` clinical 9d49f577 → `test` 79a7ef97 (`Test-Removal`: US-260 AC-5 adopta el sufijo) → `refactor`.
+> pytest rag 4793 passed; vitest unitario clinical-api 1300 passed; integración clinical-api con PostgreSQL de test 875
+> passed; `contracts:verify-provider` en verde (1123 + 632 respuestas); `contracts:check`, `generate:check`, `breaking`,
+> `pii-scan`, `verificar-commits-tdd`, `openspec validate --all --strict`, `npm run quality` y `tsc -p tsconfig.build.json` en verde.
 
 ## 1. contratos
 
-- [ ] 1.1 (exento) Consume el contrato de `l1d-316` 1.12.0 (`CaseFact.conflictWith?`/`corrected?`, `ChatBlock.kind = conflicto`, `notices[]`) y el de `l1d-315` 1.24.0 (`ConversationTurn`, `ConversationDataLink` sin `historyPath`); sin editar `apps/*/openapi.yaml` ni subir versión
-- [ ] 1.2 Añadir, un fichero por caso, `contracts/examples/chat-turn-caso-conflicto.json` (par IIA/IIB) y `chat-turn-caso-sin-contradicciones.json`; solo datos sintéticos. `CHAT-CONFLICTO-RESUELVE` (FX-12-e) es una salida del LLM antes del filtro: va como fixture del LLM falso en `apps/rag-orchestrator/tests/fixtures/llm/chat-conflicto-resuelve.json`, no en `contracts/examples/` · verificación: `contracts:check` en verde; commit `contract(L1D-319)`
+- [x] 1.1 (exento) Consume el contrato de `l1d-316` 1.12.0 (`CaseFact.conflictWith?`/`corrected?`, `ChatBlock.kind = conflicto`, `notices[]`) y el de `l1d-315` 1.24.0 (`ConversationTurn`, `ConversationDataLink` sin `historyPath`); sin editar `apps/*/openapi.yaml` ni subir versión
+- [x] 1.2 Añadir, un fichero por caso, `contracts/examples/chat-turn-caso-conflicto.json` (par IIA/IIB) y `chat-turn-caso-sin-contradicciones.json` (más sus peticiones `chat-turn-request-caso-*.json` y el índice); fixture del LLM falso `chat-conflicto-resuelve.json` · `contracts:check` en verde; commit `contract(L1D-319)` bbe9cf8e
 
 ## 2. ai-services
 
-- [ ] 2.1 (TDD estricto) Test de aceptación en rojo: «omite El estadio correcto es IIB, suma 1 a omittedClaims y no la envía al NLI cuando enlaza a un hecho en conflicto sin su contraparte [US-262 AC-2]» · integración Pytest + `TestClient`, LLM y NLI falsos (FX-12-e), reloj FX-12-f; commit `test(L1D-319)`
-- [ ] 2.2 (TDD estricto) Test de aceptación en rojo: «responde No hay contradicciones registradas en el expediente con cero llamadas al LLM de generación cuando ningún hecho está en conflicto [US-262 AC-4]» · integración Pytest con el LLM falso que cuenta invocaciones; commit `test(L1D-319)`
-- [ ] 2.3 (TDD estricto) Extraer en `app/domain/chat/contradicciones.py` `es_pregunta_de_contradicciones()`, `bloques_de_conflicto()` (función pura sin LLM: un bloque `kind = conflicto` por par con la etiqueta «Por conciliar» y los `factRefs` de ambos, orden por día relativo y `factRef`) y `afirmaciones_que_resuelven_conflicto()`, con unitarios uno a la vez (incluida la afirmación que cita ambos hechos y pasa al NLI)
-- [ ] 2.4 Integrar en el nodo `caso` (`app/application/chat/`): rama determinista de contradicciones sin LLM, regla del validador antes del NLI, textos fijos `chat_sin_contradicciones_texto` y `chat_conflicto_etiqueta` en `Settings` (RN-22), `notices[]` rellenado; añadir `CHAT-CONFLICTO-RESUELVE` al LLM falso y a su test de contrato; AC-2 y AC-4 en verde; commit `feat(L1D-319)`
-- [ ] 2.5 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-319)`
+- [x] 2.1 Test de aceptación AC-2 en rojo (falla en la aserción: la afirmación se mostraba) · `test_chat_turn_caso_conflictos.py`, commit 2838ed4e
+- [x] 2.2 Test de aceptación AC-4 en rojo (cero llamadas al LLM) · mismo commit
+- [x] 2.3 `app/domain/chat/contradicciones.py`: `es_pregunta_de_contradicciones()`, `pares_en_conflicto()`, `bloques_de_conflicto()` y `afirmaciones_que_resuelven_conflicto()` con unitarios (`test_chat_contradicciones.py`, 25 casos); ruta por reglas en `enrutado.py`
+- [x] 2.4 Nodo `caso`: turno de contradicciones sin LLM (`capacidades/contradicciones_del_caso.py`), regla del validador antes del NLI (solo interpretaciones; un `documentado` ya dice «en conflicto con otro dato»), claves `CHAT_CONFLICTO_ETIQUETA` y `CHAT_SIN_CONTRADICCIONES_TEXTO` (Settings, `.env.example`, Compose y su test); fixtures `CHAT-CONFLICTO-RESUELVE` y `CHAT-CONFLICTO-AMBOS`; AC-1 (lado rag), AC-2 y AC-4 en verde; commit 788d6cad
+- [x] 2.5 Refactor: sin cambios en rag-orchestrator (los módulos nuevos nacen extraídos)
 
 ## 3. clinical-platform
 
-- [ ] 3.1 (TDD estricto) Test de aceptación en rojo: «devuelve un bloque conflicto con Por conciliar, IIA e IIB, sus días relativos y un ConversationDataLink por cada factRef cuando se pregunta por contradicciones de P-CHAT [US-262 AC-1]» · integración Supertest + PostgreSQL de test + MSW hacia `/chat/turn` desde `contracts/examples/chat-turn-caso-conflicto.json`; respuesta validada contra el spec de `clinical-api`; commit `test(L1D-319)`
-- [ ] 3.2 (TDD estricto) Test de aceptación en rojo: «el HER2 3+ sale con la marca (corregido), corrected = true en el cuerpo hacia /chat/turn, ConversationDataLink con resourceType y resourceId del 3+ sin historyPath, y el cuerpo no contiene 2+ [US-262 AC-3]» · integración (MSW captura el cuerpo); commit `test(L1D-319)`
-- [ ] 3.3 (TDD estricto) Test de aceptación en rojo: «review_status, conflicts_with_id y supersedes_id de P-CHAT no cambian tras los turnos de contradicciones y de CHAT-CONFLICTO-RESUELVE [US-262 AC-5]» · integración con BD real (instantánea antes/después); commit `test(L1D-319)`
-- [ ] 3.4 (TDD estricto) Implementar `conversation/conflictos.ts` con `marcarConflictosYCorrecciones()` (par simétrico `conflictWith`, `corrected` desde `supersedesId`), ampliar `case-facts.builder.ts` y añadir el sufijo «(corregido)» en `verbalizarDatoDelContexto()`, con unitarios uno a uno; AC-1, AC-3 y AC-5 en verde; commit `feat(L1D-319)`
-- [ ] 3.5 Verificación del proveedor: las respuestas del turno con bloques `conflicto` y `ConversationDataLink` validan contra `apps/clinical-api/openapi.yaml`
-- [ ] 3.6 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-319)`
+- [x] 3.1 Test de aceptación AC-1 en rojo · `conversacion-conflictos.test.ts`, commit 94c3d148
+- [x] 3.2 Test de aceptación AC-3 en rojo · mismo commit
+- [x] 3.3 Test de aceptación AC-5 en rojo · mismo commit
+- [x] 3.4 `conversation/conflictos.ts` (`contrapartesDeConflicto()`, `conMarcaDeCorreccion()`), `conflictWith` simétrico en `hechos-del-caso.ts` (el módulo `case-facts.builder.ts` ya no existe), contraparte del diagnóstico activo leída (`diagnosticosEnConflicto`), desidentificada y añadida al final de `caseFacts`; `corrected` ya salía de la procedencia (L1D-317); AC-1, AC-3 y AC-5 en verde; commit 9d49f577
+- [x] 3.5 Verificación del proveedor: `contracts:verify-provider` valida las respuestas de los tests nuevos contra `apps/clinical-api/openapi.yaml` (1123 respuestas)
+- [x] 3.6 Refactor: Extract `desidentificarElCaso` (conversation.service.ts), `entradasDelTurno` y `hechoDelCandidato` (hechos-del-caso.ts) por `max-lines-per-function` y `complexity`; tests en verde antes y después
 
 ## 4. cierre
 
-- [ ] 4.1 `openspec validate l1d-319-chat-contradicciones --strict`, tests de `apps/clinical-api` y `apps/rag-orchestrator` en verde, `contracts:verify-provider` en verde
+- [x] 4.1 `openspec validate --all --strict`, tests de `apps/clinical-api` y `apps/rag-orchestrator` y `contracts:verify-provider` en verde
+- Nota para el orquestador: este change no cambia prompt, modelo, umbral, catálogo ni corpus; sin `evaluate` obligatorio. No se ejecutó el job `integration-rag` (el change no toca el schema `corpus`).
