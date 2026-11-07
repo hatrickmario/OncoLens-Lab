@@ -8,8 +8,10 @@ import {
   conEvidenciaSoloDescartadas,
   crearBffAnalisisSimulado,
 } from '../support/msw/evidence-analyses';
+import { mensajes } from '../../lib/mensajes';
 import { analizar, evidence, PREGUNTA_DE_PRUEBA, SIN_BASE } from '../support/panel-ui';
 
+const textosPanel = mensajes().conversacion.panel;
 const { replace } = vi.hoisted(() => ({ replace: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace }) }));
 
@@ -48,9 +50,7 @@ describe('EvidencePanel', () => {
     const autores = screen.getByText(evidence.cita.autores).nextElementSibling;
     expect(autores?.textContent).toBe(evidence.cita.noDisponible);
     await usuario.click(screen.getByRole('button', { name: evidence.cita.verFragmento }));
-    const fragmento = within(
-      screen.getByRole('complementary', { name: evidence.fragmento.titulo }),
-    );
+    const fragmento = within(screen.getByRole('dialog', { name: textosPanel.tituloCita }));
     expect(fragmento.getByText(cita.chunkTextSnapshot).getAttribute('lang')).toBe(cita.language);
   });
 
@@ -60,15 +60,18 @@ describe('EvidencePanel', () => {
     await usuario.click(await screen.findByRole('button', { name: new RegExp(cita.externalId) }));
     await usuario.click(screen.getByRole('button', { name: evidence.cita.verFragmento }));
 
-    const panel = screen.getByRole('complementary', { name: evidence.fragmento.titulo });
+    const panel = screen.getByRole('dialog', { name: textosPanel.tituloCita });
     const enlace = within(panel).getByRole('link', { name: cita.sourceUrl! });
     expect(enlace.getAttribute('href')).toBe(cita.sourceUrl);
     expect(enlace.getAttribute('target')).toBe('_blank');
     expect(enlace.getAttribute('rel')).toBe('noopener noreferrer');
     expect(within(panel).getByText(evidence.cita.fuenteOriginal)).toBeTruthy();
-    const botonVolver = within(panel).getByRole('button', { name: evidence.fragmento.volver });
-    const orden = enlace.compareDocumentPosition(botonVolver);
-    expect(orden & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // «Al final» del fragmento: el enlace va tras los autores y es lo último enfocable del panel (el «Cerrar» está en el encabezado).
+    const autores = within(panel).getByText(evidence.cita.autores);
+    expect(autores.compareDocumentPosition(enlace) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const enfocables = [...panel.querySelectorAll('a[href], button')];
+    expect(enfocables.at(-1)).toBe(enlace);
+    expect(within(panel).getByRole('button', { name: textosPanel.cerrar })).toBeTruthy();
   });
 
   it.each([null])(
@@ -82,7 +85,7 @@ describe('EvidencePanel', () => {
       await usuario.click(await screen.findByRole('button', { name: new RegExp(cita.externalId) }));
       await usuario.click(screen.getByRole('button', { name: evidence.cita.verFragmento }));
 
-      const panel = within(screen.getByRole('complementary', { name: evidence.fragmento.titulo }));
+      const panel = within(screen.getByRole('dialog', { name: textosPanel.tituloCita }));
       expect(panel.queryByRole('link')).toBeNull();
       expect(panel.getByText(evidence.cita.fuenteOriginal).nextElementSibling?.textContent).toBe(
         evidence.cita.noDisponible,

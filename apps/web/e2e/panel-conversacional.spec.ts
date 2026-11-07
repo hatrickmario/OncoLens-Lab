@@ -39,10 +39,10 @@ test.describe('Panel conversacional (L1D-324)', () => {
     await expect(
       tarjetas
         .nth(0)
-        .getByRole('link', { name: /Ver en el caso/ })
+        .getByRole('button', { name: /Ver en el caso/ })
         .first(),
     ).toBeVisible();
-    await expect(tarjetas.nth(2)).toContainText('[E1]');
+    await expect(tarjetas.nth(2)).toContainText(/\[E1 · frag\. \d+\]/);
     expect(new Set(turnos.map((r) => new URL(r.url()).pathname)).size).toBe(1);
   });
 

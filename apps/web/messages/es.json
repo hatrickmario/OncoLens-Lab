@@ -179,11 +179,6 @@
     "detalle": {
       "resumen": "Ver más detalle"
     },
-    "fragmento": {
-      "titulo": "Fragmento citado",
-      "ayuda": "Abre «Ver fragmento» en una cita para leer el texto original recuperado en esta consulta",
-      "volver": "Volver a la cita"
-    },
     "discarded": {
       "titulo": "Descartadas en la verificación — solo para revisión",
       "linea": "No son opciones descritas: se muestran solo para revisión.",
@@ -727,7 +722,28 @@
     "guiadasTitulo": "Preguntas de partida sobre este caso",
     "intencionDetectada": "Intención detectada",
     "turno": "Turno {n}",
-    "verEnCaso": "Ver en el caso (se abre en otra pestaña)",
+    "verEnCaso": "Ver en el caso",
+    "verReferencias": "Ver referencias",
+    "referenciasLista": "Referencias del turno",
+    "expandirTodo": "Expandir todo",
+    "plegarTodo": "Plegar todo",
+    "omitidas": "{n} afirmaciones omitidas por falta de soporte",
+    "omitidaUna": "1 afirmación omitida por falta de soporte",
+    "citaEtiqueta": "[E{n} · frag. {f}]",
+    "panel": {
+      "tituloCita": "Fragmento citado",
+      "descripcionCita": "Texto original recuperado en esta consulta. Esc cierra el panel y vuelve a la conversación.",
+      "tituloDato": "Dato del paciente",
+      "descripcionDato": "Dato de la historia clínica con su origen. Esc cierra el panel y vuelve a la conversación.",
+      "cerrar": "Cerrar",
+      "cargando": "Cargando el dato…",
+      "errorDato": "No se pudo cargar el dato",
+      "abrirCasoCompleto": "Abrir la vista de caso completa (abre en nueva pestaña)",
+      "enLaRespuesta": "En la respuesta (generada por IA; ver los avisos del turno)",
+      "origen": "Origen",
+      "fragmentoDe": "Fragmento {n} de {total}",
+      "sinMetadatos": "Metadatos de la fuente: No disponible"
+    },
     "datosUsados": "Datos usados",
     "datosAusentes": "Ausentes",
     "ninguno": "ninguno",

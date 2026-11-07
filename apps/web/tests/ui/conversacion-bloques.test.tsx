@@ -66,12 +66,12 @@ describe('Bloques del turno', () => {
       'Turno 3',
     ]);
     expect(
-      within(lista[0]!).getAllByRole('link', { name: /Ver en el caso/ }).length,
+      within(lista[0]!).getAllByRole('button', { name: /Ver en el caso/ }).length,
     ).toBeGreaterThan(0);
     expect(
-      within(lista[1]!).getAllByRole('link', { name: /Ver en el caso/ }).length,
+      within(lista[1]!).getAllByRole('button', { name: /Ver en el caso/ }).length,
     ).toBeGreaterThan(0);
-    expect(within(lista[2]!).getAllByText(/\[E1\]/).length).toBeGreaterThan(0);
+    expect(within(lista[2]!).getAllByText(/\[E1 · frag\. \d+\]/).length).toBeGreaterThan(0);
     const conversaciones = new Set(bff.turnos.map((t) => new URL(t.url).pathname));
     expect(conversaciones.size).toBe(1);
     expect(bff.aperturas).toHaveLength(1);

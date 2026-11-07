@@ -9,7 +9,7 @@ import {
   type ResultadoDeHistorico,
 } from '../../lib/correcciones/cliente';
 import { rotuloOValor } from '../../lib/caso/presentacion';
-import { nombreDeOrigen } from '../../lib/ficha/presentacion';
+import { formatearFecha, nombreDeOrigen } from '../../lib/ficha/presentacion';
 import { mensajes } from '../../lib/mensajes';
 import { FechaRelativa } from '../atoms/fecha-relativa';
 
@@ -31,27 +31,35 @@ function VersionAnterior({
 }: {
   version: CorrectionHistoryEntry;
   dato: DatoCorregible;
-  hoy: string;
+  hoy: string | undefined;
 }) {
   const { ficha } = mensajes();
   return (
     <li className="border-border flex flex-wrap items-baseline gap-x-2 border-b py-1 last:border-b-0">
       <span className="whitespace-pre-wrap">{textoDeLaVersion(version, dato)}</span>
-      <FechaRelativa fecha={version.recordedAt} hoy={hoy} />
+      {hoy === undefined ? (
+        <time dateTime={version.recordedAt.slice(0, 10)}>{formatearFecha(version.recordedAt)}</time>
+      ) : (
+        <FechaRelativa fecha={version.recordedAt} hoy={hoy} />
+      )}
       <span>{nombreDeOrigen(version.entryMethod)}</span>
       <span className="text-text-muted">{ficha.correccion.historico.reemplazado}</span>
     </li>
   );
 }
 
-function ContenidoDelHistorico({
+/**
+ * Lista de versiones reemplazadas de un dato (o su estado de carga o error). Con `hoy` las fechas son relativas; sin él,
+ * absolutas (el panel lateral del chat no recibe el reloj del servidor).
+ */
+export function ContenidoDelHistorico({
   estado,
   dato,
   hoy,
 }: {
   estado: ResultadoDeHistorico | 'cargando';
   dato: DatoCorregible;
-  hoy: string;
+  hoy?: string;
 }) {
   const { historico } = mensajes().ficha.correccion;
   if (estado === 'cargando') return <p className="m-0">{historico.cargando}</p>;

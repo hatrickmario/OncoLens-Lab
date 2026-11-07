@@ -33,7 +33,8 @@ export function EnlaceFuenteOriginal({ url }: { url: string | null | undefined }
 export interface CitationDetailsProps {
   cita: CitedSource;
   id: string;
-  onVerFragmento: () => void;
+  /** Sin él no hay botón «Ver fragmento»: la lista de referencias y el panel lateral ya muestran el fragmento. */
+  onVerFragmento?: () => void;
 }
 
 /** Metadatos de la cita con "No disponible" para lo ausente (RN-25) y enlace solo si es seguro. */
@@ -74,9 +75,11 @@ export function CitationDetails({ cita, id, onVerFragmento }: CitationDetailsPro
           <EnlaceFuenteOriginal url={cita.sourceUrl} />
         </dd>
       </dl>
-      <button type="button" className={estilos.chip} onClick={onVerFragmento}>
-        {textos.verFragmento}
-      </button>
+      {onVerFragmento && (
+        <button type="button" className={estilos.chip} onClick={onVerFragmento}>
+          {textos.verFragmento}
+        </button>
+      )}
     </div>
   );
 }

@@ -86,6 +86,9 @@ test.describe('Lenguaje no prescriptivo (L1D-193)', () => {
     await page.getByRole('button', { name: new RegExp(citaDelEjemplo.externalId) }).click();
     await page.getByRole('button', { name: textos.cita.verFragmento }).click();
     await verificarEstado(page);
+    // El panel lateral es modal: se cierra para que el campo de pregunta vuelva a estar operable.
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
 
     await preguntarEnElChat(page, preguntaSoloDescartadas);
     await page.getByRole('button', { name: textos.discarded.titulo }).click();

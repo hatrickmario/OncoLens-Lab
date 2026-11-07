@@ -1,23 +1,23 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   AssistantRuntimeProvider,
   ThreadPrimitive,
   useExternalStoreRuntime,
   type ThreadMessageLike,
 } from '@assistant-ui/react';
-import type { CitedSource } from '../../../../packages/api-contracts/src/types/clinical-api';
 import { mensajesDelHilo, textoDelMensaje } from '../../lib/conversacion/mensajes-del-hilo';
+import type { AlAbrirPanel, PanelLateral } from '../../lib/conversacion/panel-lateral';
 import { useConversacion } from '../../lib/conversacion/use-conversacion';
 import { mensajes } from '../../lib/mensajes';
 import { RUTA_LOGIN_EXPIRADA } from '../../lib/sesion/motivo-de-sesion';
-import { CitedFragment } from '../molecules/cited-fragment';
 import { ConversationComposer } from '../molecules/conversation-composer';
 import { ConversationProgress } from '../molecules/conversation-progress';
 import { GuidedQuestions } from '../molecules/guided-questions';
 import { ConversationThread } from './conversation-thread';
+import { PanelLateralDelChat } from './panel-lateral-del-chat';
 
 export interface ConversationSessionProps {
   patientId: string;
@@ -27,12 +27,7 @@ export interface ConversationSessionProps {
   onNueva: () => void;
 }
 
-interface FragmentoAbierto {
-  cita: CitedSource;
-  idChip: string;
-}
-
-/** Una conversación: su estado (`useConversacion`), el runtime de assistant-ui sobre él y el fragmento citado abierto. */
+/** Una conversación: su estado (`useConversacion`), el runtime de assistant-ui sobre él y su panel lateral (cita o dato). */
 export function ConversationSession({
   patientId,
   preguntasGuiadas,
@@ -41,7 +36,12 @@ export function ConversationSession({
 }: ConversationSessionProps) {
   const router = useRouter();
   const conversacion = useConversacion(patientId, () => router.replace(RUTA_LOGIN_EXPIRADA));
-  const [fragmento, setFragmento] = useState<FragmentoAbierto | null>(null);
+  const [panel, setPanel] = useState<PanelLateral | null>(null);
+  const disparador = useRef<HTMLElement | null>(null);
+  const abrirPanel = useCallback<AlAbrirPanel>((nuevo, idDisparador) => {
+    disparador.current = document.getElementById(idDisparador);
+    setPanel(nuevo);
+  }, []);
   const mensajesDelChat = useMemo<ThreadMessageLike[]>(
     () => mensajesDelHilo(conversacion.elementos),
     [conversacion.elementos],
@@ -59,15 +59,9 @@ export function ConversationSession({
   const ofrecerGuiadas =
     conversacion.elementos.length === 0 || (conversacion.fase === 'bloqueado' && sinTurnos);
 
-  function volverALaCita() {
-    const idChip = fragmento?.idChip;
-    setFragmento(null);
-    if (idChip) document.getElementById(idChip)?.focus();
-  }
-
   return (
     <AssistantRuntimeProvider runtime={runtime}>
-      <ThreadPrimitive.Root className="flex flex-col gap-2 md:flex-row">
+      <ThreadPrimitive.Root className="flex flex-col gap-2">
         <div className="min-w-0 flex-1">
           <button
             type="button"
@@ -83,20 +77,18 @@ export function ConversationSession({
               onElegir={conversacion.enviar}
             />
           )}
-          <ConversationThread
-            patientId={patientId}
-            onVerFragmento={(cita, idChip) => setFragmento({ cita, idChip })}
-          >
+          <ConversationThread patientId={patientId} onAbrirPanel={abrirPanel}>
             <ConversationProgress fase={conversacion.fase} onReintentar={conversacion.reintentar} />
           </ConversationThread>
           <ConversationComposer deshabilitado={bloqueado} />
         </div>
-        {fragmento && (
-          <aside className="md:w-80" aria-label={mensajes().evidence.fragmento.titulo}>
-            <CitedFragment cita={fragmento.cita} onVolver={volverALaCita} />
-          </aside>
-        )}
       </ThreadPrimitive.Root>
+      <PanelLateralDelChat
+        panel={panel}
+        patientId={patientId}
+        alCerrar={() => setPanel(null)}
+        retornoDeFoco={disparador}
+      />
     </AssistantRuntimeProvider>
   );
 }

@@ -5,6 +5,8 @@ import turnoDeCaso from '../../../../../contracts/examples/conversation-turn.jso
 import turnoDeEvidencia from '../../../../../contracts/examples/conversation-turn-evidencia.json';
 import errorOptOut from '../../../../../contracts/examples/error-opt-out.json';
 import errorTurno503 from '../../../../../contracts/examples/error-conversation-turn-503.json';
+import casoDelPaciente from '../../../../../contracts/examples/case-view.json';
+import historicoDeBiomarcador from '../../../../../contracts/examples/correction-history-biomarker.json';
 import turnoFaltantes from '../../../../../contracts/examples/chat-turn-faltantes.json';
 import turnoSinDatos from '../../../../../contracts/examples/chat-turn-caso-sin-datos.json';
 import turnoContextual from '../../../../../contracts/examples/chat-turn-evidencia-contextual.json';
@@ -14,6 +16,8 @@ import { URL_CLINICAL_API } from '../clinical-api-simulado';
 
 export {
   apertura,
+  casoDelPaciente,
+  historicoDeBiomarcador,
   errorOptOut,
   errorTurno503,
   turnoDeCaso,
@@ -53,6 +57,9 @@ export function crearBffConversacionSimulado() {
   const aperturas: string[] = [];
   const turnos: { url: string; cuerpo: Record<string, unknown> }[] = [];
   const seguimientos: string[] = [];
+  /** Lecturas del panel lateral por el BFF (`…/case` y `…/history`): un test comprueba qué se pidió. */
+  const casos: string[] = [];
+  const historicos: string[] = [];
   const porDefecto = () => [
     http.post('*/api/patients/:id/conversations', ({ request }) => {
       aperturas.push(request.url);
@@ -67,6 +74,8 @@ export function crearBffConversacionSimulado() {
     aperturas,
     turnos,
     seguimientos,
+    casos,
+    historicos,
     iniciar: () => {
       servidor.use(...porDefecto());
       servidor.listen({ onUnhandledFrame: 'error' });
@@ -77,7 +86,25 @@ export function crearBffConversacionSimulado() {
       aperturas.length = 0;
       turnos.length = 0;
       seguimientos.length = 0;
+      casos.length = 0;
+      historicos.length = 0;
     },
+    /** `GET /api/patients/{id}/case` del BFF (lo que lee el panel lateral al abrir un dato). */
+    responderCaso: ({ status, cuerpo }: { status: number; cuerpo: object }) =>
+      servidor.use(
+        http.get('*/api/patients/:id/case', ({ request }) => {
+          casos.push(request.url);
+          return HttpResponse.json(cuerpo, { status });
+        }),
+      ),
+    /** `GET /api/patients/{id}/{dato}/{rid}/history` del BFF. */
+    responderHistorico: ({ status, cuerpo }: { status: number; cuerpo: object }) =>
+      servidor.use(
+        http.get('*/api/patients/:id/:dato/:rid/history', ({ request }) => {
+          historicos.push(request.url);
+          return HttpResponse.json(cuerpo, { status });
+        }),
+      ),
     /** `GET /platform/patients/{id}` de clinical-api (lo que lee `obtenerFicha` en el RSC de la página). */
     responderFicha: ({ status, cuerpo }: { status: number; cuerpo: object }) =>
       servidor.use(
