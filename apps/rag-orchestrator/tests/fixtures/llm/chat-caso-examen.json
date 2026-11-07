@@ -29,6 +29,22 @@
   },
   "CHAT-CASO-INTERPRETACION-CIFRA-INVENTADA": {
     "ruta": "{\"intent\": \"caso\"}",
-    "generacion": "{\"claims\": [{\"kind\": \"interpretacion\", \"text\": \"El PSA subió de 4.2 a 15.8 entre ambos controles.\", \"factRefs\": [\"f2\", \"f4\"], \"citations\": []}]}"
+    "generacion": "{\"claims\": [{\"kind\": \"interpretacion\", \"text\": \"El PSA pasó de 4.2 a 15.8 entre ambos controles.\", \"factRefs\": [\"f2\", \"f4\"], \"citations\": []}]}"
+  },
+  "CHAT-CASO-INTERPRETACION-TENDENCIA": {
+    "ruta": "{\"intent\": \"caso\"}",
+    "generacion": "{\"claims\": [{\"kind\": \"interpretacion\", \"text\": \"El HER2 positivo 3+ subió respecto del diagnóstico.\", \"factRefs\": [\"f2\"], \"citations\": []}]}"
+  },
+  "CHAT-CASO-INTERPRETACION-EJEMPLO": {
+    "ruta": "{\"intent\": \"caso\"}",
+    "generacion": "{\"claims\": [{\"kind\": \"interpretacion\", \"text\": \"El CA 15-3 registró 22 U/mL a los 30 días y 28 U/mL a los 90 días después del diagnóstico, ambos normales.\", \"factRefs\": [\"f5\", \"f3\"], \"citations\": []}]}"
+  },
+  "CHAT-FALTANTES-INTERPRETACION": {
+    "ruta": "{\"intent\": \"faltantes\"}",
+    "generacion": "{\"claims\": [{\"kind\": \"interpretacion\", \"text\": \"El diagnóstico documentado es carcinoma ductal infiltrante de mama.\", \"factRefs\": [\"f1\"], \"citations\": []}]}"
+  },
+  "CHAT-FALTANTES-SIN-ENLACE": {
+    "ruta": "{\"intent\": \"faltantes\"}",
+    "generacion": "{\"claims\": [{\"text\": \"Falta el estado menopáusico.\", \"factRefs\": [], \"citations\": []}]}"
   }
 }

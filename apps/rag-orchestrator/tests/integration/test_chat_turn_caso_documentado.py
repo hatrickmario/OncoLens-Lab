@@ -10,12 +10,16 @@ import re
 
 import pytest
 
+from app.domain.chat.valores_iniciales import (
+    CHAT_SIN_DATOS_PERIODO_TEXTO_INICIAL,
+    CHAT_SIN_FECHA_TEXTO_INICIAL,
+)
 from tests.support.chat import crear_entorno_de_chat, solicitud_de_turno, solicitud_desde_ejemplo
 from tests.support.nli_falso import IMPLICA, NEUTRAL, NliFalso
 
 TEXTO_SIN_DATOS = "No se encontró información documentada sobre lo preguntado en el expediente"
 ADT = "Deprivación androgénica, línea 1, 172 días antes del diagnóstico."
-CIRUGIA = "Cirugia: cirugía conservadora, 40 días antes del diagnóstico."
+CIRUGIA = "Cirugía: cirugía conservadora, 40 días antes del diagnóstico."
 DIAGNOSTICO = "Carcinoma ductal infiltrante de mama, Nottingham grado 2, estadio IIA (TNM 8), ECOG 1, al momento del diagnóstico."
 PSA_INICIAL = "PSA: 4.2, alterado, 172 días antes del diagnóstico."
 PSA_ULTIMO = "PSA: 12.4, alterado, 37 días después del diagnóstico."
@@ -173,3 +177,91 @@ def test_chat_turn_caso_no_envia_fechas_absolutas_al_llm_cuando_pregunta_por_tra
     assert not FECHA_ABSOLUTA.search(entorno.llm.usuarios[-1])
     assert not FECHA_ABSOLUTA.search(entorno.llm.sistemas[-1] or "")
     assert "días" in entorno.llm.usuarios[-1] or "diagnóstico" in entorno.llm.usuarios[-1]
+
+
+def test_chat_turn_caso_omite_la_interpretacion_sin_invocar_al_nli_cuando_usa_un_verbo_de_tendencia():
+    nli = NliFalso(por_defecto=IMPLICA)
+    entorno = crear_entorno_de_chat("CHAT-CASO-INTERPRETACION-TENDENCIA", nli=nli)
+
+    cuerpo = entorno.turno(solicitud_de_turno()).json()
+
+    assert [b["kind"] for b in cuerpo["blocks"]] == ["limitacion"]
+    assert cuerpo["omittedClaims"] == 1
+    assert nli.invocaciones == 0
+
+
+def test_chat_turn_faltantes_no_emite_interpretacion_cuando_el_llm_la_elige_en_un_nodo_distinto_de_caso():
+    entorno = crear_entorno_de_chat("CHAT-FALTANTES-INTERPRETACION")
+
+    cuerpo = entorno.turno(solicitud_de_turno("¿Qué información falta del caso?")).json()
+
+    assert cuerpo["intent"] == "faltantes"
+    assert [b["kind"] for b in cuerpo["blocks"]] == ["documentado"]
+
+
+def test_chat_turn_faltantes_no_añade_limitacion_cuando_no_queda_ningun_bloque():
+    entorno = crear_entorno_de_chat("CHAT-FALTANTES-SIN-ENLACE")
+
+    cuerpo = entorno.turno(solicitud_de_turno("¿Qué información falta del caso?")).json()
+
+    assert cuerpo["blocks"] == []
+    assert cuerpo["omittedClaims"] == 1
+
+
+def test_chat_turn_caso_avisa_sin_bloquear_cuando_el_periodo_deja_fuera_hechos_sin_fecha_confiable():
+    entorno = crear_entorno_de_chat("CHAT-CASO-PERIODO")
+    solicitud = solicitud_desde_ejemplo("chat-turn-request-caso-periodo.json")
+    solicitud["caseFacts"].append(
+        {
+            "factRef": "f5",
+            "kind": "evento",
+            "verbalization": "cirugía: sin fecha",
+            "relativeDay": None,
+            "reviewStatus": "verificado",
+        }
+    )
+
+    cuerpo = entorno.turno(solicitud).json()
+
+    assert CHAT_SIN_FECHA_TEXTO_INICIAL.format(n=1) in cuerpo["notices"]
+    assert [b["factRefs"] for b in cuerpo["blocks"]] == [["f4"], ["f1"]]
+    assert "[f5]" not in entorno.llm.usuarios[-1]
+
+
+def test_chat_turn_caso_no_avisa_de_hechos_sin_fecha_cuando_la_pregunta_no_nombra_un_periodo():
+    entorno = crear_entorno_de_chat("CHAT-CASO-PERIODO")
+    solicitud = solicitud_desde_ejemplo("chat-turn-request-caso-periodo.json")
+    solicitud["question"] = "¿Cuál es la situación actual de la paciente?"
+    solicitud["caseFacts"][3]["relativeDay"] = None
+
+    cuerpo = entorno.turno(solicitud).json()
+
+    assert not any("sin fecha confiable" in aviso for aviso in cuerpo["notices"])
+
+
+def test_chat_turn_caso_distingue_el_periodo_vacio_del_expediente_sin_datos_cuando_hay_hechos_fuera_del_periodo():
+    entorno = crear_entorno_de_chat("CHAT-CASO-SIN-DATOS")
+    solicitud = solicitud_desde_ejemplo("chat-turn-request-caso-periodo.json")
+    solicitud["question"] = "¿Qué ocurrió en los últimos 10 días?"
+    for hecho in solicitud["caseFacts"]:
+        hecho["relativeDay"] = -200
+
+    cuerpo = entorno.turno(solicitud).json()
+
+    assert cuerpo["blocks"] == [
+        {"kind": "limitacion", "text": CHAT_SIN_DATOS_PERIODO_TEXTO_INICIAL}
+    ]
+    assert CHAT_SIN_DATOS_PERIODO_TEXTO_INICIAL != TEXTO_SIN_DATOS
+
+
+def test_chat_turn_caso_no_usa_la_fecha_absoluta_de_la_pregunta_como_periodo_ni_como_fecha_de_un_hecho():
+    entorno = crear_entorno_de_chat("CHAT-CASO-PERIODO")
+    solicitud = solicitud_desde_ejemplo("chat-turn-request-caso-periodo.json")
+    solicitud["question"] = "¿Qué ocurrió desde el 2025-03-14?"
+
+    entorno.turno(solicitud)
+
+    prompt = entorno.llm.usuarios[-1]
+    assert all(f"[f{n}]" in prompt for n in range(1, 5))
+    datos = prompt.split("<patient_data>")[1].split("</patient_data>")[0]
+    assert not FECHA_ABSOLUTA.search(datos)

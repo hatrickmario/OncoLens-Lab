@@ -19,6 +19,8 @@ TERMINOS = {"mama": frozenset({"mama", "mamario"}), "prostata": frozenset({"pros
         ("¿Qué estudios describen terapia endocrina?", Intencion.evidencia),
         ("¿Qué tratamiento previo ha recibido y cuándo?", Intencion.caso),
         ("¿Qué tratamientos previos ha recibido?", Intencion.caso),
+        ("¿Qué tratamiento anterior debe recibir?", Intencion.evidencia),
+        ("¿Qué tratamiento previo debe recibir?", Intencion.evidencia),
         ("¿Qué tratamiento anterior recibió?", Intencion.caso),
         ("¿Qué fuentes respaldan la respuesta?", Intencion.fuentes_limitaciones),
         ("¿Qué limitaciones tiene esto?", Intencion.fuentes_limitaciones),

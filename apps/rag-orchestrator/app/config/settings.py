@@ -25,7 +25,9 @@ from app.domain.chat.valores_iniciales import (
     AVISO_VERIFICAR_FUENTES_INICIAL,
     CHAT_MAX_HILOS_INICIAL,
     CHAT_MEMORY_MAX_TOKENS_INICIAL,
+    CHAT_SIN_DATOS_PERIODO_TEXTO_INICIAL,
     CHAT_SIN_DATOS_TEXTO_INICIAL,
+    CHAT_SIN_FECHA_TEXTO_INICIAL,
     CHAT_THREAD_TTL_SEGUNDOS_INICIAL,
 )
 from app.domain.corpus_seed.admisibilidad import (
@@ -134,6 +136,10 @@ class Settings(BaseSettings):
     chat_notice_verify: str = Field(default=AVISO_VERIFICAR_FUENTES_INICIAL, min_length=1)
     # Texto fijo del turno de caso sin ningún dato documentado (US-261, RN-01, RN-22).
     chat_sin_datos_texto: str = Field(default=CHAT_SIN_DATOS_TEXTO_INICIAL, min_length=1)
+    chat_sin_datos_periodo_texto: str = Field(
+        default=CHAT_SIN_DATOS_PERIODO_TEXTO_INICIAL, min_length=1
+    )
+    chat_sin_fecha_texto: str = Field(default=CHAT_SIN_FECHA_TEXTO_INICIAL, min_length=1)
     # tokenizer.json local del LLM para contar la memoria del chat; sin él se usa un contador conservador por caracteres.
     llm_tokenizer_path: Path | None = None
     # Longitud máxima del código de tipo de cáncer que entra al filtro de Milvus (RN-22).

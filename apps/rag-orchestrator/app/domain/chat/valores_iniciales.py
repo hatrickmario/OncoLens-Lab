@@ -15,3 +15,8 @@ CHAT_SIN_DATOS_TEXTO_INICIAL = (
     "No se encontró información documentada sobre lo preguntado en el expediente"
 )
 """Texto fijo del bloque ``limitacion`` de un turno de caso sin ningún dato documentado (US-261 AC-4, RN-01)."""
+
+CHAT_SIN_DATOS_PERIODO_TEXTO_INICIAL = "No se encontró información documentada en el periodo consultado; el expediente tiene datos fuera de ese periodo"
+"""Texto fijo del turno de caso con periodo cuando el filtro dejó sin hechos pero el expediente sí tiene datos (US-261)."""
+CHAT_SIN_FECHA_TEXTO_INICIAL = "Se omitieron {n} dato(s) del expediente sin fecha confiable; no se pudieron ubicar en el periodo consultado"
+"""Aviso no bloqueante cuando el filtro por periodo deja fuera hechos sin fecha confiable; ``{n}`` es su cantidad."""

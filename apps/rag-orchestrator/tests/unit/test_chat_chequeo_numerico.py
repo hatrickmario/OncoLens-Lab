@@ -7,6 +7,8 @@ o cambiada: el NLI puede dejar pasar una paráfrasis con un número distinto, es
 import pytest
 
 from app.domain.chat.chequeo_numerico import cifras_sostenidas_por_la_descripcion
+from app.domain.chat.descripcion_de_hechos import describir_hecho
+from app.domain.chat.turno import HechoDelCaso
 
 DESCRIPCION = (
     "CA 15-3: 22 U/mL, normal, 30 días después del diagnóstico. "
@@ -119,3 +121,33 @@ def test_cifras_sostenidas_compara_los_dos_extremos_de_un_rango_cuando_la_afirma
 
 def test_cifras_sostenidas_acepta_la_afirmacion_sin_cifras_cuando_la_descripcion_las_tiene():
     assert cifras_sostenidas_por_la_descripcion("Hubo una cirugía.", "Cirugía, 40 días antes.")
+
+
+def test_cifras_sostenidas_rechaza_la_afirmacion_cuando_cambia_mg_por_microgramos():
+    assert not cifras_sostenidas_por_la_descripcion("Recibió 5 µg", "Recibió 5 mg")
+    assert cifras_sostenidas_por_la_descripcion("Recibió 5 µg", "Recibió 5 µg")
+
+
+def test_cifras_sostenidas_trata_punto_y_coma_siempre_como_decimal_cuando_la_cifra_trae_miles():
+    # Política: «1.200» es 1,2 (decimal); no hay separador de miles en las verbalizaciones del expediente.
+    assert cifras_sostenidas_por_la_descripcion(
+        "El valor fue 1,2 U/mL.", "Valor: 1.200 U/mL, 5 días antes."
+    )
+    assert not cifras_sostenidas_por_la_descripcion(
+        "El valor fue 1200 U/mL.", "Valor: 1.200 U/mL, 5 días antes."
+    )
+
+
+def test_cifras_sostenidas_no_compara_cifras_en_palabras_ni_unidades_fuera_de_la_lista():
+    assert cifras_sostenidas_por_la_descripcion("Recibió tres ciclos de 5 UFC.", "Recibió 5 UFC.")
+
+
+def test_cifras_sostenidas_rechaza_el_cambio_de_sentido_del_momento_que_escribe_describir_hecho():
+    hecho = HechoDelCaso("f1", "Cirugía", -40, "verificado")
+    descripcion = describir_hecho(hecho)
+
+    cambiada = descripcion.replace("antes", "después")
+
+    assert cambiada != descripcion
+    assert not cifras_sostenidas_por_la_descripcion(cambiada, descripcion)
+    assert cifras_sostenidas_por_la_descripcion(descripcion, descripcion)
