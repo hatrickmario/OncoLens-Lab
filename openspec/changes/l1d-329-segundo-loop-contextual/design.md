@@ -190,3 +190,21 @@ solo pasa a `true` en `.env.example` y Compose tras ese PASS (tarea humana H-2).
   valor nuevo de `fields` es aditivo en una propiedad nueva y se simula de nuevo con oasdiff.
 - [`/platform/evidence-analyses` también pasa por `/rag/query`] → el gate aplica igual; el formulario de pregunta única
   sale de la UI con `l1d-324`, pero el endpoint sigue vigente y queda cubierto por los mismos tests.
+
+## Desviaciones de la implementación
+
+- **Valores canónicos en `escalas.json`.** El catálogo no traía conjuntos de valores de estadio, grado ni biomarcador, que el
+  diseño da por existentes («valores permitidos del catálogo»). Se añadieron a `escalas.json` (versión del manifest 1.7.0):
+  `valores` en `sistemasDeEstadificacion` y `sistemasDeGradacion` y `valoresDeBiomarcador` (HER2, RE, RP, BRCA, HRR). El
+  grado que entra a la consulta es solo Gleason/ISUP (`ISUP n`, PRD B-08), buscado como palabras completas dentro del texto
+  del grado; el estadio exige que el sistema del caso sea el del catálogo (`TNM_8`).
+- **Términos.** `tipo` = `etiquetaEs` de la entrada CIE-10; biomarcador principal = el primero de `datos-criticos` que el
+  caso trae, con su término (`etiquetaEs` de `codigos.json` o el nombre canónico) y, solo si es del conjunto, su valor como
+  término aparte. Los términos son cadenas del catálogo sin prefijos («IIA», no «estadio IIA»).
+- **Léxico.** `lenguaje/marcos-de-pregunta.json` se declara con `marcosDePregunta: true` en el manifest (como `escalas`);
+  `clinical-api` registró su esquema en `validar-catalogo.ts`. El idioma del gate es el del detector; no hay unión en el
+  caso ambiguo porque el detector ya resuelve al idioma por defecto (la función admite varios idiomas).
+- **Configuración añadida.** `CHAT_AVISO_BUSQUEDA_AMPLIADA` (prefijo del aviso, RN-22) además de las tres claves
+  `QUERY_CONTEXT_EXPANSION_*`.
+- **Evaluación.** `app/evaluation` no tiene suite de recuperación con el loop contextual; la medición de las 60 preguntas
+  (tarea 5.1) necesita una suite nueva o el script de la medición de ADR-52. El dataset sintético queda listo.

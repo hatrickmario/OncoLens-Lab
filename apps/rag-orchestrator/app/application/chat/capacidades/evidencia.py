@@ -17,6 +17,7 @@ from app.application.chat.citas import ConstructorDeCitas, FuenteDeCita
 from app.application.chat.contexto_del_turno import evidencia_del_turno
 from app.application.chat.grafo import EstadoDelGrafo
 from app.application.ports import ConsultaDeEvidencia, PosicionDeChunks
+from app.domain.chat.ampliacion_de_busqueda import aviso_de_busqueda_ampliada
 from app.domain.chat.bloques_de_evidencia import (
     CriterioParaMostrar,
     texto_de_la_opcion,
@@ -35,9 +36,16 @@ logger = logging.getLogger(__name__)
 
 
 class NodoEvidencia:
-    def __init__(self, *, consulta: ConsultaDeEvidencia, posiciones: PosicionDeChunks) -> None:
+    def __init__(
+        self,
+        *,
+        consulta: ConsultaDeEvidencia,
+        posiciones: PosicionDeChunks,
+        aviso_de_ampliacion: str,
+    ) -> None:
         self._consulta = consulta
         self._citas = ConstructorDeCitas(posiciones)
+        self._aviso_de_ampliacion = aviso_de_ampliacion
 
     async def ejecutar(self, estado: EstadoDelGrafo) -> dict[str, Any]:
         turno = evidencia_del_turno()
@@ -56,6 +64,7 @@ class NodoEvidencia:
             len(bloques),
         )
         return {
+            **self._aviso_de_la_ampliacion(respuesta),
             "propuestas": (),
             "bloques_del_nodo": bloques,
             "omitidas_del_nodo": respuesta.omittedClaims,
@@ -70,6 +79,14 @@ class NodoEvidencia:
                 bool(respuesta.evidenceOptions),
             ),
         }
+
+    def _aviso_de_la_ampliacion(self, respuesta: RagQueryInternalResponse) -> dict[str, Any]:
+        """El aviso determinista de ``notices[]`` si el turno usó el loop contextual (ADR-52): campos, nunca valores."""
+        expansion = respuesta.meta.retrievalParams.contextExpansion
+        if expansion is None:
+            return {}
+        campos = tuple(campo.value for campo in expansion.fields)
+        return {"avisos_del_nodo": (aviso_de_busqueda_ampliada(self._aviso_de_ampliacion, campos),)}
 
     async def _bloques_del(
         self,
@@ -86,17 +103,13 @@ class NodoEvidencia:
                     BloqueDelTurno(TipoDeBloque.limitacion, lim.text)
                     for lim in respuesta.limitations
                 ),
-                BloqueDelTurno(
-                    TipoDeBloque.limitacion,
-                    texto_de_limitaciones_de_la_recuperacion(
-                        respuesta.meta.corpusCutoffDate,
-                        respuesta.meta.excludedSources,
-                        len(chunk_ids_evaluados),
-                    ),
-                ),
+                _limitacion_del_alcance(respuesta, chunk_ids_evaluados),
             )
         if not respuesta.evidenceOptions:
-            return (BloqueDelTurno(TipoDeBloque.limitacion, MENSAJE_SIN_OPCIONES_CON_SOPORTE),)
+            return (
+                BloqueDelTurno(TipoDeBloque.limitacion, MENSAJE_SIN_OPCIONES_CON_SOPORTE),
+                _limitacion_del_alcance(respuesta, chunk_ids_evaluados),
+            )
         fuentes = [
             FuenteDeCita(c.chunkId, c.title, c.chunkTextSnapshot)
             for opcion in respuesta.evidenceOptions
@@ -123,6 +136,20 @@ class NodoEvidencia:
             BloqueDelTurno(TipoDeBloque.limitacion, lim.text) for lim in respuesta.limitations
         ]
         return tuple(bloques)
+
+
+def _limitacion_del_alcance(
+    respuesta: RagQueryInternalResponse, chunk_ids_evaluados: Sequence[str]
+) -> BloqueDelTurno:
+    """El bloque con el alcance de la recuperación (US-266): fecha de corte, fuentes no incluidas y fragmentos evaluados."""
+    return BloqueDelTurno(
+        TipoDeBloque.limitacion,
+        texto_de_limitaciones_de_la_recuperacion(
+            respuesta.meta.corpusCutoffDate,
+            respuesta.meta.excludedSources,
+            len(chunk_ids_evaluados),
+        ),
+    )
 
 
 def _criterios_de_la_opcion(

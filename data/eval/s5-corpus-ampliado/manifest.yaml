@@ -8,6 +8,7 @@ descripcion: 'Corpus derivado de data/raw/s3 (53 documentos de NCI, PMC Open Acc
 archivos:
   corpus: corpus.yaml
   preguntas: preguntas.yaml
+  preguntas_contextuales: preguntas-contextuales.yaml # las 60 preguntas de la medición de ADR-52 (US-271, L1D-329)
   propuestas: propuestas.yaml
   pii: pii.yaml
   prescriptivas: prescriptivas.yaml

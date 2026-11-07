@@ -34,3 +34,7 @@ CHAT_CONFLICTO_SIN_CONTRAPARTE_TEXTO_INICIAL = (
 """Aviso cuando un hecho marcado en conflicto llega sin su contraparte: no se afirma que no hay contradicciones."""
 CHAT_SIN_FECHA_TEXTO_INICIAL = "Se omitieron <n> dato(s) del expediente sin fecha confiable; no se pudieron ubicar en el periodo consultado"
 """Aviso no bloqueante cuando el filtro por periodo deja fuera hechos sin fecha confiable; ``<n>`` es su cantidad (no ``{n}``: la llave rompe el valor por defecto de Compose)."""
+
+CHAT_AVISO_BUSQUEDA_AMPLIADA_INICIAL = "La búsqueda se amplió con datos del caso"
+"""Prefijo del aviso de ``notices[]`` cuando el turno usó el segundo loop contextual (US-271, ADR-52, RN-22); sigue «: » y los
+nombres de los campos usados, nunca valores."""

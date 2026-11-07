@@ -229,7 +229,11 @@ def _capacidades_de_evidencia(
     El análisis nuevo es el nodo de la intención ``evidencia``; el seguimiento del análisis activo es el de la subintención."""
     if servicio is None or posiciones is None:
         return {}, {}
-    analisis = NodoEvidencia(consulta=servicio, posiciones=posiciones)
+    analisis = NodoEvidencia(
+        consulta=servicio,
+        posiciones=posiciones,
+        aviso_de_ampliacion=settings.chat_aviso_busqueda_ampliada,
+    )
     seguimiento = NodoSeguimientoDeEvidencia(
         servicio=servicio,
         posiciones=posiciones,

@@ -264,6 +264,20 @@ class QueryRewrite(BaseModel):
     reason: Reason
 
 
+class FieldModel(StrEnum):
+    tipo = 'tipo'
+    estadio = 'estadio'
+    biomarcador_principal = 'biomarcador_principal'
+
+
+class ContextExpansion(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    applied: Literal[True]
+    fields: Annotated[list[FieldModel], Field(min_length=1)]
+
+
 class RetrievalParams(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
@@ -288,9 +302,15 @@ class RetrievalParams(BaseModel):
     queryRewrite: Annotated[
         QueryRewrite,
         Field(
-            description='Segundo loop de reescritura de la consulta (US-238, RN-02 enmendada). Nunca null. `disparado`: el primer loop quedó vacío y hubo segunda recuperación con la consulta reformulada (rescate o no); `no_disparado`: el primer loop tuvo chunks sobre el umbral o la reescritura está desactivada; `no_disponible`: primer loop vacío sin reformulación utilizable (LLM caído, deadline vencido, salida inválida o cero términos del catálogo); `no_aplica`: /rag/follow-up, donde el segundo loop nunca corre. La consulta reformulada nunca sale de rag-orchestrator.'
+            description='Segundo loop de reescritura de la consulta (US-238, RN-02 enmendada). Nunca null. `disparado`: el primer loop quedó vacío y hubo segunda recuperación con la consulta reformulada (rescate o no); `no_disparado`: el primer loop tuvo chunks sobre el umbral o la reescritura está desactivada; `no_disponible`: primer loop vacío sin reformulación utilizable (LLM caído, deadline vencido, salida inválida o cero términos del catálogo); `no_aplica`: /rag/follow-up, donde el segundo loop nunca corre. `no_disparado` incluye además el caso en que el segundo loop fue el contextual sin LLM (ver `contextExpansion`). La consulta reformulada nunca sale de rag-orchestrator.'
         ),
     ]
+    contextExpansion: Annotated[
+        ContextExpansion | None,
+        Field(
+            description='Segundo loop contextual sin LLM (US-271, ADR-52, RN-02 enmendada). Opcional: ausente equivale a que no corrió (nunca null). `fields` nombra los campos del caso usados (nunca valores). No sustituye a `queryRewrite`, que describe solo la reescritura con LLM.'
+        ),
+    ] = None
 
 
 class RagMeta(BaseModel):

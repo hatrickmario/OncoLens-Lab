@@ -13,6 +13,7 @@ from app.application.errores import LlmLocalNoDisponibleError
 
 from pathlib import Path
 
+from app.domain.chat.mensajes import MENSAJE_SIN_OPCIONES_CON_SOPORTE
 from app.domain.lenguaje import ListaTerminos, check_prohibited_terms
 from tests.support.aplicabilidad import (
     OPCION_O_A,
@@ -219,7 +220,9 @@ def test_chat_turn_lleva_la_opcion_sin_soporte_a_discarded_options_y_no_la_muest
     analisis = cuerpo["evidenceAnalysis"]
     assert analisis["evidenceOptions"] == [] and len(analisis["discardedOptions"]) == 1
     assert RAZON_SIN_SOPORTE not in str(cuerpo["blocks"])
-    assert [b["kind"] for b in cuerpo["blocks"]] == ["limitacion"]
+    # El texto fijo de US-271 AC-10 y, con él, el alcance de la recuperación de US-266 (antes solo había un bloque).
+    assert [b["kind"] for b in cuerpo["blocks"]] == ["limitacion", "limitacion"]
+    assert cuerpo["blocks"][0]["text"] == MENSAJE_SIN_OPCIONES_CON_SOPORTE
 
 
 def test_chat_turn_devuelve_la_limitacion_de_sin_evidencia_con_puntaje_null_cuando_ningun_chunk_supera_el_umbral():

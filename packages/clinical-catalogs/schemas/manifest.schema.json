@@ -23,6 +23,10 @@
       "description": "true = el catálogo trae escalas.json en la raíz (L1D-90).",
       "const": true
     },
+    "marcosDePregunta": {
+      "description": "true = el catálogo trae lenguaje/marcos-de-pregunta.json (L1D-329, ADR-52).",
+      "const": true
+    },
     "poblacionReglas": {
       "type": "object",
       "propertyNames": { "pattern": "^[a-z]+$" },

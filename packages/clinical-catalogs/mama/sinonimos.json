@@ -77,6 +77,49 @@
           "idioma": "en"
         }
       ]
+    },
+    {
+      "terminoCanonico": "antraciclinas",
+      "sinonimos": [
+        {
+          "texto": "antraciclina",
+          "idioma": "es"
+        },
+        {
+          "texto": "anthracyclines",
+          "idioma": "en"
+        },
+        {
+          "texto": "anthracycline",
+          "idioma": "en"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "pertuzumab",
+      "sinonimos": [
+        {
+          "texto": "doble bloqueo anti-HER2",
+          "idioma": "es"
+        },
+        {
+          "texto": "dual HER2 blockade",
+          "idioma": "en"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "TILs",
+      "sinonimos": [
+        {
+          "texto": "linfocitos infiltrantes de tumor",
+          "idioma": "es"
+        },
+        {
+          "texto": "tumor-infiltrating lymphocytes",
+          "idioma": "en"
+        }
+      ]
     }
   ]
 }

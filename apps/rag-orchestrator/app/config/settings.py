@@ -23,6 +23,7 @@ from app.domain.chat.valores_iniciales import (
     AVISO_ACADEMICO_INICIAL,
     AVISO_DE_IA_INICIAL,
     AVISO_VERIFICAR_FUENTES_INICIAL,
+    CHAT_AVISO_BUSQUEDA_AMPLIADA_INICIAL,
     CHAT_MAX_HILOS_INICIAL,
     CHAT_EVIDENCE_MAX_OPTIONS_INICIAL,
     CHAT_CONFLICTO_ETIQUETA_INICIAL,
@@ -40,6 +41,13 @@ from app.domain.corpus_seed.admisibilidad import (
     clase_contradice_el_texto,
 )
 from app.domain.corpus_seed.chunking import validar_ventana
+from app.domain.expansion_contextual import (
+    CAMPOS_DE_EXPANSION,
+    EXPANSION_CAMPOS_INICIAL,
+    EXPANSION_HABILITADA_INICIAL,
+    FORMATO_PLANO,
+    FORMATOS_DE_CONSULTA,
+)
 from app.domain.fusion_de_candidatos import HYBRID_SPARSE_WEIGHT_INICIAL, RRF_K_INICIAL
 from app.domain.pares_del_reranker import RERANKER_CUT_LOG_MAX_IDS_INICIAL
 from app.domain.reescritura import (
@@ -130,6 +138,11 @@ class Settings(BaseSettings):
         default=REESCRITURA_MAX_TOKENS_DE_SALIDA_INICIAL, gt=0
     )
     query_rewrite_max_terms: int = Field(default=REESCRITURA_MAX_TERMINOS_INICIAL, gt=0)
+    # Segundo loop contextual sin LLM (US-271, ADR-52, RN-02 enmendada, RN-22): desactivado hasta el PASS de `evaluate`. Los
+    # campos del caso que aportan términos y el formato de la consulta que puntúa el reranker son de conjuntos cerrados.
+    query_context_expansion_enabled: bool = EXPANSION_HABILITADA_INICIAL
+    query_context_expansion_fields: Annotated[tuple[str, ...], NoDecode] = EXPANSION_CAMPOS_INICIAL
+    query_context_expansion_rerank_format: str = FORMATO_PLANO
     # Chat (US-259, ADR-51, RN-22): estado efímero del hilo en memoria del proceso. `CHAT_THREAD_TTL_SECONDS` vence el hilo
     # inactivo, `CHAT_MAX_THREADS` desaloja el más antiguo y `CHAT_MEMORY_MAX_TOKENS` acota la ventana de turnos previos.
     chat_thread_ttl_seconds: int = Field(default=CHAT_THREAD_TTL_SEGUNDOS_INICIAL, gt=0)
@@ -141,6 +154,10 @@ class Settings(BaseSettings):
     chat_notice_ai: str = Field(default=AVISO_DE_IA_INICIAL, min_length=1)
     chat_notice_academic: str = Field(default=AVISO_ACADEMICO_INICIAL, min_length=1)
     chat_notice_verify: str = Field(default=AVISO_VERIFICAR_FUENTES_INICIAL, min_length=1)
+    # Prefijo del aviso del turno que amplió la búsqueda con datos del caso (US-271, ADR-52, RN-19, RN-22).
+    chat_aviso_busqueda_ampliada: str = Field(
+        default=CHAT_AVISO_BUSQUEDA_AMPLIADA_INICIAL, min_length=1
+    )
     # Texto fijo del turno de caso sin ningún dato documentado (US-261, RN-01, RN-22).
     chat_sin_datos_texto: str = Field(default=CHAT_SIN_DATOS_TEXTO_INICIAL, min_length=1)
     chat_sin_datos_periodo_texto: str = Field(
@@ -238,6 +255,30 @@ class Settings(BaseSettings):
     @classmethod
     def _tipos_habilitados_separados_por_comas(cls, valor: Any) -> Any:
         return _lista_separada_por_comas(valor)
+
+    @field_validator("query_context_expansion_fields", mode="before")
+    @classmethod
+    def _campos_de_expansion_separados_por_comas(cls, valor: Any) -> Any:
+        return _lista_separada_por_comas(valor)
+
+    @field_validator("query_context_expansion_fields")
+    @classmethod
+    def _campos_de_expansion_del_conjunto_cerrado(cls, valor: tuple[str, ...]) -> tuple[str, ...]:
+        """El error nombra la clave y NUNCA el valor recibido (RN-10, RN-14)."""
+        if not valor or len(set(valor)) != len(valor) or not set(valor) <= set(CAMPOS_DE_EXPANSION):
+            raise ValueError(
+                "QUERY_CONTEXT_EXPANSION_FIELDS: debe ser una lista sin repetir de campos del conjunto cerrado"
+            )
+        return valor
+
+    @field_validator("query_context_expansion_rerank_format")
+    @classmethod
+    def _formato_de_la_consulta_contextual_del_conjunto_cerrado(cls, valor: str) -> str:
+        if valor not in FORMATOS_DE_CONSULTA:
+            raise ValueError(
+                "QUERY_CONTEXT_EXPANSION_RERANK_FORMAT: formato fuera del conjunto permitido"
+            )
+        return valor
 
     @field_validator("llm_base_url")
     @classmethod

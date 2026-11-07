@@ -74,7 +74,10 @@ from app.config.settings import Settings, claves_de_recuperacion_ausentes, nombr
 from app.config.telemetria import exigir_telemetria_de_langchain_apagada
 from app.config.version import VERSION_DEL_SERVICIO
 from app.domain.criterios_aplicabilidad import CriteriosDeAplicabilidad
+from app.domain.expansion_contextual import ParametrosDeExpansionContextual
 from app.domain.fusion_de_candidatos import EstrategiaDeFusion
+from app.domain.pregunta_sin_tema_propio import MarcosDePregunta
+from app.domain.terminos_del_caso import CatalogoDeTerminos
 from app.domain.tipos_habilitados import tipos_ausentes_del_catalogo
 from app.infrastructure.catalogo_clinico.aplicabilidad import (
     CriteriosDelCatalogo,
@@ -88,6 +91,10 @@ from app.infrastructure.catalogo_clinico.manifiesto import (
     CatalogoNoConfigurado,
     CatalogoNoDisponible,
     cargar_catalogo_del_manifiesto,
+)
+from app.infrastructure.catalogo_clinico.terminos_del_caso import (
+    cargar_catalogo_de_terminos,
+    cargar_marcos_de_pregunta,
 )
 from app.infrastructure.catalogo_clinico.sinonimos import (
     cargar_terminos_del_catalogo,
@@ -655,7 +662,26 @@ def _crear_servicio_de_recuperacion(
         # Segundo loop (US-238): el mismo LLM local (RN-12) y solo términos del catálogo montado (RN-27).
         reescritor=crear_reescritor_local(settings, envolver),
         terminos_del_catalogo=_terminos_del_catalogo_montado(settings, puertos.catalogo_clinico),
+        # Segundo loop contextual (US-271): léxico y términos del caso solo del catálogo montado (RN-27); sin LLM.
+        marcos_de_pregunta=_marcos_de_pregunta_montados(settings),
+        catalogo_de_terminos=_catalogo_de_terminos_montado(settings, puertos.catalogo_clinico),
     )
+
+
+def _marcos_de_pregunta_montados(settings: Settings) -> MarcosDePregunta | None:
+    """El léxico del gate G1, solo si el loop contextual está activo: un catálogo sin él no impide arrancar con el
+    indicador apagado, pero con el indicador activo el arranque falla (``CatalogoNoDisponible``) en vez de degradar."""
+    if not settings.query_context_expansion_enabled or settings.clinical_catalog_path is None:
+        return None
+    return cargar_marcos_de_pregunta(settings.clinical_catalog_path)
+
+
+def _catalogo_de_terminos_montado(
+    settings: Settings, catalogo: CatalogoClinico
+) -> CatalogoDeTerminos | None:
+    if not settings.query_context_expansion_enabled or settings.clinical_catalog_path is None:
+        return None
+    return cargar_catalogo_de_terminos(settings.clinical_catalog_path, catalogo.tipos_de_cancer())
 
 
 def _terminos_del_catalogo_montado(settings: Settings, catalogo: CatalogoClinico) -> frozenset[str]:
@@ -732,6 +758,11 @@ def _parametros_de_recuperacion(settings: Settings) -> ParametrosDeRecuperacion:
         tipos_habilitados=settings.enabled_cancer_types,
         respaldo=parametros_del_respaldo(settings),
         reescritura=parametros_de_reescritura(settings),
+        expansion_contextual=ParametrosDeExpansionContextual(
+            habilitada=settings.query_context_expansion_enabled,
+            campos=settings.query_context_expansion_fields,
+            formato=settings.query_context_expansion_rerank_format,
+        ),
         retrieval_mode=RetrievalMode(settings.retrieval_mode),
         retrieval_fusion=EstrategiaDeFusion(settings.retrieval_fusion),
         rrf_k=settings.rrf_k,

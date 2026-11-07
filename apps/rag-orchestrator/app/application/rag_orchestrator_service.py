@@ -80,6 +80,7 @@ from app.domain.citations import (
     contar_por_motivo,
     validar_citas,
 )
+from app.domain.expansion_contextual import ParametrosDeExpansionContextual, consulta_contextual
 from app.domain.faltantes import claves_de_faltantes_invalidas
 from app.domain.fusion_de_candidatos import (
     HYBRID_SPARSE_WEIGHT_INICIAL,
@@ -95,7 +96,14 @@ from app.domain.option_selection import (
     RecorteDeOpciones,
     recortar_contando_excedente,
 )
+from app.domain.pregunta_sin_tema_propio import MarcosDePregunta, pregunta_sin_tema_propio
 from app.domain.resolucion_de_soporte import ResultadoSoporte
+from app.domain.terminos_del_caso import (
+    CasoParaTerminos,
+    CatalogoDeTerminos,
+    TerminosDelCaso,
+    terminos_del_caso,
+)
 from app.domain.pares_del_reranker import (
     RERANKER_CUT_LOG_MAX_IDS_INICIAL,
     cortados_con_puesto,
@@ -120,6 +128,8 @@ from app.domain.retrieval_filter import expresion_vigente_del_tipo
 from app.domain.tipos_habilitados import exigir_tipo_habilitado
 from app.prompts.rag_query import VERSION_DEL_PROMPT
 from app.schemas.generated.models import (
+    ContextExpansion,
+    FieldModel,
     Fusion,
     Limitation,
     LlmProvider,
@@ -182,6 +192,8 @@ class ParametrosDeRecuperacion:
     """``HYBRID_SPARSE_WEIGHT``: peso de la rama *sparse* (0 < w < 1); solo con ``retrieval_fusion = ponderada``."""
     reescritura: ParametrosDeReescritura = ParametrosDeReescritura()
     """``QUERY_REWRITE_*`` (US-238, RN-22): segundo loop de reescritura; desactivado por defecto."""
+    expansion_contextual: ParametrosDeExpansionContextual = ParametrosDeExpansionContextual()
+    """``QUERY_CONTEXT_EXPANSION_*`` (US-271, ADR-52, RN-22): segundo loop contextual sin LLM; desactivado por defecto."""
 
 
 def _con_relevancia(aceptada: OpcionAceptada, puntajes: Mapping[str, float]) -> OpcionConRelevancia:
@@ -213,7 +225,11 @@ class RAGOrchestratorService:
         embedder_sparse: QuerySparseEncoder | None = None,
         reescritor: QueryRewriter | None = None,
         terminos_del_catalogo: Collection[str] = (),
+        marcos_de_pregunta: MarcosDePregunta | None = None,
+        catalogo_de_terminos: CatalogoDeTerminos | None = None,
     ) -> None:
+        self._marcos_de_pregunta = marcos_de_pregunta
+        self._catalogo_de_terminos = catalogo_de_terminos
         self._reescritor = reescritor
         self._terminos_del_catalogo = frozenset(normalizar_texto(t) for t in terminos_del_catalogo)
         self._detector_idioma = detector_idioma
@@ -304,14 +320,15 @@ class RAGOrchestratorService:
         )  # RN-11: texto libre no llega a ningún puerto
         idioma, release = await self._idioma_y_release(trace_id, solicitud.query)
         loop = await self._recuperar_y_puntuar(trace_id, solicitud, filtro, solicitud.query, 1)
+        campos_ampliados: tuple[str, ...] = ()
         if con_reescritura:
-            loop, reescritura = await self._segundo_loop_si_corresponde(
-                trace_id, solicitud, filtro, loop
+            loop, reescritura, campos_ampliados = await self._segundo_loop_si_corresponde(
+                trace_id, solicitud, filtro, loop, idioma
             )
         else:
             reescritura = EstadoDeReescritura(MotivoDeReescritura.no_aplica)
         meta = self._armar_meta_de_recuperacion(
-            solicitud, idioma, release, inicio, reescritura, version_del_prompt
+            solicitud, idioma, release, inicio, reescritura, version_del_prompt, campos_ampliados
         )
         return ResultadoDeRecuperacion(
             tuple(loop.sobre_umbral),
@@ -376,12 +393,16 @@ class RAGOrchestratorService:
         filtro: str,
         texto_de_busqueda: str,
         numero_de_loop: int,
+        texto_a_puntuar: str | None = None,
     ) -> ResultadoDelLoop:
         """Un loop: recuperar → cortar → reranquear → umbral. Solo el vector depende de ``texto_de_busqueda``; el
-        *reranker* puntúa siempre contra la pregunta original (RN-03, RN-06)."""
+        *reranker* puntúa contra la pregunta original (RN-03, RN-06), salvo en el loop contextual de ADR-52, que
+        puntúa ``texto_a_puntuar`` (la pregunta sin tema propio más los términos del caso del catálogo)."""
         candidatos = await self._recuperar(trace_id, solicitud, filtro, texto_de_busqueda)
         a_reranquear = self._cortar_a_pares_del_reranker(trace_id, candidatos)
-        puntuados = await self._reranquear(trace_id, solicitud.query, a_reranquear)
+        puntuados = await self._reranquear(
+            trace_id, solicitud.query if texto_a_puntuar is None else texto_a_puntuar, a_reranquear
+        )
         sobre_umbral = filtrar_sobre_umbral(puntuados, self._parametros.relevance_threshold)
         logger.info(
             "event=rag_query_recuperacion traceId=%s loop=%d retrieved=%d aboveThreshold=%d",
@@ -394,6 +415,73 @@ class RAGOrchestratorService:
         return ResultadoDelLoop(candidatos, sobre_umbral, evaluados)
 
     async def _segundo_loop_si_corresponde(
+        self,
+        trace_id: str,
+        solicitud: RagQueryInternalRequest,
+        filtro: str,
+        primero: ResultadoDelLoop,
+        idioma: Idioma,
+    ) -> tuple[ResultadoDelLoop, EstadoDeReescritura, tuple[str, ...]]:
+        """RN-02 enmendada: con el primer loop vacío, como máximo UN segundo loop: el contextual sin LLM (ADR-52) si la
+        pregunta no tiene tema propio y hay términos del caso en el catálogo; si no, hasta ``QUERY_REWRITE_MAX_ITERATIONS``
+        loops con la consulta reformulada con términos del catálogo. Devuelve el loop, el estado de la reescritura
+        (``no_disparado`` si el segundo loop fue el contextual) y los campos del caso usados (vacío = no corrió)."""
+        if not primero.sobre_umbral:
+            ampliado = await self._loop_contextual_si_corresponde(
+                trace_id, solicitud, filtro, idioma
+            )
+            if ampliado is not None:
+                loop, campos = ampliado
+                return loop, EstadoDeReescritura(MotivoDeReescritura.no_disparado), campos
+        loop, reescritura = await self._segundo_loop_de_reescritura(
+            trace_id, solicitud, filtro, primero
+        )
+        return loop, reescritura, ()
+
+    async def _loop_contextual_si_corresponde(
+        self,
+        trace_id: str,
+        solicitud: RagQueryInternalRequest,
+        filtro: str,
+        idioma: Idioma,
+    ) -> tuple[ResultadoDelLoop, tuple[str, ...]] | None:
+        """ADR-52: UNA recuperación más con la pregunta y los términos del caso del catálogo, sin LLM; el *reranker*
+        puntúa la misma consulta. ``None`` si no corresponde. Se registran solo los campos usados y el número de
+        términos (RN-10, RN-11)."""
+        encontrados = self._terminos_del_loop_contextual(solicitud, idioma)
+        if encontrados is None:
+            return None
+        consulta = consulta_contextual(
+            solicitud.query, encontrados.terminos, self._parametros.expansion_contextual.formato
+        )
+        logger.info(
+            "event=rag_query_expansion_contextual traceId=%s fields=%s terms=%d",
+            trace_id,
+            ",".join(encontrados.campos),
+            len(encontrados.terminos),
+        )
+        loop = await self._recuperar_y_puntuar(trace_id, solicitud, filtro, consulta, 2, consulta)
+        return loop, encontrados.campos
+
+    def _terminos_del_loop_contextual(
+        self, solicitud: RagQueryInternalRequest, idioma: Idioma
+    ) -> TerminosDelCaso | None:
+        """La decisión de ADR-52: indicador activo, pregunta sin tema propio (gate G1) y al menos un término del caso
+        en el catálogo; si falta cualquiera, ``None`` y no hay loop contextual."""
+        parametros = self._parametros.expansion_contextual
+        if not parametros.habilitada:
+            return None
+        if self._marcos_de_pregunta is None or self._catalogo_de_terminos is None:
+            return None
+        if not pregunta_sin_tema_propio(solicitud.query, self._marcos_de_pregunta, (idioma,)):
+            return None
+        caso = _caso_para_terminos(solicitud)
+        if caso is None:
+            return None
+        encontrados = terminos_del_caso(caso, self._catalogo_de_terminos, parametros.campos)
+        return encontrados if encontrados.terminos else None
+
+    async def _segundo_loop_de_reescritura(
         self,
         trace_id: str,
         solicitud: RagQueryInternalRequest,
@@ -874,6 +962,7 @@ class RAGOrchestratorService:
         inicio: datetime,
         reescritura: EstadoDeReescritura = EstadoDeReescritura(MotivoDeReescritura.no_disparado),
         version_del_prompt: str = VERSION_DEL_PROMPT,
+        campos_ampliados: tuple[str, ...] = (),
     ) -> RagMeta:
         """``meta`` con la latencia hasta el fin de la recuperación; la generación (L1D-275) la actualiza."""
         parametros = self._parametros
@@ -901,6 +990,8 @@ class RAGOrchestratorService:
                 queryRewrite=QueryRewrite(
                     applied=reescritura.applied, reason=Reason(reescritura.motivo.value)
                 ),
+                # Opcional y aditivo (ADR-26): solo si corrió el loop contextual; ausente nunca es ``null``.
+                **_expansion_declarada(campos_ampliados),
             ),
             latencyMs=int((self._reloj.ahora() - inicio).total_seconds() * 1000),
         )
@@ -932,3 +1023,29 @@ class RAGOrchestratorService:
             topRelevanceScore=top_relevance_score([]),
             meta=meta,
         )
+
+
+def _caso_para_terminos(solicitud: RagQueryInternalRequest) -> CasoParaTerminos | None:
+    """Lo que ``terminos_del_caso`` necesita del contexto desidentificado; sin diagnóstico no hay tipo ni términos."""
+    contexto = solicitud.clinicalContext
+    diagnostico = contexto.diagnosis
+    if diagnostico is None:
+        return None
+    return CasoParaTerminos(
+        tipo_de_cancer=diagnostico.cancerType.root,
+        sistema_de_estadificacion=diagnostico.stagingSystem.root,
+        estadio=diagnostico.stageValue.root,
+        grado=diagnostico.grade.root if diagnostico.grade is not None else None,
+        biomarcadores=tuple((b.biomarkerName.root, b.value.root) for b in contexto.biomarkers),
+    )
+
+
+def _expansion_declarada(campos: tuple[str, ...]) -> dict[str, ContextExpansion]:
+    """``contextExpansion`` solo si corrió el loop contextual: sin él la clave no existe en la respuesta (ni como ``null``)."""
+    if not campos:
+        return {}
+    return {
+        "contextExpansion": ContextExpansion(
+            applied=True, fields=[FieldModel(campo) for campo in campos]
+        )
+    }

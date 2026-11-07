@@ -8,6 +8,7 @@ import esquemaDeValidation from '../../../../../packages/clinical-catalogs/schem
 import esquemaComun from '../../../../../packages/clinical-catalogs/schemas/comun.schema.json' with { type: 'json' };
 import esquemaDePoblacion from '../../../../../packages/clinical-catalogs/schemas/poblacion.schema.json' with { type: 'json' };
 import esquemaDeReglasDePoblacion from '../../../../../packages/clinical-catalogs/schemas/poblacion-reglas.schema.json' with { type: 'json' };
+import esquemaDeMarcosDePregunta from '../../../../../packages/clinical-catalogs/schemas/marcos-de-pregunta.schema.json' with { type: 'json' };
 import esquemaDeManifiesto from '../../../../../packages/clinical-catalogs/schemas/manifest.schema.json' with { type: 'json' };
 import {
   ArchivoIlegibleError,
@@ -25,6 +26,7 @@ const ESQUEMAS = {
   aplicabilidad: esquemaDeAplicabilidad,
   'poblacion-reglas': esquemaDeReglasDePoblacion,
   escalas: esquemaDeEscalas,
+  'marcos-de-pregunta': esquemaDeMarcosDePregunta,
 };
 
 /** Código de la primera regla incumplida (cerrado: `destino_ausente`, `hash_distinto`...), o `null` si el catálogo valida. */

@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "test/fixtures/temas-del-caso.json: casos con entrada en las dos formas y tema esperado (L1D-329, ADR-52)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "descripcion", "casos"],
+  "properties": {
+    "version": { "$ref": "comun.schema.json#/$defs/version" },
+    "descripcion": { "type": "string", "minLength": 1 },
+    "casos": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "patientSummary", "clinicalContext", "salida"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "patientSummary": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["diagnosis", "recentBiomarkers"],
+            "properties": {
+              "diagnosis": { "$ref": "#/$defs/diagnostico" },
+              "recentBiomarkers": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["name", "value"],
+                  "properties": {
+                    "name": { "type": "string", "minLength": 1 },
+                    "value": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "clinicalContext": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["diagnosis", "biomarkers"],
+            "properties": {
+              "diagnosis": { "$ref": "#/$defs/diagnostico" },
+              "biomarkers": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["biomarkerName", "value"],
+                  "properties": {
+                    "biomarkerName": { "type": "string", "minLength": 1 },
+                    "value": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "salida": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["campos", "terminos"],
+            "properties": {
+              "campos": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": { "enum": ["tipo", "estadio", "biomarcador_principal"] }
+              },
+              "terminos": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": { "type": "string", "minLength": 1 }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "diagnostico": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cancerType", "stagingSystem", "stageValue", "grade"],
+      "properties": {
+        "cancerType": { "type": "string", "minLength": 1 },
+        "stagingSystem": { "type": "string", "minLength": 1 },
+        "stageValue": { "type": "string", "minLength": 1 },
+        "grade": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

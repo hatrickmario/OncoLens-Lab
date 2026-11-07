@@ -21,12 +21,12 @@ const valoresDe = (clave) =>
 
 describe('catalog:validate · atributos.json con valores permitidos (L1D-80, [US-094 AC-3])', () => {
   it(
-    'acepta el catálogo real 1.6.0 y declara los valores de cada atributo [US-094 AC-3]',
+    'acepta el catálogo real 1.7.0 y declara los valores de cada atributo [US-094 AC-3]',
     () => {
       const resultado = ejecutarValidador(CATALOGO);
 
       expect(resultado.codigo).toBe(0);
-      expect(resultado.salida).toContain('catalogVersion=1.6.0');
+      expect(resultado.salida).toContain('catalogVersion=1.7.0');
       expect(valoresDe('estado_menopausico')).toContain('posmenopausica');
       expect(valoresDe('estado_castracion')).toEqual(
         expect.arrayContaining(['castrado', 'sensible_castracion']),

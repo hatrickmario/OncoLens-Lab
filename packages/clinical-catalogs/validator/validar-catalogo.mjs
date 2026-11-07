@@ -8,7 +8,6 @@ import {
 } from './archivos.mjs';
 import { catalogHashDeReglasDePoblacion } from './canonico.mjs';
 import { violacionesDeAtributos } from './atributos.mjs';
-import { violacionesDeEscalas } from './escalas.mjs';
 import { nombrable } from './nombrable.mjs';
 import { clavesRepetidasEn, verificarCatalogHash, vocabularioDe } from './reglas.mjs';
 
@@ -133,15 +132,17 @@ function violacionesDeLosDeclarados(manifest, tipos, esquemasCompilados) {
   );
 }
 
-/** Archivos de la raíz que el manifiesto declara (`escalas: true`): esquema y reglas propias. */
+/** Archivos que el manifiesto declara (`escalas: true`, `marcosDePregunta: true`): esquema y reglas propias. */
 function violacionesDeLosDeclaradosDeLaRaiz(archivos, esquemasCompilados) {
   return Object.entries(ARCHIVOS_DE_RAIZ_DECLARADOS_POR_EL_MANIFIESTO).flatMap(
-    ([nombre, { clave }]) => {
+    ([nombre, { clave, reglas }]) => {
       if (archivos.manifest?.[clave] !== true) return [];
       const archivo = archivos[nombre];
-      if (!esquemasCompilados[nombre](archivo))
-        return [{ codigo: 'esquema_invalido', archivo: nombre }];
-      return violacionesDeEscalas(archivo, archivos.manifest?.cancerTypes);
+      const delArchivo = reglas(archivo, archivos.manifest);
+      if (delArchivo.length > 0) return delArchivo;
+      return esquemasCompilados[nombre](archivo)
+        ? []
+        : [{ codigo: 'esquema_invalido', archivo: nombre }];
     },
   );
 }
