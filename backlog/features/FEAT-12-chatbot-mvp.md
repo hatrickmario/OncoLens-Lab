@@ -2,14 +2,14 @@
 
 > Linear: [L1D-312](https://linear.app/l1der-lab-mjbc/issue/L1D-312)
 
-**Talla:** XL (16 historias, atraviesa los tres servicios; propone división abajo) · **Sprint:** 6 (`[S6 resp. 11]`, `[S6 resp. 13]`) · **Capacidad:** A · comprensión del caso (CAP-02: AC-02.1, AC-02.4, AC-02.5, AC-02.6) · B · información faltante (CAP-04: AC-04.1, AC-04.3, AC-04.4) · C · evidencia contextualizada (CAP-06, CAP-08, CAP-10) · T-1 (AC-T1.2, AC-T1.3, AC-T1.4) · T-3 (AC-T3.1, AC-T3.2) · T-4 · T-5 · **Recorrido principal:** sí (sustituye a la «Ficha de análisis» como foco del S6)
+**Talla:** XL (17 historias, atraviesa los tres servicios; propone división abajo) · **Sprint:** 6 (`[S6 resp. 11]`, `[S6 resp. 13]`) · **Capacidad:** A · comprensión del caso (CAP-02: AC-02.1, AC-02.4, AC-02.5, AC-02.6) · B · información faltante (CAP-04: AC-04.1, AC-04.3, AC-04.4) · C · evidencia contextualizada (CAP-06, CAP-08, CAP-10) · T-1 (AC-T1.2, AC-T1.3, AC-T1.4) · T-3 (AC-T3.1, AC-T3.2) · T-4 · T-5 · **Recorrido principal:** sí (sustituye a la «Ficha de análisis» como foco del S6)
 **Requisitos:** FR-09 (el turno de evidencia reutiliza el análisis) · FR-10 · FR-21 (caso conversacional, ADR-34) · FR-23 (faltantes, clasificación nueva) · FR-25 (aplicabilidad) · FR-31 (sustituido por el chat: 10 preguntas retiradas, ver Conflictos) · RN-01, RN-02, RN-04, RN-06, RN-07, RN-10, RN-11, RN-12, RN-15, RN-19, RN-22, RN-23, RN-24, RN-25, RN-28, RN-29 · TBD-08 (sin streaming de contenido) · ADR-26 (contratos aditivos), ADR-34, ADR-40, ADR-50, **ADR-51**
 **Evidencia:** [→ backlog/sprints/S6-prompt-chatbot.md §1–§6 (AC01…AC06) y «Aclaraciones del usuario»], [→ backlog/sprints/S6-refinamiento.md §1–§3, `[S6 resp. 1]`…`[S6 resp. 15]`], [→ docs/architecture/adr/ADR-51-chat-langgraph-estado-efimero.md], [→ PRD §6 RN-01, RN-02, RN-04, RN-06, RN-07, RN-10, RN-11, RN-12, RN-15, RN-19, RN-23, RN-24, RN-25, RN-28], [→ PRD §18.3.2 AC-02.1…AC-02.6], [→ PRD §18.3.4 AC-04.1…AC-04.4], [→ PRD §18.4 AC-T1.2, AC-T1.3, AC-T3.1, AC-T3.2], [→ readme §4.1 `ClinicalContext`, `EvidenceAnalysis`], [→ readme §6 OL-06]
 **Dependencias:** ↪ US-088/US-090 (vista de caso `GET …/case`), FEAT-04 (`GET …/completeness`, catálogo `datos-criticos`), US-049 (desidentificación), US-055/US-225 (pipeline de recuperación y generación), US-063/US-064 (citas y NLI), US-125/US-134 (aplicabilidad y orden), US-245 (afirmaciones atómicas), US-253 (correcciones con `supersedes_id`, ADR-50), US-254 (pacientes sintéticos) · 🔗 Regresión [RN-15] → US-148 (S6, todos los turnos con LLM del chat) · 🔗 Regresión [RN-12] → US-050 (S6) · 🔗 Regresión [SEG-13] → US-057 (S6) · 🔗 Regresión [RN-23] → US-068 · 🔗 Regresión [RN-19] → US-069 · 🔗 Regresión [RN-11] → US-049 · 🔗 Consume: US-216 (CSP sin `unsafe-eval`, S6) · 🔗 Medido en: US-269 · ADR-52 (US-271)
 **Valor:** hoy el oncólogo tiene que recorrer la ficha, la vista de caso y el panel de análisis por separado, y cada análisis empieza de cero (AS-IS P1, P4, P5). Con el chat pregunta en lenguaje natural sobre su paciente, en una sola conversación, y recibe el caso reconstruido con enlaces a los datos, los vacíos clasificados (no encontrado, incompleto, por conciliar, no buscado) y la evidencia científica contextualizada con citas verificadas y sus limitaciones, sin que el sistema prescriba nada ni modifique la historia clínica.
-**Stories:** US-256 · ADR-51 (2), US-257 (3), US-258 (5), US-259 (5), US-260 (5), US-261 (3), US-262 (3), US-263 (5), US-264 (3), US-265 (5), US-266 (3), US-267 (8), US-268 (3), US-269 (5), US-271 (4), US-272 (2) = **64 puntos** (S6; US-267 de 5 a 8 y altas de US-271 y US-272, aprobadas por el usuario el 2026-11-06)
+**Stories:** US-256 · ADR-51 (2), US-257 (3), US-258 (5), US-259 (5), US-260 (5), US-261 (3), US-262 (3), US-263 (5), US-264 (3), US-265 (5), US-266 (3), US-267 (8), US-268 (3), US-269 (5), US-271 (4), US-272 (2), US-273 (2) = **66 puntos** (S6; US-267 de 5 a 8 y altas de US-271 y US-272, aprobadas por el usuario el 2026-11-06; alta de US-273, `[S6 resp. 24]`, 2026-11-07)
 
-> **Propuesta de división (talla XL).** Publicar como una Feature con tres bloques que se pueden cerrar por separado, sin cambiar IDs: **12-A Plataforma del chat** (US-256, US-258, US-259), **12-B Capacidades** (US-260…US-266: A = US-260…US-262, B = US-263, US-264, C = US-265, US-266) y **12-C Interfaz y evaluación** (US-257, US-267, US-268, US-269); US-271 (segundo loop contextual) se suma a 12-B-C y US-272 (`relativeEndDay`) a 12-B-A. Orden: US-256 → {US-257, US-258, US-259} → {US-260…US-266, US-271, US-272} → {US-267, US-268} → US-269.
+> **Propuesta de división (talla XL).** Publicar como una Feature con tres bloques que se pueden cerrar por separado, sin cambiar IDs: **12-A Plataforma del chat** (US-256, US-258, US-259), **12-B Capacidades** (US-260…US-266: A = US-260…US-262, B = US-263, US-264, C = US-265, US-266) y **12-C Interfaz y evaluación** (US-257, US-267, US-268, US-269); US-271 (segundo loop contextual) y US-273 (composición de términos en próstata) se suman a 12-B-C y US-272 (`relativeEndDay`) a 12-B-A. Orden: US-256 → {US-257, US-258, US-259} → {US-260…US-266, US-271, US-272} → {US-267, US-268} → US-269.
 
 > **Encuadre (D-01) y alcance del usuario.** Análisis de evidencia, nunca recomendación. Fuera de alcance (prompt §4): historial conversacional visible, escritura en la historia clínica, recomendaciones terapéuticas autónomas. El historial **se guarda pero no se usa ni se muestra** en el MVP (aclaración del usuario, 2026-11-06). Las preguntas de seguimiento limitadas a 10 (US-218 · L1D-268) quedan sustituidas por este chat.
 
@@ -534,6 +534,35 @@ Cambiar el ancla del periodo (revisión en la Demo 6); periodos con fechas absol
 
 ## INVEST
 **Small** ✓ un campo en el contrato, su cálculo y un caso del filtro. **Testable** ✓ cuatro tests.
+
+---
+
+## US-273 — En próstata, el segundo loop contextual deja de recuperar sobre todo cribado porque la composición de términos no se ancla en «Antígeno prostático específico (PSA)»
+
+> Linear: pendiente
+
+`FEAT-12` · Sprint 6 · Estimación **2** · HU-03 · FR-09, RN-02, RN-22, RN-27, RN-29, RN-11 · ADR-52 · ↪ US-271 (L1D-329, mergeado) · 🔗 Medido en: US-269 · D6-42, D6-43
+
+> **Decidido (usuario, 2026-11-07, `[S6 resp. 24]`):** alta mínima dentro del Sprint 6: solo esta pieza. Las otras dos propuestas (visibilidad del aviso de ampliación y del AC-10 en el chat; `RERANKER_MAX_PAIRS` 12→20 con expansión activa por defecto, D6-44) **no se dan de alta**: quedan condicionadas (la segunda solo si tras esta queda presupuesto; la primera solo si se activa el indicador de expansión).
+
+## Story
+Como oncólogo con un paciente de próstata, quiero que una pregunta general como «¿qué evidencia hay para este caso?» recupere evidencia sobre el tratamiento y no solo sobre cribado, para que el segundo loop contextual sea útil en próstata.
+
+## AC (Given/When/Then)
+- **AC-1 (happy path · menos cribado)** · Dado el caso de próstata y las 22 preguntas genéricas de `preguntas-contextuales.yaml`, cuando corre el segundo loop contextual con la nueva composición, entonces los top-3 de cribado bajan respecto de la línea base del Gate 2 de L1D-329 (54 de 66) hasta la meta que fije el `design.md` con esa medición, y el reporte lista los top-3 por pregunta. `[RN-02]` `[ADR-52]`
+- **AC-2 (invariante · sin regresión)** · Dadas las 60 preguntas contextuales (`data/eval/s5-corpus-ampliado/preguntas-contextuales.yaml`, copia en `apps/rag-orchestrator/tests/fixtures/expansion_contextual/`), cuando se evalúan con `ai-eval-runner` real, entonces genéricas con evidencia (≥ 18/22), recall@10, MRR, controles y adversarias no empeoran frente a la composición actual, con 0/24 falsos positivos y las adversarias en `sin_evidencia` con `topRelevanceScore = null` y 0 llamadas al LLM. `[RN-02]` `[OL-06]`
+- **AC-3 (invariante · solo catálogo)** · Dado cualquier término añadido a la consulta contextual, cuando se captura la consulta enviada al *reranker* y los *logs*, entonces proviene del catálogo versionado, sin `pseudoPatientId`, identidad ni texto libre del expediente. `[RN-27]` `[RN-11]`
+- **AC-4 (catálogo versionado)** · Dado un cambio en `packages/clinical-catalogs`, cuando se publica, entonces la versión del catálogo sube un menor (hoy 1.8.0), `marcos-de-pregunta.json` sube la suya (hoy 1.7.0) si se toca, pasa `catalog:version-guard` y se mantiene el AC-8 de US-271 (0 genéricas en las 24 con tema y las 69 de `s5`; las 22 genéricas, genéricas). `[RN-29]`
+- **AC-5 (borde · otros tipos intactos)** · Dado un caso de mama, cuando corre el segundo loop contextual, entonces los términos añadidos y el resultado son idénticos a los de antes. `[RN-02]`
+
+## Contexto técnico
+`apps/rag-orchestrator/app/domain/terminos_del_caso.py` (reglas puras) y el catálogo `packages/clinical-catalogs/lenguaje/marcos-de-pregunta.json`. Medición de partida: 54 de 66 top-3 de las 22 genéricas con el caso de próstata son de cribado por el término «Antígeno prostático específico (PSA)». La opción de composición la elige el `design.md` con la medición. No cambia el umbral (0,30), `RETRIEVAL_MODE` ni `RERANKER_MAX_PAIRS`, ni activa `QUERY_CONTEXT_EXPANSION_ENABLED`. Tests: Pytest con adapters falsos (AC-3, AC-5) y unitarios del catálogo (AC-4); `ai-eval-runner` real sobre las 60 preguntas (AC-1, AC-2), una corrida a la vez y sin Docker en paralelo. Reporte en `reports/eval/` (carpeta protegida: tarea `## humano`). Gate 2: `ai-eval-runner`, `clinical-language-auditor`, `privacy-guardian`, `design-principles-reviewer`.
+
+## Non-goals
+Activar la expansión por defecto; cambiar el gate G1, el umbral o la recuperación.
+
+## INVEST
+**Small** ✓ una regla de composición y su entrada de catálogo; 2 puntos. **Testable** ✓ cinco comprobaciones, dos con la medición de 60 preguntas.
 
 ---
 

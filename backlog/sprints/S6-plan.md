@@ -1,7 +1,7 @@
 # S6 · Plan de ejecución
 
 > `/sprint-start S6`, sesión principal, 2026-11-06, rama `sprint/S6-planning` desde `main` 40e669a4 (#352 mergeado). Refinamiento: [`S6-refinamiento.md`](S6-refinamiento.md). Vocabulario del contrato del chat: [`S6-glosario-chat.md`](S6-glosario-chat.md). Diseño: [`docs/ux/S6/pantallas-s6.md`](../../docs/ux/S6/pantallas-s6.md) (variante B).
-> **Plazo:** **3 días con la Demo 6 dentro** y con el **50 % restante del presupuesto semanal de tokens** `[S6 resp. 22]`. **Compromiso: 79 pts de desarrollo** (70 + 9 de las altas del 2026-11-06: US-271 +4, US-272 +2, L1D-324 5 → 8; meta ≥ 80 % = 64 pts cerrados); DEC-07 (1 pt) y la corrida nocturna pasan a **opcionales al final**.
+> **Plazo:** **3 días con la Demo 6 dentro** y con el **50 % restante del presupuesto semanal de tokens** `[S6 resp. 22]`. **Compromiso: 81 pts de desarrollo** (70 + 9 de las altas del 2026-11-06: US-271 +4, US-272 +2, L1D-324 5 → 8; + 2 de US-273, `[S6 resp. 24]`; meta ≥ 80 % = 65 pts cerrados); DEC-07 (1 pt) y la corrida nocturna pasan a **opcionales al final**.
 > **Changes:** 20 nuevos (18 + `segundo-loop-contextual` y `relative-end-day`, 2026-11-06) más los 7 `movido-S6` (L1D-113, 116, 119, 126, 205, 246 y 299), que se cierran con la corrida nocturna `[S6 resp. 12]`. Los 12 changes heredados se archivan en el PR #353 (conciliación), con su deuda en [`S6-deuda.md`](S6-deuda.md).
 > **Sin change:** US-256 · ADR-51 (L1D-313; AC-1…AC-3 ya cumplidos, AC-4 se cierra con L1D-314), DEC-07 (L1D-234, opcional: solo si se ejecuta la corrida nocturna) y las firmas DEC-01 (L1D-92) y DEC-11 (L1D-125).
 
@@ -27,17 +27,20 @@
 | L1D-323 | US-266 | `l1d-323-chat-fuentes-limitaciones` | ai-services · clinical-platform | O5 | ⛔ 322 | R2 | 3 |
 | L1D-324 | US-267 | `l1d-324-panel-conversacional` (11 AC; +3 por las preguntas guiadas) | frontend · docs (tokens) | O5 | ⛔ 314 (ADR-51 §8), 315, **329 (fixture compartido)** · ↪ 322 (AC-3), 266 | R3 | 8 |
 | L1D-319 | US-262 | `l1d-319-chat-contradicciones` | clinical-platform · ai-services | O5 | ⛔ 317 · secuencial tras 318 (mismo nodo `caso`) | R1 | 3 |
+| l1d-<A> (pendiente de Linear) | US-273 | `l1d-<A>-composicion-terminos-prostata` | ai-services · catálogo (`lenguaje/marcos-de-pregunta.json`) · evaluate | **O5** (tras 329, mergeado) | ↪ 329 (mergeado) · ADR-52 | R2 | 2 |
 | L1D-325 | US-268 | `l1d-325-chat-fuentes-sin-perder-contexto` | frontend | **O6** | ⛔ 324 | R3 | 3 |
 | L1D-326 | US-269 | `l1d-326-chat-e2e-evaluate` | evaluación · E2E | **O7** | ⛔ 315…325 | — | 5 |
 | L1D-234 | DEC-07 | sin change | decisión | **opcional, al final** | corrida N | — | (1) |
 | L1D-113, 116, 119, 126, 205, 246, 299 | — | changes `movido-S6` | evaluación | **N, opcional, al final** (tras O7, si quedan tokens y tiempo) | `main` con O7 | — | 0 |
-| | | | | | | **Total comprometido** | **79** |
+| | | | | | | **Total comprometido** | **81** |
 
 **Paralelismo:** como máximo 4 a la vez, y nunca dos sobre el mismo módulo.
 - En O3, 315 (módulo `conversation`) y 204 (gateway y selector de proveedor) tocan `clinical-api`, pero en módulos distintos. 317 trabaja en rag (nodo `caso`).
 - En O4, 320 (`completeness`), 322 (`conversation` y `evidence-analysis`) y 213 (guard de opt-out) también son módulos distintos.
 - 318 y 319 tocan el mismo nodo, por eso 318 va en O4 y 319 en O5.
 - **Orden en O5 (Gate 1 de 329/330/324):** **330 → 319** (mismo `hechos-del-caso.ts` y `traduccion.py`) y, por contratos, **323 → 330 → 329** (rag 1.14.0 → 1.15.0 → 1.16.0, «siguiente menor libre»; el segundo rebasa y regenera `packages/api-contracts/`). **329 antes de 324**: crea el fixture compartido caso → tema y el catálogo 1.7.0 (324 toma 1.8.0).
+
+**Piezas condicionadas, sin alta** `[S6 resp. 24]`: (B) visibilidad en el chat del aviso de ampliación y del AC-10: solo si se activa el indicador `QUERY_CONTEXT_EXPANSION_ENABLED`; (C) `RERANKER_MAX_PAIRS` 12→20 con expansión por defecto (D6-44, regla de parada p95 ≤ 15 s): solo si tras US-273 queda presupuesto. Ninguna tiene US, puntos ni change.
 
 **Corrida nocturna N: opcional, al final** `[S6 resp. 22]`. Corre en la máquina de referencia con modelos locales y reúne D5-08, D5-24, D5-26, D5-28, D4-21, D4-30 y las tareas 1.0, 1.11, 1.12 y 4.2 de us-231b (D6). Se lanza desde `main` **solo después de O7** y solo si quedan presupuesto de tokens y tiempo antes de la demo.
 - No bloquea ningún change del sprint: todos los tests del chat usan el LLM falso.
@@ -140,6 +143,7 @@ Lo principal:
 - `[S6 resp. 20]` El chat **sustituye** al formulario de una pregunta en `/analisis`. L1D-324 retira sus 13 requisitos; los de errores y presentación del resultado siguen vigentes.
 - `[S6 resp. 21]` Orden de versiones del glosario §1. Si dos chocan, se renumera el segundo en mergear.
 - `[S6 resp. 23]` (usuario, 2026-11-06): altas dentro del S6: **US-271** (L1D-329, 4 pts, segundo loop contextual, ADR-52, O5 antes de L1D-321), **US-272** (L1D-330, 2 pts, `relativeEndDay`) y L1D-324 de 5 a 8 (preguntas guiadas). Compromiso de 70 a 79 pts. El ancla de «últimos N días» en el día 0 se revisa en la Demo 6.
+- `[S6 resp. 24]` (usuario, 2026-11-07): alta mínima de **US-273** (2 pts, composición de términos en próstata, cierra la parte de composición de H-2 de L1D-329, D6-42/D6-43). Compromiso 79 → 81 pts; meta ≥ 80 % = 65 pts. B y C condicionadas, sin alta.
 - `[S6 resp. 22]` (usuario, 2026-11-06): queda el 50 % del límite semanal de tokens y la próxima demo es en 3 días. La prioridad es terminar el desarrollo. **La corrida nocturna pasa al final, opcional**, solo si quedan tokens y tiempo. El compromiso queda en 70 pts y DEC-07 pasa a opcional.
 
 Precondición de `/sprint-run S6`: este PR (planificación) y el #353 (conciliación) mergeados en `main`.
