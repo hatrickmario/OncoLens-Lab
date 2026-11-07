@@ -122,7 +122,7 @@ RN-12: la matriz estricta de proveedores no cambia; ningún *fallback*.
 
 ```yaml
 ChatTurnRequest:
-  activeAnalysisId?: uuid        # último analysis_id de la conversación (Backend 1)
+  activeAnalysisId?: string con patrón UUID   # sin format: uuid (AC-17); último analysis_id de la conversación (Backend 1)
 ChatTurnResponse:
   subintent?: enum [seguimiento_evidencia]   # declarado en 1.12.0 por l1d-316; este change lo consume, no lo redefine
   evidenceAnalysis?: RagQueryInternalResponse   # ya existe (l1d-316); en rag el tipo es la respuesta de /rag/query; presente solo en el turno de análisis
@@ -131,7 +131,7 @@ ChatTurnResponse:
 `ultimaEvidencia` no cambia el contrato: su esquema ya está en `StructuredState` de la 1.12.0 (`l1d-316`); este change
 solo la rellena.
 
-**`clinical-api`** (proveedor; consumidor `web`) 1.25.0 → **1.26.0** (glosario §1), aditivo:
+**`clinical-api`** (proveedor; consumidor `web`) 1.27.0 → **1.29.0** (glosario §1; L1D-320 toma la 1.28.0), aditivo:
 
 ```yaml
 ConversationTurn:

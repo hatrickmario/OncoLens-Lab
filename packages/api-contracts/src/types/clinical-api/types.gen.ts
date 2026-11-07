@@ -2552,7 +2552,7 @@ export type GetConversationError = GetConversationErrors[keyof GetConversationEr
 
 export type GetConversationResponses = {
     /**
-     * La conversación con sus turnos en orden de turnNumber.
+     * La conversación con sus turnos en orden de turnNumber. `evidenceAnalysis` solo va en el turno que creó el análisis; los turnos de seguimiento lo referencian por `analysisId` sin repetirlo.
      */
     200: Conversation;
 };

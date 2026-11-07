@@ -1581,7 +1581,7 @@ export const zGetConversationPath = z.object({
 });
 
 /**
- * La conversación con sus turnos en orden de turnNumber.
+ * La conversación con sus turnos en orden de turnNumber. `evidenceAnalysis` solo va en el turno que creó el análisis; los turnos de seguimiento lo referencian por `analysisId` sin repetirlo.
  */
 export const zGetConversationResponse = zConversation;
 
