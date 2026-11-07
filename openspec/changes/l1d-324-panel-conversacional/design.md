@@ -25,6 +25,14 @@ clínica en el cliente (el panel no decide nada: pinta lo que valida el backend)
 ## Decisions
 
 ### D1 · Tecnología según ADR-51 §8
+**Opción aplicada (tarea 0.1): assistant-ui** (`@assistant-ui/react` 0.15.32 exacta, `ExternalStoreRuntime`), tal como anota
+ADR-51 §8 tras el spike L1D-314 (`docs/evidence/S6-spike-assistant-ui/README.md`). `react-markdown` 10.1.0 y `rehype-sanitize`
+6.0.0 entran con ella (versiones exactas; `npm audit --omit=dev` sin alertas). Solo APIs estables: `useExternalStoreRuntime`,
+`ThreadPrimitive.Root/Viewport/Messages` (función hija), `MessagePrimitive.Root/Parts` (`components.data.by_name` con un
+componente estable), `ComposerPrimitive.Root/Input/Send`. «Nueva conversación» no usa `threadId` ni `onSwitchToNewThread`
+(experimentales): el estado vive en `ConversationPanel` y el panel se remonta con una `key`. En los tests de UI jsdom
+necesita un `ResizeObserver` de soporte (`tests/support/jsdom-apis.ts`).
+
 Primera tarea: leer la anotación de §8. **assistant-ui:** `ExternalStoreRuntime` adapta `ConversationTurn` →
 `ThreadMessage` (sin *streaming*: `isRunning` mientras el POST está en curso y el mensaje se añade completo al llegar);
 *data parts* alineados con el contrato: uno por `blocks[].kind` (los 8 valores del enum cerrado) más `evidenceAnalysis`;

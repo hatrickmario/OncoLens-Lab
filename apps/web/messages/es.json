@@ -766,5 +766,47 @@
     "limiteConTotal": "Se alcanzó el límite de {max} preguntas de este análisis. Una pregunta distinta puede formularse en un análisis nuevo.",
     "limiteSinTotal": "Se alcanzó el límite de preguntas de este análisis. Una pregunta distinta puede formularse en un análisis nuevo.",
     "noProcesable": "La pregunta no pudo procesarse con este análisis; no se generó respuesta."
+  },
+  "conversacion": {
+    "hilo": "Conversación",
+    "campo": "Pregunta sobre este paciente",
+    "marcador": "Escribe tu pregunta",
+    "preguntar": "Preguntar",
+    "nuevaConversacion": "Nueva conversación",
+    "preguntaDelOncologo": "Pregunta del oncólogo",
+    "analizando": "Analizando…",
+    "reintentar": "Reintentar",
+    "errorTitulo": "No se pudo completar la respuesta",
+    "guiadasTitulo": "Preguntas de partida sobre este caso",
+    "intencionDetectada": "Intención detectada",
+    "turno": "Turno {n}",
+    "verEnCaso": "Ver en el caso (se abre en otra pestaña)",
+    "datosUsados": "Datos usados",
+    "datosAusentes": "Ausentes",
+    "ninguno": "ninguno",
+    "avisosTitulo": "Avisos de la respuesta",
+    "sinAvisosTitulo": "Respuesta sin los avisos de IA requeridos",
+    "intenciones": {
+      "caso": "◆ Caso",
+      "faltantes": "◌ Faltantes",
+      "evidencia": "▤ Evidencia",
+      "fuentes_limitaciones": "▤ Fuentes y límites",
+      "no_clasificada": "Sin clasificar",
+      "fuera_de_alcance": "Fuera de alcance"
+    },
+    "rotulos": {
+      "clinico": "◆ Información clínica del paciente",
+      "evidencia": "▤ Evidencia científica (corpus)",
+      "interpretacion": "Interpretación generada por IA",
+      "alcance": "Alcance de la respuesta",
+      "adicional": "Información adicional del turno"
+    },
+    "datos": {
+      "diagnosis": "Diagnóstico",
+      "biomarker": "Biomarcador",
+      "clinical_attribute": "Atributo clínico",
+      "prior_treatment": "Tratamiento previo",
+      "clinical_event": "Evento clínico"
+    }
   }
 }
