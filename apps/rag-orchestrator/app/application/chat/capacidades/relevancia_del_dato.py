@@ -12,7 +12,6 @@ La consulta al corpus lleva solo la etiqueta del catálogo y el tipo de cáncer:
 from __future__ import annotations
 
 import logging
-from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
@@ -21,10 +20,10 @@ from app.application.chat.capacidades.seguimiento_evidencia import (
     SalidaCruda,
     esquema_de_la_salida,
 )
-from app.application.chat.citas import ConstructorDeCitas, FuenteDeCita
+from app.application.chat.capacidades.bloques_citados import bloques_de_afirmaciones_con_soporte
+from app.application.chat.citas import ConstructorDeCitas
 from app.application.chat.contexto_del_turno import evidencia_del_turno
 from app.application.chat.grafo import EstadoDelGrafo
-from app.application.chunk_citable import ChunkCitable
 from app.application.errores import LlmLocalNoDisponibleError
 from app.application.generation import fragmentos_dentro_del_presupuesto, validar_salida_cruda
 from app.application.medicion_de_prompt import registrar_tamano_del_prompt
@@ -48,7 +47,6 @@ from app.domain.chat.relevancia import (
 )
 from app.domain.chat.turno import BloqueDelTurno, TipoDeBloque
 from app.domain.chat.ultima_evidencia import resumir_ultima_evidencia
-from app.domain.citations import OpcionAceptada
 from app.domain.claims import AfirmacionAtomica, PapelDeAfirmacion
 from app.domain.relevance import top_relevance_score
 from app.prompts.chat_relevancia import (
@@ -162,7 +160,9 @@ class NodoRelevancia:
         if not validadas.soportadas:
             sin_soporte = BloqueDelTurno(TipoDeBloque.limitacion, self._textos.sin_soporte)
             return _Explicacion((sin_soporte,), validadas.omitidas)
-        bloques = await self._bloques_con_citas(trace_id, validadas.soportadas, validadas.citables)
+        bloques = await bloques_de_afirmaciones_con_soporte(
+            self._citas, trace_id, validadas.soportadas, validadas.citables
+        )
         return _Explicacion(bloques, validadas.omitidas)
 
     async def _generar(
@@ -206,28 +206,6 @@ class NodoRelevancia:
                 a.texto.strip(), PapelDeAfirmacion.principal, traducir_citas(tabla, a.citas)
             )
             for a in salida.afirmaciones
-        )
-
-    async def _bloques_con_citas(
-        self,
-        trace_id: str,
-        soportadas: tuple[OpcionAceptada, ...],
-        citables: Mapping[str, ChunkCitable],
-    ) -> tuple[BloqueDelTurno, ...]:
-        """Un bloque ``evidencia`` por afirmación con soporte; la cita se copia del corpus y del catálogo (RN-04)."""
-        fuentes = [
-            FuenteDeCita(i, citables[i].ficha.title, citables[i].chunk.chunk_text)
-            for aceptada in soportadas
-            for i in aceptada.chunk_ids_validos
-        ]
-        citas = await self._citas.construir(trace_id, fuentes)
-        return tuple(
-            BloqueDelTurno(
-                TipoDeBloque.evidencia,
-                aceptada.opcion.rationale,
-                citas=tuple(citas[i] for i in aceptada.chunk_ids_validos),
-            )
-            for aceptada in soportadas
         )
 
 
