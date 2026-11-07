@@ -28,8 +28,8 @@
 | L1D-324 | US-267 | `l1d-324-panel-conversacional` (11 AC; +3 por las preguntas guiadas) | frontend · docs (tokens) | O5 | ⛔ 314 (ADR-51 §8), 315, **329 (fixture compartido)** · ↪ 322 (AC-3), 266 | R3 | 8 |
 | L1D-319 | US-262 | `l1d-319-chat-contradicciones` | clinical-platform · ai-services | O5 | ⛔ 317 · secuencial tras 318 (mismo nodo `caso`) | R1 | 3 |
 | L1D-331 | US-273 | `l1d-331-composicion-terminos-prostata` | ai-services · catálogo (`lenguaje/marcos-de-pregunta.json`) · evaluate | **O5** (tras 329, mergeado) | ↪ 329 (mergeado) · ADR-52 | R2 | 2 |
-| l1d-<B> (pendiente de Linear) | US-274 | `l1d-<B>-aviso-ampliacion-visible` | frontend (`apps/web`) · E2E sobre el fake | O5, en paralelo con 331 | ↪ 324, 329 (mergeados) · ADR-52 | R3 | 2 |
-| l1d-<C> (pendiente de Linear) | US-275 | `l1d-<C>-defaults-expansion-max-pairs` (PR separado) | ai-services (config) · humano (`.env.example`, Compose, reporte H-3) | **O8**, tras 331 y `<B>` | ↪ US-273, US-274 · ⛔ ninguna dura; `L1D-326` la espera solo por orden | — | 2 |
+| L1D-332 | US-274 | `l1d-332-aviso-ampliacion-visible` | frontend (`apps/web`) · E2E sobre el fake | O5, en paralelo con 331 | ↪ 324, 329 (mergeados) · ADR-52 | R3 | 2 |
+| L1D-333 | US-275 | `l1d-333-defaults-expansion-max-pairs` (PR separado) | ai-services (config) · humano (`.env.example`, Compose, reporte H-3) | **O8**, tras 331 y 332 | ↪ US-273, US-274 · ⛔ ninguna dura; `L1D-326` la espera solo por orden | — | 2 |
 | L1D-325 | US-268 | `l1d-325-chat-fuentes-sin-perder-contexto` | frontend | **O6** | ⛔ 324 | R3 | 3 |
 | L1D-326 | US-269 | `l1d-326-chat-e2e-evaluate` | evaluación · E2E | **O7** | ⛔ 315…325 | — | 5 |
 | L1D-234 | DEC-07 | sin change | decisión | **opcional, al final** | corrida N | — | (1) |

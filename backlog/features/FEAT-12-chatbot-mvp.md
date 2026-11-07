@@ -568,7 +568,7 @@ Activar la expansión por defecto; cambiar el gate G1, el umbral o la recuperaci
 
 ## US-274 — El aviso de ampliación de la búsqueda y el mensaje «Evidencia recuperada sin opciones soportadas» se ven claramente en el panel conversacional
 
-> Linear: pendiente
+> Linear: [L1D-332](https://linear.app/l1der-lab-mjbc/issue/L1D-332)
 
 `FEAT-12` · Sprint 6 · Estimación **2** · HU-03, HU-15 · RN-19, RN-23, RN-01 · AC-T3.1 · ADR-52 · ↪ US-267 (L1D-324), US-271 (L1D-329, mergeado) · 🔗 Antes de: US-275 · 🔗 Regresión [RN-19] → US-069 · 🔗 Medido en: US-269 · D6-42
 
@@ -597,7 +597,7 @@ Cambiar los textos de los avisos (los escribe Backend 2); avisos de IA propios d
 
 ## US-275 — La expansión contextual se activa por defecto y el tope de pares del *reranker* pasa de 12 a 20, con el p95 de consulta completa medido en máquina limpia
 
-> Linear: pendiente
+> Linear: [L1D-333](https://linear.app/l1der-lab-mjbc/issue/L1D-333)
 
 `FEAT-12` · Sprint 6 · Estimación **2** · HU-03 · FR-09, RN-02, RN-22 · ADR-39 (enmienda), ADR-52 · ↪ US-273, US-274 · 🔗 Antes de: US-269 (solo por orden) · 🔗 Medido en: US-269 · D6-42, D6-44 (relacionadas D6-43…D6-48)
 
