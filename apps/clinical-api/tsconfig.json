@@ -20,6 +20,7 @@
     "tests",
     "prisma/seed.ts",
     "prisma/seed",
+    "scripts",
     "vitest.config.ts",
     "vitest.integration.config.ts",
     "prisma.config.ts"
