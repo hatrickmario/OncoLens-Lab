@@ -2,6 +2,7 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
 import {
   IDS_SEMILLA_S5,
+  analisisDelTurno,
   datosDelGate,
   exigirPacienteSinModificar,
   iniciarSesion,
@@ -10,6 +11,8 @@ import {
   pasoRegistroManual,
   pasoSeguimiento,
   pasoVistaDeCaso,
+  esRespuestaDeTurno,
+  preguntarEnElChat,
   textos,
 } from './soporte';
 import { estadoDelOrden, violacionesDeOrdenRn28 } from './orden-rn28';
@@ -116,6 +119,16 @@ async function comprobarBaseConFaltantes(page: Page, esperados: number) {
   await expect(bloque.getByRole('listitem')).toHaveCount(esperados);
 }
 
+/**
+ * Preguntas de seguimiento del recorrido. El chat distingue un seguimiento por su referencia léxica al resultado
+ * («la primera opción», «del análisis»; `es_seguimiento_de_evidencia`): las de `datos.seguimientos` de la guía no la traen y
+ * el chat falso las trataría como preguntas nuevas, sin citas. Cada turno de seguimiento sigue exigiendo citas y avisos.
+ */
+const SEGUIMIENTOS_DEL_CHAT = [
+  '¿Qué población estudió la primera opción del análisis?',
+  '¿Qué dice la segunda opción del análisis sobre el beneficio?',
+];
+
 test.describe('Gate G-Demo: la hipótesis de punta a punta (L1D-248)', () => {
   test.setTimeout(PLAZO_DEL_RECORRIDO_MS);
   test.describe.configure({ retries: 0 });
@@ -186,20 +199,16 @@ test.describe('Gate G-Demo: la hipótesis de punta a punta (L1D-248)', () => {
         async () => {
           await page.getByRole('link', { name: es.caso.analizar }).click();
           await expect(page).toHaveURL(new RegExp(`/pacientes/${idPaciente}/analisis$`));
-          await expect(
-            page.getByRole('status').filter({ hasText: /datos críticos/ }),
-          ).toBeVisible();
-          const respuesta = page.waitForResponse(
-            (r) => r.url().endsWith('/api/evidence-analyses') && r.request().method() === 'POST',
-          );
-          await page.getByLabel(textos.formulario.pregunta).fill(datos.pregunta);
-          await page.getByRole('button', { name: textos.formulario.analizar }).click();
+          await expect(page.getByLabel(es.conversacion.campo)).toBeVisible();
+          const respuesta = page.waitForResponse(esRespuestaDeTurno);
+          await preguntarEnElChat(page, datos.pregunta);
           await expect(page.getByTestId('analysis-result')).toBeVisible({
             timeout: PLAZO_DE_GENERACION_MS,
           });
-          const analisis = await (await respuesta).json();
+          const analisis = await analisisDelTurno(await respuesta);
           expect(analisis.status).toBe('con_evidencia');
-          maxOpciones = analisis.analysisBasis.maxOptions;
+          expect(analisis.analysisBasis.maxOptions).toBeDefined();
+          maxOpciones = analisis.analysisBasis.maxOptions!;
           aviso = analisis.disclaimer;
           await comprobarOpcionesDescritas(page, maxOpciones, aviso);
         },
@@ -216,7 +225,7 @@ test.describe('Gate G-Demo: la hipótesis de punta a punta (L1D-248)', () => {
         comprobarBaseConFaltantes(page, faltantesRestantes),
       );
 
-      for (const [i, pregunta] of datos.seguimientos.entries())
+      for (const [i, pregunta] of SEGUIMIENTOS_DEL_CHAT.entries())
         await paso(`pregunta de seguimiento ${i + 1} con citas`, () =>
           pasoSeguimiento(page, pregunta, i + 1, PLAZO_DE_GENERACION_MS),
         );

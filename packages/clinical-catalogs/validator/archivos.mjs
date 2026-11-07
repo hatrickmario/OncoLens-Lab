@@ -13,6 +13,7 @@ import {
 } from './reglas.mjs';
 import { violacionesDeEscalas } from './escalas.mjs';
 import { violacionesDeMarcos } from './marcos.mjs';
+import { violacionesDePlantillas } from './plantillas.mjs';
 
 /**
  * Registro ÚNICO de los archivos por tipo que tienen ítems con destino (L1D-93, RN-29). Cada entrada nombra su
@@ -69,6 +70,22 @@ export const NOMBRES_DE_ARCHIVO = Object.keys(ARCHIVOS_DEL_CATALOGO);
 export const ARCHIVOS_DECLARADOS_POR_EL_MANIFIESTO = {
   'poblacion-reglas': { esquema: 'poblacion-reglas', clave: 'poblacionReglas' },
 };
+
+/**
+ * Archivos por tipo que existen solo en los tipos que el manifiesto lista (`plantillasDePregunta: ['mama', …]`,
+ * L1D-324): `clave` es la del manifiesto y `reglas(archivo, terminosProhibidos)` son las propias del archivo, que van
+ * antes que el esquema. Un catálogo sin la declaración no los tiene (los fixtures anteriores siguen válidos).
+ */
+export const ARCHIVOS_POR_TIPO_DECLARADOS_POR_LISTA = {
+  plantillas: {
+    esquema: 'plantillas',
+    clave: 'plantillasDePregunta',
+    reglas: (archivo, terminosProhibidos) => violacionesDePlantillas(archivo, terminosProhibidos),
+  },
+};
+
+/** Archivo de la raíz que las reglas de `plantillas` consultan (RN-23); se lee solo si el manifiesto declara plantillas. */
+export const ARCHIVO_DE_TERMINOS_PROHIBIDOS = 'lenguaje/terminos-prohibidos';
 
 /**
  * Archivos que existen solo si el manifiesto lo declara (`escalas: true`, L1D-90; `marcosDePregunta: true`, L1D-329):

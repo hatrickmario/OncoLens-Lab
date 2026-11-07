@@ -26,7 +26,7 @@ from tests.support.chat import (
     solicitud_de_turno,
 )
 from tests.support.contador_de_tokens_falso import ContadorPorPalabras
-from tests.support.fakes import RelojFijo
+from tests.support.fakes import RelojFijo, settings_de_prueba
 from tests.support.llm_chat_falso import FakeChatLlm
 from tests.support.recuperacion import EJEMPLOS
 
@@ -135,9 +135,10 @@ async def test_el_fake_del_chat_lanza_hilo_desconocido_como_el_servicio_real_cua
     respuesta = ChatTurnResponse.model_validate_json(
         (EJEMPLOS / "chat-turn-caso-ok.json").read_text(encoding="utf-8")
     )
-    fake = FakeChatTurn(
-        respuesta,
+    fake = FakeChatTurn.desde_directorio(
+        EJEMPLOS,
         RegistroDeHilos(reloj=RelojFijo(), ttl_segundos=60, max_hilos=2),
+        settings_de_prueba(),
     )
     sin_rehidratacion = ChatTurnRequest.model_validate(_sin_hilo(Q_CASO, HILO_A))
     con_rehidratacion = ChatTurnRequest.model_validate(solicitud_de_turno(Q_CASO, hilo=HILO_A))

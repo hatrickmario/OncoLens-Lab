@@ -37,6 +37,13 @@
   --color-warn-border: #e8c77a;
   --color-postmvp: #4a2f86;
   --color-postmvp-bg: #e9e4f5;
+  /* Chat (L1D-324, D6): información clínica del paciente (◆) y evidencia científica del corpus (▤). */
+  --color-clinical: #0e5a5f;
+  --color-clinical-bg: #e1f1f1;
+  --color-clinical-border: #7fb9bc;
+  --color-evidence: #1f4fb8;
+  --color-evidence-bg: #e8eefa;
+  --color-evidence-border: #9db3e3;
   --color-error: var(--color-status-nocoincide);
   --color-error-bg: var(--color-status-nocoincide-bg);
 

@@ -25,7 +25,7 @@ describe('Ejemplos de aplicabilidad servidos por MSW (L1D-131)', () => {
   afterAll(bff.detener);
   beforeEach(bff.reiniciar);
 
-  it('sirve cada ejemplo del contrato tal cual por POST /api/evidence-analyses', async () => {
+  it('sirve cada ejemplo del contrato tal cual en turn.evidenceAnalysis de POST …/turns', async () => {
     const ejemplos = [
       conEvidenciaPoblacionA_M2,
       conEvidenciaPoblacionA_M2B,
@@ -35,12 +35,14 @@ describe('Ejemplos de aplicabilidad servidos por MSW (L1D-131)', () => {
     ];
     for (const cuerpo of ejemplos) {
       bff.responder({ status: 200, cuerpo });
-      const respuesta = await fetch('http://localhost/api/evidence-analyses', {
+      const respuesta = await fetch('http://localhost/api/conversations/c1/turns', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(peticion),
+        body: JSON.stringify({ question: peticion.query }),
       });
-      expect(await respuesta.json()).toEqual(cuerpo);
+      expect(((await respuesta.json()) as { evidenceAnalysis: unknown }).evidenceAnalysis).toEqual(
+        cuerpo,
+      );
     }
   });
 

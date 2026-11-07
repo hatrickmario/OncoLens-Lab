@@ -3,6 +3,8 @@ import {
   ARCHIVOS_DE_RAIZ_DECLARADOS_POR_EL_MANIFIESTO,
   ARCHIVOS_DECLARADOS_POR_EL_MANIFIESTO,
   ARCHIVOS_DEL_CATALOGO,
+  ARCHIVOS_POR_TIPO_DECLARADOS_POR_LISTA,
+  ARCHIVO_DE_TERMINOS_PROHIBIDOS,
   NOMBRES_DE_ARCHIVO,
 } from './archivos.mjs';
 import { nombrable } from './nombrable.mjs';
@@ -79,8 +81,25 @@ export function leerCatalogo(directorio, leerArchivo) {
         tipos[tipo][nombre] = leerJson(directorio, `${tipo}/${nombre}.json`, leerArchivo);
       }
     }
+    for (const [nombre, { clave }] of Object.entries(ARCHIVOS_POR_TIPO_DECLARADOS_POR_LISTA)) {
+      if (Array.isArray(manifest[clave]) && manifest[clave].includes(tipo)) {
+        tipos[tipo][nombre] = leerJson(directorio, `${tipo}/${nombre}.json`, leerArchivo);
+      }
+    }
   }
-  return { manifest, ...deLaRaiz, ...declaradosDeLaRaiz, tipos };
+  const declaraPlantillas = Object.values(ARCHIVOS_POR_TIPO_DECLARADOS_POR_LISTA).some(
+    ({ clave }) => Array.isArray(manifest?.[clave]),
+  );
+  const terminos = declaraPlantillas
+    ? {
+        'terminos-prohibidos': leerJson(
+          directorio,
+          `${ARCHIVO_DE_TERMINOS_PROHIBIDOS}.json`,
+          leerArchivo,
+        ),
+      }
+    : {};
+  return { manifest, ...deLaRaiz, ...declaradosDeLaRaiz, ...terminos, tipos };
 }
 
 /** Esquemas del paquete que `validarCatalogo` necesita, leídos de `schemas/` (uso del script de CI). */
@@ -93,6 +112,9 @@ export function leerEsquemas(directorioDeEsquemas, leerArchivo) {
   const esquemasDeclarados = Object.values(ARCHIVOS_DECLARADOS_POR_EL_MANIFIESTO).map(
     ({ esquema }) => esquema,
   );
+  const esquemasPorLista = Object.values(ARCHIVOS_POR_TIPO_DECLARADOS_POR_LISTA).map(
+    ({ esquema }) => esquema,
+  );
   const nombres = [
     'manifest',
     'comun',
@@ -100,6 +122,7 @@ export function leerEsquemas(directorioDeEsquemas, leerArchivo) {
     ...esquemasDeLaRaiz,
     ...ESQUEMAS_DE_ARCHIVOS,
     ...esquemasDeclarados,
+    ...esquemasPorLista,
     ...esquemasDeclaradosDeLaRaiz,
   ];
   return Object.fromEntries(nombres.map((nombre) => [nombre, leer(nombre)]));

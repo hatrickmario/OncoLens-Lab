@@ -1,10 +1,12 @@
 import { render, screen } from '@testing-library/react';
+import { expect } from 'vitest';
 import userEvent from '@testing-library/user-event';
-import { EvidencePanel } from '../../components/organisms/evidence-panel';
+import { ConversationPanel } from '../../components/organisms/conversation-panel';
 import { mensajes } from '../../lib/mensajes';
 import { peticion } from './msw/evidence-analyses';
 
 export const { evidence } = mensajes();
+const { conversacion } = mensajes();
 
 /** Pregunta de prueba de la UI (`[S1 resp. 36]`): la misma que `rag-query-request-solo-descartadas.json`. */
 export const PREGUNTA_DE_PRUEBA =
@@ -15,34 +17,26 @@ export const SIN_BASE = /^(?!Base del análisis$)/;
 
 export const ID_PACIENTE = peticion.patientId;
 
+/** Monta el panel conversacional (US-267); el análisis llega como turno de evidencia (`msw/evidence-analyses`). */
 export function montarPanel() {
-  return render(<EvidencePanel patientId={ID_PACIENTE} />);
+  return render(<ConversationPanel patientId={ID_PACIENTE} />);
 }
 
-/** Escribe la pregunta y presiona "Analizar evidencia" como lo haría el oncólogo. */
+/** Escribe la pregunta y pulsa «Preguntar» como lo haría el oncólogo; el resultado sale en la tarjeta del turno. */
 export async function analizar(pregunta: string = PREGUNTA_DE_PRUEBA) {
   const usuario = userEvent.setup();
   montarPanel();
-  await usuario.type(screen.getByLabelText(evidence.formulario.pregunta), pregunta);
-  await usuario.click(screen.getByRole('button', { name: evidence.formulario.analizar }));
+  await usuario.type(screen.getByLabelText(conversacion.campo), pregunta);
+  await usuario.click(screen.getByRole('button', { name: conversacion.preguntar }));
   return usuario;
 }
 
-export const { followUp } = mensajes();
-
-/** Muestra un análisis `con_evidencia` en el panel y espera a que aparezca el hilo de seguimiento. */
-export async function analizarYAbrirHilo(
-  bff: { responder: (r: { status: number; cuerpo: object }) => void },
-  analisis: object,
-) {
-  bff.responder({ status: 200, cuerpo: analisis });
-  const usuario = await analizar();
-  await screen.findByRole('heading', { name: followUp.titulo });
-  return usuario;
-}
-
-/** Escribe la pregunta de seguimiento y pulsa «Preguntar». */
-export async function preguntar(usuario: ReturnType<typeof userEvent.setup>, texto: string) {
-  await usuario.type(screen.getByLabelText(followUp.campo), texto);
-  await usuario.click(screen.getByRole('button', { name: followUp.preguntar }));
+/** RN-26: tras un resultado con avisos el campo y «Preguntar» siguen operables (se escribe otra pregunta y se habilitan). */
+export async function esperarComposerOperable(usuario: ReturnType<typeof userEvent.setup>) {
+  const campo = screen.getByLabelText(conversacion.campo) as HTMLTextAreaElement;
+  await usuario.type(campo, 'Otra pregunta');
+  expect(campo.disabled).toBe(false);
+  expect(
+    (screen.getByRole('button', { name: conversacion.preguntar }) as HTMLButtonElement).disabled,
+  ).toBe(false);
 }

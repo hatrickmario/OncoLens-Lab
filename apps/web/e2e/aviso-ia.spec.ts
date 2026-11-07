@@ -1,74 +1,98 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import es from '../messages/es.json' with { type: 'json' };
-import { analizar, ejemplo, esperarResultado, iniciarSesion } from './soporte';
+import {
+  analizar,
+  ejemplo,
+  esperarResultado,
+  esperarTarjeta,
+  iniciarSesion,
+  preguntarEnElChat,
+  tarjetasDelChat,
+} from './soporte';
 
+const pregunta = '¿Cuál es la situación actual de la paciente?';
 const preguntaHer2 = ejemplo('rag-query-request.json').query as string;
 const preguntaSinEvidencia = ejemplo('rag-query-request-sin-evidencia.json').query as string;
-const disclaimerPorDefecto = ejemplo('con-evidencia-s1.json').disclaimer as string;
+/** Avisos que devuelve el backend en `notices[]`: en modo falso, los de los ejemplos del contrato (la UI no los lleva en su configuración). */
+const avisosDelTurno = ejemplo('chat-turn-caso-ok.json').notices as string[];
+const avisosDeEvidencia = ejemplo('chat-turn-evidencia.json').notices as string[];
+/** Aviso que solo trae un turno de caso sin datos: no debe colarse en un turno de evidencia. */
+const avisoAjeno = (ejemplo('chat-turn-caso-sin-datos.json').notices as string[])[2]!;
 const ETIQUETA = es.app.academicUseLabel;
+const regionDeAvisos = (tarjeta: ReturnType<typeof tarjetasDelChat>) =>
+  tarjeta.getByRole('region', { name: es.conversacion.avisosTitulo });
 
-/** Valor de AI_DISCLAIMER_TEXT con el que se arrancó Compose; sin él, el literal por defecto del contrato. */
-const disclaimerEsperado = process.env.AI_DISCLAIMER_TEXT ?? disclaimerPorDefecto;
+test.describe('Aviso de IA y etiqueta académica (L1D-194, US-267)', () => {
+  test('muestra en la tarjeta del turno cada aviso de notices tal como llega [US-069 AC-1]', async ({
+    page,
+  }) => {
+    await analizar(page, pregunta);
+    await esperarTarjeta(page);
 
-async function avisosDelResultado(page: Page) {
-  return page.getByTestId('analysis-result').getByRole('note').allTextContents();
-}
+    const tarjeta = tarjetasDelChat(page).first();
+    expect(avisosDelTurno.length).toBeGreaterThan(0);
+    for (const aviso of avisosDelTurno) {
+      await expect(tarjeta.getByText(aviso, { exact: true })).toBeVisible();
+    }
+  });
 
-test.describe('Aviso de IA y etiqueta académica (L1D-194)', () => {
-  test('muestra el disclaimer de la respuesta en una región note junto al resultado cuando el análisis es con_evidencia [US-069 AC-1]', async ({
+  test('muestra los dos avisos de IA en un turno de evidencia y ninguno ajeno [US-069 AC-1] [RN-19]', async ({
     page,
   }) => {
     await analizar(page, preguntaHer2);
     await esperarResultado(page);
 
-    const avisos = await avisosDelResultado(page);
-    expect(avisos.length).toBeGreaterThan(0);
-    for (const aviso of avisos) expect(aviso).toBe(disclaimerEsperado);
+    const avisos = regionDeAvisos(tarjetasDelChat(page).first());
+    for (const aviso of avisosDeEvidencia) {
+      await expect(avisos.getByText(aviso, { exact: true })).toBeVisible();
+    }
+    expect(avisosDeEvidencia).toHaveLength(2);
+    await expect(avisos).not.toContainText(avisoAjeno);
+    await expect(page.getByText(avisoAjeno)).toHaveCount(0);
   });
 
-  test('muestra el aviso cuando el análisis es sin_evidencia [US-069 AC-4]', async ({ page }) => {
+  test('muestra los avisos de IA y no bloquea cuando el análisis es sin_evidencia [US-069 AC-4] [RN-26]', async ({
+    page,
+  }) => {
     await analizar(page, preguntaSinEvidencia);
     await esperarResultado(page);
 
-    const avisos = await avisosDelResultado(page);
-    expect(avisos.length).toBeGreaterThan(0);
-    for (const aviso of avisos) expect(aviso).toBe(disclaimerEsperado);
+    await expect(page.getByText('Relevancia máxima: no aplica')).toBeVisible();
+    const avisos = regionDeAvisos(tarjetasDelChat(page).first());
+    await expect(avisos.getByRole('listitem').first()).toBeVisible();
+    for (const aviso of avisosDeEvidencia) {
+      await expect(avisos.getByText(aviso, { exact: true })).toBeVisible();
+    }
+    await preguntarEnElChat(page, pregunta);
+    await esperarTarjeta(page, 2);
   });
 
-  test('muestra el valor sintético de AI_DISCLAIMER_TEXT en el panel sin cambiar código de web [US-069 AC-2]', async ({
-    page,
-  }) => {
-    await analizar(page, preguntaHer2);
-    await esperarResultado(page);
-
-    for (const aviso of await avisosDelResultado(page)) expect(aviso).toBe(disclaimerEsperado);
-  });
-
-  test(`muestra ${ETIQUETA} en la cabecera de cada página autenticada del S1 fuera del aviso de IA [US-069 AC-3]`, async ({
+  test(`muestra ${ETIQUETA} en la cabecera de la página y pinta como avisos exactamente los notices del turno [US-069 AC-3]`, async ({
     page,
   }) => {
     await iniciarSesion(page);
     const cabecera = page.getByRole('banner');
     await expect(cabecera.getByText(ETIQUETA)).toBeVisible();
 
-    await page.getByLabel('Pregunta clínica').fill(preguntaHer2);
-    await page.getByRole('button', { name: 'Analizar evidencia' }).click();
-    await esperarResultado(page);
+    await preguntarEnElChat(page, pregunta);
+    await esperarTarjeta(page);
     await expect(cabecera.getByText(ETIQUETA)).toBeVisible();
+    // Se lee del DOM de la tarjeta, no del fixture: los avisos pintados son exactamente los `notices[]` del turno, sin
+    // añadidos del cliente (la etiqueta académica de la cabecera es otra cosa: el turno de caso también la trae).
+    const avisosPintados = await regionDeAvisos(tarjetasDelChat(page).first())
+      .getByRole('listitem')
+      .allInnerTexts();
+    expect(avisosPintados.length).toBeGreaterThan(0);
+    expect(avisosPintados).toEqual(avisosDelTurno);
 
-    await page.getByLabel('Pregunta clínica').fill(preguntaSinEvidencia);
-    await page.getByRole('button', { name: 'Analizar evidencia' }).click();
-    await expect(page.getByText('Relevancia máxima: no aplica')).toBeVisible();
-    await expect(cabecera.getByText(ETIQUETA)).toBeVisible();
-
-    await page.route('**/api/evidence-analyses', (ruta) =>
+    await page.route('**/api/conversations/*/turns', (ruta) =>
       ruta.fulfill({ status: 502, json: ejemplo('error-servicio-ia.json') }),
     );
-    await page.getByRole('button', { name: 'Analizar evidencia' }).click();
-    await expect(page.getByText(/Código de traza:/)).toBeVisible();
+    await preguntarEnElChat(page, pregunta);
+    // El route announcer de Next también es `role="alert"`: se acota al error del panel.
+    await expect(
+      page.getByRole('alert').filter({ hasText: es.conversacion.errorTitulo }),
+    ).toBeVisible();
     await expect(cabecera.getByText(ETIQUETA)).toBeVisible();
-    for (const aviso of await page.getByRole('note').allTextContents()) {
-      expect(aviso).not.toContain(ETIQUETA);
-    }
   });
 });

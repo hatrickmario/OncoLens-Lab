@@ -4,6 +4,7 @@ import {
   ARCHIVOS_DE_RAIZ_DECLARADOS_POR_EL_MANIFIESTO,
   ARCHIVOS_DECLARADOS_POR_EL_MANIFIESTO,
   ARCHIVOS_DEL_CATALOGO,
+  ARCHIVOS_POR_TIPO_DECLARADOS_POR_LISTA,
   NOMBRES_DE_ARCHIVO,
 } from './archivos.mjs';
 import { catalogHashDeReglasDePoblacion } from './canonico.mjs';
@@ -86,10 +87,14 @@ function compilarEsquemas(esquemas) {
   const declaradosDeLaRaiz = Object.entries(ARCHIVOS_DE_RAIZ_DECLARADOS_POR_EL_MANIFIESTO).map(
     ([nombre, { esquema }]) => [nombre, ajv.compile(esquemas[esquema])],
   );
+  const porLista = Object.entries(ARCHIVOS_POR_TIPO_DECLARADOS_POR_LISTA).map(
+    ([nombre, { esquema }]) => [nombre, ajv.compile(esquemas[esquema])],
+  );
   return {
     manifest: ajv.compile(esquemas.manifest),
     ...Object.fromEntries(declaradosDeLaRaiz),
     ...Object.fromEntries(declarados),
+    ...Object.fromEntries(porLista),
     ...Object.fromEntries(deLaRaiz),
     ...Object.fromEntries(delRegistro),
   };
@@ -129,6 +134,26 @@ function violacionesDeLosDeclarados(manifest, tipos, esquemasCompilados) {
         ? []
         : violacion('hash_distinto');
     }),
+  );
+}
+
+/** Archivos por tipo que el manifiesto lista (`plantillasDePregunta`): reglas propias y, si callan, esquema. */
+function violacionesDeLosDeclaradosPorLista(archivos, esquemasCompilados) {
+  return Object.entries(ARCHIVOS_POR_TIPO_DECLARADOS_POR_LISTA).flatMap(
+    ([nombre, { clave, reglas }]) =>
+      Object.entries(archivos.tipos).flatMap(([tipoDeCancer, delTipo]) => {
+        const declarados = archivos.manifest?.[clave];
+        const archivo = delTipo[nombre];
+        if (!Array.isArray(declarados) || !declarados.includes(tipoDeCancer)) return [];
+        const delArchivo = reglas(archivo, archivos['terminos-prohibidos']).map((violacion) => ({
+          ...violacion,
+          tipoDeCancer,
+        }));
+        if (delArchivo.length > 0) return delArchivo;
+        return esquemasCompilados[nombre](archivo)
+          ? []
+          : [{ codigo: 'esquema_invalido', tipoDeCancer, archivo: nombre }];
+      }),
   );
 }
 
@@ -183,6 +208,7 @@ export function validarCatalogo({ archivos, allowlist, esquemas }) {
       violacionesDelTipoSinLanzar(tipoDeCancer, delTipo, contexto, esquemasCompilados),
     ),
     ...violacionesDeLosDeclarados(archivos.manifest, archivos.tipos, esquemasCompilados),
+    ...violacionesDeLosDeclaradosPorLista(archivos, esquemasCompilados),
     ...violacionesDeLosDeclaradosDeLaRaiz(archivos, esquemasCompilados),
     ...violacionesDeAtributos(archivos.atributos),
   ];

@@ -1,5 +1,9 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { expect, type Page } from '@playwright/test';
+import type {
+  ConversationTurn,
+  EvidenceAnalysis,
+} from '../../../packages/api-contracts/src/types/clinical-api';
 import es from '../messages/es.json' with { type: 'json' };
 import { opcionDelRotulo, type OpcionVisible } from './orden-rn28';
 
@@ -80,11 +84,33 @@ export async function iniciarSesion(page: Page) {
   await page.waitForURL(/\/pacientes\/[^/]+\/analisis$/);
 }
 
-/** Abre el panel del paciente semilla (a), escribe la pregunta y presiona "Analizar evidencia". */
+/** Escribe la pregunta en el chat del paciente y pulsa «Preguntar» (US-267: sustituye al formulario de una pregunta). */
+export async function preguntarEnElChat(page: Page, pregunta: string) {
+  await page.getByLabel(es.conversacion.campo).fill(pregunta);
+  await page.getByRole('button', { name: es.conversacion.preguntar }).click();
+}
+
+/** Tarjetas de los turnos del asistente: grupos «Turno n» (las tarjetas de opción del análisis son `article`). */
+export const tarjetasDelChat = (page: Page) => page.getByRole('group', { name: /^Turno \d+$/ });
+
+/** Abre el chat del paciente semilla (a) y le hace la pregunta. */
 export async function analizar(page: Page, pregunta: string) {
   await iniciarSesion(page);
-  await page.getByLabel('Pregunta clínica').fill(pregunta);
-  await page.getByRole('button', { name: 'Analizar evidencia' }).click();
+  await preguntarEnElChat(page, pregunta);
+}
+
+/** Respuesta del `POST /api/conversations/{id}/turns`. */
+export const esRespuestaDeTurno = (r: { url(): string; request(): { method(): string } }) =>
+  r.request().method() === 'POST' && /\/api\/conversations\/[^/]+\/turns$/.test(r.url());
+
+/** El `evidenceAnalysis` del turno de evidencia (el mismo `EvidenceAnalysis` que antes devolvía `/api/evidence-analyses`). */
+export async function analisisDelTurno(respuesta: { json(): Promise<unknown> }) {
+  return ((await respuesta.json()) as ConversationTurn).evidenceAnalysis as EvidenceAnalysis;
+}
+
+/** Espera `n` tarjetas de turno (por defecto, una). */
+export async function esperarTarjeta(page: Page, n = 1) {
+  await expect(tarjetasDelChat(page)).toHaveCount(n);
 }
 
 export async function esperarResultado(page: Page) {
@@ -116,7 +142,7 @@ export function datosDelGate(): DatosDelGate {
   return JSON.parse(bloque) as DatosDelGate;
 }
 
-const { caso, datosCriticos, registroManual, followUp, evidence } = es;
+const { caso, datosCriticos, registroManual, evidence } = es;
 const { correccion } = ficha;
 const columnaDeDatosCriticos = (page: Page) =>
   page.getByRole('region', { name: datosCriticos.titulo });
@@ -181,7 +207,7 @@ export async function pasoRegistroManual(page: Page, datos: DatosDelGate) {
     .count();
 }
 
-/** Una pregunta de seguimiento: el turno `n` muestra ≥ 1 afirmación con ≥ 1 cita, el aviso de IA y la etiqueta académica. */
+/** Una pregunta de seguimiento en el chat: el turno `n + 1` (el 1 es el análisis) trae ≥ 1 cita `[E<n>]`, los avisos del turno y la etiqueta académica en la página. */
 export async function pasoSeguimiento(
   page: Page,
   pregunta: string,
@@ -189,17 +215,23 @@ export async function pasoSeguimiento(
   /** Espera de la generación (D5-57): sin valor, el `expect` conserva su plazo por defecto. */
   plazoDeGeneracion?: number,
 ) {
-  await page.getByLabel(followUp.campo).fill(pregunta);
-  await page.getByRole('button', { name: followUp.preguntar, exact: true }).click();
+  await preguntarEnElChat(page, pregunta);
 
-  const turno = page.getByRole('article', { name: new RegExp(`^Pregunta ${n} ·`) });
+  const turno = tarjetasDelChat(page).nth(n);
   await expect(turno).toBeVisible({ timeout: plazoDeGeneracion });
-  const citasPorAfirmacion = turno.getByRole('list', { name: evidence.cita.lista });
-  await expect(citasPorAfirmacion.first()).toBeVisible({ timeout: plazoDeGeneracion });
-  for (const citas of await citasPorAfirmacion.all())
-    await expect(citas.getByRole('listitem').first()).toBeVisible();
-  await expect(turno.getByRole('note')).not.toHaveCount(0);
-  await expect(turno.getByText(es.app.academicUseLabel)).toBeVisible();
+  await expect(turno.locator('summary', { hasText: /\[E\d+\]/ }).first()).toBeVisible({
+    timeout: plazoDeGeneracion,
+  });
+  // Cada cita es un elemento de lista con su fuente y fragmento; el gate no pasa con un turno sin avisos de IA (RN-19).
+  await expect(
+    turno
+      .getByRole('listitem')
+      .filter({ has: page.locator('summary') })
+      .first(),
+  ).toBeVisible();
+  const avisos = turno.getByRole('region', { name: es.conversacion.avisosTitulo });
+  await expect(avisos.getByRole('listitem')).not.toHaveCount(0);
+  await expect(page.getByRole('banner').getByText(es.app.academicUseLabel)).toBeVisible();
 }
 
 /** Los conteos que muestra cada tarjeta («Coincide 2, Parcial 0, No coincide 0, Desconocido 3») y su etiqueta de no comparable. */
