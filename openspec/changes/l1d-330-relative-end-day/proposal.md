@@ -50,8 +50,9 @@ hecho, la regla ya existente se activa en integración.
 - **Respuestas sin datos (AC-4):** sin datos en absoluto, el único bloque `limitacion` con «No se encontró información
   documentada sobre lo preguntado en el expediente» (`CHAT_SIN_DATOS_TEXTO`); sin datos en el periodo pero con datos
   fuera de él, el de `CHAT_SIN_DATOS_PERIODO_TEXTO` de `l1d-318`; ambos fijos y sin texto del LLM.
-- **Ancla visible:** cuando el turno aplica un periodo y entran hechos, un bloque `limitacion` fijo y determinista
-  «Periodo medido desde la fecha del diagnóstico» (constante única en `domain/chat/mensajes.py`).
+- **Ancla visible:** cuando el turno aplica un periodo y algún hecho entra o se excluye por la rama de intervalo
+  (`relativeEndDay` presente), un bloque `limitacion` fijo y determinista «Periodo medido desde la fecha del diagnóstico»
+  (constante única en `domain/chat/mensajes.py`); los turnos de periodo sin intervalo (ejemplo de `l1d-318`) no cambian.
 - **Dato en curso sin verificar (RN-26):** si un hecho «en curso» tiene `reviewStatus = requiere_revision`, `notices[]`
   añade un aviso fijo de «sin verificar»; no bloquea la respuesta.
 

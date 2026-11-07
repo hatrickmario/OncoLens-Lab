@@ -238,6 +238,15 @@ un grupo con nombre accesible (`axe` sin violaciones `serious` ni `critical`).
 - **WHEN** corre axe y luego el oncólogo usa Tab hasta el primer botón y pulsa Enter
 - **THEN** axe no reporta violaciones `serious` ni `critical`, el grupo tiene un nombre accesible y se envía el turno
 
+### Requirement: Un fallo de la lectura del resumen no bloquea la conversación
+Si el RSC no puede leer `PatientSummary` (`error`, `sin_permiso`, `no_encontrado`) o el paciente no tiene tipo de cáncer, el
+panel MUST pasar 0 preguntas guiadas y MUST mantener operable el campo de pregunta.
+
+#### Scenario: Sin resumen no hay preguntas guiadas pero sí campo de pregunta [US-267 AC-10] [RN-15] (asumido)
+- **GIVEN** `obtenerFicha` simulado con `sin_permiso` o `error`
+- **WHEN** se abre el panel
+- **THEN** no hay botones de preguntas guiadas y el campo de pregunta y «Preguntar» siguen operables
+
 ## REMOVED Requirements
 
 ### Requirement: Hilo de seguimiento bajo un análisis con evidencia
@@ -317,12 +326,3 @@ crudo lo mantiene el panel (design D1).
 ### Requirement: El panel valida y envía la pregunta normalizada
 **Reason**: el formulario se retira (P-1 asumido, US-267).
 **Migration**: la normalización de la pregunta del turno la hace `clinical-api` (OUT-05), que sigue siendo la validación de autoridad.
-
-### Requirement: Un fallo de la lectura del resumen no bloquea la conversación
-Si el RSC no puede leer `PatientSummary` (`error`, `sin_permiso`, `no_encontrado`) o el paciente no tiene tipo de cáncer, el
-panel MUST pasar 0 preguntas guiadas y MUST mantener operable el campo de pregunta.
-
-#### Scenario: Sin resumen no hay preguntas guiadas pero sí campo de pregunta [US-267 AC-10] [RN-15] (asumido)
-- **GIVEN** `obtenerFicha` simulado con `sin_permiso` o `error`
-- **WHEN** se abre el panel
-- **THEN** no hay botones de preguntas guiadas y el campo de pregunta y «Preguntar» siguen operables

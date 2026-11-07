@@ -133,3 +133,38 @@ LLM, más las limitaciones de US-266, y `notices[]` MUST contener los dos avisos
 - **GIVEN** el mismo turno, servido como `contracts/examples/chat-turn-evidencia-sin-opciones.json`
 - **WHEN** se inspecciona `notices[]`
 - **THEN** contiene exactamente «Generado por IA; requiere validación clínica independiente por el oncólogo tratante» y «Uso académico/investigación»
+
+## MODIFIED Requirements
+
+### Requirement: Un segundo loop de reescritura rescata el primer loop vacío
+Con cero chunks sobre el umbral en el primer loop y `QUERY_REWRITE_ENABLED = true`, el pipeline MUST invocar una vez la reescritura con el LLM local, recuperar de nuevo y, si algún chunk supera el umbral, continuar con la generación (FR-09). Con al menos un chunk sobre el umbral en el primer loop SHALL NOT invocarse. No corre si antes corrió el loop contextual de ADR-52 (US-271), que tiene prioridad para las preguntas sin tema propio.
+
+#### Scenario: El segundo loop recupera un chunk y el pipeline genera [US-238 AC-1] [AC-06.1] [RN-02] [FR-09]
+- **GIVEN** `Q-TYPO-SIN-EVIDENCIA` (FX-06b-a: `ch-m1-1` = 0,12 con la original y 0,74 con la reescritura, umbral 0,30) y `QUERY_REWRITE_ENABLED = true`
+- **WHEN** se procesa la consulta
+- **THEN** el primer loop no supera el umbral, la reescritura se invoca una vez y el segundo loop recupera al menos un chunk sobre el umbral
+- **AND** el pipeline continúa con la generación y `meta.retrievalParams.queryRewrite = { applied: true, reason: "disparado" }`
+
+#### Scenario: Con un chunk sobre el umbral la reescritura no se invoca [US-238 AC-2] [RN-02]
+- **GIVEN** un primer loop con al menos un chunk sobre el umbral y el LLM falso de reescritura con contador
+- **WHEN** se procesa la consulta
+- **THEN** el contador de llamadas del LLM de reescritura es 0
+- **AND** `meta.retrievalParams.queryRewrite = { applied: false, reason: "no_disparado" }`
+
+### Requirement: El segundo loop está acotado y se configura
+El segundo loop MUST ejecutarse como máximo `QUERY_REWRITE_MAX_ITERATIONS` veces, sin tercer loop, y, junto con el loop contextual de ADR-52 (US-271), como máximo **un** segundo loop por consulta; y `QUERY_REWRITE_ENABLED`, `QUERY_REWRITE_MAX_ITERATIONS` y `QUERY_REWRITE_DEADLINE_MS` SHALL leerse de configuración (RN-22).
+
+#### Scenario: Un LLM que siempre reformula produce un solo segundo loop [US-238 AC-4] [RN-22]
+- **GIVEN** `QUERY_REWRITE_MAX_ITERATIONS = 1` y un LLM falso que siempre propone otra reformulación
+- **WHEN** se procesa una pregunta con el primer loop vacío
+- **THEN** hay un solo segundo loop y no hay un tercero
+- **AND** las tres claves se leen de la configuración, sin literales en código
+
+### Requirement: La pregunta original manda sobre la reescritura
+Salvo el loop contextual de ADR-52 (US-271), que puntúa «pregunta + términos del catálogo» solo para preguntas sin tema propio, la reescritura MUST cambiar solo el vector enviado a Milvus: el reranker puntúa contra la pregunta original (el umbral se compara con ese puntaje) y la respuesta y el `AIAnalysisRecord` conservan siempre la pregunta original (RN-03, RN-06).
+
+#### Scenario: Pregunta mostrada, guardada y puntuada es la original [US-238 AC-7] [RN-03] [RN-06]
+- **GIVEN** el caso de `Q-TYPO-SIN-EVIDENCIA` rescatado por el segundo loop
+- **WHEN** se completa la respuesta
+- **THEN** la pregunta mostrada y guardada es la original y el reranker puntuó los chunks del segundo loop contra ella
+- **AND** la reescritura solo cambió el vector enviado a Milvus

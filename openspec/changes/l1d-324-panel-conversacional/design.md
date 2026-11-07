@@ -115,7 +115,7 @@ L1D-213 (no se muestra motivo ni código).
   falla (`error`, `sin_permiso`, `no_encontrado`) o el paciente no tiene tipo de cáncer, se pasa `[]`: solo se ocultan las
   preguntas guiadas, el campo de pregunta funciona.
 - **Catálogo en `web` (decisión más simple y su justificación).** `lib/server/catalogo-guiadas.ts` empieza con
-  `import 'server-only'` e importa `plantillas.json` (de `mama/` y `prostata/`), `codigos.json` y `atributos.json`
+  `import 'server-only'` e importa `plantillas.json` (de `mama/` y `prostata/`), `codigos.json`, `atributos.json` y `datos-criticos.json`
   directamente del paquete `clinical-catalogs`, como ya hace `texto-si-permitido.ts` con `terminos-prohibidos.json`. Así
   el catálogo **nunca entra al bundle del navegador** y no hay ruta de lectura nueva ni montaje de volumen en `web`. La
   **comprobación de versión** es de construcción: `web` y `clinical-api` se construyen del mismo commit con el mismo
@@ -123,7 +123,7 @@ L1D-213 (no se muestra motivo ni código).
   archivo importado declara una versión coherente con él; el `Dockerfile` de `web` copia esos archivos (tarea C-1). Se
   descarta importarlo en el cliente (expone todo el catálogo) y consultar `…/manual-entry-options` desde el cliente (una
   petición más para comparar `catalogVersion`).
-- **Quién compone la pregunta:** una función pura `armarPreguntasGuiadas(resumen, plantillas, codigos, atributos)` en
+- **Quién compone la pregunta:** una función pura `armarPreguntasGuiadas(resumen, plantillas, codigos, atributos, datosCriticos)` en
   `apps/web/lib/conversacion/preguntas-guiadas.ts`. Plantillas con ranuras `{tipo}`, `{estadio}`, `{biomarcador}`,
   `{grado}` en `packages/clinical-catalogs/{mama,prostata}/plantillas.json` (RN-29; hoy `items: []`, FEAT-05); el valor de
   cada ranura sale del catálogo (etiqueta CIE-10 de `codigos.json`; estadio y grado solo si están en los valores
@@ -133,8 +133,9 @@ L1D-213 (no se muestra motivo ni código).
   `clinicalContext` para rag) y la salida esperada; este change **lo consume** y no lo redefine. Una plantilla solo se
   ofrece si todas sus ranuras se resuelven; se ofrecen hasta 4 en el orden del catálogo, y el catálogo garantiza ≥ 3 que
   solo usan `{tipo}` (validador), de modo que el caso de AC-10 sigue dando 3. Sin tipo de cáncer no se ofrece ninguna.
-  `plantillas.schema.json` **se amplía** (ranuras permitidas, mínimo de plantillas solo de tipo) y se amplía el validador
-  de `packages/clinical-catalogs/validator/` (ranura desconocida, término de `terminos-prohibidos.json`, menos de 3 solo de
+  `plantillas.schema.json` **se amplía** (ranuras permitidas, mínimo de plantillas solo de tipo) y se amplía el validador:
+  se registra el archivo en `validator/archivos.mjs` y sus reglas en `validator/validar-catalogo.mjs` (`cargar.mjs` lo carga;
+  hoy ninguno referencia `plantillas`) (ranura desconocida, término de `terminos-prohibidos.json`, menos de 3 solo de
   tipo).
 - **Plantillas literales** (todas interrogativas o descriptivas; ninguna usa «mejor», «indicado», «debería» ni verbo
   prescriptivo; pasan `terminos-prohibidos.json` en un test). Mama y próstata, 4 por tipo; las 3 primeras solo usan `{tipo}`:
@@ -154,13 +155,13 @@ L1D-213 (no se muestra motivo ni código).
   por la lista `terminos-prohibidos.json` (RN-23) en un test.
 - **Catálogo:** `plantillas.json` es de datos, no código; sube la versión del manifest (la siguiente menor libre, esperada
   1.8.0 tras `l1d-329` = 1.7.0; si este change mergea antes toma 1.7.0 y `l1d-329` se renumera). `terminos-prohibidos.json`
-  sube con el manifest (versión propia) y `scripts/catalog/version-guard.mjs` ya vigila el resto.
+  **no** sube (convención, el guardián no la exige) y `scripts/catalog/version-guard.mjs` ya vigila el resto.
 
 ## Privacidad y ownership
 
 - El navegador solo llama a `/api/patients/{id}/conversations`, `/api/conversations/{id}` y `/api/conversations/{id}/turns`
   (Route Handlers de `l1d-315`, cookie opaca). Nunca a `clinical-api`, `rag-orchestrator` ni `…/follow-ups`.
-- Las preguntas guiadas se componen en el cliente solo con datos estructurados del caso y etiquetas del catálogo: nunca texto libre del expediente, `pseudoPatientId` ni identidad (RN-10, RN-11); la pregunta compuesta viaja como cualquier otra.
+- Las preguntas guiadas se componen en el RSC, en servidor, solo con datos estructurados del caso y etiquetas del catálogo: nunca texto libre del expediente, `pseudoPatientId` ni identidad (RN-10, RN-11); la pregunta compuesta viaja como cualquier otra.
 - La pregunta va en el cuerpo, nunca en la URL ni en `localStorage`/`sessionStorage`; el estado vive en memoria del
   componente. Los ids en la URL son UUID.
 - El RSC lee `PatientSummary` en servidor y **no pasa `identification` al cliente**: solo la lista de ≤ 4 textos de preguntas

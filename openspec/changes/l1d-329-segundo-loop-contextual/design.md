@@ -71,8 +71,8 @@ umbral (0,30); segundo loop en seguimiento.
    (RN-29: sin duplicados, sin cadenas vacías, normalizadas, cada idioma presente). Se lee desde `CLINICAL_CATALOG_PATH`
    (solo lectura, ambos backends; un desfase → `409`). **Qué versión sube cada fichero:** `manifest.version` sube a
    **1.7.0** (gobierna `mama/sinonimos.json` y los demás de raíz y por tipo; el guardián compara el archivo entero contra
-   `origin/main`); `lenguaje/terminos-prohibidos.json` tiene versión propia y, por la regla de coherencia del catálogo,
-   **sube también a 1.7.0** junto con el manifest (contenido sin cambios, solo la versión); `lenguaje/marcos-de-pregunta.json`
+   `origin/main`); `lenguaje/terminos-prohibidos.json` tiene versión propia y **no sube** (la coherencia con el manifest es
+   una convención que el guardián no exige; por eso `packages/clinical-language` no cambia); `lenguaje/marcos-de-pregunta.json`
    nace con `version` igual a la del manifest. Como `scripts/catalog/version-guard.mjs` registra explícitamente lo que
    vigila (`CON_VERSION_PROPIA = ['lenguaje/terminos-prohibidos']`), este change **añade `lenguaje/marcos-de-pregunta`** a
    esa lista, con su test (`scripts/catalog/__tests__`): contenido cambiado sin subir versión → falla; primera
@@ -111,12 +111,15 @@ contextExpansion:
   required: [applied, fields]
   description: >-
     Segundo loop contextual sin LLM (US-271, ADR-52, RN-02 enmendada). Opcional: ausente equivale a que no corrió.
-    `fields` nombra los campos del caso usados (nunca valores). No sustituye a `queryRewrite`.
+    `fields` nombra los campos del caso usados (nunca valores). No sustituye a `queryRewrite`, que describe solo la
+    reescritura con LLM.
   properties:
     applied:
       type: boolean
+      const: true
     fields:
       type: array
+      minItems: 1
       uniqueItems: true
       items:
         type: string
@@ -126,7 +129,8 @@ contextExpansion:
 - **Semántica:** se emite solo cuando corrió el loop contextual (`applied = true`, `fields` no vacío); en cualquier otro
   caso la propiedad **no aparece**, de modo que las respuestas sin loop contextual son idénticas byte a byte a las de
   antes (AC-4). `queryRewrite` conserva su `if/then/else` y su descripción: con el loop contextual vale
-  `{applied: false, reason: "no_disparado"}`.
+  `{applied: false, reason: "no_disparado"}`; la descripción de `no_disparado` añade «o el segundo loop fue el contextual sin
+  LLM (ver `contextExpansion`)» (sin cambio de valores). Simulado de nuevo con esas dos restricciones y la descripción: 0 ERR y 0 WARN.
 - **Versión:** el spec cambia, así que **sube la versión menor** de rag (ADR-26, `[S2 resp. 12]`). Orden esperado del
   glosario S6 §1: `l1d-323` (1.14.0) → `l1d-330` (1.15.0) → este change (1.16.0); la tarea 1.1 dice «la siguiente menor
   libre respecto de `main`» y la comprueba tras `git fetch` antes del commit `contract(L1D-329)`; si el orden cambia,
@@ -136,12 +140,15 @@ contextExpansion:
   `index.json`; para el chat, `chat-turn-evidencia-contextual.json` (turno con el loop contextual y su aviso en
   `notices[]`) y `chat-turn-evidencia-sin-opciones.json` (turno «recuperado sin opciones soportadas» con los dos avisos),
   con sus peticiones `chat-turn-request-evidencia-contextual.json` y `chat-turn-request-evidencia-sin-opciones.json`.
-- **Ejemplos existentes con la versión del catálogo:** al subir el manifest a 1.7.0 cambian de versión
-  `contracts/examples/chat-turn-evidencia.json` (`catalogVersion`, línea 90), `chat-turn-request-faltantes.json`,
-  `chat-turn-request-faltantes-ninguno.json`, `completeness-gap-type-p-chat.json` y el texto determinista de
-  `chat-turn-faltantes-ninguno.json` («según el catálogo 1.6.0»); se actualizan **en el mismo commit
-  `contract(L1D-329)`**, junto con los tests de Backend 2 que fijan la versión (`test_catalogo_clinico.py`,
-  `test_lenguaje_conformidad.py`, `test_chat_faltantes.py`).
+- **Referencias a la versión del catálogo:** al subir el manifest a 1.7.0 se hace el barrido `git grep -n '1\.6\.0'` sobre
+  `apps`, `packages`, `scripts`, `data` y `contracts` y se actualiza **en el mismo commit `contract(L1D-329)`** todo lo que
+  fije la versión. Como mínimo: los ejemplos `chat-turn-evidencia.json`, `chat-turn-request-faltantes*.json`,
+  `completeness-gap-type-p-chat.json` y el texto de `chat-turn-faltantes-ninguno.json`; en `clinical-api`: seed-catalogo-real,
+  tipo-de-vacio, faltantes-tipo-de-vacio (incluido el test del `409`), atributos, etapa-de-servicios, atc-minimo y
+  loinc-minimo; en `rag-orchestrator`: `test_catalogo_clinico.py`, `test_chat_faltantes.py`, test_catalogo_real_poblacion_reglas,
+  test_chat_turn_faltantes y test_rag_query_voz_propia (`languagePolicyVersion`); en `scripts/catalog/__tests__`: atributos,
+  escalas, fuentes-documentales y poblacion-reglas. `terminos-prohibidos.json` no sube, así que `packages/clinical-language`
+  (`casos.json` `listaVersion`, `load-prohibited-terms.test.ts`, `parse-prohibited-terms.test.ts`) no cambia.
 - Pydantic y TS se generan del spec; nunca a mano; en un rebase sobre `l1d-330` o `l1d-323` se regenera `packages/api-contracts/`
   (nunca se resuelve un generado a mano).
 - **Catálogo:** versión 1.7.0 del `manifest.json` y de las referencias; no es contrato OpenAPI, pero un desfase entre

@@ -43,9 +43,10 @@ periodo en integración; mantener RN-11 (solo días relativos).
    pueden aplicar. Un hecho cuyo fin cae **antes** del periodo (`fin < -N`) **se excluye sin marca** (decidido, usuario,
    2026-11-06): queda fuera del prompt y de los bloques. Sin periodo reconocido no se filtra ni se marca. Si un hecho «en
    curso» tiene `reviewStatus = requiere_revision`, `notices[]` añade un aviso fijo de «sin verificar» (constante en
-   `domain/chat/mensajes.py`; RN-26: informa, no bloquea). Cuando el turno aplica un periodo y entra algún hecho, se añade
-   un bloque `limitacion` fijo «Periodo medido desde la fecha del diagnóstico» (constante única en `mensajes.py`, no
-   calibrable; exento de cita, glosario §3) que hace visible el ancla del día 0.
+   `domain/chat/mensajes.py`; RN-26: informa, no bloquea). El bloque `limitacion` fijo «Periodo medido desde la fecha del diagnóstico» (constante única en `mensajes.py`, no
+   calibrable; exento de cita, glosario §3) se emite **solo cuando algún hecho entró o se excluyó por la rama de intervalo**
+   (es decir, algún `CaseFact` trae `relativeEndDay`, entero o `null`), de modo que los turnos de periodo sin intervalo, como
+   `contracts/examples/chat-turn-caso-periodo.json` de `l1d-318`, **no cambian**.
 5. **`describir_hecho` y el intervalo.** La descripción (línea del prompt y premisa del NLI) añade «hasta N días antes del
    diagnóstico» (o «después» / «al momento del diagnóstico») cuando `dia_relativo_fin` es un entero, con la misma forma
    que `_momento_de`, de modo que el chequeo numérico de `l1d-318` reconoce la cifra. Para un hecho en curso no añade nada
@@ -76,7 +77,7 @@ generado de rag, `packages/api-contracts/`). `web` no usa el campo.
 - **Ejemplos** (uno por caso, glosario §3; **no se editan los de `l1d-318`**, el glosario §3 los lista para este change):
   nuevos `contracts/examples/chat-turn-request-caso-intervalo.json` y `chat-turn-caso-intervalo.json` (quimioterapia
   `relativeDay −160`, `relativeEndDay −60`, rotulada «(iniciado antes del periodo)», con el bloque «Periodo medido desde la
-  fecha del diagnóstico»), y `chat-turn-request-caso-en-curso.json` y `chat-turn-caso-en-curso.json`
+  fecha del diagnóstico», que solo aparece porque el hecho lleva `relativeEndDay`), y `chat-turn-request-caso-en-curso.json` y `chat-turn-caso-en-curso.json`
   (`relativeEndDay: null`, rótulos «(iniciado antes del periodo)» y «(en curso)», más el aviso de «sin verificar» si el hecho
   está en `requiere_revision`). Los ejemplos de periodo de `l1d-318` siguen sin `relativeEndDay` y su comportamiento (campo
   ausente) no cambia.

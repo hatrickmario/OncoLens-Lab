@@ -31,3 +31,12 @@ El turno de evidencia del chat con chunks sobre el umbral y 0 opciones soportada
 - **WHEN** se procesa `POST /chat/turn`
 - **THEN** la respuesta coincide con `contracts/examples/chat-turn-evidencia-sin-opciones.json`: un bloque `limitacion` con el texto fijo, las limitaciones de US-266 y los dos avisos en `notices[]`
 - **AND** no declara `sin_evidencia` y `topRelevanceScore` no es `null`
+
+### Requirement: El seguimiento del chat nunca dispara el loop contextual
+El seguimiento de una evidencia previa (`subintent = seguimiento_evidencia`) MUST NOT ejecutar el segundo loop contextual ni
+declarar `contextExpansion`, aunque la pregunta no tenga tema propio (RN-24).
+
+#### Scenario: Un seguimiento sin tema propio no amplía la búsqueda [US-271 AC-5] [RN-24]
+- **GIVEN** `QUERY_CONTEXT_EXPANSION_ENABLED = true`, un `activeAnalysisId` y una pregunta de seguimiento sin tema propio («¿y qué más dice?») con el primer loop vacío, sobre `TestClient`
+- **WHEN** se procesa `POST /chat/turn`
+- **THEN** no hay segunda recuperación contextual, `contextExpansion` no aparece, `notices[]` no contiene «La búsqueda se amplió con datos del caso» y el turno responde sin evidencia con `topRelevanceScore = null`

@@ -67,8 +67,10 @@ Ninguna.
 ### Modified Capabilities
 
 - `evidence-analysis`: requisitos nuevos del segundo loop contextual (gate G1, términos del caso, prioridad y un solo
-  segundo loop, configuración, `contextExpansion`, mensaje «recuperado sin opciones soportadas») y **modificado** el
-  requisito de emisión de `queryRewrite` (sin cambio de valores: con el loop contextual vale `no_disparado`).
+  segundo loop, configuración, `contextExpansion`, mensaje «recuperado sin opciones soportadas») y **modificados** los
+  requisitos de US-238 «Un segundo loop de reescritura rescata el primer loop vacío», «El segundo loop está acotado y se
+  configura» y «La pregunta original manda sobre la reescritura», acotados a «salvo el loop contextual de ADR-52». El
+  requisito de emisión de `queryRewrite` no cambia (con el loop contextual vale `no_disparado`).
 - `clinical-catalogs`: léxico versionado de marcos de pregunta con su validador y los sinónimos nuevos.
 - `patient-chat`: requisito nuevo del turno de evidencia del chat con pregunta sin tema propio (loop contextual, aviso de
   ampliación y turno «recuperado sin opciones soportadas» con sus dos avisos de RN-19).
@@ -103,7 +105,8 @@ Ninguno. P-1 (excepción ADR-26 del valor `contextual`) desaparece: el usuario d
 ## Fuera de alcance
 
 - Activar `QUERY_REWRITE_ENABLED`; HyDE; *reranking* en dos etapas; puntaje combinado; gate con LLM (ADR-52 Descartados).
-- Segundo loop en `/rag/follow-up` (sigue `no_aplica`, RN-24).
+- Segundo loop en `/rag/follow-up` y en el seguimiento del chat: **nunca** disparan el loop contextual (decidido, Gate 1; sigue `no_aplica`, RN-24).
+- **Limitación conocida (aceptada):** el doctor no ve la ampliación de la búsqueda en `POST /platform/evidence-analyses` (el aviso vive en `notices[]` del turno de chat); se mide y se revisa en `l1d-326`.
 - Poner `QUERY_CONTEXT_EXPANSION_ENABLED=true` en `.env.example` y Compose: solo tras el PASS de `evaluate` (tarea
   humana H-2, fuera de este PR de código).
 - Preguntas guiadas del panel (US-267, `l1d-324`).

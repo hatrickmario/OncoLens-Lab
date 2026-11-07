@@ -69,6 +69,7 @@ romper RN-19/RN-23, sin *streaming* y sin que el navegador hable con otro origen
   el RSC de la página lee en servidor con `obtenerFicha`; **nunca `identification`**) y del catálogo versionado, nunca de
   texto libre ni del LLM; sin cambio de `CaseView` (ver `design.md` D7). Plantillas con
   ranura de tema en `packages/clinical-catalogs/{mama,prostata}/plantillas.json` (hoy vacíos; RN-29).
+- **Limitación conocida (aceptada, destino `l1d-326`):** el doctor no ve la ampliación de la búsqueda en `POST /platform/evidence-analyses`; el aviso vive en `notices[]` del turno de chat y la medición la revisa `l1d-326`.
 - **Sistema de diseño de rótulos:** `limitacion` usa «Alcance de la respuesta» y un `kind` desconocido «Información adicional del turno» (ver D3).
 - **Sustitución del formulario de pregunta única `(decidido, P-1 [S6 resp. 20])`:** el campo del chat sustituye a `EvidenceQueryForm` en
   `/analisis`; se retiran sus requisitos de `evidence-panel` (envío único, aviso de faltantes antes de analizar,

@@ -13,7 +13,7 @@ cuerpo sin el campo siga siendo válido (ADR-26, aditivo). `null` explícito sig
 - **AND** la versión de rag es la siguiente menor libre respecto de `main`
 
 #### Scenario: Ni el prompt ni los logs llevan fechas absolutas con un hecho con intervalo [US-272 AC-3] [RN-11]
-- **GIVEN** la petición de `contracts/examples/chat-turn-request-caso-periodo.json` con la quimioterapia con `relativeEndDay = -60`
+- **GIVEN** la petición de `contracts/examples/chat-turn-request-caso-intervalo.json` con la quimioterapia con `relativeEndDay = -60`
 - **WHEN** se procesa el turno y se capturan el prompt enviado al LLM falso y los *logs*
 - **THEN** no aparece ningún texto con forma `AAAA-MM-DD` y los días de inicio y fin solo figuran como días relativos
 
@@ -46,8 +46,9 @@ entrar; uno sin el campo conserva la regla de `l1d-318`. La descripción del hec
 - **THEN** se excluye: no llega al prompt ni a ningún `factRef` de los bloques y no lleva marca alguna
 
 ### Requirement: El periodo declara su ancla y el dato en curso sin verificar se avisa sin bloquear
-Cuando el turno aplica un periodo y entra algún hecho, la respuesta MUST incluir un bloque `limitacion` de texto fijo
-«Periodo medido desde la fecha del diagnóstico», escrito por el código y exento de cita. Si un hecho en curso tiene
+Cuando el turno aplica un periodo y algún hecho entra o se excluye por la rama de intervalo (trae `relativeEndDay`), la
+respuesta MUST incluir un bloque `limitacion` de texto fijo «Periodo medido desde la fecha del diagnóstico», escrito por el
+código y exento de cita; sin ningún `relativeEndDay` MUST NOT añadirse. Si un hecho en curso tiene
 `reviewStatus = requiere_revision`, `notices[]` MUST incluir un aviso fijo de «sin verificar» sin bloquear la respuesta
 (RN-26).
 
@@ -55,6 +56,11 @@ Cuando el turno aplica un periodo y entra algún hecho, la respuesta MUST inclui
 - **GIVEN** `P-CHAT` con quimioterapia de −160 a −60 y cirugía en −40
 - **WHEN** el oncólogo pregunta «¿Qué ocurrió en los últimos 100 días?»
 - **THEN** la respuesta incluye el bloque `limitacion` «Periodo medido desde la fecha del diagnóstico», sin texto ni cita del LLM, y coincide con `contracts/examples/chat-turn-caso-intervalo.json`
+
+#### Scenario: Sin relativeEndDay el turno de periodo no cambia [US-272 AC-1] [AC-02.1]
+- **GIVEN** la petición `contracts/examples/chat-turn-request-caso-periodo.json` de `l1d-318` (sin `relativeEndDay`)
+- **WHEN** se procesa el turno
+- **THEN** la respuesta coincide con `contracts/examples/chat-turn-caso-periodo.json` y no incluye el bloque «Periodo medido desde la fecha del diagnóstico»
 
 #### Scenario: Un dato en curso sin verificar se avisa y no bloquea [US-272 AC-2] [RN-26]
 - **GIVEN** un tratamiento en curso (`relativeEndDay = null`) con `reviewStatus = requiere_revision`
