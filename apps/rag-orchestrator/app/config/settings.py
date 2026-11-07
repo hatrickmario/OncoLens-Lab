@@ -141,7 +141,7 @@ class Settings(BaseSettings):
     # Segundo loop contextual sin LLM (US-271, ADR-52, RN-02 enmendada, RN-22): desactivado hasta el PASS de `evaluate`. Los
     # campos del caso que aportan términos y el formato de la consulta que puntúa el reranker son de conjuntos cerrados.
     query_context_expansion_enabled: bool = EXPANSION_HABILITADA_INICIAL
-    query_context_expansion_fields: tuple[str, ...] = EXPANSION_CAMPOS_INICIAL
+    query_context_expansion_fields: Annotated[tuple[str, ...], NoDecode] = EXPANSION_CAMPOS_INICIAL
     query_context_expansion_rerank_format: str = FORMATO_PLANO
     # Chat (US-259, ADR-51, RN-22): estado efímero del hilo en memoria del proceso. `CHAT_THREAD_TTL_SECONDS` vence el hilo
     # inactivo, `CHAT_MAX_THREADS` desaloja el más antiguo y `CHAT_MEMORY_MAX_TOKENS` acota la ventana de turnos previos.

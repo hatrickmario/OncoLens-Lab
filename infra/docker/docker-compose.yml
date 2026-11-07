@@ -365,6 +365,10 @@ services:
       QUERY_REWRITE_DEADLINE_MS: ${QUERY_REWRITE_DEADLINE_MS:-3000}
       QUERY_REWRITE_MAX_OUTPUT_TOKENS: ${QUERY_REWRITE_MAX_OUTPUT_TOKENS:-128}
       QUERY_REWRITE_MAX_TERMS: ${QUERY_REWRITE_MAX_TERMS:-5}
+      # Segundo loop contextual sin LLM (L1D-329, ADR-52, RN-02, RN-22): mismos valores que .env.example y que el código.
+      QUERY_CONTEXT_EXPANSION_ENABLED: ${QUERY_CONTEXT_EXPANSION_ENABLED:-false}
+      QUERY_CONTEXT_EXPANSION_FIELDS: ${QUERY_CONTEXT_EXPANSION_FIELDS:-tipo,estadio,biomarcador_principal}
+      QUERY_CONTEXT_EXPANSION_RERANK_FORMAT: ${QUERY_CONTEXT_EXPANSION_RERANK_FORMAT:-plano}
       # Chat (L1D-316, ADR-51, RN-22, RN-19): estado efímero del hilo y avisos sin punto final.
       CHAT_THREAD_TTL_SECONDS: ${CHAT_THREAD_TTL_SECONDS:-1800}
       CHAT_MAX_THREADS: ${CHAT_MAX_THREADS:-50}
@@ -380,6 +384,7 @@ services:
       CHAT_SIN_CONTRADICCIONES_TEXTO: ${CHAT_SIN_CONTRADICCIONES_TEXTO:-No hay contradicciones registradas en el expediente}
       CHAT_CONTRADICCIONES_ALCANCE_TEXTO: ${CHAT_CONTRADICCIONES_ALCANCE_TEXTO:-Se revisaron los diagnósticos y biomarcadores del expediente}
       CHAT_CONFLICTO_SIN_CONTRAPARTE_TEXTO: ${CHAT_CONFLICTO_SIN_CONTRAPARTE_TEXTO:-Hay datos marcados en conflicto cuya contraparte no está entre los datos consultados}
+      CHAT_AVISO_BUSQUEDA_AMPLIADA: ${CHAT_AVISO_BUSQUEDA_AMPLIADA:-La búsqueda se amplió con datos del caso}
       # Tokenizador del LLM para contar tokens de la memoria del chat; vacío = contador conservador por caracteres.
       LLM_TOKENIZER_PATH: ${LLM_TOKENIZER_PATH:-}
       SERVICE_JWT_PUBLIC_KEY_FILE: /run/secrets/jwt_service_public.pem
