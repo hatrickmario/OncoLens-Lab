@@ -6,14 +6,20 @@ pregunta de evidencia es el que sirve `/rag/query` para esa misma pregunta (``Fa
 por el chat y por el endpoint de análisis, incluidos «sin evidencia» (``topRelevanceScore`` null, RN-02) y varias opciones.
 """
 
-from collections.abc import Mapping
+import logging
+from collections.abc import Collection, Mapping
 from pathlib import Path
 from typing import Any
 
 from app.application.chat.avisos import avisos_del_turno
-from app.application.chat.bloques_de_la_respuesta import armar_bloques_de_evidencia
+from app.application.chat.bloques_de_la_respuesta import (
+    armar_bloques_de_evidencia,
+    fuentes_citadas_por_las_opciones,
+)
+from app.application.chat.citas import ConstructorDeCitas
 from app.application.chat.registro_de_hilos import RegistroDeHilos
 from app.application.chat.traduccion import bloque_del_contrato
+from app.application.ports import PosicionDeChunk
 from app.config.settings import Settings
 from app.domain.chat.ampliacion_de_busqueda import aviso_de_busqueda_ampliada
 from app.domain.chat.enrutado import (
@@ -22,13 +28,14 @@ from app.domain.chat.enrutado import (
     es_seguimiento_de_evidencia,
 )
 from app.domain.chat.estado import Intencion, Subintencion
-from app.domain.chat.turno import CitaDelBloque
 from app.infrastructure.fake.fake_evidence_query import FakeEvidenceQuery, leer_ejemplo
 from app.schemas.generated.models import (
     ChatTurnRequest,
     ChatTurnResponse,
     RagQueryInternalResponse,
 )
+
+logger = logging.getLogger(__name__)
 
 _ARCHIVOS: Mapping[Intencion | Subintencion, str] = {
     Intencion.caso: "chat-turn-caso-ok.json",
@@ -49,6 +56,7 @@ class FakeChatTurn:
 
     def __init__(
         self,
+        *,
         ejemplos: Mapping[Intencion | Subintencion, ChatTurnResponse],
         registro: RegistroDeHilos,
         evidencia: FakeEvidenceQuery,
@@ -61,6 +69,10 @@ class FakeChatTurn:
         self._settings = settings
         self._terminos_por_tipo = terminos_por_tipo
         self._terminos_del_catalogo = frozenset().union(*terminos_por_tipo.values())
+        if not terminos_por_tipo:
+            logger.info(
+                "event=chat_falso_sin_terminos_del_catalogo motivo=sin_sinonimos_o_sin_tipos"
+            )
 
     @classmethod
     def desde_directorio(
@@ -76,20 +88,20 @@ class FakeChatTurn:
             for clave, archivo in _ARCHIVOS.items()
         }
         return cls(
-            ejemplos,
-            registro,
-            evidencia or FakeEvidenceQuery.desde_directorio(directorio),
-            settings,
-            terminos_por_tipo or {},
+            ejemplos=ejemplos,
+            registro=registro,
+            evidencia=evidencia or FakeEvidenceQuery.desde_directorio(directorio),
+            settings=settings,
+            terminos_por_tipo=terminos_por_tipo or {},
         )
 
     async def turno(self, solicitud: ChatTurnRequest) -> ChatTurnResponse:
         self._registro.admitir_turno(
             solicitud.threadId, con_rehidratacion=solicitud.rehydration is not None
         )
-        return self._respuesta_para(solicitud)
+        return await self._respuesta_para(solicitud)
 
-    def _respuesta_para(self, solicitud: ChatTurnRequest) -> ChatTurnResponse:
+    async def _respuesta_para(self, solicitud: ChatTurnRequest) -> ChatTurnResponse:
         pregunta = solicitud.question
         diagnostico = solicitud.clinicalContext.diagnosis
         tipo = diagnostico.cancerType.root if diagnostico is not None else ""
@@ -101,7 +113,7 @@ class FakeChatTurn:
         ):
             return self._ejemplos[Subintencion.seguimiento_evidencia]
         if por_reglas is Intencion.evidencia:
-            return self._turno_de_evidencia(pregunta)
+            return await self._turno_de_evidencia(pregunta, solicitud.traceId.root)
         return self._ejemplos[por_reglas or Intencion.no_clasificada]
 
     def _intencion_por_reglas(self, pregunta: str) -> Intencion | None:
@@ -111,13 +123,14 @@ class FakeChatTurn:
             return Intencion.evidencia
         return clasificar_por_reglas(pregunta, self._terminos_del_catalogo)
 
-    def _turno_de_evidencia(self, pregunta: str) -> ChatTurnResponse:
+    async def _turno_de_evidencia(self, pregunta: str, trace_id: str) -> ChatTurnResponse:
         analisis = self._evidencia.select_fixture_response(pregunta)
-        fuentes = [c for o in analisis.evidenceOptions for c in o.citedSources]
-        citas = {
-            c.chunkId: CitaDelBloque(c.chunkId, c.externalId, c.title, 1, 1, c.chunkTextSnapshot)
-            for c in fuentes
-        }
+        fuentes = fuentes_citadas_por_las_opciones(analisis)
+        citas = await ConstructorDeCitas(_PosicionesDelAnalisis(analisis)).construir(
+            trace_id, fuentes
+        )
+        # El análisis solo expone ``retrievalStats.retrieved`` (candidatos antes del reranker); el motor real cuenta los
+        # evaluados por el reranker. El modo falso dice ese mismo número en el alcance, sin inventar otro.
         bloques = armar_bloques_de_evidencia(analisis, citas, analisis.retrievalStats.retrieved)
         return ChatTurnResponse.model_validate(
             {
@@ -158,3 +171,25 @@ def _estado_de_evidencia(
             "topRelevanceScore": analisis.topRelevanceScore,
         },
     }
+
+
+class _PosicionesDelAnalisis:
+    """``PosicionDeChunks`` fingido: el documento es la ``externalId`` de la fuente y la posición, la de cada chunk citado
+    en el análisis (ordinal desde 1 en el orden de aparición; cantidad = chunks distintos citados de ese documento).
+    Cumple el contrato del puerto real: solo devuelve los chunks pedidos que el análisis cita."""
+
+    def __init__(self, analisis: RagQueryInternalResponse) -> None:
+        por_documento: dict[str, list[str]] = {}
+        for opcion in analisis.evidenceOptions:
+            for fuente in opcion.citedSources:
+                chunks = por_documento.setdefault(fuente.externalId, [])
+                if fuente.chunkId not in chunks:
+                    chunks.append(fuente.chunkId)
+        self._posiciones = {
+            chunk: PosicionDeChunk(documento, ordinal, len(chunks))
+            for documento, chunks in por_documento.items()
+            for ordinal, chunk in enumerate(chunks, start=1)
+        }
+
+    def posiciones(self, chunk_ids: Collection[str]) -> dict[str, PosicionDeChunk]:
+        return {c: self._posiciones[c] for c in chunk_ids if c in self._posiciones}
