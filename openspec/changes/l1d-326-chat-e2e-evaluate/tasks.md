@@ -37,9 +37,9 @@
 
 ## 3. clinical-platform
 
-- [ ] 3.1 Test de aceptación en rojo: «la pregunta FX-12-d no deja nombre, documento ni fecha de nacimiento en los
+- [x] 3.1 Test de aceptación en rojo: «la pregunta FX-12-d no deja nombre, documento ni fecha de nacimiento en los
   cuerpos hacia /chat/turn [US-269 AC-6]» (Supertest + PostgreSQL real + MSW que captura) · TDD estricto · commit
-  `test(L1D-326)` · si ya pasa con lo de las hermanas, se registra como regresión y no requiere `feat`
+  `test(L1D-326)` · si ya pasa con lo de las hermanas, se registra como regresión y no requiere `feat` · evidencia: `tests/integration/evidence-analysis/chat-evaluate-no-fuga.test.ts` (P-CHAT del seed; cuerpos hacia `/chat/turn` y logs sin nombre, documento ni fecha); ya pasaba con US-258: regresión, sin `feat`; `scripts/test-integration.sh` 1 passed
 - [ ] 3.2 Test de aceptación en rojo: «publica sensibilidad, especificidad y exactitud de gapType 4/4 para P-CHAT con
   FX-12-c [US-269 AC-4]» y «resuelve el marcador de identidad y escribe peticiones desidentificadas [US-269 AC-6]»
   (integración con BD de test y seed) · TDD estricto · commit `test(L1D-326)`

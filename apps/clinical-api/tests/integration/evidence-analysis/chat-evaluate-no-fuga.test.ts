@@ -48,10 +48,11 @@ afterAll(async () => {
 
 describe('Cuerpos hacia /chat/turn con la pregunta FX-12-d sobre P-CHAT (RN-10, RN-11)', () => {
   it('no deja el nombre, el documento ni la fecha de nacimiento en ningún cuerpo hacia /chat/turn cuando la pregunta FX-12-d los trae [US-269 AC-6]', async () => {
-    const { app } = await montarGateway(mundo, {
+    const { app, logger } = await montarGateway(mundo, {
       identidades: lectorDeIdentidadFalso({ [patientId]: IDENTIDAD_CHAT }),
     });
     const conversationId = await abrirConversacion(app, cookie, patientId);
+    logger.lineas.length = 0;
 
     const respuesta = await enviarTurno(app, cookie, conversationId, PREGUNTA_FX_12_D);
 
@@ -65,6 +66,13 @@ describe('Cuerpos hacia /chat/turn con la pregunta FX-12-d sobre P-CHAT (RN-10, 
       ]) {
         expect(captura.texto, prohibido).not.toContain(prohibido);
       }
+    }
+    for (const prohibido of [
+      NOMBRE_SINTETICO_CHAT,
+      DOCUMENTO_SINTETICO_CHAT,
+      NACIMIENTO_SINTETICO_CHAT,
+    ]) {
+      expect(logger.texto(), prohibido).not.toContain(prohibido);
     }
   });
 });
