@@ -89,7 +89,10 @@ test.describe('Aviso de IA y etiqueta académica (L1D-194, US-267)', () => {
       ruta.fulfill({ status: 502, json: ejemplo('error-servicio-ia.json') }),
     );
     await preguntarEnElChat(page, pregunta);
-    await expect(page.getByRole('alert')).toContainText(es.conversacion.errorTitulo);
+    // El route announcer de Next también es `role="alert"`: se acota al error del panel.
+    await expect(
+      page.getByRole('alert').filter({ hasText: es.conversacion.errorTitulo }),
+    ).toBeVisible();
     await expect(cabecera.getByText(ETIQUETA)).toBeVisible();
   });
 });

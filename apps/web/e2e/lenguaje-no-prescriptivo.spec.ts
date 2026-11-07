@@ -1,5 +1,6 @@
 import { checkProhibitedTerms, loadProhibitedTerms } from '@oncolens/clinical-language';
 import { expect, test, type Page } from '@playwright/test';
+import es from '../messages/es.json' with { type: 'json' };
 import origen from '../../../packages/clinical-language/origen-de-campos.json' with { type: 'json' };
 import { analizar, ejemplo, preguntarEnElChat, textos } from './soporte';
 
@@ -8,6 +9,7 @@ const preguntaSoloDescartadas = ejemplo('rag-query-request-solo-descartadas.json
 const preguntaSinEvidencia = ejemplo('rag-query-request-sin-evidencia.json').query as string;
 const citaDelEjemplo = ejemplo('rag-query-con-evidencia.json').evidenceOptions[0].citedSources[0];
 const lista = loadProhibitedTerms();
+const textosDelChat = es.conversacion;
 
 interface TextosDeLaPagina {
   visibles: string[];
@@ -102,7 +104,9 @@ test.describe('Lenguaje no prescriptivo (L1D-193)', () => {
         ruta.fulfill({ status: estado, json: ejemplo(ejemploDeError) }),
       );
       await preguntarEnElChat(page, preguntaHer2);
-      await expect(page.getByRole('alert')).toBeVisible();
+      await expect(
+        page.getByRole('alert').filter({ hasText: textosDelChat.errorTitulo }),
+      ).toBeVisible();
       await verificarEstado(page);
       await page.unroute('**/api/conversations/*/turns');
     }
