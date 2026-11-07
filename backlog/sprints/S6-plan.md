@@ -25,7 +25,7 @@
 | L1D-330 | US-272 | `l1d-330-relative-end-day` | contratos (rag y clinical, aditivo) · clinical-platform · ai-services | O5 | ↪ 318 (en integración) | R1 | 2 |
 | L1D-321 | US-264 | `l1d-321-chat-relevancia-faltante` | ai-services · evaluate | **O5** | ⛔ 320 · ↪ 108, 316 | R5 | 3 |
 | L1D-323 | US-266 | `l1d-323-chat-fuentes-limitaciones` | ai-services · clinical-platform | O5 | ⛔ 322 | R2 | 3 |
-| L1D-324 | US-267 | `l1d-324-panel-conversacional` (11 AC; +3 por las preguntas guiadas) | frontend · docs (tokens) | O5 | ⛔ 314 (ADR-51 §8), 315 · ↪ 322 (AC-3), 266 · complementa 329 | R3 | 8 |
+| L1D-324 | US-267 | `l1d-324-panel-conversacional` (11 AC; +3 por las preguntas guiadas) | frontend · docs (tokens) | O5 | ⛔ 314 (ADR-51 §8), 315, **329 (fixture compartido)** · ↪ 322 (AC-3), 266 | R3 | 8 |
 | L1D-319 | US-262 | `l1d-319-chat-contradicciones` | clinical-platform · ai-services | O5 | ⛔ 317 · secuencial tras 318 (mismo nodo `caso`) | R1 | 3 |
 | L1D-325 | US-268 | `l1d-325-chat-fuentes-sin-perder-contexto` | frontend | **O6** | ⛔ 324 | R3 | 3 |
 | L1D-326 | US-269 | `l1d-326-chat-e2e-evaluate` | evaluación · E2E | **O7** | ⛔ 315…325 | — | 5 |
@@ -37,6 +37,7 @@
 - En O3, 315 (módulo `conversation`) y 204 (gateway y selector de proveedor) tocan `clinical-api`, pero en módulos distintos. 317 trabaja en rag (nodo `caso`).
 - En O4, 320 (`completeness`), 322 (`conversation` y `evidence-analysis`) y 213 (guard de opt-out) también son módulos distintos.
 - 318 y 319 tocan el mismo nodo, por eso 318 va en O4 y 319 en O5.
+- **Orden en O5 (Gate 1 de 329/330/324):** **330 → 319** (mismo `hechos-del-caso.ts` y `traduccion.py`) y, por contratos, **323 → 330 → 329** (rag 1.14.0 → 1.15.0 → 1.16.0, «siguiente menor libre»; el segundo rebasa y regenera `packages/api-contracts/`). **329 antes de 324**: crea el fixture compartido caso → tema y el catálogo 1.7.0 (324 toma 1.8.0).
 
 **Corrida nocturna N: opcional, al final** `[S6 resp. 22]`. Corre en la máquina de referencia con modelos locales y reúne D5-08, D5-24, D5-26, D5-28, D4-21, D4-30 y las tareas 1.0, 1.11, 1.12 y 4.2 de us-231b (D6). Se lanza desde `main` **solo después de O7** y solo si quedan presupuesto de tokens y tiempo antes de la demo.
 - No bloquea ningún change del sprint: todos los tests del chat usan el LLM falso.
@@ -69,6 +70,8 @@ flowchart LR
   316 --> 204
   315 --> 322 --> 323
   322 --> 329 --> 321
+  329 --> 324
+  323 -.contrato.-> 330 -.contrato.-> 329
   318 -.-> 330
   108 --> 322
   315 --> 213

@@ -1,10 +1,9 @@
 ## ADDED Requirements
 
 ### Requirement: Los hechos del caso informan el día relativo de fin de los tratamientos con intervalo
-Al construir `caseFacts`, `clinical-api` MUST calcular `relativeEndDay` solo para los tratamientos previos, con el mismo
-ancla (día 0 del diagnóstico) y la misma función que `relativeDay`: el entero de `endedAt` si existe; `null` explícito si
-el tratamiento está en curso (`ongoing` sin `endedAt`); el campo ausente en cualquier otro caso (hecho puntual, fin
-desconocido o sin fecha de diagnóstico). La fecha absoluta de fin MUST NOT salir de Backend 1 (RN-10, RN-11).
+`clinical-api` MUST calcular `relativeEndDay` solo para tratamientos previos, con el ancla y la función de `relativeDay`:
+entero si hay `endedAt` (gana la fecha); `null` explícito si `ongoing = true` sin `endedAt`; ausente en cualquier otro
+caso. La fecha absoluta de fin MUST NOT salir de Backend 1 (RN-10, RN-11).
 
 #### Scenario: Una quimioterapia con fin documentado viaja con su día relativo de fin [US-272 AC-1] [AC-02.1] [RN-11]
 - **GIVEN** `P-CHAT` con una quimioterapia con `startedAt` 160 días antes del diagnóstico y `endedAt` 60 días antes, y MSW sobre `/chat/turn`
@@ -17,8 +16,13 @@ desconocido o sin fecha de diagnóstico). La fecha absoluta de fin MUST NOT sali
 - **WHEN** se envía una pregunta cualquiera del chat
 - **THEN** el JSON serializado del hecho contiene `"relativeEndDay":null` y no omite la propiedad
 
-#### Scenario: Un tratamiento sin fin ni estado activo no informa relativeEndDay [US-272 AC-2] [AC-02.1]
-- **GIVEN** un tratamiento previo con `ongoing = false` y sin `endedAt`, y un diagnóstico, una cirugía y un biomarcador
+#### Scenario: Con endedAt gana la fecha aunque el tratamiento figure en curso o la fecha sea incierta [US-272 AC-2] [AC-02.1] [RN-11]
+- **GIVEN** un tratamiento previo con `ongoing = true` y `endedAt` presente (incoherente o con fecha incierta)
+- **WHEN** se construyen los `caseFacts`
+- **THEN** `relativeEndDay` es el entero de `endedAt` (no `null`) y el hecho conserva su `reviewStatus`
+
+#### Scenario: Un tratamiento con fin desconocido (ongoing = false sin endedAt) no informa relativeEndDay [US-272 AC-2] [AC-02.1]
+- **GIVEN** un tratamiento previo con `ongoing = false` y sin `endedAt` (fin desconocido), y un diagnóstico, una cirugía y un biomarcador
 - **WHEN** se construyen los `caseFacts`
 - **THEN** el hecho del tratamiento no tiene la propiedad `relativeEndDay` y los demás hechos tampoco la tienen
 
