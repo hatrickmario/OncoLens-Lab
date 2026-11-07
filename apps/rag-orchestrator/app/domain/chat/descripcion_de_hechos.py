@@ -26,7 +26,7 @@ TEXTO_EN_CONFLICTO = "en conflicto con otro dato"
 TEXTO_SIN_FECHA = "sin fecha confiable"
 TEXTO_AL_DIAGNOSTICO = "al momento del diagnóstico"
 _MOMENTO_RELATIVO = re.compile(r"(?<!\w)(\d+)\s*dias?\s+(antes|despues)\b")
-"""Forma de ``_momento_de`` sobre el texto sin tildes: «N día(s) antes|después del diagnóstico»."""
+"""Forma de ``_dias_antes_o_despues`` sobre el texto sin tildes: «N día(s) antes|después del diagnóstico»."""
 
 
 def describir_hecho(hecho: HechoDelCaso) -> str:
@@ -57,8 +57,8 @@ def es_la_descripcion_de(
 
 
 def sentidos_del_momento(texto: str) -> set[tuple[int, str]]:
-    """Los «N días antes/después» que escribe un texto como (N, ``antes`` | ``despues``): lee el formato de ``_momento_de``,
-    su único escritor, y no distingue tildes ni mayúsculas."""
+    """Los «N días antes/después» que escribe un texto como (N, ``antes`` | ``despues``): lee el formato de ``_dias_antes_o_despues``
+    (el del momento de inicio y el del fin del intervalo) y no distingue tildes ni mayúsculas."""
     return {(int(dias), sentido) for dias, sentido in _MOMENTO_RELATIVO.findall(sin_tildes(texto))}
 
 
@@ -66,20 +66,19 @@ def _momento_de(hecho: HechoDelCaso) -> str:
     dia = hecho.dia_relativo
     if dia is None:
         return TEXTO_SIN_FECHA  # nunca «día 0»: sin fecha confiable no hay momento
-    if dia == 0:
-        return TEXTO_AL_DIAGNOSTICO
-    unidad = "día" if abs(dia) == 1 else "días"
-    sentido = "después" if dia > 0 else "antes"
-    return f"{abs(dia)} {unidad} {sentido} del diagnóstico"
+    return TEXTO_AL_DIAGNOSTICO if dia == 0 else _dias_antes_o_despues(dia)
 
 
 def _fin_de(dia: int) -> str:
-    """El fin de un hecho con intervalo, con la misma forma que ``_momento_de``: «hasta N días antes del diagnóstico»."""
-    if dia == 0:
-        return "hasta el momento del diagnóstico"
+    """El fin de un hecho con intervalo: «hasta N días antes del diagnóstico» (misma forma que el momento)."""
+    return "hasta el momento del diagnóstico" if dia == 0 else f"hasta {_dias_antes_o_despues(dia)}"
+
+
+def _dias_antes_o_despues(dia: int) -> str:
+    """«N día(s) antes|después del diagnóstico»: el único escritor de la forma que lee ``sentidos_del_momento``."""
     unidad = "día" if abs(dia) == 1 else "días"
     sentido = "después" if dia > 0 else "antes"
-    return f"hasta {abs(dia)} {unidad} {sentido} del diagnóstico"
+    return f"{abs(dia)} {unidad} {sentido} del diagnóstico"
 
 
 def _con_mayuscula_inicial(texto: str) -> str:
