@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from app.application.chat.servicio_de_turno import ChatTurnService
+from app.application.ports import DatosDeRelevancia
 from app.bootstrap import crear_app
 from app.infrastructure.catalogo_clinico.datos_criticos import cargar_datos_criticos
 from app.infrastructure.catalogo_clinico.sinonimos import cargar_terminos_por_tipo
@@ -75,6 +76,7 @@ def crear_entorno_de_chat_con_evidencia(
     llm: FakeChatLlm | None = None,
     escenario: str = "CHAT-OK",
     posiciones: PosicionesFalsas | None = None,
+    relevancia: DatosDeRelevancia | None = None,
     **cambios_de_settings: object,
 ) -> EntornoDeChatConEvidencia:
     llm = llm or FakeChatLlm(escenario)
@@ -95,6 +97,7 @@ def crear_entorno_de_chat_con_evidencia(
         fuentes_documentales=cargar_datos_criticos(CATALOGOS, ("mama", "prostata")),
         catalogo_del_corpus=base.catalogo,
         lector_release=base.lector_release,
+        relevancia=relevancia,
     )
     app = crear_app(
         settings_de_prueba(**cambios_de_settings),

@@ -1,0 +1,22 @@
+{
+  "CHAT-RELEVANCIA-OK": {
+    "ruta": "{\"intent\": \"faltantes\"}",
+    "generacion": "{\"claims\": [{\"text\": \"Los estudios de terapia endocrina adyuvante estratifican a las pacientes según su estado menopáusico.\", \"citations\": [\"C1\"]}]}"
+  },
+  "CHAT-RELEVANCIA-KI67": {
+    "ruta": "{\"intent\": \"faltantes\"}",
+    "generacion": "{\"claims\": [{\"text\": \"Los estudios reportan el índice de proliferación Ki-67 junto con la caracterización del tumor.\", \"citations\": [\"C1\"]}]}"
+  },
+  "CHAT-RELEVANCIA-PRESCRIPTIVO": {
+    "ruta": "{\"intent\": \"faltantes\"}",
+    "generacion": "{\"claims\": [{\"text\": \"El Ki-67 debe solicitarse antes de cualquier tratamiento.\", \"citations\": [\"C1\"]}]}"
+  },
+  "CHAT-RELEVANCIA-TURNO-ANTERIOR": {
+    "ruta": "{\"intent\": \"faltantes\"}",
+    "generacion": "{\"claims\": [{\"text\": \"Los estudios reportan el índice de proliferación Ki-67 junto con la caracterización del tumor.\", \"citations\": [\"ch-m1-1\"]}]}"
+  },
+  "CHAT-RELEVANCIA-SALIDA-INVALIDA": {
+    "ruta": "{\"intent\": \"faltantes\"}",
+    "generacion": "{\"claims\": ["
+  }
+}

@@ -41,6 +41,7 @@ from app.application.ports import (
     CorpusCatalogReader,
     CorpusReleaseReader,
     DatosCriticosDelCatalogoMontado,
+    DatosDeRelevancia,
     LlmClient,
     PosicionDeChunks,
     ProhibitedTermsChecker,
@@ -81,6 +82,7 @@ class ChatTurnService:
         soporte: VerificadorDeSoporte | None = None,
         catalogo_del_corpus: CorpusCatalogReader | None = None,
         lector_release: CorpusReleaseReader | None = None,
+        relevancia: DatosDeRelevancia | None = None,
     ) -> None:
         self._catalogo = catalogo
         self._settings = settings
