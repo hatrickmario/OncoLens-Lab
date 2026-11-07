@@ -13,18 +13,19 @@ from collections import Counter
 from typing import Any
 
 from app.application.chat.grafo import EstadoDelGrafo, Nodo
-from app.application.ports import FuentesDeDatosCriticos
-from app.domain.chat.faltantes import verbalizar_faltantes
+from app.application.ports import DatosCriticosDelCatalogoMontado
+from app.domain.chat.faltantes import segun_el_catalogo, verbalizar_faltantes
 
 logger = logging.getLogger(__name__)
 
 
-def crear_nodo_faltantes(fuentes: FuentesDeDatosCriticos) -> Nodo:
+def crear_nodo_faltantes(datos: DatosCriticosDelCatalogoMontado) -> Nodo:
     async def nodo_faltantes(estado: EstadoDelGrafo) -> dict[str, Any]:
-        items = estado["completitud"]
+        tipo = estado["tipo_del_contexto"]
+        items = segun_el_catalogo(estado["completitud"], datos.etiquetas(tipo))
         bloques = verbalizar_faltantes(
             items,
-            fuentes.tipos_de_documento(estado["tipo_del_contexto"]),
+            datos.tipos_de_documento(tipo),
             estado["version_del_catalogo"],
         )
         conteos = Counter(item.tipo_de_vacio for item in items if item.tipo_de_vacio is not None)

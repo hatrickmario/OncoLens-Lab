@@ -35,13 +35,13 @@
 
 ## 4. evaluación y cierre
 
-- [ ] 4.1 (evaluate) Cambia el catálogo: suite `evaluate` en el PR (skill `run-ai-eval`), sin regresión frente al baseline
+- [x] 4.1 (evaluate) Cambia el catálogo: suite `evaluate` en el PR (skill `run-ai-eval`), sin regresión frente al baseline Evidencia (ai-eval-runner, Gate 2, LLM real gemma4:26b-a4b-it-q4_K_M): citas 1,0, fidelidad NLI 1,0, sin evidencia 1,0, recall@10 1,0, MRR 0,783, prescriptivas mostradas 0; la puerta «rechazos legítimos de más» (5 FAIL) es preexistente en main; latencia p95 ~9 s con la máquina cargada, atribución sin confirmar; no hay suites de faltantes ni de mapeo en el runner, las cubren los tests de la rama.
 - [x] 4.2 Escaneo de PII y secretos en verde (el seed `P-CHAT` solo sintético, con su entrada en `config/pii-allowlist.json`)
 
 ## Notas (sin checkbox)
 
-- 4.1 (`evaluate`) la corre `ai-eval-runner` con el LLM real en el Gate 2; queda abierta a propósito.
-- 2.2: el catálogo real 1.6.0 hace de fixture FX-12-c (un test comprueba `ki67`, `estado_menopausico`, `re` y `tnm`); `catalogHash` de `test-1.1.0` recalculado.
+- 2.2: el catálogo real 1.6.0 hace de FX-12-c; DEC-01 (L1D-92) cambiará el mapeo `sourceDocumentTypes` (`estado = "propuesta"`). Un test comprueba `ki67`, `estado_menopausico`, `re` y `tnm`; `catalogHash` de `test-1.1.0` recalculado.
 - Evidencia: rojo/verde por AC en los commits `test(L1D-320)` y `feat(L1D-320)`; verify-provider 1033 (clinical-api) y 554 (rag) respuestas; pytest rag 4566, vitest 1343, integración 842.
 - `npm run quality` y eslint no corren en este entorno (falta `@vitest/eslint-plugin`); ruff C901/PLR0915 y lint-imports sí, en verde.
 - Desviación: un `por_conciliar` puede acompañar a un `presente_verificado` (TNM de P-CHAT); el `status` no cambia.
+- Deuda (P3 del Gate 2, sin tarea en este PR): plantillas de faltantes en `domain/chat/mensajes.py`; `TIPOS_DE_DOCUMENTO` único en `ports.ts`; constante `ESTADOS_PENDIENTES_DE_REVISION` compartida en el SQL de `conflictosPendientes`; fakes de tests vía `registrosDeCompletitudFalsos` con opciones `conflictos`/`documentos`.

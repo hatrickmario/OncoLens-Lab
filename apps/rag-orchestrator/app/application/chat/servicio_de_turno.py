@@ -29,7 +29,7 @@ from app.application.ports import (
     CatalogoClinico,
     Clock,
     ContadorDeTokens,
-    FuentesDeDatosCriticos,
+    DatosCriticosDelCatalogoMontado,
     LlmClient,
     ProhibitedTermsChecker,
 )
@@ -53,7 +53,7 @@ class ChatTurnService:
         settings: Settings,
         terminos_por_tipo: Mapping[str, frozenset[str]],
         verificador_terminos: ProhibitedTermsChecker,
-        fuentes_documentales: FuentesDeDatosCriticos,
+        fuentes_documentales: DatosCriticosDelCatalogoMontado,
         soporte: VerificadorDeSoporte | None = None,
     ) -> None:
         self._catalogo = catalogo

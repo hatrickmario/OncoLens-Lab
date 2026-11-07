@@ -22,21 +22,22 @@ nodo `faltantes` sin LLM y exento de cita; verificar el `409` de catálogo con 1
 1. **`gapType` es un segundo eje sobre `status`, no un estado nuevo.** `status` no cambia (la vista de caso y sus tests
    siguen iguales); `gapType` es nullable y aditivo. Tabla:
 
-   | `status` | condición | `gapType` |
-   |---|---|---|
-   | `no_aplica` | — | `null` |
-   | `presente_verificado` | sin conflicto pendiente | `null` |
-   | `presente_verificado` | algún registro en `requiere_revision` con `conflicts_with_id` que contradice el dato (RN-08) | `por_conciliar` |
-   | `presente_sin_verificar` | algún registro vigente del destino en `requiere_revision` con `conflicts_with_id` | `por_conciliar` |
-   | `presente_sin_verificar` | sin conflicto vigente | `incompleto` |
-   | `faltante` | 0 < registros vigentes < `minValues` | `incompleto` |
-   | `faltante` | 0 registros y ≥ 1 documento del paciente con `document_type ∈ sourceDocumentTypes` y `ocr_status = completado` | `no_encontrado` |
-   | `faltante` | 0 registros y ningún documento así | `no_buscado` |
+   | `status`                 | condición                                                                                                      | `gapType`       |
+   | ------------------------ | -------------------------------------------------------------------------------------------------------------- | --------------- |
+   | `no_aplica`              | —                                                                                                              | `null`          |
+   | `presente_verificado`    | sin conflicto pendiente                                                                                        | `null`          |
+   | `presente_verificado`    | algún registro en `requiere_revision` con `conflicts_with_id` que contradice el dato (RN-08)                   | `por_conciliar` |
+   | `presente_sin_verificar` | algún registro vigente del destino en `requiere_revision` con `conflicts_with_id`                              | `por_conciliar` |
+   | `presente_sin_verificar` | sin conflicto vigente                                                                                          | `incompleto`    |
+   | `faltante`               | 0 < registros vigentes < `minValues`                                                                           | `incompleto`    |
+   | `faltante`               | 0 registros y ≥ 1 documento del paciente con `document_type ∈ sourceDocumentTypes` y `ocr_status = completado` | `no_encontrado` |
+   | `faltante`               | 0 registros y ningún documento así                                                                             | `no_buscado`    |
 
    Prioridad cuando aplican varias: `por_conciliar` > `incompleto` > `no_buscado` > `no_encontrado` (glosario §3).
    Regla pura `clasificarVacio(item, estado, documentosProcesados)` en `completeness.rules.ts`; el repository añade una
    consulta de tipos de documento procesados del paciente (`SELECT DISTINCT document_type … WHERE ocr_status =
-   'completado'`). Alternativa descartada: calcularlo en Backend 2 (rompe el ownership: Backend 2 no ve documentos).
+'completado'`). Alternativa descartada: calcularlo en Backend 2 (rompe el ownership: Backend 2 no ve documentos).
+
 2. **AC-5 alineado con `[S6 resp. 17]` y el glosario §3** (resuelve la discrepancia de la vuelta anterior):
    «incompleto» = `presente_sin_verificar` **sin conflicto vigente**, o `faltante` con menos registros vigentes que
    `minValues`; un `presente_sin_verificar` con conflicto vigente es `por_conciliar`; un `faltante` sin registros es
@@ -49,7 +50,7 @@ nodo `faltantes` sin LLM y exento de cita; verificar el `409` de catálogo con 1
    `re`, `tnm`, `ki67` y `estado_menopausico`; FX-12-c es el catálogo de test y el real puede diferir sin romper los AC.
    Si `datos-criticos.json` declara `validation.catalogHash`, se recalcula con la versión nueva.
 4. **Nodo `faltantes` determinista**: `domain/chat/faltantes.py` con `verbalizar_faltantes(completeness, catalogo)
-   -> list[ChatBlock]` (plantilla fija por `gapType` + `label` + `sourceDocumentTypes` leídos de la copia montada del
+-> list[ChatBlock]` (plantilla fija por `gapType` + `label` + `sourceDocumentTypes` leídos de la copia montada del
    catálogo por `item`, orden del catálogo, un bloque `kind = faltante` por ítem con `gapType` no nulo); sin ítems → un
    bloque «No faltan datos críticos según el catálogo <versión>». No invoca LLM, NLI ni recuperación (AC-4). Los bloques
    `faltante` no llevan `citations` ni `factRefs` y el validador de citas los trata como exentos (glosario §3, RN-01:
@@ -85,7 +86,11 @@ Cambio aditivo (ADR-26), **1.27.0 → 1.28.0** (glosario §1; si colisiona, renu
 # apps/clinical-api/openapi.yaml 1.28.0
 CompletenessItem.properties:
   gapType:
-    oneOf: [ { type: string, enum: [no_encontrado, incompleto, por_conciliar, no_buscado] }, { type: "null" } ]
+    oneOf:
+      [
+        { type: string, enum: [no_encontrado, incompleto, por_conciliar, no_buscado] },
+        { type: 'null' },
+      ]
     description: >-
       null si el ítem no tiene vacío. por_conciliar puede acompañar a presente_verificado cuando hay un
       conflicto pendiente (RN-08). Texto final igual al del spec.
@@ -102,7 +107,7 @@ TS y Zod se generan (skill `sync-contracts`).
 
 - `completeness.rules.ts`: `clasificarVacio()` pura (TDD estricto, unitarios uno a uno, tabla de la decisión 1).
 - `completeness.repository.ts`: `tiposDeDocumentoProcesados(patientId)`; `completeness.service.ts` lo recibe por
-  *factory* y compone `status` + `gapType`; `completeness.vista.ts` serializa.
+  _factory_ y compone `status` + `gapType`; `completeness.vista.ts` serializa.
 - `conversation.request.ts` (de `l1d-315`): rellena `gapType` en cada `ChatCompletenessItem` desde el mismo
   `CompletenessService` que sirve `/completeness` (una regla, un dueño).
 - `rag-orchestrator`: `application/chat/nodo_faltantes.py` sin puertos de IA; `domain/chat/faltantes.py`; lectura de

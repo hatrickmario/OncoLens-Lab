@@ -4,7 +4,12 @@ from pathlib import Path
 
 import pytest
 
-from app.domain.chat.faltantes import ItemDeCompletitud, verbalizar_faltantes
+from app.domain.chat.faltantes import (
+    ItemDeCompletitud,
+    TipoDeVacio,
+    segun_el_catalogo,
+    verbalizar_faltantes,
+)
 from app.domain.chat.turno import TipoDeBloque
 from app.domain.lenguaje import ListaTerminos, check_prohibited_terms
 
@@ -130,3 +135,22 @@ def test_verbalizar_faltantes_nunca_afirma_que_el_dato_esta_ausente_en_el_pacien
     assert (
         check_prohibited_terms(bloque.texto, lista, niveles=("A", "B"), permitir_frases=False) == []
     )
+
+
+def test_segun_el_catalogo_usa_la_etiqueta_del_catalogo_y_descarta_el_item_desconocido_cuando_la_peticion_trae_otra():
+    items = (
+        _item("ki67", "SINT-etiqueta-ajena-al-catalogo", "faltante", "no_buscado"),
+        _item("no_existe", "Dato inventado", "faltante", "no_buscado"),
+    )
+
+    resultado = segun_el_catalogo(items, {"ki67": "Ki-67"})
+
+    assert [(i.clave, i.etiqueta) for i in resultado] == [("ki67", "Ki-67")]
+
+
+@pytest.mark.parametrize("tipo", list(TipoDeVacio))
+def test_verbalizar_faltantes_tiene_una_plantilla_por_cada_miembro_de_tipo_de_vacio(tipo):
+    (bloque,) = _verbalizar((_item("ki67", "Ki-67", "faltante", tipo),))
+
+    assert bloque.tipo is TipoDeBloque.faltante
+    assert bloque.texto.startswith("Ki-67: ")

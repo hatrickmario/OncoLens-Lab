@@ -9,7 +9,8 @@ sin citas ni ``factRefs``, y están exentos de cita (RN-01).
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from enum import StrEnum
 
 from app.domain.chat.turno import BloqueDelTurno, TipoDeBloque
 
@@ -19,6 +20,15 @@ PLANTILLA_SIN_FALTANTES = "No faltan datos críticos según el catálogo {versio
 _NOMBRE_DEL_TIPO_DE_DOCUMENTO = {"historia_clinica": "historia clínica", "examen": "examen"}
 
 
+class TipoDeVacio(StrEnum):
+    """Los tipos de vacío de ``gapType`` (glosario S6 §2); cada uno tiene su plantilla."""
+
+    no_encontrado = "no_encontrado"
+    incompleto = "incompleto"
+    por_conciliar = "por_conciliar"
+    no_buscado = "no_buscado"
+
+
 @dataclass(frozen=True)
 class ItemDeCompletitud:
     """Un dato esperado del caso tal como llega en ``completeness[]``: sin procedencia ni valores del paciente."""
@@ -26,7 +36,7 @@ class ItemDeCompletitud:
     clave: str
     etiqueta: str
     estado: str
-    tipo_de_vacio: str | None
+    tipo_de_vacio: TipoDeVacio | None
 
 
 def _no_encontrado(etiqueta: str, fuentes: str) -> str:
@@ -47,13 +57,23 @@ def _por_conciliar(etiqueta: str, _fuentes: str) -> str:
     return f"{etiqueta}: hay registros en conflicto por conciliar."
 
 
-_PLANTILLAS: Mapping[str, Callable[[str, str], str]] = {
-    "no_encontrado": _no_encontrado,
-    "no_buscado": _no_buscado,
-    "incompleto": _incompleto,
-    "por_conciliar": _por_conciliar,
+_PLANTILLAS: Mapping[TipoDeVacio, Callable[[str, str], str]] = {
+    TipoDeVacio.no_encontrado: _no_encontrado,
+    TipoDeVacio.no_buscado: _no_buscado,
+    TipoDeVacio.incompleto: _incompleto,
+    TipoDeVacio.por_conciliar: _por_conciliar,
 }
 """Una plantilla fija por tipo de vacío (versionada con el código): del catálogo salen solo etiquetas y tipos de documento."""
+
+
+def segun_el_catalogo(
+    items: Sequence[ItemDeCompletitud], etiquetas: Mapping[str, str]
+) -> tuple[ItemDeCompletitud, ...]:
+    """Falla cerrado: la etiqueta sale del catálogo montado (nunca del texto de la petición) y un ítem que el catálogo no
+    conoce se descarta (RN-23, RN-29)."""
+    return tuple(
+        replace(item, etiqueta=etiquetas[item.clave]) for item in items if item.clave in etiquetas
+    )
 
 
 def _nombres_de_los_tipos(tipos: Sequence[str]) -> str:
@@ -89,7 +109,7 @@ def verbalizar_faltantes(
     return tuple(
         BloqueDelTurno(
             TipoDeBloque.faltante,
-            _PLANTILLAS[str(item.tipo_de_vacio)](
+            _PLANTILLAS[item.tipo_de_vacio](
                 item.etiqueta, _nombres_de_los_tipos(tipos_de_documento.get(item.clave, ()))
             ),
         )

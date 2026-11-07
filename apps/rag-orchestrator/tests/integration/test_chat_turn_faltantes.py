@@ -110,3 +110,25 @@ def test_chat_turn_responde_409_sin_invocar_adaptadores_cuando_rag_monta_el_cata
     assert respuesta.json()["error"] == "CATALOG_VERSION_MISMATCH"
     assert entorno.llamadas_a_adapters() == {"llm": 0, "contador": 0}
     assert entorno.nli.invocaciones == 0
+
+
+def test_chat_turn_faltantes_usa_la_etiqueta_del_catalogo_y_descarta_el_item_ajeno_cuando_la_peticion_trae_otra():
+    entorno = crear_entorno_de_chat("CHAT-OK")
+    solicitud = _solicitud()
+    solicitud["completeness"] = [
+        {**item, "label": "SINT-etiqueta-ajena"} for item in solicitud["completeness"]
+    ] + [
+        {
+            "item": "dato_inventado",
+            "label": "Dato inventado",
+            "status": "faltante",
+            "gapType": "no_buscado",
+            "destination": "Biomarker.value",
+        }
+    ]
+
+    respuesta = entorno.turno(solicitud)
+
+    assert respuesta.status_code == 200
+    assert _textos(respuesta) == [b["text"] for b in BLOQUES_DEL_EJEMPLO]
+    assert "SINT-etiqueta-ajena" not in respuesta.text and "inventado" not in respuesta.text

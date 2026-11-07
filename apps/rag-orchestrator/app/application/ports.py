@@ -340,6 +340,10 @@ class FuentesDeDatosCriticos(Protocol):
         ...
 
 
+class DatosCriticosDelCatalogoMontado(EtiquetasDeDatosCriticos, FuentesDeDatosCriticos, Protocol):
+    """Etiquetas y tipos de documento fuente de los datos críticos del mismo catálogo montado."""
+
+
 class CorpusCatalogReader(Protocol):
     """Fichas de fuente del catálogo (schema ``corpus``, rol ``rag_corpus``) para copiar los metadatos de las citas (RN-04)."""
 
