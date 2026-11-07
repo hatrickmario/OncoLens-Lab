@@ -1,0 +1,6 @@
+{
+  "CHAT-CASO-INTERVALO": {
+    "ruta": "{\"intent\": \"caso\"}",
+    "generacion": "{\"claims\": [{\"kind\": \"documentado\", \"text\": \"\", \"factRefs\": [\"f1\", \"f3\", \"f4\"], \"citations\": []}]}"
+  }
+}
