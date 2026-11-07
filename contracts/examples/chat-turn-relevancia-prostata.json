@@ -1,0 +1,34 @@
+{
+  "intent": "faltantes",
+  "blocks": [
+    {
+      "kind": "catalogo",
+      "text": "Genes HRR / BRCA es un dato crítico del catálogo vigente (versión 1.8.0). Criterios de aplicabilidad del catálogo que lo usan: Genes HRR / BRCA."
+    }
+  ],
+  "omittedClaims": 0,
+  "structuredState": {
+    "intentsVistos": [
+      "faltantes"
+    ],
+    "preguntasPrevias": [
+      "¿Por qué importa conocer los genes HRR / BRCA?"
+    ],
+    "opcionesMostradas": [],
+    "citasMostradas": [],
+    "faltantesSenalados": [],
+    "ultimaEvidencia": {
+      "query": "¿Por qué importa conocer los genes HRR / BRCA?",
+      "chunkIds": [
+        "ch-p1-1"
+      ],
+      "topRelevanceScore": null
+    }
+  },
+  "llmProvider": "local",
+  "notices": [
+    "Generado por IA; requiere validación clínica independiente por el oncólogo tratante",
+    "Uso académico/investigación",
+    "Sin evidencia: ningún fragmento recuperado supera el umbral de relevancia para este dato"
+  ]
+}

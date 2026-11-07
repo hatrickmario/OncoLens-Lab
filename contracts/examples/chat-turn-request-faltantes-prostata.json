@@ -1,0 +1,249 @@
+{
+  "threadId": "5b0e7a3c-2f64-4d8a-9c1e-7a4f3b2d1e90",
+  "pseudoPatientId": "psd_Lm4nB8sT2yQp",
+  "traceId": "req_c4a1d2e3",
+  "question": "¿Qué información falta del caso?",
+  "dataClassification": "sintetico",
+  "catalogVersion": "2026.10.0",
+  "clinicalContext": {
+    "population": "adulto",
+    "diagnosis": {
+      "dataRef": "r1",
+      "cancerType": "prostata",
+      "histology": "adenocarcinoma acinar",
+      "grade": "Gleason 4+3=7 · ISUP 3",
+      "stagingSystem": "TNM_8",
+      "stageValue": "T2cN0M0",
+      "performanceScale": "ECOG",
+      "performanceValue": 0,
+      "monthsSinceDiagnosis": 1,
+      "provenance": {
+        "entryMethod": "seed",
+        "extractionConfidence": "n_a",
+        "reviewStatus": "verificado",
+        "conflict": false
+      }
+    },
+    "biomarkers": [
+      {
+        "dataRef": "r2",
+        "biomarkerName": "PSA",
+        "value": "4.2",
+        "resultType": "cuantitativo",
+        "clinicalSignificance": "alterado",
+        "monthsAgo": 7,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      },
+      {
+        "dataRef": "r3",
+        "biomarkerName": "PSA",
+        "value": "9.8",
+        "resultType": "cuantitativo",
+        "clinicalSignificance": "alterado",
+        "monthsAgo": 1,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      },
+      {
+        "dataRef": "r4",
+        "biomarkerName": "PSA",
+        "value": "12.4",
+        "resultType": "cuantitativo",
+        "clinicalSignificance": "alterado",
+        "monthsAgo": 0,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      }
+    ],
+    "clinicalNotes": [],
+    "currentLine": 1,
+    "attributes": [
+      {
+        "dataRef": "r5",
+        "key": "estado_castracion",
+        "value": "sensible_castracion",
+        "monthsAgo": 1,
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      }
+    ],
+    "priorTreatments": [
+      {
+        "dataRef": "r6",
+        "lineNumber": 1,
+        "setting": "primera_linea_metastasica",
+        "regimenName": "Deprivación androgénica",
+        "atcCodes": [],
+        "monthsSinceStart": 7,
+        "monthsSinceEnd": null,
+        "endReason": "desconocido",
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      }
+    ],
+    "events": [
+      {
+        "dataRef": "r7",
+        "eventType": "progresion",
+        "monthsAgo": 0,
+        "description": "Progresión bioquímica",
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      }
+    ],
+    "biomarkerTrends": [],
+    "missingCriticalData": [
+      "sitios_metastasicos",
+      "hrr_brca"
+    ],
+    "priorAnalyses": [],
+    "pseudoPatientId": "psd_Lm4nB8sT2yQp"
+  },
+  "caseFacts": [
+    {
+      "factRef": "f1",
+      "kind": "diagnostico",
+      "verbalization": "adenocarcinoma acinar, Gleason 4+3=7 · ISUP 3, estadio T2cN0M0 (TNM_8), ECOG 0",
+      "relativeDay": 0,
+      "reviewStatus": "verificado"
+    },
+    {
+      "factRef": "f2",
+      "kind": "biomarcador",
+      "verbalization": "PSA: 4.2, alterado",
+      "relativeDay": -172,
+      "reviewStatus": "verificado",
+      "seriesKey": "psa"
+    },
+    {
+      "factRef": "f3",
+      "kind": "biomarcador",
+      "verbalization": "PSA: 9.8, alterado",
+      "relativeDay": 0,
+      "reviewStatus": "verificado",
+      "seriesKey": "psa"
+    },
+    {
+      "factRef": "f4",
+      "kind": "biomarcador",
+      "verbalization": "PSA: 12.4, alterado",
+      "relativeDay": 37,
+      "reviewStatus": "verificado",
+      "seriesKey": "psa"
+    },
+    {
+      "factRef": "f5",
+      "kind": "atributo",
+      "verbalization": "estado castracion: sensible_castracion",
+      "relativeDay": 0,
+      "reviewStatus": "verificado"
+    },
+    {
+      "factRef": "f6",
+      "kind": "tratamiento",
+      "verbalization": "Deprivación androgénica, línea 1",
+      "relativeDay": -172,
+      "reviewStatus": "verificado"
+    },
+    {
+      "factRef": "f7",
+      "kind": "evento",
+      "verbalization": "progresion: Progresión bioquímica",
+      "relativeDay": 37,
+      "reviewStatus": "verificado"
+    }
+  ],
+  "completeness": [
+    {
+      "item": "psa_serie",
+      "label": "PSA seriado",
+      "status": "presente_verificado",
+      "gapType": null,
+      "destination": "Biomarker.value"
+    },
+    {
+      "item": "gleason_isup",
+      "label": "Gleason / grupo ISUP",
+      "status": "presente_verificado",
+      "gapType": null,
+      "destination": "Diagnosis.grade"
+    },
+    {
+      "item": "tnm",
+      "label": "Estadificación TNM",
+      "status": "presente_verificado",
+      "gapType": null,
+      "destination": "Diagnosis.stage_value"
+    },
+    {
+      "item": "sitios_metastasicos",
+      "label": "Sitios metastásicos",
+      "status": "faltante",
+      "gapType": "no_encontrado",
+      "destination": "ClinicalAttribute.value"
+    },
+    {
+      "item": "estado_castracion",
+      "label": "Estado de castración",
+      "status": "presente_verificado",
+      "gapType": null,
+      "destination": "ClinicalAttribute.value"
+    },
+    {
+      "item": "tratamientos_previos",
+      "label": "Tratamientos previos",
+      "status": "presente_verificado",
+      "gapType": null,
+      "destination": "PriorTreatment"
+    },
+    {
+      "item": "ecog",
+      "label": "Estado funcional (ECOG)",
+      "status": "presente_verificado",
+      "gapType": null,
+      "destination": "Diagnosis.performance_value"
+    },
+    {
+      "item": "hrr_brca",
+      "label": "Genes HRR / BRCA",
+      "status": "faltante",
+      "gapType": "no_encontrado",
+      "destination": "Biomarker.value"
+    }
+  ],
+  "rehydration": {
+    "turns": [],
+    "structuredState": {
+      "intentsVistos": [],
+      "preguntasPrevias": [],
+      "opcionesMostradas": [],
+      "citasMostradas": [],
+      "faltantesSenalados": []
+    }
+  }
+}

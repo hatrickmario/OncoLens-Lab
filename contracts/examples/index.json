@@ -1497,6 +1497,61 @@
       "spec": "rag-orchestrator",
       "target": "#/components/schemas/ChatTurnResponse",
       "request": "chat-turn-request-evidencia-sin-opciones.json"
+    },
+    {
+      "file": "chat-turn-request-caso-situacion-prostata.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnRequest"
+    },
+    {
+      "file": "chat-turn-caso-situacion-prostata.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnResponse",
+      "request": "chat-turn-request-caso-situacion-prostata.json"
+    },
+    {
+      "file": "chat-turn-request-faltantes-prostata.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnRequest"
+    },
+    {
+      "file": "chat-turn-faltantes-prostata.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnResponse",
+      "request": "chat-turn-request-faltantes-prostata.json"
+    },
+    {
+      "file": "chat-turn-request-relevancia-prostata.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnRequest"
+    },
+    {
+      "file": "chat-turn-relevancia-prostata.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnResponse",
+      "request": "chat-turn-request-relevancia-prostata.json"
+    },
+    {
+      "file": "chat-turn-request-evidencia-prostata.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnRequest"
+    },
+    {
+      "file": "chat-turn-evidencia-prostata.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnResponse",
+      "request": "chat-turn-request-evidencia-prostata.json"
+    },
+    {
+      "file": "chat-turn-request-fuentes-prostata.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnRequest"
+    },
+    {
+      "file": "chat-turn-fuentes-prostata.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/ChatTurnResponse",
+      "request": "chat-turn-request-fuentes-prostata.json"
     }
   ],
   "pendingExamples": [
