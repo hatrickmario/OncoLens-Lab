@@ -93,6 +93,7 @@ export function casoDeEjemplo(resto: Partial<CasoClinico> = {}): CasoClinico {
     paciente: { id: 'paciente-sintetico', dataOrigin: 'sintetico', population: 'adulto' },
     episodioId: 'episodio-sintetico',
     diagnosticoActivo: diagnosticoDeEjemplo(),
+    diagnosticosEnConflicto: [],
     biomarcadores: [],
     atributos: [],
     tratamientosPrevios: [],

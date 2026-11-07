@@ -75,6 +75,8 @@ export interface EnlaceDeDato {
    * `incierta`). Solo vive en Backend 1: no viaja a Backend 2 ni a `patientDataLinks`.
    */
   fecha: string | null;
+  /** `conflicts_with_id` del dato (solo diagnóstico y biomarcador); con él el chat calcula los pares (L1D-319). */
+  conflictsWithId?: string | null;
 }
 export type MapaDeDataRefs = ReadonlyMap<string, EnlaceDeDato>;
 

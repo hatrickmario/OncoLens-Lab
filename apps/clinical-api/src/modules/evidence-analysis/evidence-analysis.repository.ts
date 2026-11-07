@@ -80,6 +80,8 @@ export interface CasoClinico {
   /** Episodio de atención vigente (o el último): al que se asocia el `AIAnalysisRecord`. `null` si no hay ninguno. */
   episodioId: string | null;
   diagnosticoActivo: FilaDeDiagnostico | null;
+  /** Diagnósticos vigentes en conflicto con el activo (RN-08); solo los muestra el chat (L1D-319), con ambos valores. */
+  diagnosticosEnConflicto: FilaDeDiagnostico[];
   biomarcadores: FilaDeBiomarcador[];
   atributos: FilaDeAtributo[];
   tratamientosPrevios: FilaDeTratamientoPrevio[];
@@ -192,6 +194,29 @@ async function leerDiagnosticoActivo(leer: Leer): Promise<FilaDeDiagnostico | nu
       LIMIT 1`,
   );
   return fila === undefined ? null : diagnosticoDe(fila);
+}
+
+/** Los diagnósticos vigentes que chocan con el activo (cualquiera apunta al otro con `conflicts_with_id`, RN-08). */
+async function leerDiagnosticosEnConflicto(
+  leer: Leer,
+  activo: FilaDeDiagnostico | null,
+): Promise<FilaDeDiagnostico[]> {
+  if (activo === null) return [];
+  const filas = await leer(
+    `SELECT id, cancer_type, histology, grade, staging_system, stage_value, performance_scale,
+            performance_value, diagnosed_at::text AS diagnosed_at, entry_method,
+            extraction_confidence, review_status, conflicts_with_id
+       FROM clinical.diagnosis
+      WHERE patient_id = $1 AND ${sqlDatoVigente('review_status')}
+      ORDER BY ${sqlOrdenDeDiagnosticoVigente()}`,
+  );
+  return filas
+    .map(diagnosticoDe)
+    .filter(
+      (fila) =>
+        fila.id !== activo.id &&
+        (fila.conflictsWithId === activo.id || activo.conflictsWithId === fila.id),
+    );
 }
 
 async function leerBiomarcadores(leer: Leer): Promise<FilaDeBiomarcador[]> {
@@ -393,6 +418,7 @@ export function createEvidenceAnalysisRepository(
         'SELECT id, data_origin, population FROM clinical.patient WHERE id = $1',
       );
       if (paciente === undefined) return null;
+      const diagnosticoActivo = await leerDiagnosticoActivo(leer);
       return {
         paciente: {
           id: paciente['id'] as string,
@@ -400,7 +426,8 @@ export function createEvidenceAnalysisRepository(
           population: paciente['population'] as 'adulto' | 'pediatrico',
         },
         episodioId: await leerEpisodioVigente(leer),
-        diagnosticoActivo: await leerDiagnosticoActivo(leer),
+        diagnosticoActivo,
+        diagnosticosEnConflicto: await leerDiagnosticosEnConflicto(leer, diagnosticoActivo),
         biomarcadores: await leerBiomarcadores(leer),
         atributos: await leerAtributos(leer),
         tratamientosPrevios: await leerTratamientosPrevios(leer),

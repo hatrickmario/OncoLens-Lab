@@ -17,7 +17,7 @@ import type { GeneradorDeIds } from '../../../infrastructure/ids.js';
 import { FalloDePersistenciaError, construirRegistroValidado } from '../analysis-completion.js';
 import type { RegistroDeAnalisis } from '../analysis-record.js';
 import { aEvidenceAnalysis } from '../evidence-analysis.mapper.js';
-import { construirContextoDelChat } from '../clinical-context.builder.js';
+import { construirContextoDelChat, contextosDeContrapartes } from '../clinical-context.builder.js';
 import { clasificacionDelPaciente, proveedorPermitido } from '../regla-proveedor.js';
 import type { CasoClinico, CasoRepository } from '../evidence-analysis.repository.js';
 import { armarRagQueryRequest, calcularDeadline } from '../evidence-analysis.service.js';
@@ -46,7 +46,11 @@ import type {
   TurnoDeConversacion,
   TurnoNuevo,
 } from './conversation.repository.js';
-import { construirHechosDelCaso, type HechosDelCaso } from './hechos-del-caso.js';
+import {
+  construirHechosDelCaso,
+  type ContraparteDeConflicto,
+  type HechosDelCaso,
+} from './hechos-del-caso.js';
 import {
   analisisActivo,
   construirRehidratacion,
@@ -259,6 +263,36 @@ function desidentificarContexto(
   });
 }
 
+/**
+ * RN-08, RN-11: el diagnóstico en conflicto con el activo (L1D-319) pasa por el mismo desidentificador antes de ser un
+ * hecho del turno; el seudónimo de estas llamadas se descarta (el del turno es el de la primera).
+ */
+async function desidentificarContrapartes(
+  dependencias: Dependencias,
+  conversacion: Conversacion,
+  entrada: {
+    traceId: string;
+    question: string;
+    caso: CasoClinico;
+    ahora: Date;
+    dataOrigin: DataClassification;
+  },
+): Promise<ContraparteDeConflicto[]> {
+  const { caso, ahora, ...resto } = entrada;
+  return Promise.all(
+    contextosDeContrapartes(caso, ahora).map(async ({ contexto, enlace }) => {
+      const { clinicalContext } = await desidentificarContexto(dependencias, conversacion, {
+        ...resto,
+        contexto,
+      });
+      return {
+        diagnostico: clinicalContext.diagnosis as ContraparteDeConflicto['diagnostico'],
+        enlace,
+      };
+    }),
+  );
+}
+
 /** El primer turno (y todo hilo sin turnos) ya lleva la rehidratación vacía: rag responde 404 a un hilo que no conoce. */
 function rehidratacionInicial(
   previos: readonly TurnoDeConversacion[],
@@ -284,7 +318,14 @@ async function prepararTurno(
     contexto,
     dataOrigin: clasificacion,
   });
-  const hechos = construirHechosDelCaso(clinicalContext, dataRefs);
+  const contrapartes = await desidentificarContrapartes(dependencias, conversacion, {
+    traceId: solicitud.traceId,
+    question: solicitud.peticion.question,
+    caso,
+    ahora: reloj.now(),
+    dataOrigin: clasificacion,
+  });
+  const hechos = construirHechosDelCaso(clinicalContext, dataRefs, contrapartes);
   const activo = analisisActivo(previos);
   return {
     hechos,
