@@ -1,6 +1,15 @@
 import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
-import { IDS_SEMILLA_S5, alcance, ejemplo, esperarResultado, iniciarSesion } from './soporte';
+import {
+  IDS_SEMILLA_S5,
+  alcance,
+  analisisDelTurno,
+  ejemplo,
+  esperarResultado,
+  esRespuestaDeTurno,
+  iniciarSesion,
+  preguntarEnElChat,
+} from './soporte';
 
 /**
  * Prueba de aceptación de la demo del S5 (L1D-310, US-254 AC-4): contra Compose con `LLM_PROVIDER=fake` y las
@@ -97,14 +106,13 @@ test.describe('Pacientes de la demo del S5 (L1D-310)', () => {
       page,
     }) => {
       const respuesta = page.waitForResponse(
-        (r) => r.url().endsWith('/api/evidence-analyses') && r.request().method() === 'POST',
+        esRespuestaDeTurno,
       );
       await iniciarSesion(page);
       await page.goto(`/pacientes/${IDS_SEMILLA_S5[paciente.ejemplo]}/analisis`);
-      await page.getByLabel('Pregunta clínica').fill(preguntaDe(paciente.ejemplo));
-      await page.getByRole('button', { name: 'Analizar evidencia' }).click();
+      await preguntarEnElChat(page, preguntaDe(paciente.ejemplo));
       await esperarResultado(page);
-      const analisis = await (await respuesta).json();
+      const analisis = await analisisDelTurno(await respuesta);
 
       expect(analisis.status).toBe('con_evidencia');
       expect(

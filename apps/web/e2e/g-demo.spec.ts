@@ -2,6 +2,7 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
 import {
   IDS_SEMILLA_S5,
+  analisisDelTurno,
   datosDelGate,
   exigirPacienteSinModificar,
   iniciarSesion,
@@ -10,6 +11,8 @@ import {
   pasoRegistroManual,
   pasoSeguimiento,
   pasoVistaDeCaso,
+  esRespuestaDeTurno,
+  preguntarEnElChat,
   textos,
 } from './soporte';
 import { estadoDelOrden, violacionesDeOrdenRn28 } from './orden-rn28';
@@ -186,18 +189,13 @@ test.describe('Gate G-Demo: la hipótesis de punta a punta (L1D-248)', () => {
         async () => {
           await page.getByRole('link', { name: es.caso.analizar }).click();
           await expect(page).toHaveURL(new RegExp(`/pacientes/${idPaciente}/analisis$`));
-          await expect(
-            page.getByRole('status').filter({ hasText: /datos críticos/ }),
-          ).toBeVisible();
-          const respuesta = page.waitForResponse(
-            (r) => r.url().endsWith('/api/evidence-analyses') && r.request().method() === 'POST',
-          );
-          await page.getByLabel(textos.formulario.pregunta).fill(datos.pregunta);
-          await page.getByRole('button', { name: textos.formulario.analizar }).click();
+          await expect(page.getByLabel(es.conversacion.campo)).toBeVisible();
+          const respuesta = page.waitForResponse(esRespuestaDeTurno);
+          await preguntarEnElChat(page, datos.pregunta);
           await expect(page.getByTestId('analysis-result')).toBeVisible({
             timeout: PLAZO_DE_GENERACION_MS,
           });
-          const analisis = await (await respuesta).json();
+          const analisis = await analisisDelTurno(await respuesta);
           expect(analisis.status).toBe('con_evidencia');
           maxOpciones = analisis.analysisBasis.maxOptions;
           aviso = analisis.disclaimer;

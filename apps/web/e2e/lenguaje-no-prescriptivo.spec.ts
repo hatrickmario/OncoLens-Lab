@@ -1,7 +1,7 @@
 import { checkProhibitedTerms, loadProhibitedTerms } from '@oncolens/clinical-language';
 import { expect, test, type Page } from '@playwright/test';
 import origen from '../../../packages/clinical-language/origen-de-campos.json' with { type: 'json' };
-import { analizar, ejemplo, textos } from './soporte';
+import { analizar, ejemplo, preguntarEnElChat, textos } from './soporte';
 
 const preguntaHer2 = ejemplo('rag-query-request.json').query as string;
 const preguntaSoloDescartadas = ejemplo('rag-query-request-solo-descartadas.json').query as string;
@@ -58,7 +58,7 @@ async function verificarEstado(page: Page) {
 }
 
 test.describe('Lenguaje no prescriptivo (L1D-193)', () => {
-  test('muestra exactamente "Opciones descritas en la evidencia" y "Analizar evidencia" cuando el panel tiene una opción [US-068 AC-4]', async ({
+  test('muestra exactamente "Opciones descritas en la evidencia" y "Preguntar" cuando el panel tiene una opción [US-068 AC-4]', async ({
     page,
   }) => {
     await analizar(page, preguntaHer2);
@@ -66,9 +66,7 @@ test.describe('Lenguaje no prescriptivo (L1D-193)', () => {
     await expect(page.getByRole('heading', { level: 2 })).toHaveText(
       'Opciones descritas en la evidencia',
     );
-    await expect(page.getByRole('button', { name: 'Analizar evidencia' })).toHaveText(
-      'Analizar evidencia',
-    );
+    await expect(page.getByRole('button', { name: 'Preguntar' })).toHaveText('Preguntar');
   });
 
   test('no hay términos prohibidos en el texto visible ni en los aria-label ni aria-describedby de login y del panel en sus estados del S1 [US-068 AC-3]', async ({
@@ -87,13 +85,11 @@ test.describe('Lenguaje no prescriptivo (L1D-193)', () => {
     await page.getByRole('button', { name: textos.cita.verFragmento }).click();
     await verificarEstado(page);
 
-    await page.getByLabel('Pregunta clínica').fill(preguntaSoloDescartadas);
-    await page.getByRole('button', { name: 'Analizar evidencia' }).click();
+    await preguntarEnElChat(page, preguntaSoloDescartadas);
     await page.getByRole('button', { name: textos.discarded.titulo }).click();
     await verificarEstado(page);
 
-    await page.getByLabel('Pregunta clínica').fill(preguntaSinEvidencia);
-    await page.getByRole('button', { name: 'Analizar evidencia' }).click();
+    await preguntarEnElChat(page, preguntaSinEvidencia);
     await expect(page.getByText('Relevancia máxima: no aplica')).toBeVisible();
     await verificarEstado(page);
 
@@ -102,13 +98,13 @@ test.describe('Lenguaje no prescriptivo (L1D-193)', () => {
       [503, 'error-llm-local-no-disponible.json'],
       [504, 'error-deadline-vencido.json'],
     ] as const) {
-      await page.route('**/api/evidence-analyses', (ruta) =>
+      await page.route('**/api/conversations/*/turns', (ruta) =>
         ruta.fulfill({ status: estado, json: ejemplo(ejemploDeError) }),
       );
-      await page.getByRole('button', { name: 'Analizar evidencia' }).click();
-      await expect(page.getByText(/Código de traza:/)).toBeVisible();
+      await preguntarEnElChat(page, preguntaHer2);
+      await expect(page.getByRole('alert')).toBeVisible();
       await verificarEstado(page);
-      await page.unroute('**/api/evidence-analyses');
+      await page.unroute('**/api/conversations/*/turns');
     }
   });
 });

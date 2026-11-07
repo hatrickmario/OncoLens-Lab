@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
-import { analizar, ejemplo, esperarResultado } from './soporte';
+import { analisisDelTurno, analizar, ejemplo, esperarResultado, esRespuestaDeTurno } from './soporte';
 
 /**
  * Prueba de aceptación de la demo del S4 (L1D-297, US-247 AC-2 y AC-3): contra Compose con `LLM_PROVIDER=fake` y las
@@ -63,11 +63,11 @@ test.describe('Pares de la demo del S4 (L1D-297)', () => {
       page,
     }) => {
       const respuesta = page.waitForResponse(
-        (r) => r.url().endsWith('/api/evidence-analyses') && r.request().method() === 'POST',
+        esRespuestaDeTurno,
       );
       await analizar(page, pregunta);
       await esperarResultado(page);
-      const analisis = await (await respuesta).json();
+      const analisis = await analisisDelTurno(await respuesta);
 
       expect(
         analisis.evidenceOptions.map(
@@ -80,11 +80,11 @@ test.describe('Pares de la demo del S4 (L1D-297)', () => {
       page,
     }) => {
       const respuesta = page.waitForResponse(
-        (r) => r.url().endsWith('/api/evidence-analyses') && r.request().method() === 'POST',
+        esRespuestaDeTurno,
       );
       await analizar(page, pregunta);
       await esperarResultado(page);
-      const analisis = await (await respuesta).json();
+      const analisis = await analisisDelTurno(await respuesta);
 
       expect(
         analisis.evidenceOptions.map(

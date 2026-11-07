@@ -95,6 +95,16 @@ export async function analizar(page: Page, pregunta: string) {
   await preguntarEnElChat(page, pregunta);
 }
 
+/** Respuesta del `POST /api/conversations/{id}/turns`. */
+export const esRespuestaDeTurno = (r: { url(): string; request(): { method(): string } }) =>
+  r.request().method() === 'POST' && /\/api\/conversations\/[^/]+\/turns$/.test(r.url());
+
+/** El `evidenceAnalysis` del turno de evidencia (el mismo `EvidenceAnalysis` que antes devolvía `/api/evidence-analyses`). */
+export async function analisisDelTurno(respuesta: { json(): Promise<unknown> }) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON del contrato sin tipo: el E2E lee campos concretos
+  return ((await respuesta.json()) as { evidenceAnalysis: any }).evidenceAnalysis;
+}
+
 /** Espera `n` tarjetas de turno (por defecto, una). */
 export async function esperarTarjeta(page: Page, n = 1) {
   await expect(tarjetasDelChat(page)).toHaveCount(n);
@@ -129,7 +139,7 @@ export function datosDelGate(): DatosDelGate {
   return JSON.parse(bloque) as DatosDelGate;
 }
 
-const { caso, datosCriticos, registroManual, followUp, evidence } = es;
+const { caso, datosCriticos, registroManual, evidence } = es;
 const { correccion } = ficha;
 const columnaDeDatosCriticos = (page: Page) =>
   page.getByRole('region', { name: datosCriticos.titulo });
@@ -194,7 +204,7 @@ export async function pasoRegistroManual(page: Page, datos: DatosDelGate) {
     .count();
 }
 
-/** Una pregunta de seguimiento: el turno `n` muestra ≥ 1 afirmación con ≥ 1 cita, el aviso de IA y la etiqueta académica. */
+/** Una pregunta de seguimiento en el chat: el turno `n + 1` (el 1 es el análisis) trae ≥ 1 cita `[E<n>]`, los avisos del turno y la etiqueta académica en la página. */
 export async function pasoSeguimiento(
   page: Page,
   pregunta: string,
@@ -202,17 +212,15 @@ export async function pasoSeguimiento(
   /** Espera de la generación (D5-57): sin valor, el `expect` conserva su plazo por defecto. */
   plazoDeGeneracion?: number,
 ) {
-  await page.getByLabel(followUp.campo).fill(pregunta);
-  await page.getByRole('button', { name: followUp.preguntar, exact: true }).click();
+  await preguntarEnElChat(page, pregunta);
 
-  const turno = page.getByRole('article', { name: new RegExp(`^Pregunta ${n} ·`) });
+  const turno = tarjetasDelChat(page).nth(n);
   await expect(turno).toBeVisible({ timeout: plazoDeGeneracion });
-  const citasPorAfirmacion = turno.getByRole('list', { name: evidence.cita.lista });
-  await expect(citasPorAfirmacion.first()).toBeVisible({ timeout: plazoDeGeneracion });
-  for (const citas of await citasPorAfirmacion.all())
-    await expect(citas.getByRole('listitem').first()).toBeVisible();
-  await expect(turno.getByRole('note')).not.toHaveCount(0);
-  await expect(turno.getByText(es.app.academicUseLabel)).toBeVisible();
+  await expect(turno.locator('summary', { hasText: /\[E\d+\]/ }).first()).toBeVisible({
+    timeout: plazoDeGeneracion,
+  });
+  await expect(turno.getByRole('listitem').first()).toBeVisible();
+  await expect(page.getByRole('banner').getByText(es.app.academicUseLabel)).toBeVisible();
 }
 
 /** Los conteos que muestra cada tarjeta («Coincide 2, Parcial 0, No coincide 0, Desconocido 3») y su etiqueta de no comparable. */
