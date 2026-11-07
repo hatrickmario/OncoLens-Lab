@@ -2,14 +2,14 @@
 
 > Linear: [L1D-312](https://linear.app/l1der-lab-mjbc/issue/L1D-312)
 
-**Talla:** XL (14 historias, atraviesa los tres servicios; propone división abajo) · **Sprint:** 6 (`[S6 resp. 11]`, `[S6 resp. 13]`) · **Capacidad:** A · comprensión del caso (CAP-02: AC-02.1, AC-02.4, AC-02.5, AC-02.6) · B · información faltante (CAP-04: AC-04.1, AC-04.3, AC-04.4) · C · evidencia contextualizada (CAP-06, CAP-08, CAP-10) · T-1 (AC-T1.2, AC-T1.3, AC-T1.4) · T-3 (AC-T3.1, AC-T3.2) · T-4 · T-5 · **Recorrido principal:** sí (sustituye a la «Ficha de análisis» como foco del S6)
+**Talla:** XL (16 historias, atraviesa los tres servicios; propone división abajo) · **Sprint:** 6 (`[S6 resp. 11]`, `[S6 resp. 13]`) · **Capacidad:** A · comprensión del caso (CAP-02: AC-02.1, AC-02.4, AC-02.5, AC-02.6) · B · información faltante (CAP-04: AC-04.1, AC-04.3, AC-04.4) · C · evidencia contextualizada (CAP-06, CAP-08, CAP-10) · T-1 (AC-T1.2, AC-T1.3, AC-T1.4) · T-3 (AC-T3.1, AC-T3.2) · T-4 · T-5 · **Recorrido principal:** sí (sustituye a la «Ficha de análisis» como foco del S6)
 **Requisitos:** FR-09 (el turno de evidencia reutiliza el análisis) · FR-10 · FR-21 (caso conversacional, ADR-34) · FR-23 (faltantes, clasificación nueva) · FR-25 (aplicabilidad) · FR-31 (sustituido por el chat: 10 preguntas retiradas, ver Conflictos) · RN-01, RN-02, RN-04, RN-06, RN-07, RN-10, RN-11, RN-12, RN-15, RN-19, RN-22, RN-23, RN-24, RN-25, RN-28, RN-29 · TBD-08 (sin streaming de contenido) · ADR-26 (contratos aditivos), ADR-34, ADR-40, ADR-50, **ADR-51**
 **Evidencia:** [→ backlog/sprints/S6-prompt-chatbot.md §1–§6 (AC01…AC06) y «Aclaraciones del usuario»], [→ backlog/sprints/S6-refinamiento.md §1–§3, `[S6 resp. 1]`…`[S6 resp. 15]`], [→ docs/architecture/adr/ADR-51-chat-langgraph-estado-efimero.md], [→ PRD §6 RN-01, RN-02, RN-04, RN-06, RN-07, RN-10, RN-11, RN-12, RN-15, RN-19, RN-23, RN-24, RN-25, RN-28], [→ PRD §18.3.2 AC-02.1…AC-02.6], [→ PRD §18.3.4 AC-04.1…AC-04.4], [→ PRD §18.4 AC-T1.2, AC-T1.3, AC-T3.1, AC-T3.2], [→ readme §4.1 `ClinicalContext`, `EvidenceAnalysis`], [→ readme §6 OL-06]
-**Dependencias:** ↪ US-088/US-090 (vista de caso `GET …/case`), FEAT-04 (`GET …/completeness`, catálogo `datos-criticos`), US-049 (desidentificación), US-055/US-225 (pipeline de recuperación y generación), US-063/US-064 (citas y NLI), US-125/US-134 (aplicabilidad y orden), US-245 (afirmaciones atómicas), US-253 (correcciones con `supersedes_id`, ADR-50), US-254 (pacientes sintéticos) · 🔗 Regresión [RN-15] → US-148 (S6, todos los turnos con LLM del chat) · 🔗 Regresión [RN-12] → US-050 (S6) · 🔗 Regresión [SEG-13] → US-057 (S6) · 🔗 Regresión [RN-23] → US-068 · 🔗 Regresión [RN-19] → US-069 · 🔗 Regresión [RN-11] → US-049 · 🔗 Consume: US-216 (CSP sin `unsafe-eval`, S6) · 🔗 Medido en: US-269
+**Dependencias:** ↪ US-088/US-090 (vista de caso `GET …/case`), FEAT-04 (`GET …/completeness`, catálogo `datos-criticos`), US-049 (desidentificación), US-055/US-225 (pipeline de recuperación y generación), US-063/US-064 (citas y NLI), US-125/US-134 (aplicabilidad y orden), US-245 (afirmaciones atómicas), US-253 (correcciones con `supersedes_id`, ADR-50), US-254 (pacientes sintéticos) · 🔗 Regresión [RN-15] → US-148 (S6, todos los turnos con LLM del chat) · 🔗 Regresión [RN-12] → US-050 (S6) · 🔗 Regresión [SEG-13] → US-057 (S6) · 🔗 Regresión [RN-23] → US-068 · 🔗 Regresión [RN-19] → US-069 · 🔗 Regresión [RN-11] → US-049 · 🔗 Consume: US-216 (CSP sin `unsafe-eval`, S6) · 🔗 Medido en: US-269 · ADR-52 (US-271)
 **Valor:** hoy el oncólogo tiene que recorrer la ficha, la vista de caso y el panel de análisis por separado, y cada análisis empieza de cero (AS-IS P1, P4, P5). Con el chat pregunta en lenguaje natural sobre su paciente, en una sola conversación, y recibe el caso reconstruido con enlaces a los datos, los vacíos clasificados (no encontrado, incompleto, por conciliar, no buscado) y la evidencia científica contextualizada con citas verificadas y sus limitaciones, sin que el sistema prescriba nada ni modifique la historia clínica.
-**Stories:** US-256 · ADR-51 (2), US-257 (3), US-258 (5), US-259 (5), US-260 (5), US-261 (3), US-262 (3), US-263 (5), US-264 (3), US-265 (5), US-266 (3), US-267 (5), US-268 (3), US-269 (5) = **55 puntos** (S6)
+**Stories:** US-256 · ADR-51 (2), US-257 (3), US-258 (5), US-259 (5), US-260 (5), US-261 (3), US-262 (3), US-263 (5), US-264 (3), US-265 (5), US-266 (3), US-267 (8), US-268 (3), US-269 (5), US-271 (4), US-272 (2) = **64 puntos** (S6; US-267 de 5 a 8 y altas de US-271 y US-272, aprobadas por el usuario el 2026-11-06)
 
-> **Propuesta de división (talla XL).** Publicar como una Feature con tres bloques que se pueden cerrar por separado, sin cambiar IDs: **12-A Plataforma del chat** (US-256, US-258, US-259), **12-B Capacidades** (US-260…US-266: A = US-260…US-262, B = US-263, US-264, C = US-265, US-266) y **12-C Interfaz y evaluación** (US-257, US-267, US-268, US-269). Orden: US-256 → {US-257, US-258, US-259} → {US-260…US-266} → {US-267, US-268} → US-269.
+> **Propuesta de división (talla XL).** Publicar como una Feature con tres bloques que se pueden cerrar por separado, sin cambiar IDs: **12-A Plataforma del chat** (US-256, US-258, US-259), **12-B Capacidades** (US-260…US-266: A = US-260…US-262, B = US-263, US-264, C = US-265, US-266) y **12-C Interfaz y evaluación** (US-257, US-267, US-268, US-269); US-271 (segundo loop contextual) se suma a 12-B-C y US-272 (`relativeEndDay`) a 12-B-A. Orden: US-256 → {US-257, US-258, US-259} → {US-260…US-266, US-271, US-272} → {US-267, US-268} → US-269.
 
 > **Encuadre (D-01) y alcance del usuario.** Análisis de evidencia, nunca recomendación. Fuera de alcance (prompt §4): historial conversacional visible, escritura en la historia clínica, recomendaciones terapéuticas autónomas. El historial **se guarda pero no se usa ni se muestra** en el MVP (aclaración del usuario, 2026-11-06). Las preguntas de seguimiento limitadas a 10 (US-218 · L1D-268) quedan sustituidas por este chat.
 
@@ -206,7 +206,9 @@ Backend 1 construye `caseFacts[]` desde `GET …/case` (`timeline`, `priorTreatm
 
 > Linear: [L1D-318](https://linear.app/l1der-lab-mjbc/issue/L1D-318)
 
-`FEAT-12` · Sprint 6 · Estimación **3** · HU-15 · FR-21, RN-01, RN-11, ADR-34 · AC-02.1, AC-02.3, AC-T1.2 · ↪ US-260 · 🔗 Medido en: US-269
+`FEAT-12` · Sprint 6 · Estimación **3** · HU-15 · FR-21, RN-01, RN-11, ADR-34 · AC-02.1, AC-02.3, AC-T1.2 · ↪ US-260 · 🔗 Medido en: US-269 · 🔗 Consume: US-272 (`relativeEndDay`)
+
+> **Decidido (usuario, 2026-11-06):** el ancla de «últimos N días» en el día 0 del diagnóstico basta para el MVP; **REVISAR en la Demo 6**. Sin `relativeEndDay` una quimioterapia que sigue activa desaparece del periodo; lo resuelve US-272 (L1D-330).
 
 ## Story
 Como oncólogo, quiero preguntar por un examen, un tratamiento o un periodo concreto y ver qué
@@ -376,7 +378,7 @@ Nodo `fuentes_limitaciones` determinista: lee del estado del hilo los ids de cit
 
 > Linear: [L1D-324](https://linear.app/l1der-lab-mjbc/issue/L1D-324)
 
-`FEAT-12` · Sprint 6 · Estimación **5** · HU-03, HU-15, HU-18 · RN-19, RN-23, RN-15, TBD-08 · AC-T3.1, AC-10.3 · ↪ US-257, US-258 · 🔗 Consume: `docs/ux/S6/` (variante elegida) · 🔗 Regresión [RN-15] → US-148 (AC-8, mensaje del panel) · 🔗 Regresión [RN-19] → US-069
+`FEAT-12` · Sprint 6 · Estimación **8** (re-estimada de 5 a 8, 2026-11-06, por las preguntas guiadas del AC-8…AC-11) · HU-03, HU-15, HU-18 · RN-19, RN-23, RN-15, TBD-08 · AC-T3.1, AC-10.3 · ↪ US-257, US-258 · 🔗 Complementa: US-271 (gate G1; las preguntas guiadas no lo sustituyen) · 🔗 Consume: `docs/ux/S6/` (variante elegida) · 🔗 Regresión [RN-15] → US-148 (AC-8, mensaje del panel) · 🔗 Regresión [RN-19] → US-069
 
 > **Decidido (usuario, 2026-11-06):** ya no existen las preguntas de seguimiento limitadas a 10; las sustituye el chat (aclaraciones del usuario, `S6-prompt-chatbot.md`); la variante elegida de `docs/ux/S6/` es la referencia `[S6 resp. 15]`; la tecnología (assistant-ui o shadcn) la decide US-257.
 
@@ -395,15 +397,19 @@ el caso en un solo lugar.
 - **AC-5 (borde · error)** · Dado `clinical-api` respondiendo `503`, cuando se envía una pregunta, entonces el panel muestra «No se pudo completar la respuesta» con «Reintentar», y la pregunta y los turnos previos siguen visibles. `[RN-12]`
 - **AC-6 (borde · el navegador solo habla con `web`)** · Dado el recorrido del AC-1, cuando se inspecciona la red, entonces todas las peticiones van al origen de `web` (`/api/conversations/…`). `[CLAUDE.md]`
 - **AC-7 (borde · accesibilidad)** · Dado el panel con tres turnos, cuando corre axe, entonces no hay violaciones `serious` ni `critical`, y la pregunta se puede enviar solo con teclado. `[NFR-12]`
+- **AC-8 (happy path · preguntas guiadas)** · Dada una conversación nueva con el paciente semilla (a) (mama), cuando se abre el panel, entonces muestra entre 3 y 4 preguntas guiadas («¿Qué evidencia hay para <tema del caso>?», etc.) y al pulsar una se envía como pregunta del oncólogo en un turno normal. `[ADR-52]` `[RN-27]`
+- **AC-9 (borde · el tema sale del catálogo)** · Dado el mismo paciente, cuando se arman las preguntas guiadas, entonces el tema insertado (etiqueta CIE-10 del tipo, estadio o biomarcador principal) se copia por código del catálogo versionado del caso, nunca lo escribe el LLM, y en próstata el tema incluye el grado. `[RN-27]`
+- **AC-10 (borde · sin dato del caso)** · Dado un paciente sin biomarcador principal ni estadio, cuando se arman las preguntas guiadas, entonces solo se ofrecen las que usan el tipo de cáncer, y ninguna lleva texto libre del expediente, `pseudoPatientId` ni identidad. `[RN-10]` `[RN-11]`
+- **AC-11 (borde · complemento, no sustituto)** · Dada una pregunta guiada o escrita sin tema propio, cuando se responde, entonces sigue pasando por el gate G1 y el segundo loop de US-271 (las preguntas guiadas no lo desactivan), y la UI no distingue el origen de la pregunta en el turno. `[ADR-52]`
 
 ## Contexto técnico
-`apps/web`: Route Handlers `app/api/conversations/route.ts` y `app/api/conversations/[id]/turns/route.ts` (BFF, no Server Actions) hacia US-258; componentes del panel conversacional según la decisión de US-257 y la variante de `docs/ux/S6/` (sistema de diseño `docs/ux/sistema-de-diseno.md`); `follow-up-thread.tsx` y moléculas `follow-up-*` se retiran de la UI. Markdown sin HTML crudo y `urlTransform` restringido (ADR-51 §8). Tests: test del AC primero con Testing Library + MSW (AC-2, AC-3, AC-4, AC-5); Playwright contra Compose con LLM fingido (AC-1, AC-6, AC-7); `visual-check`.
+`apps/web`: Route Handlers `app/api/conversations/route.ts` y `app/api/conversations/[id]/turns/route.ts` (BFF, no Server Actions) hacia US-258; componentes del panel conversacional según la decisión de US-257 y la variante de `docs/ux/S6/` (sistema de diseño `docs/ux/sistema-de-diseno.md`); `follow-up-thread.tsx` y moléculas `follow-up-*` se retiran de la UI. Markdown sin HTML crudo y `urlTransform` restringido (ADR-51 §8). Preguntas guiadas (AC-8…AC-11, ADR-52): el panel pide al BFF las plantillas con el tema ya resuelto por código desde `packages/clinical-catalogs/` (plantillas de preguntas, RN-29; sin LLM) y las pinta como atajos; reutiliza el Route Handler de turnos. Tests: test del AC primero con Testing Library + MSW (AC-2, AC-3, AC-4, AC-5, AC-8…AC-10); Playwright contra Compose con LLM fingido (AC-1, AC-6, AC-7, AC-11); `visual-check`.
 
 ## Non-goals
 Interacción con fuentes y referencias (US-268). Lista de conversaciones anteriores (Post-MVP). Retirar los endpoints de seguimiento del backend (deuda).
 
 ## INVEST
-**Small** ✓ un panel y dos Route Handlers; 5 es el techo. **Testable** ✓ siete tests.
+**Small** ✓ un panel, dos Route Handlers y cuatro atajos; **8 es el techo y no se divide** (decisión del usuario, 2026-11-06). **Testable** ✓ once tests.
 
 ---
 
@@ -462,6 +468,68 @@ E2E con Playwright contra Compose y respuestas fijas de `contracts/examples/chat
 
 ## INVEST
 **Small** ✓ un recorrido E2E por tipo de cáncer y un conjunto de evaluación; 5 es el techo. **Testable** ✓ ocho comprobaciones automatizadas o de registro.
+
+---
+
+## US-271 — El chat recupera evidencia para preguntas sin tema propio con un segundo loop de recuperación que añade términos del caso del catálogo, sin invocar al LLM
+
+> Linear: [L1D-329](https://linear.app/l1der-lab-mjbc/issue/L1D-329)
+
+`FEAT-12` · Sprint 6 · Estimación **4** (3+1) · HU-03 · FR-09, RN-02 (enmienda), RN-22, RN-27, RN-11 · ADR-52 · ↪ US-265 (L1D-322, mergeado), US-057 (L1D-108), US-259 (L1D-316) · 🔗 Antes de: US-264 (L1D-321) · 🔗 Complementa: US-267 (preguntas guiadas) · 🔗 Medido en: US-269
+
+> **Decidido (usuario, 2026-11-06):** opción B de [ADR-52](../../docs/architecture/adr/ADR-52-segundo-loop-contextual.md). Alta aprobada dentro del Sprint 6. Enmienda RN-02 / PRD E-14 solo para preguntas sin tema propio.
+
+## Story
+Como oncólogo, quiero que una pregunta general como «¿qué evidencia hay para este caso?» recupere evidencia del corpus usando los datos del caso, para no recibir «sin evidencia» solo porque la pregunta no nombra el tema.
+
+## AC (Given/When/Then)
+- **AC-1 (happy path)** · Dada una pregunta sin tema propio (gate G1 sobre léxico versionado) y el primer loop vacío, cuando se procesa el turno, entonces corre **un** segundo loop contextual sin LLM con términos del catálogo (etiqueta CIE-10 del tipo, estadio TNM y biomarcador principal; en próstata, el grado), y el análisis sale `con_evidencia` con citas solo de los fragmentos recuperados en ese turno. `[RN-02]` `[RN-04]`
+- **AC-2 (borde · falsos positivos de la medición)** · Dadas las preguntas adversarias y cruzadas de la medición (melanoma, tiroides, cruzadas mama/próstata, glioblastoma, CRISPR, diabetes, CAR-T, vejiga), cuando se procesan, entonces siguen en `sin_evidencia` con `topRelevanceScore = null` y 0 llamadas al LLM. `[RN-02]`
+- **AC-3 (borde · genérica bajo el umbral)** · Dada una pregunta genérica que sigue bajo `RELEVANCE_THRESHOLD` (0,30) tras el segundo loop, cuando se procesa, entonces `sin_evidencia`, `topRelevanceScore = null` y 0 llamadas al LLM de generación. `[RN-02]`
+- **AC-4 (borde · controles intactos)** · Dada una pregunta con tema propio cuyo primer loop devuelve chunks sobre el umbral, cuando se procesa, entonces no hay segundo loop y el resultado es idéntico al de antes. `[RN-02]`
+- **AC-5 (invariante · un solo segundo loop)** · Dado `QUERY_REWRITE_ENABLED=true` y una pregunta sin tema propio con primer loop vacío, cuando se procesa, entonces corre como máximo un segundo loop (el contextual, sin LLM) y la reescritura con LLM no corre. `[RN-02 enmendada]`
+- **AC-6 (invariante · solo catálogo)** · Dado cualquier turno con segundo loop contextual, cuando se captura la consulta enviada al *reranker* y los *logs*, entonces los términos añadidos provienen del catálogo versionado y no hay `pseudoPatientId`, identidad ni texto libre del expediente. `[RN-27]` `[RN-10]` `[RN-11]`
+- **AC-7 (configuración y contrato)** · Dada la configuración por defecto, cuando arranca `rag-orchestrator`, entonces `QUERY_CONTEXT_EXPANSION_ENABLED=false`; con `true`, el motivo queda en `meta.retrievalParams.queryRewrite.reason = "contextual"` (campo aditivo, ADR-26). `[RN-22]`
+- **AC-8 (léxico versionado)** · Dado `packages/clinical-catalogs/lenguaje/marcos-de-pregunta.json` (es/en) con nueva versión de catálogo y su validador, cuando corren los unitarios del gate con las 60 preguntas de la medición y las 69 de `s5`, entonces las 24 con tema y las 69 de `s5` dan 0 genéricas y las 22 genéricas dan genérica. `[RN-29]`
+- **AC-9 (sinónimos)** · Dados los sinónimos del catálogo antraciclinas↔anthracyclines, pertuzumab y TILs, cuando se procesan las 3 preguntas con tema que fallan hoy, entonces pasan el umbral o quedan documentadas en el reporte con su causa. `[RN-27]`
+- **AC-10 (borde · recuperado sin opciones)** · Dado un turno con chunks sobre el umbral y 0 opciones soportadas tras citas y NLI, cuando se responde, entonces el mensaje determinista es «Evidencia recuperada sin opciones soportadas» (sin texto del LLM) y las limitaciones de US-266. `[RN-01]` `[RN-23]`
+
+## Contexto técnico
+Se construye en `RAGOrchestratorService._segundo_loop_si_corresponde` (`apps/rag-orchestrator`). Reglas puras en `domain/`: `pregunta_sin_tema_propio` (gate G1: no queda palabra de contenido tras quitar palabras vacías y de marco) y `terminos_del_caso`. Prioridad: primer loop vacío y gate verdadero → loop contextual sin LLM; si no, `QUERY_REWRITE` si está habilitado; como máximo **un** segundo loop. Configuración (RN-22): `QUERY_CONTEXT_EXPANSION_ENABLED=false` (`true` en `.env.example` y Compose solo tras PASS de `evaluate`), `QUERY_CONTEXT_EXPANSION_FIELDS=tipo,estadio,biomarcador_principal`, `QUERY_CONTEXT_EXPANSION_RERANK_FORMAT=plano`; el umbral sigue en 0,30; **no** se activa `QUERY_REWRITE_ENABLED` en el S6. Evidencia de la medición (60 preguntas, corpus `s5-corpus-ampliado`, 53 documentos): hoy 1/22 genéricas con evidencia; con el gate G1: 18/22, recall@10 1,0, MRR 0,858, 0/24 falsos positivos, p95 de recuperación 2,37 s frente a 1,50 s; enriquecer siempre: 7/24 falsos positivos. Contratos aditivos (rag, ADR-26). Tests: Pytest con adapters falsos y TDD estricto (AC-1…AC-7, AC-10); unitarios del léxico (AC-8, AC-9). Gate 2: `privacy-guardian`, `contract-keeper`, `clinical-language-auditor`, `design-principles-reviewer` y `ai-eval-runner` real (cambia umbral y catálogo: exige `evaluate`, OL-06).
+
+## Non-goals
+Activar `QUERY_REWRITE_ENABLED`; HyDE; *reranking* en dos etapas; puntaje combinado; gate con LLM (ADR-52).
+
+## INVEST
+**Small** ✓ una regla de gate, una función de términos y una rama del segundo loop; 4 puntos (3 + 1 del léxico y sus validadores). **Testable** ✓ diez comprobaciones, las del léxico con las preguntas de la medición.
+
+---
+
+## US-272 — Una quimioterapia que sigue activa aparece en «los últimos N días» porque el hecho del caso lleva su día relativo de fin
+
+> Linear: [L1D-330](https://linear.app/l1der-lab-mjbc/issue/L1D-330)
+
+`FEAT-12` · Sprint 6 · Estimación **2** · HU-15 · FR-21, RN-11, ADR-26, ADR-34 · AC-02.1 · ↪ US-261 (L1D-318) · 🔗 Medido en: US-269
+
+> **Decidido (usuario, 2026-11-06):** alta dentro del Sprint 6; el ancla de «últimos N días» en el día 0 del diagnóstico se mantiene (REVISAR en la Demo 6).
+
+## Story
+Como oncólogo, quiero que al preguntar «¿qué ocurrió en los últimos 100 días?» aparezca la quimioterapia que sigue en curso, para no creer que el paciente no está en tratamiento.
+
+## AC (Given/When/Then)
+- **AC-1 (happy path · intervalo que cruza el periodo)** · Dado `P-CHAT` con quimioterapia de −160 a −60 y cirugía en −40, cuando pregunta «¿Qué ocurrió en los últimos 100 días?», entonces la quimioterapia entra al periodo porque `relativeEndDay = -60 ≥ -100` y se rotula «(iniciado antes del periodo)». `[AC-02.1]`
+- **AC-2 (borde · tratamiento activo sin fin)** · Dado un tratamiento activo sin fecha de fin, cuando se arma el `CaseFact`, entonces `relativeEndDay = null` y el filtro lo trata como vigente: entra en cualquier periodo que empiece después de su inicio y se rotula como en curso. `[AC-02.1]` (asumido: `null` = en curso solo para tratamientos con estado activo)
+- **AC-3 (invariante · desidentificado y aditivo)** · Dados los contratos, cuando se valida el esquema, entonces `relativeEndDay` es un entero opcional y `nullable` en `CaseFact` (rag y clinical, versión menor, ADR-26), y el prompt y los *logs* solo contienen días relativos, ninguna fecha `AAAA-MM-DD`. `[RN-11]`
+- **AC-4 (borde · sin datos)** · Dado un periodo en el que ningún hecho entra, aunque el expediente tenga datos, cuando se responde, entonces el mensaje es «No se encontró información documentada sobre lo preguntado en el expediente» (sin texto del LLM). `[RN-01]`
+
+## Contexto técnico
+Backend 1 (`clinical-api`) calcula `relativeEndDay` al construir `caseFacts` (tratamientos y eventos con intervalo) con el mismo ancla del día 0 que `relativeDay`; Backend 2 ya admite `dia_relativo_fin` opcional en `HechoDelCaso` y `filtrar_hechos_por_periodo` (L1D-318, `design.md` §4): esta historia aporta el campo al contrato y al modelo, no cambia la regla. Contratos primero (rag y clinical, aditivo, ejemplos en `contracts/examples/`). Tests: Supertest + PostgreSQL real (AC-1…AC-3); Pytest con adapters falsos (AC-1, AC-2, AC-4). Gate 2: `contract-keeper` y `privacy-guardian`.
+
+## Non-goals
+Cambiar el ancla del periodo (revisión en la Demo 6); periodos con fechas absolutas en la pregunta.
+
+## INVEST
+**Small** ✓ un campo en el contrato, su cálculo y un caso del filtro. **Testable** ✓ cuatro tests.
 
 ---
 
