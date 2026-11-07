@@ -19,6 +19,10 @@ PETICION_SIN_CONFLICTO = "chat-turn-request-caso-sin-contradicciones.json"
 Q_CONTRADICCIONES = "¿Hay contradicciones en el expediente?"
 Q_ESTADIO_CORRECTO = "¿Cuál es el estadio correcto de la paciente?"
 TEXTO_SIN_CONTRADICCIONES = "No hay contradicciones registradas en el expediente"
+ALCANCE_REVISADO = "Se revisaron los diagnósticos y biomarcadores del expediente"
+TEXTO_SIN_CONTRAPARTE = (
+    "Hay datos marcados en conflicto cuya contraparte no está entre los datos consultados"
+)
 TEXTO_DEL_CONFLICTO = (
     "Por conciliar: Carcinoma ductal infiltrante, Nottingham grado 2, estadio IIA (TNM_8), "
     "al momento del diagnóstico. Frente a: Carcinoma ductal infiltrante, estadio IIB (TNM_8), "
@@ -117,7 +121,53 @@ def test_chat_turn_caso_responde_que_no_hay_contradicciones_con_cero_llamadas_al
 
     assert respuesta.status_code == 200
     cuerpo = respuesta.json()
-    assert cuerpo["blocks"] == [{"kind": "limitacion", "text": TEXTO_SIN_CONTRADICCIONES}]
+    assert cuerpo["blocks"] == [
+        {"kind": "limitacion", "text": f"{TEXTO_SIN_CONTRADICCIONES}. {ALCANCE_REVISADO}."}
+    ]
     assert entorno.llm.llamadas_de_generacion == 0
     assert entorno.llm.invocaciones == 0
     assert cuerpo == _ejemplo("chat-turn-caso-sin-contradicciones.json")
+
+
+def _solicitud_con_marca_huerfana() -> dict:
+    solicitud = solicitud_desde_ejemplo(PETICION_CON_CONFLICTO)
+    solicitud["caseFacts"] = [h for h in solicitud["caseFacts"] if h["factRef"] != "f6"]
+    return solicitud
+
+
+def test_chat_turn_caso_declara_la_contraparte_ausente_y_no_dice_sin_contradicciones_cuando_un_hecho_marcado_no_tiene_su_par():  # noqa: E501
+    entorno = crear_entorno_de_chat("CHAT-OK")
+
+    cuerpo = entorno.turno(_solicitud_con_marca_huerfana()).json()
+
+    assert cuerpo["blocks"] == [{"kind": "limitacion", "text": TEXTO_SIN_CONTRAPARTE}]
+    assert "No hay contradicciones" not in json.dumps(cuerpo, ensure_ascii=False)
+    assert entorno.llm.invocaciones == 0
+
+
+def test_chat_turn_caso_avisa_de_la_contraparte_ausente_junto_a_los_bloques_conflicto_cuando_hay_un_par_y_una_marca_huerfana():  # noqa: E501
+    entorno = crear_entorno_de_chat("CHAT-OK")
+    solicitud = _solicitud_con_marca_huerfana()
+    solicitud["caseFacts"] += [
+        {
+            "factRef": "f7",
+            "kind": "biomarcador",
+            "verbalization": "HER2: 2+, relevante",
+            "relativeDay": 5,
+            "reviewStatus": "requiere_revision",
+            "conflictWith": "f8",
+        },
+        {
+            "factRef": "f8",
+            "kind": "biomarcador",
+            "verbalization": "HER2: 3+, relevante",
+            "relativeDay": 6,
+            "reviewStatus": "requiere_revision",
+            "conflictWith": "f7",
+        },
+    ]
+
+    cuerpo = entorno.turno(solicitud).json()
+
+    assert [b["kind"] for b in cuerpo["blocks"]] == ["conflicto"]
+    assert TEXTO_SIN_CONTRAPARTE in cuerpo["notices"]

@@ -69,6 +69,10 @@ def bloques_de_conflicto(
     )
 
 
+def hechos_con_marca_sin_contraparte(hechos: Sequence[HechoDelCaso]) -> tuple[HechoDelCaso, ...]:
+    raise NotImplementedError
+
+
 def afirmaciones_que_resuelven_conflicto(
     propuestas: Sequence[PropuestaDelTurno], hechos: Sequence[HechoDelCaso]
 ) -> tuple[PropuestaDelTurno, ...]:

@@ -8,6 +8,7 @@ from app.domain.chat.contradicciones import (
     afirmaciones_que_resuelven_conflicto,
     bloques_de_conflicto,
     es_pregunta_de_contradicciones,
+    hechos_con_marca_sin_contraparte,
     pares_en_conflicto,
 )
 from app.domain.chat.turno import BloqueDelTurno, HechoDelCaso, PropuestaDelTurno, TipoDeBloque
@@ -114,6 +115,14 @@ def test_bloques_de_conflicto_devuelve_un_bloque_por_par_en_orden_de_dia_cuando_
 
 def test_bloques_de_conflicto_devuelve_vacio_cuando_no_hay_pares():
     assert bloques_de_conflicto((LIBRE,), "Por conciliar") == ()
+
+
+def test_hechos_con_marca_sin_contraparte_devuelve_el_hecho_marcado_cuando_su_contraparte_no_esta():
+    assert hechos_con_marca_sin_contraparte((IIA, LIBRE)) == (IIA,)
+
+
+def test_hechos_con_marca_sin_contraparte_devuelve_vacio_cuando_el_par_esta_completo():
+    assert hechos_con_marca_sin_contraparte((IIA, IIB, LIBRE)) == ()
 
 
 def _afirmacion(*refs):
