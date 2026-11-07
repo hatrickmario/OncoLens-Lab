@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -303,5 +303,170 @@ describe('ruta de inicio tras el login (feedback de la Demo 4, F1)', () => {
     });
 
     expect(resultado.stdout).toBe(rutaDelAnalisis);
+  });
+});
+
+describe('levantar.sh · valida y descarga solo lo que falte [D6-31]', () => {
+  const LLM = 'modelo-falso:1b';
+
+  // Entorno sin descargas reales: `ollama`, `curl` y `docker` son stubs que registran cada llamada, y el venv de exportación
+  // es un `python` falso que, al ejecutar exportar-modelos.py, deja los pesos completos en el destino. `curl` responde a
+  // /api/version y falla en lo demás, así el script se detiene en «Modelo en memoria», antes de tocar secretos o Compose.
+  function entornoDeModelos({ pesos = 'completos', llmInstalado = true } = {}) {
+    const stub = stubDeDocker();
+    const modelos = path.join(stub.dir, 'modelos');
+    const venv = path.join(stub.dir, 'venv');
+    const escribir = (ruta, contenido) => {
+      writeFileSync(ruta, contenido);
+      chmodSync(ruta, 0o755);
+    };
+    const sembrarOnnx = () => {
+      for (const m of ['embeddings', 'reranker', 'nli']) {
+        mkdirSync(path.join(modelos, m), { recursive: true });
+        writeFileSync(path.join(modelos, m, 'model.onnx'), '');
+      }
+      writeFileSync(path.join(modelos, 'embeddings/sparse_linear.npz'), '');
+    };
+    mkdirSync(path.join(venv, 'bin'), { recursive: true });
+    escribir(
+      path.join(venv, 'bin/python'),
+      `#!/bin/sh
+echo "python $*" >> "${stub.registro}"
+case "$1" in *exportar-modelos.py)
+  mkdir -p "$2/embeddings" "$2/reranker" "$2/nli"
+  for m in embeddings reranker nli; do : > "$2/$m/model.onnx"; done
+  : > "$2/embeddings/sparse_linear.npz"
+  printf 'EMBEDDING_SPARSE_WEIGHTS_PATH=/models/embeddings/sparse_linear.npz\\nEMBEDDING_SPARSE_WEIGHTS_SHA256=abc\\n' > "$2/modelos.env" ;;
+esac
+exit 0
+`,
+    );
+    escribir(
+      path.join(stub.dir, 'ollama'),
+      `#!/bin/sh
+echo "ollama $*" >> "${stub.registro}"
+[ "$1" = "list" ] && { echo "NAME ID SIZE"; ${llmInstalado ? `echo "${LLM} x 1GB"` : ':'}; }
+exit 0
+`,
+    );
+    escribir(
+      path.join(stub.dir, 'curl'),
+      `#!/bin/sh
+case "$*" in *api/version*) exit 0 ;; esac
+exit 22
+`,
+    );
+    if (pesos === 'completos' || pesos === 'sin_variables_sparse') {
+      sembrarOnnx();
+      writeFileSync(
+        path.join(modelos, 'modelos.env'),
+        pesos === 'completos'
+          ? 'EMBEDDING_SPARSE_WEIGHTS_PATH=/models/embeddings/sparse_linear.npz\nEMBEDDING_SPARSE_WEIGHTS_SHA256=abc\n'
+          : 'EMBEDDING_MODEL_PATH=/models/embeddings/model.onnx\n',
+      );
+    }
+    const entorno = {
+      MODEL_HOST_DIR: modelos,
+      ONCOLENS_VENV_EXPORT: venv,
+      LLM_MODEL: LLM,
+      OLLAMA_PUERTO: '11999',
+    };
+    return { stub, entorno };
+  }
+  const llamadas = (stub) => readFileSync(stub.registro, 'utf8');
+
+  it('no descarga nada, avisa qué falta y nombra --descargar-modelos y el comando manual cuando faltan los pesos y no se confirma', () => {
+    const { stub, entorno } = entornoDeModelos({ pesos: 'vacios' });
+
+    const { codigo, salida } = ejecutarLevantar(stub, [], entorno);
+
+    expect(codigo).toBe(1);
+    expect(salida).toContain('embeddings/model.onnx');
+    expect(salida).toContain('modelos.env');
+    expect(salida).toContain('levantar.sh --descargar-modelos');
+    expect(salida).toContain('exportar-modelos.py');
+    expect(llamadas(stub)).not.toContain('python');
+    expect(llamadas(stub)).not.toContain('ollama pull');
+  });
+
+  it('exporta los pesos con el venv aparte y sigue adelante cuando faltan y se pasa --descargar-modelos', () => {
+    const { stub, entorno } = entornoDeModelos({ pesos: 'vacios' });
+
+    const { salida } = ejecutarLevantar(stub, ['--descargar-modelos'], entorno);
+
+    expect(llamadas(stub)).toMatch(/python .*scripts\/demo\/exportar-modelos\.py .*\/modelos/);
+    expect(salida).toContain('== Ollama');
+    expect(llamadas(stub)).not.toContain('ollama pull');
+  });
+
+  it('trata como faltantes las variables EMBEDDING_SPARSE_WEIGHTS_* ausentes de modelos.env aunque existan los ONNX', () => {
+    const { stub, entorno } = entornoDeModelos({ pesos: 'sin_variables_sparse' });
+
+    const { codigo, salida } = ejecutarLevantar(stub, [], entorno);
+
+    expect(codigo).toBe(1);
+    expect(salida).toContain('EMBEDDING_SPARSE_WEIGHTS_PATH');
+    expect(salida).toContain('EMBEDDING_SPARSE_WEIGHTS_SHA256');
+  });
+
+  it('no exporta ni descarga nada cuando los pesos y el LLM ya están', () => {
+    const { stub, entorno } = entornoDeModelos();
+
+    const { salida } = ejecutarLevantar(stub, [], entorno);
+
+    expect(salida).toContain('completos');
+    expect(llamadas(stub)).not.toContain('python');
+    expect(llamadas(stub)).not.toContain('ollama pull');
+    expect(llamadas(stub)).toContain('ollama list');
+  });
+
+  it('no hace pull y nombra el comando cuando falta el LLM y no se confirma', () => {
+    const { stub, entorno } = entornoDeModelos({ llmInstalado: false });
+
+    const { codigo, salida } = ejecutarLevantar(stub, [], entorno);
+
+    expect(codigo).toBe(1);
+    expect(salida).toContain(`ollama pull ${LLM}`);
+    expect(salida).toContain('--descargar-modelos');
+    expect(llamadas(stub)).not.toContain('ollama pull');
+  });
+
+  it('hace ollama pull del LLM que falta cuando se pasa --descargar-modelos', () => {
+    const { stub, entorno } = entornoDeModelos({ llmInstalado: false });
+
+    ejecutarLevantar(stub, ['--descargar-modelos'], entorno);
+
+    expect(llamadas(stub)).toContain(`ollama pull ${LLM}`);
+  });
+
+  it('rechaza un argumento desconocido sin tocar Docker', () => {
+    const { stub, entorno } = entornoDeModelos();
+
+    const { codigo, salida } = ejecutarLevantar(stub, ['--borrar'], entorno);
+
+    expect(codigo).toBe(2);
+    expect(salida).toContain('argumento desconocido');
+  });
+});
+
+describe('red-clinica.sh · nombre exacto del proyecto [D6-31]', () => {
+  it('pide a Docker la red `<proyecto>_clinical-net` por nombre exacto y no por coincidencia parcial', () => {
+    const dir = mkdtempSync(path.join(os.tmpdir(), 'redes-'));
+    temporales.push(dir);
+    const registro = path.join(dir, 'llamadas.log');
+    writeFileSync(path.join(dir, 'docker'), `#!/bin/sh\necho "$*" >> "${registro}"\n`);
+    chmodSync(path.join(dir, 'docker'), 0o755);
+
+    spawnSync(
+      'bash',
+      ['-c', `source "${path.join(RAIZ, 'scripts/demo/red-clinica.sh')}"; red_clinica_del_proyecto`],
+      {
+        encoding: 'utf8',
+        timeout: PLAZO_MS,
+        env: { PATH: `${dir}:/usr/bin:/bin`, COMPOSE_PROJECT_NAME: 'oncolens-demo6' },
+      },
+    );
+
+    expect(readFileSync(registro, 'utf8')).toContain('name=^oncolens-demo6_clinical-net$');
   });
 });

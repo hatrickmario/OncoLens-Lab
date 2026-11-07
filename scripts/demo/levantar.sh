@@ -2,18 +2,33 @@
 # Levanta el demo local de OncoLens con modelos reales (S1, datos SINTÉTICOS): stack de Compose, esquema clínico, seed,
 # corpus semilla y el LLM de ADR-39 en Ollama. Idempotente. Nunca imprime secretos.
 #
-#   scripts/demo/levantar.sh [--continuar]
+#   scripts/demo/levantar.sh [--continuar] [--descargar-modelos]
 #
 # Con volúmenes o contenedores de una instalación anterior (proyecto `oncolens_*`) AVISA con la lista y pide confirmación
 # antes de continuar sobre ese estado (F-07): `--continuar`, `ONCOLENS_CONFIRMAR_ESTADO_PREVIO=si` o responder `si`. Sin
 # confirmación no borra nada y sale con código 1 indicando `scripts/demo/apagar.sh --borrar-datos` (empezar de cero).
 #
-# Requisitos: Docker Desktop (>= 12 GB para la VM), Ollama con el modelo descargado (`ollama pull <LLM_MODEL>`) y los pesos
-# ONNX en MODEL_HOST_DIR (por defecto ~/adr39-modelos; se generan con scripts/demo/exportar-modelos.py).
+# Modelos: VALIDA primero y descarga solo lo que falte. Pesos ONNX (embeddings, reranker, nli), `sparse_linear.npz`,
+# `modelos.env` y sus variables EMBEDDING_SPARSE_WEIGHTS_*: los genera scripts/demo/exportar-modelos.py (~7 GB) en un venv
+# aparte (~/.venvs/oncolens-export, nunca el entorno de la app). Si el LLM no está en `ollama list`: `ollama pull` (~17 GB).
+# Las descargas piden confirmación: `--descargar-modelos`, `ONCOLENS_DESCARGAR_MODELOS=si` o responder `si`; sin confirmar
+# sale con código 1 nombrando el comando.
+#
+# Requisitos: Docker Desktop (>= 12 GB para la VM) y Ollama instalado; los modelos van en MODEL_HOST_DIR (por defecto
+# ~/adr39-modelos) y en Ollama (`LLM_MODEL`).
 # Valores públicos de ADR-39 (modelos, chunking, índice) se leen del bloque de decisión del propio ADR: fuente única.
 set -euo pipefail
 
 raiz="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
+continuar="no"; descargar_modelos="no"
+for argumento in "$@"; do
+  case "$argumento" in
+    --continuar) continuar="si" ;;
+    --descargar-modelos) descargar_modelos="si" ;;
+    *) echo "levantar: argumento desconocido: $argumento (usa --continuar o --descargar-modelos)" >&2; exit 2 ;;
+  esac
+done
+[ "${ONCOLENS_DESCARGAR_MODELOS:-}" = "si" ] && descargar_modelos="si"
 export MODEL_HOST_DIR="${MODEL_HOST_DIR:-$HOME/adr39-modelos}"
 export APP_ENV=local
 export LLM_MODEL="${LLM_MODEL:-gemma4:26b-a4b-it-q4_K_M}"
@@ -35,6 +50,49 @@ mkdir -p "$estado"
 paso() { printf '\n== %s\n' "$*"; }
 fallar() { echo "levantar: $*" >&2; exit 1; }
 
+# Pesos y configuración que faltan en MODEL_HOST_DIR, uno por línea (vacío = todo listo).
+pesos_que_faltan() {
+  local m
+  for m in embeddings reranker nli; do
+    [ -f "$MODEL_HOST_DIR/$m/model.onnx" ] || echo "$m/model.onnx"
+  done
+  [ -f "$MODEL_HOST_DIR/embeddings/sparse_linear.npz" ] || echo "embeddings/sparse_linear.npz"
+  if [ ! -f "$MODEL_HOST_DIR/modelos.env" ]; then
+    echo "modelos.env"
+  else
+    grep -q '^EMBEDDING_SPARSE_WEIGHTS_PATH=' "$MODEL_HOST_DIR/modelos.env" || echo "modelos.env: EMBEDDING_SPARSE_WEIGHTS_PATH"
+    grep -q '^EMBEDDING_SPARSE_WEIGHTS_SHA256=' "$MODEL_HOST_DIR/modelos.env" || echo "modelos.env: EMBEDDING_SPARSE_WEIGHTS_SHA256"
+  fi
+}
+
+# Pide confirmación antes de una descarga grande: --descargar-modelos, ONCOLENS_DESCARGAR_MODELOS=si o "si" en la terminal.
+# Sin confirmar sale con código 1 nombrando el comando de la descarga ($1 = qué, $2 = tamaño, $3 = comando manual).
+confirmar_descarga() {
+  local respuesta=""
+  if [ "$descargar_modelos" = "si" ]; then return 0; fi
+  if [ -t 0 ]; then
+    printf '¿Descargar %s (%s)? Escribe "si": ' "$1" "$2"
+    read -r respuesta || respuesta=""
+    [ "$respuesta" = "si" ] && return 0
+  fi
+  echo "levantar: falta $1 y la descarga (${2}) no se confirmó; no se descargó nada." >&2
+  echo "          para descargarlo y seguir: scripts/demo/levantar.sh --descargar-modelos" >&2
+  echo "          o a mano: $3" >&2
+  exit 1
+}
+
+# Genera los pesos ONNX con exportar-modelos.py en un venv aparte (idempotente: salta lo ya exportado).
+exportar_pesos() {
+  local venv="${ONCOLENS_VENV_EXPORT:-$HOME/.venvs/oncolens-export}"
+  if ! "$venv/bin/python" -c 'import torch, transformers, onnx' >/dev/null 2>&1; then
+    echo "Preparando el venv de exportación en $venv (aparte del entorno de la app)"
+    python3 -m venv "$venv" || fallar "no pude crear el venv $venv"
+    "$venv/bin/pip" install --quiet -r "$raiz/apps/rag-orchestrator/requirements-eval.txt" \
+      -r "$raiz/apps/rag-orchestrator/requirements-export.txt" || fallar "no pude instalar los requisitos de exportación en $venv"
+  fi
+  "$venv/bin/python" "$raiz/scripts/demo/exportar-modelos.py" "$MODEL_HOST_DIR" || fallar "exportar-modelos.py falló"
+}
+
 paso "Requisitos"
 docker info >/dev/null 2>&1 || fallar "Docker no responde"
 
@@ -46,7 +104,7 @@ if [ -n "$previo" ]; then
   echo "Hay restos de una instalación anterior (proyecto ${proyecto}):"
   printf '  - %s\n' $previo
   confirmado="no"
-  if [ "${1:-}" = "--continuar" ] || [ "${ONCOLENS_CONFIRMAR_ESTADO_PREVIO:-}" = "si" ]; then confirmado="si"; fi
+  if [ "$continuar" = "si" ] || [ "${ONCOLENS_CONFIRMAR_ESTADO_PREVIO:-}" = "si" ]; then confirmado="si"; fi
   if [ "$confirmado" != "si" ] && [ -t 0 ]; then
     printf '¿Continuar sobre ese estado (sin borrar nada)? Si las contraseñas cambiaron, falla. Escribe "si": '
     read -r respuesta || respuesta=""
@@ -61,10 +119,17 @@ else
   echo "Sin estado previo"
 fi
 command -v ollama >/dev/null || fallar "ollama no está instalado"
-for m in embeddings reranker nli; do
-  [ -f "$MODEL_HOST_DIR/$m/model.onnx" ] || fallar "faltan los pesos ONNX en $MODEL_HOST_DIR/$m (python scripts/demo/exportar-modelos.py)"
-done
-[ -f "$MODEL_HOST_DIR/modelos.env" ] || fallar "falta $MODEL_HOST_DIR/modelos.env (lo genera exportar-modelos.py)"
+faltantes="$(pesos_que_faltan)"
+if [ -n "$faltantes" ]; then
+  echo "Faltan en $MODEL_HOST_DIR:"
+  printf '  - %s\n' $faltantes
+  confirmar_descarga "los pesos ONNX" "~7 GB, ~10 min" "python scripts/demo/exportar-modelos.py $MODEL_HOST_DIR"
+  exportar_pesos
+  faltantes="$(pesos_que_faltan)"
+  [ -z "$faltantes" ] || fallar "tras exportar siguen faltando en $MODEL_HOST_DIR: $(echo $faltantes)"
+else
+  echo "Pesos ONNX y modelos.env completos en $MODEL_HOST_DIR"
+fi
 mem_docker_gb=$(docker info --format '{{.MemTotal}}' | awk '{printf "%d", $1/1073741824}')
 [ "$mem_docker_gb" -ge 12 ] || echo "AVISO: la VM de Docker tiene ${mem_docker_gb} GB; se recomiendan >= 12 GB (Settings > Resources)"
 
@@ -80,7 +145,10 @@ else
   for _ in $(seq 1 20); do curl -fsS -m 2 http://127.0.0.1:${puerto_ollama}/api/version >/dev/null 2>&1 && break; sleep 1; done
   curl -fsS -m 2 http://127.0.0.1:${puerto_ollama}/api/version >/dev/null || fallar "Ollama no arrancó (ver $estado/ollama.log)"
 fi
-ollama list | awk 'NR>1{print $1}' | grep -qx "$LLM_MODEL" || fallar "falta el modelo: ollama pull $LLM_MODEL"
+if ! ollama list | awk 'NR>1{print $1}' | grep -qx "$LLM_MODEL"; then
+  confirmar_descarga "el modelo $LLM_MODEL" "~17 GB" "ollama pull $LLM_MODEL"
+  ollama pull "$LLM_MODEL" || fallar "ollama pull $LLM_MODEL falló"
+fi
 
 paso "Modelo en memoria (se comprueba el contexto de 8192)"
 curl -fsS -m 300 http://127.0.0.1:${puerto_ollama}/api/generate \
