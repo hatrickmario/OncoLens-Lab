@@ -1,5 +1,6 @@
 import 'server-only';
 import escalas from '../../../../packages/clinical-catalogs/escalas.json';
+import marcosDePregunta from '../../../../packages/clinical-catalogs/lenguaje/marcos-de-pregunta.json';
 import manifest from '../../../../packages/clinical-catalogs/manifest.json';
 import codigosMama from '../../../../packages/clinical-catalogs/mama/codigos.json';
 import datosCriticosMama from '../../../../packages/clinical-catalogs/mama/datos-criticos.json';
@@ -19,6 +20,7 @@ export const catalogosGuiadas = {
   codigos: { mama: codigosMama, prostata: codigosProstata },
   escalas,
   datosCriticos: { mama: datosCriticosMama, prostata: datosCriticosProstata },
+  biomarcadoresNoAnclables: marcosDePregunta.expansion.biomarcadoresNoAnclables,
 } as unknown as CatalogosDeLasPreguntas;
 
 /** Versión del catálogo importado: la comprueba un test contra `packages/clinical-catalogs`. */

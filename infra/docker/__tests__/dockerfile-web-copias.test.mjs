@@ -72,6 +72,7 @@ describe('apps/web/Dockerfile · etapa build', () => {
     const origenes = origenesCopiados().filter((o) => o.startsWith('packages/clinical-'));
     expect(origenes.sort()).toEqual([
       'packages/clinical-catalogs/escalas.json',
+      'packages/clinical-catalogs/lenguaje/marcos-de-pregunta.json',
       'packages/clinical-catalogs/lenguaje/terminos-prohibidos.json',
       'packages/clinical-catalogs/mama/codigos.json',
       'packages/clinical-catalogs/mama/datos-criticos.json',

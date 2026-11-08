@@ -10,7 +10,7 @@ const PROHIBIDOS = leer('lenguaje/terminos-prohibidos.json');
 const item = (id, ...variantes) => ({ id, variantes });
 const deTipo = (id) => item(id, { texto: '¿Qué evidencia hay para {tipo}?', ranuras: ['tipo'] });
 const BASE = [deTipo('a'), deTipo('b'), deTipo('c')];
-const archivo = (...items) => ({ version: '1.8.0', items });
+const archivo = (...items) => ({ version: '1.9.0', items });
 const codigos = (resultado) => resultado.map((v) => `${v.codigo}:${v.elemento ?? ''}`);
 
 describe('catalog:validate · <tipo>/plantillas.json (L1D-324, ADR-52)', () => {

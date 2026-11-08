@@ -163,7 +163,7 @@ function violacionesDeLosDeclaradosDeLaRaiz(archivos, esquemasCompilados) {
     ([nombre, { clave, reglas }]) => {
       if (archivos.manifest?.[clave] !== true) return [];
       const archivo = archivos[nombre];
-      const delArchivo = reglas(archivo, archivos.manifest);
+      const delArchivo = reglas(archivo, archivos.manifest, archivos);
       if (delArchivo.length > 0) return delArchivo;
       return esquemasCompilados[nombre](archivo)
         ? []

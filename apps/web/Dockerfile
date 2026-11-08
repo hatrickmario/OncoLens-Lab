@@ -21,6 +21,7 @@ COPY packages/clinical-catalogs/lenguaje/terminos-prohibidos.json packages/clini
 # `server-only`); un test comprueba que cada JSON importado tiene su COPY.
 COPY packages/clinical-catalogs/manifest.json packages/clinical-catalogs/manifest.json
 COPY packages/clinical-catalogs/escalas.json packages/clinical-catalogs/escalas.json
+COPY packages/clinical-catalogs/lenguaje/marcos-de-pregunta.json packages/clinical-catalogs/lenguaje/marcos-de-pregunta.json
 COPY packages/clinical-catalogs/mama/plantillas.json packages/clinical-catalogs/mama/plantillas.json
 COPY packages/clinical-catalogs/mama/codigos.json packages/clinical-catalogs/mama/codigos.json
 COPY packages/clinical-catalogs/mama/datos-criticos.json packages/clinical-catalogs/mama/datos-criticos.json

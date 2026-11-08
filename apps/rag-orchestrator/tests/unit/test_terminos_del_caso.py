@@ -144,3 +144,29 @@ def test_terminos_ignoran_texto_libre_del_caso_cuando_no_es_un_valor_del_catalog
     resultado = terminos_del_caso(caso, CATALOGO, TODOS)
 
     assert resultado.terminos == ("Cáncer de mama", "HER2")
+
+
+@pytest.mark.ac("US-273", 1)
+def test_terminos_saltan_el_biomarcador_no_anclable_del_tipo_y_toman_el_siguiente_del_catalogo():
+    catalogo = replace(CATALOGO, biomarcadores_no_anclables={"mama": frozenset({"re"})})
+
+    resultado = terminos_del_caso(CASO, catalogo, TODOS)
+
+    assert resultado.terminos == ("Cáncer de mama", "IIA", "HER2", "3+")
+    assert resultado.campos == TODOS
+
+
+def test_terminos_omiten_el_campo_biomarcador_cuando_el_unico_biomarcador_del_caso_es_no_anclable():
+    catalogo = replace(CATALOGO, biomarcadores_no_anclables={"mama": frozenset({"re"})})
+    solo_re = replace(CASO, biomarcadores=(("RE", "positivo"),))
+
+    resultado = terminos_del_caso(solo_re, catalogo, TODOS)
+
+    assert resultado == TerminosDelCaso(("Cáncer de mama", "IIA"), ("tipo", "estadio"))
+
+
+@pytest.mark.ac("US-273", 5)
+def test_terminos_no_cambian_cuando_la_lista_de_no_anclables_es_de_otro_tipo():
+    catalogo = replace(CATALOGO, biomarcadores_no_anclables={"prostata": frozenset({"re"})})
+
+    assert terminos_del_caso(CASO, catalogo, TODOS) == terminos_del_caso(CASO, CATALOGO, TODOS)

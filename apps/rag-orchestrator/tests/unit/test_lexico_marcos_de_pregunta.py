@@ -40,4 +40,4 @@ def test_lexico_clasifica_las_60_preguntas_de_la_medicion_y_las_69_de_s5_cuando_
 def test_lexico_tiene_las_listas_de_los_dos_idiomas_con_la_version_del_catalogo():
     assert set(LEXICO.por_idioma) == {"es", "en"}
     assert all(i.marcos and i.vacias for i in LEXICO.por_idioma.values())
-    assert LEXICO.version == "1.7.0"
+    assert LEXICO.version == "1.8.0"

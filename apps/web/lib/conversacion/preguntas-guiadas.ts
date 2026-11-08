@@ -32,6 +32,8 @@ export interface CatalogosDeLasPreguntas {
     valoresDeBiomarcador: readonly Entrada[];
   };
   datosCriticos: Readonly<Record<string, { items: readonly Entrada[] }>>;
+  /** Tipo -> nombres normalizados que el léxico `marcos-de-pregunta.json` no deja anclar el tema (el PSA en próstata, US-273). */
+  biomarcadoresNoAnclables: Readonly<Record<string, readonly string[]>>;
 }
 
 /** Hasta 4 preguntas por conversación nueva (design D7). */
@@ -81,18 +83,23 @@ function gradoDe(resumen: ResumenParaPreguntas, tipo: string, catalogos: Catalog
     .find((valor) => ` ${grado} `.includes(` ${normalizar(valor)} `));
 }
 
-/** El primer biomarcador de `datos-criticos` (en su orden) que el caso trae: su etiqueta y, solo si es del catálogo, su valor. */
+/**
+ * El primer biomarcador de `datos-criticos` (en su orden) que el caso trae y que el léxico no declara no anclable: su
+ * etiqueta y, solo si es del catálogo, su valor. Misma regla que `terminos_del_caso` de rag-orchestrator.
+ */
 function biomarcadorDe(
   resumen: ResumenParaPreguntas,
   tipo: string,
   catalogos: CatalogosDeLasPreguntas,
 ) {
   const delCaso = new Map(resumen.recentBiomarkers.map((b) => [normalizar(b.name), b.value]));
+  const noAnclables = catalogos.biomarcadoresNoAnclables[tipo] ?? [];
   for (const item of catalogos.datosCriticos[tipo]?.items ?? []) {
     const nombre = textoDe(
       ((item.destination as Entrada | undefined)?.match as Entrada | undefined)?.name,
     );
     if (nombre === undefined || !delCaso.has(normalizar(nombre))) continue;
+    if (noAnclables.includes(normalizar(nombre))) continue;
     const valores = catalogos.escalas.valoresDeBiomarcador.find(
       (b) => delTipo(b, tipo) && normalizar(String(b.nombre)) === normalizar(nombre),
     );

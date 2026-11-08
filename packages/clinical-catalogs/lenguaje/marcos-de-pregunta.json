@@ -1,5 +1,5 @@
 {
-  "version": "1.7.0",
+  "version": "1.8.0",
   "es": {
     "marcos": [
       "caso clinico",
@@ -195,5 +195,10 @@
       "what",
       "which"
     ]
+  },
+  "expansion": {
+    "biomarcadoresNoAnclables": {
+      "prostata": ["psa"]
+    }
   }
 }

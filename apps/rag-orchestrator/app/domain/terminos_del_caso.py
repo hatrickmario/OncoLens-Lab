@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from app.domain.expansion_contextual import (
     CAMPO_BIOMARCADOR_PRINCIPAL,
@@ -54,6 +54,8 @@ class CatalogoDeTerminos:
     """Tipo -> valores canónicos de Gleason/ISUP que pueden aparecer dentro del texto del grado."""
     biomarcadores: Mapping[str, tuple[BiomarcadorDelCatalogo, ...]]
     """Tipo -> biomarcadores en el orden de ``datos-criticos`` (el primero presente es el principal)."""
+    biomarcadores_no_anclables: Mapping[str, frozenset[str]] = field(default_factory=dict)
+    """Tipo -> nombres normalizados que el catálogo declara no anclables en la consulta contextual (US-273)."""
 
 
 @dataclass(frozen=True)
@@ -105,10 +107,13 @@ def _del_grado(caso: CasoParaTerminos, catalogo: CatalogoDeTerminos) -> tuple[st
 def _del_biomarcador_principal(
     caso: CasoParaTerminos, catalogo: CatalogoDeTerminos
 ) -> tuple[str, ...]:
-    """El primero del catálogo, por su orden, que el caso trae: su término y, solo si es del catálogo, su valor."""
+    """El primero del catálogo, por su orden, que el caso trae y que el catálogo no declara no anclable.
+
+    Devuelve su término y, solo si es del catálogo, su valor (US-273: en próstata el PSA no ancla la consulta)."""
     del_caso = {normalizar_texto(nombre): valor for nombre, valor in reversed(caso.biomarcadores)}
+    no_anclables = catalogo.biomarcadores_no_anclables.get(caso.tipo_de_cancer, frozenset())
     for biomarcador in catalogo.biomarcadores.get(caso.tipo_de_cancer, ()):
-        if biomarcador.nombre in del_caso:
+        if biomarcador.nombre in del_caso and biomarcador.nombre not in no_anclables:
             valor = biomarcador.valores.get(normalizar_texto(del_caso[biomarcador.nombre]))
             return (biomarcador.termino, valor) if valor else (biomarcador.termino,)
     return ()
