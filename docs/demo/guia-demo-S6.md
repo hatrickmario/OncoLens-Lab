@@ -166,6 +166,8 @@ La comparación no es A/B puro (cambian código, pares y expansión) y no hay l�
 
 ## 6. Checklist previo al ensayo
 
+- [ ] **Antes de ejecutar `levantar.sh`, exportar el proyecto Compose de la demo:** `export COMPOSE_PROJECT_NAME=oncolens-demo2`. Sin esto el script usa `oncolens` por defecto (`levantar.sh:100`) y la limpieza del final (§6) apunta a otro proyecto. Todos los comandos `docker compose -p …` de esta guía usan `oncolens-demo2`.
+- [ ] **Puerto de Ollama:** `levantar.sh` aborta si la app de Ollama está abierta en 11434. Dos salidas: cerrar la app, o ejecutar con `OLLAMA_PUERTO=11435` (se levanta un `ollama serve` propio que hay que detener al terminar). Ver runbook §5.
 - [ ] Rama de la Demo 6 actualizada con `main` y CI en verde (0 checks en fallo, 0 pendientes, 0 alertas abiertas).
 - [ ] Modelos locales disponibles (`ollama list`): LLM, embeddings, *reranker* y NLI según el ADR de modelos locales; LLM ≤ 21 GB y stack ≤ ~30 GB sin swap (equipo de referencia de 32 GB). Comprobar con `ollama ps`.
 - [ ] `ollama serve` activo **fuera de Docker** (Metal no se expone en Docker). Sin esto el modo real devuelve «LLM local no disponible».
@@ -176,4 +178,4 @@ La comparación no es A/B puro (cambian código, pares y expansión) y no hay l�
 - [ ] Recorrer las preguntas del §2 literalmente, con RN-19 y «Opciones descritas en la evidencia» visibles.
 - [ ] Comprobar la consola y la red (`visual-check`): cero violaciones de CSP, solo `/api/*` del mismo origen, sin PII en URLs.
 - [ ] Sin datos reales ni secretos en pantalla ni en el repo (RN-14); solo pacientes sintéticos.
-- [ ] **Al terminar:** limpieza de Compose del proyecto de la demo (contenedores, redes y volúmenes del proyecto `oncolens-demo2`; cuidado con la red en `levantar.sh`), y detener `ollama serve` si ya no se usa.
+- [ ] **Al terminar:** limpieza de Compose del proyecto de la demo con `COMPOSE_PROJECT_NAME=oncolens-demo2` exportado (`docker compose -p oncolens-demo2 down -v`; contenedores, redes y volúmenes del proyecto; cuidado con la red en `levantar.sh`) y borrar las imágenes `oncolens-demo2-*`, y detener `ollama serve` si ya no se usa.
