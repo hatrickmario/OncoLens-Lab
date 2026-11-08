@@ -193,7 +193,7 @@ class ParametrosDeRecuperacion:
     reescritura: ParametrosDeReescritura = ParametrosDeReescritura()
     """``QUERY_REWRITE_*`` (US-238, RN-22): segundo loop de reescritura; desactivado por defecto."""
     expansion_contextual: ParametrosDeExpansionContextual = ParametrosDeExpansionContextual()
-    """``QUERY_CONTEXT_EXPANSION_*`` (US-271, ADR-52, RN-22): segundo loop contextual sin LLM; desactivado por defecto."""
+    """``QUERY_CONTEXT_EXPANSION_*`` (US-271, ADR-52, RN-22): segundo loop contextual sin LLM; activo por defecto en el código desde US-275; ``.env.example`` y Compose siguen en ``false`` hasta H-1/H-2, tras la corrida final."""
 
 
 def _con_relevancia(aceptada: OpcionAceptada, puntajes: Mapping[str, float]) -> OpcionConRelevancia:

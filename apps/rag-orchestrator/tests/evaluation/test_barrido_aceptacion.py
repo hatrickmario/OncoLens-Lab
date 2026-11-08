@@ -132,11 +132,11 @@ def test_informe_anota_el_p95_fuera_de_meta_como_insumo_de_adr_42_sin_cambiar_la
 ) -> None:
     metas_antes = METAS.read_bytes()
 
-    codigo = barrer(tmp_path / "salida", config_de_barrido(tmp_path), "--p95-e2e-s", "18.4")
+    codigo = barrer(tmp_path / "salida", config_de_barrido(tmp_path), "--p95-e2e-s", "22.4")
 
     assert codigo == 0
     informe = (tmp_path / "salida" / "S1-baseline.md").read_text(encoding="utf-8")
-    assert "p95 de /platform/evidence-analyses | 18.4 s | ≤ 15 s | fuera de meta" in informe
+    assert "p95 de /platform/evidence-analyses | 22.4 s | ≤ 20 s | fuera de meta" in informe
     assert "insumo de ADR-42" in informe
     assert METAS.read_bytes() == metas_antes
 

@@ -156,7 +156,7 @@ Recorridos: RU-1 acceso · RU-2 registro · RU-3 ficha · RU-4 carga · RU-5 rev
 
 | ID | Categoría | Requisito (texto fuente) | Meta | ¿Calibrable? | Sprint | Evidencia |
 |---|---|---|---|---|---|---|
-| NFR-01 | Rendimiento | Análisis de evidencia de punta a punta | p95 ≤ 15 s; tiempo máximo hacia Backend 2: 30 s | sí (S4, TBD-08) | S1 medir · S4 recalibrar | [→ PRD §7], [→ PRD §2 G-5], [→ PRD §18 M-06.2] |
+| NFR-01 | Rendimiento | Análisis de evidencia de punta a punta | p95 ≤ 20 s *(decisión del usuario, 2026-11-07, antes 15 s; techo de 25 s solo con mejora de calidad medida)*; tiempo máximo hacia Backend 2: 30 s | sí (S4, TBD-08) | S1 medir · S4 recalibrar | [→ PRD §7], [→ PRD §2 G-5], [→ PRD §18 M-06.2] |
 | NFR-02 | Rendimiento | Extracción por documento | p95 ≤ 60 s | sí ("propuesta") | S2 | [→ PRD §7], [→ PRD §18 M-01.2] |
 | NFR-03 | Rendimiento | Ficha, listado y vista de caso (sin resumen) | p95 ≤ 1 s ficha y listado; ≤ 2 s vista de caso | sí (propuesta) | S1 · S2 | [→ PRD §7], [→ PRD §18 M-02.4] |
 | NFR-04 | Capacidad | Usuarios del piloto | 10 registrados, 2–3 concurrentes; 1–2 inferencias simultáneas compartidas (cola con `429`); presupuesto de tokens por bloque en ADR de modelos | sí | S1 (semáforo) · S5 | [→ PRD §7] |
@@ -382,7 +382,7 @@ Resumen: 31 técnicos · 2 de gobierno (M-04.3, M-05.1) · 3 mixtos (M-02.5, M-0
 | G-2 | Cero opciones/afirmaciones sin respaldo | 100% | FR-20, RN-01, M-10.1, M-02.3 | — |
 | G-3 | Recuperación incl. entre idiomas | Recall@10 ≥ 0,80 / ≥ 0,70; MRR ≥ 0,60 | FR-20, OL-06, M-06.1 | TBD-02 |
 | G-4 | Fidelidad | Fidelidad, precisión de citas, "sin evidencia" ≥ 0,90 | FR-20, OL-06, M-07.2 | TBD-02 |
-| G-5 | Tiempo de respuesta | p95 ≤ 15 s (recalibra S4) | NFR-01, M-06.2 | TBD-08 |
+| G-5 | Tiempo de respuesta | p95 ≤ 20 s (antes 15 s; usuario, 2026-11-07) | NFR-01, M-06.2 | TBD-08 |
 | G-6 | Ingesta sin captura manual | ≥ 95% / ≥ 90%; ≤ 60 s | M-01.1, M-01.2 | TBD-03 |
 | G-7 | Datos `auto_aceptado` confiables | ≥ 98% | M-01.3 | TBD-03 |
 | G-8 | Privacidad hacia la IA | Sensibilidad PII ≥ 0,95; 0 datos reales en la nube | FR-20, SEG-04, SEG-05 | — |

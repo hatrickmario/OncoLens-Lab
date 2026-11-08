@@ -27,7 +27,7 @@ Cambiar el modelo de *embeddings* obliga a reindexar Milvus; cambiar el *reranke
 ## Factores de decisión
 
 - RN-12: solo modelos locales con datos reales; pesos descargables, uso sin conexión, fuera del repo.
-- NFR-01 / pila ≤ 24 GB y p95 ≤ 15 s; licencia académica; español → inglés; coste de reindexar.
+- NFR-01 / pila ≤ 24 GB y p95 ≤ 15 s (tope recalibrado a 20 s el 2026-11-07, ver la enmienda de `RERANKER_MAX_PAIRS`); licencia académica; español → inglés; coste de reindexar.
 - La calidad se informa frente a las metas iniciales de OL-06 (recall@10 ≥ 0,80; ≥ 0,70 es → en; MRR ≥ 0,60), pero **no son restricciones duras** de la selección (AC-2): se recalibran (TBD-02).
 
 ## Opciones consideradas
@@ -175,7 +175,7 @@ EMBEDDING_DIM: 1024
 SPARSE_VECTOR_SOURCE: modelo_embeddings
 RERANKER_MODEL: BAAI/bge-reranker-v2-m3
 RERANKER_MODEL_REVISION: 953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e
-RERANKER_MAX_PAIRS: 12
+RERANKER_MAX_PAIRS: 20
 RERANKER_MAX_LENGTH: 512
 NLI_MODEL: MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7
 NLI_MODEL_REVISION: b5113eb38ab63efdd7f280f8c144ea8b13f978ce
@@ -200,6 +200,14 @@ ACADEMIC_LICENSES: mit,apache-2.0
 ### Confirmación
 
 `python -m app.scripts.adr39_measure --check-config` compara `apps/rag-orchestrator/.env.example` con el bloque anterior y falla si `EMBEDDING_DIM`, `SPARSE_VECTOR_SOURCE` o cualquier otra clave faltan o difieren (US-012 AC-3, AC-10 a AC-12); la suite `evaluate` (US-072) reutiliza `data/eval/adr39-mini`. Reproducir: `docker build -f apps/rag-orchestrator/eval/configs/adr39-medicion.Dockerfile …` y `python -m app.scripts.adr39_measure --config eval/configs/adr39-fase-a.yaml`, luego `adr39-fase-a2.yaml --stage t2|t3|t4|t5`; el *reranker* sobre chunks de 1024 con `adr39-fase-a3.yaml --reranker-chunks`.
+
+### Enmienda de `RERANKER_MAX_PAIRS` (12 → 20), L1D-333 / US-275 — decidida el 2026-11-07, pendiente de la corrida final
+
+**VIGENTE EN EJECUCIÓN: 20 (bloque `adr39:decision`, `.env.example` y Compose, aplicados juntos con H-1 de L1D-333).**
+
+Decisión del usuario (2026-11-07, `[S6 resp. 24]`, D6-44): `RERANKER_MAX_PAIRS` pasa de 12 a **20**; `RETRIEVAL_MODE=dense` y `RERANK_TOP_N=10` no cambian. **Evidencia (medición de D6-44, informativa, muestra pequeña, `ai-eval-runner`):** de 12 a 20 pares, +3,1 puntos de recall y un falso «sin evidencia» menos (de 5) por +0,66 s de p95 de recuperación; 12 → 30 daría +6,3 puntos y 0 falsos con +1,65 s, y `RERANK_TOP_N` no tuvo efecto. **Costo frente al NFR de 15 s:** el p95 de consulta completa en `dense` pasaría de 14,7 s a ~15,4 s (D6-45, medido con la máquina cargada), sobre el tope; **medición de la corrida final (2026-11-07, `ai-eval-runner`, 20 pares con expansión activa):** p95 de consulta completa **17,05 s** (fase 1, n=69) y **18,3 s** (fase 2, n=67); máximo observado 23-25 s (el tope aplica al p95); p95 de la etapa del *reranker* 2,52 s (base 1,62 s); recall@10 0,875 → 0,906 y MRR 0,849 → 0,887. Limitaciones: una sola corrida, sin A/B del mismo día ni condiciones de máquina limpia garantizadas (el reporte H-3 lo guarda el humano). **Tope vigente (decisión del usuario, 2026-11-07): p95 de 20 s como objetivo por defecto (antes 15 s), con techo absoluto de 25 s solo si se mide una mejora de calidad significativa; la CI usa 20 s.** Con 17,05-18,3 s la regla de parada queda satisfecha y no hace falta subir de 20 s.
+
+**Regla de parada (US-275 AC-3, satisfecha con el tope de 20 s):** si la medición con 20 pares supera el tope vigente, no se decide ni se mergea el cambio de valores: se pregunta al orquestador y al usuario (recalibrar el tope, 20 solo en análisis o reducir el costo de generación). **Estado de aplicación:** el bloque `adr39:decision`, `.env.example` y Compose se aplicaron juntos con H-1 (`--check-config` exige que coincidan). El resto de este ADR (tablas de 12, 16 y 24 pares) es histórico.
 
 ## Puntos que decide el humano
 

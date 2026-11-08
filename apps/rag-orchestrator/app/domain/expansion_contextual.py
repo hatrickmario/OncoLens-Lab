@@ -21,13 +21,13 @@ FORMATOS_DE_CONSULTA = (FORMATO_PLANO,)
 """Formatos de la consulta que puntúa el *reranker*: ``plano`` = ``"<pregunta> <términos separados por espacio>"``."""
 
 EXPANSION_CAMPOS_INICIAL = CAMPOS_DE_EXPANSION
-EXPANSION_HABILITADA_INICIAL = False
-"""Valores iniciales de ``QUERY_CONTEXT_EXPANSION_*`` (RN-22); el indicador pasa a ``true`` solo tras el PASS de ``evaluate``."""
+EXPANSION_HABILITADA_INICIAL = True
+"""Valores iniciales de ``QUERY_CONTEXT_EXPANSION_*`` (RN-22); activo por defecto desde US-275 (``false`` en el entorno lo apaga: sin segundo loop)."""
 
 
 @dataclass(frozen=True)
 class ParametrosDeExpansionContextual:
-    """``QUERY_CONTEXT_EXPANSION_ENABLED``, ``_FIELDS`` y ``_RERANK_FORMAT``: desactivado por defecto (RN-22)."""
+    """``QUERY_CONTEXT_EXPANSION_ENABLED``, ``_FIELDS`` y ``_RERANK_FORMAT``: activado por defecto (RN-22, US-275)."""
 
     habilitada: bool = EXPANSION_HABILITADA_INICIAL
     campos: tuple[str, ...] = EXPANSION_CAMPOS_INICIAL

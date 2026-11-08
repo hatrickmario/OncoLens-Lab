@@ -43,6 +43,7 @@ claves:
     - RELEVANCE_THRESHOLD
     - RERANK_TOP_N
     - RETRIEVAL_TOP_K
+    - QUERY_CONTEXT_EXPANSION_ENABLED
   prefijos:
     - PII_
 
