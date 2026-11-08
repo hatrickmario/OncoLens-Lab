@@ -13,6 +13,8 @@ D6-44 dio, de 12 a 20 pares, +3,1 puntos de recall y un falso «sin evidencia» 
 p95 de consulta completa estimado es ~15,4 s frente a 14,7 s de la línea densa (D6-45, con la máquina cargada). El usuario
 decidió (2026-11-07) activar ambos valores por defecto, con regla de parada si la medición limpia supera 15 s.
 
+> **Decidido (usuario, 2026-11-07, vía la sesión principal):** tope de p95 de consulta completa de **20 s** como objetivo por defecto (antes 15 s), con techo absoluto de **25 s** solo si se mide una mejora de calidad significativa que lo justifique; la CI usa 20 s hasta entonces (el techo no es umbral de CI). Corrida final real: p95 17,05 s (fase 1, n=69) y 18,3 s (fase 2, n=67), máximo observado 23-25 s (el tope aplica al p95); la regla de parada de AC-3 queda satisfecha.
+
 ## What Changes
 
 - **Configuración (RN-22):** `EXPANSION_HABILITADA_INICIAL` pasa de `False` a `True`, de modo que `Settings` trae
@@ -21,7 +23,8 @@ decidió (2026-11-07) activar ambos valores por defecto, con regla de parada si 
 - **`RERANKER_MAX_PAIRS` 12 -> 20:** el valor inicial no vive en `Settings` (el submodelo `modelos` lo exige del entorno,
   ADR-39) sino en `.env.example` y en el bloque `adr39:decision`; ver `design.md` §3 y la sección `## humano`.
 - **ADR-39:** enmienda registrada en prosa con la medición de D6-44 como evidencia (AC-5).
-- Sin cambio de contrato OpenAPI, de umbral, de catálogo ni de corpus.
+- **Tope de latencia (decisión del usuario):** `p95_evidence_analyses_s` pasa de 15 a 20 en `eval/configs/metas-iniciales.yaml` (lo leen el baseline y el gate G-Demo); la documentación del NFR se actualiza (ver `design.md` §7).
+- Sin cambio de contrato OpenAPI, de catálogo ni de corpus.
 
 ## Capabilities
 
@@ -43,4 +46,4 @@ Cambiar `RETRIEVAL_MODE` o `RERANK_TOP_N`; activar `QUERY_REWRITE_ENABLED`; D6-4
 
 `apps/rag-orchestrator/app/domain/expansion_contextual.py`, tests de configuración y de integración que dependían del
 default apagado, `docs/architecture/adr/ADR-39-modelos-locales.md`. Cambia un umbral/recuperación: la suite `evaluate` se
-mide en la corrida final (D6-50).
+midió en la corrida final (D6-50; cifras y limitaciones en `design.md` §5).

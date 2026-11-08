@@ -17,7 +17,7 @@ En el chat, una pregunta general («¿qué evidencia hay para este caso?») devu
 
 - RN-02: «sin evidencia» sin invocar al LLM de generación; cero falsos positivos sobre preguntas fuera del corpus.
 - RN-27 y RN-10/RN-11: términos solo del catálogo; nada de identidad ni texto libre.
-- Auditable, revertible y con la latencia de turno (p95 14,8 s) al límite de 15 s.
+- Auditable, revertible y con la latencia de turno (p95 14,8 s en su medición; con 20 pares y la expansión por defecto, 17,05-18,3 s en la corrida final de L1D-333) dentro del tope de 20 s decidido por el usuario el 2026-11-07 (techo absoluto de 25 s solo con mejora de calidad medida).
 - Plazo: un sprint de 3 días.
 
 ## Opciones consideradas
@@ -55,7 +55,7 @@ Opción elegida: **B** (usuario, 2026-11-06).
 ## Riesgos
 
 - El léxico se escribió con las preguntas de la medición a la vista; se mitiga con las 69 preguntas de `s5` (0 falsas genéricas) y con `evaluate`.
-- El p95 de turno (14,8 s) queda al límite de 15 s.
+- El p95 de turno (14,8 s) quedó al límite del tope de 15 s de entonces; el tope vigente es 20 s (usuario, 2026-11-07; techo de 25 s solo con mejora de calidad medida) y la corrida final de L1D-333 dio 17,05-18,3 s.
 - El corpus no está balanceado entre tipos de cáncer; la medición no garantiza el mismo recall en otros.
 
 ### Confirmación
