@@ -2,7 +2,7 @@
 
 Todo con **datos sintéticos** (pacientes del seed; corpus público con licencia aceptada, RN-14, RN-21). Complementa `docs/demo/runbook-demo-S1.md` (preparar, levantar, apagar, fallos frecuentes) y las guías `guia-demo-S4.md` y `guia-demo-S5.md`. Fuentes de esta guía: `backlog/features/FEAT-12-chatbot-mvp.md`, `backlog/sprints/S6-plan.md`, `backlog/sprints/S6-deuda.md`, `contracts/examples/chat-turn-*.json` y `apps/rag-orchestrator/app/infrastructure/fake/fake_chat_turn.py`.
 
-> **Solo modo fingido, hasta la corrida final.** Los textos de esta guía son los de `LLM_PROVIDER=fake`, que sirve los ejemplos de `contracts/examples/`. Con el LLM real local la redacción y las opciones varían. Toda salida muestra «Generado por IA; requiere validación clínica independiente por el oncólogo tratante» y «Uso académico/investigación» (RN-19). Esta guía **no contiene resultados medidos de la corrida final**: los marcadores `[PENDIENTE: resultado de la corrida final]` se rellenan después.
+> **Los textos del guion son los del modo fingido.** Son los de `LLM_PROVIDER=fake`, que sirve los ejemplos de `contracts/examples/`. Con el LLM real local la redacción y las opciones varían. Toda salida muestra «Generado por IA; requiere validación clínica independiente por el oncólogo tratante» y «Uso académico/investigación» (RN-19). Los resultados medidos de la corrida final real del S6 (2026-11-07, commit `5920002a`, L1D-333) están en el §5; el chat con modelos locales **no se pudo medir** (D6-51/D6-52).
 
 ## 1. Objetivo de la Demo 6
 
@@ -95,7 +95,7 @@ Sin evidencia sobre el umbral: tras el **único** segundo loop de reescritura, �
 
 - Clasificación de preguntas sin regla (`CHAT-RUTA`), interpretaciones combinadas, redacción de síntesis y explicación de relevancia con citas.
 - NLI y *reranker* reales: soporte de cada afirmación, fidelidad y precisión de citas.
-- Latencia real (tope p95 de `/platform/evidence-analyses` de 15 s) y soporte de preguntas libres.
+- Latencia real (tope p95 de consulta completa de 20 s, decisión del usuario del 2026-11-07; antes 15 s) y soporte de preguntas libres. Esperar 17-18 s por consulta con el LLM real y casos aislados de 23-25 s (§5).
 - Cualquier dato de tipo real: **prohibido** antes del gate G-piloto (RN-13); la demo es sintética.
 
 ## 4. Límites conocidos (`S6-deuda.md`)
@@ -104,9 +104,11 @@ Declararlos en la demo, no esconderlos:
 
 - **D6-55 · duplicidad del texto de «sin opciones».** En un turno de evidencia sin opciones pueden verse dos frases cercanas («Evidencia recuperada sin opciones soportadas» de Backend 2 y «La evidencia recuperada no describe opciones para esta pregunta» de `AnalysisResult`). **Decidido** (usuario, 2026-11-07): la fuente única es Backend 2 y `web` solo renderiza lo que devuelve; el ajuste **no está implementado** en el S6 (próximo periodo).
 - **D6-46 · fidelidad NLI de 0,83 frente a la meta de 0,90** en los tres modos de recuperación; problema previo, no atribuible a la híbrida. Post-MVP (calidad NLI, OL-06).
-- **Sesgo de cribado en próstata (D6-42).** Con la expansión contextual, próstata recupera cribado por el término PSA; el ajuste **US-273** queda pendiente. No presentar la expansión en próstata como validada.
-- **D6-45 · p95 de consulta completa.** ~14,7 s en `dense` frente al tope de 15 s; con `RERANKER_MAX_PAIRS=20` se estimó ~15,4 s (D6-44), sobre el tope. Medido con la máquina cargada; sin repetir en máquina libre.
-- **D6-50 · sin corrida real hasta la final.** Soporte NLI, precisión de enlaces y latencia del chat se midieron solo con adapters falsos; la corrida real única del S6 es opcional y depende del presupuesto.
+- **Próstata con la expansión contextual (D6-42).** El top-3 deja de ser cribado por PSA (54/66 a 2/13), pero a costa de cobertura: solo 9/22 preguntas genéricas con evidencia con el caso con grado y 13/22 con el caso con HRR (mama: 22/22). Además, 1/24 preguntas adversarias recupera evidencia en próstata (preexistente). No presentar la expansión en próstata como validada (§5).
+- **Latencia (D6-45).** Con 20 pares y expansión, el p95 de consulta completa medido es 17,05 s (fase 1) y 18,3 s (fase 2), frente a 14,71 s de la línea densa de 12 pares. El máximo observado es 23-25 s. El tope autorizado es de 20 s sobre el p95, no sobre el máximo. Una sola corrida, sin línea base A/B del mismo día.
+- **Fidelidad NLI 0,822 frente a la meta de 0,90** en la corrida final (267/325); sin línea base para compararla.
+- **Chat con modelos locales: no ejecutable (D6-51/D6-52).** El script `eval-chat-preparar.ts` está trasladado y no existe; no se midió ninguna cifra del chat con LLM real (p95 por intención, AC01 a AC06). El soporte NLI, la precisión de enlaces y la latencia del chat solo se midieron con adapters falsos (D6-50).
+- **El `evaluate` oficial no mide la expansión contextual.** Las cifras del §5 salen de scripts de medición fuera del repo, no de un reporte versionado.
 - **D6-53 · dataset `chat-v1`:** 13 casos con `revision_oncologo: pendiente`; el reporte dice `no_validada`.
 - **D6-49 · E2E:** cobertura de punta a punta solo del recorrido feliz de mama contra el fake; próstata sin E2E.
 - **D6-38 · preguntas en inglés** se enrutan mal (patrones solo en español).
@@ -118,30 +120,58 @@ Declararlos en la demo, no esconderlos:
 
 ## 5. Expansión contextual de la consulta (`QUERY_CONTEXT_EXPANSION_ENABLED`)
 
-- **Por defecto: apagada** en Compose (`${QUERY_CONTEXT_EXPANSION_ENABLED:-false}`) hasta cerrar H-1 y H-2 de L1D-329 (ADR-52, D6-42). `RERANKER_MAX_PAIRS` va vacío en Compose (usa el valor de `Settings`, hoy 12; la decisión del usuario del 2026-11-07 lo lleva a 20 sin implementar todavía, D6-44).
-- Apagada, la pregunta «¿Qué evidencia hay para este caso?» no se amplía con el contexto del paciente.
+**Decisión del usuario (2026-11-07):** se autoriza la expansión contextual **activa por defecto** y `RERANKER_MAX_PAIRS=20`, con un tope de p95 de consulta completa de **20 s** (antes 15 s), con prioridad a la calidad del RAG y del chatbot. La activación llega con el paso humano **H-1** (L1D-333).
 
-### Si la corrida final es satisfactoria: encendido (`RERANKER_MAX_PAIRS=20`)
+### Comprobar el estado real antes de la demo
 
-[PENDIENTE: resultado de la corrida final]
+Hasta que se aplique H-1, Compose conserva la expansión **apagada** (`${QUERY_CONTEXT_EXPANSION_ENABLED:-false}`) y `RERANKER_MAX_PAIRS` vacío (usa el valor de `Settings`, hoy 12). No asumir el estado: comprobarlo.
 
-- Levantar con `QUERY_CONTEXT_EXPANSION_ENABLED=true` y `RERANKER_MAX_PAIRS=20`.
-- Verificar el aviso de ampliación visible (L1D-332) y reportar el p95 de consulta completa frente al tope de 15 s: [PENDIENTE: resultado de la corrida final].
-- Revisar la evidencia de próstata por el sesgo de cribado por PSA: [PENDIENTE: resultado de la corrida final].
+- Leer el valor efectivo en el Compose levantado: `docker compose -p oncolens-demo2 config` (o el contenedor `rag-orchestrator`, variables `QUERY_CONTEXT_EXPANSION_ENABLED` y `RERANKER_MAX_PAIRS`), y revisar `.env.example` y `infra/docker/docker-compose.yml` en la rama de la demo.
+- Si H-1 no se aplicó, levantar con `QUERY_CONTEXT_EXPANSION_ENABLED=true` y `RERANKER_MAX_PAIRS=20` por entorno, o declarar en la demo que la expansión sigue apagada (con 12 pares).
+- Con la expansión activa, verificar el aviso de ampliación visible (L1D-332). Apagada, la pregunta «¿Qué evidencia hay para este caso?» no se amplía con el contexto del paciente.
 
-### Si no: apagado (`RERANKER_MAX_PAIRS=12`)
+### Resultados reales de la corrida final (2026-11-07, `5920002a`, `dense`, 20 pares, expansión activa)
 
-[PENDIENTE: resultado de la corrida final]
+Modelos locales (LLM `gemma4:26b-a4b-it-q4_K_M`, pesos ADR-39), corpus `s5-corpus-ampliado` (53 documentos / 252 chunks), umbral de relevancia 0,30, NLI 0,7, catálogo 2026.10.0. Una sola corrida; 0 llamadas a la nube.
 
-- Dejar los valores por defecto (`false` y 12). Declarar en la demo que la expansión contextual existe, está probada con adapters falsos y no se activa por falta de medición real.
+| Métrica | Línea densa (12 pares) | Corrida final (20 pares) | Meta |
+|---|---|---|---|
+| p95 de consulta completa | 14,71 s | **17,05 s** (fase 1); **18,3 s** (fase 2) | ≤ 20 s (decisión del usuario; antes 15 s) |
+| Máximo de consulta | n/d | 23,28 s (fase 1); 25,3 s (fase 2) | el tope aplica al p95 |
+| recall@10 | 0,875 | 0,906 | ≥ 0,80 |
+| recall@10 es→en | 0,886 | 0,914 | ≥ 0,70 |
+| MRR | 0,849 | 0,887 | ≥ 0,60 |
+| Precisión de citas | n/d | 1,00 (n=180) | ≥ 0,90 |
+| Fidelidad NLI | n/d | **0,822** (267/325) | ≥ 0,90 (no se cumple) |
+| Violaciones de RN-02 y términos prohibidos mostrados | 0 | 0 | 0 |
+
+La comparación no es A/B puro (cambian código, pares y expansión) y no hay línea base del mismo día.
+
+**Mama:** 22/22 preguntas genéricas con evidencia con el caso completo, sin falsos positivos.
+
+**Próstata:**
+
+- El top-3 deja de ser cribado: 54/66 en la línea base pasa a 2/13 con el caso con grado (meta ≤ 33/66 cumplida en lo numérico). Se logra con menos evidencia recuperada, no con más tratamiento.
+- Cobertura de las 22 genéricas con evidencia: **9/22** (caso con grado) y **13/22** (caso con HRR), frente a 22/22 en la base. El criterio ≥ 18/22 no se cumple en próstata.
+- El top-3 restante se concentra en `nci-prostata-pac-es`.
+- 1/24 preguntas adversarias recupera evidencia en próstata (CTX-A08, `prevencion-hp-en`, puntaje 0,41, 0 opciones generadas); ya ocurría en la base. En mama, 0/24.
+- Las adversarias sin evidencia devuelven `sin_evidencia` con `topRelevanceScore` null y sin invocar al generador (RN-02); los 14 controles quedan intactos.
+
+### Qué decir y qué no prometer en la demo
+
+- Decir: la expansión contextual mejora el caso de mama (22/22 con evidencia) y la latencia p95 medida es de 17-18 s por consulta con el LLM real, bajo el tope de 20 s; puntualmente puede llegar a 23-25 s.
+- Decir: en próstata el sesgo de cribado por PSA baja, pero a costa de cobertura, y la fidelidad NLI (0,822) está por debajo de la meta de 0,90.
+- No prometer: que las preguntas genéricas de próstata devuelvan evidencia. Pueden devolver «sin evidencia». **Preferir preguntas con tema propio** (por ejemplo, un tratamiento o un dato concreto del paciente) en vez de «¿Qué evidencia hay para este caso?».
+- No prometer: métricas del chat con modelos locales (no se midieron), ni que el `evaluate` oficial cubra la expansión.
 
 ## 6. Checklist previo al ensayo
 
 - [ ] Rama de la Demo 6 actualizada con `main` y CI en verde (0 checks en fallo, 0 pendientes, 0 alertas abiertas).
 - [ ] Modelos locales disponibles (`ollama list`): LLM, embeddings, *reranker* y NLI según el ADR de modelos locales; LLM ≤ 21 GB y stack ≤ ~30 GB sin swap (equipo de referencia de 32 GB). Comprobar con `ollama ps`.
 - [ ] `ollama serve` activo **fuera de Docker** (Metal no se expone en Docker). Sin esto el modo real devuelve «LLM local no disponible».
-- [ ] **`levantar.sh` solo después de la corrida final** (sin Docker, modelos ni corridas antes). Decidir entonces la expansión contextual (§5) y rellenar los marcadores `[PENDIENTE: resultado de la corrida final]`.
-- [ ] `LLM_PROVIDER=fake` para el ensayo sin modelos; modelos reales solo si se hizo la corrida final.
+- [ ] **Estado de la expansión:** comprobar el valor efectivo de `QUERY_CONTEXT_EXPANSION_ENABLED` y `RERANKER_MAX_PAIRS` (§5); si H-1 no se aplicó, siguen apagado y 12.
+- [ ] **Latencia esperada:** con el LLM real, 17-18 s por consulta (p95 medido 17,05 s y 18,3 s; tope 20 s), no 15 s; avisar de casos de 23-25 s.
+- [ ] `LLM_PROVIDER=fake` para el ensayo sin modelos; con modelos reales, el chat no está medido (D6-51/D6-52).
 - [ ] Verificar en «Verificación del seed» de `levantar.sh` el número de pacientes sembrados; abrir la ficha del paciente (a) y del (b) antes de preguntar.
 - [ ] Recorrer las preguntas del §2 literalmente, con RN-19 y «Opciones descritas en la evidencia» visibles.
 - [ ] Comprobar la consola y la red (`visual-check`): cero violaciones de CSP, solo `/api/*` del mismo origen, sin PII en URLs.
