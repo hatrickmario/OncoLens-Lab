@@ -29,6 +29,7 @@ def test_settings_activa_el_loop_contextual_y_usa_los_tres_campos_cuando_el_ento
     assert settings.query_context_expansion_rerank_format == "plano"
 
 
+@pytest.mark.ac("US-275", 6)
 def test_settings_apaga_el_loop_contextual_cuando_el_entorno_lo_declara_false(monkeypatch):
     settings = _settings(monkeypatch, QUERY_CONTEXT_EXPANSION_ENABLED="false")
 

@@ -203,6 +203,8 @@ ACADEMIC_LICENSES: mit,apache-2.0
 
 ### Enmienda de `RERANKER_MAX_PAIRS` (12 → 20), L1D-333 / US-275 — decidida el 2026-11-07, pendiente de la corrida final
 
+**VIGENTE EN EJECUCIÓN: 12 (bloque `adr39:decision`); 20 = pendiente de H-1 tras la corrida final.**
+
 Decisión del usuario (2026-11-07, `[S6 resp. 24]`, D6-44): `RERANKER_MAX_PAIRS` pasa de 12 a **20**; `RETRIEVAL_MODE=dense` y `RERANK_TOP_N=10` no cambian. **Evidencia (medición de D6-44, informativa, muestra pequeña, `ai-eval-runner`):** de 12 a 20 pares, +3,1 puntos de recall y un falso «sin evidencia» menos (de 5) por +0,66 s de p95 de recuperación; 12 → 30 daría +6,3 puntos y 0 falsos con +1,65 s, y `RERANK_TOP_N` no tuvo efecto. **Costo frente al NFR de 15 s:** el p95 de consulta completa en `dense` pasaría de 14,7 s a ~15,4 s (D6-45, medido con la máquina cargada), sobre el tope; **la medición del p95 en máquina limpia está PENDIENTE de la corrida final única (D6-50, reporte H-3)**.
 
 **Regla de parada (US-275 AC-3):** si esa medición con 20 pares supera 15 s, no se decide ni se mergea el cambio de valores: se pregunta al orquestador y al usuario (recalibrar el tope, 20 solo en análisis o reducir el costo de generación). **Estado de aplicación:** el bloque `adr39:decision` de arriba y `.env.example` (H-1) siguen en 12 hasta esa corrida, porque `--check-config` exige que ambos coincidan y se editan juntos; hasta entonces la decisión vigente en ejecución es 12. El resto de este ADR (tablas de 12, 16 y 24 pares) es histórico.

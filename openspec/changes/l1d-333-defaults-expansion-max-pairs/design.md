@@ -16,7 +16,14 @@ Ver `proposal.md`, ADR-39 (modelos locales) y ADR-52 (segundo loop contextual). 
    hace en un único paso humano (H-1) que edita `.env.example` y el bloque del ADR a la vez; este change deja la
    enmienda del ADR en prosa y no toca el bloque (si lo tocara sin H-1, el chequeo de coherencia fallaría).
    Compose pasa `RERANKER_MAX_PAIRS: ${RERANKER_MAX_PAIRS:-}` (sin valor inicial propio) y no necesita cambio; la
-   expansión sí lleva `:-false` en Compose (H-2).
+   expansión sí lleva `:-false` en Compose. **H-1 es un único paso humano** (`.env.example`, bloque `adr39:decision` y
+   Compose en el mismo commit tras la corrida final): aplicar juntos, nunca solo la parte de Compose. Mientras tanto el
+   código arranca con la expansión activa y `.env.example`/Compose con `false` (fuentes con valores distintos, declarado
+   en ADR-52 y en el docstring del servicio); el test de paridad de Compose y `.env.example` ata ambas partes.
+6. **`clinical_catalog_path=None` con el indicador activo:** `bootstrap._marcos_de_pregunta_montados` y
+   `_catalogo_de_terminos_montado` devuelven `None` y el loop contextual es un no-op silencioso. Es el comportamiento
+   existente de US-271 (sin catálogo no hay términos que añadir; los tests lo usan); este change no lo cambia. Con
+   catálogo montado y sin el léxico, el arranque falla cerrado (`test_arranque_falla_cuando_el_indicador_esta_activo_y_el_catalogo_no_trae_el_lexico`).
 4. **REGLA DE PARADA (AC-3):** si el p95 de consulta completa con 20 pares, medido en máquina limpia en la corrida final,
    supera 15 s (la medición previa dio ~15,4 s), el implementador **se detiene y pregunta** al orquestador y al usuario las
    opciones (recalibrar el tope, 20 solo en análisis, o reducir el costo de generación). No decide ni pide el merge de los

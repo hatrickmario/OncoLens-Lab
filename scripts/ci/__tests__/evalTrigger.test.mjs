@@ -25,6 +25,7 @@ describe('tocaDisparador', () => {
   it.each([
     ['RELEVANCE_THRESHOLD', '+RELEVANCE_THRESHOLD=0.35'],
     ['LLM_MODEL', '-LLM_MODEL=gemma4:26b'],
+    ['QUERY_CONTEXT_EXPANSION_ENABLED', '+QUERY_CONTEXT_EXPANSION_ENABLED=true'],
   ])('dispara cuando el diff de .env.example cambia %s [US-074 AC-3]', (_clave, linea) => {
     const resultado = tocaDisparador([cambio('infra/docker/.env.example', linea)], REGLAS);
 
