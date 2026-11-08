@@ -10,4 +10,4 @@ metas:
   fidelidad_proxy: {etiqueta: 'fidelidad (proxy)', minimo: 0.90}
   precision_citas: {etiqueta: 'precisión de citas', minimo: 0.90}
   sin_evidencia: {etiqueta: 'sin evidencia', minimo: 0.90}
-  p95_evidence_analyses_s: {etiqueta: 'p95 de /platform/evidence-analyses', maximo: 15}
+  p95_evidence_analyses_s: {etiqueta: 'p95 de /platform/evidence-analyses', maximo: 20}  # 15 hasta L1D-333: tope de 20 s decidido por el usuario el 2026-11-07 (prioridad a la calidad del RAG)

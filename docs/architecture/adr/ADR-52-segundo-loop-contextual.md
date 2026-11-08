@@ -17,7 +17,7 @@ En el chat, una pregunta general («¿qué evidencia hay para este caso?») devu
 
 - RN-02: «sin evidencia» sin invocar al LLM de generación; cero falsos positivos sobre preguntas fuera del corpus.
 - RN-27 y RN-10/RN-11: términos solo del catálogo; nada de identidad ni texto libre.
-- Auditable, revertible y con la latencia de turno (p95 14,8 s) al límite de 15 s.
+- Auditable, revertible y con la latencia de turno (p95 14,8 s en su medición; con 20 pares y la expansión por defecto, 17,05-18,3 s en la corrida final de L1D-333) dentro del tope de 20 s decidido por el usuario el 2026-11-07 (techo absoluto de 25 s solo con mejora de calidad medida).
 - Plazo: un sprint de 3 días.
 
 ## Opciones consideradas
@@ -37,7 +37,7 @@ Opción elegida: **B** (usuario, 2026-11-06).
 1. **Gate G1** (`pregunta_sin_tema_propio`, regla pura): verdadero si, tras quitar palabras vacías y de marco, no queda ninguna palabra de contenido. Léxico es/en en `packages/clinical-catalogs/lenguaje/marcos-de-pregunta.json` (versión de catálogo nueva y validador).
 2. **Segundo loop contextual:** con el primer loop vacío y G1 verdadero, una única nueva recuperación añade términos del catálogo (`terminos_del_caso`: etiqueta CIE-10 del tipo, estadio TNM, biomarcador principal; en próstata, el grado), sin LLM. Si tampoco supera el umbral: `sin_evidencia`, `topRelevanceScore = null`, sin LLM de generación.
 3. **Como máximo un segundo loop:** si G1 no aplica, queda la reescritura de US-238 cuando está habilitada; nunca ambos.
-4. **Configuración (RN-22):** `QUERY_CONTEXT_EXPANSION_ENABLED=false` por defecto (`true` en `.env.example` y Compose solo tras PASS de `evaluate`), `QUERY_CONTEXT_EXPANSION_FIELDS=tipo,estadio,biomarcador_principal`, `QUERY_CONTEXT_EXPANSION_RERANK_FORMAT=plano`. El loop contextual se declara con `meta.retrievalParams.contextExpansion {applied, fields}` opcional (aditivo, ADR-26, 0 ERR en oasdiff); `queryRewrite` no cambia.
+4. **Configuración (RN-22):** `QUERY_CONTEXT_EXPANSION_ENABLED`: activo por defecto en el código desde US-275 (L1D-333); `.env.example` y Compose siguen en `false` hasta H-1/H-2, tras la corrida final (PASS de `evaluate`), y `false` en el entorno lo apaga, `QUERY_CONTEXT_EXPANSION_FIELDS=tipo,estadio,biomarcador_principal`, `QUERY_CONTEXT_EXPANSION_RERANK_FORMAT=plano`. El loop contextual se declara con `meta.retrievalParams.contextExpansion {applied, fields}` opcional (aditivo, ADR-26, 0 ERR en oasdiff); `queryRewrite` no cambia.
 5. **Complemento:** las preguntas guiadas del panel (US-267) no sustituyen al gate.
 
 ### Consecuencias
@@ -55,7 +55,7 @@ Opción elegida: **B** (usuario, 2026-11-06).
 ## Riesgos
 
 - El léxico se escribió con las preguntas de la medición a la vista; se mitiga con las 69 preguntas de `s5` (0 falsas genéricas) y con `evaluate`.
-- El p95 de turno (14,8 s) queda al límite de 15 s.
+- El p95 de turno (14,8 s) quedó al límite del tope de 15 s de entonces; el tope vigente es 20 s (usuario, 2026-11-07; techo de 25 s solo con mejora de calidad medida) y la corrida final de L1D-333 dio 17,05-18,3 s.
 - El corpus no está balanceado entre tipos de cáncer; la medición no garantiza el mismo recall en otros.
 
 ### Confirmación

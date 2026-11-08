@@ -101,7 +101,9 @@ def test_cargador_falla_cuando_un_tipo_del_manifiesto_no_tiene_sus_archivos(tmp_
 def test_arranque_no_carga_el_lexico_cuando_el_indicador_esta_apagado_aunque_el_catalogo_no_lo_tenga(
     tmp_path,
 ):
-    settings = settings_de_prueba(clinical_catalog_path=tmp_path)
+    settings = settings_de_prueba(
+        clinical_catalog_path=tmp_path, query_context_expansion_enabled=False
+    )
 
     assert _marcos_de_pregunta_montados(settings) is None
 

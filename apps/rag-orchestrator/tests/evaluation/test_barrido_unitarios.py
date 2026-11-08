@@ -89,4 +89,4 @@ def test_nota_adr42_solo_aparece_cuando_el_p95_supera_la_meta() -> None:
 def test_cargar_metas_lee_las_metas_iniciales_del_prd() -> None:
     metas = cargar_metas(RAIZ_APP / "eval" / "configs" / "metas-iniciales.yaml")
 
-    assert (metas["recall_at_10"].minimo, metas["p95_evidence_analyses_s"].maximo) == (0.80, 15)
+    assert (metas["recall_at_10"].minimo, metas["p95_evidence_analyses_s"].maximo) == (0.80, 20)

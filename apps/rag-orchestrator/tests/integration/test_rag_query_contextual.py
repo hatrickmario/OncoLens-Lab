@@ -274,8 +274,8 @@ def test_rag_query_no_hace_segunda_busqueda_cuando_ningun_termino_del_caso_esta_
 
 
 @pytest.mark.ac("US-271", 7)
-def test_rag_query_no_dispara_el_loop_y_no_declara_contextexpansion_cuando_el_indicador_esta_apagado_por_defecto():
-    assert settings_de_prueba().query_context_expansion_enabled is False
+@pytest.mark.ac("US-275", 6)
+def test_rag_query_no_dispara_el_loop_y_no_declara_contextexpansion_cuando_el_indicador_esta_apagado_explicitamente():
     entorno = crear_entorno_contextual(habilitada=False)
 
     respuesta = entorno.consultar(solicitud_contextual())
