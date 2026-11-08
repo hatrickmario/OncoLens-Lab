@@ -50,7 +50,7 @@ Para cada control que llega en un sprint posterior, listar también los endpoint
 
 ## 4. Requisitos no funcionales, de seguridad y de IA
 | ID | Categoría | Requisito | Meta | ¿Calibrable? | Evidencia |
-| NFR-01 | Rendimiento | Análisis de evidencia de punta a punta | p95 ≤ 15 s (a calibrar, S5) | sí | [→ PRD §7] |
+| NFR-01 | Rendimiento | Análisis de evidencia de punta a punta | p95 ≤ 20 s (recalibrado el 2026-11-07, PRD E-19) | sí | [→ PRD §7] |
 | SEG-04 | Desidentificación | … | … | — | [→ PRD §11 #4] |
 | IA-05 | Agente acotado | … | … | sí | [→ PRD §12] |
 

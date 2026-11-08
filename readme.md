@@ -160,7 +160,7 @@ OncoLens reconstruye el caso, cruza el perfil clínico y molecular con la eviden
 - **OCR:** local; los documentos no salen a la nube. Primero se extrae la capa de texto digital del PDF (sin OCR); las páginas escaneadas pasan por OCR (candidatos: Tesseract `spa+eng` o PaddleOCR). La estructuración la hace el mismo LLM local con salida JSON restringida por esquema. Descartado el vision-LLM directo: memoria, latencia sin GPU en Docker y falta de confianza por campo.
 - **LLM y *embeddings*:** configurable, **local por defecto**. La nube solo se permite para pruebas con datos **sintéticos**; los datos reales nunca salen a un proveedor externo, regla que aplica el código.
 - **Modelos concretos** (LLM, *embeddings* multilingües, *reranker*, NLI, motor de OCR): se eligen en el **ADR de evaluación de modelos locales**, al inicio del Sprint 1, midiendo con el stack completo levantado:
-  - **Restricciones duras:** memoria total del stack ≤ ~30 GB, con el LLM ≤ 21 GB (equipo de referencia de 32 GB; antes 24 GB con ≥ 8 GB para macOS, ampliado el 2026-10-20: la holgura real para macOS se mide en el ADR de modelos); `/platform/evidence-analyses` con p95 ≤ 15 s (se recalibra en el S4 con síntesis y aplicabilidad); extracción con p95 ≤ 60 s por documento; licencia compatible con uso académico; buen desempeño en español; salida JSON válida ≥ 99%; uso real de la GPU de la M5 (verificar el soporte de vLLM en Apple Silicon).
+  - **Restricciones duras:** memoria total del stack ≤ ~30 GB, con el LLM ≤ 21 GB (equipo de referencia de 32 GB; antes 24 GB con ≥ 8 GB para macOS, ampliado el 2026-10-20: la holgura real para macOS se mide en el ADR de modelos); `/platform/evidence-analyses` con p95 ≤ 20 s (recalibrado el 2026-11-07, PRD E-19; techo condicionado de 25 s solo con mejora de calidad medida; la CI usa 20 s; antes 15 s); extracción con p95 ≤ 60 s por documento; licencia compatible con uso académico; buen desempeño en español; salida JSON válida ≥ 99%; uso real de la GPU de la M5 (verificar el soporte de vLLM en Apple Silicon).
   - **Candidatos:** runtime Ollama o vLLM; LLM *instruct* de 7–8B multilingüe cuantizado a 4 bits (un modelo de ~14B solo si cumple las restricciones y mejora las métricas de forma medible); *embeddings* BGE-M3 (dense + sparse) o multilingual-e5-large; *reranker* bge-reranker-v2-m3; NLI multilingüe de la familia mDeBERTa-v3 (XNLI); OCR Tesseract o PaddleOCR. Las versiones se fijan en la fecha de ejecución.
   - **Método:** correr la suite de evaluación (OL-06) y el protocolo de latencia y memoria (3 corridas, mediana); descartar los que no cumplen las restricciones; elegir por la métrica principal de cada componente (en empate, el de menor memoria); fijar las versiones en la configuración.
 
@@ -1026,7 +1026,7 @@ El proyecto crece como un *walking skeleton* iterativo e incremental: desde el S
 
 *Objetivo (OKR):* demostrar que el sistema puede cruzar el perfil clínico de un paciente con la evidencia científica y presentar un análisis de evidencia citado, de extremo a extremo.
 - KR1: 100% de las historias del sprint (HU-01, HU-02, HU-03, HU-06, HU-07) pasan sus criterios de aceptación en demo.
-- KR2 *(meta propuesta, a calibrar):* `/platform/evidence-analyses` responde en ≤ 15 s (p95) con el corpus semilla. El valor medido decide el ADR de streaming de progreso.
+- KR2 *(meta propuesta, a calibrar):* `/platform/evidence-analyses` responde en ≤ 20 s (p95) con el corpus semilla *(antes 15 s; recalibrado el 2026-11-07, PRD E-19)*. El valor medido decide el ADR de streaming de progreso.
 - KR3: 100% de las opciones mostradas incluyen al menos una cita de un chunk recuperado **y** superan el chequeo de soporte. Las descartadas nunca se muestran como opción. 0 salidas con términos prescriptivos.
 - KR4: baseline de evaluación registrado (OL-06), con métricas de recuperación, generación y "sin evidencia" en español e inglés, **más el baseline manual de VM-1 y VM-2**.
 
@@ -1617,7 +1617,7 @@ Decisiones tomadas al detallar los tickets, cada una con sus alternativas descar
 - Ninguna salida del set de evaluación contiene términos prescriptivos prohibidos.
 - Un request sin JWT, con JWT expirado, o que envía la cookie `oncolens_session` en lugar del JWT, responde `401`.
 - `rag-orchestrator` solo tiene las credenciales del rol `rag_corpus`, y con ellas cualquier `SELECT` sobre los schemas clínicos devuelve *permission denied* (regla 1 de `CLAUDE.md`).
-- La latencia p95 sobre el corpus semilla queda registrada en el PR frente a la meta KR2 de Sprint 1 (≤ 15 s end-to-end, *propuesta, a calibrar*).
+- La latencia p95 sobre el corpus semilla queda registrada en el PR frente a la meta KR2 de Sprint 1 (≤ 15 s end-to-end en el S1; desde el 2026-11-07 el tope vigente es ≤ 20 s, PRD E-19).
 
 **Alcance complementario:**
 - **Modelos:** los fija el ADR de evaluación de modelos locales (1.4). El LLM corre nativo (Ollama o vLLM) y se consume vía `LLMAdapter` contra la API compatible con OpenAI. *Embeddings*, *reranker* y NLI corren en CPU dentro del contenedor.
@@ -1725,7 +1725,7 @@ Decisiones tomadas al detallar los tickets, cada una con sus alternativas descar
 - Estados `tipo_no_habilitado` y `429`.
 - `sourcesSelected` con las fuentes `guias`, `ensayos` y `publicaciones`.
 
-**Decisiones aplicadas** (detalle y alternativas descartadas en 6.1): #4 rótulo "Relevancia de la evidencia" · #12 contrato `EvidenceAnalysis` · #15 relevancia como metadato secundario · #8 JSON completo, nunca tokens del LLM sin validar; el estado *Cargando* cubre la espera (≤ 15 s p95, *propuesta*) y, si la medición del KR2 lo justifica, el ADR de streaming de progreso lo reemplazará por pasos visibles (recuperando evidencia → generando → validando).
+**Decisiones aplicadas** (detalle y alternativas descartadas en 6.1): #4 rótulo "Relevancia de la evidencia" · #12 contrato `EvidenceAnalysis` · #15 relevancia como metadato secundario · #8 JSON completo, nunca tokens del LLM sin validar; el estado *Cargando* cubre la espera (≤ 20 s p95; antes 15 s, PRD E-19) y, si la medición del KR2 lo justifica, el ADR de streaming de progreso lo reemplazará por pasos visibles (recuperando evidencia → generando → validando).
 
 ---
 
