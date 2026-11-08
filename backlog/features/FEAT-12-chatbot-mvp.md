@@ -576,6 +576,8 @@ Activar la expansión por defecto; cambiar el gate G1, el umbral o la recuperaci
 
 > **Decidido (usuario, 2026-11-07, `[S6 resp. 24]`):** alta dentro del Sprint 6; cierra la parte de visibilidad de H-2 de L1D-329 (US-271 AC-10). Sin avisos de IA propios en `web` (RN-19: solo `turn.notices[]`). Orden A, B, C; puede ir en paralelo con US-273 (contextos distintos). Sin corridas reales durante el desarrollo.
 
+> **Decidido (usuario, 2026-11-07, D6-55):** la fuente única del texto de «sin opciones» es Backend 2 (el contrato define el campo; web solo renderiza lo que devuelve, sin texto propio duplicado). El ajuste (quitar el texto duplicado de web, `messages/es.json` y el bloque de AnalysisResult) queda como deuda para el próximo periodo, sin implementarlo en el S6. La duplicidad visible en turnos sin opciones es una limitación conocida, registrada como deuda D6-55.
+
 ## Story
 Como oncólogo, quiero ver sin buscarlo que la búsqueda se amplió con datos del caso y que se recuperó evidencia pero ninguna opción quedó soportada, para no leer una respuesta general como si respondiera exactamente mi pregunta.
 
