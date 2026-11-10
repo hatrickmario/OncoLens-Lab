@@ -1,5 +1,7 @@
 ## Índice
 
+**[Estado actual (Demo 6): alcance, video, instalación y Post-MVP](#estado-actual-demo-6-cierre-del-sprint-6)**
+
 0. [Ficha del proyecto](#0-ficha-del-proyecto)
 1. [Descripción general del producto](#1-descripción-general-del-producto)
 2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
@@ -25,6 +27,93 @@
 > 🔁 **Proceso del oncólogo:** **[AS-IS](docs/AS-IS.md)** (cómo trabaja hoy, según el Discovery de 4 entrevistas) · **[TO-BE](docs/TO-BE.md)** (solución objetivo por fases: MVP, Post-MVP y Futuro).
 >
 > 🧭 **v1.1 y v1.2 (2026-10-04):** el producto se reconcilió con el Discovery de AI Producto (decisiones D-01 a D-16) y se resolvieron 31 hallazgos de una revisión de coherencia (R-01 a R-31). Las decisiones y su ubicación están en el [PRD §0](docs/PRD.md#0-registro-de-cambios); los criterios de aceptación del MVP, en el [PRD §18](docs/PRD.md#18-criterios-de-aceptación-del-mvp). **README, PRD y C4 forman un conjunto autocontenido**, pensado como entrada para descomponer el backlog: no dependen de otros documentos.
+
+---
+
+## Estado actual (Demo 6, cierre del Sprint 6)
+
+> Resumen de lo que **existe hoy en `main`**. El resto del documento conserva el diseño completo del producto; lo que no se construyó está marcado como **Post-MVP**.
+
+### Video de la demo funcional
+
+Recorrido por los flujos principales del producto (chatbot sobre un paciente sintético, información faltante, evidencia científica con citas):
+
+[![Demo funcional de OncoLens](https://img.youtube.com/vi/cTrYN_V_oaw/maxresdefault.jpg)](https://youtu.be/cTrYN_V_oaw)
+
+▶ https://youtu.be/cTrYN_V_oaw
+
+### Alcance logrado y cambio de alcance
+
+OncoLens es un **MVP académico** que entrega un **análisis de evidencia**, no recomendaciones. Lo que funciona hoy, solo con **datos sintéticos**:
+
+- **Chatbot sobre el paciente** (FEAT-12): el doctor abre la ficha y conversa. El asistente reconstruye el **caso** (diagnóstico, biomarcadores, tratamientos previos, periodos y contradicciones), señala la **información faltante**, explica por qué importa un dato y devuelve **evidencia científica citada**, con fuentes y limitaciones. Se orquesta con LangGraph en `rag-orchestrator` (estado efímero) y se muestra en un panel conversacional (assistant-ui).
+- **Recuperación y verificación:** búsqueda *dense* en Milvus, *reranker*, umbral de relevancia y verificación NLI de cada afirmación. Nada se muestra sin cita o sin soporte; sin evidencia, el sistema lo dice. Segundo loop contextual para preguntas genéricas.
+- **Aplicabilidad:** estados por criterio (Coincide, Parcial, No coincide, Desconocido) calculados con la población del estudio, extraída en la ingesta del corpus.
+- **Seguridad y privacidad:** identidad cifrada, desidentificación antes de la IA, `rag-orchestrator` sin acceso a datos clínicos, modelos locales sin nube, opt-out de análisis de IA y cabeceras de seguridad en `web`.
+- **Corpus público con licencia:** textos de NCI, PubMed Central (CC BY) y ClinicalTrials.gov para mama y próstata (`data/raw/seed`, 10 documentos que carga la demo; `data/raw/s3`, 53 documentos del corpus ampliado).
+
+**Cambios de alcance respecto al diseño original (PRD E-17 y E-18):**
+
+| Antes | Ahora |
+|---|---|
+| Ficha de análisis como pantalla principal | **Asistente conversacional** (chatbot MVP) sobre el paciente |
+| **OCR** y carga de PDFs clínicos | **Fuera del MVP (Post-MVP).** Los datos del paciente entran por el seed sintético y el registro manual; el diseño del OCR se conserva en este documento marcado como Post-MVP |
+| Gate de datos reales (G-piloto), auditoría completa, medición de valor | **Post-MVP.** La demo es solo sintética |
+
+### Arquitectura as-built del MVP
+
+```mermaid
+flowchart LR
+  doc([Doctor]) -- "HTTPS · cookie opaca<br/>127.0.0.1:3000" --> web["web · Next.js BFF<br/>panel conversacional"]
+  web -- "/api/*" --> capi["clinical-api · Express 5<br/>identidad cifrada · desidentificación<br/>historial del chat"]
+  capi --- pg[("PostgreSQL 17<br/>auth · identity · clinical · audit · research")]
+  capi --- cminio[("clinical-minio")]
+  capi -- "JWT de servicio asimétrico" --> rag["rag-orchestrator · FastAPI · LangGraph<br/>recuperación · reranker · NLI"]
+  rag --- milvus[("Milvus<br/>chunks dense + sparse")]
+  rag -- "rol rag_corpus" --- pgc[("PostgreSQL · schema corpus")]
+  rag -. "host.docker.internal" .-> llm["LLM local (Ollama)<br/>fuera de Docker"]
+```
+
+Un turno de evidencia: `clinical-api` desidentifica y enruta al grafo de `rag-orchestrator` → búsqueda en Milvus (top-K 30) → *reranker* (20 pares) → umbral de relevancia 0,30 → LLM local → validación de citas y NLI (≥ 0,7) sobre la respuesta completa → `clinical-api` persiste el registro **antes** de responder. Detalle completo en 2.1 y 2.5.
+
+### Instalación desde cero
+
+Prerrequisitos: macOS en Apple Silicon (referencia: MacBook Pro M5 de 32 GB), Docker, Node 22 y Python 3.13 (versiones en `.nvmrc` y `.python-version`), y [Ollama](https://ollama.com) instalado nativo (**fuera de Docker**: Docker en macOS no expone la GPU).
+
+```bash
+git clone https://github.com/hatrickmario/OncoLens-Lab.git
+cd OncoLens-Lab
+# Cierra la app de Ollama (o usa OLLAMA_PUERTO=11435 para no tocarla)
+bash scripts/demo/levantar.sh
+```
+
+`levantar.sh` es idempotente y hace todo: valida requisitos, genera los secretos locales (`scripts/setup-secrets.sh`, que se escriben en `infra/docker/secrets/`, ignorado por git), prepara los modelos de embeddings, *reranker* y NLI en `~/adr39-modelos` (los exporta con `scripts/demo/exportar-modelos.py`, unos 7 GB, y pide confirmación antes de descargar), descarga el LLM `gemma4:26b-a4b-it-q4_K_M` en Ollama (~17 GB), construye y levanta Compose, aplica las migraciones, siembra 14 pacientes sintéticos, carga el corpus y verifica los conteos.
+
+Al terminar imprime la dirección y los usuarios sintéticos: **http://127.0.0.1:3000/login**, médico `doc1@test.local` y administrador `admin@test.local`. Las contraseñas están en `infra/docker/secrets/seed_doctor_password` y `seed_admin_password`. Para apagar: `scripts/demo/apagar.sh` (`--borrar-datos` elimina también los volúmenes). La primera consulta tarda más porque carga el modelo en memoria. Guías de demo en `docs/demo/`.
+
+### Seguridad: sin secretos en el repositorio
+
+- Ningún secreto, clave o dato real está versionado: `infra/docker/secrets/` y los `.env` están en `.gitignore` (solo se versiona `.env.example`) y no hay archivos `.pem`, `.key` ni `.env` rastreados.
+- La CI lo comprueba en cada PR: **gitleaks** sobre el árbol y sobre los commits del PR (un secreto añadido y borrado en el mismo PR también falla), un escáner de **PII** sobre todo el repositorio y de la clase de datos de los datasets, **CodeQL** y auditoría de dependencias. Los escáneres nunca imprimen el valor detectado. El repositorio es público, por eso la CI corre sin secretos del repositorio.
+- Los datos de `data/` son sintéticos; las contraseñas de la demo se generan en local.
+
+### Calidad y pruebas
+
+- **Pruebas unitarias y de integración:** Vitest, Supertest y Testing Library en Node y `web`; Pytest, `respx` y `TestClient` en `rag-orchestrator`. Los mocks salen de `contracts/examples/` y la base de datos es real en integración.
+- **E2E:** Playwright contra el stack de Docker Compose con datos sintéticos y LLM fingido (`apps/web/e2e/`, también en la CI), más un *visual-check* en navegador real para la UI.
+- **Contratos:** OpenAPI como fuente única (`contracts:check`, oasdiff para cambios incompatibles).
+- **Evaluación de la IA (OL-06):** suite `evaluate` con recall, MRR, fidelidad, precisión de citas y salidas prescriptivas; obligatoria si un PR toca modelo, prompt, umbral, catálogo o corpus.
+- **CI:** `ci-ok` agrega todos los jobs (build y tests, cobertura de líneas cambiadas, lint y capas de arquitectura, integración con BD y Milvus de prueba, E2E, escaneos de seguridad). Detalle en `docs/process/ci.md`.
+- **Límites conocidos:** el E2E del chat cubre el camino feliz de mama (no hay E2E de próstata); no hay pruebas de mutación; la fidelidad NLI medida es 0,822 frente a la meta de 0,90.
+
+### Post-MVP: lo que se podría hacer a futuro
+
+- **OCR e ingesta de PDFs clínicos**, con gate de PII y normalización de documentos.
+- **Piloto con datos reales:** gate G-piloto, auditoría completa, VPN/HTTPS, copias de seguridad y medición de valor (VM).
+- **Equipo tratante** y autorización por paciente, ciclo de vida del paciente, registro de la decisión y de la evolución, y agente de búsqueda complementaria.
+- **Retrieval:** búsqueda híbrida activable, `RERANKER_MAX_PAIRS=30` (autorizado, falta medirlo), streaming de progreso y puntaje de evidencia clínica.
+- **Corpus y población:** extracción de población para los 53 documentos, más tipos de cáncer, filtros y expansión bilingüe.
+- **Calidad:** pruebas de mutación (StrykerJS), E2E de próstata, `chat-local` con modelos locales y mejora de la fidelidad NLI.
 
 ---
 
@@ -85,8 +174,8 @@ OncoLens reconstruye el caso, cruza el perfil clínico y molecular con la eviden
 
 > Enumera y describe las características y funcionalidades específicas que tiene el producto para satisfacer las necesidades identificadas.
 
-1. **Registro y ciclo de vida del paciente:** alta con formulario manual o asistido por OCR, con confirmación del doctor; identificación por documento (cédula de ciudadanía, tarjeta de identidad, cédula de extranjería o pasaporte) y nombres, cifrados; episodios de atención con egreso y reactivación; representante legal para menores. **Los consentimientos se firman y custodian en el sistema externo de la entidad médica**: en el MVP se presume el consentimiento para análisis con IA e investigación bajo el convenio, salvo una **marca de opt-out** que registra el administrador (PRD RN-15).
-2. **Ingesta de historia clínica y exámenes desde PDF** (uno o varios a la vez), con OCR local. Extrae diagnóstico, biomarcadores, notas, **eventos clínicos fechados** y **tratamientos previos**. Cada dato lleva su **nivel de confianza** (alta, media o baja) y su **estado de revisión** (automático, requiere revisión, verificado, corregido, rechazado). El doctor puede abrir el documento de origen en el lugar exacto del valor.
+1. **Registro y ciclo de vida del paciente:** alta con formulario manual o asistido por OCR (**el OCR es Post-MVP**; en el MVP el alta no usa OCR), con confirmación del doctor; identificación por documento (cédula de ciudadanía, tarjeta de identidad, cédula de extranjería o pasaporte) y nombres, cifrados; episodios de atención con egreso y reactivación; representante legal para menores. **Los consentimientos se firman y custodian en el sistema externo de la entidad médica**: en el MVP se presume el consentimiento para análisis con IA e investigación bajo el convenio, salvo una **marca de opt-out** que registra el administrador (PRD RN-15).
+2. **[Post-MVP, PRD E-17] Ingesta de historia clínica y exámenes desde PDF** (uno o varios a la vez), con OCR local. Extrae diagnóstico, biomarcadores, notas, **eventos clínicos fechados** y **tratamientos previos**. Cada dato lleva su **nivel de confianza** (alta, media o baja) y su **estado de revisión** (automático, requiere revisión, verificado, corregido, rechazado). El doctor puede abrir el documento de origen en el lugar exacto del valor.
 3. **Reconstrucción del caso (vista de caso):** timeline de eventos, tratamientos previos por línea, series de biomarcadores (PSA siempre como serie) y un **resumen del caso** en el que cada afirmación enlaza a su dato de origen.
 4. **Reconciliación y normalización:** el mismo dato repetido en varios documentos se fusiona, los valores en conflicto se marcan para revisión, y los conceptos se normalizan con **CIE-10** (diagnósticos), **LOINC** (laboratorios y biomarcadores), **CUPS** (procedimientos) y **ATC** (medicamentos).
 5. **Información faltante:** checklist determinista de datos críticos por tipo de cáncer, visible en el caso y antes de cada análisis. Avisa sin bloquear.
@@ -120,6 +209,8 @@ OncoLens reconstruye el caso, cruza el perfil clínico y molecular con la eviden
 - Node.js LTS + npm (con soporte de workspaces).
 - Python 3.x + pip.
 - **Runtime de LLM nativo:** Ollama o vLLM, instalado en macOS **fuera de Docker**, porque Docker en macOS no expone la GPU (Metal) a los contenedores. La elección final se toma en el ADR de evaluación de modelos locales (ver "Decisiones de infraestructura de IA" más abajo).
+
+> **Camino rápido desde cero:** `bash scripts/demo/levantar.sh` hace todos los pasos de abajo (secretos, modelos, Compose, migraciones, seed y corpus). Ver «Estado actual → Instalación desde cero». Los pasos siguientes detallan cada parte para desarrollo.
 
 **Pasos:**
 
@@ -241,9 +332,9 @@ flowchart TD
     D2 -. "misma versión" .-> CAT
 ```
 
-> La solución objetivo completa, con las capacidades Post-MVP y Futuro, está en [TO-BE](docs/TO-BE.md). Este diagrama muestra solo el MVP.
+> La solución objetivo completa, con las capacidades Post-MVP y Futuro, está en [TO-BE](docs/TO-BE.md). Este diagrama muestra el diseño del MVP; **en el MVP entregado (S6) no hay OCR ni carga de PDFs clínicos** (Post-MVP, PRD E-17): los nodos y el Flujo 1 con OCR describen el diseño futuro. La arquitectura realmente construida está en «Estado actual».
 
-**Flujo 1 — Carga de documento clínico (OCR):**
+**Flujo 1 — Carga de documento clínico (OCR) — [Post-MVP, no implementado en el MVP]:**
 
 ```mermaid
 sequenceDiagram
@@ -559,7 +650,7 @@ flowchart LR
 
 | Servicio | Herramientas | Enfoque |
 |---|---|---|
-| Backend 1 (Node) | Vitest, Supertest, PostgreSQL de test (Testcontainers o servicio de CI), MSW; StrykerJS en el S6 (US-185, si hay capacidad) | **Integración como nivel principal** (API contra BD real, HTTP saliente con MSW) y unitarios de lógica pura; *mutation testing* sobre auth, autorización y cifrado. Unitarios v1.1: checklist de faltantes (determinismo y reglas condicionales), reconciliación (duplicado, conflicto, nunca fusión incorrecta), timeline (fecha incierta), Base del análisis, detector de desactualizados y selección de la memoria. Unitarios v1.2: matriz ítem → campo, normalización final de datos manuales, dos marcas de desactualizado y cascada. Tests de seguridad: no-fuga de PII (incluida PII sembrada en texto libre, en eventos, atributos y en la memoria de análisis), cifrado e índice ciego, CSRF y `Origin`, gate G-piloto, **`403` por opt-out en toda generación con IA**, **`422` en cualquier registro sobre un paciente egresado**, bajas, clases de datos. |
+| Backend 1 (Node) | Vitest, Supertest, PostgreSQL de test (Testcontainers o servicio de CI), MSW; StrykerJS (US-185): Post-MVP | **Integración como nivel principal** (API contra BD real, HTTP saliente con MSW) y unitarios de lógica pura; *mutation testing* sobre auth, autorización y cifrado. Unitarios v1.1: checklist de faltantes (determinismo y reglas condicionales), reconciliación (duplicado, conflicto, nunca fusión incorrecta), timeline (fecha incierta), Base del análisis, detector de desactualizados y selección de la memoria. Unitarios v1.2: matriz ítem → campo, normalización final de datos manuales, dos marcas de desactualizado y cascada. Tests de seguridad: no-fuga de PII (incluida PII sembrada en texto libre, en eventos, atributos y en la memoria de análisis), cifrado e índice ciego, CSRF y `Origin`, gate G-piloto, **`403` por opt-out en toda generación con IA**, **`422` en cualquier registro sobre un paciente egresado**, bajas, clases de datos. |
 | Backend 2 (Python) | Pytest, FastAPI TestClient, `respx` | Unitarios de `domain/` (umbral, `relevance_score`, citas, soporte, orden determinista por aplicabilidad, normalización terminológica, confianza OCR, regla de proveedores) e integración de `/rag/query`, `/documents/extract` y `/case/summary`, con el schema `corpus` real y adapters falsos para LLM, Milvus, *embeddings*, *reranker*, NLI y OCR. Test de que un análisis previo nunca cuenta como soporte (RN-24). v1.2: agregación de aplicabilidad por opción, verbalización de datos para el NLI, límites del agente (iteraciones, sub-consultas, deadline) y `409` por versión de catálogo distinta. |
 | Frontend | Vitest, Testing Library, MSW | Comportamiento de componentes y hooks contra `/api/*` con handlers desde `contracts/examples/`; textos obligatorios (RN-19, RN-23), avisos no bloqueantes (RN-26) y accesibilidad. |
 | E2E | Playwright | Flujos del doctor contra el stack de Compose con datos sintéticos y LLM fingido (`LLM_PROVIDER=fake`): login → listado → ficha → vista de caso → faltantes → análisis → síntesis, aplicabilidad y opción con cita; sin evidencia; carga → estado → datos etiquetados → documento de origen; registro de evolución → análisis desactualizado → re-ejecutar y comparar. |
