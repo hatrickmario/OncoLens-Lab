@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Contexto de construcción: la raíz del repositorio (npm workspaces).
-FROM node:24.22.0-alpine3.24 AS build
+FROM node:24.22.2-alpine3.24 AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY apps/clinical-api/package.json apps/clinical-api/package.json
@@ -23,7 +23,7 @@ COPY packages/clinical-language/package.json packages/clinical-language/package.
 COPY packages/clinical-language/src/normalizar-pregunta.ts packages/clinical-language/src/normalizar-pregunta.ts
 RUN npm run build --workspace apps/clinical-api
 
-FROM node:24.22.0-alpine3.24 AS runtime
+FROM node:24.22.2-alpine3.24 AS runtime
 ENV NODE_ENV=production
 WORKDIR /app
 COPY package.json package-lock.json ./
