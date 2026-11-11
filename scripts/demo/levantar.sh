@@ -218,16 +218,28 @@ claves = ('clinical.patient', 'identity.patient_identity', 'auth.\"user\"', 'cli
 print('seed:', ', '.join(f'{t}={n}' for t, n in sorted(filas.items()) if t in claves))" "$estado/seed-conteos.json" \
   || fallar "el seed no publicó sus conteos (seed_completo)"
 
-paso "Corpus semilla (10 documentos públicos con licencia aceptada)"
-"${compose[@]}" run --rm -v "$raiz/data/raw/seed:/data/raw/seed:ro" \
-  -e CORPUS_SEED_MANIFEST_PATH=/data/raw/seed/manifest.yaml -e CORPUS_ACCEPTED_LICENSES=dominio_publico,cc_by,cc_by_sa \
-  -e CORPUS_EXCLUDED_SOURCES=NCCN,ESMO -e CORPUS_CUTOFF_DATE=2026-10-16 \
-  -e CORPUS_FETCH_ALLOWED_HOSTS=www.cancer.gov,pmc.ncbi.nlm.nih.gov,pmc-oa-opendata.s3.amazonaws.com \
-  -e CORPUS_FETCH_TIMEOUT_SECONDS=30 -e CORPUS_FETCH_MAX_BYTES=5000000 -e CORPUS_FETCH_DEADLINE_SECONDS=60 \
-  rag-orchestrator python -m app.scripts.load_seed_corpus 2>&1 | python3 -c "
+corpus_env=(-e CORPUS_SEED_MANIFEST_PATH=/data/raw/s3/manifest.yaml -e CORPUS_ACCEPTED_LICENSES=dominio_publico,cc_by,cc_by_sa
+  -e CORPUS_EXCLUDED_SOURCES=NCCN,ESMO -e CORPUS_CUTOFF_DATE=2026-10-16
+  -e CORPUS_FETCH_ALLOWED_HOSTS=www.cancer.gov,pmc.ncbi.nlm.nih.gov,pmc-oa-opendata.s3.amazonaws.com
+  -e CORPUS_FETCH_TIMEOUT_SECONDS=30 -e CORPUS_FETCH_MAX_BYTES=5000000 -e CORPUS_FETCH_DEADLINE_SECONDS=60)
+if [ "${EXTRAER_POBLACION:-0}" = "1" ]; then
+  # OPCIONAL (EXTRAER_POBLACION=1): ingesta completa del corpus de 53 documentos con el LLM local (metadatos y población en
+  # abanico, verificados con NLI; US-118, US-242). LARGA: una tarea de LLM por documento y criterio. No es la ruta por defecto.
+  paso "Corpus ampliado (53 documentos) con extracción de población por el LLM local (EXTRAER_POBLACION=1; tarda)"
+  # `ingest` exige los pesos sparse (EMBEDDING_SPARSE_WEIGHTS_*), como `reindex-sparse`: modelos.env los trae o se calculan.
+  sha_sparse_ingesta=${EMBEDDING_SPARSE_WEIGHTS_SHA256:-$(shasum -a 256 "$MODEL_HOST_DIR/embeddings/sparse_linear.npz" | cut -d' ' -f1)}
+  "${compose[@]}" run --rm -v "$raiz/data/raw/s3:/data/raw/s3:ro" "${corpus_env[@]}" \
+    -e EMBEDDING_SPARSE_WEIGHTS_PATH=/models/embeddings/sparse_linear.npz -e EMBEDDING_SPARSE_WEIGHTS_SHA256="$sha_sparse_ingesta" \
+    rag-orchestrator python -m app.scripts.ingest --manifest /data/raw/s3/manifest.yaml 2>&1 | tail -c 1500 \
+    || echo "AVISO: la ingesta con extracción de población terminó con error; el corpus puede quedar sin población en parte de los documentos"
+else
+  paso "Corpus ampliado (53 documentos públicos con licencia aceptada; incluye los 10 de la semilla)"
+  "${compose[@]}" run --rm -v "$raiz/data/raw/s3:/data/raw/s3:ro" "${corpus_env[@]}" \
+    rag-orchestrator python -m app.scripts.load_seed_corpus 2>&1 | python3 -c "
 import sys, json
 t = sys.stdin.read(); i = t.find('{\"documentos\"')
 print(json.dumps(json.loads(t[i:t.rfind('}')+1]).get('resumen')) if i >= 0 else 'sin reporte: ' + t[-300:])"
+fi
 
 paso "Metadatos de población verificados (data/raw/seed/poblacion-verificada.json, US-242) y pesos sparse (US-117b)"
 "${compose[@]}" run --rm -v "$raiz/data/raw/seed:/data/raw/seed:ro" rag-orchestrator \
@@ -252,7 +264,7 @@ obtenido_clinico="$("${compose[@]}" exec -T clinical-api node dist/apps/clinical
   || fallar "no pude contar las filas del seed con el rol de clinical-api"
 obtenido_corpus="$("${compose[@]}" exec -T rag-orchestrator python -m app.scripts.poblacion_seed contar 2>/dev/null)" \
   || fallar "no pude contar los documentos del corpus con el rol rag_corpus"
-documentos_manifiesto=$(grep -c '^- document_key:' "$raiz/data/raw/seed/manifest.yaml")
+documentos_manifiesto=$(grep -c '^- document_key:' "$raiz/data/raw/s3/manifest.yaml")
 python3 "$raiz/scripts/demo/verificar-conteos.py" \
   --seed "$estado/seed-conteos.json" --clinico "$obtenido_clinico" --corpus "$obtenido_corpus" \
   --documentos "$documentos_manifiesto" --poblacion "$raiz/data/raw/seed/poblacion-verificada.json" \

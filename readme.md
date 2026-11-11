@@ -50,7 +50,7 @@ OncoLens es un **MVP académico** que entrega un **análisis de evidencia**, no 
 - **Recuperación y verificación:** búsqueda *dense* en Milvus, *reranker*, umbral de relevancia y verificación NLI de cada afirmación. Nada se muestra sin cita o sin soporte; sin evidencia, el sistema lo dice. Segundo loop contextual para preguntas genéricas.
 - **Aplicabilidad:** estados por criterio (Coincide, Parcial, No coincide, Desconocido) calculados con la población del estudio, extraída en la ingesta del corpus.
 - **Seguridad y privacidad:** identidad cifrada, desidentificación antes de la IA, `rag-orchestrator` sin acceso a datos clínicos, modelos locales sin nube, opt-out de análisis de IA y cabeceras de seguridad en `web`.
-- **Corpus público con licencia:** textos de NCI, PubMed Central (CC BY) y ClinicalTrials.gov para mama y próstata (`data/raw/seed`, 10 documentos que carga la demo; `data/raw/s3`, 53 documentos del corpus ampliado).
+- **Corpus público con licencia:** textos de NCI, PubMed Central (CC BY) y ClinicalTrials.gov para mama y próstata (`data/raw/s3`, 53 documentos que carga la demo (incluye los 10 de `data/raw/seed`); `EXTRAER_POBLACION=1` ejecuta la ingesta completa con el LLM local).
 
 **Cambios de alcance respecto al diseño original (PRD E-17 y E-18):**
 
