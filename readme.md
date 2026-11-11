@@ -106,6 +106,216 @@ Al terminar imprime la dirección y los usuarios sintéticos: **http://127.0.0.1
 - **CI:** `ci-ok` agrega todos los jobs (build y tests, cobertura de líneas cambiadas, lint y capas de arquitectura, integración con BD y Milvus de prueba, E2E, escaneos de seguridad). Detalle en `docs/process/ci.md`.
 - **Límites conocidos:** el E2E del chat cubre el camino feliz de mama (no hay E2E de próstata); no hay pruebas de mutación; la fidelidad NLI medida es 0,822 frente a la meta de 0,90.
 
+### Arquitectura, seguridad y proceso de la Demo 6 (diagramas)
+
+> Versión completa, con tablas de modelos, parámetros y controles: [`docs/demo/arquitectura-y-seguridad-demo6.md`](docs/demo/arquitectura-y-seguridad-demo6.md) y [`docs/demo/proceso-de-desarrollo-demo6.md`](docs/demo/proceso-de-desarrollo-demo6.md). Los diagramas son Mermaid.
+
+#### Un turno del chat (flujo de datos)
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant D as Doctor (navegador)
+  participant W as web (BFF)
+  participant C as clinical-api
+  participant R as rag-orchestrator (LangGraph)
+  participant M as Milvus
+  participant L as LLM local (Ollama)
+
+  D->>W: pregunta (cookie de sesión)
+  W->>C: /api/... (mismo origen; valida sesión, CSRF y Origin)
+  C->>C: RBAC · opt-out de análisis de IA → 403<br/>desidentifica y enmascara · thread_id aleatorio
+  C->>R: JWT de servicio + datos desidentificados (X-Trace-Id)
+  R->>R: enrutar: reglas → si no alcanzan, clasificación con el LLM
+  alt intención "caso" o "faltantes"
+    R->>R: verbalización determinista + NLI de las afirmaciones
+  else intención "evidencia"
+    R->>M: búsqueda densa (top_k 30, solo chunks vigentes)
+    R->>R: reranker (20 pares, ≤ 512 tokens) · umbral 0,30 · top_n 10
+    opt sin chunks sobre el umbral y la pregunta es genérica
+      R->>M: UN segundo loop con términos del caso (ADR-52)
+    end
+    alt nada supera el umbral
+      R-->>C: "sin evidencia" (sin invocar al LLM de generación)
+    else hay evidencia
+      R->>L: generar con los fragmentos recuperados
+      R->>R: valida citas (solo del corpus) + NLI ≥ 0,7 sobre la respuesta COMPLETA
+    end
+  end
+  R-->>C: respuesta validada (+ avisos, omittedClaims)
+  C->>C: persiste ConversationTurn y AIAnalysisRecord ANTES de responder
+  C-->>W: respuesta
+  W-->>D: tarjetas con citas, enlaces al dato y avisos de IA
+```
+
+#### Ingesta del corpus
+
+```mermaid
+flowchart LR
+  src["data/raw/s3<br/>53 textos públicos con licencia<br/>NCI · PMC CC BY · ClinicalTrials.gov"] --> man["manifest.yaml<br/>licencia por documento<br/>NCCN y ESMO excluidas"]
+  man --> load["load_seed_corpus<br/>(o ingest, con LLM)"]
+  load --> chunk["troceo<br/>1024 tokens, sin solape"]
+  chunk --> emb["embeddings bge-m3<br/>dense 1024 + sparse"]
+  emb --> mil[("Milvus<br/>HNSW")]
+  load --> cat[("PostgreSQL · schema corpus<br/>catálogo y release")]
+  ingest["ingest + LLM local<br/>(opcional EXTRAER_POBLACION=1)"] --> pob["población del estudio por criterio<br/>una tarea por (documento, criterio)<br/>valores ≤ 3 + NLI"]
+  pob --> cat
+  pv["poblacion-verificada.json<br/>8 documentos"] --> cat
+```
+
+#### Ruta de un dato clínico (identidad y desidentificación)
+
+```mermaid
+flowchart LR
+  ficha["Datos del paciente<br/>(seed sintético)"] --> capi["clinical-api"]
+  capi --> id["identidad: schema identity<br/>AES-256-GCM + índice ciego HMAC-SHA256"]
+  capi --> clin["clínico: schema clinical<br/>solo UUID del paciente"]
+  clin --> des["desidentificación<br/>pseudoPatientId aleatorio POR consulta<br/>fechas relativas · texto libre enmascarado"]
+  des --> rag["rag-orchestrator"]
+  id -. "nunca sale de clinical-api" .-x rag
+```
+
+#### Zonas y fronteras de seguridad
+
+```mermaid
+flowchart TB
+  subgraph Z1 [Zona 1 · expuesta]
+    web2["web · único puerto publicado<br/>127.0.0.1:3000 por defecto"]
+  end
+  subgraph Z2 [Zona 2 · datos clínicos]
+    capi2["clinical-api"]
+    pg2[("schemas auth · identity · clinical · audit · research")]
+    mn2[("clinical-minio")]
+  end
+  subgraph Z3 [Zona 3 · IA y corpus]
+    rag2["rag-orchestrator"]
+    mv2[("Milvus")]
+    pc2[("schema corpus")]
+  end
+  web2 -- "cookie opaca → /api/*" --> capi2
+  capi2 -- "JWT de servicio asimétrico" --> rag2
+  rag2 -. "REVOKE ALL sobre auth, identity, clinical, audit, research<br/>sin ruta a clinical-minio" .-x pg2
+  rag2 -.-x mn2
+```
+
+#### Fuentes de verdad del proceso
+
+```mermaid
+flowchart LR
+  prd["PRD v1.4<br/>FR · RN · AC"] --> adr["ADR<br/>decisiones y alternativas"]
+  prd --> bl["Backlog en Markdown<br/>Features e historias"]
+  adr --> bl
+  bl -- "espejo" --> lin["Linear<br/>proyecto OncoLens-1"]
+  bl --> oc["OpenSpec<br/>un change por historia"]
+  oc --> cod["Código y tests"]
+  api["openapi.yaml<br/>(contract-first)"] --> cod
+  cod --> pr["PR [L1D-nn]"]
+  pr --> gh["GitHub + CI"]
+  gh -- "estado" --> lin
+  cod -- "trazabilidad" --> bl
+```
+
+#### Interacción de agentes
+
+Humano → orquestador → implementadores (por contexto, cada uno en su *worktree*) y guardianes de solo lectura (Gate 2). Los merges los hace siempre el humano.
+
+```mermaid
+flowchart TB
+  H(["Humano · sesión principal<br/>decide, entrevista, mergea"])
+  H --> O["sprint-orchestrator (Opus)<br/>nivel 1 · 2.º plano"]
+  H --> T["traceability-auditor (Opus)<br/>nivel 1 · solo en el cierre"]
+
+  subgraph Impl [Implementadores · worktree propio · nivel 2]
+    P["clinical-platform-dev (Sonnet)<br/>clinical-api · BFF · infra"]
+    A["ai-services-dev (Sonnet)<br/>rag-orchestrator · corpus"]
+    F["frontend-dev (Sonnet)<br/>UI · visual-check"]
+  end
+  subgraph Gua [Guardianes · Gate 2 · nivel 2]
+    PG["privacy-guardian (Opus)"]
+    CK["contract-keeper (Sonnet)"]
+    CL["clinical-language-auditor (Sonnet)"]
+    DP["design-principles-reviewer (Opus)"]
+    EV["ai-eval-runner (Sonnet)"]
+  end
+  O --> Impl
+  O --> Gua
+```
+
+#### Ciclo de un sprint
+
+```mermaid
+flowchart TD
+  R["/sprint-refine<br/>Definition of Ready · ADR y DEC · entrevista"] --> RM{{"PR de refinamiento<br/>merge humano"}}
+  RM --> S["/sprint-start<br/>changes OpenSpec · Gate 1 · oleadas"]
+  S --> SM{{"PR de planificación<br/>aprobación y merge humano"}}
+  SM --> U["/sprint-run<br/>orquestador por oleadas"]
+  U --> W["Por historia:<br/>test en rojo → feat (TDD, contract-first)<br/>→ Gate 2 → PR [L1D-nn]"]
+  W --> CI["CI de calidad (sección 7):<br/>tests · cobertura · contratos · lint · seguridad · evaluate<br/>0 fallos, 0 pendientes, 0 alertas"]
+  CI --> MH{{"Merge humano<br/>por oleada"}}
+  MH -->|"quedan oleadas"| W
+  MH -->|"sprint completo"| C["/sprint-close<br/>verify · archivo · trazabilidad · retro"]
+  C --> D(["Demo y cierre"])
+```
+
+#### Calidad y QA (pirámide de pruebas)
+
+```mermaid
+flowchart TB
+  E2E["E2E · Playwright contra Compose<br/>seed sintético y LLM fingido"]
+  INT["Integración · nivel principal de los backends<br/>Supertest + PostgreSQL real · TestClient + PostgreSQL y Milvus de test"]
+  UNI["Unitarias · lógica pura sin E/S<br/>Vitest · Pytest con adapters falsos"]
+  EVAL["Evaluación de IA (OL-06)<br/>suite evaluate: recuperación, citas, fidelidad, PII, prescriptivo"]
+  E2E --- INT --- UNI
+  EVAL -. "no sustituye a los tests" .- INT
+```
+
+#### CI como puerta de calidad (CI/CD)
+
+La CI corre en cada PR; `ci-ok` agrega todos los jobs y no se pide un merge hasta tener 0 fallos, 0 pendientes y 0 alertas. No hay despliegue continuo: es un MVP académico que se levanta en local con `scripts/demo/levantar.sh`.
+
+```mermaid
+flowchart LR
+  PR["PR [L1D-nn]"] --> CAM["cambios<br/>¿solo documentación?"]
+  CAM --> B1["build-test-node<br/>Vitest · build"]
+  CAM --> B2["build-test-rag<br/>Pytest + cobertura"]
+  CAM --> CON["contracts<br/>spec · generado · oasdiff"]
+  CAM --> Q["quality<br/>ESLint · Prettier · Ruff · capas"]
+  CAM --> I["integration · integration-rag<br/>BD y Milvus reales de test"]
+  CAM --> E["e2e · stack-smoke<br/>Playwright · Compose"]
+  CAM --> S["secret-scan · data-scan<br/>gitleaks · PII · CodeQL · audit"]
+  CAM --> EV["eval-required<br/>evaluate vs línea base"]
+  CAM --> H["higiene-proceso<br/>commits · Test-Removal · tasks"]
+  B1 & B2 & CON & Q & I & E & S & EV & H --> OK{{"ci-ok<br/>agregador"}}
+  OK --> M(["Merge humano"])
+```
+
+#### Estados de una historia en Linear
+
+```mermaid
+stateDiagram-v2
+  [*] --> Backlog
+  Backlog --> InProgress: el orquestador empieza el trabajo
+  InProgress --> InReview: pruebas, Gate 2 o PR abierto
+  InReview --> InProgress: fallan las pruebas o aparece un bug
+  InReview --> Done: PR mergeados, CI de main en verde, tareas con destino
+  Done --> InReview: /sprint-close lo revisa a fondo y lo devuelve
+  Done --> [*]
+```
+
+#### Plan del Sprint 6 por oleadas
+
+```mermaid
+flowchart LR
+  O1["O1<br/>108 · 266 · 327 · 314"] --> O2["O2<br/>316 chat-turn LangGraph"]
+  O2 --> O3["O3<br/>315 · 204 · 317"]
+  O3 --> O4["O4<br/>213 · 320 · 322 · 318"]
+  O4 --> O5["O5<br/>321 · 323 · 324 · 319<br/>+ 329 · 330"]
+  O5 --> O6["O6<br/>325"]
+  O6 --> O7["O7<br/>326 (recortado)"]
+  O7 --> ABC["A · B · C<br/>331 · 332 · 333"]
+  ABC --> F["Corrida final<br/>y cierre"]
+```
+
 ### Post-MVP: lo que se podría hacer a futuro
 
 - **OCR e ingesta de PDFs clínicos**, con gate de PII y normalización de documentos.
