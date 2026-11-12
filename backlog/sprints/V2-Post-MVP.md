@@ -102,6 +102,16 @@
 | US-184 | L1D-176 | El 100 % de las requests lleva un `traceId` que se correlaciona de `web` a `rag-orchestrator` | FEAT-PL5 | 6 `si-hay-capacidad` | 3 |
 | US-185 | L1D-177 | StrykerJS alcanza un *mutation score* ≥ 70 % sobre auth, autorización y cifrado, y la CI lo exige | FEAT-PL5 | 6 `si-hay-capacidad` | 5 |
 
+### Mejora de la recuperación tras la Demo 6 (borrador FEAT-T5e, alta del 2026-11-11)
+
+Prioridades 1–3 del análisis de mejoras del RAG (usuario, 2026-11-11). Sin publicar en Linear hasta su aprobación; como el resto del borrador FEAT-T5e (US-226…US-230), no se suman al resumen de arriba.
+
+| US | Linear | Título | Feature | Sprint | Est. |
+|---|---|---|---|---|---|
+| US-276 | pendiente | Un diagnóstico por etapa dice dónde pierde la evidencia una pregunta parafraseada | FEAT-T5e | Post-MVP | 2 |
+| US-277 | pendiente | Las preguntas con un nombre coloquial de un procedimiento recuperan la misma evidencia que con el término técnico | FEAT-T5e | Post-MVP | 3 |
+| US-278 | pendiente | El *reranker* puntúa el chunk entero y no solo sus primeros 512 tokens | FEAT-T5e | Post-MVP | 5 |
+
 ### Ideas sin historia ni ID (refinamiento del S4, 2026-10-29, `[S4 resp. 15]`)
 
 - «Si hay capacidad»: herramienta de revisión humana de los metadatos de población del corpus a escala (más allá de la muestra de US-118/US-233b).
