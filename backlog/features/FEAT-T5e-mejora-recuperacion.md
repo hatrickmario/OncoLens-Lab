@@ -6,13 +6,15 @@
 
 > **Decidido (usuario, 2026-11-11):** tras la Demo 6, entran a este borrador las prioridades 1–3 del análisis de mejoras del RAG: **US-276** (diagnóstico por etapa de las preguntas parafraseadas que pierden la evidencia), **US-277** (vocabulario del catálogo para procedimientos y segundo loop de reescritura medido) y **US-278** (el *reranker* puntúa el chunk entero, no solo sus primeros 512 tokens). Contexto: la misma pregunta, «complicaciones de la prostatectomía radical» frente a «complicaciones de la cirugía de prostata radical», devolvió evidencia en un caso y no en el otro. Ya aplicados en `main`, fuera de estas historias: `RERANKER_MAX_PAIRS = 20` y `QUERY_CONTEXT_EXPANSION_ENABLED = true` (US-275, L1D-333) y `CORPUS_CHUNK_OVERLAP = 51` (PR #407, enmienda de ADR-39). Las prioridades 4–8 del mismo análisis (Contextual Retrieval, multivector, BM25 nativo de Milvus, calibración del NLI y PageIndex) no tienen historia: la contextual determinista ya es el brazo A5 de US-230. Siguen sin publicarse en Linear hasta su aprobación.
 
+> **Decidido (usuario, 2026-11-13):** el **Sprint 7** se dedica solo a estas mejoras del RAG: US-276, US-277, US-278 y **US-279** (prioridad 4, Contextual Retrieval: primero la variante determinista y después la del LLM, con el texto citable separado). Publicadas en Linear el 2026-11-13 en el milestone «Sprint 7» del proyecto OncoLens-1: L1D-334…L1D-337. Las prioridades 5–8 siguen sin historia.
+
 **Talla:** L · **Sprint:** Post-MVP *(usuario, 2026-11-06, `[S6 resp. 4]`; antes propuesta 2, junto a US-072/US-073; US-229 podía cerrar en S3 según la agenda del oncólogo, SUP-4)* · **Capacidad:** T-5 (AC-T5.3, AC-T5.4) · **Recorrido principal:** sí (la hipótesis 3, "opciones más aplicables", depende de recuperar la evidencia correcta)
 **Requisitos:** FR-20 (OL-06) · FR-09 · IA-02 · G-3 y M-06.1 (recall@10 y MRR contra metas iniciales) · TBD-02 (DEC-07) · RN-02, RN-12, RN-13, RN-14, RN-21, RN-22, RN-27
 **Evidencia:** [→ docs/architecture/adr/ADR-45-mejora-recuperacion-ol06.md], [→ docs/architecture/adr/ADR-39-modelos-locales.md (rama `feat/l1d-102-adr39-embeddings-reranker-nli`)], [→ PRD §2.1 G-3], [→ PRD §18.3.6 M-06.1], [→ PRD §16 TBD-02], [→ readme §6 OL-06]
 **Dependencias:** ↪ US-072 (*runner* y reporte), US-073 (baseline y umbral), US-012 (ADR-39 fase A: dataset `adr39-mini`) · 🔗 Informa a: US-017 · DEC-07 (metas), US-112 y US-113 (híbrida y expansión: se re-estiman con el resultado), US-133 (recuperación híbrida sin retroceso), ADR-41 · ⛔ Tiempo del oncólogo asesor (SUP-4) para US-227, US-228 y US-229
 **Valor:** hoy la recuperación mide recall@10 0,71 y MRR 0,36 con un conjunto que no distingue una mejora de 0,10 del ruido. Esta Feature da un protocolo que impide el sobreajuste, un conjunto nuevo e independiente y ablaciones preinscritas, para que cualquier mejora (híbrida, expansión, contexto del chunk) se adopte solo con evidencia, y para recalibrar las metas con base estadística.
 **Workaround en el MVP:** las metas de recuperación se informan como provisionales y no bloquean la CI (enmienda propuesta a US-017, no aplicada); se sigue con recuperación densa + *reranker* (US-055).
-**Stories:** US-226 (5), US-227 (3), US-228 (5), US-229 (5), US-230 (5) = **23 puntos** · altas del 2026-11-11: US-276 (2), US-277 (3), US-278 (5) = **10 puntos** · total **33 puntos** (borrador; no se suma al total del backlog hasta aprobarse)
+**Stories:** US-226 (5), US-227 (3), US-228 (5), US-229 (5), US-230 (5) = **23 puntos** · altas del 2026-11-11: US-276 (2), US-277 (3), US-278 (5) = **10 puntos** · alta del 2026-11-13: US-279 (5) · **S7: US-276…US-279 = 15 puntos** · total **38 puntos** (borrador; no se suma al total del backlog hasta aprobarse)
 
 > **Cambios que este borrador propone a historias publicadas (no aplicados):**
 > - **US-017 · DEC-07:** añadir un AC con las metas de recuperación evaluadas sobre el límite inferior del IC de 95 % y la regla de "provisional hasta US-229" (ADR-45, "Metas de OL-06").
@@ -174,9 +176,9 @@ Implementar el cambio adoptado en producción (historia propia tras el resultado
 
 ## US-276 — Un diagnóstico por etapa dice dónde pierde la evidencia una pregunta parafraseada
 
-> Linear: pendiente
+> Linear: [L1D-334](https://linear.app/l1der-lab-mjbc/issue/L1D-334) · milestone «Sprint 7» (publicada el 2026-11-13)
 
-`FEAT-T5e` · Post-MVP *(alta del 2026-11-11, prioridad 1 del análisis de mejoras tras la Demo 6)* · Estimación **2** · — (técnica; OL-06) · FR-09, FR-20 · AC-T5.3 · ↪ US-270 (evento `rag_query_corte`), US-055 · 🔗 Produce para: US-277, US-278, US-230 · **Recorrido principal:** sí
+`FEAT-T5e` · **S7** *(alta del 2026-11-11, prioridad 1 del análisis de mejoras tras la Demo 6)* · Estimación **2** · — (técnica; OL-06) · FR-09, FR-20 · AC-T5.3 · ↪ US-270 (evento `rag_query_corte`), US-055 · 🔗 Produce para: US-277, US-278, US-230 · **Recorrido principal:** sí
 
 ## Story
 Como responsable técnico, quiero saber en qué etapa del *pipeline* se pierde la evidencia cuando una pregunta cambia una o dos palabras, para corregir la etapa que falla y no bajar a ciegas un umbral que protege a otra.
@@ -200,9 +202,9 @@ Cambiar umbrales, modelos o catálogo (US-277, US-278); medir recall@10 global (
 
 ## US-277 — Las preguntas con un nombre coloquial de un procedimiento recuperan la misma evidencia que con el término técnico
 
-> Linear: pendiente
+> Linear: [L1D-335](https://linear.app/l1der-lab-mjbc/issue/L1D-335) · milestone «Sprint 7» (publicada el 2026-11-13)
 
-`FEAT-T5e` · Post-MVP *(alta del 2026-11-11, prioridad 2 del análisis de mejoras tras la Demo 6)* · Estimación **3** · — (técnica y clínica) · FR-09, IA-02 · M-06.1 · ↪ US-276, US-238 (segundo loop de reescritura, L1D-300), US-273 (L1D-331, composición de términos en próstata) · ⛔ Validación del oncólogo asesor de los sinónimos (SUP-4) · 🔗 Cierra: D4-30 (activación de `QUERY_REWRITE_ENABLED`) · **Recorrido principal:** sí
+`FEAT-T5e` · **S7** *(alta del 2026-11-11, prioridad 2 del análisis de mejoras tras la Demo 6)* · Estimación **3** · — (técnica y clínica) · FR-09, IA-02 · M-06.1 · ↪ US-276, US-238 (segundo loop de reescritura, L1D-300), US-273 (L1D-331, composición de términos en próstata) · ⛔ Validación del oncólogo asesor de los sinónimos (SUP-4) · 🔗 Cierra: D4-30 (activación de `QUERY_REWRITE_ENABLED`) · **Recorrido principal:** sí
 
 ## Story
 Como oncólogo, quiero que una pregunta escrita con el nombre coloquial de un procedimiento («cirugía radical de próstata») encuentre la misma evidencia que con el término técnico («prostatectomía radical» / *radical prostatectomy*), para no perder información por cómo redacto la pregunta.
@@ -228,9 +230,9 @@ Traducción con modelo dedicado (brazo A4 de US-230); BM25 o multivector; cambia
 
 ## US-278 — El *reranker* puntúa el chunk entero y no solo sus primeros 512 tokens
 
-> Linear: pendiente
+> Linear: [L1D-336](https://linear.app/l1der-lab-mjbc/issue/L1D-336) · milestone «Sprint 7» (publicada el 2026-11-13)
 
-`FEAT-T5e` · Post-MVP *(alta del 2026-11-11, prioridad 3 del análisis de mejoras tras la Demo 6)* · Estimación **5** · — (técnica; OL-06) · FR-09, FR-20 · M-06.1 · ↪ US-276, US-231a (adapter real del *reranker*), ADR-39 · ⛔ ninguna dura · 🔗 Informa a: US-230 (brazo nuevo), ADR-39 (enmienda si se adopta) · **Recorrido principal:** sí
+`FEAT-T5e` · **S7** *(alta del 2026-11-11, prioridad 3 del análisis de mejoras tras la Demo 6)* · Estimación **5** · — (técnica; OL-06) · FR-09, FR-20 · M-06.1 · ↪ US-276, US-231a (adapter real del *reranker*), ADR-39 · ⛔ ninguna dura · 🔗 Informa a: US-230 (brazo nuevo), ADR-39 (enmienda si se adopta) · **Recorrido principal:** sí
 
 ## Story
 Como responsable técnico, quiero que el *reranker* vea todo el texto de cada chunk de 1024 tokens, para que la evidencia que está en su segunda mitad no se pierda bajo el umbral de relevancia.
@@ -251,3 +253,31 @@ Cambiar el modelo del *reranker*; cambiar `RELEVANCE_THRESHOLD` (si la distribuc
 
 ## INVEST
 **Small** ✓ 5. **Testable** ✓ regla pura con tests unitarios, AC-2 byte a byte, AC-4 y AC-5 en el informe.
+
+---
+
+## US-279 — Cada chunk se indexa con el contexto de su documento, sin cambiar el texto que se cita
+
+> Linear: [L1D-337](https://linear.app/l1der-lab-mjbc/issue/L1D-337) · milestone «Sprint 7» (publicada el 2026-11-13)
+
+`FEAT-T5e` · **S7** *(alta del 2026-11-13, prioridad 4 del análisis de mejoras tras la Demo 6)* · Estimación **5** · — (técnica; OL-06) · FR-09, FR-20, IA-02 · M-06.1 · ↪ US-276 (pares de paráfrasis), US-230 (brazo A5, contextual determinista), ADR-39 (chunks de 1024 y solapamiento de 51) · ⛔ ninguna dura · 🔗 Informa a: US-278 (el *reranker* puede puntuar el texto con contexto), ADR-39 (enmienda si se adopta) · **Recorrido principal:** sí
+
+## Story
+Como responsable técnico, quiero que cada chunk se indexe acompañado del contexto de su documento (título, sección, tipo de cáncer y tipo de fuente), para que un fragmento que no nombra el procedimiento o la enfermedad de la que habla se recupere igual con la pregunta que sí los nombra.
+
+## AC (Given/When/Then)
+- **AC-1 (happy path · contexto determinista)** · Dado un documento del corpus con sus metadatos del catálogo, cuando se ingiere con `CORPUS_CHUNK_CONTEXT = determinista`, entonces el texto que se embebe de cada chunk lleva un prefijo construido **solo** con metadatos del catálogo y el encabezado de sección (sin LLM), y el prefijo es el mismo en cada reingesta. `[RN-22]` `[RN-25]`
+- **AC-2 (invariante · texto citable)** · Dado un chunk indexado con contexto, cuando se cita en una respuesta o se usa como premisa del NLI, entonces el texto mostrado y el de la premisa son el texto original del chunk, sin el prefijo; el prefijo solo vive en el campo que se embebe. `[RN-04]` `[RN-01]`
+- **AC-3 (borde · comportamiento actual por defecto)** · Dado `CORPUS_CHUNK_CONTEXT = ninguno` (valor por defecto hasta la decisión), cuando se ingiere, entonces los vectores e identificadores son idénticos a los de `main`. `[RN-22]`
+- **AC-4 (happy path · variante con LLM, solo medición)** · Dado `CORPUS_CHUNK_CONTEXT = llm`, cuando se ingiere, entonces el LLM **local** escribe una frase de contexto por chunk a partir del documento, con salida validada por esquema; una salida inválida deja el chunk con el contexto determinista y se cuenta en el informe, sin abortar la ingesta. `[RN-12]` `[RN-21]`
+- **AC-5 (happy path · medición)** · Dada la suite `evaluate` con modelos locales y los pares de US-276, cuando se comparan `ninguno`, `determinista` y `llm` sobre un índice reconstruido para cada brazo, entonces el informe da recall@10, MRR, falsos «sin evidencia», paráfrasis recuperadas, p95 de consulta completa, duración de la ingesta y memoria. La variante solo se adopta si mejora fuera del ruido sin pasar el p95 de 20 s, por decisión del usuario sobre ese informe. `[OL-06]` `[ADR-45 P6]`
+- **AC-6 (invariante · RN-02 y RN-05)** · Dada cualquier variante, cuando ningún chunk supera el umbral, entonces la respuesta sigue siendo «sin evidencia» con `topRelevanceScore = null` sin invocar al LLM de generación; la reindexación crea chunks `is_current` nuevos y no borra el histórico. `[RN-02]` `[RN-05]`
+
+## Contexto técnico
+La ingesta vive en `app/application/corpus_ingestion/`; el prefijo determinista es una regla pura en `domain/` con su test unitario. Cambiar el texto que se embebe obliga a reindexar Milvus (ADR-39). Es el brazo A5 de US-230 adelantado sobre el caso de la Demo 6; la variante con LLM llega después de la determinista y solo como brazo de medición. Cambio de corpus: dispara `eval-required` y la evaluación con LLM real.
+
+## Non-goals
+Multivector, BM25 nativo de Milvus y PageIndex (prioridades 5–8 del análisis); cambiar el tamaño del chunk o `RELEVANCE_THRESHOLD`.
+
+## INVEST
+**Small** ✓ 5. **Testable** ✓ regla pura con tests unitarios, AC-2 y AC-3 comprobables sin modelos, AC-5 en el informe.
