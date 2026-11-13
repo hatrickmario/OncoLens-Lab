@@ -168,6 +168,10 @@
 | US-273 | En próstata, el segundo loop contextual deja de recuperar sobre todo cribado porque la composición de términos no se ancla en «Antígeno prostático específico (PSA)» — Linear [L1D-331](https://linear.app/l1der-lab-mjbc/issue/L1D-331) | FEAT-12 | 6 (alta, 2026-11-07) | 2 | sí |
 | US-274 | El aviso de ampliación de la búsqueda y el mensaje «Evidencia recuperada sin opciones soportadas» se ven claramente en el panel conversacional — Linear [L1D-332](https://linear.app/l1der-lab-mjbc/issue/L1D-332) | FEAT-12 | 6 (alta, 2026-11-07) | 2 | sí |
 | US-275 | La expansión contextual se activa por defecto y el tope de pares del *reranker* pasa de 12 a 20, con el p95 de consulta completa medido en máquina limpia — Linear [L1D-333](https://linear.app/l1der-lab-mjbc/issue/L1D-333) | FEAT-12 | 6 (alta, 2026-11-07) | 2 | sí |
+| US-276 | Un diagnóstico por etapa dice dónde pierde la evidencia una pregunta parafraseada — Linear [L1D-334](https://linear.app/l1der-lab-mjbc/issue/L1D-334) | FEAT-T5e | S7 (alta, 2026-11-11) | 2 | sí |
+| US-277 | Las preguntas con un nombre coloquial de un procedimiento recuperan la misma evidencia que con el término técnico — Linear [L1D-335](https://linear.app/l1der-lab-mjbc/issue/L1D-335) | FEAT-T5e | S7 (alta, 2026-11-11) | 3 | sí |
+| US-278 | El *reranker* puntúa el chunk entero y no solo sus primeros 512 tokens — Linear [L1D-336](https://linear.app/l1der-lab-mjbc/issue/L1D-336) | FEAT-T5e | S7 (alta, 2026-11-11) | 5 | sí |
+| US-279 | Cada chunk se indexa con el contexto de su documento, sin cambiar el texto que se cita — Linear [L1D-337](https://linear.app/l1der-lab-mjbc/issue/L1D-337) | FEAT-T5e | S7 (alta, 2026-11-13) | 5 | sí |
 | US-072 | La suite `evaluate` mide recuperación, fidelidad, "sin evidencia", privacidad y lenguaje de forma reproducible | FEAT-T5a | 2 | 8 (072a 5 + 072b 3) | sí |
 | US-073 | El umbral de relevancia se calibra y el baseline técnico del S1 queda registrado | FEAT-T5a | 2 | 3 | sí |
 | US-074 | Todo PR que cambie modelo, prompt, umbral, catálogo o corpus ejecuta la suite y adjunta el reporte | FEAT-T5a | 2 | 3 | sí |
