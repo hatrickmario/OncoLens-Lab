@@ -184,7 +184,7 @@ NLI_QUANTIZATION: fp32
 MODEL_CACHE_DIR: /models
 DATA_CACHE_DIR: /data-cache
 CORPUS_CHUNK_SIZE: 1024
-CORPUS_CHUNK_OVERLAP: 0
+CORPUS_CHUNK_OVERLAP: 51
 CORPUS_CHUNKING_STRATEGY: tamano_fijo
 VECTOR_INDEX_TYPE: HNSW
 VECTOR_INDEX_PARAMS: '{"M": 16, "efConstruction": 200, "ef": 64}'
@@ -208,6 +208,14 @@ ACADEMIC_LICENSES: mit,apache-2.0
 Decisión del usuario (2026-11-07, `[S6 resp. 24]`, D6-44): `RERANKER_MAX_PAIRS` pasa de 12 a **20**; `RETRIEVAL_MODE=dense` y `RERANK_TOP_N=10` no cambian. **Evidencia (medición de D6-44, informativa, muestra pequeña, `ai-eval-runner`):** de 12 a 20 pares, +3,1 puntos de recall y un falso «sin evidencia» menos (de 5) por +0,66 s de p95 de recuperación; 12 → 30 daría +6,3 puntos y 0 falsos con +1,65 s, y `RERANK_TOP_N` no tuvo efecto. **Costo frente al NFR de 15 s:** el p95 de consulta completa en `dense` pasaría de 14,7 s a ~15,4 s (D6-45, medido con la máquina cargada), sobre el tope; **medición de la corrida final (2026-11-07, `ai-eval-runner`, 20 pares con expansión activa):** p95 de consulta completa **17,05 s** (fase 1, n=69) y **18,3 s** (fase 2, n=67); máximo observado 23-25 s (el tope aplica al p95); p95 de la etapa del *reranker* 2,52 s (base 1,62 s); recall@10 0,875 → 0,906 y MRR 0,849 → 0,887. Limitaciones: una sola corrida, sin A/B del mismo día ni condiciones de máquina limpia garantizadas (el reporte H-3 lo guarda el humano). **Tope vigente (decisión del usuario, 2026-11-07): p95 de 20 s como objetivo por defecto (antes 15 s), con techo absoluto de 25 s solo si se mide una mejora de calidad significativa; la CI usa 20 s.** Con 17,05-18,3 s la regla de parada queda satisfecha y no hace falta subir de 20 s.
 
 **Regla de parada (US-275 AC-3, satisfecha con el tope de 20 s):** si la medición con 20 pares supera el tope vigente, no se decide ni se mergea el cambio de valores: se pregunta al orquestador y al usuario (recalibrar el tope, 20 solo en análisis o reducir el costo de generación). **Estado de aplicación:** el bloque `adr39:decision`, `.env.example` y Compose se aplicaron juntos con H-1 (`--check-config` exige que coincidan). El resto de este ADR (tablas de 12, 16 y 24 pares) es histórico.
+
+### Enmienda de `CORPUS_CHUNK_OVERLAP` (0 → 51 tokens, 5 % de 1024) — decidida el 2026-11-11
+
+**VIGENTE: 51 tokens** (bloque `adr39:decision` y `.env.example`, cambiados juntos; `--check-config` exige que coincidan).
+
+Decisión del usuario (2026-11-11): los chunks llevan un solapamiento del 5 % (51 de 1024 tokens) para que una idea que cae en la frontera entre dos chunks no quede partida, a raíz de las preguntas de la Demo 6 que dejaban de devolver evidencia al cambiar una o dos palabras. **Evidencia previa (T3, arriba):** 0 % → recall@10 0,710 y MRR 0,356; 10 % → 0,691 y 0,324; 15 % → 0,667 y 0,309; todas las diferencias dentro del IC (≈ ±0,1) con 69 preguntas, y el 0 % ganó por la regla de desempate (menos chunks, la más simple). El 5 % **no se midió**: es una decisión de diseño, no un resultado de la medición, y queda como valor a recalibrar (RN-22) con la suite `evaluate` y el protocolo de ADR-45.
+
+**Consecuencias:** aplica a toda instalación o reindexación desde cero (`load_seed_corpus` e `ingest` leen `CORPUS_CHUNK_OVERLAP`); un corpus ya indexado no cambia hasta reindexarse. El número de chunks sube ~5 % (de ~688 a ~720 sobre el corpus de la Demo 6) y con él, ligeramente, la memoria del índice y el tiempo de ingesta. Con `RERANKER_MAX_LENGTH` = 512 el *reranker* sigue viendo solo la primera mitad de cada chunk: el solapamiento favorece sobre todo al vector denso. Medir con modelos locales en la próxima corrida real (recall@10, MRR, falsos «sin evidencia»); si empeora fuera del ruido, volver a 0.
 
 ## Puntos que decide el humano
 
