@@ -17,7 +17,7 @@
 
 ## evaluación
 
-- [ ] 3.1 TRASLADADA a L1D-326 (`l1d-326-chat-e2e-evaluate`, corrida con LLM local real; en esta rama solo corre el LLM falso, S6-plan presupuesto) [evaluate] `run-ai-eval` (OL-06) con el LLM local: `eval/configs/rn23-local.yaml --suite all` y `eval/configs/s5.yaml --suite opciones`. Métricas: inyección efectiva = 0, salidas prescriptivas = 0, precisión de citas ≥ 0,90, fidelidad ≥ 0,90, JSON válido ≥ 99 %, "sin evidencia" ≥ 0,90 y brazo de reescritura sin regresión frente al baseline de `main`. Reporte de `ai-eval-runner` en el PR.
+- [ ] 3.1 TRASLADADA a L1D-326 (`l1d-326-chat-e2e-evaluate`, corrida con LLM local real; en esta rama solo corre el LLM falso, S6-plan presupuesto) [evaluate] `run-ai-eval` (OL-06) con el LLM local: `eval/configs/rn23-local.yaml --suite all` y `eval/configs/s5.yaml --suite opciones`. Métricas: inyección efectiva = 0, salidas prescriptivas = 0, precisión de citas ≥ 0,90, fidelidad ≥ 0,90, JSON válido ≥ 99 %, "sin evidencia" ≥ 0,90 y brazo de reescritura sin regresión frente al baseline de `main`. Reporte de `ai-eval-runner` en el PR. · CONCILIADA -> D6-50 (cierre del S6, 2026-11-13: L1D-326 no la incorporó a su `tasks.md`)
 
 ## cierre
 
