@@ -27,12 +27,12 @@
 
 ## evaluación
 
-- [ ] 3.1 TRASLADADA -> L1D-326 (evaluate real y E2E del chat; el `ai-eval-runner` real lo lanza el orquestador en el Gate 2; el caso AC04 del chat y el dataset de preguntas de relevancia se miden en US-269) · (evaluate) `run-ai-eval` con el LLM local `eval/configs/rn23-local.yaml --suite all` y `eval/configs/s5.yaml --suite opciones` (OL-06): fidelidad, precisión de citas, «sin evidencia» y salidas prescriptivas = 0; el caso AC04 del chat se mide en US-269
+- [ ] 3.1 TRASLADADA -> L1D-326 (evaluate real y E2E del chat; el `ai-eval-runner` real lo lanza el orquestador en el Gate 2; el caso AC04 del chat y el dataset de preguntas de relevancia se miden en US-269) · (evaluate) `run-ai-eval` con el LLM local `eval/configs/rn23-local.yaml --suite all` y `eval/configs/s5.yaml --suite opciones` (OL-06): fidelidad, precisión de citas, «sin evidencia» y salidas prescriptivas = 0; el caso AC04 del chat se mide en US-269 · CONCILIADA -> D6-50 (cierre del S6, 2026-11-13: L1D-326 no la incorporó a su `tasks.md`)
 
 ## cierre
 
 - [x] 4.1 `openspec validate l1d-321-chat-relevancia-faltante --strict`, tests de `apps/rag-orchestrator` en verde, `contracts:verify-provider` · EVIDENCIA: ver el reporte del implementador (pytest de rag 5030 passed, `verify-provider` de rag 733 respuestas verificadas, vitest de `clinical-api` unitario de evidence-analysis/completeness/seed 473 passed; `eval-required` con adapters falsos sin regresión)
-- [ ] 4.2 `run-ai-eval` real del prompt `chat-relevancia@0.1.0` · DIFERIDA -> L1D-326 (la tarea 3.1)
+- [ ] 4.2 `run-ai-eval` real del prompt `chat-relevancia@0.1.0` · DIFERIDA -> L1D-326 (la tarea 3.1) · CONCILIADA -> D6-50 (cierre del S6, 2026-11-13: L1D-326 no la incorporó a su `tasks.md`)
 
 ## humano
 
@@ -40,5 +40,5 @@
 
 ## deuda
 
-- [ ] D-1 Corregir la descripción de `notices` en `apps/rag-orchestrator/openapi.yaml` (cita el aviso de relevancia) · DIFERIDA -> L1D-326 (contrato futuro; este change no sube versión)
+- [ ] D-1 Corregir la descripción de `notices` en `apps/rag-orchestrator/openapi.yaml` (cita el aviso de relevancia) · DIFERIDA -> L1D-326 (contrato futuro; este change no sube versión) · CONCILIADA -> D6-62 (cierre del S6, 2026-11-13: L1D-326 no la incorporó a su `tasks.md`)
 - [ ] D-2 Minúscula inicial tras la atribución en el seguimiento (`La fuente reporta que El estudio…`) y en `componer_con_marco` · TRASLADADA -> L1D-322 (afecta a `/rag/query`, a su evaluación y a ejemplos; fuera del alcance de US-264)

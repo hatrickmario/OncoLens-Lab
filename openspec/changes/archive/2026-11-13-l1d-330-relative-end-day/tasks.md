@@ -33,4 +33,4 @@ Política: TDD estricto en el servicio de Backend 1 y en el dominio de Backend 2
 
 - [x] 4.1 `openspec validate l1d-330-relative-end-day --strict` en verde; `pytest` de `rag-orchestrator`, `vitest` e integración de `clinical-api`, `contracts:verify-provider` y `contracts:breaking` en verde · EVIDENCIA: openspec validate verde; contracts:check, breaking y generate:check verdes; verify-provider de rag con 676 respuestas; el de clinical-api no se corrió (sin PostgreSQL de test)
 - [x] 4.2 Gate 2: `contract-keeper` y `privacy-guardian` (CLAUDE.md del change); sin `run-ai-eval` (no cambia prompt, modelo, umbral, catálogo ni corpus) · Gate 2 PASS tras vuelta 1
-- [ ] 4.3 Anotar en el PR la revisión del ancla del día 0 para la Demo 6 (decisión del PO, 2026-11-06) y el resultado de los pendientes P-1 y P-2 · DIFERIDA -> L1D-326 (medida en la suite del chat) y Demo 6
+- [ ] 4.3 Anotar en el PR la revisión del ancla del día 0 para la Demo 6 (decisión del PO, 2026-11-06) y el resultado de los pendientes P-1 y P-2 · DIFERIDA -> L1D-326 (medida en la suite del chat) y Demo 6 · CONCILIADA -> D6-62 (cierre del S6, 2026-11-13: L1D-326 no la incorporó a su `tasks.md`)
