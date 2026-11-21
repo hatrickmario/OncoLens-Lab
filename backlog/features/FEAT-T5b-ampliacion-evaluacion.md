@@ -355,7 +355,11 @@ recuperación *dense* y *sparse*; la corrida con modelos locales la ejecuta
 
 ## US-140 — La suite mide que hasta 3 opciones siguen citadas, con soporte, no prescriptivas y en el orden de RN-28
 
+> **Decidido (usuario, 2026-11-21):** pasa al **Sprint 7** (L1D-246): quedó abierta al cierre del S6 y afecta a la calidad del RAG; el S7 reúne todo lo pendiente de calidad del RAG. Lo que falta está en [`S7-refinamiento.md`](../sprints/S7-refinamiento.md).
+
 > Linear: [L1D-246](https://linear.app/l1der-lab-mjbc/issue/L1D-246)
+
+> **Decidido (usuario, 2026-11-21, `[S7 resp. 1]`):** revisión clínica provisional hecha por IA ([`S7-revision-clinica.md`](../sprints/S7-revision-clinica.md) §3). Los 4 casos prueban la regla de orden, no contenido clínico: el reporte separa `mecanica_verificada` de `validada` (reservado a la revisión de un oncólogo), OP-08 gana una fuente sintética de enfermedad sensible a la castración con quimioterapia y las preguntas se redactan en español.
 
 `FEAT-T5b` · Sprint 5 *(S4 → S5, `[S4 resp. 1]`)* · Estimación **5** · — (técnica, PRD §17; OL-06) · FR-20 · AC-T5.1 (opciones), AC-T5.3 · M-10.1, M-10.2, M-07.2 (con hasta 3 opciones), G-2, G-14 · ↪ US-072, US-074, US-134, US-136 · ⛔ ADR-39 (LLM y NLI reales para la medición final) · ⛔ DEC-07 · escenario más probable (metas y tolerancias) · 🔗 Mide a: FEAT-10c, FEAT-10b (S4)
 
