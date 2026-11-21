@@ -12,12 +12,12 @@ Decisión del usuario: «todos los relacionados con la calidad del RAG se mueven
 
 | Linear | Historia | Pts | Estado | Qué falta (lo que entra al S7) |
 |---|---|---|---|---|
-| L1D-316 | US-259 turno del chat en LangGraph | 5 | In Review | **Hora 0** (hueco B2 del cierre): subir `langgraph` a ≥ 1.2.14 o descartar la alerta #9 de Dependabot con justificación; triagear la #8. Ver §6, punto 1 |
+| L1D-316 | US-259 turno del chat en LangGraph | 5 | In Review | **Hora 0** (hueco B2 del cierre): subir `langgraph` a ≥ 1.2.14 o descartar la alerta #9 de Dependabot con justificación `[S7 resp. 5]`. La alerta #8 la cierra el PR #417 |
 | L1D-329 | US-271 segundo loop contextual | 4 | In Review | AC-9: test y reporte versionado en `reports/eval/` (D6-33) |
 | L1D-333 | US-275 expansión por defecto y 20 pares | 2 | In Review | Reporte H-3 en `reports/eval/` (D6-60) |
 | L1D-331 | US-273 composición de términos en próstata | 2 | In Progress | AC-2: ≥ 18/22 genéricas con evidencia (hoy 9/22 y 13/22, D6-57); AC-3: test |
 | L1D-326 | US-269 E2E y `evaluate` del chat | 3 | In Progress | Solo `evaluate:chat` y su medición con modelos reales (AC-3, AC-7; D6-50, D6-52, D6-59) `[S7 resp. 3]` |
-| L1D-119 | US-120 corpus ampliado y calibración | 5 | In Review | Ingesta real, barridos y baseline (tareas 8.1–8.7 y 7.1); decisiones H-3 y H-4 de licencias |
+| L1D-119 | US-120 corpus ampliado y calibración | 5 | In Review | Ingesta real, barridos y baseline (tareas 8.1–8.7 y 7.1); aplicar las decisiones de licencia H-3 y H-4 `[S7 resp. 7]` `[S7 resp. 8]` |
 | L1D-116 | US-117a ingesta reanudable | 5 | In Review | Adapter real `bge_m3_sparse.py` (tarea 1.10) |
 | L1D-113 | US-116 faltantes como «desconocido» | 3 | In Review | Medición real (4.3) y menores del Gate 2 (D5-25) |
 | L1D-126 | US-121 criterios de aplicabilidad en el catálogo | 3 | In Review | Deudas G1.6 y G2.3–G2.6, y los cambios C-1, C-2, C-4 y C-5 de la revisión clínica |
@@ -46,7 +46,7 @@ De US-269 pasan a Post-MVP el E2E de próstata (D6-49) y las métricas de faltan
 | L1D | US | Pts | DoR | Nota |
 |---|---|---|---|---|
 | L1D-334 | US-276 diagnóstico por etapa | 2 | ✓ | Va primera: produce los pares de paráfrasis que usan las otras tres |
-| L1D-335 | US-277 sinónimos de procedimientos | 3 | ✓ con excepción | `⛔ Validación del oncólogo` resuelta con el escenario aceptado de `[S7 resp. 1]`: lista del §2.2 de la revisión clínica, marcada `revision_provisional`. Ver §6, punto 2 (re-estimación) |
+| L1D-335 | US-277 sinónimos de procedimientos | 5 | ✓ con excepción | `⛔ Validación del oncólogo` resuelta con el escenario aceptado de `[S7 resp. 1]`: lista del §2.2 de la revisión clínica, marcada `revision_provisional`. Era 3 pts; sube por el campo `relacion` `[S7 resp. 6]` |
 | L1D-336 | US-278 *reranker* sobre el chunk entero | 5 | ✓ | 6 AC, sin dependencias duras |
 | L1D-337 | US-279 contexto del documento en cada chunk | 5 | ✓ | 6 AC; obliga a reindexar una vez por brazo |
 
@@ -54,7 +54,7 @@ Las cuatro tienen AC en Given/When/Then, estimación, ≤ 5 pts y ≤ 8 AC. Ning
 
 Las de arrastre ya pasaron la DoR en su sprint; lo que cambia es su alcance restante (§1).
 
-**Tamaño del sprint:** 15 pts nuevos y 42 pts nominales de arrastre. El trabajo restante del arrastre se estima en ≈ 22 pts (propuesta; lo fija `/sprint-start`), así que el S7 ronda los 37 pts de trabajo real.
+**Tamaño del sprint:** 17 pts nuevos y 42 pts nominales de arrastre. El trabajo restante del arrastre se estima en ≈ 22 pts (propuesta; lo fija `/sprint-start`), así que el S7 ronda los 39 pts de trabajo real.
 
 ## 3. Respuestas del usuario (2026-11-21)
 
@@ -90,13 +90,21 @@ Sin historia en el S7, por decisión de alcance: la calibración del NLI (fideli
 5. **Corrida final:** A/B contra la base del mismo sprint, con los brazos de US-277, US-278 y US-279.
 6. **Decisiones del §4** y DEC-07.
 
-## 6. Pendiente de confirmar por el usuario
+## 6. Confirmaciones del usuario (2026-11-21, tras el merge de #416)
 
-1. **L1D-316 se queda en el S7** aunque no es calidad del RAG: el cierre del S6 lo fijó como tarea de hora 0 (hueco B2) y lleva el S6 al 80,7 %. Si prefieres aplicar la regla al pie de la letra, pasa a Post-MVP.
-2. **US-277 pasa de 3 a 5 pts** (propuesta): la revisión clínica añade el campo `relacion` al esquema de `sinonimos.json` y su validador (S-1), además del vocabulario.
-3. **L1D-125 (DEC-11) va al S7** con L1D-126, pero no puede cerrarse sin la firma de un oncólogo.
-4. **Decisiones de licencia H-3 y H-4 de L1D-119** (etiqueta de los registros de ClinicalTrials.gov y menciones de terceros en texto CC BY): se necesitan antes de la ingesta de la corrida base.
-5. **Cerrar el milestone «Sprint 6» en Linear** (lo hace el humano): quedó sin issues abiertos.
+- **`[S7 resp. 5]` L1D-316 se queda en el S7** como tarea de hora 0, aunque no trata la calidad del RAG.
+- **`[S7 resp. 6]` US-277 pasa de 3 a 5 pts:** incluye el campo `relacion` en `sinonimos.json` y en su validador; solo `equivalente` expande la consulta. Los nuevos del S7 suman 17 pts.
+- **`[S7 resp. 7]` Licencia de ClinicalTrials.gov (H-3 de L1D-119):** se mantiene la clase `dominio_publico` y se corrige el texto de `license`; ADR-36 anota que la copia es estática.
+- **`[S7 resp. 8]` Menciones de terceros (H-4 de L1D-119):** se admiten las menciones a NCCN y ESMO en referencias bibliográficas y conflictos de interés de artículos CC BY; son citas, no contenido de las guías. Se anota en ADR-36.
+
+Las respuestas 7 y 8 se aplican dentro del change `l1d-119`, antes de la ingesta de la corrida base.
+
+Sin respuesta, se mantiene lo hecho:
+- **L1D-125 (DEC-11)** está en el S7 con L1D-126, pero no puede cerrarse sin la firma de un oncólogo.
+- **Las Features padre** se movieron con sus historias.
+- **Cerrar el milestone «Sprint 6» en Linear** lo hace el humano.
+
+**Antes de `/sprint-start S7`:** el check `dependencies` falla en `main` (aviso alto de `effect` y excepción vencida de `braces`); lo corrige el PR #417.
 
 ## 7. Stack técnico
 
