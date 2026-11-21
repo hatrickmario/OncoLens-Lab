@@ -458,6 +458,8 @@ sin pesos es un test.
 
 > Linear: [L1D-299](https://linear.app/l1der-lab-mjbc/issue/L1D-299)
 
+> **Decidido (usuario, 2026-11-21, `[S7 resp. 1]`):** revisión clínica provisional hecha por IA ([`S7-revision-clinica.md`](../sprints/S7-revision-clinica.md) §4). El dorado se amplía con pares de próstata, casos difíciles (negación, rangos, definiciones implícitas, umbrales) y distractores de subgrupo y mención (D-1…D-5). Su revisor sigue siendo «IA, provisional» hasta la revisión humana.
+
 `FEAT-T5a` · Sprint 4 · Estimación **3** · — (técnica, PRD §17; OL-06) · FR-20, FR-25 · TBD-02, TBD-20 · M-08.3, M-08.4 · ⛔ ADR-47 (aceptado) · ⛔ DEC-11 (US-021) · escenario aceptado `[S4 resp. 8]` · ↪ US-242, US-243, US-118 (muestra humana), US-233a (`proveedor: local`) · 🔗 Mide a: US-242, US-243, US-244 · 🔗 Regresión [AC-T5.4] → US-074 (PR que cambia prompt, modelo, catálogo o corpus)
 
 > **Decidido (usuario, 2026-10-29):** segunda mitad de US-233: conjunto dorado de población (muestra humana con `PLANTILLA.md` ampliada; tareas humanas `l1d-117` 2.3 y `l1d-244` 2.2) y suite por criterio: precisión y cobertura por criterio, tasa de duplicados, `finish_reason=length` = 0, concordancia de estados, regresión de «sin evidencia» y repetición de la causa del bucle en ≥ 20 casos (R17) `[S4 resp. 6]` `[S4 resp. 3]`.

@@ -141,6 +141,8 @@ Mostrar o reutilizar conversaciones anteriores (Post-MVP; L1D-311). Cerrar o bor
 
 > Linear: [L1D-316](https://linear.app/l1der-lab-mjbc/issue/L1D-316)
 
+> **Decidido (usuario, 2026-11-21, `[S7 resp. 5]`):** se queda en el S7 como tarea de hora 0 aunque no trata la calidad del RAG: subir `langgraph` a una versión corregida (alerta #9 de Dependabot) con sus tests.
+
 `FEAT-12` · Sprint 6 · Estimación **5** · — (técnica; ADR-51 §1, §2, §5) · RN-04, RN-11, RN-22, RN-24, ADR-26 · ↪ US-256 · 🔗 Produce para: US-258 (contrato), US-260…US-266 (nodos) · 🔗 Regresión [SEG-13] → US-057
 
 > **Decidido (usuario, 2026-11-06):** `InMemorySaver` con TTL, `thread_id` aleatorio de la conversación (nunca `patientId` ni `pseudoPatientId`), solo datos desidentificados, sin checkpointer persistente `[S6 resp. 5]`; «hilo desconocido» tipado y rehidratación desde Backend 1 `[S6 resp. 9]`. Memoria a corto plazo = estado estructurado + ventana de turnos acotada por tokens (`CHAT_MEMORY_MAX_TOKENS` ≈ 1500); respuestas previas rotuladas como memoria no citable; cada turno científico vuelve a recuperar (ADR-51 §5).
@@ -451,6 +453,8 @@ Componentes en `apps/web` sobre el panel de US-267; el estado de la conversació
 > **Decidido (usuario, 2026-11-21):** pasa al **Sprint 7** (L1D-326): quedó abierta al cierre del S6 y afecta a la calidad del RAG; el S7 reúne todo lo pendiente de calidad del RAG. Lo que falta está en [`S7-refinamiento.md`](../sprints/S7-refinamiento.md).
 
 > Linear: [L1D-326](https://linear.app/l1der-lab-mjbc/issue/L1D-326)
+
+> **Decidido (usuario, 2026-11-21, `[S7 resp. 3]`):** en el S7 solo entra el chat con modelos reales: el comando `evaluate:chat` y su medición (AC-3, AC-7; D6-50, D6-52, D6-59). El E2E de próstata (AC-1, D6-49) y las métricas de faltantes (AC-4, D6-51) quedan en Post-MVP.
 
 `FEAT-12` · Sprint 6 · Estimación **3** (recortada de 5, `[S6 resp. 25]`) · — (técnica; OL-06) · FR-20, RN-01, RN-10, RN-11, RN-23 · AC-T5.1 · M-02.1, M-02.2, M-02.3, M-04.1, M-04.2 · ↪ US-260…US-268 · 🔗 Absorbe: US-105 (L1D-241) y US-131 (L1D-243) `[S6 resp. 13]`
 
