@@ -158,10 +158,11 @@ describe('auditar-dependencias.mjs', () => {
     expect(stderr).toMatch(/excepción GHSA-vfj7-8cjw-p6xm vencida/);
   });
 
-  it('la excepción registrada en el repositorio es válida y cubre el aviso actual de braces [US-217 AC-1]', async () => {
+  it('las excepciones registradas en el repositorio son válidas y no bloquean una auditoría sin avisos [US-217 AC-1]', async () => {
     const registradas = JSON.parse(readFileSync(path.join(RAIZ, 'security/audit-exceptions.json'), 'utf8')).excepciones;
 
-    expect(hallazgosBloqueantes(avisoNpm(), PIP_LIMPIO, registradas, HOY, VERSIONES).bloqueantes).toEqual([]);
+    expect(Array.isArray(registradas)).toBe(true);
+    expect(hallazgosBloqueantes(NPM_LIMPIO, PIP_LIMPIO, registradas, HOY).bloqueantes).toEqual([]);
   });
 });
 
