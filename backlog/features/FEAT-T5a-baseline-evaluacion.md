@@ -115,6 +115,8 @@ dataset (`data/evaluation/`, sintético). La mecánica del reporte es de US-072.
 
 ## US-017 · DEC-07 — Metas definitivas de evaluación técnica tras el baseline
 
+> **Decidido (usuario, 2026-11-21):** pasa al **Sprint 7** (L1D-234): quedó abierta al cierre del S6 y afecta a la calidad del RAG; el S7 reúne todo lo pendiente de calidad del RAG. Lo que falta está en [`S7-refinamiento.md`](../sprints/S7-refinamiento.md).
+
 > Linear: [L1D-234](https://linear.app/l1der-lab-mjbc/issue/L1D-234)
 
 `FEAT-T5a` · Sprint 6 *(S5 → S6, `[S5 resp. 3]`)* · Estimación **1** · — (decisión) · TBD-02 · Dueño: usuario (PO) + Ingeniería · ↪ US-073 (baseline técnico), US-014 · ADR-41 · 🔗 Produce para: US-074 AC-5 (umbrales reales de regresión en `eval/configs/regression.yaml` desde el S2), FEAT-T5b
@@ -451,6 +453,8 @@ sin pesos es un test.
 ---
 
 ## US-233b — Un conjunto dorado revisado a mano mide la extracción de la población por criterio y la concordancia de los estados
+
+> **Decidido (usuario, 2026-11-21):** pasa al **Sprint 7** (L1D-299): quedó abierta al cierre del S6 y afecta a la calidad del RAG; el S7 reúne todo lo pendiente de calidad del RAG. Lo que falta está en [`S7-refinamiento.md`](../sprints/S7-refinamiento.md).
 
 > Linear: [L1D-299](https://linear.app/l1der-lab-mjbc/issue/L1D-299)
 

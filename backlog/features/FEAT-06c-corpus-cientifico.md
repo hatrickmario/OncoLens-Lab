@@ -166,6 +166,8 @@ documentos por tipo (S3). Traducción de citas (V-10).
 
 ## US-117a — La ingesta del corpus es reanudable, indexa *dense* y *sparse* y rechaza lo que no tiene licencia
 
+> **Decidido (usuario, 2026-11-21):** pasa al **Sprint 7** (L1D-116): quedó abierta al cierre del S6 y afecta a la calidad del RAG; el S7 reúne todo lo pendiente de calidad del RAG. Lo que falta está en [`S7-refinamiento.md`](../sprints/S7-refinamiento.md).
+
 > Linear: [L1D-116](https://linear.app/l1der-lab-mjbc/issue/L1D-116)
 
 `FEAT-06c` · Sprint 3 · Estimación **5** · — (técnica, PRD §17; OL-02) · FR-19 (ingesta como entregable), RN-21 · AC-06.1 (corpus abierto) · ⛔ ADR-36 (lista final de fuentes y regla de PubMed sin licencia) · ⛔ ADR-39 (modelos *dense* y *sparse*) · ↪ US-058, US-059 · ↪ US-082 (`TextExtractionService`, S5: solo para PDF reales) · 🔗 Regresión [RN-21] → US-059 · 🔗 Produce para: US-117b, US-118
@@ -351,6 +353,8 @@ Tests: Pytest con PostgreSQL de test y Supertest de `clinical-api` para el AC-2.
 ---
 
 ## US-120 — El corpus del S3 alcanza al menos 20 documentos por tipo de cáncer de al menos 3 fuentes abiertas
+
+> **Decidido (usuario, 2026-11-21):** pasa al **Sprint 7** (L1D-119): quedó abierta al cierre del S6 y afecta a la calidad del RAG; el S7 reúne todo lo pendiente de calidad del RAG. Lo que falta está en [`S7-refinamiento.md`](../sprints/S7-refinamiento.md).
 
 > Linear: [L1D-119](https://linear.app/l1der-lab-mjbc/issue/L1D-119)
 
