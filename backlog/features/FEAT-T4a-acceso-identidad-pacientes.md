@@ -509,6 +509,8 @@ unitario (AC-4), Supertest con `rag-orchestrator` simulado (AC-5).
 
 ## US-013 · ADR-40 — Detección y enmascaramiento de PII en texto libre y documentos
 
+> **Decidido (usuario, 2026-11-21):** pasa a **Post-MVP** (L1D-205): quedó abierta al cierre del S6 y no trata la calidad del RAG. Lo que falta está en [`S7-refinamiento.md`](../sprints/S7-refinamiento.md).
+
 > Linear: [L1D-205](https://linear.app/l1der-lab-mjbc/issue/L1D-205)
 
 `FEAT-T4a` · Sprint 2 · Estimación **5** · — (ADR) · RN-10, RN-11, G-8 · Dueño: Ingeniería · 🔗 Bloquea: US-049 (AC-1), FEAT-01b (gate de PII y adapter `pii/`, S2), FEAT-02b/02c y FEAT-11c (desidentificación de eventos, atributos y memoria) · ⛔ Bloqueada por: — (ADR-39 solo si la opción elegida usa el LLM)

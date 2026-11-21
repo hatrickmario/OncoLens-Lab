@@ -60,6 +60,8 @@
 
 ## US-021 · DEC-11 — Criterios de aplicabilidad, excluyentes y definición de "Parcial"
 
+> **Decidido (usuario, 2026-11-21):** pasa al **Sprint 7** (L1D-125): quedó abierta al cierre del S6 y afecta a la calidad del RAG; el S7 reúne todo lo pendiente de calidad del RAG. Lo que falta está en [`S7-refinamiento.md`](../sprints/S7-refinamiento.md).
+
 > Linear: [L1D-125](https://linear.app/l1der-lab-mjbc/issue/L1D-125)
 
 `FEAT-08b` · Sprint 4 *(escenario aceptado en el S3; F-20…F-24 aceptadas y firma en la sesión de oncólogos del S4, `[S4 resp. 8]`)* · Estimación **1** · — (decisión) · TBD-13 (aplicabilidad), R-24 · RN-28, RN-29 · Dueño: oncólogo asesor · ⛔ DEC-05 (cerrada en el Pre-S1) · 🔗 Bloquea: US-121 (contenido real), US-122 (reglas), US-243 (semántica de la lista), US-126 (UI de varios valores), US-134, US-247, US-233b, US-132, DEC-19 (US-031) · Registro: `docs/decisions/DEC-11-aplicabilidad-lista-de-poblacion.md`
@@ -120,6 +122,8 @@ US-242, US-243 y US-244.
 ---
 
 ## US-121 — Los criterios de aplicabilidad de mama y próstata viven en el catálogo con destino, excluyentes y regla de "Parcial"
+
+> **Decidido (usuario, 2026-11-21):** pasa al **Sprint 7** (L1D-126): quedó abierta al cierre del S6 y afecta a la calidad del RAG; el S7 reúne todo lo pendiente de calidad del RAG. Lo que falta está en [`S7-refinamiento.md`](../sprints/S7-refinamiento.md).
 
 > Linear: [L1D-126](https://linear.app/l1der-lab-mjbc/issue/L1D-126)
 > **Decidido (usuario, 2026-10-24, cierre de la O1 del S3):** `destination.match` del catálogo de datos críticos se amplía a arrays (compatible hacia atrás; deuda anotada en L1D-93 con destino esta historia). La allowlist de destinos de L1D-93 **excluye** `Biomarker.original_name`, `reference_range` y `Exam.source_lab` (privacidad); si un criterio los necesita, se reabre con el usuario.

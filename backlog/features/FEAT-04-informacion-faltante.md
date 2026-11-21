@@ -21,6 +21,8 @@
 
 ## DEC-01 — Catálogo de datos críticos de mama y próstata revisado por el oncólogo
 
+> **Decidido (usuario, 2026-11-21):** pasa a **Post-MVP** (L1D-92): quedó abierta al cierre del S6 y no trata la calidad del RAG. Lo que falta está en [`S7-refinamiento.md`](../sprints/S7-refinamiento.md).
+
 > Linear: [L1D-92](https://linear.app/l1der-lab-mjbc/issue/L1D-92)
 
 `FEAT-04` · Sprint 5 *(S3 con cierre en la sesión de oncólogos del S4 → S5, `[S4 resp. 1]`)* · Estimación **1** · — (decisión) · TBD-12 · M-04.3 (gobierno; P-03) · RN-29 · Dueño: **oncólogo asesor** (prepara Ingeniería) · ⛔ DEC-05 (Q5, cerrada en el Pre-S1) · ↪ US-001 · 🔗 Bloquea: DEC-19 (US-031, criterio de "listo", S6)
