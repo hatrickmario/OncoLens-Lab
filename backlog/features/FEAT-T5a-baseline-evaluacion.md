@@ -115,6 +115,8 @@ dataset (`data/evaluation/`, sintético). La mecánica del reporte es de US-072.
 
 ## US-017 · DEC-07 — Metas definitivas de evaluación técnica tras el baseline
 
+> **Decidido (usuario, 2026-11-21):** pasa al **Sprint 7** (L1D-234): quedó abierta al cierre del S6 y afecta a la calidad del RAG; el S7 reúne todo lo pendiente de calidad del RAG. Lo que falta está en [`S7-refinamiento.md`](../sprints/S7-refinamiento.md).
+
 > Linear: [L1D-234](https://linear.app/l1der-lab-mjbc/issue/L1D-234)
 
 `FEAT-T5a` · Sprint 6 *(S5 → S6, `[S5 resp. 3]`)* · Estimación **1** · — (decisión) · TBD-02 · Dueño: usuario (PO) + Ingeniería · ↪ US-073 (baseline técnico), US-014 · ADR-41 · 🔗 Produce para: US-074 AC-5 (umbrales reales de regresión en `eval/configs/regression.yaml` desde el S2), FEAT-T5b
@@ -452,7 +454,11 @@ sin pesos es un test.
 
 ## US-233b — Un conjunto dorado revisado a mano mide la extracción de la población por criterio y la concordancia de los estados
 
+> **Decidido (usuario, 2026-11-21):** pasa al **Sprint 7** (L1D-299): quedó abierta al cierre del S6 y afecta a la calidad del RAG; el S7 reúne todo lo pendiente de calidad del RAG. Lo que falta está en [`S7-refinamiento.md`](../sprints/S7-refinamiento.md).
+
 > Linear: [L1D-299](https://linear.app/l1der-lab-mjbc/issue/L1D-299)
+
+> **Decidido (usuario, 2026-11-21, `[S7 resp. 1]`):** revisión clínica provisional hecha por IA ([`S7-revision-clinica.md`](../sprints/S7-revision-clinica.md) §4). El dorado se amplía con pares de próstata, casos difíciles (negación, rangos, definiciones implícitas, umbrales) y distractores de subgrupo y mención (D-1…D-5). Su revisor sigue siendo «IA, provisional» hasta la revisión humana.
 
 `FEAT-T5a` · Sprint 4 · Estimación **3** · — (técnica, PRD §17; OL-06) · FR-20, FR-25 · TBD-02, TBD-20 · M-08.3, M-08.4 · ⛔ ADR-47 (aceptado) · ⛔ DEC-11 (US-021) · escenario aceptado `[S4 resp. 8]` · ↪ US-242, US-243, US-118 (muestra humana), US-233a (`proveedor: local`) · 🔗 Mide a: US-242, US-243, US-244 · 🔗 Regresión [AC-T5.4] → US-074 (PR que cambia prompt, modelo, catálogo o corpus)
 

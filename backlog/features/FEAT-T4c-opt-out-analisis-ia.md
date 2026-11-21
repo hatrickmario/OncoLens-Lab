@@ -22,6 +22,8 @@
 
 ## US-148 — Toda generación con IA sobre un paciente con opt-out de `analisis_ia` responde `403` sin llamar a la IA, y lo demás sigue funcionando
 
+> **Decidido (usuario, 2026-11-21):** pasa a **Post-MVP** (L1D-213): quedó abierta al cierre del S6 y no trata la calidad del RAG. Lo que falta está en [`S7-refinamiento.md`](../sprints/S7-refinamiento.md).
+
 > Linear: [L1D-213](https://linear.app/l1der-lab-mjbc/issue/L1D-213)
 
 `FEAT-T4c` · Sprint 6 · Estimación **5** · HU-14 (opt-out) · RN-15 (dueña), FR-16 (S5), FR-09, FR-21 · AC-T4.6 (`403`), AC-T3.3 (bloqueo por opt-out), AC-06.1 (`403`), AC-02.5 (`403`), AC-T4.1 (parte) · G-9 (opt-out) · ↪ US-149, US-052 · 🔗 Relacionada: US-096 (resumen, `si-hay-capacidad`: AC-2 condicional) · ⛔ DEC-16 (US-026) · escenario más probable · 🔗 Regresión [RN-26] → US-071 · 🔗 Cubre: FEAT-12 (US-258…US-266)

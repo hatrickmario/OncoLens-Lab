@@ -14,7 +14,7 @@
 **Dependencias:** ↪ US-072 (*runner* y reporte), US-073 (baseline y umbral), US-012 (ADR-39 fase A: dataset `adr39-mini`) · 🔗 Informa a: US-017 · DEC-07 (metas), US-112 y US-113 (híbrida y expansión: se re-estiman con el resultado), US-133 (recuperación híbrida sin retroceso), ADR-41 · ⛔ Tiempo del oncólogo asesor (SUP-4) para US-227, US-228 y US-229
 **Valor:** hoy la recuperación mide recall@10 0,71 y MRR 0,36 con un conjunto que no distingue una mejora de 0,10 del ruido. Esta Feature da un protocolo que impide el sobreajuste, un conjunto nuevo e independiente y ablaciones preinscritas, para que cualquier mejora (híbrida, expansión, contexto del chunk) se adopte solo con evidencia, y para recalibrar las metas con base estadística.
 **Workaround en el MVP:** las metas de recuperación se informan como provisionales y no bloquean la CI (enmienda propuesta a US-017, no aplicada); se sigue con recuperación densa + *reranker* (US-055).
-**Stories:** US-226 (5), US-227 (3), US-228 (5), US-229 (5), US-230 (5) = **23 puntos** · altas del 2026-11-11: US-276 (2), US-277 (3), US-278 (5) = **10 puntos** · alta del 2026-11-13: US-279 (5) · **S7: US-276…US-279 = 15 puntos** · total **38 puntos** (borrador; no se suma al total del backlog hasta aprobarse)
+**Stories:** US-226 (5), US-227 (3), US-228 (5), US-229 (5), US-230 (5) = **23 puntos** · altas del 2026-11-11: US-276 (2), US-277 (5; era 3, `[S7 resp. 6]`), US-278 (5) = **12 puntos** · alta del 2026-11-13: US-279 (5) · **S7: US-276…US-279 = 17 puntos** · total **40 puntos** (borrador; no se suma al total del backlog hasta aprobarse)
 
 > **Cambios que este borrador propone a historias publicadas (no aplicados):**
 > - **US-017 · DEC-07:** añadir un AC con las metas de recuperación evaluadas sobre el límite inferior del IC de 95 % y la regla de "provisional hasta US-229" (ADR-45, "Metas de OL-06").
@@ -204,7 +204,9 @@ Cambiar umbrales, modelos o catálogo (US-277, US-278); medir recall@10 global (
 
 > Linear: [L1D-335](https://linear.app/l1der-lab-mjbc/issue/L1D-335) · milestone «Sprint 7» (publicada el 2026-11-13)
 
-`FEAT-T5e` · **S7** *(alta del 2026-11-11, prioridad 2 del análisis de mejoras tras la Demo 6)* · Estimación **3** · — (técnica y clínica) · FR-09, IA-02 · M-06.1 · ↪ US-276, US-238 (segundo loop de reescritura, L1D-300), US-273 (L1D-331, composición de términos en próstata) · ⛔ Validación del oncólogo asesor de los sinónimos (SUP-4) · 🔗 Cierra: D4-30 (activación de `QUERY_REWRITE_ENABLED`) · **Recorrido principal:** sí
+> **Decidido (usuario, 2026-11-21, `[S7 resp. 1]` y `[S7 resp. 6]`):** no se espera al oncólogo: los sinónimos salen de la lista del §2.2 de [`S7-revision-clinica.md`](../sprints/S7-revision-clinica.md), marcada `revision_provisional: {rol: ia, fecha}` (no es validación de un oncólogo). Cada entrada lleva `relacion: equivalente | mas_amplio | miembro_de_clase` en el esquema de `sinonimos.json` y en su validador, y **solo `equivalente` expande la consulta**. Se corrige `pertuzumab ← doble bloqueo anti-HER2` y se añade *leuprolide*. La estimación pasa de 3 a **5**.
+
+`FEAT-T5e` · **S7** *(alta del 2026-11-11, prioridad 2 del análisis de mejoras tras la Demo 6)* · Estimación **5** *(era 3; `[S7 resp. 6]`)* · — (técnica y clínica) · FR-09, IA-02 · M-06.1 · ↪ US-276, US-238 (segundo loop de reescritura, L1D-300), US-273 (L1D-331, composición de términos en próstata) · ⛔ Validación del oncólogo asesor de los sinónimos (SUP-4) · 🔗 Cierra: D4-30 (activación de `QUERY_REWRITE_ENABLED`) · **Recorrido principal:** sí
 
 ## Story
 Como oncólogo, quiero que una pregunta escrita con el nombre coloquial de un procedimiento («cirugía radical de próstata») encuentre la misma evidencia que con el término técnico («prostatectomía radical» / *radical prostatectomy*), para no perder información por cómo redacto la pregunta.
@@ -224,7 +226,7 @@ El segundo loop (US-238) ya filtra los términos con el catálogo (`domain/reesc
 Traducción con modelo dedicado (brazo A4 de US-230); BM25 o multivector; cambiar `RELEVANCE_THRESHOLD`.
 
 ## INVEST
-**Small** ✓ 3. **Testable** ✓ catálogo validado por esquema, AC-2 y AC-5 en el informe de `evaluate`.
+**Small** ✓ 5. **Testable** ✓ catálogo validado por esquema, AC-2 y AC-5 en el informe de `evaluate`.
 
 ---
 
