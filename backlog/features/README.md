@@ -92,7 +92,7 @@
 | US-050 | Los datos reales solo se procesan con modelos locales, sin respaldo en la nube | FEAT-T4a | 6 | 3 | sí |
 | US-221 | Una persona solicita una cuenta y el administrador la aprueba o la rechaza | FEAT-T4a | 6 | 3 | sí |
 | US-222 | El administrador gestiona usuarios y altas de pacientes desde una consola, sin acceso a datos clínicos | FEAT-T4a | 6 | 5 | sí |
-| US-013 · ADR-40 | Detección y enmascaramiento de PII en texto libre y documentos | FEAT-T4a | 2 | 5 | sí |
+| US-013 · ADR-40 | Detección y enmascaramiento de PII en texto libre y documentos | FEAT-T4a | Post-MVP (desde S6, usuario 2026-11-21; antes: 2) | 5 | sí |
 | US-051 | Veo la ficha mínima del paciente con su diagnóstico vigente y sus biomarcadores recientes | FEAT-02a | 2 | 5 | sí |
 | US-019 · DEC-09 | Reglas del semáforo de biomarcadores y de vigencia de diagnósticos | FEAT-02a | 5 (desde S4, `[S4 resp. 1]`) | 1 | sí |
 | US-012 · ADR-39 | Fase A: *embeddings*, *reranker* y NLI locales, más *chunking* e índice (T2–T5, `[S1 resp. 38]`) | FEAT-06a | 1 (inicio) | **8** (excepción de tamaño; era 5) | sí |
@@ -123,10 +123,10 @@
 | US-071 | Los avisos clínicos nunca bloquean; solo bloquean las reglas legales y de acceso | FEAT-T3 | 5 | 3 | sí |
 | US-014 · ADR-41 | Framework y protocolo de evaluación de calidad de la IA | FEAT-T5a | 2 | 3 | sí |
 | US-016 · DEC-06 | Revisión clínica de la muestra del dataset de evaluación y del diccionario de significancia | FEAT-T5a | 5 (desde S4, `[S4 resp. 1]`) | 1 | sí |
-| US-017 · DEC-07 | Metas definitivas de evaluación técnica tras el baseline | FEAT-T5a | 5 (desde S4, `[S4 resp. 1]`) | 1 | sí |
+| US-017 · DEC-07 | Metas definitivas de evaluación técnica tras el baseline | FEAT-T5a | 7 (desde S6, usuario 2026-11-21; antes: 5 (desde S4, `[S4 resp. 1]`)) | 1 | sí |
 | US-233 | La suite `evaluate` corre con los modelos locales… — **dividida** en US-233a y US-233b (usuario, 2026-10-29, `[S4 resp. 6]`; AC-3 y AC-8 → US-120); no suma | FEAT-T5a | — | — | — |
 | US-233a | La suite `evaluate` corre con los modelos locales, acota y calibra el juez local y mide los recursos del NLI — Linear pendiente | FEAT-T5a | 4 | 3 | sí |
-| US-233b | Un conjunto dorado revisado a mano mide la extracción de la población por criterio y la concordancia de los estados — Linear pendiente | FEAT-T5a | 4 | 3 | sí |
+| US-233b | Un conjunto dorado revisado a mano mide la extracción de la población por criterio y la concordancia de los estados — Linear pendiente | FEAT-T5a | 7 (desde S6, usuario 2026-11-21; antes: 4) | 3 | sí |
 | US-234 | La búsqueda de pacientes limita la tasa por usuario, queda auditada sin datos personales y su índice del nombre es obligatorio — Linear pendiente (límite de issues del workspace) | FEAT-T4a | 6 | 3 | sí |
 | US-235 | El nombre original del PDF se guarda cifrado o enmascarado y bloquea preflight real-data hasta entonces — Linear pendiente (límite de issues del workspace) | FEAT-01a | 6 | 2 | sí |
 | US-236 | El LLM cita los chunks por un alias corto y el sistema lo traduce al `chunkId` real antes de validar la cita | FEAT-T1a | 3 | 3 | sí |
@@ -151,7 +151,7 @@
 | US-256 · ADR-51 | El chat se orquesta con LangGraph en Backend 2 con estado efímero y Backend 1 guarda el registro y rehidrata — Linear [L1D-313](https://linear.app/l1der-lab-mjbc/issue/L1D-313) | FEAT-12 | 6 (nueva, refinamiento del S6, 2026-11-06) | 2 | sí |
 | US-257 | Spike: assistant-ui cumple los cinco escenarios del oncólogo con CSP estricta y solo APIs estables, o la UI se hace con shadcn — Linear [L1D-314](https://linear.app/l1der-lab-mjbc/issue/L1D-314) | FEAT-12 | 6 (nueva, refinamiento del S6, 2026-11-06) | 3 | sí |
 | US-258 | `clinical-api` abre una conversación sobre el paciente y persiste cada turno, con la pregunta enmascarada, antes de responder — Linear [L1D-315](https://linear.app/l1der-lab-mjbc/issue/L1D-315) | FEAT-12 | 6 (nueva, refinamiento del S6, 2026-11-06) | 5 | sí |
-| US-259 | El turno del chat se resuelve en un grafo LangGraph de `rag-orchestrator` con estado efímero, TTL y rehidratación — Linear [L1D-316](https://linear.app/l1der-lab-mjbc/issue/L1D-316) | FEAT-12 | 6 (nueva, refinamiento del S6, 2026-11-06) | 5 | sí |
+| US-259 | El turno del chat se resuelve en un grafo LangGraph de `rag-orchestrator` con estado efímero, TTL y rehidratación — Linear [L1D-316](https://linear.app/l1der-lab-mjbc/issue/L1D-316) | FEAT-12 | 7 (desde S6, usuario 2026-11-21; antes: 6 (nueva, refinamiento del S6, 2026-11-06)) | 5 | sí |
 | US-260 | AC01: el chat reconstruye la situación, el resumen y la evolución del paciente con cada afirmación enlazada y verificada — Linear [L1D-317](https://linear.app/l1der-lab-mjbc/issue/L1D-317) | FEAT-12 | 6 (nueva, refinamiento del S6, 2026-11-06) | 5 | sí |
 | US-261 | AC02: el chat responde sobre un examen, un tratamiento o un periodo concreto y distingue lo documentado de la interpretación — Linear [L1D-318](https://linear.app/l1der-lab-mjbc/issue/L1D-318) | FEAT-12 | 6 (nueva, refinamiento del S6, 2026-11-06) | 3 | sí |
 | US-262 | El chat señala las contradicciones y las correcciones del expediente sin resolverlas — Linear [L1D-319](https://linear.app/l1der-lab-mjbc/issue/L1D-319) | FEAT-12 | 6 (nueva, refinamiento del S6, 2026-11-06) | 3 | sí |
@@ -161,15 +161,15 @@
 | US-266 | AC06: fuentes y limitaciones de la evidencia y de la recuperación; «sin evidencia» sin LLM de generación — Linear [L1D-323](https://linear.app/l1der-lab-mjbc/issue/L1D-323) | FEAT-12 | 6 (nueva, refinamiento del S6, 2026-11-06) | 3 | sí |
 | US-267 | El panel conversacional sustituye a las 10 preguntas de seguimiento y muestra cada turno con sus enlaces, citas y avisos, y ofrece 3–4 preguntas guiadas — Linear [L1D-324](https://linear.app/l1der-lab-mjbc/issue/L1D-324) | FEAT-12 | 6 (nueva, refinamiento del S6, 2026-11-06; 5 → 8 el 2026-11-06) | 8 | sí |
 | US-268 | El oncólogo abre fuentes, expande bloques y consulta referencias sin perder el contexto de la conversación — Linear [L1D-325](https://linear.app/l1der-lab-mjbc/issue/L1D-325) | FEAT-12 | 6 (nueva, refinamiento del S6, 2026-11-06) | 3 | sí |
-| US-269 | E2E y `evaluate` del chat: AC01–AC06 con casos sintéticos de mama y próstata (absorbe US-105 y US-131) — Linear [L1D-326](https://linear.app/l1der-lab-mjbc/issue/L1D-326) | FEAT-12 | 6 (nueva, refinamiento del S6, 2026-11-06) | 5 | sí |
+| US-269 | E2E y `evaluate` del chat: AC01–AC06 con casos sintéticos de mama y próstata (absorbe US-105 y US-131) — Linear [L1D-326](https://linear.app/l1der-lab-mjbc/issue/L1D-326) | FEAT-12 | 7 (desde S6, usuario 2026-11-21; antes: 6 (nueva, refinamiento del S6, 2026-11-06)) | 5 | sí |
 | US-270 | El log del corte previo al *reranker* registra qué fragmentos quedaron fuera y su orden denso, nunca su texto (R4) — Linear [L1D-327](https://linear.app/l1der-lab-mjbc/issue/L1D-327) | FEAT-06a | 6 (nueva, `[S6 resp. 4]`) | 1 | sí |
-| US-271 | El chat recupera evidencia para preguntas sin tema propio con un segundo loop de recuperación que añade términos del caso del catálogo, sin invocar al LLM (ADR-52) — Linear [L1D-329](https://linear.app/l1der-lab-mjbc/issue/L1D-329) | FEAT-12 | 6 (alta, 2026-11-06) | 4 | sí |
+| US-271 | El chat recupera evidencia para preguntas sin tema propio con un segundo loop de recuperación que añade términos del caso del catálogo, sin invocar al LLM (ADR-52) — Linear [L1D-329](https://linear.app/l1der-lab-mjbc/issue/L1D-329) | FEAT-12 | 7 (desde S6, usuario 2026-11-21; antes: 6 (alta, 2026-11-06)) | 4 | sí |
 | US-272 | Una quimioterapia que sigue activa aparece en «los últimos N días» porque el hecho del caso lleva su día relativo de fin (`relativeEndDay`) — Linear [L1D-330](https://linear.app/l1der-lab-mjbc/issue/L1D-330) | FEAT-12 | 6 (alta, 2026-11-06) | 2 | sí |
-| US-273 | En próstata, el segundo loop contextual deja de recuperar sobre todo cribado porque la composición de términos no se ancla en «Antígeno prostático específico (PSA)» — Linear [L1D-331](https://linear.app/l1der-lab-mjbc/issue/L1D-331) | FEAT-12 | 6 (alta, 2026-11-07) | 2 | sí |
+| US-273 | En próstata, el segundo loop contextual deja de recuperar sobre todo cribado porque la composición de términos no se ancla en «Antígeno prostático específico (PSA)» — Linear [L1D-331](https://linear.app/l1der-lab-mjbc/issue/L1D-331) | FEAT-12 | 7 (desde S6, usuario 2026-11-21; antes: 6 (alta, 2026-11-07)) | 2 | sí |
 | US-274 | El aviso de ampliación de la búsqueda y el mensaje «Evidencia recuperada sin opciones soportadas» se ven claramente en el panel conversacional — Linear [L1D-332](https://linear.app/l1der-lab-mjbc/issue/L1D-332) | FEAT-12 | 6 (alta, 2026-11-07) | 2 | sí |
-| US-275 | La expansión contextual se activa por defecto y el tope de pares del *reranker* pasa de 12 a 20, con el p95 de consulta completa medido en máquina limpia — Linear [L1D-333](https://linear.app/l1der-lab-mjbc/issue/L1D-333) | FEAT-12 | 6 (alta, 2026-11-07) | 2 | sí |
+| US-275 | La expansión contextual se activa por defecto y el tope de pares del *reranker* pasa de 12 a 20, con el p95 de consulta completa medido en máquina limpia — Linear [L1D-333](https://linear.app/l1der-lab-mjbc/issue/L1D-333) | FEAT-12 | 7 (desde S6, usuario 2026-11-21; antes: 6 (alta, 2026-11-07)) | 2 | sí |
 | US-276 | Un diagnóstico por etapa dice dónde pierde la evidencia una pregunta parafraseada — Linear [L1D-334](https://linear.app/l1der-lab-mjbc/issue/L1D-334) | FEAT-T5e | S7 (alta, 2026-11-11) | 2 | sí |
-| US-277 | Las preguntas con un nombre coloquial de un procedimiento recuperan la misma evidencia que con el término técnico — Linear [L1D-335](https://linear.app/l1der-lab-mjbc/issue/L1D-335) | FEAT-T5e | S7 (alta, 2026-11-11) | 3 | sí |
+| US-277 | Las preguntas con un nombre coloquial de un procedimiento recuperan la misma evidencia que con el término técnico — Linear [L1D-335](https://linear.app/l1der-lab-mjbc/issue/L1D-335) | FEAT-T5e | S7 (alta, 2026-11-11) | 5 (era 3, 2026-11-21) | sí |
 | US-278 | El *reranker* puntúa el chunk entero y no solo sus primeros 512 tokens — Linear [L1D-336](https://linear.app/l1der-lab-mjbc/issue/L1D-336) | FEAT-T5e | S7 (alta, 2026-11-11) | 5 | sí |
 | US-279 | Cada chunk se indexa con el contexto de su documento, sin cambiar el texto que se cita — Linear [L1D-337](https://linear.app/l1der-lab-mjbc/issue/L1D-337) | FEAT-T5e | S7 (alta, 2026-11-13) | 5 | sí |
 | US-072 | La suite `evaluate` mide recuperación, fidelidad, "sin evidencia", privacidad y lenguaje de forma reproducible | FEAT-T5a | 2 | 8 (072a 5 + 072b 3) | sí |
@@ -208,7 +208,7 @@
 | US-104 | Los umbrales de confianza del OCR se calibran con el set de referencia y quedan en configuración | FEAT-T5b | `si-hay-capacidad` | 3 | no |
 | US-105 | La suite mide la fidelidad del caso reconstruido, el origen de cada dato, el soporte del resumen y el p95 de la vista de caso | FEAT-T5b | Post-MVP (desde S5, 2026-11-02; ratificado el 2026-11-06, absorbida por US-269, `[S6 resp. 13]`) | 5 | sí |
 | US-106 | La suite mide duplicados fusionados, conflictos detectados, fusiones incorrectas y mapeo terminológico | FEAT-T5b | `si-hay-capacidad` | 5 | no |
-| DEC-01 | Catálogo de datos críticos de mama y próstata revisado por el oncólogo | FEAT-04 | 5 (cierre; S3 → S5, `[S4 resp. 1]`) | 1 | sí |
+| DEC-01 | Catálogo de datos críticos de mama y próstata revisado por el oncólogo | FEAT-04 | Post-MVP (desde S6, usuario 2026-11-21; antes: 5 (cierre; S3 → S5, `[S4 resp. 1]`)) | 1 | sí |
 | US-001 | El catálogo de datos críticos se publica versionado y solo si cada ítem tiene campo de destino | FEAT-04 | 4 | 3 | sí |
 | US-002 | El checklist calcula de forma determinista el estado de cada dato crítico | FEAT-04 | 4 | 3 | sí |
 | US-003 | El checklist se expone por API en `/completeness`, en la vista de caso y en la ficha | FEAT-04 | 4 | 3 | sí |
@@ -224,16 +224,16 @@
 | US-113 | Una pregunta en español recupera también evidencia en inglés, y viceversa | FEAT-06b | `si-hay-capacidad` | 3 | no |
 | US-114 | Las fuentes y los filtros del panel se aplican de verdad a la búsqueda y al contexto | FEAT-06b | `si-hay-capacidad` | 5 | no |
 | US-115 | El panel ofrece los selectores de fuentes y filtros que el backend ya aplica | FEAT-06b | `si-hay-capacidad` | 3 | no |
-| US-116 | Los datos críticos faltantes viajan como "desconocido" al prompt y enriquecen la consulta | FEAT-06b | 5 | 3 | sí |
+| US-116 | Los datos críticos faltantes viajan como "desconocido" al prompt y enriquecen la consulta | FEAT-06b | 7 (desde S6, usuario 2026-11-21; antes: 5) | 3 | sí |
 | US-220 | El oncólogo filtra la evidencia por antigüedad y el filtro queda registrado en la Base del análisis | FEAT-06b | 5 | 3 | sí |
 | US-117 | La ingesta del corpus es reanudable, indexa *dense* y *sparse*, versiona sin borrar y rechaza lo que no tiene licencia — **dividida** en US-117a y US-117b (usuario, 2026-10-23, `[S3 resp. 2]`); no suma | FEAT-06c | — | — | — |
-| US-117a | La ingesta del corpus es reanudable, indexa *dense* y *sparse* y rechaza lo que no tiene licencia (L1D-116) | FEAT-06c | 3 | 5 | sí |
+| US-117a | La ingesta del corpus es reanudable, indexa *dense* y *sparse* y rechaza lo que no tiene licencia (L1D-116) | FEAT-06c | 7 (desde S6, usuario 2026-11-21; antes: 3) | 5 | sí |
 | US-117b | La ingesta versiona sin borrar y puebla el *sparse* de la semilla — Linear pendiente (límite de issues del workspace) — hecha (PR #218); se archiva en el S4 con 0 pts `[S4 resp. 10]` | FEAT-06c | 3 | 3 | sí |
 | US-118 | Los metadatos de población, diseño y endpoint se toman de la fuente o se extraen y verifican, y una muestra se revisa a mano | FEAT-06c | 4 | 3 | sí |
 | US-119 | Cada ingesta publica una `CorpusRelease` con su fecha de corte y la Base del análisis la usa | FEAT-06c | `si-hay-capacidad` | 3 | no |
-| US-120 | El corpus del S3 alcanza al menos 20 documentos por tipo de cáncer de al menos 3 fuentes abiertas | FEAT-06c | 5 (desde S4, `[S4 resp. 1]`) | 5 (era 3, 2026-11-02) | sí |
-| US-021 · DEC-11 | Criterios de aplicabilidad, excluyentes y definición de "Parcial" | FEAT-08b | 4 (cierre en la sesión de oncólogos, `[S4 resp. 8]`) | 1 | sí |
-| US-121 | Los criterios de aplicabilidad de mama y próstata viven en el catálogo con destino, excluyentes y regla de "Parcial" | FEAT-08b | 5 | 3 | sí |
+| US-120 | El corpus del S3 alcanza al menos 20 documentos por tipo de cáncer de al menos 3 fuentes abiertas | FEAT-06c | 7 (desde S6, usuario 2026-11-21; antes: 5 (desde S4, `[S4 resp. 1]`)) | 5 (era 3, 2026-11-02) | sí |
+| US-021 · DEC-11 | Criterios de aplicabilidad, excluyentes y definición de "Parcial" | FEAT-08b | 7 (desde S6, usuario 2026-11-21; antes: 4 (cierre en la sesión de oncólogos, `[S4 resp. 8]`)) | 1 | sí |
+| US-121 | Los criterios de aplicabilidad de mama y próstata viven en el catálogo con destino, excluyentes y regla de "Parcial" | FEAT-08b | 7 (desde S6, usuario 2026-11-21; antes: 5) | 3 | sí |
 | US-122 | Con valores estructurados, el estado de cada criterio se calcula con la regla del catálogo y el valor del paciente se copia del contexto | FEAT-08b | 5 | 3 | sí |
 | US-123 | Si la población del estudio solo está en el texto, el valor se acepta solo con cita y soporte; si no, queda "Desconocido" | FEAT-08b | 5 | 3 | sí |
 | US-124 | Cada criterio desconocido dice su causa, avisa si el dato del paciente no está verificado, y un excluyente en "No coincide" marca la población como no comparable | FEAT-08b | 5 | 3 | sí |
@@ -256,7 +256,7 @@
 | US-138 | Al cerrar cada análisis el panel ofrece la calificación 1–5 y, si hubo aviso de faltantes, los dos checkboxes, sin bloquear nada | FEAT-T5c | 5 | 3 | sí |
 | US-139 | El reporte de feedback agrega VM-4 y VM-5 por cohorte y por versión de catálogo y dice si el catálogo queda validado | FEAT-T5c | 5 | 3 | sí |
 | US-024 · DEC-14 | Revisión clínica de la muestra de aplicabilidad (VM-3) | FEAT-T5c | 5 | 1 | sí |
-| US-140 | La suite mide que hasta 3 opciones siguen citadas, con soporte, no prescriptivas y en el orden de RN-28 | FEAT-T5b | 5 (desde S4, `[S4 resp. 1]`) | 5 | sí |
+| US-140 | La suite mide que hasta 3 opciones siguen citadas, con soporte, no prescriptivas y en el orden de RN-28 | FEAT-T5b | 7 (desde S6, usuario 2026-11-21; antes: 5 (desde S4, `[S4 resp. 1]`)) | 5 | sí |
 | US-141 | El p95 del análisis se mide con aplicabilidad y hasta 3 opciones y la meta de G-5 se recalibra con ese dato | FEAT-T5b | `si-hay-capacidad` | 3 | no |
 | US-142 | G-Demo se verifica con el recorrido de la hipótesis sobre casos sintéticos y queda registrado | FEAT-T5b | 5 (cierre) | 5 | sí |
 | US-143 | `oncolens preflight real-data` verifica los prerrequisitos del gate y `clinical-api` no arranca con datos reales si alguno falla | FEAT-T4d | 6 | 8 | sí |
@@ -270,7 +270,7 @@
 | US-029 · DEC-17 | Mapeos terminológicos firmados | FEAT-T4d | 6 | 1 | sí |
 | US-030 · DEC-18 | Edad de mayoría configurada | FEAT-T4d | 6 | 1 | sí |
 | US-031 · DEC-19 | Criterio de "listo" por tipo de cáncer firmado | FEAT-T4d | 6 | 1 | sí |
-| US-148 | Toda generación con IA sobre un paciente con opt-out de `analisis_ia` responde `403` sin llamar a la IA, y lo demás sigue funcionando | FEAT-T4c | 6 | 5 | sí |
+| US-148 | Toda generación con IA sobre un paciente con opt-out de `analisis_ia` responde `403` sin llamar a la IA, y lo demás sigue funcionando | FEAT-T4c | Post-MVP (desde S6, usuario 2026-11-21; antes: 6) | 5 | sí |
 | US-149 | El administrador registra y revoca marcas de opt-out por CLI, con referencia externa y motivo del catálogo, auditadas | FEAT-T4c | 6 | 3 | sí |
 | US-022 · DEC-12 | Canal de opt-out: referencia externa, catálogo de motivos y SLA | FEAT-T4c | 6 | 1 | sí |
 | US-026 · DEC-16 | Alcance de "generación con IA" bajo el opt-out de `analisis_ia` | FEAT-T4c | 6 | 1 | sí |

@@ -211,6 +211,8 @@ contra Compose en perfil de test.
 
 ## US-116 — Los datos críticos faltantes viajan como "desconocido" al prompt y enriquecen la consulta
 
+> **Decidido (usuario, 2026-11-21):** pasa al **Sprint 7** (L1D-113): quedó abierta al cierre del S6 y afecta a la calidad del RAG; el S7 reúne todo lo pendiente de calidad del RAG. Lo que falta está en [`S7-refinamiento.md`](../sprints/S7-refinamiento.md).
+
 > Linear: [L1D-113](https://linear.app/l1der-lab-mjbc/issue/L1D-113)
 
 `FEAT-06b` · Sprint 5 · Estimación **3** · HU-18 · FR-09 (contexto con faltantes), FR-23 ("desconocido"), IA-03 · AC-04.3 (parte de Backend 2) · ↪ FEAT-04 US-006, US-057 · 🔗 Regresión [RN-11] → US-049 · 🔗 Regresión [RN-02] → US-055

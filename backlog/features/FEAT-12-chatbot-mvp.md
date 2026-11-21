@@ -137,7 +137,11 @@ Mostrar o reutilizar conversaciones anteriores (Post-MVP; L1D-311). Cerrar o bor
 
 ## US-259 — El turno del chat se resuelve en un grafo LangGraph de `rag-orchestrator` con estado efímero, TTL y rehidratación
 
+> **Decidido (usuario, 2026-11-21):** pasa al **Sprint 7** (L1D-316): quedó abierta al cierre del S6 y afecta a la calidad del RAG; el S7 reúne todo lo pendiente de calidad del RAG. Lo que falta está en [`S7-refinamiento.md`](../sprints/S7-refinamiento.md). Tarea de hora 0 (hueco B2 del cierre del S6).
+
 > Linear: [L1D-316](https://linear.app/l1der-lab-mjbc/issue/L1D-316)
+
+> **Decidido (usuario, 2026-11-21, `[S7 resp. 5]`):** se queda en el S7 como tarea de hora 0 aunque no trata la calidad del RAG: subir `langgraph` a una versión corregida (alerta #9 de Dependabot) con sus tests.
 
 `FEAT-12` · Sprint 6 · Estimación **5** · — (técnica; ADR-51 §1, §2, §5) · RN-04, RN-11, RN-22, RN-24, ADR-26 · ↪ US-256 · 🔗 Produce para: US-258 (contrato), US-260…US-266 (nodos) · 🔗 Regresión [SEG-13] → US-057
 
@@ -446,7 +450,11 @@ Componentes en `apps/web` sobre el panel de US-267; el estado de la conversació
 
 ## US-269 — E2E y `evaluate` del chat: AC01–AC06 con casos sintéticos de mama y próstata
 
+> **Decidido (usuario, 2026-11-21):** pasa al **Sprint 7** (L1D-326): quedó abierta al cierre del S6 y afecta a la calidad del RAG; el S7 reúne todo lo pendiente de calidad del RAG. Lo que falta está en [`S7-refinamiento.md`](../sprints/S7-refinamiento.md).
+
 > Linear: [L1D-326](https://linear.app/l1der-lab-mjbc/issue/L1D-326)
+
+> **Decidido (usuario, 2026-11-21, `[S7 resp. 3]`):** en el S7 solo entra el chat con modelos reales: el comando `evaluate:chat` y su medición (AC-3, AC-7; D6-50, D6-52, D6-59). El E2E de próstata (AC-1, D6-49) y las métricas de faltantes (AC-4, D6-51) quedan en Post-MVP.
 
 `FEAT-12` · Sprint 6 · Estimación **3** (recortada de 5, `[S6 resp. 25]`) · — (técnica; OL-06) · FR-20, RN-01, RN-10, RN-11, RN-23 · AC-T5.1 · M-02.1, M-02.2, M-02.3, M-04.1, M-04.2 · ↪ US-260…US-268 · 🔗 Absorbe: US-105 (L1D-241) y US-131 (L1D-243) `[S6 resp. 13]`
 
@@ -478,6 +486,8 @@ E2E con Playwright contra Compose y respuestas fijas de `contracts/examples/chat
 ---
 
 ## US-271 — El chat recupera evidencia para preguntas sin tema propio con un segundo loop de recuperación que añade términos del caso del catálogo, sin invocar al LLM
+
+> **Decidido (usuario, 2026-11-21):** pasa al **Sprint 7** (L1D-329): quedó abierta al cierre del S6 y afecta a la calidad del RAG; el S7 reúne todo lo pendiente de calidad del RAG. Lo que falta está en [`S7-refinamiento.md`](../sprints/S7-refinamiento.md).
 
 > Linear: [L1D-329](https://linear.app/l1der-lab-mjbc/issue/L1D-329)
 
@@ -541,6 +551,8 @@ Cambiar el ancla del periodo (revisión en la Demo 6); periodos con fechas absol
 
 ## US-273 — En próstata, el segundo loop contextual deja de recuperar sobre todo cribado porque la composición de términos no se ancla en «Antígeno prostático específico (PSA)»
 
+> **Decidido (usuario, 2026-11-21):** pasa al **Sprint 7** (L1D-331): quedó abierta al cierre del S6 y afecta a la calidad del RAG; el S7 reúne todo lo pendiente de calidad del RAG. Lo que falta está en [`S7-refinamiento.md`](../sprints/S7-refinamiento.md).
+
 > Linear: [L1D-331](https://linear.app/l1der-lab-mjbc/issue/L1D-331)
 
 `FEAT-12` · Sprint 6 · Estimación **2** · HU-03 · FR-09, RN-02, RN-22, RN-27, RN-29, RN-11 · ADR-52 · ↪ US-271 (L1D-329, mergeado) · 🔗 Medido en: US-269 · D6-42, D6-43
@@ -600,6 +612,8 @@ Cambiar los textos de los avisos (los escribe Backend 2); avisos de IA propios d
 ---
 
 ## US-275 — La expansión contextual se activa por defecto y el tope de pares del *reranker* pasa de 12 a 20, con el p95 de consulta completa medido en máquina limpia
+
+> **Decidido (usuario, 2026-11-21):** pasa al **Sprint 7** (L1D-333): quedó abierta al cierre del S6 y afecta a la calidad del RAG; el S7 reúne todo lo pendiente de calidad del RAG. Lo que falta está en [`S7-refinamiento.md`](../sprints/S7-refinamiento.md).
 
 > Linear: [L1D-333](https://linear.app/l1der-lab-mjbc/issue/L1D-333)
 
