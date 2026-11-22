@@ -9,7 +9,15 @@ describe('createPasswordHasher', () => {
 
     const hash = await hasher.hash('SINT-clave');
 
-    expect(hash).toMatch(/^\$argon2id\$v=19\$m=8,p=1,t=1\$/);
+    // El orden de los parámetros en la cadena PHC depende de la versión de la librería: se comparan por nombre.
+    const [, variante, version, parametros] = hash.split('$');
+    expect(variante).toBe('argon2id');
+    expect(version).toBe('v=19');
+    expect(Object.fromEntries((parametros ?? '').split(',').map((par) => par.split('=')))).toEqual({
+      m: '8',
+      t: '1',
+      p: '1',
+    });
     expect(await hasher.verify(hash, 'SINT-clave')).toBe(true);
   });
 
