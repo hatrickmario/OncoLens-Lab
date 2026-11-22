@@ -358,6 +358,8 @@ Tests: Pytest con PostgreSQL de test y Supertest de `clinical-api` para el AC-2.
 
 > Linear: [L1D-119](https://linear.app/l1der-lab-mjbc/issue/L1D-119)
 
+> **Decidido (usuario, 2026-11-21, `[S7 resp. 7]` y `[S7 resp. 8]`):** (H-3) los 10 registros de ClinicalTrials.gov mantienen la clase `dominio_publico` y su texto de `license` pasa a «Datos de ClinicalTrials.gov (obra del gobierno de EE. UU.; condiciones de uso)», con constancia en ADR-36 de que la copia es estática. (H-4) Se admiten las menciones a NCCN y ESMO que aparecen en las referencias bibliográficas y los conflictos de interés de artículos CC BY de terceros: son citas, no contenido de las guías; se anota en ADR-36. Ambas se aplican dentro del change `l1d-119` antes de la ingesta de la corrida base.
+
 `FEAT-06c` · Sprint 5 *(S4 → S5, `[S4 resp. 1]`)* · Estimación **5** *(era 3; usuario, 2026-11-02, PRD E-17)* · — (técnica, PRD §17; OL-02) · FR-19, RN-21 · AC-06.1 (corpus abierto) · ⛔ ADR-36 · ↪ US-117a, US-117b, US-118 · 🔗 Relacionada: US-119 (`si-hay-capacidad`) · 🔗 Medido en: US-132 (M-08.3)
 
 > **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
