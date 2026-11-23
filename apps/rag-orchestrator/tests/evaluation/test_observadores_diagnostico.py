@@ -4,6 +4,7 @@ cumplen el mismo contrato que el puerto que decoran (LSP): mismos resultados, mi
 from __future__ import annotations
 
 import asyncio
+import inspect
 from collections.abc import Sequence
 
 import pytest
@@ -11,8 +12,12 @@ import pytest
 from app.application.ports import (
     CandidatoParaReranker,
     ChunkEncontrado,
+    ChunkSearch,
+    EvidenceGenerator,
     EvidenciaGenerada,
     FalloDeInferencia,
+    NliClassifier,
+    Reranker,
     ResultadoDeRecuperacion,
 )
 from app.domain.nli import ParNli, ResultadoNli
@@ -180,3 +185,24 @@ def test_reiniciar_deja_el_registro_vacio() -> None:
     registro.reiniciar()
 
     assert (registro.eventos, registro.afirmaciones, registro.opciones_propuestas) == ([], [], [])
+
+
+@pytest.mark.parametrize(
+    ("observador", "puerto", "metodo"),
+    [
+        (BuscadorDeDiagnostico, ChunkSearch, "search_dense"),
+        (RerankerDeDiagnostico, Reranker, "puntuar"),
+        (GeneradorDeDiagnostico, EvidenceGenerator, "generar"),
+        (NliDeDiagnostico, NliClassifier, "clasificar"),
+    ],
+)
+def test_cada_observador_comparte_la_firma_del_puerto_que_decora(
+    observador: type, puerto: type, metodo: str
+) -> None:
+    del_observador = inspect.signature(getattr(observador, metodo)).parameters
+    del_puerto = inspect.signature(getattr(puerto, metodo)).parameters
+
+    assert list(del_observador) == list(del_puerto)
+    assert inspect.iscoroutinefunction(getattr(observador, metodo)) == inspect.iscoroutinefunction(
+        getattr(puerto, metodo)
+    )
