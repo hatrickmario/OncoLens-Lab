@@ -10,26 +10,27 @@ El recuperador es el de producción (``RecuperadorLexicalDeFragmentos``, en memo
 from __future__ import annotations
 
 import json
-import re
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from app.application.corpus_metadata.esquema_poblacion import PromptSinCriterio, criterio_del_prompt
 from app.application.corpus_metadata.poblacion_puertos import (
     FINISH_REASON_CORTADA,
     LlmDePoblacion,
     RespuestaDelLlm,
 )
 from app.evaluation.dataset_poblacion import ValorEsperado
+from app.evaluation.guardas import SuiteAbortada
 
-_CRITERIO_EN_PROMPT = re.compile(r"^Criterio: (\S+)$", re.MULTILINE)
 _TRUNCADO = '{"values": [{"value": "'
 
 
 def _criterio_del_prompt(usuario: str) -> str:
-    encontrado = _CRITERIO_EN_PROMPT.search(usuario)
-    if encontrado is None:
-        raise AssertionError("el prompt debe declarar 'Criterio: <clave>'")
-    return encontrado.group(1)
+    """El criterio del prompt; sin él la suite no corre (el reporte no podría nombrar documento y criterio)."""
+    try:
+        return criterio_del_prompt(usuario)
+    except PromptSinCriterio:
+        raise SuiteAbortada("el prompt de población no declara su criterio") from None
 
 
 class LlmRegistradoDePoblacion:

@@ -38,7 +38,10 @@ from app.evaluation.reporte import (
     Numero,
     Objeto,
 )
-from app.evaluation.revision_provisional import ROLES_DE_REVISION_PROVISIONAL
+from app.evaluation.revision_provisional import (
+    ROLES_DE_REVISION_PROVISIONAL,
+    ROTULO_DE_REVISION_PROVISIONAL,
+)
 from app.evaluation.rotulo import ROTULOS
 from app.schemas.generated.models import Fusion, RetrievalMode
 
@@ -428,6 +431,7 @@ ESQUEMA_POBLACION = Objeto(
                     {
                         "rol": Enumerado(frozenset(ROLES_DE_REVISION_PROVISIONAL)),
                         "fecha": Identificador(),
+                        "rotulo": Enumerado(frozenset({ROTULO_DE_REVISION_PROVISIONAL})),
                     }
                 ),
             },
@@ -454,7 +458,7 @@ ESQUEMA_POBLACION = Objeto(
                     )
                 ),
                 "por_redaccion": _desagregado_de_poblacion("redaccion"),
-                "por_tipo_de_redaccion": _desagregado_de_poblacion("tipo"),
+                "por_tipo_de_redaccion": _desagregado_de_poblacion("tipo_de_redaccion"),
                 "distractores": Objeto(
                     {
                         "pares": Numero(),

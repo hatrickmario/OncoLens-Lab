@@ -178,7 +178,7 @@ def _par_con(
     *,
     tipo_de_redaccion: str | None = None,
     distractor: bool = False,
-    como_elegibilidad: int = 0,
+    valores_como_elegibilidad: int = 0,
     doc: str = "d1",
 ) -> ParMedido:
     return ParMedido(
@@ -189,7 +189,7 @@ def _par_con(
         redaccion=redaccion,
         tipo_de_redaccion=tipo_de_redaccion,
         distractor=distractor,
-        como_elegibilidad=como_elegibilidad,
+        valores_como_elegibilidad=valores_como_elegibilidad,
     )
 
 
@@ -238,11 +238,13 @@ def test_precision_y_cobertura_por_tipo_solo_cuentan_los_pares_con_tipo() -> Non
     }
 
 
-def test_distractores_cuenta_los_valores_dados_como_elegibilidad_solo_en_los_distractores() -> None:
+def test_distractores_cuenta_los_valores_dados_valores_como_elegibilidad_solo_en_los_distractores() -> (
+    None
+):
     pares = [
-        _par_con("dificil", {"a"}, ("a",), distractor=True, como_elegibilidad=2, doc="d1"),
+        _par_con("dificil", {"a"}, ("a",), distractor=True, valores_como_elegibilidad=2, doc="d1"),
         _par_con("dificil", {"b"}, ("b",), distractor=True, doc="d2"),
-        _par_con("plantilla", {"c"}, ("c",), como_elegibilidad=1, doc="d3"),
+        _par_con("plantilla", {"c"}, ("c",), valores_como_elegibilidad=1, doc="d3"),
     ]
 
     resultado = valores_indebidos_en_distractores(pares)

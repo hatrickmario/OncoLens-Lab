@@ -72,7 +72,7 @@ class ParDorado:
     """Cuántas de las primeras llamadas del criterio terminan con ``finish_reason = length`` (adapters falsos)."""
     redaccion: str = "plantilla"
     """``plantilla`` o ``dificil`` (S7-D3, D-2)."""
-    tipo: str | None = None
+    tipo_de_redaccion: str | None = None
     """Tipo de la redacción difícil (``TIPOS_DE_REDACCION``); solo con ``redaccion: dificil``."""
     distractor: bool = False
     """El valor solo aparece como subgrupo o mención: el esperado no trae elegibilidad (D-3)."""
@@ -195,7 +195,7 @@ def _exigir_forma(dorado: DoradoDePoblacion) -> None:
 
 
 def _exigir_redaccion(par: ParDorado) -> None:
-    """``redaccion`` y ``tipo`` del conjunto cerrado y un distractor sin valores de elegibilidad (D-2, D-3)."""
+    """``redaccion`` y ``tipo_de_redaccion`` del conjunto cerrado y un distractor sin valores de elegibilidad (D-2, D-3)."""
     if par.redaccion not in REDACCIONES:
         raise DatasetInvalido(f"el par {par.id} declara una redaccion fuera del conjunto")
     if not _tipo_corresponde_a_la_redaccion(par):
@@ -207,8 +207,8 @@ def _exigir_redaccion(par: ParDorado) -> None:
 def _tipo_corresponde_a_la_redaccion(par: ParDorado) -> bool:
     """Solo la redacción difícil lleva tipo, y es uno del conjunto cerrado."""
     if par.redaccion != "dificil":
-        return par.tipo is None
-    return par.tipo in TIPOS_DE_REDACCION
+        return par.tipo_de_redaccion is None
+    return par.tipo_de_redaccion in TIPOS_DE_REDACCION
 
 
 def _leer_json(ruta: Path, nombre: str) -> dict[str, Any]:
@@ -282,7 +282,9 @@ def _par(crudo: dict[str, Any]) -> ParDorado:
         propuesta=_valores(crudo["propuesta"]) if "propuesta" in crudo else esperados,
         corte=int(crudo.get("corte", 0)),
         redaccion=str(crudo.get("redaccion", "plantilla")),
-        tipo=None if crudo.get("tipo") is None else str(crudo["tipo"]),
+        tipo_de_redaccion=(
+            None if crudo.get("tipo_de_redaccion") is None else str(crudo["tipo_de_redaccion"])
+        ),
         distractor=bool(crudo.get("distractor", False)),
     )
 

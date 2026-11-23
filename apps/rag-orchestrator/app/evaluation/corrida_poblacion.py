@@ -53,6 +53,7 @@ from app.evaluation.metricas.poblacion import (
     CasoDeEstado,
     Fraccion,
     ParMedido,
+    RegresionSinEvidencia,
     TasaDelBucle,
     cobertura_por_criterio,
     cobertura_por_redaccion,
@@ -71,6 +72,7 @@ from app.evaluation.metricas.poblacion import (
 )
 from app.evaluation.modelos_locales import OrigenLocal, cargar_puertos_locales
 from app.evaluation.reporte import escribir_reporte_cerrado
+from app.evaluation.revision_provisional import ROTULO_DE_REVISION_PROVISIONAL
 from app.evaluation.rutas import raiz_repo
 from app.infrastructure.catalogo_clinico.aplicabilidad import cargar_criterios_de_aplicabilidad
 from app.infrastructure.catalogo_clinico.manifiesto import cargar_catalogo_del_manifiesto
@@ -280,11 +282,11 @@ def _pares_medidos(
     claves = _claves_de_estudio(config, tipos)
     medidos = []
     for par in dorado.pares:
-        tipo = dorado.documentos[par.documento].tipo_de_cancer
-        estudio = claves.get((tipo, par.criterio))
+        tipo_de_cancer = dorado.documentos[par.documento].tipo_de_cancer
+        estudio = claves.get((tipo_de_cancer, par.criterio))
         if estudio is None:
             raise ConfigInvalida(
-                f"el criterio {par.criterio} no está en el catálogo del tipo {tipo}"
+                f"el criterio {par.criterio} no está en el catálogo del tipo {tipo_de_cancer}"
             )
         guardados = _valores_guardados(extraccion.guardado[par.documento], estudio)
         medidos.append(
@@ -294,9 +296,11 @@ def _pares_medidos(
                 frozenset(normalizar_texto(v.valor) for v in par.esperados),
                 tuple(valor for valor, _ in guardados),
                 redaccion=par.redaccion,
-                tipo=par.tipo,
+                tipo_de_redaccion=par.tipo_de_redaccion,
                 distractor=par.distractor,
-                como_elegibilidad=sum(alcance == "elegibilidad" for _, alcance in guardados),
+                valores_como_elegibilidad=sum(
+                    alcance == "elegibilidad" for _, alcance in guardados
+                ),
             )
         )
     return medidos
@@ -423,7 +427,7 @@ def _cortes_del_reporte(
     }
 
 
-def _sin_evidencia_del_reporte(sin_evidencia: Any) -> dict[str, Any]:
+def _sin_evidencia_del_reporte(sin_evidencia: RegresionSinEvidencia) -> dict[str, Any]:
     return {
         "baseline": sin_evidencia.baseline,
         "actual": sin_evidencia.actual,
@@ -460,7 +464,13 @@ def _configuracion(config: ConfigPoblacion, dorado: DoradoDePoblacion) -> dict[s
             **({"fecha": revision.fecha.isoformat()} if revision.fecha else {}),
         },
         **(
-            {"revision_provisional": {"rol": provisional.rol, "fecha": provisional.fecha}}
+            {
+                "revision_provisional": {
+                    "rol": provisional.rol,
+                    "fecha": provisional.fecha,
+                    "rotulo": ROTULO_DE_REVISION_PROVISIONAL,
+                }
+            }
             if provisional
             else {}
         ),
@@ -535,7 +545,7 @@ def _por_tipo_de_redaccion(pares: Sequence[ParMedido]) -> list[dict[str, Any]]:
     return _desagregado(
         precision_por_tipo_de_redaccion(pares),
         cobertura_por_tipo_de_redaccion(pares),
-        "tipo",
+        "tipo_de_redaccion",
     )
 
 

@@ -66,12 +66,20 @@ def esquema_de_poblacion(maximo_de_valores: int) -> dict[str, Any]:
     }
 
 
+_CRITERIO_EN_PROMPT: Final = re.compile(r"^Criterio: (\S+)$", re.MULTILINE)
+
+
 class PromptSinCriterio(ValueError):
     """El prompt de la tarea no declara su criterio; sin eco del prompt (puede traer texto del documento)."""
 
 
 def criterio_del_prompt(usuario: str) -> str:
-    raise NotImplementedError("no implementado")
+    """La clave del criterio de la línea ``Criterio: <clave>`` que ``construir_prompt`` escribe: la primera, que es la de
+    la plantilla y precede a los fragmentos del documento (un fragmento no puede suplantarla)."""
+    encontrado = _CRITERIO_EN_PROMPT.search(usuario)
+    if encontrado is None:
+        raise PromptSinCriterio("el prompt no declara 'Criterio: <clave>'")
+    return encontrado.group(1)
 
 
 def construir_prompt(

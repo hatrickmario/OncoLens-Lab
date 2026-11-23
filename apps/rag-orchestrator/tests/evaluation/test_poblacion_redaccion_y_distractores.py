@@ -81,7 +81,7 @@ def test_poblacion_reporta_precision_y_cobertura_por_tipo_de_redaccion_cuando_lo
 
 
 @pytest.mark.ac("US-233b", 2)
-def test_poblacion_cuenta_aparte_los_valores_dados_como_elegibilidad_en_un_distractor(
+def test_poblacion_cuenta_aparte_los_valores_dados_valores_como_elegibilidad_en_un_distractor(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     """Cuenta aparte los valores que la extracción dio como elegibilidad en un distractor [US-233b AC-2]."""

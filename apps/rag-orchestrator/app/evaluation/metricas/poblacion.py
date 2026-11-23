@@ -17,11 +17,11 @@ class ParMedido:
     obtenidos: tuple[str, ...]
     redaccion: str = "plantilla"
     """``plantilla`` o ``dificil``: cómo está redactado el fragmento del par (S7-D3, D-2)."""
-    tipo: str | None = None
+    tipo_de_redaccion: str | None = None
     """Tipo de redacción difícil (negación, rango…); ``None`` en las de plantilla."""
     distractor: bool = False
     """El esperado no tiene valores de elegibilidad: el valor solo aparece como subgrupo o mención (D-3)."""
-    como_elegibilidad: int = 0
+    valores_como_elegibilidad: int = 0
     """Cuántos de los ``obtenidos`` la extracción guardó con alcance ``elegibilidad``."""
 
 
@@ -96,12 +96,12 @@ def cobertura_por_redaccion(pares: Sequence[ParMedido]) -> dict[str, Fraccion]:
 
 def precision_por_tipo_de_redaccion(pares: Sequence[ParMedido]) -> dict[str, Fraccion]:
     """La misma precisión, por tipo de redacción difícil; los pares de plantilla (sin tipo) no entran."""
-    return _agrupado(pares, lambda p: p.tipo, _precision_del_par)
+    return _agrupado(pares, lambda p: p.tipo_de_redaccion, _precision_del_par)
 
 
 def cobertura_por_tipo_de_redaccion(pares: Sequence[ParMedido]) -> dict[str, Fraccion]:
     """La misma cobertura, por tipo de redacción difícil."""
-    return _agrupado(pares, lambda p: p.tipo, _cobertura_del_par)
+    return _agrupado(pares, lambda p: p.tipo_de_redaccion, _cobertura_del_par)
 
 
 @dataclass(frozen=True)
@@ -117,8 +117,8 @@ def valores_indebidos_en_distractores(pares: Sequence[ParMedido]) -> ValoresEnDi
     distractores = [p for p in pares if p.distractor]
     return ValoresEnDistractores(
         len(distractores),
-        sum(p.como_elegibilidad for p in distractores),
-        sum(p.como_elegibilidad > 0 for p in distractores),
+        sum(p.valores_como_elegibilidad for p in distractores),
+        sum(p.valores_como_elegibilidad > 0 for p in distractores),
     )
 
 

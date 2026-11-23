@@ -200,3 +200,16 @@ Los criterios de los casos difíciles, distractores y C-3 son `estado_menopausic
 parte B de `l1d-126`. Las frases de la semilla se reescribieron conservando cada valor esperado literal en el fragmento; el
 triple negativo se dejó tal cual (S7.9, C-4). Con adapters falsos todo da precisión y cobertura 1,0: eso prueba que la
 recuperación léxica del extractor alcanza cada fragmento, no la calidad del modelo (la mide S7.4).
+
+**Gate 2 del S7 (aplicado).** El campo del par se llama `tipo_de_redaccion` (antes `tipo`, que chocaba con el tipo de cáncer
+en `corrida_poblacion.py`); también es la clave de `pares.yaml` y de las filas de `por_tipo_de_redaccion`. La lectura de la
+línea `Criterio: <clave>` del prompt vive junto a `construir_prompt` (`criterio_del_prompt`, con `PromptSinCriterio`; el
+envoltorio de la suite lo convierte en `SuiteAbortada`) y un test de paridad la comprueba con cada plantilla versionada.
+La marca `revision_provisional` del reporte trae el rótulo «Revisión provisional de IA; sin validación humana» sin cambiar
+el veredicto. `ParMedido.como_elegibilidad` pasó a `valores_como_elegibilidad`. En `poblacion-local.yaml`,
+`relevance_threshold`, `retrieval_top_k` y `rerank_top_n` son inertes en esta familia.
+
+**Deuda registrada por el Gate 2 (no se hace aquí).** D7-17: Extract Method del par de guardas de RN-12
+(`exigir_adapters_locales` + `exigir_proveedor_local`) en `guardas.py` y su uso en las seis familias. D7-18: una constante o
+mapa único de `revision_provisional` en el esquema de reportes (P3-4) y el resto de los P3.
+

@@ -25,7 +25,8 @@ adaptadores:
     llm: http://127.0.0.1:11434/v1 # Ollama nativo; ninguna ruta hacia la nube (lista local cerrada en código)
 modelos:
   llm: gemma4:26b-a4b-it-q4_K_M # G, LLM decidido en ADR-39
-umbrales: # los valores vigentes de producción ([S7 resp. 11])
+umbrales: # los valores vigentes de producción ([S7 resp. 11]). Solo nli_entailment_threshold actúa en esta familia;
+  # relevance_threshold, retrieval_top_k y rerank_top_n son inertes (los exige la configuración común, no hay recuperación densa)
   relevance_threshold: 0.30
   nli_entailment_threshold: 0.7
   retrieval_top_k: 30

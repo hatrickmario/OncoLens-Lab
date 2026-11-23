@@ -1,6 +1,6 @@
 # Dorado sintético de población (L1D-299, US-233b AC-1): (documento, criterio) -> valores esperados con scope y fragmento.
 # Texto redactado para la prueba, sin datos de paciente. Revisión de IA provisional (manifest.json): el revisor humano lo sustituye con
-# la PLANTILLA.md ampliada (l1d-117 2.3, l1d-244 2.2). Campos opcionales por par: `redaccion: dificil` + `tipo` (negacion, rango,
+# la PLANTILLA.md ampliada (l1d-117 2.3, l1d-244 2.2). Campos opcionales por par: `redaccion: dificil` + `tipo_de_redaccion` (negacion, rango,
 # definicion_implicita, inclusion_total, umbral, tabla) y `distractor: true` (el valor solo es de subgrupo o mención).
 documentos:
   doc-gui-es-1:
@@ -653,7 +653,7 @@ pares:
     scope: elegibilidad
     chunk: ch-doc-dif-ens-es-1-1
   redaccion: dificil
-  tipo: negacion
+  tipo_de_redaccion: negacion
 - id: doc-dif-gui-en-1-estado_castracion
   documento: doc-dif-gui-en-1
   criterio: estado_castracion
@@ -662,7 +662,7 @@ pares:
     scope: elegibilidad
     chunk: ch-doc-dif-gui-en-1-1
   redaccion: dificil
-  tipo: negacion
+  tipo_de_redaccion: negacion
 - id: doc-dif-ens-en-1-ecog
   documento: doc-dif-ens-en-1
   criterio: ecog
@@ -671,7 +671,7 @@ pares:
     scope: elegibilidad
     chunk: ch-doc-dif-ens-en-1-1
   redaccion: dificil
-  tipo: rango
+  tipo_de_redaccion: rango
 - id: doc-dif-rev-es-1-isup
   documento: doc-dif-rev-es-1
   criterio: isup
@@ -680,7 +680,7 @@ pares:
     scope: elegibilidad
     chunk: ch-doc-dif-rev-es-1-1
   redaccion: dificil
-  tipo: rango
+  tipo_de_redaccion: rango
 - id: doc-dif-gui-es-1-estado_menopausico
   documento: doc-dif-gui-es-1
   criterio: estado_menopausico
@@ -689,7 +689,7 @@ pares:
     scope: elegibilidad
     chunk: ch-doc-dif-gui-es-1-1
   redaccion: dificil
-  tipo: definicion_implicita
+  tipo_de_redaccion: definicion_implicita
 - id: doc-dif-ens-en-2-estado_castracion
   documento: doc-dif-ens-en-2
   criterio: estado_castracion
@@ -698,7 +698,7 @@ pares:
     scope: elegibilidad
     chunk: ch-doc-dif-ens-en-2-1
   redaccion: dificil
-  tipo: definicion_implicita
+  tipo_de_redaccion: definicion_implicita
 - id: doc-dif-rev-es-2-estado_menopausico
   documento: doc-dif-rev-es-2
   criterio: estado_menopausico
@@ -707,7 +707,7 @@ pares:
     scope: elegibilidad
     chunk: ch-doc-dif-rev-es-2-1
   redaccion: dificil
-  tipo: inclusion_total
+  tipo_de_redaccion: inclusion_total
 - id: doc-dif-gui-en-2-ecog
   documento: doc-dif-gui-en-2
   criterio: ecog
@@ -716,7 +716,7 @@ pares:
     scope: elegibilidad
     chunk: ch-doc-dif-gui-en-2-1
   redaccion: dificil
-  tipo: inclusion_total
+  tipo_de_redaccion: inclusion_total
 - id: doc-dif-ens-es-2-isup
   documento: doc-dif-ens-es-2
   criterio: isup
@@ -725,7 +725,7 @@ pares:
     scope: elegibilidad
     chunk: ch-doc-dif-ens-es-2-1
   redaccion: dificil
-  tipo: umbral
+  tipo_de_redaccion: umbral
 - id: doc-dif-rev-en-1-ecog
   documento: doc-dif-rev-en-1
   criterio: ecog
@@ -734,7 +734,7 @@ pares:
     scope: elegibilidad
     chunk: ch-doc-dif-rev-en-1-1
   redaccion: dificil
-  tipo: umbral
+  tipo_de_redaccion: umbral
 - id: doc-dif-gui-es-2-linea_tratamiento
   documento: doc-dif-gui-es-2
   criterio: linea_tratamiento
@@ -743,7 +743,7 @@ pares:
     scope: elegibilidad
     chunk: ch-doc-dif-gui-es-2-1
   redaccion: dificil
-  tipo: tabla
+  tipo_de_redaccion: tabla
 - id: doc-dif-ens-en-3-estado_castracion
   documento: doc-dif-ens-en-3
   criterio: estado_castracion
@@ -752,7 +752,7 @@ pares:
     scope: elegibilidad
     chunk: ch-doc-dif-ens-en-3-1
   redaccion: dificil
-  tipo: tabla
+  tipo_de_redaccion: tabla
 - id: doc-dis-ens-en-1-estado_menopausico
   documento: doc-dis-ens-en-1
   criterio: estado_menopausico
