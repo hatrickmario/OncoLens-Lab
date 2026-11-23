@@ -2,7 +2,7 @@
 # CI de esta familia: no carga modelos, no abre sockets y es reproducible (misma configuración, misma huella).
 # Es independiente de test-fake.yaml: `--suite all` no la usa y data/evaluation/baseline.json no depende de ella.
 # Las metas son iniciales y provisionales (RN-22): las recalibra DEC-07 (S5). Con `adaptadores.proveedor: local` la
-# familia aún no corre (la medición con el LLM local real es la tarea 2.1 del change).
+# familia corre con poblacion-local.yaml (S7-D1; la medición con el LLM local real es la tarea S7.4, del humano).
 nombre: test-poblacion
 fixture: FX-06c-d
 dataset:
@@ -10,7 +10,7 @@ dataset:
 medicion:
   reloj: simulado
 adaptadores:
-  proveedor: fake # fake | local (la medición con el LLM local, 2.1)
+  proveedor: fake # fake | local (poblacion-local.yaml: la medición con el LLM local, S7.4)
 umbrales:
   nli_entailment_threshold: 0.8
 catalogo:
