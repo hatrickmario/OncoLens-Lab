@@ -135,3 +135,5 @@ híbrida (US-112).
 - **D3 (pesos del sparse):** el adapter real necesita los pesos de `sparse_linear`, que no estaban en la configuración
   verificada de producción. `CorpusIngestSettings` añade `EMBEDDING_SPARSE_WEIGHTS_PATH` y
   `EMBEDDING_SPARSE_WEIGHTS_SHA256` (RN-22; los pesos no se versionan). **Pendiente de revisión humana** (adición fuera del design original). Detalle en `tasks.md`.
+
+- **S7.1 (humo con pesos reales, 2026-11-23):** alternativas: (a) ejecutarlo ya en esta máquina; (b) diferirlo con el comando literal a «entrega 2 (corrida base)». Se elige (b): con 0,54 GB de swap libre y stacks ajenos activos, cargar BGE-M3 ONNX no es seguro; el código y el test ya existen (sin cambios) y el humo exige solo `pytest -m models`. 1.10 sigue `[ ]` con destino nombrado; no hay cambio de comportamiento.
