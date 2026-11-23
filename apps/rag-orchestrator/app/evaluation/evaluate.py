@@ -227,7 +227,7 @@ def _despachar_familia(
         medidor = puertos_poblacion.medidor_sin_evidencia or _medidor_de_sin_evidencia(
             reloj, raiz, origen
         )
-        return ejecutar_poblacion(args, reloj, PuertosDePoblacion(medidor))
+        return ejecutar_poblacion(args, reloj, PuertosDePoblacion(medidor), origen)
     ajustes = _ajustes_de_la_suite(args, origen.entorno)
     if args.suite == SUITE_OPCIONES:
         return ejecutar_opciones(args, ajustes, reloj, origen, puertos_opciones)

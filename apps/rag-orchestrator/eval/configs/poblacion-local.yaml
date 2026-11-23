@@ -1,0 +1,55 @@
+# Configuración de la familia `poblacion` de `evaluate` con los MODELOS LOCALES REALES (L1D-299, US-233b AC-2; S7-D1; ADR-39,
+# ADR-47, RN-12, RN-22). Corre a mano en el MacBook de referencia, en la corrida BASE del S7 y se repite en la final, con el
+# mismo dorado (data/evaluation/poblacion-dorado), los documentos del dorado como corpus fijo y los umbrales ACTUALES de
+# producción ([S7 resp. 10] y [S7 resp. 11]). Los pesos (rutas y SHA-256) y las claves de ADR-39 llegan por el entorno
+# (`~/adr39-modelos/modelos.env`); sin ellos, o con un proveedor o un modelo de nube, la suite termina con código ≠ 0
+# nombrando la variable y no escribe cifras. Mientras el dorado no traiga revisor humano, precisión y cobertura salen
+# «no concluyentes» y el veredicto nunca es PASS.
+#   OLLAMA_CONTEXT_LENGTH=8192 OLLAMA_FLASH_ATTENTION=1 OLLAMA_KV_CACHE_TYPE=q8_0 ollama serve   # LLM fuera de Docker
+#   cd apps/rag-orchestrator && python -m app.evaluation.evaluate --config eval/configs/poblacion-local.yaml \
+#     --suite poblacion --salida ../../reports/eval --nombre-archivo l1d-299-poblacion-base
+# Cambiar cualquier valor cambia la huella SHA-256 del informe. El LLM real es el que decide qué valores propone: los
+# campos `propuesta` y `corte` del dorado solo los usan los adapters falsos.
+nombre: poblacion-local
+fixture: S7-poblacion-dorado
+dataset:
+  ruta: data/evaluation/poblacion-dorado
+semilla_bootstrap: 20261122 # parte de la configuración común de la suite; esta familia no remuestrea
+bootstrap_repeticiones: 200
+medicion:
+  reloj: real # time.perf_counter
+  rss_limite_mib: 4489 # el mismo límite de US-233a / local.yaml
+adaptadores:
+  proveedor: local
+  urls:
+    llm: http://127.0.0.1:11434/v1 # Ollama nativo; ninguna ruta hacia la nube (lista local cerrada en código)
+modelos:
+  llm: gemma4:26b-a4b-it-q4_K_M # G, LLM decidido en ADR-39
+umbrales: # los valores vigentes de producción ([S7 resp. 11])
+  relevance_threshold: 0.30
+  nli_entailment_threshold: 0.7
+  retrieval_top_k: 30
+  rerank_top_n: 10
+catalogo:
+  version: '2026.10.0'
+  ruta_terminos: packages/clinical-catalogs
+  ruta: packages/clinical-catalogs # criterios, sinónimos y términos prohibidos (RN-23) de la extracción
+extraccion: # POPULATION_* (RN-22): los mismos valores iniciales que la ingesta (app/config/settings.py)
+  top_k: 4
+  max_valores_por_criterio: 3
+  max_tokens_de_salida: 512
+  concurrencia: 1
+  reintentos: 1
+licencias_aceptadas: [cc_by, cc_by_sa, dominio_publico, sintetico_propio] # RN-21; NCCN y ESMO excluidas
+metas: # M-08.3, M-08.4, M-08.2 y duplicados; iguales a test-poblacion.yaml, provisionales hasta DEC-07 (RN-22)
+  precision: {minimo: 0.90}
+  cobertura: {minimo: 0.80}
+  concordancia: {minimo: 1.00}
+  tasa_duplicados: {maximo: 0.0}
+dorado:
+  minimo_de_pares: 30 # ADR47-R9: con menos pares la precisión y la cobertura son «no concluyentes»
+bucle:
+  minimo_de_pares: 20 # OUT-06: la causa solo se cierra con tasa de cortes 0 sobre al menos 20 pares
+sin_evidencia:
+  config: apps/rag-orchestrator/eval/configs/test-fake.yaml # la suite `all` con adapters falsos que se compara con el baseline
+  baseline: data/evaluation/baseline.json

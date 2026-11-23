@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 from pydantic import ValidationError
 
 from app.application.aplicabilidad_textual import ParametrosDelRespaldo
-from app.application.corpus_metadata.poblacion_puertos import RespuestaDelLlm
+from app.application.corpus_metadata.poblacion_puertos import LlmDePoblacion, RespuestaDelLlm
 from app.application.ports import (
     CandidatoParaReranker,
     EvidenceGenerator,
@@ -38,6 +38,7 @@ from app.evaluation.llamadas import RegistroDeLlamadas
 from app.infrastructure.llm.fabrica_local import (
     LlmCompleto,
     crear_generador_local,
+    crear_llm_de_poblacion_local,
     crear_proponente_local,
     parametros_del_respaldo,
 )
@@ -95,6 +96,8 @@ class PuertosLocales:
     """Solo si la configuración trae un brazo híbrido (US-133): el codificador *sparse* de BGE-M3 de la ingesta."""
     reranker_max_pairs: int | None = None
     """``RERANKER_MAX_PAIRS`` de ADR-39: el tope de pares que admite el reranker cargado, como en el *bootstrap* de producción."""
+    llm_de_poblacion: LlmDePoblacion | None = None
+    """El mismo LLM local, anotado por el registro, para la extracción en abanico de la familia `poblacion` (L1D-299)."""
 
 
 class EmbedderRegistrado:
@@ -290,6 +293,7 @@ def cargar_puertos_locales(
         clasificador_nli=NliRegistrado(modelos.clasificador_nli, registro, clase_datos),
         generador=crear_generador_local(settings, registrar_llm),
         proponente=crear_proponente_local(settings, registrar_llm),
+        llm_de_poblacion=crear_llm_de_poblacion_local(settings, registrar_llm),
         respaldo=parametros_del_respaldo(settings),
         reranker_max_pairs=settings.modelos.reranker_max_pairs if settings.modelos else None,
         embedder_sparse=(

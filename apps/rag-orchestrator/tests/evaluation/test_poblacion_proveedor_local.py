@@ -14,10 +14,15 @@ import httpx
 import pytest
 import respx
 
+from app.config.settings import Settings
+from app.evaluation.adaptadores_falsos import NliGuionado
+from app.evaluation.config_poblacion import cargar_config_poblacion
 from app.evaluation.corrida_poblacion import MedicionSinEvidencia, PuertosDePoblacion
 from app.evaluation.evaluate import main
+from app.infrastructure.models.local import ModelosDeRecuperacion
+from tests.evaluation.conftest import RAIZ_APP
 from tests.evaluation.dorado_de_prueba import escribir_config, escribir_dorado
-from tests.evaluation.test_proveedor_local_aceptacion import modelos_fingidos
+from tests.evaluation.test_proveedor_local_aceptacion import modelos_fingidos as _modelos_lexicos
 from tests.support.fakes import RelojFijo
 from tests.support.modelos import crear_entorno_de_modelos
 
@@ -26,6 +31,18 @@ HOSTS_LOCALES = {"127.0.0.1", "localhost", "host.docker.internal"}
 VALORES_DEL_LLM = {
     "values": [{"value": "HER2-positive", "chunkId": "ch-t1-1", "scope": "elegibilidad"}]
 }
+
+
+def modelos_fingidos(ajustes: Settings) -> ModelosDeRecuperacion:
+    """Los pesos de la CI son dobles; el NLI confirma siempre: lo que se mide es la orquestación, no el modelo."""
+    lexicos = _modelos_lexicos(ajustes)
+    return ModelosDeRecuperacion(
+        detector_idioma=lexicos.detector_idioma,
+        embedder_consulta=lexicos.embedder_consulta,
+        embedder_pasajes=lexicos.embedder_pasajes,
+        reranker=lexicos.reranker,
+        clasificador_nli=NliGuionado("entailment"),
+    )
 
 
 def _cambios_locales(*, modelo: str = "gemma-fingido@1", url: str = LOCAL) -> dict[str, Any]:
@@ -53,7 +70,9 @@ def _cambios_locales(*, modelo: str = "gemma-fingido@1", url: str = LOCAL) -> di
 
 
 def _respuesta_del_llm(finish_reason: str = "stop") -> httpx.Response:
-    contenido = json.dumps(VALORES_DEL_LLM) if finish_reason == "stop" else '{"values": [{"value": "'
+    contenido = (
+        json.dumps(VALORES_DEL_LLM) if finish_reason == "stop" else '{"values": [{"value": "'
+    )
     return httpx.Response(
         200,
         json={"choices": [{"message": {"content": contenido}, "finish_reason": finish_reason}]},
@@ -71,7 +90,9 @@ def _correr_local(
     carpeta = escribir_dorado(tmp_path / "dorado")
     config = escribir_config(tmp_path, carpeta, **{**_cambios_locales(), **cambios})
     salida = tmp_path / "salida"
-    pesos = entorno if entorno is not None else crear_entorno_de_modelos(tmp_path / "pesos").variables
+    pesos = (
+        entorno if entorno is not None else crear_entorno_de_modelos(tmp_path / "pesos").variables
+    )
     with respx.mock(assert_all_called=False) as http:
         http.route().mock(return_value=_respuesta_del_llm(finish_reason))
         codigo = main(
@@ -151,3 +172,15 @@ def test_poblacion_local_sale_con_codigo_3_y_nombra_documento_y_criterio_cuando_
     error = capsys.readouterr().err
     assert codigo == 3
     assert "finish_reason length en doc-t1 / estado_her2" in error
+
+
+def test_la_configuracion_poblacion_local_versionada_declara_el_proveedor_local_y_las_mismas_metas_que_la_falsa() -> (
+    None
+):
+    local = cargar_config_poblacion(RAIZ_APP / "eval" / "configs" / "poblacion-local.yaml")
+    falsa = cargar_config_poblacion(RAIZ_APP / "eval" / "configs" / "test-poblacion.yaml")
+
+    assert local.proveedor == "local" and local.suite is not None
+    assert local.suite.urls["llm"].startswith("http://127.0.0.1")
+    assert local.metas == falsa.metas and local.dataset == falsa.dataset
+    assert falsa.suite is None

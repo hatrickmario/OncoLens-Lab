@@ -16,12 +16,47 @@ from typing import Any
 
 from app.application.corpus_metadata.poblacion_puertos import (
     FINISH_REASON_CORTADA,
+    LlmDePoblacion,
     RespuestaDelLlm,
 )
 from app.evaluation.dataset_poblacion import ValorEsperado
 
 _CRITERIO_EN_PROMPT = re.compile(r"^Criterio: (\S+)$", re.MULTILINE)
 _TRUNCADO = '{"values": [{"value": "'
+
+
+def _criterio_del_prompt(usuario: str) -> str:
+    encontrado = _CRITERIO_EN_PROMPT.search(usuario)
+    if encontrado is None:
+        raise AssertionError("el prompt debe declarar 'Criterio: <clave>'")
+    return encontrado.group(1)
+
+
+class LlmRegistradoDePoblacion:
+    """``LlmDePoblacion`` de UN documento que delega en el LLM local real y solo anota cada tarea con su
+    ``finish_reason``: lo mismo que registra el guionado, para que la suite cuente los cortes del modelo de verdad."""
+
+    def __init__(self, documento: str, interno: LlmDePoblacion) -> None:
+        self._documento = documento
+        self._interno = interno
+        self.tareas: list[tuple[str, str, str]] = []
+        """(documento, criterio, finish_reason) de cada llamada; nunca el prompt ni la salida (RN-14)."""
+
+    async def completar_json_acotado(
+        self,
+        usuario: str,
+        esquema: Mapping[str, Any],
+        *,
+        max_tokens: int,
+        semilla: int,
+        sistema: str | None = None,
+    ) -> RespuestaDelLlm:
+        criterio = _criterio_del_prompt(usuario)
+        respuesta = await self._interno.completar_json_acotado(
+            usuario, esquema, max_tokens=max_tokens, semilla=semilla, sistema=sistema
+        )
+        self.tareas.append((self._documento, criterio, respuesta.finish_reason))
+        return respuesta
 
 
 class LlmGuionadoDePoblacion:
@@ -50,10 +85,7 @@ class LlmGuionadoDePoblacion:
         semilla: int,
         sistema: str | None = None,
     ) -> RespuestaDelLlm:
-        encontrado = _CRITERIO_EN_PROMPT.search(usuario)
-        if encontrado is None:
-            raise AssertionError("el prompt debe declarar 'Criterio: <clave>'")
-        criterio = encontrado.group(1)
+        criterio = _criterio_del_prompt(usuario)
         previas = self._llamadas.get(criterio, 0)
         self._llamadas[criterio] = previas + 1
         if previas < self._cortes.get(criterio, 0):

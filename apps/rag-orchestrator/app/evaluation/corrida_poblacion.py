@@ -4,8 +4,9 @@ Mide la extracción de población en abanico de US-242 contra el conjunto dorado
 (M-08.3, M-08.4), duplicados, ``finish_reason = length`` (ADR47-R4), concordancia de los estados F-20…F-24 con las reglas
 de US-243 (M-08.2, ADR47-R1/R2), regresión de «sin evidencia» (RN-02) y la repetición del bucle (OUT-06, ADR47-R17).
 
-El extractor es el de producción (``extractor_de_poblacion``) con el LLM y el NLI falsos que dicta el dorado; las reglas
-de estado son las reales. Códigos: 0 correcto · 1 la suite no corre · 2 configuración inválida · 3 invariante violada.
+El extractor es el de producción (``PopulationFanoutExtractor``) con el LLM y el NLI falsos que dicta el dorado
+(``proveedor: fake``) o con el LLM local por Ollama y el NLI por ONNX (``proveedor: local``, S7-D1, RN-12); las reglas de
+estado son las reales. Códigos: 0 correcto · 1 la suite no corre · 2 configuración inválida · 3 invariante violada.
 Solo agregados e identificadores del corpus público en el reporte (RN-14, D7).
 """
 
@@ -26,14 +27,14 @@ from app.application.corpus_metadata.population_fanout import (
     ConfiguracionDePoblacion,
     PopulationFanoutExtractor,
 )
-from app.application.ports import Clock
+from app.application.ports import Clock, NliClassifier
 from app.domain.aplicabilidad_tipos import CriterioDePoblacion, ValorDePoblacion
 from app.domain.applicability_rules import estado_de_poblacion
 from app.domain.clasificacion_de_poblacion import valores_de_la_opcion
 from app.domain.criterios_aplicabilidad import CriterioDeAplicabilidad
 from app.domain.lenguaje import normalizar_texto
 from app.evaluation.adaptadores_falsos import NliGuionado
-from app.evaluation.adaptadores_poblacion import LlmGuionadoDePoblacion
+from app.evaluation.adaptadores_poblacion import LlmGuionadoDePoblacion, LlmRegistradoDePoblacion
 from app.evaluation.config_poblacion import ConfigPoblacion, cargar_config_poblacion
 from app.evaluation.config_suite import ConfigInvalida
 from app.evaluation.dataset_poblacion import (
@@ -45,6 +46,8 @@ from app.evaluation.dataset_poblacion import (
     cargar_dorado,
 )
 from app.evaluation.esquema_suite import ESQUEMA_POBLACION, VERSION_ESQUEMA
+from app.evaluation.guardas import exigir_adapters_locales, exigir_proveedor_local
+from app.evaluation.llamadas import RegistroDeLlamadas
 from app.evaluation.metricas.aplicabilidad import marca_frente_a_meta
 from app.evaluation.metricas.poblacion import (
     CasoDeEstado,
@@ -59,6 +62,7 @@ from app.evaluation.metricas.poblacion import (
     tasa_duplicados,
     veredicto,
 )
+from app.evaluation.modelos_locales import OrigenLocal, cargar_puertos_locales
 from app.evaluation.reporte import escribir_reporte_cerrado
 from app.evaluation.rutas import raiz_repo
 from app.infrastructure.catalogo_clinico.aplicabilidad import cargar_criterios_de_aplicabilidad
@@ -95,6 +99,19 @@ class PuertosDePoblacion:
 
 
 @dataclass(frozen=True)
+class _Modelos:
+    """Los dos modelos de la extracción: el LLM de un documento (falso guionado o local real, ambos anotan sus tareas) y
+    el NLI; más el nombre del modelo que declara la extracción guardada."""
+
+    llm_de_documento: Callable[
+        [str, Mapping[str, Sequence[ValorEsperado]], Mapping[str, int]],
+        LlmGuionadoDePoblacion | LlmRegistradoDePoblacion,
+    ]
+    nli: NliClassifier
+    version_del_modelo: str
+
+
+@dataclass(frozen=True)
 class _Extraccion:
     """Lo que la extracción guardó por documento y las tareas del LLM (documento, criterio, finish_reason)."""
 
@@ -102,40 +119,78 @@ class _Extraccion:
     tareas: tuple[tuple[str, str, str], ...]
 
 
-def ejecutar_poblacion(args: argparse.Namespace, reloj: Clock, puertos: PuertosDePoblacion) -> int:
+def ejecutar_poblacion(
+    args: argparse.Namespace, reloj: Clock, puertos: PuertosDePoblacion, origen: OrigenLocal
+) -> int:
     try:
-        return _correr(args, reloj, puertos)
+        return _correr(args, reloj, puertos, origen)
     except ConfigInvalida as error:  # el mensaje nombra la clave; nunca un valor (RN-14)
         print(f"evaluate: configuración o entrada inválida: {error}", file=sys.stderr)
         return 2
 
 
-def _correr(args: argparse.Namespace, reloj: Clock, puertos: PuertosDePoblacion) -> int:
+def _correr(
+    args: argparse.Namespace, reloj: Clock, puertos: PuertosDePoblacion, origen: OrigenLocal
+) -> int:
     config = cargar_config_poblacion(args.config)
-    if config.proveedor != "fake":
-        raise ConfigInvalida("adaptadores.proveedor: local se cablea con la medición real (2.1)")
     dorado = cargar_dorado(config.dataset, config.licencias_aceptadas)  # se niega antes de medir
     if puertos.medidor_sin_evidencia is None:
         raise ConfigInvalida("falta el medidor de «sin evidencia»")
-    reporte, cortes = _reporte(config, dorado, puertos.medidor_sin_evidencia)
+    modelos = _modelos_locales(config, dorado, origen) if config.suite else _modelos_falsos()
+    reporte, cortes = _reporte(config, dorado, modelos, puertos.medidor_sin_evidencia)
     escribir_reporte_cerrado(_ruta_del_resultado(config, args, reloj), reporte, ESQUEMA_POBLACION)
     return _codigo_de_salida(reporte, cortes)
+
+
+# --- modelos -------------------------------------------------------------------------------------------------------
+
+
+def _modelos_falsos() -> _Modelos:
+    """El LLM guionado por el dorado y el NLI que siempre confirma: lo que se mide es la orquestación."""
+    return _Modelos(LlmGuionadoDePoblacion, NliGuionado("entailment"), NOMBRE_DEL_LLM_FALSO)
+
+
+def _modelos_locales(
+    config: ConfigPoblacion, dorado: DoradoDePoblacion, origen: OrigenLocal
+) -> _Modelos:
+    """Con ``proveedor: local`` (S7-D1, RN-12): las guardas abortan antes de cargar pesos o enviar un request, y los
+    puertos son los de producción (NLI por ONNX, LLM por Ollama) con el mismo cargador que el resto de las familias."""
+    suite = config.suite
+    if suite is None:
+        raise ConfigInvalida(
+            "adaptadores.proveedor: local exige la configuración común de la suite"
+        )
+    exigir_adapters_locales(dorado.clase, suite.urls)
+    exigir_proveedor_local(suite)
+    puertos = cargar_puertos_locales(suite, origen, RegistroDeLlamadas(), dorado.clase)
+    llm = puertos.llm_de_poblacion
+    if llm is None:
+        raise ConfigInvalida("los puertos locales no traen el LLM de población")
+    return _Modelos(
+        lambda documento, _propuestas, _cortes: LlmRegistradoDePoblacion(documento, llm),
+        puertos.clasificador_nli,
+        suite.llm_modelo,
+    )
 
 
 # --- extracción ----------------------------------------------------------------------------------------------------
 
 
-def _extractor(config: ConfigPoblacion, llm: LlmGuionadoDePoblacion) -> PopulationFanoutExtractor:
+def _extractor(
+    config: ConfigPoblacion,
+    modelos: _Modelos,
+    llm: LlmGuionadoDePoblacion | LlmRegistradoDePoblacion,
+) -> PopulationFanoutExtractor:
     """El extractor de producción (``PopulationFanoutExtractor``) con las mismas piezas que la raíz de composición de la
-    ingesta (catálogo, sinónimos, términos prohibidos, plantilla versionada), pero con el LLM y el NLI falsos; los
-    parámetros salen de la configuración (RN-22)."""
+    ingesta (catálogo, sinónimos, términos prohibidos, plantilla versionada) y los modelos de ``modelos`` (falsos o
+    locales); los parámetros salen de la configuración (RN-22)."""
     extraccion = config.extraccion
     catalogo = cargar_catalogo_del_manifiesto(config.catalogo)
     tipos = catalogo.tipos_de_cancer()
     verificador = cargar_verificador_de_terminos(config.catalogo)
     return PopulationFanoutExtractor(
         llm=llm,
-        nli=NliGuionado("entailment"),
+        nli=modelos.nli,
         recuperador=RecuperadorLexicalDeFragmentos(),
         criterios=cargar_criterios_de_aplicabilidad(config.catalogo, tipos),
         plantilla_del_prompt=cargar_plantilla(VERSION_DEL_PROMPT),
@@ -150,7 +205,7 @@ def _extractor(config: ConfigPoblacion, llm: LlmGuionadoDePoblacion) -> Populati
             concurrencia=extraccion.concurrencia,
             reintentos=extraccion.reintentos,
             version_del_prompt=VERSION_DEL_PROMPT,
-            version_del_modelo=NOMBRE_DEL_LLM_FALSO,
+            version_del_modelo=modelos.version_del_modelo,
             version_del_catalogo=catalogo.version(),
             umbral_nli=config.umbral_nli,
         ),
@@ -159,6 +214,7 @@ def _extractor(config: ConfigPoblacion, llm: LlmGuionadoDePoblacion) -> Populati
 
 def _extraer(
     config: ConfigPoblacion,
+    modelos: _Modelos,
     fuentes: Sequence[
         tuple[
             str, str, Sequence[Fragmento], Mapping[str, Sequence[ValorEsperado]], Mapping[str, int]
@@ -169,8 +225,8 @@ def _extraer(
     guardado: dict[str, Mapping[str, Any]] = {}
     tareas: list[tuple[str, str, str]] = []
     for documento, tipo, fragmentos, propuestas, cortes in fuentes:
-        llm = LlmGuionadoDePoblacion(documento, propuestas, cortes)
-        extraida = _extractor(config, llm).extraer(
+        llm = modelos.llm_de_documento(documento, propuestas, cortes)
+        extraida = _extractor(config, modelos, llm).extraer(
             DocumentoParaExtraer(documento, documento, tuple(fragmentos)), (tipo,), None
         )
         guardado[documento] = extraida.population_criteria
@@ -264,7 +320,9 @@ def _caso_de_estado(
 # --- bucle (OUT-06) ------------------------------------------------------------------------------------------------
 
 
-def _pares_del_bucle_con_corte(config: ConfigPoblacion, bucle: Sequence[ParDelBucle]) -> int:
+def _pares_del_bucle_con_corte(
+    config: ConfigPoblacion, modelos: _Modelos, bucle: Sequence[ParDelBucle]
+) -> int:
     """Pares cuya tarea corta terminó alguna vez con ``finish_reason = length``."""
     con_corte = 0
     for par in bucle:
@@ -272,7 +330,7 @@ def _pares_del_bucle_con_corte(config: ConfigPoblacion, bucle: Sequence[ParDelBu
             (f.documento, "mama", f.fragmentos, {}, {"estado_her2": f.corte} if f.corte else {})
             for f in par.fuentes
         ]
-        extraccion = _extraer(config, fuentes)
+        extraccion = _extraer(config, modelos, fuentes)
         con_corte += bool(cortes_por_longitud(extraccion.tareas))
     return con_corte
 
@@ -283,9 +341,10 @@ def _pares_del_bucle_con_corte(config: ConfigPoblacion, bucle: Sequence[ParDelBu
 def _reporte(
     config: ConfigPoblacion,
     dorado: DoradoDePoblacion,
+    modelos: _Modelos,
     medidor_sin_evidencia: Callable[[Path], MedicionSinEvidencia],
 ) -> tuple[dict[str, Any], list[tuple[str, str]]]:
-    extraccion = _extraer(config, _fuentes_del_dorado(dorado))
+    extraccion = _extraer(config, modelos, _fuentes_del_dorado(dorado))
     pares = _pares_medidos(config, dorado, extraccion)
     cortes = cortes_por_longitud(extraccion.tareas)
     concluyente = (
@@ -297,7 +356,7 @@ def _reporte(
     sin_evidencia = _sin_evidencia(config, medidor_sin_evidencia)
     bucle = tasa_cortes_del_bucle(
         len(dorado.bucle),
-        _pares_del_bucle_con_corte(config, dorado.bucle),
+        _pares_del_bucle_con_corte(config, modelos, dorado.bucle),
         config.minimo_de_pares_del_bucle,
     )
     resultado = veredicto(
