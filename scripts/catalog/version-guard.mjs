@@ -21,6 +21,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import {
+  ARCHIVOS_CON_VERSION_PROPIA,
   compararVersiones,
   jsonCanonico,
   partesDeVersion,
@@ -46,7 +47,7 @@ const POR_TIPO = [
   'poblacion-reglas',
 ];
 const DE_RAIZ = ['manifest', 'atributos', 'poblacion', 'escalas'];
-const CON_VERSION_PROPIA = ['lenguaje/terminos-prohibidos', 'lenguaje/marcos-de-pregunta'];
+const CON_VERSION_PROPIA = ARCHIVOS_CON_VERSION_PROPIA;
 /** Listas de contenido: un archivo cuyas listas están todas vacías (y tiene alguna) aún no se publicó. */
 const LISTAS_DE_CONTENIDO = ['items', 'keys', 'entradas'];
 

@@ -1,4 +1,5 @@
 import {
+  ARCHIVOS_CON_VERSION_PROPIA,
   ARCHIVOS_DE_RAIZ,
   ARCHIVOS_DE_RAIZ_DECLARADOS_POR_EL_MANIFIESTO,
   ARCHIVOS_DECLARADOS_POR_EL_MANIFIESTO,
@@ -24,9 +25,7 @@ export function compararVersiones(actual, base) {
   return Math.sign(diferencia);
 }
 
-/** Los archivos de `lenguaje/` llevan versión propia (RN-23, marcos), no la del manifiesto: no se comparan. */
-const llevaVersionPropia = (nombre) =>
-  nombre === 'terminos-prohibidos' || nombre.startsWith('lenguaje/');
+const llevaVersionPropia = (nombre) => ARCHIVOS_CON_VERSION_PROPIA.includes(nombre);
 
 /**
  * Archivos que cada nivel del registro puede traer, sin lista fija: salen de los registros de `archivos.mjs`.
