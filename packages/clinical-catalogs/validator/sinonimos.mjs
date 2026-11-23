@@ -6,6 +6,7 @@
  *
  * - `sinonimo_equivalente_ambiguo`: un texto `equivalente` de dos términos, o canónico de uno y `equivalente` de otro;
  * - `termino_canonico_repetido`: el mismo término canónico dos veces;
+ * - `sinonimo_con_relaciones_contradictorias`: el mismo texto, en un término, como `equivalente` y con otra relación;
  * - `sinonimo_igual_al_canonico`: un sinónimo que repite el texto de su propio término canónico (sin ignorar tildes: la
  *   grafía de otro idioma, como `deruxtecan`, no es una repetición; las tildes y erratas las resuelve la normalización, S-6).
  *
@@ -14,30 +15,22 @@
  * (`RE`, `RP`, `ER`, `PR`) son válidas.
  */
 
+import { normalizar } from './normalizar.mjs';
+
 export const RELACION_EQUIVALENTE = 'equivalente';
 
 const esObjeto = (valor) => valor !== null && typeof valor === 'object' && !Array.isArray(valor);
 const lista = (valor) => (Array.isArray(valor) ? valor.filter(esObjeto) : []);
 
-/** Misma comparación que `normalizar_texto` de `rag-orchestrator`: sin tildes, en minúsculas y con espacios simples. */
-const normalizar = (texto) =>
-  typeof texto === 'string'
-    ? texto
-        .normalize('NFD')
-        .replace(/\p{Mn}/gu, '')
-        .toLowerCase()
-        .replace(/\s+/gu, ' ')
-        .trim()
-    : '';
-
 /** Misma grafía, sin ignorar tildes: «deruxtecan» (en) no repite «deruxtecán» (es); lo único redundante es el texto idéntico. */
 const mismaGrafia = (texto) => (typeof texto === 'string' ? texto.toLowerCase().trim() : '');
 
-const canonicoDe = (item) => normalizar(item.terminoCanonico);
+const normalizado = (texto) => (typeof texto === 'string' ? normalizar(texto) : '');
+const canonicoDe = (item) => normalizado(item.terminoCanonico);
 const equivalentesDe = (item) =>
   lista(item.sinonimos)
     .filter((s) => s.relacion === RELACION_EQUIVALENTE)
-    .map((s) => normalizar(s.texto));
+    .map((s) => normalizado(s.texto));
 
 /** Los términos (por posición) que nombran `texto` como su canónico o como uno de sus equivalentes. */
 const terminosQueEquiparan = (items, texto) =>
@@ -63,14 +56,24 @@ export function sinonimoIgualAlCanonico(items) {
   );
 }
 
-export function sinonimoConRelacionesContradictorias() {
-  throw new Error('no implementado');
+/** ¿Un mismo término declara el mismo texto como `equivalente` y con otra relación (p. ej. `mas_amplio`)? */
+export function sinonimoConRelacionesContradictorias(items) {
+  return items.some((item) => {
+    const sinonimos = lista(item.sinonimos);
+    const relaciones = new Map();
+    for (const s of sinonimos) {
+      const clave = normalizado(s.texto);
+      relaciones.set(clave, (relaciones.get(clave) ?? new Set()).add(s.relacion));
+    }
+    return [...relaciones.values()].some((r) => r.has(RELACION_EQUIVALENTE) && r.size > 1);
+  });
 }
 
 const REGLAS = [
   ['sinonimo_equivalente_ambiguo', equivalentesAmbiguos],
   ['termino_canonico_repetido', canonicosRepetidos],
   ['sinonimo_igual_al_canonico', sinonimoIgualAlCanonico],
+  ['sinonimo_con_relaciones_contradictorias', sinonimoConRelacionesContradictorias],
 ];
 
 /** @returns {{ codigo: string, archivo: 'sinonimos' }[]} */
