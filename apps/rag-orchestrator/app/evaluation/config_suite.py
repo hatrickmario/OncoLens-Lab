@@ -28,6 +28,7 @@ SUITES = (
     "poblacion",
     "opciones",
     "diagnostico",
+    "contextual",
     "all",
 )
 SUITE_COMPLETA = "all"
