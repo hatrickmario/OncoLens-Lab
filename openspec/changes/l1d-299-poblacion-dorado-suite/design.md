@@ -165,3 +165,38 @@ fixture de catálogo de test nuevo en `apps/rag-orchestrator/tests/fixtures/cata
 `apps/rag-orchestrator/tests/fixtures/catalogo/` (fixture nuevo) y tests en `tests/evaluation/`. **No toca**
 `packages/clinical-catalogs/`, `pares-bucle.yaml` ni otros datasets.
 
+### Decisiones de la implementación del S7 (ventana «antes de la corrida base»)
+
+**S7-D6 · De dónde sale el LLM del extractor con `proveedor: local`.** Opciones: (a) `PuertosLocales.llm_de_poblacion`,
+construido por `cargar_puertos_locales` con la fábrica pública `crear_llm_de_poblacion_local` (mismo cliente, URL y plazo
+que la generación); (b) reutilizar `puertos.proponente` (la tarea corta del respaldo de la consulta); (c) construir un
+`OpenAICompatibleLlmClient` dentro de `corrida_poblacion.py`. **Elegida (a).** (b) se descarta: el proponente es otra
+tarea (su tope de valores y su prompt son los del respaldo, no los de la extracción en abanico) y no expone
+`completar_json_acotado`; (c) se descarta: duplicaría `_settings_de` y se saltaría el pre-chequeo de pesos, el registro de
+llamadas y las guardas de RN-12 que ya pasan todas las familias. La anotación de tareas (`finish_reason` por documento y
+criterio) la hace un envoltorio fino, `LlmRegistradoDePoblacion`, con la misma forma que el guionado de los falsos.
+
+**S7-D7 · Configuración de `poblacion-local.yaml`.** Opciones: (a) incluir la configuración común de la suite
+(`modelos.llm`, `adaptadores.urls`, `umbrales`, `catalogo.version`, `medicion.rss_limite_mib`) y cargarla con
+`cargar_config_suite` solo cuando el proveedor es `local`, dejando `ConfigPoblacion.suite` en `None` con los falsos; (b)
+duplicar esas claves en `ConfigPoblacion`. **Elegida (a).** (b) se descarta: dos cargadores de URLs y umbrales divergirían,
+y las guardas de RN-12 (`exigir_proveedor_local`, `exigir_adapters_locales`) y `cargar_puertos_locales` reciben un
+`ConfigSuite`. Con proveedor `local` y sin esas claves la suite sale con código 2 nombrando la clave. Las metas y los
+`POPULATION_*` son los de `test-poblacion.yaml` y de la ingesta (`top_k` 4 y concurrencia 1, los de `app/config/settings.py`).
+
+**S7-D8 · Qué es un distractor y dónde entran las métricas nuevas.** Opciones para el distractor: (a) campo explícito
+`distractor: true` en el par, validado contra su esperado (sin valores de elegibilidad); (b) derivarlo de que el esperado no
+traiga elegibilidad. **Elegida (a).** (b) se descarta: el par `triple-negative` de la semilla tiene un valor de subgrupo
+junto a uno de elegibilidad y un esperado vacío no distingue «distractor» de «el dorado no lo etiquetó». Las métricas
+nuevas (`por_redaccion`, `por_tipo_de_redaccion`, `distractores`, `rendija_c3`) son **informativas**: no entran en el
+veredicto ni en las marcas (D4 no cambia); lo contrario habría convertido una medida de diagnóstico en un umbral sin
+calibrar (RN-22). `redaccion` ∈ {`plantilla`, `dificil`}; `tipo` solo con `dificil`; la rendija de C-3 se marca con
+`rendija: c3` en el caso de `estados.yaml`, cuyo esperado es el de la regla vigente (`desconocido`), no el que querría el
+revisor.
+
+**S7-D9 · Versión del dorado.** `version: s7-1` tras S7.7 y S7.8 (la semilla era `0-semilla`); S7.10b la sube de nuevo.
+Los criterios de los casos difíciles, distractores y C-3 son `estado_menopausico`, `ecog`, `linea_tratamiento`,
+`estado_castracion` e `isup`: ninguno es `extension`, `estado_her2`, `receptores_hormonales` ni `hrr_brca`, los que toca la
+parte B de `l1d-126`. Las frases de la semilla se reescribieron conservando cada valor esperado literal en el fragmento; el
+triple negativo se dejó tal cual (S7.9, C-4). Con adapters falsos todo da precisión y cobertura 1,0: eso prueba que la
+recuperación léxica del extractor alcanza cada fragmento, no la calidad del modelo (la mide S7.4).
