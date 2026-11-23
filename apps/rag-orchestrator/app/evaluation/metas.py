@@ -15,6 +15,8 @@ import yaml
 from app.evaluation.config_suite import ConfigInvalida
 
 Estado = Literal["en meta", "fuera de meta", "sin medir"]
+CLAVE_P95 = "p95_evidence_analyses_s"
+"""Clave de la meta del p95 de punta a punta en ``metas-iniciales.yaml``: la leen el informe base y la viabilidad de los brazos."""
 
 
 @dataclass(frozen=True)

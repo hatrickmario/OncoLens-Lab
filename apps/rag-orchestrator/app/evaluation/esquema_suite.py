@@ -47,6 +47,7 @@ from app.evaluation.revision_provisional import (
     ROTULO_DE_REVISION_PROVISIONAL,
 )
 from app.evaluation.rotulo import ROTULOS
+from app.evaluation.viabilidad_del_brazo import ESTADOS_DE_VIABILIDAD, MOTIVOS_DE_NO_VIABILIDAD
 from app.schemas.generated.models import Fusion, RetrievalMode
 
 VERSION_ESQUEMA = "oncolens.evaluate.v1"
@@ -269,8 +270,8 @@ _ETAPA_DEL_RERANKER = Objeto(
 )
 _VIABILIDAD = Objeto(
     {
-        "estado": Enumerado(frozenset({"viable", "no_viable", "no_medido"})),
-        "motivos": Lista(Enumerado(frozenset({"latencia", "memoria"}))),
+        "estado": Enumerado(ESTADOS_DE_VIABILIDAD),
+        "motivos": Lista(Enumerado(MOTIVOS_DE_NO_VIABILIDAD)),
         "p95_consulta_s": Numero(),
         "tope_p95_s": Numero(),
         "memoria_gb": Numero(),

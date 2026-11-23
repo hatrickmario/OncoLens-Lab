@@ -12,7 +12,14 @@ from app.evaluation.barrido import Eleccion, FilaBarrido
 from app.evaluation.config_suite import PROVEEDORES
 from app.evaluation.desagregacion import ETIQUETA_DE_IDIOMA, IDIOMAS_DEL_BASELINE
 from app.evaluation.fuente_dataset import CLASES_ADMITIDAS
-from app.evaluation.metas import Estado, Meta, MetricaMarcada, marcar_frente_a_meta, nota_adr42
+from app.evaluation.metas import (
+    CLAVE_P95,
+    Estado,
+    Meta,
+    MetricaMarcada,
+    marcar_frente_a_meta,
+    nota_adr42,
+)
 from app.evaluation.reporte import (
     Anulable,
     Booleano,
@@ -25,7 +32,6 @@ from app.evaluation.reporte import (
 )
 
 NO_EJECUTABLE = "NO-EJECUTABLE aquí"
-CLAVE_P95 = "p95_evidence_analyses_s"
 ETIQUETAS_CANCER = {"mama": "mama", "prostata": "próstata"}
 
 PROCEDIMIENTO_REAL = """\

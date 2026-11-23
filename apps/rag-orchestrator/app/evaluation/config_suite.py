@@ -542,7 +542,6 @@ def _parafrasis_de(seccion: dict[str, Any]) -> Parafrasis | None:
 
 ENTORNO_DEL_LIMITE_DE_MEMORIA = "STACK_MEMORY_LIMIT_GB"
 """Clave de ADR-39 (RN-22): el límite de memoria del stack lo da el entorno, nunca un literal de código."""
-META_DEL_P95 = "p95_evidence_analyses_s"
 
 
 def _viabilidad_de(
@@ -553,22 +552,24 @@ def _viabilidad_de(
     if not any(b.cambia_el_reranker or b.indice is not None for b in brazos):
         return None
     ruta = ruta_del_repo(str(clave_de(seccion, "metas")))
-    metas = _metas_del_p95(ruta)
+    tope_p95_s = _tope_del_p95(ruta)
     limite = entorno.get(ENTORNO_DEL_LIMITE_DE_MEMORIA)
     if not limite:
         raise ConfigInvalida(
             f"la viabilidad de los brazos del reranker exige {ENTORNO_DEL_LIMITE_DE_MEMORIA} en el entorno (ADR-39, RN-22)"
         )
-    return ViabilidadConfigurada(metas, _numero(limite, ENTORNO_DEL_LIMITE_DE_MEMORIA))
+    return ViabilidadConfigurada(tope_p95_s, _numero(limite, ENTORNO_DEL_LIMITE_DE_MEMORIA))
 
 
-def _metas_del_p95(ruta: Path) -> float:
-    try:
-        crudo = yaml.safe_load(ruta.read_text(encoding="utf-8"))
-        tope = crudo["metas"][META_DEL_P95]["maximo"]
-    except (OSError, yaml.YAMLError, KeyError, TypeError):
-        raise ConfigInvalida(f"comparacion.metas no trae la meta {META_DEL_P95}") from None
-    return _numero(tope, f"metas.{META_DEL_P95}.maximo")
+def _tope_del_p95(ruta: Path) -> float:
+    """El máximo de ``p95_evidence_analyses_s`` del YAML de metas, leído con el mismo lector que el informe base."""
+    # Import local: ``metas`` importa ``ConfigInvalida`` de este módulo.
+    from app.evaluation.metas import CLAVE_P95, cargar_metas
+
+    meta = cargar_metas(ruta).get(CLAVE_P95)
+    if meta is None or meta.maximo is None:
+        raise ConfigInvalida(f"comparacion.metas no trae la meta {CLAVE_P95}")
+    return _numero(meta.maximo, f"metas.{CLAVE_P95}.maximo")
 
 
 def _fuente_de_indice(crudo: dict[str, Any]) -> str:

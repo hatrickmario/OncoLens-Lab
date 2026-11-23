@@ -145,10 +145,10 @@ def _extras_del_reranker(
     latencia = _latencia(brazo)
     p95_s = None if latencia["consulta_p95"] is None else latencia["consulta_p95"] / 1000.0
     resultado = viabilidad_del_brazo(
-        p95_s,
-        viabilidad.tope_p95_s,
-        memoria_del_stack.get(brazo.brazo.nombre),
-        viabilidad.limite_memoria_gb,
+        p95_consulta_s=p95_s,
+        tope_p95_s=viabilidad.tope_p95_s,
+        memoria_del_stack_gb=memoria_del_stack.get(brazo.brazo.nombre),
+        limite_memoria_gb=viabilidad.limite_memoria_gb,
     )
     return {
         "reranker": _etapa_del_reranker(brazo),
@@ -160,7 +160,7 @@ def _extras_del_reranker(
             "motivos": list(resultado.motivos),
             "p95_consulta_s": resultado.p95_consulta_s,
             "tope_p95_s": resultado.tope_p95_s,
-            "memoria_gb": resultado.memoria_gb,
+            "memoria_gb": resultado.memoria_del_stack_gb,
             "limite_memoria_gb": resultado.limite_memoria_gb,
         },
     }

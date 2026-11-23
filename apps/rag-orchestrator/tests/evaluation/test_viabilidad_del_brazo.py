@@ -11,14 +11,19 @@ LIMITE_GB = 30.0
 
 
 def _viabilidad(p95: float | None, memoria: float | None):
-    return viabilidad_del_brazo(p95, TOPE_P95_S, memoria, LIMITE_GB)
+    return viabilidad_del_brazo(
+        p95_consulta_s=p95,
+        tope_p95_s=TOPE_P95_S,
+        memoria_del_stack_gb=memoria,
+        limite_memoria_gb=LIMITE_GB,
+    )
 
 
 def test_un_brazo_dentro_de_los_dos_topes_es_viable() -> None:
     resultado = _viabilidad(12.5, 24.0)
 
     assert (resultado.estado, resultado.motivos) == ("viable", ())
-    assert (resultado.p95_consulta_s, resultado.memoria_gb) == (12.5, 24.0)
+    assert (resultado.p95_consulta_s, resultado.memoria_del_stack_gb) == (12.5, 24.0)
 
 
 def test_un_brazo_justo_en_el_tope_es_viable_porque_el_exceso_es_estricto() -> None:
@@ -38,7 +43,7 @@ def test_un_p95_sobre_el_tope_es_no_viable_por_latencia_con_el_valor_medido() ->
 def test_una_memoria_sobre_el_limite_es_no_viable_por_memoria() -> None:
     resultado = _viabilidad(12.5, 30.5)
 
-    assert (resultado.estado, resultado.motivos, resultado.memoria_gb) == (
+    assert (resultado.estado, resultado.motivos, resultado.memoria_del_stack_gb) == (
         "no_viable",
         ("memoria",),
         30.5,
