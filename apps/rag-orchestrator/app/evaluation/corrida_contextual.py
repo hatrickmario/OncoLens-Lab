@@ -615,26 +615,8 @@ def informe_legible(reporte: Mapping[str, Any]) -> str:
             for r in reporte["recuentos"]
         ),
         "",
-        "## Cobertura de genéricas por caso",
-        "",
-        "| caso | genéricas con evidencia | genéricas | meta | cumple | campos usados |",
-        "|---|---|---|---|---|---|",
-        *(
-            f"| {c['caso']} | {c['genericas_con_evidencia']} | {c['genericas_total']} | {c['minimo']} "
-            f"| {c['cumple']} | {', '.join(c['campos_usados']) or '—'} |"
-            for c in reporte["cobertura"]
-        ),
-        "",
-        "## Adversarias (tema fuera del corpus)",
-        "",
-        "| caso | total | sin evidencia | falsos positivos | puntaje null | llamadas al generador |",
-        "|---|---|---|---|---|---|",
-        *(
-            f"| {a['caso']} | {a['total']} | {a['sin_evidencia']} | {a['falsos_positivos']} "
-            f"| {a['con_puntaje_nulo']} | {a['llamadas_al_generador']} |"
-            for a in reporte["adversarias"]
-        ),
-        "",
+        *_cobertura_legible(reporte["cobertura"]),
+        *_adversarias_legible(reporte["adversarias"]),
         *_comparacion_legible(reporte["comparacion"]),
         "## Por pregunta",
         "",
@@ -651,6 +633,36 @@ def informe_legible(reporte: Mapping[str, Any]) -> str:
         "",
     ]
     return "\n".join(lineas)
+
+
+def _cobertura_legible(cobertura: Sequence[Mapping[str, Any]]) -> list[str]:
+    return [
+        "## Cobertura de genéricas por caso",
+        "",
+        "| caso | genéricas con evidencia | genéricas | meta | cumple | campos usados |",
+        "|---|---|---|---|---|---|",
+        *(
+            f"| {c['caso']} | {c['genericas_con_evidencia']} | {c['genericas_total']} | {c['minimo']} "
+            f"| {c['cumple']} | {', '.join(c['campos_usados']) or '—'} |"
+            for c in cobertura
+        ),
+        "",
+    ]
+
+
+def _adversarias_legible(adversarias: Sequence[Mapping[str, Any]]) -> list[str]:
+    return [
+        "## Adversarias (tema fuera del corpus)",
+        "",
+        "| caso | total | sin evidencia | falsos positivos | puntaje null | llamadas al generador |",
+        "|---|---|---|---|---|---|",
+        *(
+            f"| {a['caso']} | {a['total']} | {a['sin_evidencia']} | {a['falsos_positivos']} "
+            f"| {a['con_puntaje_nulo']} | {a['llamadas_al_generador']} |"
+            for a in adversarias
+        ),
+        "",
+    ]
 
 
 def _top3_legible(top3: Sequence[Mapping[str, Any]]) -> str:
