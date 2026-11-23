@@ -1,0 +1,17 @@
+# FX-06c-e · Licencia de ClinicalTrials.gov y menciones de fuentes excluidas en referencias de terceros (US-120 AC-2, [S7 resp. 7]).
+# TEXTOS SINTÉTICOS en línea: ninguna fuente real. `f-ct-s7` lleva el texto de licencia decidido el 2026-11-22.
+documentos:
+  - document_key: f-ct-s7
+    source_type: clinical_trial
+    source_name: ClinicalTrials.gov
+    external_id: NCT00000003
+    title: Registro sintético de ensayo de próstata
+    language: en
+    cancer_type_tags: [prostata]
+    license: Datos de ClinicalTrials.gov (obra del gobierno de EE. UU.; condiciones de uso)
+    license_url: https://clinicaltrials.gov/about-site/terms-conditions
+    published_at: 2024-02-12
+    study_design: eca
+    population: adulto
+    original_format: html
+    text: Texto sintético de un registro de ensayo clínico con criterios de elegibilidad ficticios para próstata en adultos.

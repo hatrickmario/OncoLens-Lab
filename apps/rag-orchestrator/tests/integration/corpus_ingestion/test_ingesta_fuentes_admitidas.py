@@ -38,3 +38,26 @@ def test_ingesta_rechaza_fuente_no_admitida_y_admite_clinicaltrials_como_ensayo_
     assert documento.source_type == "clinical_trial"
     assert evaluar_admisibilidad(documento, politica).license_class == "dominio_publico"
     assert reporte.resultado_de("f-nci").estado is Estado.EMBEBIDO
+
+
+MANIFIESTO_S7 = DIRECTORIO_DE_FIXTURES / "ingest-manifest-s7-licencia-y-menciones.yaml"
+LICENCIA_DE_CLINICALTRIALS = (
+    "Datos de ClinicalTrials.gov (obra del gobierno de EE. UU.; condiciones de uso)"
+)
+
+
+@pytest.mark.ac("US-120", 2)
+def test_ingesta_embebe_un_registro_de_clinicaltrials_con_el_texto_de_licencia_decidido_como_dominio_publico(
+    fabrica_de_montaje: Callable[..., Montaje],
+) -> None:
+    """[US-120 AC-2] H-3 (S7.1): el texto de licencia de ``[S7 resp. 7]`` mapea a ``dominio_publico`` y el registro queda
+    ``embebido``."""
+    politica = politica_de_test(fuentes_admitidas=FUENTES_DE_ADR_36)
+    montaje = fabrica_de_montaje(DIRECTORIO_DE_FIXTURES, politica)
+
+    reporte = montaje.ingerir(MANIFIESTO_S7)
+
+    assert reporte.resultado_de("f-ct-s7").estado is Estado.EMBEBIDO
+    documento = next(d for d in montaje.documentos(MANIFIESTO_S7) if d.document_key == "f-ct-s7")
+    assert documento.license == LICENCIA_DE_CLINICALTRIALS
+    assert evaluar_admisibilidad(documento, politica).license_class == "dominio_publico"

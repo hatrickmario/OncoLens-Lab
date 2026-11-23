@@ -246,3 +246,33 @@ def test_el_corpus_ampliado_no_mezcla_tipos_de_cancer_en_una_misma_entrada() -> 
     assert ClaseDeLicencia.CC_BY_NC not in {
         evaluar_admisibilidad(d, POLITICA).license_class for d in DOCUMENTOS
     }
+
+
+# [S7 resp. 7] (2026-11-22): texto de licencia de los registros de ClinicalTrials.gov; la clase no cambia (ADR-36).
+LICENCIA_DE_CLINICALTRIALS = (
+    "Datos de ClinicalTrials.gov (obra del gobierno de EE. UU.; condiciones de uso)"
+)
+
+
+@pytest.mark.ac("US-120", 2)
+def test_los_registros_de_clinicaltrials_declaran_el_texto_de_licencia_decidido_y_siguen_siendo_dominio_publico() -> (
+    None
+):
+    """[US-120 AC-2] H-3 (S7.1): el texto de ``license`` de los 10 registros es el de ``[S7 resp. 7]`` y su clase sigue
+    siendo ``dominio_publico``; ninguno conserva el texto anterior."""
+    de_ct = [d for d in DOCUMENTOS if d.source_name == "ClinicalTrials.gov"]
+
+    assert len(de_ct) == 10
+    for documento in de_ct:
+        assert documento.license == LICENCIA_DE_CLINICALTRIALS, documento.document_key
+        admision = evaluar_admisibilidad(documento, POLITICA)
+        assert admision.admitido and admision.license_class == "dominio_publico", (
+            documento.document_key
+        )
+    assert not any("courtesy of the u.s." in (d.license or "").casefold() for d in DOCUMENTOS)
+
+
+def test_la_atribucion_declara_el_texto_de_licencia_de_clinicaltrials() -> None:
+    atribucion = (DIRECTORIO / "ATTRIBUTION.md").read_text(encoding="utf-8")
+
+    assert f"`license: {LICENCIA_DE_CLINICALTRIALS}`" in atribucion
