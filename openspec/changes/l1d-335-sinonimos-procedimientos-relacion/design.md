@@ -267,3 +267,35 @@ su reporte versionado en `reports/eval/` producido por `run-ai-eval` (regla del 
 - Q-5 de la revisión clínica (revisión de la lista por expertos) queda fuera del sprint; no cambia specs ni tareas.
 - Si tras el reporte el usuario activa `QUERY_REWRITE_ENABLED` o sube `RERANKER_MAX_PAIRS`, el cambio de valores por
   defecto se aplica por la sección `## humano` de `tasks.md`.
+
+## Decisiones de la implementación (catálogo y clinical-platform)
+
+Casos que el diseño no cubría, con la alternativa elegida y por qué se descartaron las otras.
+
+- **D5. Dónde vive el literal `equivalente` en el validador.** D2 pedía que las reglas lo leyeran del esquema. Opciones:
+  (a) leerlo de `sinonimos.schema.json` por la ruta `properties.items.items.properties.sinonimos.items.properties.relacion`
+  (frágil: un cambio de forma del esquema lo rompe sin aviso); (b) una palabra clave propia en el esquema (Ajv `strict`
+  la rechaza); (c) **constante `RELACION_EQUIVALENTE` en `validator/sinonimos.mjs`**, único dueño en el runtime del
+  validador, más un test que fija que el enum del esquema la contiene. Elegida (c): el esquema sigue siendo el dueño del
+  conjunto cerrado y la regla nombra solo la relación que equipara.
+- **D6. `sinonimo_igual_al_canonico` compara la grafía, no la forma normalizada.** La lista del §2.2 trae `trastuzumab
+  deruxtecan` (en) bajo `trastuzumab deruxtecán`: normalizado (sin tildes) es idéntico al canónico y la regla lo rechazaba.
+  Opciones: (a) quitarlo de la lista (la normalización de texto ya lo resuelve, S-6; pierde la entrada en inglés del
+  §2.2); (b) **comparar solo mayúsculas y espacios**, de modo que la grafía de otro idioma no sea una repetición;
+  (c) excluir el caso por una lista fija (rompe P1). Elegida (b). La ambigüedad entre términos (`sinonimo_equivalente_ambiguo`)
+  sí compara sin tildes, para no admitir dos términos que se normalizan igual.
+- **D7. Marca provisional en todas las entradas.** Los 20 términos de próstata y los 24 de mama llevan
+  `revision_provisional` (rol `ia`, 2026-11-21), también los que no cambiaron de sinónimos (`PSA`, `bicalutamida`, `Ki-67`…):
+  a todos se les asignó una `relacion` en esta revisión. Alternativa descartada: marcar solo el diff (obliga a un test
+  contra la versión anterior en git y deja entradas con relación asignada sin marca).
+- **D8. Registro por lista con `usaTerminosProhibidos`.** La lectura de `terminos-prohibidos` en `cargar.mjs` se acota con
+  un indicador de la entrada del registro (`plantillas`), no con una lista de claves en `cargar.mjs`; las reglas de
+  `sinonimos` ignoran ese segundo argumento.
+- **D9. `l1d-126` parte A ya derivó los esquemas del arranque.** `validar-catalogo.ts` usa `leerEsquemas`, así que la tarea 3.4
+  se reduce a la entrada `sinonimos` de `archivos.mjs` (tarea 1.3): no hay mapa `ESQUEMAS` que editar y los tests 3.3 del
+  arranque con equivalente ambiguo ya salían del validador compartido.
+- **D10. Fixtures.** `test-1.0.0` trae `items: []` en `sinonimos.json` (nada que migrar); el único con entradas es
+  `test-normalizacion-1.0.0`. Los casos del validador usan el fixture nuevo `test-sinonimos-1.0.0`, que declara `sinonimos`
+  en su manifiesto y no trae `lenguaje/` (así se prueba que no exige `terminos-prohibidos`).
+- **Duda de la lista del §2.2 sin resolver (a Q-5):** `hormonosensible` / `hormone-sensitive` quedan `equivalente` de
+  `sensible a la castración` (uso intercambiable en la práctica, discutible), además de las que ya anotaba D1.
