@@ -28,8 +28,16 @@ const esquemaDeSinonimos = z.strictObject({
   items: z.array(
     z.strictObject({
       terminoCanonico: z.string().min(1),
+      revision_provisional: z.strictObject({ rol: z.enum(['ia']), fecha: z.string() }).optional(),
       sinonimos: z
-        .array(z.strictObject({ texto: z.string().min(1), idioma: z.enum(['es', 'en']) }))
+        .array(
+          z.strictObject({
+            texto: z.string().min(1),
+            idioma: z.enum(['es', 'en']),
+            // Esqueleto del commit en rojo (L1D-335): el lector acepta la forma nueva; la regla llega en el `feat`.
+            relacion: z.enum(['equivalente', 'mas_amplio', 'miembro_de_clase']).optional(),
+          }),
+        )
         .min(1),
     }),
   ),
