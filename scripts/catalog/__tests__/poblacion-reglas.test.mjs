@@ -2,7 +2,13 @@ import { cpSync, mkdtempSync, rmSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { CATALOGO, PLAZO_PROCESO_MS, ejecutarValidador, modificarJson } from './apoyo.mjs';
+import {
+  CATALOGO,
+  PLAZO_PROCESO_MS,
+  VERSION_DEL_CATALOGO,
+  ejecutarValidador,
+  modificarJson,
+} from './apoyo.mjs';
 
 const copias = [];
 afterEach(() => {
@@ -22,12 +28,12 @@ function copiarElCatalogoReal() {
 
 describe('catalog:validate · poblacion-reglas.json declarado en el manifiesto (D4-03)', () => {
   it(
-    'acepta el catálogo real 1.9.0 con las reglas de población de mama y próstata',
+    'acepta el catálogo real vigente con las reglas de población de mama y próstata',
     () => {
       const resultado = ejecutarValidador(CATALOGO);
 
       expect(resultado.codigo).toBe(0);
-      expect(resultado.salida).toContain('catalogVersion=1.9.0');
+      expect(resultado.salida).toContain(`catalogVersion=${VERSION_DEL_CATALOGO}`);
     },
     PLAZO_PROCESO_MS,
   );
