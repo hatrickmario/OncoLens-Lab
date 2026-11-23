@@ -5,9 +5,19 @@ from __future__ import annotations
 from app.evaluation.acuerdo_juez import ESTADO_CONCLUYENTE, ESTADO_NO_CONCLUYENTE, SIN_MEDIR
 from app.evaluation.config_suite import PROVEEDORES, RELOJES, SUITES
 from app.evaluation.cronometro import ETAPAS
+from app.evaluation.dataset_diagnostico import IDIOMAS, TIPOS_DE_VARIACION
 from app.evaluation.dataset_poblacion import CLASES_DEL_DORADO
 from app.evaluation.fuente_dataset import CLASES_ADMITIDAS
 from app.evaluation.informe_pii import MODOS, TIPOS_DIRECTOS
+from app.evaluation.metricas.diagnostico import (
+    CAUSAS_SIN_ASIGNAR,
+    CONDICIONES_DE_LA_REGLA,
+    ETAPAS as ETAPAS_DE_LA_CONSULTA,
+    NOTA_DE_CALIBRACION,
+    RESULTADO_PERDIDA,
+    RESULTADO_SIN_ASIGNAR,
+    RESULTADO_SIN_PERDIDA,
+)
 from app.evaluation.metricas.fidelidad import ROTULO_SECUNDARIA
 from app.evaluation.reporte import (
     Anulable,
@@ -19,6 +29,7 @@ from app.evaluation.reporte import (
     Numero,
     Objeto,
 )
+from app.evaluation.revision_provisional import ROLES_DE_REVISION_PROVISIONAL
 from app.evaluation.rotulo import ROTULOS
 from app.schemas.generated.models import Fusion, RetrievalMode
 
@@ -557,4 +568,121 @@ ESQUEMA_OPCIONES = Objeto(
         "salidas_invalidas": _SALIDAS_INVALIDAS,
     },
     opcionales=frozenset({"salidas_invalidas"}),
+)
+
+
+# --- familia `diagnostico` (US-276, L1D-334): solo ids de par, de pregunta y de chunk, puestos, puntajes y recuentos -----
+
+_ETAPA_DE_LA_CONSULTA = Enumerado(frozenset(ETAPAS_DE_LA_CONSULTA))
+_FILA_DE_DIAGNOSTICO = Objeto(
+    {
+        "par": Identificador(),
+        "redaccion": Identificador(),
+        "pregunta_id": Identificador(),
+        "idioma": Enumerado(frozenset(IDIOMAS)),
+        "chunk_esperado": Anulable(Identificador()),
+        # ``null`` = no observado (el chunk no llegó a esa etapa), nunca ``0`` ni ``0.0``.
+        "puesto_denso": Numero(),
+        "entro_en_pares": Anulable(Booleano()),
+        "relevance_score": Numero(),
+        "supero_umbral": Anulable(Booleano()),
+        "con_evidencia": Booleano(),
+        "opciones_generadas": Numero(),
+        "opciones_mostradas": Numero(),
+        "opciones_descartadas": Numero(),
+        "afirmaciones_aprobadas": Numero(),
+        "afirmaciones_descartadas": Numero(),
+        "loops": Numero(),
+    }
+)
+_PAR_DE_DIAGNOSTICO = Objeto(
+    {
+        "par": Identificador(),
+        "tipo": Enumerado(frozenset(TIPOS_DE_VARIACION)),
+        "resultado": Enumerado(
+            frozenset({RESULTADO_PERDIDA, RESULTADO_SIN_PERDIDA, RESULTADO_SIN_ASIGNAR})
+        ),
+        "etapa": Anulable(_ETAPA_DE_LA_CONSULTA),
+        "causa": Anulable(Enumerado(frozenset(CAUSAS_SIN_ASIGNAR))),
+        "redaccion_perdida": Anulable(Identificador()),
+    }
+)
+
+ESQUEMA_DIAGNOSTICO = Objeto(
+    {
+        "esquema": Enumerado(frozenset({VERSION_ESQUEMA})),
+        "suite": Enumerado(frozenset({"diagnostico"})),
+        "configuracion": Objeto(
+            {
+                "nombre": Identificador(),
+                "hashConfig": Huella(),
+                "fixture": Identificador(),
+                "claseDataset": Enumerado(frozenset(CLASES_ADMITIDAS)),
+                "dataset": Objeto({"nombre": Identificador(), "version": Identificador()}),
+                # Los pares se comparan solo con el mismo corpus: se declara cuál fue ([S7 resp. 10]).
+                "corpus": Objeto(
+                    {
+                        "nombre": Identificador(),
+                        "version": Identificador(),
+                        "release": Identificador(),
+                        "recuento_de_chunks": Numero(),
+                    }
+                ),
+                "proveedor": Enumerado(frozenset(PROVEEDORES)),
+                "reloj": Enumerado(frozenset(RELOJES)),
+                "catalogVersion": Identificador(),
+                "modelos": _MODELOS_DE_OPCIONES,
+                "umbrales": Objeto(
+                    {
+                        "relevanceThreshold": Numero(),
+                        "nliEntailmentThreshold": Numero(),
+                        "retrievalTopK": Numero(),
+                        "rerankTopN": Numero(),
+                        "rerankerMaxPairs": Numero(),
+                    }
+                ),
+            }
+        ),
+        # Sin revisión de un oncólogo: el rótulo es siempre ``no_validada`` y el dataset declara quién lo revisó ([S7 resp. 1]).
+        "validacion": _VALIDACION,
+        "revision_provisional": Objeto(
+            {
+                "rol": Enumerado(frozenset(ROLES_DE_REVISION_PROVISIONAL)),
+                "fecha": Identificador(),
+            }
+        ),
+        "regla_de_asignacion": Lista(
+            Objeto(
+                {
+                    "orden": Numero(),
+                    "etapa": _ETAPA_DE_LA_CONSULTA,
+                    "condicion": Enumerado(frozenset(CONDICIONES_DE_LA_REGLA)),
+                }
+            )
+        ),
+        "preguntas": Lista(_FILA_DE_DIAGNOSTICO),
+        "pares": Lista(_PAR_DE_DIAGNOSTICO),
+        "recuento_por_etapa": Objeto(
+            {
+                **{etapa: Numero() for etapa in ETAPAS_DE_LA_CONSULTA},
+                RESULTADO_SIN_ASIGNAR: Numero(),
+                RESULTADO_SIN_PERDIDA: Numero(),
+            }
+        ),
+        "sin_asignar_por_causa": Objeto({causa: Numero() for causa in CAUSAS_SIN_ASIGNAR}),
+        "nli": Objeto(
+            {
+                "umbral": Numero(),
+                "banda_inferior": Numero(),
+                "ancho_de_tramo": Numero(),
+                "descartadas": Numero(),
+                "tramos": Lista(
+                    Objeto({"desde": Numero(), "hasta": Numero(), "recuento": Numero()})
+                ),
+                "en_banda": Numero(),
+                "nota": Enumerado(frozenset({NOTA_DE_CALIBRACION})),
+            }
+        ),
+        "salidas_invalidas": Numero(),
+    }
 )

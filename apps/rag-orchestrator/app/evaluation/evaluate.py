@@ -44,6 +44,11 @@ from app.evaluation.corrida_aplicabilidad import (
 from app.evaluation.corrida_barrido import ejecutar_barrido, exigir_dataset_sintetico
 from app.evaluation.corrida_brazos import ResultadoDeBrazo, evaluar_brazos
 from app.evaluation.corrida_calibracion import PARAMETROS_DE_CALIBRACION, ejecutar_calibracion
+from app.evaluation.corrida_diagnostico import (
+    SUITE_DIAGNOSTICO,
+    PuertosDeDiagnostico,
+    ejecutar_diagnostico,
+)
 from app.evaluation.corrida_opciones import SUITE_OPCIONES, PuertosDeOpciones, ejecutar_opciones
 from app.evaluation.corrida_poblacion import (
     SUITE_POBLACION,
@@ -144,6 +149,7 @@ def main(
     puertos_aplicabilidad: PuertosDeAplicabilidad | None = None,
     puertos_poblacion: PuertosDePoblacion | None = None,
     puertos_opciones: PuertosDeOpciones | None = None,
+    puertos_diagnostico: PuertosDeDiagnostico | None = None,
     cargador_de_modelos: CargadorDeModelos | None = None,
     lector_rss: LectorDeRss | None = None,
 ) -> int:
@@ -157,6 +163,7 @@ def main(
             puertos_aplicabilidad or PuertosDeAplicabilidad(),
             puertos_poblacion or PuertosDePoblacion(),
             puertos_opciones or PuertosDeOpciones(),
+            puertos_diagnostico or PuertosDeDiagnostico(),
         )
     except (argparse.ArgumentError, SystemExit, ConfigInvalida) as error:
         # El mensaje de ConfigInvalida nombra la clave y nunca su valor (RN-14).
@@ -199,9 +206,10 @@ def _despachar_familia(
     puertos_aplicabilidad: PuertosDeAplicabilidad,
     puertos_poblacion: PuertosDePoblacion,
     puertos_opciones: PuertosDeOpciones,
+    puertos_diagnostico: PuertosDeDiagnostico,
 ) -> int:
-    """Las familias `aplicabilidad` (US-132), `poblacion` (L1D-299) y `opciones` (US-140) tienen configuración, dataset y
-    reporte propios; el resto, la configuración común."""
+    """Las familias `aplicabilidad` (US-132), `poblacion` (L1D-299), `opciones` (US-140) y `diagnostico` (US-276) tienen
+    configuración, dataset y reporte propios; el resto, la configuración común."""
     if args.suite not in SUITES:
         raise ConfigInvalida(f"familia no disponible: {args.suite}")
     if args.suite == SUITE_APLICABILIDAD:
@@ -214,6 +222,8 @@ def _despachar_familia(
     ajustes = _ajustes_de_la_suite(args, origen.entorno)
     if args.suite == SUITE_OPCIONES:
         return ejecutar_opciones(args, ajustes, reloj, origen, puertos_opciones)
+    if args.suite == SUITE_DIAGNOSTICO:
+        return ejecutar_diagnostico(args, ajustes, reloj, origen, puertos_diagnostico)
     config = cargar_config_suite(args.config, ajustes)
     return _ejecutar(config, args, reloj, raiz, origen, directorio_de_configs)
 

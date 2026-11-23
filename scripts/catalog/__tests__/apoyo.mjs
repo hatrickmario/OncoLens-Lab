@@ -8,6 +8,11 @@ export const CATALOGO = path.join(RAIZ, 'packages/clinical-catalogs');
 export const FIXTURES = path.join(CATALOGO, 'test/fixtures');
 const SCRIPT_VALIDAR = path.join(RAIZ, 'scripts/catalog/validate.mjs');
 
+/** Versión del catálogo vigente: los tests la leen del manifiesto y no fijan el literal (S7.4c, design D14). */
+export const VERSION_DEL_CATALOGO = JSON.parse(
+  readFileSync(path.join(CATALOGO, 'manifest.json'), 'utf8'),
+).version;
+
 /** Plazo explícito de los procesos reales (el ciclo de la política TDD: sin esperas implícitas). */
 export const PLAZO_PROCESO_MS = 30_000;
 

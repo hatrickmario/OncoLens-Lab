@@ -172,3 +172,77 @@ compara. Es un insumo de diagnóstico para US-277, US-278 y US-279.
   recuento.
 - **Revisión de los pares:** quedan en `revision_provisional` con rol `ia` (`[S7 resp. 1]`); un oncólogo los revisa
   después del MVP.
+
+## Decisiones de implementación (apply)
+
+Decisiones que ni la spec ni un ADR cubrían; cada una con la alternativa elegida y por qué se descartan las otras.
+
+- **D10 · Cómo observa la suite la búsqueda densa.** `componer_servicio` gana el parámetro opcional `envolver_buscador` (una
+  función `ChunkSearch -> ChunkSearch`); la corrida lo usa para decorar la búsqueda en memoria con el observador. Descartadas:
+  (a) un segundo compositor del servicio solo para esta familia (duplica ~60 líneas de cableado y deriva del real); (b) subclasear
+  `BuscadorEnMemoria` (el observador no podría decorar el buscador que inyecta un test ni el de otra implementación del puerto).
+  El cambio es aditivo: ningún llamador existente lo pasa y `--suite all` no cambia (`baseline.json` idéntico).
+- **D11 · Qué entró en los pares del *reranker*.** Se lee de lo que el *reranker* recibió de verdad (el observador de
+  `Reranker.puntuar`), no se recalcula el corte. El orden denso sí se calcula con `recortar_a_pares_del_reranker(candidatos,
+  len(candidatos))` (un solo dueño del orden y del desempate por `chunk_id`). Descartadas: (a) recalcular el corte con
+  `RERANKER_MAX_PAIRS` de la configuración (con un reranker local manda el del reranker cargado y el diagnóstico divergiría si
+  el tope de producción cambia); (b) analizar el texto de `rag_query_corte` (frágil y ya descartado en D2). El test
+  `test_diagnostico_contra_eventos.py` comprueba que lo observado coincide con lo que registra `rag_query_corte`.
+- **D12 · `puesto_denso` y los candidatos.** El puesto es el del orden denso de la unión de las dos búsquedas del loop (la
+  pregunta y el resumen del contexto), y es `null` si supera `RETRIEVAL_TOP_K` (el chunk no es candidato, como pide la spec).
+  Descartada: informar el puesto real aun fuera del top-k (más informativo, pero contradice el escenario «si no está entre los
+  candidatos densos, `puesto_denso` es `null`»).
+- **D13 · Pares con más de dos redacciones.** Un par pierde si alguna redacción termina con evidencia y otra sin ella; la
+  etapa es la de la **primera** redacción sin evidencia en el orden del dataset (las demás quedan en la tabla por pregunta).
+  Descartada: una etapa por redacción perdida (rompe «la suma de los recuentos es el número de pares»).
+- **D14 · `nli` frente a `sin_asignar/citas`.** Con el fragmento sobre el umbral: sin opciones generadas → `sin_asignar`
+  (`sin_opciones_generadas`); con opciones pero ninguna afirmación llegó al NLI (`afirmaciones_al_nli` nulo o 0, cayeron en la
+  validación de citas) → `sin_asignar` (`citas`); en otro caso → `nli`. Descartada: forzar todo lo que supera el umbral a `nli`
+  (atribuiría al soporte una pérdida de generación y de citas, que son otra cosa).
+- **D15 · El generador de los adaptadores falsos.** Con `proveedor: fake` el corpus del servicio lleva, por redacción, una
+  opción guionada que cita el chunk esperado con las primeras 12 palabras de la cita como afirmación (para que el humo de la CI
+  recorra el camino completo). Con el generador local real esas propuestas no se usan. Descartadas: (a) un `propuestas.yaml` en
+  el dataset (mezcla guion de CI con datos de medición real y obliga al LLM real a convivir con él); (b) sin generador (todas las
+  redacciones saldrían «sin opciones» y la forma del informe no se ejercitaría).
+- **D16 · `RERANKER_MAX_PAIRS` en la configuración.** Con `proveedor: fake` se declara en `diagnostico.reranker_max_pairs` (RN-22,
+  20 en `diagnostico-fake.yaml`); con `proveedor: local` manda el del reranker cargado (ADR-39) y declararlo es una configuración
+  inválida. El informe registra el valor efectivo (`rerankerMaxPairs`, `null` si no hay corte).
+- **D17 · Claves del informe.** `reporte.escribir_reporte` rechaza las claves `texto`, `pregunta`, `cita`, `chunk`… (RN-14), así
+  que el recuento de fragmentos del corpus se llama `recuento_de_chunks` y las filas usan `pregunta_id`.
+- **D18 · Dónde vive la regla de `revision_provisional`.** No existía en el árbol al empezar este change (`l1d-246` y `l1d-299`
+  la crean «después»): se crea aquí en `app/evaluation/revision_provisional.py` (`exigir_revision_provisional`) y `dataset_diagnostico`
+  la usa. `l1d-246` (`dataset_opciones`) y `l1d-299` (`dataset_poblacion`) **deben reutilizarla**, no escribir otra.
+- **D19 · Par de la Demo 6.** El corpus fijo (`[S7 resp. 10]`) no trae un fragmento sobre las complicaciones de la prostatectomía
+  radical; el par `P01` espera el fragmento más cercano que nombra el procedimiento (`ch-nci-prostata-hp-en-2`, «radical
+  prostatectomy is generally reserved…»). Mide la sinonimia del procedimiento (US-277), no la calidad clínica de la respuesta;
+  queda dicho en el manifiesto del dataset.
+- **D20 · Informe legible.** Junto al `.json` se escribe un `.md` con las mismas cifras (D8), generado solo desde el diccionario
+  ya validado por el esquema cerrado (no puede llevar más de lo que lleva el JSON).
+
+## Respuesta al Gate 2 (refactors y deuda)
+
+- **D21 · Agrupamiento por afirmación (hallazgo 1).** `afirmaciones_juzgadas` ya no funde dos afirmaciones de igual texto: una
+  afirmación envía un par por premisa, seguidos y sin premisas repetidas (`premisas_del_soporte` las deduplica), y un par con la
+  misma hipótesis y una premisa ya vista abre otra afirmación. `test_paridad_nli_diagnostico.py` la compara con
+  `pares_a_verificar` y `veredictos_por_afirmacion` del dominio. **No se extrajo una función pública en `domain/support.py`**: el
+  change declara «sin cambio de código de producción» y el implementador no edita fuera de `app/evaluation`; la extracción
+  queda propuesta como deuda D7-02.
+- **D22 · Búsquedas por loop (hallazgo 2).** `BUSQUEDAS_POR_LOOP = 2` es un invariante del servicio: `_recuperar_dense` busca con
+  el texto de búsqueda y con el resumen del contexto, y lo mismo hacen el segundo loop contextual (ADR-52) y el de reescritura
+  (US-238), que llaman a la misma `_recuperar`. ADR-52 no cambia el número de búsquedas por loop. El test
+  `test_el_servicio_busca_exactamente_busquedas_por_loop_veces_por_consulta` falla si el servicio cambia ese número. **No se hizo
+  público `_orden_denso`** (producción): el orden denso usa `recortar_a_pares_del_reranker(c, len(c))`; hacerlo público y
+  exponer la constante junto al servicio queda como deuda D7-03.
+- **D23 · `revision_provisional` y el catálogo (hallazgo 3).** `$defs/revisionProvisional` aún no está en `main` (lo crea
+  l1d-126 parte A): hoy la regla de `app/evaluation/revision_provisional.py` es la única definición. **Cuando l1d-126 A llegue a
+  main, añadir un test de paridad** entre ese `$defs` y `ROLES_DE_REVISION_PROVISIONAL`/la forma `{rol, fecha}`.
+- **D24 · Fakes del mundo de prueba (hallazgo 4)** y **base única de la fila (hallazgo 5).** `BuscadorGuionado` respeta `limit` y
+  `RerankerGuionado` da el puntaje por defecto a una pregunta sin guion. La fila se lee del último loop y de la última
+  generación (`fila_de_redaccion`); `test_fila_de_redaccion_y_fakes.py` cubre dos loops donde solo el segundo genera.
+- **Deuda menor (IDs propuestos, S7-deuda.md no se edita aquí):**
+  - D7-02: extraer en `domain/support.py` el agrupamiento (pares, resultados) por afirmación y que `afirmaciones_juzgadas` delegue.
+  - D7-03: hacer público el orden denso (`pares_del_reranker`) y exponer `BUSQUEDAS_POR_LOOP` junto a `RAGOrchestratorService`.
+  - D7-04: `_reloj_de_medicion` duplicado entre `evaluate.py` y `corrida_diagnostico._servicio` (hay un `Cronometro(...)` equivalente en `corrida_opciones`).
+  - D7-05: parámetros posicionales largos en `fila_de_redaccion`/`medir_diagnostico`; pasar a un objeto de contexto.
+  - D7-06: la banda del NLI se valida en `config_diagnostico` y el ancho en `histograma_de_p_entailment`; dejar una sola regla.
+  - D7-07: el `.md` se escribe fuera de `escribir_reporte_cerrado`; protegido por `test_informe_md_sin_texto.py`, evaluar pasarlo por el mismo guardia.

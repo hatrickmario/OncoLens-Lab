@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
   CATALOGO,
   PLAZO_PROCESO_MS,
+  VERSION_DEL_CATALOGO,
   copiarFixture,
   ejecutarValidador,
   limpiarCopias,
@@ -17,7 +18,7 @@ describe('catalog:validate · escalas.json (L1D-90, [US-110 AC-5])', () => {
       const resultado = ejecutarValidador(CATALOGO);
 
       expect(resultado.codigo).toBe(0);
-      expect(resultado.salida).toContain('catalogVersion=1.9.0');
+      expect(resultado.salida).toContain(`catalogVersion=${VERSION_DEL_CATALOGO}`);
     },
     PLAZO_PROCESO_MS,
   );

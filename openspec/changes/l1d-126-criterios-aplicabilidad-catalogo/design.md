@@ -359,6 +359,34 @@ y final corren con los umbrales actuales, y los calibrados de `l1d-119` entran e
 (`[S7 resp. 11]`). En el PR, `eval-required` con adaptadores falsos (cambia `packages/clinical-catalogs/**/*.json`). Regla del sprint:
 ninguna cifra sin reporte versionado en `reports/eval/` producido por `run-ai-eval`.
 
+**D17 · Mecanismos de la parte A (implementador, 2026-11-22).** Decisiones que ni la spec ni un ADR fijaban:
+- **S7.1 (G1.6): `leerEsquemas` en el arranque (revisado tras el Gate 2).** `validar-catalogo.ts` obtiene TODOS los esquemas con
+  `leerEsquemas(DIRECTORIO_DE_ESQUEMAS, leerArchivo)`, derivados de los registros del validador (raíz, declarados, por tipo,
+  por lista): sin mapa propio ni `import` JSON de esquemas, y un archivo nuevo de cualquier registro (p. ej. `sinonimos` de
+  `l1d-335`) llega al arranque sin editar `clinical-api`. `tsconfig.build.json` emite `packages/clinical-catalogs/schemas/*.json`
+  a `dist/` (comprobado: build y arranque del módulo compilado contra el catálogo real). Primera versión (solo raíz derivada y
+  el resto por importación estática) descartada por duplicar `leerEsquemas` (Replace Duplicate with Call). Otras descartadas:
+  lista a mano (un archivo nuevo tumba el arranque sin aviso) y codegen de imports (paso de build nuevo). El `leerArchivo`
+  inyectado también sirve los esquemas: el test usa entradas ficticias de raíz y declaradas por el manifiesto.
+- **S7.2 (G2.3): `--base HEAD^1` en el job, sin tocar el script.** El guardián ya acepta cualquier ref; en `refs/pull/N/merge` el
+  primer padre es la punta actual de la base. El job `build-test-node` hace `fetch-depth: 2` y se retira el `git fetch` de
+  `BASE_REF`. Descartado: (a) exigir rama al día en la protección de `main` (no es verificable desde el repo); (b) que el script
+  derive `HEAD^1` solo cuando `CI=true` (acopla un default a un entorno y rompe `push` a `main`, donde `BASE_REF` es `event.before`).
+  El rojo del commit `test` es el test del workflow; los repos temporales de la base desfasada documentan la semántica.
+  Re-run sin padre (commit sin `HEAD^1`): `baseDisponible` falla y el guardián da `base_no_disponible`, que con `CI=true` falla
+  cerrado: aceptable (no pasa en silencio). Un `HEAD^1` ilegible da `base_ilegible`, también cerrado en CI.
+- **S7.3 (G2.4): `lista_vaciada`, con o sin subir la versión.** Se comprueba antes de la regla de versión (una lista publicada que
+  queda vacía exige revisión humana aunque la versión suba, porque el segundo paso, rellenarla, cuenta como primera publicación).
+  Descartado: (a) exigir además que `manifest.version` suba (no cierra la evasión: el atacante sube la versión); (b) cerrar la
+  tarea como riesgo aceptado (el humano no lo pidió).
+- **S7.4 (G2.6): una sola comparación de versiones.** `validator/versiones.mjs` aloja `compararVersiones` y
+  `violacionesDeVersionPropia`, y `ARCHIVOS_CON_VERSION_PROPIA` (en `archivos.mjs`) es la única lista de archivos con versión propia
+  para el validador y el guardián; el guardián la importa (antes la tenía copiada). Los archivos con versión propia (`lenguaje/…`,
+  `terminos-prohibidos`) se excluyen; los nombres de archivo salen de los registros de `archivos.mjs`, sin lista fija.
+  Código `version_mayor_que_manifiesto`.
+- **S7.4c:** `scripts/catalog/__tests__/apoyo.mjs` exporta `VERSION_DEL_CATALOGO`; `clinical-api` usa `versionDelCatalogo()` y
+  `VERSION_DEL_MANIFIESTO`; `rag-orchestrator`, `VERSION_DEL_CATALOGO_MONTADO`. Los `contracts/examples/` siguen siendo datos.
+
 **Ficheros que toca el S7.** `packages/clinical-catalogs/`: `manifest.json`, `mama/aplicabilidad.json`,
 `mama/poblacion-reglas.json`, `prostata/aplicabilidad.json`, `prostata/poblacion-reglas.json`,
 `schemas/comun.schema.json` (`$defs/revisionProvisional`), `schemas/validation.schema.json` (`history`),

@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
   CATALOGO,
   PLAZO_PROCESO_MS,
+  VERSION_DEL_CATALOGO,
   copiarFixture,
   ejecutarValidador,
   limpiarCopias,
@@ -21,12 +22,12 @@ const valoresDe = (clave) =>
 
 describe('catalog:validate · atributos.json con valores permitidos (L1D-80, [US-094 AC-3])', () => {
   it(
-    'acepta el catálogo real 1.9.0 y declara los valores de cada atributo [US-094 AC-3]',
+    'acepta el catálogo real vigente y declara los valores de cada atributo [US-094 AC-3]',
     () => {
       const resultado = ejecutarValidador(CATALOGO);
 
       expect(resultado.codigo).toBe(0);
-      expect(resultado.salida).toContain('catalogVersion=1.9.0');
+      expect(resultado.salida).toContain(`catalogVersion=${VERSION_DEL_CATALOGO}`);
       expect(valoresDe('estado_menopausico')).toContain('posmenopausica');
       expect(valoresDe('estado_castracion')).toEqual(
         expect.arrayContaining(['castrado', 'sensible_castracion']),
