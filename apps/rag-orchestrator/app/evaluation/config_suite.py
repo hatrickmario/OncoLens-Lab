@@ -138,6 +138,8 @@ class ConfigSuite:
     ``legitima: true`` (``exigir_tolerancia_de_falsos_positivos``)."""
     umbrales_de_settings: bool = False
     """``True`` si el YAML no declara ``umbrales`` y los valores efectivos salen de ``Settings`` (RN-22, L1D-326)."""
+    indice_fuente: str = "en_memoria"
+    """``indice.fuente``: ``en_memoria`` (el corpus del dataset) o ``milvus`` (la ingesta, en solo lectura)."""
     corpus_declarado: str | None = None
     """``corpus.declarado`` del YAML: el corpus que la corrida declara medir (``[S7 resp. 10]``); ``None`` = no declarado."""
 

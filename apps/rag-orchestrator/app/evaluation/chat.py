@@ -59,6 +59,7 @@ from app.evaluation.dataset_loader import CLASE_SINTETICA, DatasetInvalido
 from app.evaluation.envoltorios import pico_rss_mib
 from app.evaluation.fuente_dataset import FuenteDatasetEnDirectorio
 from app.evaluation.guardas import SuiteAbortada, exigir_adapters_locales, exigir_proveedor_local
+from app.evaluation.indice_del_corpus import IndiceDelCorpus
 from app.evaluation.juez_fidelidad import JuezNli
 from app.evaluation.llamadas import RegistroDeLlamadas
 from app.evaluation.modelos_locales import OrigenLocal, PuertosLocales, cargar_puertos_locales
@@ -110,6 +111,8 @@ class PuertosDeChat:
     verificador_terminos: ProhibitedTermsChecker | None = None
     llm: LlmClient | None = None
     locales: PuertosLocales | None = None
+    indice: IndiceDelCorpus | None = None
+    """El corpus leído de la ingesta (fuente ``indice``); ``None`` = el corpus del dataset en memoria."""
 
 
 def identidad_de_prueba() -> tuple[str, ...]:
