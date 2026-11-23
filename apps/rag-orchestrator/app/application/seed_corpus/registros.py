@@ -36,6 +36,11 @@ def identificador_de_documento(document_key: str, checksum: str) -> str:
     return f"{document_key}@{checksum[:12]}"
 
 
+def clave_del_documento(document_id: str) -> str:
+    """El ``document_key`` de un identificador de la ingesta (la inversa de ``identificador_de_*``)."""
+    raise NotImplementedError("no implementado")
+
+
 def identificador_de_chunk(document_id: str, indice: int) -> str:
     """Estable y determinista: reprocesar reescribe el mismo chunk. Lo cita la población extraída (RN-04)."""
     return f"{document_id}#{indice:04d}"
