@@ -40,6 +40,7 @@ from app.evaluation.dataset_diagnostico import (
     RedaccionDePar,
     cargar_dataset_diagnostico,
     dataset_para_el_servicio,
+    identificador_de_pregunta,
 )
 from app.evaluation.esquema_suite import ESQUEMA_DIAGNOSTICO, VERSION_ESQUEMA
 from app.evaluation.fuente_dataset import DatasetSuite
@@ -262,7 +263,7 @@ def _fila(
     return FilaDeRedaccion(
         par=par.id,
         redaccion=redaccion.id,
-        pregunta_id=f"{par.id}-{redaccion.id}",
+        pregunta_id=identificador_de_pregunta(par, redaccion),
         idioma=redaccion.idioma,
         chunk_esperado=observado.chunk_esperado,
         puesto_denso=observado.puesto_denso,
@@ -307,39 +308,12 @@ def _asignaciones(
 def _reporte(
     config: ConfigDiagnostico, dataset: DatasetDiagnostico, medicion: MedicionDeDiagnostico
 ) -> dict[str, Any]:
-    suite = config.suite
-    u = suite.umbrales
     asignaciones = _asignaciones(dataset, medicion.filas)
-    tipos = {p.id: p.tipo for p in dataset.pares}
-    descartadas = medicion.p_entailment_descartadas
     sin_validar = len(medicion.filas)
     return {
         "esquema": VERSION_ESQUEMA,
         "suite": SUITE_DIAGNOSTICO,
-        "configuracion": {
-            "nombre": suite.nombre,
-            "hashConfig": suite.hash_config,
-            "fixture": suite.fixture,
-            "claseDataset": dataset.clase,
-            "dataset": {"nombre": dataset.nombre, "version": dataset.version},
-            "corpus": {
-                "nombre": dataset.corpus.nombre,
-                "version": dataset.corpus.version,
-                "release": dataset.corpus.release,
-                "recuento_de_chunks": len(dataset.corpus.chunks),
-            },
-            "proveedor": suite.proveedor,
-            "reloj": suite.reloj,
-            "catalogVersion": suite.catalogo_version,
-            "modelos": {"llm": suite.llm_modelo, **medicion.modelos_respondidos},
-            "umbrales": {
-                "relevanceThreshold": u.relevance_threshold,
-                "nliEntailmentThreshold": u.nli_entailment_threshold,
-                "retrievalTopK": u.retrieval_top_k,
-                "rerankTopN": u.rerank_top_n,
-                "rerankerMaxPairs": medicion.reranker_max_pairs,
-            },
-        },
+        "configuracion": _configuracion_del_informe(config, dataset, medicion),
         "validacion": {
             "preguntas_validadas": 0,
             "preguntas_no_validadas": sin_validar,
@@ -354,34 +328,77 @@ def _reporte(
             for orden, etapa, condicion in REGLA_DE_ASIGNACION
         ],
         "preguntas": [_fila_del_informe(f) for f in medicion.filas],
-        "pares": [
-            {
-                "par": a.par,
-                "tipo": tipos[a.par],
-                "resultado": a.resultado,
-                "etapa": a.etapa,
-                "causa": a.causa,
-                "redaccion_perdida": a.redaccion_perdida,
-            }
-            for a in asignaciones
-        ],
+        "pares": _pares_del_informe(dataset, asignaciones),
         "recuento_por_etapa": recuento_por_etapa(asignaciones),
         "sin_asignar_por_causa": recuento_de_causas_sin_asignar(asignaciones),
-        "nli": {
-            "umbral": u.nli_entailment_threshold,
-            "banda_inferior": config.nli_banda_inferior,
-            "ancho_de_tramo": config.nli_ancho_de_tramo,
-            "descartadas": len(descartadas),
-            "tramos": [
-                {"desde": t.desde, "hasta": t.hasta, "recuento": t.recuento}
-                for t in histograma_de_p_entailment(descartadas, config.nli_ancho_de_tramo)
-            ],
-            "en_banda": recuento_en_banda(
-                descartadas, config.nli_banda_inferior, u.nli_entailment_threshold
-            ),
-            "nota": NOTA_DE_CALIBRACION,
-        },
+        "nli": _nli_del_informe(config, medicion.p_entailment_descartadas),
         "salidas_invalidas": medicion.salidas_invalidas,
+    }
+
+
+def _configuracion_del_informe(
+    config: ConfigDiagnostico, dataset: DatasetDiagnostico, medicion: MedicionDeDiagnostico
+) -> dict[str, Any]:
+    """Lo que identifica la medición: configuración, dataset, corpus, modelos y umbrales (los valores con los que se corrió)."""
+    suite = config.suite
+    u = suite.umbrales
+    return {
+        "nombre": suite.nombre,
+        "hashConfig": suite.hash_config,
+        "fixture": suite.fixture,
+        "claseDataset": dataset.clase,
+        "dataset": {"nombre": dataset.nombre, "version": dataset.version},
+        "corpus": {
+            "nombre": dataset.corpus.nombre,
+            "version": dataset.corpus.version,
+            "release": dataset.corpus.release,
+            "recuento_de_chunks": len(dataset.corpus.chunks),
+        },
+        "proveedor": suite.proveedor,
+        "reloj": suite.reloj,
+        "catalogVersion": suite.catalogo_version,
+        "modelos": {"llm": suite.llm_modelo, **medicion.modelos_respondidos},
+        "umbrales": {
+            "relevanceThreshold": u.relevance_threshold,
+            "nliEntailmentThreshold": u.nli_entailment_threshold,
+            "retrievalTopK": u.retrieval_top_k,
+            "rerankTopN": u.rerank_top_n,
+            "rerankerMaxPairs": medicion.reranker_max_pairs,
+        },
+    }
+
+
+def _pares_del_informe(
+    dataset: DatasetDiagnostico, asignaciones: Sequence[AsignacionDePar]
+) -> list[dict[str, Any]]:
+    tipos = {p.id: p.tipo for p in dataset.pares}
+    return [
+        {
+            "par": a.par,
+            "tipo": tipos[a.par],
+            "resultado": a.resultado,
+            "etapa": a.etapa,
+            "causa": a.causa,
+            "redaccion_perdida": a.redaccion_perdida,
+        }
+        for a in asignaciones
+    ]
+
+
+def _nli_del_informe(config: ConfigDiagnostico, descartadas: Sequence[float]) -> dict[str, Any]:
+    """El histograma de lo que el NLI descartó y la banda bajo el umbral; nunca propone un valor de umbral (AC-3)."""
+    umbral = config.suite.umbrales.nli_entailment_threshold
+    return {
+        "umbral": umbral,
+        "banda_inferior": config.nli_banda_inferior,
+        "ancho_de_tramo": config.nli_ancho_de_tramo,
+        "descartadas": len(descartadas),
+        "tramos": [
+            {"desde": t.desde, "hasta": t.hasta, "recuento": t.recuento}
+            for t in histograma_de_p_entailment(descartadas, config.nli_ancho_de_tramo)
+        ],
+        "en_banda": recuento_en_banda(descartadas, config.nli_banda_inferior, umbral),
+        "nota": NOTA_DE_CALIBRACION,
     }
 
 
@@ -408,6 +425,33 @@ def _fila_del_informe(fila: FilaDeRedaccion) -> dict[str, Any]:
 
 def _celda(valor: object) -> str:
     return "—" if valor is None else str(valor)
+
+
+def _tabla_de_pares(pares: Sequence[Mapping[str, Any]]) -> list[str]:
+    return [
+        "| par | tipo | resultado | etapa | causa | redacción sin evidencia |",
+        "|---|---|---|---|---|---|",
+        *(
+            f"| {p['par']} | {p['tipo']} | {p['resultado']} | {_celda(p['etapa'])} | {_celda(p['causa'])} "
+            f"| {_celda(p['redaccion_perdida'])} |"
+            for p in pares
+        ),
+    ]
+
+
+def _tabla_de_preguntas(preguntas: Sequence[Mapping[str, Any]]) -> list[str]:
+    return [
+        "| pregunta | chunk esperado | puesto denso | en pares | relevance_score | supera umbral | con evidencia "
+        "| opciones generadas | afirmaciones aprobadas | afirmaciones descartadas |",
+        "|---|---|---|---|---|---|---|---|---|---|",
+        *(
+            f"| {f['pregunta_id']} | {_celda(f['chunk_esperado'])} | {_celda(f['puesto_denso'])} "
+            f"| {_celda(f['entro_en_pares'])} | {_celda(f['relevance_score'])} | {_celda(f['supero_umbral'])} "
+            f"| {f['con_evidencia']} | {_celda(f['opciones_generadas'])} | {_celda(f['afirmaciones_aprobadas'])} "
+            f"| {_celda(f['afirmaciones_descartadas'])} |"
+            for f in preguntas
+        ),
+    ]
 
 
 def informe_legible(reporte: Mapping[str, Any]) -> str:
@@ -441,26 +485,11 @@ def informe_legible(reporte: Mapping[str, Any]) -> str:
         "",
         "## Por par",
         "",
-        "| par | tipo | resultado | etapa | causa | redacción sin evidencia |",
-        "|---|---|---|---|---|---|",
-        *(
-            f"| {p['par']} | {p['tipo']} | {p['resultado']} | {_celda(p['etapa'])} | {_celda(p['causa'])} "
-            f"| {_celda(p['redaccion_perdida'])} |"
-            for p in reporte["pares"]
-        ),
+        *_tabla_de_pares(reporte["pares"]),
         "",
         "## Por pregunta",
         "",
-        "| pregunta | chunk esperado | puesto denso | en pares | relevance_score | supera umbral | con evidencia "
-        "| opciones generadas | afirmaciones aprobadas | afirmaciones descartadas |",
-        "|---|---|---|---|---|---|---|---|---|---|",
-        *(
-            f"| {f['pregunta_id']} | {_celda(f['chunk_esperado'])} | {_celda(f['puesto_denso'])} "
-            f"| {_celda(f['entro_en_pares'])} | {_celda(f['relevance_score'])} | {_celda(f['supero_umbral'])} "
-            f"| {f['con_evidencia']} | {_celda(f['opciones_generadas'])} | {_celda(f['afirmaciones_aprobadas'])} "
-            f"| {_celda(f['afirmaciones_descartadas'])} |"
-            for f in reporte["preguntas"]
-        ),
+        *_tabla_de_preguntas(reporte["preguntas"]),
         "",
         "## p_entailment de las afirmaciones descartadas por el NLI",
         "",
