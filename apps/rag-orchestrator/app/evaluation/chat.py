@@ -642,6 +642,17 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _peticiones_de_la_corrida(
+    directorio: Path | None, config: ConfigSuite, dataset: DatasetDeChat
+) -> dict[str, PeticionDeChat]:
+    """Las que dejó ``eval:chat-preparar``; sin ellas, solo con adapters falsos valen los ejemplos del contrato."""
+    if directorio is not None:
+        return cargar_peticiones(directorio, config)
+    if config.proveedor == "fake":
+        return peticiones_de_ejemplo(dataset, config)
+    raise SuiteAbortada("con modelos locales hacen falta --peticiones de eval:chat-preparar")
+
+
 def main(
     argv: Sequence[str],
     *,
@@ -652,14 +663,7 @@ def main(
     try:
         config = cargar_config_suite(args.config, entorno)
         dataset = cargar_dataset_de_chat(args.dataset)
-        if args.peticiones is not None:
-            peticiones = cargar_peticiones(args.peticiones, config)
-        elif config.proveedor == "fake":
-            peticiones = peticiones_de_ejemplo(dataset, config)
-        else:
-            raise SuiteAbortada(
-                "con modelos locales hacen falta --peticiones de eval:chat-preparar"
-            )
+        peticiones = _peticiones_de_la_corrida(args.peticiones, config, dataset)
         reporte = asyncio.run(
             evaluar(config, dataset, peticiones, puertos=puertos or _puertos_de(config, entorno))
         )
