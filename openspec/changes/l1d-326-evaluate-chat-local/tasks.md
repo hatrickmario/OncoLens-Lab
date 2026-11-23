@@ -6,6 +6,8 @@ tareas de corrida real se cierran **solo** con el reporte versionado en `reports
 (`S7-refinamiento.md` §4), nunca antes. Sin cambios de API: no hay sección `## contratos`. Fuera: E2E de próstata
 (D6-49) y métricas de faltantes de AC-4 (D6-51), ambos Post-MVP. Datos solo sintéticos; sin *fallback* a la nube (RN-12).
 
+> Decidido (usuario, 2026-11-22): el chat (326) se mide sobre la ingesta de L1D-119 [S7 resp. 10]; se revierte el supuesto del dataset en memoria.
+
 Decisiones del usuario del 2026-11-22: `[S7 resp. 10]` el chat mide sobre la **ingesta de `l1d-119`**, el mismo corpus
 en la corrida base y en la final, declarado en el reporte; `[S7 resp. 11]` se mide con los umbrales **actuales**, leídos
 de `Settings`.
@@ -89,7 +91,7 @@ de `Settings`.
 - [x] 2.5 (test primero: orquestación con adapters falsos) `eval/configs/chat-local.yaml` deja de duplicar los
       umbrales: se quita su bloque `umbrales` (y no se copian los pares del *reranker* ni la expansión contextual); la
       familia los lee de `Settings` (RN-22) y el reporte registra los valores efectivos, que son los actuales
-      (`[S7 resp. 11]`). Declara el corpus de la medición (decisión del orquestador: el del dataset en memoria; `[S7 resp. 10]` parcialmente incumplida). Test: «usa los
+      (`[S7 resp. 11]`). Declara el corpus de la medición: la ingesta de `l1d-119` (`[S7 resp. 10]`; fuente `indice`, tarea 2.7). Test: «usa los
       umbrales de Settings y los registra en el reporte cuando la configuración no los declara [US-269 AC-3]». Sin
       valores copiados como constantes en código. Verificación: `cargar_config_suite` y `exigir_proveedor_local` en
       verde; test existente de host de nube en verde; `python -m app.scripts.adr39_measure --check-config`.
@@ -100,6 +102,10 @@ de `Settings`.
       familia, no se relaja la aserción. Commit `test(L1D-326)`.
 - [x] 2.6 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde
       antes y después, commit `refactor(L1D-326)`.
+
+- [x] 2.7 (TDD estricto) Fuente `indice` del corpus de la familia `chat` (`[S7 resp. 10]`, design decisión 14): test en rojo y
+      `feat(L1D-326)` de `IndiceDelCorpus`, `abrir_indice_real` (solo lectura, falla cerrado), `indice.fuente` en la configuración,
+      `componer_servicio(corpus=…)` y `corpus.cargado` en el reporte; con adapters falsos sigue sobre el dataset. Hecho 2026-11-22.
 
 ## 3. evaluación (código; antes de la corrida base)
 
@@ -120,11 +126,12 @@ de `Settings`.
 > `reports/eval/l1d-326-chat-v1.json` y escribe `reports/eval/l1d-326-chat-v1.md`, que solo resume los agregados de
 > ese JSON. Ningún otro nombre ni otro autor.
 
-- [ ] 4.1 (suite `evaluate`) DIFERIDA -> H-1 (corrida base del S7). `ai-eval-runner` corre `evaluate:chat` con
-      `chat-local.yaml` y los modelos locales de ADR-39 sobre el corpus del dataset en memoria (`[S7 resp. 10]` parcialmente
-      incumplida para el chat: no es la ingesta de `l1d-119`; el reporte declara el corpus cargado) y con los umbrales actuales (`[S7 resp. 11]`); reporte
-      en `reports/eval/l1d-326-chat-v1.{json,md}` con soporte NLI, precisión de enlaces y hechos presentes por tipo de
-      cáncer (US-269 AC-3, M-02.1…M-02.3), el corpus medido y los umbrales efectivos. Cierra D6-50 y D6-59.
+- [ ] 4.1 (suite `evaluate`) DIFERIDA -> H-1 (corrida base del S7). Decidido (usuario, 2026-11-22): el chat (326) se mide sobre la ingesta de L1D-119 [S7 resp. 10]; se revierte el supuesto del dataset en memoria. `ai-eval-runner` corre `evaluate:chat`
+      con `chat-local.yaml` y los modelos locales de ADR-39 **tras la ingesta real de `l1d-119`** (la colección de Milvus y el
+      catálogo `corpus` que lee la fuente `indice`; sin colección o sin chunks vigentes la medición no corre) y con los
+      umbrales actuales (`[S7 resp. 11]`); reporte en `reports/eval/l1d-326-chat-v1.{json,md}` con soporte NLI, precisión de
+      enlaces y hechos presentes por tipo de cáncer (US-269 AC-3, M-02.1…M-02.3), el corpus medido (`corpus.cargado`:
+      colección, recuento y huella) y los umbrales efectivos. Cierra D6-50 y D6-59.
 - [ ] 4.2 (suite `evaluate`) DIFERIDA -> H-1 (misma corrida). El reporte publica el p95 por turno e intención con reloj
       real, sin umbral bloqueante (US-269 AC-7), para la revisión de ADR-51 en el cierre del S7.
 - [ ] 4.3 DIFERIDA -> H-1 (misma corrida). Comprobar sobre el reporte: figuran ambos conteos, salidas prescriptivas = 0
@@ -132,7 +139,7 @@ de `Settings`.
       los ids pendientes (D6-53) y faltantes como no medidas (D6-51). Si RN-23 o la no fuga dan ≠ 0 (el comando sale
       con código distinto de 0), es una situación crítica: se pausa y se abre un bug en la historia dueña.
 - [ ] 4.4 DIFERIDA -> H-2 (corrida final del S7, pendiente de confirmar por el humano). Repetir `evaluate:chat` con los
-      mismos parámetros, el **mismo corpus** (el del dataset en memoria, ver 4.1) y los umbrales actuales
+      mismos parámetros, el **mismo corpus** (la ingesta de `l1d-119`, `[S7 resp. 10]`) y los umbrales actuales
       (`[S7 resp. 11]`), y versionar el reporte de la corrida final como insumo de DEC-07 (L1D-234).
 
 ## 5. Verificación
@@ -148,8 +155,8 @@ de `Settings`.
 
 - [ ] H-1 DIFERIDA -> H-1: en la corrida base del S7 (`[S7 resp. 2]`), con un solo `ollama serve`
   (`OLLAMA_CONTEXT_LENGTH=8192`), sin swap, `modelos.env` de ADR-39 en el entorno y la BD de test levantada, lanzar la
-  medición 4.1–4.3 con `ai-eval-runner` y versionar el reporte en `reports/eval/` (ruta protegida). El chat se mide sobre el corpus del dataset en memoria (no sobre la ingesta de
-  `l1d-119`, `[S7 resp. 10]` parcialmente incumplida): no hace falta esperar a 8.1. Bloque literal:
+  medición 4.1–4.3 con `ai-eval-runner` y versionar el reporte en `reports/eval/` (ruta protegida). La ingesta real de `l1d-119`
+  (corrida B, S7.7) debe haber terminado antes y Milvus y la BD de test del corpus deben estar levantados. Bloque literal:
 
 ```bash
 scripts/setup-secrets.sh --profile test   # si no existe ya
@@ -159,6 +166,9 @@ scripts/setup-secrets.sh --profile test   # si no existe ya
 # Umbrales actuales (`[S7 resp. 11]`): `chat-local.yaml` ya no los declara, la familia los lee de Settings (entorno) y se
 # niega nombrando la variable si falta alguna. Estos son los valores efectivos de infra/docker/docker-compose.yml; el
 # reporte registra los que corrieron (`umbrales`, origen `settings`).
+# Fuente `indice` (solo lectura): la ingesta de `l1d-119` vía MILVUS_URI, MILVUS_COLLECTION_NAME, EMBEDDING_DIM, VECTOR_INDEX_TYPE,
+# VECTOR_INDEX_PARAMS, MILVUS_DENSE_METRIC_TYPE, CORPUS_DATABASE_URL y PG_RAG_CORPUS_PASSWORD_FILE (rol rag_corpus), los mismos que
+# `rag-orchestrator` en Compose. Sin colección o sin chunks vigentes la familia sale con código 2 sin escribir cifras.
 export RELEVANCE_THRESHOLD=0.30 NLI_ENTAILMENT_THRESHOLD=0.7 RETRIEVAL_TOP_K=30 RERANK_TOP_N=10
 SALIDA="$(mktemp -d)"                      # directorio de trabajo, fuera del repo
 APP_ENV=test npm run evaluate:chat -- \

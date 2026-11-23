@@ -132,11 +132,7 @@ metas definitivas (DEC-07); revisión clínica (D6-53).
       las aserciones no cambian). *Descartadas:* (a) mantener el bloque en `chat-local.yaml` (es el drift que cierra
       D6-52: 40 frente a 30 candidatos); (b) un valor por defecto en código (rompe RN-22); (c) leer `os.environ` dentro del
       cargador (el único punto del entorno es `entorno_del_proceso`).
-    - **Corpus declarado frente a corpus cargado.** La familia compone el chat **en proceso** sobre el corpus en memoria del
-      dataset (`data/evaluation/opciones`), no sobre Milvus: no puede medir «la ingesta de `l1d-119`» (`[S7 resp. 10]`) por sí
-      sola. `chat-local.yaml` declara `corpus.declarado` y el reporte publica `corpus.declarado` y `corpus.cargado` lado a lado
-      para que el hallazgo no quede escondido. **Resuelto por el orquestador:** se acepta la corrida base sobre el corpus del dataset (ver Risks); `chat-local.yaml` declara
-      ese corpus y `[S7 resp. 10]` queda parcialmente incumplida para el chat.
+    - **Corpus: el de la ingesta de `l1d-119` (revierte el supuesto anterior).** Decidido (usuario, 2026-11-22): el chat (326) se mide sobre la ingesta de L1D-119 [S7 resp. 10]; se revierte el supuesto del dataset en memoria. Ver la decisión 14.
     - **LLM caído = `SuiteAbortada`.** El grafo traduce el `FalloDelLlm` del adapter real a `LlmLocalNoDisponibleError` (también
       lo hace con un NLI caído); `_turno` lo convierte en `SuiteAbortada` (código 2, sin `chat.json`). Una salida del LLM
       que no valida sigue siendo `LlmSalidaInvalidaError` y cuenta como turno errado. *Descartada:* abortar con cualquier
@@ -162,6 +158,30 @@ metas definitivas (DEC-07); revisión clínica (D6-53).
     - **`eval-required`.** La familia `chat` corre con `chat-fake.yaml --sin-preparar` desde `scripts/ci/eval-required.mjs`
       (`ejecutarFamiliaDelChat`, hermana de la de `opciones`), salida en `<carpeta>/chat`; el resumen publica solo los dos
       conteos; un código distinto de 0 rompe el job (2 si no corre, 1 en otro caso).
+
+14. **Fuente `indice` del corpus de la familia `chat` (`[S7 resp. 10]`).** Decidido (usuario, 2026-11-22): el chat (326) se mide sobre la ingesta de L1D-119 [S7 resp. 10]; se revierte el supuesto del dataset en memoria.
+    - **Qué es.** `app/evaluation/indice_del_corpus.py`: `IndiceDelCorpus(puertos: PuertosDelCorpus, resumen)`. `abrir_indice_real()`
+      compone con `crear_puertos_del_corpus` (los mismos adapters de lectura de producción: rol `rag_corpus` y Milvus, nunca un
+      schema clínico) y solo consulta (`has_collection`, `load_collection`, `query_iterator`); no inserta, no reescribe, no marca
+      vigencias (RN-05). Falla cerrado nombrando la variable (`MILVUS_COLLECTION_NAME`, `MILVUS_URI`…), nunca la URI, y aborta
+      con colección vacía. `ConfigSuite.indice_fuente` (`indice.fuente: en_memoria | milvus`, por defecto `en_memoria`: la huella
+      de las demás configuraciones no cambia; `milvus` exige `proveedor: local`). `componer_servicio(..., corpus=PuertosDelCorpus)`
+      busca y lee catálogo y release en esos puertos; la familia `chat` usa además sus `posiciones`.
+    - **Reporte.** `corpus.cargado` = `{fuente: indice, coleccion, chunks_vigentes, huella}` (SHA-256 de los ids de chunk
+      ordenados) o `{fuente: dataset, ruta}`; nunca texto. `corpus.declarado` es el de la configuración.
+    - **Reutilización por `l1d-336` y `l1d-337`.** Su diseño prevé una fuente `indice` (`en_memoria` o una colección de Milvus)
+      detrás del puerto `ChunkSearch`. Esta fuente ya cumple ese papel: `IndiceDelCorpus` y el parámetro `corpus` de
+      `componer_servicio` son lo que reutilizarán, y la clave `indice.fuente` es la misma. La colección sale hoy de
+      `MILVUS_COLLECTION_NAME`; que cada brazo apunte a otra colección es una extensión (un parámetro de `abrir_indice_real`)
+      que les corresponde sin romper este contrato. Ninguna de las dos changes está implementada aún.
+    - **Alternativas.** (a) **[elegida]** fuente de solo lectura sobre los puertos de producción: una sola composición, la que
+      reutilizan 336 y 337, y el chat mide el mismo camino de recuperación que producción. (b) componer el chat con los
+      adapters de Milvus por configuración local sin abstracción de fuente: descartada, duplicaría la composición en cada
+      familia y 336 y 337 tendrían que rehacerla. (c) exportar la ingesta a un directorio de dataset y usar
+      `FuenteDatasetEnDirectorio`: descartada, duplica el corpus fuera del almacén, desincroniza la medición de la ingesta real
+      y obliga a re-embeber en la suite.
+    - **Límites.** Con la fuente `indice` y modelos locales no se embeben los chunks del dataset (los vectores ya están en el
+      índice); el `GeneradorGuionado` y los vectores falsos siguen siendo solo del modo fake. La ejecución real es de H-1.
 
 ## Dependencias y colaboradores
 
@@ -223,13 +243,11 @@ errores); no se toca ningún fake de `rag-orchestrator`.
   desechable (decisión 3). Si obligara a tocar el servicio de producción, el implementador se detiene y lo reporta.
 - **Hilo en proceso frente a rehidratación real** (decisión 4): AC06 se mide sin el camino de rehidratación de
   Backend 1; queda anotado como limitación en el reporte.
-- **Corpus de los turnos de evidencia · `[S7 resp. 10]` parcialmente incumplida para el chat (decisión del orquestador):** la
-  familia compone el chat en proceso sobre el corpus del dataset en memoria (`data/evaluation/opciones`), no sobre la ingesta
-  de `l1d-119`. La corrida base se **acepta** sobre ese corpus; la medición corre igual y el reporte declara el corpus
-  efectivamente cargado (`corpus.cargado`) junto a la declaración de `chat-local.yaml`. Ninguna cifra del chat debe citarse
-  como medida sobre la ingesta de `l1d-119`. *Alternativas:* (a) aceptar el corpus del dataset **[elegida]**; (b) un
-  `FuenteDataset` construido desde la ingesta (descartada: cambio mayor fuera del alcance del residual, con riesgo de plazo y
-  de tocar el contrato de la familia).
+- **Corpus de los turnos de evidencia · `[S7 resp. 10]`.** Decidido (usuario, 2026-11-22): el chat (326) se mide sobre la ingesta de L1D-119 [S7 resp. 10]; se revierte el supuesto del dataset en memoria. La ingesta de `l1d-119` **sí** es requisito de la
+  corrida base: la fuente `indice` (decisión 14) lee su colección de Milvus y su catálogo `corpus`, y la suite aborta si la
+  colección no existe o está vacía; nunca mide sobre otro corpus. La ingesta real de la corrida B (S7.7) debe haber terminado
+  antes de H-1. La CI no tiene Milvus ni la ingesta: con adapters falsos la familia sigue sobre el dataset y la fuente
+  `indice` se prueba con el almacén fingido en su puerto y el cliente de Milvus fingido.
 - **Una sola medición:** `S7-refinamiento.md` §5 sitúa la medición del chat en la corrida base; repetirla en la corrida
   final (para ver el efecto de US-277…US-279 en los turnos de evidencia) es una pregunta abierta al humano (H-2). Si se
   repite, usa el mismo corpus y los umbrales actuales.
