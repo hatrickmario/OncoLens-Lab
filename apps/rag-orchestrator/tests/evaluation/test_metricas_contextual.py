@@ -204,3 +204,19 @@ def test_la_comparacion_solo_incluye_los_ambitos_que_estan_en_las_dos_corridas()
     actual = _recuentos("total", 20, 14, 0) + _recuentos("b", 10, 14, 0)
 
     assert {c.ambito for c in comparar_con_base(actual, base)} == {"total"}
+
+
+def test_el_falso_positivo_es_el_mismo_en_las_adversarias_y_en_la_comparacion_cuando_la_salida_del_generador_es_invalida() -> (
+    None
+):
+    invalida = FilaContextual(
+        "CTX-A01", "con_tema", "a", "salida_invalida", True, None, None, (), (), 1
+    )
+    base = _recuentos("a", 20, 14, 0)
+
+    (adversarias,) = adversarias_por_caso([invalida])
+    cambios = comparar_con_base(recuentos_por_clase([invalida]), base)
+
+    superado = next(c for c in cambios if (c.ambito, c.metrica) == ("a", "falsos_positivos"))
+    assert adversarias.falsos_positivos == 1
+    assert (superado.actual, superado.empeora) == (1, True)

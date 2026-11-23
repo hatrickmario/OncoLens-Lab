@@ -284,3 +284,34 @@ def test_contextual_fake_da_la_cobertura_de_los_tres_casos_sobre_las_180_consult
     assert {c["genericas_total"] for c in reporte["cobertura"]} == {22}
     assert {c["minimo"] for c in reporte["cobertura"]} == {18}
     assert reporte["comparacion"] is None
+
+
+def _base_alterada(tmp_path: Path, alterar: Any) -> Path:
+    base = tmp_path / "base" / "base.json"
+    correr_ok(construir_mundo(tmp_path), tmp_path / "base", "base")
+    crudo = json.loads(base.read_text("utf-8"))
+    alterar(crudo)
+    base.write_text(json.dumps(crudo), encoding="utf-8")
+    return base
+
+
+@pytest.mark.ac("US-273", 2)
+@pytest.mark.parametrize(
+    "alterar",
+    [
+        lambda crudo: crudo.update(suite="diagnostico"),
+        lambda crudo: crudo["recuentos"].pop(),
+        lambda crudo: crudo.pop("cobertura"),
+    ],
+    ids=["otra-familia", "recuento-ausente", "fuera-de-esquema"],
+)
+def test_contextual_se_rechaza_con_codigo_2_y_sin_cifras_cuando_el_reporte_base_no_es_valido(
+    tmp_path: Path, alterar: Any
+) -> None:
+    base = _base_alterada(tmp_path, alterar)
+    mundo = construir_mundo(tmp_path / "actual", reporte_base=base)
+
+    codigo, reporte = correr(mundo, tmp_path / "salida")
+
+    assert codigo == 2
+    assert reporte is None
