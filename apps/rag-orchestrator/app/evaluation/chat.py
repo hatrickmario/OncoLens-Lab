@@ -578,7 +578,12 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: Sequence[str], *, entorno: Mapping[str, str] | None = None) -> int:
+def main(
+    argv: Sequence[str],
+    *,
+    entorno: Mapping[str, str] | None = None,
+    puertos: PuertosDeChat | None = None,
+) -> int:
     args = _parser().parse_args(list(argv))
     try:
         config = cargar_config_suite(args.config)
@@ -592,7 +597,7 @@ def main(argv: Sequence[str], *, entorno: Mapping[str, str] | None = None) -> in
                 "con modelos locales hacen falta --peticiones de eval:chat-preparar"
             )
         reporte = asyncio.run(
-            evaluar(config, dataset, peticiones, puertos=_puertos_de(config, entorno))
+            evaluar(config, dataset, peticiones, puertos=puertos or _puertos_de(config, entorno))
         )
     except (DatasetInvalido, SuiteAbortada) as error:
         print(f"evaluar-chat: la suite no corre: {error}", file=sys.stderr)
