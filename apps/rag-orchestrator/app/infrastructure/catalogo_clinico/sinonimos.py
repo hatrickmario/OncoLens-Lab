@@ -9,7 +9,7 @@ forma o con un sinónimo sin ``relacion`` válida es ``CatalogoNoDisponible`` (e
 from __future__ import annotations
 
 import json
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from itertools import chain
 from pathlib import Path
 
@@ -35,7 +35,9 @@ def cargar_sinonimos(catalogos: Path, tipos_de_cancer: Sequence[str]) -> dict[st
 
 
 def cargar_formas_por_termino(
-    catalogos: Path, tipos_de_cancer: Sequence[str]
+    catalogos: Path,
+    tipos_de_cancer: Sequence[str],
+    relaciones: Collection[RelacionDeSinonimo] = tuple(RelacionDeSinonimo),
 ) -> dict[str, frozenset[str]]:
     """Canónico normalizado -> él y todos sus textos, con cualquier relación: lo que reconoce un término como del tema sin
     equipararlo (pertinencia del seguimiento, formas de un término en la medición contextual)."""

@@ -7,6 +7,11 @@ from pathlib import Path
 
 import pytest
 
+from app.domain.contexto_del_seguimiento import (
+    ContextoDelSeguimiento,
+    clasificar_contexto_del_seguimiento,
+)
+from app.domain.sinonimos import RelacionDeSinonimo
 from app.domain.corpus_metadata.poblacion_seleccion import ValorPropuesto, deduplicar
 from app.infrastructure.catalogo_clinico.manifiesto import CatalogoNoDisponible
 from app.infrastructure.catalogo_clinico.sinonimos import (
@@ -108,19 +113,13 @@ def test_cargar_formas_por_termino_da_todos_los_textos_con_cualquier_relacion(
     }
 
 
-def test_cargar_terminos_por_tipo_incluye_el_tipo_y_todos_los_textos_aunque_no_sean_equivalentes(
+def test_cargar_terminos_por_tipo_incluye_el_tipo_el_canonico_los_equivalentes_y_los_miembros_de_clase_pero_no_los_mas_amplios(
     tmp_path: Path,
 ) -> None:
     terminos = cargar_terminos_por_tipo(_catalogo_de_clase(tmp_path), ["mama"])
 
     assert terminos["mama"] == frozenset(
-        {
-            "mama",
-            "inhibidores de aromatasa",
-            "aromatase inhibitor",
-            "letrozol",
-            "terapia endocrina",
-        }
+        {"mama", "inhibidores de aromatasa", "aromatase inhibitor", "letrozol"}
     )
 
 
@@ -150,6 +149,20 @@ def test_cargar_sinonimos_falla_sin_ruta_ni_contenido_cuando_el_archivo_no_es_va
         cargar_sinonimos(tmp_path, ["mama"])
 
     assert str(tmp_path) not in str(fallo.value) and contenido not in str(fallo.value)
+
+
+def test_cargar_formas_por_termino_deja_solo_las_relaciones_pedidas_cuando_se_filtra(
+    tmp_path: Path,
+) -> None:
+    formas = cargar_formas_por_termino(
+        _catalogo_de_clase(tmp_path),
+        ["mama"],
+        relaciones=(RelacionDeSinonimo.equivalente,),
+    )
+
+    assert formas == {
+        "inhibidores de aromatasa": frozenset({"inhibidores de aromatasa", "aromatase inhibitor"})
+    }
 
 
 def test_cargar_formas_por_termino_falla_cuando_un_sinonimo_no_declara_relacion(
@@ -202,3 +215,26 @@ def test_la_reescritura_del_catalogo_real_no_admite_un_miembro_de_clase_ni_un_te
 
     assert "castracion medica" not in admitidos and "observacion" not in admitidos
     assert admitidos["androgen deprivation therapy"] == "terapia de privacion androgenica"
+
+
+def test_un_texto_mas_amplio_de_prostata_no_vuelve_fuera_de_contexto_una_pregunta_de_mama() -> None:
+    terminos = cargar_terminos_por_tipo(CATALOGOS, ["mama", "prostata"])
+
+    assert "observacion" not in terminos["prostata"]
+    assert (
+        clasificar_contexto_del_seguimiento(
+            "¿Qué dice la evidencia sobre la observación tras la cirugía?", "mama", terminos
+        )
+        is ContextoDelSeguimiento.en_contexto
+    )
+
+
+def test_las_relaciones_del_enum_de_python_son_las_del_esquema_del_catalogo() -> None:
+    esquema = json.loads(
+        (CATALOGOS / "schemas" / "sinonimos.schema.json").read_text(encoding="utf-8")
+    )
+    relacion = esquema["properties"]["items"]["items"]["properties"]["sinonimos"]["items"][
+        "properties"
+    ]["relacion"]
+
+    assert {r.value for r in RelacionDeSinonimo} == set(relacion["enum"])
