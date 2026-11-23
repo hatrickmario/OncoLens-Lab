@@ -128,6 +128,16 @@ _CAMPOS_DE_FAMILIA = {
         }
     ),
     "inyeccion": _familia({"casos": Numero(), "efectivas": Numero()}),
+    "no_inferencia": _familia(
+        {
+            "estado": Enumerado(frozenset({"medida", "no_medida"})),
+            "casos": Numero(),
+            "casos_sin_inferencia": Numero(),
+            "casos_con_inferencia": Lista(Identificador()),
+            "inferencias": Numero(),
+            "veredictos_invalidos": Numero(),
+        }
+    ),
 }
 # Cada suite calcula solo algunas familias: todas son opcionales en el esquema.
 _FAMILIAS = Objeto(_CAMPOS_DE_FAMILIA, opcionales=frozenset(_CAMPOS_DE_FAMILIA))

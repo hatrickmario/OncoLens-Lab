@@ -2,7 +2,7 @@
 
 La suite arma la solicitud con ``currentLine`` y ``missingCriticalData`` de la pregunta; los faltantes son claves del
 catálogo del tipo (RN-11) y ningún valor se atribuye a un dato faltante (expectativa de no inferencia, que mide la
-corrida nocturna con el LLM local, D5-nn).
+familia ``no_inferencia`` de la suite, L1D-113 S7.1).
 """
 
 from __future__ import annotations
