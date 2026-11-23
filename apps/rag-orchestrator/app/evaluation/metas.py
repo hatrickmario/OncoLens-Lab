@@ -59,7 +59,9 @@ def _estado(valor: float | None, meta: Meta) -> Estado:
 def marcar_frente_a_meta(
     metricas: Mapping[str, float | None], metas: Mapping[str, Meta]
 ) -> list[MetricaMarcada]:
-    """Una marca por meta, en el orden de las metas; una métrica sin meta no se marca."""
+    """Una marca por meta de una métrica que el informe mide, en el orden de las metas. Una métrica sin meta no se marca y
+    una meta cuya clave el informe ni declara (p. ej. la de paráfrasis, que solo mide su propia corrida) tampoco: ``None`` es
+    «sin medir»; la clave ausente, «no es de este informe»."""
     return [
         MetricaMarcada(
             clave,
@@ -69,6 +71,7 @@ def marcar_frente_a_meta(
             _estado(metricas.get(clave), meta),
         )
         for clave, meta in metas.items()
+        if clave in metricas
     ]
 
 
