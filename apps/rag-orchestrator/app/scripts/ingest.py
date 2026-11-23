@@ -16,6 +16,10 @@ verifica con el NLI (``NLI_ENTAILMENT_THRESHOLD``); si cualquiera cae, el docume
 Imprime un resumen JSON en la salida estándar: solo identificadores, estados, motivos (etapa y clase) y contadores;
 nunca contenido, URLs, credenciales ni mensajes de excepción.
 
+``brazo-de-chunks`` (US-278, ``[S7 resp. 14]``) ingiere los mismos documentos del manifiesto con chunks de ``--tamano`` tokens en una
+colección de Milvus PROPIA (``--coleccion``): el catálogo ``corpus`` se lee y no se escribe, la colección de ``MILVUS_COLLECTION_NAME``
+no se toca (RN-05; si ``--coleccion`` es esa, se niega) y no hay LLM. Solo entran los documentos que la ingesta de origen dejó vigentes.
+
 ``reindex-sparse`` (US-117b) puebla el ``sparse_vector`` de los chunks VIGENTES de la semilla (``chunk_id``, ``dense_vector`` y los
 demás campos no cambian; los no vigentes no se tocan). No usa LLM ni el catálogo (solo Milvus), así que no lleva la guarda de LLM
 de ``ingest``, pero exige por código embeddings locales verificados por SHA-256 (``MODEL_PROVIDER=local``, ``EMBEDDING_*``,
@@ -40,6 +44,7 @@ from typing import Any
 from pydantic import ValidationError
 from pymilvus import MilvusClient
 
+from app.application.corpus_ingestion.brazo_de_chunks import IngerirBrazoDeChunks
 from app.application.corpus_ingestion.ingestion_pipeline_service import IngestionPipelineService
 from app.application.corpus_ingestion.ports import (
     AlmacenDeReindexacionSparse,
@@ -59,7 +64,12 @@ from app.application.corpus_metadata.muestra_de_metadatos import GeneradorDeMues
 from app.application.corpus_metadata.poblacion_puertos import LlmDePoblacion
 from app.application.corpus_metadata.population_fanout import PopulationFanoutExtractor
 from app.application.ports import Clock, LlmClient, NliClassifier
-from app.application.seed_corpus.ports import PassageEmbedder
+from app.application.seed_corpus.ports import (
+    ChunkStoreDeIngesta,
+    LectorDePoblacionDelCorpus,
+    PassageEmbedder,
+    SourceFetcher,
+)
 from app.config.settings import (
     AjustesDeReindexacionSparse,
     AjustesSparse,
@@ -332,6 +342,7 @@ def _modelos_de_la_ingesta(
 
 
 MODO_REINDEX_SPARSE = "reindex-sparse"
+MODO_BRAZO_DE_CHUNKS = "brazo-de-chunks"
 
 
 def _argumentos(argv: Sequence[str] | None) -> argparse.Namespace:
@@ -340,6 +351,22 @@ def _argumentos(argv: Sequence[str] | None) -> argparse.Namespace:
     analizador.add_argument("--manifest", type=Path, help="manifiesto de ingesta")
     modos = analizador.add_subparsers(dest="modo", required=False)
     modos.add_parser(MODO_REINDEX_SPARSE, help="puebla el sparse de los chunks vigentes")
+    brazo = modos.add_parser(
+        MODO_BRAZO_DE_CHUNKS,
+        help="ingiere los mismos documentos con otro tamaño de chunk en una colección propia",
+    )
+    brazo.add_argument(
+        "--manifest", type=Path, required=True, help="el manifiesto de la ingesta de origen"
+    )
+    brazo.add_argument(
+        "--coleccion",
+        required=True,
+        help="colección de Milvus del brazo (distinta de MILVUS_COLLECTION_NAME)",
+    )
+    brazo.add_argument("--tamano", type=int, required=True, help="tokens por chunk del brazo")
+    brazo.add_argument(
+        "--solape", type=int, default=None, help="tokens de solape; sin él, CORPUS_CHUNK_OVERLAP"
+    )
     argumentos = analizador.parse_args(argv)
     if argumentos.modo is None and argumentos.manifest is None:
         analizador.error("--manifest es obligatorio")
@@ -414,6 +441,105 @@ def _reindexar_sparse(
     return 0
 
 
+@dataclass(frozen=True)
+class PuertosDelBrazoDeChunks:
+    """Bordes que un test sustituye; sin ellos la CLI compone Milvus (colección del brazo) y el catálogo en solo lectura."""
+
+    catalogo: LectorDePoblacionDelCorpus | None = None
+    almacen: ChunkStoreDeIngesta | None = None
+    fuente: SourceFetcher | None = None
+
+
+def _almacen_del_brazo(milvus: MilvusSettings, coleccion: str) -> ChunkStoreDeIngesta:
+    """La colección PROPIA del brazo: se crea si no existe; la de ``MILVUS_COLLECTION_NAME`` ni se abre."""
+    propia = milvus.model_copy(update={"milvus_collection_name": coleccion})
+    almacen = MilvusRepository(MilvusClient(uri=propia.milvus_uri), propia)
+    almacen.ensure_collection()
+    return almacen
+
+
+def _brazo_de_chunks(
+    argumentos: argparse.Namespace,
+    embedder: PassageEmbedder | None,
+    sparse: SparsePassageEncoder | None,
+    tokenizador: Tokenizador | None,
+    reloj: Clock | None,
+    puertos: PuertosDelBrazoDeChunks,
+) -> int:
+    """``ingest brazo-de-chunks``: sin LLM ni escritura en el catálogo. ``embedder``, ``sparse``, ``tokenizador`` y ``puertos`` se
+    inyectan solo en los tests; en producción salen de los adapters reales verificados (RN-12)."""
+    try:
+        ajustes = CorpusIngestSettings(_env_file=None)  # type: ignore[call-arg]
+        milvus = MilvusSettings(_env_file=None)  # type: ignore[call-arg]
+        base = CorpusDatabaseSettings(_env_file=None)  # type: ignore[call-arg]
+    except ValidationError as error:
+        print(f"{NOMBRE}: configuración inválida en: {_claves_invalidas(error)}", file=sys.stderr)
+        return 1
+    if argumentos.coleccion == milvus.milvus_collection_name:
+        print(
+            f"{NOMBRE} {MODO_BRAZO_DE_CHUNKS}: --coleccion no puede ser la de MILVUS_COLLECTION_NAME (RN-05)",
+            file=sys.stderr,
+        )
+        return 1
+    motor = None
+    try:
+        exigir_proveedor_de_modelos_local()  # RN-12: antes de cargar modelos o abrir Milvus
+        codificadores = _modelos_de_la_ingesta(ajustes, embedder, sparse, tokenizador)
+        catalogo = puertos.catalogo
+        if catalogo is None:
+            motor = crear_motor(
+                componer_url(
+                    base.corpus_database_url,
+                    base.pg_rag_corpus_password_file,
+                    "PG_RAG_CORPUS_PASSWORD_FILE",
+                )
+            )
+            catalogo = CorpusDocumentRepository(motor)  # se usa solo por el puerto de lectura
+        reporte = IngerirBrazoDeChunks(
+            catalogo=catalogo,
+            fuente=puertos.fuente or fuente_de_texto(ajustes, argumentos.manifest.resolve().parent),
+            almacen=puertos.almacen or _almacen_del_brazo(milvus, argumentos.coleccion),
+            embedder=codificadores[0],
+            codificador_sparse=codificadores[1],
+            tokenizador=codificadores[2],
+            tamano_de_chunk=argumentos.tamano,
+            solape_de_chunk=ajustes.corpus_chunk_overlap
+            if argumentos.solape is None
+            else argumentos.solape,
+            reloj=reloj or RelojDelSistema(),
+        ).ingerir(leer_manifiesto(argumentos.manifest))
+    except (ModeloNoVerificadoError, ManifiestoInvalido, ValueError) as error:
+        print(f"{NOMBRE} {MODO_BRAZO_DE_CHUNKS}: {error}", file=sys.stderr)
+        return 1
+    except Exception as error:  # noqa: BLE001 - se informa la clase; el mensaje de la base o de pymilvus puede traer una URI
+        print(f"{NOMBRE} {MODO_BRAZO_DE_CHUNKS}: falló ({type(error).__name__})", file=sys.stderr)
+        return 1
+    finally:
+        if motor is not None:
+            motor.dispose()
+    print(
+        json.dumps(
+            {
+                "modo": MODO_BRAZO_DE_CHUNKS,
+                "coleccion": argumentos.coleccion,
+                "tamano": argumentos.tamano,
+                "chunks": reporte.chunks,
+                "documentos": [
+                    {
+                        "document_key": r.document_key,
+                        "chunks": r.chunks,
+                        "omitido": r.omitido,
+                        "error": r.error,
+                    }
+                    for r in reporte.resultados
+                ],
+            },
+            ensure_ascii=False,
+        )
+    )
+    return 1 if reporte.hubo_errores else 0
+
+
 def main(
     argv: Sequence[str] | None = None,
     embedder: PassageEmbedder | None = None,
@@ -424,12 +550,22 @@ def main(
     nli: NliClassifier | None = None,
     almacen_sparse: AlmacenDeReindexacionSparse | None = None,
     llm_poblacion: LlmDePoblacion | None = None,
+    puertos_brazo: PuertosDelBrazoDeChunks | None = None,
 ) -> int:
     """``embedder``, ``sparse``, ``reloj``, ``tokenizador``, ``llm``, ``nli`` y ``llm_poblacion`` se inyectan solo en los tests; en
     producción salen de los adapters reales (``MODEL_PROVIDER=local``, LLM local)."""
     argumentos = _argumentos(argv)
     if argumentos.modo == MODO_REINDEX_SPARSE:
         return _reindexar_sparse(sparse, almacen_sparse)
+    if argumentos.modo == MODO_BRAZO_DE_CHUNKS:
+        return _brazo_de_chunks(
+            argumentos,
+            embedder,
+            sparse,
+            tokenizador,
+            reloj,
+            puertos_brazo or PuertosDelBrazoDeChunks(),
+        )
     try:
         ajustes = CorpusIngestSettings(_env_file=None)  # type: ignore[call-arg]
         milvus = MilvusSettings(_env_file=None)  # type: ignore[call-arg]

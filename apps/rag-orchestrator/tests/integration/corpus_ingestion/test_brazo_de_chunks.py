@@ -69,6 +69,7 @@ def test_ingerir_el_brazo_deja_intactos_el_catalogo_y_la_coleccion_de_origen_cua
 ) -> None:
     montaje.ingerir()
     catalogo_antes = deepcopy(montaje.catalogo.documentos)
+    releases_antes = list(montaje.catalogo.releases)
     origen_antes = deepcopy(montaje.almacen.chunks)
     alterno = AlmacenDeChunksEnMemoria()
 
@@ -78,7 +79,7 @@ def test_ingerir_el_brazo_deja_intactos_el_catalogo_y_la_coleccion_de_origen_cua
     assert (
         montaje.catalogo.documentos == catalogo_antes
     )  # ni un documento, ni una versión, ni una release nueva
-    assert montaje.catalogo.releases == []
+    assert montaje.catalogo.releases == releases_antes
     assert montaje.almacen.chunks == origen_antes  # la colección de l1d-119, igual que antes
     assert all(len(c.chunk_text.split()) <= TAMANO_DEL_BRAZO for c in alterno.chunks.values())
     assert len(alterno.chunks) > len(
