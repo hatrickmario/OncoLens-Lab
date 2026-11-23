@@ -44,6 +44,15 @@ def test_devuelve_los_criterios_y_los_sinonimos_del_tipo_cuando_el_tipo_esta():
     assert "psa" not in datos.sinonimos("mama")
 
 
+@pytest.mark.ac("US-277", 1)
+def test_no_nombra_el_dato_critico_un_texto_que_solo_es_miembro_de_clase_ni_mas_amplio():
+    sinonimos = cargar_datos_de_relevancia(CATALOGOS, ("prostata",)).sinonimos("prostata")
+
+    assert "abiraterona" not in sinonimos and "observacion" not in sinonimos
+    assert sinonimos["antigeno prostatico especifico"] == "psa"
+    assert sinonimos["ape"] == "psa"
+
+
 def test_devuelve_vacio_cuando_el_tipo_no_esta_en_el_catalogo():
     datos = cargar_datos_de_relevancia(CATALOGOS, ("mama",))
 

@@ -148,7 +148,7 @@ def test_cuenta_como_forma_cada_texto_de_sinonimos_del_termino_sea_cual_sea_su_r
             {
                 "texto": "linfocitos infiltrantes de tumor",
                 "idioma": "es",
-                "relacion": "relacionado",
+                "relacion": "miembro_de_clase",
             },
         ],
     )
@@ -164,7 +164,8 @@ def test_las_formas_de_un_termino_que_no_es_canonico_del_catalogo_estan_vacias(
     tmp_path: Path,
 ) -> None:
     catalogo = _catalogo_con(
-        tmp_path, [{"texto": "linfocitos infiltrantes de tumor", "idioma": "es"}]
+        tmp_path,
+        [{"texto": "linfocitos infiltrantes de tumor", "idioma": "es", "relacion": "equivalente"}],
     )
 
     assert formas_del_termino(catalogo, ["mama"], "linfocitos infiltrantes de tumor") == ()
