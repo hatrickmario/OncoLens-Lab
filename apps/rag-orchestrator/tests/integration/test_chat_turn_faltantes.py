@@ -99,7 +99,7 @@ def test_chat_turn_faltantes_dice_que_no_faltan_datos_y_nombra_la_version_cuando
 
 
 @pytest.mark.ac("US-263", 7)
-def test_chat_turn_responde_409_sin_invocar_adaptadores_cuando_rag_monta_el_catalogo_1_5_0_y_el_turno_trae_1_6_0():
+def test_chat_turn_responde_409_sin_invocar_adaptadores_cuando_rag_monta_otro_catalogo_que_el_del_turno():
     entorno = crear_entorno_de_chat("CHAT-OK", catalogo=CatalogoClinicoFalso(version="1.5.0"))
     solicitud = _solicitud()
     solicitud["catalogVersion"] = VERSION_DEL_CATALOGO_MONTADO

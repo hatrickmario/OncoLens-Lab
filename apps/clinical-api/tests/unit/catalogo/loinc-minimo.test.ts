@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { RUTA_CATALOGO_REAL } from '../../support/catalogo-terminologico.js';
+import { versionDelCatalogo } from '../../support/gateway.js';
 
 interface EntradaDeCodigos {
   terminoCanonico: string;
@@ -64,8 +65,8 @@ describe('subconjunto mínimo de LOINC del catálogo real (DEC-04)', () => {
     expect(aviso).toContain('https://clinicaltables.nlm.nih.gov/api/loinc_items/v3/search');
     expect(aviso).toContain('2026-11-03');
     expect(aviso).toContain('2.83');
-    expect((JSON.parse(leer('manifest.json')) as { version: string }).version).toMatch(
-      /^\d+\.\d+\.\d+$/,
+    expect((JSON.parse(leer('manifest.json')) as { version: string }).version).toBe(
+      versionDelCatalogo(),
     );
   });
 });

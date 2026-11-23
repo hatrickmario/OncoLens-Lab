@@ -3,15 +3,11 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { arrancar, cargarEtapaDeServicios } from '../../../src/startup.js';
+import { versionDelCatalogo } from '../../support/gateway.js';
 
 // Secretos y rutas ficticios en un directorio temporal: ningún valor es real (RN-13, RN-14).
 const RAIZ_REPO = path.resolve(import.meta.dirname, '../../../../..');
 const CATALOGO_DEL_MONOREPO = path.join(RAIZ_REPO, 'packages/clinical-catalogs');
-const VERSION_DEL_MANIFIESTO = (
-  JSON.parse(readFileSync(path.join(CATALOGO_DEL_MONOREPO, 'manifest.json'), 'utf8')) as {
-    version: string;
-  }
-).version;
 const FORMATOS_DE_PII = path.join(RAIZ_REPO, 'config/pii-formats.json');
 const MASCARAS_DE_PII = path.join(RAIZ_REPO, 'apps/clinical-api/config/pii-masks.json');
 
@@ -133,7 +129,7 @@ describe('arranque: etapa de servicios dentro de arrancar', () => {
   it('escucha una vez cuando CLINICAL_CATALOG_VERSION coincide con el manifiesto [US-041 D1]', () => {
     const resultado = arrancarCon({
       ...entornoValido(),
-      CLINICAL_CATALOG_VERSION: VERSION_DEL_MANIFIESTO,
+      CLINICAL_CATALOG_VERSION: versionDelCatalogo(),
     });
 
     expect(resultado.salidas).toEqual([]);
