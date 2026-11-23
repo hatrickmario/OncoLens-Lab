@@ -48,6 +48,30 @@ def test_meta_reranker_model_de_la_respuesta_sin_evidencia_tiene_la_misma_proced
     assert respuesta.json()["meta"]["rerankerModel"] == ESPERADO
 
 
+@pytest.mark.ac("US-278", 2)
+@pytest.mark.parametrize("modo", ["primera", "maximo"])
+def test_meta_reranker_model_es_el_mismo_con_primera_y_con_maximo_sin_el_modo_ni_el_solape(
+    modo: str,
+) -> None:
+    reranker = BgeReranker(
+        SesionDeLogitsFalsa(constante=2.0),
+        TokenizadorFalso(),
+        version=describir_modelo(MODELO, REVISION, SHA),
+        max_length=512,
+        max_pairs=12,
+        max_tokens_por_lote=4096,
+        modo_de_ventanas=modo,  # type: ignore[arg-type]
+        solape=64,
+    )
+    entorno = crear_entorno(reranker=reranker)  # type: ignore[arg-type]
+
+    respuesta = entorno.consultar(solicitud_de(Q_HER2))
+
+    assert respuesta.status_code == 200
+    assert respuesta.json()["meta"]["rerankerModel"] == ESPERADO
+    assert modo not in respuesta.json()["meta"]["rerankerModel"]
+
+
 @pytest.mark.models
 @pytest.mark.ac("US-231a", 3)
 def test_meta_reranker_model_con_los_pesos_reales_coincide_con_la_configuracion() -> None:

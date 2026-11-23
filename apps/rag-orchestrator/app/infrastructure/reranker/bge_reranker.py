@@ -12,6 +12,8 @@ from app.domain.ventanas_del_reranker import (
     MODO_DE_VENTANAS_INICIAL,
     RERANKER_WINDOW_OVERLAP_INICIAL,
     ModoDeVentanas,
+    agregar_por_maximo,
+    trazar_ventanas,
 )
 from app.infrastructure.models.fallos import fallos_de_inferencia_como_error_del_puerto
 from app.infrastructure.models.lotes import (
@@ -52,6 +54,28 @@ class BgeReranker:
     def version(self) -> str:
         return self._version
 
+    def variante(
+        self,
+        *,
+        modo_de_ventanas: ModoDeVentanas | None = None,
+        solape: int | None = None,
+        max_length: int | None = None,
+    ) -> BgeReranker:
+        """Otro reranker sobre la misma sesión y el mismo tokenizador ya cargados (no tiene estado propio), con la
+        etapa cambiada: lo usa la suite ``evaluate`` para comparar brazos sin cargar el modelo otra vez (US-278)."""
+        return BgeReranker(
+            self._sesion,
+            self._tokenizador,
+            version=self._version,
+            max_length=self._max_length if max_length is None else max_length,
+            max_pairs=self._max_pairs,
+            max_tokens_por_lote=self._max_tokens_por_lote,
+            modo_de_ventanas=self._modo_de_ventanas
+            if modo_de_ventanas is None
+            else modo_de_ventanas,
+            solape=self._solape if solape is None else solape,
+        )
+
     def puntuar(self, pregunta: str, candidatos: Sequence[CandidatoParaReranker]) -> list[float]:
         if len(candidatos) > self._max_pairs:
             raise FalloDeInferencia(_EXCESO_DE_PARES)
@@ -61,12 +85,47 @@ class BgeReranker:
             return self._puntuar_pares(pregunta, [c.chunk_text for c in candidatos])
 
     def _puntuar_pares(self, pregunta: str, pasajes: list[str]) -> list[float]:
+        if self._modo_de_ventanas == "maximo":
+            return self._puntuar_por_ventanas(pregunta, pasajes)
         secuencias = [
             truncar_conservando_el_separador_final(
                 self._tokenizador.codificar(pregunta, pasaje), self._max_length
             )
             for pasaje in pasajes
         ]
+        return normalizar_a_unidad(self._logits_de(secuencias))
+
+    def _puntuar_por_ventanas(self, pregunta: str, pasajes: list[str]) -> list[float]:
+        """``maximo`` (US-278): cada chunk largo se puntúa por ventanas y su logit es el mayor de las suyas (RN-03)."""
+        secuencias: list[list[int]] = []
+        ventanas_por_candidato: list[int] = []
+        for pasaje in pasajes:
+            del_candidato = self._secuencias_del_candidato(pregunta, pasaje)
+            secuencias.extend(del_candidato)
+            ventanas_por_candidato.append(len(del_candidato))
+        logits = self._logits_de(secuencias)
+        maximos: list[float] = []
+        inicio = 0
+        for cantidad in ventanas_por_candidato:
+            maximos.append(agregar_por_maximo(logits[inicio : inicio + cantidad]))
+            inicio += cantidad
+        return normalizar_a_unidad(maximos)
+
+    def _secuencias_del_candidato(self, pregunta: str, pasaje: str) -> list[list[int]]:
+        """Una secuencia si el par cabe en ``max_length`` (idéntica a la de ``primera``); si no, una por ventana, cada
+        una con la pregunta y los especiales enteros. Capacidad que no deja avanzar la ventana: ``ValueError``."""
+        par = self._tokenizador.codificar_par(pregunta, pasaje)
+        if len(par.ids) <= self._max_length:
+            return [par.ids]
+        prefijo, sufijo = par.ids[: par.inicio_pasaje], par.ids[par.fin_pasaje :]
+        tokens_del_pasaje = par.ids[par.inicio_pasaje : par.fin_pasaje]
+        capacidad = self._max_length - len(prefijo) - len(sufijo)
+        return [
+            [*prefijo, *tokens_del_pasaje[v.inicio : v.fin], *sufijo]
+            for v in trazar_ventanas(len(tokens_del_pasaje), capacidad, self._solape)
+        ]
+
+    def _logits_de(self, secuencias: list[list[int]]) -> list[float]:
         logits: list[float | None] = [None] * len(secuencias)
         for lote in agrupar_por_presupuesto_de_tokens(secuencias, self._max_tokens_por_lote):
             salida = self._sesion.ejecutar([secuencias[i] for i in lote])
@@ -74,7 +133,7 @@ class BgeReranker:
                 logits[indice] = logit
         if any(logit is None for logit in logits):  # un hueco jamás se disfraza de un logit 0.0
             raise FalloDeInferencia(_FALLO)
-        return normalizar_a_unidad([logit for logit in logits if logit is not None])
+        return [logit for logit in logits if logit is not None]
 
     @staticmethod
     def _logits_del_lote(salida: np.ndarray, tamano: int) -> list[float]:

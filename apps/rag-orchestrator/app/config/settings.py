@@ -70,6 +70,7 @@ from app.domain.reglas_proveedor import (
 from app.domain.ventanas_del_reranker import (
     MODO_DE_VENTANAS_INICIAL,
     RERANKER_WINDOW_OVERLAP_INICIAL,
+    ModoDeVentanas,
 )
 
 _SHA256 = re.compile(r"[0-9a-fA-F]{64}")
@@ -114,8 +115,8 @@ class Settings(BaseSettings):
     # US-270 (RN-22): máximo de `chunkId` cortados que lista el evento `rag_query_corte` (solo ids y puesto, nunca texto).
     reranker_cut_log_max_ids: int = Field(default=RERANKER_CUT_LOG_MAX_IDS_INICIAL, ge=1)
     # US-278 (RN-22): cómo puntúa el reranker un chunk más largo que RERANKER_MAX_LENGTH.
-    reranker_chunk_windows: str = MODO_DE_VENTANAS_INICIAL
-    reranker_window_overlap: int = RERANKER_WINDOW_OVERLAP_INICIAL
+    reranker_chunk_windows: ModoDeVentanas = MODO_DE_VENTANAS_INICIAL
+    reranker_window_overlap: int = Field(default=RERANKER_WINDOW_OVERLAP_INICIAL, ge=0)
     # Presupuesto de caracteres de fragmentos que entran al prompt (RN-22): la ventana de LLM_NUM_CTX se reparte con la salida.
     llm_fragments_max_chars: int = Field(default=12000, gt=0)
     # Motor y idiomas del OCR (los consume FEAT-01b, S2): un motor desconocido falla al arrancar.
@@ -385,6 +386,16 @@ class Settings(BaseSettings):
     def _rango_de_afirmaciones_coherente(self) -> Self:
         if self.claims_min_per_option > self.claims_max_per_option:
             raise ValueError("CLAIMS_MIN_PER_OPTION no puede superar a CLAIMS_MAX_PER_OPTION")
+        return self
+
+    @model_validator(mode="after")
+    def _solape_de_ventanas_deja_avanzar_la_ventana(self) -> Self:
+        """El solape debe ser menor que ``RERANKER_MAX_LENGTH`` (US-278); el error nombra la clave, nunca el valor."""
+        if (
+            self.modelos is not None
+            and self.reranker_window_overlap >= self.modelos.reranker_max_length
+        ):
+            raise ValueError("RERANKER_WINDOW_OVERLAP: debe ser menor que RERANKER_MAX_LENGTH")
         return self
 
     @model_validator(mode="after")

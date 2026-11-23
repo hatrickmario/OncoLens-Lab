@@ -22,6 +22,7 @@ from app.application.ports import (
     Reranker,
 )
 from app.application.seed_corpus.ports import PassageEmbedder
+from app.evaluation.adaptadores_falsos import RerankerLexico
 from app.infrastructure.embeddings.bge_m3 import (
     EmbedderDeConsultaBgeM3,
     EmbedderDePasajesBgeM3,
@@ -244,6 +245,79 @@ def test_el_fallo_de_un_modelo_llega_a_rag_query_como_503_retrieval_unavailable_
     assert respuesta.json()["error"] == "RETRIEVAL_UNAVAILABLE"
     assert entorno.generador.invocaciones == 0
     assert "fallo" not in respuesta.text and Q_HER2 not in respuesta.text
+
+
+# --- US-278: un chunk más largo que la ventana del reranker (RERANKER_MAX_LENGTH), con ``primera`` y con ``maximo`` ----
+
+LARGO_DE_VENTANA = 512  # RERANKER_MAX_LENGTH de las fábricas de arriba
+CHUNK_LARGO = " ".join(f"relleno{i}" for i in range(2 * LARGO_DE_VENTANA)) + " her2 mama"
+
+
+def _reales_en_maximo(rompe: str | None = None) -> Adaptadores:
+    base = _reales(rompe)
+    base.reranker = BgeReranker(
+        SesionDeLogitsFalsa(),
+        TokenizadorFalso(),
+        version="reranker-test@rev#sha256:abc",
+        max_length=LARGO_DE_VENTANA,
+        max_pairs=MAX_PARES,
+        max_tokens_por_lote=4096,
+        modo_de_ventanas="maximo",
+        solape=64,
+    )
+    return base
+
+
+def _lexico(rompe: str | None = None) -> Adaptadores:
+    base = _fakes(rompe)
+    base.reranker = RerankerLexico()
+    return base
+
+
+def _candidatos_con_un_chunk_largo() -> list[ChunkEncontrado]:
+    largo = ChunkEncontrado(
+        chunk_id="ch-largo", document_id="doc-l", chunk_text=CHUNK_LARGO, similitud_dense=0.5
+    )
+    return [largo, *_candidatos()]
+
+
+FABRICAS_CON_CHUNK_LARGO = {
+    "real-con-sesion-falsa-primera": _reales,
+    "real-con-sesion-falsa-maximo": _reales_en_maximo,
+    "fake": _fakes,
+    "fake-lexico": _lexico,
+    "real-con-pesos": pytest.param(_con_pesos_reales, marks=pytest.mark.models),
+}
+
+
+@pytest.mark.ac("US-278", 1)
+@pytest.mark.parametrize(
+    "fabrica", list(FABRICAS_CON_CHUNK_LARGO.values()), ids=list(FABRICAS_CON_CHUNK_LARGO)
+)
+def test_un_chunk_mas_largo_que_la_ventana_recibe_un_puntaje_en_cero_uno_y_nunca_none_en_real_y_en_fake(
+    fabrica: Callable[..., Adaptadores],
+) -> None:
+    candidatos = _candidatos_con_un_chunk_largo()
+
+    puntajes = fabrica().reranker.puntuar(Q_HER2, candidatos)
+
+    assert len(puntajes) == len(candidatos)
+    assert all(type(p) is float and 0.0 <= p <= 1.0 for p in puntajes)
+
+
+@pytest.mark.parametrize(
+    "fabrica",
+    [_reales, _reales_en_maximo, _fakes],
+    ids=["real-primera", "real-maximo", "fake"],
+)
+def test_el_tope_de_pares_cuenta_chunks_largos_y_no_ventanas_y_el_exceso_falla_con_el_error_del_puerto(
+    fabrica: Callable[..., Adaptadores],
+) -> None:
+    largos = _candidatos_con_un_chunk_largo()[:1] * MAX_PARES
+
+    assert len(fabrica().reranker.puntuar(Q_HER2, largos)) == MAX_PARES
+    with pytest.raises(FalloDeInferencia):
+        fabrica().reranker.puntuar(Q_HER2, [*largos, *largos[:1]])
 
 
 # --- ContadorDeTokens del chat (US-259): la misma batería sobre el adapter real, el conservador y el fake -------------
