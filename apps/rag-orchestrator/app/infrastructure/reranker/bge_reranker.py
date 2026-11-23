@@ -27,6 +27,16 @@ _FALLO = "reranker: fallo de inferencia del modelo local"
 _EXCESO_DE_PARES = "reranker: más pares que RERANKER_MAX_PAIRS"
 
 
+def _maximos_por_candidato(logits: list[float], ventanas_por_candidato: list[int]) -> list[float]:
+    """El logit de cada chunk: el mayor de sus ventanas, que ``logits`` trae seguidas y en el orden de los candidatos."""
+    maximos: list[float] = []
+    inicio = 0
+    for cantidad in ventanas_por_candidato:
+        maximos.append(agregar_por_maximo(logits[inicio : inicio + cantidad]))
+        inicio += cantidad
+    return maximos
+
+
 class BgeReranker:
     """``Reranker``: nunca devuelve ``None`` ni un ``0.0`` por defecto; si no puede puntuar, lanza el error del puerto."""
 
@@ -111,13 +121,9 @@ class BgeReranker:
             del_candidato = self._secuencias_del_candidato(pregunta, pasaje)
             secuencias.extend(del_candidato)
             ventanas_por_candidato.append(len(del_candidato))
-        logits = self._logits_de(secuencias)
-        maximos: list[float] = []
-        inicio = 0
-        for cantidad in ventanas_por_candidato:
-            maximos.append(agregar_por_maximo(logits[inicio : inicio + cantidad]))
-            inicio += cantidad
-        return normalizar_a_unidad(maximos)
+        return normalizar_a_unidad(
+            _maximos_por_candidato(self._logits_de(secuencias), ventanas_por_candidato)
+        )
 
     def _secuencias_del_candidato(self, pregunta: str, pasaje: str) -> list[list[int]]:
         """Una secuencia si el par cabe en ``max_length`` (idéntica a la de ``primera``); si no, una por ventana, cada
