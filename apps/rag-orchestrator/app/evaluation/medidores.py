@@ -28,6 +28,7 @@ from app.application.ports import (
     SinTerminosLexicos,
     SparseChunkSearch,
 )
+from app.application.seed_corpus.registros import clave_del_documento
 from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
 from app.domain.citations import FichaDeFuente
 from app.domain.nli import ParNli, ResultadoNli
@@ -168,12 +169,6 @@ class RerankerObservado:
         esperada = self._obs.esperada_del_reranker
         if esperada is not None and efectiva is not None and not _coincide(efectiva, esperada):
             self._obs.reranker_discrepante = True
-
-
-def clave_del_documento(document_id: str) -> str:
-    """El ``document_key`` del documento: la ingesta nombra ``<document_key>@<huella>`` (``identificador_de_documento``) y el
-    dataset de la suite, solo la clave. Un id del corpus en memoria no trae ``@`` y queda igual."""
-    return document_id.partition("@")[0]
 
 
 def _coincide(efectiva: ConfiguracionDelReranker, esperada: ConfiguracionDelReranker) -> bool:

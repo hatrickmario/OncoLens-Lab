@@ -37,8 +37,11 @@ def identificador_de_documento(document_key: str, checksum: str) -> str:
 
 
 def clave_del_documento(document_id: str) -> str:
-    """El ``document_key`` de un identificador de la ingesta (la inversa de ``identificador_de_*``)."""
-    raise NotImplementedError("no implementado")
+    """El ``document_key`` de un identificador de la ingesta: la inversa de ``identificador_de_documento``, ``_de_rechazado`` y
+    ``_de_error`` (``<document_key>@<sufijo>``). El dataset de la suite nombra solo la clave; un id sin ``@`` (el corpus en
+    memoria) queda igual. Corta en la ÚLTIMA ``@``: una clave puede contenerla, el sufijo no."""
+    clave, arroba, _ = document_id.rpartition("@")
+    return clave if arroba else document_id
 
 
 def identificador_de_chunk(document_id: str, indice: int) -> str:

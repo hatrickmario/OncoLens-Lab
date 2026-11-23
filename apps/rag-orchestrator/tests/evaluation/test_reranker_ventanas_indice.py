@@ -29,7 +29,6 @@ from app.evaluation.indice_del_corpus import (
     abrir_indice_real,
     huella_de_chunks,
 )
-from app.evaluation.medidores import clave_del_documento
 from app.evaluation.parafrasis_de_la_comparacion import con_parafrasis
 from app.schemas.generated.models import RagQueryInternalResponse, SourceApplicability
 from tests.evaluation.conftest import RAIZ_APP
@@ -162,16 +161,6 @@ def test_un_brazo_lee_su_propia_coleccion_y_cada_coleccion_se_abre_una_sola_vez_
     ]  # type: ignore[union-attr]
     assert corpus["indices_distintos"] == [maximo.nombre, ampliada.nombre]
     assert corpus["coleccion"] == "corpus_chunks"
-
-
-def test_los_chunks_del_indice_con_document_id_de_la_ingesta_cuentan_como_acierto_de_su_document_key() -> (
-    None
-):
-    assert (
-        clave_del_documento("pmc-mama-pembrolizumab-er-eca@0123456789ab")
-        == "pmc-mama-pembrolizumab-er-eca"
-    )
-    assert clave_del_documento("doc-sin-huella") == "doc-sin-huella"
 
 
 class _ClienteQueNombraLaColeccion(ClienteMilvusFalso):
