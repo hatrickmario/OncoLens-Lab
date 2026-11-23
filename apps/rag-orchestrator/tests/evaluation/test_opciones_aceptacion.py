@@ -167,7 +167,7 @@ def test_opciones_reporte_trae_las_metricas_de_opciones_cuando_corre_la_configur
     configuracion = reporte["configuracion"]
     assert configuracion["maxOptions"] == 3
     assert configuracion["catalogVersion"] == "test-apl-1.0.0"
-    assert configuracion["dataset"] == {"nombre": "opciones", "version": "1"}
+    assert configuracion["dataset"] == {"nombre": "opciones", "version": "2"}
     assert configuracion["versionListaTerminos"]
 
 
@@ -423,11 +423,15 @@ def test_opciones_rotula_validada_solo_la_metrica_de_los_4_casos_revisados_cuand
         assert reporte["metricas"][nombre]["validacion"] == {
             "preguntas_validadas": 4,
             "preguntas_no_validadas": 8,
+            "preguntas_mecanica_verificada": 0,
+            "preguntas_sin_revisar": 8,
             "rotulo": "no_validada",
         }
         assert reporte["metricas_validadas"][nombre]["validacion"] == {
             "preguntas_validadas": 4,
             "preguntas_no_validadas": 0,
+            "preguntas_mecanica_verificada": 0,
+            "preguntas_sin_revisar": 0,
             "rotulo": "validada",
         }
     assert reporte["metricas_validadas"]["opciones_por_analisis"]["analisis"] == 4
@@ -441,13 +445,76 @@ def test_opciones_rotula_no_validada_toda_metrica_cuando_el_dataset_real_no_tien
 
     assert codigo == 0 and reporte is not None
     for nombre in METRICAS:
-        assert reporte["metricas"][nombre]["validacion"] == {
+        validacion = reporte["metricas"][nombre]["validacion"]
+        assert validacion == {
             "preguntas_validadas": 0,
             "preguntas_no_validadas": 12,
+            "preguntas_mecanica_verificada": 4,
+            "preguntas_sin_revisar": 8,
             "rotulo": "no_validada",
         }
         assert reporte["metricas_validadas"][nombre]["validacion"]["rotulo"] == "no_validada"
     assert reporte["metricas_validadas"]["opciones_por_analisis"]["analisis"] == 0
+
+
+def _poner_revision_provisional(valor: object) -> Callable[[dict[str, Any], Path], None]:
+    """Marca los 4 casos candidatos con ``valor`` en ``revision_provisional`` (sin tocar ``revisada_por_oncologo``)."""
+
+    def poner(_: dict[str, Any], dataset: Path) -> None:
+        ruta = dataset / "preguntas.yaml"
+        crudo = yaml.safe_load(ruta.read_text(encoding="utf-8"))
+        for pregunta in crudo["preguntas"]:
+            pregunta.pop("revision_provisional", None)
+            if pregunta["id"] in REVISADAS_DE_PRUEBA:
+                pregunta["revision_provisional"] = valor
+        ruta.write_text(yaml.safe_dump(crudo, allow_unicode=True), encoding="utf-8")
+
+    return poner
+
+
+@pytest.mark.ac("US-140", 5)
+def test_opciones_indica_0_validados_4_de_mecanica_verificada_y_8_sin_revisar_cuando_los_4_casos_llevan_revision_provisional(
+    tmp_path: Path,
+) -> None:
+    provisional = {"rol": "ia", "fecha": "2026-11-21"}
+
+    codigo, reporte = correr(
+        tmp_path / "s", config=variante(tmp_path, _poner_revision_provisional(provisional))
+    )
+
+    assert codigo == 0 and reporte is not None
+    for nombre in METRICAS:
+        assert reporte["metricas"][nombre]["validacion"] == {
+            "preguntas_validadas": 0,
+            "preguntas_no_validadas": 12,
+            "preguntas_mecanica_verificada": 4,
+            "preguntas_sin_revisar": 8,
+            "rotulo": "no_validada",
+        }
+    assert reporte["metricas_validadas"]["opciones_por_analisis"]["analisis"] == 0
+
+
+@pytest.mark.ac("US-140", 5)
+@pytest.mark.parametrize(
+    "mal_formada",
+    [
+        {"rol": "oncologo", "fecha": "2026-11-21"},
+        {"rol": "ia"},
+        {"rol": "ia", "fecha": "ayer"},
+        {"rol": "ia", "fecha": "2026-11-21", "nombre": "x"},
+        "ia",
+    ],
+)
+def test_opciones_sale_con_codigo_1_nombrando_el_caso_y_el_campo_cuando_revision_provisional_esta_mal_formada(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], mal_formada: object
+) -> None:
+    codigo, reporte = correr(
+        tmp_path / "s", config=variante(tmp_path, _poner_revision_provisional(mal_formada))
+    )
+
+    assert codigo == 1 and reporte is None
+    error = capsys.readouterr().err
+    assert "OP-01" in error and "revision_provisional" in error
 
 
 # --- AC-6 -----------------------------------------------------------------------------------------------------------
