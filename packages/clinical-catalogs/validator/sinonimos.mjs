@@ -6,7 +6,8 @@
  *
  * - `sinonimo_equivalente_ambiguo`: un texto `equivalente` de dos términos, o canónico de uno y `equivalente` de otro;
  * - `termino_canonico_repetido`: el mismo término canónico dos veces;
- * - `sinonimo_igual_al_canonico`: un sinónimo que repite el texto de su propio término canónico.
+ * - `sinonimo_igual_al_canonico`: un sinónimo que repite el texto de su propio término canónico (sin ignorar tildes: la
+ *   grafía de otro idioma, como `deruxtecan`, no es una repetición; las tildes y erratas las resuelve la normalización, S-6).
  *
  * Cada violación nombra el código y el archivo, nunca valores del catálogo: `{ codigo, archivo: 'sinonimos' }`.
  * Las siglas de dos letras nuevas (S-3) se fijan con un test de contenido sobre el diff, no aquí: las vigentes
@@ -28,6 +29,9 @@ const normalizar = (texto) =>
         .replace(/\s+/gu, ' ')
         .trim()
     : '';
+
+/** Misma grafía, sin ignorar tildes: «deruxtecan» (en) no repite «deruxtecán» (es); lo único redundante es el texto idéntico. */
+const mismaGrafia = (texto) => (typeof texto === 'string' ? texto.toLowerCase().trim() : '');
 
 const canonicoDe = (item) => normalizar(item.terminoCanonico);
 const equivalentesDe = (item) =>
@@ -55,7 +59,7 @@ export function canonicosRepetidos(items) {
 
 export function sinonimoIgualAlCanonico(items) {
   return items.some((item) =>
-    lista(item.sinonimos).some((s) => normalizar(s.texto) === canonicoDe(item)),
+    lista(item.sinonimos).some((s) => mismaGrafia(s.texto) === mismaGrafia(item.terminoCanonico)),
   );
 }
 

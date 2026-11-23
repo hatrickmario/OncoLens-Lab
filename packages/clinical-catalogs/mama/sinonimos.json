@@ -1,123 +1,595 @@
 {
-  "version": "1.1.0",
+  "version": "1.10.0",
   "items": [
     {
       "terminoCanonico": "Ki-67",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
       "sinonimos": [
         {
           "texto": "Ki67",
-          "idioma": "en"
+          "idioma": "en",
+          "relacion": "equivalente"
         },
         {
           "texto": "MIB-1",
-          "idioma": "en"
+          "idioma": "en",
+          "relacion": "equivalente"
         },
         {
           "texto": "índice de proliferación",
-          "idioma": "es"
+          "idioma": "es",
+          "relacion": "equivalente"
         }
       ]
     },
     {
       "terminoCanonico": "RE",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
       "sinonimos": [
         {
           "texto": "ER",
-          "idioma": "en"
+          "idioma": "en",
+          "relacion": "equivalente"
         },
         {
           "texto": "receptor de estrógeno",
-          "idioma": "es"
+          "idioma": "es",
+          "relacion": "equivalente"
         },
         {
           "texto": "receptores de estrógeno",
-          "idioma": "es"
+          "idioma": "es",
+          "relacion": "equivalente"
         }
       ]
     },
     {
       "terminoCanonico": "RP",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
       "sinonimos": [
         {
           "texto": "PR",
-          "idioma": "en"
+          "idioma": "en",
+          "relacion": "equivalente"
         },
         {
           "texto": "PgR",
-          "idioma": "en"
+          "idioma": "en",
+          "relacion": "equivalente"
         },
         {
           "texto": "receptor de progesterona",
-          "idioma": "es"
+          "idioma": "es",
+          "relacion": "equivalente"
         },
         {
           "texto": "receptores de progesterona",
-          "idioma": "es"
+          "idioma": "es",
+          "relacion": "equivalente"
         }
       ]
     },
     {
       "terminoCanonico": "trastuzumab emtansina",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
       "sinonimos": [
         {
           "texto": "T-DM1",
-          "idioma": "en"
+          "idioma": "en",
+          "relacion": "equivalente"
         },
         {
           "texto": "trastuzumab emtansine",
-          "idioma": "en"
+          "idioma": "en",
+          "relacion": "equivalente"
         }
       ]
     },
     {
       "terminoCanonico": "letrozol",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
       "sinonimos": [
         {
           "texto": "letrozole",
-          "idioma": "en"
+          "idioma": "en",
+          "relacion": "equivalente"
         }
       ]
     },
     {
       "terminoCanonico": "antraciclinas",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
       "sinonimos": [
         {
           "texto": "antraciclina",
-          "idioma": "es"
+          "idioma": "es",
+          "relacion": "equivalente"
         },
         {
           "texto": "anthracyclines",
-          "idioma": "en"
+          "idioma": "en",
+          "relacion": "equivalente"
         },
         {
           "texto": "anthracycline",
-          "idioma": "en"
+          "idioma": "en",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "doxorrubicina",
+          "idioma": "es",
+          "relacion": "miembro_de_clase"
+        },
+        {
+          "texto": "adriamicina",
+          "idioma": "es",
+          "relacion": "miembro_de_clase"
+        },
+        {
+          "texto": "epirrubicina",
+          "idioma": "es",
+          "relacion": "miembro_de_clase"
+        },
+        {
+          "texto": "doxorubicin",
+          "idioma": "en",
+          "relacion": "miembro_de_clase"
+        },
+        {
+          "texto": "epirubicin",
+          "idioma": "en",
+          "relacion": "miembro_de_clase"
         }
       ]
     },
     {
       "terminoCanonico": "pertuzumab",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
       "sinonimos": [
         {
           "texto": "doble bloqueo anti-HER2",
-          "idioma": "es"
+          "idioma": "es",
+          "relacion": "mas_amplio"
         },
         {
           "texto": "dual HER2 blockade",
-          "idioma": "en"
+          "idioma": "en",
+          "relacion": "mas_amplio"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "doble bloqueo anti-HER2",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
+      "sinonimos": [
+        {
+          "texto": "dual HER2 blockade",
+          "idioma": "en",
+          "relacion": "equivalente"
         }
       ]
     },
     {
       "terminoCanonico": "TILs",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
       "sinonimos": [
         {
           "texto": "linfocitos infiltrantes de tumor",
-          "idioma": "es"
+          "idioma": "es",
+          "relacion": "equivalente"
         },
         {
           "texto": "tumor-infiltrating lymphocytes",
-          "idioma": "en"
+          "idioma": "en",
+          "relacion": "equivalente"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "mastectomía",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
+      "sinonimos": [
+        {
+          "texto": "mastectomía total",
+          "idioma": "es",
+          "relacion": "miembro_de_clase"
+        },
+        {
+          "texto": "mastectomía radical modificada",
+          "idioma": "es",
+          "relacion": "miembro_de_clase"
+        },
+        {
+          "texto": "mastectomy",
+          "idioma": "en",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "total mastectomy",
+          "idioma": "en",
+          "relacion": "miembro_de_clase"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "cirugía conservadora de mama",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
+      "sinonimos": [
+        {
+          "texto": "cirugía conservadora",
+          "idioma": "es",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "tumorectomía",
+          "idioma": "es",
+          "relacion": "miembro_de_clase"
+        },
+        {
+          "texto": "lumpectomía",
+          "idioma": "es",
+          "relacion": "miembro_de_clase"
+        },
+        {
+          "texto": "cuadrantectomía",
+          "idioma": "es",
+          "relacion": "miembro_de_clase"
+        },
+        {
+          "texto": "breast-conserving surgery",
+          "idioma": "en",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "partial mastectomy",
+          "idioma": "en",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "lumpectomy",
+          "idioma": "en",
+          "relacion": "miembro_de_clase"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "biopsia de ganglio centinela",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
+      "sinonimos": [
+        {
+          "texto": "BSGC",
+          "idioma": "es",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "ganglio centinela",
+          "idioma": "es",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "sentinel lymph node biopsy",
+          "idioma": "en",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "SLNB",
+          "idioma": "en",
+          "relacion": "equivalente"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "linfadenectomía axilar",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
+      "sinonimos": [
+        {
+          "texto": "vaciamiento axilar",
+          "idioma": "es",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "disección axilar",
+          "idioma": "es",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "axillary lymph node dissection",
+          "idioma": "en",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "ALND",
+          "idioma": "en",
+          "relacion": "equivalente"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "quimioterapia neoadyuvante",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
+      "sinonimos": [
+        {
+          "texto": "quimioterapia preoperatoria",
+          "idioma": "es",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "neoadjuvant chemotherapy",
+          "idioma": "en",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "preoperative chemotherapy",
+          "idioma": "en",
+          "relacion": "equivalente"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "quimioterapia adyuvante",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
+      "sinonimos": [
+        {
+          "texto": "quimioterapia posoperatoria",
+          "idioma": "es",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "adjuvant chemotherapy",
+          "idioma": "en",
+          "relacion": "equivalente"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "terapia endocrina",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
+      "sinonimos": [
+        {
+          "texto": "hormonoterapia",
+          "idioma": "es",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "tratamiento hormonal",
+          "idioma": "es",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "endocrine therapy",
+          "idioma": "en",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "hormone therapy",
+          "idioma": "en",
+          "relacion": "equivalente"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "supresión de la función ovárica",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
+      "sinonimos": [
+        {
+          "texto": "supresión ovárica",
+          "idioma": "es",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "ovarian function suppression",
+          "idioma": "en",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "OFS",
+          "idioma": "en",
+          "relacion": "equivalente"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "triple negativo",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
+      "sinonimos": [
+        {
+          "texto": "CMTN",
+          "idioma": "es",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "triple-negative",
+          "idioma": "en",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "TNBC",
+          "idioma": "en",
+          "relacion": "equivalente"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "respuesta patológica completa",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
+      "sinonimos": [
+        {
+          "texto": "RPC",
+          "idioma": "es",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "pathological complete response",
+          "idioma": "en",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "pCR",
+          "idioma": "en",
+          "relacion": "equivalente"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "trastuzumab deruxtecán",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
+      "sinonimos": [
+        {
+          "texto": "T-DXd",
+          "idioma": "es",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "trastuzumab deruxtecan",
+          "idioma": "en",
+          "relacion": "equivalente"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "HER2",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
+      "sinonimos": [
+        {
+          "texto": "ERBB2",
+          "idioma": "es",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "HER2/neu",
+          "idioma": "es",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "ERBB2",
+          "idioma": "en",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "HER2/neu",
+          "idioma": "en",
+          "relacion": "equivalente"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "inhibidores de aromatasa",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
+      "sinonimos": [
+        {
+          "texto": "letrozol",
+          "idioma": "es",
+          "relacion": "miembro_de_clase"
+        },
+        {
+          "texto": "anastrozol",
+          "idioma": "es",
+          "relacion": "miembro_de_clase"
+        },
+        {
+          "texto": "exemestano",
+          "idioma": "es",
+          "relacion": "miembro_de_clase"
+        },
+        {
+          "texto": "aromatase inhibitor",
+          "idioma": "en",
+          "relacion": "equivalente"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "inhibidores de CDK4/6",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
+      "sinonimos": [
+        {
+          "texto": "palbociclib",
+          "idioma": "es",
+          "relacion": "miembro_de_clase"
+        },
+        {
+          "texto": "ribociclib",
+          "idioma": "es",
+          "relacion": "miembro_de_clase"
+        },
+        {
+          "texto": "abemaciclib",
+          "idioma": "es",
+          "relacion": "miembro_de_clase"
+        },
+        {
+          "texto": "CDK4/6 inhibitor",
+          "idioma": "en",
+          "relacion": "equivalente"
         }
       ]
     }

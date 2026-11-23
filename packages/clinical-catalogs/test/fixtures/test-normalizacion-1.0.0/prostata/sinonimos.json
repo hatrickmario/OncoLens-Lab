@@ -3,11 +3,11 @@
   "items": [
     {
       "terminoCanonico": "leuprorelina",
-      "sinonimos": [{ "texto": "leuprolide", "idioma": "en" }]
+      "sinonimos": [{ "texto": "leuprolide", "idioma": "en", "relacion": "equivalente" }]
     },
     {
       "terminoCanonico": "PSA",
-      "sinonimos": [{ "texto": "prostate-specific antigen", "idioma": "en" }]
+      "sinonimos": [{ "texto": "prostate-specific antigen", "idioma": "en", "relacion": "equivalente" }]
     }
   ]
 }

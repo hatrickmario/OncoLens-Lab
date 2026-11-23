@@ -22,6 +22,14 @@ const esquemaDeCodigos = z.strictObject({
   ),
 });
 
+/** Conjunto cerrado de `relacion` de `sinonimos.schema.json` (L1D-335, revisión clínica S-1). */
+const RELACIONES_DE_SINONIMO = ['equivalente', 'mas_amplio', 'miembro_de_clase'] as const;
+type RelacionDeSinonimo = (typeof RELACIONES_DE_SINONIMO)[number];
+
+/** S-1: solo `equivalente` nombra el mismo concepto que el término canónico; las otras relaciones no equiparan. */
+export const esSinonimoEquivalente = (relacion: RelacionDeSinonimo): boolean =>
+  relacion === 'equivalente';
+
 /** Forma de `sinonimos.schema.json`. */
 const esquemaDeSinonimos = z.strictObject({
   version: z.string().regex(/^\d+\.\d+\.\d+$/),
@@ -34,8 +42,7 @@ const esquemaDeSinonimos = z.strictObject({
           z.strictObject({
             texto: z.string().min(1),
             idioma: z.enum(['es', 'en']),
-            // Esqueleto del commit en rojo (L1D-335): el lector acepta la forma nueva; la regla llega en el `feat`.
-            relacion: z.enum(['equivalente', 'mas_amplio', 'miembro_de_clase']).optional(),
+            relacion: z.enum(RELACIONES_DE_SINONIMO),
           }),
         )
         .min(1),
@@ -83,7 +90,7 @@ function leerTerminologiaDe(
     ),
     sinonimos: sinonimos.items.map((item) => ({
       terminoCanonico: item.terminoCanonico,
-      textos: item.sinonimos.map((s) => s.texto),
+      textos: item.sinonimos.filter((s) => esSinonimoEquivalente(s.relacion)).map((s) => s.texto),
     })),
   };
 }
