@@ -55,7 +55,7 @@ def test_la_huella_cambia_cuando_un_brazo_declara_su_modo_o_su_largo_de_ventana(
 
     con_modo = Brazo("A0", RetrievalMode.dense, reranker_modo="maximo")
     con_largo = Brazo("A0", RetrievalMode.dense, reranker_max_length=1024)
-    con_indice = Brazo("A0", RetrievalMode.dense, indice="corpus_chunks_512")
+    con_indice = Brazo("A0", RetrievalMode.dense, coleccion="corpus_chunks_512")
 
     assert len({base.huella(), con_modo.huella(), con_largo.huella(), con_indice.huella()}) == 4
     assert base.cambia_el_reranker is False and con_modo.cambia_el_reranker is True
@@ -175,9 +175,25 @@ def test_la_configuracion_de_chunks_de_512_declara_su_coleccion_propia_solo_en_s
         {**ENTORNO, "RETRIEVAL_REGRESSION_TOLERANCE": "0.05"},
     )
 
-    indices = {b.nombre: b.indice for b in config.comparacion.brazos}  # type: ignore[union-attr]
+    indices = {b.nombre: b.coleccion for b in config.comparacion.brazos}  # type: ignore[union-attr]
 
     assert indices == {"A0": None, "A512": "corpus_chunks_512"}
+
+
+def test_un_brazo_solo_con_coleccion_propia_no_cambia_la_etapa_pero_exige_la_viabilidad(
+    tmp_path: Path,
+) -> None:
+    ruta = _config_con_brazo(
+        tmp_path, {"nombre": "A512", "RETRIEVAL_MODE": "dense", "indice": "corpus_chunks_512"}
+    )
+
+    config = cargar_config_suite(ruta, ENTORNO)
+
+    brazo = config.comparacion.brazos[1]  # type: ignore[union-attr]
+    assert brazo.coleccion == "corpus_chunks_512" and brazo.cambia_el_reranker is False
+    assert config.comparacion.viabilidad is not None  # type: ignore[union-attr]
+    with pytest.raises(ConfigInvalida, match="STACK_MEMORY_LIMIT_GB"):
+        cargar_config_suite(ruta, {})
 
 
 def test_la_configuracion_real_de_los_brazos_declara_el_solape_solo_en_el_brazo_de_ventanas() -> (

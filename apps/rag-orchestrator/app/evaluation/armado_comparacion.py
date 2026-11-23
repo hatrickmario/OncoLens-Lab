@@ -116,7 +116,7 @@ def _latencia(brazo: ResultadoDeBrazo) -> dict[str, float | None]:
     return {"reranker_p95": p95["reranker"], "consulta_p95": p95["consulta"]}
 
 
-def _etapa_del_reranker(brazo: ResultadoDeBrazo) -> dict[str, Any] | None:
+def _etapa_del_informe(brazo: ResultadoDeBrazo) -> dict[str, Any] | None:
     """Modo, solape, largo y pares con los que corrió el brazo: el informe es el único lugar donde queda el modo (D4)."""
     c = brazo.reranker
     if c is None:
@@ -151,7 +151,7 @@ def _extras_del_reranker(
         limite_memoria_gb=viabilidad.limite_memoria_gb,
     )
     return {
-        "reranker": _etapa_del_reranker(brazo),
+        "reranker": _etapa_del_informe(brazo),
         "falsos_sin_evidencia": _falsos_sin_evidencia(brazo),
         "parafrasis": _parafrasis_recuperadas(brazo, pares),
         "latencia_ms": latencia,
@@ -229,8 +229,8 @@ def armar_comparacion(
     armados: list[dict[str, Any]] = []
     for b, recuperacion in zip(brazos, recuperaciones, strict=True):
         armado = _datos_del_brazo(b, recuperacion)
-        del_reranker = comparacion.viabilidad is not None
-        if del_reranker:
+        con_viabilidad = comparacion.viabilidad is not None
+        if con_viabilidad:
             armado.update(
                 _extras_del_reranker(
                     b, comparacion, pares_de_parafrasis or {}, memoria_del_stack or {}
@@ -239,7 +239,7 @@ def armar_comparacion(
         if b.brazo.nombre != REFERENCIA:
             diferencia = diferencia_frente_referencia(_metricas_de(recuperacion), referencia)
             armado["diferencia_frente_a_a0"] = _diferencia_a_dict(diferencia)
-            if del_reranker:
+            if con_viabilidad:
                 armado["diferencia_frente_a_a0"].update(_diferencias_extra(armado, armados[0]))
             armado["retroceso"] = marcar_retroceso(diferencia, comparacion.tolerancia_retroceso)
         armados.append(armado)

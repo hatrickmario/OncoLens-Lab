@@ -132,7 +132,11 @@ def test_un_brazo_lee_su_propia_coleccion_y_cada_coleccion_se_abre_una_sola_vez_
     a0, maximo, ampliada = config.comparacion.brazos  # type: ignore[union-attr]
     comparacion = replace(
         config.comparacion,
-        brazos=(a0, replace(maximo, indice=COLECCION_512), replace(ampliada, indice=COLECCION_512)),
+        brazos=(
+            a0,
+            replace(maximo, coleccion=COLECCION_512),
+            replace(ampliada, coleccion=COLECCION_512),
+        ),
     )
     abiertas: list[str | None] = []
 
@@ -210,14 +214,16 @@ def test_un_brazo_de_otra_coleccion_aborta_cuando_la_respuesta_consume_poblacion
 
     with pytest.raises(SuiteAbortada, match="población"):
         exigir_brazo_sin_poblacion(
-            replace(maximo, indice=COLECCION_512), _respuesta_con_criterios([object()])
+            replace(maximo, coleccion=COLECCION_512), _respuesta_con_criterios([object()])
         )
 
 
 def test_un_brazo_de_otra_coleccion_acepta_la_respuesta_sin_criterios_de_poblacion() -> None:
     _, maximo = _brazos_de_la_configuracion()
 
-    exigir_brazo_sin_poblacion(replace(maximo, indice=COLECCION_512), _respuesta_con_criterios([]))
+    exigir_brazo_sin_poblacion(
+        replace(maximo, coleccion=COLECCION_512), _respuesta_con_criterios([])
+    )
 
 
 def test_un_brazo_de_la_coleccion_de_la_suite_no_se_somete_a_la_guarda_de_poblacion() -> None:

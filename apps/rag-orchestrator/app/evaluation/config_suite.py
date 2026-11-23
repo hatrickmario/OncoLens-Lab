@@ -439,7 +439,7 @@ def _brazo_de(crudo: object) -> Brazo:
     modo = RetrievalMode(
         _en(str(clave_de(crudo, "RETRIEVAL_MODE")), MODOS_DE_RECUPERACION, "RETRIEVAL_MODE")
     )
-    reranker = _etapa_del_reranker(crudo)
+    reranker = _campos_de_etapa_del_brazo(crudo)
     if modo is RetrievalMode.dense:
         return Brazo(nombre, modo, **reranker)
     fusion = EstrategiaDeFusion(
@@ -459,7 +459,7 @@ def _brazo_de(crudo: object) -> Brazo:
     return Brazo(nombre, modo, fusion, peso_sparse=peso, **reranker)
 
 
-def _etapa_del_reranker(crudo: dict[str, Any]) -> dict[str, Any]:
+def _campos_de_etapa_del_brazo(crudo: dict[str, Any]) -> dict[str, Any]:
     """Los campos opcionales de la etapa del reranker de un brazo (US-278); lo que no declara queda en ``None`` (= el de
     la suite) y no entra en la huella. Un solape que no deja avanzar la ventana se rechaza nombrando la clave."""
     campos: dict[str, Any] = {}
@@ -479,7 +479,7 @@ def _etapa_del_reranker(crudo: dict[str, Any]) -> dict[str, Any]:
     if "indice" in crudo:
         if not es_identificador(str(crudo["indice"])):
             raise ConfigInvalida("el indice de un brazo no es un identificador válido")
-        campos["indice"] = str(crudo["indice"])
+        campos["coleccion"] = str(crudo["indice"])
     largo, solape = campos.get("reranker_max_length"), campos.get("reranker_solape")
     if largo is not None and solape is not None and not solape_deja_avanzar(solape, largo):
         raise ConfigInvalida("RERANKER_WINDOW_OVERLAP debe ser menor que RERANKER_MAX_LENGTH")
@@ -549,7 +549,7 @@ def _viabilidad_de(
 ) -> ViabilidadConfigurada | None:
     """Con algún brazo que cambie la etapa del reranker, ``comparacion.metas`` (el YAML de metas) y ``STACK_MEMORY_LIMIT_GB``
     (entorno) son obligatorios: la viabilidad no se calcula con topes inventados. Sin brazos del reranker no se lee nada."""
-    if not any(b.cambia_el_reranker or b.indice is not None for b in brazos):
+    if not any(b.cambia_el_reranker or b.coleccion is not None for b in brazos):
         return None
     ruta = ruta_del_repo(str(clave_de(seccion, "metas")))
     tope_p95_s = _tope_del_p95(ruta)

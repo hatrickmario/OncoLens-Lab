@@ -624,7 +624,7 @@ def corpus_de_la_comparacion(
         else indice.resumen.chunks_vigentes,
         "huella": None if indice is None else indice.resumen.huella,
         "chunk_size_de_la_ingesta": int(tamano) if tamano and tamano.isdigit() else None,
-        "indices_distintos": [b.brazo.nombre for b in brazos if b.brazo.indice is not None],
+        "indices_distintos": [b.brazo.nombre for b in brazos if b.brazo.coleccion is not None],
     }
 
 

@@ -32,7 +32,7 @@ class Brazo:
     """``RERANKER_WINDOW_OVERLAP`` del brazo; ``None`` = el del reranker de la suite."""
     reranker_max_length: int | None = None
     """``RERANKER_MAX_LENGTH`` del brazo; ``None`` = el del reranker de la suite."""
-    indice: str | None = None
+    coleccion: str | None = None
     """Colección de Milvus que lee el brazo (el de chunks de 512 tokens, US-278 AC-4); ``None`` = la de la suite."""
 
     @property
@@ -62,7 +62,7 @@ class Brazo:
                 ("reranker_modo", self.reranker_modo),
                 ("reranker_solape", self.reranker_solape),
                 ("reranker_max_length", self.reranker_max_length),
-                ("indice", self.indice),
+                ("indice", self.coleccion),
             )
             if valor is not None
         }

@@ -53,7 +53,7 @@ class ResultadoDeBrazo:
 def exigir_brazo_sin_poblacion(brazo: Brazo, respuesta: RagQueryInternalResponse) -> None:
     """Un brazo con colección propia no consume población (ADR-47): ``identificador_de_chunk`` da el mismo id a chunks distintos
     en la colección de 512 y en la de 1024, y la población se cita por ``chunk_id``; mide solo la recuperación (deuda D7-19)."""
-    if brazo.indice is not None and any(fuente.criteria for fuente in respuesta.applicability):
+    if brazo.coleccion is not None and any(fuente.criteria for fuente in respuesta.applicability):
         raise SuiteAbortada(
             f"el brazo {brazo.nombre} lee su propia colección y no puede consumir población (ADR-47): "
             "sus chunk_id colisionan con los de la colección de la suite"
@@ -72,12 +72,12 @@ async def evaluar_brazos(
     """Cada brazo, en el orden de la configuración, sobre los mismos adaptadores ya cargados.
 
     Con ``abrir_indice`` (``indice.fuente: milvus``) cada brazo lee la ingesta en solo lectura: la colección de la
-    configuración o la suya propia (``Brazo.indice``, el de chunks de 512 tokens); cada colección se abre una sola vez."""
+    configuración o la suya propia (``Brazo.coleccion``, el de chunks de 512 tokens); cada colección se abre una sola vez."""
     indices: dict[str | None, IndiceDelCorpus] = {}
     if abrir_indice is not None:
         for brazo in comparacion.brazos:
-            if brazo.indice not in indices:
-                indices[brazo.indice] = abrir_indice(brazo.indice)
+            if brazo.coleccion not in indices:
+                indices[brazo.coleccion] = abrir_indice(brazo.coleccion)
     adaptadores = adaptadores_de_suite(
         config,
         dataset,
@@ -92,7 +92,7 @@ async def evaluar_brazos(
             reloj,
             nuevo_cronometro(),
             adaptadores,
-            indices.get(brazo.indice),
+            indices.get(brazo.coleccion),
         )
         for brazo in comparacion.brazos
     ]
