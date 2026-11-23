@@ -3,6 +3,10 @@
 > Sin cambio de API: no hay sección `## contratos`. Un contexto: **ai-services** (`ai-services-dev`). TDD: la orquestación
 > de la familia y las métricas con adapters falsos y TDD estricto (doble bucle); dataset y configuración, test después; la
 > medición real, `evaluate` en la corrida nocturna del día 2.
+>
+> **Sprint 7 (movido-S7, 2026-11-22):** lo que falta está en la sección «Sprint 7» del final, agrupado por ventana
+> (antes de la corrida base · corrida base · corrida final). Esa sección manda sobre los destinos antiguos de las tareas
+> abiertas («corrida nocturna del día 2», «D5-28», «US-142»). Las tareas `[x]` no se tocan.
 
 ## 1. ai-services · dataset y configuración
 
@@ -82,3 +86,84 @@
   aplicabilidad por opción no expone cuántos excluyentes tiene en No coincide, así que se toman de `applicability[]` de su fuente
   más aplicable; (c) el reranker falso puntúa 1,0 todos los chunks del dataset, así que el desempate por relevancia de RN-28 no se
   ejercita con datos, solo en los unitarios de `orden_opciones`. DIFERIDA -> D5-28
+
+## Sprint 7 (movido-S7) · medición real, reporte versionado y revisión clínica provisional
+
+> Alcance: `proposal.md` («Alcance del Sprint 7») y `design.md` (S7-D1…S7-D5). Regla del sprint: ninguna cifra sin
+> reporte versionado en `reports/eval/` producido por `run-ai-eval`; `reports/eval/` está protegido para el implementador.
+> Nada pasa a «validada»: la revisión de los 4 casos es provisional, de IA.
+
+### (a) Antes de la corrida base · código y datos sin modelos reales
+
+- [ ] S7.1 Cierra **H-1** y **3.1**: `ai-eval-runner` genera y versiona el reporte de la corrida falsa
+      (`opciones-fake.yaml`) con `run-ai-eval`; se marcan `[x]` arriba con la ruta del reporte.
+- [ ] S7.2 Comprobar que `eval/configs/s5.yaml` corre en la máquina de referencia con los umbrales actuales
+      (`[S7 resp. 11]`: la base no usa los calibrados de `l1d-119`) y con el corpus del dataset (`[S7 resp. 10]`) ·
+      verificación: carga de la configuración sin cifras.
+
+#### Dataset y rótulos que no dependen de `l1d-126` parte B (código y datos, sin modelos reales)
+
+Ventana: **antes de la corrida base** (opción elegida en `design.md` S7-D4; misma política que `l1d-299`). Así la base
+y la final miden el mismo dataset. S7.3–S7.7 y S7.9 no esperan a `l1d-126`.
+
+- [ ] S7.3 (TDD estricto) Tests de aceptación en rojo: «indica 0 validados, 4 de mecánica verificada y 8 sin revisar y
+      rotula no_validada cuando los 4 casos llevan revision_provisional [US-140 AC-5]» y «sale con código 1 nombrando el
+      caso y el campo cuando revision_provisional está mal formada [US-140 AC-5]» · integración con adaptadores falsos ·
+      esqueleto de `contar_revision()` con `raise NotImplementedError` · commit `test(L1D-246)`.
+- [ ] S7.4 (TDD estricto) Implementar `contar_revision()` (pura, junto a `rotulo.py`), la validación de
+      `revision_provisional` en `dataset_opciones.py` con la regla pura compartida de forma (design S7-D1: si
+      `l1d-299` o `l1d-334` ya la crearon, se importa; si no, se crea aquí y ellos la importan; nunca dos copias), el
+      recuento en `corrida_opciones.py` y en `ESQUEMA_OPCIONES`;
+      `rotular_validada()` no cambia · unitarios uno a uno · commit `feat(L1D-246)`.
+- [ ] S7.5 (datos, test después) `preguntas.yaml`: `revision_provisional: {rol: ia, fecha: 2026-11-21}` en OP-01, OP-02,
+      OP-07 y OP-08 (sin tocar `revisada_por_oncologo`) y las 12 preguntas en español completo, con `cita` literal del
+      corpus. Test de carga: «ninguna pregunta contiene el texto literal en inglés de su cita [US-140 AC-1]».
+- [ ] S7.6 (datos, test después) OP-08: documento y chunk sintéticos «(test)» de enfermedad sensible a la castración con
+      privación androgénica y quimioterapia en `corpus.yaml`; `propuestas.yaml` y `casos.yaml` actualizados; el orden
+      esperado sale del comparador de RN-28 (`test_opciones_coherencia_dataset.py`), no se escribe a mano
+      [US-140 AC-3]. Texto descriptivo (RN-23), sin NCCN ni ESMO.
+- [ ] S7.7 Subir `version` en `manifest.yaml` del dataset; dos corridas falsas idénticas [US-140 AC-6] y las tres
+      invariantes cumplidas; `eval-required` en verde. `ai-eval-runner` regenera el reporte falso (S7.1) con la huella
+      nueva.
+- [ ] S7.9 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde
+      antes y después, commit `refactor(L1D-246)`.
+
+### (b) Corrida base
+
+- [ ] S7.10 Cierra **3.2**: `evaluate --suite opciones --config eval/configs/s5.yaml` con `proveedor: local` por
+      `ai-eval-runner` (`run-ai-eval`), una sola carga de modelos junto con `l1d-119`, `l1d-299`, `l1d-113`, `l1d-329` y
+      `l1d-333`; reporte en `reports/eval/` con la versión del dataset y del catálogo. Si salta un bloqueo, no se relaja
+      la meta: se anota con los ids de caso.
+- [ ] S7.11 Cierra **3.3**: enlazar el reporte de S7.10 en la historia (insumo de DEC-07, L1D-234; G-Demo real está en
+      Post-MVP).
+
+### Entre la corrida base y la final · solo lo que depende de `l1d-126` parte B (C-1, C-5)
+
+Orden de merge: `l1d-126` parte A → corrida base → `l1d-335` (`1.10.0`) → `l1d-126` parte B (`1.11.0`) → S7.8.
+
+- [ ] S7.8 Con la parte B de `l1d-126` mergeada: repetir `test_opciones_coherencia_dataset.py` con el catálogo real de
+      próstata. Rige el supuesto compartido SC-1 (`l1d-126` design D10; aquí S7-D4b): no se da por hecho que C-1
+      produzca `no_coincide`. Si el comparador da otro orden en OP-07…OP-12, se corrige `casos.yaml` aquí, sube la
+      `version` del dataset y se anotan los ids de caso para que el reporte de la final los declare no comparables
+      con la base; si el orden no cambia, se anota y no se toca el dataset.
+
+### (c) Corrida final
+
+- [ ] S7.12 Configuración de la corrida final (asumido el nombre `eval/configs/s7-opciones.yaml`): igual que `s5.yaml`,
+      con **los mismos umbrales que la base** (`[S7 resp. 11]`) y `regresion.reporte_referencia` apuntando al reporte de
+      S7.10 · test después (carga en `config_opciones`). Los umbrales calibrados de `l1d-119` van en una configuración
+      de brazo aparte (asumido el nombre `eval/configs/s7-opciones-calibrado.yaml`), con su propio reporte.
+- [ ] S7.13 `evaluate --suite opciones` con modelos locales, el mismo dataset y el mismo corpus que la base
+      (`[S7 resp. 10]`), el catálogo del S7 (`l1d-126` parte B) y las mejoras del sprint; reporte en `reports/eval/`
+      comparado con la corrida base [US-140 AC-4]; rótulos `mecanica_verificada` y `no_validada` visibles en el
+      reporte. El reporte registra el corpus y los umbrales usados y, si S7.8 cambió algún caso, los declara no
+      comparables con la base. El brazo de umbrales calibrados corre aparte y se adopta en el cierre.
+- [ ] S7.14 Cierre: `openspec validate l1d-246-suite-hasta-3-opciones --strict`; Pytest de `tests/evaluation` y Vitest de
+      `scripts/ci` en verde; CI con 0 fallos, 0 pendientes y 0 alertas antes de pedir el merge.
+
+### Fuera del S7
+
+- **H-2** (un oncólogo revisa OP-01, OP-02, OP-07 y OP-08): sigue abierta para la sesión con expertos. Sin ella no hay
+  ningún caso «validado».
+- **D5-28** (deuda de diseño de la familia): no entra, salvo la referencia de retroceso propia de `opciones` (S7.12).
+

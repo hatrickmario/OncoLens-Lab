@@ -116,3 +116,68 @@ bloquea), orden RN-28 (100 % de análisis conformes, bloqueante), media de opcio
 
 Ninguna. **P1** (referencia de AC-4 con modelos locales = reporte del S4 de `l1d-298`) y **P2** (no se mide sobre el
 corpus ampliado de `l1d-119`) quedan Decididos (usuario, 2026-11-03, `[S5 resp. 13]`).
+
+## Sprint 7 · Revisión clínica provisional y medición (movido-S7, 2026-11-22)
+
+Fuente: `backlog/sprints/S7-refinamiento.md` (§1, §4, §5, `[S7 resp. 1]`, `[S7 resp. 2]`) y
+`backlog/sprints/S7-revision-clinica.md` §3. Las decisiones anteriores siguen vigentes.
+
+**S7-D1 · Dos rótulos: `mecanica_verificada` y `validada`.** Cada pregunta del dataset puede llevar, además de
+`revisada_por_oncologo` (`null` o `{rol, fecha}`), el campo `revision_provisional: {rol: ia, fecha}` (misma forma que en
+`l1d-335` y `l1d-334`). Una pregunta con `revision_provisional` y sin `revisada_por_oncologo` cuenta como
+`mecanica_verificada`; solo `revisada_por_oncologo` cuenta como validada. El reporte da, por métrica, tres recuentos
+(validados, de mecánica verificada, sin revisar). `rotular_validada()` no cambia: «validada» sigue exigiendo que todos
+los casos de la métrica estén revisados por un oncólogo, así que con el dataset real el rótulo sigue en `no_validada`.
+La revisión de IA nunca produce «validada» (`[S7 resp. 1]`). OP-01, OP-02, OP-07 y OP-08 llevan
+`revision_provisional: {rol: ia, fecha: 2026-11-21}`.
+- Regla pura con nombre (`contar_revision()`, junto a `rotulo.py`), con TDD estricto; `dataset_opciones.py` valida la
+  forma de `revision_provisional` (rol de un conjunto cerrado, fecha ISO) y `ESQUEMA_OPCIONES` gana el recuento.
+- *Descartado:* reutilizar `revisada_por_oncologo` con `rol: ia`. Haría pasar por validado lo que no lo está.
+- **Una sola definición de la marca (Gate 1 del S7).** La forma `{rol: ia, fecha}` no se redefine aquí. En el catálogo
+  es `comun.schema.json#/$defs/revisionProvisional` (dueño: `l1d-126` parte A). En los datasets de evaluación la valida
+  **una** regla pura compartida en `app/evaluation/` (asumido el nombre `validar_revision_provisional()`), que usan
+  `dataset_opciones.py`, `dataset_poblacion.py` (`l1d-299`) y el dataset de `l1d-334`: la crea el change que la
+  implemente primero y los demás la importan. `contar_revision()` sí es propia de esta familia.
+
+**S7-D2 · OP-08.** `corpus.yaml` gana un documento y un chunk sintéticos «(test)» de enfermedad sensible a la castración
+con privación androgénica y quimioterapia; `propuestas.yaml` y `casos.yaml` lo incorporan a OP-08. La fuente de
+enfermedad resistente a la castración sigue en el caso y sigue al final por no comparable (AC-3). El orden esperado no
+se escribe a mano: sale de la regla de RN-28 y lo comprueba `test_opciones_coherencia_dataset.py`. Texto descriptivo,
+sin lenguaje prescriptivo (RN-23) y sin contenido de NCCN ni de ESMO.
+
+**S7-D3 · Preguntas en español.** Las 12 preguntas se redactan en español completo; `evidencia.cita` sigue siendo literal
+del corpus del dataset. *Riesgo:* con adaptadores falsos la recuperación puede depender del solape léxico entre la
+pregunta y el chunk en inglés; si una pregunta deja de recuperar su fuente, se corrige el dataset (texto del chunk o
+guion falso), no la regla. Verificación: el test de coherencia y dos corridas falsas idénticas (AC-6).
+
+**S7-D4 · Versión del dataset y comparabilidad.** Los cambios de S7-D1…D3 suben `version` del manifiesto del dataset y
+cambian la huella de `opciones-fake.yaml`. **Propuesta** que se evaluó: dejarlos entre la corrida base y la final, como
+dice `S7-refinamiento.md` §5; así la diferencia entre ambas mezclaría dataset y mejoras. **Opción elegida (Gate 1 del
+S7, 2026-11-22; misma política que `l1d-299`):**
+- Lo que **no depende de `l1d-126` parte B** (S7-D1, S7-D2 y S7-D3) se hace **antes de la corrida base**: no necesita
+  modelos reales y deja la base y la final sobre el mismo dataset.
+- Lo que **depende de C-1 o C-5** (corregir `casos.yaml` si el comparador da otro orden en OP-07…OP-12 con el catálogo
+  `1.11.0`) va **entre la base y la final**, después de `l1d-126` parte B. Si cambia algún caso, el dataset sube otra
+  vez de versión y el reporte de la final nombra esos casos como **no comparables con la base**.
+
+**S7-D4b · Supuesto compartido sobre C-1.** Este change no fija qué estado produce `extension`. Rige SC-1 de `l1d-126`
+(`design.md` D10): `no_coincide` solo con restricción explícita en la fuente y M0/M1 legible en el paciente; si no,
+«Desconocido» (`sin_regla_de_comparacion` o `falta_en_paciente`), sin población no comparable. En el repliegue, un
+excluyente en «Desconocido» no suma a «No coincide» y el orden de OP-07…OP-12 no cambia por C-1. En los dos casos el
+orden esperado lo da el comparador de RN-28 con el catálogo mergeado, no se escribe a mano.
+
+**S7-D5 · Medición real y referencia.** Corpus (`[S7 resp. 10]`): la familia trae su corpus en el dataset; ese es su
+corpus fijo en la base y en la final, y cada reporte lo registra (dataset y versión). No usa la ingesta de `l1d-119`.
+Umbrales (`[S7 resp. 11]`): la base y la final corren con los umbrales actuales; los calibrados de `l1d-119` entran en
+la final como un brazo más, con su propio reporte, y se adoptan en el cierre. Esto sustituye, para el S7, a «o los que
+fije `l1d-119` antes de la corrida» de la decisión 7. Corrida base: `evaluate --suite opciones --config eval/configs/s5.yaml`
+(`proveedor: local`), por `ai-eval-runner`, con reporte en `reports/eval/`. Corrida final: la misma familia con el
+catálogo del S7 (`l1d-126`) y las mejoras; su referencia de retroceso pasa a ser el reporte de la corrida base de este
+mismo sprint (asumido; hoy `s5.yaml` apunta al reporte del S4 de `l1d-298`, de otro dataset: deuda D5-28). Si un bloqueo
+salta, no se relaja la meta: se reporta con los ids de caso. Cifras anteriores sin reporte versionado no se citan.
+
+**Ficheros que toca el S7.** `data/evaluation/opciones/` (`manifest.yaml`, `preguntas.yaml`, `corpus.yaml`,
+`propuestas.yaml`, `casos.yaml`); `apps/rag-orchestrator/app/evaluation/` (`rotulo.py`, `dataset_opciones.py`,
+`corrida_opciones.py`, `esquema_suite.py`); `apps/rag-orchestrator/eval/configs/` (configuración de la corrida final);
+tests en `apps/rag-orchestrator/tests/evaluation/`. No toca `packages/clinical-catalogs/` ni otros datasets.
+

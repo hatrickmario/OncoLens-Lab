@@ -90,3 +90,78 @@ El conjunto dorado y el reporte MUST contener solo corpus público con licencia 
 - **WHEN** corre la CI
 - **THEN** el manifiesto declara licencia aceptada por fuente y el escaneo de PII y secretos no encuentra hallazgos
 - **AND** la suite se niega a correr (código 1) con un manifiesto que no declara corpus público con licencia aceptada, sin calcular métricas
+
+### Requirement: La suite de población corre con modelos locales
+`evaluate --suite poblacion` con `adaptadores.proveedor: local` MUST ejecutar la extracción con el LLM y el NLI locales y SHALL negarse a correr, sin escribir cifras, si falta un peso o una variable de los modelos o si la configuración nombra un proveedor que no es local.
+
+#### Scenario: La configuración local compone los puertos locales [US-233b AC-2] [RN-12] (D5-26)
+- **GIVEN** `eval/configs/poblacion-local.yaml` con `proveedor: local` y puertos de LLM y NLI sustituidos por adaptadores falsos en el test
+- **WHEN** se ejecuta `evaluate --suite poblacion --config eval/configs/poblacion-local.yaml`
+- **THEN** la familia corre, no sale con el código 2 de «proveedor sin cablear» y el reporte declara `proveedor = local`
+
+#### Scenario: Sin pesos o con un proveedor de nube la suite no corre [US-233b AC-2] [RN-12] (asumido)
+- **GIVEN** la configuración local sin la variable de un peso de modelo, o con un alias de proveedor de nube
+- **WHEN** se ejecuta la suite
+- **THEN** termina con código distinto de 0, el mensaje nombra la variable o el proveedor y no se escribe ningún reporte con cifras
+
+### Requirement: El conjunto dorado cubre los criterios de próstata
+`data/evaluation/poblacion-dorado/` MUST incluir al menos 16 pares documento × criterio de próstata que cubran `estado_castracion`, `extension`, `isup` y `hrr_brca`, estratificados por tipo de fuente (guía, ensayo, revisión) e idioma (es/en), además de `ecog` y `linea_tratamiento`.
+
+#### Scenario: El dorado ampliado trae pares de próstata por criterio y estrato [US-233b AC-1] [ADR47-R9] `[S7 resp. 1]` (asumido: D-1 amplía lo que pide el AC-1)
+- **GIVEN** el conjunto dorado ampliado
+- **WHEN** corre el test de carga del dataset
+- **THEN** hay al menos 16 pares de próstata y cada uno de `estado_castracion`, `extension`, `isup` y `hrr_brca` tiene pares de guía, ensayo y revisión en español y en inglés
+- **AND** los 36 pares de mama siguen presentes y todo el texto es sintético con licencia `sintetico_propio`
+
+### Requirement: El conjunto dorado incluye redacciones difíciles y distractores
+El conjunto dorado MUST incluir al menos 12 casos con redacción no plantilla (negación, rango, definición implícita, inclusión total, umbral y valor en tabla) y al menos 8 distractores en los que el valor aparece solo con alcance de subgrupo o como mención, y la suite SHALL reportar la precisión y la cobertura por tipo de redacción y contar aparte los valores dados como elegibilidad en un distractor.
+
+#### Scenario: El dorado declara casos difíciles de cada tipo [US-233b AC-1] `[S7 resp. 1]` (asumido: D-2)
+- **GIVEN** el conjunto dorado ampliado
+- **WHEN** corre el test de carga del dataset
+- **THEN** hay al menos 12 casos marcados como difíciles y cada tipo (negación, rango, definición implícita, inclusión total, umbral, tabla) tiene al menos uno
+
+#### Scenario: El reporte separa la redacción plantilla de la difícil [US-233b AC-2] [M-08.3] [M-08.4] (asumido: D-2)
+- **GIVEN** el dorado ampliado y la configuración de adaptadores falsos
+- **WHEN** se ejecuta la suite
+- **THEN** el reporte trae la precisión y la cobertura por criterio y, aparte, por tipo de redacción, solo con agregados
+
+#### Scenario: Un valor de subgrupo o mención dado como elegibilidad se cuenta aparte [US-233b AC-2] [ADR-47] (asumido: D-3)
+- **GIVEN** al menos 8 distractores cuyo esperado no tiene valores de `elegibilidad` y un adaptador falso que devuelve un valor de elegibilidad en uno de ellos
+- **WHEN** se ejecuta la suite
+- **THEN** el reporte cuenta 1 valor indebido en distractores y nombra el documento y el criterio, sin el valor ni el fragmento
+
+### Requirement: Los estados esperados cubren próstata y las rendijas de la revisión clínica
+`estados.yaml` MUST incluir un caso por regla F-20…F-23 con el criterio `estado_castracion` y casos de `extension` (C-1), y SHALL contar aparte, sin cambiar la regla vigente, los casos de elegibilidad de un solo valor sin marcador de restricción (C-3).
+
+#### Scenario: La concordancia incluye casos de estado de próstata [US-233b AC-4] [M-08.2] `[S7 resp. 1]` (asumido: D-5)
+- **GIVEN** `estados.yaml` con un caso por regla F-20…F-23 sobre `estado_castracion` y los casos de `extension`
+- **WHEN** se comparan con los estados calculados por las reglas de US-243 con un catálogo que tiene reglas de próstata
+- **THEN** el reporte da la concordancia por estado también para próstata y cuenta aparte cada No coincide indebido y cada Coincide indebido
+
+#### Scenario: Los casos de extension cubren el estado principal y el repliegue de C-1 [US-233b AC-4] [M-08.2] (asumido: supuesto compartido SC-1 de `l1d-126`)
+- **GIVEN** `estados.yaml` con dos casos de `extension` frente a una fuente restringida a enfermedad metastásica: un paciente con M0 legible en su estadio y otro cuyo estadio no permite leer M0 ni M1
+- **WHEN** se comparan con los estados calculados con el catálogo de `l1d-126` parte B
+- **THEN** el esperado del segundo caso es `desconocido` con `sin_regla_de_comparacion` y no cuenta como No coincide
+- **AND** el esperado del primero es el que da la regla del catálogo mergeado: `no_coincide` si la lectura de M0/M1 entró, `desconocido` si no entró, y el reporte dice cuál de los dos
+
+#### Scenario: Los casos de un solo valor sin restricción se cuentan como rendija [US-233b AC-4] (asumido: C-3, pregunta Q-1 para expertos)
+- **GIVEN** casos en los que la fuente declara un solo valor de un criterio mutuamente excluyente sin marcador de restricción y el paciente tiene otro valor
+- **WHEN** se ejecuta la suite
+- **THEN** el estado esperado y el calculado son `desconocido` según la regla vigente
+- **AND** el reporte cuenta aparte cuántos casos caen en esa situación, sin marcarlos como error
+
+### Requirement: Un dorado con revisión provisional de IA sigue siendo no concluyente
+Un conjunto dorado cuyo manifiesto solo trae `revision_provisional` con rol `ia`, sin revisor humano, MUST dar la precisión y la cobertura como «no concluyente» y SHALL NOT dar PASS.
+
+#### Scenario: La base y la final miden el mismo dorado, corpus y umbrales [US-233b AC-2] `[S7 resp. 10]` `[S7 resp. 11]` (asumido: política de ventanas del Gate 1 del S7)
+- **GIVEN** la parte del dorado que no depende del catálogo de `l1d-126` parte B, añadida antes de la corrida base, y la parte que depende de C-1, C-2, C-4 o C-5, añadida entre la base y la final
+- **WHEN** se comparan los reportes de la corrida base y de la corrida final
+- **THEN** los dos declaran como corpus los documentos del dorado y los mismos umbrales
+- **AND** el reporte de la final separa los pares y casos añadidos después de la base y los declara no comparables con ella
+
+#### Scenario: La revisión de IA no convierte el dorado en revisado [US-233b AC-7] `[S7 resp. 1]`
+- **GIVEN** un manifiesto con `revision_provisional = {rol: ia, fecha: 2026-11-21}` y `revisor = {rol: null, fecha: null}`
+- **WHEN** se ejecuta la suite
+- **THEN** precisión y cobertura quedan «no concluyente», el veredicto global no es PASS y el reporte declara la revisión provisional
+

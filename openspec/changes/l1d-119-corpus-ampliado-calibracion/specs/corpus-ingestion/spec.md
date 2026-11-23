@@ -81,3 +81,31 @@ Cada documento nuevo SHALL pasar por la extracción de población en abanico (AD
 - **GIVEN** un catálogo sin documentos de próstata en español
 - **WHEN** se genera el resumen de población
 - **THEN** próstata/es aparece con 0 documentos y conteos `null` por criterio, marcado «sin documentos», nunca 0
+
+### Requirement: Los registros de ClinicalTrials.gov declaran su licencia con la clase de dominio público y el texto decidido
+Cada entrada del manifiesto con `source_name = "ClinicalTrials.gov"` MUST tener `license_class = dominio_publico` y el texto de `license` «Datos de ClinicalTrials.gov (obra del gobierno de EE. UU.; condiciones de uso)», y ese texto SHALL resolverse a `dominio_publico` en el mapa de licencias de la configuración.
+
+#### Scenario: Los 10 registros llevan el texto de licencia decidido [US-120 AC-2] [RN-21] `[S7 resp. 7]`
+- **GIVEN** el manifiesto real `data/raw/s3/manifest.yaml`
+- **WHEN** corre el test de datos del manifiesto
+- **THEN** las entradas de `ClinicalTrials.gov` tienen `license = "Datos de ClinicalTrials.gov (obra del gobierno de EE. UU.; condiciones de uso)"`, `license_class = dominio_publico` y `license_url` no vacío
+- **AND** su `checksum` no cambia respecto del manifiesto anterior
+
+#### Scenario: El texto decidido se acepta en la ingesta [US-120 AC-2] [RN-21] `[S7 resp. 7]`
+- **GIVEN** una entrada de test de `ClinicalTrials.gov` con el texto de licencia decidido y el mapa de licencias por defecto
+- **WHEN** se ingiere con *embeddings* falsos
+- **THEN** queda `embebido` con `license_class = dominio_publico` y no se rechaza por licencia
+
+### Requirement: Una mención de una fuente excluida dentro de un texto con licencia propia no excluye el documento
+Un documento de una fuente admitida cuya licencia permite redistribuirlo SHALL ingerirse aunque su texto mencione a NCCN o a ESMO en referencias bibliográficas o declaraciones de conflictos de interés; ninguna entrada del manifiesto MUST tener a NCCN ni a ESMO como `source_name`, y el repositorio SHALL NOT contener contenido de sus guías.
+
+#### Scenario: Un artículo CC BY que cita una fuente excluida se ingiere [US-120 AC-2] [RN-21] `[S7 resp. 8]`
+- **GIVEN** un documento de test de `PMC Open Access` con licencia CC BY cuya lista de referencias nombra a una fuente excluida
+- **WHEN** se ingiere
+- **THEN** queda `embebido` y el resumen no lo marca como `fuente_excluida`
+
+#### Scenario: La regla de fuentes excluidas sigue aplicándose por source_name [US-120 AC-2] [RN-21] `[S7 resp. 8]`
+- **GIVEN** el manifiesto real
+- **WHEN** corre el test de datos del manifiesto
+- **THEN** ningún `source_name` es de NCCN ni de ESMO y `excluded_sources` las sigue listando
+

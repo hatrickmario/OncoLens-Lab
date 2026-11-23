@@ -79,6 +79,47 @@ Ninguna.
 - ⛔ DEC-07 → **S6**: no bloquea; escenario más probable = metas iniciales de `CLAUDE.md`.
 - US-136 (conflictos entre documentos) está en Post-MVP y **no** es dependencia.
 
+## Alcance del Sprint 7 (movido-S7, 2026-11-22)
+
+> L1D-246 pasa al S7 (decisión del usuario, 2026-11-21; `backlog/sprints/S7-refinamiento.md` §1). La familia `opciones` y
+> sus tests no se reescriben. Falta la medición real, el reporte versionado y los cambios del §3 de la revisión clínica
+> **provisional** hecha por IA (`[S7 resp. 1]`, `backlog/sprints/S7-revision-clinica.md` §3 y §6).
+
+- **Dos rótulos en el reporte.** Los 4 casos candidatos (OP-01, OP-02, OP-07, OP-08) prueban la regla de orden de RN-28,
+  no contenido clínico: el reporte los cuenta como `mecanica_verificada`. `validada` queda reservado a los casos con
+  contenido clínico revisado por un oncólogo; hoy no hay ninguno y el rótulo global sigue en `no_validada`.
+- **OP-08 deja de ser engañoso.** Gana una fuente sintética de enfermedad sensible a la castración con quimioterapia,
+  para que el caso no sugiera que esa combinación solo aparece en enfermedad resistente a la castración.
+- **Preguntas en español.** Las preguntas del dataset se redactan en español completo; el cruce de idiomas ya lo mide
+  la suite de recuperación. Las citas esperadas siguen siendo literales del corpus (RN-04).
+- **Medición real** (tareas 3.2 y 3.3) en la **corrida base** del S7 (`[S7 resp. 2]`) y de nuevo en la **corrida final**.
+  Las dos miden sobre el corpus propio del dataset `opciones`, declarado en el reporte (`[S7 resp. 10]`), y con los
+  umbrales actuales; los umbrales calibrados de `l1d-119` entran en la final como un brazo más y se adoptan en el
+  cierre (`[S7 resp. 11]`).
+- **Ventana de los cambios del dataset (misma política que `l1d-299`).** Lo que no depende de `l1d-126` parte B
+  (rótulos, preguntas en español, fuente nueva de OP-08) se hace **antes de la corrida base**: base y final miden el
+  mismo dataset. Lo que depende de C-1 o C-5 (el orden esperado de OP-07…OP-12 con el catálogo nuevo) va entre la base
+  y la final, y el reporte de la final lo declara como no comparable con la base.
+- **Reporte versionado** (H-1): lo escribe `ai-eval-runner` con `run-ai-eval`. Regla del sprint: ninguna cifra sin
+  reporte versionado en `reports/eval/`.
+- Sin cambios en las invariantes M-10.1, M-10.2 ni en el orden de RN-28. Sin cambio de API.
+
+### Dependencias del S7
+
+- **Orden de merge (único, el mismo en `l1d-126` y `l1d-299`):** `l1d-126` parte A → corrida base → `l1d-335`
+  (catálogo `1.10.0`) → `l1d-126` parte B (catálogo `1.11.0`) → la parte de este change que depende de C-1 o C-5
+  (S7.8) → corrida final. El resto de este change no espera a `l1d-126`.
+- ↪ `l1d-126-criterios-aplicabilidad-catalogo` parte B: el dataset lee el catálogo real de próstata
+  (`catalogos.prostata: packages/clinical-catalogs`). Este change no supone por su cuenta qué estado produce C-1: rige
+  el **supuesto compartido SC-1** de `l1d-126` (`design.md` D10), con su repliegue a «Desconocido». El orden esperado
+  de OP-07…OP-12 sale del comparador con el catálogo mergeado (`test_opciones_coherencia_dataset.py`).
+- ↪ `l1d-119-corpus-ampliado-calibracion`: comparte la corrida base. Sus umbrales calibrados no cambian la base ni la
+  final de esta familia: son un brazo más de la final (`[S7 resp. 11]`). La familia mide solo sobre el corpus del
+  dataset (`[S7 resp. 10]`).
+- `revision_provisional` de los datasets: una sola regla pura de forma, compartida con `l1d-299` y `l1d-334`
+  (`design.md` S7-D1).
+- H-2 (revisión por un oncólogo de los 4 casos) no es del S7: sigue abierta para la sesión con expertos.
+
 ## Fuera de alcance
 
 - p95 del análisis con hasta 3 opciones (M-06.2, US-141, `si-hay-capacidad`; se integra en US-142 AC-7).

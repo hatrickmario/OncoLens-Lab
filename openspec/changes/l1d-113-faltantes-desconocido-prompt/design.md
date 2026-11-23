@@ -109,7 +109,7 @@ Sin cambio de **esquema** ni de `info.version` (ADR-26): `ClinicalContext.curren
 `ErrorValidacion` (`CUERPO_INVALIDO`) ya existen y los ejemplos `contracts/examples/rag-query-request*.json` ya traen claves
 catalogadas. Gate 2 (contract-keeper) pidió describir el comportamiento observable nuevo: un commit `contract(L1D-113)` solo de
 **descripción** (como L1D-306) en el `422` de `/rag/query` y de `/rag/follow-up` y en `missingCriticalData`, acotado a esas dos
-rutas (`/case/summary` no aplica; alinearlo es deuda D5-25). El commit va tras los de test y feat (orden invertido benigno:
+rutas (`/case/summary` no aplica; alinearlo era deuda D5-25 y, por `[S7 resp. 12]`, sale del S7 a deuda Post-MVP D7-01: cambiaría el contrato). El commit va tras los de test y feat (orden invertido benigno:
 solo texto). No se añade `pattern` al esquema (estrecharía la entrada: incompatible).
 
 ## Evaluación
@@ -145,3 +145,26 @@ Cambian el **prompt** (`rag-query@0.7.0`) y la **consulta de recuperación** (ra
 - **Suite `evaluate`.** `corrida.solicitud_de` deja `missingCriticalData` vacío cuando el tipo de la pregunta difiere del del
   ejemplo base (sus claves son del catálogo de mama) y toma `currentLine`/`missingCriticalData` del bloque `contexto` de la
   pregunta cuando existe (dataset S5, `S5-L01…L05`).
+
+## Sprint 7 (movido-S7, 2026-11-22)
+
+Fuente: `backlog/sprints/S7-refinamiento.md` y las decisiones del usuario del 2026-11-22. Lo anterior sigue vigente salvo
+lo que aquí se indica; «corrida nocturna única del día 2» se lee como **corrida base del S7** (`[S7 resp. 2]`).
+
+- **S7-D1 · `/case/summary` fuera del S7 (`[S7 resp. 12]`).** Validar `missingCriticalData` en `/case/summary` con `422`
+  `faltante_no_catalogado` no es calidad del RAG y cambiaría el contrato OpenAPI, que hoy declara que esa ruta no aplica
+  esa validación. Pasa a deuda Post-MVP **D7-01** (tarea S7.2b, diferida). El resto de D5-25 (S7.2) es refactor interno
+  de la suite y de `bootstrap`, sin cambio observable: **sin diff** de `openapi.yaml` ni de `contracts/examples/`
+  (ADR-26).
+- **S7-D2 · Métrica de no inferencia con requisito propio.** La «métrica nueva de no inferencia» de la sección
+  Evaluación no tenía requisito en `openspec/specs/ai-evaluation/spec.md` (comprobado: ningún requisito archivado la
+  cubre; «Sensibilidad y especificidad de los faltantes sembrados» mide la detección en `clinical-api`, no la salida
+  generada). Se añade el delta ADDED mínimo en `specs/ai-evaluation/spec.md`. La métrica vive en
+  `apps/rag-orchestrator/app/evaluation/`, con el juez local acotado en su puerto (adaptadores falsos en la CI; solo
+  proveedores locales, RN-12) y un reporte de solo conteos e ids (RN-14). No fija ninguna meta: la decide DEC-07.
+- **S7-D3 · Corpus de la medición (`[S7 resp. 10]`).** La familia de faltantes usa la ingesta de `l1d-119` como corpus,
+  el mismo en la corrida base y en la final, y cada reporte lo registra. Las preguntas `S5-L01…L05` siguen siendo las
+  de `data/eval/s5-corpus-ampliado`.
+- **S7-D4 · Umbrales (`[S7 resp. 11]`).** La medición corre con los umbrales actuales; los calibrados que salgan de
+  los barridos de `l1d-119` solo entran en la corrida final como un brazo más. Este change no cambia ningún valor por
+  defecto.
