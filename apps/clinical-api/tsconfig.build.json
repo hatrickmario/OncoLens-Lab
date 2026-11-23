@@ -10,6 +10,7 @@
     "src",
     "prisma/seed.ts",
     "prisma/seed",
-    "../../packages/api-contracts/src/client/rag-orchestrator"
+    "../../packages/api-contracts/src/client/rag-orchestrator",
+    "../../packages/clinical-catalogs/schemas/*.json"
   ]
 }

@@ -1,35 +1,19 @@
+import { fileURLToPath } from 'node:url';
 import { ConfiguracionInvalidaError } from '../../config/index.js';
 import allowlistDelModelo from '../../../../../packages/clinical-catalogs/validator/modelo.allowlist.json' with { type: 'json' };
-import esquemaDeAplicabilidad from '../../../../../packages/clinical-catalogs/schemas/aplicabilidad.schema.json' with { type: 'json' };
-import esquemaDeAtributos from '../../../../../packages/clinical-catalogs/schemas/atributos.schema.json' with { type: 'json' };
-import esquemaDeDatosCriticos from '../../../../../packages/clinical-catalogs/schemas/datos-criticos.schema.json' with { type: 'json' };
-import esquemaDeEscalas from '../../../../../packages/clinical-catalogs/schemas/escalas.schema.json' with { type: 'json' };
-import esquemaDeValidation from '../../../../../packages/clinical-catalogs/schemas/validation.schema.json' with { type: 'json' };
-import esquemaComun from '../../../../../packages/clinical-catalogs/schemas/comun.schema.json' with { type: 'json' };
-import esquemaDePoblacion from '../../../../../packages/clinical-catalogs/schemas/poblacion.schema.json' with { type: 'json' };
-import esquemaDeReglasDePoblacion from '../../../../../packages/clinical-catalogs/schemas/poblacion-reglas.schema.json' with { type: 'json' };
-import esquemaDeMarcosDePregunta from '../../../../../packages/clinical-catalogs/schemas/marcos-de-pregunta.schema.json' with { type: 'json' };
-import esquemaDePlantillas from '../../../../../packages/clinical-catalogs/schemas/plantillas.schema.json' with { type: 'json' };
-import esquemaDeManifiesto from '../../../../../packages/clinical-catalogs/schemas/manifest.schema.json' with { type: 'json' };
 import {
   ArchivoIlegibleError,
   leerCatalogo,
+  leerEsquemas,
   validarCatalogo,
 } from '../../../../../packages/clinical-catalogs/validator/index.mjs';
 
-const ESQUEMAS = {
-  manifest: esquemaDeManifiesto,
-  validation: esquemaDeValidation,
-  comun: esquemaComun,
-  poblacion: esquemaDePoblacion,
-  atributos: esquemaDeAtributos,
-  'datos-criticos': esquemaDeDatosCriticos,
-  aplicabilidad: esquemaDeAplicabilidad,
-  'poblacion-reglas': esquemaDeReglasDePoblacion,
-  escalas: esquemaDeEscalas,
-  'marcos-de-pregunta': esquemaDeMarcosDePregunta,
-  plantillas: esquemaDePlantillas,
-};
+/**
+ * Los esquemas salen de `leerEsquemas`, derivados de los registros del validador (raíz, declarados, por tipo, por lista):
+ * un archivo nuevo de cualquier registro llega al arranque sin editar un mapa aquí (G1.6, design D15). `dist/` replica la disposición del repo (`rootDir ../..`), así que la misma ruta relativa sirve en fuente y compilado. */
+const DIRECTORIO_DE_ESQUEMAS = fileURLToPath(
+  new URL('../../../../../packages/clinical-catalogs/schemas/', import.meta.url),
+);
 
 /** Código de la primera regla incumplida (cerrado: `destino_ausente`, `hash_distinto`...), o `null` si el catálogo valida. */
 function codigoDeLaPrimeraViolacion(
@@ -40,7 +24,7 @@ function codigoDeLaPrimeraViolacion(
     const resultado = validarCatalogo({
       archivos: leerCatalogo(directorio, leerArchivo),
       allowlist: allowlistDelModelo,
-      esquemas: ESQUEMAS,
+      esquemas: leerEsquemas(DIRECTORIO_DE_ESQUEMAS, leerArchivo),
     });
     return resultado.valido ? null : (resultado.violaciones[0]?.codigo ?? 'esquema_invalido');
   } catch (error) {

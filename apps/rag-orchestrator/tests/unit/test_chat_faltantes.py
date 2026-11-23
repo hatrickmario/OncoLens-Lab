@@ -12,6 +12,7 @@ from app.domain.chat.faltantes import (
 )
 from app.domain.chat.turno import TipoDeBloque
 from app.domain.lenguaje import ListaTerminos, check_prohibited_terms
+from tests.support.recuperacion import VERSION_DEL_CATALOGO_MONTADO
 
 LISTA = (
     Path(__file__).resolve().parents[4]
@@ -41,7 +42,7 @@ UN_ITEM_DE_CADA_TIPO = (
 )
 
 
-def _verbalizar(items=UN_ITEM_DE_CADA_TIPO, version="1.9.0"):
+def _verbalizar(items=UN_ITEM_DE_CADA_TIPO, version=VERSION_DEL_CATALOGO_MONTADO):
     return verbalizar_faltantes(items, FUENTES, version)
 
 
@@ -117,10 +118,13 @@ def test_verbalizar_faltantes_omite_los_tipos_de_documento_cuando_el_item_no_est
 def test_verbalizar_faltantes_dice_que_no_faltan_datos_y_nombra_la_version_cuando_ningun_item_tiene_vacio():
     items = (_item("tnm", "Estadificación TNM", "presente_verificado", None),)
 
-    (bloque,) = _verbalizar(items, version="1.9.0")
+    (bloque,) = _verbalizar(items, version=VERSION_DEL_CATALOGO_MONTADO)
 
     assert bloque.tipo is TipoDeBloque.limitacion
-    assert bloque.texto == "No faltan datos críticos según el catálogo 1.9.0."
+    assert (
+        bloque.texto
+        == f"No faltan datos críticos según el catálogo {VERSION_DEL_CATALOGO_MONTADO}."
+    )
 
 
 @pytest.mark.parametrize("indice", range(len(UN_ITEM_DE_CADA_TIPO)))

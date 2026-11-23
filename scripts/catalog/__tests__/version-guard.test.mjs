@@ -346,3 +346,108 @@ describe('catalog:version-guard · sin base disponible', () => {
     PLAZO_PROCESO_MS,
   );
 });
+
+describe('catalog:version-guard · base desfasada: el primer padre del merge (G2.3, S7.2)', () => {
+  /**
+   * `main` avanza (B) con otro archivo y la MISMA versión nueva que el PR; el merge de prueba imita
+   * `refs/pull/N/merge`: primer padre = la punta actual de la base, segundo = la rama del PR. Contra la base
+   * desfasada (A, la de `pull_request.base.sha`) ambos cambios parecen una subida legítima.
+   */
+  function repoConMergeConBaseDesfasada() {
+    const raiz = repoConCatalogo();
+    modificar(raiz, 'mama/aplicabilidad.json', agregarContenido);
+    modificar(raiz, 'manifest.json', (m) => (m.version = 'test-apl-1.0.2'));
+    git(raiz, 'commit', '-q', '-a', '-m', 'pr');
+    git(raiz, 'checkout', '-q', 'main');
+    modificar(raiz, 'mama/datos-criticos.json', agregarContenido);
+    modificar(raiz, 'manifest.json', (m) => (m.version = 'test-apl-1.0.2'));
+    git(raiz, 'commit', '-q', '-a', '-m', 'main avanza');
+    git(raiz, 'checkout', '-q', '-b', 'merge-del-pr');
+    expect(git(raiz, 'merge', '--no-ff', '-q', '-m', 'merge', 'cambio').status).toBe(0);
+    return raiz;
+  }
+
+  it(
+    'falla con HEAD^1 cuando el PR cambia contenido y repite la versión que main ya subió',
+    () => {
+      const raiz = repoConMergeConBaseDesfasada();
+
+      const resultado = ejecutar(raiz, { base: 'HEAD^1', ci: true });
+
+      expect(resultado.codigo).toBe(1);
+      expect(resultado.salida).toContain('contenido_cambiado_sin_subir_version mama/aplicabilidad');
+    },
+    PLAZO_PROCESO_MS,
+  );
+
+  it(
+    'pasa con HEAD^1 cuando el PR sube la versión por encima de la de main',
+    () => {
+      const raiz = repoConMergeConBaseDesfasada();
+      modificar(raiz, 'manifest.json', (m) => (m.version = 'test-apl-1.0.3'));
+      git(raiz, 'commit', '-q', '-a', '-m', 'sube la version');
+
+      expect(ejecutar(raiz, { base: 'HEAD^1', ci: true }).codigo).toBe(0);
+    },
+    PLAZO_PROCESO_MS,
+  );
+});
+
+describe('catalog:version-guard · lista publicada que queda vacía (G2.4, S7.3, design D15)', () => {
+  const vaciar = (contenido) => {
+    const clave = contenido.items === undefined ? 'keys' : 'items';
+    contenido[clave] = [];
+  };
+
+  it(
+    'falla con lista_vaciada y nombra el archivo cuando una lista con contenido en la base queda vacía aunque la versión suba [US-121 AC-1]',
+    () => {
+      const raiz = repoConCatalogo();
+      modificar(raiz, 'mama/aplicabilidad.json', vaciar);
+      modificar(raiz, 'manifest.json', (m) => (m.version = 'test-apl-1.0.2'));
+
+      const resultado = ejecutar(raiz, { ci: true });
+
+      expect(resultado.codigo).toBe(1);
+      expect(resultado.salida).toContain('lista_vaciada mama/aplicabilidad');
+      expect(resultado.salida).not.toContain(raiz);
+    },
+    PLAZO_PROCESO_MS,
+  );
+
+  it(
+    'falla con lista_vaciada y no con la regla de versión cuando la lista se vacía sin subir la versión',
+    () => {
+      const raiz = repoConCatalogo();
+      modificar(raiz, 'atributos.json', vaciar);
+
+      const resultado = ejecutar(raiz, { ci: true });
+
+      expect(resultado.codigo).toBe(1);
+      expect(resultado.salida).toContain('lista_vaciada atributos');
+      expect(resultado.salida).not.toContain('contenido_cambiado_sin_subir_version');
+    },
+    PLAZO_PROCESO_MS,
+  );
+
+  it(
+    'pasa cuando la lista pierde un ítem pero conserva contenido y la versión sube',
+    () => {
+      const raiz = repoConCatalogo();
+      modificar(raiz, 'mama/aplicabilidad.json', (c) => c.items.pop());
+      modificar(raiz, 'manifest.json', (m) => (m.version = 'test-apl-1.0.2'));
+
+      expect(ejecutar(raiz, { ci: true }).codigo).toBe(0);
+    },
+    PLAZO_PROCESO_MS,
+  );
+
+  it('no marca lista_vaciada cuando la lista ya estaba vacía en la base', () => {
+    const lectura = (items) => ({
+      version: '1.1.0',
+      archivos: { 'mama/tendencias': { estado: 'ok', contenido: { version: '1.1.0', items } } },
+    });
+
+    expect(violacionesDeVersion({ actual: lectura([]), base: lectura([]) })).toEqual([]);
+  });
+});

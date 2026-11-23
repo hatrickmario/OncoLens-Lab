@@ -111,3 +111,12 @@ export const ARCHIVOS_DE_RAIZ = {
   atributos: { esquema: 'atributos' },
   poblacion: { esquema: 'poblacion' },
 };
+
+/**
+ * Archivos con versión propia (no la de `manifest.version`): el validador no los compara con el manifiesto
+ * (`violacionesDeVersionPropia`) y el guardián de versión los compara con la suya. Nombres relativos al catálogo, sin `.json`.
+ */
+export const ARCHIVOS_CON_VERSION_PROPIA = [
+  'lenguaje/terminos-prohibidos',
+  'lenguaje/marcos-de-pregunta',
+];

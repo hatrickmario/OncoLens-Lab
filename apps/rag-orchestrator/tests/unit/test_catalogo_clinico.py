@@ -8,6 +8,7 @@ from app.infrastructure.catalogo_clinico.manifiesto import (
     cargar_catalogo_del_manifiesto,
 )
 from tests.support.contract import CATALOGOS
+from tests.support.recuperacion import VERSION_DEL_CATALOGO_MONTADO
 
 
 def test_exigir_misma_version_no_lanza_cuando_las_versiones_son_iguales():
@@ -29,7 +30,7 @@ def test_el_error_de_version_no_lleva_ninguna_de_las_dos_versiones_en_el_mensaje
 
 
 def test_el_adapter_lee_la_version_del_manifiesto_cuando_el_catalogo_es_el_del_repositorio():
-    assert cargar_catalogo_del_manifiesto(CATALOGOS).version() == "1.9.0"
+    assert cargar_catalogo_del_manifiesto(CATALOGOS).version() == VERSION_DEL_CATALOGO_MONTADO
 
 
 @pytest.mark.parametrize(

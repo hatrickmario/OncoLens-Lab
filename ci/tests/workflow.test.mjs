@@ -288,7 +288,7 @@ describe('partición de build-test y quality en paralelo (ARR-11)', () => {
     const node = pasosDe(ci.jobs['build-test-node']).map((paso) => paso.run ?? '');
     const rag = pasosDe(ci.jobs['build-test-rag']).map((paso) => paso.run ?? '');
 
-    expect(node).toEqual(expect.arrayContaining(['npx vitest run', 'npm run test:secrets', 'npm run catalog:version-guard -- --base "$BASE_REF"']));
+    expect(node).toEqual(expect.arrayContaining(['npx vitest run', 'npm run test:secrets', 'npm run catalog:version-guard -- --base HEAD^1']));
     expect(rag).toContain('npm run contracts:verify-provider -- --proveedor rag-orchestrator');
     expect(rag.some((run) => /python -m pytest --cov=app/.test(run))).toBe(true);
     expect(node.some((run) => /\bpytest\b/.test(run))).toBe(false);

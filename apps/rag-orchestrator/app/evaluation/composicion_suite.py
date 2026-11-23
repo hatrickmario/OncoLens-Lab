@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-import dataclasses
-
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
 
 from app.application.aplicabilidad import ApplicabilityService
 from app.application.aplicabilidad_textual import ParametrosDelRespaldo
 from app.application.ports import (
+    ChunkSearch,
     Clock,
     CorpusCatalogReader,
     EvidenceGenerator,
@@ -198,7 +197,7 @@ def _adaptadores_locales(
 ) -> Adaptadores:
     """Con el corpus leído de un índice (``l1d-119``) los vectores ya están allí: no se embeben los chunks del dataset."""
     if con_indice_de_corpus:
-        dataset = dataclasses.replace(dataset, chunks=())
+        dataset = replace(dataset, chunks=())
     vectores = (
         []
         if con_indice_de_corpus
@@ -293,11 +292,15 @@ def componer_servicio(
     adaptadores: Adaptadores | None = None,
     aplicabilidad: AplicabilidadDeLaSuite | None = None,
     corpus: PuertosDelCorpus | None = None,
+    envolver_buscador: Callable[[ChunkSearch], ChunkSearch] | None = None,
+    reranker_max_pairs: int | None = None,
 ) -> ServicioDeSuite:
     """El servicio de la suite. Con ``brazo`` recupera con sus ``RETRIEVAL_*`` (US-133); con ``adaptadores`` ya cargados
     (los mismos modelos y el mismo índice para todos los brazos) no vuelve a cargar ni a indexar nada. Con
     ``aplicabilidad`` (familia `opciones`, US-140) el servicio calcula la aplicabilidad por fuente con esos criterios y
-    esa población; sin ella, la suite mide solo la recuperación y la generación. Con ``corpus`` (fuente ``indice``) el servicio
+    esa población; sin ella, la suite mide solo la recuperación y la generación. ``envolver_buscador`` decora la búsqueda
+    en memoria (la familia `diagnostico` observa el orden denso) y ``reranker_max_pairs`` fija el corte a los pares con
+    adaptadores falsos; con puertos locales manda el del reranker cargado. Con ``corpus`` (fuente ``indice``) el servicio
     busca y lee el catálogo y la release en esos puertos de solo lectura, no en el dataset en memoria."""
     if aplicabilidad is not None and corpus is not None:
         raise ConfigInvalida(
@@ -316,15 +319,17 @@ def componer_servicio(
     embedder_sparse, buscador_sparse = _rama_sparse(
         adaptadores, buscador_sparse_del_corpus, brazo, cronometro, observaciones
     )
+    buscador: ChunkSearch = (
+        corpus.buscador
+        if corpus is not None
+        else BuscadorEnMemoria(dataset, adaptadores.vectores_de_chunks)
+    )
+    if envolver_buscador is not None:
+        buscador = envolver_buscador(buscador)
     servicio = RAGOrchestratorService(
         detector_idioma=DetectorMedido(adaptadores.detector_idioma, cronometro),
         embedder=EmbedderMedido(adaptadores.embedder, cronometro),
-        buscador=BuscadorMedido(
-            corpus.buscador
-            if corpus is not None
-            else BuscadorEnMemoria(dataset, adaptadores.vectores_de_chunks),
-            cronometro,
-        ),
+        buscador=BuscadorMedido(buscador, cronometro),
         reranker=RerankerObservado(adaptadores.reranker, cronometro, observaciones),
         lector_release=LectorReleaseMedido(
             corpus.lector_release if corpus is not None else LectorReleaseFijo(dataset), cronometro
@@ -350,7 +355,7 @@ def componer_servicio(
             tipos_habilitados,
             brazo,
             puertos_locales.respaldo if puertos_locales else PARAMETROS_DEL_RESPALDO_DE_LA_SUITE,
-            puertos_locales.reranker_max_pairs if puertos_locales else None,
+            puertos_locales.reranker_max_pairs if puertos_locales else reranker_max_pairs,
         ),
         embedder_sparse=embedder_sparse,
         buscador_sparse=buscador_sparse,

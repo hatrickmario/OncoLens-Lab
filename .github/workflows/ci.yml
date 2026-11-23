@@ -67,6 +67,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # Dos commits: el merge y su primer padre (la base al día) para `catalog:version-guard` (G2.3).
+          fetch-depth: 2
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
@@ -114,10 +116,9 @@ jobs:
         run: npm test --workspaces --if-present
       - name: Validación del catálogo clínico (catalog:validate, RN-29, US-001)
         run: npm run catalog:validate
-      - name: Base del catálogo para el guardián de versión (solo el commit base, sin credenciales)
-        run: git fetch --no-tags --depth=1 origin "$BASE_REF"
       - name: Una versión publicada del catálogo no cambia de contenido (catalog:version-guard, L1D-126)
-        run: npm run catalog:version-guard -- --base "$BASE_REF"
+        # Base = primer padre del merge (`fetch-depth: 2` del checkout), no `pull_request.base.sha`, que se desfasa (G2.3).
+        run: npm run catalog:version-guard -- --base HEAD^1
       - name: La allowlist del modelo commiteada coincide con el esquema de Prisma (US-001 AC-4)
         run: npm run catalog:allowlist:check
       - name: Vitest raíz (scripts, infra y fixtures de la CI)

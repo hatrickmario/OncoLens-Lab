@@ -10,6 +10,7 @@ import {
   sembrarSinDiagnostico,
   type EscenarioDeRegistroManual,
 } from '../../support/registro-manual.js';
+import { versionDelCatalogo } from '../../support/gateway.js';
 import { clienteVerificado } from '../../support/verificarProveedor.js';
 
 const ESPACIO_DE_IDS = 9110;
@@ -224,7 +225,7 @@ describe('lectura de atributos clínicos', () => {
     expect(
       permitidos.find((a) => a.key === 'estado_castracion')?.values.map((v) => v.value),
     ).toContain('sensible_castracion');
-    expect(respuesta.body.catalogVersion).toBe('1.9.0');
+    expect(respuesta.body.catalogVersion).toBe(versionDelCatalogo());
   });
 
   it('devuelve la lista vacía de permitidos cuando el paciente no tiene diagnóstico vigente [US-094 AC-6]', async () => {
