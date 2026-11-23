@@ -125,6 +125,55 @@ def test_rag_query_contextual_de_mama_queda_igual_cuando_el_catalogo_declara_no_
     assert expansion_de(respuesta.json()) == {"applied": True, "fields": CAMPOS_USADOS}
 
 
+@pytest.mark.ac("US-273", 3)
+def test_rag_query_envia_solo_terminos_del_catalogo_y_no_registra_valores_cuando_el_caso_de_prostata_trae_texto_libre_sembrado_y_psa_con_valor(
+    caplog,
+):
+    caplog.set_level(logging.DEBUG)
+    entorno = crear_entorno_contextual()
+    solicitud = _solicitud_de_prostata(
+        (("PSA", "SENTINELA-PSA-9.99"), ("HRR", "SENTINELA-VALOR-FUERA-DEL-CATALOGO"))
+    )
+    contexto = solicitud["clinicalContext"]
+    pseudo = contexto["pseudoPatientId"]
+    contexto["diagnosis"]["histology"] = "SENTINELA-HISTOLOGIA"
+    contexto["events"][0]["description"] = (
+        "SENTINELA-EVENTO seudónimo X 2026-01-02 Nombre Sintético"
+    )
+
+    respuesta = entorno.consultar(solicitud)
+
+    assert respuesta.status_code == 200
+    enviado = " ".join(
+        [
+            *entorno.reranker.preguntas,
+            *(t for t in entorno.embedder.textos if t.startswith(Q_GENERICA)),
+        ]
+    )
+    # El valor de HRR no es del catálogo: entra el término sin valor; el PSA no ancla (US-273 AC-1).
+    assert entorno.reranker.preguntas[-1] == f"{Q_GENERICA} Cáncer de próstata IIB ISUP 3 HRR"
+    for ajeno in (
+        "SENTINELA",
+        "seudónimo",
+        "2026-01-02",
+        "Nombre Sintético",
+        "PSA",
+        "9.99",
+        pseudo,
+    ):
+        assert ajeno not in enviado
+        assert ajeno not in caplog.text
+    registro = next(
+        r.getMessage()
+        for r in caplog.records
+        if "event=rag_query_expansion_contextual" in r.getMessage()
+    )
+    assert "fields=tipo,estadio,biomarcador_principal" in registro
+    assert "terms=4" in registro
+    assert "traceId=" in registro
+    assert "IIB" not in registro and "próstata" not in registro and "HRR" not in registro
+
+
 @pytest.mark.ac("US-271", 2)
 @pytest.mark.parametrize(
     "pregunta",

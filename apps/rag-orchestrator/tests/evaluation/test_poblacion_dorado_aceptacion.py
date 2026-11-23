@@ -272,6 +272,49 @@ def test_poblacion_marca_no_concluyente_y_nunca_pass_cuando_el_dorado_no_trae_re
     assert reporte["veredicto"]["resultado"] != "pass"
 
 
+@pytest.mark.ac("US-233b", 7)
+def test_poblacion_queda_no_concluyente_y_declara_la_revision_provisional_cuando_el_manifiesto_solo_trae_revision_provisional_de_rol_ia(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Queda no concluyente y declara la revisión provisional cuando el manifiesto solo trae revision_provisional de rol
+    ia [US-233b AC-7]."""
+    provisional = {"rol": "ia", "fecha": "2026-11-21"}
+
+    codigo, reporte, _ = _correr(tmp_path, capsys, revisor=None, revision_provisional=provisional)
+
+    assert codigo == 0 and reporte is not None
+    assert reporte["configuracion"].get("revision_provisional") == {
+        **provisional,
+        "rotulo": "Revisión provisional de IA; sin validación humana",
+    }
+    assert reporte["configuracion"]["revision"]["completa"] is False
+    for criterio in reporte["metricas"]["por_criterio"]:
+        assert criterio["marca_precision"] == criterio["marca_cobertura"] == "no_concluyente"
+    assert reporte["veredicto"]["resultado"] == "no_concluyente"
+    assert "sin_revisor" in reporte["veredicto"]["causas"]
+
+
+@pytest.mark.parametrize(
+    "provisional",
+    [
+        {"rol": "oncologo_revisor", "fecha": "2026-11-21"},
+        {"rol": "ia"},
+        {"rol": "ia", "fecha": "ayer"},
+        {"rol": "ia", "fecha": "2026-11-21", "nombre": "x"},
+        "ia",
+    ],
+)
+def test_poblacion_se_niega_con_codigo_1_y_nombra_la_marca_cuando_la_revision_provisional_esta_mal_formada(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], provisional: Any
+) -> None:
+    codigo, reporte, error = _correr(
+        tmp_path, capsys, revisor=None, revision_provisional=provisional
+    )
+
+    assert codigo == 1 and reporte is None
+    assert "revision_provisional" in error
+
+
 def test_poblacion_da_pass_cuando_el_dorado_esta_revisado_y_todo_cumple_las_metas(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -307,7 +350,7 @@ def test_poblacion_se_niega_con_codigo_1_y_sin_calcular_metricas_cuando_el_manif
     assert "la suite no corre" in error
 
 
-def test_poblacion_se_niega_con_codigo_2_cuando_el_proveedor_es_local_sin_cablear(
+def test_poblacion_se_niega_con_codigo_2_cuando_el_proveedor_es_local_sin_la_configuracion_comun_de_la_suite(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     codigo, reporte, _ = _correr(tmp_path, capsys, config={"adaptadores": {"proveedor": "local"}})

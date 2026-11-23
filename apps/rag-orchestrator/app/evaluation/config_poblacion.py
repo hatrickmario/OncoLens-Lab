@@ -14,7 +14,9 @@ from app.evaluation.config_suite import (
     PROVEEDORES,
     RELOJES,
     ConfigInvalida,
+    ConfigSuite,
     _en,
+    cargar_config_suite,
     clave_de,
     huella_de_config,
     ruta_del_repo,
@@ -58,6 +60,8 @@ class ConfigPoblacion:
     config_sin_evidencia: Path
     baseline: Path
     hash_config: str
+    suite: ConfigSuite | None
+    """La configuración común de la suite (modelos, URL del LLM, umbrales): solo con ``proveedor: local`` (S7-D1)."""
 
 
 def cargar_config_poblacion(ruta: Path) -> ConfigPoblacion:
@@ -70,14 +74,15 @@ def cargar_config_poblacion(ruta: Path) -> ConfigPoblacion:
     fixture = str(clave_de(crudo, "fixture"))
     if not es_identificador(fixture):
         raise ConfigInvalida("fixture no es un identificador válido")
+    proveedor = _en(
+        str(clave_de(crudo, "adaptadores", "proveedor")), PROVEEDORES, "adaptadores.proveedor"
+    )
     return ConfigPoblacion(
         nombre=str(clave_de(crudo, "nombre")),
         fixture=fixture,
         dataset=ruta_del_repo(str(clave_de(crudo, "dataset", "ruta"))),
         reloj=_en(str(clave_de(crudo, "medicion", "reloj")), RELOJES, "medicion.reloj"),
-        proveedor=_en(
-            str(clave_de(crudo, "adaptadores", "proveedor")), PROVEEDORES, "adaptadores.proveedor"
-        ),
+        proveedor=proveedor,
         umbral_nli=_numero(clave_de(crudo, "umbrales", "nli_entailment_threshold"), "umbrales"),
         catalogo=ruta_del_repo(str(clave_de(crudo, "catalogo", "ruta"))),
         extraccion=_extraccion(clave_de(crudo, "extraccion")),
@@ -92,6 +97,7 @@ def cargar_config_poblacion(ruta: Path) -> ConfigPoblacion:
         config_sin_evidencia=ruta_del_repo(str(clave_de(crudo, "sin_evidencia", "config"))),
         baseline=ruta_del_repo(str(clave_de(crudo, "sin_evidencia", "baseline"))),
         hash_config=huella_de_config(crudo),
+        suite=cargar_config_suite(ruta) if proveedor == "local" else None,
     )
 
 

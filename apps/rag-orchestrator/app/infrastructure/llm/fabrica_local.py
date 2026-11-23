@@ -106,6 +106,14 @@ def crear_proponente_local(
     )
 
 
+def crear_llm_de_poblacion_local(
+    settings: Settings, envolver_cliente: EnvolverCliente | None = None
+) -> LlmDePoblacion:
+    """El LLM local de la tarea corta de población (``completar_json_acotado``) para quien arma el extractor en abanico
+    fuera de producción (la suite `evaluate`, L1D-299); mismo cliente, URL, plazo y modelo que la generación (RN-12)."""
+    return _cliente_llm_local(settings, envolver_cliente)
+
+
 def parametros_de_reescritura(settings: Settings) -> ParametrosDeReescritura:
     """``QUERY_REWRITE_ENABLED``, ``_MAX_ITERATIONS`` y ``_DEADLINE_MS`` de la configuración (RN-22)."""
     return ParametrosDeReescritura(

@@ -24,6 +24,7 @@ from app.evaluation.metricas.contextual import (
     CLASES_DE_PREGUNTA,
     CONDICIONES_DE_LA_CAUSA,
     ESTADOS_DE_FILA,
+    METRICAS_FRENTE_A_LA_BASE,
     SEGUNDO_LOOP_CONTEXTUAL,
     SEGUNDO_LOOP_NINGUNO,
 )
@@ -38,7 +39,10 @@ from app.evaluation.reporte import (
     Numero,
     Objeto,
 )
-from app.evaluation.revision_provisional import ROLES_DE_REVISION_PROVISIONAL
+from app.evaluation.revision_provisional import (
+    ROLES_DE_REVISION_PROVISIONAL,
+    ROTULO_DE_REVISION_PROVISIONAL,
+)
 from app.evaluation.rotulo import ROTULOS
 from app.schemas.generated.models import Fusion, RetrievalMode
 
@@ -389,6 +393,23 @@ _ESTADOS_DE_LA_MEDICION = frozenset({"concluyente", "no_concluyente"})
 _POR_ESTADO = Objeto({"esperados": Numero(), "aciertos": Numero()})
 _DOCUMENTO_Y_CRITERIO = Objeto({"documento": Identificador(), "criterio": Identificador()})
 
+
+def _desagregado_de_poblacion(grupo: str) -> Lista:
+    """Precisión y cobertura de un grupo del dorado (redacción o tipo): solo conteos y fracciones, informativas."""
+    return Lista(
+        Objeto(
+            {
+                grupo: Identificador(),
+                "esperados": Numero(),
+                "obtenidos": Numero(),
+                "coincidentes": Numero(),
+                "precision": Numero(),
+                "cobertura": Numero(),
+            }
+        )
+    )
+
+
 ESQUEMA_POBLACION = Objeto(
     {
         "esquema": Enumerado(frozenset({VERSION_ESQUEMA})),
@@ -407,7 +428,15 @@ ESQUEMA_POBLACION = Objeto(
                     {"completa": Booleano(), "rol": Identificador(), "fecha": Identificador()},
                     opcionales=frozenset({"rol", "fecha"}),
                 ),
-            }
+                "revision_provisional": Objeto(
+                    {
+                        "rol": Enumerado(frozenset(ROLES_DE_REVISION_PROVISIONAL)),
+                        "fecha": Identificador(),
+                        "rotulo": Enumerado(frozenset({ROTULO_DE_REVISION_PROVISIONAL})),
+                    }
+                ),
+            },
+            opcionales=frozenset({"revision_provisional"}),
         ),
         "metricas": Objeto(
             {
@@ -428,6 +457,18 @@ ESQUEMA_POBLACION = Objeto(
                             "marca_cobertura": Enumerado(_MARCAS_DE_POBLACION),
                         }
                     )
+                ),
+                "por_redaccion": _desagregado_de_poblacion("redaccion"),
+                "por_tipo_de_redaccion": _desagregado_de_poblacion("tipo_de_redaccion"),
+                "distractores": Objeto(
+                    {
+                        "pares": Numero(),
+                        "valores_indebidos": Numero(),
+                        "pares_con_indebidos": Numero(),
+                    }
+                ),
+                "rendija_c3": Objeto(
+                    {"casos": Numero(), "desconocido": Numero(), "otros": Numero()}
                 ),
                 "tasa_duplicados": Objeto(
                     {
@@ -733,7 +774,50 @@ _FILA_CONTEXTUAL = Objeto(
         "segundo_loop": Anulable(
             Enumerado(frozenset({SEGUNDO_LOOP_CONTEXTUAL, SEGUNDO_LOOP_NINGUNO}))
         ),
+        # Los tres primeros chunks del último ranking (id y puntaje; nunca el texto); vacío = el reranker no puntuó nada.
+        "top3": Lista(Objeto({"chunk_id": Identificador(), "relevance_score": Numero()})),
+        "campos_usados": Lista(Enumerado(frozenset(CAMPOS_DE_EXPANSION))),
+        "llamadas_al_generador": Numero(),
     }
+)
+_COBERTURA_DE_CASO = Objeto(
+    {
+        "caso": Identificador(),
+        "genericas_con_evidencia": Numero(),
+        "genericas_total": Numero(),
+        "minimo": Numero(),
+        "cumple": Booleano(),
+        "campos_usados": Lista(Enumerado(frozenset(CAMPOS_DE_EXPANSION))),
+    }
+)
+_ADVERSARIAS_DE_CASO = Objeto(
+    {
+        "caso": Identificador(),
+        "total": Numero(),
+        "sin_evidencia": Numero(),
+        "falsos_positivos": Numero(),
+        "con_puntaje_nulo": Numero(),
+        "llamadas_al_generador": Numero(),
+    }
+)
+_COMPARACION_CON_LA_BASE = Anulable(
+    Objeto(
+        {
+            "base": Objeto({"nombre": Identificador(), "hashConfig": Huella()}),
+            "cambios": Lista(
+                Objeto(
+                    {
+                        "ambito": Identificador(),
+                        "metrica": Enumerado(frozenset(METRICAS_FRENTE_A_LA_BASE)),
+                        "base": Numero(),
+                        "actual": Numero(),
+                        "empeora": Booleano(),
+                    }
+                )
+            ),
+            "empeoran": Numero(),
+        }
+    )
 )
 
 ESQUEMA_CONTEXTUAL = Objeto(
@@ -800,9 +884,13 @@ ESQUEMA_CONTEXTUAL = Objeto(
                     "clase": Enumerado(frozenset(CLASES_DE_PREGUNTA)),
                     "con_evidencia": Numero(),
                     "total": Numero(),
+                    "superaron_umbral": Numero(),
                 }
             )
         ),
+        "cobertura": Lista(_COBERTURA_DE_CASO),
+        "adversarias": Lista(_ADVERSARIAS_DE_CASO),
+        "comparacion": _COMPARACION_CON_LA_BASE,
         "sinonimos": Lista(
             Objeto(
                 {

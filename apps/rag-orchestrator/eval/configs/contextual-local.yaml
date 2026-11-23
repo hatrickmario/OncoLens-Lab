@@ -35,7 +35,10 @@ contextual:
   casos: # design D5: la corrida base y la final ejecutan los casos que apruebe el plan del S7 (H-2); l1d-331 añade prostata-con-psa-y-hrr
     - mama-completo
     - prostata-con-grado
+    - prostata-con-psa-y-hrr
   casos_ruta: packages/clinical-catalogs/test/fixtures/temas-del-caso.json
+  genericas_con_evidencia_minimo: 18 # meta por caso de US-273 AC-2 (RN-22): genéricas con evidencia sobre 22; el reporte la compara, no la cambia
+  # reporte_base: reports/eval/l1d-331-cobertura-prostata-segundo-loop.base.json # opcional: con él, la corrida final compara con la base (solo si el corpus coincide)
   expansion_habilitada: true # QUERY_CONTEXT_EXPANSION_ENABLED de la corrida
   preguntas_de_sinonimos:
     - {pregunta: CTX-C12, termino: antraciclinas}

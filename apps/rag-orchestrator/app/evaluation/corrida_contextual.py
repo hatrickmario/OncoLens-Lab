@@ -26,6 +26,7 @@ from app.application.errores import LlmSalidaInvalidaError
 from app.application.ports import Clock, EvidenceGenerator, Reranker
 from app.domain.expansion_contextual import ParametrosDeExpansionContextual
 from app.domain.lenguaje import normalizar_texto
+from app.evaluation.base_contextual import ReporteBase, exigir_mismo_corpus, leer_reporte_base
 from app.evaluation.composicion_suite import (
     ExpansionDeLaSuite,
     ServicioDeSuite,
@@ -59,12 +60,20 @@ from app.evaluation.metricas.contextual import (
     REGLA_DE_LA_CAUSA,
     SEGUNDO_LOOP_CONTEXTUAL,
     SEGUNDO_LOOP_NINGUNO,
+    AdversariasDeCaso,
+    CambioFrenteALaBase,
+    ChunkPuntuado,
+    CoberturaDeCaso,
     FilaContextual,
     RecuentoDeClase,
+    adversarias_por_caso,
     causa_de_sinonimo,
+    comparar_con_base,
+    genericas_con_evidencia_por_caso,
     recuentos_por_clase,
 )
 from app.evaluation.modelos_locales import OrigenLocal, PuertosLocales, cargar_puertos_locales
+from app.evaluation.ranking_contextual import RegistroDelRanking, RerankerQueRegistra
 from app.evaluation.reporte import escribir_reporte_cerrado
 from app.evaluation.rotulo import rotular_validada
 from app.evaluation.rutas import raiz_repo
@@ -126,13 +135,27 @@ def ejecutar_contextual(
     )  # antes de medir; exige el término en el catálogo
     exigir_adapters_locales(dataset.corpus.clase, suite.urls)
     exigir_proveedor_local(suite)
+    base = _reporte_base_de_la_corrida(
+        config, dataset
+    )  # antes de medir: un corpus distinto no se compara
     medicion = asyncio.run(medir_contextual(config, dataset, casos, origen, reloj, puertos))
-    reporte = _reporte(config, dataset, casos, medicion, formas)
+    reporte = _reporte(config, dataset, casos, medicion, formas, base)
     ruta = _ruta_del_resultado(config, args, reloj)
     escribir_reporte_cerrado(ruta, reporte, ESQUEMA_CONTEXTUAL)
     ruta.with_suffix(".md").write_text(informe_legible(reporte), encoding="utf-8")
     print(_resumen(reporte))
     return 0
+
+
+def _reporte_base_de_la_corrida(
+    config: ConfigContextual, dataset: DatasetContextual
+) -> ReporteBase | None:
+    """El reporte base de la configuración, ya comprobado contra el corpus de esta corrida (``None`` = sin comparación)."""
+    if config.reporte_base is None:
+        return None
+    base = leer_reporte_base(config.reporte_base)
+    exigir_mismo_corpus(_identidad_del_corpus(dataset), base)
+    return base
 
 
 # --- las formas de cada término de sinónimos -----------------------------------------------------------------------------
@@ -183,7 +206,8 @@ async def medir_contextual(
 ) -> MedicionContextual:
     suite = config.suite
     locales = _puertos_locales(config, dataset, origen)
-    servicio = _servicio(config, dataset, locales, puertos, reloj)
+    ranking = RegistroDelRanking()
+    servicio = _servicio(config, dataset, locales, puertos, reloj, ranking)
     base = solicitud_base()
     filas: list[FilaContextual] = []
     invalidas = 0
@@ -191,8 +215,16 @@ async def medir_contextual(
     for pregunta in dataset.preguntas:
         for caso in casos:
             solicitud = _solicitud(
-                base, caso, pregunta, len(filas), suite.catalogo_version, puertos.seudonimo
+                base,
+                caso,
+                pregunta,
+                len(filas),
+                suite.catalogo_version,
+                puertos.seudonimo,
+                dataset.corpus.clase,
             )
+            ranking.reiniciar()
+            generaciones = servicio.observaciones.generaciones
             try:
                 respuesta: RagQueryInternalResponse | None = await servicio.servicio.consultar(
                     solicitud
@@ -202,7 +234,15 @@ async def medir_contextual(
             ):  # una salida inválida del LLM no es el fin de la suite: se cuenta
                 respuesta = None
                 invalidas += 1
-            filas.append(fila_de(pregunta, caso.id, respuesta))
+            filas.append(
+                fila_de(
+                    pregunta,
+                    caso.id,
+                    respuesta,
+                    ranking.ultimo,
+                    servicio.observaciones.generaciones - generaciones,
+                )
+            )
             if respuesta is not None and not modelos:
                 modelos = _modelos_de_recuperacion(respuesta.meta)
     return MedicionContextual(
@@ -227,15 +267,17 @@ def _servicio(
     locales: PuertosLocales | None,
     puertos: PuertosDeContextual,
     reloj: Clock,
+    ranking: RegistroDelRanking,
 ) -> ServicioDeSuite:
     """El servicio de la suite con la expansión contextual de la configuración (ADR-52): el indicador y los catálogos de
-    solo lectura del catálogo montado, los mismos con los que arranca producción."""
+    solo lectura del catálogo montado, los mismos con los que arranca producción. El *reranker* anota el ranking final."""
     suite = config.suite
     adaptadores = adaptadores_de_suite(suite, dataset.corpus, locales)
     if puertos.reranker is not None:
         adaptadores = replace(adaptadores, reranker=puertos.reranker)
     if puertos.generador is not None:
         adaptadores = replace(adaptadores, generador=puertos.generador)
+    adaptadores = replace(adaptadores, reranker=RerankerQueRegistra(adaptadores.reranker, ranking))
     tipos = cargar_catalogo_del_manifiesto(suite.ruta_terminos).tipos_de_cancer()
     cronometro = Cronometro(RelojSimulado() if suite.reloj == "simulado" else time.perf_counter)
     return componer_servicio(
@@ -261,6 +303,7 @@ def _solicitud(
     indice: int,
     catalogo_version: str,
     seudonimo: Callable[[int], str],
+    clase_del_dataset: str,
 ) -> RagQueryInternalRequest:
     """La solicitud de ``contracts/examples`` con la pregunta y el contexto desidentificado del caso (RN-11). Reutiliza
     ``solicitud_de`` para el resto de campos: el tipo de cáncer de la pregunta es el del caso, así que no lo reescribe."""
@@ -287,7 +330,7 @@ def _solicitud(
     return solicitud_de(
         {**base, "clinicalContext": contexto},
         de_la_pregunta,
-        "sintetico",
+        clase_del_dataset,
         indice,
         catalogo_version,
         MAX_OPCIONES,
@@ -295,15 +338,28 @@ def _solicitud(
 
 
 def fila_de(
-    pregunta: PreguntaContextual, caso: str, respuesta: RagQueryInternalResponse | None
+    pregunta: PreguntaContextual,
+    caso: str,
+    respuesta: RagQueryInternalResponse | None,
+    top3: tuple[ChunkPuntuado, ...] = (),
+    llamadas_al_generador: int = 0,
 ) -> FilaContextual:
     """Lo observado de una consulta. Sin respuesta (salida inválida del generador) el generador solo corre cuando hay chunks
     sobre el umbral (RN-02), así que ``supero_umbral`` es verdadero; el puntaje y el segundo loop quedan en ``None``."""
     if respuesta is None:
         return FilaContextual(
-            pregunta.id, pregunta.clase, caso, ESTADO_SALIDA_INVALIDA, True, None, None
+            pregunta.id,
+            pregunta.clase,
+            caso,
+            ESTADO_SALIDA_INVALIDA,
+            True,
+            None,
+            None,
+            top3,
+            (),
+            llamadas_al_generador,
         )
-    ampliada = respuesta.meta.retrievalParams.contextExpansion is not None
+    expansion = respuesta.meta.retrievalParams.contextExpansion
     return FilaContextual(
         pregunta.id,
         pregunta.clase,
@@ -311,7 +367,10 @@ def fila_de(
         respuesta.status.value,
         respuesta.status.value == ESTADO_CON_EVIDENCIA,
         respuesta.topRelevanceScore,
-        SEGUNDO_LOOP_CONTEXTUAL if ampliada else SEGUNDO_LOOP_NINGUNO,
+        SEGUNDO_LOOP_CONTEXTUAL if expansion is not None else SEGUNDO_LOOP_NINGUNO,
+        top3,
+        tuple(campo.value for campo in expansion.fields) if expansion is not None else (),
+        llamadas_al_generador,
     )
 
 
@@ -333,8 +392,10 @@ def _reporte(
     casos: Sequence[CasoSintetico],
     medicion: MedicionContextual,
     formas: Mapping[str, tuple[str, ...]],
+    base: ReporteBase | None = None,
 ) -> dict[str, Any]:
     sin_validar = len(medicion.filas)
+    recuentos = recuentos_por_clase(medicion.filas)
     return {
         "esquema": VERSION_ESQUEMA,
         "suite": SUITE_CONTEXTUAL,
@@ -349,7 +410,15 @@ def _reporte(
             for orden, condicion, causa in REGLA_DE_LA_CAUSA
         ],
         "preguntas": [_fila_del_informe(f) for f in medicion.filas],
-        "recuentos": [_recuento_del_informe(r) for r in recuentos_por_clase(medicion.filas)],
+        "recuentos": [_recuento_del_informe(r) for r in recuentos],
+        "cobertura": [
+            _cobertura_del_informe(c)
+            for c in genericas_con_evidencia_por_caso(
+                medicion.filas, config.genericas_con_evidencia_minimo
+            )
+        ],
+        "adversarias": [_adversarias_del_informe(a) for a in adversarias_por_caso(medicion.filas)],
+        "comparacion": None if base is None else _comparacion_del_informe(recuentos, base),
         "sinonimos": _sinonimos_del_informe(config, dataset, casos, medicion, formas),
         "salidas_invalidas": medicion.salidas_invalidas,
     }
@@ -368,13 +437,7 @@ def _configuracion_del_informe(
         "hashConfig": suite.hash_config,
         "fixture": suite.fixture,
         "claseDataset": corpus.clase,
-        "dataset": {"nombre": dataset.nombre, "version": dataset.version, "ruta": dataset.ruta},
-        "corpus": {
-            "nombre": corpus.nombre,
-            "version": corpus.version,
-            "release": corpus.release,
-            "recuento_de_chunks": len(corpus.chunks),
-        },
+        **_identidad_del_corpus(dataset),
         "proveedor": suite.proveedor,
         "reloj": suite.reloj,
         "catalogVersion": suite.catalogo_version,
@@ -392,6 +455,20 @@ def _configuracion_del_informe(
     }
 
 
+def _identidad_del_corpus(dataset: DatasetContextual) -> dict[str, Any]:
+    """Lo que dice con qué dataset y corpus corrió la medición: dos reportes solo se comparan si es idéntico (S7 resp. 10)."""
+    corpus = dataset.corpus
+    return {
+        "dataset": {"nombre": dataset.nombre, "version": dataset.version, "ruta": dataset.ruta},
+        "corpus": {
+            "nombre": corpus.nombre,
+            "version": corpus.version,
+            "release": corpus.release,
+            "recuento_de_chunks": len(corpus.chunks),
+        },
+    }
+
+
 def _expansion_de_la_corrida(config: ConfigContextual) -> ParametrosDeExpansionContextual:
     """Los parámetros de la expansión con los que corre el servicio (``_servicio``): el informe los registra tal cual."""
     return ParametrosDeExpansionContextual(habilitada=config.expansion_habilitada)
@@ -406,6 +483,52 @@ def _fila_del_informe(fila: FilaContextual) -> dict[str, Any]:
         "supero_umbral": fila.supero_umbral,
         "top_relevance_score": fila.top_relevance_score,
         "segundo_loop": fila.segundo_loop,
+        "top3": [{"chunk_id": c.chunk_id, "relevance_score": c.relevance_score} for c in fila.top3],
+        "campos_usados": list(fila.campos_usados),
+        "llamadas_al_generador": fila.llamadas_al_generador,
+    }
+
+
+def _cobertura_del_informe(cobertura: CoberturaDeCaso) -> dict[str, Any]:
+    return {
+        "caso": cobertura.caso,
+        "genericas_con_evidencia": cobertura.genericas_con_evidencia,
+        "genericas_total": cobertura.genericas_total,
+        "minimo": cobertura.minimo,
+        "cumple": cobertura.cumple,
+        "campos_usados": list(cobertura.campos_usados),
+    }
+
+
+def _adversarias_del_informe(adversarias: AdversariasDeCaso) -> dict[str, Any]:
+    return {
+        "caso": adversarias.caso,
+        "total": adversarias.total,
+        "sin_evidencia": adversarias.sin_evidencia,
+        "falsos_positivos": adversarias.falsos_positivos,
+        "con_puntaje_nulo": adversarias.con_puntaje_nulo,
+        "llamadas_al_generador": adversarias.llamadas_al_generador,
+    }
+
+
+def _comparacion_del_informe(
+    recuentos: Sequence[RecuentoDeClase], base: ReporteBase
+) -> dict[str, Any]:
+    cambios = comparar_con_base(recuentos, base.recuentos)
+    return {
+        "base": {"nombre": base.nombre, "hashConfig": base.hash_config},
+        "cambios": [_cambio_del_informe(c) for c in cambios],
+        "empeoran": sum(c.empeora for c in cambios),
+    }
+
+
+def _cambio_del_informe(cambio: CambioFrenteALaBase) -> dict[str, Any]:
+    return {
+        "ambito": cambio.ambito,
+        "metrica": cambio.metrica,
+        "base": cambio.base,
+        "actual": cambio.actual,
+        "empeora": cambio.empeora,
     }
 
 
@@ -415,6 +538,7 @@ def _recuento_del_informe(recuento: RecuentoDeClase) -> dict[str, Any]:
         "clase": recuento.clase,
         "con_evidencia": recuento.con_evidencia,
         "total": recuento.total,
+        "superaron_umbral": recuento.superaron_umbral,
     }
 
 
@@ -499,13 +623,17 @@ def informe_legible(reporte: Mapping[str, Any]) -> str:
             for r in reporte["recuentos"]
         ),
         "",
+        *_cobertura_legible(reporte["cobertura"]),
+        *_adversarias_legible(reporte["adversarias"]),
+        *_comparacion_legible(reporte["comparacion"]),
         "## Por pregunta",
         "",
-        "| pregunta | clase | caso | estado | supera umbral | top_relevance_score | segundo loop |",
-        "|---|---|---|---|---|---|---|",
+        "| pregunta | clase | caso | estado | supera umbral | top_relevance_score | segundo loop | top-3 (chunk:puntaje) | llamadas al generador |",
+        "|---|---|---|---|---|---|---|---|---|",
         *(
             f"| {f['pregunta_id']} | {f['clase']} | {f['caso']} | {f['estado']} | {f['supero_umbral']} "
-            f"| {_celda(f['top_relevance_score'])} | {_celda(f['segundo_loop'])} |"
+            f"| {_celda(f['top_relevance_score'])} | {_celda(f['segundo_loop'])} "
+            f"| {_top3_legible(f['top3'])} | {f['llamadas_al_generador']} |"
             for f in reporte["preguntas"]
         ),
         "",
@@ -513,6 +641,61 @@ def informe_legible(reporte: Mapping[str, Any]) -> str:
         "",
     ]
     return "\n".join(lineas)
+
+
+def _cobertura_legible(cobertura: Sequence[Mapping[str, Any]]) -> list[str]:
+    return [
+        "## Cobertura de genéricas por caso",
+        "",
+        "La meta es la de US-273 AC-2; los casos ajenos a esa historia se comparan con ella a modo informativo.",
+        "",
+        "| caso | genéricas con evidencia | genéricas | meta | cumple | campos usados |",
+        "|---|---|---|---|---|---|",
+        *(
+            f"| {c['caso']} | {c['genericas_con_evidencia']} | {c['genericas_total']} | {c['minimo']} "
+            f"| {c['cumple']} | {', '.join(c['campos_usados']) or '—'} |"
+            for c in cobertura
+        ),
+        "",
+    ]
+
+
+def _adversarias_legible(adversarias: Sequence[Mapping[str, Any]]) -> list[str]:
+    return [
+        "## Adversarias (tema fuera del corpus)",
+        "",
+        "| caso | total | sin evidencia | falsos positivos | puntaje null | llamadas al generador |",
+        "|---|---|---|---|---|---|",
+        *(
+            f"| {a['caso']} | {a['total']} | {a['sin_evidencia']} | {a['falsos_positivos']} "
+            f"| {a['con_puntaje_nulo']} | {a['llamadas_al_generador']} |"
+            for a in adversarias
+        ),
+        "",
+    ]
+
+
+def _top3_legible(top3: Sequence[Mapping[str, Any]]) -> str:
+    return ", ".join(f"{c['chunk_id']}:{c['relevance_score']}" for c in top3) or "—"
+
+
+def _comparacion_legible(comparacion: Mapping[str, Any] | None) -> list[str]:
+    if comparacion is None:
+        return []
+    return [
+        "## Frente al reporte base",
+        "",
+        f"Base `{comparacion['base']['nombre']}` (huella `{comparacion['base']['hashConfig']}`); "
+        f"métricas que empeoran: {comparacion['empeoran']}.",
+        "",
+        "| ámbito | métrica | base | actual | empeora |",
+        "|---|---|---|---|---|",
+        *(
+            f"| {c['ambito']} | {c['metrica']} | {c['base']} | {c['actual']} | {c['empeora']} |"
+            for c in comparacion["cambios"]
+        ),
+        "",
+    ]
 
 
 def _resumen(reporte: Mapping[str, Any]) -> str:

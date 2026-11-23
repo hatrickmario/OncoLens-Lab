@@ -27,7 +27,10 @@ contextual:
   casos: # ids del fixture compartido con el panel conversacional (design D5); l1d-331 añade prostata-con-psa-y-hrr antes de la corrida base
     - mama-completo
     - prostata-con-grado
+    - prostata-con-psa-y-hrr
   casos_ruta: packages/clinical-catalogs/test/fixtures/temas-del-caso.json
+  genericas_con_evidencia_minimo: 18 # meta por caso de US-273 AC-2 (RN-22): genéricas con evidencia sobre 22; el reporte la compara, no la cambia
+  # reporte_base: reports/eval/l1d-331-cobertura-prostata-segundo-loop.base.json # opcional: con él, la corrida final compara con la base (solo si el corpus coincide)
   expansion_habilitada: true # QUERY_CONTEXT_EXPANSION_ENABLED de la corrida; false = sin segundo loop contextual (brazo de l1d-333-reporte-h3)
   preguntas_de_sinonimos: # las tres de US-271 AC-9: `termino` es un terminoCanonico del catálogo; si no, la suite no corre
     - {pregunta: CTX-C12, termino: antraciclinas}

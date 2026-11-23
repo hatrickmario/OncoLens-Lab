@@ -59,14 +59,14 @@ def cargar_dataset_contextual(directorio: Path) -> DatasetContextual:
     """Se niega (``DatasetInvalido``) si el manifiesto o alguno de sus archivos no declara ``clase: sintetico`` (RN-13, RN-14),
     si falta el archivo de preguntas o si una pregunta no es válida."""
     manifiesto = _leer(directorio / "manifest.yaml", "manifest.yaml")
-    exigir_clase_sintetica(manifiesto, "manifest.yaml", FAMILIA)
+    exigir_clase_sintetica(manifiesto.get("clase"), "manifest.yaml", FAMILIA)
     declarado = manifiesto.get("archivos", {}).get(ARCHIVO_DE_PREGUNTAS)
     if not isinstance(declarado, str):
         raise DatasetInvalido(f"el manifiesto no declara archivos.{ARCHIVO_DE_PREGUNTAS}")
     crudo = _leer(directorio / declarado, declarado)
-    exigir_clase_sintetica(crudo, declarado, FAMILIA)
+    exigir_clase_sintetica(crudo.get("clase"), declarado, FAMILIA)
     corpus = FuenteDatasetEnDirectorio(directorio).cargar()
-    exigir_clase_sintetica({"clase": corpus.clase}, "el corpus", FAMILIA)
+    exigir_clase_sintetica(corpus.clase, "el corpus", FAMILIA)
     return DatasetContextual(
         corpus.nombre,
         corpus.version,

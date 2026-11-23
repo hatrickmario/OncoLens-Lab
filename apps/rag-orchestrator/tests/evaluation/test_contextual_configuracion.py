@@ -36,7 +36,14 @@ def _con_contextual(mundo: Mundo, cambios: dict[str, Any]) -> None:
 
 
 @pytest.mark.parametrize(
-    "clave", ["casos", "casos_ruta", "expansion_habilitada", "preguntas_de_sinonimos"]
+    "clave",
+    [
+        "casos",
+        "casos_ruta",
+        "expansion_habilitada",
+        "preguntas_de_sinonimos",
+        "genericas_con_evidencia_minimo",
+    ],
 )
 def test_la_configuracion_se_rechaza_con_codigo_2_nombrando_la_clave_cuando_falta(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], clave: str
@@ -71,6 +78,15 @@ def test_la_configuracion_se_rechaza_con_codigo_2_nombrando_la_clave_cuando_falt
             "contextual.preguntas_de_sinonimos",
         ),
         ({"reranker_max_pairs": 0}, "contextual.reranker_max_pairs"),
+        (
+            {"genericas_con_evidencia_minimo": -1},
+            "contextual.genericas_con_evidencia_minimo",
+        ),
+        (
+            {"genericas_con_evidencia_minimo": "18"},
+            "contextual.genericas_con_evidencia_minimo",
+        ),
+        ({"reporte_base": 3}, "contextual.reporte_base"),
     ],
 )
 def test_la_configuracion_se_rechaza_con_codigo_2_cuando_un_valor_no_es_valido(

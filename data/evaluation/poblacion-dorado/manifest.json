@@ -1,12 +1,16 @@
 {
   "clase": "sintetico",
   "nombre": "poblacion-dorado",
-  "version": "0-semilla",
-  "descripcion": "Semilla sintética del conjunto dorado de población (L1D-299, US-233b AC-1). Texto redactado para la prueba, sin datos de paciente. Pendiente de la revisión humana (PLANTILLA.md ampliada): sin revisor la suite marca precisión y cobertura como no concluyentes.",
+  "version": "s7-1",
+  "descripcion": "Conjunto sintético del dorado de población (L1D-299, US-233b AC-1). Texto redactado para la prueba, sin datos de paciente: pares de mama y de próstata (guía, ensayo y revisión en es y en), casos de redacción difícil y distractores de subgrupo o mención. Revisión provisional de IA, sin revisor humano: la suite marca precisión y cobertura como no concluyentes.",
   "catalogo_de_estados": "apps/rag-orchestrator/tests/fixtures/catalogo/test-apl-1.2.0",
   "revisor": {
     "rol": null,
     "fecha": null
+  },
+  "revision_provisional": {
+    "rol": "ia",
+    "fecha": "2026-11-21"
   },
   "licencias": {
     "doc-gui-es-1": "sintetico_propio",
@@ -20,6 +24,32 @@
     "doc-rev-es-1": "sintetico_propio",
     "doc-rev-es-2": "sintetico_propio",
     "doc-rev-en-1": "sintetico_propio",
-    "doc-rev-en-2": "sintetico_propio"
+    "doc-rev-en-2": "sintetico_propio",
+    "doc-pro-gui-es-1": "sintetico_propio",
+    "doc-pro-gui-en-1": "sintetico_propio",
+    "doc-pro-ens-es-1": "sintetico_propio",
+    "doc-pro-ens-en-1": "sintetico_propio",
+    "doc-pro-rev-es-1": "sintetico_propio",
+    "doc-pro-rev-en-1": "sintetico_propio",
+    "doc-dif-ens-es-1": "sintetico_propio",
+    "doc-dif-gui-en-1": "sintetico_propio",
+    "doc-dif-ens-en-1": "sintetico_propio",
+    "doc-dif-rev-es-1": "sintetico_propio",
+    "doc-dif-gui-es-1": "sintetico_propio",
+    "doc-dif-ens-en-2": "sintetico_propio",
+    "doc-dif-rev-es-2": "sintetico_propio",
+    "doc-dif-gui-en-2": "sintetico_propio",
+    "doc-dif-ens-es-2": "sintetico_propio",
+    "doc-dif-rev-en-1": "sintetico_propio",
+    "doc-dif-gui-es-2": "sintetico_propio",
+    "doc-dif-ens-en-3": "sintetico_propio",
+    "doc-dis-ens-en-1": "sintetico_propio",
+    "doc-dis-gui-es-1": "sintetico_propio",
+    "doc-dis-rev-en-1": "sintetico_propio",
+    "doc-dis-ens-es-1": "sintetico_propio",
+    "doc-dis-gui-en-1": "sintetico_propio",
+    "doc-dis-rev-es-1": "sintetico_propio",
+    "doc-dis-ens-en-2": "sintetico_propio",
+    "doc-dis-gui-es-2": "sintetico_propio"
   }
 }

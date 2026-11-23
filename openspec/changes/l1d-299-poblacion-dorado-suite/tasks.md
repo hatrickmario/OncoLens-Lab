@@ -41,10 +41,10 @@ Sin TDD de contenido (prompts, modelos, corpus: suite `evaluate`); TDD estricto 
       `tasa_duplicados`, `cortes_por_longitud`, `concordancia_de_estados`, `sin_evidencia_vs_baseline`,
       `tasa_cortes_del_bucle`, `veredicto`) con unitarios uno a la vez, del caso más simple al siguiente. Reloj y
       semillas inyectados. Commit `feat(L1D-299)`. _Evidencia:_ `9bc2b426`; `metricas/poblacion.py` (19 unitarios en `test_metricas_poblacion.py`). Funciones puras: no necesitan reloj ni semilla.
-- [ ] 1.11 (TDD estricto) DIFERIDA -> D5-26 (`poblacion-local.yaml` y `proveedor: local`, atados a la medición 2.1). `dataset_poblacion.py` (carga, guardas de clase y licencia, revisor y fecha), familia
+- [x] 1.11 (TDD estricto) `dataset_poblacion.py` (carga, guardas de clase y licencia, revisor y fecha), familia
       `poblacion` en `config_suite.py`, `evaluate.py`, `composicion_poblacion.py`, `armado_reporte.py` y
       `esquema_suite.py`; metas en `eval/configs/test-poblacion.yaml` y `poblacion-local.yaml` (RN-22). Fuera de `all`.
-      Commit `feat(L1D-299)`. _Estado (L1D-299), parcial:_ hecho `dataset_poblacion.py`, `config_poblacion.py`, `corrida_poblacion.py` (en lugar de `composicion_poblacion.py`/`armado_reporte.py`), familia `poblacion` en `SUITES` (fuera de `all`), `evaluate.py` y `esquema_suite.py`; metas en `eval/configs/test-poblacion.yaml` (`9bc2b426`, `757e15b3`). **Sin marcar:** `poblacion-local.yaml` y `proveedor: local` (sale con 2 «se cablea con la medición real»); destino: D5-26.
+      Commit `feat(L1D-299)`. _Estado (L1D-299), parcial:_ hecho `dataset_poblacion.py`, `config_poblacion.py`, `corrida_poblacion.py` (en lugar de `composicion_poblacion.py`/`armado_reporte.py`), familia `poblacion` en `SUITES` (fuera de `all`), `evaluate.py` y `esquema_suite.py`; metas en `eval/configs/test-poblacion.yaml` (`9bc2b426`, `757e15b3`). _Cierre (S7.1 y S7.2):_ `poblacion-local.yaml` y `proveedor: local` están hechos; solo queda la medición real (S7.4, bajo D5-26).
 
 ## 2. evaluación
 
@@ -79,7 +79,7 @@ Sin TDD de contenido (prompts, modelos, corpus: suite `evaluate`); TDD estricto 
 
 ## deuda (propuesta de ID, sin tocar aquí)
 
-- [ ] D5-26 DIFERIDA -> D5-26: cablear `adaptadores.proveedor: local` en `corrida_poblacion.py` (LLM local por Ollama, NLI por ONNX, mismo
+- [ ] D5-26 DIFERIDA -> D5-26 (S7: el cableado y `poblacion-local.yaml` ya están por S7.1 y S7.2; queda la medición, S7.4): cablear `adaptadores.proveedor: local` en `corrida_poblacion.py` (LLM local por Ollama, NLI por ONNX, mismo
   patrón que `modelos_locales.cargar_puertos_locales`), crear `eval/configs/poblacion-local.yaml` (metas en RN-22) y ejecutar
   `evaluate --suite poblacion` en la corrida nocturna sobre el dorado revisado (2.1, 4.3); el reporte va a
   `reports/eval/` (ruta protegida: la escribe `ai-eval-runner`).
@@ -93,14 +93,14 @@ Sin TDD de contenido (prompts, modelos, corpus: suite `evaluate`); TDD estricto 
 
 ### (a) Antes de la corrida base · código sin modelos reales
 
-- [ ] S7.1 (TDD estricto) Cierra **1.11** y la parte de código de **D5-26**. Tests de aceptación en rojo: «corre y declara
+- [x] S7.1 (TDD estricto) Cierra **1.11** y la parte de código de **D5-26**. Tests de aceptación en rojo: «corre y declara
       proveedor local cuando la configuración es poblacion-local [US-233b AC-2]» y «termina con código ≠ 0 nombrando la
       variable y sin reporte cuando falta un peso o el proveedor es de nube [US-233b AC-2]» · integración con
-      adaptadores falsos en el puerto · commit `test(L1D-299)`.
-- [ ] S7.2 Cablear `adaptadores.proveedor: local` en `corrida_poblacion.py` (patrón de
+      adaptadores falsos en el puerto · commit `test(L1D-299)`. _Evidencia:_ rojo `7cedcc11` (6 tests en rojo por aserción: la corrida salía con 2 «se cablea con la medición real») → verde `a20776fc`; `tests/evaluation/test_poblacion_proveedor_local.py` (6 tests: corre y declara local, falta un peso, modelo de nube ×2, URL no local, corte por longitud del LLM real). El único cambio al test entre rojo y verde es su fixture de NLI (el léxico rechazaba la hipótesis verbalizada), sin tocar aserciones.
+- [x] S7.2 Cablear `adaptadores.proveedor: local` en `corrida_poblacion.py` (patrón de
       `modelos_locales.cargar_puertos_locales`) y crear `eval/configs/poblacion-local.yaml` (metas en RN-22) · commit
-      `feat(L1D-299)` · verificación: S7.1 en verde, `--suite poblacion` falsa y `--suite all` sin cambio de huella.
-- [ ] S7.3 Cierra **3.2**: CI del PR en verde (secretos y PII sobre `data/evaluation/poblacion-dorado/`) antes de pedir el
+      `feat(L1D-299)` · verificación: S7.1 en verde, `--suite poblacion` falsa y `--suite all` sin cambio de huella. _Evidencia:_ `a20776fc`; `--suite all` byte a byte igual a `data/evaluation/baseline.json` (huella `57b8a05d…`). El LLM real nunca corre en la CI: la prueba usa `respx` contra un Ollama fingido y pesos de ONNX falsos en el puerto del cargador.
+- [ ] S7.3 TRASLADADA -> entrega 1 (la CI del PR, que abre el orquestador). Cierra **3.2**: CI del PR en verde (secretos y PII sobre `data/evaluation/poblacion-dorado/`) antes de pedir el
       merge.
 
 #### Dorado que no depende de `l1d-126` parte B (datos y código, sin modelos reales)
@@ -108,33 +108,33 @@ Sin TDD de contenido (prompts, modelos, corpus: suite `evaluate`); TDD estricto 
 Ventana: **antes de la corrida base** (design S7-D5; misma política que `l1d-246`). Así la base y la final miden el
 mismo dorado. S7.5–S7.8, S7.11 y S7.12 no esperan a `l1d-126`.
 
-- [ ] S7.5 (TDD estricto) `revision_provisional` en el manifiesto: test de aceptación en rojo «queda no concluyente y
+- [x] S7.5 (TDD estricto) `revision_provisional` en el manifiesto: test de aceptación en rojo «queda no concluyente y
       declara la revisión provisional cuando el manifiesto solo trae revision_provisional de rol ia [US-233b AC-7]» ·
       validación en `dataset_poblacion.py` con la regla pura compartida de forma (design S7-D2: si `l1d-246` o
       `l1d-334` ya la crearon, se importa; si no, se crea aquí y ellos la importan; nunca dos copias) ·
       `test(L1D-299)` y `feat(L1D-299)`. `manifest.json`: `revision_provisional: {rol: ia, fecha: 2026-11-21}`;
-      `revisor` sigue en `null`.
-- [ ] S7.6 (TDD estricto) Métricas nuevas en `metricas/poblacion.py`, puras y con unitarios uno a uno: precisión y
+      `revisor` sigue en `null`. _Evidencia:_ rojo `a848a04e` (6 en rojo por aserción) → verde `6c50614b`; se importa `exigir_revision_provisional` de `app/evaluation/revision_provisional.py` (creada por l1d-334, usada por l1d-246: una sola copia). El reporte declara `configuracion.revision_provisional`; el veredicto sigue `no_concluyente` con la causa `sin_revisor`.
+- [x] S7.6 (TDD estricto) Métricas nuevas en `metricas/poblacion.py`, puras y con unitarios uno a uno: precisión y
       cobertura por tipo de redacción, valores indebidos en distractores y recuento de la rendija de C-3; tests de
-      aceptación en rojo antes [US-233b AC-2] [US-233b AC-4]; sección nueva en `esquema_suite.py` · solo agregados e ids.
-- [ ] S7.7 (datos, test después · D-1, parte sin `l1d-126`) Pares de próstata en `pares.yaml` de `estado_castracion`,
+      aceptación en rojo antes [US-233b AC-2] [US-233b AC-4]; sección nueva en `esquema_suite.py` · solo agregados e ids. _Evidencia:_ rojo `5b9c8b52` (7 en rojo por aserción) → verde `01491b3a`; 7 unitarios nuevos en `test_metricas_poblacion.py`. El reporte gana `por_redaccion`, `por_tipo_de_redaccion`, `distractores` y `rendija_c3`, informativas: no entran en el veredicto.
+- [x] S7.7 (datos, test después · D-1, parte sin `l1d-126`) Pares de próstata en `pares.yaml` de `estado_castracion`,
       `isup`, `ecog` y `linea_tratamiento` × guía, ensayo y revisión × es/en; licencias en `manifest.json`. Los de
       `extension` y `hrr_brca` van en S7.10b; el total de ≥ 16 pares de próstata se comprueba al cerrar S7.10b.
-      Test de carga [US-233b AC-1].
-- [ ] S7.8 (datos, test después · D-2, D-3, D-4 y C-3) ≥ 12 casos difíciles con su `redaccion` y tipo (negación, rango,
+      Test de carga [US-233b AC-1]. _Evidencia:_ `3a91bdbe`; 6 documentos y 14 pares de próstata (los 4 criterios × guía/ensayo/revisión × es/en, cada celda); `test_poblacion_dorado_versionado.py`.
+- [x] S7.8 (datos, test después · D-2, D-3, D-4 y C-3) ≥ 12 casos difíciles con su `redaccion` y tipo (negación, rango,
       definición implícita, inclusión total, umbral, tabla) y ≥ 8 distractores de subgrupo o mención, sobre criterios
       que la parte B de `l1d-126` no toca; reescritura de las frases sin sentido clínico de `pares.yaml` («tenían
       mujeres posmenopáusicas»), salvo el etiquetado del triple negativo; y en `estados.yaml` los casos de C-3 con
       criterios de mama y el esperado de la regla vigente (fixture `test-apl-1.2.0`). Texto sintético, descriptivo
-      (RN-23), sin NCCN ni ESMO, sin datos de pacientes. Test de carga [US-233b AC-1] y de aceptación [US-233b AC-4].
-- [ ] S7.11 Subir `version` del manifiesto del dorado; `pii-scan` y `dataset-class-check` sin hallazgos; `--suite poblacion`
-      falsa en verde y `--suite all` igual a `data/evaluation/baseline.json`. Se repite al cerrar S7.10b.
-- [ ] S7.12 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde
-      antes y después, commit `refactor(L1D-299)`.
+      (RN-23), sin NCCN ni ESMO, sin datos de pacientes. Test de carga [US-233b AC-1] y de aceptación [US-233b AC-4]. _Evidencia:_ `3a91bdbe`; 12 casos difíciles (2 por tipo), 8 distractores, 12 frases de la semilla reescritas (el triple negativo se dejó como estaba: S7.9) y 4 casos C-3 de mama (menopáusico ×2, línea, ECOG) con esperado `desconocido`, que las reglas vigentes confirman (9/9 de concordancia). Los criterios usados no son `extension`, `estado_her2`, `receptores_hormonales` ni `hrr_brca`.
+- [x] S7.11 Subir `version` del manifiesto del dorado; `pii-scan` y `dataset-class-check` sin hallazgos; `--suite poblacion`
+      falsa en verde y `--suite all` igual a `data/evaluation/baseline.json`. Se repite al cerrar S7.10b. _Evidencia:_ `version` del manifiesto `s7-1` (`0-semilla` antes); `pii-scan` y `dataset-class-check` sin hallazgos; `--suite poblacion` falsa: 70 pares, estratos guía/ensayo/revisión × es/en, no concluyente por `sin_revisor`, precisión y cobertura 1,0 con adapters falsos (prueba el abanico y la recuperación léxica, no el modelo); `--suite all` igual al baseline.
+- [x] S7.12 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde
+      antes y después, commit `refactor(L1D-299)`. _Evidencia:_ `f0d2a1b4`: Extract · `corrida_poblacion.py:_reporte` → `_cortes_del_reporte`, `_sin_evidencia_del_reporte`, `_bucle_del_reporte`; Extract · `dataset_poblacion.py:_exigir_redaccion` → `_tipo_corresponde_a_la_redaccion`; test renombrado. `tests/evaluation` 1336 passed antes y después.
 
 ### (b) Corrida base
 
-- [ ] S7.4 Cierra **2.1** y **4.3** (D4-13): `evaluate --suite poblacion --config eval/configs/poblacion-local.yaml` en la
+- [ ] S7.4 TRASLADADA -> D5-26 (corrida base por `ai-eval-runner`, humano). Cierra **2.1** y **4.3** (D4-13): `evaluate --suite poblacion --config eval/configs/poblacion-local.yaml` en la
       máquina de referencia por `ai-eval-runner` (`run-ai-eval`), junto con `l1d-119`, `l1d-246`, `l1d-113`, `l1d-329` y
       `l1d-333`, sobre el dorado ya ampliado en lo que no depende de `l1d-126` parte B (S7.5–S7.8), con los umbrales
       actuales (`[S7 resp. 11]`) y los documentos del dorado como corpus declarado (`[S7 resp. 10]`); reporte en
@@ -147,27 +147,27 @@ mismo dorado. S7.5–S7.8, S7.11 y S7.12 no esperan a `l1d-126`.
 Orden de merge: `l1d-126` parte A → corrida base → `l1d-335` (`1.10.0`) → `l1d-126` parte B (`1.11.0`) → S7.9, S7.10 y
 S7.10b. Estos casos llevan la marca de ventana del design S7-D5 para que el reporte los separe.
 
-- [ ] S7.9 (datos · D-4, C-4) Etiquetar el triple negativo como en C-4 (receptor hormonal positivo y triple negativo en
+- [ ] S7.9 TRASLADADA -> L1D-126 (tras su parte B). (datos · D-4, C-4) Etiquetar el triple negativo como en C-4 (receptor hormonal positivo y triple negativo en
       la misma cohorte se declara inclusiva). **Después de `l1d-126` parte B**.
-- [ ] S7.10 (datos y fixture · D-5) `estados.yaml`: un caso por regla F-20…F-23 con `estado_castracion` y los casos de
+- [ ] S7.10 TRASLADADA -> L1D-126 (tras su parte B). (datos y fixture · D-5) `estados.yaml`: un caso por regla F-20…F-23 con `estado_castracion` y los casos de
       `extension` (C-1); fixture de catálogo de test nuevo con reglas de próstata en
       `apps/rag-orchestrator/tests/fixtures/catalogo/` y `catalogo_de_estados` apuntando a él (design S7-D4).
       **Después de `l1d-126` parte B**. Los casos de `extension` siguen el supuesto compartido SC-1 (`l1d-126` design
       D10): uno con M0/M1 legible y otro de repliegue (`desconocido`, `sin_regla_de_comparacion`); si la parte B se
       mergeó sin la lectura de M0/M1, el esperado de ambos es `desconocido` y se anota. Test de aceptación
       [US-233b AC-4].
-- [ ] S7.10b (datos, test después · D-1, C-1, C-2 y C-5) Pares de `extension` y `hrr_brca` × guía, ensayo y revisión ×
+- [ ] S7.10b TRASLADADA -> L1D-126 (tras su parte B). (datos, test después · D-1, C-1, C-2 y C-5) Pares de `extension` y `hrr_brca` × guía, ensayo y revisión ×
       es/en con los códigos del catálogo `1.11.0`, y los casos sobre HER2 bajo. Con ellos el dorado llega a ≥ 16 pares
       de próstata. Subir otra vez la `version` del dorado y repetir S7.11. Test de carga [US-233b AC-1].
 
 ### (c) Corrida final
 
-- [ ] S7.13 `evaluate --suite poblacion` con modelos locales sobre el dorado ampliado y el catálogo del S7 (`l1d-126`
+- [ ] S7.13 TRASLADADA -> entrega 3 (corrida final por `ai-eval-runner`). `evaluate --suite poblacion` con modelos locales sobre el dorado ampliado y el catálogo del S7 (`l1d-126`
       parte B), por `ai-eval-runner`, con los umbrales actuales (`[S7 resp. 11]`); reporte en `reports/eval/`, leído por
       criterio, por tipo de cáncer y por tipo de redacción, que declara el corpus (los documentos del dorado,
       `[S7 resp. 10]`). La comparación con la corrida base vale para lo que ya estaba en la base; lo añadido en S7.9,
       S7.10 y S7.10b se declara no comparable con la base. Es también la no regresión que piden `l1d-126` y `l1d-335`.
-- [ ] S7.14 Cierre: `openspec validate l1d-299-poblacion-dorado-suite --strict`; Pytest de `tests/evaluation` en verde;
+- [ ] S7.14 TRASLADADA -> entrega 3 (cierre del change). Cierre: `openspec validate l1d-299-poblacion-dorado-suite --strict`; Pytest de `tests/evaluation` en verde;
       CI con 0 fallos, 0 pendientes y 0 alertas antes de pedir el merge.
 
 ### Fuera del S7
