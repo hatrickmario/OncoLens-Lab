@@ -104,10 +104,11 @@
 - [x] G1.4 Punto 5: `$defs/version` única. Los esquemas `plantillas`, `tendencias` y `sinonimos` conservan el patrón
       estricto `^\d+\.\d+\.\d+$` (no los recorre el validador; no admiten fixtures `test-*`).
 - [x] G1.5 Punto 6: puntaje solo en claves propias del criterio; nuevos nombres.
-- [ ] G1.6 **Deuda: registro de archivos de raíz del catálogo (lado API).** El mapa `ESQUEMAS` de
+- [x] G1.6 **Deuda: registro de archivos de raíz del catálogo (lado API).** El mapa `ESQUEMAS` de
       `apps/clinical-api/src/infrastructure/catalogo/validar-catalogo.ts` sigue listando a mano `atributos` y
       `poblacion`; debe derivar de `ARCHIVOS_DE_RAIZ` (imports JSON estáticos en TS). Destino: deuda: registro de
-      archivos de raíz del catálogo. **TRASLADADA a US-232** (decisión del usuario, 2026-10-27).
+      archivos de raíz del catálogo. Antes trasladada a US-232 (usuario, 2026-10-27); movida al S7 y hecha.
+      _Evidencia:_ hecha en S7.1 (parte A del S7); ver su evidencia en la sección «Sprint 7».
 - [x] G1.7 **Pendiente de modelo:** las claves `grado`, `estado_menopausico` y `estado_castracion` de `poblacion.json`
       están fuera del modelo v1.1; anotarlo en `docs/architecture/data-model.md` (fuera de mis paths). Destino:
       orquestador / L1D-117. _Evidencia:_ anotado en `docs/architecture/data-model.md` («Claves de `poblacion.json`
@@ -127,15 +128,18 @@
 - [x] G2.2 Endurecimiento del guardián (privacy-guardian M-1, m-1, m-2, m-3, m-5, P-1): huella del archivo entero,
       unión de tipos y `manifest`, `base_ilegible`, `version_no_sube`, registro explícito ampliado (design D8). La
       rama `git ls-tree`/`maxBuffer` del error de git no tiene test propio (solo el JSON ilegible).
-- [ ] G2.3 **Deuda (m-4): base desfasada de `pull_request.base.sha`.** Usar el primer padre del merge (`HEAD^1`, con
-      `fetch-depth: 2`) o exigir rama al día en la protección de `main`. Destino: US-232 (decisión del usuario, 2026-10-27).
+- [x] G2.3 **Deuda (m-4): base desfasada de `pull_request.base.sha`.** Usar el primer padre del merge (`HEAD^1`, con
+      `fetch-depth: 2`) o exigir rama al día en la protección de `main`. Antes destino US-232 (usuario, 2026-10-27); movida al S7 y hecha.
+      _Evidencia:_ hecha en S7.2 (parte A del S7); ver su evidencia en la sección «Sprint 7».
 - [x] G2.5 Menor 1 (base vacía solo cubre listas) y Menor 3 (`violacionesDeVersion` devuelve `base_ilegible`): tests en
       rojo y verde; el Lint (`no-unused-vars` de la desestructuración) se resuelve con `sinClaves`.
-- [ ] G2.4 **Deuda (Menor 2):** evasión en dos pasos (vaciar y rellenar una lista publicada). Riesgo aceptado: vaciar
-      una lista publicada exige revisión humana explícita. Destino: US-232 (decisión del usuario, 2026-10-27).
-- [ ] G2.6 **Deuda (Menor 4):** la `version` propia de cada archivo por tipo queda fuera de la huella y
-      `catalog:validate` no exige que coincida con `manifest.version`. Destino: US-232 (decisión del usuario, 2026-10-27).
+- [x] G2.4 **Deuda (Menor 2):** evasión en dos pasos (vaciar y rellenar una lista publicada). Riesgo aceptado: vaciar
+      una lista publicada exige revisión humana explícita. Antes destino US-232 (usuario, 2026-10-27); movida al S7 y hecha.
+      _Evidencia:_ hecha en S7.3 (parte A del S7); ver su evidencia en la sección «Sprint 7».
+- [x] G2.6 **Deuda (Menor 4):** la `version` propia de cada archivo por tipo queda fuera de la huella y
+      `catalog:validate` no exige que coincida con `manifest.version`. Antes destino US-232 (usuario, 2026-10-27); movida al S7 y hecha.
 
+      _Evidencia:_ hecha en S7.4 (parte A del S7); ver su evidencia en la sección «Sprint 7».
 ## Sprint 7 (movido-S7) · revisión clínica provisional y deudas
 
 > Alcance: `proposal.md` («Alcance del Sprint 7») y `design.md` (D9…D16). C-3 no entra. Nada pasa a «validada»; DEC-11
@@ -148,28 +152,44 @@
 Cierran las tareas abiertas G1.6, G2.3, G2.4 y G2.6 de arriba; cada una se marca `[x]` allí con su evidencia. La parte A
 **no cambia `manifest.version`** ni ningún archivo de contenido del catálogo. Se mergea antes de la corrida base.
 
-- [ ] S7.1 (clinical-platform · G1.6) El mapa `ESQUEMAS` de `apps/clinical-api/src/infrastructure/catalogo/validar-catalogo.ts`
+- [x] S7.1 (clinical-platform · G1.6) El mapa `ESQUEMAS` de `apps/clinical-api/src/infrastructure/catalogo/validar-catalogo.ts`
       deriva de `ARCHIVOS_DE_RAIZ`; test de integración que arranca con un archivo de raíz nuevo en un fixture · commits
       `test(L1D-126)` y `feat(L1D-126)` · verificación: Vitest de `clinical-api` en verde. Solo derivan las entradas
       de raíz; el mapa sigue abierto: `l1d-335` añadirá `sinonimos` después, así que ni el tipo ni un test fijan la
       lista exacta de claves (design D15).
-- [ ] S7.2 (clinical-platform · G2.3) `catalog:version-guard` compara contra el primer padre del merge (`HEAD^1`,
+      _Evidencia (parte A):_ `validar-catalogo-raiz.test.ts`: rojo `expected [Function] to not throw an error but
+      'ConfiguracionInvalidaError: CLINICAL_…' was thrown` (commit `test`); verde 2/2; Vitest de `clinical-api` 149 archivos y
+      1393 tests, integración 169 archivos y 888 tests con PostgreSQL real. Mecanismo y alternativas descartadas: design D17.
+- [x] S7.2 (clinical-platform · G2.3) `catalog:version-guard` compara contra el primer padre del merge (`HEAD^1`,
       `fetch-depth: 2` en el job) en lugar de `pull_request.base.sha`; test con repos temporales de una base desfasada ·
       `test(L1D-126)` y `ci(L1D-126)` · verificación: `version-guard.test.mjs` en verde y el job `build-test` del PR.
-- [ ] S7.3 (clinical-platform · G2.4) El guardián falla con un código propio cuando una lista con contenido en la base
+      _Evidencia (parte A):_ `catalogVersionGuardWorkflow.test.mjs` rojo 3/3 en la aserción (`fetch-depth` indefinido,
+      `--base "$BASE_REF"`, paso `git fetch … BASE_REF`), verde 3/3 tras el commit `ci`; `version-guard.test.mjs` con repos
+      temporales de una base desfasada (merge con primer padre = punta de `main`): falla con `HEAD^1`, pasa si la versión sube.
+- [x] S7.3 (clinical-platform · G2.4) El guardián falla con un código propio cuando una lista con contenido en la base
       queda vacía (design D15, mecanismo asumido); test en rojo antes · verificación: `version-guard.test.mjs`. Si el
       humano prefiere mantener el riesgo aceptado, la tarea se cierra como no accionable con su nota.
-- [ ] S7.4 (clinical-platform · G2.6) `catalog:validate` comprueba la `version` propia de cada archivo por tipo frente a
+      _Evidencia (parte A):_ rojo 2 fallos por aserción en `version-guard.test.mjs` (`lista_vaciada`), verde 29/29; código
+      `lista_vaciada <archivo>` (con o sin subir la versión). Sin decisión humana en contra: el riesgo aceptado se cierra.
+- [x] S7.4 (clinical-platform · G2.6) `catalog:validate` comprueba la `version` propia de cada archivo por tipo frente a
       `manifest.version` (design D15, regla asumida); test del validador en rojo antes · verificación: `catalog:validate`
       en verde sobre el catálogo vigente y en rojo sobre un fixture con una `version` mayor que la del manifiesto.
-- [ ] S7.4b (clinical-platform) Definición única de `revision_provisional`: `schemas/comun.schema.json#/$defs/revisionProvisional`
+      _Evidencia (parte A):_ `version-propia.test.mjs` rojo 2 fallos (`expected +0 not to be +0`), verde 4/4; la regla
+      `version_mayor_que_manifiesto` vive en `validator/versiones.mjs` y el guardián reutiliza su comparación.
+      `catalog:validate OK catalogVersion=1.9.0`.
+- [x] S7.4b (clinical-platform) Definición única de `revision_provisional`: `schemas/comun.schema.json#/$defs/revisionProvisional`
       (`rol` ∈ {`ia`}, `fecha` ISO, `additionalProperties: false`). Solo la definición: ningún archivo de contenido la usa
       todavía y la versión no sube. `l1d-335` y la parte B la referencian con `$ref`, sin redefinirla (design D9) ·
       test del validador: «acepta un bloque con rol ia y fecha ISO y rechaza un rol desconocido» · `test(L1D-126)` y
       `feat(L1D-126)`.
-- [ ] S7.4c (clinical-platform y ai-services) Los tests que fijan el literal de la versión del catálogo (`1.9.0`) pasan
+      _Evidencia (parte A):_ `revision-provisional.test.mjs` rojo 2 fallos por aserción (`expected undefined to deeply equal
+      [ 'ia' ]`, `expected false to be true`), verde 4/4; sin cambio de contenido ni de versión.
+- [x] S7.4c (clinical-platform y ai-services) Los tests que fijan el literal de la versión del catálogo (`1.9.0`) pasan
       a leer `manifest.version` · no cambia ninguna otra aserción; se declara en el PR · verificación: suites de
       `clinical-api`, `rag-orchestrator` y `packages/clinical-catalogs` en verde con el catálogo vigente.
+      _Evidencia (parte A):_ commit `refactor(L1D-126)`: Pytest de `rag-orchestrator` 5109 pasan; `clinical-api` 1393 unitarios y
+      888 de integración; `scripts/catalog` + `packages/clinical-catalogs` 226. `plantillas.test.mjs` conserva su `version: '1.9.0'`
+      (versión de un archivo ficticio, no la del catálogo) y `test_chat_faltantes.py` ya la lee del manifiesto.
 
 ### (b) Corrida base
 
@@ -182,27 +202,27 @@ parte A ya mergeada, y es la referencia con la que se compara la corrida final. 
 Orden: `l1d-126` parte A → corrida base → `l1d-335` (catálogo `1.10.0`) → **parte B** (catálogo `1.11.0`) → partes de
 `l1d-299` y `l1d-246` que dependen de la parte B. La parte B nunca va en paralelo con `l1d-335`: parte de su `main`.
 
-- [ ] S7.5 (clinical-platform) Esquemas: `revision_provisional` opcional en `schemas/aplicabilidad.schema.json` y
+- [ ] S7.5 (clinical-platform) Esquemas: `revision_provisional` opcional en `schemas/aplicabilidad.schema.json` y **TRASLADADA a entrega 2 (parte B, tras l1d-335)**.
       `schemas/poblacion-reglas.schema.json` por `$ref` al `$defs` de S7.4b (sin redefinirlo), y `rule.subsetOf` opcional
       en aplicabilidad (design D9, D11). Test de aceptación en rojo: «termina con código ≠ 0 y nombra el criterio cuando
       revision_provisional trae un rol desconocido [US-121 AC-1]» · TDD estricto · `test(L1D-126)` y `feat(L1D-126)`.
-- [ ] S7.5b (clinical-platform · `[S7 resp. 9]`) Bloque `validation` (design D14): `history` opcional en
+- [ ] S7.5b (clinical-platform · `[S7 resp. 9]`) Bloque `validation` (design D14): `history` opcional en **TRASLADADA a entrega 2 (parte B, tras l1d-335)**.
       `schemas/validation.schema.json` y las reglas con nombre del validador `validacion_provisional_incoherente` e
       `historial_con_huella_vigente`. Tests de aceptación en rojo, uno por escenario: «valida cuando el bloque es de
       revisión provisional de la IA y conserva la revisión del asesor en el historial [US-121 AC-1]», «termina con
       código ≠ 0 cuando una revisión provisional declara un rol que no es ia [US-121 AC-1]» y «termina con código ≠ 0
       cuando el historial lleva la huella vigente [US-121 AC-1]» · TDD estricto · `test(L1D-126)` y `feat(L1D-126)`.
-- [ ] S7.6 (ai-services) Lectores: `app/infrastructure/catalogo_clinico/aplicabilidad.py` y `poblacion_reglas.py` aceptan
+- [ ] S7.6 (ai-services) Lectores: `app/infrastructure/catalogo_clinico/aplicabilidad.py` y `poblacion_reglas.py` aceptan **TRASLADADA a entrega 2 (parte B, tras l1d-335)**.
       `revision_provisional`, `subsetOf` y `validation.history`; el dominio no recibe la marca de revisión ni el
       historial · test de carga en rojo antes ·
       verificación: Pytest de `tests/unit` e `integration` de catálogo.
-- [ ] S7.7 (ai-services · C-2) Regla pura con nombre `codigos_del_paciente()` en
+- [ ] S7.7 (ai-services · C-2) Regla pura con nombre `codigos_del_paciente()` en **TRASLADADA a entrega 2 (parte B, tras l1d-335)**.
       `app/domain/clasificacion_de_poblacion.py`: el código del paciente más sus ascendientes declarados en el catálogo.
       Tests de aceptación en rojo, uno por escenario: «coincide con fuentes de HER2 negativo y de HER2 bajo cuando la
       paciente tiene IHC 1+ [US-121 AC-5]», «no coincide con una fuente restringida a HER2 bajo cuando la paciente tiene
       IHC 0 [US-121 AC-5]», «queda desconocido y no negativo cuando el IHC es 2+ sin ISH [US-121 AC-5]» · TDD estricto ·
       fixture de catálogo de test nuevo en `tests/fixtures/catalogo/` (los `test-apl-*` existentes no cambian).
-- [ ] S7.8 (ai-services · C-1) Lectura declarativa de M0/M1 desde `stage_value` en TNM (design D10, mecanismo asumido) y
+- [ ] S7.8 (ai-services · C-1) Lectura declarativa de M0/M1 desde `stage_value` en TNM (design D10, mecanismo asumido) y **TRASLADADA a entrega 2 (parte B, tras l1d-335)**.
       tests de aceptación en rojo: «no coincide y hace la población no comparable cuando la fuente se restringe a
       enfermedad metastásica y el paciente tiene enfermedad localizada [US-121 AC-5]», «queda desconocido sin
       restricción explícita [US-121 AC-5]», «localizada y localmente avanzada no se excluyen [US-121 AC-5]» y el
@@ -210,7 +230,7 @@ Orden: `l1d-126` parte A → corrida base → `l1d-335` (catálogo `1.10.0`) →
       el estadio del paciente no permite leer M0 ni M1 [US-121 AC-5]» · TDD estricto. Si la lectura de M no cabe como
       dato del catálogo, parar y preguntar: no se escribe una regla por tipo de cáncer en código; en ese caso solo
       queda el repliegue y se avisa a `l1d-246` y `l1d-299` (design D10, SC-1).
-- [ ] S7.9 (clinical-platform · contenido, sin TDD) `prostata/aplicabilidad.json`: `extension.isExclusionary = true` y sus
+- [ ] S7.9 (clinical-platform · contenido, sin TDD) `prostata/aplicabilidad.json`: `extension.isExclusionary = true` y sus **TRASLADADA a entrega 2 (parte B, tras l1d-335)**.
       dos códigos (C-1); `hrr_brca` con cuatro valores (C-5). `prostata/poblacion-reglas.json`: sinónimos es/en de
       `extension`, `hrr_brca` y `estado_castracion`. `mama/aplicabilidad.json`: `estado_her2` con `positivo`, `bajo`,
       `negativo` y `subsetOf` (C-2). `mama/poblacion-reglas.json`: sinónimos de `bajo`; triple negativo fuera de
@@ -219,40 +239,40 @@ Orden: `l1d-126` parte A → corrida base → `l1d-335` (catálogo `1.10.0`) →
       En los dos `aplicabilidad.json`, el bloque `validation` pasa a `status = "revision_provisional"`,
       `reviewerRole = "ia"`, `date = "2026-11-21"`, y la revisión del S3 (`oncologo_asesor`, `2026-10-24`) pasa a
       `history` con su huella de entonces, sin recalcular (`[S7 resp. 9]`, design D14).
-- [ ] S7.10 (clinical-platform) Tests de contenido en `packages/clinical-catalogs/test/`: los escenarios de catálogo del
+- [ ] S7.10 (clinical-platform) Tests de contenido en `packages/clinical-catalogs/test/`: los escenarios de catálogo del **TRASLADADA a entrega 2 (parte B, tras l1d-335)**.
       delta (`extension` excluyente, cuatro valores de `hrr_brca`, triple negativo proyectado, marca provisional,
       bloque `validation` provisional con su historial). La
       aserción «el resto `isExclusionary = false`» de `contenido-aplicabilidad.test.mjs` cambia porque el escenario
       cambió en este delta (C-1): se declara en el mensaje del commit y en el PR; no se relaja ninguna otra aserción.
-- [ ] S7.11 (clinical-platform) Versión y huellas (design D14): subir `manifest.version` de `1.10.0` (la que deja
+- [ ] S7.11 (clinical-platform) Versión y huellas (design D14): subir `manifest.version` de `1.10.0` (la que deja **TRASLADADA a entrega 2 (parte B, tras l1d-335)**.
       `l1d-335`) a `1.11.0`, la `version` de cada archivo tocado, recalcular el `validation.catalogHash` del bloque
       principal (no el de `history`) y `manifest.poblacionReglas.<tipo>.catalogHash` con `catalog:hash`, y actualizar
       los `contracts/examples/` y fixtures que citan la versión; los tests ya la leen del manifiesto (S7.4c) ·
       verificación: `npm run catalog:validate`, `catalog:version-guard` y `contracts:check` en verde [US-121 AC-4].
-- [ ] S7.12 (ai-services) Coherencia con los datasets que leen el catálogo real: `tests/evaluation/test_opciones_coherencia_dataset.py`
+- [ ] S7.12 (ai-services) Coherencia con los datasets que leen el catálogo real: `tests/evaluation/test_opciones_coherencia_dataset.py` **TRASLADADA a entrega 2 (parte B, tras l1d-335)**.
       (OP-07…OP-12, `l1d-246`) y la familia `poblacion` con adaptadores falsos (`l1d-299`) en verde; si un orden esperado
       cambia por C-1 o C-5, se corrige en el change dueño del dataset, no aquí, y después de mergear la parte B. El PR
       dice cuál de los dos resultados de SC-1 quedó (con `no_coincide` o solo el repliegue).
-- [ ] S7.13 `eval-required` con adaptadores falsos en el PR (cambia el catálogo, AC-T5.4): sin regresión frente a
+- [ ] S7.13 `eval-required` con adaptadores falsos en el PR (cambia el catálogo, AC-T5.4): sin regresión frente a **TRASLADADA a entrega 2 (parte B, tras l1d-335)**.
       `data/evaluation/baseline.json`; si el baseline cambia solo por `catalogVersion`, se regenera y se dice en el PR.
-- [ ] S7.14 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde
+- [ ] S7.14 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde **TRASLADADA a entrega 2 (parte B, tras l1d-335)**.
       antes y después, commit `refactor(L1D-126)`.
 
 ### (c) Corrida final
 
-- [ ] S7.15 `run-ai-eval` con modelos locales (`ai-eval-runner`) con el catálogo del S7 (`1.11.0`) frente a la corrida
+- [ ] S7.15 `run-ai-eval` con modelos locales (`ai-eval-runner`) con el catálogo del S7 (`1.11.0`) frente a la corrida **TRASLADADA a entrega 2 (parte B, tras l1d-335)**.
       base, con los umbrales actuales (`[S7 resp. 11]`) y el corpus fijo de cada familia declarado en el reporte
       (`[S7 resp. 10]`): suites
       `aplicabilidad`, `poblacion` (`l1d-299`) y `opciones` (`l1d-246`); el reporte va a `reports/eval/` (ruta protegida)
       y rotula todo `no_validada`. Una regresión se reporta con los ids de caso; no se relaja ninguna meta.
-- [ ] S7.16 Cierre: `openspec validate l1d-126-criterios-aplicabilidad-catalogo --strict`; suites de `clinical-api` y
+- [ ] S7.16 Cierre: `openspec validate l1d-126-criterios-aplicabilidad-catalogo --strict`; suites de `clinical-api` y **TRASLADADA a entrega 2 (parte B, tras l1d-335)**.
       `rag-orchestrator` en verde; CI del PR con 0 fallos, 0 pendientes y 0 alertas antes de pedir el merge.
 
 ### humano (S7)
 
-- [ ] H-S7.1 Actualizar el AC-1 de US-121 en `backlog/features/FEAT-08b-aplicabilidad.md` (hoy solo nombra `estado_her2` y
+- [ ] H-S7.1 Actualizar el AC-1 de US-121 en `backlog/features/FEAT-08b-aplicabilidad.md` (hoy solo nombra `estado_her2` y **TRASLADADA a entrega 2 (parte B, tras l1d-335)**: el AC-1 ya está actualizado en el backlog (verificado, 2026-11-22); falta adjuntar Q-1…Q-4 a US-021 · DEC-11, que no está en `backlog/features`.
       `estado_castracion` como excluyentes) y adjuntar Q-1…Q-4 a US-021 · DEC-11. Lo hace la sesión principal.
-- [ ] H-S7.2 Responder los «Pendientes del S7» de `design.md`: IHC 2+ sin ISH como dato faltante, criterios compuestos,
+- [ ] H-S7.2 Responder los «Pendientes del S7» de `design.md`: IHC 2+ sin ISH como dato faltante, criterios compuestos, **TRASLADADA a entrega 2 (parte B, tras l1d-335)**.
       dos o tres códigos en `extension`, y los mecanismos de G2.4 y G2.6. El bloque `validation` ya está decidido
       (`[S7 resp. 9]`); quedan asumidos el nombre `history` y los códigos de sus dos reglas.
 

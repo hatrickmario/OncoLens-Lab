@@ -6,6 +6,8 @@
  *
  * - cambió y la versión es igual a la de la base: `contenido_cambiado_sin_subir_version`;
  * - cambió y la versión no es estrictamente mayor (ignorando el prefijo `test-…`): `version_no_sube`;
+ * - una lista de contenido con ítems en la base queda vacía (con o sin subir la versión): `lista_vaciada` (G2.4: vaciar
+ *   y rellenar en dos PR esquivaría la excepción de abajo, así que el primer paso exige revisión humana);
  * - la base no se pudo leer (error de git o JSON ilegible): `base_ilegible`; falla cerrado con `CI=true`;
  * - sin base (primera vez, rama sin `origin/main`): `base_no_disponible`; falla cerrado con `CI=true`.
  *
@@ -18,13 +20,17 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { jsonCanonico } from '../../packages/clinical-catalogs/validator/index.mjs';
+import {
+  ARCHIVOS_CON_VERSION_PROPIA,
+  compararVersiones,
+  jsonCanonico,
+  partesDeVersion,
+} from '../../packages/clinical-catalogs/validator/index.mjs';
 import { nombrable } from '../../packages/clinical-catalogs/validator/nombrable.mjs';
 
 const RAIZ = path.resolve(import.meta.dirname, '../..');
 const CATALOGO_POR_DEFECTO = path.join(RAIZ, 'packages/clinical-catalogs');
 const FORMA_DE_TIPO = /^[a-z]+$/;
-const FORMA_DE_VERSION = /^(?:test-(?:[a-z]+-)?)?(\d+)\.(\d+)\.(\d+)$/;
 const MAXIMO_DE_LECTURA = 16 * 1024 * 1024;
 
 /**
@@ -41,7 +47,7 @@ const POR_TIPO = [
   'poblacion-reglas',
 ];
 const DE_RAIZ = ['manifest', 'atributos', 'poblacion', 'escalas'];
-const CON_VERSION_PROPIA = ['lenguaje/terminos-prohibidos', 'lenguaje/marcos-de-pregunta'];
+const CON_VERSION_PROPIA = ARCHIVOS_CON_VERSION_PROPIA;
 /** Listas de contenido: un archivo cuyas listas están todas vacías (y tiene alguna) aún no se publicó. */
 const LISTAS_DE_CONTENIDO = ['items', 'keys', 'entradas'];
 
@@ -71,19 +77,20 @@ function sinPublicar(archivo) {
   return listas.length > 0 && listas.every((clave) => archivo[clave].length === 0);
 }
 
-const partesDe = (version) => {
-  const partes = FORMA_DE_VERSION.exec(typeof version === 'string' ? version : '');
-  return partes === null ? null : partes.slice(1).map(Number);
-};
-
-/** -1, 0 o 1; `null` si alguna versión no tiene forma de semver. */
-function compararVersiones(actual, base) {
-  const a = partesDe(actual);
-  const b = partesDe(base);
-  if (a === null || b === null) return null;
-  const diferencia = a.map((parte, i) => parte - b[i]).find((resta) => resta !== 0) ?? 0;
-  return Math.sign(diferencia);
-}
+/**
+ * Una lista de contenido con ítems en la base que en el árbol actual está vacía (G2.4). Vaciarla y rellenarla en dos PR
+ * esquivaría la regla de versión (la base vacía cuenta como primera publicación): el primer paso exige revisión humana.
+ */
+const vaciaUnaListaPublicada = (previo, actual) =>
+  esObjeto(previo) &&
+  esObjeto(actual) &&
+  LISTAS_DE_CONTENIDO.some(
+    (clave) =>
+      Array.isArray(previo[clave]) &&
+      previo[clave].length > 0 &&
+      Array.isArray(actual[clave]) &&
+      actual[clave].length === 0,
+  );
 
 const versionQueGobierna = (nombre, lectura) =>
   CON_VERSION_PROPIA.includes(nombre)
@@ -102,6 +109,8 @@ export function violacionesDeVersion({ actual, base }) {
     if (delaBase?.estado === 'error') return [{ codigo: 'base_ilegible', archivo: nombre }];
     if (delaBase === undefined || delaBase.estado !== 'ok') return [];
     const previo = delaBase.contenido;
+    if (vaciaUnaListaPublicada(previo, delActual))
+      return [{ codigo: 'lista_vaciada', archivo: nombre }];
     const primeraPublicacion =
       sinPublicar(previo) && huellaSinListas(delActual) === huellaSinListas(previo);
     if (primeraPublicacion || huellaDe(delActual) === huellaDe(previo)) return [];
@@ -120,7 +129,7 @@ const mensajeDe = ({ codigo, archivo }) =>
     .map((segmento) => nombrable(segmento))
     .join('/')}`;
 
-const versionNombrable = (version) => (partesDe(version) === null ? '?' : version);
+const versionNombrable = (version) => (partesDeVersion(version) === null ? '?' : version);
 
 function leerJsonActual(directorio, nombre) {
   try {

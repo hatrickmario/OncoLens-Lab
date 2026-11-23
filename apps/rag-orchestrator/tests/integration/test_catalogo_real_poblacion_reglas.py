@@ -10,6 +10,7 @@ from app.domain.aplicabilidad_tipos import ProyeccionDeEstado, ValorDePoblacion
 from app.domain.applicability_rules import estado_de_poblacion
 from app.infrastructure.catalogo_clinico.aplicabilidad import cargar_criterios_de_aplicabilidad
 from app.infrastructure.catalogo_clinico.manifiesto import cargar_catalogo_del_manifiesto
+from tests.support.recuperacion import VERSION_DEL_CATALOGO_MONTADO
 
 CATALOGO_REAL = Path(__file__).resolve().parents[4] / "packages" / "clinical-catalogs"
 
@@ -27,8 +28,8 @@ def _criterio_menopausia():
     return next(c for c in criterios.criterios("mama") if c.clave == "estado_menopausico")
 
 
-def test_catalogo_real_declara_la_version_1_2_0():
-    assert cargar_catalogo_del_manifiesto(CATALOGO_REAL).version() == "1.9.0"
+def test_catalogo_real_declara_la_version_del_manifiesto():
+    assert cargar_catalogo_del_manifiesto(CATALOGO_REAL).version() == VERSION_DEL_CATALOGO_MONTADO
 
 
 @pytest.mark.parametrize(

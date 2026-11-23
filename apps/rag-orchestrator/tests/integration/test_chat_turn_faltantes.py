@@ -1,7 +1,7 @@
 """`POST /chat/turn` con la intención ``faltantes`` (US-263 / L1D-320): verbalización determinista, sin LLM.
 
 El servicio del turno es el de producción; el LLM, el contador de tokens y el reloj son falsos y cuentan sus
-invocaciones. El catálogo montado es el real 1.9.0 (``sourceDocumentTypes`` por dato crítico). Cada respuesta se valida
+invocaciones. El catálogo montado es el real vigente (el de su manifiesto; ``sourceDocumentTypes`` por dato crítico). Cada respuesta se valida
 contra el spec del proveedor (US-214). Solo datos sintéticos.
 """
 
@@ -93,16 +93,16 @@ def test_chat_turn_faltantes_dice_que_no_faltan_datos_y_nombra_la_version_cuando
     assert [b["kind"] for b in bloques] == ["limitacion"]
     assert "No faltan datos críticos según el catálogo" in bloques[0]["text"]
     assert VERSION_DEL_CATALOGO_MONTADO in bloques[0]["text"]
-    assert "1.9.0" in bloques[0]["text"]
+    assert bloques[0]["text"].endswith(f"{VERSION_DEL_CATALOGO_MONTADO}.")
     assert bloques == _ejemplo("chat-turn-faltantes-ninguno.json")["blocks"]
     assert entorno.llm.invocaciones == 0
 
 
 @pytest.mark.ac("US-263", 7)
-def test_chat_turn_responde_409_sin_invocar_adaptadores_cuando_rag_monta_el_catalogo_1_5_0_y_el_turno_trae_1_6_0():
+def test_chat_turn_responde_409_sin_invocar_adaptadores_cuando_rag_monta_otro_catalogo_que_el_del_turno():
     entorno = crear_entorno_de_chat("CHAT-OK", catalogo=CatalogoClinicoFalso(version="1.5.0"))
     solicitud = _solicitud()
-    solicitud["catalogVersion"] = "1.9.0"
+    solicitud["catalogVersion"] = VERSION_DEL_CATALOGO_MONTADO
 
     respuesta = entorno.turno(solicitud)
 

@@ -11,6 +11,7 @@ import { catalogHashDeReglasDePoblacion } from './canonico.mjs';
 import { violacionesDeAtributos } from './atributos.mjs';
 import { nombrable } from './nombrable.mjs';
 import { clavesRepetidasEn, verificarCatalogHash, vocabularioDe } from './reglas.mjs';
+import { violacionesDeVersionPropia } from './versiones.mjs';
 
 /**
  * Núcleo puro del validador del catálogo (L1D-93 D2): recibe los archivos ya leídos, la allowlist del modelo y los
@@ -211,6 +212,7 @@ export function validarCatalogo({ archivos, allowlist, esquemas }) {
     ...violacionesDeLosDeclaradosPorLista(archivos, esquemasCompilados),
     ...violacionesDeLosDeclaradosDeLaRaiz(archivos, esquemasCompilados),
     ...violacionesDeAtributos(archivos.atributos),
+    ...violacionesDeVersionPropia(archivos),
   ];
   return {
     valido: violaciones.length === 0,

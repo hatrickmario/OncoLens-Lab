@@ -25,16 +25,17 @@ import {
   seedContraLaBase,
   type ArchivosDeContrasena,
 } from '../../support/seed.js';
+import { versionDelCatalogo } from '../../support/gateway.js';
 
 const ESPACIO_DE_IDS = 9420;
-const VERSION_DEL_CATALOGO_REAL = '1.9.0';
+const VERSION_DEL_CATALOGO_REAL = versionDelCatalogo();
 
 interface ItemDelCatalogo {
   key: string;
   destination: { match: { name: string } };
 }
 
-/** Nombre canónico (`destination.match.name`) que el catálogo real 1.9.0 espera para un ítem de mama. */
+/** Nombre canónico (`destination.match.name`) que el catálogo real vigente espera para un ítem de mama. */
 function nombreDelCatalogo(clave: string): string {
   const { items } = JSON.parse(
     readFileSync(resolve(RUTA_DEL_CATALOGO, 'mama/datos-criticos.json'), 'utf8'),
@@ -61,7 +62,7 @@ async function nuevaPacienteDeMama(contexto: ContextoDeSiembra): Promise<Pacient
 const estadoDe = (checklist: ChecklistDelPaciente, clave: string): string | undefined =>
   checklist.items.find((item) => item.key === clave)?.status;
 
-describe('checklist del seed sintético con el catálogo real 1.9.0', () => {
+describe('checklist del seed sintético con el catálogo real vigente', () => {
   let base: BaseDeTest;
   let cliente: Client;
   let archivos: ArchivosDeContrasena;

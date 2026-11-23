@@ -3,13 +3,18 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { idSembrado } from '../../../prisma/seed/determinismo.js';
 import { PACIENTE_CHAT } from '../../../prisma/seed/pacientes/chat.js';
 import { montarCompletitud } from '../../support/completitud-http.js';
-import { abrirSesion, prepararMundoConSeed, type MundoDeGateway } from '../../support/gateway.js';
+import {
+  abrirSesion,
+  prepararMundoConSeed,
+  versionDelCatalogo,
+  type MundoDeGateway,
+} from '../../support/gateway.js';
 import { RUTA_DEL_CATALOGO } from '../../support/seed.js';
 import { clienteVerificado } from '../../support/verificarProveedor.js';
 
 /**
  * US-263 (L1D-320): `gapType` en `GET /platform/patients/{id}/completeness` sobre `P-CHAT` (FX-12-b) con el catálogo
- * 1.9.0. El mapeo `sourceDocumentTypes` del catálogo real coincide con FX-12-c en `re`, `tnm`, `ki67` y
+ * vigente. El mapeo `sourceDocumentTypes` del catálogo real coincide con FX-12-c en `re`, `tnm`, `ki67` y
  * `estado_menopausico` (se comprueba abajo), así que el catálogo real hace de FX-12-c.
  */
 const ESPACIO_DE_IDS = 9515;
@@ -42,7 +47,7 @@ const tipoDeVacioPorItem = (items: ItemDeLaVista[]): Record<string, string | nul
   Object.fromEntries(items.map((i) => [i.item, i.gapType]));
 
 describe('GET /completeness · tipo de vacío de P-CHAT (US-263)', () => {
-  it('declara en el catálogo 1.9.0 los tipos de documento fuente de FX-12-c para re, tnm, ki67 y estado_menopausico [US-263 AC-2]', () => {
+  it('declara en el catálogo vigente los tipos de documento fuente de FX-12-c para re, tnm, ki67 y estado_menopausico [US-263 AC-2]', () => {
     const archivo = JSON.parse(
       readFileSync(`${RUTA_DEL_CATALOGO}/mama/datos-criticos.json`, 'utf8'),
     ) as { items: { key: string; sourceDocumentTypes: string[] }[] };
@@ -74,7 +79,7 @@ describe('GET /completeness · tipo de vacío de P-CHAT (US-263)', () => {
     expect(
       reales.map((r) => Object.fromEntries(clavesComparadas.map((k) => [k, (r as never)[k]]))),
     ).toEqual(ejemplo.items.map((i) => Object.fromEntries(clavesComparadas.map((k) => [k, i[k]]))));
-    expect(ejemplo.catalogVersion).toBe('1.9.0');
+    expect(ejemplo.catalogVersion).toBe(versionDelCatalogo());
   });
 
   it('clasifica Ki-67 no_buscado, menopausia no_encontrado, RE incompleto y TNM por_conciliar, y deja null los verificados sin conflicto cuando el doctor consulta el checklist [US-263 AC-2] [AC-04.1] [S6 resp. 10]', async () => {

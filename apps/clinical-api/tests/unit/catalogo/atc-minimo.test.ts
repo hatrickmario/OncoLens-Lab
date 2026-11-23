@@ -5,6 +5,7 @@ import { crearProveedorDeCatalogo } from '../../../src/infrastructure/catalogo/c
 import { crearCatalogoTerminologico } from '../../../src/infrastructure/catalogo/catalogo-terminologico.js';
 import { createReconciliationService } from '../../../src/modules/reconciliation/reconciliation.service.js';
 import { RUTA_CATALOGO_REAL } from '../../support/catalogo-terminologico.js';
+import { versionDelCatalogo } from '../../support/gateway.js';
 
 interface EntradaDeCodigos {
   terminoCanonico: string;
@@ -59,13 +60,15 @@ describe('subconjunto de ATC del catálogo real (DEC-04)', () => {
     },
   );
 
-  it('acompaña el subconjunto con el aviso de WHOCC y el manifest 1.9.0 [US-094 AC-1]', () => {
+  it('acompaña el subconjunto con el aviso de WHOCC y el manifest versionado [US-094 AC-1]', () => {
     const aviso = leer('NOTICE-atc.txt');
 
     expect(aviso).toContain('WHO Collaborating Centre for Drug Statistics Methodology');
     expect(aviso).toContain('non-commercial purposes only; not to be modified');
     expect(aviso).toContain('Uso académico no comercial');
-    expect((JSON.parse(leer('manifest.json')) as { version: string }).version).toBe('1.9.0');
+    expect((JSON.parse(leer('manifest.json')) as { version: string }).version).toBe(
+      versionDelCatalogo(),
+    );
   });
 
   it.each([
