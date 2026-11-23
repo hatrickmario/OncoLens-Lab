@@ -229,7 +229,10 @@ def _vector_sparse_o_vacio(codificador: QuerySparseEncoder, texto: str) -> dict[
 
 
 def adaptadores_de_suite(
-    config: ConfigSuite, dataset: DatasetSuite, puertos_locales: PuertosLocales | None
+    config: ConfigSuite,
+    dataset: DatasetSuite,
+    puertos_locales: PuertosLocales | None,
+    corpus: PuertosDelCorpus | None = None,
 ) -> Adaptadores:
     if config.proveedor == "fake":
         return _adaptadores_falsos(dataset)

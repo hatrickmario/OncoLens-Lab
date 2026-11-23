@@ -17,13 +17,6 @@ from typing import Any
 
 from app.application.ports import PuertosDelCorpus
 from app.config.settings import POBLACION_MAX_VALORES_POR_CRITERIO_INICIAL
-from app.evaluation.adaptadores_falsos import (
-    BuscadorEnMemoria,
-    CatalogoEnMemoria,
-    LectorReleaseFijo,
-    PosicionesDelDataset,
-)
-from app.evaluation.fuente_dataset import DatasetSuite
 from app.evaluation.guardas import SuiteAbortada
 from app.infrastructure.corpus.composicion import (
     CorpusNoDisponibleError,
@@ -64,22 +57,13 @@ def exigir_indice_utilizable(resumen: ResumenDelIndice) -> None:
         )
 
 
-def indice_fingido(dataset: DatasetSuite, vectores: Any) -> IndiceDelCorpus:
-    """El almacén vectorial y el catálogo fingidos en su puerto, sobre el corpus del dataset (solo lectura, como el real)."""
-    puertos = PuertosDelCorpus(
-        buscador=BuscadorEnMemoria(dataset, vectores),
-        lector_release=LectorReleaseFijo(dataset),
-        catalogo=CatalogoEnMemoria(dataset),
-        posiciones=PosicionesDelDataset(dataset),
-    )
-    resumen = ResumenDelIndice(
-        COLECCION_FINGIDA, len(dataset.chunks), huella_de_chunks(c.id for c in dataset.chunks)
-    )
-    return IndiceDelCorpus(puertos, resumen)
+def exigir_indice_pedido(fuente: str, indice: IndiceDelCorpus | None) -> None:
+    raise NotImplementedError("no implementado")
 
 
 def abrir_indice_real(
     *,
+    max_valores_de_poblacion: int = POBLACION_MAX_VALORES_POR_CRITERIO_INICIAL,
     fabricar_cliente: Callable[..., Any] | None = None,
     fabricar_motor: Callable[..., Any] | None = None,
 ) -> IndiceDelCorpus:

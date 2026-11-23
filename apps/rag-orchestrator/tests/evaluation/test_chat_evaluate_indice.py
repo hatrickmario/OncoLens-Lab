@@ -8,6 +8,7 @@ recuento y huella de ids, nunca texto de un chunk.
 
 import asyncio
 import json
+from types import SimpleNamespace
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
@@ -15,9 +16,18 @@ from typing import Any
 import pytest
 import yaml
 
+from app.application.ports import PuertosDelCorpus
 from app.evaluation import chat
-from app.evaluation.adaptadores_falsos import EmbedderBolsaDePalabras
+from app.evaluation.adaptadores_falsos import EmbedderBolsaDePalabras, indice_fingido
+from app.evaluation.brazos_recuperacion import Brazo
+from app.evaluation.composicion_suite import (
+    AplicabilidadDeLaSuite,
+    adaptadores_de_suite,
+    componer_servicio,
+)
 from app.evaluation.config_suite import ConfigInvalida, cargar_config_suite
+from app.domain.fusion_de_candidatos import EstrategiaDeFusion
+from app.schemas.generated.models import RetrievalMode
 from app.evaluation.dataset_chat import cargar_dataset_de_chat
 from app.evaluation.fuente_dataset import FuenteDatasetEnDirectorio
 from app.evaluation.guardas import SuiteAbortada
@@ -25,8 +35,8 @@ from app.evaluation.indice_del_corpus import (
     IndiceDelCorpus,
     ResumenDelIndice,
     abrir_indice_real,
+    exigir_indice_pedido,
     huella_de_chunks,
-    indice_fingido,
 )
 from app.evaluation.rutas import raiz_repo
 
@@ -242,3 +252,156 @@ def test_abrir_indice_real_aborta_nombrando_las_variables_cuando_falta_la_config
 def test_huella_de_chunks_no_depende_del_orden_y_cambia_con_los_ids():
     assert huella_de_chunks(["b", "a"]) == huella_de_chunks(["a", "b"])
     assert huella_de_chunks(["a", "b"]) != huella_de_chunks(["a", "c"])
+
+
+# --- Gate 2 de la fuente `indice`: tope de población, rama sparse, guardas, adaptadores, catálogo y fake coherente ----------
+
+
+def _abrir(cliente: ClienteMilvusFalso, **extra: Any) -> IndiceDelCorpus:
+    return abrir_indice_real(
+        max_valores_de_poblacion=3,
+        fabricar_cliente=lambda **_: cliente,
+        fabricar_motor=lambda _: MotorFalso(),
+        **extra,
+    )
+
+
+def test_abrir_el_indice_usa_el_tope_de_poblacion_de_settings_cuando_el_entorno_lo_declara(
+    entorno_del_corpus: None, monkeypatch: pytest.MonkeyPatch
+):
+    monkeypatch.setenv("POPULATION_MAX_VALUES_PER_CRITERION", "5")
+    config = cargar_config_suite(CONFIG_LOCAL, UMBRALES_DEL_ENTORNO)
+    cliente = ClienteMilvusFalso(filas=[_fila("c1")])
+
+    indice = chat._abrir_el_indice(
+        config, fabricar_cliente=lambda **_: cliente, fabricar_motor=lambda _: MotorFalso()
+    )
+
+    assert indice is not None
+    assert indice.puertos.catalogo._max_valores_por_criterio == 5  # type: ignore[attr-defined]
+
+
+def _config_fake():
+    return cargar_config_suite(CONFIG, UMBRALES_DEL_ENTORNO)
+
+
+def _componer_con_corpus(sparse: Any, brazo: Brazo | None, aplicabilidad: Any = None):
+    from app.evaluation.cronometro import Cronometro, RelojSimulado
+    from app.infrastructure.clock.system_clock import RelojDelSistema
+
+    indice = _indice_con_el_corpus_del_dataset()
+    corpus = PuertosDelCorpus(
+        buscador=indice.puertos.buscador,
+        lector_release=indice.puertos.lector_release,
+        catalogo=indice.puertos.catalogo,
+        buscador_sparse=sparse,
+    )
+    return componer_servicio(
+        _config_fake(),
+        _corpus(),
+        Cronometro(RelojSimulado()),
+        RelojDelSistema(),
+        brazo=brazo,
+        corpus=corpus,
+        aplicabilidad=aplicabilidad,
+    )
+
+
+HIBRIDO = Brazo("A2", RetrievalMode.hibrida, EstrategiaDeFusion.rrf, rrf_k=60)
+
+
+class BuscadorSparseDelIndice:
+    def search_sparse(self, vector, limit, filtro=None):  # noqa: ANN001, ANN201
+        return []
+
+
+def test_componer_servicio_busca_en_el_sparse_del_indice_cuando_el_brazo_es_hibrido_y_hay_corpus():
+    sparse = BuscadorSparseDelIndice()
+
+    suite = _componer_con_corpus(sparse, HIBRIDO)
+
+    assert suite.servicio._buscador_sparse._interno is sparse  # type: ignore[union-attr]
+
+
+def test_componer_servicio_rechaza_el_brazo_hibrido_cuando_el_indice_no_ofrece_busqueda_sparse():
+    with pytest.raises(ConfigInvalida, match="sparse"):
+        _componer_con_corpus(None, HIBRIDO)
+
+
+def test_abrir_indice_real_aborta_cuando_la_coleccion_no_tiene_chunks_vigentes(
+    entorno_del_corpus: None,
+):
+    with pytest.raises(SuiteAbortada, match="vac"):
+        _abrir(ClienteMilvusFalso(filas=[]))
+
+
+def test_exigir_indice_pedido_aborta_nombrando_la_fuente_cuando_se_pide_milvus_y_no_hay_indice():
+    with pytest.raises(SuiteAbortada, match="indice"):
+        exigir_indice_pedido("milvus", None)
+
+    exigir_indice_pedido(
+        "en_memoria", None
+    )  # no lanza: el dataset en memoria es la fuente por defecto
+
+
+class EmbedderDePasajesQueCuenta:
+    def __init__(self) -> None:
+        self.llamadas = 0
+
+    def embeber(self, textos):  # noqa: ANN001, ANN201
+        self.llamadas += 1
+        return [[0.0] for _ in textos]
+
+
+def _puertos_locales_de_prueba(embedder_pasajes: EmbedderDePasajesQueCuenta) -> Any:
+    nada = object()
+    return SimpleNamespace(
+        detector_idioma=nada,
+        embedder=nada,
+        embedder_pasajes=embedder_pasajes,
+        reranker=nada,
+        generador=nada,
+        clasificador_nli=nada,
+        proponente=nada,
+        embedder_sparse=None,
+    )
+
+
+def test_adaptadores_de_suite_no_embebe_los_chunks_del_dataset_cuando_hay_un_indice_de_corpus(
+    tmp_path: Path,
+):
+    config = cargar_config_suite(CONFIG_LOCAL, UMBRALES_DEL_ENTORNO)
+    con_indice, sin_indice = EmbedderDePasajesQueCuenta(), EmbedderDePasajesQueCuenta()
+    indice = _indice_con_el_corpus_del_dataset()
+
+    adaptadores_de_suite(config, _corpus(), _puertos_locales_de_prueba(con_indice), indice.puertos)
+    adaptadores_de_suite(config, _corpus(), _puertos_locales_de_prueba(sin_indice))
+
+    assert con_indice.llamadas == 0
+    assert sin_indice.llamadas == 1
+
+
+def test_componer_servicio_rechaza_recibir_a_la_vez_la_aplicabilidad_y_el_corpus_del_indice():
+    from app.application.ports import CorpusCatalogReader  # noqa: F401
+    from app.evaluation.adaptadores_falsos import CatalogoEnMemoria
+    from app.infrastructure.catalogo_clinico.aplicabilidad import CriteriosDelCatalogo
+
+    aplicabilidad = AplicabilidadDeLaSuite(CriteriosDelCatalogo({}), CatalogoEnMemoria(_corpus()))
+
+    with pytest.raises(ConfigInvalida, match="aplicabilidad"):
+        _componer_con_corpus(None, None, aplicabilidad)
+
+
+def test_indice_fingido_ofrece_busqueda_sparse_y_el_mismo_resumen_que_el_adapter_real_cuando_tienen_los_mismos_chunks(  # noqa: E501
+    entorno_del_corpus: None,
+):
+    fingido = _indice_con_el_corpus_del_dataset()
+    filas = [_fila(c.id) for c in _corpus().chunks]
+
+    real = _abrir(ClienteMilvusFalso(filas=filas))
+
+    assert fingido.puertos.buscador_sparse is not None
+    assert (real.resumen.chunks_vigentes, real.resumen.huella) == (
+        fingido.resumen.chunks_vigentes,
+        fingido.resumen.huella,
+    )

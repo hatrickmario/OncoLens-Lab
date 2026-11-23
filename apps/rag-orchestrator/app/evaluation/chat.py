@@ -725,6 +725,10 @@ def main(
     return codigo_de_salida(reporte)
 
 
+def _abrir_el_indice(config: ConfigSuite, **fabricas: Any) -> IndiceDelCorpus | None:
+    raise NotImplementedError("no implementado")
+
+
 def _puertos_de(config: ConfigSuite, entorno: Mapping[str, str] | None) -> PuertosDeChat:
     """Con ``proveedor: fake`` los bordes de la suite; con ``local``, los pesos y el LLM nativo de ADR-39 (RN-12).
 

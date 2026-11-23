@@ -22,6 +22,7 @@ from app.application.ports import (
     CoberturaDePoblacion,
     EvidenciaGenerada,
     PosicionDeChunk,
+    PuertosDelCorpus,
     ReleaseDelCorpus,
     ResultadoDeRecuperacion,
     SinTerminosLexicos,
@@ -44,6 +45,12 @@ from app.evaluation.config_suite import ConfigInvalida
 from app.evaluation.dataset_loader import CLASE_SINTETICA
 from app.evaluation.fuente_dataset import DatasetSuite, OpcionPropuesta
 from app.evaluation.guardas import SuiteAbortada
+from app.evaluation.indice_del_corpus import (
+    COLECCION_FINGIDA,
+    IndiceDelCorpus,
+    ResumenDelIndice,
+    huella_de_chunks,
+)
 from app.schemas.generated.models import RagQueryInternalRequest
 
 DIMENSION = 64
@@ -305,6 +312,20 @@ class LectorReleaseFijo:
 
     def release_vigente(self) -> ReleaseDelCorpus:
         return self._release
+
+
+def indice_fingido(dataset: DatasetSuite, vectores: Sequence[Sequence[float]]) -> IndiceDelCorpus:
+    """El almacén vectorial y el catálogo fingidos en su puerto, sobre el corpus del dataset (solo lectura, como el real)."""
+    puertos = PuertosDelCorpus(
+        buscador=BuscadorEnMemoria(dataset, vectores),
+        lector_release=LectorReleaseFijo(dataset),
+        catalogo=CatalogoEnMemoria(dataset),
+        posiciones=PosicionesDelDataset(dataset),
+    )
+    resumen = ResumenDelIndice(
+        COLECCION_FINGIDA, len(dataset.chunks), huella_de_chunks(c.id for c in dataset.chunks)
+    )
+    return IndiceDelCorpus(puertos, resumen)
 
 
 class ProponenteGuionado:
