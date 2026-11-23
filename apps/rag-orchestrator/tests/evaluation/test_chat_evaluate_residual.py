@@ -285,3 +285,23 @@ def test_evaluar_chat_mide_el_control_de_identidad_solo_por_no_fuga_cuando_el_en
     assert reporte["metricas"]["exactitud_de_intent"] == 1.0
     assert reporte["metricas"]["por_tipo"]["mama"]["hechos_presentes"] == 1.0
     assert reporte["metricas"]["apariciones_de_identidad"] == {"estado_del_hilo": 0, "logs": 0}
+
+
+def test_main_carga_las_quince_peticiones_y_el_caso_con_previo_continua_el_hilo_sin_rehidratacion(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+):
+    directorio = _peticiones_preparadas(tmp_path)
+    leidas = chat.cargar_peticiones(directorio, cargar_config_suite(CONFIG))
+
+    codigo = chat.main(["--config", str(CONFIG), "--peticiones", str(directorio)])
+
+    reporte = json.loads(capsys.readouterr().out)
+    continuacion = next(c for c in reporte["por_caso"] if c["id"] == "CHAT-AC06-MAMA")
+    assert len(leidas) == reporte["casos"] + reporte["controles"] == 15
+    assert (
+        leidas["CHAT-AC06-MAMA"].peticion.rehydration is not None
+    )  # cada archivo es un primer turno
+    assert (
+        continuacion["intent_correcto"] is True
+    )  # el hilo de AC05 sigue vivo, sin la rehidratación
+    assert codigo == 0
