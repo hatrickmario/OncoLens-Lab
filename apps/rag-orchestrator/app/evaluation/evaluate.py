@@ -612,7 +612,7 @@ def corpus_de_la_comparacion(
     entorno: Mapping[str, str],
 ) -> dict[str, Any]:
     """El corpus con el que corrieron los brazos (``[S7 resp. 10]``): la colección leída (recuento y huella de ids), el
-    ``CORPUS_CHUNK_SIZE`` de la ingesta y los brazos que leyeron un índice distinto; nunca texto."""
+    ``CORPUS_CHUNK_SIZE`` configurado (el de la ingesta, si el entorno es el de su corrida) y los brazos que leyeron un índice distinto; nunca texto."""
     indice = brazos[0].indice
     tamano = entorno.get("CORPUS_CHUNK_SIZE")
     return {
@@ -623,7 +623,7 @@ def corpus_de_la_comparacion(
         if indice is None
         else indice.resumen.chunks_vigentes,
         "huella": None if indice is None else indice.resumen.huella,
-        "chunk_size_de_la_ingesta": int(tamano) if tamano and tamano.isdigit() else None,
+        "chunk_size_configurado": int(tamano) if tamano and tamano.isdigit() else None,
         "indices_distintos": [b.brazo.nombre for b in brazos if b.brazo.coleccion is not None],
     }
 

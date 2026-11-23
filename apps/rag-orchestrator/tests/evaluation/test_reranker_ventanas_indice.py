@@ -91,7 +91,7 @@ def test_el_informe_identifica_el_corpus_de_la_corrida_sin_texto_cuando_los_braz
         "coleccion": indice.resumen.coleccion,
         "chunks_vigentes": len(dataset.chunks),
         "huella": huella_de_chunks(c.id for c in dataset.chunks),
-        "chunk_size_de_la_ingesta": 1024,
+        "chunk_size_configurado": 1024,
         "indices_distintos": [],
     }
     seccion = armar_comparacion(
@@ -107,7 +107,7 @@ def test_el_informe_declara_que_corrio_sobre_el_corpus_del_dataset_cuando_no_hay
     corpus = corpus_de_la_comparacion(config, dataset, brazos, {})
 
     assert (corpus["fuente"], corpus["coleccion"], corpus["huella"]) == ("dataset", None, None)
-    assert corpus["chunk_size_de_la_ingesta"] is None and corpus["chunks_vigentes"] == len(
+    assert corpus["chunk_size_configurado"] is None and corpus["chunks_vigentes"] == len(
         dataset.chunks
     )
 

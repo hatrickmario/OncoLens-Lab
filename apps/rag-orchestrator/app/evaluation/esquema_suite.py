@@ -11,6 +11,15 @@ from app.evaluation.dataset_diagnostico import IDIOMAS, TIPOS_DE_VARIACION
 from app.evaluation.dataset_poblacion import CLASES_DEL_DORADO
 from app.evaluation.fuente_dataset import CLASES_ADMITIDAS
 from app.evaluation.informe_pii import MODOS, TIPOS_DIRECTOS
+from app.evaluation.metricas.diagnostico import (
+    CAUSAS_SIN_ASIGNAR,
+    CONDICIONES_DE_LA_REGLA,
+    ETAPAS as ETAPAS_DE_LA_CONSULTA,
+    NOTA_DE_CALIBRACION,
+    RESULTADO_PERDIDA,
+    RESULTADO_SIN_ASIGNAR,
+    RESULTADO_SIN_PERDIDA,
+)
 from app.evaluation.metricas.contextual import (
     CAUSAS_DE_SINONIMO,
     CLASES_DE_PREGUNTA,
@@ -19,17 +28,6 @@ from app.evaluation.metricas.contextual import (
     METRICAS_FRENTE_A_LA_BASE,
     SEGUNDO_LOOP_CONTEXTUAL,
     SEGUNDO_LOOP_NINGUNO,
-)
-from app.evaluation.metricas.diagnostico import (
-    CAUSAS_SIN_ASIGNAR,
-    CONDICIONES_DE_LA_REGLA,
-    NOTA_DE_CALIBRACION,
-    RESULTADO_PERDIDA,
-    RESULTADO_SIN_ASIGNAR,
-    RESULTADO_SIN_PERDIDA,
-)
-from app.evaluation.metricas.diagnostico import (
-    ETAPAS as ETAPAS_DE_LA_CONSULTA,
 )
 from app.evaluation.metricas.fidelidad import ROTULO_SECUNDARIA
 from app.evaluation.reporte import (
@@ -319,7 +317,7 @@ _CORPUS_DE_LA_COMPARACION = Objeto(
         "coleccion": Anulable(Identificador()),
         "chunks_vigentes": Numero(),
         "huella": Anulable(Huella()),
-        "chunk_size_de_la_ingesta": Numero(),
+        "chunk_size_configurado": Numero(),
         "indices_distintos": Lista(Identificador()),
     }
 )
