@@ -191,6 +191,23 @@ class ComparacionArmada:
     """Algún brazo híbrido retrocedió frente a A0: decide el código de salida sin releer el reporte."""
 
 
+def _datos_del_brazo(brazo: ResultadoDeBrazo, recuperacion: dict[str, Any]) -> dict[str, Any]:
+    """Lo que el informe dice de un brazo antes de compararlo con la referencia: su configuración y sus métricas."""
+    modo, fusion, parametro = brazo.brazo.trazado_esperado()
+    return {
+        "nombre": brazo.brazo.nombre,
+        "retrievalMode": modo.value,
+        "fusion": fusion.value,
+        "fusionParam": parametro,
+        "huellaConfig": brazo.brazo.huella(),
+        "recuperacion": recuperacion,
+        "retroceso": False,
+        "trazabilidad": _trazabilidad(brazo),
+        "sin_terminos_lexicos": _sin_terminos(brazo),
+        "por_documento": _por_documento(brazo),
+    }
+
+
 def armar_comparacion(
     config: ConfigSuite,
     comparacion: Comparacion,
@@ -211,19 +228,7 @@ def armar_comparacion(
     referencia = _metricas_de(recuperaciones[0])
     armados: list[dict[str, Any]] = []
     for b, recuperacion in zip(brazos, recuperaciones, strict=True):
-        modo, fusion, parametro = b.brazo.trazado_esperado()
-        armado: dict[str, Any] = {
-            "nombre": b.brazo.nombre,
-            "retrievalMode": modo.value,
-            "fusion": fusion.value,
-            "fusionParam": parametro,
-            "huellaConfig": b.brazo.huella(),
-            "recuperacion": recuperacion,
-            "retroceso": False,
-            "trazabilidad": _trazabilidad(b),
-            "sin_terminos_lexicos": _sin_terminos(b),
-            "por_documento": _por_documento(b),
-        }
+        armado = _datos_del_brazo(b, recuperacion)
         del_reranker = comparacion.viabilidad is not None
         if del_reranker:
             armado.update(
