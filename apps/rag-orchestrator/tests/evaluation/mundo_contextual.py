@@ -11,7 +11,13 @@ from typing import Any
 
 import yaml
 
-from app.application.ports import CandidatoParaReranker
+from app.application.errores import LlmSalidaInvalidaError
+from app.application.ports import (
+    CandidatoParaReranker,
+    EvidenciaGenerada,
+    ResultadoDeRecuperacion,
+)
+from app.schemas.generated.models import RagQueryInternalRequest
 from app.evaluation.corrida_contextual import PuertosDeContextual
 
 PUNTAJE_BAJO = 0.05
@@ -42,12 +48,15 @@ CHUNKS = {
         "d2",
         "Los tumor-infiltrating lymphocytes se describen en el cancer de mama triple negativo.",
     ),
+    "c5": ("d5", "Texto sintetico de relleno de prostata sin relacion con las preguntas."),
     "c3": ("d3", "Texto sintetico de relleno sin relacion con los temas de las preguntas."),
     "c4": (
         "d4",
         "Resumen sintetico de la evidencia disponible para un caso de cancer de mama en estadio IIA.",
     ),
 }
+CANCER_DE_DOCUMENTO = {"d5": "prostata"}
+"""Tipo de cáncer de cada documento; el resto es de mama. La recuperación solo ve los chunks del tipo del caso."""
 TEXTOS_DEL_CASO = ("Receptor de estrógeno",)
 """Términos del caso ``mama-completo`` que el informe jamás debe contener."""
 
@@ -89,6 +98,15 @@ class RerankerGuionado:
         return [puntaje if c.chunk_id == guion.chunk else PUNTAJE_BAJO for c in candidatos]
 
 
+class GeneradorQueFalla:
+    """``EvidenceGenerator`` cuyo modelo responde con una salida que no cumple el esquema interno (503 LLM_OUTPUT_INVALID)."""
+
+    async def generar(
+        self, solicitud: RagQueryInternalRequest, recuperacion: ResultadoDeRecuperacion
+    ) -> EvidenciaGenerada:
+        raise LlmSalidaInvalidaError(("principal_duplicada",))
+
+
 @dataclass(frozen=True)
 class Mundo:
     config: Path
@@ -122,7 +140,11 @@ def escribir_corpus(directorio: Path, clase: str = "sintetico") -> None:
             "release": "rel-prueba-1",
             "corte": "2026-11-03",
             "documentos": [
-                {"id": d, "titulo": f"Documento {d} (test)", "cancer": "mama"}
+                {
+                    "id": d,
+                    "titulo": f"Documento {d} (test)",
+                    "cancer": CANCER_DE_DOCUMENTO.get(d, "mama"),
+                }
                 for d, _ in CHUNKS.values()
             ],
             "chunks": [{"id": i, "documento": d, "texto": t} for i, (d, t) in CHUNKS.items()],

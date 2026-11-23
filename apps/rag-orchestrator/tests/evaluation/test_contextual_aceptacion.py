@@ -8,6 +8,7 @@ catálogo montado y el informe cerrado. Sin mocks de módulos propios.
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -15,7 +16,12 @@ import pytest
 
 from app.evaluation.evaluate import main
 from tests.evaluation.conftest import RAIZ_APP
-from tests.evaluation.mundo_contextual import Mundo, SINONIMOS, construir_mundo
+from tests.evaluation.mundo_contextual import (
+    GeneradorQueFalla,
+    Mundo,
+    SINONIMOS,
+    construir_mundo,
+)
 from tests.support.fakes import RelojFijo
 
 CONFIG_FAKE = RAIZ_APP / "eval" / "configs" / "contextual-fake.yaml"
@@ -208,6 +214,44 @@ def test_contextual_nombra_la_pregunta_y_el_termino_y_no_escribe_cifras_cuando_e
 
 
 @pytest.mark.ac("US-271", 9)
+def test_contextual_da_termino_ausente_cuando_el_unico_chunk_con_el_termino_es_de_otro_tipo_de_cancer(
+    tmp_path: Path,
+) -> None:
+    reporte = correr_ok(
+        construir_mundo(tmp_path, casos=("prostata-con-grado",)), tmp_path / "salida"
+    )
+
+    for pregunta in (
+        "CTX-C12",
+        "CTX-C14",
+    ):  # sus chunks son de mama: la recuperación del caso de próstata no los ve
+        fila_de_sinonimo = sinonimo(reporte, pregunta)
+        assert (fila_de_sinonimo["supero_umbral"], fila_de_sinonimo["causa"]) == (
+            False,
+            "termino_ausente_del_corpus",
+        )
+
+
+@pytest.mark.ac("US-271", 9)
+def test_contextual_cuenta_la_salida_invalida_sin_contarla_como_con_evidencia_cuando_el_generador_falla(
+    tmp_path: Path,
+) -> None:
+    mundo = construir_mundo(tmp_path)
+    mundo = replace(mundo, puertos=replace(mundo.puertos, generador=GeneradorQueFalla()))
+
+    reporte = correr_ok(mundo, tmp_path / "salida")
+
+    invalida = fila(reporte, "CTX-C12")
+    assert (invalida["estado"], invalida["supero_umbral"]) == ("salida_invalida", True)
+    assert (invalida["top_relevance_score"], invalida["segundo_loop"]) == (None, None)
+    assert reporte["salidas_invalidas"] == 2  # CTX-C12 y CTX-G01 (segundo loop) llegan al generador
+    control = next(
+        r for r in reporte["recuentos"] if (r["ambito"], r["clase"]) == ("total", "control")
+    )
+    assert (control["con_evidencia"], control["total"]) == (0, 3)
+
+
+@pytest.mark.ac("US-271", 9)
 def test_contextual_registra_el_corpus_el_catalogo_y_los_umbrales_de_la_corrida(
     tmp_path: Path,
 ) -> None:
@@ -223,12 +267,16 @@ def test_contextual_registra_el_corpus_el_catalogo_y_los_umbrales_de_la_corrida(
         "nombre": "corpus-contextual-prueba",
         "version": "1",
         "release": "rel-prueba-1",
-        "recuento_de_chunks": 4,
+        "recuento_de_chunks": 5,
     }
     assert configuracion["catalogVersion"] == "2026.10.0"
     assert configuracion["umbrales"]["relevanceThreshold"] == 0.3
     assert configuracion["umbrales"]["rerankerMaxPairs"] == 20
     assert configuracion["casos"] == ["mama-completo"]
+    assert configuracion["expansion"] == {
+        "campos": ["tipo", "estadio", "biomarcador_principal"],
+        "formato": "plano",
+    }
     assert reporte["validacion"]["rotulo"] == "no_validada"
 
 

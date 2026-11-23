@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Any
 
 from app.application.errores import LlmSalidaInvalidaError
-from app.application.ports import Clock, Reranker
+from app.application.ports import Clock, EvidenceGenerator, Reranker
 from app.domain.expansion_contextual import ParametrosDeExpansionContextual
 from app.domain.lenguaje import normalizar_texto
 from app.evaluation.composicion_suite import (
@@ -90,6 +90,8 @@ class PuertosDeContextual:
 
     reranker: Reranker | None = None
     """El *reranker*; por defecto, el de los adaptadores de la configuración."""
+    generador: EvidenceGenerator | None = None
+    """El generador; por defecto, el de los adaptadores de la configuración."""
     seudonimo: Callable[[int], str] = seudonimo_de_la_suite
     """Generador de ``pseudoPatientId`` por consulta; se inyecta para que un test lo congele."""
 
