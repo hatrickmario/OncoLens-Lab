@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
 
 from app.application.aplicabilidad import ApplicabilityService
 from app.application.aplicabilidad_textual import ParametrosDelRespaldo
 from app.application.ports import (
+    ChunkSearch,
     Clock,
     CorpusCatalogReader,
     EvidenceGenerator,
@@ -264,11 +265,15 @@ def componer_servicio(
     brazo: Brazo | None = None,
     adaptadores: Adaptadores | None = None,
     aplicabilidad: AplicabilidadDeLaSuite | None = None,
+    envolver_buscador: Callable[[ChunkSearch], ChunkSearch] | None = None,
+    reranker_max_pairs: int | None = None,
 ) -> ServicioDeSuite:
     """El servicio de la suite. Con ``brazo`` recupera con sus ``RETRIEVAL_*`` (US-133); con ``adaptadores`` ya cargados
     (los mismos modelos y el mismo índice para todos los brazos) no vuelve a cargar ni a indexar nada. Con
     ``aplicabilidad`` (familia `opciones`, US-140) el servicio calcula la aplicabilidad por fuente con esos criterios y
-    esa población; sin ella, la suite mide solo la recuperación y la generación."""
+    esa población; sin ella, la suite mide solo la recuperación y la generación. ``envolver_buscador`` decora la búsqueda
+    en memoria (la familia `diagnostico` observa el orden denso) y ``reranker_max_pairs`` fija el corte a los pares con
+    adaptadores falsos; con puertos locales manda el del reranker cargado."""
     adaptadores = adaptadores or adaptadores_de_suite(config, dataset, puertos_locales)
     observaciones = Observaciones()
     nli = NliMedido(adaptadores.clasificador_nli, cronometro)
@@ -277,12 +282,13 @@ def componer_servicio(
     # La suite habilita los tipos del catálogo montado (RN-20): el dataset no restringe el tipo y la huella no cambia.
     tipos_habilitados = cargar_catalogo_del_manifiesto(config.ruta_terminos).tipos_de_cancer()
     embedder_sparse, buscador_sparse = _rama_sparse(adaptadores, brazo, cronometro, observaciones)
+    buscador: ChunkSearch = BuscadorEnMemoria(dataset, adaptadores.vectores_de_chunks)
+    if envolver_buscador is not None:
+        buscador = envolver_buscador(buscador)
     servicio = RAGOrchestratorService(
         detector_idioma=DetectorMedido(adaptadores.detector_idioma, cronometro),
         embedder=EmbedderMedido(adaptadores.embedder, cronometro),
-        buscador=BuscadorMedido(
-            BuscadorEnMemoria(dataset, adaptadores.vectores_de_chunks), cronometro
-        ),
+        buscador=BuscadorMedido(buscador, cronometro),
         reranker=RerankerObservado(adaptadores.reranker, cronometro, observaciones),
         lector_release=LectorReleaseMedido(LectorReleaseFijo(dataset), cronometro),
         catalogo=CatalogoMedido(
@@ -305,7 +311,7 @@ def componer_servicio(
             tipos_habilitados,
             brazo,
             puertos_locales.respaldo if puertos_locales else PARAMETROS_DEL_RESPALDO_DE_LA_SUITE,
-            puertos_locales.reranker_max_pairs if puertos_locales else None,
+            puertos_locales.reranker_max_pairs if puertos_locales else reranker_max_pairs,
         ),
         embedder_sparse=embedder_sparse,
         buscador_sparse=buscador_sparse,

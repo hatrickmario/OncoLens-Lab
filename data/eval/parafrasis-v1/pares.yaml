@@ -1,0 +1,90 @@
+# Pares de paráfrasis SINTÉTICOS (inventados por el equipo; ningún dato de pacientes) sobre el corpus s5-corpus-ampliado.
+# Cada `cita` es un fragmento literal del documento esperado (lo comprueba tests/evaluation/test_dataset_parafrasis.py).
+# Las redacciones son descriptivas: preguntan por lo que describe la evidencia, nunca por lo que debe recibir un paciente (RN-23).
+# tipo: coloquial_tecnico | sin_tildes | orden | es_en
+clase: sintetico
+pares:
+  - id: P01
+    tipo: coloquial_tecnico
+    tipo_de_cancer: prostata
+    redacciones:
+      - {id: a, idioma: es, pregunta: '¿Qué describe la evidencia sobre las complicaciones de la prostatectomía radical?'}
+      - {id: b, idioma: es, pregunta: '¿Qué describe la evidencia sobre las complicaciones de la cirugía de prostata radical?'}
+    evidencia: [{documento: nci-prostata-hp-en, cita: 'radical prostatectomy is generally reserved for men without lymph node metastasis'}]
+  - id: P02
+    tipo: coloquial_tecnico
+    tipo_de_cancer: mama
+    redacciones:
+      - {id: a, idioma: es, pregunta: '¿Qué dice la información para pacientes sobre el tamoxifeno para reducir el riesgo de cáncer de mama con receptor de estrógeno positivo?'}
+      - {id: b, idioma: es, pregunta: '¿Qué dice la información sobre la pastilla de tamoxifeno para bajar el riesgo de cáncer de seno que depende de las hormonas?'}
+    evidencia: [{documento: nci-mama-prevencion-pac-es, cita: 'El tratamiento con tamoxifeno disminuye el riesgo de cáncer de mama positivo para el receptor de estrógeno'}]
+  - id: P03
+    tipo: coloquial_tecnico
+    tipo_de_cancer: prostata
+    redacciones:
+      - {id: a, idioma: es, pregunta: '¿Qué riesgo cardiovascular describe la evidencia para los inhibidores de la vía del receptor de andrógenos con deprivación androgénica?'}
+      - {id: b, idioma: es, pregunta: '¿Qué describe la evidencia sobre problemas del corazón con los medicamentos hormonales nuevos para el cáncer de próstata?'}
+    evidencia: [{documento: pmc-prostata-eventos-cardiovasculares-nma, cita: 'ARPIs plus ADT were associated with a statistically significant increase in the risk of both any grade'}]
+  - id: P04
+    tipo: coloquial_tecnico
+    tipo_de_cancer: mama
+    redacciones:
+      - {id: a, idioma: es, pregunta: '¿Qué relación describe la evidencia entre el ADN tumoral circulante y la supervivencia en cáncer de mama metastásico?'}
+      - {id: b, idioma: es, pregunta: '¿Qué describe la evidencia sobre los restos de ADN del tumor en la sangre y cuánto viven las pacientes con cáncer de mama que se ha extendido?'}
+    evidencia: [{documento: pmc-mama-adn-tumoral-metastasico-rs, cita: 'detection of ctDNA was associated with worse overall, progression-free, and disease-free survival'}]
+  - id: P05
+    tipo: sin_tildes
+    tipo_de_cancer: prostata
+    redacciones:
+      - {id: a, idioma: es, pregunta: '¿Qué controversia describe la revisión sobre el cribado del cáncer de próstata con PSA?'}
+      - {id: b, idioma: es, pregunta: 'Que controversia describe la revision sobre el cribado del cancer de prostata con PSA?'}
+    evidencia: [{documento: pmc-prostata-nueva-perspectiva-cribado-es, cita: 'El cribado del cáncer de próstata mediante la medida del antígeno específico de la próstata (PSA) ha sido objeto de una intensa polémica'}]
+  - id: P06
+    tipo: sin_tildes
+    tipo_de_cancer: mama
+    redacciones:
+      - {id: a, idioma: es, pregunta: '¿Qué describe la evidencia sobre omitir la irradiación de la pared torácica tras la mastectomía en cáncer de mama de riesgo intermedio?'}
+      - {id: b, idioma: es, pregunta: 'Que describe la evidencia sobre omitir la irradiacion de la pared toracica tras la mastectomia en cancer de mama de riesgo intermedio?'}
+    evidencia: [{documento: pmc-mama-irradiacion-pared-toracica-eca, cita: 'investigating the omission of chest wall irradiation in women with'}]
+  - id: P07
+    tipo: orden
+    tipo_de_cancer: prostata
+    redacciones:
+      - {id: a, idioma: es, pregunta: '¿Qué describe la evidencia sobre añadir quimioterapia a la deprivación androgénica en cáncer de próstata metastásico?'}
+      - {id: b, idioma: es, pregunta: 'En cáncer de próstata metastásico, ¿qué describe la evidencia sobre añadir a la deprivación androgénica la quimioterapia?'}
+    evidencia: [{documento: nci-prostata-hp-en, cita: 'The addition of chemotherapy has been shown in randomized trials to improve OS compared with ADT alone'}]
+  - id: P08
+    tipo: orden
+    tipo_de_cancer: prostata
+    redacciones:
+      - {id: a, idioma: es, pregunta: '¿Qué describe la revisión sobre la braquiterapia focal guiada por imagen en cáncer de próstata?'}
+      - {id: b, idioma: es, pregunta: 'Sobre la braquiterapia focal guiada por imagen, ¿qué describe la revisión en cáncer de próstata?'}
+    evidencia: [{documento: pmc-prostata-braquiterapia-focal-rs, cita: 'Recent advances in image-guided brachytherapy have allowed for treatment volume reduction'}]
+  - id: P09
+    tipo: orden
+    tipo_de_cancer: prostata
+    redacciones:
+      - {id: a, idioma: es, pregunta: '¿Qué estudió el ensayo de prevención del cáncer de próstata con finasterida?'}
+      - {id: b, idioma: es, pregunta: 'Con finasterida, ¿qué estudió el ensayo de prevención del cáncer de próstata?'}
+    evidencia: [{documento: nci-prostata-prevencion-pac-es, cita: 'se estudió si el medicamento finasterida puede prevenir el cáncer de'}]
+  - id: P10
+    tipo: es_en
+    tipo_de_cancer: mama
+    redacciones:
+      - {id: a, idioma: es, pregunta: '¿Qué describe la evidencia sobre elacestrant en tumores con mutación ESR1 de cáncer de mama metastásico?'}
+      - {id: b, idioma: en, pregunta: 'What does the evidence describe about elacestrant in ESR1-mutated metastatic breast cancer?'}
+    evidencia: [{documento: pmc-mama-elacestrant-esr1-eca, cita: 'Elacestrant significantly prolonged progression-free survival (PFS) with manageable safety'}]
+  - id: P11
+    tipo: es_en
+    tipo_de_cancer: mama
+    redacciones:
+      - {id: a, idioma: es, pregunta: '¿Qué compara la evidencia entre trastuzumab deruxtecán y trastuzumab emtansina en cáncer de mama HER2 positivo metastásico?'}
+      - {id: b, idioma: en, pregunta: 'What does the evidence compare between trastuzumab deruxtecan and trastuzumab emtansine in metastatic HER2-positive breast cancer?'}
+    evidencia: [{documento: pmc-mama-trastuzumab-deruxtecan-eca, cita: 'Trastuzumab deruxtecan (T-DXd) demonstrated significantly improved efficacy over trastuzumab emtansine (T-DM1)'}]
+  - id: P12
+    tipo: es_en
+    tipo_de_cancer: prostata
+    redacciones:
+      - {id: a, idioma: es, pregunta: '¿Qué describe la evidencia sobre niraparib con abiraterona en cáncer de próstata metastásico sensible a la castración con deficiencia de reparación homóloga?'}
+      - {id: b, idioma: en, pregunta: 'What does the evidence describe about niraparib with abiraterone in metastatic castration-sensitive prostate cancer with homologous recombination repair deficiency?'}
+    evidencia: [{documento: pmc-prostata-niraparib-abiraterona-eca, cita: 'Inhibition of poly(ADP-ribose) polymerase (PARP) after relapse on hormone therapy is well established'}]

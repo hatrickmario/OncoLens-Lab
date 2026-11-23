@@ -3,7 +3,8 @@
  * Envoltorio de `npm run evaluate -- --suite <familia> --report json` (US-072, contrato de la skill run-ai-eval):
  * llama a `python -m app.evaluation.evaluate` dentro de apps/rag-orchestrator y devuelve su código de salida.
  * Sin `--config` usa la configuración de la CI (adapters falsos, FX-T5a-a), o la de la familia `aplicabilidad`
- * (US-132) cuando `--suite aplicabilidad` y la de la familia `opciones` (US-140) cuando `--suite opciones`. Las demás opciones pasan tal cual.
+ * (US-132) cuando `--suite aplicabilidad`, la de la familia `opciones` (US-140) cuando `--suite opciones` y la de la familia
+ * `diagnostico` (US-276) cuando `--suite diagnostico`. Las demás opciones pasan tal cual.
  * Variables (RN-22): EVAL_PYTHON (intérprete, por defecto python3) y EVAL_TIMEOUT_S (tope del proceso, por defecto 600).
  */
 import path from 'node:path';
@@ -15,6 +16,7 @@ const DIRECTORIO = path.join(RAIZ, 'apps', 'rag-orchestrator');
 const CONFIG_DE_LA_CI = path.join('eval', 'configs', 'test-fake.yaml');
 const CONFIG_DE_APLICABILIDAD = path.join('eval', 'configs', 'test-aplicabilidad.yaml');
 const CONFIG_DE_OPCIONES = path.join('eval', 'configs', 'opciones-fake.yaml');
+const CONFIG_DE_DIAGNOSTICO = path.join('eval', 'configs', 'diagnostico-fake.yaml');
 
 const OPCIONES_CON_RUTA = ['--config', '--salida'];
 
@@ -43,9 +45,13 @@ export function flagsDelJuezDesdeEntorno(entorno) {
   );
 }
 
-const CONFIG_POR_FAMILIA = { aplicabilidad: CONFIG_DE_APLICABILIDAD, opciones: CONFIG_DE_OPCIONES };
+const CONFIG_POR_FAMILIA = {
+  aplicabilidad: CONFIG_DE_APLICABILIDAD,
+  opciones: CONFIG_DE_OPCIONES,
+  diagnostico: CONFIG_DE_DIAGNOSTICO,
+};
 
-/** La configuración de la CI de la familia pedida (`aplicabilidad` y `opciones` tienen la suya; las demás comparten test-fake.yaml). */
+/** La configuración de la CI de la familia pedida (`aplicabilidad`, `opciones` y `diagnostico` tienen la suya; las demás comparten test-fake.yaml). */
 function configPorDefecto(argumentos) {
   const posicion = argumentos.indexOf('--suite');
   return (posicion >= 0 && CONFIG_POR_FAMILIA[argumentos[posicion + 1]]) || CONFIG_DE_LA_CI;
