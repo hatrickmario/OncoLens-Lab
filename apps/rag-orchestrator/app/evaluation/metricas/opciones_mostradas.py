@@ -54,6 +54,8 @@ class AnalisisDeOpciones:
     """Lo mismo con el nivel B (US-249 AC-4, meta 0)."""
     campos_con_termino: tuple[tuple[str, str], ...]
     """(campo, id de regla) de cada término prohibido de la salida mostrada; nunca el texto."""
+    revision_provisional: bool = False
+    """La pregunta lleva ``revision_provisional`` (de IA): mecánica verificada, nunca validada (S7-D1)."""
 
     @property
     def ordenables(self) -> tuple[OpcionOrdenable, ...]:
