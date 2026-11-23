@@ -492,9 +492,19 @@ _FAMILIA_DE_OPCIONES = {
     "no_comparable": {"casos": Numero(), "mostrada_al_final": Numero(), "no_mostrada": Numero()},
     "esperadas_presentes": {"esperadas": Numero(), "presentes": Numero(), "porcentaje": Numero()},
 }
+_VALIDACION_DE_OPCIONES = Objeto(
+    {
+        "preguntas_validadas": Numero(),
+        "preguntas_no_validadas": Numero(),
+        # S7-D1: tres recuentos (validadas por un oncólogo, de mecánica verificada por IA y sin revisar).
+        "preguntas_mecanica_verificada": Numero(),
+        "preguntas_sin_revisar": Numero(),
+        "rotulo": Enumerado(frozenset(ROTULOS)),
+    }
+)
 _METRICAS_DE_OPCIONES = Objeto(
     {
-        nombre: Objeto({**campos, "validacion": _VALIDACION})
+        nombre: Objeto({**campos, "validacion": _VALIDACION_DE_OPCIONES})
         for nombre, campos in _FAMILIA_DE_OPCIONES.items()
     }
 )
