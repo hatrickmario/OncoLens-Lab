@@ -12,7 +12,7 @@ de `Settings`.
 
 ## 1. clinical-platform
 
-- [ ] 1.0 (test después) **Primera tarea, antes de generar ninguna petición:** `.gitignore` raíz +
+- [x] 1.0 (test después) **Primera tarea, antes de generar ninguna petición:** `.gitignore` raíz +
       `apps/clinical-api/eval/results/tmp/`. Las peticiones preparadas llevan `identidad` sintética y se escriben en
       disco: ningún comando ni test de este change escribe en esa ruta antes de este commit (los tests usan un
       directorio temporal del SO inyectado). Verificación: `git check-ignore apps/clinical-api/eval/results/tmp/x.json`
