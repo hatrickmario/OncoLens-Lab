@@ -11,9 +11,10 @@ from dataclasses import dataclass
 from typing import Final
 
 from app.domain.lenguaje import normalizar_texto
+from app.schemas.generated.models import RagQueryStatus
 
-ESTADO_CON_EVIDENCIA: Final = "con_evidencia"
-ESTADO_SIN_EVIDENCIA: Final = "sin_evidencia"
+ESTADO_CON_EVIDENCIA: Final = RagQueryStatus.con_evidencia.value
+ESTADO_SIN_EVIDENCIA: Final = RagQueryStatus.sin_evidencia.value
 ESTADO_SALIDA_INVALIDA: Final = "salida_invalida"
 ESTADOS_DE_FILA: Final = (ESTADO_CON_EVIDENCIA, ESTADO_SIN_EVIDENCIA, ESTADO_SALIDA_INVALIDA)
 CAUSA_TERMINO_AUSENTE: Final = "termino_ausente_del_corpus"
@@ -63,6 +64,8 @@ class FilaContextual:
     clase: str
     caso: str
     estado: str
+    """``con_evidencia`` = superó el umbral y el generador devolvió una salida válida (en `diagnostico`, «con evidencia»
+    significa opciones mostradas). ``salida_invalida`` también superó el umbral (``supero_umbral``)."""
     supero_umbral: bool
     top_relevance_score: float | None
     segundo_loop: str | None
@@ -81,6 +84,8 @@ class RecuentoDeClase:
     clase: str
     con_evidencia: int
     total: int
+    superaron_umbral: int
+    """Preguntas que superaron el umbral, con salida válida o no: es la medida del falso positivo de las adversarias."""
 
 
 def causa_de_sinonimo(
@@ -121,7 +126,13 @@ def recuentos_por_clase(filas: Sequence[FilaContextual]) -> tuple[RecuentoDeClas
 def _recuento(ambito: str, clase: str, filas: Sequence[FilaContextual]) -> RecuentoDeClase:
     de_la_clase = [f for f in filas if f.clase == clase]
     con_evidencia = sum(f.estado == ESTADO_CON_EVIDENCIA for f in de_la_clase)
-    return RecuentoDeClase(ambito, clase, con_evidencia, len(de_la_clase))
+    superaron = sum(f.supero_umbral for f in de_la_clase)
+    return RecuentoDeClase(ambito, clase, con_evidencia, len(de_la_clase), superaron)
+
+
+def es_falso_positivo(fila: FilaContextual) -> bool:
+    """Una adversaria (tema fuera del corpus) que superó el umbral: la definición única del falso positivo (RN-02)."""
+    return fila.clase == CLASE_CON_TEMA and fila.supero_umbral
 
 
 @dataclass(frozen=True)
@@ -187,12 +198,11 @@ def adversarias_por_caso(filas: Sequence[FilaContextual]) -> tuple[AdversariasDe
 
 def _adversarias(caso: str, filas: Sequence[FilaContextual]) -> AdversariasDeCaso:
     adversarias = [f for f in filas if f.clase == CLASE_CON_TEMA]
-    sin_evidencia = sum(f.estado == ESTADO_SIN_EVIDENCIA for f in adversarias)
     return AdversariasDeCaso(
         caso,
         len(adversarias),
-        sin_evidencia,
-        len(adversarias) - sin_evidencia,
+        sum(f.estado == ESTADO_SIN_EVIDENCIA for f in adversarias),
+        sum(es_falso_positivo(f) for f in adversarias),
         sum(f.top_relevance_score is None for f in adversarias),
         sum(f.llamadas_al_generador for f in adversarias),
     )
@@ -206,21 +216,24 @@ def comparar_con_base(
     ambitos_de_la_base = {r.ambito for r in base}
     comunes = [a for a in dict.fromkeys(r.ambito for r in actual) if a in ambitos_de_la_base]
     return tuple(
-        _cambio(ambito, metrica, _valor(actual, ambito, clase), _valor(base, ambito, clase))
+        _cambio(ambito, metrica, _valor(actual, ambito, *medida), _valor(base, ambito, *medida))
         for ambito in comunes
-        for metrica, clase in _CLASE_DE_LA_METRICA
+        for metrica, medida in _MEDIDA_DE_LA_METRICA
     )
 
 
-_CLASE_DE_LA_METRICA: Final = (
-    (METRICA_GENERICAS, CLASE_GENERICA),
-    (METRICA_CONTROLES, CLASE_CONTROL),
-    (METRICA_FALSOS_POSITIVOS, CLASE_CON_TEMA),
+_MEDIDA_DE_LA_METRICA: Final = (
+    (METRICA_GENERICAS, (CLASE_GENERICA, "con_evidencia")),
+    (METRICA_CONTROLES, (CLASE_CONTROL, "con_evidencia")),
+    (METRICA_FALSOS_POSITIVOS, (CLASE_CON_TEMA, "superaron_umbral")),
 )
+"""Por métrica: la clase de pregunta y el recuento que se compara. El falso positivo cuenta las que superaron el umbral."""
 
 
-def _valor(recuentos: Sequence[RecuentoDeClase], ambito: str, clase: str) -> int:
-    return next((r.con_evidencia for r in recuentos if (r.ambito, r.clase) == (ambito, clase)), 0)
+def _valor(recuentos: Sequence[RecuentoDeClase], ambito: str, clase: str, campo: str) -> int:
+    """El recuento pedido; si la pareja ámbito-clase falta es un error, nunca un 0 (``null`` ≠ ``0``)."""
+    recuento = next(r for r in recuentos if (r.ambito, r.clase) == (ambito, clase))
+    return int(getattr(recuento, campo))
 
 
 def _cambio(ambito: str, metrica: str, actual: int, base: int) -> CambioFrenteALaBase:

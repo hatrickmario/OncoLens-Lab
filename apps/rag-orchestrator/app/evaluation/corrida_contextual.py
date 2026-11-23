@@ -215,7 +215,13 @@ async def medir_contextual(
     for pregunta in dataset.preguntas:
         for caso in casos:
             solicitud = _solicitud(
-                base, caso, pregunta, len(filas), suite.catalogo_version, puertos.seudonimo
+                base,
+                caso,
+                pregunta,
+                len(filas),
+                suite.catalogo_version,
+                puertos.seudonimo,
+                dataset.corpus.clase,
             )
             ranking.reiniciar()
             generaciones = servicio.observaciones.generaciones
@@ -297,6 +303,7 @@ def _solicitud(
     indice: int,
     catalogo_version: str,
     seudonimo: Callable[[int], str],
+    clase_del_dataset: str,
 ) -> RagQueryInternalRequest:
     """La solicitud de ``contracts/examples`` con la pregunta y el contexto desidentificado del caso (RN-11). Reutiliza
     ``solicitud_de`` para el resto de campos: el tipo de cáncer de la pregunta es el del caso, así que no lo reescribe."""
@@ -323,7 +330,7 @@ def _solicitud(
     return solicitud_de(
         {**base, "clinicalContext": contexto},
         de_la_pregunta,
-        "sintetico",
+        clase_del_dataset,
         indice,
         catalogo_version,
         MAX_OPCIONES,
@@ -531,6 +538,7 @@ def _recuento_del_informe(recuento: RecuentoDeClase) -> dict[str, Any]:
         "clase": recuento.clase,
         "con_evidencia": recuento.con_evidencia,
         "total": recuento.total,
+        "superaron_umbral": recuento.superaron_umbral,
     }
 
 

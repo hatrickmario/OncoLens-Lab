@@ -16,7 +16,12 @@ from typing import Any
 
 from app.evaluation.config_suite import ConfigInvalida
 from app.evaluation.guardas import SuiteAbortada
-from app.evaluation.metricas.contextual import RecuentoDeClase
+from app.evaluation.esquema_suite import ESQUEMA_CONTEXTUAL
+from app.evaluation.metricas.contextual import (
+    CLASES_DE_PREGUNTA,
+    RecuentoDeClase,
+)
+from app.evaluation.reporte import ReporteFueraDeEsquema, validar_esquema_cerrado
 
 IDENTIDAD_DEL_CORPUS = ("dataset", "corpus")
 
@@ -32,22 +37,38 @@ class ReporteBase:
 def leer_reporte_base(ruta: Path) -> ReporteBase:
     try:
         crudo = json.loads(ruta.read_text(encoding="utf-8"))
+        if crudo["suite"] != "contextual":
+            raise ValueError
+        validar_esquema_cerrado(crudo, ESQUEMA_CONTEXTUAL)
         configuracion = crudo["configuracion"]
+        recuentos = tuple(
+            RecuentoDeClase(
+                str(r["ambito"]),
+                str(r["clase"]),
+                int(r["con_evidencia"]),
+                int(r["total"]),
+                int(r["superaron_umbral"]),
+            )
+            for r in crudo["recuentos"]
+        )
+        _exigir_las_tres_clases_por_ambito(recuentos)
         return ReporteBase(
             str(configuracion["nombre"]),
             str(configuracion["hashConfig"]),
             {clave: configuracion[clave] for clave in IDENTIDAD_DEL_CORPUS},
-            tuple(
-                RecuentoDeClase(
-                    str(r["ambito"]), str(r["clase"]), int(r["con_evidencia"]), int(r["total"])
-                )
-                for r in crudo["recuentos"]
-            ),
+            recuentos,
         )
-    except (OSError, ValueError, KeyError, TypeError):
+    except (OSError, ValueError, KeyError, TypeError, ReporteFueraDeEsquema):
         raise ConfigInvalida(
             "contextual.reporte_base no es un reporte de la familia contextual legible"
         ) from None
+
+
+def _exigir_las_tres_clases_por_ambito(recuentos: tuple[RecuentoDeClase, ...]) -> None:
+    """Un ámbito sin alguna clase no se compara: faltaría una cifra y ``null`` ≠ ``0``."""
+    for ambito in {r.ambito for r in recuentos}:
+        if {r.clase for r in recuentos if r.ambito == ambito} != set(CLASES_DE_PREGUNTA):
+            raise ValueError
 
 
 def exigir_mismo_corpus(configuracion: Mapping[str, Any], base: ReporteBase) -> None:

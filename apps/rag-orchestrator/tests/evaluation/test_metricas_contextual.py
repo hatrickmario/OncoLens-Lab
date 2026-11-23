@@ -76,29 +76,29 @@ def test_los_recuentos_dan_con_evidencia_y_denominador_por_clase_en_total_y_por_
     ]
 
     assert recuentos_por_clase(filas) == (
-        RecuentoDeClase("total", "generica", 1, 2),
-        RecuentoDeClase("total", "con_tema", 1, 2),
-        RecuentoDeClase("total", "control", 2, 2),
-        RecuentoDeClase("mama", "generica", 1, 1),
-        RecuentoDeClase("mama", "con_tema", 0, 1),
-        RecuentoDeClase("mama", "control", 1, 1),
-        RecuentoDeClase("prostata", "generica", 0, 1),
-        RecuentoDeClase("prostata", "con_tema", 1, 1),
-        RecuentoDeClase("prostata", "control", 1, 1),
+        RecuentoDeClase("total", "generica", 1, 2, 1),
+        RecuentoDeClase("total", "con_tema", 1, 2, 1),
+        RecuentoDeClase("total", "control", 2, 2, 2),
+        RecuentoDeClase("mama", "generica", 1, 1, 1),
+        RecuentoDeClase("mama", "con_tema", 0, 1, 0),
+        RecuentoDeClase("mama", "control", 1, 1, 1),
+        RecuentoDeClase("prostata", "generica", 0, 1, 0),
+        RecuentoDeClase("prostata", "con_tema", 1, 1, 1),
+        RecuentoDeClase("prostata", "control", 1, 1, 1),
     )
 
 
 def test_los_recuentos_dejan_la_clase_sin_preguntas_con_total_cero_y_no_la_omiten() -> None:
     recuentos = recuentos_por_clase([_fila("G1", "generica", "mama", "sin_evidencia")])
 
-    assert RecuentoDeClase("total", "control", 0, 0) in recuentos
+    assert RecuentoDeClase("total", "control", 0, 0, 0) in recuentos
     assert len(recuentos) == 6
 
 
 def test_una_salida_invalida_no_cuenta_como_con_evidencia_aunque_supere_el_umbral() -> None:
     fila = FilaContextual("G1", "generica", "mama", "salida_invalida", True, None, None)
 
-    assert RecuentoDeClase("total", "generica", 0, 1) in recuentos_por_clase([fila])
+    assert RecuentoDeClase("total", "generica", 0, 1, 1) in recuentos_por_clase([fila])
 
 
 def _generica(caso: str, estado: str, campos: tuple[str, ...] = ()) -> FilaContextual:
@@ -173,9 +173,9 @@ def test_las_adversarias_cuentan_sin_evidencia_falsos_positivos_puntajes_null_y_
 
 def _recuentos(ambito: str, genericas: int, controles: int, con_tema: int) -> list[RecuentoDeClase]:
     return [
-        RecuentoDeClase(ambito, "generica", genericas, 22),
-        RecuentoDeClase(ambito, "con_tema", con_tema, 24),
-        RecuentoDeClase(ambito, "control", controles, 14),
+        RecuentoDeClase(ambito, "generica", genericas, 22, genericas),
+        RecuentoDeClase(ambito, "con_tema", con_tema, 24, con_tema),
+        RecuentoDeClase(ambito, "control", controles, 14, controles),
     ]
 
 

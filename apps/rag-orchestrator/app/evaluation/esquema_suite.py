@@ -844,6 +844,7 @@ ESQUEMA_CONTEXTUAL = Objeto(
                     "clase": Enumerado(frozenset(CLASES_DE_PREGUNTA)),
                     "con_evidencia": Numero(),
                     "total": Numero(),
+                    "superaron_umbral": Numero(),
                 }
             )
         ),

@@ -39,7 +39,8 @@ class RerankerQueRegistra:
 
     def puntuar(self, pregunta: str, candidatos: Sequence[CandidatoParaReranker]) -> list[float]:
         puntajes = self._interno.puntuar(pregunta, candidatos)
-        ranking = sorted(zip(candidatos, puntajes), key=lambda par: (-par[1], par[0].chunk_id))
+        # La misma regla que el servicio: orden estable por puntaje descendente (en empate, el orden denso).
+        ranking = sorted(zip(candidatos, puntajes, strict=True), key=lambda par: -par[1])
         self._registro.ultimo = tuple(
             ChunkPuntuado(c.chunk_id, p) for c, p in ranking[:CHUNKS_POR_PREGUNTA]
         )
