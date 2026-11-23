@@ -475,7 +475,7 @@ def _brazo_de_chunks(
     except ValidationError as error:
         print(f"{NOMBRE}: configuración inválida en: {_claves_invalidas(error)}", file=sys.stderr)
         return 1
-    if argumentos.coleccion == milvus.milvus_collection_name:
+    if argumentos.coleccion.strip().casefold() == milvus.milvus_collection_name.strip().casefold():
         print(
             f"{NOMBRE} {MODO_BRAZO_DE_CHUNKS}: --coleccion no puede ser la de MILVUS_COLLECTION_NAME (RN-05)",
             file=sys.stderr,
@@ -508,7 +508,7 @@ def _brazo_de_chunks(
             else argumentos.solape,
             reloj=reloj or RelojDelSistema(),
         ).ingerir(leer_manifiesto(argumentos.manifest))
-    except (ModeloNoVerificadoError, ManifiestoInvalido, ValueError) as error:
+    except (ModeloNoVerificadoError, ManifiestoInvalido) as error:
         print(f"{NOMBRE} {MODO_BRAZO_DE_CHUNKS}: {error}", file=sys.stderr)
         return 1
     except Exception as error:  # noqa: BLE001 - se informa la clase; el mensaje de la base o de pymilvus puede traer una URI

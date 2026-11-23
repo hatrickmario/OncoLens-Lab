@@ -5,9 +5,10 @@ from __future__ import annotations
 import math
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, get_args
 
 ModoDeVentanas = Literal["primera", "maximo"]
+MODOS_DE_VENTANAS: tuple[str, ...] = get_args(ModoDeVentanas)
 """``primera``: solo la primera ventana (comportamiento vigente). ``maximo``: ventanas solapadas, puntaje = el máximo."""
 
 MODO_DE_VENTANAS_INICIAL: ModoDeVentanas = "primera"
@@ -36,6 +37,14 @@ class Ventana:
     fin: int
 
 
+def solape_deja_avanzar(solape: int, capacidad: int) -> bool:
+    """Única definición de la regla «solape < capacidad» (y solape ≥ 0): la usan las ventanas, Settings y la suite.
+
+    El chequeo de arranque de Settings (contra ``RERANKER_MAX_LENGTH``) es necesario pero no suficiente: la capacidad útil
+    resta además la pregunta y los especiales, así que un solape que arranca puede fallar en la consulta con el error del puerto."""
+    return 0 <= solape < capacidad
+
+
 def trazar_ventanas(longitud_del_pasaje: int, capacidad: int, solape: int) -> tuple[Ventana, ...]:
     """Tramos de a lo sumo ``capacidad`` tokens que cubren el pasaje entero, con ``solape`` tokens entre vecinos.
 
@@ -45,7 +54,7 @@ def trazar_ventanas(longitud_del_pasaje: int, capacidad: int, solape: int) -> tu
     """
     if longitud_del_pasaje <= 0:
         raise ValueError("el pasaje no tiene tokens")
-    if capacidad <= 0 or solape < 0 or solape >= capacidad:
+    if capacidad <= 0 or not solape_deja_avanzar(solape, capacidad):
         raise ValueError("la capacidad debe ser positiva y mayor que el solape")
     paso = capacidad - solape
     ventanas = [Ventana(0, min(capacidad, longitud_del_pasaje))]

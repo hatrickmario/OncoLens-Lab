@@ -15,6 +15,7 @@ from pydantic import ValidationError
 from app.config.settings import Settings
 from app.domain.atribucion import CLAIM_MAX_WORDS_INICIAL
 from app.domain.fusion_de_candidatos import EstrategiaDeFusion
+from app.domain.ventanas_del_reranker import MODOS_DE_VENTANAS, solape_deja_avanzar
 from app.evaluation.brazos_recuperacion import REFERENCIA, Brazo
 from app.evaluation.reporte import es_identificador
 from app.evaluation.rutas import raiz_repo
@@ -458,9 +459,6 @@ def _brazo_de(crudo: object) -> Brazo:
     return Brazo(nombre, modo, fusion, peso_sparse=peso, **reranker)
 
 
-MODOS_DE_VENTANAS = ("primera", "maximo")
-
-
 def _etapa_del_reranker(crudo: dict[str, Any]) -> dict[str, Any]:
     """Los campos opcionales de la etapa del reranker de un brazo (US-278); lo que no declara queda en ``None`` (= el de
     la suite) y no entra en la huella. Un solape que no deja avanzar la ventana se rechaza nombrando la clave."""
@@ -483,7 +481,7 @@ def _etapa_del_reranker(crudo: dict[str, Any]) -> dict[str, Any]:
             raise ConfigInvalida("el indice de un brazo no es un identificador válido")
         campos["indice"] = str(crudo["indice"])
     largo, solape = campos.get("reranker_max_length"), campos.get("reranker_solape")
-    if largo is not None and solape is not None and solape >= largo:
+    if largo is not None and solape is not None and not solape_deja_avanzar(solape, largo):
         raise ConfigInvalida("RERANKER_WINDOW_OVERLAP debe ser menor que RERANKER_MAX_LENGTH")
     return campos
 

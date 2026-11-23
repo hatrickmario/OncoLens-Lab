@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from app.domain.expansion_contextual import CAMPOS_DE_EXPANSION, FORMATOS_DE_CONSULTA
+from app.domain.ventanas_del_reranker import MODOS_DE_VENTANAS
 from app.evaluation.acuerdo_juez import ESTADO_CONCLUYENTE, ESTADO_NO_CONCLUYENTE, SIN_MEDIR
 from app.evaluation.config_suite import PROVEEDORES, RELOJES, SUITES
 from app.evaluation.cronometro import ETAPAS
@@ -260,7 +261,7 @@ _METRICAS_DE_DIFERENCIA = Objeto(
 )
 _ETAPA_DEL_RERANKER = Objeto(
     {
-        "modo": Enumerado(frozenset({"primera", "maximo"})),
+        "modo": Enumerado(frozenset(MODOS_DE_VENTANAS)),
         "solape": Numero(),
         "max_length": Numero(),
         "max_pairs": Numero(),

@@ -203,6 +203,19 @@ Cada una con las alternativas que se descartaron. Nada de esto cambia el contrat
   dominio y, para los brazos, en `s7-reranker-ventanas.yaml`. Si la corrida base B o el humano piden otro, se cambia en esos dos
   lugares sin tocar código de reglas.
 
+- **Gate 2 (aplicado):** `FalloDeEtapa` y `etapa` viven en `corpus_ingestion/etapas.py` y los usan la ingesta y el brazo; la regla
+  «solape < capacidad» tiene una sola definición (`solape_deja_avanzar`; el chequeo de arranque de `Settings` es necesario pero no
+  suficiente: un solape que arranca puede fallar en la consulta con el error del puerto); los modos salen de `MODOS_DE_VENTANAS`
+  (`get_args(ModoDeVentanas)`); la guarda de colección de la CLI compara sin mayúsculas ni espacios y los `ValueError` ya no se
+  imprimen. **Fakes tocados:** `RerankerLexico` cambió (ventanas y `variante`), con el mismo contrato; el texto de D7 que decía
+  «ninguno» no valía.
+- **Colisión de `chunk_id` entre la colección de 512 y la de 1024 (hallazgo 1 de Gate 2):** `identificador_de_chunk` da el mismo id
+  a chunks distintos. Mientras no se arregle (cambia el formato que cita la población ADR-47 y RN-04, exige reindexar y un ADR),
+  el brazo de 512 solo mide recuperación: no consume población. Deuda D7-19. Otras: D7-20 (un único comparador estricto de
+  p95 y memoria, y definición única de «memoria del stack»), D7-21 (`FalloDeEtapa` en `reindexar_sparse`).
+- **Pregunta para el humano:** `comparacion.conjunto_de_desarrollo: true` es explícito porque el corpus S5 no tiene partición
+  `ol06` (ADR-45, anti-sobreajuste). Decisión del agente, a confirmar.
+
 ## Privacidad y ownership
 
 - Sin frontera nueva: todo ocurre dentro de `rag-orchestrator`. Los textos que se parten en ventanas son chunks del

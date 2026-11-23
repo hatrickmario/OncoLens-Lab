@@ -10,10 +10,10 @@ chunks. Un documento que falla deja un error por etapa y la clase (nunca el mens
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Sequence
-from contextlib import contextmanager
+from collections.abc import Sequence
 from dataclasses import dataclass
 
+from app.application.corpus_ingestion.etapas import FalloDeEtapa, etapa
 from app.application.corpus_ingestion.ports import SparsePassageEncoder
 from app.application.ports import Clock
 from app.application.seed_corpus.ports import (
@@ -61,23 +61,6 @@ class ReporteDelBrazo:
         return any(r.error is not None for r in self.resultados)
 
 
-class _FalloDeEtapa(Exception):
-    def __init__(self, etapa: str, causa: Exception) -> None:
-        super().__init__(etapa)
-        self.etapa, self.clase = etapa, type(causa).__name__
-
-
-@contextmanager
-def _etapa(nombre: str) -> Iterator[None]:
-    """Lo que falle en una etapa de UN documento sale como etapa y clase: el mensaje puede traer texto o una URI."""
-    try:
-        yield
-    except _FalloDeEtapa:
-        raise
-    except Exception as error:  # noqa: BLE001 - borde de un puerto: el fallo es de este documento
-        raise _FalloDeEtapa(nombre, error) from None
-
-
 class IngerirBrazoDeChunks:
     def __init__(
         self,
@@ -113,13 +96,13 @@ class IngerirBrazoDeChunks:
     ) -> ResultadoDelBrazo:
         try:
             return self._ingerir_documento(documento, vigentes)
-        except _FalloDeEtapa as fallo:
+        except FalloDeEtapa as fallo:
             return ResultadoDelBrazo(documento.document_key, error=f"{fallo.etapa}: {fallo.clase}")
 
     def _ingerir_documento(
         self, documento: DocumentoDeSemilla, vigentes: dict[str, RegistroDeDocumento]
     ) -> ResultadoDelBrazo:
-        with _etapa("normalizacion"):
+        with etapa("normalizacion"):
             texto = normalizar_texto(self._fuente.obtener_texto(documento))
         registro = vigentes.get(
             identificador_de_documento(documento.document_key, calcular_checksum(texto))
@@ -128,19 +111,19 @@ class IngerirBrazoDeChunks:
             registro is None
         ):  # solo entra lo que la ingesta de origen dejó vigente: no se inventan metadatos (RN-25)
             return ResultadoDelBrazo(documento.document_key, omitido=MOTIVO_SIN_REGISTRO)
-        with _etapa("chunking"):
+        with etapa("chunking"):
             fragmentos = fragmentar(
                 texto, self._tokenizador, tamano=self._tamano_de_chunk, solape=self._solape_de_chunk
             )
             if not fragmentos:
                 raise TextoVacio()
-        with _etapa("embeddings"):
+        with etapa("embeddings"):
             vectores = self._embedder.embeber(fragmentos)
-        with _etapa("sparse"):
+        with etapa("sparse"):
             sparse = exigir_sparse_por_pasaje(
                 self._codificador_sparse.codificar(fragmentos), len(fragmentos)
             )
-        with _etapa("milvus"):
+        with etapa("milvus"):
             chunks = chunks_del_documento(
                 registro, fragmentos, vectores, self._reloj.ahora(), sparse
             )

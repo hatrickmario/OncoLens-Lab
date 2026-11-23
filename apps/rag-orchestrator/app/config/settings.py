@@ -71,6 +71,7 @@ from app.domain.ventanas_del_reranker import (
     MODO_DE_VENTANAS_INICIAL,
     RERANKER_WINDOW_OVERLAP_INICIAL,
     ModoDeVentanas,
+    solape_deja_avanzar,
 )
 
 _SHA256 = re.compile(r"[0-9a-fA-F]{64}")
@@ -391,9 +392,8 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def _solape_de_ventanas_deja_avanzar_la_ventana(self) -> Self:
         """El solape debe ser menor que ``RERANKER_MAX_LENGTH`` (US-278); el error nombra la clave, nunca el valor."""
-        if (
-            self.modelos is not None
-            and self.reranker_window_overlap >= self.modelos.reranker_max_length
+        if self.modelos is not None and not solape_deja_avanzar(
+            self.reranker_window_overlap, self.modelos.reranker_max_length
         ):
             raise ValueError("RERANKER_WINDOW_OVERLAP: debe ser menor que RERANKER_MAX_LENGTH")
         return self
