@@ -18,6 +18,14 @@ from app.evaluation.metricas.diagnostico import (
     RESULTADO_SIN_ASIGNAR,
     RESULTADO_SIN_PERDIDA,
 )
+from app.evaluation.metricas.contextual import (
+    CAUSAS_DE_SINONIMO,
+    CLASES_DE_PREGUNTA,
+    CONDICIONES_DE_LA_CAUSA,
+    ESTADOS_DE_FILA,
+    SEGUNDO_LOOP_CONTEXTUAL,
+    SEGUNDO_LOOP_NINGUNO,
+)
 from app.evaluation.metricas.fidelidad import ROTULO_SECUNDARIA
 from app.evaluation.reporte import (
     Anulable,
@@ -682,6 +690,101 @@ ESQUEMA_DIAGNOSTICO = Objeto(
                 "en_banda": Numero(),
                 "nota": Enumerado(frozenset({NOTA_DE_CALIBRACION})),
             }
+        ),
+        "salidas_invalidas": Numero(),
+    }
+)
+
+
+# --- familia `contextual` (US-271 AC-9, L1D-329): solo ids de pregunta y de caso, estados, puntajes y recuentos -------------
+
+_CAUSA_DE_SINONIMO = Anulable(Enumerado(frozenset(CAUSAS_DE_SINONIMO)))
+_FILA_CONTEXTUAL = Objeto(
+    {
+        "pregunta_id": Identificador(),
+        "clase": Enumerado(frozenset(CLASES_DE_PREGUNTA)),
+        "caso": Identificador(),
+        "estado": Enumerado(frozenset(ESTADOS_DE_FILA)),
+        "supero_umbral": Booleano(),
+        # ``null`` = ningún chunk superó el umbral (RN-02) o la salida del generador fue inválida; nunca ``0.0``.
+        "top_relevance_score": Numero(),
+        # ``null`` = no observado (salida inválida del generador).
+        "segundo_loop": Anulable(
+            Enumerado(frozenset({SEGUNDO_LOOP_CONTEXTUAL, SEGUNDO_LOOP_NINGUNO}))
+        ),
+    }
+)
+
+ESQUEMA_CONTEXTUAL = Objeto(
+    {
+        "esquema": Enumerado(frozenset({VERSION_ESQUEMA})),
+        "suite": Enumerado(frozenset({"contextual"})),
+        "configuracion": Objeto(
+            {
+                "nombre": Identificador(),
+                "hashConfig": Huella(),
+                "fixture": Identificador(),
+                "claseDataset": Enumerado(frozenset(CLASES_ADMITIDAS)),
+                # El corpus con el que corrió: base y final solo se comparan si coinciden ([S7 resp. 10]).
+                "dataset": Objeto(
+                    {"nombre": Identificador(), "version": Identificador(), "ruta": Identificador()}
+                ),
+                "corpus": Objeto(
+                    {
+                        "nombre": Identificador(),
+                        "version": Identificador(),
+                        "release": Identificador(),
+                        "recuento_de_chunks": Numero(),
+                    }
+                ),
+                "proveedor": Enumerado(frozenset(PROVEEDORES)),
+                "reloj": Enumerado(frozenset(RELOJES)),
+                "catalogVersion": Identificador(),
+                "modelos": _MODELOS_DE_OPCIONES,
+                "umbrales": Objeto(
+                    {
+                        "relevanceThreshold": Numero(),
+                        "nliEntailmentThreshold": Numero(),
+                        "retrievalTopK": Numero(),
+                        "rerankTopN": Numero(),
+                        "rerankerMaxPairs": Numero(),
+                    }
+                ),
+                "expansion_habilitada": Booleano(),
+                "casos": Lista(Identificador()),
+            }
+        ),
+        "validacion": _VALIDACION,
+        "regla_de_la_causa": Lista(
+            Objeto(
+                {
+                    "orden": Numero(),
+                    "condicion": Enumerado(frozenset(CONDICIONES_DE_LA_CAUSA)),
+                    "causa": _CAUSA_DE_SINONIMO,
+                }
+            )
+        ),
+        "preguntas": Lista(_FILA_CONTEXTUAL),
+        "recuentos": Lista(
+            Objeto(
+                {
+                    "ambito": Identificador(),
+                    "clase": Enumerado(frozenset(CLASES_DE_PREGUNTA)),
+                    "con_evidencia": Numero(),
+                    "total": Numero(),
+                }
+            )
+        ),
+        "sinonimos": Lista(
+            Objeto(
+                {
+                    "pregunta_id": Identificador(),
+                    "caso": Identificador(),
+                    "termino": Identificador(),
+                    "supero_umbral": Booleano(),
+                    "causa": _CAUSA_DE_SINONIMO,
+                }
+            )
         ),
         "salidas_invalidas": Numero(),
     }

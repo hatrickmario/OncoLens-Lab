@@ -170,6 +170,21 @@ def clave_de(crudo: dict[str, Any], *ruta: str) -> Any:
     return valor
 
 
+def tope_de_pares_de_los_adaptadores_falsos(
+    seccion: dict[str, Any], suite: ConfigSuite, familia: str
+) -> int | None:
+    """``<familia>.reranker_max_pairs`` (RN-22): ``None`` = sin corte. Solo aplica con adaptadores FALSOS; con
+    ``proveedor: local`` manda el del reranker cargado. Un único dueño para las familias que lo declaran."""
+    tope = seccion.get("reranker_max_pairs")
+    if tope is None:
+        return None
+    if suite.proveedor != "fake":
+        raise ConfigInvalida(f"{familia}.reranker_max_pairs solo aplica con adaptadores falsos")
+    if isinstance(tope, bool) or not isinstance(tope, int) or tope < 1:
+        raise ConfigInvalida(f"{familia}.reranker_max_pairs debe ser un entero positivo")
+    return tope
+
+
 def _en(valor: str, permitidos: tuple[str, ...], clave: str) -> str:
     if valor not in permitidos:
         raise ConfigInvalida(f"la clave {clave} debe ser una de {', '.join(permitidos)}")
