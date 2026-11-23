@@ -18,7 +18,16 @@ from app.evaluation.reporte import es_identificador
 from app.evaluation.rutas import raiz_repo
 from app.schemas.generated.models import RetrievalMode
 
-SUITES = ("retrieval", "generation", "pii", "aplicabilidad", "poblacion", "opciones", "all")
+SUITES = (
+    "retrieval",
+    "generation",
+    "pii",
+    "aplicabilidad",
+    "poblacion",
+    "opciones",
+    "diagnostico",
+    "all",
+)
 SUITE_COMPLETA = "all"
 PROVEEDORES = ("fake", "local")
 RELOJES = ("simulado", "real")
