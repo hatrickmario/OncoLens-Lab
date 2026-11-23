@@ -22,6 +22,7 @@ from app.application.ports import (
     ChunkEncontradoSparse,
     CoberturaDePoblacion,
     EvidenciaGenerada,
+    FalloDeInferencia,
     PosicionDeChunk,
     PuertosDelCorpus,
     ReleaseDelCorpus,
@@ -44,6 +45,7 @@ from app.domain.nli import ParNli, ResultadoNli
 from app.domain.retrieval_filter import coincide_etiqueta, exigir_filtro_vigente
 from app.domain.ventanas_del_reranker import (
     MODO_DE_VENTANAS_INICIAL,
+    RERANKER_WINDOW_OVERLAP_INICIAL,
     ConfiguracionDelReranker,
     ModoDeVentanas,
     trazar_ventanas,
@@ -154,6 +156,10 @@ class BuscadorSparseEnMemoria:
         ]
 
 
+_FALLO_DE_VENTANAS = "reranker: fallo de inferencia del modelo local"
+"""El mensaje del adapter real (``BgeReranker``): el fake falla con el mismo error del puerto y el mismo texto."""
+
+
 class RerankerLexico:
     """``Reranker`` falso por coincidencia léxica. Sin ``max_length`` puntúa el texto entero; con él, cuenta PALABRAS como
     tokens y lee solo la primera ventana (``primera``) o todas, con el máximo de sus puntajes (``maximo``, US-278): la
@@ -164,7 +170,7 @@ class RerankerLexico:
     def __init__(
         self,
         modo_de_ventanas: ModoDeVentanas = MODO_DE_VENTANAS_INICIAL,
-        solape: int = 0,
+        solape: int = RERANKER_WINDOW_OVERLAP_INICIAL,
         max_length: int | None = None,
     ) -> None:
         self._modo, self._solape, self._max_length = modo_de_ventanas, solape, max_length
@@ -196,7 +202,10 @@ class RerankerLexico:
         del_texto = _PALABRA.findall(texto)
         if self._modo == "primera" or len(del_texto) <= self._max_length:
             return self._coincidencias(palabras, " ".join(del_texto[: self._max_length]))
-        ventanas = trazar_ventanas(len(del_texto), self._max_length, self._solape)
+        try:
+            ventanas = trazar_ventanas(len(del_texto), self._max_length, self._solape)
+        except ValueError:  # el mismo error del puerto que el adapter real, sin causa encadenada
+            raise FalloDeInferencia(_FALLO_DE_VENTANAS) from None
         return max(
             self._coincidencias(palabras, " ".join(del_texto[v.inicio : v.fin])) for v in ventanas
         )
