@@ -36,4 +36,21 @@ describe('evaluate --suite contextual (humo del proceso real)', { timeout: TIEMP
     expect(new Set(informe.sinonimos.map((s) => s.pregunta_id))).toEqual(new Set(['CTX-C12', 'CTX-C13', 'CTX-C14']));
     expect(informe.sinonimos.every((s) => s.supero_umbral || s.causa !== null)).toBe(true);
   });
+
+  it('sale con 0 y reporta la cobertura de los dos casos de próstata sobre las 180 consultas cuando corre con la configuración de la CI [US-273 AC-2]', () => {
+    salida = mkdtempSync(path.join(os.tmpdir(), 'ctx-humo-'));
+
+    const resultado = spawnSync(
+      'node',
+      ['scripts/eval/evaluate.mjs', '--suite', 'contextual', '--salida', salida, '--nombre-archivo', 'informe'],
+      { cwd: RAIZ, encoding: 'utf8', env: process.env, timeout: TIEMPO_MAXIMO_MS },
+    );
+
+    expect(resultado.status, `${resultado.stdout}${resultado.stderr}`).toBe(0);
+    const informe = JSON.parse(readFileSync(path.join(salida, 'informe.json'), 'utf8'));
+    expect(informe.preguntas).toHaveLength(180);
+    expect(informe.cobertura.map((c) => c.caso)).toEqual(['mama-completo', 'prostata-con-grado', 'prostata-con-psa-y-hrr']);
+    expect(informe.cobertura.every((c) => c.genericas_total === 22 && c.minimo === 18)).toBe(true);
+    expect(informe.comparacion).toBeNull();
+  });
 });
