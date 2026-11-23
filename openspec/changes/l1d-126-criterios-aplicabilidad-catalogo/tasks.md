@@ -104,10 +104,11 @@
 - [x] G1.4 Punto 5: `$defs/version` única. Los esquemas `plantillas`, `tendencias` y `sinonimos` conservan el patrón
       estricto `^\d+\.\d+\.\d+$` (no los recorre el validador; no admiten fixtures `test-*`).
 - [x] G1.5 Punto 6: puntaje solo en claves propias del criterio; nuevos nombres.
-- [ ] G1.6 **Deuda: registro de archivos de raíz del catálogo (lado API).** El mapa `ESQUEMAS` de
+- [x] G1.6 **Deuda: registro de archivos de raíz del catálogo (lado API).** El mapa `ESQUEMAS` de
       `apps/clinical-api/src/infrastructure/catalogo/validar-catalogo.ts` sigue listando a mano `atributos` y
       `poblacion`; debe derivar de `ARCHIVOS_DE_RAIZ` (imports JSON estáticos en TS). Destino: deuda: registro de
-      archivos de raíz del catálogo. **TRASLADADA a US-232** (decisión del usuario, 2026-10-27).
+      archivos de raíz del catálogo. Antes trasladada a US-232 (usuario, 2026-10-27); movida al S7 y hecha.
+      _Evidencia:_ hecha en S7.1 (parte A del S7); ver su evidencia en la sección «Sprint 7».
 - [x] G1.7 **Pendiente de modelo:** las claves `grado`, `estado_menopausico` y `estado_castracion` de `poblacion.json`
       están fuera del modelo v1.1; anotarlo en `docs/architecture/data-model.md` (fuera de mis paths). Destino:
       orquestador / L1D-117. _Evidencia:_ anotado en `docs/architecture/data-model.md` («Claves de `poblacion.json`
@@ -127,15 +128,18 @@
 - [x] G2.2 Endurecimiento del guardián (privacy-guardian M-1, m-1, m-2, m-3, m-5, P-1): huella del archivo entero,
       unión de tipos y `manifest`, `base_ilegible`, `version_no_sube`, registro explícito ampliado (design D8). La
       rama `git ls-tree`/`maxBuffer` del error de git no tiene test propio (solo el JSON ilegible).
-- [ ] G2.3 **Deuda (m-4): base desfasada de `pull_request.base.sha`.** Usar el primer padre del merge (`HEAD^1`, con
-      `fetch-depth: 2`) o exigir rama al día en la protección de `main`. Destino: US-232 (decisión del usuario, 2026-10-27).
+- [x] G2.3 **Deuda (m-4): base desfasada de `pull_request.base.sha`.** Usar el primer padre del merge (`HEAD^1`, con
+      `fetch-depth: 2`) o exigir rama al día en la protección de `main`. Antes destino US-232 (usuario, 2026-10-27); movida al S7 y hecha.
+      _Evidencia:_ hecha en S7.2 (parte A del S7); ver su evidencia en la sección «Sprint 7».
 - [x] G2.5 Menor 1 (base vacía solo cubre listas) y Menor 3 (`violacionesDeVersion` devuelve `base_ilegible`): tests en
       rojo y verde; el Lint (`no-unused-vars` de la desestructuración) se resuelve con `sinClaves`.
-- [ ] G2.4 **Deuda (Menor 2):** evasión en dos pasos (vaciar y rellenar una lista publicada). Riesgo aceptado: vaciar
-      una lista publicada exige revisión humana explícita. Destino: US-232 (decisión del usuario, 2026-10-27).
-- [ ] G2.6 **Deuda (Menor 4):** la `version` propia de cada archivo por tipo queda fuera de la huella y
-      `catalog:validate` no exige que coincida con `manifest.version`. Destino: US-232 (decisión del usuario, 2026-10-27).
+- [x] G2.4 **Deuda (Menor 2):** evasión en dos pasos (vaciar y rellenar una lista publicada). Riesgo aceptado: vaciar
+      una lista publicada exige revisión humana explícita. Antes destino US-232 (usuario, 2026-10-27); movida al S7 y hecha.
+      _Evidencia:_ hecha en S7.3 (parte A del S7); ver su evidencia en la sección «Sprint 7».
+- [x] G2.6 **Deuda (Menor 4):** la `version` propia de cada archivo por tipo queda fuera de la huella y
+      `catalog:validate` no exige que coincida con `manifest.version`. Antes destino US-232 (usuario, 2026-10-27); movida al S7 y hecha.
 
+      _Evidencia:_ hecha en S7.4 (parte A del S7); ver su evidencia en la sección «Sprint 7».
 ## Sprint 7 (movido-S7) · revisión clínica provisional y deudas
 
 > Alcance: `proposal.md` («Alcance del Sprint 7») y `design.md` (D9…D16). C-3 no entra. Nada pasa a «validada»; DEC-11
@@ -148,28 +152,44 @@
 Cierran las tareas abiertas G1.6, G2.3, G2.4 y G2.6 de arriba; cada una se marca `[x]` allí con su evidencia. La parte A
 **no cambia `manifest.version`** ni ningún archivo de contenido del catálogo. Se mergea antes de la corrida base.
 
-- [ ] S7.1 (clinical-platform · G1.6) El mapa `ESQUEMAS` de `apps/clinical-api/src/infrastructure/catalogo/validar-catalogo.ts`
+- [x] S7.1 (clinical-platform · G1.6) El mapa `ESQUEMAS` de `apps/clinical-api/src/infrastructure/catalogo/validar-catalogo.ts`
       deriva de `ARCHIVOS_DE_RAIZ`; test de integración que arranca con un archivo de raíz nuevo en un fixture · commits
       `test(L1D-126)` y `feat(L1D-126)` · verificación: Vitest de `clinical-api` en verde. Solo derivan las entradas
       de raíz; el mapa sigue abierto: `l1d-335` añadirá `sinonimos` después, así que ni el tipo ni un test fijan la
       lista exacta de claves (design D15).
-- [ ] S7.2 (clinical-platform · G2.3) `catalog:version-guard` compara contra el primer padre del merge (`HEAD^1`,
+      _Evidencia (parte A):_ `validar-catalogo-raiz.test.ts`: rojo `expected [Function] to not throw an error but
+      'ConfiguracionInvalidaError: CLINICAL_…' was thrown` (commit `test`); verde 2/2; Vitest de `clinical-api` 149 archivos y
+      1393 tests, integración 169 archivos y 888 tests con PostgreSQL real. Mecanismo y alternativas descartadas: design D17.
+- [x] S7.2 (clinical-platform · G2.3) `catalog:version-guard` compara contra el primer padre del merge (`HEAD^1`,
       `fetch-depth: 2` en el job) en lugar de `pull_request.base.sha`; test con repos temporales de una base desfasada ·
       `test(L1D-126)` y `ci(L1D-126)` · verificación: `version-guard.test.mjs` en verde y el job `build-test` del PR.
-- [ ] S7.3 (clinical-platform · G2.4) El guardián falla con un código propio cuando una lista con contenido en la base
+      _Evidencia (parte A):_ `catalogVersionGuardWorkflow.test.mjs` rojo 3/3 en la aserción (`fetch-depth` indefinido,
+      `--base "$BASE_REF"`, paso `git fetch … BASE_REF`), verde 3/3 tras el commit `ci`; `version-guard.test.mjs` con repos
+      temporales de una base desfasada (merge con primer padre = punta de `main`): falla con `HEAD^1`, pasa si la versión sube.
+- [x] S7.3 (clinical-platform · G2.4) El guardián falla con un código propio cuando una lista con contenido en la base
       queda vacía (design D15, mecanismo asumido); test en rojo antes · verificación: `version-guard.test.mjs`. Si el
       humano prefiere mantener el riesgo aceptado, la tarea se cierra como no accionable con su nota.
-- [ ] S7.4 (clinical-platform · G2.6) `catalog:validate` comprueba la `version` propia de cada archivo por tipo frente a
+      _Evidencia (parte A):_ rojo 2 fallos por aserción en `version-guard.test.mjs` (`lista_vaciada`), verde 29/29; código
+      `lista_vaciada <archivo>` (con o sin subir la versión). Sin decisión humana en contra: el riesgo aceptado se cierra.
+- [x] S7.4 (clinical-platform · G2.6) `catalog:validate` comprueba la `version` propia de cada archivo por tipo frente a
       `manifest.version` (design D15, regla asumida); test del validador en rojo antes · verificación: `catalog:validate`
       en verde sobre el catálogo vigente y en rojo sobre un fixture con una `version` mayor que la del manifiesto.
-- [ ] S7.4b (clinical-platform) Definición única de `revision_provisional`: `schemas/comun.schema.json#/$defs/revisionProvisional`
+      _Evidencia (parte A):_ `version-propia.test.mjs` rojo 2 fallos (`expected +0 not to be +0`), verde 4/4; la regla
+      `version_mayor_que_manifiesto` vive en `validator/versiones.mjs` y el guardián reutiliza su comparación.
+      `catalog:validate OK catalogVersion=1.9.0`.
+- [x] S7.4b (clinical-platform) Definición única de `revision_provisional`: `schemas/comun.schema.json#/$defs/revisionProvisional`
       (`rol` ∈ {`ia`}, `fecha` ISO, `additionalProperties: false`). Solo la definición: ningún archivo de contenido la usa
       todavía y la versión no sube. `l1d-335` y la parte B la referencian con `$ref`, sin redefinirla (design D9) ·
       test del validador: «acepta un bloque con rol ia y fecha ISO y rechaza un rol desconocido» · `test(L1D-126)` y
       `feat(L1D-126)`.
-- [ ] S7.4c (clinical-platform y ai-services) Los tests que fijan el literal de la versión del catálogo (`1.9.0`) pasan
+      _Evidencia (parte A):_ `revision-provisional.test.mjs` rojo 2 fallos por aserción (`expected undefined to deeply equal
+      [ 'ia' ]`, `expected false to be true`), verde 4/4; sin cambio de contenido ni de versión.
+- [x] S7.4c (clinical-platform y ai-services) Los tests que fijan el literal de la versión del catálogo (`1.9.0`) pasan
       a leer `manifest.version` · no cambia ninguna otra aserción; se declara en el PR · verificación: suites de
       `clinical-api`, `rag-orchestrator` y `packages/clinical-catalogs` en verde con el catálogo vigente.
+      _Evidencia (parte A):_ commit `refactor(L1D-126)`: Pytest de `rag-orchestrator` 5109 pasan; `clinical-api` 1393 unitarios y
+      888 de integración; `scripts/catalog` + `packages/clinical-catalogs` 226. `plantillas.test.mjs` conserva su `version: '1.9.0'`
+      (versión de un archivo ficticio, no la del catálogo) y `test_chat_faltantes.py` ya la lee del manifiesto.
 
 ### (b) Corrida base
 
