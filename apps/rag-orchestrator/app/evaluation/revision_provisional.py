@@ -16,6 +16,8 @@ from typing import Final
 
 from app.evaluation.dataset_loader import DatasetInvalido
 
+ROTULO_DE_REVISION_PROVISIONAL: Final = "Revisión provisional de IA; sin validación humana"
+"""Rótulo legible que acompaña a la marca en los reportes; no cambia ningún veredicto."""
 ROLES_DE_REVISION_PROVISIONAL: Final = ("ia",)
 """Rol que firma la revisión provisional; un oncólogo no se declara aquí: su revisión es ``revisada_por_oncologo``."""
 

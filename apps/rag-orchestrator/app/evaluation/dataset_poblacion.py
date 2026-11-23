@@ -21,12 +21,24 @@ from app.application.corpus_metadata.poblacion_puertos import Fragmento
 from app.evaluation.config_suite import ruta_del_repo
 from app.evaluation.dataset_loader import CLASE_SINTETICA, DatasetInvalido
 from app.evaluation.guardas import SuiteAbortada
+from app.evaluation.revision_provisional import RevisionProvisional, exigir_revision_provisional
 
 CLASE_CORPUS_PUBLICO = "corpus_publico"
 CLASES_DEL_DORADO = (CLASE_SINTETICA, CLASE_CORPUS_PUBLICO)
 ESTRATOS = ("guia", "ensayo", "revision")
 IDIOMAS = ("es", "en")
 ALCANCES = ("elegibilidad", "subgrupo", "mencion")
+REDACCIONES = ("plantilla", "dificil")
+TIPOS_DE_REDACCION = (
+    "negacion",
+    "rango",
+    "definicion_implicita",
+    "inclusion_total",
+    "umbral",
+    "tabla",
+)
+"""Tipos de redacción difícil de D-2; solo los pares ``dificil`` llevan uno."""
+RENDIJAS = ("c3",)
 ESTADOS_ESPERADOS = ("coincide", "parcial", "no_coincide", "desconocido")
 CASO_EXCLUIDO_DEL_BUCLE = "tamoxifen"
 """El bucle de OUT-06 se repite con casos DISTINTOS del que lo provocó (ADR47-R17)."""
@@ -58,6 +70,12 @@ class ParDorado:
     """Lo que el LLM falso propone; por defecto, lo esperado. Solo la usan los adapters falsos."""
     corte: int
     """Cuántas de las primeras llamadas del criterio terminan con ``finish_reason = length`` (adapters falsos)."""
+    redaccion: str = "plantilla"
+    """``plantilla`` o ``dificil`` (S7-D3, D-2)."""
+    tipo_de_redaccion: str | None = None
+    """Tipo de la redacción difícil (``TIPOS_DE_REDACCION``); solo con ``redaccion: dificil``."""
+    distractor: bool = False
+    """El valor solo aparece como subgrupo o mención: el esperado no trae elegibilidad (D-3)."""
 
 
 @dataclass(frozen=True)
@@ -69,6 +87,8 @@ class CasoDeEstadoDorado:
     valores: tuple[ValorEsperado, ...]
     citados: frozenset[str] | None
     esperado: str
+    rendija: str | None = None
+    """Caso que mide una rendija conocida de la regla (``c3``); el esperado sigue siendo el de la regla vigente."""
 
 
 @dataclass(frozen=True)
@@ -105,6 +125,8 @@ class DoradoDePoblacion:
     pares: tuple[ParDorado, ...]
     estados: tuple[CasoDeEstadoDorado, ...]
     bucle: tuple[ParDelBucle, ...]
+    revision_provisional: RevisionProvisional | None = None
+    """Marca de procedencia de IA (S7-D2): no firma el dorado; ``revision`` sigue vacía hasta que lo revise un humano."""
 
     def estratos(self) -> dict[str, int]:
         """Pares por estrato (tipo de fuente) e idioma: ``guia/es``…; solo conteos."""
@@ -122,6 +144,7 @@ def cargar_dorado(directorio: Path, licencias_aceptadas: frozenset[str]) -> Dora
         raise SuiteAbortada(
             "el manifest.json del dorado no declara corpus público ni datos sintéticos (RN-13, RN-14)"
         )
+    provisional = _revision_provisional(manifiesto)
     try:
         contenido = _leer_yaml(directorio / "pares.yaml", "pares.yaml")
         documentos = {d: _documento(d, v) for d, v in contenido["documentos"].items()}
@@ -136,6 +159,7 @@ def cargar_dorado(directorio: Path, licencias_aceptadas: frozenset[str]) -> Dora
             pares=pares,
             estados=_estados(_leer_yaml(directorio / "estados.yaml", "estados.yaml")),
             bucle=_bucle(_leer_yaml(directorio / "pares-bucle.yaml", "pares-bucle.yaml")),
+            revision_provisional=provisional,
         )
     except (KeyError, TypeError, AttributeError, ValueError):
         raise DatasetInvalido("el dorado de población no tiene la forma esperada") from None
@@ -162,11 +186,29 @@ def _exigir_forma(dorado: DoradoDePoblacion) -> None:
     for par in dorado.pares:
         if par.documento not in dorado.documentos:
             raise DatasetInvalido(f"el par {par.id} cita un documento que no está en pares.yaml")
+        _exigir_redaccion(par)
     repetidos = {(p.documento, p.criterio) for p in dorado.pares}
     if len(repetidos) != len(dorado.pares):
         raise DatasetInvalido("hay dos pares para el mismo documento y criterio")
     if any(CASO_EXCLUIDO_DEL_BUCLE in p.id.lower() for p in dorado.bucle):
         raise DatasetInvalido("el bucle debe usar casos distintos del tamoxifeno (ADR47-R17)")
+
+
+def _exigir_redaccion(par: ParDorado) -> None:
+    """``redaccion`` y ``tipo_de_redaccion`` del conjunto cerrado y un distractor sin valores de elegibilidad (D-2, D-3)."""
+    if par.redaccion not in REDACCIONES:
+        raise DatasetInvalido(f"el par {par.id} declara una redaccion fuera del conjunto")
+    if not _tipo_corresponde_a_la_redaccion(par):
+        raise DatasetInvalido(f"el par {par.id} declara un tipo de redaccion que no corresponde")
+    if par.distractor and any(v.scope == "elegibilidad" for v in par.esperados):
+        raise DatasetInvalido(f"el distractor {par.id} no puede esperar valores de elegibilidad")
+
+
+def _tipo_corresponde_a_la_redaccion(par: ParDorado) -> bool:
+    """Solo la redacción difícil lleva tipo, y es uno del conjunto cerrado."""
+    if par.redaccion != "dificil":
+        return par.tipo_de_redaccion is None
+    return par.tipo_de_redaccion in TIPOS_DE_REDACCION
 
 
 def _leer_json(ruta: Path, nombre: str) -> dict[str, Any]:
@@ -187,6 +229,13 @@ def _leer_yaml(ruta: Path, nombre: str) -> dict[str, Any]:
     if not isinstance(contenido, dict):
         raise DatasetInvalido(f"{nombre} del dorado no tiene la forma esperada")
     return contenido
+
+
+def _revision_provisional(manifiesto: Mapping[str, Any]) -> RevisionProvisional | None:
+    """Ausente es válido (dorado sin marca); presente se valida con la regla compartida de todas las familias."""
+    if "revision_provisional" not in manifiesto:
+        return None
+    return exigir_revision_provisional(manifiesto["revision_provisional"], "manifest.json")
 
 
 def _revision(crudo: object) -> RevisionDelDorado:
@@ -232,6 +281,11 @@ def _par(crudo: dict[str, Any]) -> ParDorado:
         esperados=esperados,
         propuesta=_valores(crudo["propuesta"]) if "propuesta" in crudo else esperados,
         corte=int(crudo.get("corte", 0)),
+        redaccion=str(crudo.get("redaccion", "plantilla")),
+        tipo_de_redaccion=(
+            None if crudo.get("tipo_de_redaccion") is None else str(crudo["tipo_de_redaccion"])
+        ),
+        distractor=bool(crudo.get("distractor", False)),
     )
 
 
@@ -250,9 +304,16 @@ def _estados(contenido: dict[str, Any]) -> tuple[CasoDeEstadoDorado, ...]:
                 valores=_valores(crudo["valores"]),
                 citados=frozenset(crudo["citados"]) if "citados" in crudo else None,
                 esperado=esperado,
+                rendija=_rendija(crudo.get("rendija")),
             )
         )
     return tuple(casos)
+
+
+def _rendija(crudo: object) -> str | None:
+    if crudo is not None and crudo not in RENDIJAS:
+        raise ValueError("rendija fuera del conjunto")
+    return None if crudo is None else str(crudo)
 
 
 def _bucle(contenido: dict[str, Any]) -> tuple[ParDelBucle, ...]:

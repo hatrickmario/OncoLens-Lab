@@ -7,12 +7,18 @@ from app.evaluation.metricas.poblacion import (
     Fraccion,
     ParMedido,
     cobertura_por_criterio,
+    cobertura_por_redaccion,
+    cobertura_por_tipo_de_redaccion,
     concordancia_de_estados,
     cortes_por_longitud,
     precision_por_criterio,
+    precision_por_redaccion,
+    precision_por_tipo_de_redaccion,
+    recuento_de_rendija,
     sin_evidencia_vs_baseline,
     tasa_cortes_del_bucle,
     tasa_duplicados,
+    valores_indebidos_en_distractores,
     veredicto,
 )
 
@@ -163,3 +169,110 @@ def test_veredicto_nunca_es_pass_sin_revisor_ni_con_muestra_insuficiente() -> No
 
 def test_veredicto_la_invariante_violada_gana_sobre_no_concluyente() -> None:
     assert _veredicto(revisor_completo=False, cortes=1).resultado == "fail"
+
+
+def _par_con(
+    redaccion: str,
+    esperados: set[str],
+    obtenidos: tuple[str, ...],
+    *,
+    tipo_de_redaccion: str | None = None,
+    distractor: bool = False,
+    valores_como_elegibilidad: int = 0,
+    doc: str = "d1",
+) -> ParMedido:
+    return ParMedido(
+        doc,
+        "her2",
+        frozenset(esperados),
+        obtenidos,
+        redaccion=redaccion,
+        tipo_de_redaccion=tipo_de_redaccion,
+        distractor=distractor,
+        valores_como_elegibilidad=valores_como_elegibilidad,
+    )
+
+
+def test_un_par_sin_redaccion_declarada_es_de_plantilla() -> None:
+    assert _par("her2", {"a"}, ("a",)).redaccion == "plantilla"
+
+
+def test_precision_por_redaccion_separa_los_pares_de_plantilla_de_los_dificiles() -> None:
+    pares = [
+        _par_con("plantilla", {"a"}, ("a",), doc="d1"),
+        _par_con("dificil", {"b"}, ("b", "x"), doc="d2"),
+    ]
+
+    assert precision_por_redaccion(pares) == {
+        "plantilla": Fraccion(1, 1),
+        "dificil": Fraccion(1, 2),
+    }
+
+
+def test_cobertura_por_redaccion_separa_los_pares_de_plantilla_de_los_dificiles() -> None:
+    pares = [
+        _par_con("plantilla", {"a"}, ("a",), doc="d1"),
+        _par_con("dificil", {"b", "c"}, ("b",), doc="d2"),
+    ]
+
+    assert cobertura_por_redaccion(pares) == {
+        "plantilla": Fraccion(1, 1),
+        "dificil": Fraccion(1, 2),
+    }
+
+
+def test_precision_y_cobertura_por_tipo_solo_cuentan_los_pares_con_tipo() -> None:
+    pares = [
+        _par_con("plantilla", {"a"}, ("a",), doc="d1"),
+        _par_con("dificil", {"b"}, ("x",), tipo_de_redaccion="negacion", doc="d2"),
+        _par_con("dificil", {"c"}, ("c",), tipo_de_redaccion="rango", doc="d3"),
+    ]
+
+    assert precision_por_tipo_de_redaccion(pares) == {
+        "negacion": Fraccion(0, 1),
+        "rango": Fraccion(1, 1),
+    }
+    assert cobertura_por_tipo_de_redaccion(pares) == {
+        "negacion": Fraccion(0, 1),
+        "rango": Fraccion(1, 1),
+    }
+
+
+def test_distractores_cuenta_los_valores_dados_valores_como_elegibilidad_solo_en_los_distractores() -> (
+    None
+):
+    pares = [
+        _par_con("dificil", {"a"}, ("a",), distractor=True, valores_como_elegibilidad=2, doc="d1"),
+        _par_con("dificil", {"b"}, ("b",), distractor=True, doc="d2"),
+        _par_con("plantilla", {"c"}, ("c",), valores_como_elegibilidad=1, doc="d3"),
+    ]
+
+    resultado = valores_indebidos_en_distractores(pares)
+
+    assert (resultado.pares, resultado.valores_indebidos, resultado.pares_con_indebidos) == (
+        2,
+        2,
+        1,
+    )
+
+
+def test_distractores_sin_distractores_cuenta_cero() -> None:
+    resultado = valores_indebidos_en_distractores([_par("her2", {"a"}, ("a",))])
+
+    assert (resultado.pares, resultado.valores_indebidos, resultado.pares_con_indebidos) == (
+        0,
+        0,
+        0,
+    )
+
+
+def test_la_rendija_c3_cuenta_los_casos_que_la_regla_vigente_deja_en_desconocido() -> None:
+    casos = [
+        CasoDeEstado("c3a", "desconocido", "desconocido", rendija=True),
+        CasoDeEstado("c3b", "desconocido", "no_coincide", rendija=True),
+        CasoDeEstado("f21", "desconocido", "desconocido"),  # fuera de la rendija: no cuenta
+    ]
+
+    resultado = recuento_de_rendija(casos)
+
+    assert (resultado.casos, resultado.desconocido, resultado.otros) == (2, 1, 1)

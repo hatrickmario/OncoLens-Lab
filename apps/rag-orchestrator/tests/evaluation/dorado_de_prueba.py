@@ -175,6 +175,7 @@ def escribir_dorado(
     estados: list[dict[str, Any]] | None = None,
     bucle: dict[str, Any] | None = None,
     clase: str = "sintetico",
+    revision_provisional: Any = None,
 ) -> Path:
     destino.mkdir(parents=True, exist_ok=True)
     manifiesto: dict[str, Any] = {
@@ -186,6 +187,8 @@ def escribir_dorado(
     }
     if revisor is not None:
         manifiesto["revisor"] = revisor
+    if revision_provisional is not None:
+        manifiesto["revision_provisional"] = revision_provisional
     (destino / "manifest.json").write_text(json.dumps(manifiesto), encoding="utf-8")
     _escribir_yaml(
         destino / "pares.yaml",
