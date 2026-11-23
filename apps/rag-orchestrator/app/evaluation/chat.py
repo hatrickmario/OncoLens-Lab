@@ -486,13 +486,13 @@ def _registrar_control(
 def _es_control_de_identidad_fuera_de_alcance(
     caso: CasoDeChat, respuesta: dict[str, Any] | None
 ) -> bool:
-    """El caso cuya pregunta lleva el marcador de identidad (FX-12-d) y que el enrutador de producción manda a
+    """El caso que declara ser el control de identidad (FX-12-d) y que el enrutador de producción manda a
     ``fuera_de_alcance``: ``clinical-api`` enmascara el nombre como ``[NOMBRE]`` y la regla de US-259 (S5 resp. 13) lo trata
     como otra persona. Mide la no fuga (AC-6), no la intención; una respuesta de otra intención se mide como cualquier caso."""
     return (
-        respuesta is not None
+        caso.control_de_identidad
+        and respuesta is not None
         and respuesta["intent"] == FUERA_DE_ALCANCE
-        and MARCADOR_DE_IDENTIDAD.search(caso.pregunta) is not None
     )
 
 
@@ -610,6 +610,9 @@ def _reporte(config: ConfigSuite, dataset: DatasetDeChat, medidas: _Medidas) -> 
         },
         "metricas": {
             "exactitud_de_intent": _exactitud_de_intent(medidas),
+            "casos_de_control_de_identidad": sum(
+                c["control_de_identidad"] for c in medidas.por_caso
+            ),
             "faltantes": dict.fromkeys(METRICAS_DE_FALTANTES),
             "no_medidas": [f"faltantes.{nombre}" for nombre in METRICAS_DE_FALTANTES],
             "por_tipo": _por_tipo(medidas),

@@ -64,6 +64,9 @@ class CasoDeChat:
     previo: str | None
     ejemplo: EjemploDelCaso
     guion: GuionDelLlm
+    control_de_identidad: bool = False
+    """El caso declara que su pregunta lleva la identidad (FX-12-d): mide la no fuga (AC-6) y, si el enrutador de producción
+    lo manda a ``fuera_de_alcance`` por el marcador ``[NOMBRE]`` (US-259), no entra en las métricas de intención ni del caso."""
 
 
 @dataclass(frozen=True)
@@ -174,6 +177,7 @@ def _caso(c: Mapping[str, Any]) -> CasoDeChat:
         previo=None if c.get("previo") is None else str(c["previo"]),
         ejemplo=_ejemplo(c),
         guion=_guion(c),
+        control_de_identidad=c.get("control_de_identidad") is True,
     )
 
 

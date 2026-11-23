@@ -193,40 +193,38 @@ def _con_tolerancia_efectiva(crudo: dict[str, Any], entorno: Mapping[str, str]) 
     return {**crudo, "comparacion": comparacion}
 
 
-def _con_umbrales_efectivos(crudo: dict[str, Any], entorno: Mapping[str, str]) -> dict[str, Any]:
-    """El bloque ``umbrales`` del YAML o, si no lo trae, el que sale de ``Settings`` con las variables del entorno (RN-22).
+def _con_umbrales_efectivos(
+    crudo: dict[str, Any], entorno: Mapping[str, str]
+) -> tuple[dict[str, Any], bool]:
+    """El YAML con el bloque ``umbrales`` efectivo y si salió de ``Settings`` (``True``) o del propio YAML (RN-22).
 
-    El resultado es lo que se hashea: cambiar un umbral por entorno cambia la huella de la configuración (AC-2). Si falta
-    alguna variable o alguna no es válida, ``ConfigInvalida`` la nombra (nunca su valor)."""
+    Sin bloque, los valores salen de ``Settings`` con las variables del ``entorno`` recibido y nada más: ``claim_max_words`` se
+    pasa explícito para que el entorno real del proceso no cuele valores. El resultado es lo que se hashea: cambiar un umbral
+    por entorno cambia la huella (AC-2). Si falta o no es válida alguna variable, ``ConfigInvalida`` la nombra (nunca su valor)."""
     if "umbrales" in crudo:
-        return crudo
+        return crudo, False
     ausentes = [variable for variable in ENTORNO_DE_LOS_UMBRALES if not entorno.get(variable)]
     if ausentes:
         raise ConfigInvalida(
             f"umbrales: la configuración no los declara y faltan en el entorno (Settings, RN-22): {', '.join(ausentes)}"
         )
-    variables = (*ENTORNO_DE_LOS_UMBRALES, "CLAIM_MAX_WORDS")
+    valores = {v.lower(): entorno[v] for v in ENTORNO_DE_LOS_UMBRALES}
+    valores["claim_max_words"] = entorno.get("CLAIM_MAX_WORDS") or CLAIM_MAX_WORDS_INICIAL
     try:
-        ajustes = Settings(  # type: ignore[call-arg]
-            _env_file=None,
-            **{v.lower(): entorno[v] for v in variables if entorno.get(v)},
-        )
+        ajustes = Settings(_env_file=None, **valores)  # type: ignore[call-arg]
     except ValidationError as error:
         invalidas = sorted({str(e["loc"][0]).upper() for e in error.errors() if e["loc"]})
         raise ConfigInvalida(
             f"umbrales: valor inválido en el entorno: {', '.join(invalidas)}"
         ) from None
-    return {
-        **crudo,
-        "umbrales": {
-            "relevance_threshold": ajustes.relevance_threshold,
-            "nli_entailment_threshold": ajustes.nli_entailment_threshold,
-            "retrieval_top_k": ajustes.retrieval_top_k,
-            "rerank_top_n": ajustes.rerank_top_n,
-            "claim_max_words": ajustes.claim_max_words,
-        },
-        "umbrales_de_settings": True,
+    umbrales = {
+        "relevance_threshold": ajustes.relevance_threshold,
+        "nli_entailment_threshold": ajustes.nli_entailment_threshold,
+        "retrieval_top_k": ajustes.retrieval_top_k,
+        "rerank_top_n": ajustes.rerank_top_n,
+        "claim_max_words": ajustes.claim_max_words,
     }
+    return {**crudo, "umbrales": umbrales}, True
 
 
 def _exigir_fraccion(valor: object, clave: str) -> None:
@@ -453,7 +451,7 @@ def cargar_config_suite(ruta: Path, entorno: Mapping[str, str] | None = None) ->
     if not isinstance(crudo, dict):
         raise ConfigInvalida("la configuración no es un mapa YAML")
     crudo = _con_tolerancia_efectiva(_con_juez_efectivo(crudo, entorno or {}), entorno or {})
-    crudo = _con_umbrales_efectivos(crudo, entorno or {})
+    crudo, umbrales_de_settings = _con_umbrales_efectivos(crudo, entorno or {})
     umbrales = clave_de(crudo, "umbrales")
     dataset = clave_de(crudo, "dataset")
     sub = dataset.get("subconjunto")
@@ -496,6 +494,6 @@ def cargar_config_suite(ruta: Path, entorno: Mapping[str, str] | None = None) ->
         comparacion=_comparacion_de(crudo, sub),
         p95_corridas=_corridas_de_p95(crudo),
         rn23_tolerancia_falsos_positivos=_tolerancia_de_falsos_positivos(crudo),
-        umbrales_de_settings=bool(crudo.get("umbrales_de_settings")),
+        umbrales_de_settings=umbrales_de_settings,
         corpus_declarado=_corpus_declarado(crudo),
     )
