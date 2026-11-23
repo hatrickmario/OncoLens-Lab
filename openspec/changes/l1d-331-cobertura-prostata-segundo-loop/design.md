@@ -76,6 +76,37 @@ mama idéntica (US-273 AC-5).
 (a) los dos casos alcanzan la meta, o (b) el usuario decide el criterio de cobertura de próstata (D6-57) sobre ese
 reporte y el AC-2 se actualiza en el Markdown del backlog (lo hace la sesión principal, no este change).
 
+## Decisiones de implementación (S7, ai-services)
+
+- **I1 · Dónde se toma el top-3.** La respuesta de `/rag/query` no trae los chunks bajo el umbral ni el puntaje por chunk, y
+  añadírselos cambiaría el contrato. Opciones: (a) ampliar `Observaciones.rankings` de `medidores.py` (indexado por texto de
+  pregunta y sin `chunk_id`; lo usan las demás familias); (b) leer los logs de producción; (c) un decorador del puerto
+  `Reranker` propio de la familia (`app/evaluation/ranking_contextual.py`), como hace `diagnostico` con sus observadores.
+  **Elegida (c)**: aditiva, sin tocar `medidores.py`, `composicion_suite.py` ni `evaluate.py` (el PR de L1D-113 los toca), cumple
+  el contrato del puerto (LSP) y guarda solo id y puntaje. Descartadas (a) por riesgo de conflicto y por no tener el id, y (b)
+  porque los logs no llevan puntajes por chunk (RN-14).
+- **I2 · Meta por caso o por conjunto.** Opciones: una clave única aplicada a todos los casos de la corrida, una lista de casos
+  objetivo, o un mapa caso → meta. **Elegida: una clave única** `contextual.genericas_con_evidencia_minimo` (RN-22) y el
+  reporte la compara en cada caso (`cumple` = `>=`); los casos de mama también figuran, informativos. Descartadas las otras
+  por añadir claves antes de que el usuario decida el criterio (D6-57, P-3).
+- **I3 · Reporte base.** Opciones: flag `--base` en `evaluate.py`, o clave opcional `contextual.reporte_base` en la configuración.
+  **Elegida la clave** (no toca el parser compartido; su ruta entra en la huella). La clave ausente significa «sin comparación»:
+  es la única de la familia que puede faltar, porque no es un valor «a calibrar». Se comprueba el corpus **antes** de medir
+  (`dataset` y `corpus` idénticos); si no coincide, `SuiteAbortada` (código 1) sin escribir nada.
+- **I4 · Qué es «empeora».** El dataset de la familia no declara evidencia esperada, así que recall@10 y MRR de US-273 AC-2 no se
+  pueden calcular aquí (desviación del delta, que los nombra; los miden las familias con evidencia esperada, `all`). Se
+  comparan, por ámbito común: genéricas con evidencia, controles con evidencia (bajar es empeorar) y falsos positivos de las
+  adversarias, es decir `con_tema` con evidencia (subir es empeorar). El texto del delta sigue pendiente de ajuste en un
+  `/opsx:update` si el usuario quiere recall/MRR en esta familia.
+- **I5 · Sin términos del catálogo.** El test del runner usa una copia temporal del catálogo en la que el tipo pierde su
+  etiqueta CIE-10 y un caso de próstata sin estadio, grado ni biomarcador conocido: no hay segunda recuperación, la pregunta
+  queda `sin_evidencia`, `top_relevance_score` es `null` y `llamadas_al_generador` es 0. El caso del fixture `tipo-sin-etiqueta`
+  (leucemia) no sirve: el tipo no está habilitado y el servicio responde `422`.
+- **I6 · AC-3 en verde.** P-2 aceptada por la planificación: el test nació en verde y su evidencia es la mutación local de
+  `tasks.md` 1.1 (el commit `feat` no existe para esta AC).
+- Con adaptadores falsos la mayoría de las adversarias sale con evidencia (el *reranker* léxico falso no distingue temas): las
+  cifras fake no dicen nada del RAG real y los «0 falsos positivos» se miden en la corrida base real (H-1), no en la CI.
+
 ## Privacidad y ownership
 
 - Solo `rag-orchestrator`. No se toca `clinical-api`, PostgreSQL clínico ni `clinical-minio`; ningún dato cruza una
