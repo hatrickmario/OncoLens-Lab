@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
   canonicosRepetidos,
   equivalentesAmbiguos,
+  sinonimoConRelacionesContradictorias,
   sinonimoIgualAlCanonico,
   violacionesDeSinonimos,
 } from '../../../packages/clinical-catalogs/validator/sinonimos.mjs';
@@ -183,6 +184,25 @@ describe('reglas puras de sinonimos.json', () => {
     const items = [termino('a', eq('prostatectomía')), termino('b', eq('PROSTATECTOMIA'))];
 
     expect(equivalentesAmbiguos(items)).toBe(true);
+  });
+
+  it('equivalentesAmbiguos normaliza como Python: la puntuación es un separador [US-277 AC-1]', () => {
+    const items = [termino('a', eq('HER-2')), termino('b', eq('HER 2'))];
+
+    expect(equivalentesAmbiguos(items)).toBe(true);
+  });
+
+  it('canonicosRepetidos normaliza como Python: la puntuación es un separador [US-277 AC-1]', () => {
+    expect(canonicosRepetidos([termino('HER-2', eq('x')), termino('HER 2', eq('y'))])).toBe(true);
+    // «HER2» y «HER-2» no se unen en Python (`her2` frente a `her 2`): tampoco aquí
+    expect(canonicosRepetidos([termino('HER2', eq('x')), termino('HER-2', eq('y'))])).toBe(false);
+  });
+
+  it('sinonimoConRelacionesContradictorias detecta un texto equivalente y más amplio dentro del mismo término', () => {
+    expect(sinonimoConRelacionesContradictorias([termino('a', eq('x'), amplio('X'))])).toBe(true);
+    expect(
+      sinonimoConRelacionesContradictorias([termino('a', eq('x')), termino('b', amplio('x'))]),
+    ).toBe(false);
   });
 
   it('canonicosRepetidos detecta el mismo término canónico dos veces', () => {

@@ -63,6 +63,10 @@ export function sinonimoIgualAlCanonico(items) {
   );
 }
 
+export function sinonimoConRelacionesContradictorias() {
+  throw new Error('no implementado');
+}
+
 const REGLAS = [
   ['sinonimo_equivalente_ambiguo', equivalentesAmbiguos],
   ['termino_canonico_repetido', canonicosRepetidos],
