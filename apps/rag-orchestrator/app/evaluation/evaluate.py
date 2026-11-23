@@ -44,6 +44,7 @@ from app.evaluation.corrida_aplicabilidad import (
 from app.evaluation.corrida_barrido import ejecutar_barrido, exigir_dataset_sintetico
 from app.evaluation.corrida_brazos import ResultadoDeBrazo, evaluar_brazos
 from app.evaluation.corrida_calibracion import PARAMETROS_DE_CALIBRACION, ejecutar_calibracion
+from app.evaluation.corrida_diagnostico import PuertosDeDiagnostico
 from app.evaluation.corrida_opciones import SUITE_OPCIONES, PuertosDeOpciones, ejecutar_opciones
 from app.evaluation.corrida_poblacion import (
     SUITE_POBLACION,
@@ -144,6 +145,7 @@ def main(
     puertos_aplicabilidad: PuertosDeAplicabilidad | None = None,
     puertos_poblacion: PuertosDePoblacion | None = None,
     puertos_opciones: PuertosDeOpciones | None = None,
+    puertos_diagnostico: PuertosDeDiagnostico | None = None,
     cargador_de_modelos: CargadorDeModelos | None = None,
     lector_rss: LectorDeRss | None = None,
 ) -> int:
