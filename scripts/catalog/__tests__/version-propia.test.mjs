@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import {
+  ARCHIVOS_CON_VERSION_PROPIA,
+  violacionesDeVersionPropia,
+} from '../../../packages/clinical-catalogs/validator/index.mjs';
+import {
   CATALOGO,
   PLAZO_PROCESO_MS,
   copiarFixture,
@@ -66,4 +70,26 @@ describe('catalog:validate · versión propia de cada archivo frente a manifest.
     },
     PLAZO_PROCESO_MS,
   );
+});
+
+describe('archivos con versión propia (una sola constante para el validador y el guardián)', () => {
+  it('nombra los archivos de lenguaje/ que no se comparan con el manifiesto', () => {
+    expect(ARCHIVOS_CON_VERSION_PROPIA).toEqual([
+      'lenguaje/terminos-prohibidos',
+      'lenguaje/marcos-de-pregunta',
+    ]);
+  });
+
+  it('ignora una versión mayor en un archivo con versión propia y señala la de un archivo de raíz', () => {
+    const archivos = {
+      manifest: { version: '1.0.0' },
+      'lenguaje/marcos-de-pregunta': { version: '9.0.0' },
+      escalas: { version: '9.0.0' },
+      tipos: {},
+    };
+
+    expect(violacionesDeVersionPropia(archivos)).toEqual([
+      { codigo: 'version_mayor_que_manifiesto', archivo: 'escalas' },
+    ]);
+  });
 });
