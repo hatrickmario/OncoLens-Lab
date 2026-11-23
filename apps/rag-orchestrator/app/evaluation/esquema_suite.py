@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from app.domain.expansion_contextual import CAMPOS_DE_EXPANSION, FORMATOS_DE_CONSULTA
 from app.evaluation.acuerdo_juez import ESTADO_CONCLUYENTE, ESTADO_NO_CONCLUYENTE, SIN_MEDIR
 from app.evaluation.config_suite import PROVEEDORES, RELOJES, SUITES
 from app.evaluation.cronometro import ETAPAS
@@ -751,6 +752,13 @@ ESQUEMA_CONTEXTUAL = Objeto(
                     }
                 ),
                 "expansion_habilitada": Booleano(),
+                # Los campos del caso y el formato con los que corrió la expansión (solo se registran, no se configuran).
+                "expansion": Objeto(
+                    {
+                        "campos": Lista(Enumerado(frozenset(CAMPOS_DE_EXPANSION))),
+                        "formato": Enumerado(frozenset(FORMATOS_DE_CONSULTA)),
+                    }
+                ),
                 "casos": Lista(Identificador()),
             }
         ),

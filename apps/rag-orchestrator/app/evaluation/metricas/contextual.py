@@ -26,7 +26,7 @@ AMBITO_TOTAL: Final = "total"
 
 CONDICIONES_DE_LA_CAUSA: Final = (
     "algún chunk supera RELEVANCE_THRESHOLD",
-    "ninguna forma del término (canónica o sinónimo, es o en, sin distinguir mayúsculas ni tildes) aparece en un chunk del corpus de la corrida",
+    "ninguna forma del término (canónica o sinónimo, es o en, sin distinguir mayúsculas ni tildes) aparece en un chunk del corpus de la corrida recuperable para el tipo de cáncer del caso",
     "alguna forma del término aparece en un chunk del corpus y ningún chunk supera RELEVANCE_THRESHOLD",
 )
 REGLA_DE_LA_CAUSA: Final = tuple(
@@ -66,7 +66,8 @@ def causa_de_sinonimo(
     supero_umbral: bool, formas: Sequence[str], textos_de_chunks: Iterable[str]
 ) -> str | None:
     """Por qué una pregunta de sinónimos no supera el umbral (design D4): ``None`` si lo supera; ``termino_ausente_del_corpus``
-    si ninguna forma del término (canónica o sinónimo, en cualquier idioma) aparece en un chunk del corpus de la corrida;
+    si ninguna forma del término (canónica o sinónimo, en cualquier idioma) aparece en un chunk recuperable para el caso
+    (quien llama pasa solo los chunks del tipo de cáncer del caso: la recuperación filtra por él);
     ``bajo_umbral_con_termino_en_corpus`` si alguna aparece y aun así no supera el umbral (el detalle por etapa es de
     ``diagnostico``). La comparación no distingue mayúsculas, tildes ni signos y exige palabras completas."""
     if supero_umbral:

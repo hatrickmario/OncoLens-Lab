@@ -49,6 +49,10 @@ class CasoSintetico:
     contexto_clinico: dict[str, Any]
     """``clinicalContext`` desidentificado del fixture: ``diagnosis`` y ``biomarkers``."""
 
+    @property
+    def tipo_de_cancer(self) -> str:
+        return str(self.contexto_clinico["diagnosis"]["cancerType"])
+
 
 def cargar_dataset_contextual(directorio: Path) -> DatasetContextual:
     """Se niega (``DatasetInvalido``) si el manifiesto o alguno de sus archivos no declara ``clase: sintetico`` (RN-13, RN-14),

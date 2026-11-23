@@ -47,7 +47,9 @@ from app.evaluation.dataset_contextual import (
     cargar_casos,
     cargar_dataset_contextual,
 )
+from app.domain.retrieval_filter import coincide_etiqueta
 from app.evaluation.dataset_loader import Pregunta
+from app.evaluation.fuente_dataset import DatasetSuite
 from app.evaluation.esquema_suite import ESQUEMA_CONTEXTUAL, VERSION_ESQUEMA
 from app.evaluation.guardas import exigir_adapters_locales, exigir_proveedor_local
 from app.evaluation.llamadas import RegistroDeLlamadas
@@ -125,7 +127,7 @@ def ejecutar_contextual(
     exigir_adapters_locales(dataset.corpus.clase, suite.urls)
     exigir_proveedor_local(suite)
     medicion = asyncio.run(medir_contextual(config, dataset, casos, origen, reloj, puertos))
-    reporte = _reporte(config, dataset, medicion, formas)
+    reporte = _reporte(config, dataset, casos, medicion, formas)
     ruta = _ruta_del_resultado(config, args, reloj)
     escribir_reporte_cerrado(ruta, reporte, ESQUEMA_CONTEXTUAL)
     ruta.with_suffix(".md").write_text(informe_legible(reporte), encoding="utf-8")
@@ -232,6 +234,8 @@ def _servicio(
     adaptadores = adaptadores_de_suite(suite, dataset.corpus, locales)
     if puertos.reranker is not None:
         adaptadores = replace(adaptadores, reranker=puertos.reranker)
+    if puertos.generador is not None:
+        adaptadores = replace(adaptadores, generador=puertos.generador)
     tipos = cargar_catalogo_del_manifiesto(suite.ruta_terminos).tipos_de_cancer()
     cronometro = Cronometro(RelojSimulado() if suite.reloj == "simulado" else time.perf_counter)
     return componer_servicio(
@@ -243,7 +247,7 @@ def _servicio(
         adaptadores=adaptadores,
         reranker_max_pairs=config.reranker_max_pairs,
         expansion=ExpansionDeLaSuite(
-            ParametrosDeExpansionContextual(habilitada=config.expansion_habilitada),
+            _expansion_de_la_corrida(config),
             cargar_marcos_de_pregunta(suite.ruta_terminos),
             cargar_catalogo_de_terminos(suite.ruta_terminos, tipos),
         ),
@@ -326,6 +330,7 @@ def _modelos_de_recuperacion(meta: RagMeta) -> dict[str, str]:
 def _reporte(
     config: ConfigContextual,
     dataset: DatasetContextual,
+    casos: Sequence[CasoSintetico],
     medicion: MedicionContextual,
     formas: Mapping[str, tuple[str, ...]],
 ) -> dict[str, Any]:
@@ -345,7 +350,7 @@ def _reporte(
         ],
         "preguntas": [_fila_del_informe(f) for f in medicion.filas],
         "recuentos": [_recuento_del_informe(r) for r in recuentos_por_clase(medicion.filas)],
-        "sinonimos": _sinonimos_del_informe(config, dataset, medicion, formas),
+        "sinonimos": _sinonimos_del_informe(config, dataset, casos, medicion, formas),
         "salidas_invalidas": medicion.salidas_invalidas,
     }
 
@@ -357,6 +362,7 @@ def _configuracion_del_informe(
     suite = config.suite
     u = suite.umbrales
     corpus = dataset.corpus
+    expansion = _expansion_de_la_corrida(config)
     return {
         "nombre": suite.nombre,
         "hashConfig": suite.hash_config,
@@ -381,8 +387,14 @@ def _configuracion_del_informe(
             "rerankerMaxPairs": medicion.reranker_max_pairs,
         },
         "expansion_habilitada": config.expansion_habilitada,
+        "expansion": {"campos": list(expansion.campos), "formato": expansion.formato},
         "casos": list(config.casos),
     }
+
+
+def _expansion_de_la_corrida(config: ConfigContextual) -> ParametrosDeExpansionContextual:
+    """Los parámetros de la expansión con los que corre el servicio (``_servicio``): el informe los registra tal cual."""
+    return ParametrosDeExpansionContextual(habilitada=config.expansion_habilitada)
 
 
 def _fila_del_informe(fila: FilaContextual) -> dict[str, Any]:
@@ -406,14 +418,25 @@ def _recuento_del_informe(recuento: RecuentoDeClase) -> dict[str, Any]:
     }
 
 
+def _textos_recuperables(corpus: DatasetSuite, tipo_de_cancer: str) -> list[str]:
+    """Los chunks que la recuperación puede ver para un caso: los de documentos del tipo de cáncer del caso (la búsqueda
+    filtra por él con ``coincide_etiqueta``, la regla única del filtro)."""
+    cancer = {d.id: d.cancer for d in corpus.documentos}
+    return [
+        c.texto for c in corpus.chunks if coincide_etiqueta(cancer[c.documento], tipo_de_cancer)
+    ]
+
+
 def _sinonimos_del_informe(
     config: ConfigContextual,
     dataset: DatasetContextual,
+    casos: Sequence[CasoSintetico],
     medicion: MedicionContextual,
     formas: Mapping[str, tuple[str, ...]],
 ) -> list[dict[str, Any]]:
-    """Por pregunta de sinónimos y caso: si superó el umbral o, si no, su causa (regla D4 sobre los chunks del corpus)."""
-    textos = [c.texto for c in dataset.corpus.chunks]
+    """Por pregunta de sinónimos y caso: si superó el umbral o, si no, su causa (regla D4 sobre los chunks del corpus que
+    la recuperación ve para el tipo de cáncer de ese caso)."""
+    textos = {c.id: _textos_recuperables(dataset.corpus, c.tipo_de_cancer) for c in casos}
     declaradas: dict[str, PreguntaDeSinonimos] = {
         d.pregunta: d for d in config.preguntas_de_sinonimos
     }
@@ -423,7 +446,7 @@ def _sinonimos_del_informe(
             "caso": f.caso,
             "termino": declaradas[f.pregunta_id].termino,
             "supero_umbral": f.supero_umbral,
-            "causa": causa_de_sinonimo(f.supero_umbral, formas[f.pregunta_id], textos),
+            "causa": causa_de_sinonimo(f.supero_umbral, formas[f.pregunta_id], textos[f.caso]),
         }
         for f in medicion.filas
         if f.pregunta_id in declaradas
@@ -446,7 +469,7 @@ def informe_legible(reporte: Mapping[str, Any]) -> str:
         f"(release `{c['corpus']['release']}`, {c['corpus']['recuento_de_chunks']} chunks), proveedor `{c['proveedor']}`, "
         f"catálogo `{c['catalogVersion']}`.",
         "",
-        f"Expansión contextual: {'activa' if c['expansion_habilitada'] else 'apagada'}; casos: {', '.join(c['casos'])}.",
+        f"Expansión contextual: {'activa' if c['expansion_habilitada'] else 'apagada'} (campos {', '.join(c['expansion']['campos'])}; formato {c['expansion']['formato']}); casos: {', '.join(c['casos'])}.",
         f"Umbrales: RETRIEVAL_TOP_K {u['retrievalTopK']}, RERANKER_MAX_PAIRS {_celda(u['rerankerMaxPairs'])}, "
         f"RELEVANCE_THRESHOLD {u['relevanceThreshold']}, NLI_ENTAILMENT_THRESHOLD {u['nliEntailmentThreshold']}.",
         f"Rótulo: `{reporte['validacion']['rotulo']}`.",
