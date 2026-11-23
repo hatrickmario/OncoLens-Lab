@@ -544,13 +544,13 @@ def _validacion(analisis: Sequence[AnalisisDeOpciones]) -> dict[str, Any]:
     recuento = contar_revision(
         [a.revisada for a in analisis], [a.revision_provisional for a in analisis]
     )
-    validadas = recuento.validados
+    no_validadas = len(analisis) - recuento.validados
     return {
-        "preguntas_validadas": validadas,
-        "preguntas_no_validadas": len(analisis) - validadas,
+        "preguntas_validadas": recuento.validados,
+        "preguntas_no_validadas": no_validadas,
         "preguntas_mecanica_verificada": recuento.mecanica_verificada,
         "preguntas_sin_revisar": recuento.sin_revisar,
-        "rotulo": rotular_validada(validadas, len(analisis) - validadas).rotulo,
+        "rotulo": rotular_validada(recuento.validados, no_validadas).rotulo,
     }
 
 
