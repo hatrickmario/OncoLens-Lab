@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import dataclasses
+
 from collections.abc import Sequence
 from dataclasses import dataclass, replace
 
@@ -191,11 +193,21 @@ def _adaptadores_falsos(dataset: DatasetSuite) -> Adaptadores:
     )
 
 
-def _adaptadores_locales(puertos: PuertosLocales, dataset: DatasetSuite) -> Adaptadores:
+def _adaptadores_locales(
+    puertos: PuertosLocales, dataset: DatasetSuite, con_indice_de_corpus: bool
+) -> Adaptadores:
+    """Con el corpus leído de un índice (``l1d-119``) los vectores ya están allí: no se embeben los chunks del dataset."""
+    if con_indice_de_corpus:
+        dataset = dataclasses.replace(dataset, chunks=())
+    vectores = (
+        []
+        if con_indice_de_corpus
+        else puertos.embedder_pasajes.embeber([c.texto for c in dataset.chunks])
+    )
     return Adaptadores(
         detector_idioma=puertos.detector_idioma,
         embedder=puertos.embedder,
-        vectores_de_chunks=puertos.embedder_pasajes.embeber([c.texto for c in dataset.chunks]),
+        vectores_de_chunks=vectores,
         reranker=puertos.reranker,
         generador=puertos.generador,
         clasificador_nli=puertos.clasificador_nli,
@@ -238,11 +250,12 @@ def adaptadores_de_suite(
         return _adaptadores_falsos(dataset)
     if puertos_locales is None:
         raise ConfigInvalida("adaptadores.proveedor: local exige los puertos reales ya cargados")
-    return _adaptadores_locales(puertos_locales, dataset)
+    return _adaptadores_locales(puertos_locales, dataset, corpus is not None)
 
 
 def _rama_sparse(
     adaptadores: Adaptadores,
+    buscador_sparse: SparseChunkSearch | None,
     brazo: Brazo | None,
     cronometro: Cronometro,
     observaciones: Observaciones,
@@ -250,12 +263,23 @@ def _rama_sparse(
     """Los puertos *sparse* medidos, solo para un brazo híbrido: el servicio los exige y un brazo *dense* no los toca."""
     if brazo is None or brazo.modo is RetrievalMode.dense:
         return None, None
-    if adaptadores.codificador_sparse is None or adaptadores.buscador_sparse is None:
+    if adaptadores.codificador_sparse is None or buscador_sparse is None:
         raise ConfigInvalida("un brazo híbrido exige el codificador y la búsqueda sparse")
     return (
         CodificadorSparseObservado(adaptadores.codificador_sparse, cronometro, observaciones),
-        BuscadorSparseMedido(adaptadores.buscador_sparse, cronometro),
+        BuscadorSparseMedido(buscador_sparse, cronometro),
     )
+
+
+def _catalogo_de(
+    aplicabilidad: AplicabilidadDeLaSuite | None,
+    corpus: PuertosDelCorpus | None,
+    dataset: DatasetSuite,
+) -> CorpusCatalogReader:
+    """El catálogo del corpus: el de la familia `opciones`, el del índice leído o el del dataset en memoria."""
+    if aplicabilidad is not None:
+        return aplicabilidad.catalogo
+    return corpus.catalogo if corpus is not None else CatalogoEnMemoria(dataset)
 
 
 def componer_servicio(
@@ -275,33 +299,38 @@ def componer_servicio(
     ``aplicabilidad`` (familia `opciones`, US-140) el servicio calcula la aplicabilidad por fuente con esos criterios y
     esa población; sin ella, la suite mide solo la recuperación y la generación. Con ``corpus`` (fuente ``indice``) el servicio
     busca y lee el catálogo y la release en esos puertos de solo lectura, no en el dataset en memoria."""
-    adaptadores = adaptadores or adaptadores_de_suite(config, dataset, puertos_locales)
+    if aplicabilidad is not None and corpus is not None:
+        raise ConfigInvalida(
+            "la aplicabilidad de la suite y el corpus de un índice son excluyentes: cada uno trae su catálogo"
+        )
+    adaptadores = adaptadores or adaptadores_de_suite(config, dataset, puertos_locales, corpus)
     observaciones = Observaciones()
     nli = NliMedido(adaptadores.clasificador_nli, cronometro)
     lista = cargar_lista_de_terminos(config.ruta_terminos)  # se lee y valida una sola vez
     terminos = VerificadorDeTerminosProhibidos(lista)
     # La suite habilita los tipos del catálogo montado (RN-20): el dataset no restringe el tipo y la huella no cambia.
     tipos_habilitados = cargar_catalogo_del_manifiesto(config.ruta_terminos).tipos_de_cancer()
-    embedder_sparse, buscador_sparse = _rama_sparse(adaptadores, brazo, cronometro, observaciones)
+    buscador_sparse_del_corpus = (
+        corpus.buscador_sparse if corpus is not None else adaptadores.buscador_sparse
+    )
+    embedder_sparse, buscador_sparse = _rama_sparse(
+        adaptadores, buscador_sparse_del_corpus, brazo, cronometro, observaciones
+    )
     servicio = RAGOrchestratorService(
         detector_idioma=DetectorMedido(adaptadores.detector_idioma, cronometro),
         embedder=EmbedderMedido(adaptadores.embedder, cronometro),
         buscador=BuscadorMedido(
             corpus.buscador
-            if corpus
+            if corpus is not None
             else BuscadorEnMemoria(dataset, adaptadores.vectores_de_chunks),
             cronometro,
         ),
         reranker=RerankerObservado(adaptadores.reranker, cronometro, observaciones),
         lector_release=LectorReleaseMedido(
-            corpus.lector_release if corpus else LectorReleaseFijo(dataset), cronometro
+            corpus.lector_release if corpus is not None else LectorReleaseFijo(dataset), cronometro
         ),
         catalogo=CatalogoMedido(
-            aplicabilidad.catalogo
-            if aplicabilidad
-            else corpus.catalogo
-            if corpus
-            else CatalogoEnMemoria(dataset),
+            _catalogo_de(aplicabilidad, corpus, dataset),
             cronometro,
         ),
         catalogo_clinico=CatalogoClinicoDeConfig(config.catalogo_version, tipos_habilitados),

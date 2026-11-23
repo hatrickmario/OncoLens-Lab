@@ -180,6 +180,17 @@ metas definitivas (DEC-07); revisión clínica (D6-53).
       familia y 336 y 337 tendrían que rehacerla. (c) exportar la ingesta a un directorio de dataset y usar
       `FuenteDatasetEnDirectorio`: descartada, duplica el corpus fuera del almacén, desincroniza la medición de la ingesta real
       y obliga a re-embeber en la suite.
+    - **Ajustes del Gate 2 de la fuente.** (1) `abrir_indice_real(max_valores_de_poblacion=…)` recibe el tope de `Settings`
+      (`chat._abrir_el_indice(config, ajustes)`), como producción, y no una constante. (2) `componer_servicio(corpus=…)` usa
+      `corpus.buscador_sparse`; un brazo híbrido sin esa búsqueda es `ConfigInvalida`. (3) Un `IndiceDelCorpus` sin chunks
+      vigentes no se puede construir (falla cerrado en `__post_init__`, también para el fingido) y `exigir_indice_pedido(fuente,
+      indice)` vive junto al índice. (4) Con índice no se embeben los chunks del dataset: lo decide `adaptadores_de_suite`, no la
+      familia. (5) `_catalogo_de(aplicabilidad, corpus, dataset)`; recibir aplicabilidad y corpus a la vez es `ConfigInvalida`.
+      (6) El contador usa el protocolo `LectorDeVigentes` y el fingido (`adaptadores_falsos.indice_fingido`, con búsqueda *sparse*
+      en memoria) pasa por el mismo `IndiceDelCorpus.abrir` que el real. *Desviación:* el protocolo es la mitad de lectura de
+      `AlmacenDeReindexacionSparse` (sin `reescribir_sparse`): tipar contra el completo habría dado a una fuente de solo lectura
+      una escritura al alcance. Sigue pendiente (opcional) un `cerrar()` del índice y tomar el tope de lote de `LIMITE_DE_CONSULTA`
+      (importarlo cargaría `pymilvus` también con adapters falsos).
     - **Límites.** Con la fuente `indice` y modelos locales no se embeben los chunks del dataset (los vectores ya están en el
       índice); el `GeneradorGuionado` y los vectores falsos siguen siendo solo del modo fake. La ejecución real es de H-1.
 

@@ -31,6 +31,7 @@ from app.schemas.generated.models import RetrievalMode
 from app.evaluation.dataset_chat import cargar_dataset_de_chat
 from app.evaluation.fuente_dataset import FuenteDatasetEnDirectorio
 from app.evaluation.guardas import SuiteAbortada
+from app.evaluation.seguimiento import ajustes_de_la_suite
 from app.evaluation.indice_del_corpus import (
     IndiceDelCorpus,
     ResumenDelIndice,
@@ -101,14 +102,11 @@ def test_evaluar_chat_mide_lo_mismo_con_la_fuente_indice_que_con_el_corpus_en_me
     }
 
 
-def test_evaluar_chat_aborta_nombrando_la_causa_cuando_el_indice_esta_vacio():
-    vacio = IndiceDelCorpus(
-        _indice_con_el_corpus_del_dataset().puertos,
-        ResumenDelIndice("corpus_chunks", 0, huella_de_chunks([])),
-    )
+def test_un_indice_sin_chunks_vigentes_no_se_puede_construir_y_aborta_nombrando_la_causa():
+    puertos = _indice_con_el_corpus_del_dataset().puertos
 
     with pytest.raises(SuiteAbortada, match="vac"):
-        _evaluar(chat.PuertosDeChat(indice=vacio))
+        IndiceDelCorpus(puertos, ResumenDelIndice("corpus_chunks", 0, huella_de_chunks([])))
 
 
 def _config_con_indice(tmp_path: Path, proveedor: str = "local") -> Path:
@@ -190,6 +188,10 @@ class MotorFalso:
 
 @pytest.fixture
 def entorno_del_corpus(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    _aplicar_entorno_del_corpus(tmp_path, monkeypatch)
+
+
+def _aplicar_entorno_del_corpus(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     secreto = tmp_path / "pg_rag_corpus_password"
     secreto.write_text("contrasena-secreta\n")
     for clave, valor in {
@@ -215,7 +217,9 @@ def test_abrir_indice_real_resume_la_coleccion_sin_texto_y_solo_consulta_cuando_
     cliente = ClienteMilvusFalso(filas=[_fila("c2"), _fila("c1"), _fila("c3")])
 
     indice = abrir_indice_real(
-        fabricar_cliente=lambda **_: cliente, fabricar_motor=lambda _: MotorFalso()
+        max_valores_de_poblacion=3,
+        fabricar_cliente=lambda **_: cliente,
+        fabricar_motor=lambda _: MotorFalso(),
     )
 
     assert indice.resumen == ResumenDelIndice(
@@ -232,7 +236,9 @@ def test_abrir_indice_real_aborta_nombrando_la_variable_y_sin_direccion_cuando_l
 
     with pytest.raises(SuiteAbortada, match="MILVUS_COLLECTION_NAME") as error:
         abrir_indice_real(
-            fabricar_cliente=lambda **_: cliente, fabricar_motor=lambda _: MotorFalso()
+            max_valores_de_poblacion=3,
+            fabricar_cliente=lambda **_: cliente,
+            fabricar_motor=lambda _: MotorFalso(),
         )
 
     assert URI_SECRETA not in str(error.value) and HOST_SECRETO not in str(error.value)
@@ -246,7 +252,7 @@ def test_abrir_indice_real_aborta_nombrando_las_variables_cuando_falta_la_config
         monkeypatch.delenv(variable, raising=False)
 
     with pytest.raises(SuiteAbortada, match="MILVUS_URI"):
-        abrir_indice_real()
+        abrir_indice_real(max_valores_de_poblacion=3)
 
 
 def test_huella_de_chunks_no_depende_del_orden_y_cambia_con_los_ids():
@@ -267,14 +273,18 @@ def _abrir(cliente: ClienteMilvusFalso, **extra: Any) -> IndiceDelCorpus:
 
 
 def test_abrir_el_indice_usa_el_tope_de_poblacion_de_settings_cuando_el_entorno_lo_declara(
-    entorno_del_corpus: None, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ):
     monkeypatch.setenv("POPULATION_MAX_VALUES_PER_CRITERION", "5")
     config = cargar_config_suite(CONFIG_LOCAL, UMBRALES_DEL_ENTORNO)
+    ajustes = ajustes_de_la_suite(
+        config
+    )  # Settings del entorno, antes de que haya variables de Milvus
+    _aplicar_entorno_del_corpus(tmp_path, monkeypatch)
     cliente = ClienteMilvusFalso(filas=[_fila("c1")])
 
     indice = chat._abrir_el_indice(
-        config, fabricar_cliente=lambda **_: cliente, fabricar_motor=lambda _: MotorFalso()
+        config, ajustes, fabricar_cliente=lambda **_: cliente, fabricar_motor=lambda _: MotorFalso()
     )
 
     assert indice is not None

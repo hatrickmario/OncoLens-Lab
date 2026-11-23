@@ -8,13 +8,14 @@ from __future__ import annotations
 import re
 import unicodedata
 import zlib
-from collections.abc import Collection, Mapping, Sequence
+from collections.abc import Collection, Iterator, Mapping, Sequence
 from datetime import date
 from pathlib import Path
 
 import yaml
 
 from app.application.chat.posiciones import posiciones_por_documento
+from app.application.corpus_ingestion.ports import ChunkParaReindexar
 from app.application.ports import (
     CandidatoParaReranker,
     ChunkEncontrado,
@@ -45,12 +46,7 @@ from app.evaluation.config_suite import ConfigInvalida
 from app.evaluation.dataset_loader import CLASE_SINTETICA
 from app.evaluation.fuente_dataset import DatasetSuite, OpcionPropuesta
 from app.evaluation.guardas import SuiteAbortada
-from app.evaluation.indice_del_corpus import (
-    COLECCION_FINGIDA,
-    IndiceDelCorpus,
-    ResumenDelIndice,
-    huella_de_chunks,
-)
+from app.evaluation.indice_del_corpus import COLECCION_FINGIDA, IndiceDelCorpus
 from app.schemas.generated.models import RagQueryInternalRequest
 
 DIMENSION = 64
@@ -314,18 +310,37 @@ class LectorReleaseFijo:
         return self._release
 
 
+class AlmacenFingido:
+    """``LectorDeVigentes`` sobre el corpus del dataset: cada chunk vigente por páginas, como el almacén real (solo lectura)."""
+
+    def __init__(self, dataset: DatasetSuite) -> None:
+        self._chunks = tuple(dataset.chunks)
+
+    def listar_vigentes_paginado(self, lote: int) -> Iterator[list[ChunkParaReindexar]]:
+        if not 0 < lote:
+            raise ValueError("el lote debe ser positivo")
+        for inicio in range(0, len(self._chunks), lote):
+            yield [
+                ChunkParaReindexar(c.id, c.texto, {}) for c in self._chunks[inicio : inicio + lote]
+            ]
+
+
 def indice_fingido(dataset: DatasetSuite, vectores: Sequence[Sequence[float]]) -> IndiceDelCorpus:
-    """El almacén vectorial y el catálogo fingidos en su puerto, sobre el corpus del dataset (solo lectura, como el real)."""
+    """El almacén vectorial y el catálogo fingidos en su puerto, sobre el corpus del dataset (solo lectura, como el real).
+
+    Ofrece las mismas ramas que el índice real (*dense*, *sparse*, posiciones, release y catálogo) y su resumen sale del mismo
+    camino que el del índice real (``IndiceDelCorpus.abrir``)."""
+    sparse = CodificadorSparseLexico()
     puertos = PuertosDelCorpus(
         buscador=BuscadorEnMemoria(dataset, vectores),
         lector_release=LectorReleaseFijo(dataset),
         catalogo=CatalogoEnMemoria(dataset),
+        buscador_sparse=BuscadorSparseEnMemoria(
+            dataset, [sparse.vector_de(c.texto) for c in dataset.chunks]
+        ),
         posiciones=PosicionesDelDataset(dataset),
     )
-    resumen = ResumenDelIndice(
-        COLECCION_FINGIDA, len(dataset.chunks), huella_de_chunks(c.id for c in dataset.chunks)
-    )
-    return IndiceDelCorpus(puertos, resumen)
+    return IndiceDelCorpus.abrir(puertos, AlmacenFingido(dataset), COLECCION_FINGIDA)
 
 
 class ProponenteGuionado:

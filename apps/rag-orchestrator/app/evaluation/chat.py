@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import dataclasses
 import json
 import logging
 import re
@@ -63,7 +62,7 @@ from app.evaluation.guardas import SuiteAbortada, exigir_adapters_locales, exigi
 from app.evaluation.indice_del_corpus import (
     IndiceDelCorpus,
     abrir_indice_real,
-    exigir_indice_utilizable,
+    exigir_indice_pedido,
 )
 from app.evaluation.juez_fidelidad import JuezNli
 from app.evaluation.llamadas import RegistroDeLlamadas
@@ -261,13 +260,9 @@ def _componer_el_chat(
 ) -> _Corrida:
     corpus = FuenteDatasetEnDirectorio(raiz_repo() / dataset.corpus).cargar()
     indice = None if puertos.indice is None else puertos.indice.puertos
-    # Con la ingesta como corpus y modelos locales no se embeben los chunks del dataset: los vectores ya están en el índice.
-    para_los_adaptadores = (
-        dataclasses.replace(corpus, chunks=()) if indice and config.proveedor == "local" else corpus
-    )
     suite = componer_servicio(
         config,
-        para_los_adaptadores,
+        corpus,
         Cronometro(RelojSimulado()),
         RelojDelSistema(),
         puertos_locales=puertos.locales,
@@ -287,7 +282,7 @@ def _componer_el_chat(
         terminos_por_tipo=cargar_terminos_por_tipo(config.ruta_terminos, tipos),
         verificador_terminos=verificador,
         servicio_de_evidencia=suite.servicio,
-        posiciones=indice.posiciones if indice else PosicionesDelDataset(corpus),
+        posiciones=indice.posiciones if indice is not None else PosicionesDelDataset(corpus),
         fuentes_documentales=cargar_datos_criticos(config.ruta_terminos, tipos),
         soporte=VerificadorDeSoporte(
             clasificador=nli,
@@ -296,8 +291,8 @@ def _componer_el_chat(
             reloj=RelojDelSistema(),
             max_palabras_por_afirmacion=config.umbrales.claim_max_words,
         ),
-        catalogo_del_corpus=indice.catalogo if indice else CatalogoEnMemoria(corpus),
-        lector_release=indice.lector_release if indice else LectorReleaseFijo(corpus),
+        catalogo_del_corpus=indice.catalogo if indice is not None else CatalogoEnMemoria(corpus),
+        lector_release=indice.lector_release if indice is not None else LectorReleaseFijo(corpus),
         relevancia=cargar_datos_de_relevancia(config.ruta_terminos, tipos),
     )
     juez = JuezNli(nli, config.umbrales.nli_entailment_threshold)
@@ -447,7 +442,7 @@ async def evaluar(
     if faltan:
         raise DatasetInvalido(f"faltan las peticiones de: {', '.join(faltan)}")
     puertos = puertos or PuertosDeChat()
-    _exigir_el_indice_pedido(config, puertos)
+    exigir_indice_pedido(config.indice_fuente, puertos.indice)
     corrida = _componer_el_chat(config, dataset, puertos)
     reloj = RelojSimulado() if config.reloj == "simulado" else time.perf_counter
     medidas, raices = _Medidas(), {}
@@ -592,28 +587,11 @@ def _revision(dataset: DatasetDeChat) -> dict[str, Any]:
     return {"rotulo": validacion.rotulo, "pendientes": pendientes}
 
 
-def _exigir_el_indice_pedido(config: ConfigSuite, puertos: PuertosDeChat) -> None:
-    """La fuente ``indice`` no cae en silencio al corpus del dataset: sin índice abierto, o con uno vacío, la suite aborta."""
-    if puertos.indice is None:
-        if config.indice_fuente == "milvus":
-            raise SuiteAbortada(
-                "la configuración pide la fuente indice y no se abrió ningún índice del corpus"
-            )
-        return
-    exigir_indice_utilizable(puertos.indice.resumen)
-
-
 def _corpus_cargado(dataset: DatasetDeChat, indice: IndiceDelCorpus | None) -> dict[str, Any]:
     """El corpus con el que corrió la suite, sin texto: la colección leída (recuento y huella de ids) o el del dataset."""
     if indice is None:
         return {"fuente": "dataset", "ruta": str(dataset.corpus)}
-    resumen = indice.resumen
-    return {
-        "fuente": "indice",
-        "coleccion": resumen.coleccion,
-        "chunks_vigentes": resumen.chunks_vigentes,
-        "huella": resumen.huella,
-    }
+    return indice.describir()
 
 
 def _umbrales_efectivos(config: ConfigSuite) -> dict[str, Any]:
@@ -725,8 +703,17 @@ def main(
     return codigo_de_salida(reporte)
 
 
-def _abrir_el_indice(config: ConfigSuite, **fabricas: Any) -> IndiceDelCorpus | None:
-    raise NotImplementedError("no implementado")
+def _abrir_el_indice(
+    config: ConfigSuite, ajustes: Settings, **fabricas: Any
+) -> IndiceDelCorpus | None:
+    """La ingesta de ``l1d-119`` en solo lectura si la configuración pide ``indice.fuente: milvus``; si no, ``None``.
+
+    El tope de población es el de ``Settings``, como en producción (RN-22)."""
+    if config.indice_fuente != "milvus":
+        return None
+    return abrir_indice_real(
+        max_valores_de_poblacion=ajustes.population_max_values_per_criterion, **fabricas
+    )
 
 
 def _puertos_de(config: ConfigSuite, entorno: Mapping[str, str] | None) -> PuertosDeChat:
@@ -743,8 +730,8 @@ def _puertos_de(config: ConfigSuite, entorno: Mapping[str, str] | None) -> Puert
         RegistroDeLlamadas(),
         CLASE_SINTETICA,
     )
-    indice = abrir_indice_real() if config.indice_fuente == "milvus" else None
     base = ajustes_de_la_suite(config)
+    indice = _abrir_el_indice(config, base)
     ajustes = Settings(
         _env_file=None,  # type: ignore[call-arg]
         claim_max_words=base.claim_max_words,
