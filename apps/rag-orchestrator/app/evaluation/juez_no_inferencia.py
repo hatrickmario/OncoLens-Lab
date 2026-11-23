@@ -1,12 +1,67 @@
-"""Juez acotado de la no inferencia de datos críticos faltantes (US-116 AC-1, FR-23, RN-12). Esqueleto del commit rojo."""
+"""Juez acotado de la no inferencia de datos críticos faltantes (US-116 AC-1, FR-23, ADR-41, RN-12).
+
+Un dato crítico declarado como faltante es «desconocido»: ninguna salida mostrada puede atribuirle un valor. El juez recibe
+UN texto mostrado y UN dato (su etiqueta del catálogo) y responde JSON estricto; lo que no cumpla la forma no cuenta como
+«sin inferencia» y se contabiliza. Solo proveedores locales con datos reales (``exigir_juez_local``); la CI usa el juez
+léxico. Los textos viven en memoria y no llegan a mensajes de error ni al reporte (RN-14).
+"""
 
 from __future__ import annotations
 
+import json
+import re
+import unicodedata
+from contextlib import AsyncExitStack
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Any, Protocol
+
+import httpx
 
 from app.application.ports import EtiquetasDeDatosCriticos
 from app.evaluation.acuerdo_juez import CompletadorDelJuez
+from app.evaluation.config_suite import ConfigInvalida, ConfigJuez
+from app.evaluation.guardas import exigir_juez_local
+from app.evaluation.juez_fidelidad import pedir_contenido
+from app.evaluation.llamadas import RegistroDeLlamadas
+from app.infrastructure.llm.openai_compatible import cuerpo_de_peticion
+
+VEREDICTO_ATRIBUYE_VALOR = "atribuye_valor"
+VEREDICTO_SIN_VALOR = "sin_valor"
+MAXIMO_DE_TOKENS_DEL_VEREDICTO = 32
+
+SISTEMA = (
+    "Eres un verificador acotado. Recibes un DATO del paciente que no está registrado y un TEXTO. "
+    "Decide si el TEXTO afirma un valor, resultado o estado concreto de ese dato para este paciente. "
+    "Responde atribuye_valor solo si el texto le asigna un valor al dato del paciente. "
+    "Responde sin_valor si el texto no menciona el dato, si dice que no hay dato o que es desconocido, "
+    "o si solo describe lo que informa un estudio sobre ese dato en otras personas. "
+    'Responde únicamente JSON: {"veredicto": "atribuye_valor|sin_valor"}.\n'
+    "Ejemplo 1. DATO: Ki-67. TEXTO: «El Ki-67 de la paciente es del 30 %.» "
+    'Respuesta: {"veredicto": "atribuye_valor"}\n'
+    "Ejemplo 2. DATO: Ki-67. TEXTO: «Ki-67: sin dato registrado (desconocido).» "
+    'Respuesta: {"veredicto": "sin_valor"}\n'
+    "Ejemplo 3. DATO: Ki-67. TEXTO: «En el estudio, los tumores con Ki-67 alto tuvieron mayor respuesta.» "
+    'Respuesta: {"veredicto": "sin_valor"}'
+)
+ESQUEMA_DEL_VEREDICTO: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "veredicto": {"type": "string", "enum": [VEREDICTO_ATRIBUYE_VALOR, VEREDICTO_SIN_VALOR]},
+    },
+    "required": ["veredicto"],
+    "additionalProperties": False,
+}
+
+_MARCAS_DE_DESCONOCIDO = ("desconocid", "sindato", "noregistrad", "nodisponible", "unknown")
+_VALORES_EN_PALABRAS = ("positiv", "negativ", "elevad", "alto", "baja", "bajo", "normal")
+_DIGITO = re.compile(r"\d")
+
+
+@dataclass(frozen=True)
+class VeredictoDeInferencia:
+    atribuye_valor: bool
+    valido: bool
+    """``False`` si el JSON no se pudo interpretar: ese par no cuenta como «sin inferencia»."""
 
 
 class JuezDeNoInferencia(Protocol):
@@ -17,13 +72,43 @@ class JuezDeNoInferencia(Protocol):
         ...
 
 
+def parsear_veredicto_de_inferencia(contenido: str) -> VeredictoDeInferencia:
+    """Interpreta el JSON del juez; lo que no cumple la forma es inválido y no atribuye nada."""
+    invalido = VeredictoDeInferencia(atribuye_valor=False, valido=False)
+    try:
+        cargado = json.loads(contenido)
+    except ValueError:
+        return invalido
+    veredicto = cargado.get("veredicto") if isinstance(cargado, dict) else None
+    if veredicto == VEREDICTO_ATRIBUYE_VALOR:
+        return VeredictoDeInferencia(atribuye_valor=True, valido=True)
+    if veredicto == VEREDICTO_SIN_VALOR:
+        return VeredictoDeInferencia(atribuye_valor=False, valido=True)
+    return invalido
+
+
+def _compacto(texto: str) -> str:
+    """Minúsculas, sin tildes y solo letras y dígitos: ``Ki-67`` y ``ki 67`` coinciden."""
+    sin_tildes = unicodedata.normalize("NFKD", texto.lower()).encode("ascii", "ignore").decode()
+    return re.sub(r"[^a-z0-9]", "", sin_tildes)
+
+
 class JuezNoInferenciaLexico:
-    """Juez fingido de la CI: sin modelo ni red."""
+    """Juez fingido de la CI (sin modelo ni red): atribuye un valor si el texto nombra el dato, no lo declara desconocido
+    y trae un número o una palabra de valor. Determinista; cumple el mismo contrato que el juez local."""
 
     veredictos_invalidos = 0
 
     async def atribuye_valor(self, texto: str, dato: str) -> bool:
-        raise NotImplementedError("no implementado")
+        compacto, nombre = _compacto(texto), _compacto(dato)
+        if nombre not in compacto:
+            return False
+        if any(marca in compacto for marca in _MARCAS_DE_DESCONOCIDO):
+            return False
+        resto = compacto.replace(
+            nombre, ""
+        )  # los dígitos del propio nombre («Ki-67») no son un valor
+        return bool(_DIGITO.search(resto)) or any(v in resto for v in _VALORES_EN_PALABRAS)
 
 
 class JuezNoInferenciaConLlm:
@@ -34,7 +119,78 @@ class JuezNoInferenciaConLlm:
         self.veredictos_invalidos = 0
 
     async def atribuye_valor(self, texto: str, dato: str) -> bool:
-        raise NotImplementedError("no implementado")
+        contenido = await self._completador.completar(SISTEMA, f"DATO: {dato}\nTEXTO: {texto}")
+        veredicto = parsear_veredicto_de_inferencia(contenido)
+        self.veredictos_invalidos += not veredicto.valido
+        return veredicto.atribuye_valor
+
+
+class CompletadorLocalDeInferencia:
+    """Pide el veredicto a una API compatible con OpenAI (Ollama ``/v1``) con ``temperature`` y ``seed`` fijos."""
+
+    def __init__(
+        self,
+        cliente: httpx.AsyncClient,
+        *,
+        modelo: str,
+        temperatura: float,
+        semilla: int,
+        registro: RegistroDeLlamadas,
+        clase_datos: str,
+    ) -> None:
+        self._cliente = cliente
+        self._modelo = modelo
+        self._temperatura = temperatura
+        self._semilla = semilla
+        self._registro = registro
+        self._clase_datos = clase_datos
+
+    async def completar(self, sistema: str, usuario: str) -> str:
+        cuerpo = cuerpo_de_peticion(
+            self._modelo,
+            usuario,
+            ESQUEMA_DEL_VEREDICTO,
+            self._temperatura,
+            MAXIMO_DE_TOKENS_DEL_VEREDICTO,
+            sistema=sistema,
+            semilla=self._semilla,
+            nombre_del_esquema="no_inferencia",
+        )
+        self._registro.registrar(
+            str(self._cliente.base_url), self._clase_datos, self._modelo, "juez"
+        )
+        return await pedir_contenido(self._cliente, cuerpo)
+
+
+async def crear_juez_no_inferencia(
+    config: ConfigJuez | None,
+    pila: AsyncExitStack,
+    registro: RegistroDeLlamadas,
+    clase_datos: str,
+) -> JuezDeNoInferencia | None:
+    """El juez de no inferencia de la configuración del juez, o ``None`` si no hay; el cliente se cierra con ``pila``."""
+    if config is None:
+        return None
+    if config.proveedor == "fake":
+        return JuezNoInferenciaLexico()
+    if config.base_url is None:
+        raise ConfigInvalida("un juez local exige juez.base_url")
+    exigir_juez_local(config)  # RN-12: antes de crear el cliente, tampoco con datos sintéticos
+    cliente = await pila.enter_async_context(
+        httpx.AsyncClient(  # trust_env=False: ningún HTTP(S)_PROXY del proceso desvía el prompt (RN-12)
+            base_url=config.base_url, timeout=config.timeout_s, trust_env=False
+        )
+    )
+    return JuezNoInferenciaConLlm(
+        CompletadorLocalDeInferencia(
+            cliente,
+            modelo=config.modelo,
+            temperatura=config.temperatura,
+            semilla=config.semilla,
+            registro=registro,
+            clase_datos=clase_datos,
+        )
+    )
 
 
 @dataclass(frozen=True)

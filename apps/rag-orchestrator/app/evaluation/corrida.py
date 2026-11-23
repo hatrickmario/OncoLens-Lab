@@ -38,10 +38,12 @@ from app.evaluation.metricas.resultado import (
     LenguajeCrudo,
     RechazoDeSalidaLegitima,
     ResultadoConsulta,
+    ResultadoNoInferencia,
 )
 from app.evaluation.retrieval_metrics import evaluar_pregunta
 from app.evaluation.rutas import raiz_repo
 from app.evaluation.salida_generada import (
+    afirmaciones_sobre_el_paciente,
     grupos_de_propuesta,
     grupos_de_respuesta,
     textos_de_opcion_mostrada,
@@ -227,6 +229,7 @@ async def _resultado_de(
         ids_afirmaciones=tuple(f"{pregunta.id}/a{n}" for n, _ in enumerate(en_nli, 1)),
         veredictos_invalidos_juez=invalidos,
         afirmaciones_juez=en_juez,
+        no_inferencia=await _no_inferencia_de(suite, pregunta, respuesta),
     )
 
 
@@ -379,3 +382,23 @@ async def _veredictos(
     juez: JuezFidelidad, afirmaciones: list[AfirmacionAJuzgar]
 ) -> tuple[bool, ...]:
     return tuple([await juez.juzgar_soporte(a.texto, a.premisas) for a in afirmaciones])
+
+
+async def _no_inferencia_de(
+    suite: ServicioDeSuite, pregunta: Pregunta, respuesta: RagQueryInternalResponse
+) -> ResultadoNoInferencia | None:
+    """Pares (afirmación mostrada, dato faltante) en los que el juez acotado ve un valor atribuido al dato declarado como
+    faltante (US-116 AC-1). ``None`` si la pregunta no declara faltantes o no hay juez: no entra en la métrica."""
+    medidor = suite.no_inferencia
+    if medidor is None or pregunta.contexto is None or not pregunta.contexto.faltantes:
+        return None
+    etiquetas = medidor.etiquetas.etiquetas(pregunta.cancer)
+    datos = [etiquetas[clave] for clave in pregunta.contexto.faltantes]
+    invalidos_antes = medidor.juez.veredictos_invalidos
+    inferencias = 0
+    for texto in afirmaciones_sobre_el_paciente(respuesta):
+        for dato in datos:
+            inferencias += await medidor.juez.atribuye_valor(texto, dato)
+    return ResultadoNoInferencia(
+        pregunta.id, inferencias, medidor.juez.veredictos_invalidos - invalidos_antes
+    )

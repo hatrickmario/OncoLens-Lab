@@ -71,6 +71,19 @@
           "rotulo": "no_validada"
         }
       },
+      "no_inferencia": {
+        "casos": 0,
+        "casos_con_inferencia": [],
+        "casos_sin_inferencia": 0,
+        "estado": "no_medida",
+        "inferencias": null,
+        "validacion": {
+          "preguntas_no_validadas": 6,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        },
+        "veredictos_invalidos": 0
+      },
       "opciones_con_cita_y_soporte": {
         "n": 5,
         "porcentaje": 0.6,
@@ -188,6 +201,19 @@
           "preguntas_validadas": 0,
           "rotulo": "no_validada"
         }
+      },
+      "no_inferencia": {
+        "casos": 0,
+        "casos_con_inferencia": [],
+        "casos_sin_inferencia": 0,
+        "estado": "no_medida",
+        "inferencias": null,
+        "validacion": {
+          "preguntas_no_validadas": 0,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        },
+        "veredictos_invalidos": 0
       },
       "opciones_con_cita_y_soporte": {
         "n": 0,

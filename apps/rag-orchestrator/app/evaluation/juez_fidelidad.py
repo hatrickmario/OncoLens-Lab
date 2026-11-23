@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from contextlib import AsyncExitStack
-from typing import Protocol
+from typing import Any, Protocol
 
 import httpx
 
@@ -68,6 +68,19 @@ class JuezLlmLexico:
         return bool(premisas) and tokens(afirmacion) <= disponibles
 
 
+async def pedir_contenido(cliente: httpx.AsyncClient, cuerpo: dict[str, Any]) -> str:
+    """El contenido de la respuesta del LLM local del juez; los errores nunca llevan textos (RN-14)."""
+    try:
+        respuesta = await cliente.post(RUTA_DE_COMPLETIONS, json=cuerpo)
+        respuesta.raise_for_status()
+        contenido = respuesta.json()["choices"][0]["message"]["content"]
+    except httpx.HTTPError:
+        raise JuezNoDisponible("el juez LLM no respondió") from None
+    except (KeyError, IndexError, TypeError, ValueError):
+        raise JuezNoDisponible("la respuesta del juez LLM no tiene la forma esperada") from None
+    return str(contenido)
+
+
 class JuezLlmLocal:
     """Juez LLM secundario por una API compatible con OpenAI (Ollama ``/v1``), con ``temperature`` y ``seed`` fijos."""
 
@@ -111,15 +124,7 @@ class JuezLlmLocal:
         self._registro.registrar(
             str(self._cliente.base_url), self._clase_datos, self._modelo, "juez"
         )
-        try:
-            respuesta = await self._cliente.post(RUTA_DE_COMPLETIONS, json=cuerpo)
-            respuesta.raise_for_status()
-            contenido = respuesta.json()["choices"][0]["message"]["content"]
-        except httpx.HTTPError:
-            raise JuezNoDisponible("el juez LLM no respondió") from None
-        except (KeyError, IndexError, TypeError, ValueError):
-            raise JuezNoDisponible("la respuesta del juez LLM no tiene la forma esperada") from None
-        return str(contenido)
+        return await pedir_contenido(self._cliente, cuerpo)
 
 
 async def crear_juez_llm(

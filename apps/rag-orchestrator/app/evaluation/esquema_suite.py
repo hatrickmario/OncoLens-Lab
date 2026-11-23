@@ -12,11 +12,13 @@ from app.evaluation.informe_pii import MODOS, TIPOS_DIRECTOS
 from app.evaluation.metricas.diagnostico import (
     CAUSAS_SIN_ASIGNAR,
     CONDICIONES_DE_LA_REGLA,
-    ETAPAS as ETAPAS_DE_LA_CONSULTA,
     NOTA_DE_CALIBRACION,
     RESULTADO_PERDIDA,
     RESULTADO_SIN_ASIGNAR,
     RESULTADO_SIN_PERDIDA,
+)
+from app.evaluation.metricas.diagnostico import (
+    ETAPAS as ETAPAS_DE_LA_CONSULTA,
 )
 from app.evaluation.metricas.fidelidad import ROTULO_SECUNDARIA
 from app.evaluation.reporte import (
@@ -118,6 +120,16 @@ _CAMPOS_DE_FAMILIA = {
         }
     ),
     "inyeccion": _familia({"casos": Numero(), "efectivas": Numero()}),
+    "no_inferencia": _familia(
+        {
+            "estado": Enumerado(frozenset({"medida", "no_medida"})),
+            "casos": Numero(),
+            "casos_sin_inferencia": Numero(),
+            "casos_con_inferencia": Lista(Identificador()),
+            "inferencias": Numero(),
+            "veredictos_invalidos": Numero(),
+        }
+    ),
 }
 # Cada suite calcula solo algunas familias: todas son opcionales en el esquema.
 _FAMILIAS = Objeto(_CAMPOS_DE_FAMILIA, opcionales=frozenset(_CAMPOS_DE_FAMILIA))

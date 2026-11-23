@@ -81,6 +81,7 @@ from app.evaluation.informe_pii import (
     SinInformePii,
 )
 from app.evaluation.juez_fidelidad import JuezNoDisponible, crear_juez_llm
+from app.evaluation.juez_no_inferencia import crear_juez_no_inferencia
 from app.evaluation.llamadas import RegistroDeLlamadas
 from app.evaluation.medicion_modelos import informe_de_recursos_nli
 from app.evaluation.medidores import LatenciasNli
@@ -513,7 +514,18 @@ async def _evaluar(
     )
     async with AsyncExitStack() as pila:  # cierra el cliente del juez LLM, si lo hay
         juez_llm = await crear_juez_llm(config.juez, pila, registro, dataset.clase)
-        servicio = componer_servicio(config, dataset, cronometro, reloj, juez_llm, puertos_locales)
+        juez_no_inferencia = await crear_juez_no_inferencia(
+            config.juez, pila, registro, dataset.clase
+        )
+        servicio = componer_servicio(
+            config,
+            dataset,
+            cronometro,
+            reloj,
+            juez_llm,
+            puertos_locales,
+            juez_no_inferencia=juez_no_inferencia,
+        )
         resultados, respuestas = await evaluar_dataset(servicio, dataset)
         return resultados, respuestas, servicio.latencias_nli
 
