@@ -150,3 +150,22 @@ comprobación de D6-37 lo exige; `docs/architecture/adr/ADR-36-fuentes-y-licenci
 `backlog/sprints/S4-deuda.md` (filas D4-21 y D4-30, sesión principal). No toca `packages/clinical-catalogs/` ni
 `data/evaluation/`.
 
+
+### S7-D7 · Decisiones de implementación de S7.1–S7.6 (2026-11-22)
+
+- **Clave antigua del mapa de licencias (S7.1).** Alternativas: (a) conservar la clave antigua además de la nueva;
+  (b) sustituirla. Se sustituye: ningún manifiesto la usa, conservarla admitiría en silencio un texto que citaba como
+  condición una frase ausente de los términos de uso, y un manifiesto con el texto viejo debe fallar con
+  `licencia_no_aceptada` (falla cerrado, RN-21).
+- **Prueba de la regla de fuentes excluidas (S7.2).** La regla (`es_fuente_excluida`) mira nombre, alias, host y DOI del
+  documento, no su texto; por eso las menciones en referencias ya se admitían. Alternativas: (a) añadir una exclusión por
+  texto (descartada: contradice `[S7 resp. 8]` y daría falsos positivos en artículos CC BY legítimos); (b) fijar el
+  comportamiento con pruebas. Se elige (b): control del corpus real con la función de dominio (no un `==` sobre el nombre),
+  control negativo que prueba que falla ante un documento de NCCN/ESMO por nombre, alias, DOI o host, y caso de ingesta
+  con documento sintético. Son pruebas de caracterización: no hay rojo previo.
+- **Comprobación de S7.5.** Alternativas: (a) fijar `RERANKER_MAX_PAIRS` en `s5-calibracion.yaml` (descartada: es un
+  parámetro de ADR-39 en `modelos.env`; la suite con `proveedor: fake` no lo lee y con `local` lo toma del entorno);
+  (b) prueba de humo con la configuración versionada y solo los adaptadores sustituidos. Se elige (b). Consecuencia a
+  tener en cuenta en la corrida base: con el tope de 20 pares (decisión 82) el reranker nunca recibe más de 20 candidatos,
+  de modo que los valores 30 y 50 de `retrieval_top_k` solo pueden diferir de 20 en lo que se mide antes del reranker; el
+  informe del barrido debe leerse con esa salvedad (no se cambia la grilla aquí: es decisión de la corrida).
