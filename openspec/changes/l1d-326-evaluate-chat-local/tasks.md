@@ -60,53 +60,53 @@ de `Settings`.
 - [x] 1.7 (test después) Verificación del `.gitignore` de 1.0 con el comando real: tras
       `npm run eval:chat-preparar`, `git status --porcelain` no lista nada bajo `apps/clinical-api/eval/results/tmp/`
       (aserción dentro de 1.1). La entrada del `.gitignore` ya no se añade aquí: va en 1.0.
-- [ ] 1.8 (test después) `scripts/ci/eval-trigger-paths.yaml`: + `data/eval/chat-v1/**`,
+- [ ] 1.8 TRASLADADA a entrega 1 (solo el paso de la CI; los disparadores ya están hechos): (test después) `scripts/ci/eval-trigger-paths.yaml`: + `data/eval/chat-v1/**`,
       `apps/rag-orchestrator/app/evaluation/chat.py`, los nodos y prompts del chat que hoy no cubren los globs; y el
       workflow de `eval-required` corre `npm run evaluate:chat -- --config
       apps/rag-orchestrator/eval/configs/chat-fake.yaml --sin-preparar` cuando se dispara. Verificación: caso nuevo en
       `scripts/ci/__tests__/evalRequired.test.mjs` (un cambio en `data/eval/chat-v1/casos.yaml` dispara) y
       `evalRequiredWorkflow.test.mjs` en verde.
-- [ ] 1.9 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde
+- [x] 1.9 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde
       antes y después, commit `refactor(L1D-326)`.
 
 ## 2. ai-services
 
-- [ ] 2.1 (TDD estricto) Test de aceptación en rojo: «declara el reloj y el proveedor y rotula la latencia como
+- [ ] 2.1 TRASLADADA a entrega 1 (ai-services-dev, misma rama) · (TDD estricto) Test de aceptación en rojo: «declara el reloj y el proveedor y rotula la latencia como
       simulada cuando corre con chat-fake.yaml [US-269 AC-7]» y «publica las métricas de faltantes como null en la
       lista de no medidas, nunca 0.0 [US-269 AC-4]» · integración de la familia (grafo de producción en proceso,
       adapters falsos, reloj simulado). Commit `test(L1D-326)`.
-- [ ] 2.2 (TDD estricto) Test de aceptación en rojo: «termina con código distinto de 0 y no escribe chat.json cuando el
+- [ ] 2.2 TRASLADADA a entrega 1 (ai-services-dev, misma rama) · (TDD estricto) Test de aceptación en rojo: «termina con código distinto de 0 y no escribe chat.json cuando el
       LLM local no responde [US-269 AC-3]» · integración con el cliente del LLM en su puerto devolviendo el error de
       conexión del adapter real (mismo tipo de error, sin red); una salida inválida del LLM sigue contándose en el caso
       y no aborta. Commit `test(L1D-326)`.
-- [ ] 2.3 (TDD estricto) Implementar en `app/evaluation/chat.py`: campo `reloj` y rótulo de latencia, métricas no
+- [ ] 2.3 TRASLADADA a entrega 1 (ai-services-dev, misma rama) · (TDD estricto) Implementar en `app/evaluation/chat.py`: campo `reloj` y rótulo de latencia, métricas no
       medidas con `null`, y `SuiteAbortada` ante dependencia caída. Sin tocar nodos, prompts ni el grafo. Commit
       `feat(L1D-326)`. Verificación: 2.1 y 2.2 en verde; los tests existentes de `test_chat_evaluate*.py` siguen en
       verde sin cambiar aserciones.
-- [ ] 2.4 (test después) Test: «carga las peticiones que deja eval:chat-preparar» con un archivo de ejemplo sintético
+- [ ] 2.4 TRASLADADA a entrega 1 (ai-services-dev, misma rama) · (test después) Test: «carga las peticiones que deja eval:chat-preparar» con un archivo de ejemplo sintético
       del formato `{peticion, hechosPorClave, identidad}` generado en el propio test (sin identidad literal en el repo);
       cubre el caso con `previo` (AC06 continúa el hilo de AC05 sin rehidratación).
-- [ ] 2.5 (test primero: orquestación con adapters falsos) `eval/configs/chat-local.yaml` deja de duplicar los
+- [ ] 2.5 TRASLADADA a entrega 1 (ai-services-dev, misma rama) · (test primero: orquestación con adapters falsos) `eval/configs/chat-local.yaml` deja de duplicar los
       umbrales: se quita su bloque `umbrales` (y no se copian los pares del *reranker* ni la expansión contextual); la
       familia los lee de `Settings` (RN-22) y el reporte registra los valores efectivos, que son los actuales
       (`[S7 resp. 11]`). Declara el corpus de la medición: la ingesta de `l1d-119` (`[S7 resp. 10]`). Test: «usa los
       umbrales de Settings y los registra en el reporte cuando la configuración no los declara [US-269 AC-3]». Sin
       valores copiados como constantes en código. Verificación: `cargar_config_suite` y `exigir_proveedor_local` en
       verde; test existente de host de nube en verde; `python -m app.scripts.adr39_measure --check-config`.
-- [ ] 2.5b (TDD estricto) Test de aceptación: «publica salidas_prescriptivas y apariciones_de_identidad y termina con
+- [ ] 2.5b TRASLADADA a entrega 1 (ai-services-dev, misma rama) · (TDD estricto) Test de aceptación: «publica salidas_prescriptivas y apariciones_de_identidad y termina con
       código distinto de 0 cuando alguno no es 0, con las peticiones preparadas [US-269 AC-5] [US-269 AC-6] [RN-23]
       [RN-10]» y su variante limpia (ambos conteos en 0 y código 0) · integración con adapters falsos y un archivo de
       peticiones sintético generado en el test. `codigo_de_salida()` ya existe: si queda en rojo es un bug de la
       familia, no se relaja la aserción. Commit `test(L1D-326)`.
-- [ ] 2.6 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde
+- [ ] 2.6 TRASLADADA a entrega 1 (ai-services-dev, misma rama) · Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde
       antes y después, commit `refactor(L1D-326)`.
 
 ## 3. evaluación (código; antes de la corrida base)
 
-- [ ] 3.1 (suite `evaluate`) `run-ai-eval` con adapters falsos: `--suite all` da el mismo
+- [ ] 3.1 TRASLADADA a entrega 1 (ai-services-dev, misma rama) · (suite `evaluate`) `run-ai-eval` con adapters falsos: `--suite all` da el mismo
       `data/evaluation/baseline.json` y la misma huella de `test-fake.yaml`; `npm run evaluate:chat -- --config
       apps/rag-orchestrator/eval/configs/chat-fake.yaml --sin-preparar` sale con 0.
-- [ ] 3.2 (humo) Ensayo de `npm run evaluate:chat` de punta a punta **con adapters falsos y preparación real**
+- [ ] 3.2 TRASLADADA a entrega 1 (ai-services-dev, misma rama) · (humo) Ensayo de `npm run evaluate:chat` de punta a punta **con adapters falsos y preparación real**
       (BD de test con seed, `chat-fake.yaml` sin `--sin-preparar`): las 15 peticiones preparadas cargan en la familia
       y el directorio temporal queda borrado. Demuestra que la corrida base no fallará por la tubería. Sin cifras.
 
@@ -137,11 +137,11 @@ de `Settings`.
 
 ## 5. Verificación
 
-- [ ] 5.1 `openspec validate l1d-326-evaluate-chat-local --strict`; Pytest de `tests/evaluation` y la suite de
+- [ ] 5.1 TRASLADADA a entrega 1 (ai-services-dev, misma rama) · `openspec validate l1d-326-evaluate-chat-local --strict`; Pytest de `tests/evaluation` y la suite de
       `apps/rag-orchestrator` en verde; Vitest unitario e integración de `clinical-api` en verde; tests de
       `scripts/eval` y `scripts/ci` en verde; `ruff` y `lint-imports` limpios. Sin cambios de API:
       `contracts:verify-provider` no aplica.
-- [ ] 5.2 CI del PR en verde (incluidos `data-scan`, `eval-required` e `higiene-proceso`): 0 checks en fallo, 0
+- [ ] 5.2 TRASLADADA a entrega 1 (ai-services-dev, misma rama) · CI del PR en verde (incluidos `data-scan`, `eval-required` e `higiene-proceso`): 0 checks en fallo, 0
       pendientes y 0 alertas antes de pedir el merge.
 
 ## humano
@@ -153,8 +153,11 @@ de `Settings`.
 
 ```bash
 scripts/setup-secrets.sh --profile test   # si no existe ya
+# La BD de test (Compose, perfil test) debe estar migrada y con el seed sintético (clinical-seed, perfil seed). La preparación
+# completa la conexión del stack de test (ONCOLENS_SECRETS_DIR, PG_TEST_PORT, POSTGRES_DB, EVAL_CHAT_DB_TLS_SERVERNAME);
+# APP_ENV lo declara quien corre el comando: la guarda de datos reales (RN-13) no presume un entorno permitido.
 SALIDA="$(mktemp -d)"                      # directorio de trabajo, fuera del repo
-npm run evaluate:chat -- \
+APP_ENV=test npm run evaluate:chat -- \
   --config apps/rag-orchestrator/eval/configs/chat-local.yaml \
   --salida "$SALIDA"
 # ai-eval-runner versiona $SALIDA/chat.json como reports/eval/l1d-326-chat-v1.json (sin modificarlo)

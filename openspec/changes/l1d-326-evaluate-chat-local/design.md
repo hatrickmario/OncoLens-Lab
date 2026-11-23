@@ -89,6 +89,31 @@ metas definitivas (DEC-07); revisión clínica (D6-53).
     `l1d-119`, el mismo corpus en la corrida base y en la final, y el reporte lo declara. Corre con los umbrales
     actuales; los calibrados de `l1d-119` solo entran en la final como un brazo propio de ese change.
 
+12. **Implementación de `clinical-platform` (decisiones no cubiertas arriba).**
+    - **Cómo se obtiene `factRef → recurso` sin escribirlo.** El capturador responde con un bloque `documentado` por hecho de la
+      petición; el servicio de producción valida y persiste ese turno (BD de test desechable, decisión 3) y devuelve sus
+      `dataLinks` (`factRef`, `resourceId`). `traducirHechosEsperados()` casa esos ids con los del seed y solo escribe clave
+      semántica → `factRef`. *Descartadas:* (a) reconstruir la numeración de `factRef` en la preparación (duplica
+      `construirHechosDelCaso` y se desincroniza); (b) exportar el mapa interno del servicio (la regla del mapa que no sale de
+      Backend 1 lo prohíbe y exige tocar `evidence-analysis`, fuera del alcance).
+    - **Clave de hecho.** `<paciente>/<recurso>` admite la clave del dato (`her2`, `diagnostico-1`, `adt`) y la del examen con un
+      solo biomarcador (`psa-1`): así están escritas las claves de `chat-v1`. Un examen con varios biomarcadores sin clave de
+      biomarcador es ambiguo y se trata como hecho inexistente.
+    - **Controles.** No nombran paciente: toman el del primer caso del mismo tipo de cáncer (mama → `paciente-a`, próstata →
+      `paciente-b`). *Descartada:* añadir `paciente` a los controles (cambia `data/eval/chat-v1/`, que este change no toca).
+    - **Guarda de base (decisión 10).** «Base de test sintética» = tiene pacientes, todos `sintetico` y todos del seed
+      (`PACIENTES_SEMILLA` + `P-CHAT`); si no, `BaseNoSinteticaError` antes de abrir las claves. *Descartada:* comparar el
+      nombre de la base con un prefijo de test (la base del seed de Compose se llama `oncolens` en cualquier entorno).
+    - **Composición.** `componerConversacion` de `evidence-analysis.module.ts` no se exporta y ese módulo queda fuera del
+      alcance: `src/evaluacion/chat/composicion.ts` cablea `crearConversationService` con las mismas piezas exportadas y lo
+      comparten el proceso real y los tests (una sola composición). *Pendiente de decidir:* exportar `componerConversacion` y
+      reutilizarla (quita ~30 líneas duplicadas).
+    - **Conexión desde el host.** El PostgreSQL de Compose solo certifica el nombre `postgres`: la preparación admite
+      `EVAL_CHAT_DB_TLS_SERVERNAME` (RN-22) con TLS verificado contra la CA, y `entornoDelStackDeTest()` completa conexión y
+      rutas de secretos del stack de test. `APP_ENV` nunca se completa (RN-13). *Descartada:* `rejectUnauthorized: false`.
+    - **Seudónimo y logs.** El servicio real usa el seudónimo aleatorio por consulta; el comando no registra nada (registrador
+      nulo) y su mensaje de fallo nombra variable, caso o clave, o la clase del error, nunca su texto.
+
 ## Dependencias y colaboradores
 
 | Módulo | Estado | Depende de |
