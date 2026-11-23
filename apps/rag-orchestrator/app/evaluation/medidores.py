@@ -33,6 +33,7 @@ from app.domain.citations import FichaDeFuente
 from app.domain.nli import ParNli, ResultadoNli
 from app.domain.ventanas_del_reranker import ConfiguracionDelReranker
 from app.evaluation.cronometro import Cronometro
+from app.evaluation.reranker_con_ventanas import RerankerConVentanas
 from app.evaluation.retrieval_metrics import ChunkRecuperado
 from app.schemas.generated.models import RagQueryInternalRequest
 
@@ -160,7 +161,9 @@ class RerankerObservado:
     def _anotar_la_configuracion(self) -> None:
         """Lo que el adapter dice de su propia etapa en cada llamada: así la suite comprueba que el modo efectivo de una
         consulta es el de su brazo y no el que se declaró (US-278 AC-4)."""
-        efectiva = getattr(self._interno, "configuracion", None)
+        efectiva = (
+            self._interno.configuracion if isinstance(self._interno, RerankerConVentanas) else None
+        )
         self._obs.reranker = efectiva
         esperada = self._obs.esperada_del_reranker
         if esperada is not None and efectiva is not None and not _coincide(efectiva, esperada):

@@ -76,6 +76,7 @@ from app.evaluation.medidores import (
 )
 from app.evaluation.metricas.rechazos_legitimos import ids_de_preguntas_de_control_legitimo
 from app.evaluation.modelos_locales import PuertosLocales
+from app.evaluation.reranker_con_ventanas import RerankerConVentanas
 from app.infrastructure.catalogo_clinico.aplicabilidad import CriteriosDelCatalogo
 from app.infrastructure.catalogo_clinico.datos_criticos import cargar_datos_criticos
 from app.infrastructure.catalogo_clinico.manifiesto import cargar_catalogo_del_manifiesto
@@ -297,10 +298,9 @@ def _reranker_del_brazo(base: Reranker, brazo: Brazo | None) -> Reranker:
     campos del reranker en el brazo, el reranker de la suite tal cual (la huella y el resultado de A0 no cambian)."""
     if brazo is None or not brazo.cambia_el_reranker:
         return base
-    variante = getattr(base, "variante", None)
-    if variante is None:
+    if not isinstance(base, RerankerConVentanas):
         raise ConfigInvalida("el reranker de la suite no admite variantes por brazo (RERANKER_*)")
-    return variante(  # type: ignore[no-any-return]
+    return base.variante(
         modo_de_ventanas=brazo.reranker_modo,
         solape=brazo.reranker_solape,
         max_length=brazo.reranker_max_length,
@@ -313,7 +313,7 @@ def _etapa_esperada_del_reranker(
     """Lo que el brazo declaró sobre la etapa y, para lo que no declaró, lo que ya traía el reranker de la suite."""
     if brazo is None or not brazo.cambia_el_reranker:
         return None
-    de_la_suite = getattr(base, "configuracion", None)
+    de_la_suite = base.configuracion if isinstance(base, RerankerConVentanas) else None
     if de_la_suite is None:
         raise ConfigInvalida("el reranker de la suite no expone su configuración (RERANKER_*)")
     return replace(

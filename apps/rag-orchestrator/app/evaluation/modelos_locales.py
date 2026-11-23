@@ -32,10 +32,11 @@ from app.config.modelos import ConfigInvalida as ConfigDeModelosInvalida
 from app.config.modelos import cargar_config_modelos
 from app.config.settings import Settings
 from app.domain.nli import ParNli, ResultadoNli
-from app.domain.ventanas_del_reranker import ConfiguracionDelReranker
+from app.domain.ventanas_del_reranker import ConfiguracionDelReranker, ModoDeVentanas
 from app.evaluation.config_suite import ConfigSuite
 from app.evaluation.guardas import SuiteAbortada
 from app.evaluation.llamadas import RegistroDeLlamadas
+from app.evaluation.reranker_con_ventanas import RerankerConVentanas
 from app.infrastructure.llm.fabrica_local import (
     LlmCompleto,
     crear_generador_local,
@@ -152,11 +153,24 @@ class RerankerRegistrado:
     @property
     def configuracion(self) -> ConfiguracionDelReranker | None:
         """La etapa del reranker cargado (modo, solape, largo y pares), si el adapter la expone (US-278)."""
-        return getattr(self._interno, "configuracion", None)
+        if isinstance(self._interno, RerankerConVentanas):
+            return self._interno.configuracion
+        return None
 
-    def variante(self, **cambios: Any) -> RerankerRegistrado:
+    def variante(
+        self,
+        *,
+        modo_de_ventanas: ModoDeVentanas | None = None,
+        solape: int | None = None,
+        max_length: int | None = None,
+    ) -> RerankerRegistrado:
         """El mismo reranker cargado con otra etapa (sin cargar el modelo de nuevo), registrado igual (RN-12)."""
-        return RerankerRegistrado(self._interno.variante(**cambios), self._registro, self._clase)  # type: ignore[attr-defined]
+        if not isinstance(self._interno, RerankerConVentanas):
+            raise SuiteAbortada("el reranker cargado no admite variantes por brazo (RERANKER_*)")
+        otra = self._interno.variante(
+            modo_de_ventanas=modo_de_ventanas, solape=solape, max_length=max_length
+        )
+        return RerankerRegistrado(otra, self._registro, self._clase)
 
     def puntuar(self, pregunta: str, candidatos: Sequence[CandidatoParaReranker]) -> list[float]:
         self._registro.registrar_en_proceso("reranker", self._clase, self.version)
