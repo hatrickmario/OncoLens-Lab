@@ -8,7 +8,6 @@ excluida (NCCN, ESMO; RN-21) se rechaza con ``DatasetInvalido`` antes de medir n
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -42,9 +41,9 @@ class DatasetInvalido(ValueError):
     """El dataset incumple tamaño, idioma, clase o licencia; la medición no debe empezar."""
 
 
-def exigir_clase_sintetica(crudo: Mapping[str, Any], archivo: str, familia: str) -> None:
+def exigir_clase_sintetica(clase: object, archivo: str, familia: str) -> None:
     """RN-13, RN-14: la familia solo mide sobre datos sintéticos; el mensaje nombra el archivo y la familia, nunca un valor."""
-    if crudo.get("clase") != CLASE_SINTETICA:
+    if clase != CLASE_SINTETICA:
         raise DatasetInvalido(f"{archivo} del dataset de {familia} no declara clase: sintetico")
 
 

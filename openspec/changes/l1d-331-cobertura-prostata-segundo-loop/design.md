@@ -107,6 +107,21 @@ reporte y el AC-2 se actualiza en el Markdown del backlog (lo hace la sesión pr
 - Con adaptadores falsos la mayoría de las adversarias sale con evidencia (el *reranker* léxico falso no distingue temas): las
   cifras fake no dicen nada del RAG real y los «0 falsos positivos» se miden en la corrida base real (H-1), no en la CI.
 
+## Ajustes del Gate 2 y deuda (S7)
+
+- **Falso positivo único.** `es_falso_positivo(fila)` (adversaria que superó el umbral, con salida válida o no) es la definición
+  de `adversarias_por_caso` y de la comparación; `recuentos[]` lleva `superaron_umbral` y el reporte base debe traerlo. El
+  reporte base se valida contra el esquema cerrado, la suite `contextual` y las tres clases por ámbito (`null` ≠ `0`).
+- **Top-3** con la regla del servicio (orden estable por puntaje descendente; en empate manda el orden denso) y `zip(strict=True)`.
+- **Clase sintética:** `exigir_clase_sintetica(clase, archivo, familia)` recibe la clase (Introduce Parameter); `contextual` y
+  `diagnostico` la usan también para el corpus, y la solicitud lleva `dataset.corpus.clase`, no un literal.
+- **Meta en casos que no son de próstata:** la clave es única; el informe lo declara en texto (informativo). Un campo explícito
+  por caso exigiría una clave de configuración más: descartado por ahora (I2).
+- **Deuda registrada fuera de este change:** D7-12 unificar el vocabulario `con_evidencia` entre familias; D7-13 observar el
+  soporte NLI donde se conoce el plan (heurística de agrupación); D7-14 adoptar `exigir_clase_sintetica` en
+  aplicabilidad/chat/opciones/loader; D7-15 trocear `corrida_contextual.py` y `corrida_diagnostico.py` (informes aparte);
+  D7-16 `validar_ancho_de_tramo` y otros P3.
+
 ## Privacidad y ownership
 
 - Solo `rag-orchestrator`. No se toca `clinical-api`, PostgreSQL clínico ni `clinical-minio`; ningún dato cruza una

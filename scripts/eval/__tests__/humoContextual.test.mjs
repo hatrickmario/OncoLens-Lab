@@ -50,7 +50,11 @@ describe('evaluate --suite contextual (humo del proceso real)', { timeout: TIEMP
     const informe = JSON.parse(readFileSync(path.join(salida, 'informe.json'), 'utf8'));
     expect(informe.preguntas).toHaveLength(180);
     expect(informe.cobertura.map((c) => c.caso)).toEqual(['mama-completo', 'prostata-con-grado', 'prostata-con-psa-y-hrr']);
-    expect(informe.cobertura.every((c) => c.genericas_total === 22 && c.minimo === 18)).toBe(true);
+    const config = readFileSync(path.join(RAIZ, 'apps', 'rag-orchestrator', 'eval', 'configs', 'contextual-fake.yaml'), 'utf8');
+    const meta = Number(/genericas_con_evidencia_minimo:\s*(\d+)/.exec(config)[1]);
+    const preguntas = readFileSync(path.join(RAIZ, 'data', 'eval', 's5-corpus-ampliado', 'preguntas-contextuales.yaml'), 'utf8');
+    const genericas = (preguntas.match(/clase: generica/g) ?? []).length;
+    expect(informe.cobertura.every((c) => c.genericas_total === genericas && c.minimo === meta)).toBe(true);
     expect(informe.comparacion).toBeNull();
   });
 });

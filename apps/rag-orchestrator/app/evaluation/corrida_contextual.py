@@ -647,6 +647,8 @@ def _cobertura_legible(cobertura: Sequence[Mapping[str, Any]]) -> list[str]:
     return [
         "## Cobertura de genéricas por caso",
         "",
+        "La meta es la de US-273 AC-2; los casos ajenos a esa historia se comparan con ella a modo informativo.",
+        "",
         "| caso | genéricas con evidencia | genéricas | meta | cumple | campos usados |",
         "|---|---|---|---|---|---|",
         *(
