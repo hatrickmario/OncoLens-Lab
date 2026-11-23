@@ -17,37 +17,37 @@ de `Settings`.
       disco: ningún comando ni test de este change escribe en esa ruta antes de este commit (los tests usan un
       directorio temporal del SO inyectado). Verificación: `git check-ignore apps/clinical-api/eval/results/tmp/x.json`
       sale con 0. Commit `chore(L1D-326)`.
-- [ ] 1.1 (TDD estricto) Test de aceptación en rojo: «escribe una petición que cumple ChatTurnRequest por cada caso y
+- [x] 1.1 (TDD estricto) Test de aceptación en rojo: «escribe una petición que cumple ChatTurnRequest por cada caso y
       control, con los hechos esperados traducidos a factRefs de esa petición [US-269 AC-3]» · integración (PostgreSQL
       real de test con el seed sintético, vía `scripts/test-integration.sh`; directorio de salida temporal inyectado;
       valida `peticion` con el schema Zod generado del contrato de `rag-orchestrator`). Esqueleto de
       `src/evaluacion/chat/preparar-peticiones.ts` con `throw new Error('no implementado')`. Commit `test(L1D-326)`.
-- [ ] 1.2 (TDD estricto) Test de aceptación en rojo: «resuelve el marcador de identidad y la petición de
+- [x] 1.2 (TDD estricto) Test de aceptación en rojo: «resuelve el marcador de identidad y la petición de
       CHAT-AC01-MAMA-PII no lleva nombre, documento ni fecha de nacimiento de P-CHAT, ni el marcador sin resolver
       [US-269 AC-6]» · integración; lee la identidad sintética de `prisma/seed/pacientes/chat.ts` (sin literales
       nuevos); comprueba también que el `pseudoPatientId` no se repite entre casos (RN-11). Commit `test(L1D-326)`.
-- [ ] 1.3 (TDD estricto) Test de aceptación en rojo: «termina con código distinto de 0 sin abrir las claves de
+- [x] 1.3 (TDD estricto) Test de aceptación en rojo: «termina con código distinto de 0 sin abrir las claves de
       identidad ni escribir peticiones cuando REAL_*_ENABLED o el entorno es piloto [RN-13]» y «nombra el caso y la
       clave y no deja peticiones parciales cuando el seed no tiene el paciente o el hecho [US-269 AC-3]» · integración.
       La guarda exige **además** la BD de test con datos sintéticos, no solo `APP_ENV` en `SEED_ALLOWED_ENVS`: «termina
       con código distinto de 0 sin abrir las claves de identidad cuando la base no es la de test o contiene un paciente
       que no es del seed sintético [RN-13]». Commit `test(L1D-326)`.
-- [ ] 1.3b (TDD estricto) Test de aceptación en rojo: «las claves de hechosPorClave son las claves semánticas de
+- [x] 1.3b (TDD estricto) Test de aceptación en rojo: «las claves de hechosPorClave son las claves semánticas de
       hechos_esperados y el archivo no contiene ningún identificador de recurso de Backend 1 ni el mapa factRef →
       recurso [US-269 AC-6] [RN-10]» · integración: compara cada archivo preparado con los UUID de los recursos del
       paciente sembrado (paciente, diagnóstico, exámenes, tratamientos, documentos) y exige cero coincidencias; los
       valores de `hechosPorClave` son solo `factRef` presentes en esa petición. Commit `test(L1D-326)`.
-- [ ] 1.3c (TDD estricto) Test de aceptación en rojo: «borra el residuo de una corrida anterior antes de preparar
+- [x] 1.3c (TDD estricto) Test de aceptación en rojo: «borra el residuo de una corrida anterior antes de preparar
       [US-269 AC-6]» · integración: un archivo previo en el directorio de salida (como el que deja un SIGKILL) ya no
       existe tras arrancar, también cuando la guarda de 1.3 se niega a preparar. Commit `test(L1D-326)`.
-- [ ] 1.4 (TDD estricto) Implementar `src/evaluacion/chat/` y `src/cli/eval-chat-preparar.ts` (patrón de `medir-pii`;
+- [x] 1.4 (TDD estricto) Implementar `src/evaluacion/chat/` y `src/cli/eval-chat-preparar.ts` (patrón de `medir-pii`;
       script `eval:chat-preparar` en `apps/clinical-api/package.json`): servicio de conversación de producción con un
       cliente **capturador** en el puerto de Backend 2 (sin HTTP), un primer turno por caso, guarda del seed
       (`prisma/seed/guarda.ts`) reutilizada y ampliada con la comprobación de BD de test sintética (1.3), limpieza
       del residuo al arrancar (1.3c), reloj y generador de IDs inyectados; **sin** métricas de faltantes
       (D6-51). El mapa `factRef → recurso` no se escribe ni se registra. Unitarios uno a la vez. Commit
       `feat(L1D-326)`. Verificación: 1.1–1.3c en verde.
-- [ ] 1.5 Extraer `resolverMarcadorDeIdentidad()` (RN-10, RN-11) y `traducirHechosEsperados()` (clave del seed →
+- [x] 1.5 Extraer `resolverMarcadorDeIdentidad()` (RN-10, RN-11) y `traducirHechosEsperados()` (clave del seed →
       `factRef`) como funciones puras con nombre propio y sus unitarios; el cliente capturador pasa el test de contrato
       del puerto de Backend 2 (mismos errores que el cliente real). Entra con el `feat(L1D-326)` de 1.4.
 - [ ] 1.6 (test después) `scripts/eval/evaluate-chat.mjs` y script raíz `evaluate:chat` en `package.json`: prepara
@@ -57,7 +57,7 @@ de `Settings`.
       Test en `scripts/eval/__tests__/` que **ejecuta el comando real** con `chat-fake.yaml --sin-preparar` (tiempo
       máximo explícito, no los 5 s por defecto) y otro que comprueba el código 2 sin reporte con `chat-local.yaml
       --sin-preparar`. Commit `feat(L1D-326)` con su test.
-- [ ] 1.7 (test después) Verificación del `.gitignore` de 1.0 con el comando real: tras
+- [x] 1.7 (test después) Verificación del `.gitignore` de 1.0 con el comando real: tras
       `npm run eval:chat-preparar`, `git status --porcelain` no lista nada bajo `apps/clinical-api/eval/results/tmp/`
       (aserción dentro de 1.1). La entrada del `.gitignore` ya no se añade aquí: va en 1.0.
 - [ ] 1.8 (test después) `scripts/ci/eval-trigger-paths.yaml`: + `data/eval/chat-v1/**`,

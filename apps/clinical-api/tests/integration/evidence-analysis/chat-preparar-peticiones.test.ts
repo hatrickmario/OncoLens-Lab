@@ -85,7 +85,7 @@ describe('eval:chat-preparar sobre la BD de test con el seed sintético', () => 
     const prostata = leerArchivo('CHAT-AC01-PROSTATA');
     expect(hecho(prostata, 'paciente-b/psa-3')).toMatchObject({ kind: 'biomarcador' });
     expect(hecho(prostata, 'paciente-b/progresion-bioquimica')).toMatchObject({ kind: 'evento' });
-    expect(hecho(leerArchivo('CHAT-AC03-PROSTATA'), 'paciente-b/adt')).toMatchObject({
+    expect(hecho(leerArchivo('CHAT-AC02-PROSTATA'), 'paciente-b/adt')).toMatchObject({
       kind: 'tratamiento',
     });
   });

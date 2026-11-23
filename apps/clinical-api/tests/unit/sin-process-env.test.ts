@@ -10,6 +10,8 @@ const RAICES_DE_COMPOSICION = [
   path.join(RAIZ_SRC, 'cli', 'oncolens.ts'),
   // Comando `eval:pii` (L1D-205): tercera raíz de composición; pasa el entorno a `readDeidentificationConfig`.
   path.join(RAIZ_SRC, 'cli', 'medir-pii.ts'),
+  // Comando `eval:chat-preparar` (L1D-326): cuarta raíz de composición; pasa el entorno a la guarda del seed y a la configuración.
+  path.join(RAIZ_SRC, 'cli', 'eval-chat-preparar.ts'),
 ];
 const MODULO_DE_CONFIGURACION = path.join(RAIZ_SRC, 'config') + path.sep;
 

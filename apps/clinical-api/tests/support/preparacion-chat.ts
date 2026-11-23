@@ -1,9 +1,6 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { crearEjecutorDeTransacciones } from '../../src/infrastructure/database.js';
-import { crearProveedorDeCatalogo } from '../../src/infrastructure/catalogo/catalog-version.provider.js';
-import { readFileSync } from 'node:fs';
 import { idSembrado } from '../../prisma/seed/determinismo.js';
 import { identidadSinteticaDe } from '../../prisma/seed/identidades.js';
 import {
@@ -12,21 +9,14 @@ import {
   PACIENTE_CHAT,
 } from '../../prisma/seed/pacientes/chat.js';
 import { PACIENTES_SEMILLA } from '../../prisma/seed/pacientes/indice.js';
-import { componerCompletitud } from '../../src/modules/completeness/completeness.module.js';
-import { crearBaseDelAnalisis } from '../../src/modules/evidence-analysis/analysis-basis.js';
-import { crearContextDeidentifier } from '../../src/modules/evidence-analysis/deidentification/context-deidentifier.js';
-import { crearConversationRepository } from '../../src/modules/evidence-analysis/conversation/conversation.repository.js';
-import { crearConversationService } from '../../src/modules/evidence-analysis/conversation/conversation.service.js';
-import { createEvidenceAnalysisRepository } from '../../src/modules/evidence-analysis/evidence-analysis.repository.js';
-import { crearChecklistDelChat } from '../../src/modules/evidence-analysis/evidence-analysis.module.js';
-import { cargarEtiquetasDeDatosCriticos } from '../../src/modules/evidence-analysis/etiquetas-datos-criticos.js';
-import { crearTiposHabilitados } from '../../src/modules/evidence-analysis/tipos-habilitados.js';
-import type { IdentidadDelPaciente } from '../../src/modules/evidence-analysis/ports.js';
-import { crearCapturadorDeTurnos } from '../../src/evaluacion/chat/capturador.js';
+import { componerServicioDeConversacion } from '../../src/evaluacion/chat/composicion.js';
 import type {
   BaseParaPreparar,
   DependenciasDelComando,
+  ServicioParaPreparar,
 } from '../../src/evaluacion/chat/comando.js';
+import { crearContextDeidentifier } from '../../src/modules/evidence-analysis/deidentification/context-deidentifier.js';
+import type { IdentidadDelPaciente } from '../../src/modules/evidence-analysis/ports.js';
 import {
   configuracionDePiiDeTest,
   detectoresReales,
@@ -100,9 +90,9 @@ export function prepararEntorno(
       () =>
         `req_PrepChat${String(++n).padStart(4, '0')}`
     )(),
-    componerServicio: (base) => {
+    componerServicio: () => {
       composiciones += 1;
-      return Promise.resolve(componerServicioDeTest(mundo, base));
+      return Promise.resolve(componerServicioDeTest(mundo));
     },
   };
   return {
@@ -115,24 +105,13 @@ export function prepararEntorno(
   };
 }
 
-function componerServicioDeTest(mundo: MundoDeGateway, _base: BaseParaPreparar) {
-  const reloj = relojFijo(AHORA);
+function componerServicioDeTest(mundo: MundoDeGateway): ServicioParaPreparar {
   const logger = loggerEnMemoria();
-  const leer = (archivo: string): string => readFileSync(archivo, 'utf8');
-  const completitud = componerCompletitud({
+  const { servicio, capturador } = componerServicioDeConversacion({
     db: mundo.cliente,
+    pool: mundo.pool,
     rutaDelCatalogo: RUTA_DEL_CATALOGO,
-    leerArchivo: leer,
-    tiposHabilitados: crearTiposHabilitados(['mama', 'prostata'], ['mama', 'prostata']),
-  });
-  const capturador = crearCapturadorDeTurnos();
-  const servicio = crearConversationService({
-    conversaciones: crearConversationRepository(
-      mundo.cliente,
-      crearEjecutorDeTransacciones(mundo.pool),
-    ),
-    casos: createEvidenceAnalysisRepository(mundo.cliente),
-    checklist: crearChecklistDelChat(completitud),
+    leerArchivo: (archivo) => readFileSync(archivo, 'utf8'),
     desidentificador: crearContextDeidentifier({
       identidades: lectorDeIdentidadFalso(identidadesDelSeed()),
       detectores: detectoresReales(),
@@ -141,22 +120,19 @@ function componerServicioDeTest(mundo: MundoDeGateway, _base: BaseParaPreparar) 
       registrar: logger.registrar,
       expresionesDeFecha: configuracionDePiiDeTest().fechas.expresiones,
     }),
-    rag: capturador,
-    base: crearBaseDelAnalisis({
-      etiquetaDe: cargarEtiquetasDeDatosCriticos(RUTA_DEL_CATALOGO, leer),
-      maxFollowUps: 10,
-    }),
-    idsDeAnalisis: mundo.idsDeAnalisis,
-    catalogo: crearProveedorDeCatalogo(RUTA_DEL_CATALOGO, leer),
-    reloj,
-    idsDeConversaciones: mundo.idsDeConversaciones,
-    idsDeTurnos: mundo.idsDeTurnosDeChat,
-    idsDeHilos: mundo.idsDeHilos,
-    config: {
+    analisis: {
       ragTimeoutMs: 1000,
       chatRehydrateTurns: 6,
-      maxOpciones: 1,
+      analysisMaxOptions: 1,
+      analysisFollowupMax: 10,
       aiDisclaimerText: DISCLAIMER_DE_TEST,
+    },
+    reloj: relojFijo(AHORA),
+    ids: {
+      analisis: mundo.idsDeAnalisis,
+      conversaciones: mundo.idsDeConversaciones,
+      turnos: mundo.idsDeTurnosDeChat,
+      hilos: mundo.idsDeHilos,
     },
   });
   return { servicio, capturador, usuarioId: idSembrado('usuario/doc1') };
