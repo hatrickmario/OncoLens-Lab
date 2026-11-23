@@ -23,6 +23,10 @@ CLASES_DE_PREGUNTA: Final = ("generica", "con_tema", "control")
 SEGUNDO_LOOP_CONTEXTUAL: Final = "contextual"
 SEGUNDO_LOOP_NINGUNO: Final = "ninguno"
 AMBITO_TOTAL: Final = "total"
+METRICA_GENERICAS: Final = "genericas_con_evidencia"
+METRICA_CONTROLES: Final = "controles_con_evidencia"
+METRICA_FALSOS_POSITIVOS: Final = "falsos_positivos"
+METRICAS_FRENTE_A_LA_BASE: Final = (METRICA_GENERICAS, METRICA_CONTROLES, METRICA_FALSOS_POSITIVOS)
 
 CONDICIONES_DE_LA_CAUSA: Final = (
     "algún chunk supera RELEVANCE_THRESHOLD",
@@ -41,6 +45,14 @@ REGLA_DE_LA_CAUSA: Final = tuple(
 
 
 @dataclass(frozen=True)
+class ChunkPuntuado:
+    """Un chunk del ranking final de una pregunta: su id y su ``relevance_score`` en [0, 1] (RN-03); nunca su texto."""
+
+    chunk_id: str
+    relevance_score: float
+
+
+@dataclass(frozen=True)
 class FilaContextual:
     """Una pregunta corrida con un caso. ``None`` = no observado (≠ ``0.0``)."""
 
@@ -51,6 +63,12 @@ class FilaContextual:
     supero_umbral: bool
     top_relevance_score: float | None
     segundo_loop: str | None
+    top3: tuple[ChunkPuntuado, ...] = ()
+    """Los tres primeros chunks del último ranking de la pregunta; vacío si el *reranker* no puntuó nada."""
+    campos_usados: tuple[str, ...] = ()
+    """``contextExpansion.fields`` de la respuesta; vacío si no hubo segundo loop contextual."""
+    llamadas_al_generador: int = 0
+    """Veces que se invocó al LLM de generación para esta consulta (RN-02: 0 cuando no hay chunks sobre el umbral)."""
 
 
 @dataclass(frozen=True)
@@ -101,3 +119,49 @@ def _recuento(ambito: str, clase: str, filas: Sequence[FilaContextual]) -> Recue
     de_la_clase = [f for f in filas if f.clase == clase]
     con_evidencia = sum(f.estado == ESTADO_CON_EVIDENCIA for f in de_la_clase)
     return RecuentoDeClase(ambito, clase, con_evidencia, len(de_la_clase))
+
+
+@dataclass(frozen=True)
+class CoberturaDeCaso:
+    caso: str
+    genericas_con_evidencia: int
+    genericas_total: int
+    minimo: int
+    """La meta leída de la configuración (RN-22); nunca una constante de este módulo."""
+    cumple: bool
+    campos_usados: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class AdversariasDeCaso:
+    caso: str
+    total: int
+    sin_evidencia: int
+    falsos_positivos: int
+    con_puntaje_nulo: int
+    llamadas_al_generador: int
+
+
+@dataclass(frozen=True)
+class CambioFrenteALaBase:
+    ambito: str
+    metrica: str
+    base: int
+    actual: int
+    empeora: bool
+
+
+def genericas_con_evidencia_por_caso(
+    filas: Sequence[FilaContextual], minimo: int
+) -> tuple[CoberturaDeCaso, ...]:
+    raise NotImplementedError("no implementado")
+
+
+def adversarias_por_caso(filas: Sequence[FilaContextual]) -> tuple[AdversariasDeCaso, ...]:
+    raise NotImplementedError("no implementado")
+
+
+def comparar_con_base(
+    actual: Sequence[RecuentoDeClase], base: Sequence[RecuentoDeClase]
+) -> tuple[CambioFrenteALaBase, ...]:
+    raise NotImplementedError("no implementado")

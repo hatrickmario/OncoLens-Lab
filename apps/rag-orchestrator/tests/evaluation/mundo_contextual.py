@@ -107,6 +107,14 @@ class GeneradorQueFalla:
         raise LlmSalidaInvalidaError(("principal_duplicada",))
 
 
+GUIONES_DE_PROSTATA = {G01: Guion("c5", PUNTAJE_BAJO, 0.9)}
+"""La genérica puntúa alto con el único chunk de próstata cuando corre el loop contextual (los de mama no son recuperables)."""
+
+
+def puertos_de_prostata() -> PuertosDeContextual:
+    return PuertosDeContextual(reranker=RerankerGuionado(GUIONES_DE_PROSTATA))
+
+
 @dataclass(frozen=True)
 class Mundo:
     config: Path
@@ -189,6 +197,10 @@ def construir_mundo(
     expansion: bool = True,
     sinonimos: Sequence[tuple[str, str]] = SINONIMOS,
     casos: Sequence[str] = ("mama-completo",),
+    minimo: int = 1,
+    reporte_base: Path | None = None,
+    casos_ruta: str = CASOS,
+    ruta_terminos: str = "packages/clinical-catalogs",
 ) -> Mundo:
     corpus = tmp_path / "corpus"
     escribir_corpus(corpus, clase)
@@ -207,11 +219,13 @@ def construir_mundo(
             "retrieval_top_k": 30,
             "rerank_top_n": 10,
         },
-        "catalogo": {"version": "2026.10.0", "ruta_terminos": "packages/clinical-catalogs"},
+        "catalogo": {"version": "2026.10.0", "ruta_terminos": ruta_terminos},
         "contextual": {
             "casos": list(casos),
-            "casos_ruta": CASOS,
+            "casos_ruta": casos_ruta,
             "expansion_habilitada": expansion,
+            "genericas_con_evidencia_minimo": minimo,
+            **({"reporte_base": str(reporte_base)} if reporte_base is not None else {}),
             "reranker_max_pairs": 20,
             "preguntas_de_sinonimos": [{"pregunta": p, "termino": t} for p, t in sinonimos],
         },
