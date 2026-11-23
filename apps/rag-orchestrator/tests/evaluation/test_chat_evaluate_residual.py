@@ -9,6 +9,7 @@ sintética se compone en ejecución (``chat.identidad_de_prueba``), nunca un lit
 import asyncio
 import dataclasses
 import json
+import shutil
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -16,6 +17,7 @@ import pytest
 import yaml
 
 from app.application.ports import FalloDelLlm
+from app.domain.atribucion import CLAIM_MAX_WORDS_INICIAL
 from app.evaluation import chat
 from app.evaluation.config_suite import ConfigInvalida, cargar_config_suite
 from app.evaluation.dataset_chat import cargar_dataset_de_chat
@@ -305,3 +307,48 @@ def test_main_carga_las_quince_peticiones_y_el_caso_con_previo_continua_el_hilo_
         continuacion["intent_correcto"] is True
     )  # el hilo de AC05 sigue vivo, sin la rehidratación
     assert codigo == 0
+
+
+def test_cargar_config_suite_ignora_el_entorno_del_proceso_cuando_el_entorno_recibido_no_trae_claim_max_words(  # noqa: E501
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    monkeypatch.setenv("CLAIM_MAX_WORDS", "99")
+    ruta = _config_sin_umbrales(tmp_path)
+
+    config = cargar_config_suite(ruta, UMBRALES_DEL_ENTORNO)
+
+    assert config.umbrales.claim_max_words == CLAIM_MAX_WORDS_INICIAL
+
+
+def test_evaluar_chat_publica_cuantos_casos_excluye_por_control_de_identidad_cuando_el_caso_lo_declara():  # noqa: E501
+    dataset = cargar_dataset_de_chat(CHAT_V1)
+    peticiones = _con_la_pregunta_enmascarada_como_clinical_api(
+        chat.peticiones_de_ejemplo(dataset, cargar_config_suite(CONFIG))
+    )
+
+    reporte = _correr(peticiones=peticiones)
+
+    assert reporte["metricas"].get("casos_de_control_de_identidad") == 1
+
+
+def test_evaluar_chat_mide_como_cualquier_caso_el_fuera_de_alcance_cuando_el_caso_no_declara_control_de_identidad(  # noqa: E501
+    tmp_path: Path,
+):
+    destino = tmp_path / "chat-v1"
+    shutil.copytree(CHAT_V1, destino)
+    ruta = destino / "casos.yaml"
+    crudo = yaml.safe_load(ruta.read_text(encoding="utf-8"))
+    for caso in crudo["casos"]:
+        caso.pop("control_de_identidad", None)
+    ruta.write_text(yaml.safe_dump(crudo, allow_unicode=True), encoding="utf-8")
+    config = cargar_config_suite(CONFIG)
+    dataset = cargar_dataset_de_chat(destino)
+    peticiones = _con_la_pregunta_enmascarada_como_clinical_api(
+        chat.peticiones_de_ejemplo(dataset, config)
+    )
+
+    reporte = asyncio.run(chat.evaluar(config, dataset, peticiones))
+
+    caso = next(c for c in reporte["por_caso"] if c["id"] == CASO_PII)
+    assert caso["control_de_identidad"] is False and caso["intent_correcto"] is False
+    assert reporte["metricas"]["exactitud_de_intent"] < 1.0
