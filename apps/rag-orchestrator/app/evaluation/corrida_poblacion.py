@@ -53,6 +53,7 @@ from app.evaluation.metricas.poblacion import (
     CasoDeEstado,
     Fraccion,
     ParMedido,
+    TasaDelBucle,
     cobertura_por_criterio,
     cobertura_por_redaccion,
     cobertura_por_tipo_de_redaccion,
@@ -395,26 +396,11 @@ def _reporte(
             "por_tipo_de_redaccion": _por_tipo_de_redaccion(pares),
             "distractores": _distractores(pares),
             "tasa_duplicados": duplicados,
-            "cortes_por_longitud": {
-                "tareas": len(extraccion.tareas),
-                "cortes": len(cortes),
-                "casos": [{"documento": d, "criterio": c} for d, c in cortes],
-            },
+            "cortes_por_longitud": _cortes_del_reporte(extraccion, cortes),
             "concordancia": concordancia,
             "rendija_c3": _rendija_c3(estados),
-            "sin_evidencia": {
-                "baseline": sin_evidencia.baseline,
-                "actual": sin_evidencia.actual,
-                "baja": sin_evidencia.baja,
-                "violaciones_rn02": sin_evidencia.violaciones_rn02,
-            },
-            "bucle": {
-                "pares": bucle.pares,
-                "cortes": bucle.cortes,
-                "tasa": bucle.tasa,
-                "minimo_de_pares": bucle.minimo_de_pares,
-                "out06": bucle.out06,
-            },
+            "sin_evidencia": _sin_evidencia_del_reporte(sin_evidencia),
+            "bucle": _bucle_del_reporte(bucle),
         },
         "veredicto": {
             "resultado": resultado.resultado,
@@ -425,6 +411,35 @@ def _reporte(
         },
     }
     return reporte, cortes
+
+
+def _cortes_del_reporte(
+    extraccion: _Extraccion, cortes: Sequence[tuple[str, str]]
+) -> dict[str, Any]:
+    return {
+        "tareas": len(extraccion.tareas),
+        "cortes": len(cortes),
+        "casos": [{"documento": d, "criterio": c} for d, c in cortes],
+    }
+
+
+def _sin_evidencia_del_reporte(sin_evidencia: Any) -> dict[str, Any]:
+    return {
+        "baseline": sin_evidencia.baseline,
+        "actual": sin_evidencia.actual,
+        "baja": sin_evidencia.baja,
+        "violaciones_rn02": sin_evidencia.violaciones_rn02,
+    }
+
+
+def _bucle_del_reporte(bucle: TasaDelBucle) -> dict[str, Any]:
+    return {
+        "pares": bucle.pares,
+        "cortes": bucle.cortes,
+        "tasa": bucle.tasa,
+        "minimo_de_pares": bucle.minimo_de_pares,
+        "out06": bucle.out06,
+    }
 
 
 def _configuracion(config: ConfigPoblacion, dorado: DoradoDePoblacion) -> dict[str, Any]:

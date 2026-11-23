@@ -347,7 +347,7 @@ def test_poblacion_se_niega_con_codigo_1_y_sin_calcular_metricas_cuando_el_manif
     assert "la suite no corre" in error
 
 
-def test_poblacion_se_niega_con_codigo_2_cuando_el_proveedor_es_local_sin_cablear(
+def test_poblacion_se_niega_con_codigo_2_cuando_el_proveedor_es_local_sin_la_configuracion_comun_de_la_suite(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     codigo, reporte, _ = _correr(tmp_path, capsys, config={"adaptadores": {"proveedor": "local"}})

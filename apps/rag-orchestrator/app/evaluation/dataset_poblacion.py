@@ -198,12 +198,17 @@ def _exigir_redaccion(par: ParDorado) -> None:
     """``redaccion`` y ``tipo`` del conjunto cerrado y un distractor sin valores de elegibilidad (D-2, D-3)."""
     if par.redaccion not in REDACCIONES:
         raise DatasetInvalido(f"el par {par.id} declara una redaccion fuera del conjunto")
-    if (par.tipo is not None) != (par.redaccion == "dificil") or (
-        par.tipo is not None and par.tipo not in TIPOS_DE_REDACCION
-    ):
+    if not _tipo_corresponde_a_la_redaccion(par):
         raise DatasetInvalido(f"el par {par.id} declara un tipo de redaccion que no corresponde")
     if par.distractor and any(v.scope == "elegibilidad" for v in par.esperados):
         raise DatasetInvalido(f"el distractor {par.id} no puede esperar valores de elegibilidad")
+
+
+def _tipo_corresponde_a_la_redaccion(par: ParDorado) -> bool:
+    """Solo la redacción difícil lleva tipo, y es uno del conjunto cerrado."""
+    if par.redaccion != "dificil":
+        return par.tipo is None
+    return par.tipo in TIPOS_DE_REDACCION
 
 
 def _leer_json(ruta: Path, nombre: str) -> dict[str, Any]:
