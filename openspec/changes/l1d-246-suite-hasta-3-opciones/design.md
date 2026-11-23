@@ -181,3 +181,23 @@ salta, no se relaja la meta: se reporta con los ids de caso. Cifras anteriores s
 `corrida_opciones.py`, `esquema_suite.py`); `apps/rag-orchestrator/eval/configs/` (configuración de la corrida final);
 tests en `apps/rag-orchestrator/tests/evaluation/`. No toca `packages/clinical-catalogs/` ni otros datasets.
 
+**Decisiones de implementación del S7 (antes de la corrida base).**
+- **S7-I1 · Dónde van los tres recuentos.** Cada `validacion` de las 8 métricas de la familia gana
+  `preguntas_mecanica_verificada` y `preguntas_sin_revisar` (con `preguntas_validadas`/`preguntas_no_validadas` intactas), con
+  un objeto de esquema propio en `ESQUEMA_OPCIONES` (`_VALIDACION_DE_OPCIONES`). *Descartado:* un bloque `revision` de nivel
+  superior (el spec pide el recuento por métrica y el subconjunto `metricas_validadas` tiene el suyo); ampliar `_VALIDACION`
+  compartido (cambiaría el esquema de las demás familias, fuera de alcance).
+- **S7-I2 · `contar_revision()`** vive en `app/evaluation/contar_revision.py` (módulo propio, pura, junto a `rotulo.py`):
+  recibe dos secuencias de booleanos por caso y devuelve `RecuentoDeRevision(validados, mecanica_verificada, sin_revisar)`; una
+  pregunta con ambas revisiones cuenta solo como validada. *Descartado:* meterla en `rotulo.py` (mezcla rótulo y recuento).
+  La marca se valida con `exigir_revision_provisional()` de `revision_provisional.py` (creada por `l1d-334`): ninguna segunda
+  copia; un test de paridad compara `ROLES_DE_REVISION_PROVISIONAL` con el enum de `$defs/revisionProvisional` del catálogo.
+- **S7-I3 · Preguntas en español y recuperación falsa.** El reranker falso es léxico y no cruza idiomas: cada fragmento del
+  corpus gana una frase descriptiva en español (la `cita` sigue siendo el texto en inglés). *Descartado:* conservar términos en
+  inglés en la pregunta (viola AC-1) o tocar el guion falso (la recuperación fallaría igual).
+- **S7-I4 · OP-08.** Con `maxOptions: 3` las propuestas son P1, P5 (nuevo, sensible a la castración, quimioterapia) y P2
+  (resistente, no comparable, al final); P3 sale del caso para que la no comparable quede dentro del tope y AC-3 siga
+  ejercitándose. El orden `[doc-p1, doc-p5, doc-p2]` lo confirma el comparador de RN-28
+  (`test_opciones_coherencia_dataset.py`), no se fijó a ojo. *Descartado:* mantener cuatro propuestas (la no comparable
+  quedaría fuera del tope y OP-08 dejaría de probar «no comparable al final»).
+

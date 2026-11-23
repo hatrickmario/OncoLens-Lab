@@ -3,8 +3,8 @@
 # prueba, fechas relativas. Ningún dato real ni de paciente (RN-14).
 clase: sintetico
 nombre: opciones
-version: '1'
-descripcion: '12 casos (6 mama, 6 próstata); 0 revisados por el oncólogo hasta que lo confirme (4 candidatos); 2 con una opción de fuente única no comparable; guiones derivados de FX-10c-a (LLM-CUATRO, LLM-TRES, APL-FIJA).'
+version: '2'
+descripcion: '12 casos (6 mama, 6 próstata) con preguntas en español; 0 revisados por un oncólogo (H-2) y 4 con revisión provisional de IA (OP-01, OP-02, OP-07, OP-08: mecánica verificada, nunca validada); 2 con una opción de fuente única no comparable; OP-08 con la fuente sensible a la castración (doc-p5); guiones derivados de FX-10c-a (LLM-CUATRO, LLM-TRES, APL-FIJA).'
 catalogVersion: test-apl-1.0.0
 catalogos:
   mama: packages/clinical-catalogs/test/fixtures/test-apl-1.0.0

@@ -16,8 +16,8 @@ from app.application.ports import (
     LanguageDetector,
     NliClassifier,
     PoblacionTask,
-    ProhibitedTermsChecker,
     PuertosDelCorpus,
+    ProhibitedTermsChecker,
     QueryEmbedder,
     QuerySparseEncoder,
     Reranker,
@@ -34,6 +34,9 @@ from app.config.settings import (
     POBLACION_VERSION_DEL_PROMPT_INICIAL,
 )
 from app.domain.criterios_aplicabilidad import CriteriosDeAplicabilidad
+from app.domain.expansion_contextual import ParametrosDeExpansionContextual
+from app.domain.pregunta_sin_tema_propio import MarcosDePregunta
+from app.domain.terminos_del_caso import CatalogoDeTerminos
 from app.evaluation.adaptadores_falsos import (
     BuscadorEnMemoria,
     BuscadorSparseEnMemoria,
@@ -114,6 +117,17 @@ class AplicabilidadDeLaSuite:
     catalogo: CorpusCatalogReader
 
 
+@dataclass(frozen=True)
+class ExpansionDeLaSuite:
+    """Lo que la familia `contextual` (US-271) inyecta para que el servicio decida el segundo loop contextual (ADR-52): el
+    indicador y los dos catálogos de solo lectura (marcos de pregunta y términos del caso). Sin ella el servicio no tiene
+    catálogo de términos y nunca corre ese loop: las demás familias y `--suite all` no lo miden (D6-60)."""
+
+    parametros: ParametrosDeExpansionContextual
+    marcos: MarcosDePregunta
+    terminos: CatalogoDeTerminos
+
+
 PARAMETROS_DEL_RESPALDO_DE_LA_SUITE = ParametrosDelRespaldo(
     plazo_ms=POBLACION_PLAZO_DEL_RESPALDO_MS_INICIAL,
     concurrencia=POBLACION_CONCURRENCIA_INICIAL,
@@ -129,8 +143,10 @@ def parametros_de_recuperacion(
     brazo: Brazo | None = None,
     respaldo: ParametrosDelRespaldo = PARAMETROS_DEL_RESPALDO_DE_LA_SUITE,
     reranker_max_pairs: int | None = None,
+    expansion: ExpansionDeLaSuite | None = None,
 ) -> ParametrosDeRecuperacion:
-    """Los parámetros del servicio de la suite; ``reranker_max_pairs`` solo lo fija un reranker local (``None`` = sin tope)."""
+    """Los parámetros del servicio de la suite; ``reranker_max_pairs`` solo lo fija un reranker local (``None`` = sin tope).
+    Sin ``expansion`` el loop contextual queda apagado (como en las demás familias); con ella, el indicador de la corrida."""
     u = config.umbrales
     base = ParametrosDeRecuperacion(
         relevance_threshold=u.relevance_threshold,
@@ -145,6 +161,8 @@ def parametros_de_recuperacion(
         respaldo=respaldo,
         reranker_max_pairs=reranker_max_pairs,
     )
+    if expansion is not None:
+        base = replace(base, expansion_contextual=expansion.parametros)
     return base if brazo is None else _con_recuperacion_del_brazo(base, brazo)
 
 
@@ -297,6 +315,7 @@ def componer_servicio(
     corpus: PuertosDelCorpus | None = None,
     envolver_buscador: Callable[[ChunkSearch], ChunkSearch] | None = None,
     reranker_max_pairs: int | None = None,
+    expansion: ExpansionDeLaSuite | None = None,
     juez_no_inferencia: JuezDeNoInferencia | None = None,
 ) -> ServicioDeSuite:
     """El servicio de la suite. Con ``brazo`` recupera con sus ``RETRIEVAL_*`` (US-133); con ``adaptadores`` ya cargados
@@ -305,7 +324,8 @@ def componer_servicio(
     esa población; sin ella, la suite mide solo la recuperación y la generación. ``envolver_buscador`` decora la búsqueda
     en memoria (la familia `diagnostico` observa el orden denso) y ``reranker_max_pairs`` fija el corte a los pares con
     adaptadores falsos; con puertos locales manda el del reranker cargado. Con ``corpus`` (fuente ``indice``) el servicio
-    busca y lee el catálogo y la release en esos puertos de solo lectura, no en el dataset en memoria. Con
+    busca y lee el catálogo y la release en esos puertos de solo lectura, no en el dataset en memoria. Con ``expansion``
+    (familia `contextual`, US-271) el servicio decide el segundo loop contextual con esos catálogos y su indicador. Con
     ``juez_no_inferencia`` la suite cuenta las salidas que atribuyen un valor a un dato crítico faltante (US-116 AC-1)."""
     if aplicabilidad is not None and corpus is not None:
         raise ConfigInvalida(
@@ -362,9 +382,12 @@ def componer_servicio(
             brazo,
             puertos_locales.respaldo if puertos_locales else PARAMETROS_DEL_RESPALDO_DE_LA_SUITE,
             puertos_locales.reranker_max_pairs if puertos_locales else reranker_max_pairs,
+            expansion,
         ),
         embedder_sparse=embedder_sparse,
         buscador_sparse=buscador_sparse,
+        marcos_de_pregunta=expansion.marcos if expansion else None,
+        catalogo_de_terminos=expansion.terminos if expansion else None,
     )
     return ServicioDeSuite(
         servicio,

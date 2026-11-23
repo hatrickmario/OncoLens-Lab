@@ -48,6 +48,7 @@ from app.evaluation.config_opciones import (
     leer_referencia,
 )
 from app.evaluation.config_suite import ConfigSuite, cargar_config_suite
+from app.evaluation.contar_revision import contar_revision
 from app.evaluation.corrida import evaluar_pregunta_tolerante, solicitud_base
 from app.evaluation.cronometro import Cronometro, RelojSimulado
 from app.evaluation.dataset_opciones import (
@@ -262,6 +263,7 @@ async def _analisis_de(
         campos_nivel_a=resultado.salidas_mostradas_nivel_a,
         campos_nivel_b=resultado.salidas_mostradas_nivel_b,
         campos_con_termino=resultado.campos_mostrados,
+        revision_provisional=caso_id in dataset.con_revision_provisional,
     )
 
 
@@ -539,11 +541,16 @@ def _metricas(medido: MedicionDeOpciones) -> dict[str, Any]:
 
 
 def _validacion(analisis: Sequence[AnalisisDeOpciones]) -> dict[str, Any]:
-    validadas = sum(a.revisada for a in analisis)
+    recuento = contar_revision(
+        [a.revisada for a in analisis], [a.revision_provisional for a in analisis]
+    )
+    no_validadas = len(analisis) - recuento.validados
     return {
-        "preguntas_validadas": validadas,
-        "preguntas_no_validadas": len(analisis) - validadas,
-        "rotulo": rotular_validada(validadas, len(analisis) - validadas).rotulo,
+        "preguntas_validadas": recuento.validados,
+        "preguntas_no_validadas": no_validadas,
+        "preguntas_mecanica_verificada": recuento.mecanica_verificada,
+        "preguntas_sin_revisar": recuento.sin_revisar,
+        "rotulo": rotular_validada(recuento.validados, no_validadas).rotulo,
     }
 
 

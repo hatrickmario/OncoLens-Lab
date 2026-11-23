@@ -9,22 +9,22 @@
 
 ## 1. ai-services
 
-- [ ] 1.1 (TDD estricto) Test de aceptación en rojo: «cada pregunta de sinónimos supera el umbral o queda con su causa
+- [x] 1.1 (TDD estricto) Test de aceptación en rojo: «cada pregunta de sinónimos supera el umbral o queda con su causa
       cuando corre la familia contextual con adaptadores falsos [US-271 AC-9]» · integración del runner con
       `contextual-fake.yaml` en `tests/evaluation/test_contextual_aceptacion.py`, `@pytest.mark.ac("US-271", 9)`; tres
       preguntas (pasa, `termino_ausente_del_corpus`, `bajo_umbral_con_termino_en_corpus`), `null` (nunca `0.0`) en
       `top_relevance_score` y `causa`, y reproducibilidad byte a byte. Esqueletos con `raise NotImplementedError`.
       Commit `test(L1D-329)`.
-- [ ] 1.2 (TDD estricto) Tests de aceptación en rojo del resto del requisito: recuentos por clase y `segundo_loop`
+- [x] 1.2 (TDD estricto) Tests de aceptación en rojo del resto del requisito: recuentos por clase y `segundo_loop`
       con el indicador en `true` y en `false` `[US-271 AC-2] [US-271 AC-4] [US-275 AC-4]`; término fuera del catálogo y
       dataset no sintético terminan con código ≠ 0; el informe no contiene el texto de ninguna pregunta, chunk ni
       término del caso `[US-271 AC-6]`. Commit `test(L1D-329)`.
-- [ ] 1.3 (TDD estricto) `metricas/contextual.py`: `causa_de_sinonimo()` y `recuentos_por_clase()`; unitarios uno a la
+- [x] 1.3 (TDD estricto) `metricas/contextual.py`: `causa_de_sinonimo()` y `recuentos_por_clase()`; unitarios uno a la
       vez. Las formas del término son **todos** los textos de `sinonimos[]` del término y salen de un único punto,
       `formas_del_termino()`, sobre el cargador de sinónimos existente (sin duplicar la normalización). Test de guarda:
       «cuenta como forma cada texto de sinonimos[] del término [US-271 AC-9]» (queda en rojo si el cargador pasa a
       devolver solo equivalentes; `l1d-335` lo repunta, design D4).
-- [ ] 1.4 (TDD estricto) `config_contextual.py`, `corrida_contextual.py` y la familia `contextual` en
+- [x] 1.4 (TDD estricto) `config_contextual.py`, `corrida_contextual.py` y la familia `contextual` en
       `config_suite.py`, `evaluate.py` y `esquema_suite.py` (fuera de `all`); `eval/configs/contextual-fake.yaml` y
       `contextual-local.yaml` (indicador activo; casos `mama-completo` y `prostata-con-grado`, design D5; `l1d-331`
       añade el tercero) y `contextual-local-apagado.yaml` (mismo contenido con
@@ -32,14 +32,14 @@
       de seudónimos inyectados. El informe registra el corpus de la corrida (ruta del dataset, versión y recuento de
       chunks), la versión del catálogo y los umbrales (`[S7 resp. 10]`, `[S7 resp. 11]`). Commit `feat(L1D-329)` cuando
       1.1 y 1.2 pasan.
-- [ ] 1.5 (test después) Humo del proceso real: `node scripts/eval/evaluate.mjs --suite contextual` sale con 0 y
+- [x] 1.5 (test después) Humo del proceso real: `node scripts/eval/evaluate.mjs --suite contextual` sale con 0 y
       escribe el informe en un directorio temporal; tiempo máximo explícito del test (60 s).
-- [ ] 1.6 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en
+- [x] 1.6 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en
       verde antes y después, commit `refactor(L1D-329)`.
 
 ## 2. evaluación
 
-- [ ] 2.1 (suite `evaluate`) `run-ai-eval` con adaptadores falsos: `--suite all` da el mismo
+- [x] 2.1 (suite `evaluate`) `run-ai-eval` con adaptadores falsos: `--suite all` da el mismo
       `data/evaluation/baseline.json` y la misma huella de `test-fake.yaml`; `--suite contextual` con
       `contextual-fake.yaml` sale con 0.
 - [ ] 2.2 (suite `evaluate`) DIFERIDA -> H-1 (corrida base del S7). `evaluate --config
@@ -54,9 +54,9 @@
 
 ## 3. Verificación
 
-- [ ] 3.1 Pytest de `tests/evaluation` y la suite de `apps/rag-orchestrator` en verde; `ruff` y `lint-imports`
+- [x] 3.1 Pytest de `tests/evaluation` y la suite de `apps/rag-orchestrator` en verde; `ruff` y `lint-imports`
       limpios; `openspec validate l1d-329-segundo-loop-ac9-reporte --strict`. `contracts:verify-provider` no aplica.
-- [ ] 3.2 CI del PR con 0 checks en fallo, 0 pendientes y 0 alertas antes de pedir el merge.
+- [ ] 3.2 TRASLADADA a orquestador, tras CI del PR (entrega 1): CI del PR con 0 checks en fallo, 0 pendientes y 0 alertas antes de pedir el merge.
 
 ## humano
 

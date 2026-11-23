@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -22,6 +22,7 @@ from app.evaluation.config_suite import ruta_del_repo
 from app.evaluation.dataset_loader import CLASE_SINTETICA, DatasetInvalido
 from app.evaluation.fuente_dataset import DatasetSuite, FuenteDatasetEnDirectorio
 from app.evaluation.guardas import SuiteAbortada
+from app.evaluation.revision_provisional import exigir_revision_provisional
 from app.infrastructure.catalogo_clinico.aplicabilidad import cargar_criterios_de_aplicabilidad
 from app.infrastructure.catalogo_clinico.manifiesto import CatalogoNoDisponible
 from app.schemas.generated.models import ClinicalContext
@@ -61,6 +62,8 @@ class DatasetOpciones:
     """Los ``clinicalContext`` de los pacientes de test, ya validados contra el contrato (desidentificados)."""
     poblaciones: Mapping[str, PoblacionDeFuente]
     casos: tuple[CasoDeOpciones, ...]
+    con_revision_provisional: frozenset[str] = frozenset()
+    """Preguntas con ``revision_provisional`` válida (de IA): mecánica verificada, nunca «validada» (S7-D1)."""
 
     def caso_de(self, pregunta_id: str) -> CasoDeOpciones:
         return next(c for c in self.casos if c.id == pregunta_id)
@@ -104,8 +107,9 @@ def cargar_dataset_opciones(directorio: Path) -> DatasetOpciones:
     except (KeyError, TypeError, AttributeError, ValueError, ValidationError):
         raise DatasetInvalido("el dataset de opciones no tiene la forma esperada") from None
     _exigir_coherencia(dataset)
-    _exigir_revisiones_con_rol_y_fecha(directorio / str(manifiesto["archivos"]["preguntas"]))
-    return dataset
+    preguntas = _leer_yaml(directorio / str(manifiesto["archivos"]["preguntas"]), "preguntas.yaml")
+    _exigir_revisiones_con_rol_y_fecha(preguntas)
+    return replace(dataset, con_revision_provisional=_con_revision_provisional(preguntas))
 
 
 def cargar_criterios(dataset: DatasetOpciones) -> CriteriosPorTipo:
@@ -133,10 +137,20 @@ def _exigir_coherencia(dataset: DatasetOpciones) -> None:
         )
 
 
-def _exigir_revisiones_con_rol_y_fecha(ruta: Path) -> None:
+def _con_revision_provisional(preguntas: Mapping[str, Any]) -> frozenset[str]:
+    """Las preguntas con ``revision_provisional``; una marca mal formada la rechaza la regla compartida con el id del caso."""
+    con_marca: set[str] = set()
+    for pregunta in preguntas["preguntas"]:
+        if "revision_provisional" in pregunta:
+            exigir_revision_provisional(pregunta["revision_provisional"], str(pregunta["id"]))
+            con_marca.add(str(pregunta["id"]))
+    return frozenset(con_marca)
+
+
+def _exigir_revisiones_con_rol_y_fecha(preguntas: Mapping[str, Any]) -> None:
     """``revisada_por_oncologo`` es ``null`` (sin revisar) o ``{rol, fecha}`` sin nombre de persona (RN-10): un booleano o una
     revisión sin rol o sin fecha fabricaría una validación humana sin saber quién la hizo ni cuándo."""
-    for pregunta in _leer_yaml(ruta, "preguntas.yaml")["preguntas"]:
+    for pregunta in preguntas["preguntas"]:
         revision = pregunta.get("revisada_por_oncologo")
         if revision is None:
             continue

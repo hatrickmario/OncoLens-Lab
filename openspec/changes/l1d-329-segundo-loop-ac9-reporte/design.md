@@ -134,3 +134,40 @@ No cambia modelo, prompt, umbral, catálogo ni corpus: añade una familia. No mu
   planificación: `mama-completo` y `prostata-con-grado` (este change) más `prostata-con-psa-y-hrr` (`l1d-331`). Se
   aprueba con el plan del sprint. Afecta: `contextual-local.yaml` y la duración de la corrida.
 - **Corpus (D2): resuelto** por `[S7 resp. 10]` (dataset `s5-corpus-ampliado` en memoria, el mismo en base y final).
+
+## Decisiones de implementación (ai-services-dev)
+
+Decisiones que ni la spec ni un ADR cubrían; cada una con las alternativas que se descartaron.
+
+- **I1 · Una fila de `sinonimos` por pregunta y caso.** La pregunta de sinónimos corre una vez por caso y el término del
+  caso puede cambiar el resultado de la recuperación (la búsqueda usa también el resumen del contexto). Elegida: el informe
+  da `supero_umbral` y `causa` por (pregunta, caso). Descartadas: agregar con «alguna vez superó» (esconde casos donde no
+  pasa) y exigir un solo caso (impide los tres casos de D5).
+- **I2 · `salida_invalida` como cuarto estado de fila.** El generador solo corre cuando hay chunks sobre el umbral, así que
+  una `LlmSalidaInvalidaError` implica `supero_umbral: true`; el puntaje y el segundo loop quedan en `null` (no observados) y
+  no cuenta como «con evidencia». Descartadas: abortar la suite (un modelo local puede fallar en una pregunta de 180) y
+  contarla como `sin_evidencia` (falso: sí superó el umbral).
+- **I3 · El segundo loop se activa inyectando `ExpansionDeLaSuite` en `componer_servicio`.** El servicio solo decide el loop
+  contextual si recibe los marcos de pregunta y el catálogo de términos; la suite no los pasaba, por eso `--suite all` no lo
+  medía (D6-60). Elegida: un parámetro opcional y aditivo con el indicador y los dos catálogos; sin él nada cambia. Descartadas:
+  construir los catálogos dentro de `componer_servicio` para toda familia (cambiaría la huella de `all`) y leer `Settings`
+  (la suite no lee el entorno, US-037 AC-1).
+- **I4 · El generador falso no propone nada para las 60 preguntas.** Con adaptadores falsos el estado `con_evidencia` solo
+  mide la recuperación (RN-02: basta un chunk sobre el umbral), que es lo que la familia reporta. Descartada: fabricar una
+  propuesta por pregunta (acopla el dataset al generador falso y no aporta al AC-9).
+- **I5 · El tope de pares falsos tiene un único dueño.** `tope_de_pares_de_los_adaptadores_falsos()` en `config_suite.py`
+  sustituye a la copia privada de `config_diagnostico.py` (refactor `Extract Method`, mismos mensajes).
+- **I6 · `PuertosDeContextual` solo sustituye el *reranker* y el generador de seudónimos.** Los tests guionan el puntaje por
+  chunk y loop; el resto de los adaptadores falsos son los de la suite. Descartada: sustituir `Adaptadores` completo (obliga
+  al test a reconstruir el dataset del servicio).
+- **I8 · La causa mira solo los chunks recuperables para el tipo del caso (Gate 2).** La recuperación filtra por el tipo de
+  cáncer del caso; un término que solo aparece en un chunk de otro tipo no es «en el corpus» para esa fila. Se pasan a
+  `causa_de_sinonimo` los chunks de documentos cuyo `cancer` coincide (`coincide_etiqueta`, la regla única del filtro). Se
+  descarta duplicar la regla del filtro en la suite.
+- **I9 · Deuda propuesta (D7-08, D7-09), fuera de este change.** D7-08: la plomería común de las familias de `evaluate`
+  (cronómetro, ruta del resultado, celdas del `.md`) está repetida en `diagnostico`, `opciones`, `contextual` y `chat`; extraerla
+  a un módulo compartido. D7-09: `formas_del_termino()` vive en `corrida_contextual.py`; cuando `l1d-335` publique
+  `cargar_formas_por_termino` debe pasar a la capa del catálogo con un solo dueño. La guarda de clase sintética ya tiene dueño
+  (`dataset_loader.exigir_clase_sintetica`, usada por `diagnostico` y `contextual`; las demás familias, a D7-08).
+- **I7 · El informe da la ruta del dataset relativa al repositorio** (o el nombre de su carpeta si está fuera): nunca una ruta
+  absoluta de la máquina (RN-14).
