@@ -2,9 +2,9 @@
 
 Un dataset cuyo contenido (preguntas, evidencia esperada, orden esperado) lo fijó un asistente de IA y no un oncólogo declara
 ``revision_provisional: {rol: ia, fecha: AAAA-MM-DD}``. Es una marca de procedencia, no una validación clínica: el informe que
-se calcula con ese dataset sigue rotulado ``no_validada``. La forma es la misma que en el catálogo
-(``$defs/revisionProvisional`` de ``schemas/comun.schema.json``): exactamente ``rol`` y ``fecha``, el rol de un conjunto
-cerrado y la fecha ISO. Las familias `diagnostico`, `opciones` y `poblacion` validan con esta función (un solo dueño; la
+se calcula con ese dataset sigue rotulado ``no_validada``. La forma es exactamente ``rol`` y ``fecha``, el rol de un
+conjunto cerrado y la fecha ISO. Estará en el catálogo (``$defs/revisionProvisional``, l1d-126 parte A); hoy esta es la
+única definición (hay una nota en el design.md de l1d-334 para añadir un test de paridad cuando l1d-126 A llegue a main). Las familias `diagnostico`, `opciones` y `poblacion` validan con esta función (un solo dueño; la
 creó l1d-334 y l1d-246 y l1d-299 la reutilizan).
 """
 

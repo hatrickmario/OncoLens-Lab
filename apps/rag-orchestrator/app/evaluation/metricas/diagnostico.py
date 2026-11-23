@@ -195,22 +195,27 @@ class AfirmacionJuzgada:
 def afirmaciones_juzgadas(
     pares: Sequence[ParNli], resultados: Sequence[ResultadoNli], umbral: float
 ) -> list[AfirmacionJuzgada]:
-    """Agrupa los pares contiguos de una misma hipótesis (las premisas de una afirmación van seguidas, en el orden de
-    ``pares_a_verificar``): soportada si alguna premisa la soporta; ``p_entailment`` es el máximo de sus premisas."""
+    """Agrupa los pares por afirmación como ``pares_a_verificar`` y ``veredictos_por_afirmacion`` (dominio): una afirmación
+    envía un par por premisa, seguidos y sin premisas repetidas (``premisas_del_soporte`` las deduplica). Un par con la misma
+    hipótesis y una premisa ya vista abre OTRA afirmación (dos afirmaciones de igual texto no se funden). Soportada si alguna
+    premisa la soporta (``soporta``); ``p_entailment`` es el máximo de sus premisas."""
     if len(pares) != len(resultados):
         raise ValueError("el NLI debe devolver un resultado por par")
     juzgadas: list[AfirmacionJuzgada] = []
-    previa: str | None = None
+    hipotesis: str | None = None
+    premisas: set[str] = set()
     for par, resultado in zip(pares, resultados, strict=True):
         soportada = soporta(resultado, umbral)
-        if juzgadas and par.hipotesis == previa:
+        if juzgadas and par.hipotesis == hipotesis and par.premisa not in premisas:
             ultima = juzgadas[-1]
             juzgadas[-1] = AfirmacionJuzgada(
                 max(ultima.p_entailment, resultado.p_entailment), ultima.soportada or soportada
             )
         else:
             juzgadas.append(AfirmacionJuzgada(resultado.p_entailment, soportada))
-        previa = par.hipotesis
+            premisas = set()
+        hipotesis = par.hipotesis
+        premisas.add(par.premisa)
     return juzgadas
 
 

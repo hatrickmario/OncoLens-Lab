@@ -106,16 +106,17 @@ class BuscadorGuionado:
     ) -> None:
         self._redacciones = list(redacciones)
         self._chunks = chunks
-        self._llamadas = 0
+        self.llamadas = 0
 
     def search_dense(
         self, vector: Sequence[float], limit: int, filtro: str | None = None
     ) -> list[ChunkEncontrado]:
-        redaccion = self._redacciones[self._llamadas // 2]
-        self._llamadas += 1
+        """Respeta ``limit`` como el puerto real (Milvus devuelve a lo sumo ``limit`` resultados)."""
+        redaccion = self._redacciones[self.llamadas // 2]
+        self.llamadas += 1
         return [
             ChunkEncontrado(chunk, self._chunks[chunk][0], self._chunks[chunk][1], 1.0 - 0.1 * i)
-            for i, chunk in enumerate(redaccion.candidatos)
+            for i, chunk in enumerate(redaccion.candidatos[:limit])
         ]
 
 
@@ -129,7 +130,9 @@ class RerankerGuionado:
         self._puntajes = puntajes_por_pregunta
 
     def puntuar(self, pregunta: str, candidatos: Sequence[CandidatoParaReranker]) -> list[float]:
-        guion = self._puntajes[pregunta]
+        guion = self._puntajes.get(
+            pregunta, {}
+        )  # una pregunta sin guion recibe el puntaje por defecto, no un KeyError
         return [guion.get(c.chunk_id, PUNTAJE_POR_DEFECTO) for c in candidatos]
 
 

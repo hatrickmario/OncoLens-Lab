@@ -187,7 +187,7 @@ async def medir_diagnostico(
         ):  # una salida inválida del LLM es un caso sin evidencia, no el fin de la suite
             respuesta = None
             invalidas += 1
-        filas.append(_fila(config, par, redaccion, respuesta, registro))
+        filas.append(fila_de_redaccion(config, par, redaccion, respuesta, registro))
         descartadas.extend(a.p_entailment for a in registro.afirmaciones if not a.soportada)
         if respuesta is not None and not modelos:
             modelos = _modelos_de_recuperacion(respuesta.meta)
@@ -242,15 +242,17 @@ def _servicio(
     )
 
 
-def _fila(
+def fila_de_redaccion(
     config: ConfigDiagnostico,
     par: ParDeParafrasis,
     redaccion: RedaccionDePar,
     respuesta: RagQueryInternalResponse | None,
     registro: RegistroDeDiagnostico,
 ) -> FilaDeRedaccion:
-    """Lo observado de una consulta. Con varios loops (RN-02, ADR-52) la etapa se lee del ÚLTIMO: es el que decide lo que
-    ve el médico (D5); ``loops`` cuenta cuántos hubo."""
+    """Lo observado de una consulta, con UNA sola base: el ÚLTIMO loop (RN-02, ADR-52), el que decide lo que ve el médico
+    (D5). El generador y el soporte NLI corren una vez por consulta, después del último loop, así que las opciones propuestas
+    son las de la última generación (``[-1]``, no una suma sobre generaciones) y las afirmaciones, las de ese soporte;
+    ``loops`` cuenta cuántos loops hubo."""
     umbrales = config.suite.umbrales
     loops = registro.loops()
     observado = observar_chunk_esperado(
@@ -271,7 +273,7 @@ def _fila(
         relevance_score=observado.relevance_score,
         supero_umbral=observado.supero_umbral,
         con_evidencia=respuesta is not None and bool(respuesta.evidenceOptions),
-        opciones_generadas=sum(registro.opciones_propuestas)
+        opciones_generadas=registro.opciones_propuestas[-1]
         if registro.opciones_propuestas
         else None,
         opciones_mostradas=len(respuesta.evidenceOptions) if respuesta else 0,
