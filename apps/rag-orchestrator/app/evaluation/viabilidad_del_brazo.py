@@ -27,4 +27,22 @@ def viabilidad_del_brazo(
     memoria_gb: float | None,
     limite_memoria_gb: float,
 ) -> Viabilidad:
-    raise NotImplementedError("no implementado")
+    """``no_viable`` si alguna medición supera su tope (``p95_consulta_s > tope_p95_s``, ``memoria_gb > limite_memoria_gb``,
+    ambos estrictos); si no supera ninguno pero falta una medición, ``no_medido``: ``None`` jamás se lee como dentro del
+    presupuesto (``null`` ≠ ``0.0``). Los topes llegan de la configuración (``p95_evidence_analyses_s``,
+    ``STACK_MEMORY_LIMIT_GB``): aquí no hay ningún literal."""
+    motivos = tuple(
+        motivo
+        for motivo, excede in (
+            (MOTIVO_LATENCIA, p95_consulta_s is not None and p95_consulta_s > tope_p95_s),
+            (MOTIVO_MEMORIA, memoria_gb is not None and memoria_gb > limite_memoria_gb),
+        )
+        if excede
+    )
+    if motivos:
+        estado: Estado = "no_viable"
+    elif p95_consulta_s is None or memoria_gb is None:
+        estado = "no_medido"
+    else:
+        estado = "viable"
+    return Viabilidad(estado, motivos, p95_consulta_s, tope_p95_s, memoria_gb, limite_memoria_gb)

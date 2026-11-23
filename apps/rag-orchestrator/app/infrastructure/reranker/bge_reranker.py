@@ -11,6 +11,7 @@ from app.domain.normalizacion_puntaje import normalizar_a_unidad
 from app.domain.ventanas_del_reranker import (
     MODO_DE_VENTANAS_INICIAL,
     RERANKER_WINDOW_OVERLAP_INICIAL,
+    ConfiguracionDelReranker,
     ModoDeVentanas,
     agregar_por_maximo,
     trazar_ventanas,
@@ -53,6 +54,13 @@ class BgeReranker:
     @property
     def version(self) -> str:
         return self._version
+
+    @property
+    def configuracion(self) -> ConfiguracionDelReranker:
+        """La etapa tal como corre; el informe de la suite la registra (``meta.rerankerModel`` no lleva el modo, D4)."""
+        return ConfiguracionDelReranker(
+            self._modo_de_ventanas, self._solape, self._max_length, self._max_pairs
+        )
 
     def variante(
         self,

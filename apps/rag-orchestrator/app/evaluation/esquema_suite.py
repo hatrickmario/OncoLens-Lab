@@ -10,15 +10,6 @@ from app.evaluation.dataset_diagnostico import IDIOMAS, TIPOS_DE_VARIACION
 from app.evaluation.dataset_poblacion import CLASES_DEL_DORADO
 from app.evaluation.fuente_dataset import CLASES_ADMITIDAS
 from app.evaluation.informe_pii import MODOS, TIPOS_DIRECTOS
-from app.evaluation.metricas.diagnostico import (
-    CAUSAS_SIN_ASIGNAR,
-    CONDICIONES_DE_LA_REGLA,
-    ETAPAS as ETAPAS_DE_LA_CONSULTA,
-    NOTA_DE_CALIBRACION,
-    RESULTADO_PERDIDA,
-    RESULTADO_SIN_ASIGNAR,
-    RESULTADO_SIN_PERDIDA,
-)
 from app.evaluation.metricas.contextual import (
     CAUSAS_DE_SINONIMO,
     CLASES_DE_PREGUNTA,
@@ -27,6 +18,17 @@ from app.evaluation.metricas.contextual import (
     METRICAS_FRENTE_A_LA_BASE,
     SEGUNDO_LOOP_CONTEXTUAL,
     SEGUNDO_LOOP_NINGUNO,
+)
+from app.evaluation.metricas.diagnostico import (
+    CAUSAS_SIN_ASIGNAR,
+    CONDICIONES_DE_LA_REGLA,
+    NOTA_DE_CALIBRACION,
+    RESULTADO_PERDIDA,
+    RESULTADO_SIN_ASIGNAR,
+    RESULTADO_SIN_PERDIDA,
+)
+from app.evaluation.metricas.diagnostico import (
+    ETAPAS as ETAPAS_DE_LA_CONSULTA,
 )
 from app.evaluation.metricas.fidelidad import ROTULO_SECUNDARIA
 from app.evaluation.reporte import (
@@ -242,7 +244,37 @@ _RECURSOS_NLI = Objeto(
 )
 
 _METRICAS_DE_DIFERENCIA = Objeto(
-    {"recall_at_10_total": Numero(), "recall_at_10_es_a_en": Numero(), "mrr": Numero()}
+    {
+        "recall_at_10_total": Numero(),
+        "recall_at_10_es_a_en": Numero(),
+        "mrr": Numero(),
+        # US-278: solo en las comparaciones con brazos del reranker; ``None`` = una de las dos medidas falta.
+        "falsos_sin_evidencia": Numero(),
+        "parafrasis_recuperadas": Numero(),
+        "p95_reranker_ms": Numero(),
+        "p95_consulta_ms": Numero(),
+    },
+    opcionales=frozenset(
+        {"falsos_sin_evidencia", "parafrasis_recuperadas", "p95_reranker_ms", "p95_consulta_ms"}
+    ),
+)
+_ETAPA_DEL_RERANKER = Objeto(
+    {
+        "modo": Enumerado(frozenset({"primera", "maximo"})),
+        "solape": Numero(),
+        "max_length": Numero(),
+        "max_pairs": Numero(),
+    }
+)
+_VIABILIDAD = Objeto(
+    {
+        "estado": Enumerado(frozenset({"viable", "no_viable", "no_medido"})),
+        "motivos": Lista(Enumerado(frozenset({"latencia", "memoria"}))),
+        "p95_consulta_s": Numero(),
+        "tope_p95_s": Numero(),
+        "memoria_gb": Numero(),
+        "limite_memoria_gb": Numero(),
+    }
 )
 _BRAZO = Objeto(
     {
@@ -259,8 +291,35 @@ _BRAZO = Objeto(
         "por_documento": Lista(
             Objeto({"documento": Identificador(), "recall_at_10": Numero(), "n": Numero()})
         ),
+        # US-278: las cinco claves siguientes solo existen si la comparación declara brazos del reranker.
+        "reranker": Anulable(_ETAPA_DEL_RERANKER),
+        "falsos_sin_evidencia": Objeto({"n": Numero(), "total": Numero()}),
+        "parafrasis": Objeto({"pares": Numero(), "recuperadas": Numero()}),
+        "latencia_ms": Objeto({"reranker_p95": Numero(), "consulta_p95": Numero()}),
+        "viabilidad": _VIABILIDAD,
     },
-    opcionales=frozenset({"diferencia_frente_a_a0"}),
+    opcionales=frozenset(
+        {
+            "diferencia_frente_a_a0",
+            "reranker",
+            "falsos_sin_evidencia",
+            "parafrasis",
+            "latencia_ms",
+            "viabilidad",
+        }
+    ),
+)
+_CORPUS_DE_LA_COMPARACION = Objeto(
+    {
+        # US-278 AC-4, [S7 resp. 10]: el corpus con el que corrieron los brazos (la ingesta de l1d-119 u otro índice), sin texto.
+        "fuente": Enumerado(frozenset({"dataset", "indice"})),
+        "declarado": Anulable(Identificador()),
+        "coleccion": Anulable(Identificador()),
+        "chunks_vigentes": Numero(),
+        "huella": Anulable(Huella()),
+        "chunk_size_de_la_ingesta": Numero(),
+        "indices_distintos": Lista(Identificador()),
+    }
 )
 _COMPARACION_RECUPERACION = Objeto(
     {
@@ -268,7 +327,9 @@ _COMPARACION_RECUPERACION = Objeto(
         "tolerancia_retroceso": Numero(),
         "retroceso": Booleano(),
         "brazos": Lista(_BRAZO),
-    }
+        "corpus": _CORPUS_DE_LA_COMPARACION,
+    },
+    opcionales=frozenset({"corpus"}),
 )
 
 _RECHAZOS_LEGITIMOS = Objeto(

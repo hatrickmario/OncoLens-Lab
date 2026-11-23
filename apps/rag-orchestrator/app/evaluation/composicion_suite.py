@@ -16,8 +16,8 @@ from app.application.ports import (
     LanguageDetector,
     NliClassifier,
     PoblacionTask,
-    PuertosDelCorpus,
     ProhibitedTermsChecker,
+    PuertosDelCorpus,
     QueryEmbedder,
     QuerySparseEncoder,
     Reranker,
@@ -37,6 +37,7 @@ from app.domain.criterios_aplicabilidad import CriteriosDeAplicabilidad
 from app.domain.expansion_contextual import ParametrosDeExpansionContextual
 from app.domain.pregunta_sin_tema_propio import MarcosDePregunta
 from app.domain.terminos_del_caso import CatalogoDeTerminos
+from app.domain.ventanas_del_reranker import ConfiguracionDelReranker
 from app.evaluation.adaptadores_falsos import (
     BuscadorEnMemoria,
     BuscadorSparseEnMemoria,
@@ -291,6 +292,40 @@ def _rama_sparse(
     )
 
 
+def _reranker_del_brazo(base: Reranker, brazo: Brazo | None) -> Reranker:
+    """El reranker del brazo (US-278): la misma sesión y el mismo tokenizador con la etapa que el brazo declara; sin
+    campos del reranker en el brazo, el reranker de la suite tal cual (la huella y el resultado de A0 no cambian)."""
+    if brazo is None or not brazo.cambia_el_reranker:
+        return base
+    variante = getattr(base, "variante", None)
+    if variante is None:
+        raise ConfigInvalida("el reranker de la suite no admite variantes por brazo (RERANKER_*)")
+    return variante(  # type: ignore[no-any-return]
+        modo_de_ventanas=brazo.reranker_modo,
+        solape=brazo.reranker_solape,
+        max_length=brazo.reranker_max_length,
+    )
+
+
+def _etapa_esperada_del_reranker(
+    base: Reranker, brazo: Brazo | None
+) -> ConfiguracionDelReranker | None:
+    """Lo que el brazo declaró sobre la etapa y, para lo que no declaró, lo que ya traía el reranker de la suite."""
+    if brazo is None or not brazo.cambia_el_reranker:
+        return None
+    de_la_suite = getattr(base, "configuracion", None)
+    if de_la_suite is None:
+        raise ConfigInvalida("el reranker de la suite no expone su configuración (RERANKER_*)")
+    return replace(
+        de_la_suite,
+        modo=brazo.reranker_modo or de_la_suite.modo,
+        solape=de_la_suite.solape if brazo.reranker_solape is None else brazo.reranker_solape,
+        max_length=de_la_suite.max_length
+        if brazo.reranker_max_length is None
+        else brazo.reranker_max_length,
+    )
+
+
 def _catalogo_de(
     aplicabilidad: AplicabilidadDeLaSuite | None,
     corpus: PuertosDelCorpus | None,
@@ -332,7 +367,9 @@ def componer_servicio(
             "la aplicabilidad de la suite y el corpus de un índice son excluyentes: cada uno trae su catálogo"
         )
     adaptadores = adaptadores or adaptadores_de_suite(config, dataset, puertos_locales, corpus)
-    observaciones = Observaciones()
+    observaciones = Observaciones(
+        esperada_del_reranker=_etapa_esperada_del_reranker(adaptadores.reranker, brazo)
+    )
     nli = NliMedido(adaptadores.clasificador_nli, cronometro)
     lista = cargar_lista_de_terminos(config.ruta_terminos)  # se lee y valida una sola vez
     terminos = VerificadorDeTerminosProhibidos(lista)
@@ -356,7 +393,9 @@ def componer_servicio(
         detector_idioma=DetectorMedido(adaptadores.detector_idioma, cronometro),
         embedder=EmbedderMedido(adaptadores.embedder, cronometro),
         buscador=BuscadorMedido(buscador, cronometro),
-        reranker=RerankerObservado(adaptadores.reranker, cronometro, observaciones),
+        reranker=RerankerObservado(
+            _reranker_del_brazo(adaptadores.reranker, brazo), cronometro, observaciones
+        ),
         lector_release=LectorReleaseMedido(
             corpus.lector_release if corpus is not None else LectorReleaseFijo(dataset), cronometro
         ),

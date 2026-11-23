@@ -105,12 +105,33 @@ class Barrido:
 
 
 @dataclass(frozen=True)
+class Parafrasis:
+    """``comparacion.parafrasis``: el dataset de pares de ``l1d-334`` cuyas redacciones se miden en cada brazo (US-278 AC-4)."""
+
+    ruta: Path
+    pares_minimos: int
+
+
+@dataclass(frozen=True)
+class ViabilidadConfigurada:
+    """Los topes de la viabilidad de un brazo del reranker (US-278 AC-5, ADR-39): ninguno es un literal de código."""
+
+    tope_p95_s: float
+    """``p95_evidence_analyses_s`` de ``comparacion.metas`` (``metas-iniciales.yaml``)."""
+    limite_memoria_gb: float
+    """``STACK_MEMORY_LIMIT_GB`` del entorno (clave de ADR-39)."""
+
+
+@dataclass(frozen=True)
 class Comparacion:
     """La comparación de brazos de recuperación (US-133): A0 *dense* primero, luego las variantes híbridas."""
 
     brazos: tuple[Brazo, ...]
     tolerancia_retroceso: float
     """``RETRIEVAL_REGRESSION_TOLERANCE`` (RN-22) en puntos absolutos; sin valor por defecto: la fija la preinscripción P1."""
+    parafrasis: Parafrasis | None = None
+    viabilidad: ViabilidadConfigurada | None = None
+    """``None`` salvo que algún brazo cambie la etapa del reranker (US-278): entonces es obligatoria."""
 
 
 @dataclass(frozen=True)
@@ -417,19 +438,54 @@ def _brazo_de(crudo: object) -> Brazo:
     modo = RetrievalMode(
         _en(str(clave_de(crudo, "RETRIEVAL_MODE")), MODOS_DE_RECUPERACION, "RETRIEVAL_MODE")
     )
+    reranker = _etapa_del_reranker(crudo)
     if modo is RetrievalMode.dense:
-        return Brazo(nombre, modo)
+        return Brazo(nombre, modo, **reranker)
     fusion = EstrategiaDeFusion(
         _en(str(clave_de(crudo, "RETRIEVAL_FUSION")), FUSIONES, "RETRIEVAL_FUSION")
     )
     if fusion is EstrategiaDeFusion.rrf:
         return Brazo(
-            nombre, modo, fusion, rrf_k=_exigir_entero_positivo(clave_de(crudo, "RRF_K"), "RRF_K")
+            nombre,
+            modo,
+            fusion,
+            rrf_k=_exigir_entero_positivo(clave_de(crudo, "RRF_K"), "RRF_K"),
+            **reranker,
         )
     peso = _numero(clave_de(crudo, "HYBRID_SPARSE_WEIGHT"), "HYBRID_SPARSE_WEIGHT")
     if not 0.0 < peso < 1.0:
         raise ConfigInvalida("HYBRID_SPARSE_WEIGHT debe estar en (0, 1)")
-    return Brazo(nombre, modo, fusion, peso_sparse=peso)
+    return Brazo(nombre, modo, fusion, peso_sparse=peso, **reranker)
+
+
+MODOS_DE_VENTANAS = ("primera", "maximo")
+
+
+def _etapa_del_reranker(crudo: dict[str, Any]) -> dict[str, Any]:
+    """Los campos opcionales de la etapa del reranker de un brazo (US-278); lo que no declara queda en ``None`` (= el de
+    la suite) y no entra en la huella. Un solape que no deja avanzar la ventana se rechaza nombrando la clave."""
+    campos: dict[str, Any] = {}
+    if "RERANKER_CHUNK_WINDOWS" in crudo:
+        campos["reranker_modo"] = _en(
+            str(crudo["RERANKER_CHUNK_WINDOWS"]), MODOS_DE_VENTANAS, "RERANKER_CHUNK_WINDOWS"
+        )
+    if "RERANKER_WINDOW_OVERLAP" in crudo:
+        solape = _numero(crudo["RERANKER_WINDOW_OVERLAP"], "RERANKER_WINDOW_OVERLAP")
+        if solape < 0 or solape != int(solape):
+            raise ConfigInvalida("RERANKER_WINDOW_OVERLAP debe ser un entero no negativo")
+        campos["reranker_solape"] = int(solape)
+    if "RERANKER_MAX_LENGTH" in crudo:
+        campos["reranker_max_length"] = _exigir_entero_positivo(
+            crudo["RERANKER_MAX_LENGTH"], "RERANKER_MAX_LENGTH"
+        )
+    if "indice" in crudo:
+        if not es_identificador(str(crudo["indice"])):
+            raise ConfigInvalida("el indice de un brazo no es un identificador válido")
+        campos["indice"] = str(crudo["indice"])
+    largo, solape = campos.get("reranker_max_length"), campos.get("reranker_solape")
+    if largo is not None and solape is not None and solape >= largo:
+        raise ConfigInvalida("RERANKER_WINDOW_OVERLAP debe ser menor que RERANKER_MAX_LENGTH")
+    return campos
 
 
 def _numero(valor: object, clave: str) -> float:
@@ -439,13 +495,16 @@ def _numero(valor: object, clave: str) -> float:
         raise ConfigInvalida(f"{clave} debe ser un número") from None
 
 
-def _comparacion_de(crudo: dict[str, Any], subconjunto: str | None) -> Comparacion | None:
+def _comparacion_de(
+    crudo: dict[str, Any], subconjunto: str | None, entorno: Mapping[str, str]
+) -> Comparacion | None:
     """``comparacion`` (US-133): A0 *dense* de referencia primero, nombres únicos, solo el conjunto de desarrollo
-    (ADR-45 P2) y una tolerancia sin valor por defecto."""
+    (ADR-45 P2) y una tolerancia sin valor por defecto. Un dataset sin partición solo se admite si la configuración declara
+    ``comparacion.conjunto_de_desarrollo: true`` (el dataset completo es de desarrollo, p. ej. el corpus ampliado de S5)."""
     seccion = crudo.get("comparacion")
     if seccion is None:
         return None
-    if subconjunto != "desarrollo":
+    if subconjunto != "desarrollo" and seccion.get("conjunto_de_desarrollo") is not True:
         raise ConfigInvalida(
             "la comparación solo evalúa dataset.subconjunto: desarrollo (ADR-45 P2)"
         )
@@ -463,7 +522,55 @@ def _comparacion_de(crudo: dict[str, Any], subconjunto: str | None) -> Comparaci
     tolerancia = _numero(clave_de(seccion, "tolerancia_retroceso"), "tolerancia_retroceso")
     if not 0.0 <= tolerancia <= 1.0:
         raise ConfigInvalida("comparacion.tolerancia_retroceso debe estar en [0, 1]")
-    return Comparacion(brazos, tolerancia)
+    return Comparacion(
+        brazos,
+        tolerancia,
+        _parafrasis_de(seccion),
+        _viabilidad_de(seccion, brazos, entorno),
+    )
+
+
+def _parafrasis_de(seccion: dict[str, Any]) -> Parafrasis | None:
+    crudo = seccion.get("parafrasis")
+    if crudo is None:
+        return None
+    return Parafrasis(
+        ruta_del_repo(str(clave_de(crudo, "ruta"))),
+        _exigir_entero_positivo(
+            clave_de(crudo, "pares_minimos"), "comparacion.parafrasis.pares_minimos"
+        ),
+    )
+
+
+ENTORNO_DEL_LIMITE_DE_MEMORIA = "STACK_MEMORY_LIMIT_GB"
+"""Clave de ADR-39 (RN-22): el límite de memoria del stack lo da el entorno, nunca un literal de código."""
+META_DEL_P95 = "p95_evidence_analyses_s"
+
+
+def _viabilidad_de(
+    seccion: dict[str, Any], brazos: tuple[Brazo, ...], entorno: Mapping[str, str]
+) -> ViabilidadConfigurada | None:
+    """Con algún brazo que cambie la etapa del reranker, ``comparacion.metas`` (el YAML de metas) y ``STACK_MEMORY_LIMIT_GB``
+    (entorno) son obligatorios: la viabilidad no se calcula con topes inventados. Sin brazos del reranker no se lee nada."""
+    if not any(b.cambia_el_reranker or b.indice is not None for b in brazos):
+        return None
+    ruta = ruta_del_repo(str(clave_de(seccion, "metas")))
+    metas = _metas_del_p95(ruta)
+    limite = entorno.get(ENTORNO_DEL_LIMITE_DE_MEMORIA)
+    if not limite:
+        raise ConfigInvalida(
+            f"la viabilidad de los brazos del reranker exige {ENTORNO_DEL_LIMITE_DE_MEMORIA} en el entorno (ADR-39, RN-22)"
+        )
+    return ViabilidadConfigurada(metas, _numero(limite, ENTORNO_DEL_LIMITE_DE_MEMORIA))
+
+
+def _metas_del_p95(ruta: Path) -> float:
+    try:
+        crudo = yaml.safe_load(ruta.read_text(encoding="utf-8"))
+        tope = crudo["metas"][META_DEL_P95]["maximo"]
+    except (OSError, yaml.YAMLError, KeyError, TypeError):
+        raise ConfigInvalida(f"comparacion.metas no trae la meta {META_DEL_P95}") from None
+    return _numero(tope, f"metas.{META_DEL_P95}.maximo")
 
 
 def _fuente_de_indice(crudo: dict[str, Any]) -> str:
@@ -532,7 +639,7 @@ def cargar_config_suite(ruta: Path, entorno: Mapping[str, str] | None = None) ->
         barrido=_barrido_de(crudo),
         rss_limite_mib=_limite_de_rss(crudo),
         origen=crudo.get("origen"),
-        comparacion=_comparacion_de(crudo, sub),
+        comparacion=_comparacion_de(crudo, sub, entorno or {}),
         p95_corridas=_corridas_de_p95(crudo),
         rn23_tolerancia_falsos_positivos=_tolerancia_de_falsos_positivos(crudo),
         umbrales_de_settings=umbrales_de_settings,

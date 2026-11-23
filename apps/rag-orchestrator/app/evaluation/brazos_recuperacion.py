@@ -12,6 +12,7 @@ import json
 from dataclasses import dataclass
 
 from app.domain.fusion_de_candidatos import EstrategiaDeFusion
+from app.domain.ventanas_del_reranker import ModoDeVentanas
 from app.schemas.generated.models import Fusion, RetrievalMode
 
 REFERENCIA = "A0"
@@ -25,6 +26,22 @@ class Brazo:
     fusion: EstrategiaDeFusion | None = None
     rrf_k: int | None = None
     peso_sparse: float | None = None
+    reranker_modo: ModoDeVentanas | None = None
+    """``RERANKER_CHUNK_WINDOWS`` del brazo (US-278); ``None`` = el del reranker de la suite."""
+    reranker_solape: int | None = None
+    """``RERANKER_WINDOW_OVERLAP`` del brazo; ``None`` = el del reranker de la suite."""
+    reranker_max_length: int | None = None
+    """``RERANKER_MAX_LENGTH`` del brazo; ``None`` = el del reranker de la suite."""
+    indice: str | None = None
+    """Colección de Milvus que lee el brazo (el de chunks de 512 tokens, US-278 AC-4); ``None`` = la de la suite."""
+
+    @property
+    def cambia_el_reranker(self) -> bool:
+        return (self.reranker_modo, self.reranker_solape, self.reranker_max_length) != (
+            None,
+            None,
+            None,
+        )
 
     def trazado_esperado(self) -> tuple[RetrievalMode, Fusion, float]:
         """``(retrievalMode, fusion, fusionParam)`` que ``meta.retrievalParams`` debe traer, sin nulos (l1d-109 D7)."""
@@ -38,6 +55,17 @@ class Brazo:
 
     def huella(self) -> str:
         """SHA-256 de la configuración del brazo, para que el reporte identifique qué se comparó."""
+        # Los campos del reranker y del índice entran solo si el brazo los declara: la huella de A0, A2 y A2b no cambia.
+        extras = {
+            clave: valor
+            for clave, valor in (
+                ("reranker_modo", self.reranker_modo),
+                ("reranker_solape", self.reranker_solape),
+                ("reranker_max_length", self.reranker_max_length),
+                ("indice", self.indice),
+            )
+            if valor is not None
+        }
         canonico = json.dumps(
             {
                 "nombre": self.nombre,
@@ -45,6 +73,7 @@ class Brazo:
                 "fusion": None if self.fusion is None else self.fusion.value,
                 "rrf_k": self.rrf_k,
                 "peso_sparse": self.peso_sparse,
+                **extras,
             },
             sort_keys=True,
             separators=(",", ":"),

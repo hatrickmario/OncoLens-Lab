@@ -42,6 +42,12 @@ from app.domain.cobertura_poblacion import contar_cobertura
 from app.domain.corpus_seed.admisibilidad import PISO_DE_FUENTES_EXCLUIDAS
 from app.domain.nli import ParNli, ResultadoNli
 from app.domain.retrieval_filter import coincide_etiqueta, exigir_filtro_vigente
+from app.domain.ventanas_del_reranker import (
+    MODO_DE_VENTANAS_INICIAL,
+    ConfiguracionDelReranker,
+    ModoDeVentanas,
+    trazar_ventanas,
+)
 from app.evaluation.config_suite import ConfigInvalida
 from app.evaluation.dataset_loader import CLASE_SINTETICA
 from app.evaluation.fuente_dataset import DatasetSuite, OpcionPropuesta
@@ -149,17 +155,55 @@ class BuscadorSparseEnMemoria:
 
 
 class RerankerLexico:
+    """``Reranker`` falso por coincidencia léxica. Sin ``max_length`` puntúa el texto entero; con él, cuenta PALABRAS como
+    tokens y lee solo la primera ventana (``primera``) o todas, con el máximo de sus puntajes (``maximo``, US-278): la
+    misma regla de ventanas del adapter real, sin modelo."""
+
     version = "fake-lexical@1"
+
+    def __init__(
+        self,
+        modo_de_ventanas: ModoDeVentanas = MODO_DE_VENTANAS_INICIAL,
+        solape: int = 0,
+        max_length: int | None = None,
+    ) -> None:
+        self._modo, self._solape, self._max_length = modo_de_ventanas, solape, max_length
+
+    @property
+    def configuracion(self) -> ConfiguracionDelReranker:
+        return ConfiguracionDelReranker(self._modo, self._solape, self._max_length, None)
+
+    def variante(
+        self,
+        *,
+        modo_de_ventanas: ModoDeVentanas | None = None,
+        solape: int | None = None,
+        max_length: int | None = None,
+    ) -> RerankerLexico:
+        return RerankerLexico(
+            self._modo if modo_de_ventanas is None else modo_de_ventanas,
+            self._solape if solape is None else solape,
+            self._max_length if max_length is None else max_length,
+        )
 
     def puntuar(self, pregunta: str, candidatos: Sequence[CandidatoParaReranker]) -> list[float]:
         palabras = tokens(pregunta)
-        return [
-            min(
-                1.0,
-                len(palabras & tokens(c.chunk_text)) / COINCIDENCIAS_PARA_PUNTAJE_MAXIMO,
-            )
-            for c in candidatos
-        ]
+        return [self._puntaje(palabras, c.chunk_text) for c in candidatos]
+
+    def _puntaje(self, palabras: frozenset[str], texto: str) -> float:
+        if self._max_length is None:
+            return self._coincidencias(palabras, texto)
+        del_texto = _PALABRA.findall(texto)
+        if self._modo == "primera" or len(del_texto) <= self._max_length:
+            return self._coincidencias(palabras, " ".join(del_texto[: self._max_length]))
+        ventanas = trazar_ventanas(len(del_texto), self._max_length, self._solape)
+        return max(
+            self._coincidencias(palabras, " ".join(del_texto[v.inicio : v.fin])) for v in ventanas
+        )
+
+    @staticmethod
+    def _coincidencias(palabras: frozenset[str], texto: str) -> float:
+        return min(1.0, len(palabras & tokens(texto)) / COINCIDENCIAS_PARA_PUNTAJE_MAXIMO)
 
 
 class NliLexico:

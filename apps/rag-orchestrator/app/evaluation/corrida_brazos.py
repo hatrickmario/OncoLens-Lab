@@ -12,6 +12,7 @@ from dataclasses import dataclass
 
 from app.application.errores import RecuperacionNoDisponibleError
 from app.application.ports import Clock
+from app.domain.ventanas_del_reranker import ConfiguracionDelReranker
 from app.evaluation.brazos_recuperacion import Brazo
 from app.evaluation.composicion_suite import (
     Adaptadores,
@@ -27,6 +28,8 @@ from app.evaluation.corrida import (
 )
 from app.evaluation.cronometro import Cronometro
 from app.evaluation.fuente_dataset import DatasetSuite
+from app.evaluation.guardas import SuiteAbortada
+from app.evaluation.indice_del_corpus import IndiceDelCorpus
 from app.evaluation.metricas.resultado import ResultadoConsulta
 from app.evaluation.modelos_locales import PuertosLocales
 from app.schemas.generated.models import RagMeta
@@ -41,6 +44,10 @@ class ResultadoDeBrazo:
     """El ``meta`` de cada consulta que respondió, en orden; las que fallaron cerradas no tienen."""
     sin_terminos_lexicos: int
     """Preguntas cuya rama *sparse* no tuvo términos y fallaron cerradas (US-248 AC-4); cuentan como fallo de recall."""
+    reranker: ConfiguracionDelReranker | None = None
+    """La etapa del reranker tal como corrió la última consulta del brazo (US-278); ``None`` si el adapter no la expone."""
+    indice: IndiceDelCorpus | None = None
+    """El índice de solo lectura que leyó el brazo (``indice.fuente: milvus``); ``None`` = el corpus del dataset en memoria."""
 
 
 async def evaluar_brazos(
@@ -50,11 +57,33 @@ async def evaluar_brazos(
     reloj: Clock,
     nuevo_cronometro: Callable[[], Cronometro],
     puertos_locales: PuertosLocales | None,
+    abrir_indice: Callable[[str | None], IndiceDelCorpus] | None = None,
 ) -> list[ResultadoDeBrazo]:
-    """Cada brazo, en el orden de la configuración, sobre los mismos adaptadores ya cargados."""
-    adaptadores = adaptadores_de_suite(config, dataset, puertos_locales)
+    """Cada brazo, en el orden de la configuración, sobre los mismos adaptadores ya cargados.
+
+    Con ``abrir_indice`` (``indice.fuente: milvus``) cada brazo lee la ingesta en solo lectura: la colección de la
+    configuración o la suya propia (``Brazo.indice``, el de chunks de 512 tokens); cada colección se abre una sola vez."""
+    indices: dict[str | None, IndiceDelCorpus] = {}
+    if abrir_indice is not None:
+        for brazo in comparacion.brazos:
+            if brazo.indice not in indices:
+                indices[brazo.indice] = abrir_indice(brazo.indice)
+    adaptadores = adaptadores_de_suite(
+        config,
+        dataset,
+        puertos_locales,
+        next(iter(indices.values())).puertos if indices else None,
+    )
     return [
-        await _evaluar_brazo(config, brazo, dataset, reloj, nuevo_cronometro(), adaptadores)
+        await _evaluar_brazo(
+            config,
+            brazo,
+            dataset,
+            reloj,
+            nuevo_cronometro(),
+            adaptadores,
+            indices.get(brazo.indice),
+        )
         for brazo in comparacion.brazos
     ]
 
@@ -66,18 +95,25 @@ async def _evaluar_brazo(
     reloj: Clock,
     cronometro: Cronometro,
     adaptadores: Adaptadores,
+    indice: IndiceDelCorpus | None = None,
 ) -> ResultadoDeBrazo:
     servicio = componer_servicio(
-        config, dataset, cronometro, reloj, brazo=brazo, adaptadores=adaptadores
+        config,
+        dataset,
+        cronometro,
+        reloj,
+        brazo=brazo,
+        adaptadores=adaptadores,
+        corpus=None if indice is None else indice.puertos,
     )
     base = solicitud_base()
     resultados: list[ResultadoConsulta] = []
     metas: list[RagMeta] = []
     sin_terminos = 0
-    for indice, pregunta in enumerate(dataset.preguntas):
+    for posicion, pregunta in enumerate(dataset.preguntas):
         try:
             resultado, respuesta = await evaluar_pregunta_en_servicio(
-                servicio, dataset, base, pregunta, indice
+                servicio, dataset, base, pregunta, posicion
             )
         except RecuperacionNoDisponibleError:
             if pregunta.texto not in servicio.observaciones.sin_terminos_lexicos:
@@ -87,4 +123,10 @@ async def _evaluar_brazo(
             continue
         resultados.append(resultado)
         metas.append(respuesta.meta)
-    return ResultadoDeBrazo(brazo, servicio, resultados, metas, sin_terminos)
+    if servicio.observaciones.reranker_discrepante:
+        raise SuiteAbortada(
+            f"el brazo {brazo.nombre} corrió consultas con un reranker distinto del que declara (RERANKER_*)"
+        )
+    return ResultadoDeBrazo(
+        brazo, servicio, resultados, metas, sin_terminos, servicio.observaciones.reranker, indice
+    )

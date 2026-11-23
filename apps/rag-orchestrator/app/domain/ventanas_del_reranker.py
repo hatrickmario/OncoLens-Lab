@@ -18,6 +18,17 @@ RERANKER_WINDOW_OVERLAP_INICIAL = 64
 
 
 @dataclass(frozen=True)
+class ConfiguracionDelReranker:
+    """La etapa del reranker tal como corrió: la registra el informe de la suite (es el único lugar donde queda el modo)."""
+
+    modo: ModoDeVentanas
+    solape: int
+    max_length: int | None
+    """``None`` = el adapter no trunca (el reranker falso sin ``RERANKER_MAX_LENGTH``)."""
+    max_pairs: int | None
+
+
+@dataclass(frozen=True)
 class Ventana:
     """Tramo ``[inicio, fin)`` sobre los tokens del pasaje."""
 
