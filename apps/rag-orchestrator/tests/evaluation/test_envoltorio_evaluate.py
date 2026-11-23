@@ -41,6 +41,16 @@ def test_el_envoltorio_corre_la_suite_de_la_ci_y_escribe_el_json(tmp_path: Path)
     assert json.loads((tmp_path / "r.json").read_text(encoding="utf-8"))["suite"] == "all"
 
 
+def test_el_envoltorio_corre_la_familia_diagnostico_con_su_configuracion_de_la_ci_y_escribe_el_informe(
+    tmp_path: Path,
+) -> None:
+    proceso = correr("--suite", "diagnostico", "--report", "json", salida=tmp_path, nombre="d.json")
+
+    assert proceso.returncode == 0, proceso.stderr
+    assert json.loads((tmp_path / "d.json").read_text(encoding="utf-8"))["suite"] == "diagnostico"
+    assert (tmp_path / "d.md").is_file()
+
+
 def test_el_envoltorio_devuelve_el_codigo_de_la_suite_cuando_la_familia_no_esta_disponible(
     tmp_path: Path,
 ) -> None:
