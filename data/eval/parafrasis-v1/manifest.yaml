@@ -1,0 +1,22 @@
+# Pares de paráfrasis SINTÉTICOS de la familia `diagnostico` de `evaluate` (US-276, L1D-334). Ningún dato de pacientes: las
+# preguntas son inventadas por el equipo y la evidencia esperada es un fragmento literal del corpus del dataset
+# `s5-corpus-ampliado` (extractos de textos públicos con licencia registrada, RN-21). Cada par reúne preguntas con el mismo
+# significado y distinta redacción; la suite mide en qué etapa de la consulta se pierde el fragmento esperado.
+clase: sintetico
+nombre: parafrasis-v1
+version: '1'
+descripcion: 'Doce pares de preguntas con el mismo significado (coloquial frente a técnico, sin tildes, orden cambiado, español frente a inglés) sobre el corpus s5-corpus-ampliado (mama y próstata). Lo consume eval/configs/diagnostico-fake.yaml (CI, adaptadores falsos) y diagnostico-local.yaml (corrida base y final del S7, modelos locales).'
+# Directorio del corpus sobre el que se miden los pares: el mismo en la corrida base y en la final ([S7 resp. 10]).
+corpus: data/eval/s5-corpus-ampliado
+archivos:
+  pares: pares.yaml
+# Marca de procedencia ([S7 resp. 1]): las redacciones y la evidencia esperada las fijó un asistente de IA, no un oncólogo.
+# No es una validación clínica: los informes con este dataset llevan el rótulo `no_validada`.
+revision_provisional:
+  rol: ia
+  fecha: '2026-11-22'
+# Par de la Demo 6: la misma pregunta con «prostatectomía radical» y con «cirugía de prostata radical».
+par_de_la_demo_6: P01
+# Limitación conocida: el corpus fijo no trae un fragmento sobre las complicaciones de la prostatectomía radical; el par
+# P01 espera el fragmento más cercano que nombra el procedimiento. Mide la sinonimia del procedimiento (US-277), no la
+# calidad clínica de la respuesta.
