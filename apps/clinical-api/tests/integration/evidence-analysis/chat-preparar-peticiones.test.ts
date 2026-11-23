@@ -4,6 +4,7 @@ import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
 import { zChatTurnRequest } from '../../../../../packages/api-contracts/src/zod/rag-orchestrator/zod.gen.js';
+import { recursoDelSeed } from '../../../src/evaluacion/chat/reglas.js';
 import { ejecutarComandoPreparar } from '../../../src/evaluacion/chat/comando.js';
 import { prepararMundoConSeed, type MundoDeGateway } from '../../support/gateway.js';
 import {
@@ -134,6 +135,21 @@ describe('hechosPorClave de las peticiones preparadas', () => {
       expect(presentes, caso.id).toEqual([]);
       const { hechosPorClave } = leerArchivo(caso.id);
       for (const valor of Object.values(hechosPorClave)) expect(valor).toMatch(/^f\d+$/);
+    }
+  });
+
+  it('resuelve cada clave de hechos_esperados del dataset a una fila del seed [US-269 AC-3]', async () => {
+    const { rows: pacientes } = await mundo.cliente.query<{ id: string }>(
+      'SELECT id FROM clinical.patient',
+    );
+    const filas = new Set<string>();
+    for (const { id } of pacientes) {
+      const { rows } = await mundo.cliente.query<{ id: string }>(RECURSOS_DEL_PACIENTE, [id]);
+      rows.forEach((fila) => filas.add(fila.id));
+    }
+
+    for (const clave of dataset.casos.flatMap((caso) => caso.hechos_esperados ?? [])) {
+      expect(filas.has(recursoDelSeed(clave) ?? ''), clave).toBe(true);
     }
   });
 });

@@ -1,4 +1,4 @@
-import { idDeTratamiento, idSembrado } from '../../../prisma/seed/determinismo.js';
+import { idDeBiomarcador, idDeTratamiento, idSembrado } from '../../../prisma/seed/determinismo.js';
 import { identidadSinteticaDe } from '../../../prisma/seed/identidades.js';
 import {
   DOCUMENTO_SINTETICO_CHAT,
@@ -68,22 +68,22 @@ export function recursoDelSeed(clave: string): string | null {
   ) {
     return idSembrado(clave);
   }
-  return idDelBiomarcador(paciente, recurso);
+  return idDelBiomarcadorPorRecurso(paciente, recurso);
 }
 
 /** El biomarcador por su `clave` o, si la clave es la de un examen con un solo biomarcador (`psa-2`), el de ese examen. */
-function idDelBiomarcador(paciente: PacienteSemilla, recurso: string): string | null {
+function idDelBiomarcadorPorRecurso(paciente: PacienteSemilla, recurso: string): string | null {
   const examenDelBiomarcador = paciente.examenes.find((e) =>
     e.biomarcadores.some((b) => b.clave === recurso),
   );
   if (examenDelBiomarcador !== undefined) {
-    return idSembrado(`${paciente.clave}/${examenDelBiomarcador.clave}/${recurso}`);
+    return idDeBiomarcador(paciente.clave, examenDelBiomarcador.clave, recurso);
   }
   const examen = paciente.examenes.find((e) => e.clave === recurso);
   const unico = examen?.biomarcadores.length === 1 ? examen.biomarcadores[0] : undefined;
   return examen === undefined || unico === undefined
     ? null
-    : idSembrado(`${paciente.clave}/${examen.clave}/${unico.clave}`);
+    : idDeBiomarcador(paciente.clave, examen.clave, unico.clave);
 }
 
 /**

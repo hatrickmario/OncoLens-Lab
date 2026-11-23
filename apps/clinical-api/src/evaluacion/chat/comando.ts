@@ -5,7 +5,7 @@ import { idSembrado } from '../../../prisma/seed/determinismo.js';
 import { leerConfiguracionDelSeed } from '../../../prisma/seed/config.js';
 import { SeedBloqueadoError, assertSeedPermitido } from '../../../prisma/seed/guarda.js';
 import type { ConversationService } from '../../modules/evidence-analysis/conversation/conversation.service.js';
-import type { CapturadorDeTurnos } from './capturador.js';
+import type { CapturadorDeTurnosDeEvaluacion } from './capturador.js';
 import { cargarCasosDelChat, DatasetDeChatInvalidoError } from './dataset.js';
 import { BaseNoSinteticaError, exigirBaseDeTestSintetica } from './guarda-de-base.js';
 import { CasoNoPreparableError, prepararPeticiones } from './preparar-peticiones.js';
@@ -24,7 +24,7 @@ export interface BaseParaPreparar {
 
 export interface ServicioParaPreparar {
   servicio: ConversationService;
-  capturador: CapturadorDeTurnos;
+  capturador: CapturadorDeTurnosDeEvaluacion;
   usuarioId: string;
 }
 
@@ -75,9 +75,10 @@ export async function ejecutarComandoPreparar(
     dependencias.stderr(USO);
     return SALIDA_USO;
   }
-  rmSync(dependencias.directorioDeSalida, { recursive: true, force: true });
   let base: BaseParaPreparar | null = null;
   try {
+    // Primero, antes de cualquier guarda; dentro del try para que un fallo del borrado salga por la misma vía sin datos.
+    rmSync(dependencias.directorioDeSalida, { recursive: true, force: true });
     exigirEntornoSinDatosReales(dependencias.entorno);
     const casos = cargarCasosDelChat(dependencias.raizDelRepo);
     base = await dependencias.abrirBase();

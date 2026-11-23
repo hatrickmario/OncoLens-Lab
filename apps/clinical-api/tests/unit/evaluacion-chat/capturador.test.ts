@@ -4,14 +4,14 @@ import { zChatTurnResponseRefinado } from '../../../../../packages/api-contracts
 import type { ChatTurnRequest } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import {
   SinPeticionCapturadaError,
-  crearCapturadorDeTurnos,
+  crearCapturadorDeTurnosDeEvaluacion,
 } from '../../../src/evaluacion/chat/capturador.js';
 
 const peticion = peticionDeEjemplo as ChatTurnRequest;
 
-describe('crearCapturadorDeTurnos', () => {
+describe('crearCapturadorDeTurnosDeEvaluacion', () => {
   it('guarda la petición recibida y la devuelve en ultimaPeticion', async () => {
-    const capturador = crearCapturadorDeTurnos();
+    const capturador = crearCapturadorDeTurnosDeEvaluacion();
 
     await capturador.responder(peticion);
 
@@ -19,11 +19,13 @@ describe('crearCapturadorDeTurnos', () => {
   });
 
   it('lanza cuando ultimaPeticion se pide antes de que el servicio llame al puerto', () => {
-    expect(() => crearCapturadorDeTurnos().ultimaPeticion()).toThrow(SinPeticionCapturadaError);
+    expect(() => crearCapturadorDeTurnosDeEvaluacion().ultimaPeticion()).toThrow(
+      SinPeticionCapturadaError,
+    );
   });
 
   it('responde ok con un cuerpo que cumple el contrato de ChatTurnResponse, como el cliente real de /chat/turn', async () => {
-    const respuesta = await crearCapturadorDeTurnos().responder(peticion);
+    const respuesta = await crearCapturadorDeTurnosDeEvaluacion().responder(peticion);
 
     expect(respuesta.ok).toBe(true);
     if (!respuesta.ok) return;
@@ -31,7 +33,7 @@ describe('crearCapturadorDeTurnos', () => {
   });
 
   it('cita cada hecho de la petición en un bloque documentado con su factRef', async () => {
-    const respuesta = await crearCapturadorDeTurnos().responder(peticion);
+    const respuesta = await crearCapturadorDeTurnosDeEvaluacion().responder(peticion);
 
     if (!respuesta.ok) throw new Error('el capturador respondió un fallo');
     expect(respuesta.cuerpo.blocks.flatMap((bloque) => bloque.factRefs ?? [])).toEqual(

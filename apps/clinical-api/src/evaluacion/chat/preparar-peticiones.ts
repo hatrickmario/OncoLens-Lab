@@ -4,7 +4,7 @@ import {
   ConversacionNoEncontradaError,
   type ConversationService,
 } from '../../modules/evidence-analysis/conversation/conversation.service.js';
-import type { CapturadorDeTurnos } from './capturador.js';
+import type { CapturadorDeTurnosDeEvaluacion } from './capturador.js';
 import {
   HechoEsperadoNoEncontradoError,
   identidadSinteticaDelPaciente,
@@ -25,7 +25,7 @@ export interface CasoParaPreparar {
 export interface EntradasDeLaPreparacion {
   casos: readonly CasoParaPreparar[];
   servicio: ConversationService;
-  capturador: CapturadorDeTurnos;
+  capturador: CapturadorDeTurnosDeEvaluacion;
   usuarioId: string;
   idDelPaciente: (clave: string) => string;
   directorioDeSalida: string;

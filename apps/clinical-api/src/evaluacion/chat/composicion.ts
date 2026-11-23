@@ -7,27 +7,26 @@ import { leerConfiguracionDelSeed } from '../../../prisma/seed/config.js';
 import {
   ConfiguracionInvalidaError,
   readDatabaseConfig,
-  type DatabaseConfig,
   readDeidentificationConfig,
   readEvidenceAnalysisConfig,
   type EvidenceAnalysisConfig,
 } from '../../config/index.js';
 import type { Clock } from '../../infrastructure/clock.js';
-import { crearEjecutorDeTransacciones } from '../../infrastructure/database.js';
+import { crearEjecutorDeTransacciones, crearPool } from '../../infrastructure/database.js';
 import { crearProveedorDeCatalogo } from '../../infrastructure/catalogo/catalog-version.provider.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import { nuevoSeudonimo } from '../../infrastructure/ids.js';
 import type { Registrar } from '../../infrastructure/logger.js';
 import type { Consultador } from '../../modules/auth/auth.repository.js';
 import { componerCompletitud } from '../../modules/completeness/completeness.module.js';
-import { crearBaseDelAnalisis } from '../../modules/evidence-analysis/analysis-basis.js';
 import { crearContextDeidentifier } from '../../modules/evidence-analysis/deidentification/context-deidentifier.js';
 import { crearLectorDeIdentidad } from '../../modules/evidence-analysis/deidentification/patient-identity.reader.js';
 import { crearDetectorOpcionA } from '../../modules/evidence-analysis/deidentification/pii-detector.opcion-a.js';
 import { cargarConfiguracionDePii } from '../../modules/evidence-analysis/deidentification/pii-formats.config.js';
-import { crearConversationRepository } from '../../modules/evidence-analysis/conversation/conversation.repository.js';
-import { crearConversationService } from '../../modules/evidence-analysis/conversation/conversation.service.js';
-import { crearChecklistDelChat } from '../../modules/evidence-analysis/evidence-analysis.module.js';
+import {
+  crearChecklistDelChat,
+  crearConversacionDeProduccion,
+} from '../../modules/evidence-analysis/evidence-analysis.module.js';
 import { createEvidenceAnalysisRepository } from '../../modules/evidence-analysis/evidence-analysis.repository.js';
 import { cargarEtiquetasDeDatosCriticos } from '../../modules/evidence-analysis/etiquetas-datos-criticos.js';
 import type { ContextDeidentifier } from '../../modules/evidence-analysis/ports.js';
@@ -36,7 +35,7 @@ import {
   crearServicioDeIdentidad,
   leerClavesDeIdentidadDelEntorno,
 } from '../../modules/patients/identity.module.js';
-import { crearCapturadorDeTurnos } from './capturador.js';
+import { crearCapturadorDeTurnosDeEvaluacion } from './capturador.js';
 import type { BaseParaPreparar, DependenciasDelComando, ServicioParaPreparar } from './comando.js';
 
 /** Todo lo que el servicio de conversación necesita, explícito: el proceso real y los tests lo arman con sus propias piezas. */
@@ -71,7 +70,7 @@ export interface EntradasDeLaComposicion {
 export function componerServicioDeConversacion(
   entradas: EntradasDeLaComposicion,
 ): Pick<ServicioParaPreparar, 'servicio' | 'capturador'> {
-  const { db, pool, rutaDelCatalogo, leerArchivo, analisis } = entradas;
+  const { db, rutaDelCatalogo, leerArchivo, analisis } = entradas;
   const catalogo = crearProveedorDeCatalogo(rutaDelCatalogo, leerArchivo);
   const tipos = catalogo.cancerTypes();
   const completitud = componerCompletitud({
@@ -80,30 +79,25 @@ export function componerServicioDeConversacion(
     leerArchivo,
     tiposHabilitados: crearTiposHabilitados(tipos, tipos),
   });
-  const capturador = crearCapturadorDeTurnos();
-  const servicio = crearConversationService({
-    conversaciones: crearConversationRepository(db, crearEjecutorDeTransacciones(pool)),
-    casos: createEvidenceAnalysisRepository(db),
-    checklist: crearChecklistDelChat(completitud),
-    desidentificador: entradas.desidentificador,
-    rag: capturador,
-    base: crearBaseDelAnalisis({
+  const capturador = crearCapturadorDeTurnosDeEvaluacion();
+  const servicio = crearConversacionDeProduccion(
+    {
+      db: entradas.db,
+      enTransaccion: crearEjecutorDeTransacciones(entradas.pool),
+      checklistDelChat: crearChecklistDelChat(completitud),
+      desidentificador: entradas.desidentificador,
+      ragChat: capturador,
       etiquetaDe: cargarEtiquetasDeDatosCriticos(rutaDelCatalogo, leerArchivo),
-      maxFollowUps: analisis.analysisFollowupMax,
-    }),
-    idsDeAnalisis: entradas.ids.analisis,
-    catalogo,
-    reloj: entradas.reloj,
-    idsDeConversaciones: entradas.ids.conversaciones,
-    idsDeTurnos: entradas.ids.turnos,
-    idsDeHilos: entradas.ids.hilos,
-    config: {
-      ragTimeoutMs: analisis.ragTimeoutMs,
-      chatRehydrateTurns: analisis.chatRehydrateTurns,
-      maxOpciones: analisis.analysisMaxOptions,
-      aiDisclaimerText: analisis.aiDisclaimerText,
+      idsDeAnalisis: entradas.ids.analisis,
+      catalogo,
+      reloj: entradas.reloj,
+      idsDeConversaciones: entradas.ids.conversaciones,
+      idsDeTurnosDeChat: entradas.ids.turnos,
+      idsDeHilos: entradas.ids.hilos,
+      config: analisis,
     },
-  });
+    createEvidenceAnalysisRepository(db),
+  );
   return { servicio, capturador };
 }
 
@@ -117,25 +111,6 @@ const ignorar: Registrar = () => undefined;
 
 /** Nombre con el que se verifica el certificado de PostgreSQL cuando difiere del host (el de test solo certifica `postgres`). */
 const SERVIDOR_TLS = 'EVAL_CHAT_DB_TLS_SERVERNAME';
-
-/** Mismo pool que `crearPool` (TLS verificado contra la CA) más `servername` opcional: conectar desde el host al PostgreSQL de Compose. */
-function abrirPool(entorno: NodeJS.ProcessEnv, config: DatabaseConfig): pg.Pool {
-  const servername = entorno[SERVIDOR_TLS]?.trim();
-  const pool = new pg.Pool({
-    host: config.host,
-    port: config.port,
-    database: config.database,
-    user: config.user,
-    password: config.password,
-    ssl: {
-      ca: config.ca,
-      rejectUnauthorized: true,
-      ...(servername !== undefined && servername !== '' && { servername }),
-    },
-  });
-  pool.on('error', () => ignorar({ event: 'pool_postgres_error' }));
-  return pool;
-}
 
 /** Puerto y base del PostgreSQL de test de Compose: los mismos por omisión que `scripts/test-integration.sh`. */
 const PUERTO_DE_TEST = '55432';
@@ -220,7 +195,9 @@ export function dependenciasDelProceso(
   let pool: pg.Pool | null = null;
   return {
     abrirBase: () => {
-      const abierto = abrirPool(entorno, readDatabaseConfig(entorno, leerArchivo));
+      const abierto = crearPool(readDatabaseConfig(entorno, leerArchivo), ignorar, {
+        servername: entorno[SERVIDOR_TLS]?.trim(),
+      });
       pool = abierto;
       const base: BaseParaPreparar = {
         consultar: (sql, valores) => abierto.query(sql, valores),

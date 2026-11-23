@@ -4,8 +4,11 @@ import type {
 } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import type { ChatTurnPort } from '../../modules/evidence-analysis/ports.js';
 
-/** Cliente de Backend 2 que no llama a nadie: guarda el cuerpo que saldría hacia `/chat/turn`. */
-export interface CapturadorDeTurnos extends ChatTurnPort {
+/**
+ * Cliente de Backend 2 que no llama a nadie: guarda el cuerpo que saldría hacia `/chat/turn`. Solo para la evaluación: no
+ * sustituye al cliente real (`crearRagChatClient`) ni se cablea fuera de `evaluate:chat`.
+ */
+export interface CapturadorDeTurnosDeEvaluacion extends ChatTurnPort {
   /** La última petición recibida; lanza si todavía no hubo ninguna. */
   ultimaPeticion(): ChatTurnRequest;
 }
@@ -45,7 +48,7 @@ function respuestaQueCitaCadaHecho(peticion: ChatTurnRequest): ChatTurnResponse 
 }
 
 /** Puerto de `/chat/turn` sin HTTP: es el borde arquitectónico por el que cruza la petición desidentificada. */
-export function crearCapturadorDeTurnos(): CapturadorDeTurnos {
+export function crearCapturadorDeTurnosDeEvaluacion(): CapturadorDeTurnosDeEvaluacion {
   let ultima: ChatTurnRequest | null = null;
   return {
     responder: (peticion) => {

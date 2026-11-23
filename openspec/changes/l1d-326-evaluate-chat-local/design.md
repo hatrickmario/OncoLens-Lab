@@ -111,6 +111,12 @@ metas definitivas (DEC-07); revisión clínica (D6-53).
     - **Conexión desde el host.** El PostgreSQL de Compose solo certifica el nombre `postgres`: la preparación admite
       `EVAL_CHAT_DB_TLS_SERVERNAME` (RN-22) con TLS verificado contra la CA, y `entornoDelStackDeTest()` completa conexión y
       rutas de secretos del stack de test. `APP_ENV` nunca se completa (RN-13). *Descartada:* `rejectUnauthorized: false`.
+    - **Respuesta al Gate 2 (refactor).** `crearConversacionDeProduccion()` (exportada desde `evidence-analysis.module.ts`) es la
+      única composición del servicio de conversación, para el gateway y para la preparación; `crearPool` admite `servername`
+      sin quitar `rejectUnauthorized`; `idDeBiomarcador()` vive en `prisma/seed/determinismo.ts` junto a `idDeTratamiento()`; el
+      capturador se llama `CapturadorDeTurnosDeEvaluacion` y no sustituye al cliente real.
+    - **SIGKILL.** El `finally` de `evaluate:chat` no cubre un SIGKILL: el residuo (peticiones con identidad sintética, en un
+      directorio ignorado por git) queda hasta la siguiente corrida, que lo borra antes de cualquier guarda.
     - **Seudónimo y logs.** El servicio real usa el seudónimo aleatorio por consulta; el comando no registra nada (registrador
       nulo) y su mensaje de fallo nombra variable, caso o clave, o la clase del error, nunca su texto.
 

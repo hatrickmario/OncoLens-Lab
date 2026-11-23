@@ -140,9 +140,35 @@ export function crearChecklistDelChat(completitud: CompletenessConTiposDeVacio):
   };
 }
 
+/** Lo que el servicio de la conversación toma de las dependencias del gateway (también lo usa la preparación de `evaluate:chat`). */
+export type DependenciasDeLaConversacionDeProduccion = Pick<
+  DependenciasDelGateway,
+  | 'db'
+  | 'enTransaccion'
+  | 'checklistDelChat'
+  | 'desidentificador'
+  | 'ragChat'
+  | 'etiquetaDe'
+  | 'idsDeAnalisis'
+  | 'catalogo'
+  | 'reloj'
+  | 'idsDeConversaciones'
+  | 'idsDeTurnosDeChat'
+  | 'idsDeHilos'
+> & {
+  config: Pick<
+    ConfiguracionDelGateway,
+    | 'ragTimeoutMs'
+    | 'chatRehydrateTurns'
+    | 'analysisMaxOptions'
+    | 'aiDisclaimerText'
+    | 'analysisFollowupMax'
+  >;
+};
+
 /** Servicio de la conversación (L1D-315): comparte desidentificador, catálogo, reloj y configuración con el gateway. */
-function componerConversacion(
-  dependencias: DependenciasDelGateway,
+export function crearConversacionDeProduccion(
+  dependencias: DependenciasDeLaConversacionDeProduccion,
   casos: CasoRepository,
 ): ConversationService {
   const { ragTimeoutMs, chatRehydrateTurns, analysisMaxOptions, aiDisclaimerText } =
@@ -236,7 +262,7 @@ export function componerGatewayDeAnalisis(dependencias: DependenciasDelGateway):
   );
   return conversationController(
     {
-      service: componerConversacion(dependencias, repositorio),
+      service: crearConversacionDeProduccion(dependencias, repositorio),
       traceIds: dependencias.traceIds,
       registrar: dependencias.registrar,
       fabricaDeGuardia,
