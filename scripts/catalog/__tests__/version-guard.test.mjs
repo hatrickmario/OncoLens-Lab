@@ -392,3 +392,62 @@ describe('catalog:version-guard · base desfasada: el primer padre del merge (G2
     PLAZO_PROCESO_MS,
   );
 });
+
+describe('catalog:version-guard · lista publicada que queda vacía (G2.4, S7.3, design D15)', () => {
+  const vaciar = (contenido) => {
+    const clave = contenido.items === undefined ? 'keys' : 'items';
+    contenido[clave] = [];
+  };
+
+  it(
+    'falla con lista_vaciada y nombra el archivo cuando una lista con contenido en la base queda vacía aunque la versión suba [US-121 AC-1]',
+    () => {
+      const raiz = repoConCatalogo();
+      modificar(raiz, 'mama/aplicabilidad.json', vaciar);
+      modificar(raiz, 'manifest.json', (m) => (m.version = 'test-apl-1.0.2'));
+
+      const resultado = ejecutar(raiz, { ci: true });
+
+      expect(resultado.codigo).toBe(1);
+      expect(resultado.salida).toContain('lista_vaciada mama/aplicabilidad');
+      expect(resultado.salida).not.toContain(raiz);
+    },
+    PLAZO_PROCESO_MS,
+  );
+
+  it(
+    'falla con lista_vaciada y no con la regla de versión cuando la lista se vacía sin subir la versión',
+    () => {
+      const raiz = repoConCatalogo();
+      modificar(raiz, 'atributos.json', vaciar);
+
+      const resultado = ejecutar(raiz, { ci: true });
+
+      expect(resultado.codigo).toBe(1);
+      expect(resultado.salida).toContain('lista_vaciada atributos');
+      expect(resultado.salida).not.toContain('contenido_cambiado_sin_subir_version');
+    },
+    PLAZO_PROCESO_MS,
+  );
+
+  it(
+    'pasa cuando la lista pierde un ítem pero conserva contenido y la versión sube',
+    () => {
+      const raiz = repoConCatalogo();
+      modificar(raiz, 'mama/aplicabilidad.json', (c) => c.items.pop());
+      modificar(raiz, 'manifest.json', (m) => (m.version = 'test-apl-1.0.2'));
+
+      expect(ejecutar(raiz, { ci: true }).codigo).toBe(0);
+    },
+    PLAZO_PROCESO_MS,
+  );
+
+  it('no marca lista_vaciada cuando la lista ya estaba vacía en la base', () => {
+    const lectura = (items) => ({
+      version: '1.1.0',
+      archivos: { 'mama/tendencias': { estado: 'ok', contenido: { version: '1.1.0', items } } },
+    });
+
+    expect(violacionesDeVersion({ actual: lectura([]), base: lectura([]) })).toEqual([]);
+  });
+});
