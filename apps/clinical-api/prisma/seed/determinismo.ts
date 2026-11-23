@@ -20,3 +20,12 @@ export function idSembrado(claveNatural: string): string {
 export function idDeTratamiento(pacienteClave: string, tratamientoClave: string): string {
   return idSembrado(`${pacienteClave}/${tratamientoClave}`);
 }
+
+/** Id sembrado de un biomarcador de un examen: lo comparten su fila, el conflicto que lo apunta y la evaluación del chat. */
+export function idDeBiomarcador(
+  pacienteClave: string,
+  examenClave: string,
+  biomarcadorClave: string,
+): string {
+  return idSembrado(`${pacienteClave}/${examenClave}/${biomarcadorClave}`);
+}

@@ -43,6 +43,9 @@ playwright-report/
 apps/rag-orchestrator/eval/results/
 reports/quality/
 
+# Peticiones preparadas del chat para evaluate:chat (L1D-326): llevan identidad sintética; efímeras, nunca se versionan.
+apps/clinical-api/eval/results/tmp/
+
 # Metadatos de población del corpus (L1D-117): la muestra para revisión humana se genera aquí; no se versiona (solo PLANTILLA.md).
 /data/evaluation/corpus-metadatos/*
 !/data/evaluation/corpus-metadatos/PLANTILLA.md

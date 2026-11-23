@@ -10,6 +10,9 @@
  * Además ejecuta la familia `opciones` (US-140, L1D-246) con su configuración de adapters falsos: un código de salida
  * distinto de 0 (3 = invariante violada o retroceso de fidelidad/precisión de citas) rompe el job y el resumen nombra la
  * familia, con ids de caso e invariante, nunca texto.
+ * Y la familia `chat` (US-269, L1D-326) con `chat-fake.yaml` y `--sin-preparar` (ejemplos del contrato, sin base de datos): un
+ * código distinto de 0 (1 = salida prescriptiva o fuga de identidad, 2 = no corre) rompe el job y el resumen publica solo los
+ * dos conteos, nunca texto ni identidad.
  * No exige juez LLM. La lógica vive aquí y no en el YAML del workflow (docs/process/ci.md).
  *
  * Uso: node scripts/ci/eval-required.mjs [--base <sha>] [--root <dir>] [--baseline <archivo>] [--salida <dir>]
@@ -35,6 +38,9 @@ const CONFIG_DE_UMBRALES = path.join('eval', 'configs', 'regression.yaml');
 const FORMATO_DE_TOLERANCIA = /^\d+(\.\d+)?$/;
 const MENSAJE_ENTRADA_ILEGIBLE = 'eval-required — reporte o baseline ilegible';
 const NOMBRE_REPORTE_DE_OPCIONES = 'opciones.json';
+const CONFIG_DEL_CHAT = path.join('apps', 'rag-orchestrator', 'eval', 'configs', 'chat-fake.yaml');
+const CARPETA_DEL_CHAT = 'chat';
+const NOMBRE_REPORTE_DEL_CHAT = 'chat.json';
 
 /** Error de configuración con mensaje fijo, seguro de imprimir (los demás se reportan solo por su nombre, RN-14). */
 class ConfiguracionInvalida extends Error {}
@@ -72,6 +78,32 @@ function ejecutarFamiliaDeOpciones(raiz, salida, entorno) {
     { cwd: raiz, stdio: 'inherit', env: entorno },
   );
   return resultado.status ?? 1;
+}
+
+/** La familia `chat` (US-269) con adapters falsos y sin preparar; deja `<salida>/chat/chat.json` y devuelve su código de salida (0, 1 RN-23 o fuga, 2 no corre). */
+function ejecutarFamiliaDelChat(raiz, salida, entorno) {
+  const resultado = spawnSync(
+    'node',
+    ['scripts/eval/evaluate-chat.mjs', '--config', CONFIG_DEL_CHAT, '--sin-preparar', '--salida', path.join(salida, CARPETA_DEL_CHAT)],
+    { cwd: raiz, stdio: 'inherit', env: entorno },
+  );
+  return resultado.status ?? 1;
+}
+
+/** Los dos conteos que bloquean el chat (RN-23, RN-10), solo números (RN-14); `null` si el reporte no se puede leer. */
+function conteosDelChat(carpeta) {
+  try {
+    const { salidas_prescriptivas: prescriptivas, apariciones_de_identidad: identidad } = leerJson(path.join(carpeta, CARPETA_DEL_CHAT, NOMBRE_REPORTE_DEL_CHAT)).metricas;
+    return { prescriptivas, identidad: Object.values(identidad).reduce((suma, n) => suma + n, 0) };
+  } catch {
+    return null;
+  }
+}
+
+function seccionDelChat({ codigo, conteos }) {
+  const veredicto = codigo === 0 ? 'Sin salidas prescriptivas (RN-23) ni apariciones de identidad (RN-10, RN-11).' : `La familia terminó con código ${codigo}.`;
+  const detalle = conteos ? [`- salidas prescriptivas: ${conteos.prescriptivas}`, `- apariciones de identidad: ${conteos.identidad}`] : [];
+  return ['', '### Familia `chat` (US-269)', '', veredicto, ...detalle];
 }
 
 /** Invariantes violadas y retrocesos del reporte de la familia, solo como ids de caso e invariante (RN-14); `null` si no se puede leer. */
@@ -129,9 +161,9 @@ function seccionDeUmbrales({ salida, errores }) {
   return ['', '### Mínimos de `regression.yaml`', '', ...[...salida, ...errores].map((linea) => `> ${textoSeguro(linea)}`)];
 }
 
-function comentario({ motivos, tolerancia, comparacion, umbrales, opciones }) {
+function comentario({ motivos, tolerancia, comparacion, umbrales, opciones, chat }) {
   const encabezado = ['## eval-required', '', 'La suite `evaluate` se ejecutó (adapters falsos, FX-T5a-a) porque el diff toca:', lineasDeMotivos(motivos), ''];
-  return [...encabezado, ...seccionDeBaseline(comparacion, tolerancia), ...seccionDeUmbrales(umbrales), ...seccionDeOpciones(opciones)].join('\n');
+  return [...encabezado, ...seccionDeBaseline(comparacion, tolerancia), ...seccionDeUmbrales(umbrales), ...seccionDeOpciones(opciones), ...seccionDelChat(chat)].join('\n');
 }
 
 /** Líneas de consola y código de salida del control contra el baseline. */
@@ -192,14 +224,20 @@ export function ejecutar({ raiz = RAIZ, base, baseline = BASELINE_POR_DEFECTO, s
   const umbrales = comprobarUmbrales(raiz, reporte, entorno);
   const codigoDeOpciones = ejecutarFamiliaDeOpciones(raiz, carpeta, entorno);
   const opciones = { codigo: codigoDeOpciones, hallazgos: codigoDeOpciones === 0 ? [] : hallazgosDeOpciones(carpeta), revision: avisoDeRevisionDeOpciones(carpeta) };
-  publicarComentario(comentario({ motivos, tolerancia, comparacion, umbrales, opciones }), carpeta, entorno);
+  const codigoDelChat = ejecutarFamiliaDelChat(raiz, carpeta, entorno);
+  const chat = { codigo: codigoDelChat, conteos: conteosDelChat(carpeta) };
+  publicarComentario(comentario({ motivos, tolerancia, comparacion, umbrales, opciones, chat }), carpeta, entorno);
   const contraBaseline = comparacion ? veredictoDeRegresion(comparacion, { baseline, tolerancia }) : { codigo: 0, salida: [], errores: [] };
   imprimir(contraBaseline, umbrales);
   if (contraBaseline.codigo !== 0) return contraBaseline.codigo;
   if (umbrales.codigo !== 0) return Math.min(umbrales.codigo, 2);
-  if (codigoDeOpciones === 0) return 0;
-  console.error(`eval-required — la familia opciones terminó con código ${codigoDeOpciones}`);
-  return codigoDeOpciones === 2 ? 2 : 1;
+  if (codigoDeOpciones !== 0) {
+    console.error(`eval-required — la familia opciones terminó con código ${codigoDeOpciones}`);
+    return codigoDeOpciones === 2 ? 2 : 1;
+  }
+  if (codigoDelChat === 0) return 0;
+  console.error(`eval-required — la familia chat terminó con código ${codigoDelChat}`);
+  return codigoDelChat === 2 ? 2 : 1;
 }
 
 function main(argumentos) {

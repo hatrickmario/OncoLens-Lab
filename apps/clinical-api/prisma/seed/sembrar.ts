@@ -5,7 +5,7 @@ import {
   resolverCodigoDelCatalogo,
   type CatalogoClinico,
 } from './catalogo.js';
-import { idDeTratamiento, idSembrado } from './determinismo.js';
+import { idDeBiomarcador, idDeTratamiento, idSembrado } from './determinismo.js';
 import { columnasDeGradacion } from './columnas-de-gradacion.js';
 import { derivarTextoGrade } from './grade.js';
 import { identidadSinteticaDe } from './identidades.js';
@@ -280,7 +280,7 @@ function idDelBiomarcador(
   examen: Pick<ExamenSemilla, 'clave'>,
   claveDelBiomarcador: string,
 ): string {
-  return idSembrado(`${contexto.paciente.clave}/${examen.clave}/${claveDelBiomarcador}`);
+  return idDeBiomarcador(contexto.paciente.clave, examen.clave, claveDelBiomarcador);
 }
 
 /** `conflicts_with_id` del biomarcador (RN-08): el id sembrado del otro biomarcador con el que choca, o `null` sin conflicto. */

@@ -63,6 +63,7 @@ function correr({ clon, base }, entorno = {}) {
     salida: `${resultado.stdout}${resultado.stderr}`,
     reporte: leer('apps/rag-orchestrator/eval/results/ci/reporte.json'),
     opciones: leer('apps/rag-orchestrator/eval/results/ci/opciones.json'),
+    chat: leer('apps/rag-orchestrator/eval/results/ci/chat/chat.json'),
     comentario: leer('apps/rag-orchestrator/eval/results/ci/comentario.md'),
     resumen: leer('resumen.md'),
   };
@@ -114,6 +115,33 @@ describe('eval-required', { timeout: 90_000 }, () => {
     expect(resultado.comentario).toContain('### Familia `opciones` (US-140)');
     expect(resultado.comentario).toContain('Invariantes cumplidas');
     expect(resultado.comentario).toContain('Preguntas revisadas por el oncólogo: 0 de 12; las fuentes esperadas y el orden no están revisados clínicamente');
+  });
+
+  it('ejecuta la familia chat con adapters falsos y publica solo sus dos conteos cuando el PR cambia el dataset del chat [US-269 AC-3] [US-269 AC-5] [US-269 AC-6]', () => {
+    const resultado = correr(pr({ 'data/eval/chat-v1/casos.yaml': agregarLinea('# retoque del dataset del chat (fixture)') }));
+
+    expect(resultado.codigo).toBe(0);
+    expect(JSON.parse(resultado.chat).suite).toBe('chat');
+    expect(JSON.parse(resultado.chat).modelos.proveedor).toBe('fake');
+    expect(resultado.comentario).toContain('### Familia `chat` (US-269)');
+    expect(resultado.comentario).toContain('- salidas prescriptivas: 0');
+    expect(resultado.comentario).toContain('- apariciones de identidad: 0');
+  });
+
+  it('falla y nombra la familia chat cuando su dataset no cumple la clase sintética [US-269 AC-3] [RN-14]', () => {
+    const resultado = correr(pr({ 'data/eval/chat-v1/manifest.yaml': (texto) => texto.replace('clase: sintetico', 'clase: real') }));
+
+    expect(resultado.codigo).toBe(2);
+    expect(resultado.salida).toContain('eval-required — la familia chat terminó con código 2');
+    expect(resultado.comentario).toContain('### Familia `chat` (US-269)');
+    expect(resultado.comentario).toContain('La familia terminó con código 2.');
+    expect(resultado.resumen).toBe(resultado.comentario);
+  });
+
+  it('no ejecuta la familia chat cuando el PR solo cambia apps/web [US-269 AC-3]', () => {
+    const resultado = correr(pr({ 'apps/web/app/login/nota.txt': agregarLinea('sin relación con la IA') }));
+
+    expect(resultado.chat).toBeNull();
   });
 
   it('falla y nombra la familia opciones y la métrica cuando su fidelidad retrocede más que la tolerancia [US-140 AC-4] [US-140 AC-2]', () => {
