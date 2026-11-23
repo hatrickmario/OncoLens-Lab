@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { arrancar, cargarEtapaDeServicios } from '../../../src/startup.js';
-import { RUTA_CATALOGO_FX01BB } from '../../support/catalogo-terminologico.js';
+import { RUTA_CATALOGO_FX01BB, RUTA_CATALOGO_REAL } from '../../support/catalogo-terminologico.js';
 
 // Secretos y rutas ficticios en un directorio temporal: ningún valor es real (RN-13, RN-14).
 const RAIZ_REPO = path.resolve(import.meta.dirname, '../../../../..');
@@ -84,6 +84,52 @@ describe('arranque: catálogo terminológico', () => {
       regla: 'esquema_invalido',
       motivo: 'catalogo_invalido',
     });
+    expect(resultado.log).not.toContain(directorio);
+  });
+
+  it('arranca con el catálogo real que declara sinonimos y sus relaciones [US-277 AC-1]', () => {
+    const manifiesto = JSON.parse(
+      readFileSync(path.join(RUTA_CATALOGO_REAL, 'manifest.json'), 'utf8'),
+    );
+    const env = { ...entorno(), CLINICAL_CATALOG_PATH: RUTA_CATALOGO_REAL };
+
+    const resultado = arrancarCon(env);
+
+    expect(manifiesto.sinonimos).toEqual(['mama', 'prostata']);
+    expect(resultado.salidas).toEqual([]);
+    expect(resultado.escuchas).toEqual([4997]);
+  });
+
+  it('no arranca y nombra solo el código de la violación cuando el catálogo declara sinonimos y trae un equivalente ambiguo [US-277 AC-1]', () => {
+    const manifiesto = JSON.parse(readFileSync(path.join(catalogo, 'manifest.json'), 'utf8'));
+    writeFileSync(
+      path.join(catalogo, 'manifest.json'),
+      JSON.stringify({ ...manifiesto, sinonimos: ['mama', 'prostata'] }),
+    );
+    const eq = (texto: string) => ({ texto, idioma: 'es', relacion: 'equivalente' });
+    writeFileSync(
+      path.join(catalogo, 'prostata/sinonimos.json'),
+      JSON.stringify({
+        version: '1.0.0',
+        items: [
+          { terminoCanonico: 'vigilancia activa', sinonimos: [eq('seguimiento secreto')] },
+          { terminoCanonico: 'espera vigilante', sinonimos: [eq('seguimiento secreto')] },
+        ],
+      }),
+    );
+    writeFileSync(
+      path.join(catalogo, 'mama/sinonimos.json'),
+      JSON.stringify({ version: '1.0.0', items: [] }),
+    );
+
+    const resultado = arrancarCon(entorno());
+
+    expect(resultado.salidas).toEqual([1]);
+    expect(JSON.parse(resultado.log)).toMatchObject({
+      event: 'configuracion_invalida',
+      regla: 'sinonimo_equivalente_ambiguo',
+    });
+    expect(resultado.log).not.toContain('secreto');
     expect(resultado.log).not.toContain(directorio);
   });
 });

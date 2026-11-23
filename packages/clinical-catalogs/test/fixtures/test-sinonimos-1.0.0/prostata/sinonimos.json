@@ -1,0 +1,31 @@
+{
+  "version": "1.0.0",
+  "items": [
+    {
+      "terminoCanonico": "vigilancia activa",
+      "revision_provisional": { "rol": "ia", "fecha": "2026-11-21" },
+      "sinonimos": [{ "texto": "active surveillance", "idioma": "en", "relacion": "equivalente" }]
+    },
+    {
+      "terminoCanonico": "espera vigilante",
+      "sinonimos": [{ "texto": "watchful waiting", "idioma": "en", "relacion": "equivalente" }]
+    },
+    {
+      "terminoCanonico": "terapia de privación androgénica",
+      "sinonimos": [
+        { "texto": "hormonoterapia", "idioma": "es", "relacion": "equivalente" },
+        { "texto": "análogos de LHRH", "idioma": "es", "relacion": "miembro_de_clase" }
+      ]
+    },
+    {
+      "terminoCanonico": "pertuzumab",
+      "sinonimos": [
+        { "texto": "doble bloqueo anti-HER2", "idioma": "es", "relacion": "mas_amplio" }
+      ]
+    },
+    {
+      "terminoCanonico": "doble bloqueo anti-HER2",
+      "sinonimos": [{ "texto": "dual HER2 blockade", "idioma": "en", "relacion": "equivalente" }]
+    }
+  ]
+}

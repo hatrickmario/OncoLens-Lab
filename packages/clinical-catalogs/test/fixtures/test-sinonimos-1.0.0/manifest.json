@@ -1,0 +1,6 @@
+{
+  "version": "test-sinonimos-1.0.0",
+  "cancerTypes": ["mama", "prostata"],
+  "standards": ["cie10", "loinc", "atc"],
+  "sinonimos": ["mama", "prostata"]
+}
