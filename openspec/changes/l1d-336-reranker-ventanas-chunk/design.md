@@ -151,6 +151,58 @@ aproximadamente»). El número real por consulta depende de la distribución de 
 - `tests/integration/test_reranker_real.py` (modelo real, fuera de la CI rápida): un chunk largo con la evidencia al
   final puntúa más con `maximo` que con `primera`.
 
+### D8. Decisiones de implementación (L1D-336, `ai-services-dev`)
+
+Cada una con las alternativas que se descartaron. Nada de esto cambia el contrato ni `meta.rerankerModel`.
+
+- **La regla de ventanas recibe longitudes, no tokens.** `trazar_ventanas(longitud_del_pasaje, capacidad, solape)` devuelve
+  tramos `[inicio, fin)`; el adapter corta los ids con ellos. Descartado: pasar la secuencia de tokens (la regla no los lee y
+  habría que copiarlos) y devolver listas de ids (mezcla la regla con el tokenizador).
+- **El tramo del pasaje sale de `sequence_ids` (`Tokenizador.codificar_par`).** Un método nuevo del protocolo de
+  infraestructura que devuelve `ParCodificado(ids, inicio_pasaje, fin_pasaje)` con los mismos ids que `codificar(pregunta,
+  pasaje)`. Descartado (ya en D3): restar la pregunta codificada sola. `primera` no lo usa: sigue con `codificar` y el
+  truncado de hoy, así AC-2 no depende de ninguna equivalencia.
+- **`BgeReranker.variante(modo, solape, max_length)` en vez de cargar otro reranker por brazo.** Devuelve otro adapter sobre
+  la MISMA sesión y el MISMO tokenizador (no tiene estado), que es lo que pide ADR-45 P1. `RerankerRegistrado` (RN-12) y
+  `RerankerLexico` la delegan o la implementan. Descartado: construir `BgeReranker` en `composicion_suite` (la suite
+  conocería los argumentos del adapter) y una fábrica de brazos (otra capa sin segundo uso).
+- **El modo efectivo se comprueba con lo que el adapter dice de sí mismo, no con `meta`.** Como `meta.rerankerModel` no lleva
+  el modo (D4), el reranker expone `configuracion` (`ConfiguracionDelReranker`: modo, solape, largo, pares); `RerankerObservado`
+  la anota en cada consulta y `evaluar_brazos` aborta (`SuiteAbortada`) si alguna difiere de lo que el brazo declaró. Descartado:
+  leerla de `meta` (cambiaría el contrato) y de los logs (no es dato de la corrida).
+- **Las paráfrasis entran en la misma corrida como preguntas añadidas.** `comparacion.parafrasis` (ruta de `parafrasis-v1` y
+  `pares_minimos`) añade las redacciones al dataset de la configuración, que conserva su partición, y exige que el corpus de los
+  pares sea el mismo (nombre y versión). «Paráfrasis recuperadas» cuenta los pares con TODAS sus redacciones con `recall` > 0.
+  Descartado: una familia nueva `reranker` con su propio ejecutor (duplicaría `evaluar_brazos` y su esquema) y medirlas en otra
+  corrida (la diferencia ya no saldría de la misma sesión).
+- **Un dataset sin partición solo se admite con `comparacion.conjunto_de_desarrollo: true`.** El corpus ampliado de S5 y sus
+  preguntas son de desarrollo por construcción y no existe una partición de `ol06-particion-v1` para sus ids; la declaración es
+  explícita y versionada (ADR-45 P2 sigue sin abrir validación ni prueba). Descartado: crear una partición nueva (fuera de los
+  paths de este change) y relajar la regla para cualquier dataset.
+- **Los topes de la viabilidad no tienen literales.** `p95_evidence_analyses_s` se lee de `comparacion.metas`
+  (`metas-iniciales.yaml`) y `STACK_MEMORY_LIMIT_GB` del entorno (clave de ADR-39); sin alguno la carga se niega nombrándolo. La
+  memoria del stack por brazo llega en `--memoria-del-stack <json>` (`{brazo: GB}`, la mide `ai-eval-runner`). Descartado: el
+  RSS del proceso como memoria del stack (no incluye Ollama ni Milvus y es monótono entre brazos) y una variable de entorno por
+  brazo (el nombre del brazo no es un identificador de entorno).
+- **La fuente `indice` ya la dejó `l1d-326`; aquí se extiende por brazo.** `evaluar_brazos` abre cada colección una sola vez
+  (`Brazo.indice`, `None` = la de `MILVUS_COLLECTION_NAME`) con el abridor de `OrigenLocal` (el real o el fingido de los tests) y
+  el informe trae `corpus` (fuente, colección, recuento y huella de ids, `CORPUS_CHUNK_SIZE` de la ingesta y los brazos con índice
+  distinto), sin texto. El `document_id` de la ingesta es `<document_key>@<huella>` y el dataset nombra la clave:
+  `RerankerObservado` normaliza con `clave_del_documento` para resolver el chunk esperado por documento y cita literal.
+- **Ingesta del brazo de 512 aparte, sin tocar el catálogo (tarea 2.5b).** `IngerirBrazoDeChunks` recibe el catálogo por su puerto
+  de LECTURA (`LectorDePoblacionDelCorpus`: sin métodos de escritura) y escribe solo en el almacén de la colección nueva: vuelve a
+  leer el texto del manifiesto, lo fragmenta, lo embebe y copia los metadatos del registro del catálogo (sin LLM ni NLI). Solo
+  entran los documentos que `l1d-119` dejó vigentes. Descartado: reutilizar `IngestionPipelineService` (`decidir_version` omite el
+  documento ya embebido con el mismo `checksum` y escribe en el catálogo compartido) y `reindex-context` de `l1d-337` (conserva
+  los `chunk_id`; aquí cambian los límites). El subcomando `ingest brazo-de-chunks` se niega si `--coleccion` es la de
+  `MILVUS_COLLECTION_NAME`.
+- **El reranker falso también cuenta ventanas.** `RerankerLexico(modo, solape, max_length)` cuenta palabras como tokens y usa la
+  misma `trazar_ventanas`; sin `max_length` se comporta como antes (el baseline de la CI no cambia). Con `maximo` nunca puntúa
+  menos que con `primera`.
+- **Valor inicial del solape: 64 tokens, sin confirmar.** Sigue siendo la propuesta de la pregunta 1; vive en la constante de
+  dominio y, para los brazos, en `s7-reranker-ventanas.yaml`. Si la corrida base B o el humano piden otro, se cambia en esos dos
+  lugares sin tocar código de reglas.
+
 ## Privacidad y ownership
 
 - Sin frontera nueva: todo ocurre dentro de `rag-orchestrator`. Los textos que se parten en ventanas son chunks del
