@@ -15,12 +15,13 @@ from typing import Any
 
 import yaml
 
-from app.evaluation.dataset_loader import CLASE_SINTETICA, DatasetInvalido
+from app.evaluation.dataset_loader import DatasetInvalido, exigir_clase_sintetica
 from app.evaluation.fuente_dataset import DatasetSuite, FuenteDatasetEnDirectorio
 from app.evaluation.metricas.contextual import CLASES_DE_PREGUNTA
 from app.evaluation.reporte import es_identificador
 from app.evaluation.rutas import raiz_repo
 
+FAMILIA = "contextual"
 ARCHIVO_DE_PREGUNTAS = "preguntas_contextuales"
 
 
@@ -58,14 +59,14 @@ def cargar_dataset_contextual(directorio: Path) -> DatasetContextual:
     """Se niega (``DatasetInvalido``) si el manifiesto o alguno de sus archivos no declara ``clase: sintetico`` (RN-13, RN-14),
     si falta el archivo de preguntas o si una pregunta no es válida."""
     manifiesto = _leer(directorio / "manifest.yaml", "manifest.yaml")
-    _exigir_clase_sintetica(manifiesto, "manifest.yaml")
+    exigir_clase_sintetica(manifiesto, "manifest.yaml", FAMILIA)
     declarado = manifiesto.get("archivos", {}).get(ARCHIVO_DE_PREGUNTAS)
     if not isinstance(declarado, str):
         raise DatasetInvalido(f"el manifiesto no declara archivos.{ARCHIVO_DE_PREGUNTAS}")
     crudo = _leer(directorio / declarado, declarado)
-    _exigir_clase_sintetica(crudo, declarado)
+    exigir_clase_sintetica(crudo, declarado, FAMILIA)
     corpus = FuenteDatasetEnDirectorio(directorio).cargar()
-    _exigir_clase_sintetica({"clase": corpus.clase}, "el corpus")
+    exigir_clase_sintetica({"clase": corpus.clase}, "el corpus", FAMILIA)
     return DatasetContextual(
         corpus.nombre,
         corpus.version,
@@ -112,13 +113,6 @@ def _ruta_del_informe(directorio: Path) -> str:
     resuelta = directorio.resolve()
     raiz = raiz_repo().resolve()
     return resuelta.relative_to(raiz).as_posix() if resuelta.is_relative_to(raiz) else resuelta.name
-
-
-def _exigir_clase_sintetica(crudo: dict[str, Any], archivo: str) -> None:
-    if (
-        crudo.get("clase") != CLASE_SINTETICA
-    ):  # RN-13, RN-14: la familia solo mide sobre datos sintéticos
-        raise DatasetInvalido(f"{archivo} del dataset de contextual no declara clase: sintetico")
 
 
 def _leer(ruta: Path, nombre: str) -> dict[str, Any]:

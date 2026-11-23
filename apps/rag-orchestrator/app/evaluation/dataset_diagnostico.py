@@ -14,11 +14,18 @@ from typing import Any, Final
 import yaml
 
 from app.evaluation.config_suite import ruta_del_repo
-from app.evaluation.dataset_loader import CLASE_SINTETICA, DatasetInvalido, Evidencia, Pregunta
+from app.evaluation.dataset_loader import (
+    CLASE_SINTETICA,
+    DatasetInvalido,
+    Evidencia,
+    Pregunta,
+    exigir_clase_sintetica,
+)
 from app.evaluation.fuente_dataset import DatasetSuite, FuenteDatasetEnDirectorio, OpcionPropuesta
 from app.evaluation.metricas.diagnostico import chunks_esperados_de
 from app.evaluation.revision_provisional import RevisionProvisional, exigir_revision_provisional
 
+FAMILIA: Final = "diagnostico"
 TIPOS_DE_VARIACION: Final = ("coloquial_tecnico", "sin_tildes", "orden", "es_en")
 IDIOMAS: Final = ("es", "en")
 MAXIMO_DE_PALABRAS_DEL_GUION: Final = 12
@@ -83,9 +90,9 @@ def cargar_dataset_diagnostico(directorio: Path, pares_minimos: int) -> DatasetD
     """Se niega (``DatasetInvalido``) si el manifiesto no declara ``clase: sintetico``, si falta la marca de revisión, si una
     cita no es un fragmento literal del documento esperado o si el conjunto no cubre los pares y los tipos exigidos."""
     manifiesto = _leer(directorio / "manifest.yaml", "manifest.yaml")
-    _exigir_clase_sintetica(manifiesto, "manifest.yaml")
+    exigir_clase_sintetica(manifiesto, "manifest.yaml", FAMILIA)
     crudo = _leer(directorio / str(_clave(manifiesto, "archivos")["pares"]), "pares.yaml")
-    _exigir_clase_sintetica(crudo, "pares.yaml")
+    exigir_clase_sintetica(crudo, "pares.yaml", FAMILIA)
     revision = exigir_revision_provisional(manifiesto.get("revision_provisional"), "manifest.yaml")
     corpus = FuenteDatasetEnDirectorio(ruta_del_repo(str(_clave(manifiesto, "corpus")))).cargar()
     if corpus.clase != CLASE_SINTETICA:
@@ -187,13 +194,6 @@ def _exigir_cobertura(pares: tuple[ParDeParafrasis, ...], pares_minimos: int) ->
     faltan = [t for t in TIPOS_DE_VARIACION if not any(p.tipo == t for p in pares)]
     if faltan:
         raise DatasetInvalido(f"el dataset de diagnostico no tiene ningún par del tipo {faltan[0]}")
-
-
-def _exigir_clase_sintetica(crudo: dict[str, Any], archivo: str) -> None:
-    if (
-        crudo.get("clase") != CLASE_SINTETICA
-    ):  # RN-13, RN-14: la familia solo mide sobre datos sintéticos
-        raise DatasetInvalido(f"{archivo} del dataset de diagnostico no declara clase: sintetico")
 
 
 def _clave(crudo: dict[str, Any], clave: str) -> Any:
