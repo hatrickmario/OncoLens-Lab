@@ -14,7 +14,12 @@ from typing import Any
 
 import yaml
 
-from app.evaluation.config_suite import ConfigInvalida, ConfigSuite, clave_de
+from app.evaluation.config_suite import (
+    ConfigInvalida,
+    ConfigSuite,
+    clave_de,
+    tope_de_pares_de_los_adaptadores_falsos,
+)
 from app.evaluation.metricas.diagnostico import histograma_de_p_entailment
 
 
@@ -53,7 +58,11 @@ def cargar_config_diagnostico(ruta: Path, suite: ConfigSuite) -> ConfigDiagnosti
             "diagnostico.nli_ancho_de_tramo debe dividir el intervalo [0, 1] en tramos iguales"
         ) from None
     return ConfigDiagnostico(
-        suite, pares_minimos, banda, ancho, _tope_de_pares(crudo["diagnostico"], suite)
+        suite,
+        pares_minimos,
+        banda,
+        ancho,
+        tope_de_pares_de_los_adaptadores_falsos(crudo["diagnostico"], suite, "diagnostico"),
     )
 
 
@@ -61,14 +70,3 @@ def _fraccion(valor: object, clave: str) -> float:
     if isinstance(valor, bool) or not isinstance(valor, (int, float)) or not 0.0 <= valor <= 1.0:
         raise ConfigInvalida(f"diagnostico.{clave} debe ser un número en [0, 1]")
     return float(valor)
-
-
-def _tope_de_pares(seccion: dict[str, Any], suite: ConfigSuite) -> int | None:
-    tope = seccion.get("reranker_max_pairs")
-    if tope is None:
-        return None
-    if suite.proveedor != "fake":
-        raise ConfigInvalida("diagnostico.reranker_max_pairs solo aplica con adaptadores falsos")
-    if isinstance(tope, bool) or not isinstance(tope, int) or tope < 1:
-        raise ConfigInvalida("diagnostico.reranker_max_pairs debe ser un entero positivo")
-    return tope
