@@ -53,8 +53,18 @@ ESQUEMA_DEL_VEREDICTO: dict[str, Any] = {
 }
 
 _MARCAS_DE_DESCONOCIDO = ("desconocid", "sindato", "noregistrad", "nodisponible", "unknown")
-_VALORES_EN_PALABRAS = ("positiv", "negativ", "elevad", "alto", "baja", "bajo", "normal")
-_DIGITO = re.compile(r"\d")
+_PALABRAS_DE_ESTUDIO = frozenset(
+    {"estudio", "estudios", "ensayo", "ensayos", "study", "studies", "trial", "trials"}
+    | {"tumores", "pacientes", "patients", "tumors"}
+)
+"""Quien describe a otras personas (un estudio, un grupo): el texto informa de ellas, no atribuye un valor a este caso."""
+_VALORES_EN_PALABRAS = frozenset(
+    {"positivo", "negativo", "elevado", "alto", "bajo", "baja", "normal", "positive", "negative"}
+    | {"high", "low"}
+)
+_VENTANA_DEL_VALOR = 40
+_NUMERO_COMO_VALOR = re.compile(r"(?:\b(?:es|del?|of|is)\b|[:=])\s*\d|\d\s*%")
+_PALABRA = re.compile(r"[a-z]+")
 
 
 @dataclass(frozen=True)
@@ -87,28 +97,44 @@ def parsear_veredicto_de_inferencia(contenido: str) -> VeredictoDeInferencia:
     return invalido
 
 
+def _sin_tildes(texto: str) -> str:
+    return unicodedata.normalize("NFKD", texto.lower()).encode("ascii", "ignore").decode()
+
+
 def _compacto(texto: str) -> str:
     """Minúsculas, sin tildes y solo letras y dígitos: ``Ki-67`` y ``ki 67`` coinciden."""
-    sin_tildes = unicodedata.normalize("NFKD", texto.lower()).encode("ascii", "ignore").decode()
-    return re.sub(r"[^a-z0-9]", "", sin_tildes)
+    return re.sub(r"[^a-z0-9]", "", _sin_tildes(texto))
+
+
+def _lo_que_sigue_al_dato(texto: str, dato: str) -> str | None:
+    """El texto (sin tildes) tras la primera mención del dato, que admite separadores entre sus caracteres
+    (``Ki-67``, ``ki 67``); ``None`` si no lo nombra."""
+    separador = r"[\W_]*"
+    patron = separador.join(re.escape(c) for c in _compacto(dato))
+    mencion = re.search(patron, _sin_tildes(texto))
+    return None if mencion is None else _sin_tildes(texto)[mencion.end() :]
 
 
 class JuezNoInferenciaLexico:
-    """Juez fingido de la CI (sin modelo ni red): atribuye un valor si el texto nombra el dato, no lo declara desconocido
-    y trae un número o una palabra de valor. Determinista; cumple el mismo contrato que el juez local."""
+    """Juez fingido de la CI (sin modelo ni red) con el contrato del juez local (los tres ejemplos de ``SISTEMA``):
+    atribuye un valor si el texto nombra el dato y, justo después, le da un número como valor o una palabra de valor
+    (por palabra completa), sin declararlo desconocido ni hablar de un estudio o de otras personas. Determinista."""
 
     veredictos_invalidos = 0
 
     async def atribuye_valor(self, texto: str, dato: str) -> bool:
-        compacto, nombre = _compacto(texto), _compacto(dato)
-        if nombre not in compacto:
+        tras_el_dato = _lo_que_sigue_al_dato(texto, dato)
+        if tras_el_dato is None:
             return False
+        compacto = _compacto(texto)
         if any(marca in compacto for marca in _MARCAS_DE_DESCONOCIDO):
             return False
-        resto = compacto.replace(
-            nombre, ""
-        )  # los dígitos del propio nombre («Ki-67») no son un valor
-        return bool(_DIGITO.search(resto)) or any(v in resto for v in _VALORES_EN_PALABRAS)
+        if _PALABRAS_DE_ESTUDIO & set(_PALABRA.findall(_sin_tildes(texto))):
+            return False
+        ventana = tras_el_dato[:_VENTANA_DEL_VALOR]
+        return bool(_NUMERO_COMO_VALOR.search(ventana)) or bool(
+            _VALORES_EN_PALABRAS & set(_PALABRA.findall(ventana))
+        )
 
 
 class JuezNoInferenciaConLlm:
