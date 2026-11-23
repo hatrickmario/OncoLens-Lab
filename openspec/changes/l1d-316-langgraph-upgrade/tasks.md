@@ -43,16 +43,16 @@
 
 ## 2. Verificación de las alertas (solo lectura)
 
-- [ ] 2.1 Antes de pedir el merge: CI del PR con 0 checks en fallo y 0 pendientes; la alerta #8
+- [ ] 2.1 TRASLADADA a orquestador, entrega 1 (CI del PR) · Antes de pedir el merge: CI del PR con 0 checks en fallo y 0 pendientes; la alerta #8
       (`minimatch`) sigue en estado `fixed` (design D4) · **exento**
-- [ ] 2.2 Tras el merge: `gh api repos/hatrickmario/OncoLens-Lab/dependabot/alerts/9` devuelve
+- [ ] 2.2 DIFERIDA a entrega 2 (tras el merge; verificación de la alerta #9) · Tras el merge: `gh api repos/hatrickmario/OncoLens-Lab/dependabot/alerts/9` devuelve
       `state: fixed` y no hay alertas abiertas; dejar la evidencia en el PR · **exento**
 
 ## humano
 
 Los agentes no descartan alertas ni cambian la configuración de seguridad del repositorio.
 
-- [ ] H-1 Solo en el repliegue (design D3): descartar la alerta #9 en GitHub con el motivo «el código
+- [ ] H-1 DIFERIDA -> H-1 (solo repliegue D3) · Solo en el repliegue (design D3): descartar la alerta #9 en GitHub con el motivo «el código
       vulnerable no se usa» y el texto literal de design D3. No aplica si 2.2 da `fixed`
       DIFERIDA -> H-1
 
