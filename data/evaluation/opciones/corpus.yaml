@@ -1,4 +1,6 @@
-# Corpus de test de la familia `opciones`. La población de cada documento vive en casos.yaml (fuentes).
+# Corpus de test de la familia `opciones`. La población de cada documento vive en casos.yaml (fuentes). Cada fragmento trae su
+# texto en inglés (de donde se copian las citas) y una frase descriptiva en español: el recuperador falso es léxico y no cruza
+# idiomas, así que las preguntas en español (S7-D3) se recuperan por esa frase; los modelos reales cruzan idiomas por sí solos.
 clase: sintetico
 release: rel-opciones-1
 corte: '2026-09-30'
@@ -12,13 +14,15 @@ documentos:
   - {id: doc-p2, titulo: 'Estudio sintético doc-p2 (test)', cancer: prostata}
   - {id: doc-p3, titulo: 'Estudio sintético doc-p3 (test)', cancer: prostata}
   - {id: doc-p4, titulo: 'Estudio sintético doc-p4 (test)', cancer: prostata}
+  - {id: doc-p5, titulo: 'Estudio sintético doc-p5 (test)', cancer: prostata}
 chunks:
-  - {id: ch-a1-1, documento: doc-a1, texto: 'Adjuvant anti-HER2 therapy after surgery improved disease-free survival in a synthetic trial (test).'}
-  - {id: ch-a3-1, documento: doc-a3, texto: 'Adjuvant chemotherapy alone after surgery is described in a synthetic cohort (test).'}
-  - {id: ch-a4-1, documento: doc-a4, texto: 'Adjuvant anti-HER2 therapy after surgery was studied in a synthetic HER2-negative cohort (test).'}
-  - {id: ch-a5-1, documento: doc-a5, texto: 'Adjuvant anti-HER2 therapy with extended duration after surgery in a synthetic registry (test).'}
-  - {id: ch-a6-1, documento: doc-a6, texto: 'Adjuvant anti-HER2 therapy after surgery with dose adjustment in a synthetic trial (test).'}
-  - {id: ch-p1-1, documento: doc-p1, texto: 'Androgen deprivation therapy plus an androgen receptor inhibitor prolonged survival in castration-sensitive prostate cancer (test).'}
-  - {id: ch-p2-1, documento: doc-p2, texto: 'Androgen deprivation therapy plus chemotherapy was described in castration-resistant prostate cancer (test).'}
-  - {id: ch-p3-1, documento: doc-p3, texto: 'Androgen deprivation therapy alone is described in a synthetic prostate cohort (test).'}
-  - {id: ch-p4-1, documento: doc-p4, texto: 'Androgen receptor inhibitor with radiotherapy is described in synthetic prostate cancer (test).'}
+  - {id: ch-a1-1, documento: doc-a1, texto: 'Adjuvant anti-HER2 therapy after surgery improved disease-free survival in a synthetic trial (test). Terapia adyuvante anti-HER2 tras la cirugía, descrita en un ensayo sintético (test).'}
+  - {id: ch-a3-1, documento: doc-a3, texto: 'Adjuvant chemotherapy alone after surgery is described in a synthetic cohort (test). Quimioterapia adyuvante sola tras la cirugía, descrita en una cohorte sintética (test).'}
+  - {id: ch-a4-1, documento: doc-a4, texto: 'Adjuvant anti-HER2 therapy after surgery was studied in a synthetic HER2-negative cohort (test). Terapia adyuvante anti-HER2 tras la cirugía, estudiada en una cohorte sintética HER2 negativa (test).'}
+  - {id: ch-a5-1, documento: doc-a5, texto: 'Adjuvant anti-HER2 therapy with extended duration after surgery in a synthetic registry (test). Terapia adyuvante anti-HER2 de duración extendida tras la cirugía en un registro sintético (test).'}
+  - {id: ch-a6-1, documento: doc-a6, texto: 'Adjuvant anti-HER2 therapy after surgery with dose adjustment in a synthetic trial (test). Terapia adyuvante anti-HER2 con ajuste de dosis tras la cirugía en un ensayo sintético (test).'}
+  - {id: ch-p1-1, documento: doc-p1, texto: 'Androgen deprivation therapy plus an androgen receptor inhibitor prolonged survival in castration-sensitive prostate cancer (test). Privación androgénica más inhibidor del receptor de andrógenos en cáncer de próstata sensible a la castración (test).'}
+  - {id: ch-p2-1, documento: doc-p2, texto: 'Androgen deprivation therapy plus chemotherapy was described in castration-resistant prostate cancer (test). Privación androgénica más quimioterapia, descrita en cáncer de próstata resistente a la castración (test).'}
+  - {id: ch-p3-1, documento: doc-p3, texto: 'Androgen deprivation therapy alone is described in a synthetic prostate cohort (test). Privación androgénica sola, descrita en una cohorte sintética de cáncer de próstata (test).'}
+  - {id: ch-p4-1, documento: doc-p4, texto: 'Androgen receptor inhibitor with radiotherapy is described in synthetic prostate cancer (test). Inhibidor del receptor de andrógenos con radioterapia, descrito en cáncer de próstata sintético (test).'}
+  - {id: ch-p5-1, documento: doc-p5, texto: 'Androgen deprivation therapy plus chemotherapy was described in castration-sensitive prostate cancer (test). Privación androgénica más quimioterapia, descrita en cáncer de próstata sensible a la castración (test).'}

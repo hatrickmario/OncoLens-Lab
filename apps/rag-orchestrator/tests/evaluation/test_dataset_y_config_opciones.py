@@ -55,6 +55,36 @@ def test_dataset_trae_12_casos_6_por_tipo_ninguno_revisado_y_2_con_no_comparable
     assert sum(c.no_comparable_mostrada for c in dataset.casos) == CASOS_CON_NO_COMPARABLE
 
 
+def test_dataset_marca_revision_provisional_en_op_01_op_02_op_07_y_op_08_sin_validar_ninguno() -> (
+    None
+):
+    dataset = cargar_dataset_opciones(DATASET)
+
+    assert dataset.con_revision_provisional == frozenset({"OP-01", "OP-02", "OP-07", "OP-08"})
+    assert dataset.base.revisadas == frozenset()
+
+
+@pytest.mark.ac("US-140", 1)
+def test_dataset_no_trae_ninguna_pregunta_con_el_texto_literal_en_ingles_de_su_cita() -> None:
+    dataset = cargar_dataset_opciones(DATASET)
+
+    for pregunta in dataset.base.preguntas:
+        assert pregunta.idioma == "es", pregunta.id
+        for evidencia in pregunta.evidencia:
+            assert evidencia.cita.lower() not in pregunta.texto.lower(), pregunta.id
+
+
+def test_dataset_op_08_trae_la_fuente_sensible_a_castracion_y_deja_la_resistente_al_final() -> None:
+    dataset = cargar_dataset_opciones(DATASET)
+
+    caso = dataset.caso_de("OP-08")
+
+    assert set(caso.esperadas) == {"doc-p1", "doc-p5", "doc-p2"}
+    assert caso.no_comparable_mostrada and caso.orden_esperado[-1] == "doc-p2"
+    poblacion = dataset.poblaciones["doc-p5"].population_criteria
+    assert poblacion["estado_castracion"] == "sensible a castración"
+
+
 def test_dataset_es_sintetico_y_no_lleva_identidad_en_los_contextos() -> None:
     dataset = cargar_dataset_opciones(DATASET)
 

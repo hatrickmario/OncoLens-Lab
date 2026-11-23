@@ -167,7 +167,7 @@ def test_opciones_reporte_trae_las_metricas_de_opciones_cuando_corre_la_configur
     configuracion = reporte["configuracion"]
     assert configuracion["maxOptions"] == 3
     assert configuracion["catalogVersion"] == "test-apl-1.0.0"
-    assert configuracion["dataset"] == {"nombre": "opciones", "version": "1"}
+    assert configuracion["dataset"] == {"nombre": "opciones", "version": "2"}
     assert configuracion["versionListaTerminos"]
 
 
@@ -446,9 +446,13 @@ def test_opciones_rotula_no_validada_toda_metrica_cuando_el_dataset_real_no_tien
     assert codigo == 0 and reporte is not None
     for nombre in METRICAS:
         validacion = reporte["metricas"][nombre]["validacion"]
-        assert validacion["preguntas_validadas"] == 0
-        assert validacion["preguntas_no_validadas"] == 12
-        assert validacion["rotulo"] == "no_validada"
+        assert validacion == {
+            "preguntas_validadas": 0,
+            "preguntas_no_validadas": 12,
+            "preguntas_mecanica_verificada": 4,
+            "preguntas_sin_revisar": 8,
+            "rotulo": "no_validada",
+        }
         assert reporte["metricas_validadas"][nombre]["validacion"]["rotulo"] == "no_validada"
     assert reporte["metricas_validadas"]["opciones_por_analisis"]["analisis"] == 0
 
