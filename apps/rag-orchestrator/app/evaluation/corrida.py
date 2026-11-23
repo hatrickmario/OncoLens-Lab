@@ -93,14 +93,20 @@ def solicitud_de(
     )
     cruda["dataClassification"] = DataClassification(clase).value
     contexto = cruda["clinicalContext"]
+    contexto["missingCriticalData"] = _faltantes_del_caso(contexto, pregunta)
     if pregunta.contexto is not None:
         contexto["currentLine"] = pregunta.contexto.linea_actual
-        contexto["missingCriticalData"] = list(pregunta.contexto.faltantes)
-    elif contexto["diagnosis"]["cancerType"] != pregunta.cancer:
-        # Los faltantes del ejemplo son claves del catálogo de su tipo (US-116, RN-11): con otro tipo no son válidos.
-        contexto["missingCriticalData"] = []
     contexto["diagnosis"]["cancerType"] = pregunta.cancer
     return RagQueryInternalRequest.model_validate(cruda)
+
+
+def _faltantes_del_caso(contexto_base: dict[str, Any], pregunta: Pregunta) -> list[str]:
+    """Los faltantes son claves del catálogo de SU tipo de cáncer (US-116, RN-11): los de la pregunta, o los del ejemplo
+    base solo si la pregunta es del mismo tipo; con otro tipo no serían claves válidas."""
+    if pregunta.contexto is not None:
+        return list(pregunta.contexto.faltantes)
+    mismo_tipo = contexto_base["diagnosis"]["cancerType"] == pregunta.cancer
+    return list(contexto_base["missingCriticalData"]) if mismo_tipo else []
 
 
 async def evaluar_dataset(
