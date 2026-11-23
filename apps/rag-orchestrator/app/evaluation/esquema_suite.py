@@ -379,6 +379,23 @@ _ESTADOS_DE_LA_MEDICION = frozenset({"concluyente", "no_concluyente"})
 _POR_ESTADO = Objeto({"esperados": Numero(), "aciertos": Numero()})
 _DOCUMENTO_Y_CRITERIO = Objeto({"documento": Identificador(), "criterio": Identificador()})
 
+
+def _desagregado_de_poblacion(grupo: str) -> Lista:
+    """Precisión y cobertura de un grupo del dorado (redacción o tipo): solo conteos y fracciones, informativas."""
+    return Lista(
+        Objeto(
+            {
+                grupo: Identificador(),
+                "esperados": Numero(),
+                "obtenidos": Numero(),
+                "coincidentes": Numero(),
+                "precision": Numero(),
+                "cobertura": Numero(),
+            }
+        )
+    )
+
+
 ESQUEMA_POBLACION = Objeto(
     {
         "esquema": Enumerado(frozenset({VERSION_ESQUEMA})),
@@ -425,6 +442,18 @@ ESQUEMA_POBLACION = Objeto(
                             "marca_cobertura": Enumerado(_MARCAS_DE_POBLACION),
                         }
                     )
+                ),
+                "por_redaccion": _desagregado_de_poblacion("redaccion"),
+                "por_tipo_de_redaccion": _desagregado_de_poblacion("tipo"),
+                "distractores": Objeto(
+                    {
+                        "pares": Numero(),
+                        "valores_indebidos": Numero(),
+                        "pares_con_indebidos": Numero(),
+                    }
+                ),
+                "rendija_c3": Objeto(
+                    {"casos": Numero(), "desconocido": Numero(), "otros": Numero()}
                 ),
                 "tasa_duplicados": Objeto(
                     {

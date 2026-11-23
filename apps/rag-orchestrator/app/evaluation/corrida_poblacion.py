@@ -54,12 +54,18 @@ from app.evaluation.metricas.poblacion import (
     Fraccion,
     ParMedido,
     cobertura_por_criterio,
+    cobertura_por_redaccion,
+    cobertura_por_tipo_de_redaccion,
     concordancia_de_estados,
     cortes_por_longitud,
     precision_por_criterio,
+    precision_por_redaccion,
+    precision_por_tipo_de_redaccion,
+    recuento_de_rendija,
     sin_evidencia_vs_baseline,
     tasa_cortes_del_bucle,
     tasa_duplicados,
+    valores_indebidos_en_distractores,
     veredicto,
 )
 from app.evaluation.modelos_locales import OrigenLocal, cargar_puertos_locales
@@ -256,11 +262,14 @@ def _claves_de_estudio(config: ConfigPoblacion, tipos: Sequence[str]) -> dict[tu
     return {(t, c.clave): c.clave_de_estudio for t in tipos for c in criterios.criterios(t)}
 
 
-def _valores_guardados(guardado: Mapping[str, Any], clave_de_estudio: str) -> tuple[str, ...]:
+def _valores_guardados(
+    guardado: Mapping[str, Any], clave_de_estudio: str
+) -> tuple[tuple[str, str], ...]:
+    """(valor normalizado, alcance) de lo que la extracción guardó para el criterio."""
     lista = guardado.get(clave_de_estudio)
     if not isinstance(lista, list):  # la marca ``pendiente`` no guarda valores
         return ()
-    return tuple(normalizar_texto(v["value"]) for v in lista)
+    return tuple((normalizar_texto(v["value"]), str(v["scope"])) for v in lista)
 
 
 def _pares_medidos(
@@ -276,12 +285,17 @@ def _pares_medidos(
             raise ConfigInvalida(
                 f"el criterio {par.criterio} no está en el catálogo del tipo {tipo}"
             )
+        guardados = _valores_guardados(extraccion.guardado[par.documento], estudio)
         medidos.append(
             ParMedido(
                 par.documento,
                 par.criterio,
                 frozenset(normalizar_texto(v.valor) for v in par.esperados),
-                _valores_guardados(extraccion.guardado[par.documento], estudio),
+                tuple(valor for valor, _ in guardados),
+                redaccion=par.redaccion,
+                tipo=par.tipo,
+                distractor=par.distractor,
+                como_elegibilidad=sum(alcance == "elegibilidad" for _, alcance in guardados),
             )
         )
     return medidos
@@ -314,7 +328,7 @@ def _caso_de_estado(
         valores.valores if caso.citados is None else valores_de_la_opcion(valores, caso.citados)
     )
     calculado = estado_de_poblacion(citados, caso.paciente, criterio).estado
-    return CasoDeEstado(caso.id, caso.esperado, calculado)
+    return CasoDeEstado(caso.id, caso.esperado, calculado, rendija=caso.rendija is not None)
 
 
 # --- bucle (OUT-06) ------------------------------------------------------------------------------------------------
@@ -352,7 +366,8 @@ def _reporte(
     )
     por_criterio = _por_criterio(config, pares, concluyente)
     duplicados = _duplicados(config, pares)
-    concordancia = _concordancia(config, dorado)
+    estados = _estados_calculados(dorado)
+    concordancia = _concordancia(config, estados)
     sin_evidencia = _sin_evidencia(config, medidor_sin_evidencia)
     bucle = tasa_cortes_del_bucle(
         len(dorado.bucle),
@@ -376,6 +391,9 @@ def _reporte(
             "pares_del_dorado": len(dorado.pares),
             "estratos": [{"estrato": k, "pares": n} for k, n in dorado.estratos().items()],
             "por_criterio": por_criterio,
+            "por_redaccion": _por_redaccion(pares),
+            "por_tipo_de_redaccion": _por_tipo_de_redaccion(pares),
+            "distractores": _distractores(pares),
             "tasa_duplicados": duplicados,
             "cortes_por_longitud": {
                 "tareas": len(extraccion.tareas),
@@ -383,6 +401,7 @@ def _reporte(
                 "casos": [{"documento": d, "criterio": c} for d, c in cortes],
             },
             "concordancia": concordancia,
+            "rendija_c3": _rendija_c3(estados),
             "sin_evidencia": {
                 "baseline": sin_evidencia.baseline,
                 "actual": sin_evidencia.actual,
@@ -474,8 +493,53 @@ def _duplicados(config: ConfigPoblacion, pares: Sequence[ParMedido]) -> dict[str
     }
 
 
-def _concordancia(config: ConfigPoblacion, dorado: DoradoDePoblacion) -> dict[str, Any]:
-    resultado = concordancia_de_estados(_estados_calculados(dorado))
+def _desagregado(
+    precision: Mapping[str, Fraccion],
+    cobertura: Mapping[str, Fraccion],
+    nombre: str,
+) -> list[dict[str, Any]]:
+    """Una fila por grupo con solo conteos y fracciones; informativa: no entra en el veredicto."""
+    return [
+        {
+            nombre: grupo,
+            "esperados": cobertura[grupo].total,
+            "obtenidos": precision[grupo].total,
+            "coincidentes": precision[grupo].aciertos,
+            "precision": precision[grupo].valor,
+            "cobertura": cobertura[grupo].valor,
+        }
+        for grupo in sorted(precision)
+    ]
+
+
+def _por_redaccion(pares: Sequence[ParMedido]) -> list[dict[str, Any]]:
+    return _desagregado(precision_por_redaccion(pares), cobertura_por_redaccion(pares), "redaccion")
+
+
+def _por_tipo_de_redaccion(pares: Sequence[ParMedido]) -> list[dict[str, Any]]:
+    return _desagregado(
+        precision_por_tipo_de_redaccion(pares),
+        cobertura_por_tipo_de_redaccion(pares),
+        "tipo",
+    )
+
+
+def _distractores(pares: Sequence[ParMedido]) -> dict[str, int]:
+    medido = valores_indebidos_en_distractores(pares)
+    return {
+        "pares": medido.pares,
+        "valores_indebidos": medido.valores_indebidos,
+        "pares_con_indebidos": medido.pares_con_indebidos,
+    }
+
+
+def _rendija_c3(estados: Sequence[CasoDeEstado]) -> dict[str, int]:
+    medida = recuento_de_rendija(estados)
+    return {"casos": medida.casos, "desconocido": medida.desconocido, "otros": medida.otros}
+
+
+def _concordancia(config: ConfigPoblacion, estados: Sequence[CasoDeEstado]) -> dict[str, Any]:
+    resultado = concordancia_de_estados(estados)
     minimo = config.metas.concordancia_minima
     return {
         "por_estado": {
