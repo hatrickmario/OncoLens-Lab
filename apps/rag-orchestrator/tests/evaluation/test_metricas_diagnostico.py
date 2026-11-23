@@ -8,7 +8,10 @@ import pytest
 from app.domain.nli import ParNli, ResultadoNli
 from app.evaluation.dataset_loader import Evidencia
 from app.evaluation.fuente_dataset import ChunkCorpus
+from app.evaluation.lenguaje_estricto import VerificadorEstricto
 from app.evaluation.metricas.diagnostico import (
+    CONDICIONES_DE_LA_REGLA,
+    NOTA_DE_CALIBRACION,
     AfirmacionJuzgada,
     AsignacionDePar,
     CandidatoObservado,
@@ -24,8 +27,11 @@ from app.evaluation.metricas.diagnostico import (
     recuento_en_banda,
     recuento_por_etapa,
 )
+from app.infrastructure.lenguaje.terminos_prohibidos import cargar_lista_de_terminos
+from tests.evaluation.conftest import RAIZ_REPO
 
 UMBRAL = 0.3
+CATALOGOS = RAIZ_REPO / "packages" / "clinical-catalogs"
 
 
 def redaccion(**cambios: object) -> RedaccionObservada:
@@ -44,6 +50,14 @@ def redaccion(**cambios: object) -> RedaccionObservada:
 def candidatos(*ids: str) -> tuple[CandidatoObservado, ...]:
     """Candidatos con similitud descendente: el primero id es el más cercano."""
     return tuple(CandidatoObservado(c, 1.0 - 0.1 * i) for i, c in enumerate(ids))
+
+
+def test_los_textos_fijos_del_informe_no_contienen_terminos_prescriptivos_prohibidos() -> None:
+    verificador = VerificadorEstricto(cargar_lista_de_terminos(CATALOGOS))
+
+    textos = (*CONDICIONES_DE_LA_REGLA, NOTA_DE_CALIBRACION)
+
+    assert [t for t in textos if verificador.contiene_terminos(t, "rationale")] == []
 
 
 # --- chunks_esperados_de ---------------------------------------------------------------------------------------------

@@ -233,3 +233,6 @@ def test_diagnostico_deja_en_null_y_nunca_en_cero_lo_que_no_se_observo(tmp_path:
     assert (cortado["relevance_score"], cortado["supero_umbral"]) == (None, None)
     assert fila(reporte, "P5-b")["afirmaciones_aprobadas"] is None  # el NLI no recibió nada
     assert fila(reporte, "P5-b")["opciones_generadas"] == 0
+    assert {f["loops"] for f in reporte["preguntas"]} == {
+        1
+    }  # el servicio busca dos veces por loop (BUSQUEDAS_POR_LOOP)
