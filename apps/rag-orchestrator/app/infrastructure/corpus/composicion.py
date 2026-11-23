@@ -70,6 +70,11 @@ def crear_puertos_del_corpus(
     )
 
 
+def leer_configuracion_del_corpus() -> tuple[MilvusSettings, CorpusDatabaseSettings]:
+    """La configuración de Milvus y del rol ``rag_corpus`` desde el entorno; ``CorpusNoDisponibleError`` nombra lo que falta."""
+    return _leer_configuracion_del_corpus()
+
+
 def _leer_configuracion_del_corpus() -> tuple[MilvusSettings, CorpusDatabaseSettings]:
     claves: set[str] = set()
     ajustes: list[Any] = []

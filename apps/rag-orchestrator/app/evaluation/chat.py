@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import dataclasses
 import json
 import logging
 import re
@@ -59,7 +60,11 @@ from app.evaluation.dataset_loader import CLASE_SINTETICA, DatasetInvalido
 from app.evaluation.envoltorios import pico_rss_mib
 from app.evaluation.fuente_dataset import FuenteDatasetEnDirectorio
 from app.evaluation.guardas import SuiteAbortada, exigir_adapters_locales, exigir_proveedor_local
-from app.evaluation.indice_del_corpus import IndiceDelCorpus
+from app.evaluation.indice_del_corpus import (
+    IndiceDelCorpus,
+    abrir_indice_real,
+    exigir_indice_utilizable,
+)
 from app.evaluation.juez_fidelidad import JuezNli
 from app.evaluation.llamadas import RegistroDeLlamadas
 from app.evaluation.modelos_locales import OrigenLocal, PuertosLocales, cargar_puertos_locales
@@ -255,12 +260,18 @@ def _componer_el_chat(
     config: ConfigSuite, dataset: DatasetDeChat, puertos: PuertosDeChat
 ) -> _Corrida:
     corpus = FuenteDatasetEnDirectorio(raiz_repo() / dataset.corpus).cargar()
+    indice = None if puertos.indice is None else puertos.indice.puertos
+    # Con la ingesta como corpus y modelos locales no se embeben los chunks del dataset: los vectores ya están en el índice.
+    para_los_adaptadores = (
+        dataclasses.replace(corpus, chunks=()) if indice and config.proveedor == "local" else corpus
+    )
     suite = componer_servicio(
         config,
-        corpus,
+        para_los_adaptadores,
         Cronometro(RelojSimulado()),
         RelojDelSistema(),
         puertos_locales=puertos.locales,
+        corpus=indice,
     )
     ajustes = ajustes_de_la_suite(config)
     tipos = ajustes.enabled_cancer_types
@@ -276,7 +287,7 @@ def _componer_el_chat(
         terminos_por_tipo=cargar_terminos_por_tipo(config.ruta_terminos, tipos),
         verificador_terminos=verificador,
         servicio_de_evidencia=suite.servicio,
-        posiciones=PosicionesDelDataset(corpus),
+        posiciones=indice.posiciones if indice else PosicionesDelDataset(corpus),
         fuentes_documentales=cargar_datos_criticos(config.ruta_terminos, tipos),
         soporte=VerificadorDeSoporte(
             clasificador=nli,
@@ -285,8 +296,8 @@ def _componer_el_chat(
             reloj=RelojDelSistema(),
             max_palabras_por_afirmacion=config.umbrales.claim_max_words,
         ),
-        catalogo_del_corpus=CatalogoEnMemoria(corpus),
-        lector_release=LectorReleaseFijo(corpus),
+        catalogo_del_corpus=indice.catalogo if indice else CatalogoEnMemoria(corpus),
+        lector_release=indice.lector_release if indice else LectorReleaseFijo(corpus),
         relevancia=cargar_datos_de_relevancia(config.ruta_terminos, tipos),
     )
     juez = JuezNli(nli, config.umbrales.nli_entailment_threshold)
@@ -436,6 +447,7 @@ async def evaluar(
     if faltan:
         raise DatasetInvalido(f"faltan las peticiones de: {', '.join(faltan)}")
     puertos = puertos or PuertosDeChat()
+    _exigir_el_indice_pedido(config, puertos)
     corrida = _componer_el_chat(config, dataset, puertos)
     reloj = RelojSimulado() if config.reloj == "simulado" else time.perf_counter
     medidas, raices = _Medidas(), {}
@@ -450,7 +462,7 @@ async def evaluar(
         )
         medidas.identidad_en_logs += _apariciones(entrada.identidad, logs)
         await _registrar(corrida, caso, entrada, respuesta, ms, medidas)
-    return _reporte(config, dataset, medidas)
+    return _reporte(config, dataset, medidas, puertos.indice)
 
 
 async def _registrar(
@@ -580,6 +592,30 @@ def _revision(dataset: DatasetDeChat) -> dict[str, Any]:
     return {"rotulo": validacion.rotulo, "pendientes": pendientes}
 
 
+def _exigir_el_indice_pedido(config: ConfigSuite, puertos: PuertosDeChat) -> None:
+    """La fuente ``indice`` no cae en silencio al corpus del dataset: sin índice abierto, o con uno vacío, la suite aborta."""
+    if puertos.indice is None:
+        if config.indice_fuente == "milvus":
+            raise SuiteAbortada(
+                "la configuración pide la fuente indice y no se abrió ningún índice del corpus"
+            )
+        return
+    exigir_indice_utilizable(puertos.indice.resumen)
+
+
+def _corpus_cargado(dataset: DatasetDeChat, indice: IndiceDelCorpus | None) -> dict[str, Any]:
+    """El corpus con el que corrió la suite, sin texto: la colección leída (recuento y huella de ids) o el del dataset."""
+    if indice is None:
+        return {"fuente": "dataset", "ruta": str(dataset.corpus)}
+    resumen = indice.resumen
+    return {
+        "fuente": "indice",
+        "coleccion": resumen.coleccion,
+        "chunks_vigentes": resumen.chunks_vigentes,
+        "huella": resumen.huella,
+    }
+
+
 def _umbrales_efectivos(config: ConfigSuite) -> dict[str, Any]:
     """Los valores con los que corrió la suite y de dónde salen (RN-22): ``settings`` si el YAML no los declara."""
     u = config.umbrales
@@ -593,7 +629,9 @@ def _umbrales_efectivos(config: ConfigSuite) -> dict[str, Any]:
     }
 
 
-def _reporte(config: ConfigSuite, dataset: DatasetDeChat, medidas: _Medidas) -> dict[str, Any]:
+def _reporte(
+    config: ConfigSuite, dataset: DatasetDeChat, medidas: _Medidas, indice: IndiceDelCorpus | None
+) -> dict[str, Any]:
     return {
         "suite": "chat",
         "config": config.nombre,
@@ -604,7 +642,10 @@ def _reporte(config: ConfigSuite, dataset: DatasetDeChat, medidas: _Medidas) -> 
         "modelos": {"llm": config.llm_modelo, "proveedor": config.proveedor},
         "reloj": config.reloj,
         "umbrales": _umbrales_efectivos(config),
-        "corpus": {"declarado": config.corpus_declarado, "cargado": str(dataset.corpus)},
+        "corpus": {
+            "declarado": config.corpus_declarado,
+            "cargado": _corpus_cargado(dataset, indice),
+        },
         "catalogVersion": config.catalogo_version,
         "prompts": {
             "chat": VERSION_DEL_PROMPT_DE_CHAT,
@@ -698,6 +739,7 @@ def _puertos_de(config: ConfigSuite, entorno: Mapping[str, str] | None) -> Puert
         RegistroDeLlamadas(),
         CLASE_SINTETICA,
     )
+    indice = abrir_indice_real() if config.indice_fuente == "milvus" else None
     base = ajustes_de_la_suite(config)
     ajustes = Settings(
         _env_file=None,  # type: ignore[call-arg]
@@ -707,7 +749,7 @@ def _puertos_de(config: ConfigSuite, entorno: Mapping[str, str] | None) -> Puert
         llm_base_url=config.urls["llm"],
         llm_model=config.llm_modelo,
     )
-    return PuertosDeChat(llm=crear_cliente_llm_del_chat(ajustes), locales=locales)
+    return PuertosDeChat(llm=crear_cliente_llm_del_chat(ajustes), locales=locales, indice=indice)
 
 
 if __name__ == "__main__":

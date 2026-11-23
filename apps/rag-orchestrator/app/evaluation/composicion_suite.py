@@ -15,6 +15,7 @@ from app.application.ports import (
     LanguageDetector,
     NliClassifier,
     PoblacionTask,
+    PuertosDelCorpus,
     ProhibitedTermsChecker,
     QueryEmbedder,
     QuerySparseEncoder,
@@ -264,11 +265,13 @@ def componer_servicio(
     brazo: Brazo | None = None,
     adaptadores: Adaptadores | None = None,
     aplicabilidad: AplicabilidadDeLaSuite | None = None,
+    corpus: PuertosDelCorpus | None = None,
 ) -> ServicioDeSuite:
     """El servicio de la suite. Con ``brazo`` recupera con sus ``RETRIEVAL_*`` (US-133); con ``adaptadores`` ya cargados
     (los mismos modelos y el mismo índice para todos los brazos) no vuelve a cargar ni a indexar nada. Con
     ``aplicabilidad`` (familia `opciones`, US-140) el servicio calcula la aplicabilidad por fuente con esos criterios y
-    esa población; sin ella, la suite mide solo la recuperación y la generación."""
+    esa población; sin ella, la suite mide solo la recuperación y la generación. Con ``corpus`` (fuente ``indice``) el servicio
+    busca y lee el catálogo y la release en esos puertos de solo lectura, no en el dataset en memoria."""
     adaptadores = adaptadores or adaptadores_de_suite(config, dataset, puertos_locales)
     observaciones = Observaciones()
     nli = NliMedido(adaptadores.clasificador_nli, cronometro)
@@ -281,12 +284,22 @@ def componer_servicio(
         detector_idioma=DetectorMedido(adaptadores.detector_idioma, cronometro),
         embedder=EmbedderMedido(adaptadores.embedder, cronometro),
         buscador=BuscadorMedido(
-            BuscadorEnMemoria(dataset, adaptadores.vectores_de_chunks), cronometro
+            corpus.buscador
+            if corpus
+            else BuscadorEnMemoria(dataset, adaptadores.vectores_de_chunks),
+            cronometro,
         ),
         reranker=RerankerObservado(adaptadores.reranker, cronometro, observaciones),
-        lector_release=LectorReleaseMedido(LectorReleaseFijo(dataset), cronometro),
+        lector_release=LectorReleaseMedido(
+            corpus.lector_release if corpus else LectorReleaseFijo(dataset), cronometro
+        ),
         catalogo=CatalogoMedido(
-            aplicabilidad.catalogo if aplicabilidad else CatalogoEnMemoria(dataset), cronometro
+            aplicabilidad.catalogo
+            if aplicabilidad
+            else corpus.catalogo
+            if corpus
+            else CatalogoEnMemoria(dataset),
+            cronometro,
         ),
         catalogo_clinico=CatalogoClinicoDeConfig(config.catalogo_version, tipos_habilitados),
         datos_criticos=cargar_datos_criticos(config.ruta_terminos, tipos_habilitados),

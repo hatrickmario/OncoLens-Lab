@@ -23,6 +23,7 @@ from app.schemas.generated.models import RetrievalMode
 SUITES = ("retrieval", "generation", "pii", "aplicabilidad", "poblacion", "opciones", "all")
 SUITE_COMPLETA = "all"
 PROVEEDORES = ("fake", "local")
+FUENTES_DE_INDICE = ("en_memoria", "milvus")
 RELOJES = ("simulado", "real")
 SUBCONJUNTOS = ("desarrollo", "validacion", "prueba")
 MODOS_DE_RECUPERACION = tuple(m.value for m in RetrievalMode)
@@ -440,6 +441,19 @@ def _comparacion_de(crudo: dict[str, Any], subconjunto: str | None) -> Comparaci
     return Comparacion(brazos, tolerancia)
 
 
+def _fuente_de_indice(crudo: dict[str, Any]) -> str:
+    """``indice.fuente``: ``en_memoria`` por defecto (la huella de las configuraciones existentes no cambia) o ``milvus``, que
+    lee la ingesta y solo tiene sentido con los modelos locales: los vectores de la ingesta no son los del embedder falso."""
+    fuente = _en(
+        str((crudo.get("indice") or {}).get("fuente", "en_memoria")),
+        FUENTES_DE_INDICE,
+        "indice.fuente",
+    )
+    if fuente == "milvus" and crudo["adaptadores"]["proveedor"] != "local":
+        raise ConfigInvalida("indice.fuente: milvus exige adaptadores.proveedor: local")
+    return fuente
+
+
 def _corpus_declarado(crudo: dict[str, Any]) -> str | None:
     declarado = (crudo.get("corpus") or {}).get("declarado")
     return None if declarado is None else str(declarado)
@@ -497,5 +511,6 @@ def cargar_config_suite(ruta: Path, entorno: Mapping[str, str] | None = None) ->
         p95_corridas=_corridas_de_p95(crudo),
         rn23_tolerancia_falsos_positivos=_tolerancia_de_falsos_positivos(crudo),
         umbrales_de_settings=umbrales_de_settings,
+        indice_fuente=_fuente_de_indice(crudo),
         corpus_declarado=_corpus_declarado(crudo),
     )

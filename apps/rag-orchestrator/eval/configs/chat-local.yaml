@@ -24,10 +24,13 @@ modelos:
 # Sin bloque `umbrales` (RN-22, `[S7 resp. 11]`): la suite los lee de `Settings` (RELEVANCE_THRESHOLD, NLI_ENTAILMENT_THRESHOLD,
 # RETRIEVAL_TOP_K y RERANK_TOP_N en el entorno; sin valor por defecto en código) y el reporte registra los efectivos. Así no
 # se copian los de producción ni los pares del reranker ni la expansión contextual (L1D-333), que ya salen de `Settings`.
+# `[S7 resp. 10]` (decidido por el usuario, 2026-11-22): el chat se mide sobre la ingesta de `l1d-119`. La fuente `indice` lee en solo
+# lectura la colección de Milvus (`MILVUS_URI`, `MILVUS_COLLECTION_NAME`) y el catálogo `corpus` (`CORPUS_DATABASE_URL`, rol `rag_corpus`)
+# del entorno; sin colección o sin chunks vigentes la suite aborta. El reporte publica `corpus.cargado` (colección, recuento y huella).
+indice:
+  fuente: milvus
 corpus:
-  # Decisión del orquestador (`[S7 resp. 10]`, parcialmente incumplida para el chat): la familia compone el chat en proceso sobre
-  # el corpus del dataset en memoria, no sobre la ingesta de `l1d-119`. El reporte declara esto y el corpus cargado (`corpus.cargado`).
-  declarado: corpus del dataset chat-v1 en memoria (data/evaluation/opciones); no es la ingesta de l1d-119
+  declarado: ingesta de l1d-119 (colección de Milvus y catálogo corpus, solo lectura)
 catalogo:
   version: '2026.10.0'
   ruta_terminos: packages/clinical-catalogs
