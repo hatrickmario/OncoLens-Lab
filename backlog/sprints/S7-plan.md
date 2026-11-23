@@ -166,12 +166,17 @@ Sin lote: 316, 326, 113, 116, 119, 333.
 10. `l1d-299`: fixture nuevo de estados de próstata, no el catálogo real.
 
 **Pendiente en el backlog (no se toca sin tu aprobación):**
-- US-121 AC-1 solo nombra `estado_her2` y `estado_castracion` como excluyentes; C-1 añade `extension`. Los escenarios nuevos van como `(asumido)`.
+- ~~US-121 AC-1 solo nombra `estado_her2` y `estado_castracion` como excluyentes; C-1 añade `extension`.~~ Actualizado el 2026-11-22 `[S7 resp. 18]`.
 - US-120 AC-5 y AC-6 dicen que los umbrales «quedan fijados»; con `[S7 resp. 11]` dependen de la adopción en el cierre.
 - Requisito archivado de faltantes de US-269 (AC-4, D6-51): sigue en `openspec/specs/` sin implementar; el reporte publica esas métricas como `null`.
 
 ## 6. Aprobación
 
 Aprobado por el usuario (hatrickmario) el 2026-11-22, en la sesión principal de `/sprint-start S7`: orden por oleadas, hasta 3 historias en paralelo, merges por oleada y las respuestas `[S7 resp. 9]`…`[S7 resp. 16]` del §5. Los supuestos del §5 quedan aceptados salvo objeción posterior.
+
+**Confirmaciones del 2026-11-22, tras el merge del plan (#420):**
+- **`[S7 resp. 17]`** Los diez supuestos del §5 quedan **aceptados** expresamente.
+- **`[S7 resp. 18]`** El AC-1 de US-121 se actualiza con `extension` como excluyente (C-1), primero en `backlog/features/FEAT-08b-aplicabilidad.md` y después en Linear (L1D-126). Los AC-5 y AC-6 de US-120 no se tocan.
+- **Inicio del sprint:** el usuario lanza `/sprint-run S7` a mano, en una sesión nueva, el 2026-11-22 a las 20:41 (hora de Bogotá).
 
 El humano mergea el PR de este plan antes de `/sprint-run S7`.

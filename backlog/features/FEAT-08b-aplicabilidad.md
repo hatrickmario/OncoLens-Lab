@@ -125,6 +125,8 @@ US-242, US-243 y US-244.
 
 > **Decidido (usuario, 2026-11-21):** pasa al **Sprint 7** (L1D-126): quedó abierta al cierre del S6 y afecta a la calidad del RAG; el S7 reúne todo lo pendiente de calidad del RAG. Lo que falta está en [`S7-refinamiento.md`](../sprints/S7-refinamiento.md).
 
+> **Decidido (usuario, 2026-11-22, planificación del S7):** el AC-1 incorpora el cambio C-1 de la [revisión clínica provisional](../sprints/S7-revision-clinica.md): en próstata, `extension` pasa a ser excluyente. Es una revisión de IA (`revision_provisional: {rol: ia, fecha: 2026-11-21}`), no la validación de un oncólogo; DEC-11 sigue sin firma. El bloque `validation` del catálogo pasa a `revision_provisional` de rol `ia` y la revisión del asesor del S3 queda en `history` `[S7 resp. 9]`. Detalle en [`S7-plan.md`](../sprints/S7-plan.md).
+
 > Linear: [L1D-126](https://linear.app/l1der-lab-mjbc/issue/L1D-126)
 > **Decidido (usuario, 2026-10-24, cierre de la O1 del S3):** `destination.match` del catálogo de datos críticos se amplía a arrays (compatible hacia atrás; deuda anotada en L1D-93 con destino esta historia). La allowlist de destinos de L1D-93 **excluye** `Biomarker.original_name`, `reference_range` y `Exam.source_lab` (privacidad); si un criterio los necesita, se reabre con el usuario.
 
@@ -145,6 +147,11 @@ caso, para que la comparación sea siempre la misma y se pueda revisar.
   cada uno con `destination`, `isExclusionary` y `rule`, y `estado_her2` y
   `estado_castracion` con `isExclusionary = true`. `[FR-25]` `[AC-08.6]` (asumido en las
   claves, escenario de DEC-11)
+  Desde la versión de catálogo del S7 (1.11.0), `extension` de próstata también lleva
+  `isExclusionary = true`: una fuente restringida a enfermedad metastásica da «No coincide»
+  solo si la restricción es explícita y la extensión del paciente (M0 o M1) se puede leer
+  de su dato; si no se puede leer, el estado es «Desconocido». (usuario, 2026-11-22;
+  C-1 de la revisión clínica provisional, `revision_provisional` de rol `ia`)
 - **AC-2 (borde · sin destino)** · Dado un criterio sin `destination`, cuando se ejecuta
   `catalog:validate`, entonces termina con código ≠ 0 y nombra el criterio.
   `[RN-29]` `[AC-04.5]`
