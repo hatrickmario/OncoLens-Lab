@@ -168,3 +168,27 @@ lo que aquí se indica; «corrida nocturna única del día 2» se lee como **cor
 - **S7-D4 · Umbrales (`[S7 resp. 11]`).** La medición corre con los umbrales actuales; los calibrados que salgan de
   los barridos de `l1d-119` solo entran en la corrida final como un brazo más. Este change no cambia ningún valor por
   defecto.
+- **S7-D5 · Cómo se mide la no inferencia (S7.1).** Alternativas: (a) un juez que ve toda la respuesta y devuelve un conteo;
+  (b) un juez por par (afirmación mostrada, dato faltante) con veredicto binario; (c) una regla léxica sin juez. Se elige
+  **(b)**: el veredicto binario con esquema estricto es lo que ADR-41 ya usa para la fidelidad (lo inválido se contabiliza y
+  nunca cuenta como «sin inferencia»), y la unidad por afirmación (cada opción con título, justificación y detalles juntos,
+  cada limitación, cada texto de la síntesis) evita contar dos veces el mismo valor repetido en el título y la
+  justificación. (a) mezcla en un número lo que el reporte debe poder auditar por caso; (c) no distingue «el Ki-67 de la
+  paciente es 30 %» de «en el estudio, Ki-67 alto…». El juez de la CI es léxico (nombra el dato, no lo da por desconocido y
+  trae un número o una palabra de valor) y el local reutiliza `ConfigJuez` (mismo modelo, `temperature` y `seed` fijos, guarda
+  de RN-12 antes de crear el cliente); el POST se comparte con el juez de fidelidad (`pedir_contenido`). Quedan fuera los
+  valores de población (describen el estudio) y las opciones descartadas. El reporte lleva `estado`, `casos`,
+  `casos_sin_inferencia`, `casos_con_inferencia` (ids), `inferencias` y `veredictos_invalidos`; sin casos, `inferencias` vale
+  `null` y el estado es `no_medida`. La familia aparece en toda corrida `generation`/`all`, así que `data/evaluation/baseline.json`
+  se regeneró con adaptadores falsos (solo suma la familia nueva, sin otra diferencia).
+- **S7-D6 · `S5-L04` no se reescribe.** La pregunta nombra la «deficiencia de reparación homóloga» mientras el caso declara
+  `hrr_brca` como faltante. Alternativas: (a) reescribir solo `S5-L04`; (b) reescribir `S5-L04` y su gemela `S5-P05`;
+  (c) mantenerla. Se elige **(c)**: (a) rompe la pareja que S7.5 compara (recall con y sin `currentLine` exige la misma
+  consulta) y (b) cambia una pregunta del dataset de calibración del S5 y su recall de referencia. La pregunta describe una
+  población, no afirma un dato del paciente; el control de que la salida no le atribuye un valor lo da la métrica nueva sobre lo
+  mostrado, no la redacción de la pregunta.
+- **S7-D7 · Archivos fuera de la lista del change.** La métrica obliga a tocar `esquema_suite.py` (una entrada de familia: el
+  esquema del reporte es cerrado) y `evaluate.py` (cuatro líneas: crear el juez junto al de fidelidad y pasarlo a
+  `componer_servicio`); no se tocó `config_suite.py`. S7.2 toca
+  `domain/faltantes.py`, `infrastructure/catalogo_clinico/datos_criticos.py` y `bootstrap.py` por la forma de clave única y el
+  `or`. Los PR de 246 y 329 pueden chocar en `evaluate.py`/`esquema_suite.py`: son hunks pequeños y aditivos.

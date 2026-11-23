@@ -36,6 +36,20 @@ class RechazoDeSalidaLegitima:
 
 
 @dataclass(frozen=True)
+class ResultadoNoInferencia:
+    """Lo que el juez acotado dijo de una consulta con datos críticos faltantes declarados (US-116 AC-1, FR-23).
+
+    Solo conteos: nunca el texto de la salida ni el del dato (RN-14)."""
+
+    caso: str
+    """Id de la pregunta del dataset: lo único que el reporte nombra."""
+    inferencias: int = 0
+    """Pares (texto mostrado, dato faltante) en los que el juez vio un valor atribuido al dato."""
+    veredictos_invalidos: int = 0
+    """Veredictos del juez que no se pudieron interpretar: no cuentan como «sin inferencia»."""
+
+
+@dataclass(frozen=True)
 class ResultadoConsulta:
     recuperacion: ResultadoPregunta
     revisada: bool
@@ -77,3 +91,5 @@ class ResultadoConsulta:
     """Veredicto del juez LLM (secundario) para las mismas afirmaciones; ``None`` si no hay juez configurado."""
     salida_invalida: tuple[str, ...] | None = None
     """``None`` = el generador devolvió una salida válida; si no, el id de cada regla que incumplió (nunca el texto, RN-14)."""
+    no_inferencia: ResultadoNoInferencia | None = None
+    """``None`` = la consulta no declara datos faltantes o no hay juez: no entra en la métrica de no inferencia."""

@@ -3,7 +3,14 @@
 import re
 from collections.abc import Collection, Sequence
 
-_FORMA_DE_CLAVE = re.compile(r"[a-z0-9_]+")
+PATRON_DE_CLAVE = r"^[a-z0-9_]+$"
+"""La forma de una clave del catálogo de datos críticos (la de ``comun.schema.json``): un solo sitio para toda la app."""
+_FORMA_DE_CLAVE = re.compile(PATRON_DE_CLAVE)
+
+
+def tiene_forma_de_clave(valor: str) -> bool:
+    """``True`` si ``valor`` es exactamente una clave posible del catálogo (no mira si el catálogo la contiene)."""
+    return _FORMA_DE_CLAVE.fullmatch(valor) is not None
 
 
 def claves_de_faltantes_invalidas(
@@ -16,5 +23,5 @@ def claves_de_faltantes_invalidas(
     return tuple(
         posicion
         for posicion, clave in enumerate(claves)
-        if not _FORMA_DE_CLAVE.fullmatch(clave) or clave not in conocidas
+        if not tiene_forma_de_clave(clave) or clave not in conocidas
     )

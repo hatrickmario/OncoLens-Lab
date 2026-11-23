@@ -17,6 +17,7 @@ import yaml
 
 from app.config.settings import Settings
 from app.domain.corpus_seed.admisibilidad import PISO_DE_FUENTES_EXCLUIDAS
+from app.domain.faltantes import tiene_forma_de_clave
 
 CLASE_SINTETICA = "sintetico"
 ETIQUETAS_NLI = ("entailment", "neutral", "contradiction")
@@ -71,7 +72,7 @@ def contexto_de_pregunta(crudo: dict[str, Any]) -> ContextoDePregunta | None:
     if linea is not None and (not isinstance(linea, int) or isinstance(linea, bool) or linea < 1):
         raise DatasetInvalido(f"{crudo.get('id')}: linea_actual debe ser un entero positivo")
     faltantes = tuple(str(f) for f in contexto.get("faltantes", []))
-    if any(not re.fullmatch(r"[a-z0-9_]+", f) for f in faltantes):
+    if not all(tiene_forma_de_clave(f) for f in faltantes):
         raise DatasetInvalido(f"{crudo.get('id')}: un faltante no es una clave del catálogo")
     return ContextoDePregunta(linea, faltantes)
 

@@ -9,6 +9,7 @@ from typing import Any
 from app.evaluation.metricas.citas import precision_de_citas
 from app.evaluation.metricas.fidelidad import fidelidad
 from app.evaluation.metricas.inyeccion import inyeccion_efectiva
+from app.evaluation.metricas.no_inferencia import no_inferencia
 from app.evaluation.metricas.opciones import porcentaje_con_cita_y_soporte
 from app.evaluation.metricas.prescriptivas import terminos_prohibidos
 from app.evaluation.metricas.resultado import ResultadoConsulta
@@ -58,6 +59,7 @@ def calcular_familias(
         familias["fidelidad"] = fidelidad(resultados, acuerdo_minimo, muestra_minima)
         familias["terminos_prohibidos"] = terminos_prohibidos(resultados)
         familias["inyeccion"] = inyeccion_efectiva(resultados)
+        familias["no_inferencia"] = no_inferencia(resultados)
     validacion = _validacion_de(resultados)
     for familia in familias.values():
         familia["validacion"] = validacion
