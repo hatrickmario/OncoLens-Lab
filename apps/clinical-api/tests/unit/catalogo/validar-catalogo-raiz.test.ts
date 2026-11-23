@@ -1,15 +1,18 @@
 import { readFileSync } from 'node:fs';
-import { afterEach, describe, expect, it } from 'vitest';
-import { ARCHIVOS_DE_RAIZ } from '../../../../../packages/clinical-catalogs/validator/index.mjs';
+import { describe, expect, it } from 'vitest';
+import {
+  ARCHIVOS_DE_RAIZ,
+  ARCHIVOS_DE_RAIZ_DECLARADOS_POR_EL_MANIFIESTO,
+} from '../../../../../packages/clinical-catalogs/validator/index.mjs';
 import { exigirCatalogoValido } from '../../../src/infrastructure/catalogo/validar-catalogo.js';
 import { RUTA_CATALOGO_FX01BB } from '../../support/catalogo-terminologico.js';
 
 /**
- * G1.6 (S7.1, design D15): los archivos de raíz del registro `ARCHIVOS_DE_RAIZ` llegan solos al arranque de
- * `clinical-api`. Un archivo de raíz nuevo se prueba aquí sin editar el mapa de esquemas; el test no fija la lista de
- * claves del mapa (el resto de entradas sigue abierto: `l1d-335` añadirá `sinonimos`).
+ * G1.6 (S7.1, design D15): los archivos de los registros del validador llegan solos al arranque de `clinical-api`.
+ * Un archivo nuevo se prueba aquí sin editar ningún mapa de esquemas; el test no fija sus claves (`l1d-335` añadirá
+ * `sinonimos`).
  */
-const raiz = ARCHIVOS_DE_RAIZ as Record<string, { esquema: string }>;
+type Registro = Record<string, unknown>;
 
 const esquemaFicticio = JSON.stringify({
   $schema: 'https://json-schema.org/draft/2020-12/schema',
@@ -19,33 +22,63 @@ const esquemaFicticio = JSON.stringify({
   properties: { version: { type: 'string' } },
 });
 
-const lectorConArchivoDeRaiz = (contenido: object) => (ruta: string) => {
-  if (ruta.endsWith('/ficticio.schema.json')) return esquemaFicticio;
-  if (ruta.endsWith('/ficticio.json')) return JSON.stringify(contenido);
+const lectorConArchivo = (nombre: string, contenido: object) => (ruta: string) => {
+  if (ruta.endsWith(`/${nombre}.schema.json`)) return esquemaFicticio;
+  if (ruta.endsWith(`/${nombre}.json`)) return JSON.stringify(contenido);
   return readFileSync(ruta, 'utf8');
 };
 
-describe('exigirCatalogoValido con un archivo de raíz nuevo en el registro', () => {
-  afterEach(() => {
-    delete raiz.ficticio;
-  });
+/** Registra una entrada ficticia mientras dura `prueba` y la retira siempre (try/finally). */
+function conEntrada(registro: Registro, nombre: string, entrada: unknown, prueba: () => void) {
+  registro[nombre] = entrada;
+  try {
+    prueba();
+  } finally {
+    delete registro[nombre];
+  }
+}
 
+const deLaRaiz = ARCHIVOS_DE_RAIZ as Registro;
+// Declarado por una clave que el manifiesto del fixture ya trae en `true` (`escalas`): el esquema del manifiesto no admite claves nuevas.
+const declaradoPorElManifiesto = ARCHIVOS_DE_RAIZ_DECLARADOS_POR_EL_MANIFIESTO as Registro;
+const ENTRADA_DECLARADA = { esquema: 'ficticio', clave: 'escalas', reglas: () => [] };
+
+describe('exigirCatalogoValido con un archivo nuevo en un registro del validador', () => {
   it('arranca cuando el archivo de raíz nuevo cumple su esquema y no está en una lista a mano [US-121 AC-1]', () => {
-    raiz.ficticio = { esquema: 'ficticio' };
-
-    expect(() =>
-      exigirCatalogoValido(RUTA_CATALOGO_FX01BB, lectorConArchivoDeRaiz({ version: '1' })),
-    ).not.toThrow();
+    conEntrada(deLaRaiz, 'ficticio', { esquema: 'ficticio' }, () => {
+      expect(() =>
+        exigirCatalogoValido(RUTA_CATALOGO_FX01BB, lectorConArchivo('ficticio', { version: '1' })),
+      ).not.toThrow();
+    });
   });
 
   it('rechaza con esquema_invalido cuando el archivo de raíz nuevo incumple su esquema', () => {
-    raiz.ficticio = { esquema: 'ficticio' };
+    conEntrada(deLaRaiz, 'ficticio', { esquema: 'ficticio' }, () => {
+      expect(() =>
+        exigirCatalogoValido(
+          RUTA_CATALOGO_FX01BB,
+          lectorConArchivo('ficticio', { version: '1', sobrante: true }),
+        ),
+      ).toThrow(/esquema_invalido/);
+    });
+  });
 
-    expect(() =>
-      exigirCatalogoValido(
-        RUTA_CATALOGO_FX01BB,
-        lectorConArchivoDeRaiz({ version: '1', sobrante: true }),
-      ),
-    ).toThrow(/esquema_invalido/);
+  it('arranca cuando el archivo declarado por el manifiesto cumple su esquema y no está en una lista a mano', () => {
+    conEntrada(declaradoPorElManifiesto, 'ficticio', ENTRADA_DECLARADA, () => {
+      expect(() =>
+        exigirCatalogoValido(RUTA_CATALOGO_FX01BB, lectorConArchivo('ficticio', { version: '1' })),
+      ).not.toThrow();
+    });
+  });
+
+  it('rechaza con esquema_invalido cuando el archivo declarado por el manifiesto incumple su esquema', () => {
+    conEntrada(declaradoPorElManifiesto, 'ficticio', ENTRADA_DECLARADA, () => {
+      expect(() =>
+        exigirCatalogoValido(
+          RUTA_CATALOGO_FX01BB,
+          lectorConArchivo('ficticio', { version: '1', sobrante: true }),
+        ),
+      ).toThrow(/esquema_invalido/);
+    });
   });
 });
