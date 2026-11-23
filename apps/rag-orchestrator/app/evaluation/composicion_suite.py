@@ -53,6 +53,7 @@ from app.evaluation.dataset_loader import DatasetInvalido
 from app.evaluation.fuente_dataset import DatasetSuite
 from app.evaluation.guardas import SuiteAbortada
 from app.evaluation.juez_fidelidad import JuezFidelidad, JuezNli, JuezSecundario
+from app.evaluation.juez_no_inferencia import JuezDeNoInferencia, MedidorDeNoInferencia
 from app.evaluation.lenguaje_estricto import VerificadorEstricto
 from app.evaluation.lenguaje_linea_base import verificador_de_la_linea_base
 from app.evaluation.medidores import (
@@ -100,6 +101,8 @@ class ServicioDeSuite:
     """``CLAIM_MAX_WORDS`` de la suite: el mismo que usa el verificador del servicio (RN-22)."""
     verificador_linea_base: ProhibitedTermsChecker | None = None
     """El filtro de la línea base de US-068 (lista 1.5.0, solo Nivel A) para la regresión de falsos positivos (US-249 AC-5)."""
+    no_inferencia: MedidorDeNoInferencia | None = None
+    """El juez acotado y las etiquetas de los faltantes (US-116 AC-1); ``None`` = la no inferencia no se mide."""
 
 
 @dataclass(frozen=True)
@@ -294,6 +297,7 @@ def componer_servicio(
     corpus: PuertosDelCorpus | None = None,
     envolver_buscador: Callable[[ChunkSearch], ChunkSearch] | None = None,
     reranker_max_pairs: int | None = None,
+    juez_no_inferencia: JuezDeNoInferencia | None = None,
 ) -> ServicioDeSuite:
     """El servicio de la suite. Con ``brazo`` recupera con sus ``RETRIEVAL_*`` (US-133); con ``adaptadores`` ya cargados
     (los mismos modelos y el mismo índice para todos los brazos) no vuelve a cargar ni a indexar nada. Con
@@ -301,7 +305,8 @@ def componer_servicio(
     esa población; sin ella, la suite mide solo la recuperación y la generación. ``envolver_buscador`` decora la búsqueda
     en memoria (la familia `diagnostico` observa el orden denso) y ``reranker_max_pairs`` fija el corte a los pares con
     adaptadores falsos; con puertos locales manda el del reranker cargado. Con ``corpus`` (fuente ``indice``) el servicio
-    busca y lee el catálogo y la release en esos puertos de solo lectura, no en el dataset en memoria."""
+    busca y lee el catálogo y la release en esos puertos de solo lectura, no en el dataset en memoria. Con
+    ``juez_no_inferencia`` la suite cuenta las salidas que atribuyen un valor a un dato crítico faltante (US-116 AC-1)."""
     if aplicabilidad is not None and corpus is not None:
         raise ConfigInvalida(
             "la aplicabilidad de la suite y el corpus de un índice son excluyentes: cada uno trae su catálogo"
@@ -326,6 +331,7 @@ def componer_servicio(
     )
     if envolver_buscador is not None:
         buscador = envolver_buscador(buscador)
+    datos_criticos = cargar_datos_criticos(config.ruta_terminos, tipos_habilitados)
     servicio = RAGOrchestratorService(
         detector_idioma=DetectorMedido(adaptadores.detector_idioma, cronometro),
         embedder=EmbedderMedido(adaptadores.embedder, cronometro),
@@ -339,7 +345,7 @@ def componer_servicio(
             cronometro,
         ),
         catalogo_clinico=CatalogoClinicoDeConfig(config.catalogo_version, tipos_habilitados),
-        datos_criticos=cargar_datos_criticos(config.ruta_terminos, tipos_habilitados),
+        datos_criticos=datos_criticos,
         # Sin ``aplicabilidad`` la suite no calcula criterios (mide recuperación y generación; M-08.2 es de US-132); con ella
         # (familia `opciones`, US-140) el servicio evalúa la aplicabilidad por fuente.
         aplicabilidad=ApplicabilityService(
@@ -374,6 +380,9 @@ def componer_servicio(
         nli.latencias,
         config.umbrales.claim_max_words,
         _filtro_de_la_linea_base(dataset),
+        None
+        if juez_no_inferencia is None
+        else MedidorDeNoInferencia(juez_no_inferencia, datos_criticos),
     )
 
 
