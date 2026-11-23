@@ -16,3 +16,4 @@
 - [Relevancia del dato faltante (L1D-321)](chat_relevancia_l1d321_trampas.md) — nodo dentro de faltantes, aviso en notices, cobertura de destinos y trampas de normalización
 - [Familia chat de evaluate (L1D-326)](chat_evaluate_l1d326_trampas.md) — composición en proceso, controles RN-23, NLI léxico y pii-scan con DOI
 - [Cobertura de próstata (L1D-331)](cobertura_prostata_l1d331_trampas.md) — top-3 por decorador del Reranker, reporte_base opcional y trampas del catálogo tmp
+- [Sinónimos con relación (L1D-335)](sinonimos_relacion_l1d335_trampas.md) — cargadores S-1, meta de paráfrasis vs esquema del baseline y push a rama ajena
