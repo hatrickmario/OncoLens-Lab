@@ -76,7 +76,7 @@ umbrales actuales (`[S7 resp. 11]`).
 - [x] 3.1 Pytest de `tests/evaluation` y la suite de `apps/rag-orchestrator` en verde; `ruff` y `lint-imports` limpios;
       `openspec validate l1d-334-diagnostico-etapas-recuperacion --strict`. Sin cambios de API: `contracts:verify-provider`
       no aplica.
-- [ ] 3.2 CI del PR en verde (incluidos `data-scan` y `dataset-class-check` sobre `data/eval/parafrasis-v1/`): 0 checks
+- [ ] 3.2 TRASLADADA a orquestador, tras CI del PR (entrega 1): CI del PR en verde (incluidos `data-scan` y `dataset-class-check` sobre `data/eval/parafrasis-v1/`): 0 checks
       en fallo, 0 pendientes y 0 alertas antes de pedir el merge.
 
 ## humano

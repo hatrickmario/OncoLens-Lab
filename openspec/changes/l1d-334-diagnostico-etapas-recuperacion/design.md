@@ -218,3 +218,31 @@ Decisiones que ni la spec ni un ADR cubrían; cada una con la alternativa elegid
   queda dicho en el manifiesto del dataset.
 - **D20 · Informe legible.** Junto al `.json` se escribe un `.md` con las mismas cifras (D8), generado solo desde el diccionario
   ya validado por el esquema cerrado (no puede llevar más de lo que lleva el JSON).
+
+## Respuesta al Gate 2 (refactors y deuda)
+
+- **D21 · Agrupamiento por afirmación (hallazgo 1).** `afirmaciones_juzgadas` ya no funde dos afirmaciones de igual texto: una
+  afirmación envía un par por premisa, seguidos y sin premisas repetidas (`premisas_del_soporte` las deduplica), y un par con la
+  misma hipótesis y una premisa ya vista abre otra afirmación. `test_paridad_nli_diagnostico.py` la compara con
+  `pares_a_verificar` y `veredictos_por_afirmacion` del dominio. **No se extrajo una función pública en `domain/support.py`**: el
+  change declara «sin cambio de código de producción» y el implementador no edita fuera de `app/evaluation`; la extracción
+  queda propuesta como deuda D7-02.
+- **D22 · Búsquedas por loop (hallazgo 2).** `BUSQUEDAS_POR_LOOP = 2` es un invariante del servicio: `_recuperar_dense` busca con
+  el texto de búsqueda y con el resumen del contexto, y lo mismo hacen el segundo loop contextual (ADR-52) y el de reescritura
+  (US-238), que llaman a la misma `_recuperar`. ADR-52 no cambia el número de búsquedas por loop. El test
+  `test_el_servicio_busca_exactamente_busquedas_por_loop_veces_por_consulta` falla si el servicio cambia ese número. **No se hizo
+  público `_orden_denso`** (producción): el orden denso usa `recortar_a_pares_del_reranker(c, len(c))`; hacerlo público y
+  exponer la constante junto al servicio queda como deuda D7-03.
+- **D23 · `revision_provisional` y el catálogo (hallazgo 3).** `$defs/revisionProvisional` aún no está en `main` (lo crea
+  l1d-126 parte A): hoy la regla de `app/evaluation/revision_provisional.py` es la única definición. **Cuando l1d-126 A llegue a
+  main, añadir un test de paridad** entre ese `$defs` y `ROLES_DE_REVISION_PROVISIONAL`/la forma `{rol, fecha}`.
+- **D24 · Fakes del mundo de prueba (hallazgo 4)** y **base única de la fila (hallazgo 5).** `BuscadorGuionado` respeta `limit` y
+  `RerankerGuionado` da el puntaje por defecto a una pregunta sin guion. La fila se lee del último loop y de la última
+  generación (`fila_de_redaccion`); `test_fila_de_redaccion_y_fakes.py` cubre dos loops donde solo el segundo genera.
+- **Deuda menor (IDs propuestos, S7-deuda.md no se edita aquí):**
+  - D7-02: extraer en `domain/support.py` el agrupamiento (pares, resultados) por afirmación y que `afirmaciones_juzgadas` delegue.
+  - D7-03: hacer público el orden denso (`pares_del_reranker`) y exponer `BUSQUEDAS_POR_LOOP` junto a `RAGOrchestratorService`.
+  - D7-04: `_reloj_de_medicion` duplicado entre `evaluate.py` y `corrida_diagnostico._servicio` (hay un `Cronometro(...)` equivalente en `corrida_opciones`).
+  - D7-05: parámetros posicionales largos en `fila_de_redaccion`/`medir_diagnostico`; pasar a un objeto de contexto.
+  - D7-06: la banda del NLI se valida en `config_diagnostico` y el ancho en `histograma_de_p_entailment`; dejar una sola regla.
+  - D7-07: el `.md` se escribe fuera de `escribir_reporte_cerrado`; protegido por `test_informe_md_sin_texto.py`, evaluar pasarlo por el mismo guardia.
