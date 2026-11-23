@@ -82,6 +82,18 @@ def grupos_de_respuesta(
     return [*por_opcion, limitaciones, GrupoDeTextos(_textos_sin_fuentes(respuesta), ())]
 
 
+def afirmaciones_sobre_el_paciente(respuesta: RagQueryInternalResponse) -> list[str]:
+    """Lo generado que la respuesta muestra sobre el caso, una unidad por afirmación mostrada: cada opción (título,
+    justificación y detalles juntos), cada limitación y cada texto de la síntesis. Quedan fuera los valores de población
+    (describen el estudio, no al paciente) y las opciones descartadas (no se muestran como soporte)."""
+    por_opcion = [
+        " ".join(texto for _, texto in textos_de_opcion_mostrada(opcion))
+        for opcion in respuesta.evidenceOptions
+    ]
+    limitaciones = [limitacion.text for limitacion in respuesta.limitations]
+    return [*por_opcion, *limitaciones, *(texto for _, texto in _textos_de_sintesis(respuesta))]
+
+
 def textos_de_poblacion(respuesta: RagQueryInternalResponse) -> list[TextoGenerado]:
     """Los valores de población del estudio que muestra cada criterio: los extrae el LLM de la ingesta (RN-23, ADR-47)."""
     textos: list[TextoGenerado] = []
@@ -106,7 +118,14 @@ def _textos_sin_fuentes(respuesta: RagQueryInternalResponse) -> list[TextoGenera
             ("unsupportedClaims", afirmacion) for afirmacion in descartada.unsupportedClaims
         )
     textos.extend(textos_de_poblacion(respuesta))
-    textos.extend(("synthesis", acuerdo.root.text) for acuerdo in respuesta.synthesis.agreements)
+    textos.extend(_textos_de_sintesis(respuesta))
+    return textos
+
+
+def _textos_de_sintesis(respuesta: RagQueryInternalResponse) -> list[TextoGenerado]:
+    textos: list[TextoGenerado] = [
+        ("synthesis", acuerdo.root.text) for acuerdo in respuesta.synthesis.agreements
+    ]
     for discrepancia in respuesta.synthesis.discrepancies:
         textos.append(("synthesis", discrepancia.claim.root.text))
         if discrepancia.explanation:

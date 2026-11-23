@@ -16,12 +16,12 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 from app.domain.criterios_aplicabilidad import DestinoDelCriterio
+from app.domain.faltantes import PATRON_DE_CLAVE
 from app.infrastructure.catalogo_clinico.manifiesto import CatalogoNoDisponible
 
 NOMBRE_DEL_ARCHIVO = "datos-criticos.json"
 
-# Patrones idénticos a ``comun.schema.json``: la clave es ``^[a-z0-9_]+$`` y el tipo ``^[a-z]+$``.
-_CLAVE = r"^[a-z0-9_]+$"
+# Patrones idénticos a ``comun.schema.json``: la clave es ``PATRON_DE_CLAVE`` y el tipo ``^[a-z]+$``.
 _TIPO_DE_CANCER = r"^[a-z]+$"
 
 
@@ -46,7 +46,7 @@ class _Destino(BaseModel):
 class _DatoCritico(BaseModel):
     model_config = ConfigDict(extra="ignore", frozen=True, strict=True)
 
-    key: str = Field(pattern=_CLAVE)
+    key: str = Field(pattern=PATRON_DE_CLAVE)
     cancerType: str = Field(pattern=_TIPO_DE_CANCER)
     label: _Etiqueta
     destination: _Destino

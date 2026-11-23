@@ -475,8 +475,8 @@ preguntas:
     revisada_por_oncologo: false
   # US-116 (L1D-113): casos SINTÉTICOS con la línea de tratamiento actual y datos críticos faltantes (claves del catálogo del
   # tipo). Mismas preguntas y evidencia que S5-M01/M03/P01/P05, para medir el efecto de `línea de tratamiento {n}` en el recall
-  # dense frente a su versión sin contexto. Expectativa de no inferencia: ninguna afirmación mostrada atribuye un valor al dato
-  # faltante (la mide la corrida nocturna con el LLM local). Sin pareja en inglés: no entran en el recall es->en.
+  # dense frente a su versión sin contexto. La expectativa de no inferencia (ninguna afirmación mostrada atribuye un valor al
+  # dato faltante) la mide la familia `no_inferencia` de la suite con su juez acotado (L1D-113, S7.1). Sin pareja en inglés: no entran en el recall es->en.
   - id: S5-L01
     idioma: es
     cancer: mama

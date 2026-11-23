@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from contextlib import AsyncExitStack
-from typing import Protocol
+from typing import Any, Protocol
 
 import httpx
 
@@ -68,6 +68,19 @@ class JuezLlmLexico:
         return bool(premisas) and tokens(afirmacion) <= disponibles
 
 
+async def pedir_contenido(cliente: httpx.AsyncClient, cuerpo: dict[str, Any]) -> str:
+    """El contenido de la respuesta del LLM local del juez; los errores nunca llevan textos (RN-14)."""
+    try:
+        respuesta = await cliente.post(RUTA_DE_COMPLETIONS, json=cuerpo)
+        respuesta.raise_for_status()
+        contenido = respuesta.json()["choices"][0]["message"]["content"]
+    except httpx.HTTPError:
+        raise JuezNoDisponible("el juez LLM no respondió") from None
+    except (KeyError, IndexError, TypeError, ValueError):
+        raise JuezNoDisponible("la respuesta del juez LLM no tiene la forma esperada") from None
+    return str(contenido)
+
+
 class JuezLlmLocal:
     """Juez LLM secundario por una API compatible con OpenAI (Ollama ``/v1``), con ``temperature`` y ``seed`` fijos."""
 
@@ -111,15 +124,21 @@ class JuezLlmLocal:
         self._registro.registrar(
             str(self._cliente.base_url), self._clase_datos, self._modelo, "juez"
         )
-        try:
-            respuesta = await self._cliente.post(RUTA_DE_COMPLETIONS, json=cuerpo)
-            respuesta.raise_for_status()
-            contenido = respuesta.json()["choices"][0]["message"]["content"]
-        except httpx.HTTPError:
-            raise JuezNoDisponible("el juez LLM no respondió") from None
-        except (KeyError, IndexError, TypeError, ValueError):
-            raise JuezNoDisponible("la respuesta del juez LLM no tiene la forma esperada") from None
-        return str(contenido)
+        return await pedir_contenido(self._cliente, cuerpo)
+
+
+async def abrir_cliente_del_juez_local(
+    config: ConfigJuez, pila: AsyncExitStack
+) -> httpx.AsyncClient:
+    """El cliente HTTP de un juez local, cerrado con ``pila``. RN-12: la guarda corre antes de crearlo (ni con datos
+    sintéticos sale un request a un host fuera de la lista local) y ``trust_env=False`` impide que un ``HTTP(S)_PROXY`` del
+    proceso desvíe el prompt."""
+    if config.base_url is None:
+        raise ConfigInvalida("un juez local exige juez.base_url")
+    exigir_juez_local(config)
+    return await pila.enter_async_context(
+        httpx.AsyncClient(base_url=config.base_url, timeout=config.timeout_s, trust_env=False)
+    )
 
 
 async def crear_juez_llm(
@@ -133,14 +152,7 @@ async def crear_juez_llm(
         return None
     if config.proveedor == "fake":
         return JuezLlmLexico()
-    if config.base_url is None:
-        raise ConfigInvalida("un juez local exige juez.base_url")
-    exigir_juez_local(config)  # RN-12: antes de crear el cliente, tampoco con datos sintéticos
-    cliente = await pila.enter_async_context(
-        httpx.AsyncClient(  # trust_env=False: ningún HTTP(S)_PROXY del proceso desvía el prompt (RN-12)
-            base_url=config.base_url, timeout=config.timeout_s, trust_env=False
-        )
-    )
+    cliente = await abrir_cliente_del_juez_local(config, pila)
     return JuezLlmLocal(
         cliente,
         modelo=config.modelo,

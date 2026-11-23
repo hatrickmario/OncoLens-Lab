@@ -292,7 +292,8 @@ def crear_app(
         if criterios_de_aplicabilidad is not None
         else _montar_criterios_de_aplicabilidad(settings, catalogo_clinico)
     )
-    datos_criticos = datos_criticos or _montar_datos_criticos(settings, catalogo_clinico)
+    if datos_criticos is None:
+        datos_criticos = _montar_datos_criticos(settings, catalogo_clinico)
     registrar_manejadores_de_error(app, trace_ids)
     app.add_middleware(ContencionDeErroresInesperados, trace_ids=trace_ids)
     app.add_middleware(
