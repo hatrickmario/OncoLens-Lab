@@ -24,11 +24,11 @@ from app.domain.chat.valores_iniciales import (
     AVISO_DE_IA_INICIAL,
     AVISO_VERIFICAR_FUENTES_INICIAL,
     CHAT_AVISO_BUSQUEDA_AMPLIADA_INICIAL,
-    CHAT_MAX_HILOS_INICIAL,
-    CHAT_EVIDENCE_MAX_OPTIONS_INICIAL,
     CHAT_CONFLICTO_ETIQUETA_INICIAL,
     CHAT_CONFLICTO_SIN_CONTRAPARTE_TEXTO_INICIAL,
     CHAT_CONTRADICCIONES_ALCANCE_TEXTO_INICIAL,
+    CHAT_EVIDENCE_MAX_OPTIONS_INICIAL,
+    CHAT_MAX_HILOS_INICIAL,
     CHAT_MEMORY_MAX_TOKENS_INICIAL,
     CHAT_RELEVANCIA_CATALOGO_TEXTO_INICIAL,
     CHAT_RELEVANCIA_CRITERIOS_TEXTO_INICIAL,
@@ -66,6 +66,10 @@ from app.domain.reglas_proveedor import (
     HOSTS_LOCALES,
     reject_fake_model_provider_with_real_data,
     reject_fake_provider_with_real_data,
+)
+from app.domain.ventanas_del_reranker import (
+    MODO_DE_VENTANAS_INICIAL,
+    RERANKER_WINDOW_OVERLAP_INICIAL,
 )
 
 _SHA256 = re.compile(r"[0-9a-fA-F]{64}")
@@ -109,6 +113,9 @@ class Settings(BaseSettings):
     claim_max_words: int = Field(default=CLAIM_MAX_WORDS_INICIAL, gt=0)
     # US-270 (RN-22): máximo de `chunkId` cortados que lista el evento `rag_query_corte` (solo ids y puesto, nunca texto).
     reranker_cut_log_max_ids: int = Field(default=RERANKER_CUT_LOG_MAX_IDS_INICIAL, ge=1)
+    # US-278 (RN-22): cómo puntúa el reranker un chunk más largo que RERANKER_MAX_LENGTH.
+    reranker_chunk_windows: str = MODO_DE_VENTANAS_INICIAL
+    reranker_window_overlap: int = RERANKER_WINDOW_OVERLAP_INICIAL
     # Presupuesto de caracteres de fragmentos que entran al prompt (RN-22): la ventana de LLM_NUM_CTX se reparte con la salida.
     llm_fragments_max_chars: int = Field(default=12000, gt=0)
     # Motor y idiomas del OCR (los consume FEAT-01b, S2): un motor desconocido falla al arrancar.

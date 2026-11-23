@@ -17,6 +17,8 @@ import numpy as np
 import onnxruntime as ort
 from tokenizers import Tokenizer
 
+from app.infrastructure.models.sesion import ParCodificado
+
 # Orden de búsqueda del relleno cuando el tokenizer.json no declara su `padding`: BGE-M3 usa `<pad>`, mDeBERTa `[PAD]`.
 TOKENS_DE_RELLENO = ("<pad>", "[PAD]")
 
@@ -120,3 +122,6 @@ class TokenizadorDeArchivo:
             self._tokenizador.encode(texto) if par is None else self._tokenizador.encode(texto, par)
         )
         return list(codificacion.ids)
+
+    def codificar_par(self, pregunta: str, pasaje: str) -> ParCodificado:
+        raise NotImplementedError("no implementado")

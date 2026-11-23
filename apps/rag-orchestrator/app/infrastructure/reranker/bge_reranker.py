@@ -8,6 +8,11 @@ import numpy as np
 
 from app.application.ports import CandidatoParaReranker, FalloDeInferencia
 from app.domain.normalizacion_puntaje import normalizar_a_unidad
+from app.domain.ventanas_del_reranker import (
+    MODO_DE_VENTANAS_INICIAL,
+    RERANKER_WINDOW_OVERLAP_INICIAL,
+    ModoDeVentanas,
+)
 from app.infrastructure.models.fallos import fallos_de_inferencia_como_error_del_puerto
 from app.infrastructure.models.lotes import (
     agrupar_por_presupuesto_de_tokens,
@@ -31,6 +36,8 @@ class BgeReranker:
         max_length: int,
         max_pairs: int,
         max_tokens_por_lote: int,
+        modo_de_ventanas: ModoDeVentanas = MODO_DE_VENTANAS_INICIAL,
+        solape: int = RERANKER_WINDOW_OVERLAP_INICIAL,
     ) -> None:
         self._sesion = sesion
         self._tokenizador = tokenizador
@@ -38,6 +45,8 @@ class BgeReranker:
         self._max_length = max_length
         self._max_pairs = max_pairs
         self._max_tokens_por_lote = max_tokens_por_lote
+        self._modo_de_ventanas = modo_de_ventanas
+        self._solape = solape
 
     @property
     def version(self) -> str:
