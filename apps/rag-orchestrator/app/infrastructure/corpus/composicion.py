@@ -33,7 +33,7 @@ def puertos_del_corpus_segun_proveedores(settings: Settings) -> PuertosDelCorpus
     """Los bordes reales del corpus si modelos y LLM son locales; si no, ``None`` (no se importa Milvus)."""
     if settings.model_provider != "local" or settings.llm_provider != "local":
         return None
-    milvus, base = _leer_configuracion_del_corpus()
+    milvus, base = leer_configuracion_del_corpus()
     return crear_puertos_del_corpus(
         milvus,
         base,
@@ -70,7 +70,7 @@ def crear_puertos_del_corpus(
     )
 
 
-def _leer_configuracion_del_corpus() -> tuple[MilvusSettings, CorpusDatabaseSettings]:
+def leer_configuracion_del_corpus() -> tuple[MilvusSettings, CorpusDatabaseSettings]:
     claves: set[str] = set()
     ajustes: list[Any] = []
     for clase in (MilvusSettings, CorpusDatabaseSettings):

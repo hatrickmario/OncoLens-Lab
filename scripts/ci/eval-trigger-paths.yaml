@@ -10,6 +10,11 @@ rutas:
   - packages/clinical-catalogs/**/*.json
   - data/raw/**/manifest.{yaml,json}
   - apps/rag-orchestrator/eval/configs/*.yaml
+  # Chat (US-269, L1D-326): el dataset, la familia `chat` y su cargador, y los nodos del grafo (los prompts ya entran por app/prompts).
+  - data/eval/chat-v1/**
+  - apps/rag-orchestrator/app/evaluation/chat.py
+  - apps/rag-orchestrator/app/evaluation/dataset_chat.py
+  - apps/rag-orchestrator/app/application/chat/**
 
 # `claves`: solo dispara si una línea añadida o borrada de esos archivos nombra alguna de las claves (sin distinguir
 # mayúsculas: `.env.example` usa LLM_MODEL y la configuración versionada de Python, `llm_model`). Los `.env.example`

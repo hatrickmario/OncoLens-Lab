@@ -89,6 +89,111 @@ metas definitivas (DEC-07); revisión clínica (D6-53).
     `l1d-119`, el mismo corpus en la corrida base y en la final, y el reporte lo declara. Corre con los umbrales
     actuales; los calibrados de `l1d-119` solo entran en la final como un brazo propio de ese change.
 
+12. **Implementación de `clinical-platform` (decisiones no cubiertas arriba).**
+    - **Cómo se obtiene `factRef → recurso` sin escribirlo.** El capturador responde con un bloque `documentado` por hecho de la
+      petición; el servicio de producción valida y persiste ese turno (BD de test desechable, decisión 3) y devuelve sus
+      `dataLinks` (`factRef`, `resourceId`). `traducirHechosEsperados()` casa esos ids con los del seed y solo escribe clave
+      semántica → `factRef`. *Descartadas:* (a) reconstruir la numeración de `factRef` en la preparación (duplica
+      `construirHechosDelCaso` y se desincroniza); (b) exportar el mapa interno del servicio (la regla del mapa que no sale de
+      Backend 1 lo prohíbe y exige tocar `evidence-analysis`, fuera del alcance).
+    - **Clave de hecho.** `<paciente>/<recurso>` admite la clave del dato (`her2`, `diagnostico-1`, `adt`) y la del examen con un
+      solo biomarcador (`psa-1`): así están escritas las claves de `chat-v1`. Un examen con varios biomarcadores sin clave de
+      biomarcador es ambiguo y se trata como hecho inexistente.
+    - **Controles.** No nombran paciente: toman el del primer caso del mismo tipo de cáncer (mama → `paciente-a`, próstata →
+      `paciente-b`). *Descartada:* añadir `paciente` a los controles (cambia `data/eval/chat-v1/`, que este change no toca).
+    - **Guarda de base (decisión 10).** «Base de test sintética» = tiene pacientes, todos `sintetico` y todos del seed
+      (`PACIENTES_SEMILLA` + `P-CHAT`); si no, `BaseNoSinteticaError` antes de abrir las claves. *Descartada:* comparar el
+      nombre de la base con un prefijo de test (la base del seed de Compose se llama `oncolens` en cualquier entorno).
+    - **Composición.** `componerConversacion` de `evidence-analysis.module.ts` no se exporta y ese módulo queda fuera del
+      alcance: `src/evaluacion/chat/composicion.ts` cablea `crearConversationService` con las mismas piezas exportadas y lo
+      comparten el proceso real y los tests (una sola composición). *Pendiente de decidir:* exportar `componerConversacion` y
+      reutilizarla (quita ~30 líneas duplicadas).
+    - **Conexión desde el host.** El PostgreSQL de Compose solo certifica el nombre `postgres`: la preparación admite
+      `EVAL_CHAT_DB_TLS_SERVERNAME` (RN-22) con TLS verificado contra la CA, y `entornoDelStackDeTest()` completa conexión y
+      rutas de secretos del stack de test. `APP_ENV` nunca se completa (RN-13). *Descartada:* `rejectUnauthorized: false`.
+    - **Respuesta al Gate 2 (refactor).** `crearConversacionDeProduccion()` (exportada desde `evidence-analysis.module.ts`) es la
+      única composición del servicio de conversación, para el gateway y para la preparación; `crearPool` admite `servername`
+      sin quitar `rejectUnauthorized`; `idDeBiomarcador()` vive en `prisma/seed/determinismo.ts` junto a `idDeTratamiento()`; el
+      capturador se llama `CapturadorDeTurnosDeEvaluacion` y no sustituye al cliente real.
+    - **SIGKILL.** El `finally` de `evaluate:chat` no cubre un SIGKILL: el residuo (peticiones con identidad sintética, en un
+      directorio ignorado por git) queda hasta la siguiente corrida, que lo borra antes de cualquier guarda.
+    - **Seudónimo y logs.** El servicio real usa el seudónimo aleatorio por consulta; el comando no registra nada (registrador
+      nulo) y su mensaje de fallo nombra variable, caso o clave, o la clase del error, nunca su texto.
+
+13. **Implementación de `ai-services` (decisiones no cubiertas arriba).**
+    - **Umbrales de `Settings` sin valor en código.** `Settings` no tiene valores por defecto para `RELEVANCE_THRESHOLD`,
+      `NLI_ENTAILMENT_THRESHOLD`, `RETRIEVAL_TOP_K` ni `RERANK_TOP_N` (RN-22): «leer de `Settings`» es leer el entorno. Con
+      `umbrales` ausente del YAML, `cargar_config_suite(ruta, entorno)` los resuelve con `Settings` (rango validado), los
+      mete en el texto hasheado (cambiar uno cambia la huella) y, si falta o es inválida alguna variable, lanza
+      `ConfigInvalida` nombrando la variable, nunca el valor (la familia sale con código 2). El bloque `umbrales` presente
+      en un YAML sigue mandando (las demás configuraciones no cambian). Consecuencia: la corrida base necesita esas cuatro
+      variables en el entorno; el bloque literal de H-1 las exporta con los valores del Compose. Los cuatro tests de
+      `test_chat_evaluate_unitarios.py` que cargaban `chat-local.yaml` sin entorno reciben ahora uno (solo su preparación;
+      las aserciones no cambian). *Descartadas:* (a) mantener el bloque en `chat-local.yaml` (es el drift que cierra
+      D6-52: 40 frente a 30 candidatos); (b) un valor por defecto en código (rompe RN-22); (c) leer `os.environ` dentro del
+      cargador (el único punto del entorno es `entorno_del_proceso`).
+    - **Corpus: el de la ingesta de `l1d-119` (revierte el supuesto anterior).** Decidido (usuario, 2026-11-22): el chat (326) se mide sobre la ingesta de L1D-119 [S7 resp. 10]; se revierte el supuesto del dataset en memoria. Ver la decisión 14.
+    - **LLM caído = `SuiteAbortada`.** El grafo traduce el `FalloDelLlm` del adapter real a `LlmLocalNoDisponibleError` (también
+      lo hace con un NLI caído); `_turno` lo convierte en `SuiteAbortada` (código 2, sin `chat.json`). Una salida del LLM
+      que no valida sigue siendo `LlmSalidaInvalidaError` y cuenta como turno errado. *Descartada:* abortar con cualquier
+      excepción (ocultaría un turno defectuoso como «dependencia caída»).
+    - **`CHAT-AC01-MAMA-PII` e `intent_correcto: false` (observación del humo).** La causa **no es un defecto del enrutador ni
+      del dataset**: `clinical-api` enmascara el nombre como `[NOMBRE]` y la regla de US-259 (`S5 resp. 13`,
+      `MARCADORES_DE_IDENTIDAD`) trata cualquier marcador de identidad como «otra persona» → `fuera_de_alcance`, sin LLM. Con
+      adapters falsos el ejemplo del contrato se enmascaraba como `[REDACTADO]`, que el enrutador no reconoce, por eso el
+      humo anterior sí daba `caso`: el fake no tenía la forma de producción. Alternativas: (1) cambiar el enrutador para que
+      reconozca el nombre del propio paciente (decisión de producto de US-259: no se toca sin reportar); (2) cambiar
+      `intent: caso` del dataset a `fuera_de_alcance` (rompe la ruta de adapters falsos, que sigue dando `caso`, y contradice
+      su `respuesta_esperada`); (3) **elegida:** el caso con marcador de identidad cuya respuesta es `fuera_de_alcance` se
+      mide solo por no fuga (AC-6): queda en `por_caso` con `control_de_identidad: true` e `intent_correcto: null` y no entra
+      en la exactitud de intención, la latencia por intención ni soporte, enlaces o hechos del tipo de cáncer (con la
+      respuesta de rechazo penalizaría `hechos_presentes` de mama por construcción). Una respuesta de otra intención se mide
+      como cualquier caso, así que la regla no oculta un enrutado defectuoso. **Pendiente para el humano/DEC:** si el
+      producto quiere que «la paciente Fulana» siga en el caso, es un cambio de US-259 con su propia evaluación.
+      El fake conserva `[REDACTADO]` (cambiarlo movería las cifras que fijan los tests existentes); el humo con
+      preparación real (3.2) sí ejerce la forma de producción.
+    - **Reporte.** Nuevos campos aditivos: `reloj`, `umbrales` (con `origen`), `corpus`, `metricas.faltantes` (tres `null`),
+      `metricas.no_medidas`, `metricas.latencia.rotulo` (`simulada`/`real`) y `por_caso[].control_de_identidad`. Un test
+      inyecta los puertos en `main(..., puertos=...)` para probar el LLM caído sin red.
+    - **`eval-required`.** La familia `chat` corre con `chat-fake.yaml --sin-preparar` desde `scripts/ci/eval-required.mjs`
+      (`ejecutarFamiliaDelChat`, hermana de la de `opciones`), salida en `<carpeta>/chat`; el resumen publica solo los dos
+      conteos; un código distinto de 0 rompe el job (2 si no corre, 1 en otro caso).
+
+14. **Fuente `indice` del corpus de la familia `chat` (`[S7 resp. 10]`).** Decidido (usuario, 2026-11-22): el chat (326) se mide sobre la ingesta de L1D-119 [S7 resp. 10]; se revierte el supuesto del dataset en memoria.
+    - **Qué es.** `app/evaluation/indice_del_corpus.py`: `IndiceDelCorpus(puertos: PuertosDelCorpus, resumen)`. `abrir_indice_real()`
+      compone con `crear_puertos_del_corpus` (los mismos adapters de lectura de producción: rol `rag_corpus` y Milvus, nunca un
+      schema clínico) y solo consulta (`has_collection`, `load_collection`, `query_iterator`); no inserta, no reescribe, no marca
+      vigencias (RN-05). Falla cerrado nombrando la variable (`MILVUS_COLLECTION_NAME`, `MILVUS_URI`…), nunca la URI, y aborta
+      con colección vacía. `ConfigSuite.indice_fuente` (`indice.fuente: en_memoria | milvus`, por defecto `en_memoria`: la huella
+      de las demás configuraciones no cambia; `milvus` exige `proveedor: local`). `componer_servicio(..., corpus=PuertosDelCorpus)`
+      busca y lee catálogo y release en esos puertos; la familia `chat` usa además sus `posiciones`.
+    - **Reporte.** `corpus.cargado` = `{fuente: indice, coleccion, chunks_vigentes, huella}` (SHA-256 de los ids de chunk
+      ordenados) o `{fuente: dataset, ruta}`; nunca texto. `corpus.declarado` es el de la configuración.
+    - **Reutilización por `l1d-336` y `l1d-337`.** Su diseño prevé una fuente `indice` (`en_memoria` o una colección de Milvus)
+      detrás del puerto `ChunkSearch`. Esta fuente ya cumple ese papel: `IndiceDelCorpus` y el parámetro `corpus` de
+      `componer_servicio` son lo que reutilizarán, y la clave `indice.fuente` es la misma. La colección sale hoy de
+      `MILVUS_COLLECTION_NAME`; que cada brazo apunte a otra colección es una extensión (un parámetro de `abrir_indice_real`)
+      que les corresponde sin romper este contrato. Ninguna de las dos changes está implementada aún.
+    - **Alternativas.** (a) **[elegida]** fuente de solo lectura sobre los puertos de producción: una sola composición, la que
+      reutilizan 336 y 337, y el chat mide el mismo camino de recuperación que producción. (b) componer el chat con los
+      adapters de Milvus por configuración local sin abstracción de fuente: descartada, duplicaría la composición en cada
+      familia y 336 y 337 tendrían que rehacerla. (c) exportar la ingesta a un directorio de dataset y usar
+      `FuenteDatasetEnDirectorio`: descartada, duplica el corpus fuera del almacén, desincroniza la medición de la ingesta real
+      y obliga a re-embeber en la suite.
+    - **Ajustes del Gate 2 de la fuente.** (1) `abrir_indice_real(max_valores_de_poblacion=…)` recibe el tope de `Settings`
+      (`chat._abrir_el_indice(config, ajustes)`), como producción, y no una constante. (2) `componer_servicio(corpus=…)` usa
+      `corpus.buscador_sparse`; un brazo híbrido sin esa búsqueda es `ConfigInvalida`. (3) Un `IndiceDelCorpus` sin chunks
+      vigentes no se puede construir (falla cerrado en `__post_init__`, también para el fingido) y `exigir_indice_pedido(fuente,
+      indice)` vive junto al índice. (4) Con índice no se embeben los chunks del dataset: lo decide `adaptadores_de_suite`, no la
+      familia. (5) `_catalogo_de(aplicabilidad, corpus, dataset)`; recibir aplicabilidad y corpus a la vez es `ConfigInvalida`.
+      (6) El contador usa el protocolo `LectorDeVigentes` y el fingido (`adaptadores_falsos.indice_fingido`, con búsqueda *sparse*
+      en memoria) pasa por el mismo `IndiceDelCorpus.abrir` que el real. *Desviación:* el protocolo es la mitad de lectura de
+      `AlmacenDeReindexacionSparse` (sin `reescribir_sparse`): tipar contra el completo habría dado a una fuente de solo lectura
+      una escritura al alcance. Sigue pendiente (opcional) un `cerrar()` del índice y tomar el tope de lote de `LIMITE_DE_CONSULTA`
+      (importarlo cargaría `pymilvus` también con adapters falsos).
+    - **Límites.** Con la fuente `indice` y modelos locales no se embeben los chunks del dataset (los vectores ya están en el
+      índice); el `GeneradorGuionado` y los vectores falsos siguen siendo solo del modo fake. La ejecución real es de H-1.
+
 ## Dependencias y colaboradores
 
 | Módulo | Estado | Depende de |
@@ -149,8 +254,11 @@ errores); no se toca ningún fake de `rag-orchestrator`.
   desechable (decisión 3). Si obligara a tocar el servicio de producción, el implementador se detiene y lo reporta.
 - **Hilo en proceso frente a rehidratación real** (decisión 4): AC06 se mide sin el camino de rehidratación de
   Backend 1; queda anotado como limitación en el reporte.
-- **Corpus de los turnos de evidencia · cerrado (`[S7 resp. 10]`):** el chat mide sobre la ingesta de `l1d-119`,
-  declarada en el reporte. Si esa ingesta no está lista, la medición no corre (no se mide sobre otro corpus).
+- **Corpus de los turnos de evidencia · `[S7 resp. 10]`.** Decidido (usuario, 2026-11-22): el chat (326) se mide sobre la ingesta de L1D-119 [S7 resp. 10]; se revierte el supuesto del dataset en memoria. La ingesta de `l1d-119` **sí** es requisito de la
+  corrida base: la fuente `indice` (decisión 14) lee su colección de Milvus y su catálogo `corpus`, y la suite aborta si la
+  colección no existe o está vacía; nunca mide sobre otro corpus. La ingesta real de la corrida B (S7.7) debe haber terminado
+  antes de H-1. La CI no tiene Milvus ni la ingesta: con adapters falsos la familia sigue sobre el dataset y la fuente
+  `indice` se prueba con el almacén fingido en su puerto y el cliente de Milvus fingido.
 - **Una sola medición:** `S7-refinamiento.md` §5 sitúa la medición del chat en la corrida base; repetirla en la corrida
   final (para ver el efecto de US-277…US-279 en los turnos de evidencia) es una pregunta abierta al humano (H-2). Si se
   repite, usa el mismo corpus y los umbrales actuales.

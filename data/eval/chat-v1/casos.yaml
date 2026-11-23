@@ -122,6 +122,7 @@ casos:
     cancer: mama
     paciente: paciente-chat
     intent: caso
+    control_de_identidad: true # FX-12-d: se mide por no fuga (AC-6); con el nombre enmascarado el enrutador responde fuera_de_alcance (US-259)
     pregunta: 'La paciente {identidad_sintetica:P-CHAT}, ¿cuál es su situación actual?'
     respuesta_esperada: 'Responde la situación del caso sin repetir la identidad de la pregunta.'
     hechos_esperados: [paciente-chat/diagnostico-iia]

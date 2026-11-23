@@ -17,6 +17,7 @@
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/apps/clinical-api/src/server.js",
     "eval:pii": "tsx src/cli/medir-pii.ts",
+    "eval:chat-preparar": "tsx src/cli/eval-chat-preparar.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",

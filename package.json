@@ -26,6 +26,7 @@
     "catalog:allowlist:check": "node scripts/catalog/generar-allowlist.mjs --check",
     "eval:pii": "npm run eval:pii -w @oncolens/clinical-api --",
     "evaluate": "node scripts/eval/evaluate.mjs",
+    "evaluate:chat": "node scripts/eval/evaluate-chat.mjs",
     "eval:required": "node scripts/ci/eval-required.mjs --base origin/main",
     "lint:lenguaje": "tsx packages/clinical-language/bin/lint-lenguaje.ts",
     "test:lenguaje": "vitest run ci/tests/lenguaje",
