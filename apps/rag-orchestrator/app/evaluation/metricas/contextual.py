@@ -19,7 +19,10 @@ ESTADOS_DE_FILA: Final = (ESTADO_CON_EVIDENCIA, ESTADO_SIN_EVIDENCIA, ESTADO_SAL
 CAUSA_TERMINO_AUSENTE: Final = "termino_ausente_del_corpus"
 CAUSA_BAJO_UMBRAL: Final = "bajo_umbral_con_termino_en_corpus"
 CAUSAS_DE_SINONIMO: Final = (CAUSA_TERMINO_AUSENTE, CAUSA_BAJO_UMBRAL)
-CLASES_DE_PREGUNTA: Final = ("generica", "con_tema", "control")
+CLASE_GENERICA: Final = "generica"
+CLASE_CON_TEMA: Final = "con_tema"
+CLASE_CONTROL: Final = "control"
+CLASES_DE_PREGUNTA: Final = (CLASE_GENERICA, CLASE_CON_TEMA, CLASE_CONTROL)
 SEGUNDO_LOOP_CONTEXTUAL: Final = "contextual"
 SEGUNDO_LOOP_NINGUNO: Final = "ninguno"
 AMBITO_TOTAL: Final = "total"
@@ -154,14 +157,72 @@ class CambioFrenteALaBase:
 def genericas_con_evidencia_por_caso(
     filas: Sequence[FilaContextual], minimo: int
 ) -> tuple[CoberturaDeCaso, ...]:
-    raise NotImplementedError("no implementado")
+    """Por caso, en el orden en que aparecen: cuántas genéricas terminaron ``con_evidencia`` (el estado lo dio el servicio: no
+    se vuelve a aplicar el umbral), cuántas se corrieron, la meta y si se cumple (``>=``), con los campos usados."""
+    por_caso = {
+        caso: [f for f in filas if f.caso == caso] for caso in dict.fromkeys(f.caso for f in filas)
+    }
+    return tuple(_cobertura(caso, de_el_caso, minimo) for caso, de_el_caso in por_caso.items())
+
+
+def _cobertura(caso: str, filas: Sequence[FilaContextual], minimo: int) -> CoberturaDeCaso:
+    genericas = [f for f in filas if f.clase == CLASE_GENERICA]
+    con_evidencia = sum(f.estado == ESTADO_CON_EVIDENCIA for f in genericas)
+    return CoberturaDeCaso(
+        caso,
+        con_evidencia,
+        len(genericas),
+        minimo,
+        con_evidencia >= minimo,
+        next((f.campos_usados for f in genericas if f.campos_usados), ()),
+    )
 
 
 def adversarias_por_caso(filas: Sequence[FilaContextual]) -> tuple[AdversariasDeCaso, ...]:
-    raise NotImplementedError("no implementado")
+    """Por caso: las preguntas con tema fuera del corpus (``con_tema``) que quedaron ``sin_evidencia``, las que no (falsos
+    positivos), las que dejaron el puntaje en ``null`` y cuántas veces se invocó al generador (RN-02: debe ser 0)."""
+    casos = dict.fromkeys(f.caso for f in filas)
+    return tuple(_adversarias(caso, [f for f in filas if f.caso == caso]) for caso in casos)
+
+
+def _adversarias(caso: str, filas: Sequence[FilaContextual]) -> AdversariasDeCaso:
+    adversarias = [f for f in filas if f.clase == CLASE_CON_TEMA]
+    sin_evidencia = sum(f.estado == ESTADO_SIN_EVIDENCIA for f in adversarias)
+    return AdversariasDeCaso(
+        caso,
+        len(adversarias),
+        sin_evidencia,
+        len(adversarias) - sin_evidencia,
+        sum(f.top_relevance_score is None for f in adversarias),
+        sum(f.llamadas_al_generador for f in adversarias),
+    )
 
 
 def comparar_con_base(
     actual: Sequence[RecuentoDeClase], base: Sequence[RecuentoDeClase]
 ) -> tuple[CambioFrenteALaBase, ...]:
-    raise NotImplementedError("no implementado")
+    """Por ámbito presente en las dos corridas (el total y cada caso): genéricas con evidencia, controles con evidencia y
+    falsos positivos (``con_tema`` con evidencia). Una métrica empeora cuando baja una cobertura o sube un falso positivo."""
+    ambitos_de_la_base = {r.ambito for r in base}
+    comunes = [a for a in dict.fromkeys(r.ambito for r in actual) if a in ambitos_de_la_base]
+    return tuple(
+        _cambio(ambito, metrica, _valor(actual, ambito, clase), _valor(base, ambito, clase))
+        for ambito in comunes
+        for metrica, clase in _CLASE_DE_LA_METRICA
+    )
+
+
+_CLASE_DE_LA_METRICA: Final = (
+    (METRICA_GENERICAS, CLASE_GENERICA),
+    (METRICA_CONTROLES, CLASE_CONTROL),
+    (METRICA_FALSOS_POSITIVOS, CLASE_CON_TEMA),
+)
+
+
+def _valor(recuentos: Sequence[RecuentoDeClase], ambito: str, clase: str) -> int:
+    return next((r.con_evidencia for r in recuentos if (r.ambito, r.clase) == (ambito, clase)), 0)
+
+
+def _cambio(ambito: str, metrica: str, actual: int, base: int) -> CambioFrenteALaBase:
+    empeora = actual > base if metrica == METRICA_FALSOS_POSITIVOS else actual < base
+    return CambioFrenteALaBase(ambito, metrica, base, actual, empeora)

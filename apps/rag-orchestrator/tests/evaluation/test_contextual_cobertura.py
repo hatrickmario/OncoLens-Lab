@@ -257,3 +257,30 @@ def test_la_configuracion_de_la_familia_declara_la_meta_de_us_273_ac_2_y_los_tre
 
     assert contextual.get("genericas_con_evidencia_minimo") == 18
     assert contextual["casos"] == ["mama-completo", *PROSTATA]
+
+
+@pytest.mark.ac("US-273", 2)
+def test_contextual_fake_da_la_cobertura_de_los_tres_casos_sobre_las_180_consultas_del_dataset_del_repositorio(
+    tmp_path: Path,
+) -> None:
+    codigo = main(
+        [
+            "--config",
+            str(RAIZ_APP / "eval" / "configs" / "contextual-fake.yaml"),
+            "--suite",
+            "contextual",
+            "--salida",
+            str(tmp_path),
+            "--nombre-archivo",
+            "informe",
+        ],
+        reloj=RelojFijo(),
+    )
+
+    reporte = json.loads((tmp_path / "informe.json").read_text("utf-8"))
+    assert codigo == 0
+    assert len(reporte["preguntas"]) == 180
+    assert [c["caso"] for c in reporte["cobertura"]] == ["mama-completo", *PROSTATA]
+    assert {c["genericas_total"] for c in reporte["cobertura"]} == {22}
+    assert {c["minimo"] for c in reporte["cobertura"]} == {18}
+    assert reporte["comparacion"] is None
