@@ -127,6 +127,20 @@ class JuezLlmLocal:
         return await pedir_contenido(self._cliente, cuerpo)
 
 
+async def abrir_cliente_del_juez_local(
+    config: ConfigJuez, pila: AsyncExitStack
+) -> httpx.AsyncClient:
+    """El cliente HTTP de un juez local, cerrado con ``pila``. RN-12: la guarda corre antes de crearlo (ni con datos
+    sintéticos sale un request a un host fuera de la lista local) y ``trust_env=False`` impide que un ``HTTP(S)_PROXY`` del
+    proceso desvíe el prompt."""
+    if config.base_url is None:
+        raise ConfigInvalida("un juez local exige juez.base_url")
+    exigir_juez_local(config)
+    return await pila.enter_async_context(
+        httpx.AsyncClient(base_url=config.base_url, timeout=config.timeout_s, trust_env=False)
+    )
+
+
 async def crear_juez_llm(
     config: ConfigJuez | None,
     pila: AsyncExitStack,
@@ -138,14 +152,7 @@ async def crear_juez_llm(
         return None
     if config.proveedor == "fake":
         return JuezLlmLexico()
-    if config.base_url is None:
-        raise ConfigInvalida("un juez local exige juez.base_url")
-    exigir_juez_local(config)  # RN-12: antes de crear el cliente, tampoco con datos sintéticos
-    cliente = await pila.enter_async_context(
-        httpx.AsyncClient(  # trust_env=False: ningún HTTP(S)_PROXY del proceso desvía el prompt (RN-12)
-            base_url=config.base_url, timeout=config.timeout_s, trust_env=False
-        )
-    )
+    cliente = await abrir_cliente_del_juez_local(config, pila)
     return JuezLlmLocal(
         cliente,
         modelo=config.modelo,

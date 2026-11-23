@@ -31,13 +31,14 @@ from app.evaluation.juez_no_inferencia import (
 )
 from app.evaluation.metricas.no_inferencia import no_inferencia
 from app.evaluation.metricas.resultado import ResultadoConsulta
+from app.prompts.rag_query import DESCRIPCION_DEL_FALTANTE
 from tests.evaluation.conftest import RAIZ_APP, RAIZ_REPO
 from tests.support.fakes import RelojFijo
 
 CONFIG = RAIZ_APP / "eval" / "configs" / "test-fake.yaml"
 CASO = "FX-01"  # pregunta de mama del mini-dataset FX-T5a-a: su propuesta cita ch-m1-1
 OPCION_CON_VALOR = "Ki-67 30 % improved disease-free survival"
-LIMITACION_DESCONOCIDO = "Ki-67: sin dato registrado (desconocido)"
+LIMITACION_DESCONOCIDO = f"Ki-67: {DESCRIPCION_DEL_FALTANTE}"
 
 
 class CompletadorQueDevuelve:

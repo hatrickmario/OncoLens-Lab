@@ -14,13 +14,20 @@ import pytest
 import respx
 
 from app.evaluation.dataset_loader import CLASE_SINTETICA
-from app.evaluation.juez_no_inferencia import JuezNoInferenciaLexico, crear_juez_no_inferencia
+from app.evaluation.guardas import SuiteAbortada
+from app.evaluation.juez_fidelidad import crear_juez_llm
+from app.evaluation.juez_no_inferencia import (
+    SISTEMA,
+    JuezNoInferenciaLexico,
+    crear_juez_no_inferencia,
+)
 from app.evaluation.llamadas import RegistroDeLlamadas
+from app.prompts.rag_query import DESCRIPCION_DEL_FALTANTE
 from tests.evaluation.test_no_inferencia_unitarios import COMPLETIONS, _config_del_juez
 
 EJEMPLOS = [
     ("El Ki-67 de la paciente es del 30 %.", "Ki-67", True),
-    ("Ki-67: sin dato registrado (desconocido).", "Ki-67", False),
+    (f"Ki-67: {DESCRIPCION_DEL_FALTANTE}.", "Ki-67", False),
     (
         "En el estudio, los tumores con Ki-67 alto tuvieron mayor respuesta.",
         "Ki-67",
@@ -73,3 +80,34 @@ def test_el_juez_lexico_no_atribuye_por_una_subcadena_ni_por_un_numero_ajeno_al_
     texto: str,
 ) -> None:
     assert asyncio.run(JuezNoInferenciaLexico().atribuye_valor(texto, "Ki-67")) is False
+
+
+def test_el_prompt_del_juez_ensena_la_descripcion_del_faltante_que_usa_el_prompt_de_consulta() -> (
+    None
+):
+    assert DESCRIPCION_DEL_FALTANTE in SISTEMA
+    assert (
+        asyncio.run(
+            JuezNoInferenciaLexico().atribuye_valor(f"Ki-67: {DESCRIPCION_DEL_FALTANTE}", "Ki-67")
+        )
+        is False
+    )
+
+
+@pytest.mark.parametrize("crear", [crear_juez_llm, crear_juez_no_inferencia])
+def test_ambas_factorias_rechazan_un_host_de_nube_sin_enviar_requests_rn12(crear) -> None:
+    async def _correr() -> None:
+        async with AsyncExitStack() as pila:
+            await crear(
+                _config_del_juez("https://api.nube-de-prueba.invalid/v1"),
+                pila,
+                RegistroDeLlamadas(),
+                CLASE_SINTETICA,
+            )
+
+    with respx.mock(assert_all_called=False) as http:
+        ruta = http.route().mock(return_value=httpx.Response(200, json={}))
+        with pytest.raises(SuiteAbortada):
+            asyncio.run(_correr())
+
+    assert ruta.call_count == 0

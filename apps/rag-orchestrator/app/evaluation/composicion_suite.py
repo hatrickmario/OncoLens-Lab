@@ -380,9 +380,11 @@ def componer_servicio(
         nli.latencias,
         config.umbrales.claim_max_words,
         _filtro_de_la_linea_base(dataset),
-        None
-        if juez_no_inferencia is None
-        else MedidorDeNoInferencia(juez_no_inferencia, datos_criticos),
+        no_inferencia=(
+            None
+            if juez_no_inferencia is None
+            else MedidorDeNoInferencia(juez_no_inferencia, datos_criticos)
+        ),
     )
 
 

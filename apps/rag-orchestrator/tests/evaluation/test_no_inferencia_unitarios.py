@@ -29,6 +29,7 @@ from app.evaluation.metricas.prescriptivas import contar_salidas_con_terminos
 from app.evaluation.metricas.resultado import ResultadoNoInferencia
 from app.evaluation.reporte import ReporteFueraDeEsquema, validar_esquema_cerrado
 from app.infrastructure.lenguaje.terminos_prohibidos import cargar_lista_de_terminos
+from app.prompts.rag_query import DESCRIPCION_DEL_FALTANTE
 from tests.evaluation.conftest import RAIZ_REPO
 from tests.evaluation.test_suite_unitarios import consulta
 
@@ -88,7 +89,7 @@ def test_el_veredicto_solo_atribuye_con_la_forma_exacta_y_lo_demas_es_invalido(
 ) -> None:
     veredicto = parsear_veredicto_de_inferencia(contenido)
 
-    assert (veredicto.atribuye_valor, veredicto.valido) == (atribuye, valido)
+    assert (veredicto.atribuye, veredicto.valido) == (atribuye, valido)
 
 
 def test_el_prompt_del_juez_no_usa_lenguaje_prescriptivo() -> None:
@@ -107,7 +108,7 @@ def test_el_prompt_del_juez_no_usa_lenguaje_prescriptivo() -> None:
     [
         ("El Ki-67 de la paciente es del 30 %.", "Ki-67", True),
         ("ki 67 elevado en la paciente", "Ki-67", True),
-        ("Ki-67: sin dato registrado (desconocido)", "Ki-67", False),
+        (f"Ki-67: {DESCRIPCION_DEL_FALTANTE}", "Ki-67", False),
         ("El estado de HER2 es positivo", "Ki-67", False),
         ("Ki-67 no se describe en este caso", "Ki-67", False),
         ("Estado menopáusico positivo", "Estado menopáusico", True),

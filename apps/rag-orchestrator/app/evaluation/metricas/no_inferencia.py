@@ -17,7 +17,8 @@ ESTADO_NO_MEDIDA = "no_medida"
 
 def no_inferencia(resultados: Sequence[ResultadoConsulta]) -> dict[str, Any]:
     """Casos con faltantes declarados que el juez examinó, cuáles tuvieron inferencias y cuántas veredictos no se
-    pudieron interpretar. Un caso con veredictos inválidos y ninguna inferencia no cuenta como «sin inferencia»."""
+    pudieron interpretar. Un caso que no mostró ningún texto sobre el paciente no recibe veredicto: cuenta como medido y
+    sin inferencia. Un caso con veredictos inválidos y ninguna inferencia no cuenta como «sin inferencia»."""
     medidos = [r.no_inferencia for r in resultados if r.no_inferencia is not None]
     if not medidos:
         return {

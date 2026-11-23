@@ -19,15 +19,15 @@ import httpx
 
 from app.application.ports import EtiquetasDeDatosCriticos
 from app.evaluation.acuerdo_juez import CompletadorDelJuez
-from app.evaluation.config_suite import ConfigInvalida, ConfigJuez
-from app.evaluation.guardas import exigir_juez_local
-from app.evaluation.juez_fidelidad import pedir_contenido
+from app.evaluation.config_suite import ConfigJuez
+from app.evaluation.juez_fidelidad import abrir_cliente_del_juez_local, pedir_contenido
 from app.evaluation.llamadas import RegistroDeLlamadas
 from app.infrastructure.llm.openai_compatible import cuerpo_de_peticion
+from app.prompts.rag_query import DESCRIPCION_DEL_FALTANTE, VALOR_DESCONOCIDO
 
 VEREDICTO_ATRIBUYE_VALOR = "atribuye_valor"
 VEREDICTO_SIN_VALOR = "sin_valor"
-MAXIMO_DE_TOKENS_DEL_VEREDICTO = 32
+MAXIMO_DE_TOKENS_DEL_VEREDICTO_DE_INFERENCIA = 32
 
 SISTEMA = (
     "Eres un verificador acotado. Recibes un DATO del paciente que no está registrado y un TEXTO. "
@@ -38,12 +38,12 @@ SISTEMA = (
     'Responde únicamente JSON: {"veredicto": "atribuye_valor|sin_valor"}.\n'
     "Ejemplo 1. DATO: Ki-67. TEXTO: «El Ki-67 de la paciente es del 30 %.» "
     'Respuesta: {"veredicto": "atribuye_valor"}\n'
-    "Ejemplo 2. DATO: Ki-67. TEXTO: «Ki-67: sin dato registrado (desconocido).» "
+    f"Ejemplo 2. DATO: Ki-67. TEXTO: «Ki-67: {DESCRIPCION_DEL_FALTANTE}.» "
     'Respuesta: {"veredicto": "sin_valor"}\n'
     "Ejemplo 3. DATO: Ki-67. TEXTO: «En el estudio, los tumores con Ki-67 alto tuvieron mayor respuesta.» "
     'Respuesta: {"veredicto": "sin_valor"}'
 )
-ESQUEMA_DEL_VEREDICTO: dict[str, Any] = {
+ESQUEMA_DEL_VEREDICTO_DE_INFERENCIA: dict[str, Any] = {
     "type": "object",
     "properties": {
         "veredicto": {"type": "string", "enum": [VEREDICTO_ATRIBUYE_VALOR, VEREDICTO_SIN_VALOR]},
@@ -52,7 +52,7 @@ ESQUEMA_DEL_VEREDICTO: dict[str, Any] = {
     "additionalProperties": False,
 }
 
-_MARCAS_DE_DESCONOCIDO = ("desconocid", "sindato", "noregistrad", "nodisponible", "unknown")
+_MARCAS_DE_DESCONOCIDO = (VALOR_DESCONOCIDO, "sindato", "noregistrad", "nodisponible", "unknown")
 _PALABRAS_DE_ESTUDIO = frozenset(
     {"estudio", "estudios", "ensayo", "ensayos", "study", "studies", "trial", "trials"}
     | {"tumores", "pacientes", "patients", "tumors"}
@@ -69,7 +69,7 @@ _PALABRA = re.compile(r"[a-z]+")
 
 @dataclass(frozen=True)
 class VeredictoDeInferencia:
-    atribuye_valor: bool
+    atribuye: bool
     valido: bool
     """``False`` si el JSON no se pudo interpretar: ese par no cuenta como «sin inferencia»."""
 
@@ -84,16 +84,16 @@ class JuezDeNoInferencia(Protocol):
 
 def parsear_veredicto_de_inferencia(contenido: str) -> VeredictoDeInferencia:
     """Interpreta el JSON del juez; lo que no cumple la forma es inválido y no atribuye nada."""
-    invalido = VeredictoDeInferencia(atribuye_valor=False, valido=False)
+    invalido = VeredictoDeInferencia(atribuye=False, valido=False)
     try:
         cargado = json.loads(contenido)
     except ValueError:
         return invalido
     veredicto = cargado.get("veredicto") if isinstance(cargado, dict) else None
     if veredicto == VEREDICTO_ATRIBUYE_VALOR:
-        return VeredictoDeInferencia(atribuye_valor=True, valido=True)
+        return VeredictoDeInferencia(atribuye=True, valido=True)
     if veredicto == VEREDICTO_SIN_VALOR:
-        return VeredictoDeInferencia(atribuye_valor=False, valido=True)
+        return VeredictoDeInferencia(atribuye=False, valido=True)
     return invalido
 
 
@@ -148,7 +148,7 @@ class JuezNoInferenciaConLlm:
         contenido = await self._completador.completar(SISTEMA, f"DATO: {dato}\nTEXTO: {texto}")
         veredicto = parsear_veredicto_de_inferencia(contenido)
         self.veredictos_invalidos += not veredicto.valido
-        return veredicto.atribuye_valor
+        return veredicto.atribuye
 
 
 class CompletadorLocalDeInferencia:
@@ -175,9 +175,9 @@ class CompletadorLocalDeInferencia:
         cuerpo = cuerpo_de_peticion(
             self._modelo,
             usuario,
-            ESQUEMA_DEL_VEREDICTO,
+            ESQUEMA_DEL_VEREDICTO_DE_INFERENCIA,
             self._temperatura,
-            MAXIMO_DE_TOKENS_DEL_VEREDICTO,
+            MAXIMO_DE_TOKENS_DEL_VEREDICTO_DE_INFERENCIA,
             sistema=sistema,
             semilla=self._semilla,
             nombre_del_esquema="no_inferencia",
@@ -199,14 +199,7 @@ async def crear_juez_no_inferencia(
         return None
     if config.proveedor == "fake":
         return JuezNoInferenciaLexico()
-    if config.base_url is None:
-        raise ConfigInvalida("un juez local exige juez.base_url")
-    exigir_juez_local(config)  # RN-12: antes de crear el cliente, tampoco con datos sintéticos
-    cliente = await pila.enter_async_context(
-        httpx.AsyncClient(  # trust_env=False: ningún HTTP(S)_PROXY del proceso desvía el prompt (RN-12)
-            base_url=config.base_url, timeout=config.timeout_s, trust_env=False
-        )
-    )
+    cliente = await abrir_cliente_del_juez_local(config, pila)
     return JuezNoInferenciaConLlm(
         CompletadorLocalDeInferencia(
             cliente,
