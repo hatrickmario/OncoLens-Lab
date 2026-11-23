@@ -1,0 +1,44 @@
+# Configuración de la familia `contextual` de `evaluate` con los MODELOS LOCALES REALES (US-271 AC-9, L1D-329; ADR-39, ADR-41,
+# ADR-52, RN-12, RN-22). Corre a mano en el MacBook de referencia, en la corrida BASE del S7 ([S7 resp. 2]) y se repite en la
+# final, con el mismo dataset, el mismo corpus (data/eval/s5-corpus-ampliado en memoria, [S7 resp. 10]) y los umbrales ACTUALES
+# ([S7 resp. 11]); dos informes solo se comparan con el mismo dataset y la misma huella de corpus. Los pesos (rutas y SHA-256)
+# y las claves de ADR-39 llegan por el entorno (`~/adr39-modelos/modelos.env`); sin ellos la suite termina con código ≠ 0
+# nombrando la variable y no escribe cifras.
+#   OLLAMA_CONTEXT_LENGTH=8192 OLLAMA_FLASH_ATTENTION=1 OLLAMA_KV_CACHE_TYPE=q8_0 ollama serve   # LLM fuera de Docker
+#   cd apps/rag-orchestrator && python -m app.evaluation.evaluate --config eval/configs/contextual-local.yaml \
+#     --suite contextual --salida ../../reports/eval --nombre-archivo l1d-329-segundo-loop-ac9-reporte
+# Cambiar cualquier valor cambia la huella SHA-256 del informe.
+nombre: contextual-local
+fixture: S7-contextual-ctx
+dataset:
+  ruta: data/eval/s5-corpus-ampliado
+semilla_bootstrap: 20261122
+bootstrap_repeticiones: 200
+medicion:
+  reloj: real # time.perf_counter
+  rss_limite_mib: 4489 # el mismo límite de US-233a / local.yaml
+adaptadores:
+  proveedor: local
+  urls:
+    llm: http://127.0.0.1:11434/v1 # Ollama nativo; ninguna ruta hacia la nube (lista local cerrada en código)
+modelos:
+  llm: gemma4:26b-a4b-it-q4_K_M # G, LLM decidido en ADR-39
+umbrales: # los valores vigentes de producción ([S7 resp. 11]); los calibrados entran en la corrida final como un brazo más
+  relevance_threshold: 0.30
+  nli_entailment_threshold: 0.7
+  retrieval_top_k: 30
+  rerank_top_n: 10
+catalogo:
+  version: '2026.10.0'
+  ruta_terminos: packages/clinical-catalogs
+contextual:
+  casos: # design D5: la corrida base y la final ejecutan los casos que apruebe el plan del S7 (H-2); l1d-331 añade prostata-con-psa-y-hrr
+    - mama-completo
+    - prostata-con-grado
+  casos_ruta: packages/clinical-catalogs/test/fixtures/temas-del-caso.json
+  expansion_habilitada: true # QUERY_CONTEXT_EXPANSION_ENABLED de la corrida
+  preguntas_de_sinonimos:
+    - {pregunta: CTX-C12, termino: antraciclinas}
+    - {pregunta: CTX-C13, termino: pertuzumab}
+    - {pregunta: CTX-C14, termino: TILs}
+  # RERANKER_MAX_PAIRS no se declara: con proveedor local manda el del reranker cargado (ADR-39) y el informe lo registra.

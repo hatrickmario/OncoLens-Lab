@@ -1,0 +1,36 @@
+# Configuración de la familia `contextual` de `evaluate` con adapters falsos (US-271 AC-9, L1D-329). Es la configuración de la CI
+# de esta familia (regresión de FORMA): no carga modelos, no abre sockets y es reproducible (misma configuración, mismo informe).
+# Es independiente de test-fake.yaml: `--suite all` no la usa y data/evaluation/baseline.json no depende de ella.
+# `contextual-local.yaml` es su par con los modelos locales (corrida base y final del S7). Con adapters falsos las cifras NO
+# dicen nada del RAG real: ninguna se cita como resultado.
+nombre: contextual-fake
+fixture: S7-contextual-ctx
+dataset:
+  ruta: data/eval/s5-corpus-ampliado # el corpus de la medición de ADR-52, en memoria y el mismo en la corrida base y en la final ([S7 resp. 10])
+semilla_bootstrap: 20261122
+bootstrap_repeticiones: 200
+medicion:
+  reloj: simulado # simulado: 1 ms por lectura (reproducible); real: time.perf_counter
+adaptadores:
+  proveedor: fake
+modelos:
+  llm: fake-guion@1
+umbrales: # los valores vigentes de producción ([S7 resp. 11]): RELEVANCE_THRESHOLD, RETRIEVAL_TOP_K, RERANK_TOP_N, NLI_ENTAILMENT_THRESHOLD
+  relevance_threshold: 0.30
+  nli_entailment_threshold: 0.7
+  retrieval_top_k: 30
+  rerank_top_n: 10
+catalogo:
+  version: '2026.10.0'
+  ruta_terminos: packages/clinical-catalogs
+contextual:
+  casos: # ids del fixture compartido con el panel conversacional (design D5); l1d-331 añade prostata-con-psa-y-hrr antes de la corrida base
+    - mama-completo
+    - prostata-con-grado
+  casos_ruta: packages/clinical-catalogs/test/fixtures/temas-del-caso.json
+  expansion_habilitada: true # QUERY_CONTEXT_EXPANSION_ENABLED de la corrida; false = sin segundo loop contextual (brazo de l1d-333-reporte-h3)
+  preguntas_de_sinonimos: # las tres de US-271 AC-9: `termino` es un terminoCanonico del catálogo; si no, la suite no corre
+    - {pregunta: CTX-C12, termino: antraciclinas}
+    - {pregunta: CTX-C13, termino: pertuzumab}
+    - {pregunta: CTX-C14, termino: TILs}
+  reranker_max_pairs: 20 # RERANKER_MAX_PAIRS de ADR-39 para los adapters falsos; con proveedor local manda el del reranker cargado
