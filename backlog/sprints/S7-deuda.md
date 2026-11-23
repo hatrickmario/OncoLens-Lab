@@ -1,6 +1,6 @@
 # S7 · Deuda
 
-> Origen: planificación del S7 (`/sprint-start S7`, 2026-11-22). Plan: [`S7-plan.md`](S7-plan.md). D7-02…D7-11: Gate 2 de la ejecución (`/sprint-run S7`), registrados por la sesión principal el 2026-11-23 a pedido del usuario.
+> Origen: planificación del S7 (`/sprint-start S7`, 2026-11-22). Plan: [`S7-plan.md`](S7-plan.md). D7-02…D7-18: Gate 2 de la ejecución (`/sprint-run S7`), registrados por la sesión principal el 2026-11-23 a pedido del usuario.
 
 | ID | Change | Tarea | Resumen | Destino |
 |---|---|---|---|---|
@@ -11,7 +11,14 @@
 | D7-05 | `l1d-334-diagnostico-etapas-recuperacion` | Gate 2 (diseño, Menor) | Parámetros posicionales largos en `fila_de_redaccion` y `medir_diagnostico`; pasarlos a un objeto de contexto. | Por decidir en `/sprint-close S7` |
 | D7-06 | `l1d-334-diagnostico-etapas-recuperacion` | Gate 2 (diseño, Menor) | La banda del NLI se valida en `config_diagnostico` y el ancho en `histograma_de_p_entailment`; dejar una sola regla. | Por decidir en `/sprint-close S7` |
 | D7-07 | `l1d-334-diagnostico-etapas-recuperacion` | Gate 2 (diseño, Menor) | El `.md` del informe se escribe fuera de `escribir_reporte_cerrado`. Lo protege `test_informe_md_sin_texto.py`; evaluar pasarlo por el mismo guardia. | Por decidir en `/sprint-close S7` |
-| D7-08 | `l1d-329-segundo-loop-ac9-reporte` | Gate 2 (diseño), design I9 | La plomería común de las familias de `evaluate` (cronómetro, ruta del resultado, celdas del `.md`) está repetida en `diagnostico`, `opciones`, `contextual` y `chat`: extraerla a un módulo compartido. Incluye llevar la guarda de clase sintética (`dataset_loader.exigir_clase_sintetica`) a las familias que aún no la usan. | Por decidir en `/sprint-close S7` |
+| D7-08 | `l1d-329-segundo-loop-ac9-reporte` | Gate 2 (diseño), design I9 | La plomería común de las familias de `evaluate` (cronómetro, ruta del resultado, celdas del `.md`) está repetida en `diagnostico`, `opciones`, `contextual` y `chat`: extraerla a un módulo compartido. | Por decidir en `/sprint-close S7` |
 | D7-09 | `l1d-329-segundo-loop-ac9-reporte` | Gate 2 (diseño), design I9 | `formas_del_termino()` vive en `corrida_contextual.py`; cuando `l1d-335` publique `cargar_formas_por_termino`, pasa a la capa del catálogo con un solo dueño. | `l1d-335-sinonimos-procedimientos-relacion`, tarea 2.5b (O4) |
 | D7-10 | `l1d-113-faltantes-desconocido-prompt` | Gate 2 (diseño, Menor), PR #430 | El tope de tokens del juez de no inferencia está como literal en el código; pasarlo a configuración (RN-22). | Por decidir en `/sprint-close S7` |
 | D7-11 | `l1d-113-faltantes-desconocido-prompt` | Gate 2 (diseño, Menor), PR #430 | Un caso sin textos sobre el paciente cuenta como medido en la métrica de no inferencia; decidir si debe contar como no medido para no inflar la tasa. | Por decidir en `/sprint-close S7` |
+| D7-12 | `l1d-331-cobertura-prostata-segundo-loop` | Gate 2 (diseño, lote R1) | Unificar el vocabulario `con_evidencia` entre las familias de `evaluate`. | Junto con D7-08 |
+| D7-13 | `l1d-331-cobertura-prostata-segundo-loop` | Gate 2 (diseño, lote R1) | Observar el soporte NLI donde se conoce el plan, en lugar de agruparlo por heurística en el histograma de 334: con la heurística, dos afirmaciones con el mismo texto y premisas distintas pueden contarse como una. | Por decidir en `/sprint-close S7` (relacionada con D7-02) |
+| D7-14 | `l1d-331-cobertura-prostata-segundo-loop` | Gate 2 (diseño, lote R1) | Adoptar `exigir_clase_sintetica(clase, archivo, familia)` en las familias `aplicabilidad`, `chat` y `opciones` y en el cargador de datasets (hoy solo la usan `diagnostico` y `contextual`). | Junto con D7-08 |
+| D7-15 | `l1d-331-cobertura-prostata-segundo-loop` | Gate 2 (diseño, lote R1) | Trocear `corrida_contextual.py` y `corrida_diagnostico.py`, con los informes en módulos aparte. | Por decidir en `/sprint-close S7` |
+| D7-16 | `l1d-331-cobertura-prostata-segundo-loop` | Gate 2 (diseño, lote R1, P3) | `validar_ancho_de_tramo` y otros P3 del lote. | Por decidir en `/sprint-close S7` |
+| D7-17 | `l1d-299-poblacion-dorado-suite` | Gate 2 (diseño) | Extraer en `guardas.py` el par de guardas de RN-12 (`exigir_adapters_locales` + `exigir_proveedor_local`) y usarlo en las seis familias. | Junto con D7-08 |
+| D7-18 | `l1d-299-poblacion-dorado-suite` | Gate 2 (diseño, P3) | Una constante o mapa único de `revision_provisional` en el esquema de reportes (P3-4) y el resto de los P3 de 299. | Por decidir en `/sprint-close S7` |
