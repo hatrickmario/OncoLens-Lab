@@ -8,6 +8,10 @@
     "rol": null,
     "fecha": null
   },
+  "revision_provisional": {
+    "rol": "ia",
+    "fecha": "2026-11-21"
+  },
   "licencias": {
     "doc-gui-es-1": "sintetico_propio",
     "doc-gui-es-2": "sintetico_propio",

@@ -21,6 +21,7 @@ from app.application.corpus_metadata.poblacion_puertos import Fragmento
 from app.evaluation.config_suite import ruta_del_repo
 from app.evaluation.dataset_loader import CLASE_SINTETICA, DatasetInvalido
 from app.evaluation.guardas import SuiteAbortada
+from app.evaluation.revision_provisional import RevisionProvisional, exigir_revision_provisional
 
 CLASE_CORPUS_PUBLICO = "corpus_publico"
 CLASES_DEL_DORADO = (CLASE_SINTETICA, CLASE_CORPUS_PUBLICO)
@@ -105,6 +106,8 @@ class DoradoDePoblacion:
     pares: tuple[ParDorado, ...]
     estados: tuple[CasoDeEstadoDorado, ...]
     bucle: tuple[ParDelBucle, ...]
+    revision_provisional: RevisionProvisional | None = None
+    """Marca de procedencia de IA (S7-D2): no firma el dorado; ``revision`` sigue vacía hasta que lo revise un humano."""
 
     def estratos(self) -> dict[str, int]:
         """Pares por estrato (tipo de fuente) e idioma: ``guia/es``…; solo conteos."""
@@ -122,6 +125,7 @@ def cargar_dorado(directorio: Path, licencias_aceptadas: frozenset[str]) -> Dora
         raise SuiteAbortada(
             "el manifest.json del dorado no declara corpus público ni datos sintéticos (RN-13, RN-14)"
         )
+    provisional = _revision_provisional(manifiesto)
     try:
         contenido = _leer_yaml(directorio / "pares.yaml", "pares.yaml")
         documentos = {d: _documento(d, v) for d, v in contenido["documentos"].items()}
@@ -136,6 +140,7 @@ def cargar_dorado(directorio: Path, licencias_aceptadas: frozenset[str]) -> Dora
             pares=pares,
             estados=_estados(_leer_yaml(directorio / "estados.yaml", "estados.yaml")),
             bucle=_bucle(_leer_yaml(directorio / "pares-bucle.yaml", "pares-bucle.yaml")),
+            revision_provisional=provisional,
         )
     except (KeyError, TypeError, AttributeError, ValueError):
         raise DatasetInvalido("el dorado de población no tiene la forma esperada") from None
@@ -187,6 +192,13 @@ def _leer_yaml(ruta: Path, nombre: str) -> dict[str, Any]:
     if not isinstance(contenido, dict):
         raise DatasetInvalido(f"{nombre} del dorado no tiene la forma esperada")
     return contenido
+
+
+def _revision_provisional(manifiesto: Mapping[str, Any]) -> RevisionProvisional | None:
+    """Ausente es válido (dorado sin marca); presente se valida con la regla compartida de todas las familias."""
+    if "revision_provisional" not in manifiesto:
+        return None
+    return exigir_revision_provisional(manifiesto["revision_provisional"], "manifest.json")
 
 
 def _revision(crudo: object) -> RevisionDelDorado:

@@ -397,7 +397,14 @@ ESQUEMA_POBLACION = Objeto(
                     {"completa": Booleano(), "rol": Identificador(), "fecha": Identificador()},
                     opcionales=frozenset({"rol", "fecha"}),
                 ),
-            }
+                "revision_provisional": Objeto(
+                    {
+                        "rol": Enumerado(frozenset(ROLES_DE_REVISION_PROVISIONAL)),
+                        "fecha": Identificador(),
+                    }
+                ),
+            },
+            opcionales=frozenset({"revision_provisional"}),
         ),
         "metricas": Objeto(
             {

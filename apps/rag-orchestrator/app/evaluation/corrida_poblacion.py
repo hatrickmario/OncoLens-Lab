@@ -410,6 +410,7 @@ def _reporte(
 
 def _configuracion(config: ConfigPoblacion, dorado: DoradoDePoblacion) -> dict[str, Any]:
     revision = dorado.revision
+    provisional = dorado.revision_provisional
     return {
         "nombre": config.nombre,
         "hashConfig": config.hash_config,
@@ -424,6 +425,11 @@ def _configuracion(config: ConfigPoblacion, dorado: DoradoDePoblacion) -> dict[s
             **({"rol": revision.rol} if revision.rol else {}),
             **({"fecha": revision.fecha.isoformat()} if revision.fecha else {}),
         },
+        **(
+            {"revision_provisional": {"rol": provisional.rol, "fecha": provisional.fecha}}
+            if provisional
+            else {}
+        ),
     }
 
 

@@ -66,3 +66,17 @@ def test_el_dorado_semilla_sin_revisor_corre_la_suite_y_queda_no_concluyente(
     assert reporte["configuracion"]["revision"]["completa"] is False
     assert reporte["veredicto"]["resultado"] == "no_concluyente"
     assert reporte["metricas"]["pares_del_dorado"] >= 30
+
+
+def test_el_manifiesto_del_dorado_declara_la_revision_provisional_de_ia_y_deja_el_revisor_humano_vacio() -> (
+    None
+):
+    config = cargar_config_poblacion(CONFIG)
+    dorado = cargar_dorado(DORADO, config.licencias_aceptadas)
+
+    assert dorado.revision_provisional is not None
+    assert (dorado.revision_provisional.rol, dorado.revision_provisional.fecha) == (
+        "ia",
+        "2026-11-21",
+    )
+    assert dorado.revision.completa is False  # la marca de IA no firma el dorado (S7-D2)
