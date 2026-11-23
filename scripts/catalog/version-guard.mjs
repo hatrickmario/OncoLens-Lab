@@ -20,13 +20,16 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { jsonCanonico } from '../../packages/clinical-catalogs/validator/index.mjs';
+import {
+  compararVersiones,
+  jsonCanonico,
+  partesDeVersion,
+} from '../../packages/clinical-catalogs/validator/index.mjs';
 import { nombrable } from '../../packages/clinical-catalogs/validator/nombrable.mjs';
 
 const RAIZ = path.resolve(import.meta.dirname, '../..');
 const CATALOGO_POR_DEFECTO = path.join(RAIZ, 'packages/clinical-catalogs');
 const FORMA_DE_TIPO = /^[a-z]+$/;
-const FORMA_DE_VERSION = /^(?:test-(?:[a-z]+-)?)?(\d+)\.(\d+)\.(\d+)$/;
 const MAXIMO_DE_LECTURA = 16 * 1024 * 1024;
 
 /**
@@ -88,20 +91,6 @@ const vaciaUnaListaPublicada = (previo, actual) =>
       actual[clave].length === 0,
   );
 
-const partesDe = (version) => {
-  const partes = FORMA_DE_VERSION.exec(typeof version === 'string' ? version : '');
-  return partes === null ? null : partes.slice(1).map(Number);
-};
-
-/** -1, 0 o 1; `null` si alguna versión no tiene forma de semver. */
-function compararVersiones(actual, base) {
-  const a = partesDe(actual);
-  const b = partesDe(base);
-  if (a === null || b === null) return null;
-  const diferencia = a.map((parte, i) => parte - b[i]).find((resta) => resta !== 0) ?? 0;
-  return Math.sign(diferencia);
-}
-
 const versionQueGobierna = (nombre, lectura) =>
   CON_VERSION_PROPIA.includes(nombre)
     ? lectura.archivos[nombre]?.contenido?.version
@@ -139,7 +128,7 @@ const mensajeDe = ({ codigo, archivo }) =>
     .map((segmento) => nombrable(segmento))
     .join('/')}`;
 
-const versionNombrable = (version) => (partesDe(version) === null ? '?' : version);
+const versionNombrable = (version) => (partesDeVersion(version) === null ? '?' : version);
 
 function leerJsonActual(directorio, nombre) {
   try {

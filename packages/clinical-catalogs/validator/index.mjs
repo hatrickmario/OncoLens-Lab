@@ -13,6 +13,7 @@ export {
   jsonCanonico,
 } from './canonico.mjs';
 export { ArchivoIlegibleError, leerCatalogo, leerEsquemas } from './cargar.mjs';
+export { compararVersiones, partesDeVersion, violacionesDeVersionPropia } from './versiones.mjs';
 export { mensajeDe, validarCatalogo } from './validar-catalogo.mjs';
 export { terminosDelCatalogo, violacionesDeTemasDelCaso } from './temas-del-caso.mjs';
 export { violacionesDePlantillas } from './plantillas.mjs';
