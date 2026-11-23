@@ -41,6 +41,11 @@ export interface DependenciasDelComando {
   trazador: () => string;
 }
 
+/** RN-13: la guarda del seed (entorno permitido, sin `REAL_*_ENABLED`, nunca `piloto`) con la configuración del entorno. */
+function exigirEntornoSinDatosReales(entorno: NodeJS.ProcessEnv): void {
+  assertSeedPermitido(leerConfiguracionDelSeed(entorno));
+}
+
 /** Cuerpo de cada fallo conocido: nombra la variable, el caso o la condición; nunca valores ni datos clínicos. */
 function mensajeDelFallo(error: unknown): string {
   if (error instanceof ConfiguracionInvalidaError)
@@ -73,7 +78,7 @@ export async function ejecutarComandoPreparar(
   rmSync(dependencias.directorioDeSalida, { recursive: true, force: true });
   let base: BaseParaPreparar | null = null;
   try {
-    assertSeedPermitido(leerConfiguracionDelSeed(dependencias.entorno));
+    exigirEntornoSinDatosReales(dependencias.entorno);
     const casos = cargarCasosDelChat(dependencias.raizDelRepo);
     base = await dependencias.abrirBase();
     await exigirBaseDeTestSintetica(base);
