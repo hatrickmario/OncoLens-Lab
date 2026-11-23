@@ -125,6 +125,14 @@ def test_config_falsa_usa_adapters_falsos_y_reloj_simulado_y_s5_usa_el_proveedor
     assert falsa.hash_config != local.hash_config
 
 
+def test_config_s5_usa_los_umbrales_actuales_de_local_y_el_corpus_del_dataset_de_opciones() -> None:
+    """S7.2 (``[S7 resp. 10]`` y ``[S7 resp. 11]``): la base no usa los umbrales calibrados de l1d-119 ni su corpus."""
+    s5, local = cargar(LOCAL).suite, cargar_config_suite(CONFIGS / "local.yaml", {})
+
+    assert s5.umbrales == local.umbrales
+    assert s5.dataset == DATASET
+
+
 def test_config_rechaza_la_ausencia_de_la_referencia_nombrando_la_clave(tmp_path: Path) -> None:
     ruta = con_cambio(tmp_path, lambda crudo: crudo["regresion"].pop("reporte_referencia"))
 
