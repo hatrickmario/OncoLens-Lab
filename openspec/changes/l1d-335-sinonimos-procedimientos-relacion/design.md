@@ -342,3 +342,10 @@ Casos que el diseño no cubría, con la alternativa elegida y por qué se descar
 - **Deuda:** D7-23 (paridad automática esquema JSON ↔ zod ↔ Pydantic del catálogo, más allá de `relacion`) y D7-24
   (decisión de producto sobre la semántica de pertinencia si no se acepta D15).
 - **Entrega 2 (4.1b y 4.2):** necesitan `Brazo` de `l1d-336` y los pares de `l1d-334`, aún sin mergear; no se apilan.
+- **D17. Versión de `plantillas.json` y el AC-8 de US-267.** Al subir el manifiesto a 1.10.0, `plantillas.json` conserva su
+  versión propia 1.9.0 (regla de versión propia de 126 A: ≤ manifiesto) y el test de web exigía `== manifiesto`. Opciones:
+  (a) subir `plantillas.json` a 1.10.0 sin cambio de contenido (versión falsa: el guardián la tomaría por contenido nuevo);
+  (b) **quitar la igualdad y conservar «ningún archivo importado supera al manifiesto»**, que es la intención del AC-8
+  (el build no importa contenido más nuevo que el catálogo declarado); la igualdad solo valía mientras las plantillas eran
+  el contenido recién añadido (1.8.0). Elegida (b), con `Test-Removal` por la aserción retirada.
+
