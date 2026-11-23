@@ -53,7 +53,7 @@ def test_poblacion_reporta_precision_y_cobertura_por_tipo_de_redaccion_cuando_lo
     """Reporta precisión y cobertura por tipo de redacción cuando los pares traen redaccion plantilla y dificil
     [US-233b AC-2]."""
     pares = copy.deepcopy(PARES)
-    pares[0] |= {"redaccion": "dificil", "tipo": "rango"}
+    pares[0] |= {"redaccion": "dificil", "tipo_de_redaccion": "rango"}
     pares[0]["propuesta"] = pares[0]["esperados"][:1]  # el LLM omite uno de los dos valores
 
     codigo, reporte, _ = _correr(tmp_path, capsys, pares=pares)
@@ -73,8 +73,11 @@ def test_poblacion_reporta_precision_y_cobertura_por_tipo_de_redaccion_cuando_lo
         2,
         3,
     )
-    por_tipo = {t["tipo"]: t for t in reporte["metricas"].get("por_tipo_de_redaccion", [])}
+    por_tipo = {
+        t["tipo_de_redaccion"]: t for t in reporte["metricas"].get("por_tipo_de_redaccion", [])
+    }
     assert set(por_tipo) == {"rango"} and por_tipo["rango"]["cobertura"] == 0.5
+    assert not {"mama", "prostata"} & set(por_tipo)  # tipo de redacción, nunca tipo de cáncer
 
 
 @pytest.mark.ac("US-233b", 2)
@@ -138,7 +141,10 @@ def test_poblacion_cuenta_aparte_los_casos_de_la_rendija_c3_con_el_estado_que_da
     ("cambio", "palabra"),
     [
         (lambda pares: pares[0].update(redaccion="rebuscada"), "redaccion"),
-        (lambda pares: pares[0].update(redaccion="dificil", tipo="adivinanza"), "tipo"),
+        (
+            lambda pares: pares[0].update(redaccion="dificil", tipo_de_redaccion="adivinanza"),
+            "tipo",
+        ),
         (
             lambda pares: pares[0].update(distractor=True),
             "distractor",

@@ -66,6 +66,14 @@ def esquema_de_poblacion(maximo_de_valores: int) -> dict[str, Any]:
     }
 
 
+class PromptSinCriterio(ValueError):
+    """El prompt de la tarea no declara su criterio; sin eco del prompt (puede traer texto del documento)."""
+
+
+def criterio_del_prompt(usuario: str) -> str:
+    raise NotImplementedError("no implementado")
+
+
 def construir_prompt(
     plantilla: str,
     criterio: CriterioParaElPrompt,

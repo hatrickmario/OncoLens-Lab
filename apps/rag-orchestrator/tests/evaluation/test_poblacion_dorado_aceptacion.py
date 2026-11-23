@@ -283,7 +283,10 @@ def test_poblacion_queda_no_concluyente_y_declara_la_revision_provisional_cuando
     codigo, reporte, _ = _correr(tmp_path, capsys, revisor=None, revision_provisional=provisional)
 
     assert codigo == 0 and reporte is not None
-    assert reporte["configuracion"].get("revision_provisional") == provisional
+    assert reporte["configuracion"].get("revision_provisional") == {
+        **provisional,
+        "rotulo": "Revisión provisional de IA; sin validación humana",
+    }
     assert reporte["configuracion"]["revision"]["completa"] is False
     for criterio in reporte["metricas"]["por_criterio"]:
         assert criterio["marca_precision"] == criterio["marca_cobertura"] == "no_concluyente"

@@ -124,7 +124,7 @@ def test_el_dorado_versionado_trae_casos_dificiles_de_los_seis_tipos_y_distracto
     distractores = [p for p in dorado.pares if p.distractor]
 
     assert len(dificiles) >= 12
-    assert {p.tipo for p in dificiles} == {
+    assert {p.tipo_de_redaccion for p in dificiles} == {
         "negacion",
         "rango",
         "definicion_implicita",

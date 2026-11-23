@@ -176,7 +176,7 @@ def _par_con(
     esperados: set[str],
     obtenidos: tuple[str, ...],
     *,
-    tipo: str | None = None,
+    tipo_de_redaccion: str | None = None,
     distractor: bool = False,
     como_elegibilidad: int = 0,
     doc: str = "d1",
@@ -187,7 +187,7 @@ def _par_con(
         frozenset(esperados),
         obtenidos,
         redaccion=redaccion,
-        tipo=tipo,
+        tipo_de_redaccion=tipo_de_redaccion,
         distractor=distractor,
         como_elegibilidad=como_elegibilidad,
     )
@@ -224,8 +224,8 @@ def test_cobertura_por_redaccion_separa_los_pares_de_plantilla_de_los_dificiles(
 def test_precision_y_cobertura_por_tipo_solo_cuentan_los_pares_con_tipo() -> None:
     pares = [
         _par_con("plantilla", {"a"}, ("a",), doc="d1"),
-        _par_con("dificil", {"b"}, ("x",), tipo="negacion", doc="d2"),
-        _par_con("dificil", {"c"}, ("c",), tipo="rango", doc="d3"),
+        _par_con("dificil", {"b"}, ("x",), tipo_de_redaccion="negacion", doc="d2"),
+        _par_con("dificil", {"c"}, ("c",), tipo_de_redaccion="rango", doc="d3"),
     ]
 
     assert precision_por_tipo_de_redaccion(pares) == {

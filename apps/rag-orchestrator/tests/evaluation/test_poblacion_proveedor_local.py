@@ -124,6 +124,30 @@ def test_poblacion_corre_y_declara_proveedor_local_cuando_la_configuracion_es_po
 
 
 @pytest.mark.ac("US-233b", 2)
+def test_poblacion_no_guarda_valores_cuando_el_nli_inyectado_no_los_confirma(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """El NLI del puerto se observa: con un NLI neutral el LLM propone pero nada se guarda [US-233b AC-2]."""
+
+    def modelos_neutrales(ajustes: Settings) -> ModelosDeRecuperacion:
+        base = modelos_fingidos(ajustes)
+        return ModelosDeRecuperacion(
+            detector_idioma=base.detector_idioma,
+            embedder_consulta=base.embedder_consulta,
+            embedder_pasajes=base.embedder_pasajes,
+            reranker=base.reranker,
+            clasificador_nli=NliGuionado("neutral"),
+        )
+
+    codigo, reporte, _ = _correr_local(tmp_path, cargador=modelos_neutrales)
+
+    assert codigo == 0, capsys.readouterr().err
+    assert reporte is not None
+    her2 = {c["criterio"]: c for c in reporte["metricas"]["por_criterio"]}["estado_her2"]
+    assert her2["obtenidos"] == 0
+
+
+@pytest.mark.ac("US-233b", 2)
 def test_poblacion_termina_distinto_de_cero_nombrando_la_variable_y_sin_reporte_cuando_falta_un_peso(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
