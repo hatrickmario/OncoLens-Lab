@@ -114,6 +114,50 @@ metas definitivas (DEC-07); revisión clínica (D6-53).
     - **Seudónimo y logs.** El servicio real usa el seudónimo aleatorio por consulta; el comando no registra nada (registrador
       nulo) y su mensaje de fallo nombra variable, caso o clave, o la clase del error, nunca su texto.
 
+13. **Implementación de `ai-services` (decisiones no cubiertas arriba).**
+    - **Umbrales de `Settings` sin valor en código.** `Settings` no tiene valores por defecto para `RELEVANCE_THRESHOLD`,
+      `NLI_ENTAILMENT_THRESHOLD`, `RETRIEVAL_TOP_K` ni `RERANK_TOP_N` (RN-22): «leer de `Settings`» es leer el entorno. Con
+      `umbrales` ausente del YAML, `cargar_config_suite(ruta, entorno)` los resuelve con `Settings` (rango validado), los
+      mete en el texto hasheado (cambiar uno cambia la huella) y, si falta o es inválida alguna variable, lanza
+      `ConfigInvalida` nombrando la variable, nunca el valor (la familia sale con código 2). El bloque `umbrales` presente
+      en un YAML sigue mandando (las demás configuraciones no cambian). Consecuencia: la corrida base necesita esas cuatro
+      variables en el entorno; el bloque literal de H-1 las exporta con los valores del Compose. Los cuatro tests de
+      `test_chat_evaluate_unitarios.py` que cargaban `chat-local.yaml` sin entorno reciben ahora uno (solo su preparación;
+      las aserciones no cambian). *Descartadas:* (a) mantener el bloque en `chat-local.yaml` (es el drift que cierra
+      D6-52: 40 frente a 30 candidatos); (b) un valor por defecto en código (rompe RN-22); (c) leer `os.environ` dentro del
+      cargador (el único punto del entorno es `entorno_del_proceso`).
+    - **Corpus declarado frente a corpus cargado.** La familia compone el chat **en proceso** sobre el corpus en memoria del
+      dataset (`data/evaluation/opciones`), no sobre Milvus: no puede medir «la ingesta de `l1d-119`» (`[S7 resp. 10]`) por sí
+      sola. `chat-local.yaml` declara `corpus.declarado` y el reporte publica `corpus.declarado` y `corpus.cargado` lado a lado
+      para que el hallazgo no quede escondido. **Abierto (lo decide el orquestador o el humano antes de 4.1):** o la corrida
+      base se acepta sobre el corpus del dataset y se corrige la declaración, o se construye un `FuenteDataset` desde la
+      ingesta (cambio mayor, fuera de este alcance).
+    - **LLM caído = `SuiteAbortada`.** El grafo traduce el `FalloDelLlm` del adapter real a `LlmLocalNoDisponibleError` (también
+      lo hace con un NLI caído); `_turno` lo convierte en `SuiteAbortada` (código 2, sin `chat.json`). Una salida del LLM
+      que no valida sigue siendo `LlmSalidaInvalidaError` y cuenta como turno errado. *Descartada:* abortar con cualquier
+      excepción (ocultaría un turno defectuoso como «dependencia caída»).
+    - **`CHAT-AC01-MAMA-PII` e `intent_correcto: false` (observación del humo).** La causa **no es un defecto del enrutador ni
+      del dataset**: `clinical-api` enmascara el nombre como `[NOMBRE]` y la regla de US-259 (`S5 resp. 13`,
+      `MARCADORES_DE_IDENTIDAD`) trata cualquier marcador de identidad como «otra persona» → `fuera_de_alcance`, sin LLM. Con
+      adapters falsos el ejemplo del contrato se enmascaraba como `[REDACTADO]`, que el enrutador no reconoce, por eso el
+      humo anterior sí daba `caso`: el fake no tenía la forma de producción. Alternativas: (1) cambiar el enrutador para que
+      reconozca el nombre del propio paciente (decisión de producto de US-259: no se toca sin reportar); (2) cambiar
+      `intent: caso` del dataset a `fuera_de_alcance` (rompe la ruta de adapters falsos, que sigue dando `caso`, y contradice
+      su `respuesta_esperada`); (3) **elegida:** el caso con marcador de identidad cuya respuesta es `fuera_de_alcance` se
+      mide solo por no fuga (AC-6): queda en `por_caso` con `control_de_identidad: true` e `intent_correcto: null` y no entra
+      en la exactitud de intención, la latencia por intención ni soporte, enlaces o hechos del tipo de cáncer (con la
+      respuesta de rechazo penalizaría `hechos_presentes` de mama por construcción). Una respuesta de otra intención se mide
+      como cualquier caso, así que la regla no oculta un enrutado defectuoso. **Pendiente para el humano/DEC:** si el
+      producto quiere que «la paciente Fulana» siga en el caso, es un cambio de US-259 con su propia evaluación.
+      El fake conserva `[REDACTADO]` (cambiarlo movería las cifras que fijan los tests existentes); el humo con
+      preparación real (3.2) sí ejerce la forma de producción.
+    - **Reporte.** Nuevos campos aditivos: `reloj`, `umbrales` (con `origen`), `corpus`, `metricas.faltantes` (tres `null`),
+      `metricas.no_medidas`, `metricas.latencia.rotulo` (`simulada`/`real`) y `por_caso[].control_de_identidad`. Un test
+      inyecta los puertos en `main(..., puertos=...)` para probar el LLM caído sin red.
+    - **`eval-required`.** La familia `chat` corre con `chat-fake.yaml --sin-preparar` desde `scripts/ci/eval-required.mjs`
+      (`ejecutarFamiliaDelChat`, hermana de la de `opciones`), salida en `<carpeta>/chat`; el resumen publica solo los dos
+      conteos; un código distinto de 0 rompe el job (2 si no corre, 1 en otro caso).
+
 ## Dependencias y colaboradores
 
 | Módulo | Estado | Depende de |
