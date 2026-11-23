@@ -299,3 +299,26 @@ Casos que el diseño no cubría, con la alternativa elegida y por qué se descar
   en su manifiesto y no trae `lenguaje/` (así se prueba que no exige `terminos-prohibidos`).
 - **Duda de la lista del §2.2 sin resolver (a Q-5):** `hormonosensible` / `hormone-sensitive` quedan `equivalente` de
   `sensible a la castración` (uso intercambiable en la práctica, discutible), además de las que ya anotaba D1.
+
+## Decisiones de la implementación (ai-services)
+
+- **D11. Un solo parser del catálogo en Python.** `cargar_sinonimos` y `cargar_formas_por_termino` leen el archivo con el mismo
+  `_terminos_de` (canónico y `(texto, RelacionDeSinonimo)` normalizados); la regla S-1 vive solo en
+  `app/domain/sinonimos.py::es_equivalente`. Alternativas: (a) que cada cargador abra el JSON y compare el literal
+  `equivalente` (duplica la regla, descartada por P1); (b) un cargador que devuelva ya los dos mapas (obliga a todos los
+  consumidores a conocer ambos; descartada). `RelacionDeSinonimo(valor)` lanza `ValueError` ante una relación ausente o
+  desconocida y el cargador lo traduce a `CatalogoNoDisponible` sin ruta ni contenido, como el resto de errores de forma.
+- **D12. `formas_del_termino` (familia `contextual`) devuelve las formas ordenadas.** El cargador devuelve `frozenset` (sin
+  orden), así que la función las entrega `sorted`, determinista. El orden anterior era el de inserción del catálogo; ninguna
+  aserción ni reporte lo usa como dato (los reportes comparan conjuntos). Alternativa descartada: devolver tuplas en el orden
+  del archivo (el contrato «canónico → todos sus textos» no necesita orden y complica la derivación de pertinencia).
+- **D13. La meta de paráfrasis no entra en los informes que no la miden.** El esquema del baseline es cerrado y
+  `marcar_frente_a_meta` marcaba una fila por meta, así que `paraphrase_evidence_min_ratio` rompía el informe (`$.metricas[7]
+  fuera del conjunto`). Ahora omite las metas cuya clave el informe no declara (`None` sigue siendo «sin medir»). Alternativas:
+  (a) ampliar el esquema del baseline con la métrica (cambia un contrato de informe por una métrica que otra suite mide);
+  (b) meta en un archivo aparte (contradice `[S7 resp. 6]`/RN-22: una sola configuración de metas). Elegida la regla de
+  marcado: no cambia ningún informe existente.
+- **D14. Los casos AC-2/AC-3/AC-4 sobre el catálogo real nacen en verde.** El mecanismo de US-238 ya filtraba contra el
+  catálogo y el catálogo 1.10.0 (misma rama) ya trae los textos; solo es rojo el caso que distingue la relación (tarea 2.2).
+  Se registran así, sin debilitar aserciones (la propia tarea 2.3 lo prevé para RN-02).
+- **Entrega 2 (4.1b y 4.2):** necesitan `Brazo` de `l1d-336` y los pares de `l1d-334`, aún sin mergear; no se apilan.
