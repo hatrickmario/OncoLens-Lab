@@ -114,3 +114,72 @@ Cuando el diff de un PR toque un disparador de la evaluación (modelo, prompt, u
 - **GIVEN** un PR que solo cambia documentación
 - **WHEN** corre `eval-required`
 - **THEN** la familia `opciones` no se ejecuta
+
+### Requirement: La mecánica verificada se rotula aparte de la validación clínica
+La familia `opciones` MUST contar por separado, en cada métrica, los casos revisados por un oncólogo, los casos con `revision_provisional` (mecánica verificada) y los casos sin revisar, y SHALL reservar el rótulo «validada» a las métricas calculadas solo sobre casos revisados por un oncólogo; una revisión provisional hecha por IA SHALL NOT producir el rótulo «validada».
+
+#### Scenario: Los 4 casos revisados por IA cuentan como mecánica verificada [US-140 AC-5] [AC-T5.3] `[S7 resp. 1]` (asumido: el rótulo `mecanica_verificada` lo añade la revisión clínica provisional)
+- **GIVEN** el dataset `data/evaluation/opciones/` con `revision_provisional = {rol: ia, fecha: 2026-11-21}` en OP-01, OP-02, OP-07 y OP-08 y `revisada_por_oncologo = null` en los 12 casos
+- **WHEN** se genera el reporte
+- **THEN** cada métrica indica 0 casos validados, 4 de mecánica verificada y 8 sin revisar
+- **AND** el rótulo de cada métrica es `no_validada`
+
+#### Scenario: Una revisión de oncólogo sigue dando el rótulo validada [US-140 AC-5] [AC-T5.3]
+- **GIVEN** un dataset de prueba con `revisada_por_oncologo = {rol, fecha}` (sin nombre, RN-10) en todos los casos de una métrica
+- **WHEN** se genera el reporte
+- **THEN** esa métrica lleva el rótulo «validada»
+
+#### Scenario: Una revisión provisional mal formada impide cargar el dataset [US-140 AC-5] [RN-10] (asumido)
+- **GIVEN** un dataset de prueba con `revision_provisional` con un rol fuera del conjunto admitido, una fecha que no es ISO o un nombre de persona
+- **WHEN** se ejecuta la familia
+- **THEN** la suite no corre, sale con código 1 y el mensaje nombra el id del caso y el campo, sin texto de la pregunta
+
+### Requirement: El caso OP-08 incluye una fuente de enfermedad sensible a la castración con quimioterapia
+El dataset de la familia `opciones` MUST incluir en OP-08 una fuente sintética que describa privación androgénica con quimioterapia en enfermedad sensible a la castración, y la fuente de enfermedad resistente a la castración SHALL seguir mostrándose después de toda opción comparable.
+
+#### Scenario: OP-08 muestra la fuente no comparable al final [US-140 AC-3] [RN-28] `[S7 resp. 1]`
+- **GIVEN** el caso OP-08 con la fuente nueva de enfermedad sensible a la castración con quimioterapia y la fuente de enfermedad resistente a la castración
+- **WHEN** se evalúa con la configuración de adaptadores falsos
+- **THEN** la opción de la fuente de enfermedad resistente a la castración aparece después de las comparables y el caso cuenta como conforme a RN-28
+- **AND** el orden esperado del caso coincide con el que calcula el comparador de aplicabilidad
+
+### Requirement: Las preguntas del dataset de opciones están en español
+Las preguntas de `data/evaluation/opciones/` MUST estar redactadas en español, y las citas esperadas SHALL seguir siendo texto literal del corpus del dataset.
+
+#### Scenario: Ninguna pregunta copia el texto en inglés de su cita [US-140 AC-1] [RN-04] `[S7 resp. 1]` (asumido en el mecanismo de comprobación)
+- **GIVEN** las 12 preguntas del dataset
+- **WHEN** corre el test de carga del dataset
+- **THEN** ninguna `pregunta` contiene el texto literal de su `cita` en inglés
+- **AND** cada `cita` sigue apareciendo de forma literal en un chunk del corpus del dataset
+
+#### Scenario: La familia sigue siendo reproducible con las preguntas en español [US-140 AC-6] [OL-06]
+- **GIVEN** el dataset con las preguntas en español y la configuración falsa `eval/configs/opciones-fake.yaml`
+- **WHEN** se ejecuta la familia dos veces
+- **THEN** las métricas deterministas y la huella de la configuración son idénticas y las tres invariantes se cumplen
+
+### Requirement: La medición real de la familia de opciones queda en un reporte versionado
+La medición de la familia `opciones` con modelos locales MUST producirla `run-ai-eval` y quedar versionada en `reports/eval/` con su configuración, el corpus usado, la versión del dataset y la versión del catálogo; ninguna cifra de la familia SHALL citarse sin ese reporte.
+
+#### Scenario: La corrida base deja el reporte de la familia [US-140 AC-1] [AC-T5.1] `[S7 resp. 2]`
+- **GIVEN** la corrida base del S7 con `proveedor: local` en la máquina de referencia
+- **WHEN** `ai-eval-runner` ejecuta `evaluate --suite opciones`
+- **THEN** existe en `reports/eval/` un reporte de la familia con las métricas del AC-1, la configuración, la versión del dataset y la del catálogo, solo con agregados e ids de caso
+- **AND** el reporte registra como corpus el del propio dataset `opciones` `[S7 resp. 10]` y los umbrales actuales `[S7 resp. 11]`
+
+#### Scenario: La corrida final se compara con la corrida base del mismo sprint [US-140 AC-4] [M-07.2] `[S7 resp. 2]` (asumido: la referencia pasa a ser el reporte de la corrida base)
+- **GIVEN** el reporte de la corrida base y la corrida final con el catálogo y las mejoras del S7
+- **WHEN** termina la familia en la corrida final
+- **THEN** el reporte muestra fidelidad y precisión de citas frente a las de la corrida base y aplica `FAITHFULNESS_REGRESSION_TOLERANCE`
+- **AND** un bloqueo se reporta con los ids de caso, sin cambiar ninguna meta
+
+#### Scenario: La base y la final miden el mismo dataset, corpus y umbrales [US-140 AC-4] [US-140 AC-6] `[S7 resp. 10]` `[S7 resp. 11]` (asumido: política de ventanas del Gate 1 del S7)
+- **GIVEN** los cambios del dataset que no dependen del catálogo de `l1d-126` parte B (rótulos, preguntas en español y fuente nueva de OP-08) hechos antes de la corrida base
+- **WHEN** se comparan los reportes de la corrida base y de la corrida final
+- **THEN** los dos declaran el mismo corpus y los mismos umbrales, y la misma versión del dataset salvo los casos que cambiaron por el catálogo nuevo
+- **AND** el reporte de la final nombra por id los casos de OP-07…OP-12 cuyo orden esperado cambió por C-1 o C-5 y los declara no comparables con la base
+
+#### Scenario: Los umbrales calibrados se miden como un brazo aparte [US-140 AC-4] [RN-22] `[S7 resp. 11]` (asumido en el mecanismo)
+- **GIVEN** los umbrales calibrados por `l1d-119` en una configuración de brazo propia
+- **WHEN** corre ese brazo en la corrida final
+- **THEN** produce un reporte propio que declara sus umbrales, y el reporte principal de la final sigue con los umbrales de la base
+

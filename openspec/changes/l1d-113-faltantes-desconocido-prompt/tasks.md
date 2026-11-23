@@ -105,3 +105,54 @@ node scripts/ci/eval-required.mjs --base origin/main
 ```
 
 - [ ] H-2 Gate 2 y CI verde antes del merge (tarea 5.2). DIFERIDA -> H-2.
+
+## Sprint 7 (movido-S7, 2026-11-22)
+
+> L1D-113 pasa al S7 (decisión del usuario, 2026-11-21; `backlog/sprints/S7-refinamiento.md` §1). El código está en `main`
+> (PR #307 y #314 mergeados). Quedan la medición real (**4.3**) y los menores del Gate 2 (**6.2**, D5-25). Los destinos
+> antiguos («corrida nocturna del día 2», «D5-24») significan ahora **corrida base del S7** (`[S7 resp. 2]`). Las tareas
+> `[x]` no se tocan. Regla del sprint: ninguna cifra sin reporte versionado en `reports/eval/` producido por `run-ai-eval`.
+>
+> Decisiones del usuario del 2026-11-22: `[S7 resp. 12]` el punto «alinear `/case/summary` con la validación de claves»
+> de **6.2** **sale del S7** a deuda Post-MVP (**D7-01**): no es calidad del RAG y cambiaría el contrato OpenAPI, que hoy
+> declara que esa ruta no aplica esa validación. `[S7 resp. 10]` la medición de faltantes usa como corpus la ingesta de
+> `l1d-119`, el mismo en la corrida base y en la final, y el reporte lo registra. `[S7 resp. 11]` se mide con los umbrales
+> actuales (`NLI_ENTAILMENT_THRESHOLD`, `RETRIEVAL_TOP_K`, `RELEVANCE_THRESHOLD`); ningún valor por defecto cambia entre la
+> base y la final.
+
+### (a) Antes de la corrida base · código sin modelos reales
+
+- [ ] S7.1 Parte de **6.2** que la medición necesita: la expectativa de no inferencia deja de ser un comentario del
+      dataset y pasa a ser una métrica con su juez acotado (ningún valor atribuido a un dato declarado como faltante),
+      con adaptadores falsos · TDD estricto: test de aceptación en rojo «cuenta una inferencia cuando la salida atribuye
+      un valor a un dato faltante [US-116 AC-1]» y variante limpia · commits `test(L1D-113)` y `feat(L1D-113)`.
+      Requisito: delta `specs/ai-evaluation/spec.md` («Métrica de no inferencia de datos críticos faltantes»); incluye
+      el caso sin faltantes declarados (`null`, no medida) y el veredicto inválido del juez.
+- [ ] S7.2 Resto de **6.2** (D5-25) que **no toca el contrato**: `solicitud_de` simétrica por tipo en la suite, la forma
+      de clave `^[a-z0-9_]+$` en un solo sitio, el `or` de `bootstrap` y la redacción de `S5-L04` · refactor en verde,
+      sin cambiar aserciones. Sin cambios en `openapi.yaml`, en `contracts/examples/` ni en `/case/summary`.
+- [ ] S7.2b DIFERIDA -> D7-01 (`[S7 resp. 12]`, Post-MVP; **fuera del S7**). Validar `missingCriticalData` en
+      `/case/summary` con `422` `faltante_no_catalogado`. No se implementa aquí: exige un cambio de contrato
+      (contract-first, skill `sync-contracts`) en la historia que la recoja. La fila D7-01 la registra la sesión
+      principal en `backlog/sprints/S7-deuda.md`.
+- [ ] S7.3 Cierra **H-1**: `ai-eval-runner` versiona en `reports/eval/` el informe de `eval-required` con adaptadores
+      falsos (sin regresión frente a `data/evaluation/baseline.json`, salidas prescriptivas = 0).
+- [ ] S7.4 **5.2** y **H-2** (Gate 2 y CI antes del merge) se refieren al PR #307, ya mergeado: el orquestador las
+      concilia con esa evidencia; para el PR de S7.1 y S7.2 rige la regla habitual (0 fallos, 0 pendientes, 0 alertas).
+
+### (b) Corrida base
+
+- [ ] S7.5 Cierra **4.3**: con modelos locales y el corpus ampliado ingerido (`l1d-119`, 8.1; `[S7 resp. 10]`),
+      `S5-L01…L05` frente a sus gemelas sin `currentLine`: recall@10 y MRR de la rama *dense* con y sin línea, fidelidad
+      y no inferencia con faltantes (métrica de S7.1); informe de `ai-eval-runner` en `reports/eval/`, que registra el
+      corpus medido y los umbrales, que son los actuales (`[S7 resp. 11]`). Si el recall retrocede con `currentLine`, se
+      ajusta el literal de la consulta (P-1), no la regla.
+
+### (c) Corrida final
+
+Nada propio: el informe de S7.5 queda como referencia de no regresión de la consulta enriquecida. Si otra historia
+vuelve a medir los faltantes en la corrida final, usa el mismo corpus (la ingesta de `l1d-119`, `[S7 resp. 10]`).
+
+- [ ] S7.6 Cierre: `openspec validate l1d-113-faltantes-desconocido-prompt --strict` y Pytest de `rag-orchestrator` en
+      verde.
+

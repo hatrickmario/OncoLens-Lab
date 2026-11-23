@@ -70,6 +70,47 @@ Ninguna.
 - 🔗 Mide a: US-242, US-243, US-244 (`l1d-294-respaldo-poblacion-consulta`). 🔗 Regresión [AC-T5.4] → US-074.
 - Independent ⚠: depende de la revisión humana del usuario para pasar de «no concluyente» a una conclusión.
 
+## Alcance del Sprint 7 (movido-S7, 2026-11-22)
+
+> L1D-299 pasa al S7 (decisión del usuario, 2026-11-21; `backlog/sprints/S7-refinamiento.md` §1). La familia `poblacion`,
+> sus métricas y sus tests no se reescriben. Falta cablear el proveedor local, correr la suite con modelos reales y
+> ampliar el dorado según la revisión clínica **provisional** hecha por IA (`[S7 resp. 1]`,
+> `backlog/sprints/S7-revision-clinica.md` §4 y §6).
+
+- **`proveedor: local` (D5-26, tarea 1.11):** `corrida_poblacion.py` deja de salir con código 2 y usa el LLM y el NLI
+  locales, con `eval/configs/poblacion-local.yaml`. Va **antes de la corrida base**.
+- **Correr la suite (2.1 y 4.3)** con modelos locales en la **corrida base** (`[S7 resp. 2]`) y de nuevo en la
+  **corrida final** con el dorado ampliado. Reporte en `reports/eval/` producido por `run-ai-eval`.
+- **Dorado ampliado (D-1…D-5):** ≥ 16 pares de próstata (hoy los 36 son de mama); ≥ 12 casos difíciles con redacción
+  no plantilla (negación, rangos, definiciones implícitas, inclusión total, umbrales, valores en tabla); ≥ 8
+  distractores donde el valor solo aparece en un análisis de subgrupo o en la discusión; frases sin sentido clínico
+  reescritas; y un caso de estado por regla con un criterio de próstata y con los de C-1 y C-3.
+- **El revisor sigue siendo «IA, provisional».** `manifest.json` gana `revision_provisional: {rol: ia, fecha: 2026-11-21}`
+  y `revisor` sigue en `null`: la precisión y la cobertura siguen «no concluyentes» y nunca PASS (AC-7) hasta la
+  revisión humana (1.1, 1.2, H-1, H-2, que no son del S7). Todo el texto nuevo es sintético (`sintetico_propio`).
+- **Ventana de los cambios del dorado (misma política que `l1d-246`).** Lo que no depende de `l1d-126` parte B se hace
+  **antes de la corrida base**: base y final miden el mismo dorado. Lo que depende de C-1, C-2, C-4 o C-5 va entre la
+  base y la final, y el reporte de la final lo declara como no comparable con la base (`design.md` S7-D5).
+- **Corpus y umbrales.** La familia mide sobre los documentos del propio dorado, que es su corpus fijo en la base y en
+  la final y queda declarado en cada reporte (`[S7 resp. 10]`). Base y final corren con los umbrales actuales; los
+  calibrados de `l1d-119` entran en la final como un brazo más (`[S7 resp. 11]`).
+- Sin cambio de API ni de catálogo. Sin contenido de NCCN ni de ESMO.
+
+### Dependencias del S7
+
+- **Orden de merge (único, el mismo en `l1d-126` y `l1d-246`):** `l1d-126` parte A → corrida base → `l1d-335`
+  (catálogo `1.10.0`) → `l1d-126` parte B (catálogo `1.11.0`) → la parte de este change que depende de la parte B
+  (S7.9, S7.10 y S7.10b) → corrida final. El resto de este change no espera a `l1d-126`.
+- ↪ `l1d-126-criterios-aplicabilidad-catalogo` parte B: la extracción de la suite lee `packages/clinical-catalogs`
+  (criterios y sinónimos). Los pares de `extension` y `hrr_brca`, los casos de estado de próstata, los de C-1 y el
+  triple negativo de D-4 (C-4) necesitan su catálogo: van **después** de la parte B. Este change no supone por su
+  cuenta qué estado produce C-1: rige el **supuesto compartido SC-1** de `l1d-126` (`design.md` D10), con su repliegue
+  a «Desconocido».
+- `revision_provisional` de los datasets: una sola regla pura de forma, compartida con `l1d-246` y `l1d-334`
+  (`design.md` S7-D2).
+- ↪ `l1d-119-corpus-ampliado-calibracion`: comparte la corrida base (una sola carga de modelos).
+- ↪ `l1d-335-sinonimos-procedimientos-relacion`: usa la suite `poblacion` como no regresión en la corrida final.
+
 ## Fuera de alcance
 
 Herramienta de revisión humana a escala (S5); extracción doble con comparación (S6 / si hay capacidad); calibración de

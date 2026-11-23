@@ -36,6 +36,38 @@ El corpus vigente es la semilla del S1: 10 documentos (5 de mama, 5 de próstata
 - `ai-evaluation`: ADDED (barrido del umbral de entailment y de `RETRIEVAL_TOP_K`; baseline por tipo de cáncer con umbrales definitivos) y MODIFIED («Calibración del umbral de relevancia por barrido» y «Anotación del p95 fuera de meta»: la fijación definitiva se traslada de US-233 AC-8 a esta historia). Sin capacidad nueva.
 - Contextos: **ai-services** (`data/raw/s3/`, `apps/rag-orchestrator/app/evaluation/`, `app/config/settings.py`, `eval/configs/`, tests). Toca los valores por defecto de `infra/docker/docker-compose.yml` (líneas de `rag-orchestrator`) y su test; `.env.example` va en `## humano`. Sin cambios en `clinical-api`, `web` ni contratos.
 
+## Alcance del Sprint 7 (movido-S7, 2026-11-22)
+
+> L1D-119 pasa al S7 (decisión del usuario, 2026-11-21; `backlog/sprints/S7-refinamiento.md` §1). El manifiesto, los
+> barridos y el baseline con adaptadores falsos ya están hechos y no se reescriben. Falta todo lo que necesita modelos
+> reales, que deja de ser «la corrida nocturna del día 2» y pasa a la **corrida base** del S7 (`[S7 resp. 2]`).
+
+- **Corrida base del S7:** ingesta real del corpus ampliado y `reindex-sparse` (8.1), población en abanico (8.2),
+  barridos (8.3), baseline por tipo e idioma (8.4), D4-21 (8.5), brazo de reescritura (8.6) y `run-ai-eval` (8.7, 9.3).
+  Es la línea base contra la que se comparan `l1d-335`, `l1d-336` y `l1d-337` en la corrida final.
+- **Corpus por familia (`[S7 resp. 10]`):** uno fijo por familia de evaluación, el mismo en la corrida base y en la
+  final, registrado en cada reporte. **Usan la ingesta de este change:** chat (`l1d-326`), faltantes (`l1d-113`),
+  opciones (`l1d-246`), población (`l1d-299`) y los brazos de US-278 (`l1d-336`) y US-279 (`l1d-337`). **No la usan:**
+  las familias `contextual` (`l1d-329`, `l1d-331`) y `diagnostico` (`l1d-334`), que miden sobre el dataset
+  `s5-corpus-ampliado` en memoria.
+- **Umbrales calibrados (`[S7 resp. 11]`):** la corrida base y la final corren con los umbrales **actuales**; ningún
+  valor por defecto cambia entre ambas. Los barridos de la base proponen `NLI_ENTAILMENT_THRESHOLD`, `RETRIEVAL_TOP_K` y
+  `RELEVANCE_THRESHOLD`; esos valores entran en la corrida final como **un brazo más** y se adoptan (o no) en las
+  decisiones de cierre, junto a DEC-07. Solo si se adoptan se escriben en `Settings` y Compose (7.1). Sustituye, para
+  el S7, lo que «Qué cambia» dice de dejarlos «fijados en configuración» con el baseline.
+- **Licencia de ClinicalTrials.gov (`[S7 resp. 7]`, H-3):** se mantiene la clase `dominio_publico` y el texto de `license`
+  de los 10 registros pasa a «Datos de ClinicalTrials.gov (obra del gobierno de EE. UU.; condiciones de uso)»; ADR-36
+  anota que la copia es estática. Se aplica **antes** de la ingesta de la corrida base.
+- **Menciones de terceros (`[S7 resp. 8]`, H-4):** se admiten las menciones a NCCN y ESMO en referencias bibliográficas y
+  conflictos de interés de artículos CC BY de terceros: son citas, no contenido de las guías. Ningún documento se
+  recorta ni se excluye; NCCN y ESMO siguen sin ninguna entrada de manifiesto. Se anota en ADR-36.
+- **Decisión de `QUERY_REWRITE_ENABLED` (D4-30):** deja de fijarse aquí. La tarea 8.6 solo mide el brazo de reescritura
+  en la corrida base; el valor por defecto lo decide el usuario en `l1d-335` (H-2) sobre la corrida final
+  (`S7-refinamiento.md` §4).
+- **Meta de p95:** la vigente es la de `metas-iniciales.yaml` (`p95_evidence_analyses_s`, 20 s desde la decisión del
+  usuario del 2026-11-07); el «≤ 15 s» de `design.md` (Evaluación) queda sustituido por ella.
+- Regla del sprint: ninguna cifra sin reporte versionado en `reports/eval/` producido por `run-ai-eval`.
+
 ## Fuera de alcance
 
 - `CorpusRelease` por ingesta como entregable propio (US-119, `si-hay-capacidad`): aquí se usa la que ya publica `ingest`.

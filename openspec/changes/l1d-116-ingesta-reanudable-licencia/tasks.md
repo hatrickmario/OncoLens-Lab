@@ -100,3 +100,35 @@
 - Los AC de integración corren con catálogo y almacén **en memoria** (`tests/integration/corpus_ingestion/`); AC-2 y AC-4
   tienen además la variante `[real]` (PostgreSQL y Milvus de test, `servicios_reales`) y la CLI se cubre con
   `test_script_ingest.py`: ninguno ejecutado localmente, se verán en `integration-rag`.
+
+## Sprint 7 (movido-S7, 2026-11-22)
+
+> L1D-116 pasa al S7 (decisión del usuario, 2026-11-21; `backlog/sprints/S7-refinamiento.md` §1 y §5, paso 2). Solo queda
+> la tarea **1.10**. Su destino anterior («TRASLADADA a US-233», ejecutar el *smoke* en el job `integration-rag`) no es
+> alcanzable: la CI no tiene pesos (RN-14). Esta sección manda sobre ese destino; las tareas `[x]` no se tocan.
+
+Estado observado en `main`: `app/infrastructure/embeddings/bge_m3_sparse.py` (`CodificadorSparseBgeM3`), su cargador y sus
+unitarios existen; `tests/integration/test_smoke_sparse_con_pesos_reales.py` existe y pasó en local en US-117b;
+`EMBEDDING_SPARSE_WEIGHTS_PATH` y `EMBEDDING_SPARSE_WEIGHTS_SHA256` ya están en `apps/rag-orchestrator/.env.example`.
+
+### (a) Antes de la corrida base
+
+- [ ] S7.1 Cierra **1.10**: en la máquina de referencia, con los pesos de ADR-39 verificados por SHA-256, ejecutar el
+      *smoke* del adapter real (`test_smoke_sparse_con_pesos_reales.py`, marca de modelos reales) y comprobar ≥ 1 término
+      por pasaje; anotar en 1.10 el comando y el resultado (sin rutas ni contenido de documentos). No hay código nuevo
+      previsto; si el *smoke* falla, se corrige el adapter con test primero · test después (humo).
+
+### (b) Corrida base
+
+- [ ] S7.2 El adapter se ejerce con el corpus ampliado en `reindex-sparse` (`l1d-119`, tarea 8.1) y en la medición D4-21
+      (`l1d-119`, tarea 8.5): cada chunk vigente queda con `sparse_vector` poblado. Evidencia: el resumen JSON de la
+      ingesta y el reporte de `l1d-119` en `reports/eval/`. Las variables `EMBEDDING_SPARSE_WEIGHTS_*` y `RETRIEVAL_*` que
+      faltan en Compose son la deuda D6-47 (L1D-328) y no bloquean: `evaluate` corre fuera de Compose.
+
+### (c) Corrida final
+
+Nada. `RETRIEVAL_MODE` sigue en `dense`; la híbrida ponderada (D6-43) está fuera del S7.
+
+- [ ] S7.3 Cierre: `openspec validate l1d-116-ingesta-reanudable-licencia --strict` y 1.10 marcada `[x]` con la evidencia
+      de S7.1.
+

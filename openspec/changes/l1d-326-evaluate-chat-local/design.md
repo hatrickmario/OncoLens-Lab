@@ -1,0 +1,158 @@
+# Design — l1d-326-evaluate-chat-local
+
+## Context
+
+Residual de US-269 para el S7 (`[S7 resp. 3]`): que el chat se pueda medir con los modelos locales y medirlo en la
+corrida base. Lo que ya está en `main` (change archivado `2026-11-13-l1d-326-chat-e2e-evaluate`):
+
+- `apps/rag-orchestrator/app/evaluation/chat.py`: familia `chat` sobre el grafo de producción en proceso. CLI
+  `python -m app.evaluation.chat --config … [--peticiones <dir>] [--salida <dir>]`. Con `proveedor: local` y sin
+  `--peticiones` termina con código 2 («con modelos locales hacen falta --peticiones de eval:chat-preparar»).
+  `cargar_peticiones` ya define el formato de entrada: una `<id>.json` por caso con `peticion`, `hechosPorClave` e
+  `identidad`. `_puertos_de` ya aplica `exigir_proveedor_local` y `exigir_adapters_locales` antes de cargar pesos.
+- `eval/configs/chat-fake.yaml` y `chat-local.yaml` (escrita el 2026-11-07, antes de los cambios de defaults de L1D-333).
+- `data/eval/chat-v1/` (13 casos y 2 controles, `clase: sintetico`).
+- `apps/clinical-api/src/modules/evidence-analysis/conversation/` (`conversation.service.ts`, `hechos-del-caso.ts`):
+  arma el `ChatTurnRequest` desidentificado y numera los `factRefs`; el mapa `factRef → recurso` no sale de Backend 1.
+- `apps/clinical-api/src/cli/medir-pii.ts` + `src/evaluacion/pii/`: patrón de un comando de evaluación en Backend 1
+  (raíz de composición fina, lógica en `src/evaluacion/`, reloj y salidas inyectados).
+
+Lo que **no** existe: `eval:chat-preparar`, `evaluate:chat`, `apps/clinical-api/eval/` y los disparadores del chat en
+`scripts/ci/eval-trigger-paths.yaml`.
+
+## Goals / Non-Goals
+
+**Goals:** preparación de peticiones con el pipeline de producción; comando único `evaluate:chat`; corrida real en la
+corrida base con reporte versionado (AC-3, AC-7); cierre de D6-50, D6-52 y D6-59.
+
+**Non-Goals:** métricas de faltantes (AC-4, D6-51); E2E de próstata (D6-49); cambios de nodos, prompts, umbrales o UI;
+metas definitivas (DEC-07); revisión clínica (D6-53).
+
+## Decisions
+
+1. **La preparación vive en `clinical-api` y se reduce a armar peticiones.** El `ChatTurnRequest` desidentificado solo lo
+   puede construir Backend 1 (regla de ownership). El alcance es el mínimo que desbloquea `chat-local`: no calcula
+   M-04.x ni `gapType`. *Descartadas:* escribir las peticiones a mano en el dataset (divergen del seed y la no fuga deja
+   de medir el camino de producción); usar con modelos locales los ejemplos del contrato (medirían casos de juguete, no
+   los pacientes sembrados; es justo la limitación de D6-50).
+2. **Ubicación y forma: patrón de `medir-pii`.** `src/cli/eval-chat-preparar.ts` es la raíz de composición;
+   `src/evaluacion/chat/` aloja `prepararPeticiones()` (lee el dataset, itera casos, escribe) y dos reglas con nombre
+   propio: `resolverMarcadorDeIdentidad()` (marcador → identidad del seed, antes de enmascarar) y
+   `traducirHechosEsperados()` (clave del seed → `factRef` de esa petición). El change archivado hablaba de
+   `apps/clinical-api/scripts/`, que no existe; se sigue la estructura real.
+3. **El pipeline de producción se ejerce por su puerto, no por una copia.** `prepararPeticiones()` usa el servicio de
+   conversación real con un cliente de Backend 2 **capturador** en el puerto de `ports.ts` (el borde arquitectónico del
+   HTTP saliente): guarda el cuerpo que saldría hacia `/chat/turn` y no llama a nadie. No se duplica la construcción del
+   contexto ni la desidentificación; si el servicio no permite obtener la petición sin persistir un turno, la corrida
+   usa la BD de test desechable y no deja nada fuera de ella.
+4. **Cada caso se prepara como primer turno de su propia conversación.** Los casos con `previo` (AC06 sigue a AC05) los
+   encadena ya la familia `chat` en el mismo hilo en proceso (`_hilo_de`, `_en_el_hilo`), que descarta la rehidratación
+   en los turnos siguientes. Así la preparación no necesita una respuesta del LLM para el turno anterior.
+5. **`evaluate:chat` es un script raíz delgado** (`scripts/eval/evaluate-chat.mjs`, hermano de `evaluate.mjs`, reutiliza
+   `python.mjs`): 1) `eval:chat-preparar` (salvo `--sin-preparar`); 2) `python -m app.evaluation.chat --config …
+   --peticiones <tmp> --salida <dir>`; 3) borra `<tmp>` en un `finally`. Devuelve el código de la familia. No interpreta
+   el YAML: quien decide si hacen falta peticiones es la familia (código 2). Como AC-4 queda fuera, **no hay paso de
+   combinación de agregados**: el reporte es el JSON de la familia; la combinación llega con D6-51.
+   **Nombre y autoría del reporte:** la familia escribe `chat.json` en `--salida`, que es un directorio de trabajo
+   fuera de `reports/eval/`. `ai-eval-runner` (skill `run-ai-eval`) lo versiona sin modificarlo como
+   `reports/eval/l1d-326-chat-v1.json` y escribe `reports/eval/l1d-326-chat-v1.md`, que solo resume los agregados de
+   ese JSON; ni el script ni la familia generan el `.md`. El código de salida es el de la familia: distinto de 0 si
+   las salidas prescriptivas o las apariciones de identidad no son 0 (`codigo_de_salida()`, ya en `main`), con ambos
+   conteos escritos en el reporte.
+6. **Peticiones temporales fuera del repo y efímeras.** `apps/clinical-api/eval/results/tmp/` entra al `.gitignore`
+   en la **primera tarea** (1.0), antes de que ningún comando genere una petición, y se borra al terminar. Como un
+   SIGKILL se salta el `finally` y deja el directorio, la preparación **borra el residuo al arrancar**, antes de la
+   guarda y de escribir nada. El campo `identidad` de cada archivo contiene textos de identidad **sintética** (solo
+   para contarlos); nunca se copia al reporte ni a `reports/eval/`. *Descartada:* el directorio temporal del SO como
+   salida por defecto (evita el `.gitignore`, pero el residuo de un SIGKILL quedaría fuera del alcance de la limpieza
+   al arrancar); los tests sí inyectan un directorio temporal del SO.
+7. **Ajustes de la familia `chat`, sin tocar el grafo.** (a) El reporte declara `reloj` (`real`/`simulado`) junto a
+   `proveedor`; (b) añade las métricas de faltantes con valor `null` y la lista de no medidas (`null` ≠ `0.0`); (c) un
+   fallo de conexión con el LLM local sale como `SuiteAbortada` (código ≠ 0, sin `chat.json`), distinto de una salida
+   inválida del LLM, que se sigue contando en el caso; (d) `chat-local.yaml` se alinea con los defaults vigentes de
+   `Settings` (p. ej., `RERANKER_MAX_PAIRS` y la expansión contextual de L1D-333) y con el corpus de la medición.
+   Los umbrales **se leen de `Settings`** y no se duplican en el YAML (RN-22): se quita el bloque `umbrales` de
+   `chat-local.yaml` y el reporte registra los valores efectivos, que son los actuales (`[S7 resp. 11]`).
+8. **La medición no es una tarea de código.** Las tareas de la sección `## evaluación` que dependen de la corrida base
+   se cierran **solo** con el reporte versionado en `reports/eval/` producido por `run-ai-eval`; hasta entonces quedan
+   abiertas y diferidas a `H-1`. Ningún artefacto (PR, cierre, Linear) cita cifras del chat antes.
+9. **`hechosPorClave` lleva claves semánticas, no identificadores de recurso.** Lo único que baja a Backend 2 además
+   de la petición desidentificada es `clave semántica de hechos_esperados → factRef` (el número de hecho de esa
+   petición). Las claves son las del dataset `chat-v1`, no UUID de paciente, diagnóstico, examen, tratamiento ni
+   documento. El mapa `factRef → recurso` **no sale de Backend 1**: no se escribe en el archivo ni en *logs*. Lo prueba
+   el test de 1.3b.
+10. **La guarda exige BD de test sintética.** Además de `assertSeedPermitido` (`REAL_*_ENABLED`, `piloto`, `APP_ENV` en
+    `SEED_ALLOWED_ENVS`), la preparación comprueba, antes de abrir las claves de identidad, que la base es la de test
+    y que solo contiene pacientes del seed sintético; si no, termina con código distinto de 0. `APP_ENV` por sí solo
+    no basta: una base con otros datos puede correr con un entorno permitido.
+11. **Corpus y umbrales de la medición (`[S7 resp. 10]`, `[S7 resp. 11]`).** El chat mide sobre la ingesta de
+    `l1d-119`, el mismo corpus en la corrida base y en la final, y el reporte lo declara. Corre con los umbrales
+    actuales; los calibrados de `l1d-119` solo entran en la final como un brazo propio de ese change.
+
+## Dependencias y colaboradores
+
+| Módulo | Estado | Depende de |
+|---|---|---|
+| `apps/clinical-api/src/cli/eval-chat-preparar.ts` | nuevo | `src/evaluacion/chat/`, entorno, reloj y salidas inyectados |
+| `src/evaluacion/chat/preparar-peticiones.ts` | nuevo | servicio de conversación por su *factory*; puerto de Backend 2 de `evidence-analysis/ports.ts` (cliente capturador); guarda del seed (`prisma/seed/guarda.ts`) |
+| `resolverMarcadorDeIdentidad()`, `traducirHechosEsperados()` | nuevos | datos del seed; sin E/S |
+| `scripts/eval/evaluate-chat.mjs` | nuevo | `scripts/eval/python.mjs`; `EVAL_PYTHON`, `EVAL_TIMEOUT_S` (RN-22) |
+| `apps/rag-orchestrator/app/evaluation/chat.py` | modificado | puertos de la suite (`PuertosLocales`), `Settings` |
+| `eval/configs/chat-local.yaml` | modificado | umbrales leídos de `Settings` (sin bloque `umbrales`), corpus de la ingesta de `l1d-119` |
+
+Reglas que no se duplican: la guarda de datos reales es la del seed (`guarda.ts`); la desidentificación es la del
+servicio de conversación; la lista cerrada de proveedores locales es `exigir_proveedor_local`. **Fakes tocados:** el
+cliente capturador de Backend 2 implementa el mismo puerto que el cliente HTTP real y pasa su test de contrato (mismos
+errores); no se toca ningún fake de `rag-orchestrator`.
+
+## Privacidad y ownership
+
+- **clinical-api:** la preparación corre contra la BD de **test** con seed sintético y se niega con `REAL_*_ENABLED`,
+  entorno `piloto` o una base que no sea la de test sintética, antes de abrir las claves de identidad (RN-13). La identidad de `P-CHAT` se lee solo para resolver el
+  marcador y sale enmascarada de la petición (RN-10, RN-11); cada petición lleva su propio `pseudoPatientId`.
+- **clinical-api → rag-orchestrator:** no hay llamada HTTP; cruza un archivo local con la misma petición desidentificada
+  que viajaría a `/chat/turn`, más `hechosPorClave` (claves **semánticas** de `hechos_esperados` → `factRef`, sin
+  ningún UUID de recurso; el mapa `factRef → recurso` no sale de Backend 1) e `identidad` sintética para el conteo.
+  Vive en un directorio ignorado desde la primera tarea, se borra al terminar y su residuo se limpia al arrancar.
+- **rag-orchestrator:** consume solo esas peticiones; no accede a datos clínicos, a la BD de `clinical-api` ni a
+  `clinical-minio`; no persiste el estado del hilo.
+- **RN-12:** `chat-local.yaml` usa Ollama nativo en `127.0.0.1`; las guardas corren antes de crear el cliente; sin
+  *fallback* a la nube. **RN-14:** solo datos sintéticos; el reporte lleva agregados e ids de caso.
+- **Logs:** el comando no registra preguntas, respuestas, identidad ni rutas con contenido; solo ids de caso y conteos.
+- Sin sesión de usuario ni JWT de servicio: no hay tráfico entre servicios en esta suite.
+
+## Contratos
+
+- **Sin diff** en `apps/rag-orchestrator/openapi.yaml` ni en `apps/clinical-api/openapi.yaml`; sin ejemplos nuevos en
+  `contracts/examples/`. Proveedor de `ChatTurnRequest`: `rag-orchestrator`; consumidor: `clinical-api`. Compatible con
+  ADR-26 (nada cambia).
+- La `peticion` preparada se valida en el test con el schema Zod **generado** del contrato de `rag-orchestrator`
+  (`packages/api-contracts`) y, al cargarla, con el modelo Pydantic generado (`ChatTurnRequest.model_validate`).
+- El archivo intermedio `{peticion, hechosPorClave, identidad}` es un formato interno de la suite, ya fijado por
+  `cargar_peticiones`; no es un contrato HTTP.
+
+## Evaluación
+
+- No cambia modelo, prompt, umbral, catálogo ni corpus de producción. Cambia `eval/configs/chat-local.yaml`, que dispara
+  `eval-required`: la CI corre la suite con adapters falsos (`--suite all` sin cambios de huella en `test-fake.yaml`) y
+  la familia `chat` con `chat-fake.yaml`.
+- **Corrida base (modelos locales, `ai-eval-runner`):** `evaluate:chat` con `chat-local.yaml` → 
+  `reports/eval/l1d-326-chat-v1.{json,md}`. Métricas: exactitud de `intent`; por tipo de cáncer, soporte NLI de las
+  afirmaciones mostradas (M-02.3), precisión de enlaces (M-02.2) y hechos esperados presentes (M-02.1); salidas
+  prescriptivas (= 0, bloquea); apariciones de identidad (= 0, bloquea); p95 por turno e intención (informativo, ADR-51);
+  rótulo `no_validada`. Faltantes (M-04.x, `gapType`): `null`, no medidas (D6-51).
+- Metas: no se fijan aquí; las decide DEC-07 con el reporte de la corrida final. Este change no adelanta ninguna cifra.
+
+## Risks / Trade-offs
+
+- **El servicio de conversación puede exigir persistir el turno** para armar la petición: se acepta en la BD de test
+  desechable (decisión 3). Si obligara a tocar el servicio de producción, el implementador se detiene y lo reporta.
+- **Hilo en proceso frente a rehidratación real** (decisión 4): AC06 se mide sin el camino de rehidratación de
+  Backend 1; queda anotado como limitación en el reporte.
+- **Corpus de los turnos de evidencia · cerrado (`[S7 resp. 10]`):** el chat mide sobre la ingesta de `l1d-119`,
+  declarada en el reporte. Si esa ingesta no está lista, la medición no corre (no se mide sobre otro corpus).
+- **Una sola medición:** `S7-refinamiento.md` §5 sitúa la medición del chat en la corrida base; repetirla en la corrida
+  final (para ver el efecto de US-277…US-279 en los turnos de evidencia) es una pregunta abierta al humano (H-2). Si se
+  repite, usa el mismo corpus y los umbrales actuales.
+- **Presupuesto de la corrida:** 13 casos y 2 controles con el LLM local; cabe en la carga única de modelos de la
+  corrida base junto a las otras suites.

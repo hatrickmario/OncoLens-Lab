@@ -65,6 +65,64 @@ el motor de aplicabilidad del S3 (US-122…US-125) no tiene criterios sobre los 
 - 🔗 Produce para: L1D-127 · US-122 (forma del criterio, `studyKey`, test del AC-5), L1D-117 · US-118
   (`studyKey` y `poblacion.json`), L1D-128 · US-123, L1D-129 · US-124, L1D-130 · US-125.
 
+## Alcance del Sprint 7 (movido-S7, 2026-11-22)
+
+> L1D-126 pasa al S7 (decisión del usuario, 2026-11-21; `backlog/sprints/S7-refinamiento.md` §1). Lo hecho en el S3 no se
+> reescribe. Lo que falta es la revisión clínica **provisional** hecha por IA (`[S7 resp. 1]`,
+> `backlog/sprints/S7-revision-clinica.md` §1 y §6) y cuatro deudas del Gate 2.
+
+- **C-1 (Alta) · próstata:** `extension` pasa a ser excluyente, solo entre enfermedad no metastásica (localizada o
+  localmente avanzada) y metastásica, y solo con restricción explícita en la fuente (misma condición que F-21).
+- **C-2 (Alta) · mama:** `estado_her2` gana la categoría `bajo` (IHC 1+, o 2+ con ISH negativo) como subconjunto de
+  `negativo`; un IHC 2+ sin ISH es equívoco y queda «Desconocido», nunca `negativo`.
+- **C-4 (Media) · mama:** «triple negativo» deja de ser un valor de `receptores_hormonales` y se proyecta en dos
+  criterios: receptores hormonales = negativo y HER2 = negativo.
+- **C-5 (Media) · próstata:** `hrr_brca` separa `BRCA1/2 mutado`, `otro gen HRR`, `sin mutación` y `no evaluado`.
+- **C-3 no entra:** es la pregunta Q-1 para la sesión con expertos. C-6…C-10 quedan en Post-MVP o como preguntas.
+- **Nada pasa a «validada».** Cada criterio tocado lleva `revision_provisional: {rol: ia, fecha: 2026-11-21}` y sigue en
+  `estado = "propuesta"`. DEC-11 (L1D-125) sigue sin firma de oncólogo: **la regla F-20…F-24 no cambia**; cambian los datos
+  del catálogo. Los reportes siguen diciendo `no_validada`.
+- **Bloque `validation` (`[S7 resp. 9]`).** Cuando la IA edita un `aplicabilidad.json`, su `validation` pasa a
+  `status = "revision_provisional"`, `reviewerRole = "ia"`, `date = "2026-11-21"`, con el `catalogHash` del contenido
+  nuevo. La revisión del asesor del S3 (`reviewerRole = "oncologo_asesor"`, `2026-10-24`) se conserva aparte, como
+  historial, con el hash del contenido que sí cubrió. **El hash nuevo nunca queda atribuido a un oncólogo**; el
+  validador lo comprueba (`design.md` D14).
+- **Deudas del Gate 2 que vuelven de US-232:** G1.6 (registro de archivos de raíz en `clinical-api`), G2.3 (base del
+  guardián de versión), G2.4 (evasión en dos pasos) y G2.6 (`version` propia de cada archivo). G2.5 ya está hecha.
+- **Dos PR (Gate 1 del S7, 2026-11-22):**
+  - **Parte A** (S7.1–S7.4c): las deudas G1.6, G2.3, G2.4 y G2.6, la definición única de `revision_provisional` en los
+    esquemas y los tests que leen la versión del manifiesto. **No cambia contenido ni `manifest.version`**. Va **antes de
+    la corrida base**.
+  - **Parte B** (S7.5–S7.14): C-1, C-2, C-4 y C-5 y el bloque `validation` de `[S7 resp. 9]`. Va después de `l1d-335`,
+    que sube el catálogo a `1.10.0`; la parte B lo sube a **`1.11.0`**. Evaluación obligatoria: `eval-required` con
+    adaptadores falsos en el PR y medición con modelos locales en la **corrida final** del S7 (`[S7 resp. 2]`).
+- La corrida base usa el catálogo vigente (`1.9.0`) y es la referencia del A/B. Base y final corren con los umbrales
+  actuales (`[S7 resp. 11]`) y cada familia mide sobre su corpus fijo, declarado en el reporte (`[S7 resp. 10]`).
+
+### Dependencias del S7
+
+- **Orden de merge (único, el mismo en `l1d-246` y `l1d-299`):** `l1d-126` parte A → corrida base → `l1d-335`
+  (catálogo `1.10.0`) → `l1d-126` parte B (catálogo `1.11.0`) → las partes de `l1d-299` y `l1d-246` que dependen de la
+  parte B → corrida final.
+- ↪ `l1d-335-sinonimos-procedimientos-relacion` (US-277): sube `manifest.version` y actualiza los mismos
+  `contracts/examples/` (unos 20) y fixtures que citan la versión. Nunca en paralelo con la parte B: `l1d-335` primero.
+  `l1d-335` añadirá `sinonimos` al mapa `ESQUEMAS` de `validar-catalogo.ts`; la parte A (S7.1) no lo impide.
+- **`revision_provisional` tiene una sola definición** en el catálogo: `comun.schema.json#/$defs/revisionProvisional`,
+  dueño `l1d-126` parte A. `l1d-335` y la parte B la referencian con `$ref`; nadie la redefine (`design.md` D9).
+- ↪ `l1d-246-suite-hasta-3-opciones`: su dataset lee el catálogo real de próstata. El efecto de C-1 y C-5 sobre el orden
+  de OP-07…OP-12 se rige por el **supuesto compartido SC-1** (`design.md` D10) y se comprueba con su test de coherencia
+  después de la parte B.
+- ↪ `l1d-299-poblacion-dorado-suite`: su extracción lee `packages/clinical-catalogs`; los casos del dorado que usan C-1,
+  C-2, C-4 y C-5 van después de la parte B y siguen el mismo SC-1.
+- ⛔ DEC-11 (L1D-125): sin firma. Este change cierra sobre el escenario aceptado; se le adjuntan Q-1…Q-4.
+
+### Fuera de alcance en el S7
+
+- Cambiar F-20…F-24 o la palabra «solo» de F-21 (C-3, Q-1).
+- Criterios nuevos (C-6, C-7), tabla ECOG↔Karnofsky (C-8), edad y sexo como contexto (C-9).
+- Comparar criterios compuestos componente a componente (`receptores_hormonales`, `hrr_brca`): ver `design.md` D12 y D13.
+- Marcar un IHC 2+ sin ISH como dato crítico faltante en `datos-criticos.json` (DEC-01 está en Post-MVP): pregunta abierta.
+
 ## Fuera de alcance
 
 - El cálculo del estado por criterio (US-122), la población solo en texto (US-123), la causa de "Desconocido" y

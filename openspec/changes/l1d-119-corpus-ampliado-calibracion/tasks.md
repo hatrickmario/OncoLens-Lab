@@ -1,6 +1,8 @@
 # Tasks — l1d-119-corpus-ampliado-calibracion
 
 > Sin cambio de API: no hay sección `## contratos`. Un solo contexto: **ai-services** (`ai-services-dev`). Lo que necesita los modelos locales reales (sección `## evaluación`) se ejecuta en la **corrida nocturna del día 2** (`S5-refinamiento.md` §5) por `ai-eval-runner`, junto con US-249 AC-4 y US-140; la CI usa adaptadores falsos.
+>
+> **Sprint 7 (movido-S7, 2026-11-22):** lo que falta está en la sección «Sprint 7» del final, agrupado por ventana (antes de la corrida base · corrida base · corrida final). Esa sección manda sobre los destinos antiguos de las tareas abiertas: «corrida nocturna del día 2» y «DIFERIDA -> D5-08» significan ahora **corrida base del S7** (`[S7 resp. 2]`). Las tareas `[x]` no se tocan.
 
 ## ai-services
 
@@ -58,7 +60,7 @@
 
 ## humano
 
-- [ ] H-3 Decisión sobre la etiqueta de licencia de los 10 registros de ClinicalTrials.gov (hoy `license: Dominio público`, clase `dominio_publico` por la Enmienda 1 de ADR-36): los términos de uso reservan derechos internacionales fuera de EE. UU. y posibles derechos de terceros y piden mantener los datos actualizados. Recomendación del privacy-guardian: mantener la CLASE `dominio_publico` y cambiar solo el texto de `license` a «Datos de ClinicalTrials.gov (obra del gobierno de EE. UU.; condiciones de uso)» con la misma clase en `MAPA_DE_LICENCIAS_POR_DEFECTO`, y dejar constancia en ADR-36 de que la copia es estática. No se cambió: DIFERIDA -> H-3
+- [ ] H-3 Decisión sobre la etiqueta de licencia de los 10 registros de ClinicalTrials.gov (hoy `license: Dominio público`, clase `dominio_publico` por la Enmienda 1 de ADR-36): los términos de uso reservan derechos internacionales fuera de EE. UU. y posibles derechos de terceros y piden mantener los datos actualizados. Propuesta del privacy-guardian: mantener la CLASE `dominio_publico` y cambiar solo el texto de `license` a «Datos de ClinicalTrials.gov (obra del gobierno de EE. UU.; condiciones de uso)» con la misma clase en `MAPA_DE_LICENCIAS_POR_DEFECTO`, y dejar constancia en ADR-36 de que la copia es estática. No se cambió: DIFERIDA -> H-3
 - [ ] D5-20 Deuda de diseño del Gate 2 (vuelta 1), propuesta de ID D5-20 y sin tocar aquí: (5) `CORPUS_MIN_DOCUMENTS_PER_CANCER_TYPE` y `CORPUS_MIN_SOURCES_PER_CANCER_TYPE` están declarados sin consumidor (consumirlos con una marca `bajo_el_minimo` o borrarlos: decisión de producto); (7) la CLI `ingest` devuelve una tupla de 4, lee `Settings` en línea y `main` no tiene test; (8) `ETIQUETAS_CANCER` fijas en el informe frente al catálogo o `ENABLED_CANCER_TYPES`; P3: doble llamada a `_seccion_out_08`, bandera `fijar`, tres `if` por parámetro de barrido, firmas posicionales del `conftest.py` de ingesta, formato de etiquetas por coma, igualdades `==` de fuentes que deben ser `<=`/`>=`. DIFERIDA -> D5-20
 - [ ] H-4 Atribución de PMC: el bucket exige reconocer a NLM (hecho como línea global en `ATTRIBUTION.md`). Las menciones a NCCN/ESMO dentro del texto CC BY de terceros (referencias bibliográficas y conflictos de interés; sin contenido de guías ni entradas de manifiesto) quedan a decisión del humano: admisibles o recortar. DIFERIDA -> H-4
 
@@ -97,3 +99,42 @@ npm run evaluate -- --config apps/rag-orchestrator/eval/configs/s4-hibrida.yaml 
 - [x] 9.1 `openspec validate l1d-119-corpus-ampliado-calibracion --strict` en verde.
 - [x] 9.2 Tests de `rag-orchestrator` (unitarios e integración) y de `infra/docker/__tests__` en verde; `eval-required` en verde en la CI.
 - [ ] 9.3 `run-ai-eval` adjunto al PR (8.7). DIFERIDA -> D5-08
+
+## Sprint 7 (movido-S7) · decisiones de licencia y corrida base
+
+> Alcance: `proposal.md` («Alcance del Sprint 7») y `design.md` (S7-D1…S7-D6). Regla del sprint: ninguna cifra sin reporte versionado en `reports/eval/` producido por `run-ai-eval`. Un script del scratchpad no cuenta.
+>
+> **Umbrales (`[S7 resp. 11]`, design S7-D5):** la corrida base y la final corren con los umbrales **actuales**. Los barridos proponen; los valores calibrados entran en la corrida final como **un brazo más** y se adoptan (o no) en las decisiones de cierre, junto a DEC-07. La tarea **7.1** y el bloque **H-1** ya no se ejecutan «tras la corrida nocturna»: solo tras la corrida final y solo si se adoptan (S7.15). En el bloque H-2, el comentario «los valores van a Settings y Compose en 7.1» se lee con esta condición.
+>
+> **Corpus (`[S7 resp. 10]`, design S7-D6):** uno fijo por familia, el mismo en base y final, registrado en cada reporte. Usan la ingesta de 8.1: chat (`l1d-326`), faltantes (`l1d-113`), opciones (`l1d-246`), población (`l1d-299`) y los brazos de US-278 (`l1d-336`) y US-279 (`l1d-337`). Las familias `contextual` (`l1d-329`, `l1d-331`) y `diagnostico` (`l1d-334`) usan el dataset `s5-corpus-ampliado` en memoria, no esta ingesta.
+
+### (a) Antes de la corrida base · código y datos sin modelos reales
+
+- [ ] S7.1 Cierra **H-3** (`[S7 resp. 7]`): texto de `license` de los 10 registros de ClinicalTrials.gov en `data/raw/s3/manifest.yaml` → «Datos de ClinicalTrials.gov (obra del gobierno de EE. UU.; condiciones de uso)», misma clase `dominio_publico`; misma línea en `data/raw/s3/ATTRIBUTION.md`; entrada en `MAPA_DE_LICENCIAS_POR_DEFECTO` (`app/config/settings.py`). Sustituye el texto aplicado el 2026-11-04 (ADR-36 v1.1b; ver design S7-D2). Test de datos en `tests/unit/test_manifiesto_real_s3.py` y test de ingesta de una entrada con el texto nuevo `[US-120 AC-2]` · test después (datos y configuración) · commit `chore(L1D-119)`.
+- [ ] S7.2 Cierra **H-4** (`[S7 resp. 8]`): sin cambio de datos. El test de datos de `source_name` es obligatorio (`[S7 resp. 15]`): falla si algún documento del corpus es de una organización excluida (NCCN, ESMO); la mención en referencias de un artículo de terceros con licencia abierta sí se admite. Test de integración «queda embebido cuando un artículo CC BY cita una fuente excluida en sus referencias `[US-120 AC-2]`» con un documento de test sintético; el test de datos sigue comprobando que ningún `source_name` es de NCCN ni de ESMO · commit `test(L1D-119)`.
+- [ ] S7.3 `[HUMANO / sesión principal]` Anotar en `docs/architecture/adr/ADR-36-fuentes-y-licencias.md` las decisiones `[S7 resp. 7]` (texto nuevo, clase sin cambio, copia estática) y `[S7 resp. 8]` (menciones admitidas). El ADR no es de ai-services.
+- [ ] S7.4 `eval-required` con adaptadores falsos en el PR de S7.1 (cambia `data/raw/s3/manifest.yaml`): sin regresión; CI con 0 fallos, 0 pendientes y 0 alertas (`data-scan`, `gitleaks`) antes de pedir el merge.
+- [ ] S7.5 Comprobar con adaptadores falsos que `eval/configs/s5-calibracion.yaml` carga y corre con el corpus de 53 documentos y `RERANKER_MAX_PAIRS = 20` (D6-37); si falla, fijar el parámetro en la configuración · test después.
+- [ ] S7.6 Preparar la máquina (`S7-refinamiento.md` §7): modelos de ADR-39 verificados, un solo `ollama serve` con `OLLAMA_CONTEXT_LENGTH=8192`, sin swap, espacio en disco, stack anterior apagado; pesos *sparse* verificados (`l1d-116`, tarea 1.10) para 8.1 y 8.5.
+
+### (b) Corrida base · con modelos locales, por `ai-eval-runner`
+
+Cierran las tareas abiertas de arriba; cada una se marca `[x]` allí con la ruta de su reporte.
+
+- [ ] S7.7 **8.1** ingesta real y `reindex-sparse` `[US-120 AC-1] [US-120 AC-2]`; **8.2** población en abanico y resumen por tipo e idioma `[US-120 AC-7]`.
+- [ ] S7.8 **8.4** baseline por tipo de cáncer e idioma, barrido de `RELEVANCE_THRESHOLD` y p95 de punta a punta (mediana de 3 corridas) frente a la meta vigente de `metas-iniciales.yaml` `[US-120 AC-6]`; **8.3** barridos de `NLI_ENTAILMENT_THRESHOLD` y `RETRIEVAL_TOP_K` `[US-120 AC-5]`. El baseline corre con los umbrales actuales; los barridos reportan la tabla, el valor **propuesto** y su justificación, y no escriben en `Settings` ni en Compose (`[S7 resp. 11]`). Cada reporte registra el corpus y los umbrales usados (`[S7 resp. 10]`).
+- [ ] S7.9 **8.6** (D4-30) brazo de reescritura: solo la medición; el valor por defecto de `QUERY_REWRITE_ENABLED` lo decide `l1d-335` (H-2) en la corrida final. **8.5** (D4-21) A0, A2 y A2b si los pesos *sparse* están verificados; si no, se difiere con el motivo.
+- [ ] S7.10 **8.7** y **9.3**: `run-ai-eval` frente a `main` y reportes en `reports/eval/l1d-119-*`; **H-2** (bloque literal de la corrida) ejecutado.
+- [ ] S7.11 Tras los reportes de S7.8: dejar listos los valores **propuestos** de `NLI_ENTAILMENT_THRESHOLD`, `RETRIEVAL_TOP_K` y `RELEVANCE_THRESHOLD` (con la ruta del reporte de cada barrido) como configuración del brazo «umbrales calibrados» de la corrida final (S7.13). **No** se escribe ningún valor por defecto en `Settings`, Compose ni `.env.example` (`[S7 resp. 11]`, design S7-D5); **7.1** y **H-1** siguen abiertas hasta S7.15.
+- [ ] S7.12 `[HUMANO / sesión principal]` Anotar D4-21 y D4-30 en `backlog/sprints/S4-deuda.md` con la ruta de los reportes.
+
+### (c) Corrida final
+
+- [ ] S7.13 Brazo «umbrales calibrados» (`[S7 resp. 11]`): `ai-eval-runner` repite el baseline de 8.4 con la misma configuración y el mismo corpus que en la base y los tres umbrales propuestos (S7.11) pasados por configuración de la corrida, sin cambiar valores por defecto; reporte en `reports/eval/l1d-119-*` con los umbrales del brazo y los actuales `[US-120 AC-5] [US-120 AC-6]`. Si un barrido confirmó el actual o no dio valor elegible, ese parámetro no se varía y el reporte lo dice. Además: comprobar que la colección y el reporte de la corrida base siguen disponibles como referencia del A/B de `l1d-335`, `l1d-336` y `l1d-337`, y enlazar el baseline en US-017 · DEC-07 (L1D-234).
+- [ ] S7.15 `[HUMANO / decisiones de cierre]` Adoptar o no los umbrales calibrados, junto a DEC-07, sobre los reportes de la corrida final. Si se adoptan: **7.1** (valores por defecto de `NLI_ENTAILMENT_THRESHOLD`, `RETRIEVAL_TOP_K` y `RELEVANCE_THRESHOLD` en `Settings` y Compose, `compose-config.test.mjs` y la justificación en `design.md`; **sin** `QUERY_REWRITE_ENABLED`) y **H-1** (bloque de `.env.example` con esos tres valores; la línea `QUERY_REWRITE_ENABLED` pasa a `l1d-335`) · test después · commit `chore(L1D-119)`; el PR dispara `eval-required`. Si no se adoptan: 7.1 y H-1 se cierran como «no adoptado» con la ruta del reporte, sin cambio de configuración.
+- [ ] S7.14 Cierre: `openspec validate l1d-119-corpus-ampliado-calibracion --strict`; Pytest de `rag-orchestrator` e `infra/docker/__tests__` en verde.
+
+### Fuera del S7
+
+- **1.1b** (recuento de resúmenes PDQ, D5-09) y **D5-20** (deuda de diseño): no bloquean y no entran.
+

@@ -88,3 +88,17 @@ metastásica…). AC-04.3 exige que los faltantes viajen a la IA como «desconoc
   La suite mide su efecto en el recall de la rama dense; si retrocede, se ajusta el literal, no la regla.
 - **P-2 · Corrida con modelos locales · Decidido (usuario, 2026-11-03):** este change **entra en la corrida nocturna
   única del día 2** (`S5-refinamiento.md` §5). Si no cabe: `DIFERIDA -> D5-nn`.
+
+## Alcance del Sprint 7 (movido-S7, 2026-11-22)
+
+> L1D-113 pasa al S7 (`backlog/sprints/S7-refinamiento.md` §1). El código está en `main`; lo de arriba no se reescribe.
+
+- **Entra:** la métrica de **no inferencia** con su juez acotado (S7.1; capacidad `ai-evaluation`: ADDED «Métrica de no
+  inferencia de datos críticos faltantes»), los menores de D5-25 que no tocan el contrato (S7.2), el informe con
+  adaptadores falsos (S7.3) y la medición con modelos locales en la corrida base (S7.5).
+- **Sale del S7 (`[S7 resp. 12]`):** validar `missingCriticalData` en `/case/summary` con `422`
+  `faltante_no_catalogado`. No es calidad del RAG y cambiaría el contrato OpenAPI, que hoy declara que esa ruta no
+  aplica esa validación. Queda como deuda Post-MVP **D7-01**. El change sigue **sin cambios de contrato**.
+- **Corpus (`[S7 resp. 10]`):** la medición de faltantes usa la ingesta de `l1d-119`, la misma en la corrida base y en
+  la final, registrada en el reporte.
+- **Umbrales (`[S7 resp. 11]`):** se mide con los umbrales actuales; este change no cambia ningún valor por defecto.

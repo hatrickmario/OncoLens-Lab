@@ -66,3 +66,87 @@ Sin cambios de API: no hay diff de `openapi.yaml` ni de `contracts/examples/`. L
 - **Español en mama con HER2/receptores en elegibilidad (AC-7):** PMC OA en español es escaso; si NCI ES no expresa la elegibilidad HER2 en un fragmento verificable, el AC-7 puede no cumplirse con fuentes de ADR-36. No se relaja la regla de licencias (ADR-36, SUP-3): se reporta y se lleva al humano.
 - **Tiempo de la corrida nocturna:** ingesta real de ~40–50 documentos + extracción de población + barridos (3 grillas) + baseline (3 corridas de p95) + D4-21 + D4-30 + US-249/US-140. Orden de prioridad si no cabe: AC-1/AC-7 → AC-6 → AC-5 → D4-30 → D4-21.
 - Reglas de elección de D3: propuestas, a confirmar en `/sprint-start`.
+
+## Sprint 7 · Corrida base y decisiones de licencia (movido-S7, 2026-11-22)
+
+Fuente: `backlog/sprints/S7-refinamiento.md` (§1, §4, §5, §6, §7; `[S7 resp. 2]`, `[S7 resp. 7]`, `[S7 resp. 8]`) y las
+decisiones del usuario del 2026-11-22 (`[S7 resp. 10]`, `[S7 resp. 11]`). D1…D5 siguen vigentes salvo lo que aquí se
+indica; en particular, el último punto de D3 («los valores elegidos se escriben en la configuración…») queda sustituido
+por S7-D5.
+
+### S7-D1 · La «corrida nocturna del día 2» es ahora la corrida base del S7
+
+Todo lo que en `tasks.md` dice «corrida nocturna» o «DIFERIDA -> D5-08» se ejecuta en la corrida base: una sola carga
+de modelos (`ollama ps`, sin swap, `OLLAMA_CONTEXT_LENGTH=8192`), `proveedor: local`, máquina de referencia, stack de la
+demo anterior apagado (`S7-refinamiento.md` §7). La comparten `l1d-334` (diagnóstico por etapa), `l1d-329`, `l1d-333`,
+`l1d-246`, `l1d-299` y `l1d-113`. Orden de prioridad si no cabe (sin cambio): 8.1–8.2 → 8.4 → 8.3 → 8.6 → 8.5. El
+reporte de esta corrida es la referencia del A/B de la corrida final; la colección de Milvus de la base no se
+sobrescribe (los brazos de `l1d-337` reindexan en colecciones aparte). Compartir la corrida no es compartir el corpus:
+qué corpus usa cada familia lo fija S7-D6.
+
+### S7-D2 · Licencia de ClinicalTrials.gov (`[S7 resp. 7]`, H-3)
+
+Estado observado en `main`: H-3 y H-4 figuran como abiertas en `tasks.md`, pero el 2026-11-04 se aplicó una primera
+decisión (ADR-36, versión 1.1b): el manifiesto, `ATTRIBUTION.md` y `MAPA_DE_LICENCIAS_POR_DEFECTO` llevan
+«Obra del gobierno de EE. UU.; atribución Courtesy of the U.S. National Library of Medicine». `[S7 resp. 7]`, posterior,
+fija otro texto: «Datos de ClinicalTrials.gov (obra del gobierno de EE. UU.; condiciones de uso)». Manda la más
+reciente (además, la tarea 1.1 verificó que los términos de uso de ClinicalTrials.gov no contienen la frase de
+atribución con «U.S.»). Cambios: `license` de los 10 registros en `data/raw/s3/manifest.yaml`, la línea de
+`data/raw/s3/ATTRIBUTION.md`, la entrada de `MAPA_DE_LICENCIAS_POR_DEFECTO` (`app/config/settings.py`) y la nota de ADR-36
+(copia estática). La clase sigue `dominio_publico`; el `checksum` de los textos no cambia, así que la ingesta no
+reindexa por esto. Cambia `data/raw/**/manifest.yaml`: el PR dispara `eval-required` (adaptadores falsos).
+
+### S7-D3 · Menciones de terceros en texto CC BY (`[S7 resp. 8]`, H-4)
+
+Se admiten. No hay cambio de datos: ningún documento se recorta. NCCN y ESMO siguen en `excluded_sources` y sin entradas
+de manifiesto; sus nombres en un artículo CC BY de otra fuente son citas del propio artículo. El test de datos del
+manifiesto sigue comprobando que ningún `source_name` es de una fuente excluida. ADR-36 ya lo recoge en su versión
+1.1b; se le añade la confirmación del 2026-11-21.
+
+### S7-D4 · Lo que ya no se decide aquí
+
+- `QUERY_REWRITE_ENABLED` (D4-30): la tarea 8.6 mide; la decisión es de `l1d-335` (H-2), sobre la corrida final. La
+  tarea 7.1 y el bloque H-1 dejan de escribir ese valor.
+- Metas definitivas: DEC-07 (L1D-234), sobre la corrida final.
+- Híbrida ponderada (D6-43) y calibración del NLI con etiquetas humanas (D6-46, D6-58): fuera del S7. La tarea 8.5
+  (D4-21) solo mide A0, A2 y A2b; `RETRIEVAL_MODE` no cambia.
+
+### S7-D5 · Valores calibrados (7.1) y comparabilidad
+
+**Decidido (usuario, 2026-11-22), `[S7 resp. 11]`.** Los barridos de la corrida base **proponen**
+`NLI_ENTAILMENT_THRESHOLD`, `RETRIEVAL_TOP_K` y `RELEVANCE_THRESHOLD`; no fijan nada.
+
+- La corrida base y la corrida final corren con los umbrales **actuales** (los valores por defecto vigentes de
+  `Settings` y Compose). **Ningún valor por defecto cambia entre la base y la final**, así que los brazos de la final
+  (`l1d-335`, `l1d-336`, `l1d-337`) se comparan con la base con los mismos umbrales.
+- Los valores calibrados que salgan de los barridos entran en la corrida final como **un brazo más** («umbrales
+  calibrados»): la misma configuración y el mismo corpus que el baseline de la base (8.4), con los tres umbrales
+  elegidos pasados por configuración de la corrida (entorno o configuración de la suite), sin tocar `Settings` ni
+  Compose. Su reporte declara los umbrales de ese brazo y los actuales.
+- **Adoptarlos o no** se decide en las decisiones de cierre del sprint, junto a DEC-07 (L1D-234), sobre los reportes de
+  la corrida final. Solo si se adoptan se ejecuta la tarea 7.1 (valores por defecto en `Settings` y Compose, su test y
+  el bloque H-1 de `.env.example`); si no, 7.1 se cierra como «no adoptado» con la ruta del reporte y los valores
+  actuales quedan anotados como confirmados.
+- Si un barrido no encuentra valor elegible o confirma el actual, el brazo de la final no se corre para ese parámetro
+  y el reporte lo dice.
+
+### S7-D6 · Corpus por familia de evaluación (`[S7 resp. 10]`)
+
+Cada familia usa un corpus fijo, el mismo en la corrida base y en la final, y cada reporte lo registra.
+
+| Corpus | Familias y changes |
+|---|---|
+| Dataset `s5-corpus-ampliado` en memoria (`data/eval/s5-corpus-ampliado`) | `contextual` (`l1d-329`, `l1d-331`) y `diagnostico` (`l1d-334`) |
+| Ingesta real de este change (8.1) | chat (`l1d-326`), faltantes (`l1d-113`), opciones (`l1d-246`), población (`l1d-299`) y los brazos de US-278 (`l1d-336`) y US-279 (`l1d-337`) |
+
+Las mediciones propias de este change no cambian de corpus: los barridos y el baseline usan
+`eval/configs/s5-calibracion.yaml` (tarea 1.4) y el p95 de punta a punta, el Compose con la ingesta de 8.1; cada reporte
+`reports/eval/l1d-119-*` registra el suyo. El brazo «umbrales calibrados» de la final usa el mismo que el baseline.
+
+**Ficheros que toca el S7.** `data/raw/s3/manifest.yaml` y `data/raw/s3/ATTRIBUTION.md` (texto de licencia);
+`apps/rag-orchestrator/app/config/settings.py` (mapa de licencias; los valores calibrados, solo si se adoptan en el
+cierre, tras la corrida final); `infra/docker/docker-compose.yml` y su test (ídem); `apps/rag-orchestrator/eval/configs/s5-calibracion.yaml` solo si la
+comprobación de D6-37 lo exige; `docs/architecture/adr/ADR-36-fuentes-y-licencias.md` (anotación, sesión principal);
+`backlog/sprints/S4-deuda.md` (filas D4-21 y D4-30, sesión principal). No toca `packages/clinical-catalogs/` ni
+`data/evaluation/`.
+
