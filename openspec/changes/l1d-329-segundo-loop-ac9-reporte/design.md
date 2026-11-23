@@ -160,5 +160,14 @@ Decisiones que ni la spec ni un ADR cubrían; cada una con las alternativas que 
 - **I6 · `PuertosDeContextual` solo sustituye el *reranker* y el generador de seudónimos.** Los tests guionan el puntaje por
   chunk y loop; el resto de los adaptadores falsos son los de la suite. Descartada: sustituir `Adaptadores` completo (obliga
   al test a reconstruir el dataset del servicio).
+- **I8 · La causa mira solo los chunks recuperables para el tipo del caso (Gate 2).** La recuperación filtra por el tipo de
+  cáncer del caso; un término que solo aparece en un chunk de otro tipo no es «en el corpus» para esa fila. Se pasan a
+  `causa_de_sinonimo` los chunks de documentos cuyo `cancer` coincide (`coincide_etiqueta`, la regla única del filtro). Se
+  descarta duplicar la regla del filtro en la suite.
+- **I9 · Deuda propuesta (D7-08, D7-09), fuera de este change.** D7-08: la plomería común de las familias de `evaluate`
+  (cronómetro, ruta del resultado, celdas del `.md`) está repetida en `diagnostico`, `opciones`, `contextual` y `chat`; extraerla
+  a un módulo compartido. D7-09: `formas_del_termino()` vive en `corrida_contextual.py`; cuando `l1d-335` publique
+  `cargar_formas_por_termino` debe pasar a la capa del catálogo con un solo dueño. La guarda de clase sintética ya tiene dueño
+  (`dataset_loader.exigir_clase_sintetica`, usada por `diagnostico` y `contextual`; las demás familias, a D7-08).
 - **I7 · El informe da la ruta del dataset relativa al repositorio** (o el nombre de su carpeta si está fuera): nunca una ruta
   absoluta de la máquina (RN-14).
