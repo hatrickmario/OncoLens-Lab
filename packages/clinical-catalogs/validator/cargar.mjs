@@ -87,10 +87,12 @@ export function leerCatalogo(directorio, leerArchivo) {
       }
     }
   }
-  const declaraPlantillas = Object.values(ARCHIVOS_POR_TIPO_DECLARADOS_POR_LISTA).some(
-    ({ clave }) => Array.isArray(manifest?.[clave]),
+  const declaraArchivoConTerminosProhibidos = Object.values(
+    ARCHIVOS_POR_TIPO_DECLARADOS_POR_LISTA,
+  ).some(
+    ({ clave, usaTerminosProhibidos }) => usaTerminosProhibidos && Array.isArray(manifest?.[clave]),
   );
-  const terminos = declaraPlantillas
+  const terminos = declaraArchivoConTerminosProhibidos
     ? {
         'terminos-prohibidos': leerJson(
           directorio,
