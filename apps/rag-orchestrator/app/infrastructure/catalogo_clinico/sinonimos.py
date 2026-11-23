@@ -19,6 +19,7 @@ from app.infrastructure.catalogo_clinico.manifiesto import CatalogoNoDisponible
 
 NOMBRE_DEL_ARCHIVO = "sinonimos.json"
 
+_RELACIONES_DE_PERTINENCIA = (RelacionDeSinonimo.equivalente, RelacionDeSinonimo.miembro_de_clase)
 _TerminoDelCatalogo = tuple[str, list[tuple[str, RelacionDeSinonimo]]]
 
 
@@ -39,12 +40,14 @@ def cargar_formas_por_termino(
     tipos_de_cancer: Sequence[str],
     relaciones: Collection[RelacionDeSinonimo] = tuple(RelacionDeSinonimo),
 ) -> dict[str, frozenset[str]]:
-    """Canónico normalizado -> él y todos sus textos, con cualquier relación: lo que reconoce un término como del tema sin
-    equipararlo (pertinencia del seguimiento, formas de un término en la medición contextual)."""
+    """Canónico normalizado -> él y sus textos de las ``relaciones`` pedidas (por defecto todas): lo que reconoce un término
+    como del tema sin equipararlo (pertinencia del seguimiento, formas de un término en la medición contextual)."""
     formas: dict[str, set[str]] = {}
     for tipo in tipos_de_cancer:
         for canonico, textos in _terminos_de(catalogos / tipo / NOMBRE_DEL_ARCHIVO):
-            formas.setdefault(canonico, {canonico}).update(texto for texto, _ in textos)
+            formas.setdefault(canonico, {canonico}).update(
+                texto for texto, relacion in textos if relacion in relaciones
+            )
     return {canonico: frozenset(textos) for canonico, textos in formas.items()}
 
 
@@ -76,13 +79,18 @@ def cargar_terminos_del_catalogo(catalogos: Path, tipos_de_cancer: Sequence[str]
 def cargar_terminos_por_tipo(
     catalogos: Path, tipos_de_cancer: Sequence[str]
 ) -> dict[str, frozenset[str]]:
-    """Por tipo de cáncer: su código y todos los textos de su ``sinonimos.json``, normalizados, con cualquier relación.
-    Lo usa la regla determinista de pertinencia del seguimiento (US-218, design D7)."""
+    """Por tipo de cáncer: su código, los canónicos y los textos ``equivalente`` y ``miembro_de_clase`` de su
+    ``sinonimos.json``, normalizados; nunca los ``mas_amplio`` (no son exclusivos del término: «observación» no es de
+    próstata). Lo usa la regla determinista de pertinencia del seguimiento (US-218, design D7, D15)."""
     return {
         tipo: frozenset(
             {
                 normalizar_texto(tipo),
-                *chain.from_iterable(cargar_formas_por_termino(catalogos, [tipo]).values()),
+                *chain.from_iterable(
+                    cargar_formas_por_termino(
+                        catalogos, [tipo], _RELACIONES_DE_PERTINENCIA
+                    ).values()
+                ),
             }
         )
         for tipo in tipos_de_cancer

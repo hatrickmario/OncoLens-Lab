@@ -321,4 +321,24 @@ Casos que el diseño no cubría, con la alternativa elegida y por qué se descar
 - **D14. Los casos AC-2/AC-3/AC-4 sobre el catálogo real nacen en verde.** El mecanismo de US-238 ya filtraba contra el
   catálogo y el catálogo 1.10.0 (misma rama) ya trae los textos; solo es rojo el caso que distingue la relación (tarea 2.2).
   Se registran así, sin debilitar aserciones (la propia tarea 2.3 lo prevé para RN-02).
+- **D13 (revisado en el Gate 2).** La omisión de metas sin clave salió de `marcar_frente_a_meta` (vuelve a marcar una por
+  meta; una meta sin clave en las métricas es «sin medir») y pasó al informe que tiene el esquema cerrado:
+  `DatosDelInforme.metas_medidas` (Move Method), con las claves de `_METRICAS_DE_META` y el p95. `corrida_opciones` ya
+  filtraba sus metas del mismo modo.
+- **D15. La pertinencia por tipo no incluye los textos `mas_amplio`.** `cargar_terminos_por_tipo` (contexto del seguimiento y
+  enrutado del chat) devuelve el código del tipo, los canónicos, los `equivalente` y los `miembro_de_clase`, no los
+  `mas_amplio`: por definición no son exclusivos del término («observación» en una pregunta de mama la clasificaría
+  `fuera_de_contexto`). Se implementa con el parámetro `relaciones` de `cargar_formas_por_termino` (por defecto todas;
+  la regla de la causa de contextual, `formas_del_termino`, sigue usando todas). Alternativas descartadas: mantener
+  «todos» (falsos `fuera_de_contexto` en mama) y excluir también `miembro_de_clase` (las clases sí son específicas de un tipo).
+  Si el producto prefiere otra semántica, es la deuda D7-24.
+- **D16. Normalización del validador.** `validator/normalizar.mjs` (la de `plantillas.mjs`, igual a `normalizar_texto` de
+  Python) la usan `plantillas.mjs` y `sinonimos.mjs`; «HER-2» y «HER 2» son el mismo texto, «HER2» y «HER-2» no (Python tampoco
+  los une). `marcos.mjs` conserva la suya (solo `a-z0-9`, otra regla). Regla nueva `sinonimo_con_relaciones_contradictorias`
+  (el mismo texto como `equivalente` y con otra relación dentro de un término).
+- **Paridad del enum.** pytest compara `RelacionDeSinonimo` con el enum del esquema y Vitest compara `RELACIONES_DE_SINONIMO`
+  (ahora exportado). El patrón de fecha de `revision_provisional` lo comprueba el esquema al arrancar y en `catalog:validate`;
+  no se duplicó en zod.
+- **Deuda:** D7-23 (paridad automática esquema JSON ↔ zod ↔ Pydantic del catálogo, más allá de `relacion`) y D7-24
+  (decisión de producto sobre la semántica de pertinencia si no se acepta D15).
 - **Entrega 2 (4.1b y 4.2):** necesitan `Brazo` de `l1d-336` y los pares de `l1d-334`, aún sin mergear; no se apilan.

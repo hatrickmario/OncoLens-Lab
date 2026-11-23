@@ -40,6 +40,17 @@ Cifras reales (modelos de ADR-39 + Compose) en la máquina de referencia (MacBoo
 """
 
 
+_METRICAS_DE_META = (
+    "recall_at_10",
+    "recall_at_10_es_a_en",
+    "mrr",
+    "fidelidad_proxy",
+    "precision_citas",
+    "sin_evidencia",
+)
+_CLAVES_MEDIDAS = frozenset((*_METRICAS_DE_META, CLAVE_P95))
+
+
 @dataclass(frozen=True)
 class DatosDelInforme:
     clase_dataset: str
@@ -64,6 +75,12 @@ class DatosDelInforme:
     # De dónde sale ``p95_e2e_s``: ``medicion_externa`` (``--p95-e2e-s``), ``corridas_en_proceso`` (etapa ``consulta`` de
     # ``EVAL_P95_RUNS`` corridas) o ``no_declarado``.
     p95_origen: str = "no_declarado"
+
+    @property
+    def metas_medidas(self) -> dict[str, Meta]:
+        """Las metas de las métricas que este informe mide (su esquema es cerrado): una meta de otra corrida, como la de
+        paráfrasis de L1D-335, no se marca aquí."""
+        return {c: m for c, m in self.metas.items() if c in _CLAVES_MEDIDAS}
 
 
 def _numero(valor: float | None) -> str:
@@ -130,11 +147,11 @@ def _etiquetas_de_cancer(metricas: Mapping[str, Mapping[str, float | None]]) -> 
 
 
 def _seccion_baseline(d: DatosDelInforme) -> list[str]:
-    totales = marcar_frente_a_meta({**d.metricas_totales, CLAVE_P95: d.p95_e2e_s}, d.metas)
+    totales = marcar_frente_a_meta({**d.metricas_totales, CLAVE_P95: d.p95_e2e_s}, d.metas_medidas)
     por_cancer = [
         _fila_de_metrica(m, f"{ETIQUETAS_CANCER.get(cancer, cancer)} · ")
         for cancer, valores in d.metricas_por_cancer.items()
-        for m in marcar_frente_a_meta(valores, d.metas)
+        for m in marcar_frente_a_meta(valores, d.metas_medidas)
         if m.clave != CLAVE_P95
     ]
     referencia = d.proveedor == "fake"
@@ -183,7 +200,7 @@ def _filas_por_tipo_e_idioma(d: DatosDelInforme) -> list[str]:
                 continue
             filas.extend(
                 _fila_de_metrica(m, f"{prefijo} · ")
-                for m in marcar_frente_a_meta(celda, d.metas)
+                for m in marcar_frente_a_meta(celda, d.metas_medidas)
                 if m.clave != CLAVE_P95
             )
     return filas
@@ -211,7 +228,7 @@ prompts; la decisión es de una historia aparte con su propia evaluación (OL-06
 
 
 def _seccion_out_08(d: DatosDelInforme) -> list[str]:
-    marcas = marcar_frente_a_meta(d.metricas_totales, d.metas)
+    marcas = marcar_frente_a_meta(d.metricas_totales, d.metas_medidas)
     fidelidad = next((m for m in marcas if m.clave == "fidelidad_proxy"), None)
     if fidelidad is None or fidelidad.estado != "fuera de meta":
         return []
@@ -278,7 +295,7 @@ def renderizar_informe(d: DatosDelInforme) -> str:
 
 def agregados_del_informe(d: DatosDelInforme) -> dict[str, Any]:
     """El JSON de agregados: las mismas cifras del informe, sin textos."""
-    marcas = marcar_frente_a_meta({**d.metricas_totales, CLAVE_P95: d.p95_e2e_s}, d.metas)
+    marcas = marcar_frente_a_meta({**d.metricas_totales, CLAVE_P95: d.p95_e2e_s}, d.metas_medidas)
     return {
         "esquema": "oncolens.baseline.v1",
         "claseDataset": d.clase_dataset,
@@ -322,14 +339,6 @@ def agregados_del_informe(d: DatosDelInforme) -> dict[str, Any]:
     }
 
 
-_METRICAS_DE_META = (
-    "recall_at_10",
-    "recall_at_10_es_a_en",
-    "mrr",
-    "fidelidad_proxy",
-    "precision_citas",
-    "sin_evidencia",
-)
 _POR_CANCER = Objeto({m: Numero() for m in _METRICAS_DE_META})
 ESQUEMA_BASELINE = Objeto(
     {

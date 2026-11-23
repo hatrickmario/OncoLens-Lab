@@ -23,7 +23,7 @@ const esquemaDeCodigos = z.strictObject({
 });
 
 /** Conjunto cerrado de `relacion` de `sinonimos.schema.json` (L1D-335, revisión clínica S-1). */
-const RELACIONES_DE_SINONIMO = ['equivalente', 'mas_amplio', 'miembro_de_clase'] as const;
+export const RELACIONES_DE_SINONIMO = ['equivalente', 'mas_amplio', 'miembro_de_clase'] as const;
 type RelacionDeSinonimo = (typeof RELACIONES_DE_SINONIMO)[number];
 
 /** S-1: solo `equivalente` nombra el mismo concepto que el término canónico; las otras relaciones no equiparan. */
