@@ -19,4 +19,5 @@ class RelacionDeSinonimo(StrEnum):
 
 
 def es_equivalente(relacion: RelacionDeSinonimo) -> bool:
-    raise NotImplementedError("no implementado")
+    """S-1: solo un texto que nombra el mismo concepto que el canónico lo equipara; ante la duda no lo es."""
+    return relacion is RelacionDeSinonimo.equivalente
