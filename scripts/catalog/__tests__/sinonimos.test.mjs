@@ -195,6 +195,12 @@ describe('reglas puras de sinonimos.json', () => {
     expect(sinonimoIgualAlCanonico([termino('a', eq('b'))])).toBe(false);
   });
 
+  it('sinonimoIgualAlCanonico acepta la grafía de otro idioma que solo difiere en la tilde', () => {
+    const items = [termino('trastuzumab deruxtecán', eq('trastuzumab deruxtecan', 'en'))];
+
+    expect(sinonimoIgualAlCanonico(items)).toBe(false);
+  });
+
   it('violacionesDeSinonimos nombra el código y el archivo, sin valores del catálogo', () => {
     const archivo = {
       items: [termino('a', eq('x')), termino('b', eq('x')), termino('b', eq('b'))],
