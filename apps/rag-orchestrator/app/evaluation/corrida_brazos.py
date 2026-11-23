@@ -51,8 +51,13 @@ class ResultadoDeBrazo:
 
 
 def exigir_brazo_sin_poblacion(brazo: Brazo, respuesta: RagQueryInternalResponse) -> None:
-    """Un brazo con colección propia no consume población (ADR-47)."""
-    raise NotImplementedError("no implementado")
+    """Un brazo con colección propia no consume población (ADR-47): ``identificador_de_chunk`` da el mismo id a chunks distintos
+    en la colección de 512 y en la de 1024, y la población se cita por ``chunk_id``; mide solo la recuperación (deuda D7-19)."""
+    if brazo.indice is not None and any(fuente.criteria for fuente in respuesta.applicability):
+        raise SuiteAbortada(
+            f"el brazo {brazo.nombre} lee su propia colección y no puede consumir población (ADR-47): "
+            "sus chunk_id colisionan con los de la colección de la suite"
+        )
 
 
 async def evaluar_brazos(
@@ -126,6 +131,7 @@ async def _evaluar_brazo(
             resultados.append(resultado_sin_recuperacion(pregunta, dataset))
             sin_terminos += 1
             continue
+        exigir_brazo_sin_poblacion(brazo, respuesta)
         resultados.append(resultado)
         metas.append(respuesta.meta)
     if servicio.observaciones.reranker_discrepante:
