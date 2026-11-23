@@ -50,7 +50,7 @@ de `Settings`.
 - [x] 1.5 Extraer `resolverMarcadorDeIdentidad()` (RN-10, RN-11) y `traducirHechosEsperados()` (clave del seed →
       `factRef`) como funciones puras con nombre propio y sus unitarios; el cliente capturador pasa el test de contrato
       del puerto de Backend 2 (mismos errores que el cliente real). Entra con el `feat(L1D-326)` de 1.4.
-- [ ] 1.6 (test después) `scripts/eval/evaluate-chat.mjs` y script raíz `evaluate:chat` en `package.json`: prepara
+- [x] 1.6 (test después) `scripts/eval/evaluate-chat.mjs` y script raíz `evaluate:chat` en `package.json`: prepara
       (salvo `--sin-preparar`), llama a `python -m app.evaluation.chat --config … --peticiones <tmp> --salida <dir>`,
       borra `<tmp>` en un `finally` y devuelve el código de la familia; `EVAL_PYTHON` y `EVAL_TIMEOUT_S` (RN-22).
       El `finally` no cubre un SIGKILL: por eso la preparación limpia el residuo al arrancar (1.3c).
