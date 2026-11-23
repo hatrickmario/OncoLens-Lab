@@ -1,5 +1,7 @@
-# Semilla sintética: (documento, criterio) -> valores esperados con scope y fragmento. 36 pares, estratos guía/ensayo/revisión x es/en.
-# El revisor humano la sustituye con la PLANTILLA.md ampliada (l1d-117 2.3, l1d-244 2.2).
+# Dorado sintético de población (L1D-299, US-233b AC-1): (documento, criterio) -> valores esperados con scope y fragmento.
+# Texto redactado para la prueba, sin datos de paciente. Revisión de IA provisional (manifest.json): el revisor humano lo sustituye con
+# la PLANTILLA.md ampliada (l1d-117 2.3, l1d-244 2.2). Campos opcionales por par: `redaccion: dificil` + `tipo` (negacion, rango,
+# definicion_implicita, inclusion_total, umbral, tabla) y `distractor: true` (el valor solo es de subgrupo o mención).
 documentos:
   doc-gui-es-1:
     estrato: guia
@@ -7,96 +9,273 @@ documentos:
     tipo_de_cancer: mama
     fragmentos:
     - chunk_id: ch-doc-gui-es-1-1
-      texto: 'Elegibilidad: las pacientes elegibles de esta poblacion tenian mujeres
-        posmenopausicas; HER2 positivo; ECOG 0 o 1.'
+      texto: 'Elegibilidad: mujeres posmenopausicas con HER2 positivo y ECOG 0 o 1.'
   doc-gui-es-2:
     estrato: guia
     idioma: es
     tipo_de_cancer: mama
     fragmentos:
     - chunk_id: ch-doc-gui-es-2-1
-      texto: 'Elegibilidad: las pacientes elegibles de esta poblacion tenian HER2
-        positivo; ECOG 0 o 1; primera linea.'
+      texto: 'Elegibilidad: pacientes con HER2 positivo y ECOG 0 o 1 que inician primera linea.'
   doc-gui-en-1:
     estrato: guia
     idioma: en
     tipo_de_cancer: mama
     fragmentos:
     - chunk_id: ch-doc-gui-en-1-1
-      texto: 'Eligibility: eligible patients in this population had ECOG 0 or 1; first
-        line; hormone receptor-positive, triple-negative.'
+      texto: 'Eligibility: patients with ECOG 0 or 1 starting first line; hormone receptor-positive, triple-negative.'
   doc-gui-en-2:
     estrato: guia
     idioma: en
     tipo_de_cancer: mama
     fragmentos:
     - chunk_id: ch-doc-gui-en-2-1
-      texto: 'Eligibility: eligible patients in this population had first line; hormone
-        receptor-positive, triple-negative; stage II-III.'
+      texto: 'Eligibility: patients starting first line; hormone receptor-positive, triple-negative; stage II-III.'
   doc-ens-es-1:
     estrato: ensayo
     idioma: es
     tipo_de_cancer: mama
     fragmentos:
     - chunk_id: ch-doc-ens-es-1-1
-      texto: 'Elegibilidad: las pacientes elegibles de esta poblacion tenian receptores
-        hormonales positivos; estadio II-III; mujeres posmenopausicas.'
+      texto: 'Elegibilidad: mujeres posmenopausicas con receptores hormonales positivos y estadio II-III.'
   doc-ens-es-2:
     estrato: ensayo
     idioma: es
     tipo_de_cancer: mama
     fragmentos:
     - chunk_id: ch-doc-ens-es-2-1
-      texto: 'Elegibilidad: las pacientes elegibles de esta poblacion tenian estadio
-        II-III; mujeres posmenopausicas; HER2 positivo.'
+      texto: 'Elegibilidad: mujeres posmenopausicas con estadio II-III y HER2 positivo.'
   doc-ens-en-1:
     estrato: ensayo
     idioma: en
     tipo_de_cancer: mama
     fragmentos:
     - chunk_id: ch-doc-ens-en-1-1
-      texto: 'Eligibility: eligible patients in this population had premenopausal
-        women, postmenopausal women; HER2-positive; ECOG 0 or 1.'
+      texto: 'Eligibility: premenopausal women and postmenopausal women with HER2-positive disease and ECOG 0 or 1.'
   doc-ens-en-2:
     estrato: ensayo
     idioma: en
     tipo_de_cancer: mama
     fragmentos:
     - chunk_id: ch-doc-ens-en-2-1
-      texto: 'Eligibility: eligible patients in this population had HER2-positive;
-        ECOG 0 or 1; first line.'
+      texto: 'Eligibility: patients with HER2-positive disease and ECOG 0 or 1 starting first line.'
   doc-rev-es-1:
     estrato: revision
     idioma: es
     tipo_de_cancer: mama
     fragmentos:
     - chunk_id: ch-doc-rev-es-1-1
-      texto: 'Elegibilidad: las pacientes elegibles de esta poblacion tenian ECOG
-        0 o 1; primera linea; receptores hormonales positivos.'
+      texto: 'Elegibilidad: pacientes con ECOG 0 o 1 en primera linea y receptores hormonales positivos.'
   doc-rev-es-2:
     estrato: revision
     idioma: es
     tipo_de_cancer: mama
     fragmentos:
     - chunk_id: ch-doc-rev-es-2-1
-      texto: 'Elegibilidad: las pacientes elegibles de esta poblacion tenian primera
-        linea; receptores hormonales positivos; estadio II-III.'
+      texto: 'Elegibilidad: pacientes en primera linea con receptores hormonales positivos y estadio II-III.'
   doc-rev-en-1:
     estrato: revision
     idioma: en
     tipo_de_cancer: mama
     fragmentos:
     - chunk_id: ch-doc-rev-en-1-1
-      texto: 'Eligibility: eligible patients in this population had hormone receptor-positive,
-        triple-negative; stage II-III; premenopausal women, postmenopausal women.'
+      texto: 'Eligibility: patients with hormone receptor-positive, triple-negative disease at stage II-III; premenopausal
+        women and postmenopausal women.'
   doc-rev-en-2:
     estrato: revision
     idioma: en
     tipo_de_cancer: mama
     fragmentos:
     - chunk_id: ch-doc-rev-en-2-1
-      texto: 'Eligibility: eligible patients in this population had stage II-III;
-        premenopausal women, postmenopausal women; HER2-positive.'
+      texto: 'Eligibility: premenopausal women and postmenopausal women with stage II-III HER2-positive disease.'
+  doc-pro-gui-es-1:
+    estrato: guia
+    idioma: es
+    tipo_de_cancer: prostata
+    fragmentos:
+    - chunk_id: ch-doc-pro-gui-es-1-1
+      texto: 'Elegibilidad: pacientes con cancer de prostata metastasico en castracion resistente; grado ISUP 2 a 5; ECOG
+        0 o 1.'
+  doc-pro-gui-en-1:
+    estrato: guia
+    idioma: en
+    tipo_de_cancer: prostata
+    fragmentos:
+    - chunk_id: ch-doc-pro-gui-en-1-1
+      texto: 'Eligibility: adult patients with metastatic prostate cancer, castration-resistant disease, second line or later.'
+  doc-pro-ens-es-1:
+    estrato: ensayo
+    idioma: es
+    tipo_de_cancer: prostata
+    fragmentos:
+    - chunk_id: ch-doc-pro-ens-es-1-1
+      texto: 'Elegibilidad: hombres con adenocarcinoma de prostata; grado ISUP 1 a 3; ECOG 0 o 1; segunda linea de tratamiento.'
+  doc-pro-ens-en-1:
+    estrato: ensayo
+    idioma: en
+    tipo_de_cancer: prostata
+    fragmentos:
+    - chunk_id: ch-doc-pro-ens-en-1-1
+      texto: 'Eligibility: men with metastatic prostate cancer and castration-sensitive disease; ECOG 0 to 2.'
+  doc-pro-rev-es-1:
+    estrato: revision
+    idioma: es
+    tipo_de_cancer: prostata
+    fragmentos:
+    - chunk_id: ch-doc-pro-rev-es-1-1
+      texto: 'Elegibilidad: pacientes con cancer de prostata y castracion resistente documentada, en primera linea de tratamiento.'
+  doc-pro-rev-en-1:
+    estrato: revision
+    idioma: en
+    tipo_de_cancer: prostata
+    fragmentos:
+    - chunk_id: ch-doc-pro-rev-en-1-1
+      texto: 'Eligibility: patients with prostate cancer, ISUP grade group 3 to 5; ECOG 0 or 1.'
+  doc-dif-ens-es-1:
+    estrato: ensayo
+    idioma: es
+    tipo_de_cancer: mama
+    fragmentos:
+    - chunk_id: ch-doc-dif-ens-es-1-1
+      texto: 'Elegibilidad: mujeres con cancer de mama metastasico sin ninguna linea de tratamiento previa.'
+  doc-dif-gui-en-1:
+    estrato: guia
+    idioma: en
+    tipo_de_cancer: prostata
+    fragmentos:
+    - chunk_id: ch-doc-dif-gui-en-1-1
+      texto: 'Eligibility: men with prostate cancer; castration status: disease not castration-resistant.'
+  doc-dif-ens-en-1:
+    estrato: ensayo
+    idioma: en
+    tipo_de_cancer: mama
+    fragmentos:
+    - chunk_id: ch-doc-dif-ens-en-1-1
+      texto: 'Eligibility: ECOG performance status between 0 and 2.'
+  doc-dif-rev-es-1:
+    estrato: revision
+    idioma: es
+    tipo_de_cancer: prostata
+    fragmentos:
+    - chunk_id: ch-doc-dif-rev-es-1-1
+      texto: 'Elegibilidad: grado ISUP entre 2 y 4 en la biopsia.'
+  doc-dif-gui-es-1:
+    estrato: guia
+    idioma: es
+    tipo_de_cancer: mama
+    fragmentos:
+    - chunk_id: ch-doc-dif-gui-es-1-1
+      texto: 'Elegibilidad: mujeres sin menstruacion durante los ultimos 12 meses, estado menopausico confirmado.'
+  doc-dif-ens-en-2:
+    estrato: ensayo
+    idioma: en
+    tipo_de_cancer: prostata
+    fragmentos:
+    - chunk_id: ch-doc-dif-ens-en-2-1
+      texto: 'Eligibility: castration confirmed by testosterone below 50 ng/dL despite androgen deprivation therapy.'
+  doc-dif-rev-es-2:
+    estrato: revision
+    idioma: es
+    tipo_de_cancer: mama
+    fragmentos:
+    - chunk_id: ch-doc-dif-rev-es-2-1
+      texto: 'Elegibilidad: mujeres premenopausicas y posmenopausicas, sin restriccion por estado menopausico.'
+  doc-dif-gui-en-2:
+    estrato: guia
+    idioma: en
+    tipo_de_cancer: mama
+    fragmentos:
+    - chunk_id: ch-doc-dif-gui-en-2-1
+      texto: 'Eligibility: patients regardless of ECOG performance status.'
+  doc-dif-ens-es-2:
+    estrato: ensayo
+    idioma: es
+    tipo_de_cancer: prostata
+    fragmentos:
+    - chunk_id: ch-doc-dif-ens-es-2-1
+      texto: 'Elegibilidad: grado ISUP de al menos 3.'
+  doc-dif-rev-en-1:
+    estrato: revision
+    idioma: en
+    tipo_de_cancer: mama
+    fragmentos:
+    - chunk_id: ch-doc-dif-rev-en-1-1
+      texto: 'Eligibility: ECOG performance status of 1 or lower.'
+  doc-dif-gui-es-2:
+    estrato: guia
+    idioma: es
+    tipo_de_cancer: mama
+    fragmentos:
+    - chunk_id: ch-doc-dif-gui-es-2-1
+      texto: 'Tabla 2. Criterios de inclusion. Criterio: linea de tratamiento. Valor: primera linea.'
+  doc-dif-ens-en-3:
+    estrato: ensayo
+    idioma: en
+    tipo_de_cancer: prostata
+    fragmentos:
+    - chunk_id: ch-doc-dif-ens-en-3-1
+      texto: 'Table 1. Inclusion criteria. Criterion: castration status. Value: castration-resistant.'
+  doc-dis-ens-en-1:
+    estrato: ensayo
+    idioma: en
+    tipo_de_cancer: mama
+    fragmentos:
+    - chunk_id: ch-doc-dis-ens-en-1-1
+      texto: 'Eligibility: women with early breast cancer. In an exploratory subgroup by menopausal status, postmenopausal
+        women had longer follow-up.'
+  doc-dis-gui-es-1:
+    estrato: guia
+    idioma: es
+    tipo_de_cancer: mama
+    fragmentos:
+    - chunk_id: ch-doc-dis-gui-es-1-1
+      texto: 'Elegibilidad: mujeres con cancer de mama metastasico. En la discusion se indica que estudios previos incluyeron
+        ECOG 0 o 1.'
+  doc-dis-rev-en-1:
+    estrato: revision
+    idioma: en
+    tipo_de_cancer: mama
+    fragmentos:
+    - chunk_id: ch-doc-dis-rev-en-1-1
+      texto: 'Eligibility: adults with advanced disease. The discussion notes that first line trials reported higher response.'
+  doc-dis-ens-es-1:
+    estrato: ensayo
+    idioma: es
+    tipo_de_cancer: prostata
+    fragmentos:
+    - chunk_id: ch-doc-dis-ens-es-1-1
+      texto: 'Elegibilidad: hombres con cancer de prostata. Un analisis de subgrupo por estado de castracion incluyo pacientes
+        con castracion resistente.'
+  doc-dis-gui-en-1:
+    estrato: guia
+    idioma: en
+    tipo_de_cancer: prostata
+    fragmentos:
+    - chunk_id: ch-doc-dis-gui-en-1-1
+      texto: 'Eligibility: men with prostate cancer. A post hoc subgroup analysis by ISUP grade included ISUP grade group
+        4 or 5.'
+  doc-dis-rev-es-1:
+    estrato: revision
+    idioma: es
+    tipo_de_cancer: prostata
+    fragmentos:
+    - chunk_id: ch-doc-dis-rev-es-1-1
+      texto: 'Elegibilidad: hombres con cancer de prostata. En la discusion se cita un estudio previo con ECOG 0 a 2.'
+  doc-dis-ens-en-2:
+    estrato: ensayo
+    idioma: en
+    tipo_de_cancer: mama
+    fragmentos:
+    - chunk_id: ch-doc-dis-ens-en-2-1
+      texto: 'Eligibility: women with breast cancer. In the subgroup older than 65 years, ECOG 2 was more frequent.'
+  doc-dis-gui-es-2:
+    estrato: guia
+    idioma: es
+    tipo_de_cancer: mama
+    fragmentos:
+    - chunk_id: ch-doc-dis-gui-es-2-1
+      texto: 'Elegibilidad: mujeres con cancer de mama. En un subgrupo exploratorio de mujeres premenopausicas, la tolerancia
+        fue similar; estado menopausico descrito.'
 pares:
 - id: doc-gui-es-1-estado_menopausico
   documento: doc-gui-es-1
@@ -368,3 +547,273 @@ pares:
   - valor: HER2-positive
     scope: elegibilidad
     chunk: ch-doc-rev-en-2-1
+- id: doc-pro-gui-es-1-estado_castracion
+  documento: doc-pro-gui-es-1
+  criterio: estado_castracion
+  esperados:
+  - valor: castracion resistente
+    scope: elegibilidad
+    chunk: ch-doc-pro-gui-es-1-1
+- id: doc-pro-gui-es-1-isup
+  documento: doc-pro-gui-es-1
+  criterio: isup
+  esperados:
+  - valor: ISUP 2 a 5
+    scope: elegibilidad
+    chunk: ch-doc-pro-gui-es-1-1
+- id: doc-pro-gui-es-1-ecog
+  documento: doc-pro-gui-es-1
+  criterio: ecog
+  esperados:
+  - valor: ECOG 0 o 1
+    scope: elegibilidad
+    chunk: ch-doc-pro-gui-es-1-1
+- id: doc-pro-gui-en-1-estado_castracion
+  documento: doc-pro-gui-en-1
+  criterio: estado_castracion
+  esperados:
+  - valor: castration-resistant
+    scope: elegibilidad
+    chunk: ch-doc-pro-gui-en-1-1
+- id: doc-pro-gui-en-1-linea_tratamiento
+  documento: doc-pro-gui-en-1
+  criterio: linea_tratamiento
+  esperados:
+  - valor: second line or later
+    scope: elegibilidad
+    chunk: ch-doc-pro-gui-en-1-1
+- id: doc-pro-ens-es-1-isup
+  documento: doc-pro-ens-es-1
+  criterio: isup
+  esperados:
+  - valor: ISUP 1 a 3
+    scope: elegibilidad
+    chunk: ch-doc-pro-ens-es-1-1
+- id: doc-pro-ens-es-1-ecog
+  documento: doc-pro-ens-es-1
+  criterio: ecog
+  esperados:
+  - valor: ECOG 0 o 1
+    scope: elegibilidad
+    chunk: ch-doc-pro-ens-es-1-1
+- id: doc-pro-ens-es-1-linea_tratamiento
+  documento: doc-pro-ens-es-1
+  criterio: linea_tratamiento
+  esperados:
+  - valor: segunda linea
+    scope: elegibilidad
+    chunk: ch-doc-pro-ens-es-1-1
+- id: doc-pro-ens-en-1-estado_castracion
+  documento: doc-pro-ens-en-1
+  criterio: estado_castracion
+  esperados:
+  - valor: castration-sensitive
+    scope: elegibilidad
+    chunk: ch-doc-pro-ens-en-1-1
+- id: doc-pro-ens-en-1-ecog
+  documento: doc-pro-ens-en-1
+  criterio: ecog
+  esperados:
+  - valor: ECOG 0 to 2
+    scope: elegibilidad
+    chunk: ch-doc-pro-ens-en-1-1
+- id: doc-pro-rev-es-1-estado_castracion
+  documento: doc-pro-rev-es-1
+  criterio: estado_castracion
+  esperados:
+  - valor: castracion resistente
+    scope: elegibilidad
+    chunk: ch-doc-pro-rev-es-1-1
+- id: doc-pro-rev-es-1-linea_tratamiento
+  documento: doc-pro-rev-es-1
+  criterio: linea_tratamiento
+  esperados:
+  - valor: primera linea
+    scope: elegibilidad
+    chunk: ch-doc-pro-rev-es-1-1
+- id: doc-pro-rev-en-1-isup
+  documento: doc-pro-rev-en-1
+  criterio: isup
+  esperados:
+  - valor: ISUP grade group 3 to 5
+    scope: elegibilidad
+    chunk: ch-doc-pro-rev-en-1-1
+- id: doc-pro-rev-en-1-ecog
+  documento: doc-pro-rev-en-1
+  criterio: ecog
+  esperados:
+  - valor: ECOG 0 or 1
+    scope: elegibilidad
+    chunk: ch-doc-pro-rev-en-1-1
+- id: doc-dif-ens-es-1-linea_tratamiento
+  documento: doc-dif-ens-es-1
+  criterio: linea_tratamiento
+  esperados:
+  - valor: sin ninguna linea de tratamiento previa
+    scope: elegibilidad
+    chunk: ch-doc-dif-ens-es-1-1
+  redaccion: dificil
+  tipo: negacion
+- id: doc-dif-gui-en-1-estado_castracion
+  documento: doc-dif-gui-en-1
+  criterio: estado_castracion
+  esperados:
+  - valor: not castration-resistant
+    scope: elegibilidad
+    chunk: ch-doc-dif-gui-en-1-1
+  redaccion: dificil
+  tipo: negacion
+- id: doc-dif-ens-en-1-ecog
+  documento: doc-dif-ens-en-1
+  criterio: ecog
+  esperados:
+  - valor: ECOG performance status between 0 and 2
+    scope: elegibilidad
+    chunk: ch-doc-dif-ens-en-1-1
+  redaccion: dificil
+  tipo: rango
+- id: doc-dif-rev-es-1-isup
+  documento: doc-dif-rev-es-1
+  criterio: isup
+  esperados:
+  - valor: grado ISUP entre 2 y 4
+    scope: elegibilidad
+    chunk: ch-doc-dif-rev-es-1-1
+  redaccion: dificil
+  tipo: rango
+- id: doc-dif-gui-es-1-estado_menopausico
+  documento: doc-dif-gui-es-1
+  criterio: estado_menopausico
+  esperados:
+  - valor: mujeres sin menstruacion durante los ultimos 12 meses
+    scope: elegibilidad
+    chunk: ch-doc-dif-gui-es-1-1
+  redaccion: dificil
+  tipo: definicion_implicita
+- id: doc-dif-ens-en-2-estado_castracion
+  documento: doc-dif-ens-en-2
+  criterio: estado_castracion
+  esperados:
+  - valor: testosterone below 50 ng/dL
+    scope: elegibilidad
+    chunk: ch-doc-dif-ens-en-2-1
+  redaccion: dificil
+  tipo: definicion_implicita
+- id: doc-dif-rev-es-2-estado_menopausico
+  documento: doc-dif-rev-es-2
+  criterio: estado_menopausico
+  esperados:
+  - valor: mujeres premenopausicas y posmenopausicas
+    scope: elegibilidad
+    chunk: ch-doc-dif-rev-es-2-1
+  redaccion: dificil
+  tipo: inclusion_total
+- id: doc-dif-gui-en-2-ecog
+  documento: doc-dif-gui-en-2
+  criterio: ecog
+  esperados:
+  - valor: regardless of ECOG performance status
+    scope: elegibilidad
+    chunk: ch-doc-dif-gui-en-2-1
+  redaccion: dificil
+  tipo: inclusion_total
+- id: doc-dif-ens-es-2-isup
+  documento: doc-dif-ens-es-2
+  criterio: isup
+  esperados:
+  - valor: ISUP de al menos 3
+    scope: elegibilidad
+    chunk: ch-doc-dif-ens-es-2-1
+  redaccion: dificil
+  tipo: umbral
+- id: doc-dif-rev-en-1-ecog
+  documento: doc-dif-rev-en-1
+  criterio: ecog
+  esperados:
+  - valor: ECOG performance status of 1 or lower
+    scope: elegibilidad
+    chunk: ch-doc-dif-rev-en-1-1
+  redaccion: dificil
+  tipo: umbral
+- id: doc-dif-gui-es-2-linea_tratamiento
+  documento: doc-dif-gui-es-2
+  criterio: linea_tratamiento
+  esperados:
+  - valor: primera linea
+    scope: elegibilidad
+    chunk: ch-doc-dif-gui-es-2-1
+  redaccion: dificil
+  tipo: tabla
+- id: doc-dif-ens-en-3-estado_castracion
+  documento: doc-dif-ens-en-3
+  criterio: estado_castracion
+  esperados:
+  - valor: castration-resistant
+    scope: elegibilidad
+    chunk: ch-doc-dif-ens-en-3-1
+  redaccion: dificil
+  tipo: tabla
+- id: doc-dis-ens-en-1-estado_menopausico
+  documento: doc-dis-ens-en-1
+  criterio: estado_menopausico
+  esperados:
+  - valor: postmenopausal women
+    scope: subgrupo
+    chunk: ch-doc-dis-ens-en-1-1
+  distractor: true
+- id: doc-dis-gui-es-1-ecog
+  documento: doc-dis-gui-es-1
+  criterio: ecog
+  esperados:
+  - valor: ECOG 0 o 1
+    scope: mencion
+    chunk: ch-doc-dis-gui-es-1-1
+  distractor: true
+- id: doc-dis-rev-en-1-linea_tratamiento
+  documento: doc-dis-rev-en-1
+  criterio: linea_tratamiento
+  esperados:
+  - valor: first line
+    scope: mencion
+    chunk: ch-doc-dis-rev-en-1-1
+  distractor: true
+- id: doc-dis-ens-es-1-estado_castracion
+  documento: doc-dis-ens-es-1
+  criterio: estado_castracion
+  esperados:
+  - valor: castracion resistente
+    scope: subgrupo
+    chunk: ch-doc-dis-ens-es-1-1
+  distractor: true
+- id: doc-dis-gui-en-1-isup
+  documento: doc-dis-gui-en-1
+  criterio: isup
+  esperados:
+  - valor: ISUP grade group 4 or 5
+    scope: subgrupo
+    chunk: ch-doc-dis-gui-en-1-1
+  distractor: true
+- id: doc-dis-rev-es-1-ecog
+  documento: doc-dis-rev-es-1
+  criterio: ecog
+  esperados:
+  - valor: ECOG 0 a 2
+    scope: mencion
+    chunk: ch-doc-dis-rev-es-1-1
+  distractor: true
+- id: doc-dis-ens-en-2-ecog
+  documento: doc-dis-ens-en-2
+  criterio: ecog
+  esperados:
+  - valor: ECOG 2
+    scope: subgrupo
+    chunk: ch-doc-dis-ens-en-2-1
+  distractor: true
+- id: doc-dis-gui-es-2-estado_menopausico
+  documento: doc-dis-gui-es-2
+  criterio: estado_menopausico
+  esperados:
+  - valor: mujeres premenopausicas
+    scope: subgrupo
+    chunk: ch-doc-dis-gui-es-2-1
+  distractor: true

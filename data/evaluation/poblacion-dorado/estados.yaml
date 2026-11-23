@@ -61,3 +61,50 @@ casos:
     chunk: ch-b
   esperado:
     estado: desconocido
+# C-3 (S7.8, Q-1): elegibilidad de un solo valor SIN «solo» frente a un paciente que no lo cumple. La regla vigente
+# (DEC-11, fixture test-apl-1.2.0) no declara No coincide sin una restricción explícita: queda desconocido. La suite los
+# cuenta aparte (`rendija_c3`) como medida de esa rendija, sin cambiar la regla.
+- id: C-3a
+  rendija: c3
+  criterio: estado_menopausico
+  tipo_de_cancer: mama
+  paciente: premenopáusica
+  valores:
+  - valor: postmenopausal women
+    scope: elegibilidad
+    chunk: ch-a
+  esperado:
+    estado: desconocido
+- id: C-3b
+  rendija: c3
+  criterio: estado_menopausico
+  tipo_de_cancer: mama
+  paciente: posmenopáusica
+  valores:
+  - valor: premenopausal women
+    scope: elegibilidad
+    chunk: ch-a
+  esperado:
+    estado: desconocido
+- id: C-3c
+  rendija: c3
+  criterio: linea_tratamiento
+  tipo_de_cancer: mama
+  paciente: segunda linea
+  valores:
+  - valor: first line
+    scope: elegibilidad
+    chunk: ch-a
+  esperado:
+    estado: desconocido
+- id: C-3d
+  rendija: c3
+  criterio: ecog
+  tipo_de_cancer: mama
+  paciente: ECOG 3
+  valores:
+  - valor: ECOG 0 or 1
+    scope: elegibilidad
+    chunk: ch-a
+  esperado:
+    estado: desconocido
