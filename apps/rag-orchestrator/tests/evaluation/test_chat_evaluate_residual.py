@@ -190,14 +190,17 @@ def test_cargar_config_suite_cambia_la_huella_cuando_cambia_un_umbral_del_entorn
     assert base != cambiada
 
 
-def test_chat_local_no_duplica_los_umbrales_y_declara_el_corpus_de_la_ingesta_de_l1d_119():
+def test_chat_local_no_duplica_los_umbrales_y_declara_el_corpus_del_dataset_en_memoria():
     crudo = yaml.safe_load(CONFIG_LOCAL.read_text(encoding="utf-8"))
 
     config = cargar_config_suite(CONFIG_LOCAL, UMBRALES_DEL_ENTORNO)
 
     assert "umbrales" not in crudo
     assert config.umbrales.rerank_top_n == 9
-    assert config.corpus_declarado is not None and "l1d-119" in config.corpus_declarado
+    assert (
+        config.corpus_declarado is not None
+        and "data/evaluation/opciones" in config.corpus_declarado
+    )
 
 
 def test_main_termina_con_codigo_2_nombrando_las_variables_cuando_chat_local_no_encuentra_los_umbrales(  # noqa: E501

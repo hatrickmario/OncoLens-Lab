@@ -25,9 +25,9 @@ modelos:
 # RETRIEVAL_TOP_K y RERANK_TOP_N en el entorno; sin valor por defecto en código) y el reporte registra los efectivos. Así no
 # se copian los de producción ni los pares del reranker ni la expansión contextual (L1D-333), que ya salen de `Settings`.
 corpus:
-  # `[S7 resp. 10]`: el corpus de la medición es la ingesta de `l1d-119` (`data/raw/s3/manifest.yaml`), el mismo en la corrida
-  # base y en la final. El reporte lo declara junto al corpus que la familia cargó en memoria (`corpus.cargado`).
-  declarado: ingesta de l1d-119 (data/raw/s3/manifest.yaml)
+  # Decisión del orquestador (`[S7 resp. 10]`, parcialmente incumplida para el chat): la familia compone el chat en proceso sobre
+  # el corpus del dataset en memoria, no sobre la ingesta de `l1d-119`. El reporte declara esto y el corpus cargado (`corpus.cargado`).
+  declarado: corpus del dataset chat-v1 en memoria (data/evaluation/opciones); no es la ingesta de l1d-119
 catalogo:
   version: '2026.10.0'
   ruta_terminos: packages/clinical-catalogs

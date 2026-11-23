@@ -135,9 +135,8 @@ metas definitivas (DEC-07); revisión clínica (D6-53).
     - **Corpus declarado frente a corpus cargado.** La familia compone el chat **en proceso** sobre el corpus en memoria del
       dataset (`data/evaluation/opciones`), no sobre Milvus: no puede medir «la ingesta de `l1d-119`» (`[S7 resp. 10]`) por sí
       sola. `chat-local.yaml` declara `corpus.declarado` y el reporte publica `corpus.declarado` y `corpus.cargado` lado a lado
-      para que el hallazgo no quede escondido. **Abierto (lo decide el orquestador o el humano antes de 4.1):** o la corrida
-      base se acepta sobre el corpus del dataset y se corrige la declaración, o se construye un `FuenteDataset` desde la
-      ingesta (cambio mayor, fuera de este alcance).
+      para que el hallazgo no quede escondido. **Resuelto por el orquestador:** se acepta la corrida base sobre el corpus del dataset (ver Risks); `chat-local.yaml` declara
+      ese corpus y `[S7 resp. 10]` queda parcialmente incumplida para el chat.
     - **LLM caído = `SuiteAbortada`.** El grafo traduce el `FalloDelLlm` del adapter real a `LlmLocalNoDisponibleError` (también
       lo hace con un NLI caído); `_turno` lo convierte en `SuiteAbortada` (código 2, sin `chat.json`). Una salida del LLM
       que no valida sigue siendo `LlmSalidaInvalidaError` y cuenta como turno errado. *Descartada:* abortar con cualquier
@@ -224,8 +223,13 @@ errores); no se toca ningún fake de `rag-orchestrator`.
   desechable (decisión 3). Si obligara a tocar el servicio de producción, el implementador se detiene y lo reporta.
 - **Hilo en proceso frente a rehidratación real** (decisión 4): AC06 se mide sin el camino de rehidratación de
   Backend 1; queda anotado como limitación en el reporte.
-- **Corpus de los turnos de evidencia · cerrado (`[S7 resp. 10]`):** el chat mide sobre la ingesta de `l1d-119`,
-  declarada en el reporte. Si esa ingesta no está lista, la medición no corre (no se mide sobre otro corpus).
+- **Corpus de los turnos de evidencia · `[S7 resp. 10]` parcialmente incumplida para el chat (decisión del orquestador):** la
+  familia compone el chat en proceso sobre el corpus del dataset en memoria (`data/evaluation/opciones`), no sobre la ingesta
+  de `l1d-119`. La corrida base se **acepta** sobre ese corpus; la medición corre igual y el reporte declara el corpus
+  efectivamente cargado (`corpus.cargado`) junto a la declaración de `chat-local.yaml`. Ninguna cifra del chat debe citarse
+  como medida sobre la ingesta de `l1d-119`. *Alternativas:* (a) aceptar el corpus del dataset **[elegida]**; (b) un
+  `FuenteDataset` construido desde la ingesta (descartada: cambio mayor fuera del alcance del residual, con riesgo de plazo y
+  de tocar el contrato de la familia).
 - **Una sola medición:** `S7-refinamiento.md` §5 sitúa la medición del chat en la corrida base; repetirla en la corrida
   final (para ver el efecto de US-277…US-279 en los turnos de evidencia) es una pregunta abierta al humano (H-2). Si se
   repite, usa el mismo corpus y los umbrales actuales.
