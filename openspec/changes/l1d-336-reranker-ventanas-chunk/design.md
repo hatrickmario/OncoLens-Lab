@@ -128,7 +128,7 @@ aproximadamente»). El número real por consulta depende de la distribución de 
 - Métricas nuevas del informe por brazo: falsos «sin evidencia» (pregunta con respuesta esperada que termina en
   `sin_evidencia`), paráfrasis recuperadas (pares de US-276 en los que ambas redacciones recuperan el chunk esperado),
   p95 de la etapa del *reranker* (ya lo cronometra `RerankerObservado`) y p95 de la consulta completa.
-- «No viable»: regla pura `viabilidad_del_brazo(p95, tope, memoria, limite)` → `viable` | `no_viable(motivo)` |
+- «No viable»: regla pura `viabilidad_del_brazo(*, p95_consulta_s, tope_p95_s, memoria_del_stack_gb, limite_memoria_gb)` → `viable` | `no_viable(motivo)` |
   `no_medido`. El tope de latencia es `p95_evidence_analyses_s` de `eval/configs/metas-iniciales.yaml` (hoy 20) y el de
   memoria `STACK_MEMORY_LIMIT_GB`; ninguno se repite como literal. `None` nunca se lee como dentro de presupuesto.
 - La suite cronometra el proceso de `rag-orchestrator` (RSS). La memoria **del stack** completo (con Ollama y Milvus) la
@@ -185,10 +185,10 @@ Cada una con las alternativas que se descartaron. Nada de esto cambia el contrat
   RSS del proceso como memoria del stack (no incluye Ollama ni Milvus y es monótono entre brazos) y una variable de entorno por
   brazo (el nombre del brazo no es un identificador de entorno).
 - **La fuente `indice` ya la dejó `l1d-326`; aquí se extiende por brazo.** `evaluar_brazos` abre cada colección una sola vez
-  (`Brazo.indice`, `None` = la de `MILVUS_COLLECTION_NAME`) con el abridor de `OrigenLocal` (el real o el fingido de los tests) y
+  (`Brazo.coleccion`, clave YAML `indice`; `None` = la de `MILVUS_COLLECTION_NAME`) con el abridor de `OrigenLocal` (el real o el fingido de los tests) y
   el informe trae `corpus` (fuente, colección, recuento y huella de ids, `CORPUS_CHUNK_SIZE` de la ingesta y los brazos con índice
   distinto), sin texto. El `document_id` de la ingesta es `<document_key>@<huella>` y el dataset nombra la clave:
-  `RerankerObservado` normaliza con `clave_del_documento` para resolver el chunk esperado por documento y cita literal.
+  `RerankerObservado` normaliza con `clave_del_documento` (en `seed_corpus/registros.py`, junto a `identificador_de_documento`) para resolver el chunk esperado por documento y cita literal.
 - **Ingesta del brazo de 512 aparte, sin tocar el catálogo (tarea 2.5b).** `IngerirBrazoDeChunks` recibe el catálogo por su puerto
   de LECTURA (`LectorDePoblacionDelCorpus`: sin métodos de escritura) y escribe solo en el almacén de la colección nueva: vuelve a
   leer el texto del manifiesto, lo fragmenta, lo embebe y copia los metadatos del registro del catálogo (sin LLM ni NLI). Solo
@@ -213,6 +213,18 @@ Cada una con las alternativas que se descartaron. Nada de esto cambia el contrat
   a chunks distintos. Mientras no se arregle (cambia el formato que cita la población ADR-47 y RN-04, exige reindexar y un ADR),
   el brazo de 512 solo mide recuperación: no consume población. Deuda D7-19. Otras: D7-20 (un único comparador estricto de
   p95 y memoria, y definición única de «memoria del stack»), D7-21 (`FalloDeEtapa` en `reindexar_sparse`).
+- **Gate 2, segunda ronda (aplicado, `refactor`/`feat(L1D-336)`):** (1) `exigir_brazo_sin_poblacion` en `evaluar_brazos`: un brazo con
+  colección propia aborta (`SuiteAbortada`) si su respuesta trae criterios de población, porque `chunk_id` colisiona con la
+  colección de 1024 (D7-19). (4) `config_suite` lee el tope con `cargar_metas` y `CLAVE_P95` (movida a `metas.py`, con un import
+  local porque `metas` importa `ConfigInvalida` de `config_suite`); `viabilidad_del_brazo` solo con argumentos con nombre y
+  `memoria_del_stack_gb` (la clave del informe sigue siendo `memoria_gb`: cambiarla altera el esquema y el test de AC-5). (5)
+  `RerankerConVentanas` (Extract Interface, `runtime_checkable`) en lugar de `getattr` y `type: ignore`; alternativa descartada:
+  añadir `variante` al puerto `Reranker` (lo ensancha para todos los adapters). (6) `RerankerLexico` usa el solape inicial del
+  dominio y envuelve el fallo de `trazar_ventanas` en `FalloDeInferencia`, con la misma prueba en real y fake. (7) `clave_del_documento`
+  corta en la ÚLTIMA `@`. (8) estados y motivos de viabilidad con una definición (`ESTADOS_DE_VIABILIDAD`,
+  `MOTIVOS_DE_NO_VIABILIDAD`). (9) `Brazo.coleccion`, `con_viabilidad`, `_etapa_del_informe` y `_campos_de_etapa_del_brazo`.
+  Menor: `chunk_size_de_la_ingesta` → `chunk_size_configurado`. El validador de arranque del solape se mantiene con `primera`: el
+  escenario de AC-2 lo pide sin condicionarlo al modo.
 - **Pregunta para el humano:** `comparacion.conjunto_de_desarrollo: true` es explícito porque el corpus S5 no tiene partición
   `ol06` (ADR-45, anti-sobreajuste). Decisión del agente, a confirmar.
 
