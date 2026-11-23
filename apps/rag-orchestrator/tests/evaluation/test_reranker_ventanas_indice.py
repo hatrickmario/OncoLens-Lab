@@ -16,11 +16,13 @@ import pytest
 
 from app.evaluation.adaptadores_falsos import EmbedderBolsaDePalabras, indice_fingido
 from app.evaluation.armado_comparacion import armar_comparacion
+from app.evaluation.brazos_recuperacion import Brazo
 from app.evaluation.config_suite import cargar_config_suite
-from app.evaluation.corrida_brazos import evaluar_brazos
+from app.evaluation.corrida_brazos import evaluar_brazos, exigir_brazo_sin_poblacion
 from app.evaluation.cronometro import Cronometro, RelojSimulado
 from app.evaluation.evaluate import corpus_de_la_comparacion
 from app.evaluation.fuente_dataset import DatasetSuite, FuenteDatasetEnDirectorio
+from app.evaluation.guardas import SuiteAbortada
 from app.evaluation.indice_del_corpus import (
     IndiceDelCorpus,
     ResumenDelIndice,
@@ -29,6 +31,7 @@ from app.evaluation.indice_del_corpus import (
 )
 from app.evaluation.medidores import clave_del_documento
 from app.evaluation.parafrasis_de_la_comparacion import con_parafrasis
+from app.schemas.generated.models import RagQueryInternalResponse, SourceApplicability
 from tests.evaluation.conftest import RAIZ_APP
 from tests.evaluation.test_chat_evaluate_indice import (
     ClienteMilvusFalso,
@@ -200,3 +203,35 @@ def test_abrir_el_indice_de_otra_coleccion_la_nombra_en_el_resumen_y_solo_consul
         COLECCION_512
     }  # la colección de l1d-119 ("coleccion_de_119") no se toca
     assert set(cliente.llamadas) == {"has_collection", "load_collection", "query_iterator"}
+
+
+def _respuesta_con_criterios(criterios: list[Any]) -> RagQueryInternalResponse:
+    fuente = SourceApplicability.model_construct(externalId="fuente-1", criteria=criterios)
+    return RagQueryInternalResponse.model_construct(applicability=[fuente])
+
+
+def _brazos_de_la_configuracion() -> tuple[Brazo, Brazo]:
+    config, _, _ = _mundo()
+    a0, maximo, _ = config.comparacion.brazos  # type: ignore[union-attr]
+    return a0, maximo
+
+
+def test_un_brazo_de_otra_coleccion_aborta_cuando_la_respuesta_consume_poblacion() -> None:
+    _, maximo = _brazos_de_la_configuracion()
+
+    with pytest.raises(SuiteAbortada, match="población"):
+        exigir_brazo_sin_poblacion(
+            replace(maximo, indice=COLECCION_512), _respuesta_con_criterios([object()])
+        )
+
+
+def test_un_brazo_de_otra_coleccion_acepta_la_respuesta_sin_criterios_de_poblacion() -> None:
+    _, maximo = _brazos_de_la_configuracion()
+
+    exigir_brazo_sin_poblacion(replace(maximo, indice=COLECCION_512), _respuesta_con_criterios([]))
+
+
+def test_un_brazo_de_la_coleccion_de_la_suite_no_se_somete_a_la_guarda_de_poblacion() -> None:
+    a0, _ = _brazos_de_la_configuracion()
+
+    exigir_brazo_sin_poblacion(a0, _respuesta_con_criterios([object()]))

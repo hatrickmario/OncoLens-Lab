@@ -32,7 +32,7 @@ from app.evaluation.guardas import SuiteAbortada
 from app.evaluation.indice_del_corpus import IndiceDelCorpus
 from app.evaluation.metricas.resultado import ResultadoConsulta
 from app.evaluation.modelos_locales import PuertosLocales
-from app.schemas.generated.models import RagMeta
+from app.schemas.generated.models import RagMeta, RagQueryInternalResponse
 
 
 @dataclass(frozen=True)
@@ -48,6 +48,11 @@ class ResultadoDeBrazo:
     """La etapa del reranker tal como corrió la última consulta del brazo (US-278); ``None`` si el adapter no la expone."""
     indice: IndiceDelCorpus | None = None
     """El índice de solo lectura que leyó el brazo (``indice.fuente: milvus``); ``None`` = el corpus del dataset en memoria."""
+
+
+def exigir_brazo_sin_poblacion(brazo: Brazo, respuesta: RagQueryInternalResponse) -> None:
+    """Un brazo con colección propia no consume población (ADR-47)."""
+    raise NotImplementedError("no implementado")
 
 
 async def evaluar_brazos(
