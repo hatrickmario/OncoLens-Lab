@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import re
 from collections import Counter, defaultdict
+from dataclasses import replace
 
 import pytest
 
@@ -18,6 +19,7 @@ from app.config.settings import (
 )
 from app.domain.corpus_seed.admisibilidad import (
     ClaseDeLicencia,
+    es_fuente_excluida,
     evaluar_admisibilidad,
     fuente_admitida,
 )
@@ -127,6 +129,7 @@ def test_el_manifiesto_ampliado_declara_nccn_y_esmo_como_excluidas_y_ningun_docu
     assert "- NCCN" in cabecera and "- ESMO" in cabecera
     for documento in DOCUMENTOS:
         assert documento.source_name.casefold() not in {"nccn", "esmo"}, documento.document_key
+        assert not es_fuente_excluida(documento, POLITICA), documento.document_key
         for valor in (documento.external_id, documento.url_original or ""):
             assert not re.search(
                 r"nccn\.org|esmo\.org|esmoopen|annalsofoncology|10\.1016/j\.(annonc|esmoop)",
@@ -270,6 +273,40 @@ def test_los_registros_de_clinicaltrials_declaran_el_texto_de_licencia_decidido_
             documento.document_key
         )
     assert not any("courtesy of the u.s." in (d.license or "").casefold() for d in DOCUMENTOS)
+
+
+@pytest.mark.ac("US-120", 3)
+@pytest.mark.parametrize(
+    "cambios",
+    [
+        {"source_name": "NCCN"},
+        {"source_name": "National Comprehensive Cancer Network"},
+        {"source_name": "ESMO Open"},
+        {"external_id": "10.1016/j.annonc.2024.01.001"},
+        {"url_fuente": "https://www.esmo.org/guidelines/breast"},
+    ],
+    ids=lambda c: next(iter(c)) + "=" + str(next(iter(c.values()))),
+)
+def test_el_test_de_datos_marca_como_excluido_un_documento_de_nccn_o_esmo_cuando_aparece_en_el_corpus(
+    cambios: dict[str, str],
+) -> None:
+    """[US-120 AC-3] H-4 (S7.2, ``[S7 resp. 15]``): el control del test de datos FALLA si un documento del corpus es de
+    NCCN o ESMO (por nombre, alias, host o DOI)."""
+    intruso = replace(DOCUMENTOS[0], **cambios)
+
+    assert es_fuente_excluida(intruso, POLITICA)
+
+
+def test_el_test_de_datos_no_marca_como_excluido_un_articulo_de_pmc_que_menciona_nccn_o_esmo_en_su_texto() -> (
+    None
+):
+    """``[S7 resp. 8]``: la mención en la bibliografía de un artículo de terceros con licencia abierta se admite."""
+    articulo = replace(
+        next(d for d in DOCUMENTOS if d.source_name == "PMC Open Access"),
+        texto="Referencias. 1. NCCN Guidelines. 2. ESMO Clinical Practice Guidelines.",
+    )
+
+    assert not es_fuente_excluida(articulo, POLITICA)
 
 
 def test_la_atribucion_declara_el_texto_de_licencia_de_clinicaltrials() -> None:

@@ -61,3 +61,21 @@ def test_ingesta_embebe_un_registro_de_clinicaltrials_con_el_texto_de_licencia_d
     documento = next(d for d in montaje.documentos(MANIFIESTO_S7) if d.document_key == "f-ct-s7")
     assert documento.license == LICENCIA_DE_CLINICALTRIALS
     assert evaluar_admisibilidad(documento, politica).license_class == "dominio_publico"
+
+
+@pytest.mark.ac("US-120", 2)
+def test_queda_embebido_cuando_un_articulo_cc_by_cita_una_fuente_excluida_en_sus_referencias(
+    fabrica_de_montaje: Callable[..., Montaje],
+) -> None:
+    """[US-120 AC-2] H-4 (S7.2, ``[S7 resp. 8]``): NCCN y ESMO en la bibliografía de un artículo CC BY de PMC no lo
+    excluyen (la fuente del documento es PMC); sus chunks quedan vigentes."""
+    politica = politica_de_test(fuentes_admitidas=FUENTES_DE_ADR_36)
+    montaje = fabrica_de_montaje(DIRECTORIO_DE_FIXTURES, politica)
+
+    reporte = montaje.ingerir(MANIFIESTO_S7)
+
+    assert reporte.resultado_de("f-pmc-cita-excluida").estado is Estado.EMBEBIDO
+    assert montaje.filas_de("f-pmc-cita-excluida") == [("embebido", True)]
+    assert "f-pmc-cita-excluida" in montaje.chunks_vigentes_por_clave()
+    textos = " ".join(montaje.textos_de_chunks("f-pmc-cita-excluida"))
+    assert "NCCN" in textos and "ESMO" in textos
