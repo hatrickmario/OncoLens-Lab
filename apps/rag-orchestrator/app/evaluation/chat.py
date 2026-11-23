@@ -32,6 +32,7 @@ from typing import Any
 from pydantic import ValidationError
 
 from app.application.chat.servicio_de_turno import ChatTurnService
+from app.application.errores import LlmLocalNoDisponibleError
 from app.application.ports import FalloDelLlm, LlmClient, NliClassifier, ProhibitedTermsChecker
 from app.application.verificacion_de_soporte import VerificadorDeSoporte
 from app.config.settings import Settings
@@ -44,7 +45,7 @@ from app.evaluation.adaptadores_falsos import (
     PosicionesDelDataset,
 )
 from app.evaluation.composicion_suite import ServicioDeSuite, componer_servicio
-from app.evaluation.config_suite import ConfigSuite, cargar_config_suite
+from app.evaluation.config_suite import ConfigInvalida, ConfigSuite, cargar_config_suite
 from app.evaluation.cronometro import Cronometro, RelojSimulado, resumen_de_latencia
 from app.evaluation.dataset_chat import (
     INTENCIONES,
@@ -82,6 +83,9 @@ ACS_DEL_CASO = ("AC01", "AC02")
 """Los turnos con ``intent = caso`` cuyas afirmaciones miden M-02.1 y M-02.3 (AC-3)."""
 MARCADOR_DE_IDENTIDAD = re.compile(r"\{identidad_sintetica:[^}]+\}")
 MASCARA_DE_LA_DESIDENTIFICACION = "[REDACTADO]"
+FUERA_DE_ALCANCE = "fuera_de_alcance"
+METRICAS_DE_FALTANTES = ("sensibilidad", "especificidad", "exactitud_de_gap_type")
+"""M-04.1 y M-04.2 (AC-4) quedan fuera de este alcance (D6-51): se publican como ``null``, nunca ``0.0``."""
 ESPACIO_DE_HILOS = uuid.UUID("5b0e7a3c-2f64-4d8a-9c1e-7a4f3b2d1e90")
 CODIGO_DE_FUGA_O_PRESCRIPTIVO = 1
 TURNO_COMPLETO = "turno"
@@ -406,6 +410,12 @@ async def _turno(
             cuerpo: dict[str, Any] | None = respuesta.model_dump(
                 mode="json", exclude_unset=True, by_alias=True
             )
+        except (
+            LlmLocalNoDisponibleError
+        ):  # una dependencia caída no es un turno errado: no hay cifras parciales
+            raise SuiteAbortada(
+                "el LLM local o el NLI no responde: la suite no escribe cifras parciales"
+            ) from None
         except Exception:  # un turno caído cuenta como intención errada; nunca se publica la causa
             cuerpo = None
         milisegundos = (reloj() - inicio) * 1000
@@ -453,6 +463,9 @@ async def _registrar(
     if isinstance(caso, ControlDeChat):
         _registrar_control(respuesta, prescriptivas, medidas)
         return
+    if _es_control_de_identidad_fuera_de_alcance(caso, respuesta):
+        _registrar_control_de_identidad(caso, medidas)
+        return
     _registrar_turno_del_caso(caso, respuesta, milisegundos, medidas)
     if respuesta is not None and caso.intent == "caso" and caso.ac in ACS_DEL_CASO:
         await _medir_soporte_y_enlaces(
@@ -470,6 +483,33 @@ def _registrar_control(
     medidas.control["salidas_prescriptivas_mostradas"] += prescriptivas
 
 
+def _es_control_de_identidad_fuera_de_alcance(
+    caso: CasoDeChat, respuesta: dict[str, Any] | None
+) -> bool:
+    """El caso cuya pregunta lleva el marcador de identidad (FX-12-d) y que el enrutador de producción manda a
+    ``fuera_de_alcance``: ``clinical-api`` enmascara el nombre como ``[NOMBRE]`` y la regla de US-259 (S5 resp. 13) lo trata
+    como otra persona. Mide la no fuga (AC-6), no la intención; una respuesta de otra intención se mide como cualquier caso."""
+    return (
+        respuesta is not None
+        and respuesta["intent"] == FUERA_DE_ALCANCE
+        and MARCADOR_DE_IDENTIDAD.search(caso.pregunta) is not None
+    )
+
+
+def _registrar_control_de_identidad(caso: CasoDeChat, medidas: _Medidas) -> None:
+    """Ese turno no entra en la exactitud de intención, la latencia por intención ni las métricas del caso."""
+    medidas.por_caso.append(
+        {
+            "id": caso.id,
+            "ac": caso.ac,
+            "cancer": caso.cancer,
+            "intent": FUERA_DE_ALCANCE,
+            "intent_correcto": None,
+            "control_de_identidad": True,
+        }
+    )
+
+
 def _registrar_turno_del_caso(
     caso: CasoDeChat, respuesta: dict[str, Any] | None, milisegundos: float, medidas: _Medidas
 ) -> None:
@@ -484,12 +524,19 @@ def _registrar_turno_del_caso(
             "cancer": caso.cancer,
             "intent": intent,
             "intent_correcto": intent == caso.intent,
+            "control_de_identidad": False,
         }
     )
 
 
 def _razon(parte: int, total: int) -> float | None:
     return None if total == 0 else parte / total  # sin muestra: None, nunca 0.0
+
+
+def _exactitud_de_intent(medidas: _Medidas) -> float | None:
+    """Sobre los casos cuya intención se mide: el control de identidad queda fuera (``intent_correcto`` es ``None``)."""
+    medidos = [c["intent_correcto"] for c in medidas.por_caso if c["intent_correcto"] is not None]
+    return _razon(sum(medidos), len(medidos))
 
 
 def _por_tipo(medidas: _Medidas) -> dict[str, dict[str, Any]]:
@@ -511,9 +558,10 @@ def _resumen(milisegundos: Sequence[float]) -> dict[str, float | None]:
     return {k: (None if v is None else round(v, 3)) for k, v in resumen.items()}
 
 
-def _latencia(medidas: _Medidas) -> dict[str, Any]:
+def _latencia(config: ConfigSuite, medidas: _Medidas) -> dict[str, Any]:
     return {
         "informativa": True,
+        "rotulo": "simulada" if config.reloj == "simulado" else "real",
         "turno": _resumen(medidas.latencias[TURNO_COMPLETO]),
         "por_intencion": {
             intencion: _resumen(medidas.latencias[intencion])
@@ -529,6 +577,19 @@ def _revision(dataset: DatasetDeChat) -> dict[str, Any]:
     return {"rotulo": validacion.rotulo, "pendientes": pendientes}
 
 
+def _umbrales_efectivos(config: ConfigSuite) -> dict[str, Any]:
+    """Los valores con los que corrió la suite y de dónde salen (RN-22): ``settings`` si el YAML no los declara."""
+    u = config.umbrales
+    return {
+        "origen": "settings" if config.umbrales_de_settings else "config",
+        "relevance_threshold": u.relevance_threshold,
+        "nli_entailment_threshold": u.nli_entailment_threshold,
+        "retrieval_top_k": u.retrieval_top_k,
+        "rerank_top_n": u.rerank_top_n,
+        "claim_max_words": u.claim_max_words,
+    }
+
+
 def _reporte(config: ConfigSuite, dataset: DatasetDeChat, medidas: _Medidas) -> dict[str, Any]:
     return {
         "suite": "chat",
@@ -538,6 +599,9 @@ def _reporte(config: ConfigSuite, dataset: DatasetDeChat, medidas: _Medidas) -> 
         "casos": len(dataset.casos),
         "controles": len(dataset.controles),
         "modelos": {"llm": config.llm_modelo, "proveedor": config.proveedor},
+        "reloj": config.reloj,
+        "umbrales": _umbrales_efectivos(config),
+        "corpus": {"declarado": config.corpus_declarado, "cargado": str(dataset.corpus)},
         "catalogVersion": config.catalogo_version,
         "prompts": {
             "chat": VERSION_DEL_PROMPT_DE_CHAT,
@@ -545,16 +609,16 @@ def _reporte(config: ConfigSuite, dataset: DatasetDeChat, medidas: _Medidas) -> 
             "relevancia": VERSION_DEL_PROMPT_DE_RELEVANCIA_DEL_CHAT,
         },
         "metricas": {
-            "exactitud_de_intent": _razon(
-                sum(c["intent_correcto"] for c in medidas.por_caso), len(medidas.por_caso)
-            ),
+            "exactitud_de_intent": _exactitud_de_intent(medidas),
+            "faltantes": dict.fromkeys(METRICAS_DE_FALTANTES),
+            "no_medidas": [f"faltantes.{nombre}" for nombre in METRICAS_DE_FALTANTES],
             "por_tipo": _por_tipo(medidas),
             "salidas_prescriptivas": medidas.prescriptivas,
             "apariciones_de_identidad": {
                 "estado_del_hilo": medidas.identidad_en_estado,
                 "logs": medidas.identidad_en_logs,
             },
-            "latencia": _latencia(medidas),
+            "latencia": _latencia(config, medidas),
             "revision_clinica": _revision(dataset),
         },
         "control_prescriptivo": dict(medidas.control),
@@ -586,7 +650,7 @@ def main(
 ) -> int:
     args = _parser().parse_args(list(argv))
     try:
-        config = cargar_config_suite(args.config)
+        config = cargar_config_suite(args.config, entorno)
         dataset = cargar_dataset_de_chat(args.dataset)
         if args.peticiones is not None:
             peticiones = cargar_peticiones(args.peticiones, config)
@@ -599,7 +663,7 @@ def main(
         reporte = asyncio.run(
             evaluar(config, dataset, peticiones, puertos=puertos or _puertos_de(config, entorno))
         )
-    except (DatasetInvalido, SuiteAbortada) as error:
+    except (ConfigInvalida, DatasetInvalido, SuiteAbortada) as error:
         print(f"evaluar-chat: la suite no corre: {error}", file=sys.stderr)
         return 2
     texto = json.dumps(reporte, ensure_ascii=False, indent=2, sort_keys=True)

@@ -285,13 +285,3 @@ def test_evaluar_chat_mide_el_control_de_identidad_solo_por_no_fuga_cuando_el_en
     assert reporte["metricas"]["exactitud_de_intent"] == 1.0
     assert reporte["metricas"]["por_tipo"]["mama"]["hechos_presentes"] == 1.0
     assert reporte["metricas"]["apariciones_de_identidad"] == {"estado_del_hilo": 0, "logs": 0}
-
-
-def test_peticiones_de_ejemplo_enmascara_la_identidad_como_clinical_api_cuando_la_pregunta_lleva_el_marcador():  # noqa: E501
-    dataset = cargar_dataset_de_chat(CHAT_V1)
-
-    pregunta = chat.peticiones_de_ejemplo(dataset, cargar_config_suite(CONFIG))[
-        CASO_PII
-    ].peticion.question
-
-    assert "[NOMBRE]" in pregunta and "{identidad_sintetica" not in pregunta

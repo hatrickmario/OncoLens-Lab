@@ -10,7 +10,9 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from pydantic import ValidationError
 
+from app.config.settings import Settings
 from app.domain.atribucion import CLAIM_MAX_WORDS_INICIAL
 from app.domain.fusion_de_candidatos import EstrategiaDeFusion
 from app.evaluation.brazos_recuperacion import REFERENCIA, Brazo
@@ -34,6 +36,14 @@ ENTORNO_DEL_JUEZ = {
     "muestra_minima": "JUEZ_MUESTRA_MINIMA",
 }
 """Claves del juez que ADR-41 deja en variables de entorno (RN-22); lo que digan sustituye al YAML."""
+ENTORNO_DE_LOS_UMBRALES = (
+    "RELEVANCE_THRESHOLD",
+    "NLI_ENTAILMENT_THRESHOLD",
+    "RETRIEVAL_TOP_K",
+    "RERANK_TOP_N",
+)
+"""Variables de ``Settings`` de las que la suite lee los umbrales cuando la configuración no declara el bloque ``umbrales``
+(RN-22): no hay valor por defecto en código, así que si falta alguna la suite se niega nombrándola."""
 TIMEOUT_DEL_JUEZ_POR_DEFECTO_S = 120.0
 ENTORNO_DE_LA_TOLERANCIA = "RETRIEVAL_REGRESSION_TOLERANCE"
 """Variable de entorno de la tolerancia de retroceso (RN-22, US-133); lo que diga sustituye al YAML y no hay valor por defecto."""
@@ -126,6 +136,10 @@ class ConfigSuite:
     """``rn23_tolerancia_falsos_positivos`` (RN-22, US-249 AC-5): cuántos rechazos legítimos más que la línea base 1.5.0
     tolera la suite. Sin valor por defecto en código: ``None`` = no declarada y la suite no corre un dataset con salidas
     ``legitima: true`` (``exigir_tolerancia_de_falsos_positivos``)."""
+    umbrales_de_settings: bool = False
+    """``True`` si el YAML no declara ``umbrales`` y los valores efectivos salen de ``Settings`` (RN-22, L1D-326)."""
+    corpus_declarado: str | None = None
+    """``corpus.declarado`` del YAML: el corpus que la corrida declara medir (``[S7 resp. 10]``); ``None`` = no declarado."""
 
 
 def huella_de_config(crudo: dict[str, Any]) -> str:
@@ -177,6 +191,42 @@ def _con_tolerancia_efectiva(crudo: dict[str, Any], entorno: Mapping[str, str]) 
         "tolerancia_retroceso": entorno[ENTORNO_DE_LA_TOLERANCIA],
     }
     return {**crudo, "comparacion": comparacion}
+
+
+def _con_umbrales_efectivos(crudo: dict[str, Any], entorno: Mapping[str, str]) -> dict[str, Any]:
+    """El bloque ``umbrales`` del YAML o, si no lo trae, el que sale de ``Settings`` con las variables del entorno (RN-22).
+
+    El resultado es lo que se hashea: cambiar un umbral por entorno cambia la huella de la configuración (AC-2). Si falta
+    alguna variable o alguna no es válida, ``ConfigInvalida`` la nombra (nunca su valor)."""
+    if "umbrales" in crudo:
+        return crudo
+    ausentes = [variable for variable in ENTORNO_DE_LOS_UMBRALES if not entorno.get(variable)]
+    if ausentes:
+        raise ConfigInvalida(
+            f"umbrales: la configuración no los declara y faltan en el entorno (Settings, RN-22): {', '.join(ausentes)}"
+        )
+    variables = (*ENTORNO_DE_LOS_UMBRALES, "CLAIM_MAX_WORDS")
+    try:
+        ajustes = Settings(  # type: ignore[call-arg]
+            _env_file=None,
+            **{v.lower(): entorno[v] for v in variables if entorno.get(v)},
+        )
+    except ValidationError as error:
+        invalidas = sorted({str(e["loc"][0]).upper() for e in error.errors() if e["loc"]})
+        raise ConfigInvalida(
+            f"umbrales: valor inválido en el entorno: {', '.join(invalidas)}"
+        ) from None
+    return {
+        **crudo,
+        "umbrales": {
+            "relevance_threshold": ajustes.relevance_threshold,
+            "nli_entailment_threshold": ajustes.nli_entailment_threshold,
+            "retrieval_top_k": ajustes.retrieval_top_k,
+            "rerank_top_n": ajustes.rerank_top_n,
+            "claim_max_words": ajustes.claim_max_words,
+        },
+        "umbrales_de_settings": True,
+    }
 
 
 def _exigir_fraccion(valor: object, clave: str) -> None:
@@ -390,6 +440,11 @@ def _comparacion_de(crudo: dict[str, Any], subconjunto: str | None) -> Comparaci
     return Comparacion(brazos, tolerancia)
 
 
+def _corpus_declarado(crudo: dict[str, Any]) -> str | None:
+    declarado = (crudo.get("corpus") or {}).get("declarado")
+    return None if declarado is None else str(declarado)
+
+
 def cargar_config_suite(ruta: Path, entorno: Mapping[str, str] | None = None) -> ConfigSuite:
     try:
         crudo = yaml.safe_load(ruta.read_text(encoding="utf-8"))
@@ -398,6 +453,7 @@ def cargar_config_suite(ruta: Path, entorno: Mapping[str, str] | None = None) ->
     if not isinstance(crudo, dict):
         raise ConfigInvalida("la configuración no es un mapa YAML")
     crudo = _con_tolerancia_efectiva(_con_juez_efectivo(crudo, entorno or {}), entorno or {})
+    crudo = _con_umbrales_efectivos(crudo, entorno or {})
     umbrales = clave_de(crudo, "umbrales")
     dataset = clave_de(crudo, "dataset")
     sub = dataset.get("subconjunto")
@@ -440,4 +496,6 @@ def cargar_config_suite(ruta: Path, entorno: Mapping[str, str] | None = None) ->
         comparacion=_comparacion_de(crudo, sub),
         p95_corridas=_corridas_de_p95(crudo),
         rn23_tolerancia_falsos_positivos=_tolerancia_de_falsos_positivos(crudo),
+        umbrales_de_settings=bool(crudo.get("umbrales_de_settings")),
+        corpus_declarado=_corpus_declarado(crudo),
     )

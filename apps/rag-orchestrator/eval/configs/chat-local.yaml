@@ -21,11 +21,13 @@ adaptadores:
     llm: http://127.0.0.1:11434/v1 # Ollama nativo; ninguna ruta hacia la nube (lista local cerrada en código)
 modelos:
   llm: gemma4:26b-a4b-it-q4_K_M # G, LLM decidido en ADR-39
-umbrales:
-  relevance_threshold: 0.30
-  nli_entailment_threshold: 0.7
-  retrieval_top_k: 40
-  rerank_top_n: 10
+# Sin bloque `umbrales` (RN-22, `[S7 resp. 11]`): la suite los lee de `Settings` (RELEVANCE_THRESHOLD, NLI_ENTAILMENT_THRESHOLD,
+# RETRIEVAL_TOP_K y RERANK_TOP_N en el entorno; sin valor por defecto en código) y el reporte registra los efectivos. Así no
+# se copian los de producción ni los pares del reranker ni la expansión contextual (L1D-333), que ya salen de `Settings`.
+corpus:
+  # `[S7 resp. 10]`: el corpus de la medición es la ingesta de `l1d-119` (`data/raw/s3/manifest.yaml`), el mismo en la corrida
+  # base y en la final. El reporte lo declara junto al corpus que la familia cargó en memoria (`corpus.cargado`).
+  declarado: ingesta de l1d-119 (data/raw/s3/manifest.yaml)
 catalogo:
   version: '2026.10.0'
   ruta_terminos: packages/clinical-catalogs

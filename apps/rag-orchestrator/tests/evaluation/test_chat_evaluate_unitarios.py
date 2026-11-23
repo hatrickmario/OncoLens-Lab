@@ -19,6 +19,13 @@ from app.evaluation.rutas import raiz_repo
 CONFIG = raiz_repo() / "apps/rag-orchestrator/eval/configs/chat-fake.yaml"
 CONFIG_LOCAL = raiz_repo() / "apps/rag-orchestrator/eval/configs/chat-local.yaml"
 CHAT_V1 = raiz_repo() / "data" / "eval" / "chat-v1"
+UMBRALES_DEL_ENTORNO = {
+    "RELEVANCE_THRESHOLD": "0.30",
+    "NLI_ENTAILMENT_THRESHOLD": "0.7",
+    "RETRIEVAL_TOP_K": "30",
+    "RERANK_TOP_N": "10",
+}
+"""``chat-local.yaml`` ya no declara umbrales: salen de ``Settings`` (RN-22), es decir, del entorno."""
 
 
 def _reporte(dataset, peticiones):
@@ -112,7 +119,7 @@ def test_main_imprime_el_reporte_sin_texto_de_casos_y_lo_escribe_cuando_se_pide_
 def test_main_termina_con_codigo_2_sin_cifras_cuando_la_config_local_no_trae_las_peticiones(
     capsys: pytest.CaptureFixture[str],
 ):
-    codigo = chat.main(["--config", str(CONFIG_LOCAL)])
+    codigo = chat.main(["--config", str(CONFIG_LOCAL)], entorno=UMBRALES_DEL_ENTORNO)
 
     assert codigo == 2
     assert "--peticiones" in capsys.readouterr().err
@@ -130,7 +137,10 @@ def test_main_termina_con_codigo_2_nombrando_las_variables_cuando_faltan_los_pes
             json.dumps({"peticion": cuerpo}), encoding="utf-8"
         )
 
-    codigo = chat.main(["--config", str(CONFIG_LOCAL), "--peticiones", str(tmp_path)], entorno={})
+    codigo = chat.main(
+        ["--config", str(CONFIG_LOCAL), "--peticiones", str(tmp_path)],
+        entorno=UMBRALES_DEL_ENTORNO,
+    )
 
     err = capsys.readouterr().err
     assert codigo == 2
@@ -138,7 +148,7 @@ def test_main_termina_con_codigo_2_nombrando_las_variables_cuando_faltan_los_pes
 
 
 def test_chat_local_es_un_proveedor_local_con_reloj_real_y_sin_nube_cuando_se_carga_la_config():
-    config = cargar_config_suite(CONFIG_LOCAL)
+    config = cargar_config_suite(CONFIG_LOCAL, UMBRALES_DEL_ENTORNO)
 
     exigir_proveedor_local(config)  # no lanza: host local y modelo que no corre en la nube
 
@@ -153,4 +163,4 @@ def test_chat_local_aborta_cuando_el_llm_apunta_a_un_host_que_no_es_local(tmp_pa
     ruta.write_text(yaml.safe_dump(crudo), encoding="utf-8")
 
     with pytest.raises(SuiteAbortada, match="llm"):
-        exigir_proveedor_local(cargar_config_suite(ruta))
+        exigir_proveedor_local(cargar_config_suite(ruta, UMBRALES_DEL_ENTORNO))
