@@ -36,7 +36,7 @@
       renombrar, `SPARSE_VECTOR_SOURCE` validada) y código de salida 0/1; test de humo del proceso real con timeout
       explícito de 120 s que comprueba el código de salida y que la salida es JSON sin texto de documentos · test
       después · commit `feat(L1D-116)`
-- [ ] 1.10 Adapter real `infrastructure/embeddings/bge_m3_sparse.py` (D3) sobre el núcleo de BGE-M3, reutilizando el
+- [ ] 1.10 DIFERIDA a entrega 2 (corrida base; ver S7.1): Adapter real `infrastructure/embeddings/bge_m3_sparse.py` (D3) sobre el núcleo de BGE-M3, reutilizando el
       cálculo de `app/evaluation/envoltorios.py` sin duplicarlo; smoke con los modelos verificados de ADR-39 en el
       mismo job que el smoke de US-231b (`integration-rag`), que comprueba ≥ 1 término por pasaje · test después ·
       commit `feat(L1D-116)` · **adapter y unitarios hechos; smoke con pesos reales TRASLADADA a L1D-117 AC-5 / US-117b**
@@ -113,14 +113,26 @@ unitarios existen; `tests/integration/test_smoke_sparse_con_pesos_reales.py` exi
 
 ### (a) Antes de la corrida base
 
-- [ ] S7.1 Cierra **1.10**: en la máquina de referencia, con los pesos de ADR-39 verificados por SHA-256, ejecutar el
+- [ ] S7.1 DIFERIDA a entrega 2 (corrida base, humano en la máquina de referencia): cierra **1.10**: en la máquina de referencia, con los pesos de ADR-39 verificados por SHA-256, ejecutar el
       *smoke* del adapter real (`test_smoke_sparse_con_pesos_reales.py`, marca de modelos reales) y comprobar ≥ 1 término
       por pasaje; anotar en 1.10 el comando y el resultado (sin rutas ni contenido de documentos). No hay código nuevo
       previsto; si el *smoke* falla, se corrige el adapter con test primero · test después (humo).
+      **Estado (2026-11-23, agente ai-services):** el código y el test existen y no necesitan cambios; con fakes pasan los 119
+      unitarios `-k sparse` y el humo se deselecciona sin marca (`1 deselected`). El humo real NO se ejecutó: la máquina tenía
+      0,54 GB de swap libre de 7,2 GB y cargar BGE-M3 ONNX arriesga tumbar los stacks ajenos. Comando literal para el humano
+      (con la máquina holgada, desde `apps/rag-orchestrator`, venv de dependencias; las rutas y SHA-256 están en
+      `~/adr39-modelos/modelos.env`):
+
+      ```text
+      set -a; source ~/adr39-modelos/modelos.env; set +a
+      python -m pytest -m models tests/integration/test_smoke_sparse_con_pesos_reales.py -q
+      ```
+
+      Resultado esperado: `1 passed`. Anotar en 1.10 el comando y el resultado (sin rutas) y marcar `[x]` en S7.3.
 
 ### (b) Corrida base
 
-- [ ] S7.2 El adapter se ejerce con el corpus ampliado en `reindex-sparse` (`l1d-119`, tarea 8.1) y en la medición D4-21
+- [ ] S7.2 DIFERIDA a entrega 2 (corrida base, `l1d-119` 8.1/8.5): el adapter se ejerce con el corpus ampliado en `reindex-sparse` (`l1d-119`, tarea 8.1) y en la medición D4-21
       (`l1d-119`, tarea 8.5): cada chunk vigente queda con `sparse_vector` poblado. Evidencia: el resumen JSON de la
       ingesta y el reporte de `l1d-119` en `reports/eval/`. Las variables `EMBEDDING_SPARSE_WEIGHTS_*` y `RETRIEVAL_*` que
       faltan en Compose son la deuda D6-47 (L1D-328) y no bloquean: `evaluate` corre fuera de Compose.
@@ -129,6 +141,6 @@ unitarios existen; `tests/integration/test_smoke_sparse_con_pesos_reales.py` exi
 
 Nada. `RETRIEVAL_MODE` sigue en `dense`; la híbrida ponderada (D6-43) está fuera del S7.
 
-- [ ] S7.3 Cierre: `openspec validate l1d-116-ingesta-reanudable-licencia --strict` y 1.10 marcada `[x]` con la evidencia
+- [ ] S7.3 DIFERIDA a entrega 2 (tras S7.1 y S7.2): cierre: `openspec validate l1d-116-ingesta-reanudable-licencia --strict` y 1.10 marcada `[x]` con la evidencia
       de S7.1.
 
