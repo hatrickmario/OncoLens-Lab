@@ -139,12 +139,12 @@ def _exigir_coherencia(dataset: DatasetOpciones) -> None:
 
 def _con_revision_provisional(preguntas: Mapping[str, Any]) -> frozenset[str]:
     """Las preguntas con ``revision_provisional``; una marca mal formada la rechaza la regla compartida con el id del caso."""
-    return frozenset(
-        str(p["id"])
-        for p in preguntas["preguntas"]
-        if "revision_provisional" in p
-        and exigir_revision_provisional(p["revision_provisional"], str(p["id"]))
-    )
+    con_marca: set[str] = set()
+    for pregunta in preguntas["preguntas"]:
+        if "revision_provisional" in pregunta:
+            exigir_revision_provisional(pregunta["revision_provisional"], str(pregunta["id"]))
+            con_marca.add(str(pregunta["id"]))
+    return frozenset(con_marca)
 
 
 def _exigir_revisiones_con_rol_y_fecha(preguntas: Mapping[str, Any]) -> None:

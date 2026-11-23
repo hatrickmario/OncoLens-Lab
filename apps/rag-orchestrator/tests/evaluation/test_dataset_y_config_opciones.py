@@ -85,6 +85,20 @@ def test_dataset_op_08_trae_la_fuente_sensible_a_castracion_y_deja_la_resistente
     assert poblacion["estado_castracion"] == "sensible a castración"
 
 
+def test_dataset_rechaza_revision_provisional_con_rol_de_oncologo_nombrando_el_caso(
+    tmp_path: Path,
+) -> None:
+    copia = tmp_path / "opciones"
+    shutil.copytree(DATASET, copia)
+    ruta = copia / "preguntas.yaml"
+    crudo = yaml.safe_load(ruta.read_text(encoding="utf-8"))
+    crudo["preguntas"][0]["revision_provisional"] = {"rol": "oncologo", "fecha": "2026-11-21"}
+    ruta.write_text(yaml.safe_dump(crudo, allow_unicode=True), encoding="utf-8")
+
+    with pytest.raises(DatasetInvalido, match="OP-01"):
+        cargar_dataset_opciones(copia)
+
+
 def test_dataset_es_sintetico_y_no_lleva_identidad_en_los_contextos() -> None:
     dataset = cargar_dataset_opciones(DATASET)
 
