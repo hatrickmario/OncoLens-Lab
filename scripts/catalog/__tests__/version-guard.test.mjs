@@ -346,3 +346,49 @@ describe('catalog:version-guard · sin base disponible', () => {
     PLAZO_PROCESO_MS,
   );
 });
+
+describe('catalog:version-guard · base desfasada: el primer padre del merge (G2.3, S7.2)', () => {
+  /**
+   * `main` avanza (B) con otro archivo y la MISMA versión nueva que el PR; el merge de prueba imita
+   * `refs/pull/N/merge`: primer padre = la punta actual de la base, segundo = la rama del PR. Contra la base
+   * desfasada (A, la de `pull_request.base.sha`) ambos cambios parecen una subida legítima.
+   */
+  function repoConMergeConBaseDesfasada() {
+    const raiz = repoConCatalogo();
+    modificar(raiz, 'mama/aplicabilidad.json', agregarContenido);
+    modificar(raiz, 'manifest.json', (m) => (m.version = 'test-apl-1.0.2'));
+    git(raiz, 'commit', '-q', '-a', '-m', 'pr');
+    git(raiz, 'checkout', '-q', 'main');
+    modificar(raiz, 'mama/datos-criticos.json', agregarContenido);
+    modificar(raiz, 'manifest.json', (m) => (m.version = 'test-apl-1.0.2'));
+    git(raiz, 'commit', '-q', '-a', '-m', 'main avanza');
+    git(raiz, 'checkout', '-q', '-b', 'merge-del-pr');
+    expect(git(raiz, 'merge', '--no-ff', '-q', '-m', 'merge', 'cambio').status).toBe(0);
+    return raiz;
+  }
+
+  it(
+    'falla con HEAD^1 cuando el PR cambia contenido y repite la versión que main ya subió',
+    () => {
+      const raiz = repoConMergeConBaseDesfasada();
+
+      const resultado = ejecutar(raiz, { base: 'HEAD^1', ci: true });
+
+      expect(resultado.codigo).toBe(1);
+      expect(resultado.salida).toContain('contenido_cambiado_sin_subir_version mama/aplicabilidad');
+    },
+    PLAZO_PROCESO_MS,
+  );
+
+  it(
+    'pasa con HEAD^1 cuando el PR sube la versión por encima de la de main',
+    () => {
+      const raiz = repoConMergeConBaseDesfasada();
+      modificar(raiz, 'manifest.json', (m) => (m.version = 'test-apl-1.0.3'));
+      git(raiz, 'commit', '-q', '-a', '-m', 'sube la version');
+
+      expect(ejecutar(raiz, { base: 'HEAD^1', ci: true }).codigo).toBe(0);
+    },
+    PLAZO_PROCESO_MS,
+  );
+});
