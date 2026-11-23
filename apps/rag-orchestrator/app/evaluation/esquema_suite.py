@@ -24,6 +24,7 @@ from app.evaluation.metricas.contextual import (
     CLASES_DE_PREGUNTA,
     CONDICIONES_DE_LA_CAUSA,
     ESTADOS_DE_FILA,
+    METRICAS_FRENTE_A_LA_BASE,
     SEGUNDO_LOOP_CONTEXTUAL,
     SEGUNDO_LOOP_NINGUNO,
 )
@@ -773,7 +774,50 @@ _FILA_CONTEXTUAL = Objeto(
         "segundo_loop": Anulable(
             Enumerado(frozenset({SEGUNDO_LOOP_CONTEXTUAL, SEGUNDO_LOOP_NINGUNO}))
         ),
+        # Los tres primeros chunks del último ranking (id y puntaje; nunca el texto); vacío = el reranker no puntuó nada.
+        "top3": Lista(Objeto({"chunk_id": Identificador(), "relevance_score": Numero()})),
+        "campos_usados": Lista(Enumerado(frozenset(CAMPOS_DE_EXPANSION))),
+        "llamadas_al_generador": Numero(),
     }
+)
+_COBERTURA_DE_CASO = Objeto(
+    {
+        "caso": Identificador(),
+        "genericas_con_evidencia": Numero(),
+        "genericas_total": Numero(),
+        "minimo": Numero(),
+        "cumple": Booleano(),
+        "campos_usados": Lista(Enumerado(frozenset(CAMPOS_DE_EXPANSION))),
+    }
+)
+_ADVERSARIAS_DE_CASO = Objeto(
+    {
+        "caso": Identificador(),
+        "total": Numero(),
+        "sin_evidencia": Numero(),
+        "falsos_positivos": Numero(),
+        "con_puntaje_nulo": Numero(),
+        "llamadas_al_generador": Numero(),
+    }
+)
+_COMPARACION_CON_LA_BASE = Anulable(
+    Objeto(
+        {
+            "base": Objeto({"nombre": Identificador(), "hashConfig": Huella()}),
+            "cambios": Lista(
+                Objeto(
+                    {
+                        "ambito": Identificador(),
+                        "metrica": Enumerado(frozenset(METRICAS_FRENTE_A_LA_BASE)),
+                        "base": Numero(),
+                        "actual": Numero(),
+                        "empeora": Booleano(),
+                    }
+                )
+            ),
+            "empeoran": Numero(),
+        }
+    )
 )
 
 ESQUEMA_CONTEXTUAL = Objeto(
@@ -840,9 +884,13 @@ ESQUEMA_CONTEXTUAL = Objeto(
                     "clase": Enumerado(frozenset(CLASES_DE_PREGUNTA)),
                     "con_evidencia": Numero(),
                     "total": Numero(),
+                    "superaron_umbral": Numero(),
                 }
             )
         ),
+        "cobertura": Lista(_COBERTURA_DE_CASO),
+        "adversarias": Lista(_ADVERSARIAS_DE_CASO),
+        "comparacion": _COMPARACION_CON_LA_BASE,
         "sinonimos": Lista(
             Objeto(
                 {

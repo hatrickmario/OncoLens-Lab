@@ -90,13 +90,12 @@ def cargar_dataset_diagnostico(directorio: Path, pares_minimos: int) -> DatasetD
     """Se niega (``DatasetInvalido``) si el manifiesto no declara ``clase: sintetico``, si falta la marca de revisión, si una
     cita no es un fragmento literal del documento esperado o si el conjunto no cubre los pares y los tipos exigidos."""
     manifiesto = _leer(directorio / "manifest.yaml", "manifest.yaml")
-    exigir_clase_sintetica(manifiesto, "manifest.yaml", FAMILIA)
+    exigir_clase_sintetica(manifiesto.get("clase"), "manifest.yaml", FAMILIA)
     crudo = _leer(directorio / str(_clave(manifiesto, "archivos")["pares"]), "pares.yaml")
-    exigir_clase_sintetica(crudo, "pares.yaml", FAMILIA)
+    exigir_clase_sintetica(crudo.get("clase"), "pares.yaml", FAMILIA)
     revision = exigir_revision_provisional(manifiesto.get("revision_provisional"), "manifest.yaml")
     corpus = FuenteDatasetEnDirectorio(ruta_del_repo(str(_clave(manifiesto, "corpus")))).cargar()
-    if corpus.clase != CLASE_SINTETICA:
-        raise DatasetInvalido("el corpus del dataset de diagnostico no declara clase: sintetico")
+    exigir_clase_sintetica(corpus.clase, "el corpus", FAMILIA)
     pares = _pares(crudo, corpus)
     _exigir_cobertura(pares, pares_minimos)
     return DatasetDiagnostico(

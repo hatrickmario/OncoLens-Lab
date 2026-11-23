@@ -44,6 +44,10 @@ class ConfigContextual:
     preguntas_de_sinonimos: tuple[PreguntaDeSinonimos, ...]
     reranker_max_pairs: int | None
     """``RERANKER_MAX_PAIRS`` de los adaptadores FALSOS (``None`` = sin corte). Con ``proveedor: local`` manda el del reranker cargado."""
+    genericas_con_evidencia_minimo: int
+    """La meta de cobertura por caso (US-273 AC-2, RN-22): genéricas con evidencia que cada caso debe alcanzar. Sin valor por defecto."""
+    reporte_base: Path | None = None
+    """Reporte base de la misma familia con el que se compara la corrida; ``None`` = sin comparación. Opcional por diseño."""
 
 
 def cargar_config_contextual(ruta: Path, suite: ConfigSuite) -> ConfigContextual:
@@ -64,6 +68,11 @@ def cargar_config_contextual(ruta: Path, suite: ConfigSuite) -> ConfigContextual
     if not isinstance(habilitada, bool):
         raise ConfigInvalida("contextual.expansion_habilitada debe ser verdadero o falso")
     seccion = crudo["contextual"]
+    minimo = clave_de(crudo, "contextual", "genericas_con_evidencia_minimo")
+    if isinstance(minimo, bool) or not isinstance(minimo, int) or minimo < 0:
+        raise ConfigInvalida(
+            "contextual.genericas_con_evidencia_minimo debe ser un entero no negativo"
+        )
     return ConfigContextual(
         suite,
         tuple(casos),
@@ -71,7 +80,17 @@ def cargar_config_contextual(ruta: Path, suite: ConfigSuite) -> ConfigContextual
         habilitada,
         _preguntas_de_sinonimos(clave_de(crudo, "contextual", "preguntas_de_sinonimos")),
         tope_de_pares_de_los_adaptadores_falsos(seccion, suite, "contextual"),
+        minimo,
+        _reporte_base(seccion.get("reporte_base")),
     )
+
+
+def _reporte_base(crudo: Any) -> Path | None:
+    if crudo is None:
+        return None
+    if not isinstance(crudo, str) or not crudo:
+        raise ConfigInvalida("contextual.reporte_base debe ser una ruta o estar ausente")
+    return ruta_del_repo(crudo)
 
 
 def _preguntas_de_sinonimos(crudo: Any) -> tuple[PreguntaDeSinonimos, ...]:
