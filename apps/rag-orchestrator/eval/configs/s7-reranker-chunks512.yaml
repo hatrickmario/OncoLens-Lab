@@ -1,0 +1,40 @@
+# Brazo de CHUNKS DE 512 TOKENS del reranker con los MODELOS LOCALES REALES (US-278, L1D-336; `[S7 resp. 14]`; ADR-39, ADR-45 P6).
+# Entra en la CORRIDA FINAL del S7, después de ingerir los mismos documentos de `l1d-119` a 512 tokens en su colección propia
+# (`python -m app.scripts.ingest brazo-de-chunks`, tarea 2.5b: no toca el catálogo `corpus` ni la colección de `l1d-119`, RN-05):
+#   CORPUS_CHUNK_SIZE=512 MILVUS_COLLECTION_NAME=corpus_chunks_512 python -m app.scripts.ingest brazo-de-chunks --manifest <ruta>
+#   RETRIEVAL_REGRESSION_TOLERANCE=<valor de la preinscripción P1> STACK_MEMORY_LIMIT_GB=<ADR-39> \
+#     python -m app.evaluation.evaluate --config eval/configs/s7-reranker-chunks512.yaml --suite retrieval --salida reports/eval
+# El informe lo declara «índice distinto» (`corpus.indices_distintos`) y lo compara contra A0 de la MISMA corrida, que lee la colección
+# de `l1d-119` (1024 tokens). Misma salvedad de memoria y de pesos que `s7-reranker-ventanas.yaml`.
+nombre: s7-reranker-chunks512
+fixture: S7-reranker-chunks512
+dataset:
+  ruta: data/eval/s5-corpus-ampliado
+semilla_bootstrap: 20261122
+bootstrap_repeticiones: 10000
+medicion:
+  reloj: real
+  rss_limite_mib: 4489
+adaptadores:
+  proveedor: local
+  urls:
+    llm: http://127.0.0.1:11434/v1
+modelos:
+  llm: gemma4:26b-a4b-it-q4_K_M
+# Sin bloque `umbrales`: los actuales, de `Settings` (`[S7 resp. 11]`), iguales para los dos brazos.
+catalogo:
+  version: '2026.10.0'
+  ruta_terminos: packages/clinical-catalogs
+indice:
+  fuente: milvus # la colección de la configuración (l1d-119) para A0; A512 lee la suya
+corpus:
+  declarado: l1d-119
+comparacion:
+  conjunto_de_desarrollo: true
+  metas: apps/rag-orchestrator/eval/configs/metas-iniciales.yaml
+  parafrasis:
+    ruta: data/eval/parafrasis-v1
+    pares_minimos: 10
+  brazos:
+    - {nombre: A0, RETRIEVAL_MODE: dense, RERANKER_CHUNK_WINDOWS: primera}
+    - {nombre: A512, RETRIEVAL_MODE: dense, RERANKER_CHUNK_WINDOWS: primera, indice: corpus_chunks_512}

@@ -7,9 +7,19 @@ el runtime real los implementa en ``onnx.py`` y los tests usan dobles determinis
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import dataclass
 from typing import Protocol
 
 import numpy as np
+
+
+@dataclass(frozen=True)
+class ParCodificado:
+    """Ids del par (pregunta, pasaje) con sus especiales y el tramo ``[inicio_pasaje, fin_pasaje)`` que ocupa el pasaje."""
+
+    ids: list[int]
+    inicio_pasaje: int
+    fin_pasaje: int
 
 
 class Tokenizador(Protocol):
@@ -20,6 +30,10 @@ class Tokenizador(Protocol):
 
     def codificar(self, texto: str, par: str | None = None) -> list[int]:
         """Ids con los tokens especiales del modelo; con ``par``, la pareja (pregunta, pasaje) del cross-encoder."""
+        ...
+
+    def codificar_par(self, pregunta: str, pasaje: str) -> ParCodificado:
+        """Los mismos ids que ``codificar(pregunta, pasaje)`` y dónde empieza y acaba el pasaje dentro de ellos."""
         ...
 
 

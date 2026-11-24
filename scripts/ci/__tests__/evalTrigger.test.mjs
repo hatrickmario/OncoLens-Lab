@@ -27,6 +27,8 @@ describe('tocaDisparador', () => {
     ['LLM_MODEL', '-LLM_MODEL=gemma4:26b'],
     ['QUERY_CONTEXT_EXPANSION_ENABLED', '+QUERY_CONTEXT_EXPANSION_ENABLED=true'],
     ['QUERY_REWRITE_ENABLED', '+QUERY_REWRITE_ENABLED=true'],
+    ['RERANKER_CHUNK_WINDOWS', '+RERANKER_CHUNK_WINDOWS=maximo'],
+    ['RERANKER_WINDOW_OVERLAP', '+RERANKER_WINDOW_OVERLAP=64'],
   ])('dispara cuando el diff de .env.example cambia %s [US-074 AC-3]', (_clave, linea) => {
     const resultado = tocaDisparador([cambio('infra/docker/.env.example', linea)], REGLAS);
 
@@ -36,6 +38,13 @@ describe('tocaDisparador', () => {
 
   it('dispara cuando cambia una clave de modelo en la configuración versionada en minúsculas [US-074 AC-3]', () => {
     expect(tocaDisparador([cambio('apps/rag-orchestrator/app/config/settings.py', '+    llm_model: str = "x"')], REGLAS).dispara).toBe(true);
+  });
+
+  it('dispara cuando cambia el modo de ventanas del reranker en la configuración versionada [US-278 AC-2]', () => {
+    const resultado = tocaDisparador([cambio('apps/rag-orchestrator/app/config/settings.py', '+    reranker_chunk_windows: str = "maximo"')], REGLAS);
+
+    expect(resultado.dispara).toBe(true);
+    expect(resultado.motivos[0].motivo).toBe('clave');
   });
 
   it('dispara cuando cambia el manifiesto del corpus de data/raw [US-074 AC-3]', () => {

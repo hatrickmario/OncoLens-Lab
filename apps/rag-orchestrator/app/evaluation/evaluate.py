@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import sys
 import time
 from collections.abc import Callable, Mapping, Sequence
@@ -78,6 +79,7 @@ from app.evaluation.guardas import (
     exigir_proveedor_local,
     verificar_golden_sha256,
 )
+from app.evaluation.indice_del_corpus import IndiceDelCorpus, abrir_indice_real
 from app.evaluation.informe_pii import (
     InformePiiB1,
     InformePiiInvalido,
@@ -106,8 +108,10 @@ from app.evaluation.modelos_locales import (
     OrigenLocal,
     cargar_puertos_locales,
 )
+from app.evaluation.parafrasis_de_la_comparacion import con_parafrasis
 from app.evaluation.reporte import ReporteFueraDeEsquema, escribir_reporte_cerrado
 from app.evaluation.rutas import raiz_repo
+from app.evaluation.seguimiento import ajustes_de_la_suite
 from app.infrastructure.clock.system_clock import RelojDelSistema
 from app.infrastructure.lenguaje.terminos_prohibidos import ListaDeTerminosNoDisponible
 from app.schemas.generated.models import RagMeta, RagQueryInternalResponse
@@ -138,6 +142,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--fijar", action="store_true")
     parser.add_argument("--p95-e2e-s", type=float, default=None)
     parser.add_argument("--corpus-cutoff-date", default=None)
+    parser.add_argument("--memoria-del-stack", type=Path, default=None)
     return parser
 
 
@@ -302,7 +307,15 @@ def _ejecutar(
     informe_pii = _proveedor_pii(
         config, args
     ).leer()  # antes de consultar: un informe roto no cuesta una corrida
-    corrida = _correr_suite(config, fuente.cargar(), args.suite, reloj, informe_pii, origen)
+    corrida = _correr_suite(
+        config,
+        fuente.cargar(),
+        args.suite,
+        reloj,
+        informe_pii,
+        origen,
+        _leer_memoria_del_stack(args.memoria_del_stack, config),
+    )
     escribir_reporte_cerrado(
         _ruta_del_resultado(config, args, reloj), corrida.reporte, ESQUEMA_SUITE
     )
@@ -392,6 +405,7 @@ def _correr_suite(
     reloj: Clock,
     informe_pii: InformePiiB1 | None,
     origen: OrigenLocal,
+    memoria_del_stack: Mapping[str, float] | None = None,
 ) -> _Corrida:
     """El reporte de la suite, si la comparación de brazos retrocedió (US-133) y los rechazos legítimos (US-249 AC-5)."""
     if ids_de_preguntas_de_control_legitimo(dataset):
@@ -402,7 +416,7 @@ def _correr_suite(
     medido = _Medicion([], None, Cronometro(_reloj_de_medicion(config)), None, None)
     if suite != SUITE_PII:  # la familia pii no consulta al servicio: mide solo la privacidad
         medido = (
-            _medir_comparacion(config, dataset, reloj, registro, origen)
+            _medir_comparacion(config, dataset, reloj, registro, origen, memoria_del_stack)
             if config.comparacion is not None
             else _medir_un_brazo(config, dataset, reloj, registro, origen)
         )
@@ -478,14 +492,27 @@ def _medir_comparacion(
     reloj: Clock,
     registro: RegistroDeLlamadas,
     origen: OrigenLocal,
+    memoria_del_stack: Mapping[str, float] | None = None,
 ) -> _Medicion:
     """Todos los brazos; el reporte principal es el de la referencia (A0) y la comparación va aparte."""
     comparacion = config.comparacion
     if comparacion is None:
         raise ConfigInvalida("falta el bloque comparacion")
+    pares: dict[str, tuple[str, ...]] = {}
+    if (
+        comparacion.parafrasis is not None
+    ):  # las redacciones de los pares se miden en la misma corrida (US-278 AC-4)
+        dataset, pares = con_parafrasis(dataset, comparacion.parafrasis)
     brazos = asyncio.run(_evaluar_brazos(config, comparacion, dataset, reloj, registro, origen))
     referencia = brazos[0]
-    armada = armar_comparacion(config, comparacion, brazos)
+    armada = armar_comparacion(
+        config,
+        comparacion,
+        brazos,
+        pares_de_parafrasis=pares,
+        memoria_del_stack=memoria_del_stack or {},
+        corpus=corpus_de_la_comparacion(config, dataset, brazos, origen.entorno),
+    )
     return _Medicion(
         referencia.resultados,
         referencia.metas[0],
@@ -562,7 +589,62 @@ async def _evaluar_brazos(
         reloj,
         lambda: Cronometro(_reloj_de_medicion(config)),
         puertos_locales,
+        _abridor_de_indice(config, origen),
     )
+
+
+def _abridor_de_indice(
+    config: ConfigSuite, origen: OrigenLocal
+) -> Callable[[str | None], IndiceDelCorpus] | None:
+    """Con ``indice.fuente: milvus``, cómo abrir la ingesta en solo lectura (el real, o el que inyecta el test); si no, ``None``."""
+    if config.indice_fuente != "milvus":
+        return None
+    if origen.abridor_de_indice is not None:
+        return origen.abridor_de_indice
+    maximo = ajustes_de_la_suite(config).population_max_values_per_criterion
+    return lambda coleccion: abrir_indice_real(max_valores_de_poblacion=maximo, coleccion=coleccion)
+
+
+def corpus_de_la_comparacion(
+    config: ConfigSuite,
+    dataset: DatasetSuite,
+    brazos: Sequence[ResultadoDeBrazo],
+    entorno: Mapping[str, str],
+) -> dict[str, Any]:
+    """El corpus con el que corrieron los brazos (``[S7 resp. 10]``): la colección leída (recuento y huella de ids), el
+    ``CORPUS_CHUNK_SIZE`` configurado (el de la ingesta, si el entorno es el de su corrida) y los brazos que leyeron un índice distinto; nunca texto."""
+    indice = brazos[0].indice
+    tamano = entorno.get("CORPUS_CHUNK_SIZE")
+    return {
+        "fuente": "dataset" if indice is None else "indice",
+        "declarado": config.corpus_declarado,
+        "coleccion": None if indice is None else indice.resumen.coleccion,
+        "chunks_vigentes": len(dataset.chunks)
+        if indice is None
+        else indice.resumen.chunks_vigentes,
+        "huella": None if indice is None else indice.resumen.huella,
+        "chunk_size_configurado": int(tamano) if tamano and tamano.isdigit() else None,
+        "indices_distintos": [b.brazo.nombre for b in brazos if b.brazo.coleccion is not None],
+    }
+
+
+def _leer_memoria_del_stack(ruta: Path | None, config: ConfigSuite) -> dict[str, float]:
+    """``--memoria-del-stack <json>``: la memoria del stack completo por brazo, medida por ``ai-eval-runner`` (GB). Sin el
+    archivo, ningún brazo tiene medición de memoria y queda ``no_medido``; un nombre ajeno a la comparación se rechaza."""
+    if ruta is None:
+        return {}
+    try:
+        crudo = json.loads(ruta.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        raise ConfigInvalida("--memoria-del-stack no se pudo leer como JSON") from None
+    nombres = {b.nombre for b in config.comparacion.brazos} if config.comparacion else set()
+    if not isinstance(crudo, dict) or not set(crudo) <= nombres:
+        raise ConfigInvalida(
+            "--memoria-del-stack debe ser un mapa {brazo: GB} de los brazos de la comparación"
+        )
+    if any(isinstance(v, bool) or not isinstance(v, int | float) or v <= 0 for v in crudo.values()):
+        raise ConfigInvalida("--memoria-del-stack: cada memoria debe ser un número positivo")
+    return {nombre: float(valor) for nombre, valor in crudo.items()}
 
 
 def _ruta_del_resultado(config: ConfigSuite, args: argparse.Namespace, reloj: Clock) -> Path:

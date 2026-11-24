@@ -12,6 +12,7 @@ from collections.abc import Sequence
 
 import numpy as np
 
+from app.infrastructure.models.sesion import ParCodificado
 from tests.support.recuperacion import CORPUS_FX06A, Q_HER2
 
 ID_CLS = 0
@@ -72,6 +73,10 @@ class TokenizadorFalso:
         if par is None:
             return [ID_CLS, *_ids(texto), ID_SEP]
         return [ID_CLS, *_ids(texto), ID_SEP, ID_SEP, *_ids(par), ID_SEP]
+
+    def codificar_par(self, pregunta: str, pasaje: str) -> ParCodificado:
+        ids = self.codificar(pregunta, pasaje)
+        return ParCodificado(ids, len(_ids(pregunta)) + 3, len(ids) - 1)
 
 
 class SesionDeEmbeddingsFalsa:

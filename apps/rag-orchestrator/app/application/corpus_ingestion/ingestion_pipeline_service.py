@@ -10,11 +10,11 @@ se captura: ``BaseException`` (``KeyboardInterrupt``, ``SystemExit``) y los fall
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Sequence
-from contextlib import contextmanager
+from collections.abc import Sequence
 from dataclasses import replace
 from datetime import date
 
+from app.application.corpus_ingestion.etapas import FalloDeEtapa, etapa
 from app.application.corpus_ingestion.ports import ResolutorDeMetadatos, SparsePassageEncoder
 from app.application.corpus_ingestion.reporte import (
     Estado,
@@ -75,25 +75,6 @@ from app.domain.corpus_seed.versionado import (
 )
 
 
-class FalloDeEtapa(Exception):
-    """Una etapa de un documento falló: lleva el nombre de la etapa y la clase del error, nunca su mensaje."""
-
-    def __init__(self, etapa: str, causa: Exception) -> None:
-        super().__init__(etapa)
-        self.etapa = etapa
-        self.clase = type(causa).__name__
-
-
-@contextmanager
-def _etapa(nombre: str) -> Iterator[None]:
-    try:
-        yield
-    except FalloDeEtapa:
-        raise
-    except Exception as error:  # noqa: BLE001 - borde de un puerto: lo que falle es de este documento
-        raise FalloDeEtapa(nombre, error) from None
-
-
 class IngestionPipelineService:
     def __init__(
         self,
@@ -150,7 +131,7 @@ class IngestionPipelineService:
         """Rechazo por licencia o fuente (RN-21): retira la vigente del grupo sin borrar nada (RN-05) y registra el rechazo."""
         retiro = self._nucleo.planificar_retiro(documento)
         try:
-            with _etapa("retiro"):
+            with etapa("retiro"):
                 self._nucleo.apagar_chunks(retiro.a_apagar)
         except FalloDeEtapa as fallo:
             # Error y sin fila de rechazo: la siguiente ingesta repite el retiro desde cero.
@@ -178,13 +159,13 @@ class IngestionPipelineService:
 
     def _leer_y_normalizar(self, documento: DocumentoDeSemilla) -> tuple[str, str]:
         """Texto íntegro y normalizado con su ``checksum``. Un texto que no es UTF-8 falla en ``normalizacion``."""
-        with _etapa("obtener_texto"):
+        with etapa("obtener_texto"):
             crudo = self._obtener_texto(documento)
-        with _etapa("normalizacion"):
+        with etapa("normalizacion"):
             texto = normalizar_texto(crudo)
         checksum = calcular_checksum(texto)
         if documento.checksum_esperado not in (None, checksum):
-            with _etapa("integridad"):
+            with etapa("integridad"):
                 raise ChecksumDelManifiestoNoCoincide()
         return texto, checksum
 
@@ -214,7 +195,7 @@ class IngestionPipelineService:
             documento, document_id, fragmentos, metadatos
         )
         registro = registro_embebido(documento, admision, checksum, self._reloj.ahora(), metadatos)
-        with _etapa("milvus"):
+        with etapa("milvus"):
             self._indexar(registro, fragmentos, vectores, vectores_sparse, decision)
         self._confirmar(registro, decision)
         return ResultadoDeIngesta(
@@ -232,7 +213,7 @@ class IngestionPipelineService:
             texto, self._tokenizador, tamano=self._tamano_de_chunk, solape=self._solape_de_chunk
         )
         if not fragmentos:
-            with _etapa("texto"):
+            with etapa("texto"):
                 raise TextoVacio()
         return fragmentos
 
@@ -241,7 +222,7 @@ class IngestionPipelineService:
     ) -> MetadatosResueltos:
         """Los fallos del LLM y del NLI ya vuelven como ``pendiente``; un defecto del resolutor deja SOLO este documento en
         ``error`` (etapa ``metadatos``) y el lote sigue."""
-        with _etapa("metadatos"):
+        with etapa("metadatos"):
             return self._resolutor_de_metadatos.resolver(documento, texto, fragmentos)
 
     def _extraer_poblacion(
@@ -256,7 +237,7 @@ class IngestionPipelineService:
         un defecto del extractor deja SOLO este documento en ``error`` (etapa ``poblacion``)."""
         if self._extractor_de_poblacion is None or metadatos.metadata_source != EXTRAIDO_VERIFICADO:
             return metadatos, None
-        with _etapa("poblacion"):
+        with etapa("poblacion"):
             extraida = self._extractor_de_poblacion.extraer(
                 _documento_para_extraer(documento, document_id, fragmentos),
                 documento.cancer_type_tags,
@@ -273,7 +254,7 @@ class IngestionPipelineService:
         if self._extractor_de_poblacion is None or self._almacen_de_poblacion is None:
             return None
         document_id = identificador_de_documento(documento.document_key, checksum)
-        with _etapa("poblacion"):
+        with etapa("poblacion"):
             guardado = self._almacen_de_poblacion.leer_poblacion(document_id)
             if guardado is None or guardado.metadata_source != EXTRAIDO_VERIFICADO:
                 return None
@@ -303,12 +284,12 @@ class IngestionPipelineService:
         )
 
     def _embeber(self, fragmentos: Sequence[str]) -> list[list[float]]:
-        with _etapa("embeddings"):
+        with etapa("embeddings"):
             return self._embedder.embeber(fragmentos)
 
     def _codificar_sparse(self, fragmentos: Sequence[str]) -> list[dict[int, float]]:
         """Un vector *sparse* no vacío por fragmento: sin él el documento queda en error, nunca se inserta sin *sparse*."""
-        with _etapa("sparse"):
+        with etapa("sparse"):
             vectores = self._codificador_sparse.codificar(fragmentos)
             return list(exigir_sparse_por_pasaje(vectores, len(fragmentos)))
 
@@ -317,7 +298,7 @@ class IngestionPipelineService:
     ) -> ResultadoDeIngesta:
         """Ya embebido con ese contenido: no se re-embebe, pero se reconcilia Milvus con el catálogo (RN-05)."""
         try:
-            with _etapa("milvus"):
+            with etapa("milvus"):
                 self._nucleo.reconciliar_omitido(decision)
         except FalloDeEtapa as fallo:
             # Sin fila de error: el documento embebido y vigente sigue siendo la verdad del catálogo.
