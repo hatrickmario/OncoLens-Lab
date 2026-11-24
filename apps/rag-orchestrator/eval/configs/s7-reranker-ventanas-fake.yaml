@@ -1,0 +1,37 @@
+# Comparación de los brazos del reranker con ADAPTERS FALSOS (US-278, L1D-336; ADR-45 P1, P6). Es la configuración de la CI de
+# esta familia (regresión de FORMA): no carga modelos, no abre sockets y es reproducible (misma configuración, mismo informe).
+# `s7-reranker-ventanas.yaml` es su par con los modelos locales y la ingesta de `l1d-119` (corrida final del S7). Con adapters
+# falsos las cifras NO dicen nada del RAG real: ninguna se cita como resultado. El reranker falso cuenta PALABRAS como tokens.
+#   npm run evaluate -- --config apps/rag-orchestrator/eval/configs/s7-reranker-ventanas-fake.yaml --suite all --report json
+# Cambiar cualquier valor cambia la huella SHA-256 del informe.
+nombre: s7-reranker-ventanas-fake
+fixture: S7-reranker-ventanas
+dataset:
+  ruta: data/eval/s5-corpus-ampliado # el corpus de los pares de paráfrasis (`parafrasis-v1`): el mismo en la base y en la final
+semilla_bootstrap: 20261122
+bootstrap_repeticiones: 200
+medicion:
+  reloj: simulado # simulado: 1 ms por lectura (reproducible); real: time.perf_counter
+adaptadores:
+  proveedor: fake
+modelos:
+  llm: fake-guion@1
+umbrales: # los valores vigentes de producción ([S7 resp. 11]); todos los brazos corren con ellos
+  relevance_threshold: 0.30
+  nli_entailment_threshold: 0.7
+  retrieval_top_k: 30
+  rerank_top_n: 10
+catalogo:
+  version: '2026.10.0'
+  ruta_terminos: packages/clinical-catalogs
+comparacion:
+  conjunto_de_desarrollo: true # ADR-45 P2: el dataset completo es de desarrollo (sin partición); validación y prueba no existen aquí
+  tolerancia_retroceso: 1.0 # solo para la CI con fakes (la forma, no la calidad); la corrida real la fija RETRIEVAL_REGRESSION_TOLERANCE
+  metas: apps/rag-orchestrator/eval/configs/metas-iniciales.yaml # el tope p95_evidence_analyses_s de la viabilidad (no se repite aquí)
+  parafrasis:
+    ruta: data/eval/parafrasis-v1
+    pares_minimos: 10
+  brazos: # RERANKER_MAX_LENGTH en palabras: el reranker falso cuenta palabras como tokens
+    - {nombre: A0, RETRIEVAL_MODE: dense, RERANKER_CHUNK_WINDOWS: primera, RERANKER_WINDOW_OVERLAP: 2, RERANKER_MAX_LENGTH: 12}
+    - {nombre: A0-maximo, RETRIEVAL_MODE: dense, RERANKER_CHUNK_WINDOWS: maximo, RERANKER_WINDOW_OVERLAP: 2, RERANKER_MAX_LENGTH: 12}
+    - {nombre: A0-longitud-ampliada, RETRIEVAL_MODE: dense, RERANKER_CHUNK_WINDOWS: primera, RERANKER_WINDOW_OVERLAP: 2, RERANKER_MAX_LENGTH: 24}

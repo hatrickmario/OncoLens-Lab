@@ -289,6 +289,8 @@ def _reranker(
         max_length=config.reranker_max_length,
         max_pairs=config.reranker_max_pairs,
         max_tokens_por_lote=settings.model_batch_max_tokens,
+        modo_de_ventanas=settings.reranker_chunk_windows,
+        solape=settings.reranker_window_overlap,
     )
 
 

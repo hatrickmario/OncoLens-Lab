@@ -16,6 +16,8 @@ from tests.support.inferencia_falsa import (
     TokenizadorFalso,
 )
 
+MAXIMO_S = 300.0  # carga un modelo real: el tiempo máximo del test, explícito
+
 
 def _candidatos() -> list[ChunkEncontrado]:
     return [
@@ -53,3 +55,36 @@ def test_puntua_en_0_1_y_ch_m1_1_por_encima_de_ch_p1_1_con_los_pesos_reales() ->
     from tests.support.modelos import cargar_modelos_reales
 
     _afirmar_unidad_y_pertinente_sobre_otro_tipo(cargar_modelos_reales().reranker)
+
+
+@pytest.mark.models
+@pytest.mark.ac("US-278", 1)
+def test_un_chunk_largo_con_la_evidencia_al_final_puntua_mas_con_maximo_que_con_primera_con_los_pesos_reales() -> (
+    None
+):
+    """Carga el modelo real: el tiempo máximo es de 300 s (``MAXIMO_S``) y se comprueba al final del test."""
+    import time
+
+    from tests.support.modelos import cargar_modelos_reales
+
+    inicio = time.monotonic()
+    reranker = cargar_modelos_reales().reranker
+    relleno = " ".join(["The weather was mild and the committee met on Tuesday."] * 120)
+    evidencia = (
+        "Adding anti-HER2 therapy to adjuvant chemotherapy improved disease-free survival "
+        "in HER2-positive early breast cancer."
+    )
+    candidato = ChunkEncontrado(
+        chunk_id="ch-largo",
+        document_id="doc-largo",
+        chunk_text=f"{relleno} {evidencia}",
+        similitud_dense=0.5,
+    )
+
+    con_primera = reranker.puntuar(Q_HER2, [candidato])[0]
+    con_maximo = reranker.variante(modo_de_ventanas="maximo", solape=64).puntuar(  # type: ignore[attr-defined]
+        Q_HER2, [candidato]
+    )[0]
+
+    assert con_maximo > con_primera
+    assert time.monotonic() - inicio < MAXIMO_S

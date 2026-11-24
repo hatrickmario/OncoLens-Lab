@@ -111,13 +111,18 @@ def abrir_indice_real(
     max_valores_de_poblacion: int,
     fabricar_cliente: Callable[..., Any] | None = None,
     fabricar_motor: Callable[..., Any] | None = None,
+    coleccion: str | None = None,
 ) -> IndiceDelCorpus:
     """Abre la ingesta en solo lectura con la configuración del entorno (``MILVUS_*``, ``CORPUS_DATABASE_URL``).
 
     ``max_valores_de_poblacion`` es el de ``Settings`` (como en producción). Las fábricas se inyectan en los tests. Un fallo
-    nombra la variable y nunca la URI, el host ni el motivo del cliente (RN-12, RN-22); un índice sin chunks vigentes aborta."""
+    nombra la variable y nunca la URI, el host ni el motivo del cliente (RN-12, RN-22); un índice sin chunks vigentes aborta.
+    ``coleccion`` sustituye a ``MILVUS_COLLECTION_NAME`` (el brazo de chunks de 512 tokens lee su colección propia, US-278): el
+    catálogo ``corpus`` es el mismo y solo se lee."""
     try:
         milvus, base = leer_configuracion_del_corpus()
+        if coleccion is not None:
+            milvus = milvus.model_copy(update={"milvus_collection_name": coleccion})
         puertos = crear_puertos_del_corpus(
             milvus,
             base,

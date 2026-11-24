@@ -17,6 +17,8 @@ import numpy as np
 import onnxruntime as ort
 from tokenizers import Tokenizer
 
+from app.infrastructure.models.sesion import ParCodificado
+
 # Orden de búsqueda del relleno cuando el tokenizer.json no declara su `padding`: BGE-M3 usa `<pad>`, mDeBERTa `[PAD]`.
 TOKENS_DE_RELLENO = ("<pad>", "[PAD]")
 
@@ -120,3 +122,14 @@ class TokenizadorDeArchivo:
             self._tokenizador.encode(texto) if par is None else self._tokenizador.encode(texto, par)
         )
         return list(codificacion.ids)
+
+    def codificar_par(self, pregunta: str, pasaje: str) -> ParCodificado:
+        """Los ids de ``codificar(pregunta, pasaje)`` y el tramo del pasaje según los ``sequence_ids`` de la codificación
+        (no se infiere codificando la pregunta sola: eso depende de la plantilla de especiales del modelo). Un pasaje
+        sin tokens da un tramo vacío antes del separador final."""
+        codificacion = self._tokenizador.encode(pregunta, pasaje)
+        ids = list(codificacion.ids)
+        del_pasaje = [i for i, secuencia in enumerate(codificacion.sequence_ids) if secuencia == 1]
+        if not del_pasaje:
+            return ParCodificado(ids, len(ids) - 1, len(ids) - 1)
+        return ParCodificado(ids, del_pasaje[0], del_pasaje[-1] + 1)

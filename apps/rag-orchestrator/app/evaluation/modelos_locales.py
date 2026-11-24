@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pydantic import ValidationError
 
@@ -32,9 +32,11 @@ from app.config.modelos import ConfigInvalida as ConfigDeModelosInvalida
 from app.config.modelos import cargar_config_modelos
 from app.config.settings import Settings
 from app.domain.nli import ParNli, ResultadoNli
+from app.domain.ventanas_del_reranker import ConfiguracionDelReranker, ModoDeVentanas
 from app.evaluation.config_suite import ConfigSuite
 from app.evaluation.guardas import SuiteAbortada
 from app.evaluation.llamadas import RegistroDeLlamadas
+from app.evaluation.reranker_con_ventanas import RerankerConVentanas
 from app.infrastructure.llm.fabrica_local import (
     LlmCompleto,
     crear_generador_local,
@@ -80,6 +82,9 @@ class OrigenLocal:
     entorno: Mapping[str, str]
     cargador: CargadorDeModelos | None
     lector_rss: LectorDeRss
+    abridor_de_indice: Callable[[str | None], Any] | None = None
+    """Cómo se abre la ingesta en solo lectura (``IndiceDelCorpus``) para una colección o la de la configuración; los tests
+    inyectan el almacén fingido en su puerto. ``None`` = el índice real de ``abrir_indice_real`` (``indice.fuente: milvus``)."""
 
 
 @dataclass(frozen=True)
@@ -144,6 +149,28 @@ class RerankerRegistrado:
     @property
     def version(self) -> str:
         return self._interno.version
+
+    @property
+    def configuracion(self) -> ConfiguracionDelReranker | None:
+        """La etapa del reranker cargado (modo, solape, largo y pares), si el adapter la expone (US-278)."""
+        if isinstance(self._interno, RerankerConVentanas):
+            return self._interno.configuracion
+        return None
+
+    def variante(
+        self,
+        *,
+        modo_de_ventanas: ModoDeVentanas | None = None,
+        solape: int | None = None,
+        max_length: int | None = None,
+    ) -> RerankerRegistrado:
+        """El mismo reranker cargado con otra etapa (sin cargar el modelo de nuevo), registrado igual (RN-12)."""
+        if not isinstance(self._interno, RerankerConVentanas):
+            raise SuiteAbortada("el reranker cargado no admite variantes por brazo (RERANKER_*)")
+        otra = self._interno.variante(
+            modo_de_ventanas=modo_de_ventanas, solape=solape, max_length=max_length
+        )
+        return RerankerRegistrado(otra, self._registro, self._clase)
 
     def puntuar(self, pregunta: str, candidatos: Sequence[CandidatoParaReranker]) -> list[float]:
         self._registro.registrar_en_proceso("reranker", self._clase, self.version)

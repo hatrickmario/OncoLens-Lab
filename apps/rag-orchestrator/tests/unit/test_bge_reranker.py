@@ -9,7 +9,12 @@ import pytest
 
 from app.application.ports import ChunkEncontrado, FalloDeInferencia
 from app.infrastructure.reranker.bge_reranker import BgeReranker
-from tests.support.inferencia_falsa import ID_SEP, SesionDeLogitsFalsa, TokenizadorFalso
+from tests.support.inferencia_falsa import (
+    ID_SEP,
+    SesionDeLogitsFalsa,
+    TokenizadorFalso,
+    id_de_palabra,
+)
 
 TEXTO_SECRETO = "texto-clinico-que-no-debe-salir-en-el-error"
 
@@ -140,3 +145,157 @@ def test_un_fallo_del_modelo_se_traduce_al_error_del_puerto_sin_texto_ni_causa(o
 
     assert TEXTO_SECRETO not in f"{error.value} {error.value!r}"
     assert error.value.__cause__ is None and error.value.__suppress_context__ is True
+
+
+# --- US-278: RERANKER_CHUNK_WINDOWS = maximo (los tests de ``primera`` de arriba quedan sin tocar) ----------------------
+
+PREGUNTA_CORTA = (
+    "uno dos"  # con los 4 especiales del par: capacidad = max_length - 4 - 2 por ventana
+)
+PASAJE_LARGO = " ".join(f"p{i}" for i in range(20))
+
+
+def _maximo(sesion: object | None = None, **cambios: object) -> BgeReranker:
+    return _reranker(
+        sesion=sesion,
+        modo_de_ventanas="maximo",
+        solape=cambios.pop("solape", 2),
+        max_length=cambios.pop("max_length", 12),
+        **cambios,
+    )
+
+
+def _secuencias_de(sesion: SesionDeLogitsFalsa) -> list[list[int]]:
+    return [secuencia for lote in sesion.lotes for secuencia in lote]
+
+
+def test_maximo_envia_una_sola_secuencia_identica_a_la_de_primera_cuando_el_par_cabe() -> None:
+    sesion_primera, sesion_maximo = SesionDeLogitsFalsa(), SesionDeLogitsFalsa()
+
+    con_primera = _reranker(sesion=sesion_primera, max_length=12).puntuar(
+        PREGUNTA_CORTA, [_chunk("p0 p1 p2")]
+    )
+    con_maximo = _maximo(sesion_maximo).puntuar(PREGUNTA_CORTA, [_chunk("p0 p1 p2")])
+
+    assert sesion_maximo.lotes == sesion_primera.lotes
+    assert len(sesion_maximo.lotes[0]) == 1
+    assert con_maximo == con_primera
+
+
+def test_maximo_envia_ventanas_que_cubren_el_pasaje_y_no_pasan_de_max_length() -> None:
+    sesion = SesionDeLogitsFalsa()
+
+    _maximo(sesion).puntuar(PREGUNTA_CORTA, [_chunk(PASAJE_LARGO)])
+
+    secuencias = _secuencias_de(sesion)
+    assert len(secuencias) > 1 and all(len(s) <= 12 for s in secuencias)
+    assert all(
+        s[0] == 0 and s[-1] == ID_SEP for s in secuencias
+    )  # cada ventana lleva pregunta y especiales
+    cubiertos = {i for s in secuencias for i in s[s.index(ID_SEP) + 2 : -1]}
+    assert cubiertos == {id_de_palabra(f"p{i}") for i in range(20)}
+
+
+def test_maximo_puntua_el_chunk_con_el_mayor_logit_de_sus_ventanas_normalizado_una_sola_vez() -> (
+    None
+):
+    sesion = SesionDeLogitsFalsa(logits=[-1.0, 0.5, 2.0, -3.0, 0.0, 0.0])  # sobran: no se usan
+
+    puntajes = _maximo(sesion, solape=2).puntuar(PREGUNTA_CORTA, [_chunk(PASAJE_LARGO)])
+
+    ventanas = len(_secuencias_de(sesion))
+    esperado = max([-1.0, 0.5, 2.0, -3.0, 0.0, 0.0][:ventanas])
+    assert puntajes == pytest.approx([_sigmoide(esperado)])
+
+
+def test_maximo_devuelve_un_puntaje_por_candidato_en_el_orden_recibido_con_chunks_cortos_y_largos() -> (
+    None
+):
+    candidatos = [
+        _chunk(PASAJE_LARGO, "largo"),
+        _chunk("p0", "corto"),
+        _chunk(PASAJE_LARGO[::-1], "otro"),
+    ]
+
+    en_lotes = _maximo(max_tokens_por_lote=24).puntuar(PREGUNTA_CORTA, candidatos)
+    solos = [_maximo().puntuar(PREGUNTA_CORTA, [c])[0] for c in candidatos]
+
+    assert en_lotes == pytest.approx(solos)
+
+
+def test_maximo_cuenta_candidatos_y_no_ventanas_contra_el_maximo_de_pares() -> None:
+    reranker = _maximo(SesionDeLogitsFalsa(), max_pairs=2)
+
+    dos = reranker.puntuar(PREGUNTA_CORTA, [_chunk(PASAJE_LARGO, "a"), _chunk(PASAJE_LARGO, "b")])
+
+    assert len(dos) == 2
+    with pytest.raises(FalloDeInferencia):
+        reranker.puntuar(PREGUNTA_CORTA, [_chunk("p0", "a"), _chunk("p1", "b"), _chunk("p2", "c")])
+
+
+@pytest.mark.parametrize("mala", [np.nan, np.inf, -np.inf])
+def test_maximo_falla_con_el_error_del_puerto_cuando_una_sola_ventana_no_tiene_logit_finito(
+    mala: float,
+) -> None:
+    class SesionConUnaVentanaMala:
+        def ejecutar(self, secuencias):
+            salida = np.zeros((len(secuencias), 1), dtype=np.float32)
+            salida[-1, 0] = mala
+            return salida
+
+    with pytest.raises(FalloDeInferencia):
+        _maximo(SesionConUnaVentanaMala()).puntuar(PREGUNTA_CORTA, [_chunk(PASAJE_LARGO)])
+
+
+@pytest.mark.parametrize(
+    "cambios",
+    [{"solape": 6}, {"solape": 9}, {"max_length": 6}],
+    ids=["solape-igual-que-la-capacidad", "solape-mayor", "la-pregunta-llena-la-ventana"],
+)
+def test_maximo_falla_cerrado_cuando_las_ventanas_no_pueden_avanzar(
+    cambios: dict[str, int],
+) -> None:
+    with pytest.raises(FalloDeInferencia) as error:
+        _maximo(**cambios).puntuar(PREGUNTA_CORTA, [_chunk(PASAJE_LARGO)])  # type: ignore[arg-type]
+
+    assert PASAJE_LARGO not in f"{error.value} {error.value!r}"
+
+
+def test_maximo_con_un_pasaje_vacio_envia_la_secuencia_sin_pasaje_en_vez_de_fallar() -> None:
+    sesion = SesionDeLogitsFalsa()
+
+    puntajes = _maximo(sesion).puntuar(PREGUNTA_CORTA, [_chunk("")])
+
+    assert len(puntajes) == 1 and len(sesion.lotes[0]) == 1
+
+
+def test_maximo_da_el_mismo_resultado_en_dos_ejecuciones_y_con_otro_presupuesto_de_lote() -> None:
+    candidatos = [_chunk(PASAJE_LARGO, "a"), _chunk(PASAJE_LARGO[::-1], "b")]
+
+    uno = _maximo(max_tokens_por_lote=12).puntuar(PREGUNTA_CORTA, candidatos)
+    otro = _maximo(max_tokens_por_lote=4096).puntuar(PREGUNTA_CORTA, candidatos)
+
+    assert uno == otro
+
+
+def test_una_variante_comparte_la_sesion_y_el_tokenizador_y_cambia_solo_la_etapa_pedida() -> None:
+    sesion = SesionDeLogitsFalsa()
+    base = _reranker(sesion=sesion, max_length=12)
+
+    variante = base.variante(modo_de_ventanas="maximo", solape=2)
+    variante.puntuar(PREGUNTA_CORTA, [_chunk(PASAJE_LARGO)])
+    base.puntuar(PREGUNTA_CORTA, [_chunk(PASAJE_LARGO)])
+
+    assert variante.version == base.version
+    assert len(sesion.lotes[0]) > 1  # la variante usó ventanas sobre la sesión de la base
+    assert len(sesion.lotes[1]) == 1  # la base sigue en primera
+
+
+def test_una_variante_con_otro_max_length_trunca_a_ese_largo() -> None:
+    sesion = SesionDeLogitsFalsa()
+
+    _reranker(sesion=sesion, max_length=8).variante(max_length=16).puntuar(
+        PREGUNTA_CORTA, [_chunk(PASAJE_LARGO)]
+    )
+
+    assert len(sesion.lotes[0][0]) == 16

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from app.domain.expansion_contextual import CAMPOS_DE_EXPANSION, FORMATOS_DE_CONSULTA
+from app.domain.ventanas_del_reranker import MODOS_DE_VENTANAS
 from app.evaluation.acuerdo_juez import ESTADO_CONCLUYENTE, ESTADO_NO_CONCLUYENTE, SIN_MEDIR
 from app.evaluation.config_suite import PROVEEDORES, RELOJES, SUITES
 from app.evaluation.cronometro import ETAPAS
@@ -44,6 +45,7 @@ from app.evaluation.revision_provisional import (
     ROTULO_DE_REVISION_PROVISIONAL,
 )
 from app.evaluation.rotulo import ROTULOS
+from app.evaluation.viabilidad_del_brazo import ESTADOS_DE_VIABILIDAD, MOTIVOS_DE_NO_VIABILIDAD
 from app.schemas.generated.models import Fusion, RetrievalMode
 
 VERSION_ESQUEMA = "oncolens.evaluate.v1"
@@ -242,7 +244,37 @@ _RECURSOS_NLI = Objeto(
 )
 
 _METRICAS_DE_DIFERENCIA = Objeto(
-    {"recall_at_10_total": Numero(), "recall_at_10_es_a_en": Numero(), "mrr": Numero()}
+    {
+        "recall_at_10_total": Numero(),
+        "recall_at_10_es_a_en": Numero(),
+        "mrr": Numero(),
+        # US-278: solo en las comparaciones con brazos del reranker; ``None`` = una de las dos medidas falta.
+        "falsos_sin_evidencia": Numero(),
+        "parafrasis_recuperadas": Numero(),
+        "p95_reranker_ms": Numero(),
+        "p95_consulta_ms": Numero(),
+    },
+    opcionales=frozenset(
+        {"falsos_sin_evidencia", "parafrasis_recuperadas", "p95_reranker_ms", "p95_consulta_ms"}
+    ),
+)
+_ETAPA_DEL_RERANKER = Objeto(
+    {
+        "modo": Enumerado(frozenset(MODOS_DE_VENTANAS)),
+        "solape": Numero(),
+        "max_length": Numero(),
+        "max_pairs": Numero(),
+    }
+)
+_VIABILIDAD = Objeto(
+    {
+        "estado": Enumerado(ESTADOS_DE_VIABILIDAD),
+        "motivos": Lista(Enumerado(MOTIVOS_DE_NO_VIABILIDAD)),
+        "p95_consulta_s": Numero(),
+        "tope_p95_s": Numero(),
+        "memoria_gb": Numero(),
+        "limite_memoria_gb": Numero(),
+    }
 )
 _BRAZO = Objeto(
     {
@@ -259,8 +291,35 @@ _BRAZO = Objeto(
         "por_documento": Lista(
             Objeto({"documento": Identificador(), "recall_at_10": Numero(), "n": Numero()})
         ),
+        # US-278: las cinco claves siguientes solo existen si la comparación declara brazos del reranker.
+        "reranker": Anulable(_ETAPA_DEL_RERANKER),
+        "falsos_sin_evidencia": Objeto({"n": Numero(), "total": Numero()}),
+        "parafrasis": Objeto({"pares": Numero(), "recuperadas": Numero()}),
+        "latencia_ms": Objeto({"reranker_p95": Numero(), "consulta_p95": Numero()}),
+        "viabilidad": _VIABILIDAD,
     },
-    opcionales=frozenset({"diferencia_frente_a_a0"}),
+    opcionales=frozenset(
+        {
+            "diferencia_frente_a_a0",
+            "reranker",
+            "falsos_sin_evidencia",
+            "parafrasis",
+            "latencia_ms",
+            "viabilidad",
+        }
+    ),
+)
+_CORPUS_DE_LA_COMPARACION = Objeto(
+    {
+        # US-278 AC-4, [S7 resp. 10]: el corpus con el que corrieron los brazos (la ingesta de l1d-119 u otro índice), sin texto.
+        "fuente": Enumerado(frozenset({"dataset", "indice"})),
+        "declarado": Anulable(Identificador()),
+        "coleccion": Anulable(Identificador()),
+        "chunks_vigentes": Numero(),
+        "huella": Anulable(Huella()),
+        "chunk_size_configurado": Numero(),
+        "indices_distintos": Lista(Identificador()),
+    }
 )
 _COMPARACION_RECUPERACION = Objeto(
     {
@@ -268,7 +327,9 @@ _COMPARACION_RECUPERACION = Objeto(
         "tolerancia_retroceso": Numero(),
         "retroceso": Booleano(),
         "brazos": Lista(_BRAZO),
-    }
+        "corpus": _CORPUS_DE_LA_COMPARACION,
+    },
+    opcionales=frozenset({"corpus"}),
 )
 
 _RECHAZOS_LEGITIMOS = Objeto(

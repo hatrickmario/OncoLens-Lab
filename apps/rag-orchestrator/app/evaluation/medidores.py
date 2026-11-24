@@ -28,10 +28,13 @@ from app.application.ports import (
     SinTerminosLexicos,
     SparseChunkSearch,
 )
+from app.application.seed_corpus.registros import clave_del_documento
 from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
 from app.domain.citations import FichaDeFuente
 from app.domain.nli import ParNli, ResultadoNli
+from app.domain.ventanas_del_reranker import ConfiguracionDelReranker
 from app.evaluation.cronometro import Cronometro
+from app.evaluation.reranker_con_ventanas import RerankerConVentanas
 from app.evaluation.retrieval_metrics import ChunkRecuperado
 from app.schemas.generated.models import RagQueryInternalRequest
 
@@ -49,6 +52,11 @@ class Observaciones:
     generaciones: int = 0
     sin_terminos_lexicos: set[str] = field(default_factory=set)
     """Textos de pregunta cuya rama *sparse* no tuvo ningún término (la consulta híbrida falla cerrada, US-248 AC-4)."""
+    reranker: ConfiguracionDelReranker | None = None
+    """La etapa del reranker tal como corrió la última consulta (US-278): modo, solape y largo; ``None`` si el adapter no la expone."""
+    reranker_discrepante: bool = False
+    """Alguna consulta usó una configuración del reranker distinta de la que el brazo declaró (``esperada_del_reranker``)."""
+    esperada_del_reranker: ConfiguracionDelReranker | None = None
 
 
 class DetectorMedido:
@@ -144,11 +152,32 @@ class RerankerObservado:
 
     def puntuar(self, pregunta: str, candidatos: Sequence[ChunkEncontrado]) -> list[float]:
         puntajes = self._cronometro.medir("reranker", self._interno.puntuar, pregunta, candidatos)
+        self._anotar_la_configuracion()
         ranking = sorted(zip(candidatos, puntajes), key=lambda par: (-par[1], par[0].chunk_id))
         self._obs.rankings[pregunta] = [
-            ChunkRecuperado(c.document_id, c.chunk_text, p) for c, p in ranking
+            ChunkRecuperado(clave_del_documento(c.document_id), c.chunk_text, p) for c, p in ranking
         ]
         return puntajes
+
+    def _anotar_la_configuracion(self) -> None:
+        """Lo que el adapter dice de su propia etapa en cada llamada: así la suite comprueba que el modo efectivo de una
+        consulta es el de su brazo y no el que se declaró (US-278 AC-4)."""
+        efectiva = (
+            self._interno.configuracion if isinstance(self._interno, RerankerConVentanas) else None
+        )
+        self._obs.reranker = efectiva
+        esperada = self._obs.esperada_del_reranker
+        if esperada is not None and efectiva is not None and not _coincide(efectiva, esperada):
+            self._obs.reranker_discrepante = True
+
+
+def _coincide(efectiva: ConfiguracionDelReranker, esperada: ConfiguracionDelReranker) -> bool:
+    """Solo se compara lo que el brazo declaró: el modo, el solape y el largo; el tope de pares no es del brazo."""
+    return (efectiva.modo, efectiva.solape, efectiva.max_length) == (
+        esperada.modo,
+        esperada.solape,
+        esperada.max_length,
+    )
 
 
 class GeneradorObservado:
