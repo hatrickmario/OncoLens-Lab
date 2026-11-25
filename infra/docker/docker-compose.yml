@@ -16,7 +16,7 @@ x-service-jwt-ttl: &service-jwt-ttl ${SERVICE_JWT_TTL_SECONDS:-60}
 
 services:
   postgres:
-    image: postgres:17.11-alpine
+    image: postgres:17.12-alpine
     # TLS obligatorio (SEG-08): entrypoint-tls.sh instala la clave con los permisos que exige PostgreSQL y delega
     # en el entrypoint de la imagen. El superusuario solo entra por `local peer` (docker compose exec -u postgres).
     entrypoint: ["/bin/sh", "/usr/local/bin/entrypoint-tls.sh"]
