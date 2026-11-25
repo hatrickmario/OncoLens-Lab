@@ -14,6 +14,7 @@ import {
 import { violacionesDeEscalas } from './escalas.mjs';
 import { violacionesDeMarcos } from './marcos.mjs';
 import { violacionesDePlantillas } from './plantillas.mjs';
+import { violacionesDeSinonimos } from './sinonimos.mjs';
 
 /**
  * Registro ÚNICO de los archivos por tipo que tienen ítems con destino (L1D-93, RN-29). Cada entrada nombra su
@@ -73,14 +74,21 @@ export const ARCHIVOS_DECLARADOS_POR_EL_MANIFIESTO = {
 
 /**
  * Archivos por tipo que existen solo en los tipos que el manifiesto lista (`plantillasDePregunta: ['mama', …]`,
- * L1D-324): `clave` es la del manifiesto y `reglas(archivo, terminosProhibidos)` son las propias del archivo, que van
- * antes que el esquema. Un catálogo sin la declaración no los tiene (los fixtures anteriores siguen válidos).
+ * L1D-324; `sinonimos: ['mama', …]`, L1D-335): `clave` es la del manifiesto y `reglas(archivo, terminosProhibidos)` son las
+ * propias del archivo, que van antes que el esquema; `usaTerminosProhibidos` hace que el catálogo lea
+ * `lenguaje/terminos-prohibidos` (RN-23) solo si el manifiesto declara un archivo que lo necesita. Un catálogo sin la declaración no los tiene (los fixtures anteriores siguen válidos).
  */
 export const ARCHIVOS_POR_TIPO_DECLARADOS_POR_LISTA = {
   plantillas: {
     esquema: 'plantillas',
     clave: 'plantillasDePregunta',
+    usaTerminosProhibidos: true,
     reglas: (archivo, terminosProhibidos) => violacionesDePlantillas(archivo, terminosProhibidos),
+  },
+  sinonimos: {
+    esquema: 'sinonimos',
+    clave: 'sinonimos',
+    reglas: (archivo) => violacionesDeSinonimos(archivo),
   },
 };
 

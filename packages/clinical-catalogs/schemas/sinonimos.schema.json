@@ -34,7 +34,8 @@
               "additionalProperties": false,
               "required": [
                 "texto",
-                "idioma"
+                "idioma",
+                "relacion"
               ],
               "properties": {
                 "texto": {
@@ -46,9 +47,19 @@
                     "es",
                     "en"
                   ]
+                },
+                "relacion": {
+                  "enum": [
+                    "equivalente",
+                    "mas_amplio",
+                    "miembro_de_clase"
+                  ]
                 }
               }
             }
+          },
+          "revision_provisional": {
+            "$ref": "comun.schema.json#/$defs/revisionProvisional"
           }
         }
       }

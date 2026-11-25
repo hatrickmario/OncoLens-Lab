@@ -26,6 +26,7 @@ describe('tocaDisparador', () => {
     ['RELEVANCE_THRESHOLD', '+RELEVANCE_THRESHOLD=0.35'],
     ['LLM_MODEL', '-LLM_MODEL=gemma4:26b'],
     ['QUERY_CONTEXT_EXPANSION_ENABLED', '+QUERY_CONTEXT_EXPANSION_ENABLED=true'],
+    ['QUERY_REWRITE_ENABLED', '+QUERY_REWRITE_ENABLED=true'],
     ['RERANKER_CHUNK_WINDOWS', '+RERANKER_CHUNK_WINDOWS=maximo'],
     ['RERANKER_WINDOW_OVERLAP', '+RERANKER_WINDOW_OVERLAP=64'],
   ])('dispara cuando el diff de .env.example cambia %s [US-074 AC-3]', (_clave, linea) => {

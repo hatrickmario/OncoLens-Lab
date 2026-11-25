@@ -33,6 +33,12 @@
       "uniqueItems": true,
       "items": { "type": "string", "pattern": "^[a-z]+$" }
     },
+    "sinonimos": {
+      "description": "Tipos de cáncer cuyo `<tipo>/sinonimos.json` valida `catalog:validate`: esquema con `relacion` y reglas propias (L1D-335, US-277).",
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[a-z]+$" }
+    },
     "poblacionReglas": {
       "type": "object",
       "propertyNames": { "pattern": "^[a-z]+$" },

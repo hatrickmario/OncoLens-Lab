@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "items": [
+    {
+      "terminoCanonico": "terapia endocrina",
+      "sinonimos": [
+        { "texto": "hormonoterapia", "idioma": "es", "relacion": "equivalente" },
+        { "texto": "endocrine therapy", "idioma": "en", "relacion": "equivalente" }
+      ]
+    }
+  ]
+}

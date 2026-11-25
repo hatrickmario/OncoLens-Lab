@@ -1,38 +1,515 @@
 {
-  "version": "1.1.0",
+  "version": "1.10.0",
   "items": [
     {
       "terminoCanonico": "PSA",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
       "sinonimos": [
         {
           "texto": "antígeno prostático específico",
-          "idioma": "es"
+          "idioma": "es",
+          "relacion": "equivalente"
         },
         {
           "texto": "APE",
-          "idioma": "es"
+          "idioma": "es",
+          "relacion": "equivalente"
         },
         {
           "texto": "prostate specific antigen",
-          "idioma": "en"
+          "idioma": "en",
+          "relacion": "equivalente"
         }
       ]
     },
     {
       "terminoCanonico": "leuprorelina",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
       "sinonimos": [
         {
+          "texto": "leuprolida",
+          "idioma": "es",
+          "relacion": "equivalente"
+        },
+        {
           "texto": "leuprorelin",
-          "idioma": "en"
+          "idioma": "en",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "leuprolide",
+          "idioma": "en",
+          "relacion": "equivalente"
         }
       ]
     },
     {
       "terminoCanonico": "bicalutamida",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
       "sinonimos": [
         {
           "texto": "bicalutamide",
-          "idioma": "en"
+          "idioma": "en",
+          "relacion": "equivalente"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "prostatectomía radical",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
+      "sinonimos": [
+        {
+          "texto": "cirugía radical de próstata",
+          "idioma": "es",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "extirpación radical de la próstata",
+          "idioma": "es",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "prostatectomía radical robótica",
+          "idioma": "es",
+          "relacion": "miembro_de_clase"
+        },
+        {
+          "texto": "prostatectomía radical laparoscópica",
+          "idioma": "es",
+          "relacion": "miembro_de_clase"
+        },
+        {
+          "texto": "radical prostatectomy",
+          "idioma": "en",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "robot-assisted radical prostatectomy",
+          "idioma": "en",
+          "relacion": "miembro_de_clase"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "radioterapia externa",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
+      "sinonimos": [
+        {
+          "texto": "radioterapia de haz externo",
+          "idioma": "es",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "RT externa",
+          "idioma": "es",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "radioterapia de intensidad modulada",
+          "idioma": "es",
+          "relacion": "miembro_de_clase"
+        },
+        {
+          "texto": "external beam radiotherapy",
+          "idioma": "en",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "external beam radiation therapy",
+          "idioma": "en",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "EBRT",
+          "idioma": "en",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "IMRT",
+          "idioma": "en",
+          "relacion": "miembro_de_clase"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "braquiterapia",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
+      "sinonimos": [
+        {
+          "texto": "radioterapia intersticial",
+          "idioma": "es",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "implante de semillas",
+          "idioma": "es",
+          "relacion": "miembro_de_clase"
+        },
+        {
+          "texto": "brachytherapy",
+          "idioma": "en",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "seed implant",
+          "idioma": "en",
+          "relacion": "miembro_de_clase"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "vigilancia activa",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
+      "sinonimos": [
+        {
+          "texto": "seguimiento activo",
+          "idioma": "es",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "active surveillance",
+          "idioma": "en",
+          "relacion": "equivalente"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "espera vigilante",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
+      "sinonimos": [
+        {
+          "texto": "observación",
+          "idioma": "es",
+          "relacion": "mas_amplio"
+        },
+        {
+          "texto": "watchful waiting",
+          "idioma": "en",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "observation",
+          "idioma": "en",
+          "relacion": "mas_amplio"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "terapia de privación androgénica",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
+      "sinonimos": [
+        {
+          "texto": "TDA",
+          "idioma": "es",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "deprivación androgénica",
+          "idioma": "es",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "bloqueo androgénico",
+          "idioma": "es",
+          "relacion": "miembro_de_clase"
+        },
+        {
+          "texto": "castración médica",
+          "idioma": "es",
+          "relacion": "miembro_de_clase"
+        },
+        {
+          "texto": "análogos de LHRH",
+          "idioma": "es",
+          "relacion": "miembro_de_clase"
+        },
+        {
+          "texto": "androgen deprivation therapy",
+          "idioma": "en",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "ADT",
+          "idioma": "en",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "medical castration",
+          "idioma": "en",
+          "relacion": "miembro_de_clase"
+        },
+        {
+          "texto": "LHRH agonist",
+          "idioma": "en",
+          "relacion": "miembro_de_clase"
+        },
+        {
+          "texto": "GnRH agonist",
+          "idioma": "en",
+          "relacion": "miembro_de_clase"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "orquiectomía bilateral",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
+      "sinonimos": [
+        {
+          "texto": "castración quirúrgica",
+          "idioma": "es",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "bilateral orchiectomy",
+          "idioma": "en",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "surgical castration",
+          "idioma": "en",
+          "relacion": "equivalente"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "resistente a la castración",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
+      "sinonimos": [
+        {
+          "texto": "CPRC",
+          "idioma": "es",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "hormonorrefractario",
+          "idioma": "es",
+          "relacion": "mas_amplio"
+        },
+        {
+          "texto": "castration-resistant",
+          "idioma": "en",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "CRPC",
+          "idioma": "en",
+          "relacion": "equivalente"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "sensible a la castración",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
+      "sinonimos": [
+        {
+          "texto": "hormonosensible",
+          "idioma": "es",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "CPHS",
+          "idioma": "es",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "castration-sensitive",
+          "idioma": "en",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "hormone-sensitive",
+          "idioma": "en",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "CSPC",
+          "idioma": "en",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "HSPC",
+          "idioma": "en",
+          "relacion": "equivalente"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "recaída bioquímica",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
+      "sinonimos": [
+        {
+          "texto": "recurrencia bioquímica",
+          "idioma": "es",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "biochemical recurrence",
+          "idioma": "en",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "biochemical relapse",
+          "idioma": "en",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "PSA recurrence",
+          "idioma": "en",
+          "relacion": "equivalente"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "radioterapia de rescate",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
+      "sinonimos": [
+        {
+          "texto": "salvage radiotherapy",
+          "idioma": "en",
+          "relacion": "equivalente"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "linfadenectomía pélvica",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
+      "sinonimos": [
+        {
+          "texto": "disección ganglionar pélvica",
+          "idioma": "es",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "pelvic lymph node dissection",
+          "idioma": "en",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "PLND",
+          "idioma": "en",
+          "relacion": "equivalente"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "incontinencia urinaria",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
+      "sinonimos": [
+        {
+          "texto": "pérdida de orina",
+          "idioma": "es",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "urinary incontinence",
+          "idioma": "en",
+          "relacion": "equivalente"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "disfunción eréctil",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
+      "sinonimos": [
+        {
+          "texto": "impotencia",
+          "idioma": "es",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "erectile dysfunction",
+          "idioma": "en",
+          "relacion": "equivalente"
+        }
+      ]
+    },
+    {
+      "terminoCanonico": "inhibidores de la vía del receptor androgénico",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      },
+      "sinonimos": [
+        {
+          "texto": "abiraterona",
+          "idioma": "es",
+          "relacion": "miembro_de_clase"
+        },
+        {
+          "texto": "enzalutamida",
+          "idioma": "es",
+          "relacion": "miembro_de_clase"
+        },
+        {
+          "texto": "apalutamida",
+          "idioma": "es",
+          "relacion": "miembro_de_clase"
+        },
+        {
+          "texto": "darolutamida",
+          "idioma": "es",
+          "relacion": "miembro_de_clase"
+        },
+        {
+          "texto": "androgen receptor pathway inhibitor",
+          "idioma": "en",
+          "relacion": "equivalente"
+        },
+        {
+          "texto": "ARPI",
+          "idioma": "en",
+          "relacion": "equivalente"
         }
       ]
     }

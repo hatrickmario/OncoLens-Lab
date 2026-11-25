@@ -4,3 +4,4 @@
 - [Trampas de ejemplos y módulos nuevos](reference_trampas_ejemplos_y_modulos_nuevos.md) — /responses/ en index.json, pii-scan en uuid, include/exclude de vitest, ruff
 - [Seed ampliado: trampas](reference_seed_ampliado_trampas.md) — letras ya tomadas, ordinales de 2 dígitos, oráculo ATC por fármaco, E2E solo mama
 - [Validador del catálogo y entorno](reference_validador_catalogo_y_entorno.md) — dónde vive catalog:validate; trampas de Ajv strict, hook y venv
+- [Trampas de sinonimos.json con relacion](reference_sinonimos_relacion_trampas.md) — prettier sobre schemas, Ajv sin comun, hook vs la palabra eval, push hatrickmario

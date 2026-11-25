@@ -78,7 +78,7 @@ from app.evaluation.reporte import escribir_reporte_cerrado
 from app.evaluation.rotulo import rotular_validada
 from app.evaluation.rutas import raiz_repo
 from app.infrastructure.catalogo_clinico.manifiesto import cargar_catalogo_del_manifiesto
-from app.infrastructure.catalogo_clinico.sinonimos import cargar_sinonimos
+from app.infrastructure.catalogo_clinico.sinonimos import cargar_formas_por_termino
 from app.infrastructure.catalogo_clinico.terminos_del_caso import (
     cargar_catalogo_de_terminos,
     cargar_marcos_de_pregunta,
@@ -164,10 +164,8 @@ def _reporte_base_de_la_corrida(
 def formas_del_termino(catalogos: Path, tipos: Sequence[str], termino: str) -> tuple[str, ...]:
     """El ÚNICO punto que da las formas de un término: su texto canónico y TODOS los textos de su ``sinonimos[]``, sea cual sea
     su relación con el canónico (design D4). Vacío si ``termino`` no es un ``terminoCanonico`` del catálogo."""
-    canonico = normalizar_texto(termino)
-    return tuple(
-        texto for texto, de in cargar_sinonimos(catalogos, tipos).items() if de == canonico
-    )
+    formas = cargar_formas_por_termino(catalogos, tipos).get(normalizar_texto(termino), frozenset())
+    return tuple(sorted(formas))
 
 
 def formas_de_las_preguntas_de_sinonimos(

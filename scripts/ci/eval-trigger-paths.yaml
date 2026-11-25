@@ -49,6 +49,7 @@ claves:
     - RERANK_TOP_N
     - RETRIEVAL_TOP_K
     - QUERY_CONTEXT_EXPANSION_ENABLED
+    - QUERY_REWRITE_ENABLED
     # Ventanas del reranker sobre un chunk largo (US-278, L1D-336): cambian el puntaje y con él el umbral de facto.
     - RERANKER_CHUNK_WINDOWS
     - RERANKER_WINDOW_OVERLAP

@@ -267,3 +267,85 @@ su reporte versionado en `reports/eval/` producido por `run-ai-eval` (regla del 
 - Q-5 de la revisión clínica (revisión de la lista por expertos) queda fuera del sprint; no cambia specs ni tareas.
 - Si tras el reporte el usuario activa `QUERY_REWRITE_ENABLED` o sube `RERANKER_MAX_PAIRS`, el cambio de valores por
   defecto se aplica por la sección `## humano` de `tasks.md`.
+
+## Decisiones de la implementación (catálogo y clinical-platform)
+
+Casos que el diseño no cubría, con la alternativa elegida y por qué se descartaron las otras.
+
+- **D5. Dónde vive el literal `equivalente` en el validador.** D2 pedía que las reglas lo leyeran del esquema. Opciones:
+  (a) leerlo de `sinonimos.schema.json` por la ruta `properties.items.items.properties.sinonimos.items.properties.relacion`
+  (frágil: un cambio de forma del esquema lo rompe sin aviso); (b) una palabra clave propia en el esquema (Ajv `strict`
+  la rechaza); (c) **constante `RELACION_EQUIVALENTE` en `validator/sinonimos.mjs`**, único dueño en el runtime del
+  validador, más un test que fija que el enum del esquema la contiene. Elegida (c): el esquema sigue siendo el dueño del
+  conjunto cerrado y la regla nombra solo la relación que equipara.
+- **D6. `sinonimo_igual_al_canonico` compara la grafía, no la forma normalizada.** La lista del §2.2 trae `trastuzumab
+  deruxtecan` (en) bajo `trastuzumab deruxtecán`: normalizado (sin tildes) es idéntico al canónico y la regla lo rechazaba.
+  Opciones: (a) quitarlo de la lista (la normalización de texto ya lo resuelve, S-6; pierde la entrada en inglés del
+  §2.2); (b) **comparar solo mayúsculas y espacios**, de modo que la grafía de otro idioma no sea una repetición;
+  (c) excluir el caso por una lista fija (rompe P1). Elegida (b). La ambigüedad entre términos (`sinonimo_equivalente_ambiguo`)
+  sí compara sin tildes, para no admitir dos términos que se normalizan igual.
+- **D7. Marca provisional en todas las entradas.** Los 20 términos de próstata y los 24 de mama llevan
+  `revision_provisional` (rol `ia`, 2026-11-21), también los que no cambiaron de sinónimos (`PSA`, `bicalutamida`, `Ki-67`…):
+  a todos se les asignó una `relacion` en esta revisión. Alternativa descartada: marcar solo el diff (obliga a un test
+  contra la versión anterior en git y deja entradas con relación asignada sin marca).
+- **D8. Registro por lista con `usaTerminosProhibidos`.** La lectura de `terminos-prohibidos` en `cargar.mjs` se acota con
+  un indicador de la entrada del registro (`plantillas`), no con una lista de claves en `cargar.mjs`; las reglas de
+  `sinonimos` ignoran ese segundo argumento.
+- **D9. `l1d-126` parte A ya derivó los esquemas del arranque.** `validar-catalogo.ts` usa `leerEsquemas`, así que la tarea 3.4
+  se reduce a la entrada `sinonimos` de `archivos.mjs` (tarea 1.3): no hay mapa `ESQUEMAS` que editar y los tests 3.3 del
+  arranque con equivalente ambiguo ya salían del validador compartido.
+- **D10. Fixtures.** `test-1.0.0` trae `items: []` en `sinonimos.json` (nada que migrar); el único con entradas es
+  `test-normalizacion-1.0.0`. Los casos del validador usan el fixture nuevo `test-sinonimos-1.0.0`, que declara `sinonimos`
+  en su manifiesto y no trae `lenguaje/` (así se prueba que no exige `terminos-prohibidos`).
+- **Duda de la lista del §2.2 sin resolver (a Q-5):** `hormonosensible` / `hormone-sensitive` quedan `equivalente` de
+  `sensible a la castración` (uso intercambiable en la práctica, discutible), además de las que ya anotaba D1.
+
+## Decisiones de la implementación (ai-services)
+
+- **D11. Un solo parser del catálogo en Python.** `cargar_sinonimos` y `cargar_formas_por_termino` leen el archivo con el mismo
+  `_terminos_de` (canónico y `(texto, RelacionDeSinonimo)` normalizados); la regla S-1 vive solo en
+  `app/domain/sinonimos.py::es_equivalente`. Alternativas: (a) que cada cargador abra el JSON y compare el literal
+  `equivalente` (duplica la regla, descartada por P1); (b) un cargador que devuelva ya los dos mapas (obliga a todos los
+  consumidores a conocer ambos; descartada). `RelacionDeSinonimo(valor)` lanza `ValueError` ante una relación ausente o
+  desconocida y el cargador lo traduce a `CatalogoNoDisponible` sin ruta ni contenido, como el resto de errores de forma.
+- **D12. `formas_del_termino` (familia `contextual`) devuelve las formas ordenadas.** El cargador devuelve `frozenset` (sin
+  orden), así que la función las entrega `sorted`, determinista. El orden anterior era el de inserción del catálogo; ninguna
+  aserción ni reporte lo usa como dato (los reportes comparan conjuntos). Alternativa descartada: devolver tuplas en el orden
+  del archivo (el contrato «canónico → todos sus textos» no necesita orden y complica la derivación de pertinencia).
+- **D13. La meta de paráfrasis no entra en los informes que no la miden.** El esquema del baseline es cerrado y
+  `marcar_frente_a_meta` marcaba una fila por meta, así que `paraphrase_evidence_min_ratio` rompía el informe (`$.metricas[7]
+  fuera del conjunto`). Ahora omite las metas cuya clave el informe no declara (`None` sigue siendo «sin medir»). Alternativas:
+  (a) ampliar el esquema del baseline con la métrica (cambia un contrato de informe por una métrica que otra suite mide);
+  (b) meta en un archivo aparte (contradice `[S7 resp. 6]`/RN-22: una sola configuración de metas). Elegida la regla de
+  marcado: no cambia ningún informe existente.
+- **D14. Los casos AC-2/AC-3/AC-4 sobre el catálogo real nacen en verde.** El mecanismo de US-238 ya filtraba contra el
+  catálogo y el catálogo 1.10.0 (misma rama) ya trae los textos; solo es rojo el caso que distingue la relación (tarea 2.2).
+  Se registran así, sin debilitar aserciones (la propia tarea 2.3 lo prevé para RN-02).
+- **D13 (revisado en el Gate 2).** La omisión de metas sin clave salió de `marcar_frente_a_meta` (vuelve a marcar una por
+  meta; una meta sin clave en las métricas es «sin medir») y pasó al informe que tiene el esquema cerrado:
+  `DatosDelInforme.metas_medidas` (Move Method), con las claves de `_METRICAS_DE_META` y el p95. `corrida_opciones` ya
+  filtraba sus metas del mismo modo.
+- **D15. La pertinencia por tipo no incluye los textos `mas_amplio`.** `cargar_terminos_por_tipo` (contexto del seguimiento y
+  enrutado del chat) devuelve el código del tipo, los canónicos, los `equivalente` y los `miembro_de_clase`, no los
+  `mas_amplio`: por definición no son exclusivos del término («observación» en una pregunta de mama la clasificaría
+  `fuera_de_contexto`). Se implementa con el parámetro `relaciones` de `cargar_formas_por_termino` (por defecto todas;
+  la regla de la causa de contextual, `formas_del_termino`, sigue usando todas). Alternativas descartadas: mantener
+  «todos» (falsos `fuera_de_contexto` en mama) y excluir también `miembro_de_clase` (las clases sí son específicas de un tipo).
+  Si el producto prefiere otra semántica, es la deuda D7-24.
+- **D16. Normalización del validador.** `validator/normalizar.mjs` (la de `plantillas.mjs`, igual a `normalizar_texto` de
+  Python) la usan `plantillas.mjs` y `sinonimos.mjs`; «HER-2» y «HER 2» son el mismo texto, «HER2» y «HER-2» no (Python tampoco
+  los une). `marcos.mjs` conserva la suya (solo `a-z0-9`, otra regla). Regla nueva `sinonimo_con_relaciones_contradictorias`
+  (el mismo texto como `equivalente` y con otra relación dentro de un término).
+- **Paridad del enum.** pytest compara `RelacionDeSinonimo` con el enum del esquema y Vitest compara `RELACIONES_DE_SINONIMO`
+  (ahora exportado). El patrón de fecha de `revision_provisional` lo comprueba el esquema al arrancar y en `catalog:validate`;
+  no se duplicó en zod.
+- **Deuda:** D7-23 (paridad automática esquema JSON ↔ zod ↔ Pydantic del catálogo, más allá de `relacion`) y D7-24
+  (decisión de producto sobre la semántica de pertinencia si no se acepta D15).
+- **Entrega 2 (4.1b y 4.2):** necesitan `Brazo` de `l1d-336` y los pares de `l1d-334`, aún sin mergear; no se apilan.
+- **D17. Versión de `plantillas.json` y el AC-8 de US-267.** Al subir el manifiesto a 1.10.0, `plantillas.json` conserva su
+  versión propia 1.9.0 (regla de versión propia de 126 A: ≤ manifiesto) y el test de web exigía `== manifiesto`. Opciones:
+  (a) subir `plantillas.json` a 1.10.0 sin cambio de contenido (versión falsa: el guardián la tomaría por contenido nuevo);
+  (b) **quitar la igualdad y conservar «ningún archivo importado supera al manifiesto»**, que es la intención del AC-8
+  (el build no importa contenido más nuevo que el catálogo declarado); la igualdad solo valía mientras las plantillas eran
+  el contenido recién añadido (1.8.0). Elegida (b), con `Test-Removal` por la aserción retirada.
+

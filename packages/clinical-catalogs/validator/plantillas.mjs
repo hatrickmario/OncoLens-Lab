@@ -12,19 +12,13 @@
  */
 
 export const RANURAS_PERMITIDAS = ['tipo', 'estadio', 'biomarcador', 'grado'];
+import { normalizar } from './normalizar.mjs';
+
 export const MINIMO_DE_PLANTILLAS_DE_TIPO = 3;
 
 const esObjeto = (valor) => valor !== null && typeof valor === 'object' && !Array.isArray(valor);
 const lista = (valor) => (Array.isArray(valor) ? valor : []);
 const textos = (valor) => lista(valor).filter((v) => typeof v === 'string');
-
-const normalizar = (texto) =>
-  texto
-    .normalize('NFKD')
-    .replace(/\p{Mn}/gu, '')
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}]+/gu, ' ')
-    .trim();
 
 /** Ranuras `{x}` que usa un texto, en orden y sin repetir. */
 const ranurasDelTexto = (texto) => [

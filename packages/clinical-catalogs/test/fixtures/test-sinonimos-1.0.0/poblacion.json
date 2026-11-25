@@ -1,0 +1,9 @@
+{
+  "version": "test-1.0.0",
+  "keys": [
+    {
+      "key": "estado_menopausico",
+      "cancerTypes": ["mama"]
+    }
+  ]
+}

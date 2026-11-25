@@ -4,23 +4,23 @@
     {
       "terminoCanonico": "HER2",
       "sinonimos": [
-        { "texto": "c-erbB-2", "idioma": "en" },
-        { "texto": "ERBB2", "idioma": "en" },
-        { "texto": "HER-2/neu", "idioma": "en" }
+        { "texto": "c-erbB-2", "idioma": "en", "relacion": "equivalente" },
+        { "texto": "ERBB2", "idioma": "en", "relacion": "equivalente" },
+        { "texto": "HER-2/neu", "idioma": "en", "relacion": "equivalente" }
       ]
     },
     {
       "terminoCanonico": "RE",
       "sinonimos": [
-        { "texto": "ER", "idioma": "en" },
-        { "texto": "receptor de estrógeno", "idioma": "es" }
+        { "texto": "ER", "idioma": "en", "relacion": "equivalente" },
+        { "texto": "receptor de estrógeno", "idioma": "es", "relacion": "equivalente" }
       ]
     },
     {
       "terminoCanonico": "Ki-67",
       "sinonimos": [
-        { "texto": "MIB-1", "idioma": "en" },
-        { "texto": "ki 67", "idioma": "es" }
+        { "texto": "MIB-1", "idioma": "en", "relacion": "equivalente" },
+        { "texto": "ki 67", "idioma": "es", "relacion": "equivalente" }
       ]
     }
   ]
