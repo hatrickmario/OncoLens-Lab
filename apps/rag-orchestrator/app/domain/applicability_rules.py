@@ -359,9 +359,9 @@ def _por_igualdad(
     """El valor del estudio coincide si es alguno de los códigos del paciente: la categoría de ``equivalences`` que su valor
     nombra más sus ascendientes de ``subsetOf``. Sin categoría no se adivina: igual al literal coincide, igual a una
     clave de la tabla es ``desconocido``, otro valor no coincide."""
-    categorias = codigos_del_paciente(valor_paciente, criterio)
-    if categorias:
-        return ("coincide" if valor_estudio in categorias else "no_coincide"), None
+    codigos = codigos_del_paciente(valor_paciente, criterio)
+    if codigos:
+        return ("coincide" if valor_estudio in codigos else "no_coincide"), None
     if valor_estudio == valor_paciente:
         return "coincide", None
     if valor_estudio in criterio.regla.equivalencias:
