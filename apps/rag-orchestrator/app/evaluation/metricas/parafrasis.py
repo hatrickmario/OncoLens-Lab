@@ -25,4 +25,23 @@ def proporcion_de_parafrasis_recuperadas(
     con_evidencia_en_la_referencia: Mapping[str, bool],
     con_evidencia_en_el_brazo: Mapping[str, bool],
 ) -> ProporcionDeParafrasis:
-    raise NotImplementedError("no implementado")
+    aplicables = [
+        ids for ids in pares.values() if _pierde_una_redaccion(ids, con_evidencia_en_la_referencia)
+    ]
+    recuperadas = sum(
+        all(con_evidencia_en_el_brazo.get(redaccion, False) for redaccion in ids)
+        for ids in aplicables
+    )
+    return ProporcionDeParafrasis(
+        aplicables=len(aplicables),
+        recuperadas=recuperadas,
+        proporcion=recuperadas / len(aplicables) if aplicables else None,
+        sin_pares_aplicables=not aplicables,
+    )
+
+
+def _pierde_una_redaccion(redacciones: tuple[str, ...], con_evidencia: Mapping[str, bool]) -> bool:
+    """Alguna redacción obtiene la evidencia y otra no: la pérdida es de la redacción, no del tema (que ninguna encuentre
+    es otro problema, y que todas la encuentren no deja nada que recuperar)."""
+    con = [con_evidencia.get(redaccion, False) for redaccion in redacciones]
+    return any(con) and not all(con)

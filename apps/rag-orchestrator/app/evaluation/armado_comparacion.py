@@ -9,6 +9,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
+from app.evaluation.adopcion_del_brazo import decidir_adopcion
 from app.evaluation.brazos_recuperacion import (
     REFERENCIA,
     MetricasDeBrazo,
@@ -20,6 +21,7 @@ from app.evaluation.config_suite import Comparacion, ConfigSuite
 from app.evaluation.corrida_brazos import ResultadoDeBrazo
 from app.evaluation.guardas import SuiteAbortada
 from app.evaluation.metricas.familias import familias_de_recuperacion
+from app.evaluation.metricas.parafrasis import proporcion_de_parafrasis_recuperadas
 from app.evaluation.viabilidad_del_brazo import viabilidad_del_brazo
 
 
@@ -166,6 +168,56 @@ def _extras_del_reranker(
     }
 
 
+def _con_evidencia(brazo: ResultadoDeBrazo) -> dict[str, bool]:
+    """Por pregunta: la evidencia esperada llegó al top 10 Y el umbral no la dejó sin evidencia (RN-02). Lo que se pierde antes de
+    la generación (recuperación, corte de pares o umbral) es lo que la reescritura y los pares pueden recuperar (US-277 AC-2)."""
+    return {
+        r.recuperacion.id: (r.recuperacion.recall or 0.0) > 0.0 and not r.sin_evidencia
+        for r in brazo.resultados
+    }
+
+
+def _extras_de_pares_y_reescritura(
+    brazo: ResultadoDeBrazo, referencia: ResultadoDeBrazo, pares: Mapping[str, tuple[str, ...]]
+) -> dict[str, Any]:
+    """Lo que dice el informe de un brazo de US-277: la reescritura que realmente corrió y la proporción de pares perdidos en la
+    referencia que el brazo recupera (``proporcion`` ``None`` = sin pares aplicables, no ``0.0``)."""
+    proporcion = proporcion_de_parafrasis_recuperadas(
+        pares, _con_evidencia(referencia), _con_evidencia(brazo)
+    )
+    return {
+        "reescritura": {
+            "habilitada": brazo.servicio.observaciones.reescritura_esperada is True,
+            "invocaciones": brazo.servicio.observaciones.reescrituras,
+        },
+        "parafrasis_atribuidas": {
+            "aplicables": proporcion.aplicables,
+            "recuperadas": proporcion.recuperadas,
+            "proporcion": proporcion.proporcion,
+            "sin_pares_aplicables": proporcion.sin_pares_aplicables,
+        },
+    }
+
+
+def _tasa_de_falsos_sin_evidencia(armado: dict[str, Any]) -> float | None:
+    falsos = armado["falsos_sin_evidencia"]
+    return falsos["n"] / falsos["total"] if falsos["total"] else None
+
+
+def _adopcion_del_brazo(
+    armado: dict[str, Any], referencia: dict[str, Any], tolerancia: float
+) -> dict[str, Any]:
+    """US-277 AC-5: ``adoptable`` frente a la referencia, con los motivos de no serlo."""
+    del_brazo, de_la_referencia = (_tasa_de_falsos_sin_evidencia(a) for a in (armado, referencia))
+    decision = decidir_adopcion(
+        retroceso=armado["retroceso"],
+        aumento_de_falsos_sin_evidencia=_restar_opcional(del_brazo, de_la_referencia),
+        tolerancia=tolerancia,
+        viabilidad=armado["viabilidad"]["estado"],
+    )
+    return {"adoptable": decision.adoptable, "motivos": list(decision.motivos)}
+
+
 def _diferencias_extra(
     armado: dict[str, Any], referencia: dict[str, Any]
 ) -> dict[str, float | None]:
@@ -227,21 +279,30 @@ def armar_comparacion(
     ]
     referencia = _metricas_de(recuperaciones[0])
     armados: list[dict[str, Any]] = []
+    con_viabilidad = comparacion.viabilidad is not None
+    con_pares_o_reescritura = con_viabilidad and any(
+        b.brazo.declara_pares_o_reescritura for b in brazos
+    )
     for b, recuperacion in zip(brazos, recuperaciones, strict=True):
         armado = _datos_del_brazo(b, recuperacion)
-        con_viabilidad = comparacion.viabilidad is not None
         if con_viabilidad:
             armado.update(
                 _extras_del_reranker(
                     b, comparacion, pares_de_parafrasis or {}, memoria_del_stack or {}
                 )
             )
+        if con_pares_o_reescritura:
+            armado.update(_extras_de_pares_y_reescritura(b, brazos[0], pares_de_parafrasis or {}))
         if b.brazo.nombre != REFERENCIA:
             diferencia = diferencia_frente_referencia(_metricas_de(recuperacion), referencia)
             armado["diferencia_frente_a_a0"] = _diferencia_a_dict(diferencia)
             if con_viabilidad:
                 armado["diferencia_frente_a_a0"].update(_diferencias_extra(armado, armados[0]))
             armado["retroceso"] = marcar_retroceso(diferencia, comparacion.tolerancia_retroceso)
+            if con_pares_o_reescritura:
+                armado["adopcion"] = _adopcion_del_brazo(
+                    armado, armados[0], comparacion.tolerancia_retroceso
+                )
         armados.append(armado)
     hay_retroceso = any(a["retroceso"] for a in armados)
     seccion = {

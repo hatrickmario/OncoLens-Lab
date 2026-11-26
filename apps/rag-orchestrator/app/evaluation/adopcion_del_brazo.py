@@ -34,4 +34,20 @@ def decidir_adopcion(
     tolerancia: float,
     viabilidad: Estado,
 ) -> Adopcion:
-    raise NotImplementedError("no implementado")
+    # round: 0.55 - 0.50 es 0.05000000000000004 en coma flotante y «igual a la tolerancia» no es empeorar
+    empeora_los_falsos = aumento_de_falsos_sin_evidencia is not None and round(
+        aumento_de_falsos_sin_evidencia, 12
+    ) > round(tolerancia, 12)
+    motivos = tuple(
+        motivo
+        for motivo, aplica in (
+            (MOTIVO_RETROCESO, retroceso),
+            (MOTIVO_FALSOS_SIN_EVIDENCIA, empeora_los_falsos),
+            (MOTIVO_NO_VIABLE, viabilidad == "no_viable"),
+        )
+        if aplica
+    )
+    if motivos:
+        return Adopcion(False, motivos)
+    sin_medir = aumento_de_falsos_sin_evidencia is None or viabilidad == "no_medido"
+    return Adopcion(None if sin_medir else True, ())
