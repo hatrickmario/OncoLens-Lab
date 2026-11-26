@@ -214,3 +214,10 @@ el veredicto. `ParMedido.como_elegibilidad` pasó a `valores_como_elegibilidad`.
 (`exigir_adapters_locales` + `exigir_proveedor_local`) en `guardas.py` y su uso en las seis familias. D7-18: una constante o
 mapa único de `revision_provisional` en el esquema de reportes (P3-4) y el resto de los P3.
 
+
+### Notas del lote R3 (entrega 2, S7.9, S7.10 y S7.10b)
+
+- **Etapa del dataset.** El campo de S7-D5 se llama `etapa_del_dataset` y no `ventana`: `ventana` ya es la ventana del reranker, de chunking y de turnos. `ETAPA_BASE` y `ETAPAS_DEL_DATASET` viven en `dataset_poblacion.py`; el reporte las separa en `por_etapa_del_dataset`. El valor `tras_catalogo_s7` lleva el número de sprint (nombre de proceso, no de dominio) y se conserva porque este design y los reportes ya lo usan; neutralizarlo es una decisión pendiente.
+- **Fixture de estados.** `tests/fixtures/catalogo/test-apl-1.11.0/` es una copia de `aplicabilidad.json` y `poblacion-reglas.json` de mama y próstata del catálogo real salvo `version`; un test compara la copia con el real y falla tras un bump hasta recopiar.
+- **Cifra corregida.** El cuerpo del commit `9176b5b9` dice «27 pares de próstata»; son **26** (14 + 12). La historia no se reescribe.
+- **Revisión provisional.** `MarcaDeRevisionProvisional` (antes `RevisionProvisional`) exige el patrón `^\d{4}-\d{2}-\d{2}$` de `comun.schema.json` antes de `fromisoformat`.
