@@ -1,0 +1,293 @@
+{
+  "configuracion": {
+    "claseDataset": "sintetico",
+    "dataset": {
+      "nombre": "poblacion-dorado",
+      "version": "s7-1"
+    },
+    "fixture": "S7-poblacion-dorado",
+    "hashConfig": "cd1e7874d8a554b7944ebf4bb43b7248d35a8933d4c474036b3fcf83a2748929",
+    "nombre": "poblacion-local",
+    "proveedor": "local",
+    "reloj": "real",
+    "revision": {
+      "completa": false
+    },
+    "revision_provisional": {
+      "fecha": "2026-11-21",
+      "rol": "ia",
+      "rotulo": "Revisión provisional de IA; sin validación humana"
+    },
+    "umbrales": {
+      "nliEntailmentThreshold": 0.7
+    }
+  },
+  "esquema": "oncolens.evaluate.v1",
+  "metricas": {
+    "bucle": {
+      "cortes": 0,
+      "minimo_de_pares": 20,
+      "out06": "cerrada",
+      "pares": 24,
+      "tasa": 0.0
+    },
+    "concordancia": {
+      "aciertos": 9,
+      "coincide_indebido": 0,
+      "marca": "en_meta",
+      "meta": 1.0,
+      "no_coincide_indebido": 0,
+      "por_estado": {
+        "coincide": {
+          "aciertos": 1,
+          "esperados": 1
+        },
+        "desconocido": {
+          "aciertos": 6,
+          "esperados": 6
+        },
+        "no_coincide": {
+          "aciertos": 1,
+          "esperados": 1
+        },
+        "parcial": {
+          "aciertos": 1,
+          "esperados": 1
+        }
+      },
+      "total": 9,
+      "valor": 1.0
+    },
+    "cortes_por_longitud": {
+      "casos": [],
+      "cortes": 0,
+      "tareas": 228
+    },
+    "distractores": {
+      "pares": 8,
+      "pares_con_indebidos": 0,
+      "valores_indebidos": 0
+    },
+    "estratos": [
+      {
+        "estrato": "ensayo/en",
+        "pares": 13
+      },
+      {
+        "estrato": "ensayo/es",
+        "pares": 12
+      },
+      {
+        "estrato": "guia/en",
+        "pares": 11
+      },
+      {
+        "estrato": "guia/es",
+        "pares": 13
+      },
+      {
+        "estrato": "revision/en",
+        "pares": 10
+      },
+      {
+        "estrato": "revision/es",
+        "pares": 11
+      }
+    ],
+    "pares_del_dorado": 70,
+    "por_criterio": [
+      {
+        "cobertura": 0.0,
+        "coincidentes": 0,
+        "criterio": "ecog",
+        "esperados": 16,
+        "marca_cobertura": "no_concluyente",
+        "marca_precision": "no_concluyente",
+        "meta_cobertura": 0.8,
+        "meta_precision": 0.9,
+        "obtenidos": 0,
+        "precision": null
+      },
+      {
+        "cobertura": 0.8333333333333334,
+        "coincidentes": 5,
+        "criterio": "estadio",
+        "esperados": 6,
+        "marca_cobertura": "no_concluyente",
+        "marca_precision": "no_concluyente",
+        "meta_cobertura": 0.8,
+        "meta_precision": 0.9,
+        "obtenidos": 6,
+        "precision": 0.8333333333333334
+      },
+      {
+        "cobertura": 0.0,
+        "coincidentes": 0,
+        "criterio": "estado_castracion",
+        "esperados": 8,
+        "marca_cobertura": "no_concluyente",
+        "marca_precision": "no_concluyente",
+        "meta_cobertura": 0.8,
+        "meta_precision": 0.9,
+        "obtenidos": 1,
+        "precision": 0.0
+      },
+      {
+        "cobertura": 0.0,
+        "coincidentes": 0,
+        "criterio": "estado_her2",
+        "esperados": 6,
+        "marca_cobertura": "no_concluyente",
+        "marca_precision": "no_concluyente",
+        "meta_cobertura": 0.8,
+        "meta_precision": 0.9,
+        "obtenidos": 0,
+        "precision": null
+      },
+      {
+        "cobertura": 0.0,
+        "coincidentes": 0,
+        "criterio": "estado_menopausico",
+        "esperados": 13,
+        "marca_cobertura": "no_concluyente",
+        "marca_precision": "no_concluyente",
+        "meta_cobertura": 0.8,
+        "meta_precision": 0.9,
+        "obtenidos": 1,
+        "precision": 0.0
+      },
+      {
+        "cobertura": 0.0,
+        "coincidentes": 0,
+        "criterio": "isup",
+        "esperados": 6,
+        "marca_cobertura": "no_concluyente",
+        "marca_precision": "no_concluyente",
+        "meta_cobertura": 0.8,
+        "meta_precision": 0.9,
+        "obtenidos": 0,
+        "precision": null
+      },
+      {
+        "cobertura": 0.0,
+        "coincidentes": 0,
+        "criterio": "linea_tratamiento",
+        "esperados": 12,
+        "marca_cobertura": "no_concluyente",
+        "marca_precision": "no_concluyente",
+        "meta_cobertura": 0.8,
+        "meta_precision": 0.9,
+        "obtenidos": 0,
+        "precision": null
+      },
+      {
+        "cobertura": 0.0,
+        "coincidentes": 0,
+        "criterio": "receptores_hormonales",
+        "esperados": 9,
+        "marca_cobertura": "no_concluyente",
+        "marca_precision": "no_concluyente",
+        "meta_cobertura": 0.8,
+        "meta_precision": 0.9,
+        "obtenidos": 0,
+        "precision": null
+      }
+    ],
+    "por_redaccion": [
+      {
+        "cobertura": 0.0,
+        "coincidentes": 0,
+        "esperados": 12,
+        "obtenidos": 0,
+        "precision": null,
+        "redaccion": "dificil"
+      },
+      {
+        "cobertura": 0.078125,
+        "coincidentes": 5,
+        "esperados": 64,
+        "obtenidos": 8,
+        "precision": 0.625,
+        "redaccion": "plantilla"
+      }
+    ],
+    "por_tipo_de_redaccion": [
+      {
+        "cobertura": 0.0,
+        "coincidentes": 0,
+        "esperados": 2,
+        "obtenidos": 0,
+        "precision": null,
+        "tipo_de_redaccion": "definicion_implicita"
+      },
+      {
+        "cobertura": 0.0,
+        "coincidentes": 0,
+        "esperados": 2,
+        "obtenidos": 0,
+        "precision": null,
+        "tipo_de_redaccion": "inclusion_total"
+      },
+      {
+        "cobertura": 0.0,
+        "coincidentes": 0,
+        "esperados": 2,
+        "obtenidos": 0,
+        "precision": null,
+        "tipo_de_redaccion": "negacion"
+      },
+      {
+        "cobertura": 0.0,
+        "coincidentes": 0,
+        "esperados": 2,
+        "obtenidos": 0,
+        "precision": null,
+        "tipo_de_redaccion": "rango"
+      },
+      {
+        "cobertura": 0.0,
+        "coincidentes": 0,
+        "esperados": 2,
+        "obtenidos": 0,
+        "precision": null,
+        "tipo_de_redaccion": "tabla"
+      },
+      {
+        "cobertura": 0.0,
+        "coincidentes": 0,
+        "esperados": 2,
+        "obtenidos": 0,
+        "precision": null,
+        "tipo_de_redaccion": "umbral"
+      }
+    ],
+    "rendija_c3": {
+      "casos": 4,
+      "desconocido": 4,
+      "otros": 0
+    },
+    "sin_evidencia": {
+      "actual": 1.0,
+      "baja": false,
+      "baseline": 1.0,
+      "violaciones_rn02": 0
+    },
+    "tasa_duplicados": {
+      "duplicados": 0,
+      "marca": "en_meta",
+      "meta": 0.0,
+      "obtenidos": 8,
+      "valor": 0.0
+    }
+  },
+  "suite": "poblacion",
+  "veredicto": {
+    "causas": [
+      "sin_revisor"
+    ],
+    "cobertura": "no_concluyente",
+    "invariantes_violadas": [],
+    "precision": "no_concluyente",
+    "resultado": "no_concluyente"
+  }
+}
