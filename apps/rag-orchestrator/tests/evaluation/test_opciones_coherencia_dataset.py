@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 
 from app.evaluation.config_opciones import cargar_config_opciones
 from app.evaluation.config_suite import cargar_config_suite
@@ -29,3 +30,28 @@ def test_dataset_orden_esperado_coincide_con_el_orden_que_da_la_corrida_falsa() 
     for analisis in medido.analisis:
         primera_fuente = tuple(o.documentos[0] for o in analisis.opciones)
         assert primera_fuente == dataset.caso_de(analisis.caso).orden_esperado, analisis.caso
+
+
+def test_dataset_de_prostata_no_pone_a_extension_en_no_coincide_con_el_catalogo_real() -> None:
+    """SC-1 (l1d-126 D10): el catálogo real hace excluyente a `extension` (M0/M1 por componente), pero ninguna fuente de
+    próstata del dataset declara la extensión (`estadio: no_disponible`) y los pacientes no traen M legible (T3a): sale
+    «Desconocido», no «No coincide», y el orden esperado de OP-07…OP-12 no depende de C-1. Si un caso nuevo declara la
+    extensión, el orden esperado debe salir del comparador con el catálogo mergeado (design S7-D4b)."""
+    catalogo = json.loads(
+        (RAIZ_APP.parents[1] / "packages/clinical-catalogs/prostata/aplicabilidad.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    extension = next(c for c in catalogo["items"] if c["key"] == "extension")
+    suite = cargar_config_suite(FALSA, {})
+    dataset = cargar_dataset_opciones(cargar_config_opciones(FALSA, suite).suite.dataset)
+
+    estadios_de_prostata = {
+        documento: fuente.population_criteria["estadio"]
+        for documento, fuente in dataset.poblaciones.items()
+        if documento.startswith("doc-p")
+    }
+
+    assert extension["isExclusionary"] is True
+    assert extension["rule"]["equivalenceMatch"] == "componente"
+    assert set(estadios_de_prostata.values()) == {"no_disponible"}, estadios_de_prostata
