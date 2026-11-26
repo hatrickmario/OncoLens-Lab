@@ -52,6 +52,7 @@ from app.application.corpus_ingestion.ports import (
     AlmacenDeReindexacionDeContexto,
     AlmacenDeReindexacionSparse,
     ConstructorDeContexto,
+    GeneradorDeContextoDeChunk,
     SparsePassageEncoder,
 )
 from app.application.corpus_ingestion.reindexar_contexto import (
@@ -291,13 +292,7 @@ def _ejecutar_ingesta(
     extractor = _extractor_de_poblacion(
         metadatos, ajustes
     )  # antes de abrir conexiones: falla cerrado por configuración
-    motor = crear_motor(
-        componer_url(
-            base.corpus_database_url,
-            base.pg_rag_corpus_password_file,
-            "PG_RAG_CORPUS_PASSWORD_FILE",
-        )
-    )
+    motor = _motor_del_catalogo(base)
     try:
         almacen = MilvusRepository(MilvusClient(uri=milvus.milvus_uri), milvus)
         almacen.ensure_collection()
@@ -514,13 +509,7 @@ def _brazo_de_chunks(
         codificadores = _modelos_de_la_ingesta(ajustes, embedder, sparse, tokenizador)
         catalogo = puertos.catalogo
         if catalogo is None:
-            motor = crear_motor(
-                componer_url(
-                    base.corpus_database_url,
-                    base.pg_rag_corpus_password_file,
-                    "PG_RAG_CORPUS_PASSWORD_FILE",
-                )
-            )
+            motor = _motor_del_catalogo(base)
             catalogo = CorpusDocumentRepository(motor)  # se usa solo por el puerto de lectura
         reporte = IngerirBrazoDeChunks(
             catalogo=catalogo,
@@ -577,22 +566,25 @@ class PuertosDeLaReindexacionDeContexto:
     llm: LlmClient | None = None
 
 
+def _generador_de_contexto(
+    ajustes: AjustesDeContextoLlm, llm: LlmClient | None
+) -> GeneradorDeContextoDeChunk | None:
+    """El generador sobre el LLM local, solo para la variante ``llm`` (RN-12, que ya se exigió antes de llegar aquí)."""
+    if ajustes.corpus_chunk_context is not VarianteDeContexto.LLM:
+        return None
+    if llm is None:
+        raise ConfiguracionDeLlmNoLocalError("LLM_BASE_URL")
+    return GeneradorLlmDeContexto(llm=llm, max_chars=ajustes.corpus_chunk_context_llm_max_chars)
+
+
 def _constructor_de_contexto(
     ajustes: AjustesDeContextoLlm, llm: LlmClient | None
 ) -> ConstructorDeContexto:
-    """El constructor de la variante configurada; solo ``llm`` usa el LLM local (RN-12, que ya se exigió antes de llegar aquí)."""
-    llm_requerido = ajustes.corpus_chunk_context is VarianteDeContexto.LLM
-    if llm_requerido and llm is None:
-        raise ConfiguracionDeLlmNoLocalError("LLM_BASE_URL")
-    generador = (
-        GeneradorLlmDeContexto(llm=llm, max_chars=ajustes.corpus_chunk_context_llm_max_chars)
-        if llm_requerido and llm is not None
-        else None
-    )
+    """El constructor de la variante configurada."""
     return constructor_de_contexto(
         ajustes.corpus_chunk_context,
         max_chars=ajustes.corpus_chunk_context_max_chars,
-        generador=generador,
+        generador=_generador_de_contexto(ajustes, llm),
         doc_max_chars=ajustes.corpus_chunk_context_llm_doc_max_chars,
         concurrencia=ajustes.corpus_chunk_context_llm_concurrency,
     )
