@@ -1,6 +1,6 @@
 """`POST /rag/query` con la reescritura sobre el catálogo ampliado de sinónimos (US-277 / L1D-335, `[S7 resp. 2]`).
 
-Catálogo real (1.10.0) o de prueba en ``tmp_path``; ``QueryRewriter``, Milvus y reranker fingidos en su puerto sobre FX-06a-a.
+Catálogo real (el del manifiesto montado) o de prueba en ``tmp_path``; ``QueryRewriter``, Milvus y reranker fingidos en su puerto sobre FX-06a-a.
 Cada respuesta la valida contra el spec del proveedor el hook de ``verificacion_proveedor.py`` (US-214).
 """
 

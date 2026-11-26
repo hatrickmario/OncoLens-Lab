@@ -155,7 +155,7 @@ def _criterio(
         etiqueta_en=None,
         destino=DestinoDelCriterio(entidad, campo, coincidencia),
         es_excluyente=False,
-        regla=ReglaDeAplicabilidad("pertenencia", "solo_subgrupo", {}, None),
+        regla=ReglaDeAplicabilidad("pertenencia", "solo_subgrupo", {}, None, {}, "prefijo"),
         estado_de_revision="propuesta",
     )
 

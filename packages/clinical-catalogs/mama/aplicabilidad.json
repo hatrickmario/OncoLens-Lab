@@ -1,13 +1,21 @@
 {
-  "version": "1.1.0",
+  "version": "1.11.0",
   "validation": {
     "scope": [
       "aplicabilidad"
     ],
-    "status": "propuesta_revisada",
-    "reviewerRole": "oncologo_asesor",
-    "date": "2026-10-24",
-    "catalogHash": "c89a3335f17f3141dcecbed4d8fd5875614736f27e2e8f66bc8a9621db0498b4"
+    "status": "revision_provisional",
+    "reviewerRole": "ia",
+    "date": "2026-11-21",
+    "catalogHash": "e7eef1261695b94855e13fe45181ff0063e4e86b854249ca2a3933e391363b20",
+    "history": [
+      {
+        "status": "propuesta_revisada",
+        "reviewerRole": "oncologo_asesor",
+        "date": "2026-10-24",
+        "catalogHash": "c89a3335f17f3141dcecbed4d8fd5875614736f27e2e8f66bc8a9621db0498b4"
+      }
+    ]
   },
   "items": [
     {
@@ -32,13 +40,27 @@
           "positivo": [
             "3+",
             "2+ con ISH positivo"
+          ],
+          "bajo": [
+            "1+",
+            "2+ con ISH negativo"
+          ],
+          "negativo": [
+            "0"
           ]
+        },
+        "subsetOf": {
+          "bajo": "negativo"
         },
         "partial": {
           "when": "solo_subgrupo"
         }
       },
-      "estado": "propuesta"
+      "estado": "propuesta",
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      }
     },
     {
       "key": "receptores_hormonales",

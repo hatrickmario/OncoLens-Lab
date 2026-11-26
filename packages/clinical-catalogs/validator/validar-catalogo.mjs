@@ -10,7 +10,7 @@ import {
 import { catalogHashDeReglasDePoblacion } from './canonico.mjs';
 import { violacionesDeAtributos } from './atributos.mjs';
 import { nombrable } from './nombrable.mjs';
-import { clavesRepetidasEn, verificarCatalogHash, vocabularioDe } from './reglas.mjs';
+import { clavesRepetidasEn, verificarBloqueValidation, vocabularioDe } from './reglas.mjs';
 import { violacionesDeVersionPropia } from './versiones.mjs';
 
 /**
@@ -57,10 +57,12 @@ function violacionesDeLosItems(archivo, nombreDelArchivo, contexto) {
 
 function violacionesDelArchivo(archivo, nombreDelArchivo, contexto) {
   const delItem = violacionesDeLosItems(archivo, nombreDelArchivo, contexto);
-  const delHash = verificarCatalogHash(archivo);
-  return delItem.length > 0 || delHash === null
-    ? delItem
-    : [{ codigo: delHash, tipoDeCancer: contexto.tipoDeCancer, archivo: nombreDelArchivo }];
+  if (delItem.length > 0) return delItem;
+  return verificarBloqueValidation(archivo).map((codigo) => ({
+    codigo,
+    tipoDeCancer: contexto.tipoDeCancer,
+    archivo: nombreDelArchivo,
+  }));
 }
 
 function violacionDeEsquema(validar, contenido, archivo, tipoDeCancer) {

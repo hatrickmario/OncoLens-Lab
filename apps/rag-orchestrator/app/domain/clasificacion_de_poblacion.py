@@ -14,7 +14,12 @@ from app.domain.aplicabilidad_tipos import (
     ProyeccionDeEstado,
     ValorDePoblacion,
 )
-from app.domain.criterios_aplicabilidad import CriterioDeAplicabilidad, DestinoDelCriterio
+from app.domain.criterios_aplicabilidad import (
+    CoincidenciaDeEquivalencias,
+    CriterioDeAplicabilidad,
+    DestinoDelCriterio,
+    ReglaDeAplicabilidad,
+)
 
 _ENTERO = re.compile(r"\d+")
 _RANGO_DE_ENTEROS = re.compile(r"(\d+)\s*[-–]\s*(\d+)")
@@ -119,12 +124,12 @@ def _clasificar_categorias(
 ) -> _Clasificacion:
     por_fragmento = _codigos_por_fragmento(elegibles, criterio)
     codigos = frozenset().union(*por_fragmento.values())
-    codigo_paciente = _codigo_del_paciente(valor_paciente, criterio)
-    if not codigos or codigo_paciente is None:
+    del_paciente = codigos_del_paciente(valor_paciente, criterio)
+    if not codigos or not del_paciente:
         return "sin_regla", "valor_fuera_de_tabla"
     if detectar_conflicto(por_fragmento):
         return "en_conflicto", None
-    if codigo_paciente not in codigos:
+    if del_paciente.isdisjoint(codigos):
         marcadores = criterio.poblacion.marcadores_de_restriccion
         restringido = any(reconoce_restriccion(v.valor, marcadores) for v in elegibles)
         return ("restringido" if restringido else "ausente"), None
@@ -164,7 +169,7 @@ def _codigo_del_estudio(valor: str, criterio: CriterioDeAplicabilidad) -> str | 
 
 def _codigo_del_paciente(valor: str, criterio: CriterioDeAplicabilidad) -> str | None:
     codigo = _indice_de_sinonimos(criterio).get(valor.casefold())
-    return codigo or categoria_del_paciente(criterio.regla.equivalencias, valor)
+    return codigo or categoria_del_paciente(criterio.regla, valor)
 
 
 def _clasificar_rango(
@@ -233,13 +238,46 @@ def es_criterio_compuesto(destino: DestinoDelCriterio) -> bool:
     return len(destino.coincidencia.get("name", ())) > 1
 
 
-def categoria_del_paciente(
-    equivalencias: Mapping[str, tuple[str, ...]], valor_paciente: str
-) -> str | None:
-    for categoria, alternativas in equivalencias.items():
-        if any(valor_paciente.startswith(alternativa) for alternativa in alternativas):
+def codigos_del_paciente(valor_paciente: str, criterio: CriterioDeAplicabilidad) -> frozenset[str]:
+    """Códigos del catálogo a los que pertenece el valor del paciente: el propio más sus ascendientes (C-2, D11).
+
+    Vacío cuando el valor no cae en ninguna categoría: el dato existe pero no hay regla para leerlo."""
+    propio = _codigo_del_paciente(valor_paciente, criterio)
+    if propio is None:
+        return frozenset()
+    return _con_ascendientes(propio, criterio.regla.jerarquia)
+
+
+def _con_ascendientes(codigo: str, jerarquia: Mapping[str, str]) -> frozenset[str]:
+    """El código y la cadena de padres de ``rule.subsetOf``; un ciclo del catálogo corta al repetir un código."""
+    codigos = {codigo}
+    padre = jerarquia.get(codigo)
+    while padre is not None and padre not in codigos:
+        codigos.add(padre)
+        padre = jerarquia.get(padre)
+    return frozenset(codigos)
+
+
+def categoria_del_paciente(regla: ReglaDeAplicabilidad, valor_paciente: str) -> str | None:
+    """Primera categoría de ``equivalences`` con una alternativa presente en el valor del paciente, según el modo de
+    coincidencia del catálogo (``rule.equivalenceMatch``); ``None`` si el valor no cae en la tabla."""
+    for categoria, alternativas in regla.equivalencias.items():
+        if any(
+            _alternativa_presente(valor_paciente, alternativa, regla.coincidencia_de_equivalencias)
+            for alternativa in alternativas
+        ):
             return categoria
     return None
+
+
+def _alternativa_presente(
+    valor_paciente: str, alternativa: str, modo: CoincidenciaDeEquivalencias
+) -> bool:
+    """``prefijo``: el valor empieza por la alternativa. ``componente``: la alternativa aparece dentro del valor y no va
+    seguida de un número (``M1`` está en ``T3aN1M1b`` y no en ``M10``, D18)."""
+    if modo == "prefijo":
+        return valor_paciente.startswith(alternativa)
+    return re.search(rf"{re.escape(alternativa)}(?!\d)", valor_paciente) is not None
 
 
 def rango_acotado(texto: str, criterio: CriterioDeAplicabilidad) -> tuple[float, float] | None:

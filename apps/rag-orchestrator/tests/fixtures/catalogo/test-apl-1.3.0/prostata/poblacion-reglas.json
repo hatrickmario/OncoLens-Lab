@@ -1,0 +1,44 @@
+{
+  "version": "test-apl-1.3.0",
+  "restrictionMarkers": {
+    "es": [
+      "solo",
+      "exclusivamente"
+    ],
+    "en": [
+      "only",
+      "exclusively"
+    ]
+  },
+  "disenosQueMezclan": [
+    "guia",
+    "revision_sistematica"
+  ],
+  "criteria": {
+    "extension": {
+      "synonyms": {
+        "no_metastasica": [
+          "localized prostate cancer",
+          "locally advanced prostate cancer",
+          "non-metastatic prostate cancer",
+          "enfermedad localizada",
+          "enfermedad localmente avanzada",
+          "enfermedad no metastásica",
+          "cáncer de próstata localizado"
+        ],
+        "metastasica": [
+          "metastatic prostate cancer",
+          "metastatic disease",
+          "metastatic castration-resistant prostate cancer",
+          "enfermedad metastásica",
+          "cáncer de próstata metastásico",
+          "cáncer de próstata metastásico resistente a la castración"
+        ]
+      },
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      }
+    }
+  }
+}

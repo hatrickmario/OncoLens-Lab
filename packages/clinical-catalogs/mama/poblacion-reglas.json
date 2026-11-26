@@ -1,5 +1,5 @@
 {
-  "version": "1.2.0",
+  "version": "1.11.0",
   "restrictionMarkers": {
     "es": ["solo", "exclusivamente"],
     "en": ["only", "exclusively"]
@@ -29,13 +29,30 @@
         "negativo": [
           "HER2-negative (IHC 2+, ISH not amplified)",
           "estrogen receptor–positive and HER2-negative breast cancer patients with luminal A or B subtype",
-          "estrogen receptor–positive and HER2-negative tumors"
+          "estrogen receptor–positive and HER2-negative tumors",
+          "triple-negative (TNBC)",
+          "triple negativo"
+        ],
+        "bajo": [
+          "HER2-low",
+          "HER2-low breast cancer",
+          "HER2-low (IHC 1+ or IHC 2+/ISH-negative)",
+          "HER2 bajo",
+          "cáncer de mama HER2 bajo"
         ]
+      },
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
       }
     },
     "receptores_hormonales": {
       "synonyms": {
-        "triple_negativo": ["triple-negative (TNBC)"]
+        "negativo": ["triple-negative (TNBC)", "triple negativo"]
+      },
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
       }
     }
   }

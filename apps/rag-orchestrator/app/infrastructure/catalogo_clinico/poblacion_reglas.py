@@ -12,9 +12,10 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Annotated
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field
+from pydantic import AfterValidator, Field
 
 from app.domain.criterios_aplicabilidad import ReglasDePoblacion
+from app.infrastructure.catalogo_clinico.forma_estricta import Estricto, RevisionProvisional
 from app.infrastructure.catalogo_clinico.manifiesto import CatalogoNoDisponible
 
 NOMBRE_DEL_ARCHIVO_DE_REGLAS = "poblacion-reglas.json"
@@ -32,22 +33,19 @@ _Texto = Annotated[str, Field(min_length=1)]
 _ListaUnica = Annotated[list[_Texto], Field(min_length=1), AfterValidator(_sin_repetidos)]
 
 
-class _Estricto(BaseModel):
-    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
-
-
-class _Marcadores(_Estricto):
+class _Marcadores(Estricto):
     es: list[_Texto] = []
     en: list[_Texto] = []
 
 
-class _ReglasDelCriterio(_Estricto):
+class _ReglasDelCriterio(Estricto):
     synonyms: dict[Annotated[str, Field(pattern=_CLAVE)], _ListaUnica] = {}
     scale: _ListaUnica | None = None
     groups: dict[_Texto, _ListaUnica] = {}
+    revision_provisional: RevisionProvisional | None = None
 
 
-class _Archivo(_Estricto):
+class _Archivo(Estricto):
     version: str
     restrictionMarkers: _Marcadores = _Marcadores()
     disenosQueMezclan: list[_Texto] = []

@@ -387,6 +387,42 @@ ninguna cifra sin reporte versionado en `reports/eval/` producido por `run-ai-ev
 - **S7.4c:** `scripts/catalog/__tests__/apoyo.mjs` exporta `VERSION_DEL_CATALOGO`; `clinical-api` usa `versionDelCatalogo()` y
   `VERSION_DEL_MANIFIESTO`; `rag-orchestrator`, `VERSION_DEL_CATALOGO_MONTADO`. Los `contracts/examples/` siguen siendo datos.
 
+**D18 · Mecanismos y contenido de la parte B, entrega 1 clinical-platform (implementador, 2026-11-26).** Decisiones que ni la spec
+ni un ADR fijaban; el consumidor (`ai-services-dev`, S7.6–S7.8 y S7.12) parte de esta forma del catálogo `1.11.0`:
+- **Lectura de M0/M1 como dato (S7.8, D10): `rule.equivalenceMatch`.** Campo opcional de `aplicabilidad.schema.json#/$defs/regla`,
+  enum `prefijo` (por defecto, el comportamiento vigente de `categoria_del_paciente()`) o `componente`. Con `componente`, cada
+  alternativa de `equivalences` se busca **dentro** del valor del paciente y no puede ir seguida de un dígito (así `M1` acepta
+  `T3aN1M1b` y `T2cN0M0` da `M0`, pero `M1` no acepta `M10`); la primera categoría con una alternativa presente gana, y sin
+  ninguna el valor «no cae en la tabla» (`valor_fuera_de_tabla` -> `sin_regla_de_comparacion`; sin `stage_value` ->
+  `falta_en_paciente`, como hoy). `extension` lo declara: `equivalences = { no_metastasica: ["M0"], metastasica: ["M1"] }` y
+  `equivalenceMatch = "componente"`. No hay regla por tipo de cáncer en código: la lectura es un dato del criterio. Alternativa
+  descartada: una lista aparte `patientMarks` junto a `equivalences` (dos listas para la misma tabla; el modo evita duplicarla).
+- **Jerarquía (S7.7, D11): `rule.subsetOf`.** Objeto `{ <categoría hija>: <categoría padre> }` con claves `^[a-z0-9_]+$`;
+  el validador exige que ambas existan en `rule.equivalences`, que ninguna sea subconjunto de sí misma y que no haya ciclos
+  (código `subconjunto_sin_equivalencia`). `estado_her2`: `subsetOf = { bajo: "negativo" }` con `equivalences = { positivo:
+  ["3+", "2+ con ISH positivo"], bajo: ["1+", "2+ con ISH negativo"], negativo: ["0"] }`; el `2+` sin ISH no está en ninguna.
+  Los valores del paciente son los del seed (`0 (IHQ)`, `1+ (IHQ)`, `2+ (IHQ)`, `3+ (IHQ)`), por eso las alternativas son prefijos.
+- **`revision_provisional` en `poblacion-reglas.json`:** campo opcional del bloque de cada criterio (`criteria.<clave>`), por `$ref` a
+  `comun#/$defs/revisionProvisional`. Entra en la huella del archivo (`manifest.poblacionReglas.<tipo>.catalogHash`).
+  En `aplicabilidad.json` es campo opcional del criterio y entra en el `validation.catalogHash`.
+- **Regla con nombre `revision_provisional_invalida`** (rol fuera del vocabulario o fecha no ISO; nombra el criterio y `campo=rol|fecha`,
+  nunca el valor): el esquema solo daría `esquema_invalido <tipo>/aplicabilidad`, sin el criterio. Roles y patrón de fecha se leen
+  de `comun#/$defs/revisionProvisional` (una sola definición). `validation.history`: reutiliza las definiciones del esquema
+  (`$defs/status`, `reviewerRole`, `date`, `catalogHash`), `minItems: 1`.
+- **Códigos de `hrr_brca` (C-5, D13):** `brca12_mutado`, `otro_gen_hrr`, `sin_mutacion`, `no_evaluado`; `equivalences` con los valores del
+  paciente (`BRCA mutado`, `HRR mutado`, `No mutado`, `No evaluado`) y sinónimos es/en en `poblacion-reglas.json`, sin texto
+  repetido entre códigos. El criterio sigue siendo compuesto (`match.name = [HRR, BRCA]`): el estado calculado no cambia.
+- **`estado_castracion`:** bloque nuevo en `prostata/poblacion-reglas.json` cuyas claves son los valores del atributo
+  (`sensible_castracion`, `resistente_castracion`), con el propio valor como sinónimo (patrón de `estado_menopausico`) más textos es/en.
+- **Triple negativo (C-4, D12):** sale el código `triple_negativo` de `receptores_hormonales`; `triple-negative (TNBC)` y `triple negativo` son
+  sinónimos de `negativo` en `estado_her2` y en `receptores_hormonales`.
+- **Versión:** los cuatro archivos tocados llevan `1.11.0` (igual al manifiesto: el guardián solo exige que no la supere).
+  Los tests de contenido viven en `scripts/catalog/__tests__/` (donde están todos los del catálogo), no en `packages/clinical-catalogs/test/`
+  (ahí solo hay fixtures). Los `catalogHash` del historial son los del contenido de `1.9.0`/`1.10.0` (idénticas: ningún cambio de aplicabilidad entre ambas).
+- **Rompe hasta la entrega 2:** `apps/rag-orchestrator` (modelos Pydantic `extra="forbid"` del catálogo y el test de paridad con
+  los esquemas) rechaza `revision_provisional`, `subsetOf`, `equivalenceMatch` y `validation.history` hasta S7.6; el literal `1.10.0`
+  del test `tests/integration/test_rag_query_reescritura_sinonimos.py` es suyo.
+
 **Ficheros que toca el S7.** `packages/clinical-catalogs/`: `manifest.json`, `mama/aplicabilidad.json`,
 `mama/poblacion-reglas.json`, `prostata/aplicabilidad.json`, `prostata/poblacion-reglas.json`,
 `schemas/comun.schema.json` (`$defs/revisionProvisional`), `schemas/validation.schema.json` (`history`),
