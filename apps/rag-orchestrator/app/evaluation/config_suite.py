@@ -478,6 +478,16 @@ def _campos_de_etapa_del_brazo(crudo: dict[str, Any]) -> dict[str, Any]:
         campos["reranker_max_length"] = _exigir_entero_positivo(
             crudo["RERANKER_MAX_LENGTH"], "RERANKER_MAX_LENGTH"
         )
+    largo, solape = campos.get("reranker_max_length"), campos.get("reranker_solape")
+    if largo is not None and solape is not None and not solape_deja_avanzar(solape, largo):
+        raise ConfigInvalida("RERANKER_WINDOW_OVERLAP debe ser menor que RERANKER_MAX_LENGTH")
+    return {**campos, **_campos_del_indice_y_la_consulta_del_brazo(crudo)}
+
+
+def _campos_del_indice_y_la_consulta_del_brazo(crudo: dict[str, Any]) -> dict[str, Any]:
+    """Lo que un brazo declara de su índice (``indice``, ``CORPUS_CHUNK_CONTEXT``) y de la consulta (``RERANKER_MAX_PAIRS``,
+    ``QUERY_REWRITE_ENABLED``); lo que no declara queda en ``None`` y no entra en la huella."""
+    campos: dict[str, Any] = {}
     if "indice" in crudo:
         if not es_identificador(str(crudo["indice"])):
             raise ConfigInvalida("el indice de un brazo no es un identificador válido")
@@ -492,9 +502,6 @@ def _campos_de_etapa_del_brazo(crudo: dict[str, Any]) -> dict[str, Any]:
         campos["query_rewrite_enabled"] = crudo["QUERY_REWRITE_ENABLED"]
     if "CORPUS_CHUNK_CONTEXT" in crudo:
         campos["contexto"] = _variante_de_contexto(crudo["CORPUS_CHUNK_CONTEXT"])
-    largo, solape = campos.get("reranker_max_length"), campos.get("reranker_solape")
-    if largo is not None and solape is not None and not solape_deja_avanzar(solape, largo):
-        raise ConfigInvalida("RERANKER_WINDOW_OVERLAP debe ser menor que RERANKER_MAX_LENGTH")
     return campos
 
 
