@@ -69,6 +69,13 @@ class ConsultaTruncada(RuntimeError):
     """La consulta devolvió exactamente el tope de Milvus: puede faltar el resto, y no se actúa con un resultado parcial."""
 
 
+class CorpusCollectionNoExiste(RuntimeError):
+    """La colección que se pidió abrir para leer no existe. El mensaje no lleva su nombre ni la URI."""
+
+    def __init__(self) -> None:
+        super().__init__("la colección de origen no existe")
+
+
 class CorpusCollectionSchemaMismatch(RuntimeError):
     """La colección existente no coincide con el esquema esperado. El mensaje nombra campo, lo esperado y lo hallado."""
 
@@ -94,6 +101,13 @@ class MilvusRepository:
             index_params=build_corpus_chunks_indexes(self._cliente, self._ajustes),
         )
         return True
+
+    def abrir_existente(self) -> None:
+        """Abre para LEER una colección que ya existe (el origen de ``reindex-context``): nunca la crea, comprueba su esquema y la carga."""
+        if not self._cliente.has_collection(self._coleccion):
+            raise CorpusCollectionNoExiste
+        self.assert_schema_matches()
+        self._cliente.load_collection(self._coleccion)
 
     def assert_schema_matches(self) -> None:
         """Compara nombre, tipo y dimensión de cada campo con el esquema esperado (D5)."""

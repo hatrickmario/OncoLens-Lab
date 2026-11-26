@@ -9,6 +9,7 @@ import pytest
 from app.infrastructure.milvus.repository import (
     LIMITE_DE_CONSULTA,
     ConsultaTruncada,
+    CorpusCollectionNoExiste,
     MilvusRepository,
 )
 from tests.support.milvus import ajustes_de_milvus, nombre_de_coleccion_de_test
@@ -50,6 +51,18 @@ class _ClienteMilvusEspia:
         self.consultas: list[dict[str, Any]] = []
         self.query_simples: list[dict[str, Any]] = []
         self.upserts: list[tuple[str, list[dict[str, Any]]]] = []
+        self.existe = True
+        self.creadas: list[str] = []
+        self.cargadas: list[str] = []
+
+    def has_collection(self, coleccion: str, **_: Any) -> bool:
+        return self.existe
+
+    def create_collection(self, coleccion: str, **_: Any) -> None:
+        self.creadas.append(coleccion)
+
+    def load_collection(self, coleccion: str, **_: Any) -> None:
+        self.cargadas.append(coleccion)
 
     def query_iterator(self, coleccion: str, **argumentos: Any) -> _IteradorFalso:
         self.consultas.append({"coleccion": coleccion, **argumentos})
@@ -159,6 +172,16 @@ def test_escribir_filas_hace_upsert_de_las_filas_completas_en_la_coleccion_propi
     ((coleccion, filas),) = cliente.upserts
     assert coleccion == nombre_de_coleccion_de_test("ctx")
     assert filas == [_fila(0), _fila(1, vigente=False)]
+
+
+def test_abrir_una_coleccion_que_no_existe_falla_sin_crearla_ni_cargarla() -> None:
+    cliente = _ClienteMilvusEspia()
+    cliente.existe = False  # type: ignore[attr-defined]
+
+    with pytest.raises(CorpusCollectionNoExiste):
+        _repositorio(cliente).abrir_existente()
+
+    assert cliente.creadas == [] and cliente.cargadas == []  # type: ignore[attr-defined]
 
 
 def test_escribir_sin_filas_no_llama_a_milvus() -> None:

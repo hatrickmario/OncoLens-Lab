@@ -27,6 +27,7 @@ import httpx
 from pydantic import ValidationError
 from pymilvus import MilvusClient
 
+from app.application.corpus_ingestion.constructores_de_contexto import constructor_de_contexto
 from app.application.ports import Clock
 from app.application.seed_corpus.ports import PassageEmbedder
 from app.application.seed_corpus.reporte import ReporteDeCarga
@@ -40,6 +41,11 @@ from app.config.settings import (
 )
 from app.domain.corpus_seed.admisibilidad import PoliticaDeLicencias
 from app.domain.corpus_seed.chunking import Tokenizador
+from app.domain.corpus_seed.coleccion_de_la_variante import (
+    ColeccionNoCorrespondeALaVariante,
+    exigir_coleccion_de_la_variante,
+)
+from app.domain.corpus_seed.contexto_del_chunk import VarianteDeContexto
 from app.infrastructure.catalog.conexion import componer_url, crear_motor
 from app.infrastructure.catalog.corpus_document_repository import CorpusDocumentRepository
 from app.infrastructure.clock.system_clock import RelojDelSistema
@@ -130,6 +136,20 @@ def fuente_de_texto(ajustes: AjustesDeCorpus, directorio_base: Path) -> FuenteDe
     return FuenteDeTextoDelManifiesto(directorio_base, descargador)
 
 
+class VarianteNoAdmitidaEnLaSemilla(ValueError):
+    """La semilla no tiene LLM: la variante ``llm`` solo existe en ``ingest`` y ``reindex-context``. El mensaje es solo el NOMBRE de la variable."""
+
+    def __init__(self) -> None:
+        super().__init__("CORPUS_CHUNK_CONTEXT: la semilla no admite la variante llm")
+
+
+def exigir_variante_de_la_semilla(semilla: AjustesDeCorpus, milvus: MilvusSettings) -> None:
+    """Antes de abrir nada (US-279 D5, RN-22): la variante es una de las que la semilla sabe construir y la colección es la suya."""
+    if semilla.corpus_chunk_context is VarianteDeContexto.LLM:
+        raise VarianteNoAdmitidaEnLaSemilla
+    exigir_coleccion_de_la_variante(milvus.milvus_collection_name, semilla.corpus_chunk_context)
+
+
 def _claves_invalidas(error: ValidationError) -> str:
     return ", ".join(sorted({str(e["loc"][0]).upper() for e in error.errors() if e["loc"]}))
 
@@ -167,6 +187,9 @@ def _ejecutar_carga(
             tamano_de_chunk=semilla.corpus_chunk_size,
             solape_de_chunk=semilla.corpus_chunk_overlap,
             fecha_de_corte=semilla.corpus_cutoff_date,
+            constructor_de_contexto=constructor_de_contexto(
+                semilla.corpus_chunk_context, max_chars=semilla.corpus_chunk_context_max_chars
+            ),
         )
         return cargador.cargar(documentos)
     finally:
@@ -203,6 +226,7 @@ def main(
         )
         return 1
     try:
+        exigir_variante_de_la_semilla(semilla, milvus)
         modelos_embedder, modelos_tokenizador = _modelos_de_la_semilla(embedder, tokenizador)
         reporte = _ejecutar_carga(
             semilla,
@@ -213,7 +237,12 @@ def main(
             modelos_tokenizador,
             reloj or RelojDelSistema(),
         )
-    except (ModeloNoVerificadoError, ManifiestoInvalido) as error:
+    except (
+        ModeloNoVerificadoError,
+        ManifiestoInvalido,
+        VarianteNoAdmitidaEnLaSemilla,
+        ColeccionNoCorrespondeALaVariante,
+    ) as error:
         print(f"load_seed_corpus: {error}", file=sys.stderr)
         return 1
     except Exception as error:  # noqa: BLE001 - se informa la clase; el mensaje de la base o de pymilvus puede traer una URI

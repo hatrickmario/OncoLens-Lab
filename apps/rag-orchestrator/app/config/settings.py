@@ -605,6 +605,9 @@ class AjustesDeContextoLlm(AjustesDeContextoDelChunk):
     corpus_chunk_context_llm_concurrency: int = Field(
         default=CONTEXTO_LLM_CONCURRENCIA_INICIAL, gt=0
     )
+    # Temperatura del LLM local en la ingesta (RN-22): la de la extracción de metadatos y la de la frase de contexto de la variante
+    # ``llm``; propia, no la de la generación de /rag/query.
+    corpus_metadata_llm_temperature: float = Field(default=0.0, ge=0.0, le=2.0)
 
 
 class AjustesDeCorpus(AjustesDeContextoDelChunk):
@@ -761,8 +764,6 @@ class CorpusIngestSettings(AjustesDeCorpus, AjustesSparse, AjustesDeContextoLlm)
     corpus_metadata_sample_pct: float = Field(default=10.0, ge=0.0, le=100.0)
     corpus_metadata_sample_seed: str = Field(default="oncolens-metadatos", min_length=1)
     corpus_metadata_sample_dir: Path = Path("data/evaluation/corpus-metadatos")
-    # Temperatura del LLM en la extracción de metadatos (RN-22): propia, no la de la generación de /rag/query.
-    corpus_metadata_llm_temperature: float = Field(default=0.0, ge=0.0, le=2.0)
 
     # Extracción de la población del estudio en abanico (US-242, ADR-47, RN-22): una tarea corta por documento y criterio.
     population_extraction_top_k: int = Field(default=POBLACION_TOP_K_INICIAL, gt=0)
