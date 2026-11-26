@@ -233,6 +233,11 @@ def es_criterio_compuesto(destino: DestinoDelCriterio) -> bool:
     return len(destino.coincidencia.get("name", ())) > 1
 
 
+def codigos_del_paciente(valor_paciente: str, criterio: CriterioDeAplicabilidad) -> frozenset[str]:
+    """Códigos del catálogo a los que pertenece el valor del paciente: el propio más sus ascendientes (C-2, D11)."""
+    raise NotImplementedError("no implementado")
+
+
 def categoria_del_paciente(
     equivalencias: Mapping[str, tuple[str, ...]], valor_paciente: str
 ) -> str | None:
