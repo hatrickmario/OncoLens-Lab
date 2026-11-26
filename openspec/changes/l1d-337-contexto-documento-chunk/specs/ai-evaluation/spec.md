@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Comparación de las variantes de contexto del chunk en la misma corrida
-La suite `evaluate` MUST comparar las variantes `ninguno`, `determinista` y `llm` de `CORPUS_CHUNK_CONTEXT` en una sola ejecución, con los mismos modelos locales, las mismas preguntas y un índice propio para cada brazo, y SHALL reportar por brazo las métricas de recuperación, de latencia y de costo de la ingesta, y la diferencia frente a `ninguno`, y SHALL informar, por brazo distinto de la referencia, si es «adoptable» según la regla de adopción de los brazos de US-277. «Adoptable» es una señal técnica sobre una variante de indexación, no una valoración clínica ni se muestra en la UI. No cambia ningún valor por defecto.
+La suite `evaluate` MUST comparar las variantes `ninguno`, `determinista` y `llm` de `CORPUS_CHUNK_CONTEXT` en una sola ejecución, con los mismos modelos locales, las mismas preguntas y un índice propio para cada brazo, y SHALL reportar por brazo sus métricas y la diferencia frente a `ninguno`, e informar si cada brazo es «adoptable» según la regla de US-277. «Adoptable» es una señal técnica sobre una variante de indexación, no una valoración clínica ni se muestra en la UI.
 
 #### Scenario: El reporte compara los tres brazos con los pares de paráfrasis [US-279 AC-5] [OL-06] [ADR-45 P6]
 - **GIVEN** la suite `evaluate` con los modelos locales de ADR-39, el conjunto de desarrollo, los pares de paráfrasis de US-276, los umbrales actuales y una colección por brazo: la de la ingesta de `l1d-119` para `ninguno` y las reindexadas desde ella para `determinista` y `llm`
