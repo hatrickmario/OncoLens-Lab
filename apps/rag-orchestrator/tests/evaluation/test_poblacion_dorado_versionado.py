@@ -12,6 +12,7 @@ from app.evaluation.corrida_poblacion import MedicionSinEvidencia, PuertosDePobl
 from app.evaluation.dataset_poblacion import DoradoDePoblacion, cargar_dorado
 from app.evaluation.evaluate import main
 from tests.evaluation.conftest import RAIZ_APP, RAIZ_REPO
+from tests.support.catalogo_aplicabilidad import APL_1_11_0
 from tests.support.fakes import RelojFijo
 
 CONFIG = RAIZ_APP / "eval" / "configs" / "test-poblacion.yaml"
@@ -164,9 +165,7 @@ def test_el_dorado_versionado_trae_los_casos_de_la_rendija_c3_de_mama_con_el_esp
         and "only" not in c.valores[0].valor
         for c in c3
     )
-    assert (
-        dorado.catalogo_de_estados.name == "test-apl-1.11.0"
-    )  # S7-D4: fixture con las reglas de próstata
+    assert dorado.catalogo_de_estados == APL_1_11_0  # S7-D4: fixture con las reglas de próstata
 
 
 def test_el_manifiesto_del_dorado_subio_su_version_respecto_de_la_semilla() -> None:

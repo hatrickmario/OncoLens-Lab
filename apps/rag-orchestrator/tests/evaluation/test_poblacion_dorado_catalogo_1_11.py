@@ -1,7 +1,7 @@
 """Dorado de población sobre el catálogo 1.11.0 (L1D-299, S7.9, S7.10 y S7.10b; design S7-D4 y S7-D5).
 
 Los casos y pares que dependen de la parte B de ``l1d-126`` (C-1, C-2, C-4 y C-5) llevan la etapa_del_dataset
-``tras_catalogo_s7`` y el reporte los separa de la base. Las reglas de estado son las reales; el catálogo de estados del
+``tras_catalogo_s7`` y el reporte los separa de la base. Las reglas de estado son las de ``app/domain``; el catálogo de estados del
 dorado es el fixture ``test-apl-1.11.0`` (copia de las reglas de mama y próstata del catálogo 1.11.0), no el real.
 Solo agregados e identificadores en el reporte (RN-14).
 """
@@ -34,6 +34,8 @@ from app.evaluation.metricas.poblacion import (
 )
 from tests.evaluation.conftest import RAIZ_APP, RAIZ_REPO
 from tests.evaluation.dorado_de_prueba import ESTADOS, PARES, escribir_config, escribir_dorado
+from tests.support.catalogo_aplicabilidad import APL_1_11_0
+from tests.support.contract import CATALOGOS
 from tests.support.fakes import RelojFijo
 
 CONFIG = RAIZ_APP / "eval" / "configs" / "test-poblacion.yaml"
@@ -255,13 +257,13 @@ def test_el_dorado_concuerda_con_las_reglas_del_catalogo_1_11_0_en_castracion_y_
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     """Trae un caso por regla F-20…F-23 con estado_castracion y los de extension (M0/M1 legible y repliegue), y el
-    cómputo con las reglas reales concuerda sin No coincide ni Coincide indebidos [US-233b AC-4]."""
+    cómputo (las reglas de ``app/domain``, sobre la copia ``test-apl-1.11.0`` del catálogo) concuerda sin No coincide ni Coincide indebidos [US-233b AC-4]."""
     dorado = _dorado_versionado()
     nuevos = [c for c in dorado.estados if c.etapa_del_dataset == ETAPA]
     castracion = [c for c in nuevos if c.criterio == "estado_castracion"]
     extension = [c for c in nuevos if c.criterio == "extension"]
 
-    assert dorado.catalogo_de_estados.name == "test-apl-1.11.0"
+    assert dorado.catalogo_de_estados == APL_1_11_0
     assert {c.esperado for c in castracion} == {"parcial", "desconocido", "no_coincide", "coincide"}
     assert len(castracion) >= 5  # F-20, F-21, F-21b (restricción explícita), F-22 y F-23
     assert {c.tipo_de_cancer for c in nuevos} == {"prostata"}
@@ -299,3 +301,18 @@ def test_el_dorado_conserva_los_estados_de_mama_de_la_base_con_el_catalogo_1_11_
         == por_etapa_del_dataset[ETAPA_BASE]["total"]
         == len(base)
     )
+
+
+@pytest.mark.parametrize("tipo", ["mama", "prostata"])
+@pytest.mark.parametrize("archivo", ["aplicabilidad.json", "poblacion-reglas.json"])
+def test_la_fixture_1_11_0_iguala_a_cada_criterio_del_catalogo_real(
+    tipo: str, archivo: str
+) -> None:
+    """La copia no se queda atrás: con el catálogo real distinto del fixture, el dorado mediría reglas obsoletas. Si falla
+    tras un bump del catálogo, se vuelve a copiar el archivo (solo cambia ``version``) y se revisa el dorado."""
+    de_la_fixture = json.loads((APL_1_11_0 / tipo / archivo).read_text(encoding="utf-8"))
+    real = json.loads((CATALOGOS / tipo / archivo).read_text(encoding="utf-8"))
+
+    de_la_fixture.pop("version")
+    real.pop("version")
+    assert de_la_fixture == real
