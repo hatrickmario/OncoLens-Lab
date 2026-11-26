@@ -3,7 +3,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { catalogHashDeReglasDePoblacion } from '../../../packages/clinical-catalogs/validator/index.mjs';
 import { hashDelArchivo } from '../hash.mjs';
-import { CATALOGO, PLAZO_PROCESO_MS, ejecutarValidador } from './apoyo.mjs';
+import { CATALOGO, PLAZO_PROCESO_MS, VERSION_DEL_CATALOGO, ejecutarValidador } from './apoyo.mjs';
 
 /**
  * Contenido del catálogo tras la revisión clínica provisional del S7 (l1d-126 parte B, US-121, design D9…D14,
@@ -234,15 +234,15 @@ describe('catálogo del S7 · C-5: HRR/BRCA con cuatro valores (D13)', () => {
 });
 
 describe('catálogo del S7 · versión y huellas (D14)', () => {
-  it('sube manifest.version a 1.11.0 y la de cada archivo tocado a esa misma versión [US-121 AC-4]', () => {
+  it('declara en cada archivo tocado la misma versión que manifest.version, sin fijar el literal [US-121 AC-4]', () => {
     const manifiesto = leerJson('manifest.json');
     const versiones = ['mama', 'prostata'].flatMap((tipo) => [
       leerJson(`${tipo}/aplicabilidad.json`).version,
       leerJson(`${tipo}/poblacion-reglas.json`).version,
     ]);
 
-    expect(manifiesto.version).toBe('1.11.0');
-    expect(versiones).toEqual(['1.11.0', '1.11.0', '1.11.0', '1.11.0']);
+    expect(manifiesto.version).toBe(VERSION_DEL_CATALOGO);
+    expect(versiones).toEqual(Array(4).fill(manifiesto.version));
   });
 
   it.each(['mama', 'prostata'])(
