@@ -10,6 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final
 
+from app.evaluation.brazos_recuperacion import supera_la_tolerancia
 from app.evaluation.viabilidad_del_brazo import Estado
 
 MOTIVO_RETROCESO: Final = "retroceso"
@@ -34,10 +35,9 @@ def decidir_adopcion(
     tolerancia: float,
     viabilidad: Estado,
 ) -> Adopcion:
-    # round: 0.55 - 0.50 es 0.05000000000000004 en coma flotante y «igual a la tolerancia» no es empeorar
-    empeora_los_falsos = aumento_de_falsos_sin_evidencia is not None and round(
-        aumento_de_falsos_sin_evidencia, 12
-    ) > round(tolerancia, 12)
+    empeora_los_falsos = aumento_de_falsos_sin_evidencia is not None and supera_la_tolerancia(
+        aumento_de_falsos_sin_evidencia, tolerancia
+    )
     motivos = tuple(
         motivo
         for motivo, aplica in (

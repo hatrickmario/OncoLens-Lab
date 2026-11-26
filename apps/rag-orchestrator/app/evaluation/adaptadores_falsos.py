@@ -157,8 +157,8 @@ class BuscadorSparseEnMemoria:
 
 
 _FALLO_DE_VENTANAS = "reranker: fallo de inferencia del modelo local"
-_FALLO_DE_PARES = "reranker: más pares de los que admite RERANKER_MAX_PAIRS"
-"""El mensaje del adapter real (``BgeReranker``): el fake falla con el mismo error del puerto y el mismo texto."""
+# El mismo texto que ``BgeReranker``: el fake falla con el mismo error del puerto y el mismo mensaje.
+_FALLO_DE_PARES = "reranker: más pares que RERANKER_MAX_PAIRS"
 
 
 class RerankerLexico:
