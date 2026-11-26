@@ -214,17 +214,19 @@ Orden: `l1d-126` parte A → corrida base → `l1d-335` (catálogo `1.10.0`) →
       código ≠ 0 cuando una revisión provisional declara un rol que no es ia [US-121 AC-1]» y «termina con código ≠ 0
       cuando el historial lleva la huella vigente [US-121 AC-1]» · TDD estricto · `test(L1D-126)` y `feat(L1D-126)`.
       Evidencia: mismos commits que S7.5 (`validacion-provisional.test.mjs`, 5 pruebas; 4 en rojo en la aserción, todas en verde). `verificarBloqueValidation` reúne `hash_distinto` y las dos reglas nuevas.
-- [ ] S7.6 (ai-services) Lectores: `app/infrastructure/catalogo_clinico/aplicabilidad.py` y `poblacion_reglas.py` aceptan **TRASLADADA a entrega 2 (parte B, ai-services)**.
+- [x] S7.6 (ai-services) Lectores: `app/infrastructure/catalogo_clinico/aplicabilidad.py` y `poblacion_reglas.py` aceptan
       `revision_provisional`, `subsetOf` y `validation.history`; el dominio no recibe la marca de revisión ni el
       historial · test de carga en rojo antes ·
       verificación: Pytest de `tests/unit` e `integration` de catálogo.
-- [ ] S7.7 (ai-services · C-2) Regla pura con nombre `codigos_del_paciente()` en **TRASLADADA a entrega 2 (parte B, ai-services)**.
+      Evidencia: `test(L1D-126)` 989fa63e en rojo (13 fallan: el espejo con `extra=forbid` rechaza los campos nuevos y el catálogo real 1.11.0 no se carga; `tests/unit/test_lectores_catalogo_parte_b.py` y las variantes nuevas de `test_paridad_aplicabilidad_esquema.py`) y `feat(L1D-126)` 2c118d99 en verde (5894 pruebas de `rag-orchestrator` con el catálogo real). El dominio solo recibe `jerarquia` y `coincidencia_de_equivalencias`; `revision_provisional` y `validation.history` se validan y no pasan. Una definición compartida de la forma estricta y de la marca en `forma_estricta.py` (refactor, S7.14b). `test_rag_query_reescritura_sinonimos.py` ya no cita el literal de la versión.
+- [x] S7.7 (ai-services · C-2) Regla pura con nombre `codigos_del_paciente()` en
       `app/domain/clasificacion_de_poblacion.py`: el código del paciente más sus ascendientes declarados en el catálogo.
       Tests de aceptación en rojo, uno por escenario: «coincide con fuentes de HER2 negativo y de HER2 bajo cuando la
       paciente tiene IHC 1+ [US-121 AC-5]», «no coincide con una fuente restringida a HER2 bajo cuando la paciente tiene
       IHC 0 [US-121 AC-5]», «queda desconocido y no negativo cuando el IHC es 2+ sin ISH [US-121 AC-5]» · TDD estricto ·
       fixture de catálogo de test nuevo en `tests/fixtures/catalogo/` (los `test-apl-*` existentes no cambian).
-- [ ] S7.8 (ai-services · C-1) Lectura declarativa de M0/M1 desde `stage_value` en TNM (design D10, mecanismo asumido) y **TRASLADADA a entrega 2 (parte B, ai-services)**.
+      Evidencia: `test(L1D-126)` c9a44e25 en rojo (10 fallan en `tests/unit/test_jerarquia_de_categorias_her2.py`: HER2 1+ queda `desconocido` frente a una fuente de HER2 negativo y `codigos_del_paciente` no está implementada) y `feat(L1D-126)` 61c526e3 en verde (5909 pruebas). La misma regla sirve a la población en lista y a la forma antigua (`_por_igualdad`: un valor único «negativo» coincide con un 1+); un ciclo de `subsetOf` corta. Fixture `tests/fixtures/catalogo/test-apl-1.3.0/` (copia de `estado_her2` y `extension` del 1.11.0). Sin cambio de escenario en ninguna aserción previa.
+- [x] S7.8 (ai-services · C-1) Lectura declarativa de M0/M1 desde `stage_value` en TNM (design D10, mecanismo asumido) y
       tests de aceptación en rojo: «no coincide y hace la población no comparable cuando la fuente se restringe a
       enfermedad metastásica y el paciente tiene enfermedad localizada [US-121 AC-5]», «queda desconocido sin
       restricción explícita [US-121 AC-5]», «localizada y localmente avanzada no se excluyen [US-121 AC-5]» y el
@@ -232,6 +234,7 @@ Orden: `l1d-126` parte A → corrida base → `l1d-335` (catálogo `1.10.0`) →
       el estadio del paciente no permite leer M0 ni M1 [US-121 AC-5]» · TDD estricto. Si la lectura de M no cabe como
       dato del catálogo, parar y preguntar: no se escribe una regla por tipo de cáncer en código; en ese caso solo
       queda el repliegue y se avisa a `l1d-246` y `l1d-299` (design D10, SC-1).
+      Evidencia: `test(L1D-126)` 81be6e0a en rojo (9 de 17 fallan en la aserción en `tests/unit/test_extension_prostata_m0_m1.py`: `extension` queda siempre `desconocido` con `sin_regla_de_comparacion`) y `feat(L1D-126)` 85921ffc en verde (5926 pruebas). La lectura cabe como dato del catálogo (`rule.equivalenceMatch = componente`): `categoria_del_paciente` recibe la regla; sin regla por tipo de cáncer en código. Resultado de SC-1: **`no_coincide` con población no comparable** cuando hay marcador explícito y M legible (`T2cN0M0` -> M0, `T3aN1M1b` -> M1, `M10` no es M1); sin M legible, repliegue a `desconocido` con `sin_regla_de_comparacion`.
 - [x] S7.9 (clinical-platform · contenido, sin TDD) `prostata/aplicabilidad.json`: `extension.isExclusionary = true` y sus
       dos códigos (C-1); `hrr_brca` con cuatro valores (C-5). `prostata/poblacion-reglas.json`: sinónimos es/en de
       `extension`, `hrr_brca` y `estado_castracion`. `mama/aplicabilidad.json`: `estado_her2` con `positivo`, `bajo`,
@@ -254,16 +257,19 @@ Orden: `l1d-126` parte A → corrida base → `l1d-335` (catálogo `1.10.0`) →
       los `contracts/examples/` y fixtures que citan la versión; los tests ya la leen del manifiesto (S7.4c) ·
       verificación: `npm run catalog:validate`, `catalog:version-guard` y `contracts:check` en verde [US-121 AC-4].
       Evidencia: `catalog:validate` y `catalog:version-guard` OK (1.11.0), `contracts:check` sin hallazgos, `npm test -w apps/clinical-api` 1440 y `scripts/test-integration.sh` 907 pruebas en verde; los 20 `contracts/examples/` cambian solo la versión.
-- [ ] S7.12 (ai-services) Coherencia con los datasets que leen el catálogo real: `tests/evaluation/test_opciones_coherencia_dataset.py` **TRASLADADA a entrega 2 (parte B, ai-services)**.
+- [x] S7.12 (ai-services) Coherencia con los datasets que leen el catálogo real: `tests/evaluation/test_opciones_coherencia_dataset.py`
       (OP-07…OP-12, `l1d-246`) y la familia `poblacion` con adaptadores falsos (`l1d-299`) en verde; si un orden esperado
       cambia por C-1 o C-5, se corrige en el change dueño del dataset, no aquí, y después de mergear la parte B. El PR
       dice cuál de los dos resultados de SC-1 quedó (con `no_coincide` o solo el repliegue).
+      Evidencia: con el catálogo real 1.11.0 pasan `tests/evaluation` completo (incluidos `test_opciones_coherencia_dataset.py`, `test_opciones_gate2.py` y `test_opciones_aceptacion.py`) y la suite de 5926 pruebas; ningún orden esperado cambió por C-1 ni C-5, así que no se tocó ningún dataset. `evaluate` con adaptadores falsos, familias `poblacion` (`test-poblacion.yaml`), `aplicabilidad` (`test-aplicabilidad.yaml`) y `opciones` (`opciones-fake.yaml`): código de salida 0 las tres. Resultado de SC-1: `no_coincide` (ver S7.8).
 - [ ] S7.13 `eval-required` con adaptadores falsos en el PR (cambia el catálogo, AC-T5.4): sin regresión frente a **TRASLADADA a entrega 2 (parte B, orquestador, `eval-required` del PR tras el Gate 2)**.
       `data/evaluation/baseline.json`; si el baseline cambia solo por `catalogVersion`, se regenera y se dice en el PR.
+      Verificación local del implementador (no cierra la tarea): `node scripts/ci/eval-required.mjs --base origin/main` con adaptadores falsos termina en «sin regresión contra data/evaluation/baseline.json (tolerancia 0)»; el baseline no cambia. La marca `[x]` la pone el orquestador con el `eval-required` del PR.
 - [x] S7.14 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde
       antes y después, commit `refactor(L1D-126)`.
       Evidencia (apartado clinical-platform): `refactor(L1D-126)` 3258da63, Extract `huellaRecalculadaDe` en `validator/reglas.mjs`; `scripts/catalog` 302 en verde antes y después. El apartado de ai-services sigue abierto en S7.14b.
-- [ ] S7.14b (ai-services) Refactor de los archivos de `apps/rag-orchestrator` que toque la parte B, con los tests en verde antes y después, commit `refactor(L1D-126)`. **TRASLADADA a entrega 2 (parte B, ai-services)**.
+- [x] S7.14b (ai-services) Refactor de los archivos de `apps/rag-orchestrator` que toque la parte B, con los tests en verde antes y después, commit `refactor(L1D-126)`.
+      Evidencia: `refactor(L1D-126)` 05a988e7; Extract `aplicabilidad.py:_a_regla_del_dominio` y `_a_destino_del_dominio` (`_a_criterio_del_dominio` mezclaba niveles) y Extract `forma_estricta.py:Estricto` y `RevisionProvisional` (regla duplicada en los dos lectores); 5926 pruebas en verde antes y después, `lint-imports` 2 contratos cumplidos, cobertura de módulo sin bajar (se añaden pruebas, no se quita ninguna).
 
 ### (c) Corrida final
 
