@@ -56,7 +56,7 @@ los bordes (embeddings, *reranker*, LLM, NLI, Milvus); nunca módulos propios. R
 
 ## 1b. ai-services · composición condicional (después de la corrida base)
 
-- [ ] 1.6 DIFERIDA -> H-1 (condicional; TDD estricto; **después de la corrida base**, en un PR propio) Solo si el usuario elige la opción B o C del design D5 tras la corrida base:
+- [x] 1.6 **No aplica: opción A (usuario, 2026-11-26)**; no se toca la composición del segundo loop. Reporte de la base: `reports/eval/s7-corrida-base-b/l1d-331-cobertura-prostata-segundo-loop.base.md`. (Condicional original; TDD estricto; TDD estricto; **después de la corrida base**, en un PR propio) Solo si el usuario elige la opción B o C del design D5 tras la corrida base:
       primero `/opsx:update` con el delta `MODIFIED` de `evidence-analysis` (y `clinical-catalogs` en C) y Gate 1;
       después test de aceptación en rojo `[US-273 AC-2]` `[US-273 AC-5]` (mama idéntica) y la implementación en
       `app/domain/expansion_contextual.py` o `app/domain/terminos_del_caso.py`. En C, versión nueva del catálogo
