@@ -208,10 +208,12 @@ def _adopcion_del_brazo(
     armado: dict[str, Any], referencia: dict[str, Any], tolerancia: float
 ) -> dict[str, Any]:
     """US-277 AC-5: ``adoptable`` frente a la referencia, con los motivos de no serlo."""
-    del_brazo, de_la_referencia = (_tasa_de_falsos_sin_evidencia(a) for a in (armado, referencia))
+    aumento_de_falsos = _restar_opcional(
+        _tasa_de_falsos_sin_evidencia(armado), _tasa_de_falsos_sin_evidencia(referencia)
+    )
     decision = decidir_adopcion(
         retroceso=armado["retroceso"],
-        aumento_de_falsos_sin_evidencia=_restar_opcional(del_brazo, de_la_referencia),
+        aumento_de_falsos_sin_evidencia=aumento_de_falsos,
         tolerancia=tolerancia,
         viabilidad=armado["viabilidad"]["estado"],
     )
