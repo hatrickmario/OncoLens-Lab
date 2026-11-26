@@ -137,8 +137,9 @@ marca. `dataset_poblacion.py` valida la forma del campo nuevo.
 
 **S7-D4 · Catálogo de estados para próstata.** `manifest.catalogo_de_estados` apunta hoy al fixture `test-apl-1.2.0`,
 cuya próstata no tiene `poblacion-reglas.json`. Los casos de próstata y de C-1 necesitan reglas de próstata: se crea un
-fixture de catálogo de test nuevo en `apps/rag-orchestrator/tests/fixtures/catalogo/` (asumido el nombre
-`test-apl-1.3.0`), copiado del contenido de `l1d-126` cuando esté mergeado; `test-apl-1.2.0` no se toca. Alternativa
+fixture de catálogo de test nuevo en `apps/rag-orchestrator/tests/fixtures/catalogo/` con el nombre
+`test-apl-1.11.0` (no `1.3.0`: ese ya lo usa `l1d-126` y solo trae `extension` y HER2), copiado de las reglas de mama y próstata del catálogo `1.11.0` (S7.10);
+`test-apl-1.2.0` no se toca. Alternativa
 (pregunta abierta): apuntar al catálogo real para que la concordancia siga sus cambios.
 
 **S7-D5 · Ventanas (Gate 1 del S7, 2026-11-22; misma política que `l1d-246`).**
