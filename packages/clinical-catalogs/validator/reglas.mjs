@@ -235,15 +235,23 @@ export function exigirStudyKey(item, tipo, poblacion, studyKeysRepetidas) {
   return studyKeysRepetidas.has(studyKey) ? 'study_key_duplicada' : null;
 }
 
-/** AC-04.4: el hash del contenido cubierto por `validation.scope` coincide con `validation.catalogHash`. */
-export function verificarCatalogHash(archivo) {
-  if (!esObjeto(archivo) || !esObjeto(archivo.validation)) return null;
-  const { scope, catalogHash } = archivo.validation;
+/**
+ * Huella recalculada del contenido que cubre `validation.scope`, o `undefined` si el archivo no tiene bloque
+ * `validation` o la forma no es la esperada (no es un hash distinto: lo rechaza el esquema, que garantiza la forma).
+ */
+function huellaRecalculadaDe(archivo) {
+  if (!esObjeto(archivo) || !esObjeto(archivo.validation)) return undefined;
+  const { scope } = archivo.validation;
   const formaEsperada =
     Array.isArray(scope) && Array.isArray(archivo.items) && archivo.items.every(esObjeto);
-  // Una forma inesperada no es un hash distinto: la rechaza el esquema, que es quien garantiza la forma.
-  if (!formaEsperada) return null;
-  return catalogHashDe(scope, archivo.items) === catalogHash ? null : 'hash_distinto';
+  return formaEsperada ? catalogHashDe(scope, archivo.items) : undefined;
+}
+
+/** AC-04.4: el hash del contenido cubierto por `validation.scope` coincide con `validation.catalogHash`. */
+export function verificarCatalogHash(archivo) {
+  const recalculada = huellaRecalculadaDe(archivo);
+  if (recalculada === undefined) return null;
+  return recalculada === archivo.validation.catalogHash ? null : 'hash_distinto';
 }
 
 /** ¿El archivo declara una revisión de la IA (`reviewerRole = ia`) o un estado provisional sin el otro (S7, D14)? */
@@ -269,16 +277,13 @@ function historialConHuellaVigente({ history, catalogHash }, huellaRecalculada) 
  * Una forma inesperada no es un incumplimiento de estas reglas: la rechaza el esquema.
  */
 export function verificarBloqueValidation(archivo) {
-  const hash = verificarCatalogHash(archivo);
-  if (!esObjeto(archivo) || !esObjeto(archivo.validation)) return hash === null ? [] : [hash];
+  if (!esObjeto(archivo) || !esObjeto(archivo.validation)) return [];
   const { validation } = archivo;
-  const recalculada =
-    Array.isArray(validation.scope) && Array.isArray(archivo.items) && archivo.items.every(esObjeto)
-      ? catalogHashDe(validation.scope, archivo.items)
-      : undefined;
   return [
-    hash,
+    verificarCatalogHash(archivo),
     validacionProvisionalIncoherente(validation) ? 'validacion_provisional_incoherente' : null,
-    historialConHuellaVigente(validation, recalculada) ? 'historial_con_huella_vigente' : null,
+    historialConHuellaVigente(validation, huellaRecalculadaDe(archivo))
+      ? 'historial_con_huella_vigente'
+      : null,
   ].filter(Boolean);
 }
