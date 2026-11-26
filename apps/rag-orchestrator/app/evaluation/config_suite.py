@@ -501,7 +501,7 @@ def _campos_del_indice_y_la_consulta_del_brazo(crudo: dict[str, Any]) -> dict[st
             raise ConfigInvalida("QUERY_REWRITE_ENABLED debe ser true o false")
         campos["query_rewrite_enabled"] = crudo["QUERY_REWRITE_ENABLED"]
     if "CORPUS_CHUNK_CONTEXT" in crudo:
-        campos["contexto"] = _variante_de_contexto(crudo["CORPUS_CHUNK_CONTEXT"])
+        campos["variante_de_contexto"] = _variante_de_contexto(crudo["CORPUS_CHUNK_CONTEXT"])
     return campos
 
 
@@ -544,7 +544,7 @@ def _comparacion_de(
         )
     if len({b.nombre for b in brazos}) != len(brazos):
         raise ConfigInvalida("los nombres de comparacion.brazos deben ser únicos")
-    motivo = error_de_los_brazos([(b.nombre, b.contexto) for b in brazos])
+    motivo = error_de_los_brazos([(b.nombre, b.variante_de_contexto) for b in brazos])
     if motivo is not None:
         raise ConfigInvalida(motivo)
     tolerancia = _numero(clave_de(seccion, "tolerancia_retroceso"), "tolerancia_retroceso")
@@ -583,7 +583,7 @@ def _viabilidad_de(
         b.cambia_el_reranker
         or b.coleccion is not None
         or b.declara_pares_o_reescritura
-        or b.declara_contexto
+        or b.declara_variante_de_contexto
         for b in brazos
     ):
         return None

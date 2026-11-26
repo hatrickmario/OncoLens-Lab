@@ -667,7 +667,11 @@ def leer_resumenes_de_contexto(ruta: Path | None, config: ConfigSuite) -> dict[s
         return {}
     crudo = _json_de_la_opcion(ruta, "--resumenes-de-contexto")
     variantes = (
-        {b.nombre: b.contexto for b in config.comparacion.brazos if b.contexto is not None}
+        {
+            b.nombre: b.variante_de_contexto
+            for b in config.comparacion.brazos
+            if b.variante_de_contexto is not None
+        }
         if config.comparacion
         else {}
     )

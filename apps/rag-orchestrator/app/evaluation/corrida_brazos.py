@@ -14,6 +14,7 @@ from app.application.errores import RecuperacionNoDisponibleError
 from app.application.ports import Clock
 from app.domain.corpus_seed.coleccion_de_la_variante import (
     ColeccionNoCorrespondeALaVariante,
+    es_coleccion_de_contexto,
     exigir_coleccion_de_la_variante,
 )
 from app.domain.ventanas_del_reranker import ConfiguracionDelReranker
@@ -74,7 +75,9 @@ def exigir_brazo_sin_poblacion(brazo: Brazo, respuesta: RagQueryInternalResponse
     en la colección de 512 y en la de 1024, y la población se cita por ``chunk_id``; mide solo la recuperación (deuda D7-19)."""
     if (
         brazo.coleccion is not None
-        and not brazo.declara_contexto  # una colección de contexto conserva los chunk_id de la de origen (US-279 D4)
+        and not es_coleccion_de_contexto(
+            brazo.coleccion
+        )  # una colección de contexto conserva los chunk_id de la de origen (US-279 D4)
         and any(fuente.criteria for fuente in respuesta.applicability)
     ):
         raise SuiteAbortada(
@@ -101,10 +104,10 @@ def exigir_reescritura_del_brazo(
 
 def exigir_coleccion_del_brazo(brazo: Brazo, indice: IndiceDelCorpus | None) -> None:
     """La colección que lee un brazo de contexto es la de SU variante (US-279 D5, RN-22): si no, la corrida mediría un índice ajeno."""
-    if brazo.contexto is None or indice is None:
+    if brazo.variante_de_contexto is None or indice is None:
         return
     try:
-        exigir_coleccion_de_la_variante(indice.resumen.coleccion, brazo.contexto)
+        exigir_coleccion_de_la_variante(indice.resumen.coleccion, brazo.variante_de_contexto)
     except ColeccionNoCorrespondeALaVariante as error:
         raise SuiteAbortada(f"el brazo {brazo.nombre}: {error}") from None
 
@@ -119,10 +122,14 @@ def _con_el_indice_del_brazo(
 ) -> tuple[Adaptadores, IndiceEnMemoriaDelBrazo | None]:
     """Un brazo de contexto sobre el corpus en memoria construye su índice (cronometrado); con ``indice.fuente: milvus`` lee su
     colección y no se vuelve a embeber nada. Un brazo sin variante usa los adaptadores de la suite tal cual."""
-    if brazo.contexto is None or indice is not None or config.indice_fuente != "en_memoria":
+    if (
+        brazo.variante_de_contexto is None
+        or indice is not None
+        or config.indice_fuente != "en_memoria"
+    ):
         return adaptadores, None
     construido, segundos = cronometro.cronometrar(
-        construir_indice_con_contexto, adaptadores, dataset, brazo.contexto
+        construir_indice_con_contexto, adaptadores, dataset, brazo.variante_de_contexto
     )
     return construido.adaptadores, IndiceEnMemoriaDelBrazo(
         segundos,

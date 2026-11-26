@@ -25,8 +25,8 @@ class Viabilidad:
     limite_memoria_gb: float
 
 
-def excede_el_tope_de_latencia(p95_s: float | None, tope_s: float) -> bool | None:
-    """``p95_s > tope_s`` (estricto: igual al tope no excede); ``None`` (≠ ``False``) si no se midió."""
+def exceso_de_latencia(p95_s: float | None, tope_s: float) -> bool | None:
+    """Tri-estado: ``True`` si ``p95_s > tope_s`` (estricto: igual al tope no excede), ``False`` si no, ``None`` (≠ ``False``) si no se midió."""
     return None if p95_s is None else p95_s > tope_s
 
 
@@ -45,7 +45,7 @@ def viabilidad_del_brazo(
     motivos = tuple(
         motivo
         for motivo, excede in (
-            (MOTIVO_LATENCIA, excede_el_tope_de_latencia(p95_consulta_s, tope_p95_s)),
+            (MOTIVO_LATENCIA, exceso_de_latencia(p95_consulta_s, tope_p95_s)),
             (
                 MOTIVO_MEMORIA,
                 memoria_del_stack_gb is not None and memoria_del_stack_gb > limite_memoria_gb,

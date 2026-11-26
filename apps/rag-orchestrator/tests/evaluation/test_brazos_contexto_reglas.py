@@ -100,24 +100,29 @@ def test_una_diferencia_nula_con_intervalo_que_incluye_cero_no_es_mejora() -> No
 def test_cumple_cuando_el_intervalo_excluye_cero_y_el_p95_no_supera_el_tope() -> None:
     regla = regla_de_adopcion(inferior=0.02, p95_consulta_s=18.0, tope_p95_s=20.0)
 
-    assert (regla.cumple, regla.motivos) == (True, ())
+    assert (regla.mejora_fuera_del_ruido, regla.motivos) == (True, ())
 
 
 def test_el_p95_igual_al_tope_cumple_porque_el_tope_es_un_maximo() -> None:
-    assert regla_de_adopcion(inferior=0.02, p95_consulta_s=20.0, tope_p95_s=20.0).cumple is True
+    assert (
+        regla_de_adopcion(
+            inferior=0.02, p95_consulta_s=20.0, tope_p95_s=20.0
+        ).mejora_fuera_del_ruido
+        is True
+    )
 
 
 @pytest.mark.parametrize("inferior", [0.0, -0.01])
 def test_no_cumple_sin_mejora_cuando_el_intervalo_incluye_cero(inferior: float) -> None:
     regla = regla_de_adopcion(inferior=inferior, p95_consulta_s=10.0, tope_p95_s=20.0)
 
-    assert (regla.cumple, regla.motivos) == (False, (MOTIVO_SIN_MEJORA,))
+    assert (regla.mejora_fuera_del_ruido, regla.motivos) == (False, (MOTIVO_SIN_MEJORA,))
 
 
 def test_no_cumple_cuando_el_p95_supera_el_tope_aunque_mejore() -> None:
     regla = regla_de_adopcion(inferior=0.05, p95_consulta_s=20.5, tope_p95_s=20.0)
 
-    assert (regla.cumple, regla.motivos) == (False, (MOTIVO_P95_SOBRE_EL_TOPE,))
+    assert (regla.mejora_fuera_del_ruido, regla.motivos) == (False, (MOTIVO_P95_SOBRE_EL_TOPE,))
 
 
 def test_acumula_los_dos_motivos_cuando_ninguna_condicion_se_cumple() -> None:
@@ -132,16 +137,16 @@ def test_sin_una_medicion_no_se_marca_ni_cumple_ni_no_cumple(
 ) -> None:
     regla = regla_de_adopcion(inferior=inferior, p95_consulta_s=p95, tope_p95_s=20.0)
 
-    assert (regla.cumple, regla.motivos) == (None, (MOTIVO_NO_MEDIBLE,))
+    assert (regla.mejora_fuera_del_ruido, regla.motivos) == (None, (MOTIVO_NO_MEDIBLE,))
 
 
 @pytest.mark.parametrize(("p95", "esperado"), [(20.0, False), (20.1, True), (None, None)])
 def test_el_tope_de_latencia_es_el_mismo_para_la_viabilidad_y_la_regla_de_adopcion(
     p95: float | None, esperado: bool | None
 ) -> None:
-    from app.evaluation.viabilidad_del_brazo import excede_el_tope_de_latencia, viabilidad_del_brazo
+    from app.evaluation.viabilidad_del_brazo import exceso_de_latencia, viabilidad_del_brazo
 
-    assert excede_el_tope_de_latencia(p95, 20.0) is esperado
+    assert exceso_de_latencia(p95, 20.0) is esperado
     regla = regla_de_adopcion(inferior=0.1, p95_consulta_s=p95, tope_p95_s=20.0)
     viabilidad = viabilidad_del_brazo(
         p95_consulta_s=p95, tope_p95_s=20.0, memoria_del_stack_gb=1.0, limite_memoria_gb=30.0

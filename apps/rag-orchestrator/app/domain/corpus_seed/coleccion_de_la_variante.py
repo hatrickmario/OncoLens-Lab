@@ -28,6 +28,11 @@ class OrigenIgualAlDestino(ValueError):
         super().__init__("--origen no puede ser la colección de MILVUS_COLLECTION_NAME")
 
 
+def es_coleccion_de_contexto(nombre: str) -> bool:
+    """El nombre lleva la marca de una variante de contexto: sus ``chunk_id`` son los de la colección de origen (US-279 D4)."""
+    return MARCA_DE_CONTEXTO in nombre
+
+
 def coleccion_de_la_variante(base: str, variante: VarianteDeContexto) -> str:
     """El nombre de la colección de ``variante`` a partir del nombre base."""
     if variante is VarianteDeContexto.NINGUNO:
@@ -39,7 +44,7 @@ def exigir_coleccion_de_la_variante(nombre: str, variante: VarianteDeContexto) -
     """``ColeccionNoCorrespondeALaVariante`` si ``nombre`` no es el de la colección de ``variante``: ``ninguno`` no lleva marca de
     contexto; las otras terminan en el sufijo de SU variante y de la versión vigente de la plantilla, con un nombre base delante."""
     if variante is VarianteDeContexto.NINGUNO:
-        corresponde = MARCA_DE_CONTEXTO not in nombre
+        corresponde = not es_coleccion_de_contexto(nombre)
     else:
         sufijo = _sufijo(variante)
         corresponde = nombre.endswith(sufijo) and len(nombre) > len(sufijo)

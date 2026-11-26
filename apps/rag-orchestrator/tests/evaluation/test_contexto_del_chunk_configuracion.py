@@ -51,7 +51,7 @@ def test_la_configuracion_local_declara_los_tres_brazos_con_una_coleccion_por_va
 
     assert config.proveedor == "local" and config.indice_fuente == "milvus"
     assert [b.nombre for b in brazos] == BRAZOS
-    assert [b.contexto for b in brazos] == list(VarianteDeContexto)
+    assert [b.variante_de_contexto for b in brazos] == list(VarianteDeContexto)
     assert brazos[0].coleccion is None  # ninguno lee MILVUS_COLLECTION_NAME: la ingesta de l1d-119
     assert config.corpus_declarado == "l1d-119"
     assert (
@@ -65,9 +65,11 @@ def test_el_nombre_de_la_coleccion_de_cada_brazo_corresponde_a_su_variante_segun
     config = cargar_config_suite(CONFIG_LOCAL, ENTORNO_LOCAL)
 
     for brazo in config.comparacion.brazos[1:]:  # type: ignore[union-attr]
-        assert brazo.contexto is not None and brazo.coleccion is not None
-        exigir_coleccion_de_la_variante(brazo.coleccion, brazo.contexto)
-        assert brazo.coleccion == coleccion_de_la_variante("corpus_chunks", brazo.contexto)
+        assert brazo.variante_de_contexto is not None and brazo.coleccion is not None
+        exigir_coleccion_de_la_variante(brazo.coleccion, brazo.variante_de_contexto)
+        assert brazo.coleccion == coleccion_de_la_variante(
+            "corpus_chunks", brazo.variante_de_contexto
+        )
 
 
 def test_la_configuracion_local_no_declara_umbrales_ni_el_llm_de_la_ingesta_en_el_brazo() -> None:
@@ -190,7 +192,7 @@ def _resultado(
     en_memoria: IndiceEnMemoriaDelBrazo | None = None,
 ) -> ResultadoDeBrazo:
     return ResultadoDeBrazo(
-        Brazo("A0-x", RetrievalMode.dense, contexto=variante),
+        Brazo("A0-x", RetrievalMode.dense, variante_de_contexto=variante),
         servicio=None,  # type: ignore[arg-type]
         resultados=[],
         metas=[],

@@ -157,3 +157,14 @@ def test_la_cli_sale_con_1_y_nombra_la_etapa_cuando_un_documento_falla(
 
     salida = capsys.readouterr().out
     assert codigo == 1 and "milvus: RuntimeError" in salida and "uri-secreta" not in salida
+
+
+def test_la_cli_se_niega_con_otra_capitalizacion_y_espacios_en_la_coleccion_de_milvus_collection_name(
+    entorno: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    alterno = AlmacenDeChunksEnMemoria()
+
+    codigo = _main(_argumentos(coleccion=" Corpus_Chunks "), montar(), alterno)
+
+    assert codigo == 1 and "MILVUS_COLLECTION_NAME" in capsys.readouterr().err
+    assert alterno.chunks == {}

@@ -326,7 +326,9 @@ _CONTEXTO_DEL_BRAZO = Objeto(
         ),
         "regla_de_adopcion": Objeto(
             {
-                "cumple": Anulable(Booleano()),  # null = lo medido no alcanza para afirmarlo
+                "mejora_fuera_del_ruido": Anulable(
+                    Booleano()
+                ),  # null = lo medido no alcanza para afirmarlo
                 "motivos": Lista(Enumerado(MOTIVOS_DE_NO_CUMPLIR)),
             }
         ),

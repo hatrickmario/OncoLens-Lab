@@ -62,7 +62,7 @@ def test_el_reporte_trae_los_tres_brazos_con_sus_metricas_la_diferencia_frente_a
         diferencia = brazo["contexto"]["diferencia_pareada"]["recall_at_10_total"]
         assert set(diferencia) == {"diferencia", "ic95"}
         assert set(diferencia["ic95"]) == {"inferior", "superior"}
-        assert set(brazo["contexto"]["regla_de_adopcion"]) == {"cumple", "motivos"}
+        assert set(brazo["contexto"]["regla_de_adopcion"]) == {"mejora_fuera_del_ruido", "motivos"}
         assert "diferencia_frente_a_a0" in brazo
     assert "diferencia_pareada" not in por_nombre["A0"]["contexto"]
     assert "regla_de_adopcion" not in por_nombre["A0"]["contexto"]
@@ -99,7 +99,7 @@ def test_el_informe_marca_la_regla_de_adopcion_sin_adoptar_nada(
 
     assert reglas["A0"] is None
     for nombre in BRAZOS[1:]:
-        assert reglas[nombre]["cumple"] in (True, False, None)
+        assert reglas[nombre]["mejora_fuera_del_ruido"] in (True, False, None)
         assert all(isinstance(m, str) for m in reglas[nombre]["motivos"])
     from app.domain.corpus_seed.contexto_del_chunk import VARIANTE_INICIAL
 

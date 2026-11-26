@@ -14,7 +14,7 @@ from typing import Final
 
 from app.domain.corpus_seed.contexto_del_chunk import VarianteDeContexto
 from app.evaluation.retrieval_metrics import bootstrap_ic
-from app.evaluation.viabilidad_del_brazo import excede_el_tope_de_latencia
+from app.evaluation.viabilidad_del_brazo import exceso_de_latencia
 
 VARIANTE_DE_REFERENCIA: Final = VarianteDeContexto.NINGUNO
 CLAVE_DE_LA_VARIANTE: Final = "CORPUS_CHUNK_CONTEXT"
@@ -78,9 +78,9 @@ def diferencia_pareada(
 
 @dataclass(frozen=True)
 class ReglaDeAdopcion:
-    """``cumple`` ``None`` = lo medido no alcanza para afirmarlo (ni «cumple» ni «no cumple»)."""
+    """``mejora_fuera_del_ruido`` ``None`` = lo medido no alcanza para afirmarlo (ni «cumple» ni «no cumple»)."""
 
-    cumple: bool | None
+    mejora_fuera_del_ruido: bool | None
     motivos: tuple[str, ...]
 
 
@@ -95,7 +95,7 @@ def regla_de_adopcion(
         motivo
         for motivo, falla in (
             (MOTIVO_SIN_MEJORA, inferior <= 0.0),
-            (MOTIVO_P95_SOBRE_EL_TOPE, excede_el_tope_de_latencia(p95_consulta_s, tope_p95_s)),
+            (MOTIVO_P95_SOBRE_EL_TOPE, exceso_de_latencia(p95_consulta_s, tope_p95_s)),
         )
         if falla
     )

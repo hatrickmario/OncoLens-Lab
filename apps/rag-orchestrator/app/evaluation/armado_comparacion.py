@@ -333,7 +333,7 @@ def _contexto_del_brazo(
 ) -> dict[str, Any]:
     """Lo que el informe dice de un brazo de contexto: variante, plantilla, colección, costo del índice y, fuera de la referencia, la
     diferencia pareada frente a ``ninguno`` y la marca de la regla de adopción (que NO adopta nada)."""
-    variante = brazo.brazo.contexto
+    variante = brazo.brazo.variante_de_contexto
     contexto: dict[str, Any] = {
         "variante": None if variante is None else variante.value,
         "version_de_la_plantilla": VERSION_DE_LA_PLANTILLA,
@@ -350,7 +350,10 @@ def _contexto_del_brazo(
             p95_consulta_s=_p95_de_consulta_s(armado["latencia_ms"]),
             tope_p95_s=comparacion.viabilidad.tope_p95_s,
         )
-        contexto["regla_de_adopcion"] = {"cumple": regla.cumple, "motivos": list(regla.motivos)}
+        contexto["regla_de_adopcion"] = {
+            "mejora_fuera_del_ruido": regla.mejora_fuera_del_ruido,
+            "motivos": list(regla.motivos),
+        }
     return contexto
 
 
@@ -414,7 +417,7 @@ def armar_comparacion(
     con_pares_o_reescritura = con_viabilidad and any(
         b.brazo.declara_pares_o_reescritura for b in brazos
     )
-    con_contexto = any(b.brazo.declara_contexto for b in brazos)
+    con_contexto = any(b.brazo.declara_variante_de_contexto for b in brazos)
     for b, recuperacion in zip(brazos, recuperaciones, strict=True):
         armado = _datos_del_brazo(b, recuperacion)
         if con_viabilidad:

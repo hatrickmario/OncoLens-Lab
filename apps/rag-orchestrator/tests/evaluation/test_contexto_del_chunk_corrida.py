@@ -34,7 +34,9 @@ ENTORNO = {"STACK_MEMORY_LIMIT_GB": "30"}
 
 
 def _brazo(variante: VarianteDeContexto, **cambios: Any) -> Brazo:
-    return Brazo(f"A0-{variante.value}", RetrievalMode.dense, contexto=variante, **cambios)
+    return Brazo(
+        f"A0-{variante.value}", RetrievalMode.dense, variante_de_contexto=variante, **cambios
+    )
 
 
 def _indice(coleccion: str) -> IndiceDelCorpus:
@@ -128,13 +130,13 @@ def test_la_configuracion_fake_declara_los_tres_brazos_con_su_variante() -> None
     brazos = config.comparacion.brazos  # type: ignore[union-attr]
 
     assert [b.nombre for b in brazos] == ["A0", "A0-determinista", "A0-llm"]
-    assert [b.contexto for b in brazos] == list(VarianteDeContexto)
+    assert [b.variante_de_contexto for b in brazos] == list(VarianteDeContexto)
     assert config.comparacion.viabilidad is not None  # type: ignore[union-attr]
 
 
 def test_la_variante_del_brazo_entra_en_su_huella() -> None:
-    a = Brazo("A0", RetrievalMode.dense, contexto=VarianteDeContexto.NINGUNO)
-    b = replace(a, contexto=VarianteDeContexto.DETERMINISTA)
+    a = Brazo("A0", RetrievalMode.dense, variante_de_contexto=VarianteDeContexto.NINGUNO)
+    b = replace(a, variante_de_contexto=VarianteDeContexto.DETERMINISTA)
 
     assert a.huella() != b.huella()
     assert a.huella() != Brazo("A0", RetrievalMode.dense).huella()
@@ -202,4 +204,47 @@ def test_una_metrica_sin_preguntas_es_null_y_el_brazo_no_se_marca_como_cumple_la
 
     assert diferencias["recall_at_10_total"].diferencia is None
     assert diferencias["mrr"].diferencia is None
-    assert regla.cumple is None
+    assert regla.mejora_fuera_del_ruido is None
+
+
+def test_un_brazo_ninguno_con_otra_coleccion_consume_poblacion_con_ids_colisionados_y_aborta() -> (
+    None
+):
+    brazo = Brazo(
+        "A0-512",
+        RetrievalMode.dense,
+        variante_de_contexto=VarianteDeContexto.NINGUNO,
+        coleccion="corpus_chunks_512",
+    )
+
+    with pytest.raises(SuiteAbortada, match="población"):
+        exigir_brazo_sin_poblacion(brazo, _respuesta_con_criterios())
+
+
+def test_la_marca_de_contexto_en_el_nombre_decide_si_la_coleccion_es_de_contexto() -> None:
+    from app.domain.corpus_seed.coleccion_de_la_variante import es_coleccion_de_contexto
+
+    assert es_coleccion_de_contexto("corpus_chunks__ctx_llm_v1")
+    assert not es_coleccion_de_contexto("corpus_chunks_512")
+
+
+def test_la_suite_declara_la_reescritura_esperada_del_brazo_al_construir_las_observaciones() -> (
+    None
+):
+    from app.evaluation.composicion_suite import componer_servicio
+    from app.evaluation.fuente_dataset import FuenteDatasetEnDirectorio
+    from tests.support.fakes import RelojFijo
+
+    config = cargar_config_suite(CONFIGS / "s7-contexto-fake.yaml", ENTORNO)
+    dataset = FuenteDatasetEnDirectorio(config.dataset).cargar()
+    con = Brazo("A0", RetrievalMode.dense, query_rewrite_enabled=True)
+
+    def observaciones(brazo: Brazo | None):  # type: ignore[no-untyped-def]
+        return componer_servicio(
+            config, dataset, Cronometro(RelojSimulado()), RelojFijo(), brazo=brazo
+        ).observaciones
+
+    assert observaciones(con).reescritura_esperada is True
+    assert observaciones(replace(con, query_rewrite_enabled=False)).reescritura_esperada is False
+    assert observaciones(None).reescritura_esperada is None
+    assert isinstance(_brazo(VarianteDeContexto.LLM).variante_de_contexto, VarianteDeContexto)

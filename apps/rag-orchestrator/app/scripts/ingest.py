@@ -511,7 +511,9 @@ def _brazo_de_chunks(
     except ValidationError as error:
         print(f"{NOMBRE}: configuración inválida en: {_claves_invalidas(error)}", file=sys.stderr)
         return 1
-    if argumentos.coleccion.strip().casefold() == milvus.milvus_collection_name.strip().casefold():
+    try:
+        exigir_origen_distinto_del_destino(argumentos.coleccion, milvus.milvus_collection_name)
+    except OrigenIgualAlDestino:
         print(
             f"{NOMBRE} {MODO_BRAZO_DE_CHUNKS}: --coleccion no puede ser la de MILVUS_COLLECTION_NAME (RN-05)",
             file=sys.stderr,
