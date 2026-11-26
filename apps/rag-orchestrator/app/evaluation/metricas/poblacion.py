@@ -110,14 +110,20 @@ VENTANA_BASE = "base"
 """Nombre con el que el reporte agrupa lo que no lleva ventana: el dorado de la corrida base."""
 
 
+def _ventana_de(elemento: ParMedido | CasoDeEstado) -> str:
+    """La ventana del par o caso; sin marca es de la base y el reporte la nombra ``base`` (a diferencia del tipo de
+    redacción, donde ``None`` queda fuera de todo grupo)."""
+    return elemento.ventana or VENTANA_BASE
+
+
 def precision_por_ventana(pares: Sequence[ParMedido]) -> dict[str, Fraccion]:
     """La misma precisión, separando la base de lo agregado después con el catálogo 1.11.0 (S7-D5)."""
-    return _agrupado(pares, lambda p: p.ventana or VENTANA_BASE, _precision_del_par)
+    return _agrupado(pares, _ventana_de, _precision_del_par)
 
 
 def cobertura_por_ventana(pares: Sequence[ParMedido]) -> dict[str, Fraccion]:
     """La misma cobertura, separando la base de lo agregado después."""
-    return _agrupado(pares, lambda p: p.ventana or VENTANA_BASE, _cobertura_del_par)
+    return _agrupado(pares, _ventana_de, _cobertura_del_par)
 
 
 @dataclass(frozen=True)
@@ -194,7 +200,7 @@ def concordancia_por_ventana(casos: Sequence[CasoDeEstado]) -> dict[str, Fraccio
     """Aciertos y total de la concordancia, separando la base de los casos que dependen del catálogo 1.11.0."""
     acumulado: dict[str, Fraccion] = {}
     for caso in casos:
-        ventana = caso.ventana or VENTANA_BASE
+        ventana = _ventana_de(caso)
         previo = acumulado.get(ventana, Fraccion(0, 0))
         acumulado[ventana] = Fraccion(
             previo.aciertos + (caso.esperado == caso.calculado), previo.total + 1
