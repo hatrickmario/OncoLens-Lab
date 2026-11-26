@@ -1,6 +1,6 @@
 """Dorado de población sobre el catálogo 1.11.0 (L1D-299, S7.9, S7.10 y S7.10b; design S7-D4 y S7-D5).
 
-Los casos y pares que dependen de la parte B de ``l1d-126`` (C-1, C-2, C-4 y C-5) llevan la ventana
+Los casos y pares que dependen de la parte B de ``l1d-126`` (C-1, C-2, C-4 y C-5) llevan la etapa_del_dataset
 ``tras_catalogo_s7`` y el reporte los separa de la base. Las reglas de estado son las reales; el catálogo de estados del
 dorado es el fixture ``test-apl-1.11.0`` (copia de las reglas de mama y próstata del catálogo 1.11.0), no el real.
 Solo agregados e identificadores en el reporte (RN-14).
@@ -18,14 +18,19 @@ import pytest
 from app.evaluation.config_poblacion import cargar_config_poblacion
 from app.evaluation.corrida_poblacion import MedicionSinEvidencia, PuertosDePoblacion
 from app.evaluation.dataset_loader import DatasetInvalido
-from app.evaluation.dataset_poblacion import DoradoDePoblacion, cargar_dorado
+from app.evaluation.dataset_poblacion import (
+    ETAPA_BASE,
+    ETAPA_TRAS_CATALOGO_S7,
+    DoradoDePoblacion,
+    cargar_dorado,
+)
 from app.evaluation.evaluate import main
 from app.evaluation.metricas.poblacion import (
     CasoDeEstado,
     ParMedido,
-    concordancia_por_ventana,
-    cobertura_por_ventana,
-    precision_por_ventana,
+    concordancia_por_etapa_del_dataset,
+    cobertura_por_etapa_del_dataset,
+    precision_por_etapa_del_dataset,
 )
 from tests.evaluation.conftest import RAIZ_APP, RAIZ_REPO
 from tests.evaluation.dorado_de_prueba import ESTADOS, PARES, escribir_config, escribir_dorado
@@ -33,7 +38,7 @@ from tests.support.fakes import RelojFijo
 
 CONFIG = RAIZ_APP / "eval" / "configs" / "test-poblacion.yaml"
 DORADO = RAIZ_REPO / "data" / "evaluation" / "poblacion-dorado"
-VENTANA = "tras_catalogo_s7"
+ETAPA = ETAPA_TRAS_CATALOGO_S7
 ESTRATOS_E_IDIOMAS = {(e, i) for e in ("guia", "ensayo", "revision") for i in ("es", "en")}
 
 
@@ -58,35 +63,35 @@ def _correr_versionado(
     return codigo, json.loads(next(tmp_path.glob("*.json")).read_text(encoding="utf-8"))
 
 
-# --- ventana: dataset y métricas ----------------------------------------------------------------------------------------
+# --- etapa_del_dataset: dataset y métricas ----------------------------------------------------------------------------------------
 
 
-def test_un_par_y_un_caso_sin_ventana_son_de_la_base(tmp_path: Path) -> None:
+def test_un_par_y_un_caso_sin_etapa_del_dataset_son_de_la_base(tmp_path: Path) -> None:
     carpeta = escribir_dorado(tmp_path / "dorado")
     dorado = cargar_dorado(carpeta, frozenset({"sintetico_propio"}))
 
-    assert {p.ventana for p in dorado.pares} == {None}
-    assert {e.ventana for e in dorado.estados} == {None}
+    assert {p.etapa_del_dataset for p in dorado.pares} == {None}
+    assert {e.etapa_del_dataset for e in dorado.estados} == {None}
 
 
-def test_el_dorado_lee_la_ventana_de_un_par_y_de_un_caso(tmp_path: Path) -> None:
+def test_el_dorado_lee_la_etapa_de_un_par_y_de_un_caso(tmp_path: Path) -> None:
     pares = copy.deepcopy(PARES)
-    pares[0]["ventana"] = VENTANA
+    pares[0]["etapa_del_dataset"] = ETAPA
     estados = copy.deepcopy(ESTADOS)
-    estados[0]["ventana"] = VENTANA
+    estados[0]["etapa_del_dataset"] = ETAPA
 
     dorado = cargar_dorado(
         escribir_dorado(tmp_path / "dorado", pares=pares, estados=estados),
         frozenset({"sintetico_propio"}),
     )
 
-    assert dorado.pares[0].ventana == VENTANA
-    assert dorado.estados[0].ventana == VENTANA
+    assert dorado.pares[0].etapa_del_dataset == ETAPA
+    assert dorado.estados[0].etapa_del_dataset == ETAPA
 
 
-def test_el_dorado_rechaza_una_ventana_fuera_del_conjunto(tmp_path: Path) -> None:
+def test_el_dorado_rechaza_una_etapa_del_dataset_fuera_del_conjunto(tmp_path: Path) -> None:
     pares = copy.deepcopy(PARES)
-    pares[0]["ventana"] = "otra_ventana"
+    pares[0]["etapa_del_dataset"] = "otra_etapa_del_dataset"
 
     with pytest.raises(DatasetInvalido):
         cargar_dorado(
@@ -94,40 +99,47 @@ def test_el_dorado_rechaza_una_ventana_fuera_del_conjunto(tmp_path: Path) -> Non
         )
 
 
-def test_precision_y_cobertura_por_ventana_separan_la_base_de_lo_agregado_despues() -> None:
+def test_precision_y_cobertura_por_etapa_del_dataset_separan_la_base_de_lo_agregado_despues() -> (
+    None
+):
     pares = [
         ParMedido("d1", "ecog", frozenset({"a"}), ("a",)),
-        ParMedido("d2", "ecog", frozenset({"b", "c"}), ("b", "x"), ventana=VENTANA),
+        ParMedido("d2", "ecog", frozenset({"b", "c"}), ("b", "x"), etapa_del_dataset=ETAPA),
     ]
 
-    assert precision_por_ventana(pares)["base"].valor == 1.0
-    assert precision_por_ventana(pares)[VENTANA].valor == 0.5
-    assert cobertura_por_ventana(pares)[VENTANA].valor == 0.5
-    assert set(cobertura_por_ventana(pares)) == {"base", VENTANA}
+    assert precision_por_etapa_del_dataset(pares)[ETAPA_BASE].valor == 1.0
+    assert precision_por_etapa_del_dataset(pares)[ETAPA].valor == 0.5
+    assert cobertura_por_etapa_del_dataset(pares)[ETAPA].valor == 0.5
+    assert set(cobertura_por_etapa_del_dataset(pares)) == {ETAPA_BASE, ETAPA}
 
 
-def test_concordancia_por_ventana_cuenta_aciertos_y_total_de_cada_ventana() -> None:
+def test_concordancia_por_etapa_del_dataset_cuenta_aciertos_y_total_de_cada_etapa_del_dataset() -> (
+    None
+):
     casos = [
         CasoDeEstado("a", "coincide", "coincide"),
-        CasoDeEstado("b", "parcial", "desconocido", ventana=VENTANA),
-        CasoDeEstado("c", "parcial", "parcial", ventana=VENTANA),
+        CasoDeEstado("b", "parcial", "desconocido", etapa_del_dataset=ETAPA),
+        CasoDeEstado("c", "parcial", "parcial", etapa_del_dataset=ETAPA),
     ]
 
-    por_ventana = concordancia_por_ventana(casos)
+    por_etapa_del_dataset = concordancia_por_etapa_del_dataset(casos)
 
-    assert (por_ventana["base"].aciertos, por_ventana["base"].total) == (1, 1)
-    assert (por_ventana[VENTANA].aciertos, por_ventana[VENTANA].total) == (1, 2)
+    assert (
+        por_etapa_del_dataset[ETAPA_BASE].aciertos,
+        por_etapa_del_dataset[ETAPA_BASE].total,
+    ) == (1, 1)
+    assert (por_etapa_del_dataset[ETAPA].aciertos, por_etapa_del_dataset[ETAPA].total) == (1, 2)
 
 
 @pytest.mark.ac("US-233b", 2)
-def test_el_reporte_separa_pares_y_casos_de_la_ventana_tras_el_catalogo_s7_de_la_base(
+def test_el_reporte_separa_pares_y_casos_de_la_etapa_del_dataset_tras_el_catalogo_s7_de_la_base(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """Reporta aparte los pares y casos de la ventana tras_catalogo_s7 [US-233b AC-2]."""
+    """Reporta aparte los pares y casos de la etapa_del_dataset tras_catalogo_s7 [US-233b AC-2]."""
     pares = copy.deepcopy(PARES)
-    pares[0]["ventana"] = VENTANA
+    pares[0]["etapa_del_dataset"] = ETAPA
     estados = copy.deepcopy(ESTADOS)
-    estados[0]["ventana"] = VENTANA
+    estados[0]["etapa_del_dataset"] = ETAPA
     carpeta = escribir_dorado(tmp_path / "dorado", pares=pares, estados=estados)
     ruta = escribir_config(tmp_path, carpeta)
     salida = tmp_path / "salida"
@@ -140,8 +152,14 @@ def test_el_reporte_separa_pares_y_casos_de_la_ventana_tras_el_catalogo_s7_de_la
 
     assert codigo == 0, capsys.readouterr().err
     metricas = json.loads(next(salida.glob("*.json")).read_text(encoding="utf-8"))["metricas"]
-    assert {f["ventana"] for f in metricas["por_ventana"]} == {"base", VENTANA}
-    assert {f["ventana"] for f in metricas["concordancia"]["por_ventana"]} == {"base", VENTANA}
+    assert {f["etapa_del_dataset"] for f in metricas["por_etapa_del_dataset"]} == {
+        ETAPA_BASE,
+        ETAPA,
+    }
+    assert {f["etapa_del_dataset"] for f in metricas["concordancia"]["por_etapa_del_dataset"]} == {
+        ETAPA_BASE,
+        ETAPA,
+    }
 
 
 # --- S7.9 · S7.10b: pares ----------------------------------------------------------------------------------------------
@@ -162,12 +180,12 @@ def test_el_dorado_trae_pares_de_extension_y_hrr_brca_en_las_seis_celdas_y_llega
         celdas = {_celda(dorado, p.documento) for p in prostata if p.criterio == criterio}
         assert celdas == ESTRATOS_E_IDIOMAS, criterio
     nuevos = [p for p in prostata if p.criterio in ("extension", "hrr_brca")]
-    assert {p.ventana for p in nuevos} == {VENTANA}
+    assert {p.etapa_del_dataset for p in nuevos} == {ETAPA}
     assert all(v.scope == "elegibilidad" for p in nuevos for v in p.esperados)
 
 
 @pytest.mark.ac("US-233b", 1)
-def test_el_dorado_trae_pares_sobre_her2_bajo_de_mama_en_la_ventana_del_catalogo_s7() -> None:
+def test_el_dorado_trae_pares_sobre_her2_bajo_de_mama_en_la_etapa_del_catalogo_s7() -> None:
     """Trae pares de estado_her2 con HER2 bajo (IHC 1+ o 2+ con ISH negativo) en guía, ensayo y revisión
     [US-233b AC-1]."""
     dorado = _dorado_versionado()
@@ -183,7 +201,7 @@ def test_el_dorado_trae_pares_sobre_her2_bajo_de_mama_en_la_ventana_del_catalogo
     assert len(bajos) >= 4
     assert {dorado.documentos[p.documento].estrato for p in bajos} == {"guia", "ensayo", "revision"}
     assert {dorado.documentos[p.documento].idioma for p in bajos} == {"es", "en"}
-    assert {p.ventana for p in bajos} == {VENTANA}
+    assert {p.etapa_del_dataset for p in bajos} == {ETAPA}
 
 
 @pytest.mark.ac("US-233b", 1)
@@ -198,7 +216,7 @@ def test_el_triple_negativo_se_declara_inclusivo_y_se_proyecta_en_los_dos_criter
         for p in dorado.pares
         if p.criterio == "receptores_hormonales"
         and any("triple" in v.valor.lower() for v in p.esperados)
-        and p.ventana == VENTANA
+        and p.etapa_del_dataset == ETAPA
     ]
 
     assert len(receptores) >= 3
@@ -213,7 +231,7 @@ def test_el_triple_negativo_se_declara_inclusivo_y_se_proyecta_en_los_dos_criter
         for p in dorado.pares
         if p.criterio == "estado_her2"
         and any("triple" in v.valor.lower() for v in p.esperados)
-        and p.ventana == VENTANA
+        and p.etapa_del_dataset == ETAPA
     }
     assert en_her2 == {p.documento for p in receptores}
 
@@ -239,7 +257,7 @@ def test_el_dorado_concuerda_con_las_reglas_del_catalogo_1_11_0_en_castracion_y_
     """Trae un caso por regla F-20…F-23 con estado_castracion y los de extension (M0/M1 legible y repliegue), y el
     cómputo con las reglas reales concuerda sin No coincide ni Coincide indebidos [US-233b AC-4]."""
     dorado = _dorado_versionado()
-    nuevos = [c for c in dorado.estados if c.ventana == VENTANA]
+    nuevos = [c for c in dorado.estados if c.etapa_del_dataset == ETAPA]
     castracion = [c for c in nuevos if c.criterio == "estado_castracion"]
     extension = [c for c in nuevos if c.criterio == "extension"]
 
@@ -256,19 +274,28 @@ def test_el_dorado_concuerda_con_las_reglas_del_catalogo_1_11_0_en_castracion_y_
     concordancia = reporte["metricas"]["concordancia"]
     assert concordancia["aciertos"] == concordancia["total"]
     assert (concordancia["no_coincide_indebido"], concordancia["coincide_indebido"]) == (0, 0)
-    por_ventana = {f["ventana"]: f for f in concordancia["por_ventana"]}
-    assert por_ventana[VENTANA]["total"] == len(nuevos)
-    assert por_ventana[VENTANA]["aciertos"] == len(nuevos)
-    assert "base" in por_ventana
+    por_etapa_del_dataset = {
+        f["etapa_del_dataset"]: f for f in concordancia["por_etapa_del_dataset"]
+    }
+    assert por_etapa_del_dataset[ETAPA]["total"] == len(nuevos)
+    assert por_etapa_del_dataset[ETAPA]["aciertos"] == len(nuevos)
+    assert ETAPA_BASE in por_etapa_del_dataset
 
 
 def test_el_dorado_conserva_los_estados_de_mama_de_la_base_con_el_catalogo_1_11_0(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     dorado = _dorado_versionado()
-    base = [c for c in dorado.estados if c.ventana is None]
+    base = [c for c in dorado.estados if c.etapa_del_dataset is None]
 
     assert {c.id for c in base} >= {"F-20", "F-21", "F-21b", "F-22", "F-23", "C-3a", "C-3d"}
     _, reporte = _correr_versionado(tmp_path, capsys)
-    por_ventana = {f["ventana"]: f for f in reporte["metricas"]["concordancia"]["por_ventana"]}
-    assert por_ventana["base"]["aciertos"] == por_ventana["base"]["total"] == len(base)
+    por_etapa_del_dataset = {
+        f["etapa_del_dataset"]: f
+        for f in reporte["metricas"]["concordancia"]["por_etapa_del_dataset"]
+    }
+    assert (
+        por_etapa_del_dataset[ETAPA_BASE]["aciertos"]
+        == por_etapa_del_dataset[ETAPA_BASE]["total"]
+        == len(base)
+    )

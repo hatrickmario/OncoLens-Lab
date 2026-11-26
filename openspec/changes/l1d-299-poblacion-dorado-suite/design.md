@@ -152,7 +152,7 @@ fixture de catálogo de test nuevo en `apps/rag-orchestrator/tests/fixtures/cata
 - **Entre la base y la final, lo que depende de la parte B** (después de mergearla): pares de `extension` y `hrr_brca`
   (C-1, C-5), casos sobre HER2 bajo (C-2), etiquetado del triple negativo (C-4), los casos de estado de próstata
   (F-20…F-23 con `estado_castracion` y los de C-1) y el fixture de S7-D4. Estos casos llevan una marca en el dataset
-  (asumido el campo `ventana: tras_catalogo_s7`).
+  (campo `etapa_del_dataset: tras_catalogo_s7`; no se llama `ventana`, que ya es la ventana del reranker, de chunking y de turnos).
 - **Corrida final:** la suite sobre el dorado completo y el catálogo del S7. La comparación con la base vale para los
   pares y casos que ya estaban en la base; el reporte nombra los añadidos después como **no comparables con la base**
   y los lee por criterio y por estrato.

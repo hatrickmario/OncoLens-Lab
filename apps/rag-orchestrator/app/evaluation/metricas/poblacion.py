@@ -6,6 +6,8 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 
+from app.evaluation.dataset_poblacion import ETAPA_BASE
+
 
 @dataclass(frozen=True)
 class ParMedido:
@@ -23,7 +25,7 @@ class ParMedido:
     """El esperado no tiene valores de elegibilidad: el valor solo aparece como subgrupo o mención (D-3)."""
     valores_como_elegibilidad: int = 0
     """Cuántos de los ``obtenidos`` la extracción guardó con alcance ``elegibilidad``."""
-    ventana: str | None = None
+    etapa_del_dataset: str | None = None
     """``tras_catalogo_s7`` o ``None`` (de la base): permite separar lo agregado después de la corrida base (S7-D5)."""
 
 
@@ -106,24 +108,20 @@ def cobertura_por_tipo_de_redaccion(pares: Sequence[ParMedido]) -> dict[str, Fra
     return _agrupado(pares, lambda p: p.tipo_de_redaccion, _cobertura_del_par)
 
 
-VENTANA_BASE = "base"
-"""Nombre con el que el reporte agrupa lo que no lleva ventana: el dorado de la corrida base."""
-
-
-def _ventana_de(elemento: ParMedido | CasoDeEstado) -> str:
-    """La ventana del par o caso; sin marca es de la base y el reporte la nombra ``base`` (a diferencia del tipo de
+def _etapa_de(elemento: ParMedido | CasoDeEstado) -> str:
+    """La etapa del dataset del par o caso; sin marca es de la base y el reporte la nombra ``base`` (a diferencia del tipo de
     redacción, donde ``None`` queda fuera de todo grupo)."""
-    return elemento.ventana or VENTANA_BASE
+    return elemento.etapa_del_dataset or ETAPA_BASE
 
 
-def precision_por_ventana(pares: Sequence[ParMedido]) -> dict[str, Fraccion]:
+def precision_por_etapa_del_dataset(pares: Sequence[ParMedido]) -> dict[str, Fraccion]:
     """La misma precisión, separando la base de lo agregado después con el catálogo 1.11.0 (S7-D5)."""
-    return _agrupado(pares, _ventana_de, _precision_del_par)
+    return _agrupado(pares, _etapa_de, _precision_del_par)
 
 
-def cobertura_por_ventana(pares: Sequence[ParMedido]) -> dict[str, Fraccion]:
+def cobertura_por_etapa_del_dataset(pares: Sequence[ParMedido]) -> dict[str, Fraccion]:
     """La misma cobertura, separando la base de lo agregado después."""
-    return _agrupado(pares, _ventana_de, _cobertura_del_par)
+    return _agrupado(pares, _etapa_de, _cobertura_del_par)
 
 
 @dataclass(frozen=True)
@@ -167,7 +165,7 @@ class CasoDeEstado:
     calculado: str
     rendija: bool = False
     """El caso mide la rendija de C-3: elegibilidad de un solo valor sin «solo» (Q-1)."""
-    ventana: str | None = None
+    etapa_del_dataset: str | None = None
     """``tras_catalogo_s7`` o ``None`` (de la base), como en ``ParMedido``."""
 
 
@@ -196,13 +194,13 @@ def concordancia_de_estados(casos: Sequence[CasoDeEstado]) -> ConcordanciaDeEsta
     )
 
 
-def concordancia_por_ventana(casos: Sequence[CasoDeEstado]) -> dict[str, Fraccion]:
+def concordancia_por_etapa_del_dataset(casos: Sequence[CasoDeEstado]) -> dict[str, Fraccion]:
     """Aciertos y total de la concordancia, separando la base de los casos que dependen del catálogo 1.11.0."""
     acumulado: dict[str, Fraccion] = {}
     for caso in casos:
-        ventana = _ventana_de(caso)
-        previo = acumulado.get(ventana, Fraccion(0, 0))
-        acumulado[ventana] = Fraccion(
+        etapa_del_dataset = _etapa_de(caso)
+        previo = acumulado.get(etapa_del_dataset, Fraccion(0, 0))
+        acumulado[etapa_del_dataset] = Fraccion(
             previo.aciertos + (caso.esperado == caso.calculado), previo.total + 1
         )
     return acumulado

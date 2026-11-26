@@ -413,7 +413,7 @@ pares:
   - valor: triple-negative
     scope: elegibilidad
     chunk: ch-doc-gui-en-1-1
-  ventana: tras_catalogo_s7
+  etapa_del_dataset: tras_catalogo_s7
 - id: doc-gui-en-2-linea_tratamiento
   documento: doc-gui-en-2
   criterio: linea_tratamiento
@@ -431,7 +431,7 @@ pares:
   - valor: triple-negative
     scope: elegibilidad
     chunk: ch-doc-gui-en-2-1
-  ventana: tras_catalogo_s7
+  etapa_del_dataset: tras_catalogo_s7
 - id: doc-gui-en-2-estadio
   documento: doc-gui-en-2
   criterio: estadio
@@ -578,7 +578,7 @@ pares:
   - valor: triple-negative
     scope: elegibilidad
     chunk: ch-doc-rev-en-1-1
-  ventana: tras_catalogo_s7
+  etapa_del_dataset: tras_catalogo_s7
 - id: doc-rev-en-1-estadio
   documento: doc-rev-en-1
   criterio: estadio
@@ -897,7 +897,7 @@ pares:
   - valor: enfermedad metastasica
     scope: elegibilidad
     chunk: ch-doc-pro-gui-es-2-1
-  ventana: tras_catalogo_s7
+  etapa_del_dataset: tras_catalogo_s7
 - id: doc-pro-gui-es-2-hrr_brca
   documento: doc-pro-gui-es-2
   criterio: hrr_brca
@@ -905,7 +905,7 @@ pares:
   - valor: mutacion en BRCA1/2
     scope: elegibilidad
     chunk: ch-doc-pro-gui-es-2-1
-  ventana: tras_catalogo_s7
+  etapa_del_dataset: tras_catalogo_s7
 - id: doc-pro-gui-en-2-extension
   documento: doc-pro-gui-en-2
   criterio: extension
@@ -913,7 +913,7 @@ pares:
   - valor: metastatic prostate cancer
     scope: elegibilidad
     chunk: ch-doc-pro-gui-en-2-1
-  ventana: tras_catalogo_s7
+  etapa_del_dataset: tras_catalogo_s7
 - id: doc-pro-gui-en-2-hrr_brca
   documento: doc-pro-gui-en-2
   criterio: hrr_brca
@@ -921,7 +921,7 @@ pares:
   - valor: BRCA1/2 mutated
     scope: elegibilidad
     chunk: ch-doc-pro-gui-en-2-1
-  ventana: tras_catalogo_s7
+  etapa_del_dataset: tras_catalogo_s7
 - id: doc-pro-ens-es-2-extension
   documento: doc-pro-ens-es-2
   criterio: extension
@@ -932,7 +932,7 @@ pares:
   - valor: enfermedad localmente avanzada
     scope: elegibilidad
     chunk: ch-doc-pro-ens-es-2-1
-  ventana: tras_catalogo_s7
+  etapa_del_dataset: tras_catalogo_s7
 - id: doc-pro-ens-es-2-hrr_brca
   documento: doc-pro-ens-es-2
   criterio: hrr_brca
@@ -940,7 +940,7 @@ pares:
   - valor: sin mutacion en genes HRR
     scope: elegibilidad
     chunk: ch-doc-pro-ens-es-2-1
-  ventana: tras_catalogo_s7
+  etapa_del_dataset: tras_catalogo_s7
 - id: doc-pro-ens-en-2-extension
   documento: doc-pro-ens-en-2
   criterio: extension
@@ -948,7 +948,7 @@ pares:
   - valor: non-metastatic prostate cancer
     scope: elegibilidad
     chunk: ch-doc-pro-ens-en-2-1
-  ventana: tras_catalogo_s7
+  etapa_del_dataset: tras_catalogo_s7
 - id: doc-pro-ens-en-2-hrr_brca
   documento: doc-pro-ens-en-2
   criterio: hrr_brca
@@ -956,7 +956,7 @@ pares:
   - valor: other HRR gene mutated
     scope: elegibilidad
     chunk: ch-doc-pro-ens-en-2-1
-  ventana: tras_catalogo_s7
+  etapa_del_dataset: tras_catalogo_s7
 - id: doc-pro-rev-es-2-extension
   documento: doc-pro-rev-es-2
   criterio: extension
@@ -964,7 +964,7 @@ pares:
   - valor: enfermedad no metastasica
     scope: elegibilidad
     chunk: ch-doc-pro-rev-es-2-1
-  ventana: tras_catalogo_s7
+  etapa_del_dataset: tras_catalogo_s7
 - id: doc-pro-rev-es-2-hrr_brca
   documento: doc-pro-rev-es-2
   criterio: hrr_brca
@@ -972,7 +972,7 @@ pares:
   - valor: estado HRR no evaluado
     scope: elegibilidad
     chunk: ch-doc-pro-rev-es-2-1
-  ventana: tras_catalogo_s7
+  etapa_del_dataset: tras_catalogo_s7
 - id: doc-pro-rev-en-2-extension
   documento: doc-pro-rev-en-2
   criterio: extension
@@ -980,7 +980,7 @@ pares:
   - valor: locally advanced prostate cancer
     scope: elegibilidad
     chunk: ch-doc-pro-rev-en-2-1
-  ventana: tras_catalogo_s7
+  etapa_del_dataset: tras_catalogo_s7
 - id: doc-pro-rev-en-2-hrr_brca
   documento: doc-pro-rev-en-2
   criterio: hrr_brca
@@ -991,7 +991,7 @@ pares:
   - valor: other HRR gene mutated
     scope: elegibilidad
     chunk: ch-doc-pro-rev-en-2-1
-  ventana: tras_catalogo_s7
+  etapa_del_dataset: tras_catalogo_s7
 - id: doc-her2b-gui-es-1-estado_her2
   documento: doc-her2b-gui-es-1
   criterio: estado_her2
@@ -999,7 +999,7 @@ pares:
   - valor: HER2 bajo
     scope: elegibilidad
     chunk: ch-doc-her2b-gui-es-1-1
-  ventana: tras_catalogo_s7
+  etapa_del_dataset: tras_catalogo_s7
 - id: doc-her2b-gui-en-1-estado_her2
   documento: doc-her2b-gui-en-1
   criterio: estado_her2
@@ -1007,7 +1007,7 @@ pares:
   - valor: HER2-low
     scope: elegibilidad
     chunk: ch-doc-her2b-gui-en-1-1
-  ventana: tras_catalogo_s7
+  etapa_del_dataset: tras_catalogo_s7
 - id: doc-her2b-ens-en-1-estado_her2
   documento: doc-her2b-ens-en-1
   criterio: estado_her2
@@ -1017,7 +1017,7 @@ pares:
     chunk: ch-doc-her2b-ens-en-1-1
   redaccion: dificil
   tipo_de_redaccion: definicion_implicita
-  ventana: tras_catalogo_s7
+  etapa_del_dataset: tras_catalogo_s7
 - id: doc-her2b-rev-es-1-estado_her2
   documento: doc-her2b-rev-es-1
   criterio: estado_her2
@@ -1025,7 +1025,7 @@ pares:
   - valor: HER2 bajo
     scope: elegibilidad
     chunk: ch-doc-her2b-rev-es-1-1
-  ventana: tras_catalogo_s7
+  etapa_del_dataset: tras_catalogo_s7
 - id: doc-gui-en-1-estado_her2
   documento: doc-gui-en-1
   criterio: estado_her2
@@ -1033,7 +1033,7 @@ pares:
   - valor: triple-negative
     scope: elegibilidad
     chunk: ch-doc-gui-en-1-1
-  ventana: tras_catalogo_s7
+  etapa_del_dataset: tras_catalogo_s7
 - id: doc-gui-en-2-estado_her2
   documento: doc-gui-en-2
   criterio: estado_her2
@@ -1041,7 +1041,7 @@ pares:
   - valor: triple-negative
     scope: elegibilidad
     chunk: ch-doc-gui-en-2-1
-  ventana: tras_catalogo_s7
+  etapa_del_dataset: tras_catalogo_s7
 - id: doc-rev-en-1-estado_her2
   documento: doc-rev-en-1
   criterio: estado_her2
@@ -1049,4 +1049,4 @@ pares:
   - valor: triple-negative
     scope: elegibilidad
     chunk: ch-doc-rev-en-1-1
-  ventana: tras_catalogo_s7
+  etapa_del_dataset: tras_catalogo_s7

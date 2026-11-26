@@ -2,7 +2,7 @@
   "clase": "sintetico",
   "nombre": "poblacion-dorado",
   "version": "s7-2",
-  "descripcion": "Conjunto sintético del dorado de población (L1D-299, US-233b AC-1). Texto redactado para la prueba, sin datos de paciente: pares de mama y de próstata (guía, ensayo y revisión en es y en), casos de redacción difícil, distractores de subgrupo o mención y, con la marca de ventana tras_catalogo_s7, los pares y casos que dependen del catálogo 1.11.0 (extensión y HRR/BRCA de próstata, HER2 bajo, triple negativo inclusivo, estados de castración y extensión). Revisión provisional de IA, sin revisor humano: la suite marca precisión y cobertura como no concluyentes.",
+  "descripcion": "Conjunto sintético del dorado de población (L1D-299, US-233b AC-1). Texto redactado para la prueba, sin datos de paciente: pares de mama y de próstata (guía, ensayo y revisión en es y en), casos de redacción difícil, distractores de subgrupo o mención y, con la marca de etapa_del_dataset tras_catalogo_s7, los pares y casos que dependen del catálogo 1.11.0 (extensión y HRR/BRCA de próstata, HER2 bajo, triple negativo inclusivo, estados de castración y extensión). Revisión provisional de IA, sin revisor humano: la suite marca precisión y cobertura como no concluyentes.",
   "catalogo_de_estados": "apps/rag-orchestrator/tests/fixtures/catalogo/test-apl-1.11.0",
   "revisor": {
     "rol": null,

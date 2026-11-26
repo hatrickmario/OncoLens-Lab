@@ -145,19 +145,19 @@ mismo dorado. S7.5–S7.8, S7.11 y S7.12 no esperan a `l1d-126`.
 ### Entre la corrida base y la final · solo lo que depende de `l1d-126` parte B (C-1, C-2, C-4, C-5)
 
 Orden de merge: `l1d-126` parte A → corrida base → `l1d-335` (`1.10.0`) → `l1d-126` parte B (`1.11.0`) → S7.9, S7.10 y
-S7.10b. Estos casos llevan la marca de ventana del design S7-D5 para que el reporte los separe.
+S7.10b. Estos casos llevan la marca `etapa_del_dataset` del design S7-D5 para que el reporte los separe.
 
 - [x] S7.9 (datos · D-4, C-4) Etiquetar el triple negativo como en C-4 (receptor hormonal positivo y triple negativo en
       la misma cohorte se declara inclusiva). _Evidencia:_ `9176b5b9`; los tres fragmentos con «hormone receptor-positive,
       triple-negative» dicen ahora «the cohort includes both … and …», el triple negativo pasa a `elegibilidad` y se proyecta también en
-      `estado_her2` (HER2 negativo); los 6 pares llevan `ventana: tras_catalogo_s7`. Test `[US-233b AC-1]`
+      `estado_her2` (HER2 negativo); los 6 pares llevan `etapa_del_dataset: tras_catalogo_s7`. Test `[US-233b AC-1]`
       `test_el_triple_negativo_se_declara_inclusivo_y_se_proyecta_en_los_dos_criterios_como_en_c_4`.
 - [x] S7.10 (datos y fixture · D-5) `estados.yaml`: un caso por regla F-20…F-23 con `estado_castracion` y los casos de
       `extension` (C-1); fixture de catálogo de test nuevo con reglas de próstata y `catalogo_de_estados` apuntando a él (design
       S7-D4). _Evidencia:_ rojo `5ba7aaf0` (12 tests en rojo por aserción) → verde `9176b5b9`. Fixture
       `apps/rag-orchestrator/tests/fixtures/catalogo/test-apl-1.11.0/` (mama y próstata: `aplicabilidad.json` y `poblacion-reglas.json` copiados del
       catálogo `1.11.0`; se llama `1.11.0` y no `1.3.0` porque `test-apl-1.3.0` ya existe para `l1d-126` y solo trae `extension`/HER2). 9 casos nuevos
-      con `ventana: tras_catalogo_s7`: `F-20p`, `F-21p`, `F-21pb` (restricción explícita), `F-22p`, `F-23p` (`estado_castracion`) y `C-1a` (M0 con «only
+      con `etapa_del_dataset: tras_catalogo_s7`: `F-20p`, `F-21p`, `F-21pb` (restricción explícita), `F-22p`, `F-23p` (`estado_castracion`) y `C-1a` (M0 con «only
       metastatic» → no_coincide), `C-1b` (M1b → coincide), `C-1c` (sin marcador → desconocido), `C-1d` (`T2c`, repliegue → desconocido). La parte B se mergeó con la lectura de M0/M1, así que el
       esperado es el del supuesto SC-1 y no el de repliegue total. Test `[US-233b AC-4]`
       `test_el_dorado_concuerda_con_las_reglas_del_catalogo_1_11_0_en_castracion_y_extension_sin_indebidos` (concordancia 100 % y 0 indebidos con las reglas reales).
@@ -167,8 +167,8 @@ S7.10b. Estos casos llevan la marca de ventana del design S7-D5 para que el repo
       una de las seis celdas), 26 pares de próstata en total (14 + 12) y 4 de HER2 bajo (un `dificil`/`definicion_implicita` con «IHC 1+ o 2+ con ISH negativo»);
       `version` del manifiesto `s7-2`. S7.11 repetido: `pii-scan` y `dataset-class-check` sin hallazgos y `--suite poblacion` falsa en verde (no concluyente por `sin_revisor`); `--suite all` igual al baseline
       (ver el reporte de la entrega). Test `[US-233b AC-1]` `test_el_dorado_trae_pares_de_extension_y_hrr_brca_en_las_seis_celdas_y_llega_a_16_de_prostata` y
-      `..._her2_bajo_...`. **Ventana (S7-D5):** el dataset admite `ventana: tras_catalogo_s7` (`dataset_poblacion.VENTANAS`) y el reporte gana `metricas.por_ventana` y
-      `concordancia.por_ventana` (informativas, no entran en el veredicto): lo agregado o cambiado tras la corrida base queda **no comparable con la base**. Sin LLM real: la medición de estos pares va a la corrida final (S7.13).
+      `..._her2_bajo_...`. **Etapa del dataset (S7-D5):** el dataset admite `etapa_del_dataset: tras_catalogo_s7` (`dataset_poblacion.ETAPAS_DEL_DATASET`) y el reporte gana `metricas.por_etapa_del_dataset` y
+      `concordancia.por_etapa_del_dataset` (informativas, no entran en el veredicto): lo agregado o cambiado tras la corrida base queda **no comparable con la base**. Sin LLM real: la medición de estos pares va a la corrida final (S7.13).
 - [ ] S7.13 TRASLADADA -> entrega 3 (corrida final por `ai-eval-runner`). `evaluate --suite poblacion` con modelos locales sobre el dorado ampliado y el catálogo del S7 (`l1d-126`
       parte B), por `ai-eval-runner`, con los umbrales actuales (`[S7 resp. 11]`); reporte en `reports/eval/`, leído por
       criterio, por tipo de cáncer y por tipo de redacción, que declara el corpus (los documentos del dorado,

@@ -109,12 +109,12 @@ casos:
   esperado:
     estado: desconocido
 # S7.10 (D-5, C-1): un caso por regla F-20…F-23 con estado_castracion y los de extension, sobre el fixture
-# test-apl-1.11.0 (copia de las reglas del catálogo 1.11.0). Llevan la ventana tras_catalogo_s7: no son
+# test-apl-1.11.0 (copia de las reglas del catálogo 1.11.0). Llevan la etapa_del_dataset tras_catalogo_s7: no son
 # comparables con la corrida base. El esperado lo fija quien lee la regla (DEC-11, SC-1), no la salida del código.
 - id: F-20p
   criterio: estado_castracion
   tipo_de_cancer: prostata
-  ventana: tras_catalogo_s7
+  etapa_del_dataset: tras_catalogo_s7
   paciente: castration-resistant prostate cancer
   valores:
   - valor: castration-sensitive prostate cancer
@@ -128,7 +128,7 @@ casos:
 - id: F-21p
   criterio: estado_castracion
   tipo_de_cancer: prostata
-  ventana: tras_catalogo_s7
+  etapa_del_dataset: tras_catalogo_s7
   paciente: castration-sensitive prostate cancer
   valores:
   - valor: castration-resistant prostate cancer
@@ -139,7 +139,7 @@ casos:
 - id: F-21pb
   criterio: estado_castracion
   tipo_de_cancer: prostata
-  ventana: tras_catalogo_s7
+  etapa_del_dataset: tras_catalogo_s7
   paciente: castration-sensitive prostate cancer
   valores:
   - valor: only castration-resistant prostate cancer
@@ -150,7 +150,7 @@ casos:
 - id: F-22p
   criterio: estado_castracion
   tipo_de_cancer: prostata
-  ventana: tras_catalogo_s7
+  etapa_del_dataset: tras_catalogo_s7
   paciente: castration-resistant prostate cancer
   valores:
   - valor: castration-sensitive prostate cancer
@@ -166,7 +166,7 @@ casos:
 - id: F-23p
   criterio: estado_castracion
   tipo_de_cancer: prostata
-  ventana: tras_catalogo_s7
+  etapa_del_dataset: tras_catalogo_s7
   paciente: castration-resistant prostate cancer
   valores:
   - valor: castration-sensitive prostate cancer
@@ -180,7 +180,7 @@ casos:
 - id: C-1a
   criterio: extension
   tipo_de_cancer: prostata
-  ventana: tras_catalogo_s7
+  etapa_del_dataset: tras_catalogo_s7
   paciente: T2cN0M0
   valores:
   - valor: only metastatic prostate cancer
@@ -191,7 +191,7 @@ casos:
 - id: C-1b
   criterio: extension
   tipo_de_cancer: prostata
-  ventana: tras_catalogo_s7
+  etapa_del_dataset: tras_catalogo_s7
   paciente: T3aN1M1b
   valores:
   - valor: only metastatic prostate cancer
@@ -202,7 +202,7 @@ casos:
 - id: C-1c
   criterio: extension
   tipo_de_cancer: prostata
-  ventana: tras_catalogo_s7
+  etapa_del_dataset: tras_catalogo_s7
   paciente: T2cN0M0
   valores:
   - valor: metastatic prostate cancer
@@ -213,7 +213,7 @@ casos:
 - id: C-1d
   criterio: extension
   tipo_de_cancer: prostata
-  ventana: tras_catalogo_s7
+  etapa_del_dataset: tras_catalogo_s7
   paciente: T2c
   valores:
   - valor: only metastatic prostate cancer
