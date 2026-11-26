@@ -16,6 +16,7 @@ from typing import Annotated, Literal
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, model_validator
 
 from app.domain.criterios_aplicabilidad import (
+    CoincidenciaDeEquivalencias,
     CondicionDeParcial,
     CriterioDeAplicabilidad,
     DestinoDelCriterio,
@@ -28,6 +29,7 @@ from app.infrastructure.catalogo_clinico.manifiesto import CatalogoNoDisponible
 from app.infrastructure.catalogo_clinico.poblacion_reglas import (
     NOMBRE_DEL_ARCHIVO_DE_REGLAS,
     ReglasDePoblacionDelTipo,
+    RevisionProvisional,
     leer_reglas_de_poblacion,
 )
 
@@ -44,6 +46,8 @@ _CAMPO = r"^[a-z][a-z0-9_]*$"
 _CLAVE_DE_COINCIDENCIA = r"^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)?$"
 _VERSION = r"^(test-([a-z]+-)?)?\d+\.\d+\.\d+$"
 _MINUSCULAS_Y_GUION_BAJO = r"^[a-z_]+$"
+_FECHA = r"^\d{4}-\d{2}-\d{2}$"
+_HUELLA = r"^[0-9a-f]{64}$"
 
 
 def _sin_repetidos(valores: list[str]) -> list[str]:
@@ -103,6 +107,14 @@ class _Regla(_Estricto):
         Annotated[dict[Annotated[str, Field(pattern=_CLAVE)], _ListaUnica], Field(min_length=1)]
         | None
     ) = None
+    subsetOf: (
+        Annotated[
+            dict[Annotated[str, Field(pattern=_CLAVE)], Annotated[str, Field(pattern=_CLAVE)]],
+            Field(min_length=1),
+        ]
+        | None
+    ) = None
+    equivalenceMatch: CoincidenciaDeEquivalencias | None = None
     partial: _Parcial
     limits: _Limites | None = None
 
@@ -116,6 +128,16 @@ class _Criterio(_Estricto):
     isExclusionary: bool
     rule: _Regla
     estado: EstadoDeRevision
+    revision_provisional: RevisionProvisional | None = None
+
+
+class _EntradaDeHistorial(_Estricto):
+    """Revisión anterior del archivo: solo roles, nunca nombres de persona (RN-10); no llega al dominio."""
+
+    status: str = Field(pattern=_MINUSCULAS_Y_GUION_BAJO)
+    reviewerRole: str = Field(pattern=_MINUSCULAS_Y_GUION_BAJO)
+    date: str = Field(pattern=_FECHA)
+    catalogHash: str = Field(pattern=_HUELLA)
 
 
 class _Validacion(_Estricto):
@@ -126,8 +148,9 @@ class _Validacion(_Estricto):
     ]
     status: str = Field(pattern=_MINUSCULAS_Y_GUION_BAJO)
     reviewerRole: str = Field(pattern=_MINUSCULAS_Y_GUION_BAJO)
-    date: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")
-    catalogHash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    date: str = Field(pattern=_FECHA)
+    catalogHash: str = Field(pattern=_HUELLA)
+    history: Annotated[list[_EntradaDeHistorial], Field(min_length=1)] | None = None
 
 
 class _Archivo(_Estricto):
@@ -231,6 +254,8 @@ def _a_criterio_del_dominio(
                 }
             ),
             limites=LimitesDeRegla(regla.limits.min, regla.limits.max) if regla.limits else None,
+            jerarquia=MappingProxyType(regla.subsetOf or {}),
+            coincidencia_de_equivalencias=regla.equivalenceMatch or "prefijo",
         ),
         estado_de_revision=item.estado,
         poblacion=reglas_de_poblacion.de(item.key),

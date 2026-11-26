@@ -10,9 +10,9 @@ import json
 from collections.abc import Mapping
 from pathlib import Path
 from types import MappingProxyType
-from typing import Annotated
+from typing import Annotated, Literal
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, model_validator
 
 from app.domain.criterios_aplicabilidad import ReglasDePoblacion
 from app.infrastructure.catalogo_clinico.manifiesto import CatalogoNoDisponible
@@ -20,6 +20,7 @@ from app.infrastructure.catalogo_clinico.manifiesto import CatalogoNoDisponible
 NOMBRE_DEL_ARCHIVO_DE_REGLAS = "poblacion-reglas.json"
 
 _CLAVE = r"^[a-z0-9_]+$"
+_FECHA = r"^\d{4}-\d{2}-\d{2}$"
 
 
 def _sin_repetidos(valores: list[str]) -> list[str]:
@@ -35,6 +36,23 @@ _ListaUnica = Annotated[list[_Texto], Field(min_length=1), AfterValidator(_sin_r
 class _Estricto(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
 
+    @model_validator(mode="before")
+    @classmethod
+    def _rechazar_null_explicito(cls, datos: object) -> object:
+        """El esquema JSON pide el campo opcional ausente, no ``null``."""
+        if isinstance(datos, dict) and any(valor is None for valor in datos.values()):
+            raise ValueError("null explícito")
+        return datos
+
+
+class RevisionProvisional(_Estricto):
+    """Marca de procedencia de una revisión provisional de la IA (``comun.schema.json#/$defs/revisionProvisional``).
+
+    Se valida aquí y no llega al dominio: la lectura de la población no depende de quién revisó el criterio."""
+
+    rol: Literal["ia"]
+    fecha: str = Field(pattern=_FECHA)
+
 
 class _Marcadores(_Estricto):
     es: list[_Texto] = []
@@ -45,6 +63,7 @@ class _ReglasDelCriterio(_Estricto):
     synonyms: dict[Annotated[str, Field(pattern=_CLAVE)], _ListaUnica] = {}
     scale: _ListaUnica | None = None
     groups: dict[_Texto, _ListaUnica] = {}
+    revision_provisional: RevisionProvisional | None = None
 
 
 class _Archivo(_Estricto):
