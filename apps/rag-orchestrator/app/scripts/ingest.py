@@ -47,6 +47,7 @@ from pymilvus import MilvusClient
 from app.application.corpus_ingestion.brazo_de_chunks import IngerirBrazoDeChunks
 from app.application.corpus_ingestion.ingestion_pipeline_service import IngestionPipelineService
 from app.application.corpus_ingestion.ports import (
+    AlmacenDeReindexacionDeContexto,
     AlmacenDeReindexacionSparse,
     SparsePassageEncoder,
 )
@@ -343,6 +344,7 @@ def _modelos_de_la_ingesta(
 
 MODO_REINDEX_SPARSE = "reindex-sparse"
 MODO_BRAZO_DE_CHUNKS = "brazo-de-chunks"
+MODO_REINDEX_CONTEXTO = "reindex-context"
 
 
 def _argumentos(argv: Sequence[str] | None) -> argparse.Namespace:
@@ -367,6 +369,11 @@ def _argumentos(argv: Sequence[str] | None) -> argparse.Namespace:
     brazo.add_argument(
         "--solape", type=int, default=None, help="tokens de solape; sin él, CORPUS_CHUNK_OVERLAP"
     )
+    contexto = modos.add_parser(
+        MODO_REINDEX_CONTEXTO,
+        help="reconstruye el índice de una variante de contexto en una colección propia",
+    )
+    contexto.add_argument("--origen", required=True, help="colección de Milvus de origen")
     argumentos = analizador.parse_args(argv)
     if argumentos.modo is None and argumentos.manifest is None:
         analizador.error("--manifest es obligatorio")
@@ -540,6 +547,26 @@ def _brazo_de_chunks(
     return 1 if reporte.hubo_errores else 0
 
 
+@dataclass(frozen=True)
+class PuertosDeLaReindexacionDeContexto:
+    """Bordes que un test sustituye; sin ellos la CLI compone Milvus (origen y destino), el catálogo en solo lectura y el LLM local."""
+
+    origen: AlmacenDeReindexacionDeContexto | None = None
+    destino: AlmacenDeReindexacionDeContexto | None = None
+    catalogo: LectorDePoblacionDelCorpus | None = None
+    llm: LlmClient | None = None
+
+
+def _reindexar_contexto(
+    argumentos: argparse.Namespace,
+    embedder: PassageEmbedder | None,
+    sparse: SparsePassageEncoder | None,
+    reloj: Clock | None,
+    puertos: PuertosDeLaReindexacionDeContexto,
+) -> int:
+    raise NotImplementedError("no implementado")
+
+
 def main(
     argv: Sequence[str] | None = None,
     embedder: PassageEmbedder | None = None,
@@ -551,12 +578,21 @@ def main(
     almacen_sparse: AlmacenDeReindexacionSparse | None = None,
     llm_poblacion: LlmDePoblacion | None = None,
     puertos_brazo: PuertosDelBrazoDeChunks | None = None,
+    puertos_contexto: PuertosDeLaReindexacionDeContexto | None = None,
 ) -> int:
     """``embedder``, ``sparse``, ``reloj``, ``tokenizador``, ``llm``, ``nli`` y ``llm_poblacion`` se inyectan solo en los tests; en
     producción salen de los adapters reales (``MODEL_PROVIDER=local``, LLM local)."""
     argumentos = _argumentos(argv)
     if argumentos.modo == MODO_REINDEX_SPARSE:
         return _reindexar_sparse(sparse, almacen_sparse)
+    if argumentos.modo == MODO_REINDEX_CONTEXTO:
+        return _reindexar_contexto(
+            argumentos,
+            embedder,
+            sparse,
+            reloj,
+            puertos_contexto or PuertosDeLaReindexacionDeContexto(),
+        )
     if argumentos.modo == MODO_BRAZO_DE_CHUNKS:
         return _brazo_de_chunks(
             argumentos,
