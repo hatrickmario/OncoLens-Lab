@@ -89,7 +89,9 @@ def test_el_dorado_rechaza_una_ventana_fuera_del_conjunto(tmp_path: Path) -> Non
     pares[0]["ventana"] = "otra_ventana"
 
     with pytest.raises(DatasetInvalido):
-        cargar_dorado(escribir_dorado(tmp_path / "dorado", pares=pares), frozenset({"sintetico_propio"}))
+        cargar_dorado(
+            escribir_dorado(tmp_path / "dorado", pares=pares), frozenset({"sintetico_propio"})
+        )
 
 
 def test_precision_y_cobertura_por_ventana_separan_la_base_de_lo_agregado_despues() -> None:
@@ -169,11 +171,13 @@ def test_el_dorado_trae_pares_sobre_her2_bajo_de_mama_en_la_ventana_del_catalogo
     """Trae pares de estado_her2 con HER2 bajo (IHC 1+ o 2+ con ISH negativo) en guía, ensayo y revisión
     [US-233b AC-1]."""
     dorado = _dorado_versionado()
+
+    def _habla_de_her2_bajo(documento: str) -> bool:
+        texto = " ".join(f.texto.lower() for f in dorado.documentos[documento].fragmentos)
+        return any(frase in texto for frase in ("her2-low", "her2 bajo", "low her2"))
+
     bajos = [
-        p
-        for p in dorado.pares
-        if p.criterio == "estado_her2"
-        and any(("low" in v.valor.lower() or "bajo" in v.valor.lower()) for v in p.esperados)
+        p for p in dorado.pares if p.criterio == "estado_her2" and _habla_de_her2_bajo(p.documento)
     ]
 
     assert len(bajos) >= 4
@@ -201,7 +205,9 @@ def test_el_triple_negativo_se_declara_inclusivo_y_se_proyecta_en_los_dos_criter
     for par in receptores:
         assert {v.scope for v in par.esperados} == {"elegibilidad"}, par.id
         texto = " ".join(f.texto for f in dorado.documentos[par.documento].fragmentos).lower()
-        assert "both" in texto or "ambos" in texto, par.id  # la frase dice que la cohorte es inclusiva
+        assert "both" in texto or "ambos" in texto, (
+            par.id
+        )  # la frase dice que la cohorte es inclusiva
     en_her2 = {
         p.documento
         for p in dorado.pares

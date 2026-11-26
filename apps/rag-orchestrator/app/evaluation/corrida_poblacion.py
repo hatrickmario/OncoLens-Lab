@@ -58,11 +58,14 @@ from app.evaluation.metricas.poblacion import (
     cobertura_por_criterio,
     cobertura_por_redaccion,
     cobertura_por_tipo_de_redaccion,
+    cobertura_por_ventana,
     concordancia_de_estados,
+    concordancia_por_ventana,
     cortes_por_longitud,
     precision_por_criterio,
     precision_por_redaccion,
     precision_por_tipo_de_redaccion,
+    precision_por_ventana,
     recuento_de_rendija,
     sin_evidencia_vs_baseline,
     tasa_cortes_del_bucle,
@@ -298,6 +301,7 @@ def _pares_medidos(
                 redaccion=par.redaccion,
                 tipo_de_redaccion=par.tipo_de_redaccion,
                 distractor=par.distractor,
+                ventana=par.ventana,
                 valores_como_elegibilidad=sum(
                     alcance == "elegibilidad" for _, alcance in guardados
                 ),
@@ -333,7 +337,13 @@ def _caso_de_estado(
         valores.valores if caso.citados is None else valores_de_la_opcion(valores, caso.citados)
     )
     calculado = estado_de_poblacion(citados, caso.paciente, criterio).estado
-    return CasoDeEstado(caso.id, caso.esperado, calculado, rendija=caso.rendija is not None)
+    return CasoDeEstado(
+        caso.id,
+        caso.esperado,
+        calculado,
+        rendija=caso.rendija is not None,
+        ventana=caso.ventana,
+    )
 
 
 # --- bucle (OUT-06) ------------------------------------------------------------------------------------------------
@@ -398,6 +408,7 @@ def _reporte(
             "por_criterio": por_criterio,
             "por_redaccion": _por_redaccion(pares),
             "por_tipo_de_redaccion": _por_tipo_de_redaccion(pares),
+            "por_ventana": _por_ventana(pares),
             "distractores": _distractores(pares),
             "tasa_duplicados": duplicados,
             "cortes_por_longitud": _cortes_del_reporte(extraccion, cortes),
@@ -549,6 +560,11 @@ def _por_tipo_de_redaccion(pares: Sequence[ParMedido]) -> list[dict[str, Any]]:
     )
 
 
+def _por_ventana(pares: Sequence[ParMedido]) -> list[dict[str, Any]]:
+    """Separa lo de la base de lo agregado tras el catálogo 1.11.0: lo segundo no es comparable con la base (S7-D5)."""
+    return _desagregado(precision_por_ventana(pares), cobertura_por_ventana(pares), "ventana")
+
+
 def _distractores(pares: Sequence[ParMedido]) -> dict[str, int]:
     medido = valores_indebidos_en_distractores(pares)
     return {
@@ -578,6 +594,10 @@ def _concordancia(config: ConfigPoblacion, estados: Sequence[CasoDeEstado]) -> d
         "marca": marca_frente_a_meta(resultado.total.valor, minimo),
         "no_coincide_indebido": resultado.no_coincide_indebido,
         "coincide_indebido": resultado.coincide_indebido,
+        "por_ventana": [
+            {"ventana": ventana, "aciertos": f.aciertos, "total": f.total}
+            for ventana, f in sorted(concordancia_por_ventana(estados).items())
+        ],
     }
 
 

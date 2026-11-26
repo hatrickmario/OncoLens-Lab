@@ -597,6 +597,7 @@ ESQUEMA_POBLACION = Objeto(
                 ),
                 "por_redaccion": _desagregado_de_poblacion("redaccion"),
                 "por_tipo_de_redaccion": _desagregado_de_poblacion("tipo_de_redaccion"),
+                "por_ventana": _desagregado_de_poblacion("ventana"),
                 "distractores": Objeto(
                     {
                         "pares": Numero(),
@@ -634,6 +635,15 @@ ESQUEMA_POBLACION = Objeto(
                         "marca": Enumerado(_MARCAS),
                         "no_coincide_indebido": Numero(),
                         "coincide_indebido": Numero(),
+                        "por_ventana": Lista(
+                            Objeto(
+                                {
+                                    "ventana": Identificador(),
+                                    "aciertos": Numero(),
+                                    "total": Numero(),
+                                }
+                            )
+                        ),
                     }
                 ),
                 "sin_evidencia": Objeto(

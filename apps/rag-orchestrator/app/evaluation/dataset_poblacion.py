@@ -292,6 +292,7 @@ def _par(crudo: dict[str, Any]) -> ParDorado:
             None if crudo.get("tipo_de_redaccion") is None else str(crudo["tipo_de_redaccion"])
         ),
         distractor=bool(crudo.get("distractor", False)),
+        ventana=_ventana(crudo.get("ventana")),
     )
 
 
@@ -311,6 +312,7 @@ def _estados(contenido: dict[str, Any]) -> tuple[CasoDeEstadoDorado, ...]:
                 citados=frozenset(crudo["citados"]) if "citados" in crudo else None,
                 esperado=esperado,
                 rendija=_rendija(crudo.get("rendija")),
+                ventana=_ventana(crudo.get("ventana")),
             )
         )
     return tuple(casos)
@@ -319,6 +321,12 @@ def _estados(contenido: dict[str, Any]) -> tuple[CasoDeEstadoDorado, ...]:
 def _rendija(crudo: object) -> str | None:
     if crudo is not None and crudo not in RENDIJAS:
         raise ValueError("rendija fuera del conjunto")
+    return None if crudo is None else str(crudo)
+
+
+def _ventana(crudo: object) -> str | None:
+    if crudo is not None and crudo not in VENTANAS:
+        raise ValueError("ventana fuera del conjunto")
     return None if crudo is None else str(crudo)
 
 
