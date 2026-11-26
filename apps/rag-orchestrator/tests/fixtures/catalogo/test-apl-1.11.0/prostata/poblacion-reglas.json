@@ -1,0 +1,84 @@
+{
+  "version": "test-apl-1.11.0",
+  "restrictionMarkers": {
+    "es": ["solo", "exclusivamente"],
+    "en": ["only", "exclusively"]
+  },
+  "disenosQueMezclan": ["guia", "revision_sistematica"],
+  "criteria": {
+    "estado_castracion": {
+      "synonyms": {
+        "sensible_castracion": [
+          "sensible_castracion",
+          "castration-sensitive",
+          "castration-sensitive prostate cancer",
+          "hormone-sensitive prostate cancer",
+          "sensible a la castración",
+          "cáncer de próstata sensible a la castración"
+        ],
+        "resistente_castracion": [
+          "resistente_castracion",
+          "castration-resistant",
+          "castration-resistant prostate cancer",
+          "resistente a la castración",
+          "cáncer de próstata resistente a la castración"
+        ]
+      },
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      }
+    },
+    "extension": {
+      "synonyms": {
+        "no_metastasica": [
+          "localized prostate cancer",
+          "locally advanced prostate cancer",
+          "non-metastatic prostate cancer",
+          "enfermedad localizada",
+          "enfermedad localmente avanzada",
+          "enfermedad no metastásica",
+          "cáncer de próstata localizado"
+        ],
+        "metastasica": [
+          "metastatic prostate cancer",
+          "metastatic disease",
+          "metastatic castration-resistant prostate cancer",
+          "enfermedad metastásica",
+          "cáncer de próstata metastásico",
+          "cáncer de próstata metastásico resistente a la castración"
+        ]
+      },
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      }
+    },
+    "hrr_brca": {
+      "synonyms": {
+        "brca12_mutado": [
+          "BRCA1/2 mutated",
+          "BRCA1/2-mutated",
+          "BRCA1/2 mutado",
+          "mutación en BRCA1/2"
+        ],
+        "otro_gen_hrr": [
+          "other HRR gene mutated",
+          "non-BRCA HRR gene mutated",
+          "otro gen HRR mutado",
+          "mutación en otro gen HRR"
+        ],
+        "sin_mutacion": [
+          "no HRR mutation",
+          "without HRR gene mutation",
+          "sin mutación en genes HRR"
+        ],
+        "no_evaluado": ["HRR status not evaluated", "estado HRR no evaluado"]
+      },
+      "revision_provisional": {
+        "rol": "ia",
+        "fecha": "2026-11-21"
+      }
+    }
+  }
+}

@@ -39,6 +39,8 @@ TIPOS_DE_REDACCION = (
 )
 """Tipos de redacción difícil de D-2; solo los pares ``dificil`` llevan uno."""
 RENDIJAS = ("c3",)
+VENTANAS = ("tras_catalogo_s7",)
+"""Ventana de un par o caso agregado o etiquetado después de la corrida base, con el catálogo 1.11.0 (S7-D5)."""
 ESTADOS_ESPERADOS = ("coincide", "parcial", "no_coincide", "desconocido")
 CASO_EXCLUIDO_DEL_BUCLE = "tamoxifen"
 """El bucle de OUT-06 se repite con casos DISTINTOS del que lo provocó (ADR47-R17)."""
@@ -76,6 +78,8 @@ class ParDorado:
     """Tipo de la redacción difícil (``TIPOS_DE_REDACCION``); solo con ``redaccion: dificil``."""
     distractor: bool = False
     """El valor solo aparece como subgrupo o mención: el esperado no trae elegibilidad (D-3)."""
+    ventana: str | None = None
+    """``tras_catalogo_s7`` cuando el par se agregó o cambió después de la corrida base (S7-D5); ``None``: de la base."""
 
 
 @dataclass(frozen=True)
@@ -89,6 +93,8 @@ class CasoDeEstadoDorado:
     esperado: str
     rendija: str | None = None
     """Caso que mide una rendija conocida de la regla (``c3``); el esperado sigue siendo el de la regla vigente."""
+    ventana: str | None = None
+    """``tras_catalogo_s7`` cuando el caso depende del catálogo 1.11.0 (S7-D5); ``None``: de la base."""
 
 
 @dataclass(frozen=True)

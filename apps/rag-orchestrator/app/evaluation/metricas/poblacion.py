@@ -23,6 +23,8 @@ class ParMedido:
     """El esperado no tiene valores de elegibilidad: el valor solo aparece como subgrupo o mención (D-3)."""
     valores_como_elegibilidad: int = 0
     """Cuántos de los ``obtenidos`` la extracción guardó con alcance ``elegibilidad``."""
+    ventana: str | None = None
+    """``tras_catalogo_s7`` o ``None`` (de la base): permite separar lo agregado después de la corrida base (S7-D5)."""
 
 
 @dataclass(frozen=True)
@@ -104,6 +106,14 @@ def cobertura_por_tipo_de_redaccion(pares: Sequence[ParMedido]) -> dict[str, Fra
     return _agrupado(pares, lambda p: p.tipo_de_redaccion, _cobertura_del_par)
 
 
+def precision_por_ventana(pares: Sequence[ParMedido]) -> dict[str, Fraccion]:
+    raise NotImplementedError
+
+
+def cobertura_por_ventana(pares: Sequence[ParMedido]) -> dict[str, Fraccion]:
+    raise NotImplementedError
+
+
 @dataclass(frozen=True)
 class ValoresEnDistractores:
     pares: int
@@ -145,6 +155,8 @@ class CasoDeEstado:
     calculado: str
     rendija: bool = False
     """El caso mide la rendija de C-3: elegibilidad de un solo valor sin «solo» (Q-1)."""
+    ventana: str | None = None
+    """``tras_catalogo_s7`` o ``None`` (de la base), como en ``ParMedido``."""
 
 
 @dataclass(frozen=True)
@@ -170,6 +182,10 @@ def concordancia_de_estados(casos: Sequence[CasoDeEstado]) -> ConcordanciaDeEsta
         sum(c.calculado == "no_coincide" and c.esperado != "no_coincide" for c in casos),
         sum(c.calculado == "coincide" and c.esperado != "coincide" for c in casos),
     )
+
+
+def concordancia_por_ventana(casos: Sequence[CasoDeEstado]) -> dict[str, Fraccion]:
+    raise NotImplementedError
 
 
 @dataclass(frozen=True)
