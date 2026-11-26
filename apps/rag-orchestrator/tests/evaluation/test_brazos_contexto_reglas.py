@@ -133,3 +133,18 @@ def test_sin_una_medicion_no_se_marca_ni_cumple_ni_no_cumple(
     regla = regla_de_adopcion(inferior=inferior, p95_consulta_s=p95, tope_p95_s=20.0)
 
     assert (regla.cumple, regla.motivos) == (None, (MOTIVO_NO_MEDIBLE,))
+
+
+@pytest.mark.parametrize(("p95", "esperado"), [(20.0, False), (20.1, True), (None, None)])
+def test_el_tope_de_latencia_es_el_mismo_para_la_viabilidad_y_la_regla_de_adopcion(
+    p95: float | None, esperado: bool | None
+) -> None:
+    from app.evaluation.viabilidad_del_brazo import excede_el_tope_de_latencia, viabilidad_del_brazo
+
+    assert excede_el_tope_de_latencia(p95, 20.0) is esperado
+    regla = regla_de_adopcion(inferior=0.1, p95_consulta_s=p95, tope_p95_s=20.0)
+    viabilidad = viabilidad_del_brazo(
+        p95_consulta_s=p95, tope_p95_s=20.0, memoria_del_stack_gb=1.0, limite_memoria_gb=30.0
+    )
+    assert (MOTIVO_P95_SOBRE_EL_TOPE in regla.motivos) is bool(esperado)
+    assert (viabilidad.estado == "no_viable") is bool(esperado)
