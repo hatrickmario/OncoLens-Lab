@@ -30,8 +30,10 @@ from app.evaluation.cronometro import Cronometro
 from app.evaluation.fuente_dataset import DatasetSuite
 from app.evaluation.guardas import SuiteAbortada
 from app.evaluation.indice_del_corpus import IndiceDelCorpus
+from app.evaluation.medidores import Observaciones
 from app.evaluation.metricas.resultado import ResultadoConsulta
 from app.evaluation.modelos_locales import PuertosLocales
+from app.evaluation.reescritura_del_brazo import reescritura_efectiva_coincide
 from app.schemas.generated.models import RagMeta, RagQueryInternalResponse
 
 
@@ -57,6 +59,22 @@ def exigir_brazo_sin_poblacion(brazo: Brazo, respuesta: RagQueryInternalResponse
         raise SuiteAbortada(
             f"el brazo {brazo.nombre} lee su propia colección y no puede consumir población (ADR-47): "
             "sus chunk_id colisionan con los de la colección de la suite"
+        )
+
+
+def exigir_reescritura_del_brazo(
+    brazo: Brazo, observaciones: Observaciones, reescrituras_previas: int, sin_evidencia: bool
+) -> None:
+    """La reescritura efectiva de la consulta (las invocaciones al puerto del reescritor) es la que el brazo declara; si no,
+    la corrida no mide lo que dice medir y aborta (US-277 AC-5). Un brazo sin reescritor medido no se comprueba."""
+    esperada = observaciones.reescritura_esperada
+    if esperada is None:
+        return
+    invocaciones = observaciones.reescrituras - reescrituras_previas
+    if not reescritura_efectiva_coincide(esperada, invocaciones, sin_evidencia):
+        raise SuiteAbortada(
+            f"el brazo {brazo.nombre} corrió una consulta con una reescritura distinta de la que declara "
+            "(QUERY_REWRITE_ENABLED)"
         )
 
 
@@ -123,6 +141,7 @@ async def _evaluar_brazo(
     metas: list[RagMeta] = []
     sin_terminos = 0
     for posicion, pregunta in enumerate(dataset.preguntas):
+        reescrituras_previas = servicio.observaciones.reescrituras
         try:
             resultado, respuesta = await evaluar_pregunta_en_servicio(
                 servicio, dataset, base, pregunta, posicion
@@ -134,6 +153,9 @@ async def _evaluar_brazo(
             sin_terminos += 1
             continue
         exigir_brazo_sin_poblacion(brazo, respuesta)
+        exigir_reescritura_del_brazo(
+            brazo, servicio.observaciones, reescrituras_previas, resultado.sin_evidencia
+        )
         resultados.append(resultado)
         metas.append(respuesta.meta)
     if servicio.observaciones.reranker_discrepante:

@@ -14,6 +14,8 @@ from typing import Any
 import pytest
 import yaml
 
+from app.application.ports import FalloDeInferencia
+from app.evaluation.adaptadores_falsos import RerankerLexico
 from app.evaluation.brazos_recuperacion import Brazo
 from app.evaluation.composicion_suite import Adaptadores, adaptadores_de_suite
 from app.evaluation.config_suite import ConfigInvalida, ConfigSuite, cargar_config_suite
@@ -43,6 +45,16 @@ HUELLAS_DE_LOS_BRAZOS_EXISTENTES = {
     "A0-maximo": "ec2d42a3d29dbd775ed5919cd948da6d7ccc8a697ade58fca39f617c428a4655",
     "A0-longitud-ampliada": "fd9a3cd2bd9d8101b7d27aa93d4a03cf745120f48a8a53bb8252244201196cfa",
 }
+
+
+class _CandidatoFalso:
+    def __init__(self, texto: str) -> None:
+        self.chunk_id, self.document_id, self.chunk_text, self.similitud_dense = (
+            texto,
+            "d",
+            texto,
+            0.1,
+        )
 
 
 def _mundo() -> tuple[ConfigSuite, DatasetSuite]:
@@ -169,6 +181,19 @@ def test_el_brazo_de_30_pares_envia_al_reranker_hasta_30_candidatos_y_el_vigente
 
     assert (mayor_envio(vigente), mayor_envio(treinta)) == (20, 30)
     assert [vigente.reranker.max_pairs, treinta.reranker.max_pairs] == [20, 30]  # type: ignore[union-attr]
+
+
+def test_el_reranker_falso_con_tope_de_pares_rechaza_mas_candidatos_con_el_error_del_puerto() -> (
+    None
+):
+    con_tope = RerankerLexico(max_pairs=2)
+    candidatos = [_CandidatoFalso("a"), _CandidatoFalso("b"), _CandidatoFalso("c")]
+
+    with pytest.raises(FalloDeInferencia):
+        con_tope.puntuar("pregunta", candidatos)
+
+    assert len(con_tope.variante(max_pairs=3).puntuar("pregunta", candidatos)) == 3
+    assert RerankerLexico().variante().configuracion.max_pairs is None  # sin tope: como antes
 
 
 def test_un_brazo_sin_pares_declarados_conserva_el_corte_de_la_suite() -> None:

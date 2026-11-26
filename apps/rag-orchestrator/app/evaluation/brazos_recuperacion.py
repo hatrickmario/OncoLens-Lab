@@ -41,11 +41,18 @@ class Brazo:
 
     @property
     def cambia_el_reranker(self) -> bool:
-        return (self.reranker_modo, self.reranker_solape, self.reranker_max_length) != (
-            None,
-            None,
-            None,
-        )
+        """El brazo declara algo de la etapa del reranker: ventanas, largo o el tope de pares que admite (US-277 AC-6)."""
+        return (
+            self.reranker_modo,
+            self.reranker_solape,
+            self.reranker_max_length,
+            self.reranker_max_pairs,
+        ) != (None, None, None, None)
+
+    @property
+    def declara_pares_o_reescritura(self) -> bool:
+        """El brazo es de la comparación de US-277: cambia los pares del reranker o la reescritura de la consulta."""
+        return self.reranker_max_pairs is not None or self.query_rewrite_enabled is not None
 
     def trazado_esperado(self) -> tuple[RetrievalMode, Fusion, float]:
         """``(retrievalMode, fusion, fusionParam)`` que ``meta.retrievalParams`` debe traer, sin nulos (l1d-109 D7)."""
@@ -59,7 +66,7 @@ class Brazo:
 
     def huella(self) -> str:
         """SHA-256 de la configuración del brazo, para que el reporte identifique qué se comparó."""
-        # Los campos del reranker y del índice entran solo si el brazo los declara: la huella de A0, A2 y A2b no cambia.
+        # Los campos del reranker, del índice y de US-277 entran solo si el brazo los declara: la huella de A0, A2 y A2b no cambia.
         extras = {
             clave: valor
             for clave, valor in (
@@ -67,6 +74,8 @@ class Brazo:
                 ("reranker_solape", self.reranker_solape),
                 ("reranker_max_length", self.reranker_max_length),
                 ("indice", self.coleccion),
+                ("reranker_max_pairs", self.reranker_max_pairs),
+                ("query_rewrite_enabled", self.query_rewrite_enabled),
             )
             if valor is not None
         }

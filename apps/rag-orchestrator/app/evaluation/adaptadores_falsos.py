@@ -157,13 +157,14 @@ class BuscadorSparseEnMemoria:
 
 
 _FALLO_DE_VENTANAS = "reranker: fallo de inferencia del modelo local"
+_FALLO_DE_PARES = "reranker: más pares de los que admite RERANKER_MAX_PAIRS"
 """El mensaje del adapter real (``BgeReranker``): el fake falla con el mismo error del puerto y el mismo texto."""
 
 
 class RerankerLexico:
     """``Reranker`` falso por coincidencia léxica. Sin ``max_length`` puntúa el texto entero; con él, cuenta PALABRAS como
     tokens y lee solo la primera ventana (``primera``) o todas, con el máximo de sus puntajes (``maximo``, US-278): la
-    misma regla de ventanas del adapter real, sin modelo."""
+    misma regla de ventanas del adapter real, sin modelo. Con ``max_pairs`` rechaza más candidatos que su tope, como el real."""
 
     version = "fake-lexical@1"
 
@@ -172,12 +173,14 @@ class RerankerLexico:
         modo_de_ventanas: ModoDeVentanas = MODO_DE_VENTANAS_INICIAL,
         solape: int = RERANKER_WINDOW_OVERLAP_INICIAL,
         max_length: int | None = None,
+        max_pairs: int | None = None,
     ) -> None:
         self._modo, self._solape, self._max_length = modo_de_ventanas, solape, max_length
+        self._max_pairs = max_pairs
 
     @property
     def configuracion(self) -> ConfiguracionDelReranker:
-        return ConfiguracionDelReranker(self._modo, self._solape, self._max_length, None)
+        return ConfiguracionDelReranker(self._modo, self._solape, self._max_length, self._max_pairs)
 
     def variante(
         self,
@@ -185,14 +188,20 @@ class RerankerLexico:
         modo_de_ventanas: ModoDeVentanas | None = None,
         solape: int | None = None,
         max_length: int | None = None,
+        max_pairs: int | None = None,
     ) -> RerankerLexico:
         return RerankerLexico(
             self._modo if modo_de_ventanas is None else modo_de_ventanas,
             self._solape if solape is None else solape,
             self._max_length if max_length is None else max_length,
+            self._max_pairs if max_pairs is None else max_pairs,
         )
 
     def puntuar(self, pregunta: str, candidatos: Sequence[CandidatoParaReranker]) -> list[float]:
+        if self._max_pairs is not None and len(candidatos) > self._max_pairs:
+            raise FalloDeInferencia(
+                _FALLO_DE_PARES
+            )  # el mismo error del puerto que el adapter real
         palabras = tokens(pregunta)
         return [self._puntaje(palabras, c.chunk_text) for c in candidatos]
 

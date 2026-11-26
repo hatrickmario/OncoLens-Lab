@@ -10,4 +10,6 @@ from __future__ import annotations
 def reescritura_efectiva_coincide(
     esperada: bool, invocaciones_de_la_consulta: int, termino_sin_evidencia: bool
 ) -> bool:
-    raise NotImplementedError("no implementado")
+    if not esperada:
+        return invocaciones_de_la_consulta == 0
+    return invocaciones_de_la_consulta >= 1 or not termino_sin_evidencia
