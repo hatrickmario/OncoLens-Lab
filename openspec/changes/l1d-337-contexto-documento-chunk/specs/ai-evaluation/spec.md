@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Comparación de las variantes de contexto del chunk en la misma corrida
-La suite `evaluate` MUST comparar las variantes `ninguno`, `determinista` y `llm` de `CORPUS_CHUNK_CONTEXT` en una sola ejecución, con los mismos modelos locales, las mismas preguntas y un índice propio para cada brazo, y SHALL reportar por brazo las métricas de recuperación, de latencia y de costo de la ingesta, y la diferencia frente a `ninguno`, y marca cada brazo «adoptable» con `decidir_adopcion` (usuario, 2026-11-26). No cambia ningún valor por defecto.
+La suite `evaluate` MUST comparar las variantes `ninguno`, `determinista` y `llm` de `CORPUS_CHUNK_CONTEXT` en una sola ejecución, con los mismos modelos locales, las mismas preguntas y un índice propio para cada brazo, y SHALL reportar por brazo las métricas de recuperación, de latencia y de costo de la ingesta, y la diferencia frente a `ninguno`, y SHALL informar, por brazo distinto de la referencia, si es «adoptable» según la regla de adopción de los brazos de US-277. «Adoptable» es una señal técnica sobre una variante de indexación, no una valoración clínica ni se muestra en la UI. No cambia ningún valor por defecto.
 
 #### Scenario: El reporte compara los tres brazos con los pares de paráfrasis [US-279 AC-5] [OL-06] [ADR-45 P6]
 - **GIVEN** la suite `evaluate` con los modelos locales de ADR-39, el conjunto de desarrollo, los pares de paráfrasis de US-276, los umbrales actuales y una colección por brazo: la de la ingesta de `l1d-119` para `ninguno` y las reindexadas desde ella para `determinista` y `llm`
@@ -14,7 +14,7 @@ La suite `evaluate` MUST comparar las variantes `ninguno`, `determinista` y `llm
 #### Scenario: Un brazo limpio es adoptable, sin adoptarlo [US-279 AC-5] [RN-22]
 - **GIVEN** un brazo cuya mejora de recall@10 frente a `ninguno` excluye 0 en el intervalo pareado (`mejora_fuera_del_ruido`), cuyo p95 de consulta completa no supera `p95_evidence_analyses_s`, que no retrocede en recall ni en MRR más que `RETRIEVAL_REGRESSION_TOLERANCE`, que no aumenta los falsos «sin evidencia» por encima de esa tolerancia y cuya viabilidad es `viable`
 - **WHEN** termina la suite
-- **THEN** el reporte marca `adoptable: true` en ese brazo, con `motivos` vacíos, y a los demás con `adoptable: false` y sus motivos
+- **THEN** el reporte marca `adoptable: true` en ese brazo, con `motivos` vacíos, y a los demás con `adoptable: false` y sus motivos, o `adoptable: null` si les falta una medición; la referencia `ninguno` no lleva `adopcion`
 - **AND** el valor por defecto de `CORPUS_CHUNK_CONTEXT` sigue siendo `ninguno`: adoptar es una decisión del usuario sobre el reporte versionado en `reports/eval/`
 
 #### Scenario: Un brazo con mejora y p95 en regla pero con retroceso no es adoptable [US-279 AC-5] [ADR-45 P6]

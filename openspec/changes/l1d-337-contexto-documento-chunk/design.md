@@ -287,7 +287,7 @@ Lo que se concretó o se desvió de lo descrito arriba; el código manda sobre e
   falsos inyectados (el subcomando real no tiene un modo falso por entorno, y no se añadió uno al código de producción).
 - **D7 (suite):** el brazo de contexto es un `Brazo` con `CORPUS_CHUNK_CONTEXT`; la referencia sigue siendo `A0` y declara `ninguno`. La mejora
   que decide la regla de adopción es el recall@10 total (diferencia pareada por pregunta, IC 95 % por bootstrap con la semilla de la
-  configuración); el MRR se informa. `mejora_fuera_del_ruido: null` (con el motivo `no_medible`) cuando falta el intervalo o el p95. En la corrida real la duración
+  configuración); el MRR se informa. **La marca `adoptable` combina esa regla con `decidir_adopcion` (ver Notas, opción B de H-2).** `mejora_fuera_del_ruido: null` (con el motivo `no_medible`) cuando falta el intervalo o el p95. En la corrida real la duración
   de la construcción del índice y los chunks con respaldo salen de `--resumenes-de-contexto <json>` (`{brazo: resumen de reindex-context}`, validado
   contra la variante de cada brazo); la memoria sale de `--memoria-del-stack` (ya existente). Una colección de brazo que no corresponde a su variante
   aborta la corrida; un brazo de contexto con colección propia SÍ consume la población (los `chunk_id` no cambian), a diferencia del brazo de 512 tokens.
@@ -305,5 +305,9 @@ Lo que se concretó o se desvió de lo descrito arriba; el código manda sobre e
   H-2: dejaría dos reglas de adopción distintas en el código del mismo sprint). Trabajo: el armado de la comparación calcula hoy
   retroceso, falsos «sin evidencia» y viabilidad para los brazos de contexto, pero solo llama a `decidir_adopcion` para los brazos
   de pares o reescritura; la sección 6 de `tasks.md` lo extiende.
+  **Forma (Gate 1):** la ruta es `brazos[].adopcion` (`{adoptable, motivos}`, como US-277) y la referencia no la lleva. Precedencia: un
+  motivo explícito (`adoptable: false`) gana a `null`, y `null` gana a `true`; cuando `decidir_adopcion` da `None` por medición ausente se
+  añade `no_medible`. Los motivos propios del contexto (`sin_mejora`, `p95_sobre_el_tope`, `no_medible`) viven en `brazos_contexto.py`;
+  `MOTIVOS_DE_NO_ADOPCION` de L1D-335 no se amplía (el enum del esquema del informe los une sin alterar esa regla).
 - **RN-22:** `corpus_metadata_llm_temperature` pasó de `CorpusIngestSettings` a `AjustesDeContextoLlm` (mismo nombre, valor y variable de entorno)
   para que la reindexación `llm` use la misma temperatura; no se añade ninguna variable a `.env.example` ni a Compose más allá del bloque de H-1.
