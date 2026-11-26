@@ -258,6 +258,10 @@ def criterio_evaluado(
     )
 
 
+_FRAGMENTO_DE_FORMA_ANTIGUA = "forma_antigua"
+"""Identificador interno del único fragmento de un valor sin ``chunk_id``; no es un dato del corpus."""
+
+
 def _proyeccion_de_forma_antigua(
     criterio: CriterioDeAplicabilidad,
     valor_paciente: str | None,
@@ -266,12 +270,31 @@ def _proyeccion_de_forma_antigua(
     causa = causa_de_desconocido(valor_paciente, valor_estudio)
     if causa is not None or valor_paciente is None or valor_estudio is None:
         return ProyeccionDeEstado("desconocido", causa=causa)
+    if _se_lee_por_categorias(criterio):
+        return _proyeccion_por_categorias(criterio, valor_paciente, valor_estudio)
     estado, motivo = _veredicto(criterio, valor_paciente, valor_estudio)
     if estado == "desconocido" and motivo in MOTIVOS_SIN_REGLA_DE_COMPARACION:
         return proyectar_estado("sin_regla", motivo)
     if estado == "parcial":
         return proyectar_estado("solo_subgrupo")
     return ProyeccionDeEstado(estado, motivo_interno=motivo)
+
+
+def _se_lee_por_categorias(criterio: CriterioDeAplicabilidad) -> bool:
+    """Una pertenencia con tabla ``equivalences`` se lee por categorías, como la lista: una sola lectura (D10, SC-1)."""
+    return criterio.regla.operador == "pertenencia" and bool(criterio.regla.equivalencias)
+
+
+def _proyeccion_por_categorias(
+    criterio: CriterioDeAplicabilidad, valor_paciente: str, valor_estudio: ValorDelEstudio
+) -> ProyeccionDeEstado:
+    """El valor único de la forma antigua se clasifica como un valor de elegibilidad de la lista; si era de subgrupo y
+    coincide, queda ``parcial`` por ``solo_subgrupo``."""
+    unico = ValorDePoblacion(valor_estudio.valor, "elegibilidad", _FRAGMENTO_DE_FORMA_ANTIGUA)
+    interno, motivo = clasificar_poblacion([unico], valor_paciente, criterio)
+    if interno == "exacto" and valor_estudio.solo_subgrupo:
+        return proyectar_estado("solo_subgrupo")
+    return proyectar_estado(interno, motivo)
 
 
 def causa_de_desconocido(
@@ -333,9 +356,9 @@ def _veredicto(
 def _por_igualdad(
     criterio: CriterioDeAplicabilidad, valor_paciente: str, valor_estudio: str
 ) -> _Veredicto:
-    """Categoría del paciente (y sus ascendientes del catálogo) = clave de ``equivalences`` cuya alternativa es prefijo de
-    su valor. Sin categoría no se adivina: igual al literal coincide, igual a una clave de la tabla es ``desconocido``,
-    otro valor no coincide."""
+    """El valor del estudio coincide si es alguno de los códigos del paciente: la categoría de ``equivalences`` que su valor
+    nombra más sus ascendientes de ``subsetOf``. Sin categoría no se adivina: igual al literal coincide, igual a una
+    clave de la tabla es ``desconocido``, otro valor no coincide."""
     categorias = codigos_del_paciente(valor_paciente, criterio)
     if categorias:
         return ("coincide" if valor_estudio in categorias else "no_coincide"), None

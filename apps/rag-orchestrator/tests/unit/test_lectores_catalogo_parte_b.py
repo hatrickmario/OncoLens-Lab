@@ -227,3 +227,17 @@ def test_el_catalogo_real_se_carga_completo_con_la_version_del_manifiesto() -> N
 
     assert {c.clave for c in criterios.criterios("prostata")} >= {"extension", "hrr_brca"}
     assert criterios.criterios("mama")
+
+
+@pytest.mark.parametrize(
+    ("tipo", "clave"),
+    [("mama", "estado_her2"), ("prostata", "extension")],
+    ids=["her2", "extension"],
+)
+def test_la_fixture_iguala_al_criterio_del_catalogo_real_cuando_se_leen_los_dos(
+    tipo: str, clave: str
+) -> None:
+    de_la_fixture = _criterio(APL_1_3_0, tipo, clave)
+    real = cargar_criterios_de_aplicabilidad(CATALOGOS, TIPOS).criterios(tipo)
+
+    assert de_la_fixture == next(c for c in real if c.clave == clave)
