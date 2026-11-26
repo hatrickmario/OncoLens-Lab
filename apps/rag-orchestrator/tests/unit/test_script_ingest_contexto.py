@@ -337,3 +337,38 @@ def test_el_proceso_real_de_reindex_context_termina_con_0_dentro_del_plazo_y_su_
     resumen = json.loads(proceso.stdout)
     assert resumen["modo"] == "reindex-context" and resumen["reindexados"] == 2
     assert TEXTO_SECRETO_DEL_CHUNK not in proceso.stdout and "http" not in proceso.stdout
+
+
+class _AlmacenSparseEspia:
+    """Si la guarda falla ANTES de abrir Milvus, nadie lo toca."""
+
+    def __init__(self) -> None:
+        self.llamadas = 0
+
+    def listar_vigentes_paginado(self, lote: int):  # type: ignore[no-untyped-def]
+        self.llamadas += 1
+        return iter([])
+
+    def reescribir_sparse(self, chunks, vectores_sparse) -> int:  # type: ignore[no-untyped-def]
+        self.llamadas += 1
+        return 0
+
+
+@pytest.mark.ac("US-279", 5)
+def test_reindex_sparse_rechaza_coleccion_con_marca_de_contexto(
+    entorno_de_reindexacion: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """[US-279 AC-5] reindex-sparse no recalcula el sparse sobre una coleccion con prefijo: nombra solo la variable y no escribe."""
+    entorno_de_reindexacion.setenv("MILVUS_COLLECTION_NAME", DETERMINISTA)
+    almacen = _AlmacenSparseEspia()
+
+    codigo = ingest.main(
+        ["reindex-sparse"],
+        sparse=CodificadorSparseFalso(),
+        almacen_sparse=almacen,  # type: ignore[arg-type]
+    )
+
+    capturado = capsys.readouterr()
+    assert codigo == 1 and capturado.out == ""
+    assert "MILVUS_COLLECTION_NAME" in capturado.err and DETERMINISTA not in capturado.err
+    assert almacen.llamadas == 0
