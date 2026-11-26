@@ -143,6 +143,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--p95-e2e-s", type=float, default=None)
     parser.add_argument("--corpus-cutoff-date", default=None)
     parser.add_argument("--memoria-del-stack", type=Path, default=None)
+    parser.add_argument("--resumenes-de-contexto", type=Path, default=None)
     return parser
 
 
@@ -315,6 +316,7 @@ def _ejecutar(
         informe_pii,
         origen,
         _leer_memoria_del_stack(args.memoria_del_stack, config),
+        leer_resumenes_de_contexto(args.resumenes_de_contexto, config),
     )
     escribir_reporte_cerrado(
         _ruta_del_resultado(config, args, reloj), corrida.reporte, ESQUEMA_SUITE
@@ -406,6 +408,7 @@ def _correr_suite(
     informe_pii: InformePiiB1 | None,
     origen: OrigenLocal,
     memoria_del_stack: Mapping[str, float] | None = None,
+    resumenes_de_contexto: Mapping[str, Mapping[str, Any]] | None = None,
 ) -> _Corrida:
     """El reporte de la suite, si la comparación de brazos retrocedió (US-133) y los rechazos legítimos (US-249 AC-5)."""
     if ids_de_preguntas_de_control_legitimo(dataset):
@@ -416,7 +419,9 @@ def _correr_suite(
     medido = _Medicion([], None, Cronometro(_reloj_de_medicion(config)), None, None)
     if suite != SUITE_PII:  # la familia pii no consulta al servicio: mide solo la privacidad
         medido = (
-            _medir_comparacion(config, dataset, reloj, registro, origen, memoria_del_stack)
+            _medir_comparacion(
+                config, dataset, reloj, registro, origen, memoria_del_stack, resumenes_de_contexto
+            )
             if config.comparacion is not None
             else _medir_un_brazo(config, dataset, reloj, registro, origen)
         )
@@ -493,6 +498,7 @@ def _medir_comparacion(
     registro: RegistroDeLlamadas,
     origen: OrigenLocal,
     memoria_del_stack: Mapping[str, float] | None = None,
+    resumenes_de_contexto: Mapping[str, Mapping[str, Any]] | None = None,
 ) -> _Medicion:
     """Todos los brazos; el reporte principal es el de la referencia (A0) y la comparación va aparte."""
     comparacion = config.comparacion
@@ -512,6 +518,7 @@ def _medir_comparacion(
         pares_de_parafrasis=pares,
         memoria_del_stack=memoria_del_stack or {},
         corpus=corpus_de_la_comparacion(config, dataset, brazos, origen.entorno),
+        resumenes_de_contexto=resumenes_de_contexto,
     )
     return _Medicion(
         referencia.resultados,
@@ -645,6 +652,37 @@ def _leer_memoria_del_stack(ruta: Path | None, config: ConfigSuite) -> dict[str,
     if any(isinstance(v, bool) or not isinstance(v, int | float) or v <= 0 for v in crudo.values()):
         raise ConfigInvalida("--memoria-del-stack: cada memoria debe ser un número positivo")
     return {nombre: float(valor) for nombre, valor in crudo.items()}
+
+
+def leer_resumenes_de_contexto(ruta: Path | None, config: ConfigSuite) -> dict[str, dict[str, Any]]:
+    """``--resumenes-de-contexto <json>``: el resumen que imprimió ``ingest reindex-context`` de cada brazo (``{brazo: resumen}``), que
+    ``ai-eval-runner`` adjunta al reporte (duración de la construcción y chunks con respaldo; US-279 AC-5). Sin el archivo esos datos quedan
+    ``null`` (no medidos); un brazo ajeno a la comparación o un resumen de otra variante se rechaza."""
+    if ruta is None:
+        return {}
+    try:
+        crudo = json.loads(ruta.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        raise ConfigInvalida("--resumenes-de-contexto no se pudo leer como JSON") from None
+    variantes = (
+        {b.nombre: b.contexto for b in config.comparacion.brazos if b.contexto is not None}
+        if config.comparacion
+        else {}
+    )
+    if (
+        not isinstance(crudo, dict)
+        or not set(crudo) <= set(variantes)
+        or not all(isinstance(r, dict) for r in crudo.values())
+    ):
+        raise ConfigInvalida(
+            "--resumenes-de-contexto debe ser un mapa {brazo: resumen} de los brazos de contexto de la comparación"
+        )
+    for nombre, resumen in crudo.items():
+        if resumen.get("variante") != variantes[nombre].value:
+            raise ConfigInvalida(
+                f"--resumenes-de-contexto: el resumen de {nombre} no es de su variante de CORPUS_CHUNK_CONTEXT"
+            )
+    return {nombre: dict(resumen) for nombre, resumen in crudo.items()}
 
 
 def _ruta_del_resultado(config: ConfigSuite, args: argparse.Namespace, reloj: Clock) -> Path:

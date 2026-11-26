@@ -71,6 +71,12 @@ class Cronometro:
         finally:
             self._registrar(etapa, inicio)
 
+    def cronometrar(self, funcion: Callable[..., _R], *argumentos: object) -> tuple[_R, float]:
+        """El resultado de ``funcion`` y su duración en SEGUNDOS con el reloj inyectado; no entra en ninguna etapa de latencia."""
+        inicio = self._reloj()
+        resultado = funcion(*argumentos)
+        return resultado, self._reloj() - inicio
+
     def ultima_duracion_ms(self, etapa: str) -> float:
         """Duración de la última medición de la etapa (la que acaba de terminar ``medir``)."""
         return self._duraciones_ms[etapa][-1]

@@ -265,11 +265,11 @@ def _buscador_sparse_local(
     Un chunk sin ningún término con peso queda con vector vacío (no aporta a la rama), igual que en la ingesta."""
     if codificador is None:
         return None
-    vectores = [_vector_sparse_o_vacio(codificador, c.texto) for c in dataset.chunks]
+    vectores = [vector_sparse_o_vacio(codificador, c.texto) for c in dataset.chunks]
     return BuscadorSparseEnMemoria(dataset, vectores)
 
 
-def _vector_sparse_o_vacio(codificador: QuerySparseEncoder, texto: str) -> dict[int, float]:
+def vector_sparse_o_vacio(codificador: QuerySparseEncoder, texto: str) -> dict[int, float]:
     try:
         return dict(codificador.embeber_sparse(texto))
     except SinTerminosLexicos:

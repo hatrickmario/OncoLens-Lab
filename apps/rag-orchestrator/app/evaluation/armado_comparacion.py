@@ -9,7 +9,15 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
+from app.application.corpus_ingestion.contexto_llm import PROMPT_VERSION
+from app.domain.corpus_seed.contexto_del_chunk import VERSION_DE_LA_PLANTILLA, VarianteDeContexto
 from app.evaluation.adopcion_del_brazo import decidir_adopcion
+from app.evaluation.brazos_contexto import (
+    METRICA_DE_ADOPCION,
+    DiferenciaPareada,
+    diferencia_pareada,
+    regla_de_adopcion,
+)
 from app.evaluation.brazos_recuperacion import (
     REFERENCIA,
     MetricasDeBrazo,
@@ -237,6 +245,126 @@ def _diferencias_extra(
     }
 
 
+# --- las variantes de contexto del chunk (US-279 AC-5): solo aparecen si la comparación declara brazos con CORPUS_CHUNK_CONTEXT -------
+
+
+def _recall_y_rr_por_pregunta(
+    brazo: ResultadoDeBrazo,
+) -> tuple[dict[str, float | None], dict[str, float | None]]:
+    """Por pregunta: el recall@10 y el rr del brazo (``None`` = sin respuesta esperada); las preguntas se parean por id."""
+    return (
+        {r.recuperacion.id: r.recuperacion.recall for r in brazo.resultados},
+        {r.recuperacion.id: r.recuperacion.rr for r in brazo.resultados},
+    )
+
+
+def _intervalo_a_dict(d: DiferenciaPareada) -> dict[str, Any]:
+    return {"diferencia": d.diferencia, "ic95": {"inferior": d.inferior, "superior": d.superior}}
+
+
+def _diferencia_pareada_del_brazo(
+    config: ConfigSuite, brazo: ResultadoDeBrazo, referencia: ResultadoDeBrazo
+) -> dict[str, DiferenciaPareada]:
+    """Brazo menos ``ninguno`` sobre las MISMAS preguntas, con su intervalo pareado (el de recall decide la regla; el de MRR se informa)."""
+    recall, rr = _recall_y_rr_por_pregunta(brazo)
+    recall_a0, rr_a0 = _recall_y_rr_por_pregunta(referencia)
+    semilla, repeticiones = config.semilla_bootstrap, config.bootstrap_repeticiones
+    return {
+        METRICA_DE_ADOPCION: diferencia_pareada(
+            recall, recall_a0, semilla=semilla, repeticiones=repeticiones
+        ),
+        "mrr": diferencia_pareada(rr, rr_a0, semilla=semilla + 1, repeticiones=repeticiones),
+    }
+
+
+def _entero_o_none(resumen: Mapping[str, Any] | None, clave: str) -> int | None:
+    valor = None if resumen is None else resumen.get(clave)
+    return valor if isinstance(valor, int) and not isinstance(valor, bool) else None
+
+
+def _indice_del_brazo(
+    brazo: ResultadoDeBrazo, resumen: Mapping[str, Any] | None
+) -> dict[str, float | int | None]:
+    """Lo que costó construir el índice del brazo y cuántos chunks vigentes cubre: de la suite si lo construyó en memoria (la CI), del
+    resumen de ``reindex-context`` si lo leyó de Milvus (``--resumenes-de-contexto``); ``None`` = no medido, nunca ``0.0``."""
+    if brazo.indice_en_memoria is not None:
+        return {
+            "construccion_s": brazo.indice_en_memoria.construccion_s,
+            "chunks_vigentes": brazo.indice_en_memoria.chunks,
+        }
+    duracion = None if resumen is None else resumen.get("duracion_s")
+    return {
+        "construccion_s": float(duracion) if isinstance(duracion, int | float) else None,
+        "chunks_vigentes": None if brazo.indice is None else brazo.indice.resumen.chunks_vigentes,
+    }
+
+
+def _llm_del_brazo(
+    config: ConfigSuite, brazo: ResultadoDeBrazo, resumen: Mapping[str, Any] | None
+) -> dict[str, Any]:
+    """El modelo, la versión del prompt y los chunks con respaldo determinista de la variante ``llm`` (el brazo no es reproducible byte a byte)."""
+    en_memoria = brazo.indice_en_memoria
+    return {
+        "modelo": config.llm_modelo,
+        "version_del_prompt": PROMPT_VERSION,
+        "chunks_con_respaldo": {
+            "salida_invalida": en_memoria.respaldo_por_salida_invalida
+            if en_memoria
+            else _entero_o_none(resumen, "con_respaldo_por_salida_invalida"),
+            "llm_no_disponible": en_memoria.respaldo_por_llm_no_disponible
+            if en_memoria
+            else _entero_o_none(resumen, "con_respaldo_por_llm_no_disponible"),
+        },
+    }
+
+
+def _p95_de_consulta_s(armado: dict[str, Any]) -> float | None:
+    p95_ms = armado["latencia_ms"]["consulta_p95"]
+    return None if p95_ms is None else p95_ms / 1000.0
+
+
+def _contexto_del_brazo(
+    config: ConfigSuite,
+    comparacion: Comparacion,
+    brazo: ResultadoDeBrazo,
+    referencia: ResultadoDeBrazo,
+    armado: dict[str, Any],
+    resumen: Mapping[str, Any] | None,
+) -> dict[str, Any]:
+    """Lo que el informe dice de un brazo de contexto: variante, plantilla, colección, costo del índice y, fuera de la referencia, la
+    diferencia pareada frente a ``ninguno`` y la marca de la regla de adopción (que NO adopta nada)."""
+    variante = brazo.brazo.contexto
+    contexto: dict[str, Any] = {
+        "variante": None if variante is None else variante.value,
+        "version_de_la_plantilla": VERSION_DE_LA_PLANTILLA,
+        "coleccion": None if brazo.indice is None else brazo.indice.resumen.coleccion,
+        "indice": _indice_del_brazo(brazo, resumen),
+    }
+    if variante is VarianteDeContexto.LLM:
+        contexto["llm"] = _llm_del_brazo(config, brazo, resumen)
+    if brazo is not referencia and comparacion.viabilidad is not None:
+        diferencias = _diferencia_pareada_del_brazo(config, brazo, referencia)
+        contexto["diferencia_pareada"] = {k: _intervalo_a_dict(d) for k, d in diferencias.items()}
+        regla = regla_de_adopcion(
+            inferior=diferencias[METRICA_DE_ADOPCION].inferior,
+            p95_consulta_s=_p95_de_consulta_s(armado),
+            tope_p95_s=comparacion.viabilidad.tope_p95_s,
+        )
+        contexto["regla_de_adopcion"] = {"cumple": regla.cumple, "motivos": list(regla.motivos)}
+    return contexto
+
+
+def _seccion_de_contexto(comparacion: Comparacion, referencia: ResultadoDeBrazo) -> dict[str, Any]:
+    """La colección de origen de las reindexaciones (la de ``ninguno``, el mismo corpus de la corrida base, ``[S7 resp. 10]``) y la regla."""
+    return {
+        "coleccion_de_origen": None
+        if referencia.indice is None
+        else referencia.indice.resumen.coleccion,
+        "metrica_de_adopcion": METRICA_DE_ADOPCION,
+        "tope_p95_s": None if comparacion.viabilidad is None else comparacion.viabilidad.tope_p95_s,
+    }
+
+
 @dataclass(frozen=True)
 class ComparacionArmada:
     seccion: dict[str, Any]
@@ -270,6 +398,7 @@ def armar_comparacion(
     pares_de_parafrasis: Mapping[str, tuple[str, ...]] | None = None,
     memoria_del_stack: Mapping[str, float] | None = None,
     corpus: Mapping[str, Any] | None = None,
+    resumenes_de_contexto: Mapping[str, Mapping[str, Any]] | None = None,
 ) -> ComparacionArmada:
     for brazo in brazos:
         exigir_trazabilidad_coherente(brazo)  # antes de armar ningún dato
@@ -285,6 +414,7 @@ def armar_comparacion(
     con_pares_o_reescritura = con_viabilidad and any(
         b.brazo.declara_pares_o_reescritura for b in brazos
     )
+    con_contexto = any(b.brazo.declara_contexto for b in brazos)
     for b, recuperacion in zip(brazos, recuperaciones, strict=True):
         armado = _datos_del_brazo(b, recuperacion)
         if con_viabilidad:
@@ -295,6 +425,15 @@ def armar_comparacion(
             )
         if con_pares_o_reescritura:
             armado.update(_extras_de_pares_y_reescritura(b, brazos[0], pares_de_parafrasis or {}))
+        if con_contexto:
+            armado["contexto"] = _contexto_del_brazo(
+                config,
+                comparacion,
+                b,
+                brazos[0],
+                armado,
+                (resumenes_de_contexto or {}).get(b.brazo.nombre),
+            )
         if b.brazo.nombre != REFERENCIA:
             diferencia = diferencia_frente_referencia(_metricas_de(recuperacion), referencia)
             armado["diferencia_frente_a_a0"] = _diferencia_a_dict(diferencia)
@@ -313,5 +452,6 @@ def armar_comparacion(
         "retroceso": hay_retroceso,
         "brazos": armados,
         **({} if corpus is None else {"corpus": dict(corpus)}),
+        **({"contexto": _seccion_de_contexto(comparacion, brazos[0])} if con_contexto else {}),
     }
     return ComparacionArmada(seccion, hay_retroceso)
