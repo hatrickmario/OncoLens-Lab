@@ -45,6 +45,10 @@ class ResultadoDeIngesta:
     document_id: str | None = field(default=None, repr=False, compare=False)
     # Extracción de población en abanico (US-242): solo contadores, nunca valores (RN-14). ``None`` = no corrió.
     poblacion: ContadoresDePoblacion | None = None
+    # Variante ``llm`` del contexto (US-279): chunks de este documento que quedaron con el contexto determinista porque el LLM no
+    # entregó una frase utilizable, por salida inválida o por LLM no disponible. Solo recuentos.
+    contexto_con_respaldo_por_salida_invalida: int = 0
+    contexto_con_respaldo_por_llm_no_disponible: int = 0
 
     @property
     def metadata_source(self) -> str | None:
@@ -82,7 +86,19 @@ class ReporteDeIngesta:
             "resumen": self.contadores(),
             "metadatos_pendientes": self._resumen_de_metadatos_pendientes(),
             "poblacion": self.contadores_de_poblacion.como_diccionario(),
+            "contexto_del_chunk": self.contadores_de_contexto(),
             "release_id": self.release_id,
+        }
+
+    def contadores_de_contexto(self) -> dict[str, int]:
+        """Chunks con el contexto determinista por falta de frase del LLM (variante ``llm``), contados por motivo."""
+        return {
+            "respaldo_por_salida_invalida": sum(
+                r.contexto_con_respaldo_por_salida_invalida for r in self.resultados
+            ),
+            "respaldo_por_llm_no_disponible": sum(
+                r.contexto_con_respaldo_por_llm_no_disponible for r in self.resultados
+            ),
         }
 
     @property

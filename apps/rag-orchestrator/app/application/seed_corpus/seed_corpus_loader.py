@@ -10,6 +10,8 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date
 
+from app.application.corpus_ingestion.constructores_de_contexto import ConstructorNinguno
+from app.application.corpus_ingestion.ports import ConstructorDeContexto
 from app.application.ports import Clock
 from app.application.seed_corpus.nucleo_de_versionado import NucleoDeVersionado
 from app.application.seed_corpus.ports import (
@@ -22,6 +24,7 @@ from app.application.seed_corpus.ports import (
 )
 from app.application.seed_corpus.registros import (
     chunks_del_documento,
+    metadatos_del_contexto_de_documento,
     registro_con_error,
     registro_embebido,
 )
@@ -68,7 +71,9 @@ class SeedCorpusLoader:
         tamano_de_chunk: int,
         solape_de_chunk: int,
         fecha_de_corte: date,
+        constructor_de_contexto: ConstructorDeContexto | None = None,
     ) -> None:
+        self._constructor_de_contexto = constructor_de_contexto or ConstructorNinguno()
         self._catalogo = catalogo
         self._almacen_de_chunks = almacen_de_chunks
         self._embedder = embedder
@@ -137,7 +142,7 @@ class SeedCorpusLoader:
             metadatos_sin_extraer(documento),
         )
         try:
-            vectores = self._embedder.embeber(fragmentos)
+            vectores = self._embeber(documento, fragmentos)
         except Exception as error:  # noqa: BLE001 - borde del puerto PassageEmbedder
             return self._registrar_error(
                 documento, admision, preparado.checksum, "embeddings", error
@@ -151,6 +156,16 @@ class SeedCorpusLoader:
         except Exception as error:  # noqa: BLE001 - borde del puerto ChunkStoreDeIngesta (Milvus)
             return self._registrar_error(documento, admision, preparado.checksum, "milvus", error)
         return self._confirmar(documento, registro, preparado.decision, len(fragmentos))
+
+    def _embeber(
+        self, documento: DocumentoDeSemilla, fragmentos: Sequence[str]
+    ) -> list[list[float]]:
+        """El texto que se embebe sale de la variante de contexto (el mismo constructor que la ingesta, D3); lo que se guarda y se
+        cita son los ``fragmentos`` originales (RN-04)."""
+        contexto = self._constructor_de_contexto.textos_a_embeber(
+            metadatos_del_contexto_de_documento(documento), fragmentos
+        )
+        return self._embedder.embeber(contexto.textos)
 
     def _preparar(
         self, documento: DocumentoDeSemilla, admision: Admision

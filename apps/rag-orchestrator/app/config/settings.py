@@ -47,6 +47,15 @@ from app.domain.corpus_seed.admisibilidad import (
     clase_contradice_el_texto,
 )
 from app.domain.corpus_seed.chunking import validar_ventana
+from app.domain.corpus_seed.contexto_del_chunk import (
+    CONTEXTO_LLM_CONCURRENCIA_INICIAL,
+    CONTEXTO_LLM_DOC_MAX_CHARS_INICIAL,
+    CONTEXTO_LLM_MAX_CHARS_INICIAL,
+    CONTEXTO_MAX_CHARS_INICIAL,
+    CONTEXTO_REINDEXACION_LOTE_INICIAL,
+    VARIANTE_INICIAL,
+    VarianteDeContexto,
+)
 from app.domain.expansion_contextual import (
     CAMPOS_DE_EXPANSION,
     EXPANSION_CAMPOS_INICIAL,
@@ -574,7 +583,31 @@ def _lista_separada_por_comas(valor: Any) -> Any:
     return valor
 
 
-class AjustesDeCorpus(BaseSettings):
+class AjustesDeContextoDelChunk(BaseSettings):
+    """Variante del contexto del documento en el texto que se embebe (US-279, L1D-337, RN-22).
+
+    Lo que lee quien indexa: la semilla, la ingesta y la reindexación. Los valores iniciales viven en dominio
+    (``contexto_del_chunk``); el valor por defecto de la variante es ``ninguno`` y solo lo cambia una decisión del usuario."""
+
+    model_config = SettingsConfigDict(extra="ignore", hide_input_in_errors=True)
+
+    corpus_chunk_context: VarianteDeContexto = VARIANTE_INICIAL
+    corpus_chunk_context_max_chars: int = Field(default=CONTEXTO_MAX_CHARS_INICIAL, gt=0)
+
+
+class AjustesDeContextoLlm(AjustesDeContextoDelChunk):
+    """Lo que añade la variante ``llm``: límite de la frase, del inicio del documento y concurrencia propia."""
+
+    corpus_chunk_context_llm_max_chars: int = Field(default=CONTEXTO_LLM_MAX_CHARS_INICIAL, gt=0)
+    corpus_chunk_context_llm_doc_max_chars: int = Field(
+        default=CONTEXTO_LLM_DOC_MAX_CHARS_INICIAL, gt=0
+    )
+    corpus_chunk_context_llm_concurrency: int = Field(
+        default=CONTEXTO_LLM_CONCURRENCIA_INICIAL, gt=0
+    )
+
+
+class AjustesDeCorpus(AjustesDeContextoDelChunk):
     """Claves comunes del cargador de la semilla y de la ingesta en lote (licencias, fuentes excluidas, chunking, descargas)."""
 
     model_config = SettingsConfigDict(extra="ignore", hide_input_in_errors=True)
@@ -713,7 +746,14 @@ class AjustesDeReindexacionSparse(AjustesSparse):
     corpus_sparse_reindex_batch_size: int = Field(default=64, gt=0)
 
 
-class CorpusIngestSettings(AjustesDeCorpus, AjustesSparse):
+class AjustesDeReindexacionDeContexto(AjustesSparse, AjustesDeContextoLlm):
+    """Configuración de ``python -m app.scripts.ingest reindex-context`` (US-279, L1D-337, RN-22): como la reindexación *sparse*,
+    no exige licencias, corte ni *chunking*; el tope superior del lote lo valida el repositorio de Milvus."""
+
+    corpus_context_reindex_batch_size: int = Field(default=CONTEXTO_REINDEXACION_LOTE_INICIAL, gt=0)
+
+
+class CorpusIngestSettings(AjustesDeCorpus, AjustesSparse, AjustesDeContextoLlm):
     """Configuración de ``python -m app.scripts.ingest`` (US-117a, RN-22): las claves de la semilla sin el manifiesto
     (llega por ``--manifest``) más el origen del *sparse* y los pesos de su cabeza lineal (``AjustesSparse``)."""
 

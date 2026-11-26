@@ -84,11 +84,9 @@ def test_ingesta_determinista_embebe_el_titulo_el_tipo_de_fuente_y_el_cancer_ant
             prefijo = texto.removesuffix(original)
             assert texto.endswith(original) and prefijo
             etiquetas = ", ".join(documento.cancer_type_tags)
-            assert (
-                prefijo.index(documento.title)
-                < prefijo.index(documento.source_type)
-                < prefijo.index(etiquetas)
-            )
+            en_titulo = prefijo.index(documento.title)
+            en_fuente = prefijo.index(documento.source_type, en_titulo + len(documento.title))
+            assert en_titulo == 0 and en_fuente < prefijo.index(etiquetas, en_fuente)
             assert "No disponible" not in prefijo
     assert montaje.sparse.textos_recibidos == montaje.embedder.textos_recibidos
     assert espia.llamadas == []
