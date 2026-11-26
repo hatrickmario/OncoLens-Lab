@@ -341,7 +341,7 @@ Casos que el diseño no cubría, con la alternativa elegida y por qué se descar
   no se duplicó en zod.
 - **Deuda:** D7-23 (paridad automática esquema JSON ↔ zod ↔ Pydantic del catálogo, más allá de `relacion`) y D7-24
   (decisión de producto sobre la semántica de pertinencia si no se acepta D15).
-- **Entrega 2 (4.1b y 4.2):** necesitan `Brazo` de `l1d-336` y los pares de `l1d-334`, aún sin mergear; no se apilan.
+- **Entrega 2 (4.1b y 4.2), hecha sobre `main` con `l1d-334` y `l1d-336` ya mergeados.** Ver D18.
 - **D17. Versión de `plantillas.json` y el AC-8 de US-267.** Al subir el manifiesto a 1.10.0, `plantillas.json` conserva su
   versión propia 1.9.0 (regla de versión propia de 126 A: ≤ manifiesto) y el test de web exigía `== manifiesto`. Opciones:
   (a) subir `plantillas.json` a 1.10.0 sin cambio de contenido (versión falsa: el guardián la tomaría por contenido nuevo);
@@ -349,3 +349,28 @@ Casos que el diseño no cubría, con la alternativa elegida y por qué se descar
   (el build no importa contenido más nuevo que el catálogo declarado); la igualdad solo valía mientras las plantillas eran
   el contenido recién añadido (1.8.0). Elegida (b), con `Test-Removal` por la aserción retirada.
 
+- **D18. Brazos de pares y de reescritura de la suite (entrega 2).** La corrida base B (DB-4) halló que `QUERY_REWRITE_ENABLED`
+  solo se cableaba en `bootstrap.py`: `composicion_suite.py` componía el servicio sin reescritor, y no había brazo medible.
+  - **Reescritura por brazo.** `Brazo.query_rewrite_enabled` enciende `ParametrosDeReescritura.habilitada` y el servicio recibe
+    el reescritor de los adaptadores (falso en `fake`; el LLM local con `crear_reescritor_local` en `local`, RN-12) y los
+    términos del catálogo montado (RN-27, solo si el brazo reescribe). Las demás familias (`brazo=None`) siguen sin reescritura.
+    La reescritura **efectiva** se mide en el puerto (`ReescritorObservado`) y `corrida_brazos` aborta nombrando el brazo si no
+    es la declarada: un brazo apagado nunca invoca al reescritor; uno encendido lo invoca en cada consulta que terminó en
+    `sin_evidencia` (RN-02 enmendada: solo corre con el primer loop vacío). Un brazo sin reescritor medido (adapter ausente)
+    también aborta, en vez de medir sin reescribir.
+  - **Pares por brazo.** `Brazo.reranker_max_pairs` fija el corte del servicio y la variante del reranker (el adapter real
+    rechaza más candidatos que su tope). Entra en `cambia_el_reranker`, así que la etapa esperada del informe también lo compara.
+    `BgeReranker.variante(max_pairs)` es la única edición fuera de `app/evaluation/` (sin ella el brazo de 30 pares no corre
+    con el modelo real).
+  - **AC-2.** «Evidencia» de una redacción = el fragmento esperado llega al top 10 **y** el umbral no la deja en `sin_evidencia`;
+    el par es *aplicable* si la referencia (A0 de la misma corrida) obtiene la evidencia con una redacción y la pierde con otra
+    (recuperación, corte de pares o umbral: lo que pasa antes de la generación); la proporción es la de pares aplicables que el
+    brazo recupera con todas sus redacciones. Sin pares aplicables: `sin_pares_aplicables` y `proporcion` nula, nunca `0.0`.
+  - **AC-5.** `adoptable` es `False` por retroceso (tolerancia de P1), por aumento de los falsos «sin evidencia» por encima de esa
+    misma tolerancia o por inviabilidad (ADR-39); `None` si lo medido no alcanza (sin memoria del stack). Las preguntas
+    adversarias y la exactitud de «sin evidencia» las mide `--suite all` en la corrida final, no esta comparación.
+  - **Descartadas.** (a) Leer la atribución de etapa de la familia `diagnostico` (US-276) para el AC-2: exige observadores por
+    brazo y duplicaría su regla (un solo dueño); se usa lo que ya mide la comparación. (b) Activar la reescritura por variable
+    de entorno: la suite no lee `Settings` para el segundo loop (DB-4, descartada allí). (c) Tomar la reescritura de `Settings`
+    cuando el brazo no declara el campo: haría que el mismo YAML mida distinto según el entorno. (d) Añadir claves dentro de
+    `parafrasis`: un test existente fija su forma; la proporción va en `parafrasis_atribuidas`.

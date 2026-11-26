@@ -23,6 +23,7 @@ from app.application.ports import (
     NliClassifier,
     PoblacionTask,
     QueryEmbedder,
+    QueryRewriter,
     QuerySparseEncoder,
     Reranker,
 )
@@ -32,6 +33,7 @@ from app.config.modelos import ConfigInvalida as ConfigDeModelosInvalida
 from app.config.modelos import cargar_config_modelos
 from app.config.settings import Settings
 from app.domain.nli import ParNli, ResultadoNli
+from app.domain.reescritura import ParametrosDeReescritura
 from app.domain.ventanas_del_reranker import ConfiguracionDelReranker, ModoDeVentanas
 from app.evaluation.config_suite import ConfigSuite
 from app.evaluation.guardas import SuiteAbortada
@@ -42,6 +44,8 @@ from app.infrastructure.llm.fabrica_local import (
     crear_generador_local,
     crear_llm_de_poblacion_local,
     crear_proponente_local,
+    crear_reescritor_local,
+    parametros_de_reescritura,
     parametros_del_respaldo,
 )
 from app.infrastructure.models.verificacion import ModeloNoVerificadoError
@@ -103,6 +107,10 @@ class PuertosLocales:
     """``RERANKER_MAX_PAIRS`` de ADR-39: el tope de pares que admite el reranker cargado, como en el *bootstrap* de producción."""
     llm_de_poblacion: LlmDePoblacion | None = None
     """El mismo LLM local, anotado por el registro, para la extracción en abanico de la familia `poblacion` (L1D-299)."""
+    reescritor: QueryRewriter | None = None
+    """El reescritor del segundo loop sobre el mismo LLM local, anotado por el registro (US-238, RN-12; US-277)."""
+    reescritura: ParametrosDeReescritura = ParametrosDeReescritura()
+    """``QUERY_REWRITE_MAX_ITERATIONS`` y ``_DEADLINE_MS`` de ``Settings``; ``habilitada`` lo decide cada brazo."""
 
 
 class EmbedderRegistrado:
@@ -163,12 +171,16 @@ class RerankerRegistrado:
         modo_de_ventanas: ModoDeVentanas | None = None,
         solape: int | None = None,
         max_length: int | None = None,
+        max_pairs: int | None = None,
     ) -> RerankerRegistrado:
         """El mismo reranker cargado con otra etapa (sin cargar el modelo de nuevo), registrado igual (RN-12)."""
         if not isinstance(self._interno, RerankerConVentanas):
             raise SuiteAbortada("el reranker cargado no admite variantes por brazo (RERANKER_*)")
         otra = self._interno.variante(
-            modo_de_ventanas=modo_de_ventanas, solape=solape, max_length=max_length
+            modo_de_ventanas=modo_de_ventanas,
+            solape=solape,
+            max_length=max_length,
+            max_pairs=max_pairs,
         )
         return RerankerRegistrado(otra, self._registro, self._clase)
 
@@ -322,6 +334,8 @@ def cargar_puertos_locales(
         proponente=crear_proponente_local(settings, registrar_llm),
         llm_de_poblacion=crear_llm_de_poblacion_local(settings, registrar_llm),
         respaldo=parametros_del_respaldo(settings),
+        reescritor=crear_reescritor_local(settings, registrar_llm),
+        reescritura=parametros_de_reescritura(settings),
         reranker_max_pairs=settings.modelos.reranker_max_pairs if settings.modelos else None,
         embedder_sparse=(
             None
