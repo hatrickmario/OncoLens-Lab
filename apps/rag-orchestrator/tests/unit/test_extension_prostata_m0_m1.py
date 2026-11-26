@@ -10,9 +10,10 @@ from types import MappingProxyType
 
 import pytest
 
-from app.domain.aplicabilidad_tipos import ProyeccionDeEstado, ValorDePoblacion
+from app.domain.aplicabilidad_tipos import ProyeccionDeEstado, ValorDelEstudio, ValorDePoblacion
 from app.domain.applicability_rules import (
     criterio_evaluado,
+    evaluar_criterio,
     estado_de_poblacion,
     poblacion_no_comparable,
 )
@@ -137,3 +138,33 @@ def test_lee_la_alternativa_solo_al_inicio_cuando_el_criterio_no_declara_coincid
 
     assert codigos_del_paciente(LOCALIZADA, criterio) == frozenset()
     assert codigos_del_paciente("M0", criterio) == frozenset({"no_metastasica"})
+
+
+FUENTE_LOCALIZADA = "localized prostate cancer"
+
+
+@pytest.mark.ac("US-121", 5)
+@pytest.mark.parametrize(
+    ("estadio", "fuente", "estado", "causa"),
+    [
+        (LOCALIZADA, FUENTE_LOCALIZADA, "coincide", None),
+        (LOCALIZADA, SOLO_METASTASICA, "no_coincide", None),
+        (LOCALIZADA, "metastatic prostate cancer", "desconocido", None),
+        ("T2c", SOLO_METASTASICA, "desconocido", "sin_regla_de_comparacion"),
+    ],
+    ids=["localizada", "restringida_a_metastasica", "sin_marcador", "m_no_legible"],
+)
+def test_la_forma_antigua_lee_m0_y_m1_como_la_lista_cuando_la_fuente_trae_un_valor_unico_sin_fragmento(
+    estadio: str, fuente: str, estado: str, causa: str | None
+) -> None:
+    evaluado = evaluar_criterio(EXTENSION, estadio, ValorDelEstudio(fuente))
+
+    assert evaluado.estado == estado
+    if causa is not None:
+        assert evaluado.causa == causa
+
+
+def test_la_forma_antigua_marca_parcial_cuando_el_valor_unico_es_de_subgrupo_y_coincide() -> None:
+    evaluado = evaluar_criterio(EXTENSION, LOCALIZADA, ValorDelEstudio(FUENTE_LOCALIZADA, True))
+
+    assert evaluado.estado == "parcial"
