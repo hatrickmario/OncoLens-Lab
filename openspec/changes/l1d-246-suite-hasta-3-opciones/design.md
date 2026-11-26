@@ -166,6 +166,19 @@ S7, 2026-11-22; misma política que `l1d-299`):**
 excluyente en «Desconocido» no suma a «No coincide» y el orden de OP-07…OP-12 no cambia por C-1. En los dos casos el
 orden esperado lo da el comparador de RN-28 con el catálogo mergeado, no se escribe a mano.
 
+**S7-D4c · Resultado de S7.8 (2026-11-26, catálogo 1.11.0).** Evidencia ejecutada: el test de coherencia con el catálogo
+real de próstata 1.11.0 pasa en los 12 casos y el desglose por opción (excluyentes en No coincide, Coincide, relevancia,
+no comparable) de la corrida falsa es idéntico al del catálogo 1.10.0. La causa está en los datos: ninguna fuente `doc-p*`
+declara `estadio` (la clave de estudio de `extension`) y p-a1/p-a2 traen `T3a` sin M, de modo que C-1 produce «Desconocido»
+y no suma a «No coincide». Decisión: **no se toca `casos.yaml` ni la `version` del dataset**; ningún caso se declara no
+comparable con la base por C-1. Alternativas descartadas: (a) *subir la versión del dataset igualmente por haber cambiado
+el catálogo*: subirla sin cambio de contenido declararía no comparables casos que sí lo son (el dataset no cambió; el
+catálogo se registra aparte en el reporte de la final); (b) *añadir una fuente o un paciente con M0/M1 explícito para ejercitar `no_coincide`*: sería un caso nuevo con
+su propia verdad, fuera del alcance de S7.8 y habría roto la comparabilidad con la base sin necesidad; (c) *aserción del
+orden escrita a mano para `extension`*: contradice S7-D4b (el orden lo da el comparador). Se añadió un test que fija la
+premisa (`extension` excluyente por componente en el catálogo y ninguna fuente de próstata la declara): si un caso futuro
+declara la extensión, el test avisa de que el orden esperado debe recalcularse con el comparador.
+
 **S7-D5 · Medición real y referencia.** Corpus (`[S7 resp. 10]`): la familia trae su corpus en el dataset; ese es su
 corpus fijo en la base y en la final, y cada reporte lo registra (dataset y versión). No usa la ingesta de `l1d-119`.
 Umbrales (`[S7 resp. 11]`): la base y la final corren con los umbrales actuales; los calibrados de `l1d-119` entran en
