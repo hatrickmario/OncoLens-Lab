@@ -635,15 +635,20 @@ def corpus_de_la_comparacion(
     }
 
 
+def _json_de_la_opcion(ruta: Path, opcion: str) -> Any:
+    """El JSON de un archivo que pasa una opción de la CLI; un archivo ilegible o roto nombra la opción y nunca su contenido."""
+    try:
+        return json.loads(ruta.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        raise ConfigInvalida(f"{opcion} no se pudo leer como JSON") from None
+
+
 def _leer_memoria_del_stack(ruta: Path | None, config: ConfigSuite) -> dict[str, float]:
     """``--memoria-del-stack <json>``: la memoria del stack completo por brazo, medida por ``ai-eval-runner`` (GB). Sin el
     archivo, ningún brazo tiene medición de memoria y queda ``no_medido``; un nombre ajeno a la comparación se rechaza."""
     if ruta is None:
         return {}
-    try:
-        crudo = json.loads(ruta.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        raise ConfigInvalida("--memoria-del-stack no se pudo leer como JSON") from None
+    crudo = _json_de_la_opcion(ruta, "--memoria-del-stack")
     nombres = {b.nombre for b in config.comparacion.brazos} if config.comparacion else set()
     if not isinstance(crudo, dict) or not set(crudo) <= nombres:
         raise ConfigInvalida(
@@ -660,10 +665,7 @@ def leer_resumenes_de_contexto(ruta: Path | None, config: ConfigSuite) -> dict[s
     ``null`` (no medidos); un brazo ajeno a la comparación o un resumen de otra variante se rechaza."""
     if ruta is None:
         return {}
-    try:
-        crudo = json.loads(ruta.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        raise ConfigInvalida("--resumenes-de-contexto no se pudo leer como JSON") from None
+    crudo = _json_de_la_opcion(ruta, "--resumenes-de-contexto")
     variantes = (
         {b.nombre: b.contexto for b in config.comparacion.brazos if b.contexto is not None}
         if config.comparacion

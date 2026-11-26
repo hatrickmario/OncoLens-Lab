@@ -126,6 +126,12 @@ def _latencia(brazo: ResultadoDeBrazo) -> dict[str, float | None]:
     return {"reranker_p95": p95["reranker"], "consulta_p95": p95["consulta"]}
 
 
+def _p95_de_consulta_s(latencia: Mapping[str, float | None]) -> float | None:
+    """El p95 de la consulta completa en segundos; ``None`` (≠ ``0.0``) si la etapa no se midió."""
+    p95_ms = latencia["consulta_p95"]
+    return None if p95_ms is None else p95_ms / 1000.0
+
+
 def _etapa_del_informe(brazo: ResultadoDeBrazo) -> dict[str, Any] | None:
     """Modo, solape, largo y pares con los que corrió el brazo: el informe es el único lugar donde queda el modo (D4)."""
     c = brazo.reranker
@@ -153,9 +159,8 @@ def _extras_del_reranker(
     if viabilidad is None:  # la carga de la configuración lo exige: no hay topes inventados
         raise SuiteAbortada("la comparación del reranker no trae los topes de viabilidad")
     latencia = _latencia(brazo)
-    p95_s = None if latencia["consulta_p95"] is None else latencia["consulta_p95"] / 1000.0
     resultado = viabilidad_del_brazo(
-        p95_consulta_s=p95_s,
+        p95_consulta_s=_p95_de_consulta_s(latencia),
         tope_p95_s=viabilidad.tope_p95_s,
         memoria_del_stack_gb=memoria_del_stack.get(brazo.brazo.nombre),
         limite_memoria_gb=viabilidad.limite_memoria_gb,
@@ -318,11 +323,6 @@ def _llm_del_brazo(
     }
 
 
-def _p95_de_consulta_s(armado: dict[str, Any]) -> float | None:
-    p95_ms = armado["latencia_ms"]["consulta_p95"]
-    return None if p95_ms is None else p95_ms / 1000.0
-
-
 def _contexto_del_brazo(
     config: ConfigSuite,
     comparacion: Comparacion,
@@ -347,7 +347,7 @@ def _contexto_del_brazo(
         contexto["diferencia_pareada"] = {k: _intervalo_a_dict(d) for k, d in diferencias.items()}
         regla = regla_de_adopcion(
             inferior=diferencias[METRICA_DE_ADOPCION].inferior,
-            p95_consulta_s=_p95_de_consulta_s(armado),
+            p95_consulta_s=_p95_de_consulta_s(armado["latencia_ms"]),
             tope_p95_s=comparacion.viabilidad.tope_p95_s,
         )
         contexto["regla_de_adopcion"] = {"cumple": regla.cumple, "motivos": list(regla.motivos)}
