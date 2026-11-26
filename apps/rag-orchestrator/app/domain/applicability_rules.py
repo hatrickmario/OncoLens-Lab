@@ -30,8 +30,8 @@ from app.domain.aplicabilidad_tipos import (
 )
 from app.domain.applicability_order import contar_excluyentes_no_coincide
 from app.domain.clasificacion_de_poblacion import (
-    categoria_del_paciente,
     clasificar_poblacion,
+    codigos_del_paciente,
     es_criterio_compuesto,
     es_forma_antigua,
     proyectar_estado,
@@ -324,23 +324,24 @@ def _veredicto(
         return "desconocido", "forma_no_comparable"
     regla = criterio.regla
     if regla.operador == "igualdad":
-        return _por_igualdad(regla.equivalencias, valor_paciente, valor_estudio.valor)
+        return _por_igualdad(criterio, valor_paciente, valor_estudio.valor)
     if regla.operador == "rango":
         return _por_rango(criterio, valor_paciente, valor_estudio)
     return _por_pertenencia(criterio, valor_paciente, valor_estudio)
 
 
 def _por_igualdad(
-    equivalencias: Mapping[str, tuple[str, ...]], valor_paciente: str, valor_estudio: str
+    criterio: CriterioDeAplicabilidad, valor_paciente: str, valor_estudio: str
 ) -> _Veredicto:
-    """Categoría del paciente = clave de ``equivalences`` cuya alternativa es prefijo de su valor. Sin categoría no se
-    adivina: igual al literal coincide, igual a una clave de la tabla es ``desconocido``, otro valor no coincide."""
-    categoria = categoria_del_paciente(equivalencias, valor_paciente)
-    if categoria is not None:
-        return ("coincide" if valor_estudio == categoria else "no_coincide"), None
+    """Categoría del paciente (y sus ascendientes del catálogo) = clave de ``equivalences`` cuya alternativa es prefijo de
+    su valor. Sin categoría no se adivina: igual al literal coincide, igual a una clave de la tabla es ``desconocido``,
+    otro valor no coincide."""
+    categorias = codigos_del_paciente(valor_paciente, criterio)
+    if categorias:
+        return ("coincide" if valor_estudio in categorias else "no_coincide"), None
     if valor_estudio == valor_paciente:
         return "coincide", None
-    if valor_estudio in equivalencias:
+    if valor_estudio in criterio.regla.equivalencias:
         return "desconocido", "valor_fuera_de_tabla"
     return "no_coincide", None
 

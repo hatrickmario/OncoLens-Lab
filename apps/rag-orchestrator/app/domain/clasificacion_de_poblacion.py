@@ -119,12 +119,12 @@ def _clasificar_categorias(
 ) -> _Clasificacion:
     por_fragmento = _codigos_por_fragmento(elegibles, criterio)
     codigos = frozenset().union(*por_fragmento.values())
-    codigo_paciente = _codigo_del_paciente(valor_paciente, criterio)
-    if not codigos or codigo_paciente is None:
+    del_paciente = codigos_del_paciente(valor_paciente, criterio)
+    if not codigos or not del_paciente:
         return "sin_regla", "valor_fuera_de_tabla"
     if detectar_conflicto(por_fragmento):
         return "en_conflicto", None
-    if codigo_paciente not in codigos:
+    if del_paciente.isdisjoint(codigos):
         marcadores = criterio.poblacion.marcadores_de_restriccion
         restringido = any(reconoce_restriccion(v.valor, marcadores) for v in elegibles)
         return ("restringido" if restringido else "ausente"), None
@@ -234,8 +234,23 @@ def es_criterio_compuesto(destino: DestinoDelCriterio) -> bool:
 
 
 def codigos_del_paciente(valor_paciente: str, criterio: CriterioDeAplicabilidad) -> frozenset[str]:
-    """Códigos del catálogo a los que pertenece el valor del paciente: el propio más sus ascendientes (C-2, D11)."""
-    raise NotImplementedError("no implementado")
+    """Códigos del catálogo a los que pertenece el valor del paciente: el propio más sus ascendientes (C-2, D11).
+
+    Vacío cuando el valor no cae en ninguna categoría: el dato existe pero no hay regla para leerlo."""
+    propio = _codigo_del_paciente(valor_paciente, criterio)
+    if propio is None:
+        return frozenset()
+    return _con_ascendientes(propio, criterio.regla.jerarquia)
+
+
+def _con_ascendientes(codigo: str, jerarquia: Mapping[str, str]) -> frozenset[str]:
+    """El código y la cadena de padres de ``rule.subsetOf``; un ciclo del catálogo corta al repetir un código."""
+    codigos = {codigo}
+    padre = jerarquia.get(codigo)
+    while padre is not None and padre not in codigos:
+        codigos.add(padre)
+        padre = jerarquia.get(padre)
+    return frozenset(codigos)
 
 
 def categoria_del_paciente(
