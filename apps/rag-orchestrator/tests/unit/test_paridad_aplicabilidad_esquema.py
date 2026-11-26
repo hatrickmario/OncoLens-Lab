@@ -14,6 +14,7 @@ from jsonschema import Draft202012Validator
 from referencing import Registry, Resource
 
 from app.infrastructure.catalogo_clinico.aplicabilidad import (
+    _Archivo,
     _Criterio,
     cargar_criterios_de_aplicabilidad,
 )
@@ -23,6 +24,12 @@ from tests.support.contract import CATALOGOS
 
 ESQUEMAS = CATALOGOS / "schemas"
 Variante = Callable[[dict[str, Any]], None]
+_ENTRADA = {
+    "status": "propuesta_revisada",
+    "reviewerRole": "oncologo_asesor",
+    "date": "2026-10-24",
+    "catalogHash": "b" * 64,
+}
 
 
 def _leer(nombre: str) -> dict[str, Any]:
@@ -147,6 +154,43 @@ VARIANTES: dict[str, Variante] = {
     "validation_hash_mayusculas": lambda a: a["validation"].__setitem__("catalogHash", "A" * 64),
     "equivalencia_item_vacio": _poner(("rule", "equivalences"), {"x": [""]}),
     "match_item_vacio": _poner(("destination", "match"), {"name": ["RE", ""]}),
+    # S7.6 (L1D-126 parte B): marca provisional, jerarquía, modo de coincidencia e historial de validación
+    "revision_provisional_ia": _poner(
+        ("revision_provisional",), {"rol": "ia", "fecha": "2026-11-21"}
+    ),
+    "revision_provisional_rol_desconocido": _poner(
+        ("revision_provisional",), {"rol": "oncologo_asesor", "fecha": "2026-11-21"}
+    ),
+    "revision_provisional_fecha_invalida": _poner(
+        ("revision_provisional",), {"rol": "ia", "fecha": "21/11/2026"}
+    ),
+    "revision_provisional_sin_fecha": _poner(("revision_provisional",), {"rol": "ia"}),
+    "revision_provisional_con_extra": _poner(
+        ("revision_provisional",), {"rol": "ia", "fecha": "2026-11-21", "peso": 1}
+    ),
+    "revision_provisional_null": _poner(("revision_provisional",), None),
+    "subset_of_valido": _poner(("rule", "subsetOf"), {"bajo": "negativo"}),
+    "subset_of_vacio": _poner(("rule", "subsetOf"), {}),
+    "subset_of_clave_invalida": _poner(("rule", "subsetOf"), {"Bajo": "negativo"}),
+    "subset_of_valor_invalido": _poner(("rule", "subsetOf"), {"bajo": "Negativo"}),
+    "subset_of_valor_no_texto": _poner(("rule", "subsetOf"), {"bajo": 3}),
+    "subset_of_null": _poner(("rule", "subsetOf"), None),
+    "equivalence_match_componente": _poner(("rule", "equivalenceMatch"), "componente"),
+    "equivalence_match_prefijo": _poner(("rule", "equivalenceMatch"), "prefijo"),
+    "equivalence_match_desconocido": _poner(("rule", "equivalenceMatch"), "regex"),
+    "equivalence_match_null": _poner(("rule", "equivalenceMatch"), None),
+    "validation_con_historial": lambda a: a["validation"].__setitem__("history", [_ENTRADA]),
+    "validation_historial_vacio": lambda a: a["validation"].__setitem__("history", []),
+    "validation_historial_con_persona": lambda a: a["validation"].__setitem__(
+        "history", [{**_ENTRADA, "reviewerName": "alguien"}]
+    ),
+    "validation_historial_sin_hash": lambda a: a["validation"].__setitem__(
+        "history", [{k: v for k, v in _ENTRADA.items() if k != "catalogHash"}]
+    ),
+    "validation_historial_hash_corto": lambda a: a["validation"].__setitem__(
+        "history", [{**_ENTRADA, "catalogHash": "abc"}]
+    ),
+    "validation_historial_null": lambda a: a["validation"].__setitem__("history", None),
 }
 
 
@@ -224,6 +268,18 @@ def test_el_modelo_declara_los_mismos_enumerados_que_el_esquema() -> None:
     )
     assert set(modelo["$defs"]["_Parcial"]["properties"]["when"]["enum"]) == set(
         esquema["$defs"]["regla"]["properties"]["partial"]["properties"]["when"]["enum"]
+    )
+
+
+def test_el_modelo_declara_las_mismas_propiedades_de_la_regla_y_del_bloque_validation_que_el_esquema() -> (
+    None
+):
+    esquema = _leer("aplicabilidad.schema.json")["$defs"]["regla"]
+    modelo = _Archivo.model_json_schema()["$defs"]
+
+    assert set(modelo["_Regla"]["properties"]) == set(esquema["properties"])
+    assert set(modelo["_Validacion"]["properties"]) == set(
+        _leer("validation.schema.json")["properties"]
     )
 
 

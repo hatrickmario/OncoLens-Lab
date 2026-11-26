@@ -8,7 +8,9 @@ import {
   exigirClaveUnica,
   exigirEstadoValido,
   exigirFuentesDeDocumento,
+  exigirRevisionProvisionalValida,
   exigirStudyKey,
+  exigirSubconjuntoDeclarado,
   rechazarCamposDePuntaje,
 } from './reglas.mjs';
 import { violacionesDeEscalas } from './escalas.mjs';
@@ -54,6 +56,8 @@ export const ARCHIVOS_DEL_CATALOGO = {
     reglas: [
       ...REGLAS_DE_DESTINO,
       (item) => rechazarCamposDePuntaje(item),
+      (item, { vocabulario }) => exigirRevisionProvisionalValida(item, vocabulario),
+      (item) => exigirSubconjuntoDeclarado(item),
       (item, { tipoDeCancer, poblacion, studyKeysRepetidas }) =>
         exigirStudyKey(item, tipoDeCancer, poblacion, studyKeysRepetidas),
       (item, { vocabulario }) => exigirEstadoValido(item, vocabulario),

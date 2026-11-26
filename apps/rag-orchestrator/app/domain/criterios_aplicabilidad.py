@@ -12,6 +12,7 @@ from typing import Literal, Protocol
 OperadorDeRegla = Literal["igualdad", "pertenencia", "rango"]
 CondicionDeParcial = Literal["solo_subgrupo", "rango_solapado"]
 EstadoDeRevision = Literal["propuesta", "pendiente", "revisado"]
+CoincidenciaDeEquivalencias = Literal["prefijo", "componente"]
 
 
 @dataclass(frozen=True)
@@ -37,6 +38,10 @@ class ReglaDeAplicabilidad:
     parcial_cuando: CondicionDeParcial
     equivalencias: Mapping[str, tuple[str, ...]]
     limites: LimitesDeRegla | None
+    jerarquia: Mapping[str, str]
+    """Categoría hija → categoría padre de ``equivalencias`` (``rule.subsetOf``): quien es de la hija lo es también del padre."""
+    coincidencia_de_equivalencias: CoincidenciaDeEquivalencias
+    """Cómo se busca cada alternativa en el valor del paciente (``rule.equivalenceMatch``): al inicio o como componente."""
 
 
 @dataclass(frozen=True)

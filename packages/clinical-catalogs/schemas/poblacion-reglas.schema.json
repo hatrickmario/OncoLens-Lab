@@ -31,7 +31,8 @@
           "groups": {
             "type": "object",
             "additionalProperties": { "$ref": "#/$defs/textosNoVacios" }
-          }
+          },
+          "revision_provisional": { "$ref": "comun.schema.json#/$defs/revisionProvisional" }
         }
       }
     }

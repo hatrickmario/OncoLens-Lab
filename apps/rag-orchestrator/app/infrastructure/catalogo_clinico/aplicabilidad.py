@@ -13,9 +13,10 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Annotated, Literal
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field, model_validator
+from pydantic import AfterValidator, Field, model_validator
 
 from app.domain.criterios_aplicabilidad import (
+    CoincidenciaDeEquivalencias,
     CondicionDeParcial,
     CriterioDeAplicabilidad,
     DestinoDelCriterio,
@@ -24,6 +25,7 @@ from app.domain.criterios_aplicabilidad import (
     OperadorDeRegla,
     ReglaDeAplicabilidad,
 )
+from app.infrastructure.catalogo_clinico.forma_estricta import FECHA, Estricto, RevisionProvisional
 from app.infrastructure.catalogo_clinico.manifiesto import CatalogoNoDisponible
 from app.infrastructure.catalogo_clinico.poblacion_reglas import (
     NOMBRE_DEL_ARCHIVO_DE_REGLAS,
@@ -44,6 +46,7 @@ _CAMPO = r"^[a-z][a-z0-9_]*$"
 _CLAVE_DE_COINCIDENCIA = r"^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)?$"
 _VERSION = r"^(test-([a-z]+-)?)?\d+\.\d+\.\d+$"
 _MINUSCULAS_Y_GUION_BAJO = r"^[a-z_]+$"
+_HUELLA = r"^[0-9a-f]{64}$"
 
 
 def _sin_repetidos(valores: list[str]) -> list[str]:
@@ -56,25 +59,12 @@ _Texto = Annotated[str, Field(min_length=1)]
 _ListaUnica = Annotated[list[_Texto], Field(min_length=1), AfterValidator(_sin_repetidos)]
 
 
-class _Estricto(BaseModel):
-    # strict: ``"true"`` o ``1`` no son booleanos, ``"0"`` no es número (el esquema JSON también los rechaza).
-    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
-
-    @model_validator(mode="before")
-    @classmethod
-    def _rechazar_null_explicito(cls, datos: object) -> object:
-        """El esquema JSON pide el campo opcional ausente, no ``null``: ``{"en": null}`` es inválido."""
-        if isinstance(datos, dict) and any(valor is None for valor in datos.values()):
-            raise ValueError("null explícito")
-        return datos
-
-
-class _Etiqueta(_Estricto):
+class _Etiqueta(Estricto):
     es: _Texto
     en: _Texto | None = None
 
 
-class _Destino(_Estricto):
+class _Destino(Estricto):
     entity: str = Field(pattern=_ENTIDAD)
     field: str | None = Field(default=None, pattern=_CAMPO)
     match: dict[Annotated[str, Field(pattern=_CLAVE_DE_COINCIDENCIA)], _Texto | _ListaUnica] = (
@@ -82,11 +72,11 @@ class _Destino(_Estricto):
     )
 
 
-class _Parcial(_Estricto):
+class _Parcial(Estricto):
     when: CondicionDeParcial
 
 
-class _Limites(_Estricto):
+class _Limites(Estricto):
     min: float | None = None
     max: float | None = None
 
@@ -97,17 +87,25 @@ class _Limites(_Estricto):
         return self
 
 
-class _Regla(_Estricto):
+class _Regla(Estricto):
     operator: OperadorDeRegla
     equivalences: (
         Annotated[dict[Annotated[str, Field(pattern=_CLAVE)], _ListaUnica], Field(min_length=1)]
         | None
     ) = None
+    subsetOf: (
+        Annotated[
+            dict[Annotated[str, Field(pattern=_CLAVE)], Annotated[str, Field(pattern=_CLAVE)]],
+            Field(min_length=1),
+        ]
+        | None
+    ) = None
+    equivalenceMatch: CoincidenciaDeEquivalencias | None = None
     partial: _Parcial
     limits: _Limites | None = None
 
 
-class _Criterio(_Estricto):
+class _Criterio(Estricto):
     key: str = Field(pattern=_CLAVE)
     cancerType: str = Field(pattern=_TIPO_DE_CANCER)
     studyKey: str = Field(pattern=_CLAVE_DE_ESTUDIO)
@@ -116,9 +114,19 @@ class _Criterio(_Estricto):
     isExclusionary: bool
     rule: _Regla
     estado: EstadoDeRevision
+    revision_provisional: RevisionProvisional | None = None
 
 
-class _Validacion(_Estricto):
+class _EntradaDeHistorial(Estricto):
+    """Revisión anterior del archivo: solo roles, nunca nombres de persona (RN-10); no llega al dominio."""
+
+    status: str = Field(pattern=_MINUSCULAS_Y_GUION_BAJO)
+    reviewerRole: str = Field(pattern=_MINUSCULAS_Y_GUION_BAJO)
+    date: str = Field(pattern=FECHA)
+    catalogHash: str = Field(pattern=_HUELLA)
+
+
+class _Validacion(Estricto):
     scope: Annotated[
         list[Literal["datos_criticos", "matriz_item_campo", "aplicabilidad"]],
         Field(min_length=1),
@@ -126,11 +134,12 @@ class _Validacion(_Estricto):
     ]
     status: str = Field(pattern=_MINUSCULAS_Y_GUION_BAJO)
     reviewerRole: str = Field(pattern=_MINUSCULAS_Y_GUION_BAJO)
-    date: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")
-    catalogHash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    date: str = Field(pattern=FECHA)
+    catalogHash: str = Field(pattern=_HUELLA)
+    history: Annotated[list[_EntradaDeHistorial], Field(min_length=1)] | None = None
 
 
-class _Archivo(_Estricto):
+class _Archivo(Estricto):
     version: str = Field(pattern=_VERSION)
     validation: _Validacion | None = None
     items: list[_Criterio]
@@ -205,35 +214,41 @@ def _leer_criterios_del_tipo(
 def _a_criterio_del_dominio(
     item: _Criterio, reglas_de_poblacion: ReglasDePoblacionDelTipo
 ) -> CriterioDeAplicabilidad:
-    destino = item.destination
-    regla = item.rule
     return CriterioDeAplicabilidad(
         clave=item.key,
         tipo_de_cancer=item.cancerType,
         clave_de_estudio=item.studyKey,
         etiqueta_es=item.label.es,
         etiqueta_en=item.label.en,
-        destino=DestinoDelCriterio(
-            entidad=destino.entity,
-            campo=destino.field,
-            coincidencia=MappingProxyType(
-                {nombre: _como_tupla(valor) for nombre, valor in destino.match.items()}
-            ),
-        ),
+        destino=_a_destino_del_dominio(item.destination),
         es_excluyente=item.isExclusionary,
-        regla=ReglaDeAplicabilidad(
-            operador=regla.operator,
-            parcial_cuando=regla.partial.when,
-            equivalencias=MappingProxyType(
-                {
-                    canonico: tuple(valores)
-                    for canonico, valores in (regla.equivalences or {}).items()
-                }
-            ),
-            limites=LimitesDeRegla(regla.limits.min, regla.limits.max) if regla.limits else None,
-        ),
+        regla=_a_regla_del_dominio(item.rule),
         estado_de_revision=item.estado,
         poblacion=reglas_de_poblacion.de(item.key),
+    )
+
+
+def _a_destino_del_dominio(destino: _Destino) -> DestinoDelCriterio:
+    return DestinoDelCriterio(
+        entidad=destino.entity,
+        campo=destino.field,
+        coincidencia=MappingProxyType(
+            {nombre: _como_tupla(valor) for nombre, valor in destino.match.items()}
+        ),
+    )
+
+
+def _a_regla_del_dominio(regla: _Regla) -> ReglaDeAplicabilidad:
+    """La regla del catálogo para el dominio; la marca ``revision_provisional`` del criterio no viaja con ella."""
+    return ReglaDeAplicabilidad(
+        operador=regla.operator,
+        parcial_cuando=regla.partial.when,
+        equivalencias=MappingProxyType(
+            {canonico: tuple(valores) for canonico, valores in (regla.equivalences or {}).items()}
+        ),
+        limites=LimitesDeRegla(regla.limits.min, regla.limits.max) if regla.limits else None,
+        jerarquia=MappingProxyType(regla.subsetOf or {}),
+        coincidencia_de_equivalencias=regla.equivalenceMatch or "prefijo",
     )
 
 

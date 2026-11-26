@@ -24,7 +24,8 @@ const CLAVES_DE_PROSTATA = [
   'ecog',
   'hrr_brca',
 ];
-const EXCLUYENTES = ['estado_her2', 'estado_castracion'];
+// `extension` es excluyente desde la revisión provisional del S7 (C-1, design D10): cambió el escenario del AC-1.
+const EXCLUYENTES = ['estado_her2', 'estado_castracion', 'extension'];
 
 describe('contenido de aplicabilidad del catálogo del S3', () => {
   it('lista exactamente los criterios de mama y próstata con destination, studyKey, isExclusionary y rule [US-121 AC-1]', () => {
@@ -44,14 +45,14 @@ describe('contenido de aplicabilidad del catálogo del S3', () => {
     }
   });
 
-  it('declara el bloque validation propuesta_revisada con scope aplicabilidad y el catalogHash de sus criterios [US-121 AC-1]', () => {
+  it('declara el bloque validation de revisión provisional con scope aplicabilidad y el catalogHash de sus criterios [US-121 AC-1]', () => {
     for (const tipo of ['mama', 'prostata']) {
       const { validation } = archivoDe(tipo);
 
       expect(validation, tipo).toMatchObject({
         scope: ['aplicabilidad'],
-        status: 'propuesta_revisada',
-        reviewerRole: expect.any(String),
+        status: 'revision_provisional',
+        reviewerRole: 'ia',
         date: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
       });
       expect(validation.catalogHash, tipo).toBe(

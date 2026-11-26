@@ -38,6 +38,8 @@ def _criterio(
             parcial,  # type: ignore[arg-type]
             MappingProxyType(equivalencias or {}),
             None,
+            MappingProxyType({}),
+            "prefijo",
         ),
         estado_de_revision="propuesta",
         poblacion=poblacion or ReglasDePoblacion(),

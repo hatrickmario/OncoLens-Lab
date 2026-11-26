@@ -59,7 +59,9 @@ def criterio_de(
         etiqueta_en=None,
         destino=DestinoDelCriterio(entidad, campo, coincidencia or {}),
         es_excluyente=excluyente,
-        regla=ReglaDeAplicabilidad(operador, parcial_cuando, equivalencias or {}, limites),
+        regla=ReglaDeAplicabilidad(
+            operador, parcial_cuando, equivalencias or {}, limites, {}, "prefijo"
+        ),
         estado_de_revision="propuesta",
     )
 
