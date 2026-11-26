@@ -1,0 +1,59 @@
+{
+  "claseDataset": "sintetico",
+  "dataset": "s5-corpus-ampliado@1",
+  "elegido": 0.5,
+  "esquema": "oncolens.calibracion.v1",
+  "filas": [
+    {
+      "fidelidad": 0.7894736842105263,
+      "mrr": 0.88671875,
+      "p95BusquedaMs": 5.670042,
+      "precisionCitas": 1.0,
+      "recallAt10": 0.90625,
+      "sinEvidencia": 0.9420289855072463,
+      "valor": 0.5
+    },
+    {
+      "fidelidad": 0.7478260869565218,
+      "mrr": 0.88671875,
+      "p95BusquedaMs": 5.317417,
+      "precisionCitas": 1.0,
+      "recallAt10": 0.90625,
+      "sinEvidencia": 0.9420289855072463,
+      "valor": 0.6
+    },
+    {
+      "fidelidad": 0.6696428571428571,
+      "mrr": 0.88671875,
+      "p95BusquedaMs": 5.4175,
+      "precisionCitas": 1.0,
+      "recallAt10": 0.90625,
+      "sinEvidencia": 0.9420289855072463,
+      "valor": 0.7
+    },
+    {
+      "fidelidad": 0.6666666666666666,
+      "mrr": 0.88671875,
+      "p95BusquedaMs": 5.423583,
+      "precisionCitas": 1.0,
+      "recallAt10": 0.90625,
+      "sinEvidencia": 0.9420289855072463,
+      "valor": 0.8
+    },
+    {
+      "fidelidad": 0.6068376068376068,
+      "mrr": 0.88671875,
+      "p95BusquedaMs": 5.090625,
+      "precisionCitas": 1.0,
+      "recallAt10": 0.90625,
+      "sinEvidencia": 0.9420289855072463,
+      "valor": 0.9
+    }
+  ],
+  "hashConfig": "ddb1a877eee82666718edef8c068f2a0f85910bb283598d729d4314517f5e43e",
+  "parametro": "nli_entailment_threshold",
+  "proveedor": "local",
+  "provisional": 0.7,
+  "sinValorElegible": false,
+  "toleranciaRecall": null
+}

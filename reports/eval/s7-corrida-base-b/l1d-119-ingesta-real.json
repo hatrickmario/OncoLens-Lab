@@ -1,0 +1,583 @@
+{
+ "documentos": [
+  {
+   "document_key": "nci-mama-hp-en",
+   "estado": "omitido",
+   "motivo": null,
+   "chunks": 0,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": null
+  },
+  {
+   "document_key": "nci-mama-pac-es",
+   "estado": "omitido",
+   "motivo": null,
+   "chunks": 0,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": null
+  },
+  {
+   "document_key": "nci-prostata-hp-en",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 97,
+   "reanudado": true,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "nci-prostata-pac-es",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 13,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "pmc-mama-cdk46-guia",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 19,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "pmc-mama-tamoxifeno-eca",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 11,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "pmc-mama-antraciclinas-rs",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 10,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "pmc-prostata-mhsp-nma",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 18,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "pmc-prostata-volumen-nma",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 11,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "pmc-prostata-darolutamida-rs",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 19,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "nci-mama-prevencion-hp-en",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 29,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "nci-mama-deteccion-hp-en",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 43,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "nci-mama-hombre-hp-en",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 5,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "nci-mama-prevencion-pac-es",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 6,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "nci-mama-deteccion-pac-es",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 5,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "nci-prostata-prevencion-hp-en",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 17,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "nci-prostata-deteccion-hp-en",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 32,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "nci-prostata-tratamiento-pac-en",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 9,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "nci-prostata-prevencion-pac-en",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 3,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "nci-prostata-deteccion-pac-en",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 3,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "nci-prostata-prevencion-pac-es",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 4,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "nci-prostata-deteccion-pac-es",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 3,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "pmc-mama-pembrolizumab-er-eca",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 7,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "pmc-mama-trastuzumab-deruxtecan-eca",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 14,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "pmc-mama-elacestrant-esr1-eca",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 10,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "pmc-mama-capivasertib-eca",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 13,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "pmc-mama-adn-tumoral-metastasico-rs",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 7,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "pmc-mama-irradiacion-pared-toracica-eca",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 7,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "pmc-mama-parp-neoadyuvante-eca",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 17,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "pmc-mama-arx788-her2-eca",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 9,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "pmc-mama-linfocitos-her2-secundario",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 7,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "pmc-prostata-niraparib-abiraterona-eca",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 13,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "pmc-prostata-inhibidores-ar-taxanos-eca",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 16,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "pmc-prostata-darolutamida-japon-eca",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 10,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "pendiente"
+  },
+  {
+   "document_key": "pmc-prostata-hormonoterapia-radioterapia-ma",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 10,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "pmc-prostata-talazoparib-enzalutamida-nma",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 9,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "pmc-prostata-enzalutamida-abiraterona-ma",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 8,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "pmc-prostata-braquiterapia-focal-rs",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 9,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "pmc-prostata-eventos-cardiovasculares-nma",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 11,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "pmc-prostata-cirugia-citorreductora-ma",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 8,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "pmc-prostata-lu-psma-comparadores",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 9,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "pmc-prostata-cribado-personalizado-es",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 10,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "pmc-prostata-nueva-perspectiva-cribado-es",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 6,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "extraido_verificado"
+  },
+  {
+   "document_key": "ct-mama-aphinity",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 3,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "fuente_estructurada"
+  },
+  {
+   "document_key": "ct-mama-monarche",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 2,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "fuente_estructurada"
+  },
+  {
+   "document_key": "ct-mama-natalee",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 3,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "fuente_estructurada"
+  },
+  {
+   "document_key": "ct-mama-destiny-breast06",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 2,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "fuente_estructurada"
+  },
+  {
+   "document_key": "ct-mama-katherine",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 2,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "fuente_estructurada"
+  },
+  {
+   "document_key": "ct-prostata-arasens",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 2,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "fuente_estructurada"
+  },
+  {
+   "document_key": "ct-prostata-aramis",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 2,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "fuente_estructurada"
+  },
+  {
+   "document_key": "ct-prostata-latitude",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 2,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "fuente_estructurada"
+  },
+  {
+   "document_key": "ct-prostata-spartan",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 2,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "fuente_estructurada"
+  },
+  {
+   "document_key": "ct-prostata-prevail",
+   "estado": "embebido",
+   "motivo": null,
+   "chunks": 2,
+   "reanudado": false,
+   "retirada_de_vigente": false,
+   "metadata_source": "fuente_estructurada"
+  }
+ ],
+ "resumen": {
+  "embebido": 51,
+  "omitido": 2,
+  "rechazado_licencia": 0,
+  "error": 0
+ },
+ "metadatos_pendientes": {
+  "cantidad": 1,
+  "documentos": [
+   {
+    "document_key": "pmc-prostata-darolutamida-japon-eca",
+    "motivo": "metadatos: SalidaInvalida"
+   }
+  ]
+ },
+ "poblacion": {
+  "llamadas": 236,
+  "valoresRechazados": 25,
+  "valoresRechazadosPorMotivo": {
+   "relleno": 0,
+   "chunk_ajeno": 25
+  },
+  "valoresSinSoporte": 209,
+  "valoresConLenguajePrescriptivo": 2,
+  "valoresDescartadosPorLongitud": 0,
+  "valoresFueraDelTope": 0,
+  "truncado": false,
+  "finishReasonLength": 0,
+  "criteriosPendientes": 0,
+  "criteriosReutilizados": 12
+ },
+ "release_id": "release-05d5be1544b9",
+ "corpus_por_tipo_y_fuente": {
+  "mama": {
+   "ClinicalTrials.gov": 5,
+   "NCI": 7,
+   "PMC Open Access": 12
+  },
+  "prostata": {
+   "ClinicalTrials.gov": 5,
+   "NCI": 9,
+   "PMC Open Access": 15
+  }
+ },
+ "muestra_de_metadatos": {
+  "tamano": 0,
+  "fallo": "OSError"
+ },
+ "poblacion_por_tipo_e_idioma": {
+  "mama": {
+   "es": {
+    "documentos": 3,
+    "sin_documentos": false,
+    "criterios": {
+     "estado_her2": 0,
+     "receptores_hormonales": 0,
+     "estadio": 1,
+     "linea_tratamiento": 0,
+     "estado_menopausico": 0,
+     "ecog": 0
+    }
+   },
+   "en": {
+    "documentos": 21,
+    "sin_documentos": false,
+    "criterios": {
+     "estado_her2": 9,
+     "receptores_hormonales": 6,
+     "estadio": 8,
+     "linea_tratamiento": 5,
+     "estado_menopausico": 2,
+     "ecog": 1
+    }
+   }
+  },
+  "prostata": {
+   "es": {
+    "documentos": 5,
+    "sin_documentos": false,
+    "criterios": {
+     "estado_castracion": 0,
+     "extension": 0,
+     "isup": 1,
+     "linea_tratamiento": 3,
+     "ecog": 0,
+     "hrr_brca": 0
+    }
+   },
+   "en": {
+    "documentos": 24,
+    "sin_documentos": false,
+    "criterios": {
+     "estado_castracion": 4,
+     "extension": 5,
+     "isup": 1,
+     "linea_tratamiento": 4,
+     "ecog": 1,
+     "hrr_brca": 2
+    }
+   }
+  }
+ }
+}

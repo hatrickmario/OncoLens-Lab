@@ -1,0 +1,234 @@
+{
+  "casos": 13,
+  "catalogVersion": "2026.10.0",
+  "config": "chat-local",
+  "control_prescriptivo": {
+    "afirmaciones_omitidas": 0,
+    "salidas_prescriptivas_mostradas": 0
+  },
+  "controles": 2,
+  "corpus": {
+    "cargado": {
+      "chunks_vigentes": 717,
+      "coleccion": "corpus_chunks",
+      "fuente": "indice",
+      "huella": "70f007395da8fc9df09d999ace9c9c2b02ddba0c9a2c7a04ea77af18c632cb0e"
+    },
+    "declarado": "ingesta de l1d-119 (colección de Milvus y catálogo corpus, solo lectura)"
+  },
+  "dataset": {
+    "clase": "sintetico",
+    "nombre": "chat-v1",
+    "version": "1"
+  },
+  "huella_config": "1b2202ae074b97c73e3028a860df67416ff56a28abdd9438d2f44fa4bccb45d7",
+  "metricas": {
+    "apariciones_de_identidad": {
+      "estado_del_hilo": 0,
+      "logs": 0
+    },
+    "casos_de_control_de_identidad": 1,
+    "exactitud_de_intent": 0.9166666666666666,
+    "faltantes": {
+      "especificidad": null,
+      "exactitud_de_gap_type": null,
+      "sensibilidad": null
+    },
+    "latencia": {
+      "informativa": true,
+      "por_intencion": {
+        "caso": {
+          "n": 4,
+          "p50_ms": 1576.293,
+          "p95_ms": 10540.459
+        },
+        "evidencia": {
+          "n": 2,
+          "p50_ms": 13147.415,
+          "p95_ms": 14859.198
+        },
+        "faltantes": {
+          "n": 4,
+          "p50_ms": 6.33,
+          "p95_ms": 10113.701
+        },
+        "fuentes_limitaciones": {
+          "n": 2,
+          "p50_ms": 10.333,
+          "p95_ms": 11.22
+        }
+      },
+      "rotulo": "real",
+      "turno": {
+        "n": 12,
+        "p50_ms": 1576.293,
+        "p95_ms": 14859.198
+      }
+    },
+    "no_medidas": [
+      "faltantes.sensibilidad",
+      "faltantes.especificidad",
+      "faltantes.exactitud_de_gap_type"
+    ],
+    "por_tipo": {
+      "mama": {
+        "afirmaciones_mostradas": 3,
+        "afirmaciones_omitidas": 0,
+        "hechos_presentes": 0.6666666666666666,
+        "precision_de_enlaces": 0.5,
+        "soporte_nli": 0.6666666666666666
+      },
+      "prostata": {
+        "afirmaciones_mostradas": 8,
+        "afirmaciones_omitidas": 1,
+        "hechos_presentes": 1.0,
+        "precision_de_enlaces": 0.75,
+        "soporte_nli": 1.0
+      }
+    },
+    "revision_clinica": {
+      "pendientes": [
+        "CHAT-AC01-MAMA",
+        "CHAT-AC02-MAMA",
+        "CHAT-AC03-MAMA",
+        "CHAT-AC04-MAMA",
+        "CHAT-AC05-MAMA",
+        "CHAT-AC06-MAMA",
+        "CHAT-AC01-MAMA-PII",
+        "CHAT-AC01-PROSTATA",
+        "CHAT-AC02-PROSTATA",
+        "CHAT-AC03-PROSTATA",
+        "CHAT-AC04-PROSTATA",
+        "CHAT-AC05-PROSTATA",
+        "CHAT-AC06-PROSTATA"
+      ],
+      "rotulo": "no_validada"
+    },
+    "salidas_prescriptivas": 0
+  },
+  "modelos": {
+    "llm": "gemma4:26b-a4b-it-q4_K_M",
+    "proveedor": "local"
+  },
+  "por_caso": [
+    {
+      "ac": "AC01",
+      "cancer": "mama",
+      "control_de_identidad": false,
+      "id": "CHAT-AC01-MAMA",
+      "intent": "caso",
+      "intent_correcto": true
+    },
+    {
+      "ac": "AC02",
+      "cancer": "mama",
+      "control_de_identidad": false,
+      "id": "CHAT-AC02-MAMA",
+      "intent": "faltantes",
+      "intent_correcto": false
+    },
+    {
+      "ac": "AC03",
+      "cancer": "mama",
+      "control_de_identidad": false,
+      "id": "CHAT-AC03-MAMA",
+      "intent": "faltantes",
+      "intent_correcto": true
+    },
+    {
+      "ac": "AC04",
+      "cancer": "mama",
+      "control_de_identidad": false,
+      "id": "CHAT-AC04-MAMA",
+      "intent": "faltantes",
+      "intent_correcto": true
+    },
+    {
+      "ac": "AC05",
+      "cancer": "mama",
+      "control_de_identidad": false,
+      "id": "CHAT-AC05-MAMA",
+      "intent": "evidencia",
+      "intent_correcto": true
+    },
+    {
+      "ac": "AC06",
+      "cancer": "mama",
+      "control_de_identidad": false,
+      "id": "CHAT-AC06-MAMA",
+      "intent": "fuentes_limitaciones",
+      "intent_correcto": true
+    },
+    {
+      "ac": "AC01",
+      "cancer": "mama",
+      "control_de_identidad": true,
+      "id": "CHAT-AC01-MAMA-PII",
+      "intent": "fuera_de_alcance",
+      "intent_correcto": null
+    },
+    {
+      "ac": "AC01",
+      "cancer": "prostata",
+      "control_de_identidad": false,
+      "id": "CHAT-AC01-PROSTATA",
+      "intent": "caso",
+      "intent_correcto": true
+    },
+    {
+      "ac": "AC02",
+      "cancer": "prostata",
+      "control_de_identidad": false,
+      "id": "CHAT-AC02-PROSTATA",
+      "intent": "caso",
+      "intent_correcto": true
+    },
+    {
+      "ac": "AC03",
+      "cancer": "prostata",
+      "control_de_identidad": false,
+      "id": "CHAT-AC03-PROSTATA",
+      "intent": "faltantes",
+      "intent_correcto": true
+    },
+    {
+      "ac": "AC04",
+      "cancer": "prostata",
+      "control_de_identidad": false,
+      "id": "CHAT-AC04-PROSTATA",
+      "intent": "faltantes",
+      "intent_correcto": true
+    },
+    {
+      "ac": "AC05",
+      "cancer": "prostata",
+      "control_de_identidad": false,
+      "id": "CHAT-AC05-PROSTATA",
+      "intent": "evidencia",
+      "intent_correcto": true
+    },
+    {
+      "ac": "AC06",
+      "cancer": "prostata",
+      "control_de_identidad": false,
+      "id": "CHAT-AC06-PROSTATA",
+      "intent": "fuentes_limitaciones",
+      "intent_correcto": true
+    }
+  ],
+  "prompts": {
+    "caso": "chat-caso@0.3.0",
+    "chat": "chat-turn@0.1.0",
+    "relevancia": "chat-relevancia@0.1.0"
+  },
+  "reloj": "real",
+  "suite": "chat",
+  "umbrales": {
+    "claim_max_words": 20,
+    "nli_entailment_threshold": 0.7,
+    "origen": "settings",
+    "relevance_threshold": 0.3,
+    "rerank_top_n": 10,
+    "retrieval_top_k": 30
+  }
+}
