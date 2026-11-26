@@ -291,5 +291,7 @@ Lo que se concretó o se desvió de lo descrito arriba; el código manda sobre e
   de la construcción del índice y los chunks con respaldo salen de `--resumenes-de-contexto <json>` (`{brazo: resumen de reindex-context}`, validado
   contra la variante de cada brazo); la memoria sale de `--memoria-del-stack` (ya existente). Una colección de brazo que no corresponde a su variante
   aborta la corrida; un brazo de contexto con colección propia SÍ consume la población (los `chunk_id` no cambian), a diferencia del brazo de 512 tokens.
+- **Prefijo del brazo en memoria (CI):** omite el tipo de fuente porque `DocumentoCorpus` del dataset no lo trae (solo título y cáncer); la forma del
+  informe no cambia y la calidad no se mide ahí. `reindex-sparse` rechaza una colección con marca de contexto (Gate 2).
 - **RN-22:** `corpus_metadata_llm_temperature` pasó de `CorpusIngestSettings` a `AjustesDeContextoLlm` (mismo nombre, valor y variable de entorno)
   para que la reindexación `llm` use la misma temperatura; no se añade ninguna variable a `.env.example` ni a Compose más allá del bloque de H-1.

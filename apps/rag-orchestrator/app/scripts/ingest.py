@@ -415,6 +415,16 @@ def _almacen_de_milvus() -> AlmacenDeReindexacionSparse:
     return almacen
 
 
+def _exigir_coleccion_sin_contexto() -> None:
+    """``reindex-sparse`` trabaja sobre la colección SIN contexto (``ninguno``): sobre una ``__ctx_`` dejaría el *dense* con prefijo y el
+    *sparse* sin él. Si la configuración de Milvus no es válida no se decide aquí: ya la reporta el camino que la usa."""
+    try:
+        nombre = MilvusSettings(_env_file=None).milvus_collection_name  # type: ignore[call-arg]
+    except ValidationError:
+        return
+    exigir_coleccion_de_la_variante(nombre, VarianteDeContexto.NINGUNO)
+
+
 def _reindexar_sparse(
     sparse: SparsePassageEncoder | None, almacen: AlmacenDeReindexacionSparse | None
 ) -> int:
@@ -427,6 +437,7 @@ def _reindexar_sparse(
         return 1
     try:
         exigir_proveedor_de_modelos_local()  # RN-12: antes de cargar modelos o abrir Milvus
+        _exigir_coleccion_sin_contexto()  # el sparse de una colección con prefijo no se recalcula sin él
         codificador = sparse if sparse is not None else _sparse_real(ajustes)
         almacen = almacen if almacen is not None else _almacen_de_milvus()
         resumen = ReindexarSparse(
@@ -434,6 +445,9 @@ def _reindexar_sparse(
             codificador=codificador,
             lote=ajustes.corpus_sparse_reindex_batch_size,
         ).ejecutar()
+    except ColeccionNoCorrespondeALaVariante as error:
+        print(f"{NOMBRE} {MODO_REINDEX_SPARSE}: {error}", file=sys.stderr)
+        return 1
     except (
         ValidationError
     ) as error:  # la configuración de Milvus, que se valida después de la guarda
