@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from app.domain.expansion_contextual import CAMPOS_DE_EXPANSION, FORMATOS_DE_CONSULTA
 from app.domain.ventanas_del_reranker import MODOS_DE_VENTANAS
+from app.evaluation.adopcion_del_brazo import MOTIVOS_DE_NO_ADOPCION
 from app.evaluation.acuerdo_juez import ESTADO_CONCLUYENTE, ESTADO_NO_CONCLUYENTE, SIN_MEDIR
 from app.evaluation.config_suite import PROVEEDORES, RELOJES, SUITES
 from app.evaluation.cronometro import ETAPAS
@@ -276,6 +277,24 @@ _VIABILIDAD = Objeto(
         "limite_memoria_gb": Numero(),
     }
 )
+_REESCRITURA_DEL_BRAZO = Objeto({"habilitada": Booleano(), "invocaciones": Numero()})
+_PARAFRASIS_ATRIBUIDAS = Objeto(
+    {
+        # US-277 AC-2: pares que la referencia pierde en la recuperación o en el umbral y los que el brazo recupera.
+        "aplicables": Numero(),
+        "recuperadas": Numero(),
+        "proporcion": Numero(),  # None = sin pares aplicables, nunca 0.0
+        "sin_pares_aplicables": Booleano(),
+    }
+)
+_ADOPCION = Objeto(
+    {
+        "adoptable": Anulable(
+            Booleano()
+        ),  # None = lo medido no alcanza para afirmarlo (p. ej. sin memoria del stack)
+        "motivos": Lista(Enumerado(MOTIVOS_DE_NO_ADOPCION)),
+    }
+)
 _BRAZO = Objeto(
     {
         "nombre": Identificador(),
@@ -297,6 +316,10 @@ _BRAZO = Objeto(
         "parafrasis": Objeto({"pares": Numero(), "recuperadas": Numero()}),
         "latencia_ms": Objeto({"reranker_p95": Numero(), "consulta_p95": Numero()}),
         "viabilidad": _VIABILIDAD,
+        # US-277: solo si la comparación declara brazos de pares o de reescritura (``adopcion``, además, solo fuera de A0).
+        "reescritura": _REESCRITURA_DEL_BRAZO,
+        "parafrasis_atribuidas": _PARAFRASIS_ATRIBUIDAS,
+        "adopcion": _ADOPCION,
     },
     opcionales=frozenset(
         {
@@ -306,6 +329,9 @@ _BRAZO = Objeto(
             "parafrasis",
             "latencia_ms",
             "viabilidad",
+            "reescritura",
+            "parafrasis_atribuidas",
+            "adopcion",
         }
     ),
 )

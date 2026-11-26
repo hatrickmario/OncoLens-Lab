@@ -17,6 +17,7 @@ import pytest
 import yaml
 
 from app.application.ports import PuertosDelCorpus
+from app.domain.reescritura import ParametrosDeReescritura
 from app.evaluation import chat
 from app.evaluation.adaptadores_falsos import EmbedderBolsaDePalabras, indice_fingido
 from app.evaluation.brazos_recuperacion import Brazo
@@ -373,6 +374,8 @@ def _puertos_locales_de_prueba(embedder_pasajes: EmbedderDePasajesQueCuenta) -> 
         generador=nada,
         clasificador_nli=nada,
         proponente=nada,
+        reescritor=None,
+        reescritura=ParametrosDeReescritura(),
         embedder_sparse=None,
     )
 

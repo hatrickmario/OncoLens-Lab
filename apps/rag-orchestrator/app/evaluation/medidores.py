@@ -21,6 +21,7 @@ from app.application.ports import (
     LanguageDetector,
     NliClassifier,
     QueryEmbedder,
+    QueryRewriter,
     QuerySparseEncoder,
     ReleaseDelCorpus,
     Reranker,
@@ -57,6 +58,10 @@ class Observaciones:
     reranker_discrepante: bool = False
     """Alguna consulta usó una configuración del reranker distinta de la que el brazo declaró (``esperada_del_reranker``)."""
     esperada_del_reranker: ConfiguracionDelReranker | None = None
+    reescrituras: int = 0
+    """Veces que el servicio invocó al reescritor (US-277): la reescritura efectiva, medida en el puerto."""
+    reescritura_esperada: bool | None = None
+    """La reescritura que el brazo declaró (``None`` = no es un brazo); la suite la compara con ``reescrituras``."""
 
 
 class DetectorMedido:
@@ -172,12 +177,25 @@ class RerankerObservado:
 
 
 def _coincide(efectiva: ConfiguracionDelReranker, esperada: ConfiguracionDelReranker) -> bool:
-    """Solo se compara lo que el brazo declaró: el modo, el solape y el largo; el tope de pares no es del brazo."""
-    return (efectiva.modo, efectiva.solape, efectiva.max_length) == (
+    """Lo que el brazo declaró de la etapa (y lo que no, lo de la suite): el modo, el solape, el largo y el tope de pares."""
+    return (efectiva.modo, efectiva.solape, efectiva.max_length, efectiva.max_pairs) == (
         esperada.modo,
         esperada.solape,
         esperada.max_length,
+        esperada.max_pairs,
     )
+
+
+class ReescritorObservado:
+    """``QueryRewriter`` que cuenta cada invocación del servicio: así la suite mide la reescritura EFECTIVA de un brazo en el
+    puerto y no la que se declaró (US-277 AC-5). No toca la pregunta ni los términos."""
+
+    def __init__(self, interno: QueryRewriter, observaciones: Observaciones) -> None:
+        self._interno, self._obs = interno, observaciones
+
+    async def reformular(self, pregunta: str) -> tuple[str, ...]:
+        self._obs.reescrituras += 1
+        return await self._interno.reformular(pregunta)
 
 
 class GeneradorObservado:

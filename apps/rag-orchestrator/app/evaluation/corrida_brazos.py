@@ -30,8 +30,10 @@ from app.evaluation.cronometro import Cronometro
 from app.evaluation.fuente_dataset import DatasetSuite
 from app.evaluation.guardas import SuiteAbortada
 from app.evaluation.indice_del_corpus import IndiceDelCorpus
+from app.evaluation.medidores import Observaciones
 from app.evaluation.metricas.resultado import ResultadoConsulta
 from app.evaluation.modelos_locales import PuertosLocales
+from app.evaluation.reescritura_del_brazo import reescritura_efectiva_coincide
 from app.schemas.generated.models import RagMeta, RagQueryInternalResponse
 
 
@@ -60,6 +62,22 @@ def exigir_brazo_sin_poblacion(brazo: Brazo, respuesta: RagQueryInternalResponse
         )
 
 
+def exigir_reescritura_del_brazo(
+    brazo: Brazo, observaciones: Observaciones, reescrituras_previas: int, sin_evidencia: bool
+) -> None:
+    """La reescritura efectiva de la consulta (las invocaciones al puerto del reescritor) es la que el brazo declara; si no,
+    la corrida no mide lo que dice medir y aborta (US-277 AC-5). Un brazo sin reescritor medido no se comprueba."""
+    esperada = observaciones.reescritura_esperada
+    if esperada is None:
+        return
+    invocaciones = observaciones.reescrituras - reescrituras_previas
+    if not reescritura_efectiva_coincide(esperada, invocaciones, sin_evidencia):
+        raise SuiteAbortada(
+            f"el brazo {brazo.nombre} corrió una consulta con una reescritura distinta de la que declara "
+            "(QUERY_REWRITE_ENABLED)"
+        )
+
+
 async def evaluar_brazos(
     config: ConfigSuite,
     comparacion: Comparacion,
@@ -68,17 +86,19 @@ async def evaluar_brazos(
     nuevo_cronometro: Callable[[], Cronometro],
     puertos_locales: PuertosLocales | None,
     abrir_indice: Callable[[str | None], IndiceDelCorpus] | None = None,
+    adaptadores: Adaptadores | None = None,
 ) -> list[ResultadoDeBrazo]:
     """Cada brazo, en el orden de la configuración, sobre los mismos adaptadores ya cargados.
 
     Con ``abrir_indice`` (``indice.fuente: milvus``) cada brazo lee la ingesta en solo lectura: la colección de la
-    configuración o la suya propia (``Brazo.coleccion``, el de chunks de 512 tokens); cada colección se abre una sola vez."""
+    configuración o la suya propia (``Brazo.coleccion``, el de chunks de 512 tokens); cada colección se abre una sola vez.
+    ``adaptadores`` ya cargados (los de la suite o los de una prueba) evitan construir otros."""
     indices: dict[str | None, IndiceDelCorpus] = {}
     if abrir_indice is not None:
         for brazo in comparacion.brazos:
             if brazo.coleccion not in indices:
                 indices[brazo.coleccion] = abrir_indice(brazo.coleccion)
-    adaptadores = adaptadores_de_suite(
+    adaptadores = adaptadores or adaptadores_de_suite(
         config,
         dataset,
         puertos_locales,
@@ -121,6 +141,7 @@ async def _evaluar_brazo(
     metas: list[RagMeta] = []
     sin_terminos = 0
     for posicion, pregunta in enumerate(dataset.preguntas):
+        reescrituras_previas = servicio.observaciones.reescrituras
         try:
             resultado, respuesta = await evaluar_pregunta_en_servicio(
                 servicio, dataset, base, pregunta, posicion
@@ -132,6 +153,9 @@ async def _evaluar_brazo(
             sin_terminos += 1
             continue
         exigir_brazo_sin_poblacion(brazo, respuesta)
+        exigir_reescritura_del_brazo(
+            brazo, servicio.observaciones, reescrituras_previas, resultado.sin_evidencia
+        )
         resultados.append(resultado)
         metas.append(respuesta.meta)
     if servicio.observaciones.reranker_discrepante:

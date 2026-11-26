@@ -78,6 +78,7 @@ class BgeReranker:
         modo_de_ventanas: ModoDeVentanas | None = None,
         solape: int | None = None,
         max_length: int | None = None,
+        max_pairs: int | None = None,
     ) -> BgeReranker:
         """Otro reranker sobre la misma sesión y el mismo tokenizador ya cargados (no tiene estado propio), con la
         etapa cambiada: lo usa la suite ``evaluate`` para comparar brazos sin cargar el modelo otra vez (US-278)."""
@@ -86,7 +87,7 @@ class BgeReranker:
             self._tokenizador,
             version=self._version,
             max_length=self._max_length if max_length is None else max_length,
-            max_pairs=self._max_pairs,
+            max_pairs=self._max_pairs if max_pairs is None else max_pairs,
             max_tokens_por_lote=self._max_tokens_por_lote,
             modo_de_ventanas=self._modo_de_ventanas
             if modo_de_ventanas is None
