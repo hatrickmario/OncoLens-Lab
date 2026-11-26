@@ -130,13 +130,18 @@ def diferencia_frente_referencia(
     )
 
 
+def supera_la_tolerancia(empeoramiento: float, tolerancia: float) -> bool:
+    """``True`` si el empeoramiento (positivo = peor) es mayor que la tolerancia (RETRIEVAL_REGRESSION_TOLERANCE, RN-22).
+    round: 0.60 - 0.65 es -0.05000000000000004 en coma flotante y «igual a la tolerancia» no es empeorar."""
+    return round(empeoramiento, 12) > round(tolerancia, 12)
+
+
 def marcar_retroceso(diferencias: MetricasDeBrazo, tolerancia: float) -> bool:
     """``True`` si alguna diferencia es peor que ``-tolerancia``; una diferencia ``None`` no cuenta como retroceso."""
     if tolerancia < 0:
         raise ValueError("la tolerancia de retroceso no puede ser negativa")
-    # round: 0.60 - 0.65 es -0.05000000000000004 en coma flotante y «igual a la tolerancia» no es retroceso
     return any(
-        d is not None and round(d, 12) < -round(tolerancia, 12) for d in diferencias.como_tupla()
+        d is not None and supera_la_tolerancia(-d, tolerancia) for d in diferencias.como_tupla()
     )
 
 
