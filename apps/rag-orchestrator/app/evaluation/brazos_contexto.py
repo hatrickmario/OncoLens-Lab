@@ -13,6 +13,7 @@ from statistics import mean
 from typing import Final
 
 from app.domain.corpus_seed.contexto_del_chunk import VarianteDeContexto
+from app.evaluation.adopcion_del_brazo import Adopcion
 from app.evaluation.retrieval_metrics import bootstrap_ic
 from app.evaluation.viabilidad_del_brazo import exceso_de_latencia
 
@@ -100,3 +101,16 @@ def regla_de_adopcion(
         if falla
     )
     return ReglaDeAdopcion(not motivos, motivos)
+
+
+def adopcion_del_contexto(regla: ReglaDeAdopcion, decision: Adopcion) -> Adopcion:
+    """Combina la regla propia del contexto con ``decidir_adopcion`` (la de los brazos de US-277), sin repetir ninguna de las dos.
+
+    Precedencia: un motivo explícito (``False``) gana a ``None``, y ``None`` gana a ``True`` (``null`` ≠ ``0.0``: lo no medido no
+    se lee como adoptable); el ``None`` lleva el motivo ``no_medible``. Es una señal técnica del informe, no adopta nada."""
+    explicitos = tuple(m for m in regla.motivos if m != MOTIVO_NO_MEDIBLE) + decision.motivos
+    if explicitos:
+        return Adopcion(False, explicitos)
+    if regla.mejora_fuera_del_ruido is None or decision.adoptable is None:
+        return Adopcion(None, (MOTIVO_NO_MEDIBLE,))
+    return Adopcion(True, ())

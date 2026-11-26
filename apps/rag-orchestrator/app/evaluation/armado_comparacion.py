@@ -15,6 +15,8 @@ from app.evaluation.adopcion_del_brazo import decidir_adopcion
 from app.evaluation.brazos_contexto import (
     METRICA_DE_ADOPCION,
     DiferenciaPareada,
+    ReglaDeAdopcion,
+    adopcion_del_contexto,
     diferencia_pareada,
     regla_de_adopcion,
 )
@@ -220,7 +222,8 @@ def _tasa_de_falsos_sin_evidencia(armado: dict[str, Any]) -> float | None:
 def _adopcion_del_brazo(
     armado: dict[str, Any], referencia: dict[str, Any], tolerancia: float
 ) -> dict[str, Any]:
-    """US-277 AC-5: ``adoptable`` frente a la referencia, con los motivos de no serlo."""
+    """US-277 AC-5: ``adoptable`` frente a la referencia, con los motivos de no serlo; en un brazo de contexto (US-279 AC-5) se
+    combina con la regla propia del contexto, ya calculada en ``armado["contexto"]``."""
     aumento_de_falsos = _restar_opcional(
         _tasa_de_falsos_sin_evidencia(armado), _tasa_de_falsos_sin_evidencia(referencia)
     )
@@ -230,6 +233,11 @@ def _adopcion_del_brazo(
         tolerancia=tolerancia,
         viabilidad=armado["viabilidad"]["estado"],
     )
+    regla = armado.get("contexto", {}).get("regla_de_adopcion")
+    if regla is not None:
+        decision = adopcion_del_contexto(
+            ReglaDeAdopcion(regla["mejora_fuera_del_ruido"], tuple(regla["motivos"])), decision
+        )
     return {"adoptable": decision.adoptable, "motivos": list(decision.motivos)}
 
 
@@ -443,7 +451,7 @@ def armar_comparacion(
             if con_viabilidad:
                 armado["diferencia_frente_a_a0"].update(_diferencias_extra(armado, armados[0]))
             armado["retroceso"] = marcar_retroceso(diferencia, comparacion.tolerancia_retroceso)
-            if con_pares_o_reescritura:
+            if con_pares_o_reescritura or (con_contexto and con_viabilidad):
                 armado["adopcion"] = _adopcion_del_brazo(
                     armado, armados[0], comparacion.tolerancia_retroceso
                 )

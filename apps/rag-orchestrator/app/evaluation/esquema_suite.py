@@ -294,7 +294,8 @@ _ADOPCION = Objeto(
         "adoptable": Anulable(
             Booleano()
         ),  # None = lo medido no alcanza para afirmarlo (p. ej. sin memoria del stack)
-        "motivos": Lista(Enumerado(MOTIVOS_DE_NO_ADOPCION)),
+        # los de la regla de US-277 y, en los brazos de contexto (US-279 AC-5), los de la regla propia del contexto
+        "motivos": Lista(Enumerado(MOTIVOS_DE_NO_ADOPCION | MOTIVOS_DE_NO_CUMPLIR)),
     }
 )
 _DIFERENCIA_PAREADA = Objeto(
