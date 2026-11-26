@@ -14,8 +14,13 @@ from collections.abc import Sequence
 from dataclasses import replace
 from datetime import date
 
+from app.application.corpus_ingestion.constructores_de_contexto import ConstructorNinguno
 from app.application.corpus_ingestion.etapas import FalloDeEtapa, etapa
-from app.application.corpus_ingestion.ports import ResolutorDeMetadatos, SparsePassageEncoder
+from app.application.corpus_ingestion.ports import (
+    ConstructorDeContexto,
+    ResolutorDeMetadatos,
+    SparsePassageEncoder,
+)
 from app.application.corpus_ingestion.reporte import (
     Estado,
     ReporteDeIngesta,
@@ -94,7 +99,9 @@ class IngestionPipelineService:
         fecha_de_corte: date,
         extractor_de_poblacion: ExtractorDePoblacion | None = None,
         almacen_de_poblacion: AlmacenDePoblacion | None = None,
+        constructor_de_contexto: ConstructorDeContexto | None = None,
     ) -> None:
+        self._constructor_de_contexto = constructor_de_contexto or ConstructorNinguno()
         self._extractor_de_poblacion = extractor_de_poblacion
         self._almacen_de_poblacion = almacen_de_poblacion
         self._catalogo = catalogo

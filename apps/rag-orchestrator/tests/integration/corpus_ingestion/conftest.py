@@ -22,6 +22,7 @@ import pytest
 from sqlalchemy import text
 
 from app.application.corpus_ingestion.ingestion_pipeline_service import IngestionPipelineService
+from app.application.corpus_ingestion.ports import ConstructorDeContexto
 from app.application.corpus_ingestion.reporte import ReporteDeIngesta
 from app.application.corpus_metadata.metadata_extraction_service import MetadataExtractionService
 from app.domain.corpus_seed.admisibilidad import PoliticaDeLicencias
@@ -298,6 +299,7 @@ def _servicio(
     nli: NliFalso,
     politica: PoliticaDeLicencias | None = None,
     tamano_de_chunk: int = TAMANO_DE_CHUNK_DE_TEST,
+    constructor_de_contexto: ConstructorDeContexto | None = None,
 ) -> IngestionPipelineService:
     return IngestionPipelineService(
         catalogo=catalogo,
@@ -315,6 +317,7 @@ def _servicio(
         tamano_de_chunk=tamano_de_chunk,
         solape_de_chunk=SOLAPE_DE_CHUNK_DE_TEST,
         fecha_de_corte=FECHA_DE_CORTE_DE_TEST,
+        constructor_de_contexto=constructor_de_contexto,
     )
 
 
@@ -322,6 +325,7 @@ def montar(
     directorio_de_textos: Path = DIRECTORIO_DE_FIXTURES,
     politica: PoliticaDeLicencias | None = None,
     tamano_de_chunk: int = TAMANO_DE_CHUNK_DE_TEST,
+    constructor_de_contexto: ConstructorDeContexto | None = None,
 ) -> Montaje:
     catalogo, almacen = CatalogoEnMemoria(), AlmacenDeChunksEnMemoria()
     embedder, sparse = EmbedderInterrumpible(), CodificadorSparseFalso()
@@ -336,6 +340,7 @@ def montar(
         nli,
         politica,
         tamano_de_chunk,
+        constructor_de_contexto,
     )
     observador = ObservadorEnMemoria(catalogo, almacen)
     return Montaje(
@@ -377,11 +382,21 @@ def fabrica_de_montaje(request: pytest.FixtureRequest) -> Iterator[Callable[...,
         directorio: Path = DIRECTORIO_DE_FIXTURES,
         politica: PoliticaDeLicencias | None = None,
         tamano_de_chunk: int = TAMANO_DE_CHUNK_DE_TEST,
+        constructor_de_contexto: ConstructorDeContexto | None = None,
     ) -> Montaje:
         embedder, sparse = EmbedderInterrumpible(), CodificadorSparseFalso()
         llm, nli = FakeMetadataLlm(), nli_de_metadatos()
         servicio = _servicio(
-            catalogo, almacen, directorio, embedder, sparse, llm, nli, politica, tamano_de_chunk
+            catalogo,
+            almacen,
+            directorio,
+            embedder,
+            sparse,
+            llm,
+            nli,
+            politica,
+            tamano_de_chunk,
+            constructor_de_contexto,
         )
         observador = ObservadorReal(motor, cliente, ajustes.milvus_collection_name)
         return Montaje(
