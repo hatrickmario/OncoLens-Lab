@@ -19,6 +19,7 @@ from app.application.ports import (
     PuertosDelCorpus,
     ProhibitedTermsChecker,
     QueryEmbedder,
+    QueryRewriter,
     QuerySparseEncoder,
     Reranker,
     SinTerminosLexicos,
@@ -36,6 +37,7 @@ from app.config.settings import (
 from app.domain.criterios_aplicabilidad import CriteriosDeAplicabilidad
 from app.domain.expansion_contextual import ParametrosDeExpansionContextual
 from app.domain.pregunta_sin_tema_propio import MarcosDePregunta
+from app.domain.reescritura import ParametrosDeReescritura
 from app.domain.terminos_del_caso import CatalogoDeTerminos
 from app.domain.ventanas_del_reranker import ConfiguracionDelReranker
 from app.evaluation.adaptadores_falsos import (
@@ -192,6 +194,10 @@ class Adaptadores:
     generador: EvidenceGenerator
     clasificador_nli: NliClassifier
     proponente: PoblacionTask
+    reescritor: QueryRewriter | None = None
+    """El reescritor del segundo loop (US-238, RN-12): falso en la suite ``fake``, el LLM local en la ``local``."""
+    reescritura: ParametrosDeReescritura = ParametrosDeReescritura()
+    """``QUERY_REWRITE_MAX_ITERATIONS`` y ``_DEADLINE_MS`` de la suite; ``habilitada`` lo fija cada brazo (US-277)."""
     codificador_sparse: QuerySparseEncoder | None = None
     """La rama *sparse* (US-133): el codificador de la consulta y la búsqueda sobre los mismos chunks que la *dense*."""
     buscador_sparse: SparseChunkSearch | None = None

@@ -68,17 +68,19 @@ async def evaluar_brazos(
     nuevo_cronometro: Callable[[], Cronometro],
     puertos_locales: PuertosLocales | None,
     abrir_indice: Callable[[str | None], IndiceDelCorpus] | None = None,
+    adaptadores: Adaptadores | None = None,
 ) -> list[ResultadoDeBrazo]:
     """Cada brazo, en el orden de la configuración, sobre los mismos adaptadores ya cargados.
 
     Con ``abrir_indice`` (``indice.fuente: milvus``) cada brazo lee la ingesta en solo lectura: la colección de la
-    configuración o la suya propia (``Brazo.coleccion``, el de chunks de 512 tokens); cada colección se abre una sola vez."""
+    configuración o la suya propia (``Brazo.coleccion``, el de chunks de 512 tokens); cada colección se abre una sola vez.
+    ``adaptadores`` ya cargados (los de la suite o los de una prueba) evitan construir otros."""
     indices: dict[str | None, IndiceDelCorpus] = {}
     if abrir_indice is not None:
         for brazo in comparacion.brazos:
             if brazo.coleccion not in indices:
                 indices[brazo.coleccion] = abrir_indice(brazo.coleccion)
-    adaptadores = adaptadores_de_suite(
+    adaptadores = adaptadores or adaptadores_de_suite(
         config,
         dataset,
         puertos_locales,

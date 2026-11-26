@@ -57,6 +57,10 @@ class Observaciones:
     reranker_discrepante: bool = False
     """Alguna consulta usó una configuración del reranker distinta de la que el brazo declaró (``esperada_del_reranker``)."""
     esperada_del_reranker: ConfiguracionDelReranker | None = None
+    reescrituras: int = 0
+    """Veces que el servicio invocó al reescritor (US-277): la reescritura efectiva, medida en el puerto."""
+    reescritura_esperada: bool | None = None
+    """La reescritura que el brazo declaró (``None`` = no es un brazo); la suite la compara con ``reescrituras``."""
 
 
 class DetectorMedido:

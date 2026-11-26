@@ -34,6 +34,10 @@ class Brazo:
     """``RERANKER_MAX_LENGTH`` del brazo; ``None`` = el del reranker de la suite."""
     coleccion: str | None = None
     """Colección de Milvus que lee el brazo (el de chunks de 512 tokens, US-278 AC-4); ``None`` = la de la suite."""
+    reranker_max_pairs: int | None = None
+    """``RERANKER_MAX_PAIRS`` del brazo (US-277 AC-6): los candidatos que llegan al reranker; ``None`` = el de la suite."""
+    query_rewrite_enabled: bool | None = None
+    """``QUERY_REWRITE_ENABLED`` del brazo (US-277 AC-2, AC-5): el segundo loop de reescritura; ``None`` = el de la suite."""
 
     @property
     def cambia_el_reranker(self) -> bool:

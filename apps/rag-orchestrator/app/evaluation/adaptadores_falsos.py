@@ -215,6 +215,18 @@ class RerankerLexico:
         return min(1.0, len(palabras & tokens(texto)) / COINCIDENCIAS_PARA_PUNTAJE_MAXIMO)
 
 
+class ReescritorFalso:
+    """``QueryRewriter`` falso (US-238): propone los términos que su guion declara para la pregunta y nada si no hay guion.
+
+    Cumple el contrato del puerto: una tupla (``()`` = sin propuesta, nunca ``None``); el filtro del catálogo es del dominio."""
+
+    def __init__(self, guion: Mapping[str, tuple[str, ...]] | None = None) -> None:
+        self._guion = dict(guion or {})
+
+    async def reformular(self, pregunta: str) -> tuple[str, ...]:
+        return self._guion.get(pregunta, ())
+
+
 class NliLexico:
     """Implica la hipótesis cuando todas sus palabras están en la premisa; si no, es neutral."""
 
