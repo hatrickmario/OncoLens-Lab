@@ -1,0 +1,264 @@
+{
+  "alcance_de_la_revision": "preguntas",
+  "configuracion": {
+    "catalogVersion": "test-apl-1.0.0",
+    "claseDataset": "sintetico",
+    "dataset": {
+      "nombre": "opciones",
+      "version": "2"
+    },
+    "fixture": "FX-T5a-a+FX-10c-a",
+    "hashConfig": "e8e54200eab80b2cc6d95a4bc61d168b37f7f20d1ac653fe175991f4a5119963",
+    "maxOptions": 3,
+    "modelos": {
+      "embeddings": "BAAI/bge-m3@5617a9f61b028005a4858fdac845db406aefb181#sha256:3f771d8d6368f21658b0784f947c6c05fdff6f5f56f7c7498cec2b901f16191a",
+      "llm": "gemma4:26b-a4b-it-q4_K_M",
+      "nli": "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7@b5113eb38ab63efdd7f280f8c144ea8b13f978ce#sha256:49f52a865d9207679c83d2f227738294a1856843115a1fc7c86978615beddee4",
+      "reranker": "BAAI/bge-reranker-v2-m3@953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e#sha256:d1d97f8090e239b20420cae771c5457197e4dc59678d08c9b6c521448c968d0f"
+    },
+    "nombre": "s5-opciones-local",
+    "proveedor": "local",
+    "reloj": "real",
+    "umbrales": {
+      "nliEntailmentThreshold": 0.7,
+      "relevanceThreshold": 0.3,
+      "rerankTopN": 10,
+      "retrievalTopK": 40
+    },
+    "versionListaTerminos": "1.6.0"
+  },
+  "esquema": "oncolens.evaluate.v1",
+  "invariantes": {
+    "cumplidas": true,
+    "violaciones": []
+  },
+  "metas": {
+    "metricas": [
+      {
+        "estado": "en_meta",
+        "meta": 0.9,
+        "metrica": "fidelidad_proxy",
+        "valor": 0.9743589743589743
+      },
+      {
+        "estado": "en_meta",
+        "meta": 0.9,
+        "metrica": "precision_citas",
+        "valor": 1.0
+      }
+    ],
+    "origen": "metas_iniciales_dec07_pendiente"
+  },
+  "metricas": {
+    "citas": {
+      "n": 38,
+      "precision": 1.0,
+      "validacion": {
+        "preguntas_mecanica_verificada": 4,
+        "preguntas_no_validadas": 12,
+        "preguntas_sin_revisar": 8,
+        "preguntas_validadas": 0,
+        "rotulo": "no_validada"
+      }
+    },
+    "esperadas_presentes": {
+      "esperadas": 30,
+      "porcentaje": 0.8,
+      "presentes": 24,
+      "validacion": {
+        "preguntas_mecanica_verificada": 4,
+        "preguntas_no_validadas": 12,
+        "preguntas_sin_revisar": 8,
+        "preguntas_validadas": 0,
+        "rotulo": "no_validada"
+      }
+    },
+    "fidelidad": {
+      "afirmaciones": 39,
+      "fidelidad": 0.9743589743589743,
+      "soportadas": 38,
+      "validacion": {
+        "preguntas_mecanica_verificada": 4,
+        "preguntas_no_validadas": 12,
+        "preguntas_sin_revisar": 8,
+        "preguntas_validadas": 0,
+        "rotulo": "no_validada"
+      }
+    },
+    "m_10_1": {
+      "con_cita_y_soporte": 24,
+      "mostradas": 24,
+      "porcentaje": 1.0,
+      "validacion": {
+        "preguntas_mecanica_verificada": 4,
+        "preguntas_no_validadas": 12,
+        "preguntas_sin_revisar": 8,
+        "preguntas_validadas": 0,
+        "rotulo": "no_validada"
+      }
+    },
+    "m_10_2": {
+      "campos_con_termino": 0,
+      "nivel_a": 0,
+      "nivel_b": 0,
+      "validacion": {
+        "preguntas_mecanica_verificada": 4,
+        "preguntas_no_validadas": 12,
+        "preguntas_sin_revisar": 8,
+        "preguntas_validadas": 0,
+        "rotulo": "no_validada"
+      }
+    },
+    "no_comparable": {
+      "casos": 2,
+      "mostrada_al_final": 1,
+      "no_mostrada": 1,
+      "validacion": {
+        "preguntas_mecanica_verificada": 4,
+        "preguntas_no_validadas": 12,
+        "preguntas_sin_revisar": 8,
+        "preguntas_validadas": 0,
+        "rotulo": "no_validada"
+      }
+    },
+    "opciones_por_analisis": {
+      "analisis": 12,
+      "media": 2.0,
+      "validacion": {
+        "preguntas_mecanica_verificada": 4,
+        "preguntas_no_validadas": 12,
+        "preguntas_sin_revisar": 8,
+        "preguntas_validadas": 0,
+        "rotulo": "no_validada"
+      }
+    },
+    "orden_rn28": {
+      "analisis": 12,
+      "conformes": 12,
+      "porcentaje": 1.0,
+      "validacion": {
+        "preguntas_mecanica_verificada": 4,
+        "preguntas_no_validadas": 12,
+        "preguntas_sin_revisar": 8,
+        "preguntas_validadas": 0,
+        "rotulo": "no_validada"
+      }
+    }
+  },
+  "metricas_validadas": {
+    "citas": {
+      "n": 0,
+      "precision": null,
+      "validacion": {
+        "preguntas_mecanica_verificada": 0,
+        "preguntas_no_validadas": 0,
+        "preguntas_sin_revisar": 0,
+        "preguntas_validadas": 0,
+        "rotulo": "no_validada"
+      }
+    },
+    "esperadas_presentes": {
+      "esperadas": 0,
+      "porcentaje": null,
+      "presentes": 0,
+      "validacion": {
+        "preguntas_mecanica_verificada": 0,
+        "preguntas_no_validadas": 0,
+        "preguntas_sin_revisar": 0,
+        "preguntas_validadas": 0,
+        "rotulo": "no_validada"
+      }
+    },
+    "fidelidad": {
+      "afirmaciones": 0,
+      "fidelidad": null,
+      "soportadas": 0,
+      "validacion": {
+        "preguntas_mecanica_verificada": 0,
+        "preguntas_no_validadas": 0,
+        "preguntas_sin_revisar": 0,
+        "preguntas_validadas": 0,
+        "rotulo": "no_validada"
+      }
+    },
+    "m_10_1": {
+      "con_cita_y_soporte": 0,
+      "mostradas": 0,
+      "porcentaje": null,
+      "validacion": {
+        "preguntas_mecanica_verificada": 0,
+        "preguntas_no_validadas": 0,
+        "preguntas_sin_revisar": 0,
+        "preguntas_validadas": 0,
+        "rotulo": "no_validada"
+      }
+    },
+    "m_10_2": {
+      "campos_con_termino": 0,
+      "nivel_a": 0,
+      "nivel_b": 0,
+      "validacion": {
+        "preguntas_mecanica_verificada": 0,
+        "preguntas_no_validadas": 0,
+        "preguntas_sin_revisar": 0,
+        "preguntas_validadas": 0,
+        "rotulo": "no_validada"
+      }
+    },
+    "no_comparable": {
+      "casos": 0,
+      "mostrada_al_final": 0,
+      "no_mostrada": 0,
+      "validacion": {
+        "preguntas_mecanica_verificada": 0,
+        "preguntas_no_validadas": 0,
+        "preguntas_sin_revisar": 0,
+        "preguntas_validadas": 0,
+        "rotulo": "no_validada"
+      }
+    },
+    "opciones_por_analisis": {
+      "analisis": 0,
+      "media": null,
+      "validacion": {
+        "preguntas_mecanica_verificada": 0,
+        "preguntas_no_validadas": 0,
+        "preguntas_sin_revisar": 0,
+        "preguntas_validadas": 0,
+        "rotulo": "no_validada"
+      }
+    },
+    "orden_rn28": {
+      "analisis": 0,
+      "conformes": 0,
+      "porcentaje": null,
+      "validacion": {
+        "preguntas_mecanica_verificada": 0,
+        "preguntas_no_validadas": 0,
+        "preguntas_sin_revisar": 0,
+        "preguntas_validadas": 0,
+        "rotulo": "no_validada"
+      }
+    }
+  },
+  "regresion": {
+    "dataset_de_la_referencia": "fx-t5a-a",
+    "metricas": [
+      {
+        "metrica": "fidelidad",
+        "referencia": 0.6666666666666666,
+        "retroceso": false,
+        "valor": 0.9743589743589743
+      },
+      {
+        "metrica": "precision_citas",
+        "referencia": 1.0,
+        "retroceso": false,
+        "valor": 1.0
+      }
+    ],
+    "reporte_referencia": "reports/eval/l1d-298-evaluate-modelos-locales-fx-t5a-a.json",
+    "tolerancia": 0.05
+  },
+  "suite": "opciones"
+}

@@ -1,0 +1,40 @@
+# Brazo SIN expansión de la familia `contextual` (L1D-329; lo usa `l1d-333-reporte-h3`, US-275 AC-4): el mismo contenido que
+# `contextual-local.yaml` con `expansion_habilitada: false`, para medir el segundo loop contextual frente a su ausencia con el
+# mismo corpus, los mismos casos y los mismos umbrales. Mismas condiciones de corrida y mismos requisitos de entorno que aquella.
+#   cd apps/rag-orchestrator && python -m app.evaluation.evaluate --config eval/configs/contextual-local-apagado.yaml \
+#     --suite contextual --salida ../../reports/eval --nombre-archivo l1d-329-segundo-loop-ac9-reporte-apagado
+# Cambiar cualquier valor cambia la huella SHA-256 del informe.
+nombre: contextual-local-apagado
+fixture: S7-contextual-ctx
+dataset:
+  ruta: data/eval/s5-corpus-ampliado
+semilla_bootstrap: 20261122
+bootstrap_repeticiones: 200
+medicion:
+  reloj: real # time.perf_counter
+  rss_limite_mib: 4489 # el mismo límite de US-233a / local.yaml
+adaptadores:
+  proveedor: local
+  urls:
+    llm: http://127.0.0.1:11434/v1 # Ollama nativo; ninguna ruta hacia la nube (lista local cerrada en código)
+modelos:
+  llm: gemma4:26b-a4b-it-q4_K_M # G, LLM decidido en ADR-39
+umbrales: # los valores vigentes de producción ([S7 resp. 11])
+  relevance_threshold: 0.30
+  nli_entailment_threshold: 0.7
+  retrieval_top_k: 30
+  rerank_top_n: 10
+catalogo:
+  version: '2026.10.0'
+  ruta_terminos: packages/clinical-catalogs
+contextual:
+  casos:
+    - mama-completo
+    - prostata-con-grado
+  casos_ruta: packages/clinical-catalogs/test/fixtures/temas-del-caso.json
+  genericas_con_evidencia_minimo: 18 # COPIA de la corrida B: clave añadida (falta en el versionado); mismo valor que contextual-local.yaml
+  expansion_habilitada: false # el único cambio frente a contextual-local.yaml
+  preguntas_de_sinonimos:
+    - {pregunta: CTX-C12, termino: antraciclinas}
+    - {pregunta: CTX-C13, termino: pertuzumab}
+    - {pregunta: CTX-C14, termino: TILs}

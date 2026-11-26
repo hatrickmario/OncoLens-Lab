@@ -1,0 +1,3221 @@
+{
+  "adversarias": [
+    {
+      "caso": "mama-completo",
+      "con_puntaje_nulo": 24,
+      "falsos_positivos": 0,
+      "llamadas_al_generador": 0,
+      "sin_evidencia": 24,
+      "total": 24
+    },
+    {
+      "caso": "prostata-con-grado",
+      "con_puntaje_nulo": 23,
+      "falsos_positivos": 1,
+      "llamadas_al_generador": 1,
+      "sin_evidencia": 23,
+      "total": 24
+    }
+  ],
+  "cobertura": [
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "cumple": false,
+      "genericas_con_evidencia": 0,
+      "genericas_total": 22,
+      "minimo": 18
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "cumple": false,
+      "genericas_con_evidencia": 1,
+      "genericas_total": 22,
+      "minimo": 18
+    }
+  ],
+  "comparacion": null,
+  "configuracion": {
+    "casos": [
+      "mama-completo",
+      "prostata-con-grado"
+    ],
+    "catalogVersion": "2026.10.0",
+    "claseDataset": "sintetico",
+    "corpus": {
+      "nombre": "s5-corpus-ampliado",
+      "recuento_de_chunks": 252,
+      "release": "rel-s5-corpus-ampliado-1",
+      "version": "1"
+    },
+    "dataset": {
+      "nombre": "s5-corpus-ampliado",
+      "ruta": "data/eval/s5-corpus-ampliado",
+      "version": "1"
+    },
+    "expansion": {
+      "campos": [
+        "tipo",
+        "estadio",
+        "biomarcador_principal"
+      ],
+      "formato": "plano"
+    },
+    "expansion_habilitada": false,
+    "fixture": "S7-contextual-ctx",
+    "hashConfig": "afb1cc9ef1467aef26c854467c4105c0ce0c347203dd36af15cb3003e5dda393",
+    "modelos": {
+      "embeddings": "BAAI/bge-m3@5617a9f61b028005a4858fdac845db406aefb181#sha256:3f771d8d6368f21658b0784f947c6c05fdff6f5f56f7c7498cec2b901f16191a",
+      "llm": "gemma4:26b-a4b-it-q4_K_M",
+      "nli": "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7@b5113eb38ab63efdd7f280f8c144ea8b13f978ce#sha256:49f52a865d9207679c83d2f227738294a1856843115a1fc7c86978615beddee4",
+      "reranker": "BAAI/bge-reranker-v2-m3@953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e#sha256:d1d97f8090e239b20420cae771c5457197e4dc59678d08c9b6c521448c968d0f"
+    },
+    "nombre": "contextual-local-apagado",
+    "proveedor": "local",
+    "reloj": "real",
+    "umbrales": {
+      "nliEntailmentThreshold": 0.7,
+      "relevanceThreshold": 0.3,
+      "rerankTopN": 10,
+      "rerankerMaxPairs": 20,
+      "retrievalTopK": 30
+    }
+  },
+  "esquema": "oncolens.evaluate.v1",
+  "preguntas": [
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G01",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-linfocitos-her2-secundario-5",
+          "relevance_score": 0.011792509167740849
+        },
+        {
+          "chunk_id": "ch-ct-mama-katherine-4",
+          "relevance_score": 0.004941808198297115
+        },
+        {
+          "chunk_id": "ch-nci-mama-prevencion-pac-es-4",
+          "relevance_score": 0.0032587132478120616
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G01",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-2",
+          "relevance_score": 0.015595890117327153
+        },
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-1",
+          "relevance_score": 0.011426884134851984
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-cribado-personalizado-es-4",
+          "relevance_score": 0.004869584294044118
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G02",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-ct-mama-monarche-3",
+          "relevance_score": 0.002695181504996174
+        },
+        {
+          "chunk_id": "ch-pmc-mama-linfocitos-her2-secundario-5",
+          "relevance_score": 0.0023719707163886174
+        },
+        {
+          "chunk_id": "ch-ct-mama-katherine-4",
+          "relevance_score": 0.0011093492806977536
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G02",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-ct-prostata-prevail-2",
+          "relevance_score": 0.002729202516192757
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-nueva-perspectiva-cribado-es-1",
+          "relevance_score": 0.002595104593437776
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-cribado-personalizado-es-4",
+          "relevance_score": 0.0015928350507785616
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G03",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-ct-mama-destiny-breast06-4",
+          "relevance_score": 0.002116060813325441
+        },
+        {
+          "chunk_id": "ch-nci-mama-pac-es-4",
+          "relevance_score": 0.0020139903750802175
+        },
+        {
+          "chunk_id": "ch-ct-mama-monarche-3",
+          "relevance_score": 0.001642583462448858
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G03",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-prostata-cirugia-citorreductora-ma-2",
+          "relevance_score": 0.0035173413312151783
+        },
+        {
+          "chunk_id": "ch-ct-prostata-prevail-3",
+          "relevance_score": 0.002962687927655515
+        },
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-1",
+          "relevance_score": 0.0013288763675149552
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G04",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-linfocitos-her2-secundario-3",
+          "relevance_score": 0.0010681470052265457
+        },
+        {
+          "chunk_id": "ch-nci-mama-prevencion-pac-es-4",
+          "relevance_score": 0.0005349153685058675
+        },
+        {
+          "chunk_id": "ch-ct-mama-katherine-2",
+          "relevance_score": 0.0004955019398377178
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G04",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-prostata-nueva-perspectiva-cribado-es-5",
+          "relevance_score": 0.0024060510691960905
+        },
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-4",
+          "relevance_score": 0.0020803854344221668
+        },
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-1",
+          "relevance_score": 0.001778656475050521
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G05",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-ct-mama-katherine-1",
+          "relevance_score": 0.03660763065038793
+        },
+        {
+          "chunk_id": "ch-ct-mama-katherine-2",
+          "relevance_score": 0.016581370562616965
+        },
+        {
+          "chunk_id": "ch-ct-mama-natalee-1",
+          "relevance_score": 0.006292277956666491
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G05",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-prostata-nueva-perspectiva-cribado-es-5",
+          "relevance_score": 0.026461278419742308
+        },
+        {
+          "chunk_id": "ch-ct-prostata-prevail-3",
+          "relevance_score": 0.011911541894912935
+        },
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-2",
+          "relevance_score": 0.004769657681713264
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G06",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-ct-mama-aphinity-5",
+          "relevance_score": 0.0020148061479517655
+        },
+        {
+          "chunk_id": "ch-ct-mama-katherine-1",
+          "relevance_score": 0.0017830499190602093
+        },
+        {
+          "chunk_id": "ch-ct-mama-monarche-2",
+          "relevance_score": 0.0014225872394815458
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G06",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-prostata-nueva-perspectiva-cribado-es-1",
+          "relevance_score": 0.006970079931972645
+        },
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-4",
+          "relevance_score": 0.006419070097987551
+        },
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-1",
+          "relevance_score": 0.005011356508418115
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G07",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-ct-mama-monarche-3",
+          "relevance_score": 0.007001762711890418
+        },
+        {
+          "chunk_id": "ch-pmc-mama-linfocitos-her2-secundario-5",
+          "relevance_score": 0.006822823781146632
+        },
+        {
+          "chunk_id": "ch-nci-mama-prevencion-pac-es-4",
+          "relevance_score": 0.0017986190380374764
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G07",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-prostata-nueva-perspectiva-cribado-es-5",
+          "relevance_score": 0.018339546354141194
+        },
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-2",
+          "relevance_score": 0.011696029643342222
+        },
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-1",
+          "relevance_score": 0.007103144415045573
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G08",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-tamoxifeno-eca-1",
+          "relevance_score": 0.012722989708354301
+        },
+        {
+          "chunk_id": "ch-pmc-mama-cdk46-guia-2",
+          "relevance_score": 0.004442538259886894
+        },
+        {
+          "chunk_id": "ch-ct-mama-katherine-4",
+          "relevance_score": 0.0040535100908005665
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G08",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-ct-prostata-prevail-3",
+          "relevance_score": 0.010701872580126896
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-nueva-perspectiva-cribado-es-5",
+          "relevance_score": 0.003895590437754627
+        },
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-1",
+          "relevance_score": 0.0027430437523874116
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G09",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-mama-hp-en-4",
+          "relevance_score": 0.00019265283484853465
+        },
+        {
+          "chunk_id": "ch-nci-mama-hombre-hp-en-2",
+          "relevance_score": 0.00018826248638535047
+        },
+        {
+          "chunk_id": "ch-nci-mama-deteccion-hp-en-3",
+          "relevance_score": 0.00012667843617094184
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G09",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-1",
+          "relevance_score": 0.0009113116479576802
+        },
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-4",
+          "relevance_score": 0.0004592196686513844
+        },
+        {
+          "chunk_id": "ch-ct-prostata-prevail-2",
+          "relevance_score": 0.00042920722978206135
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G10",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-ct-mama-katherine-5",
+          "relevance_score": 0.19177060024377507
+        },
+        {
+          "chunk_id": "ch-ct-mama-katherine-1",
+          "relevance_score": 0.011802587892112784
+        },
+        {
+          "chunk_id": "ch-nci-mama-pac-es-4",
+          "relevance_score": 0.007034537682367686
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G10",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-ct-prostata-prevail-2",
+          "relevance_score": 0.022232019109493545
+        },
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-1",
+          "relevance_score": 0.007711568831421645
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-cirugia-citorreductora-ma-3",
+          "relevance_score": 0.007198318818734047
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G11",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-linfocitos-her2-secundario-5",
+          "relevance_score": 0.004942966660986315
+        },
+        {
+          "chunk_id": "ch-nci-mama-prevencion-pac-es-4",
+          "relevance_score": 0.0018507430242110413
+        },
+        {
+          "chunk_id": "ch-ct-mama-katherine-4",
+          "relevance_score": 0.0010343273022080284
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G11",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-4",
+          "relevance_score": 0.007111496213706826
+        },
+        {
+          "chunk_id": "ch-nci-prostata-pac-es-1",
+          "relevance_score": 0.00688502598379283
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-mhsp-nma-4",
+          "relevance_score": 0.005035704996819357
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G12",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-ct-mama-destiny-breast06-1",
+          "relevance_score": 0.009887596898025883
+        },
+        {
+          "chunk_id": "ch-ct-mama-monarche-3",
+          "relevance_score": 0.005424740685376091
+        },
+        {
+          "chunk_id": "ch-ct-mama-destiny-breast06-4",
+          "relevance_score": 0.004823503311437993
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "generica",
+      "estado": "con_evidencia",
+      "llamadas_al_generador": 1,
+      "pregunta_id": "CTX-G12",
+      "segundo_loop": "ninguno",
+      "supero_umbral": true,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-prostata-pac-es-5",
+          "relevance_score": 0.9774731041663257
+        },
+        {
+          "chunk_id": "ch-nci-prostata-pac-es-3",
+          "relevance_score": 0.8893248043420814
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-cirugia-citorreductora-ma-3",
+          "relevance_score": 0.034284489071582845
+        }
+      ],
+      "top_relevance_score": 0.9774731041663257
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G13",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-irradiacion-pared-toracica-eca-2",
+          "relevance_score": 0.0033668252964056977
+        },
+        {
+          "chunk_id": "ch-pmc-mama-cdk46-guia-2",
+          "relevance_score": 0.0032768114610672843
+        },
+        {
+          "chunk_id": "ch-ct-mama-aphinity-5",
+          "relevance_score": 0.001559465289912626
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G13",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-prostata-pac-es-1",
+          "relevance_score": 0.00233721867014487
+        },
+        {
+          "chunk_id": "ch-ct-prostata-prevail-2",
+          "relevance_score": 0.00218210172284204
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-nueva-perspectiva-cribado-es-1",
+          "relevance_score": 0.0008581115916215165
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G14",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-ct-mama-katherine-4",
+          "relevance_score": 0.041801126760466614
+        },
+        {
+          "chunk_id": "ch-ct-mama-monarche-3",
+          "relevance_score": 0.040484344917444334
+        },
+        {
+          "chunk_id": "ch-pmc-mama-linfocitos-her2-secundario-5",
+          "relevance_score": 0.031466375462011566
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G14",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-1",
+          "relevance_score": 0.06710076343006492
+        },
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-2",
+          "relevance_score": 0.054533104208704844
+        },
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-5",
+          "relevance_score": 0.014799417344284919
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G15",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-ct-mama-katherine-4",
+          "relevance_score": 0.03970173835758094
+        },
+        {
+          "chunk_id": "ch-ct-mama-katherine-3",
+          "relevance_score": 0.007098703291480011
+        },
+        {
+          "chunk_id": "ch-pmc-mama-linfocitos-her2-secundario-5",
+          "relevance_score": 0.006664627099209252
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G15",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-ct-prostata-prevail-3",
+          "relevance_score": 0.02626406130075603
+        },
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-1",
+          "relevance_score": 0.017783063430764166
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-cirugia-citorreductora-ma-2",
+          "relevance_score": 0.01701021588054707
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G16",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-ct-mama-aphinity-1",
+          "relevance_score": 0.036957718203366755
+        },
+        {
+          "chunk_id": "ch-ct-mama-monarche-3",
+          "relevance_score": 0.02780580400268594
+        },
+        {
+          "chunk_id": "ch-pmc-mama-adn-tumoral-metastasico-rs-3",
+          "relevance_score": 0.024100392759263498
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G16",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-prostata-enzalutamida-abiraterona-ma-5",
+          "relevance_score": 0.15779241846054226
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-cirugia-citorreductora-ma-2",
+          "relevance_score": 0.04972652651671398
+        },
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-1",
+          "relevance_score": 0.036032116244406734
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G17",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-ct-mama-katherine-5",
+          "relevance_score": 0.05112182509070879
+        },
+        {
+          "chunk_id": "ch-ct-mama-destiny-breast06-4",
+          "relevance_score": 0.014728842201866762
+        },
+        {
+          "chunk_id": "ch-ct-mama-katherine-2",
+          "relevance_score": 0.009211828713426781
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G17",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-prostata-cirugia-citorreductora-ma-2",
+          "relevance_score": 0.0873736529148133
+        },
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-1",
+          "relevance_score": 0.054994965896912454
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-darolutamida-rs-4",
+          "relevance_score": 0.035687706481280675
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G18",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-linfocitos-her2-secundario-5",
+          "relevance_score": 0.015345810437056876
+        },
+        {
+          "chunk_id": "ch-ct-mama-katherine-4",
+          "relevance_score": 0.015266668799011788
+        },
+        {
+          "chunk_id": "ch-ct-mama-aphinity-4",
+          "relevance_score": 0.00917950989699778
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G18",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-1",
+          "relevance_score": 0.04262422367895007
+        },
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-4",
+          "relevance_score": 0.02447463860680159
+        },
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-2",
+          "relevance_score": 0.02040953548069982
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G19",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-ct-mama-monarche-3",
+          "relevance_score": 0.0005261051065743006
+        },
+        {
+          "chunk_id": "ch-ct-mama-katherine-4",
+          "relevance_score": 0.00032489581073307124
+        },
+        {
+          "chunk_id": "ch-ct-mama-katherine-5",
+          "relevance_score": 0.0002834833468729529
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G19",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-prostata-nueva-perspectiva-cribado-es-5",
+          "relevance_score": 0.0008396290923476232
+        },
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-1",
+          "relevance_score": 0.00038933858962350294
+        },
+        {
+          "chunk_id": "ch-nci-prostata-hp-en-1",
+          "relevance_score": 0.00032539674288847105
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G20",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-antraciclinas-rs-1",
+          "relevance_score": 0.006190757205921128
+        },
+        {
+          "chunk_id": "ch-ct-mama-monarche-3",
+          "relevance_score": 0.0050646263740882136
+        },
+        {
+          "chunk_id": "ch-ct-mama-katherine-5",
+          "relevance_score": 0.003966338972276327
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G20",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-4",
+          "relevance_score": 0.03532913214487206
+        },
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-1",
+          "relevance_score": 0.013622610213368445
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-cirugia-citorreductora-ma-2",
+          "relevance_score": 0.012734542844371236
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G21",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-ct-mama-katherine-5",
+          "relevance_score": 0.013112462871339492
+        },
+        {
+          "chunk_id": "ch-pmc-mama-adn-tumoral-metastasico-rs-3",
+          "relevance_score": 0.01057737306597499
+        },
+        {
+          "chunk_id": "ch-pmc-mama-parp-neoadyuvante-eca-5",
+          "relevance_score": 0.006092420477113596
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G21",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-prostata-volumen-nma-3",
+          "relevance_score": 0.005630123593832633
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-hormonoterapia-radioterapia-ma-2",
+          "relevance_score": 0.005002514754790757
+        },
+        {
+          "chunk_id": "ch-ct-prostata-aramis-2",
+          "relevance_score": 0.0033263049096331535
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G22",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-linfocitos-her2-secundario-5",
+          "relevance_score": 0.029388147673228907
+        },
+        {
+          "chunk_id": "ch-nci-mama-hp-en-4",
+          "relevance_score": 0.0027318825558103185
+        },
+        {
+          "chunk_id": "ch-ct-mama-aphinity-5",
+          "relevance_score": 0.002063273638447638
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "generica",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-G22",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-1",
+          "relevance_score": 0.012743838403204082
+        },
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-4",
+          "relevance_score": 0.009453451693336588
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-mhsp-nma-4",
+          "relevance_score": 0.00721702743165281
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A01",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-ct-mama-katherine-5",
+          "relevance_score": 0.017016771035438312
+        },
+        {
+          "chunk_id": "ch-nci-mama-hp-en-4",
+          "relevance_score": 0.0018538939269343478
+        },
+        {
+          "chunk_id": "ch-pmc-mama-linfocitos-her2-secundario-5",
+          "relevance_score": 0.0015191321705999286
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A01",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-prostata-nueva-perspectiva-cribado-es-5",
+          "relevance_score": 0.019571209843682682
+        },
+        {
+          "chunk_id": "ch-ct-prostata-spartan-4",
+          "relevance_score": 0.010822991114380951
+        },
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-4",
+          "relevance_score": 0.0034778306513234573
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A02",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-adn-tumoral-metastasico-rs-3",
+          "relevance_score": 0.0022673674282074436
+        },
+        {
+          "chunk_id": "ch-ct-mama-katherine-5",
+          "relevance_score": 0.0012915664301885866
+        },
+        {
+          "chunk_id": "ch-pmc-mama-antraciclinas-rs-1",
+          "relevance_score": 0.0012641865215731695
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A02",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-1",
+          "relevance_score": 0.0029611811781526517
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-cribado-personalizado-es-2",
+          "relevance_score": 0.0012196178776995904
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-cribado-personalizado-es-4",
+          "relevance_score": 0.0010317483020725962
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A03",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-mama-hp-en-3",
+          "relevance_score": 0.018680530266665316
+        },
+        {
+          "chunk_id": "ch-pmc-mama-cdk46-guia-2",
+          "relevance_score": 0.01003507780179319
+        },
+        {
+          "chunk_id": "ch-ct-mama-katherine-1",
+          "relevance_score": 0.004392284348488455
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A03",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-prostata-hp-en-4",
+          "relevance_score": 0.03942502735105347
+        },
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-4",
+          "relevance_score": 0.004291864184591894
+        },
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-1",
+          "relevance_score": 0.003730336045372293
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A04",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-adn-tumoral-metastasico-rs-3",
+          "relevance_score": 0.010027629114071615
+        },
+        {
+          "chunk_id": "ch-nci-mama-prevencion-hp-en-3",
+          "relevance_score": 0.007263169725885319
+        },
+        {
+          "chunk_id": "ch-pmc-mama-tamoxifeno-eca-3",
+          "relevance_score": 0.0055019375793562055
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A04",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-4",
+          "relevance_score": 0.02964896427898455
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-nueva-perspectiva-cribado-es-5",
+          "relevance_score": 0.026891701248067182
+        },
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-1",
+          "relevance_score": 0.021643854152422738
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A05",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-linfocitos-her2-secundario-5",
+          "relevance_score": 0.0027427959280601657
+        },
+        {
+          "chunk_id": "ch-ct-mama-katherine-5",
+          "relevance_score": 0.0015405238398098365
+        },
+        {
+          "chunk_id": "ch-pmc-mama-adn-tumoral-metastasico-rs-3",
+          "relevance_score": 0.0012114962642408964
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A05",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-1",
+          "relevance_score": 0.07230917038131097
+        },
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-5",
+          "relevance_score": 0.012010303757089074
+        },
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-2",
+          "relevance_score": 0.011857527875487314
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A06",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-irradiacion-pared-toracica-eca-3",
+          "relevance_score": 0.012935922718674763
+        },
+        {
+          "chunk_id": "ch-pmc-mama-linfocitos-her2-secundario-5",
+          "relevance_score": 0.011000676699347697
+        },
+        {
+          "chunk_id": "ch-pmc-mama-adn-tumoral-metastasico-rs-3",
+          "relevance_score": 0.002861435928052654
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A06",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-1",
+          "relevance_score": 0.04310565587440521
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-nueva-perspectiva-cribado-es-5",
+          "relevance_score": 0.02032836452598811
+        },
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-4",
+          "relevance_score": 0.010130574239995714
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A07",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-linfocitos-her2-secundario-5",
+          "relevance_score": 0.007785901569466076
+        },
+        {
+          "chunk_id": "ch-ct-mama-monarche-3",
+          "relevance_score": 0.005716190983354863
+        },
+        {
+          "chunk_id": "ch-nci-mama-deteccion-hp-en-2",
+          "relevance_score": 0.005129860349960482
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A07",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-prostata-nueva-perspectiva-cribado-es-5",
+          "relevance_score": 0.00685832243439943
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-cirugia-citorreductora-ma-3",
+          "relevance_score": 0.0018112435328115231
+        },
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-1",
+          "relevance_score": 0.0015042623844012087
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A08",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-ct-mama-destiny-breast06-2",
+          "relevance_score": 0.11765801823790815
+        },
+        {
+          "chunk_id": "ch-pmc-mama-linfocitos-her2-secundario-5",
+          "relevance_score": 0.09152503331023618
+        },
+        {
+          "chunk_id": "ch-pmc-mama-trastuzumab-deruxtecan-eca-1",
+          "relevance_score": 0.07013977894531294
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "con_tema",
+      "estado": "con_evidencia",
+      "llamadas_al_generador": 1,
+      "pregunta_id": "CTX-A08",
+      "segundo_loop": "ninguno",
+      "supero_umbral": true,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-1",
+          "relevance_score": 0.41450587968127195
+        },
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-pac-es-4",
+          "relevance_score": 0.3150847290866542
+        },
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-4",
+          "relevance_score": 0.24536509879216747
+        }
+      ],
+      "top_relevance_score": 0.41450587968127195
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A09",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-mama-prevencion-hp-en-5",
+          "relevance_score": 0.25914536411686473
+        },
+        {
+          "chunk_id": "ch-nci-mama-hp-en-3",
+          "relevance_score": 0.046044750639182355
+        },
+        {
+          "chunk_id": "ch-pmc-mama-antraciclinas-rs-1",
+          "relevance_score": 0.04257108504566143
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A09",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-prostata-enzalutamida-abiraterona-ma-1",
+          "relevance_score": 0.1755508408387442
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-talazoparib-enzalutamida-nma-1",
+          "relevance_score": 0.08839912643586238
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-nueva-perspectiva-cribado-es-5",
+          "relevance_score": 0.007509667730284859
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A10",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-mama-deteccion-hp-en-3",
+          "relevance_score": 0.0009899050579246812
+        },
+        {
+          "chunk_id": "ch-pmc-mama-parp-neoadyuvante-eca-1",
+          "relevance_score": 0.0009822933465863228
+        },
+        {
+          "chunk_id": "ch-nci-mama-hp-en-4",
+          "relevance_score": 0.0008648108902609191
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A10",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-1",
+          "relevance_score": 0.1495510733094826
+        },
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-4",
+          "relevance_score": 0.12157684929414037
+        },
+        {
+          "chunk_id": "ch-ct-prostata-spartan-1",
+          "relevance_score": 0.04796536512183288
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A11",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-adn-tumoral-metastasico-rs-3",
+          "relevance_score": 0.0006158532825707825
+        },
+        {
+          "chunk_id": "ch-nci-mama-deteccion-hp-en-3",
+          "relevance_score": 0.0005688949161749295
+        },
+        {
+          "chunk_id": "ch-nci-mama-hombre-hp-en-2",
+          "relevance_score": 0.00043002712630710186
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A11",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-4",
+          "relevance_score": 0.0007650454830112907
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-cribado-personalizado-es-2",
+          "relevance_score": 0.0006244048239550533
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-darolutamida-rs-4",
+          "relevance_score": 0.00035855283816965265
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A12",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-mama-hp-en-3",
+          "relevance_score": 0.0025563852497195476
+        },
+        {
+          "chunk_id": "ch-pmc-mama-parp-neoadyuvante-eca-5",
+          "relevance_score": 0.001902499465047328
+        },
+        {
+          "chunk_id": "ch-pmc-mama-adn-tumoral-metastasico-rs-3",
+          "relevance_score": 0.001419565281466026
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A12",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-prostata-cirugia-citorreductora-ma-3",
+          "relevance_score": 0.002636479396632738
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-cribado-personalizado-es-4",
+          "relevance_score": 0.002378885191835692
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-cirugia-citorreductora-ma-2",
+          "relevance_score": 0.0009886618730355278
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A13",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-ct-mama-aphinity-1",
+          "relevance_score": 0.0020002725083788915
+        },
+        {
+          "chunk_id": "ch-nci-mama-deteccion-hp-en-3",
+          "relevance_score": 0.0018676930894395494
+        },
+        {
+          "chunk_id": "ch-nci-mama-hp-en-4",
+          "relevance_score": 0.0009107569713806241
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A13",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-4",
+          "relevance_score": 0.02077185182374489
+        },
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-4",
+          "relevance_score": 0.0037689553364386643
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-cribado-personalizado-es-2",
+          "relevance_score": 0.0027122510211224048
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A14",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-adn-tumoral-metastasico-rs-4",
+          "relevance_score": 0.0016245803507186842
+        },
+        {
+          "chunk_id": "ch-nci-mama-deteccion-hp-en-3",
+          "relevance_score": 0.0015669223974953215
+        },
+        {
+          "chunk_id": "ch-pmc-mama-linfocitos-her2-secundario-5",
+          "relevance_score": 0.0014559985437555152
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A14",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-2",
+          "relevance_score": 0.002215503047663195
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-inhibidores-ar-taxanos-eca-4",
+          "relevance_score": 0.0016019897904314157
+        },
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-5",
+          "relevance_score": 0.0007154158088618077
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A15",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-mama-deteccion-hp-en-3",
+          "relevance_score": 0.0015263923462789336
+        },
+        {
+          "chunk_id": "ch-ct-mama-katherine-5",
+          "relevance_score": 0.0007821170000108874
+        },
+        {
+          "chunk_id": "ch-nci-mama-hombre-hp-en-2",
+          "relevance_score": 0.0006392063479704768
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A15",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-5",
+          "relevance_score": 0.013132266482002367
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-cribado-personalizado-es-2",
+          "relevance_score": 0.002926250441346407
+        },
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-2",
+          "relevance_score": 0.00104010841231048
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A16",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-ct-mama-katherine-5",
+          "relevance_score": 0.0005342852951061191
+        },
+        {
+          "chunk_id": "ch-pmc-mama-parp-neoadyuvante-eca-3",
+          "relevance_score": 0.0003471355922644625
+        },
+        {
+          "chunk_id": "ch-pmc-mama-antraciclinas-rs-1",
+          "relevance_score": 0.00032845553961161484
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A16",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-4",
+          "relevance_score": 0.001389592153441573
+        },
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-1",
+          "relevance_score": 0.0007480614653075859
+        },
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-4",
+          "relevance_score": 0.0005073506748179913
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A17",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-adn-tumoral-metastasico-rs-3",
+          "relevance_score": 0.00031456269936263156
+        },
+        {
+          "chunk_id": "ch-ct-mama-aphinity-4",
+          "relevance_score": 0.00029313519136960986
+        },
+        {
+          "chunk_id": "ch-pmc-mama-trastuzumab-deruxtecan-eca-1",
+          "relevance_score": 0.00018860511815409366
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A17",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-4",
+          "relevance_score": 0.0006911363157374742
+        },
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-4",
+          "relevance_score": 0.0006840497562205239
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-cirugia-citorreductora-ma-3",
+          "relevance_score": 9.371890353471562e-05
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A18",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-adn-tumoral-metastasico-rs-3",
+          "relevance_score": 0.0003127678620129229
+        },
+        {
+          "chunk_id": "ch-ct-mama-katherine-1",
+          "relevance_score": 0.0001363016078206943
+        },
+        {
+          "chunk_id": "ch-nci-mama-deteccion-hp-en-3",
+          "relevance_score": 0.00010838204174217663
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A18",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-4",
+          "relevance_score": 0.0002306601778516912
+        },
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-4",
+          "relevance_score": 0.00020660559323328403
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-nueva-perspectiva-cribado-es-5",
+          "relevance_score": 7.570928984347575e-05
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A19",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-adn-tumoral-metastasico-rs-3",
+          "relevance_score": 0.022651447507272292
+        },
+        {
+          "chunk_id": "ch-pmc-mama-parp-neoadyuvante-eca-3",
+          "relevance_score": 0.013468503565938737
+        },
+        {
+          "chunk_id": "ch-pmc-mama-tamoxifeno-eca-5",
+          "relevance_score": 0.0067345034903141645
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A19",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-1",
+          "relevance_score": 0.014085104928704085
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-cirugia-citorreductora-ma-3",
+          "relevance_score": 0.013246360655666279
+        },
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-1",
+          "relevance_score": 0.008552465928427018
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A20",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-adn-tumoral-metastasico-rs-3",
+          "relevance_score": 0.006034374598308909
+        },
+        {
+          "chunk_id": "ch-ct-mama-katherine-5",
+          "relevance_score": 0.00219665618406725
+        },
+        {
+          "chunk_id": "ch-ct-mama-aphinity-4",
+          "relevance_score": 0.0015742419692043672
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A20",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-1",
+          "relevance_score": 0.06981581055497746
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-nueva-perspectiva-cribado-es-5",
+          "relevance_score": 0.023577977098113802
+        },
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-1",
+          "relevance_score": 0.019118871894706367
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A21",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-adn-tumoral-metastasico-rs-3",
+          "relevance_score": 0.017696948812801563
+        },
+        {
+          "chunk_id": "ch-pmc-mama-linfocitos-her2-secundario-5",
+          "relevance_score": 0.004125296418111397
+        },
+        {
+          "chunk_id": "ch-nci-mama-deteccion-hp-en-3",
+          "relevance_score": 0.0031588209299727612
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A21",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-4",
+          "relevance_score": 0.006935024809538885
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-cribado-personalizado-es-4",
+          "relevance_score": 0.0034052846939555425
+        },
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-5",
+          "relevance_score": 0.0018010640213323185
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A22",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-linfocitos-her2-secundario-5",
+          "relevance_score": 0.05956140177081446
+        },
+        {
+          "chunk_id": "ch-pmc-mama-adn-tumoral-metastasico-rs-3",
+          "relevance_score": 0.011289936686129362
+        },
+        {
+          "chunk_id": "ch-ct-mama-katherine-3",
+          "relevance_score": 0.004036323243872676
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A22",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-prostata-volumen-nma-3",
+          "relevance_score": 0.051801592566494206
+        },
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-4",
+          "relevance_score": 0.00856869462803296
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-cribado-personalizado-es-4",
+          "relevance_score": 0.004868791791015909
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A23",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-linfocitos-her2-secundario-5",
+          "relevance_score": 0.011237919839259182
+        },
+        {
+          "chunk_id": "ch-pmc-mama-cdk46-guia-1",
+          "relevance_score": 0.005993170169781521
+        },
+        {
+          "chunk_id": "ch-pmc-mama-antraciclinas-rs-1",
+          "relevance_score": 0.005132903197203941
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A23",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-4",
+          "relevance_score": 0.01172747246530557
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-cirugia-citorreductora-ma-3",
+          "relevance_score": 0.008307069031223538
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-braquiterapia-focal-rs-4",
+          "relevance_score": 0.00782401329432129
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A24",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-ct-mama-katherine-4",
+          "relevance_score": 0.003526652702845264
+        },
+        {
+          "chunk_id": "ch-pmc-mama-antraciclinas-rs-1",
+          "relevance_score": 0.0031048937787647632
+        },
+        {
+          "chunk_id": "ch-pmc-mama-adn-tumoral-metastasico-rs-3",
+          "relevance_score": 0.002257069698478549
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "con_tema",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-A24",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-1",
+          "relevance_score": 0.0468077335396885
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-nueva-perspectiva-cribado-es-5",
+          "relevance_score": 0.006060172568957265
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-cirugia-citorreductora-ma-3",
+          "relevance_score": 0.0052997502306891455
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "control",
+      "estado": "con_evidencia",
+      "llamadas_al_generador": 1,
+      "pregunta_id": "CTX-C01",
+      "segundo_loop": "ninguno",
+      "supero_umbral": true,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-pembrolizumab-er-eca-1",
+          "relevance_score": 0.9659727114082316
+        },
+        {
+          "chunk_id": "ch-pmc-mama-pembrolizumab-er-eca-4",
+          "relevance_score": 0.8425740611785466
+        },
+        {
+          "chunk_id": "ch-ct-mama-aphinity-1",
+          "relevance_score": 0.40699208674441795
+        }
+      ],
+      "top_relevance_score": 0.9659727114082316
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "control",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-C01",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-1",
+          "relevance_score": 0.01456755949879924
+        },
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-1",
+          "relevance_score": 0.010534154522844577
+        },
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-4",
+          "relevance_score": 0.00581413267342652
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "control",
+      "estado": "con_evidencia",
+      "llamadas_al_generador": 1,
+      "pregunta_id": "CTX-C02",
+      "segundo_loop": "ninguno",
+      "supero_umbral": true,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-trastuzumab-deruxtecan-eca-1",
+          "relevance_score": 0.9886413438290164
+        },
+        {
+          "chunk_id": "ch-ct-mama-katherine-2",
+          "relevance_score": 0.9684991431484549
+        },
+        {
+          "chunk_id": "ch-ct-mama-katherine-1",
+          "relevance_score": 0.9338060909624714
+        }
+      ],
+      "top_relevance_score": 0.9886413438290164
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "control",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-C02",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-1",
+          "relevance_score": 0.09348820116293599
+        },
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-4",
+          "relevance_score": 0.0424554980207586
+        },
+        {
+          "chunk_id": "ch-ct-prostata-arasens-5",
+          "relevance_score": 0.021026934657230854
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "control",
+      "estado": "con_evidencia",
+      "llamadas_al_generador": 1,
+      "pregunta_id": "CTX-C03",
+      "segundo_loop": "ninguno",
+      "supero_umbral": true,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-elacestrant-esr1-eca-1",
+          "relevance_score": 0.8552845540944511
+        },
+        {
+          "chunk_id": "ch-pmc-mama-elacestrant-esr1-eca-4",
+          "relevance_score": 0.579544392318954
+        },
+        {
+          "chunk_id": "ch-pmc-mama-elacestrant-esr1-eca-2",
+          "relevance_score": 0.3248664139125293
+        }
+      ],
+      "top_relevance_score": 0.8552845540944511
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "control",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-C03",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-prostata-cribado-personalizado-es-2",
+          "relevance_score": 0.01227695821904882
+        },
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-4",
+          "relevance_score": 0.006260687392688421
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-cribado-personalizado-es-4",
+          "relevance_score": 0.006039722386840555
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "control",
+      "estado": "con_evidencia",
+      "llamadas_al_generador": 1,
+      "pregunta_id": "CTX-C04",
+      "segundo_loop": "ninguno",
+      "supero_umbral": true,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-elacestrant-esr1-eca-1",
+          "relevance_score": 0.8556343061149527
+        },
+        {
+          "chunk_id": "ch-pmc-mama-elacestrant-esr1-eca-4",
+          "relevance_score": 0.3904841221890407
+        },
+        {
+          "chunk_id": "ch-pmc-mama-elacestrant-esr1-eca-5",
+          "relevance_score": 0.36919363767012026
+        }
+      ],
+      "top_relevance_score": 0.8556343061149527
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "control",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-C04",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-prostata-nueva-perspectiva-cribado-es-5",
+          "relevance_score": 0.0374089538123071
+        },
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-1",
+          "relevance_score": 0.01635031702415439
+        },
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-4",
+          "relevance_score": 0.01255452867271063
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "control",
+      "estado": "con_evidencia",
+      "llamadas_al_generador": 1,
+      "pregunta_id": "CTX-C05",
+      "segundo_loop": "ninguno",
+      "supero_umbral": true,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-cdk46-guia-2",
+          "relevance_score": 0.9245508992236839
+        },
+        {
+          "chunk_id": "ch-ct-mama-destiny-breast06-1",
+          "relevance_score": 0.6896309829357384
+        },
+        {
+          "chunk_id": "ch-pmc-mama-elacestrant-esr1-eca-1",
+          "relevance_score": 0.48618933460863634
+        }
+      ],
+      "top_relevance_score": 0.9245508992236839
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "control",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-C05",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-prostata-cirugia-citorreductora-ma-3",
+          "relevance_score": 0.007713627030416054
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-volumen-nma-2",
+          "relevance_score": 0.004179256223964568
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-cribado-personalizado-es-4",
+          "relevance_score": 0.0031263239005273414
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "control",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-C06",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-parp-neoadyuvante-eca-3",
+          "relevance_score": 0.2944757002538446
+        },
+        {
+          "chunk_id": "ch-pmc-mama-parp-neoadyuvante-eca-1",
+          "relevance_score": 0.202673682845815
+        },
+        {
+          "chunk_id": "ch-pmc-mama-parp-neoadyuvante-eca-2",
+          "relevance_score": 0.03183168008240904
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "control",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-C06",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-prostata-cirugia-citorreductora-ma-3",
+          "relevance_score": 0.007673702850845914
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-cribado-personalizado-es-4",
+          "relevance_score": 0.0022115158333319822
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-niraparib-abiraterona-eca-1",
+          "relevance_score": 0.001995870070194049
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "control",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-C07",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-ct-mama-destiny-breast06-2",
+          "relevance_score": 0.0012627616719922458
+        },
+        {
+          "chunk_id": "ch-pmc-mama-trastuzumab-deruxtecan-eca-1",
+          "relevance_score": 0.001176068461665263
+        },
+        {
+          "chunk_id": "ch-ct-mama-katherine-4",
+          "relevance_score": 0.001094457948919049
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "control",
+      "estado": "con_evidencia",
+      "llamadas_al_generador": 1,
+      "pregunta_id": "CTX-C07",
+      "segundo_loop": "ninguno",
+      "supero_umbral": true,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-prostata-enzalutamida-abiraterona-ma-1",
+          "relevance_score": 0.9726665647103904
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-talazoparib-enzalutamida-nma-1",
+          "relevance_score": 0.9420692925676561
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-darolutamida-rs-2",
+          "relevance_score": 0.23044711899402828
+        }
+      ],
+      "top_relevance_score": 0.9726665647103904
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "control",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-C08",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-linfocitos-her2-secundario-5",
+          "relevance_score": 0.01361522459762796
+        },
+        {
+          "chunk_id": "ch-ct-mama-katherine-4",
+          "relevance_score": 0.007695315824366879
+        },
+        {
+          "chunk_id": "ch-ct-mama-destiny-breast06-1",
+          "relevance_score": 0.005243388591569738
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "control",
+      "estado": "con_evidencia",
+      "llamadas_al_generador": 1,
+      "pregunta_id": "CTX-C08",
+      "segundo_loop": "ninguno",
+      "supero_umbral": true,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-prostata-volumen-nma-2",
+          "relevance_score": 0.964605944270781
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-enzalutamida-abiraterona-ma-1",
+          "relevance_score": 0.9565713311300973
+        },
+        {
+          "chunk_id": "ch-ct-prostata-latitude-1",
+          "relevance_score": 0.7997834095760225
+        }
+      ],
+      "top_relevance_score": 0.964605944270781
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "control",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-C09",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-linfocitos-her2-secundario-5",
+          "relevance_score": 0.0017104570832181733
+        },
+        {
+          "chunk_id": "ch-nci-mama-prevencion-pac-es-4",
+          "relevance_score": 0.0013018870827973018
+        },
+        {
+          "chunk_id": "ch-pmc-mama-antraciclinas-rs-1",
+          "relevance_score": 0.0009139246324827266
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "control",
+      "estado": "con_evidencia",
+      "llamadas_al_generador": 1,
+      "pregunta_id": "CTX-C09",
+      "segundo_loop": "ninguno",
+      "supero_umbral": true,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-prostata-mhsp-nma-4",
+          "relevance_score": 0.31078563573944956
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-lu-psma-comparadores-2",
+          "relevance_score": 0.2788132557759527
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-cribado-personalizado-es-1",
+          "relevance_score": 0.0721372078739255
+        }
+      ],
+      "top_relevance_score": 0.31078563573944956
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "control",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-C10",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-tamoxifeno-eca-3",
+          "relevance_score": 0.0013972257403133662
+        },
+        {
+          "chunk_id": "ch-pmc-mama-linfocitos-her2-secundario-5",
+          "relevance_score": 0.0012646459683558822
+        },
+        {
+          "chunk_id": "ch-nci-mama-hp-en-2",
+          "relevance_score": 0.0012582905824120255
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "control",
+      "estado": "con_evidencia",
+      "llamadas_al_generador": 1,
+      "pregunta_id": "CTX-C10",
+      "segundo_loop": "ninguno",
+      "supero_umbral": true,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-prostata-braquiterapia-focal-rs-3",
+          "relevance_score": 0.36740763848354635
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-hormonoterapia-radioterapia-ma-1",
+          "relevance_score": 0.1973944035982921
+        },
+        {
+          "chunk_id": "ch-ct-prostata-arasens-5",
+          "relevance_score": 0.04886631052632341
+        }
+      ],
+      "top_relevance_score": 0.36740763848354635
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "control",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-C11",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-parp-neoadyuvante-eca-1",
+          "relevance_score": 0.04869650398368864
+        },
+        {
+          "chunk_id": "ch-nci-mama-hombre-hp-en-1",
+          "relevance_score": 0.005408831290433336
+        },
+        {
+          "chunk_id": "ch-pmc-mama-adn-tumoral-metastasico-rs-3",
+          "relevance_score": 0.0018649953794716823
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "control",
+      "estado": "con_evidencia",
+      "llamadas_al_generador": 1,
+      "pregunta_id": "CTX-C11",
+      "segundo_loop": "ninguno",
+      "supero_umbral": true,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-prostata-niraparib-abiraterona-eca-1",
+          "relevance_score": 0.9110396190518086
+        },
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-1",
+          "relevance_score": 0.28436954705074247
+        },
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-1",
+          "relevance_score": 0.19061891123319713
+        }
+      ],
+      "top_relevance_score": 0.9110396190518086
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "control",
+      "estado": "con_evidencia",
+      "llamadas_al_generador": 1,
+      "pregunta_id": "CTX-C12",
+      "segundo_loop": "ninguno",
+      "supero_umbral": true,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-antraciclinas-rs-1",
+          "relevance_score": 0.9490872976568274
+        },
+        {
+          "chunk_id": "ch-nci-mama-prevencion-pac-es-4",
+          "relevance_score": 0.06048799789316352
+        },
+        {
+          "chunk_id": "ch-ct-mama-katherine-1",
+          "relevance_score": 0.045710769753489415
+        }
+      ],
+      "top_relevance_score": 0.9490872976568274
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "control",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-C12",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-prostata-cirugia-citorreductora-ma-3",
+          "relevance_score": 0.008696174403592627
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-nueva-perspectiva-cribado-es-5",
+          "relevance_score": 0.0066102085940145765
+        },
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-1",
+          "relevance_score": 0.0033098229086416355
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "control",
+      "estado": "con_evidencia",
+      "llamadas_al_generador": 1,
+      "pregunta_id": "CTX-C13",
+      "segundo_loop": "ninguno",
+      "supero_umbral": true,
+      "top3": [
+        {
+          "chunk_id": "ch-ct-mama-aphinity-1",
+          "relevance_score": 0.8804545351449024
+        },
+        {
+          "chunk_id": "ch-pmc-mama-antraciclinas-rs-1",
+          "relevance_score": 0.41546923118342655
+        },
+        {
+          "chunk_id": "ch-ct-mama-katherine-2",
+          "relevance_score": 0.3546781153251571
+        }
+      ],
+      "top_relevance_score": 0.8804545351449024
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "control",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-C13",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-1",
+          "relevance_score": 0.02586716131564192
+        },
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-2",
+          "relevance_score": 0.0032721488438044355
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-cribado-personalizado-es-4",
+          "relevance_score": 0.003138111346472817
+        }
+      ],
+      "top_relevance_score": null
+    },
+    {
+      "campos_usados": [],
+      "caso": "mama-completo",
+      "clase": "control",
+      "estado": "con_evidencia",
+      "llamadas_al_generador": 1,
+      "pregunta_id": "CTX-C14",
+      "segundo_loop": "ninguno",
+      "supero_umbral": true,
+      "top3": [
+        {
+          "chunk_id": "ch-pmc-mama-linfocitos-her2-secundario-5",
+          "relevance_score": 0.36643217877743334
+        },
+        {
+          "chunk_id": "ch-pmc-mama-linfocitos-her2-secundario-1",
+          "relevance_score": 0.03350379729581837
+        },
+        {
+          "chunk_id": "ch-pmc-mama-adn-tumoral-metastasico-rs-3",
+          "relevance_score": 0.015102374225486968
+        }
+      ],
+      "top_relevance_score": 0.36643217877743334
+    },
+    {
+      "campos_usados": [],
+      "caso": "prostata-con-grado",
+      "clase": "control",
+      "estado": "sin_evidencia",
+      "llamadas_al_generador": 0,
+      "pregunta_id": "CTX-C14",
+      "segundo_loop": "ninguno",
+      "supero_umbral": false,
+      "top3": [
+        {
+          "chunk_id": "ch-nci-prostata-prevencion-hp-en-2",
+          "relevance_score": 0.0016533060573233936
+        },
+        {
+          "chunk_id": "ch-nci-prostata-deteccion-hp-en-4",
+          "relevance_score": 0.0007295898715866571
+        },
+        {
+          "chunk_id": "ch-pmc-prostata-cirugia-citorreductora-ma-2",
+          "relevance_score": 0.0007177475546649588
+        }
+      ],
+      "top_relevance_score": null
+    }
+  ],
+  "recuentos": [
+    {
+      "ambito": "total",
+      "clase": "generica",
+      "con_evidencia": 1,
+      "superaron_umbral": 1,
+      "total": 44
+    },
+    {
+      "ambito": "total",
+      "clase": "con_tema",
+      "con_evidencia": 1,
+      "superaron_umbral": 1,
+      "total": 48
+    },
+    {
+      "ambito": "total",
+      "clase": "control",
+      "con_evidencia": 13,
+      "superaron_umbral": 13,
+      "total": 28
+    },
+    {
+      "ambito": "mama-completo",
+      "clase": "generica",
+      "con_evidencia": 0,
+      "superaron_umbral": 0,
+      "total": 22
+    },
+    {
+      "ambito": "mama-completo",
+      "clase": "con_tema",
+      "con_evidencia": 0,
+      "superaron_umbral": 0,
+      "total": 24
+    },
+    {
+      "ambito": "mama-completo",
+      "clase": "control",
+      "con_evidencia": 8,
+      "superaron_umbral": 8,
+      "total": 14
+    },
+    {
+      "ambito": "prostata-con-grado",
+      "clase": "generica",
+      "con_evidencia": 1,
+      "superaron_umbral": 1,
+      "total": 22
+    },
+    {
+      "ambito": "prostata-con-grado",
+      "clase": "con_tema",
+      "con_evidencia": 1,
+      "superaron_umbral": 1,
+      "total": 24
+    },
+    {
+      "ambito": "prostata-con-grado",
+      "clase": "control",
+      "con_evidencia": 5,
+      "superaron_umbral": 5,
+      "total": 14
+    }
+  ],
+  "regla_de_la_causa": [
+    {
+      "causa": null,
+      "condicion": "algún chunk supera RELEVANCE_THRESHOLD",
+      "orden": 1
+    },
+    {
+      "causa": "termino_ausente_del_corpus",
+      "condicion": "ninguna forma del término (canónica o sinónimo, es o en, sin distinguir mayúsculas ni tildes) aparece en un chunk del corpus de la corrida recuperable para el tipo de cáncer del caso",
+      "orden": 2
+    },
+    {
+      "causa": "bajo_umbral_con_termino_en_corpus",
+      "condicion": "alguna forma del término aparece en un chunk del corpus y ningún chunk supera RELEVANCE_THRESHOLD",
+      "orden": 3
+    }
+  ],
+  "salidas_invalidas": 0,
+  "sinonimos": [
+    {
+      "caso": "mama-completo",
+      "causa": null,
+      "pregunta_id": "CTX-C12",
+      "supero_umbral": true,
+      "termino": "antraciclinas"
+    },
+    {
+      "caso": "prostata-con-grado",
+      "causa": "termino_ausente_del_corpus",
+      "pregunta_id": "CTX-C12",
+      "supero_umbral": false,
+      "termino": "antraciclinas"
+    },
+    {
+      "caso": "mama-completo",
+      "causa": null,
+      "pregunta_id": "CTX-C13",
+      "supero_umbral": true,
+      "termino": "pertuzumab"
+    },
+    {
+      "caso": "prostata-con-grado",
+      "causa": "termino_ausente_del_corpus",
+      "pregunta_id": "CTX-C13",
+      "supero_umbral": false,
+      "termino": "pertuzumab"
+    },
+    {
+      "caso": "mama-completo",
+      "causa": null,
+      "pregunta_id": "CTX-C14",
+      "supero_umbral": true,
+      "termino": "TILs"
+    },
+    {
+      "caso": "prostata-con-grado",
+      "causa": "termino_ausente_del_corpus",
+      "pregunta_id": "CTX-C14",
+      "supero_umbral": false,
+      "termino": "TILs"
+    }
+  ],
+  "suite": "contextual",
+  "validacion": {
+    "preguntas_no_validadas": 120,
+    "preguntas_validadas": 0,
+    "rotulo": "no_validada"
+  }
+}

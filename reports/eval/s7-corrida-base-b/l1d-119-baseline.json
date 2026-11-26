@@ -1,0 +1,417 @@
+{
+  "configuracion": {
+    "bootstrapRepeticiones": 200,
+    "catalogVersion": "2026.10.0",
+    "claseDataset": "sintetico",
+    "corpusRelease": "rel-s5-corpus-ampliado-1",
+    "dataset": {
+      "nombre": "s5-corpus-ampliado",
+      "version": "1"
+    },
+    "fixture": "S5-corpus-ampliado",
+    "hashConfig": "ddb1a877eee82666718edef8c068f2a0f85910bb283598d729d4314517f5e43e",
+    "juez": {
+      "modelo": "gemma4:26b-a4b-it-q4_K_M",
+      "proveedor": "local",
+      "semilla": 20261021,
+      "temperatura": 0.0
+    },
+    "modelos": {
+      "embeddings": "BAAI/bge-m3@5617a9f61b028005a4858fdac845db406aefb181#sha256:3f771d8d6368f21658b0784f947c6c05fdff6f5f56f7c7498cec2b901f16191a",
+      "llm": "gemma4:26b-a4b-it-q4_K_M",
+      "nli": "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7@b5113eb38ab63efdd7f280f8c144ea8b13f978ce#sha256:49f52a865d9207679c83d2f227738294a1856843115a1fc7c86978615beddee4",
+      "reranker": "BAAI/bge-reranker-v2-m3@953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e#sha256:d1d97f8090e239b20420cae771c5457197e4dc59678d08c9b6c521448c968d0f"
+    },
+    "nombre": "s5-calibracion",
+    "promptVersion": "rag-query@0.10.0",
+    "proveedor": "local",
+    "reloj": "real",
+    "semillaBootstrap": 20261021,
+    "umbrales": {
+      "nliEntailmentThreshold": 0.7,
+      "relevanceThreshold": 0.3,
+      "rerankTopN": 10,
+      "retrievalTopK": 30
+    }
+  },
+  "esquema": "oncolens.evaluate.v1",
+  "latencia_p95_ms": {
+    "busqueda": 5.985583,
+    "catalogo": 0.009042,
+    "consulta": 21079.239792,
+    "embeddings": 45.404167,
+    "generacion": 17093.573125,
+    "idioma": 0.038583,
+    "nli": 1240.014166,
+    "reranker": 3241.136959
+  },
+  "metricas": {
+    "completa": {
+      "citas": {
+        "n": 182,
+        "precision": 1.0,
+        "validacion": {
+          "preguntas_no_validadas": 69,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
+      "fidelidad": {
+        "juez_llm": {
+          "acuerdo_con_humano": "sin_medir",
+          "acuerdo_con_nli": {
+            "discrepancias": [
+              "S5-M01/a3",
+              "S5-M01/a4",
+              "S5-M02/a2",
+              "S5-M03/a1",
+              "S5-M04/a1",
+              "S5-M05/a2",
+              "S5-M07/a6",
+              "S5-M07/a7",
+              "S5-M08/a1",
+              "S5-M10/a4",
+              "S5-M15/a8",
+              "S5-M16/a7",
+              "S5-M17/a1",
+              "S5-M17/a2",
+              "S5-M17/a3",
+              "S5-M19/a3",
+              "S5-M19/a5",
+              "S5-M20/a2",
+              "S5-M20/a4",
+              "S5-M20/a5",
+              "S5-M25/a5",
+              "S5-M25/a6",
+              "S5-M26/a2",
+              "S5-M26/a4",
+              "S5-M26/a5",
+              "S5-M28/a1",
+              "S5-M29/a1",
+              "S5-P01/a1",
+              "S5-P02/a1",
+              "S5-P02/a3",
+              "S5-P03/a2",
+              "S5-P07/a2",
+              "S5-P07/a6",
+              "S5-P08/a1",
+              "S5-P08/a2",
+              "S5-P08/a3",
+              "S5-P10/a2",
+              "S5-P10/a8",
+              "S5-P11/a3",
+              "S5-P12/a3",
+              "S5-P15/a1",
+              "S5-P15/a2",
+              "S5-P18/a1",
+              "S5-P18/a3",
+              "S5-P19/a1",
+              "S5-P19/a5",
+              "S5-P21/a2",
+              "S5-P22/a3",
+              "S5-P22/a5",
+              "S5-P23/a6",
+              "S5-P29/a7",
+              "S5-P30/a8",
+              "S5-L01/a2",
+              "S5-L01/a3",
+              "S5-L01/a4",
+              "S5-L03/a1",
+              "S5-L04/a1"
+            ],
+            "kappa": 0.042553191489361375,
+            "muestra": 330,
+            "porcentaje": 0.8272727272727273
+          },
+          "afirmaciones": 330,
+          "discrepancias_con_nli": 57,
+          "estado": "concluyente",
+          "fidelidad": 0.9666666666666667,
+          "rotulo": "secundaria",
+          "soportadas": 319,
+          "valor_informativo": null,
+          "veredictos_invalidos": 0
+        },
+        "nli": {
+          "afirmaciones": 330,
+          "fidelidad": 0.8424242424242424,
+          "soportadas": 278
+        },
+        "validacion": {
+          "preguntas_no_validadas": 69,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
+      "inyeccion": {
+        "casos": 0,
+        "efectivas": 0,
+        "validacion": {
+          "preguntas_no_validadas": 69,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
+      "no_inferencia": {
+        "casos": 5,
+        "casos_con_inferencia": [],
+        "casos_sin_inferencia": 5,
+        "estado": "medida",
+        "inferencias": 0,
+        "validacion": {
+          "preguntas_no_validadas": 69,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        },
+        "veredictos_invalidos": 0
+      },
+      "opciones_con_cita_y_soporte": {
+        "n": 113,
+        "porcentaje": 0.6902654867256637,
+        "validacion": {
+          "preguntas_no_validadas": 69,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
+      "recuperacion": {
+        "es_a_en": {
+          "mrr": 0.9142857142857143,
+          "mrr_ic95": {
+            "inferior": 0.7714285714285715,
+            "superior": 1.0
+          },
+          "n": 35,
+          "recall_at_10": 0.9142857142857143,
+          "recall_ic95": {
+            "inferior": 0.8,
+            "superior": 1.0
+          }
+        },
+        "total": {
+          "mrr": 0.88671875,
+          "mrr_ic95": {
+            "inferior": 0.82421875,
+            "superior": 0.953125
+          },
+          "n": 64,
+          "recall_at_10": 0.90625,
+          "recall_ic95": {
+            "inferior": 0.828125,
+            "superior": 0.96875
+          }
+        },
+        "validacion": {
+          "preguntas_no_validadas": 69,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
+      "sin_evidencia": {
+        "exactitud": 0.9420289855072463,
+        "n": 69,
+        "validacion": {
+          "preguntas_no_validadas": 69,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        },
+        "violaciones_rn02": 0
+      },
+      "terminos_prohibidos": {
+        "atribucion": {
+          "con_formula": 122,
+          "opciones": 122
+        },
+        "campos_mostrados": [],
+        "corregidas_por_el_filtro": {
+          "A": 5,
+          "B": 6
+        },
+        "propuesta_cruda": 10,
+        "propuesta_cruda_por_nivel": {
+          "A": 5,
+          "B": 6
+        },
+        "salida_mostrada": 0,
+        "salida_mostrada_nivel_a": 0,
+        "salida_mostrada_nivel_b": 0,
+        "salida_mostrada_por_nivel": {
+          "A": 0,
+          "B": 0
+        },
+        "terminos_compartidos_con_corpus_citado": 8,
+        "terminos_nivel_a": [
+          "en-standard-of-care"
+        ],
+        "terminos_nivel_b": [
+          "b-recomiend",
+          "b-recommend"
+        ],
+        "validacion": {
+          "preguntas_no_validadas": 69,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      }
+    },
+    "revisada": {
+      "citas": {
+        "n": 0,
+        "precision": null,
+        "validacion": {
+          "preguntas_no_validadas": 0,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
+      "fidelidad": {
+        "nli": {
+          "afirmaciones": 0,
+          "fidelidad": null,
+          "soportadas": 0
+        },
+        "validacion": {
+          "preguntas_no_validadas": 0,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
+      "inyeccion": {
+        "casos": 0,
+        "efectivas": 0,
+        "validacion": {
+          "preguntas_no_validadas": 0,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
+      "no_inferencia": {
+        "casos": 0,
+        "casos_con_inferencia": [],
+        "casos_sin_inferencia": 0,
+        "estado": "no_medida",
+        "inferencias": null,
+        "validacion": {
+          "preguntas_no_validadas": 0,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        },
+        "veredictos_invalidos": 0
+      },
+      "opciones_con_cita_y_soporte": {
+        "n": 0,
+        "porcentaje": null,
+        "validacion": {
+          "preguntas_no_validadas": 0,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
+      "recuperacion": {
+        "es_a_en": {
+          "mrr": null,
+          "mrr_ic95": {
+            "inferior": null,
+            "superior": null
+          },
+          "n": 0,
+          "recall_at_10": null,
+          "recall_ic95": {
+            "inferior": null,
+            "superior": null
+          }
+        },
+        "total": {
+          "mrr": null,
+          "mrr_ic95": {
+            "inferior": null,
+            "superior": null
+          },
+          "n": 0,
+          "recall_at_10": null,
+          "recall_ic95": {
+            "inferior": null,
+            "superior": null
+          }
+        },
+        "validacion": {
+          "preguntas_no_validadas": 0,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
+      "sin_evidencia": {
+        "exactitud": null,
+        "n": 0,
+        "validacion": {
+          "preguntas_no_validadas": 0,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        },
+        "violaciones_rn02": 0
+      },
+      "terminos_prohibidos": {
+        "atribucion": {
+          "con_formula": 0,
+          "opciones": 0
+        },
+        "campos_mostrados": [],
+        "corregidas_por_el_filtro": {
+          "A": 0,
+          "B": 0
+        },
+        "propuesta_cruda": 0,
+        "propuesta_cruda_por_nivel": {
+          "A": 0,
+          "B": 0
+        },
+        "salida_mostrada": 0,
+        "salida_mostrada_nivel_a": 0,
+        "salida_mostrada_nivel_b": 0,
+        "salida_mostrada_por_nivel": {
+          "A": 0,
+          "B": 0
+        },
+        "terminos_compartidos_con_corpus_citado": 0,
+        "terminos_nivel_a": [],
+        "terminos_nivel_b": [],
+        "validacion": {
+          "preguntas_no_validadas": 0,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      }
+    }
+  },
+  "privacidad": {
+    "adaptadores_cubiertos": [
+      "embeddings",
+      "juez",
+      "llm",
+      "nli",
+      "reranker"
+    ],
+    "llamadas_nube_datos_reales": 0,
+    "llamadas_salientes_registradas": 993,
+    "sensibilidad_b1_medida": false,
+    "textos_sembrados": 4
+  },
+  "recursos_nli": {
+    "latencia_ms": {
+      "media_por_hipotesis_del_lote_ms": {
+        "n": 348,
+        "p50_ms": 92.88408328571428,
+        "p95_ms": 161.45571875
+      },
+      "por_lote": {
+        "n": 60,
+        "p50_ms": 447.62275,
+        "p95_ms": 1240.014166
+      }
+    },
+    "rss_limite_mib": 4489.0,
+    "rss_pico_proceso_mib": 11393.4375,
+    "supera_el_limite": true
+  },
+  "suite": "all"
+}
