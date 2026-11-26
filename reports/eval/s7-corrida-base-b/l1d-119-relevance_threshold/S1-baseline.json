@@ -1,0 +1,186 @@
+{
+  "barrido": {
+    "elegido": 0.1,
+    "fijado": false,
+    "filas": [
+      {
+        "exactitudSinEvidencia": 0.9565217391304348,
+        "recallAt10TrasUmbral": 0.90625,
+        "umbral": 0.1
+      },
+      {
+        "exactitudSinEvidencia": 0.9420289855072463,
+        "recallAt10TrasUmbral": 0.90625,
+        "umbral": 0.2
+      },
+      {
+        "exactitudSinEvidencia": 0.9420289855072463,
+        "recallAt10TrasUmbral": 0.90625,
+        "umbral": 0.3
+      },
+      {
+        "exactitudSinEvidencia": 0.9420289855072463,
+        "recallAt10TrasUmbral": 0.90625,
+        "umbral": 0.4
+      },
+      {
+        "exactitudSinEvidencia": 0.9420289855072463,
+        "recallAt10TrasUmbral": 0.90625,
+        "umbral": 0.5
+      },
+      {
+        "exactitudSinEvidencia": 0.9130434782608695,
+        "recallAt10TrasUmbral": 0.890625,
+        "umbral": 0.6
+      },
+      {
+        "exactitudSinEvidencia": 0.8985507246376812,
+        "recallAt10TrasUmbral": 0.875,
+        "umbral": 0.7
+      },
+      {
+        "exactitudSinEvidencia": 0.8695652173913043,
+        "recallAt10TrasUmbral": 0.859375,
+        "umbral": 0.8
+      },
+      {
+        "exactitudSinEvidencia": 0.7101449275362319,
+        "recallAt10TrasUmbral": 0.671875,
+        "umbral": 0.9
+      }
+    ],
+    "toleranciaRecall": 0.05,
+    "umbralDeReferencia": 0.3
+  },
+  "claseDataset": "sintetico",
+  "dataset": "s5-corpus-ampliado@1",
+  "esquema": "oncolens.baseline.v1",
+  "hashConfig": "ddb1a877eee82666718edef8c068f2a0f85910bb283598d729d4314517f5e43e",
+  "metricas": [
+    {
+      "estado": "en meta",
+      "metaMaximo": null,
+      "metaMinimo": 0.8,
+      "metrica": "recall_at_10",
+      "valor": 0.90625
+    },
+    {
+      "estado": "en meta",
+      "metaMaximo": null,
+      "metaMinimo": 0.7,
+      "metrica": "recall_at_10_es_a_en",
+      "valor": 0.9142857142857143
+    },
+    {
+      "estado": "en meta",
+      "metaMaximo": null,
+      "metaMinimo": 0.6,
+      "metrica": "mrr",
+      "valor": 0.88671875
+    },
+    {
+      "estado": "fuera de meta",
+      "metaMaximo": null,
+      "metaMinimo": 0.9,
+      "metrica": "fidelidad_proxy",
+      "valor": 0.6923076923076923
+    },
+    {
+      "estado": "en meta",
+      "metaMaximo": null,
+      "metaMinimo": 0.9,
+      "metrica": "precision_citas",
+      "valor": 1.0
+    },
+    {
+      "estado": "en meta",
+      "metaMaximo": null,
+      "metaMinimo": 0.9,
+      "metrica": "sin_evidencia",
+      "valor": 0.9565217391304348
+    },
+    {
+      "estado": "en meta",
+      "metaMaximo": 20,
+      "metaMinimo": null,
+      "metrica": "p95_evidence_analyses_s",
+      "valor": 17.927110916
+    }
+  ],
+  "metricasPorCancer": {
+    "mama": {
+      "fidelidad_proxy": 0.75,
+      "mrr": 0.9193548387096774,
+      "precision_citas": 1.0,
+      "recall_at_10": 0.9354838709677419,
+      "recall_at_10_es_a_en": 0.9411764705882353,
+      "sin_evidencia": 0.9705882352941176
+    },
+    "prostata": {
+      "fidelidad_proxy": 0.639344262295082,
+      "mrr": 0.8560606060606061,
+      "precision_citas": 1.0,
+      "recall_at_10": 0.8787878787878788,
+      "recall_at_10_es_a_en": 0.8888888888888888,
+      "sin_evidencia": 0.9428571428571428
+    }
+  },
+  "metricasPorTipoEIdioma": {
+    "mama": {
+      "en": {
+        "fidelidad_proxy": 0.7407407407407407,
+        "mrr": 0.8928571428571429,
+        "precision_citas": 1.0,
+        "recall_at_10": 0.9285714285714286,
+        "recall_at_10_es_a_en": null,
+        "sin_evidencia": 1.0
+      },
+      "es": {
+        "fidelidad_proxy": 0.7586206896551724,
+        "mrr": 0.9411764705882353,
+        "precision_citas": 1.0,
+        "recall_at_10": 0.9411764705882353,
+        "recall_at_10_es_a_en": 0.9411764705882353,
+        "sin_evidencia": 0.9473684210526315
+      },
+      "es_a_en": {
+        "fidelidad_proxy": 0.7586206896551724,
+        "mrr": 0.9411764705882353,
+        "precision_citas": 1.0,
+        "recall_at_10": 0.9411764705882353,
+        "recall_at_10_es_a_en": 0.9411764705882353,
+        "sin_evidencia": 0.9411764705882353
+      }
+    },
+    "prostata": {
+      "en": {
+        "fidelidad_proxy": 0.6896551724137931,
+        "mrr": 0.8166666666666667,
+        "precision_citas": 1.0,
+        "recall_at_10": 0.8666666666666667,
+        "recall_at_10_es_a_en": null,
+        "sin_evidencia": 0.9375
+      },
+      "es": {
+        "fidelidad_proxy": 0.59375,
+        "mrr": 0.8888888888888888,
+        "precision_citas": 1.0,
+        "recall_at_10": 0.8888888888888888,
+        "recall_at_10_es_a_en": 0.8888888888888888,
+        "sin_evidencia": 0.9473684210526315
+      },
+      "es_a_en": {
+        "fidelidad_proxy": 0.59375,
+        "mrr": 0.8888888888888888,
+        "precision_citas": 1.0,
+        "recall_at_10": 0.8888888888888888,
+        "recall_at_10_es_a_en": 0.8888888888888888,
+        "sin_evidencia": 0.9444444444444444
+      }
+    }
+  },
+  "p95Corridas": 3,
+  "p95E2eS": 17.927110916,
+  "proveedor": "local",
+  "referenciaDeterminista": false
+}
