@@ -53,6 +53,11 @@ claves:
     # Ventanas del reranker sobre un chunk largo (US-278, L1D-336): cambian el puntaje y con él el umbral de facto.
     - RERANKER_CHUNK_WINDOWS
     - RERANKER_WINDOW_OVERLAP
+    # Contexto del documento en el texto que se embebe (US-279, L1D-337): cambia los vectores del corpus indexado.
+    - CORPUS_CHUNK_CONTEXT
+    - CORPUS_CHUNK_CONTEXT_MAX_CHARS
+    - CORPUS_CHUNK_CONTEXT_LLM_MAX_CHARS
+    - CORPUS_CHUNK_CONTEXT_LLM_DOC_MAX_CHARS
   prefijos:
     - PII_
 

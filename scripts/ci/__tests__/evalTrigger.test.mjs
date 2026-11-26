@@ -29,6 +29,10 @@ describe('tocaDisparador', () => {
     ['QUERY_REWRITE_ENABLED', '+QUERY_REWRITE_ENABLED=true'],
     ['RERANKER_CHUNK_WINDOWS', '+RERANKER_CHUNK_WINDOWS=maximo'],
     ['RERANKER_WINDOW_OVERLAP', '+RERANKER_WINDOW_OVERLAP=64'],
+    ['CORPUS_CHUNK_CONTEXT', '+CORPUS_CHUNK_CONTEXT=determinista'],
+    ['CORPUS_CHUNK_CONTEXT_MAX_CHARS', '+CORPUS_CHUNK_CONTEXT_MAX_CHARS=200'],
+    ['CORPUS_CHUNK_CONTEXT_LLM_MAX_CHARS', '+CORPUS_CHUNK_CONTEXT_LLM_MAX_CHARS=200'],
+    ['CORPUS_CHUNK_CONTEXT_LLM_DOC_MAX_CHARS', '+CORPUS_CHUNK_CONTEXT_LLM_DOC_MAX_CHARS=2000'],
   ])('dispara cuando el diff de .env.example cambia %s [US-074 AC-3]', (_clave, linea) => {
     const resultado = tocaDisparador([cambio('infra/docker/.env.example', linea)], REGLAS);
 

@@ -45,15 +45,26 @@ from pydantic import ValidationError
 from pymilvus import MilvusClient
 
 from app.application.corpus_ingestion.brazo_de_chunks import IngerirBrazoDeChunks
+from app.application.corpus_ingestion.constructores_de_contexto import constructor_de_contexto
+from app.application.corpus_ingestion.contexto_llm import GeneradorLlmDeContexto
 from app.application.corpus_ingestion.ingestion_pipeline_service import IngestionPipelineService
 from app.application.corpus_ingestion.ports import (
+    AlmacenDeReindexacionDeContexto,
     AlmacenDeReindexacionSparse,
+    ConstructorDeContexto,
+    GeneradorDeContextoDeChunk,
     SparsePassageEncoder,
+)
+from app.application.corpus_ingestion.reindexar_contexto import (
+    ETAPA_ESCRIBIR,
+    ETAPA_LEER_ORIGEN,
+    ReindexarContexto,
 )
 from app.application.corpus_ingestion.reindexar_sparse import (
     ETAPA_LEER,
     FalloDeReindexacion,
     ReindexarSparse,
+    etapa_de_reindexacion,
 )
 from app.application.corpus_ingestion.reporte import ReporteDeIngesta
 from app.application.corpus_ingestion.resumen_corpus import contar_corpus_por_tipo_y_fuente
@@ -71,6 +82,8 @@ from app.application.seed_corpus.ports import (
     SourceFetcher,
 )
 from app.config.settings import (
+    AjustesDeContextoLlm,
+    AjustesDeReindexacionDeContexto,
     AjustesDeReindexacionSparse,
     AjustesSparse,
     CorpusDatabaseSettings,
@@ -80,6 +93,13 @@ from app.config.settings import (
 )
 from app.domain.corpus_seed.admisibilidad import PoliticaDeLicencias
 from app.domain.corpus_seed.chunking import Tokenizador
+from app.domain.corpus_seed.coleccion_de_la_variante import (
+    ColeccionNoCorrespondeALaVariante,
+    OrigenIgualAlDestino,
+    exigir_coleccion_de_la_variante,
+    exigir_origen_distinto_del_destino,
+)
+from app.domain.corpus_seed.contexto_del_chunk import VERSION_DE_LA_PLANTILLA, VarianteDeContexto
 from app.domain.reglas_proveedor import variable_que_incumple_llm_local
 from app.infrastructure.catalog.conexion import componer_url, crear_motor
 from app.infrastructure.catalog.corpus_document_repository import CorpusDocumentRepository
@@ -262,6 +282,7 @@ def _ejecutar_ingesta(
     tokenizador: Tokenizador,
     metadatos: ModelosDeMetadatos,
     reloj: Clock,
+    constructor_de_contexto: ConstructorDeContexto,
 ) -> tuple[ReporteDeIngesta, dict[str, object], dict[str, Any] | None, dict[str, dict[str, int]]]:
     """Raíz de composición: adapters reales -> ``IngestionPipelineService``. Cierra las conexiones a PostgreSQL al terminar.
 
@@ -271,13 +292,7 @@ def _ejecutar_ingesta(
     extractor = _extractor_de_poblacion(
         metadatos, ajustes
     )  # antes de abrir conexiones: falla cerrado por configuración
-    motor = crear_motor(
-        componer_url(
-            base.corpus_database_url,
-            base.pg_rag_corpus_password_file,
-            "PG_RAG_CORPUS_PASSWORD_FILE",
-        )
-    )
+    motor = _motor_del_catalogo(base)
     try:
         almacen = MilvusRepository(MilvusClient(uri=milvus.milvus_uri), milvus)
         almacen.ensure_collection()
@@ -302,6 +317,7 @@ def _ejecutar_ingesta(
             fecha_de_corte=ajustes.corpus_cutoff_date,
             extractor_de_poblacion=extractor,
             almacen_de_poblacion=catalogo,
+            constructor_de_contexto=constructor_de_contexto,
         )
         reporte = servicio.ingerir(documentos)
         generador = GeneradorDeMuestraDeMetadatos(
@@ -343,6 +359,7 @@ def _modelos_de_la_ingesta(
 
 MODO_REINDEX_SPARSE = "reindex-sparse"
 MODO_BRAZO_DE_CHUNKS = "brazo-de-chunks"
+MODO_REINDEX_CONTEXTO = "reindex-context"
 
 
 def _argumentos(argv: Sequence[str] | None) -> argparse.Namespace:
@@ -367,6 +384,11 @@ def _argumentos(argv: Sequence[str] | None) -> argparse.Namespace:
     brazo.add_argument(
         "--solape", type=int, default=None, help="tokens de solape; sin él, CORPUS_CHUNK_OVERLAP"
     )
+    contexto = modos.add_parser(
+        MODO_REINDEX_CONTEXTO,
+        help="reconstruye el índice de una variante de contexto en una colección propia",
+    )
+    contexto.add_argument("--origen", required=True, help="colección de Milvus de origen")
     argumentos = analizador.parse_args(argv)
     if argumentos.modo is None and argumentos.manifest is None:
         analizador.error("--manifest es obligatorio")
@@ -393,6 +415,16 @@ def _almacen_de_milvus() -> AlmacenDeReindexacionSparse:
     return almacen
 
 
+def _exigir_coleccion_sin_contexto() -> None:
+    """``reindex-sparse`` trabaja sobre la colección SIN contexto (``ninguno``): sobre una ``__ctx_`` dejaría el *dense* con prefijo y el
+    *sparse* sin él. Si la configuración de Milvus no es válida no se decide aquí: ya la reporta el camino que la usa."""
+    try:
+        nombre = MilvusSettings(_env_file=None).milvus_collection_name  # type: ignore[call-arg]
+    except ValidationError:
+        return
+    exigir_coleccion_de_la_variante(nombre, VarianteDeContexto.NINGUNO)
+
+
 def _reindexar_sparse(
     sparse: SparsePassageEncoder | None, almacen: AlmacenDeReindexacionSparse | None
 ) -> int:
@@ -405,6 +437,7 @@ def _reindexar_sparse(
         return 1
     try:
         exigir_proveedor_de_modelos_local()  # RN-12: antes de cargar modelos o abrir Milvus
+        _exigir_coleccion_sin_contexto()  # el sparse de una colección con prefijo no se recalcula sin él
         codificador = sparse if sparse is not None else _sparse_real(ajustes)
         almacen = almacen if almacen is not None else _almacen_de_milvus()
         resumen = ReindexarSparse(
@@ -412,6 +445,9 @@ def _reindexar_sparse(
             codificador=codificador,
             lote=ajustes.corpus_sparse_reindex_batch_size,
         ).ejecutar()
+    except ColeccionNoCorrespondeALaVariante as error:
+        print(f"{NOMBRE} {MODO_REINDEX_SPARSE}: {error}", file=sys.stderr)
+        return 1
     except (
         ValidationError
     ) as error:  # la configuración de Milvus, que se valida después de la guarda
@@ -475,7 +511,9 @@ def _brazo_de_chunks(
     except ValidationError as error:
         print(f"{NOMBRE}: configuración inválida en: {_claves_invalidas(error)}", file=sys.stderr)
         return 1
-    if argumentos.coleccion.strip().casefold() == milvus.milvus_collection_name.strip().casefold():
+    try:
+        exigir_origen_distinto_del_destino(argumentos.coleccion, milvus.milvus_collection_name)
+    except OrigenIgualAlDestino:
         print(
             f"{NOMBRE} {MODO_BRAZO_DE_CHUNKS}: --coleccion no puede ser la de MILVUS_COLLECTION_NAME (RN-05)",
             file=sys.stderr,
@@ -487,13 +525,7 @@ def _brazo_de_chunks(
         codificadores = _modelos_de_la_ingesta(ajustes, embedder, sparse, tokenizador)
         catalogo = puertos.catalogo
         if catalogo is None:
-            motor = crear_motor(
-                componer_url(
-                    base.corpus_database_url,
-                    base.pg_rag_corpus_password_file,
-                    "PG_RAG_CORPUS_PASSWORD_FILE",
-                )
-            )
+            motor = _motor_del_catalogo(base)
             catalogo = CorpusDocumentRepository(motor)  # se usa solo por el puerto de lectura
         reporte = IngerirBrazoDeChunks(
             catalogo=catalogo,
@@ -540,6 +572,158 @@ def _brazo_de_chunks(
     return 1 if reporte.hubo_errores else 0
 
 
+@dataclass(frozen=True)
+class PuertosDeLaReindexacionDeContexto:
+    """Bordes que un test sustituye; sin ellos la CLI compone Milvus (origen y destino), el catálogo en solo lectura y el LLM local."""
+
+    origen: AlmacenDeReindexacionDeContexto | None = None
+    destino: AlmacenDeReindexacionDeContexto | None = None
+    catalogo: LectorDePoblacionDelCorpus | None = None
+    llm: LlmClient | None = None
+
+
+def _generador_de_contexto(
+    ajustes: AjustesDeContextoLlm, llm: LlmClient | None
+) -> GeneradorDeContextoDeChunk | None:
+    """El generador sobre el LLM local, solo para la variante ``llm`` (RN-12, que ya se exigió antes de llegar aquí)."""
+    if ajustes.corpus_chunk_context is not VarianteDeContexto.LLM:
+        return None
+    if llm is None:
+        raise ConfiguracionDeLlmNoLocalError("LLM_BASE_URL")
+    return GeneradorLlmDeContexto(llm=llm, max_chars=ajustes.corpus_chunk_context_llm_max_chars)
+
+
+def _constructor_de_contexto(
+    ajustes: AjustesDeContextoLlm, llm: LlmClient | None
+) -> ConstructorDeContexto:
+    """El constructor de la variante configurada."""
+    return constructor_de_contexto(
+        ajustes.corpus_chunk_context,
+        max_chars=ajustes.corpus_chunk_context_max_chars,
+        generador=_generador_de_contexto(ajustes, llm),
+        doc_max_chars=ajustes.corpus_chunk_context_llm_doc_max_chars,
+        concurrencia=ajustes.corpus_chunk_context_llm_concurrency,
+    )
+
+
+def _embedder_y_sparse_de_la_reindexacion(
+    embedder: PassageEmbedder | None,
+    sparse: SparsePassageEncoder | None,
+    ajustes: AjustesSparse,
+) -> tuple[PassageEmbedder, SparsePassageEncoder]:
+    """Inyectados (solo en los tests) o, en producción, los reales y verificados por SHA-256 (RN-12). El ``onnxruntime`` se difiere."""
+    if embedder is not None and sparse is not None:
+        return embedder, sparse
+    from app.infrastructure.models.local import cargar_embeddings_y_sparse_de_pasajes
+
+    return cargar_embeddings_y_sparse_de_pasajes(ajustes_de_modelos_del_entorno(), ajustes)
+
+
+def _almacenes_de_la_reindexacion(
+    milvus: MilvusSettings, origen: str, puertos: PuertosDeLaReindexacionDeContexto
+) -> tuple[AlmacenDeReindexacionDeContexto, AlmacenDeReindexacionDeContexto]:
+    """El origen se abre para LEER (nunca se crea) y el destino, la colección de ``MILVUS_COLLECTION_NAME``, se crea si no existe."""
+    if puertos.origen is not None and puertos.destino is not None:
+        return puertos.origen, puertos.destino
+    with etapa_de_reindexacion(ETAPA_LEER_ORIGEN):
+        cliente = MilvusClient(uri=milvus.milvus_uri)
+        de_origen = MilvusRepository(
+            cliente, milvus.model_copy(update={"milvus_collection_name": origen})
+        )
+        de_origen.abrir_existente()
+    with etapa_de_reindexacion(ETAPA_ESCRIBIR):
+        destino = MilvusRepository(cliente, milvus)
+        destino.ensure_collection()
+    return de_origen, destino
+
+
+def _reindexar_contexto(
+    argumentos: argparse.Namespace,
+    embedder: PassageEmbedder | None,
+    sparse: SparsePassageEncoder | None,
+    reloj: Clock | None,
+    puertos: PuertosDeLaReindexacionDeContexto,
+) -> int:
+    """``ingest reindex-context`` (US-279 D4): el índice de la variante en la colección de ``MILVUS_COLLECTION_NAME``, desde la de
+    ``--origen``. Las guardas (variante, colección, origen distinto, RN-12) van antes de cargar modelos o abrir conexiones; el catálogo
+    entra por su puerto de solo lectura. ``embedder``, ``sparse`` y ``puertos`` se inyectan solo en los tests."""
+    try:
+        ajustes = AjustesDeReindexacionDeContexto(_env_file=None)  # type: ignore[call-arg]
+        milvus = MilvusSettings(_env_file=None)  # type: ignore[call-arg]
+    except ValidationError as error:
+        print(f"{NOMBRE}: configuración inválida en: {_claves_invalidas(error)}", file=sys.stderr)
+        return 1
+    motor = None
+    try:
+        exigir_coleccion_de_la_variante(milvus.milvus_collection_name, ajustes.corpus_chunk_context)
+        exigir_origen_distinto_del_destino(argumentos.origen, milvus.milvus_collection_name)
+        exigir_proveedor_de_modelos_local()  # RN-12: antes de cargar modelos o abrir Milvus
+        if ajustes.corpus_chunk_context is VarianteDeContexto.LLM:
+            _exigir_llm_local()
+        codificadores = _embedder_y_sparse_de_la_reindexacion(embedder, sparse, ajustes)
+        origen, destino = _almacenes_de_la_reindexacion(milvus, argumentos.origen, puertos)
+        catalogo = puertos.catalogo
+        if catalogo is None:
+            motor = _motor_del_catalogo(CorpusDatabaseSettings(_env_file=None))  # type: ignore[call-arg]
+            catalogo = CorpusDocumentRepository(motor)  # se usa solo por el puerto de lectura
+        resumen = ReindexarContexto(
+            origen=origen,
+            destino=destino,
+            catalogo=catalogo,
+            embedder=codificadores[0],
+            codificador_sparse=codificadores[1],
+            constructor=_constructor_de_contexto(
+                ajustes, puertos.llm or _llm_de_la_reindexacion(ajustes)
+            ),
+            variante=ajustes.corpus_chunk_context,
+            lote=ajustes.corpus_context_reindex_batch_size,
+            reloj=reloj or RelojDelSistema(),
+        ).ejecutar()
+    except (
+        ModeloNoVerificadoError,
+        ConfiguracionDeLlmNoLocalError,
+        ColeccionNoCorrespondeALaVariante,
+        OrigenIgualAlDestino,
+    ) as error:
+        print(f"{NOMBRE} {MODO_REINDEX_CONTEXTO}: {error}", file=sys.stderr)
+        return 1
+    except ValidationError as error:
+        print(f"{NOMBRE}: configuración inválida en: {_claves_invalidas(error)}", file=sys.stderr)
+        return 1
+    except FalloDeReindexacion as fallo:
+        print(
+            f"{NOMBRE} {MODO_REINDEX_CONTEXTO}: falló en {fallo.etapa} ({fallo.clase})",
+            file=sys.stderr,
+        )
+        return 1
+    except Exception as error:  # noqa: BLE001 - se informa la clase; el mensaje de la base o de pymilvus puede traer una URI
+        print(f"{NOMBRE} {MODO_REINDEX_CONTEXTO}: falló ({type(error).__name__})", file=sys.stderr)
+        return 1
+    finally:
+        if motor is not None:
+            motor.dispose()
+    print(json.dumps({"modo": MODO_REINDEX_CONTEXTO, **resumen.como_diccionario()}))
+    return 0
+
+
+def _llm_de_la_reindexacion(ajustes: AjustesDeContextoLlm) -> LlmClient | None:
+    """El LLM local solo para la variante ``llm``; con las otras no se construye ningún cliente."""
+    if ajustes.corpus_chunk_context is not VarianteDeContexto.LLM:
+        return None
+    ambiente = Settings(_env_file=None, modelos=None)  # type: ignore[call-arg]
+    return _llm_local(ambiente, ajustes.corpus_metadata_llm_temperature)
+
+
+def _motor_del_catalogo(base: CorpusDatabaseSettings) -> Any:
+    return crear_motor(
+        componer_url(
+            base.corpus_database_url,
+            base.pg_rag_corpus_password_file,
+            "PG_RAG_CORPUS_PASSWORD_FILE",
+        )
+    )
+
+
 def main(
     argv: Sequence[str] | None = None,
     embedder: PassageEmbedder | None = None,
@@ -551,12 +735,21 @@ def main(
     almacen_sparse: AlmacenDeReindexacionSparse | None = None,
     llm_poblacion: LlmDePoblacion | None = None,
     puertos_brazo: PuertosDelBrazoDeChunks | None = None,
+    puertos_contexto: PuertosDeLaReindexacionDeContexto | None = None,
 ) -> int:
     """``embedder``, ``sparse``, ``reloj``, ``tokenizador``, ``llm``, ``nli`` y ``llm_poblacion`` se inyectan solo en los tests; en
     producción salen de los adapters reales (``MODEL_PROVIDER=local``, LLM local)."""
     argumentos = _argumentos(argv)
     if argumentos.modo == MODO_REINDEX_SPARSE:
         return _reindexar_sparse(sparse, almacen_sparse)
+    if argumentos.modo == MODO_REINDEX_CONTEXTO:
+        return _reindexar_contexto(
+            argumentos,
+            embedder,
+            sparse,
+            reloj,
+            puertos_contexto or PuertosDeLaReindexacionDeContexto(),
+        )
     if argumentos.modo == MODO_BRAZO_DE_CHUNKS:
         return _brazo_de_chunks(
             argumentos,
@@ -575,8 +768,12 @@ def main(
         print(f"{NOMBRE}: configuración inválida en: {_claves_invalidas(error)}", file=sys.stderr)
         return 1
     try:
+        exigir_coleccion_de_la_variante(milvus.milvus_collection_name, ajustes.corpus_chunk_context)
         _exigir_llm_local()  # RN-12: antes de cargar embeddings o abrir conexiones
         modelos = _modelos_de_la_ingesta(ajustes, embedder, sparse, tokenizador)
+        de_metadatos = _modelos_de_metadatos(
+            llm, nli, ajustes.corpus_metadata_llm_temperature, llm_poblacion
+        )
         reporte, muestra, poblacion, corpus = _ejecutar_ingesta(
             argumentos.manifest,
             ajustes,
@@ -584,8 +781,9 @@ def main(
             base,
             politica,
             *modelos,
-            _modelos_de_metadatos(llm, nli, ajustes.corpus_metadata_llm_temperature, llm_poblacion),
+            de_metadatos,
             reloj or RelojDelSistema(),
+            _constructor_de_contexto(ajustes, de_metadatos.llm),
         )
     except (
         ModeloNoVerificadoError,
@@ -593,6 +791,7 @@ def main(
         ConfiguracionDeLlmNoLocalError,
         CatalogoDePoblacionNoConfigurado,
         PlantillaDePoblacionNoDisponible,
+        ColeccionNoCorrespondeALaVariante,
     ) as error:
         print(f"{NOMBRE}: {error}", file=sys.stderr)
         return 1
@@ -601,6 +800,11 @@ def main(
         return 1
     resumen = {
         **reporte.como_diccionario(),
+        "contexto_del_chunk": {
+            "variante": ajustes.corpus_chunk_context.value,
+            "version_de_la_plantilla": VERSION_DE_LA_PLANTILLA,
+            **reporte.contadores_de_contexto(),
+        },
         "corpus_por_tipo_y_fuente": corpus,
         "muestra_de_metadatos": muestra,
     }

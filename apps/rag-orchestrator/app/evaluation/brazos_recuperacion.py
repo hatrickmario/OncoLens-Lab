@@ -11,6 +11,7 @@ import hashlib
 import json
 from dataclasses import dataclass
 
+from app.domain.corpus_seed.contexto_del_chunk import VarianteDeContexto
 from app.domain.fusion_de_candidatos import EstrategiaDeFusion
 from app.domain.ventanas_del_reranker import ModoDeVentanas
 from app.schemas.generated.models import Fusion, RetrievalMode
@@ -38,6 +39,8 @@ class Brazo:
     """``RERANKER_MAX_PAIRS`` del brazo (US-277 AC-6): los candidatos que llegan al reranker; ``None`` = el de la suite."""
     query_rewrite_enabled: bool | None = None
     """``QUERY_REWRITE_ENABLED`` del brazo (US-277 AC-2, AC-5): el segundo loop de reescritura; ``None`` = el de la suite."""
+    variante_de_contexto: VarianteDeContexto | None = None
+    """``CORPUS_CHUNK_CONTEXT`` del índice que lee el brazo (US-279 AC-5); ``None`` = no es un brazo de contexto."""
 
     @property
     def cambia_el_reranker(self) -> bool:
@@ -53,6 +56,11 @@ class Brazo:
     def declara_pares_o_reescritura(self) -> bool:
         """El brazo es de la comparación de US-277: cambia los pares del reranker o la reescritura de la consulta."""
         return self.reranker_max_pairs is not None or self.query_rewrite_enabled is not None
+
+    @property
+    def declara_variante_de_contexto(self) -> bool:
+        """El brazo es de la comparación de US-279: su índice se construyó con una variante de ``CORPUS_CHUNK_CONTEXT``."""
+        return self.variante_de_contexto is not None
 
     def trazado_esperado(self) -> tuple[RetrievalMode, Fusion, float]:
         """``(retrievalMode, fusion, fusionParam)`` que ``meta.retrievalParams`` debe traer, sin nulos (l1d-109 D7)."""
@@ -76,6 +84,10 @@ class Brazo:
                 ("indice", self.coleccion),
                 ("reranker_max_pairs", self.reranker_max_pairs),
                 ("query_rewrite_enabled", self.query_rewrite_enabled),
+                (
+                    "contexto",
+                    None if self.variante_de_contexto is None else self.variante_de_contexto.value,
+                ),
             )
             if valor is not None
         }

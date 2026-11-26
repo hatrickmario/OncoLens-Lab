@@ -14,7 +14,7 @@ from typing import Any
 from pymilvus import MilvusClient
 from pymilvus.exceptions import MilvusException
 
-from app.application.corpus_ingestion.ports import ChunkParaReindexar
+from app.application.corpus_ingestion.ports import ChunkDeOrigen, ChunkParaReindexar
 from app.application.ports import (
     ChunkDelCorpus,
     ChunkEncontrado,
@@ -69,6 +69,13 @@ class ConsultaTruncada(RuntimeError):
     """La consulta devolvió exactamente el tope de Milvus: puede faltar el resto, y no se actúa con un resultado parcial."""
 
 
+class CorpusCollectionNoExiste(RuntimeError):
+    """La colección que se pidió abrir para leer no existe. El mensaje no lleva su nombre ni la URI."""
+
+    def __init__(self) -> None:
+        super().__init__("la colección de origen no existe")
+
+
 class CorpusCollectionSchemaMismatch(RuntimeError):
     """La colección existente no coincide con el esquema esperado. El mensaje nombra campo, lo esperado y lo hallado."""
 
@@ -94,6 +101,13 @@ class MilvusRepository:
             index_params=build_corpus_chunks_indexes(self._cliente, self._ajustes),
         )
         return True
+
+    def abrir_existente(self) -> None:
+        """Abre para LEER una colección que ya existe (el origen de ``reindex-context``): nunca la crea, comprueba su esquema y la carga."""
+        if not self._cliente.has_collection(self._coleccion):
+            raise CorpusCollectionNoExiste
+        self.assert_schema_matches()
+        self._cliente.load_collection(self._coleccion)
 
     def assert_schema_matches(self) -> None:
         """Compara nombre, tipo y dimensión de cada campo con el esquema esperado (D5)."""
@@ -322,6 +336,63 @@ class MilvusRepository:
             for chunk, sparse in zip(chunks, vectores_sparse, strict=True)
         ]
         self._cliente.upsert(self._coleccion, filas)
+        return len(filas)
+
+    # --- AlmacenDeReindexacionDeContexto (US-279, L1D-337): todos los chunks, ids presentes y filas completas ---------------
+
+    def listar_paginado(self, lote: int) -> Iterator[list[ChunkDeOrigen]]:
+        """TODOS los chunks (vigentes o no) en páginas de ``lote``: ``query_iterator`` pagina por PK. ``lote`` debe quedar
+        estrictamente entre 0 y ``LIMITE_DE_CONSULTA`` (``ValueError`` antes de leer nada). Cada chunk lleva su fila completa para
+        escribirla en otra colección sin perder campos."""
+        if not 0 < lote < LIMITE_DE_CONSULTA:
+            raise ValueError(f"el lote debe cumplir 0 < lote < {LIMITE_DE_CONSULTA}")
+        return self._paginas_de_todos(lote)
+
+    def _paginas_de_todos(self, lote: int) -> Iterator[list[ChunkDeOrigen]]:
+        iterador = self._cliente.query_iterator(
+            self._coleccion,
+            batch_size=lote,
+            filter='chunk_id != ""',
+            output_fields=["*"],
+            consistency_level="Strong",
+        )
+        try:
+            while pagina := iterador.next():
+                yield [self._chunk_de_origen(f) for f in pagina]
+        finally:
+            iterador.close()
+
+    @staticmethod
+    def _chunk_de_origen(fila: Mapping[str, Any]) -> ChunkDeOrigen:
+        return ChunkDeOrigen(
+            fila["chunk_id"],
+            fila["document_id"],
+            fila["chunk_index"],
+            fila["section"],
+            fila["chunk_text"],
+            bool(fila["is_current"]),
+            fila,
+        )
+
+    def ids_presentes(self, chunk_ids: Collection[str]) -> frozenset[str]:
+        """Los ``chunk_id`` de ``chunk_ids`` que la colección ya tiene (la reindexación reanudada no repite lo hecho)."""
+        if not chunk_ids:
+            return frozenset()
+        filas = self._cliente.query(
+            self._coleccion,
+            filter=_filtro_en("chunk_id", sorted(chunk_ids)),
+            output_fields=["chunk_id"],
+            limit=LIMITE_DE_CONSULTA,
+            consistency_level="Strong",
+        )
+        _exigir_completo(filas)
+        return frozenset(f["chunk_id"] for f in filas)
+
+    def escribir_filas(self, filas: Sequence[Mapping[str, Any]]) -> int:
+        """``upsert`` por ``chunk_id`` de filas completas, tal como las entregó ``listar_paginado`` (con los vectores sustituidos)."""
+        if not filas:
+            return 0
+        self._cliente.upsert(self._coleccion, [dict(f) for f in filas])
         return len(filas)
 
     @staticmethod

@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from app.domain.expansion_contextual import CAMPOS_DE_EXPANSION, FORMATOS_DE_CONSULTA
 from app.domain.ventanas_del_reranker import MODOS_DE_VENTANAS
+from app.domain.corpus_seed.contexto_del_chunk import VarianteDeContexto
 from app.evaluation.adopcion_del_brazo import MOTIVOS_DE_NO_ADOPCION
+from app.evaluation.brazos_contexto import METRICA_DE_ADOPCION, MOTIVOS_DE_NO_CUMPLIR
 from app.evaluation.acuerdo_juez import ESTADO_CONCLUYENTE, ESTADO_NO_CONCLUYENTE, SIN_MEDIR
 from app.evaluation.config_suite import PROVEEDORES, RELOJES, SUITES
 from app.evaluation.cronometro import ETAPAS
@@ -295,6 +297,44 @@ _ADOPCION = Objeto(
         "motivos": Lista(Enumerado(MOTIVOS_DE_NO_ADOPCION)),
     }
 )
+_DIFERENCIA_PAREADA = Objeto(
+    {
+        # US-279 AC-5: brazo menos `ninguno` sobre las mismas preguntas; todo `null` si no hay preguntas pareadas (≠ 0.0).
+        "diferencia": Numero(),
+        "ic95": Objeto({"inferior": Numero(), "superior": Numero()}),
+    }
+)
+_CONTEXTO_DEL_BRAZO = Objeto(
+    {
+        # US-279 AC-5: solo si la comparación declara brazos con CORPUS_CHUNK_CONTEXT. Sin texto de chunks, de prefijos ni de frases.
+        "variante": Enumerado(frozenset(v.value for v in VarianteDeContexto)),
+        "version_de_la_plantilla": Numero(),
+        "coleccion": Anulable(Identificador()),  # null = el corpus del dataset en memoria (la CI)
+        "indice": Objeto({"construccion_s": Numero(), "chunks_vigentes": Numero()}),
+        "llm": Objeto(  # solo en la variante `llm`
+            {
+                "modelo": Identificador(),
+                "version_del_prompt": Identificador(),
+                "chunks_con_respaldo": Objeto(
+                    {"salida_invalida": Numero(), "llm_no_disponible": Numero()}
+                ),
+            }
+        ),
+        # solo fuera de la referencia `ninguno`
+        "diferencia_pareada": Objeto(
+            {METRICA_DE_ADOPCION: _DIFERENCIA_PAREADA, "mrr": _DIFERENCIA_PAREADA}
+        ),
+        "regla_de_adopcion": Objeto(
+            {
+                "mejora_fuera_del_ruido": Anulable(
+                    Booleano()
+                ),  # null = lo medido no alcanza para afirmarlo
+                "motivos": Lista(Enumerado(MOTIVOS_DE_NO_CUMPLIR)),
+            }
+        ),
+    },
+    opcionales=frozenset({"llm", "diferencia_pareada", "regla_de_adopcion"}),
+)
 _BRAZO = Objeto(
     {
         "nombre": Identificador(),
@@ -320,9 +360,11 @@ _BRAZO = Objeto(
         "reescritura": _REESCRITURA_DEL_BRAZO,
         "parafrasis_atribuidas": _PARAFRASIS_ATRIBUIDAS,
         "adopcion": _ADOPCION,
+        "contexto": _CONTEXTO_DEL_BRAZO,
     },
     opcionales=frozenset(
         {
+            "contexto",
             "diferencia_frente_a_a0",
             "reranker",
             "falsos_sin_evidencia",
@@ -354,8 +396,16 @@ _COMPARACION_RECUPERACION = Objeto(
         "retroceso": Booleano(),
         "brazos": Lista(_BRAZO),
         "corpus": _CORPUS_DE_LA_COMPARACION,
+        "contexto": Objeto(
+            {
+                # US-279 AC-5, [S7 resp. 10]: la colección de origen de las reindexaciones y la regla que evalúa el informe.
+                "coleccion_de_origen": Anulable(Identificador()),
+                "metrica_de_adopcion": Enumerado(frozenset({METRICA_DE_ADOPCION})),
+                "tope_p95_s": Numero(),
+            }
+        ),
     },
-    opcionales=frozenset({"corpus"}),
+    opcionales=frozenset({"corpus", "contexto"}),
 )
 
 _RECHAZOS_LEGITIMOS = Objeto(

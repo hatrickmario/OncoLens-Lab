@@ -8,12 +8,12 @@ las mismas reglas que los adapters reales (LSP): ``guardar_documento`` es un *up
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping, Sequence
-from dataclasses import replace
+from collections.abc import Collection, Iterator, Mapping, Sequence
+from dataclasses import asdict, fields, replace
 from datetime import datetime
 from typing import Any
 
-from app.application.corpus_ingestion.ports import ChunkParaReindexar
+from app.application.corpus_ingestion.ports import ChunkDeOrigen, ChunkParaReindexar
 from app.application.corpus_metadata.poblacion_puertos import PoblacionGuardada
 from app.application.ports import ChunkDelCorpus, ChunkEncontrado, DimensionDeVectorInvalida
 from app.application.seed_corpus.ports import (
@@ -205,6 +205,52 @@ class AlmacenDeChunksEnMemoria:
             original = chunk.registro["chunk"]
             self.chunks[original.chunk_id] = replace(original, sparse_vector=dict(sparse))
         return len(chunks)
+
+    # --- AlmacenDeReindexacionDeContexto (US-279): todos los chunks, ids presentes y filas completas -------------------
+
+    def listar_paginado(self, lote: int) -> Iterator[list[ChunkDeOrigen]]:
+        """Mismo contrato que ``MilvusRepository`` (LSP): vigentes o no, por ``chunk_id``, sin repetir ni omitir."""
+        if not 0 < lote < LIMITE_DE_CONSULTA:
+            raise ValueError("el lote debe ser positivo y menor que el tope de consulta")
+        return self._paginas_de_todos(lote)
+
+    def _paginas_de_todos(self, lote: int) -> Iterator[list[ChunkDeOrigen]]:
+        todos = sorted(self.chunks.values(), key=lambda c: c.chunk_id)
+        for inicio in range(0, len(todos), lote):
+            self._puede("listar_paginado")
+            yield [
+                ChunkDeOrigen(
+                    c.chunk_id,
+                    c.document_id,
+                    c.chunk_index,
+                    c.section,
+                    c.chunk_text,
+                    c.is_current,
+                    asdict(c),
+                )
+                for c in todos[inicio : inicio + lote]
+            ]
+
+    def ids_presentes(self, chunk_ids: Collection[str]) -> frozenset[str]:
+        self._puede("ids_presentes")
+        return frozenset(i for i in chunk_ids if i in self.chunks)
+
+    def escribir_filas(self, filas: Sequence[Mapping[str, Any]]) -> int:
+        self._puede("escribir_filas")
+        for fila in filas:
+            if len(fila["dense_vector"]) != self.dimension:
+                raise DimensionDeVectorInvalida("dimensión distinta de EMBEDDING_DIM")
+            self.chunks[fila["chunk_id"]] = _chunk_de_fila(fila)
+        return len(filas)
+
+
+def _chunk_de_fila(fila: Mapping[str, Any]) -> ChunkDelCorpus:
+    """Un chunk desde una fila de CUALQUIER almacén: las de Milvus llevan ``created_at`` (campo de la colección) y las del fake,
+    ``created_at_ms`` (campo del dataclass); lo que el dataclass no tiene se ignora, como al escribir en una colección con ``upsert``."""
+    campos = {k: v for k, v in fila.items() if k in {f.name for f in fields(ChunkDelCorpus)}}
+    if "created_at" in fila and "created_at_ms" not in campos:
+        campos["created_at_ms"] = fila["created_at"]
+    return ChunkDelCorpus(**campos)
 
 
 class AlmacenConFallosInyectables:

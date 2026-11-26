@@ -261,3 +261,40 @@ restaurar `CORPUS_CHUNK_CONTEXT = ninguno` y el nombre de colección original; e
    change fije.
 3. **Valor por defecto y enmienda de ADR-39 (dueño: usuario, tras la corrida final).** Incluye qué colección queda
    como índice de producción (D5) y si el *reranker* debe ver el contexto (🔗 L1D-336).
+
+## Notas de la implementación (secciones 1 y 2)
+
+Lo que se concretó o se desvió de lo descrito arriba; el código manda sobre esta lista.
+
+- **D2 (valores iniciales):** `CORPUS_CHUNK_CONTEXT_MAX_CHARS` 300, `_LLM_MAX_CHARS` 300, `_LLM_DOC_MAX_CHARS` 4000 (≈ 1000 tokens: con el
+  chunk de 1024 y el prompt cabe en `OLLAMA_CONTEXT_LENGTH = 8192`), `_LLM_CONCURRENCY` 4 y `CORPUS_CONTEXT_REINDEX_BATCH_SIZE` 64, todos en
+  `domain/corpus_seed/contexto_del_chunk.py`. Formato del prefijo: `título | tipo de fuente | tipo de cáncer | sección` y una línea en blanco;
+  las etiquetas de cáncer del catálogo (`mama,prostata`) salen como `mama, prostata`. `VERSION_DE_LA_PLANTILLA = 1`.
+- **D6 (puerto del generador):** `generar` devuelve `FraseDeContexto(frase, motivo)` y no `str | None`: el motivo (`salida_invalida` |
+  `llm_no_disponible`) tiene que llegar al resumen y `None` solo no lo lleva. Contrato igual: una cadena vacía nunca es una frase y nunca lanza
+  por un fallo del LLM. El constructor `ConstructorDeContexto.textos_a_embeber(metadatos, fragmentos, secciones, pendientes)` recibe los
+  fragmentos de UN documento y los índices pedidos (`pendientes`): la reindexación reanudada solo llama al LLM por los que faltan, pero el
+  «inicio del documento» sale siempre de todos los fragmentos vigentes.
+- **D4 (reindexación):** el catálogo entra por `LectorDePoblacionDelCorpus` (sin ningún método de escritura); un chunk vigente cuyo documento no
+  está vigente en el catálogo se reindexa sin contexto y se cuenta en `vigentes_sin_registro` (RN-25: no se inventa). Los chunks de un documento
+  se agrupan por `document_id` contiguo en el orden de la lectura (`chunk_id` = `<document_id>#<n>`). La CLI abre el origen con
+  `MilvusRepository.abrir_existente()` (nunca lo crea) y crea el destino si no existe, como `ingest`.
+- **Tests con servicios reales:** los de integración de la reindexación corren sobre memoria y, donde existe el Compose de test
+  (`integration-rag`), sobre el PostgreSQL `corpus` y el Milvus reales como origen (`fabrica_de_montaje`); el contrato del puerto
+  `AlmacenDeReindexacionDeContexto` lo cumplen igual el almacén falso y `MilvusRepository` (caso `milvus` con `servicios_reales`). Nada de eso
+  se pudo ejecutar contra Milvus real en el desarrollo local.
+- **1.12 (humo del subcomando):** `python -m tests.support.reindex_contexto_cli` ejecuta `ingest.main` en un proceso aparte con los adapters
+  falsos inyectados (el subcomando real no tiene un modo falso por entorno, y no se añadió uno al código de producción).
+- **D7 (suite):** el brazo de contexto es un `Brazo` con `CORPUS_CHUNK_CONTEXT`; la referencia sigue siendo `A0` y declara `ninguno`. La mejora
+  que decide la regla de adopción es el recall@10 total (diferencia pareada por pregunta, IC 95 % por bootstrap con la semilla de la
+  configuración); el MRR se informa. `mejora_fuera_del_ruido: null` (con el motivo `no_medible`) cuando falta el intervalo o el p95. En la corrida real la duración
+  de la construcción del índice y los chunks con respaldo salen de `--resumenes-de-contexto <json>` (`{brazo: resumen de reindex-context}`, validado
+  contra la variante de cada brazo); la memoria sale de `--memoria-del-stack` (ya existente). Una colección de brazo que no corresponde a su variante
+  aborta la corrida; un brazo de contexto con colección propia SÍ consume la población (los `chunk_id` no cambian), a diferencia del brazo de 512 tokens.
+- **Prefijo del brazo en memoria (CI):** omite el tipo de fuente porque `DocumentoCorpus` del dataset no lo trae (solo título y cáncer); la forma del
+  informe no cambia y la calidad no se mide ahí. `reindex-sparse` rechaza una colección con marca de contexto (Gate 2).
+- **Veredicto de adopción (Gate 2, lote R2):** el informe marca `regla_de_adopcion.mejora_fuera_del_ruido` (IC pareado excluye 0 y p95 bajo el
+  tope, como documenta AC-5); no es un veredicto de adopción. **Pregunta abierta para el usuario (H-2):** ¿la adopción del contexto debe
+  exigir además que no haya retroceso y que la viabilidad no sea `no_viable`? Descartado por ahora: exigirlo (cambia un AC documentado).
+- **RN-22:** `corpus_metadata_llm_temperature` pasó de `CorpusIngestSettings` a `AjustesDeContextoLlm` (mismo nombre, valor y variable de entorno)
+  para que la reindexación `llm` use la misma temperatura; no se añade ninguna variable a `.env.example` ni a Compose más allá del bloque de H-1.

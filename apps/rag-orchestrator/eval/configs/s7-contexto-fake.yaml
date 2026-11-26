@@ -1,0 +1,39 @@
+# Comparación de las variantes de CONTEXTO DEL CHUNK con ADAPTERS FALSOS (US-279, L1D-337 tarea 2.3; ADR-45 P1, P6). Es la configuración
+# de la CI de esta familia (regresión de FORMA): no carga modelos, no abre sockets y es reproducible (misma configuración, mismo
+# informe). `s7-contexto.yaml` es su par con los modelos locales y una colección de Milvus por brazo (corrida final del S7). Con
+# adapters falsos las cifras NO dicen nada del RAG real: ninguna se cita como resultado. El índice de cada brazo se construye EN
+# MEMORIA con `texto_a_embeber` de dominio (la misma función de producción) y el brazo `llm` usa el generador de contexto falso, sin
+# ninguna llamada de red. El valor por defecto de CORPUS_CHUNK_CONTEXT no cambia: este informe no adopta nada.
+#   npm run evaluate -- --config apps/rag-orchestrator/eval/configs/s7-contexto-fake.yaml --suite all --report json
+# Cambiar cualquier valor cambia la huella SHA-256 del informe.
+nombre: s7-contexto-fake
+fixture: S7-contexto
+dataset:
+  ruta: data/eval/s5-corpus-ampliado # el corpus de los pares de paráfrasis (`parafrasis-v1`): el mismo en la base y en la final
+semilla_bootstrap: 20261122
+bootstrap_repeticiones: 200
+medicion:
+  reloj: simulado # simulado: 1 ms por lectura (reproducible); real: time.perf_counter
+adaptadores:
+  proveedor: fake
+modelos:
+  llm: fake-guion@1
+umbrales: # los valores vigentes de producción ([S7 resp. 11]); todos los brazos corren con ellos
+  relevance_threshold: 0.30
+  nli_entailment_threshold: 0.7
+  retrieval_top_k: 30
+  rerank_top_n: 10
+catalogo:
+  version: '2026.10.0'
+  ruta_terminos: packages/clinical-catalogs
+comparacion:
+  conjunto_de_desarrollo: true # ADR-45 P2: el dataset completo es de desarrollo (sin partición)
+  tolerancia_retroceso: 1.0 # solo para la CI con fakes (la forma, no la calidad); la corrida real la fija RETRIEVAL_REGRESSION_TOLERANCE
+  metas: apps/rag-orchestrator/eval/configs/metas-iniciales.yaml # el tope p95_evidence_analyses_s de la regla de adopción (no se repite aquí)
+  parafrasis:
+    ruta: data/eval/parafrasis-v1
+    pares_minimos: 10
+  brazos: # la referencia es A0 = `ninguno`; cada brazo declara la variante de CORPUS_CHUNK_CONTEXT de su índice
+    - {nombre: A0, RETRIEVAL_MODE: dense, CORPUS_CHUNK_CONTEXT: ninguno}
+    - {nombre: A0-determinista, RETRIEVAL_MODE: dense, CORPUS_CHUNK_CONTEXT: determinista}
+    - {nombre: A0-llm, RETRIEVAL_MODE: dense, CORPUS_CHUNK_CONTEXT: llm}

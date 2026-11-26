@@ -16,6 +16,8 @@ from app.config.settings import Settings
 from app.domain.atribucion import CLAIM_MAX_WORDS_INICIAL
 from app.domain.fusion_de_candidatos import EstrategiaDeFusion
 from app.domain.ventanas_del_reranker import MODOS_DE_VENTANAS, solape_deja_avanzar
+from app.domain.corpus_seed.contexto_del_chunk import VarianteDeContexto
+from app.evaluation.brazos_contexto import error_de_los_brazos
 from app.evaluation.brazos_recuperacion import REFERENCIA, Brazo
 from app.evaluation.reporte import es_identificador
 from app.evaluation.rutas import raiz_repo
@@ -484,7 +486,7 @@ def _campos_de_etapa_del_brazo(crudo: dict[str, Any]) -> dict[str, Any]:
 
 
 def _campos_del_indice_pares_y_reescritura_del_brazo(crudo: dict[str, Any]) -> dict[str, Any]:
-    """El índice propio (US-278) y los pares y la reescritura (US-277) de un brazo; lo que no declara no aparece."""
+    """El índice propio (US-278), la variante de contexto (US-279) y los pares y la reescritura (US-277) de un brazo; lo que no declara no aparece."""
     campos: dict[str, Any] = {}
     if "indice" in crudo:
         if not es_identificador(str(crudo["indice"])):
@@ -498,7 +500,17 @@ def _campos_del_indice_pares_y_reescritura_del_brazo(crudo: dict[str, Any]) -> d
         if not isinstance(crudo["QUERY_REWRITE_ENABLED"], bool):
             raise ConfigInvalida("QUERY_REWRITE_ENABLED debe ser true o false")
         campos["query_rewrite_enabled"] = crudo["QUERY_REWRITE_ENABLED"]
+    if "CORPUS_CHUNK_CONTEXT" in crudo:
+        campos["variante_de_contexto"] = _variante_de_contexto(crudo["CORPUS_CHUNK_CONTEXT"])
     return campos
+
+
+def _variante_de_contexto(valor: object) -> VarianteDeContexto:
+    """``CORPUS_CHUNK_CONTEXT`` de un brazo (US-279): una de las variantes cerradas; un valor fuera del conjunto nombra la clave."""
+    try:
+        return VarianteDeContexto(str(valor))
+    except ValueError:
+        raise ConfigInvalida("CORPUS_CHUNK_CONTEXT debe ser ninguno, determinista o llm") from None
 
 
 def _numero(valor: object, clave: str) -> float:
@@ -532,6 +544,9 @@ def _comparacion_de(
         )
     if len({b.nombre for b in brazos}) != len(brazos):
         raise ConfigInvalida("los nombres de comparacion.brazos deben ser únicos")
+    motivo = error_de_los_brazos([(b.nombre, b.variante_de_contexto) for b in brazos])
+    if motivo is not None:
+        raise ConfigInvalida(motivo)
     tolerancia = _numero(clave_de(seccion, "tolerancia_retroceso"), "tolerancia_retroceso")
     if not 0.0 <= tolerancia <= 1.0:
         raise ConfigInvalida("comparacion.tolerancia_retroceso debe estar en [0, 1]")
@@ -565,7 +580,10 @@ def _viabilidad_de(
     """Con algún brazo que cambie la etapa del reranker, ``comparacion.metas`` (el YAML de metas) y ``STACK_MEMORY_LIMIT_GB``
     (entorno) son obligatorios: la viabilidad no se calcula con topes inventados. Sin brazos del reranker no se lee nada."""
     if not any(
-        b.cambia_el_reranker or b.coleccion is not None or b.declara_pares_o_reescritura
+        b.cambia_el_reranker
+        or b.coleccion is not None
+        or b.declara_pares_o_reescritura
+        or b.declara_variante_de_contexto
         for b in brazos
     ):
         return None
@@ -600,6 +618,15 @@ def _fuente_de_indice(crudo: dict[str, Any]) -> str:
     )
     if fuente == "milvus" and crudo["adaptadores"]["proveedor"] != "local":
         raise ConfigInvalida("indice.fuente: milvus exige adaptadores.proveedor: local")
+    brazos = (crudo.get("comparacion") or {}).get("brazos") or []
+    if (
+        fuente == "en_memoria"
+        and crudo["adaptadores"]["proveedor"] == "local"
+        and any(isinstance(b, dict) and "CORPUS_CHUNK_CONTEXT" in b for b in brazos)
+    ):  # el índice de cada brazo de contexto con modelos reales es una colección ya reindexada (US-279 D7), no se embebe aquí
+        raise ConfigInvalida(
+            "las variantes de contexto con adaptadores.proveedor: local exigen indice.fuente: milvus"
+        )
     return fuente
 
 

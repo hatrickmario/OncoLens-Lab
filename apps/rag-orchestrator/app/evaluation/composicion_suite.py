@@ -265,11 +265,11 @@ def _buscador_sparse_local(
     Un chunk sin ningún término con peso queda con vector vacío (no aporta a la rama), igual que en la ingesta."""
     if codificador is None:
         return None
-    vectores = [_vector_sparse_o_vacio(codificador, c.texto) for c in dataset.chunks]
+    vectores = [vector_sparse_o_vacio(codificador, c.texto) for c in dataset.chunks]
     return BuscadorSparseEnMemoria(dataset, vectores)
 
 
-def _vector_sparse_o_vacio(codificador: QuerySparseEncoder, texto: str) -> dict[int, float]:
+def vector_sparse_o_vacio(codificador: QuerySparseEncoder, texto: str) -> dict[int, float]:
     try:
         return dict(codificador.embeber_sparse(texto))
     except SinTerminosLexicos:
@@ -355,16 +355,18 @@ def _pares_del_reranker(brazo: Brazo | None, de_la_suite: int | None) -> int | N
     return brazo.reranker_max_pairs
 
 
+def _reescritura_esperada(brazo: Brazo | None) -> bool | None:
+    """La reescritura que el brazo declara (``None`` = no es un brazo). Aun sin reescritor (un adapter ausente) la suite declara lo
+    esperado: así la corrida aborta en vez de medir sin reescribir."""
+    return None if brazo is None else brazo.query_rewrite_enabled is True
+
+
 def _reescritura_del_brazo(
     adaptadores: Adaptadores, brazo: Brazo | None, observaciones: Observaciones
 ) -> QueryRewriter | None:
-    """El reescritor medido del brazo y su indicador en ``Observaciones`` (US-277 AC-5). Solo un brazo reescribe: las demás
-    familias componen el servicio sin reescritura, como antes. El brazo que no declara el indicador corre apagado."""
-    if brazo is None:
-        return None
-    # Aun sin reescritor (un adapter ausente) la suite declara lo esperado: así la corrida aborta en vez de medir sin reescribir.
-    observaciones.reescritura_esperada = brazo.query_rewrite_enabled is True
-    if adaptadores.reescritor is None:
+    """El reescritor medido del brazo (US-277 AC-5). Solo un brazo reescribe: las demás familias componen el servicio sin
+    reescritura, como antes. Lo que el brazo espera ya viene en ``Observaciones`` (``_reescritura_esperada``)."""
+    if brazo is None or adaptadores.reescritor is None:
         return None
     return ReescritorObservado(adaptadores.reescritor, observaciones)
 
@@ -420,7 +422,8 @@ def componer_servicio(
         )
     adaptadores = adaptadores or adaptadores_de_suite(config, dataset, puertos_locales, corpus)
     observaciones = Observaciones(
-        esperada_del_reranker=_etapa_esperada_del_reranker(adaptadores.reranker, brazo)
+        esperada_del_reranker=_etapa_esperada_del_reranker(adaptadores.reranker, brazo),
+        reescritura_esperada=_reescritura_esperada(brazo),
     )
     nli = NliMedido(adaptadores.clasificador_nli, cronometro)
     lista = cargar_lista_de_terminos(config.ruta_terminos)  # se lee y valida una sola vez

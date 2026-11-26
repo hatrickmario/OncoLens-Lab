@@ -52,3 +52,28 @@ def test_el_diccionario_del_reporte_lleva_resultado_y_motivo_por_documento_y_el_
     assert salida["documentos"][0]["estado"] == "error"
     assert salida["documentos"][0]["motivo"] == "sparse: VectorSparseVacio"
     assert salida["resumen"]["error"] == 1 and salida["release_id"] == "release-1"
+
+
+def test_el_contexto_del_chunk_suma_los_respaldos_por_motivo_de_todos_los_documentos() -> None:
+    reporte = _reporte(
+        ResultadoDeIngesta(
+            "a",
+            Estado.EMBEBIDO,
+            contexto_con_respaldo_por_salida_invalida=1,
+            contexto_con_respaldo_por_llm_no_disponible=2,
+        ),
+        ResultadoDeIngesta("b", Estado.EMBEBIDO, contexto_con_respaldo_por_salida_invalida=3),
+    )
+
+    assert reporte.contadores_de_contexto() == {
+        "respaldo_por_salida_invalida": 4,
+        "respaldo_por_llm_no_disponible": 2,
+    }
+    assert reporte.como_diccionario()["contexto_del_chunk"] == reporte.contadores_de_contexto()
+
+
+def test_sin_la_variante_llm_los_contadores_de_contexto_valen_cero() -> None:
+    assert _reporte(ResultadoDeIngesta("a", Estado.EMBEBIDO)).contadores_de_contexto() == {
+        "respaldo_por_salida_invalida": 0,
+        "respaldo_por_llm_no_disponible": 0,
+    }

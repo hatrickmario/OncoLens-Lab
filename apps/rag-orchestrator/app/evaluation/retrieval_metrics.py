@@ -109,7 +109,7 @@ class Metrica:
     mrr_ic95: tuple[float, float]
 
 
-def _bootstrap_ic(
+def bootstrap_ic(
     valores: Sequence[float], semilla: int, repeticiones: int, alfa: float = 0.05
 ) -> tuple[float, float]:
     if not valores:
@@ -133,8 +133,8 @@ def metrica(
         recall_at_10=mean(recalls) if recalls else float("nan"),
         mrr=mean(rrs) if rrs else float("nan"),
         n=len(con_respuesta),
-        recall_ic95=_bootstrap_ic(recalls, semilla, repeticiones),
-        mrr_ic95=_bootstrap_ic(rrs, semilla + 1, repeticiones),
+        recall_ic95=bootstrap_ic(recalls, semilla, repeticiones),
+        mrr_ic95=bootstrap_ic(rrs, semilla + 1, repeticiones),
     )
 
 

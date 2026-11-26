@@ -12,6 +12,11 @@ from dataclasses import dataclass
 
 from app.application.errores import RecuperacionNoDisponibleError
 from app.application.ports import Clock
+from app.domain.corpus_seed.coleccion_de_la_variante import (
+    ColeccionNoCorrespondeALaVariante,
+    es_coleccion_de_contexto,
+    exigir_coleccion_de_la_variante,
+)
 from app.domain.ventanas_del_reranker import ConfiguracionDelReranker
 from app.evaluation.brazos_recuperacion import Brazo
 from app.evaluation.composicion_suite import (
@@ -29,12 +34,23 @@ from app.evaluation.corrida import (
 from app.evaluation.cronometro import Cronometro
 from app.evaluation.fuente_dataset import DatasetSuite
 from app.evaluation.guardas import SuiteAbortada
+from app.evaluation.indice_con_contexto import construir_indice_con_contexto
 from app.evaluation.indice_del_corpus import IndiceDelCorpus
 from app.evaluation.medidores import Observaciones
 from app.evaluation.metricas.resultado import ResultadoConsulta
 from app.evaluation.modelos_locales import PuertosLocales
 from app.evaluation.reescritura_del_brazo import reescritura_efectiva_coincide
 from app.schemas.generated.models import RagMeta, RagQueryInternalResponse
+
+
+@dataclass(frozen=True)
+class IndiceEnMemoriaDelBrazo:
+    """El índice que la suite construyó para un brazo de contexto sobre el corpus del dataset (la CI): lo que costó y lo que cubrió."""
+
+    construccion_s: float
+    chunks: int
+    respaldo_por_salida_invalida: int
+    respaldo_por_llm_no_disponible: int
 
 
 @dataclass(frozen=True)
@@ -50,12 +66,20 @@ class ResultadoDeBrazo:
     """La etapa del reranker tal como corrió la última consulta del brazo (US-278); ``None`` si el adapter no la expone."""
     indice: IndiceDelCorpus | None = None
     """El índice de solo lectura que leyó el brazo (``indice.fuente: milvus``); ``None`` = el corpus del dataset en memoria."""
+    indice_en_memoria: IndiceEnMemoriaDelBrazo | None = None
+    """Solo un brazo de contexto con el corpus en memoria (US-279 AC-5): su índice construido por la suite; ``None`` en el resto."""
 
 
 def exigir_brazo_sin_poblacion(brazo: Brazo, respuesta: RagQueryInternalResponse) -> None:
     """Un brazo con colección propia no consume población (ADR-47): ``identificador_de_chunk`` da el mismo id a chunks distintos
     en la colección de 512 y en la de 1024, y la población se cita por ``chunk_id``; mide solo la recuperación (deuda D7-19)."""
-    if brazo.coleccion is not None and any(fuente.criteria for fuente in respuesta.applicability):
+    if (
+        brazo.coleccion is not None
+        and not es_coleccion_de_contexto(
+            brazo.coleccion
+        )  # una colección de contexto conserva los chunk_id de la de origen (US-279 D4)
+        and any(fuente.criteria for fuente in respuesta.applicability)
+    ):
         raise SuiteAbortada(
             f"el brazo {brazo.nombre} lee su propia colección y no puede consumir población (ADR-47): "
             "sus chunk_id colisionan con los de la colección de la suite"
@@ -78,6 +102,43 @@ def exigir_reescritura_del_brazo(
         )
 
 
+def exigir_coleccion_del_brazo(brazo: Brazo, indice: IndiceDelCorpus | None) -> None:
+    """La colección que lee un brazo de contexto es la de SU variante (US-279 D5, RN-22): si no, la corrida mediría un índice ajeno."""
+    if brazo.variante_de_contexto is None or indice is None:
+        return
+    try:
+        exigir_coleccion_de_la_variante(indice.resumen.coleccion, brazo.variante_de_contexto)
+    except ColeccionNoCorrespondeALaVariante as error:
+        raise SuiteAbortada(f"el brazo {brazo.nombre}: {error}") from None
+
+
+def _con_el_indice_del_brazo(
+    config: ConfigSuite,
+    brazo: Brazo,
+    adaptadores: Adaptadores,
+    dataset: DatasetSuite,
+    cronometro: Cronometro,
+    indice: IndiceDelCorpus | None,
+) -> tuple[Adaptadores, IndiceEnMemoriaDelBrazo | None]:
+    """Un brazo de contexto sobre el corpus en memoria construye su índice (cronometrado); con ``indice.fuente: milvus`` lee su
+    colección y no se vuelve a embeber nada. Un brazo sin variante usa los adaptadores de la suite tal cual."""
+    if (
+        brazo.variante_de_contexto is None
+        or indice is not None
+        or config.indice_fuente != "en_memoria"
+    ):
+        return adaptadores, None
+    construido, segundos = cronometro.cronometrar(
+        construir_indice_con_contexto, adaptadores, dataset, brazo.variante_de_contexto
+    )
+    return construido.adaptadores, IndiceEnMemoriaDelBrazo(
+        segundos,
+        construido.chunks,
+        construido.respaldo_por_salida_invalida,
+        construido.respaldo_por_llm_no_disponible,
+    )
+
+
 async def evaluar_brazos(
     config: ConfigSuite,
     comparacion: Comparacion,
@@ -98,6 +159,7 @@ async def evaluar_brazos(
         for brazo in comparacion.brazos:
             if brazo.coleccion not in indices:
                 indices[brazo.coleccion] = abrir_indice(brazo.coleccion)
+            exigir_coleccion_del_brazo(brazo, indices[brazo.coleccion])
     adaptadores = adaptadores or adaptadores_de_suite(
         config,
         dataset,
@@ -127,6 +189,9 @@ async def _evaluar_brazo(
     adaptadores: Adaptadores,
     indice: IndiceDelCorpus | None = None,
 ) -> ResultadoDeBrazo:
+    adaptadores, en_memoria = _con_el_indice_del_brazo(
+        config, brazo, adaptadores, dataset, cronometro, indice
+    )
     servicio = componer_servicio(
         config,
         dataset,
@@ -163,5 +228,12 @@ async def _evaluar_brazo(
             f"el brazo {brazo.nombre} corrió consultas con un reranker distinto del que declara (RERANKER_*)"
         )
     return ResultadoDeBrazo(
-        brazo, servicio, resultados, metas, sin_terminos, servicio.observaciones.reranker, indice
+        brazo,
+        servicio,
+        resultados,
+        metas,
+        sin_terminos,
+        servicio.observaciones.reranker,
+        indice,
+        en_memoria,
     )

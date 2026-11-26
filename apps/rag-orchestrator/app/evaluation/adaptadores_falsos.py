@@ -15,7 +15,11 @@ from pathlib import Path
 import yaml
 
 from app.application.chat.posiciones import posiciones_por_documento
-from app.application.corpus_ingestion.ports import ChunkParaReindexar
+from app.application.corpus_ingestion.ports import (
+    ChunkParaReindexar,
+    EntradaDelGeneradorDeContexto,
+    FraseDeContexto,
+)
 from app.application.ports import (
     CandidatoParaReranker,
     ChunkEncontrado,
@@ -234,6 +238,17 @@ class ReescritorFalso:
 
     async def reformular(self, pregunta: str) -> tuple[str, ...]:
         return self._guion.get(pregunta, ())
+
+
+class GeneradorDeContextoFalso:
+    """``GeneradorDeContextoDeChunk`` falso de la suite (US-279): una frase determinista que nombra el título del documento y ninguna
+    llamada de red. Cumple el contrato del puerto: una frase no vacía o un motivo, y nunca lanza."""
+
+    def generar(self, entrada: EntradaDelGeneradorDeContexto, chunk: str) -> FraseDeContexto:
+        titulo = entrada.metadatos.titulo if entrada.metadatos else None
+        return FraseDeContexto(
+            f"Fragmento del documento {titulo}." if titulo else "Fragmento de un documento."
+        )
 
 
 class NliLexico:

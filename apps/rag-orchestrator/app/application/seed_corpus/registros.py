@@ -16,6 +16,7 @@ from app.application.seed_corpus.ports import RegistroDeDocumento
 from app.domain.corpus_metadata.origen import metadatos_sin_extraer
 from app.domain.corpus_metadata.resultado import MetadatosResueltos
 from app.domain.corpus_seed.admisibilidad import Admision, ClaseDeLicencia
+from app.domain.corpus_seed.contexto_del_chunk import SECCION_UNICA, MetadatosDelContexto
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
 from app.domain.corpus_seed.versionado import (
     STATUS_EMBEBIDO,
@@ -24,7 +25,6 @@ from app.domain.corpus_seed.versionado import (
     STATUS_RECHAZADO,
 )
 
-SECCION_UNICA = "texto_completo"
 # La columna ``license_class`` es NOT NULL con CHECK sobre cuatro valores y ``rechazado_licencia`` no tiene clase propia
 # (el catálogo no cambia en este change): un rechazado lleva la más restrictiva. La verdad de su licencia es el texto
 # literal de ``license`` y su ``status``; nunca es vigente ni tiene chunks.
@@ -194,6 +194,19 @@ def _registro(
 def etiquetas_de_cancer(documento: DocumentoDeSemilla) -> str:
     """Formato de ``cancer_type_tags`` en el catálogo y en Milvus: etiquetas separadas por coma, sin espacios."""
     return ",".join(documento.cancer_type_tags)
+
+
+def metadatos_del_contexto_de_documento(documento: DocumentoDeSemilla) -> MetadatosDelContexto:
+    """Los campos del prefijo (US-279) tal como los copiará ``registro_embebido`` al catálogo: la ingesta y la reindexación dan el mismo
+    prefijo al mismo documento."""
+    return MetadatosDelContexto(
+        documento.title, documento.source_type, etiquetas_de_cancer(documento)
+    )
+
+
+def metadatos_del_contexto_de_registro(registro: RegistroDeDocumento) -> MetadatosDelContexto:
+    """Los mismos campos leídos del catálogo (``corpus.corpus_document``) en la reindexación."""
+    return MetadatosDelContexto(registro.title, registro.source_type, registro.cancer_type_tags)
 
 
 def chunks_del_documento(

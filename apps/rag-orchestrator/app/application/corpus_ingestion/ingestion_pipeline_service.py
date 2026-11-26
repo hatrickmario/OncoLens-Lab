@@ -14,8 +14,14 @@ from collections.abc import Sequence
 from dataclasses import replace
 from datetime import date
 
+from app.application.corpus_ingestion.constructores_de_contexto import ConstructorNinguno
 from app.application.corpus_ingestion.etapas import FalloDeEtapa, etapa
-from app.application.corpus_ingestion.ports import ResolutorDeMetadatos, SparsePassageEncoder
+from app.application.corpus_ingestion.ports import (
+    ConstructorDeContexto,
+    ResolutorDeMetadatos,
+    ResultadoDeContexto,
+    SparsePassageEncoder,
+)
 from app.application.corpus_ingestion.reporte import (
     Estado,
     ReporteDeIngesta,
@@ -43,6 +49,7 @@ from app.application.seed_corpus.registros import (
     chunks_del_documento,
     identificador_de_chunk,
     identificador_de_documento,
+    metadatos_del_contexto_de_documento,
     registro_con_error,
     registro_embebido,
     registro_normalizado,
@@ -94,7 +101,9 @@ class IngestionPipelineService:
         fecha_de_corte: date,
         extractor_de_poblacion: ExtractorDePoblacion | None = None,
         almacen_de_poblacion: AlmacenDePoblacion | None = None,
+        constructor_de_contexto: ConstructorDeContexto | None = None,
     ) -> None:
+        self._constructor_de_contexto = constructor_de_contexto or ConstructorNinguno()
         self._extractor_de_poblacion = extractor_de_poblacion
         self._almacen_de_poblacion = almacen_de_poblacion
         self._catalogo = catalogo
@@ -187,8 +196,9 @@ class IngestionPipelineService:
         self._catalogo.guardar_documento(
             registro_normalizado(documento, admision, checksum, self._reloj.ahora())
         )
-        vectores = self._embeber(fragmentos)
-        vectores_sparse = self._codificar_sparse(fragmentos)
+        contexto = self._construir_contexto(documento, fragmentos)
+        vectores = self._embeber(contexto.textos)
+        vectores_sparse = self._codificar_sparse(contexto.textos)
         document_id = identificador_de_documento(documento.document_key, checksum)
         metadatos = self._resolver_metadatos(documento, texto, fragmentos)
         metadatos, poblacion = self._extraer_poblacion(
@@ -206,7 +216,18 @@ class IngestionPipelineService:
             metadatos=metadatos,
             document_id=registro.document_id,
             poblacion=poblacion,
+            contexto_con_respaldo_por_salida_invalida=contexto.respaldo_por_salida_invalida,
+            contexto_con_respaldo_por_llm_no_disponible=contexto.respaldo_por_llm_no_disponible,
         )
+
+    def _construir_contexto(
+        self, documento: DocumentoDeSemilla, fragmentos: Sequence[str]
+    ) -> ResultadoDeContexto:
+        """El texto que entra a los codificadores según la variante; ``chunks_del_documento`` sigue recibiendo los originales (RN-04)."""
+        with etapa("contexto"):
+            return self._constructor_de_contexto.textos_a_embeber(
+                metadatos_del_contexto_de_documento(documento), fragmentos
+            )
 
     def _fragmentar(self, texto: str) -> list[str]:
         fragmentos = fragmentar(

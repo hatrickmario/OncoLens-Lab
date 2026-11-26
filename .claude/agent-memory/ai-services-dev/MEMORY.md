@@ -18,3 +18,4 @@
 - [Cobertura de próstata (L1D-331)](cobertura_prostata_l1d331_trampas.md) — top-3 por decorador del Reranker, reporte_base opcional y trampas del catálogo tmp
 - [Sinónimos con relación (L1D-335)](sinonimos_relacion_l1d335_trampas.md) — cargadores S-1, meta de paráfrasis vs esquema del baseline y push a rama ajena
 - [Brazos de pares y reescritura (L1D-335 entrega 2)](brazos_pares_reescritura_l1d335b_trampas.md) — reescritura efectiva en el puerto, variante de pares y trampas del arnés
+- [Contexto del chunk (L1D-337)](contexto_chunk_l1d337_trampas.md) — dónde vive el prefijo, reindex-context en memoria y trampas de scripts y de ingest.crear_motor
