@@ -212,6 +212,9 @@ class AlmacenDeChunksEnMemoria:
         """Mismo contrato que ``MilvusRepository`` (LSP): vigentes o no, por ``chunk_id``, sin repetir ni omitir."""
         if not 0 < lote < LIMITE_DE_CONSULTA:
             raise ValueError("el lote debe ser positivo y menor que el tope de consulta")
+        return self._paginas_de_todos(lote)
+
+    def _paginas_de_todos(self, lote: int) -> Iterator[list[ChunkDeOrigen]]:
         todos = sorted(self.chunks.values(), key=lambda c: c.chunk_id)
         for inicio in range(0, len(todos), lote):
             self._puede("listar_paginado")

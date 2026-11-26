@@ -198,9 +198,15 @@ def test_la_reindexacion_llm_da_al_generador_la_misma_entrada_que_la_ingesta_par
 
     entorno.reindexar(VarianteDeContexto.LLM)
 
-    entradas_ingesta = {e for e, _ in en_la_ingesta.llamadas}
-    entradas_reindexacion = {e for e, _ in en_la_reindexacion.llamadas}
-    assert entradas_ingesta and entradas_ingesta <= entradas_reindexacion
+    # ``i-gl-1`` tiene su versión 1 no vigente en el origen: no se reindexa y la ingesta de la versión 1 no se compara.
+    comparados = {d.title for d in documentos_fx_06c_b("i-ct-1", "i-lit-1", "i-lit-2")}
+    entradas_ingesta = {e for e, _ in en_la_ingesta.llamadas if e.metadatos.titulo in comparados}  # type: ignore[union-attr]
+    entradas_reindexacion = {
+        e
+        for e, _ in en_la_reindexacion.llamadas
+        if e.metadatos.titulo in comparados  # type: ignore[union-attr]
+    }
+    assert len(entradas_ingesta) == len(comparados) and entradas_ingesta == entradas_reindexacion
 
 
 @pytest.mark.ac("US-279", 6)
