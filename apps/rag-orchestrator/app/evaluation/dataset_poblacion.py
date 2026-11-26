@@ -319,14 +319,17 @@ def _estados(contenido: dict[str, Any]) -> tuple[CasoDeEstadoDorado, ...]:
 
 
 def _rendija(crudo: object) -> str | None:
-    if crudo is not None and crudo not in RENDIJAS:
-        raise ValueError("rendija fuera del conjunto")
-    return None if crudo is None else str(crudo)
+    return _marca_opcional(crudo, RENDIJAS, "rendija")
 
 
 def _ventana(crudo: object) -> str | None:
-    if crudo is not None and crudo not in VENTANAS:
-        raise ValueError("ventana fuera del conjunto")
+    return _marca_opcional(crudo, VENTANAS, "ventana")
+
+
+def _marca_opcional(crudo: object, conjunto: tuple[str, ...], nombre: str) -> str | None:
+    """Una marca opcional del dataset: ausente es ``None``; presente, debe pertenecer al conjunto cerrado."""
+    if crudo is not None and crudo not in conjunto:
+        raise ValueError(f"{nombre} fuera del conjunto")
     return None if crudo is None else str(crudo)
 
 
