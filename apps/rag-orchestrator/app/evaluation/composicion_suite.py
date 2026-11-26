@@ -19,6 +19,7 @@ from app.application.ports import (
     PuertosDelCorpus,
     ProhibitedTermsChecker,
     QueryEmbedder,
+    QueryRewriter,
     QuerySparseEncoder,
     Reranker,
     SinTerminosLexicos,
@@ -36,6 +37,7 @@ from app.config.settings import (
 from app.domain.criterios_aplicabilidad import CriteriosDeAplicabilidad
 from app.domain.expansion_contextual import ParametrosDeExpansionContextual
 from app.domain.pregunta_sin_tema_propio import MarcosDePregunta
+from app.domain.reescritura import ParametrosDeReescritura
 from app.domain.terminos_del_caso import CatalogoDeTerminos
 from app.domain.ventanas_del_reranker import ConfiguracionDelReranker
 from app.evaluation.adaptadores_falsos import (
@@ -48,6 +50,7 @@ from app.evaluation.adaptadores_falsos import (
     GeneradorGuionado,
     LectorReleaseFijo,
     NliLexico,
+    ReescritorFalso,
     RerankerLexico,
 )
 from app.evaluation.brazos_recuperacion import Brazo
@@ -73,6 +76,7 @@ from app.evaluation.medidores import (
     NliMedido,
     Observaciones,
     RerankerObservado,
+    ReescritorObservado,
 )
 from app.evaluation.metricas.rechazos_legitimos import ids_de_preguntas_de_control_legitimo
 from app.evaluation.modelos_locales import PuertosLocales
@@ -80,6 +84,7 @@ from app.evaluation.reranker_con_ventanas import RerankerConVentanas
 from app.infrastructure.catalogo_clinico.aplicabilidad import CriteriosDelCatalogo
 from app.infrastructure.catalogo_clinico.datos_criticos import cargar_datos_criticos
 from app.infrastructure.catalogo_clinico.manifiesto import cargar_catalogo_del_manifiesto
+from app.infrastructure.catalogo_clinico.sinonimos import cargar_terminos_del_catalogo
 from app.infrastructure.fake.tarea_de_poblacion_silenciosa import TareaDePoblacionSilenciosa
 from app.infrastructure.language.detector_local import DetectorDeIdiomaLocal
 from app.infrastructure.lenguaje.terminos_prohibidos import (
@@ -146,9 +151,11 @@ def parametros_de_recuperacion(
     respaldo: ParametrosDelRespaldo = PARAMETROS_DEL_RESPALDO_DE_LA_SUITE,
     reranker_max_pairs: int | None = None,
     expansion: ExpansionDeLaSuite | None = None,
+    reescritura: ParametrosDeReescritura = ParametrosDeReescritura(),
 ) -> ParametrosDeRecuperacion:
     """Los parámetros del servicio de la suite; ``reranker_max_pairs`` solo lo fija un reranker local (``None`` = sin tope).
-    Sin ``expansion`` el loop contextual queda apagado (como en las demás familias); con ella, el indicador de la corrida."""
+    Sin ``expansion`` el loop contextual queda apagado (como en las demás familias); con ella, el indicador de la corrida.
+    ``reescritura`` trae el plazo y las iteraciones del segundo loop; solo un brazo que lo declara lo enciende (US-277)."""
     u = config.umbrales
     base = ParametrosDeRecuperacion(
         relevance_threshold=u.relevance_threshold,
@@ -162,6 +169,7 @@ def parametros_de_recuperacion(
         claim_max_words=u.claim_max_words,
         respaldo=respaldo,
         reranker_max_pairs=reranker_max_pairs,
+        reescritura=reescritura,
     )
     if expansion is not None:
         base = replace(base, expansion_contextual=expansion.parametros)
@@ -171,9 +179,12 @@ def parametros_de_recuperacion(
 def _con_recuperacion_del_brazo(
     parametros: ParametrosDeRecuperacion, brazo: Brazo
 ) -> ParametrosDeRecuperacion:
-    """``RETRIEVAL_*`` del brazo sobre los valores por defecto del servicio (*dense*)."""
+    """``RETRIEVAL_*``, ``RERANKER_MAX_PAIRS`` y ``QUERY_REWRITE_ENABLED`` del brazo sobre los valores por defecto del servicio
+    (*dense*, sin reescritura)."""
     return replace(
         parametros,
+        reranker_max_pairs=_pares_del_reranker(brazo, parametros.reranker_max_pairs),
+        reescritura=replace(parametros.reescritura, habilitada=brazo.query_rewrite_enabled is True),
         retrieval_mode=brazo.modo,
         retrieval_fusion=(parametros.retrieval_fusion if brazo.fusion is None else brazo.fusion),
         rrf_k=parametros.rrf_k if brazo.rrf_k is None else brazo.rrf_k,
@@ -192,6 +203,10 @@ class Adaptadores:
     generador: EvidenceGenerator
     clasificador_nli: NliClassifier
     proponente: PoblacionTask
+    reescritor: QueryRewriter | None = None
+    """El reescritor del segundo loop (US-238, RN-12): falso en la suite ``fake``, el LLM local en la ``local``."""
+    reescritura: ParametrosDeReescritura = ParametrosDeReescritura()
+    """``QUERY_REWRITE_MAX_ITERATIONS`` y ``_DEADLINE_MS`` de la suite; ``habilitada`` lo fija cada brazo (US-277)."""
     codificador_sparse: QuerySparseEncoder | None = None
     """La rama *sparse* (US-133): el codificador de la consulta y la búsqueda sobre los mismos chunks que la *dense*."""
     buscador_sparse: SparseChunkSearch | None = None
@@ -208,6 +223,7 @@ def _adaptadores_falsos(dataset: DatasetSuite) -> Adaptadores:
         generador=GeneradorGuionado(dataset),
         clasificador_nli=NliLexico(),
         proponente=TareaDePoblacionSilenciosa(),
+        reescritor=ReescritorFalso(),
         codificador_sparse=sparse,
         buscador_sparse=BuscadorSparseEnMemoria(
             dataset, [sparse.vector_de(c.texto) for c in dataset.chunks]
@@ -234,6 +250,8 @@ def _adaptadores_locales(
         generador=puertos.generador,
         clasificador_nli=puertos.clasificador_nli,
         proponente=puertos.proponente,  # el de producción: la suite local no usa el silencioso
+        reescritor=puertos.reescritor,
+        reescritura=puertos.reescritura,
         codificador_sparse=puertos.embedder_sparse,
         buscador_sparse=_buscador_sparse_local(puertos.embedder_sparse, dataset),
     )
@@ -304,6 +322,7 @@ def _reranker_del_brazo(base: Reranker, brazo: Brazo | None) -> Reranker:
         modo_de_ventanas=brazo.reranker_modo,
         solape=brazo.reranker_solape,
         max_length=brazo.reranker_max_length,
+        max_pairs=brazo.reranker_max_pairs,
     )
 
 
@@ -323,7 +342,40 @@ def _etapa_esperada_del_reranker(
         max_length=de_la_suite.max_length
         if brazo.reranker_max_length is None
         else brazo.reranker_max_length,
+        max_pairs=de_la_suite.max_pairs
+        if brazo.reranker_max_pairs is None
+        else brazo.reranker_max_pairs,
     )
+
+
+def _pares_del_reranker(brazo: Brazo | None, de_la_suite: int | None) -> int | None:
+    """``RERANKER_MAX_PAIRS`` con el que corre el servicio: el que el brazo declara (US-277 AC-6) o, si no, el de la suite."""
+    if brazo is None or brazo.reranker_max_pairs is None:
+        return de_la_suite
+    return brazo.reranker_max_pairs
+
+
+def _reescritura_del_brazo(
+    adaptadores: Adaptadores, brazo: Brazo | None, observaciones: Observaciones
+) -> QueryRewriter | None:
+    """El reescritor medido del brazo y su indicador en ``Observaciones`` (US-277 AC-5). Solo un brazo reescribe: las demás
+    familias componen el servicio sin reescritura, como antes. El brazo que no declara el indicador corre apagado."""
+    if brazo is None:
+        return None
+    # Aun sin reescritor (un adapter ausente) la suite declara lo esperado: así la corrida aborta en vez de medir sin reescribir.
+    observaciones.reescritura_esperada = brazo.query_rewrite_enabled is True
+    if adaptadores.reescritor is None:
+        return None
+    return ReescritorObservado(adaptadores.reescritor, observaciones)
+
+
+def _terminos_para_reescribir(
+    config: ConfigSuite, tipos_habilitados: tuple[str, ...], brazo: Brazo | None
+) -> frozenset[str]:
+    """Los términos del catálogo montado que la reescritura puede agregar (RN-27): solo se leen si el brazo reescribe."""
+    if brazo is None or brazo.query_rewrite_enabled is not True:
+        return frozenset()
+    return cargar_terminos_del_catalogo(config.ruta_terminos, tipos_habilitados)
 
 
 def _catalogo_de(
@@ -422,9 +474,12 @@ def componer_servicio(
             puertos_locales.respaldo if puertos_locales else PARAMETROS_DEL_RESPALDO_DE_LA_SUITE,
             puertos_locales.reranker_max_pairs if puertos_locales else reranker_max_pairs,
             expansion,
+            adaptadores.reescritura,
         ),
         embedder_sparse=embedder_sparse,
         buscador_sparse=buscador_sparse,
+        reescritor=_reescritura_del_brazo(adaptadores, brazo, observaciones),
+        terminos_del_catalogo=_terminos_para_reescribir(config, tipos_habilitados, brazo),
         marcos_de_pregunta=expansion.marcos if expansion else None,
         catalogo_de_terminos=expansion.terminos if expansion else None,
     )

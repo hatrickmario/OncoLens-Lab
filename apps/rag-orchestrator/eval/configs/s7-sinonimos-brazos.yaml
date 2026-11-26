@@ -1,0 +1,50 @@
+# Comparación de los brazos de PARES y de REESCRITURA con los MODELOS LOCALES REALES sobre la ingesta de `l1d-119` (US-277,
+# L1D-335 tareas 4.1b y 4.4; ADR-39, ADR-45 P1, P6, RN-12). Corre a mano en el MacBook de referencia con el stack limpio, en la
+# CORRIDA FINAL del S7 con `ai-eval-runner`; la CI usa `s7-sinonimos-brazos-fake.yaml` (regresión de forma). La reescritura usa el
+# LLM local (RN-12) y solo agrega términos del catálogo montado (RN-27); el catálogo es el AMPLIADO de la tarea 1.5.
+#   OLLAMA_CONTEXT_LENGTH=8192 OLLAMA_FLASH_ATTENTION=1 OLLAMA_KV_CACHE_TYPE=q8_0 ollama serve   # LLM fuera de Docker
+#   RETRIEVAL_REGRESSION_TOLERANCE=<valor de la preinscripción P1> STACK_MEMORY_LIMIT_GB=<ADR-39> \
+#     python -m app.evaluation.evaluate --config eval/configs/s7-sinonimos-brazos.yaml --suite retrieval \
+#       --memoria-del-stack <memoria.json> --salida reports/eval
+# Los pesos (rutas y SHA-256) y las claves de ADR-39 llegan por el entorno (`~/adr39-modelos/modelos.env`); sin ellos la suite
+# termina con código ≠ 0 nombrando la variable y no escribe cifras. `memoria.json` = `{"A0": <GB>, ...}` con la memoria del stack
+# completo que mide `ai-eval-runner` por brazo; sin ella los brazos quedan `no_medido` (nunca viables ni adoptables).
+# Cambiar cualquier valor cambia la huella SHA-256 del informe. Los valores de los brazos viven SOLO aquí (RN-22, design D4).
+nombre: s7-sinonimos-brazos
+fixture: S7-sinonimos-brazos
+dataset:
+  ruta: data/eval/s5-corpus-ampliado # las preguntas sobre los documentos de la ingesta; los pares de `parafrasis-v1` son del mismo corpus
+semilla_bootstrap: 20261122
+bootstrap_repeticiones: 10000
+medicion:
+  reloj: real # time.perf_counter: el p95 de la etapa y el de la consulta son de verdad
+  rss_limite_mib: 4489 # el mismo límite de US-233a / local.yaml
+adaptadores:
+  proveedor: local
+  urls:
+    llm: http://127.0.0.1:11434/v1 # Ollama nativo; ninguna ruta hacia la nube (lista local cerrada en código)
+modelos:
+  llm: gemma4:26b-a4b-it-q4_K_M # G, LLM decidido en ADR-39
+# Sin bloque `umbrales` (RN-22, `[S7 resp. 11]`): todos los brazos corren con los umbrales ACTUALES, que la suite lee de `Settings`
+# (RELEVANCE_THRESHOLD, NLI_ENTAILMENT_THRESHOLD, RETRIEVAL_TOP_K y RERANK_TOP_N del entorno) y el informe registra.
+catalogo:
+  version: '2026.10.0'
+  ruta_terminos: packages/clinical-catalogs
+# `[S7 resp. 10]`: la ingesta de `l1d-119` (la misma de la corrida base) en SOLO LECTURA: colección de Milvus (`MILVUS_URI`,
+# `MILVUS_COLLECTION_NAME`) y catálogo `corpus` (`CORPUS_DATABASE_URL`, rol `rag_corpus`) del entorno. Sin chunks vigentes aborta.
+indice:
+  fuente: milvus
+corpus:
+  declarado: l1d-119
+comparacion:
+  # tolerancia_retroceso: sin valor aquí. RETRIEVAL_REGRESSION_TOLERANCE (entorno) lo fija la preinscripción P1 (RN-22).
+  conjunto_de_desarrollo: true # ADR-45 P2: el corpus ampliado y sus preguntas son de desarrollo; no hay validación ni prueba
+  metas: apps/rag-orchestrator/eval/configs/metas-iniciales.yaml # el tope p95_evidence_analyses_s de la viabilidad
+  parafrasis:
+    ruta: data/eval/parafrasis-v1
+    pares_minimos: 10
+  brazos: # sin RERANKER_MAX_PAIRS = el vigente (Settings); 30 = el brazo de US-277 AC-6; sin ventanas: el reranker de la suite
+    - {nombre: A0, RETRIEVAL_MODE: dense, QUERY_REWRITE_ENABLED: false} # referencia: el catálogo ampliado, sin reescritura y con los pares vigentes
+    - {nombre: A0-reescritura, RETRIEVAL_MODE: dense, QUERY_REWRITE_ENABLED: true}
+    - {nombre: A0-30-pares, RETRIEVAL_MODE: dense, QUERY_REWRITE_ENABLED: false, RERANKER_MAX_PAIRS: 30}
+    - {nombre: A0-reescritura-30-pares, RETRIEVAL_MODE: dense, QUERY_REWRITE_ENABLED: true, RERANKER_MAX_PAIRS: 30}

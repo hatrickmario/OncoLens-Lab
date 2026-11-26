@@ -27,6 +27,7 @@ class RerankerConVentanas(Reranker, Protocol):
         modo_de_ventanas: ModoDeVentanas | None = None,
         solape: int | None = None,
         max_length: int | None = None,
+        max_pairs: int | None = None,
     ) -> RerankerConVentanas:
         """El mismo reranker, sobre los mismos modelos ya cargados, con la etapa cambiada; ``None`` conserva el valor."""
         ...

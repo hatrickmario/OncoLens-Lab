@@ -95,6 +95,17 @@ def test_mas_pares_que_el_maximo_falla_con_el_error_del_puerto_sin_truncar_en_si
     assert sesion.lotes == []
 
 
+def test_una_variante_con_otro_tope_de_pares_admite_ese_tope_y_la_base_conserva_el_suyo() -> None:
+    base = _reranker(max_pairs=2)
+    treinta = base.variante(max_pairs=3)
+    candidatos = [_chunk("a"), _chunk("b"), _chunk("c")]
+
+    assert len(treinta.puntuar("p", candidatos)) == 3
+    assert treinta.configuracion.max_pairs == 3 and base.configuracion.max_pairs == 2
+    with pytest.raises(FalloDeInferencia):
+        base.puntuar("p", candidatos)
+
+
 def test_sin_candidatos_devuelve_lista_vacia_sin_invocar_al_modelo() -> None:
     sesion = SesionDeLogitsFalsa()
 
