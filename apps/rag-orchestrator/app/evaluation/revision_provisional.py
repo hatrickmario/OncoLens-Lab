@@ -20,6 +20,8 @@ ROTULO_DE_REVISION_PROVISIONAL: Final = "Revisión provisional de IA; sin valida
 """Rótulo legible que acompaña a la marca en los reportes; no cambia ningún veredicto."""
 ROLES_DE_REVISION_PROVISIONAL: Final = ("ia",)
 """Rol que firma la revisión provisional; un oncólogo no se declara aquí: su revisión es ``revisada_por_oncologo``."""
+PATRON_DE_FECHA_ISO: Final = r"^\d{4}-\d{2}-\d{2}$"
+"""Mismo ``pattern`` que ``fecha`` en ``comun.schema.json``; un test de paridad lo comprueba."""
 
 
 @dataclass(frozen=True)
