@@ -52,6 +52,17 @@
             "items": { "type": "string", "minLength": 1 }
           }
         },
+        "subsetOf": {
+          "description": "Jerarquía entre categorías de equivalences (S7, design D11): `{ \"bajo\": \"negativo\" }` declara que `bajo` pertenece también a `negativo`",
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": { "pattern": "^[a-z0-9_]+$" },
+          "additionalProperties": { "type": "string", "pattern": "^[a-z0-9_]+$" }
+        },
+        "equivalenceMatch": {
+          "description": "Cómo se busca cada alternativa de equivalences en el valor del paciente (S7, design D10): `prefijo` (por defecto) o `componente` (aparece en el valor, no seguida de un dígito: `M1` acepta `T3aN1M1b` y no `M10`)",
+          "enum": ["prefijo", "componente"]
+        },
         "partial": {
           "type": "object",
           "additionalProperties": false,
@@ -78,7 +89,8 @@
         "destination": { "$ref": "#/$defs/destinoConLista" },
         "isExclusionary": { "type": "boolean" },
         "rule": { "$ref": "#/$defs/regla" },
-        "estado": { "$ref": "comun.schema.json#/$defs/estado" }
+        "estado": { "$ref": "comun.schema.json#/$defs/estado" },
+        "revision_provisional": { "$ref": "comun.schema.json#/$defs/revisionProvisional" }
       }
     }
   }

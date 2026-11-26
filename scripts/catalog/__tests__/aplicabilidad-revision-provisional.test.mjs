@@ -113,6 +113,21 @@ describe('catalog:validate · rule.subsetOf de un criterio de aplicabilidad (S7.
   );
 });
 
+describe('catalog:validate · subsetOf sin ciclos (S7.5, D11)', () => {
+  it(
+    'termina con código distinto de 0 cuando subsetOf forma un ciclo entre categorías [US-121 AC-5]',
+    () => {
+      const catalogo = copiaAlterada(conSubconjunto({ bajo: 'negativo', negativo: 'bajo' }));
+
+      const resultado = ejecutarValidador(catalogo);
+
+      expect(resultado.codigo).not.toBe(0);
+      expect(resultado.salida).toContain('subconjunto_sin_equivalencia mama/estado_her2');
+    },
+    PLAZO_PROCESO_MS,
+  );
+});
+
 describe('catalog:validate · rule.equivalenceMatch de un criterio de aplicabilidad (S7.5, D10)', () => {
   const conLectura = (modo) => (contenido) => {
     const regla = criterioDe(contenido, 'estadio').rule;

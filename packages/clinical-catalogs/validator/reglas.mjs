@@ -16,6 +16,11 @@ export function vocabularioDe(esquemas) {
     operadores: condicion.operator.enum,
     respuestasSiDesconocida: item.whenConditionUnknown.enum,
     tiposDeDocumento: item.sourceDocumentTypes.items.enum,
+    // La marca `revision_provisional` (S7, D9) se define una sola vez en `comun`: roles y fecha salen de ahí.
+    rolesDeRevisionProvisional: esquemas.comun.$defs.revisionProvisional.properties.rol.enum,
+    fechaDeRevisionProvisional: new RegExp(
+      esquemas.comun.$defs.revisionProvisional.properties.fecha.pattern,
+    ),
   };
 }
 
@@ -144,6 +149,47 @@ export function exigirEstadoValido(item, vocabulario) {
   return vocabulario.estados.includes(item.estado) ? null : 'estado_invalido';
 }
 
+/**
+ * S7 (design D9): `revision_provisional` con un rol del vocabulario del esquema común y una fecha ISO. Nombra el campo
+ * (`rol` o `fecha`), nunca su valor. Va antes que el esquema para que el mensaje diga qué criterio y qué campo.
+ */
+export function exigirRevisionProvisionalValida(item, vocabulario) {
+  const marca = item.revision_provisional;
+  if (marca === undefined) return null;
+  const { rol, fecha } = esObjeto(marca) ? marca : {};
+  if (!vocabulario.rolesDeRevisionProvisional.includes(rol)) {
+    return { codigo: 'revision_provisional_invalida', campo: 'rol' };
+  }
+  return typeof fecha === 'string' && vocabulario.fechaDeRevisionProvisional.test(fecha)
+    ? null
+    : { codigo: 'revision_provisional_invalida', campo: 'fecha' };
+}
+
+/** Cadena de ascendientes de `categoria` según `subsetOf`; `true` si vuelve a una categoría ya recorrida (ciclo). */
+function formaCiclo(categoria, subsetOf) {
+  const vistas = new Set();
+  for (let actual = categoria; actual !== undefined; actual = subsetOf[actual]) {
+    if (vistas.has(actual)) return true;
+    vistas.add(actual);
+  }
+  return false;
+}
+
+/**
+ * S7 (design D11): `rule.subsetOf` solo relaciona categorías declaradas en `rule.equivalences`, ninguna consigo misma y
+ * sin ciclos (el lector del catálogo recorre los ascendientes y un ciclo no terminaría).
+ */
+export function exigirSubconjuntoDeclarado(item) {
+  const subsetOf = item.rule?.subsetOf;
+  if (!esObjeto(subsetOf)) return null; // la forma la rechaza el esquema
+  const categorias = esObjeto(item.rule.equivalences) ? Object.keys(item.rule.equivalences) : [];
+  const declaradas = Object.entries(subsetOf).every(
+    ([hijo, padre]) => hijo !== padre && categorias.includes(hijo) && categorias.includes(padre),
+  );
+  const sinCiclos = Object.keys(subsetOf).every((hijo) => !formaCiclo(hijo, subsetOf));
+  return declaradas && sinCiclos ? null : 'subconjunto_sin_equivalencia';
+}
+
 /** Campos que un criterio de aplicabilidad no puede declarar (RN-28: la aplicabilidad no lleva puntaje ni ponderación). */
 const CAMPOS_DE_PUNTAJE = ['peso', 'puntaje', 'ponderacion', 'puntos', 'score', 'weight'];
 
@@ -198,4 +244,41 @@ export function verificarCatalogHash(archivo) {
   // Una forma inesperada no es un hash distinto: la rechaza el esquema, que es quien garantiza la forma.
   if (!formaEsperada) return null;
   return catalogHashDe(scope, archivo.items) === catalogHash ? null : 'hash_distinto';
+}
+
+/** ¿El archivo declara una revisión de la IA (`reviewerRole = ia`) o un estado provisional sin el otro (S7, D14)? */
+function validacionProvisionalIncoherente({ status, reviewerRole }) {
+  return (status === 'revision_provisional') !== (reviewerRole === 'ia');
+}
+
+/** ¿Alguna entrada de `history` lleva la huella vigente (la declarada o la recalculada)? Sería atribuirla a otro rol. */
+function historialConHuellaVigente({ history, catalogHash }, huellaRecalculada) {
+  return (
+    Array.isArray(history) &&
+    history.some(
+      (entrada) =>
+        esObjeto(entrada) &&
+        (entrada.catalogHash === catalogHash || entrada.catalogHash === huellaRecalculada),
+    )
+  );
+}
+
+/**
+ * Códigos del bloque `validation` de un archivo (AC-04.4 y S7, `[S7 resp. 9]`): el hash del contenido cubierto, la
+ * coherencia entre `status` y `reviewerRole` de la revisión provisional y que el historial no lleve la huella vigente.
+ * Una forma inesperada no es un incumplimiento de estas reglas: la rechaza el esquema.
+ */
+export function verificarBloqueValidation(archivo) {
+  const hash = verificarCatalogHash(archivo);
+  if (!esObjeto(archivo) || !esObjeto(archivo.validation)) return hash === null ? [] : [hash];
+  const { validation } = archivo;
+  const recalculada =
+    Array.isArray(validation.scope) && Array.isArray(archivo.items) && archivo.items.every(esObjeto)
+      ? catalogHashDe(validation.scope, archivo.items)
+      : undefined;
+  return [
+    hash,
+    validacionProvisionalIncoherente(validation) ? 'validacion_provisional_incoherente' : null,
+    historialConHuellaVigente(validation, recalculada) ? 'historial_con_huella_vigente' : null,
+  ].filter(Boolean);
 }
