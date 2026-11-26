@@ -23,7 +23,10 @@ from app.evaluation.dataset_loader import (
 )
 from app.evaluation.fuente_dataset import DatasetSuite, FuenteDatasetEnDirectorio, OpcionPropuesta
 from app.evaluation.metricas.diagnostico import chunks_esperados_de
-from app.evaluation.revision_provisional import RevisionProvisional, exigir_revision_provisional
+from app.evaluation.revision_provisional import (
+    MarcaDeRevisionProvisional,
+    exigir_revision_provisional,
+)
 
 FAMILIA: Final = "diagnostico"
 TIPOS_DE_VARIACION: Final = ("coloquial_tecnico", "sin_tildes", "orden", "es_en")
@@ -58,7 +61,7 @@ class DatasetDiagnostico:
     clase: str
     corpus: DatasetSuite
     pares: tuple[ParDeParafrasis, ...]
-    revision_provisional: RevisionProvisional
+    revision_provisional: MarcaDeRevisionProvisional
 
     def preguntas(self) -> tuple[tuple[ParDeParafrasis, RedaccionDePar, Pregunta], ...]:
         return tuple(

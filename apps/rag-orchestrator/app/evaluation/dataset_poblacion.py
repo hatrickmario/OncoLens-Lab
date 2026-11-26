@@ -21,7 +21,10 @@ from app.application.corpus_metadata.poblacion_puertos import Fragmento
 from app.evaluation.config_suite import ruta_del_repo
 from app.evaluation.dataset_loader import CLASE_SINTETICA, DatasetInvalido
 from app.evaluation.guardas import SuiteAbortada
-from app.evaluation.revision_provisional import RevisionProvisional, exigir_revision_provisional
+from app.evaluation.revision_provisional import (
+    MarcaDeRevisionProvisional,
+    exigir_revision_provisional,
+)
 
 CLASE_CORPUS_PUBLICO = "corpus_publico"
 CLASES_DEL_DORADO = (CLASE_SINTETICA, CLASE_CORPUS_PUBLICO)
@@ -131,7 +134,7 @@ class DoradoDePoblacion:
     pares: tuple[ParDorado, ...]
     estados: tuple[CasoDeEstadoDorado, ...]
     bucle: tuple[ParDelBucle, ...]
-    revision_provisional: RevisionProvisional | None = None
+    revision_provisional: MarcaDeRevisionProvisional | None = None
     """Marca de procedencia de IA (S7-D2): no firma el dorado; ``revision`` sigue vacía hasta que lo revise un humano."""
 
     def estratos(self) -> dict[str, int]:
@@ -237,7 +240,7 @@ def _leer_yaml(ruta: Path, nombre: str) -> dict[str, Any]:
     return contenido
 
 
-def _revision_provisional(manifiesto: Mapping[str, Any]) -> RevisionProvisional | None:
+def _revision_provisional(manifiesto: Mapping[str, Any]) -> MarcaDeRevisionProvisional | None:
     """Ausente es válido (dorado sin marca); presente se valida con la regla compartida de todas las familias."""
     if "revision_provisional" not in manifiesto:
         return None

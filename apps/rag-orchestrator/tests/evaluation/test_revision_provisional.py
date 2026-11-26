@@ -11,7 +11,7 @@ from app.evaluation.dataset_loader import DatasetInvalido
 from app.evaluation.revision_provisional import (
     PATRON_DE_FECHA_ISO,
     ROLES_DE_REVISION_PROVISIONAL,
-    RevisionProvisional,
+    MarcaDeRevisionProvisional,
     exigir_revision_provisional,
 )
 from tests.evaluation.conftest import RAIZ_REPO
@@ -20,7 +20,7 @@ from tests.evaluation.conftest import RAIZ_REPO
 def test_acepta_rol_ia_con_fecha_iso_en_texto() -> None:
     marca = exigir_revision_provisional({"rol": "ia", "fecha": "2026-11-22"}, "manifest.yaml")
 
-    assert marca == RevisionProvisional("ia", "2026-11-22")
+    assert marca == MarcaDeRevisionProvisional("ia", "2026-11-22")
 
 
 def test_acepta_la_fecha_que_yaml_convierte_en_date() -> None:
