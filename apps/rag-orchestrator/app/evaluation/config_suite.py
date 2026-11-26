@@ -476,6 +476,16 @@ def _campos_de_etapa_del_brazo(crudo: dict[str, Any]) -> dict[str, Any]:
         campos["reranker_max_length"] = _exigir_entero_positivo(
             crudo["RERANKER_MAX_LENGTH"], "RERANKER_MAX_LENGTH"
         )
+    campos.update(_campos_del_indice_pares_y_reescritura_del_brazo(crudo))
+    largo, solape = campos.get("reranker_max_length"), campos.get("reranker_solape")
+    if largo is not None and solape is not None and not solape_deja_avanzar(solape, largo):
+        raise ConfigInvalida("RERANKER_WINDOW_OVERLAP debe ser menor que RERANKER_MAX_LENGTH")
+    return campos
+
+
+def _campos_del_indice_pares_y_reescritura_del_brazo(crudo: dict[str, Any]) -> dict[str, Any]:
+    """El índice propio (US-278) y los pares y la reescritura (US-277) de un brazo; lo que no declara no aparece."""
+    campos: dict[str, Any] = {}
     if "indice" in crudo:
         if not es_identificador(str(crudo["indice"])):
             raise ConfigInvalida("el indice de un brazo no es un identificador válido")
@@ -488,9 +498,6 @@ def _campos_de_etapa_del_brazo(crudo: dict[str, Any]) -> dict[str, Any]:
         if not isinstance(crudo["QUERY_REWRITE_ENABLED"], bool):
             raise ConfigInvalida("QUERY_REWRITE_ENABLED debe ser true o false")
         campos["query_rewrite_enabled"] = crudo["QUERY_REWRITE_ENABLED"]
-    largo, solape = campos.get("reranker_max_length"), campos.get("reranker_solape")
-    if largo is not None and solape is not None and not solape_deja_avanzar(solape, largo):
-        raise ConfigInvalida("RERANKER_WINDOW_OVERLAP debe ser menor que RERANKER_MAX_LENGTH")
     return campos
 
 
