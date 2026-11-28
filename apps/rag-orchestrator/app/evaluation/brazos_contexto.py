@@ -109,7 +109,7 @@ def adopcion_del_contexto(regla: ReglaDeAdopcion, decision: Adopcion) -> Adopcio
     Precedencia: un motivo explícito (``False``) gana a ``None``, y ``None`` gana a ``True`` (``null`` ≠ ``0.0``: lo no medido no
     se lee como adoptable); el ``None`` lleva el motivo ``no_medible``. Es una señal técnica del informe, no adopta nada."""
     explicitos = tuple(m for m in regla.motivos if m != MOTIVO_NO_MEDIBLE) + decision.motivos
-    if explicitos:
+    if explicitos or regla.mejora_fuera_del_ruido is False:
         return Adopcion(False, explicitos)
     if regla.mejora_fuera_del_ruido is None or decision.adoptable is None:
         return Adopcion(None, (MOTIVO_NO_MEDIBLE,))
