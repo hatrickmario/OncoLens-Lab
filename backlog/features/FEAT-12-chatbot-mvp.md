@@ -553,6 +553,8 @@ Cambiar el ancla del periodo (revisión en la Demo 6); periodos con fechas absol
 
 > **Decidido (usuario, 2026-11-21):** pasa al **Sprint 7** (L1D-331): quedó abierta al cierre del S6 y afecta a la calidad del RAG; el S7 reúne todo lo pendiente de calidad del RAG. Lo que falta está en [`S7-refinamiento.md`](../sprints/S7-refinamiento.md).
 
+> **Decidido (usuario, 2026-11-26):** opción A de D5: no se toca la composición del segundo loop. B y C se descartan por ahora (tras la base entraron los sinónimos de 335 y el catálogo 1.11.0; cambiar además la composición mezclaría efectos, ADR-45); si la corrida final sigue por debajo de 18 de 22, la siguiente candidata es B antes que C, y después D6 y P-3.
+>
 > Linear: [L1D-331](https://linear.app/l1der-lab-mjbc/issue/L1D-331)
 
 `FEAT-12` · Sprint 6 · Estimación **2** · HU-03 · FR-09, RN-02, RN-22, RN-27, RN-29, RN-11 · ADR-52 · ↪ US-271 (L1D-329, mergeado) · 🔗 Medido en: US-269 · D6-42, D6-43

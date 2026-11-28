@@ -169,7 +169,7 @@ def _codigo_del_estudio(valor: str, criterio: CriterioDeAplicabilidad) -> str | 
 
 def _codigo_del_paciente(valor: str, criterio: CriterioDeAplicabilidad) -> str | None:
     codigo = _indice_de_sinonimos(criterio).get(valor.casefold())
-    return codigo or categoria_del_paciente(criterio.regla, valor)
+    return codigo or _categoria_de_la_tabla(criterio.regla, valor)
 
 
 def _clasificar_rango(
@@ -258,7 +258,7 @@ def _con_ascendientes(codigo: str, jerarquia: Mapping[str, str]) -> frozenset[st
     return frozenset(codigos)
 
 
-def categoria_del_paciente(regla: ReglaDeAplicabilidad, valor_paciente: str) -> str | None:
+def _categoria_de_la_tabla(regla: ReglaDeAplicabilidad, valor_paciente: str) -> str | None:
     """Primera categoría de ``equivalences`` con una alternativa presente en el valor del paciente, según el modo de
     coincidencia del catálogo (``rule.equivalenceMatch``); ``None`` si el valor no cae en la tabla."""
     for categoria, alternativas in regla.equivalencias.items():

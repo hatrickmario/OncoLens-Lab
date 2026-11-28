@@ -14,3 +14,6 @@ ORIGEN_DE_LAS_FIXTURES = CATALOGOS / "test" / "fixtures"
 APL_1_3_0 = FIXTURES_DE_APLICABILIDAD / "test-apl-1.3.0"
 """L1D-126 parte B: ``estado_her2`` con jerarquía (``subsetOf``) y ``extension`` con lectura de M0/M1 (``componente``),
 más sus reglas de población; copia de los criterios del catálogo ``1.11.0`` con la marca ``revision_provisional``."""
+APL_1_11_0 = FIXTURES_DE_APLICABILIDAD / "test-apl-1.11.0"
+"""L1D-299 (S7-D4): ``aplicabilidad.json`` y ``poblacion-reglas.json`` de mama y próstata del catálogo ``1.11.0``, copiados
+sin cambios salvo ``version``; es el ``catalogo_de_estados`` del dorado de población. Un test compara la copia con el real."""

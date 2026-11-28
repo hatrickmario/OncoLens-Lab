@@ -21,7 +21,10 @@ from app.application.corpus_metadata.poblacion_puertos import Fragmento
 from app.evaluation.config_suite import ruta_del_repo
 from app.evaluation.dataset_loader import CLASE_SINTETICA, DatasetInvalido
 from app.evaluation.guardas import SuiteAbortada
-from app.evaluation.revision_provisional import RevisionProvisional, exigir_revision_provisional
+from app.evaluation.revision_provisional import (
+    MarcaDeRevisionProvisional,
+    exigir_revision_provisional,
+)
 
 CLASE_CORPUS_PUBLICO = "corpus_publico"
 CLASES_DEL_DORADO = (CLASE_SINTETICA, CLASE_CORPUS_PUBLICO)
@@ -39,6 +42,13 @@ TIPOS_DE_REDACCION = (
 )
 """Tipos de redacción difícil de D-2; solo los pares ``dificil`` llevan uno."""
 RENDIJAS = ("c3",)
+ETAPA_BASE = "base"
+"""Etapa de lo que no lleva marca: el dorado de la corrida base. Es la única definición; el reporte la nombra así."""
+ETAPA_TRAS_CATALOGO_S7 = "tras_catalogo_s7"
+"""Etapa de los pares y casos agregados o cambiados después de la corrida base, con el catálogo 1.11.0 (S7-D5). Es un
+nombre de proceso (el sprint), no de dominio: se conserva porque el design S7-D5 y los reportes ya lo usan."""
+ETAPAS_DEL_DATASET = (ETAPA_TRAS_CATALOGO_S7,)
+"""Etapas que un par o caso puede declarar; ``etapa_del_dataset`` no es la ventana del reranker, de chunking ni de turnos."""
 ESTADOS_ESPERADOS = ("coincide", "parcial", "no_coincide", "desconocido")
 CASO_EXCLUIDO_DEL_BUCLE = "tamoxifen"
 """El bucle de OUT-06 se repite con casos DISTINTOS del que lo provocó (ADR47-R17)."""
@@ -76,6 +86,8 @@ class ParDorado:
     """Tipo de la redacción difícil (``TIPOS_DE_REDACCION``); solo con ``redaccion: dificil``."""
     distractor: bool = False
     """El valor solo aparece como subgrupo o mención: el esperado no trae elegibilidad (D-3)."""
+    etapa_del_dataset: str | None = None
+    """``tras_catalogo_s7`` cuando el par se agregó o cambió después de la corrida base (S7-D5); ``None``: de la base."""
 
 
 @dataclass(frozen=True)
@@ -89,6 +101,8 @@ class CasoDeEstadoDorado:
     esperado: str
     rendija: str | None = None
     """Caso que mide una rendija conocida de la regla (``c3``); el esperado sigue siendo el de la regla vigente."""
+    etapa_del_dataset: str | None = None
+    """``tras_catalogo_s7`` cuando el caso depende del catálogo 1.11.0 (S7-D5); ``None``: de la base."""
 
 
 @dataclass(frozen=True)
@@ -125,7 +139,7 @@ class DoradoDePoblacion:
     pares: tuple[ParDorado, ...]
     estados: tuple[CasoDeEstadoDorado, ...]
     bucle: tuple[ParDelBucle, ...]
-    revision_provisional: RevisionProvisional | None = None
+    revision_provisional: MarcaDeRevisionProvisional | None = None
     """Marca de procedencia de IA (S7-D2): no firma el dorado; ``revision`` sigue vacía hasta que lo revise un humano."""
 
     def estratos(self) -> dict[str, int]:
@@ -231,7 +245,7 @@ def _leer_yaml(ruta: Path, nombre: str) -> dict[str, Any]:
     return contenido
 
 
-def _revision_provisional(manifiesto: Mapping[str, Any]) -> RevisionProvisional | None:
+def _revision_provisional(manifiesto: Mapping[str, Any]) -> MarcaDeRevisionProvisional | None:
     """Ausente es válido (dorado sin marca); presente se valida con la regla compartida de todas las familias."""
     if "revision_provisional" not in manifiesto:
         return None
@@ -286,6 +300,7 @@ def _par(crudo: dict[str, Any]) -> ParDorado:
             None if crudo.get("tipo_de_redaccion") is None else str(crudo["tipo_de_redaccion"])
         ),
         distractor=bool(crudo.get("distractor", False)),
+        etapa_del_dataset=_etapa_del_dataset(crudo.get("etapa_del_dataset")),
     )
 
 
@@ -305,14 +320,24 @@ def _estados(contenido: dict[str, Any]) -> tuple[CasoDeEstadoDorado, ...]:
                 citados=frozenset(crudo["citados"]) if "citados" in crudo else None,
                 esperado=esperado,
                 rendija=_rendija(crudo.get("rendija")),
+                etapa_del_dataset=_etapa_del_dataset(crudo.get("etapa_del_dataset")),
             )
         )
     return tuple(casos)
 
 
 def _rendija(crudo: object) -> str | None:
-    if crudo is not None and crudo not in RENDIJAS:
-        raise ValueError("rendija fuera del conjunto")
+    return _marca_opcional(crudo, RENDIJAS, "rendija")
+
+
+def _etapa_del_dataset(crudo: object) -> str | None:
+    return _marca_opcional(crudo, ETAPAS_DEL_DATASET, "etapa_del_dataset")
+
+
+def _marca_opcional(crudo: object, conjunto: tuple[str, ...], nombre: str) -> str | None:
+    """Una marca opcional del dataset: ausente es ``None``; presente, debe pertenecer al conjunto cerrado."""
+    if crudo is not None and crudo not in conjunto:
+        raise ValueError(f"{nombre} fuera del conjunto")
     return None if crudo is None else str(crudo)
 
 

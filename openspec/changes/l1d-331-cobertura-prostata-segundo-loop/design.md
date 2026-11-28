@@ -185,3 +185,7 @@ paralelo.
 - **P-3 (usuario, corrida final):** criterio de cobertura de próstata (D6-57): mantener la meta de US-273 AC-2, exigirla
   por caso o en conjunto, o cambiarla.
 - **P-4 (usuario, tras la corrida base):** opción A, B o C de D5.
+  **Resuelta: opción A (usuario, 2026-11-26).** B y C se descartan por ahora: tras la corrida base entraron en main los sinónimos de
+  `l1d-335` y el catálogo 1.11.0, y cambiar además la composición mezclaría efectos (anti-sobreajuste, ADR-45). Si la corrida
+  final sigue por debajo de 18 de 22, la siguiente candidata es B (barata y reversible) antes que C; después habría que
+  decidir D6 y P-3 (criterio de cobertura de próstata).

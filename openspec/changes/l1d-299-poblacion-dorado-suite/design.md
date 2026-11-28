@@ -137,8 +137,9 @@ marca. `dataset_poblacion.py` valida la forma del campo nuevo.
 
 **S7-D4 · Catálogo de estados para próstata.** `manifest.catalogo_de_estados` apunta hoy al fixture `test-apl-1.2.0`,
 cuya próstata no tiene `poblacion-reglas.json`. Los casos de próstata y de C-1 necesitan reglas de próstata: se crea un
-fixture de catálogo de test nuevo en `apps/rag-orchestrator/tests/fixtures/catalogo/` (asumido el nombre
-`test-apl-1.3.0`), copiado del contenido de `l1d-126` cuando esté mergeado; `test-apl-1.2.0` no se toca. Alternativa
+fixture de catálogo de test nuevo en `apps/rag-orchestrator/tests/fixtures/catalogo/` con el nombre
+`test-apl-1.11.0` (no `1.3.0`: ese ya lo usa `l1d-126` y solo trae `extension` y HER2), copiado de las reglas de mama y próstata del catálogo `1.11.0` (S7.10);
+`test-apl-1.2.0` no se toca. Alternativa
 (pregunta abierta): apuntar al catálogo real para que la concordancia siga sus cambios.
 
 **S7-D5 · Ventanas (Gate 1 del S7, 2026-11-22; misma política que `l1d-246`).**
@@ -151,7 +152,7 @@ fixture de catálogo de test nuevo en `apps/rag-orchestrator/tests/fixtures/cata
 - **Entre la base y la final, lo que depende de la parte B** (después de mergearla): pares de `extension` y `hrr_brca`
   (C-1, C-5), casos sobre HER2 bajo (C-2), etiquetado del triple negativo (C-4), los casos de estado de próstata
   (F-20…F-23 con `estado_castracion` y los de C-1) y el fixture de S7-D4. Estos casos llevan una marca en el dataset
-  (asumido el campo `ventana: tras_catalogo_s7`).
+  (campo `etapa_del_dataset: tras_catalogo_s7`; no se llama `ventana`, que ya es la ventana del reranker, de chunking y de turnos).
 - **Corrida final:** la suite sobre el dorado completo y el catálogo del S7. La comparación con la base vale para los
   pares y casos que ya estaban en la base; el reporte nombra los añadidos después como **no comparables con la base**
   y los lee por criterio y por estrato.
@@ -213,3 +214,10 @@ el veredicto. `ParMedido.como_elegibilidad` pasó a `valores_como_elegibilidad`.
 (`exigir_adapters_locales` + `exigir_proveedor_local`) en `guardas.py` y su uso en las seis familias. D7-18: una constante o
 mapa único de `revision_provisional` en el esquema de reportes (P3-4) y el resto de los P3.
 
+
+### Notas del lote R3 (entrega 2, S7.9, S7.10 y S7.10b)
+
+- **Etapa del dataset.** El campo de S7-D5 se llama `etapa_del_dataset` y no `ventana`: `ventana` ya es la ventana del reranker, de chunking y de turnos. `ETAPA_BASE` y `ETAPAS_DEL_DATASET` viven en `dataset_poblacion.py`; el reporte las separa en `por_etapa_del_dataset`. El valor `tras_catalogo_s7` lleva el número de sprint (nombre de proceso, no de dominio) y se conserva porque este design y los reportes ya lo usan; neutralizarlo es una decisión pendiente.
+- **Fixture de estados.** `tests/fixtures/catalogo/test-apl-1.11.0/` es una copia de `aplicabilidad.json` y `poblacion-reglas.json` de mama y próstata del catálogo real salvo `version`; un test compara la copia con el real y falla tras un bump hasta recopiar.
+- **Cifra corregida.** El cuerpo del commit `9176b5b9` dice «27 pares de próstata»; son **26** (14 + 12). La historia no se reescribe.
+- **Revisión provisional.** `MarcaDeRevisionProvisional` (antes `RevisionProvisional`) exige el patrón `^\d{4}-\d{2}-\d{2}$` de `comun.schema.json` antes de `fromisoformat`.

@@ -23,14 +23,14 @@ documentos:
     tipo_de_cancer: mama
     fragmentos:
     - chunk_id: ch-doc-gui-en-1-1
-      texto: 'Eligibility: patients with ECOG 0 or 1 starting first line; hormone receptor-positive, triple-negative.'
+      texto: 'Eligibility: patients with ECOG 0 or 1 starting first line; the cohort includes both hormone receptor-positive and triple-negative disease.'
   doc-gui-en-2:
     estrato: guia
     idioma: en
     tipo_de_cancer: mama
     fragmentos:
     - chunk_id: ch-doc-gui-en-2-1
-      texto: 'Eligibility: patients starting first line; hormone receptor-positive, triple-negative; stage II-III.'
+      texto: 'Eligibility: patients starting first line; the cohort includes both hormone receptor-positive and triple-negative disease; stage II-III.'
   doc-ens-es-1:
     estrato: ensayo
     idioma: es
@@ -79,7 +79,7 @@ documentos:
     tipo_de_cancer: mama
     fragmentos:
     - chunk_id: ch-doc-rev-en-1-1
-      texto: 'Eligibility: patients with hormone receptor-positive, triple-negative disease at stage II-III; premenopausal
+      texto: 'Eligibility: patients at stage II-III; the cohort includes both hormone receptor-positive and triple-negative disease; premenopausal
         women and postmenopausal women.'
   doc-rev-en-2:
     estrato: revision
@@ -276,6 +276,76 @@ documentos:
     - chunk_id: ch-doc-dis-gui-es-2-1
       texto: 'Elegibilidad: mujeres con cancer de mama. En un subgrupo exploratorio de mujeres premenopausicas, la tolerancia
         fue similar; estado menopausico descrito.'
+  doc-pro-gui-es-2:
+    estrato: guia
+    idioma: es
+    tipo_de_cancer: prostata
+    fragmentos:
+    - chunk_id: ch-doc-pro-gui-es-2-1
+      texto: 'Elegibilidad: pacientes con enfermedad metastasica; mutacion en BRCA1/2.'
+  doc-pro-gui-en-2:
+    estrato: guia
+    idioma: en
+    tipo_de_cancer: prostata
+    fragmentos:
+    - chunk_id: ch-doc-pro-gui-en-2-1
+      texto: 'Eligibility: patients with metastatic prostate cancer and BRCA1/2 mutated disease.'
+  doc-pro-ens-es-2:
+    estrato: ensayo
+    idioma: es
+    tipo_de_cancer: prostata
+    fragmentos:
+    - chunk_id: ch-doc-pro-ens-es-2-1
+      texto: 'Elegibilidad: hombres con enfermedad localizada o enfermedad localmente avanzada; sin mutacion en genes HRR.'
+  doc-pro-ens-en-2:
+    estrato: ensayo
+    idioma: en
+    tipo_de_cancer: prostata
+    fragmentos:
+    - chunk_id: ch-doc-pro-ens-en-2-1
+      texto: 'Eligibility: men with non-metastatic prostate cancer; other HRR gene mutated.'
+  doc-pro-rev-es-2:
+    estrato: revision
+    idioma: es
+    tipo_de_cancer: prostata
+    fragmentos:
+    - chunk_id: ch-doc-pro-rev-es-2-1
+      texto: 'Elegibilidad: pacientes con enfermedad no metastasica; estado HRR no evaluado.'
+  doc-pro-rev-en-2:
+    estrato: revision
+    idioma: en
+    tipo_de_cancer: prostata
+    fragmentos:
+    - chunk_id: ch-doc-pro-rev-en-2-1
+      texto: 'Eligibility: patients with locally advanced prostate cancer; BRCA1/2 mutated or other HRR gene mutated.'
+  doc-her2b-gui-es-1:
+    estrato: guia
+    idioma: es
+    tipo_de_cancer: mama
+    fragmentos:
+    - chunk_id: ch-doc-her2b-gui-es-1-1
+      texto: 'Elegibilidad: pacientes con cancer de mama HER2 bajo; ECOG 0 o 1.'
+  doc-her2b-gui-en-1:
+    estrato: guia
+    idioma: en
+    tipo_de_cancer: mama
+    fragmentos:
+    - chunk_id: ch-doc-her2b-gui-en-1-1
+      texto: 'Eligibility: patients with HER2-low breast cancer.'
+  doc-her2b-ens-en-1:
+    estrato: ensayo
+    idioma: en
+    tipo_de_cancer: mama
+    fragmentos:
+    - chunk_id: ch-doc-her2b-ens-en-1-1
+      texto: 'Eligibility: patients whose tumors show low HER2 expression, defined as IHC 1+ or IHC 2+ with a negative ISH result.'
+  doc-her2b-rev-es-1:
+    estrato: revision
+    idioma: es
+    tipo_de_cancer: mama
+    fragmentos:
+    - chunk_id: ch-doc-her2b-rev-es-1-1
+      texto: 'Elegibilidad: pacientes con cancer de mama HER2 bajo (IHC 1+ o IHC 2+ con ISH negativo).'
 pares:
 - id: doc-gui-es-1-estado_menopausico
   documento: doc-gui-es-1
@@ -341,8 +411,9 @@ pares:
     scope: elegibilidad
     chunk: ch-doc-gui-en-1-1
   - valor: triple-negative
-    scope: subgrupo
+    scope: elegibilidad
     chunk: ch-doc-gui-en-1-1
+  etapa_del_dataset: tras_catalogo_s7
 - id: doc-gui-en-2-linea_tratamiento
   documento: doc-gui-en-2
   criterio: linea_tratamiento
@@ -358,8 +429,9 @@ pares:
     scope: elegibilidad
     chunk: ch-doc-gui-en-2-1
   - valor: triple-negative
-    scope: subgrupo
+    scope: elegibilidad
     chunk: ch-doc-gui-en-2-1
+  etapa_del_dataset: tras_catalogo_s7
 - id: doc-gui-en-2-estadio
   documento: doc-gui-en-2
   criterio: estadio
@@ -504,8 +576,9 @@ pares:
     scope: elegibilidad
     chunk: ch-doc-rev-en-1-1
   - valor: triple-negative
-    scope: subgrupo
+    scope: elegibilidad
     chunk: ch-doc-rev-en-1-1
+  etapa_del_dataset: tras_catalogo_s7
 - id: doc-rev-en-1-estadio
   documento: doc-rev-en-1
   criterio: estadio
@@ -817,3 +890,163 @@ pares:
     scope: subgrupo
     chunk: ch-doc-dis-gui-es-2-1
   distractor: true
+- id: doc-pro-gui-es-2-extension
+  documento: doc-pro-gui-es-2
+  criterio: extension
+  esperados:
+  - valor: enfermedad metastasica
+    scope: elegibilidad
+    chunk: ch-doc-pro-gui-es-2-1
+  etapa_del_dataset: tras_catalogo_s7
+- id: doc-pro-gui-es-2-hrr_brca
+  documento: doc-pro-gui-es-2
+  criterio: hrr_brca
+  esperados:
+  - valor: mutacion en BRCA1/2
+    scope: elegibilidad
+    chunk: ch-doc-pro-gui-es-2-1
+  etapa_del_dataset: tras_catalogo_s7
+- id: doc-pro-gui-en-2-extension
+  documento: doc-pro-gui-en-2
+  criterio: extension
+  esperados:
+  - valor: metastatic prostate cancer
+    scope: elegibilidad
+    chunk: ch-doc-pro-gui-en-2-1
+  etapa_del_dataset: tras_catalogo_s7
+- id: doc-pro-gui-en-2-hrr_brca
+  documento: doc-pro-gui-en-2
+  criterio: hrr_brca
+  esperados:
+  - valor: BRCA1/2 mutated
+    scope: elegibilidad
+    chunk: ch-doc-pro-gui-en-2-1
+  etapa_del_dataset: tras_catalogo_s7
+- id: doc-pro-ens-es-2-extension
+  documento: doc-pro-ens-es-2
+  criterio: extension
+  esperados:
+  - valor: enfermedad localizada
+    scope: elegibilidad
+    chunk: ch-doc-pro-ens-es-2-1
+  - valor: enfermedad localmente avanzada
+    scope: elegibilidad
+    chunk: ch-doc-pro-ens-es-2-1
+  etapa_del_dataset: tras_catalogo_s7
+- id: doc-pro-ens-es-2-hrr_brca
+  documento: doc-pro-ens-es-2
+  criterio: hrr_brca
+  esperados:
+  - valor: sin mutacion en genes HRR
+    scope: elegibilidad
+    chunk: ch-doc-pro-ens-es-2-1
+  etapa_del_dataset: tras_catalogo_s7
+- id: doc-pro-ens-en-2-extension
+  documento: doc-pro-ens-en-2
+  criterio: extension
+  esperados:
+  - valor: non-metastatic prostate cancer
+    scope: elegibilidad
+    chunk: ch-doc-pro-ens-en-2-1
+  etapa_del_dataset: tras_catalogo_s7
+- id: doc-pro-ens-en-2-hrr_brca
+  documento: doc-pro-ens-en-2
+  criterio: hrr_brca
+  esperados:
+  - valor: other HRR gene mutated
+    scope: elegibilidad
+    chunk: ch-doc-pro-ens-en-2-1
+  etapa_del_dataset: tras_catalogo_s7
+- id: doc-pro-rev-es-2-extension
+  documento: doc-pro-rev-es-2
+  criterio: extension
+  esperados:
+  - valor: enfermedad no metastasica
+    scope: elegibilidad
+    chunk: ch-doc-pro-rev-es-2-1
+  etapa_del_dataset: tras_catalogo_s7
+- id: doc-pro-rev-es-2-hrr_brca
+  documento: doc-pro-rev-es-2
+  criterio: hrr_brca
+  esperados:
+  - valor: estado HRR no evaluado
+    scope: elegibilidad
+    chunk: ch-doc-pro-rev-es-2-1
+  etapa_del_dataset: tras_catalogo_s7
+- id: doc-pro-rev-en-2-extension
+  documento: doc-pro-rev-en-2
+  criterio: extension
+  esperados:
+  - valor: locally advanced prostate cancer
+    scope: elegibilidad
+    chunk: ch-doc-pro-rev-en-2-1
+  etapa_del_dataset: tras_catalogo_s7
+- id: doc-pro-rev-en-2-hrr_brca
+  documento: doc-pro-rev-en-2
+  criterio: hrr_brca
+  esperados:
+  - valor: BRCA1/2 mutated
+    scope: elegibilidad
+    chunk: ch-doc-pro-rev-en-2-1
+  - valor: other HRR gene mutated
+    scope: elegibilidad
+    chunk: ch-doc-pro-rev-en-2-1
+  etapa_del_dataset: tras_catalogo_s7
+- id: doc-her2b-gui-es-1-estado_her2
+  documento: doc-her2b-gui-es-1
+  criterio: estado_her2
+  esperados:
+  - valor: HER2 bajo
+    scope: elegibilidad
+    chunk: ch-doc-her2b-gui-es-1-1
+  etapa_del_dataset: tras_catalogo_s7
+- id: doc-her2b-gui-en-1-estado_her2
+  documento: doc-her2b-gui-en-1
+  criterio: estado_her2
+  esperados:
+  - valor: HER2-low
+    scope: elegibilidad
+    chunk: ch-doc-her2b-gui-en-1-1
+  etapa_del_dataset: tras_catalogo_s7
+- id: doc-her2b-ens-en-1-estado_her2
+  documento: doc-her2b-ens-en-1
+  criterio: estado_her2
+  esperados:
+  - valor: IHC 1+ or IHC 2+ with a negative ISH result
+    scope: elegibilidad
+    chunk: ch-doc-her2b-ens-en-1-1
+  redaccion: dificil
+  tipo_de_redaccion: definicion_implicita
+  etapa_del_dataset: tras_catalogo_s7
+- id: doc-her2b-rev-es-1-estado_her2
+  documento: doc-her2b-rev-es-1
+  criterio: estado_her2
+  esperados:
+  - valor: HER2 bajo
+    scope: elegibilidad
+    chunk: ch-doc-her2b-rev-es-1-1
+  etapa_del_dataset: tras_catalogo_s7
+- id: doc-gui-en-1-estado_her2
+  documento: doc-gui-en-1
+  criterio: estado_her2
+  esperados:
+  - valor: triple-negative
+    scope: elegibilidad
+    chunk: ch-doc-gui-en-1-1
+  etapa_del_dataset: tras_catalogo_s7
+- id: doc-gui-en-2-estado_her2
+  documento: doc-gui-en-2
+  criterio: estado_her2
+  esperados:
+  - valor: triple-negative
+    scope: elegibilidad
+    chunk: ch-doc-gui-en-2-1
+  etapa_del_dataset: tras_catalogo_s7
+- id: doc-rev-en-1-estado_her2
+  documento: doc-rev-en-1
+  criterio: estado_her2
+  esperados:
+  - valor: triple-negative
+    scope: elegibilidad
+    chunk: ch-doc-rev-en-1-1
+  etapa_del_dataset: tras_catalogo_s7

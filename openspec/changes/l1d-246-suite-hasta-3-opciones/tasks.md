@@ -148,11 +148,18 @@ y la final miden el mismo dataset. S7.3–S7.7 y S7.9 no esperan a `l1d-126`.
 
 Orden de merge: `l1d-126` parte A → corrida base → `l1d-335` (`1.10.0`) → `l1d-126` parte B (`1.11.0`) → S7.8.
 
-- [ ] S7.8 TRASLADADA a entrega 3 (tras l1d-126 parte B) · Con la parte B de `l1d-126` mergeada: repetir `test_opciones_coherencia_dataset.py` con el catálogo real de
+- [x] S7.8 Con la parte B de `l1d-126` mergeada (catálogo 1.11.0, #443): repetir `test_opciones_coherencia_dataset.py` con el catálogo real de
       próstata. Rige el supuesto compartido SC-1 (`l1d-126` design D10; aquí S7-D4b): no se da por hecho que C-1
       produzca `no_coincide`. Si el comparador da otro orden en OP-07…OP-12, se corrige `casos.yaml` aquí, sube la
       `version` del dataset y se anotan los ids de caso para que el reporte de la final los declare no comparables
       con la base; si el orden no cambia, se anota y no se toca el dataset.
+      **Hecho (2026-11-26): el orden NO cambia.** Con el catálogo 1.11.0 el test de coherencia pasa (12/12 casos, OP-07…OP-12
+      incluidos) y el desglose por opción (excluyentes en No coincide, Coincide, no comparable) es idéntico, byte a byte, al
+      que da el catálogo 1.10.0. Motivo: C-1 hace excluyente a `extension` (M0/M1, `equivalenceMatch: componente`), pero
+      ninguna fuente de próstata del dataset declara la extensión (`estadio: no_disponible`) y los pacientes p-a1/p-a2 traen
+      `T3a` sin M legible, así que el criterio sale «Desconocido» (`sin_regla_de_comparacion`), nunca «No coincide». Por tanto
+      `casos.yaml` y la `version` del dataset (`'2'`) no se tocan y **ningún caso es no comparable con la base** por C-1. Test
+      nuevo que fija la premisa: `test_dataset_de_prostata_no_pone_a_extension_en_no_coincide_con_el_catalogo_real`.
 
 ### (c) Corrida final
 
