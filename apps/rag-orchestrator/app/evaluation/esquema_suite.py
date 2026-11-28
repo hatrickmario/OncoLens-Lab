@@ -357,7 +357,7 @@ _BRAZO = Objeto(
         "parafrasis": Objeto({"pares": Numero(), "recuperadas": Numero()}),
         "latencia_ms": Objeto({"reranker_p95": Numero(), "consulta_p95": Numero()}),
         "viabilidad": _VIABILIDAD,
-        # US-277: solo si la comparación declara brazos de pares o de reescritura (``adopcion``, además, solo fuera de A0).
+        # US-277: solo si la comparación declara brazos de pares o de reescritura, o de contexto con viabilidad (``adopcion``, además, solo fuera de A0).
         "reescritura": _REESCRITURA_DEL_BRAZO,
         "parafrasis_atribuidas": _PARAFRASIS_ATRIBUIDAS,
         "adopcion": _ADOPCION,

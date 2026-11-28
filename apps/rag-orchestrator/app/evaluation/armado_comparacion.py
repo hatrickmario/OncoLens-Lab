@@ -220,10 +220,13 @@ def _tasa_de_falsos_sin_evidencia(armado: dict[str, Any]) -> float | None:
 
 
 def _adopcion_del_brazo(
-    armado: dict[str, Any], referencia: dict[str, Any], tolerancia: float
+    armado: dict[str, Any],
+    referencia: dict[str, Any],
+    tolerancia: float,
+    regla_de_contexto: ReglaDeAdopcion | None = None,
 ) -> dict[str, Any]:
     """US-277 AC-5: ``adoptable`` frente a la referencia, con los motivos de no serlo; en un brazo de contexto (US-279 AC-5) se
-    combina con la regla propia del contexto, ya calculada en ``armado["contexto"]``."""
+    combina con ``regla_de_contexto``, la regla propia del contexto que calculó ``_contexto_del_brazo``."""
     aumento_de_falsos = _restar_opcional(
         _tasa_de_falsos_sin_evidencia(armado), _tasa_de_falsos_sin_evidencia(referencia)
     )
@@ -233,11 +236,8 @@ def _adopcion_del_brazo(
         tolerancia=tolerancia,
         viabilidad=armado["viabilidad"]["estado"],
     )
-    regla = armado.get("contexto", {}).get("regla_de_adopcion")
-    if regla is not None:
-        decision = adopcion_del_contexto(
-            ReglaDeAdopcion(regla["mejora_fuera_del_ruido"], tuple(regla["motivos"])), decision
-        )
+    if regla_de_contexto is not None:
+        decision = adopcion_del_contexto(regla_de_contexto, decision)
     return {"adoptable": decision.adoptable, "motivos": list(decision.motivos)}
 
 
@@ -338,9 +338,10 @@ def _contexto_del_brazo(
     referencia: ResultadoDeBrazo,
     armado: dict[str, Any],
     resumen: Mapping[str, Any] | None,
-) -> dict[str, Any]:
+) -> tuple[dict[str, Any], ReglaDeAdopcion | None]:
     """Lo que el informe dice de un brazo de contexto: variante, plantilla, colección, costo del índice y, fuera de la referencia, la
-    diferencia pareada frente a ``ninguno`` y la marca de la regla de adopción (que NO adopta nada)."""
+    diferencia pareada frente a ``ninguno`` y la marca de la regla de adopción (que NO adopta nada); devuelve además esa regla
+    (``None`` en la referencia) para que ``adopcion`` no tenga que releerla del informe."""
     variante = brazo.brazo.variante_de_contexto
     contexto: dict[str, Any] = {
         "variante": None if variante is None else variante.value,
@@ -350,6 +351,7 @@ def _contexto_del_brazo(
     }
     if variante is VarianteDeContexto.LLM:
         contexto["llm"] = _llm_del_brazo(config, brazo, resumen)
+    regla: ReglaDeAdopcion | None = None
     if brazo is not referencia and comparacion.viabilidad is not None:
         diferencias = _diferencia_pareada_del_brazo(config, brazo, referencia)
         contexto["diferencia_pareada"] = {k: _intervalo_a_dict(d) for k, d in diferencias.items()}
@@ -362,7 +364,7 @@ def _contexto_del_brazo(
             "mejora_fuera_del_ruido": regla.mejora_fuera_del_ruido,
             "motivos": list(regla.motivos),
         }
-    return contexto
+    return contexto, regla
 
 
 def _seccion_de_contexto(comparacion: Comparacion, referencia: ResultadoDeBrazo) -> dict[str, Any]:
@@ -436,8 +438,9 @@ def armar_comparacion(
             )
         if con_pares_o_reescritura:
             armado.update(_extras_de_pares_y_reescritura(b, brazos[0], pares_de_parafrasis or {}))
+        regla_de_contexto: ReglaDeAdopcion | None = None
         if con_contexto:
-            armado["contexto"] = _contexto_del_brazo(
+            armado["contexto"], regla_de_contexto = _contexto_del_brazo(
                 config,
                 comparacion,
                 b,
@@ -453,7 +456,7 @@ def armar_comparacion(
             armado["retroceso"] = marcar_retroceso(diferencia, comparacion.tolerancia_retroceso)
             if con_pares_o_reescritura or (con_contexto and con_viabilidad):
                 armado["adopcion"] = _adopcion_del_brazo(
-                    armado, armados[0], comparacion.tolerancia_retroceso
+                    armado, armados[0], comparacion.tolerancia_retroceso, regla_de_contexto
                 )
         armados.append(armado)
     hay_retroceso = any(a["retroceso"] for a in armados)
