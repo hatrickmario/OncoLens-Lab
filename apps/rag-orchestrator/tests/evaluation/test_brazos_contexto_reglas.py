@@ -184,6 +184,7 @@ SIN_MEDIR = ReglaDeAdopcion(None, (MOTIVO_NO_MEDIBLE,))
         (SIN_MEDIR, Adopcion(True, ()), None, (MOTIVO_NO_MEDIBLE,)),  # sin IC o p95: null, nunca true
         (SIN_MEDIR, Adopcion(None, ()), None, (MOTIVO_NO_MEDIBLE,)),
         (SIN_MEDIR, Adopcion(False, (MOTIVO_RETROCESO,)), False, (MOTIVO_RETROCESO,)),  # un motivo explícito gana a null
+        (ReglaDeAdopcion(False, ()), Adopcion(True, ()), False, ()),  # un False sin motivos tampoco se lee como adoptable
     ],
 )  # fmt: skip
 def test_la_adopcion_del_contexto_combina_la_regla_propia_con_la_de_decidir_adopcion(
