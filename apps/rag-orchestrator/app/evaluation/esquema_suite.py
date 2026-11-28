@@ -294,7 +294,8 @@ _ADOPCION = Objeto(
         "adoptable": Anulable(
             Booleano()
         ),  # None = lo medido no alcanza para afirmarlo (p. ej. sin memoria del stack)
-        "motivos": Lista(Enumerado(MOTIVOS_DE_NO_ADOPCION)),
+        # los de la regla de US-277 y, en los brazos de contexto (US-279 AC-5), los de la regla propia del contexto
+        "motivos": Lista(Enumerado(MOTIVOS_DE_NO_ADOPCION | MOTIVOS_DE_NO_CUMPLIR)),
     }
 )
 _DIFERENCIA_PAREADA = Objeto(
@@ -356,7 +357,7 @@ _BRAZO = Objeto(
         "parafrasis": Objeto({"pares": Numero(), "recuperadas": Numero()}),
         "latencia_ms": Objeto({"reranker_p95": Numero(), "consulta_p95": Numero()}),
         "viabilidad": _VIABILIDAD,
-        # US-277: solo si la comparación declara brazos de pares o de reescritura (``adopcion``, además, solo fuera de A0).
+        # US-277: solo si la comparación declara brazos de pares o de reescritura, o de contexto con viabilidad (``adopcion``, además, solo fuera de A0).
         "reescritura": _REESCRITURA_DEL_BRAZO,
         "parafrasis_atribuidas": _PARAFRASIS_ATRIBUIDAS,
         "adopcion": _ADOPCION,

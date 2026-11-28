@@ -5,7 +5,15 @@ from __future__ import annotations
 import pytest
 
 from app.domain.corpus_seed.contexto_del_chunk import VarianteDeContexto
+from app.evaluation.adopcion_del_brazo import (
+    MOTIVO_FALSOS_SIN_EVIDENCIA,
+    MOTIVO_NO_VIABLE,
+    MOTIVO_RETROCESO,
+    Adopcion,
+)
 from app.evaluation.brazos_contexto import (
+    ReglaDeAdopcion,
+    adopcion_del_contexto,
     MOTIVO_NO_MEDIBLE,
     MOTIVO_P95_SOBRE_EL_TOPE,
     MOTIVO_SIN_MEJORA,
@@ -153,3 +161,35 @@ def test_el_tope_de_latencia_es_el_mismo_para_la_viabilidad_y_la_regla_de_adopci
     )
     assert (MOTIVO_P95_SOBRE_EL_TOPE in regla.motivos) is bool(esperado)
     assert (viabilidad.estado == "no_viable") is bool(esperado)
+
+
+# --- la adopción combinada (opción B del usuario, 2026-11-26) ------------------------------------------------------------
+
+LIMPIA = ReglaDeAdopcion(True, ())
+SIN_MEJORA = ReglaDeAdopcion(False, (MOTIVO_SIN_MEJORA,))
+SIN_MEDIR = ReglaDeAdopcion(None, (MOTIVO_NO_MEDIBLE,))
+
+
+@pytest.mark.parametrize(
+    ("regla", "decision", "adoptable", "motivos"),
+    [
+        (LIMPIA, Adopcion(True, ()), True, ()),
+        (LIMPIA, Adopcion(False, (MOTIVO_RETROCESO,)), False, (MOTIVO_RETROCESO,)),
+        (LIMPIA, Adopcion(False, (MOTIVO_FALSOS_SIN_EVIDENCIA,)), False, (MOTIVO_FALSOS_SIN_EVIDENCIA,)),
+        (LIMPIA, Adopcion(False, (MOTIVO_NO_VIABLE,)), False, (MOTIVO_NO_VIABLE,)),
+        (SIN_MEJORA, Adopcion(True, ()), False, (MOTIVO_SIN_MEJORA,)),
+        (ReglaDeAdopcion(False, (MOTIVO_P95_SOBRE_EL_TOPE,)), Adopcion(True, ()), False, (MOTIVO_P95_SOBRE_EL_TOPE,)),
+        (SIN_MEJORA, Adopcion(False, (MOTIVO_NO_VIABLE,)), False, (MOTIVO_SIN_MEJORA, MOTIVO_NO_VIABLE)),
+        (LIMPIA, Adopcion(None, ()), None, (MOTIVO_NO_MEDIBLE,)),  # sin memoria del stack: null, nunca true
+        (SIN_MEDIR, Adopcion(True, ()), None, (MOTIVO_NO_MEDIBLE,)),  # sin IC o p95: null, nunca true
+        (SIN_MEDIR, Adopcion(None, ()), None, (MOTIVO_NO_MEDIBLE,)),
+        (SIN_MEDIR, Adopcion(False, (MOTIVO_RETROCESO,)), False, (MOTIVO_RETROCESO,)),  # un motivo explícito gana a null
+        (ReglaDeAdopcion(False, ()), Adopcion(True, ()), False, ()),  # un False sin motivos tampoco se lee como adoptable
+    ],
+)  # fmt: skip
+def test_la_adopcion_del_contexto_combina_la_regla_propia_con_la_de_decidir_adopcion(
+    regla: ReglaDeAdopcion, decision: Adopcion, adoptable: bool | None, motivos: tuple[str, ...]
+) -> None:
+    resultado = adopcion_del_contexto(regla, decision)
+
+    assert (resultado.adoptable, resultado.motivos) == (adoptable, motivos)

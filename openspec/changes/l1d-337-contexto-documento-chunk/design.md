@@ -287,14 +287,27 @@ Lo que se concretó o se desvió de lo descrito arriba; el código manda sobre e
   falsos inyectados (el subcomando real no tiene un modo falso por entorno, y no se añadió uno al código de producción).
 - **D7 (suite):** el brazo de contexto es un `Brazo` con `CORPUS_CHUNK_CONTEXT`; la referencia sigue siendo `A0` y declara `ninguno`. La mejora
   que decide la regla de adopción es el recall@10 total (diferencia pareada por pregunta, IC 95 % por bootstrap con la semilla de la
-  configuración); el MRR se informa. `mejora_fuera_del_ruido: null` (con el motivo `no_medible`) cuando falta el intervalo o el p95. En la corrida real la duración
+  configuración); el MRR se informa. **La marca `adoptable` combina esa regla con `decidir_adopcion` (ver Notas, opción B de H-2).** `mejora_fuera_del_ruido: null` (con el motivo `no_medible`) cuando falta el intervalo o el p95. En la corrida real la duración
   de la construcción del índice y los chunks con respaldo salen de `--resumenes-de-contexto <json>` (`{brazo: resumen de reindex-context}`, validado
   contra la variante de cada brazo); la memoria sale de `--memoria-del-stack` (ya existente). Una colección de brazo que no corresponde a su variante
   aborta la corrida; un brazo de contexto con colección propia SÍ consume la población (los `chunk_id` no cambian), a diferencia del brazo de 512 tokens.
 - **Prefijo del brazo en memoria (CI):** omite el tipo de fuente porque `DocumentoCorpus` del dataset no lo trae (solo título y cáncer); la forma del
   informe no cambia y la calidad no se mide ahí. `reindex-sparse` rechaza una colección con marca de contexto (Gate 2).
-- **Veredicto de adopción (Gate 2, lote R2):** el informe marca `regla_de_adopcion.mejora_fuera_del_ruido` (IC pareado excluye 0 y p95 bajo el
-  tope, como documenta AC-5); no es un veredicto de adopción. **Pregunta abierta para el usuario (H-2):** ¿la adopción del contexto debe
-  exigir además que no haya retroceso y que la viabilidad no sea `no_viable`? Descartado por ahora: exigirlo (cambia un AC documentado).
+- **Veredicto de adopción (Gate 2, lote R2; H-2):** **Decidido (usuario, 2026-11-26): opción B.** La adopción del contexto exige en el
+  código la misma regla que los brazos de L1D-335: el informe calcula `adoptable` con `decidir_adopcion`
+  (`app/evaluation/adopcion_del_brazo.py`) y un brazo NO es adoptable si (a) retrocede en recall o MRR por la tolerancia de retroceso,
+  (b) aumenta los falsos «sin evidencia» por esa misma tolerancia o (c) su viabilidad es `no_viable` frente a los topes de ADR-39. Una
+  medición ausente da `adoptable: null` con su motivo (null ≠ 0.0), nunca `true`. Se mantiene la regla propia del contexto
+  (`mejora_fuera_del_ruido`: IC pareado del recall@10 que excluye 0; p95 de consulta completa ≤ `p95_evidence_analyses_s`), que sigue
+  informándose por separado; `adoptable` es verdadero solo si se cumplen la regla de contexto y `decidir_adopcion`. Sigue siendo una
+  señal del informe: adoptar lo decide el usuario (H-2). Alternativas descartadas: **A** (dejarlo como está: permitiría marcar como
+  cumplidor a un brazo con retrocesos o fuera de los topes de memoria, contra ADR-45) y **C** (exigirlo solo en la decisión humana de
+  H-2: dejaría dos reglas de adopción distintas en el código del mismo sprint). Trabajo: el armado de la comparación calcula hoy
+  retroceso, falsos «sin evidencia» y viabilidad para los brazos de contexto, pero solo llama a `decidir_adopcion` para los brazos
+  de pares o reescritura; la sección 6 de `tasks.md` lo extiende.
+  **Forma (Gate 1):** la ruta es `brazos[].adopcion` (`{adoptable, motivos}`, como US-277) y la referencia no la lleva. Precedencia: un
+  motivo explícito (`adoptable: false`) gana a `null`, y `null` gana a `true`; cuando `decidir_adopcion` da `None` por medición ausente se
+  añade `no_medible`. Los motivos propios del contexto (`sin_mejora`, `p95_sobre_el_tope`, `no_medible`) viven en `brazos_contexto.py`;
+  `MOTIVOS_DE_NO_ADOPCION` de L1D-335 no se amplía (el enum del esquema del informe los une sin alterar esa regla).
 - **RN-22:** `corpus_metadata_llm_temperature` pasó de `CorpusIngestSettings` a `AjustesDeContextoLlm` (mismo nombre, valor y variable de entorno)
   para que la reindexación `llm` use la misma temperatura; no se añade ninguna variable a `.env.example` ni a Compose más allá del bloque de H-1.
